@@ -1,7 +1,7 @@
 ;;; jka-cmpr-hook.el --- preloaded code to enable jka-compr.el
 
 ;; Copyright (C) 1993, 1994, 1995, 1997, 1999, 2000, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: jka@ece.cmu.edu (Jay K. Adams)
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -97,7 +95,7 @@ The determination as to which compression scheme, if any, to use is
 based on the filename itself and `jka-compr-compression-info-list'."
   (catch 'compression-info
     (let ((case-fold-search nil))
-      (mapcar
+      (mapc
        (function (lambda (x)
 		   (and (string-match (jka-compr-info-regexp x) filename)
 			(throw 'compression-info x))))
@@ -179,14 +177,28 @@ options through Custom does this automatically."
 
 ;; I have this defined so that .Z files are assumed to be in unix
 ;; compress format; and .gz files, in gzip format, and .bz2 files in bzip fmt.
+
+;; FIXME? It seems ugly that one has to add "\\(~\\|\\.~[0-9]+~\\)?" to
+;; all the regexps here, in order to match backup files etc.
+;; It's trivial to modify jka-compr-get-compression-info to match
+;; regexps against file-name-sans-versions, but this regexp is also
+;; used to build a file-name-handler-alist entry.
+;; find-file-name-handler does not use file-name-sans-versions.
+;; Perhaps it should,
+;; http://lists.gnu.org/archive/html/emacs-devel/2008-02/msg00812.html,
+;; but it's used all over the place and there are probably other ramifications.
+;; One could modify jka-compr-build-file-regexp to add the backup regexp,
+;; but jka-compr-compression-info-list is a defcustom to which
+;; anything could be added, so it's easiest to leave things as they are.
 (defcustom jka-compr-compression-info-list
   ;;[regexp
   ;; compr-message  compr-prog  compr-args
   ;; uncomp-message uncomp-prog uncomp-args
-  ;; can-append auto-mode-flag strip-extension-flag file-magic-bytes]
+  ;; can-append strip-extension-flag file-magic-bytes]
   '(["\\.Z\\(~\\|\\.~[0-9]+~\\)?\\'"
      "compressing"    "compress"     ("-c")
-     "uncompressing"  "uncompress"   ("-c")
+     ;; gzip is more common than uncompress. It can only read, not write.
+     "uncompressing"  "gzip"   ("-c" "-q" "-d")
      nil t "\037\235"]
      ;; Formerly, these had an additional arg "-c", but that fails with
      ;; "Version 0.1pl2, 29-Aug-97." (RedHat 5.1 GNU/Linux) and
@@ -195,11 +207,11 @@ options through Custom does this automatically."
      "bzip2ing"        "bzip2"         nil
      "bunzip2ing"      "bzip2"         ("-d")
      nil t "BZh"]
-    ["\\.tbz\\'"
+    ["\\.tbz2?\\'"
      "bzip2ing"        "bzip2"         nil
      "bunzip2ing"      "bzip2"         ("-d")
      nil nil "BZh"]
-    ["\\.tgz\\'"
+    ["\\.\\(?:tgz\\|svgz\\|sifz\\)\\(~\\|\\.~[0-9]+~\\)?\\'"
      "compressing"        "gzip"         ("-c" "-q")
      "uncompressing"      "gzip"         ("-c" "-q" "-d")
      t nil "\037\213"]
@@ -274,7 +286,7 @@ variables.  Setting this through Custom does that automatically."
   :group 'jka-compr)
 
 (defcustom jka-compr-mode-alist-additions
-  (list (cons "\\.tgz\\'" 'tar-mode) (cons "\\.tbz\\'" 'tar-mode))
+  (list (cons "\\.tgz\\'" 'tar-mode) (cons "\\.tbz2?\\'" 'tar-mode))
   "List of pairs added to `auto-mode-alist' when installing jka-compr.
 Uninstalling jka-compr removes all pairs from `auto-mode-alist' that
 installing added.

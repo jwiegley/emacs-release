@@ -1,13 +1,16 @@
 /* Deal with the X Resource Manager.
    Copyright (C) 1990, 1993, 1994, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+
+Author: Joseph Arceneaux
+Created: 4/90
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,11 +18,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
-
-/* Written by jla, 4/90 */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #ifdef emacs
 #include <config.h>
@@ -433,13 +432,11 @@ get_user_app (class)
     {
       XrmDatabase db = XrmGetFileDatabase (file);
       free (file);
-      if (free_it)
-	free (free_it);
+      free (free_it);
       return db;
     }
 
-  if (free_it)
-    free (free_it);
+  free (free_it);
   return NULL;
 }
 
@@ -506,8 +503,8 @@ get_environ_db ()
 
   db = XrmGetFileDatabase (p);
 
-  if (path) free (path);
-  if (home) free (home);
+  free (path);
+  free (home);
 
   return db;
 }
@@ -614,8 +611,7 @@ x_load_resources (display, xrm_string, myname, myclass)
 
   /* Figure out what the "customization string" is, so we can use it
      to decode paths.  */
-  if (x_customization_string)
-    free (x_customization_string);
+  free (x_customization_string);
   x_customization_string
     = x_get_customization_string (user_database, myname, myclass);
 

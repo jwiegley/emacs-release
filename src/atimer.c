@@ -1,13 +1,13 @@
 /* Asynchronous timers.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 #include <signal.h>
@@ -355,20 +353,12 @@ schedule_atimer (t)
   t->next = a;
 }
 
-
-/* Signal handler for SIGALRM.  SIGNO is the signal number, i.e.
-   SIGALRM.  */
-
-SIGTYPE
-alarm_signal_handler (signo)
-     int signo;
+static void
+run_timers ()
 {
   EMACS_TIME now;
 
-  SIGNAL_THREAD_CHECK (signo);
-
   EMACS_GET_TIME (now);
-  pending_atimers = 0;
 
   while (atimers
 	 && (pending_atimers = interrupt_input_blocked) == 0
@@ -378,9 +368,7 @@ alarm_signal_handler (signo)
 
       t = atimers;
       atimers = atimers->next;
-#ifndef MAC_OSX
       t->fn (t);
-#endif
 
       if (t->type == ATIMER_CONTINUOUS)
 	{
@@ -392,16 +380,41 @@ alarm_signal_handler (signo)
 	  t->next = free_atimers;
 	  free_atimers = t;
 	}
-#ifdef MAC_OSX
-      /* Fix for Ctrl-G.  Perhaps this should apply to all platforms. */
-      t->fn (t); 
-#endif
 
       EMACS_GET_TIME (now);
     }
 
+  if (! atimers)
+    pending_atimers = 0;
+
+#ifdef SYNC_INPUT
+  if (pending_atimers)
+    pending_signals = 1;
+  else
+    {
+      pending_signals = interrupt_input_pending;
+      set_alarm ();
+    }
+#else
   if (! pending_atimers)
     set_alarm ();
+#endif
+}
+
+
+/* Signal handler for SIGALRM.  SIGNO is the signal number, i.e.
+   SIGALRM.  */
+
+SIGTYPE
+alarm_signal_handler (signo)
+     int signo;
+{
+  pending_atimers = 1;
+#ifdef SYNC_INPUT
+  pending_signals = 1;
+#else
+  run_timers ();
+#endif
 }
 
 
@@ -413,7 +426,7 @@ do_pending_atimers ()
   if (pending_atimers)
     {
       BLOCK_ATIMERS;
-      alarm_signal_handler (SIGALRM);
+      run_timers ();
       UNBLOCK_ATIMERS;
     }
 }
@@ -439,8 +452,9 @@ turn_on_atimers (on)
 void
 init_atimer ()
 {
-  free_atimers = atimers = NULL;
+  free_atimers = stopped_atimers = atimers = NULL;
   pending_atimers = 0;
+  /* pending_signals is initialized in init_keyboard.*/
   signal (SIGALRM, alarm_signal_handler);
 }
 

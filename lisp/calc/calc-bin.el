@@ -1,17 +1,17 @@
 ;;; calc-bin.el --- binary functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -31,6 +29,17 @@
 
 (require 'calc-ext)
 (require 'calc-macs)
+
+;;; Some useful numbers
+(defconst math-bignum-logb-digit-size
+  (logb math-bignum-digit-size)
+  "The logb of the size of a bignum digit.
+This is the largest value of B such that 2^B is less than 
+the size of a Calc bignum digit.")
+
+(defconst math-bignum-digit-power-of-two
+  (expt 2 (logb math-bignum-digit-size))
+  "The largest power of 2 less than the size of a Calc bignum digit.")
 
 ;;; b-prefix binary commands.
 
@@ -297,11 +306,11 @@
 
 (defun math-and-bignum (a b)   ; [l l l]
   (and a b
-       (let ((qa (math-div-bignum-digit a 512))
-	     (qb (math-div-bignum-digit b 512)))
+       (let ((qa (math-div-bignum-digit a math-bignum-digit-power-of-two))
+	     (qb (math-div-bignum-digit b math-bignum-digit-power-of-two)))
 	 (math-mul-bignum-digit (math-and-bignum (math-norm-bignum (car qa))
 						  (math-norm-bignum (car qb)))
-				 512
+				 math-bignum-digit-power-of-two
 				 (logand (cdr qa) (cdr qb))))))
 
 (defun calcFunc-or (a b &optional w)   ; [I I I] [Public]
@@ -324,11 +333,11 @@
 
 (defun math-or-bignum (a b)   ; [l l l]
   (and (or a b)
-       (let ((qa (math-div-bignum-digit a 512))
-	     (qb (math-div-bignum-digit b 512)))
+       (let ((qa (math-div-bignum-digit a math-bignum-digit-power-of-two))
+	     (qb (math-div-bignum-digit b math-bignum-digit-power-of-two)))
 	 (math-mul-bignum-digit (math-or-bignum (math-norm-bignum (car qa))
 						 (math-norm-bignum (car qb)))
-				 512
+				 math-bignum-digit-power-of-two
 				 (logior (cdr qa) (cdr qb))))))
 
 (defun calcFunc-xor (a b &optional w)   ; [I I I] [Public]
@@ -351,11 +360,11 @@
 
 (defun math-xor-bignum (a b)   ; [l l l]
   (and (or a b)
-       (let ((qa (math-div-bignum-digit a 512))
-	     (qb (math-div-bignum-digit b 512)))
+       (let ((qa (math-div-bignum-digit a math-bignum-digit-power-of-two))
+	     (qb (math-div-bignum-digit b math-bignum-digit-power-of-two)))
 	 (math-mul-bignum-digit (math-xor-bignum (math-norm-bignum (car qa))
 						  (math-norm-bignum (car qb)))
-				 512
+				 math-bignum-digit-power-of-two
 				 (logxor (cdr qa) (cdr qb))))))
 
 (defun calcFunc-diff (a b &optional w)   ; [I I I] [Public]
@@ -378,11 +387,11 @@
 
 (defun math-diff-bignum (a b)   ; [l l l]
   (and a
-       (let ((qa (math-div-bignum-digit a 512))
-	     (qb (math-div-bignum-digit b 512)))
+       (let ((qa (math-div-bignum-digit a math-bignum-digit-power-of-two))
+	     (qb (math-div-bignum-digit b math-bignum-digit-power-of-two)))
 	 (math-mul-bignum-digit (math-diff-bignum (math-norm-bignum (car qa))
 						   (math-norm-bignum (car qb)))
-				 512
+				 math-bignum-digit-power-of-two
 				 (logand (cdr qa) (lognot (cdr qb)))))))
 
 (defun calcFunc-not (a &optional w)   ; [I I] [Public]
@@ -402,14 +411,15 @@
 				   w))))))
 
 (defun math-not-bignum (a w)   ; [l l]
-  (let ((q (math-div-bignum-digit a 512)))
-    (if (<= w 9)
+  (let ((q (math-div-bignum-digit a math-bignum-digit-power-of-two)))
+    (if (<= w math-bignum-logb-digit-size)
 	(list (logand (lognot (cdr q))
 		      (1- (lsh 1 w))))
       (math-mul-bignum-digit (math-not-bignum (math-norm-bignum (car q))
-					       (- w 9))
-			      512
-			      (logxor (cdr q) 511)))))
+					       (- w math-bignum-logb-digit-size))
+			      math-bignum-digit-power-of-two
+			      (logxor (cdr q) 
+                                      (1- math-bignum-digit-power-of-two))))))
 
 (defun calcFunc-lsh (a &optional n w)   ; [I I] [Public]
   (setq a (math-trunc a)
@@ -510,8 +520,8 @@
 	   (math-sub a (math-power-of-2 (- w)))))
 	((Math-negp a)
 	 (math-normalize (cons 'bigpos (math-binary-arg a w))))
-	((and (integerp a) (< a 1000000))
-	 (if (>= w 20)
+	((and (integerp a) (< a math-small-integer-size))
+	 (if (> w (logb math-small-integer-size))
 	     a
 	   (logand a (1- (lsh 1 w)))))
 	(t
@@ -523,13 +533,13 @@
 (defalias 'calcFunc-clip 'math-clip)
 
 (defun math-clip-bignum (a w)   ; [l l]
-  (let ((q (math-div-bignum-digit a 512)))
-    (if (<= w 9)
+  (let ((q (math-div-bignum-digit a math-bignum-digit-power-of-two)))
+    (if (<= w math-bignum-logb-digit-size)
 	(list (logand (cdr q)
 		      (1- (lsh 1 w))))
       (math-mul-bignum-digit (math-clip-bignum (math-norm-bignum (car q))
-						(- w 9))
-			      512
+						(- w math-bignum-logb-digit-size))
+			      math-bignum-digit-power-of-two
 			      (cdr q)))))
 
 (defvar math-max-digits-cache nil)
@@ -804,5 +814,5 @@
 
 (provide 'calc-bin)
 
-;;; arch-tag: f6dba7bc-53b2-41ae-919c-c266ab0ca8b3
+;; arch-tag: f6dba7bc-53b2-41ae-919c-c266ab0ca8b3
 ;;; calc-bin.el ends here

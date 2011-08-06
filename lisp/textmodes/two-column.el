@@ -1,7 +1,7 @@
 ;;; two-column.el --- minor mode for editing of two-column text
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Daniel Pfeiffer <occitan@esperanto.org>
 ;; Adapted-By: ESR, Daniel Pfeiffer
@@ -9,33 +9,18 @@
 
 ;; This file is part of GNU Emacs.
 
-;; Esperanto:				 English:
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; ^Ci dosiero estas ero de GNU Emacs.	 This file is part of GNU Emacs.
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
-;; GNU  Emacs estas libera  programaro;	 GNU Emacs is free software; you can
-;; vi povas disdoni ^gin kaj/a^u modifi	 redistribute it and/or modify it
-;; ^gin sub  la  kondi^coj  de  la  GNU	 under the terms of the GNU General
-;; ^Generala  Publika Licenco kiel pub-	 Public License as published by the
-;; likigita far la Liberprogramara Fon-	 Free Software Foundation; either
-;; da^jo; a^u eldono 2a,  a^u (la^u via	 version 3, or (at your option) any
-;; elekto) ajna posta eldono.		 later version.
-
-;; GNU  Emacs  estas  disdonata  en  la	 GNU Emacs is distributed in the hope
-;; espero ke  ^gi estos utila,  sed SEN	 that it will be useful, but WITHOUT
-;; IA  GARANTIO;  sen e^c  la implicita	 ANY WARRANTY; without even the
-;; garantio  de VENDEBLECO  a^u PRETECO	 implied warranty of MERCHANTABILITY
-;; POR  DETERMINITA CELO.  Vidu la  GNU	 or FITNESS FOR A PARTICULAR PURPOSE.
-;; ^Generala Publika Licenco por plenaj	 See the GNU General Public License
-;; detaloj.				 for more details.
-
-;; Vi devus ricevinti kopion de la  GNU	 You should have received a copy of
-;; ^Generala  Publika  Licenco kune kun	 the GNU General Public License along
-;; GNU Emacs; vidu la dosieron COPYING.	 with GNU Emacs; see the file
-;; Alikaze skribu al la			 COPYING.  If not, write to the
-
-;; Free Software Foundation, 51 Franklin Street, Fifth Floor
-;; Boston, MA 02110-1301, USA.
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -427,9 +412,9 @@ First column's text    sSs  Second column's text
 	     (erase-buffer))
 	 (signal 'quit nil)))
   (let ((point (point))
-	; make next-line always come back to same column
-	(goal-column (current-column))
-	; a counter for empty lines in other buffer
+	;; make next-line always come back to same column
+	(column (current-column))
+	;; a counter for empty lines in other buffer
 	(n (1- (count-lines (point-min) (point))))
 	chars other)
     (save-excursion
@@ -438,13 +423,17 @@ First column's text    sSs  Second column's text
       (skip-chars-forward " \t" point)
       (make-local-variable '2C-separator)
       (setq 2C-separator (buffer-substring (point) point)
-	    2C-window-width (current-column)))
+	    2C-window-width (+ (fringe-columns 'left)
+			       (fringe-columns 'right)
+			       (scroll-bar-columns 'left)
+			       (scroll-bar-columns 'right)
+			       (current-column))))
     (2C-two-columns)
     (setq other (2C-other))
-    ; now we're ready to actually split
+    ;; now we're ready to actually split
     (save-excursion
       (while (not (eobp))
-	(if (not (and (= (current-column) goal-column)
+	(if (not (and (= (current-column) column)
 		      (string= chars
 			       (buffer-substring (point)
 						 (save-excursion
@@ -463,7 +452,8 @@ First column's text    sSs  Second column's text
 						 (1+ (point)))))
 	  (delete-region point (point))
 	  (setq n 0))
-	(next-line 1)))))
+	(forward-line 1)
+	(move-to-column column)))))
 
 
 
@@ -531,7 +521,7 @@ off trailing spaces with \\[delete-trailing-whitespace]."
 	  (end-of-line)
 	  (indent-to-column 2C-window-width)
 	  (insert 2C-separator string))
-	(next-line 1)			; add one if necessary
+	(forward-line 1)		; add one if necessary
 	(set-buffer b2))))
   (unless (window-full-width-p)
     (enlarge-window 99999 t)))
@@ -595,10 +585,10 @@ on, this also realigns the two buffers."
       ;; catch a mouse scroll on non-selected scrollbar
       (select-window
        (prog1 (selected-window)
-	 (and (consp last-command-char)
+	 (and (consp last-command-event)
 	      (not (eq (selected-window)
-		       (car (car (cdr last-command-char)))))
-	      (select-window (car (car (cdr last-command-char)))))
+		       (car (car (cdr last-command-event)))))
+	      (select-window (car (car (cdr last-command-event)))))
 	 ;; In some cases scrolling causes an error, but post-command-hook
 	 ;; shouldn't, and should always stay in the original window
 	 (condition-case ()
@@ -642,5 +632,5 @@ on, this also realigns the two buffers."
 
 (provide 'two-column)
 
-;;; arch-tag: 2021b5ab-d3a4-4a8c-a21c-1936b0f9e6b1
+;; arch-tag: 2021b5ab-d3a4-4a8c-a21c-1936b0f9e6b1
 ;;; two-column.el ends here

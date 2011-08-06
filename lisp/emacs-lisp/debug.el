@@ -1,17 +1,17 @@
 ;;; debug.el --- debuggers and related commands for Emacs
 
 ;; Copyright (C) 1985, 1986, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: lisp, tools, maint
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -202,7 +200,7 @@ first will be printed into the backtrace buffer."
 		    (insert "...\n"))
 		  (goto-char (point-min))
 		  (message "%s" (buffer-string))
-		  (kill-emacs))
+		  (kill-emacs -1))
 		(message "")
 		(let ((standard-output nil)
 		      (buffer-read-only t))
@@ -232,9 +230,10 @@ first will be printed into the backtrace buffer."
                     ;; would need to be de-iconified anyway immediately
                     ;; after when we re-enter the debugger, so iconifying it
                     ;; here would cause flashing.
-                    ;; Use quit-window rather than bury-buffer to quieten
-                    ;; Drew Adams.  --Stef
-                    (quit-window))))
+                    ;; Drew Adams is not happy with this: he wants to frame
+                    ;; to be left at the top-level, still working on how
+                    ;; best to do that.
+                    (bury-buffer))))
 	    (kill-buffer debugger-buffer))
 	  (with-timeout-unsuspend debugger-with-timeout-suspend)
 	  (set-match-data debugger-outer-match-data)))
@@ -585,7 +584,8 @@ Applies to the frame whose line point is on in the backtrace."
   (debugger-env-macro (eval-expression exp)))
 
 (defvar debugger-mode-map
-  (let ((map (make-keymap)))
+  (let ((map (make-keymap))
+	(menu-map (make-sparse-keymap)))
     (set-keymap-parent map button-buffer-map)
     (suppress-keymap map)
     (define-key map "-" 'negative-argument)
@@ -603,6 +603,49 @@ Applies to the frame whose line point is on in the backtrace."
     (define-key map "R" 'debugger-record-expression)
     (define-key map "\C-m" 'debug-help-follow)
     (define-key map [mouse-2] 'push-button)
+    (define-key map [menu-bar debugger] (cons "Debugger" menu-map))
+    (define-key menu-map [deb-top]
+      '(menu-item "Quit" top-level
+		  :help "Quit debugging and return to top level"))
+    (define-key menu-map [deb-s0] '("--"))
+    (define-key menu-map [deb-descr]
+      '(menu-item "Describe Debugger Mode" describe-mode
+		  :help "Display documentation for debugger-mode"))
+    (define-key menu-map [deb-hfol]
+      '(menu-item "Help Follow" debug-help-follow
+		  :help "Follow cross-reference"))
+    (define-key menu-map [deb-nxt]
+      '(menu-item "Next Line" next-line
+		  :help "Move cursor down"))
+    (define-key menu-map [deb-s1] '("--"))
+    (define-key menu-map [deb-lfunc]
+      '(menu-item "List debug on entry functions" debugger-list-functions
+		  :help "Display a list of all the functions now set to debug on entry"))
+    (define-key menu-map [deb-fclear]
+      '(menu-item "Cancel debug frame" debugger-frame-clear
+		  :help "Do not enter debugger when this frame exits"))
+    (define-key menu-map [deb-frame]
+      '(menu-item "Debug frame" debugger-frame
+		  :help "Request entry to debugger when this frame exits"))
+    (define-key menu-map [deb-s2] '("--"))
+    (define-key menu-map [deb-ret]
+      '(menu-item "Return value..." debugger-return-value
+		  :help "Continue, specifying value to return."))
+    (define-key menu-map [deb-rec]
+      '(menu-item "Display and Record Expression" debugger-record-expression
+		  :help "Display a variable's value and record it in `*Backtrace-record*' buffer"))
+    (define-key menu-map [deb-eval]
+      '(menu-item "Eval Expression..." debugger-eval-expression
+		  :help "Eval an expression, in an environment like that outside the debugger"))
+    (define-key menu-map [deb-jump]
+      '(menu-item "Jump" debugger-jump
+		  :help "Continue to exit from this frame, with all debug-on-entry suspended"))
+    (define-key menu-map [deb-cont]
+      '(menu-item "Continue" debugger-continue
+		  :help "Continue, evaluating this expression without stopping"))
+    (define-key menu-map [deb-step]
+      '(menu-item "Step through" debugger-step-through
+		  :help "Proceed, stepping through subexpressions of this expression"))
     map))
 
 (put 'debugger-mode 'mode-class 'special)
@@ -654,6 +697,8 @@ Complete list of commands:
     (message "%s"
 	     (buffer-substring (line-beginning-position 0)
 			       (line-end-position 0)))))
+
+(declare-function help-xref-interned "help-mode" (symbol))
 
 (defun debug-help-follow (&optional pos)
   "Follow cross-reference at POS, defaulting to point.

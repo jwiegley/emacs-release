@@ -1,8 +1,8 @@
 ;;; antlr-mode.el --- major mode for ANTLR grammar files
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-;; Free Software Foundation, Inc.
-;;
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
+
 ;; Author: Christoph.Wedler@sap.com
 ;; Keywords: languages, ANTLR, code generator
 ;; Version: (see `antlr-version' below)
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -85,12 +83,17 @@
 
 ;;; Code:
 
-(provide 'antlr-mode)
+(eval-when-compile 
+  (require 'cl))
+
 (require 'easymenu)
 
+;; Just to get the rid of the byte compiler warning.  The code for
+;; this function and its friends are too complex for their own good.
+(declare-function cond-emacs-xemacs-macfn "antlr-mode" (args &optional msg))
+
 ;; General Emacs/XEmacs-compatibility compile-time macros
-(eval-when-compile
-  (require 'cl)
+(eval-when-compile 
   (defmacro cond-emacs-xemacs (&rest args)
     (cond-emacs-xemacs-macfn
      args "`cond-emacs-xemacs' must return exactly one element"))
@@ -99,7 +102,7 @@
       (and (eq (car args) :@) (null msg) ; (:@ ...spliced...)
 	   (setq args (cdr args)
 		 msg "(:@ ....) must return exactly one element"))
-      (let ((ignore (if (string-match "XEmacs" emacs-version) :EMACS :XEMACS))
+      (let ((ignore (if (featurep 'xemacs) :EMACS :XEMACS))
 	    (mode :BOTH) code)
 	(while (consp args)
 	  (if (memq (car args) '(:EMACS :XEMACS :BOTH)) (setq mode (pop args)))
@@ -115,7 +118,7 @@
   ;; existing functions when they are `fboundp', provide shortcuts if they are
   ;; known to be defined in a specific Emacs branch (for short .elc)
   (defmacro defunx (name arglist &rest definition)
-    (let ((xemacsp (string-match "XEmacs" emacs-version)) reuses)
+    (let ((xemacsp (featurep 'xemacs)) reuses)
       (while (memq (car definition)
 		   '(:try :emacs-and-try :xemacs-and-try))
 	(if (eq (pop definition) (if xemacsp :xemacs-and-try :emacs-and-try))
@@ -152,7 +155,7 @@
   (defmacro ignore-errors-x (&rest body)
     (let ((specials '((scan-sexps . 4) (scan-lists . 5)))
 	  spec nils)
-      (if (and (string-match "XEmacs" emacs-version)
+      (if (and (featurep 'xemacs)
 	       (null (cdr body)) (consp (car body))
 	       (setq spec (assq (caar body) specials))
 	       (>= (setq nils (- (cdr spec) (length (car body)))) 0))
@@ -166,7 +169,7 @@
       `(let ((,modified (buffer-modified-p)))
 	 (unwind-protect
 	     (let ((buffer-undo-list t) (inhibit-read-only t)
-		   ,@(unless (string-match "XEmacs" emacs-version)
+		   ,@(unless (featurep 'xemacs)
 		       '((inhibit-point-motion-hooks t) deactivate-mark))
 		   before-change-functions after-change-functions
 		   buffer-file-name buffer-file-truename)
@@ -176,15 +179,12 @@
 (put 'save-buffer-state-x 'lisp-indent-function 0)
 
 ;; get rid of byte-compile warnings
-(eval-when-compile			; required and optional libraries
-  (require 'cc-mode)
-  (ignore-errors (require 'font-lock))
-  (ignore-errors (require 'compile))
-  ;;(ignore-errors (defun c-init-language-vars))) dangerous on Emacs!
-  ;;(ignore-errors (defun c-init-c-language-vars))) dangerous on Emacs!
-  ;;(ignore-errors (defun c-basic-common-init))   dangerous on Emacs!
-  (defvar outline-level) (defvar imenu-use-markers)
-  (defvar imenu-create-index-function))
+(eval-when-compile
+  (require 'cc-mode))
+
+(defvar outline-level)
+(defvar imenu-use-markers)
+(defvar imenu-create-index-function)
 
 ;; We cannot use `c-forward-syntactic-ws' directly since it is a macro since
 ;; cc-mode-5.30 => antlr-mode compiled with older cc-mode would fail (macro
@@ -840,7 +840,8 @@ Do not change."
 (defface antlr-keyword
   (cond-emacs-xemacs
    '((((class color) (background light))
-      (:foreground "black" :EMACS :weight bold :XEMACS :bold t))))
+      (:foreground "black" :EMACS :weight bold :XEMACS :bold t))
+     (t :inherit font-lock-keyword-face)))
   "ANTLR keywords."
   :group 'antlr)
 ;; backward-compatibility alias
@@ -850,7 +851,8 @@ Do not change."
 (defface antlr-syntax
   (cond-emacs-xemacs
    '((((class color) (background light))
-      (:foreground "black" :EMACS :weight bold :XEMACS :bold t))))
+      (:foreground "black" :EMACS :weight bold :XEMACS :bold t))
+     (t :inherit font-lock-constant-face)))
   "ANTLR syntax symbols like :, |, (, ), ...."
   :group 'antlr)
 ;; backward-compatibility alias
@@ -860,7 +862,8 @@ Do not change."
 (defface antlr-ruledef
   (cond-emacs-xemacs
    '((((class color) (background light))
-      (:foreground "blue" :EMACS :weight bold :XEMACS :bold t))))
+      (:foreground "blue" :EMACS :weight bold :XEMACS :bold t))
+     (t :inherit font-lock-function-name-face)))
   "ANTLR rule references (definition)."
   :group 'antlr)
 ;; backward-compatibility alias
@@ -870,7 +873,8 @@ Do not change."
 (defface antlr-tokendef
   (cond-emacs-xemacs
    '((((class color) (background light))
-      (:foreground "blue" :EMACS :weight bold :XEMACS :bold t))))
+      (:foreground "blue" :EMACS :weight bold :XEMACS :bold t))
+     (t :inherit font-lock-function-name-face)))
   "ANTLR token references (definition)."
   :group 'antlr)
 ;; backward-compatibility alias
@@ -878,7 +882,8 @@ Do not change."
 
 (defvar antlr-ruleref-face 'antlr-ruleref)
 (defface antlr-ruleref
-  '((((class color) (background light)) (:foreground "blue4")))
+  '((((class color) (background light)) (:foreground "blue4"))
+    (t :inherit font-lock-type-face))
   "ANTLR rule references (usage)."
   :group 'antlr)
 ;; backward-compatibility alias
@@ -886,7 +891,8 @@ Do not change."
 
 (defvar antlr-tokenref-face 'antlr-tokenref)
 (defface antlr-tokenref
-  '((((class color) (background light)) (:foreground "orange4")))
+  '((((class color) (background light)) (:foreground "orange4"))
+    (t :inherit font-lock-type-face))
   "ANTLR token references (usage)."
   :group 'antlr)
 ;; backward-compatibility alias
@@ -896,7 +902,8 @@ Do not change."
 (defface antlr-literal
   (cond-emacs-xemacs
    '((((class color) (background light))
-      (:foreground "brown4" :EMACS :weight bold :XEMACS :bold t))))
+      (:foreground "brown4" :EMACS :weight bold :XEMACS :bold t))
+     (t :inherit font-lock-string-face)))
   "ANTLR special literal tokens.
 It is used to highlight strings matched by the first regexp group of
 `antlr-font-lock-literal-regexp'."
@@ -922,7 +929,7 @@ group.  The string matched by the first group is highlighted with
    `((antlr-invalidate-context-cache)
      ("\\$setType[ \t]*(\\([A-Za-z\300-\326\330-\337]\\sw*\\))"
       (1 antlr-tokendef-face))
-     ("\\$\\sw+" (0 keyword-face))
+     ("\\$\\sw+" (0 antlr-keyword-face))
      ;; the tokens are already fontified as string/docstrings:
      (,(lambda (limit)
 	 (if antlr-font-lock-literal-regexp
@@ -1868,7 +1875,7 @@ cell where the two values determine the area inside the braces."
 					(read initial)
 				      initial))
 			       (cdr value))))
-	(message (cadr value))
+	(message "%s" (or (cadr value) ""))
 	(setq value nil)))
     ;; insert value ----------------------------------------------------------
     (if (consp old)
@@ -2505,7 +2512,7 @@ ANTLR's syntax and influences the auto indentation, see
 	    (let ((context (antlr-syntactic-context)))
 	      (not (and (numberp context)
 			(or (zerop context)
-			    (memq last-command-char '(?\{ ?\}))))))))
+			    (memq last-command-event '(?\{ ?\}))))))))
       (self-insert-command (prefix-numeric-value arg))
     (self-insert-command (prefix-numeric-value arg))
     (antlr-indent-line)))
@@ -2662,7 +2669,9 @@ Used in `antlr-mode'.  Also a useful function in `java-mode-hook'."
 		     indent-tabs-mode (cadddr elem)
 		     alist nil))))))
 
+(provide 'antlr-mode)
+
 ;;; Local IspellPersDict: .ispell_antlr
 
-;;; arch-tag: 5de2be79-3d13-4560-8fbc-f7d0234dcb5c
+;; arch-tag: 5de2be79-3d13-4560-8fbc-f7d0234dcb5c
 ;;; antlr-mode.el ends here

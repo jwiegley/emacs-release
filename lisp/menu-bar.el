@@ -1,7 +1,7 @@
 ;;; menu-bar.el --- define a default menu bar
 
 ;; Copyright (C) 1993, 1994, 1995, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: RMS
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,26 +20,13 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; Avishai Yacobi suggested some menu rearrangements.
 
 ;;; Commentary:
 
 ;;; Code:
-
-;;; User options:
-
-(defcustom buffers-menu-max-size 10
-  "*Maximum number of entries which may appear on the Buffers menu.
-If this is 10, then only the ten most-recently-selected buffers are shown.
-If this is nil, then all buffers are shown.
-A large number or nil slows down menu responsiveness."
-  :type '(choice integer
-		 (const :tag "All" nil))
-  :group 'mouse)
 
 ;; Don't clobber an existing menu-bar keymap, to preserve any menu-bar key
 ;; definitions made in loaddefs.el.
@@ -77,7 +64,7 @@ A large number or nil slows down menu responsiveness."
 
 ;; The "File" menu items
 (define-key menu-bar-file-menu [exit-emacs]
-  '(menu-item "Exit Emacs" save-buffers-kill-emacs
+  '(menu-item "Quit" save-buffers-kill-terminal
 	      :help "Save unsaved buffers, then exit"))
 
 (define-key menu-bar-file-menu [separator-exit]
@@ -309,7 +296,7 @@ A large number or nil slows down menu responsiveness."
   '(menu-item "Continue Tags Search" tags-loop-continue
 	      :help "Continue last tags search operation"))
 (define-key menu-bar-search-menu [tags-srch]
-  '(menu-item "Search tagged files..." tags-search
+  '(menu-item "Search Tagged Files..." tags-search
 	      :help "Search for a regexp in all tagged files"))
 (define-key menu-bar-search-menu [separator-tag-search]
   '(menu-item "--"))
@@ -353,7 +340,7 @@ A large number or nil slows down menu responsiveness."
   '(menu-item "Continue Replace" tags-loop-continue
 	      :help "Continue last tags replace operation"))
 (define-key menu-bar-replace-menu [tags-repl]
-  '(menu-item "Replace in tagged files..." tags-query-replace
+  '(menu-item "Replace in Tagged Files..." tags-query-replace
 	      :help "Interactively replace a regexp in all tagged files"))
 (define-key menu-bar-replace-menu [separator-replace-tags]
   '(menu-item "--"))
@@ -453,7 +440,7 @@ A large number or nil slows down menu responsiveness."
 
 (define-key menu-bar-edit-menu [mark-whole-buffer]
   '(menu-item "Select All" mark-whole-buffer
-	      :help "Mark the whole buffer for a subsequent cut/copy."))
+	      :help "Mark the whole buffer for a subsequent cut/copy"))
 (define-key menu-bar-edit-menu [clear]
   '(menu-item "Clear" delete-region
 	      :enable (and mark-active
@@ -464,16 +451,18 @@ A large number or nil slows down menu responsiveness."
 (defvar yank-menu (cons "Select Yank" nil))
 (fset 'yank-menu (cons 'keymap yank-menu))
 (define-key menu-bar-edit-menu [paste-from-menu]
-  '(menu-item "Paste from kill menu" yank-menu
+  '(menu-item "Paste from Kill Menu" yank-menu
 	      :enable (and (cdr yank-menu) (not buffer-read-only))
 	      :help "Choose a string from the kill ring and paste it"))
 (define-key menu-bar-edit-menu [paste]
   '(menu-item "Paste" yank
-	      :enable (and
-		       ;; Emacs compiled --without-x doesn't have
-		       ;; x-selection-exists-p.
-		       (fboundp 'x-selection-exists-p)
-		       (x-selection-exists-p) (not buffer-read-only))
+	      :enable (and (or
+			    ;; Emacs compiled --without-x doesn't have
+			    ;; x-selection-exists-p.
+			    (and (fboundp 'x-selection-exists-p)
+				 (x-selection-exists-p))
+			    kill-ring)
+			   (not buffer-read-only))
 	      :help "Paste (yank) text most recently cut/copied"))
 (define-key menu-bar-edit-menu [copy]
   '(menu-item "Copy" menu-bar-kill-ring-save
@@ -504,11 +493,14 @@ A large number or nil slows down menu responsiveness."
 ;; These are alternative definitions for the cut, paste and copy
 ;; menu items.  Use them if your system expects these to use the clipboard.
 
-(put 'clipboard-kill-region 'menu-enable 'mark-active)
+(put 'clipboard-kill-region 'menu-enable
+     '(and mark-active (not buffer-read-only)))
 (put 'clipboard-kill-ring-save 'menu-enable 'mark-active)
 (put 'clipboard-yank 'menu-enable
-     '(or (and (fboundp 'x-selection-exists-p) (x-selection-exists-p))
-	  (x-selection-exists-p 'CLIPBOARD)))
+     '(and (or (not (fboundp 'x-selection-exists-p))
+	       (x-selection-exists-p)
+	       (x-selection-exists-p 'CLIPBOARD))
+ 	   (not buffer-read-only)))
 
 (defun clipboard-yank ()
   "Insert the clipboard contents, or the last stretch of killed text."
@@ -637,6 +629,35 @@ by \"Save Options\" in Custom buffers.")
                  :button (:toggle . (and (default-boundp ',variable)
 					 (default-value ',variable))))))
 
+;; Function for setting/saving default font.
+
+(defun menu-set-font ()
+  "Interactively select a font and make it the default."
+  (interactive)
+  (let ((font (if (fboundp 'x-select-font)
+  		  (x-select-font)
+  		(mouse-select-font)))
+	spec)
+    (when font
+      ;; Be careful here: when set-face-attribute is called for the
+      ;; :font attribute, Emacs tries to guess the best matching font
+      ;; by examining the other face attributes (Bug#2476).
+      (set-face-attribute 'default (selected-frame)
+			  :width 'normal
+			  :weight 'normal
+			  :slant 'normal
+			  :font font)
+      (let ((font-object (face-attribute 'default :font)))
+	(dolist (f (frame-list))
+	  (and (not (eq f (selected-frame)))
+	       (display-graphic-p f)
+	       (set-face-attribute 'default f :font font-object)))
+	(set-face-attribute 'default t :font font-object))
+      (setq spec (list (list t (face-attr-construct 'default))))
+      (put 'default 'customized-face spec)
+      (custom-push-theme 'theme-face 'default 'user 'set spec)
+      (put 'default 'face-modified nil))))
+
 ;;; Assemble all the top-level items of the "Options" menu
 (define-key menu-bar-options-menu [customize]
   (list 'menu-item "Customize Emacs" menu-bar-custom-menu))
@@ -670,6 +691,10 @@ by \"Save Options\" in Custom buffers.")
       (and (get elt 'customized-value)
 	   (customize-mark-to-save elt)
 	   (setq need-save t)))
+    (when (get 'default 'customized-face)
+      (put 'default 'saved-face (get 'default 'customized-face))
+      (put 'default 'customized-face nil)
+      (setq need-save t))
     ;; Save if we changed anything.
     (when need-save
       (custom-save-all))))
@@ -681,10 +706,10 @@ by \"Save Options\" in Custom buffers.")
 (define-key menu-bar-options-menu [custom-separator]
   '("--"))
 
-(define-key menu-bar-options-menu [mouse-set-font]
-  '(menu-item "Set Font/Fontset..." mouse-set-font
-	       :visible (display-multi-font-p)
-	       :help "Select a font from list of known fonts/fontsets"))
+(define-key menu-bar-options-menu [menu-set-font]
+  '(menu-item "Set Default Font..." menu-set-font
+	      :visible (display-multi-font-p)
+	      :help "Select a default font"))
 
 ;; The "Show/Hide" submenu of menu "Options"
 
@@ -934,15 +959,15 @@ mail status in mode line"))
 	:button `(:toggle . tooltip-mode)))
 
 (define-key menu-bar-showhide-menu [menu-bar-mode]
-  '(menu-item "Menu-bar" menu-bar-mode
+  '(menu-item "Menu-bar" toggle-menu-bar-mode-from-frame
 	      :help "Turn menu-bar on/off"
-	      :button (:toggle . menu-bar-mode)))
+	      :button (:toggle . (> (frame-parameter nil 'menu-bar-lines) 0))))
 
 (define-key menu-bar-showhide-menu [showhide-tool-bar]
-  (list 'menu-item "Tool-bar" 'tool-bar-mode
+  (list 'menu-item "Tool-bar" 'toggle-tool-bar-mode-from-frame
 	:help "Turn tool-bar on/off"
 	:visible `(display-graphic-p)
-	:button `(:toggle . tool-bar-mode)))
+	:button `(:toggle . (> (frame-parameter nil 'tool-bar-lines) 0))))
 
 (define-key menu-bar-options-menu [showhide]
   (list 'menu-item "Show/Hide" menu-bar-showhide-menu))
@@ -1026,7 +1051,7 @@ mail status in mode line"))
   (menu-bar-make-toggle toggle-case-fold-search case-fold-search
 	    "Case-Insensitive Search"
 	    "Case-Insensitive Search %s"
-	    "Globally ignore letter-case in search"))
+	    "Ignore letter-case in search commands"))
 
 (defun menu-bar-text-mode-auto-fill ()
   (interactive)
@@ -1037,18 +1062,58 @@ mail status in mode line"))
   (customize-mark-as-set 'text-mode-hook))
 
 (define-key menu-bar-options-menu [auto-fill-mode]
-  '(menu-item "Word Wrap in Text Modes"
+  '(menu-item "Auto Fill in Text Modes"
               menu-bar-text-mode-auto-fill
-	      :help "Automatically fill text between left and right margins (Auto Fill)"
+	      :help "Automatically fill text while typing (Auto Fill mode)"
               :button (:toggle . (if (listp text-mode-hook)
 				     (member 'turn-on-auto-fill text-mode-hook)
 				   (eq 'turn-on-auto-fill text-mode-hook)))))
-(define-key menu-bar-options-menu [truncate-lines]
-  '(menu-item "Truncate Long Lines in this Buffer"
-	      toggle-truncate-lines
-	      :help "Truncate long lines on the screen"
-	      :button (:toggle . truncate-lines)
-	      :enable (menu-bar-menu-frame-live-and-visible-p)))
+
+
+(defvar menu-bar-line-wrapping-menu (make-sparse-keymap "Line Wrapping"))
+
+(define-key menu-bar-line-wrapping-menu [word-wrap]
+  '(menu-item "Word Wrap (Visual Line mode)"
+	      (lambda ()
+		(interactive)
+		(unless visual-line-mode
+		  (visual-line-mode 1))
+		(message "Visual-Line mode enabled"))
+	      :help "Wrap long lines at word boundaries"
+	      :button (:radio . (and (null truncate-lines)
+				     (not (truncated-partial-width-window-p))
+				     word-wrap))
+	      :visible (menu-bar-menu-frame-live-and-visible-p)))
+
+(define-key menu-bar-line-wrapping-menu [truncate]
+  '(menu-item "Truncate Long Lines"
+	      (lambda ()
+		(interactive)
+		(if visual-line-mode (visual-line-mode 0))
+		(setq word-wrap nil)
+		(toggle-truncate-lines 1))
+	      :help "Truncate long lines at window edge"
+	      :button (:radio . (or truncate-lines
+				    (truncated-partial-width-window-p)))
+	      :visible (menu-bar-menu-frame-live-and-visible-p)
+	      :enable (not (truncated-partial-width-window-p))))
+
+(define-key menu-bar-line-wrapping-menu [window-wrap]
+  '(menu-item "Wrap at Window Edge"
+	      (lambda () (interactive)
+		(if visual-line-mode (visual-line-mode 0))
+		(setq word-wrap nil)
+		(if truncate-lines (toggle-truncate-lines -1)))
+	      :help "Wrap long lines at window edge"
+	      :button (:radio . (and (null truncate-lines)
+				     (not (truncated-partial-width-window-p))
+				     (not word-wrap)))
+	      :visible (menu-bar-menu-frame-live-and-visible-p)
+	      :enable (not (truncated-partial-width-window-p))))
+
+(define-key menu-bar-options-menu [line-wrapping]
+  (list 'menu-item "Line Wrapping in this Buffer" menu-bar-line-wrapping-menu))
+
 
 (define-key menu-bar-options-menu [highlight-separator]
   '("--"))
@@ -1097,12 +1162,17 @@ mail status in mode line"))
   '(menu-item "Zone Out"  zone
 	      :help "Play tricks with Emacs display when Emacs is idle"))
 (define-key menu-bar-games-menu [tetris]
-  '(menu-item "Tetris"  tetris))
+  '(menu-item "Tetris"  tetris
+              :help "Falling blocks game"))
 (define-key menu-bar-games-menu [solitaire]
-  '(menu-item "Solitaire"  solitaire))
+  '(menu-item "Solitaire"  solitaire
+              :help "Get rid of all the stones"))
 (define-key menu-bar-games-menu [snake]
   '(menu-item "Snake"  snake
 	      :help "Move snake around avoiding collisions"))
+(define-key menu-bar-games-menu [pong]
+  '(menu-item "Pong" pong
+	      :help "Bounce the ball to your opponent"))
 (define-key menu-bar-games-menu [mult]
   '(menu-item "Multiplication Puzzle"  mpuz
 	      :help "Exercise brain with multiplication"))
@@ -1115,6 +1185,9 @@ mail status in mode line"))
 (define-key menu-bar-games-menu [gomoku]
   '(menu-item "Gomoku"  gomoku
 	      :help "Mark 5 contiguous squares (like tic-tac-toe)"))
+(define-key menu-bar-games-menu [bubbles]
+  '(menu-item "Bubbles" bubbles
+	      :help "Remove all bubbles using the fewest moves"))
 (define-key menu-bar-games-menu [black-box]
   '(menu-item "Blackbox"  blackbox
 	      :help "Find balls in a black box by shooting rays"))
@@ -1124,6 +1197,73 @@ mail status in mode line"))
 (define-key menu-bar-games-menu [5x5]
   '(menu-item "5x5" 5x5
 	      :help "Fill in all the squares on a 5x5 board"))
+
+(defvar menu-bar-encryption-decryption-menu
+  (make-sparse-keymap "Encryption/Decryption"))
+
+(define-key menu-bar-tools-menu [encryption-decryption]
+  (list 'menu-item "Encryption/Decryption" menu-bar-encryption-decryption-menu))
+
+(define-key menu-bar-tools-menu [separator-encryption-decryption]
+  '("--"))
+
+(define-key menu-bar-encryption-decryption-menu [insert-keys]
+  '(menu-item "Insert Keys" epa-insert-keys
+	      :help "Insert public keys after the current point"))
+
+(define-key menu-bar-encryption-decryption-menu [export-keys]
+  '(menu-item "Export Keys" epa-export-keys
+	      :help "Export public keys to a file"))
+
+(define-key menu-bar-encryption-decryption-menu [import-keys-region]
+  '(menu-item "Import Keys from Region" epa-import-keys-region
+	      :help "Import public keys from the current region"))
+
+(define-key menu-bar-encryption-decryption-menu [import-keys]
+  '(menu-item "Import Keys from File..." epa-import-keys
+	      :help "Import public keys from a file"))
+
+(define-key menu-bar-encryption-decryption-menu [list-keys]
+  '(menu-item "List Keys" epa-list-keys
+	      :help "Browse your public keyring"))
+
+(define-key menu-bar-encryption-decryption-menu [separator-keys]
+  '("--"))
+
+(define-key menu-bar-encryption-decryption-menu [sign-region]
+  '(menu-item "Sign Region" epa-sign-region
+	      :help "Create digital signature of the current region"))
+
+(define-key menu-bar-encryption-decryption-menu [verify-region]
+  '(menu-item "Verify Region" epa-verify-region
+	      :help "Verify digital signature of the current region"))
+
+(define-key menu-bar-encryption-decryption-menu [encrypt-region]
+  '(menu-item "Encrypt Region" epa-encrypt-region
+	      :help "Encrypt the current region"))
+
+(define-key menu-bar-encryption-decryption-menu [decrypt-region]
+  '(menu-item "Decrypt Region" epa-decrypt-region
+	      :help "Decrypt the current region"))
+
+(define-key menu-bar-encryption-decryption-menu [separator-file]
+  '("--"))
+
+(define-key menu-bar-encryption-decryption-menu [sign-file]
+  '(menu-item "Sign File..." epa-sign-file
+	      :help "Create digital signature of a file"))
+
+(define-key menu-bar-encryption-decryption-menu [verify-file]
+  '(menu-item "Verify File..." epa-verify-file
+	      :help "Verify digital signature of a file"))
+
+(define-key menu-bar-encryption-decryption-menu [encrypt-file]
+  '(menu-item "Encrypt File..." epa-encrypt-file
+	      :help "Encrypt a file"))
+
+(define-key menu-bar-encryption-decryption-menu [decrypt-file]
+  '(menu-item "Decrypt File..." epa-decrypt-file
+	      :help "Decrypt a file"))
 
 (define-key menu-bar-tools-menu [simple-calculator]
   '(menu-item "Simple Calculator" calculator
@@ -1236,7 +1376,7 @@ mail status in mode line"))
 
 (define-key menu-bar-describe-menu [list-keybindings]
   '(menu-item "List Key Bindings" describe-bindings
-	      :help "Display all current keybindings (keyboard shortcuts)"))
+	      :help "Display all current key bindings (keyboard shortcuts)"))
 (define-key menu-bar-describe-menu [describe-current-display-table]
   '(menu-item "Describe Display Table" describe-current-display-table
 	      :help "Describe the current display table"))
@@ -1332,7 +1472,7 @@ key, a click, or a menu-item"))
   '(menu-item "Ordering Manuals" view-order-manuals
 	      :help "How to order manuals from the Free Software Foundation"))
 (define-key menu-bar-manuals-menu [lookup-subject-in-all-manuals]
-  '(menu-item "Lookup Subject in all manuals..." info-apropos
+  '(menu-item "Lookup Subject in all Manuals..." info-apropos
 	      :help "Find description of a subject in all installed manuals"))
 (define-key menu-bar-manuals-menu [other-manuals]
   '(menu-item "All Other Manuals (Info)" Info-directory
@@ -1360,14 +1500,14 @@ key, a click, or a menu-item"))
 	      :help "Show the Emacs license (GPL)"))
 (define-key menu-bar-help-menu [getting-new-versions]
   '(menu-item "Getting New Versions" describe-distribution
-	      :help "How to get latest versions of Emacs"))
+	      :help "How to get the latest version of Emacs"))
 (defun menu-bar-help-extra-packages ()
   "Display help about some additional packages available for Emacs."
   (interactive)
   (let (enable-local-variables)
     (view-file (expand-file-name "MORE.STUFF"
 				 data-directory))
-    (goto-address)))
+    (goto-address-mode 1)))
 (define-key menu-bar-help-menu [sep2]
   '("--"))
 (define-key menu-bar-help-menu [external-packages]
@@ -1432,9 +1572,13 @@ for the definition of the menu frame."
     (not (window-minibuffer-p (frame-selected-window menu-frame)))))
 
 (defun kill-this-buffer ()	; for the menu bar
-  "Kill the current buffer."
+  "Kill the current buffer.
+When called in the minibuffer, get out of the minibuffer
+using `abort-recursive-edit'."
   (interactive)
-  (kill-buffer (current-buffer)))
+  (if (menu-bar-non-minibuffer-window-p)
+      (kill-buffer (current-buffer))
+    (abort-recursive-edit)))
 
 (defun kill-this-buffer-enabled-p ()
   (let ((count 0)
@@ -1443,8 +1587,8 @@ for the definition of the menu frame."
       (or (string-match "^ " (buffer-name (car buffers)))
 	  (setq count (1+ count)))
       (setq buffers (cdr buffers)))
-    (and (menu-bar-non-minibuffer-window-p)
-	 (> count 1))))
+    (or (not (menu-bar-non-minibuffer-window-p))
+	(> count 1))))
 
 (put 'dired 'menu-enable '(menu-bar-non-minibuffer-window-p))
 
@@ -1460,9 +1604,9 @@ for the definition of the menu frame."
     (> count 1)))
 
 (defcustom yank-menu-length 20
-  "*Maximum length to display in the yank-menu."
+  "Maximum length to display in the yank-menu."
   :type 'integer
-  :group 'mouse)
+  :group 'menu)
 
 (defun menu-bar-update-yank-menu (string old)
   (let ((front (car (cdr yank-menu)))
@@ -1499,6 +1643,26 @@ The menu shows all the killed text sequences stored in `kill-ring'."
   (insert last-command-event))
 
 
+;;; Buffers Menu
+
+(defcustom buffers-menu-max-size 10
+  "Maximum number of entries which may appear on the Buffers menu.
+If this is 10, then only the ten most-recently-selected buffers are shown.
+If this is nil, then all buffers are shown.
+A large number or nil slows down menu responsiveness."
+  :type '(choice integer
+		 (const :tag "All" nil))
+  :group 'menu)
+
+(defcustom buffers-menu-buffer-name-length 30
+  "Maximum length of the buffer name on the Buffers menu.
+If this is a number, then buffer names are truncated to this length.
+If this is nil, then buffer names are shown in full.
+A large number or nil makes the menu too wide."
+  :type '(choice integer
+		 (const :tag "Full length" nil))
+  :group 'menu)
+
 (defcustom buffers-menu-show-directories 'unless-uniquify
   "If non-nil, show directories in the Buffers menu for buffers that have them.
 The special value `unless-uniquify' means that directories will be shown
@@ -1530,23 +1694,14 @@ Buffers menu is regenerated."
 
 (defvar list-buffers-directory nil)
 
-(defvar menu-bar-update-buffers-maxbuf)
-
 (defun menu-bar-select-buffer ()
   (interactive)
   (switch-to-buffer last-command-event))
 
-(defun menu-bar-select-frame ()
-  (interactive)
-  (let (frame)
-    (dolist (f (frame-list))
-      (when (equal last-command-event (frame-parameter f 'name))
-	(setq frame f)))
-    ;; FRAME can be nil when user specifies the selected frame.
-    (setq frame (or frame (selected-frame)))
-    (make-frame-visible frame)
-    (raise-frame frame)
-    (select-frame frame)))
+(defun menu-bar-select-frame (frame)
+  (make-frame-visible frame)
+  (raise-frame frame)
+  (select-frame frame))
 
 (defun menu-bar-update-buffers-1 (elt)
   (let* ((buf (car elt))
@@ -1590,60 +1745,55 @@ Buffers menu is regenerated."
 
 	 ;; Make the menu of buffers proper.
 	 (setq buffers-menu
-	       (let* ((buffer-list
-		       (mapcar 'list buffers))
-		      (menu-bar-update-buffers-maxbuf 0)
-		      alist)
+	       (let (alist)
 		 ;; Put into each element of buffer-list
 		 ;; the name for actual display,
 		 ;; perhaps truncated in the middle.
-		 (dolist (buf buffer-list)
-		   (let ((name (buffer-name (car buf))))
-		     (setcdr buf
-			     (if (> (length name) 27)
-				 (concat (substring name 0 12)
+		 (dolist (buf buffers)
+		   (let ((name (buffer-name buf)))
+                     (unless (eq ?\s (aref name 0))
+                       (push (menu-bar-update-buffers-1
+                              (cons buf
+				    (if (and (integerp buffers-menu-buffer-name-length)
+					     (> (length name) buffers-menu-buffer-name-length))
+					(concat
+					 (substring
+					  name 0 (/ buffers-menu-buffer-name-length 2))
 					 "..."
-					 (substring name -12))
-			       name))))
-		 ;; Compute the maximum length of any name.
-		 (dolist (buf buffer-list)
-		   (unless (eq ?\s (aref (cdr buf) 0))
-		     (setq menu-bar-update-buffers-maxbuf
-			   (max menu-bar-update-buffers-maxbuf
-				(length (cdr buf))))))
-		 ;; Set ALIST to an alist of the form
-		 ;; ITEM-STRING . BUFFER
-		 (dolist (buf buffer-list)
-		   (unless (eq ?\s (aref (cdr buf) 0))
-		     (push (menu-bar-update-buffers-1 buf) alist)))
-		 ;; Now make the actual list of items, and add
-		 ;; some miscellaneous buffer commands to the end.
-		 (mapcar (lambda (pair)
-			   ;; This is somewhat risque, to use
-			   ;; the buffer name itself as the event
-			   ;; type to define, but it works.
-			   ;; It would not work to use the buffer
-			   ;; since a buffer as an event has its
-			   ;; own meaning.
-			   (nconc (list (buffer-name (cdr pair))
-					(car pair)
+					 (substring
+					  name (- (/ buffers-menu-buffer-name-length 2))))
+				      name)
+                                    ))
+                             alist))))
+		 ;; Now make the actual list of items.
+                 (let ((buffers-vec (make-vector (length alist) nil))
+                       (i (length alist)))
+                   (dolist (pair alist)
+                     (setq i (1- i))
+                     (aset buffers-vec i
+			   (nconc (list (car pair)
 					(cons nil nil))
-				  'menu-bar-select-buffer))
-			 (nreverse alist))))
+				  `(lambda ()
+                                     (interactive)
+                                     (switch-to-buffer ,(cdr pair))))))
+                   (list buffers-vec))))
 
 	 ;; Make a Frames menu if we have more than one frame.
 	 (when (cdr frames)
-	   (let ((frames-menu
-		  (cons 'keymap
-			(cons "Select Frame"
-			      (mapcar
-			       (lambda (frame)
-				 (nconc
-				  (list (frame-parameter frame 'name)
-					(frame-parameter frame 'name)
-					(cons nil nil))
-				  'menu-bar-select-frame))
-			       frames)))))
+	   (let* ((frames-vec (make-vector (length frames) nil))
+                  (frames-menu
+                   (cons 'keymap
+                         (list "Select Frame" frames-vec)))
+                  (i 0))
+             (dolist (frame frames)
+               (aset frames-vec i
+                     (nconc
+                      (list
+                       (frame-parameter frame 'name)
+                       (cons nil nil))
+                      `(lambda ()
+                         (interactive) (menu-bar-select-frame ,frame))))
+               (setq i (1+ i)))
 	     ;; Put it after the normal buffers
 	     (setq buffers-menu
 		   (nconc buffers-menu
@@ -1730,11 +1880,24 @@ Buffers menu is regenerated."
 
 (let ((map minibuffer-local-map))
   (define-key map [menu-bar minibuf quit]
-    (list 'menu-item "Quit" 'keyboard-escape-quit
+    (list 'menu-item "Quit" 'abort-recursive-edit
 	  :help "Abort input and exit minibuffer"))
   (define-key map [menu-bar minibuf return]
     (list 'menu-item "Enter" 'exit-minibuffer
-	  :help "Terminate input and exit minibuffer")))
+          :key-sequence "\r"
+	  :help "Terminate input and exit minibuffer"))
+  (define-key map [menu-bar minibuf isearch-forward]
+    (list 'menu-item "Isearch History Forward" 'isearch-forward
+	  :help "Incrementally search minibuffer history forward"))
+  (define-key map [menu-bar minibuf isearch-backward]
+    (list 'menu-item "Isearch History Backward" 'isearch-backward
+	  :help "Incrementally search minibuffer history backward"))
+  (define-key map [menu-bar minibuf next]
+    (list 'menu-item "Next History Item" 'next-history-element
+	  :help "Put next minibuffer history element in the minibuffer"))
+  (define-key map [menu-bar minibuf previous]
+    (list 'menu-item "Previous History Item" 'previous-history-element
+	  :help "Put previous minibuffer history element in the minibuffer")))
 
 ;;;###autoload
 ;; This comment is taken from tool-bar.el near
@@ -1745,7 +1908,6 @@ Buffers menu is regenerated."
 ;; that would overwrite disabling the tool bar from X resources.
 (put 'menu-bar-mode 'standard-value '(t))
 
-;;;###autoload
 (define-minor-mode menu-bar-mode
   "Toggle display of a menu bar on each frame.
 This command applies to all frames that exist and frames to be
@@ -1755,18 +1917,10 @@ turn on menu bars; otherwise, turn off menu bars."
   :init-value nil
   :global t
   :group 'frames
+
   ;; Make menu-bar-mode and default-frame-alist consistent.
-  (let ((lines (if menu-bar-mode 1 0)))
-    ;; Alter existing frames...
-    (mapc (lambda (frame)
-	    (modify-frame-parameters frame
-				     (list (cons 'menu-bar-lines lines))))
-	  (frame-list))
-    ;; ...and future ones.
-    (let ((elt (assq 'menu-bar-lines default-frame-alist)))
-      (if elt
-	  (setcdr elt lines)
-	(add-to-list 'default-frame-alist (cons 'menu-bar-lines lines)))))
+  (modify-all-frames-parameters (list (cons 'menu-bar-lines
+					    (if menu-bar-mode 1 0))))
 
   ;; Make the message appear when Emacs is idle.  We can not call message
   ;; directly.  The minor-mode message "Menu-bar mode disabled" comes
@@ -1775,6 +1929,36 @@ turn on menu bars; otherwise, turn off menu bars."
     (run-with-idle-timer 0 nil 'message
 			 "Menu-bar mode disabled.  Use M-x menu-bar-mode to make the menu bar appear."))
   menu-bar-mode)
+
+(defun toggle-menu-bar-mode-from-frame (&optional arg)
+  "Toggle menu bar on or off, based on the status of the current frame.
+See `menu-bar-mode' for more information."
+  (interactive (list (or current-prefix-arg 'toggle)))
+  (if (eq arg 'toggle)
+      (menu-bar-mode (if (> (frame-parameter nil 'menu-bar-lines) 0) 0 1))
+    (menu-bar-mode arg)))
+
+(declare-function x-menu-bar-open "term/x-win" (&optional frame))
+(declare-function w32-menu-bar-open "term/w32-win" (&optional frame))
+
+(defun menu-bar-open (&optional frame)
+  "Start key navigation of the menu bar in FRAME.
+
+This function decides which method to use to access the menu
+depending on FRAME's terminal device.  On X displays, it calls
+`x-menu-bar-open'; on Windows, `w32-menu-bar-open' otherwise it
+calls `tmm-menubar'.
+
+If FRAME is nil or not given, use the selected frame."
+  (interactive)
+  (let ((type (framep (or frame (selected-frame)))))
+    (cond
+     ((eq type 'x) (x-menu-bar-open frame))
+     ((eq type 'w32) (w32-menu-bar-open frame))
+     (t (with-selected-frame (or frame (selected-frame))
+          (tmm-menubar))))))
+
+(global-set-key [f10] 'menu-bar-open)
 
 (provide 'menu-bar)
 

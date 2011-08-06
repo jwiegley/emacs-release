@@ -1,33 +1,31 @@
 ;;; url-handlers.el --- file-name-handler stuff for URL loading
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes, hypermedia
 
 ;; This file is part of GNU Emacs.
 ;;
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-;;
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-;;
+
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
 
 ;; (require 'url)
-(eval-when-compile (require 'url-parse))
+(require 'url-parse)
 ;; (require 'url-util)
 (eval-when-compile (require 'mm-decode))
 ;; (require 'mailcap)
@@ -40,9 +38,6 @@
 (autoload 'url-expand-file-name "url-expand" "Convert url to a fully specified url, and canonicalize it.")
 (autoload 'mm-dissect-buffer "mm-decode" "Dissect the current buffer and return a list of MIME handles.")
 (autoload 'url-scheme-get-property "url-methods" "Get property of a URL SCHEME.")
-
-(eval-when-compile
-  (require 'cl))
 
 ;; Implementation status
 ;; ---------------------
@@ -76,6 +71,7 @@
 ;; file-ownership-preserved-p		No way to know
 ;; file-readable-p			Finished
 ;; file-regular-p			!directory_p
+;; file-remote-p			Finished
 ;; file-symlink-p			Needs DAV bindings
 ;; file-truename			Needs DAV bindings
 ;; file-writable-p			Check for LOCK?
@@ -97,7 +93,7 @@
 
 (defvar url-handler-regexp
   "\\`\\(https?\\|ftp\\|file\\|nfs\\)://"
-  "*A regular expression for matching  URLs handled by file-name-handler-alist.
+  "*A regular expression for matching URLs handled by `file-name-handler-alist'.
 Some valid URL protocols just do not make sense to visit interactively
 \(about, data, info, irc, mailto, etc\).  This regular expression
 avoids conflicts with local files that look like URLs \(Gnus is
@@ -136,7 +132,7 @@ the arguments that would have been passed to OPERATION."
 	(hooked nil))
     (if (and fn (fboundp fn))
 	(setq hooked t
-	      val (apply fn args))
+	      val (save-match-data (apply fn args)))
       (setq hooked nil
 	    val (url-run-real-handler operation args)))
     (url-debug 'handlers "%s %S%S => %S" (if hooked "Hooked" "Real")
@@ -154,6 +150,7 @@ the arguments that would have been passed to OPERATION."
 (put 'expand-file-name 'url-file-handlers 'url-handler-expand-file-name)
 (put 'directory-file-name 'url-file-handlers 'url-handler-directory-file-name)
 (put 'unhandled-file-name-directory 'url-file-handlers 'url-handler-unhandled-file-name-directory)
+(put 'file-remote-p 'url-file-handlers 'url-handler-file-remote-p)
 ;; (put 'file-name-as-directory 'url-file-handlers 'url-handler-file-name-as-directory)
 
 ;; These are operations that we do not support yet (DAV!!!)
@@ -186,11 +183,35 @@ the arguments that would have been passed to OPERATION."
     (url-run-real-handler 'directory-file-name (list dir))))
 
 (defun url-handler-unhandled-file-name-directory (filename)
-  ;; Copied from tramp.el.  This is used as the cwd for subprocesses:
-  ;; without it running call-process or start-process in a URL directory
-  ;; signals an error.
-  ;; FIXME: we can do better if `filename' is a "file://" URL.
-  (expand-file-name "~/"))
+  (let ((url (url-generic-parse-url filename)))
+    (if (equal (url-type url) "file")
+        ;; `file' URLs are actually local.  The filename part may be ""
+        ;; which really stands for "/".
+        ;; FIXME: maybe we should check that the host part is "" or "localhost"
+        ;; or some name that represents the local host?
+        (or (file-name-directory (url-filename url)) "/")
+      ;; All other URLs are not expected to be directly accessible from
+      ;; a local process.
+      nil)))
+
+(defun url-handler-file-remote-p (filename &optional identification connected)
+  (let ((url (url-generic-parse-url filename)))
+    (if (and (url-type url) (not (equal (url-type url) "file")))
+	;; Maybe we can find a suitable check for CONNECTED.  For now,
+	;; we ignore it.
+	(cond
+	 ((eq identification 'method) (url-type url))
+	 ((eq identification 'user) (url-user url))
+	 ((eq identification 'host) (url-host url))
+	 ((eq identification 'localname) (url-filename url))
+	 (t (url-recreate-url
+	     (url-parse-make-urlobj (url-type url) (url-user url) nil
+				    (url-host url) (url-port url)))))
+      ;; If there is no URL type, or it is a "file://" URL, the
+      ;; filename is expected to be non remote.  A more subtle check
+      ;; for "file://" URLs could be applied, as said in
+      ;; `url-handler-unhandled-file-name-directory'.
+      nil)))
 
 ;; The actual implementation
 ;;;###autoload
@@ -267,7 +288,7 @@ They count bytes from the beginning of the body."
           (decode-coding-inserted-region start (point) url visit beg end replace))
         (list url (car size-and-charset))))))
 
-(defun url-file-name-completion (url directory)
+(defun url-file-name-completion (url directory &optional predicate)
   (error "Unimplemented"))
 
 (defun url-file-name-all-completions (file directory)

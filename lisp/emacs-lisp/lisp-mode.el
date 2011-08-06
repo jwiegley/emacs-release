@@ -1,17 +1,17 @@
 ;;; lisp-mode.el --- Lisp mode, and its idiosyncratic commands
 
-;; Copyright (C) 1985, 1986, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1986, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: lisp, languages
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -36,6 +34,8 @@
 (defvar font-lock-string-face)
 
 (defvar lisp-mode-abbrev-table nil)
+
+(define-abbrev-table 'lisp-mode-abbrev-table ())
 
 (defvar emacs-lisp-mode-syntax-table
   (let ((table (make-syntax-table)))
@@ -56,6 +56,8 @@
 	(modify-syntax-entry i "_   " table)
 	(setq i (1+ i)))
       (modify-syntax-entry ?\s "    " table)
+      ;; Non-break space acts as whitespace.
+      (modify-syntax-entry ?\x8a0 "    " table)
       (modify-syntax-entry ?\t "    " table)
       (modify-syntax-entry ?\f "    " table)
       (modify-syntax-entry ?\n ">   " table)
@@ -85,8 +87,6 @@
     (modify-syntax-entry ?# "' 14b" table)
     (modify-syntax-entry ?| "\" 23bn" table)
     table))
-
-(define-abbrev-table 'lisp-mode-abbrev-table ())
 
 (defvar lisp-imenu-generic-expression
   (list
@@ -132,6 +132,7 @@
 (put 'defvar   'doc-string-elt 3)
 (put 'defcustom 'doc-string-elt 3)
 (put 'deftheme 'doc-string-elt 2)
+(put 'deftype 'doc-string-elt 3)
 (put 'defconst 'doc-string-elt 3)
 (put 'defmacro 'doc-string-elt 3)
 (put 'defmacro* 'doc-string-elt 3)
@@ -193,9 +194,12 @@
               font-lock-string-face))))
     font-lock-comment-face))
 
-;; The LISP-SYNTAX argument is used by code in inf-lisp.el and is
-;; (uselessly) passed from pp.el, chistory.el, gnus-kill.el and score-mode.el
-(defun lisp-mode-variables (&optional lisp-syntax)
+(defun lisp-mode-variables (&optional lisp-syntax keywords-case-insensitive)
+  "Common initialization routine for lisp modes.
+The LISP-SYNTAX argument is used by code in inf-lisp.el and is
+\(uselessly) passed from pp.el, chistory.el, gnus-kill.el and
+score-mode.el.  KEYWORDS-CASE-INSENSITIVE non-nil means that for
+font-lock keywords will not be case sensitive."
   (when lisp-syntax
     (set-syntax-table lisp-mode-syntax-table))
   (setq local-abbrev-table lisp-mode-abbrev-table)
@@ -214,8 +218,6 @@
   ;;(set (make-local-variable 'adaptive-fill-mode) nil)
   (make-local-variable 'indent-line-function)
   (setq indent-line-function 'lisp-indent-line)
-  (make-local-variable 'indent-region-function)
-  (setq indent-region-function 'lisp-indent-region)
   (make-local-variable 'parse-sexp-ignore-comments)
   (setq parse-sexp-ignore-comments t)
   (make-local-variable 'outline-regexp)
@@ -243,9 +245,9 @@
   (setq multibyte-syntax-as-symbol t)
   (set (make-local-variable 'syntax-begin-function) 'beginning-of-defun)
   (setq font-lock-defaults
-	'((lisp-font-lock-keywords
+	`((lisp-font-lock-keywords
 	   lisp-font-lock-keywords-1 lisp-font-lock-keywords-2)
-	  nil nil (("+-*/.<>=!?$%_&~^:@" . "w")) nil
+	  nil ,keywords-case-insensitive (("+-*/.<>=!?$%_&~^:@" . "w")) nil
 	  (font-lock-mark-block-function . mark-defun)
 	  (font-lock-syntactic-face-function
 	   . lisp-font-lock-syntactic-face-function))))
@@ -259,7 +261,6 @@
 
 (defvar lisp-mode-shared-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\t" 'lisp-indent-line)
     (define-key map "\e\C-q" 'indent-sexp)
     (define-key map "\177" 'backward-delete-char-untabify)
     ;; This gets in the way when viewing a Lisp file in view-mode.  As
@@ -269,40 +270,108 @@
     map)
   "Keymap for commands shared by all sorts of Lisp modes.")
 
-(defvar emacs-lisp-mode-map ()
+(defvar emacs-lisp-mode-map
+  (let ((map (make-sparse-keymap "Emacs-Lisp"))
+	(menu-map (make-sparse-keymap "Emacs-Lisp"))
+	(prof-map (make-sparse-keymap))
+	(tracing-map (make-sparse-keymap)))
+    (set-keymap-parent map lisp-mode-shared-map)
+    (define-key map "\e\t" 'lisp-complete-symbol)
+    (define-key map "\e\C-x" 'eval-defun)
+    (define-key map "\e\C-q" 'indent-pp-sexp)
+    (define-key map [menu-bar emacs-lisp] (cons "Emacs-Lisp" menu-map))
+    (define-key menu-map [eldoc]
+      '(menu-item "Auto-Display Documentation Strings" eldoc-mode
+		  :button (:toggle . (bound-and-true-p eldoc-mode))
+		  :help "Display the documentation string for the item under cursor"))
+    (define-key menu-map [checkdoc]
+      '(menu-item "Check Documentation Strings" checkdoc
+		  :help "Check documentation strings for style requirements"))
+    (define-key menu-map [re-builder]
+      '(menu-item "Construct Regexp" re-builder
+		  :help "Construct a regexp interactively"))
+    (define-key menu-map [tracing] (cons "Tracing" tracing-map))
+    (define-key tracing-map [tr-a]
+      '(menu-item "Untrace all" untrace-all
+		  :help "Untrace all currently traced functions"))
+    (define-key tracing-map [tr-uf]
+      '(menu-item "Untrace function..." untrace-function
+		  :help "Untrace function, and possibly activate all remaining advice"))
+    (define-key tracing-map [tr-sep] '("--"))
+    (define-key tracing-map [tr-q]
+      '(menu-item "Trace function quietly..." trace-function-background
+		  :help "Trace the function with trace output going quietly to a buffer"))
+    (define-key tracing-map [tr-f]
+      '(menu-item "Trace function..." trace-function
+		  :help "Trace the function given as an argument"))
+    (define-key menu-map [profiling] (cons "Profiling" prof-map))
+    (define-key prof-map [prof-restall]
+      '(menu-item "Remove Instrumentation for All Functions" elp-restore-all
+		  :help "Restore the original definitions of all functions being profiled"))
+    (define-key prof-map [prof-restfunc]
+      '(menu-item "Remove Instrumentation for Function..." elp-restore-function
+		  :help "Restore an instrumented function to its original definition"))
+
+    (define-key prof-map [sep-rem] '("--"))
+    (define-key prof-map [prof-resall]
+      '(menu-item "Reset Counters for All Functions" elp-reset-all
+		  :help "Reset the profiling information for all functions being profiled"))
+    (define-key prof-map [prof-resfunc]
+      '(menu-item "Reset Counters for Function..." elp-reset-function
+		  :help "Reset the profiling information for a function"))
+    (define-key prof-map [prof-res]
+      '(menu-item "Show Profiling Results" elp-results
+		  :help "Display current profiling results"))
+    (define-key prof-map [prof-pack]
+      '(menu-item "Instrument Package..." elp-instrument-package
+		  :help "Instrument for profiling all function that start with a prefix"))
+    (define-key prof-map [prof-func]
+      '(menu-item "Instrument Function..." elp-instrument-function
+		  :help "Instrument a function for profiling"))
+    (define-key menu-map [edebug-defun]
+      '(menu-item "Instrument Function for Debugging" edebug-defun
+		  :help "Evaluate the top level form point is in, stepping through with Edebug"
+		  :keys "C-u C-M-x"))
+    (define-key menu-map [separator-byte] '("--"))
+    (define-key menu-map [disas]
+      '(menu-item "Disassemble byte compiled object..." disassemble
+		  :help "Print disassembled code for OBJECT in a buffer"))
+    (define-key menu-map [byte-recompile]
+      '(menu-item "Byte-recompile Directory..." byte-recompile-directory
+		  :help "Recompile every `.el' file in DIRECTORY that needs recompilation"))
+    (define-key menu-map [emacs-byte-compile-and-load]
+      '(menu-item "Byte-compile And Load" emacs-lisp-byte-compile-and-load
+		  :help "Byte-compile the current file (if it has changed), then load compiled code"))
+    (define-key menu-map [byte-compile]
+      '(menu-item "Byte-compile This File" emacs-lisp-byte-compile
+		  :help "Byte compile the file containing the current buffer"))
+    (define-key menu-map [separator-eval] '("--"))
+    (define-key menu-map [ielm]
+      '(menu-item "Interactive Expression Evaluation" ielm
+		  :help "Interactively evaluate Emacs Lisp expressions"))
+    (define-key menu-map [eval-buffer]
+      '(menu-item "Evaluate Buffer" eval-buffer
+		  :help "Execute the current buffer as Lisp code"))
+    (define-key menu-map [eval-region]
+      '(menu-item "Evaluate Region" eval-region
+		  :help "Execute the region as Lisp code"
+		  :enable mark-active))
+    (define-key menu-map [eval-sexp]
+      '(menu-item "Evaluate Last S-expression" eval-last-sexp
+		  :help "Evaluate sexp before point; print value in minibuffer"))
+    (define-key menu-map [separator-format] '("--"))
+    (define-key menu-map [comment-region]
+      '(menu-item "Comment Out Region" comment-region
+		  :help "Comment or uncomment each line in the region"
+		  :enable mark-active))
+    (define-key menu-map [indent-region]
+      '(menu-item "Indent Region" indent-region
+		  :help "Indent each nonblank line in the region"
+		  :enable mark-active))
+    (define-key menu-map [indent-line] '("Indent Line" . lisp-indent-line))
+    map)
   "Keymap for Emacs Lisp mode.
 All commands in `lisp-mode-shared-map' are inherited by this map.")
-
-(if emacs-lisp-mode-map
-    ()
-  (let ((map (make-sparse-keymap "Emacs-Lisp")))
-    (setq emacs-lisp-mode-map (make-sparse-keymap))
-    (set-keymap-parent emacs-lisp-mode-map lisp-mode-shared-map)
-    (define-key emacs-lisp-mode-map "\e\t" 'lisp-complete-symbol)
-    (define-key emacs-lisp-mode-map "\e\C-x" 'eval-defun)
-    (define-key emacs-lisp-mode-map "\e\C-q" 'indent-pp-sexp)
-    (define-key emacs-lisp-mode-map [menu-bar] (make-sparse-keymap))
-    (define-key emacs-lisp-mode-map [menu-bar emacs-lisp]
-      (cons "Emacs-Lisp" map))
-    (define-key map [edebug-defun]
-      '("Instrument Function for Debugging" . edebug-defun))
-    (define-key map [byte-recompile]
-      '("Byte-recompile Directory..." . byte-recompile-directory))
-    (define-key map [emacs-byte-compile-and-load]
-      '("Byte-compile And Load" . emacs-lisp-byte-compile-and-load))
-    (define-key map [byte-compile]
-      '("Byte-compile This File" . emacs-lisp-byte-compile))
-    (define-key map [separator-eval] '("--"))
-    (define-key map [eval-buffer] '("Evaluate Buffer" . eval-buffer))
-    (define-key map [eval-region] '("Evaluate Region" . eval-region))
-    (define-key map [eval-sexp] '("Evaluate Last S-expression" . eval-last-sexp))
-    (define-key map [separator-format] '("--"))
-    (define-key map [comment-region] '("Comment Out Region" . comment-region))
-    (define-key map [indent-region] '("Indent Region" . indent-region))
-    (define-key map [indent-line] '("Indent Line" . lisp-indent-line))
-    (put 'eval-region 'menu-enable 'mark-active)
-    (put 'comment-region 'menu-enable 'mark-active)
-    (put 'indent-region 'menu-enable 'mark-active)))
 
 (defun emacs-lisp-byte-compile ()
   "Byte compile the file containing the current buffer."
@@ -349,6 +418,7 @@ All commands in `lisp-mode-shared-map' are inherited by this map.")
 Commands:
 Delete converts tabs to spaces as it moves back.
 Blank lines separate paragraphs.  Semicolons start comments.
+
 \\{emacs-lisp-mode-map}
 Entry to this mode calls the value of `emacs-lisp-mode-hook'
 if that value is non-nil."
@@ -364,10 +434,21 @@ if that value is non-nil."
 (put 'emacs-lisp-mode 'custom-mode-group 'lisp)
 
 (defvar lisp-mode-map
-  (let ((map (make-sparse-keymap)))
+  (let ((map (make-sparse-keymap))
+	(menu-map (make-sparse-keymap "Lisp")))
     (set-keymap-parent map lisp-mode-shared-map)
     (define-key map "\e\C-x" 'lisp-eval-defun)
     (define-key map "\C-c\C-z" 'run-lisp)
+    (define-key map [menu-bar lisp] (cons "Lisp" menu-map))
+    (define-key menu-map [run-lisp]
+      '(menu-item "Run inferior Lisp" run-lisp
+		  :help "Run an inferior Lisp process, input and output via buffer `*inferior-lisp*'"))
+    (define-key menu-map [ev-def]
+      '(menu-item "Eval defun" lisp-eval-defun
+		  :help "Send the current defun to the Lisp process made by M-x run-lisp"))
+    (define-key menu-map [ind-sexp]
+      '(menu-item "Indent sexp" indent-sexp
+		  :help "Indent each line of the list starting just after point"))
     map)
   "Keymap for ordinary Lisp mode.
 All commands in `lisp-mode-shared-map' are inherited by this map.")
@@ -377,6 +458,7 @@ All commands in `lisp-mode-shared-map' are inherited by this map.")
 Commands:
 Delete converts tabs to spaces as it moves back.
 Blank lines separate paragraphs.  Semicolons start comments.
+
 \\{lisp-mode-map}
 Note that `run-lisp' may be used either to start an inferior Lisp job
 or to switch back to an existing one.
@@ -388,12 +470,10 @@ if that value is non-nil."
   (use-local-map lisp-mode-map)
   (setq major-mode 'lisp-mode)
   (setq mode-name "Lisp")
-  (lisp-mode-variables)
+  (lisp-mode-variables nil t)
   (make-local-variable 'comment-start-skip)
   (setq comment-start-skip
        "\\(\\(^\\|[^\\\\\n]\\)\\(\\\\\\\\\\)*\\)\\(;+\\|#|\\) *")
-  (make-local-variable 'font-lock-keywords-case-fold-search)
-  (setq font-lock-keywords-case-fold-search t)
   (setq imenu-case-fold-search t)
   (set-syntax-table lisp-mode-syntax-table)
   (run-mode-hooks 'lisp-mode-hook))
@@ -416,12 +496,30 @@ if that value is non-nil."
   (error "Process lisp does not exist"))
 
 (defvar lisp-interaction-mode-map
-  (let ((map (make-sparse-keymap)))
+  (let ((map (make-sparse-keymap))
+	(menu-map (make-sparse-keymap "Lisp-Interaction")))
     (set-keymap-parent map lisp-mode-shared-map)
     (define-key map "\e\C-x" 'eval-defun)
     (define-key map "\e\C-q" 'indent-pp-sexp)
     (define-key map "\e\t" 'lisp-complete-symbol)
     (define-key map "\n" 'eval-print-last-sexp)
+    (define-key map [menu-bar lisp-interaction] (cons "Lisp-Interaction" menu-map))
+    (define-key menu-map [eval-defun]
+      '(menu-item "Evaluate Defun" eval-defun
+		  :help "Evaluate the top-level form containing point, or after point"))
+    (define-key menu-map [eval-print-last-sexp]
+      '(menu-item "Evaluate and print" eval-print-last-sexp
+		  :help "Evaluate sexp before point; print value into current buffer"))
+    (define-key menu-map [edebug-defun-lisp-interaction]
+      '(menu-item "Instrument Function for Debugging" edebug-defun
+		  :help "Evaluate the top level form point is in, stepping through with Edebug"
+		  :keys "C-u C-M-x"))
+    (define-key menu-map [indent-pp-sexp]
+      '(menu-item "Indent or Pretty-Print" indent-pp-sexp
+		  :help "Indent each line of the list starting just after point, or prettyprint it"))
+    (define-key menu-map [lisp-complete-symbol]
+      '(menu-item "Complete Lisp Symbol" lisp-complete-symbol
+		  :help "Perform completion on Lisp symbol preceding point"))
     map)
   "Keymap for Lisp Interaction mode.
 All commands in `lisp-mode-shared-map' are inherited by this map.")
@@ -438,6 +536,7 @@ Commands:
 Delete converts tabs to spaces as it moves back.
 Paragraphs are separated only by blank lines.
 Semicolons start comments.
+
 \\{lisp-interaction-mode-map}
 Entry to this mode calls the value of `lisp-interaction-mode-hook'
 if that value is non-nil.")
@@ -625,6 +724,8 @@ With argument, print output into current buffer."
 (defun eval-last-sexp (eval-last-sexp-arg-internal)
   "Evaluate sexp before point; print value in minibuffer.
 Interactively, with prefix argument, print output into current buffer.
+Truncates long output according to the value of the variables
+`eval-expression-print-length' and `eval-expression-print-level'.
 
 If `eval-expression-debug-on-error' is non-nil, which is the default,
 this command arranges for all errors to enter the debugger."
@@ -696,6 +797,8 @@ if it already has a value.\)
 With argument, insert value in current buffer after the defun.
 Return the result of evaluation."
   (interactive "P")
+  ;; FIXME: the print-length/level bindings should only be applied while
+  ;; printing, not while evaluating.
   (let ((debug-on-error eval-expression-debug-on-error)
 	(print-length eval-expression-print-length)
 	(print-level eval-expression-print-level))
@@ -766,31 +869,23 @@ which see."
 	     value)))))
 
 ;; May still be used by some external Lisp-mode variant.
-(define-obsolete-function-alias 'lisp-comment-indent 'comment-indent-default)
-
-;; This function just forces a more costly detection of comments (using
-;; parse-partial-sexp from beginning-of-defun).  I.e. It avoids the problem of
-;; taking a `;' inside a string started on another line for a comment starter.
-;; Note: `newcomment' gets it right now since we set comment-use-global-state
-;; so we could get rid of it.   -stef
-(defun lisp-mode-auto-fill ()
-  (if (> (current-column) (current-fill-column))
-      (if (save-excursion
-	    (nth 4 (syntax-ppss (point))))
-	  (do-auto-fill)
-	(unless (and (boundp 'comment-auto-fill-only-comments)
-		     comment-auto-fill-only-comments)
-	  (let ((comment-start nil) (comment-start-skip nil))
-	    (do-auto-fill))))))
+(define-obsolete-function-alias 'lisp-comment-indent
+    'comment-indent-default "22.1")
+(define-obsolete-function-alias 'lisp-mode-auto-fill 'do-auto-fill "23.1")
 
 (defcustom lisp-indent-offset nil
   "If non-nil, indent second line of expressions that many more columns."
   :group 'lisp
-  :type '(choice nil integer))
+  :type '(choice (const nil) integer))
 (put 'lisp-body-indent 'safe-local-variable
      (lambda (x) (or (null x) (integerp x))))
 
-(defvar lisp-indent-function 'lisp-indent-function)
+(defvar lisp-indent-function 'lisp-indent-function
+  "A function to be called by `calculate-lisp-indent'.
+It indents the arguments of a Lisp function call.  This function
+should accept two arguments: the indent-point, and the
+`parse-partial-sexp' state at that position.  One option for this
+function is `common-lisp-indent-function'.")
 
 (defun lisp-indent-line (&optional whole-exp)
   "Indent current line as Lisp code.
@@ -944,7 +1039,10 @@ is the buffer position of the start of the containing expression."
                      ;; where it begins, so find that one, instead.
                      (save-excursion
                        (goto-char calculate-lisp-indent-last-sexp)
-                       (while (and (not (looking-back "^[ \t]*"))
+		       ;; Handle prefix characters and whitespace
+		       ;; following an open paren.  (Bug#1012)
+                       (backward-prefix-chars)
+                       (while (and (not (looking-back "^[ \t]*\\|([ \t]+"))
                                    (or (not containing-sexp)
                                        (< (1+ containing-sexp) (point))))
                          (forward-sexp -1)

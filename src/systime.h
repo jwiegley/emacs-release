@@ -1,13 +1,13 @@
 /* systime.h - System-dependent definitions for time manipulations.
    Copyright (C) 1993, 1994, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #ifndef EMACS_SYSTIME_H
 #define EMACS_SYSTIME_H
@@ -42,12 +40,6 @@ extern char *tzname[];	/* RS6000 and others want it this way.  */
 /* SVr4 doesn't actually declare this in its #include files.  */
 #ifdef USG5_4
 extern time_t timezone;
-#endif
-
-#ifdef VMS
-#ifdef VAXC
-#include "vmstime.h"
-#endif
 #endif
 
 /* On some configurations (hpux8.0, X11R4), sys/time.h and X11/Xos.h
@@ -158,12 +150,14 @@ extern Lisp_Object make_time __P ((time_t));
 #endif
 
 /* Compare times T1 and T2.  Value is 0 if T1 and T2 are the same.
-   Value is < 0 if T1 is less than T2.  Value is > 0 otherwise.  */
+   Value is < 0 if T1 is less than T2.  Value is > 0 otherwise.  (Cast
+   to long is for those platforms where time_t is an unsigned
+   type, and where otherwise T1 will always be grater than T2.)  */
 
-#define EMACS_TIME_CMP(T1, T2)			\
-  (EMACS_SECS (T1) - EMACS_SECS (T2)		\
-   + (EMACS_SECS (T1) == EMACS_SECS (T2)	\
-      ? EMACS_USECS (T1) - EMACS_USECS (T2)	\
+#define EMACS_TIME_CMP(T1, T2)				\
+  ((long)EMACS_SECS (T1) - (long)EMACS_SECS (T2)	\
+   + (EMACS_SECS (T1) == EMACS_SECS (T2)		\
+      ? EMACS_USECS (T1) - EMACS_USECS (T2)		\
       : 0))
 
 /* Compare times T1 and T2 for equality, inequality etc.  */

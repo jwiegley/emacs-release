@@ -1,17 +1,17 @@
 ;;; scroll-bar.el --- window system-independent scroll bar support
 
 ;; Copyright (C) 1993, 1994, 1995, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: hardware
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -92,24 +90,11 @@ This is nil while loading `scroll-bar.el', and t afterward.")
   (setq scroll-bar-mode value)
 
   (when scroll-bar-mode-explicit
-    ;; Apply it to default-frame-alist.
-    (let ((parameter (assq 'vertical-scroll-bars default-frame-alist)))
-      (if (consp parameter)
-	  (setcdr parameter scroll-bar-mode)
-	(setq default-frame-alist
-	      (cons (cons 'vertical-scroll-bars scroll-bar-mode)
-		    default-frame-alist))))
-
-    ;; Apply it to existing frames.
-    (let ((frames (frame-list)))
-      (while frames
-	(modify-frame-parameters
-	 (car frames)
-	 (list (cons 'vertical-scroll-bars scroll-bar-mode)))
-	(setq frames (cdr frames))))))
+    (modify-all-frames-parameters (list (cons 'vertical-scroll-bars
+					      scroll-bar-mode)))))
 
 (defcustom scroll-bar-mode default-frame-scroll-bars
-  "*Specify whether to have vertical scroll bars, and on which side.
+  "Specify whether to have vertical scroll bars, and on which side.
 Possible values are nil (no scroll bars), `left' (scroll bars on left)
 and `right' (scroll bars on right).
 To set this variable in a Lisp program, use `set-scroll-bar-mode'
@@ -132,15 +117,15 @@ Setting the variable with a customization buffer also takes effect."
   "Toggle display of vertical scroll bars on all frames.
 This command applies to all frames that exist and frames to be
 created in the future.
-With a numeric argument, if the argument is negative,
-turn off scroll bars; otherwise, turn on scroll bars."
+With a numeric argument, if the argument is positive
+turn on scroll bars; otherwise turn off scroll bars."
   (interactive "P")
 
   ;; Tweedle the variable according to the argument.
-  (set-scroll-bar-mode (if (if (null flag) 
+  (set-scroll-bar-mode (if (if (null flag)
 			       (not scroll-bar-mode)
 			     (setq flag (prefix-numeric-value flag))
-			     (or (not (numberp flag)) (>= flag 0)))
+			     (or (not (numberp flag)) (> flag 0)))
 			   (or previous-scroll-bar-mode
 			       default-frame-scroll-bars))))
 
@@ -373,5 +358,5 @@ EVENT should be a scroll bar click."
 
 (provide 'scroll-bar)
 
-;;; arch-tag: 6f1d01d0-0b1e-4bf8-86db-d491e0f399f3
+;; arch-tag: 6f1d01d0-0b1e-4bf8-86db-d491e0f399f3
 ;;; scroll-bar.el ends here

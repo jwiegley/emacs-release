@@ -1,16 +1,16 @@
 ;;; viper-init.el --- some common definitions for Viper
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,15 +18,11 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
-
-(provide 'viper-init)
 
 ;; compiler pacifier
 (defvar mark-even-if-inactive)
@@ -49,36 +45,18 @@
   (interactive)
   (message "Viper version is %s" viper-version))
 
-;; Is it XEmacs?
-(defconst viper-xemacs-p (string-match "XEmacs" emacs-version))
-;; Is it Emacs?
-(defconst viper-emacs-p (not viper-xemacs-p))
 ;; Tell whether we are running as a window application or on a TTY
 
-;; This is used to avoid compilation warnings. When emacs/xemacs forms can
-;; generate compile time warnings, we use this macro.
-;; In this case, the macro will expand into the form that is appropriate to the
-;; compiler at hand.
-;; Suggested by rms.
-(defmacro viper-cond-compile-for-xemacs-or-emacs (xemacs-form emacs-form)
-  (if (string-match "XEmacs" emacs-version)
-      xemacs-form emacs-form))
-
-
 (defsubst viper-device-type ()
-  (viper-cond-compile-for-xemacs-or-emacs
-   (device-type (selected-device))
-   window-system
-   ))
+  (if (featurep 'xemacs)
+      (device-type (selected-device))
+    window-system))
 
 (defun viper-color-display-p ()
   (condition-case nil
-      (viper-cond-compile-for-xemacs-or-emacs
-       (eq (device-class (selected-device)) 'color) ; xemacs form
-       (if (fboundp 'display-color-p) ; emacs form
-	   (display-color-p)
-	 (x-display-color-p))
-	)
+      (if (featurep 'xemacs)
+          (eq (device-class (selected-device)) 'color)
+        (display-color-p))
     (error nil)))
 
 ;; in XEmacs: device-type is tty on tty and stream in batch.
@@ -91,10 +69,12 @@
   :type 'boolean
   :tag "Is it Microsoft-made OS?"
   :group 'viper-misc)
-(defcustom viper-vms-os-p (memq system-type '(vax-vms axp-vms))
-  "Tells if Emacs is running under VMS."
+
+(defcustom viper-suppress-input-method-change-message nil
+  "If t, the message notifying about changes in the input method is not displayed.
+Normally, a message is displayed each time on enters the vi, insert or replace
+state."
   :type 'boolean
-  :tag "Is it VMS?"
   :group 'viper-misc)
 
 (defcustom viper-force-faces nil
@@ -109,8 +89,8 @@ In all likelihood, you don't need to bother with this setting."
   (cond ((viper-window-display-p))
 	(viper-force-faces)
 	((viper-color-display-p))
-	(viper-emacs-p (memq (viper-device-type) '(pc)))
-	(viper-xemacs-p (memq (viper-device-type) '(tty pc)))))
+	((featurep 'emacs) (memq (viper-device-type) '(pc)))
+	((featurep 'xemacs) (memq (viper-device-type) '(tty pc)))))
 
 
 ;;; Macros
@@ -326,7 +306,8 @@ Use `M-x viper-set-expert-level' to change this.")
     ;; turn off special input methods in vi-state
     (if (eq viper-current-state 'vi-state)
 	(viper-set-input-method nil))
-    (if (memq viper-current-state '(vi-state insert-state replace-state))
+    (if (and (memq viper-current-state '(vi-state insert-state replace-state))
+	     (not viper-suppress-input-method-change-message))
 	(message "Viper special input method%s: on"
 		 (if (or current-input-method default-input-method)
 		     (format " %S"
@@ -339,7 +320,8 @@ Use `M-x viper-set-expert-level' to change this.")
   (if (null viper-mule-hook-flag)
       ()
     (setq viper-special-input-method nil)
-    (if (memq viper-current-state '(vi-state insert-state replace-state))
+    (if (and (memq viper-current-state '(vi-state insert-state replace-state))
+	     (not viper-suppress-input-method-change-message))
 	(message "Viper special input method%s: off"
 		 (if (or current-input-method default-input-method)
 		     (format " %S"
@@ -347,10 +329,10 @@ Use `M-x viper-set-expert-level' to change this.")
 		   "")))))
 
 (defun viper-inactivate-input-method ()
-  (cond ((and viper-emacs-p (fboundp 'inactivate-input-method))
+  (cond ((and (featurep 'emacs) (fboundp 'inactivate-input-method))
 	 (inactivate-input-method))
-	((and viper-xemacs-p (boundp 'current-input-method))
-	 ;; XEmacs had broken quil-mode for some time, so we are working around
+	((and (featurep 'xemacs) (boundp 'current-input-method))
+	 ;; XEmacs had broken quail-mode for some time, so we are working around
 	 ;; it here
 	 (setq quail-mode nil)
 	 (if (featurep 'quail)
@@ -361,7 +343,7 @@ Use `M-x viper-set-expert-level' to change this.")
 	 (force-mode-line-update))
 	))
 (defun viper-activate-input-method ()
-  (cond ((and viper-emacs-p (fboundp 'activate-input-method))
+  (cond ((and (featurep 'emacs) (fboundp 'activate-input-method))
 	 (activate-input-method default-input-method))
 	((featurep 'xemacs)
 	 (if (fboundp 'quail-mode) (quail-mode 1)))))
@@ -369,7 +351,7 @@ Use `M-x viper-set-expert-level' to change this.")
 ;; Set quail-mode to ARG
 (defun viper-set-input-method (arg)
   (setq viper-mule-hook-flag t) ; just a precaution
-  (let (viper-mule-hook-flag) ; temporarily inactivate viper mule hooks
+  (let (viper-mule-hook-flag) ; temporarily deactivate viper mule hooks
     (cond ((and arg (> (prefix-numeric-value arg) 0) default-input-method)
 	   ;; activate input method
 	   (viper-activate-input-method))
@@ -424,15 +406,11 @@ delete the text being replaced, as in standard Vi."
   "*Cursor color when Viper is in Replace state."
   :type 'string
   :group 'viper)
-(if (fboundp 'make-variable-frame-local)
-    (make-variable-frame-local 'viper-replace-overlay-cursor-color))
 
 (defcustom viper-insert-state-cursor-color "Green"
   "Cursor color when Viper is in insert state."
   :type 'string
   :group 'viper)
-(if (fboundp 'make-variable-frame-local)
-    (make-variable-frame-local 'viper-insert-state-cursor-color))
 
 ;; viper-emacs-state-cursor-color doesn't work well. Causes cursor colors to be
 ;; confused in some cases. So, this var is nulled for now.
@@ -441,13 +419,18 @@ delete the text being replaced, as in standard Vi."
   "Cursor color when Viper is in Emacs state."
   :type 'string
   :group 'viper)
-(if (fboundp 'make-variable-frame-local)
-    (make-variable-frame-local 'viper-emacs-state-cursor-color))
 
 ;; internal var, used to remember the default cursor color of emacs frames
 (defvar viper-vi-state-cursor-color nil)
-(if (fboundp 'make-variable-frame-local)
-    (make-variable-frame-local 'viper-vi-state-cursor-color))
+
+;; Frame-local variables are obsolete from Emacs 22.2 onwards, so we
+;; do it by hand with viper-frame-value (qv).
+(when (and (featurep 'xemacs)
+           (fboundp 'make-variable-frame-local))
+  (make-variable-frame-local 'viper-replace-overlay-cursor-color)
+  (make-variable-frame-local 'viper-insert-state-cursor-color)
+  (make-variable-frame-local 'viper-emacs-state-cursor-color)
+  (make-variable-frame-local 'viper-vi-state-cursor-color))
 
 (viper-deflocalvar viper-replace-overlay nil "")
 (put 'viper-replace-overlay 'permanent-local t)
@@ -466,7 +449,7 @@ is non-nil."
   :group 'viper)
 (defcustom viper-use-replace-region-delimiters
   (or (not (viper-has-face-support-p))
-      (and viper-xemacs-p (eq (viper-device-type) 'tty)))
+      (and (featurep 'xemacs) (eq (viper-device-type) 'tty)))
   "*If non-nil, Viper will always use `viper-replace-region-end-delimiter' and
 `viper-replace-region-start-delimiter' to delimit replacement regions, even on
 color displays.  By default, the delimiters are used only on TTYs."
@@ -479,19 +462,13 @@ color displays.  By default, the delimiters are used only on TTYs."
   :group 'viper)
 
 ;; XEmacs requires glyphs
-(viper-cond-compile-for-xemacs-or-emacs
- (progn ; xemacs
-   (or (glyphp viper-replace-region-end-delimiter)
-       (setq viper-replace-region-end-delimiter
-	     (make-glyph viper-replace-region-end-delimiter)))
-   (or (glyphp viper-replace-region-start-delimiter)
-       (setq viper-replace-region-start-delimiter
-	     (make-glyph viper-replace-region-start-delimiter)))
-   )
-  nil ; emacs
- )
-
-
+(when (featurep 'xemacs)
+  (or (glyphp viper-replace-region-end-delimiter)
+      (setq viper-replace-region-end-delimiter
+            (make-glyph viper-replace-region-end-delimiter)))
+  (or (glyphp viper-replace-region-start-delimiter)
+      (setq viper-replace-region-start-delimiter
+            (make-glyph viper-replace-region-start-delimiter))))
 
 ;; These are local marker that must be initialized to nil and moved with
 ;; `viper-move-marker-locally'
@@ -548,27 +525,10 @@ will make it hard to use Vi-style timeout macros."
   :type 'integer
   :group 'viper-misc)
 
-(defcustom viper-ESC-keyseq-timeout (if (viper-window-display-p)
-				      0 viper-fast-keyseq-timeout)
-  "*Key sequence beginning with ESC and separated by no more than this many milliseconds is considered to be generated by a keyboard function key.
-Setting this too high may slow down switching from insert to vi state.  Setting
-this value too low will make it impossible to use function keys in insert mode
-on a dumb terminal."
-  :type 'integer
-  :group 'viper-misc)
-
-(defcustom viper-translate-all-ESC-keysequences (not (viper-window-display-p))
-  "Allow translation of all key sequences into commands.
-Normally, Viper lets Emacs translate only those ESC key sequences that are
-defined in the low-level key-translation-map or function-key-map, such as those
-emitted by the arrow and function keys. Other sequences, e.g., \\e/, are
-treated as ESC command followed by a `/'. This is done for people who type fast
-and tend to hit other characters right after they hit ESC. Other people like
-Emacs to translate ESC sequences all the time.
-The default is to translate all sequences only when using a dumb terminal.
-This permits you to use ESC as a meta key in insert mode."
-  :type 'boolean
-  :group 'viper-misc)
+;; This function determines if ESC key sequences are to be translated into
+;; commands.
+(defun viper-translate-all-ESC-keysequences ()
+  (not (viper-window-display-p)))
 
 ;; Modes and related variables
 
@@ -781,7 +741,7 @@ If nil, the cursor will move backwards without deleting anything."
   :type '(choice (const nil) character)
   :group 'viper-search)
 
-(defcustom viper-search-wrap-around-t t
+(defcustom viper-search-wrap-around t
   "*If t, search wraps around."
   :type 'boolean
   :tag "Search Wraps Around"
@@ -1009,15 +969,27 @@ Should be set in `~/.viper' file."
 
 (defun viper-restore-cursor-type ()
   (condition-case nil
-      (if viper-xemacs-p
+      (if (featurep 'xemacs)
 	  (set (make-local-variable 'bar-cursor) nil)
 	(setq cursor-type default-cursor-type))
     (error nil)))
 
 (defun viper-set-insert-cursor-type ()
-  (if viper-xemacs-p
+  (if (featurep 'xemacs)
       (set (make-local-variable 'bar-cursor) 2)
     (setq cursor-type '(bar . 2))))
+
+(defun viper-ESC-keyseq-timeout ()
+  "*Key sequence beginning with ESC and separated by no more than this many milliseconds is considered to be generated by a keyboard function key.
+Setting this too high may slow down switching from insert to vi state.  Setting
+this value too low will make it impossible to use function keys in insert mode
+on a dumb terminal."
+  (if (viper-window-display-p)
+      0 viper-fast-keyseq-timeout))
+
+
+
+(provide 'viper-init)
 
 
 ;; Local Variables:

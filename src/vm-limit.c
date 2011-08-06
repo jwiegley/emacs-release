@@ -1,13 +1,13 @@
 /* Functions for memory limit warnings.
-   Copyright (C) 1990, 1992, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+   Copyright (C) 1990, 1992, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+                 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #ifdef emacs
 #include <config.h>
@@ -123,9 +121,38 @@ void
 get_lim_data ()
 {
   _go32_dpmi_meminfo info;
+  unsigned long lim1, lim2;
 
   _go32_dpmi_get_free_memory_information (&info);
-  lim_data = info.available_memory;
+  /* DPMI server of Windows NT and its descendants reports in
+     info.available_memory a much lower amount that is really
+     available, which causes bogus "past 95% of memory limit"
+     warnings.  Try to overcome that via circumstantial evidence.  */
+  lim1 = info.available_memory;
+  lim2 = info.available_physical_pages;
+  /* DPMI Spec: "Fields that are unavailable will hold -1."  */
+  if ((long)lim1 == -1L)
+    lim1 = 0;
+  if ((long)lim2 == -1L)
+    lim2 = 0;
+  else
+    lim2 *= 4096;
+  /* Surely, the available memory is at least what we have physically
+     available, right?  */
+  if (lim1 >= lim2)
+    lim_data = lim1;
+  else
+    lim_data = lim2;
+  /* Don't believe they will give us more that 0.5 GB.   */
+  if (lim_data > 512U * 1024U * 1024U)
+    lim_data = 512U * 1024U * 1024U;
+}
+
+unsigned long
+ret_lim_data ()
+{
+  get_lim_data ();
+  return lim_data;
 }
 #else /* not MSDOS */
 static void

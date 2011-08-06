@@ -1,26 +1,24 @@
 ;;; gnus-agent.el --- Legacy unplugged support for Gnus
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Kevin Greiner <kgreiner@xpediantsolutions.com>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -110,23 +108,20 @@ converted to the compressed format."
 	    (throw 'found-file-to-convert t))
 
           (erase-buffer)
-          (let ((compressed nil))
-            (mapcar (lambda (pair)
-                      (let* ((article-id (car pair))
-                             (day-of-download (cdr pair))
-                             (comp-list (assq day-of-download compressed)))
-                        (if comp-list
-                            (setcdr comp-list
-                                    (cons article-id (cdr comp-list)))
-                          (setq compressed
-                                (cons (list day-of-download article-id)
-                                      compressed)))
-                        nil)) alist)
-            (mapcar (lambda (comp-list)
-                      (setcdr comp-list
-                              (gnus-compress-sequence
-                               (nreverse (cdr comp-list)))))
-                    compressed)
+          (let (article-id day-of-download comp-list compressed)
+	    (while alist
+	      (setq article-id (caar alist)
+		    day-of-download (cdar alist)
+		    comp-list (assq day-of-download compressed)
+		    alist (cdr alist))
+	      (if comp-list
+		  (setcdr comp-list (cons article-id (cdr comp-list)))
+		(push (list day-of-download article-id) compressed)))
+	    (setq alist compressed)
+	    (while alist
+	      (setq comp-list (pop alist))
+	      (setcdr comp-list
+		      (gnus-compress-sequence (nreverse (cdr comp-list)))))
             (princ compressed (current-buffer)))
           (insert "\n2\n")
           (write-file file)
@@ -191,7 +186,7 @@ converted to the compressed format."
                                                                (when (eq 0 (string-match
                                                                             (caar days)
                                                                             group))
-                                                                 (throw 'found (cadar days)))
+                                                                 (throw 'found (cadr (car days))))
                                                                (setq days (cdr days)))
                                                              nil)))
                                                  (when day

@@ -1,17 +1,17 @@
 ;;; rfn-eshadow.el --- Highlight `shadowed' part of read-file-name input text
 ;;
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 ;;
 ;; Author: Miles Bader <miles@gnu.org>
 ;; Keywords: convenience minibuffer
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -119,6 +117,12 @@ system, `file-name-shadow-properties' is used instead."
   :group 'minibuffer
   :version "22.1")
 
+(defvar rfn-eshadow-setup-minibuffer-hook nil
+  "Minibuffer setup functions from other packages.")
+
+(defvar rfn-eshadow-update-overlay-hook nil
+  "Customer overlay functions from other packages")
+
 
 ;;; Internal variables
 
@@ -153,7 +157,9 @@ The prompt and initial input should already have been inserted."
     (overlay-put rfn-eshadow-overlay 'evaporate t)
     ;; Add our post-command hook, and make sure can remove it later.
     (add-to-list 'rfn-eshadow-frobbed-minibufs (current-buffer))
-    (add-hook 'post-command-hook #'rfn-eshadow-update-overlay nil t)))
+    (add-hook 'post-command-hook #'rfn-eshadow-update-overlay nil t)
+    ;; Run custom hook
+    (run-hooks 'rfn-eshadow-setup-minibuffer-hook)))
 
 (defsubst rfn-eshadow-sifn-equal (goal pos)
   (equal goal (condition-case nil
@@ -193,7 +199,9 @@ been set up by `rfn-eshadow-setup-minibuffer'."
             (if (rfn-eshadow-sifn-equal goal mid)
                 (setq start mid)
               (setq end mid)))
-          (move-overlay rfn-eshadow-overlay (minibuffer-prompt-end) start)))
+          (move-overlay rfn-eshadow-overlay (minibuffer-prompt-end) start))
+	;; Run custom hook
+	(run-hooks 'rfn-eshadow-update-overlay-hook))
     ;; `substitute-in-file-name' can fail on partial input.
     (error nil)))
 

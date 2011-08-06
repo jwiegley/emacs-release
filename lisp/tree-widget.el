@@ -1,6 +1,6 @@
 ;;; tree-widget.el --- Tree widget
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Ponce <david@dponce.com>
 ;; Maintainer: David Ponce <david@dponce.com>
@@ -9,20 +9,18 @@
 
 ;; This file is part of GNU Emacs
 
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 3, or (at
-;; your option) any later version.
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; This program is distributed in the hope that it will be useful, but
-;; WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -127,9 +125,9 @@
   :version "22.1"
   :group 'widgets)
 
-(defcustom tree-widget-image-enable
-  (not (or (featurep 'xemacs) (< emacs-major-version 21)))
-  "*Non-nil means that tree-widget will try to use images."
+(defcustom tree-widget-image-enable (if (fboundp 'display-images-p)
+                                        (display-images-p))
+  "Non-nil means that tree-widget will try to use images."
   :type  'boolean
   :group 'tree-widget)
 
@@ -151,7 +149,7 @@ Emacs, and what `(locate-data-directory \"tree-widget\")' returns on
 XEmacs.")
 
 (defcustom tree-widget-themes-directory "tree-widget"
-  "*Name of the directory in which to look for an image theme.
+  "Name of the directory in which to look for an image theme.
 When nil use the directory where the tree-widget library is located.
 When it is a relative name, search in all occurrences of that sub
 directory in the path specified by `tree-widget-themes-load-path'.
@@ -162,7 +160,7 @@ The default is to use the \"tree-widget\" relative name."
   :group 'tree-widget)
 
 (defcustom tree-widget-theme nil
-  "*Name of the theme in which to look for images.
+  "Name of the theme in which to look for images.
 This is a sub directory of the themes directory specified by the
 `tree-widget-themes-directory' option.
 The default theme is \"default\".  When an image is not found in a
@@ -199,13 +197,13 @@ icon widgets used to draw the tree.  By default these images are used:
 
 (defcustom tree-widget-image-properties-emacs
   '(:ascent center :mask (heuristic t))
-  "*Default properties of Emacs images."
+  "Default properties of Emacs images."
   :type 'plist
   :group 'tree-widget)
 
 (defcustom tree-widget-image-properties-xemacs
   nil
-  "*Default properties of XEmacs images."
+  "Default properties of XEmacs images."
   :type 'plist
   :group 'tree-widget)
 
@@ -403,19 +401,20 @@ Search first in current theme, then in parent themes (see also the
 function `tree-widget-set-parent-theme').
 Return the first image found having a supported format, or nil if not
 found."
-  (catch 'found
-    (dolist (default-directory (tree-widget-themes-path))
-      (dolist (dir (aref tree-widget--theme 0))
-        (dolist (fmt (tree-widget-image-formats))
-          (dolist (ext (cdr fmt))
-            (setq file (expand-file-name (concat name ext) dir))
-            (and (file-readable-p file)
-                 (file-regular-p file)
-                 (throw 'found
-                        (tree-widget-create-image
-                         (car fmt) file
-                         (tree-widget-image-properties name))))))))
-    nil))
+  (let (file)
+    (catch 'found
+      (dolist (default-directory (tree-widget-themes-path))
+        (dolist (dir (aref tree-widget--theme 0))
+          (dolist (fmt (tree-widget-image-formats))
+            (dolist (ext (cdr fmt))
+              (setq file (expand-file-name (concat name ext) dir))
+              (and (file-readable-p file)
+                   (file-regular-p file)
+                   (throw 'found
+                          (tree-widget-create-image
+                           (car fmt) file
+                           (tree-widget-image-properties name))))))))
+      nil)))
 
 (defun tree-widget-find-image (name)
   "Find the image with NAME in current theme.

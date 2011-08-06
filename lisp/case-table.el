@@ -1,7 +1,7 @@
 ;;; case-table.el --- code to extend the character set and support case tables
 
 ;; Copyright (C) 1988, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Howard Gayle
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -35,27 +33,31 @@
 
 ;;; Code:
 
-(defvar set-case-syntax-offset 0)
-
-(defvar set-case-syntax-set-multibyte nil)
-
 (defun describe-buffer-case-table ()
   "Describe the case table of the current buffer."
   (interactive)
   (let ((description (make-char-table 'case-table)))
     (map-char-table
      (function (lambda (key value)
-		 (aset
-		  description key
-		  (cond ((not (natnump value))
-			 "case-invariant")
-			((/= key (downcase key))
-			 (concat "uppercase, matches "
-				 (char-to-string (downcase key))))
-			((/= key (upcase key))
-			 (concat "lowercase, matches "
-				 (char-to-string (upcase key))))
-			(t "case-invariant")))))
+		 (if (not (natnump value))
+		     (if (consp key)
+			 (set-char-table-range description key "case-invariant")
+		       (aset description key "case-invariant"))
+		   (let (from to)
+		     (if (consp key)
+			 (setq from (car key) to (cdr key))
+		       (setq from (setq to key)))
+		     (while (<= from to)
+		       (aset
+			description from
+			(cond ((/= from (downcase from))
+			       (concat "uppercase, matches "
+				       (char-to-string (downcase from))))
+			      ((/= from (upcase from))
+			       (concat "lowercase, matches "
+				       (char-to-string (upcase from))))
+			      (t "case-invariant")))
+		       (setq from (1+ from)))))))
      (current-case-table))
     (save-excursion
      (with-output-to-temp-buffer "*Help*"
@@ -87,20 +89,12 @@
     (set-char-table-extra-slot copy 2 nil)
     copy))
 
-(defsubst set-case-syntax-1 (char)
-  "Offset CHAR by `set-case-syntax-offset' if CHAR is a non-ASCII 8-bit char."
-  (if (and (>= char 128) (< char 256))
-      (+ char set-case-syntax-offset)
-    char))
-
 (defun set-case-syntax-delims (l r table)
   "Make characters L and R a matching pair of non-case-converting delimiters.
 This sets the entries for L and R in TABLE, which is a string
 that will be used as the downcase part of a case table.
 It also modifies `standard-syntax-table' to
 indicate left and right delimiters."
-  (setq l (set-case-syntax-1 l))
-  (setq r (set-case-syntax-1 r))
   (aset table l l)
   (aset table r r)
   (let ((up (get-upcase-table table)))
@@ -121,8 +115,6 @@ This sets the entries for characters UC and LC in TABLE, which is a string
 that will be used as the downcase part of a case table.
 It also modifies `standard-syntax-table' to give them the syntax of
 word constituents."
-  (setq uc (set-case-syntax-1 uc))
-  (setq lc (set-case-syntax-1 lc))
   (aset table uc lc)
   (aset table lc lc)
   (let ((up (get-upcase-table table)))
@@ -139,8 +131,6 @@ word constituents."
   "Make character UC an upcase of character LC.
 It also modifies `standard-syntax-table' to give them the syntax of
 word constituents."
-  (setq uc (set-case-syntax-1 uc))
-  (setq lc (set-case-syntax-1 lc))
   (aset table lc lc)
   (let ((up (get-upcase-table table)))
     (aset up uc uc)
@@ -156,8 +146,6 @@ word constituents."
   "Make character LC a downcase of character UC.
 It also modifies `standard-syntax-table' to give them the syntax of
 word constituents."
-  (setq uc (set-case-syntax-1 uc))
-  (setq lc (set-case-syntax-1 lc))
   (aset table uc lc)
   (aset table lc lc)
   (let ((up (get-upcase-table table)))
@@ -175,7 +163,6 @@ This sets the entry for character C in TABLE, which is a string
 that will be used as the downcase part of a case table.
 It also modifies `standard-syntax-table'.
 SYNTAX should be \" \", \"w\", \".\" or \"_\"."
-  (setq c (set-case-syntax-1 c))
   (aset table c c)
   (let ((up (get-upcase-table table)))
     (aset up c c))
@@ -187,5 +174,5 @@ SYNTAX should be \" \", \"w\", \".\" or \"_\"."
 
 (provide 'case-table)
 
-;;; arch-tag: 3c2cf885-2c9a-449a-9972-2e269191896d
+;; arch-tag: 3c2cf885-2c9a-449a-9972-2e269191896d
 ;;; case-table.el ends here

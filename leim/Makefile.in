@@ -1,28 +1,27 @@
 # Makefile for leim subdirectory in GNU Emacs.
 # Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-#   2006, 2007, 2008
+#   2006, 2007, 2008, 2009
 #   Free Software Foundation, Inc.
 # Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-#   2006, 2007, 2008
+#   2006, 2007, 2008, 2009
 #   National Institute of Advanced Industrial Science and Technology (AIST)
 #   Registration Number H14PRO021
 
 # This file is part of GNU Emacs.
 
-# GNU Emacs is free software; you can redistribute it and/or modify
+# GNU Emacs is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
-#
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
 # GNU Emacs is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-#
+
 # You should have received a copy of the GNU General Public License
-# along with GNU Emacs; see the file COPYING.  If not, write to the
-# Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-# Boston, MA 02110-1301, USA.
+# along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+
 
 # Avoid trouble on systems where the `SHELL' variable might be
 # inherited from the environment.
@@ -34,13 +33,14 @@ prefix=@prefix@
 datarootdir=@datarootdir@
 datadir=@datadir@
 srcdir=@srcdir@
+ns_appresdir=@ns_appresdir@
 
 # Where to install LEIM files.
 INSTALLDIR=$(DESTDIR)${datadir}/emacs/${version}/leim
 
 GZIP_PROG = @GZIP_PROG@
 
-# On Xenix and the IBM RS6000, double-dot gets screwed up.
+# On IBM RS6000, double-dot gets screwed up.
 dot = .
 
 # Which Emacs to use to convert TIT files to Emacs Lisp files,
@@ -50,7 +50,7 @@ BUILT-EMACS = ${dot}${dot}/src/emacs
 buildlisppath=${srcdir}/${dot}${dot}/lisp
 
 # How to run Emacs.
-RUN-EMACS = EMACSLOADPATH=$(buildlisppath) LC_ALL=C\
+RUN-EMACS = EMACSLOADPATH=$(buildlisppath) LC_ALL=C \
 	${BUILT-EMACS} -batch --no-init-file --no-site-file --multibyte
 
 # Subdirectories to be made if ${srcdir} is different from the current
@@ -91,7 +91,6 @@ CHINESE-BIG5=${TIT-BIG5} ${NON-TIT-BIG5}
 JAPANESE=${srcdir}/quail/japanese.elc ${srcdir}/ja-dic/ja-dic.elc
 
 KOREAN=	${srcdir}/quail/hangul.elc	\
-	${srcdir}/quail/hangul3.elc	\
 	${srcdir}/quail/hanja.elc	\
 	${srcdir}/quail/hanja3.elc	\
 	${srcdir}/quail/hanja-jis.elc	\
@@ -126,6 +125,7 @@ GREEK=${srcdir}/quail/greek.elc
 RUSSIAN=${srcdir}/quail/cyrillic.elc ${srcdir}/quail/cyril-jis.elc
 
 OTHERS= \
+	${srcdir}/quail/arabic.elc \
 	${srcdir}/quail/ethiopic.elc \
 	${srcdir}/quail/ipa.elc \
 	${srcdir}/quail/hebrew.elc \
@@ -154,7 +154,8 @@ NON-TIT-MISC=${CHINESE-NON-TIT} ${JAPANESE} ${KOREAN} ${EUROPEAN} ${OTHERS}
 .SUFFIXES: .elc .el
 
 .el.elc:
-	${RUN-EMACS} -f batch-byte-compile $<
+	@echo Compiling $<
+	@${RUN-EMACS} -f batch-byte-compile $<
 
 all: ${BUILT-EMACS} ${SUBDIRS} leim-list.el ${WORLD}
 
@@ -207,6 +208,7 @@ changed.misc: ${MISC-SOURCES}
 	  echo "changed" > $@
 
 leim-list.el: ${SUBDIRS} ${TIT-MISC} changed.tit changed.misc ${srcdir}/leim-ext.el
+	rm -rf leim-list.el
 	${RUN-EMACS}  -l ${buildlisppath}/international/quail \
 	  -f batch-byte-compile-if-not-done ${TIT-MISC:.elc=.el}
 	if [ x`(cd ${srcdir} && /bin/pwd)` = x`(/bin/pwd)` ] ; then \
@@ -217,6 +219,8 @@ leim-list.el: ${SUBDIRS} ${TIT-MISC} changed.tit changed.misc ${srcdir}/leim-ext
 	    --eval "(update-leim-list-file \".\" \"${srcdir}\")" ; \
 	fi
 	sed -n '/^[^;]/ p' < ${srcdir}/leim-ext.el >> $@
+
+MV_DIRS = for i in $$dir; do rm -fr `basename "$$i"` ; mv "$$i" . ; done
 
 install: all
 	if [ ! -d ${INSTALLDIR} ] ; then \
@@ -238,6 +242,7 @@ install: all
 	  fi; \
 	  rm -rf ${INSTALLDIR}/CVS        ${INSTALLDIR}/*/CVS; \
 	  rm -f  ${INSTALLDIR}/.cvsignore ${INSTALLDIR}/*/.cvsignore; \
+	  rm -f  ${INSTALLDIR}/.gitignore ${INSTALLDIR}/*/.gitignore; \
 	  rm -f  ${INSTALLDIR}/.arch-inventory ${INSTALLDIR}/*/.arch-inventory; \
 	  rm -f  ${INSTALLDIR}/\#*        ${INSTALLDIR}/*/\#* ; \
 	  rm -f  ${INSTALLDIR}/.\#*       ${INSTALLDIR}/*/.\#* ; \
@@ -253,7 +258,16 @@ install: all
 	    done) \
 	else true; fi
 	-chmod -R a+r ${INSTALLDIR}
-	-find ${INSTALLDIR} -exec chown $${LOGNAME:-$$USERNAME} '{}' ';'
+	for installuser in $${LOGNAME} $${USERNAME} $${USER} \
+	  `id -un 2> /dev/null`; do \
+	  [ -n "$${installuser}" ] && break ; \
+	done ; \
+	find ${INSTALLDIR} -exec chown $${installuser} '{}' ';'
+	if [ "${ns_appresdir}" != "" ]; then \
+	  ( cd ${ns_appresdir} ; \
+	    if test -d share/emacs ; then dir=share/emacs/*/*; $(MV_DIRS); fi;\
+	    rm -fr share ) ; \
+	else true ; fi
 
 clean mostlyclean:
 	rm -f ${TIT-MISC} ${TIT-MISC:.elc=.el} \
@@ -274,3 +288,9 @@ maintainer-clean: distclean
 
 extraclean: maintainer-clean
 	-rm -f *~ \#* m/?*~ s/?*~
+
+.PHONY: check-declare
+
+check-declare:
+	$(RUN-EMACS) -l $(buildlisppath)/emacs-lisp/check-declare \
+	  --eval '(check-declare-directory "$(srcdir)")'

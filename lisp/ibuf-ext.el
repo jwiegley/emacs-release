@@ -1,7 +1,7 @@
 ;;; ibuf-ext.el --- extensions for ibuffer
 
-;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Colin Walters <walters@verbum.org>
 ;; Maintainer: John Paul Wallington <jpw@gnu.org>
@@ -10,20 +10,18 @@
 
 ;; This file is part of GNU Emacs.
 
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 3, or (at
-;; your option) any later version.
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; This program is distributed in the hope that it will be useful, but
-;; WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program ; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -224,28 +222,26 @@ Currently, this only applies to `ibuffer-saved-filters' and
 
 (defun ibuffer-auto-update-changed ()
   (when (frame-or-buffer-changed-p 'ibuffer-auto-buffers-changed)
-    (mapcar #'(lambda (buf)
-		(ignore-errors
-		  (with-current-buffer buf
-		    (when (and ibuffer-auto-mode
-			       (eq major-mode 'ibuffer-mode))
-		      (ibuffer-update nil t)))))
-	    (buffer-list))))
+    (dolist (buf (buffer-list))
+      (ignore-errors
+	(with-current-buffer buf
+	  (when (and ibuffer-auto-mode
+		     (derived-mode-p 'ibuffer-mode))
+	    (ibuffer-update nil t)))))))
 
 ;;;###autoload
 (defun ibuffer-auto-mode (&optional arg)
   "Toggle use of Ibuffer's auto-update facility.
 With numeric ARG, enable auto-update if and only if ARG is positive."
   (interactive)
-  (unless (eq major-mode 'ibuffer-mode)
+  (unless (derived-mode-p 'ibuffer-mode)
     (error "This buffer is not in Ibuffer mode"))
   (set (make-local-variable 'ibuffer-auto-mode)
        (if arg
 	   (plusp arg)
 	 (not ibuffer-auto-mode)))
-  (frame-or-buffer-changed-p 'ibuffer-auto-buffers-changed)
-  (add-hook 'post-command-hook 'ibuffer-auto-update-changed)
-  (ibuffer-update-mode-name))
+  (frame-or-buffer-changed-p 'ibuffer-auto-buffers-changed) ; Initialize state vector
+  (add-hook 'post-command-hook 'ibuffer-auto-update-changed))
 
 ;;;###autoload
 (defun ibuffer-mouse-filter-by-mode (event)
@@ -264,9 +260,7 @@ With numeric ARG, enable auto-update if and only if ARG is positive."
     (if (assq 'mode ibuffer-filtering-qualifiers)
 	(setq ibuffer-filtering-qualifiers
 	      (ibuffer-delete-alist 'mode ibuffer-filtering-qualifiers))
-      (ibuffer-push-filter (cons 'mode
-				(with-current-buffer buf
-				  major-mode)))))
+      (ibuffer-push-filter (cons 'mode (buffer-local-value 'major-mode buf)))))
   (ibuffer-update nil t))
 
 ;;;###autoload
@@ -414,6 +408,24 @@ To evaluate a form without viewing the buffer, see `ibuffer-do-eval'."
    :modifier-p :maybe)
   (revert-buffer t t))
 
+;;;###autoload (autoload 'ibuffer-do-isearch "ibuf-ext")
+(define-ibuffer-op ibuffer-do-isearch ()
+  "Perform a `isearch-forward' in marked buffers."
+  (:interactive ()
+   :opstring "searched in"
+   :complex t
+   :modifier-p :maybe)
+  (multi-isearch-buffers (ibuffer-get-marked-buffers)))
+
+;;;###autoload (autoload 'ibuffer-do-isearch-regexp "ibuf-ext")
+(define-ibuffer-op ibuffer-do-isearch-regexp ()
+  "Perform a `isearch-forward-regexp' in marked buffers."
+  (:interactive ()
+   :opstring "searched regexp in"
+   :complex t
+   :modifier-p :maybe)
+  (multi-isearch-buffers-regexp (ibuffer-get-marked-buffers)))
+
 ;;;###autoload (autoload 'ibuffer-do-replace-regexp "ibuf-ext")
 (define-ibuffer-op replace-regexp (from-str to-str)
   "Perform a `replace-regexp' in marked buffers."
@@ -532,10 +544,11 @@ To evaluate a form without viewing the buffer, see `ibuffer-do-eval'."
       (dolist (filtergroup filter-group-alist)
 	(let ((filterset (cdr filtergroup)))
 	  (multiple-value-bind (hip-crowd lamers)
-	      (ibuffer-split-list (lambda (bufmark)
-				    (ibuffer-included-in-filters-p (car bufmark)
-								   filterset))
-				  bmarklist)
+	      (values-list 
+	       (ibuffer-split-list (lambda (bufmark)
+				     (ibuffer-included-in-filters-p (car bufmark)
+								    filterset))
+				   bmarklist))
 	    (aset vec i hip-crowd)
 	    (incf i)
 	    (setq bmarklist lamers))))
@@ -566,7 +579,7 @@ To evaluate a form without viewing the buffer, see `ibuffer-do-eval'."
                 (let ((modes
                        (ibuffer-remove-duplicates
                         (mapcar (lambda (buf)
-				  (with-current-buffer buf major-mode))
+				  (buffer-local-value 'major-mode buf))
                                 (buffer-list)))))
                   (if ibuffer-view-ibuffer
 		      modes
@@ -732,8 +745,7 @@ prompt for NAME, and use the current filters."
   (ibuffer-aif (assoc name ibuffer-saved-filter-groups)
       (setcdr it groups)
     (push (cons name groups) ibuffer-saved-filter-groups))
-  (ibuffer-maybe-save-stuff)
-  (ibuffer-update-mode-name))
+  (ibuffer-maybe-save-stuff))
 
 ;;;###autoload
 (defun ibuffer-delete-saved-filter-groups (name)
@@ -898,8 +910,7 @@ Interactively, prompt for NAME, and use the current filters."
   (ibuffer-aif (assoc name ibuffer-saved-filters)
       (setcdr it filters)
     (push (list name filters) ibuffer-saved-filters))
-  (ibuffer-maybe-save-stuff)
-  (ibuffer-update-mode-name))
+  (ibuffer-maybe-save-stuff))
 
 ;;;###autoload
 (defun ibuffer-delete-saved-filters (name)
@@ -972,10 +983,7 @@ The list returned will be of the form (\"MODE-NAME\" . MODE-SYMBOL)."
 	(modes)
 	(this-mode))
     (while bufs
-      (setq this-mode
-	    (with-current-buffer
-		(car bufs)
-	      major-mode)
+      (setq this-mode (buffer-local-value 'major-mode (car bufs))
 	    bufs (cdr bufs))
       (add-to-list
        'modes
@@ -999,10 +1007,9 @@ The list returned will be of the form (\"MODE-NAME\" . MODE-SYMBOL)."
 		     t
 		     (let ((buf (ibuffer-current-buffer)))
 		       (if (and buf (buffer-live-p buf))
-			   (with-current-buffer buf
-			     (symbol-name major-mode))
+			   (symbol-name (buffer-local-value 'major-mode buf))
 			 "")))))
-  (eq qualifier (with-current-buffer buf major-mode)))
+  (eq qualifier (buffer-local-value 'major-mode buf)))
 
 ;;;###autoload (autoload 'ibuffer-filter-by-used-mode "ibuf-ext")
 (define-ibuffer-filter used-mode
@@ -1018,10 +1025,10 @@ currently used by buffers."
 				  t
 				  (let ((buf (ibuffer-current-buffer)))
 				    (if (and buf (buffer-live-p buf))
-					(with-current-buffer buf
-					  (symbol-name major-mode))
+					(symbol-name (buffer-local-value
+						      'major-mode buf))
 				      "")))))
-  (eq qualifier (with-current-buffer buf major-mode)))
+  (eq qualifier (buffer-local-value 'major-mode buf)))
 
 ;;;###autoload (autoload 'ibuffer-filter-by-name "ibuf-ext")
 (define-ibuffer-filter name
@@ -1035,15 +1042,7 @@ currently used by buffers."
   "Toggle current view to buffers with filename matching QUALIFIER."
   (:description "filename"
    :reader (read-from-minibuffer "Filter by filename (regexp): "))
-  (ibuffer-awhen (with-current-buffer buf
-		   (or buffer-file-name
-		       (and (boundp 'dired-directory)
-			    (let ((dired-dir
-				   (if (stringp dired-directory)
-				       dired-directory
-				     (car dired-directory))))
-			      (and dired-dir
-				   (expand-file-name dired-dir))))))
+  (ibuffer-awhen (buffer-local-value 'buffer-file-name buf)
     (string-match qualifier it)))
 
 ;;;###autoload (autoload 'ibuffer-filter-by-size-gt  "ibuf-ext")
@@ -1119,13 +1118,9 @@ Default sorting modes are:
 Ordering is lexicographic."
   (:description "major mode")
   (string-lessp (downcase
-		 (symbol-name (with-current-buffer
-				  (car a)
-				major-mode)))
+		 (symbol-name (buffer-local-value 'major-mode (car a))))
 		(downcase
-		 (symbol-name (with-current-buffer
-				  (car b)
-				major-mode)))))
+		 (symbol-name (buffer-local-value 'major-mode (car b))))))
 
 ;;;###autoload (autoload 'ibuffer-do-sort-by-mode-name "ibuf-ext")
 (define-ibuffer-sorter mode-name
@@ -1133,13 +1128,13 @@ Ordering is lexicographic."
 Ordering is lexicographic."
   (:description "major mode name")
   (string-lessp (downcase
-		  (with-current-buffer
-		      (car a)
-		    mode-name))
+		 (with-current-buffer
+		     (car a)
+		   (format-mode-line mode-name)))
 		(downcase
 		 (with-current-buffer
 		     (car b)
-		   mode-name))))
+		   (format-mode-line mode-name)))))
 
 ;;;###autoload (autoload 'ibuffer-do-sort-by-alphabetic "ibuf-ext")
 (define-ibuffer-sorter alphabetic
@@ -1158,6 +1153,20 @@ Ordering is lexicographic."
        (buffer-size))
      (with-current-buffer (car b)
        (buffer-size))))
+
+;;;###autoload (autoload 'ibuffer-do-sort-by-filename/process "ibuf-ext")
+(define-ibuffer-sorter filename/process
+ "Sort the buffers by their file name/process name."
+  (:description "file name")
+  (string-lessp
+   ;; FIXME: For now just compare the file name and the process name
+   ;; (if it exists).  Is there a better way to do this?
+   (or (buffer-file-name (car a)) 
+       (let ((pr-a (get-buffer-process (car a))))
+	 (and (processp pr-a) (process-name pr-a))))
+   (or (buffer-file-name (car b)) 
+       (let ((pr-b (get-buffer-process (car b))))
+	 (and (processp pr-b) (process-name pr-b))))))
 
 ;;; Functions to emulate bs.el
 
@@ -1307,15 +1316,68 @@ a prefix argument reverses the meaning of that variable."
 	  (error "No buffer with name %s" name)
 	(goto-char buf-point)))))
 
+(declare-function diff-sentinel "diff" (code))
+
+(defun ibuffer-diff-buffer-with-file-1 (buffer)
+  (let ((bufferfile (buffer-local-value 'buffer-file-name buffer))
+	(tempfile (make-temp-file "buffer-content-")))
+    (when bufferfile
+      (unwind-protect
+	  (progn
+	    (with-current-buffer buffer
+	      (write-region nil nil tempfile nil 'nomessage))
+	    (let* ((old (expand-file-name bufferfile))
+		   (new (expand-file-name tempfile))
+		   (oldtmp (file-local-copy old))
+		   (newtmp (file-local-copy new))
+		   (switches diff-switches)
+		   (command
+		    (mapconcat
+		     'identity
+		     `(,diff-command
+		       ;; Use explicitly specified switches
+		       ,@(if (listp switches) switches (list switches))
+		       ,@(if (or old new)
+			     (list "-L" (shell-quote-argument old)
+				   "-L" (shell-quote-argument
+					 (format "Buffer %s" (buffer-name buffer)))))
+		       ,(shell-quote-argument (or oldtmp old))
+		       ,(shell-quote-argument (or newtmp new)))
+		     " "))
+		   proc)
+	      (let ((inhibit-read-only t))
+		(insert command "\n")
+		(diff-sentinel
+		 (call-process shell-file-name nil
+			       (current-buffer) nil
+			       shell-command-switch command)))
+	      (insert "\n"))))
+      (sit-for 0)
+      (when (file-exists-p tempfile)
+	(delete-file tempfile)))))
+
 ;;;###autoload
 (defun ibuffer-diff-with-file ()
-  "View the differences between this buffer and its associated file.
+  "View the differences between marked buffers and their associated files.
+If no buffers are marked, use buffer at point.
 This requires the external program \"diff\" to be in your `exec-path'."
   (interactive)
-  (let ((buf (ibuffer-current-buffer)))
-    (unless (buffer-live-p buf)
-      (error "Buffer %s has been killed" buf))
-    (diff-buffer-with-file buf)))
+  (require 'diff)
+  (let ((marked-bufs (ibuffer-get-marked-buffers)))
+    (when (null marked-bufs)
+      (setq marked-bufs (list (ibuffer-current-buffer t))))
+    (with-current-buffer (get-buffer-create "*Ibuffer Diff*")
+      (setq buffer-read-only nil)
+      (buffer-disable-undo (current-buffer))
+      (erase-buffer)
+      (buffer-enable-undo (current-buffer))
+      (diff-mode)
+      (dolist (buf marked-bufs)
+	(unless (buffer-live-p buf)
+	  (error "Buffer %s has been killed" buf))
+	(ibuffer-diff-buffer-with-file-1 buf))
+      (setq buffer-read-only t)))
+  (switch-to-buffer "*Ibuffer Diff*"))
 
 ;;;###autoload
 (defun ibuffer-copy-filename-as-kill (&optional arg)
@@ -1370,7 +1432,8 @@ You can then feed the file name(s) to other commands with \\[yank]."
 	  nil
 	  group)))
     (ibuffer-redisplay t)
-    (message "Marked %s buffers" count)))
+    (unless (eq ibuffer-mark-on-buffer-mark ?\s)
+      (message "Marked %s buffers" count))))
 
 ;;;###autoload
 (defun ibuffer-mark-by-name-regexp (regexp)
@@ -1387,7 +1450,7 @@ You can then feed the file name(s) to other commands with \\[yank]."
   (ibuffer-mark-on-buffer
    #'(lambda (buf)
        (with-current-buffer buf
-	 (string-match regexp mode-name)))))
+	 (string-match regexp (format-mode-line mode-name nil nil buf))))))
 
 ;;;###autoload
 (defun ibuffer-mark-by-file-name-regexp (regexp)
@@ -1423,8 +1486,7 @@ You can then feed the file name(s) to other commands with \\[yank]."
 				      ""))))))
   (ibuffer-mark-on-buffer
    #'(lambda (buf)
-       (with-current-buffer buf
-	 (eq major-mode mode)))))
+       (eq (buffer-local-value 'major-mode buf) mode))))
 
 ;;;###autoload
 (defun ibuffer-mark-modified-buffers ()
@@ -1438,7 +1500,7 @@ You can then feed the file name(s) to other commands with \\[yank]."
   "Mark all modified buffers that have an associated file."
   (interactive)
   (ibuffer-mark-on-buffer
-   #'(lambda (buf) (and (with-current-buffer buf buffer-file-name)
+   #'(lambda (buf) (and (buffer-local-value 'buffer-file-name buf)
 			(buffer-modified-p buf)))))
 
 ;;;###autoload
@@ -1507,18 +1569,14 @@ You can then feed the file name(s) to other commands with \\[yank]."
   "Mark all read-only buffers."
   (interactive)
   (ibuffer-mark-on-buffer
-   #'(lambda (buf)
-       (with-current-buffer buf
-	 buffer-read-only))))
+   #'(lambda (buf) (buffer-local-value 'buffer-read-only buf))))
 
 ;;;###autoload
 (defun ibuffer-mark-dired-buffers ()
   "Mark all `dired' buffers."
   (interactive)
   (ibuffer-mark-on-buffer
-   #'(lambda (buf)
-       (with-current-buffer buf
-	 (eq major-mode 'dired-mode)))))
+   #'(lambda (buf) (eq (buffer-local-value 'major-mode buf) 'dired-mode))))
 
 ;;;###autoload
 (defun ibuffer-do-occur (regexp &optional nlines)
@@ -1540,5 +1598,5 @@ defaults to one."
 
 (provide 'ibuf-ext)
 
-;;; arch-tag: 9af21953-deda-4c30-b76d-f81d9128e76d
+;; arch-tag: 9af21953-deda-4c30-b76d-f81d9128e76d
 ;;; ibuf-ext.el ends here

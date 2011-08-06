@@ -1,14 +1,14 @@
 /* MS-DOS specific Lisp utilities.  Coded by Manabu Higashida, 1991.
    Major changes May-July 1993 Morten Welinder (only 10% original code left)
    Copyright (C) 1991, 1993, 1996, 1997, 1998, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 
@@ -31,26 +29,30 @@ Boston, MA 02110-1301, USA.  */
 #include "lisp.h"
 #include "buffer.h"
 #include "termchar.h"
-#include "termhooks.h"
 #include "frame.h"
+#include "termhooks.h"
 #include "blockinput.h"
 #include "window.h"
 #include "dosfns.h"
 #include "msdos.h"
 #include "dispextern.h"
-#include "charset.h"
+#include "character.h"
 #include "coding.h"
+#include "process.h"
 #include <dpmi.h>
 #include <go32.h>
 #include <dirent.h>
 #include <sys/vfs.h>
+#include <unistd.h>
+#include <grp.h>
+#include <crt0.h>
 
 #ifndef __DJGPP_MINOR__
 # define __tb _go32_info_block.linear_address_of_transfer_buffer;
 #endif
 
 DEFUN ("int86", Fint86, Sint86, 2, 2, 0,
-       doc: /* Call specific MSDOS interrupt number INTERRUPT with REGISTERS.
+       doc: /* Call specific MS-DOS interrupt number INTERRUPT with REGISTERS.
 Return the updated REGISTER vector.
 
 INTERRUPT should be an integer in the range 0 to 255.
@@ -422,7 +424,7 @@ msdos_stdcolor_idx (const char *name)
   int i;
 
   for (i = 0; i < sizeof (vga_colors) / sizeof (vga_colors[0]); i++)
-    if (strcasecmp (name, vga_colors[i]) == 0)
+    if (xstrcasecmp (name, vga_colors[i]) == 0)
       return i;
 
   return
@@ -535,18 +537,158 @@ If the underlying system call fails, value is nil.  */)
   return value;
 }
 
+/* System depended enumeration of and access to system processes a-la
+   ps(1).  Here, we only return info about the running Emacs process.
+   (There are no other processes on DOS, right?)  */
+
+Lisp_Object
+list_system_processes ()
+{
+  Lisp_Object proclist = Qnil;
+
+  proclist = Fcons (make_fixnum_or_float (getpid ()), proclist);
+
+  return proclist;
+}
+
+Lisp_Object
+system_process_attributes (Lisp_Object pid)
+{
+  int proc_id;
+  Lisp_Object attrs = Qnil;
+
+  CHECK_NUMBER_OR_FLOAT (pid);
+  proc_id = FLOATP (pid) ? XFLOAT_DATA (pid) : XINT (pid);
+
+  if (proc_id == getpid ())
+    {
+      EMACS_INT uid, gid;
+      char *usr;
+      struct group *gr;
+      char cmd[FILENAME_MAX];
+      char *cmdline = NULL, *p, *q;
+      size_t cmdline_size = 0;
+      int i;
+      Lisp_Object cmd_str, decoded_cmd, tem;
+      double pmem;
+#ifndef SYSTEM_MALLOC
+      extern unsigned long ret_lim_data ();
+#endif
+
+      uid = getuid ();
+      attrs = Fcons (Fcons (Qeuid, make_fixnum_or_float (uid)), attrs);
+      usr = getlogin ();
+      if (usr)
+	attrs = Fcons (Fcons (Quser, build_string (usr)), attrs);
+      gid = getgid ();
+      attrs = Fcons (Fcons (Qegid, make_fixnum_or_float (gid)), attrs);
+      gr = getgrgid (gid);
+      if (gr)
+	attrs = Fcons (Fcons (Qgroup, build_string (gr->gr_name)), attrs);
+      strcpy (cmd, basename (__crt0_argv[0]));
+      /* Command name is encoded in locale-coding-system; decode it.  */
+      cmd_str = make_unibyte_string (cmd, strlen (cmd));
+      decoded_cmd = code_convert_string_norecord (cmd_str,
+						  Vlocale_coding_system, 0);
+      attrs = Fcons (Fcons (Qcomm, decoded_cmd), attrs);
+      /* Pretend we have 0 as PPID.  */
+      attrs = Fcons (Fcons (Qppid, make_number (0)), attrs);
+      attrs = Fcons (Fcons (Qpgrp, pid), attrs);
+      attrs = Fcons (Fcons (Qttname, build_string ("/dev/tty")), attrs);
+      /* We are never idle!  */
+      tem = Fget_internal_run_time ();
+      attrs = Fcons (Fcons (Qtime, tem), attrs);
+      attrs = Fcons (Fcons (Qthcount, make_number (1)), attrs);
+      attrs = Fcons (Fcons (Qstart,
+			    Fsymbol_value (intern ("before-init-time"))),
+		     attrs);
+      attrs = Fcons (Fcons (Qvsize,
+			    make_fixnum_or_float ((unsigned long)sbrk(0)/1024)),
+		     attrs);
+      attrs = Fcons (Fcons (Qetime, tem), attrs);
+#ifndef SYSTEM_MALLOC
+      /* ret_lim_data is on vm-limit.c, which is not compiled in under
+	 SYSTEM_MALLOC.  */
+      pmem = (double)((unsigned long) sbrk (0)) / ret_lim_data () * 100.0;
+      if (pmem > 100)
+#endif
+	pmem = 100;
+      attrs = Fcons (Fcons (Qpmem, make_float (pmem)), attrs);
+      /* Pass 1: Count how much storage we need.  */
+      for (i = 0; i < __crt0_argc; i++)
+	{
+	  cmdline_size += strlen (__crt0_argv[i]) + 1; /* +1 for blank delim */
+	  if (strpbrk (__crt0_argv[i], " \t\n\r\v\f"))
+	    {
+	      cmdline_size += 2;
+	      for (p = __crt0_argv[i]; *p; p++)
+		{
+		  if (*p == '"')
+		    cmdline_size++;
+		}
+	    }
+	}
+      /* Pass 2: Allocate storage and concatenate argv[].  */
+      cmdline = xmalloc (cmdline_size + 1);
+      for (i = 0, q = cmdline; i < __crt0_argc; i++)
+	{
+	  if (strpbrk (__crt0_argv[i], " \t\n\r\v\f"))
+	    {
+	      *q++ = '"';
+	      for (p = __crt0_argv[i]; *p; p++)
+		{
+		  if (*p == '\"')
+		    *q++ = '\\';
+		  *q++ = *p;
+		}
+	      *q++ = '"';
+	    }
+	  else
+	    {
+	      strcpy (q, __crt0_argv[i]);
+	      q += strlen (__crt0_argv[i]);
+	    }
+	  *q++ = ' ';
+	}
+      /* Remove the trailing blank.  */
+      if (q > cmdline)
+	q[-1] = '\0';
+
+      /* Command line is encoded in locale-coding-system; decode it.  */
+      cmd_str = make_unibyte_string (cmdline, strlen (cmdline));
+      decoded_cmd = code_convert_string_norecord (cmd_str,
+						  Vlocale_coding_system, 0);
+      xfree (cmdline);
+      attrs = Fcons (Fcons (Qargs, decoded_cmd), attrs);
+    }
+
+  return attrs;
+}
+
 void
 dos_cleanup (void)
 {
+  struct tty_display_info *tty;
+
 #ifndef HAVE_X_WINDOWS
   restore_parent_vm_title ();
 #endif
   /* Make sure the termscript file is committed, in case we are
      crashing and some vital info was written there.  */
-  if (termscript)
+  if (FRAMEP (selected_frame))
     {
-      fflush (termscript);
-      fsync (fileno (termscript));
+      struct frame *sf = XFRAME (selected_frame);
+
+      if (FRAME_LIVE_P (sf)
+	  && (FRAME_MSDOS_P (sf) || FRAME_TERMCAP_P (sf)))
+	{
+	  tty = CURTTY ();
+	  if (tty->termscript)
+	    {
+	      fflush (tty->termscript);
+	      fsync (fileno (tty->termscript));
+	    }
+	}
     }
 }
 

@@ -1,13 +1,13 @@
 /* syssignal.h - System-dependent definitions for signals.
    Copyright (C) 1993, 1999, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,13 +15,11 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 extern void init_signals P_ ((void));
 
-#if defined (HAVE_GTK_AND_PTHREAD) || (defined (HAVE_CARBON) && MAC_OS_X_VERSION_MAX_ALLOWED >= 1020)
+#if defined (HAVE_GTK_AND_PTHREAD) || defined (HAVE_NS)
 #include <pthread.h>
 /* If defined, asynchronous signals delivered to a non-main thread are
    forwarded to the main thread.  */
@@ -39,6 +37,7 @@ extern pthread_t main_thread;
    indicate that SIGIO doesn't work by #undef-ing SIGIO.  If this file
    #includes <signal.h>, then that will re-#define SIGIO and confuse
    things.  */
+/* XXX This is not correct anymore, there is a BROKEN_SIGIO macro. */
 
 #define SIGMASKTYPE sigset_t
 
@@ -144,9 +143,7 @@ extern SIGMASKTYPE sigprocmask_set;
 { SIGMASKTYPE omask = sigblock (SIGFULLMASK); sigsetmask (omask & ~SIG); }
 #endif
 
-#ifndef BSD4_1
 #define sigfree() sigsetmask (SIGEMPTYMASK)
-#endif /* not BSD4_1 */
 
 #if defined (SIGINFO) && defined (BROKEN_SIGINFO)
 #undef SIGINFO
@@ -181,11 +178,6 @@ extern SIGMASKTYPE sigprocmask_set;
 # define NSIG NSIG_MINIMUM
 #endif
 
-#ifdef BSD4_1
-#define SIGIO SIGTINT
-/* sigfree is in sysdep.c */
-#endif /* BSD4_1 */
-
 /* On bsd, [man says] kill does not accept a negative number to kill a pgrp.
    Must do that using the killpg call.  */
 #ifdef BSD_SYSTEM
@@ -200,13 +192,11 @@ extern SIGMASKTYPE sigprocmask_set;
 
 /* Define SIGCHLD as an alias for SIGCLD.  There are many conditionals
    testing SIGCHLD.  */
-#ifndef VMS
 #ifdef SIGCLD
 #ifndef SIGCHLD
 #define SIGCHLD SIGCLD
 #endif /* SIGCHLD */
 #endif /* ! defined (SIGCLD) */
-#endif /* VMS */
 
 #ifndef HAVE_STRSIGNAL
 /* strsignal is in sysdep.c */

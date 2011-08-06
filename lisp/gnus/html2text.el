@@ -1,25 +1,23 @@
 ;;; html2text.el --- a simple html to plain text converter
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Joakim Hove <hove@phys.ntnu.no>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -43,8 +41,42 @@
 (defvar html2text-format-single-element-list '(("hr" . html2text-clean-hr)))
 
 (defvar html2text-replace-list
-  '(("&nbsp;" . " ") ("&gt;" . ">") ("&lt;" . "<") ("&quot;" . "\"")
-    ("&amp;" . "&") ("&apos;" . "'"))
+  '(("&acute;" . "`")
+    ("&amp;" . "&")
+    ("&apos;" . "'")
+    ("&brvbar;" . "|")
+    ("&cent;" . "c")
+    ("&circ;" . "^")
+    ("&copy;" . "(C)")
+    ("&curren;" . "(#)")
+    ("&deg;" . "degree")
+    ("&divide;" . "/")
+    ("&euro;" . "e")
+    ("&frac12;" . "1/2")
+    ("&gt;" . ">")
+    ("&iquest;" . "?")
+    ("&laquo;" . "<<")
+    ("&ldquo" . "\"")
+    ("&lsaquo;" . "(")
+    ("&lsquo;" . "`")
+    ("&lt;" . "<")
+    ("&mdash;" . "--")
+    ("&nbsp;" . " ")
+    ("&ndash;" . "-")
+    ("&permil;" . "%%")
+    ("&plusmn;" . "+-")
+    ("&pound;" . "£")
+    ("&quot;" . "\"")
+    ("&raquo;" . ">>")
+    ("&rdquo" . "\"")
+    ("&reg;" . "(R)")
+    ("&rsaquo;" . ")")
+    ("&rsquo;" . "'")
+    ("&sect;" . "§")
+    ("&sup1;" . "^1")
+    ("&sup2;" . "^2")
+    ("&sup3;" . "^3")
+    ("&tilde;" . "~"))
   "The map of entity to text.
 
 This is an alist were each element is a dotted pair consisting of an
@@ -229,12 +261,12 @@ formatting, and then moved afterward.")
   (goto-char p1)
   (let ((item-nr 0)
 	(items   0))
-    (while (re-search-forward "<li>" p2 t)
+    (while (search-forward "<li>" p2 t)
       (setq items (1+ items)))
     (goto-char p1)
     (while (< item-nr items)
       (setq item-nr (1+ item-nr))
-      (re-search-forward "<li>" (point-max) t)
+      (search-forward "<li>" (point-max) t)
       (cond
        ((string= list-type "ul") (insert " o "))
        ((string= list-type "ol") (insert (format " %s: " item-nr)))
@@ -244,7 +276,7 @@ formatting, and then moved afterward.")
   (goto-char p1)
   (let ((items   0)
 	(item-nr 0))
-    (while (re-search-forward "<dt>" p2 t)
+    (while (search-forward "<dt>" p2 t)
       (setq items (1+ items)))
     (goto-char p1)
     (while (< item-nr items)
@@ -342,8 +374,7 @@ formatting, and then moved afterward.")
 
 (defun html2text-fix-paragraph (p1 p2)
   (goto-char p1)
-  (let ((has-br-line)
-	(refill-start)
+  (let ((refill-start)
 	(refill-stop))
     (when (re-search-forward "<br>$" p2 t)
       (goto-char p1)
@@ -355,7 +386,7 @@ formatting, and then moved afterward.")
 	(forward-line 1)
 	(end-of-line)
 	;; refill-stop should ideally be adjusted to
-	;; accomodate the "<br>" strings which are removed
+	;; accommodate the "<br>" strings which are removed
 	;; between refill-start and refill-stop.  Can simply
 	;; be returned from my-replace-string
 	(setq refill-stop (+ (point)
@@ -477,5 +508,5 @@ See the documentation for that variable."
 ;; </Interactive functions>
 ;;
 (provide 'html2text)
-;;; arch-tag: e9e57b79-35d4-4de1-a647-e7e01fe56d1e
+;; arch-tag: e9e57b79-35d4-4de1-a647-e7e01fe56d1e
 ;;; html2text.el ends here

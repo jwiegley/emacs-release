@@ -1,7 +1,7 @@
-;;; skeleton.el --- Lisp language extension for writing statement skeletons
+;;; skeleton.el --- Lisp language extension for writing statement skeletons -*- coding: utf-8 -*-
 
 ;; Copyright (C) 1993, 1994, 1995, 1996, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Daniel Pfeiffer <occitan@esperanto.org>
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -355,7 +353,7 @@ automatically, and you are prompted to fill in the variable parts.")))
 
 (defun skeleton-internal-1 (element &optional literal recursive)
   (cond
-   ((char-or-string-p element)
+   ((or (integerp element) (stringp element))
     (if (and (integerp element)		; -num
 	     (< element 0))
 	(if skeleton-untabify
@@ -472,7 +470,7 @@ This allows for context-sensitive checking whether pairing is appropriate.")
 
 
 (defvar skeleton-pair-alist ()
-  "An override alist of pairing partners matched against `last-command-char'.
+  "An override alist of pairing partners matched against `last-command-event'.
 Each alist element, which looks like (ELEMENT ...), is passed to
 `skeleton-insert' with no interactor.  Variable `str' does nothing.
 
@@ -482,7 +480,7 @@ Elements might be (?` ?` _ \"''\"), (?\\( ?  _ \" )\") or (?{ \\n > _ \\n ?} >).
 				      (?[ _ ?]) (?\])
 				      (?{ _ ?}) (?\})
 				      (?< _ ?>) (?\>)
-				      (?« _ ?») (?\»)
+				      (?Â« _ ?Â») (?\Â»)
 				      (?` _ ?')))
 
 ;;;###autoload
@@ -506,7 +504,7 @@ symmetrical ones, and the same character twice for the others."
 		      (or (eq last-command 'mouse-drag-region)
 			  (and transient-mark-mode mark-active))))
 	   (skeleton-end-hook)
-	   (char last-command-char)
+	   (char last-command-event)
 	   (skeleton (or (assq char skeleton-pair-alist)
 			 (assq char skeleton-pair-default-alist)
 			 `(,char _ ,char))))
@@ -520,7 +518,7 @@ symmetrical ones, and the same character twice for the others."
 
 
 ;; A more serious example can be found in sh-script.el
-;;; (defun mirror-mode ()
+;; (defun mirror-mode ()
 ;;  "This major mode is an amusing little example of paired insertion.
 ;;All printable characters do a paired self insert, while the other commands
 ;;work normally."
@@ -564,5 +562,5 @@ symmetrical ones, and the same character twice for the others."
 
 (provide 'skeleton)
 
-;;; arch-tag: ccad7bd5-eb5d-40de-9ded-900197215c3e
+;; arch-tag: ccad7bd5-eb5d-40de-9ded-900197215c3e
 ;;; skeleton.el ends here

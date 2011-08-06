@@ -1,16 +1,16 @@
 ;;; url-imap.el --- IMAP retrieval routines
 
-;; Copyright (C) 1999, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Simon Josefsson <jas@pdc.kth.se>
 ;; Keywords: comm, data, processes
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -32,13 +30,12 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 (require 'url-util)
 (require 'url-parse)
 (require 'nnimap)
 (require 'mm-util)
 
-(defconst url-imap-default-port 143 "Default IMAP port")
+(defconst url-imap-default-port 143 "Default IMAP port.")
 
 (defun url-imap-open-host (host port user pass)
   ;; xxx use user and password
@@ -53,7 +50,8 @@
 			  (nnimap-authenticator ,authenticator)))))
 
 (defun url-imap (url)
-  (check-type url vector "Need a pre-parsed URL.")
+  (unless (vectorp url)
+    (signal 'wrong-type-error (list "Need a pre-parsed URL." url)))
   (save-excursion
     (set-buffer (generate-new-buffer " *url-imap*"))
     (mm-disable-multibyte)
@@ -72,12 +70,12 @@
 	     ;; fetch message part
 	     ;; xxx handle partial fetches
 	     (insert "Content-type: message/rfc822\n\n")
-	     (nnimap-request-article (cdr (assoc "UID" (url-attributes url))) 
+	     (nnimap-request-article (cdr (assoc "UID" (url-attributes url)))
 				     mailbox host (current-buffer)))
 	    (t
 	     ;; xxx list messages in mailbox (start gnus?)
 	     )))
     (current-buffer)))
 
-;;; arch-tag: 034991ff-5425-48ea-b911-c96c90e6f47d
+;; arch-tag: 034991ff-5425-48ea-b911-c96c90e6f47d
 ;;; url-imap.el ends here

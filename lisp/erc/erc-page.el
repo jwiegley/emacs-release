@@ -1,13 +1,13 @@
 ;; erc-page.el - CTCP PAGE support for ERC
 
-;; Copyright (C) 2002, 2004, 2006, 2007, 2008 Free Software Foundation
+;; Copyright (C) 2002, 2004, 2006, 2007, 2008, 2009 Free Software Foundation
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -104,5 +102,11 @@ receive pages if `erc-page-mode' is on."
 
 (provide 'erc-page)
 
-;; arch-tag: 82fd2e0e-6060-4dd2-9788-8c1411e844de
 ;;; erc-page.el ends here
+;;
+;; Local Variables:
+;; indent-tabs-mode: t
+;; tab-width: 8
+;; End:
+
+;; arch-tag: 82fd2e0e-6060-4dd2-9788-8c1411e844de

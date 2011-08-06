@@ -1,17 +1,17 @@
 ;;; shadowfile.el --- automatic file copying
 
 ;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Boris Goldowsky <boris@gnu.org>
 ;; Keywords: comm files
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,16 +19,14 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;  This package helps you to keep identical copies of files in more than one
 ;;  place - possibly on different machines.  When you save a file, it checks
 ;;  whether it is on the list of files with "shadows", and if so, it tries to
-;;  copy it when you exit emacs (or use the shadow-copy-files command).
+;;  copy it when you exit Emacs (or use the shadow-copy-files command).
 
 ;; Installation & Use:
 
@@ -38,8 +36,8 @@
 ;;  them).  After doing this once, everything should be automatic.
 
 ;;  The lists of clusters and shadows are saved in a file called .shadows,
-;;  so that they can be remembered from one emacs session to another, even
-;;  (as much as possible) if the emacs session terminates abnormally.  The
+;;  so that they can be remembered from one Emacs session to another, even
+;;  (as much as possible) if the Emacs session terminates abnormally.  The
 ;;  files needing to be copied are stored in .shadow_todo; if a file cannot
 ;;  be copied for any reason, it will stay on the list to be tried again
 ;;  next time.  The .shadows file should itself have shadows on all your
@@ -47,7 +45,7 @@
 ;;  .shadow_todo is local information and should have no shadows.
 
 ;;  If you do not want to copy a particular file, you can answer "no" and
-;;  be asked again next time you hit C-x 4 s or exit emacs.  If you do not
+;;  be asked again next time you hit C-x 4 s or exit Emacs.  If you do not
 ;;  want to be asked again, use shadow-cancel, and you will not be asked
 ;;  until you change the file and save it again.  If you do not want to
 ;;  shadow that file ever again, you can edit it out of the .shadows
@@ -90,14 +88,14 @@
   :group 'files)
 
 (defcustom shadow-noquery nil
-  "*If t, always copy shadow files without asking.
+  "If t, always copy shadow files without asking.
 If nil \(the default), always ask.  If not nil and not t, ask only if there
 is no buffer currently visiting the file."
   :type '(choice (const t) (const nil) (other :tag "Ask if no buffer" maybe))
   :group 'shadow)
 
 (defcustom shadow-inhibit-message nil
-  "*If non-nil, do not display a message when a file needs copying."
+  "If non-nil, do not display a message when a file needs copying."
   :type 'boolean
   :group 'shadow)
 
@@ -191,12 +189,6 @@ Nondestructive; actually returns a copy of the list with the elements removed."
 	  (shadow-remove-if func (cdr list))
 	(cons (car list) (shadow-remove-if func (cdr list))))
     nil))
-
-(defun shadow-join (strings sep)
-  "Concatenate elements of the list of STRINGS with SEP between each."
-  (cond ((null strings) "")
-	((null (cdr strings)) (car strings))
-	((concat (car strings) " " (shadow-join (cdr strings) sep)))))
 
 (defun shadow-regexp-superquote (string)
   "Like `regexp-quote', but includes the ^ and $.
@@ -503,9 +495,7 @@ function).  Each site can be either a hostname or the name of a cluster \(see
   ;; Mostly for debugging.
   "Interactive function to display shadows of a buffer."
   (interactive)
-  (let ((msg (shadow-join (mapcar (function cdr)
-				  (shadow-shadows-of (buffer-file-name)))
-			  " ")))
+  (let ((msg (mapconcat #'cdr (shadow-shadows-of (buffer-file-name)) " ")))
     (message "%s"
 	     (if (zerop (length msg))
 		 "No shadows."
@@ -583,13 +573,11 @@ site."
 	 (to (shadow-expand-cluster-in-file-name (cdr s))))
     (when buffer
       (set-buffer buffer)
-      (save-restriction
-	(widen)
-	(condition-case i
-	    (progn
-	      (write-region (point-min) (point-max) to)
-	      (shadow-remove-from-todo s))
-	  (error (message "Shadow %s not updated!" (cdr s))))))))
+      (condition-case i
+	  (progn
+            (write-region nil nil to)
+            (shadow-remove-from-todo s))
+        (error (message "Shadow %s not updated!" (cdr s)))))))
 
 (defun shadow-shadows-of (file)
   "Return copy operations needed to update FILE.
@@ -643,7 +631,7 @@ Consider them as regular expressions if third arg REGEXP is true."
 		       "Use \\[shadow-copy-files] to update shadows."))
 	(sit-for 1))
       (shadow-write-todo-file)))
-  nil)     ; Return nil for write-file-hooks
+  nil)     ; Return nil for write-file-functions
 
 (defun shadow-remove-from-todo (pair)
   "Remove PAIR from `shadow-files-to-copy'.
@@ -774,7 +762,7 @@ look for files that have been changed and need to be copied to other systems."
 				(buffer-list))))
 	   (yes-or-no-p "Modified buffers exist; exit anyway? "))
        (or (not (fboundp 'process-list))
-	   ;; process-list is not defined on VMS.
+	   ;; process-list is not defined on MSDOS.
 	   (let ((processes (process-list))
 		 active)
 	     (while processes
@@ -817,10 +805,11 @@ look for files that have been changed and need to be copied to other systems."
 	    (file-name-as-directory (shadow-expand-file-name "~"))))
   (if (null shadow-info-file)
       (setq shadow-info-file
-	    (shadow-expand-file-name "~/.shadows")))
+	    (shadow-expand-file-name (convert-standard-filename "~/.shadows"))))
   (if (null shadow-todo-file)
       (setq shadow-todo-file
-	    (shadow-expand-file-name "~/.shadow_todo")))
+	    (shadow-expand-file-name
+	     (convert-standard-filename "~/.shadow_todo"))))
   (if (not (shadow-read-files))
       (progn
 	(message "Shadowfile information files not found - aborting")
@@ -831,18 +820,18 @@ look for files that have been changed and need to be copied to other systems."
       (defalias 'shadow-orig-save-buffers-kill-emacs
 	(symbol-function 'save-buffers-kill-emacs))
       (defalias 'save-buffers-kill-emacs 'shadow-save-buffers-kill-emacs))
-    (add-hook 'write-file-hooks 'shadow-add-to-todo)
+    (add-hook 'write-file-functions 'shadow-add-to-todo)
     (define-key ctl-x-4-map "s" 'shadow-copy-files)))
 
-(defun shadowfile-unload-hook ()
-  (if (fboundp 'shadow-orig-save-buffers-kill-emacs)
-      (fset 'save-buffers-kill-emacs
-	    (symbol-function 'shadow-orig-save-buffers-kill-emacs)))
-  (remove-hook 'write-file-hooks 'shadow-add-to-todo))
-
-(add-hook 'shadowfile-unload-hook 'shadowfile-unload-hook)
+(defun shadowfile-unload-function ()
+  (substitute-key-definition 'shadow-copy-files nil ctl-x-4-map)
+  (when (fboundp 'shadow-orig-save-buffers-kill-emacs)
+    (fset 'save-buffers-kill-emacs
+	  (symbol-function 'shadow-orig-save-buffers-kill-emacs)))
+  ;; continue standard unloading
+  nil)
 
 (provide 'shadowfile)
 
-;;; arch-tag: e2f4cdd7-2bab-4def-9130-9e69b412b79e
+;; arch-tag: e2f4cdd7-2bab-4def-9130-9e69b412b79e
 ;;; shadowfile.el ends here

@@ -1,7 +1,7 @@
 ;;; rcompile.el --- run a compilation on a remote machine
 
 ;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Albert    <alon@milcse.rtsg.mot.com>
 ;; Maintainer: FSF
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -115,43 +113,35 @@ nil means run no commands."
 
 ;;;; entry point
 
-;; We use the Tramp internal functions `with-parsed-tramp-file-name'
-;; and `tramp-make-tramp-file-name'.  Better would be, if there are
-;; functions to provide user, host and localname of a remote filename,
-;; independent of Tramp's implementation.  The function calls are
-;; wrapped by `funcall' in order to pacify the byte compiler.
-;; ange-ftp check removed, because it is handled also by Tramp.
+;; We use the Tramp internal function`tramp-make-tramp-file-name'.
+;; Better would be, if there are functions to provide user, host and
+;; localname of a remote filename, independent of Tramp's implementation.
+;; The function calls are wrapped by `funcall' in order to pacify the byte
+;; compiler.  ange-ftp check removed, because it is handled also by Tramp.
 ;;;###autoload
 (defun remote-compile (host user command)
   "Compile the current buffer's directory on HOST.  Log in as USER.
 See \\[compile]."
   (interactive
-   (let ((parsed (and (featurep 'tramp)
-		      (file-remote-p default-directory)))
-         host user command prompt l l-host l-user)
-     (if parsed
-	 (funcall (symbol-function 'with-parsed-tramp-file-name)
-		  default-directory l
-		  (setq host l-host
-			user l-user))
-       (setq prompt (if (stringp remote-compile-host)
-                        (format "Compile on host (default %s): "
-                                remote-compile-host)
-                      "Compile on host: ")
-             host (if (or remote-compile-prompt-for-host
-                          (null remote-compile-host))
-                      (read-from-minibuffer prompt
-                                            "" nil nil
-                                            'remote-compile-host-history)
-                    remote-compile-host)
-             user (if remote-compile-prompt-for-user
-                      (read-from-minibuffer (format
-                                             "Compile by user (default %s): "
-                                             (or remote-compile-user
-                                                 (user-login-name)))
-                                            "" nil nil
-                                            'remote-compile-user-history)
-                    remote-compile-user)))
+   (let (host user command prompt l l-host l-user)
+     (setq prompt (if (stringp remote-compile-host)
+                      (format "Compile on host (default %s): "
+                              remote-compile-host)
+                    "Compile on host: ")
+           host (if (or remote-compile-prompt-for-host
+                        (null remote-compile-host))
+                    (read-from-minibuffer prompt
+                                          "" nil nil
+                                          'remote-compile-host-history)
+                  remote-compile-host)
+           user (if remote-compile-prompt-for-user
+                    (read-from-minibuffer (format
+                                           "Compile by user (default %s): "
+                                           (or remote-compile-user
+                                               (user-login-name)))
+                                          "" nil nil
+                                          'remote-compile-user-history)
+                  remote-compile-user))
      (setq command (read-from-minibuffer "Compile command: "
                                          compile-command nil nil
                                          '(compile-history . 1)))
@@ -164,8 +154,6 @@ See \\[compile]."
         ((null remote-compile-user)
          (setq remote-compile-user (user-login-name))))
   (let* (localname ;; Pacify byte-compiler.
-	 (parsed (and (featurep 'tramp)
-		      (file-remote-p default-directory)))
          (compile-command
           (format "%s %s -l %s \"(%scd %s; %s)\""
 		  remote-shell-program
@@ -174,10 +162,7 @@ See \\[compile]."
                   (if remote-compile-run-before
                       (concat remote-compile-run-before "; ")
                     "")
-		  (if parsed
-		      (funcall (symbol-function 'with-parsed-tramp-file-name)
-			       default-directory nil localname)
-		    "")
+                  ""
                   compile-command)))
     (setq remote-compile-host host)
     (save-some-buffers nil nil)
@@ -185,14 +170,13 @@ See \\[compile]."
     ;; Set comint-file-name-prefix in the compilation buffer so
     ;; compilation-parse-errors will find referenced files by Tramp.
     (with-current-buffer compilation-last-buffer
-      (when (featurep 'tramp)
+      (when (fboundp 'tramp-make-tramp-file-name)
 	(set (make-local-variable 'comint-file-name-prefix)
-	     (funcall (symbol-function 'tramp-make-tramp-file-name)
-	      nil ;; multi-method.  To be removed with Tramp 2.1.
-	      nil
+	     (tramp-make-tramp-file-name
+	      nil ;; method.
 	      remote-compile-user
 	      remote-compile-host
 	      ""))))))
 
-;;; arch-tag: 2866a132-ece4-4ce9-9f91-ec147f803f73
+;; arch-tag: 2866a132-ece4-4ce9-9f91-ec147f803f73
 ;;; rcompile.el ends here

@@ -1,17 +1,17 @@
 ;;; misc.el --- some nonstandard basic editing commands for Emacs
 
 ;; Copyright (C) 1989, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: convenience
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -108,7 +106,31 @@ With argument, do this that many times."
   (interactive "p")
   (forward-to-word (- arg)))
 
+;;;###autoload
+(defun butterfly ()
+  "Use butterflies to flip the desired bit on the drive platter.
+Open hands and let the delicate wings flap once.  The disturbance
+ripples outward, changing the flow of the eddy currents in the
+upper atmosphere.  These cause momentary pockets of higher-pressure
+air to form, which act as lenses that deflect incoming cosmic rays,
+focusing them to strike the drive platter and flip the desired bit.
+You can type `M-x butterfly C-M-c' to run it.  This is a permuted
+variation of `C-x M-c M-butterfly' from url `http://xkcd.com/378/'."
+  (interactive)
+  (if (yes-or-no-p "Do you really want to unleash the powers of the butterfly? ")
+      (progn
+	(switch-to-buffer (get-buffer-create "*butterfly*"))
+	(erase-buffer)
+	(sit-for 0)
+	(setq indent-tabs-mode nil)
+	(animate-string "Amazing physics going on..."
+			(/ (window-height) 2) (- (/ (window-width) 2) 12))
+	(sit-for (* 5 (/ (abs (random)) (float most-positive-fixnum))))
+	(message "Successfully flipped one bit!"))
+    (message "Well, then go to xkcd.com!")
+    (browse-url "http://xkcd.com/378/")))
+
 (provide 'misc)
 
-;;; arch-tag: 908f7884-c19e-4388-920c-9cfa425e449b
+;; arch-tag: 908f7884-c19e-4388-920c-9cfa425e449b
 ;;; misc.el ends here

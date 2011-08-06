@@ -1,17 +1,17 @@
 ;;; mouse.el --- window system-independent mouse support
 
-;; Copyright (C) 1993, 1994, 1995, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1994, 1995, 1999, 2000, 2001, 2002, 2003, 2004,
+;;   2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: hardware, mouse
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -35,16 +33,16 @@
 
 ;;; Utility functions.
 
-;;; Indent track-mouse like progn.
+;; Indent track-mouse like progn.
 (put 'track-mouse 'lisp-indent-function 0)
 
 (defcustom mouse-yank-at-point nil
-  "*If non-nil, mouse yank commands yank at point instead of at click."
+  "If non-nil, mouse yank commands yank at point instead of at click."
   :type 'boolean
   :group 'mouse)
 
 (defcustom mouse-drag-copy-region t
-  "*If non-nil, mouse drag copies region to kill-ring."
+  "If non-nil, mouse drag copies region to kill-ring."
   :type 'boolean
   :version "22.1"
   :group 'mouse)
@@ -83,7 +81,7 @@ packages.  See `mouse-on-link-p' for details."
   :group 'mouse)
 
 (defcustom mouse-1-click-in-non-selected-windows t
-  "*If non-nil, a Mouse-1 click also follows links in non-selected windows.
+  "If non-nil, a Mouse-1 click also follows links in non-selected windows.
 
 If nil, a Mouse-1 click on a link in a non-selected window performs
 the normal mouse-1 binding, typically selects the window and sets
@@ -151,87 +149,69 @@ PREFIX is the prefix argument (if any) to pass to the command."
       ;; mouse-major-mode-menu was using `command-execute' instead.
       (call-interactively cmd))))
 
-(defvar mouse-major-mode-menu-prefix)	; dynamically bound
+(defun minor-mode-menu-from-indicator (indicator)
+  "Show menu for minor mode specified by INDICATOR.
+Interactively, INDICATOR is read using completion.
+If there is no menu defined for the minor mode, then create one with
+items `Turn Off' and `Help'."
+  (interactive
+   (list (completing-read
+	  "Minor mode indicator: "
+	  (describe-minor-mode-completion-table-for-indicator))))
+  (let ((minor-mode (lookup-minor-mode-from-indicator indicator)))
+    (unless minor-mode (error "Cannot find minor mode for `%s'" indicator))
+    (let* ((map (cdr-safe (assq minor-mode minor-mode-map-alist)))
+           (menu (and (keymapp map) (lookup-key map [menu-bar]))))
+      (setq menu
+            (if menu
+                (mouse-menu-non-singleton menu)
+	      `(keymap
+                ,indicator
+                (turn-off menu-item "Turn Off minor mode" ,minor-mode)
+                (help menu-item "Help for minor mode"
+                      (lambda () (interactive)
+                        (describe-function ',minor-mode))))))
+      (popup-menu menu))))
 
-(defun mouse-major-mode-menu (event &optional prefix)
-  "Pop up a mode-specific menu of mouse commands.
-Default to the Edit menu if the major mode doesn't define a menu."
-  ;; Switch to the window clicked on, because otherwise
-  ;; the mode's commands may not make sense.
-  (interactive "@e\nP")
-  ;; Let the mode update its menus first.
-  (run-hooks 'activate-menubar-hook 'menu-bar-update-hook)
-  (let* (;; This is where mouse-major-mode-menu-prefix
-	 ;; returns the prefix we should use (after menu-bar).
-	 ;; It is either nil or (SOME-SYMBOL).
-	 (mouse-major-mode-menu-prefix nil)
-	 ;; Keymap from which to inherit; may be null.
-	 (ancestor (mouse-major-mode-menu-1
+(defun mouse-minor-mode-menu (event)
+  "Show minor-mode menu for EVENT on minor modes area of the mode line."
+  (interactive "@e")
+  (let ((indicator (car (nth 4 (car (cdr event))))))
+    (minor-mode-menu-from-indicator indicator)))
+
+(defun mouse-menu-major-mode-map ()
+  (let* (;; Keymap from which to inherit; may be null.
+	 (ancestor (mouse-menu-non-singleton
 		    (and (current-local-map)
 			 (local-key-binding [menu-bar]))))
 	 ;; Make a keymap in which our last command leads to a menu or
 	 ;; default to the edit menu.
 	 (newmap (if ancestor
-		     (make-sparse-keymap (concat mode-name " Mode"))
+		     (make-sparse-keymap (concat (format-mode-line mode-name)
+                                                 " Mode"))
 		   menu-bar-edit-menu))
 	 uniq)
     (if ancestor
-	;; Make our menu inherit from the desired keymap which we want
-	;; to display as the menu now.
-	;; Sometimes keymaps contain duplicate menu code, leading to
-	;; duplicates in the popped-up menu. Avoid this by simply
-	;; taking the first of any identically-named menus.
-	;; http://lists.gnu.org/archive/html/emacs-devel/2007-11/msg00469.html
-	(set-keymap-parent newmap
-			   (progn
-			     (dolist (e ancestor)
-			       (unless (and (listp e)
-					    (assoc (car e) uniq))
-				 (setq uniq (append uniq (list e)))))
-			     uniq)))
-    (popup-menu newmap event prefix)))
+	(set-keymap-parent newmap ancestor))
+    newmap))
 
-
-;; Compute and cache the equivalent keys in MENU and all its submenus.
-;;;(defun mouse-major-mode-menu-compute-equiv-keys (menu)
-;;;  (and (eq (car menu) 'keymap)
-;;;       (x-popup-menu nil menu))
-;;;  (while menu
-;;;    (and (consp (car menu))
-;;;	 (consp (cdr (car menu)))
-;;;	 (let ((tail (cdr (car menu))))
-;;;	   (while (and (consp tail)
-;;;		       (not (eq (car tail) 'keymap)))
-;;;	     (setq tail (cdr tail)))
-;;;	   (if (consp tail)
-;;;	       (mouse-major-mode-menu-compute-equiv-keys tail))))
-;;;    (setq menu (cdr menu))))
-
-;; Given a mode's menu bar keymap,
-;; if it defines exactly one menu bar menu,
-;; return just that menu.
-;; Otherwise return a menu for all of them.
-(defun mouse-major-mode-menu-1 (menubar)
+(defun mouse-menu-non-singleton (menubar)
+  "Given menu keymap,
+if it defines exactly one submenu, return just that submenu.
+Otherwise return the whole menu."
   (if menubar
-      (let ((tail menubar)
-	    submap)
-	(while tail
-	  (if (consp (car tail))
-	      (if submap
-		  (setq submap t)
-		(setq submap (car tail))))
-	  (setq tail (cdr tail)))
-	(if (eq submap t)
-	    menubar
-	  (setq mouse-major-mode-menu-prefix (list (car submap)))
-	  (lookup-key menubar (vector (car submap)))))))
+      (let (submap)
+        (map-keymap
+         (lambda (k v) (setq submap (if submap t (cons k v))))
+         (keymap-canonicalize menubar))
+        (if (eq submap t)
+            menubar
+          (lookup-key menubar (vector (car submap)))))))
 
-(defun mouse-popup-menubar (event prefix)
-  "Pop up a menu equivalent to the menu bar for keyboard EVENT with PREFIX.
+(defun mouse-menu-bar-map ()
+  "Return a keymap equivalent to the menu bar.
 The contents are the items that would be in the menu bar whether or
 not it is actually displayed."
-  (interactive "@e \nP")
-  (run-hooks 'activate-menubar-hook 'menu-bar-update-hook)
   (let* ((local-menu (and (current-local-map)
 			  (lookup-key (current-local-map) [menu-bar])))
 	 (global-menu (lookup-key global-map [menu-bar]))
@@ -242,47 +222,70 @@ not it is actually displayed."
 	 ;; display non-empty menu pane names.
 	 (minor-mode-menus
 	  (mapcar
-	   (function
-	    (lambda (menu)
-	      (let* ((minor-mode (car menu))
-		     (menu (cdr menu))
-		     (title-or-map (cadr menu)))
-		(or (stringp title-or-map)
-		    (setq menu
-			  (cons 'keymap
-				(cons (concat
-				       (capitalize (subst-char-in-string
-						    ?- ?\s (symbol-name
-							    minor-mode)))
-				       " Menu")
-				      (cdr menu)))))
-		menu)))
+           (lambda (menu)
+             (let* ((minor-mode (car menu))
+                    (menu (cdr menu))
+                    (title-or-map (cadr menu)))
+               (or (stringp title-or-map)
+                   (setq menu
+                         (cons 'keymap
+                               (cons (concat
+                                      (capitalize (subst-char-in-string
+                                                   ?- ?\s (symbol-name
+                                                           minor-mode)))
+                                      " Menu")
+                                     (cdr menu)))))
+               menu))
 	   (minor-mode-key-binding [menu-bar])))
 	 (local-title-or-map (and local-menu (cadr local-menu)))
 	 (global-title-or-map (cadr global-menu)))
     (or (null local-menu)
 	(stringp local-title-or-map)
 	(setq local-menu (cons 'keymap
-			       (cons (concat mode-name " Mode Menu")
+			       (cons (concat (format-mode-line mode-name)
+                                             " Mode Menu")
 				     (cdr local-menu)))))
     (or (stringp global-title-or-map)
 	(setq global-menu (cons 'keymap
 			        (cons "Global Menu"
 				      (cdr global-menu)))))
     ;; Supplying the list is faster than making a new map.
-    (popup-menu (append (list global-menu)
-			(if local-menu
-			    (list local-menu))
-			minor-mode-menus)
-		event prefix)))
+    ;; FIXME: We have a problem here: we have to use the global/local/minor
+    ;; so they're displayed in the expected order, but later on in the command
+    ;; loop, they're actually looked up in the opposite order.
+    (apply 'append
+           global-menu
+           local-menu
+           minor-mode-menus)))
+
+(defun mouse-major-mode-menu (event &optional prefix)
+  "Pop up a mode-specific menu of mouse commands.
+Default to the Edit menu if the major mode doesn't define a menu."
+  (interactive "@e\nP")
+  (run-hooks 'activate-menubar-hook 'menu-bar-update-hook)
+  (popup-menu (mouse-menu-major-mode-map) event prefix))
+(make-obsolete 'mouse-major-mode-menu 'mouse-menu-major-mode-map "23.1")
+
+(defun mouse-popup-menubar (event prefix)
+  "Pop up a menu equivalent to the menu bar for keyboard EVENT with PREFIX.
+The contents are the items that would be in the menu bar whether or
+not it is actually displayed."
+  (interactive "@e \nP")
+  (run-hooks 'activate-menubar-hook 'menu-bar-update-hook)
+  (popup-menu (mouse-menu-bar-map) event prefix))
+(make-obsolete 'mouse-popup-menubar 'mouse-menu-bar-map "23.1")
 
 (defun mouse-popup-menubar-stuff (event prefix)
   "Popup a menu like either `mouse-major-mode-menu' or `mouse-popup-menubar'.
 Use the former if the menu bar is showing, otherwise the latter."
-  (interactive "@e \nP")
-  (if (zerop (assoc-default 'menu-bar-lines (frame-parameters) 'eq 0))
-      (mouse-popup-menubar event prefix)
-    (mouse-major-mode-menu event prefix)))
+  (interactive "@e\nP")
+  (run-hooks 'activate-menubar-hook 'menu-bar-update-hook)
+  (popup-menu
+   (if (zerop (or (frame-parameter nil 'menu-bar-lines) 0))
+       (mouse-menu-bar-map)
+     (mouse-menu-major-mode-map))
+   event prefix))
+(make-obsolete 'mouse-popup-menubar-stuff nil "23.1")
 
 ;; Commands that operate on windows.
 
@@ -416,6 +419,10 @@ MODE-LINE-P non-nil means dragging a mode line; nil means a header line."
 	 (start-event-window (posn-window start))
 	 (start-event-frame (window-frame start-event-window))
 	 (start-nwindows (count-windows t))
+         (on-link (and mouse-1-click-follows-link
+		       (or mouse-1-click-in-non-selected-windows
+			   (eq (posn-window start) (selected-window)))
+                       (mouse-on-link-p start)))
 	 (minibuffer (frame-parameter nil 'minibuffer))
 	 should-enlarge-minibuffer event mouse y top bot edges wconfig growth)
     (track-mouse
@@ -488,6 +495,11 @@ MODE-LINE-P non-nil means dragging a mode line; nil means a header line."
 			    (one-window-p t))
 		   (error "Attempt to resize sole window"))
 
+                 ;; If we ever move, make sure we don't mistakenly treat
+                 ;; some unexpected `mouse-1' final event as a sign that
+                 ;; this whole drag was nothing more than a click.
+                 (if (/= growth 0) (setq on-link nil))
+
 		 ;; grow/shrink minibuffer?
 		 (if should-enlarge-minibuffer
 		     (unless resize-mini-windows
@@ -516,7 +528,14 @@ MODE-LINE-P non-nil means dragging a mode line; nil means a header line."
 				    (nth 1 (window-edges
 					    ;; Choose right window.
 					    start-event-window)))))
-		   (set-window-configuration wconfig)))))))))
+		   (set-window-configuration wconfig)))))
+
+        ;; Presumably if this was just a click, the last event should
+        ;; be `mouse-1', whereas if this did move the mouse, it should be
+        ;; a `drag-mouse-1'.  In any case `on-link' would have been nulled
+        ;; above if there had been any significant mouse movement.
+        (when (and on-link (eq 'mouse-1 (car-safe event)))
+          (push (cons 'mouse-2 (cdr event)) unread-command-events))))))
 
 (defun mouse-drag-mode-line (start-event)
   "Change the height of a window by dragging on the mode line."
@@ -670,7 +689,7 @@ This should be bound to a mouse drag event."
     ;; If mark is highlighted, no need to bounce the cursor.
     ;; On X, we highlight while dragging, thus once again no need to bounce.
     (or transient-mark-mode
-	(memq (framep (selected-frame)) '(x pc w32 mac))
+	(memq (framep (selected-frame)) '(x pc w32 ns))
 	(sit-for 1))
     (push-mark)
     (set-mark (point))
@@ -686,14 +705,17 @@ This should be bound to a mouse drag event."
 
 (defun mouse-set-region-1 ()
   ;; Set transient-mark-mode for a little while.
-  (if (memq transient-mark-mode '(nil identity))
-      (setq transient-mark-mode 'only))
+  (unless (eq (car-safe transient-mark-mode) 'only)
+    (setq transient-mark-mode
+	  (cons 'only
+		(unless (eq transient-mark-mode 'lambda)
+		  transient-mark-mode))))
   (setq mouse-last-region-beg (region-beginning))
   (setq mouse-last-region-end (region-end))
   (setq mouse-last-region-tick (buffer-modified-tick)))
 
 (defcustom mouse-scroll-delay 0.25
-  "*The pause between scroll steps caused by mouse drags, in seconds.
+  "The pause between scroll steps caused by mouse drags, in seconds.
 If you drag the mouse beyond the edge of a window, Emacs scrolls the
 window to bring the text beyond that edge into view, with a delay of
 this many seconds between scroll steps.  Scrolling stops when you move
@@ -704,7 +726,7 @@ Setting this to zero causes Emacs to scroll as fast as it can."
   :group 'mouse)
 
 (defcustom mouse-scroll-min-lines 1
-  "*The minimum number of lines scrolled by dragging mouse out of window.
+  "The minimum number of lines scrolled by dragging mouse out of window.
 Moving the mouse out the top or bottom edge of the window begins
 scrolling repeatedly.  The number of lines scrolled per repetition
 is normally equal to the number of lines beyond the window edge that
@@ -1024,11 +1046,6 @@ should only be used by mouse-drag-region."
 			      (overlay-start mouse-drag-overlay))
 			   region-termination))
 		       last-command this-command)
-		  (when (eq transient-mark-mode 'identity)
-		    ;; Reset `transient-mark-mode' to avoid expanding the region
-		    ;; while scrolling (compare thread on "Erroneous selection
-		    ;; extension ..." on bug-gnu-emacs from 2007-06-10).
-		    (setq transient-mark-mode nil))
 		  (push-mark region-commencement t t)
 		  (goto-char region-termination)
 		  (if (not do-mouse-drag-region-post-process)
@@ -1109,8 +1126,7 @@ If DIR is positive skip forward; if negative, skip backward."
 	   ;; Here, we can't use skip-syntax-forward/backward because
 	   ;; they don't pay attention to word-separating-categories,
 	   ;; and thus they will skip over a true word boundary.  So,
-	   ;; we simularte the original behaviour by using
-	   ;; forward-word.
+	   ;; we simulate the original behavior by using forward-word.
 	   (if (< dir 0)
 	       (if (not (looking-at "\\<"))
 		   (forward-word -1))
@@ -1349,6 +1365,20 @@ regardless of where you click."
   (setq mouse-selection-click-count 0)
   (yank arg))
 
+(defun mouse-yank-primary (click)
+  "Insert the primary selection at the position clicked on.
+Move point to the end of the inserted text.
+If `mouse-yank-at-point' is non-nil, insert at point
+regardless of where you click."
+  (interactive "e")
+  ;; Give temporary modes such as isearch a chance to turn off.
+  (run-hooks 'mouse-leave-buffer-hook)
+  (or mouse-yank-at-point (mouse-set-point click))
+  (let ((primary (x-get-selection 'PRIMARY)))
+    (if primary
+        (insert (x-get-selection 'PRIMARY))
+      (error "No primary selection"))))
+
 (defun mouse-kill-ring-save (click)
   "Copy the region between point and the mouse click in the kill ring.
 This does not delete the region; it acts like \\[kill-ring-save]."
@@ -1358,12 +1388,12 @@ This does not delete the region; it acts like \\[kill-ring-save]."
     (kill-ring-save (point) (mark t)))
   (mouse-show-mark))
 
-;;; This function used to delete the text between point and the mouse
-;;; whenever it was equal to the front of the kill ring, but some
-;;; people found that confusing.
+;; This function used to delete the text between point and the mouse
+;; whenever it was equal to the front of the kill ring, but some
+;; people found that confusing.
 
-;;; A list (TEXT START END), describing the text and position of the last
-;;; invocation of mouse-save-then-kill.
+;; A list (TEXT START END), describing the text and position of the last
+;; invocation of mouse-save-then-kill.
 (defvar mouse-save-then-kill-posn nil)
 
 (defun mouse-save-then-kill-delete-region (beg end)
@@ -1785,14 +1815,14 @@ again.  If you do this twice in the same position, it kills the selection."
 			    (overlay-end mouse-secondary-overlay)))))))
 
 (defcustom mouse-buffer-menu-maxlen 20
-  "*Number of buffers in one pane (submenu) of the buffer menu.
+  "Number of buffers in one pane (submenu) of the buffer menu.
 If we have lots of buffers, divide them into groups of
 `mouse-buffer-menu-maxlen' and make a pane (or submenu) for each one."
   :type 'integer
   :group 'mouse)
 
 (defcustom mouse-buffer-menu-mode-mult 4
-  "*Group the buffers by the major mode groups on \\[mouse-buffer-menu]?
+  "Group the buffers by the major mode groups on \\[mouse-buffer-menu]?
 This number which determines (in a hairy way) whether \\[mouse-buffer-menu]
 will split the buffer menu by the major modes (see
 `mouse-buffer-menu-mode-groups') or just by menu length.
@@ -1811,7 +1841,7 @@ a large number if you prefer a mixed multitude.  The default is 4."
     ("Text" . "Text")
     ("Outline" . "Text")
     ("\\(HT\\|SG\\|X\\|XHT\\)ML" . "SGML")
-    ("log\\|diff\\|vc\\|cvs" . "Version Control") ; "Change Management"?
+    ("log\\|diff\\|vc\\|cvs\\|Annotate" . "Version Control") ; "Change Management"?
     ("Lisp" . "Lisp"))
   "How to group various major modes together in \\[mouse-buffer-menu].
 Each element has the form (REGEXP . GROUPNAME).
@@ -1825,27 +1855,23 @@ and selects that window."
   (mouse-minibuffer-check event)
   (let ((buffers (buffer-list))  alist menu split-by-major-mode sum-of-squares)
     ;; Make an alist of elements that look like (MENU-ITEM . BUFFER).
-    (let ((tail buffers))
-      (while tail
-	;; Divide all buffers into buckets for various major modes.
-	;; Each bucket looks like (MODE NAMESTRING BUFFERS...).
-	(with-current-buffer (car tail)
-	  (let* ((adjusted-major-mode major-mode) elt)
-	    (let ((tail mouse-buffer-menu-mode-groups))
-	      (while tail
-		(if (string-match (car (car tail)) mode-name)
-		    (setq adjusted-major-mode (cdr (car tail))))
-		(setq tail (cdr tail))))
-	    (setq elt (assoc adjusted-major-mode split-by-major-mode))
-	    (if (null elt)
-		(setq elt (list adjusted-major-mode
-				(if (stringp adjusted-major-mode)
-				    adjusted-major-mode
-				  mode-name))
-		      split-by-major-mode (cons elt split-by-major-mode)))
-	    (or (memq (car tail) (cdr (cdr elt)))
-		(setcdr (cdr elt) (cons (car tail) (cdr (cdr elt)))))))
-	(setq tail (cdr tail))))
+    (dolist (buf buffers)
+      ;; Divide all buffers into buckets for various major modes.
+      ;; Each bucket looks like (MODE NAMESTRING BUFFERS...).
+      (with-current-buffer buf
+        (let* ((adjusted-major-mode major-mode) elt)
+          (dolist (group mouse-buffer-menu-mode-groups)
+            (when (string-match (car group) (format-mode-line mode-name))
+              (setq adjusted-major-mode (cdr group))))
+          (setq elt (assoc adjusted-major-mode split-by-major-mode))
+          (unless elt
+            (setq elt (list adjusted-major-mode
+                            (if (stringp adjusted-major-mode)
+                                adjusted-major-mode
+                              (format-mode-line mode-name nil nil buf)))
+                  split-by-major-mode (cons elt split-by-major-mode)))
+          (or (memq buf (cdr (cdr elt)))
+              (setcdr (cdr elt) (cons buf (cdr (cdr elt))))))))
     ;; Compute the sum of squares of sizes of the major-mode buckets.
     (let ((tail split-by-major-mode))
       (setq sum-of-squares 0)
@@ -1968,331 +1994,331 @@ and selects that window."
     ;; Few buffers--put them all in one pane.
     (list (cons title alist))))
 
-;;; These need to be rewritten for the new scroll bar implementation.
+;; These need to be rewritten for the new scroll bar implementation.
 
-;;;!! ;; Commands for the scroll bar.
-;;;!!
-;;;!! (defun mouse-scroll-down (click)
-;;;!!   (interactive "@e")
-;;;!!   (scroll-down (1+ (cdr (mouse-coords click)))))
-;;;!!
-;;;!! (defun mouse-scroll-up (click)
-;;;!!   (interactive "@e")
-;;;!!   (scroll-up (1+ (cdr (mouse-coords click)))))
-;;;!!
-;;;!! (defun mouse-scroll-down-full ()
-;;;!!   (interactive "@")
-;;;!!   (scroll-down nil))
-;;;!!
-;;;!! (defun mouse-scroll-up-full ()
-;;;!!   (interactive "@")
-;;;!!   (scroll-up nil))
-;;;!!
-;;;!! (defun mouse-scroll-move-cursor (click)
-;;;!!   (interactive "@e")
-;;;!!   (move-to-window-line (1+ (cdr (mouse-coords click)))))
-;;;!!
-;;;!! (defun mouse-scroll-absolute (event)
-;;;!!   (interactive "@e")
-;;;!!   (let* ((pos (car event))
-;;;!! 	 (position (car pos))
-;;;!! 	 (length (car (cdr pos))))
-;;;!!     (if (<= length 0) (setq length 1))
-;;;!!     (let* ((scale-factor (max 1 (/ length (/ 8000000 (buffer-size)))))
-;;;!! 	   (newpos (* (/ (* (/ (buffer-size) scale-factor)
-;;;!! 			    position)
-;;;!! 			 length)
-;;;!! 		      scale-factor)))
-;;;!!       (goto-char newpos)
-;;;!!       (recenter '(4)))))
-;;;!!
-;;;!! (defun mouse-scroll-left (click)
-;;;!!   (interactive "@e")
-;;;!!   (scroll-left (1+ (car (mouse-coords click)))))
-;;;!!
-;;;!! (defun mouse-scroll-right (click)
-;;;!!   (interactive "@e")
-;;;!!   (scroll-right (1+ (car (mouse-coords click)))))
-;;;!!
-;;;!! (defun mouse-scroll-left-full ()
-;;;!!   (interactive "@")
-;;;!!   (scroll-left nil))
-;;;!!
-;;;!! (defun mouse-scroll-right-full ()
-;;;!!   (interactive "@")
-;;;!!   (scroll-right nil))
-;;;!!
-;;;!! (defun mouse-scroll-move-cursor-horizontally (click)
-;;;!!   (interactive "@e")
-;;;!!   (move-to-column (1+ (car (mouse-coords click)))))
-;;;!!
-;;;!! (defun mouse-scroll-absolute-horizontally (event)
-;;;!!   (interactive "@e")
-;;;!!   (let* ((pos (car event))
-;;;!! 	 (position (car pos))
-;;;!! 	 (length (car (cdr pos))))
-;;;!!   (set-window-hscroll (selected-window) 33)))
-;;;!!
-;;;!! (global-set-key [scroll-bar mouse-1] 'mouse-scroll-up)
-;;;!! (global-set-key [scroll-bar mouse-2] 'mouse-scroll-absolute)
-;;;!! (global-set-key [scroll-bar mouse-3] 'mouse-scroll-down)
-;;;!!
-;;;!! (global-set-key [vertical-slider mouse-1] 'mouse-scroll-move-cursor)
-;;;!! (global-set-key [vertical-slider mouse-2] 'mouse-scroll-move-cursor)
-;;;!! (global-set-key [vertical-slider mouse-3] 'mouse-scroll-move-cursor)
-;;;!!
-;;;!! (global-set-key [thumbup mouse-1] 'mouse-scroll-up-full)
-;;;!! (global-set-key [thumbup mouse-2] 'mouse-scroll-up-full)
-;;;!! (global-set-key [thumbup mouse-3] 'mouse-scroll-up-full)
-;;;!!
-;;;!! (global-set-key [thumbdown mouse-1] 'mouse-scroll-down-full)
-;;;!! (global-set-key [thumbdown mouse-2] 'mouse-scroll-down-full)
-;;;!! (global-set-key [thumbdown mouse-3] 'mouse-scroll-down-full)
-;;;!!
-;;;!! (global-set-key [horizontal-scroll-bar mouse-1] 'mouse-scroll-left)
-;;;!! (global-set-key [horizontal-scroll-bar mouse-2]
-;;;!! 		'mouse-scroll-absolute-horizontally)
-;;;!! (global-set-key [horizontal-scroll-bar mouse-3] 'mouse-scroll-right)
-;;;!!
-;;;!! (global-set-key [horizontal-slider mouse-1]
-;;;!! 		'mouse-scroll-move-cursor-horizontally)
-;;;!! (global-set-key [horizontal-slider mouse-2]
-;;;!! 		'mouse-scroll-move-cursor-horizontally)
-;;;!! (global-set-key [horizontal-slider mouse-3]
-;;;!! 		'mouse-scroll-move-cursor-horizontally)
-;;;!!
-;;;!! (global-set-key [thumbleft mouse-1] 'mouse-scroll-left-full)
-;;;!! (global-set-key [thumbleft mouse-2] 'mouse-scroll-left-full)
-;;;!! (global-set-key [thumbleft mouse-3] 'mouse-scroll-left-full)
-;;;!!
-;;;!! (global-set-key [thumbright mouse-1] 'mouse-scroll-right-full)
-;;;!! (global-set-key [thumbright mouse-2] 'mouse-scroll-right-full)
-;;;!! (global-set-key [thumbright mouse-3] 'mouse-scroll-right-full)
-;;;!!
-;;;!! (global-set-key [horizontal-scroll-bar S-mouse-2]
-;;;!! 		'mouse-split-window-horizontally)
-;;;!! (global-set-key [mode-line S-mouse-2]
-;;;!! 		'mouse-split-window-horizontally)
-;;;!! (global-set-key [vertical-scroll-bar S-mouse-2]
-;;;!! 		'mouse-split-window)
+;;!! ;; Commands for the scroll bar.
+;;!!
+;;!! (defun mouse-scroll-down (click)
+;;!!   (interactive "@e")
+;;!!   (scroll-down (1+ (cdr (mouse-coords click)))))
+;;!!
+;;!! (defun mouse-scroll-up (click)
+;;!!   (interactive "@e")
+;;!!   (scroll-up (1+ (cdr (mouse-coords click)))))
+;;!!
+;;!! (defun mouse-scroll-down-full ()
+;;!!   (interactive "@")
+;;!!   (scroll-down nil))
+;;!!
+;;!! (defun mouse-scroll-up-full ()
+;;!!   (interactive "@")
+;;!!   (scroll-up nil))
+;;!!
+;;!! (defun mouse-scroll-move-cursor (click)
+;;!!   (interactive "@e")
+;;!!   (move-to-window-line (1+ (cdr (mouse-coords click)))))
+;;!!
+;;!! (defun mouse-scroll-absolute (event)
+;;!!   (interactive "@e")
+;;!!   (let* ((pos (car event))
+;;!! 	 (position (car pos))
+;;!! 	 (length (car (cdr pos))))
+;;!!     (if (<= length 0) (setq length 1))
+;;!!     (let* ((scale-factor (max 1 (/ length (/ 8000000 (buffer-size)))))
+;;!! 	   (newpos (* (/ (* (/ (buffer-size) scale-factor)
+;;!! 			    position)
+;;!! 			 length)
+;;!! 		      scale-factor)))
+;;!!       (goto-char newpos)
+;;!!       (recenter '(4)))))
+;;!!
+;;!! (defun mouse-scroll-left (click)
+;;!!   (interactive "@e")
+;;!!   (scroll-left (1+ (car (mouse-coords click)))))
+;;!!
+;;!! (defun mouse-scroll-right (click)
+;;!!   (interactive "@e")
+;;!!   (scroll-right (1+ (car (mouse-coords click)))))
+;;!!
+;;!! (defun mouse-scroll-left-full ()
+;;!!   (interactive "@")
+;;!!   (scroll-left nil))
+;;!!
+;;!! (defun mouse-scroll-right-full ()
+;;!!   (interactive "@")
+;;!!   (scroll-right nil))
+;;!!
+;;!! (defun mouse-scroll-move-cursor-horizontally (click)
+;;!!   (interactive "@e")
+;;!!   (move-to-column (1+ (car (mouse-coords click)))))
+;;!!
+;;!! (defun mouse-scroll-absolute-horizontally (event)
+;;!!   (interactive "@e")
+;;!!   (let* ((pos (car event))
+;;!! 	 (position (car pos))
+;;!! 	 (length (car (cdr pos))))
+;;!!   (set-window-hscroll (selected-window) 33)))
+;;!!
+;;!! (global-set-key [scroll-bar mouse-1] 'mouse-scroll-up)
+;;!! (global-set-key [scroll-bar mouse-2] 'mouse-scroll-absolute)
+;;!! (global-set-key [scroll-bar mouse-3] 'mouse-scroll-down)
+;;!!
+;;!! (global-set-key [vertical-slider mouse-1] 'mouse-scroll-move-cursor)
+;;!! (global-set-key [vertical-slider mouse-2] 'mouse-scroll-move-cursor)
+;;!! (global-set-key [vertical-slider mouse-3] 'mouse-scroll-move-cursor)
+;;!!
+;;!! (global-set-key [thumbup mouse-1] 'mouse-scroll-up-full)
+;;!! (global-set-key [thumbup mouse-2] 'mouse-scroll-up-full)
+;;!! (global-set-key [thumbup mouse-3] 'mouse-scroll-up-full)
+;;!!
+;;!! (global-set-key [thumbdown mouse-1] 'mouse-scroll-down-full)
+;;!! (global-set-key [thumbdown mouse-2] 'mouse-scroll-down-full)
+;;!! (global-set-key [thumbdown mouse-3] 'mouse-scroll-down-full)
+;;!!
+;;!! (global-set-key [horizontal-scroll-bar mouse-1] 'mouse-scroll-left)
+;;!! (global-set-key [horizontal-scroll-bar mouse-2]
+;;!! 		'mouse-scroll-absolute-horizontally)
+;;!! (global-set-key [horizontal-scroll-bar mouse-3] 'mouse-scroll-right)
+;;!!
+;;!! (global-set-key [horizontal-slider mouse-1]
+;;!! 		'mouse-scroll-move-cursor-horizontally)
+;;!! (global-set-key [horizontal-slider mouse-2]
+;;!! 		'mouse-scroll-move-cursor-horizontally)
+;;!! (global-set-key [horizontal-slider mouse-3]
+;;!! 		'mouse-scroll-move-cursor-horizontally)
+;;!!
+;;!! (global-set-key [thumbleft mouse-1] 'mouse-scroll-left-full)
+;;!! (global-set-key [thumbleft mouse-2] 'mouse-scroll-left-full)
+;;!! (global-set-key [thumbleft mouse-3] 'mouse-scroll-left-full)
+;;!!
+;;!! (global-set-key [thumbright mouse-1] 'mouse-scroll-right-full)
+;;!! (global-set-key [thumbright mouse-2] 'mouse-scroll-right-full)
+;;!! (global-set-key [thumbright mouse-3] 'mouse-scroll-right-full)
+;;!!
+;;!! (global-set-key [horizontal-scroll-bar S-mouse-2]
+;;!! 		'mouse-split-window-horizontally)
+;;!! (global-set-key [mode-line S-mouse-2]
+;;!! 		'mouse-split-window-horizontally)
+;;!! (global-set-key [vertical-scroll-bar S-mouse-2]
+;;!! 		'mouse-split-window)
 
-;;;!! ;;;;
-;;;!! ;;;; Here are experimental things being tested.  Mouse events
-;;;!! ;;;; are of the form:
-;;;!! ;;;;	((x y) window screen-part key-sequence timestamp)
-;;;!! ;;
-;;;!! ;;;;
-;;;!! ;;;; Dynamically track mouse coordinates
-;;;!! ;;;;
-;;;!! ;;
-;;;!! ;;(defun track-mouse (event)
-;;;!! ;;  "Track the coordinates, absolute and relative, of the mouse."
-;;;!! ;;  (interactive "@e")
-;;;!! ;;  (while mouse-grabbed
-;;;!! ;;    (let* ((pos (read-mouse-position (selected-screen)))
-;;;!! ;;	   (abs-x (car pos))
-;;;!! ;;	   (abs-y (cdr pos))
-;;;!! ;;	   (relative-coordinate (coordinates-in-window-p
-;;;!! ;;				 (list (car pos) (cdr pos))
-;;;!! ;;				 (selected-window))))
-;;;!! ;;      (if (consp relative-coordinate)
-;;;!! ;;	  (message "mouse: [%d %d], (%d %d)" abs-x abs-y
-;;;!! ;;		   (car relative-coordinate)
-;;;!! ;;		   (car (cdr relative-coordinate)))
-;;;!! ;;	(message "mouse: [%d %d]" abs-x abs-y)))))
-;;;!!
-;;;!! ;;
-;;;!! ;; Dynamically put a box around the line indicated by point
-;;;!! ;;
-;;;!! ;;
-;;;!! ;;(require 'backquote)
-;;;!! ;;
-;;;!! ;;(defun mouse-select-buffer-line (event)
-;;;!! ;;  (interactive "@e")
-;;;!! ;;  (let ((relative-coordinate
-;;;!! ;;	 (coordinates-in-window-p (car event) (selected-window)))
-;;;!! ;;	(abs-y (car (cdr (car event)))))
-;;;!! ;;    (if (consp relative-coordinate)
-;;;!! ;;	(progn
-;;;!! ;;	  (save-excursion
-;;;!! ;;	    (move-to-window-line (car (cdr relative-coordinate)))
-;;;!! ;;	    (x-draw-rectangle
-;;;!! ;;	     (selected-screen)
-;;;!! ;;	     abs-y 0
-;;;!! ;;	     (save-excursion
-;;;!! ;;		 (move-to-window-line (car (cdr relative-coordinate)))
-;;;!! ;;		 (end-of-line)
-;;;!! ;;		 (push-mark nil t)
-;;;!! ;;		 (beginning-of-line)
-;;;!! ;;		 (- (region-end) (region-beginning))) 1))
-;;;!! ;;	  (sit-for 1)
-;;;!! ;;	  (x-erase-rectangle (selected-screen))))))
-;;;!! ;;
-;;;!! ;;(defvar last-line-drawn nil)
-;;;!! ;;(defvar begin-delim "[^ \t]")
-;;;!! ;;(defvar end-delim   "[^ \t]")
-;;;!! ;;
-;;;!! ;;(defun mouse-boxing (event)
-;;;!! ;;  (interactive "@e")
-;;;!! ;;  (save-excursion
-;;;!! ;;    (let ((screen (selected-screen)))
-;;;!! ;;      (while (= (x-mouse-events) 0)
-;;;!! ;;	(let* ((pos (read-mouse-position screen))
-;;;!! ;;	       (abs-x (car pos))
-;;;!! ;;	       (abs-y (cdr pos))
-;;;!! ;;	       (relative-coordinate
-;;;!! ;;		(coordinates-in-window-p `(,abs-x ,abs-y)
-;;;!! ;;					 (selected-window)))
-;;;!! ;;	       (begin-reg nil)
-;;;!! ;;	       (end-reg nil)
-;;;!! ;;	       (end-column nil)
-;;;!! ;;	       (begin-column nil))
-;;;!! ;;	  (if (and (consp relative-coordinate)
-;;;!! ;;		   (or (not last-line-drawn)
-;;;!! ;;		       (not (= last-line-drawn abs-y))))
-;;;!! ;;	      (progn
-;;;!! ;;		(move-to-window-line (car (cdr relative-coordinate)))
-;;;!! ;;		(if (= (following-char) 10)
-;;;!! ;;		    ()
-;;;!! ;;		  (progn
-;;;!! ;;		    (setq begin-reg (1- (re-search-forward end-delim)))
-;;;!! ;;		    (setq begin-column (1- (current-column)))
-;;;!! ;;		    (end-of-line)
-;;;!! ;;		    (setq end-reg (1+ (re-search-backward begin-delim)))
-;;;!! ;;		    (setq end-column (1+ (current-column)))
-;;;!! ;;		    (message "%s" (buffer-substring begin-reg end-reg))
-;;;!! ;;		    (x-draw-rectangle screen
-;;;!! ;;				      (setq last-line-drawn abs-y)
-;;;!! ;;				      begin-column
-;;;!! ;;				      (- end-column begin-column) 1))))))))))
-;;;!! ;;
-;;;!! ;;(defun mouse-erase-box ()
-;;;!! ;;  (interactive)
-;;;!! ;;  (if last-line-drawn
-;;;!! ;;      (progn
-;;;!! ;;	(x-erase-rectangle (selected-screen))
-;;;!! ;;	(setq last-line-drawn nil))))
-;;;!!
-;;;!! ;;; (defun test-x-rectangle ()
-;;;!! ;;;   (use-local-mouse-map (setq rectangle-test-map (make-sparse-keymap)))
-;;;!! ;;;   (define-key rectangle-test-map mouse-motion-button-left 'mouse-boxing)
-;;;!! ;;;   (define-key rectangle-test-map mouse-button-left-up 'mouse-erase-box))
-;;;!!
-;;;!! ;;
-;;;!! ;; Here is how to do double clicking in lisp.  About to change.
-;;;!! ;;
-;;;!!
-;;;!! (defvar double-start nil)
-;;;!! (defconst double-click-interval 300
-;;;!!   "Max ticks between clicks")
-;;;!!
-;;;!! (defun double-down (event)
-;;;!!   (interactive "@e")
-;;;!!   (if double-start
-;;;!!       (let ((interval (- (nth 4 event) double-start)))
-;;;!! 	(if (< interval double-click-interval)
-;;;!! 	    (progn
-;;;!! 	      (backward-up-list 1)
-;;;!! 	      ;;      (message "Interval %d" interval)
-;;;!! 	      (sleep-for 1)))
-;;;!! 	(setq double-start nil))
-;;;!!     (setq double-start (nth 4 event))))
-;;;!!
-;;;!! (defun double-up (event)
-;;;!!   (interactive "@e")
-;;;!!   (and double-start
-;;;!!        (> (- (nth 4 event ) double-start) double-click-interval)
-;;;!!        (setq double-start nil)))
-;;;!!
-;;;!! ;;; (defun x-test-doubleclick ()
-;;;!! ;;;   (use-local-mouse-map (setq doubleclick-test-map (make-sparse-keymap)))
-;;;!! ;;;   (define-key doubleclick-test-map mouse-button-left 'double-down)
-;;;!! ;;;   (define-key doubleclick-test-map mouse-button-left-up 'double-up))
-;;;!!
-;;;!! ;;
-;;;!! ;; This scrolls while button is depressed.  Use preferable in scroll bar.
-;;;!! ;;
-;;;!!
-;;;!! (defvar scrolled-lines 0)
-;;;!! (defconst scroll-speed 1)
-;;;!!
-;;;!! (defun incr-scroll-down (event)
-;;;!!   (interactive "@e")
-;;;!!   (setq scrolled-lines 0)
-;;;!!   (incremental-scroll scroll-speed))
-;;;!!
-;;;!! (defun incr-scroll-up (event)
-;;;!!   (interactive "@e")
-;;;!!   (setq scrolled-lines 0)
-;;;!!   (incremental-scroll (- scroll-speed)))
-;;;!!
-;;;!! (defun incremental-scroll (n)
-;;;!!   (while (= (x-mouse-events) 0)
-;;;!!     (setq scrolled-lines (1+ (* scroll-speed scrolled-lines)))
-;;;!!     (scroll-down n)
-;;;!!     (sit-for 300 t)))
-;;;!!
-;;;!! (defun incr-scroll-stop (event)
-;;;!!   (interactive "@e")
-;;;!!   (message "Scrolled %d lines" scrolled-lines)
-;;;!!   (setq scrolled-lines 0)
-;;;!!   (sleep-for 1))
-;;;!!
-;;;!! ;;; (defun x-testing-scroll ()
-;;;!! ;;;   (let ((scrolling-map (function mouse-vertical-scroll-bar-prefix)))
-;;;!! ;;;     (define-key scrolling-map mouse-button-left 'incr-scroll-down)
-;;;!! ;;;     (define-key scrolling-map mouse-button-right 'incr-scroll-up)
-;;;!! ;;;     (define-key scrolling-map mouse-button-left-up 'incr-scroll-stop)
-;;;!! ;;;     (define-key scrolling-map mouse-button-right-up 'incr-scroll-stop)))
-;;;!!
-;;;!! ;;
-;;;!! ;; Some playthings suitable for picture mode?  They need work.
-;;;!! ;;
-;;;!!
-;;;!! (defun mouse-kill-rectangle (event)
-;;;!!   "Kill the rectangle between point and the mouse cursor."
-;;;!!   (interactive "@e")
-;;;!!   (let ((point-save (point)))
-;;;!!     (save-excursion
-;;;!!       (mouse-set-point event)
-;;;!!       (push-mark nil t)
-;;;!!       (if (> point-save (point))
-;;;!! 	  (kill-rectangle (point) point-save)
-;;;!! 	(kill-rectangle point-save (point))))))
-;;;!!
-;;;!! (defun mouse-open-rectangle (event)
-;;;!!   "Kill the rectangle between point and the mouse cursor."
-;;;!!   (interactive "@e")
-;;;!!   (let ((point-save (point)))
-;;;!!     (save-excursion
-;;;!!       (mouse-set-point event)
-;;;!!       (push-mark nil t)
-;;;!!       (if (> point-save (point))
-;;;!! 	  (open-rectangle (point) point-save)
-;;;!! 	(open-rectangle point-save (point))))))
-;;;!!
-;;;!! ;; Must be a better way to do this.
-;;;!!
-;;;!! (defun mouse-multiple-insert (n char)
-;;;!!   (while (> n 0)
-;;;!!     (insert char)
-;;;!!     (setq n (1- n))))
-;;;!!
-;;;!! ;; What this could do is not finalize until button was released.
-;;;!!
-;;;!! (defun mouse-move-text (event)
-;;;!!   "Move text from point to cursor position, inserting spaces."
-;;;!!   (interactive "@e")
-;;;!!   (let* ((relative-coordinate
-;;;!! 	  (coordinates-in-window-p (car event) (selected-window))))
-;;;!!     (if (consp relative-coordinate)
-;;;!! 	(cond ((> (current-column) (car relative-coordinate))
-;;;!! 	       (delete-char
-;;;!! 		(- (car relative-coordinate) (current-column))))
-;;;!! 	      ((< (current-column) (car relative-coordinate))
-;;;!! 	       (mouse-multiple-insert
-;;;!! 		(- (car relative-coordinate) (current-column)) " "))
-;;;!! 	      ((= (current-column) (car relative-coordinate)) (ding))))))
+;;!! ;;;;
+;;!! ;;;; Here are experimental things being tested.  Mouse events
+;;!! ;;;; are of the form:
+;;!! ;;;;	((x y) window screen-part key-sequence timestamp)
+;;!! ;;
+;;!! ;;;;
+;;!! ;;;; Dynamically track mouse coordinates
+;;!! ;;;;
+;;!! ;;
+;;!! ;;(defun track-mouse (event)
+;;!! ;;  "Track the coordinates, absolute and relative, of the mouse."
+;;!! ;;  (interactive "@e")
+;;!! ;;  (while mouse-grabbed
+;;!! ;;    (let* ((pos (read-mouse-position (selected-screen)))
+;;!! ;;	   (abs-x (car pos))
+;;!! ;;	   (abs-y (cdr pos))
+;;!! ;;	   (relative-coordinate (coordinates-in-window-p
+;;!! ;;				 (list (car pos) (cdr pos))
+;;!! ;;				 (selected-window))))
+;;!! ;;      (if (consp relative-coordinate)
+;;!! ;;	  (message "mouse: [%d %d], (%d %d)" abs-x abs-y
+;;!! ;;		   (car relative-coordinate)
+;;!! ;;		   (car (cdr relative-coordinate)))
+;;!! ;;	(message "mouse: [%d %d]" abs-x abs-y)))))
+;;!!
+;;!! ;;
+;;!! ;; Dynamically put a box around the line indicated by point
+;;!! ;;
+;;!! ;;
+;;!! ;;(require 'backquote)
+;;!! ;;
+;;!! ;;(defun mouse-select-buffer-line (event)
+;;!! ;;  (interactive "@e")
+;;!! ;;  (let ((relative-coordinate
+;;!! ;;	 (coordinates-in-window-p (car event) (selected-window)))
+;;!! ;;	(abs-y (car (cdr (car event)))))
+;;!! ;;    (if (consp relative-coordinate)
+;;!! ;;	(progn
+;;!! ;;	  (save-excursion
+;;!! ;;	    (move-to-window-line (car (cdr relative-coordinate)))
+;;!! ;;	    (x-draw-rectangle
+;;!! ;;	     (selected-screen)
+;;!! ;;	     abs-y 0
+;;!! ;;	     (save-excursion
+;;!! ;;		 (move-to-window-line (car (cdr relative-coordinate)))
+;;!! ;;		 (end-of-line)
+;;!! ;;		 (push-mark nil t)
+;;!! ;;		 (beginning-of-line)
+;;!! ;;		 (- (region-end) (region-beginning))) 1))
+;;!! ;;	  (sit-for 1)
+;;!! ;;	  (x-erase-rectangle (selected-screen))))))
+;;!! ;;
+;;!! ;;(defvar last-line-drawn nil)
+;;!! ;;(defvar begin-delim "[^ \t]")
+;;!! ;;(defvar end-delim   "[^ \t]")
+;;!! ;;
+;;!! ;;(defun mouse-boxing (event)
+;;!! ;;  (interactive "@e")
+;;!! ;;  (save-excursion
+;;!! ;;    (let ((screen (selected-screen)))
+;;!! ;;      (while (= (x-mouse-events) 0)
+;;!! ;;	(let* ((pos (read-mouse-position screen))
+;;!! ;;	       (abs-x (car pos))
+;;!! ;;	       (abs-y (cdr pos))
+;;!! ;;	       (relative-coordinate
+;;!! ;;		(coordinates-in-window-p `(,abs-x ,abs-y)
+;;!! ;;					 (selected-window)))
+;;!! ;;	       (begin-reg nil)
+;;!! ;;	       (end-reg nil)
+;;!! ;;	       (end-column nil)
+;;!! ;;	       (begin-column nil))
+;;!! ;;	  (if (and (consp relative-coordinate)
+;;!! ;;		   (or (not last-line-drawn)
+;;!! ;;		       (not (= last-line-drawn abs-y))))
+;;!! ;;	      (progn
+;;!! ;;		(move-to-window-line (car (cdr relative-coordinate)))
+;;!! ;;		(if (= (following-char) 10)
+;;!! ;;		    ()
+;;!! ;;		  (progn
+;;!! ;;		    (setq begin-reg (1- (re-search-forward end-delim)))
+;;!! ;;		    (setq begin-column (1- (current-column)))
+;;!! ;;		    (end-of-line)
+;;!! ;;		    (setq end-reg (1+ (re-search-backward begin-delim)))
+;;!! ;;		    (setq end-column (1+ (current-column)))
+;;!! ;;		    (message "%s" (buffer-substring begin-reg end-reg))
+;;!! ;;		    (x-draw-rectangle screen
+;;!! ;;				      (setq last-line-drawn abs-y)
+;;!! ;;				      begin-column
+;;!! ;;				      (- end-column begin-column) 1))))))))))
+;;!! ;;
+;;!! ;;(defun mouse-erase-box ()
+;;!! ;;  (interactive)
+;;!! ;;  (if last-line-drawn
+;;!! ;;      (progn
+;;!! ;;	(x-erase-rectangle (selected-screen))
+;;!! ;;	(setq last-line-drawn nil))))
+;;!!
+;;!! ;;; (defun test-x-rectangle ()
+;;!! ;;;   (use-local-mouse-map (setq rectangle-test-map (make-sparse-keymap)))
+;;!! ;;;   (define-key rectangle-test-map mouse-motion-button-left 'mouse-boxing)
+;;!! ;;;   (define-key rectangle-test-map mouse-button-left-up 'mouse-erase-box))
+;;!!
+;;!! ;;
+;;!! ;; Here is how to do double clicking in lisp.  About to change.
+;;!! ;;
+;;!!
+;;!! (defvar double-start nil)
+;;!! (defconst double-click-interval 300
+;;!!   "Max ticks between clicks")
+;;!!
+;;!! (defun double-down (event)
+;;!!   (interactive "@e")
+;;!!   (if double-start
+;;!!       (let ((interval (- (nth 4 event) double-start)))
+;;!! 	(if (< interval double-click-interval)
+;;!! 	    (progn
+;;!! 	      (backward-up-list 1)
+;;!! 	      ;;      (message "Interval %d" interval)
+;;!! 	      (sleep-for 1)))
+;;!! 	(setq double-start nil))
+;;!!     (setq double-start (nth 4 event))))
+;;!!
+;;!! (defun double-up (event)
+;;!!   (interactive "@e")
+;;!!   (and double-start
+;;!!        (> (- (nth 4 event ) double-start) double-click-interval)
+;;!!        (setq double-start nil)))
+;;!!
+;;!! ;;; (defun x-test-doubleclick ()
+;;!! ;;;   (use-local-mouse-map (setq doubleclick-test-map (make-sparse-keymap)))
+;;!! ;;;   (define-key doubleclick-test-map mouse-button-left 'double-down)
+;;!! ;;;   (define-key doubleclick-test-map mouse-button-left-up 'double-up))
+;;!!
+;;!! ;;
+;;!! ;; This scrolls while button is depressed.  Use preferable in scroll bar.
+;;!! ;;
+;;!!
+;;!! (defvar scrolled-lines 0)
+;;!! (defconst scroll-speed 1)
+;;!!
+;;!! (defun incr-scroll-down (event)
+;;!!   (interactive "@e")
+;;!!   (setq scrolled-lines 0)
+;;!!   (incremental-scroll scroll-speed))
+;;!!
+;;!! (defun incr-scroll-up (event)
+;;!!   (interactive "@e")
+;;!!   (setq scrolled-lines 0)
+;;!!   (incremental-scroll (- scroll-speed)))
+;;!!
+;;!! (defun incremental-scroll (n)
+;;!!   (while (= (x-mouse-events) 0)
+;;!!     (setq scrolled-lines (1+ (* scroll-speed scrolled-lines)))
+;;!!     (scroll-down n)
+;;!!     (sit-for 300 t)))
+;;!!
+;;!! (defun incr-scroll-stop (event)
+;;!!   (interactive "@e")
+;;!!   (message "Scrolled %d lines" scrolled-lines)
+;;!!   (setq scrolled-lines 0)
+;;!!   (sleep-for 1))
+;;!!
+;;!! ;;; (defun x-testing-scroll ()
+;;!! ;;;   (let ((scrolling-map (function mouse-vertical-scroll-bar-prefix)))
+;;!! ;;;     (define-key scrolling-map mouse-button-left 'incr-scroll-down)
+;;!! ;;;     (define-key scrolling-map mouse-button-right 'incr-scroll-up)
+;;!! ;;;     (define-key scrolling-map mouse-button-left-up 'incr-scroll-stop)
+;;!! ;;;     (define-key scrolling-map mouse-button-right-up 'incr-scroll-stop)))
+;;!!
+;;!! ;;
+;;!! ;; Some playthings suitable for picture mode?  They need work.
+;;!! ;;
+;;!!
+;;!! (defun mouse-kill-rectangle (event)
+;;!!   "Kill the rectangle between point and the mouse cursor."
+;;!!   (interactive "@e")
+;;!!   (let ((point-save (point)))
+;;!!     (save-excursion
+;;!!       (mouse-set-point event)
+;;!!       (push-mark nil t)
+;;!!       (if (> point-save (point))
+;;!! 	  (kill-rectangle (point) point-save)
+;;!! 	(kill-rectangle point-save (point))))))
+;;!!
+;;!! (defun mouse-open-rectangle (event)
+;;!!   "Kill the rectangle between point and the mouse cursor."
+;;!!   (interactive "@e")
+;;!!   (let ((point-save (point)))
+;;!!     (save-excursion
+;;!!       (mouse-set-point event)
+;;!!       (push-mark nil t)
+;;!!       (if (> point-save (point))
+;;!! 	  (open-rectangle (point) point-save)
+;;!! 	(open-rectangle point-save (point))))))
+;;!!
+;;!! ;; Must be a better way to do this.
+;;!!
+;;!! (defun mouse-multiple-insert (n char)
+;;!!   (while (> n 0)
+;;!!     (insert char)
+;;!!     (setq n (1- n))))
+;;!!
+;;!! ;; What this could do is not finalize until button was released.
+;;!!
+;;!! (defun mouse-move-text (event)
+;;!!   "Move text from point to cursor position, inserting spaces."
+;;!!   (interactive "@e")
+;;!!   (let* ((relative-coordinate
+;;!! 	  (coordinates-in-window-p (car event) (selected-window))))
+;;!!     (if (consp relative-coordinate)
+;;!! 	(cond ((> (current-column) (car relative-coordinate))
+;;!! 	       (delete-char
+;;!! 		(- (car relative-coordinate) (current-column))))
+;;!! 	      ((< (current-column) (car relative-coordinate))
+;;!! 	       (mouse-multiple-insert
+;;!! 		(- (car relative-coordinate) (current-column)) " "))
+;;!! 	      ((= (current-column) (car relative-coordinate)) (ding))))))
 
 ;; Choose a completion with the mouse.
 
@@ -2344,7 +2370,7 @@ and selects that window."
 		  (cdr elt)))))
 
 (defvar x-fixed-font-alist
-  '("Font menu"
+  '("Font Menu"
     ("Misc"
      ;; For these, we specify the pixel height and width.
      ("fixed" "fixed")
@@ -2375,15 +2401,15 @@ and selects that window."
       "-schumacher-clean-medium-r-normal--16-*-*-*-c-80-iso8859-1")
      ("")
      ("sony 8x16" "-sony-fixed-medium-r-normal--16-*-*-*-c-80-iso8859-1")
-;;; We don't seem to have these; who knows what they are.
-;;;    ("fg-18" "fg-18")
-;;;    ("fg-25" "fg-25")
+     ;; We don't seem to have these; who knows what they are.
+     ;; ("fg-18" "fg-18")
+     ;; ("fg-25" "fg-25")
      ("lucidasanstypewriter-12" "-b&h-lucidatypewriter-medium-r-normal-sans-*-120-*-*-*-*-iso8859-1")
      ("lucidasanstypewriter-bold-14" "-b&h-lucidatypewriter-bold-r-normal-sans-*-140-*-*-*-*-iso8859-1")
      ("lucidasanstypewriter-bold-24"
       "-b&h-lucidatypewriter-bold-r-normal-sans-*-240-*-*-*-*-iso8859-1")
-;;;    ("lucidatypewriter-bold-r-24" "-b&h-lucidatypewriter-bold-r-normal-sans-24-240-75-75-m-140-iso8859-1")
-;;;    ("fixed-medium-20" "-misc-fixed-medium-*-*-*-20-*-*-*-*-*-*-*")
+     ;; ("lucidatypewriter-bold-r-24" "-b&h-lucidatypewriter-bold-r-normal-sans-24-240-75-75-m-140-iso8859-1")
+     ;; ("fixed-medium-20" "-misc-fixed-medium-*-*-*-20-*-*-*-*-*-*-*")
      )
     ("Courier"
      ;; For these, we specify the point height.
@@ -2414,8 +2440,30 @@ and selects that window."
     )
   "X fonts suitable for use in Emacs.")
 
+(declare-function generate-fontset-menu "fontset" ())
+
+(defun mouse-select-font ()
+  "Prompt for a font name, using `x-popup-menu', and return it."
+  (interactive)
+  (unless (display-multi-font-p)
+    (error "Cannot change fonts on this display"))
+  (car
+   (x-popup-menu
+    (if (listp last-nonmenu-event)
+	last-nonmenu-event
+      (list '(0 0) (selected-window)))
+    (append x-fixed-font-alist
+	    (list (generate-fontset-menu))))))
+
+(declare-function text-scale-mode "face-remap")
+
 (defun mouse-set-font (&rest fonts)
-  "Select an Emacs font from a list of known good fonts and fontsets."
+  "Set the default font for the selected frame.
+The argument FONTS is a list of font names; the first valid font
+in this list is used.
+
+When called interactively, pop up a menu and allow the user to
+choose a font."
   (interactive
    (progn (unless (display-multi-font-p)
 	    (error "Cannot change fonts on this display"))
@@ -2430,13 +2478,78 @@ and selects that window."
 	(while fonts
 	  (condition-case nil
 	      (progn
-		(set-default-font (car fonts))
+		(set-frame-font (car fonts))
 		(setq font (car fonts))
 		(setq fonts nil))
 	    (error
 	     (setq fonts (cdr fonts)))))
 	(if (null font)
 	    (error "Font not found")))))
+
+(defvar mouse-appearance-menu-map nil)
+(declare-function x-select-font "xfns.c" (&optional frame ignored)) ; USE_GTK
+(declare-function buffer-face-mode-invoke "face-remap"
+                  (face arg &optional interactive))
+(declare-function font-face-attributes "font.c" (font &optional frame))
+
+(defun mouse-appearance-menu (event)
+  (interactive "@e")
+  (require 'face-remap)
+  (when (display-multi-font-p)
+    (with-selected-window (car (event-start event))
+      (if mouse-appearance-menu-map
+	  nil ; regenerate new fonts
+	;; Initialize mouse-appearance-menu-map
+	(setq mouse-appearance-menu-map
+	      (make-sparse-keymap "Change Default Buffer Face"))
+	(define-key mouse-appearance-menu-map [face-remap-reset-base]
+	  '(menu-item "Reset to Default" face-remap-reset-base))
+	(define-key mouse-appearance-menu-map [text-scale-decrease]
+	  '(menu-item "Decrease Buffer Text Size" text-scale-decrease))
+	(define-key mouse-appearance-menu-map [text-scale-increase]
+	  '(menu-item "Increase Buffer Text Size" text-scale-increase))
+	;; Font selector
+	(if (functionp 'x-select-font)
+	    (define-key mouse-appearance-menu-map [x-select-font]
+	      '(menu-item "Change Buffer Font..." x-select-font))
+	  ;; If the select-font is unavailable, construct a menu.
+	  (let ((font-submenu (make-sparse-keymap "Change Text Font"))
+		(font-alist (cdr (append x-fixed-font-alist
+					 (list (generate-fontset-menu))))))
+	    (dolist (family font-alist)
+	      (let* ((submenu-name (car family))
+		     (submenu-map (make-sparse-keymap submenu-name)))
+		(dolist (font (cdr family))
+		  (let ((font-name (car font))
+			font-symbol)
+		    (if (string= font-name "")
+			(define-key submenu-map [space]
+			  '("--"))
+		      (setq font-symbol (intern (cadr font)))
+		      (define-key submenu-map (vector font-symbol)
+			(list 'menu-item (car font) font-symbol)))))
+		(define-key font-submenu (vector (intern submenu-name))
+		  (list 'menu-item submenu-name submenu-map))))
+	    (define-key mouse-appearance-menu-map [font-submenu]
+	      (list 'menu-item "Change Text Font" font-submenu)))))
+      (let ((choice (x-popup-menu event mouse-appearance-menu-map)))
+	(setq choice (nth (1- (length choice)) choice))
+	(cond ((eq choice 'text-scale-increase)
+	       (text-scale-increase 1))
+	      ((eq choice 'text-scale-decrease)
+	       (text-scale-increase -1))
+	      ((eq choice 'face-remap-reset-base)
+	       (text-scale-mode 0)
+	       (buffer-face-mode 0))
+	      (choice
+	       ;; Either choice == 'x-select-font, or choice is a
+	       ;; symbol whose name is a font.
+	       (buffer-face-mode-invoke (font-face-attributes
+					 (if (eq choice 'x-select-font)
+					     (x-select-font)
+					   (symbol-name choice)))
+					t (interactive-p))))))))
+
 
 ;;; Bindings for mouse commands.
 
@@ -2464,9 +2577,14 @@ and selects that window."
 ;; event to make the selection, saving a click.
 (global-set-key [C-down-mouse-1] 'mouse-buffer-menu)
 (if (not (eq system-type 'ms-dos))
-    (global-set-key [S-down-mouse-1] 'mouse-set-font))
+    (global-set-key [S-down-mouse-1] 'mouse-appearance-menu))
 ;; C-down-mouse-2 is bound in facemenu.el.
-(global-set-key [C-down-mouse-3] 'mouse-popup-menubar-stuff)
+(global-set-key [C-down-mouse-3]
+  '(menu-item "Menu Bar" ignore
+    :filter (lambda (_)
+              (if (zerop (or (frame-parameter nil 'menu-bar-lines) 0))
+                  (mouse-menu-bar-map)
+                (mouse-menu-major-mode-map)))))
 
 
 ;; Replaced with dragging mouse-1

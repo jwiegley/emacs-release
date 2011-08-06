@@ -1,14 +1,380 @@
-2008-09-05  Chong Yidong  <cyd@stupidchicken.com>
+2009-07-29  Chong Yidong  <cyd@stupidchicken.com>
 
-	* Version 22.3 released.
+	* Version 23.1 released.
 
-2008-05-04  Glenn Morris  <rgm@gnu.org>
+2009-07-16  Glenn Morris  <rgm@gnu.org>
+
+	* refcards/cs-dired-ref.tex, refcards/fr-dired-ref.tex:
+	* refcards/sk-dired-ref.tex:
+	Remove non-existent (?) bindings: w, C-u o, U, delete.
+	Fix bindings: delete marked files = D, not X; flag garbage = % &, not &.
+
+	* refcards/gnus-refcard.tex: Condense a few sentences in order to
+	make them fit on one line, and add some page breaks, to improve the
+	layout in the pdfs.
+
+2009-07-15  Glenn Morris  <rgm@gnu.org>
+
+	* refcards/dired-ref.tex: Change from A4 to letter paper.
+	Remove non-existent (?) bindings: w, C-u o, U, delete.
+	Fix bindings: delete marked files = D, not X; flag garbage = % &, not &.
+	New: async shell command = &.
+
+	* refcards/gnus-refcard.tex (Copyright): Add 2009.
+	(Notes): Add missing line-break.
+	(Threading): Reword to fit on one line.
+
+	* refcards/calccard.tex (emacsversionnumber): Just use major version.
+
+2009-07-10  Kevin Ryde  <user42@zip.com.au>
+
+	* compilation.txt: Fix names of some elements.
+
+2009-07-10  Kenichi Handa  <handa@m17n.org>
+
+	* PROBLEMS: Show the workaround for single<->double width problem
+	of font selection in CJK environment.
+
+2009-07-08  Glenn Morris  <rgm@gnu.org>
+
+	* tutorials/TUTORIAL: Standardize the way M-x commands are written:
+	dashes inside command names, not spaces; spaces before <Return>.
+	(Summary): Describe the new behavior of C-l.
+	(Basic Cursor Control): Don't say that files "ought" to end in newlines.
+	Try to distinguish scroll bar from fringes.
+	You can also scroll with a wheel mouse.
+	(If Emacs Stops Responding): Rename from "When Emacs is hung".
+	(Inserting And Deleting): Continuation marks appear in the fringe.
+	Clarify that deletion can be undone.  Mention cut and paste, and
+	the Glossary.
+	(Files, Mode Line): Update mode-line format.
+	(Extending The Command Set): Downplay C-z, since using Emacs on a
+	text-only terminal is less common these days.
+	(Searching): Incremental searching is no longer atypical.
+	Downplay flow control issues, remove reference to deleted FAQ node.
+	(Multiple Windows): Mention frames.
+	(Multiple Frames): New section.
+	(Getting More Help): Downplay C-h having a different binding.
+	Don't say help is "on-line", since the meaning has changed.
+	(More Features): Replace "on-line".  Use C-h rather than F10 h.
+	Say a little more about completion.
+	(Conclusion): Don't mention C-z again here.
+
+2009-06-24  Kenichi Handa  <handa@m17n.org>
+
+	* charsets/stdenc.map, charsets/symbol.map: Re-generate.
+
+2009-06-15  Alan Mackenzie  <acm@muc.de>
+
+	* NEWS: Document changes to end-of-defun-function, clarifying
+	entry for beginning-of-defun-function.
+
+2009-06-13  Bill Wohler  <wohler@newt.com>
+
+	Release MH-E version 8.2.
+
+	* NEWS, MH-E-NEWS: Update for MH-E release 8.2.
+
+2009-06-12  Kenichi Handa  <handa@m17n.org>
+
+	* HELLO: Use "/" instead of "," to seperate independent words.
+
+	* charsets/*.map: All re-generated.
+
+2009-06-08  Kenichi Handa  <handa@m17n.org>
+
+	* HELLO: Downcase "suomi".
+
+2009-05-25  Werner Lemberg  <wl@gnu.org>
+
+	* tutorial/TUTORIAL.de: Updated; synchronize with TUTORIAL.
+	Use reformed Orthography.
+	Minor improvements.
+
+2009-05-19  Chong Yidong  <cyd@stupidchicken.com>
+
+	* refcards/survival.tex: Add M-g M-g binding.
+
+	* refcards/survival.tex:
+	* refcards/sk-survival.tex:
+	* refcards/sk-refcard.tex:
+	* refcards/sk-dired-ref.tex:
+	* refcards/ru-refcard.tex:
+	* refcards/pt-br-refcard.tex:
+	* refcards/pl-refcard.tex:
+	* refcards/fr-survival.tex:
+	* refcards/fr-dired-ref.tex:
+	* refcards/dired-ref.tex:
+	* refcards/cs-survival.tex:
+	* refcards/cs-refcard.tex:
+	* refcards/cs-dired-ref.tex: Bump refcard version numbers to 23.
+
+2009-05-15  Chong Yidong  <cyd@stupidchicken.com>
+
+	* refcards/refcard.tex: Update Emacs version to 23.
+
+2009-05-15  Sven Joachim  <svenjoac@gmx.de>
+
+        * refcards/de-refcard.tex: Merge changes from refcard.tex.
+        Change `Paragraph' to `Absatz'.
+
+2009-04-09  Glenn Morris  <rgm@gnu.org>
+
+	* MORE.STUFF: Update some urls.  Remove dead links: eshell, expand,
+	ffap, hideshow.  Remove original whitespace, now in obsolete/.
+	Remember and nXML are part of the distribution now.
+
+2009-03-13  Kenichi Handa  <handa@m17n.org>
+
+	* NEWS: Add description for the argument change of
+	`set-fontset-font' and `print-fontset'.
+
+2009-02-25  Glenn Morris  <rgm@gnu.org>
+
+	* MORE.STUFF: Mention Zile.
+
+2009-02-23  Miles Bader  <miles@gnu.org>
+
+	* NEWS: Rename `system-process-attributes' to `process-attributes'.
+
+2009-02-19  Nick Roberts  <nickrob@snap.net.nz>
+
+	* compilation.txt: Add entry for maven.
+
+2009-02-14  Jay Belanger  <jay.p.belanger@gmail.com>
+
+	* refcards/calccard.tex: Update version number.
+	Mention Maxima mode.
+
+2009-02-04  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* compilation.txt (gnu): Add an example for the "note" format.
+
+2009-02-04  Jason Rumney  <jasonr@gnu.org>
+
+	* PROBLEMS (CPP): Note problem with resource compiler of MSVC.
+
+2009-02-02  Carsten Dominik  <dominik@science.uva.nl>
+
+	* refcards/orgcard.tex: New version number.
+
+2009-01-28  Juanma Barranquero  <lekktu@gmail.com>
+
+	* PROBLEMS (Windows): Add entry about TCC/4NT and App Paths keys.
+
+2009-01-28  Carsten Dominik  <dominik@science.uva.nl>
+
+	* refcards/orgcard.tex: New version number.
+
+2009-01-27  Carsten Dominik  <dominik@science.uva.nl>
+
+	* refcards/orgcard.tex: New version number.
+
+2009-01-27  Kenichi Handa  <handa@m17n.org>
+
+	* NEWS: New function `coding-sytem-from-name'.
+
+2009-01-25  Carsten Dominik  <dominik@science.uva.nl>
+
+	* refcards/orgcard.tex: New year and version number.
+	Document heading/item conversion commands.
+	Document C-c RET in tables.
+
+2009-01-03  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: Tramp supports IPv6 addresses.
+
+2008-12-20  Carsten Dominik  <dominik@science.uva.nl>
+
+	* refcards/orgcard.tex: Version number change.
+
+2008-12-19  Eli Zaretskii  <eliz@gnu.org>
+
+	* PROBLEMS (MS-DOS): Document the problems on Vista.
+
+2008-12-17  Carsten Dominik  <dominik@science.uva.nl>
+
+	* refcards/orgcard.tex: Version number change.
+
+2008-12-16  Carsten Dominik  <dominik@science.uva.nl>
+
+	* refcards/orgcard.tex: Version number change.
+
+2008-12-11  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* MACHINES: SH3 is still supported.
+
+2008-12-07  Carsten Dominik  <dominik@science.uva.nl>
+
+	* refcards/orgcard.tex: Version number update.
+
+2008-11-27  Juanma Barranquero  <lekktu@gmail.com>
+
+	* NEWS: Fix typo.  (Bug#1439)
+
+2008-11-12  Carsten Dominik  <dominik@science.uva.nl>
+
+	* refcards/orgcard.tex: Document the extra yanking key.
+
+2008-11-08  Mark A. Hershberger  <mah@everybody.org>
+
+	* compilation.txt (php): Add regexp for php error messages.
+
+2008-10-24  Juanma Barranquero  <lekktu@gmail.com>
+
+	* NEWS: New function `locate-user-emacs-file'.
+
+2008-10-18  Ulrich Mueller  <ulm@gentoo.org>
+
+	* MACHINES: Add section for SuperH.
+
+2008-10-12  Carsten Dominik  <dominik@science.uva.nl>
+
+	* refcards/orgcard.tex: Add description for attachments, plus
+	minor changes.
+
+2008-07-24  Carsten Dominik  <dominik@science.uva.nl>
+
+	* refcards/orgcard.tex: Minor fixes.
+
+2008-09-08  Daiki Ueno  <ueno@unixuser.org>
+
+	* TODO: Remove the entry describing auto-encryption.
+
+2008-08-26  Robert J. Chassell  <bob@rattlesnake.com>
+
+	* PROBLEMS: Prevent pasting a region twice on an xterm or rxvt in X.
+
+2008-08-23  Chong Yidong  <cyd@stupidchicken.com>
+
+	* HELLO: Fix Javanese pun.
+
+2008-08-18  Bill Wohler  <wohler@newt.com>
+
+	Release MH-E version 8.1.
+
+	* NEWS, MH-E-NEWS: Update for MH-E release 8.1.
+
+2008-08-14  Vinicius Jose Latorre  <viniciusjl@ig.com.br>
+
+	* NEWS: Improve information about whitespace package.
+
+2008-08-01  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* NEWS: Add entries about the new auth-source integration and
+	about the cyrillic-translit modifications.
+
+2008-08-01  Adrian Robert  <Adrian.B.Robert@gmail.com>
+
+	* Emacs.clr: Remove.
+
+2008-07-31  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* termcap.src: Remove file.
+	* README:
+	* PROBLEMS:
+	* MACHINES: Remove VMS info.
+
+2008-07-27  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* PROBLEMS:
+	* MACHINES: Remove mentions of Mac Carbon.
+
+2008-07-24  Vinicius Jose Latorre  <viniciusjl@ig.com.br>
+
+	* NEWS: New function `diff-show-trailing-blanks' in diff-mode.el.
+
+2008-07-24  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: Add xesam.el.
+
+2008-07-24  Vinicius Jose Latorre  <viniciusjl@ig.com.br>
+
+	* NEWS: Add information about whitespace package.
+
+2008-07-19  Juri Linkov  <juri@jurta.org>
+
+	* tutorials/TUTORIAL: Add information about C-g to the introduction.
+
+2008-07-18  Francesc Rocher  <rocher@member.fsf.org>
+
+	* images/splash8.xpm: Remove.
+
+2008-07-17  Adrian Robert  <Adrian.B.Robert@gmail.com>
+
+	* NEWS: Add entry about NS port.
+
+2008-07-15  Adrian Robert  <Adrian.B.Robert@gmail.com>
+
+	* Emacs.clr: New file, add support for X color names to NS display
+	implementations.
+
+2008-07-12  Juri Linkov  <juri@jurta.org>
+
+	* HELLO: Use more correct IPA characters for English pronunciation.
+	Add the combining acute accent after the accented vowel in the
+	Russian example like it is used in dictionaries.
+
+2008-07-11  Kenichi Handa  <handa@m17n.org>
+
+	* HELLO: Change the Arabic words appearing in Non-ASCII examples to
+	iso-8859-6 characters.
+
+2008-07-02  Francesc Rocher  <rocher@member.fsf.org>
+
+	* images/splash.png:
+	* images/splash.svg:
+	* images/gnus/gnus.png:
+	* images/gnus/gnus.svg: New files.
+
+2008-06-25  Kenichi Handa  <handa@m17n.org>
+
+	* NEWS: Mention string-to-unibyte.
+
+2008-06-21  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: Tramp uses auth-source.
+
+2008-06-08  John Paul Wallington  <jpw@pobox.com>
+
+	* NEWS: Document that `completion-ignore-case' is nil on MS-Windows.
+
+2008-05-19  Tom Tromey  <tromey@redhat.com>
+
+	* NEWS: Mention directory-local variables.
+
+2008-05-11  Juri Linkov  <juri@jurta.org>
+
+	* images/custom/README:
+	* images/custom/down.xpm:
+	* images/custom/down-pushed.xpm:
+	* images/custom/right.xpm:
+	* images/custom/right-pushed.xpm: New files.
+
+2008-05-07  Eric S. Raymond  <esr@snark.thyrsus.com>
+
+	* NEWS: Support for Meta-CVS removed.
+
+2008-05-05  Nick Roberts  <nickrob@snap.net.nz>
+
+	* compilation.txt: Add regexp for Open Watcom compiler output.
+
+2008-05-04  Reiner Steib  <reiner.steib@gmx.de>
+
+	* NEWS: Reword previous commit.
+	* NEWS.22: Document removal of duplicated "alt-" input methods.
+
+2008-05-03  Glenn Morris  <rgm@gnu.org>
 
 	* NEWS: Document removal of duplicated "alt-" input methods.
 
-2008-03-26  Chong Yidong  <cyd@stupidchicken.com>
+2008-04-26  Glenn Morris  <rgm@gnu.org>
 
-	* Version 22.2 released.
+	* forms-d2.dat: Move here from ../lisp.
+
+2008-04-06  Jason Rumney  <jasonr@gnu.org>
+
+	* HELLO (Burmese): Rename from Myanmar.
 
 2008-03-22  Reiner Steib  <Reiner.Steib@gmx.de>
 
@@ -16,89 +382,544 @@
 
 2008-03-12  Reiner Steib  <Reiner.Steib@gmx.de>
 
-	* TUTORIAL.de: Remove even more discussion of flow control.  Refer
-	to node name `Init Rebinding' instead of title.
+	* tutorials/TUTORIAL.de: Remove even more discussion of flow
+	control.  Refer to node name `Init Rebinding' instead of title.
+
+2008-03-13  Carsten Dominik  <dominik@science.uva.nl>
+
+	* refcards/orgcard.tex: Minor fixes.
 
 2008-03-12  Chong Yidong  <cyd@stupidchicken.com>
 
-	* TUTORIAL, TUTORIAL.fr, TUTORIAL.ro, TUTORIAL.bg, TUTORIAL.it:
-	* TUTORIAL.ru, TUTORIAL.cn, TUTORIAL.ja, TUTORIAL.sk:
-	* TUTORIAL.cs, TUTORIAL.ko, TUTORIAL.sl, TUTORIAL.de:
-	* TUTORIAL.nl, TUTORIAL.sv, TUTORIAL.eo, TUTORIAL.pl, TUTORIAL.th:
-	* TUTORIAL.es, TUTORIAL.pt_BR: Remove discussion of flow control.
+	* tutorials/TUTORIAL, tutorials/TUTORIAL.fr, tutorials/TUTORIAL.ro:
+	* tutorials/TUTORIAL.bg, tutorials/TUTORIAL.it, tutorials/TUTORIAL.ru:
+	* tutorials/TUTORIAL.cn, tutorials/TUTORIAL.ja, tutorials/TUTORIAL.sk:
+	* tutorials/TUTORIAL.cs, tutorials/TUTORIAL.ko, tutorials/TUTORIAL.sl:
+	* tutorials/TUTORIAL.de, tutorials/TUTORIAL.nl, tutorials/TUTORIAL.sv:
+	* tutorials/TUTORIAL.eo, tutorials/TUTORIAL.pl, tutorials/TUTORIAL.th:
+	* tutorials/TUTORIAL.es, tutorials/TUTORIAL.pt_BR:
+	Remove discussion of flow control.
 
-2008-02-25  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2008-03-12  Juanma Barranquero  <lekktu@gmail.com>
 
-	* NEWS: Mention stock icons for Gtk+.
+	* NEWS: Describe linum.el.
+
+2008-03-11  Glenn Morris  <rgm@gnu.org>
+
+	* images/icons/hicolor/128x128/apps/emacs.png:
+	* images/icons/hicolor/16x16/apps/emacs.png:
+	* images/icons/hicolor/24x24/apps/emacs.png:
+	* images/icons/hicolor/32x32/apps/emacs.png:
+	* images/icons/hicolor/48x48/apps/emacs.png:
+	* images/icons/hicolor/scalable/apps/emacs.svg:
+	* images/icons/hicolor/scalable/mimetypes/emacs-document.svg:
+	Remove `creator' metadata.
+
+2008-03-06  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* images/README: Update with bookmark_add.
+
+	* images/bookmark_add.pbm, images/bookmark_add.xpm: New files.
+
+2008-03-03  Kentaro Ohkouchi  <nanasess@fsm.ne.jp>
+
+	* images/icons/hicolor/32x32/apps/emacs.png: Make transparency 8 bit.
+	* images/icons/hicolor/scalable/mimetypes/emacs-document.svg: New file.
+	* images/icons/hicolor/scalable/apps/emacs.svg: Fix format.
+
+2008-03-03  Andrew Zhilin  <andrew_zhilin@yahoo.com>
+
+	* images/icons/hicolor/16x16/apps/emacs22.png:
+	* images/icons/hicolor/24x24/apps/emacs22.png:
+	* images/icons/hicolor/32x32/apps/emacs22.png:
+	* images/icons/hicolor/48x48/apps/emacs22.png: New files.
+	These are the old versions of `emacs.png' under a new name.
+
+2008-03-02  Kentaro Ohkouchi  <nanasess@fsm.ne.jp>
+
+	* images/icons/README: Update info for the icons.
+
+	* images/icons/emacs16_mac.png:
+	* images/icons/emacs24_mac.png:
+	* images/icons/emacs256_mac.png:
+	* images/icons/emacs32_mac.png:
+	* images/icons/emacs48_mac.png:
+	* images/icons/emacs512_mac.png: Remove.
+
+	* images/icons/hicolor/16x16/apps/emacs.png:
+	* images/icons/hicolor/24x24/apps/emacs.png:
+	* images/icons/hicolor/32x32/apps/emacs.png:
+	* images/icons/hicolor/48x48/apps/emacs.png: New icon.
+
+	* images/icons/hicolor/scalable/apps/emacs.svg:
+	* images/icons/hicolor/128x128/apps/emacs.png: New files.
+
+2008-02-26  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* NEWS (Gnus): Mention problem with coding system `utf-8-emacs'
+	when using different Emacs versions.
+
+2008-02-25  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* NEWS.22: Mention stock icons for Gtk+.
+
+2008-02-22  Kenichi Handa  <handa@ni.aist.go.jp>
+
+	* NEWS: Mention the new language environments Bengali, Punjabi,
+	Gujarati, Oriya, Telugu, Sinhala.  Mention the removal of features
+	devanagari, devan-util, kannada, knd-util, malayalam, mlm-util,
+	tamil, and tml-util.
+
+2008-02-22  Michael Olson  <mwolson@gnu.org>
+
+	* NEWS: Describe nXML mode and json.el.
+
+2008-02-21  Kenichi Handa  <handa@ni.aist.go.jp>
+
+	* NEWS: Improve the description about the removal of cp-...-codepage
+	functions.  Describe the removal of the feature `devan-util'.
+
+2008-02-21  Glenn Morris  <rgm@gnu.org>
+
+	* NEWS.unicode: Merge into NEWS and remove file.
+
+2008-02-20  Kenichi Handa  <handa@ni.aist.go.jp>
+
+	* NEWS.unicode: Mention the removal of codepage related functions.
+
+2008-02-16  Glenn Morris  <rgm@gnu.org>
+
+	* nxml/test-invalid.xml, nxml/test-valid.xml: Move here from lisp/nxml.
+	Rename from "test." to "test-" for doschk.
+
+2008-02-10  Daiki Ueno  <ueno@unixuser.org>
+
+	* NEWS: Clarify EasyPG functionalities.
 
 2008-02-09  Eli Zaretskii  <eliz@gnu.org>
 
-	* TUTORIAL.ru: Remove redundant empty lines, insert a magic line
-	instead.
+	* tutorials/TUTORIAL.ru: Remove redundant empty lines, insert a
+	magic line instead.
+
+2008-02-08  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* NEWS: Mention XEmbed and --parent-id.
+
+2008-02-08  Daiki Ueno  <ueno@unixuser.org>
+
+	* NEWS: Mention EasyPG.
 
 2008-02-02  Eli Zaretskii  <eliz@gnu.org>
 
-	* TUTORIAL.ru: Restore copyright years.  Update tutorial.  Fix
-	wording.
+	* tutorials/TUTORIAL.ru: Restore copyright years.  Update tutorial.
+	Fix wording.
+
+2008-02-02  Kenichi Handa  <handa@ni.aist.go.jp>
+
+	* HELLO: Add Bengali, Gujarati, Khmer, Myanmar, Oriya, Sinhala,
+	Telugu.  Fix ISO-2022 designations in Cantonese line.
+
+2008-02-01  Kenichi Handa  <handa@m17n.org>
+
+	* HELLO: Remove non-unicode character from Tibetan text.
+
+2008-02-01  Miles Bader  <miles@gnu.org>
+
+	* TODO, PROBLEMS, NEWS: Replace references to Emacs version "22"
+	with "23".
+
+2008-02-01  Kenichi Handa  <handa@m17n.org>
+
+	* charsets: New directory for charset mapping tables.
+
+	* charsets/README: New file.
+
+	* charsets/*.map: New files.
+
+2008-02-01  Kenichi Handa  <handa@m17n.org>
+
+	* HELLO: Change "Hindi" to more common characters.
+
+2008-02-01  Kenichi Handa  <handa@m17n.org>
+
+	* HELLO: Fix upcase and downcase for several languages.
+	Change the two German lines into one.  Change "Nederlangs" to
+	"Dutch (Nederlands)".  Add original language names to several entries.
+
+2008-02-01  Kenichi Handa  <handa@m17n.org>
+
+	* tutorials/TUTORIAL.es: Add local variable coding: latin-1.
+
+2008-02-01  Kenichi Handa  <handa@m17n.org>
+
+	* HELLO: Change indian-2-column chars of Hindi line to Unicode chars.
+
+2008-02-01  Dave Love  <fx@gnu.org>
+
+	* HELLO: Add pseudo-maths example.
 
 2008-01-31  Alex Ott  <alexott@gmail.com>
 
-	* TUTORIAL.ru: Update tutorial.
+	* tutorials/TUTORIAL.ru: Update tutorial.
+
+2008-01-25  Michael Olson  <mwolson@gnu.org>
+
+	* ERC-NEWS: Update for ERC 5.3 release candidate.
+
+2008-01-22  Juanma Barranquero  <lekktu@gmail.com>
+
+	* DEVEL.HUMOR: New entry.
+
+2008-01-18  Carsten Dominik  <dominik@science.uva.nl>
+
+	* refcards/orgcard.tex: Update to Org-mode version 5.19.
+
+2008-01-12  Eli Zaretskii  <eliz@gnu.org>
+
+	* MACHINES: Add an explicit list of platforms that are no longer
+	supported.
+	* NEWS: Refer to this list.
+
+2008-01-08  Glenn Morris  <rgm@gnu.org>
+
+	* refcards/calccard.tex, refcards/cs-dired-ref.tex:
+	* refcards/cs-refcard.tex, refcards/cs-survival.tex:
+	* refcards/de-refcard.tex, refcards/dired-ref.tex:
+	* refcards/fr-drdref.tex, refcards/fr-refcard.tex:
+	* refcards/fr-survival.tex, refcards/gnus-refcard.tex:
+	* refcards/orgcard.tex, refcards/pl-refcard.tex:
+	* refcards/pt-br-refcard.tex, refcards/refcard.tex:
+	* refcards/ru-refcard.tex, refcards/sk-dired-ref.tex:
+	* refcards/sk-refcard.tex, refcards/sk-survival.tex:
+	* refcards/survival.tex, refcards/vipcard.tex:
+	* refcards/viperCard.tex: Update printed copyright year to 2008.
 
 2008-01-08  Kevin Ryde  <user42@zip.com.au>
 
 	* compilation.txt (perl): Add a "during global destruction" sample.
 
-2008-01-08  Glenn Morris  <rgm@gnu.org>
+2008-01-06  Dan Nicolaescu  <dann@ics.uci.edu>
 
-	* calccard.tex, cs-dired-ref.tex, cs-refcard.tex, cs-survival.tex:
-	* de-refcard.tex, dired-ref.tex, fr-drdref.tex, fr-refcard.tex:
-	* fr-survival.tex, gnus-refcard.tex, orgcard.tex, pl-refcard.tex:
-	* pt-br-refcard.tex, refcard.tex, ru-refcard.tex, sk-dired-ref.tex:
-	* sk-refcard.tex, sk-survival.tex, survival.tex, vipcard.tex:
-	* viperCard.tex: Update printed copyright year to 2008.
+	* PROBLEMS:
+	* MACHINES: Remove references to systems not supported anymore.
+
+2008-01-05  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* MACHINES: Remove Masscomp.
+
+2008-01-03  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* images/icons/emacs_16.png, images/icons/emacs_24.png
+	* images/icons/emacs_32.png, images/icons/emacs_48.png: Rename to
+	hicolor/16x16/apps/emacs.png, hicolor/24x24/apps/emacs.png,
+	hicolor/32x32/apps/emacs.png and hicolor/48x48/apps/emacs.png.
+
+	* images/icons/README (Author): Update for renaming.
+
+	* emacs.desktop (Icon): Update icon name.
+
+2007-12-15  Eli Zaretskii  <eliz@gnu.org>
+
+	The following files renamed to avoid file-name clashes in
+	8+3 (a.k.a. DOS) namespace:
+
+	* schema/xhtml-basic-form.rnc: Renamed to xhtml-bform.rnc.
+	* schema/xhtml-basic-table.rnc: Renamed to xhtml-btable.rnc.
+	* schema/xhtml-list.rnc: Renamed to xhtml-lst.rnc.
+	* schema/xhtml-target.rnc: Renamed to xhtml-tgt.rnc.
+	* schema/xhtml-style.rnc: Renamed to xhtml-xstyle.rnc.
+	* schema/xhtml-form.rnc, schema/xhtml-table.rnc, schema/xhtml.rnc:
+	Updated accordingly.
+
+	* schema/docbook-dyntbl.rnc, schema/docbook-soextbl.rnc: Renamed to
+	docbk-dyntbl.rnc and docbk-soextbl.rnc, respectively.
+
+	* images/icons/macemacs_16.png, images/icons/macemacs_24.png:
+	* images/icons/macemacs_32.png, images/icons/macemacs_48.png:
+	* images/icons/macemacs_256.png, images/icons/macemacs_512.png:
+	Renamed to emacs16_mac.png, emacs24_mac.png, emacs32_mac.png,
+	emacs48_mac.png, emacs256_mac.png, and emacs512_mac.png,
+	respectively.
+
+2007-12-08  Ulrich Mueller  <ulm@gentoo.org>  (tiny change)
+
+	* emacs.desktop (Exec, Icon, Categories): Fix entries.
+
+2007-12-08  Reiner Steib  <Reiner.Steib@gmx.de>
+
+	* NEWS: Add minimal Gnus item.
+
+2007-12-08  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* emacs.desktop: New file.
+
+2007-11-30  Kentaro Ohkouchi  <nanasess@fsm.ne.jp>
+
+	* images/icons/macemacs_16.png, images/icons/macemacs_24.png:
+	* images/icons/macemacs_32.png, images/icons/macemacs_48.png:
+	* images/icons/macemacs_256.png, images/icons/macemacs_512.png:
+	New files.
+
+2007-11-28  Glenn Morris  <rgm@gnu.org>
+
+	* nxml/: New directory, moved here from lisp/nxml/char-name/unicode.
+	* nxml/README: New file.
 
 2007-11-24  Glenn Morris  <rgm@gnu.org>
 
-	* images/gnus/mail-send.xpm: Copy here from trunk.
+	* images/gnus/mail_send.xpm: Rename to mail-send.xpm.
 
-2007-11-22  Francesco Potort,Al(B  <pot@gnu.org>
+2007-11-23  Mark A. Hershberger  <mah@everybody.org>
 
-	* etags.1: Revert this change, not installed in Emacs 22:
-	"Now --members is the default for etags, not for ctags yet".
-	* etags.1: Note that you can use "-" for stdout with -o.
-	* NEWS: remove this entry for etags, because it was in fact not
-	installed in Emacs 22: "the --members option is now the default".
+	* NXML-NEWS: New File.
+
+	* schema: Initial merge of nxml.
+
+2007-11-22  Francesco Potortì  <pot@gnu.org>
+
+	* NEWS: etags: the --members option is now the default.
+
+2007-11-22  Glenn Morris  <rgm@gnu.org>
+
+	* images/smilies/grayscale/README, images/smilies/medium/README:
+	New files.
+
+2007-11-12  Vinicius Jose Latorre  <viniciusjl@ig.com.br>
+
+	* compilation.txt: Add new entries: compilation-perl--Pod::Checker,
+	compilation-perl--Test, compilation-perl--Test::Harness and
+	compilation-weblint.
+
+2007-11-01  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* MACHINES: Remove Sun windows info.
+
+2007-10-30  Michael Olson  <mwolson@gnu.org>
+
+	* NEWS: Add entry for Remember Mode.
+
+2007-10-29  Glenn Morris  <rgm@gnu.org>
+
+	* refcards/gnus-refcard.tex: Restore Feb 2007 copyright
+	clarifications lost in update to Gnus trunk.
+
+2007-10-28  Adam Sjøgren  <asjo@koldfront.dk>
+
+	* images/smilies/grayscale/blink.xpm:
+	* images/smilies/grayscale/braindamaged.xpm
+	* images/smilies/grayscale/cry.xpm, images/smilies/grayscale/dead.xpm:
+	* images/smilies/grayscale/evil.xpm:
+	* images/smilies/grayscale/forced.xpm:
+	* images/smilies/grayscale/frown.xpm, images/smilies/grayscale/grin.xpm:
+	* images/smilies/grayscale/indifferent.xpm:
+	* images/smilies/grayscale/reverse-smile.xpm:
+	* images/smilies/grayscale/sad.xpm, images/smilies/grayscale/smile.xpm:
+	* images/smilies/grayscale/wry.xpm: New larger grayscale smileys.
+
+	* images/smilies/medium/blink.xpm:
+	* images/smilies/medium/braindamaged.xpm, images/smilies/medium/cry.xpm:
+	* images/smilies/medium/dead.xpm, images/smilies/medium/evil.xpm:
+	* images/smilies/medium/forced.xpm, images/smilies/medium/frown.xpm:
+	* images/smilies/medium/grin.xpm, images/smilies/medium/indifferent.xpm:
+	* images/smilies/medium/reverse-smile.xpm:
+	* images/smilies/medium/sad.xpm, images/smilies/medium/smile.xpm:
+	* images/smilies/medium/wry.xpm: New colorful smileys.
+
+2007-10-29  Michael Olson  <mwolson@gnu.org>
+
+	* ERC-NEWS: Update for recent change.
+
+2007-10-27  Juanma Barranquero  <lekktu@gmail.com>
+
+	* .cvsignore: Add *.pyc.
+
+2007-10-25  Jonathan Yavner  <jyavner@member.fsf.org>
+
+	* ses-example.ses: Get rid of silly life-universe-everything local
+	variable.  `symbolic-formulas' is now `ses--symbolic-formulas'.
 
 2007-10-24  Juanma Barranquero  <lekktu@gmail.com>
 
 	* NEWS: Mention desktop locking.
 
+2007-10-10  Eric S. Raymond  <esr@snark.thyrsus.com>
+
+	* NEWS: Explain the VC fileset changes a bit better.
+
 2007-09-28  Glenn Morris  <rgm@gnu.org>
 
 	* PROBLEMS: Mention Tex superscript font issue.
 
-2007-09-12  Stefan Monnier  <monnier@iro.umontreal.ca>
+2007-09-25  Johannes Weiner  <hannes@saeurebad.de>
 
-	* emacs.py (complete.class_members): Make sure we return the _emacs_out
-	message even in the face of exceptions.
+	* NEWS: Fix typo.
 
-2007-09-05  Jason Rumney  <jasonr@gnu.org>
+2007-09-24  Glenn Morris  <rgm@gnu.org>
 
-	* NEWS: Mention focus-follows-mouse change.
+	* CONTRIBUTE: Remove information on maintaining copyright years;
+	it does not belong here and is in admin/notes anyway.
+
+2007-09-24  Adam Hupp  <adam@hupp.org>
+
+	* emacs.py: Split for python 2 and python 3 compatibility.
+	* emacs2.py: New file, split off from emacs.py.
+	* emacs3.py: New file, python 3 version of emacs2.py.
+
+2007-09-21  Glenn Morris  <rgm@gnu.org>
+
+	* emacstool.1: Remove file.
+	* emacs.bash: Adapt for removal of emacstool.
+	* emacs.csh: Remove emacstool-related code.
+
+2007-09-16  Glenn Morris  <rgm@gnu.org>
+
+	* gfdl.1: Remove unused file.
+
+2007-09-12  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile (SOURCES, unlock, relock): Delete.
+
+2007-09-10  Michaël Cadilhac  <michael@cadilhac.name>
+
+	* NEWS: Document the interactive specification for C functions.
+	Say that `set-file-modes' is now interactive.
+
+2007-09-10  Michael Olson  <mwolson@gnu.org>
+
+	* ERC-NEWS: Improve description of erc-tls and erc-ssl change.
+
+2007-09-09  Juri Linkov  <juri@jurta.org>
+
+	* AUTHORS, CONTRIBUTE: New files, moved here from the root dir.
+
+2007-09-08  Michael Olson  <mwolson@gnu.org>
+
+	* ERC-NEWS: Update for changes to the development version of ERC 5.3.
+
+2007-09-06  Glenn Morris  <rgm@gnu.org>
+
+	* ctags.1, emacs.1, emacsclient.1, etags.1: Move from etc/ to
+	doc/man/.
+
+	* refcards/README: Also mention gnus-logo.pdf license.
+
+2007-08-30  Carsten Dominik  <dominik@science.uva.nl>
+
+	* NEWS.22 (Note): Lower-case for orgtbl-mode.
+
+2007-08-29  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* NEWS: Say that Gtk+ build uses stock icons.
+
+2007-08-28  Werner LEMBERG  <wl@gnu.org>
+
+	* refcards/de-refcard.tex, refcards/de-refcard.pdf: Use `C-M-%'
+	instead of `M-x query-replace-regexp'.
 
 2007-08-27  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
 
 	* PROBLEMS (Mac OS X): Add alternative workaround for QuickTime
 	updater breakage.
 
+2007-08-26  Michaël Cadilhac  <michael@cadilhac.name>
+
+	* NEWS: Say that PDF files are now the default for refcards.
+
+	* refcards/fr-drdref.tex, refcards/fr-drdref.pdf: Move these to...
+	* refcards/fr-dired-ref.tex, refcards/fr-dired-ref.pdf: ... those names.
+
+	* refcards/pdflayout.sty: New.  Handle PDF layouts through
+	\pdfpagewidth and \pdfpageheight.
+
+	* refcards/calccard.pdf, refcards/cs-dired-ref.pdf:
+	* refcards/cs-refcard.pdf, refcards/de-refcard.pdf:
+	* refcards/dired-ref.pdf, refcards/fr-drdref.pdf:
+	* refcards/fr-refcard.pdf, refcards/gnus-booklet.pdf:
+	* refcards/gnus-logo.pdf, refcards/gnus-refcard.pdf:
+	* refcards/orgcard.pdf, refcards/pl-refcard.pdf:
+	* refcards/pt-br-refcard.pdf, refcards/refcard.pdf:
+	* refcards/ru-refcard.pdf, refcards/sk-dired-ref.pdf:
+	* refcards/sk-refcard.pdf: Add PDF versions of the refcards.
+
+	* refcards/calccard.ps, refcards/cs-dired-ref.ps:
+	* refcards/cs-refcard.ps, refcards/de-refcard.ps, refcards/dired-ref.ps:
+	* refcards/fr-drdref.ps, refcards/fr-refcard.ps:
+	* refcards/gnus-booklet.ps, refcards/gnus-logo.ps:
+	* refcards/gnus-refcard.ps, refcards/orgcard.ps, refcards/pl-refcard.ps:
+	* refcards/pt-br-refcard.ps, refcards/refcard.ps:
+	* refcards/ru-refcard.ps, refcards/sk-dired-ref.ps:
+	* refcards/sk-refcard.ps: Remove the PS versions of the refcards.
+
+	* refcards/calccard.tex, refcards/fr-survival.tex, refcards/orgcard.tex:
+	* refcards/pl-refcard.tex, refcards/pt-br-refcard.tex:
+	* refcards/refcard.tex, refcards/survival.tex, refcards/vipcard.tex:
+	* refcards/viperCard.tex: Specify PDF layout,
+	use a PDF `compile-command' local variable.
+
+	* refcards/cs-dired-ref.tex, refcards/cs-refcard.tex:
+	* refcards/cs-survival.tex, refcards/dired-ref.tex:
+	* refcards/fr-drdref.tex, refcards/sk-dired-ref.tex:
+	* refcards/sk-refcard.tex, refcards/sk-survival.tex:
+	Specify PDF layout.
+
+	* refcards/fr-refcard.tex: Update copyright notice.
+	Update the examples.  Fix a typo.  Remove the `letterpaper' counter,
+	specify PDF layout, use a PDF `compile-command' local variable.
+
+	* refcards/de-refcard.tex: Remove the `letterpaper' counter,
+	specify PDF layout, use a PDF `compile-command' local variable.
+
+	* refcards/ru-refcard.tex: Use a PDF `compile-command' local variable.
+
+	* refcards/Makefile: Add rules for creating the refcards in PDF,
+	make them the default.  Change `fr-drdref' to `fr-dired-ref'.
+
+2007-08-23  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile (mostlyclean, clean, distclean, maintainer-clean):
+	Delete these targets since nothing uses them.
+	(SOURCES): Update.
+	Move comments to e/README.  Remove license from now-trivial file.
+
+	* e/README: New file, with most information formerly in Makefile.
+
+2007-09-05  Jason Rumney  <jasonr@gnu.org>
+
+	* NEWS.22: Mention focus-follows-mouse change.
+
 2007-08-22  Karl Berry  <karl@gnu.org>
 
-	* refcard.tex: Updates for printing.
+	* refcards/refcard.tex: Updates for printing.
 	(\versionyear): Update to 2007.
 	(\copyrightnotice): Modified or unmodified ok.
 	(Simple Customization): Don't use goto-line, since now it's bound.
 	Also, use now-preferred (kbd ...) syntax.
+
+2007-08-22  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: `shell' prompts for the default directory if called with a
+	prefix and `default-directory' is a remote file name.
+
+2007-08-22  Glenn Morris  <rgm@gnu.org>
+
+	* tree-widget: Move this directory into images/ subdirectory.
+
+	* refcards/: New directory.  Move refcards here.
+	* Makefile: Move refcard rules from here...
+	* refcards/Makefile: ...to here.
+	* README: Move information about tex files from here...
+	* refcards/README: ...to here.
+
+	* tutorials/: New directory.  Move TUTORIAL* here.
+
+	* gnus.pbm, letter.pbm, letter.xpm:
+	* splash.pbm, splash.xpm, splash8.xpm: Move from etc/ to etc/images/.
+	* README: Move license information for the above files from here...
+	* images/README: ...to here.
+
+2007-08-22  Carsten Dominik  <dominik@science.uva.nl>
+
+	* orgcard.tex: Version number upgrade.
 
 2007-08-14  Glenn Morris  <rgm@gnu.org>
 
@@ -109,28 +930,76 @@
 	* TODO: `iff' item is dealt with.
 	* GNUS-NEWS, NEWS, NEWS.1-17, NEWS.19, NEWS.21: Replace `iff'.
 
+2007-08-01  Glenn Morris  <rgm@gnu.org>
+
+	* NEWS: Add fortran-line-length, plus some more sections.
+
 2007-07-25  Glenn Morris  <rgm@gnu.org>
 
 	* Relicense all FSF files to GPLv3 or later.
 
 	* COPYING: Switch to GPLv3.
 
-2007-07-15  Werner Lemberg  <wl@gnu.org>
+2007-07-24  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: New functions `start-file-process-shell-command' and
+	`process-file-shell-command'.
+
+2007-07-17  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: `file-remote-p' has a new optional parameter IDENTIFICATION.
+
+2007-07-15  Karl Fogel  <kfogel@red-bean.com>
+
+	* NEWS: Revert revision 1.1509 (commitid xdXJjPiU1ZfI9Fps), which
+	documented bookmark keybinding changes that were later reverted.
+
+2007-07-14  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* PROBLEMS: Mention gtk-engines-qt problem.
+
+2007-07-13  Karl Fogel  <kfogel@red-bean.com>
+
+	* NEWS: Update for recent bookmark keybinding changes.
+
+2007-07-10  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: Add Tramp and comint-mode changes.
+
+2007-07-08  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: `file-remote-p' has a new optional parameter CONNECTED.
+
+2007-07-07  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: New function `start-file-process'.
+
+2007-07-02  Carsten Dominik  <dominik@science.uva.nl>
+
+	* orgcard.tex: Version 5.01
+
+2007-06-27  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: `dired-call-process' has been removed.
+
+2007-06-20  Glenn Morris  <rgm@gnu.org>
+
+	* NEWS: configure prefers libgif over libungif.
+
+2007-06-14  Nick Roberts  <nickrob@snap.net.nz>
+
+	* NEWS: Mention mouse highlighting in a GNU/Linux console.
+
+2007-06-14  Werner Lemberg  <wl@gnu.org>
 
 	* emacs.1: Completely revised.
 	Fix many typographical glitches.
 	Updated to handle current state of options and resources.
 
-2007-07-14  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2007-06-12  Glenn Morris  <rgm@gnu.org>
 
-	* PROBLEMS: Mention gtk-engines-qt problem.
-
-2007-06-07  Glenn Morris  <rgm@gnu.org>
-
-	* images/cancel.pbm: Convert from PGM to PBM.
-
-	* images/copy.pbm, images/next-node.pbm, images/prev-node.pbm:
-	* images/save.pbm, images/up-node.pbm: Convert from PPM to PBM.
+	* NEWS: Change bug address.  Add back +++/--- note.
+	Use present tense for X-toolkit entry.  Mention libgif.
 
 2007-06-07  Mark H. Weaver  <mhw@netris.org>  (tiny change)
 
@@ -139,6 +1008,20 @@
 2007-06-07  Michael Olson  <mwolson@gnu.org>
 
 	* MORE.STUFF: Update eshell URL.
+
+2007-06-06  Carsten Dominik  <dominik@science.uva.nl>
+
+	* orgcard.tex: Version 4.77.
+
+2007-06-05  Michael Albinus  <michael.albinus@gmx.de>
+
+	* NEWS: Add socks.el as new package.
+
+2007-06-02  Thien-Thi Nguyen  <ttn@gnuvola.org>
+
+	* MORE.STUFF (Hideshow): Delete.
+	(EDB, Go in a buffer): Update urls.
+	Suggested by CHENG Gao <chenggao@gmail.com>.
 
 2007-06-02  Chong Yidong  <cyd@stupidchicken.com>
 
@@ -153,11 +1036,24 @@
 
 	* NEWS: Fix instances of `allow' without object.
 
+2007-05-22  Glenn Morris  <rgm@gnu.org>
+
+	* NEWS.22: New file with entries for Emacs 22.
+	* NEWS: Move Emacs 22 entries to new file NEWS.22, leave empty
+	template for next Emacs version.
+
+2007-05-19  Glenn Morris  <rgm@gnu.org>
+
+	* images/cancel.pbm: Convert from PGM to PBM.
+
+	* images/copy.pbm, images/next-node.pbm, images/prev-node.pbm:
+	* images/save.pbm, images/up-node.pbm: Convert from PPM to PBM.
+
 2007-05-17  Glenn Morris  <rgm@gnu.org>
 
 	* PROBLEMS (Dumping): Mention OpenBSD macppc problem.
 
-2007-05-15  Micha,Ak(Bl Cadilhac  <michael@cadilhac.name>
+2007-05-15  Michaël Cadilhac  <michael@cadilhac.name>
 
 	* fr-refcard.tex: Rewrite using German layout.
 
@@ -167,7 +1063,7 @@
 
 	* refcard.tex (section{Incremental Search}): Minor corrections.
 
-2007-05-12  Micha,Ak(Bl Cadilhac  <michael@cadilhac.name>
+2007-05-12  Michaël Cadilhac  <michael@cadilhac.name>
 
 	* Makefile (viperCard.ps, calccard.ps refcard.ps)
 	(sk-dired-ref.ps sk-refcard.ps sk-survival.ps)
@@ -323,7 +1219,7 @@
 	* cs-dired-ref.tex: Increase in 2 column case to make room
 	for copyright notice.
 	(nopagenumbers): Call to turn off numbers in 1 page document.
-	(N,Aa(Bpov,Al(Bda, Modifikace Dired bufferu): Swap sections to
+	(Nápovìda, Modifikace Dired bufferu): Swap sections to
 	balance column length in presence of copyright notice.
 	(copyrightnotice): Uncomment so that notice is displayed.
 
@@ -348,7 +1244,7 @@
 	* sk-dired-ref.tex (vsize): Increase in 2 column case to make room
 	for copyright notice.
 	(nopagenumbers): Call to turn off numbers in 1 page document.
-	(N,Aa(Bpoveda, Modifik,Aa(Bcia Dired bufferu): Swap sections to
+	(Nápoveda, Modifikácia Dired bufferu): Swap sections to
 	balance column length in presence of copyright notice.
 	(copyrightnotice): Uncomment so that notice is displayed.
 
@@ -365,7 +1261,7 @@
 	(section{Exporting and Publishing}): Export options no longer in
 	reference card.
 
-2007-02-25  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2007-02-25  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* PROBLEMS: Gtk+ and cygwin doesn't work.
 
@@ -373,7 +1269,7 @@
 
 	* MORE.STUFF: Add a pointer to Phil Sung's Emacs slides on MIT.
 
-2007-02-22  Per Starb,Ad(Bck  <starback@stp.lingfil.uu.se>  (tiny change)
+2007-02-22  Per Starbäck  <starback@stp.lingfil.uu.se>  (tiny change)
 
 	* NEWS: Grammar and capitalization fixes.
 
@@ -392,7 +1288,7 @@
 
 2007-02-19  Kenichi Handa  <handa@m17n.org>
 
-	* NEWS (New language environmets): Add "Esperanto".
+	* NEWS (New language environments): Add "Esperanto".
 
 2007-02-16  Dale Gulledge  <dsplat@rochester.rr.com>
 
@@ -462,7 +1358,7 @@
 
 	* DEVEL.HUMOR: New entry.
 
-2007-02-05  Francesco Potort,Al(B  <pot@gnu.org>
+2007-02-05  Francesco Potortì  <pot@gnu.org>
 
 	* etags.1: Now --members is the default for etags, not for ctags yet.
 	* NEWS (etags): Document it.
@@ -533,7 +1429,7 @@
 	GNU/Linux.
 	* PROBLEMS: As above.
 
-2007-01-02  Francesco Potort,Al(B  <pot@gnu.org>
+2007-01-02  Francesco Potortì  <pot@gnu.org>
 
 	* etags.1: Undocument the --no-warn option.
 
@@ -549,7 +1445,7 @@
 
 	* ERC-NEWS: Note that the list module has been removed.
 
-2006-12-05  Micha,Ak(Bl Cadilhac  <michael.cadilhac@lrde.org>
+2006-12-05  Michaël Cadilhac  <michael.cadilhac@lrde.org>
 
 	* NEWS (Changes to cmuscheme): Mention the alternative for
 	`~/.emacs_SCHEMEPROG' which is `~/.emacs.d/init_SCHEMEPROG.scm'.
@@ -636,7 +1532,7 @@
 
 	* refcard.ps: Regenerate.
 
-2006-09-18  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2006-09-18  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* NEWS: Rename x-use-old-gtk-file-dialog to x-gtk-use-old-file-dialog.
 
@@ -662,7 +1558,7 @@
 	to "t".
 	* PROBLEMS: Adjust tcsh advice for this.
 
-2006-09-10  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2006-09-10  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* PROBLEMS (are): Emacs compiled with Gtk+ crashes when closing a
 	display (x-close-connection).
@@ -763,7 +1659,7 @@
 
 	* PROBLEMS: Emacs now requires ws2_32.dll on Windows.
 
-2006-07-14  K,Aa(Broly L$,1 q(Brentey  <lorentey@elte.hu>
+2006-07-14  Károly Lőrentey  <lorentey@elte.hu>
 
 	* HELLO: Update Hungarian sample.
 
@@ -800,7 +1696,7 @@
 	* orgcard.tex (section{Agenda Views}): Document `s' key to save
 	all org-mode buffers.
 
-2006-06-30  Francesco Potort,Al(B  <pot@gnu.org>
+2006-06-30  Francesco Potortì  <pot@gnu.org>
 
 	* etags.1: -m and -M options do not exist.
 
@@ -853,11 +1749,11 @@
 
 	* yow.lines: Delete existing data; add a new entry.
 
-2006-06-09  W$,1 b(Bodek Bzyl  <matwb@univ.gda.pl>
+2006-06-09  Włodek Bzyl  <matwb@univ.gda.pl>
 
 	* pl-refcard.ps: Regenerate.
 
-2006-06-08  W$,1 b(Bodek Bzyl  <matwb@univ.gda.pl>
+2006-06-08  Włodek Bzyl  <matwb@univ.gda.pl>
 
 	* pl-refcard.tex: Update for Emacs 22.
 
@@ -865,7 +1761,7 @@
 
 	* fr-refcard.tex: Fix errors in previous commit.
 
-2006-06-08  ,AI(Bric Jacoboni  <jaco@jacoboni.fr>
+2006-06-08  Éric Jacoboni  <jaco@jacoboni.fr>
 
 	* fr-refcard.tex: Update for Emacs 22.
 
@@ -918,7 +1814,7 @@
 	* tree-widget/folder/open.png, tree-widget/folder/open.xpm:
 	Reduce the size of images.
 
-2006-05-29  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2006-05-29  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* NEWS: Mention F10 for Gtk+/Lesstif/Lucid menus.
 
@@ -1137,7 +2033,7 @@
 
 2006-03-09  Reiner Steib  <Reiner.Steib@gmx.de>
 
-	* TUTORIAL.de: Replace "Schreiben" by "Dr,A|(Bcken" where appropriate.
+	* TUTORIAL.de: Replace "Schreiben" by "Drücken" where appropriate.
 
 2006-03-07  Carsten Dominik  <dominik@science.uva.nl>
 
@@ -1176,7 +2072,7 @@
 
 	* NEWS: Changes in handling of file local variables.
 
-2006-02-14  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2006-02-14  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* NEWS: Gtk+ 2.4 is required.
 
@@ -1244,11 +2140,11 @@
 	* e/eterm-color.ti: Temporarily disable the ri entry.
 	* e/eterm-color: Regenerate.
 
-2005-12-21  L$,1 q(Brentey K,Aa(Broly  <lorentey@elte.hu>
+2005-12-21  Lőrentey Károly  <lorentey@elte.hu>
 
 	* TODO: Add note on the multi-tty branch.
 
-2005-12-16  L$,1 q(Brentey K,Aa(Broly  <lorentey@elte.hu>
+2005-12-16  Lőrentey Károly  <lorentey@elte.hu>
 
 	* NEWS: Change `prev-buffer' to `previous-buffer'; add note on
 	them using the frame-local buffer list.
@@ -1291,13 +2187,13 @@
 
 	* images/gud/pp.xpm, images/gud/pp.pbm: New icons.
 
-2005-11-06  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2005-11-06  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* images/copy.xpm, images/copy.pbm, images/low-color/copy.xpm
 	* images/save.xpm, images/save.pbm, images/low-color/save.xpm:
 	Adjust baseline.
 
-2005-11-06  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2005-11-06  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* images/up-node.xpm, images/prev-node.xpm, images/next-node.xpm
 	* images/up-node.pbm, images/prev-node.pbm, images/next-node.pbm
@@ -1308,7 +2204,7 @@
 
 	* DEBUG: Describe how to provide preprocessor macro information.
 
-2005-11-04  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2005-11-04  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* images/up-node.xpm, images/prev-node.xpm, images/next-node.xpm
 	* images/up-node.pbm, images/prev-node.pbm, images/next-node.pbm
@@ -1343,7 +2239,7 @@
 
 2005-10-25  Nick Roberts  <nickrob@snap.net.nz>
 
-	* images/gud/until.xpm: Colour correction.
+	* images/gud/until.xpm: Color correction.
 
 2005-10-23  Richard M. Stallman  <rms@gnu.org>
 
@@ -1456,7 +2352,7 @@
 
 	* NEWS, MH-E-NEWS: Updated for release 7.85.
 
-2005-10-10  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2005-10-10  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* NEWS: -nb => -nbi
 
@@ -1464,7 +2360,7 @@
 
 	* orgcard.tex: Version 3.17, no changes except version number.
 
-2005-10-09  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2005-10-09  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* NEWS: -nb, --no-bitmap-icon
 
@@ -1577,7 +2473,7 @@
 
 	* grep.txt: New file.
 
-2005-07-19  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2005-07-19  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* PROBLEMS (Fedora Core 4 GNU/Linux: Segfault during dumping):
 	-R comes after i386 in setarch command.
@@ -1618,7 +2514,7 @@
 	* pl-refcard.tex, refcard.tex, ru-refcard.tex, sk-dired-ref.tex:
 	* sk-refcard.tex, vipcard.tex, viperCard.tex: Update FSF's address.
 
-2005-07-03  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2005-07-03  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* PROBLEMS (Fedora Core 4 GNU/Linux: Segfault during dumping):
 	Add it again.
@@ -1716,11 +2612,11 @@
 
 	* TUTORIAL.ru: Update.
 
-2005-04-13  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2005-04-13  Pavel Janík  <Pavel@Janik.cz>
 
 	* TUTORIAL.sk: Updated header.
 
-2005-04-12  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2005-04-12  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* NEWS: Mention cursorBlink resource.
 
@@ -1728,7 +2624,7 @@
 
 	* NEWS: Mention dynamic change of keyboard-coding-system on Mac.
 
-2005-04-10  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2005-04-10  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* NEWS: Mention fontSet for Lucid menus.
 
@@ -1742,7 +2638,7 @@
 	* TUTORIAL.ja: Updated header, contents synchronized with
 	TUTORIAL (CVS-1.61).
 
-2005-04-06  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2005-04-06  Pavel Janík  <Pavel@Janik.cz>
 
 	* TUTORIAL.cs: Updated header.
 
@@ -1891,15 +2787,15 @@
 
 	* fr-refcard.tex: Fix typos.
 
-2004-12-07  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2004-12-07  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* PROBLEMS: Update information about klipper on KDE.
 
-2004-11-26  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2004-11-26  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* NEWS: Rename use-old-gtk-file-dialog to x-use-old-gtk-file-dialog.
 
-2004-10-08  Fr,Ai(Bd,Ai(Bric Bothamy  <frederic.bothamy@free.fr>  (tiny change)
+2004-10-08  Frédéric Bothamy  <frederic.bothamy@free.fr>  (tiny change)
 
 	* TUTORIAL.fr: Minor wording fix.
 
@@ -1923,7 +2819,7 @@
 	Reformat.
 	* e/eterm: Regenerate.
 
-2004-09-25  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2004-09-25  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* PROBLEMS: Updated exec-shield description.
 
@@ -1974,7 +2870,7 @@
 
 	* NEWS: Mention the thumbs.el package.
 
-2004-08-14  Eric Hanchrow  <offby1@blarg.net>
+2004-08-14  Eric Hanchrow  <offby1@blarg.net>  (tiny change)
 
 	* TUTORIAL.es: Replace actual whitespace with the magic string
 	that causes help-with-tutorial to automatically insert the correct
@@ -2093,7 +2989,7 @@
 	(HeaderClip, FooterClip): New PostScript funs.
 	(HeaderText, FooterText): Adjust PostScript code.
 
-2004-03-29  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2004-03-29  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* TODO: Removed drag-and-drop entry (DONE).
 
@@ -2146,7 +3042,7 @@
 	* HELLO: Fix cases of language names.  Make German lines one.
 	Delete FORTRAN, add Mathematics.
 
-2003-10-24  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2003-10-24  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* PROBLEMS: Characters are displayed as empty boxes or
 	with wrong font under X.
@@ -2191,7 +3087,7 @@
 
 2003-04-01  Dave Love  <fx@gnu.org>
 
-	* letter.xpm: Use transparent/opaque `colours'.
+	* letter.xpm: Use transparent/opaque `colors'.
 
 	* letter.xbm: Deleted.
 
@@ -2205,7 +3101,7 @@
 
 	* TUTORIAL.cn, TUTORIAL.zh: New files.
 
-	* TUTORIAL.translator: List TUTORIAL.cn and TUTORIAL.zh.
+	* TUTORIAL.translators: List TUTORIAL.cn and TUTORIAL.zh.
 
 2003-02-24  Kenichi Handa  <handa@m17n.org>
 
@@ -2219,11 +3115,11 @@
 
 	* HELLO: Fix Hindi and add Tamil.
 
-2003-02-05  Francesco Potort,Al(B  <pot@gnu.org>
+2003-02-05  Francesco Potortì  <pot@gnu.org>
 
 	* TUTORIAL.it: Italian tutorial.
 	From Alfredo Finelli <alfredofnl@tiscali.it> (original translator).
-	Revised by Francesco Potort,Al(B <pot@gnu.org>.
+	Revised by Francesco Potortì <pot@gnu.org>.
 
 2003-02-03  Bill Wohler  <wohler@newt.com>
 
@@ -2233,7 +3129,7 @@
 
 	* MACHINES: Added Cygwin.
 
-2003-01-27  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2003-01-27  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* DEBUG: Added note about xmon.
 
@@ -2241,12 +3137,12 @@
 
 	* TUTORIAL.pl: Updated.
 
-2003-01-11  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2003-01-11  Pavel Janík  <Pavel@Janik.cz>
 
 	* TUTORIAL.sk: Updated to reflect changes in English version.
-	From Miroslav Va$,1!!(Bko <zemiak@zoznam.sk>.
+	From Miroslav Vaško <zemiak@zoznam.sk>.
 
-2003-01-09  Francesco Potort,Al(B  <pot@gnu.org>
+2003-01-09  Francesco Potortì  <pot@gnu.org>
 
 	* etags.1: Added reference to the new `etags --help --lang=LANG'
 	option.
@@ -2267,7 +3163,7 @@
 
 	* MH-E-NEWS: Upgraded to MH-E version 7.0.
 
-2002-11-22  Rafael Sep,Az(Blveda  <drs@gnulinux.org.mx>
+2002-11-22  Rafael Sepúlveda  <drs@gnulinux.org.mx>
 
 	* TUTORIAL.es: Extensively changed and updated.
 
@@ -2303,7 +3199,7 @@
 
 2002-06-16  Eli Zaretskii  <eliz@is.elta.co.il>
 
-	* TUTORIAL.fr: New version from ,AI(Bric Jacoboni <jaco@teaser.fr>.
+	* TUTORIAL.fr: New version from Éric Jacoboni <jaco@teaser.fr>.
 
 2002-05-04  Eli Zaretskii  <eliz@is.elta.co.il>
 
@@ -2313,7 +3209,7 @@
 
 	* termcap.src: New version from ftp://invisible-island.net.
 
-2002-03-24  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2002-03-24  Pavel Janík  <Pavel@Janik.cz>
 
 	* TUTORIAL.translators: New file, list of tutorial translators.
 
@@ -2321,15 +3217,15 @@
 
 	* gnus.xpm: Remove garbages.
 
-2002-01-27  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2002-01-27  Pavel Janík  <Pavel@Janik.cz>
 
 	* letter.xpm: New file, XPM variant of letter.xbm.
 
-2001-12-03  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2001-12-03  Pavel Janík  <Pavel@Janik.cz>
 
 	* COPYING: Move back.
 
-2001-11-29  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2001-11-29  Pavel Janík  <Pavel@Janik.cz>
 
 	* COPYING: Removed.
 
@@ -2347,11 +3243,11 @@
 
 2001-11-18  Eli Zaretskii  <eliz@is.elta.co.il>
 
-	* fr-survival.tex: New file, from ,AI(Bric Jacoboni <jaco@teaser.fr>.
+	* fr-survival.tex: New file, from Éric Jacoboni <jaco@teaser.fr>.
 
 2001-11-17  Eli Zaretskii  <eliz@is.elta.co.il>
 
-	* TUTORIAL.fr: New version from ,AI(Bric Jacoboni <jaco@teaser.fr>.
+	* TUTORIAL.fr: New version from Éric Jacoboni <jaco@teaser.fr>.
 
 2001-11-17  Colin Walters  <walters@debian.org>
 
@@ -2359,7 +3255,7 @@
 
 2001-11-16  Eli Zaretskii  <eliz@is.elta.co.il>
 
-	* TUTORIAL.fr: New file.  From ,AI(Bric Jacoboni <jaco@teaser.fr>.
+	* TUTORIAL.fr: New file.  From Éric Jacoboni <jaco@teaser.fr>.
 
 2001-11-10  Eli Zaretskii  <eliz@is.elta.co.il>
 
@@ -2384,7 +3280,7 @@
 	* HELLO: Fix the Italian and Maltese entries.  From Trevor Spiteri
 	<tbspit@eng.um.edu.mt>.
 
-2001-08-25  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2001-08-25  Pavel Janík  <Pavel@Janik.cz>
 
 	* HELLO: Slovak language name added to be compatible with other
 	languages.
@@ -2392,7 +3288,7 @@
 2001-08-23  Eli Zaretskii  <eliz@is.elta.co.il>
 
 	* TUTORIAL.pl: Updated in accordance with the English version.
-	From Beata Wierzcho$,1 b(Bowska <beataw@orient.uw.edu.pl> and
+	From Beata Wierzchołowska <beataw@orient.uw.edu.pl> and
 	Janusz S. Bien <jsbien@mail.uw.edu.pl>.
 
 2001-08-14  Eli Zaretskii  <eliz@is.elta.co.il>
@@ -2401,33 +3297,33 @@
 	per config.sub and config.guess.  Reported by Ryo Furue
 	<furufuru@ccsr.u-tokyo.ac.jp>.
 
-2001-08-10  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2001-08-10  Pavel Janík  <Pavel@Janik.cz>
 
 	* TUTORIAL.sk: Updated in accordance with the English version.
-	From Miroslav Va$,1!!(Bko <vasko@debian.cz>.
+	From Miroslav Vaško <vasko@debian.cz>.
 
 2001-08-08  Eli Zaretskii  <eliz@is.elta.co.il>
 
 	* TUTORIAL.ko: Updated in accordance with the English version.
 	From Koaunghi Un <koaunghi@world.kaist.ac.kr>.
 
-2001-08-06  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2001-08-06  Pavel Janík  <Pavel@Janik.cz>
 
 	* TUTORIAL.cs: Update from Milan Zamazal.
 
-2001-08-05  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2001-08-05  Pavel Janík  <Pavel@Janik.cz>
 
 	* TUTORIAL.cs, TUTORIAL.sk, cs-refcard.tex, sk-refcard.tex: E-mail
 	address of Milan Zamazal changed.
 
-2001-08-04  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2001-08-04  Pavel Janík  <Pavel@Janik.cz>
 
 	* TUTORIAL, TUTORIAL.cs: Be consistent when naming CONTROL and
 	META keys.
 
-2001-05-17  Francesco Potorti`  <pot@gnu.org>
+2001-05-17  Francesco Potortì  <pot@gnu.org>
 
-	* etags.1: Add the latest changes to etags behaviour.
+	* etags.1: Add the latest changes to etags behavior.
 
 2001-05-04  Eli Zaretskii  <eliz@is.elta.co.il>
 
@@ -2452,7 +3348,7 @@
 	* sk-dired-ref.tex: New files.
 
 	* cs-survival.tex, cs-dired-ref.ps, cs-dired-ref.tex: New files.
-	From Pavel@Janik.cz (Pavel Jan,Am(Bk).
+	From Pavel@Janik.cz (Pavel Janík).
 
 2001-04-10  Vinicius Jose Latorre  <vinicius@cpqd.com.br>
 
@@ -2546,7 +3442,7 @@
 
 2000-12-15  Miles Bader  <miles@gnu.org>
 
-	* DEBUG: Add note aboute using `inverse-video' to detect excessive
+	* DEBUG: Add note about using `inverse-video' to detect excessive
 	screen redraw.
 
 2000-12-07  Dave Love  <fx@gnu.org>
@@ -2716,7 +3612,7 @@
 
 2000-03-15  Vinicius Jose Latorre  <vinicius@cpqd.com.br>
 
-	* ps-print0.ps: New file.
+	* ps-prin0.ps: New file.
 
 	* ps-prin1.ps, ps-prin3.ps: Eliminate CheckConfig.
 
@@ -3008,13 +3904,13 @@
 
 1993-03-22  Eric S. Raymond  (eric@geech.gnu.ai.mit.edu)
 
-	* spook.lines:	Alpha-sorted this, and added some new hot buttons
+	* spook.lines: Alpha-sorted this, and added some new hot buttons
 	for the 1990s.
 
 1993-03-19  Eric S. Raymond  (eric@geech.gnu.ai.mit.edu)
 
 	* MACHINES: Deleted some VMS caveats.  If the src and lisp
-	ChangeLogs are correct,	dired and mail and process control are now
+	ChangeLogs are correct, dired and mail and process control are now
 	fully supported.
 
 	* NEWS: Added finder news.
@@ -3239,7 +4135,7 @@
 
 1992-01-09  Jim Blandy  (jimb@pogo.cs.oberlin.edu)
 
-	* emacsclient.c: #include <sys/stat.h>
+	* emacsclient.c: #include <sys/stat.h>.
 	(main): Do declare statbfr.
 
 1991-12-21  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
@@ -3524,7 +4420,7 @@
 
 	* emacstool.c: setenv IN_EMACSTOOL=t, TERM=sun, TERMCAP=.
 
-	* emacsstool.1: Update to document environment variables.
+	* emacstool.1: Update to document environment variables.
 
 1989-02-21  Mosur Mohan  (email@notavailable)
 
@@ -3726,20 +4622,20 @@
 	* loadst.c (main) [XENIX]: Use /usr/spool/mail, not /usr/mail.
 
 ;; Local Variables:
-;; coding: iso-2022-7bit
+;; coding: utf-8
 ;; add-log-time-zone-rule: t
 ;; End:
 
     Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2001
-	2002, 2003, 2004, 2005, 2006, 2007, 2008
+	2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 	Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
-  GNU Emacs is free software; you can redistribute it and/or modify
+  GNU Emacs is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 3, or (at your option)
-  any later version.
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -3747,8 +4643,6 @@
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with GNU Emacs; see the file COPYING.  If not, write to the
-  Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-  Boston, MA 02110-1301, USA.
+  along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; arch-tag: 094f3a51-bd72-44d0-8fac-2ac242c6c5b1

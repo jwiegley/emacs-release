@@ -1,17 +1,17 @@
 ;;; paragraphs.el --- paragraph and sentence parsing
 
 ;; Copyright (C) 1985, 1986, 1987, 1991, 1994, 1995, 1996, 1997, 1999, 2000,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: wp
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -98,7 +96,7 @@ If the variable `use-hard-newlines' is non-nil, then only lines following a
 hard newline are considered to match."
   :group 'paragraphs
   :type 'regexp)
-;;;###autoload(put 'paragraph-start 'safe-local-variable 'stringp)
+(put 'paragraph-start 'safe-local-variable 'stringp)
 
 ;; paragraph-start requires a hard newline, but paragraph-separate does not:
 ;; It is assumed that paragraph-separate is distinctive enough to be believed
@@ -116,7 +114,7 @@ ensures that the paragraph functions will work equally within a region of
 text indented by a margin setting."
   :group 'paragraphs
   :type 'regexp)
-;;;###autoload(put 'paragraph-separate 'safe-local-variable 'stringp)
+(put 'paragraph-separate 'safe-local-variable 'stringp)
 
 (defcustom sentence-end-double-space t
   "Non-nil means a single space does not end a sentence.
@@ -128,7 +126,7 @@ regexp describing the end of a sentence, when the value of the variable
 `sentence-end' is nil.  See Info node `(elisp)Standard Regexps'."
   :type 'boolean
   :group 'fill)
-;;;###autoload(put 'sentence-end-double-space 'safe-local-variable 'booleanp)
+(put 'sentence-end-double-space 'safe-local-variable 'booleanp)
 
 (defcustom sentence-end-without-period nil
   "Non-nil means a sentence will end without a period.
@@ -140,7 +138,7 @@ regexp describing the end of a sentence, when the value of the variable
 `sentence-end' is nil.  See Info node `(elisp)Standard Regexps'."
   :type 'boolean
   :group 'fill)
-;;;###autoload(put 'sentence-end-without-period 'safe-local-variable 'booleanp)
+(put 'sentence-end-without-period 'safe-local-variable 'booleanp)
 
 (defcustom sentence-end-without-space
   "$B!#!%!)!*$A!##.#?#!$(0!$!%!)!*$(G!$!%!)!*(B"
@@ -151,7 +149,7 @@ regexp describing the end of a sentence, when the value of the variable
 `sentence-end' is nil.  See Info node `(elisp)Standard Regexps'."
   :group 'paragraphs
   :type 'string)
-;;;###autoload(put 'sentence-end-without-space 'safe-local-variable 'stringp)
+(put 'sentence-end-without-space 'safe-local-variable 'stringp)
 
 (defcustom sentence-end nil
   "Regexp describing the end of a sentence.
@@ -163,14 +161,14 @@ function `sentence-end'.  You should always use this function
 to obtain the value of this variable."
   :group 'paragraphs
   :type '(choice regexp (const :tag "Use default value" nil)))
-;;;###autoload(put 'sentence-end 'safe-local-variable 'string-or-null-p)
+(put 'sentence-end 'safe-local-variable 'string-or-null-p)
 
 (defcustom sentence-end-base "[.?!][]\"'$B!I$,1r}(B)}]*"
   "Regexp matching the basic end of a sentence, not including following space."
   :group 'paragraphs
   :type 'string
   :version "22.1")
-;;;###autoload(put 'sentence-end-base 'safe-local-variable 'stringp)
+(put 'sentence-end-base 'safe-local-variable 'stringp)
 
 (defun sentence-end ()
   "Return the regexp describing the end of a sentence.
@@ -185,27 +183,28 @@ end of a sentence, the ending period, question mark, or exclamation point
 must be followed by two spaces, with perhaps some closing delimiters
 in between.  See Info node `(elisp)Standard Regexps'."
   (or sentence-end
-      (concat (if sentence-end-without-period "\\w  \\|")
+      ;; We accept non-break space along with space.
+      (concat (if sentence-end-without-period "\\w[ \u00a0][ \u00a0]\\|")
 	      "\\("
 	      sentence-end-base
               (if sentence-end-double-space
-                  "\\($\\| $\\|\t\\|  \\)" "\\($\\|[\t ]\\)")
+                  "\\($\\|[ \u00a0]$\\|\t\\|[ \u00a0][ \u00a0]\\)" "\\($\\|[\t \u00a0]\\)")
               "\\|[" sentence-end-without-space "]+"
 	      "\\)"
-              "[ \t\n]*")))
+              "[ \u00a0\t\n]*")))
 
 (defcustom page-delimiter "^\014"
   "Regexp describing line-beginnings that separate pages."
   :group 'paragraphs
   :type 'regexp)
-;;;###autoload(put 'page-delimiter 'safe-local-variable 'stringp)
+(put 'page-delimiter 'safe-local-variable 'stringp)
 
 (defcustom paragraph-ignore-fill-prefix nil
   "Non-nil means the paragraph commands are not affected by `fill-prefix'.
 This is desirable in modes where blank lines are the paragraph delimiters."
   :group 'paragraphs
   :type 'boolean)
-;;;###autoload(put 'paragraph-ignore-fill-prefix 'safe-local-variable 'booleanp)
+(put 'paragraph-ignore-fill-prefix 'safe-local-variable 'booleanp)
 
 (defun forward-paragraph (&optional arg)
   "Move forward to end of paragraph.
@@ -217,7 +216,7 @@ A line which `paragraph-start' matches either separates paragraphs
 A paragraph end is the beginning of a line which is not part of the paragraph
 to which the end of the previous line belongs, or the end of the buffer.
 Returns the count of paragraphs left to move."
-  (interactive "p")
+  (interactive "^p")
   (or arg (setq arg 1))
   (let* ((opoint (point))
 	 (fill-prefix-regexp
@@ -361,7 +360,7 @@ paragraph is preceded by a blank line, the paragraph starts at that
 blank line.
 
 See `forward-paragraph' for more information."
-  (interactive "p")
+  (interactive "^p")
   (or arg (setq arg 1))
   (forward-paragraph (- arg)))
 
@@ -445,13 +444,16 @@ With negative argument, move backward repeatedly to start of sentence.
 
 The variable `sentence-end' is a regular expression that matches ends of
 sentences.  Also, every paragraph boundary terminates sentences as well."
-  (interactive "p")
+  (interactive "^p")
   (or arg (setq arg 1))
   (let ((opoint (point))
         (sentence-end (sentence-end)))
     (while (< arg 0)
       (let ((pos (point))
-	    (par-beg (save-excursion (start-of-paragraph-text) (point))))
+	    ;; We used to use (start-of-paragraph-text), but this can
+	    ;; prevent sentence-end from matching if it is anchored at
+	    ;; BOL and the paragraph starts indented.
+	    (par-beg (save-excursion (backward-paragraph) (point))))
        (if (and (re-search-backward sentence-end par-beg t)
 		(or (< (match-end 0) pos)
 		    (re-search-backward sentence-end par-beg t)))
@@ -477,7 +479,7 @@ It works using `query-replace-regexp'."
 (defun backward-sentence (&optional arg)
   "Move backward to start of sentence.  With arg, do it arg times.
 See `forward-sentence' for more information."
-  (interactive "p")
+  (interactive "^p")
   (or arg (setq arg 1))
   (forward-sentence (- arg)))
 

@@ -286,22 +286,6 @@
 
 (defconst feedmail-patch-level "8")
 
-
-;; from <URL:http://www.dina.kvl.dk/~abraham/custom/>:
-;; If you write software that must work without the new custom, you
-;; can use this hack stolen from w3-cus.el:
-(eval-and-compile
- (condition-case ()
-     (require 'custom)
-   (error nil))
- (if (and (featurep 'custom) (fboundp 'custom-declare-variable))
-     nil ;; We've got what we needed
-     ;; We have the old custom-library, hack around it!
-     (defmacro defgroup (&rest args)
-       nil)
-     (defmacro defcustom (var value doc &rest args)
-       `(defvar ,var ,value ,doc))))
-
 (eval-when-compile (require 'smtpmail))
 (autoload 'mail-do-fcc "sendmail")
 
@@ -824,30 +808,21 @@ without having to answer no to the individual message prompts."
   :type 'boolean)
 
 
-;; I provided a default for VMS because someone asked for it (the
-;; normal default doesn't work there), but, puh-lease!, it is a user
-;; definable option, so if you don't like the default, change it to
-;; whatever you want.  I am unable to directly test the VMS goop
-;; provided here by levitte@lp.se (Richard Levitte - VMS Whacker).
 (defcustom feedmail-queue-directory
-  (if (memq system-type '(axp-vms vax-vms))
-      (expand-file-name (concat (getenv "HOME") "[.MAIL.Q]"))
-    (concat (getenv "HOME") "/mail/q"))
+  (concat (getenv "HOME") "/mail/q")
   "*Name of a directory where messages will be queued.
 Directory will be created if necessary.  Should be a string that
-doesn't end with a slash.  Default, except on VMS, is \"$HOME/mail/q\"."
+doesn't end with a slash.  Default is \"$HOME/mail/q\"."
   :group 'feedmail-queue
   :type 'string
   )
 
 
 (defcustom feedmail-queue-draft-directory
-  (if (memq system-type '(axp-vms vax-vms))
-      (expand-file-name (concat (getenv "HOME") "[.MAIL.DRAFT]"))
-    (concat (getenv "HOME") "/mail/draft"))
+  (concat (getenv "HOME") "/mail/draft")
   "*Name of a directory where draft messages will be queued.
 Directory will be created if necessary.  Should be a string that
-doesn't end with a slash.  Default, except on VMS, is \"$HOME/mail/draft\"."
+doesn't end with a slash.  Default is \"$HOME/mail/draft\"."
   :group 'feedmail-queue
   :type 'string
   )
@@ -1588,7 +1563,7 @@ backup file names and the like)."
 	(setq list-of-possible-fqms (directory-files feedmail-queue-directory t))
 	(if feedmail-queue-run-orderer
 	    (setq list-of-possible-fqms (funcall feedmail-queue-run-orderer list-of-possible-fqms)))
-	(mapcar
+	(mapc
 	 '(lambda (blobby)
 	    (setq maybe-file (expand-file-name blobby feedmail-queue-directory))
 	    (cond
@@ -1835,7 +1810,7 @@ the counts."
   (let ((q-cnt 0) (q-oth 0) (high-water 0) (blobbet))
     ;; iterate, counting things we find along the way in the directory
     (if (file-directory-p queue-directory)
-	(mapcar
+	(mapc
 	 '(lambda (blobby)
 	    (cond
 	     ((file-directory-p blobby) nil) ; don't care about subdirs
@@ -1922,7 +1897,7 @@ mapped to mostly alphanumerics for safety."
       ;; progn to get nil result no matter what
       (progn (make-directory queue-directory t) nil)
       (file-accessible-directory-p queue-directory)
-      (error (concat "FQM: Message not queued; trouble with directory " queue-directory)))
+      (error "FQM: Message not queued; trouble with directory %s" queue-directory))
   (let ((filename)
 	(is-fqm)
 	(is-in-this-dir)
@@ -2678,5 +2653,5 @@ been weeded out."
 
 (provide 'feedmail)
 
-;;; arch-tag: ec27b380-11c0-4dfd-8436-f636cf2bb992
+;; arch-tag: ec27b380-11c0-4dfd-8436-f636cf2bb992
 ;;; feedmail.el ends here

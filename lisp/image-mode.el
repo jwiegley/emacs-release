@@ -1,16 +1,16 @@
 ;;; image-mode.el --- support for visiting image files
 ;;
-;; Copyright (C) 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 ;;
 ;; Author: Richard Stallman <rms@gnu.org>
 ;; Keywords: multimedia
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -35,15 +33,100 @@
 ;;; Code:
 
 (require 'image)
+(eval-when-compile (require 'cl))
 
 ;;;###autoload (push '("\\.jpe?g\\'"    . image-mode) auto-mode-alist)
 ;;;###autoload (push '("\\.png\\'"      . image-mode) auto-mode-alist)
 ;;;###autoload (push '("\\.gif\\'"      . image-mode) auto-mode-alist)
 ;;;###autoload (push '("\\.tiff?\\'"    . image-mode) auto-mode-alist)
 ;;;###autoload (push '("\\.p[bpgn]m\\'" . image-mode) auto-mode-alist)
+
+;;;###autoload (push '("\\.x[bp]m\\'"   . c-mode)     auto-mode-alist)
 ;;;###autoload (push '("\\.x[bp]m\\'"   . image-mode-maybe) auto-mode-alist)
 
+;;;###autoload (push '("\\.svgz?\\'"    . xml-mode)   auto-mode-alist)
+;;;###autoload (push '("\\.svgz?\\'"    . image-mode-maybe) auto-mode-alist)
+
+;;; Image mode window-info management.
+
+(defvar image-mode-winprops-alist t)
+(make-variable-buffer-local 'image-mode-winprops-alist)
+
+(defvar image-mode-new-window-functions nil
+  "Special hook run when image data is requested in a new window.
+It is called with one argument, the initial WINPROPS.")
+
+(defun image-mode-winprops (&optional window cleanup)
+  "Return winprops of WINDOW.
+A winprops object has the shape (WINDOW . ALIST)."
+  (cond ((null window)
+	 (setq window (selected-window)))
+	((not (windowp window))
+	 (error "Not a window: %s" window)))
+  (when cleanup
+    (setq image-mode-winprops-alist
+  	  (delq nil (mapcar (lambda (winprop)
+  			      (if (window-live-p (car-safe winprop))
+  				  winprop))
+  			    image-mode-winprops-alist))))
+  (let ((winprops (assq window image-mode-winprops-alist)))
+    ;; For new windows, set defaults from the latest.
+    (unless winprops
+      (setq winprops (cons window
+                           (copy-alist (cdar image-mode-winprops-alist))))
+      (run-hook-with-args 'image-mode-new-window-functions winprops))
+    ;; Move window to front.
+    (setq image-mode-winprops-alist
+          (cons winprops (delq winprops image-mode-winprops-alist)))
+    winprops))
+
+(defun image-mode-window-get (prop &optional winprops)
+  (unless (consp winprops) (setq winprops (image-mode-winprops winprops)))
+  (cdr (assq prop (cdr winprops))))
+
+(defsetf image-mode-window-get (prop &optional winprops) (val)
+  `(image-mode-window-put ,prop ,val ,winprops))
+
+(defun image-mode-window-put (prop val &optional winprops)
+  (unless (consp winprops) (setq winprops (image-mode-winprops winprops)))
+  (setcdr winprops (cons (cons prop val)
+                         (delq (assq prop (cdr winprops)) (cdr winprops)))))
+
+(defun image-set-window-vscroll (vscroll)
+  (setf (image-mode-window-get 'vscroll) vscroll)
+  (set-window-vscroll (selected-window) vscroll))
+
+(defun image-set-window-hscroll (ncol)
+  (setf (image-mode-window-get 'hscroll) ncol)
+  (set-window-hscroll (selected-window) ncol))
+
+(defun image-mode-reapply-winprops ()
+  ;; When set-window-buffer, set hscroll and vscroll to what they were
+  ;; last time the image was displayed in this window.
+  (when (and (image-get-display-property)
+	     (listp image-mode-winprops-alist))
+    (let* ((winprops (image-mode-winprops nil t))
+           (hscroll (image-mode-window-get 'hscroll winprops))
+           (vscroll (image-mode-window-get 'vscroll winprops)))
+      (if hscroll (set-window-hscroll (selected-window) hscroll))
+      (if vscroll (set-window-vscroll (selected-window) vscroll)))))
+
+(defun image-mode-setup-winprops ()
+  ;; Record current scroll settings.
+  (unless (listp image-mode-winprops-alist)
+    (setq image-mode-winprops-alist nil))
+  (add-hook 'window-configuration-change-hook
+ 	    'image-mode-reapply-winprops nil t))
+
 ;;; Image scrolling functions
+
+(defun image-get-display-property ()
+  (get-char-property (point-min) 'display
+                     ;; There might be different images for different displays.
+                     (if (eq (window-buffer) (current-buffer))
+                         (selected-window))))
+
+(declare-function image-size "image.c" (spec &optional pixels frame))
 
 (defun image-forward-hscroll (&optional n)
   "Scroll image in current window to the left by N character widths.
@@ -51,15 +134,14 @@ Stop if the right edge of the image is reached."
   (interactive "p")
   (cond ((= n 0) nil)
 	((< n 0)
-	 (set-window-hscroll nil (max 0 (+ (window-hscroll) n))))
+	 (image-set-window-hscroll (max 0 (+ (window-hscroll) n))))
 	(t
-	 (let* ((image (get-text-property 1 'display))
-		(img-width (ceiling (car (image-size image))))
+	 (let* ((image (image-get-display-property))
 		(edges (window-inside-edges))
-		(win-width (- (nth 2 edges) (nth 0 edges))))
-	   (set-window-hscroll nil
-			       (min (max 0 (- img-width win-width))
-				    (+ n (window-hscroll))))))))
+		(win-width (- (nth 2 edges) (nth 0 edges)))
+		(img-width (ceiling (car (image-size image)))))
+	   (image-set-window-hscroll (min (max 0 (- img-width win-width))
+					  (+ n (window-hscroll))))))))
 
 (defun image-backward-hscroll (&optional n)
   "Scroll image in current window to the right by N character widths.
@@ -73,15 +155,14 @@ Stop if the bottom edge of the image is reached."
   (interactive "p")
   (cond ((= n 0) nil)
 	((< n 0)
-	 (set-window-vscroll nil (max 0 (+ (window-vscroll) n))))
+	 (image-set-window-vscroll (max 0 (+ (window-vscroll) n))))
 	(t
-	 (let* ((image (get-text-property 1 'display))
-		(img-height (ceiling (cdr (image-size image))))
+	 (let* ((image (image-get-display-property))
 		(edges (window-inside-edges))
-		(win-height (- (nth 3 edges) (nth 1 edges))))
-	   (set-window-vscroll nil
-			       (min (max 0 (- img-height win-height))
-				    (+ n (window-vscroll))))))))
+		(win-height (- (nth 3 edges) (nth 1 edges)))
+		(img-height (ceiling (cdr (image-size image)))))
+	   (image-set-window-vscroll (min (max 0 (- img-height win-height))
+					  (+ n (window-vscroll))))))))
 
 (defun image-previous-line (&optional n)
   "Scroll image in current window downward by N lines.
@@ -111,7 +192,7 @@ When calling from a program, supply as argument a number, nil, or `-'."
 	(t (image-next-line (prefix-numeric-value n)))))
 
 (defun image-scroll-down (&optional n)
-  "Scroll image in current window downward by N lines
+  "Scroll image in current window downward by N lines.
 Stop if the top edge of the image is reached.
 If ARG is omitted or nil, scroll downward by a near full screen.
 A near full screen is `next-screen-context-lines' less than a full screen.
@@ -139,7 +220,7 @@ stopping if the top or bottom edge of the image is reached."
   (and arg
        (/= (setq arg (prefix-numeric-value arg)) 1)
        (image-next-line (- arg 1)))
-  (set-window-hscroll (selected-window) 0))
+  (image-set-window-hscroll 0))
 
 (defun image-eol (arg)
   "Scroll horizontally to the right edge of the image in the current window.
@@ -149,36 +230,69 @@ stopping if the top or bottom edge of the image is reached."
   (and arg
        (/= (setq arg (prefix-numeric-value arg)) 1)
        (image-next-line (- arg 1)))
-  (let* ((image (get-text-property 1 'display))
+  (let* ((image (image-get-display-property))
 	 (edges (window-inside-edges))
 	 (win-width (- (nth 2 edges) (nth 0 edges)))
 	 (img-width (ceiling (car (image-size image)))))
-    (set-window-hscroll (selected-window)
-			(max 0 (- img-width win-width)))))
+    (image-set-window-hscroll (max 0 (- img-width win-width)))))
 
 (defun image-bob ()
   "Scroll to the top-left corner of the image in the current window."
   (interactive)
-  (set-window-hscroll (selected-window) 0)
-  (set-window-vscroll (selected-window) 0))
+  (image-set-window-hscroll 0)
+  (image-set-window-vscroll 0))
 
 (defun image-eob ()
   "Scroll to the bottom-right corner of the image in the current window."
   (interactive)
-  (let* ((image (get-text-property 1 'display))
+  (let* ((image (image-get-display-property))
 	 (edges (window-inside-edges))
 	 (win-width (- (nth 2 edges) (nth 0 edges)))
 	 (img-width (ceiling (car (image-size image))))
 	 (win-height (- (nth 3 edges) (nth 1 edges)))
 	 (img-height (ceiling (cdr (image-size image)))))
-    (set-window-hscroll (selected-window) (max 0 (- img-width win-width)))
-    (set-window-vscroll (selected-window) (max 0 (- img-height win-height)))))
+    (image-set-window-hscroll (max 0 (- img-width win-width)))
+    (image-set-window-vscroll (max 0 (- img-height win-height)))))
+
+;; Adjust frame and image size.
+
+(defun image-mode-fit-frame ()
+  "Fit the frame to the current image.
+This function assumes the current frame has only one window."
+  ;; FIXME: This does not take into account decorations like mode-line,
+  ;; minibuffer, header-line, ...
+  (interactive)
+  (let* ((saved (frame-parameter nil 'image-mode-saved-size))
+         (display (image-get-display-property))
+         (size (image-size display)))
+    (if (and saved
+             (eq (caar saved) (frame-width))
+             (eq (cdar saved) (frame-height)))
+        (progn ;; Toggle back to previous non-fitted size.
+          (set-frame-parameter nil 'image-mode-saved-size nil)
+          (setq size (cdr saved)))
+      ;; Round up size, and save current size so we can toggle back to it.
+      (setcar size (ceiling (car size)))
+      (setcdr size (ceiling (cdr size)))
+      (set-frame-parameter nil 'image-mode-saved-size
+                           (cons size (cons (frame-width) (frame-height)))))
+    (set-frame-width  (selected-frame) (car size))
+    (set-frame-height (selected-frame) (cdr size))))
 
 ;;; Image Mode setup
 
+(defvar image-type nil
+  "Current image type.
+This variable is used to display the current image type in the mode line.")
+(make-variable-buffer-local 'image-type)
+
 (defvar image-mode-map
   (let ((map (make-sparse-keymap)))
+    (suppress-keymap map)
+    (define-key map "q"         'quit-window)
     (define-key map "\C-c\C-c" 'image-toggle-display)
+    (define-key map (kbd "SPC")       'image-scroll-up)
+    (define-key map (kbd "DEL")       'image-scroll-down)
     (define-key map [remap forward-char] 'image-forward-hscroll)
     (define-key map [remap backward-char] 'image-backward-hscroll)
     (define-key map [remap previous-line] 'image-previous-line)
@@ -198,6 +312,8 @@ stopping if the top or bottom edge of the image is reached."
     map)
   "Major mode keymap for viewing images as text in Image mode.")
 
+(defvar bookmark-make-record-function)
+
 ;;;###autoload
 (defun image-mode ()
   "Major mode for image files.
@@ -205,23 +321,32 @@ You can use \\<image-mode-map>\\[image-toggle-display]
 to toggle between display as an image and display as text."
   (interactive)
   (kill-all-local-variables)
-  (setq mode-name "Image")
   (setq major-mode 'image-mode)
+  ;; Use our own bookmarking function for images.
+  (set (make-local-variable 'bookmark-make-record-function)
+       'image-bookmark-make-record)
+
+  ;; Keep track of [vh]scroll when switching buffers
+  (image-mode-setup-winprops)
+
   (add-hook 'change-major-mode-hook 'image-toggle-display-text nil t)
   (if (display-images-p)
-      (if (not (get-text-property (point-min) 'display))
+      (if (not (image-get-display-property))
 	  (image-toggle-display)
 	;; Set next vars when image is already displayed but local
 	;; variables were cleared by kill-all-local-variables
 	(use-local-map image-mode-map)
-	(setq cursor-type nil truncate-lines t))
+	(setq cursor-type nil truncate-lines t
+	      image-type (plist-get (cdr (image-get-display-property)) :type)))
+    (setq image-type "text")
     (use-local-map image-mode-text-map))
+  (setq mode-name (format "Image[%s]" image-type))
   (run-mode-hooks 'image-mode-hook)
   (if (display-images-p)
       (message "%s" (concat
 		     (substitute-command-keys
 		      "Type \\[image-toggle-display] to view as ")
-		     (if (get-text-property (point-min) 'display)
+		     (if (image-get-display-property)
 			 "text" "an image") "."))))
 
 ;;;###autoload
@@ -229,18 +354,26 @@ to toggle between display as an image and display as text."
   "Toggle Image minor mode.
 With arg, turn Image minor mode on if arg is positive, off otherwise.
 See the command `image-mode' for more information on this mode."
-  nil " Image" image-mode-text-map
+  nil (:eval (format " Image[%s]" image-type)) image-mode-text-map
   :group 'image
   :version "22.1"
   (if (not image-minor-mode)
       (image-toggle-display-text)
-    (if (get-text-property (point-min) 'display)
-	(setq cursor-type nil truncate-lines t))
+    (image-mode-setup-winprops)
     (add-hook 'change-major-mode-hook (lambda () (image-minor-mode -1)) nil t)
-    (message "%s" (concat (substitute-command-keys
-		      "Type \\[image-toggle-display] to view the image as ")
-		     (if (get-text-property (point-min) 'display)
-			 "text" "an image") "."))))
+    (if (display-images-p)
+	(if (not (image-get-display-property))
+	    (image-toggle-display)
+	  (setq cursor-type nil truncate-lines t
+		image-type (plist-get (cdr (image-get-display-property)) :type)))
+      (setq image-type "text")
+      (use-local-map image-mode-text-map))
+    (if (display-images-p)
+	(message "%s" (concat
+		       (substitute-command-keys
+			"Type \\[image-toggle-display] to view the image as ")
+		       (if (image-get-display-property)
+			   "text" "an image") ".")))))
 
 ;;;###autoload
 (defun image-mode-maybe ()
@@ -269,18 +402,19 @@ information on these modes."
 
 (defun image-toggle-display-text ()
   "Showing the text of the image file."
-  (if (get-text-property (point-min) 'display)
+  (if (image-get-display-property)
       (image-toggle-display)))
 
 (defvar archive-superior-buffer)
 (defvar tar-superior-buffer)
+(declare-function image-refresh "image.c" (spec &optional frame))
 
 (defun image-toggle-display ()
   "Start or stop displaying an image file as the actual image.
 This command toggles between showing the text of the image file
 and showing the image as an image."
   (interactive)
-  (if (get-text-property (point-min) 'display)
+  (if (image-get-display-property)
       (let ((inhibit-read-only t)
 	    (buffer-undo-list t)
 	    (modified (buffer-modified-p)))
@@ -292,25 +426,28 @@ and showing the image as an image."
 	(kill-local-variable 'truncate-lines)
 	(kill-local-variable 'auto-hscroll-mode)
 	(use-local-map image-mode-text-map)
+	(setq image-type "text")
+	(if (eq major-mode 'image-mode)
+	    (setq mode-name "Image[text]"))
 	(if (called-interactively-p)
 	    (message "Repeat this command to go back to displaying the image")))
     ;; Turn the image data into a real image, but only if the whole file
     ;; was inserted
     (let* ((filename (buffer-file-name))
-	   (image
-	    (if (and filename
-		     (file-readable-p filename)
-		     (not (file-remote-p filename))
-		     (not (buffer-modified-p))
-		     (not (and (boundp 'archive-superior-buffer)
-			       archive-superior-buffer))
-		     (not (and (boundp 'tar-superior-buffer)
-			       tar-superior-buffer)))
-		(create-image filename)
-	      (create-image
-	       (string-make-unibyte
-		(buffer-substring-no-properties (point-min) (point-max)))
-	       nil t)))
+	   (data-p (not (and filename
+			     (file-readable-p filename)
+			     (not (file-remote-p filename))
+			     (not (buffer-modified-p))
+			     (not (and (boundp 'archive-superior-buffer)
+				       archive-superior-buffer))
+			     (not (and (boundp 'tar-superior-buffer)
+				       tar-superior-buffer)))))
+	   (file-or-data (if data-p
+			     (string-make-unibyte
+			      (buffer-substring-no-properties (point-min) (point-max)))
+			   filename))
+	   (type (image-type file-or-data nil data-p))
+	   (image (create-image file-or-data type data-p))
 	   (props
 	    `(display ,image
 		      intangible ,image
@@ -320,8 +457,9 @@ and showing the image as an image."
 	   (buffer-undo-list t)
 	   (modified (buffer-modified-p)))
       (image-refresh image)
-      (add-text-properties (point-min) (point-max) props)
-      (set-buffer-modified-p modified)
+      (let ((buffer-file-truename nil)) ; avoid changing dir mtime by lock_file
+	(add-text-properties (point-min) (point-max) props)
+	(restore-buffer-modified-p modified))
       ;; Inhibit the cursor when the buffer contains only an image,
       ;; because cursors look very strange on top of images.
       (setq cursor-type nil)
@@ -331,9 +469,31 @@ and showing the image as an image."
       ;; Allow navigation of large images
       (set (make-local-variable 'auto-hscroll-mode) nil)
       (use-local-map image-mode-map)
+      (setq image-type type)
+      (if (eq major-mode 'image-mode)
+	  (setq mode-name (format "Image[%s]" type)))
       (if (called-interactively-p)
 	  (message "Repeat this command to go back to displaying the file as text")))))
+
+;;; Support for bookmark.el
+(declare-function bookmark-make-record-default "bookmark"
+                  (&optional point-only))
+(declare-function bookmark-prop-get "bookmark" (bookmark prop))
+(declare-function bookmark-default-handler "bookmark" (bmk))
 
+(defun image-bookmark-make-record ()
+  (nconc (bookmark-make-record-default)
+         `((image-type . ,image-type)
+           (handler    . image-bookmark-jump))))
+
+;;;###autoload
+(defun image-bookmark-jump (bmk)
+  ;; This implements the `handler' function interface for record type
+  ;; returned by `bookmark-make-record-function', which see.
+  (prog1 (bookmark-default-handler bmk)
+    (when (not (string= image-type (bookmark-prop-get bmk 'image-type)))
+      (image-toggle-display))))
+
 (provide 'image-mode)
 
 ;; arch-tag: b5b2b7e6-26a7-4b79-96e3-1546b5c4c6cb

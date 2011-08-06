@@ -1,17 +1,17 @@
 ;;; parse-time.el --- parsing time strings
 
-;; Copyright (C) 1996, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1996, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Erik Naggum <erik@naggum.no>
 ;; Keywords: util
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -118,9 +116,18 @@
 (defvar parse-time-months '(("jan" . 1) ("feb" . 2) ("mar" . 3)
 			    ("apr" . 4) ("may" . 5) ("jun" . 6)
 			    ("jul" . 7) ("aug" . 8) ("sep" . 9)
-			    ("oct" . 10) ("nov" . 11) ("dec" . 12)))
+			    ("oct" . 10) ("nov" . 11) ("dec" . 12)
+			    ("january" . 1) ("february" . 2)
+			    ("march" . 3) ("april" . 4) ("june" . 6)
+			    ("july" . 7) ("august" . 8)
+			    ("september" . 9) ("october" . 10)
+			    ("november" . 11) ("december" . 12)))
 (defvar parse-time-weekdays '(("sun" . 0) ("mon" . 1) ("tue" . 2)
-			      ("wed" . 3) ("thu" . 4) ("fri" . 5) ("sat" . 6)))
+			      ("wed" . 3) ("thu" . 4) ("fri" . 5)
+			      ("sat" . 6) ("sunday" . 0) ("monday" . 1)
+			      ("tuesday" . 2) ("wednesday" . 3)
+			      ("thursday" . 4) ("friday" . 5)
+			      ("saturday" . 6)))
 (defvar parse-time-zoneinfo `(("z" 0) ("ut" 0) ("gmt" 0)
 			      ("pst" ,(* -8 3600)) ("pdt" ,(* -7 3600) t)
 			      ("mst" ,(* -7 3600)) ("mdt" ,(* -6 3600) t)
@@ -187,7 +194,7 @@ unknown are returned as nil."
       (let ((parse-time-elt (pop temp))
 	    (rules parse-time-rules)
 	    (exit nil))
-	(while (and (not (null rules)) (not exit))
+	(while (and rules (not exit))
 	  (let* ((rule (pop rules))
 		 (slots (pop rule))
 		 (predicate (pop rule))
@@ -219,5 +226,5 @@ unknown are returned as nil."
 
 (provide 'parse-time)
 
-;;; arch-tag: 07066094-45a8-4c68-b307-86195e2c1103
+;; arch-tag: 07066094-45a8-4c68-b307-86195e2c1103
 ;;; parse-time.el ends here

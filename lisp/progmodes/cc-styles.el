@@ -1,13 +1,14 @@
 ;;; cc-styles.el --- support for styles in CC Mode
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    2004- Alan Mackenzie
 ;;             1998- Martin Stjernholm
 ;;             1992-1999 Barry A. Warsaw
-;;             1987 Dave Detlefs and Stewart Clamen
+;;             1987 Dave Detlefs
+;;             1987 Stewart Clamen
 ;;             1985 Richard M. Stallman
 ;; Maintainer: bug-cc-mode@gnu.org
 ;; Created:    22-Apr-1997 (split from cc-mode.el)
@@ -16,10 +17,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,9 +28,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -385,11 +384,11 @@ a null operation."
       ;; fallback entry.
       (setq c-special-indent-hook
 	    (default-value 'c-special-indent-hook)))
-    (mapcar (lambda (elem)
-	      (c-set-style-1 elem dont-override))
-	    ;; Need to go through the variables backwards when we
-	    ;; don't override any settings.
-	    (if (eq dont-override t) (nreverse vars) vars)))
+    (mapc (lambda (elem)
+	    (c-set-style-1 elem dont-override))
+	  ;; Need to go through the variables backwards when we
+	  ;; don't override any settings.
+	  (if (eq dont-override t) (nreverse vars) vars)))
   (setq c-indentation-style stylename)
   (c-keep-region-active))
 
@@ -512,14 +511,21 @@ variables."
 			  (assoc 'other c-comment-prefix-regexp)))
 	  c-comment-prefix-regexp))
 
-  (let ((comment-line-prefix
-	 (concat "[ \t]*\\(" c-current-comment-prefix "\\)[ \t]*")))
+  (let* ((empty-is-prefix (string-match c-current-comment-prefix ""))
+	 (nonws-comment-line-prefix
+	  (concat "\\(" c-current-comment-prefix "\\)[ \t]*"))
+	 (comment-line-prefix (concat "[ \t]*" nonws-comment-line-prefix))
+	 (blank-or-comment-line-prefix
+	  (concat "[ \t]*"
+		  (if empty-is-prefix "" "\\(")
+		  nonws-comment-line-prefix
+		  (if empty-is-prefix "" "\\)?"))))
 
-    (setq paragraph-start (concat comment-line-prefix
+    (setq paragraph-start (concat blank-or-comment-line-prefix
 				  c-paragraph-start
 				  "\\|"
 				  page-delimiter)
-	  paragraph-separate (concat comment-line-prefix
+	  paragraph-separate (concat blank-or-comment-line-prefix
 				     c-paragraph-separate
 				     "\\|"
 				     page-delimiter)
@@ -640,7 +646,7 @@ any reason to call this function directly."
 		'make-variable-buffer-local))
 	(varsyms (cons 'c-indentation-style (copy-alist c-style-variables))))
     (delq 'c-special-indent-hook varsyms)
-    (mapcar func varsyms)
+    (mapc func varsyms)
     ;; Hooks must be handled specially
     (if this-buf-only-p
 	(make-local-hook 'c-special-indent-hook)
@@ -652,5 +658,5 @@ any reason to call this function directly."
 
 (cc-provide 'cc-styles)
 
-;;; arch-tag: c764f61a-96ba-484a-a68f-101c0e9d5d2c
+;; arch-tag: c764f61a-96ba-484a-a68f-101c0e9d5d2c
 ;;; cc-styles.el ends here

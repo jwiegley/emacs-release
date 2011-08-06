@@ -1,13 +1,13 @@
 /* Block-relocating memory allocator.
    Copyright (C) 1993, 1995, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* NOTES:
 
@@ -179,9 +177,9 @@ static heap_ptr first_heap, last_heap;
    b->data + b->size == b->next->data.
 
    An element with variable==NIL denotes a freed block, which has not yet
-   been collected.  They may only appear while r_alloc_freeze > 0, and will be
-   freed when the arena is thawed.  Currently, these blocs are not reusable,
-   while the arena is frozen.  Very inefficient.  */
+   been collected.  They may only appear while r_alloc_freeze_level > 0,
+   and will be freed when the arena is thawed.  Currently, these blocs are
+   not reusable, while the arena is frozen.  Very inefficient.  */
 
 typedef struct bp
 {
@@ -404,6 +402,11 @@ find_bloc (ptr)
 
   while (p != NIL_BLOC)
     {
+      /* Consistency check. Don't return inconsistent blocs.
+	 Don't abort here, as callers might be expecting this,  but
+	 callers that always expect a bloc to be returned should abort
+	 if one isn't to avoid a memory corruption bug that is
+	 difficult to track down.  */
       if (p->variable == ptr && p->data == *ptr)
 	return p;
 
@@ -427,8 +430,7 @@ get_bloc (size)
   if (! (new_bloc = (bloc_ptr) malloc (BLOC_PTR_SIZE))
       || ! (new_bloc->data = obtain (break_value, size)))
     {
-      if (new_bloc)
-	free (new_bloc);
+      free (new_bloc);
 
       return 0;
     }
@@ -942,8 +944,8 @@ r_alloc_sbrk (size)
    which will use the data area.
 
    The allocation of 0 bytes is valid.
-   In case r_alloc_freeze is set, a best fit of unused blocs could be done
-   before allocating a new area.  Not yet done.
+   In case r_alloc_freeze_level is set, a best fit of unused blocs could be
+   done before allocating a new area.  Not yet done.
 
    If we can't allocate the necessary memory, set *PTR to zero, and
    return zero.  */
@@ -984,7 +986,7 @@ r_alloc_free (ptr)
 
   dead_bloc = find_bloc (ptr);
   if (dead_bloc == NIL_BLOC)
-    abort ();
+    abort (); /* Double free? PTR not originally used to allocate?  */
 
   free_bloc (dead_bloc);
   *ptr = 0;
@@ -999,7 +1001,7 @@ r_alloc_free (ptr)
    SIZE is less than or equal to the current bloc size, in which case
    do nothing.
 
-   In case r_alloc_freeze is set, a new bloc is allocated, and the
+   In case r_alloc_freeze_level is set, a new bloc is allocated, and the
    memory copied to it.  Not very efficient.  We could traverse the
    bloc_list for a best fit of free blocs first.
 
@@ -1028,7 +1030,7 @@ r_re_alloc (ptr, size)
 
   bloc = find_bloc (ptr);
   if (bloc == NIL_BLOC)
-    abort ();
+    abort (); /* Already freed? PTR not originally used to allocate?  */
 
   if (size < bloc->size)
     {
@@ -1226,6 +1228,34 @@ r_alloc_check ()
 
 #endif /* DEBUG */
 
+/* Update the internal record of which variable points to some data to NEW.
+   Used by buffer-swap-text in Emacs to restore consistency after it
+   swaps the buffer text between two buffer objects.  The OLD pointer
+   is checked to ensure that memory corruption does not occur due to
+   misuse.  */
+void
+r_alloc_reset_variable (old, new)
+     POINTER *old, *new;
+{
+  bloc_ptr bloc = first_bloc;
+
+  /* Find the bloc that corresponds to the data pointed to by pointer.
+     find_bloc cannot be used, as it has internal consistency checks
+     which fail when the variable needs reseting.  */
+  while (bloc != NIL_BLOC)
+    {
+      if (bloc->data == *new)
+	break;
+
+      bloc = bloc->next;
+    }
+
+  if (bloc == NIL_BLOC || bloc->variable != old)
+    abort (); /* Already freed? OLD not originally used to allocate?  */
+
+  /* Update variable to point to the new location.  */
+  bloc->variable = new;
+}
 
 
 /***********************************************************************

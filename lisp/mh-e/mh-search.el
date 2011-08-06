@@ -1,7 +1,8 @@
 ;;; mh-search  ---  MH-Search mode
 
 ;; Copyright (C) 1993, 1995,
-;;  2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Indexed search by Satyaki Das <satyaki@theforce.stanford.edu>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -10,20 +11,18 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING. If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -718,7 +717,7 @@ parsed."
               ((equal token "and") (push 'and op-stack))
               ((equal token ")")
                (multiple-value-setq (op-stack operand-stack)
-                 (mh-index-evaluate op-stack operand-stack))
+                 (values-list (mh-index-evaluate op-stack operand-stack)))
                (when (eq (car op-stack) 'not)
                  (setq op-stack (cdr op-stack))
                  (push `(not ,(pop operand-stack)) operand-stack))
@@ -768,7 +767,7 @@ parsed."
       (while op-stack
         (setq op (pop op-stack))
         (cond ((eq op 'paren)
-               (return-from mh-index-evaluate (values op-stack operand-stack)))
+               (return-from mh-index-evaluate (list op-stack operand-stack)))
               ((eq op 'not)
                (push `(not ,(pop operand-stack)) operand-stack))
               ((or (eq op 'and) (eq op 'or))
@@ -1090,8 +1089,16 @@ REGEXP-LIST is an alist of fields and values."
           (cond ((eq (car pair) 'to) "t:")
                 ((eq (car pair) 'from) "f:")
                 ((eq (car pair) 'cc) "c:")
+                ((eq (car pair) 'to-or-cc) "tc:")
+                ((eq (car pair) 'address) "a:")
                 ((eq (car pair) 'subject) "s:")
+                ((eq (car pair) 'subject-or-body) "bs:")
                 ((eq (car pair) 'date) "d:")
+                ((eq (car pair) 'message-id) "m:")
+                ((eq (car pair) 'message-body) "b:")
+                ((eq (car pair) 'message-size) "z:")
+                ((eq (car pair) 'message-attachment-name) "n:")
+                ((eq (car pair) 'message-flags) "F:")
                 (t ""))
           (let ((sop (cdr (mh-mairix-convert-to-sop* (cdr pair))))
                 (final ""))
@@ -1268,12 +1275,12 @@ is used to search."
       (when (cdr pattern)
         (setq result `(,@result "-and" "-lbrace"
                        ,@(mh-pick-construct-regexp
-                          (if (and (mh-variant-p 'mu-mh) (car pattern))
+                          (if (and (mh-variant-p 'gnu-mh) (car pattern))
                               (format "--pattern=%s" (cdr pattern))
                             (cdr pattern))
                           (if (car pattern)
                               (cond
-                               ((mh-variant-p 'mu-mh)
+                               ((mh-variant-p 'gnu-mh)
                                 (format "--component=%s" (car pattern)))
                                ((member (car pattern) mh-pick-single-dash)
                                 (format "-%s" (car pattern)))

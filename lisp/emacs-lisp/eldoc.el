@@ -1,7 +1,7 @@
 ;;; eldoc.el --- show function arglist or variable docstring in echo area
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Noah Friedman <friedman@splode.com>
 ;; Maintainer: friedman@splode.com
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -43,7 +41,7 @@
 ;;      (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode)
 ;;      (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode)
 
-;; Major modes for other languages may use Eldoc by defining an
+;; Major modes for other languages may use ElDoc by defining an
 ;; appropriate function as the buffer-local value of
 ;; `eldoc-documentation-function'.
 
@@ -57,7 +55,7 @@
   :group 'extensions)
 
 (defcustom eldoc-idle-delay 0.50
-  "*Number of seconds of idle time to wait before printing.
+  "Number of seconds of idle time to wait before printing.
 If user input arrives before this interval of time has elapsed after the
 last input, no documentation will be printed.
 
@@ -67,7 +65,7 @@ If this variable is set to 0, no idle time is required."
 
 ;;;###autoload
 (defcustom eldoc-minor-mode-string " ElDoc"
-  "*String to display in mode line when Eldoc Mode is enabled; nil for none."
+  "String to display in mode line when ElDoc Mode is enabled; nil for none."
   :type '(choice string (const :tag "None" nil))
   :group 'eldoc)
 
@@ -75,14 +73,17 @@ If this variable is set to 0, no idle time is required."
   "Case to display argument names of functions, as a symbol.
 This has two preferred values: `upcase' or `downcase'.
 Actually, any name of a function which takes a string as an argument and
-returns another string is acceptable."
+returns another string is acceptable.
+
+Note that if `eldoc-documentation-function' is non-nil, this variable
+has no effect, unless the function handles it explicitly."
   :type '(radio (function-item upcase)
 		(function-item downcase)
                 function)
   :group 'eldoc)
 
 (defcustom eldoc-echo-area-use-multiline-p 'truncate-sym-name-if-fit
-  "*Allow long eldoc messages to resize echo area display.
+  "Allow long ElDoc messages to resize echo area display.
 If value is t, never attempt to truncate messages; complete symbol name
 and function arglist or 1-line variable documentation will be displayed
 even if echo area must be resized to fit.
@@ -94,18 +95,27 @@ former case.
 
 If value is nil, messages are always truncated to fit in a single line of
 display in the echo area.  Function or variable symbol name may be
-truncated to make more of the arglist or documentation string visible."
+truncated to make more of the arglist or documentation string visible.
+
+Note that if `eldoc-documentation-function' is non-nil, this variable
+has no effect, unless the function handles it explicitly."
   :type '(radio (const :tag "Always" t)
                 (const :tag "Never" nil)
                 (const :tag "Yes, but truncate symbol names if it will\
  enable argument list to fit on one line" truncate-sym-name-if-fit))
   :group 'eldoc)
 
+(defface eldoc-highlight-function-argument
+  '((t (:inherit bold)))
+  "Face used for the argument at point in a function's argument list.
+Note that if `eldoc-documentation-function' is non-nil, this face
+has no effect, unless the function handles it explicitly."
+  :group 'eldoc)
+
 ;;; No user options below here.
 
 (defvar eldoc-message-commands-table-size 31
-  "This is used by `eldoc-add-command' to initialize `eldoc-message-commands'
-as an obarray.
+  "Used by `eldoc-add-command' to initialize `eldoc-message-commands' obarray.
 It should probably never be necessary to do so, but if you
 choose to increase the number of buckets, you must do so before loading
 this file since the obarray is initialized at load time.
@@ -114,22 +124,24 @@ Remember to keep it a prime number to improve hash performance.")
 (defconst eldoc-message-commands
   (make-vector eldoc-message-commands-table-size 0)
   "Commands after which it is appropriate to print in the echo area.
-Eldoc does not try to print function arglists, etc. after just any command,
+ElDoc does not try to print function arglists, etc., after just any command,
 because some commands print their own messages in the echo area and these
 functions would instantly overwrite them.  But `self-insert-command' as well
 as most motion commands are good candidates.
 This variable contains an obarray of symbols; do not manipulate it
 directly.  Instead, use `eldoc-add-command' and `eldoc-remove-command'.")
 
+;; Not a constant.
 (defconst eldoc-last-data (make-vector 3 nil)
   "Bookkeeping; elements are as follows:
   0 - contains the last symbol read from the buffer.
-  1 - contains the string last displayed in the echo area for that
-      symbol, so it can be printed again if necessary without reconsing.
+  1 - contains the string last displayed in the echo area for variables,
+      or argument string for functions.
   2 - 'function if function args, 'variable if variable documentation.")
+
 (defvar eldoc-last-message nil)
 
-(defvar eldoc-timer nil "eldoc's timer object.")
+(defvar eldoc-timer nil "ElDoc's timer object.")
 
 (defvar eldoc-current-idle-delay eldoc-idle-delay
   "Idle time delay currently in use by timer.
@@ -238,8 +250,13 @@ It should return nil if there's no doc appropriate for the context.
 Typically doc is returned if point is on a function-like name or in its
 arg list.
 
+The result is used as is, so the function must explicitly handle
+the variables `eldoc-argument-case' and `eldoc-echo-area-use-multiline-p',
+and the face `eldoc-highlight-function-argument', if they are to have any
+effect.
+
 This variable is expected to be made buffer-local by modes (other than
-Emacs Lisp mode) that support Eldoc.")
+Emacs Lisp mode) that support ElDoc.")
 
 (defun eldoc-print-current-symbol-info ()
   (condition-case err
@@ -249,37 +266,93 @@ Emacs Lisp mode) that support Eldoc.")
 	     (let* ((current-symbol (eldoc-current-symbol))
 		    (current-fnsym  (eldoc-fnsym-in-current-sexp))
 		    (doc (cond
-			  ((eq current-symbol current-fnsym)
-			   (or (eldoc-get-fnsym-args-string current-fnsym)
+			  ((null current-fnsym)
+			   nil)
+			  ((eq current-symbol (car current-fnsym))
+			   (or (apply 'eldoc-get-fnsym-args-string
+				      current-fnsym)
 			       (eldoc-get-var-docstring current-symbol)))
 			  (t
 			   (or (eldoc-get-var-docstring current-symbol)
-			       (eldoc-get-fnsym-args-string current-fnsym))))))
+			       (apply 'eldoc-get-fnsym-args-string
+				      current-fnsym))))))
 	       (eldoc-message doc))))
     ;; This is run from post-command-hook or some idle timer thing,
     ;; so we need to be careful that errors aren't ignored.
     (error (message "eldoc error: %s" err))))
 
-;; Return a string containing the function parameter list, or 1-line
-;; docstring if function is a subr and no arglist is obtainable from the
-;; docstring or elsewhere.
-(defun eldoc-get-fnsym-args-string (sym)
-  (let ((args nil)
-        (doc nil))
+(defun eldoc-get-fnsym-args-string (sym &optional index)
+  "Return a string containing the parameter list of the function SYM.
+If SYM is a subr and no arglist is obtainable from the docstring
+or elsewhere, return a 1-line docstring.  Calls the functions
+`eldoc-function-argstring-format' and
+`eldoc-highlight-function-argument' to format the result.  The
+former calls `eldoc-argument-case'; the latter gives the
+function name `font-lock-function-name-face', and optionally
+highlights argument number INDEX."
+  (let (args doc)
     (cond ((not (and sym (symbolp sym) (fboundp sym))))
-          ((and (eq sym (aref eldoc-last-data 0))
-                (eq 'function (aref eldoc-last-data 2)))
-           (setq doc (aref eldoc-last-data 1)))
+	  ((and (eq sym (aref eldoc-last-data 0))
+		(eq 'function (aref eldoc-last-data 2)))
+	   (setq doc (aref eldoc-last-data 1)))
 	  ((setq doc (help-split-fundoc (documentation sym t) sym))
 	   (setq args (car doc))
+	   ;; Remove any enclosing (), since e-function-argstring adds them.
 	   (string-match "\\`[^ )]* ?" args)
-	   (setq args (concat "(" (substring args (match-end 0)))))
-          (t
-           (setq args (eldoc-function-argstring sym))))
-    (cond (args
-           (setq doc (eldoc-docstring-format-sym-doc sym args))
-           (eldoc-last-data-store sym doc 'function)))
-    doc))
+	   (setq args (substring args (match-end 0)))
+	   (if (string-match-p ")\\'" args)
+	       (setq args (substring args 0 -1))))
+	  (t
+	   (setq args (help-function-arglist sym))))
+    (if args
+	;; Stringify, and store before highlighting, downcasing, etc.
+	;; FIXME should truncate before storing.
+	(eldoc-last-data-store sym (setq args (eldoc-function-argstring args))
+			       'function)
+      (setq args doc))		  ; use stored value
+    ;; Change case, highlight, truncate.
+    (if args
+	(eldoc-highlight-function-argument
+	 sym (eldoc-function-argstring-format args) index))))
+
+(defun eldoc-highlight-function-argument (sym args index)
+  "Highlight argument INDEX in ARGS list for function SYM.
+In the absence of INDEX, just call `eldoc-docstring-format-sym-doc'."
+  (let ((start          nil)
+	(end            0)
+	(argument-face  'eldoc-highlight-function-argument))
+    ;; Find the current argument in the argument string.  We need to
+    ;; handle `&rest' and informal `...' properly.
+    ;;
+    ;; FIXME: What to do with optional arguments, like in
+    ;;        (defun NAME ARGLIST [DOCSTRING] BODY...) case?
+    ;;        The problem is there is no robust way to determine if
+    ;;        the current argument is indeed a docstring.
+    (while (and index (>= index 1))
+      (if (string-match "[^ ()]+" args end)
+	  (progn
+	    (setq start (match-beginning 0)
+		  end   (match-end 0))
+	    (let ((argument (match-string 0 args)))
+	      (cond ((string= argument "&rest")
+		     ;; All the rest arguments are the same.
+		     (setq index 1))
+		    ((string= argument "&optional"))
+		    ((string-match-p "\\.\\.\\.$" argument)
+		     (setq index 0))
+		    (t
+		     (setq index (1- index))))))
+	(setq end           (length args)
+	      start         (1- end)
+	      argument-face 'font-lock-warning-face
+	      index         0)))
+    (let ((doc args))
+      (when start
+	(setq doc (copy-sequence args))
+	(add-text-properties start end (list 'face argument-face) doc))
+      (setq doc (eldoc-docstring-format-sym-doc
+		 sym doc 'font-lock-function-name-face))
+      doc)))
 
 ;; Return a string containing a brief (one-line) documentation string for
 ;; the variable.
@@ -292,7 +365,8 @@ Emacs Lisp mode) that support Eldoc.")
 	   (let ((doc (documentation-property sym 'variable-documentation t)))
 	     (cond (doc
 		    (setq doc (eldoc-docstring-format-sym-doc
-			       sym (eldoc-docstring-first-line doc)))
+			       sym (eldoc-docstring-first-line doc)
+			       'font-lock-variable-name-face))
 		    (eldoc-last-data-store sym doc 'variable)))
 	     doc)))))
 
@@ -307,7 +381,9 @@ Emacs Lisp mode) that support Eldoc.")
   (and (stringp doc)
        (substitute-command-keys
         (save-match-data
-          (let ((start (if (string-match "^\\*" doc) (match-end 0) 0)))
+	  ;; Don't use "^" in the regexp below since it may match
+	  ;; anywhere in the doc-string.
+	  (let ((start (if (string-match "\\`\\*" doc) (match-end 0) 0)))
             (cond ((string-match "\n" doc)
                    (substring doc start (match-beginning 0)))
                   ((zerop start) doc)
@@ -316,7 +392,7 @@ Emacs Lisp mode) that support Eldoc.")
 ;; If the entire line cannot fit in the echo area, the symbol name may be
 ;; truncated or eliminated entirely from the output to make room for the
 ;; description.
-(defun eldoc-docstring-format-sym-doc (sym doc)
+(defun eldoc-docstring-format-sym-doc (sym doc face)
   (save-match-data
     (let* ((name (symbol-name sym))
            (ea-multi eldoc-echo-area-use-multiline-p)
@@ -328,7 +404,7 @@ Emacs Lisp mode) that support Eldoc.")
       (cond ((or (<= strip 0)
                  (eq ea-multi t)
                  (and ea-multi (> (length doc) ea-width)))
-             (format "%s: %s" sym doc))
+             (format "%s: %s" (propertize name 'face face) doc))
             ((> (length doc) ea-width)
              (substring (format "%s" doc) 0 ea-width))
             ((>= strip (length name))
@@ -338,27 +414,44 @@ Emacs Lisp mode) that support Eldoc.")
              ;; than the beginning, since the former is more likely
              ;; to be unique given package namespace conventions.
              (setq name (substring name strip))
-             (format "%s: %s" name doc))))))
+             (format "%s: %s" (propertize name 'face face) doc))))))
 
 
+;; Return a list of current function name and argument index.
 (defun eldoc-fnsym-in-current-sexp ()
-  (let ((p (point)))
-    (eldoc-beginning-of-sexp)
-    (prog1
-        ;; Don't do anything if current word is inside a string.
-        (if (= (or (char-after (1- (point))) 0) ?\")
-            nil
-          (eldoc-current-symbol))
-      (goto-char p))))
+  (save-excursion
+    (let ((argument-index (1- (eldoc-beginning-of-sexp))))
+      ;; If we are at the beginning of function name, this will be -1.
+      (when (< argument-index 0)
+	(setq argument-index 0))
+      ;; Don't do anything if current word is inside a string.
+      (if (= (or (char-after (1- (point))) 0) ?\")
+	  nil
+	(list (eldoc-current-symbol) argument-index)))))
 
+;; Move to the beginnig of current sexp.  Return the number of nested
+;; sexp the point was over or after.
 (defun eldoc-beginning-of-sexp ()
-  (let ((parse-sexp-ignore-comments t))
+  (let ((parse-sexp-ignore-comments t)
+	(num-skipped-sexps 0))
     (condition-case err
-        (while (progn
-                 (forward-sexp -1)
-                 (or (= (char-before) ?\")
-                     (> (point) (point-min)))))
-      (error nil))))
+	(progn
+	  ;; First account for the case the point is directly over a
+	  ;; beginning of a nested sexp.
+	  (condition-case err
+	      (let ((p (point)))
+		(forward-sexp -1)
+		(forward-sexp 1)
+		(when (< (point) p)
+		  (setq num-skipped-sexps 1)))
+	    (error))
+	  (while
+	      (let ((p (point)))
+		(forward-sexp -1)
+		(when (< (point) p)
+		  (setq num-skipped-sexps (1+ num-skipped-sexps))))))
+      (error))
+    num-skipped-sexps))
 
 ;; returns nil unless current word is an interned symbol.
 (defun eldoc-current-symbol ()
@@ -377,28 +470,31 @@ Emacs Lisp mode) that support Eldoc.")
            (error (setq defn nil))))
     defn))
 
-(defun eldoc-function-argstring (fn)
-  (eldoc-function-argstring-format (help-function-arglist fn)))
+(defun eldoc-function-argstring (arglist)
+  "Return ARGLIST as a string enclosed by ().
+ARGLIST is either a string, or a list of strings or symbols."
+  (cond ((stringp arglist))
+	((not (listp arglist))
+	 (setq arglist nil))
+	((symbolp (car arglist))
+	 (setq arglist
+	       (mapconcat (lambda (s) (symbol-name s))
+			  arglist " ")))
+	((stringp (car arglist))
+	 (setq arglist
+	       (mapconcat (lambda (s) s)
+			  arglist " "))))
+  (if arglist
+      (format "(%s)" arglist)))
 
-(defun eldoc-function-argstring-format (arglist)
-  (cond ((not (listp arglist))
-         (setq arglist nil))
-        ((symbolp (car arglist))
-         (setq arglist
-               (mapcar (function (lambda (s)
-                                   (if (memq s '(&optional &rest))
-                                       (symbol-name s)
-                                     (funcall eldoc-argument-case
-                                              (symbol-name s)))))
-                       arglist)))
-        ((stringp (car arglist))
-         (setq arglist
-               (mapcar (function (lambda (s)
-                                   (if (member s '("&optional" "&rest"))
-                                       s
-                                     (funcall eldoc-argument-case s))))
-                       arglist))))
-  (concat "(" (mapconcat 'identity arglist " ") ")"))
+(defun eldoc-function-argstring-format (argstring)
+  "Apply `eldoc-argument-case' to each word in ARGSTRING.
+The words \"&rest\", \"&optional\" are returned unchanged."
+  (mapconcat (lambda (s)
+	       (if (string-match-p "\\`(?&\\(?:optional\\|rest\\))?\\'" s)
+		   s
+		 (funcall eldoc-argument-case s)))
+	     (split-string argstring) " "))
 
 
 ;; When point is in a sexp, the function args are not reprinted in the echo

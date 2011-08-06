@@ -1,17 +1,17 @@
 ;;; keypad.el --- simplified keypad bindings
 
 ;; Copyright (C) 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008 Free Software Foundation, Inc.
+;;   2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Kim F. Storm <storm@cua.dk>
 ;; Keywords: keyboard convenience
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -234,7 +232,7 @@ the decimal key on the keypad is mapped to DECIMAL instead of `.'"
 	 (bind
 	  (cond
 	   ((or (eq setup 'numeric)
-		(char-valid-p setup))
+		(characterp setup))
 	    (if (eq decimal 'numeric)
 		(setq decimal nil))
 	    (vector (or decimal ?.) ?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
@@ -272,5 +270,5 @@ the decimal key on the keypad is mapped to DECIMAL instead of `.'"
 
       (setq i (1+ i)))))
 
-;;; arch-tag: 0899d2bd-9e12-4b4e-9aef-d0014d3b6414
+;; arch-tag: 0899d2bd-9e12-4b4e-9aef-d0014d3b6414
 ;;; keypad.el ends here

@@ -1,7 +1,7 @@
 ;;; generic.el --- defining simple major modes with comment and font-lock
 ;;
 ;; Copyright (C) 1997, 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 ;;
 ;; Author:  Peter Breton <pbreton@cs.umb.edu>
 ;; Created: Fri Sep 27 1996
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -205,7 +203,7 @@ See the file generic-x.el for some examples of `define-generic-mode'."
     (setq font-lock-defaults '(generic-font-lock-keywords))
 
     ;; Call a list of functions
-    (mapcar 'funcall function-list)
+    (mapc 'funcall function-list)
 
     (run-mode-hooks mode-hook)))
 
@@ -240,9 +238,9 @@ Some generic modes are defined in `generic-x.el'."
 	(when (consp start)
 	  (setq end (cdr start))
 	  (setq start (car start)))
-	(when (char-valid-p start) (setq start (char-to-string start)))
+	(when (characterp start) (setq start (char-to-string start)))
 	(cond
-	 ((char-valid-p end)   (setq end (char-to-string end)))
+	 ((characterp end)   (setq end (char-to-string end)))
 	 ((zerop (length end)) (setq end "\n")))
 
 	;; Setup the vars for `comment-region'

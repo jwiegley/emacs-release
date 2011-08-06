@@ -3,14 +3,14 @@
 
 /* Support routines for the NT version of Emacs.
    Copyright (C) 1994, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 /* File descriptor set emulation.  */
@@ -74,6 +72,8 @@ typedef struct _child_process
   PROCESS_INFORMATION   procinfo;
   volatile int          status;
   char                  chr;
+  OVERLAPPED            ovl_read;
+  OVERLAPPED            ovl_write;
 } child_process;
 
 #define MAXDESC FD_SETSIZE
@@ -101,6 +101,7 @@ extern filedesc fd_info [ MAXDESC ];
 #define FILE_PIPE               0x0100
 #define FILE_SOCKET             0x0200
 #define FILE_NDELAY             0x0400
+#define FILE_SERIAL             0x0800
 
 extern child_process * new_child (void);
 extern void delete_child (child_process *cp);

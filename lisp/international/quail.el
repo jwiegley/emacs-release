@@ -1,9 +1,9 @@
 ;;; quail.el --- provides simple input method for multilingual text
 
 ;; Copyright (C) 1997, 1998, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008  Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008
+;;   2005, 2006, 2007, 2008, 2009
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
@@ -14,10 +14,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -25,9 +25,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -138,6 +136,14 @@ See the documentation of `quail-define-package' for the other elements.")
 (defsubst quail-name ()
   "Return the name of the current Quail package."
   (nth 0 quail-current-package))
+
+(defun quail-indent-to (col)
+  (indent-to col)
+  (let ((end (point)))
+    (save-excursion
+      (unless (zerop (skip-chars-backward "\t "))
+        (put-text-property (point) end 'display (list 'space :align-to col))))))
+
 ;;;###autoload
 (defun quail-title ()
   "Return the title of the current Quail package."
@@ -233,7 +239,7 @@ Conversion keymap is a keymap used while conversion region is active
 ;;;###autoload
 (defun quail-use-package (package-name &rest libraries)
   "Start using Quail package PACKAGE-NAME.
-The remaining arguments are libraries to be loaded before using the package.
+The remaining arguments are LIBRARIES to be loaded before using the package.
 
 This activates input method defined by PACKAGE-NAME by running
 `quail-activate', which see."
@@ -547,7 +553,7 @@ This function runs the normal hook `quail-inactivate-hook'."
 
 (defun quail-activate (&optional arg)
   "Activate Quail input method.
-With arg, activate Quail input method if and only if arg is positive.
+With ARG, activate Quail input method if and only if arg is positive.
 
 This function runs `quail-activate-hook' if it activates the input
 method, `quail-inactivate-hook' if it deactivates it.
@@ -800,7 +806,9 @@ The format of KBD-LAYOUT is the same as `quail-keyboard-layout'."
 	(if translation
 	    (progn
 	      (if (consp translation)
-		  (setq translation (aref (cdr translation) 0)))
+		  (if (> (length (cdr translation)) 0)
+		      (setq translation (aref (cdr translation) 0))
+		    (setq translation " ")))
 	      (setq done-list (cons translation done-list)))
 	  (setq translation ch))
 	(aset layout i translation))
@@ -822,10 +830,6 @@ The format of KBD-LAYOUT is the same as `quail-keyboard-layout'."
 	      (insert-char 32 (+ row (/ (- row 2) 2)))))
 	(setq lower (aref layout i)
 	      upper (aref layout (1+ i)))
-	(if (and (integerp lower) (>= lower 128) (< lower 256))
-	    (setq lower (unibyte-char-to-multibyte lower)))
-	(if (and (integerp upper) (>= upper 128) (< upper 256))
-	    (setq upper (unibyte-char-to-multibyte upper)))
 	(insert bar)
 	(if (= (if (stringp lower) (string-width lower) (char-width lower)) 1)
 	    (insert " "))
@@ -990,13 +994,12 @@ the following annotation types are supported.
 	  (if no-decode-map
 	      (setq annotations (delete no-decode-map annotations)
 		    no-decode-map (cdr no-decode-map)))
-	  ;; Convert the remaining annoations to property list PROPS.
-	  (while annotations
+	  ;; Convert the remaining annotations to property list PROPS.
+	  (dolist (annotation annotations)
 	    (setq props
-		  (cons (car (car annotations))
-			(cons (cdr (car annotations))
-			      props))
-		  annotations (cdr annotations)))
+		  (cons (car annotation)
+			(cons (cdr annotation)
+			      props))))
 	  (setq l (cdr l))))
     ;; Process the remaining arguments one by one.
     (if append
@@ -1086,6 +1089,13 @@ to the current translations for KEY instead of replacing them."
 	(setq quail-current-package package)))
   (quail-defrule-internal key translation (quail-map) append))
 
+(defun quail-vunion (v1 v2)
+  (apply 'vector
+         ;; No idea why this was here, but it seems to cause the
+         ;; incorrect ordering, according to Nils Anders Danielsson.
+         ;; (nreverse
+         (delete-dups (nconc (append v1 ()) (append v2 ()))))) ;; )
+
 ;;;###autoload
 (defun quail-defrule-internal (key trans map &optional append decode-map props)
   "Define KEY as TRANS in a Quail map MAP.
@@ -1168,17 +1178,20 @@ function `quail-define-rules' for the detail."
 		  (setcdr decode-map
 			  (cons (cons elt key) (cdr decode-map)))))))
 	(if (and (car map) append)
-	    (let ((prev (quail-get-translation (car map) key len)))
-	      (if (integerp prev)
-		  (setq prev (vector prev))
-		(setq prev (cdr prev)))
+	    (let* ((prev (quail-get-translation (car map) key len))
+                   (prevchars (if (integerp prev)
+                                  (vector prev)
+                                (cdr prev))))
 	      (if (integerp trans)
 		  (setq trans (vector trans))
 		(if (stringp trans)
 		    (setq trans (string-to-vector trans))))
+              (let ((new (quail-vunion prevchars trans)))
 	      (setq trans
-		    (cons (list 0 0 0 0 nil)
-			  (vconcat prev trans)))))
+                      (if (equal new prevchars)
+                          ;; Nothing to change, get back to orig value.
+                          prev
+                        (cons (list 0 0 0 0 nil) new))))))
 	(setcar map trans)))))
 
 (defun quail-get-translation (def key len)
@@ -1276,28 +1289,17 @@ The returned value is a Quail map specific to KEY."
 
 (defun quail-input-string-to-events (str)
   "Convert input string STR to a list of events.
-Do so while interleaving with the following special events:
-\(compose-last-chars LEN COMPONENTS)
-\(quail-advice INPUT-STRING)"
-  (let* ((events (mapcar
-		  (lambda (c)
-		    ;; This gives us the chance to unify on input
-		    ;; (e.g. using ucs-tables.el).
-		    (or (and translation-table-for-input
-			     (aref translation-table-for-input c))
-			c))
-		  str))
-	 (len (length str))
-	 (idx len)
-	 composition from to)
-    (while (and (> idx 0)
-		(setq composition (find-composition idx 0 str t)))
-      (setq from (car composition) to (nth 1 composition))
-      (setcdr (nthcdr (1- to) events)
-	      (cons (list 'compose-last-chars (- to from)
-			  (and (not (nth 3 composition)) (nth 2 composition)))
-		    (nthcdr to events)))
-      (setq idx (1- from)))
+If STR has `advice' text property, append the following special event:
+\(quail-advice STR)"
+  (let ((events (mapcar
+		 (lambda (c)
+		   (or
+		    ;; Avoid "obsolete" warnings for translation-table-for-input.
+		    (with-no-warnings
+		      (and translation-table-for-input
+			   (aref translation-table-for-input c)))
+		    c))
+		 str)))
     (if (or (get-text-property 0 'advice str)
 	    (next-single-property-change 0 'advice str))
 	(setq events
@@ -1363,7 +1365,7 @@ Return the input string."
       (let* ((echo-keystrokes 0)
 	     (help-char nil)
 	     (overriding-terminal-local-map (quail-translation-keymap))
-	     (generated-events nil)
+	     (generated-events nil)     ;FIXME: What is this?
 	     (input-method-function nil)
 	     (modified-p (buffer-modified-p))
 	     last-command-event last-command this-command)
@@ -1421,7 +1423,7 @@ Return the input string."
       (let* ((echo-keystrokes 0)
 	     (help-char nil)
 	     (overriding-terminal-local-map (quail-conversion-keymap))
-	     (generated-events nil)
+	     (generated-events nil)     ;FIXME: What is this?
 	     (input-method-function nil)
 	     (modified-p (buffer-modified-p))
 	     last-command-event last-command this-command)
@@ -1597,7 +1599,10 @@ with more keys."
   "Return string to be shown as current translation of key sequence.
 LEN is the length of the sequence.  DEF is a definition part of the
 Quail map for the sequence."
-  (or (and (consp def) (aref (cdr def) (car (car def))))
+  (or (and (consp def)
+	   (if (> (length (cdr def)) (car (car def)))
+	       (aref (cdr def) (car (car def)))
+	     ""))
       def
       (and (> len 1)
 	   (let* ((str (quail-get-current-str
@@ -1639,7 +1644,7 @@ Make RELATIVE-INDEX the current translation."
 	      (maxcol (- (window-width)
 			 quail-guidance-translations-starting-column))
 	      (block (nth 3 indices))
-	      col idx width trans num-items blocks)
+	      col idx width trans num-items)
 	  (if (< cur start)
 	      ;; We must calculate from the head.
 	      (setq start 0 block 0)
@@ -1926,6 +1931,10 @@ Remaining args are for FUNC."
 		    (frame-char-height) (* internal-border 2) (* border 2))))
     (if (< newtop 0)
 	(setq newtop (+ top (frame-pixel-height) internal-border border)))
+    ;; If I leave the `parent-id' parameter, my frame ends up with 13 lines
+    ;; rather than just 1.  Not sure what is really going on, but
+    ;; clearly this parameter is not needed.  --Stef
+    (setq fparam (delq (assoc 'parent-id fparam) fparam))
     (make-frame (append '((user-position . t) (height . 1)
 			  (minibuffer)
 			  (menu-bar-lines . 0) (tool-bar-lines . 0))
@@ -1934,12 +1943,13 @@ Remaining args are for FUNC."
 (defun quail-setup-completion-buf ()
   "Setup Quail completion buffer."
   (unless (buffer-live-p quail-completion-buf)
-    (let ((default-enable-multibyte-characters enable-multibyte-characters))
-      (setq quail-completion-buf (get-buffer-create "*Quail Completions*")))
-    (with-current-buffer quail-completion-buf
-      (setq buffer-read-only t)
-      (setq quail-overlay (make-overlay 1 1))
-      (overlay-put quail-overlay 'face 'highlight))))
+    (let ((mb enable-multibyte-characters))
+      (setq quail-completion-buf (get-buffer-create "*Quail Completions*"))
+      (with-current-buffer quail-completion-buf
+        (set-buffer-multibyte mb)
+        (setq buffer-read-only t)
+        (setq quail-overlay (make-overlay (point-min) (point-min)))
+        (overlay-put quail-overlay 'face 'highlight)))))
 
 (defun quail-require-guidance-buf ()
   "Return t if the current Quail package requires showing guidance buffer."
@@ -1982,30 +1992,30 @@ minibuffer and the selected frame has no other windows)."
 	     (not input-method-use-echo-area)
 	     (null unread-command-events)
 	     (null unread-post-input-method-events))
-    (if (eq (selected-window) (minibuffer-window))
+    (if (minibufferp)
 	(if (eq (minibuffer-window) (frame-root-window))
 	    ;; Use another frame.  It is sure that we are using some
 	    ;; window system.
 	    (let ((guidance quail-guidance-str))
 	      (or (frame-live-p quail-guidance-frame)
-		  (setq quail-guidance-frame 
+		  (setq quail-guidance-frame
 			(quail-make-guidance-frame)))
 	      (or (buffer-live-p quail-guidance-buf)
 		  (setq quail-guidance-buf
 			(get-buffer-create " *Quail-guidance*")))
-	      (save-excursion
-		(set-buffer quail-guidance-buf)
+	      (with-current-buffer quail-guidance-buf
 		(erase-buffer)
 		(setq cursor-type nil)
 		(insert guidance))
-	      (set-window-buffer (frame-root-window quail-guidance-frame)
-				 quail-guidance-buf)
+              (let ((win (frame-root-window quail-guidance-frame)))
+                (set-window-buffer win quail-guidance-buf)
+                (set-window-dedicated-p win t))
 	      (quail-minibuffer-message
 	       (format " [%s]" current-input-method-title)))
 	  ;; Show the guidance in the next line of the currrent
 	  ;; minibuffer.
 	  (quail-minibuffer-message
-	   (format "  [%s]\n%s" 
+	   (format "  [%s]\n%s"
 		   current-input-method-title quail-guidance-str)))
       ;; Show the guidance in echo area without logging.
       (let ((message-log-max nil))
@@ -2076,6 +2086,8 @@ minibuffer and the selected frame has no other windows)."
 
 (defun quail-get-translations ()
   "Return a string containing the current possible translations."
+  (or (multibyte-string-p quail-current-key)
+      (setq quail-current-key (string-to-multibyte quail-current-key)))
   (let ((map (quail-lookup-key quail-current-key nil t))
 	(str (copy-sequence quail-current-key)))
     (if quail-current-translations
@@ -2084,7 +2096,7 @@ minibuffer and the selected frame has no other windows)."
     ;; Show the current key.
     (let ((guidance (quail-guidance)))
       (if (listp guidance)
-	  ;; We must replace thetyped key with the specified PROMPTKEY.
+	  ;; We must replace the typed key with the specified PROMPT-KEY.
 	  (dotimes (i (length str))
 	    (let ((prompt-key (cdr (assoc (aref str i) guidance))))
 	      (if prompt-key
@@ -2178,7 +2190,7 @@ are shown (at most to the depth specified `quail-completion-max-depth')."
 (defun quail-completion-1 (key map indent)
 "List all completions of KEY in MAP with indentation INDENT."
   (let ((len (length key)))
-    (indent-to indent)
+    (quail-indent-to indent)
     (insert key ":")
     (if (and (symbolp map) (fboundp map))
 	(setq map (funcall map key len)))
@@ -2219,13 +2231,12 @@ are shown (at most to the depth specified `quail-completion-max-depth')."
       (setq translations (cdr translations))
       ;; Insert every 10 elements with indices in a line.
       (let ((len (length translations))
-	    (i 0)
-	    num)
+	    (i 0))
 	(while (< i len)
 	  (when (zerop (% i 10))
 	    (when (>= i 10)
  	      (insert "\n")
-	      (indent-to indent))
+	      (quail-indent-to indent))
 	    (insert (format "(%d/%d)" (1+ (/ i 10)) (1+ (/ len 10)))))
 	  ;; We show the last digit of FROM while converting
 	  ;; 0,1,..,9 to 1,2,..,0.
@@ -2303,7 +2314,7 @@ Optional 6th arg IGNORES is a list of translations to ignore."
 	 elt)
     (cond ((integerp translation)
 	   ;; Accept only non-ASCII chars not listed in IGNORES.
-	   (when (and (> translation 255) (not (memq translation ignores)))
+	   (when (and (> translation 127) (not (memq translation ignores)))
 	     (setcdr decode-map
 		     (cons (cons key translation) (cdr decode-map)))
 	     (setq num (1+ num))))
@@ -2313,8 +2324,8 @@ Optional 6th arg IGNORES is a list of translations to ignore."
 	     (mapc (function (lambda (x)
 			       ;; Accept only non-ASCII chars not
 			       ;; listed in IGNORES.
-			       (if (and (if (integerp x) (> x 255)
-					  (> (string-bytes x) (length x)))
+			       (if (and (if (integerp x) (> x 127)
+                                          (string-match-p "[^[:ascii:]]" x))
 					(not (member x ignores)))
 				   (setq multibyte t))))
 		   translation)
@@ -2348,93 +2359,89 @@ should be made by `quail-build-decode-map' (which see)."
 				   (not (string< x y))))))))
   (let ((window-width (window-width (get-buffer-window
                                      (current-buffer) 'visible)))
-	(single-key-width 3)
 	(single-trans-width 4)
-	(multiple-key-width 3)
 	(single-list nil)
 	(multiple-list nil)
-	elt trans width pos cols rows col row str col-width)
+	trans)
     ;; Divide the elements of decoding map into single ones (i.e. the
-    ;; one that has single translation) and multibyte ones (i.e. the
+    ;; one that has single translation) and multiple ones (i.e. the
     ;; one that has multiple translations).
-    (while decode-map
-      (setq elt (car decode-map) decode-map (cdr decode-map)
-	    trans (cdr elt))
+    (dolist (elt decode-map)
+      (setq trans (cdr elt))
       (if (and (vectorp trans) (= (length trans) 1))
 	  (setq trans (aref trans 0)))
       (if (vectorp trans)
-	  (setq multiple-list (cons elt multiple-list))
-	(setq single-list (cons (cons (car elt) trans) single-list)
-	      width (if (stringp trans) (string-width trans)
-		      (char-width trans)))
-	(if (> width single-trans-width)
-	    (setq single-trans-width width)))
-      (setq width (length (car elt)))
-      (if (> width single-key-width)
-	  (setq single-key-width width))
-      (if (> width multiple-key-width)
-	  (setq multiple-key-width width)))
+	  (push elt multiple-list)
+	(push (cons (car elt) trans) single-list)
+        (let ((width (if (stringp trans) (string-width trans)
+                       (char-width trans))))
+          (if (> width single-trans-width)
+              (setq single-trans-width width)))))
     (when single-list
-      (setq col-width (+ single-key-width 1 single-trans-width 1)
-	    cols (/ window-width col-width)
-	    rows (/ (length single-list) cols))
-      (if (> (% (length single-list) cols) 0)
-	  (setq rows (1+ rows)))
-      (insert "key")
-      (indent-to (1+ single-key-width))
-      (insert "char")
-      (indent-to (1+ col-width))
-      (insert "[type a key sequence to insert the corresponding character]\n")
-      (setq pos (point))
-      (insert-char ?\n (+ rows 2))
-      (goto-char pos)
-      (setq col (- col-width) row 0)
-      (while single-list
-	(setq elt (car single-list) single-list (cdr single-list))
-	(when (= (% row rows) 0)
-	  (goto-char pos)
-	  (setq col (+ col col-width))
-	  (move-to-column col t)
-	  (insert-char ?- single-key-width)
-	  (insert ? )
-	  (insert-char ?- single-trans-width)
-	  (forward-line 1))
-	(move-to-column col t)
-	(insert (car elt))
-	(indent-to (+ col single-key-width 1))
-	(insert (cdr elt))
-	(forward-line 1)
-	(setq row (1+ row)))
-      (goto-char (point-max)))
+      ;; Since decode-map is sorted, we known the longest key is at the end.
+      (let* ((max-key-width (max 3 (length (caar (last single-list)))))
+             (col-width (+ max-key-width 1 single-trans-width 1))
+             (cols (/ window-width col-width))
+             (rows (/ (+ (length single-list) (1- cols)) cols)) ; Round up.
+             col pos row)
+        (insert "key")
+        (quail-indent-to (1+ max-key-width))
+        (insert "char")
+        (quail-indent-to (1+ col-width))
+        (insert "[type a key sequence to insert the corresponding character]\n")
+        (setq pos (point))
+        (insert-char ?\n (+ rows 2))
+        (goto-char pos)
+        (setq col (- col-width) row 0)
+        (dolist (elt single-list)
+          (when (= (% row rows) 0)
+            (goto-char pos)
+            (setq col (+ col col-width))
+            (move-to-column col)
+            (quail-indent-to col)
+            (insert-char ?- max-key-width)
+            (insert ? )
+            (insert-char ?- single-trans-width)
+            (forward-line 1))
+          (move-to-column col)
+          (quail-indent-to col)
+          (insert (car elt))
+          (quail-indent-to (+ col max-key-width 1))
+          (insert (cdr elt))
+          (forward-line 1)
+          (setq row (1+ row)))
+        (goto-char (point-max))))
 
     (when multiple-list
-      (insert "key")
-      (indent-to (1+ multiple-key-width))
-      (insert "character(s)  [type a key (sequence) and select one from the list]\n")
-      (insert-char ?- multiple-key-width)
-      (insert " ------------\n")
-      (while multiple-list
-	(setq elt (car multiple-list) multiple-list (cdr multiple-list))
-	(insert (car elt))
-	(indent-to multiple-key-width)
-	(if (vectorp (cdr elt))
-	    (mapc (function
-		   (lambda (x)
-		     (let ((width (if (integerp x) (char-width x)
-				    (string-width x))))
-		       (when (> (+ (current-column) 1 width) window-width)
-			 (insert "\n")
-			 (indent-to multiple-key-width))
-		       (insert " " x))))
-		  (cdr elt))
-	  (insert " " (cdr elt)))
-	(insert ?\n))
-      (insert ?\n))))
+      ;; Since decode-map is sorted, we known the longest key is at the end.
+      (let ((max-key-width (max 3 (length (caar (last multiple-list))))))
+        (insert "key")
+        (quail-indent-to (1+ max-key-width))
+        (insert "character(s)  [type a key (sequence) and select one from the list]\n")
+        (insert-char ?- max-key-width)
+        (insert " ------------\n")
+        (dolist (elt multiple-list)
+          (insert (car elt))
+          (quail-indent-to max-key-width)
+          (if (vectorp (cdr elt))
+              (mapc (function
+                     (lambda (x)
+                       (let ((width (if (integerp x) (char-width x)
+                                      (string-width x))))
+                         (when (> (+ (current-column) 1 width) window-width)
+                           (insert "\n")
+                           (quail-indent-to max-key-width))
+                         (insert " " x))))
+                    (cdr elt))
+            (insert " " (cdr elt)))
+          (insert ?\n))
+        (insert ?\n)))))
 
 (define-button-type 'quail-keyboard-layout-button
   :supertype 'help-xref
   'help-function '(lambda (layout)
-		    (help-setup-xref `(quail-keyboard-layout-button ,layout) nil)
+		    (help-setup-xref `(quail-keyboard-layout-button ,layout)
+				     nil)
 		    (quail-show-keyboard-layout layout))
   'help-echo (purecopy "mouse-2, RET: show keyboard layout"))
 
@@ -2447,8 +2454,9 @@ should be made by `quail-build-decode-map' (which see)."
 Optional arg PACKAGE specifies the name of alternative Quail
 package to describe."
   (interactive)
+  (require 'help-mode)
   (let ((help-xref-mule-regexp help-xref-mule-regexp-template)
-	(default-enable-multibyte-characters enable-multibyte-characters)
+	(mb enable-multibyte-characters)
 	(package-def
 	 (if package
 	     (assoc package quail-package-alist)
@@ -2457,6 +2465,7 @@ package to describe."
     (let ((temp-buffer-show-hook nil))
       (with-output-to-temp-buffer (help-buffer)
 	(with-current-buffer standard-output
+          (set-buffer-multibyte mb)
 	  (setq quail-current-package package-def))))
     ;; Then, insert text in the help buffer while paying attention to
     ;; the width of the window in which the buffer displayed.
@@ -2519,14 +2528,16 @@ physical keyboard layout as specified with that variable.
 	  (insert "\n"))
 
 	;; Show key sequences.
-	(let ((decode-map (list 'decode-map))
-	      elt pos num)
-	  (setq num (quail-build-decode-map (list (quail-map)) "" decode-map
-					    0 512 done-list))
+	(let* ((decode-map (list 'decode-map))
+               (num (quail-build-decode-map (list (quail-map)) "" decode-map
+                                            ;; We used to use 512 here, but
+                                            ;; TeX has more than 1000 and
+                                            ;; it's good to see the list.
+                                            0 5120 done-list)))
 	  (when (> num 0)
 	    (insert "
 KEY SEQUENCE
------------
+------------
 ")
 	    (if (quail-show-layout)
 		(insert "You can also input more characters")
@@ -2553,8 +2564,8 @@ KEY BINDINGS FOR CONVERSION
 	(run-hooks 'temp-buffer-show-hook)))))
 
 (defun quail-help-insert-keymap-description (keymap &optional header)
-  (let (pos1 pos2 eol)
-    (setq pos1 (point))
+  (let ((pos1 (point))
+        pos2)
     (if header
 	(insert header))
     (save-excursion
@@ -2629,7 +2640,7 @@ KEY BINDINGS FOR CONVERSION
 ;; it is not yet stored.  As a result, the element is a string or a
 ;; list of strings.
 
-(defsubst quail-store-decode-map-key (table char key)
+(defun quail-store-decode-map-key (table char key)
   (let ((elt (aref table char)))
     (if elt
 	(if (consp elt)
@@ -2638,10 +2649,12 @@ KEY BINDINGS FOR CONVERSION
 	  (or (string= key elt)
 	      (aset table char (list key elt))))
       (aset table char key))
-    (if (and translation-table-for-input
-	     (setq char (aref translation-table-for-input char)))
-	(let ((translation-table-for-input nil))
-	  (quail-store-decode-map-key table char key)))))
+    ;; Avoid "obsolete" warnings for translation-table-for-input.
+    (with-no-warnings
+      (if (and translation-table-for-input
+	       (setq char (aref translation-table-for-input char)))
+	  (let ((translation-table-for-input nil))
+	    (quail-store-decode-map-key table char key))))))
 
 ;; Helper function for quail-gen-decode-map.  Store key strings to
 ;; type each character under MAP in TABLE (char-table).  MAP is an
@@ -2690,9 +2703,11 @@ KEY BINDINGS FOR CONVERSION
 
 (defsubst quail-char-equal-p (char target)
   (or (= char target)
-      (and translation-table-for-input
-	   (setq char (aref translation-table-for-input char))
-	   (= char target))))
+      ;; Avoid "obsolete" warnings for translation-table-for-input.
+      (with-no-warnings
+	(and translation-table-for-input
+	     (setq char (aref translation-table-for-input char))
+	     (= char target)))))
 
 ;; Helper function for quail-find-key.  Prepend key strings to type
 ;; for inputting CHAR by the current input method to KEY-LIST and
@@ -2927,7 +2942,7 @@ of each directory."
   (interactive "FDirectory of LEIM: ")
   (setq dirname (expand-file-name dirname))
   (let ((leim-list (expand-file-name leim-list-file-name dirname))
-	quail-dirs list-buf pkg-list pkg-buf pos)
+	quail-dirs list-buf pkg-list pos)
     (if (not (file-writable-p leim-list))
 	(error "Can't write to file \"%s\"" leim-list))
     (message "Updating %s ..." leim-list)
@@ -3019,8 +3034,8 @@ of each directory."
 
     ;; At last, write out LEIM list file.
     (with-current-buffer list-buf
-      (setq buffer-file-coding-system 'iso-2022-7bit)
-      (save-buffer 0))
+      (let ((coding-system-for-write 'utf-8))
+	(save-buffer 0)))
     (kill-buffer list-buf)
     (message "Updating %s ... done" leim-list)))
 
@@ -3042,5 +3057,5 @@ call it with one argument STRING."
 ;;
 (provide 'quail)
 
-;;; arch-tag: 46d7db54-5467-42c4-a2a9-53ca90a1e886
+;; arch-tag: 46d7db54-5467-42c4-a2a9-53ca90a1e886
 ;;; quail.el ends here

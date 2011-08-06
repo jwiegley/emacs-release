@@ -1,16 +1,16 @@
 ;;; esh-util.el --- general utilities
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,22 +18,16 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
-(provide 'esh-util)
+;;; Commentary:
 
-(eval-when-compile (require 'esh-maint))
+;;; Code:
 
 (defgroup eshell-util nil
   "This is general utility code, meant for use by Eshell itself."
   :tag "General utilities"
   :group 'eshell)
-
-;;; Commentary:
-
-(require 'pp)
 
 ;;; User Variables:
 
@@ -138,10 +132,6 @@ function `string-to-number'."
   "A timestamp of when the hosts file was read.")
 
 ;;; Functions:
-
-(defsubst eshell-under-xemacs-p ()
-  "Return non-nil if we are running under XEmacs."
-  (boundp 'xemacs-logo))
 
 (defsubst eshell-under-windows-p ()
   "Return non-nil if we are running under MS-DOS/Windows."
@@ -280,6 +270,7 @@ If N or M is nil, it means the end of the list."
       (setq text (replace-match " " t t text)))
     text))
 
+;; FIXME this is just dolist.
 (defmacro eshell-for (for-var for-list &rest forms)
   "Iterate through a list"
   `(let ((list-iter ,for-list))
@@ -433,7 +424,9 @@ list."
   ;; "args out of range" error in `sit-for', if this function
   ;; runs while point is in the minibuffer and the users attempt
   ;; to use completion.  Don't ask me.
-  (ignore-errors (sit-for 0 0)))
+  (condition-case nil
+      (sit-for 0 0)
+    (error nil)))
 
 (defun eshell-read-passwd-file (file)
   "Return an alist correlating gids to group names in FILE."
@@ -586,7 +579,7 @@ Unless optional argument INPLACE is non-nil, return a new string."
 	string)))
 
 (unless (fboundp 'directory-files-and-attributes)
-  (defun directory-files-and-attributes (directory &optional full match nosort)
+  (defun directory-files-and-attributes (directory &optional full match nosort id-format)
     "Return a list of names of files and their attributes in DIRECTORY.
 There are three optional arguments:
 If FULL is non-nil, return absolute file names.  Otherwise return names
@@ -601,15 +594,14 @@ If NOSORT is non-nil, the list is not sorted--its order is unpredictable.
          (cons file (eshell-file-attributes (expand-file-name file directory)))))
        (directory-files directory full match nosort)))))
 
-(eval-when-compile
-  (defvar ange-cache))
+(defvar ange-cache)
 
-(defun eshell-directory-files-and-attributes (dir &optional full match nosort)
+(defun eshell-directory-files-and-attributes (dir &optional full match nosort id-format)
   "Make sure to use the handler for `directory-file-and-attributes'."
   (let* ((dir (expand-file-name dir))
 	 (dfh (find-file-name-handler dir 'directory-files)))
     (if (not dfh)
-	(directory-files-and-attributes dir full match nosort)
+	(directory-files-and-attributes dir full match nosort id-format)
       (let ((files (funcall dfh 'directory-files dir full match nosort))
 	    (fah (find-file-name-handler dir 'file-attributes)))
 	(mapcar
@@ -636,7 +628,7 @@ If NOSORT is non-nil, the list is not sorted--its order is unpredictable.
     (autoload 'parse-time-string "parse-time"))
 
 (eval-when-compile
-  (load "ange-ftp" t))
+  (require 'ange-ftp nil t))
 
 (defun eshell-parse-ange-ls (dir)
   (let (entry)
@@ -658,6 +650,7 @@ If NOSORT is non-nil, the list is not sorted--its order is unpredictable.
 	       (user (match-string 3))
 	       (group (match-string 4))
 	       (size (string-to-number (match-string 5)))
+	       (name (ange-ftp-parse-filename))
 	       (mtime
 		(if (fboundp 'parse-time-string)
 		    (let ((moment (parse-time-string
@@ -670,7 +663,6 @@ If NOSORT is non-nil, the list is not sorted--its order is unpredictable.
 			(setcar (nthcdr 2 moment) 0))
 		      (apply 'encode-time moment))
 		  (ange-ftp-file-modtime (expand-file-name name dir))))
-	       (name (ange-ftp-parse-filename))
 	       symlink)
 	  (if (string-match "\\(.+\\) -> \\(.+\\)" name)
 	      (setq symlink (match-string 2 name)
@@ -785,7 +777,7 @@ If NOSORT is non-nil, the list is not sorted--its order is unpredictable.
 ;     (or result
 ;	(file-attributes filename))))
 
-;;; Code:
+(provide 'esh-util)
 
-;;; arch-tag: 70159778-5c7a-480a-bae4-3ad332fca19d
+;; arch-tag: 70159778-5c7a-480a-bae4-3ad332fca19d
 ;;; esh-util.el ends here

@@ -1,7 +1,7 @@
 ;;; make-mode.el --- makefile editing commands for Emacs
 
-;; Copyright (C) 1992, 1994, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-;; Free Software Foundation, Inc.
+;; Copyright (C) 1992, 1994, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
+;;   2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Thomas Neumann <tom@smart.bo.open.de>
 ;;	Eric S. Raymond <esr@snark.thyrsus.com>
@@ -11,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -582,7 +580,8 @@ The function must satisfy this calling convention:
   (define-abbrev-table 'makefile-mode-abbrev-table ()))
 
 (defvar makefile-mode-map
-  (let ((map (make-sparse-keymap)))
+  (let ((map (make-sparse-keymap))
+	(opt-map (make-sparse-keymap)))
     ;; set up the keymap
     (define-key map "\C-c:" 'makefile-insert-target-ref)
     (if makefile-electric-keys
@@ -612,17 +611,64 @@ The function must satisfy this calling convention:
     (define-key map [menu-bar makefile-mode]
       (cons "Makefile" (make-sparse-keymap "Makefile")))
 
+    (define-key map [menu-bar makefile-mode makefile-type]
+      (cons "Switch Makefile Type" opt-map))
+    (define-key opt-map [makefile-makepp-mode]
+      '(menu-item "Makepp" makefile-makepp-mode
+		  :help "An adapted `makefile-mode' that knows about makepp"
+		  :button (:radio . (eq major-mode 'makefile-makepp-mode))))
+    (define-key opt-map [makefile-imake-mode]
+      '(menu-item "Imake" makefile-imake-mode
+		  :help "An adapted `makefile-mode' that knows about imake"
+		  :button (:radio . (eq major-mode 'makefile-imake-mode))))
+    (define-key opt-map [makefile-mode]
+      '(menu-item "Classic" makefile-mode
+		  :help "`makefile-mode' with no special functionality"
+		  :button (:radio . (eq major-mode 'makefile-mode))))
+    (define-key opt-map [makefile-bsdmake-mode]
+      '(menu-item "BSD" makefile-bsdmake-mode
+		  :help "An adapted `makefile-mode' that knows about BSD make"
+		  :button (:radio . (eq major-mode 'makefile-bsdmake-mode))))
+    (define-key opt-map [makefile-automake-mode]
+      '(menu-item "Automake" makefile-automake-mode
+		  :help "An adapted `makefile-mode' that knows about automake"
+		  :button (:radio . (eq major-mode 'makefile-automake-mode))))
+    (define-key opt-map [makefile-gmake-mode]
+      '(menu-item "GNU make" makefile-gmake-mode
+		  :help "An adapted `makefile-mode' that knows about GNU make"
+		  :button (:radio . (eq major-mode 'makefile-gmake-mode))))
     (define-key map [menu-bar makefile-mode browse]
-      '("Pop up Makefile Browser" . makefile-switch-to-browser))
-    (define-key map [menu-bar makefile-mode complete]
-      '("Complete Target or Macro" . makefile-complete))
+      '(menu-item "Pop up Makefile Browser" makefile-switch-to-browser
+		  ;; XXX: this needs a better string, the function is not documented...
+		  :help "Pop up Makefile Browser"))
+    (define-key map [menu-bar makefile-mode overview]
+      '(menu-item "Up To Date Overview" makefile-create-up-to-date-overview
+		  :help "Create a buffer containing an overview of the state of all known targets"))
+    ;; Target related
+    (define-key map [menu-bar makefile-mode separator1]  '("----"))
+    (define-key map [menu-bar makefile-mode pickup-file]
+      '(menu-item "Pick File Name as Target" makefile-pickup-filenames-as-targets
+		  :help "Scan the current directory for filenames to use as targets"))
+    (define-key map [menu-bar makefile-mode function]
+      '(menu-item "Insert GNU make function" makefile-insert-gmake-function
+		  :help "Insert a GNU make function call"))
     (define-key map [menu-bar makefile-mode pickup]
-      '("Find Targets and Macros" . makefile-pickup-everything))
-
+      '(menu-item "Find Targets and Macros" makefile-pickup-everything
+		  :help "Notice names of all macros and targets in Makefile"))
+    (define-key map [menu-bar makefile-mode complete]
+      '(menu-item "Complete Target or Macro" makefile-complete
+		  :help "Perform completion on Makefile construct preceding point"))
+    (define-key map [menu-bar makefile-mode backslash]
+      '(menu-item "Backslash Region" makefile-backslash-region
+		  :help "Insert, align, or delete end-of-line backslashes on the lines in the region"))
+    ;; Motion
+    (define-key map [menu-bar makefile-mode separator]  '("----"))
     (define-key map [menu-bar makefile-mode prev]
-      '("Move to Previous Dependency" . makefile-previous-dependency))
+      '(menu-item "Move to Previous Dependency" makefile-previous-dependency
+		  :help "Move point to the beginning of the previous dependency line"))
     (define-key map [menu-bar makefile-mode next]
-      '("Move to Next Dependency" . makefile-next-dependency))
+      '(menu-item "Move to Next Dependency" makefile-next-dependency
+		  :help "Move point to the beginning of the next dependency line"))
     map)
   "The keymap that is used in Makefile mode.")
 
@@ -1642,7 +1688,7 @@ and generates the overview, one line per target name."
 ;;; ------------------------------------------------------------
 
 (defun makefile-cleanup-continuations ()
-  (if (eq major-mode 'makefile-mode)
+  (if (derived-mode-p 'makefile-mode)
       (if (and makefile-cleanup-continuations
 	       (not buffer-read-only))
 	  (save-excursion
@@ -1657,7 +1703,7 @@ and generates the overview, one line per target name."
 
 (defun makefile-warn-suspicious-lines ()
   ;; Returning non-nil cancels the save operation
-  (if (eq major-mode 'makefile-mode)
+  (if (derived-mode-p 'makefile-mode)
       (save-excursion
 	(goto-char (point-min))
 	(if (re-search-forward "^\\(\t+$\\| +\t\\)" nil t)
@@ -1666,7 +1712,7 @@ and generates the overview, one line per target name."
 			  (count-lines (point-min) (point)))))))))
 
 (defun makefile-warn-continuations ()
-  (if (eq major-mode 'makefile-mode)
+  (if (derived-mode-p 'makefile-mode)
       (save-excursion
 	(goto-char (point-min))
 	(if (re-search-forward "\\\\[ \t]+$" nil t)
@@ -1715,11 +1761,12 @@ Then prompts for all required parameters."
   "To be called as an anchored matcher by font-lock.
 The anchor must have matched the opening parens in the first group."
   (let ((s (match-string-no-properties 1)))
-    (setq s (cond ((string= s "(") "\\(.*?\\)[ \t]*)")
-		  ((string= s "{") "\\(.*?\\)[ \t]*}")
-		  ((string= s "((") "\\(.*?\\)[ \t]*))")
-		  ((string= s "{{") "\\(.*?\\)[ \t]*}}")))
-    (if s (looking-at s))))
+    ;; FIXME forward-sexp or somesuch would be better?
+    (if (setq s (cond ((string= s "(") ")")
+		      ((string= s "{") "}")
+		      ((string= s "((") "))")
+		      ((string= s "{{") "}}")))
+	(re-search-forward (concat "\\(.*\\)[ \t]*" s) (line-end-position) t))))
 
 (defun makefile-match-dependency (bound)
   "Search for `makefile-dependency-regex' up to BOUND.

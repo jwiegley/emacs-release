@@ -1,30 +1,30 @@
-This is ../info/elisp, produced by makeinfo version 4.11 from
+This is ../../info/elisp, produced by makeinfo version 4.11 from
 elisp.texi.
 
-INFO-DIR-SECTION Emacs
-START-INFO-DIR-ENTRY
-* Elisp: (elisp).       The Emacs Lisp Reference Manual.
-END-INFO-DIR-ENTRY
-
-   This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.3.
+This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
+corresponding to Emacs version 23.1.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
-Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free
+Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
-     Version 1.2 or any later version published by the Free Software
+     Version 1.3 or any later version published by the Free Software
      Foundation; with the Invariant Sections being "GNU General Public
      License," with the Front-Cover texts being "A GNU Manual," and
      with the Back-Cover Texts as in (a) below.  A copy of the license
      is included in the section entitled "GNU Free Documentation
      License."
 
-     (a) The FSF's Back-Cover Text is: "You are free to copy and modify
-     this GNU Manual. Buying copies from GNU Press supports the FSF in
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
+
+INFO-DIR-SECTION Emacs
+START-INFO-DIR-ENTRY
+* Elisp: (elisp).       The Emacs Lisp Reference Manual.
+END-INFO-DIR-ENTRY
 
 
 File: elisp,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
@@ -32,8 +32,28 @@ File: elisp,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
 Emacs Lisp
 **********
 
-This Info file contains edition 2.9 of the GNU Emacs Lisp Reference
-Manual, corresponding to GNU Emacs version 22.3.
+This Info file contains edition 3.0 of the GNU Emacs Lisp Reference
+Manual, corresponding to GNU Emacs version 23.1.
+
+   This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
+corresponding to Emacs version 23.1.
+
+   Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free
+Software Foundation, Inc.
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with the Invariant Sections being "GNU General Public
+     License," with the Front-Cover texts being "A GNU Manual," and
+     with the Back-Cover Texts as in (a) below.  A copy of the license
+     is included in the section entitled "GNU Free Documentation
+     License."
+
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
+     developing GNU and promoting software freedom."
 
 * Menu:
 
@@ -93,8 +113,8 @@ Manual, corresponding to GNU Emacs version 22.3.
 
 Appendices
 
-* Antinews::                Info for users downgrading to Emacs 21.
-* GNU Free Documentation License:: The license for this documentation
+* Antinews::                Info for users downgrading to Emacs 22.
+* GNU Free Documentation License:: The license for this documentation.
 * GPL::                     Conditions for copying and changing GNU Emacs.
 * Tips::                    Advice and coding conventions for Emacs Lisp.
 * GNU Emacs Internals::     Building and dumping Emacs;
@@ -129,7 +149,7 @@ Conventions
 * Some Terms::              Explanation of terms we use in this manual.
 * nil and t::               How the symbols `nil' and `t' are used.
 * Evaluation Notation::     The format we use for examples of evaluation.
-* Printing Notation::       The format we use for examples that print output.
+* Printing Notation::       The format we use when examples print text.
 * Error Messages::          The format we use for examples of errors.
 * Buffer Text Notation::    The format we use for buffer contents in examples.
 * Format of Descriptions::  Notation for describing functions, variables, etc.
@@ -147,7 +167,7 @@ Lisp Data Types
 * Comments::                Comments and their formatting conventions.
 * Programming Types::       Types found in all Lisp systems.
 * Editing Types::           Types specific to Emacs.
-* Circular Objects::            Read syntax for circular structure.
+* Circular Objects::        Read syntax for circular structure.
 * Type Predicates::         Tests related to types.
 * Equality Predicates::     Tests of equality between any two objects.
 
@@ -158,7 +178,7 @@ Programming Types
 * Character Type::      The representation of letters, numbers and
                           control characters.
 * Symbol Type::         A multi-use object that refers to a function,
-                        variable, property list, or itself.
+                        variable, or property list, and has a unique identity.
 * Sequence Type::       Both lists and arrays are classified as sequences.
 * Cons Cell Type::      Cons cells, and lists (which are made from cons cells).
 * Array Type::          Arrays include strings and vectors.
@@ -186,7 +206,7 @@ Character Type
 Cons Cell and List Types
 
 * Box Diagrams::            Drawing pictures of lists.
-* Dotted Pair Notation::    An alternative syntax for lists.
+* Dotted Pair Notation::    A general syntax for cons cells.
 * Association List Type::   A specially constructed list.
 
 String Type
@@ -200,14 +220,16 @@ Editing Types
 
 * Buffer Type::             The basic object of editing.
 * Marker Type::             A position in a buffer.
-* Window Type::             What makes buffers visible.
-* Frame Type::		    Windows subdivide frames.
+* Window Type::             Buffers are displayed in windows.
+* Frame Type::              Windows subdivide frames.
+* Terminal Type::           A terminal device displays frames.
 * Window Configuration Type::  Recording the way a frame is subdivided.
 * Frame Configuration Type::   Recording the status of all frames.
-* Process Type::            A process running on the underlying OS.
+* Process Type::            A subprocess of Emacs running on the underlying OS.
 * Stream Type::             Receive or send characters.
 * Keymap Type::             What function a keystroke invokes.
 * Overlay Type::            How an overlay is represented.
+* Font Type::               Fonts for displaying text.
 
 Numbers
 
@@ -227,9 +249,9 @@ Strings and Characters
 * String Basics::           Basic properties of strings and characters.
 * Predicates for Strings::  Testing whether an object is a string or char.
 * Creating Strings::        Functions to allocate new strings.
-* Modifying Strings::         Altering the contents of an existing string.
+* Modifying Strings::       Altering the contents of an existing string.
 * Text Comparison::         Comparing characters or strings.
-* String Conversion::       Converting characters to strings and vice versa.
+* String Conversion::       Converting to and from characters and strings.
 * Formatting Strings::      `format': Emacs's analogue of `printf'.
 * Case Conversion::         Case conversion functions.
 * Case Tables::		    Customizing case conversion.
@@ -267,7 +289,7 @@ Hash Tables
 
 * Creating Hash::           Functions to create hash tables.
 * Hash Access::             Reading and writing the hash table contents.
-* Defining Hash::           Defining new comparison methods
+* Defining Hash::           Defining new comparison methods.
 * Other Hash::              Miscellaneous.
 
 Symbols
@@ -330,7 +352,6 @@ Errors
 * Processing of Errors::    What Emacs does when you report an error.
 * Handling Errors::         How you can trap errors and continue execution.
 * Error Symbols::           How errors are classified for trapping them.
-* Standard Errors::         List of all error symbols.
 
 Variables
 
@@ -346,13 +367,13 @@ Variables
 * Setting Variables::       Storing new values in variables.
 * Variable Scoping::        How Lisp chooses among local and global values.
 * Buffer-Local Variables::  Variable values in effect only in one buffer.
-* Future Local Variables::  New kinds of local values we might add some day.
 * File Local Variables::    Handling local variable lists in files.
+* Directory Local Variables:: Local variables common to all files in a
+                                directory.
+* Frame-Local Variables::   Frame-local bindings for variables.
 * Variable Aliases::        Variables that are aliases for other variables.
 * Variables with Restricted Values::  Non-constant variables whose value can
                                         _not_ be an arbitrary Lisp object.
-* Standard Buffer-Local Variables::
-                            List of variables buffer-local in all buffers.
 
 Scoping Rules for Variable Bindings
 
@@ -372,17 +393,19 @@ Buffer-Local Variables
 
 Functions
 
-* What Is a Function::      Lisp functions vs primitives; terminology.
+* What Is a Function::      Lisp functions vs. primitives; terminology.
 * Lambda Expressions::      How functions are expressed as Lisp objects.
 * Function Names::          A symbol can serve as the name of a function.
 * Defining Functions::      Lisp expressions for defining functions.
 * Calling Functions::       How to use an existing function.
 * Mapping Functions::       Applying a function to each element of a list, etc.
-* Anonymous Functions::     Lambda-expressions are functions with no names.
+* Anonymous Functions::     Lambda expressions are functions with no names.
 * Function Cells::          Accessing or setting the function definition
                               of a symbol.
 * Obsolete Functions::      Declaring functions obsolete.
-* Inline Functions::	    Defining functions that the compiler will open code.
+* Inline Functions::	    Defining functions that the compiler
+                              will open code.
+* Declaring Functions::	    Telling the compiler that a function is defined.
 * Function Safety::         Determining whether a function is safe to call.
 * Related Topics::          Cross-references to specific Lisp primitives
                               that have a special bearing on how
@@ -512,6 +535,25 @@ Edebug
 * Edebug and Macros::       Specifying how to handle macro calls.
 * Edebug Options::	    Option variables for customizing Edebug.
 
+Breaks
+
+* Breakpoints::             Breakpoints at stop points.
+* Global Break Condition::  Breaking on an event.
+* Source Breakpoints::      Embedding breakpoints in source code.
+
+The Outside Context
+
+* Checking Whether to Stop::When Edebug decides what to do.
+* Edebug Display Update::   When Edebug updates the display.
+* Edebug Recursive Edit::   When Edebug stops execution.
+
+Edebug and Macros
+
+* Instrumenting Macro Calls::The basic problem.
+* Specification List::	    How to specify complex patterns of evaluation.
+* Backtracking::	    What Edebug does when matching fails.
+* Specification Examples::  To help understand specifications.
+
 Debugging Invalid Lisp Syntax
 
 * Excess Open::             How to find a spurious open paren or missing close.
@@ -554,9 +596,11 @@ Completion
 * Minibuffer Completion::   Invoking the minibuffer with completion.
 * Completion Commands::     Minibuffer commands that do completion.
 * High-Level Completion::   Convenient special cases of completion
-                              (reading buffer name, file name, etc.)
-* Reading File Names::      Using completion to read file names.
-* Programmed Completion::   Finding the completions for a given file name.
+                              (reading buffer name, file name, etc.).
+* Reading File Names::      Using completion to read file names and
+                              shell commands.
+* Completion Styles::       Specifying rules for performing completion.
+* Programmed Completion::   Writing your own completion-function.
 
 Command Loop
 
@@ -599,6 +643,7 @@ Input Events
 * Misc Events::             Other events the system can generate.
 * Event Examples::          Examples of the lists for mouse events.
 * Classifying Events::      Finding the modifier keys in an event symbol.
+                              Event types.
 * Accessing Mouse::	    Functions to extract info from mouse events.
 * Accessing Scroll::        Functions to get info from scroll bar events.
 * Strings of Events::       Special considerations for putting
@@ -628,29 +673,14 @@ Keymaps
 * Controlling Active Maps:: Each buffer has a local keymap
                                to override the standard (global) bindings.
                                A minor mode can also override them.
-* Key Lookup::              How extracting elements from keymaps works.
+* Key Lookup::              Finding a key's binding in one keymap.
 * Functions for Key Lookup::    How to request key lookup.
 * Changing Key Bindings::   Redefining a key in a keymap.
 * Remapping Commands::      A keymap can translate one command to another.
 * Translation Keymaps::     Keymaps for translating sequences of events.
 * Key Binding Commands::    Interactive interfaces for redefining keys.
 * Scanning Keymaps::        Looking through all keymaps, for printing help.
-* Menu Keymaps::            A keymap can define a menu for X
-                              or for use from the terminal.
-* Standard Keymaps::        List of standard keymaps.
-
-Major and Minor Modes
-
-* Hooks::                   How to use hooks; how to write code that
-                              provides hooks.
-* Major Modes::             Defining major modes.
-* Minor Modes::             Defining minor modes.
-* Mode Line Format::        Customizing the text that appears in the mode line.
-* Imenu::                   How a mode can provide a menu
-                              of definitions in the buffer.
-* Font Lock Mode::          How modes can highlight text according to syntax.
-* Desktop Save Mode::       How modes can have buffer state saved between
-                              Emacs sessions.
+* Menu Keymaps::            Defining a menu as a keymap.
 
 Menu Keymaps
 
@@ -684,11 +714,15 @@ Major and Minor Modes
 * Desktop Save Mode::  How modes can have buffer state saved between
                          Emacs sessions.
 
+Hooks
+
+* Running Hooks::      How to run a hook.
+* Setting Hooks::      How to put functions on a hook, or remove them.
+
 Major Modes
 
 * Major Mode Basics::
 * Major Mode Conventions::  Coding conventions for keymaps, etc.
-* Example Major Modes::     Text mode and Lisp modes.
 * Auto Major Mode::         How Emacs chooses the major mode automatically.
 * Mode Help::               Finding out how to use a mode.
 * Derived Modes::           Defining a new major mode based on another major
@@ -696,6 +730,7 @@ Major Modes
 * Generic Modes::           Defining a simple major mode that supports
                               comment syntax and Font Lock mode.
 * Mode Hooks::              Hooks run at the end of major mode functions.
+* Example Major Modes::     Text mode and Lisp modes.
 
 Minor Modes
 
@@ -705,8 +740,9 @@ Minor Modes
 
 Mode Line Format
 
-* Mode Line Basics::
+* Mode Line Basics::        Basic ideas of mode line control.
 * Mode Line Data::          The data structure that controls the mode line.
+* Mode Line Top::           The top level variable, mode-line-format.
 * Mode Line Variables::     Variables used in that data structure.
 * %-Constructs::            Putting information into a mode line.
 * Properties in Mode::      Using text properties in the mode line.
@@ -732,7 +768,7 @@ Font Lock Mode
 
 Multiline Font Lock Constructs
 
-* Font Lock Multiline::     Marking multiline chunks with a text property
+* Font Lock Multiline::     Marking multiline chunks with a text property.
 * Region to Fontify::       Controlling which region gets refontified
                               after a buffer change.
 
@@ -750,7 +786,7 @@ Files
 
 * Visiting Files::          Reading files into Emacs buffers for editing.
 * Saving Buffers::          Writing changed buffers back into files.
-* Reading from Files::      Reading files into other buffers.
+* Reading from Files::      Reading files into buffers without visiting.
 * Writing to Files::        Writing new files from parts of buffers.
 * File Locks::              Locking and unlocking files, to prevent
                               simultaneous editing by two people.
@@ -779,8 +815,7 @@ Information about Files
 File Names
 
 * File Name Components::    The directory part of a file name, and the rest.
-* Relative File Names::     Some file names are relative to a
-                              current directory.
+* Relative File Names::     Some file names are relative to a current directory.
 * Directory Names::         A directory's name as a directory
                               is different from its name as a file.
 * File Name Expansion::     Converting relative file names to absolute ones.
@@ -788,6 +823,12 @@ File Names
 * File Name Completion::    Finding the completions for a given file name.
 * Standard File Names::     If your package uses a fixed file name,
                               how to handle various operating systems simply.
+
+File Format Conversion
+
+* Format Conversion Overview::   `insert-file-contents' and `write-region'.
+* Format Conversion Round-Trip:: Using `format-alist'.
+* Format Conversion Piecemeal::  Specifying non-paired conversion.
 
 Backups and Auto-Saving
 
@@ -810,7 +851,7 @@ Buffers
 
 * Buffer Basics::           What is a buffer?
 * Current Buffer::          Designating a buffer as current
-                              so primitives will access its contents.
+                              so that primitives will access its contents.
 * Buffer Names::            Accessing and changing buffer names.
 * Buffer File Name::        The buffer file name indicates which file
                               is visited.
@@ -824,6 +865,7 @@ Buffers
 * Killing Buffers::         Buffers exist until explicitly killed.
 * Indirect Buffers::        An indirect buffer shares text with some
                               other buffer.
+* Swapping Text::           Swapping text between two buffers.
 * Buffer Gap::              The gap in the buffer.
 
 Windows
@@ -837,9 +879,11 @@ Windows
 * Displaying Buffers::      Higher-level functions for displaying a buffer
                               and choosing a window for it.
 * Choosing Window::	    How to choose a window for displaying a buffer.
+* Dedicated Windows::	    How to avoid displaying another buffer in
+                              a specific window.
 * Window Point::            Each window has its own location of point.
-* Window Start::            The display-start position controls which text
-                              is on-screen in the window.
+* Window Start and End::    Buffer positions indicating which text is
+                              on-screen in a window.
 * Textual Scrolling::       Moving text up and down through the window.
 * Vertical Scrolling::      Moving the contents up and down on the window.
 * Horizontal Scrolling::    Moving the contents sideways on the window.
@@ -848,6 +892,7 @@ Windows
 * Coordinates and Windows:: Converting coordinates to windows.
 * Window Tree::             The layout and sizes of all windows in a frame.
 * Window Configurations::   Saving and restoring the state of the screen.
+* Window Parameters::       Associating additional information with windows.
 * Window Hooks::            Hooks for scrolling, window size changes,
                               redisplay going past a certain point,
                               or window configuration changes.
@@ -855,8 +900,9 @@ Windows
 Frames
 
 * Creating Frames::	    Creating additional frames.
-* Multiple Displays::       Creating frames on other displays.
+* Multiple Terminals::      Displaying on several different devices.
 * Frame Parameters::	    Controlling frame size, position, font, etc.
+* Terminal Parameters::     Parameters common for all frames on terminal.
 * Frame Titles::            Automatic updating of frame titles.
 * Deleting Frames::	    Frames last until explicitly deleted.
 * Finding All Frames::	    How to examine all existing frames.
@@ -866,14 +912,14 @@ Frames
 * Input Focus::		    Specifying the selected frame.
 * Visibility of Frames::    Frames may be visible or invisible, or icons.
 * Raising and Lowering::    Raising a frame makes it hide other windows;
-			      lowering it puts it underneath the others.
+			      lowering it makes the others hide it.
 * Frame Configurations::    Saving the state of all frames.
 * Mouse Tracking::	    Getting events that say when the mouse moves.
 * Mouse Position::	    Asking where the mouse is, or moving it.
 * Pop-Up Menus::	    Displaying a menu for the user to select from.
 * Dialog Boxes::            Displaying a box to ask yes or no.
 * Pointer Shape::           Specifying the shape of the mouse pointer.
-* Window System Selections::Transferring text to and from other windows.
+* Window System Selections::Transferring text to and from other X clients.
 * Drag and Drop::               Internals of Drag-and-Drop implementation.
 * Color Names::	            Getting the definitions of color names.
 * Text Terminal Colors::    Defining colors for text-only terminals.
@@ -898,7 +944,7 @@ Window Frame Parameters
 * Buffer Parameters::       Which buffers have been or should be shown.
 * Management Parameters::   Communicating with the window manager.
 * Cursor Parameters::       Controlling the cursor appearance.
-* Color Parameters::        Colors of various parts of the frame.
+* Font and Color Parameters:: Fonts and colors for the frame text.
 
 Positions
 
@@ -922,8 +968,7 @@ Markers
 * Overview of Markers::     The components of a marker, and how it relocates.
 * Predicates on Markers::   Testing whether an object is a marker.
 * Creating Markers::        Making empty markers or markers at certain places.
-* Information from Markers::Finding the marker's buffer or character
-                              position.
+* Information from Markers::Finding the marker's buffer or character position.
 * Marker Insertion Types::  Two ways a marker can relocate when you
                               insert where it points.
 * Moving Markers::          Moving the marker to a new buffer or position.
@@ -970,7 +1015,7 @@ The Kill Ring
 * Yanking::                 How yanking is done.
 * Yank Commands::           Commands that access the kill ring.
 * Low-Level Kill Ring::	    Functions and variables for kill ring access.
-* Internals of Kill Ring::  Variables that hold kill-ring data.
+* Internals of Kill Ring::  Variables that hold kill ring data.
 
 Indentation
 
@@ -990,13 +1035,10 @@ Text Properties
 * Format Properties::       Properties for representing formatting of text.
 * Sticky Properties::       How inserted text gets properties from
                               neighboring text.
-* Saving Properties::       Saving text properties in files, and reading
-                              them back.
 * Lazy Properties::         Computing text properties in a lazy fashion
                               only when text is examined.
 * Clickable Text::          Using text properties to make regions of text
                               do something when you click on them.
-* Links and Mouse-1::       How to make <Mouse-1> follow a link.
 * Fields::                  The `field' property defines
                               fields within the buffer.
 * Not Intervals::	    Why text properties do not use
@@ -1004,15 +1046,15 @@ Text Properties
 
 Non-ASCII Characters
 
-* Text Representations::    Unibyte and multibyte representations
+* Text Representations::    How Emacs represents text.
 * Converting Representations::  Converting unibyte to multibyte and vice versa.
 * Selecting a Representation::  Treating a byte sequence as unibyte or multi.
 * Character Codes::         How unibyte and multibyte relate to
                                 codes of individual characters.
+* Character Properties::    Character attributes that define their
+                                behavior and handling.
 * Character Sets::          The space of possible character codes
                                 is divided into various character sets.
-* Chars and Bytes::         More information about multibyte encodings.
-* Splitting Characters::    Converting a character to its byte sequence.
 * Scanning Charsets::       Which character sets are used in a buffer?
 * Translation of Characters::   Translation tables are used for conversion.
 * Coding Systems::          Coding systems are conversions for saving files.
@@ -1092,7 +1134,7 @@ Parsing Expressions
 * Low-Level Parsing::       Parsing across a specified region.
 * Control Parsing::         Parameters that affect parsing.
 
-Abbrevs And Abbrev Expansion
+Abbrevs and Abbrev Expansion
 
 * Abbrev Mode::             Setting up Emacs for abbreviation.
 * Abbrev Tables::           Creating and working with abbrev tables.
@@ -1100,6 +1142,10 @@ Abbrevs And Abbrev Expansion
 * Abbrev Files::            Saving abbrevs in files.
 * Abbrev Expansion::        Controlling expansion; expansion subroutines.
 * Standard Abbrev Tables::  Abbrev tables used by various major modes.
+* Abbrev Properties::       How to read and set abbrev properties.
+                            Which properties have which effect.
+* Abbrev Table Properties:: How to read and set abbrev table properties.
+                            Which properties have which effect.
 
 Processes
 
@@ -1115,13 +1161,16 @@ Processes
 * Output from Processes::   Collecting output from an asynchronous subprocess.
 * Sentinels::               Sentinels run when process run-status changes.
 * Query Before Exit::       Whether to query if exiting will kill a process.
+* System Processes::        Accessing other processes running on your system.
 * Transaction Queues::      Transaction-based communication with subprocesses.
 * Network::                 Opening network connections.
 * Network Servers::         Network servers let Emacs accept net connections.
 * Datagrams::               UDP network connections.
 * Low-Level Network::       Lower-level but more general function
                               to create connections and servers.
-* Misc Network::            Additional relevant functions for network connections.
+* Misc Network::            Additional relevant functions for
+                              network connections.
+* Serial Ports::            Communicating with serial ports.
 * Byte Packing::            Using bindat to pack and unpack binary data.
 
 Receiving Output from Processes
@@ -1133,10 +1182,9 @@ Receiving Output from Processes
 
 Low-Level Network Access
 
-* Proc: Network Processes.  Using `make-network-process'.
-* Options: Network Options.  Further control over network connections.
-* Features: Network Feature Testing.
-                            Determining which network features work on
+* Network Processes::       Using `make-network-process'.
+* Network Options::         Further control over network connections.
+* Network Feature Testing:: Determining which network features work on
                               the machine you are using.
 
 Packing and Unpacking Byte Arrays
@@ -1167,7 +1215,8 @@ Emacs Display
 * Buttons::                 Adding clickable buttons to Emacs buffers.
 * Abstract Display::        Emacs' Widget for Object Collections.
 * Blinking::                How Emacs shows the matching open parenthesis.
-* Usual Display::	    The usual conventions for displaying nonprinting chars.
+* Usual Display::	    The usual conventions for displaying
+                              nonprinting chars.
 * Display Tables::	    How to specify other conventions.
 * Beeping::                 Audible signal to the user.
 * Window Systems::          Which window system is being used.
@@ -1182,7 +1231,8 @@ The Echo Area
 Reporting Warnings
 
 * Warning Basics::          Warnings concepts and functions to report them.
-* Warning Variables::       Variables programs bind to customize their warnings.
+* Warning Variables::       Variables programs bind to customize
+                              their warnings.
 * Warning Options::         Variables users set to control display of warnings.
 
 Overlays
@@ -1199,13 +1249,15 @@ Faces
 * Attribute Functions::     Functions to examine and set face attributes.
 * Displaying Faces::        How Emacs combines the faces specified for
                               a character.
-* Font Selection::          Finding the best available font for a face.
+* Face Remapping::         Remapping faces to alternative definitions.
 * Face Functions::          How to define and examine faces.
 * Auto Faces::              Hook for automatic face assignment.
+* Font Selection::          Finding the best available font for a face.
 * Font Lookup::             Looking up the names of available fonts
                               and information about them.
 * Fontsets::                A fontset is a collection of fonts
                               that handle a range of character sets.
+* Low-Level Font::          Lisp representation for character display fonts.
 
 Fringes
 
@@ -1218,6 +1270,7 @@ Fringes
 
 The `display' Property
 
+* Replacing Specs::         Display specs that replace the text.
 * Specified Space::         Displaying one space with a specified width.
 * Pixel Specification::     Specifying space width or height in pixels.
 * Other Display Specs::     Displaying an image; magnifying text; moving it
@@ -1228,10 +1281,12 @@ The `display' Property
 
 Images
 
+* Image Formats::           Supported image formats.
 * Image Descriptors::       How to specify an image for use in `:display'.
 * XBM Images::              Special features for XBM format.
 * XPM Images::              Special features for XPM format.
 * GIF Images::              Special features for GIF format.
+* TIFF Images::             Special features for TIFF format.
 * PostScript Images::       Special features for PostScript format.
 * Other Image Types::       Various other formats are supported.
 * Defining Images::         Convenient ways to define an image for later use.
@@ -1260,31 +1315,33 @@ Display Tables
 
 Operating System Interface
 
-* Starting Up::             Customizing Emacs start-up processing.
+* Starting Up::             Customizing Emacs startup processing.
 * Getting Out::             How exiting works (permanent or temporary).
 * System Environment::      Distinguish the name and kind of system.
 * User Identification::     Finding the name and user id of the user.
 * Time of Day::		    Getting the current time.
-* Time Conversion::         Converting a time from numeric form to a string, or
-                              to calendrical data (or vice versa).
+* Time Conversion::         Converting a time from numeric form to
+                              calendrical data and vice versa.
 * Time Parsing::            Converting a time from numeric form to text
                               and vice versa.
 * Processor Run Time::      Getting the run time used by Emacs.
 * Time Calculations::       Adding, subtracting, comparing times, etc.
-* Timers::		    Setting a timer to call a function at a certain time.
+* Timers::		    Setting a timer to call a function at a
+                              certain time.
 * Idle Timers::             Setting a timer to call a function when Emacs has
                               been idle for a certain length of time.
 * Terminal Input::          Accessing and recording terminal input.
 * Terminal Output::         Controlling and recording terminal output.
 * Sound Output::            Playing sounds on the computer's speaker.
-* X11 Keysyms::             Operating on key symbols for X Windows
+* X11 Keysyms::             Operating on key symbols for X Windows.
 * Batch Mode::              Running Emacs without terminal interaction.
-* Session Management::      Saving and restoring state with X Session Management.
+* Session Management::      Saving and restoring state with
+                              X Session Management.
 
 Starting Up Emacs
 
-* Startup Summary::         Sequence of actions Emacs performs at start-up.
-* Init File::               Details on reading the init file (`.emacs').
+* Startup Summary::         Sequence of actions Emacs performs at startup.
+* Init File::               Details on reading the init file.
 * Terminal-Specific::       How the terminal-specific Lisp file is read.
 * Command-Line Arguments::  How command-line arguments are processed,
                               and how you can customize them.
@@ -1357,8 +1414,8 @@ Lisp that have counterparts in many programming languages, and later
 chapters describe features that are peculiar to Emacs Lisp or relate
 specifically to editing.
 
-   This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.3.
+   This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
+corresponding to Emacs version 23.1.
 
 * Menu:
 
@@ -1379,7 +1436,7 @@ but not flawless.  There are a few topics that are not covered, either
 because we consider them secondary (such as most of the individual
 modes) or because they are yet to be written.  Because we are not able
 to deal with them completely, we have left out several parts
-intentionally.  This includes most information about usage on VMS.
+intentionally.
 
    The manual should be fully correct in what it does cover, and it is
 therefore open to criticism on anything it says--from specific examples
@@ -1395,15 +1452,7 @@ and send it in.  Please reference any comments to the node name and
 function or variable name, as appropriate.  Also state the number of
 the edition you are criticizing.
 
-   Please mail comments and corrections to
-
-     bug-lisp-manual@gnu.org
-
-We let mail to this list accumulate unread until someone decides to
-apply the corrections.  Months, and sometimes years, go by between
-updates.  So please attach no significance to the lack of a reply--your
-mail _will_ be acted on in due time.  If you want to contact the Emacs
-maintainers more quickly, send mail to `bug-gnu-emacs@gnu.org'.
+   Please send comments and corrections using `M-x report-emacs-bug'.
 
 
 File: elisp,  Node: Lisp History,  Next: Conventions,  Prev: Caveats,  Up: Introduction
@@ -1516,7 +1565,7 @@ values results in a `setting-constant' error.  *Note Constant
 Variables::.
 
  -- Function: booleanp object
-     Return non-nil if OBJECT is one of the two canonical boolean
+     Return non-`nil' if OBJECT is one of the two canonical boolean
      values: `t' or `nil'.
 
 
@@ -1760,13 +1809,13 @@ use.
      reports.
 
           (emacs-version)
-            => "GNU Emacs 20.3.5 (i486-pc-linux-gnulibc1, X toolkit)
-           of Sat Feb 14 1998 on psilocin.gnu.org"
+            => "GNU Emacs 23.1 (i686-pc-linux-gnu, GTK+ Version 2.14.4)
+                       of 2009-06-01 on cyd.mit.edu"
 
      If HERE is non-`nil', it inserts the text in the buffer before
-     point, and returns `nil'.  Called interactively, the function
-     prints the same information in the echo area, but giving a prefix
-     argument makes HERE non-`nil'.
+     point, and returns `nil'.  When this function is called
+     interactively, it prints the same information in the echo area, but
+     giving a prefix argument makes HERE non-`nil'.
 
  -- Variable: emacs-build-time
      The value of this variable indicates the time at which Emacs was
@@ -1774,25 +1823,25 @@ use.
      value of `current-time' (*note Time of Day::).
 
           emacs-build-time
-               => (13623 62065 344633)
+               => (18846 52016 156039)
 
  -- Variable: emacs-version
      The value of this variable is the version of Emacs being run.  It
-     is a string such as `"20.3.1"'.  The last number in this string is
+     is a string such as `"23.1.1"'.  The last number in this string is
      not really part of the Emacs release version number; it is
      incremented each time you build Emacs in any given directory.  A
-     value with four numeric components, such as `"20.3.9.1"',
+     value with four numeric components, such as `"22.0.91.1"',
      indicates an unreleased test version.
 
    The following two variables have existed since Emacs version 19.23:
 
  -- Variable: emacs-major-version
      The major version number of Emacs, as an integer.  For Emacs
-     version 20.3, the value is 20.
+     version 23.1, the value is 23.
 
  -- Variable: emacs-minor-version
      The minor version number of Emacs, as an integer.  For Emacs
-     version 20.3, the value is 3.
+     version 23.1, the value is 1.
 
 
 File: elisp,  Node: Acknowledgements,  Prev: Version Info,  Up: Introduction
@@ -1805,20 +1854,25 @@ Richard M. Stallman and Chris Welty, the volunteers of the GNU manual
 group, in an effort extending over several years.  Robert J. Chassell
 helped to review and edit the manual, with the support of the Defense
 Advanced Research Projects Agency, ARPA Order 6082, arranged by
-Warren A. Hunt, Jr. of Computational Logic, Inc.
+Warren A. Hunt, Jr. of Computational Logic, Inc.  Additional sections
+were written by Miles Bader, Lars Brinkhoff, Chong Yidong, Kenichi
+Handa, Lute Kamstra, Juri Linkov, Glenn Morris, Thien-Thi Nguyen, Dan
+Nicolaescu, Martin Rudalics, Kim F. Storm, Luc Teirlinck, and Eli
+Zaretskii.
 
-   Corrections were supplied by Karl Berry, Jim Blandy, Bard Bloom,
-Stephane Boucher, David Boyes, Alan Carroll, Richard Davis, Lawrence R.
-Dodd, Peter Doornbosch, David A. Duff, Chris Eich, Beverly Erlebacher,
-David Eckelkamp, Ralf Fassel, Eirik Fuller, Stephen Gildea, Bob
-Glickstein, Eric Hanchrow, George Hartzell, Nathan Hess, Masayuki Ida,
-Dan Jacobson, Jak Kirman, Bob Knighten, Frederick M. Korz, Joe Lammens,
-Glenn M. Lewis, K. Richard Magill, Brian Marick, Roland McGrath, Skip
+   Corrections were supplied by Drew Adams, Juanma Barranquero, Karl
+Berry, Jim Blandy, Bard Bloom, Stephane Boucher, David Boyes, Alan
+Carroll, Richard Davis, Lawrence R. Dodd, Peter Doornbosch, David A.
+Duff, Chris Eich, Beverly Erlebacher, David Eckelkamp, Ralf Fassel,
+Eirik Fuller, Stephen Gildea, Bob Glickstein, Eric Hanchrow, Jesper
+Harder, George Hartzell, Nathan Hess, Masayuki Ida, Dan Jacobson, Jak
+Kirman, Bob Knighten, Frederick M. Korz, Joe Lammens, Glenn M. Lewis,
+K. Richard Magill, Brian Marick, Roland McGrath, Stefan Monnier, Skip
 Montanaro, John Gardiner Myers, Thomas A. Peterson, Francesco Potorti,
-Friedrich Pukelsheim, Arnold D. Robbins, Raul Rockwell, Per Starba"ck,
-Shinichirou Sugou, Kimmo Suominen, Edward Tharp, Bill Trost, Rickard
-Westman, Jean White, Matthew Wilding, Carl Witty, Dale Worley, Rusty
-Wright, and David D. Zuhn.
+Friedrich Pukelsheim, Arnold D. Robbins, Raul Rockwell, Jason Rumney,
+Per Starba"ck, Shinichirou Sugou, Kimmo Suominen, Edward Tharp, Bill
+Trost, Rickard Westman, Jean White, Eduard Wiebe, Matthew Wilding, Carl
+Witty, Dale Worley, Rusty Wright, and David D. Zuhn.
 
 
 File: elisp,  Node: Lisp Data Types,  Next: Numbers,  Prev: Introduction,  Up: Top
@@ -1847,10 +1901,10 @@ Types::.)
    Each primitive type has a corresponding Lisp function that checks
 whether an object is a member of that type.
 
-   Note that Lisp is unlike many other languages in that Lisp objects
-are "self-typing": the primitive type of the object is implicit in the
-object itself.  For example, if an object is a vector, nothing can treat
-it as a number; Lisp knows it is a vector, not a number.
+   Lisp is unlike many other languages in that its objects are
+"self-typing": the primitive type of each object is implicit in the
+object itself.  For example, if an object is a vector, nothing can
+treat it as a number; Lisp knows it is a vector, not a number.
 
    In most languages, the programmer must declare the data type of each
 variable, and the type is known by the compiler but not represented in
@@ -2031,12 +2085,11 @@ example, the character `A' is represented as the integer 65.
 more common to work with _strings_, which are sequences composed of
 characters.  *Note String Type::.
 
-   Characters in strings, buffers, and files are currently limited to
-the range of 0 to 524287--nineteen bits.  But not all values in that
-range are valid character codes.  Codes 0 through 127 are ASCII codes;
-the rest are non-ASCII (*note Non-ASCII Characters::).  Characters that
-represent keyboard input have a much wider range, to encode modifier
-keys such as Control, Meta and Shift.
+   Characters in strings and buffers are currently limited to the range
+of 0 to 4194303--twenty two bits (*note Character Codes::).  Codes 0
+through 127 are ASCII codes; the rest are non-ASCII (*note Non-ASCII
+Characters::).  Characters that represent keyboard input have a much
+wider range, to encode modifier keys such as Control, Meta and Shift.
 
    There are special functions for producing a human-readable textual
 description of a character for the sake of messages.  *Note Describing
@@ -2044,11 +2097,11 @@ Characters::.
 
 * Menu:
 
-* Basic Char Syntax::
-* General Escape Syntax::
-* Ctl-Char Syntax::
-* Meta-Char Syntax::
-* Other Char Bits::
+* Basic Char Syntax::      Syntax for regular characters.
+* General Escape Syntax::  How to specify characters by their codes.
+* Ctl-Char Syntax::        Syntax for control characters.
+* Meta-Char Syntax::       Syntax for meta-characters.
+* Other Char Bits::        Syntax for hyper-, super-, and alt-characters.
 
 
 File: elisp,  Node: Basic Char Syntax,  Next: General Escape Syntax,  Up: Character Type
@@ -2119,21 +2172,22 @@ File: elisp,  Node: General Escape Syntax,  Next: Ctl-Char Syntax,  Prev: Basic 
 2.3.3.2 General Escape Syntax
 .............................
 
-In addition to the specific excape sequences for special important
-control characters, Emacs provides general categories of escape syntax
-that you can use to specify non-ASCII text characters.
+In addition to the specific escape sequences for special important
+control characters, Emacs provides several types of escape syntax that
+you can use to specify non-ASCII text characters.
 
-   For instance, you can specify characters by their Unicode values.
-`?\uNNNN' represents a character that maps to the Unicode code point
-`U+NNNN'.  There is a slightly different syntax for specifying
-characters with code points above `#xFFFF'; `\U00NNNNNN' represents the
-character whose Unicode code point is `U+NNNNNN', if such a character
-is supported by Emacs.  If the corresponding character is not
-supported, Emacs signals an error.
+   You can specify characters by their Unicode values.  `?\uNNNN'
+represents a character that maps to the Unicode code point `U+NNNN' (by
+convention, Unicode code points are given in hexadecimal).  There is a
+slightly different syntax for specifying characters with code points
+higher than `U+FFFF': `\U00NNNNNN' represents the character whose code
+point is `U+NNNNNN'.  The Unicode Standard only defines code points up
+to `U+10FFFF', so if you specify a code point higher than that, Emacs
+signals an error.
 
    This peculiar and inconvenient syntax was adopted for compatibility
 with other programming languages.  Unlike some other languages, Emacs
-Lisp supports this syntax in only character literals and strings.
+Lisp supports this syntax only in character literals and strings.
 
    The most general read syntax for a character represents the
 character code in either octal or hex.  To use octal, write a question
@@ -2632,10 +2686,10 @@ strings.
 
 * Menu:
 
-* Syntax for Strings::
-* Non-ASCII in Strings::
-* Nonprinting Characters::
-* Text Props and Strings::
+* Syntax for Strings::      How to specify Lisp strings.
+* Non-ASCII in Strings::    International characters in strings.
+* Nonprinting Characters::  Literal unprintable characters in strings.
+* Text Props and Strings::  Strings with text properties.
 
 
 File: elisp,  Node: Syntax for Strings,  Next: Non-ASCII in Strings,  Up: String Type
@@ -2643,12 +2697,12 @@ File: elisp,  Node: Syntax for Strings,  Next: Non-ASCII in Strings,  Up: String
 2.3.8.1 Syntax for Strings
 ..........................
 
-The read syntax for strings is a double-quote, an arbitrary number of
+The read syntax for a string is a double-quote, an arbitrary number of
 characters, and another double-quote, `"like this"'.  To include a
 double-quote in a string, precede it with a backslash; thus, `"\""' is
 a string containing just a single double-quote character.  Likewise,
-you can include a backslash by preceding it with another backslash, like
-this: `"this \\ is a single embedded backslash"'.
+you can include a backslash by preceding it with another backslash,
+like this: `"this \\ is a single embedded backslash"'.
 
    The newline character is not special in the read syntax for strings;
 if you write a new line between the double-quotes, it becomes a
@@ -2999,13 +3053,15 @@ editing.
 * Buffer Type::         The basic object of editing.
 * Marker Type::         A position in a buffer.
 * Window Type::         Buffers are displayed in windows.
-* Frame Type::		Windows subdivide frames.
+* Frame Type::          Windows subdivide frames.
+* Terminal Type::       A terminal device displays frames.
 * Window Configuration Type::   Recording the way a frame is subdivided.
 * Frame Configuration Type::    Recording the status of all frames.
-* Process Type::        A process running on the underlying OS.
+* Process Type::        A subprocess of Emacs running on the underlying OS.
 * Stream Type::         Receive or send characters.
 * Keymap Type::         What function a keystroke invokes.
 * Overlay Type::        How an overlay is represented.
+* Font Type::           Fonts for displaying text.
 
 
 File: elisp,  Node: Buffer Type,  Next: Marker Type,  Up: Editing Types
@@ -3018,7 +3074,10 @@ Buffers::).  Most buffers hold the contents of a disk file (*note
 Files::) so they can be edited, but some are used for other purposes.
 Most buffers are also meant to be seen by the user, and therefore
 displayed, at some time, in a window (*note Windows::).  But a buffer
-need not be displayed in any window.
+need not be displayed in any window.  Each buffer has a designated
+position called "point" (*note Positions::); most editing commands act
+on the contents of the current buffer in the neighborhood of point.  At
+any time, one buffer is the "current buffer".
 
    The contents of a buffer are much like a string, but buffers are not
 used like strings in Emacs Lisp, and the available operations are
@@ -3027,12 +3086,9 @@ existing buffer, altering the buffer's contents, whereas "inserting"
 text into a string requires concatenating substrings, and the result is
 an entirely new string object.
 
-   Each buffer has a designated position called "point" (*note
-Positions::).  At any time, one buffer is the "current buffer".  Most
-editing commands act on the contents of the current buffer in the
-neighborhood of point.  Many of the standard Emacs functions manipulate
-or test the characters in the current buffer; a whole chapter in this
-manual is devoted to describing these functions (*note Text::).
+   Many of the standard Emacs functions manipulate or test the
+characters in the current buffer; a whole chapter in this manual is
+devoted to describing these functions (*note Text::).
 
    Several other data structures are associated with each buffer:
 
@@ -3115,7 +3171,7 @@ in any given window can change frequently.
 windows.
 
 
-File: elisp,  Node: Frame Type,  Next: Window Configuration Type,  Prev: Window Type,  Up: Editing Types
+File: elisp,  Node: Frame Type,  Next: Terminal Type,  Prev: Window Type,  Up: Editing Types
 
 2.4.4 Frame Type
 ----------------
@@ -3135,9 +3191,24 @@ uniquely).
 frames.
 
 
-File: elisp,  Node: Window Configuration Type,  Next: Frame Configuration Type,  Prev: Frame Type,  Up: Editing Types
+File: elisp,  Node: Terminal Type,  Next: Window Configuration Type,  Prev: Frame Type,  Up: Editing Types
 
-2.4.5 Window Configuration Type
+2.4.5 Terminal Type
+-------------------
+
+A "terminal" is a device capable of displaying one or more Emacs frames
+(*note Frame Type::).
+
+   Terminals have no read syntax.  They print in hash notation giving
+the terminal's ordinal number and its TTY device file name.
+
+     (get-device-terminal nil)
+          => #<terminal 1 on /dev/tty>
+
+
+File: elisp,  Node: Window Configuration Type,  Next: Frame Configuration Type,  Prev: Terminal Type,  Up: Editing Types
+
+2.4.6 Window Configuration Type
 -------------------------------
 
 A "window configuration" stores information about the positions, sizes,
@@ -3151,13 +3222,14 @@ for a description of several functions related to window configurations.
 
 File: elisp,  Node: Frame Configuration Type,  Next: Process Type,  Prev: Window Configuration Type,  Up: Editing Types
 
-2.4.6 Frame Configuration Type
+2.4.7 Frame Configuration Type
 ------------------------------
 
 A "frame configuration" stores information about the positions, sizes,
-and contents of the windows in all frames.  It is actually a list whose
-CAR is `frame-configuration' and whose CDR is an alist.  Each alist
-element describes one frame, which appears as the CAR of that element.
+and contents of the windows in all frames.  It is not a primitive
+type--it is actually a list whose CAR is `frame-configuration' and
+whose CDR is an alist.  Each alist element describes one frame, which
+appears as the CAR of that element.
 
    *Note Frame Configurations::, for a description of several functions
 related to frame configurations.
@@ -3165,7 +3237,7 @@ related to frame configurations.
 
 File: elisp,  Node: Process Type,  Next: Stream Type,  Prev: Frame Configuration Type,  Up: Editing Types
 
-2.4.7 Process Type
+2.4.8 Process Type
 ------------------
 
 The word "process" usually means a running program.  Emacs itself runs
@@ -3191,7 +3263,7 @@ output from processes.
 
 File: elisp,  Node: Stream Type,  Next: Keymap Type,  Prev: Process Type,  Up: Editing Types
 
-2.4.8 Stream Type
+2.4.9 Stream Type
 -----------------
 
 A "stream" is an object that can be used as a source or sink for
@@ -3217,8 +3289,8 @@ streams, including parsing and printing functions.
 
 File: elisp,  Node: Keymap Type,  Next: Overlay Type,  Prev: Stream Type,  Up: Editing Types
 
-2.4.9 Keymap Type
------------------
+2.4.10 Keymap Type
+------------------
 
 A "keymap" maps keys typed by the user to commands.  This mapping
 controls how the user's command input is executed.  A keymap is actually
@@ -3228,9 +3300,9 @@ a list whose CAR is the symbol `keymap'.
 prefix keys, local as well as global keymaps, and changing key bindings.
 
 
-File: elisp,  Node: Overlay Type,  Prev: Keymap Type,  Up: Editing Types
+File: elisp,  Node: Overlay Type,  Next: Font Type,  Prev: Keymap Type,  Up: Editing Types
 
-2.4.10 Overlay Type
+2.4.11 Overlay Type
 -------------------
 
 An "overlay" specifies properties that apply to a part of a buffer.
@@ -3242,6 +3314,19 @@ syntax, and print in hash notation, giving the buffer name and range of
 positions.
 
    *Note Overlays::, for how to create and use overlays.
+
+
+File: elisp,  Node: Font Type,  Prev: Overlay Type,  Up: Editing Types
+
+2.4.12 Font Type
+----------------
+
+A "font" specifies how to display text on a graphical terminal.  There
+are actually three separate font types--"font objects", "font specs",
+and "font entities"--each of which has slightly different properties.
+None of them have a read syntax; their print syntax looks like
+`#<font-object>', `#<font-spec>', and `#<font-entity>' respectively.
+*Note Low-Level Font::, for a description of these Lisp objects.
 
 
 File: elisp,  Node: Circular Objects,  Next: Type Predicates,  Prev: Editing Types,  Up: Lisp Data Types
@@ -3376,6 +3461,9 @@ with references to further information.
 `floatp'
      *Note floatp: Predicates on Numbers.
 
+`fontp'
+     *Note Low-Level Font::.
+
 `frame-configuration-p'
      *Note frame-configuration-p: Frame Configurations.
 
@@ -3471,10 +3559,11 @@ most cases, it is more convenient to use type predicates than `type-of'.
 
  -- Function: type-of object
      This function returns a symbol naming the primitive type of
-     OBJECT.  The value is one of the symbols `symbol', `integer',
-     `float', `string', `cons', `vector', `char-table', `bool-vector',
-     `hash-table', `subr', `compiled-function', `marker', `overlay',
-     `window', `buffer', `frame', `process', or `window-configuration'.
+     OBJECT.  The value is one of the symbols `bool-vector', `buffer',
+     `char-table', `compiled-function', `cons', `float', `font-entity',
+     `font-object', `font-spec', `frame', `hash-table', `integer',
+     `marker', `overlay', `process', `string', `subr', `symbol',
+     `vector', `window', or `window-configuration'.
 
           (type-of 1)
                => integer
@@ -3492,9 +3581,9 @@ File: elisp,  Node: Equality Predicates,  Prev: Type Predicates,  Up: Lisp Data 
 =======================
 
 Here we describe functions that test for equality between any two
-objects.  Other functions test equality between objects of specific
-types, e.g., strings.  For these predicates, see the appropriate chapter
-describing the data type.
+objects.  Other functions test equality of contents between objects of
+specific types, e.g., strings.  For these predicates, see the
+appropriate chapter describing the data type.
 
  -- Function: eq object1 object2
      This function returns `t' if OBJECT1 and OBJECT2 are the same
@@ -3517,6 +3606,11 @@ describing the data type.
 
           (eq "asdf" "asdf")
                => nil
+
+          (eq "" "")
+               => t
+          ;; This exception occurs because Emacs Lisp
+          ;; makes just one multibyte empty string, to save space.
 
           (eq '(1 (2 (3))) '(1 (2 (3))))
                => nil
@@ -3724,6 +3818,9 @@ value is a marker, its position value is used and its buffer is ignored.
  -- Variable: most-negative-fixnum
      The value of this variable is the smallest integer that Emacs Lisp
      can handle.  It is negative.
+
+   *Note max-char: Character Codes, for the maximum value of a valid
+character codepoint.
 
 
 File: elisp,  Node: Float Basics,  Next: Predicates on Numbers,  Prev: Integer Basics,  Up: Numbers
@@ -4554,7 +4651,8 @@ File: elisp,  Node: String Basics,  Next: Predicates for Strings,  Up: Strings a
 
 Characters are represented in Emacs Lisp as integers; whether an
 integer is a character or not is determined only by how it is used.
-Thus, strings really contain integers.
+Thus, strings really contain integers.  *Note Character Codes::, for
+details about character representation in Emacs.
 
    The length of a string (like any array) is fixed, and cannot be
 altered once the string exists.  Strings in Lisp are _not_ terminated
@@ -4569,24 +4667,19 @@ individual characters in a string using the functions `aref' and `aset'
 
    There are two text representations for non-ASCII characters in Emacs
 strings (and in buffers): unibyte and multibyte (*note Text
-Representations::).  An ASCII character always occupies one byte in a
-string; in fact, when a string is all ASCII, there is no real
-difference between the unibyte and multibyte representations.  For most
-Lisp programming, you don't need to be concerned with these two
-representations.
+Representations::).  For most Lisp programming, you don't need to be
+concerned with these two representations.
 
-   Sometimes key sequences are represented as strings.  When a string is
-a key sequence, string elements in the range 128 to 255 represent meta
-characters (which are large integers) rather than character codes in
-the range 128 to 255.
-
-   Strings cannot hold characters that have the hyper, super or alt
-modifiers; they can hold ASCII control characters, but no other control
-characters.  They do not distinguish case in ASCII control characters.
-If you want to store such characters in a sequence, such as a key
-sequence, you must use a vector instead of a string.  *Note Character
-Type::, for more information about the representation of meta and other
-modifiers for keyboard input characters.
+   Sometimes key sequences are represented as unibyte strings.  When a
+unibyte string is a key sequence, string elements in the range 128 to
+255 represent meta characters (which are large integers) rather than
+character codes in the range 128 to 255.  Strings cannot hold
+characters that have the hyper, super or alt modifiers; they can hold
+ASCII control characters, but no other control characters.  They do not
+distinguish case in ASCII control characters.  If you want to store
+such characters in a sequence, such as a key sequence, you must use a
+vector instead of a string.  *Note Character Type::, for more
+information about keyboard input characters.
 
    Strings are useful for holding regular expressions.  You can also
 match regular expressions against strings with `string-match' (*note
@@ -4620,8 +4713,8 @@ For more information about general sequence and array predicates, see
      This function returns `t' if OBJECT is a string, `nil' otherwise.
 
  -- Function: string-or-null-p object
-     This function returns `t' if OBJECT is a string or nil, `nil'
-     otherwise.
+     This function returns `t' if OBJECT is a string or `nil'.  It
+     returns `nil' otherwise.
 
  -- Function: char-or-string-p object
      This function returns `t' if OBJECT is a string or a character
@@ -4664,11 +4757,11 @@ putting strings together, or by taking them apart.
           (substring "abcdefg" 0 3)
                => "abc"
 
-     Here the index for `a' is 0, the index for `b' is 1, and the index
-     for `c' is 2.  Thus, three letters, `abc', are copied from the
-     string `"abcdefg"'.  The index 3 marks the character position up
-     to which the substring is copied.  The character whose index is 3
-     is actually the fourth character in the string.
+     In the above example, the index for `a' is 0, the index for `b' is
+     1, and the index for `c' is 2.  The index 3--which is the the
+     fourth character in the string--marks the character position up to
+     which the substring is copied.  Thus, `abc' is copied from the
+     string `"abcdefg"'.
 
      A negative number counts from the end of the string, so that -1
      signifies the index of the last character of the string.  For
@@ -4743,32 +4836,27 @@ putting strings together, or by taking them apart.
           (concat)
                => ""
 
-     The `concat' function always constructs a new string that is not
-     `eq' to any existing string.
-
-     In Emacs versions before 21, when an argument was an integer (not a
-     sequence of integers), it was converted to a string of digits
-     making up the decimal printed representation of the integer.  This
-     obsolete usage no longer works.  The proper way to convert an
-     integer to its decimal printed form is with `format' (*note
-     Formatting Strings::) or `number-to-string' (*note String
-     Conversion::).
+     This function always constructs a new string that is not `eq' to
+     any existing string, except when the result is the empty string (to
+     save space, Emacs makes only one empty multibyte string).
 
      For information about other concatenation functions, see the
      description of `mapconcat' in *note Mapping Functions::, `vconcat'
      in *note Vector Functions::, and `append' in *note Building
-     Lists::.
+     Lists::.  For concatenating individual command-line arguments into
+     a string to be used as a shell command, see *note
+     combine-and-quote-strings: Shell Arguments.
 
  -- Function: split-string string &optional separators omit-nulls
-     This function splits STRING into substrings at matches for the
-     regular expression SEPARATORS.  Each match for SEPARATORS defines
-     a splitting point; the substrings between the splitting points are
-     made into a list, which is the value returned by `split-string'.
+     This function splits STRING into substrings based on the regular
+     expression SEPARATORS (*note Regular Expressions::).  Each match
+     for SEPARATORS defines a splitting point; the substrings between
+     splitting points are made into a list, which is returned.
 
-     If OMIT-NULLS is `nil', the result contains null strings whenever
-     there are two consecutive matches for SEPARATORS, or a match is
-     adjacent to the beginning or end of STRING.  If OMIT-NULLS is `t',
-     these null strings are omitted from the result.
+     If OMIT-NULLS is `nil' (or omitted), the result contains null
+     strings whenever there are two consecutive matches for SEPARATORS,
+     or a match is adjacent to the beginning or end of STRING.  If
+     OMIT-NULLS is `t', these null strings are omitted from the result.
 
      If SEPARATORS is `nil' (or omitted), the default is the value of
      `split-string-default-separators'.
@@ -4827,6 +4915,10 @@ putting strings together, or by taking them apart.
                => nil
           (split-string "ooo" "\\|o+" t)
                => ("o" "o" "o")
+
+     If you need to split a string that is a shell command, where
+     individual arguments could be quoted, see *note
+     split-string-and-unquote: Shell Arguments.
 
  -- Variable: split-string-default-separators
      The default value of SEPARATORS for `split-string'.  Its usual
@@ -4900,9 +4992,9 @@ File: elisp,  Node: Text Comparison,  Next: String Conversion,  Prev: Modifying 
      `equal' if and only if they contain the same sequence of character
      codes and all these codes are either in the range 0 through 127
      (ASCII) or 160 through 255 (`eight-bit-graphic').  However, when a
-     unibyte string gets converted to a multibyte string, all
-     characters with codes in the range 160 through 255 get converted
-     to characters with higher codes, whereas ASCII characters remain
+     unibyte string is converted to a multibyte string, all characters
+     with codes in the range 160 through 255 are converted to
+     characters with higher codes, whereas ASCII characters remain
      unchanged.  Thus, a unibyte string and its conversion to multibyte
      are only `equal' if the string is all ASCII.  Character codes 160
      through 255 are not entirely proper in multibyte text, even though
@@ -4993,7 +5085,7 @@ File: elisp,  Node: Text Comparison,  Next: String Conversion,  Prev: Modifying 
      strings or symbols rather than an actual alist.  *Note Association
      Lists::.
 
-   See also the `compare-buffer-substrings' function in *note Comparing
+   See also the function `compare-buffer-substrings' in *note Comparing
 Text::, for a way to compare text in buffers.  The function
 `string-match', which matches a regular expression against a string,
 can be used for a kind of string comparison; see *note Regexp Search::.
@@ -5004,7 +5096,7 @@ File: elisp,  Node: String Conversion,  Next: Formatting Strings,  Prev: Text Co
 4.6 Conversion of Characters and Strings
 ========================================
 
-This section describes functions for conversions between characters,
+This section describes functions for converting between characters,
 strings and integers.  `format' (*note Formatting Strings::) and
 `prin1-to-string' (*note Output Functions::) can also convert Lisp
 objects into strings.  `read-from-string' (*note Input Functions::) can
@@ -5108,10 +5200,10 @@ File: elisp,  Node: Formatting Strings,  Next: Case Conversion,  Prev: String Co
 4.7 Formatting Strings
 ======================
 
-"Formatting" means constructing a string by substitution of computed
+"Formatting" means constructing a string by substituting computed
 values at various places in a constant string.  This constant string
-controls how the other values are printed, as well as where they appear;
-it is called a "format string".
+controls how the other values are printed, as well as where they
+appear; it is called a "format string".
 
    Formatting is often useful for computing messages to be displayed.
 In fact, the functions `message' and `error' provide the same
@@ -5316,15 +5408,15 @@ arguments.
 codes 88 and 120 respectively.
 
  -- Function: downcase string-or-char
-     This function converts a character or a string to lower case.
+     This function converts STRING-OR-CHAR, which should be either a
+     character or a string, to lower case.
 
-     When the argument to `downcase' is a string, the function creates
-     and returns a new string in which each letter in the argument that
-     is upper case is converted to lower case.  When the argument to
-     `downcase' is a character, `downcase' returns the corresponding
-     lower case character.  This value is an integer.  If the original
-     character is lower case, or is not a letter, then the value equals
-     the original character.
+     When STRING-OR-CHAR is a string, this function returns a new
+     string in which each letter in the argument that is upper case is
+     converted to lower case.  When STRING-OR-CHAR is a character, this
+     function returns the corresponding lower case character (an
+     integer); if the original character is lower case, or is not a
+     letter, the return value is equal to the original character.
 
           (downcase "The cat in the hat")
                => "the cat in the hat"
@@ -5333,16 +5425,15 @@ codes 88 and 120 respectively.
                => 120
 
  -- Function: upcase string-or-char
-     This function converts a character or a string to upper case.
+     This function converts STRING-OR-CHAR, which should be either a
+     character or a string, to upper case.
 
-     When the argument to `upcase' is a string, the function creates
-     and returns a new string in which each letter in the argument that
-     is lower case is converted to upper case.
-
-     When the argument to `upcase' is a character, `upcase' returns the
-     corresponding upper case character.  This value is an integer.  If
-     the original character is upper case, or is not a letter, then the
-     value returned equals the original character.
+     When STRING-OR-CHAR is a string, this function returns a new
+     string in which each letter in the argument that is lower case is
+     converted to upper case.  When STRING-OR-CHAR is a character, this
+     function returns the corresponding upper case character (an an
+     integer); if the original character is upper case, or is not a
+     letter, the return value is equal to the original character.
 
           (upcase "The cat in the hat")
                => "THE CAT IN THE HAT"
@@ -5352,18 +5443,18 @@ codes 88 and 120 respectively.
 
  -- Function: capitalize string-or-char
      This function capitalizes strings or characters.  If
-     STRING-OR-CHAR is a string, the function creates and returns a new
-     string, whose contents are a copy of STRING-OR-CHAR in which each
-     word has been capitalized.  This means that the first character of
-     each word is converted to upper case, and the rest are converted
-     to lower case.
+     STRING-OR-CHAR is a string, the function returns a new string
+     whose contents are a copy of STRING-OR-CHAR in which each word has
+     been capitalized.  This means that the first character of each
+     word is converted to upper case, and the rest are converted to
+     lower case.
 
      The definition of a word is any sequence of consecutive characters
      that are assigned to the word constituent syntax class in the
      current syntax table (*note Syntax Class Table::).
 
-     When the argument to `capitalize' is a character, `capitalize' has
-     the same result as `upcase'.
+     When STRING-OR-CHAR is a character, this function does the same
+     thing as `upcase'.
 
           (capitalize "The cat in the hat")
                => "The Cat In The Hat"
@@ -5446,7 +5537,7 @@ equivalence class (of characters with the same canonical equivalent).
 (For ordinary ASCII, this would map `a' into `A' and `A' into `a', and
 likewise for each set of equivalent characters.)
 
-   When you construct a case table, you can provide `nil' for
+   When constructing a case table, you can provide `nil' for
 CANONICALIZE; then Emacs fills in this slot from the lower case and
 upper case mappings.  You can also provide `nil' for EQUIVALENCES; then
 Emacs fills in this slot from CANONICALIZE.  In a case table that is
@@ -5478,7 +5569,7 @@ EQUIVALENCES without also specifying CANONICALIZE.
      the last form in BODY.  The case table is restored even in case of
      an abnormal exit via `throw' or error (*note Nonlocal Exits::).
 
-   Some language environments may modify the case conversions of ASCII
+   Some language environments modify the case conversions of ASCII
 characters; for example, in the Turkish language environment, the ASCII
 character `I' is downcased into a Turkish "dotless i".  This can
 interfere with code that requires ordinary ASCII case conversion, such
@@ -5647,12 +5738,12 @@ File: elisp,  Node: List Elements,  Next: Building Lists,  Prev: List-related Pr
 
  -- Function: car cons-cell
      This function returns the value referred to by the first slot of
-     the cons cell CONS-CELL.  Expressed another way, this function
-     returns the CAR of CONS-CELL.
+     the cons cell CONS-CELL.  In other words, it returns the CAR of
+     CONS-CELL.
 
-     As a special case, if CONS-CELL is `nil', then `car' is defined to
-     return `nil'; therefore, any list is a valid argument for `car'.
-     An error is signaled if the argument is not a cons cell or `nil'.
+     As a special case, if CONS-CELL is `nil', this function returns
+     `nil'.  Therefore, any list is a valid argument.  An error is
+     signaled if the argument is not a cons cell or `nil'.
 
           (car '(a b c))
                => a
@@ -5661,12 +5752,12 @@ File: elisp,  Node: List Elements,  Next: Building Lists,  Prev: List-related Pr
 
  -- Function: cdr cons-cell
      This function returns the value referred to by the second slot of
-     the cons cell CONS-CELL.  Expressed another way, this function
-     returns the CDR of CONS-CELL.
+     the cons cell CONS-CELL.  In other words, it returns the CDR of
+     CONS-CELL.
 
-     As a special case, if CONS-CELL is `nil', then `cdr' is defined to
-     return `nil'; therefore, any list is a valid argument for `cdr'.
-     An error is signaled if the argument is not a cons cell or `nil'.
+     As a special case, if CONS-CELL is `nil', this function returns
+     `nil'; therefore, any list is a valid argument.  An error is
+     signaled if the argument is not a cons cell or `nil'.
 
           (cdr '(a b c))
                => (b c)
@@ -5868,15 +5959,6 @@ for Emacs than `cons'.
      elements of the result list.  If the final element is not a list,
      the result is a dotted list since its final CDR is not `nil' as
      required in a true list.
-
-     In Emacs 20 and before, the `append' function also allowed
-     integers as (non last) arguments.  It converted them to strings of
-     digits, making up the decimal print representation of the integer,
-     and then used the strings instead of the original integers.  This
-     obsolete usage no longer works.  The proper way to convert an
-     integer to a decimal number in this way is with `format' (*note
-     Formatting Strings::) or `number-to-string' (*note String
-     Conversion::).
 
    Here is an example of using `append':
 
@@ -6974,10 +7056,9 @@ lists and arrays.  In other words, any list is a sequence, and any
 array is a sequence.  The common property that all sequences have is
 that each is an ordered collection of elements.
 
-   An "array" is a single primitive object that has a slot for each of
-its elements.  All the elements are accessible in constant time, but
-the length of an existing array cannot be changed.  Strings, vectors,
-char-tables and bool-vectors are the four types of arrays.
+   An "array" is a fixed-length object with a slot for each of its
+elements.  All the elements are accessible in constant time.  The four
+types of arrays are strings, vectors, char-tables and bool-vectors.
 
    A list is a sequence of elements, but it is not a single primitive
 object; it is made of cons cells, one cell per element.  Finding the
@@ -7003,9 +7084,6 @@ possible to add elements to the list, or remove elements.
               |          | |____________| |_____________| | |
               |          |________________________________| |
               |_____________________________________________|
-
-   The elements of vectors and lists may be any Lisp objects.  The
-elements of strings are all characters.
 
 * Menu:
 
@@ -7125,63 +7203,4 @@ See also `string-bytes', in *note Text Representations::.
           (setcar (aref x 1) 69)
           x => [quux (69 2)]
           y => [foo (69 2)]
-
-
-File: elisp,  Node: Arrays,  Next: Array Functions,  Prev: Sequence Functions,  Up: Sequences Arrays Vectors
-
-6.2 Arrays
-==========
-
-An "array" object has slots that hold a number of other Lisp objects,
-called the elements of the array.  Any element of an array may be
-accessed in constant time.  In contrast, an element of a list requires
-access time that is proportional to the position of the element in the
-list.
-
-   Emacs defines four types of array, all one-dimensional: "strings",
-"vectors", "bool-vectors" and "char-tables".  A vector is a general
-array; its elements can be any Lisp objects.  A string is a specialized
-array; its elements must be characters.  Each type of array has its own
-read syntax.  *Note String Type::, and *note Vector Type::.
-
-   All four kinds of array share these characteristics:
-
-   * The first element of an array has index zero, the second element
-     has index 1, and so on.  This is called "zero-origin" indexing.
-     For example, an array of four elements has indices 0, 1, 2, and 3.
-
-   * The length of the array is fixed once you create it; you cannot
-     change the length of an existing array.
-
-   * For purposes of evaluation, the array is a constant--in other
-     words, it evaluates to itself.
-
-   * The elements of an array may be referenced or changed with the
-     functions `aref' and `aset', respectively (*note Array
-     Functions::).
-
-   When you create an array, other than a char-table, you must specify
-its length.  You cannot specify the length of a char-table, because that
-is determined by the range of character codes.
-
-   In principle, if you want an array of text characters, you could use
-either a string or a vector.  In practice, we always choose strings for
-such applications, for four reasons:
-
-   * They occupy one-fourth the space of a vector of the same elements.
-
-   * Strings are printed in a way that shows the contents more clearly
-     as text.
-
-   * Strings can hold text properties.  *Note Text Properties::.
-
-   * Many of the specialized editing and I/O facilities of Emacs accept
-     only strings.  For example, you cannot insert a vector of
-     characters into a buffer the way you can insert a string.  *Note
-     Strings and Characters::.
-
-   By contrast, for an array of keyboard input characters (such as a key
-sequence), a vector may be necessary, because many keyboard input
-characters are outside the range that will fit in a string.  *Note Key
-Sequence Input::.
 

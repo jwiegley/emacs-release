@@ -1,16 +1,16 @@
 ;;; em-unix.el --- UNIX command aliases
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,27 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-(provide 'em-unix)
-
-(eval-when-compile (require 'esh-maint))
-(require 'eshell)
-
-(defgroup eshell-unix nil
-  "This module defines many of the more common UNIX utilities as
-aliases implemented in Lisp.  These include mv, ln, cp, rm, etc.  If
-the user passes arguments which are too complex, or are unrecognized
-by the Lisp variant, the external version will be called (if
-available).  The only reason not to use them would be because they are
-usually much slower.  But in several cases their tight integration
-with Eshell makes them more versatile than their traditional cousins
-\(such as being able to use `kill' to kill Eshell background processes
-by name)."
-  :tag "UNIX commands in Lisp"
-  :group 'eshell-module)
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -53,6 +33,24 @@ by name)."
 ;;
 ;;   3) it allows Eshell to refrain from having to invoke external
 ;;      processes for common operations.
+
+;;; Code:
+
+(require 'eshell)
+
+;;;###autoload
+(eshell-defgroup eshell-unix nil
+  "This module defines many of the more common UNIX utilities as
+aliases implemented in Lisp.  These include mv, ln, cp, rm, etc.  If
+the user passes arguments which are too complex, or are unrecognized
+by the Lisp variant, the external version will be called (if
+available).  The only reason not to use them would be because they are
+usually much slower.  But in several cases their tight integration
+with Eshell makes them more versatile than their traditional cousins
+\(such as being able to use `kill' to kill Eshell background processes
+by name)."
+  :tag "UNIX commands in Lisp"
+  :group 'eshell-module)
 
 (defcustom eshell-unix-load-hook '(eshell-unix-initialize)
   "*A list of functions to run when `eshell-unix' is loaded."
@@ -78,7 +76,7 @@ receiving side of a command pipeline."
   :type 'boolean
   :group 'eshell-unix)
 
-(defcustom eshell-plain-locate-behavior (eshell-under-xemacs-p)
+(defcustom eshell-plain-locate-behavior (featurep 'xemacs)
   "*If non-nil, standalone \"locate\" commands will behave normally.
 Standalone in this context means not redirected, and not on the
 receiving side of a command pipeline."
@@ -137,8 +135,6 @@ Otherwise, Emacs will attempt to use rsh to invoke du on the remote machine."
   :type 'boolean
   :group 'eshell-unix)
 
-(require 'esh-opt)
-
 ;;; Functions:
 
 (defun eshell-unix-initialize ()
@@ -156,17 +152,45 @@ Otherwise, Emacs will attempt to use rsh to invoke du on the remote machine."
 (defalias 'eshell/basename 'file-name-nondirectory)
 (defalias 'eshell/dirname  'file-name-directory)
 
-(eval-when-compile
-  (defvar interactive)
-  (defvar preview)
-  (defvar recursive)
-  (defvar verbose))
+(defvar interactive)
+(defvar preview)
+(defvar recursive)
+(defvar verbose)
 
 (defun eshell/man (&rest args)
   "Invoke man, flattening the arguments appropriately."
   (funcall 'man (apply 'eshell-flatten-and-stringify args)))
 
 (put 'eshell/man 'eshell-no-numeric-conversions t)
+
+(defun eshell/info (&rest args)
+  "Run the info command in-frame with the same behavior as command-line `info', ie:
+  'info'           => goes to top info window
+  'info arg1'      => IF arg1 is a file, then visits arg1
+  'info arg1'      => OTHERWISE goes to top info window and then menu item arg1
+  'info arg1 arg2' => does action for arg1 (either visit-file or menu-item) and then menu item arg2
+  etc."
+  (eval-and-compile (require 'info))
+  (let ((file (cond
+                ((not (stringp (car args)))
+                 nil)
+                ((file-exists-p (expand-file-name (car args)))
+                 (expand-file-name (car args)))
+                ((file-exists-p (concat (expand-file-name (car args)) ".info"))
+                 (concat (expand-file-name (car args)) ".info")))))
+
+    ;; If the first arg is a file, then go to that file's Top node
+    ;; Otherwise, go to the global directory
+    (if file
+      (progn
+        (setq args (cdr args))
+        (Info-find-node file "Top"))
+      (Info-directory))
+
+    ;; Treat all remaining args as menu references
+    (while args
+      (Info-menu (car args))
+      (setq args (cdr args)))))
 
 (defun eshell-remove-entries (path files &optional top-level)
   "From PATH, remove all of the given FILES, perhaps interactively."
@@ -312,10 +336,9 @@ Remove the DIRECTORY(ies), if they are empty.")
 
 (put 'eshell/rmdir 'eshell-no-numeric-conversions t)
 
-(eval-when-compile
-  (defvar no-dereference)
-  (defvar preview)
-  (defvar verbose))
+(defvar no-dereference)
+(defvar preview)
+(defvar verbose)
 
 (defvar eshell-warn-dot-directories t)
 
@@ -778,15 +801,14 @@ external command."
 
 (defalias 'pcomplete/ssh 'pcomplete/rsh)
 
-(eval-when-compile
-  (defvar block-size)
-  (defvar by-bytes)
-  (defvar dereference-links)
-  (defvar grand-total)
-  (defvar human-readable)
-  (defvar max-depth)
-  (defvar only-one-filesystem)
-  (defvar show-all))
+(defvar block-size)
+(defvar by-bytes)
+(defvar dereference-links)
+(defvar grand-total)
+(defvar human-readable)
+(defvar max-depth)
+(defvar only-one-filesystem)
+(defvar show-all)
 
 (defsubst eshell-du-size-string (size)
   (let* ((str (eshell-printable-size size human-readable block-size t))
@@ -945,6 +967,12 @@ Show wall-clock time elapsed during execution of COMMAND.")
   (if eshell-diff-window-config
       (set-window-configuration eshell-diff-window-config)))
 
+(defun nil-blank-string (string)
+  "Return STRING, or nil if STRING contains only non-blank characters."
+  (cond
+    ((string-match "[^[:blank:]]" string) string)
+    (nil)))
+
 (defun eshell/diff (&rest args)
   "Alias \"diff\" to call Emacs `diff' function."
   (let ((orig-args (eshell-stringify-list (eshell-flatten-list args))))
@@ -966,7 +994,8 @@ Show wall-clock time elapsed during execution of COMMAND.")
 	  (setcdr (last args 3) nil))
 	(with-current-buffer
 	    (condition-case err
-		(diff old new (eshell-flatten-and-stringify args))
+		(diff old new
+		      (nil-blank-string (eshell-flatten-and-stringify args)))
 	      (error
 	       (throw 'eshell-replace-command
 		      (eshell-parse-command "*diff" orig-args))))
@@ -1014,7 +1043,11 @@ Show wall-clock time elapsed during execution of COMMAND.")
 
 (put 'eshell/occur 'eshell-no-numeric-conversions t)
 
-;;; Code:
+(provide 'em-unix)
 
-;;; arch-tag: 2462edd2-a76a-4cf2-897d-92e9a82ac1c9
+;; Local Variables:
+;; generated-autoload-file: "esh-groups.el"
+;; End:
+
+;; arch-tag: 2462edd2-a76a-4cf2-897d-92e9a82ac1c9
 ;;; em-unix.el ends here

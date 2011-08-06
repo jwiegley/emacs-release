@@ -1,17 +1,17 @@
 ;;; tooltip.el --- show tooltip windows
 
 ;; Copyright (C) 1997, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Gerd Moellmann <gerd@acm.org>
 ;; Keywords: help c mouse tools
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -51,10 +49,9 @@ all pop-up help appears in the echo area.)
 When Tooltip mode is disabled, Emacs displays one line of
 the help text in the echo area, and does not make a pop-up window."
   :global t
-  :init-value (not (or noninteractive
-		       emacs-basic-display
-		       (not (display-graphic-p))
-		       (not (fboundp 'x-show-tip))))
+  ;; Even if we start on a text-only terminal, make this non-nil by
+  ;; default because we can open a graphical frame later (multi-tty).
+  :init-value t
   :initialize 'custom-initialize-safe-default
   :group 'tooltip
   (unless (or (null tooltip-mode) (fboundp 'x-show-tip))
@@ -62,12 +59,12 @@ the help text in the echo area, and does not make a pop-up window."
   (if tooltip-mode
       (progn
 	(add-hook 'pre-command-hook 'tooltip-hide)
-	(add-hook 'tooltip-hook 'tooltip-help-tips))
+	(add-hook 'tooltip-functions 'tooltip-help-tips))
     (unless (and (boundp 'gud-tooltip-mode) gud-tooltip-mode)
       (remove-hook 'pre-command-hook 'tooltip-hide))
-    (remove-hook 'tooltip-hook 'tooltip-help-tips))
+    (remove-hook 'tooltip-functions 'tooltip-help-tips))
   (setq show-help-function
-	(if tooltip-mode 'tooltip-show-help nil)))
+	(if tooltip-mode 'tooltip-show-help 'tooltip-show-help-non-mode)))
 
 
 ;;; Customizable settings
@@ -124,7 +121,10 @@ the value of `tooltip-y-offset' is ignored."
   "Frame parameters used for tooltips.
 
 If `left' or `top' parameters are included, they specify the absolute
-position to pop up the tooltip."
+position to pop up the tooltip.
+
+Note that font and color parameters are ignored, and the attributes
+of the `tooltip' face are used instead."
   :type 'sexp
   :group 'tooltip)
 
@@ -149,10 +149,14 @@ and enable `tooltip-mode'."
 
 ;;; Variables that are not customizable.
 
-(defvar tooltip-hook nil
+(defvar tooltip-functions nil
   "Functions to call to display tooltips.
-Each function is called with one argument EVENT which is a copy of
-the last mouse movement event that occurred.")
+Each function is called with one argument EVENT which is a copy
+of the last mouse movement event that occurred.  If one of these
+functions displays the tooltip, it should return non-nil and the
+rest are not called.")
+
+(define-obsolete-variable-alias 'tooltip-hook 'tooltip-functions "23.1")
 
 (defvar tooltip-timeout-id nil
   "The id of the timeout started when Emacs becomes idle.")
@@ -178,12 +182,10 @@ This might return nil if the event did not occur over a buffer."
 
 (defun tooltip-delay ()
   "Return the delay in seconds for the next tooltip."
-  (let ((delay tooltip-delay)
-	(now (float-time)))
-    (when (and tooltip-hide-time
-	       (< (- now tooltip-hide-time) tooltip-recent-seconds))
-      (setq delay tooltip-short-delay))
-    delay))
+  (if (and tooltip-hide-time
+           (< (- (float-time) tooltip-hide-time) tooltip-recent-seconds))
+      tooltip-short-delay
+    tooltip-delay))
 
 (defun tooltip-cancel-delayed-tip ()
   "Disable the tooltip timeout."
@@ -198,7 +200,7 @@ This might return nil if the event did not occur over a buffer."
 
 (defun tooltip-timeout (object)
   "Function called when timer with id `tooltip-timeout-id' fires."
-  (run-hook-with-args-until-success 'tooltip-hook
+  (run-hook-with-args-until-success 'tooltip-functions
 				    tooltip-last-mouse-motion-event))
 
 
@@ -214,6 +216,9 @@ change the existing association.  Value is the resulting alist."
       (push (cons key value) alist))
     alist))
 
+(declare-function x-show-tip "xfns.c"
+		  (string &optional frame parms timeout dx dy))
+
 (defun tooltip-show (text &optional use-echo-area)
   "Show a tooltip window displaying TEXT.
 
@@ -228,7 +233,7 @@ position.
 Optional second arg USE-ECHO-AREA non-nil means to show tooltip
 in echo area."
   (if use-echo-area
-      (message "%s" text)
+      (tooltip-show-help-non-mode text)
     (condition-case error
 	(let ((params (copy-sequence tooltip-frame-parameters))
 	      (fg (face-attribute 'tooltip :foreground))
@@ -248,6 +253,8 @@ in echo area."
        (message "Error while displaying tooltip: %s" error)
        (sit-for 1)
        (message "%s" text)))))
+
+(declare-function x-hide-tip "xfns.c" ())
 
 (defun tooltip-hide (&optional ignored-arg)
   "Hide a tooltip, if one is displayed.
@@ -272,18 +279,15 @@ is based on the current syntax table."
 	  (buffer-substring start (point)))))))
 
 (defmacro tooltip-region-active-p ()
-  "Value is non-nil if the region is currently active."
-  (if (string-match "^GNU" (emacs-version))
-      `(and transient-mark-mode mark-active)
-    `(region-active-p)))
+  "Value is non-nil if the region should override command actions."
+  `(use-region-p))
 
 (defun tooltip-expr-to-print (event)
   "Return an expression that should be printed for EVENT.
 If a region is active and the mouse is inside the region, print
 the region.  Otherwise, figure out the identifier around the point
 where the mouse is."
-  (save-excursion
-    (set-buffer (tooltip-event-buffer event))
+  (with-current-buffer (tooltip-event-buffer event)
     (let ((point (posn-point (event-end event))))
       (if (tooltip-region-active-p)
 	  (when (and (<= (region-beginning) point) (<= point (region-end)))
@@ -294,53 +298,85 @@ where the mouse is."
   "Return regexp matching the prompt of PROCESS at the end of a string.
 The prompt is taken from the value of `comint-prompt-regexp' in
 the buffer of PROCESS."
-  (let ((prompt-regexp (save-excursion
-			 (set-buffer (process-buffer process))
+  (let ((prompt-regexp (with-current-buffer (process-buffer process)
 			 comint-prompt-regexp)))
-    ;; Most start with `^' but the one for `sdb' cannot be easily
-    ;; stripped.  Code the prompt for `sdb' fixed here.
-    (if (= (aref prompt-regexp 0) ?^)
-	(setq prompt-regexp (substring prompt-regexp 1))
-      (setq prompt-regexp "\\*"))
-    (concat "\n*" prompt-regexp "$")))
+    (concat "\n*"
+            ;; Most start with `^' but the one for `sdb' cannot be easily
+            ;; stripped.  Code the prompt for `sdb' fixed here.
+            (if (= (aref prompt-regexp 0) ?^)
+                (substring prompt-regexp 1)
+              "\\*")
+            "$")))
 
 (defun tooltip-strip-prompt (process output)
   "Return OUTPUT with any prompt of PROCESS stripped from its end."
-  (let ((prompt-regexp (tooltip-process-prompt-regexp process)))
-    (save-match-data
-      (when (string-match prompt-regexp output)
-	(setq output (substring output 0 (match-beginning 0)))))
-    output))
+  (save-match-data
+    (if (string-match (tooltip-process-prompt-regexp process) output)
+        (substring output 0 (match-beginning 0))
+      output)))
 
 
 ;;; Tooltip help.
 
 (defvar tooltip-help-message nil
-  "The last help message received via `tooltip-show-help'.")
+  "The last help message received via `show-help-function'.
+This is used by `tooltip-show-help' and
+`tooltip-show-help-non-mode'.")
+
+(defvar tooltip-previous-message nil
+  "The previous content of the echo area.")
+
+(defun tooltip-show-help-non-mode (help)
+  "Function installed as `show-help-function' when Tooltip mode is off.
+It is also called if Tooltip mode is on, for text-only displays."
+  (when (and (not (window-minibuffer-p)) ;Don't overwrite minibuffer contents.
+             (not cursor-in-echo-area))  ;Don't overwrite a prompt.
+    (cond
+     ((stringp help)
+      (setq help (replace-regexp-in-string "\n" ", " help))
+      (unless (or tooltip-previous-message
+		  (string-equal help (current-message))
+		  (and (stringp tooltip-help-message)
+		       (string-equal tooltip-help-message
+				     (current-message))))
+        (setq tooltip-previous-message (current-message)))
+      (setq tooltip-help-message help)
+      (let ((message-truncate-lines t)
+            (message-log-max nil))
+        (message "%s" help)))
+     ((stringp tooltip-previous-message)
+      (let ((message-log-max nil))
+        (message "%s" tooltip-previous-message)
+        (setq tooltip-previous-message nil)))
+     (t
+      (message nil)))))
 
 (defun tooltip-show-help (msg)
   "Function installed as `show-help-function'.
 MSG is either a help string to display, or nil to cancel the display."
-  (let ((previous-help tooltip-help-message))
-    (setq tooltip-help-message msg)
-    (cond ((null msg)
-	   ;; Cancel display.  This also cancels a delayed tip, if
-	   ;; there is one.
-	   (tooltip-hide))
-	  ((equal previous-help msg)
-	   ;; Same help as before (but possibly the mouse has moved).
-	   ;; Keep what we have.
-	   )
-	  (t
-	   ;; A different help.  Remove a previous tooltip, and
-	   ;; display a new one, with some delay.
-	   (tooltip-hide)
-	   (tooltip-start-delayed-tip)))))
+  (if (display-graphic-p)
+      (let ((previous-help tooltip-help-message))
+	(setq tooltip-help-message msg)
+	(cond ((null msg)
+	       ;; Cancel display.  This also cancels a delayed tip, if
+	       ;; there is one.
+	       (tooltip-hide))
+	      ((equal previous-help msg)
+	       ;; Same help as before (but possibly the mouse has moved).
+	       ;; Keep what we have.
+	       )
+	      (t
+	       ;; A different help.  Remove a previous tooltip, and
+	       ;; display a new one, with some delay.
+	       (tooltip-hide)
+	       (tooltip-start-delayed-tip))))
+    ;; On text-only displays, try `tooltip-show-help-non-mode'.
+    (tooltip-show-help-non-mode msg)))
 
 (defun tooltip-help-tips (event)
   "Hook function to display a help tooltip.
-This is installed on the hook `tooltip-hook', which is run when
-the timer with id `tooltip-timeout-id' fires.
+This is installed on the hook `tooltip-functions', which
+is run when the timer with id `tooltip-timeout-id' fires.
 Value is non-nil if this function handled the tip."
   (when (stringp tooltip-help-message)
     (tooltip-show tooltip-help-message tooltip-use-echo-area)

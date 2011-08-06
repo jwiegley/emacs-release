@@ -1,7 +1,7 @@
 ;;; elint.el --- Lint Emacs Lisp
 
-;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+;;   2009  Free Software Foundation, Inc.
 
 ;; Author: Peter Liljenberg <petli@lysator.liu.se>
 ;; Created: May 1997
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -109,7 +107,7 @@
     (if cond then &rest else)
     (apply function &rest args)
     (format string &rest args)
-    (encode-time second minute hour day month year zone &rest args)
+    (encode-time second minute hour day month year &optional zone)
     (min &rest args)
     (logand &rest args)
     (logxor &rest args)
@@ -218,7 +216,7 @@ This environment can be passed to `macroexpand'."
 					    (buffer-file-name)
 					  (buffer-name))))
   (elint-display-log)
-  (mapcar 'elint-top-form (elint-update-env))
+  (mapc 'elint-top-form (elint-update-env))
 
   ;; Tell the user we're finished. This is terribly klugy: we set
   ;; elint-top-form-logged so elint-log-message doesn't print the
@@ -508,6 +506,7 @@ Returns `unknown' if we couldn't find arguments."
 	      (let ((fcode (indirect-function func)))
 		(if (subrp fcode)
 		    (let ((args (get func 'elint-args)))
+		      ;; FIXME builtins with no args have args = nil.
 		      (if args args 'unknown))
 		  (elint-find-args-in-code fcode)))
 	    'undefined)
@@ -542,11 +541,11 @@ CODE can be a lambda expression, a macro, or byte-compiled code."
 (defun elint-check-defun-form (form env)
   "Lint a defun/defmacro/lambda FORM in ENV."
   (setq form (if (eq (car form) 'lambda) (cdr form) (cdr (cdr form))))
-  (mapcar (function (lambda (p)
-		      (or (memq p '(&optional &rest))
-			  (setq env (elint-env-add-var env p)))
-		      ))
-	  (car form))
+  (mapc (function (lambda (p)
+		    (or (memq p '(&optional &rest))
+			(setq env (elint-env-add-var env p)))
+		    ))
+	(car form))
   (elint-forms (cdr form) env))
 
 (defun elint-check-let-form (form env)
@@ -566,21 +565,21 @@ CODE can be a lambda expression, a macro, or byte-compiled code."
 
       ;; Add variables to environment, and check the init values
       (let ((newenv env))
-	(mapcar (function (lambda (s)
-			    (cond
-			     ((symbolp s)
-			      (setq newenv (elint-env-add-var newenv s)))
-			     ((and (consp s) (<= (length s) 2))
-			      (elint-form (car (cdr s))
-					  (if (eq (car form) 'let)
-					      env
-					    newenv))
-			      (setq newenv
-				    (elint-env-add-var newenv (car s))))
-			     (t (elint-error
-				 "Malformed `let' declaration: %s" s))
-			     )))
-		varlist)
+	(mapc (function (lambda (s)
+			  (cond
+			   ((symbolp s)
+			    (setq newenv (elint-env-add-var newenv s)))
+			   ((and (consp s) (<= (length s) 2))
+			    (elint-form (car (cdr s))
+					(if (eq (car form) 'let)
+					    env
+					  newenv))
+			    (setq newenv
+				  (elint-env-add-var newenv (car s))))
+			   (t (elint-error
+			       "Malformed `let' declaration: %s" s))
+			   )))
+	      varlist)
 
 	;; Lint the body forms
 	(elint-forms (cdr (cdr form)) newenv)
@@ -665,18 +664,18 @@ CODE can be a lambda expression, a macro, or byte-compiled code."
 	    errlist)
 	(while errforms
 	  (setq errlist (car (car errforms)))
-	  (mapcar (function (lambda (s)
-			      (or (get s 'error-conditions)
-				  (get s 'error-message)
-				  (elint-warning
-				   "Not an error symbol in error handler: %s" s))))
-		  (cond
-		   ((symbolp errlist) (list errlist))
-		   ((listp errlist) errlist)
-		   (t (elint-error "Bad error list in error handler: %s"
-				   errlist)
-		      nil))
-		  )
+	  (mapc (function (lambda (s)
+			    (or (get s 'error-conditions)
+				(get s 'error-message)
+				(elint-warning
+				 "Not an error symbol in error handler: %s" s))))
+		(cond
+		  ((symbolp errlist) (list errlist))
+		  ((listp errlist) errlist)
+		  (t (elint-error "Bad error list in error handler: %s"
+				  errlist)
+		     nil))
+		)
 	  (elint-forms (cdr (car errforms)) newenv)
 	  (setq errforms (cdr errforms))
 	  )))
@@ -767,11 +766,11 @@ Insert HEADER followed by a blank line if non-nil."
 (defun elint-initialize ()
   "Initialize elint."
   (interactive)
-  (mapcar (function (lambda (x)
-		      (or (not (symbolp (car x)))
-			  (eq (cdr x) 'unknown)
-			  (put (car x) 'elint-args (cdr x)))))
-	  (elint-find-builtin-args))
+  (mapc (function (lambda (x)
+		    (or (not (symbolp (car x)))
+			(eq (cdr x) 'unknown)
+			(put (car x) 'elint-args (cdr x)))))
+	(elint-find-builtin-args))
   (mapcar (function (lambda (x)
 		      (put (car x) 'elint-args (cdr x))))
 	  elint-unknown-builtin-args))
@@ -794,17 +793,16 @@ functions, otherwise use LIST.
 Each functions is represented by a cons cell:
 \(function-symbol . args)
 If no documentation could be found args will be `unknown'."
-
-    (mapcar (function (lambda (f)
-			(let ((doc (documentation f t)))
-			  (if (and doc (string-match "\n\n\\((.*)\\)" doc))
-			      (read (match-string 1 doc))
-			    (cons f 'unknown))
-			  )))
-	    (if list list
-	      (elint-find-builtins))))
+  (mapcar (lambda (f)
+	    (let ((doc (documentation f t)))
+	      (or (and doc
+		       (string-match "\n\n(fn\\(.*)\\)\\'" doc)
+		       (ignore-errors
+			(read (format "(%s %s" f (match-string 1 doc)))))
+		  (cons f 'unknown))))
+	  (or list (elint-find-builtins))))
 
 (provide 'elint)
 
-;;; arch-tag: b2f061e2-af84-4ddc-8e39-f5e969ac228f
+;; arch-tag: b2f061e2-af84-4ddc-8e39-f5e969ac228f
 ;;; elint.el ends here

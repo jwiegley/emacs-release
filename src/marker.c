@@ -1,13 +1,13 @@
 /* Markers: examining, setting and deleting.
-   Copyright (C) 1985, 1997, 1998, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+   Copyright (C) 1985, 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006,
+                 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,15 +15,13 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 #include <config.h>
 #include "lisp.h"
 #include "buffer.h"
-#include "charset.h"
+#include "character.h"
 
 /* Record one cached position found recently by
    buf_charpos_to_bytepos or buf_bytepos_to_charpos.  */
@@ -452,9 +450,12 @@ Returns nil if MARKER points into a dead buffer.  */)
   if (XMARKER (marker)->buffer)
     {
       XSETBUFFER (buf, XMARKER (marker)->buffer);
-      /* Return marker's buffer only if it is not dead.  */
-      if (!NILP (XBUFFER (buf)->name))
-	return buf;
+      /* If the buffer is dead, we're in trouble: the buffer pointer here
+	 does not preserve the buffer from being GC'd (it's weak), so
+	 markers have to be unlinked from their buffer as soon as the buffer
+	 is killed.  */
+      eassert (!NILP (XBUFFER (buf)->name));
+      return buf;
     }
   return Qnil;
 }

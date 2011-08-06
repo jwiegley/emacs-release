@@ -1,6 +1,56 @@
-2008-09-05  Chong Yidong  <cyd@stupidchicken.com>
+2009-07-29  Chong Yidong  <cyd@stupidchicken.com>
 
-	* Version 22.3 released.
+	* Version 23.1 released.
+
+2009-03-27  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* url-handlers.el (url-file-handler): Save match data.
+
+2009-02-21  Jason Rumney  <jasonr@gnu.org>
+
+	* url-expand.el (url-default-expander): Use concat to combine
+	parts. (Bug #1020)
+
+2009-02-10  Glenn Morris  <rgm@gnu.org>
+
+	* url-util.el (url-generate-unique-filename): Silence compiler.
+
+2009-02-07  Chong Yidong  <cyd@stupidchicken.com>
+
+	* url-file.el (url-file): Use make-temp-file.
+
+	* url-util.el (url-generate-unique-filename): Mark as obsolete.
+
+	* url-vars.el (url-temporary-directory): Mark as obsolete.
+
+2009-01-15  Chong Yidong  <cyd@stupidchicken.com>
+
+	* url-cookie.el (url-cookie-retrieve): Fix last change.
+
+2009-01-14  Chong Yidong  <cyd@stupidchicken.com>
+
+	* url-cookie.el (url-cookie-retrieve): Handle null localpart.
+
+2009-01-13  Juanma Barranquero  <lekktu@gmail.com>
+
+	* url-util.el (url-truncate-url-for-viewing): Doc fix.
+
+2009-01-09  Glenn Morris  <rgm@gnu.org>
+
+	* url-cid.el (url-cid-gnus): Fix typo in header name.
+
+2008-11-04  Chong Yidong  <cyd@stupidchicken.com>
+
+	* url-util.el (url-basepath): Add url-basepath as an alias for
+	url-file-directory.
+
+2008-10-24  Juanma Barranquero  <lekktu@gmail.com>
+
+	* url.el (url-configuration-directory): Use `locate-user-emacs-file'.
+
+2008-10-20  İsmail Dönmez  <ismail@namtrac.org>  (tiny change)
+
+	* url-auth.el (url-basic-auth): Encode password string.
 
 2008-08-30  Glenn Morris  <rgm@gnu.org>
 
@@ -8,28 +58,104 @@
 	url-default-expander rather than via another alias.
 	(url-default-expander): Autoload an autoload.  (Bug#825).
 
-2008-04-04  Magnus Henoch  <mange@freemail.hu>
+2008-07-02  Juanma Barranquero  <lekktu@gmail.com>
+
+	* url.el (url-do-setup):
+	* url-dired.el (url-dired-minor-mode):
+	* url-file.el (url-file-find-possibly-compressed-file):
+	* url-gw.el (url-gateway-broken-resolution):
+	* url-handlers.el (url-handler-regexp):
+	* url-imap.el (url-imap-default-port):
+	* url-methods.el (url-scheme-get-property): Fix typos in docstrings.
+
+	* url-auth.el (url-basic-auth-storage, url-digest-auth):
+	Fix typos in docstrings.
+	(url-digest-auth-storage, url-register-auth-scheme): Reflow docstrings.
+
+	* url-cache.el (url-cache-prepare): Doc fix.
+	(url-cache-create-filename-human-readable, url-cache-extract):
+	Fix typos in docstrings.
+
+	* url-dav.el (url-intersection, url-dav-iso8601-regexp)
+	(url-dav-delete-something): Fix typos in docstrings.
+	(url-dav-http-success-p, url-dav-file-name-all-completions)
+	(url-dav-directory-files, url-dav-file-name-completion): Doc fixes.
+
+	* url-http.el (url-http-idle-sentinel): Doc fix.
+
+	* url-irc.el (url-irc-default-port): Fix typo in docstring.
+	(url-irc-function): Doc fix.
+
+	* url-util.el (url-get-url-filename-chars, url-unhex-string):
+	Fix typos in docstrings.
+	(url-file-extension): Doc fix.
+
+	* url-vars.el (url-current-object, url-current-mime-headers)
+	(url-privacy-level, url-mail-command, url-mime-language-string):
+	Fix typos in docstrings.
+	(url-honor-refresh-requests): Reflow docstring.
+	(url-using-proxy): Doc fix.
+
+2008-06-22  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* vc-dav.el: Move to the parent directory to be together with the
+	rest of the VC backends.
+
+2008-06-07  Glenn Morris  <rgm@gnu.org>
+
+	* url-auth.el (auth-source-user-or-password): Remove unnecessary
+	eval-and-compile.
+
+2008-05-30  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* url-handlers.el (url-file-name-completion): Add missing argument.
+
+2008-05-12  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* url-auth.el: Add autoload cookie for `auth-source-user-or-password'.
+	(url-basic-auth, url-digest-auth): Use it with any realm,
+	overriding the user name and password before the prompt.
+
+2008-04-28  Juanma Barranquero  <lekktu@gmail.com>
+
+	* url-vars.el (url-load-hook): Fix typo in docstring.
+
+2008-03-09  Magnus Henoch  <mange@freemail.hu>
 
 	* url-http.el (url-http-chunked-encoding-after-change-function):
 	Remove superfluous CRLF at end of file.  (bug #42)
 
-2008-03-31  John Wiegley  <johnw@newartisans.com>
+2008-03-02  Andreas Schwab  <schwab@suse.de>
 
-	* url-auth.el (url-digest-auth): Changed an if so that the
-	interaction between the PROMPT and OVERWRITE arguments can no
-	longer result in the user being queried twice for the same login
-	and password information.
+	* url-util.el: Require cl when compiling.
 
 2008-02-28  Teodor Zlatanov  <tzz@lifelogs.com>
 
-	* url-util.el (url-get-normalized-date): Simplify
-	to use `format-time-string'.  Always generate date in UTC, but
+	* url-util.el (url-get-normalized-date): Simplify to use
+	`format-time-string'.  Always generate date in UTC, but
 	call it GMT for full compatibility with the RFCs.
 
-2008-02-25  John Wiegley  <johnw@newartisans.com>
+2008-02-06  Michael Albinus  <michael.albinus@gmx.de>
+
+	* url-handlers.el (file-remote-p): Add handler.
+	(url-handler-file-remote-p): New fun.
+
+2008-02-06  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* url-handlers.el (url-handler-unhandled-file-name-directory):
+	Handle `file' URLs specially.  Return nil for non-local filenames.
+
+2008-02-04  Magnus Henoch  <mange@freemail.hu>
+
+	* url-expand.el: Require cl when compiling, for setf.
+
+2008-01-29  John Wiegley  <johnw@newartisans.com>
 
 	* url-auth.el (url-digest-auth): If the 'opaque' argument is not
-	being used, don't add it to the response text.
+	being used, don't add it to the response text.  Also, changed an
+	if so that the interaction between the PROMPT and OVERWRITE
+	arguments can no longer result in the user being queried twice for
+	the same login and password information.
 
 2008-01-21  Stefan Monnier  <monnier@iro.umontreal.ca>
 
@@ -42,27 +168,82 @@
 
 2007-12-11  Glenn Morris  <rgm@gnu.org>
 
+	* url.el (url-configuration-directory): Make it a defcustom.
+
 	* url-util.el (url-make-private-file): New function.
 	* url-cookie.el (url-cookie-write-file):
 	* url-history.el (url-history-save-history):
 	Use url-make-private-file and with-temp-buffer.
 
+2007-12-06  Glenn Morris  <rgm@gnu.org>
+
+	* url-file.el, url-mailto.el: Remove directory part from filenames
+	in function declarations.
+
 2007-12-02  Glenn Morris  <rgm@gnu.org>
 
-	* url-news.el (nntp-open-tls-stream, nntp-open-ssl-stream):
+	* url-about.el, url-handlers.el: Don't require cl when compiling.
+
+	* url-dav.el (url-dav-delete-directory): Fix message typo.
+
+	* url-history.el (top-level): Don't require cl when compiling.
+	(url-history-setup-save-timer, url-history-save-history):
+	Use condition-case rather than ignore-errors.
+
+	* url-imap.el (top-level): Don't require cl when compiling.
+	(url-imap): Use signal rather than check-type.
+
+	* url-news.el (top-level): Don't require cl when compiling.
+	(gnus-group-buffer): Define for compiler.
+	(url-news-fetch-message-id): Don't use `declare'.
+	(nntp-open-tls-stream, nntp-open-ssl-stream):
 	No need to define for compiler.
 	(url-snews): Use nntp-open-tls-stream unless ssl is requested.
 	Correct quoting of nntp-open-connection-function value.
 
+2007-12-01  Glenn Morris  <rgm@gnu.org>
+
+	* url-handlers.el (top-level): Always require url-parse, not just
+	when compiling.
+
+2007-11-30  Glenn Morris  <rgm@gnu.org>
+
+	* url-cookie.el (url-cookie-p): Declare as a function.
+
+2007-11-29  Glenn Morris  <rgm@gnu.org>
+
+	* url-file.el (url-file-build-filename, url-file): Wrap uses of
+	efs in (featurep 'xemacs) test.
+
+	* url-irc.el (zenirc, zenirc-send-line): Declare as functions.
+
 2007-11-28  Diane Murray  <disumu@x3y2z1.net>
 
 	* url-dired.el: Don't require w3-fetch and w3-open-local.
-	(url-dired-find-file): Use `find-file'.	 Doc fix.
+	(url-dired-find-file): Use `find-file'.  Doc fix.
 	(url-dired-find-file-mouse, url-dired-minor-mode): Doc fix.
+
+2007-11-24  Glenn Morris  <rgm@gnu.org>
+
+	* url-privacy.el (url-device-type): Fix typo.
+
+2007-11-20  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* url-mailto.el (mail-send-and-exit):
+	* url-http.el (url-dav-file-attributes):
+	* url-file.el (ange-ftp-set-passwd, ange-ftp-copy-file-internal)
+	(url-generate-unique-filename): Declare as functions.
+
+	* url-privacy.el (url-device-type): Define unconditionally.
 
 2007-11-15  Richard Stallman  <rms@gnu.org>
 
 	* url.el (url-retrieve-synchronously): Call delete-process.
+
+2007-10-31  Juanma Barranquero  <lekktu@gmail.com>
+
+	* url-vars.el (url-vars-unload-hook): Remove function and variable.
+	Hooks are automatically removed by `unload-feature'.
 
 2007-10-13  Richard Stallman  <rms@gnu.org>
 
@@ -88,6 +269,11 @@
 	(url-set-host, url-set-port, url-set-filename, url-set-target)
 	(url-set-attributes, url-set-full): Change macros to defuns.
 
+2007-09-26  Juanma Barranquero  <lekktu@gmail.com>
+
+	* url-dav.el (top):
+	* url-vars.el (top): Use `mapc' rather than `mapcar'.
+
 2007-09-22  Diane Murray  <disumu@x3y2z1.net>
 
 	* url-misc.el (url-generic-emulator-loader): Send the port as a
@@ -95,8 +281,7 @@
 
 2007-09-21  Diane Murray  <disumu@x3y2z1.net>
 
-	* url-news.el (url-news-fetch-newsgroup): Fix formatting of Gnus
-	method.
+	* url-news.el (url-news-fetch-newsgroup): Fix formatting of Gnus method.
 
 	* url-util.el (url-get-normalized-date): Pass full timezone
 	information to timezone-make-date-arpa-standard, since zone name
@@ -109,6 +294,22 @@
 	`current-buffer', so that the correct buffer is killed if
 	`url-retrieve-synchronously' gets redirected to a new URL.
 
+2007-08-31  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* url-parse.el (url): Use defstruct rather than macros.
+	(url-generic-parse-url):
+	* url-util.el (url-normalize-url, url-truncate-url-for-viewing):
+	* url-methods.el (url-scheme-register-proxy):
+	* url-mailto.el (url-mailto):
+	* url-file.el (url-file-build-filename):
+	* url-expand.el (url-identity-expander, url-default-expander):
+	Update all callers.
+
+2007-08-09  Edward O'Connor  <hober0@gmail.com>  (tiny change)
+
+	* url-auth.el (url-basic-auth): When prompting for username
+	and password, default to the username and password in the URL.
+
 2007-08-08  Glenn Morris  <rgm@gnu.org>
 
 	* url-auth.el, url-cache.el, url-dav.el, url-file.el, vc-dav.el:
@@ -118,11 +319,26 @@
 
 	* Relicense all FSF files to GPLv3 or later.
 
+2007-06-12  Tom Tromey  <tromey@redhat.com>
+
+	* url.el (url-configuration-directory): Use user-emacs-directory.
+
+2007-06-12  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* url-cookie.el (url-cookie-name, url-cookie-value)
+	(url-cookie-expires, url-cookie-localpart, url-cookie-domain)
+	(url-cookie-secure, url-cookie-set-name, url-cookie-set-value)
+	(url-cookie-set-expires, url-cookie-set-localpart)
+	(url-cookie-set-domain, url-cookie-set-secure)
+	(url-cookie-retrieve-arg, url-cookie-create, url-cookie-p): Remove.
+	(url-cookie): New struct.
+	(url-cookie-store): Use setf instead of url-cookie-set-*.
+
 2007-05-29  Chong Yidong  <cyd@stupidchicken.com>
 
 	* url-mailto.el (url-mailto): Insert body after
 	mail-header-separator if present, so that it is before signature.
-	Bug reported by Leo <sdl.web@gmail.com>.
+	Suggested by Leo <sdl.web@gmail.com>.
 
 2007-04-15  Chong Yidong  <cyd@stupidchicken.com>
 
@@ -297,7 +513,7 @@
 	path component and non-empty query component.  Untangle path,
 	query and fragment parsing code.  Add references to RFC 3986 in
 	comments.
-	(url-recreate-url-attributes): Start query string with "?", not	";".
+	(url-recreate-url-attributes): Start query string with "?", not ";".
 
 2006-09-20  Stefan Monnier  <monnier@iro.umontreal.ca>
 
@@ -603,8 +819,7 @@
 
 2005-06-14  Juanma Barranquero  <lekktu@gmail.com>
 
-	* url-history.el (url-completion-function): Follow error
-	conventions.
+	* url-history.el (url-completion-function): Follow error conventions.
 
 2005-06-13  Stefan Monnier  <monnier@iro.umontreal.ca>
 
@@ -1067,7 +1282,7 @@
 	(url-dav-process-response): Make sure that we create a DAV:status
 	property when parsing a singleton response.
 	(url-dav-file-attributes): If the properties returned did not have
-	a succesful HTTP response code, then ignore them and use the
+	a successful HTTP response code, then ignore them and use the
 	HEAD-based attributes.
 
 	* lisp/vc-dav.el: Added full copyright information.
@@ -1104,7 +1319,7 @@
 	(url-dav-process-DAV:lockdiscovery): Can now correctly parse
 	DAV:lockdiscovery nodes, so that we can find out who has a
 	resource locked and properly parse the reponse to a LOCK request.
-	(url-dav-process-DAV:status): Now parses ou the numeric status
+	(url-dav-process-DAV:status): Now parses out the numeric status
 	from the HTTP response line.
 	(url-dav-process-response): New function to handle all the
 	parsing of an XML response from WebDAV.  This handles all the
@@ -1265,12 +1480,12 @@
 	* lisp/url-about.el (url-about): New loader scheme to handle
 	about:foo URLs.  Automatically tries to find a `url-about-foo'
 	function to display the actual data.
-	(url-about-protocols): Implement about:protocols
+	(url-about-protocols): Implement about:protocols.
 
 	* lisp/url-http.el (url-http): Make sure that we signal an error
 	when we cannot open a network connection for whatever reason.
 	Before, it would just silently clean up after itself and the user
-	got absolutely no indication that an error had occured.  If the
+	got absolutely no indication that an error had occurred.  If the
 	error should truly be ignored, the caller should do that for us.
 	(url-http-chunked-encoding-after-change-function): Doh!  Need to
 	user marker-position in some log messages now that
@@ -1325,7 +1540,7 @@
 	needed.  I should use my brain sometime.
 
 	* lisp/url-vars.el (and): Fix feature test for xemacs and
-	coding-system-list behaviour.
+	coding-system-list behavior.
 
 	* lisp/url-http.el
 	(url-http-chunked-encoding-after-change-function): Add optional
@@ -1612,11 +1827,11 @@
 2001-01-03  Sam Steingold  <sds@gnu.org>
 
 	* lisp/url-http.el (url-http-wait-for-headers-change-function):
-	set `url-http-end-of-headers' to 0 for HTTP 0.9
+	set `url-http-end-of-headers' to 0 for HTTP 0.9.
 
 2001-01-02  Sam Steingold  <sds@gnu.org>
 
-	* lisp/url-auth.el (provide): `url-auth', not `urlauth'
+	* lisp/url-auth.el (provide): `url-auth', not `urlauth'.
 
 2000-12-22  Dave Love  <fx@gnu.org>
 
@@ -1651,7 +1866,7 @@
 
 	* lisp/url-http.el (url-http-parse-headers): Need to make the
 	connection as 'free' when we get a 304 response (found in cache),
-	or when a keep-alive conneection timed out, it would re-parse the
+	or when a keep-alive connection timed out, it would re-parse the
 	headers and dispatch to the callback again.  Eek.
 
 2000-10-02  William M. Perry  <wmperry@aventail.com>
@@ -1704,7 +1919,7 @@
 	IRC URL so people don't think I'm crazy.
 
 	* configure.in: Checks to make sure that Gnus was found, since we
-	HAVE to have it now.  Removed conditional compilation of url-cid.el
+	HAVE to have it now.  Removed conditional compilation of url-cid.el.
 
 1999-12-16  Eric Marsden  <emarsden@mail.dotcom.fr>
 
@@ -1788,7 +2003,7 @@
 1999-12-06  William M. Perry  <wmperry@aventail.com>
 
 	* lisp/mule-sysdp.el (mule-code-convert-region): Deal with Mule
-	4.1 gracefully
+	4.1 gracefully.
 
 	* lisp/url-news.el: Reimplemented news and nntp URL support.
 	No longer bothers to check for outdated Gnus versions, since this
@@ -1814,7 +2029,7 @@
 	as well as efs.
 	(url-file): Add default content-type of application/octet-stream if
 	none known.
-	(url-file): Correct bad call to url-host-is-local-p
+	(url-file): Correct bad call to url-host-is-local-p.
 
 	* lisp/url-handlers.el (url-insert-file-contents): Emacs doesn't
 	like buffer-substring with nil arguments.
@@ -1830,7 +2045,7 @@
 	(url-scheme-get-property): Use it when we load a URL scheme for
 	the first time.
 
-	* lisp/url-util.el (url-get-url-at-point): Re-integrated
+	* lisp/url-util.el (url-get-url-at-point): Re-integrated.
 
 1999-12-04  William M. Perry  <wmperry@aventail.com>
 
@@ -1932,14 +2147,14 @@
 ;; End:
 
     Copyright (C) 1999, 2001, 2002, 2004, 2005,
-	2006, 2007, 2008  Free Software Foundation, Inc.
+	2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
-  GNU Emacs is free software; you can redistribute it and/or modify
+  GNU Emacs is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 3, or (at your option)
-  any later version.
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -1947,8 +2162,6 @@
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with GNU Emacs; see the file COPYING.  If not, write to the
-  Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-  Boston, MA 02110-1301, USA.
+  along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; arch-tag: ac117078-3091-4533-be93-098162ac2926

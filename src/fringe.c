@@ -1,14 +1,14 @@
 /* Fringe handling (split from xdisp.c).
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 1994, 1995, 1997,
                  1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 #include <stdio.h>
@@ -29,6 +27,7 @@ Boston, MA 02110-1301, USA.  */
 #include "dispextern.h"
 #include "buffer.h"
 #include "blockinput.h"
+#include "termhooks.h"
 
 #ifdef HAVE_WINDOW_SYSTEM
 
@@ -483,7 +482,7 @@ static struct fringe_bitmap **fringe_bitmaps;
 static Lisp_Object *fringe_faces;
 static int max_fringe_bitmaps;
 
-static int max_used_fringe_bitmap = MAX_STANDARD_FRINGE_BITMAPS;
+int max_used_fringe_bitmap = MAX_STANDARD_FRINGE_BITMAPS;
 
 
 /* Lookup bitmap number for symbol BITMAP.
@@ -585,7 +584,7 @@ draw_fringe_bitmap_1 (w, row, left_p, overlay, which)
       Lisp_Object face;
 
       if ((face = fringe_faces[which], NILP (face))
-	  || (face_id = lookup_derived_face (f, face, 'A', FRINGE_FACE_ID, 0),
+	  || (face_id = lookup_derived_face (f, face, FRINGE_FACE_ID, 0),
 	      face_id < 0))
 	face_id = FRINGE_FACE_ID;
     }
@@ -686,7 +685,7 @@ draw_fringe_bitmap_1 (w, row, left_p, overlay, which)
       break;
     }
 
-  rif->draw_fringe_bitmap (w, row, &p);
+  FRAME_RIF (f)->draw_fringe_bitmap (w, row, &p);
 }
 
 static int
@@ -1278,6 +1277,8 @@ destroy_fringe_bitmap (n)
   fbp = &fringe_bitmaps[n];
   if (*fbp && (*fbp)->dynamic)
     {
+      /* XXX Is SELECTED_FRAME OK here? */
+      struct redisplay_interface *rif = FRAME_RIF (SELECTED_FRAME ());
       if (rif && rif->destroy_fringe_bitmap)
 	rif->destroy_fringe_bitmap (n);
       xfree (*fbp);
@@ -1328,11 +1329,11 @@ If BITMAP overrides a standard fringe bitmap, the original bitmap is restored.  
 */
 
 #if defined (HAVE_X_WINDOWS)
-static unsigned char swap_nibble[16]
-  = { 0x0, 0x8, 0x4, 0xc,    /* 0000 1000 0100 1100 */
-      0x2, 0xa, 0x6, 0xe,    /* 0010 1010 0110 1110 */
-      0x1, 0x9, 0x5, 0xd,    /* 0001 1001 0101 1101 */
-      0x3, 0xb, 0x7, 0xf };  /* 0011 1011 0111 1111 */
+static unsigned char swap_nibble[16] = {
+  0x0, 0x8, 0x4, 0xc,           /* 0000 1000 0100 1100 */
+  0x2, 0xa, 0x6, 0xe,           /* 0010 1010 0110 1110 */
+  0x1, 0x9, 0x5, 0xd,           /* 0001 1001 0101 1101 */
+  0x3, 0xb, 0x7, 0xf};          /* 0011 1011 0111 1111 */
 #endif                          /* HAVE_X_WINDOWS */
 
 void
@@ -1368,24 +1369,22 @@ init_fringe_bitmap (which, fb, once_p)
 				   | (swap_nibble[(b>>4) & 0xf] << 8)
 				   | (swap_nibble[(b>>8) & 0xf] << 4)
 				   | (swap_nibble[(b>>12) & 0xf]));
-	      *bits++ = (b >> (16 - fb->width));
+	      b >>= (16 - fb->width);
+#ifdef WORDS_BIG_ENDIAN
+	      b = ((b >> 8) | (b << 8));
+#endif
+	      *bits++ = b;
 	    }
 	}
 #endif /* HAVE_X_WINDOWS */
 
-#if defined (MAC_OS) && defined (WORDS_BIG_ENDIAN)
-      unsigned short *bits = fb->bits;
-      int j;
-      for (j = 0; j < fb->height; j++)
-	{
-	  unsigned short b = *bits;
-	  *bits++ = ((b >> 8) & 0xff) | ((b & 0xff) << 8);
-	}
-#endif /* MAC_OS && WORDS_BIG_ENDIAN */
     }
 
   if (!once_p)
     {
+      /* XXX Is SELECTED_FRAME OK here? */
+      struct redisplay_interface *rif = FRAME_RIF (SELECTED_FRAME ());
+
       destroy_fringe_bitmap (which);
 
       if (rif && rif->define_fringe_bitmap)
@@ -1557,7 +1556,7 @@ If FACE is nil, reset face to default fringe face.  */)
   if (!NILP (face))
     {
       face_id = lookup_derived_face (SELECTED_FRAME (), face,
-				     'A', FRINGE_FACE_ID, 1);
+				     FRINGE_FACE_ID, 1);
       if (face_id < 0)
 	error ("No such face");
     }
@@ -1692,14 +1691,10 @@ init_fringe ()
     }
 }
 
-#if defined (HAVE_NTGUI) || defined (MAC_OS)
+#ifdef HAVE_NTGUI
 
 void
-#ifdef HAVE_NTGUI
-w32_init_fringe ()
-#else  /* MAC_OS */
-mac_init_fringe ()
-#endif
+w32_init_fringe (struct redisplay_interface *rif)
 {
   int bt;
 
@@ -1712,14 +1707,13 @@ mac_init_fringe ()
       rif->define_fringe_bitmap (bt, fb->bits, fb->height, fb->width);
     }
 }
-#endif
 
-#ifdef HAVE_NTGUI
 void
 w32_reset_fringes ()
 {
   /* Destroy row bitmaps.  */
   int bt;
+  struct redisplay_interface *rif = FRAME_RIF (SELECTED_FRAME ());
 
   if (!rif)
     return;

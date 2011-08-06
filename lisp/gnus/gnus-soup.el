@@ -1,7 +1,7 @@
 ;;; gnus-soup.el --- SOUP packet writing support for Gnus
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Per Abrahamsen <abraham@iesd.auc.dk>
 ;;	Lars Magne Ingebrigtsen <larsi@gnus.org>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -306,7 +304,7 @@ Note -- this function hasn't been implemented yet."
 If NOT-ALL, don't pack ticked articles."
   (let ((gnus-expert-user t)
 	(gnus-large-newsgroup nil)
-	(entry (gnus-gethash group gnus-newsrc-hashtb)))
+	(entry (gnus-group-entry group)))
     (when (or (null entry)
 	      (eq (car entry) t)
 	      (and (car entry)
@@ -594,9 +592,8 @@ Return whether the unpacking was successful."
 			      (mail-fetch-field "to"))
 		(sit-for 1)
 		(let ((mail-header-separator ""))
-		  (mm-with-unibyte-current-buffer
-		    (funcall (or message-send-mail-real-function
-				 message-send-mail-function)))))
+                  (funcall (or message-send-mail-real-function
+                               message-send-mail-function))))
 	       (t
 		(error "Unknown reply kind")))
 	      (set-buffer msg-buf)
@@ -610,5 +607,5 @@ Return whether the unpacking was successful."
 
 (provide 'gnus-soup)
 
-;;; arch-tag: eddfa69d-13e8-4aea-84ef-62a526ef185c
+;; arch-tag: eddfa69d-13e8-4aea-84ef-62a526ef185c
 ;;; gnus-soup.el ends here

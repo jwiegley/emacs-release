@@ -1,9 +1,12 @@
 ;;; dabbrev.el --- dynamic abbreviation package
 
 ;; Copyright (C) 1985, 1986, 1992, 1994, 1996, 1997, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Don Morrison
+;;	Lars Lindberg
+;; (according to ack.texi)
 ;; Maintainer: Lars Lindberg <Lars.Lindberg@sypro.cap.se>
 ;; Created: 16 Mars 1992
 ;; Lindberg's last update version: 5.7
@@ -11,10 +14,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,9 +25,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -106,18 +107,18 @@
   :group 'convenience)
 
 (defcustom dabbrev-backward-only nil
-  "*If non-nil, `dabbrev-expand' only looks backwards."
+  "If non-nil, `dabbrev-expand' only looks backwards."
   :type 'boolean
   :group 'dabbrev)
 
 (defcustom dabbrev-limit nil
-  "*Limits region searched by `dabbrev-expand' to this many chars away."
+  "Limits region searched by `dabbrev-expand' to this many chars away."
   :type '(choice (const :tag "off" nil)
 		 integer)
   :group 'dabbrev)
 
 (defcustom dabbrev-abbrev-skip-leading-regexp nil
-  "*Regexp for skipping leading characters of an abbreviation.
+  "Regexp for skipping leading characters of an abbreviation.
 
 Example: Set this to \"\\\\$\" for programming languages
 in which variable names may appear with or without a leading `$'.
@@ -128,14 +129,14 @@ Set this to nil if no characters should be skipped."
 		 (const :tag "off" nil))
   :group 'dabbrev)
 
-(defcustom dabbrev--eliminate-newlines t
-  "*Non-nil means dabbrev should not insert newlines.
+(defcustom dabbrev-eliminate-newlines t
+  "Non-nil means dabbrev should not insert newlines.
 Instead it converts them to spaces."
   :type 'boolean
   :group 'dabbrev)
 
 (defcustom dabbrev-case-fold-search 'case-fold-search
-  "*Control whether dabbrev searches should ignore case.
+  "Control whether dabbrev searches should ignore case.
 A value of nil means case is significant.
 A value of `case-fold-search' means case is significant
  if `case-fold-search' is nil.
@@ -146,7 +147,7 @@ Any other non-nil version means case is not significant."
   :group 'dabbrev)
 
 (defcustom dabbrev-upcase-means-case-search nil
-  "*The significance of an uppercase character in an abbreviation.
+  "The significance of an uppercase character in an abbreviation.
 A nil value means case fold search when searching for possible expansions;
 non-nil means case sensitive search.
 
@@ -156,7 +157,7 @@ This variable has an effect only when the value of
   :group 'dabbrev)
 
 (defcustom dabbrev-case-distinction 'case-replace
-  "*Whether dabbrev treats expansions as the same if they differ in case.
+  "Whether dabbrev treats expansions as the same if they differ in case.
 
 A value of nil means treat them as different.
 A value of `case-replace' means distinguish them if `case-replace' is nil.
@@ -171,7 +172,7 @@ This variable has an effect only when the value of
   :version "22.1")
 
 (defcustom dabbrev-case-replace 'case-replace
-  "*Whether dabbrev applies the abbreviations's case pattern to the expansion.
+  "Whether dabbrev applies the abbreviations's case pattern to the expansion.
 
 A value of nil means preserve the expansion's case pattern.
 A value of `case-replace' means preserve it if `case-replace' is nil.
@@ -186,7 +187,7 @@ This variable has an effect only when the value of
   :group 'dabbrev)
 
 (defcustom dabbrev-abbrev-char-regexp nil
-  "*Regexp to recognize a character in an abbreviation or expansion.
+  "Regexp to recognize a character in an abbreviation or expansion.
 This regexp will be surrounded with \\\\( ... \\\\) when actually used.
 
 Set this variable to \"\\\\sw\" if you want ordinary words or
@@ -211,7 +212,7 @@ The recommended value is \"\\\\sw\\\\|\\\\s_\"."
   :group 'dabbrev)
 
 (defcustom dabbrev-check-all-buffers t
-  "*Non-nil means dabbrev package should search *all* buffers.
+  "Non-nil means dabbrev package should search *all* buffers.
 
 Dabbrev always searches the current buffer first.  Then, if
 `dabbrev-check-other-buffers' says so, it searches the buffers
@@ -224,21 +225,21 @@ or matched by `dabbrev-ignored-regexps'."
   :group 'dabbrev)
 
 (defcustom dabbrev-ignored-buffer-names '("*Messages*" "*Buffer List*")
-  "*List of buffer names that dabbrev should not check.
+  "List of buffer names that dabbrev should not check.
 See also `dabbrev-ignored-buffer-regexps'."
   :type '(repeat (string :tag "Buffer name"))
   :group 'dabbrev
   :version "20.3")
 
 (defcustom dabbrev-ignored-buffer-regexps nil
-  "*List of regexps matching names of buffers that dabbrev should not check.
+  "List of regexps matching names of buffers that dabbrev should not check.
 See also `dabbrev-ignored-buffer-names'."
   :type '(repeat regexp)
   :group 'dabbrev
   :version "21.1")
 
 (defcustom dabbrev-check-other-buffers t
-  "*Should \\[dabbrev-expand] look in other buffers?\
+  "Should \\[dabbrev-expand] look in other buffers?\
 
 nil: Don't look in other buffers.
 t: Also look for expansions in the buffers pointed out by
@@ -265,7 +266,7 @@ for an example.
 A mode setting this variable should make it buffer local.")
 
 (defcustom dabbrev-friend-buffer-function 'dabbrev--same-major-mode-p
-  "*A function to decide whether dabbrev should search OTHER-BUFFER.
+  "A function to decide whether dabbrev should search OTHER-BUFFER.
 The function should take one argument, OTHER-BUFFER, and return
 non-nil if that buffer should be searched.  Have a look at
 `dabbrev--same-major-mode-p' for an example.
@@ -331,6 +332,9 @@ this list."
 
 ;; The regexp for recognizing a character in an abbreviation.
 (defvar dabbrev--abbrev-char-regexp nil)
+
+;; The progress reporter for buffer-scanning progress.
+(defvar dabbrev--progress-reporter nil)
 
 ;;----------------------------------------------------------------
 ;; Macros
@@ -711,10 +715,6 @@ If IGNORE-CASE is non-nil, accept matches which differ in case."
 	(setq all-expansions (cons expansion all-expansions))))
     all-expansions))
 
-(defun dabbrev--scanning-message ()
-  (unless (window-minibuffer-p (selected-window))
-    (message "Scanning `%s'" (buffer-name (current-buffer)))))
-
 (defun dabbrev--ignore-buffer-p (buffer)
   "Return non-nil if BUFFER should be ignored by dabbrev."
   (let ((bn (buffer-name buffer)))
@@ -740,8 +740,7 @@ of the start of the occurrence."
     ;; If we were scanning something other than the current buffer,
     ;; continue scanning there.
     (when dabbrev--last-buffer
-      (set-buffer dabbrev--last-buffer)
-      (dabbrev--scanning-message))
+      (set-buffer dabbrev--last-buffer))
     (or
      ;; ------------------------------------------
      ;; Look backward in current buffer.
@@ -773,15 +772,20 @@ of the start of the occurrence."
 	 ;; If we have just now begun to search other buffers,
 	 ;; determine which other buffers we should check.
 	 ;; Put that list in dabbrev--friend-buffer-list.
-	 (or dabbrev--friend-buffer-list
-	     (setq dabbrev--friend-buffer-list
-		   (dabbrev--make-friend-buffer-list))))
+	 (unless dabbrev--friend-buffer-list
+           (setq dabbrev--friend-buffer-list
+                 (dabbrev--make-friend-buffer-list))
+           (setq dabbrev--progress-reporter
+                 (make-progress-reporter
+                  "Scanning for dabbrevs..."
+                  (- (length dabbrev--friend-buffer-list)) 0 0 1 1.5))))
        ;; Walk through the buffers till we find a match.
        (let (expansion)
 	 (while (and (not expansion) dabbrev--friend-buffer-list)
 	   (setq dabbrev--last-buffer (pop dabbrev--friend-buffer-list))
 	   (set-buffer dabbrev--last-buffer)
-	   (dabbrev--scanning-message)
+           (progress-reporter-update dabbrev--progress-reporter
+                                     (- (length dabbrev--friend-buffer-list)))
 	   (setq dabbrev--last-expansion-location (point-min))
 	   (setq expansion (dabbrev--try-find abbrev nil 1 ignore-case)))
 	 expansion)))))
@@ -913,10 +917,12 @@ to record whether we upcased the expansion, downcased it, or did neither."
 			  ((equal abbrev (downcase abbrev)) 'downcase)))))
 
     ;; Convert whitespace to single spaces.
-    (if dabbrev--eliminate-newlines
-	;; Start searching at end of ABBREV so that any whitespace
-	;; carried over from the existing text is not changed.
-	(let ((pos (length abbrev)))
+    (if dabbrev-eliminate-newlines
+	(let ((pos
+	       (if (equal abbrev " ") 0 (length abbrev))))
+	  ;; If ABBREV is real, search after the end of it.
+	  ;; If ABBREV is space and we are copying successive words,
+	  ;; search starting at the front.
 	  (while (string-match "[\n \t]+" expansion pos)
 	    (setq pos (1+ (match-beginning 0)))
 	    (setq expansion (replace-match " " nil nil expansion)))))
@@ -1006,12 +1012,12 @@ Leaves point at the location of the start of the expansion."
 		(cons found-string dabbrev--last-table))
 	  result)))))
 
-(dolist (mess '("^No dynamic expansion for .* found$"
+(dolist (mess '("^No dynamic expansion for .* found"
 		"^No further dynamic expansion for .* found$"
 		"^No possible abbreviation preceding point$"))
   (add-to-list 'debug-ignored-errors mess))
 
 (provide 'dabbrev)
 
-;;; arch-tag: 29e58596-f080-4306-a409-70296cf9d46f
+;; arch-tag: 29e58596-f080-4306-a409-70296cf9d46f
 ;;; dabbrev.el ends here

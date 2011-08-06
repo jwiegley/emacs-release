@@ -1,16 +1,16 @@
 ;;; em-banner.el --- sample module that displays a login banner
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,21 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-(provide 'em-banner)
-
-(eval-when-compile (require 'esh-maint))
-
-(defgroup eshell-banner nil
-  "This sample module displays a welcome banner at login.
-It exists so that others wishing to create their own Eshell extension
-modules may have a simple template to begin with."
-  :tag "Login banner"
-  ;; :link '(info-link "(eshell)Login banner")
-  :group 'eshell-module)
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -51,6 +37,24 @@ modules may have a simple template to begin with."
 ;; In this case, it allows the user to change the string which
 ;; displays at login time.
 
+;;; Code:
+
+(eval-when-compile
+  (require 'cl)
+  (require 'esh-mode)
+  (require 'eshell))
+
+(require 'esh-util)
+
+;;;###autoload
+(eshell-defgroup eshell-banner nil
+  "This sample module displays a welcome banner at login.
+It exists so that others wishing to create their own Eshell extension
+modules may have a simple template to begin with."
+  :tag "Login banner"
+  ;; :link '(info-link "(eshell)Login banner")
+  :group 'eshell-module)
+
 ;;; User Variables:
 
 (defcustom eshell-banner-message "Welcome to the Emacs shell\n\n"
@@ -60,10 +64,6 @@ This can be any sexp, and should end with at least two newlines."
   :group 'eshell-banner)
 
 (put 'eshell-banner-message 'risky-local-variable t)
-
-;;; Code:
-
-(require 'esh-util)
 
 (defcustom eshell-banner-load-hook '(eshell-banner-initialize)
   "*A list of functions to run when `eshell-banner' is loaded."
@@ -90,5 +90,11 @@ This can be any sexp, and should end with at least two newlines."
     (goto-char (point-min))
     (looking-at msg)))
 
-;;; arch-tag: e738b4ef-8671-42ae-a757-291779b92491
+(provide 'em-banner)
+
+;; Local Variables:
+;; generated-autoload-file: "esh-groups.el"
+;; End:
+
+;; arch-tag: e738b4ef-8671-42ae-a757-291779b92491
 ;;; em-banner.el ends here

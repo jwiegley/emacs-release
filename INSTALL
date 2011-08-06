@@ -1,7 +1,14 @@
 GNU Emacs Installation Guide
 Copyright (C) 1992, 1994, 1996, 1997, 2000, 2001, 2002, 2003, 2004,
-2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 See the end of the file for license conditions.
+
+
+This file contains general information.  For more specific information
+for the Windows, GNUstep/Mac OS X, and MS-DOS ports, also see the files
+nt/INSTALL nextstep/INSTALL, and msdos/INSTALL.  For information
+specific to building from a CVS checkout (rather than a release), see
+the file INSTALL.CVS.
 
 
 BASIC INSTALLATION
@@ -92,6 +99,30 @@ that, so please refer to them if the simple procedure does not work.
 
 ADDITIONAL DISTRIBUTION FILES
 
+* Complex Text Layout support libraries
+
+Emacs needs the optional libraries "m17n-db", "libm17n-flt", "libotf"
+to correctly display such complex scripts as Indic and Khmer.
+On some systems, particularly GNU/Linux, these libraries may be
+already present or available as additional packages.  Note that if
+there is a separate `dev' or `devel' package, for use at compilation
+time rather than run time, you will need that as well as the
+corresponding run time package; typically the dev package will contain
+header files and a library archive.  Otherwise, you can download and
+build libraries from sources.
+
+The sources of these libraries are available by anonymous CVS from
+cvs.m17n.org.
+
+    % cvs -d :pserver:anonymous@cvs.m17n.org:/cvs/m17n login
+    % cvs -d :pserver:anonymous@cvs.m17n.org:/cvs/m17n co m17n-db
+    % cvs -d :pserver:anonymous@cvs.m17n.org:/cvs/m17n co m17n-lib
+    % cvs -d :pserver:anonymous@cvs.m17n.org:/cvs/m17n co libotf
+
+For m17n-lib, if you have problems with making the whole package
+because you lack some other packages on which m17n-lib depends, try to
+configure it with the option "--without-gui".
+
 * intlfonts-VERSION.tar.gz
 
 The intlfonts distribution contains X11 fonts in various encodings
@@ -139,10 +170,7 @@ can be found:
                       Get version 6b -- 6a is reported to fail in
                       Emacs.
   . libtiff for TIFF: http://www.libtiff.org/
-  . libungif for GIF:
-      http://sourceforge.net/projects/libungif
-      Ensure you get version 4.1.0b1 or higher of libungif -- a bug in
-      4.1.0 can crash Emacs.
+  . libgif for GIF:   http://sourceforge.net/projects/giflib/
 
 Emacs will configure itself to build with these libraries if the
 `configure' script finds them on your system, unless you supply the
@@ -156,8 +184,10 @@ configure should avoid such old versions.  If that happens, use the
 The Emacs distribution does not include fonts and does not install
 them.  You must do that yourself.
 
-To take proper advantage of Emacs 21's mule-unicode charsets, you need
-a suitable font.  For `Unicode' (ISO 10646) fonts for X, see
+Emacs running on the GNU system supports both X fonts and local fonts
+(i.e. the fonts managed by the fontconfig library).
+
+For `Unicode' (ISO 10646) X fonts, see
 <URL:http://czyborra.com/unifont/> (packaged in Debian),
 <URL:http://openlab.ring.gr.jp/efont/> (packaged in Debian).  (In
 recent Debian versions, there is an extensive `misc-fixed' iso10646-1
@@ -201,9 +231,9 @@ Debian 3 and above.
 DETAILED BUILDING AND INSTALLATION:
 
 (This is for a Unix or Unix-like system.  For MS-DOS and Windows 3.X,
-see below; search for MSDOG.  For Windows 9X, Windows ME, Windows NT,
-and Windows 2000, see the file nt/INSTALL.  For the Mac, see the file
-mac/INSTALL.)
+see msdos/INSTALL.  For Windows 9X, Windows ME, Windows NT, Windows
+2000, Windows XP/2003, and Windows Vista/2008, see the file
+nt/INSTALL.  For GNUstep and Mac OS X, see nextstep/INSTALL.)
 
 1) Make sure your system has enough swapping space allocated to handle
 a program whose pure code is 1.5 MB and whose data area is at
@@ -269,11 +299,6 @@ If `--with-x-toolkit=gtk' is specified, you can tell configure where
 to search for GTK by specifying `--with-pkg-config-prog=PATH' where
 PATH is the pathname to pkg-config.  Note that GTK version 2.4 or
 newer is required for Emacs.
-
-The `--with-gcc' option specifies that the build process should
-compile Emacs using GCC.  If you don't want to use GCC, specify
-`--with-gcc=no'.  If you omit this option, `configure' will search
-for GCC in your path, and use it if present.
 
 The Emacs mail reader RMAIL is configured to be able to read mail from
 a POP3 server by default.  Versions of the POP protocol older than
@@ -369,7 +394,7 @@ before running `configure'.  CPP is the command which invokes the
 preprocessor, CPPFLAGS lists the options passed to it, CFLAGS are
 compilation options, LDFLAGS are options used when linking, LIBS are
 libraries to link against, and CC is the command which invokes the
-compiler.
+compiler.  By default, gcc is used if available.
 
 Here's an example of a `configure' invocation, assuming a Bourne-like
 shell such as Bash, which uses these variables:
@@ -773,146 +798,13 @@ PROBLEMS
 
 See the file PROBLEMS in etc subdirectory for a list of various
 problems sometimes encountered, and what to do about them.
-
-
-Installation on MSDOG (a.k.a. MSDOS)
-
-To install on MSDOG, you need to have the GNU C compiler for MSDOG
-(also known as djgpp), GNU Make, rm, mv, and sed.  See the remarks in
-config.bat for more information about locations and versions.  The
-file etc/FAQ includes pointers to Internet sites where you can find
-the necessary utilities; search for "MS-DOS".  The configuration step
-(see below) will test for these utilities and will refuse to continue
-if any of them isn't found.
-
-Recompiling Lisp files in the `lisp' subdirectory using the various
-targets in the lisp/Makefile file requires additional utilities:
-`find' and `xargs' (from Findutils), `touch' (from Fileutils) GNU
-`echo' and `test' (from Sh-utils), `tr, `sort', and `uniq' (from
-Textutils), and a port of Bash.  However, you should not normally need
-to run lisp/Makefile, as all the Lisp files are distributed in
-byte-compiled form as well.
-
-If you are building the MSDOG version of Emacs on an MSDOG-like system
-which supports long file names (e.g. Windows 95), you need to make
-sure that long file names are handled consistently both when you
-unpack the distribution and compile it.  If you intend to compile with
-DJGPP v2.0 or later, and long file names support is enabled (LFN=y in
-the environment), you need to unpack Emacs distribution in a way that
-doesn't truncate the original long filenames to the DOS 8.3 namespace;
-the easiest way to do this is to use djtar program which comes with
-DJGPP, since it will note the LFN setting and behave accordingly.
-DJGPP v1 doesn't support long filenames, so you must unpack Emacs with
-a program that truncates the filenames to 8.3 naming as it extracts
-files; again, using djtar after setting LFN=n is the recommended way.
-You can build Emacs with LFN=n even if you use DJGPP v2, if some of
-your tools don't support long file names: just ensure that LFN is set
-to `n' during both unpacking and compiling.
-
-(By the time you read this, you have already unpacked the Emacs
-distribution, but if the explanations above imply that you should have
-done it differently, it's safer to delete the directory tree created
-by the unpacking program and unpack Emacs again, than to risk running
-into problems during the build process.)
-
-It is important to understand that the runtime support of long file
-names by the Emacs binary is NOT affected by the LFN setting during
-compilation; Emacs compiled with DJGPP v2.0 or later will always
-support long file names on Windows 9X no matter what was the setting
-of LFN at compile time.  However, if you compiled with LFN disabled
-and want to enable LFN support after Emacs was already built, you need
-to make sure that the support files in the lisp, etc and info
-directories are called by their original long names as found in the
-distribution.  You can do this either by renaming the files manually,
-or by extracting them from the original distribution archive with
-djtar after you set LFN=y in the environment.
-
-To unpack Emacs with djtar, type this command:
-
-    djtar -x emacs.tgz
-
-(This assumes that the Emacs distribution is called `emacs.tgz' on
-your system.)
-
-If you want to print international characters, install the intlfonts
-distribution.  For this, create a directory called `fonts' under the
-Emacs top-level directory (usually called `emacs-XX.YY') created by
-unpacking emacs.tgz, chdir into the directory emacs-XX.YY/fonts, and
-type this:
-
-    djtar -x intlfonts.tgz
-
-When unpacking is done, a directory called `emacs-XX.YY' will be
-created, where XX.YY is the Emacs version.  To build and install
-Emacs, chdir to that directory and type these commands:
-
-    config msdos
-    make install
-
-Running "config msdos" checks for several programs that are required
-to configure and build Emacs; if one of those programs is not found,
-CONFIG.BAT stops and prints an error message.  If you have DJGPP
-version 2.0 or 2.01, it will complain about a program called
-DJECHO.EXE.  These old versions of DJGPP shipped that program under
-the name ECHO.EXE, so you can simply copy ECHO.EXE to DJECHO.EXE and
-rerun CONFIG.BAT.  If you have neither ECHO.EXE nor DJECHO.EXE, you
-should be able to find them in your djdevNNN.zip archive (where NNN is
-the DJGPP version number).
-
-On Windows NT or Windows 2000, running "config msdos" might print an
-error message like "VDM has been already loaded".  This is because
-those systems have a program called `redir.exe' which is incompatible
-with a program by the same name supplied with DJGPP, which is used by
-config.bat.  To resolve this, move the DJGPP's `bin' subdirectory to
-the front of your PATH environment variable.
-
-To install the international fonts, chdir to the intlfonts-X.Y
-directory created when you unpacked the intlfonts distribution (X.Y is
-the version number of the fonts' distribution), and type the following
-command:
-
-    make bdf INSTALLDIR=..
-
-After Make finishes, you may remove the directory intlfonts-X.Y; the
-fonts are installed into the fonts/bdf subdirectory of the top-level
-Emacs directory, and that is where Emacs will look for them by
-default.
-
-Building Emacs creates executable files in the src and lib-src
-directories.  Installing Emacs on MSDOS moves these executables to a
-sibling directory called bin.  For example, if you build in directory
-/emacs, installing moves the executables from /emacs/src and
-/emacs/lib-src to the directory /emacs/bin, so you can then delete the
-subdirectories /emacs/src and /emacs/lib-src if you wish.  The only
-subdirectories you need to keep are bin, lisp, etc and info.  (If you
-installed intlfonts, keep the fonts directory and all its
-subdirectories as well.)  The bin subdirectory should be added to your
-PATH.  The msdos subdirectory includes a PIF and an icon file for
-Emacs which you might find useful if you run Emacs under MS Windows.
-
-Emacs on MSDOS finds the lisp, etc and info directories by looking in
-../lisp, ../etc and ../info, starting from the directory where the
-Emacs executable was run from.  You can override this by setting the
-environment variables EMACSDATA (for the location of `etc' directory),
-EMACSLOADPATH (for the location of `lisp' directory) and INFOPATH (for
-the location of the `info' directory).
-
-MSDOG is a not a multitasking operating system, so Emacs features such
-as asynchronous subprocesses that depend on multitasking will not
-work.  Synchronous subprocesses do work.
-
-Version 2.0 of djgpp has two bugs that affect Emacs.  We've included
-corrected versions of two files from djgpp in the msdos subdirectory:
-is_exec.c and sigaction.c.  To work around the bugs, compile these
-files and link them into temacs.  Djgpp versions 2.01 and later have
-these bugs fixed, so upgrade if you can before building Emacs.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -920,6 +812,4 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to the
-Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.

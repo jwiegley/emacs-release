@@ -1,13 +1,13 @@
 /* Functions taken directly from X sources for use with the Microsoft W32 API.
    Copyright (C) 1989, 1992, 1993, 1994, 1995, 1999, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 #include <signal.h>
@@ -48,12 +46,12 @@ init_crit ()
      when the input queue is empty, so make it a manual reset event. */
   keyboard_handle = input_available = CreateEvent (NULL, TRUE, FALSE, NULL);
 
-  /* interrupt_handle is signalled when quit (C-g) is detected, so that
+  /* interrupt_handle is signaled when quit (C-g) is detected, so that
      blocking system calls can be interrupted.  We make it a manual
      reset event, so that if we should ever have multiple threads
      performing system calls, they will all be interrupted (I'm guessing
      that would the right response).  Note that we use PulseEvent to
-     signal this event, so that it never remains signalled.  */
+     signal this event, so that it never remains signaled.  */
   interrupt_handle = CreateEvent (NULL, TRUE, FALSE, NULL);
 }
 
@@ -77,7 +75,7 @@ delete_crit ()
 void
 signal_quit ()
 {
-  /* Make sure this event never remains signalled; if the main thread
+  /* Make sure this event never remains signaled; if the main thread
      isn't in a blocking call, then this should do nothing.  */
   PulseEvent (interrupt_handle);
 }
@@ -192,6 +190,47 @@ get_next_msg (lpmsg, bWait)
       }
 
       nQueue--;
+      /* Consolidate WM_PAINT messages to optimise redrawing.  */
+      if (lpmsg->msg.message == WM_PAINT && nQueue)
+        {
+          int_msg * lpCur = lpHead;
+          int_msg * lpPrev = NULL;
+          int_msg * lpNext = NULL;
+
+          while (lpCur && nQueue)
+            {
+              lpNext = lpCur->lpNext;
+              if (lpCur->w32msg.msg.message == WM_PAINT)
+                {
+                  /* Remove this message from the queue.  */
+                  if (lpPrev)
+                    lpPrev->lpNext = lpNext;
+                  else
+                    lpHead = lpNext;
+
+                  if (lpCur == lpTail)
+                    lpTail = lpPrev;
+
+                  /* Adjust clip rectangle to cover both.  */
+                  if (!UnionRect (&(lpmsg->rect), &(lpmsg->rect),
+                                  &(lpCur->w32msg.rect)))
+                    {
+                      SetRectEmpty(&(lpmsg->rect));
+                    }
+
+                  myfree (lpCur);
+
+                  nQueue--;
+
+                  lpCur = lpNext;
+                }
+              else
+                {
+                  lpPrev = lpCur;
+                  lpCur = lpNext;
+                }
+            }
+        }
 
       bRet = TRUE;
     }

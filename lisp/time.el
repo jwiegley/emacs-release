@@ -1,16 +1,16 @@
 ;;; time.el --- display time, load and mail indicator in mode line of Emacs -*-coding: utf-8 -*-
 
 ;; Copyright (C) 1985, 1986, 1987, 1993, 1994, 1996, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,14 +18,15 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;; Facilities to display current time/date and a new-mail indicator
-;; in the Emacs mode line.  The single entry point is `display-time'.
+;; in the Emacs mode line.  The entry point is `display-time'.
+
+;; Display time world in a buffer, the entry point is
+;; `display-time-world'.
 
 ;;; Code:
 
@@ -36,7 +37,7 @@
 
 
 (defcustom display-time-mail-file nil
-  "*File name of mail inbox file, for indicating existence of new mail.
+  "File name of mail inbox file, for indicating existence of new mail.
 Non-nil and not a string means don't check for mail; nil means use
 default, which is system-dependent, and is the same as used by Rmail."
   :type '(choice (const :tag "None" none)
@@ -45,7 +46,7 @@ default, which is system-dependent, and is the same as used by Rmail."
   :group 'display-time)
 
 (defcustom display-time-mail-directory nil
-  "*Name of mail inbox directory, for indicating existence of new mail.
+  "Name of mail inbox directory, for indicating existence of new mail.
 Any nonempty regular file in the directory is regarded as newly arrived mail.
 If nil, do not check a directory for arriving mail."
   :type '(choice (const :tag "None" nil)
@@ -53,7 +54,7 @@ If nil, do not check a directory for arriving mail."
   :group 'display-time)
 
 (defcustom display-time-mail-function nil
-  "*Function to call, for indicating existence of new mail.
+  "Function to call, for indicating existence of new mail.
 If nil, that means use the default method: check that the file
 specified by `display-time-mail-file' is nonempty or that the
 directory `display-time-mail-directory' contains nonempty files."
@@ -62,9 +63,14 @@ directory `display-time-mail-directory' contains nonempty files."
   :group 'display-time)
 
 (defcustom display-time-default-load-average 0
-  "*Which load average value will be shown in the mode line.
+  "Which load average value will be shown in the mode line.
 Almost every system can provide values of load for past 1 minute, past 5 or
-past 15 minutes.  The default is to display 1 minute load average."
+past 15 minutes.  The default is to display 1 minute load average.
+The value can be one of:
+
+  0   => 1 minute load
+  1   => 5 minutes load
+  2   => 15 minutes load"
   :type '(choice (const :tag "1 minute load" 0)
 		 (const :tag "5 minutes load" 1)
 		 (const :tag "15 minutes load" 2)
@@ -75,7 +81,7 @@ past 15 minutes.  The default is to display 1 minute load average."
   "Load average currently being shown in mode line.")
 
 (defcustom display-time-load-average-threshold 0.1
-  "*Load-average values below this value won't be shown in the mode line."
+  "Load-average values below this value won't be shown in the mode line."
   :type 'number
   :group 'display-time)
 
@@ -88,12 +94,12 @@ past 15 minutes.  The default is to display 1 minute load average."
 (defvar display-time-timer nil)
 
 (defcustom display-time-interval 60
-  "*Seconds between updates of time in the mode line."
+  "Seconds between updates of time in the mode line."
   :type 'integer
   :group 'display-time)
 
 (defcustom display-time-24hr-format nil
-  "*Non-nil indicates time should be displayed as hh:mm, 0 <= hh <= 23.
+  "Non-nil indicates time should be displayed as hh:mm, 0 <= hh <= 23.
 A value of nil means 1 <= hh <= 12, and an AM/PM suffix is used."
   :type 'boolean
   :group 'display-time)
@@ -101,13 +107,102 @@ A value of nil means 1 <= hh <= 12, and an AM/PM suffix is used."
 (defvar display-time-string nil)
 
 (defcustom display-time-hook nil
-  "*List of functions to be called when the time is updated on the mode line."
+  "List of functions to be called when the time is updated on the mode line."
   :type 'hook
   :group 'display-time)
 
 (defvar display-time-server-down-time nil
    "Time when mail file's file system was recorded to be down.
 If that file system seems to be up, the value is nil.")
+
+(defcustom zoneinfo-style-world-list
+  '(("America/Los_Angeles" "Seattle")
+    ("America/New_York" "New York")
+    ("Europe/London" "London")
+    ("Europe/Paris" "Paris")
+    ("Asia/Calcutta" "Bangalore")
+    ("Asia/Tokyo" "Tokyo"))
+  "Alist of zoneinfo-style time zones and places for `display-time-world'.
+Each element has the form (TIMEZONE LABEL).
+TIMEZONE should be a string of the form AREA/LOCATION, where AREA is
+the name of a region -- a continent or ocean, and LOCATION is the name
+of a specific location, e.g., a city, within that region.
+LABEL is a string to display as the label of that TIMEZONE's time."
+  :group 'display-time
+  :type '(repeat (list string string))
+  :version "23.1")
+
+(defcustom legacy-style-world-list
+  '(("PST8PDT" "Seattle")
+    ("EST5EDT" "New York")
+    ("GMT0BST" "London")
+    ("CET-1CDT" "Paris")
+    ("IST-5:30" "Bangalore")
+    ("JST-9" "Tokyo"))
+  "Alist of traditional-style time zones and places for `display-time-world'.
+Each element has the form (TIMEZONE LABEL).
+TIMEZONE should be a string of the form:
+
+     std[+|-]offset[dst[offset][,date[/time],date[/time]]]
+
+See the documentation of the TZ environment variable on your system,
+for more details about the format of TIMEZONE.
+LABEL is a string to display as the label of that TIMEZONE's time."
+  :group 'display-time
+  :type '(repeat (list string string))
+  :version "23.1")
+
+(defcustom display-time-world-list
+  ;; Determine if zoneinfo style timezones are supported by testing that
+  ;; America/New York and Europe/London return different timezones.
+  (let (gmt nyt)
+    (set-time-zone-rule "America/New York")
+    (setq nyt (format-time-string "%z"))
+    (set-time-zone-rule "Europe/London")
+    (setq gmt (format-time-string "%z"))
+    (set-time-zone-rule nil)
+    (if (string-equal nyt gmt)
+        legacy-style-world-list
+      zoneinfo-style-world-list))
+  "Alist of time zones and places for `display-time-world' to display.
+Each element has the form (TIMEZONE LABEL).
+TIMEZONE should be in the format supported by `set-time-zone-rule' on
+your system.  See the documentation of `zoneinfo-style-world-list' and
+\`legacy-style-world-list' for two widely used formats.
+LABEL is a string to display as the label of that TIMEZONE's time."
+  :group 'display-time
+  :type '(repeat (list string string))
+  :version "23.1")
+
+(defcustom display-time-world-time-format "%A %d %B %R %Z"
+  "Format of the time displayed, see `format-time-string'."
+  :group 'display-time
+  :type 'string
+  :version "23.1")
+
+(defcustom display-time-world-buffer-name "*wclock*"
+  "Name of the wclock buffer."
+  :group 'display-time
+  :type 'string
+  :version "23.1")
+
+(defcustom display-time-world-timer-enable t
+  "If non-nil, a timer will update the world clock."
+  :group 'display-time
+  :type 'boolean
+  :version "23.1")
+
+(defcustom display-time-world-timer-second 60
+  "Interval in seconds for updating the world clock."
+  :group 'display-time
+  :type 'integer
+  :version "23.1")
+
+(defvar display-time-world-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "q" 'kill-this-buffer)
+    map)
+  "Keymap of Display Time World mode")
 
 ;;;###autoload
 (defun display-time ()
@@ -161,7 +256,7 @@ This can use the Unicode letter character if you can display it."
 		 string))
 
 (defcustom display-time-format nil
-  "*String specifying format for displaying the time in the mode line.
+  "String specifying format for displaying the time in the mode line.
 See the function `format-time-string' for an explanation of
 how to write this string.  If this is nil, the defaults
 depend on `display-time-day-and-date' and `display-time-24hr-format'."
@@ -204,7 +299,7 @@ depend on `display-time-day-and-date' and `display-time-24hr-format'."
 	  'local-map (make-mode-line-mouse-map 'mouse-2
 					       read-mail-command)))
       ""))
-  "*List of expressions governing display of the time in the mode line.
+  "List of expressions governing display of the time in the mode line.
 For most purposes, you can control the time format using `display-time-format'
 which is a more standard interface.
 
@@ -393,7 +488,96 @@ This runs the normal hook `display-time-hook' after each update."
     (remove-hook 'rmail-after-get-new-mail-hook
 		 'display-time-event-handler)))
 
+
+(defun display-time-world-mode ()
+  "Major mode for buffer that displays times in various time zones.
+See `display-time-world'."
+  (interactive)
+  (kill-all-local-variables)
+  (setq
+   major-mode 'display-time-world-mode
+   mode-name "World clock")
+  (use-local-map display-time-world-mode-map))
+
+(defun display-time-world-display (alist)
+  "Replace current buffer text with times in various zones, based on ALIST."
+  (let ((inhibit-read-only t)
+	(buffer-undo-list t))
+    (erase-buffer)
+    (let ((max-width 0)
+	  (result ()))
+      (unwind-protect
+	  (dolist (zone alist)
+	    (let* ((label (cadr zone))
+		   (width (string-width label)))
+	      (set-time-zone-rule (car zone))
+	      (setq result
+		    (append result
+			    (list
+			     label width
+			     (format-time-string display-time-world-time-format))))
+	      (when (> width max-width)
+		(setq max-width width))))
+	(set-time-zone-rule nil))
+      (while result
+	(insert (pop result)
+		(make-string (1+ (- max-width (pop result))) ?\s)
+		(pop result) "\n")))
+    (delete-backward-char 1)))
+
+;;;###autoload
+(defun display-time-world ()
+  "Enable updating display of times in various time zones.
+`display-time-world-list' specifies the zones.
+To turn off the world time display, go to that window and type `q'."
+  (interactive)
+  (when (and display-time-world-timer-enable
+             (not (get-buffer display-time-world-buffer-name)))
+    (run-at-time t display-time-world-timer-second 'display-time-world-timer))
+  (with-current-buffer (get-buffer-create display-time-world-buffer-name)
+    (display-time-world-display display-time-world-list))
+  (pop-to-buffer display-time-world-buffer-name)
+  (fit-window-to-buffer)
+  (display-time-world-mode))
+
+(defun display-time-world-timer ()
+  (if (get-buffer display-time-world-buffer-name)
+      (with-current-buffer (get-buffer display-time-world-buffer-name)
+        (display-time-world-display display-time-world-list))
+    ;; cancel timer
+    (let ((list timer-list))
+      (while list
+        (let ((elt (pop list)))
+          (when (equal (symbol-name (aref elt 5)) "display-time-world-timer")
+            (cancel-timer elt)))))))
+
+;;;###autoload
+(defun emacs-uptime (&optional format)
+  "Return a string giving the uptime of this instance of Emacs.
+FORMAT is a string to format the result, using `format-seconds'.
+For example, the Unix uptime command format is \"%D, %z%2h:%.2m\"."
+  (interactive)
+  (let ((str
+         (format-seconds (or format "%Y, %D, %H, %M, %z%S")
+                         (time-to-seconds
+                          (time-subtract (current-time) before-init-time)))))
+    (if (interactive-p)
+        (message "%s" str)
+      str)))
+
+;;;###autoload
+(defun emacs-init-time ()
+  "Return a string giving the duration of the Emacs initialization."
+  (interactive)
+  (let ((str
+	 (format "%.1f seconds"
+		 (time-to-seconds
+		  (time-subtract after-init-time before-init-time)))))
+    (if (interactive-p)
+        (message "%s" str)
+      str)))
+
 (provide 'time)
 
-;;; arch-tag: b9c1623f-b5cb-48e4-b650-482a4d23c5a6
+;; arch-tag: b9c1623f-b5cb-48e4-b650-482a4d23c5a6
 ;;; time.el ends here

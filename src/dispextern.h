@@ -1,14 +1,14 @@
 /* Interface definitions for display code.
    Copyright (C) 1985, 1993, 1994, 1997, 1998, 1999, 2000, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007, 2008
+                 2003, 2004, 2005, 2006, 2007, 2008, 2009
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* New redisplay written by Gerd Moellmann <gerd@gnu.org>.  */
 
@@ -63,10 +61,10 @@ typedef XImage *XImagePtr;
 typedef HDC XImagePtr_or_DC;
 #endif
 
-#ifdef MAC_OS
-#include "macgui.h"
-typedef struct mac_display_info Display_Info;
-/* Mac equivalent of XImage.  */
+#ifdef HAVE_NS
+#include "nsgui.h"
+/* following typedef needed to accomodate the MSDOS port, believe it or not */
+typedef struct ns_display_info Display_Info;
 typedef Pixmap XImagePtr;
 typedef XImagePtr XImagePtr_or_DC;
 #endif
@@ -276,7 +274,7 @@ enum glyph_type
   /* Glyph describes a character.  */
   CHAR_GLYPH,
 
-  /* Glyph describes a composition sequence.  */
+  /* Glyph describes a static composition.  */
   COMPOSITE_GLYPH,
 
   /* Glyph describes an image.  */
@@ -351,13 +349,16 @@ struct glyph
      glyphs above or below it.  */
   unsigned overlaps_vertically_p : 1;
 
-  /* 1 means glyph is a padding glyph.  Padding glyphs are used for
-     characters whose visual shape consists of more than one glyph
-     (e.g. Asian characters).  All but the first glyph of such a glyph
-     sequence have the padding_p flag set.  Only used for terminal
-     frames, and there only to minimize code changes.  A better way
-     would probably be to use the width field of glyphs to express
-     padding. */
+  /* For terminal frames, 1 means glyph is a padding glyph.  Padding
+     glyphs are used for characters whose visual shape consists of
+     more than one glyph (e.g. Asian characters).  All but the first
+     glyph of such a glyph sequence have the padding_p flag set.  This
+     flag is used only to minimize code changes.  A better way would
+     probably be to use the width field of glyphs to express padding.
+
+     For graphic frames, 1 means the pixel width of the glyph in a
+     font is 0, but 1-pixel is padded on displaying for correct cursor
+     displaying.  The member `pixel_width' above is set to 1.  */
   unsigned padding_p : 1;
 
   /* 1 means the actual glyph is not available, draw a box instead.
@@ -365,7 +366,11 @@ struct glyph
      doesn't have a glyph in a font.  */
   unsigned glyph_not_available_p : 1;
 
-#define FACE_ID_BITS	21
+ 
+  /* Non-zero means don't display cursor here.  */
+  unsigned avoid_cursor_p : 1;
+
+#define FACE_ID_BITS	20
 
   /* Face of the glyph.  This is a realized face ID,
      an index in the face cache of the frame.  */
@@ -385,8 +390,17 @@ struct glyph
     /* Character code for character glyphs (type == CHAR_GLYPH).  */
     unsigned ch;
 
-    /* Composition ID for composition glyphs (type == COMPOSITION_GLYPH)  */
-    unsigned cmp_id;
+    /* Sub-structures for type == COMPOSITION_GLYPH.  */
+    struct
+    {
+      /* Flag to tell if the composition is automatic or not.  */
+      unsigned automatic : 1;
+      /* ID of the composition.  */
+      unsigned id    : 23;
+      /* Start and end indices of glyphs of the composition.  */
+      unsigned from : 4;
+      unsigned to : 4;
+    } cmp;
 
     /* Image ID for image glyphs (type == IMAGE_GLYPH).  */
     unsigned img_id;
@@ -415,7 +429,7 @@ struct glyph
 /* Is GLYPH a space?  */
 
 #define CHAR_GLYPH_SPACE_P(GLYPH) \
-     (GLYPH_FROM_CHAR_GLYPH ((GLYPH)) == SPACEGLYPH)
+  ((GLYPH).u.ch == SPACEGLYPH && (GLYPH).face_id == DEFAULT_FACE_ID)
 
 /* Are glyph slices of glyphs *X and *Y equal */
 
@@ -462,18 +476,25 @@ struct glyph
 
 #define SET_CHAR_GLYPH_FROM_GLYPH(GLYPH, FROM)			\
      SET_CHAR_GLYPH ((GLYPH),					\
-	 	     FAST_GLYPH_CHAR ((FROM)),			\
-		     FAST_GLYPH_FACE ((FROM)),			\
+	 	     GLYPH_CHAR ((FROM)),			\
+		     GLYPH_FACE ((FROM)),			\
 		     0)
 
 /* Construct a glyph code from a character glyph GLYPH.  If the
    character is multibyte, return -1 as we can't use glyph table for a
    multibyte character.  */
 
-#define GLYPH_FROM_CHAR_GLYPH(GLYPH)				\
-  ((GLYPH).u.ch < 256						\
-   ? ((GLYPH).u.ch | ((GLYPH).face_id << CHARACTERBITS))	\
-   : -1)
+#define SET_GLYPH_FROM_CHAR_GLYPH(G, GLYPH)			\
+  do								\
+    {								\
+      if ((GLYPH).u.ch < 256)					\
+	SET_GLYPH ((G), (GLYPH).u.ch, ((GLYPH).face_id));	\
+      else							\
+	SET_GLYPH ((G), -1, 0);					\
+    }								\
+  while (0)
+
+#define GLYPH_INVALID_P(GLYPH) (GLYPH_CHAR (GLYPH) < 0)
 
 /* Is GLYPH a padding glyph?  */
 
@@ -681,9 +702,9 @@ struct glyph_row
   short used[LAST_AREA];
 
   /* Window-relative x and y-position of the top-left corner of this
-     row.  If y < 0, this means that abs (y) pixels of the row are
+     row.  If y < 0, this means that eabs (y) pixels of the row are
      invisible because it is partially visible at the top of a window.
-     If x < 0, this means that abs (x) pixels of the first glyph of
+     If x < 0, this means that eabs (x) pixels of the first glyph of
      the text area of the row are invisible because the glyph is
      partially visible.  */
   int x, y;
@@ -853,6 +874,12 @@ struct glyph_row
 
   /* Continuation lines width at the start of the row.  */
   int continuation_lines_width;
+
+#ifdef HAVE_WINDOW_SYSTEM
+  /* Non-NULL means the current clipping area.  This is temporarily
+     set while exposing a region.  Coordinates are frame-relative.  */
+  XRectangle *clip;
+#endif
 };
 
 
@@ -1030,13 +1057,8 @@ extern int fonts_changed_p;
 
 extern struct glyph space_glyph;
 
-/* Frame being updated by update_window/update_frame.  */
-
-extern struct frame *updating_frame;
-
 /* Window being updated by update_window.  This is non-null as long as
-   update_window has not finished, and null otherwise.  It's role is
-   analogous to updating_frame.  */
+   update_window has not finished, and null otherwise.  */
 
 extern struct window *updated_window;
 
@@ -1150,19 +1172,17 @@ struct glyph_string
   struct face *face;
 
   /* Font in which this string is to be drawn.  */
-  XFontStruct *font;
+  struct font *font;
 
-  /* Font info for this string.  */
-  struct font_info *font_info;
-
-  /* Non-null means this string describes (part of) a composition.
-     All characters from char2b are drawn composed.  */
+  /* Non-null means this string describes (part of) a static
+     composition.  */
   struct composition *cmp;
 
-  /* Index of this glyph string's first character in the glyph
-     definition of CMP.  If this is zero, this glyph string describes
-     the first character of a composition.  */
-  int gidx;
+  /* If not negative, this string describes a compos.  */
+  int cmp_id;
+
+  /* Start and end glyph indices in a glyph-string.  */
+  int cmp_from, cmp_to;
 
   /* 1 means this glyph strings face has to be drawn to the right end
      of the window's drawing area.  */
@@ -1196,8 +1216,13 @@ struct glyph_string
      respectively.  */
   unsigned for_overlaps : 3;
 
+  /* 1 means that all glyphs in this glyph string has the flag
+     padding_p set, and thus must be drawn one by one to have 1-pixel
+     width even though the logical width in the font is zero.  */
+  unsigned padding_p : 1;
+
   /* The GC to use for drawing this glyph string.  */
-#if defined(HAVE_X_WINDOWS) || defined(MAC_OS)
+#if defined(HAVE_X_WINDOWS)
   GC gc;
 #endif
 #if defined(HAVE_NTGUI)
@@ -1220,6 +1245,16 @@ struct glyph_string
      left edge of *clip_head, and ends with the right edge of
      *clip_tail, not including their overhangs.  */
   struct glyph_string *clip_head, *clip_tail;
+
+  /* The current clipping areas.  */
+  NativeRectangle clip[2];
+
+  /* Number of clipping areas. */
+  int num_clips;
+
+  int underline_position;
+
+  int underline_thickness;
 
   struct glyph_string *next, *prev;
 };
@@ -1356,7 +1391,7 @@ struct glyph_string
 	DESCENT = FONT->descent
 	HEIGHT = FONT_HEIGHT (FONT)
 	F_DESCENT = (FRAME_FONT (F)->descent
-		     - F->output_data.x->baseline_offset)
+		     - F->terminal->output_data.x->baseline_offset)
 	F_HEIGHT = FRAME_LINE_HEIGHT (F)
 */
 
@@ -1377,6 +1412,7 @@ struct glyph_string
 enum lface_attribute_index
 {
   LFACE_FAMILY_INDEX = 1,
+  LFACE_FOUNDRY_INDEX,
   LFACE_SWIDTH_INDEX,
   LFACE_HEIGHT_INDEX,
   LFACE_WEIGHT_INDEX,
@@ -1391,7 +1427,7 @@ enum lface_attribute_index
   LFACE_BOX_INDEX,
   LFACE_FONT_INDEX,
   LFACE_INHERIT_INDEX,
-  LFACE_AVGWIDTH_INDEX,
+  LFACE_FONTSET_INDEX,
   LFACE_VECTOR_SIZE
 };
 
@@ -1433,12 +1469,6 @@ struct face
      drawing the characters in this face.  */
   GC gc;
 
-  /* Font used for this face, or null if the font could not be loaded
-     for some reason.  This points to a `font' slot of a struct
-     font_info, and we should not call XFreeFont on it because the
-     font may still be used somewhere else.  */
-  XFontStruct *font;
-
   /* Background stipple or bitmap used for this face.  This is
      an id as returned from load_pixmap.  */
   int stipple;
@@ -1466,20 +1496,10 @@ struct face
   unsigned long strike_through_color;
   unsigned long box_color;
 
-  /* The font's name.  This points to a `name' of a font_info, and it
-     must not be freed.  */
-  char *font_name;
+  struct font *font;
 
-  /* Font info ID for this face's font.  An ID is stored here because
-     pointers to font_info structures may change.  The reason is that
-     they are pointers into a font table vector that is itself
-     reallocated.  */
-  int font_info_id;
-
-  /* Fontset ID if this face uses a fontset, or -1.  This is only >= 0
-     if the face was realized for a composition sequence.
-     Otherwise, a specific font is loaded from the set of fonts
-     specified by the fontset given by the family attribute of the face.  */
+  /* Fontset ID if for this face's fontset.  Non-ASCII faces derived
+     from the same ASCII face have the same fontset.  */
   int fontset;
 
   /* Pixmap width and height.  */
@@ -1503,20 +1523,6 @@ struct face
   /* If `box' above specifies a 3D type, 1 means use box_color for
      drawing shadows.  */
   unsigned use_box_color_for_shadows_p : 1;
-
-  /* The Lisp face attributes this face realizes.  All attributes
-     in this vector are non-nil.  */
-  Lisp_Object lface[LFACE_VECTOR_SIZE];
-
-  /* The hash value of this face.  */
-  unsigned hash;
-
-  /* The charset for which this face was realized if it was realized
-     for use in multibyte text.  If fontset >= 0, this is the charset
-     of the first character of the composition sequence.  A value of
-     charset < 0 means the face was realized for use in unibyte text
-     where the idea of Emacs charsets isn't applicable.  */
-  int charset;
 
   /* Non-zero if text in this face should be underlined, overlined,
      strike-through or have a box drawn around it.  */
@@ -1560,12 +1566,30 @@ struct face
   /* If non-zero, use overstrike (to simulate bold-face).  */
   unsigned overstrike : 1;
 
+/* NOTE: this is not used yet, but eventually this impl should be done
+         similarly to overstrike */
+#ifdef HAVE_NS
+  /* If non-zero, use geometric rotation (to simulate italic).  */
+  unsigned synth_ital : 1;
+#endif
+
+  /* The Lisp face attributes this face realizes.  All attributes
+     in this vector are non-nil.  */
+  Lisp_Object lface[LFACE_VECTOR_SIZE];
+
+  /* The hash value of this face.  */
+  unsigned hash;
+
   /* Next and previous face in hash collision list of face cache.  */
   struct face *next, *prev;
 
-  /* If this face is for ASCII characters, this points this face
-     itself.  Otherwise, this points a face for ASCII characters.  */
+  /* If this face is an ASCII face, this points to this face itself.
+     Otherwise, this points to an ASCII face that has the same
+     attributes except the font.  */
   struct face *ascii_face;
+
+  /* Extra member that a font-driver uses privately.  */
+  void *extra;
 };
 
 
@@ -1653,7 +1677,7 @@ struct face_cache
 /* Non-zero if FACE is suitable for displaying character CHAR.  */
 
 #define FACE_SUITABLE_FOR_CHAR_P(FACE, CHAR)	\
-  (SINGLE_BYTE_CHAR_P (CHAR)			\
+  (ASCII_CHAR_P (CHAR)				\
    ? (FACE) == (FACE)->ascii_face		\
    : face_suitable_for_char_p ((FACE), (CHAR)))
 
@@ -1661,15 +1685,15 @@ struct face_cache
    with id ID but is suitable for displaying character CHAR.
    This macro is only meaningful for multibyte character CHAR.  */
 
-#define FACE_FOR_CHAR(F, FACE, CHAR)	\
-  (SINGLE_BYTE_CHAR_P (CHAR)		\
-   ? (FACE)->ascii_face->id		\
-   : face_for_char ((F), (FACE), (CHAR)))
+#define FACE_FOR_CHAR(F, FACE, CHAR, POS, OBJECT)	\
+  (ASCII_CHAR_P (CHAR)					\
+   ? (FACE)->ascii_face->id				\
+   : face_for_char ((F), (FACE), (CHAR), (POS), (OBJECT)))
 
 #else /* not HAVE_WINDOW_SYSTEM */
 
 #define FACE_SUITABLE_FOR_CHAR_P(FACE, CHAR) 1
-#define FACE_FOR_CHAR(F, FACE, CHAR) ((FACE)->id)
+#define FACE_FOR_CHAR(F, FACE, CHAR, POS, OBJECT) ((FACE)->id)
 
 #endif /* not HAVE_WINDOW_SYSTEM */
 
@@ -1760,7 +1784,7 @@ enum display_element_type
   /* A normal character.  */
   IT_CHARACTER,
 
-  /* A composition sequence.  */
+  /* A composition (static and automatic).  */
   IT_COMPOSITION,
 
   /* An image.  */
@@ -1787,6 +1811,7 @@ enum display_element_type
 
 enum prop_idx
 {
+  AUTO_COMPOSED_PROP_IDX,
   FONTIFIED_PROP_IDX,
   FACE_PROP_IDX,
   INVISIBLE_PROP_IDX,
@@ -1800,6 +1825,14 @@ enum prop_idx
   LAST_PROP_IDX
 };
 
+/* An enumerator for the method of wrapping long lines.  */
+
+enum line_wrap_method
+{
+  TRUNCATE,
+  WORD_WRAP,
+  WINDOW_WRAP
+};
 
 struct it_slice
 {
@@ -1815,7 +1848,6 @@ struct it_slice
 enum it_method {
   GET_FROM_BUFFER = 0,
   GET_FROM_DISPLAY_VECTOR,
-  GET_FROM_COMPOSITION,
   GET_FROM_STRING,
   GET_FROM_C_STRING,
   GET_FROM_IMAGE,
@@ -1824,6 +1856,36 @@ enum it_method {
 };
 
 #define IT_STACK_SIZE 4
+
+/* Iterator for composition (both for static and automatic).  */
+struct composition_it
+{
+  /* Next position at which to check the composition.  */
+  EMACS_INT stop_pos;
+  /* ID number of the composition or glyph-string.  If negative, we
+     are not iterating over a composition now.  */
+  int id;
+  /* If non-negative, character that triggers the automatic
+     composition at `stop_pos', and this is an automatic compositoin.
+     If negative, this is a static composition.  This is set to -2
+     temporarily if searching of composition reach a limit or a
+     newline.  */
+  int ch;
+  /* If this an automatic composition, how many characters to look back
+     from the position where a character triggering the composition
+     exists.  */
+  int lookback;
+  /* If non-negative, number of glyphs of the glyph-string.  */
+  int nglyphs;
+  /* Number of characters and bytes of the current grapheme cluster.  */
+  int nchars, nbytes;
+  /* Indices of the glyphs for the current grapheme cluster.  */
+  int from, to;
+  /* Width of the current grapheme cluster in units of pixels on a
+     graphic display and in units of canonical characters on a
+     terminal display.  */
+  int width;
+};
 
 struct it
 {
@@ -1874,6 +1936,9 @@ struct it
   /* When METHOD == next_element_from_display_vector,
      this is 1 if we're doing an ellipsis.  Otherwise meaningless.  */
   unsigned ellipsis_p : 1;
+
+  /* True means cursor shouldn't be displayed here.  */
+  unsigned avoid_cursor_p : 1;
 
   /* Display table in effect or null for none.  */
   struct Lisp_Char_Table *dp;
@@ -1944,6 +2009,7 @@ struct it
     int string_nchars;
     int end_charpos;
     int stop_charpos;
+    struct composition_it cmp_it;
     int face_id;
 
     /* Save values specific to a given method.  */
@@ -1957,8 +2023,6 @@ struct it
       /* method == GET_FROM_COMPOSITION */
       struct {
 	Lisp_Object object;
-	int c, len;
-	int cmp_id, cmp_len;
       } comp;
       /* method == GET_FROM_STRETCH */
       struct {
@@ -1975,11 +2039,13 @@ struct it
     unsigned multibyte_p : 1;
     unsigned string_from_display_prop_p : 1;
     unsigned display_ellipsis_p : 1;
+    unsigned avoid_cursor_p : 1;
+    enum line_wrap_method line_wrap;
 
     /* properties from display property that are reset by another display property. */
+    short voffset;
     Lisp_Object space_width;
     Lisp_Object font_height;
-    short voffset;
   }
   stack[IT_STACK_SIZE];
 
@@ -2003,9 +2069,6 @@ struct it
   /* 1 means control characters are translated into the form `^C'
      where the `^' can be replaced by a display table entry.  */
   unsigned ctl_arrow_p : 1;
-
-  /* 1 means lines are truncated.  */
-  unsigned truncate_lines_p : 1;
 
   /* Non-zero means that the current face has a box.  */
   unsigned face_box_p : 1;
@@ -2042,6 +2105,8 @@ struct it
      descent/ascent (line-height property).  Reset after this glyph.  */
   unsigned constrain_row_ascent_descent_p : 1;
 
+  enum line_wrap_method line_wrap;
+
   /* The ID of the default face to use.  One of DEFAULT_FACE_ID,
      MODE_LINE_FACE_ID, etc, depending on what we are displaying.  */
   int base_face_id;
@@ -2055,9 +2120,9 @@ struct it
      and length in bytes of the composition.  */
   int c, len;
 
-  /* If what == IT_COMPOSITION, identification number and length in
-     chars of a composition.  */
-  int cmp_id, cmp_len;
+  /* If what == IT_COMPOSITION, iterator substructure for the
+     composition.  */
+  struct composition_it cmp_it;
 
   /* The character to display, possibly translated to multibyte
      if unibyte_display_via_language_environment is set.  This
@@ -2076,6 +2141,9 @@ struct it
   /* Computed from the value of the `raise' property.  */
   short voffset;
 
+  /* Number of columns per \t.  */
+  short tab_width;
+
   /* Value of the `height' property, if any; nil if none.  */
   Lisp_Object font_height;
 
@@ -2085,9 +2153,6 @@ struct it
      during mode-line update.  Position is a position in object.  */
   Lisp_Object object;
   struct text_pos position;
-
-  /* Number of columns per \t.  */
-  short tab_width;
 
   /* Width in pixels of truncation and continuation glyphs.  */
   short truncation_pixel_width, continuation_pixel_width;
@@ -2196,16 +2261,16 @@ struct it
 /* Call produce_glyphs or produce_glyphs_hook, if set.  Shortcut to
    avoid the function call overhead.  */
 
-#define PRODUCE_GLYPHS(IT) 			\
-     do {					\
-       extern int inhibit_free_realized_faces;	\
-       if (rif != NULL)				\
-	 rif->produce_glyphs ((IT));		\
-       else					\
-	 produce_glyphs ((IT));			\
-       if ((IT)->glyph_row != NULL)		\
-	 inhibit_free_realized_faces = 1;	\
-     } while (0)
+#define PRODUCE_GLYPHS(IT)                              \
+  do {                                                  \
+    extern int inhibit_free_realized_faces;             \
+    if (FRAME_RIF ((IT)->f) != NULL)                    \
+      FRAME_RIF ((IT)->f)->produce_glyphs ((IT));       \
+    else                                                \
+      produce_glyphs ((IT));                            \
+    if ((IT)->glyph_row != NULL)                        \
+      inhibit_free_realized_faces = 1;                  \
+  } while (0)
 
 /* Bit-flags indicating what operation move_it_to should perform.  */
 
@@ -2330,17 +2395,6 @@ struct redisplay_interface
 				    int h, int wd));
   void (*destroy_fringe_bitmap) P_ ((int which));
 
-/* Get metrics of character CHAR2B in FONT of type FONT_TYPE.
-   Value is null if CHAR2B is not contained in the font.  */
-  XCharStruct * (*per_char_metric) P_ ((XFontStruct *font, XChar2b *char2b,
-					int font_type));
-
-/* Encode CHAR2B using encoding information from FONT_INFO.  CHAR2B is
-   the two-byte form of C.  Encoding is returned in *CHAR2B.  If
-   TWO_BYTE_P is non-null, return non-zero there if font is two-byte.  */
-  int (*encode_char) P_ ((int c, XChar2b *char2b,
-			  struct font_info *font_into, int *two_byte_p));
-
 /* Compute left and right overhang of glyph string S.
    A NULL pointer if platform does not support this. */
   void (*compute_glyph_string_overhangs) P_ ((struct glyph_string *s));
@@ -2378,10 +2432,6 @@ struct redisplay_interface
 
 #endif /* HAVE_WINDOW_SYSTEM */
 };
-
-/* The current interface for window-based redisplay.  */
-
-extern struct redisplay_interface *rif;
 
 
 /***********************************************************************
@@ -2483,6 +2533,11 @@ struct image
   /* Lisp specification of this image.  */
   Lisp_Object spec;
 
+  /* List of "references" followed to build the image.
+     Typically will just contain the name of the image file.
+     Used to allow fine-grained cache flushing.  */
+  Lisp_Object dependencies;
+
   /* Relief to draw around the image.  */
   int relief;
 
@@ -2543,8 +2598,8 @@ struct image_cache
    no image with that id exists.  */
 
 #define IMAGE_FROM_ID(F, ID)					\
-     (((ID) >= 0 && (ID) < (FRAME_X_IMAGE_CACHE (F)->used))	\
-      ? FRAME_X_IMAGE_CACHE (F)->images[ID]			\
+     (((ID) >= 0 && (ID) < (FRAME_IMAGE_CACHE (F)->used))	\
+      ? FRAME_IMAGE_CACHE (F)->images[ID]			\
       : NULL)
 
 /* Size of bucket vector of image caches.  Should be prime.  */
@@ -2686,14 +2741,15 @@ void init_iterator_to_row_start P_ ((struct it *, struct window *,
 				     struct glyph_row *));
 int get_next_display_element P_ ((struct it *));
 void set_iterator_to_next P_ ((struct it *, int));
-void produce_glyphs P_ ((struct it *));
-void produce_special_glyphs P_ ((struct it *, enum display_element_type));
 void start_display P_ ((struct it *, struct window *, struct text_pos));
 void move_it_to P_ ((struct it *, int, int, int, int, int));
 void move_it_vertically P_ ((struct it *, int));
 void move_it_vertically_backward P_ ((struct it *, int));
 void move_it_by_lines P_ ((struct it *, int, int));
 void move_it_past_eol P_ ((struct it *));
+void move_it_in_display_line (struct it *it,
+			      EMACS_INT to_charpos, int to_x,
+			      enum move_operation_enum op);
 int in_display_vector_p P_ ((struct it *));
 int frame_mode_line_height P_ ((struct frame *));
 void highlight_trailing_whitespace P_ ((struct frame *, struct glyph_row *));
@@ -2711,11 +2767,12 @@ extern struct frame *last_mouse_frame;
 extern int last_tool_bar_item;
 extern Lisp_Object Vmouse_autoselect_window;
 extern int unibyte_display_via_language_environment;
+extern EMACS_INT underline_minimum_offset;
 
 extern void reseat_at_previous_visible_line_start P_ ((struct it *));
 
 extern int calc_pixel_width_or_height P_ ((double *, struct it *, Lisp_Object,
-					   /* XFontStruct */ void *, int, int *));
+					   struct font *, int, int *));
 
 #ifdef HAVE_WINDOW_SYSTEM
 
@@ -2784,14 +2841,10 @@ int draw_window_fringes P_ ((struct window *, int));
 int update_window_fringes P_ ((struct window *, int));
 void compute_fringe_widths P_ ((struct frame *, int));
 
-#ifdef WINDOWS_NT
-void w32_init_fringe P_ ((void));
+#ifdef WINDOWSNT
+void w32_init_fringe P_ ((struct redisplay_interface *));
 void w32_reset_fringes P_ ((void));
 #endif
-#ifdef MAC_OS
-void mac_init_fringe P_ ((void));
-#endif
-
 /* Defined in image.c */
 
 #ifdef HAVE_WINDOW_SYSTEM
@@ -2816,9 +2869,8 @@ extern Lisp_Object x_find_image_file P_ ((Lisp_Object));
 void x_kill_gs_process P_ ((Pixmap, struct frame *));
 struct image_cache *make_image_cache P_ ((void));
 void free_image_cache P_ ((struct frame *));
-void clear_image_cache P_ ((struct frame *, int));
-void forall_images_in_image_cache P_ ((struct frame *,
-				       void (*) P_ ((struct image *))));
+void clear_image_caches P_ ((Lisp_Object));
+void mark_image_cache P_ ((struct image_cache *));
 int valid_image_p P_ ((Lisp_Object));
 void prepare_image_for_display P_ ((struct frame *, struct image *));
 int lookup_image P_ ((struct frame *, Lisp_Object));
@@ -2834,11 +2886,11 @@ int image_ascent P_ ((struct image *, struct face *, struct glyph_slice *));
 
 /* Defined in sysdep.c */
 
-void get_frame_size P_ ((int *, int *));
+void get_tty_size P_ ((int, int *, int *));
 void request_sigio P_ ((void));
 void unrequest_sigio P_ ((void));
-int tabs_safe_p P_ ((void));
-void init_baud_rate P_ ((void));
+int tabs_safe_p P_ ((int));
+void init_baud_rate P_ ((int));
 void init_sigio P_ ((int));
 
 /* Defined in xfaces.c */
@@ -2854,32 +2906,41 @@ void clear_face_cache P_ ((int));
 unsigned long load_color P_ ((struct frame *, struct face *, Lisp_Object,
 			      enum lface_attribute_index));
 void unload_color P_ ((struct frame *, unsigned long));
-int face_font_available_p P_ ((struct frame *, Lisp_Object));
+char *choose_face_font P_ ((struct frame *, Lisp_Object *, Lisp_Object,
+			    int *));
 int ascii_face_of_lisp_face P_ ((struct frame *, int));
 void prepare_face_for_display P_ ((struct frame *, struct face *));
-int xstricmp P_ ((const unsigned char *, const unsigned char *));
-int lookup_face P_ ((struct frame *, Lisp_Object *, int, struct face *));
-int lookup_named_face P_ ((struct frame *, Lisp_Object, int, int));
+int xstrcasecmp P_ ((const unsigned char *, const unsigned char *));
+int lookup_face P_ ((struct frame *, Lisp_Object *));
+int lookup_named_face P_ ((struct frame *, Lisp_Object, int));
+int lookup_basic_face P_ ((struct frame *, int));
 int smaller_face P_ ((struct frame *, int, int));
 int face_with_height P_ ((struct frame *, int, int));
-int lookup_derived_face P_ ((struct frame *, Lisp_Object, int, int, int));
+int lookup_derived_face P_ ((struct frame *, Lisp_Object, int, int));
 void init_frame_faces P_ ((struct frame *));
 void free_frame_faces P_ ((struct frame *));
 void recompute_basic_faces P_ ((struct frame *));
-int face_at_buffer_position P_ ((struct window *, int, int, int, int *,
-				 int, int));
-int face_for_overlay_string P_ ((struct window *, int, int,
-				 int, int *,
-				 int, int, Lisp_Object));
-int face_at_string_position P_ ((struct window *, Lisp_Object, int, int, int,
-				 int, int *, enum face_id, int));
+int face_at_buffer_position P_ ((struct window *w, EMACS_INT pos,
+				 EMACS_INT region_beg, EMACS_INT region_end,
+				 EMACS_INT *endptr, EMACS_INT limit,
+				 int mouse, int base_face_id));
+int face_for_overlay_string P_ ((struct window *w, EMACS_INT pos,
+				 EMACS_INT region_beg, EMACS_INT region_end,
+				 EMACS_INT *endptr, EMACS_INT limit,
+				 int mouse, Lisp_Object overlay));
+int face_at_string_position P_ ((struct window *w, Lisp_Object string,
+				 EMACS_INT pos, EMACS_INT bufpos,
+				 EMACS_INT region_beg, EMACS_INT region_end,
+				 EMACS_INT *endptr, enum face_id, int mouse));
 int merge_faces P_ ((struct frame *, Lisp_Object, int, int));
 int compute_char_face P_ ((struct frame *, int, Lisp_Object));
 void free_all_realized_faces P_ ((Lisp_Object));
+void free_realized_face P_ ((struct frame *, struct face *));
 extern Lisp_Object Qforeground_color, Qbackground_color;
 extern Lisp_Object Qframe_set_background_mode;
 extern char unspecified_fg[], unspecified_bg[];
-void free_realized_multibyte_face P_ ((struct frame *, int));
+
+extern Lisp_Object Vface_remapping_alist;
 
 /* Defined in xfns.c  */
 
@@ -2888,9 +2949,6 @@ void gamma_correct P_ ((struct frame *, XColor *));
 #endif
 #ifdef WINDOWSNT
 void gamma_correct P_ ((struct frame *, COLORREF *));
-#endif
-#ifdef MAC_OS
-void gamma_correct P_ ((struct frame *, unsigned long *));
 #endif
 
 #ifdef HAVE_WINDOW_SYSTEM
@@ -2906,6 +2964,15 @@ extern void start_hourglass P_ ((void));
 extern void cancel_hourglass P_ ((void));
 extern int hourglass_started P_ ((void));
 extern int display_hourglass_p;
+extern int hourglass_shown_p;
+struct atimer;			/* Defined in atimer.h.  */
+/* If non-null, an asynchronous timer that, when it expires, displays
+   an hourglass cursor on all frames.  */
+extern struct atimer *hourglass_atimer;
+
+/* Each GUI implements these.  FIXME: move into RIF. */
+extern void show_hourglass P_ ((struct atimer *));
+extern void hide_hourglass P_ ((void));
 
 /* Returns the background color of IMG, calculating one heuristically if
    necessary.  If non-zero, XIMG is an existing XImage object to use for
@@ -2980,8 +3047,6 @@ void clear_glyph_row P_ ((struct glyph_row *));
 void prepare_desired_row P_ ((struct glyph_row *));
 int line_hash_code P_ ((struct glyph_row *));
 void set_window_update_flags P_ ((struct window *, int));
-void write_glyphs P_ ((struct glyph *, int));
-void insert_glyphs P_ ((struct glyph *, int));
 void redraw_frame P_ ((struct frame *));
 void redraw_garbaged_frames P_ ((void));
 int scroll_cost P_ ((struct frame *, int, int, int));
@@ -2996,33 +3061,46 @@ void bitch_at_user P_ ((void));
 void init_display P_ ((void));
 void syms_of_display P_ ((void));
 extern Lisp_Object Qredisplay_dont_pause;
-GLYPH spec_glyph_lookup_face P_ ((struct window *, GLYPH));
+void spec_glyph_lookup_face P_ ((struct window *, GLYPH *));
+
+/* Defined in terminal.c */
+
+extern void ring_bell P_ ((struct frame *));
+extern void update_begin P_ ((struct frame *));
+extern void update_end P_ ((struct frame *));
+extern void set_terminal_window P_ ((struct frame *, int));
+extern void cursor_to P_ ((struct frame *, int, int));
+extern void raw_cursor_to P_ ((struct frame *, int, int));
+extern void clear_to_end P_ ((struct frame *));
+extern void clear_frame P_ ((struct frame *));
+extern void clear_end_of_line P_ ((struct frame *, int));
+extern void write_glyphs P_ ((struct frame *, struct glyph *, int));
+extern void insert_glyphs P_ ((struct frame *, struct glyph *, int));
+extern void delete_glyphs P_ ((struct frame *, int));
+extern void ins_del_lines P_ ((struct frame *, int, int));
+
+extern struct terminal *init_initial_terminal P_ ((void));
+
 
 /* Defined in term.c */
 
-extern void ring_bell P_ ((void));
-extern void set_terminal_modes P_ ((void));
-extern void reset_terminal_modes P_ ((void));
-extern void update_begin P_ ((struct frame *));
-extern void update_end P_ ((struct frame *));
-extern void set_terminal_window P_ ((int));
-extern void set_scroll_region P_ ((int, int));
-extern void turn_off_insert P_ ((void));
-extern void turn_off_highlight P_ ((void));
-extern void background_highlight P_ ((void));
-extern void clear_frame P_ ((void));
-extern void clear_end_of_line P_ ((int));
-extern void clear_end_of_line_raw P_ ((int));
-extern void delete_glyphs P_ ((int));
-extern void ins_del_lines P_ ((int, int));
+extern void tty_set_terminal_modes P_ ((struct terminal *));
+extern void tty_reset_terminal_modes P_ ((struct terminal *));
+extern void tty_turn_off_insert P_ ((struct tty_display_info *));
+extern void tty_turn_off_highlight P_ ((struct tty_display_info *));
 extern int string_cost P_ ((char *));
 extern int per_line_cost P_ ((char *));
 extern void calculate_costs P_ ((struct frame *));
-extern void set_tty_color_mode P_ ((struct frame *, Lisp_Object));
-extern void tty_setup_colors P_ ((int));
-extern void term_init P_ ((char *));
-void cursor_to P_ ((int, int));
-extern int tty_capable_p P_ ((struct frame *, unsigned, unsigned long, unsigned long));
+extern void produce_glyphs P_ ((struct it *));
+extern void produce_special_glyphs P_ ((struct it *, enum display_element_type));
+extern int tty_capable_p P_ ((struct tty_display_info *, unsigned, unsigned long, unsigned long));
+extern void set_tty_color_mode (struct tty_display_info *, struct frame *);
+extern struct terminal *get_tty_terminal P_ ((Lisp_Object, int));
+extern struct terminal *get_named_tty P_ ((char *));
+EXFUN (Ftty_type, 1);
+extern void create_tty_output P_ ((struct frame *));
+extern struct terminal *init_tty P_ ((char *, char *, int));
+
 
 /* Defined in scroll.c */
 

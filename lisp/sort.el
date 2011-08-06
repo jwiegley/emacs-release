@@ -1,7 +1,7 @@
 ;;; sort.el --- commands to sort text in an Emacs buffer
 
 ;; Copyright (C) 1986, 1987, 1994, 1995, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Howie Kaye
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -36,7 +34,7 @@
   :group 'data)
 
 (defcustom sort-fold-case nil
-  "*Non-nil if the buffer sort functions should ignore case."
+  "Non-nil if the buffer sort functions should ignore case."
   :group 'sort
   :type 'boolean)
 ;;;###autoload(put 'sort-fold-case 'safe-local-variable 'booleanp)
@@ -157,8 +155,10 @@ it defaults to `<', otherwise it defaults to `string<'."
   (let ((last (point-min))
 	(min (point-min)) (max (point-max))
 	(old-buffer (current-buffer))
+        (mb enable-multibyte-characters)
 	temp-buffer)
     (with-temp-buffer
+      (set-buffer-multibyte mb)
       ;; Record the temporary buffer.
       (setq temp-buffer (current-buffer))
 
@@ -256,7 +256,7 @@ the sort order."
     (setq sort-fields-syntax-table table)))
 
 (defcustom sort-numeric-base 10
-  "*The default base used by `sort-numeric-fields'."
+  "The default base used by `sort-numeric-fields'."
   :group 'sort
   :type 'integer)
 ;;;###autoload(put 'sort-numeric-base 'safe-local-variable 'integerp)
@@ -491,7 +491,7 @@ Use \\[untabify] to convert tabs to spaces before sorting."
       (setq col-end (max col-beg1 col-end1))
       (if (search-backward "\t" beg1 t)
 	  (error "sort-columns does not work with tabs -- use M-x untabify"))
-      (if (not (or (memq system-type '(vax-vms windows-nt))
+      (if (not (or (memq system-type '(windows-nt))
 		   (let ((pos beg1) plist fontified)
 		     (catch 'found
 		       (while (< pos end1)
@@ -516,7 +516,7 @@ Use \\[untabify] to convert tabs to spaces before sorting."
 	    (when sort-fold-case
 	      (push "-f" sort-args))
 	    (apply #'call-process-region beg1 end1 "sort" t t nil sort-args))
-	;; On VMS and ms-windows, use Emacs's own facilities.
+	;; On ms-windows, use Emacs's own facilities.
 	(save-excursion
 	  (save-restriction
 	    (narrow-to-region beg1 end1)
@@ -559,5 +559,5 @@ From a program takes two point or marker arguments, BEG and END."
 
 (provide 'sort)
 
-;;; arch-tag: fbac12be-2a7b-4c8a-9665-264d61f70bd9
+;; arch-tag: fbac12be-2a7b-4c8a-9665-264d61f70bd9
 ;;; sort.el ends here

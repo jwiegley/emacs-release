@@ -3,16 +3,16 @@
 ;; Maintainer: FSF
 ;; Keywords: internal
 
-;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009 Free Software Foundation, Inc.
 ;; Based partially on earlier release by Lucid.
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,13 +20,52 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
+
+(defcustom selection-coding-system nil
+  "Coding system for communicating with other X clients.
+
+When sending text via selection and clipboard, if the target
+data-type matches with the type of this coding system, it is used
+for encoding the text.  Otherwise (including the case that this
+variable is nil), a proper coding system is used as below:
+
+data-type	coding system
+---------	-------------
+UTF8_STRING	utf-8
+COMPOUND_TEXT	compound-text-with-extensions
+STRING		iso-latin-1
+C_STRING	no-conversion
+
+When receiving text, if this coding system is non-nil, it is used
+for decoding regardless of the data-type.  If this is nil, a
+proper coding system is used according to the data-type as above.
+
+See also the documentation of the variable `x-select-request-type' how
+to control which data-type to request for receiving text.
+
+The default value is nil."
+  :type 'coding-system
+  :group 'mule
+  ;; Default was compound-text-with-extensions in 22.x (pre-unicode).
+  :version "23.1"
+  :set (lambda (symbol value)
+         (set-selection-coding-system value)
+         (set symbol value)))
+
+(defvar next-selection-coding-system nil
+  "Coding system for the next communication with other X clients.
+Usually, `selection-coding-system' is used for communicating with
+other X clients.  But, if this variable is set, it is used for
+the next communication only.  After the communication, this
+variable is set to nil.")
+
+(declare-function x-get-selection-internal "xselect.c"
+		  (selection-symbol target-type &optional time-stamp))
 
 ;; This is for temporary compatibility with pre-release Emacs 19.
 (defalias 'x-selection 'x-get-selection)
@@ -48,17 +87,32 @@ in `selection-converter-alist', which see."
 	coding)
     (when (and (stringp data)
 	       (setq data-type (get-text-property 0 'foreign-selection data)))
-      (setq coding (if (eq data-type 'UTF8_STRING)
-		       'utf-8
-		     (or next-selection-coding-system
-			 selection-coding-system))
-	    data (decode-coding-string data coding))
+      (setq coding (or next-selection-coding-system
+		       selection-coding-system
+		       (cond ((eq data-type 'UTF8_STRING)
+			      'utf-8)
+			     ((eq data-type 'COMPOUND_TEXT)
+			      'compound-text-with-extensions)
+			     ((eq data-type 'C_STRING)
+			      nil)
+			     ((eq data-type 'STRING)
+			      'iso-8859-1)
+			     (t
+			      (error "Unknow selection data type: %S" type))))
+	    data (if coding (decode-coding-string data coding)
+		   (string-to-multibyte data)))
+      (setq next-selection-coding-system nil)
       (put-text-property 0 (length data) 'foreign-selection data-type data))
     data))
 
 (defun x-get-clipboard ()
   "Return text pasted to the clipboard."
   (x-get-selection-internal 'CLIPBOARD 'STRING))
+
+(declare-function x-own-selection-internal "xselect.c"
+		  (selection-name selection-value))
+(declare-function x-disown-selection-internal "xselect.c"
+		  (selection &optional time))
 
 (defun x-set-selection (type data)
   "Make an X Windows selection of type TYPE and value DATA.
@@ -80,7 +134,10 @@ The return value is DATA.
 
 Interactively, this command sets the primary selection.  Without
 prefix argument, it reads the selection in the minibuffer.  With
-prefix argument, it uses the text of the region as the selection value ."
+prefix argument, it uses the text of the region as the selection value.
+
+Note that on MS-Windows, primary and secondary selections set by Emacs
+are not available to other programs."
   (interactive (if (not current-prefix-arg)
 		   (list 'PRIMARY (read-string "Set text for pasting: "))
 		 (list 'PRIMARY (buffer-substring (region-beginning) (region-end)))))
@@ -125,8 +182,10 @@ prefix argument, it uses the text of the region as the selection value ."
 
 ;;; Cut Buffer support
 
+(declare-function x-get-cut-buffer-internal "xselect.c")
+
 (defun x-get-cut-buffer (&optional which-one)
-  "Returns the value of one of the 8 X server cut-buffers.
+  "Return the value of one of the 8 X server cut-buffers.
 Optional arg WHICH-ONE should be a number from 0 to 7, defaulting to 0.
 Cut buffers are considered obsolete; you should use selections instead."
   (x-get-cut-buffer-internal
@@ -136,56 +195,24 @@ Cut buffers are considered obsolete; you should use selections instead."
 	     which-one)
      'CUT_BUFFER0)))
 
+(declare-function x-rotate-cut-buffers-internal "xselect.c")
+(declare-function x-store-cut-buffer-internal "xselect.c")
+
 (defun x-set-cut-buffer (string &optional push)
   "Store STRING into the X server's primary cut buffer.
 If PUSH is non-nil, also rotate the cut buffers:
 this means the previous value of the primary cut buffer moves to the second
 cut buffer, and the second to the third, and so on (there are 8 buffers.)
 Cut buffers are considered obsolete; you should use selections instead."
-  (or (stringp string) (signal 'wrong-type-argument (list 'string string)))
+  (or (stringp string) (signal 'wrong-type-argument (list 'stringp string)))
   (if push
       (x-rotate-cut-buffers-internal 1))
   (x-store-cut-buffer-internal 'CUT_BUFFER0 string))
 
 
-;;; Functions to convert the selection into various other selection types.
-;;; Every selection type that Emacs handles is implemented this way, except
-;;; for TIMESTAMP, which is a special case.
-
-(eval-when-compile (require 'ccl))
-
-(define-ccl-program ccl-check-utf-8
-  '(0
-    ((r0 = 1)
-     (loop
-      (read-if (r1 < #x80) (repeat)
-	((r0 = 0)
-	 (if (r1 < #xC2) (end))
-	 (read r2)
-	 (if ((r2 & #xC0) != #x80) (end))
-	 (if (r1 < #xE0) ((r0 = 1) (repeat)))
-	 (read r2)
-	 (if ((r2 & #xC0) != #x80) (end))
-	 (if (r1 < #xF0) ((r0 = 1) (repeat)))
-	 (read r2)
-	 (if ((r2 & #xC0) != #x80) (end))
-	 (if (r1 < #xF8) ((r0 = 1) (repeat)))
-	 (read r2)
-	 (if ((r2 & #xC0) != #x80) (end))
-	 (if (r1 == #xF8) ((r0 = 1) (repeat)))
-	 (end))))))
-  "Check if the input unibyte string is a valid UTF-8 sequence or not.
-If it is valid, set the register `r0' to 1, else set it to 0.")
-
-(defun string-utf-8-p (string)
-  "Return non-nil if STRING is a unibyte string of valid UTF-8 sequence."
-  (if (or (not (stringp string))
-	  (multibyte-string-p string))
-      (error "Not a unibyte string: %s" string))
-  (let ((status (make-vector 9 0)))
-    (ccl-execute-on-string ccl-check-utf-8 status string)
-    (= (aref status 0) 1)))
-
+;; Functions to convert the selection into various other selection types.
+;; Every selection type that Emacs handles is implemented this way, except
+;; for TIMESTAMP, which is a special case.
 
 (defun xselect-convert-to-string (selection type value)
   (let (str coding)
@@ -219,49 +246,50 @@ If it is valid, set the register `r0' to 1, else set it to 0.")
 	  str
 	(setq coding (or next-selection-coding-system selection-coding-system))
 	(if coding
-	    (setq coding (coding-system-base coding))
-	  (setq coding 'raw-text))
+	    (setq coding (coding-system-base coding)))
 	(let ((inhibit-read-only t))
 	  ;; Suppress producing escape sequences for compositions.
 	  (remove-text-properties 0 (length str) '(composition nil) str)
+	  (if (eq type 'TEXT)
+	      ;; TEXT is a polymorphic target.  We must select the
+	      ;; actual type from `UTF8_STRING', `COMPOUND_TEXT',
+	      ;; `STRING', and `C_STRING'.
+	      (if (not (multibyte-string-p str))
+		  (setq type 'C_STRING)
+		(let (non-latin-1 non-unicode eight-bit)
+		  (mapc #'(lambda (x)
+			    (if (>= x #x100)
+				(if (< x #x110000)
+				    (setq non-latin-1 t)
+				  (if (< x #x3FFF80)
+				      (setq non-unicode t)
+				    (setq eight-bit t)))))
+			str)
+		  (setq type (if non-unicode 'COMPOUND_TEXT
+			       (if non-latin-1 'UTF8_STRING
+				 (if eight-bit 'C_STRING 'STRING)))))))
 	  (cond
-	   ((eq type 'TEXT)
-	    (if (not (multibyte-string-p str))
-		;; Don't have to encode unibyte string.
-		(setq type 'STRING)
-	      ;; If STR contains only ASCII, Latin-1, and raw bytes,
-	      ;; encode STR by iso-latin-1, and return it as type
-	      ;; `STRING'.  Otherwise, encode STR by CODING.  In that
-	      ;; case, the returing type depends on CODING.
-	      (let ((charsets (find-charset-string str)))
-		(setq charsets
-		      (delq 'ascii
-			    (delq 'latin-iso8859-1
-				  (delq 'eight-bit-control
-					(delq 'eight-bit-graphic charsets)))))
-		(if charsets
-		    (setq str (encode-coding-string str coding)
-			  type (if (memq coding '(compound-text
-						  compound-text-with-extensions))
-				   'COMPOUND_TEXT
-				 'STRING))
-		  (setq type 'STRING
-			str (encode-coding-string str 'iso-latin-1))))))
-
-	   ((eq type 'COMPOUND_TEXT)
+	   ((eq type 'UTF8_STRING)
+	    (if (or (not coding)
+		    (not (eq (coding-system-type coding) 'utf-8)))
+		(setq coding 'utf-8))
 	    (setq str (encode-coding-string str coding)))
 
 	   ((eq type 'STRING)
-	    (if (memq coding '(compound-text
-			       compound-text-with-extensions))
-		(setq str (string-make-unibyte str))
-	      (setq str (encode-coding-string str coding))))
+	    (if (or (not coding)
+		    (not (eq (coding-system-type coding) 'charset)))
+		(setq coding 'iso-8859-1))
+	    (setq str (encode-coding-string str coding)))
 
-	   ((eq type 'UTF8_STRING)
-	    (if (multibyte-string-p str)
-		(setq str (encode-coding-string str 'utf-8)))
-	    (if (not (string-utf-8-p str))
-		(setq str nil))) ;; Decline request as we don't have UTF-8 data.
+	   ((eq type 'COMPOUND_TEXT)
+	    (if (or (not coding)
+		    (not (eq (coding-system-type coding) 'iso-2022)))
+		(setq coding 'compound-text-with-extensions))
+	    (setq str (encode-coding-string str coding)))
+
+	   ((eq type 'C_STRING)
+	    (setq str (string-make-unibyte str)))
+
 	   (t
 	    (error "Unknow selection type: %S" type))
 	   )))
@@ -437,5 +465,5 @@ This function returns the string \"emacs\"."
 
 (provide 'select)
 
-;;; arch-tag: bb634f97-8a3b-4b0a-b940-f6e09982328c
+;; arch-tag: bb634f97-8a3b-4b0a-b940-f6e09982328c
 ;;; select.el ends here

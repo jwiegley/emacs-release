@@ -1,7 +1,7 @@
 ;;; term.el --- general command interpreter in a window stuff
 
 ;; Copyright (C) 1988, 1990, 1992, 1994, 1995, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Per Bothner <per@bothner.com>
 ;; Maintainer: Dan Nicolaescu <dann@ics.uci.edu>, Per Bothner <per@bothner.com>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Marck 13 2001
 ;;; Fixes for CJK support by Yong Lu <lyongu@yahoo.com>.
@@ -407,8 +405,7 @@
 
 (defgroup term nil
   "General command interpreter in a window."
-  :group 'processes
-  :group 'unix)
+  :group 'processes)
 
 
 ;;; Buffer Local Variables:
@@ -481,7 +478,7 @@
 (defvar term-pager-old-filter) ;; Saved process-filter while paging.
 
 (defcustom explicit-shell-file-name nil
-  "*If non-nil, is file name to use for explicitly requested inferior shell."
+  "If non-nil, is file name to use for explicitly requested inferior shell."
   :type '(choice (const nil) file)
   :group 'term)
 
@@ -511,7 +508,7 @@ For shells, a good value is (?\\| ?& ?< ?> ?\\( ?\\) ?\\;).
 This is a good thing to set in mode hooks.")
 
 (defcustom term-input-autoexpand nil
-  "*If non-nil, expand input command history references on completion.
+  "If non-nil, expand input command history references on completion.
 This mirrors the optional behavior of tcsh (its autoexpand and histlit).
 
 If the value is `input', then the expansion is seen on input.
@@ -524,7 +521,7 @@ This variable is buffer-local."
   :group 'term)
 
 (defcustom term-input-ignoredups nil
-  "*If non-nil, don't add input matching the last on the input ring.
+  "If non-nil, don't add input matching the last on the input ring.
 This mirrors the optional behavior of bash.
 
 This variable is buffer-local."
@@ -532,7 +529,7 @@ This variable is buffer-local."
   :group 'term)
 
 (defcustom term-input-ring-file-name nil
-  "*If non-nil, name of the file to read/write input history.
+  "If non-nil, name of the file to read/write input history.
 See also `term-read-input-ring' and `term-write-input-ring'.
 
 This variable is buffer-local, and is a good thing to set in mode hooks."
@@ -540,7 +537,7 @@ This variable is buffer-local, and is a good thing to set in mode hooks."
   :group 'term)
 
 (defcustom term-scroll-to-bottom-on-output nil
-  "*Controls whether interpreter output causes window to scroll.
+  "Controls whether interpreter output causes window to scroll.
 If nil, then do not scroll.  If t or `all', scroll all windows showing buffer.
 If `this', scroll only the selected window.
 If `others', scroll only those that are not the selected window.
@@ -553,7 +550,7 @@ This variable is buffer-local."
   :group 'term)
 
 (defcustom term-scroll-show-maximum-output nil
-  "*Controls how interpreter output causes window to scroll.
+  "Controls how interpreter output causes window to scroll.
 If non-nil, then show the maximum output when the window is scrolled.
 
 See variable `term-scroll-to-bottom-on-output'.
@@ -602,7 +599,7 @@ the user command `term-send-input'.  `term-simple-send' just sends
 the string plus a newline.")
 
 (defcustom term-eol-on-send t
-  "*Non-nil means go to the end of the line before sending input.
+  "Non-nil means go to the end of the line before sending input.
 See `term-send-input'."
   :type 'boolean
   :group 'term)
@@ -622,7 +619,53 @@ executed once when the buffer is created."
   :type 'hook
   :group 'term)
 
-(defvar term-mode-map nil)
+(defvar term-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "\ep" 'term-previous-input)
+    (define-key map "\en" 'term-next-input)
+    (define-key map "\er" 'term-previous-matching-input)
+    (define-key map "\es" 'term-next-matching-input)
+    (unless (featurep 'xemacs)
+      (define-key map [?\A-\M-r]
+	'term-previous-matching-input-from-input)
+      (define-key map [?\A-\M-s] 'term-next-matching-input-from-input))
+    (define-key map "\e\C-l" 'term-show-output)
+    (define-key map "\C-m" 'term-send-input)
+    (define-key map "\C-d" 'term-delchar-or-maybe-eof)
+    (define-key map "\C-c\C-a" 'term-bol)
+    (define-key map "\C-c\C-u" 'term-kill-input)
+    (define-key map "\C-c\C-w" 'backward-kill-word)
+    (define-key map "\C-c\C-c" 'term-interrupt-subjob)
+    (define-key map "\C-c\C-z" 'term-stop-subjob)
+    (define-key map "\C-c\C-\\" 'term-quit-subjob)
+    (define-key map "\C-c\C-m" 'term-copy-old-input)
+    (define-key map "\C-c\C-o" 'term-kill-output)
+    (define-key map "\C-c\C-r" 'term-show-output)
+    (define-key map "\C-c\C-e" 'term-show-maximum-output)
+    (define-key map "\C-c\C-l" 'term-dynamic-list-input-ring)
+    (define-key map "\C-c\C-n" 'term-next-prompt)
+    (define-key map "\C-c\C-p" 'term-previous-prompt)
+    (define-key map "\C-c\C-d" 'term-send-eof)
+    (define-key map "\C-c\C-k" 'term-char-mode)
+    (define-key map "\C-c\C-j" 'term-line-mode)
+    (define-key map "\C-c\C-q" 'term-pager-toggle)
+
+    ;;  ;; completion:
+    ;;  (define-key map [menu-bar completion]
+    ;;    (cons "Complete" (make-sparse-keymap "Complete")))
+    ;;  (define-key map [menu-bar completion complete-expand]
+    ;;    '("Expand File Name" . term-replace-by-expanded-filename))
+    ;;  (define-key map [menu-bar completion complete-listing]
+    ;;    '("File Completion Listing" . term-dynamic-list-filename-completions))
+    ;;  (define-key map [menu-bar completion complete-file]
+    ;;    '("Complete File Name" . term-dynamic-complete-filename))
+    ;;  (define-key map [menu-bar completion complete]
+    ;;    '("Complete Before Point" . term-dynamic-complete))
+    ;;  ;; Put them in the menu bar:
+    ;;  (setq menu-bar-final-items (append '(terminal completion inout signals)
+    ;;				     menu-bar-final-items))
+    map))
+
 (defvar term-raw-map nil
   "Keyboard map for sending characters directly to the inferior process.")
 (defvar term-escape-char nil
@@ -726,66 +769,23 @@ is buffer-local.")
       [ "Enable paging" term-pager-toggle (not term-pager-count)]
       [ "Disable paging" term-pager-toggle term-pager-count])))
 
-(unless term-mode-map
-  (setq term-mode-map (make-sparse-keymap))
-  (define-key term-mode-map "\ep" 'term-previous-input)
-  (define-key term-mode-map "\en" 'term-next-input)
-  (define-key term-mode-map "\er" 'term-previous-matching-input)
-  (define-key term-mode-map "\es" 'term-next-matching-input)
-  (unless (featurep 'xemacs)
-    (define-key term-mode-map [?\A-\M-r]
-      'term-previous-matching-input-from-input)
-    (define-key term-mode-map [?\A-\M-s] 'term-next-matching-input-from-input))
-  (define-key term-mode-map "\e\C-l" 'term-show-output)
-  (define-key term-mode-map "\C-m" 'term-send-input)
-  (define-key term-mode-map "\C-d" 'term-delchar-or-maybe-eof)
-  (define-key term-mode-map "\C-c\C-a" 'term-bol)
-  (define-key term-mode-map "\C-c\C-u" 'term-kill-input)
-  (define-key term-mode-map "\C-c\C-w" 'backward-kill-word)
-  (define-key term-mode-map "\C-c\C-c" 'term-interrupt-subjob)
-  (define-key term-mode-map "\C-c\C-z" 'term-stop-subjob)
-  (define-key term-mode-map "\C-c\C-\\" 'term-quit-subjob)
-  (define-key term-mode-map "\C-c\C-m" 'term-copy-old-input)
-  (define-key term-mode-map "\C-c\C-o" 'term-kill-output)
-  (define-key term-mode-map "\C-c\C-r" 'term-show-output)
-  (define-key term-mode-map "\C-c\C-e" 'term-show-maximum-output)
-  (define-key term-mode-map "\C-c\C-l" 'term-dynamic-list-input-ring)
-  (define-key term-mode-map "\C-c\C-n" 'term-next-prompt)
-  (define-key term-mode-map "\C-c\C-p" 'term-previous-prompt)
-  (define-key term-mode-map "\C-c\C-d" 'term-send-eof)
-  (define-key term-mode-map "\C-c\C-k" 'term-char-mode)
-  (define-key term-mode-map "\C-c\C-j" 'term-line-mode)
-  (define-key term-mode-map "\C-c\C-q" 'term-pager-toggle)
-
-;  ;; completion:
-;  (define-key term-mode-map [menu-bar completion]
-;    (cons "Complete" (make-sparse-keymap "Complete")))
-;  (define-key term-mode-map [menu-bar completion complete-expand]
-;    '("Expand File Name" . term-replace-by-expanded-filename))
-;  (define-key term-mode-map [menu-bar completion complete-listing]
-;    '("File Completion Listing" . term-dynamic-list-filename-completions))
-;  (define-key term-mode-map [menu-bar completion complete-file]
-;    '("Complete File Name" . term-dynamic-complete-filename))
-;  (define-key term-mode-map [menu-bar completion complete]
-;    '("Complete Before Point" . term-dynamic-complete))
-;  ;; Put them in the menu bar:
-;  (setq menu-bar-final-items (append '(terminal completion inout signals)
-;				     menu-bar-final-items))
-  )
-
 ;; Menu bars:
 (unless (featurep 'xemacs)
   ;; terminal:
   (let (newmap)
     (setq newmap (make-sparse-keymap "Terminal"))
     (define-key newmap [terminal-pager-enable]
-      '("Enable paging" . term-fake-pager-enable))
+      '(menu-item "Enable paging" term-fake-pager-enable
+		  :help "Enable paging feature"))
     (define-key newmap [terminal-pager-disable]
-      '("Disable paging" . term-fake-pager-disable))
+      '(menu-item "Disable paging" term-fake-pager-disable
+		  :help "Disable paging feature"))
     (define-key newmap [terminal-char-mode]
-      '("Character mode" . term-char-mode))
+      '(menu-item "Character mode" term-char-mode
+		  :help "Switch to char (raw) sub-mode of term mode"))
     (define-key newmap [terminal-line-mode]
-      '("Line mode" . term-line-mode))
+      '(menu-item "Line mode" term-line-mode
+		  :help "Switch to line (cooked) sub-mode of term mode"))
     (setq term-terminal-menu (cons "Terminal" newmap))
 
     ;; completion:  (line mode only)
@@ -843,14 +843,26 @@ is buffer-local.")
 
     ;; Signals
     (setq newmap (make-sparse-keymap "Signals"))
-    (define-key newmap [eof] '("EOF" . term-send-eof))
-    (define-key newmap [kill] '("KILL" . term-kill-subjob))
-    (define-key newmap [quit] '("QUIT" . term-quit-subjob))
-    (define-key newmap [cont] '("CONT" . term-continue-subjob))
-    (define-key newmap [stop] '("STOP" . term-stop-subjob))
-    (define-key newmap [] '("BREAK" . term-interrupt-subjob))
     (define-key term-mode-map [menu-bar signals]
       (setq term-signals-menu (cons "Signals" newmap)))
+    (define-key newmap [eof]
+      '(menu-item "EOF" term-send-eof
+		  :help "Send an EOF to the current buffer's process"))
+    (define-key newmap [kill]
+      '(menu-item "KILL" term-kill-subjob
+		  :help "Send kill signal to the current subjob"))
+    (define-key newmap [quit]
+      '(menu-item "QUIT" term-quit-subjob
+		  :help "Send quit signal to the current subjob."))
+    (define-key newmap [cont]
+      '(menu-item "CONT" term-continue-subjob
+		  :help "Send CONT signal to process buffer's process group"))
+    (define-key newmap [stop]
+      '(menu-item "STOP" term-stop-subjob
+		  :help "Stop the current subjob"))
+    (define-key newmap [brk]
+      '(menu-item "BREAK" term-interrupt-subjob
+		  :help "Interrupt the current subjob"))
     ))
 
 ;; Set up term-raw-map, etc.
@@ -883,8 +895,7 @@ is buffer-local.")
     (unless (or (eq i ?O) (eq i 91))
 		(define-key esc-map (make-string 1 i) 'term-send-raw-meta))
     (setq i (1+ i)))
-  (dolist (elm (generic-character-list))
-    (define-key map (vector elm) 'term-send-raw))
+  (define-key map [remap self-insert-command] 'term-send-raw)
   (define-key map "\e" esc-map)
   (setq term-raw-map map)
   (setq term-raw-escape-map
@@ -914,6 +925,8 @@ is buffer-local.")
   (define-key term-raw-map [next] 'term-send-next))
 
 (term-set-escape-char ?\C-c)
+
+(defvar overflow-newline-into-fringe)
 
 (defun term-window-width ()
   (if (featurep 'xemacs)
@@ -1155,6 +1168,7 @@ Entry to this mode runs the hooks on `term-mode-hook'."
     (set-process-window-size process term-height term-width)))
 
 (defun term-send-raw-string (chars)
+  (deactivate-mark)
   (let ((proc (get-buffer-process (current-buffer))))
     (if (not proc)
 	(error "Current buffer has no process")
@@ -1169,16 +1183,16 @@ Entry to this mode runs the hooks on `term-mode-hook'."
   "Send the last character typed through the terminal-emulator
 without any interpretation."
   (interactive)
- ;; Convert `return' to C-m, etc.
-  (when (and (symbolp last-input-char)
-	     (get last-input-char 'ascii-character))
-    (setq last-input-char (get last-input-char 'ascii-character)))
-  (term-send-raw-string (make-string 1 last-input-char)))
+  ;; Convert `return' to C-m, etc.
+  (when (and (symbolp last-input-event)
+	     (get last-input-event 'ascii-character))
+    (setq last-input-event (get last-input-event 'ascii-character)))
+  (term-send-raw-string (make-string 1 last-input-event)))
 
 (defun term-send-raw-meta ()
   (interactive)
-  (let ((char last-input-char))
-    (when (symbolp last-input-char)
+  (let ((char last-input-event))
+    (when (symbolp last-input-event)
       ;; Convert `return' to C-m, etc.
       (let ((tmp (get char 'event-symbol-elements)))
 	(when tmp
@@ -1265,18 +1279,42 @@ you type \\[term-send-input] which sends the current line to the inferior."
     (term-update-mode-line)))
 
 (defun term-update-mode-line ()
-  (setq mode-line-process
-	(if (term-in-char-mode)
-	    (if (term-pager-enabled) '(": char page %s") '(": char %s"))
-	  (if (term-pager-enabled) '(": line page %s") '(": line %s"))))
+  (let ((term-mode (if (term-in-char-mode) "char" "line"))
+        (term-page (when (term-pager-enabled) " page"))
+        (serial-item-speed)
+        (serial-item-config)
+        (temp)
+        (proc (get-buffer-process (current-buffer))))
+    (when (and (term-check-proc (current-buffer))
+               (equal (process-type nil) 'serial))
+      (let ((temp (serial-speed)))
+        (setq serial-item-speed
+            `(:propertize
+              ,(or (and temp (format " %d" temp)) "")
+              help-echo "mouse-1: Change the speed of the serial port"
+              mouse-face mode-line-highlight
+              local-map (keymap (mode-line keymap
+                                (down-mouse-1 . serial-mode-line-speed-menu-1))))))
+      (let ((temp (process-contact proc :summary)))
+        (setq serial-item-config
+              `(:propertize
+                ,(or (and temp (format " %s" temp)) "")
+                help-echo "mouse-1: Change the configuration of the serial port"
+                mouse-face mode-line-highlight
+                local-map (keymap (mode-line keymap
+                           (down-mouse-1 . serial-mode-line-config-menu-1)))))))
+    (setq mode-line-process
+          (list ": " term-mode term-page
+                serial-item-speed
+                serial-item-config
+                " %s")))
   (force-mode-line-update))
 
 (defun term-check-proc (buffer)
-  "True if there is a process associated w/buffer BUFFER, and
-it is alive (status RUN or STOP).  BUFFER can be either a buffer or the
-name of one."
+  "True if there is a process associated w/buffer BUFFER, and it
+is alive.  BUFFER can be either a buffer or the name of one."
   (let ((proc (get-buffer-process buffer)))
-    (and proc (memq (process-status proc) '(run stop)))))
+    (and proc (memq (process-status proc) '(run stop open listen connect)))))
 
 ;;;###autoload
 (defun make-term (name program &optional startfile &rest switches)
@@ -1672,14 +1710,14 @@ Moves relative to START, or `term-input-ring-index'."
     (when (string-match regexp (ring-ref term-input-ring n))
       n)))
 
-(defun term-previous-matching-input (regexp arg)
+(defun term-previous-matching-input (regexp n)
   "Search backwards through input history for match for REGEXP.
 \(Previous history elements are earlier commands.)
 With prefix argument N, search for Nth previous match.
 If N is negative, find the next or Nth next match."
   (interactive (term-regexp-arg "Previous input matching (regexp): "))
-  (setq arg (term-search-arg arg))
-  (let ((pos (term-previous-matching-input-string-position regexp arg)))
+  (setq n (term-search-arg n))
+  (let ((pos (term-previous-matching-input-string-position regexp n)))
     ;; Has a match been found?
     (if (null pos)
 	(error "Not found")
@@ -1690,15 +1728,15 @@ If N is negative, find the next or Nth next match."
        (process-mark (get-buffer-process (current-buffer))) (point))
       (insert (ring-ref term-input-ring pos)))))
 
-(defun term-next-matching-input (regexp arg)
+(defun term-next-matching-input (regexp n)
   "Search forwards through input history for match for REGEXP.
 \(Later history elements are more recent commands.)
 With prefix argument N, search for Nth following match.
 If N is negative, find the previous or Nth previous match."
   (interactive (term-regexp-arg "Next input matching (regexp): "))
-  (term-previous-matching-input regexp (- arg)))
+  (term-previous-matching-input regexp (- n)))
 
-(defun term-previous-matching-input-from-input (arg)
+(defun term-previous-matching-input-from-input (n)
   "Search backwards through input history for match for current input.
 \(Previous history elements are earlier commands.)
 With prefix argument N, search for Nth previous match.
@@ -1714,15 +1752,15 @@ If N is negative, search forwards for the -Nth following match."
 	  term-input-ring-index nil))
   (term-previous-matching-input
    (concat "^" (regexp-quote term-matching-input-from-input-string))
-   arg))
+   n))
 
-(defun term-next-matching-input-from-input (arg)
+(defun term-next-matching-input-from-input (n)
   "Search forwards through input history for match for current input.
 \(Following history elements are more recent commands.)
 With prefix argument N, search for Nth following match.
 If N is negative, search backwards for the -Nth previous match."
   (interactive "p")
-  (term-previous-matching-input-from-input (- arg)))
+  (term-previous-matching-input-from-input (- n)))
 
 
 (defun term-replace-by-expanded-history (&optional silent)
@@ -2276,15 +2314,15 @@ buffer."
   (interactive)
   (process-send-eof))
 
-(defun term-backward-matching-input (regexp arg)
+(defun term-backward-matching-input (regexp n)
   "Search backward through buffer for match for REGEXP.
 Matches are searched for on lines that match `term-prompt-regexp'.
 With prefix argument N, search for Nth previous match.
 If N is negative, find the next or Nth next match."
   (interactive (term-regexp-arg "Backward input matching (regexp): "))
   (let* ((re (concat term-prompt-regexp ".*" regexp))
-	 (pos (save-excursion (end-of-line (if (> arg 0) 0 1))
-			      (when (re-search-backward re nil t arg)
+	 (pos (save-excursion (end-of-line (if (> n 0) 0 1))
+			      (when (re-search-backward re nil t n)
 				(point)))))
     (if (null pos)
 	(progn (message "Not found")
@@ -2292,13 +2330,13 @@ If N is negative, find the next or Nth next match."
       (goto-char pos)
       (term-bol nil))))
 
-(defun term-forward-matching-input (regexp arg)
+(defun term-forward-matching-input (regexp n)
   "Search forward through buffer for match for REGEXP.
 Matches are searched for on lines that match `term-prompt-regexp'.
 With prefix argument N, search for Nth following match.
 If N is negative, find the previous or Nth previous match."
   (interactive (term-regexp-arg "Forward input matching (regexp): "))
-  (term-backward-matching-input regexp (- arg)))
+  (term-backward-matching-input regexp (- n)))
 
 
 (defun term-next-prompt (n)
@@ -2682,7 +2720,11 @@ See `term-prompt-regexp'."
 
 (defun term-emulate-terminal (proc str)
   (with-current-buffer (process-buffer proc)
-    (let* ((i 0) char funny count save-point save-marker old-point temp win
+    (let* ((i 0) char funny
+	   count       ; number of decoded chars in substring
+	   count-bytes ; number of bytes
+	   decoded-substring
+	   save-point save-marker old-point temp win
 	   (buffer-undo-list t)
 	   (selected (selected-window))
 	   last-win
@@ -2741,6 +2783,13 @@ See `term-prompt-regexp'."
 				       str i))
 		   (when (not funny) (setq funny str-length))
 		   (cond ((> funny i)
+			  ;; Decode the string before counting
+			  ;; characters, to avoid garbling of certain
+			  ;; multibyte characters (bug#1006).
+			  (setq decoded-substring
+				(decode-coding-string
+				 (substring str i funny)
+				 locale-coding-system))
 			  (cond ((eq term-terminal-state 1)
 				 ;; We are in state 1, we need to wrap
 				 ;; around.  Go to the beginning of
@@ -2749,21 +2798,31 @@ See `term-prompt-regexp'."
 				 (term-down 1 t)
 				 (term-move-columns (- (term-current-column)))
 				 (setq term-terminal-state 0)))
-			  (setq count (- funny i))
+			  (setq count (length decoded-substring))
 			  (setq temp (- (+ (term-horizontal-column) count)
 					term-width))
 			  (cond ((<= temp 0)) ;; All count chars fit in line.
 				((> count temp)	;; Some chars fit.
 				 ;; This iteration, handle only what fits.
 				 (setq count (- count temp))
+				 (setq count-bytes
+				       (length
+					(encode-coding-string
+					 (substring decoded-substring 0 count)
+					 'binary)))
 				 (setq temp 0)
-				 (setq funny (+ count i)))
+				 (setq funny (+ count-bytes i)))
 				((or (not (or term-pager-count
 					      term-scroll-with-delete))
 				     (>  (term-handle-scroll 1) 0))
 				 (term-adjust-current-row-cache 1)
 				 (setq count (min count term-width))
-				 (setq funny (+ count i))
+				 (setq count-bytes
+				       (length
+					(encode-coding-string
+					 (substring decoded-substring 0 count)
+					 'binary)))
+				 (setq funny (+ count-bytes i))
 				 (setq term-start-line-column
 				       term-current-column))
 				(t ;; Doing PAGER processing.
@@ -3037,7 +3096,11 @@ See `term-prompt-regexp'."
 	    (forward-line (- term-buffer-maximum-size))
 	    (beginning-of-line)
 	    (delete-region (point-min) (point))))
-	(set-marker save-marker nil)))))
+	(set-marker save-marker nil)))
+    ;; This might be expensive, but we need it to handle something
+    ;; like `sleep 5 | less -c' in more-or-less real time.
+    (when (get-buffer-window (current-buffer))
+      (redisplay))))
 
 (defun term-handle-deferred-scroll ()
   (let ((count (- (term-current-row) term-height)))
@@ -3723,12 +3786,12 @@ all pending output has been dealt with."))
 (defun term-erase-in-display (kind)
   "Erases (that is blanks out) part of the window.
 If KIND is 0, erase from (point) to (point-max);
-if KIND is 1, erase from home to point; else erase from home to point-max.
-Should only be called when point is at the start of a screen line."
+if KIND is 1, erase from home to point; else erase from home to point-max."
   (term-handle-deferred-scroll)
   (cond ((eq term-terminal-parameter 0)
-	 (delete-region (point) (point-max))
-	 (term-unwrap-line))
+	 (let ((need-unwrap (bolp)))
+	   (delete-region (point) (point-max))
+	   (when need-unwrap (term-unwrap-line))))
 	((let ((row (term-current-row))
 	      (col (term-horizontal-column))
 	      (start-region term-home-marker)
@@ -4189,6 +4252,238 @@ the process.  Any more args are arguments to PROGRAM."
   (switch-to-buffer term-ansi-buffer-name))
 
 
+;;; Serial terminals
+;;; ===========================================================================
+(defun serial-port-is-file-p ()
+  "Guess whether serial ports are files on this system.
+Return t if this is a Unix-based system, where serial ports are
+files, such as /dev/ttyS0.
+Return nil if this is Windows or DOS, where serial ports have
+special identifiers such as COM1."
+  (not (member system-type (list 'windows-nt 'cygwin 'ms-dos))))
+
+(defvar serial-name-history
+  (if (serial-port-is-file-p)
+      (or (when (file-exists-p "/dev/ttys0") (list "/dev/ttys0"))
+          (when (file-exists-p "/dev/ttyS0") (list "/dev/ttyS0")))
+    (list "COM1"))
+  "History of serial ports used by `serial-read-name'.")
+
+(defvar serial-speed-history
+  ;; Initialised with reasonable values for newbies.
+  (list "9600" ;; Given twice because 9600 b/s is the most common speed
+        "1200" "2400" "4800" "9600" "14400" "19200"
+        "28800" "38400" "57600" "115200")
+  "History of serial port speeds used by `serial-read-speed'.")
+
+(defun serial-nice-speed-history ()
+  "Return `serial-speed-history' cleaned up for a mouse-menu."
+  (let ((x) (y))
+    (setq x
+         (sort
+          (copy-sequence serial-speed-history)
+          '(lambda (a b) (when (and (stringp a) (stringp b))
+                           (> (string-to-number a) (string-to-number b))))))
+    (dolist (i x) (when (not (equal i (car y))) (push i y)))
+    y))
+
+(defconst serial-no-speed "nil"
+  "String for `serial-read-speed' for special serial ports.
+If `serial-read-speed' reads this string from the user, it
+returns nil, which is recognized by `serial-process-configure'
+for special serial ports that cannot be configured.")
+
+(defun serial-supported-or-barf ()
+  "Signal an error if serial processes are not supported"
+  (unless (fboundp 'make-serial-process)
+    (error "Serial processes are not supported on this system")))
+
+(defun serial-read-name ()
+  "Read a serial port name from the user.
+Try to be nice by providing useful defaults and history.
+On Windows, prepend \\.\ to the port name unless it already
+contains a backslash.  This handles the legacy ports COM1-COM9 as
+well as the newer ports COM10 and higher."
+  (serial-supported-or-barf)
+  (let* ((file-name-history serial-name-history)
+         (h (car file-name-history))
+         (x (if (serial-port-is-file-p)
+                (read-file-name
+                 ;; `prompt': The most recently used port is provided as
+                 ;; the default value, which is used when the user
+                 ;; simply presses return.
+                 (if (stringp h) (format "Serial port (default %s): " h)
+                   "Serial port: ")
+                 ;; `directory': Most systems have their serial ports
+                 ;; in the same directory, so start in the directory
+                 ;; of the most recently used port, or in a reasonable
+                 ;; default directory.
+                 (or (and h (file-name-directory h))
+                     (and (file-exists-p "/dev/") "/dev/")
+                     (and (file-exists-p "/") "/"))
+                 ;; `default': This causes (read-file-name) to return
+                 ;; the empty string if he user simply presses return.
+                 ;; Using nil here may result in a default directory
+                 ;; of the current buffer, which is not useful for
+                 ;; serial port.
+                 "")
+              (read-from-minibuffer
+               (if (stringp h) (format "Serial port (default %s): " h)
+                 "Serial port: ")
+               nil nil nil '(file-name-history . 1) nil nil))))
+    (if (or (null x) (and (stringp x) (zerop (length x))))
+        (setq x h)
+      (setq serial-name-history file-name-history))
+    (when (or (null x) (and (stringp x) (zerop (length x))))
+      (error "No serial port selected"))
+    (when (and (not (serial-port-is-file-p))
+               (not (string-match "\\\\" x)))
+      (set 'x (concat "\\\\.\\" x)))
+    x))
+
+(defun serial-read-speed ()
+  "Read a serial port speed (in bits per second) from the user.
+Try to be nice by providing useful defaults and history."
+  (serial-supported-or-barf)
+  (let* ((history serial-speed-history)
+         (h (car history))
+         (x (read-from-minibuffer
+             (cond ((string= h serial-no-speed)
+                    "Speed (default nil = set by port): ")
+                   (h
+                    (format "Speed (default %s b/s): " h))
+                   (t
+		    (format "Speed (b/s): ")))
+             nil nil nil '(history . 1) nil nil)))
+    (when (or (null x) (and (stringp x) (zerop (length x))))
+      (setq x h))
+    (when (or (null x) (not (stringp x)) (zerop (length x)))
+      (error "Invalid speed"))
+    (if (string= x serial-no-speed)
+        (setq x nil)
+      (setq x (string-to-number x))
+      (when (or (null x) (not (integerp x)) (<= x 0))
+        (error "Invalid speed")))
+    (setq serial-speed-history history)
+    x))
+
+;;;###autoload
+(defun serial-term (port speed)
+  "Start a terminal-emulator for a serial port in a new buffer.
+PORT is the path or name of the serial port.  For example, this
+could be \"/dev/ttyS0\" on Unix.  On Windows, this could be
+\"COM1\" or \"\\\\.\\COM10\".
+SPEED is the speed of the serial port in bits per second.  9600
+is a common value.  SPEED can be nil, see
+`serial-process-configure' for details.
+The buffer is in Term mode; see `term-mode' for the commands to
+use in that buffer.
+\\<term-raw-map>Type \\[switch-to-buffer] to switch to another buffer."
+  (interactive (list (serial-read-name) (serial-read-speed)))
+  (serial-supported-or-barf)
+  (let* ((process (make-serial-process
+                   :port port
+                   :speed speed
+                   :coding 'no-conversion
+                   :noquery t))
+         (buffer (process-buffer process)))
+    (save-excursion
+      (set-buffer buffer)
+      (term-mode)
+      (term-char-mode)
+      (goto-char (point-max))
+      (set-marker (process-mark process) (point))
+      (set-process-filter process 'term-emulate-terminal)
+      (set-process-sentinel process 'term-sentinel))
+    (switch-to-buffer buffer)
+    buffer))
+
+(defvar serial-mode-line-speed-menu nil)
+(defvar serial-mode-line-config-menu nil)
+
+(defun serial-speed ()
+  "Return the speed of the serial port of the current buffer's process.
+The return value may be nil for a special serial port."
+  (process-contact (get-buffer-process (current-buffer)) :speed))
+
+(defun serial-mode-line-speed-menu-1 (event)
+  (interactive "e")
+  (save-selected-window
+    (select-window (posn-window (event-start event)))
+    (serial-update-speed-menu)
+    (let* ((selection (serial-mode-line-speed-menu event))
+	   (binding (and selection (lookup-key serial-mode-line-speed-menu
+					       (vector (car selection))))))
+      (when binding (call-interactively binding)))))
+
+(defun serial-mode-line-speed-menu (event)
+  (x-popup-menu event serial-mode-line-speed-menu))
+
+(defun serial-update-speed-menu ()
+  (setq serial-mode-line-speed-menu (make-sparse-keymap "Speed (b/s)"))
+  (define-key serial-mode-line-speed-menu [serial-mode-line-speed-menu-other]
+    '(menu-item "Other..."
+                (lambda (event) (interactive "e")
+                  (let ((speed (serial-read-speed)))
+                    (serial-process-configure :speed speed)
+                    (term-update-mode-line)
+                    (message "Speed set to %d b/s" speed)))))
+  (dolist (str (serial-nice-speed-history))
+    (let ((num (or (and (stringp str) (string-to-number str)) 0)))
+      (define-key
+        serial-mode-line-speed-menu
+        (vector (make-symbol (format "serial-mode-line-speed-menu-%s" str)))
+        `(menu-item
+          ,str
+          (lambda (event) (interactive "e")
+            (serial-process-configure :speed ,num)
+            (term-update-mode-line)
+            (message "Speed set to %d b/s" ,num))
+          :button (:toggle . (= (serial-speed) ,num)))))))
+
+(defun serial-mode-line-config-menu-1 (event)
+  (interactive "e")
+  (save-selected-window
+    (select-window (posn-window (event-start event)))
+    (serial-update-config-menu)
+    (let* ((selection (serial-mode-line-config-menu event))
+           (binding (and selection (lookup-key serial-mode-line-config-menu
+                                               (vector (car selection))))))
+      (when binding (call-interactively binding)))))
+
+(defun serial-mode-line-config-menu (event)
+  (x-popup-menu event serial-mode-line-config-menu))
+
+(defun serial-update-config-menu ()
+  (setq serial-mode-line-config-menu (make-sparse-keymap "Configuration"))
+  (let ((config (process-contact
+                 (get-buffer-process (current-buffer)) t))
+        (y)
+        (str))
+    (dolist (y '((:flowcontrol hw   "Hardware flowcontrol (RTS/CTS)")
+                 (:flowcontrol sw   "Software flowcontrol (XON/XOFF)")
+                 (:flowcontrol nil  "No flowcontrol")
+                 (:stopbits    2    "2 stopbits")
+                 (:stopbits    1    "1 stopbit")
+                 (:parity      odd  "Odd parity")
+                 (:parity      even "Even parity")
+                 (:parity      nil  "No parity")
+                 (:bytesize    7    "7 bits per byte")
+                 (:bytesize    8    "8 bits per byte")))
+      (define-key serial-mode-line-config-menu
+        (vector (make-symbol (format "%s-%s" (nth 0 y) (nth 1 y))))
+        `(menu-item
+          ,(nth 2 y)
+          (lambda (event) (interactive "e")
+            (serial-process-configure ,(nth 0 y) ',(nth 1 y))
+            (term-update-mode-line)
+            (message "%s" ,(nth 2 y)))
+          ;; Use :toggle instead of :radio because a non-standard port
+          ;; configuration may not match any menu items.
+          :button (:toggle . ,(equal (plist-get config (nth 0 y))
+                                     (nth 1 y))))))))
+
+
 ;;; Converting process modes to use term mode
 ;;; ===========================================================================
 ;;; Renaming variables
@@ -4270,5 +4565,5 @@ the process.  Any more args are arguments to PROGRAM."
 
 (provide 'term)
 
-;;; arch-tag: eee16bc8-2cd7-4147-9534-a5694752f716
+;; arch-tag: eee16bc8-2cd7-4147-9534-a5694752f716
 ;;; term.el ends here

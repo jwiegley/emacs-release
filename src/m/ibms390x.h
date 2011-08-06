@@ -1,13 +1,13 @@
 /* machine description file for IBM S390 in 64-bit mode
-   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008
+   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
      Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* This file was made by copying the significant parts of amdx86-64.h
    into ibms390.h.  */
@@ -47,31 +45,15 @@ NOTE-END */
 
 #define NO_ARG_ARRAY
 
-/* Define WORD_MACHINE if addresses and such have
- * to be corrected before they can be used as byte counts.  */
-
-#define WORD_MACHINE
-
-/* Now define a symbol for the cpu type, if your compiler
-   does not define it automatically:
-   Ones defined so far include vax, m68000, ns16000, pyramid,
-   orion, tahoe, APOLLO and many others */
-
-/* Use type int rather than a union, to represent Lisp_Object */
-/* This is desirable for most machines.  */
-
-#define NO_UNION_TYPE
-
 /* Define the type to use.  */
 #define EMACS_INT long
 #define EMACS_UINT unsigned long
-#define SPECIAL_EMACS_INT
 
 /* Define EXPLICIT_SIGN_EXTEND if XINT must explicitly sign-extend
    the 24-bit bit field into an int.  In other words, if bit fields
    are always unsigned.
 
-   If you use NO_UNION_TYPE, this flag does not matter.  */
+   This flag only matters if you use USE_LISP_UNION_TYPE.  */
 
 #undef EXPLICIT_SIGN_EXTEND
 
@@ -83,12 +65,6 @@ NOTE-END */
 
 #define LOAD_AVE_CVT(x) (int) (((double) (x)) * 100.0 / FSCALE)
 
-/* Define CANNOT_DUMP on machines where unexec does not work.
-   Then the function dump-emacs will not be defined
-   and temacs will do (load "loadup") automatically unless told otherwise.  */
-
-#undef CANNOT_DUMP
-
 /* Define VIRT_ADDR_VARIES if the virtual addresses of
    pure and impure space as loaded can vary, and even their
    relative order cannot be relied on.
@@ -98,77 +74,31 @@ NOTE-END */
 
 #define VIRT_ADDR_VARIES
 
-/* Define C_ALLOCA if this machine does not support a true alloca
-   and the one written in C should be used instead.
-   Define HAVE_ALLOCA to say that the system provides a properly
-   working alloca function and it should be used.
-   Define neither one if an assembler-language alloca
-   in the file alloca.s should be used.  */
+/* Define HAVE_ALLOCA to say that the system provides a properly
+   working alloca function and it should be used.  Undefine it if an
+   assembler-language alloca in the file alloca.s should be used. */
 
-#undef C_ALLOCA
 #define HAVE_ALLOCA
-
-/* Define NO_REMAP if memory segmentation makes it not work well
-   to change the boundary between the text section and data section
-   when Emacs is dumped.  If you define this, the preloaded Lisp
-   code will not be sharable; but that's better than failing completely.  */
-
-#undef NO_REMAP
-
-/* Some really obscure 4.2-based systems (like Sequent DYNIX)
- * do not support asynchronous I/O (using SIGIO) on sockets,
- * even though it works fine on tty's.  If you have one of
- * these systems, define the following, and then use it in
- * config.h (or elsewhere) to decide when (not) to use SIGIO.
- *
- * You'd think this would go in an operating-system description file,
- * but since it only occurs on some, but not all, BSD systems, the
- * reasonable place to select for it is in the machine description
- * file.
- */
-
-#undef NO_SOCK_SIGIO
-
-
-/* After adding support for a new system, modify the large case
-   statement in the `configure' script to recognize reasonable
-   configuration names, and add a description of the system to
-   `etc/MACHINES'.
-
-   If you've just fixed a problem in an existing configuration file,
-   you should also check `etc/MACHINES' to make sure its descriptions
-   of known problems in that configuration should be updated.  */
-
-#define PNTR_COMPARISON_TYPE unsigned long
 
 /* On the 64 bit architecture, we can use 60 bits for addresses */
 
 #define VALBITS         60
 
-/* This definition of MARKBIT is necessary because of the comparison of
-   ARRAY_MARK_FLAG and MARKBIT in an #if in lisp.h, which cpp doesn't like. */
-
-#define MARKBIT         0x8000000000000000L
-
 #define LINKER $(CC) -nostdlib
-
-/* Define XINT and XUINT so that they can take arguments of type int */
-#define XINT(a)  (((long) (a) << (BITS_PER_LONG - VALBITS)) >> (BITS_PER_LONG - VALBITS))
-#define XUINT(a) ((long) (a) & VALMASK)
 
 /* Define XPNTR to avoid or'ing with DATA_SEG_BITS */
 
 #define XPNTR(a) XUINT (a)
 
 #undef START_FILES
-#ifdef HAVE_X86_64_LIB64_DIR
+#ifdef HAVE_LIB64_DIR
 #define START_FILES pre-crt0.o /usr/lib64/crt1.o /usr/lib64/crti.o
 #else
 #define START_FILES pre-crt0.o /usr/lib/crt1.o /usr/lib/crti.o
 #endif
 
 #undef LIB_STANDARD
-#ifdef HAVE_X86_64_LIB64_DIR
+#ifdef HAVE_LIB64_DIR
 #define LIB_STANDARD -lgcc -lc -lgcc /usr/lib64/crtn.o
 #else
 #define LIB_STANDARD -lgcc -lc -lgcc /usr/lib/crtn.o

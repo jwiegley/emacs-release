@@ -1,16 +1,16 @@
 ;;; esh-proc.el --- process management
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,13 +18,17 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;;; Code:
 
 (provide 'esh-proc)
 
-(eval-when-compile (require 'esh-maint))
+(eval-when-compile
+  (require 'eshell)
+  (require 'esh-util))
 
 (defgroup eshell-proc nil
   "When Eshell invokes external commands, it always does so
@@ -32,8 +36,6 @@ asynchronously, so that Emacs isn't tied up waiting for the process to
 finish."
   :tag "Process management"
   :group 'eshell)
-
-;;; Commentary:
 
 ;;; User Variables:
 
@@ -236,6 +238,26 @@ The prompt will be set to PROMPT."
   "A marker that tracks the beginning of output of the last subprocess.
 Used only on systems which do not support async subprocesses.")
 
+(defvar eshell-needs-pipe '("bc")
+  "List of commands which need `process-connection-type' to be nil.
+Currently only affects commands in pipelines, and not those at
+the front.  If an element contains a directory part it must match
+the full name of a command, otherwise just the nondirectory part must match.")
+
+(defun eshell-needs-pipe-p (command)
+  "Return non-nil if COMMAND needs `process-connection-type' to be nil.
+See `eshell-needs-pipe'."
+  (and eshell-in-pipeline-p
+       (not (eq eshell-in-pipeline-p 'first))
+       ;; FIXME should this return non-nil for anything that is
+       ;; neither 'first nor 'last?  See bug#1388 discussion.
+       (catch 'found
+	 (dolist (exe eshell-needs-pipe)
+	   (if (string-equal exe (if (string-match "/" exe)
+				     command
+				   (file-name-nondirectory command)))
+	       (throw 'found t))))))
+
 (defun eshell-gather-process-output (command args)
   "Gather the output from COMMAND + ARGS."
   (unless (and (file-executable-p command)
@@ -250,11 +272,13 @@ Used only on systems which do not support async subprocesses.")
     (cond
      ((fboundp 'start-process)
       (setq proc
-	    (apply 'start-process
-		   (file-name-nondirectory command) nil
-		   ;; `start-process' can't deal with relative
-		   ;; filenames
-		   (append (list (expand-file-name command)) args)))
+	    (let ((process-connection-type
+		   (unless (eshell-needs-pipe-p command)
+		     process-connection-type)))
+	      (apply 'start-process
+		     (file-name-nondirectory command) nil
+		     ;; `start-process' can't deal with relative filenames.
+		     (append (list (expand-file-name command)) args))))
       (eshell-record-process-object proc)
       (set-process-buffer proc (current-buffer))
       (if (eshell-interactive-output-p)
@@ -502,7 +526,5 @@ See the variable `eshell-kill-processes-on-exit'."
   (eshell-send-input nil nil t)
   (eshell-process-interact 'process-send-eof))
 
-;;; Code:
-
-;;; arch-tag: ac477a3e-ee4d-4b44-8ec6-212010e607bb
+;; arch-tag: ac477a3e-ee4d-4b44-8ec6-212010e607bb
 ;;; esh-proc.el ends here

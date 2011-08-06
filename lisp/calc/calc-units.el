@@ -1,17 +1,17 @@
 ;;; calc-units.el --- unit conversion functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -40,45 +38,51 @@
 ;;; with some additions by Przemek Klosowski (przemek@rrdstrad.nist.gov)
 ;;; Updated April 2002 by Jochen Küpper
 
-;;; for CODATA 1998 see one of
-;;; - Journal of Physical and Chemical Reference Data, 28(6), 1713-1852, 1999.
-;;; - Reviews of Modern Physics, 72(2), 351-495, 2000.
-;;; for CODATA 2005 see
-;;; - http://physics.nist.gov/cuu/Constants/index.html
+;;; Updated August 2007, using
+;;;     CODATA (http://physics.nist.gov/cuu/Constants/index.html)
+;;;     NIST   (http://physics.nist.gov/Pubs/SP811/appenB9.html)
+;;;     ESUWM  (Encyclopaedia of Scientific Units, Weights and
+;;;             Measures, by François Cardarelli)
+;;; All conversions are exact unless otherwise noted.
 
 (defvar math-standard-units
   '( ;; Length
     ( m       nil                    "*Meter" )
-    ( in      "2.54 cm"           "Inch" )
-    ( ft      "12 in"                "Foot" )
+    ( in      "254*10^(-2) cm"       "Inch"  nil
+              "2.54 cm")
+    ( ft      "12 in"                "Foot")
     ( yd      "3 ft"                 "Yard" )
     ( mi      "5280 ft"              "Mile" )
-    ( au      "149597870691 m"       "Astronomical Unit" ) ;; NASA JPL (http://neo.jpl.nasa.gov/glossary/au.html)
-    ( lyr     "9460536207068016 m"   "Light Year" )
-    ( pc      "206264.80625 au"      "Parsec" )
+    ( au      "149597870691. m"      "Astronomical Unit" nil
+              "149597870691 m (*)")
+              ;; (approx) NASA JPL (http://neo.jpl.nasa.gov/glossary/au.html)
+    ( lyr     "c yr"                 "Light Year" )
+    ( pc      "3.0856775854*10^16 m" "Parsec" nil
+              "3.0856775854 10^16 m (*)") ;; (approx) ESUWM
     ( nmi     "1852 m"               "Nautical Mile" )
     ( fath    "6 ft"                 "Fathom" )
+    ( fur     "660 ft"               "Furlong")
     ( mu      "1 um"                 "Micron" )
-    ( mil     "in/1000"              "Mil" )
-    ( point   "in/72"                "Point (1/72 inch)" )
-    ( Ang     "1e-10 m"              "Angstrom" )
+    ( mil     "(1/1000) in"          "Mil" )
+    ( point   "(1/72) in"            "Point (1/72 inch)" )
+    ( Ang     "10^(-10) m"           "Angstrom" )
     ( mfi     "mi+ft+in"             "Miles + feet + inches" )
     ;; TeX lengths
-    ( texpt   "in/72.27"             "Point (TeX conventions)" )
+    ( texpt   "(100/7227) in"        "Point (TeX conventions)" )
     ( texpc   "12 texpt"             "Pica" )
     ( texbp   "point"                "Big point (TeX conventions)" )
-    ( texdd   "1238/1157 texpt"      "Didot point" )
+    ( texdd   "(1238/1157) texpt"    "Didot point" )
     ( texcc   "12 texdd"             "Cicero" )
-    ( texsp   "1/66536 texpt"        "Scaled TeX point" )
+    ( texsp   "(1/65536) texpt"      "Scaled TeX point" )
 
     ;; Area
     ( hect    "10000 m^2"            "*Hectare" )
     ( a       "100 m^2"              "Are")
-    ( acre    "mi^2 / 640"           "Acre" )
-    ( b       "1e-28 m^2"            "Barn" )
+    ( acre    "(1/640) mi^2"         "Acre" )
+    ( b       "10^(-28) m^2"         "Barn" )
 
     ;; Volume
-    ( L       "1e-3 m^3"             "*Liter" )
+    ( L       "10^(-3) m^3"          "*Liter" )
     ( l       "L"                    "Liter" )
     ( gal     "4 qt"                 "US Gallon" )
     ( qt      "2 pt"                 "Quart" )
@@ -87,10 +91,15 @@
     ( ozfl    "2 tbsp"               "Fluid Ounce" )
     ( floz    "2 tbsp"               "Fluid Ounce" )
     ( tbsp    "3 tsp"                "Tablespoon" )
-    ( tsp     "4.92892159375 ml"     "Teaspoon" )
-    ( vol     "tsp+tbsp+ozfl+cup+pt+qt+gal" "Gallons + ... + teaspoons" )
-    ( galC    "4.54609 L"            "Canadian Gallon" )
-    ( galUK   "4.546092 L"           "UK Gallon" )
+    ;; ESUWM defines a US gallon as 231 in^3.
+    ;; That gives the following exact value for tsp.
+    ( tsp     "492892159375*10^(-11) ml" "Teaspoon" nil
+              "4.92892159375 ml")
+    ( vol     "tsp+tbsp+ozfl+cup+pt+qt+gal" "Gallons + ... + teaspoons" nil
+              "tsp+tbsp+ozfl+cup+pt+qt+gal")
+    ( galC    "galUK"                "Canadian Gallon" )
+    ( galUK   "454609*10^(-5) L"     "UK Gallon" nil
+              "4.54609 L") ;; NIST
 
     ;; Time
     ( s       nil                    "*Second" )
@@ -100,44 +109,57 @@
     ( day     "24 hr"                "Day" )
     ( wk      "7 day"                "Week" )
     ( hms     "wk+day+hr+min+s"      "Hours, minutes, seconds" )
-    ( yr      "365.25 day"           "Year" )
+    ( yr      "36525*10^(-2) day"    "Year (Julian)" nil
+              "365.25 day")
     ( Hz      "1/s"                  "Hertz" )
 
     ;; Speed
     ( mph     "mi/hr"                "*Miles per hour" )
     ( kph     "km/hr"                "Kilometers per hour" )
     ( knot    "nmi/hr"               "Knot" )
-    ( c       "299792458 m/s"        "Speed of light" ) ;;; CODATA 2005
+    ( c       "299792458 m/s"        "Speed of light" ) ;;; CODATA
 
     ;; Acceleration
-    ( ga      "9.80665 m/s^2"        "*\"g\" acceleration" ) ;; CODATA 2005
+    ( ga      "980665*10^(-5) m/s^2" "*\"g\" acceleration" nil
+              "9.80665 m / s^2") ;; CODATA
 
     ;; Mass
     ( g       nil                    "*Gram" )
     ( lb      "16 oz"                "Pound (mass)" )
-    ( oz      "28.349523125 g"       "Ounce (mass)" )
+    ( oz      "28349523125*10^(-9) g" "Ounce (mass)" nil
+              "28.349523125 g") ;; ESUWM
     ( ton     "2000 lb"              "Ton" )
     ( tpo     "ton+lb+oz"            "Tons + pounds + ounces (mass)" )
     ( t       "1000 kg"              "Metric ton" )
-    ( tonUK   "1016.0469088 kg"      "UK ton" )
+    ( tonUK   "10160469088*10^(-7) kg" "UK ton" nil
+              "1016.0469088 kg") ;; ESUWM
     ( lbt     "12 ozt"               "Troy pound" )
-    ( ozt     "31.103475 g"          "Troy ounce" )
-    ( ct      ".2 g"                 "Carat" )
-    ( u       "1.66053886e-27 kg"    "Unified atomic mass" ) ;; CODATA 2005
+    ( ozt     "311034768*10^(-7) g"        "Troy ounce" nil
+              "31.10347680 g") ;; ESUWM, 1/12 exact value for lbt
+    ( ct      "(2/10) g"             "Carat" nil
+              "0.2 g") ;; ESUWM
+    ( u       "1.660538782*10^(-27) kg"    "Unified atomic mass" nil
+              "1.660538782 10^-27 kg (*)");;(approx) CODATA
 
     ;; Force
     ( N       "m kg/s^2"             "*Newton" )
-    ( dyn     "1e-5 N"               "Dyne" )
+    ( dyn     "10^(-5) N"            "Dyne" )
     ( gf      "ga g"                 "Gram (force)" )
-    ( lbf     "4.44822161526 N"      "Pound (force)" )
+    ( lbf     "ga lb"                "Pound (force)" )
     ( kip     "1000 lbf"             "Kilopound (force)" )
-    ( pdl     "0.138255 N"           "Poundal" )
+    ( pdl     "138254954376*10^(-12) N" "Poundal" nil
+              "0.138254954376 N") ;; ESUWM
 
     ;; Energy
     ( J       "N m"                  "*Joule" )
-    ( erg     "1e-7 J"               "Erg" )
-    ( cal     "4.1868 J"             "International Table Calorie" )
-    ( Btu     "1055.05585262 J"      "International Table Btu" )
+    ( erg     "10^(-7) J"            "Erg" )
+    ( cal     "41868*10^(-4) J"      "International Table Calorie" nil
+              "4.1868 J") ;; NIST
+    ( calth   "4184*10^(-3) J"       "Thermochemical Calorie" nil
+              "4.184 J") ;; NIST
+    ( Cal     "1000 cal"             "Large Calorie")
+    ( Btu     "105505585262*10^(-8) J" "International Table Btu" nil
+              "1055.05585262 J") ;; ESUWM
     ( eV      "ech V"                "Electron volt" )
     ( ev      "eV"                   "Electron volt" )
     ( therm   "105506000 J"          "EEC therm" )
@@ -151,7 +173,8 @@
 
     ;; Power
     ( W       "J/s"                  "*Watt" )
-    ( hp      "745.7 W"              "Horsepower" )
+    ( hp      "550 ft lbf/s"         "Horsepower") ;;ESUWM
+    ( hpm     "75 m kgf/s"           "Metric Horsepower") ;;ESUWM
 
     ;; Temperature
     ( K       nil                    "*Degree Kelvin"     K )
@@ -164,24 +187,27 @@
 
     ;; Pressure
     ( Pa      "N/m^2"                "*Pascal" )
-    ( bar     "1e5 Pa"               "Bar" )
-    ( atm     "101325 Pa"            "Standard atmosphere" ) ;; CODATA 2005
-    ( Torr    " 1.333224e2 Pa"       "Torr" ) ;; NIST (http://physics.nist.gov/Pubs/SP811/appenB9.html)
+    ( bar     "10^5 Pa"              "Bar" )
+    ( atm     "101325 Pa"            "Standard atmosphere" ) ;; CODATA
+    ( Torr    "(1/760) atm"          "Torr")
     ( mHg     "1000 Torr"            "Meter of mercury" )
-    ( inHg    "25.4 mmHg"            "Inch of mercury" )
-    ( inH2O   "2.490889e2 Pa"        "Inch of water" ) ;; NIST (http://physics.nist.gov/Pubs/SP811/appenB9.html)
-    ( psi     "6894.75729317 Pa"     "Pound per square inch" )
+    ( inHg    "254*10^(-1) mmHg"     "Inch of mercury" nil
+              "25.4 mmHg")
+    ( inH2O   "2.490889*10^2 Pa"        "Inch of water" nil
+              "2.490889 10^2 Pa (*)") ;;(approx) NIST
+    ( psi     "lbf/in^2"             "Pounds per square inch" )
 
     ;; Viscosity
-    ( P       "0.1 Pa s"              "*Poise" )
-    ( St      "1e-4 m^2/s"            "Stokes" )
+    ( P       "(1/10) Pa s"           "*Poise" )
+    ( St      "10^(-4) m^2/s"         "Stokes" )
 
     ;; Electromagnetism
     ( A       nil                     "*Ampere" )
     ( C       "A s"                   "Coulomb" )
     ( Fdy     "ech Nav"               "Faraday" )
-    ( e       "1.60217653e-19 C"      "Elementary charge" ) ;; CODATA 2005
-    ( ech     "1.60217653e-19 C"      "Elementary charge" ) ;; CODATA 2005
+    ( e       "ech"                   "Elementary charge" )
+    ( ech     "1.602176487*10^(-19) C"     "Elementary charge" nil
+              "1.602176487 10^-19 C (*)") ;;(approx) CODATA
     ( V       "W/A"                   "Volt" )
     ( ohm     "V/A"                   "Ohm" )
     ( mho     "A/V"                   "Mho" )
@@ -189,26 +215,26 @@
     ( F       "C/V"                   "Farad" )
     ( H       "Wb/A"                  "Henry" )
     ( T       "Wb/m^2"                "Tesla" )
-    ( Gs      "1e-4 T"                "Gauss" )
+    ( Gs      "10^(-4) T"             "Gauss" )
     ( Wb      "V s"                   "Weber" )
 
     ;; Luminous intensity
     ( cd      nil                     "*Candela" )
-    ( sb      "1e4 cd/m^2"            "Stilb" )
+    ( sb      "10000 cd/m^2"          "Stilb" )
     ( lm      "cd sr"                 "Lumen" )
     ( lx      "lm/m^2"                "Lux" )
-    ( ph      "1e4 lx"                "Phot" )
-    ( fc      "10.76391 lx"           "Footcandle" ) ;; NIST (http://physics.nist.gov/Pubs/SP811/appenB9.html)
-    ( lam     "1e4 lm/m^2"            "Lambert" )
-    ( flam    "3.426259 cd/m^2"       "Footlambert" ) ;; NIST (http://physics.nist.gov/Pubs/SP811/appenB9.html)
+    ( ph      "10000 lx"              "Phot" )
+    ( fc      "lm/ft^2"               "Footcandle") ;; ESUWM
+    ( lam     "10000 lm/m^2"          "Lambert" )
+    ( flam    "(1/pi) cd/ft^2"        "Footlambert") ;; ESUWM
 
     ;; Radioactivity
     ( Bq      "1/s"                    "*Becquerel" )
-    ( Ci      "3.7e10 Bq"              "Curie" )
+    ( Ci      "37*10^9 Bq"             "Curie" ) ;; ESUWM
     ( Gy      "J/kg"                   "Gray" )
     ( Sv      "Gy"                     "Sievert" )
-    ( R       "2.58e-4 C/kg"           "Roentgen" )
-    ( rd      ".01 Gy"                 "Rad" )
+    ( R       "258*10^(-6) C/kg"       "Roentgen" ) ;; NIST
+    ( rd      "(1/100) Gy"             "Rad" )
     ( rem     "rd"                     "Rem" )
 
     ;; Amount of substance
@@ -228,65 +254,84 @@
     ( sr      nil                      "*Steradian" )
 
     ;; Other physical quantities
-    ( h       "6.6260693e-34 J s"     "*Planck's constant" ) ;; CODATA 2005
-    ( hbar    "h / 2 pi"               "Planck's constant" )
-    ( mu0     "4 pi 1e-7 H/m"          "Permeability of vacuum" )
-    ( G       "6.6742e-11 m^3/kg^1/s^2" "Gravitational constant" ) ;; CODATA 2005
-    ( Nav     "6.02214115e23 / mol"    "Avagadro's constant" ) ;; CODATA 2005
-    ( me      "9.1093826e-31 kg"       "Electron rest mass" ) ;; CODATA 2005
-    ( mp      "1.67262171e-27 kg"      "Proton rest mass" ) ;; CODATA 2005
-    ( mn      "1.67492728e-27 kg"      "Neutron rest mass" ) ;; CODATA 2005
-    ( mmu     "1.88353140e-28 kg"      "Muon rest mass" ) ;; CODATA 2005
-    ( Ryd     "10973731.568525 /m"     "Rydberg's constant" ) ;; CODATA 2005
-    ( k       "1.3806505e-23 J/K"      "Boltzmann's constant" ) ;; CODATA 2005
-    ( alpha   "7.297352568e-3"         "Fine structure constant" ) ;; CODATA 2005
-    ( muB     "927.400949e-26 J/T"     "Bohr magneton" ) ;; CODATA 2005
-    ( muN     "5.05078343e-27 J/T"     "Nuclear magneton" ) ;; CODATA 2005
-    ( mue     "-928.476412e-26 J/T"    "Electron magnetic moment" ) ;; CODATA 2005
-    ( mup     "1.41060671e-26 J/T"     "Proton magnetic moment" ) ;; CODATA 2005
-    ( R0      "8.314472 J/mol/K"       "Molar gas constant" ) ;; CODATA 2005
-    ( V0      "22.710981e-3 m^3/mol"   "Standard volume of ideal gas" )))
+    ;; The values are from CODATA, and are approximate.
+    ( h       "6.62606896*10^(-34) J s"     "*Planck's constant" nil
+              "6.62606896 10^-34 J s (*)")
+    ( hbar    "h / (2 pi)"                  "Planck's constant" ) ;; Exact
+    ( mu0     "4 pi 10^(-7) H/m"            "Permeability of vacuum") ;; Exact
+    ( eps0    "1 / (mu0 c^2)"               "Permittivity of vacuum" )
+    ( G       "6.67428*10^(-11) m^3/(kg s^2)"    "Gravitational constant" nil
+              "6.67428 10^-11 m^3/(kg s^2) (*)")
+    ( Nav     "6.02214179*10^(23) / mol"    "Avogadro's constant" nil
+              "6.02214179 10^23 / mol (*)")
+    ( me      "9.10938215*10^(-31) kg"      "Electron rest mass" nil
+              "9.10938215 10^-31 kg (*)")
+    ( mp      "1.672621637*10^(-27) kg"     "Proton rest mass" nil
+              "1.672621637 10^-27 kg (*)")
+    ( mn      "1.674927211*10^(-27) kg"     "Neutron rest mass" nil
+              "1.674927211 10^-27 kg (*)")
+    ( mmu     "1.88353130*10^(-28) kg"      "Muon rest mass" nil
+              "1.88353130 10^-28 kg (*)")
+    ( Ryd     "10973731.568527 /m"          "Rydberg's constant" nil
+              "10973731.568527 /m (*)")
+    ( k       "1.3806504*10^(-23) J/K"      "Boltzmann's constant" nil
+              "1.3806504 10^-23 J/K (*)")
+    ( alpha   "7.2973525376*10^(-3)"        "Fine structure constant" nil
+              "7.2973525376 10^-3 (*)")
+    ( muB     "927.400915*10^(-26) J/T"     "Bohr magneton" nil
+              "927.400915 10^-26 J/T (*)")
+    ( muN     "5.05078324*10^(-27) J/T"     "Nuclear magneton" nil
+              "5.05078324 10^-27 J/T (*)")
+    ( mue     "-928.476377*10^(-26) J/T"    "Electron magnetic moment" nil
+              "-928.476377 10^-26 J/T (*)")
+    ( mup     "1.410606662*10^(-26) J/T"    "Proton magnetic moment" nil
+              "1.410606662 10^-26 J/T (*)")
+    ( R0      "8.314472 J/(mol K)"          "Molar gas constant" nil
+              "8.314472 J/(mol K) (*)")
+    ( V0      "22.710981*10^(-3) m^3/mol"   "Standard volume of ideal gas" nil
+              "22.710981 10^-3 m^3/mol (*)")))
 
 
 (defvar math-additional-units nil
   "*Additional units table for user-defined units.
-Must be formatted like math-standard-units.
-If this is changed, be sure to set math-units-table to nil to ensure
+Must be formatted like `math-standard-units'.
+If you change this, be sure to set `math-units-table' to nil to ensure
 that the combined units table will be rebuilt.")
 
 (defvar math-unit-prefixes
-  '( ( ?Y  (float 1 24)  "Yotta"  )
-     ( ?Z  (float 1 21)  "Zetta"  )
-     ( ?E  (float 1 18)  "Exa"    )
-     ( ?P  (float 1 15)  "Peta"   )
-     ( ?T  (float 1 12)  "Tera"	  )
-     ( ?G  (float 1 9)   "Giga"	  )
-     ( ?M  (float 1 6)   "Mega"	  )
-     ( ?k  (float 1 3)   "Kilo"	  )
-     ( ?K  (float 1 3)   "Kilo"	  )
-     ( ?h  (float 1 2)   "Hecto"  )
-     ( ?H  (float 1 2)   "Hecto"  )
-     ( ?D  (float 1 1)   "Deka"	  )
-     ( 0   (float 1 0)   nil      )
-     ( ?d  (float 1 -1)  "Deci"	  )
-     ( ?c  (float 1 -2)  "Centi"  )
-     ( ?m  (float 1 -3)  "Milli"  )
-     ( ?u  (float 1 -6)  "Micro"  )
-     ( ?n  (float 1 -9)  "Nano"	  )
-     ( ?p  (float 1 -12) "Pico"	  )
-     ( ?f  (float 1 -15) "Femto"  )
-     ( ?a  (float 1 -18) "Atto"   )
-     ( ?z  (float 1 -21) "zepto"  )
-     ( ?y  (float 1 -24) "yocto"  )))
+  '( ( ?Y  (^ 10 24)  "Yotta"  )
+     ( ?Z  (^ 10 21)  "Zetta"  )
+     ( ?E  (^ 10 18)  "Exa"    )
+     ( ?P  (^ 10 15)  "Peta"   )
+     ( ?T  (^ 10 12)  "Tera"   )
+     ( ?G  (^ 10 9)   "Giga"   )
+     ( ?M  (^ 10 6)   "Mega"   )
+     ( ?k  (^ 10 3)   "Kilo"   )
+     ( ?K  (^ 10 3)   "Kilo"   )
+     ( ?h  (^ 10 2)   "Hecto"  )
+     ( ?H  (^ 10 2)   "Hecto"  )
+     ( ?D  (^ 10 1)   "Deka"   )
+     ( 0   (^ 10 0)    nil     )
+     ( ?d  (^ 10 -1)  "Deci"   )
+     ( ?c  (^ 10 -2)  "Centi"  )
+     ( ?m  (^ 10 -3)  "Milli"  )
+     ( ?u  (^ 10 -6)  "Micro"  )
+     ( ?n  (^ 10 -9)  "Nano"   )
+     ( ?p  (^ 10 -12) "Pico"   )
+     ( ?f  (^ 10 -15) "Femto"  )
+     ( ?a  (^ 10 -18) "Atto"   )
+     ( ?z  (^ 10 -21) "zepto"  )
+     ( ?y  (^ 10 -24) "yocto"  )))
 
 (defvar math-standard-units-systems
   '( ( base  nil )
-     ( si    ( ( g   '(* (var kg var-kg) (float 1 -3)) ) ) )
-     ( mks   ( ( g   '(* (var kg var-kg) (float 1 -3)) ) ) )
-     ( cgs   ( ( m   '(* (var cm var-cm) 100         ) ) ) )))
+     ( si    ( ( g   '(/ (var kg var-kg) 1000) ) ) )
+     ( mks   ( ( g   '(/ (var kg var-kg) 1000) ) ) )
+     ( cgs   ( ( m   '(* (var cm var-cm) 100 ) ) ) )))
 
 (defvar math-units-table nil
-  "Internal units table derived from math-defined-units.
+  "Internal units table.
+Derived from `math-standard-units' and `math-additional-units'.
 Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
 
 (defvar math-units-table-buffer-valid nil)
@@ -304,7 +349,7 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
 (defun calc-quick-units ()
   (interactive)
   (calc-slow-wrapper
-   (let* ((num (- last-command-char ?0))
+   (let* ((num (- last-command-event ?0))
 	  (pos (if (= num 0) 10 num))
 	  (units (calc-var-value 'var-Units))
 	  (expr (calc-top-n 1)))
@@ -321,13 +366,67 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
 			  (math-simplify-units
 			   (math-mul expr (nth pos units))))))))
 
+(defun math-get-standard-units (expr)
+  "Return the standard units in EXPR."
+  (math-simplify-units
+   (math-extract-units
+    (math-to-standard-units expr nil))))
+
+(defun math-get-units (expr)
+  "Return the units in EXPR."
+  (math-simplify-units
+   (math-extract-units expr)))
+
+(defun math-make-unit-string (expr)
+  "Return EXPR in string form.
+If EXPR is nil, return nil."
+  (if expr
+      (let ((cexpr (math-compose-expr expr 0)))
+        (replace-regexp-in-string
+         " / " "/"
+         (if (stringp cexpr)
+             cexpr
+           (math-composition-to-string cexpr))))))
+
+(defvar math-default-units-table
+  (make-hash-table :test 'equal)
+  "A table storing previously converted units.")
+
+(defun math-get-default-units (expr)
+  "Get default units to use when converting the units in EXPR."
+  (let* ((units (math-get-units expr))
+         (standard-units (math-get-standard-units expr))
+         (default-units (gethash
+                         standard-units
+                         math-default-units-table)))
+    (if (equal units (car default-units))
+        (math-make-unit-string (cadr default-units))
+      (math-make-unit-string (car default-units)))))
+
+(defun math-put-default-units (expr)
+  "Put the units in EXPR in the default units table."
+  (let* ((units (math-get-units expr))
+         (standard-units (math-get-standard-units expr))
+         (default-units (gethash
+                         standard-units
+                         math-default-units-table)))
+    (cond
+     ((not default-units)
+      (puthash standard-units (list units) math-default-units-table))
+     ((not (equal units (car default-units)))
+      (puthash standard-units
+               (list units (car default-units))
+               math-default-units-table)))))
+
+
 (defun calc-convert-units (&optional old-units new-units)
   (interactive)
   (calc-slow-wrapper
    (let ((expr (calc-top-n 1))
 	 (uoldname nil)
 	 unew
-         units)
+         units
+         defunits)
      (unless (math-units-in-expr-p expr t)
        (let ((uold (or old-units
 		       (progn
@@ -343,16 +442,31 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
 	   (error "Bad format in units expression: %s" (nth 1 uold)))
 	 (setq expr (math-mul expr uold))))
      (unless new-units
-       (setq new-units (read-string (if uoldname
-					(concat "Old units: "
-						uoldname
-						", new units: ")
-				      "New units: "))))
+       (setq defunits (math-get-default-units expr))
+       (setq new-units
+             (read-string (concat
+                           (if uoldname
+                               (concat "Old units: "
+                                       uoldname
+                                       ", new units")
+                            "New units")
+                           (if defunits
+                               (concat
+                                " (default "
+                                defunits
+                                "): ")
+                             ": "))))
+
+       (if (and
+            (string= new-units "")
+            defunits)
+           (setq new-units defunits)))
      (when (string-match "\\` */" new-units)
        (setq new-units (concat "1" new-units)))
      (setq units (math-read-expr new-units))
      (when (eq (car-safe units) 'error)
        (error "Bad format in units expression: %s" (nth 2 units)))
+     (math-put-default-units units)
      (let ((unew (math-units-in-expr-p units t))
 	   (std (and (eq (car-safe units) 'var)
 		     (assq (nth 1 units) math-standard-units-systems))))
@@ -381,7 +495,8 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
    (let ((expr (calc-top-n 1))
 	 (uold nil)
 	 (uoldname nil)
-	 unew)
+	 unew
+         defunits)
      (setq uold (or old-units
 		    (let ((units (math-single-units-in-expr-p expr)))
 		      (if units
@@ -398,18 +513,32 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
        (error "Bad format in units expression: %s" (nth 2 uold)))
      (or (math-units-in-expr-p expr nil)
 	 (setq expr (math-mul expr uold)))
+     (setq defunits (math-get-default-units expr))
      (setq unew (or new-units
-		    (math-read-expr
-		     (read-string (if uoldname
-				      (concat "Old temperature units: "
-					      uoldname
-					      ", new units: ")
-				    "New temperature units: ")))))
+                    (read-string
+                     (concat
+                      (if uoldname
+                          (concat "Old temperature units: "
+                                  uoldname
+                                  ", new units")
+                        "New temperature units")
+                      (if defunits
+                          (concat " (default "
+                                  defunits
+                                  "): ")
+                        ": ")))))
+     (setq unew (math-read-expr (if (string= unew "") defunits unew)))
      (when (eq (car-safe unew) 'error)
        (error "Bad format in units expression: %s" (nth 2 unew)))
-     (calc-enter-result 1 "cvtm" (math-simplify-units
-				  (math-convert-temperature expr uold unew
-							    uoldname))))))
+     (math-put-default-units unew)
+     (let ((ntemp (calc-normalize
+                   (math-simplify-units
+                    (math-convert-temperature expr uold unew
+                                              uoldname)))))
+       (if (Math-zerop ntemp)
+           (setq ntemp (list '* ntemp unew)))
+       (let ((calc-simplify-mode 'none))
+         (calc-enter-result 1 "cvtm" ntemp))))))
 
 (defun calc-remove-units ()
   (interactive)
@@ -423,7 +552,7 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
    (calc-enter-result 1 "rmun" (math-simplify-units
 				(math-extract-units (calc-top-n 1))))))
 
-;; The variables calc-num-units and calc-den-units are local to 
+;; The variables calc-num-units and calc-den-units are local to
 ;; calc-explain-units, but are used by calc-explain-units-rec,
 ;; which is called by calc-explain-units.
 (defvar calc-num-units)
@@ -529,14 +658,15 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
   (math-build-units-table-buffer t)
   (message "%s" (substitute-command-keys "Type \\[calc] to return to the Calculator")))
 
-(defun calc-define-unit (uname desc)
-  (interactive "SDefine unit name: \nsDescription: ")
+(defun calc-define-unit (uname desc &optional disp)
+  (interactive "SDefine unit name: \nsDescription: \nP")
+  (if disp (setq disp (read-string "Display definition: ")))
   (calc-wrapper
    (let ((form (calc-top-n 1))
 	 (unit (assq uname math-additional-units)))
      (or unit
 	 (setq math-additional-units
-	       (cons (setq unit (list uname nil nil))
+	       (cons (setq unit (list uname nil nil nil nil))
 		     math-additional-units)
 	       math-units-table nil))
      (setcar (cdr unit) (and (not (and (eq (car-safe form) 'var)
@@ -544,7 +674,9 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
 			     (not (math-equal-int form 1))
 			     (math-format-flat-expr form 0)))
      (setcar (cdr (cdr unit)) (and (not (equal desc ""))
-				   desc))))
+				   desc))
+     (if disp
+         (setcar (cdr (cdr (cdr (cdr unit)))) disp))))
   (calc-invalidate-units-table))
 
 (defun calc-undefine-unit (uname)
@@ -665,10 +797,11 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
 				   (nth 2 x)
 				   (nth 3 x)
 				   (and (not (nth 1 x))
-					(list (cons (car x) 1))))))
+					(list (cons (car x) 1)))
+                                   (nth 4 x))))
 			  combined-units))
 	(let ((math-units-table tab))
-	  (mapcar 'math-find-base-units tab))
+	  (mapc 'math-find-base-units tab))
 	(message "Building units table...done")
 	(setq math-units-table tab))))
 
@@ -710,7 +843,7 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
 		     (old (assq (car (car ulist)) math-fbu-base)))
 		 (if old
 		     (setcdr old (+ (cdr old) p))
-		   (setq math-fbu-base 
+		   (setq math-fbu-base
                          (cons (cons (car (car ulist)) p) math-fbu-base))))
 	       (setq ulist (cdr ulist)))))
 	  ((math-scalarp expr))
@@ -904,8 +1037,8 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
 	   (if (equal (nth 4 math-fcu-u) (nth 4 u2))
 	       (cons expr pow))))))
 
-;; The variables math-cu-new-units and math-cu-pure are local to 
-;; math-convert-units, but are used by math-convert-units-rec, 
+;; The variables math-cu-new-units and math-cu-pure are local to
+;; math-convert-units, but are used by math-convert-units-rec,
 ;; which is called by math-convert-units.
 (defvar math-cu-new-units)
 (defvar math-cu-pure)
@@ -917,7 +1050,7 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
         (if (eq (car-safe (nth 1 unew)) '+)
             (setq math-cu-new-units (nth 1 unew)))))
   (math-with-extra-prec 2
-    (let ((compat (and (not math-cu-pure) 
+    (let ((compat (and (not math-cu-pure)
                        (math-find-compatible-unit expr math-cu-new-units)))
 	  (math-cu-unit-list nil)
 	  (math-combining-units nil))
@@ -944,7 +1077,7 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
 
 (defun math-convert-units-rec (expr)
   (if (math-units-in-expr-p expr nil)
-      (math-apply-units (math-to-standard-units 
+      (math-apply-units (math-to-standard-units
                          (list '/ expr math-cu-new-units) nil)
 			math-cu-new-units math-cu-unit-list math-cu-pure)
     (if (Math-primp expr)
@@ -971,17 +1104,17 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
 						     (symbol-name v)))))))
     (or (eq (nth 3 uold) (nth 3 unew))
 	(cond ((eq (nth 3 uold) 'K)
-	       (setq expr (list '- expr '(float 27315 -2)))
+	       (setq expr (list '- expr '(/ 27315 100)))
 	       (if (eq (nth 3 unew) 'F)
-		   (setq expr (list '+ (list '* expr '(frac 9 5)) 32))))
+		   (setq expr (list '+ (list '* expr '(/ 9 5)) 32))))
 	      ((eq (nth 3 uold) 'C)
 	       (if (eq (nth 3 unew) 'F)
-		   (setq expr (list '+ (list '* expr '(frac 9 5)) 32))
-		 (setq expr (list '+ expr '(float 27315 -2)))))
+		   (setq expr (list '+ (list '* expr '(/ 9 5)) 32))
+		 (setq expr (list '+ expr '(/ 27315 100)))))
 	      (t
-	       (setq expr (list '* (list '- expr 32) '(frac 5 9)))
+	       (setq expr (list '* (list '- expr 32) '(/ 5 9)))
 	       (if (eq (nth 3 unew) 'K)
-		   (setq expr (list '+ expr '(float 27315 -2)))))))
+		   (setq expr (list '+ expr '(/ 27315 100)))))))
     (if pure
 	expr
       (list '* expr new))))
@@ -1009,7 +1142,7 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
 	       (calc-record-why "*Inconsistent units" math-simplify-expr)
 	       math-simplify-expr)
 	   (list '* (math-add (math-remove-units (nth 1 math-simplify-expr))
-			      (if (eq (car math-simplify-expr) '-) 
+			      (if (eq (car math-simplify-expr) '-)
                                   (math-neg ratio) ratio))
 		 units)))))
 
@@ -1103,7 +1236,7 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
 	 (math-simplify-units-divisor np (cdr (cdr math-simplify-expr)))
 	 (if (eq math-try-cancel-units 0)
 	     (let* ((math-simplifying-units nil)
-		    (base (math-simplify 
+		    (base (math-simplify
                            (math-to-standard-units math-simplify-expr nil))))
 	       (if (Math-numberp base)
 		   (setq math-simplify-expr base))))
@@ -1161,11 +1294,11 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
        (math-realp (nth 2 math-simplify-expr))
        (if (memq (car-safe (nth 1 math-simplify-expr)) '(* /))
 	   (list (car (nth 1 math-simplify-expr))
-		 (list '^ (nth 1 (nth 1 math-simplify-expr)) 
+		 (list '^ (nth 1 (nth 1 math-simplify-expr))
                        (nth 2 math-simplify-expr))
-		 (list '^ (nth 2 (nth 1 math-simplify-expr)) 
+		 (list '^ (nth 2 (nth 1 math-simplify-expr))
                        (nth 2 math-simplify-expr)))
-	 (math-simplify-units-pow (nth 1 math-simplify-expr) 
+	 (math-simplify-units-pow (nth 1 math-simplify-expr)
                                   (nth 2 math-simplify-expr)))))
 
 (math-defsimplify calcFunc-sqrt
@@ -1333,6 +1466,7 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
           (let ((inhibit-read-only t))
             (erase-buffer)
             (insert "Calculator Units Table:\n\n")
+            (insert "(All definitions are exact unless marked with an asterisk (*).)\n\n")
             (insert "Unit    Type  Definition                  Description\n\n")
             (while uptr
               (setq u (car uptr)
@@ -1360,9 +1494,11 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
                       (insert "U"))))
               (indent-to 14)
               (and shadowed (insert "("))
-              (if (nth 1 u)
-                  (insert (math-format-value (nth 1 u) 80))
-                (insert (symbol-name (car u))))
+              (if (nth 5 u)
+                  (insert (nth 5 u))
+                (if (nth 1 u)
+                    (insert (math-format-value (nth 1 u) 80))
+                  (insert (symbol-name (car u)))))
               (and shadowed (insert ")"))
               (indent-to 41)
               (insert " ")
@@ -1408,5 +1544,5 @@ Entries are (SYMBOL EXPR DOC-STRING TEMP-TYPE BASE-UNITS).")
 ;; coding: iso-latin-1
 ;; End:
 
-;;; arch-tag: e993314f-3adc-4191-be61-4ef8874881c4
+;; arch-tag: e993314f-3adc-4191-be61-4ef8874881c4
 ;;; calc-units.el ends here

@@ -1,18 +1,19 @@
 ;;; hideif.el --- hides selected code within ifdef
 
-;; Copyright (C) 1988, 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-;; Free Software Foundation, Inc.
+;; Copyright (C) 1988, 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
-;; Author: Daniel LaLiberte <liberte@holonexus.org>
+;; Author: Brian Marick
+;;	Daniel LaLiberte <liberte@holonexus.org>
 ;; Maintainer: FSF
 ;; Keywords: c, outlines
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -99,12 +98,6 @@
 ;;
 ;; Written by Brian Marick, at Gould, Computer Systems Division, Urbana IL.
 ;; Extensively modified by Daniel LaLiberte (while at Gould).
-;;
-;; You may freely modify and distribute this, but keep a record
-;; of modifications and send comments to:
-;; 	 liberte@a.cs.uiuc.edu  or  ihnp4!uiucdcs!liberte
-;; I will continue to upgrade hide-ifdef-mode
-;; with your contributions.
 
 ;;; Code:
 
@@ -113,6 +106,33 @@
 (defgroup hide-ifdef nil
   "Hide selected code within `ifdef'."
   :group 'c)
+
+(defcustom hide-ifdef-initially nil
+  "Non-nil means call `hide-ifdefs' when Hide-Ifdef mode is first activated."
+  :type 'boolean
+  :group 'hide-ifdef)
+
+(defcustom hide-ifdef-read-only nil
+  "Set to non-nil if you want buffer to be read-only while hiding text."
+  :type 'boolean
+  :group 'hide-ifdef)
+
+(defcustom hide-ifdef-lines nil
+  "Non-nil means hide the #ifX, #else, and #endif lines."
+  :type 'boolean
+  :group 'hide-ifdef)
+
+(defcustom hide-ifdef-shadow nil
+  "Non-nil means shadow text instead of hiding it."
+  :type 'boolean
+  :group 'hide-ifdef
+  :version "23.1")
+
+(defface hide-ifdef-shadow '((t (:inherit shadow)))
+  "Face for shadowing ifdef blocks."
+  :group 'hide-ifdef
+  :version "23.1")
+
 
 (defvar hide-ifdef-mode-submap
   ;; Set up the submap that goes after the prefix key.
@@ -128,6 +148,7 @@
     (define-key map "\C-s" 'show-ifdef-block)
 
     (define-key map "\C-q" 'hide-ifdef-toggle-read-only)
+    (define-key map "\C-w" 'hide-ifdef-toggle-shadowing)
     (substitute-key-definition
      'toggle-read-only 'hide-ifdef-toggle-outside-read-only map)
     map)
@@ -146,16 +167,28 @@
 (easy-menu-define hide-ifdef-mode-menu hide-ifdef-mode-map
   "Menu for `hide-ifdef-mode'."
   '("Hide-Ifdef"
-    ["Hide some ifdefs" hide-ifdefs t]
-    ["Show all ifdefs" show-ifdefs t]
-    ["Hide ifdef block" hide-ifdef-block t]
-    ["Show ifdef block" show-ifdef-block t]
-    ["Define a variable" hide-ifdef-define t]
-    ["Define an alist" hide-ifdef-set-define-alist t]
-    ["Use an alist" hide-ifdef-use-define-alist t]
-    ["Undefine a variable" hide-ifdef-undef t]
+    ["Hide some ifdefs" hide-ifdefs
+     :help "Hide the contents of some #ifdefs"]
+    ["Show all ifdefs" show-ifdefs
+     :help "Cancel the effects of `hide-ifdef': show the contents of all #ifdefs"]
+    ["Hide ifdef block" hide-ifdef-block
+     :help "Hide the ifdef block (true or false part) enclosing or before the cursor"]
+    ["Show ifdef block" show-ifdef-block
+     :help "Show the ifdef block (true or false part) enclosing or before the cursor"]
+    ["Define a variable..." hide-ifdef-define
+     :help "Define a VAR so that #ifdef VAR would be included"]
+    ["Undefine a variable..." hide-ifdef-undef
+     :help "Undefine a VAR so that #ifdef VAR would not be included"]
+    ["Define an alist..." hide-ifdef-set-define-alist
+     :help "Set the association for NAME to `hide-ifdef-env'"]
+    ["Use an alist..." hide-ifdef-use-define-alist
+     :help "Set `hide-ifdef-env' to the define list specified by NAME"]
     ["Toggle read only" hide-ifdef-toggle-read-only
-              :style toggle :selected hide-ifdef-read-only]))
+     :style toggle :selected hide-ifdef-read-only
+     :help "Buffer should be read-only while hiding text"]
+    ["Toggle shadowing" hide-ifdef-toggle-shadowing
+     :style toggle :selected hide-ifdef-shadow
+     :help "Text should be shadowed instead of hidden"]))
 
 (defvar hide-ifdef-hiding nil
   "Non-nil when text may be hidden.")
@@ -233,8 +266,8 @@ how the hiding is done:
     ;; else end hide-ifdef-mode
     (kill-local-variable 'line-move-ignore-invisible)
     (remove-from-invisibility-spec '(hide-ifdef . t))
-    (if hide-ifdef-hiding
-	(show-ifdefs))))
+    (when hide-ifdef-hiding
+      (show-ifdefs))))
 
 
 (defun hif-show-all ()
@@ -256,9 +289,12 @@ how the hiding is done:
     (end-of-line 2)))
 
 (defun hide-ifdef-region-internal (start end)
-  (remove-overlays start end 'invisible 'hide-ifdef)
+  (remove-overlays start end 'hide-ifdef t)
   (let ((o (make-overlay start end)))
-    (overlay-put o 'invisible 'hide-ifdef)))
+    (overlay-put o 'hide-ifdef t)
+    (if hide-ifdef-shadow
+	(overlay-put o 'face 'hide-ifdef-shadow)
+      (overlay-put o 'invisible 'hide-ifdef))))
 
 (defun hide-ifdef-region (start end)
   "START is the start of a #if or #else form.  END is the ending part.
@@ -270,7 +306,7 @@ Everything including these lines is made invisible."
 
 (defun hif-show-ifdef-region (start end)
   "Everything between START and END is made visible."
-  (remove-overlays start end 'invisible 'hide-ifdef))
+  (remove-overlays start end 'hide-ifdef t))
 
 
 ;;===%%SF%% evaluation (Start)  ===
@@ -321,10 +357,27 @@ that form should be displayed.")
 (defvar hif-token)
 (defvar hif-token-list)
 
-;; pattern to match initial identifier, !, &&, ||, (, or ).
-;; Added ==, + and -: garyo@avs.com 8/9/94
+(defconst hif-token-alist
+  '(("||" . or)
+    ("&&" . and)
+    ("|"  . hif-logior)
+    ("&"  . hif-logand)
+    ("==" . equal)
+    ("!=" . hif-notequal)
+    ("!"  . not)
+    ("("  . lparen)
+    (")"  . rparen)
+    (">"  . hif-greater)
+    ("<"  . hif-less)
+    (">=" . hif-greater-equal)
+    ("<=" . hif-less-equal)
+    ("+"  . hif-plus)
+    ("-"  . hif-minus)
+    ("?"  . hif-conditional)
+    (":"  . hif-colon)))
+
 (defconst hif-token-regexp
-  "\\(&&\\|||\\|[!=]=\\|!\\|[()+?:-]\\|[<>]=?\\|\\w+\\)")
+  (concat (regexp-opt (mapcar 'car hif-token-alist)) "\\|\\w+"))
 
 (defun hif-tokenize (start end)
   "Separate string between START and END into a list of tokens."
@@ -342,26 +395,11 @@ that form should be displayed.")
 	    (let ((token (buffer-substring (point) (match-end 0))))
 	      (goto-char (match-end 0))
 	      ;; (message "token: %s" token) (sit-for 1)
-	      (push (cond
-		     ((string-equal token "||") 'or)
-		     ((string-equal token "&&") 'and)
-		     ((string-equal token "==") 'equal)
-		     ((string-equal token "!=") 'hif-notequal)
-		     ((string-equal token "!")  'not)
-		     ((string-equal token "defined") 'hif-defined)
-		     ((string-equal token "(") 'lparen)
-		     ((string-equal token ")") 'rparen)
-		     ((string-equal token ">") 'hif-greater)
-		     ((string-equal token "<") 'hif-less)
-		     ((string-equal token ">=") 'hif-greater-equal)
-		     ((string-equal token "<=") 'hif-less-equal)
-		     ((string-equal token "+") 'hif-plus)
-		     ((string-equal token "-") 'hif-minus)
-		     ((string-equal token "?") 'hif-conditional)
-		     ((string-equal token ":") 'hif-colon)
-		     ((string-match "\\`[0-9]*\\'" token)
-		      (string-to-number token))
-		     (t (intern token)))
+	      (push (or (cdr (assoc token hif-token-alist))
+                        (if (string-equal token "defined") 'hif-defined)
+                        (if (string-match "\\`[0-9]*\\'" token)
+                            (string-to-number token))
+                        (intern token))
 		    token-list)))
 	   (t (error "Bad #if expression: %s" (buffer-string)))))))
     (nreverse token-list)))
@@ -430,7 +468,7 @@ that form should be displayed.")
        math : factor | math '+|-' factor."
   (let ((result (hif-factor))
 	(math-op nil))
-    (while (memq hif-token '(hif-plus hif-minus))
+    (while (memq hif-token '(hif-plus hif-minus hif-logior hif-logand))
       (setq math-op hif-token)
       (hif-nexttoken)
       (setq result (list math-op result (hif-factor))))
@@ -467,6 +505,10 @@ that form should be displayed.")
    ((numberp hif-token)
     (prog1 hif-token (hif-nexttoken)))
 
+   ;; Unary plus/minus.
+   ((memq hif-token '(hif-minus hif-plus))
+    (list (prog1 hif-token (hif-nexttoken)) 0 (hif-factor)))
+ 
    (t					; identifier
     (let ((ident hif-token))
       (if (memq ident '(or and))
@@ -488,27 +530,22 @@ that form should be displayed.")
   (or (not (zerop (hif-mathify a))) (not (zerop (hif-mathify b)))))
 (defun hif-not (a)
   (zerop (hif-mathify a)))
-(defun hif-plus (a b)
-  "Like ordinary plus but treat t and nil as 1 and 0."
-  (+ (hif-mathify a) (hif-mathify b)))
-(defun hif-minus (a b)
-  "Like ordinary minus but treat t and nil as 1 and 0."
-  (- (hif-mathify a) (hif-mathify b)))
-(defun hif-notequal (a b)
-  "Like (not (equal A B)) but as one symbol."
-  (not (equal a b)))
-(defun hif-greater (a b)
-  "Simple comparison."
-  (> (hif-mathify a) (hif-mathify b)))
-(defun hif-less (a b)
-  "Simple comparison."
-  (< (hif-mathify a) (hif-mathify b)))
-(defun hif-greater-equal (a b)
-  "Simple comparison."
-  (>= (hif-mathify a) (hif-mathify b)))
-(defun hif-less-equal (a b)
-  "Simple comparison."
-  (<= (hif-mathify a) (hif-mathify b)))
+
+(defmacro hif-mathify-binop (fun)
+  `(lambda (a b)
+     ,(format "Like `%s' but treat t and nil as 1 and 0." fun)
+     (,fun (hif-mathify a) (hif-mathify b))))
+
+(defalias 'hif-plus          (hif-mathify-binop +))
+(defalias 'hif-minus         (hif-mathify-binop -))
+(defalias 'hif-notequal      (hif-mathify-binop /=))
+(defalias 'hif-greater       (hif-mathify-binop >))
+(defalias 'hif-less          (hif-mathify-binop <))
+(defalias 'hif-greater-equal (hif-mathify-binop >=))
+(defalias 'hif-less-equal    (hif-mathify-binop <=))
+(defalias 'hif-logior        (hif-mathify-binop logior))
+(defalias 'hif-logand        (hif-mathify-binop logand))
+
 ;;;----------- end of parser -----------------------
 
 
@@ -740,11 +777,11 @@ Point is left unchanged."
 
 (defun hif-hide-line (point)
   "Hide the line containing point.  Does nothing if `hide-ifdef-lines' is nil."
-  (if hide-ifdef-lines
-      (save-excursion
-	(goto-char point)
-	(hide-ifdef-region-internal (line-beginning-position)
-				    (progn (hif-end-of-line) (point))))))
+  (when hide-ifdef-lines
+    (save-excursion
+      (goto-char point)
+      (hide-ifdef-region-internal
+       (line-beginning-position) (progn (hif-end-of-line) (point))))))
 
 
 ;;;  Hif-Possibly-Hide
@@ -827,24 +864,6 @@ It does not do the work that's pointless to redo on a recursive entry."
 
 ;;===%%SF%% exports (Start)  ===
 
-;;;###autoload
-(defcustom hide-ifdef-initially nil
-  "*Non-nil means call `hide-ifdefs' when Hide-Ifdef mode is first activated."
-  :type 'boolean
-  :group 'hide-ifdef)
-
-;;;###autoload
-(defcustom hide-ifdef-read-only nil
-  "*Set to non-nil if you want buffer to be read-only while hiding text."
-  :type 'boolean
-  :group 'hide-ifdef)
-
-;;;###autoload
-(defcustom hide-ifdef-lines nil
-  "*Non-nil means hide the #ifX, #else, and #endif lines."
-  :type 'boolean
-  :group 'hide-ifdef)
-
 (defun hide-ifdef-toggle-read-only ()
   "Toggle `hide-ifdef-read-only'."
   (interactive)
@@ -866,6 +885,21 @@ It does not do the work that's pointless to redo on a recursive entry."
 	    hif-outside-read-only))
   (force-mode-line-update))
 
+(defun hide-ifdef-toggle-shadowing ()
+  "Toggle shadowing."
+  (interactive)
+  (set (make-local-variable 'hide-ifdef-shadow) (not hide-ifdef-shadow))
+  (message "Shadowing %s" (if hide-ifdef-shadow "ON" "OFF"))
+  (save-restriction
+    (widen)
+    (dolist (overlay (overlays-in (point-min) (point-max)))
+      (when (overlay-get overlay 'hide-ifdef)
+	(if hide-ifdef-shadow
+	    (progn
+	      (overlay-put overlay 'invisible nil)
+	      (overlay-put overlay 'face 'hide-ifdef-shadow))
+	  (overlay-put overlay 'face nil)
+	  (overlay-put overlay 'invisible 'hide-ifdef))))))
 
 (defun hide-ifdef-define (var)
   "Define a VAR so that #ifdef VAR would be included."

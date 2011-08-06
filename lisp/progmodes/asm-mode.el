@@ -1,6 +1,6 @@
 ;;; asm-mode.el --- mode for editing assembler code
 
-;; Copyright (C) 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;; Free Software Foundation, Inc.
 
 ;; Author: Eric S. Raymond <esr@snark.thyrsus.com>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -81,12 +79,15 @@
     (define-key map "\C-m"	'newline-and-indent)
     (define-key map [menu-bar] (make-sparse-keymap))
     (define-key map [menu-bar asm-mode] (cons "Asm" map))
-    (define-key map [asm-colon]
-      '("Insert Colon" . asm-colon))
     (define-key map [comment-region]
-      '("Comment Region" . comment-region))
+      '(menu-item "Comment Region" comment-region
+		  :help "Comment or uncomment each line in the region"))
     (define-key map [newline-and-indent]
-      '("Insert Newline and Indent" . newline-and-indent))
+      '(menu-item "Insert Newline and Indent" newline-and-indent
+		  :help "Insert a newline, then indent according to major mode"))
+    (define-key map [asm-colon]
+      '(menu-item "Insert Colon" asm-colon
+		  :help "Insert a colon; if it follows a label, delete the label's indentation"))
     map)
   "Keymap for Asm mode.")
 
@@ -253,5 +254,5 @@ repeatedly until you are satisfied with the kind of comment."
 
 (provide 'asm-mode)
 
-;;; arch-tag: 210e695f-f338-4376-8913-a4c5c72ac848
+;; arch-tag: 210e695f-f338-4376-8913-a4c5c72ac848
 ;;; asm-mode.el ends here

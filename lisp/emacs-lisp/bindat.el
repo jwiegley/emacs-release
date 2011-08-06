@@ -1,6 +1,6 @@
 ;;; bindat.el --- binary data structure packing and unpacking.
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Kim F. Storm <storm@cua.dk>
 ;; Assignment name: struct.el
@@ -8,10 +8,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -611,9 +609,9 @@ Optional fourth arg BINDAT-IDX is the starting offset into BINDAT-RAW."
   (let ((no-return bindat-raw))
     (unless bindat-idx (setq bindat-idx 0))
     (unless bindat-raw
-      (setq bindat-raw (make-vector (+ bindat-idx (bindat-length spec struct)) 0)))
+      (setq bindat-raw (make-string (+ bindat-idx (bindat-length spec struct)) 0)))
     (bindat--pack-group struct spec)
-    (if no-return nil (concat bindat-raw))))
+    (if no-return nil bindat-raw)))
 
 
 ;; Misc. format conversions
@@ -651,5 +649,5 @@ The port (if any) is omitted.  IP can be a string, as well."
 
 (provide 'bindat)
 
-;;; arch-tag: 5e6708c3-03e2-4ad7-9885-5041b779c3fb
+;; arch-tag: 5e6708c3-03e2-4ad7-9885-5041b779c3fb
 ;;; bindat.el ends here

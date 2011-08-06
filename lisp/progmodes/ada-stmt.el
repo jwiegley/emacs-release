@@ -1,18 +1,21 @@
 ;;; ada-stmt.el --- an extension to Ada mode for inserting statement templates
 
 ;; Copyright (C) 1987, 1993, 1994, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
-;; Authors: Daniel Pfeiffer, Markus Heritsch, Rolf Ebert <ebert@waporo.muc.de>
+;; Authors: Daniel Pfeiffer
+;;	Markus Heritsch
+;;	Rolf Ebert <ebert@waporo.muc.de>
 ;; Maintainer: Stephen Leake <stephen_leake@stephe-leake.org>
 ;; Keywords: languages, ada
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +23,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;; This file is now automatically loaded from ada-mode.el, and creates a submenu
@@ -96,7 +97,7 @@ Prompt for component type and index subtypes."
 
 (define-skeleton ada-case
   "Build skeleton case statement.
-Prompt for the selector expression. Also builds the first when clause."
+Prompt for the selector expression.  Also builds the first when clause."
   "[selector expression]: "
   "case " str " is" \n
   > "when " ("discrete choice: " str " | ") -3 " =>" \n
@@ -268,7 +269,7 @@ prompting for the boolean-expression."
 
 
 (define-skeleton ada-package-body
-  "Insert a skeleton package body --  includes a begin statement."
+  "Insert a skeleton package body -- includes a begin statement."
   "[package name]: "
   "package body " str " is" \n
   > _ \n
@@ -277,7 +278,7 @@ prompting for the boolean-expression."
 
 
 (define-skeleton ada-private
-  "Undent and start a private section of a package spec. Reindent."
+  "Undent and start a private section of a package spec.  Reindent."
   ()
   < "private" \n
   >)
@@ -482,5 +483,5 @@ Invoke right after `ada-function-spec' or `ada-procedure-spec'."
 
 (provide 'ada-stmt)
 
-;;; arch-tag: 94f51555-cc0e-44e5-8865-8788aae8ecd3
+;; arch-tag: 94f51555-cc0e-44e5-8865-8788aae8ecd3
 ;;; ada-stmt.el ends here

@@ -1,27 +1,25 @@
 ;;; decipher.el --- cryptanalyze monoalphabetic substitution ciphers
 ;;
 ;; Copyright (C) 1995, 1996, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 ;;
 ;; Author: Christopher J. Madsen <chris_madsen@geocities.com>
 ;; Keywords: games
 ;;
 ;; This file is part of GNU Emacs.
 ;;
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-;;
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-;;
+
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -352,7 +350,7 @@ The most useful commands are:
                (t
                 (error "Bad location")))))
           (let (goal-column)
-            (previous-line 1)))
+            (forward-line -1)))
       (let ((char-a (following-char))
             (char-b (decipher-last-command-char)))
         (or (and (not (= ?w (char-syntax char-a)))
@@ -1070,5 +1068,5 @@ if it can't, it signals an error."
 ;;;          (delete-backward-char 1)
 ;;;          (insert ")\n"))))))
 
-;;; arch-tag: 8f094d88-ffe1-4f99-afe3-a5e81dd939d9
+;; arch-tag: 8f094d88-ffe1-4f99-afe3-a5e81dd939d9
 ;;; decipher.el ends here

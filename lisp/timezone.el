@@ -1,7 +1,7 @@
 ;;; timezone.el --- time zone package for GNU Emacs
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 1996, 1999, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Masanobu Umeda
 ;; Maintainer: umerin@mse.kyutech.ac.jp
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -260,7 +258,7 @@ Recognize HH:MM:SS, HH:MM, HHMMSS, HHMM."
 
 (defun timezone-zone-to-minute (timezone)
   "Translate TIMEZONE to an integer minute offset from GMT.
-TIMEZONE can be a cons cell containing the output of current-time-zone,
+TIMEZONE can be a cons cell containing the output of `current-time-zone',
 or an integer of the form +-HHMM, or a time zone name."
   (cond
      ((consp timezone)
@@ -282,7 +280,7 @@ or an integer of the form +-HHMM, or a time zone name."
 
 (defun timezone-time-from-absolute (date seconds)
   "Compute the UTC time equivalent to DATE at time SECONDS after midnight.
-Return a list suitable as an argument to current-time-zone,
+Return a list suitable as an argument to `current-time-zone',
 or nil if the date cannot be thus represented.
 DATE is the number of days elapsed since the (imaginary)
 Gregorian date Sunday, December 31, 1 BC."
@@ -300,7 +298,7 @@ Gregorian date Sunday, December 31, 1 BC."
 
 (defun timezone-time-zone-from-absolute (date seconds)
   "Compute the local time zone for DATE at time SECONDS after midnight.
-Return a list in the same format as current-time-zone's result,
+Return a list in the same format as `current-time-zone's result,
 or nil if the local time zone could not be computed.
 DATE is the number of days elapsed since the (imaginary)
 Gregorian date Sunday, December 31, 1 BC."
@@ -372,7 +370,7 @@ If TIMEZONE is nil, use the local time zone."
     (aref [31 28 31 30 31 30 31 31 30 31 30 31] (1- month))))
 
 (defun timezone-leap-year-p (year)
-  "Returns t if YEAR is a Gregorian leap year."
+  "Return t if YEAR is a Gregorian leap year."
   (or (and (zerop  (% year 4))
 	   (not (zerop (% year 100))))
       (zerop (% year 400))))
@@ -398,5 +396,5 @@ The Gregorian date Sunday, December 31, 1 BC is imaginary."
 
 (provide 'timezone)
 
-;;; arch-tag: e23d5bc6-f32d-48ba-8996-323e9d654b3f
+;; arch-tag: e23d5bc6-f32d-48ba-8996-323e9d654b3f
 ;;; timezone.el ends here

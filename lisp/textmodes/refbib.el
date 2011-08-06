@@ -1,7 +1,7 @@
 ;;; refbib.el --- convert refer-style references to ones usable by Latex bib
 
 ;; Copyright (C) 1989, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Henry Kautz <kautz@research.att.com>
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -223,17 +221,16 @@ This is in addition to the `r2b-capitalize-title-stop-words'.")
 
 (defvar r2b-error-found nil)
 
-(eval-when-compile
-  (defvar r2b-variables) (defvar r2bv-address)    (defvar r2bv-annote)
-  (defvar r2bv-author)   (defvar r2bv-booktitle)  (defvar r2bv-date)
-  (defvar r2bv-decade)   (defvar r2bv-editor)     (defvar r2bv-entry-kind)
-  (defvar r2bv-institution) (defvar r2bv-journal) (defvar r2bv-keywords)
-  (defvar r2bv-kn)       (defvar r2bv-month)      (defvar r2bv-note)
-  (defvar r2bv-number)   (defvar r2bv-ordering)   (defvar r2bv-organization)
-  (defvar r2bv-pages)    (defvar r2bv-primary-author) (defvar r2bv-publisher)
-  (defvar r2bv-school)   (defvar r2bv-title)      (defvar r2bv-title-first-word)
-  (defvar r2bv-tr)       (defvar r2bv-type)       (defvar r2bv-volume)
-  (defvar r2bv-where)    (defvar r2bv-year))
+(defvar r2b-variables) (defvar r2bv-address)    (defvar r2bv-annote)
+(defvar r2bv-author)   (defvar r2bv-booktitle)  (defvar r2bv-date)
+(defvar r2bv-decade)   (defvar r2bv-editor)     (defvar r2bv-entry-kind)
+(defvar r2bv-institution) (defvar r2bv-journal) (defvar r2bv-keywords)
+(defvar r2bv-kn)       (defvar r2bv-month)      (defvar r2bv-note)
+(defvar r2bv-number)   (defvar r2bv-ordering)   (defvar r2bv-organization)
+(defvar r2bv-pages)    (defvar r2bv-primary-author) (defvar r2bv-publisher)
+(defvar r2bv-school)   (defvar r2bv-title)      (defvar r2bv-title-first-word)
+(defvar r2bv-tr)       (defvar r2bv-type)       (defvar r2bv-volume)
+(defvar r2bv-where)    (defvar r2bv-year)
 
 (setq r2b-variables '(
                       r2b-error-found
@@ -754,5 +751,5 @@ Please send bug reports and suggestions to
 (provide 'refbib)
 (provide 'refer-to-bibtex)
 
-;;; arch-tag: 664afee2-6e76-4408-ba56-981d8a179586
+;; arch-tag: 664afee2-6e76-4408-ba56-981d8a179586
 ;;; refbib.el ends here

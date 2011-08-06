@@ -1,17 +1,17 @@
 ;;; calc-prog.el --- user programmability functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -31,6 +29,11 @@
 
 (require 'calc-ext)
 (require 'calc-macs)
+
+;; Declare functions which are defined elsewhere.
+(declare-function edmacro-format-keys "edmacro" (macro &optional verbose))
+(declare-function edmacro-parse-keys "edmacro" (string &optional need-vector))
+(declare-function math-read-expr-level "calc-aent" (exp-prec &optional exp-term))
 
 
 (defun calc-equal-to (arg)
@@ -160,7 +163,7 @@
 (defvar math-integral-cache-state)
 
 ;; calc-user-formula-alist is local to calc-user-define-formula,
-;; calc-user-define-compostion and calc-finish-formula-edit,
+;; calc-user-define-composition and calc-finish-formula-edit,
 ;; but is used by calc-fix-user-formula.
 (defvar calc-user-formula-alist)
 
@@ -568,7 +571,7 @@
 			  (set-buffer calc-buf)
 			  (let ((calc-user-parse-tables nil)
 				(calc-language nil)
-				(math-expr-opers math-standard-opers)
+				(math-expr-opers (math-standard-ops))
 				(calc-hashes-used 0))
 			    (math-read-expr
 			     (if (string-match ",[ \t]*\\'" str)
@@ -1282,7 +1285,7 @@ Redefine the corresponding command."
   (let* ((count 0)
 	 (parts nil)
 	 (body "")
-	 (open last-command-char)
+	 (open last-command-event)
 	 (counter initial)
 	 ch)
     (or executing-kbd-macro
@@ -2361,5 +2364,5 @@ Redefine the corresponding command."
 
 (provide 'calc-prog)
 
-;;; arch-tag: 4c5a183b-c9e5-4632-bb3f-e41a764518b0
+;; arch-tag: 4c5a183b-c9e5-4632-bb3f-e41a764518b0
 ;;; calc-prog.el ends here

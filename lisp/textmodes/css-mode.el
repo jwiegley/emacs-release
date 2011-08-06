@@ -1,24 +1,24 @@
 ;;; css-mode.el --- Major mode to edit CSS files
 
-;; Copyright (C) 2006, 2007, 2008  Free Software Foundation, Inc.
+;; Copyright (C) 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Keywords: hypermedia
 
-;; This file is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; This file is part of GNU Emacs.
 
-;; This file is distributed in the hope that it will be useful,
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -32,6 +32,10 @@
 ;; - fix font-lock errors with multi-line selectors
 
 ;;; Code:
+
+(defgroup css nil
+  "Cascading Style Sheets (CSS) editing mode."
+  :group 'languages)
 
 (eval-when-compile (require 'cl))
 
@@ -88,7 +92,7 @@
        ;; vice-versa).
        (t nil)))
     elems))
-        
+
 
 (defun css-extract-props-and-vals ()
   (with-temp-buffer
@@ -104,7 +108,7 @@
                                                  (progn
                                                    (re-search-forward "[ \t\n]+|[ \t\n]+<a href=\"cascade.html#value-def-inherit\" class=\"noxref\"><span class=\"value-inst-inherit\">inherit</span></a>")
                                                    (match-beginning 0)))))
-              ;; 
+              ;;
               (push (cons prop (css-extract-parse-val-grammar vals-string props))
                     props)))))
       props)))
@@ -175,7 +179,8 @@
   "Self inserting keys which should trigger re-indentation."
   :version "22.2"
   :type '(repeat character)
-  :options '((?\} ?\;)))
+  :options '((?\} ?\;))
+  :group 'css)
 
 (defvar css-mode-syntax-table
   (let ((st (make-syntax-table)))
@@ -210,9 +215,11 @@
 (defconst css-name-re (concat css-nmchar-re "+"))
 
 (defface css-selector '((t :inherit font-lock-function-name-face))
-  "Face to use for selectors.")
+  "Face to use for selectors."
+  :group 'css)
 (defface css-property '((t :inherit font-lock-variable-name-face))
-  "Face to use for properties.")
+  "Face to use for properties."
+  :group 'css)
 
 (defvar css-font-lock-keywords
   `(("!\\s-*important" . font-lock-builtin-face)
@@ -250,11 +257,9 @@
 (defvar css-font-lock-defaults
   '(css-font-lock-keywords nil t))
 
-(unless (fboundp 'prog-mode) (defalias 'prog-mode 'fundamental-mode))
-
 ;;;###autoload (add-to-list 'auto-mode-alist '("\\.css\\'" . css-mode))
 ;;;###autoload
-(define-derived-mode css-mode prog-mode "CSS"
+(define-derived-mode css-mode fundamental-mode "CSS"
   "Major mode to edit Cascading Style Sheets."
   (set (make-local-variable 'font-lock-defaults) css-font-lock-defaults)
   (set (make-local-variable 'comment-start) "/*")
@@ -308,7 +313,7 @@
             (fill-paragraph justify)
             ;; Don't try filling again.
             t)))
-        
+
        ((and (null (nth 8 ppss))
              (or (nth 1 ppss)
                  (and (ignore-errors
@@ -352,7 +357,7 @@
     (map-char-table (lambda (c v)
                       ;; Turn punctuation (code = 1) into symbol (code = 1).
                       (if (eq (car-safe v) 1)
-                          (aset st c (cons 3 (cdr v)))))
+                          (set-char-table-range st c (cons 3 (cdr v)))))
                     st)
     st))
 
@@ -368,7 +373,7 @@
                         (save-excursion
                           (forward-comment (- (point-max)))
                           ;; FIXME: We should also skip punctuation.
-                          (not (memq (char-before) '(?\; ?\{)))))))))))
+                          (not (or (bobp) (memq (char-before) '(?\; ?\{))))))))))))
 
 (defun css-forward-sexp (n)
   (let ((forward-sexp-function nil))
@@ -396,7 +401,8 @@
 (defcustom css-indent-offset 4
   "Basic size of one indentation step."
   :version "22.2"
-  :type 'integer)
+  :type 'integer
+  :group 'css)
 
 (defun css-indent-calculate ()
   (let ((ppss (syntax-ppss))
@@ -451,7 +457,7 @@
              (if (looking-at "\\s(")
                  (css-indent-calculate)
                (css-indent-calculate-virtual))))))))))
-     
+
 
 (defun css-indent-line ()
   "Indent current line according to CSS indentation rules."

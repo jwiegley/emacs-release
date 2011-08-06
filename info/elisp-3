@@ -1,30 +1,406 @@
-This is ../info/elisp, produced by makeinfo version 4.11 from
+This is ../../info/elisp, produced by makeinfo version 4.11 from
 elisp.texi.
 
-INFO-DIR-SECTION Emacs
-START-INFO-DIR-ENTRY
-* Elisp: (elisp).       The Emacs Lisp Reference Manual.
-END-INFO-DIR-ENTRY
-
-   This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.3.
+This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
+corresponding to Emacs version 23.1.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
-Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free
+Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
-     Version 1.2 or any later version published by the Free Software
+     Version 1.3 or any later version published by the Free Software
      Foundation; with the Invariant Sections being "GNU General Public
      License," with the Front-Cover texts being "A GNU Manual," and
      with the Back-Cover Texts as in (a) below.  A copy of the license
      is included in the section entitled "GNU Free Documentation
      License."
 
-     (a) The FSF's Back-Cover Text is: "You are free to copy and modify
-     this GNU Manual. Buying copies from GNU Press supports the FSF in
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
+
+INFO-DIR-SECTION Emacs
+START-INFO-DIR-ENTRY
+* Elisp: (elisp).       The Emacs Lisp Reference Manual.
+END-INFO-DIR-ENTRY
+
+
+File: elisp,  Node: Composite Types,  Next: Splicing into Lists,  Prev: Simple Types,  Up: Customization Types
+
+14.4.2 Composite Types
+----------------------
+
+When none of the simple types is appropriate, you can use composite
+types, which build new types from other types or from specified data.
+The specified types or data are called the "arguments" of the composite
+type.  The composite type normally looks like this:
+
+     (CONSTRUCTOR ARGUMENTS...)
+
+but you can also add keyword-value pairs before the arguments, like
+this:
+
+     (CONSTRUCTOR {KEYWORD VALUE}... ARGUMENTS...)
+
+   Here is a table of constructors and how to use them to write
+composite types:
+
+`(cons CAR-TYPE CDR-TYPE)'
+     The value must be a cons cell, its CAR must fit CAR-TYPE, and its
+     CDR must fit CDR-TYPE.  For example, `(cons string symbol)' is a
+     customization type which matches values such as `("foo" . foo)'.
+
+     In the customization buffer, the CAR and the CDR are displayed and
+     edited separately, each according to the type that you specify for
+     it.
+
+`(list ELEMENT-TYPES...)'
+     The value must be a list with exactly as many elements as the
+     ELEMENT-TYPES given; and each element must fit the corresponding
+     ELEMENT-TYPE.
+
+     For example, `(list integer string function)' describes a list of
+     three elements; the first element must be an integer, the second a
+     string, and the third a function.
+
+     In the customization buffer, each element is displayed and edited
+     separately, according to the type specified for it.
+
+`(group ELEMENT-TYPES...)'
+     This works like `list' except for the formatting of text in the
+     Custom buffer.  `list' labels each element value with its tag;
+     `group' does not.
+
+`(vector ELEMENT-TYPES...)'
+     Like `list' except that the value must be a vector instead of a
+     list.  The elements work the same as in `list'.
+
+`(choice ALTERNATIVE-TYPES...)'
+     The value must fit at least one of ALTERNATIVE-TYPES.  For
+     example, `(choice integer string)' allows either an integer or a
+     string.
+
+     In the customization buffer, the user selects an alternative using
+     a menu, and can then edit the value in the usual way for that
+     alternative.
+
+     Normally the strings in this menu are determined automatically
+     from the choices; however, you can specify different strings for
+     the menu by including the `:tag' keyword in the alternatives.  For
+     example, if an integer stands for a number of spaces, while a
+     string is text to use verbatim, you might write the customization
+     type this way,
+
+          (choice (integer :tag "Number of spaces")
+                  (string :tag "Literal text"))
+
+     so that the menu offers `Number of spaces' and `Literal text'.
+
+     In any alternative for which `nil' is not a valid value, other than
+     a `const', you should specify a valid default for that alternative
+     using the `:value' keyword.  *Note Type Keywords::.
+
+     If some values are covered by more than one of the alternatives,
+     customize will choose the first alternative that the value fits.
+     This means you should always list the most specific types first,
+     and the most general last.  Here's an example of proper usage:
+
+          (choice (const :tag "Off" nil)
+                  symbol (sexp :tag "Other"))
+
+     This way, the special value `nil' is not treated like other
+     symbols, and symbols are not treated like other Lisp expressions.
+
+`(radio ELEMENT-TYPES...)'
+     This is similar to `choice', except that the choices are displayed
+     using `radio buttons' rather than a menu.  This has the advantage
+     of displaying documentation for the choices when applicable and so
+     is often a good choice for a choice between constant functions
+     (`function-item' customization types).
+
+`(const VALUE)'
+     The value must be VALUE--nothing else is allowed.
+
+     The main use of `const' is inside of `choice'.  For example,
+     `(choice integer (const nil))' allows either an integer or `nil'.
+
+     `:tag' is often used with `const', inside of `choice'.  For
+     example,
+
+          (choice (const :tag "Yes" t)
+                  (const :tag "No" nil)
+                  (const :tag "Ask" foo))
+
+     describes a variable for which `t' means yes, `nil' means no, and
+     `foo' means "ask."
+
+`(other VALUE)'
+     This alternative can match any Lisp value, but if the user chooses
+     this alternative, that selects the value VALUE.
+
+     The main use of `other' is as the last element of `choice'.  For
+     example,
+
+          (choice (const :tag "Yes" t)
+                  (const :tag "No" nil)
+                  (other :tag "Ask" foo))
+
+     describes a variable for which `t' means yes, `nil' means no, and
+     anything else means "ask."  If the user chooses `Ask' from the
+     menu of alternatives, that specifies the value `foo'; but any
+     other value (not `t', `nil' or `foo') displays as `Ask', just like
+     `foo'.
+
+`(function-item FUNCTION)'
+     Like `const', but used for values which are functions.  This
+     displays the documentation string as well as the function name.
+     The documentation string is either the one you specify with
+     `:doc', or FUNCTION's own documentation string.
+
+`(variable-item VARIABLE)'
+     Like `const', but used for values which are variable names.  This
+     displays the documentation string as well as the variable name.
+     The documentation string is either the one you specify with
+     `:doc', or VARIABLE's own documentation string.
+
+`(set TYPES...)'
+     The value must be a list, and each element of the list must match
+     one of the TYPES specified.
+
+     This appears in the customization buffer as a checklist, so that
+     each of TYPES may have either one corresponding element or none.
+     It is not possible to specify two different elements that match
+     the same one of TYPES.  For example, `(set integer symbol)' allows
+     one integer and/or one symbol in the list; it does not allow
+     multiple integers or multiple symbols.  As a result, it is rare to
+     use nonspecific types such as `integer' in a `set'.
+
+     Most often, the TYPES in a `set' are `const' types, as shown here:
+
+          (set (const :bold) (const :italic))
+
+     Sometimes they describe possible elements in an alist:
+
+          (set (cons :tag "Height" (const height) integer)
+               (cons :tag "Width" (const width) integer))
+
+     That lets the user specify a height value optionally and a width
+     value optionally.
+
+`(repeat ELEMENT-TYPE)'
+     The value must be a list and each element of the list must fit the
+     type ELEMENT-TYPE.  This appears in the customization buffer as a
+     list of elements, with `[INS]' and `[DEL]' buttons for adding more
+     elements or removing elements.
+
+`(restricted-sexp :match-alternatives CRITERIA)'
+     This is the most general composite type construct.  The value may
+     be any Lisp object that satisfies one of CRITERIA.  CRITERIA
+     should be a list, and each element should be one of these
+     possibilities:
+
+        * A predicate--that is, a function of one argument that has no
+          side effects, and returns either `nil' or non-`nil' according
+          to the argument.  Using a predicate in the list says that
+          objects for which the predicate returns non-`nil' are
+          acceptable.
+
+        * A quoted constant--that is, `'OBJECT'.  This sort of element
+          in the list says that OBJECT itself is an acceptable value.
+
+     For example,
+
+          (restricted-sexp :match-alternatives
+                           (integerp 't 'nil))
+
+     allows integers, `t' and `nil' as legitimate values.
+
+     The customization buffer shows all legitimate values using their
+     read syntax, and the user edits them textually.
+
+   Here is a table of the keywords you can use in keyword-value pairs
+in a composite type:
+
+`:tag TAG'
+     Use TAG as the name of this alternative, for user communication
+     purposes.  This is useful for a type that appears inside of a
+     `choice'.
+
+`:match-alternatives CRITERIA'
+     Use CRITERIA to match possible values.  This is used only in
+     `restricted-sexp'.
+
+`:args ARGUMENT-LIST'
+     Use the elements of ARGUMENT-LIST as the arguments of the type
+     construct.  For instance, `(const :args (foo))' is equivalent to
+     `(const foo)'.  You rarely need to write `:args' explicitly,
+     because normally the arguments are recognized automatically as
+     whatever follows the last keyword-value pair.
+
+
+File: elisp,  Node: Splicing into Lists,  Next: Type Keywords,  Prev: Composite Types,  Up: Customization Types
+
+14.4.3 Splicing into Lists
+--------------------------
+
+The `:inline' feature lets you splice a variable number of elements
+into the middle of a list or vector.  You use it in a `set', `choice'
+or `repeat' type which appears among the element-types of a `list' or
+`vector'.
+
+   Normally, each of the element-types in a `list' or `vector'
+describes one and only one element of the list or vector.  Thus, if an
+element-type is a `repeat', that specifies a list of unspecified length
+which appears as one element.
+
+   But when the element-type uses `:inline', the value it matches is
+merged directly into the containing sequence.  For example, if it
+matches a list with three elements, those become three elements of the
+overall sequence.  This is analogous to using `,@' in the backquote
+construct.
+
+   For example, to specify a list whose first element must be `baz' and
+whose remaining arguments should be zero or more of `foo' and `bar',
+use this customization type:
+
+     (list (const baz) (set :inline t (const foo) (const bar)))
+
+This matches values such as `(baz)', `(baz foo)', `(baz bar)' and `(baz
+foo bar)'.
+
+   When the element-type is a `choice', you use `:inline' not in the
+`choice' itself, but in (some of) the alternatives of the `choice'.
+For example, to match a list which must start with a file name,
+followed either by the symbol `t' or two strings, use this
+customization type:
+
+     (list file
+           (choice (const t)
+                   (list :inline t string string)))
+
+If the user chooses the first alternative in the choice, then the
+overall list has two elements and the second element is `t'.  If the
+user chooses the second alternative, then the overall list has three
+elements and the second and third must be strings.
+
+
+File: elisp,  Node: Type Keywords,  Next: Defining New Types,  Prev: Splicing into Lists,  Up: Customization Types
+
+14.4.4 Type Keywords
+--------------------
+
+You can specify keyword-argument pairs in a customization type after the
+type name symbol.  Here are the keywords you can use, and their
+meanings:
+
+`:value DEFAULT'
+     This is used for a type that appears as an alternative inside of
+     `choice'; it specifies the default value to use, at first, if and
+     when the user selects this alternative with the menu in the
+     customization buffer.
+
+     Of course, if the actual value of the option fits this
+     alternative, it will appear showing the actual value, not DEFAULT.
+
+     If `nil' is not a valid value for the alternative, then it is
+     essential to specify a valid default with `:value'.
+
+`:format FORMAT-STRING'
+     This string will be inserted in the buffer to represent the value
+     corresponding to the type.  The following `%' escapes are available
+     for use in FORMAT-STRING:
+
+    `%[BUTTON%]'
+          Display the text BUTTON marked as a button.  The `:action'
+          attribute specifies what the button will do if the user
+          invokes it; its value is a function which takes two
+          arguments--the widget which the button appears in, and the
+          event.
+
+          There is no way to specify two different buttons with
+          different actions.
+
+    `%{SAMPLE%}'
+          Show SAMPLE in a special face specified by `:sample-face'.
+
+    `%v'
+          Substitute the item's value.  How the value is represented
+          depends on the kind of item, and (for variables) on the
+          customization type.
+
+    `%d'
+          Substitute the item's documentation string.
+
+    `%h'
+          Like `%d', but if the documentation string is more than one
+          line, add an active field to control whether to show all of
+          it or just the first line.
+
+    `%t'
+          Substitute the tag here.  You specify the tag with the `:tag'
+          keyword.
+
+    `%%'
+          Display a literal `%'.
+
+`:action ACTION'
+     Perform ACTION if the user clicks on a button.
+
+`:button-face FACE'
+     Use the face FACE (a face name or a list of face names) for button
+     text displayed with `%[...%]'.
+
+`:button-prefix PREFIX'
+`:button-suffix SUFFIX'
+     These specify the text to display before and after a button.  Each
+     can be:
+
+    `nil'
+          No text is inserted.
+
+    a string
+          The string is inserted literally.
+
+    a symbol
+          The symbol's value is used.
+
+`:tag TAG'
+     Use TAG (a string) as the tag for the value (or part of the value)
+     that corresponds to this type.
+
+`:doc DOC'
+     Use DOC as the documentation string for this value (or part of the
+     value) that corresponds to this type.  In order for this to work,
+     you must specify a value for `:format', and use `%d' or `%h' in
+     that value.
+
+     The usual reason to specify a documentation string for a type is to
+     provide more information about the meanings of alternatives inside
+     a `:choice' type or the parts of some other composite type.
+
+`:help-echo MOTION-DOC'
+     When you move to this item with `widget-forward' or
+     `widget-backward', it will display the string MOTION-DOC in the
+     echo area.  In addition, MOTION-DOC is used as the mouse
+     `help-echo' string and may actually be a function or form evaluated
+     to yield a help string.  If it is a function, it is called with one
+     argument, the widget.
+
+`:match FUNCTION'
+     Specify how to decide whether a value matches the type.  The
+     corresponding value, FUNCTION, should be a function that accepts
+     two arguments, a widget and a value; it should return non-`nil' if
+     the value is acceptable.
+
+`:validate FUNCTION'
+     Specify a validation function for input.  FUNCTION takes a widget
+     as an argument, and should return `nil' if the widget's current
+     value is valid for the widget.  Otherwise, it should return the
+     widget containing the invalid data, and set that widget's `:error'
+     property to a string explaining the error.
+
 
 
 File: elisp,  Node: Defining New Types,  Prev: Type Keywords,  Up: Customization Types
@@ -549,9 +925,12 @@ define function FUNCTION-NAME"'.
 consists of `;;;###autoload', on a line by itself, just before the real
 definition of the function in its autoloadable source file.  The
 command `M-x update-file-autoloads' writes a corresponding `autoload'
-call into `loaddefs.el'.  Building Emacs loads `loaddefs.el' and thus
-calls `autoload'.  `M-x update-directory-autoloads' is even more
-powerful; it updates autoloads for all files in the current directory.
+call into `loaddefs.el'.  (The string that serves as the autoload
+cookie and the name of the file generated by `update-file-autoloads'
+can be changed from the above defaults, see below.)  Building Emacs
+loads `loaddefs.el' and thus calls `autoload'.  `M-x
+update-directory-autoloads' is even more powerful; it updates autoloads
+for all files in the current directory.
 
    The same magic comment can copy any kind of form into `loaddefs.el'.
 If the form following the magic comment is not a function-defining form
@@ -604,6 +983,24 @@ ordinary magic autoload comment would copy the whole definition into
      (mydefunmacro foo
        ...)
 
+   You can use a non-default string as the autoload cookie and have the
+corresponding autoload calls written into a file whose name is
+different from the default `loaddefs.el'.  Emacs provides two variables
+to control this:
+
+ -- Variable: generate-autoload-cookie
+     The value of this variable should be a string whose syntax is a
+     Lisp comment.  `M-x update-file-autoloads' copies the Lisp form
+     that follows the cookie into the autoload file it generates.  The
+     default value of this variable is `";;;###autoload"'.
+
+ -- Variable: generated-autoload-file
+     The value of this variable names an Emacs Lisp file where the
+     autoload calls should go.  The default value is `loaddefs.el', but
+     you can override that, e.g., in the "Local Variables" section of a
+     `.el' file (*note File Local Variables::).  The autoload file is
+     assumed to contain a trailer starting with a formfeed character.
+
 
 File: elisp,  Node: Repeated Loading,  Next: Named Features,  Prev: Autoload,  Up: Loading
 
@@ -635,18 +1032,15 @@ initialized.  (*Note Defining Variables::.)
      (push '(leif-mode " Leif") minor-mode-alist)
 
 But this would add multiple elements if the library is reloaded.  To
-avoid the problem, write this:
+avoid the problem, use `add-to-list' (*note List Variables::):
 
-     (or (assq 'leif-mode minor-mode-alist)
-         (push '(leif-mode " Leif") minor-mode-alist))
-
-or this:
-
-     (add-to-list '(leif-mode " Leif") minor-mode-alist)
+     (add-to-list 'minor-mode-alist '(leif-mode " Leif"))
 
    Occasionally you will want to test explicitly whether a library has
-already been loaded.  Here's one way to test, in a library, whether it
-has been loaded before:
+already been loaded.  If the library uses `provide' to provide a named
+feature, you can use `featurep' earlier in the file to test whether the
+`provide' call has been executed before (*note Named Features::).
+Alternatively, you could use something like this:
 
      (defvar foo-was-loaded nil)
 
@@ -654,9 +1048,6 @@ has been loaded before:
        EXECUTE-FIRST-TIME-ONLY
        (setq foo-was-loaded t))
 
-If the library uses `provide' to provide a named feature, you can use
-`featurep' earlier in the file to test whether the `provide' call has
-been executed before.  *Note Named Features::.
 
 
 File: elisp,  Node: Named Features,  Next: Where Defined,  Prev: Repeated Loading,  Up: Loading
@@ -680,7 +1071,7 @@ feature name as argument.  `require' looks in the global variable
 `features' to see whether the desired feature has been provided
 already.  If not, it loads the feature from the appropriate file.  This
 file should call `provide' at the top level to add the feature to
-`features'; if it fails to do so, `require' signals an error.  
+`features'; if it fails to do so, `require' signals an error.
 
    For example, in `emacs/lisp/prolog.el', the definition for
 `run-prolog' includes the following code:
@@ -707,7 +1098,7 @@ This adds `comint' to the global `features' list, so that `(require
    When `require' is used at top level in a file, it takes effect when
 you byte-compile that file (*note Byte Compilation::) as well as when
 you load it.  This is in case the required package contains macros that
-the byte compiler must know about.  It also avoids byte-compiler
+the byte compiler must know about.  It also avoids byte compiler
 warnings for functions and variables defined in the file loaded with
 `require'.
 
@@ -732,9 +1123,11 @@ file is loaded.
      facilities associated with FEATURE are or will be available for
      other Lisp programs.
 
-     The direct effect of calling `provide' is to add FEATURE to the
-     front of the list `features' if it is not already in the list.
-     The argument FEATURE must be a symbol.  `provide' returns FEATURE.
+     The direct effect of calling `provide' is if not already in
+     FEATURES then to add FEATURE to the front of that list and call
+     any `eval-after-load' code waiting for it (*note Hooks for
+     Loading::).  The argument FEATURE must be a symbol.  `provide'
+     returns FEATURE.
 
      If provided, SUBFEATURES should be a list of symbols indicating a
      set of specific subfeatures provided by this version of FEATURE.
@@ -802,11 +1195,13 @@ File: elisp,  Node: Where Defined,  Next: Unloading,  Prev: Named Features,  Up:
  -- Function: symbol-file symbol &optional type
      This function returns the name of the file that defined SYMBOL.
      If TYPE is `nil', then any kind of definition is acceptable.  If
-     TYPE is `defun' or `defvar', that specifies function definition
-     only or variable definition only.
+     TYPE is `defun', `defvar', or `defface', that specifies function
+     definition, variable definition, or face definition only.
 
-     The value is normally an absolute file name.  It can also be
-     `nil', if the definition is not associated with any file.
+     The value is normally an absolute file name.  It can also be `nil',
+     if the definition is not associated with any file.  If SYMBOL
+     specifies an autoloaded function, the value can be a relative file
+     name without extension.
 
    The basis for `symbol-file' is the data in the variable
 `load-history'.
@@ -834,6 +1229,9 @@ File: elisp,  Node: Where Defined,  Next: Unloading,  Prev: Named Features,  Up:
 
     `(autoload . FUN)'
           The function FUN was defined as an autoload.
+
+    `(defface . FACE)'
+          The face FACE was defined.
 
     `(require . FEATURE)'
           The feature FEATURE was required.
@@ -1025,18 +1423,18 @@ Here is an example:
          (list t1 (current-time-string))))
      => silly-loop
 
-     (silly-loop 100000)
-     => ("Fri Mar 18 17:25:57 1994"
-         "Fri Mar 18 17:26:28 1994")  ; 31 seconds
+     (silly-loop 50000000)
+     => ("Wed Mar 11 21:10:19 2009"
+         "Wed Mar 11 21:10:41 2009")  ; 22 seconds
 
      (byte-compile 'silly-loop)
      => [Compiled code not shown]
 
-     (silly-loop 100000)
-     => ("Fri Mar 18 17:26:52 1994"
-         "Fri Mar 18 17:26:58 1994")  ; 6 seconds
+     (silly-loop 50000000)
+     => ("Wed Mar 11 21:12:26 2009"
+         "Wed Mar 11 21:12:32 2009")  ; 6 seconds
 
-   In this example, the interpreted code required 31 seconds to run,
+   In this example, the interpreted code required 22 seconds to run,
 whereas the byte-compiled code required 6 seconds.  These results are
 representative, but actual results will vary greatly.
 
@@ -1404,16 +1802,22 @@ The call to FUNC must be in the THEN-FORM of the `if', and FUNC must
 appear quoted in the call to `fboundp'.  (This feature operates for
 `cond' as well.)
 
-   Likewise, you can suppress a compiler warning for an unbound variable
-VARIABLE by conditionalizing its use on a `boundp' test, like this:
+   You can tell the compiler that a function is defined using
+`declare-function' (*note Declaring Functions::).  Likewise, you can
+tell the compiler that a variable is defined using `defvar' with no
+initial value.
+
+   You can suppress the compiler warning for a specific use of an
+undefined variable VARIABLE by conditionalizing its use on a `boundp'
+test, like this:
 
      (if (boundp 'VARIABLE) ...VARIABLE...)
 
 The reference to VARIABLE must be in the THEN-FORM of the `if', and
 VARIABLE must appear quoted in the call to `boundp'.
 
-   You can suppress any compiler warnings using the construct
-`with-no-warnings':
+   You can suppress any and all compiler warnings within a certain
+expression using the construct `with-no-warnings':
 
  -- Special Form: with-no-warnings body...
      In execution, this is equivalent to `(progn BODY...)', but the
@@ -1421,7 +1825,11 @@ VARIABLE must appear quoted in the call to `boundp'.
      BODY.
 
      We recommend that you use this construct around the smallest
-     possible piece of code.
+     possible piece of code, to avoid missing possible warnings other
+     than one one you intend to suppress.
+
+   More precise control of warnings is possible by setting the variable
+`byte-compile-warnings'.
 
 
 File: elisp,  Node: Byte-Code Objects,  Next: Disassembly,  Prev: Compiler Errors,  Up: Byte Compilation
@@ -1498,7 +1906,7 @@ File: elisp,  Node: Disassembly,  Prev: Byte-Code Objects,  Up: Byte Compilation
 
 People do not write byte-code; that job is left to the byte compiler.
 But we provide a disassembler to satisfy a cat-like curiosity.  The
-disassembler converts the byte-compiled code into humanly readable form.
+disassembler converts the byte-compiled code into human-readable form.
 
    The byte-code interpreter is implemented as a simple stack machine.
 It pushes values onto a stack of its own, then pops them off to use them
@@ -1524,10 +1932,7 @@ the stack.
 
    Here are two examples of using the `disassemble' function.  We have
 added explanatory comments to help you relate the byte-code to the Lisp
-source; these do not appear in the output of `disassemble'.  These
-examples show unoptimized byte-code.  Nowadays byte-code is usually
-optimized, but we did not want to rewrite these examples, since they
-still serve their purpose.
+source; these do not appear in the output of `disassemble'.
 
      (defun factorial (integer)
        "Compute factorial of an integer."
@@ -1543,64 +1948,33 @@ still serve their purpose.
       doc: Compute factorial of an integer.
       args: (integer)
 
-     0   constant 1              ; Push 1 onto stack.
+     0   varref   integer        ; Get the value of `integer'
+                                 ;   and push it onto the stack.
+     1   constant 1              ; Push 1 onto stack.
 
-     1   varref   integer        ; Get value of `integer'
-                                 ;   from the environment
-                                 ;   and push the value
-                                 ;   onto the stack.
+     2   eqlsign                 ; Pop top two values off stack, compare
+                                 ;   them, and push result onto stack.
 
-     2   eqlsign                 ; Pop top two values off stack,
-                                 ;   compare them,
-                                 ;   and push result onto stack.
-
-     3   goto-if-nil 10          ; Pop and test top of stack;
-                                 ;   if `nil', go to 10,
+     3   goto-if-nil 1           ; Pop and test top of stack;
+                                 ;   if `nil', go to 1,
                                  ;   else continue.
-
      6   constant 1              ; Push 1 onto top of stack.
+     7   return                  ; Return the top element
+                                 ;   of the stack.
 
-     7   goto     17             ; Go to 17 (in this case, 1 will be
-                                 ;   returned by the function).
-
-     10  constant *              ; Push symbol `*' onto stack.
-
-     11  varref   integer        ; Push value of `integer' onto stack.
-
-     12  constant factorial      ; Push `factorial' onto stack.
-
-     13  varref   integer        ; Push value of `integer' onto stack.
-
-     14  sub1                    ; Pop `integer', decrement value,
+     8:1 varref   integer        ; Push value of `integer' onto stack.
+     9   constant factorial      ; Push `factorial' onto stack.
+     10  varref   integer        ; Push value of `integer' onto stack.
+     11  sub1                    ; Pop `integer', decrement value,
                                  ;   push new value onto stack.
-
-                                 ; Stack now contains:
-                                 ;   - decremented value of `integer'
-                                 ;   - `factorial'
-                                 ;   - value of `integer'
-                                 ;   - `*'
-
-     15  call     1              ; Call function `factorial' using
+     12  call     1              ; Call function `factorial' using
                                  ;   the first (i.e., the top) element
                                  ;   of the stack as the argument;
                                  ;   push returned value onto stack.
 
-                                 ; Stack now contains:
-                                 ;   - result of recursive
-                                 ;        call to `factorial'
-                                 ;   - value of `integer'
-                                 ;   - `*'
-
-     16  call     2              ; Using the first two
-                                 ;   (i.e., the top two)
-                                 ;   elements of the stack
-                                 ;   as arguments,
-                                 ;   call the function `*',
-                                 ;   pushing the result onto the stack.
-
-     17  return                  ; Return the top element
-                                 ;   of the stack.
-          => nil
+     13 mult                     ; Pop top two values off stack, multiply
+                                 ;   them, and push result onto stack.
+     14 return                   ; Return the top element of stack.
 
    The `silly-loop' function is somewhat more complex:
 
@@ -1622,23 +1996,21 @@ still serve their purpose.
                                        ;   onto top of stack.
 
      1   call     0              ; Call `current-time-string'
-                                 ;    with no argument,
-                                 ;    pushing result onto stack.
+                                 ;   with no argument,
+                                 ;   pushing result onto stack.
 
      2   varbind  t1             ; Pop stack and bind `t1'
                                  ;   to popped value.
 
-     3   varref   n              ; Get value of `n' from
+     3:1 varref   n              ; Get value of `n' from
                                  ;   the environment and push
                                  ;   the value onto the stack.
-
      4   sub1                    ; Subtract 1 from top of stack.
 
      5   dup                     ; Duplicate the top of the stack;
                                  ;   i.e., copy the top of
                                  ;   the stack and push the
                                  ;   copy onto the stack.
-
      6   varset   n              ; Pop the top of the stack,
                                  ;   and bind `n' to the value.
 
@@ -1648,49 +2020,24 @@ still serve their purpose.
                                  ;   without popping it.
 
      7   constant 0              ; Push 0 onto stack.
-
      8   gtr                     ; Pop top two values off stack,
                                  ;   test if N is greater than 0
                                  ;   and push result onto stack.
 
-     9   goto-if-nil-else-pop 17 ; Goto 17 if `n' <= 0
-                                 ;   (this exits the while loop).
-                                 ;   else pop top of stack
-                                 ;   and continue
+     9   goto-if-not-nil 1       ; Goto 1 if `n' > 0
+                                 ;   (this continues the while loop)
+                                 ;   else continue.
 
-     12  constant nil            ; Push `nil' onto stack
-                                 ;   (this is the body of the loop).
-
-     13  discard                 ; Discard result of the body
-                                 ;   of the loop (a while loop
-                                 ;   is always evaluated for
-                                 ;   its side effects).
-
-     14  goto     3              ; Jump back to beginning
-                                 ;   of while loop.
-
-     17  discard                 ; Discard result of while loop
-                                 ;   by popping top of stack.
-                                 ;   This result is the value `nil' that
-                                 ;   was not popped by the goto at 9.
-
-     18  varref   t1             ; Push value of `t1' onto stack.
-
-     19  constant current-time-string  ; Push
-                                       ;   `current-time-string'
+     12  varref   t1             ; Push value of `t1' onto stack.
+     13  constant current-time-string  ; Push `current-time-string'
                                        ;   onto top of stack.
+     14  call     0              ; Call `current-time-string' again.
 
-     20  call     0              ; Call `current-time-string' again.
-
-     21  list2                   ; Pop top two elements off stack,
+     15  unbind   1              ; Unbind `t1' in local environment.
+     16  list2                   ; Pop top two elements off stack,
                                  ;   create a list of them,
                                  ;   and push list onto stack.
-
-     22  unbind   1              ; Unbind `t1' in local environment.
-
-     23  return                  ; Return value of the top of stack.
-
-          => nil
+     17  return                  ; Return value of the top of stack.
 
 
 File: elisp,  Node: Advising Functions,  Next: Debugging,  Prev: Byte Compilation,  Up: Top
@@ -1989,22 +2336,29 @@ using the function `ad-add-advice'.
 
  -- Function: ad-add-advice function advice class position
      Calling `ad-add-advice' adds ADVICE as a piece of advice to
-     FUNCTION in class CLASS.  The argument ADVICE  has this form:
+     FUNCTION in class CLASS.  The argument ADVICE has this form:
 
           (NAME PROTECTED ENABLED DEFINITION)
 
-     Here PROTECTED and ENABLED are flags, and DEFINITION is the
-     expression that says what the advice should do.  If ENABLED is
-     `nil', this piece of advice is initially disabled (*note Enabling
-     Advice::).
+     Here, PROTECTED and ENABLED are flags; if PROTECTED is non-`nil',
+     the advice is protected against non-local exits (*note Defining
+     Advice::), and if ENABLED is `nil' the advice is initially
+     disabled (*note Enabling Advice::).  DEFINITION should have the
+     form
 
-     If FUNCTION already has one or more pieces of advice in the
-     specified CLASS, then POSITION specifies where in the list to put
-     the new piece of advice.  The value of POSITION can either be
-     `first', `last', or a number (counting from 0 at the beginning of
-     the list).  Numbers outside the range are mapped to the beginning
-     or the end of the range, whichever is closer.  The POSITION value
-     is ignored when redefining an existing piece of advice.
+          (advice . LAMBDA)
+
+     where LAMBDA is a lambda expression; this lambda expression is
+     called in order to perform the advice.  *Note Lambda Expressions::.
+
+     If the FUNCTION argument to `ad-add-advice' already has one or
+     more pieces of advice in the specified CLASS, then POSITION
+     specifies where in the list to put the new piece of advice.  The
+     value of POSITION can either be `first', `last', or a number
+     (counting from 0 at the beginning of the list).  Numbers outside
+     the range are mapped to the beginning or the end of the range,
+     whichever is closer.  The POSITION value is ignored when
+     redefining an existing piece of advice.
 
      If FUNCTION already has a piece of ADVICE with the same name, then
      the position argument is ignored and the old advice is replaced
@@ -2104,7 +2458,7 @@ activated advice for FUNCTION, it activates the new advice.
      A value of `always' specifies to compile unconditionally.  A value
      of `never' specifies never compile the advice.
 
-     A value of `maybe' specifies to compile if the byte-compiler is
+     A value of `maybe' specifies to compile if the byte compiler is
      already loaded.  A value of `like-original' specifies to compile
      the advice if the original definition of the advised function is
      compiled or a built-in function.
@@ -2189,11 +2543,11 @@ work properly, because of a mismatch.
 
    * Activation of the advised function takes longer than usual.
 
-   * The byte-compiler gets loaded while an advised function gets
+   * The byte compiler gets loaded while an advised function gets
      activated.
 
    * `byte-compile' is included in the value of `features' even though
-     you did not ever explicitly use the byte-compiler.
+     you did not ever explicitly use the byte compiler.
 
    Compiled preactivated advice works properly even if the function
 itself is not defined until later; however, the function needs to be
@@ -2303,10 +2657,10 @@ File: elisp,  Node: Advising Primitives,  Next: Combined Definition,  Prev: Argu
 17.9 Advising Primitives
 ========================
 
-Advising a primitive function (also called a "subr") is risky.  Some
-primitive functions are used by the advice mechanism; advising them
-could cause an infinite recursion.  Also, many primitive functions are
-called directly from C code.  Calls to the primitive from Lisp code
+Advising a primitive function (*note What Is a Function::) is risky.
+Some primitive functions are used by the advice mechanism; advising
+them could cause an infinite recursion.  Also, many primitive functions
+are called directly from C code.  Calls to the primitive from Lisp code
 will take note of the advice, but calls from C code will ignore the
 advice.
 
@@ -2465,17 +2819,19 @@ error.
 
    However, entry to the debugger is not a normal consequence of an
 error.  Many commands frequently cause Lisp errors when invoked
-inappropriately (such as `C-f' at the end of the buffer), and during
-ordinary editing it would be very inconvenient to enter the debugger
-each time this happens.  So if you want errors to enter the debugger,
-set the variable `debug-on-error' to non-`nil'.  (The command
-`toggle-debug-on-error' provides an easy way to do this.)
+inappropriately, and during ordinary editing it would be very
+inconvenient to enter the debugger each time this happens.  So if you
+want errors to enter the debugger, set the variable `debug-on-error' to
+non-`nil'.  (The command `toggle-debug-on-error' provides an easy way
+to do this.)
 
  -- User Option: debug-on-error
      This variable determines whether the debugger is called when an
-     error is signaled and not handled.  If `debug-on-error' is `t', all
-     kinds of errors call the debugger (except those listed in
-     `debug-ignored-errors').  If it is `nil', none call the debugger.
+     error is signaled and not handled.  If `debug-on-error' is `t',
+     all kinds of errors call the debugger, except those listed in
+     `debug-ignored-errors' (see below).  If it is `nil', none call the
+     debugger.  (Note that `eval-expression-debug-on-error' affects the
+     setting of this variable in some cases; see below.)
 
      The value can also be a list of error conditions that should call
      the debugger.  For example, if you set it to the list
@@ -2534,15 +2890,6 @@ set the variable `debug-on-error' to non-`nil'.  (The command
 the option `--debug-init'.  This binds `debug-on-error' to `t' while
 loading the init file, and bypasses the `condition-case' which normally
 catches errors in the init file.
-
-   If your init file sets `debug-on-error', the effect may not last
-past the end of loading the init file.  (This is an undesirable
-byproduct of the code that implements the `--debug-init' command line
-option.)  The best way to make the init file set `debug-on-error'
-permanently is with `after-init-hook', like this:
-
-     (add-hook 'after-init-hook
-               (lambda () (setq debug-on-error t)))
 
 
 File: elisp,  Node: Infinite Loops,  Next: Function Debugging,  Prev: Error Debugging,  Up: Debugger
@@ -2999,7 +3346,7 @@ File: elisp,  Node: Edebug,  Next: Syntax Errors,  Prev: Debugger,  Up: Debuggin
 18.2 Edebug
 ===========
 
-Edebug is a source-level debugger for Emacs Lisp programs with which
+Edebug is a source-level debugger for Emacs Lisp programs, with which
 you can:
 
    * Step through evaluation, stopping before and after each expression.
@@ -3017,7 +3364,7 @@ you can:
    * Automatically re-evaluate a list of expressions and display their
      results each time Edebug updates the display.
 
-   * Output trace info on function enter and exit.
+   * Output trace information on function calls and returns.
 
    * Stop when an error occurs.
 
@@ -3028,7 +3375,7 @@ you can:
    * Obtain rudimentary coverage testing and frequency counts.
 
    The first three sections below should tell you enough about Edebug to
-enable you to use it.
+start using it.
 
 * Menu:
 
@@ -3150,7 +3497,7 @@ instrument any top-level form regardless of the values of
 instruments the definition of the function or macro called by the list
 form after point, if is not already instrumented.  This is possible
 only if Edebug knows where to find the source for that function; for
-this reading, after loading Edebug, `eval-region' records the position
+this reason, after loading Edebug, `eval-region' records the position
 of every definition it evaluates, even if not instrumenting it.  See
 also the `i' command (*note Jumping::), which steps into the call after
 instrumenting the function.
@@ -3160,7 +3507,7 @@ instrumenting the function.
 expressions, and other defining forms.  However, Edebug cannot determine
 on its own what a user-defined macro will do with the arguments of a
 macro call, so you must provide that information using Edebug
-specifications; see *note Edebug and Macros::, for details.
+specifications; for details, *note Edebug and Macros::.
 
    When Edebug is about to instrument code for the first time in a
 session, it runs the hook `edebug-setup-hook', then sets it to `nil'.
@@ -3252,17 +3599,17 @@ completely work: exiting from Edebug, to resume the program, loses track
 of the keyboard macro.  This is not easy to fix.  Also, defining or
 executing a keyboard macro outside of Edebug does not affect commands
 inside Edebug.  This is usually an advantage.  See also the
-`edebug-continue-kbd-macro' option (*note Edebug Options::).
+`edebug-continue-kbd-macro' option in *note Edebug Options::.
 
    When you enter a new Edebug level, the initial execution mode comes
-from the value of the variable `edebug-initial-mode'.  (*Note Edebug
-Options::.)  By default, this specifies step mode.  Note that you may
+from the value of the variable `edebug-initial-mode' (*note Edebug
+Options::).  By default, this specifies step mode.  Note that you may
 reenter the same Edebug level several times if, for example, an
 instrumented function is called several times from one command.
 
  -- User Option: edebug-sit-for-seconds
      This option specifies how many seconds to wait between execution
-     steps in trace mode.  The default is 1 second.
+     steps in trace mode or continue mode.  The default is 1 second.
 
 
 File: elisp,  Node: Jumping,  Next: Edebug Misc,  Prev: Edebug Execution Modes,  Up: Edebug
@@ -3287,7 +3634,8 @@ program to stop.
      Run the program for one expression (`edebug-forward-sexp').
 
 `o'
-     Run the program until the end of the containing sexp.
+     Run the program until the end of the containing sexp
+     (`edebug-step-out').
 
 `i'
      Step into the function or macro called by the form after point.
@@ -3296,22 +3644,22 @@ program to stop.
 location of point, using a temporary breakpoint.
 
    The `f' command runs the program forward over one expression.  More
-precisely, it sets a temporary breakpoint at the position that `C-M-f'
-would reach, then executes in go mode so that the program will stop at
-breakpoints.
+precisely, it sets a temporary breakpoint at the position that
+`forward-sexp' would reach, then executes in go mode so that the
+program will stop at breakpoints.
 
    With a prefix argument N, the temporary breakpoint is placed N sexps
 beyond point.  If the containing list ends before N more elements, then
 the place to stop is after the containing expression.
 
-   You must check that the position `C-M-f' finds is a place that the
-program will really get to.  In `cond', for example, this may not be
-true.
+   You must check that the position `forward-sexp' finds is a place
+that the program will really get to.  In `cond', for example, this may
+not be true.
 
    For flexibility, the `f' command does `forward-sexp' starting at
 point, rather than at the stop point.  If you want to execute one
-expression _from the current stop point_, first type `w', to move point
-there, and then type `f'.
+expression _from the current stop point_, first type `w'
+(`edebug-where') to move point there, and then type `f'.
 
    The `o' command continues "out of" an expression.  It places a
 temporary breakpoint at the end of the sexp containing point.  If the
@@ -3355,7 +3703,7 @@ Some miscellaneous Edebug commands are described here.
 
 `Q'
      Like `q', but don't stop even for protected code
-     (`top-level-nonstop').
+     (`edebug-top-level-nonstop').
 
 `r'
      Redisplay the most recently known expression result in the echo
@@ -3602,16 +3950,16 @@ on this process.
      interference with the evaluation.
 
 `M-: EXP <RET>'
-     Evaluate expression EXP in the context of Edebug itself.
+     Evaluate expression EXP in the context of Edebug itself
+     (`eval-expression').
 
 `C-x C-e'
      Evaluate the expression before point, in the context outside of
      Edebug (`edebug-eval-last-sexp').
 
    Edebug supports evaluation of expressions containing references to
-lexically bound symbols created by the following constructs in `cl.el'
-(version 2.03 or later): `lexical-let', `macrolet', and
-`symbol-macrolet'.
+lexically bound symbols created by the following constructs in `cl.el':
+`lexical-let', `macrolet', and `symbol-macrolet'.
 
 
 File: elisp,  Node: Eval List,  Next: Printing in Edebug,  Prev: Edebug Eval,  Up: Edebug
@@ -3675,10 +4023,10 @@ inserts comment lines so that each expression becomes its own group.
 Thus, if you type `C-c C-u' again without changing the buffer text, the
 evaluation list is effectively unchanged.
 
-   If an error occurs during an evaluation from the evaluation list, the
-error message is displayed in a string as if it were the result.
-Therefore, expressions that use variables not currently valid do not
-interrupt your debugging.
+   If an error occurs during an evaluation from the evaluation list,
+the error message is displayed in a string as if it were the result.
+Therefore, expressions using variables that are not currently valid do
+not interrupt your debugging.
 
    Here is an example of what the evaluation list window looks like
 after several expressions have been added to it:
@@ -3724,9 +4072,9 @@ list structure, you may get an error when Edebug attempts to print it.
 
    One way to cope with circular structure is to set `print-length' or
 `print-level' to truncate the printing.  Edebug does this for you; it
-binds `print-length' and `print-level' to 50 if they were `nil'.
-(Actually, the variables `edebug-print-length' and `edebug-print-level'
-specify the values to use within Edebug.)  *Note Output Variables::.
+binds `print-length' and `print-level' to the values of the variables
+`edebug-print-length' and `edebug-print-level' (so long as they have
+non-`nil' values).  *Note Output Variables::.
 
  -- User Option: edebug-print-length
      If non-`nil', Edebug binds `print-length' to this value while
@@ -3822,7 +4170,7 @@ values.
 
    Coverage testing makes execution slower, so it is only done if
 `edebug-test-coverage' is non-`nil'.  Frequency counting is performed
-for all execution of an instrumented function, even if the execution
+for all executions of an instrumented function, even if the execution
 mode is Go-nonstop, and regardless of whether coverage testing is
 enabled.
 
@@ -3835,12 +4183,12 @@ temporarily, only until you type another key.
      This command displays the frequency count data for each line of the
      current definition.
 
-     The frequency counts appear as comment lines after each line of
-     code, and you can undo all insertions with one `undo' command.  The
+     It inserts frequency counts as comment lines after each line of
+     code.  You can undo all insertions with one `undo' command.  The
      counts appear under the `(' before an expression or the `)' after
-     an expression, or on the last character of a variable.  To
-     simplify the display, a count is not shown if it is equal to the
-     count of an earlier expression on the same line.
+     an expression, or on the last character of a variable.  To simplify
+     the display, a count is not shown if it is equal to the count of an
+     earlier expression on the same line.
 
      The character `=' following the count for an expression says that
      the expression has returned the same value each time it was
@@ -3898,9 +4246,9 @@ Whenever Edebug is entered, it needs to save and restore certain data
 before even deciding whether to make trace information or stop the
 program.
 
-   * `max-lisp-eval-depth' and `max-specpdl-size' are both incremented
-     once to reduce Edebug's impact on the stack.  You could, however,
-     still run out of stack space when using Edebug.
+   * `max-lisp-eval-depth' and `max-specpdl-size' are both increased to
+     reduce Edebug's impact on the stack.  You could, however, still
+     run out of stack space when using Edebug.
 
    * The state of keyboard macro execution is saved and restored.  While
      Edebug is active, `executing-kbd-macro' is bound to `nil' unless
@@ -3948,7 +4296,7 @@ error or quit signal occurs).
      if `edebug-save-displayed-buffer-points' is non-`nil'.
 
    * The variables `overlay-arrow-position' and `overlay-arrow-string'
-     are saved and restored.  So you can safely invoke Edebug from the
+     are saved and restored, so you can safely invoke Edebug from the
      recursive edit elsewhere in the same buffer.
 
    * `cursor-in-echo-area' is locally bound to `nil' so that the cursor
@@ -3965,11 +4313,10 @@ saves (and later restores) these additional data:
 
    * The current match data.  *Note Match Data::.
 
-   * The variables `last-command', `this-command', `last-command-char',
-     `last-input-char', `last-input-event', `last-command-event',
-     `last-event-frame', `last-nonmenu-event', and `track-mouse'.
-     Commands used within Edebug do not affect these variables outside
-     of Edebug.
+   * The variables `last-command', `this-command', `last-input-event',
+     `last-command-event', `last-event-frame', `last-nonmenu-event', and
+     `track-mouse'.  Commands used within Edebug do not affect these
+     variables outside of Edebug.
 
      Executing commands within Edebug can change the key sequence that
      would be returned by `this-command-keys', and there is no way to
@@ -4037,7 +4384,7 @@ example macro (*note Argument Evaluation::).
        ...)
 
    The Edebug specification says which parts of a call to the macro are
-forms to be evaluated.  For simple macros, the SPECIFICATION often
+forms to be evaluated.  For simple macros, the specification often
 looks very similar to the formal argument list of the macro definition,
 but specifications are much more general than macro arguments.  *Note
 Defining Macros::, for more explanation of the `declare' form.
@@ -4066,10 +4413,10 @@ directs processing of arguments.
      None of the arguments is instrumented.
 
 a symbol
-     The symbol must have an Edebug specification which is used instead.
-     This indirection is repeated until another kind of specification is
-     found.  This allows you to inherit the specification from another
-     macro.
+     The symbol must have an Edebug specification, which is used
+     instead.  This indirection is repeated until another kind of
+     specification is found.  This allows you to inherit the
+     specification from another macro.
 
 a list
      The elements of the list describe the types of the arguments of a
@@ -4078,9 +4425,13 @@ a list
 
    If a macro has no Edebug specification, neither through a `debug'
 declaration nor through a `def-edebug-spec' call, the variable
-`edebug-eval-macro-args' comes into play.  If it is `nil', the default,
-none of the arguments is instrumented for evaluation.  If it is
-non-`nil', all arguments are instrumented.
+`edebug-eval-macro-args' comes into play.
+
+ -- User Option: edebug-eval-macro-args
+     This controls the way Edebug treats macro arguments with no
+     explicit Edebug specification.  If it is `nil' (the default), none
+     of the arguments is instrumented for evaluation.  Otherwise, all
+     arguments are instrumented.
 
 
 File: elisp,  Node: Specification List,  Next: Backtracking,  Prev: Instrumenting Macro Calls,  Up: Edebug and Macros
@@ -4102,8 +4453,8 @@ hierarchy of levels.  Specification keywords apply only to the
 remainder of the sublist or group they are contained in.
 
    When a specification list involves alternatives or repetition,
-matching it against an actual macro call may require backtracking.
-*Note Backtracking::, for more details.
+matching it against an actual macro call may require backtracking.  For
+more details, *note Backtracking::.
 
    Edebug specifications provide the power of regular expression
 matching, plus some context-free grammar constructs: the matching of
@@ -4198,12 +4549,11 @@ examples):
      specification" should be either a list specification that is used
      in place of the symbol, or a function that is called to process the
      arguments.  The specification may be defined with `def-edebug-spec'
-     just as for macros. See the `defun' example.
+     just as for macros.  See the `defun' example.
 
      Otherwise, the symbol should be a predicate.  The predicate is
      called with the argument and the specification fails if the
-     predicate returns `nil'.  In either case, that argument is not
-     instrumented.
+     predicate returns `nil', and the argument is not instrumented.
 
      Some suitable predicates include `symbolp', `integerp', `stringp',
      `vectorp', and `atom'.
@@ -4272,7 +4622,7 @@ after `&define'.  See the `defun' example.
 
 `def-form'
      The argument is a single, highest-level form in a definition.
-     This is like `def-body', except use this to match a single form
+     This is like `def-body', except it is used to match a single form
      rather than a list of forms.  As a special case, `def-form' also
      means that tracing information is not output when the form is
      executed.  See the `interactive' example.
@@ -4291,15 +4641,15 @@ matched by some element in the specification, and every required element
 in the specification must match some argument.
 
    When a syntax error is detected, it might not be reported until much
-later after higher-level alternatives have been exhausted, and with the
+later, after higher-level alternatives have been exhausted, and with the
 point positioned further from the real error.  But if backtracking is
 disabled when an error occurs, it can be reported immediately.  Note
 that backtracking is also reenabled automatically in several situations;
-it is reenabled when a new alternative is established by `&optional',
-`&rest', or `&or', or at the start of processing a sublist, group, or
-indirect specification.  The effect of enabling or disabling
-backtracking is limited to the remainder of the level currently being
-processed and lower levels.
+when a new alternative is established by `&optional', `&rest', or
+`&or', or at the start of processing a sublist, group, or indirect
+specification.  The effect of enabling or disabling backtracking is
+limited to the remainder of the level currently being processed and
+lower levels.
 
    Backtracking is disabled while matching any of the form
 specifications (that is, `form', `body', `def-form', and `def-body').
@@ -4338,12 +4688,13 @@ the sublist to prevent backtracking once a sublist is found.
          &or symbolp (gate symbolp &optional form))
         body))
 
-   Edebug uses the following specifications for `defun' and `defmacro'
-and the associated argument list and `interactive' specifications.  It
-is necessary to handle interactive forms specially since an expression
-argument is actually evaluated outside of the function body.
+   Edebug uses the following specifications for `defun' and the
+associated argument list and `interactive' specifications.  It is
+necessary to handle interactive forms specially since an expression
+argument is actually evaluated outside of the function body.  (The
+specification for `defmacro' is very similar to that for `defun', but
+allows for the `declare' statement.)
 
-     (def-edebug-spec defmacro defun) ; Indirect ref to `defun' spec.
      (def-edebug-spec defun
        (&define name lambda-list
                 [&optional stringp]   ; Match the doc string, if present.
@@ -4362,10 +4713,10 @@ argument is actually evaluated outside of the function body.
    The specification for backquote below illustrates how to match
 dotted lists and use `nil' to terminate recursion.  It also illustrates
 how components of a vector may be matched.  (The actual specification
-defined by Edebug does not support dotted lists because doing so causes
-very deep recursion that could fail.)
+defined by Edebug is a little different, and does not support dotted
+lists because doing so causes very deep recursion that could fail.)
 
-     (def-edebug-spec ` (backquote-form))   ; Alias just for clarity.
+     (def-edebug-spec \` (backquote-form))   ; Alias just for clarity.
 
      (def-edebug-spec backquote-form
        (&or ([&or "," ",@"] &or ("quote" backquote-form) form)
@@ -4423,7 +4774,7 @@ These options affect the behavior of Edebug:
      displayed buffers.
 
      Saving and restoring point in other buffers is necessary if you are
-     debugging code that changes the point of a buffer which is
+     debugging code that changes the point of a buffer that is
      displayed in a non-selected window.  If Edebug or the user then
      selects the window, point in that buffer will move to the window's
      value of point.
@@ -4896,6 +5247,11 @@ unterminated list, vector, or string.
      `read' uses when the STREAM argument is `nil'.  The default is
      `t', meaning use the minibuffer.
 
+ -- Variable: read-circle
+     If non-`nil', this variable enables the reading of circular and
+     shared structures.  *Note Circular Objects::.  Its default value is
+     `t'.
+
 
 File: elisp,  Node: Output Streams,  Next: Output Functions,  Prev: Input Functions,  Up: Read and Print
 
@@ -5238,7 +5594,7 @@ shared structure:
 
  -- Variable: print-circle
      If non-`nil', this variable enables detection of circular and
-     shared structure in printing.
+     shared structure in printing.  *Note Circular Objects::.
 
  -- Variable: print-gensym
      If non-`nil', this variable enables detection of uninterned symbols
@@ -5324,16 +5680,15 @@ read-only so you won't accidentally delete or change it.  It is also
 marked as a field (*note Fields::), so that certain motion functions,
 including `beginning-of-line', `forward-word', `forward-sentence', and
 `forward-paragraph', stop at the boundary between the prompt and the
-actual text.  (In older Emacs versions, the prompt was displayed using
-a special mechanism and was not part of the buffer contents.)
+actual text.
 
    The minibuffer's window is normally a single line; it grows
-automatically if necessary if the contents require more space.  You can
-explicitly resize it temporarily with the window sizing commands; it
-reverts to its normal size when the minibuffer is exited.  You can
-resize it permanently by using the window sizing commands in the frame's
-other window, when the minibuffer is not active.  If the frame contains
-just a minibuffer, you can change the minibuffer's size by changing the
+automatically if the contents require more space.  You can explicitly
+resize it temporarily with the window sizing commands; it reverts to
+its normal size when the minibuffer is exited.  You can resize it
+permanently by using the window sizing commands in the frame's other
+window, when the minibuffer is not active.  If the frame contains just
+a minibuffer, you can change the minibuffer's size by changing the
 frame's size.
 
    Use of the minibuffer reads input events, and that alters the values
@@ -5341,16 +5696,16 @@ of variables such as `this-command' and `last-command' (*note Command
 Loop Info::).  Your program should bind them around the code that uses
 the minibuffer, if you do not want that to change them.
 
-   If a command uses a minibuffer while there is an active minibuffer,
-this is called a "recursive minibuffer".  The first minibuffer is named
-` *Minibuf-0*'.  Recursive minibuffers are named by incrementing the
-number at the end of the name.  (The names begin with a space so that
-they won't show up in normal buffer lists.)  Of several recursive
-minibuffers, the innermost (or most recently entered) is the active
-minibuffer.  We usually call this "the" minibuffer.  You can permit or
-forbid recursive minibuffers by setting the variable
-`enable-recursive-minibuffers' or by putting properties of that name on
-command symbols (*note Recursive Mini::).
+   Under some circumstances, a command can use a minibuffer even if
+there is an active minibuffer; such minibuffers are called a "recursive
+minibuffer".  The first minibuffer is named ` *Minibuf-0*'.  Recursive
+minibuffers are named by incrementing the number at the end of the
+name.  (The names begin with a space so that they won't show up in
+normal buffer lists.)  Of several recursive minibuffers, the innermost
+(or most recently entered) is the active minibuffer.  We usually call
+this "the" minibuffer.  You can permit or forbid recursive minibuffers
+by setting the variable `enable-recursive-minibuffers', or by putting
+properties of that name on command symbols (*Note Recursive Mini::.)
 
    Like other buffers, a minibuffer uses a local keymap (*note
 Keymaps::) to specify special key bindings.  The function that invokes
@@ -5369,11 +5724,12 @@ File: elisp,  Node: Text from Minibuffer,  Next: Object from Minibuffer,  Prev: 
 20.2 Reading Text Strings with the Minibuffer
 =============================================
 
-Most often, the minibuffer is used to read text as a string.  It can
-also be used to read a Lisp object in textual form.  The most basic
-primitive for minibuffer input is `read-from-minibuffer'; it can do
-either one.  There are also specialized commands for reading commands,
-variables, file names, etc. (*note Completion::).
+The most basic primitive for minibuffer input is
+`read-from-minibuffer', which can be used to read either a string or a
+Lisp object in textual form.  The function `read-regexp' is used for
+reading regular expressions (*note Regular Expressions::), which are a
+special kind of string.  There are also specialized functions for
+reading commands, variables, file names, etc.  (*note Completion::).
 
    In most cases, you should not call minibuffer input functions in the
 middle of a Lisp function.  Instead, do all minibuffer input as part of
@@ -5382,7 +5738,7 @@ specification.  *Note Defining Commands::.
 
  -- Function: read-from-minibuffer prompt-string &optional
           initial-contents keymap read hist default inherit-input-method
-     This function is the most general way to get input through the
+     This function is the most general way to get input from the
      minibuffer.  By default, it accepts arbitrary text and returns it
      as a string; however, if READ is non-`nil', then it uses `read' to
      convert the text into a Lisp object (*note Input Functions::).
@@ -5398,17 +5754,19 @@ specification.  *Note Defining Commands::.
      text and returns the resulting Lisp object, unevaluated.  (*Note
      Input Functions::, for information about reading.)
 
-     The argument DEFAULT specifies a default value to make available
-     through the history commands.  It should be a string, or `nil'.
-     If non-`nil', the user can access it using `next-history-element',
-     usually bound in the minibuffer to `M-n'.  If READ is non-`nil',
-     then DEFAULT is also used as the input to `read', if the user
-     enters empty input.  (If READ is non-`nil' and DEFAULT is `nil',
-     empty input results in an `end-of-file' error.)  However, in the
-     usual case (where READ is `nil'), `read-from-minibuffer' ignores
-     DEFAULT when the user enters empty input and returns an empty
-     string, `""'.  In this respect, it is different from all the other
-     minibuffer input functions in this chapter.
+     The argument DEFAULT specifies default values to make available
+     through the history commands.  It should be a string, a list of
+     strings, or `nil'.  The string or strings become the minibuffer's
+     "future history," available to the user with `M-n'.
+
+     If READ is non-`nil', then DEFAULT is also used as the input to
+     `read', if the user enters empty input.  If DEFAULT is a list of
+     strings, the first string is used as the input.  If DEFAULT is
+     `nil', empty input results in an `end-of-file' error.  However, in
+     the usual case (where READ is `nil'), `read-from-minibuffer'
+     ignores DEFAULT when the user enters empty input and returns an
+     empty string, `""'.  In this respect, it differs from all the
+     other minibuffer input functions in this chapter.
 
      If KEYMAP is non-`nil', that keymap is the local keymap to use in
      the minibuffer.  If KEYMAP is omitted or `nil', the value of
@@ -5445,11 +5803,14 @@ specification.  *Note Defining Commands::.
      The optional argument DEFAULT is used as in
      `read-from-minibuffer', except that, if non-`nil', it also
      specifies a default value to return if the user enters null input.
-     As in `read-from-minibuffer' it should be a string, or `nil',
-     which is equivalent to an empty string.
+     As in `read-from-minibuffer' it should be a string, a list of
+     strings, or `nil' which is equivalent to an empty string.  When
+     DEFAULT is a string, that string is the default value.  When it is
+     a list of strings, the first string is the default value.  (All
+     these strings are available to the user in the "future minibuffer
+     history.")
 
-     This function is a simplified interface to the
-     `read-from-minibuffer' function:
+     This function works by calling the `read-from-minibuffer' function:
 
           (read-string PROMPT INITIAL HISTORY DEFAULT INHERIT)
           ==
@@ -5457,8 +5818,36 @@ specification.  *Note Defining Commands::.
                  (read-from-minibuffer PROMPT INITIAL nil nil
                                        HISTORY DEFAULT INHERIT)))
             (if (and (equal value "") DEFAULT)
-                DEFAULT
+                (if (consp DEFAULT) (car DEFAULT) DEFAULT)
               value))
+
+ -- Function: read-regexp prompt &optional default-value
+     This function reads a regular expression as a string from the
+     minibuffer and returns it.  The argument PROMPT is used as in
+     `read-from-minibuffer'.  The keymap used is
+     `minibuffer-local-map', and `regexp-history' is used as the
+     history list (*note regexp-history: Minibuffer History.).
+
+     The optional argument DEFAULT-VALUE specifies a default value to
+     return if the user enters null input; it should be a string, or
+     `nil' which is equivalent to an empty string.
+
+     In addition, `read-regexp' collects a few useful candidates for
+     input and passes them to `read-from-minibuffer', to make them
+     available to the user as the "future minibuffer history list"
+     (*note future list: (emacs)Minibuffer History.).  These candidates
+     are:
+
+        - The word or symbol at point.
+
+        - The last regexp used in an incremental search.
+
+        - The last string used in an incremental search.
+
+        - The last string or pattern used in query-replace commands.
+
+     This function works by calling the `read-from-minibuffer'
+     function, after computing the list of defaults as described above.
 
  -- Variable: minibuffer-allow-text-properties
      If this variable is `nil', then `read-from-minibuffer' strips all
@@ -5692,7 +6081,7 @@ delete duplicates in history.
      using `add-to-history'.  By default, `history-add-new-input' is
      set to a non-`nil' value.
 
- -- Variable: history-length
+ -- User Option: history-length
      The value of this variable specifies the maximum length for all
      history lists that don't specify their own maximum lengths.  If the
      value is `t', that means there no maximum (don't delete old
@@ -5700,7 +6089,7 @@ delete duplicates in history.
      list variable's symbol, if set, overrides this variable for that
      particular history list.
 
- -- Variable: history-delete-duplicates
+ -- User Option: history-delete-duplicates
      If the value of this variable is `t', that means when adding a new
      history element, all previous identical elements are deleted.
 
@@ -5808,8 +6197,10 @@ certain kinds of names with completion.
 * Minibuffer Completion::  Invoking the minibuffer with completion.
 * Completion Commands::    Minibuffer commands that do completion.
 * High-Level Completion::  Convenient special cases of completion
-                             (reading buffer name, file name, etc.)
-* Reading File Names::     Using completion to read file names.
+                             (reading buffer name, file name, etc.).
+* Reading File Names::     Using completion to read file names and
+                             shell commands.
+* Completion Styles::      Specifying rules for performing completion.
 * Programmed Completion::  Writing your own completion-function.
 
 
@@ -5970,7 +6361,11 @@ variable as "risky" with a non-`nil' `risky-local-variable' property.
 
  -- Variable: completion-ignore-case
      If the value of this variable is non-`nil', Emacs does not
-     consider case significant in completion.
+     consider case significant in completion.  Note, however, that this
+     variable is overridden by `read-file-name-completion-ignore-case'
+     within `read-file-name' (*note Reading File Names::), and by
+     `read-buffer-completion-ignore-case' within `read-buffer' (*note
+     High-Level Completion::).
 
  -- Variable: completion-regexp-list
      This is a list of regular expressions.  The completion functions
@@ -6013,17 +6408,32 @@ minibuffer with completion.
      non-`nil', it should be compatible with COLLECTION and
      `completion-ignore-case'.  *Note Definition of test-completion::.
 
-     If REQUIRE-MATCH is `nil', the exit commands work regardless of
-     the input in the minibuffer.  If REQUIRE-MATCH is `t', the usual
-     minibuffer exit commands won't exit unless the input completes to
-     an element of COLLECTION.  If REQUIRE-MATCH is neither `nil' nor
-     `t', then the exit commands won't exit unless the input already in
-     the buffer matches an element of COLLECTION.
+     The value of the optional argument REQUIRE-MATCH determines how
+     the user may exit the minibuffer:
+
+        * If `nil', the usual minibuffer exit commands work regardless
+          of the input in the minibuffer.
+
+        * If `t', the usual minibuffer exit commands won't exit unless
+          the input completes to an element of COLLECTION.
+
+        * If `confirm', the user can exit with any input, but is asked
+          for confirmation if the input is not an element of COLLECTION.
+
+        * If `confirm-after-completion', the user can exit with any
+          input, but is asked for confirmation if the preceding command
+          was a completion command (i.e., one of the commands in
+          `minibuffer-confirm-exit-commands') and the resulting input is
+          not an element of COLLECTION.  *Note Completion Commands::.
+
+        * Any other value of REQUIRE-MATCH behaves like `t', except
+          that the exit commands won't exit if it performs completion.
 
      However, empty input is always permitted, regardless of the value
-     of REQUIRE-MATCH; in that case, `completing-read' returns DEFAULT,
-     or `""', if DEFAULT is `nil'.  The value of DEFAULT (if non-`nil')
-     is also available to the user through the history commands.
+     of REQUIRE-MATCH; in that case, `completing-read' returns the
+     first element of DEFAULT, if it is a list; `""', if DEFAULT is
+     `nil'; or DEFAULT.  The string or strings in DEFAULT are also
+     available to the user through the history commands.
 
      The function `completing-read' uses
      `minibuffer-local-completion-map' as the keymap if REQUIRE-MATCH
@@ -6079,12 +6489,7 @@ File: elisp,  Node: Completion Commands,  Next: High-Level Completion,  Prev: Mi
 ---------------------------------------------
 
 This section describes the keymaps, commands and user options used in
-the minibuffer to do completion.  The description refers to the
-situation when Partial Completion mode is disabled (as it is by
-default).  When enabled, this minor mode uses its own alternatives to
-some of the commands described below.  *Note Completion Options:
-(emacs)Completion Options, for a short description of Partial
-Completion mode.
+the minibuffer to do completion.
 
  -- Variable: minibuffer-completion-table
      The value of this variable is the collection used for completion in
@@ -6098,10 +6503,24 @@ Completion mode.
      minibuffer completion functions.
 
  -- Variable: minibuffer-completion-confirm
-     When the value of this variable is non-`nil', Emacs asks for
-     confirmation of a completion before exiting the minibuffer.
-     `completing-read' binds this variable, and the function
-     `minibuffer-complete-and-exit' checks the value before exiting.
+     This variable determines whether Emacs asks for confirmation before
+     exiting the minibuffer; `completing-read' binds this variable, and
+     the function `minibuffer-complete-and-exit' checks the value
+     before exiting.  If the value is `nil', confirmation is not
+     required.  If the value is `confirm', the user may exit with an
+     input that is not a valid completion alternative, but Emacs asks
+     for confirmation.  If the value is `confirm-after-completion', the
+     user may exit with an input that is not a valid completion
+     alternative, but Emacs asks for confirmation if the user submitted
+     the input right after any of the completion commands in
+     `minibuffer-confirm-exit-commands'.
+
+ -- Variable: minibuffer-confirm-exit-commands
+     This variable holds a list of commands that cause Emacs to ask for
+     confirmation before exiting the minibuffer, if the REQUIRE-MATCH
+     argument to `completing-read' is `confirm-after-completion'.  The
+     confirmation is requested if the user attempts to exit the
+     minibuffer immediately after calling any command in this list.
 
  -- Command: minibuffer-complete-word
      This function completes the minibuffer contents by at most a single
@@ -6210,7 +6629,7 @@ Completion mode.
      not bind <SPC>.  This keymap is used by the function
      `read-file-name'.
 
- -- Variable: minibuffer-local-must-match-filename-map
+ -- Variable: minibuffer-local-filename-must-match-map
      This is like `minibuffer-local-must-match-map' except that it does
      not bind <SPC>.  This keymap is used by the function
      `read-file-name'.
@@ -6218,8 +6637,8 @@ Completion mode.
 
 File: elisp,  Node: High-Level Completion,  Next: Reading File Names,  Prev: Completion Commands,  Up: Completion
 
-20.6.4 High-Level Completion  Functions
----------------------------------------
+20.6.4 High-Level Completion Functions
+--------------------------------------
 
 This section describes the higher-level convenient functions for
 reading certain sorts of names with completion.
@@ -6229,30 +6648,27 @@ Lisp function.  When possible, do all minibuffer input as part of
 reading the arguments for a command, in the `interactive'
 specification.  *Note Defining Commands::.
 
- -- Function: read-buffer prompt &optional default existing
+ -- Function: read-buffer prompt &optional default require-match
      This function reads the name of a buffer and returns it as a
      string.  The argument DEFAULT is the default name to use, the
      value to return if the user exits with an empty minibuffer.  If
-     non-`nil', it should be a string or a buffer.  It is mentioned in
-     the prompt, but is not inserted in the minibuffer as initial input.
+     non-`nil', it should be a string, a list of strings, or a buffer.
+     If it is a list, the default value is the first element of this
+     list.  It is mentioned in the prompt, but is not inserted in the
+     minibuffer as initial input.
 
      The argument PROMPT should be a string ending with a colon and a
      space.  If DEFAULT is non-`nil', the function inserts it in PROMPT
      before the colon to follow the convention for reading from the
      minibuffer with a default value (*note Programming Tips::).
 
-     If EXISTING is non-`nil', then the name specified must be that of
-     an existing buffer.  The usual commands to exit the minibuffer do
-     not exit if the text is not valid, and <RET> does completion to
-     attempt to find a valid name.  If EXISTING is neither `nil' nor
-     `t', confirmation is required after completion.  (However, DEFAULT
-     is not checked for validity; it is returned, whatever it is, if
-     the user exits with the minibuffer empty.)
+     The optional argument REQUIRE-MATCH has the same meaning as in
+     `completing-read'.  *Note Minibuffer Completion::.
 
      In the following example, the user enters `minibuffer.t', and then
-     types <RET>.  The argument EXISTING is `t', and the only buffer
-     name starting with the given input is `minibuffer.texi', so that
-     name is the value.
+     types <RET>.  The argument REQUIRE-MATCH is `t', and the only
+     buffer name starting with the given input is `minibuffer.texi', so
+     that name is the value.
 
           (read-buffer "Buffer name: " "foo" t)
           ;; After evaluation of the preceding expression,
@@ -6266,11 +6682,15 @@ specification.  *Note Defining Commands::.
           ;; The user types `minibuffer.t <RET>'.
                => "minibuffer.texi"
 
- -- Variable: read-buffer-function
+ -- User Option: read-buffer-function
      This variable specifies how to read buffer names.  For example, if
      you set this variable to `iswitchb-read-buffer', all Emacs commands
      that call `read-buffer' to read a buffer name will actually use the
      `iswitchb' package to read it.
+
+ -- User Option: read-buffer-completion-ignore-case
+     If this variable is non-`nil', `read-buffer' ignores case when
+     performing completion.
 
  -- Function: read-command prompt &optional default
      This function reads the name of a command and returns it as a Lisp
@@ -6280,11 +6700,12 @@ specification.  *Note Defining Commands::.
      `t'.  *Note Interactive Call::.
 
      The argument DEFAULT specifies what to return if the user enters
-     null input.  It can be a symbol or a string; if it is a string,
-     `read-command' interns it before returning it.  If DEFAULT is
-     `nil', that means no default has been specified; then if the user
-     enters null input, the return value is `(intern "")', that is, a
-     symbol whose name is an empty string.
+     null input.  It can be a symbol, a string or a list of strings.
+     If it is a string, `read-command' interns it before returning it.
+     If it is a list, `read-command' returns the first element of this
+     list.  If DEFAULT is `nil', that means no default has been
+     specified; then if the user enters null input, the return value is
+     `(intern "")', that is, a symbol whose name is an empty string.
 
           (read-command "Command name? ")
 
@@ -6312,11 +6733,13 @@ specification.  *Note Defining Commands::.
      This function reads the name of a user variable and returns it as a
      symbol.
 
-     The argument DEFAULT specifies what to return if the user enters
-     null input.  It can be a symbol or a string; if it is a string,
-     `read-variable' interns it before returning it.  If DEFAULT is
-     `nil', that means no default has been specified; then if the user
-     enters null input, the return value is `(intern "")'.
+     The argument DEFAULT specifies the default value to return if the
+     user enters null input.  It can be a symbol, a string, or a list
+     of strings.  If it is a string, `read-variable' interns it to make
+     the default value.  If it is a list, `read-variable' interns the
+     first element.  If DEFAULT is `nil', that means no default has
+     been specified; then if the user enters null input, the return
+     value is `(intern "")'.
 
           (read-variable "Variable name? ")
 
@@ -6340,35 +6763,54 @@ specification.  *Note Defining Commands::.
            (completing-read PROMPT obarray
                             'user-variable-p t nil))
 
+ -- Command: read-color &optional prompt convert allow-empty display
+     This function reads a string that is a color specification, either
+     the color's name or an RGB hex value such as `#RRRGGGBBB'.  It
+     prompts with PROMPT (default: `"Color (name or #R+G+B+):"') and
+     provides completion for color names, but not for hex RGB values.
+     In addition to names of standard colors, completion candidates
+     include the foreground and background colors at point.
+
+     Valid RGB values are described in *note Color Names::.
+
+     The function's return value is the color name typed by the user in
+     the minibuffer.  However, when called interactively or if the
+     optional argument CONVERT is non-`nil', it converts the name into
+     the color's RGB value and returns that value as a string.  If an
+     invalid color name was specified, this function signals an error,
+     except that empty color names are allowed when `allow-empty' is
+     non-`nil' and the user enters null input.
+
+     Interactively, or when DISPLAY is non-`nil', the return value is
+     also displayed in the echo area.
+
    See also the functions `read-coding-system' and
 `read-non-nil-coding-system', in *note User-Chosen Coding Systems::,
 and `read-input-method-name', in *note Input Methods::.
 
 
-File: elisp,  Node: Reading File Names,  Next: Programmed Completion,  Prev: High-Level Completion,  Up: Completion
+File: elisp,  Node: Reading File Names,  Next: Completion Styles,  Prev: High-Level Completion,  Up: Completion
 
 20.6.5 Reading File Names
 -------------------------
 
-Here is another high-level completion function, designed for reading a
-file name.  It provides special features including automatic insertion
-of the default directory.
+The high-level completion functions `read-file-name',
+`read-directory-name', and `read-shell-command' are designed to read
+file names, directory names, and shell commands respectively.  They
+provide special features, including automatic insertion of the default
+directory.
 
  -- Function: read-file-name prompt &optional directory default
-          existing initial predicate
+          require-match initial predicate
      This function reads a file name in the minibuffer, prompting with
      PROMPT and providing completion.
 
-     If EXISTING is non-`nil', then the user must specify the name of
-     an existing file; <RET> performs completion to make the name valid
-     if possible, and then refuses to exit if it is not valid.  If the
-     value of EXISTING is neither `nil' nor `t', then <RET> also
-     requires confirmation after completion.  If EXISTING is `nil',
-     then the name of a nonexistent file is acceptable.
+     The optional argument REQUIRE-MATCH has the same meaning as in
+     `completing-read'.  *Note Minibuffer Completion::.
 
      `read-file-name' uses `minibuffer-local-filename-completion-map'
-     as the keymap if EXISTING is `nil', and uses
-     `minibuffer-local-must-match-filename-map' if EXISTING is
+     as the keymap if REQUIRE-MATCH is `nil', and uses
+     `minibuffer-local-filename-must-match-map' if REQUIRE-MATCH is
      non-`nil'.  *Note Completion Commands::.
 
      The argument DIRECTORY specifies the directory to use for
@@ -6389,9 +6831,9 @@ of the default directory.
      `read-file-name' inserted initially.  The initial minibuffer
      contents are always non-empty if `insert-default-directory' is
      non-`nil', as it is by default.  DEFAULT is not checked for
-     validity, regardless of the value of EXISTING.  However, if
-     EXISTING is non-`nil', the initial minibuffer contents should be a
-     valid file (or directory) name.  Otherwise `read-file-name'
+     validity, regardless of the value of REQUIRE-MATCH.  However, if
+     REQUIRE-MATCH is non-`nil', the initial minibuffer contents should
+     be a valid file (or directory) name.  Otherwise `read-file-name'
      attempts completion if the user exits without any editing, and
      does not return DEFAULT.  DEFAULT is also available through the
      history commands.
@@ -6409,7 +6851,7 @@ of the default directory.
      of the minibuffer.
 
      If the user types <RET> in an empty minibuffer, this function
-     returns an empty string, regardless of the value of EXISTING.
+     returns an empty string, regardless of the value of REQUIRE-MATCH.
      This is, for instance, how the user can make the current buffer
      visit no file using `M-x set-visited-file-name'.
 
@@ -6448,12 +6890,12 @@ of the default directory.
      it calls this function with the supplied arguments instead of
      doing its usual work.
 
- -- Variable: read-file-name-completion-ignore-case
+ -- User Option: read-file-name-completion-ignore-case
      If this variable is non-`nil', `read-file-name' ignores case when
      performing completion.
 
  -- Function: read-directory-name prompt &optional directory default
-          existing initial
+          require-match initial
      This function is like `read-file-name' but allows only directory
      names as completion possibilities.
 
@@ -6503,492 +6945,24 @@ of the default directory.
           The file is -!-
           ---------- Buffer: Minibuffer ----------
 
-
-File: elisp,  Node: Programmed Completion,  Prev: Reading File Names,  Up: Completion
-
-20.6.6 Programmed Completion
-----------------------------
-
-Sometimes it is not possible to create an alist or an obarray
-containing all the intended possible completions.  In such a case, you
-can supply your own function to compute the completion of a given
-string.  This is called "programmed completion".
-
-   To use this feature, pass a symbol with a function definition as the
-COLLECTION argument to `completing-read'.  The function
-`completing-read' arranges to pass your completion function along to
-`try-completion' and `all-completions', which will then let your
-function do all the work.
-
-   The completion function should accept three arguments:
-
-   * The string to be completed.
-
-   * The predicate function to filter possible matches, or `nil' if
-     none.  Your function should call the predicate for each possible
-     match, and ignore the possible match if the predicate returns
-     `nil'.
-
-   * A flag specifying the type of operation.
-
-   There are three flag values for three operations:
-
-   * `nil' specifies `try-completion'.  The completion function should
-     return the completion of the specified string, or `t' if the
-     string is a unique and exact match already, or `nil' if the string
-     matches no possibility.
-
-     If the string is an exact match for one possibility, but also
-     matches other longer possibilities, the function should return the
-     string, not `t'.
-
-   * `t' specifies `all-completions'.  The completion function should
-     return a list of all possible completions of the specified string.
-
-   * `lambda' specifies `test-completion'.  The completion function
-     should return `t' if the specified string is an exact match for
-     some possibility; `nil' otherwise.
-
-   It would be consistent and clean for completion functions to allow
-lambda expressions (lists that are functions) as well as function
-symbols as COLLECTION, but this is impossible.  Lists as completion
-tables already have other meanings, and it would be unreliable to treat
-one differently just because it is also a possible function.  So you
-must arrange for any function you wish to use for completion to be
-encapsulated in a symbol.
-
-   Emacs uses programmed completion when completing file names.  *Note
-File Name Completion::.
-
- -- Macro: dynamic-completion-table function
-     This macro is a convenient way to write a function that can act as
-     programmed completion function.  The argument FUNCTION should be a
-     function that takes one argument, a string, and returns an alist of
-     possible completions of it.  You can think of
-     `dynamic-completion-table' as a transducer between that interface
-     and the interface for programmed completion functions.
-
-
-File: elisp,  Node: Yes-or-No Queries,  Next: Multiple Queries,  Prev: Completion,  Up: Minibuffers
-
-20.7 Yes-or-No Queries
-======================
-
-This section describes functions used to ask the user a yes-or-no
-question.  The function `y-or-n-p' can be answered with a single
-character; it is useful for questions where an inadvertent wrong answer
-will not have serious consequences.  `yes-or-no-p' is suitable for more
-momentous questions, since it requires three or four characters to
-answer.
-
-   If either of these functions is called in a command that was invoked
-using the mouse--more precisely, if `last-nonmenu-event' (*note Command
-Loop Info::) is either `nil' or a list--then it uses a dialog box or
-pop-up menu to ask the question.  Otherwise, it uses keyboard input.
-You can force use of the mouse or use of keyboard input by binding
-`last-nonmenu-event' to a suitable value around the call.
-
-   Strictly speaking, `yes-or-no-p' uses the minibuffer and `y-or-n-p'
-does not; but it seems best to describe them together.
-
- -- Function: y-or-n-p prompt
-     This function asks the user a question, expecting input in the echo
-     area.  It returns `t' if the user types `y', `nil' if the user
-     types `n'.  This function also accepts <SPC> to mean yes and <DEL>
-     to mean no.  It accepts `C-]' to mean "quit," like `C-g', because
-     the question might look like a minibuffer and for that reason the
-     user might try to use `C-]' to get out.  The answer is a single
-     character, with no <RET> needed to terminate it.  Upper and lower
-     case are equivalent.
-
-     "Asking the question" means printing PROMPT in the echo area,
-     followed by the string `(y or n) '.  If the input is not one of
-     the expected answers (`y', `n', `<SPC>', `<DEL>', or something
-     that quits), the function responds `Please answer y or n.', and
-     repeats the request.
-
-     This function does not actually use the minibuffer, since it does
-     not allow editing of the answer.  It actually uses the echo area
-     (*note The Echo Area::), which uses the same screen space as the
-     minibuffer.  The cursor moves to the echo area while the question
-     is being asked.
-
-     The answers and their meanings, even `y' and `n', are not
-     hardwired.  The keymap `query-replace-map' specifies them.  *Note
-     Search and Replace::.
-
-     In the following example, the user first types `q', which is
-     invalid.  At the next prompt the user types `y'.
-
-          (y-or-n-p "Do you need a lift? ")
-
-          ;; After evaluation of the preceding expression,
-          ;;   the following prompt appears in the echo area:
-
-          ---------- Echo area ----------
-          Do you need a lift? (y or n)
-          ---------- Echo area ----------
-
-          ;; If the user then types `q', the following appears:
-
-          ---------- Echo area ----------
-          Please answer y or n.  Do you need a lift? (y or n)
-          ---------- Echo area ----------
-
-          ;; When the user types a valid answer,
-          ;;   it is displayed after the question:
-
-          ---------- Echo area ----------
-          Do you need a lift? (y or n) y
-          ---------- Echo area ----------
-
-     We show successive lines of echo area messages, but only one
-     actually appears on the screen at a time.
-
- -- Function: y-or-n-p-with-timeout prompt seconds default-value
-     Like `y-or-n-p', except that if the user fails to answer within
-     SECONDS seconds, this function stops waiting and returns
-     DEFAULT-VALUE.  It works by setting up a timer; see *note Timers::.
-     The argument SECONDS may be an integer or a floating point number.
-
- -- Function: yes-or-no-p prompt
-     This function asks the user a question, expecting input in the
-     minibuffer.  It returns `t' if the user enters `yes', `nil' if the
-     user types `no'.  The user must type <RET> to finalize the
-     response.  Upper and lower case are equivalent.
-
-     `yes-or-no-p' starts by displaying PROMPT in the echo area,
-     followed by `(yes or no) '.  The user must type one of the
-     expected responses; otherwise, the function responds `Please answer
-     yes or no.', waits about two seconds and repeats the request.
-
-     `yes-or-no-p' requires more work from the user than `y-or-n-p' and
-     is appropriate for more crucial decisions.
-
-     Here is an example:
-
-          (yes-or-no-p "Do you really want to remove everything? ")
-
-          ;; After evaluation of the preceding expression,
-          ;;   the following prompt appears,
-          ;;   with an empty minibuffer:
-
-          ---------- Buffer: minibuffer ----------
-          Do you really want to remove everything? (yes or no)
-          ---------- Buffer: minibuffer ----------
-
-     If the user first types `y <RET>', which is invalid because this
-     function demands the entire word `yes', it responds by displaying
-     these prompts, with a brief pause between them:
-
-          ---------- Buffer: minibuffer ----------
-          Please answer yes or no.
-          Do you really want to remove everything? (yes or no)
-          ---------- Buffer: minibuffer ----------
-
-
-File: elisp,  Node: Multiple Queries,  Next: Reading a Password,  Prev: Yes-or-No Queries,  Up: Minibuffers
-
-20.8 Asking Multiple Y-or-N Questions
-=====================================
-
-When you have a series of similar questions to ask, such as "Do you
-want to save this buffer" for each buffer in turn, you should use
-`map-y-or-n-p' to ask the collection of questions, rather than asking
-each question individually.  This gives the user certain convenient
-facilities such as the ability to answer the whole series at once.
-
- -- Function: map-y-or-n-p prompter actor list &optional help
-          action-alist no-cursor-in-echo-area
-     This function asks the user a series of questions, reading a
-     single-character answer in the echo area for each one.
-
-     The value of LIST specifies the objects to ask questions about.
-     It should be either a list of objects or a generator function.  If
-     it is a function, it should expect no arguments, and should return
-     either the next object to ask about, or `nil' meaning stop asking
-     questions.
-
-     The argument PROMPTER specifies how to ask each question.  If
-     PROMPTER is a string, the question text is computed like this:
-
-          (format PROMPTER OBJECT)
-
-     where OBJECT is the next object to ask about (as obtained from
-     LIST).
-
-     If not a string, PROMPTER should be a function of one argument
-     (the next object to ask about) and should return the question
-     text.  If the value is a string, that is the question to ask the
-     user.  The function can also return `t' meaning do act on this
-     object (and don't ask the user), or `nil' meaning ignore this
-     object (and don't ask the user).
-
-     The argument ACTOR says how to act on the answers that the user
-     gives.  It should be a function of one argument, and it is called
-     with each object that the user says yes for.  Its argument is
-     always an object obtained from LIST.
-
-     If the argument HELP is given, it should be a list of this form:
-
-          (SINGULAR PLURAL ACTION)
-
-     where SINGULAR is a string containing a singular noun that
-     describes the objects conceptually being acted on, PLURAL is the
-     corresponding plural noun, and ACTION is a transitive verb
-     describing what ACTOR does.
-
-     If you don't specify HELP, the default is `("object" "objects"
-     "act on")'.
-
-     Each time a question is asked, the user may enter `y', `Y', or
-     <SPC> to act on that object; `n', `N', or <DEL> to skip that
-     object; `!' to act on all following objects; <ESC> or `q' to exit
-     (skip all following objects); `.' (period) to act on the current
-     object and then exit; or `C-h' to get help.  These are the same
-     answers that `query-replace' accepts.  The keymap
-     `query-replace-map' defines their meaning for `map-y-or-n-p' as
-     well as for `query-replace'; see *note Search and Replace::.
-
-     You can use ACTION-ALIST to specify additional possible answers
-     and what they mean.  It is an alist of elements of the form `(CHAR
-     FUNCTION HELP)', each of which defines one additional answer.  In
-     this element, CHAR is a character (the answer); FUNCTION is a
-     function of one argument (an object from LIST); HELP is a string.
-
-     When the user responds with CHAR, `map-y-or-n-p' calls FUNCTION.
-     If it returns non-`nil', the object is considered "acted upon,"
-     and `map-y-or-n-p' advances to the next object in LIST.  If it
-     returns `nil', the prompt is repeated for the same object.
-
-     Normally, `map-y-or-n-p' binds `cursor-in-echo-area' while
-     prompting.  But if NO-CURSOR-IN-ECHO-AREA is non-`nil', it does
-     not do that.
-
-     If `map-y-or-n-p' is called in a command that was invoked using the
-     mouse--more precisely, if `last-nonmenu-event' (*note Command Loop
-     Info::) is either `nil' or a list--then it uses a dialog box or
-     pop-up menu to ask the question.  In this case, it does not use
-     keyboard input or the echo area.  You can force use of the mouse
-     or use of keyboard input by binding `last-nonmenu-event' to a
-     suitable value around the call.
-
-     The return value of `map-y-or-n-p' is the number of objects acted
-     on.
-
-
-File: elisp,  Node: Reading a Password,  Next: Minibuffer Commands,  Prev: Multiple Queries,  Up: Minibuffers
-
-20.9 Reading a Password
-=======================
-
-To read a password to pass to another program, you can use the function
-`read-passwd'.
-
- -- Function: read-passwd prompt &optional confirm default
-     This function reads a password, prompting with PROMPT.  It does
-     not echo the password as the user types it; instead, it echoes `.'
-     for each character in the password.
-
-     The optional argument CONFIRM, if non-`nil', says to read the
-     password twice and insist it must be the same both times.  If it
-     isn't the same, the user has to type it over and over until the
-     last two times match.
-
-     The optional argument DEFAULT specifies the default password to
-     return if the user enters empty input.  If DEFAULT is `nil', then
-     `read-passwd' returns the null string in that case.
-
-
-File: elisp,  Node: Minibuffer Commands,  Next: Minibuffer Contents,  Prev: Reading a Password,  Up: Minibuffers
-
-20.10 Minibuffer Commands
-=========================
-
-This section describes some commands meant for use in the minibuffer.
-
- -- Command: exit-minibuffer
-     This command exits the active minibuffer.  It is normally bound to
-     keys in minibuffer local keymaps.
-
- -- Command: self-insert-and-exit
-     This command exits the active minibuffer after inserting the last
-     character typed on the keyboard (found in `last-command-char';
-     *note Command Loop Info::).
-
- -- Command: previous-history-element n
-     This command replaces the minibuffer contents with the value of the
-     Nth previous (older) history element.
-
- -- Command: next-history-element n
-     This command replaces the minibuffer contents with the value of the
-     Nth more recent history element.
-
- -- Command: previous-matching-history-element pattern n
-     This command replaces the minibuffer contents with the value of the
-     Nth previous (older) history element that matches PATTERN (a
-     regular expression).
-
- -- Command: next-matching-history-element pattern n
-     This command replaces the minibuffer contents with the value of the
-     Nth next (newer) history element that matches PATTERN (a regular
-     expression).
-
-
-File: elisp,  Node: Minibuffer Windows,  Next: Recursive Mini,  Prev: Minibuffer Contents,  Up: Minibuffers
-
-20.11 Minibuffer Windows
-========================
-
-These functions access and select minibuffer windows and test whether
-they are active.
-
- -- Function: active-minibuffer-window
-     This function returns the currently active minibuffer window, or
-     `nil' if none is currently active.
-
- -- Function: minibuffer-window &optional frame
-     This function returns the minibuffer window used for frame FRAME.
-     If FRAME is `nil', that stands for the current frame.  Note that
-     the minibuffer window used by a frame need not be part of that
-     frame--a frame that has no minibuffer of its own necessarily uses
-     some other frame's minibuffer window.
-
- -- Function: set-minibuffer-window window
-     This function specifies WINDOW as the minibuffer window to use.
-     This affects where the minibuffer is displayed if you put text in
-     it without invoking the usual minibuffer commands.  It has no
-     effect on the usual minibuffer input functions because they all
-     start by choosing the minibuffer window according to the current
-     frame.
-
- -- Function: window-minibuffer-p &optional window
-     This function returns non-`nil' if WINDOW is a minibuffer window.
-     WINDOW defaults to the selected window.
-
-   It is not correct to determine whether a given window is a
-minibuffer by comparing it with the result of `(minibuffer-window)',
-because there can be more than one minibuffer window if there is more
-than one frame.
-
- -- Function: minibuffer-window-active-p window
-     This function returns non-`nil' if WINDOW, assumed to be a
-     minibuffer window, is currently active.
-
-
-File: elisp,  Node: Minibuffer Contents,  Next: Minibuffer Windows,  Prev: Minibuffer Commands,  Up: Minibuffers
-
-20.12 Minibuffer Contents
-=========================
-
-These functions access the minibuffer prompt and contents.
-
- -- Function: minibuffer-prompt
-     This function returns the prompt string of the currently active
-     minibuffer.  If no minibuffer is active, it returns `nil'.
-
- -- Function: minibuffer-prompt-end
-     This function returns the current position of the end of the
-     minibuffer prompt, if a minibuffer is current.  Otherwise, it
-     returns the minimum valid buffer position.
-
- -- Function: minibuffer-prompt-width
-     This function returns the current display-width of the minibuffer
-     prompt, if a minibuffer is current.  Otherwise, it returns zero.
-
- -- Function: minibuffer-contents
-     This function returns the editable contents of the minibuffer
-     (that is, everything except the prompt) as a string, if a
-     minibuffer is current.  Otherwise, it returns the entire contents
-     of the current buffer.
-
- -- Function: minibuffer-contents-no-properties
-     This is like `minibuffer-contents', except that it does not copy
-     text properties, just the characters themselves.  *Note Text
-     Properties::.
-
- -- Function: minibuffer-completion-contents
-     This is like `minibuffer-contents', except that it returns only
-     the contents before point.  That is the part that completion
-     commands operate on.  *Note Minibuffer Completion::.
-
- -- Function: delete-minibuffer-contents
-     This function erases the editable contents of the minibuffer (that
-     is, everything except the prompt), if a minibuffer is current.
-     Otherwise, it erases the entire current buffer.
-
-
-File: elisp,  Node: Recursive Mini,  Next: Minibuffer Misc,  Prev: Minibuffer Windows,  Up: Minibuffers
-
-20.13 Recursive Minibuffers
-===========================
-
-These functions and variables deal with recursive minibuffers (*note
-Recursive Editing::):
-
- -- Function: minibuffer-depth
-     This function returns the current depth of activations of the
-     minibuffer, a nonnegative integer.  If no minibuffers are active,
-     it returns zero.
-
- -- User Option: enable-recursive-minibuffers
-     If this variable is non-`nil', you can invoke commands (such as
-     `find-file') that use minibuffers even while the minibuffer window
-     is active.  Such invocation produces a recursive editing level for
-     a new minibuffer.  The outer-level minibuffer is invisible while
-     you are editing the inner one.
-
-     If this variable is `nil', you cannot invoke minibuffer commands
-     when the minibuffer window is active, not even if you switch to
-     another window to do it.
-
-   If a command name has a property `enable-recursive-minibuffers' that
-is non-`nil', then the command can use the minibuffer to read arguments
-even if it is invoked from the minibuffer.  A command can also achieve
-this by binding `enable-recursive-minibuffers' to `t' in the
-interactive declaration (*note Using Interactive::).  The minibuffer
-command `next-matching-history-element' (normally `M-s' in the
-minibuffer) does the latter.
-
-
-File: elisp,  Node: Minibuffer Misc,  Prev: Recursive Mini,  Up: Minibuffers
-
-20.14 Minibuffer Miscellany
-===========================
-
- -- Function: minibufferp &optional buffer-or-name
-     This function returns non-`nil' if BUFFER-OR-NAME is a minibuffer.
-     If BUFFER-OR-NAME is omitted, it tests the current buffer.
-
- -- Variable: minibuffer-setup-hook
-     This is a normal hook that is run whenever the minibuffer is
-     entered.  *Note Hooks::.
-
- -- Variable: minibuffer-exit-hook
-     This is a normal hook that is run whenever the minibuffer is
-     exited.  *Note Hooks::.
-
- -- Variable: minibuffer-help-form
-     The current value of this variable is used to rebind `help-form'
-     locally inside the minibuffer (*note Help Functions::).
-
- -- Variable: minibuffer-scroll-window
-     If the value of this variable is non-`nil', it should be a window
-     object.  When the function `scroll-other-window' is called in the
-     minibuffer, it scrolls this window.
-
- -- Function: minibuffer-selected-window
-     This function returns the window which was selected when the
-     minibuffer was entered.  If selected window is not a minibuffer
-     window, it returns `nil'.
-
- -- User Option: max-mini-window-height
-     This variable specifies the maximum height for resizing minibuffer
-     windows.  If a float, it specifies a fraction of the height of the
-     frame.  If an integer, it specifies a number of lines.
-
- -- Function: minibuffer-message string
-     This function displays STRING temporarily at the end of the
-     minibuffer text, for two seconds, or until the next input event
-     arrives, whichever comes first.
+ -- Function: read-shell-command prompt &optional initial-contents hist
+          &rest args
+     This function reads a shell command from the minibuffer, prompting
+     with PROMPT and providing intelligent completion.  It completes
+     the first word of the command using candidates that are appropriate
+     for command names, and the rest of the command words as file names.
+
+     This function uses `minibuffer-local-shell-command-map' as the
+     keymap for minibuffer input.  The HIST argument specifies the
+     history list to use; if is omitted or `nil', it defaults to
+     `shell-command-history' (*note shell-command-history: Minibuffer
+     History.).  The optional argument INITIAL-CONTENTS specifies the
+     initial content of the minibuffer (*note Initial Input::).  The
+     rest of ARGS, if present, are used as the DEFAULT and
+     INHERIT-INPUT-METHOD arguments in `read-from-minibuffer' (*note
+     Text from Minibuffer::).
+
+ -- Variable: minibuffer-local-shell-command-map
+     This keymap is used by `read-shell-command' for completing command
+     and file names that are part of a shell command.
 

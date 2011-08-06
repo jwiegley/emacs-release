@@ -1,13 +1,13 @@
 /* Execution of byte code produced by bytecomp.el.
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,10 +15,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
+/*
 hacked on by jwz@lucid.com 17-jun-91
   o  added a compile-time switch to turn on simple sanity checking;
   o  put back the obsolete byte-codes for error-detection;
@@ -37,7 +36,7 @@ by Hallvard:
 #include <config.h>
 #include "lisp.h"
 #include "buffer.h"
-#include "charset.h"
+#include "character.h"
 #include "syntax.h"
 #include "window.h"
 
@@ -422,7 +421,7 @@ If the third argument is incorrect, Emacs may crash.  */)
   Lisp_Object *top;
   Lisp_Object result;
 
-#ifdef CHECK_FRAME_FONT
+#if 0 /* CHECK_FRAME_FONT */
  {
    struct frame *f = SELECTED_FRAME ();
    if (FRAME_X_P (f)
@@ -1394,10 +1393,17 @@ If the third argument is incorrect, Emacs may crash.  */)
 	  break;
 
 	case Bchar_syntax:
-	  BEFORE_POTENTIAL_GC ();
-	  CHECK_NUMBER (TOP);
-	  AFTER_POTENTIAL_GC ();
-	  XSETFASTINT (TOP, syntax_code_spec[(int) SYNTAX (XINT (TOP))]);
+	  {
+	    int c;
+
+	    BEFORE_POTENTIAL_GC ();
+	    CHECK_CHARACTER (TOP);
+	    AFTER_POTENTIAL_GC ();
+	    c = XFASTINT (TOP);
+	    if (NILP (current_buffer->enable_multibyte_characters))
+	      MAKE_CHAR_MULTIBYTE (c);
+	    XSETFASTINT (TOP, syntax_code_spec[(int) SYNTAX (c)]);
+	  }
 	  break;
 
 	case Bbuffer_substring:

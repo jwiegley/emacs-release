@@ -1,17 +1,19 @@
 ;;; ehelp.el --- bindings for electric-help mode
 
-;; Copyright (C) 1986, 1995, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1986, 1995, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
+;;   2007, 2008, 2009  Free Software Foundation, Inc.
 
+;; Author: Richard Mlynarik
+;; (according to ack.texi and authors.el)
 ;; Maintainer: FSF
 ;; Keywords: help, extensions
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -40,8 +40,6 @@
 ;;; Code:
 
 (require 'electric)
-(defvar electric-help-map ()
-  "Keymap defining commands available in `electric-help-mode'.")
 
 (defvar electric-help-form-to-execute nil)
 
@@ -61,8 +59,8 @@
   :group 'electric-help)
 
 (put 'electric-help-undefined 'suppress-keymap t)
-(if electric-help-map
-    ()
+
+(defvar electric-help-map
   (let ((map (make-keymap)))
     ;; allow all non-self-inserting keys - search, scroll, etc, but
     ;; let M-x and C-x exit ehelp mode and retain buffer:
@@ -93,8 +91,8 @@
     (define-key map "r" 'electric-help-retain)
     (define-key map "\ex" 'electric-help-execute-extended)
     (define-key map "\C-x" 'electric-help-ctrl-x-prefix)
-
-    (setq electric-help-map map)))
+    map)
+  "Keymap defining commands available in `electric-help-mode'.")
 
 (defun electric-help-mode ()
   "`with-electric-help' temporarily places its buffer in this mode.
@@ -119,13 +117,13 @@ erased before THUNK is called unless NOERASE is non-nil.  THUNK will
 be called while BUFFER is current and with `standard-output' bound to
 the buffer specified by BUFFER.
 
-If THUNK returns nil, we display BUFFER starting at the top, and
-shrink the window to fit.  If THUNK returns non-nil, we don't do those things.
+If THUNK returns nil, we display BUFFER starting at the top, and shrink
+the window to fit.  If THUNK returns non-nil, we don't do those things.
 
-After THUNK has been called, this function \"electrically\" pops up a window
-in which BUFFER is displayed and allows the user to scroll through that buffer
-in `electric-help-mode'. The window's height will be at least MINHEIGHT if
-this value is non-nil.
+After THUNK has been called, this function \"electrically\" pops up a
+window in which BUFFER is displayed and allows the user to scroll
+through that buffer in `electric-help-mode'.  The window's height will
+be at least MINHEIGHT if this value is non-nil.
 
 If THUNK returns nil, we display BUFFER starting at the top, and
 shrink the window to fit if `electric-help-shrink-window' is non-nil.
@@ -404,9 +402,7 @@ will select it.)"
 
 ;;;; ehelp-map
 
-(defvar ehelp-map ())
-(if ehelp-map
-    nil
+(defvar ehelp-map
   (let ((map (copy-keymap help-map)))
     (substitute-key-definition 'apropos 'electric-apropos map)
     (substitute-key-definition 'command-apropos 'electric-command-apropos map)
@@ -417,8 +413,7 @@ will select it.)"
     (substitute-key-definition 'describe-variable 'electric-describe-variable map)
     (substitute-key-definition 'describe-bindings 'electric-describe-bindings map)
     (substitute-key-definition 'describe-syntax 'electric-describe-syntax map)
-
-    (setq ehelp-map map)))
+    map))
 
 ;;;###(autoload 'ehelp-command "ehelp" "Prefix command for ehelp." t 'keymap)
 (defalias 'ehelp-command ehelp-map)
@@ -426,5 +421,5 @@ will select it.)"
 
 (provide 'ehelp)
 
-;;; arch-tag: e0e3037f-42c0-433e-ba18-322c5d951f46
+;; arch-tag: e0e3037f-42c0-433e-ba18-322c5d951f46
 ;;; ehelp.el ends here

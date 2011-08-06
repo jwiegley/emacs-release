@@ -1,13 +1,13 @@
 /* undo handling for GNU Emacs.
    Copyright (C) 1990, 1993, 1994, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 #include <config.h>
@@ -38,7 +36,12 @@ Lisp_Object Vundo_outer_limit;
 Lisp_Object Vundo_outer_limit_function;
 
 /* Last buffer for which undo information was recorded.  */
-Lisp_Object last_undo_buffer;
+/* BEWARE: This is not traced by the GC, so never dereference it!  */
+struct buffer *last_undo_buffer;
+
+/* Position of point last time we inserted a boundary.  */
+struct buffer *last_boundary_buffer;
+EMACS_INT last_boundary_position;
 
 Lisp_Object Qinhibit_read_only;
 
@@ -53,8 +56,12 @@ Lisp_Object Qapply;
    an undo-boundary.  */
 Lisp_Object pending_boundary;
 
+/* Nonzero means do not record point in record_point.  */
+
+int undo_inhibit_record_point;
+
 /* Record point as it was at beginning of this command (if necessary)
-   And prepare the undo info for recording a change.
+   and prepare the undo info for recording a change.
    PT is the position of point that will naturally occur as a result of the
    undo record that will be added just after this command terminates.  */
 
@@ -64,14 +71,23 @@ record_point (pt)
 {
   int at_boundary;
 
+  /* Don't record position of pt when undo_inhibit_record_point holds.  */
+  if (undo_inhibit_record_point)
+    return;
+
   /* Allocate a cons cell to be the undo boundary after this command.  */
   if (NILP (pending_boundary))
     pending_boundary = Fcons (Qnil, Qnil);
 
-  if (!BUFFERP (last_undo_buffer)
-      || current_buffer != XBUFFER (last_undo_buffer))
+  if ((current_buffer != last_undo_buffer)
+      /* Don't call Fundo_boundary for the first change.  Otherwise we
+	 risk overwriting last_boundary_position in Fundo_boundary with
+	 PT of the current buffer and as a consequence not insert an
+	 undo boundary because last_boundary_position will equal pt in
+	 the test at the end of the present function (Bug#731).  */
+      && (MODIFF > SAVE_MODIFF))
     Fundo_boundary ();
-  XSETBUFFER (last_undo_buffer, current_buffer);
+  last_undo_buffer = current_buffer;
 
   if (CONSP (current_buffer->undo_list))
     {
@@ -101,19 +117,10 @@ record_point (pt)
   /* If we are just after an undo boundary, and
      point wasn't at start of deleted range, record where it was.  */
   if (at_boundary
-      && BUFFERP (last_point_position_buffer)
-      /* If we're called from batch mode, this could be nil.  */
-      && current_buffer == XBUFFER (last_point_position_buffer))
-    {
-      /* If we have switched windows, use the point value
-	 from the window we are in.  */
-      if (! EQ (last_point_position_window, selected_window))
-	last_point_position = marker_position (XWINDOW (selected_window)->pointm);
-
-      if (last_point_position != pt)
-	current_buffer->undo_list
-	  = Fcons (make_number (last_point_position), current_buffer->undo_list);
-    }
+      && current_buffer == last_boundary_buffer
+      && last_boundary_position != pt)
+    current_buffer->undo_list
+      = Fcons (make_number (last_boundary_position), current_buffer->undo_list);
 }
 
 /* Record an insertion that just happened or is about to happen,
@@ -199,10 +206,9 @@ record_marker_adjustment (marker, adjustment)
   if (NILP (pending_boundary))
     pending_boundary = Fcons (Qnil, Qnil);
 
-  if (!BUFFERP (last_undo_buffer)
-      || current_buffer != XBUFFER (last_undo_buffer))
+  if (current_buffer != last_undo_buffer)
     Fundo_boundary ();
-  XSETBUFFER (last_undo_buffer, current_buffer);
+  last_undo_buffer = current_buffer;
 
   current_buffer->undo_list
     = Fcons (Fcons (marker, make_number (adjustment)),
@@ -234,10 +240,9 @@ record_first_change ()
   if (EQ (current_buffer->undo_list, Qt))
     return;
 
-  if (!BUFFERP (last_undo_buffer)
-      || current_buffer != XBUFFER (last_undo_buffer))
+  if (current_buffer != last_undo_buffer)
     Fundo_boundary ();
-  XSETBUFFER (last_undo_buffer, current_buffer);
+  last_undo_buffer = current_buffer;
 
   if (base_buffer->base_buffer)
     base_buffer = base_buffer->base_buffer;
@@ -256,22 +261,22 @@ record_property_change (beg, length, prop, value, buffer)
      Lisp_Object prop, value, buffer;
 {
   Lisp_Object lbeg, lend, entry;
-  struct buffer *obuf = current_buffer;
+  struct buffer *obuf = current_buffer, *buf = XBUFFER (buffer);
   int boundary = 0;
 
-  if (EQ (XBUFFER (buffer)->undo_list, Qt))
+  if (EQ (buf->undo_list, Qt))
     return;
 
   /* Allocate a cons cell to be the undo boundary after this command.  */
   if (NILP (pending_boundary))
     pending_boundary = Fcons (Qnil, Qnil);
 
-  if (!EQ (buffer, last_undo_buffer))
+  if (buf != last_undo_buffer)
     boundary = 1;
-  last_undo_buffer = buffer;
+  last_undo_buffer = buf;
 
   /* Switch temporarily to the buffer that was changed.  */
-  current_buffer = XBUFFER (buffer);
+  current_buffer = buf;
 
   if (boundary)
     Fundo_boundary ();
@@ -311,6 +316,8 @@ but another undo command will undo to the previous boundary.  */)
       else
 	current_buffer->undo_list = Fcons (Qnil, current_buffer->undo_list);
     }
+  last_boundary_position = PT;
+  last_boundary_buffer = current_buffer;
   return Qnil;
 }
 
@@ -386,7 +393,8 @@ truncate_undo_list (b)
       && size_so_far > XINT (Vundo_outer_limit)
       && !NILP (Vundo_outer_limit_function))
     {
-      Lisp_Object temp = last_undo_buffer, tem;
+      Lisp_Object tem;
+      struct buffer *temp = last_undo_buffer;
 
       /* Normally the function this calls is undo-outer-limit-truncate.  */
       tem = call1 (Vundo_outer_limit_function, make_number (size_so_far));
@@ -667,6 +675,9 @@ syms_of_undo ()
   pending_boundary = Qnil;
   staticpro (&pending_boundary);
 
+  last_undo_buffer = NULL;
+  last_boundary_buffer = NULL;
+
   defsubr (&Sprimitive_undo);
   defsubr (&Sundo_boundary);
 
@@ -678,7 +689,7 @@ value, the earlier commands that came before it are forgotten.
 
 The size is counted as the number of bytes occupied,
 which includes both saved text and other data.  */);
-  undo_limit = 20000;
+  undo_limit = 80000;
 
   DEFVAR_INT ("undo-strong-limit", &undo_strong_limit,
 	      doc: /* Don't keep more than this much size of undo information.
@@ -690,7 +701,7 @@ is never discarded for this reason.
 
 The size is counted as the number of bytes occupied,
 which includes both saved text and other data.  */);
-  undo_strong_limit = 30000;
+  undo_strong_limit = 120000;
 
   DEFVAR_LISP ("undo-outer-limit", &Vundo_outer_limit,
 	      doc: /* Outer limit on size of undo information for one command.
@@ -707,7 +718,7 @@ In fact, this calls the function which is the value of
 `undo-outer-limit-function' with one argument, the size.
 The text above describes the behavior of the function
 that variable usually specifies.  */);
-  Vundo_outer_limit = make_number (3000000);
+  Vundo_outer_limit = make_number (12000000);
 
   DEFVAR_LISP ("undo-outer-limit-function", &Vundo_outer_limit_function,
 	       doc: /* Function to call when an undo list exceeds `undo-outer-limit'.
@@ -719,6 +730,10 @@ If it returns nil, the other forms of truncation are done.
 Garbage collection is inhibited around the call to this function,
 so it must make sure not to do a lot of consing.  */);
   Vundo_outer_limit_function = Qnil;
+
+  DEFVAR_BOOL ("undo-inhibit-record-point", &undo_inhibit_record_point,
+	       doc: /* Non-nil means do not record `point' in `buffer-undo-list'.  */);
+  undo_inhibit_record_point = 0;
 }
 
 /* arch-tag: d546ee01-4aed-4ffb-bb8b-eefaae50d38a

@@ -1,7 +1,7 @@
 ;;; emacsbug.el --- command to report Emacs bugs to appropriate mailing list
 
 ;; Copyright (C) 1985, 1994, 1997, 1998, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: K. Shane Hartman
 ;; Maintainer: FSF
@@ -10,10 +10,10 @@
 ;; Not fully installed because it can work only on Internet hosts.
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,20 +21,16 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;; `M-x report-emacs-bug' starts an email note to the Emacs maintainers
-;; describing a problem.  Here's how it's done...
+;; describing a problem.  You need to be able to send mail from Emacs
+;; to complete the process.  Alternatively, compose the bug report in
+;; Emacs then paste it into your normal mail client.
 
 ;;; Code:
-
-;; >> This should be an address which is accessible to your machine,
-;; >> otherwise you can't use this file.  It will only work on the
-;; >> internet with this address.
 
 (require 'sendmail)
 
@@ -44,27 +40,33 @@
   :group 'mail)
 
 (defcustom report-emacs-bug-address "bug-gnu-emacs@gnu.org"
-  "*Address of mailing list for GNU Emacs bugs."
+  "Address of mailing list for GNU Emacs bugs."
   :group 'emacsbug
   :type 'string)
 
 (defcustom report-emacs-bug-pretest-address "emacs-pretest-bug@gnu.org"
-  "*Address of mailing list for GNU Emacs pretest bugs."
+  "Address of mailing list for GNU Emacs pretest bugs."
   :group 'emacsbug
   :type 'string)
 
-(defvar report-emacs-bug-orig-text nil
-  "The automatically-created initial text of bug report.")
-
 (defcustom report-emacs-bug-no-confirmation nil
-  "*If non-nil, suppress the confirmations asked for the sake of novice users."
+  "If non-nil, suppress the confirmations asked for the sake of novice users."
   :group 'emacsbug
   :type 'boolean)
 
 (defcustom report-emacs-bug-no-explanations nil
-  "*If non-nil, suppress the explanations given for the sake of novice users."
+  "If non-nil, suppress the explanations given for the sake of novice users."
   :group 'emacsbug
   :type 'boolean)
+
+;; User options end here.
+
+
+(defvar report-emacs-bug-orig-text nil
+  "The automatically-created initial text of bug report.")
+
+(declare-function x-server-vendor "xfns.c" (&optional terminal))
+(declare-function x-server-version "xfns.c" (&optional terminal))
 
 ;;;###autoload
 (defun report-emacs-bug (topic &optional recent-keys)
@@ -73,18 +75,27 @@ Prompts for bug subject.  Leaves you in a mail buffer."
   ;; This strange form ensures that (recent-keys) is the value before
   ;; the bug subject string is read.
   (interactive (reverse (list (recent-keys) (read-string "Bug Subject: "))))
-  ;; If there are four numbers in emacs-version, this is a pretest
-  ;; version.
-  (let* ((pretest-p (string-match "\\..*\\..*\\." emacs-version))
-	(from-buffer (current-buffer))
-	(reporting-address (if pretest-p
-			       report-emacs-bug-pretest-address
-			     report-emacs-bug-address))
-        ;; Put these properties on semantically-void text.
-        (prompt-properties '(field emacsbug-prompt
-                                   intangible but-helpful
-                                   rear-nonsticky t))
-	user-point message-end-point)
+  ;; The syntax `version;' is preferred to `[version]' because the
+  ;; latter could be mistakenly stripped by mailing software.
+  (if (eq system-type 'ms-dos)
+      (setq topic (concat emacs-version "; " topic))
+    (when (string-match "^\\(\\([.0-9]+\\)*\\)\\.[0-9]+$" emacs-version)
+      (setq topic (concat (match-string 1 emacs-version) "; " topic))))
+  ;; If there are four numbers in emacs-version (three for MS-DOS),
+  ;; this is a pretest version.
+  (let* ((pretest-p (string-match (if (eq system-type 'ms-dos)
+				      "\\..*\\."
+				    "\\..*\\..*\\.")
+				  emacs-version))
+	 (from-buffer (current-buffer))
+	 (reporting-address (if pretest-p
+				report-emacs-bug-pretest-address
+			      report-emacs-bug-address))
+	 ;; Put these properties on semantically-void text.
+	 (prompt-properties '(field emacsbug-prompt
+				    intangible but-helpful
+				    rear-nonsticky t))
+	 user-point message-end-point)
     (setq message-end-point
 	  (with-current-buffer (get-buffer-create "*Messages*")
 	    (point-max-marker)))
@@ -106,7 +117,7 @@ Prompts for bug subject.  Leaves you in a mail buffer."
 	(let ((pos (point)))
 	  (insert "not to your local site managers!")
 	  (put-text-property pos (point) 'face 'highlight)))
-	(insert "\nPlease write in ")
+      (insert "\nPlease write in ")
       (let ((pos (point)))
 	(insert "English")
 	(put-text-property pos (point) 'face 'highlight))
@@ -132,8 +143,8 @@ usually do not have translators to read other languages for them.\n\n")
 
     (let ((debug-file (expand-file-name "DEBUG" data-directory)))
       (if (file-readable-p debug-file)
-	(insert "If you would like to further debug the crash, please read the file\n"
-		debug-file " for instructions.\n")))
+	  (insert "If you would like to further debug the crash, please read the file\n"
+		  debug-file " for instructions.\n")))
     (add-text-properties (1+ user-point) (point) prompt-properties)
 
     (insert "\n\nIn " (emacs-version) "\n")
@@ -149,17 +160,19 @@ usually do not have translators to read other languages for them.\n\n")
 	(insert "configured using `configure "
 		system-configuration-options "'\n\n"))
     (insert "Important settings:\n")
-    (mapcar
+    (mapc
      '(lambda (var)
 	(insert (format "  value of $%s: %s\n" var (getenv var))))
      '("LC_ALL" "LC_COLLATE" "LC_CTYPE" "LC_MESSAGES"
-       "LC_MONETARY" "LC_NUMERIC" "LC_TIME" "LANG"))
+       "LC_MONETARY" "LC_NUMERIC" "LC_TIME" "LANG" "XMODIFIERS"))
     (insert (format "  locale-coding-system: %s\n" locale-coding-system))
     (insert (format "  default-enable-multibyte-characters: %s\n"
 		    default-enable-multibyte-characters))
     (insert "\n")
     (insert (format "Major mode: %s\n"
-		    (buffer-local-value 'mode-name from-buffer)))
+		    (format-mode-line
+                     (buffer-local-value 'mode-name from-buffer)
+                     nil nil from-buffer)))
     (insert "\n")
     (insert "Minor modes in effect:\n")
     (dolist (mode minor-mode-list)
@@ -223,10 +236,7 @@ Type SPC to scroll through this section and its subsections."))))
 (defun report-emacs-bug-info ()
   "Go to the Info node on reporting Emacs bugs."
   (interactive)
-  (info)
-  (Info-directory)
-  (Info-menu "emacs")
-  (Info-goto-node "Bugs"))
+  (info "(emacs)Bugs"))
 
 (defun report-emacs-bug-hook ()
   (save-excursion

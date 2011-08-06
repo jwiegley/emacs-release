@@ -1,27 +1,25 @@
 ;;; gnus-move.el --- commands for moving Gnus from one server to another
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -47,16 +45,13 @@ Update the .newsrc.eld file to reflect the change of nntp server."
 
   ;; First start Gnus.
   (let ((gnus-activate-level 0)
-	(mail-sources nil)
-	(nnmail-spool-file nil))
+	(mail-sources nil))
     (gnus))
 
   (save-excursion
     ;; Go through all groups and translate.
-    (let ((newsrc gnus-newsrc-alist)
-	  (nntp-nov-gap nil)
-	  info)
-      (while (setq info (pop newsrc))
+    (let ((nntp-nov-gap nil))
+      (dolist (info gnus-newsrc-alist)
 	(when (gnus-group-native-p (gnus-info-group info))
 	  (gnus-move-group-to-server info from-server to-server))))))
 
@@ -177,11 +172,10 @@ Update the .newsrc.eld file to reflect the change of nntp server."
 	   (new-name (gnus-group-prefixed-name
 		      (gnus-group-real-name group) to-server)))
       (gnus-info-set-group info new-name)
-      (gnus-sethash new-name (gnus-gethash group gnus-newsrc-hashtb)
-		    gnus-newsrc-hashtb)
+      (gnus-sethash new-name (gnus-group-entry group) gnus-newsrc-hashtb)
       (gnus-sethash group nil gnus-newsrc-hashtb))))
 
 (provide 'gnus-move)
 
-;;; arch-tag: 503742b8-7d66-4d79-bb31-4a698070707b
+;; arch-tag: 503742b8-7d66-4d79-bb31-4a698070707b
 ;;; gnus-move.el ends here

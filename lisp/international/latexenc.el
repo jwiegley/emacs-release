@@ -1,16 +1,16 @@
 ;;; latexenc.el --- guess correct coding system in LaTeX files -*-coding: iso-2022-7bit -*-
 
-;; Copyright (C) 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Arne J,Ax(Brgensen <arne@arnested.dk>
 ;; Keywords: mule, coding system, latex
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -65,8 +63,6 @@
     ("cp852" . cp852) ; IBM code page 852
     ("cp858" . cp858) ; IBM code page 850 but with a euro symbol
     ("cp865" . cp865) ; IBM code page 865
-    ;; The DECMultinational charaterset used by the OpenVMS system
-    ;; ("decmulti" . undecided)
     ("latin1" . iso-8859-1)
     ("latin2" . iso-8859-2)
     ("latin3" . iso-8859-3)

@@ -1,6 +1,6 @@
 ;;; savehist.el --- Save minibuffer history.
 
-;; Copyright (C) 1997, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+;; Copyright (C) 1997, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Hrvoje Niksic <hniksic@xemacs.org>
 ;; Keywords: minibuffer
@@ -8,10 +8,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -71,14 +69,14 @@ interface."
   :group 'savehist)
 
 (defcustom savehist-save-minibuffer-history t
-  "*If non-nil, save all recorded minibuffer histories.
+  "If non-nil, save all recorded minibuffer histories.
 If you want to save only specific histories, use `savehist-save-hook' to
 modify the value of `savehist-minibuffer-history-variables'."
   :type 'boolean
   :group 'savehist)
 
 (defcustom savehist-additional-variables ()
-  "*List of additional variables to save.
+  "List of additional variables to save.
 Each element is a symbol whose value will be persisted across Emacs
 sessions that use savehist.  The contents of variables should be
 printable with the Lisp printer.  You don't need to add minibuffer
@@ -93,21 +91,13 @@ minibuffer histories, such as `compile-command' or `kill-ring'."
   :group 'savehist)
 
 (defcustom savehist-ignored-variables nil ;; '(command-history)
-  "*List of additional variables not to save."
+  "List of additional variables not to save."
   :type '(repeat variable)
   :group 'savehist)
 
 (defcustom savehist-file
-  (cond
-   ;; Backward compatibility with previous versions of savehist.
-   ((file-exists-p "~/.emacs-history") "~/.emacs-history")
-   ((and (not (featurep 'xemacs)) (file-directory-p "~/.emacs.d/"))
-    "~/.emacs.d/history")
-   ((and (featurep 'xemacs) (file-directory-p "~/.xemacs/"))
-    "~/.xemacs/history")
-   ;; For users without `~/.emacs.d/' or `~/.xemacs/'.
-   (t "~/.emacs-history"))
-  "*File name where minibuffer history is saved to and loaded from.
+  (locate-user-emacs-file "history" ".emacs-history")
+  "File name where minibuffer history is saved to and loaded from.
 The minibuffer history is a series of Lisp expressions loaded
 automatically when `savehist-mode' is turned on.  See `savehist-mode'
 for more details.
@@ -119,7 +109,7 @@ set to a coding system that exists in both emacsen."
   :group 'savehist)
 
 (defcustom savehist-file-modes #o600
-  "*Default permissions of the history file.
+  "Default permissions of the history file.
 This is decimal, not octal.  The default is 384 (0600 in octal).
 Set to nil to use the default permissions that Emacs uses, typically
 mandated by umask.  The default is a bit more restrictive to protect
@@ -128,7 +118,7 @@ the user's privacy."
   :group 'savehist)
 
 (defcustom savehist-autosave-interval (* 5 60)
-  "*The interval between autosaves of minibuffer history.
+  "The interval between autosaves of minibuffer history.
 If set to nil, disables timer-based autosaving."
   :type 'integer
   :group 'savehist)
@@ -147,12 +137,12 @@ save."
 
 ;; This should be capable of representing characters used by Emacs.
 ;; We prefer UTF-8 over ISO 2022 because it is well-known outside
-;; Mule.  XEmacs prir to 21.5 had UTF-8 provided by an external
+;; Mule.  XEmacs prior to 21.5 had UTF-8 provided by an external
 ;; package which may not be loaded, which is why we check for version.
 (defvar savehist-coding-system (if (and (featurep 'xemacs)
 					(<= emacs-major-version 21)
 					(< emacs-minor-version 5))
-				   'iso-2022-8 'utf-8)
+				   'iso-2022-8 'utf-8-unix)
   "The coding system savehist uses for saving the minibuffer history.
 Changing this value while Emacs is running is supported, but considered
 unwise, unless you know what you are doing.")
@@ -228,13 +218,10 @@ which is probably undesirable."
 (add-minor-mode 'savehist-mode "")
 
 (defun savehist-load ()
-  "Obsolete function provided for transition from old versions of savehist.
-Don't call this from new code, use (savehist-mode 1) instead.
-
-This function loads the variables stored in `savehist-file' and turns on
-`savehist-mode'.  If `savehist-file' is in the old format that doesn't
-record the value of `savehist-minibuffer-history-variables', that value
-is deducted from the contents of the file."
+  "Load the variables stored in `savehist-file' and turn on `savehist-mode'.
+If `savehist-file' is in the old format that doesn't record
+the value of `savehist-minibuffer-history-variables', that
+value is deducted from the contents of the file."
   (savehist-mode 1)
   ;; Old versions of savehist distributed with XEmacs didn't save
   ;; savehist-minibuffer-history-variables.  If that variable is nil
@@ -251,7 +238,7 @@ is deducted from the contents of the file."
 		;; Collect VAR, i.e. (nth form 1).
                 (push (nth 1 form) vars))
               vars)))))
-(make-obsolete 'savehist-load 'savehist-mode)
+(make-obsolete 'savehist-load 'savehist-mode "22.1")
 
 (defun savehist-install ()
   "Hook savehist into Emacs.
@@ -323,14 +310,15 @@ If AUTO-SAVE is non-nil, compare the saved contents to the one last saved,
 		(dolist (elt value)
 		  (let ((start (point)))
 		    (insert " ")
-		    (prin1 elt (current-buffer))
-		    ;; Try to read the element we just printed.
+		    ;; Try to print and then to read an element.
 		    (condition-case nil
-			(save-excursion
-			  (goto-char start)
-			  (read (current-buffer)))
+			(progn
+			  (prin1 elt (current-buffer))
+			  (save-excursion
+			    (goto-char start)
+			    (read (current-buffer))))
 		      (error
-		       ;; If reading it gets an error, comment it out.
+		       ;; If writing or reading gave an error, comment it out.
 		       (goto-char start)
 		       (insert "\n")
 		       (while (not (eobp))

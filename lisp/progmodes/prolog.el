@@ -1,17 +1,17 @@
 ;;; prolog.el --- major mode for editing and running Prolog under Emacs
 
-;; Copyright (C) 1986, 1987, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-;; Free Software Foundation, Inc.
+;; Copyright (C) 1986, 1987, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Masanobu UMEDA <umerin@mse.kyutech.ac.jp>
 ;; Keywords: languages
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -32,7 +30,7 @@
 ;;; Code:
 
 (defvar comint-prompt-regexp)
-
+(defvar comint-process-echoes)
 
 (defgroup prolog nil
   "Major mode for editing and running Prolog under Emacs."
@@ -240,6 +238,11 @@ rigidly along with this one (not yet)."
 (defvar inferior-prolog-mode-syntax-table prolog-mode-syntax-table)
 (defvar inferior-prolog-mode-abbrev-table prolog-mode-abbrev-table)
 
+(declare-function comint-mode "comint")
+(declare-function comint-send-string "comint" (process string))
+(declare-function comint-send-region "comint" (process start end))
+(declare-function comint-send-eof "comint" ())
+
 (define-derived-mode inferior-prolog-mode comint-mode "Inferior Prolog"
   "Major mode for interacting with an inferior Prolog process.
 
@@ -268,6 +271,12 @@ Return not at end copies rest of line to end and sends it.
   (prolog-mode-variables))
 
 (defvar inferior-prolog-buffer nil)
+
+(defvar inferior-prolog-flavor 'unknown
+  "Either a symbol or a buffer position offset by one.
+If a buffer position, the flavor has not been determined yet and
+it is expected that the process's output has been or will
+be inserted at that position plus one.")
 
 (defun inferior-prolog-run (&optional name)
   (with-current-buffer (make-comint "prolog" (or name prolog-program-name))
@@ -301,12 +310,6 @@ Return not at end copies rest of line to end and sends it.
         (inferior-prolog-run)
         ;; Try again.
         (inferior-prolog-process))))
-
-(defvar inferior-prolog-flavor 'unknown
-  "Either a symbol or a buffer position offset by one.
-If a buffer position, the flavor has not been determined yet and
-it is expected that the process's output has been or will
-be inserted at that position plus one.")
 
 (defun inferior-prolog-guess-flavor (&optional ignored)
   (save-excursion
@@ -354,7 +357,7 @@ With prefix argument \\[universal-prefix], prompt for the program to use."
              (save-excursion
                (goto-char (- pmark 3))
                (looking-at " \\? ")))
-        (comint-send-string proc (string last-command-char))
+        (comint-send-string proc (string last-command-event))
       (call-interactively 'self-insert-command))))
 
 (defun prolog-consult-region (compile beg end)

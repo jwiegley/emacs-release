@@ -1,7 +1,7 @@
 ;;; edt-mapper.el --- create an EDT LK-201 map file for X-Windows Emacs
 
-;; Copyright (C) 1994, 1995, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1994, 1995, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
+;;   2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Kevin Gallagher <Kevin.Gallagher@boeing.com>
 ;; Maintainer: Kevin Gallagher <Kevin.Gallagher@boeing.com>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -99,43 +97,23 @@
 ;;; Code:
 
 ;;;
-;;;  Make sure we're running Emacs version 19, or higher.
-;;;
-
-(cond
- ((string-lessp emacs-version "19")
-  (insert "
-
-    Whoa!  This isn't going to work...
-
-    You must run edt-mapper.el under Emacs version 19 or higher.
-
-    Press any key to exit.  ")
-  (sit-for 600)
-  (kill-emacs t)))
-
-;;;
 ;;;  Decide Emacs Variant, GNU Emacs or XEmacs (aka Lucid Emacs).
 ;;;  Determine Window System, and X Server Vendor (if appropriate).
 ;;;
-(defconst edt-x-emacs-p (string-match "XEmacs" emacs-version)
-  "Non-nil if we are running XEmacs version 19, or higher.")
-
-(defconst edt-emacs-variant (if edt-x-emacs-p "xemacs" "gnu")
-  "Indicates Emacs variant:  GNU Emacs or XEmacs \(aka Lucid Emacs\).")
-
-(defconst edt-window-system (if edt-x-emacs-p (console-type) window-system)
+(defconst edt-window-system (if (featurep 'xemacs) (console-type) window-system)
   "Indicates window system \(in GNU Emacs\) or console type \(in XEmacs\).")
 
-(defconst edt-xserver (if (eq edt-window-system 'x)
-			  (if edt-x-emacs-p
-			      ;; The Cygwin window manager has a `/' in its
-			      ;; name, which breaks the generated file name of
-			      ;; the custom key map file.  Replace `/' with a
-			      ;; `-' to work around that.
-			      (replace-in-string (x-server-vendor) "[ /]" "-")
-			    (subst-char-in-string ?/ ?- (subst-char-in-string ?  ?- (x-server-vendor))))
-			nil)
+(declare-function x-server-vendor "xfns.c" (&optional terminal))
+
+(defconst edt-xserver (when (eq edt-window-system 'x)
+			;; The Cygwin window manager has a `/' in its
+			;; name, which breaks the generated file name of
+			;; the custom key map file.  Replace `/' with a
+			;; `-' to work around that.
+			(if (featurep 'xemacs)
+			    (replace-in-string (x-server-vendor) "[ /]" "-")
+			  (replace-regexp-in-string "[ /]" "-"
+						    (x-server-vendor))))
   "Indicates X server vendor name, if applicable.")
 
 
@@ -151,9 +129,8 @@
 (defvar edt-term nil)
 
 ;; To silence the byte-compiler
-(eval-when-compile
-  (defvar EDT-key-name)
-  (defvar edt-save-function-key-map))
+(defvar EDT-key-name)
+(defvar edt-save-function-key-map)
 
 ;;;
 ;;;  Determine Terminal Type (if appropriate).
@@ -245,7 +222,7 @@
 ;;;  function-key-map.
 ;;;
 (cond
- (edt-x-emacs-p
+ ((featurep 'xemacs)
   (setq edt-return-seq (read-key-sequence "Hit carriage-return <CR> to continue "))
   (setq edt-return (concat "[" (format "%s" (event-key (aref edt-return-seq 0))) "]")))
  (t
@@ -327,40 +304,37 @@
 ;;;
 ;;;  Key mapping functions
 ;;;
-(defun edt-lucid-map-key (ident descrip)
+(defun edt-map-key (ident descrip)
   (interactive)
-  (setq edt-key-seq (read-key-sequence (format "Press %s%s: " ident descrip)))
-  (setq edt-key (concat "[" (format "%s" (event-key (aref edt-key-seq 0))) "]"))
-  (cond ((not (equal edt-key edt-return))
-         (set-buffer "Keys")
-         (insert (format "    (\"%s\" . %s)\n" ident edt-key))
-         (set-buffer "Directions"))
-        ;; bogosity to get next prompt to come up, if the user hits <CR>!
-        ;; check periodically to see if this is still needed...
-        (t
-         (set-buffer "Keys")
-         (insert (format "    (\"%s\" . \"\" )\n" ident))
-         (set-buffer "Directions")))
+  (if (featurep 'xemacs)
+      (progn 
+	(setq edt-key-seq (read-key-sequence (format "Press %s%s: " ident descrip)))
+	(setq edt-key (concat "[" (format "%s" (event-key (aref edt-key-seq 0))) "]"))
+	(cond ((not (equal edt-key edt-return))
+	       (set-buffer "Keys")
+	       (insert (format "    (\"%s\" . %s)\n" ident edt-key))
+	       (set-buffer "Directions"))
+	      ;; bogosity to get next prompt to come up, if the user hits <CR>!
+	      ;; check periodically to see if this is still needed...
+	      (t
+	       (set-buffer "Keys")
+	       (insert (format "    (\"%s\" . \"\" )\n" ident))
+	       (set-buffer "Directions"))))
+    (setq edt-key (read-key-sequence (format "Press %s%s: " ident descrip)))
+    (cond ((not (equal edt-key edt-return))
+	   (set-buffer "Keys")
+	   (insert (if (vectorp edt-key)
+		       (format "    (\"%s\" . %s)\n" ident edt-key)
+		     (format "    (\"%s\" . \"%s\")\n" ident edt-key)))
+	   (set-buffer "Directions"))
+	  ;; bogosity to get next prompt to come up, if the user hits <CR>!
+	  ;; check periodically to see if this is still needed...
+	  (t
+	   (set-buffer "Keys")
+	   (insert (format "    (\"%s\" . \"\" )\n" ident))
+	   (set-buffer "Directions"))))
   edt-key)
 
-(defun edt-gnu-map-key (ident descrip)
-  (interactive)
-  (setq edt-key (read-key-sequence (format "Press %s%s: " ident descrip)))
-  (cond ((not (equal edt-key edt-return))
-         (set-buffer "Keys")
-         (insert (if (vectorp edt-key)
-                     (format "    (\"%s\" . %s)\n" ident edt-key)
-                   (format "    (\"%s\" . \"%s\")\n" ident edt-key)))
-         (set-buffer "Directions"))
-        ;; bogosity to get next prompt to come up, if the user hits <CR>!
-        ;; check periodically to see if this is still needed...
-        (t
-         (set-buffer "Keys")
-         (insert (format "    (\"%s\" . \"\" )\n" ident))
-         (set-buffer "Directions")))
-  edt-key)
-
-(fset 'edt-map-key (if edt-x-emacs-p 'edt-lucid-map-key 'edt-gnu-map-key))
 (set-buffer "Keys")
 (insert "
 ;;
@@ -494,7 +468,7 @@
 ;;;
 ;;;  Restore function-key-map.
 ;;;
-(if (and edt-window-system (not edt-x-emacs-p))
+(if (and edt-window-system (not (featurep 'xemacs)))
     (setq function-key-map edt-save-function-key-map))
 (setq EDT-key-name "")
 (while (not
@@ -517,7 +491,7 @@
 ;;;  Save the key mapping file
 ;;;
 (let ((file (concat
-	     "~/.edt-" edt-emacs-variant
+	     "~/.edt-" (if (featurep 'xemacs) "xemacs" "gnu")
 	     (if edt-term (concat "-" edt-term))
 	     (if edt-xserver (concat "-" edt-xserver))
 	     (if edt-window-system (concat "-" (upcase (symbol-name edt-window-system))))
@@ -530,5 +504,5 @@
 (sit-for 600)
 (kill-emacs t)
 
-;;; arch-tag: 9eea59c8-b8b7-4d66-b858-c8920624c518
+;; arch-tag: 9eea59c8-b8b7-4d66-b858-c8920624c518
 ;;; edt-mapper.el ends here

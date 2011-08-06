@@ -1,51 +1,1843 @@
-This is ../info/gnus, produced by makeinfo version 4.11 from gnus.texi.
+This is ../../info/gnus, produced by makeinfo version 4.11 from
+gnus.texi.
 
 Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
-     Version 1.2 or any later version published by the Free Software
+     Version 1.3 or any later version published by the Free Software
      Foundation; with no Invariant Sections, with the Front-Cover texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
-     "GNU Free Documentation License" in the Emacs manual.
+     "GNU Free Documentation License".
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
-
-     This document is part of a collection distributed under the GNU
-     Free Documentation License.  If you want to distribute this
-     document separately from the collection, you can do so by adding a
-     copy of the license to the document, as described in section 6 of
-     the license.
-
-   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
-
-     Permission is granted to copy, distribute and/or modify this
-     document under the terms of the GNU Free Documentation License,
-     Version 1.2 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
-     being "A GNU Manual", and with the Back-Cover Texts as in (a)
-     below.  A copy of the license is included in the section entitled
-     "GNU Free Documentation License" in the Emacs manual.
-
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
-
-     This document is part of a collection distributed under the GNU
-     Free Documentation License.  If you want to distribute this
-     document separately from the collection, you can do so by adding a
-     copy of the license to the document, as described in section 6 of
-     the license.
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
+     developing GNU and promoting software freedom."
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).         The newsreader Gnus.
 END-INFO-DIR-ENTRY
+
+
+File: gnus,  Node: Gnus Versions,  Next: Other Gnus Versions,  Up: History
+
+10.2.1 Gnus Versions
+--------------------
+
+The first "proper" release of Gnus 5 was done in November 1995 when it
+was included in the Emacs 19.30 distribution (132 (ding) Gnus releases
+plus 15 Gnus 5.0 releases).
+
+   In May 1996 the next Gnus generation (aka. "September Gnus" (after 99
+releases)) was released under the name "Gnus 5.2" (40 releases).
+
+   On July 28th 1996 work on Red Gnus was begun, and it was released on
+January 25th 1997 (after 84 releases) as "Gnus 5.4" (67 releases).
+
+   On September 13th 1997, Quassia Gnus was started and lasted 37
+releases.  It was released as "Gnus 5.6" on March 8th 1998 (46
+releases).
+
+   Gnus 5.6 begat Pterodactyl Gnus on August 29th 1998 and was released
+as "Gnus 5.8" (after 99 releases and a CVS repository) on December 3rd
+1999.
+
+   On the 26th of October 2000, Oort Gnus was begun and was released as
+Gnus 5.10 on May 1st 2003 (24 releases).
+
+   On the January 4th 2004, No Gnus was begun.
+
+   If you happen upon a version of Gnus that has a prefixed name -
+"(ding) Gnus", "September Gnus", "Red Gnus", "Quassia Gnus",
+"Pterodactyl Gnus", "Oort Gnus", "No Gnus" - don't panic.  Don't let it
+know that you're frightened.  Back away.  Slowly.  Whatever you do,
+don't run.  Walk away, calmly, until you're out of its reach.  Find a
+proper released version of Gnus and snuggle up to that instead.
+
+
+File: gnus,  Node: Other Gnus Versions,  Next: Why?,  Prev: Gnus Versions,  Up: History
+
+10.2.2 Other Gnus Versions
+--------------------------
+
+In addition to the versions of Gnus which have had their releases
+coordinated by Lars, one major development has been Semi-gnus from
+Japan.  It's based on a library called SEMI, which provides MIME
+capabilities.
+
+   These Gnusae are based mainly on Gnus 5.6 and Pterodactyl Gnus.
+Collectively, they are called "Semi-gnus", and different strains are
+called T-gnus, ET-gnus, Nana-gnus and Chaos.  These provide powerful
+MIME and multilingualization things, especially important for Japanese
+users.
+
+
+File: gnus,  Node: Why?,  Next: Compatibility,  Prev: Other Gnus Versions,  Up: History
+
+10.2.3 Why?
+-----------
+
+What's the point of Gnus?
+
+   I want to provide a "rad", "happening", "way cool" and "hep"
+newsreader, that lets you do anything you can think of.  That was my
+original motivation, but while working on Gnus, it has become clear to
+me that this generation of newsreaders really belong in the stone age.
+Newsreaders haven't developed much since the infancy of the net.  If the
+volume continues to rise with the current rate of increase, all current
+newsreaders will be pretty much useless.  How do you deal with
+newsgroups that have thousands of new articles each day?  How do you
+keep track of millions of people who post?
+
+   Gnus offers no real solutions to these questions, but I would very
+much like to see Gnus being used as a testing ground for new methods of
+reading and fetching news.  Expanding on UMEDA-san's wise decision to
+separate the newsreader from the back ends, Gnus now offers a simple
+interface for anybody who wants to write new back ends for fetching mail
+and news from different sources.  I have added hooks for customizations
+everywhere I could imagine it being useful.  By doing so, I'm inviting
+every one of you to explore and invent.
+
+   May Gnus never be complete.  `C-u 100 M-x all-hail-emacs' and `C-u
+100 M-x all-hail-xemacs'.
+
+
+File: gnus,  Node: Compatibility,  Next: Conformity,  Prev: Why?,  Up: History
+
+10.2.4 Compatibility
+--------------------
+
+Gnus was designed to be fully compatible with GNUS.  Almost all key
+bindings have been kept.  More key bindings have been added, of course,
+but only in one or two obscure cases have old bindings been changed.
+
+   Our motto is:
+
+                         In a cloud bones of steel.
+
+   All commands have kept their names.  Some internal functions have
+changed their names.
+
+   The `gnus-uu' package has changed drastically.  *Note Decoding
+Articles::.
+
+   One major compatibility question is the presence of several summary
+buffers.  All variables relevant while reading a group are buffer-local
+to the summary buffer they belong in.  Although many important
+variables have their values copied into their global counterparts
+whenever a command is executed in the summary buffer, this change might
+lead to incorrect values being used unless you are careful.
+
+   All code that relies on knowledge of GNUS internals will probably
+fail.  To take two examples: Sorting `gnus-newsrc-alist' (or changing
+it in any way, as a matter of fact) is strictly verboten.  Gnus
+maintains a hash table that points to the entries in this alist (which
+speeds up many functions), and changing the alist directly will lead to
+peculiar results.
+
+   Old hilit19 code does not work at all.  In fact, you should probably
+remove all hilit code from all Gnus hooks (`gnus-group-prepare-hook'
+and `gnus-summary-prepare-hook').  Gnus provides various integrated
+functions for highlighting.  These are faster and more accurate.  To
+make life easier for everybody, Gnus will by default remove all hilit
+calls from all hilit hooks.  Uncleanliness!  Away!
+
+   Packages like `expire-kill' will no longer work.  As a matter of
+fact, you should probably remove all old GNUS packages (and other code)
+when you start using Gnus.  More likely than not, Gnus already does
+what you have written code to make GNUS do.  (Snicker.)
+
+   Even though old methods of doing things are still supported, only the
+new methods are documented in this manual.  If you detect a new method
+of doing something while reading this manual, that does not mean you
+have to stop doing it the old way.
+
+   Gnus understands all GNUS startup files.
+
+   Overall, a casual user who hasn't written much code that depends on
+GNUS internals should suffer no problems.  If problems occur, please
+let me know by issuing that magic command `M-x gnus-bug'.
+
+   If you are in the habit of sending bug reports _very_ often, you may
+find the helpful help buffer annoying after a while.  If so, set
+`gnus-bug-create-help-buffer' to `nil' to avoid having it pop up at you.
+
+
+File: gnus,  Node: Conformity,  Next: Emacsen,  Prev: Compatibility,  Up: History
+
+10.2.5 Conformity
+-----------------
+
+No rebels without a clue here, ma'am.  We conform to all standards known
+to (wo)man.  Except for those standards and/or conventions we disagree
+with, of course.
+
+*RFC (2)822*
+     There are no known breaches of this standard.
+
+*RFC 1036*
+     There are no known breaches of this standard, either.
+
+*Son-of-RFC 1036*
+     We do have some breaches to this one.
+
+    _X-Newsreader_
+    _User-Agent_
+          These are considered to be "vanity headers", while I consider
+          them to be consumer information.  After seeing so many badly
+          formatted articles coming from `tin' and `Netscape' I know
+          not to use either of those for posting articles.  I would not
+          have known that if it wasn't for the `X-Newsreader' header.
+
+*USEFOR*
+     USEFOR is an IETF working group writing a successor to RFC 1036,
+     based on Son-of-RFC 1036.  They have produced a number of drafts
+     proposing various changes to the format of news articles.  The
+     Gnus towers will look into implementing the changes when the draft
+     is accepted as an RFC.
+
+*MIME - RFC 2045-2049 etc*
+     All the various MIME RFCs are supported.
+
+*Disposition Notifications - RFC 2298*
+     Message Mode is able to request notifications from the receiver.
+
+*PGP - RFC 1991 and RFC 2440*
+     RFC 1991 is the original PGP message specification, published as
+     an informational RFC.  RFC 2440 was the follow-up, now called Open
+     PGP, and put on the Standards Track.  Both document a non-MIME
+     aware PGP format.  Gnus supports both encoding (signing and
+     encryption) and decoding (verification and decryption).
+
+*PGP/MIME - RFC 2015/3156*
+     RFC 2015 (superseded by 3156 which references RFC 2440 instead of
+     RFC 1991) describes the MIME-wrapping around the RFC 1991/2440
+     format.  Gnus supports both encoding and decoding.
+
+*S/MIME - RFC 2633*
+     RFC 2633 describes the S/MIME format.
+
+*IMAP - RFC 1730/2060, RFC 2195, RFC 2086, RFC 2359, RFC 2595, RFC 1731*
+     RFC 1730 is IMAP version 4, updated somewhat by RFC 2060 (IMAP 4
+     revision 1).  RFC 2195 describes CRAM-MD5 authentication for IMAP.
+     RFC 2086 describes access control lists (ACLs) for IMAP.  RFC 2359
+     describes a IMAP protocol enhancement.  RFC 2595 describes the
+     proper TLS integration (STARTTLS) with IMAP.  RFC 1731 describes
+     the GSSAPI/Kerberos4 mechanisms for IMAP.
+
+
+   If you ever notice Gnus acting non-compliant with regards to the
+texts mentioned above, don't hesitate to drop a note to Gnus Towers and
+let us know.
+
+
+File: gnus,  Node: Emacsen,  Next: Gnus Development,  Prev: Conformity,  Up: History
+
+10.2.6 Emacsen
+--------------
+
+This version of Gnus should work on:
+
+   * Emacs 21.1 and up.
+
+   * XEmacs 21.4 and up.
+
+
+   This Gnus version will absolutely not work on any Emacsen older than
+that.  Not reliably, at least.  Older versions of Gnus may work on older
+Emacs versions.  Particularly, Gnus 5.10.8 should also work on Emacs
+20.7 and XEmacs 21.1.
+
+
+File: gnus,  Node: Gnus Development,  Next: Contributors,  Prev: Emacsen,  Up: History
+
+10.2.7 Gnus Development
+-----------------------
+
+Gnus is developed in a two-phased cycle.  The first phase involves much
+discussion on the development mailing list `ding@gnus.org', where people
+propose changes and new features, post patches and new back ends.  This
+phase is called the "alpha" phase, since the Gnusae released in this
+phase are "alpha releases", or (perhaps more commonly in other circles)
+"snapshots".  During this phase, Gnus is assumed to be unstable and
+should not be used by casual users.  Gnus alpha releases have names
+like "Oort Gnus" and "No Gnus".  *Note Gnus Versions::.
+
+   After futzing around for 10-100 alpha releases, Gnus is declared
+"frozen", and only bug fixes are applied.  Gnus loses the prefix, and
+is called things like "Gnus 5.10.1" instead.  Normal people are
+supposed to be able to use these, and these are mostly discussed on the
+`gnu.emacs.gnus' newsgroup.  This newgroup is mirrored to the mailing
+list `info-gnus-english@gnu.org' which is carried on Gmane as
+`gmane.emacs.gnus.user'.  These releases are finally integrated in
+Emacs.
+
+   Some variable defaults differ between alpha Gnusae and released
+Gnusae, in particular, `mail-source-delete-incoming'.  This is to
+prevent lossage of mail if an alpha release hiccups while handling the
+mail.  *Note Mail Source Customization::.
+
+   The division of discussion between the ding mailing list and the Gnus
+newsgroup is not purely based on publicity concerns.  It's true that
+having people write about the horrible things that an alpha Gnus release
+can do (sometimes) in a public forum may scare people off, but more
+importantly, talking about new experimental features that have been
+introduced may confuse casual users.  New features are frequently
+introduced, fiddled with, and judged to be found wanting, and then
+either discarded or totally rewritten.  People reading the mailing list
+usually keep up with these rapid changes, while people on the newsgroup
+can't be assumed to do so.
+
+   So if you have problems with or questions about the alpha versions,
+direct those to the ding mailing list `ding@gnus.org'.  This list is
+also available on Gmane as `gmane.emacs.gnus.general'.
+
+   Some variable defaults differ between alpha Gnusae and released
+Gnusae, in particular, `mail-source-delete-incoming'.  This is to
+prevent lossage of mail if an alpha release hiccups while handling the
+mail.  *Note Mail Source Customization::.
+
+
+File: gnus,  Node: Contributors,  Next: New Features,  Prev: Gnus Development,  Up: History
+
+10.2.8 Contributors
+-------------------
+
+The new Gnus version couldn't have been done without the help of all the
+people on the (ding) mailing list.  Every day for over a year I have
+gotten billions of nice bug reports from them, filling me with joy,
+every single one of them.  Smooches.  The people on the list have been
+tried beyond endurance, what with my "oh, that's a neat idea <type
+type>, yup, I'll release it right away <ship off> no wait, that doesn't
+work at all <type type>, yup, I'll ship that one off right away <ship
+off> no, wait, that absolutely does not work" policy for releases.
+Micro$oft--bah.  Amateurs.  I'm _much_ worse.  (Or is that "worser"?
+"much worser"?  "worsest"?)
+
+   I would like to take this opportunity to thank the Academy for...
+oops, wrong show.
+
+   * Masanobu UMEDA--the writer of the original GNUS.
+
+   * Shenghuo Zhu--uudecode.el, mm-uu.el, rfc1843.el, webmail.el,
+     nnwarchive and many, many other things connected with MIME and
+     other types of en/decoding, as well as general bug fixing, new
+     functionality and stuff.
+
+   * Per Abrahamsen--custom, scoring, highlighting and SOUP code (as
+     well as numerous other things).
+
+   * Luis Fernandes--design and graphics.
+
+   * Joe Reiss--creator of the smiley faces.
+
+   * Justin Sheehy--the FAQ maintainer.
+
+   * Erik Naggum--help, ideas, support, code and stuff.
+
+   * Wes Hardaker--`gnus-picon.el' and the manual section on "picons"
+     (*note Picons::).
+
+   * Kim-Minh Kaplan--further work on the picon code.
+
+   * Brad Miller--`gnus-gl.el' and the GroupLens manual section.
+
+   * Sudish Joseph--innumerable bug fixes.
+
+   * Ilja Weis--`gnus-topic.el'.
+
+   * Steven L. Baur--lots and lots and lots of bugs detections and
+     fixes.
+
+   * Vladimir Alexiev--the refcard and reference booklets.
+
+   * Felix Lee & Jamie Zawinski--I stole some pieces from the XGnus
+     distribution by Felix Lee and JWZ.
+
+   * Scott Byer--`nnfolder.el' enhancements & rewrite.
+
+   * Peter Mutsaers--orphan article scoring code.
+
+   * Ken Raeburn--POP mail support.
+
+   * Hallvard B Furuseth--various bits and pieces, especially dealing
+     with .newsrc files.
+
+   * Brian Edmonds--`gnus-bbdb.el'.
+
+   * David Moore--rewrite of `nnvirtual.el' and many other things.
+
+   * Kevin Davidson--came up with the name "ding", so blame him.
+
+   * François Pinard--many, many interesting and thorough bug reports,
+     as well as autoconf support.
+
+
+   This manual was proof-read by Adrian Aichner, with Ricardo Nassif,
+Mark Borges, and Jost Krieger proof-reading parts of the manual.
+
+   The following people have contributed many patches and suggestions:
+
+   Christopher Davis, Andrew Eskilsson, Kai Grossjohann, Kevin Greiner,
+Jesper Harder, Paul Jarc, Simon Josefsson, David Kågedal, Richard Pieri,
+Fabrice Popineau, Daniel Quinlan, Michael Shields, Reiner Steib, Jason
+L. Tibbitts, III, Jack Vinson, Katsumi Yamaoka, and Teodor Zlatanov.
+
+   Also thanks to the following for patches and stuff:
+
+   Jari Aalto, Adrian Aichner, Vladimir Alexiev, Russ Allbery, Peter
+Arius, Matt Armstrong, Marc Auslander, Miles Bader, Alexei V. Barantsev,
+Frank Bennett, Robert Bihlmeyer, Chris Bone, Mark Borges, Mark Boyns,
+Lance A. Brown, Rob Browning, Kees de Bruin, Martin Buchholz, Joe
+Buehler, Kevin Buhr, Alastair Burt, Joao Cachopo, Zlatko Calusic,
+Massimo Campostrini, Castor, David Charlap, Dan Christensen, Kevin
+Christian, Jae-you Chung, James H. Cloos, Jr., Laura Conrad, Michael R.
+Cook, Glenn Coombs, Andrew J. Cosgriff, Neil Crellin, Frank D. Cringle,
+Geoffrey T. Dairiki, Andre Deparade, Ulrik Dickow, Dave Disser, Rui-Tao
+Dong, Joev Dubach, Michael Welsh Duggan, Dave Edmondson, Paul Eggert,
+Mark W. Eichin, Karl Eichwalder, Enami Tsugutomo, Michael Ernst, Luc
+Van Eycken, Sam Falkner, Nelson Jose dos Santos Ferreira, Sigbjorn
+Finne, Sven Fischer, Paul Fisher, Decklin Foster, Gary D. Foster, Paul
+Franklin, Guy Geens, Arne Georg Gleditsch, David S. Goldberg,
+Michelangelo Grigni, Dale Hagglund, D. Hall, Magnus Hammerin, Kenichi
+Handa, Raja R. Harinath, Yoshiki Hayashi, P. E. Jareth Hein, Hisashige
+Kenji, Scott Hofmann, Tassilo Horn, Marc Horowitz, Gunnar Horrigmo,
+Richard Hoskins, Brad Howes, Miguel de Icaza, François Felix Ingrand,
+Tatsuya Ichikawa, Ishikawa Ichiro, Lee Iverson, Iwamuro Motonori,
+Rajappa Iyer, Andreas Jaeger, Adam P. Jenkins, Randell Jesup, Fred
+Johansen, Gareth Jones, Greg Klanderman, Karl Kleinpaste, Michael
+Klingbeil, Peter Skov Knudsen, Shuhei Kobayashi, Petr Konecny, Koseki
+Yoshinori, Thor Kristoffersen, Jens Lautenbacher, Martin Larose,
+Seokchan Lee, Joerg Lenneis, Carsten Leonhardt, James LewisMoss,
+Christian Limpach, Markus Linnala, Dave Love, Mike McEwan, Tonny Madsen,
+Shlomo Mahlab, Nat Makarevitch, Istvan Marko, David Martin, Jason R.
+Mastaler, Gordon Matzigkeit, Timo Metzemakers, Richard Mlynarik, Lantz
+Moore, Morioka Tomohiko, Erik Toubro Nielsen, Hrvoje Niksic, Andy
+Norman, Fred Oberhauser, C. R. Oldham, Alexandre Oliva, Ken Olstad,
+Masaharu Onishi, Hideki Ono, Ettore Perazzoli, William Perry, Stephen
+Peters, Jens-Ulrik Holger Petersen, Ulrich Pfeifer, Matt Pharr, Andy
+Piper, John McClary Prevost, Bill Pringlemeir, Mike Pullen, Jim Radford,
+Colin Rafferty, Lasse Rasinen, Lars Balker Rasmussen, Joe Reiss, Renaud
+Rioboo, Roland B. Roberts, Bart Robinson, Christian von Roques, Markus
+Rost, Jason Rumney, Wolfgang Rupprecht, Jay Sachs, Dewey M. Sasser,
+Conrad Sauerwald, Loren Schall, Dan Schmidt, Ralph Schleicher, Philippe
+Schnoebelen, Andreas Schwab, Randal L. Schwartz, Danny Siu, Matt
+Simmons, Paul D. Smith, Jeff Sparkes, Toby Speight, Michael Sperber,
+Darren Stalder, Richard Stallman, Greg Stark, Sam Steingold, Paul
+Stevenson, Jonas Steverud, Paul Stodghill, Kiyokazu Suto, Kurt Swanson,
+Samuel Tardieu, Teddy, Chuck Thompson, Tozawa Akihiko, Philippe Troin,
+James Troup, Trung Tran-Duc, Jack Twilley, Aaron M. Ucko, Aki Vehtari,
+Didier Verna, Vladimir Volovich, Jan Vroonhof, Stefan Waldherr, Pete
+Ware, Barry A. Warsaw, Christoph Wedler, Joe Wells, Lee Willis, and
+Lloyd Zusman.
+
+   For a full overview of what each person has done, the ChangeLogs
+included in the Gnus alpha distributions should give ample reading
+(550kB and counting).
+
+   Apologies to everybody that I've forgotten, of which there are many,
+I'm sure.
+
+   Gee, that's quite a list of people.  I guess that must mean that
+there actually are people who are using Gnus.  Who'd'a thunk it!
+
+
+File: gnus,  Node: New Features,  Prev: Contributors,  Up: History
+
+10.2.9 New Features
+-------------------
+
+* Menu:
+
+* ding Gnus::                   New things in Gnus 5.0/5.1, the first new Gnus.
+* September Gnus::              The Thing Formally Known As Gnus 5.2/5.3.
+* Red Gnus::                    Third time best---Gnus 5.4/5.5.
+* Quassia Gnus::                Two times two is four, or Gnus 5.6/5.7.
+* Pterodactyl Gnus::            Pentad also starts with P, AKA Gnus 5.8/5.9.
+* Oort Gnus::                   It's big.  It's far out.  Gnus 5.10/5.11.
+* No Gnus::                     Very punny.
+
+   These lists are, of course, just _short_ overviews of the _most_
+important new features.  No, really.  There are tons more.  Yes, we
+have feeping creaturism in full effect.
+
+
+File: gnus,  Node: ding Gnus,  Next: September Gnus,  Up: New Features
+
+10.2.9.1 (ding) Gnus
+....................
+
+New features in Gnus 5.0/5.1:
+
+   * The look of all buffers can be changed by setting format-like
+     variables (*note Group Buffer Format:: and *note Summary Buffer
+     Format::).
+
+   * Local spool and several NNTP servers can be used at once (*note
+     Select Methods::).
+
+   * You can combine groups into virtual groups (*note Virtual
+     Groups::).
+
+   * You can read a number of different mail formats (*note Getting
+     Mail::).  All the mail back ends implement a convenient mail
+     expiry scheme (*note Expiring Mail::).
+
+   * Gnus can use various strategies for gathering threads that have
+     lost their roots (thereby gathering loose sub-threads into one
+     thread) or it can go back and retrieve enough headers to build a
+     complete thread (*note Customizing Threading::).
+
+   * Killed groups can be displayed in the group buffer, and you can
+     read them as well (*note Listing Groups::).
+
+   * Gnus can do partial group updates--you do not have to retrieve the
+     entire active file just to check for new articles in a few groups
+     (*note The Active File::).
+
+   * Gnus implements a sliding scale of subscribedness to groups (*note
+     Group Levels::).
+
+   * You can score articles according to any number of criteria (*note
+     Scoring::).  You can even get Gnus to find out how to score
+     articles for you (*note Adaptive Scoring::).
+
+   * Gnus maintains a dribble buffer that is auto-saved the normal Emacs
+     manner, so it should be difficult to lose much data on what you
+     have read if your machine should go down (*note Auto Save::).
+
+   * Gnus now has its own startup file (`~/.gnus.el') to avoid
+     cluttering up the `.emacs' file.
+
+   * You can set the process mark on both groups and articles and
+     perform operations on all the marked items (*note
+     Process/Prefix::).
+
+   * You can grep through a subset of groups and create a group from the
+     results (*note Kibozed Groups::).
+
+   * You can list subsets of groups according to, well, anything (*note
+     Listing Groups::).
+
+   * You can browse foreign servers and subscribe to groups from those
+     servers (*note Browse Foreign Server::).
+
+   * Gnus can fetch articles, asynchronously, on a second connection to
+     the server (*note Asynchronous Fetching::).
+
+   * You can cache articles locally (*note Article Caching::).
+
+   * The uudecode functions have been expanded and generalized (*note
+     Decoding Articles::).
+
+   * You can still post uuencoded articles, which was a little-known
+     feature of GNUS' past (*note Uuencoding and Posting::).
+
+   * Fetching parents (and other articles) now actually works without
+     glitches (*note Finding the Parent::).
+
+   * Gnus can fetch FAQs and group descriptions (*note Group
+     Information::).
+
+   * Digests (and other files) can be used as the basis for groups
+     (*note Document Groups::).
+
+   * Articles can be highlighted and customized (*note Customizing
+     Articles::).
+
+   * URLs and other external references can be buttonized (*note
+     Article Buttons::).
+
+   * You can do lots of strange stuff with the Gnus window & frame
+     configuration (*note Window Layout::).
+
+   * You can click on buttons instead of using the keyboard (*note
+     Buttons::).
+
+
+
+File: gnus,  Node: September Gnus,  Next: Red Gnus,  Prev: ding Gnus,  Up: New Features
+
+10.2.9.2 September Gnus
+.......................
+
+New features in Gnus 5.2/5.3:
+
+   * A new message composition mode is used.  All old customization
+     variables for `mail-mode', `rnews-reply-mode' and `gnus-msg' are
+     now obsolete.
+
+   * Gnus is now able to generate "sparse" threads--threads where
+     missing articles are represented by empty nodes (*note Customizing
+     Threading::).
+
+          (setq gnus-build-sparse-threads 'some)
+
+   * Outgoing articles are stored on a special archive server (*note
+     Archived Messages::).
+
+   * Partial thread regeneration now happens when articles are referred.
+
+   * Gnus can make use of GroupLens predictions.
+
+   * Picons (personal icons) can be displayed under XEmacs (*note
+     Picons::).
+
+   * A `trn'-like tree buffer can be displayed (*note Tree Display::).
+
+          (setq gnus-use-trees t)
+
+   * An `nn'-like pick-and-read minor mode is available for the summary
+     buffers (*note Pick and Read::).
+
+          (add-hook 'gnus-summary-mode-hook 'gnus-pick-mode)
+
+   * In binary groups you can use a special binary minor mode (*note
+     Binary Groups::).
+
+   * Groups can be grouped in a folding topic hierarchy (*note Group
+     Topics::).
+
+          (add-hook 'gnus-group-mode-hook 'gnus-topic-mode)
+
+   * Gnus can re-send and bounce mail (*note Summary Mail Commands::).
+
+   * Groups can now have a score, and bubbling based on entry frequency
+     is possible (*note Group Score::).
+
+          (add-hook 'gnus-summary-exit-hook 'gnus-summary-bubble-group)
+
+   * Groups can be process-marked, and commands can be performed on
+     groups of groups (*note Marking Groups::).
+
+   * Caching is possible in virtual groups.
+
+   * `nndoc' now understands all kinds of digests, mail boxes, rnews
+     news batches, ClariNet briefs collections, and just about
+     everything else (*note Document Groups::).
+
+   * Gnus has a new back end (`nnsoup') to create/read SOUP packets
+     (*note SOUP::).
+
+   * The Gnus cache is much faster.
+
+   * Groups can be sorted according to many criteria (*note Sorting
+     Groups::).
+
+   * New group parameters have been introduced to set list-addresses and
+     expiry times (*note Group Parameters::).
+
+   * All formatting specs allow specifying faces to be used (*note
+     Formatting Fonts::).
+
+   * There are several more commands for setting/removing/acting on
+     process marked articles on the `M P' submap (*note Setting Process
+     Marks::).
+
+   * The summary buffer can be limited to show parts of the available
+     articles based on a wide range of criteria.  These commands have
+     been bound to keys on the `/' submap (*note Limiting::).
+
+   * Articles can be made persistent with the `*' command (*note
+     Persistent Articles::).
+
+   * All functions for hiding article elements are now toggles.
+
+   * Article headers can be buttonized (*note Article Washing::).
+
+   * All mail back ends support fetching articles by `Message-ID'.
+
+   * Duplicate mail can now be treated properly (*note Duplicates::).
+
+   * All summary mode commands are available directly from the article
+     buffer (*note Article Keymap::).
+
+   * Frames can be part of `gnus-buffer-configuration' (*note Window
+     Layout::).
+
+   * Mail can be re-scanned by a daemonic process (*note Daemons::).
+
+   * Gnus can make use of NoCeM files to weed out spam (*note NoCeM::).
+
+          (setq gnus-use-nocem t)
+
+   * Groups can be made permanently visible (*note Listing Groups::).
+
+          (setq gnus-permanently-visible-groups "^nnml:")
+
+   * Many new hooks have been introduced to make customizing easier.
+
+   * Gnus respects the `Mail-Copies-To' header.
+
+   * Threads can be gathered by looking at the `References' header
+     (*note Customizing Threading::).
+
+          (setq gnus-summary-thread-gathering-function
+                'gnus-gather-threads-by-references)
+
+   * Read articles can be stored in a special backlog buffer to avoid
+     refetching (*note Article Backlog::).
+
+          (setq gnus-keep-backlog 50)
+
+   * A clean copy of the current article is always stored in a separate
+     buffer to allow easier treatment.
+
+   * Gnus can suggest where to save articles (*note Saving Articles::).
+
+   * Gnus doesn't have to do as much prompting when saving (*note
+     Saving Articles::).
+
+          (setq gnus-prompt-before-saving t)
+
+   * `gnus-uu' can view decoded files asynchronously while fetching
+     articles (*note Other Decode Variables::).
+
+          (setq gnus-uu-grabbed-file-functions 'gnus-uu-grab-view)
+
+   * Filling in the article buffer now works properly on cited text
+     (*note Article Washing::).
+
+   * Hiding cited text adds buttons to toggle hiding, and how much
+     cited text to hide is now customizable (*note Article Hiding::).
+
+          (setq gnus-cited-lines-visible 2)
+
+   * Boring headers can be hidden (*note Article Hiding::).
+
+   * Default scoring values can now be set from the menu bar.
+
+   * Further syntax checking of outgoing articles have been added.
+
+
+
+File: gnus,  Node: Red Gnus,  Next: Quassia Gnus,  Prev: September Gnus,  Up: New Features
+
+10.2.9.3 Red Gnus
+.................
+
+New features in Gnus 5.4/5.5:
+
+   * `nntp.el' has been totally rewritten in an asynchronous fashion.
+
+   * Article prefetching functionality has been moved up into Gnus
+     (*note Asynchronous Fetching::).
+
+   * Scoring can now be performed with logical operators like `and',
+     `or', `not', and parent redirection (*note Advanced Scoring::).
+
+   * Article washing status can be displayed in the article mode line
+     (*note Misc Article::).
+
+   * `gnus.el' has been split into many smaller files.
+
+   * Suppression of duplicate articles based on Message-ID can be done
+     (*note Duplicate Suppression::).
+
+          (setq gnus-suppress-duplicates t)
+
+   * New variables for specifying what score and adapt files are to be
+     considered home score and adapt files (*note Home Score File::)
+     have been added.
+
+   * `nndoc' was rewritten to be easily extendable (*note Document
+     Server Internals::).
+
+   * Groups can inherit group parameters from parent topics (*note
+     Topic Parameters::).
+
+   * Article editing has been revamped and is now actually usable.
+
+   * Signatures can be recognized in more intelligent fashions (*note
+     Article Signature::).
+
+   * Summary pick mode has been made to look more `nn'-like.  Line
+     numbers are displayed and the `.' command can be used to pick
+     articles (`Pick and Read').
+
+   * Commands for moving the `.newsrc.eld' from one server to another
+     have been added (*note Changing Servers::).
+
+   * There's a way now to specify that "uninteresting" fields be
+     suppressed when generating lines in buffers (*note Advanced
+     Formatting::).
+
+   * Several commands in the group buffer can be undone with `C-M-_'
+     (*note Undo::).
+
+   * Scoring can be done on words using the new score type `w' (*note
+     Score File Format::).
+
+   * Adaptive scoring can be done on a Subject word-by-word basis
+     (*note Adaptive Scoring::).
+
+          (setq gnus-use-adaptive-scoring '(word))
+
+   * Scores can be decayed (*note Score Decays::).
+
+          (setq gnus-decay-scores t)
+
+   * Scoring can be performed using a regexp on the Date header.  The
+     Date is normalized to compact ISO 8601 format first (*note Score
+     File Format::).
+
+   * A new command has been added to remove all data on articles from
+     the native server (*note Changing Servers::).
+
+   * A new command for reading collections of documents (`nndoc' with
+     `nnvirtual' on top) has been added--`C-M-d' (*note Really Various
+     Summary Commands::).
+
+   * Process mark sets can be pushed and popped (*note Setting Process
+     Marks::).
+
+   * A new mail-to-news back end makes it possible to post even when
+     the NNTP server doesn't allow posting (*note Mail-To-News
+     Gateways::).
+
+   * A new back end for reading searches from Web search engines
+     ("DejaNews", "Alta Vista", "InReference") has been added (*note
+     Web Searches::).
+
+   * Groups inside topics can now be sorted using the standard sorting
+     functions, and each topic can be sorted independently (*note Topic
+     Sorting::).
+
+   * Subsets of the groups can be sorted independently (`Sorting
+     Groups').
+
+   * Cached articles can be pulled into the groups (*note Summary
+     Generation Commands::).
+
+   * Score files are now applied in a more reliable order (*note Score
+     Variables::).
+
+   * Reports on where mail messages end up can be generated (*note
+     Splitting Mail::).
+
+   * More hooks and functions have been added to remove junk from
+     incoming mail before saving the mail (*note Washing Mail::).
+
+   * Emphasized text can be properly fontisized:
+
+
+
+File: gnus,  Node: Quassia Gnus,  Next: Pterodactyl Gnus,  Prev: Red Gnus,  Up: New Features
+
+10.2.9.4 Quassia Gnus
+.....................
+
+New features in Gnus 5.6:
+
+   * New functionality for using Gnus as an offline newsreader has been
+     added.  A plethora of new commands and modes have been added.
+     *Note Gnus Unplugged::, for the full story.
+
+   * The `nndraft' back end has returned, but works differently than
+     before.  All Message buffers are now also articles in the `nndraft'
+     group, which is created automatically.
+
+   * `gnus-alter-header-function' can now be used to alter header
+     values.
+
+   * `gnus-summary-goto-article' now accept Message-ID's.
+
+   * A new Message command for deleting text in the body of a message
+     outside the region: `C-c C-v'.
+
+   * You can now post to component group in `nnvirtual' groups with
+     `C-u C-c C-c'.
+
+   *  `nntp-rlogin-program'--new variable to ease customization.
+
+   * `C-u C-c C-c' in `gnus-article-edit-mode' will now inhibit
+     re-highlighting of the article buffer.
+
+   * New element in `gnus-boring-article-headers'--`long-to'.
+
+   * `M-i' symbolic prefix command.  *Note Symbolic Prefixes::, for
+     details.
+
+   * `L' and `I' in the summary buffer now take the symbolic prefix `a'
+     to add the score rule to the `all.SCORE' file.
+
+   * `gnus-simplify-subject-functions' variable to allow greater
+     control over simplification.
+
+   * `A T'--new command for fetching the current thread.
+
+   * `/ T'--new command for including the current thread in the limit.
+
+   * `M-RET' is a new Message command for breaking cited text.
+
+   * `\\1'-expressions are now valid in `nnmail-split-methods'.
+
+   * The `custom-face-lookup' function has been removed.  If you used
+     this function in your initialization files, you must rewrite them
+     to use `face-spec-set' instead.
+
+   * Canceling now uses the current select method.  Symbolic prefix `a'
+     forces normal posting method.
+
+   * New command to translate M******** sm*rtq**t*s into proper
+     text--`W d'.
+
+   * For easier debugging of `nntp', you can set `nntp-record-commands'
+     to a non-`nil' value.
+
+   * `nntp' now uses `~/.authinfo', a `.netrc'-like file, for
+     controlling where and how to send AUTHINFO to NNTP servers.
+
+   * A command for editing group parameters from the summary buffer has
+     been added.
+
+   * A history of where mails have been split is available.
+
+   * A new article date command has been added--`article-date-iso8601'.
+
+   * Subjects can be simplified when threading by setting
+     `gnus-score-thread-simplify'.
+
+   * A new function for citing in Message has been
+     added--`message-cite-original-without-signature'.
+
+   * `article-strip-all-blank-lines'--new article command.
+
+   * A new Message command to kill to the end of the article has been
+     added.
+
+   * A minimum adaptive score can be specified by using the
+     `gnus-adaptive-word-minimum' variable.
+
+   * The "lapsed date" article header can be kept continually updated
+     by the `gnus-start-date-timer' command.
+
+   * Web listserv archives can be read with the `nnlistserv' back end.
+
+   * Old dejanews archives can now be read by `nnweb'.
+
+
+
+File: gnus,  Node: Pterodactyl Gnus,  Next: Oort Gnus,  Prev: Quassia Gnus,  Up: New Features
+
+10.2.9.5 Pterodactyl Gnus
+.........................
+
+New features in Gnus 5.8:
+
+   * The mail-fetching functions have changed.  See the manual for the
+     many details.  In particular, all procmail fetching variables are
+     gone.
+
+     If you used procmail like in
+
+          (setq nnmail-use-procmail t)
+          (setq nnmail-spool-file 'procmail)
+          (setq nnmail-procmail-directory "~/mail/incoming/")
+          (setq nnmail-procmail-suffix "\\.in")
+
+     this now has changed to
+
+          (setq mail-sources
+                '((directory :path "~/mail/incoming/"
+                             :suffix ".in")))
+
+     *Note Mail Source Specifiers::.
+
+   * Gnus is now a MIME-capable reader.  This affects many parts of
+     Gnus, and adds a slew of new commands.  See the manual for details.
+
+   * Gnus has also been multilingualized.  This also affects too many
+     parts of Gnus to summarize here, and adds many new variables.
+
+   * `gnus-auto-select-first' can now be a function to be called to
+     position point.
+
+   * The user can now decide which extra headers should be included in
+     summary buffers and NOV files.
+
+   * `gnus-article-display-hook' has been removed.  Instead, a number
+     of variables starting with `gnus-treat-' have been added.
+
+   * The Gnus posting styles have been redone again and now works in a
+     subtly different manner.
+
+   * New web-based back ends have been added: `nnslashdot',
+     `nnwarchive' and `nnultimate'.  nnweb has been revamped, again, to
+     keep up with ever-changing layouts.
+
+   * Gnus can now read IMAP mail via `nnimap'.
+
+
+
+File: gnus,  Node: Oort Gnus,  Next: No Gnus,  Prev: Pterodactyl Gnus,  Up: New Features
+
+10.2.9.6 Oort Gnus
+..................
+
+New features in Gnus 5.10:
+
+   * Installation changes
+
+        * Upgrading from previous (stable) version if you have used
+          Oort.
+
+          If you have tried Oort (the unstable Gnus branch leading to
+          this release) but went back to a stable version, be careful
+          when upgrading to this version.  In particular, you will
+          probably want to remove all `.marks' (nnml) and `.mrk'
+          (nnfolder) files, so that flags are read from your
+          `.newsrc.eld' instead of from the `.marks'/`.mrk' file where
+          this release store flags.  See a later entry for more
+          information about marks.  Note that downgrading isn't save in
+          general.
+
+        * Lisp files are now installed in `.../site-lisp/gnus/' by
+          default.  It defaulted to `.../site-lisp/' formerly.  In
+          addition to this, the new installer issues a warning if other
+          Gnus installations which will shadow the latest one are
+          detected.  You can then remove those shadows manually or
+          remove them using `make remove-installed-shadows'.
+
+        * New `make.bat' for compiling and installing Gnus under MS
+          Windows
+
+          Use `make.bat' if you want to install Gnus under MS Windows,
+          the first argument to the batch-program should be the
+          directory where `xemacs.exe' respectively `emacs.exe' is
+          located, if you want to install Gnus after compiling it, give
+          `make.bat' `/copy' as the second parameter.
+
+          `make.bat' has been rewritten from scratch, it now features
+          automatic recognition of XEmacs and GNU Emacs, generates
+          `gnus-load.el', checks if errors occur while compilation and
+          generation of info files and reports them at the end of the
+          build process.  It now uses `makeinfo' if it is available and
+          falls back to `infohack.el' otherwise.  `make.bat' should now
+          install all files which are necessary to run Gnus and be
+          generally a complete replacement for the `configure; make;
+          make install' cycle used under Unix systems.
+
+          The new `make.bat' makes `make-x.bat' and `xemacs.mak'
+          superfluous, so they have been removed.
+
+        * `~/News/overview/' not used.
+
+          As a result of the following change, the `~/News/overview/'
+          directory is not used any more.  You can safely delete the
+          entire hierarchy.
+
+        * `(require 'gnus-load)'
+
+          If you use a stand-alone Gnus distribution, you'd better add
+          `(require 'gnus-load)' into your `~/.emacs' after adding the
+          Gnus lisp directory into load-path.
+
+          File `gnus-load.el' contains autoload commands, functions and
+          variables, some of which may not be included in distributions
+          of Emacsen.
+
+
+   * New packages and libraries within Gnus
+
+        * The revised Gnus FAQ is included in the manual, *Note
+          Frequently Asked Questions::.
+
+        * TLS wrapper shipped with Gnus
+
+          TLS/SSL is now supported in IMAP and NNTP via `tls.el' and
+          GNUTLS.  The old TLS/SSL support via (external third party)
+          `ssl.el' and OpenSSL still works.
+
+        * Improved anti-spam features.
+
+          Gnus is now able to take out spam from your mail and news
+          streams using a wide variety of programs and filter rules.
+          Among the supported methods are RBL blocklists, bogofilter
+          and white/blacklists.  Hooks for easy use of external
+          packages such as SpamAssassin and Hashcash are also new.
+          *note Thwarting Email Spam:: and *note Spam Package::.
+
+        * Gnus supports server-side mail filtering using Sieve.
+
+          Sieve rules can be added as Group Parameters for groups, and
+          the complete Sieve script is generated using `D g' from the
+          Group buffer, and then uploaded to the server using `C-c C-l'
+          in the generated Sieve buffer.  *Note Sieve Commands::, and
+          the new Sieve manual *note Top: (sieve)Top.
+
+
+   * Changes in group mode
+
+        * `gnus-group-read-ephemeral-group' can be called interactively,
+          using `G M'.
+
+        * Retrieval of charters and control messages
+
+          There are new commands for fetching newsgroup charters (`H
+          c') and control messages (`H C').
+
+        * The new variable `gnus-parameters' can be used to set group
+          parameters.
+
+          Earlier this was done only via `G p' (or `G c'), which stored
+          the parameters in `~/.newsrc.eld', but via this variable you
+          can enjoy the powers of customize, and simplified backups
+          since you set the variable in `~/.gnus.el' instead of
+          `~/.newsrc.eld'.  The variable maps regular expressions
+          matching group names to group parameters, a'la:
+               (setq gnus-parameters
+                     '(("mail\\..*"
+                        (gnus-show-threads nil)
+                        (gnus-use-scoring nil))
+                       ("^nnimap:\\(foo.bar\\)$"
+                        (to-group . "\\1"))))
+
+        * Unread count correct in nnimap groups.
+
+          The estimated number of unread articles in the group buffer
+          should now be correct for nnimap groups.  This is achieved by
+          calling `nnimap-fixup-unread-after-getting-new-news' from the
+          `gnus-setup-news-hook' (called on startup) and
+          `gnus-after-getting-new-news-hook'. (called after getting new
+          mail).  If you have modified those variables from the
+          default, you may want to add
+          `nnimap-fixup-unread-after-getting-new-news' again.  If you
+          were happy with the estimate and want to save some (minimal)
+          time when getting new mail, remove the function.
+
+        * Group names are treated as UTF-8 by default.
+
+          This is supposedly what USEFOR wanted to migrate to.  See
+          `gnus-group-name-charset-group-alist' and
+          `gnus-group-name-charset-method-alist' for customization.
+
+        * `gnus-group-charset-alist' and
+          `gnus-group-ignored-charsets-alist'.
+
+          The regexps in these variables are compared with full group
+          names instead of real group names in 5.8.  Users who
+          customize these variables should change those regexps
+          accordingly.  For example:
+               ("^han\\>" euc-kr) -> ("\\(^\\|:\\)han\\>" euc-kr)
+
+        * Old intermediate incoming mail files (`Incoming*') are deleted
+          after a couple of days, not immediately.  *Note Mail Source
+          Customization::.  (New in Gnus 5.10.10 / Emacs 22.2)
+
+
+   * Changes in summary and article mode
+
+        * `F' (`gnus-article-followup-with-original') and `R'
+          (`gnus-article-reply-with-original') only yank the text in the
+          region if the region is active.
+
+        * In draft groups, `e' is now bound to
+          `gnus-draft-edit-message'.  Use `B w' for
+          `gnus-summary-edit-article' instead.
+
+        * Article Buttons
+
+          More buttons for URLs, mail addresses, Message-IDs, Info
+          links, man pages and Emacs or Gnus related references.  *Note
+          Article Buttons::.  The variables `gnus-button-*-level' can
+          be used to control the appearance of all article buttons.
+          *Note Article Button Levels::.
+
+        * Single-part yenc encoded attachments can be decoded.
+
+        * Picons
+
+          The picons code has been reimplemented to work in GNU
+          Emacs--some of the previous options have been removed or
+          renamed.
+
+          Picons are small "personal icons" representing users, domain
+          and newsgroups, which can be displayed in the Article buffer.
+          *Note Picons::.
+
+        * If the new option `gnus-treat-body-boundary' is non-`nil', a
+          boundary line is drawn at the end of the headers.
+
+        * Signed article headers (X-PGP-Sig) can be verified with `W p'.
+
+        * The Summary Buffer uses an arrow in the fringe to indicate
+          the current article.  Use `(setq gnus-summary-display-arrow
+          nil)' to disable it.
+
+        * Warn about email replies to news
+
+          Do you often find yourself replying to news by email by
+          mistake?  Then the new option
+          `gnus-confirm-mail-reply-to-news' is just the thing for you.
+
+        * If the new option `gnus-summary-display-while-building' is
+          non-`nil', the summary buffer is shown and updated as it's
+          being built.
+
+        * The new `recent' mark `.' indicates newly arrived messages (as
+          opposed to old but unread messages).
+
+        * Gnus supports RFC 2369 mailing list headers, and adds a
+          number of related commands in mailing list groups.  *Note
+          Mailing List::.
+
+        * The Date header can be displayed in a format that can be read
+          aloud in English.  *Note Article Date::.
+
+        * diffs are automatically highlighted in groups matching
+          `mm-uu-diff-groups-regexp'
+
+        * Better handling of Microsoft citation styles
+
+          Gnus now tries to recognize the mangled header block that
+          some Microsoft mailers use to indicate that the rest of the
+          message is a citation, even though it is not quoted in any
+          way.  The variable `gnus-cite-unsightly-citation-regexp'
+          matches the start of these citations.
+
+          The new command `W Y f'
+          (`gnus-article-outlook-deuglify-article') allows deuglifying
+          broken Outlook (Express) articles.
+
+        * `gnus-article-skip-boring'
+
+          If you set `gnus-article-skip-boring' to `t', then Gnus will
+          not scroll down to show you a page that contains only boring
+          text, which by default means cited text and signature.  You
+          can customize what is skippable using
+          `gnus-article-boring-faces'.
+
+          This feature is especially useful if you read many articles
+          that consist of a little new content at the top with a long,
+          untrimmed message cited below.
+
+        * Smileys (`:-)', `;-)' etc) are now displayed graphically in
+          Emacs too.
+
+          Put `(setq gnus-treat-display-smileys nil)' in `~/.gnus.el' to
+          disable it.
+
+        * Face headers handling.  *Note Face::.
+
+        * In the summary buffer, the new command `/ N' inserts new
+          messages and `/ o' inserts old messages.
+
+        * Gnus decodes morse encoded messages if you press `W m'.
+
+        * `gnus-summary-line-format'
+
+          The default value changed to `%U%R%z%I%(%[%4L: %-23,23f%]%)
+          %s\n'.  Moreover `gnus-extra-headers', `nnmail-extra-headers'
+          and `gnus-ignored-from-addresses' changed their default so
+          that the users name will be replaced by the recipient's name
+          or the group name posting to for NNTP groups.
+
+        * Deleting of attachments.
+
+          The command `gnus-mime-save-part-and-strip' (bound to `C-o'
+          on MIME buttons) saves a part and replaces the part with an
+          external one.  `gnus-mime-delete-part' (bound to `d' on MIME
+          buttons) removes a part.  It works only on back ends that
+          support editing.
+
+        * `gnus-default-charset'
+
+          The default value is determined from the
+          `current-language-environment' variable, instead of
+          `iso-8859-1'.  Also the `.*' item in
+          `gnus-group-charset-alist' is removed.
+
+        * Printing capabilities are enhanced.
+
+          Gnus supports Muttprint natively with `O P' from the Summary
+          and Article buffers.  Also, each individual MIME part can be
+          printed using `p' on the MIME button.
+
+        * Extended format specs.
+
+          Format spec `%&user-date;' is added into
+          `gnus-summary-line-format-alist'.  Also, user defined extended
+          format specs are supported.  The extended format specs look
+          like `%u&foo;', which invokes function
+          `gnus-user-format-function-FOO'.  Because `&' is used as the
+          escape character, old user defined format `%u&' is no longer
+          supported.
+
+        * `/ *' (`gnus-summary-limit-include-cached') is rewritten.
+
+          It was aliased to `Y c'
+          (`gnus-summary-insert-cached-articles').  The new function
+          filters out other articles.
+
+        * Some limiting commands accept a `C-u' prefix to negate the
+          match.
+
+          If `C-u' is used on subject, author or extra headers, i.e., `/
+          s', `/ a', and `/ x'
+          (`gnus-summary-limit-to-{subject,author,extra}')
+          respectively, the result will be to display all articles that
+          do not match the expression.
+
+        * Gnus inlines external parts (message/external).
+
+
+   * Changes in Message mode and related Gnus features
+
+        * Delayed articles
+
+          You can delay the sending of a message with `C-c C-j' in the
+          Message buffer.  The messages are delivered at specified
+          time.  This is useful for sending yourself reminders.  *Note
+          Delayed Articles::.
+
+        * If the new option `nnml-use-compressed-files' is non-`nil',
+          the nnml back end allows compressed message files.
+
+        * The new option `gnus-gcc-mark-as-read' automatically marks
+          Gcc articles as read.
+
+        * Externalizing of attachments
+
+          If `gnus-gcc-externalize-attachments' or
+          `message-fcc-externalize-attachments' is non-`nil', attach
+          local files as external parts.
+
+        * The envelope sender address can be customized when using
+          Sendmail.  *Note Mail Variables: (message)Mail Variables.
+
+        * Gnus no longer generate the Sender: header automatically.
+
+          Earlier it was generated when the user configurable email
+          address was different from the Gnus guessed default user
+          address.  As the guessing algorithm is rarely correct these
+          days, and (more controversially) the only use of the Sender:
+          header was to check if you are entitled to cancel/supersede
+          news (which is now solved by Cancel Locks instead, see
+          another entry), generation of the header has been disabled by
+          default.  See the variables `message-required-headers',
+          `message-required-news-headers', and
+          `message-required-mail-headers'.
+
+        * Features from third party `message-utils.el' added to
+          `message.el'.
+
+          Message now asks if you wish to remove `(was: <old subject>)'
+          from subject lines (see
+          `message-subject-trailing-was-query').  `C-c M-m' and `C-c
+          M-f' inserts markers indicating included text.  `C-c C-f a'
+          adds a X-No-Archive: header.  `C-c C-f x' inserts appropriate
+          headers and a note in the body for cross-postings and
+          followups (see the variables `message-cross-post-*').
+
+        * References and X-Draft-From headers are no longer generated
+          when you start composing messages and
+          `message-generate-headers-first' is `nil'.
+
+        * Easy inclusion of X-Faces headers.  *Note X-Face::.
+
+        * Group Carbon Copy (GCC) quoting
+
+          To support groups that contains SPC and other weird
+          characters, groups are quoted before they are placed in the
+          Gcc: header.  This means variables such as
+          `gnus-message-archive-group' should no longer contain quote
+          characters to make groups containing SPC work.  Also, if you
+          are using the string `nnml:foo, nnml:bar' (indicating Gcc
+          into two groups) you must change it to return the list
+          `("nnml:foo" "nnml:bar")', otherwise the Gcc: line will be
+          quoted incorrectly.  Note that returning the string
+          `nnml:foo, nnml:bar' was incorrect earlier, it just didn't
+          generate any problems since it was inserted directly.
+
+        * `message-insinuate-rmail'
+
+          Adding `(message-insinuate-rmail)' and `(setq mail-user-agent
+          'gnus-user-agent)' in `.emacs' convinces Rmail to compose,
+          reply and forward messages in message-mode, where you can
+          enjoy the power of MML.
+
+        * `message-minibuffer-local-map'
+
+          The line below enables BBDB in resending a message:
+               (define-key message-minibuffer-local-map [(tab)]
+                 'bbdb-complete-name)
+
+        * `gnus-posting-styles'
+
+          Add a new format of match like
+               ((header "to" "larsi.*org")
+                (Organization "Somewhere, Inc."))
+          The old format like the lines below is obsolete, but still
+          accepted.
+               (header "to" "larsi.*org"
+                       (Organization "Somewhere, Inc."))
+
+        * `message-ignored-news-headers' and
+          `message-ignored-mail-headers'
+
+          `X-Draft-From' and `X-Gnus-Agent-Meta-Information' have been
+          added into these two variables.  If you customized those,
+          perhaps you need add those two headers too.
+
+        * Gnus supports the "format=flowed" (RFC 2646) parameter.  On
+          composing messages, it is enabled by `use-hard-newlines'.
+          Decoding format=flowed was present but not documented in
+          earlier versions.
+
+        * The option `mm-fill-flowed' can be used to disable treatment
+          of "format=flowed" messages.  Also, flowed text is disabled
+          when sending inline PGP signed messages.  *Note Flowed text:
+          (emacs-mime)Flowed text.  (New in Gnus 5.10.7)
+
+        * Gnus supports the generation of RFC 2298 Disposition
+          Notification requests.
+
+          This is invoked with the `C-c M-n' key binding from message
+          mode.
+
+        * Message supports the Importance: (RFC 2156) header.
+
+          In the message buffer, `C-c C-f C-i' or `C-c C-u' cycles
+          through the valid values.
+
+        * Gnus supports Cancel Locks in News.
+
+          This means a header `Cancel-Lock' is inserted in news
+          posting.  It is used to determine if you wrote an article or
+          not (for canceling and superseding).  Gnus generates a random
+          password string the first time you post a message, and saves
+          it in your `~/.emacs' using the Custom system.  While the
+          variable is called `canlock-password', it is not security
+          sensitive data.  Publishing your canlock string on the web
+          will not allow anyone to be able to anything she could not
+          already do.  The behavior can be changed by customizing
+          `message-insert-canlock'.
+
+        * Gnus supports PGP (RFC 1991/2440), PGP/MIME (RFC 2015/3156)
+          and S/MIME (RFC 2630-2633).
+
+          It needs an external S/MIME and OpenPGP implementation, but no
+          additional Lisp libraries.  This add several menu items to the
+          Attachments menu, and `C-c RET' key bindings, when composing
+          messages.  This also obsoletes `gnus-article-hide-pgp-hook'.
+
+        * MML (Mime compose) prefix changed from `M-m' to `C-c C-m'.
+
+          This change was made to avoid conflict with the standard
+          binding of `back-to-indentation', which is also useful in
+          message mode.
+
+        * The default for `message-forward-show-mml' changed to the
+          symbol `best'.
+
+          The behavior for the `best' value is to show MML (i.e.,
+          convert to MIME) when appropriate.  MML will not be used when
+          forwarding signed or encrypted messages, as the conversion
+          invalidate the digital signature.
+
+        * If `auto-compression-mode' is enabled, attachments are
+          automatically decompressed when activated.
+
+        * Support for non-ASCII domain names
+
+          Message supports non-ASCII domain names in From:, To: and Cc:
+          and will query you whether to perform encoding when you try to
+          send a message.  The variable `message-use-idna' controls
+          this.  Gnus will also decode non-ASCII domain names in From:,
+          To: and Cc: when you view a message.  The variable
+          `gnus-use-idna' controls this.
+
+        * You can now drag and drop attachments to the Message buffer.
+          See `mml-dnd-protocol-alist' and `mml-dnd-attach-options'.
+          *Note MIME: (message)MIME.
+
+        * `auto-fill-mode' is enabled by default in Message mode.  See
+          `message-fill-column'.  *Note Message Headers:
+          (message)Various Message Variables.
+
+
+   * Changes in back ends
+
+        * Gnus can display RSS newsfeeds as a newsgroup.  *Note RSS::.
+
+        * The nndoc back end now supports mailman digests and exim
+          bounces.
+
+        * Gnus supports Maildir groups.
+
+          Gnus includes a new back end `nnmaildir.el'.  *Note Maildir::.
+
+        * The nnml and nnfolder back ends store marks for each groups.
+
+          This makes it possible to take backup of nnml/nnfolder
+          servers/groups separately of `~/.newsrc.eld', while
+          preserving marks.  It also makes it possible to share
+          articles and marks between users (without sharing the
+          `~/.newsrc.eld' file) within e.g. a department.  It works by
+          storing the marks stored in `~/.newsrc.eld' in a per-group
+          file `.marks' (for nnml) and `GROUPNAME.mrk' (for nnfolder,
+          named GROUPNAME).  If the nnml/nnfolder is moved to another
+          machine, Gnus will automatically use the `.marks' or `.mrk'
+          file instead of the information in `~/.newsrc.eld'.  The new
+          server variables `nnml-marks-is-evil' and
+          `nnfolder-marks-is-evil' can be used to disable this feature.
+
+
+   * Appearance
+
+        * The menu bar item (in Group and Summary buffer) named "Misc"
+          has been renamed to "Gnus".
+
+        * The menu bar item (in Message mode) named "MML" has been
+          renamed to "Attachments".  Note that this menu also contains
+          security related stuff, like signing and encryption (*note
+          Security: (message)Security.).
+
+        * The tool bars have been updated to use GNOME icons in Group,
+          Summary and Message mode.  You can also customize the tool
+          bars: `M-x customize-apropos RET -tool-bar$' should get you
+          started.  This is a new feature in Gnus 5.10.10.  (Only for
+          Emacs, not in XEmacs.)
+
+        * The tool bar icons are now (de)activated correctly in the
+          group buffer, see the variable `gnus-group-update-tool-bar'.
+          Its default value depends on your Emacs version.  This is a
+          new feature in Gnus 5.10.9.
+
+   * Miscellaneous changes
+
+        * `gnus-agent'
+
+          The Gnus Agent has seen a major updated and is now enabled by
+          default, and all nntp and nnimap servers from
+          `gnus-select-method' and `gnus-secondary-select-method' are
+          agentized by default.  Earlier only the server in
+          `gnus-select-method' was agentized by the default, and the
+          agent was disabled by default.  When the agent is enabled,
+          headers are now also retrieved from the Agent cache instead
+          of the back ends when possible.  Earlier this only happened
+          in the unplugged state.  You can enroll or remove servers
+          with `J a' and `J r' in the server buffer.  Gnus will not
+          download articles into the Agent cache, unless you instruct
+          it to do so, though, by using `J u' or `J s' from the Group
+          buffer.  You revert to the old behavior of having the Agent
+          disabled with `(setq gnus-agent nil)'.  Note that putting
+          `(gnus-agentize)' in `~/.gnus.el' is not needed any more.
+
+        * Gnus reads the NOV and articles in the Agent if plugged.
+
+          If one reads an article while plugged, and the article
+          already exists in the Agent, it won't get downloaded once
+          more.  `(setq gnus-agent-cache nil)' reverts to the old
+          behavior.
+
+        * Dired integration
+
+          `gnus-dired-minor-mode' (see *note Other modes::) installs key
+          bindings in dired buffers to send a file as an attachment,
+          open a file using the appropriate mailcap entry, and print a
+          file using the mailcap entry.
+
+        * The format spec `%C' for positioning point has changed to
+          `%*'.
+
+        * `gnus-slave-unplugged'
+
+          A new command which starts Gnus offline in slave mode.
+
+
+
+
+File: gnus,  Node: No Gnus,  Prev: Oort Gnus,  Up: New Features
+
+10.2.9.7 No Gnus
+................
+
+New features in No Gnus:
+
+   * Installation changes
+
+        * Upgrading from previous (stable) version if you have used No
+          Gnus.
+
+          If you have tried No Gnus (the unstable Gnus branch leading
+          to this release) but went back to a stable version, be
+          careful when upgrading to this version.  In particular, you
+          will probably want to remove the `~/News/marks' directory
+          (perhaps selectively), so that flags are read from your
+          `~/.newsrc.eld' instead of from the stale marks file, where
+          this release will store flags for nntp.  See a later entry
+          for more information about nntp marks.  Note that downgrading
+          isn't safe in general.
+
+        * Incompatibility when switching from Emacs 23 to Emacs 22 In
+          Emacs 23, Gnus uses Emacs' new internal coding system
+          `utf-8-emacs' for saving articles drafts and `~/.newsrc.eld'.
+          These files may not be read correctly in Emacs 22 and below.
+          If you want to use Gnus across different Emacs versions, you
+          may set `mm-auto-save-coding-system' to `emacs-mule'.
+
+        * Lisp files are now installed in `.../site-lisp/gnus/' by
+          default.  It defaulted to `.../site-lisp/' formerly.  In
+          addition to this, the new installer issues a warning if other
+          Gnus installations which will shadow the latest one are
+          detected.  You can then remove those shadows manually or
+          remove them using `make remove-installed-shadows'.
+
+        * The installation directory name is allowed to have spaces
+          and/or tabs.
+
+   * New packages and libraries within Gnus
+
+        * Gnus includes the Emacs Lisp SASL library.
+
+          This provides a clean API to SASL mechanisms from within
+          Emacs.  The user visible aspects of this, compared to the
+          earlier situation, include support for DIGEST-MD5 and NTLM.
+          *Note Emacs SASL: (sasl)Top.
+
+        * ManageSieve connections uses the SASL library by default.
+
+          The primary change this brings is support for DIGEST-MD5 and
+          NTLM, when the server supports it.
+
+        * Gnus includes a password cache mechanism in password.el.
+
+          It is enabled by default (see `password-cache'), with a short
+          timeout of 16 seconds (see `password-cache-expiry').  If PGG
+          is used as the PGP back end, the PGP passphrase is managed by
+          this mechanism.  Passwords for ManageSieve connections are
+          managed by this mechanism, after querying the user about
+          whether to do so.
+
+        * Using EasyPG with Gnus When EasyPG, is available, Gnus will
+          use it instead of PGG.  EasyPG is an Emacs user interface to
+          GNU Privacy Guard.  *Note EasyPG Assistant user's manual:
+          (epa)Top.  EasyPG is included in Emacs 23 and available
+          separately as well.
+
+   * Changes in group mode
+
+        * Old intermediate incoming mail files (`Incoming*') are deleted
+          after a couple of days, not immediately.  *Note Mail Source
+          Customization::.  (New in Gnus 5.10.10 / No Gnus 0.8)
+
+
+   * Changes in summary and article mode
+
+        * Gnus now supports sticky article buffers.  Those are article
+          buffers that are not reused when you select another article.
+          *Note Sticky Articles::.
+
+        * Gnus can selectively display `text/html' articles with a WWW
+          browser with `K H'.  *Note MIME Commands::.
+
+        * International host names (IDNA) can now be decoded inside
+          article bodies using `W i' (`gnus-summary-idna-message').
+          This requires that GNU Libidn
+          (`http://www.gnu.org/software/libidn/') has been installed.
+
+        * The non-ASCII group names handling has been much improved.
+          The back ends that fully support non-ASCII group names are
+          now `nntp', `nnml', and `nnrss'.  Also the agent, the cache,
+          and the marks features work with those back ends.  *Note
+          Non-ASCII Group Names::.
+
+        * Gnus now displays DNS master files sent as text/dns using
+          dns-mode.
+
+        * Gnus supports new limiting commands in the Summary buffer: `/
+          r' (`gnus-summary-limit-to-replied') and `/ R'
+          (`gnus-summary-limit-to-recipient').  *Note Limiting::.
+
+        * You can now fetch all ticked articles from the server using
+          `Y t' (`gnus-summary-insert-ticked-articles').  *Note Summary
+          Generation Commands::.
+
+        * Gnus supports a new sort command in the Summary buffer: `C-c
+          C-s C-t' (`gnus-summary-sort-by-recipient').  *Note Summary
+          Sorting::.
+
+        * S/MIME now features LDAP user certificate searches.  You need
+          to configure the server in `smime-ldap-host-list'.
+
+        * URLs inside OpenPGP headers are retrieved and imported to
+          your PGP key ring when you click on them.
+
+        * Picons can be displayed right from the textual address, see
+          `gnus-picon-style'.  *Note Picons::.
+
+        * ANSI SGR control sequences can be transformed using `W A'.
+
+          ANSI sequences are used in some Chinese hierarchies for
+          highlighting articles (`gnus-article-treat-ansi-sequences').
+
+        * Gnus now MIME decodes articles even when they lack
+          "MIME-Version" header.  This changes the default of
+          `gnus-article-loose-mime'.
+
+        * `gnus-decay-scores' can be a regexp matching score files.
+          For example, set it to `\\.ADAPT\\'' and only adaptive score
+          files will be decayed.  *Note Score Decays::.
+
+        * Strings prefixing to the `To' and `Newsgroup' headers in
+          summary lines when using `gnus-ignored-from-addresses' can be
+          customized with `gnus-summary-to-prefix' and
+          `gnus-summary-newsgroup-prefix'.  *Note To From Newsgroups::.
+
+        * You can replace MIME parts with external bodies.  See
+          `gnus-mime-replace-part' and `gnus-article-replace-part'.
+          *Note MIME Commands::, *note Using MIME::.
+
+        * The option `mm-fill-flowed' can be used to disable treatment
+          of format=flowed messages.  Also, flowed text is disabled
+          when sending inline PGP signed messages.  *Note Flowed text:
+          (emacs-mime)Flowed text.  (New in Gnus 5.10.7)
+
+        * Now the new command `S W'
+          (`gnus-article-wide-reply-with-original') for a wide reply in
+          the article buffer yanks a text that is in the active region,
+          if it is set, as well as the `R'
+          (`gnus-article-reply-with-original') command.  Note that the
+          `R' command in the article buffer no longer accepts a prefix
+          argument, which was used to make it do a wide reply.  *Note
+          Article Keymap::.
+
+        * The new command `C-h b' (`gnus-article-describe-bindings')
+          used in the article buffer now shows not only the article
+          commands but also the real summary commands that are
+          accessible from the article buffer.
+
+
+   * Changes in Message mode
+
+        * Gnus now supports the "hashcash" client puzzle anti-spam
+          mechanism.  Use `(setq message-generate-hashcash t)' to
+          enable.  *Note Hashcash::.
+
+        * You can now drag and drop attachments to the Message buffer.
+          See `mml-dnd-protocol-alist' and `mml-dnd-attach-options'.
+          *Note MIME: (message)MIME.
+
+        * The option `message-yank-empty-prefix' now controls how empty
+          lines are prefixed in cited text.  *Note Insertion Variables:
+          (message)Insertion Variables.
+
+        * Gnus uses narrowing to hide headers in Message buffers.  The
+          `References' header is hidden by default.  To make all
+          headers visible, use `(setq message-hidden-headers nil)'.
+          *Note Message Headers: (message)Message Headers.
+
+        * You can highlight different levels of citations like in the
+          article buffer.  See `gnus-message-highlight-citation'.
+
+        * `auto-fill-mode' is enabled by default in Message mode.  See
+          `message-fill-column'.  *Note Message Headers:
+          (message)Various Message Variables.
+
+        * You can now store signature files in a special directory
+          named `message-signature-directory'.
+
+        * The option `message-citation-line-format' controls the format
+          of the "Whomever writes:" line.  You need to set
+          `message-citation-line-function' to
+          `message-insert-formatted-citation-line' as well.
+
+   * Changes in back ends
+
+        * The nntp back end stores article marks in `~/News/marks'.
+
+          The directory can be changed using the (customizable) variable
+          `nntp-marks-directory', and marks can be disabled using the
+          (back end) variable `nntp-marks-is-evil'.  The advantage of
+          this is that you can copy `~/News/marks' (using rsync, scp or
+          whatever) to another Gnus installation, and it will realize
+          what articles you have read and marked.  The data in
+          `~/News/marks' has priority over the same data in
+          `~/.newsrc.eld'.
+
+        * You can import and export your RSS subscriptions from OPML
+          files.  *Note RSS::.
+
+        * IMAP identity (RFC 2971) is supported.
+
+          By default, Gnus does not send any information about itself,
+          but you can customize it using the variable `nnimap-id'.
+
+        * The `nnrss' back end now supports multilingual text.
+          Non-ASCII group names for the `nnrss' groups are also
+          supported.  *Note RSS::.
+
+        * Retrieving mail with POP3 is supported over SSL/TLS and with
+          StartTLS.
+
+        * The nnml back end allows other compression programs beside
+          `gzip' for compressed message files.  *Note Mail Spool::.
+
+        * The nnml back end supports group compaction.
+
+          This feature, accessible via the functions
+          `gnus-group-compact-group' (`G z' in the group buffer) and
+          `gnus-server-compact-server' (`z' in the server buffer)
+          renumbers all articles in a group, starting from 1 and
+          removing gaps.  As a consequence, you get a correct total
+          article count (until messages are deleted again).
+
+
+   * Appearance
+
+        * The tool bar has been updated to use GNOME icons.  You can
+          also customize the tool bars: `M-x customize-apropos RET
+          -tool-bar$' should get you started.  (Only for Emacs, not in
+          XEmacs.)
+
+        * The tool bar icons are now (de)activated correctly in the
+          group buffer, see the variable `gnus-group-update-tool-bar'.
+          Its default value depends on your Emacs version.
+
+        * You can change the location of XEmacs' toolbars in Gnus
+          buffers.  See `gnus-use-toolbar' and `message-use-toolbar'.
+
+
+   * Miscellaneous changes
+
+        * Having edited the select-method for the foreign server in the
+          server buffer is immediately reflected to the subscription of
+          the groups which use the server in question.  For instance,
+          if you change `nntp-via-address' into `bar.example.com' from
+          `foo.example.com', Gnus will connect to the news host by way
+          of the intermediate host `bar.example.com' from next time.
+
+        * The `all.SCORE' file can be edited from the group buffer
+          using `W e'.
+
+
+
+
+File: gnus,  Node: On Writing Manuals,  Next: Terminology,  Prev: History,  Up: Appendices
+
+10.3 On Writing Manuals
+=======================
+
+I guess most manuals are written after-the-fact; documenting a program
+that's already there.  This is not how this manual is written.  When
+implementing something, I write the manual entry for that something
+straight away.  I then see that it's difficult to explain the
+functionality, so I write how it's supposed to be, and then I change the
+implementation.  Writing the documentation and writing the code go hand
+in hand.
+
+   This, of course, means that this manual has no, or little, flow.  It
+documents absolutely everything in Gnus, but often not where you're
+looking for it.  It is a reference manual, and not a guide to how to get
+started with Gnus.
+
+   That would be a totally different book, that should be written using
+the reference manual as source material.  It would look quite different.
 
 
 File: gnus,  Node: Terminology,  Next: Customization,  Prev: On Writing Manuals,  Up: Appendices
@@ -410,8 +2202,8 @@ problems, really.
      again before Gnus will work.
 
   3. Try doing an `M-x gnus-version'.  If you get something that looks
-     like `Gnus v5.10.8' you have the right files loaded.  Otherwise
-     you have some old `.el' files lying around.  Delete these.
+     like `Gnus v5.13' you have the right files loaded.  Otherwise you
+     have some old `.el' files lying around.  Delete these.
 
   4. Read the help group (`G h' in the group buffer) for a FAQ and a
      how-to.
@@ -911,7 +2703,9 @@ File: gnus,  Node: Optional Back End Functions,  Next: Error Messaging,  Prev: R
      for alterations.  This comes in handy if the back end really
      carries all the information (as is the case with virtual and imap
      groups).  This function should destructively alter the info to
-     suit its needs, and should return a non-`nil' value.
+     suit its needs, and should return a non-`nil' value (exceptionally,
+     `nntp-request-update-info' always returns `nil' not to waste the
+     network resources).
 
      There should be no result data from this function.
 
@@ -1211,7 +3005,7 @@ following macros:
    Below is a slightly shortened version of the `nndir' back end.
 
      ;;; nndir.el -- single directory newsgroup access for Gnus
-     ;; Copyright (C) 1995,96 Free Software Foundation, Inc.
+     ;; Copyright (C) 1995,1996 Free Software Foundation, Inc.
 
      ;;; Code:
 
@@ -2026,8 +3820,8 @@ Answer
 
 Jingle please: Gnus 5.10 is released, get it while it's hot! As well as
 the step in version number is rather small, Gnus 5.10 has tons of new
-features which you shouldn't miss. The current release (5.10.10) should
-be at least as stable as the latest release of the 5.8 series.
+features which you shouldn't miss. The current release (5.13) should be
+at least as stable as the latest release of the 5.8 series.
 
 
 File: gnus,  Node: FAQ 1-2,  Next: FAQ 1-3,  Prev: FAQ 1-1,  Up: FAQ 1 - Installation FAQ
@@ -3135,7 +4929,7 @@ How to enable automatic word-wrap when composing messages?
 Answer
 ......
 
-Starting from Gnus 5.10.12, automatic word-wrap is already enabled by
+Starting from No Gnus, automatic word-wrap is already enabled by
 default, see the variable message-fill-column.
 
    For other versions of Gnus, say
@@ -3932,10 +5726,9 @@ which deals with general Gnus questions.  If you have questions about
 development versions of Gnus, you should better ask on the ding mailing
 list, see below.
 
-   If you want to stay in the big8, news.software.newssreaders is also
-read by some Gnus users (but chances for qualified help are much better
-in the above groups).  If you speak German, there's
-de.comm.software.gnus.
+   If you want to stay in the big8, news.software.readers is also read
+by some Gnus users (but chances for qualified help are much better in
+the above groups).  If you speak German, there's de.comm.software.gnus.
 
    The ding mailing list (ding@gnus.org) deals with development of
 Gnus. You can read the ding list via NNTP, too under the name
@@ -4097,14 +5890,13 @@ File: gnus,  Node: GNU Free Documentation License,  Next: Index,  Prev: Appendic
 11 GNU Free Documentation License
 *********************************
 
-                      Version 1.2, November 2002
+                     Version 1.3, 3 November 2008
 
-     Copyright (C) 2000,2001,2002  Free Software Foundation, Inc.
-     51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
      of this license document, but changing it is not allowed.
-
 
   0. PREAMBLE
 
@@ -4116,7 +5908,7 @@ File: gnus,  Node: GNU Free Documentation License,  Next: Index,  Prev: Appendic
      author and publisher a way to get credit for their work, while not
      being considered responsible for modifications made by others.
 
-     This License is a kind of "copyleft," which means that derivative
+     This License is a kind of "copyleft", which means that derivative
      works of the document must themselves be free in the same sense.
      It complements the GNU General Public License, which is a copyleft
      license designed for free software.
@@ -4130,7 +5922,6 @@ File: gnus,  Node: GNU Free Documentation License,  Next: Index,  Prev: Appendic
      We recommend this License principally for works whose purpose is
      instruction or reference.
 
-
   1. APPLICABILITY AND DEFINITIONS
 
      This License applies to any manual or other work, in any medium,
@@ -4138,8 +5929,8 @@ File: gnus,  Node: GNU Free Documentation License,  Next: Index,  Prev: Appendic
      can be distributed under the terms of this License.  Such a notice
      grants a world-wide, royalty-free license, unlimited in duration,
      to use that work under the conditions stated herein.  The
-     "Document," below, refers to any such manual or work.  Any member
-     of the public is a licensee, and is addressed as "you."  You
+     "Document", below, refers to any such manual or work.  Any member
+     of the public is a licensee, and is addressed as "you".  You
      accept the license if you copy, modify or distribute the work in a
      way requiring permission under copyright law.
 
@@ -4147,16 +5938,16 @@ File: gnus,  Node: GNU Free Documentation License,  Next: Index,  Prev: Appendic
      Document or a portion of it, either copied verbatim, or with
      modifications and/or translated into another language.
 
-     A "Secondary Section" is a named appendix or a front-matter
-     section of the Document that deals exclusively with the
-     relationship of the publishers or authors of the Document to the
-     Document's overall subject (or to related matters) and contains
-     nothing that could fall directly within that overall subject.
-     (Thus, if the Document is in part a textbook of mathematics, a
-     Secondary Section may not explain any mathematics.)  The
-     relationship could be a matter of historical connection with the
-     subject or with related matters, or of legal, commercial,
-     philosophical, ethical or political position regarding them.
+     A "Secondary Section" is a named appendix or a front-matter section
+     of the Document that deals exclusively with the relationship of the
+     publishers or authors of the Document to the Document's overall
+     subject (or to related matters) and contains nothing that could
+     fall directly within that overall subject.  (Thus, if the Document
+     is in part a textbook of mathematics, a Secondary Section may not
+     explain any mathematics.)  The relationship could be a matter of
+     historical connection with the subject or with related matters, or
+     of legal, commercial, philosophical, ethical or political position
+     regarding them.
 
      The "Invariant Sections" are certain Secondary Sections whose
      titles are designated, as being those of Invariant Sections, in
@@ -4184,7 +5975,7 @@ File: gnus,  Node: GNU Free Documentation License,  Next: Index,  Prev: Appendic
      markup, has been arranged to thwart or discourage subsequent
      modification by readers is not Transparent.  An image format is
      not Transparent if used for any substantial amount of text.  A
-     copy that is not "Transparent" is called "Opaque."
+     copy that is not "Transparent" is called "Opaque".
 
      Examples of suitable formats for Transparent copies include plain
      ASCII without markup, Texinfo input format, LaTeX input format,
@@ -4192,8 +5983,8 @@ File: gnus,  Node: GNU Free Documentation License,  Next: Index,  Prev: Appendic
      standard-conforming simple HTML, PostScript or PDF designed for
      human modification.  Examples of transparent image formats include
      PNG, XCF and JPG.  Opaque formats include proprietary formats that
-     can be read and edited only by proprietary word processors, SGML
-     or XML for which the DTD and/or processing tools are not generally
+     can be read and edited only by proprietary word processors, SGML or
+     XML for which the DTD and/or processing tools are not generally
      available, and the machine-generated HTML, PostScript or PDF
      produced by some word processors for output purposes only.
 
@@ -4204,11 +5995,14 @@ File: gnus,  Node: GNU Free Documentation License,  Next: Index,  Prev: Appendic
      Page" means the text near the most prominent appearance of the
      work's title, preceding the beginning of the body of the text.
 
+     The "publisher" means any person or entity that distributes copies
+     of the Document to the public.
+
      A section "Entitled XYZ" means a named subunit of the Document
      whose title either is precisely XYZ or contains XYZ in parentheses
      following text that translates XYZ in another language.  (Here XYZ
      stands for a specific section name mentioned below, such as
-     "Acknowledgements," "Dedications," "Endorsements," or "History.")
+     "Acknowledgements", "Dedications", "Endorsements", or "History".)
      To "Preserve the Title" of such a section when you modify the
      Document means that it remains a section "Entitled XYZ" according
      to this definition.
@@ -4286,59 +6080,75 @@ File: gnus,  Node: GNU Free Documentation License,  Next: Index,  Prev: Appendic
      whoever possesses a copy of it.  In addition, you must do these
      things in the Modified Version:
 
-     A. Use in the Title Page (and on the covers, if any) a title
-     distinct    from that of the Document, and from those of previous
-     versions    (which should, if there were any, be listed in the
-     History section    of the Document).  You may use the same title
-     as a previous version    if the original publisher of that version
-     gives permission.
-     B. List on the Title Page, as authors, one or more persons or
-     entities    responsible for authorship of the modifications in the
-     Modified    Version, together with at least five of the principal
-     authors of the    Document (all of its principal authors, if it
-     has fewer than five),    unless they release you from this
-     requirement.
-     C. State on the Title page the name of the publisher of the
-     Modified Version, as the publisher.
-     D. Preserve all the copyright notices of the Document.
-     E. Add an appropriate copyright notice for your modifications
-     adjacent to the other copyright notices.
-     F. Include, immediately after the copyright notices, a license
-     notice    giving the public permission to use the Modified Version
-     under the    terms of this License, in the form shown in the
-     Addendum below.
-     G. Preserve in that license notice the full lists of Invariant
-     Sections    and required Cover Texts given in the Document's
-     license notice.
-     H. Include an unaltered copy of this License.
-     I. Preserve the section Entitled "History," Preserve its Title,
-     and add    to it an item stating at least the title, year, new
-     authors, and    publisher of the Modified Version as given on the
-     Title Page.  If    there is no section Entitled "History" in the
-     Document, create one    stating the title, year, authors, and
-     publisher of the Document as    given on its Title Page, then add
-     an item describing the Modified    Version as stated in the
-     previous sentence.
-     J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and likewise
-       the network locations given in the Document for previous versions
-       it was based on.  These may be placed in the "History" section.
-       You may omit a network location for a work that was published at
-       least four years before the Document itself, or if the original
-      publisher of the version it refers to gives permission.
-     K. For any section Entitled "Acknowledgements" or "Dedications,"
-     Preserve the Title of the section, and preserve in the section all
-       the substance and tone of each of the contributor
-     acknowledgements    and/or dedications given therein.
-     L. Preserve all the Invariant Sections of the Document,
-     unaltered in their text and in their titles.  Section numbers
-     or the equivalent are not considered part of the section titles.
-     M. Delete any section Entitled "Endorsements."  Such a section
-     may not be included in the Modified Version.
-     N. Do not retitle any existing section to be Entitled
-     "Endorsements"    or to conflict in title with any Invariant
-     Section.
-     O. Preserve any Warranty Disclaimers.
+       A. Use in the Title Page (and on the covers, if any) a title
+          distinct from that of the Document, and from those of
+          previous versions (which should, if there were any, be listed
+          in the History section of the Document).  You may use the
+          same title as a previous version if the original publisher of
+          that version gives permission.
+
+       B. List on the Title Page, as authors, one or more persons or
+          entities responsible for authorship of the modifications in
+          the Modified Version, together with at least five of the
+          principal authors of the Document (all of its principal
+          authors, if it has fewer than five), unless they release you
+          from this requirement.
+
+       C. State on the Title page the name of the publisher of the
+          Modified Version, as the publisher.
+
+       D. Preserve all the copyright notices of the Document.
+
+       E. Add an appropriate copyright notice for your modifications
+          adjacent to the other copyright notices.
+
+       F. Include, immediately after the copyright notices, a license
+          notice giving the public permission to use the Modified
+          Version under the terms of this License, in the form shown in
+          the Addendum below.
+
+       G. Preserve in that license notice the full lists of Invariant
+          Sections and required Cover Texts given in the Document's
+          license notice.
+
+       H. Include an unaltered copy of this License.
+
+       I. Preserve the section Entitled "History", Preserve its Title,
+          and add to it an item stating at least the title, year, new
+          authors, and publisher of the Modified Version as given on
+          the Title Page.  If there is no section Entitled "History" in
+          the Document, create one stating the title, year, authors,
+          and publisher of the Document as given on its Title Page,
+          then add an item describing the Modified Version as stated in
+          the previous sentence.
+
+       J. Preserve the network location, if any, given in the Document
+          for public access to a Transparent copy of the Document, and
+          likewise the network locations given in the Document for
+          previous versions it was based on.  These may be placed in
+          the "History" section.  You may omit a network location for a
+          work that was published at least four years before the
+          Document itself, or if the original publisher of the version
+          it refers to gives permission.
+
+       K. For any section Entitled "Acknowledgements" or "Dedications",
+          Preserve the Title of the section, and preserve in the
+          section all the substance and tone of each of the contributor
+          acknowledgements and/or dedications given therein.
+
+       L. Preserve all the Invariant Sections of the Document,
+          unaltered in their text and in their titles.  Section numbers
+          or the equivalent are not considered part of the section
+          titles.
+
+       M. Delete any section Entitled "Endorsements".  Such a section
+          may not be included in the Modified Version.
+
+       N. Do not retitle any existing section to be Entitled
+          "Endorsements" or to conflict in title with any Invariant
+          Section.
+
+       O. Preserve any Warranty Disclaimers.
 
      If the Modified Version includes new front-matter sections or
      appendices that qualify as Secondary Sections and contain no
@@ -4348,11 +6158,11 @@ File: gnus,  Node: GNU Free Documentation License,  Next: Index,  Prev: Appendic
      Version's license notice.  These titles must be distinct from any
      other section titles.
 
-     You may add a section Entitled "Endorsements," provided it contains
+     You may add a section Entitled "Endorsements", provided it contains
      nothing but endorsements of your Modified Version by various
-     parties-for example, statements of peer review or that the text has
-     been approved by an organization as the authoritative definition
-     of a standard.
+     parties--for example, statements of peer review or that the text
+     has been approved by an organization as the authoritative
+     definition of a standard.
 
      You may add a passage of up to five words as a Front-Cover Text,
      and a passage of up to 25 words as a Back-Cover Text, to the end
@@ -4392,7 +6202,7 @@ File: gnus,  Node: GNU Free Documentation License,  Next: Index,  Prev: Appendic
      In the combination, you must combine any sections Entitled
      "History" in the various original documents, forming one section
      Entitled "History"; likewise combine any sections Entitled
-     "Acknowledgements," and any sections Entitled "Dedications."  You
+     "Acknowledgements", and any sections Entitled "Dedications".  You
      must delete all sections Entitled "Endorsements."
 
   6. COLLECTIONS OF DOCUMENTS
@@ -4445,20 +6255,37 @@ File: gnus,  Node: GNU Free Documentation License,  Next: Index,  Prev: Appendic
      this License or a notice or disclaimer, the original version will
      prevail.
 
-     If a section in the Document is Entitled "Acknowledgements,"
-     "Dedications," or "History," the requirement (section 4) to
+     If a section in the Document is Entitled "Acknowledgements",
+     "Dedications", or "History", the requirement (section 4) to
      Preserve its Title (section 1) will typically require changing the
      actual title.
 
   9. TERMINATION
 
      You may not copy, modify, sublicense, or distribute the Document
-     except as expressly provided for under this License.  Any other
-     attempt to copy, modify, sublicense or distribute the Document is
-     void, and will automatically terminate your rights under this
-     License.  However, parties who have received copies, or rights,
-     from you under this License will not have their licenses
-     terminated so long as such parties remain in full compliance.
+     except as expressly provided under this License.  Any attempt
+     otherwise to copy, modify, sublicense, or distribute it is void,
+     and will automatically terminate your rights under this License.
+
+     However, if you cease all violation of this License, then your
+     license from a particular copyright holder is reinstated (a)
+     provisionally, unless and until the copyright holder explicitly
+     and finally terminates your license, and (b) permanently, if the
+     copyright holder fails to notify you of the violation by some
+     reasonable means prior to 60 days after the cessation.
+
+     Moreover, your license from a particular copyright holder is
+     reinstated permanently if the copyright holder notifies you of the
+     violation by some reasonable means, this is the first time you have
+     received notice of violation of this License (for any work) from
+     that copyright holder, and you cure the violation prior to 30 days
+     after your receipt of the notice.
+
+     Termination of your rights under this section does not terminate
+     the licenses of parties who have received copies or rights from
+     you under this License.  If your rights have been terminated and
+     not permanently reinstated, receipt of a copy of some or all of
+     the same material does not give you any rights to use it.
 
  10. FUTURE REVISIONS OF THIS LICENSE
 
@@ -4466,7 +6293,7 @@ File: gnus,  Node: GNU Free Documentation License,  Next: Index,  Prev: Appendic
      the GNU Free Documentation License from time to time.  Such new
      versions will be similar in spirit to the present version, but may
      differ in detail to address new problems or concerns.  See
-     http://www.gnu.org/copyleft/.
+     `http://www.gnu.org/copyleft/'.
 
      Each version of the License is given a distinguishing version
      number.  If the Document specifies that a particular numbered
@@ -4476,7 +6303,40 @@ File: gnus,  Node: GNU Free Documentation License,  Next: Index,  Prev: Appendic
      published (not as a draft) by the Free Software Foundation.  If
      the Document does not specify a version number of this License,
      you may choose any version ever published (not as a draft) by the
-     Free Software Foundation.
+     Free Software Foundation.  If the Document specifies that a proxy
+     can decide which future versions of this License can be used, that
+     proxy's public statement of acceptance of a version permanently
+     authorizes you to choose that version for the Document.
+
+ 11. RELICENSING
+
+     "Massive Multiauthor Collaboration Site" (or "MMC Site") means any
+     World Wide Web server that publishes copyrightable works and also
+     provides prominent facilities for anybody to edit those works.  A
+     public wiki that anybody can edit is an example of such a server.
+     A "Massive Multiauthor Collaboration" (or "MMC") contained in the
+     site means any set of copyrightable works thus published on the MMC
+     site.
+
+     "CC-BY-SA" means the Creative Commons Attribution-Share Alike 3.0
+     license published by Creative Commons Corporation, a not-for-profit
+     corporation with a principal place of business in San Francisco,
+     California, as well as future copyleft versions of that license
+     published by that same organization.
+
+     "Incorporate" means to publish or republish a Document, in whole or
+     in part, as part of another Document.
+
+     An MMC is "eligible for relicensing" if it is licensed under this
+     License, and if all works that were first published under this
+     License somewhere other than this MMC, and subsequently
+     incorporated in whole or in part into the MMC, (1) had no cover
+     texts or invariant sections, and (2) were thus incorporated prior
+     to November 1, 2008.
+
+     The operator of an MMC Site may republish an MMC contained in the
+     site under CC-BY-SA on the same site at any time before August 1,
+     2009, provided the MMC is eligible for relicensing.
 
 
 ADDENDUM: How to use this License for your documents
@@ -4486,20 +6346,20 @@ To use this License in a document you have written, include a copy of
 the License in the document and put the following copyright and license
 notices just after the title page:
 
-     Copyright (C)  YEAR  YOUR NAME.
-     Permission is granted to copy, distribute and/or modify this document
-     under the terms of the GNU Free Documentation License, Version 1.2
-     or any later version published by the Free Software Foundation;
-     with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
-     A copy of the license is included in the section entitled ``GNU
-     Free Documentation License.''
+       Copyright (C)  YEAR  YOUR NAME.
+       Permission is granted to copy, distribute and/or modify this document
+       under the terms of the GNU Free Documentation License, Version 1.3
+       or any later version published by the Free Software Foundation;
+       with no Invariant Sections, no Front-Cover Texts, and no Back-Cover
+       Texts.  A copy of the license is included in the section entitled ``GNU
+       Free Documentation License''.
 
    If you have Invariant Sections, Front-Cover Texts and Back-Cover
 Texts, replace the "with...Texts." line with this:
 
-     with the Invariant Sections being LIST THEIR TITLES, with the
-     Front-Cover Texts being LIST, and with the Back-Cover Texts being
-     LIST.
+         with the Invariant Sections being LIST THEIR TITLES, with
+         the Front-Cover Texts being LIST, and with the Back-Cover Texts
+         being LIST.
 
    If you have Invariant Sections without Cover Texts, or some other
 combination of the three, merge those two alternatives to suit the
@@ -4510,3 +6370,8 @@ recommend releasing these examples in parallel under your choice of
 free software license, such as the GNU General Public License, to
 permit their use in free software.
 
+
+
+Local Variables:
+coding: iso-8859-1
+End:

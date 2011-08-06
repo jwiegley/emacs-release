@@ -1,16 +1,16 @@
 ;;; em-rebind.el --- rebind keys when point is at current input
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,15 +18,16 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
-(provide 'em-rebind)
+;;; Commentary:
 
-(eval-when-compile (require 'esh-maint))
+;;; Code:
 
-(defgroup eshell-rebind nil
+(eval-when-compile (require 'eshell))
+
+;;;###autoload
+(eshell-defgroup eshell-rebind nil
   "This module allows for special keybindings that only take effect
 while the point is in a region of input text.  By default, it binds
 C-a to move to the beginning of the input text (rather than just the
@@ -38,8 +39,6 @@ commands to cause the point to leave the input area, such as
 the behavior of normal shells while the user editing new input text."
   :tag "Rebind keys at input"
   :group 'eshell-module)
-
-;;; Commentary:
 
 ;;; User Variables:
 
@@ -242,7 +241,11 @@ input."
 	  (eshell-life-is-too-much)))
       (eshell-delete-backward-char (- arg)))))
 
-;;; Code:
+(provide 'em-rebind)
 
-;;; arch-tag: 76d84f12-cc56-4d67-9b7d-c6b44ad20530
+;; Local Variables:
+;; generated-autoload-file: "esh-groups.el"
+;; End:
+
+;; arch-tag: 76d84f12-cc56-4d67-9b7d-c6b44ad20530
 ;;; em-rebind.el ends here

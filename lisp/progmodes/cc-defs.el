@@ -1,13 +1,14 @@
 ;;; cc-defs.el --- compile time definitions for CC Mode
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    2003- Alan Mackenzie
 ;;             1998- Martin Stjernholm
 ;;             1992-1999 Barry A. Warsaw
-;;             1987 Dave Detlefs and Stewart Clamen
+;;             1987 Dave Detlefs
+;;             1987 Stewart Clamen
 ;;             1985 Richard M. Stallman
 ;; Maintainer: bug-cc-mode@gnu.org
 ;; Created:    22-Apr-1997 (split from cc-mode.el)
@@ -16,10 +17,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,9 +28,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -73,9 +72,9 @@
 
 ; (eval-after-load "font-lock"  ; 2006-07-09.  font-lock is now preloaded
 ;   '
-(if (and (not (featurep 'cc-fix)) ; only load the file once.
-	 (featurep 'xemacs)	; There is now (2005/12) code in GNU Emacs CVS
+(if (and (featurep 'xemacs)	; There is now (2005/12) code in GNU Emacs CVS
 				; to make the call to f-l-c-k throw an error.
+	 (not (featurep 'cc-fix)) ; only load the file once.
 	 (let (font-lock-keywords)
 	   (font-lock-compile-keywords '("\\<\\>"))
 	   font-lock-keywords))     ; did the previous call foul this up?
@@ -84,8 +83,8 @@
 ;; The above takes care of the delayed loading, but this is necessary
 ;; to ensure correct byte compilation.
 (eval-when-compile
-  (if (and (not (featurep 'cc-fix))
-	   (featurep 'xemacs)
+  (if (and (featurep 'xemacs)
+	   (not (featurep 'cc-fix))
 	   (progn
 	     (require 'font-lock)
 	     (let (font-lock-keywords)
@@ -96,7 +95,7 @@
 
 ;;; Variables also used at compile time.
 
-(defconst c-version "5.31.6"
+(defconst c-version "5.31.7"
   "CC Mode version number.")
 
 (defconst c-version-sym (intern c-version))
@@ -337,11 +336,11 @@ to it is returned.  This function does not modify the point or the mark."
 (defmacro c-region-is-active-p ()
   ;; Return t when the region is active.  The determination of region
   ;; activeness is different in both Emacs and XEmacs.
-  (if (cc-bytecomp-fboundp 'region-active-p)
-      ;; XEmacs.
-      '(region-active-p)
-    ;; Emacs.
-    'mark-active))
+  (if (cc-bytecomp-boundp 'mark-active)
+      ;; Emacs.
+      'mark-active
+    ;; XEmacs.
+    '(region-active-p)))
 
 (defmacro c-set-region-active (activate)
   ;; Activate the region if ACTIVE is non-nil, deactivate it
@@ -408,7 +407,7 @@ properties to be changed, even in a read-only buffer.
 
 This macro should be placed around all calculations which set
 \"insignificant\" text properties in a buffer, even when the buffer is
-known to be writeable.  That way, these text properties remain set
+known to be writable.  That way, these text properties remain set
 even if the user undoes the command which set them.
 
 This macro should ALWAYS be placed around \"temporary\" internal buffer
@@ -934,7 +933,9 @@ MODE is either a mode symbol or a list of mode symbols."
 		(or (memq property prop)
 		    (put-text-property pos (1+ pos)
 				       'rear-nonsticky
-				       (cons property prop))))))))))
+				       (cons property prop)))))))
+	  ;; This won't be used for anything.
+	  (t 'ignore))))
 (cc-bytecomp-defun c-put-char-property-fun) ; Make it known below.
 
 (defmacro c-put-char-property (pos property value)
@@ -1442,6 +1443,28 @@ non-nil, a caret is prepended to invert the set."
 			 '1-bit)
 		       list)))
 
+    ;; Check whether beginning/end-of-defun call
+    ;; beginning/end-of-defun-function nicely, passing through the
+    ;; argument and respecting the return code.
+    (let* (mark-ring
+	   (bod-param 'foo) (eod-param 'foo)
+	   (beginning-of-defun-function
+	    (lambda (&optional arg)
+	      (or (eq bod-param 'foo) (setq bod-param 'bar))
+	      (and (eq bod-param 'foo)
+		   (setq bod-param arg)
+		   (eq arg 3))))
+	   (end-of-defun-function
+	    (lambda (&optional arg)
+	      (and (eq eod-param 'foo)
+		   (setq eod-param arg)
+		   (eq arg 3)))))
+      (if (save-excursion (and (beginning-of-defun 3) (eq bod-param 3)
+			       (not (beginning-of-defun))
+			       (end-of-defun 3) (eq eod-param 3)
+			       (not (end-of-defun))))
+	  (setq list (cons 'argumentative-bod-function list))))
+
     (let ((buf (generate-new-buffer " test"))
 	  parse-sexp-lookup-properties
 	  parse-sexp-ignore-comments
@@ -1541,6 +1564,9 @@ might be present:
 
 '8-bit              8 bit syntax entry flags (XEmacs style).
 '1-bit              1 bit syntax entry flags (Emacs style).
+'argumentative-bod-function         beginning-of-defun passes ARG through
+                    to a non-null beginning-of-defun-function.  It is assumed
+		    the end-of-defun does the same thing.
 'syntax-properties  It works to override the syntax for specific characters
 		    in the buffer with the 'syntax-table property.  It's
 		    always set - CC Mode no longer works in emacsen without
@@ -1673,6 +1699,9 @@ itself is evaluated."
   ;; Evaluate at macro expansion time, i.e. in the
   ;; `cl-macroexpand-all' inside `c-lang-defconst'.
   (eval form))
+
+;; Only used at compile time - suppress "might not be defined at runtime".
+(declare-function cl-macroexpand-all "cl-extra" (form &optional env))
 
 (defmacro c-lang-defconst (name &rest args)
   "Set the language specific values of the language constant NAME.
@@ -2099,5 +2128,5 @@ quoted."
 
 (cc-provide 'cc-defs)
 
-;;; arch-tag: 3bb2629d-dd84-4ff0-ad39-584be0fe3cda
+;; arch-tag: 3bb2629d-dd84-4ff0-ad39-584be0fe3cda
 ;;; cc-defs.el ends here

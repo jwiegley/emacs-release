@@ -210,6 +210,7 @@ foo.c:8: message
 foo/bar.py:8: FutureWarning message
 foo.py:8: RuntimeWarning message
 foo.c:8:I: message
+foo.c:8.23: note: message
 foo.c:8.23: info: message
 foo.c:8:23:information: message
 foo.c:8.23-45: Informational: message
@@ -240,6 +241,13 @@ makepp: bla bla `/foo/Makeppfile:12' bla
 makepp: bla bla `/foo/bar.c' and `/foo/bar.h'
 
 
+* maven 2.0.9
+
+symbol: maven
+
+FooBar.java:[111,53] no interface expected here
+
+
 * MIPS lint; looks good for SunPro lint also
 
 symbols: mips-1 mips-2
@@ -261,6 +269,14 @@ made it more strict about the error message that follows.
 
 keyboard handler.c(537) : warning C4005: 'min' : macro redefinition
 d:\tmp\test.c(23) : error C2143: syntax error : missing ';' before 'if'
+
+
+* Open Watcom
+
+symbol: watcom
+
+..\src\ctrl\lister.c(109): Error! E1009: Expecting ';' but found '{'
+..\src\ctrl\lister.c(120): Warning! W201: Unreachable code
 
 
 * Oracle pro*c
@@ -289,6 +305,13 @@ Died at test.pl line 27.
 store::odrecall('File_A', 'x2') called at store.pm line 90
 	(in cleanup) something bad at foo.pl line 3 during global destruction.
 
+
+* PHP
+
+symbol: php
+
+Parse error: parse error, unexpected $ in main.php on line 59
+Fatal error: Call to undefined function: mysql_pconnect() in db.inc on line 66
 
 * RXP
 
@@ -371,6 +394,36 @@ symbol: gcov-file gcov-bb-file gcov-never-called-line gcov-called-line
         -:   18:} 
 
 
+* Podchecker error messages, per Pod::Checker
+
+symbol: perl--Pod::Checker
+
+*** ERROR: Spurious text after =cut at line 193 in file foo.pm
+*** ERROR: =over on line 37 without closing =back at line EOF in file bar.pm
+*** ERROR: =over on line 1 without closing =back (at head1) at line 3 in file x.pod
+
+
+* Perl Test module error messages
+
+symbol: perl--Test
+
+# Failed test 1 in foo.t at line 6
+
+
+* Perl Test::Harness output
+
+symbol: perl--Test::Harness
+
+NOK 1# Test 1 got: "1234" (t/foo.t at line 46)
+
+
+* Perl HTML::Lint::Error::as_string()
+
+symbol: weblint
+
+index.html (13:1) Unknown element <fdjsk>
+
+
 * Directory tracking
 
 Directories are matched via `compilation-directory-matcher'.  Files which are
@@ -404,18 +457,19 @@ Compilation interrupt at Wed Jul 20 12:20:10
 Compilation killed at Wed Jul 20 12:20:10
 Compilation terminated at Wed Jul 20 12:20:10
 Compilation exited abnormally with code 1 at Wed Jul 20 12:21:12
+Compilation segmentation fault at Thu Jul 13 10:55:49
 Compilation finished at Thu Jul 21 15:02:15
 
 
-Copyright (C) 2004, 2005, 2006, 2007, 2008
+Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009
 Free Software Foundation, Inc.
 
 COPYING PERMISSIONS:
 
-    This document is free software; you can redistribute it and/or modify
+    This document is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3, or (at your option)
-    any later version.
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -423,6 +477,4 @@ COPYING PERMISSIONS:
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program; see the file COPYING.  If not, write to
-    the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
-    Boston, MA 02110-1301 USA.
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.

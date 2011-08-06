@@ -1,17 +1,17 @@
 ;;; tool-bar.el --- setting up the tool bar
 ;;
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 ;;
 ;; Author: Dave Love <fx@gnu.org>
 ;; Keywords: mouse frames
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -54,22 +52,27 @@ conveniently adding tool bar items."
   :global t
   :group 'mouse
   :group 'frames
-  (and (display-images-p)
-       (let ((lines (if tool-bar-mode 1 0)))
-	 ;; Alter existing frames...
-	 (mapc (lambda (frame)
-		 (modify-frame-parameters frame
-					  (list (cons 'tool-bar-lines lines))))
-	       (frame-list))
-	 ;; ...and future ones.
-	 (let ((elt (assq 'tool-bar-lines default-frame-alist)))
-	   (if elt
-	       (setcdr elt lines)
-	     (add-to-list 'default-frame-alist (cons 'tool-bar-lines lines)))))
-       (if (and tool-bar-mode
-		(display-graphic-p)
-		(= 1 (length (default-value 'tool-bar-map)))) ; not yet setup
-	   (tool-bar-setup))))
+  (if tool-bar-mode
+      (progn
+	;; Make one tool-bar-line for any - including non-graphical -
+	;; terminal, see Bug#1754.  If this causes problems, we should
+	;; handle the problem in `modify-frame-parameters' or do not
+	;; call `modify-all-frames-parameters' when toggling the tool
+	;; bar off either.
+	(modify-all-frames-parameters (list (cons 'tool-bar-lines 1)))
+	(if (= 1 (length (default-value 'tool-bar-map))) ; not yet setup
+	    (tool-bar-setup)))
+    (modify-all-frames-parameters (list (cons 'tool-bar-lines 0)))))
+
+;;;###autoload
+;; Used in the Show/Hide menu, to have the toggle reflect the current frame.
+(defun toggle-tool-bar-mode-from-frame (&optional arg)
+  "Toggle tool bar on or off, based on the status of the current frame.
+See `tool-bar-mode' for more information."
+  (interactive (list (or current-prefix-arg 'toggle)))
+  (if (eq arg 'toggle)
+      (tool-bar-mode (if (> (frame-parameter nil 'tool-bar-lines) 0) 0 1))
+    (tool-bar-mode arg)))
 
 ;;;###autoload
 ;; We want to pretend the toolbar by standard is on, as this will make
@@ -88,7 +91,44 @@ Define this locally to override the global tool bar.")
 
 (global-set-key [tool-bar]
 		'(menu-item "tool bar" ignore
-			    :filter (lambda (ignore) tool-bar-map)))
+			    :filter tool-bar-make-keymap))
+
+(declare-function image-mask-p "image.c" (spec &optional frame))
+
+(defconst tool-bar-keymap-cache (make-hash-table :weakness t :test 'equal))
+
+(defun tool-bar-make-keymap (&optional ignore)
+  "Generate an actual keymap from `tool-bar-map'.
+Its main job is to figure out which images to use based on the display's
+color capability and based on the available image libraries."
+  (let ((key (cons (frame-terminal) tool-bar-map)))
+    (or (gethash key tool-bar-keymap-cache)
+	(puthash key (tool-bar-make-keymap-1) tool-bar-keymap-cache))))
+
+(defun tool-bar-make-keymap-1 ()
+  "Generate an actual keymap from `tool-bar-map', without caching."
+  (mapcar (lambda (bind)
+            (let (image-exp plist)
+              (when (and (eq (car-safe (cdr-safe bind)) 'menu-item)
+			 ;; For the format of menu-items, see node
+			 ;; `Extended Menu Items' in the Elisp manual.
+			 (setq plist (nthcdr (if (consp (nth 4 bind)) 5 4)
+					     bind))
+			 (setq image-exp (plist-get plist :image))
+			 (consp image-exp)
+			 (not (eq (car image-exp) 'image))
+			 (fboundp (car image-exp)))
+		(if (not (display-images-p))
+		    (setq bind nil)
+		  (let ((image (eval image-exp)))
+		    (unless (and image (image-mask-p image))
+		      (setq image (append image '(:mask heuristic))))
+		    (setq bind (copy-sequence bind)
+			  plist (nthcdr (if (consp (nth 4 bind)) 5 4)
+					bind))
+		    (plist-put plist :image image))))
+	      bind))
+	  tool-bar-map))
 
 ;;;###autoload
 (defun tool-bar-add-item (icon def key &rest props)
@@ -116,7 +156,7 @@ PROPS are additional items to add to the menu item specification.  See
 Info node `(elisp)Tool Bar'.  Items are added from left to right.
 
 ICON is the base name of a file containing the image to use.  The
-function will first try to use low-color/ICON.xpm if display-color-cells
+function will first try to use low-color/ICON.xpm if `display-color-cells'
 is less or equal to 256, then ICON.xpm, then ICON.pbm, and finally
 ICON.xbm, using `find-image'."
   (let* ((fg (face-attribute 'tool-bar :foreground))
@@ -124,24 +164,21 @@ ICON.xbm, using `find-image'."
 	 (colors (nconc (if (eq fg 'unspecified) nil (list :foreground fg))
 			(if (eq bg 'unspecified) nil (list :background bg))))
 	 (xpm-spec (list :type 'xpm :file (concat icon ".xpm")))
-	 (xpm-lo-spec (if (> (display-color-cells) 256)
-			  nil
-			(list :type 'xpm :file
-                              (concat "low-color/" icon ".xpm"))))
+	 (xpm-lo-spec (list :type 'xpm :file
+			    (concat "low-color/" icon ".xpm")))
 	 (pbm-spec (append (list :type 'pbm :file
                                  (concat icon ".pbm")) colors))
 	 (xbm-spec (append (list :type 'xbm :file
                                  (concat icon ".xbm")) colors))
-	 (image (find-image
-		(if (display-color-p)
-		    (list xpm-lo-spec xpm-spec pbm-spec xbm-spec)
-		  (list pbm-spec xbm-spec xpm-lo-spec xpm-spec)))))
-
-    (when (and (display-images-p) image)
-      (unless (image-mask-p image)
-	(setq image (append image '(:mask heuristic))))
-      (define-key-after map (vector key)
-	`(menu-item ,(symbol-name key) ,def :image ,image ,@props)))))
+	 (image-exp `(find-image
+		      (cond ((not (display-color-p))
+			     ',(list pbm-spec xbm-spec xpm-lo-spec xpm-spec))
+			    ((< (display-color-cells) 256)
+			     ',(list xpm-lo-spec xpm-spec pbm-spec xbm-spec))
+			    (t
+			     ',(list xpm-spec pbm-spec xbm-spec))))))
+    (define-key-after map (vector key)
+      `(menu-item ,(symbol-name key) ,def :image ,image-exp ,@props))))
 
 ;;;###autoload
 (defun tool-bar-add-item-from-menu (command icon &optional map &rest props)
@@ -179,52 +216,50 @@ holds a keymap."
 	 (colors (nconc (if (eq fg 'unspecified) nil (list :foreground fg))
 			(if (eq bg 'unspecified) nil (list :background bg))))
 	 (xpm-spec (list :type 'xpm :file (concat icon ".xpm")))
-	 (xpm-lo-spec (if (> (display-color-cells) 256)
-			  nil
-			(list :type 'xpm :file
-                              (concat "low-color/" icon ".xpm"))))
+	 (xpm-lo-spec (list :type 'xpm :file
+			    (concat "low-color/" icon ".xpm")))
 	 (pbm-spec (append (list :type 'pbm :file
                                  (concat icon ".pbm")) colors))
 	 (xbm-spec (append (list :type 'xbm :file
                                  (concat icon ".xbm")) colors))
-	 (spec (if (display-color-p)
-		   (list xpm-lo-spec xpm-spec pbm-spec xbm-spec)
-		 (list pbm-spec xbm-spec xpm-lo-spec xpm-spec)))
-	 (image (find-image spec))
+	 (image-exp `(find-image
+		      (cond ((not (display-color-p))
+			     ',(list pbm-spec xbm-spec xpm-lo-spec xpm-spec))
+			    ((< (display-color-cells) 256)
+			     ',(list xpm-lo-spec xpm-spec pbm-spec xbm-spec))
+			    (t
+			     ',(list xpm-spec pbm-spec xbm-spec)))))
 	 submap key)
-    (when (and (display-images-p) image)
-      ;; We'll pick up the last valid entry in the list of keys if
-      ;; there's more than one.
-      (dolist (k keys)
-	;; We're looking for a binding of the command in a submap of
-	;; the menu bar map, so the key sequence must be two or more
-	;; long.
-	(if (and (vectorp k)
-		 (> (length k) 1))
-	    (let ((m (lookup-key menu-bar-map (substring k 0 -1)))
-		  ;; Last element in the bound key sequence:
-		  (kk (aref k (1- (length k)))))
-	      (if (and (keymapp m)
-		       (symbolp kk))
-		  (setq submap m
-			key kk)))))
-      (when (and (symbolp submap) (boundp submap))
-	(setq submap (eval submap)))
-      (unless (image-mask-p image)
-	(setq image (append image '(:mask heuristic))))
-      (let ((defn (assq key (cdr submap))))
-	(if (eq (cadr defn) 'menu-item)
-	    (define-key-after in-map (vector key)
-	      (append (cdr defn) (list :image image) props))
-	  (setq defn (cdr defn))
-	  (define-key-after in-map (vector key)
-	    (let ((rest (cdr defn)))
-	      ;; If the rest of the definition starts
-	      ;; with a list of menu cache info, get rid of that.
-	      (if (and (consp rest) (consp (car rest)))
-		  (setq rest (cdr rest)))
-	      (append `(menu-item ,(car defn) ,rest)
-		      (list :image image) props))))))))
+    ;; We'll pick up the last valid entry in the list of keys if
+    ;; there's more than one.
+    (dolist (k keys)
+      ;; We're looking for a binding of the command in a submap of
+      ;; the menu bar map, so the key sequence must be two or more
+      ;; long.
+      (if (and (vectorp k)
+               (> (length k) 1))
+          (let ((m (lookup-key menu-bar-map (substring k 0 -1)))
+                ;; Last element in the bound key sequence:
+                (kk (aref k (1- (length k)))))
+            (if (and (keymapp m)
+                     (symbolp kk))
+                (setq submap m
+                      key kk)))))
+    (when (and (symbolp submap) (boundp submap))
+      (setq submap (eval submap)))
+    (let ((defn (assq key (cdr submap))))
+      (if (eq (cadr defn) 'menu-item)
+          (define-key-after in-map (vector key)
+            (append (cdr defn) (list :image image-exp) props))
+        (setq defn (cdr defn))
+        (define-key-after in-map (vector key)
+          (let ((rest (cdr defn)))
+            ;; If the rest of the definition starts
+            ;; with a list of menu cache info, get rid of that.
+            (if (and (consp rest) (consp (car rest)))
+                (setq rest (cdr rest)))
+            (append `(menu-item ,(car defn) ,rest)
+                    (list :image image-exp) props)))))))
 
 ;;; Set up some global items.  Additions/deletions up for grabs.
 
@@ -280,10 +315,9 @@ holds a keymap."
 				(interactive)
 				(popup-menu menu-bar-help-menu))
 		       'help
-		       :help "Pop up the Help menu"))
-  )
+		       :help "Pop up the Help menu")))
+
 
 (provide 'tool-bar)
-
-;;; arch-tag: 15f30f0a-d0d7-4d50-bbb7-f48fd0c8582f
+;; arch-tag: 15f30f0a-d0d7-4d50-bbb7-f48fd0c8582f
 ;;; tool-bar.el ends here

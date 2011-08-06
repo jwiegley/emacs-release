@@ -1,7 +1,7 @@
 ;;; gnus-uu.el --- extract (uu)encoded files in Gnus
 
 ;; Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Created: 2 Oct 1993
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -35,6 +33,7 @@
 (require 'message)
 (require 'gnus-msg)
 (require 'mm-decode)
+(require 'yenc)
 
 (defgroup gnus-extract nil
   "Extracting encoded files."
@@ -346,6 +345,7 @@ didn't work, and overwrite existing files.  Otherwise, ask each time."
 (defvar gnus-uu-file-name nil)
 (defvar gnus-uu-uudecode-process nil)
 (defvar gnus-uu-binhex-article-name nil)
+(defvar gnus-uu-yenc-article-name nil)
 
 (defvar gnus-uu-work-dir nil)
 
@@ -411,6 +411,17 @@ didn't work, and overwrite existing files.  Otherwise, ask each time."
   (setq gnus-uu-binhex-article-name
 	(mm-make-temp-file (expand-file-name "binhex" gnus-uu-work-dir)))
   (gnus-uu-decode-with-method 'gnus-uu-binhex-article n dir))
+
+(defun gnus-uu-decode-yenc (n dir)
+  "Decode the yEnc-encoded current article."
+  (interactive
+   (list current-prefix-arg
+	 (file-name-as-directory
+	  (read-file-name "yEnc decode and save in dir: "
+			  gnus-uu-default-dir
+			  gnus-uu-default-dir))))
+  (setq gnus-uu-yenc-article-name nil)
+  (gnus-uu-decode-with-method 'gnus-uu-yenc-article n dir nil t))
 
 (defun gnus-uu-decode-uu-view (&optional n)
   "Uudecodes and views the current article."
@@ -482,11 +493,24 @@ didn't work, and overwrite existing files.  Otherwise, ask each time."
 	(setq message-forward-as-mime (not message-forward-as-mime)
 	      n nil))
     (let ((gnus-article-reply (gnus-summary-work-articles n)))
+      (when (and (not n)
+		 (= (length gnus-article-reply) 1))
+	;; The case where neither a number of articles nor a region is
+	;; specified.
+	(gnus-summary-top-thread)
+	(setq gnus-article-reply (nreverse (gnus-uu-find-articles-matching))))
       (gnus-setup-message 'forward
 	(setq gnus-uu-digest-from-subject nil)
 	(setq gnus-uu-digest-buffer
 	      (gnus-get-buffer-create " *gnus-uu-forward*"))
-	(gnus-uu-decode-save n file)
+	;; Specify articles to be forwarded.  Note that they should be
+	;; reversed; see `gnus-uu-get-list-of-articles'.
+	(let ((gnus-newsgroup-processable (reverse gnus-article-reply)))
+	  (gnus-uu-decode-save n file)
+	  (setq gnus-article-reply gnus-newsgroup-processable))
+	;; Restore the value of `gnus-newsgroup-processable' to which
+	;; it should be set when it is not `let'-bound.
+	(setq gnus-newsgroup-processable (reverse gnus-article-reply))
 	(switch-to-buffer gnus-uu-digest-buffer)
 	(let ((fs gnus-uu-digest-from-subject))
 	  (when fs
@@ -511,11 +535,11 @@ didn't work, and overwrite existing files.  Otherwise, ask each time."
 		    "Various"))))
 	(goto-char (point-min))
 	(when (re-search-forward "^Subject: ")
-	  (delete-region (point) (gnus-point-at-eol))
+	  (delete-region (point) (point-at-eol))
 	  (insert subject))
 	(goto-char (point-min))
 	(when (re-search-forward "^From:")
-	  (delete-region (point) (gnus-point-at-eol))
+	  (delete-region (point) (point-at-eol))
 	  (insert " " from))
 	(let ((message-forward-decoded-p t))
 	  (message-forward post t))))
@@ -530,19 +554,19 @@ didn't work, and overwrite existing files.  Otherwise, ask each time."
 
 (defun gnus-message-process-mark (unmarkp new-marked)
   (let ((old (- (length gnus-newsgroup-processable) (length new-marked))))
-    (message "%d mark%s %s%s"
-	     (length new-marked)
-	     (if (= (length new-marked) 1) "" "s")
-	     (if unmarkp "removed" "added")
-	     (cond
-	      ((and (zerop old)
-		    (not unmarkp))
-	       "")
-	      (unmarkp
-	       (format ", %d remain marked"
-		       (length gnus-newsgroup-processable)))
-	      (t
-	       (format ", %d already marked" old))))))
+    (gnus-message 6 "%d mark%s %s%s"
+		  (length new-marked)
+		  (if (= (length new-marked) 1) "" "s")
+		  (if unmarkp "removed" "added")
+		  (cond
+		   ((and (zerop old)
+			 (not unmarkp))
+		    "")
+		   (unmarkp
+		    (format ", %d remain marked"
+			    (length gnus-newsgroup-processable)))
+		   (t
+		    (format ", %d already marked" old))))))
 
 (defun gnus-new-processable (unmarkp articles)
   (if unmarkp
@@ -570,16 +594,18 @@ When called interactively, prompt for REGEXP."
   (interactive "sUnmark (regexp): ")
   (gnus-uu-mark-by-regexp regexp t))
 
-(defun gnus-uu-mark-series ()
+(defun gnus-uu-mark-series (&optional silent)
   "Mark the current series with the process mark."
   (interactive)
   (let* ((articles (gnus-uu-find-articles-matching))
-         (l (length articles)))
+	 (l (length articles)))
     (while articles
       (gnus-summary-set-process-mark (car articles))
       (setq articles (cdr articles)))
-    (message "Marked %d articles" l))
-  (gnus-summary-position-point))
+    (unless silent
+      (gnus-message 6 "Marked %d articles" l))
+    (gnus-summary-position-point)
+    l))
 
 (defun gnus-uu-mark-region (beg end &optional unmark)
   "Set the process mark on all articles between point and mark."
@@ -687,14 +713,16 @@ When called interactively, prompt for REGEXP."
   (setq gnus-newsgroup-processable nil)
   (save-excursion
     (let ((data gnus-newsgroup-data)
+	  (count 0)
 	  number)
       (while data
 	(when (and (not (memq (setq number (gnus-data-number (car data)))
 			      gnus-newsgroup-processable))
 		   (vectorp (gnus-data-header (car data))))
 	  (gnus-summary-goto-subject number)
-	  (gnus-uu-mark-series))
-	(setq data (cdr data)))))
+	  (setq count (+ count (gnus-uu-mark-series t))))
+	(setq data (cdr data)))
+      (gnus-message 6 "Marked %d articles" count)))
   (gnus-summary-position-point))
 
 ;; All PostScript functions written by Erik Selberg <speed@cs.washington.edu>.
@@ -852,7 +880,7 @@ When called interactively, prompt for REGEXP."
 	  (save-restriction
 	    (set-buffer buffer)
 	    (let (buffer-read-only)
-	      (gnus-set-text-properties (point-min) (point-max) nil)
+	      (set-text-properties (point-min) (point-max) nil)
 	      ;; These two are necessary for XEmacs 19.12 fascism.
 	      (put-text-property (point-min) (point-max) 'invisible nil)
 	      (put-text-property (point-min) (point-max) 'intangible nil))
@@ -862,7 +890,7 @@ When called interactively, prompt for REGEXP."
 	      (mm-enable-multibyte)
 	      (mime-to-mml))
 	    (goto-char (point-min))
-	    (re-search-forward "\n\n")
+	    (search-forward "\n\n")
 	    (unless (and message-forward-as-mime gnus-uu-digest-buffer)
 	      ;; Quote all 30-dash lines.
 	      (save-excursion
@@ -999,6 +1027,39 @@ When called interactively, prompt for REGEXP."
 	(cons gnus-uu-binhex-article-name state)
       state)))
 
+;; yEnc
+
+(defun gnus-uu-yenc-article (buffer in-state)
+  (save-excursion
+    (set-buffer gnus-original-article-buffer)
+    (widen)
+    (let ((file-name (yenc-extract-filename))
+	  state start-char)
+      (when (not file-name)
+	(setq state (list 'wrong-type)))
+
+      (if (memq 'wrong-type state)
+	  ()
+	(when (yenc-first-part-p)
+	  (setq gnus-uu-yenc-article-name
+		(expand-file-name file-name gnus-uu-work-dir))
+	  (push 'begin state))
+	(when (yenc-last-part-p)
+	  (push 'end state))
+	(unless state
+	  (push 'middle state))
+	(mm-with-unibyte-buffer
+	  (insert-buffer-substring gnus-original-article-buffer)
+	  (yenc-decode-region (point-min) (point-max))
+	  (when (and (member 'begin state)
+		     (file-exists-p gnus-uu-yenc-article-name))
+	    (delete-file gnus-uu-yenc-article-name))
+	  (mm-append-to-file (point-min) (point-max)
+			     gnus-uu-yenc-article-name)))
+      (if (memq 'begin state)
+	  (cons file-name state)
+	state))))
+
 ;; PostScript
 
 (defun gnus-uu-decode-postscript-article (process-buffer in-state)
@@ -1089,7 +1150,7 @@ When called interactively, prompt for REGEXP."
 				nil t)
 	    (replace-match "\\1[0-9]+\\2[0-9]+" t nil nil nil))))
 
-    (goto-char 1)
+    (goto-char (point-min))
     (while (re-search-forward "[ \t]+" nil t)
       (replace-match "[ \t]+" t t))
 
@@ -1153,7 +1214,7 @@ When called interactively, prompt for REGEXP."
 
 	;; Expand numbers, sort, and return the list of article
 	;; numbers.
-	(mapcar (lambda (sub) (cdr sub))
+	(mapcar 'cdr
 		(sort (gnus-uu-expand-numbers
 		       list-of-subjects
 		       (not do-not-translate))
@@ -1190,7 +1251,7 @@ When called interactively, prompt for REGEXP."
 	     (format "%06d"
 		     (string-to-number (buffer-substring
 				     (match-beginning 0) (match-end 0)))))))
-	(setq string (buffer-substring 1 (point-max)))
+	(setq string (buffer-substring (point-min) (point-max)))
 	(setcar (car string-list) string)
 	(setq string-list (cdr string-list))))
     out-list))
@@ -1406,7 +1467,7 @@ When called interactively, prompt for REGEXP."
 	  (setq part (match-string 0 subject))
 	  (setq subject (substring subject (match-end 0)))))
     (or part
-	(while (string-match "\\([0-9]+\\)[^0-9]+\\([0-9]+\\)" subject)
+	(while (string-match "[0-9]+[^0-9]+[0-9]+" subject)
 	  (setq part (match-string 0 subject))
 	  (setq subject (substring subject (match-end 0)))))
     (or part "")))
@@ -1708,8 +1769,7 @@ Gnus might fail to display all of it.")
 (defun gnus-uu-check-correct-stripped-uucode (start end)
   (save-excursion
     (let (found beg length)
-      (if (not gnus-uu-correct-stripped-uucode)
-	  ()
+      (unless gnus-uu-correct-stripped-uucode
 	(goto-char start)
 
 	(if (re-search-forward " \\|`" end t)
@@ -1722,19 +1782,15 @@ Gnus might fail to display all of it.")
 		  (forward-line 1))))
 
 	  (while (not (eobp))
-	    (if (looking-at (concat gnus-uu-begin-string "\\|"
-				    gnus-uu-end-string))
-		()
+	    (unless (looking-at (concat gnus-uu-begin-string "\\|"
+					gnus-uu-end-string))
 	      (when (not found)
-		(beginning-of-line)
-		(setq beg (point))
-		(end-of-line)
-		(setq length (- (point) beg)))
+		(setq length (- (point-at-eol) (point-at-bol))))
 	      (setq found t)
 	      (beginning-of-line)
 	      (setq beg (point))
 	      (end-of-line)
-	      (when (not (= length (- (point) beg)))
+	      (unless (= length (- (point) beg))
 		(insert (make-string (- length (- (point) beg)) ? ))))
 	    (forward-line 1)))))))
 
@@ -1759,7 +1815,7 @@ Gnus might fail to display all of it.")
 
       (setq gnus-uu-work-dir
 	    (mm-make-temp-file (concat gnus-uu-tmp-dir "gnus") 'dir))
-      (set-file-modes gnus-uu-work-dir 448)
+      (gnus-set-file-modes gnus-uu-work-dir 448)
       (setq gnus-uu-work-dir (file-name-as-directory gnus-uu-work-dir))
       (push (cons gnus-newsgroup-name gnus-uu-work-dir)
 	    gnus-uu-tmp-alist))))
@@ -1779,7 +1835,7 @@ Gnus might fail to display all of it.")
 ;; that the filename will be treated as a single argument when the shell
 ;; executes the command.
 (defun gnus-uu-command (action file)
-  (let ((quoted-file (mm-quote-arg file)))
+  (let ((quoted-file (shell-quote-argument file)))
     (if (string-match "%s" action)
 	(format action quoted-file)
       (concat action " " quoted-file))))
@@ -1903,7 +1959,7 @@ The user will be asked for a file name."
   (when (gnus-uu-post-encode-file "uuencode" path file-name)
     (goto-char (point-min))
     (forward-line 1)
-    (while (re-search-forward " " nil t)
+    (while (search-forward " " nil t)
       (replace-match "`"))
     t))
 
@@ -2034,8 +2090,7 @@ If no file has been included, the user will be asked for a file."
     (goto-char (point-min))
     (re-search-forward
      (concat "^" (regexp-quote mail-header-separator) "$") nil t)
-    (beginning-of-line)
-    (setq header (buffer-substring (point-min) (point)))
+    (setq header (buffer-substring (point-min) (point-at-bol)))
 
     (goto-char (point-min))
     (when gnus-uu-post-separate-description
@@ -2111,10 +2166,9 @@ If no file has been included, the user will be asked for a file."
 
     (when (not gnus-uu-post-separate-description)
       (set-buffer-modified-p nil)
-      (when (fboundp 'bury-buffer)
-	(bury-buffer)))))
+      (bury-buffer))))
 
 (provide 'gnus-uu)
 
-;;; arch-tag: 05312384-0a83-4720-9a58-b3160b888853
+;; arch-tag: 05312384-0a83-4720-9a58-b3160b888853
 ;;; gnus-uu.el ends here

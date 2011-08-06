@@ -1,17 +1,17 @@
 ;;; fill.el --- fill commands for Emacs		-*- coding: iso-2022-7bit -*-
 
 ;; Copyright (C) 1985, 1986, 1992, 1994, 1995, 1996, 1997, 1999, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: wp
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -36,7 +34,7 @@
   :group 'editing)
 
 (defcustom fill-individual-varying-indent nil
-  "*Controls criterion for a new paragraph in `fill-individual-paragraphs'.
+  "Controls criterion for a new paragraph in `fill-individual-paragraphs'.
 Non-nil means changing indent doesn't end a paragraph.
 That mode can handle paragraphs with extra indentation on the first line,
 but it requires separator lines between paragraphs.
@@ -45,21 +43,24 @@ A value of nil means that any change in indentation starts a new paragraph."
   :group 'fill)
 
 (defcustom colon-double-space nil
-  "*Non-nil means put two spaces after a colon when filling."
+  "Non-nil means put two spaces after a colon when filling."
   :type 'boolean
   :group 'fill)
-;;;###autoload(put 'colon-double-space 'safe-local-variable 'booleanp)
+(put 'colon-double-space 'safe-local-variable 'booleanp)
 
 (defvar fill-paragraph-function nil
   "Mode-specific function to fill a paragraph, or nil if there is none.
 If the function returns nil, then `fill-paragraph' does its normal work.
-A value of t means explicitly \"do nothing special\".")
+A value of t means explicitly \"do nothing special\".
+Note: This only affects `fill-paragraph' and not `fill-region'
+nor `auto-fill-mode', so it is often better to use some other hook,
+such as `fill-forward-paragraph-function'.")
 
 (defvar fill-paragraph-handle-comment t
   "Non-nil means paragraph filling will try to pay attention to comments.")
 
 (defcustom enable-kinsoku t
-  "*Non-nil means enable \"kinsoku\" processing on filling paragraphs.
+  "Non-nil means enable \"kinsoku\" processing on filling paragraphs.
 Kinsoku processing is designed to prevent certain characters from being
 placed at the beginning or end of a line by filling.
 See the documentation of `kinsoku' for more information."
@@ -83,7 +84,7 @@ reinserts the fill prefix in each resulting line."
     (message "fill-prefix cancelled")))
 
 (defcustom adaptive-fill-mode t
-  "*Non-nil means determine a paragraph's fill prefix from its text."
+  "Non-nil means determine a paragraph's fill prefix from its text."
   :type 'boolean
   :group 'fill)
 
@@ -92,7 +93,7 @@ reinserts the fill prefix in each resulting line."
   ;; Added `%' for TeX comments.
   ;; RMS: deleted the code to match `1.' and `(1)'.
   "[ \t]*\\([-!|#%;>*,A7$,1s"s#sC$,2"F(B]+[ \t]*\\)*"
-  "*Regexp to match text at start of line that constitutes indentation.
+  "Regexp to match text at start of line that constitutes indentation.
 If Adaptive Fill mode is enabled, a prefix matching this pattern
 on the first and second lines of a paragraph is used as the
 standard indentation for the whole paragraph.
@@ -104,7 +105,7 @@ a role."
   :group 'fill)
 
 (defcustom adaptive-fill-first-line-regexp "\\`[ \t]*\\'"
-  "*Regexp specifying whether to set fill prefix from a one-line paragraph.
+  "Regexp specifying whether to set fill prefix from a one-line paragraph.
 When a paragraph has just one line, then after `adaptive-fill-regexp'
 finds the prefix at the beginning of the line, if it doesn't
 match this regexp, it is replaced with whitespace.
@@ -344,7 +345,7 @@ be tested.  If it returns t, fill commands do not break the line there."
 Can be customized with the variables `fill-nobreak-predicate'
 and `fill-nobreak-invisible'."
   (or
-   (and fill-nobreak-invisible (line-move-invisible-p (point)))
+   (and fill-nobreak-invisible (invisible-p (point)))
    (unless (bolp)
     (or
      ;; Don't break after a period followed by just one space.
@@ -374,15 +375,29 @@ and `fill-nobreak-invisible'."
 	      (looking-at paragraph-start))))
      (run-hook-with-args-until-success 'fill-nobreak-predicate)))))
 
-;; Put `fill-find-break-point-function' property to charsets which
-;; require special functions to find line breaking point.
-(dolist (pair '((katakana-jisx0201 . kinsoku)
-		(chinese-gb2312 . kinsoku)
-		(japanese-jisx0208 . kinsoku)
-		(japanese-jisx0212 . kinsoku)
-		(chinese-big5-1 . kinsoku)
-		(chinese-big5-2 . kinsoku)))
-  (put-charset-property (car pair) 'fill-find-break-point-function (cdr pair)))
+(defvar fill-find-break-point-function-table (make-char-table nil)
+  "Char-table of special functions to find line breaking point.")
+
+(defvar fill-nospace-between-words-table (make-char-table nil)
+  "Char-table of characters that don't use space between words.")
+
+(progn
+  ;; Register `kinsoku' for scripts HAN, KANA, BOPOMPFO, and CJK-MISS.
+  ;; Also tell that they don't use space between words.
+  (map-char-table
+   #'(lambda (key val)
+       (when (memq val '(han kana bopomofo cjk-misc))
+	 (set-char-table-range fill-find-break-point-function-table
+			       key 'kinsoku)
+	 (set-char-table-range fill-nospace-between-words-table
+			       key t)))
+   char-script-table)
+  ;; Do the same thing also for full width characters and half
+  ;; width kana variants.
+  (set-char-table-range fill-find-break-point-function-table
+			'(#xFF01 . #xFFE6) 'kinsoku)
+  (set-char-table-range fill-nospace-between-words-table
+			'(#xFF01 . #xFFE6) 'kinsoku))
 
 (defun fill-find-break-point (limit)
   "Move point to a proper line breaking position of the current line.
@@ -393,15 +408,9 @@ after or before a non-ASCII character.  If the charset of the
 character has the property `fill-find-break-point-function', this
 function calls the property value as a function with one arg LIMIT.
 If the charset has no such property, do nothing."
-  (let* ((ch (following-char))
-	 (charset (char-charset ch))
-	 func)
-    (if (eq charset 'ascii)
-	(setq ch (preceding-char)
-	      charset (char-charset ch)))
-    (if (charsetp charset)
-	(setq func
-	      (get-charset-property charset 'fill-find-break-point-function)))
+  (let ((func (or
+	       (aref fill-find-break-point-function-table (following-char))
+	       (aref fill-find-break-point-function-table (preceding-char)))))
     (if (and func (fboundp func))
 	(funcall func limit))))
 
@@ -460,14 +469,13 @@ Point is moved to just past the fill prefix on the first line."
   (goto-char from)
   (if enable-multibyte-characters
       ;; Delete unnecessay newlines surrounded by words.  The
-      ;; character category `|' means that we can break a line
-      ;; at the character.  And, charset property
-      ;; `nospace-between-words' tells how to concatenate
-      ;; words.  If the value is non-nil, never put spaces
-      ;; between words, thus delete a newline between them.
-      ;; If the value is nil, delete a newline only when a
-      ;; character preceding a newline has text property
-      ;; `nospace-between-words'.
+      ;; character category `|' means that we can break a line at the
+      ;; character.  And, char-table
+      ;; `fill-nospace-between-words-table' tells how to concatenate
+      ;; words.  If a character has non-nil value in the table, never
+      ;; put spaces between words, thus delete a newline between them.
+      ;; Otherwise, delete a newline only when a character preceding a
+      ;; newline has non-nil value in that table.
       (while (search-forward "\n" to t)
 	(if (get-text-property (match-beginning 0) 'fill-space)
 	    (replace-match (get-text-property (match-beginning 0) 'fill-space))
@@ -475,10 +483,8 @@ Point is moved to just past the fill prefix on the first line."
 		(next (following-char)))
 	    (if (and (or (aref (char-category-set next) ?|)
 			 (aref (char-category-set prev) ?|))
-		     (or (get-charset-property (char-charset prev)
-					       'nospace-between-words)
-			 (get-text-property (1- (match-beginning 0))
-					    'nospace-between-words)))
+		     (or (aref fill-nospace-between-words-table next)
+			 (aref fill-nospace-between-words-table prev)))
 		(delete-char -1))))))
 
   (goto-char from)
@@ -752,10 +758,19 @@ space does not end a sentence, so don't break a line there."
     (narrow-to-region (minibuffer-prompt-end) (point-max))
     (fill-paragraph arg)))
 
-(defun fill-paragraph (arg)
+(defvar fill-forward-paragraph-function 'forward-paragraph
+  "Function to move over paragraphs used by the filling code.
+It is called with a single argument specifying the number of paragraphs to move.
+Just like `forward-paragraph', it should return the number of paragraphs
+left to move.")
+
+(defun fill-forward-paragraph (arg)
+  (funcall fill-forward-paragraph-function arg))
+
+(defun fill-paragraph (&optional justify region)
   "Fill paragraph at or after point.
 
-If ARG is non-nil (interactively, with prefix argument), justify as well.
+If JUSTIFY is non-nil (interactively, with prefix argument), justify as well.
 If `sentence-end-double-space' is non-nil, then period followed by one
 space does not end a sentence, so don't break a line there.
 The variable `fill-column' controls the width for filling.
@@ -763,64 +778,78 @@ The variable `fill-column' controls the width for filling.
 If `fill-paragraph-function' is non-nil, we call it (passing our
 argument to it), and if it returns non-nil, we simply return its value.
 
-If `fill-paragraph-function' is nil, return the `fill-prefix' used for filling."
+If `fill-paragraph-function' is nil, return the `fill-prefix' used for filling.
+
+The REGION argument is non-nil if called interactively; in that
+case, if Transient Mark mode is enabled and the mark is active,
+call `fill-region' to fill each of the paragraphs in the active
+region, instead of just filling the current paragraph."
   (interactive (progn
 		 (barf-if-buffer-read-only)
-		 (list (if current-prefix-arg 'full))))
-  ;; First try fill-paragraph-function.
-  (or (and (not (eq fill-paragraph-function t))
-	   (or fill-paragraph-function
-	       (and (minibufferp (current-buffer))
-		    (= 1 (point-min))))
-	   (let ((function (or fill-paragraph-function
-			       ;; In the minibuffer, don't count the width
-			       ;; of the prompt.
-			       'fill-minibuffer-function))
-		 ;; If fill-paragraph-function is set, it probably takes care
-		 ;; of comments and stuff.  If not, it will have to set
-		 ;; fill-paragraph-handle-comment back to t explicitly or
-		 ;; return nil.
-		 (fill-paragraph-handle-comment nil)
-		 (fill-paragraph-function t))
-	     (funcall function arg)))
-      ;; Then try our syntax-aware filling code.
-      (and fill-paragraph-handle-comment
-	   ;; Our code only handles \n-terminated comments right now.
-	   comment-start (equal comment-end "")
-	   (let ((fill-paragraph-handle-comment nil))
-	     (fill-comment-paragraph arg)))
-      ;; If it all fails, default to the good ol' text paragraph filling.
-      (let ((before (point))
-	    (paragraph-start paragraph-start)
-	    ;; Fill prefix used for filling the paragraph.
-	    fill-pfx)
-	;; Try to prevent code sections and comment sections from being
-	;; filled together.
-	(when (and fill-paragraph-handle-comment comment-start-skip)
-	  (setq paragraph-start
-		(concat paragraph-start "\\|[ \t]*\\(?:"
-			comment-start-skip "\\)")))
-	(save-excursion
-	  ;; To make sure the return value of forward-paragraph is meaningful,
-	  ;; we have to start from the beginning of line, otherwise skipping
-	  ;; past the last few chars of a paragraph-separator would count as
-	  ;; a paragraph (and not skipping any chars at EOB would not count
-	  ;; as a paragraph even if it is).
-	  (move-to-left-margin)
-	  (if (not (zerop (forward-paragraph)))
-	      ;; There's no paragraph at or after point: give up.
-	      (setq fill-pfx "")
-	    (let ((end (point))
-		  (beg (progn (backward-paragraph) (point))))
-	      (goto-char before)
-	      (setq fill-pfx
-		    (if use-hard-newlines
-			;; Can't use fill-region-as-paragraph, since this
-			;; paragraph may still contain hard newlines.  See
-			;; fill-region.
-			(fill-region beg end arg)
-		      (fill-region-as-paragraph beg end arg))))))
-	fill-pfx)))
+		 (list (if current-prefix-arg 'full) t)))
+  (or
+   ;; 1. Fill the region if it is active when called interactively.
+   (and region transient-mark-mode mark-active
+	(not (eq (region-beginning) (region-end)))
+	(or (fill-region (region-beginning) (region-end) justify) t))
+   ;; 2. Try fill-paragraph-function.
+   (and (not (eq fill-paragraph-function t))
+        (or fill-paragraph-function
+            (and (minibufferp (current-buffer))
+                 (= 1 (point-min))))
+        (let ((function (or fill-paragraph-function
+                            ;; In the minibuffer, don't count the width
+                            ;; of the prompt.
+                            'fill-minibuffer-function))
+              ;; If fill-paragraph-function is set, it probably takes care
+              ;; of comments and stuff.  If not, it will have to set
+              ;; fill-paragraph-handle-comment back to t explicitly or
+              ;; return nil.
+              (fill-paragraph-handle-comment nil)
+              (fill-paragraph-function t))
+          (funcall function justify)))
+   ;; 3. Try our syntax-aware filling code.
+   (and fill-paragraph-handle-comment
+        ;; Our code only handles \n-terminated comments right now.
+        comment-start (equal comment-end "")
+        (let ((fill-paragraph-handle-comment nil))
+          (fill-comment-paragraph justify)))
+   ;; 4. If it all fails, default to the good ol' text paragraph filling.
+   (let ((before (point))
+         (paragraph-start paragraph-start)
+         ;; Fill prefix used for filling the paragraph.
+         fill-pfx)
+     ;; Try to prevent code sections and comment sections from being
+     ;; filled together.
+     (when (and fill-paragraph-handle-comment comment-start-skip)
+       (setq paragraph-start
+             (concat paragraph-start "\\|[ \t]*\\(?:"
+                     comment-start-skip "\\)")))
+     (save-excursion
+       ;; To make sure the return value of forward-paragraph is meaningful,
+       ;; we have to start from the beginning of line, otherwise skipping
+       ;; past the last few chars of a paragraph-separator would count as
+       ;; a paragraph (and not skipping any chars at EOB would not count
+       ;; as a paragraph even if it is).
+       (move-to-left-margin)
+       (if (not (zerop (fill-forward-paragraph 1)))
+           ;; There's no paragraph at or after point: give up.
+           (setq fill-pfx "")
+         (let ((end (point))
+               (beg (progn (fill-forward-paragraph -1) (point))))
+           (goto-char before)
+           (setq fill-pfx
+                 (if use-hard-newlines
+                     ;; Can't use fill-region-as-paragraph, since this
+                     ;; paragraph may still contain hard newlines.  See
+                     ;; fill-region.
+                     (fill-region beg end justify)
+                   (fill-region-as-paragraph beg end justify))))))
+     fill-pfx)))
+
+(declare-function comment-search-forward "newcomment" (limit &optional noerror))
+(declare-function comment-string-strip "newcomment" (str beforep afterp))
+
 
 (defun fill-comment-paragraph (&optional justify)
   "Fill current comment.
@@ -984,7 +1013,7 @@ space does not end a sentence, so don't break a line there."
     (goto-char (max from to))
     (when to-eop
       (skip-chars-backward "\n")
-      (forward-paragraph))
+      (fill-forward-paragraph 1))
     (setq max (copy-marker (point) t))
     (goto-char (setq beg (min from to)))
     (beginning-of-line)
@@ -1002,9 +1031,9 @@ space does not end a sentence, so don't break a line there."
 		(goto-char (1+ end)))
 	      (setq end (if end (min max (1+ end)) max))
 	      (goto-char initial))
-	  (forward-paragraph 1)
+	  (fill-forward-paragraph 1)
 	  (setq end (min max (point)))
-	  (forward-paragraph -1))
+	  (fill-forward-paragraph -1))
 	(if (< (point) beg)
 	    (goto-char beg))
 	(if (>= (point) initial)
@@ -1015,7 +1044,7 @@ space does not end a sentence, so don't break a line there."
 
 
 (defcustom default-justification 'left
-  "*Method of justifying text not otherwise specified.
+  "Method of justifying text not otherwise specified.
 Possible values are `left', `right', `full', `center', or `none'.
 The requested kind of justification is done whenever lines are filled.
 The `justification' text-property can locally override this variable."
@@ -1445,6 +1474,7 @@ Also, if CITATION-REGEXP is non-nil, don't fill header lines."
 	    (fill-region-as-paragraph start (point) justify)
 	    (if (and (bolp) (not had-newline))
 		(delete-char -1))))))))
+
 (defun fill-individual-paragraphs-prefix (citation-regexp)
   (let* ((adaptive-fill-first-line-regexp ".*")
 	 (just-one-line-prefix

@@ -1,6 +1,6 @@
 ;;; thumbs.el --- Thumbnails previewer for images files
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Jean-Philippe Theberge <jphiltheberge@videotron.ca>
 ;; Maintainer: FSF
@@ -8,10 +8,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -67,13 +65,13 @@
   :version "22.1"
   :group 'multimedia)
 
-(defcustom thumbs-thumbsdir "~/.emacs.d/thumbs"
-  "*Directory to store thumbnails."
+(defcustom thumbs-thumbsdir (locate-user-emacs-file "thumbs")
+  "Directory to store thumbnails."
   :type 'directory
   :group 'thumbs)
 
 (defcustom thumbs-geometry "100x100"
-  "*Size of thumbnails."
+  "Size of thumbnails."
   :type 'string
   :group 'thumbs)
 
@@ -93,12 +91,16 @@ When it reaches that size (in bytes), a warning is sent."
   :type 'integer
   :group 'thumbs)
 
+;; Unfortunately Windows XP has a program called CONVERT.EXE in
+;; C:/WINDOWS/SYSTEM32/ for partioning NTFS system.  So Emacs
+;; can find the one in your ImageMagick directory, you need to
+;; customize this value to the absolute filename.
 (defcustom thumbs-conversion-program
   (if (eq system-type 'windows-nt)
       "convert.exe"
     (or (executable-find "convert")
 	"/usr/X11R6/bin/convert"))
-  "*Name of conversion program for thumbnails generation.
+  "Name of conversion program for thumbnails generation.
 It must be 'convert'."
   :type 'string
   :group 'thumbs)
@@ -110,12 +112,12 @@ It must be 'convert'."
   :group 'thumbs)
 
 (defcustom thumbs-relief 5
-  "*Size of button-like border around thumbnails."
+  "Size of button-like border around thumbnails."
   :type 'integer
   :group 'thumbs)
 
 (defcustom thumbs-margin 2
-  "*Size of the margin around thumbnails.
+  "Size of the margin around thumbnails.
 This is where you see the cursor."
   :type 'integer
   :group 'thumbs)
@@ -248,15 +250,12 @@ ARG any arguments to the ACTION command,
 OUTPUT-FORMAT is the file format to output (default is jpeg),
 ACTION-PREFIX is the symbol to place before the ACTION command
               (defaults to '-' but can sometimes be '+')."
-  (let ((command (format "%s %s%s %s \"%s\" \"%s:%s\""
-			 thumbs-conversion-program
-			 (or action-prefix "-")
-			 action
-			 (or arg "")
-			 filein
-			 (or output-format "jpeg")
-			 fileout)))
-    (call-process shell-file-name nil nil nil shell-command-switch command)))
+  (call-process thumbs-conversion-program nil nil nil
+		(or action-prefix "-")
+		action
+		(or arg "")
+		filein
+		(format "%s:%s"	(or output-format "jpeg") fileout)))
 
 (defun thumbs-new-image-size (s increment)
   "New image (a cons of width x height)."
@@ -334,6 +333,8 @@ smaller according to whether INCREMENT is 1 or -1."
 	((string-match ".*\\.bmp\\'" img) 'bmp)
 	((string-match ".*\\.png\\'" img) 'png)
 	((string-match ".*\\.tiff?\\'" img) 'tiff)))
+
+(declare-function image-size "image.c" (spec &optional pixels frame))
 
 (defun thumbs-file-size (img)
   (let ((i (image-size

@@ -1,16 +1,16 @@
 ;;; erc-networks.el --- IRC networks
 
-;; Copyright (C) 2002, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Mario Lang <mlang@lexx.delysid.org>
 ;; Keywords: comm
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -28,9 +26,7 @@
 ;;
 ;; Usage:
 ;;
-;; Put into your .emacs:
-;;
-;; (require 'erc-networks)
+;; This is the "networks" module.
 ;;
 ;; M-x erc-server-select provides an alternative way to connect to servers by
 ;; choosing networks.
@@ -351,6 +347,7 @@
   ("Relicnet: Random server" Relicnet "irc.relic.net" 6667)
   ("Rezosup: Random server" Rezosup "irc.rezosup.org" 6667)
   ("Risanet: Random server" Risanet "irc.risanet.com" ((6667 6669)))
+  ("Rizon: Random server" Rizon "irc.rizon.net" (6633 (6660 6669) 6697 7000 8080 9999))
   ("Rubiks: Random server" Rubiks "irc.rubiks.net" 6667)
   ("Rusnet: EU, RU, Tomsk" Rusnet "irc.tsk.ru" ((6667 6669) (7770 7775) ))
   ("Rusnet: EU, RU, Vladivostok" Rusnet "irc.vladivostok.ru" ((6667 6669) (7770 7775) ))
@@ -765,9 +762,14 @@ network as a symbol."
   (setq erc-network nil)
   nil)
 
-(add-hook 'erc-server-375-functions 'erc-set-network-name)
-(add-hook 'erc-server-422-functions 'erc-set-network-name)
-(add-hook 'erc-disconnected-hook 'erc-unset-network-name)
+(define-erc-module networks nil
+  "Provide data about IRC networks."
+  ((add-hook 'erc-server-375-functions 'erc-set-network-name)
+   (add-hook 'erc-server-422-functions 'erc-set-network-name)
+   (add-hook 'erc-disconnected-hook 'erc-unset-network-name))
+  ((remove-hook 'erc-server-375-functions 'erc-set-network-name)
+   (remove-hook 'erc-server-422-functions 'erc-set-network-name)
+   (remove-hook 'erc-disconnected-hook 'erc-unset-network-name)))
 
 (defun erc-ports-list (ports)
   "Return a list of PORTS.

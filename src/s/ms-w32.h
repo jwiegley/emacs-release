@@ -1,13 +1,13 @@
 /* System description file for Windows NT.
-   Copyright (C) 1993, 1994, 1995, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+   Copyright (C) 1993, 1994, 1995, 2001, 2002, 2003, 2004, 2005, 2006,
+                 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,25 +15,13 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /*
  *      Define symbols to identify the version of Unix this is.
  *      Define all the symbols that apply correctly.
  */
 
-/* #define UNIPLUS */
-/* #define USG5 */
-/* #define USG */
-/* #define HPUX */
-/* #define UMAX */
-/* #define BSD4_1 */
-/* #define BSD4_2 */
-/* #define BSD4_3 */
-/* #define BSD_SYSTEM */
-/* #define VMS */
 #ifndef WINDOWSNT
 #define WINDOWSNT
 #endif
@@ -58,54 +46,10 @@ Boston, MA 02110-1301, USA.  */
 
 #define NO_MATHERR 1
 
-/* NOMULTIPLEJOBS should be defined if your system's shell
- does not have "job control" (the ability to stop a program,
- run some other program, then continue the first one).  */
-
-/* #define NOMULTIPLEJOBS 1 */
-
-/* Emacs can read input using SIGIO and buffering characters itself,
-   or using CBREAK mode and making C-g cause SIGINT.
-   The choice is controlled by the variable interrupt_input.
-
-   Define INTERRUPT_INPUT to make interrupt_input = 1 the default (use SIGIO)
-
-   Emacs uses the presence or absence of the SIGIO macro to indicate
-   whether or not signal-driven I/O is possible.  It uses
-   INTERRUPT_INPUT to decide whether to use it by default.
-
-   SIGIO can be used only on systems that implement it (4.2 and 4.3).
-   CBREAK mode has two disadvantages
-     1) At least in 4.2, it is impossible to handle the Meta key properly.
-	I hear that in system V this problem does not exist.
-     2) Control-G causes output to be discarded.
-	I do not know whether this can be fixed in system V.
-
-   Another method of doing input is planned but not implemented.
-   It would have Emacs fork off a separate process
-   to read the input and send it to the true Emacs process
-   through a pipe. */
-
-/* #define INTERRUPT_INPUT 1 */
-
 /* Letter to use in finding device name of first pty,
   if system supports pty's.  'a' means it is /dev/ptya0  */
 
 #define FIRST_PTY_LETTER 'a'
-
-/*
- *      Define HAVE_TERMIOS if the system provides POSIX-style
- *      functions and macros for terminal control.
- *
- *      Define HAVE_TERMIO if the system provides sysV-style ioctls
- *      for terminal control.
- *
- *      Do not define both.  HAVE_TERMIOS is preferred, if it is
- *      supported on your system.
- */
-
-/* #define HAVE_TERMIOS 1 */
-/* #define HAVE_TERMIO 1 */
 
 /*
  *      Define HAVE_TIMEVAL if the system supports the BSD style clock values.
@@ -113,25 +57,6 @@ Boston, MA 02110-1301, USA.  */
  */
 
 #define HAVE_TIMEVAL 1
-
-/*
- *      Define HAVE_SELECT if the system supports the `select' system call.
- */
-
-/* #define HAVE_SELECT 1 */
-
-/*
- *      Define HAVE_PTYS if the system supports pty devices.
- */
-
-/* #define HAVE_PTYS 1 */
-
-/*
- *      Define NONSYSTEM_DIR_LIBRARY to make Emacs emulate
- *      The 4.2 opendir, etc., library functions.
- */
-
-/* #define NONSYSTEM_DIR_LIBRARY */
 
 /* NT supports Winsock which is close enough (with some hacks) */
 
@@ -159,14 +84,6 @@ Boston, MA 02110-1301, USA.  */
 #define BCOPY_UPWARD_SAFE 1
 #define BCOPY_DOWNWARD_SAFE 1
 
-/* subprocesses should be defined if you want to
-   have code for asynchronous subprocesses
-   (as used in M-x compile and M-x shell).
-   This is generally OS dependent, and not supported
-   under most USG systems. */
-
-#define subprocesses 1
-
 /* If your system uses COFF (Common Object File Format) then define the
    preprocessor symbol "COFF". */
 
@@ -180,21 +97,6 @@ Boston, MA 02110-1301, USA.  */
 /* #define MAIL_USE_FLOCK */
 #define MAIL_USE_POP 1
 #define MAIL_USE_SYSTEM_LOCK 1
-
-/* Define CLASH_DETECTION if you want lock files to be written
-   so that Emacs can tell instantly when you try to modify
-   a file that someone else has modified in his Emacs.  */
-
-/* #define CLASH_DETECTION 1 */
-
-/* Define this if your operating system declares signal handlers to
-   have a type other than the usual.  `The usual' is `void' for ANSI C
-   systems (i.e. when the __STDC__ macro is defined), and `int' for
-   pre-ANSI systems.  If you're using GCC on an older system, __STDC__
-   will be defined, but the system's include files will still say that
-   signal returns int or whatever; in situations like that, define
-   this to be what the system's include files want.  */
-/* #define SIGTYPE int */
 
 /* If the character used to separate elements of the executable path
    is not ':', #define this to be the appropriate character constant.  */
@@ -241,6 +143,7 @@ Boston, MA 02110-1301, USA.  */
 #undef  HAVE_TERMIOS_H
 #define HAVE_LIMITS_H 1
 #define HAVE_STRING_H 1
+#define HAVE_STDLIB_H 1
 #define HAVE_PWD_H 1
 #define STDC_HEADERS 1
 #define TIME_WITH_SYS_TIME 1
@@ -291,6 +194,7 @@ Boston, MA 02110-1301, USA.  */
 #define HAVE_INET_SOCKETS 1
 
 #undef  HAVE_AIX_SMT_EXP
+#define USE_TOOLKIT_SCROLL_BARS 1
 
 /* Define if you have the ANSI `strerror' function.
    Otherwise you must have the variable `char *sys_errlist[]'.  */
@@ -304,7 +208,6 @@ Boston, MA 02110-1301, USA.  */
 
 #ifdef HAVE_NTGUI
 #define HAVE_WINDOW_SYSTEM 1
-#define HAVE_FACES 1
 #define HAVE_MENUS 1
 #endif
 
@@ -362,17 +265,12 @@ Boston, MA 02110-1301, USA.  */
 /* map to MSVC names */
 #define execlp    _execlp
 #define execvp    _execvp
-#define fcloseall _fcloseall
 #define fdopen	  _fdopen
-#define fgetchar  _fgetchar
 #ifndef fileno
 #define fileno	  _fileno
 #endif
-#define flushall  _flushall
-#define fputchar  _fputchar
 #define fsync	  _commit
 #define ftruncate _chsize
-#define getw	  _getw
 #define getpid    _getpid
 #ifdef _MSC_VER
 typedef int pid_t;
@@ -383,7 +281,6 @@ typedef int pid_t;
 #define lseek     _lseek
 #define popen     _popen
 #define pclose    _pclose
-#define putw	  _putw
 #define umask	  _umask
 #define utimbuf	  _utimbuf
 #define index     strchr
@@ -397,10 +294,6 @@ typedef int pid_t;
 #if !defined (_MSC_VER) || (_MSC_VER < 1400)
 #define tzname    _tzname
 #define utime	  _utime
-#endif
-
-#ifdef HAVE_NTGUI
-#define abort	w32_abort
 #endif
 
 /* this is hacky, but is necessary to avoid warnings about macro
@@ -477,10 +370,8 @@ extern char *get_emacs_configuration_options (void);
 #endif
 #include <string.h>
 
-/* We need a little extra space, see ../../lisp/loadup.el.
-   The number below comes from 23923 bytes worth (as of 2006-04)
-   of w32-specific files loaded by loadup.el, plus 1K spare.  */
-#define SYSTEM_PURESIZE_EXTRA 25000
+/* We need a little extra space, see ../../lisp/loadup.el.  */
+#define SYSTEM_PURESIZE_EXTRA 50000
 
 /* For unexec to work on Alpha systems, we need to put Emacs'
    initialized data into a separate section from the CRT initialized
@@ -491,9 +382,9 @@ extern char *get_emacs_configuration_options (void);
    into its own section.  VC5 intermingles uninitialized data from the CRT
    between Emacs' static uninitialized data and its public uninitialized
    data.  A separate .bss section for Emacs groups both static and
-   public uninitalized together.
+   public uninitialized together.
 
-   Note that unexnt.c relies on this fact, and must be modified
+   Note that unexw32.c relies on this fact, and must be modified
    accordingly if this section name is changed, or if this pragma is
    removed.  Also, obviously, all files that define initialized data
    must include config.h to pick up this pragma.  */

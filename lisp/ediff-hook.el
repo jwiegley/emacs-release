@@ -1,16 +1,16 @@
 ;;; ediff-hook.el --- setup for Ediff's menus and autoloads
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -45,332 +43,218 @@
 ;; end pacifier
 
 ;; allow menus to be set up without ediff-wind.el being loaded
-;;;###autoload
 (defvar ediff-window-setup-function)
 
-;; This macro is used to avoid compilation warnings.
-;; The macro will expand into the form that is appropriate to the
-;; compiler at hand (emacs or xemacs).
-;; The autoload, below, is useless in Emacs because ediff-hook.el
-;; is dumped with emacs, but it is needed in XEmacs
-;;;###autoload (defmacro ediff-cond-compile-for-xemacs-or-emacs (xemacs-form emacs-form) (if (string-match "XEmacs" emacs-version) xemacs-form emacs-form))
-
-(defmacro ediff-cond-compile-for-xemacs-or-emacs (xemacs-form emacs-form)
-  (if (string-match "XEmacs" emacs-version)
-      xemacs-form emacs-form))
-
 ;; This autoload is useless in Emacs because ediff-hook.el is dumped with
 ;; emacs, but it is needed in XEmacs
 ;;;###autoload
-(ediff-cond-compile-for-xemacs-or-emacs
- ;; xemacs form
- (defun ediff-xemacs-init-menus ()
-   (if (featurep 'menubar)
-       (progn
-	 (add-submenu
-	  '("Tools") ediff-menu "OO-Browser...")
-	 (add-submenu
-	  '("Tools") ediff-merge-menu "OO-Browser...")
-	 (add-submenu
-	  '("Tools") epatch-menu "OO-Browser...")
-	 (add-submenu
-	  '("Tools") ediff-misc-menu "OO-Browser...")
-	 (add-menu-button
-	  '("Tools") "-------" "OO-Browser...")
-	 )))
- nil ; emacs form
- )
+(if (featurep 'xemacs)
+    (progn
+      (defun ediff-xemacs-init-menus ()
+	(when (featurep 'menubar)
+	  (add-submenu
+	   '("Tools") ediff-menu "OO-Browser...")
+	  (add-submenu
+	   '("Tools") ediff-merge-menu "OO-Browser...")
+	  (add-submenu
+	   '("Tools") epatch-menu "OO-Browser...")
+	  (add-submenu
+	   '("Tools") ediff-misc-menu "OO-Browser...")
+	  (add-menu-button
+	   '("Tools") "-------" "OO-Browser...")
+	  ))
+      (defvar ediff-menu
+	'("Compare"
+	  ["Two Files..."  ediff-files t]
+	  ["Two Buffers..." ediff-buffers t]
+	  ["Three Files..."  ediff-files3 t]
+	  ["Three Buffers..." ediff-buffers3 t]
+	  "---"
+	  ["Two Directories..." ediff-directories t]
+	  ["Three Directories..." ediff-directories3 t]
+	  "---"
+	  ["File with Revision..."  ediff-revision t]
+	  ["Directory Revisions..."  ediff-directory-revisions t]
+	  "---"
+	  ["Windows Word-by-word..." ediff-windows-wordwise t]
+	  ["Windows Line-by-line..." ediff-windows-linewise t]
+	  "---"
+	  ["Regions Word-by-word..." ediff-regions-wordwise t]
+	  ["Regions Line-by-line..." ediff-regions-linewise t]
+	  ))
+      (defvar ediff-merge-menu
+	'("Merge"
+	  ["Files..."  ediff-merge-files t]
+	  ["Files with Ancestor..." ediff-merge-files-with-ancestor t]
+	  ["Buffers..."  ediff-merge-buffers t]
+	  ["Buffers with Ancestor..."
+	   ediff-merge-buffers-with-ancestor t]
+	  "---"
+	  ["Directories..."  ediff-merge-directories t]
+	  ["Directories with Ancestor..."
+	   ediff-merge-directories-with-ancestor t]
+	  "---"
+	  ["Revisions..."  ediff-merge-revisions t]
+	  ["Revisions with Ancestor..."
+	   ediff-merge-revisions-with-ancestor t]
+	  ["Directory Revisions..." ediff-merge-directory-revisions t]
+	  ["Directory Revisions with Ancestor..."
+	   ediff-merge-directory-revisions-with-ancestor t]
+	  ))
+      (defvar epatch-menu
+	'("Apply Patch"
+	  ["To a file..."  ediff-patch-file t]
+	  ["To a buffer..." ediff-patch-buffer t]
+	  ))
+      (defvar ediff-misc-menu
+	'("Ediff Miscellanea"
+	  ["Ediff Manual" ediff-documentation t]
+	  ["Customize Ediff" ediff-customize t]
+	  ["List Ediff Sessions" ediff-show-registry t]
+	  ["Use separate frame for Ediff control buffer"
+	   ediff-toggle-multiframe
+	   :style toggle
+	   :selected (if (and (featurep 'ediff-util)
+			      (boundp 'ediff-window-setup-function))
+			 (eq ediff-window-setup-function
+			     'ediff-setup-windows-multiframe))]
+	  ["Use a toolbar with Ediff control buffer"
+	   ediff-toggle-use-toolbar
+	   :style toggle
+	   :selected (if (featurep 'ediff-tbar)
+			 (ediff-use-toolbar-p))]))
+      
+      ;; put these menus before Object-Oriented-Browser in Tools menu
+      (if (and (featurep 'menubar) (not (featurep 'infodock))
+	       (not (featurep 'ediff-hook)))
+	  (ediff-xemacs-init-menus)))
+  ;; Emacs
+  ;; initialize menu bar keymaps
+  (defvar menu-bar-ediff-misc-menu
+    (make-sparse-keymap "Ediff Miscellanea"))
+  (fset 'menu-bar-ediff-misc-menu
+	(symbol-value 'menu-bar-ediff-misc-menu))
+  (defvar menu-bar-epatch-menu (make-sparse-keymap "Apply Patch"))
+  (fset 'menu-bar-epatch-menu (symbol-value 'menu-bar-epatch-menu))
+  (defvar menu-bar-ediff-merge-menu (make-sparse-keymap "Merge"))
+  (fset 'menu-bar-ediff-merge-menu
+	(symbol-value 'menu-bar-ediff-merge-menu))
+  (defvar menu-bar-ediff-menu (make-sparse-keymap "Compare"))
+  (fset 'menu-bar-ediff-menu (symbol-value 'menu-bar-ediff-menu))
+  
+  ;; define ediff compare menu
+  (define-key menu-bar-ediff-menu [window]
+    '(menu-item "This Window and Next Window" compare-windows
+		:help "Compare the current window and the next window"))
+  (define-key menu-bar-ediff-menu [ediff-windows-linewise]
+    '(menu-item "Windows Line-by-line..." ediff-windows-linewise
+		:help "Compare windows line-wise"))
+  (define-key menu-bar-ediff-menu [ediff-windows-wordwise]
+    '(menu-item "Windows Word-by-word..." ediff-windows-wordwise
+		:help "Compare windows word-wise"))
+  (define-key menu-bar-ediff-menu [separator-ediff-windows] '("--"))
+  (define-key menu-bar-ediff-menu [ediff-regions-linewise]
+    '(menu-item "Regions Line-by-line..." ediff-regions-linewise
+		:help "Compare regions line-wise"))
+  (define-key menu-bar-ediff-menu [ediff-regions-wordwise]
+    '(menu-item "Regions Word-by-word..." ediff-regions-wordwise
+		:help "Compare regions word-wise"))
+  (define-key menu-bar-ediff-menu [separator-ediff-regions] '("--"))
+  (define-key menu-bar-ediff-menu [ediff-dir-revision]
+    '(menu-item "Directory Revisions..." ediff-directory-revisions
+		:help "Compare directory files with their older versions"))
+  (define-key menu-bar-ediff-menu [ediff-revision]
+    '(menu-item "File with Revision..." ediff-revision
+		:help "Compare file with its older versions"))
+  (define-key menu-bar-ediff-menu [separator-ediff-directories] '("--"))
+  (define-key menu-bar-ediff-menu [ediff-directories3]
+    '(menu-item "Three Directories..." ediff-directories3
+		:help "Compare files common to three directories simultaneously"))
+  (define-key menu-bar-ediff-menu [ediff-directories]
+    '(menu-item "Two Directories..." ediff-directories
+		:help "Compare files common to two directories simultaneously"))
+  (define-key menu-bar-ediff-menu [separator-ediff-files] '("--"))
+  (define-key menu-bar-ediff-menu [ediff-buffers3]
+    '(menu-item "Three Buffers..." ediff-buffers3
+		:help "Compare three buffers simultaneously"))
+  (define-key menu-bar-ediff-menu [ediff-files3]
+    '(menu-item "Three Files..." ediff-files3
+		:help "Compare three files simultaneously"))
+  (define-key menu-bar-ediff-menu [ediff-buffers]
+    '(menu-item "Two Buffers..." ediff-buffers
+		:help "Compare two buffers simultaneously"))
+  (define-key menu-bar-ediff-menu [ediff-files]
+    '(menu-item "Two Files..." ediff-files
+		:help "Compare two files simultaneously"))
 
+  ;; define ediff merge menu
+  (define-key
+    menu-bar-ediff-merge-menu [ediff-merge-dir-revisions-with-ancestor]
+    '(menu-item "Directory Revisions with Ancestor..."
+      ediff-merge-directory-revisions-with-ancestor
+      :help "Merge versions of the files in the same directory by comparing the files with common ancestors"))
+  (define-key
+    menu-bar-ediff-merge-menu [ediff-merge-dir-revisions]
+    '(menu-item "Directory Revisions..." ediff-merge-directory-revisions
+      :help "Merge versions of the files in the same directory (without using ancestor information)"))
+  (define-key
+    menu-bar-ediff-merge-menu [ediff-merge-revisions-with-ancestor]
+    '(menu-item "Revisions with Ancestor..."
+      ediff-merge-revisions-with-ancestor
+      :help "Merge versions of the same file by comparing them with a common ancestor"))
+  (define-key menu-bar-ediff-merge-menu [ediff-merge-revisions]
+    '(menu-item "Revisions..." ediff-merge-revisions
+      :help "Merge versions of the same file (without using ancestor information)"))
+  (define-key menu-bar-ediff-merge-menu [separator-ediff-merge] '("--"))
+  (define-key
+    menu-bar-ediff-merge-menu [ediff-merge-directories-with-ancestor]
+    '(menu-item "Directories with Ancestor..."
+      ediff-merge-directories-with-ancestor
+      :help "Merge files common to a pair of directories by comparing the files with common ancestors"))
+  (define-key menu-bar-ediff-merge-menu [ediff-merge-directories]
+    '(menu-item "Directories..." ediff-merge-directories
+		:help "Merge files common to a pair of directories"))
+  (define-key
+    menu-bar-ediff-merge-menu [separator-ediff-merge-dirs] '("--"))
+  (define-key
+    menu-bar-ediff-merge-menu [ediff-merge-buffers-with-ancestor]
+    '(menu-item "Buffers with Ancestor..." ediff-merge-buffers-with-ancestor
+      :help "Merge buffers by comparing their contents with a common ancestor"))
+  (define-key menu-bar-ediff-merge-menu [ediff-merge-buffers]
+    '(menu-item "Buffers..." ediff-merge-buffers
+      :help "Merge buffers (without using ancestor information)"))
+  (define-key menu-bar-ediff-merge-menu [ediff-merge-files-with-ancestor]
+    '(menu-item "Files with Ancestor..." ediff-merge-files-with-ancestor
+      :help "Merge files by comparing them with a common ancestor"))
+  (define-key menu-bar-ediff-merge-menu [ediff-merge-files]
+    '(menu-item "Files..." ediff-merge-files
+      :help "Merge files (without using ancestor information)"))
 
-;; This autoload is useless in Emacs because ediff-hook.el is dumped with
-;; emacs, but it is needed in XEmacs
-;;;###autoload
-(ediff-cond-compile-for-xemacs-or-emacs
- (progn
-   (defvar ediff-menu
-     '("Compare"
-       ["Two Files..."  ediff-files t]
-       ["Two Buffers..." ediff-buffers t]
-       ["Three Files..."  ediff-files3 t]
-       ["Three Buffers..." ediff-buffers3 t]
-       "---"
-       ["Two Directories..." ediff-directories t]
-       ["Three Directories..." ediff-directories3 t]
-       "---"
-       ["File with Revision..."  ediff-revision t]
-       ["Directory Revisions..."  ediff-directory-revisions t]
-       "---"
-       ["Windows Word-by-word..." ediff-windows-wordwise t]
-       ["Windows Line-by-line..." ediff-windows-linewise t]
-       "---"
-       ["Regions Word-by-word..." ediff-regions-wordwise t]
-       ["Regions Line-by-line..." ediff-regions-linewise t]
-       ))
-   (defvar ediff-merge-menu
-     '("Merge"
-       ["Files..."  ediff-merge-files t]
-       ["Files with Ancestor..." ediff-merge-files-with-ancestor t]
-       ["Buffers..."  ediff-merge-buffers t]
-       ["Buffers with Ancestor..."
-	ediff-merge-buffers-with-ancestor t]
-       "---"
-       ["Directories..."  ediff-merge-directories t]
-       ["Directories with Ancestor..."
-	ediff-merge-directories-with-ancestor t]
-       "---"
-       ["Revisions..."  ediff-merge-revisions t]
-       ["Revisions with Ancestor..."
-	ediff-merge-revisions-with-ancestor t]
-       ["Directory Revisions..." ediff-merge-directory-revisions t]
-       ["Directory Revisions with Ancestor..."
-	ediff-merge-directory-revisions-with-ancestor t]
-       ))
-   (defvar epatch-menu
-     '("Apply Patch"
-       ["To a file..."  ediff-patch-file t]
-       ["To a buffer..." ediff-patch-buffer t]
-       ))
-   (defvar ediff-misc-menu
-     '("Ediff Miscellanea"
-       ["Ediff Manual" ediff-documentation t]
-       ["Customize Ediff" ediff-customize t]
-       ["List Ediff Sessions" ediff-show-registry t]
-       ["Use separate frame for Ediff control buffer"
-	ediff-toggle-multiframe
-	:style toggle
-	:selected (if (and (featurep 'ediff-util)
-			   (boundp 'ediff-window-setup-function))
-		      (eq ediff-window-setup-function
-			  'ediff-setup-windows-multiframe))]
-       ["Use a toolbar with Ediff control buffer"
-	ediff-toggle-use-toolbar
-	:style toggle
-	:selected (if (featurep 'ediff-tbar)
-		      (ediff-use-toolbar-p))]
-       ))
+  ;; define epatch menu
+  (define-key menu-bar-epatch-menu [ediff-patch-buffer]
+    '(menu-item "To a Buffer..." ediff-patch-buffer
+      :help "Apply a patch to the contents of a buffer"))
+  (define-key menu-bar-epatch-menu [ediff-patch-file]
+    '(menu-item "To a File..." ediff-patch-file
+      :help "Apply a patch to a file"))
 
-   ;; put these menus before Object-Oriented-Browser in Tools menu
-   (if (and (featurep 'menubar) (not (featurep 'infodock))
-	    (not (featurep 'ediff-hook)))
-	   (ediff-xemacs-init-menus)))
-
- ;; Emacs--only if menu-bar is loaded
- (if (featurep 'menu-bar)
-     (progn
-       ;; initialize menu bar keymaps
-       (defvar menu-bar-ediff-misc-menu
-	 (make-sparse-keymap "Ediff Miscellanea"))
-       (fset 'menu-bar-ediff-misc-menu
-	     (symbol-value 'menu-bar-ediff-misc-menu))
-       (defvar menu-bar-epatch-menu (make-sparse-keymap "Apply Patch"))
-       (fset 'menu-bar-epatch-menu (symbol-value 'menu-bar-epatch-menu))
-       (defvar menu-bar-ediff-merge-menu (make-sparse-keymap "Merge"))
-       (fset 'menu-bar-ediff-merge-menu
-	     (symbol-value 'menu-bar-ediff-merge-menu))
-       (defvar menu-bar-ediff-menu (make-sparse-keymap "Compare"))
-       (fset 'menu-bar-ediff-menu (symbol-value 'menu-bar-ediff-menu))
-
-       ;; define ediff-menu
-       (define-key menu-bar-ediff-menu [window]
-	 '("This Window and Next Window" . compare-windows))
-       (define-key menu-bar-ediff-menu [ediff-windows-linewise]
-	 '("Windows Line-by-line..." . ediff-windows-linewise))
-       (define-key menu-bar-ediff-menu [ediff-windows-wordwise]
-	 '("Windows Word-by-word..." . ediff-windows-wordwise))
-       (define-key menu-bar-ediff-menu [separator-ediff-windows] '("--"))
-       (define-key menu-bar-ediff-menu [ediff-regions-linewise]
-	 '("Regions Line-by-line..." . ediff-regions-linewise))
-       (define-key menu-bar-ediff-menu [ediff-regions-wordwise]
-	 '("Regions Word-by-word..." . ediff-regions-wordwise))
-       (define-key menu-bar-ediff-menu [separator-ediff-regions] '("--"))
-       (define-key menu-bar-ediff-menu [ediff-dir-revision]
-	 '("Directory Revisions..." . ediff-directory-revisions))
-       (define-key menu-bar-ediff-menu [ediff-revision]
-	 '("File with Revision..." . ediff-revision))
-       (define-key menu-bar-ediff-menu [separator-ediff-directories] '("--"))
-       (define-key menu-bar-ediff-menu [ediff-directories3]
-	 '("Three Directories..." . ediff-directories3))
-       (define-key menu-bar-ediff-menu [ediff-directories]
-	 '("Two Directories..." . ediff-directories))
-       (define-key menu-bar-ediff-menu [separator-ediff-files] '("--"))
-       (define-key menu-bar-ediff-menu [ediff-buffers3]
-	 '("Three Buffers..." . ediff-buffers3))
-       (define-key menu-bar-ediff-menu [ediff-files3]
-	 '("Three Files..." . ediff-files3))
-       (define-key menu-bar-ediff-menu [ediff-buffers]
-	 '("Two Buffers..." . ediff-buffers))
-       (define-key menu-bar-ediff-menu [ediff-files]
-	 '("Two Files..." . ediff-files))
-
-       ;; define merge menu
-       (define-key
-	 menu-bar-ediff-merge-menu [ediff-merge-dir-revisions-with-ancestor]
-	 '("Directory Revisions with Ancestor..."
-	   . ediff-merge-directory-revisions-with-ancestor))
-       (define-key
-	 menu-bar-ediff-merge-menu [ediff-merge-dir-revisions]
-	 '("Directory Revisions..." . ediff-merge-directory-revisions))
-       (define-key
-	 menu-bar-ediff-merge-menu [ediff-merge-revisions-with-ancestor]
-	 '("Revisions with Ancestor..."
-	   . ediff-merge-revisions-with-ancestor))
-       (define-key menu-bar-ediff-merge-menu [ediff-merge-revisions]
-	 '("Revisions..." . ediff-merge-revisions))
-       (define-key menu-bar-ediff-merge-menu [separator-ediff-merge] '("--"))
-       (define-key
-	 menu-bar-ediff-merge-menu [ediff-merge-directories-with-ancestor]
-	 '("Directories with Ancestor..."
-	   . ediff-merge-directories-with-ancestor))
-       (define-key menu-bar-ediff-merge-menu [ediff-merge-directories]
-	 '("Directories..." . ediff-merge-directories))
-       (define-key
-	 menu-bar-ediff-merge-menu [separator-ediff-merge-dirs] '("--"))
-       (define-key
-	 menu-bar-ediff-merge-menu [ediff-merge-buffers-with-ancestor]
-	 '("Buffers with Ancestor..." . ediff-merge-buffers-with-ancestor))
-       (define-key menu-bar-ediff-merge-menu [ediff-merge-buffers]
-	 '("Buffers..." . ediff-merge-buffers))
-       (define-key menu-bar-ediff-merge-menu [ediff-merge-files-with-ancestor]
-	 '("Files with Ancestor..." . ediff-merge-files-with-ancestor))
-       (define-key menu-bar-ediff-merge-menu [ediff-merge-files]
-	 '("Files..." . ediff-merge-files))
-
-       ;; define epatch menu
-       (define-key menu-bar-epatch-menu [ediff-patch-buffer]
-	 '("To a Buffer..." . ediff-patch-buffer))
-       (define-key menu-bar-epatch-menu [ediff-patch-file]
-	 '("To a File..." . ediff-patch-file))
-
-       ;; define ediff miscellanea
-       (define-key menu-bar-ediff-misc-menu [emultiframe]
-	 '("Toggle use of separate control buffer frame"
-	   . ediff-toggle-multiframe))
-       (define-key menu-bar-ediff-misc-menu [eregistry]
-	 '("List Ediff Sessions" . ediff-show-registry))
-       (define-key menu-bar-ediff-misc-menu [ediff-cust]
-	 '("Customize Ediff" . ediff-customize))
-       (define-key menu-bar-ediff-misc-menu [ediff-doc]
-	 '("Ediff Manual" . ediff-documentation))
-       )
-
-      ) ; emacs case
- ) ; ediff-cond-compile-for-xemacs-or-emacs
-
-;; arrange for autoloads
-(if purify-flag
-    () ; if dumping, autoloads are set up in loaddefs.el
-  ;; if the user decides to load this file, set up autoloads
-  ;; compare files and buffers
-  (autoload 'ediff "ediff" "Compare two files." t)
-  (autoload 'ediff-files "ediff" "Compare two files." t)
-  (autoload 'ediff-buffers "ediff" "Compare two buffers." t)
-  (autoload 'ebuffers "ediff" "Compare two buffers." t)
-  (autoload 'ediff3  "ediff"  "Compare three files." t)
-  (autoload 'ediff-files3 "ediff" "Compare three files." t)
-  (autoload 'ediff-buffers3 "ediff" "Compare three buffers." t)
-  (autoload 'ebuffers3 "ediff" "Compare three buffers." t)
-
-  (autoload 'erevision "ediff" "Compare versions of a file." t)
-  (autoload 'ediff-revision "ediff" "Compare versions of a file." t)
-
-  ;; compare regions and windows
-  (autoload 'ediff-windows-wordwise
-    "ediff" "Compare two windows word-by-word." t)
-  (autoload 'ediff-regions-wordwise
-    "ediff" "Compare two regions word-by-word." t)
-  (autoload 'ediff-windows-linewise
-    "ediff" "Compare two windows line-by-line." t)
-  (autoload 'ediff-regions-linewise
-    "ediff" "Compare two regions line-by-line." t)
-
-  ;; patch
-  (autoload 'ediff-patch-file "ediff" "Patch a file." t)
-  (autoload 'epatch "ediff" "Patch a file." t)
-  (autoload 'ediff-patch-buffer "ediff" "Patch a buffer.")
-  (autoload 'epatch-buffer "ediff" "Patch a buffer." t)
-
-  ;; merge
-  (autoload 'ediff-merge "ediff" "Merge two files." t)
-  (autoload 'ediff-merge-files "ediff" "Merge two files." t)
-  (autoload 'ediff-merge-files-with-ancestor
-    "ediff" "Merge two files using a third file as an ancestor." t)
-  (autoload 'ediff-merge-buffers "ediff" "Merge two buffers." t)
-  (autoload 'ediff-merge-buffers-with-ancestor
-    "ediff" "Merge two buffers using a third buffer as an ancestor." t)
-
-  (autoload 'ediff-merge-revisions "ediff" "Merge two versions of a file." t)
-  (autoload 'ediff-merge-revisions-with-ancestor
-    "ediff" "Merge two versions of a file." t)
-
-  ;; compare directories
-  (autoload 'edirs "ediff" "Compare files in two directories." t)
-  (autoload 'ediff-directories "ediff" "Compare files in two directories." t)
-  (autoload 'edirs3 "ediff" "Compare files in three directories." t)
-  (autoload
-    'ediff-directories3 "ediff" "Compare files in three directories." t)
-
-  (autoload 'edir-revisions
-    "ediff" "Compare two versions of a file." t)
-  (autoload 'ediff-directory-revisions
-    "ediff" "Compare two versions of a file." t)
-
-  ;; merge directories
-  (autoload 'edirs-merge "ediff" "Merge files in two directories." t)
-  (autoload 'ediff-merge-directories
-    "ediff" "Merge files in two directories." t)
-  (autoload 'edirs-merge-with-ancestor
-    "ediff"
-    "Merge files in two directories using files in a third dir as ancestors."
-    t)
-  (autoload 'ediff-merge-directories-with-ancestor
-    "ediff"
-    "Merge files in two directories using files in a third dir as ancestors."
-    t)
-
-  (autoload 'edir-merge-revisions
-    "ediff" "Merge versions of files in a directory." t)
-  (autoload 'ediff-merge-directory-revisions
-    "ediff" "Merge versions of files in a directory." t)
-  (autoload 'ediff-merge-directory-revisions-with-ancestor
-    "ediff"
-    "Merge versions of files in a directory using other versions as ancestors."
-    t)
-  (autoload 'edir-merge-revisions-with-ancestor
-    "ediff"
-    "Merge versions of files in a directory using other versions as ancestors."
-    t)
-
-  ;; misc
-  (autoload 'ediff-show-registry
-    "ediff-mult"
-    "Display the registry of active Ediff sessions."
-    t)
-  (autoload 'eregistry
-    "ediff-mult"
-    "Display the registry of active Ediff sessions."
-    t)
-  (autoload 'ediff-documentation
-    "ediff"
-    "Display Ediff's manual."
-    t)
-  (autoload 'ediff-version
-    "ediff"
-    "Show Ediff's version and last modification date."
-    t)
-  (autoload 'ediff-toggle-multiframe
-    "ediff-util"
-    "Toggle the use of separate frame for Ediff control buffer."
-    t)
-  (autoload 'ediff-toggle-use-toolbar
-    "ediff-util"
-    "Toggle the use of Ediff toolbar."
-    t)
-
-  ) ; if purify-flag
-
+  ;; define ediff miscellanea
+  (define-key menu-bar-ediff-misc-menu [emultiframe]
+    '(menu-item "Toggle use of separate control buffer frame"
+      ediff-toggle-multiframe
+      :help "Switch between the single-frame presentation mode and the multi-frame mode"))
+  (define-key menu-bar-ediff-misc-menu [eregistry]
+    '(menu-item "List Ediff Sessions" ediff-show-registry
+		:help "List all active Ediff sessions; it is a convenient way to find and resume such a session"))
+  (define-key menu-bar-ediff-misc-menu [ediff-cust]
+    '(menu-item "Customize Ediff" ediff-customize
+		:help "Change some of the parameters that govern the behavior of Ediff"))
+  (define-key menu-bar-ediff-misc-menu [ediff-doc]
+    '(menu-item "Ediff Manual" ediff-documentation
+		:help "Bring up the Ediff manual")))
 
 (provide 'ediff-hook)
 
 
-;;; arch-tag: 512f8656-8a4b-4789-af5d-5c6144498df3
+;; arch-tag: 512f8656-8a4b-4789-af5d-5c6144498df3
 ;;; ediff-hook.el ends here

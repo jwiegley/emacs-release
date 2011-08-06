@@ -1,7 +1,7 @@
 ;;; zone.el --- idle display hacks
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Victor Zandy <zandy@cs.wisc.edu>
 ;; Maintainer: Thien-Thi Nguyen <ttn@gnu.org>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -74,6 +72,7 @@ If nil, don't interrupt for about 1^26 seconds.")
                        zone-pgm-drip-fretfully
                        zone-pgm-five-oclock-swan-dive
                        zone-pgm-martini-swan-dive
+                       zone-pgm-rat-race
                        zone-pgm-paragraph-spaz
                        zone-pgm-stress
                        zone-pgm-stress-destress
@@ -85,30 +84,10 @@ If nil, don't interrupt for about 1^26 seconds.")
      ,@body))
 
 (defmacro zone-hiding-modeline (&rest body)
-  `(let (bg mode-line-fg mode-line-bg mode-line-box)
-     (unwind-protect
-         (progn
-           (when (and (= 0 (get 'zone 'modeline-hidden-level))
-                      (display-color-p))
-             (setq bg (face-background 'default)
-                   mode-line-box (face-attribute 'mode-line :box)
-                   mode-line-fg (face-attribute 'mode-line :foreground)
-                   mode-line-bg (face-attribute 'mode-line :background))
-             (set-face-attribute 'mode-line nil
-                                 :foreground bg
-                                 :background bg
-                                 :box nil))
-           (put 'zone 'modeline-hidden-level
-                (1+ (get 'zone 'modeline-hidden-level)))
-           ,@body)
-       (put 'zone 'modeline-hidden-level
-            (1- (get 'zone 'modeline-hidden-level)))
-       (when (and (> 1 (get 'zone 'modeline-hidden-level))
-                  mode-line-fg)
-         (set-face-attribute 'mode-line nil
-                             :foreground mode-line-fg
-                             :background mode-line-bg
-                             :box mode-line-box)))))
+  ;; This formerly worked by temporarily altering face `mode-line',
+  ;; which did not even work right, it seems.
+  `(let (mode-line-format)
+     ,@body))
 
 (defun zone-call (program &optional timeout)
   "Call PROGRAM in a zoned way.
@@ -157,6 +136,7 @@ If the element is a function or a list of a function and a number,
       (sit-for 0 500)
       (let ((pgm (elt zone-programs (random (length zone-programs))))
             (ct (and f (frame-parameter f 'cursor-type)))
+            (show-trailing-whitespace nil)
             (restore (list '(kill-buffer outbuf))))
         (when ct
           (modify-frame-parameters f '((cursor-type . (bar . 0))))
@@ -398,20 +378,20 @@ If the element is a function or a list of a function and a number,
   (let* ((specs (apply
                  'vector
                  (let (res)
-                   (mapcar (lambda (ent)
-                             (let* ((beg (car ent))
-                                    (end (cdr ent))
-                                    (amt (if random-style
-                                             (funcall random-style)
-                                           (- (random 7) 3))))
-                               (when (< (- end (abs amt)) beg)
-                                 (setq amt (random (- end beg))))
-                               (unless (= 0 amt)
-                                 (setq res
-                                       (cons
-                                        (vector amt beg (- end (abs amt)))
-                                        res)))))
-                           (zone-line-specs))
+                   (mapc (lambda (ent)
+			   (let* ((beg (car ent))
+				  (end (cdr ent))
+				  (amt (if random-style
+					   (funcall random-style)
+					 (- (random 7) 3))))
+			     (when (< (- end (abs amt)) beg)
+			       (setq amt (random (- end beg))))
+			     (unless (= 0 amt)
+			       (setq res
+				     (cons
+				      (vector amt beg (- end (abs amt)))
+				      res)))))
+			 (zone-line-specs))
                    res)))
          (n (length specs))
          amt aamt cut paste txt i ent)
@@ -507,7 +487,7 @@ If the element is a function or a list of a function and a number,
          (wait 0.15)
          newpos fall-p)
     (while (when (save-excursion
-                   (next-line 1)
+                   (forward-line 1)
                    (and (= col (current-column))
                         (setq newpos (point))
                         (string= spaces (buffer-substring-no-properties
@@ -567,6 +547,17 @@ If the element is a function or a list of a function and a number,
 
 (defun zone-pgm-martini-swan-dive ()
   (zone-pgm-drip t t))
+
+(defun zone-pgm-rat-race ()
+  (while (not (input-pending-p))
+    (zone-call '((zone-pgm-rotate 10)
+                 (zone-pgm-drip-fretfully 15)
+                 (zone-pgm-drip 10)
+                 ((lambda ()
+                    (goto-char (point-min))
+                    (while (re-search-forward " +$" nil t)
+                      (delete-region (match-beginning 0) (match-end 0))))
+                  5)))))
 
 
 ;;;; paragraph spazzing (for textish modes)
@@ -692,10 +683,11 @@ If nil, `zone-pgm-random-life' chooses a value from 0-3 (inclusive).")
       (life (or zone-pgm-random-life-wait (random 4)))
       (kill-buffer nil))))
 
+
 (random t)
 
 ;;;;;;;;;;;;;;;
 (provide 'zone)
 
-;;; arch-tag: 7092503d-74a9-4325-a55c-a026ede58cea
+;; arch-tag: 7092503d-74a9-4325-a55c-a026ede58cea
 ;;; zone.el ends here

@@ -1,13 +1,13 @@
 /* Input event support for Emacs on the Microsoft W32 API.
-   Copyright (C) 1992, 1993, 1995, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+   Copyright (C) 1992, 1993, 1995, 2001, 2002, 2003, 2004, 2005, 2006,
+                 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,10 +15,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
+/*
    Drew Bliss                   01-Oct-93
      Adapted from ntkbd.c by Tim Fleehart
 */
@@ -153,7 +152,7 @@ w32_kbd_mods_to_emacs (DWORD mods, WORD key)
   if (mods & SCROLLLOCK_ON)
     retval |= w32_key_to_modifier (VK_SCROLL);
 
-  /* Just in case someone wanted the original behaviour, make it
+  /* Just in case someone wanted the original behavior, make it
      optional by setting w32-capslock-is-shiftlock to t.  */
   if (NILP (Vw32_capslock_is_shiftlock)
       /* Keys that should _not_ be affected by CapsLock.  */
@@ -641,7 +640,9 @@ maybe_generate_resize_event ()
 }
 
 int
-w32_console_read_socket (int sd, int expected, struct input_event *hold_quit)
+w32_console_read_socket (struct terminal *terminal,
+                         int expected,
+                         struct input_event *hold_quit)
 {
   BOOL no_events = TRUE;
   int nev, ret = 0, add;

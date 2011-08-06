@@ -1,16 +1,16 @@
 ;;; url-irc.el --- IRC URL interface
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -31,11 +29,11 @@
 (require 'url-vars)
 (require 'url-parse)
 
-(defconst url-irc-default-port 6667 "Default port for IRC connections")
+(defconst url-irc-default-port 6667 "Default port for IRC connections.")
 
 (defcustom url-irc-function 'url-irc-rcirc
   "*Function to actually open an IRC connection.
-Should be a function that takes several arguments:
+The function should take the following arguments:
     HOST - the hostname of the IRC server to contact
     PORT - the port number of the IRC server to contact
  CHANNEL - What channel on the server to visit right away (can be nil)
@@ -46,6 +44,10 @@ PASSWORD - What password to use"
 		 (const :tag "ZEN IRC" :value url-irc-zenirc)
 		 (function :tag "Other"))
   :group 'url)
+
+;; External.
+(declare-function zenirc "ext:zenirc" (&optional prefix))
+(declare-function zenirc-send-line "ext:zenirc" ())
 
 (defun url-irc-zenirc (host port channel user password)
   (let ((zenirc-buffer-name (if (and user host port)
@@ -88,5 +90,5 @@ PASSWORD - What password to use"
 
 (provide 'url-irc)
 
-;;; arch-tag: 2e5eecf8-9eb3-436b-9fbd-c26f2fb2bf3e
+;; arch-tag: 2e5eecf8-9eb3-436b-9fbd-c26f2fb2bf3e
 ;;; url-irc.el ends here

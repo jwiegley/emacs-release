@@ -1,17 +1,17 @@
 ;;; outline.el --- outline mode commands for Emacs
 
 ;; Copyright (C) 1986, 1993, 1994, 1995, 1997, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: outlines
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -97,47 +95,86 @@ in the file it applies to."
 
     (define-key map [hide] (cons "Hide" (make-sparse-keymap "Hide")))
 
-    (define-key map [hide hide-other] '("Hide Other" . hide-other))
-    (define-key map [hide hide-sublevels] '("Hide Sublevels" . hide-sublevels))
-    (define-key map [hide hide-subtree] '("Hide Subtree" . hide-subtree))
-    (define-key map [hide hide-entry] '("Hide Entry" . hide-entry))
-    (define-key map [hide hide-body] '("Hide Body" . hide-body))
-    (define-key map [hide hide-leaves] '("Hide Leaves" . hide-leaves))
+    (define-key map [hide hide-other]
+      '(menu-item "Hide Other" hide-other
+		  :help "Hide everything except current body and parent and top-level headings"))
+    (define-key map [hide hide-sublevels]
+      '(menu-item "Hide Sublevels" hide-sublevels
+		  :help "Hide everything but the top LEVELS levels of headers, in whole buffer"))
+    (define-key map [hide hide-subtree]
+      '(menu-item "Hide Subtree" hide-subtree
+		  :help "Hide everything after this heading at deeper levels"))
+    (define-key map [hide hide-entry]
+      '(menu-item "Hide Entry" hide-entry
+		  :help "Hide the body directly following this heading"))
+    (define-key map [hide hide-body]
+      '(menu-item "Hide Body" hide-body
+		  :help "Hide all body lines in buffer, leaving all headings visible"))
+    (define-key map [hide hide-leaves]
+      '(menu-item "Hide Leaves" hide-leaves
+		  :help "Hide the body after this heading and at deeper levels"))
 
     (define-key map [show] (cons "Show" (make-sparse-keymap "Show")))
 
-    (define-key map [show show-subtree] '("Show Subtree" . show-subtree))
-    (define-key map [show show-children] '("Show Children" . show-children))
-    (define-key map [show show-branches] '("Show Branches" . show-branches))
-    (define-key map [show show-entry] '("Show Entry" . show-entry))
-    (define-key map [show show-all] '("Show All" . show-all))
+    (define-key map [show show-subtree]
+      '(menu-item "Show Subtree" show-subtree
+		  :help "Show everything after this heading at deeper levels"))
+    (define-key map [show show-children]
+      '(menu-item "Show Children" show-children
+		  :help "Show all direct subheadings of this heading"))
+    (define-key map [show show-branches]
+      '(menu-item "Show Branches" show-branches
+		  :help "Show all subheadings of this heading, but not their bodies"))
+    (define-key map [show show-entry]
+      '(menu-item "Show Entry" show-entry
+		  :help "Show the body directly following this heading"))
+    (define-key map [show show-all]
+      '(menu-item "Show All" show-all
+		  :help "Show all of the text in the buffer"))
 
     (define-key map [headings]
       (cons "Headings" (make-sparse-keymap "Headings")))
 
     (define-key map [headings demote-subtree]
-      '(menu-item "Demote subtree" outline-demote))
+      '(menu-item "Demote subtree" outline-demote
+		  :help "Demote headings lower down the tree"))
     (define-key map [headings promote-subtree]
-      '(menu-item "Promote subtree" outline-promote))
+      '(menu-item "Promote subtree" outline-promote
+		  :help "Promote headings higher up the tree"))
     (define-key map [headings move-subtree-down]
-      '(menu-item "Move subtree down" outline-move-subtree-down))
+      '(menu-item "Move subtree down" outline-move-subtree-down
+		  :help "Move the currrent subtree down past arg headlines of the same level"))
     (define-key map [headings move-subtree-up]
-      '(menu-item "Move subtree up" outline-move-subtree-up))
+      '(menu-item "Move subtree up" outline-move-subtree-up
+		  :help "Move the currrent subtree up past arg headlines of the same level"))
     (define-key map [headings copy]
       '(menu-item "Copy to kill ring" outline-headers-as-kill
-	:enable mark-active))
+		  :enable mark-active
+		  :help "Save the visible outline headers in region at the start of the kill ring"))
     (define-key map [headings outline-insert-heading]
-      '("New heading" . outline-insert-heading))
+
+      '(menu-item "New heading" outline-insert-heading
+		  :help "Insert a new heading at same depth at point"))
     (define-key map [headings outline-backward-same-level]
-      '("Previous Same Level" . outline-backward-same-level))
+
+      '(menu-item "Previous Same Level" outline-backward-same-level
+		  :help "Move backward to the arg'th subheading at same level as this one."))
     (define-key map [headings outline-forward-same-level]
-      '("Next Same Level" . outline-forward-same-level))
+
+      '(menu-item "Next Same Level" outline-forward-same-level
+		  :help "Move forward to the arg'th subheading at same level as this one"))
     (define-key map [headings outline-previous-visible-heading]
-      '("Previous" . outline-previous-visible-heading))
+
+      '(menu-item "Previous" outline-previous-visible-heading
+		  :help "Move to the previous heading line"))
     (define-key map [headings outline-next-visible-heading]
-      '("Next" . outline-next-visible-heading))
+
+      '(menu-item "Next" outline-next-visible-heading
+		  :help "Move to the next visible heading line"))
     (define-key map [headings outline-up-heading]
-      '("Up" . outline-up-heading))
+
+      '(menu-item "Up" outline-up-heading
+		  :help "Move to the visible heading line of which the present line is a subheading"))
     map))
 
 (defvar outline-minor-mode-menu-bar-map
@@ -187,12 +224,12 @@ in the file it applies to."
   :group 'outlines)
 
 (defface outline-4
-  '((t :inherit font-lock-builtin-face))
+  '((t :inherit font-lock-comment-face))
   "Level 4."
   :group 'outlines)
 
 (defface outline-5
-  '((t :inherit font-lock-comment-face))
+  '((t :inherit font-lock-type-face))
   "Level 5."
   :group 'outlines)
 
@@ -202,7 +239,7 @@ in the file it applies to."
   :group 'outlines)
 
 (defface outline-7
-  '((t :inherit font-lock-type-face))
+  '((t :inherit font-lock-builtin-face))
   "Level 7."
   :group 'outlines)
 
@@ -215,8 +252,8 @@ in the file it applies to."
   [outline-1 outline-2 outline-3 outline-4
    outline-5 outline-6 outline-7 outline-8])
 
-(defvar outline-font-lock-levels nil)
-(make-variable-buffer-local 'outline-font-lock-levels)
+;; (defvar outline-font-lock-levels nil)
+;; (make-variable-buffer-local 'outline-font-lock-levels)
 
 (defun outline-font-lock-face ()
   ;; (save-excursion
@@ -241,9 +278,7 @@ in the file it applies to."
   (save-excursion
     (goto-char (match-beginning 0))
     (looking-at outline-regexp)
-    (condition-case nil
-	(aref outline-font-lock-faces (1- (funcall outline-level)))
-      (error font-lock-warning-face))))
+    (aref outline-font-lock-faces (% (1- (funcall outline-level)) (length outline-font-lock-faces)))))
 
 (defvar outline-view-change-hook nil
   "Normal hook to be run after outline visibility changes.")
@@ -312,7 +347,7 @@ Turning on outline mode calls the value of `text-mode-hook' and then of
   (add-hook 'change-major-mode-hook 'show-all nil t))
 
 (defcustom outline-minor-mode-prefix "\C-c@"
-  "*Prefix key to use for Outline commands in Outline minor mode.
+  "Prefix key to use for Outline commands in Outline minor mode.
 The value of this variable is checked as part of loading Outline mode.
 After that, changing the prefix key requires manipulating keymaps."
   :type 'string
@@ -411,7 +446,7 @@ at the end of the buffer."
 
 (defun outline-visible ()
   (not (outline-invisible-p)))
-(make-obsolete 'outline-visible 'outline-invisible-p)
+(make-obsolete 'outline-visible 'outline-invisible-p "21.1")
 
 (defun outline-back-to-heading (&optional invisible-ok)
   "Move to previous heading line, or beg of this line if it's a heading.
@@ -870,6 +905,8 @@ Show the heading too, if it is currently invisible."
                   (goto-char (point-max))
                   ;; Keep empty last line, if available.
                   (if (bolp) (1- (point)) (point)))))
+      (if (< end beg)
+	  (setq beg (prog1 end (setq end beg))))
       ;; First hide everything.
       (outline-flag-region beg end t)
       ;; Then unhide the top level headers.
@@ -973,8 +1010,8 @@ If INVISIBLE-OK is non-nil, also consider invisible lines."
        (or (eq last-command 'outline-up-heading) (push-mark)))
   (outline-back-to-heading invisible-ok)
   (let ((start-level (funcall outline-level)))
-    (if (eq start-level 1)
-	(error "Already at top level of the outline"))
+    (when (<= start-level 1)
+      (error "Already at top level of the outline"))
     (while (and (> start-level 1) (> arg 0) (not (bobp)))
       (let ((level start-level))
 	(while (not (or (< level start-level) (bobp)))

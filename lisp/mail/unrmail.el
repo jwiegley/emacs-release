@@ -1,17 +1,17 @@
-;;; unrmail.el --- convert Rmail files to mailbox files
+;;; unrmail.el --- convert Rmail Babyl files to mailbox files
 
-;; Copyright (C) 1992, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1992, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+;;   2009  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: mail
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,24 +19,19 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
 
-(defvar command-line-args-left)	;Avoid 'free variable' warning
-
 ;;;###autoload
 (defun batch-unrmail ()
-  "Convert Rmail files to system inbox format.
-Specify the input Rmail file names as command line arguments.
+  "Convert old-style Rmail Babyl files to system inbox format.
+Specify the input Rmail Babyl file names as command line arguments.
 For each Rmail file, the corresponding output file name
 is made by adding `.mail' at the end.
 For example, invoke `emacs -batch -f batch-unrmail RMAIL'."
-  ;; command-line-args-left is what is left of the command line (from startup.el)
   (if (not noninteractive)
       (error "`batch-unrmail' is to be used only with -batch"))
   (let ((error nil))
@@ -48,16 +43,20 @@ For example, invoke `emacs -batch -f batch-unrmail RMAIL'."
     (message "Done")
     (kill-emacs (if error 1 0))))
 
+(declare-function mail-mbox-from "mail-utils" ())
+(defvar rmime-magic-string)		; in rmime.el, if you have it
+
 ;;;###autoload
 (defun unrmail (file to-file)
-  "Convert Rmail file FILE to system inbox format file TO-FILE."
-  (interactive "fUnrmail (rmail file): \nFUnrmail into (new mailbox file): ")
+  "Convert old-style Rmail Babyl file FILE to system inbox format file TO-FILE."
+  (interactive "fUnrmail (babyl file): \nFUnrmail into (new mailbox file): ")
   (with-temp-buffer
     ;; Read in the old Rmail file with no decoding.
     (let ((coding-system-for-read 'raw-text))
       (insert-file-contents file))
     ;; But make it multibyte.
     (set-buffer-multibyte t)
+    (setq buffer-file-coding-system 'raw-text-unix)
 
     (if (not (looking-at "BABYL OPTIONS"))
 	(error "This file is not in Babyl format"))
@@ -109,11 +108,12 @@ For example, invoke `emacs -batch -f batch-unrmail RMAIL'."
 	  (from-buffer (current-buffer)))
 
       ;; Process the messages one by one.
-      (while (search-forward "\^_\^l" nil t)
+      (while (re-search-forward "^\^_\^l" nil t)
 	(let ((beg (point))
 	      (end (save-excursion
-		     (if (search-forward "\^_" nil t)
-			 (1- (point)) (point-max))))
+		     (if (re-search-forward "^\^_\\(\^l\\|\\'\\)" nil t)
+			 (match-beginning 0)
+		       (point-max))))
 	      (coding 'raw-text)
 	      label-line attrs keywords
 	      mail-from reformatted)
@@ -133,14 +133,16 @@ For example, invoke `emacs -batch -f batch-unrmail RMAIL'."
 		  (buffer-substring (point)
 				    (save-excursion (forward-line 1)
 						    (point))))
-	    (search-forward ",,")
+	    (re-search-forward ",, ?")
 	    (unless (eolp)
 	      (setq keywords
 		    (buffer-substring (point)
 				      (progn (end-of-line)
 					     (1- (point)))))
-	      (setq keywords
-		    (replace-regexp-in-string ", " "," keywords)))
+	      ;; Mbox rmail needs the spaces.  Bug#2303.
+	      ;;; (setq keywords
+	      ;;; 	    (replace-regexp-in-string ", " "," keywords))
+	      )
 
 	    (setq attrs
 		  (list
@@ -148,9 +150,10 @@ For example, invoke `emacs -batch -f batch-unrmail RMAIL'."
 		   (if (string-match ", deleted," label-line) ?D ?-)
 		   (if (string-match ", edited," label-line) ?E ?-)
 		   (if (string-match ", filed," label-line) ?F ?-)
-		   (if (string-match ", resent," label-line) ?R ?-)
-		   (if (string-match ", unseen," label-line) ?\  ?-)
-		   (if (string-match ", stored," label-line) ?S ?-)))
+		   (if (string-match ", retried," label-line) ?R ?-)
+		   (if (string-match ", forwarded," label-line) ?S ?-)
+		   (if (string-match ", unseen," label-line) ?U ?-)
+		   (if (string-match ", resent," label-line) ?r ?-)))
 
 	    ;; Delete the special Babyl lines at the start,
 	    ;; and the ***EOOH*** line, and the reformatted header if any.
@@ -174,27 +177,39 @@ For example, invoke `emacs -batch -f batch-unrmail RMAIL'."
 	      (re-search-forward "^[*][*][*] EOOH [*][*][*]\n")
 	      (delete-region (point-min) (point)))
 
+	    ;; Handle rmime formatting.
+	    (when (require 'rmime nil t)
+	      (let ((start (point)))
+		(while (search-forward rmime-magic-string nil t))
+		(delete-region start (point))))
+
 	    ;; Some operations on the message header itself.
 	    (goto-char (point-min))
 	    (save-restriction
-	      (narrow-to-region 
+	      (narrow-to-region
 	       (point-min)
 	       (save-excursion (search-forward "\n\n" nil 'move) (point)))
 
 	      ;; Fetch or construct what we should use in the `From ' line.
-	      (setq mail-from
-		    (or (mail-fetch-field "Mail-From")
-			(concat "From "
-				(mail-strip-quoted-names (or (mail-fetch-field "from")
-							     (mail-fetch-field "really-from")
-							     (mail-fetch-field "sender")
-							     "unknown"))
-				" " (current-time-string))))
+	      (setq mail-from (or (let ((from (mail-fetch-field "Mail-From")))
+				    ;; mail-mbox-from (below) returns a
+				    ;; string that ends in a newline, but
+				    ;; but mail-fetch-field does not, so
+				    ;; we append a newline here.
+				    (if from
+					(format "%s\n" from)))
+				  (mail-mbox-from)))
 
 	      ;; If the message specifies a coding system, use it.
 	      (let ((maybe-coding (mail-fetch-field "X-Coding-System")))
 		(if maybe-coding
-		    (setq coding (intern maybe-coding))))
+		    (setq coding
+			  ;; Force Unix EOLs.
+			  (coding-system-change-eol-conversion
+			   (intern maybe-coding) 0))
+		  ;; If there's no X-Coding-System header, assume the
+		  ;; message was never decoded.
+		  (setq coding 'raw-text-unix)))
 
 	      ;; Delete the Mail-From: header field if any.
 	      (when (re-search-forward "^Mail-from:" nil t)
@@ -204,11 +219,11 @@ For example, invoke `emacs -batch -f batch-unrmail RMAIL'."
 
 	    (goto-char (point-min))
 	    ;; Insert the `From ' line.
-	    (insert mail-from "\n")
+	    (insert mail-from)
 	    ;; Record the keywords and attributes in our special way.
-	    (insert "X-BABYL-V6-ATTRIBUTES: " (apply 'string attrs) "\n")
+	    (insert "X-RMAIL-ATTRIBUTES: " (apply 'string attrs) "\n")
 	    (when keywords
-	      (insert "X-BABYL-V6-KEYWORDS: " keywords "\n"))
+	      (insert "X-RMAIL-KEYWORDS: " keywords "\n"))
 	    (goto-char (point-min))
 	    ;; ``Quote'' "\nFrom " as "\n>From "
 	    ;;  (note that this isn't really quoting, as there is no requirement
@@ -217,14 +232,18 @@ For example, invoke `emacs -batch -f batch-unrmail RMAIL'."
 	      (while (search-forward "\nFrom " nil t)
 		(forward-char -5)
 		(insert ?>)))
-	    ;; Write it to the output file.
-	    (write-region (point-min) (point-max) to-file t
-			  'nomsg))))
+	    ;; Make sure the message ends with two newlines
+	    (goto-char (point-max))
+	    (unless (looking-back "\n\n")
+	      (insert "\n"))
+	    ;; Write it to the output file, suitably encoded.
+	    (let ((coding-system-for-write coding))
+	      (write-region (point-min) (point-max) to-file t
+			    'nomsg)))))
       (kill-buffer temp-buffer))
     (message "Writing messages to %s...done" to-file)))
 
 (provide 'unrmail)
 
+;; arch-tag: 14c6290d-60b2-456f-8909-5c2387de6acb
 ;;; unrmail.el ends here
-
-;;; arch-tag: 14c6290d-60b2-456f-8909-5c2387de6acb

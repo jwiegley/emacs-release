@@ -1,7 +1,7 @@
 ;;; ansi-color.el --- translate ANSI escape sequences into faces
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Alex Schroeder <alex@gnu.org>
 ;; Maintainer: Alex Schroeder <alex@gnu.org>
@@ -10,20 +10,18 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify it
-;; under the terms of the GNU General Public License as published by the
-;; Free Software Foundation; either version 3, or (at your option) any
-;; later version.
-;;
-;; GNU Emacs is distributed in the hope that it will be useful, but
-;; WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
-;;
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -149,7 +147,7 @@ map.  This color map is stored in the variable `ansi-color-map'."
   :initialize 'custom-initialize-default
   :group 'ansi-colors)
 
-(defconst ansi-color-regexp "\033\\[\\([0-9;]*\\)m"
+(defconst ansi-color-regexp "\033\\[\\([0-9;]*m\\)"
   "Regexp that matches SGR control sequences.")
 
 (defconst ansi-color-parameter-regexp "\\([0-9]*\\)[m;]"
@@ -196,7 +194,7 @@ in shell buffers.  You set this variable by calling one of:
   (setq ansi-color-for-comint-mode 'filter))
 
 ;;;###autoload
-(defun ansi-color-process-output (string)
+(defun ansi-color-process-output (ignored)
   "Maybe translate SGR control sequences of comint output into text-properties.
 
 Depending on variable `ansi-color-for-comint-mode' the comint output is
@@ -513,7 +511,7 @@ property."
 (defun ansi-color-set-extent-face (extent face)
   "Set the `face' property of EXTENT to FACE.
 XEmacs uses `set-extent-face', Emacs  uses `overlay-put'."
-  (if (fboundp 'set-extent-face)
+  (if (featurep 'xemacs)
       (set-extent-face extent face)
     (overlay-put extent 'face face)))
 
@@ -557,14 +555,14 @@ The face definitions are based upon the variables
   (let ((ansi-color-map (make-vector 50 nil))
         (index 0))
     ;; miscellaneous attributes
-    (mapcar
+    (mapc
      (function (lambda (e)
                  (aset ansi-color-map index e)
                  (setq index (1+ index)) ))
      ansi-color-faces-vector)
     ;; foreground attributes
     (setq index 30)
-    (mapcar
+    (mapc
      (function (lambda (e)
                  (aset ansi-color-map index
 		       (ansi-color-make-face 'foreground e))
@@ -572,7 +570,7 @@ The face definitions are based upon the variables
      ansi-color-names-vector)
     ;; background attributes
     (setq index 40)
-    (mapcar
+    (mapc
      (function (lambda (e)
                  (aset ansi-color-map index
 		       (ansi-color-make-face 'background e))
@@ -616,13 +614,12 @@ the parameter 0), then the effect of all previous parameters is cancelled.
 
 ESCAPE-SEQ is a SGR control sequences such as \\033[34m.  The parameter
 34 is used by `ansi-color-get-face-1' to return a face definition."
-  (let ((ansi-color-r "[0-9][0-9]?")
-        (i 0)
+  (let ((i 0)
         f val)
-    (while (string-match ansi-color-r escape-seq i)
+    (while (string-match ansi-color-parameter-regexp escape-seq i)
       (setq i (match-end 0)
 	    val (ansi-color-get-face-1
-		 (string-to-number (match-string 0 escape-seq) 10)))
+		 (string-to-number (match-string 1 escape-seq) 10)))
       (cond ((not val))
 	    ((eq val 'default)
 	     (setq f (list val)))
@@ -633,5 +630,5 @@ ESCAPE-SEQ is a SGR control sequences such as \\033[34m.  The parameter
 
 (provide 'ansi-color)
 
-;;; arch-tag: 00726118-9432-44fd-b72d-d2af7591c99c
+;; arch-tag: 00726118-9432-44fd-b72d-d2af7591c99c
 ;;; ansi-color.el ends here

@@ -1,26 +1,24 @@
 ;;; url-history.el --- Global history tracking for URL package
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes, hypermedia
 
 ;; This file is part of GNU Emacs.
 ;;
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-;;
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-;;
+
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -28,7 +26,6 @@
 
 ;; This can get a recursive require.
 ;;(require 'url)
-(eval-when-compile (require 'cl))
 (require 'url-parse)
 (autoload 'url-do-setup "url")
 
@@ -83,8 +80,9 @@ to run the `url-history-setup-save-timer' function manually."
 (defun url-history-setup-save-timer ()
   "Reset the history list timer."
   (interactive)
-  (ignore-errors
-   (cancel-timer url-history-timer))
+  (condition-case nil
+      (cancel-timer url-history-timer)
+    (error nil))
   (setq url-history-timer nil)
   (if (and (eq url-history-track t) url-history-save-interval)
       (setq url-history-timer (run-at-time url-history-save-interval
@@ -146,13 +144,13 @@ user for what type to save as."
           ;; We used to add this in the file, but it just makes the code
           ;; more complex with no benefit.  Worse: it makes it harder to
           ;; preserve preexisting history when loading the history file.
-          ;; (goto-char (point-min))
-          ;; (insert (format
-          ;;          "(setq url-history-hash-table (make-hash-table :size %d :test 'equal))\n"
-          ;;          (/ count 4)))
-          ;; (goto-char (point-max))
-          (insert "\n")
-          (write-file fname)))
+	  ;; (goto-char (point-min))
+	  ;; (insert (format
+	  ;;          "(setq url-history-hash-table (make-hash-table :size %d :test 'equal))\n"
+	  ;;          (/ count 4)))
+	  ;; (goto-char (point-max))
+	  (insert "\n")
+	  (write-file fname)))
       (setq url-history-changed-since-last-save nil))))
 
 (defun url-have-visited-url (url)

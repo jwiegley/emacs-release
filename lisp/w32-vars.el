@@ -1,16 +1,17 @@
 ;;; w32-vars.el --- MS-Windows specific user options
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Jason Rumney <jasonr@gnu.org>
 ;; Keywords: internal
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -35,26 +34,25 @@
 
 ;; Redefine the font selection to use the standard W32 dialog
 (defcustom w32-use-w32-font-dialog t
-  "*Use the standard font dialog.
+  "Use the standard font dialog.
 If nil, pop up a menu of a fixed set of fonts including fontsets, like
 X does.  See `w32-fixed-font-alist' for the font menu definition."
   :type 'boolean
   :group 'w32)
 
-(defcustom w32-list-proportional-fonts nil
-  "*Include proportional fonts in the default font dialog."
-  :type 'boolean
-  :group 'w32)
+(defvar w32-list-proportional-fonts nil
+  "Include proportional fonts in the default font dialog.")
+(make-obsolete-variable 'w32-list-proportional-fonts "no longer used." "23.1")
 
 (defcustom w32-allow-system-shell nil
-  "*Disable startup warning when using \"system\" shells."
+  "Disable startup warning when using \"system\" shells."
   :type 'boolean
   :group 'w32)
 
 (defcustom w32-system-shells '("cmd" "cmd.exe" "command" "command.com"
 			       "4nt" "4nt.exe" "4dos" "4dos.exe"
 			       "tcc" "tcc.exe" "ndos" "ndos.exe")
-  "*List of strings recognized as Windows NT/9X system shells."
+  "List of strings recognized as Windows system shells."
   :type '(repeat string)
   :group 'w32)
 
@@ -132,9 +130,9 @@ X does.  See `w32-fixed-font-alist' for the font menu definition."
      ("11 bold italic" "-*-Courier New-bold-i-*-*-15-*-*-*-c-*-iso8859-1")
      ("12 bold italic" "-*-Courier New-bold-i-*-*-16-*-*-*-c-*-iso8859-1")
      ))
-    "*Fonts suitable for use in Emacs.
+    "Fonts suitable for use in Emacs.
 Initially this is a list of some fixed width fonts that most people
-will have like Terminal and Courier. These fonts are used in the font
+will have like Terminal and Courier.  These fonts are used in the font
 menu if the variable `w32-use-w32-font-dialog' is nil."
     :type '(list
 	    (string :tag "Menu Title")
@@ -150,11 +148,16 @@ menu if the variable `w32-use-w32-font-dialog' is nil."
     :group 'w32)
 
 (defcustom x-select-enable-clipboard t
-  "*Non-nil means cutting and pasting uses the clipboard.
-This is in addition to the primary selection."
+  "Non-nil means cutting and pasting uses the clipboard.
+This is in addition to, but in preference to, the primary selection.
+
+On MS-Windows, this is non-nil by default, since Windows does not
+support other types of selections.  \(The primary selection that is
+set by Emacs is not accessible to other programs on Windows.\)"
   :type 'boolean
   :group 'killing)
 
+(provide 'w32-vars)
 
-;;; arch-tag: ee2394fb-9db7-4c15-a8f0-66b47f4a2bb1
+;; arch-tag: ee2394fb-9db7-4c15-a8f0-66b47f4a2bb1
 ;;; w32-vars.el ends here

@@ -1,17 +1,17 @@
 ;;; calc-stuff.el --- miscellaneous functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -157,11 +155,6 @@ With a prefix, push that prefix as a number onto the stack."
 	  (setq calc-which-why calc-why))
       (message "No explanations available"))))
 
-
-(defun calc-version ()
-  (interactive)
-  (message "Calc %s" calc-version))
-
 ;; The following caches are declared in other files, but are
 ;; reset here.
 (defvar math-lud-cache) ; calc-mtx.el
@@ -191,7 +184,7 @@ With a prefix, push that prefix as a number onto the stack."
 	 math-eval-rules-cache-tag t
 	 math-format-date-cache nil
 	 math-holidays-cache-tag t)
-   (mapcar (function (lambda (x) (set x -100))) math-cache-list)
+   (mapc (function (lambda (x) (set x -100))) math-cache-list)
    (unless inhibit-msg
      (message "All internal calculator caches have been reset"))))
 
@@ -217,9 +210,9 @@ With a prefix, push that prefix as a number onto the stack."
   (interactive "P")
   (calc-clean (- (if num
 		     (prefix-numeric-value num)
-		   (if (and (>= last-command-char ?0)
-			    (<= last-command-char ?9))
-		       (- last-command-char ?0)
+		   (if (and (>= last-command-event ?0)
+			    (<= last-command-event ?9))
+		       (- last-command-event ?0)
 		     (error "Number required"))))))
 
 
@@ -302,5 +295,5 @@ With a prefix, push that prefix as a number onto the stack."
 
 (provide 'calc-stuff)
 
-;;; arch-tag: 789332ef-a178-49d3-8fb7-5d7ed7e21f56
+;; arch-tag: 789332ef-a178-49d3-8fb7-5d7ed7e21f56
 ;;; calc-stuff.el ends here

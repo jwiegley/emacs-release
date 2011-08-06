@@ -1,13 +1,13 @@
 ;;; erc-sound.el --- CTCP SOUND support for ERC
 
-;; Copyright (C) 2002, 2003, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -30,7 +28,7 @@
 
 ;; Add the following to your .emacs if you want to play sounds.
 ;;
-;; (require 'erc-soud)
+;; (require 'erc-sound)
 ;; (erc-sound-enable)
 ;;
 ;; To send requests to other users from within query buffers, type the
@@ -125,7 +123,7 @@ See also `play-sound-file'."
     (if (and (not filepath) erc-default-sound)
 	(setq filepath erc-default-sound))
     (cond ((and filepath (file-exists-p filepath))
-           (play-sound-file filepath))
+	   (play-sound-file filepath))
 	  (t (beep)))
     (erc-log (format "Playing sound file %S" filepath))))
 
@@ -142,5 +140,11 @@ See also `play-sound-file'."
 
 (provide 'erc-sound)
 
-;; arch-tag: 53657d1d-007f-4a20-91c1-588e71cf0cee
 ;;; erc-sound.el ends here
+;;
+;; Local Variables:
+;; indent-tabs-mode: t
+;; tab-width: 8
+;; End:
+
+;; arch-tag: 53657d1d-007f-4a20-91c1-588e71cf0cee

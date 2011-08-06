@@ -1,27 +1,143 @@
-This is ../info/calc, produced by makeinfo version 4.11 from calc.texi.
+This is ../../info/calc, produced by makeinfo version 4.11 from
+calc.texi.
 
 This file documents Calc, the GNU Emacs calculator.
 
-   Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008 Free Software Foundation, Inc.
+Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+2008, 2009 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
-     Version 1.2 or any later version published by the Free Software
+     Version 1.3 or any later version published by the Free Software
      Foundation; with the Invariant Sections being just "GNU GENERAL
      PUBLIC LICENSE", with the Front-Cover texts being "A GNU Manual,"
      and with the Back-Cover Texts as in (a) below.  A copy of the
      license is included in the section entitled "GNU Free
      Documentation License."
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
+     developing GNU and promoting software freedom."
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Calc: (calc).         Advanced desk calculator and mathematical tool.
 END-INFO-DIR-ENTRY
+
+
+File: calc,  Node: Related Financial Functions,  Next: Depreciation Functions,  Prev: Present Value,  Up: Financial Functions
+
+9.6.4 Related Financial Functions
+---------------------------------
+
+The functions in this section are basically inverses of the present
+value functions with respect to the various arguments.
+
+   The `b M' (`calc-fin-pmt') [`pmt'] command computes the amount of
+periodic payment necessary to amortize a loan.  Thus `pmt(RATE, N,
+AMOUNT)' equals the value of PAYMENT such that `pv(RATE, N, PAYMENT) =
+AMOUNT'.
+
+   The `I b M' [`pmtb'] command does the same computation but using
+`pvb' instead of `pv'.  Like `pv' and `pvb', these functions can also
+take a fourth argument which represents an initial lump-sum investment.
+
+   The `H b M' key just invokes the `fvl' function, which is the
+inverse of `pvl'.  There is no explicit `pmtl' function.
+
+   The `b #' (`calc-fin-nper') [`nper'] command computes the number of
+regular payments necessary to amortize a loan.  Thus `nper(RATE,
+PAYMENT, AMOUNT)' equals the value of N such that `pv(RATE, N, PAYMENT)
+= AMOUNT'.  If PAYMENT is too small ever to amortize a loan for AMOUNT
+at interest rate RATE, the `nper' function is left in symbolic form.
+
+   The `I b #' [`nperb'] command does the same computation but using
+`pvb' instead of `pv'.  You can give a fourth lump-sum argument to
+these functions, but the computation will be rather slow in the
+four-argument case.
+
+   The `H b #' [`nperl'] command does the same computation using `pvl'.
+By exchanging PAYMENT and AMOUNT you can also get the solution for
+`fvl'.  For example, `nperl(8%, 2000, 1000) = 9.006', so if you place
+$1000 in a bank account earning 8%, it will take nine years to grow to
+$2000.
+
+   The `b T' (`calc-fin-rate') [`rate'] command computes the rate of
+return on an investment.  This is also an inverse of `pv': `rate(N,
+PAYMENT, AMOUNT)' computes the value of RATE such that `pv(RATE, N,
+PAYMENT) = AMOUNT'.  The result is expressed as a formula like `6.3%'.
+
+   The `I b T' [`rateb'] and `H b T' [`ratel'] commands solve the
+analogous equations with `pvb' or `pvl' in place of `pv'.  Also, `rate'
+and `rateb' can accept an optional fourth argument just like `pv' and
+`pvb'.  To redo the above example from a different perspective,
+`ratel(9, 2000, 1000) = 8.00597%', which says you will need an interest
+rate of 8% in order to double your account in nine years.
+
+   The `b I' (`calc-fin-irr') [`irr'] command is the analogous function
+to `rate' but for net present value.  Its argument is a vector of
+payments.  Thus `irr(PAYMENTS)' computes the RATE such that `npv(RATE,
+PAYMENTS) = 0'; this rate is known as the "internal rate of return".
+
+   The `I b I' [`irrb'] command computes the internal rate of return
+assuming payments occur at the beginning of each period.
+
+
+File: calc,  Node: Depreciation Functions,  Next: Definitions of Financial Functions,  Prev: Related Financial Functions,  Up: Financial Functions
+
+9.6.5 Depreciation Functions
+----------------------------
+
+The functions in this section calculate "depreciation", which is the
+amount of value that a possession loses over time.  These functions are
+characterized by three parameters:  COST, the original cost of the
+asset; SALVAGE, the value the asset will have at the end of its
+expected "useful life"; and LIFE, the number of years (or other
+periods) of the expected useful life.
+
+   There are several methods for calculating depreciation that differ in
+the way they spread the depreciation over the lifetime of the asset.
+
+   The `b S' (`calc-fin-sln') [`sln'] command computes the
+"straight-line" depreciation.  In this method, the asset depreciates by
+the same amount every year (or period).  For example, `sln(12000, 2000,
+5)' returns 2000.  The asset costs $12000 initially and will be worth
+$2000 after five years; it loses $2000 per year.
+
+   The `b Y' (`calc-fin-syd') [`syd'] command computes the accelerated
+"sum-of-years'-digits" depreciation.  Here the depreciation is higher
+during the early years of the asset's life.  Since the depreciation is
+different each year, `b Y' takes a fourth PERIOD parameter which
+specifies which year is requested, from 1 to LIFE.  If PERIOD is
+outside this range, the `syd' function will return zero.
+
+   The `b D' (`calc-fin-ddb') [`ddb'] command computes an accelerated
+depreciation using the double-declining balance method.  It also takes
+a fourth PERIOD parameter.
+
+   For symmetry, the `sln' function will accept a PERIOD parameter as
+well, although it will ignore its value except that the return value
+will as usual be zero if PERIOD is out of range.
+
+   For example, pushing the vector `[1,2,3,4,5]' (perhaps with `v x 5')
+and then mapping `V M ' [sln(12000,2000,5,$), syd(12000,2000,5,$),
+ddb(12000,2000,5,$)] <RET>' produces a matrix that allows us to compare
+the three depreciation methods:
+
+     [ [ 2000, 3333, 4800 ]
+       [ 2000, 2667, 2880 ]
+       [ 2000, 2000, 1728 ]
+       [ 2000, 1333,  592 ]
+       [ 2000,  667,   0  ] ]
+
+(Values have been rounded to nearest integers in this figure.)  We see
+that `sln' depreciates by the same amount each year, `syd' depreciates
+more at the beginning and less at the end, and `ddb' weights the
+depreciation even more toward the beginning.
+
+   Summing columns with `V R : +' yields `[10000, 10000, 10000]'; the
+total depreciation in any method is (by definition) the difference
+between the cost and the salvage value.
 
 
 File: calc,  Node: Definitions of Financial Functions,  Prev: Depreciation Functions,  Up: Financial Functions
@@ -431,10 +547,10 @@ as an argument and computes `arctan2' of the elements.  (This command
 does not accept the Hyperbolic flag.)
 
    The remaining trigonometric functions, `calc-sec' [`sec'],
-`calc-csc' [`csc'] and `calc-sec' [`sec'], are also available.  With
+`calc-csc' [`csc'] and `calc-cot' [`cot'], are also available.  With
 the Hyperbolic flag, these compute their hyperbolic counterparts, which
 are also available separately as `calc-sech' [`sech'], `calc-csch'
-[`csch'] and `calc-sech' [`sech'].  (These commmands do not accept the
+[`csch'] and `calc-coth' [`coth'].  (These commands do not accept the
 Inverse flag.)
 
 
@@ -518,8 +634,8 @@ section will describe each function briefly; for a more detailed
 discussion (including some nifty diagrams), consult Steele's book.
 
    Note that the branch cuts for `arctan' and `arctanh' were changed
-between the first and second editions of Steele.  Versions of Calc
-starting with 2.00 follow the second edition.
+between the first and second editions of Steele.  Recent versions of
+Calc follow the second edition.
 
    The new branch cuts exactly match those of the HP-28/48 calculators.
 They also match those of Mathematica 1.2, except that Mathematica's
@@ -643,7 +759,7 @@ The `k r' (`calc-random') [`random'] command produces random numbers of
 various sorts.
 
    Given a positive numeric prefix argument `M', it produces a random
-integer `N' in the range `0 <= N < M'.  Each of the `M' values appears
+integer `N' in the range `0 <= N < M'.  Each possible value `N' appears
 with equal probability.
 
    With no numeric prefix argument, the `k r' command takes its argument
@@ -1588,17 +1704,18 @@ squares of the absolute values of the elements of the vector or matrix.
 If the vector is interpreted as a point in two- or three-dimensional
 space, this is the distance from that point to the origin.
 
-   The `v n' (`calc-rnorm') [`rnorm'] command computes the row norm, or
-infinity-norm, of a vector or matrix.  For a plain vector, this is the
-maximum of the absolute values of the elements.  For a matrix, this is
-the maximum of the row-absolute-value-sums, i.e., of the sums of the
-absolute values of the elements along the various rows.
+   The `v n' (`calc-rnorm') [`rnorm'] command computes the
+infinity-norm of a vector, or the row norm of a matrix.  For a plain
+vector, this is the maximum of the absolute values of the elements.  For
+a matrix, this is the maximum of the row-absolute-value-sums, i.e., of
+the sums of the absolute values of the elements along the various rows.
 
-   The `V N' (`calc-cnorm') [`cnorm'] command computes the column norm,
-or one-norm, of a vector or matrix.  For a plain vector, this is the
+   The `V N' (`calc-cnorm') [`cnorm'] command computes the one-norm of
+a vector, or column norm of a matrix.  For a plain vector, this is the
 sum of the absolute values of the elements.  For a matrix, this is the
 maximum of the column-absolute-value-sums.  General `k'-norms for `k'
-other than one or infinity are not provided.
+other than one or infinity are not provided.  However, the 2-norm (or
+Frobenius norm) is provided for vectors by the `A' (`calc-abs') command.
 
    The `V C' (`calc-cross') [`cross'] command computes the right-handed
 cross product of two vectors, each of which must have exactly three
@@ -1628,6 +1745,9 @@ and the third is upper-triangular.
    The `V T' (`calc-mtrace') [`tr'] command computes the trace of a
 square matrix.  This is defined as the sum of the diagonal elements of
 the matrix.
+
+   The `V K' (`calc-kron') [`kron'] command computes the Kronecker
+product of two matrices.
 
 
 File: calc,  Node: Set Operations,  Next: Statistical Operations,  Prev: Vector and Matrix Arithmetic,  Up: Matrix Functions
@@ -2612,15 +2732,15 @@ variable names and use `j s', you will select the entire four-term sum.
    The `j b' (`calc-break-selections') command controls a mode in which
 the "deep structure" of these associative formulas shows through.  Calc
 actually stores the above formulas as `((a + b) - c) + d' and `x * (y *
-z)'.  (Note that for certain obscure reasons, Calc treats
+z)'.  (Note that for certain obscure reasons, by default Calc treats
 multiplication as right-associative.)  Once you have enabled `j b'
 mode, selecting with the cursor on the `-' sign would only select the
 `a + b - c' portion, which makes sense when the deep structure of the
 sum is considered.  There is no way to select the `b - c + d' portion;
-although this might initially look like just as legitimate a
-sub-formula as `a + b - c', the deep structure shows that it isn't.
-The `d U' command can be used to view the deep structure of any formula
-(*note Normal Language Modes::).
+although this might initially look like just as legitimate a sub-formula
+as `a + b - c', the deep structure shows that it isn't.  The `d U'
+command can be used to view the deep structure of any formula (*note
+Normal Language Modes::).
 
    When `j b' mode has not been enabled, the deep structure is
 generally hidden by the selection commands--what you see is what you
@@ -2967,24 +3087,33 @@ works for inequalities as well as equations.
 using algebraic entry, then multiplies both sides of the selected
 quotient or equation by that formula.  It simplifies each side with `a
 s' (`calc-simplify') before re-forming the quotient or equation.  You
-can suppress this simplification by providing any numeric prefix
-argument.  There is also a `j /' (`calc-sel-div-both-sides') which is
-similar to `j *' but dividing instead of multiplying by the factor you
-enter.
+can suppress this simplification by providing a prefix argument: `C-u j
+*'.  There is also a `j /' (`calc-sel-div-both-sides') which is similar
+to `j *' but dividing instead of multiplying by the factor you enter.
 
-   As a special feature, if the numerator of the quotient is 1, then
-the denominator is expanded at the top level using the distributive law
-(i.e., using the `C-u -1 a x' command).  Suppose the formula on the
-stack is `1 / (sqrt(a) + 1)', and you wish to eliminate the square root
-in the denominator by multiplying both sides by `sqrt(a) - 1'.  Calc's
-default simplifications would change the result `(sqrt(a) - 1) /
-(sqrt(a) - 1) (sqrt(a) + 1)' right back to the original form by
-cancellation; Calc expands the denominator to `sqrt(a) (sqrt(a) - 1) +
-sqrt(a) - 1' to prevent this.  (You would now want to use an `a x'
-command to expand the rest of the way, whereupon the denominator would
-cancel out to the desired form, `a - 1'.)  When the numerator is not 1,
-this initial expansion is not necessary because Calc's default
-simplifications will not notice the potential cancellation.
+   If the selection is a quotient with numerator 1, then Calc's default
+simplifications would normally cancel the new factors.  To prevent
+this, when the `j *' command is used on a selection whose numerator is
+1 or -1, the denominator is expanded at the top level using the
+distributive law (as if using the `C-u 1 a x' command).  Suppose the
+formula on the stack is `1 / (a + 1)' and you wish to multiplying the
+top and bottom by `a - 1'.  Calc's default simplifications would
+normally change the result `(a - 1) /(a + 1) (a - 1)' back to the
+original form by cancellation; when `j *' is used, Calc expands the
+denominator to  `a (a - 1) + a - 1' to prevent this.
+
+   If you wish the `j *' command to completely expand the denominator
+of a quotient you can call it with a zero prefix: `C-u 0 j *'.  For
+example, if the formula on the stack is `1 / (sqrt(a) + 1)', you may
+wish to eliminate the square root in the denominator by multiplying the
+top and bottom by `sqrt(a) - 1'.  If you did this simply by using a
+simple `j *' command, you would get `(sqrt(a)-1)/ (sqrt(a) (sqrt(a) -
+1) + sqrt(a) - 1)'.  Instead, you would probably want to use `C-u 0 j
+*', which would expand the bottom and give you the desired result
+`(sqrt(a)-1)/(a-1)'.  More generally, if `j *' is called with an
+argument of a positive integer N, then the denominator of the
+expression will be expanded N times (as if with the `C-u N a x'
+command).
 
    If the selection is an inequality, `j *' and `j /' will accept any
 factor, but will warn unless they can prove the factor is either
@@ -3261,11 +3390,11 @@ Automatic Rewrites::, for details.
    Arithmetic operators like `+' and `*' always take two arguments in
 Calc's internal form.  Sums and products of three or more terms are
 arranged by the associative law of algebra into a left-associative form
-for sums, `((a + b) + c) + d', and a right-associative form for
-products, `a * (b * (c * d))'.  Formulas like `(a + b) + (c + d)' are
-rearranged to left-associative form, though this rarely matters since
-Calc's algebra commands are designed to hide the inner structure of
-sums and products as much as possible.  Sums and products in their
+for sums, `((a + b) + c) + d', and (by default) a right-associative
+form for products, `a * (b * (c * d))'.  Formulas like `(a + b) + (c +
+d)' are rearranged to left-associative form, though this rarely matters
+since Calc's algebra commands are designed to hide the inner structure
+of sums and products as much as possible.  Sums and products in their
 proper associative form will be written without parentheses in the
 examples below.
 
@@ -4717,7 +4846,13 @@ The `a F' command fits a set of data to a "model formula", such as `y =
 m x + b' where `m' and `b' are parameters to be determined.  For a
 typical set of measured data there will be no single `m' and `b' that
 exactly fit the data; in this case, Calc chooses values of the
-parameters that provide the closest possible fit.
+parameters that provide the closest possible fit.  The model formula
+can be entered in various ways after the key sequence `a F' is pressed.
+
+   If the letter `P' is pressed after `a F' but before the model
+description is entered, the data as well as the model formula will be
+plotted after the formula is determined.  This will be indicated by a
+"P" in the minibuffer after the help message.
 
 * Menu:
 
@@ -4783,7 +4918,7 @@ name only those and let the parameters use default names.
 
 is on the stack and we wish to do a simple linear fit.  Type `a F',
 then `1' for the model, then <RET> to use the default names.  The
-result will be the formula `3 + 2 x' on the stack.  Calc has created
+result will be the formula `3. + 2. x' on the stack.  Calc has created
 the model expression `a + b x', then found the optimal values of `a'
 and `b' to fit the data.  (In this case, it was able to find an exact
 fit.)  Calc then substituted those values for `a' and `b' in the model
@@ -4920,7 +5055,8 @@ model formula is simply `a x'; in the multilinear case, the model might
 be `a x + b y + c z'; and in the polynomial case, the model could be `a
 x + b x^2 + c x^3'.  You can get a homogeneous linear or multilinear
 model by pressing the letter `h' followed by a regular model key, like
-`1' or `2'.
+`1' or `2'.  This will be indicated by an "h" in the minibuffer after
+the help message.
 
    It is certainly possible to have other constrained linear models,
 like `2.3 + a x' or `a - 4 x'.  While there is no single key to select
@@ -5076,6 +5212,15 @@ others must be entered by hand as algebraic formulas.
 `g'
      Gaussian.  (a / b sqrt(2 pi)) exp(-0.5*((x-c)/b)^2).
 
+`s'
+     Logistic _s_ curve.  a/(1 + exp(b (x - c))).
+
+`b'
+     Logistic bell curve.  a exp(b (x - c))/(1 + exp(b (x - c)))^2.
+
+`o'
+     Hubbert linearization.  (y/x) = a (1 - x/b).
+
    All of these models are used in the usual way; just press the
 appropriate letter at the model prompt, and choose variable names if
 you wish.  The result will be a formula as shown in the above table,
@@ -5083,11 +5228,12 @@ with the best-fit values of the parameters substituted.  (You may find
 it easier to read the parameter values from the vector that is placed
 in the trail.)
 
-   All models except Gaussian and polynomials can generalize as shown
-to any number of independent variables.  Also, all the built-in models
-have an additive or multiplicative parameter shown as `a' in the above
-table which can be replaced by zero or one, as appropriate, by typing
-`h' before the model key.
+   All models except Gaussian, logistics, Hubbert and polynomials can
+generalize as shown to any number of independent variables.  Also, all
+the built-in models except for the logistic and Hubbert curves have an
+additive or multiplicative parameter shown as `a' in the above table
+which can be replaced by zero or one, as appropriate, by typing `h'
+before the model key.
 
    Note that many of these models are essentially equivalent, but
 express the parameters slightly differently.  For example, `a b^x' and
@@ -5200,8 +5346,8 @@ convert the model into this form.  For example, if the model is `a + b
 x + c x^2', then `f(x) = 1', `g(x) = x', and `h(x) = x^2' are suitable
 functions.
 
-   For other models, Calc uses a variety of algebraic manipulations to
-try to put the problem into the form
+   For most other models, Calc uses a variety of algebraic manipulations
+to try to put the problem into the form
 
      Y(x,y,z) = A(a,b,c) F(x,y,z) + B(a,b,c) G(x,y,z) + C(a,b,c) H(x,y,z)
 
@@ -5239,8 +5385,13 @@ of `B'), `C = b', and `H = x^2'.
 shows that it's actually similar to the quadratic model but with an
 exponential that can be brought to the top and moved into `Y'.
 
-   An example of a model that cannot be put into general linear form is
-a Gaussian with a constant background added on, i.e., `d' + the regular
+   The logistic models cannot be put into general linear form.  For
+these models, and the Hubbert linearization, Calc computes a rough
+approximation for the parameters, then uses the Levenberg-Marquardt
+iterative method to refine the approximations.
+
+   Another model that cannot be put into general linear form is a
+Gaussian with a constant background added on, i.e., `d' + the regular
 Gaussian formula.  If you have a model like this, your best bet is to
 replace enough of your parameters with constants to make the model
 linearizable, then adjust the constants manually by doing a series of
@@ -5629,369 +5780,4 @@ n)'.
 a series of iterated index values, just like `sum' and `prod', but its
 result is simply a vector of the results.  For example, `table(a_i, i,
 1, 7, 2)' produces `[a_1, a_3, a_5, a_7]'.
-
-
-File: calc,  Node: Logical Operations,  Next: Rewrite Rules,  Prev: Summations,  Up: Algebra
-
-12.10 Logical Operations
-========================
-
-The following commands and algebraic functions return true/false values,
-where 1 represents "true" and 0 represents "false."  In cases where a
-truth value is required (such as for the condition part of a rewrite
-rule, or as the condition for a `Z [ Z ]' control structure), any
-nonzero value is accepted to mean "true."  (Specifically, anything for
-which `dnonzero' returns 1 is "true," and anything for which `dnonzero'
-returns 0 or cannot decide is assumed "false."  Note that this means
-that `Z [ Z ]' will execute the "then" portion if its condition is
-provably true, but it will execute the "else" portion for any condition
-like `a = b' that is not provably true, even if it might be true.
-Algebraic functions that have conditions as arguments, like `? :' and
-`&&', remain unevaluated if the condition is neither provably true nor
-provably false.  *Note Declarations::.)
-
-   The `a =' (`calc-equal-to') command, or `eq(a,b)' function (which
-can also be written `a = b' or `a == b' in an algebraic formula) is
-true if `a' and `b' are equal, either because they are identical
-expressions, or because they are numbers which are numerically equal.
-(Thus the integer 1 is considered equal to the float 1.0.)  If the
-equality of `a' and `b' cannot be determined, the comparison is left in
-symbolic form.  Note that as a command, this operation pops two values
-from the stack and pushes back either a 1 or a 0, or a formula `a = b'
-if the values' equality cannot be determined.
-
-   Many Calc commands use `=' formulas to represent "equations".  For
-example, the `a S' (`calc-solve-for') command rearranges an equation to
-solve for a given variable.  The `a M' (`calc-map-equation') command
-can be used to apply any function to both sides of an equation; for
-example, `2 a M *' multiplies both sides of the equation by two.  Note
-that just `2 *' would not do the same thing; it would produce the
-formula `2 (a = b)' which represents 2 if the equality is true or zero
-if not.
-
-   The `eq' function with more than two arguments (e.g., `C-u 3 a =' or
-`a = b = c') tests if all of its arguments are equal.  In algebraic
-notation, the `=' operator is unusual in that it is neither left- nor
-right-associative:  `a = b = c' is not the same as `(a = b) = c' or `a
-= (b = c)' (which each compare one variable with the 1 or 0 that
-results from comparing two other variables).
-
-   The `a #' (`calc-not-equal-to') command, or `neq(a,b)' or `a != b'
-function, is true if `a' and `b' are not equal.  This also works with
-more than two arguments; `a != b != c != d' tests that all four of `a',
-`b', `c', and `d' are distinct numbers.
-
-   The `a <' (`calc-less-than') [`lt(a,b)' or `a < b'] operation is
-true if `a' is less than `b'.  Similar functions are `a >'
-(`calc-greater-than') [`gt(a,b)' or `a > b'], `a [' (`calc-less-equal')
-[`leq(a,b)' or `a <= b'], and `a ]' (`calc-greater-equal') [`geq(a,b)'
-or `a >= b'].
-
-   While the inequality functions like `lt' do not accept more than two
-arguments, the syntax `a <= b < c' is translated to an equivalent
-expression involving intervals: `b in [a .. c)'.  (See the description
-of `in' below.)  All four combinations of `<' and `<=' are allowed, or
-any of the four combinations of `>' and `>='.  Four-argument
-constructions like `a < b < c < d', and mixtures like `a < b = c' that
-involve both equalities and inequalities, are not allowed.
-
-   The `a .' (`calc-remove-equal') [`rmeq'] command extracts the
-righthand side of the equation or inequality on the top of the stack.
-It also works elementwise on vectors.  For example, if `[x = 2.34, y =
-z / 2]' is on the stack, then `a .' produces `[2.34, z / 2]'.  As a
-special case, if the righthand side is a variable and the lefthand side
-is a number (as in `2.34 = x'), then Calc keeps the lefthand side
-instead.  Finally, this command works with assignments `x := 2.34' as
-well as equations, always taking the righthand side, and for `=>'
-(evaluates-to) operators, always taking the lefthand side.
-
-   The `a &' (`calc-logical-and') [`land(a,b)' or `a && b'] function is
-true if both of its arguments are true, i.e., are non-zero numbers.  In
-this case, the result will be either `a' or `b', chosen arbitrarily.
-If either argument is zero, the result is zero.  Otherwise, the formula
-is left in symbolic form.
-
-   The `a |' (`calc-logical-or') [`lor(a,b)' or `a || b'] function is
-true if either or both of its arguments are true (nonzero).  The result
-is whichever argument was nonzero, choosing arbitrarily if both are
-nonzero.  If both `a' and `b' are zero, the result is zero.
-
-   The `a !' (`calc-logical-not') [`lnot(a)' or `! a'] function is true
-if `a' is false (zero), or false if `a' is true (nonzero).  It is left
-in symbolic form if `a' is not a number.
-
-   The `a :' (`calc-logical-if') [`if(a,b,c)' or `a ? b : c'] function
-is equal to either `b' or `c' if `a' is a nonzero number or zero,
-respectively.  If `a' is not a number, the test is left in symbolic
-form and neither `b' nor `c' is evaluated in any way.  In algebraic
-formulas, this is one of the few Calc functions whose arguments are not
-automatically evaluated when the function itself is evaluated.  The
-others are `lambda', `quote', and `condition'.
-
-   One minor surprise to watch out for is that the formula `a?3:4' will
-not work because the `3:4' is parsed as a fraction instead of as three
-separate symbols.  Type something like `a ? 3 : 4' or `a?(3):4' instead.
-
-   As a special case, if `a' evaluates to a vector, then both `b' and
-`c' are evaluated; the result is a vector of the same length as `a'
-whose elements are chosen from corresponding elements of `b' and `c'
-according to whether each element of `a' is zero or nonzero.  Each of
-`b' and `c' must be either a vector of the same length as `a', or a
-non-vector which is matched with all elements of `a'.
-
-   The `a {' (`calc-in-set') [`in(a,b)'] function is true if the number
-`a' is in the set of numbers represented by `b'.  If `b' is an interval
-form, `a' must be one of the values encompassed by the interval.  If
-`b' is a vector, `a' must be equal to one of the elements of the
-vector.  (If any vector elements are intervals, `a' must be in any of
-the intervals.)  If `b' is a plain number, `a' must be numerically
-equal to `b'.  *Note Set Operations::, for a group of commands that
-manipulate sets of this sort.
-
-   The `typeof(a)' function produces an integer or variable which
-characterizes `a'.  If `a' is a number, vector, or variable, the result
-will be one of the following numbers:
-
-      1   Integer
-      2   Fraction
-      3   Floating-point number
-      4   HMS form
-      5   Rectangular complex number
-      6   Polar complex number
-      7   Error form
-      8   Interval form
-      9   Modulo form
-     10   Date-only form
-     11   Date/time form
-     12   Infinity (inf, uinf, or nan)
-     100  Variable
-     101  Vector (but not a matrix)
-     102  Matrix
-
-   Otherwise, `a' is a formula, and the result is a variable which
-represents the name of the top-level function call.
-
-   The `integer(a)' function returns true if `a' is an integer.  The
-`real(a)' function is true if `a' is a real number, either integer,
-fraction, or float.  The `constant(a)' function returns true if `a' is
-any of the objects for which `typeof' would produce an integer code
-result except for variables, and provided that the components of an
-object like a vector or error form are themselves constant.  Note that
-infinities do not satisfy any of these tests, nor do special constants
-like `pi' and `e'.
-
-   *Note Declarations::, for a set of similar functions that recognize
-formulas as well as actual numbers.  For example, `dint(floor(x))' is
-true because `floor(x)' is provably integer-valued, but
-`integer(floor(x))' does not because `floor(x)' is not literally an
-integer constant.
-
-   The `refers(a,b)' function is true if the variable (or
-sub-expression) `b' appears in `a', or false otherwise.  Unlike the
-other tests described here, this function returns a definite "no" answer
-even if its arguments are still in symbolic form.  The only case where
-`refers' will be left unevaluated is if `a' is a plain variable
-(different from `b').
-
-   The `negative(a)' function returns true if `a' "looks" negative,
-because it is a negative number, because it is of the form `-x', or
-because it is a product or quotient with a term that looks negative.
-This is most useful in rewrite rules.  Beware that `negative(a)'
-evaluates to 1 or 0 for _any_ argument `a', so it can only be stored in
-a formula if the default simplifications are turned off first with `m
-O' (or if it appears in an unevaluated context such as a rewrite rule
-condition).
-
-   The `variable(a)' function is true if `a' is a variable, or false if
-not.  If `a' is a function call, this test is left in symbolic form.
-Built-in variables like `pi' and `inf' are considered variables like
-any others by this test.
-
-   The `nonvar(a)' function is true if `a' is a non-variable.  If its
-argument is a variable it is left unsimplified; it never actually
-returns zero.  However, since Calc's condition-testing commands
-consider "false" anything not provably true, this is often good enough.
-
-   The functions `lin', `linnt', `islin', and `islinnt' check if an
-expression is "linear," i.e., can be written in the form `a + b x' for
-some constants `a' and `b', and some variable or subformula `x'.  The
-function `islin(f,x)' checks if formula `f' is linear in `x', returning
-1 if so.  For example, `islin(x,x)', `islin(-x,x)', `islin(3,x)', and
-`islin(x y / 3 - 2, x)' all return 1.  The `lin(f,x)' function is
-similar, except that instead of returning 1 it returns the vector `[a,
-b, x]'.  For the above examples, this vector would be `[0, 1, x]', `[0,
--1, x]', `[3, 0, x]', and `[-2, y/3, x]', respectively.  Both `lin' and
-`islin' generally remain unevaluated for expressions which are not
-linear, e.g., `lin(2 x^2, x)' and `lin(sin(x), x)'.  The second
-argument can also be a formula; `islin(2 + 3 sin(x), sin(x))' returns
-true.
-
-   The `linnt' and `islinnt' functions perform a similar check, but
-require a "non-trivial" linear form, which means that the `b'
-coefficient must be non-zero.  For example, `lin(2,x)' returns `[2, 0,
-x]' and `lin(y,x)' returns `[y, 0, x]', but `linnt(2,x)' and
-`linnt(y,x)' are left unevaluated (in other words, these formulas are
-considered to be only "trivially" linear in `x').
-
-   All four linearity-testing functions allow you to omit the second
-argument, in which case the input may be linear in any non-constant
-formula.  Here, the `a=0', `b=1' case is also considered trivial, and
-only constant values for `a' and `b' are recognized.  Thus, `lin(2 x
-y)' returns `[0, 2, x y]', `lin(2 - x y)' returns `[2, -1, x y]', and
-`lin(x y)' returns `[0, 1, x y]'.  The `linnt' function would allow the
-first two cases but not the third.  Also, neither `lin' nor `linnt'
-accept plain constants as linear in the one-argument case: `islin(2,x)'
-is true, but `islin(2)' is false.
-
-   The `istrue(a)' function returns 1 if `a' is a nonzero number or
-provably nonzero formula, or 0 if `a' is anything else.  Calls to
-`istrue' can only be manipulated if `m O' mode is used to make sure
-they are not evaluated prematurely.  (Note that declarations are used
-when deciding whether a formula is true; `istrue' returns 1 when
-`dnonzero' would return 1, and it returns 0 when `dnonzero' would
-return 0 or leave itself in symbolic form.)
-
-
-File: calc,  Node: Rewrite Rules,  Prev: Logical Operations,  Up: Algebra
-
-12.11 Rewrite Rules
-===================
-
-The `a r' (`calc-rewrite') [`rewrite'] command makes substitutions in a
-formula according to a specified pattern or patterns known as "rewrite
-rules".  Whereas `a b' (`calc-substitute') matches literally, so that
-substituting `sin(x)' with `cos(x)' matches only the `sin' function
-applied to the variable `x', rewrite rules match general kinds of
-formulas; rewriting using the rule `sin(x) := cos(x)' matches `sin' of
-any argument and replaces it with `cos' of that same argument.  The
-only significance of the name `x' is that the same name is used on both
-sides of the rule.
-
-   Rewrite rules rearrange formulas already in Calc's memory.  *Note
-Syntax Tables::, to read about "syntax rules", which are similar to
-algebraic rewrite rules but operate when new algebraic entries are
-being parsed, converting strings of characters into Calc formulas.
-
-* Menu:
-
-* Entering Rewrite Rules::
-* Basic Rewrite Rules::
-* Conditional Rewrite Rules::
-* Algebraic Properties of Rewrite Rules::
-* Other Features of Rewrite Rules::
-* Composing Patterns in Rewrite Rules::
-* Nested Formulas with Rewrite Rules::
-* Multi-Phase Rewrite Rules::
-* Selections with Rewrite Rules::
-* Matching Commands::
-* Automatic Rewrites::
-* Debugging Rewrites::
-* Examples of Rewrite Rules::
-
-
-File: calc,  Node: Entering Rewrite Rules,  Next: Basic Rewrite Rules,  Prev: Rewrite Rules,  Up: Rewrite Rules
-
-12.11.1 Entering Rewrite Rules
-------------------------------
-
-Rewrite rules normally use the "assignment" operator `OLD := NEW'.
-This operator is equivalent to the function call `assign(old, new)'.
-The `assign' function is undefined by itself in Calc, so an assignment
-formula such as a rewrite rule will be left alone by ordinary Calc
-commands.  But certain commands, like the rewrite system, interpret
-assignments in special ways.
-
-   For example, the rule `sin(x)^2 := 1-cos(x)^2' says to replace every
-occurrence of the sine of something, squared, with one minus the square
-of the cosine of that same thing.  All by itself as a formula on the
-stack it does nothing, but when given to the `a r' command it turns
-that command into a sine-squared-to-cosine-squared converter.
-
-   To specify a set of rules to be applied all at once, make a vector of
-rules.
-
-   When `a r' prompts you to enter the rewrite rules, you can answer in
-several ways:
-
-  1. With a rule:  `f(x) := g(x) <RET>'.
-
-  2. With a vector of rules:  `[f1(x) := g1(x), f2(x) := g2(x)] <RET>'.
-     (You can omit the enclosing square brackets if you wish.)
-
-  3. With the name of a variable that contains the rule or rules vector:
-     `myrules <RET>'.
-
-  4. With any formula except a rule, a vector, or a variable name; this
-     will be interpreted as the OLD half of a rewrite rule, and you
-     will be prompted a second time for the NEW half: `f(x) <RET> g(x)
-     <RET>'.
-
-  5. With a blank line, in which case the rule, rules vector, or
-     variable will be taken from the top of the stack (and the formula
-     to be rewritten will come from the second-to-top position).
-
-   If you enter the rules directly (as opposed to using rules stored in
-a variable), those rules will be put into the Trail so that you can
-retrieve them later.  *Note Trail Commands::.
-
-   It is most convenient to store rules you use often in a variable and
-invoke them by giving the variable name.  The `s e'
-(`calc-edit-variable') command is an easy way to create or edit a rule
-set stored in a variable.  You may also wish to use `s p'
-(`calc-permanent-variable') to save your rules permanently; *note
-Operations on Variables::.
-
-   Rewrite rules are compiled into a special internal form for faster
-matching.  If you enter a rule set directly it must be recompiled every
-time.  If you store the rules in a variable and refer to them through
-that variable, they will be compiled once and saved away along with the
-variable for later reference.  This is another good reason to store
-your rules in a variable.
-
-   Calc also accepts an obsolete notation for rules, as vectors `[OLD,
-NEW]'.  But because it is easily confused with a vector of two rules,
-the use of this notation is no longer recommended.
-
-
-File: calc,  Node: Basic Rewrite Rules,  Next: Conditional Rewrite Rules,  Prev: Entering Rewrite Rules,  Up: Rewrite Rules
-
-12.11.2 Basic Rewrite Rules
----------------------------
-
-To match a particular formula `x' with a particular rewrite rule `OLD
-:= NEW', Calc compares the structure of `x' with the structure of OLD.
-Variables that appear in OLD are treated as "meta-variables"; the
-corresponding positions in `x' may contain any sub-formulas.  For
-example, the pattern `f(x,y)' would match the expression `f(12, a+1)'
-with the meta-variable `x' corresponding to 12 and with `y'
-corresponding to `a+1'.  However, this pattern would not match `f(12)'
-or `g(12, a+1)', since there is no assignment of the meta-variables
-that will make the pattern match these expressions.  Notice that if the
-pattern is a single meta-variable, it will match any expression.
-
-   If a given meta-variable appears more than once in OLD, the
-corresponding sub-formulas of `x' must be identical.  Thus the pattern
-`f(x,x)' would match `f(12, 12)' and `f(a+1, a+1)' but not `f(12, a+1)'
-or `f(a+b, b+a)'.  (*Note Conditional Rewrite Rules::, for a way to
-match the latter.)
-
-   Things other than variables must match exactly between the pattern
-and the target formula.  To match a particular variable exactly, use
-the pseudo-function `quote(v)' in the pattern.  For example, the
-pattern `x+quote(y)' matches `x+y', `2+y', or `sin(a)+y'.
-
-   The special variable names `e', `pi', `i', `phi', `gamma', `inf',
-`uinf', and `nan' always match literally.  Thus the pattern `sin(d + e
-+ f)' acts exactly like `sin(d + quote(e) + f)'.
-
-   If the OLD pattern is found to match a given formula, that formula
-is replaced by NEW, where any occurrences in NEW of meta-variables from
-the pattern are replaced with the sub-formulas that they matched.
-Thus, applying the rule `f(x,y) := g(y+x,x)' to `f(12, a+1)' would
-produce `g(a+13, 12)'.
-
-   The normal `a r' command applies rewrite rules over and over
-throughout the target formula until no further changes are possible (up
-to a limit of 100 times).  Use `C-u 1 a r' to make only one change at a
-time.
 

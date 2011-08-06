@@ -1,13 +1,16 @@
 /* Primitive operations on floating point for GNU Emacs Lisp interpreter.
    Copyright (C) 1988, 1993, 1994, 1999, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+
+Author: Wolfgang Rupprecht
+(according to ack.texi)
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +18,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 /* ANSI C requires only these float functions:
@@ -64,16 +65,6 @@ Boston, MA 02110-1301, USA.  */
 #endif
 #endif
 
-/* Work around a problem that happens because math.h on hpux 7
-   defines two static variables--which, in Emacs, are not really static,
-   because `static' is defined as nothing.  The problem is that they are
-   defined both here and in lread.c.
-   These macros prevent the name conflict.  */
-#if defined (HPUX) && !defined (HPUX8)
-#define _MAXLDBL floatfns_maxldbl
-#define _NMAXLDBL floatfns_nmaxldbl
-#endif
-
 #include <math.h>
 
 /* This declaration is omitted on some systems, like Ultrix.  */
@@ -112,16 +103,6 @@ extern double logb ();
 extern int errno;
 #endif
 #endif
-
-/* Avoid traps on VMS from sinh and cosh.
-   All the other functions set errno instead.  */
-
-#ifdef VMS
-#undef cosh
-#undef sinh
-#define cosh(x) ((exp(x)+exp(-x))*0.5)
-#define sinh(x) ((exp(x)-exp(-x))*0.5)
-#endif /* VMS */
 
 #ifdef FLOAT_CATCH_SIGILL
 static SIGTYPE float_error ();
@@ -454,7 +435,7 @@ DEFUN ("expt", Fexpt, Sexpt, 2, 2, 0,
      (arg1, arg2)
      register Lisp_Object arg1, arg2;
 {
-  double f1, f2;
+  double f1, f2, f3;
 
   CHECK_NUMBER_OR_FLOAT (arg1);
   CHECK_NUMBER_OR_FLOAT (arg2);
@@ -500,8 +481,11 @@ DEFUN ("expt", Fexpt, Sexpt, 2, 2, 0,
   else if ((f1 == 0.0 && f2 < 0.0) || (f1 < 0 && f2 != floor(f2)))
     domain_error2 ("expt", arg1, arg2);
 #endif
-  IN_FLOAT2 (f1 = pow (f1, f2), "expt", arg1, arg2);
-  return make_float (f1);
+  IN_FLOAT2 (f3 = pow (f1, f2), "expt", arg1, arg2);
+  /* Check for overflow in the result.  */
+  if (f1 != 0.0 && f3 == 0.0)
+    range_error ("expt", arg1);
+  return make_float (f3);
 }
 
 DEFUN ("log", Flog, Slog, 1, 2, 0,
@@ -971,11 +955,7 @@ float_error (signo)
     fatal_error_signal (signo);
 
 #ifdef BSD_SYSTEM
-#ifdef BSD4_1
-  sigrelse (SIGILL);
-#else /* not BSD4_1 */
   sigsetmask (SIGEMPTYMASK);
-#endif /* not BSD4_1 */
 #else
   /* Must reestablish handler each time it is called.  */
   signal (SIGILL, float_error);

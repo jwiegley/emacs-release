@@ -1,7 +1,7 @@
 ;;; byte-opt.el --- the optimization passes of the emacs-lisp byte compiler
 
 ;; Copyright (C) 1991, 1994, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com>
 ;;	Hallvard Furuseth <hbf@ulrik.uio.no>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -31,7 +29,7 @@
 ;; "No matter how hard you try, you can't make a racehorse out of a pig.
 ;; You can, however, make a faster pig."
 ;;
-;; Or, to put it another way, the emacs byte compiler is a VW Bug.  This code
+;; Or, to put it another way, the Emacs byte compiler is a VW Bug.  This code
 ;; makes it be a VW Bug with fuel injection and a turbocharger...  You're
 ;; still not going to make it go faster than 70 mph, but it might be easier
 ;; to get it there.
@@ -185,6 +183,7 @@
 ;;; Code:
 
 (require 'bytecomp)
+(eval-when-compile (require 'cl))
 
 (defun byte-compile-log-lap-1 (format &rest args)
   (if (aref byte-code-vector 0)
@@ -382,7 +381,9 @@
 		form))
 	  ((or (byte-code-function-p fn)
 	       (eq 'lambda (car-safe fn)))
-	   (byte-compile-unfold-lambda form))
+           (byte-optimize-form-code-walker
+            (byte-compile-unfold-lambda form)
+            for-effect))
 	  ((memq fn '(let let*))
 	   ;; recursively enter the optimizer for the bindings and body
 	   ;; of a let or let*.  This for depth-firstness: forms that
@@ -627,13 +628,32 @@
 ;;
 ;; It is now safe to optimize code such that it introduces new bindings.
 
-;; I'd like this to be a defsubst, but let's not be self-referential...
-(defmacro byte-compile-trueconstp (form)
-  ;; Returns non-nil if FORM is a non-nil constant.
-  `(cond ((consp ,form) (eq (car ,form) 'quote))
-	 ((not (symbolp ,form)))
-	 ((eq ,form t))
-	 ((keywordp ,form))))
+(defsubst byte-compile-trueconstp (form)
+  "Return non-nil if FORM always evaluates to a non-nil value."
+  (while (eq (car-safe form) 'progn)
+    (setq form (car (last (cdr form)))))
+  (cond ((consp form)
+         (case (car form)
+           (quote (cadr form))
+           ;; Can't use recursion in a defsubst.
+           ;; (progn (byte-compile-trueconstp (car (last (cdr form)))))
+           ))
+        ((not (symbolp form)))
+        ((eq form t))
+        ((keywordp form))))
+
+(defsubst byte-compile-nilconstp (form)
+  "Return non-nil if FORM always evaluates to a nil value."
+  (while (eq (car-safe form) 'progn)
+    (setq form (car (last (cdr form)))))
+  (cond ((consp form)
+         (case (car form)
+           (quote (null (cadr form)))
+           ;; Can't use recursion in a defsubst.
+           ;; (progn (byte-compile-nilconstp (car (last (cdr form)))))
+           ))
+        ((not (symbolp form)) nil)
+        ((null form))))
 
 ;; If the function is being called with constant numeric args,
 ;; evaluate as much as possible at compile-time.  This optimizer
@@ -727,119 +747,104 @@
 				(list (apply fun (nreverse constants)))))))))
     form))
 
-(defun byte-optimize-plus (form)
-  (setq form (byte-optimize-delay-constants-math form 1 '+))
-  (if (memq 0 form) (setq form (delq 0 (copy-sequence form))))
-  ;;(setq form (byte-optimize-associative-two-args-math form))
-  (cond ((null (cdr form))
-	 (condition-case ()
-	     (eval form)
-	   (error form)))
-;;;  It is not safe to delete the function entirely
-;;;  (actually, it would be safe if we know the sole arg
-;;;  is not a marker).
-;;;	((null (cdr (cdr form))) (nth 1 form))
-	((null (cddr form))
-	 (if (numberp (nth 1 form))
-	     (nth 1 form)
-	   form))
-	((and (null (nthcdr 3 form))
-	      (or (memq (nth 1 form) '(1 -1))
-		  (memq (nth 2 form) '(1 -1))))
-	 ;; Optimize (+ x 1) into (1+ x) and (+ x -1) into (1- x).
-	 (let ((integer
-		(if (memq (nth 1 form) '(1 -1))
-		    (nth 1 form)
-		  (nth 2 form)))
-	       (other
-		(if (memq (nth 1 form) '(1 -1))
-		    (nth 2 form)
-		  (nth 1 form))))
-	   (list (if (eq integer 1) '1+ '1-)
-		 other)))
-	(t form)))
-
-(defun byte-optimize-minus (form)
-  ;; Put constants at the end, except the last constant.
-  (setq form (byte-optimize-delay-constants-math form 2 '+))
-  ;; Now only first and last element can be a number.
-  (let ((last (car (reverse (nthcdr 3 form)))))
-    (cond ((eq 0 last)
-	   ;; (- x y ... 0)  --> (- x y ...)
-	   (setq form (copy-sequence form))
-	   (setcdr (cdr (cdr form)) (delq 0 (nthcdr 3 form))))
-	  ((equal (nthcdr 2 form) '(1))
-	   (setq form (list '1- (nth 1 form))))
-	  ((equal (nthcdr 2 form) '(-1))
-	   (setq form (list '1+ (nth 1 form))))
-	  ;; If form is (- CONST foo... CONST), merge first and last.
-	  ((and (numberp (nth 1 form))
-		(numberp last))
-	   (setq form (nconc (list '- (- (nth 1 form) last) (nth 2 form))
-			     (delq last (copy-sequence (nthcdr 3 form))))))))
-;;;  It is not safe to delete the function entirely
-;;;  (actually, it would be safe if we know the sole arg
-;;;  is not a marker).
-;;;  (if (eq (nth 2 form) 0)
-;;;      (nth 1 form)			; (- x 0)  -->  x
-    (byte-optimize-predicate
-     (if (and (null (cdr (cdr (cdr form))))
-	      (eq (nth 1 form) 0))	; (- 0 x)  -->  (- x)
-	 (cons (car form) (cdr (cdr form)))
-       form))
-;;;    )
-  )
-
-(defun byte-optimize-multiply (form)
-  (setq form (byte-optimize-delay-constants-math form 1 '*))
-  ;; If there is a constant in FORM, it is now the last element.
-  (cond ((null (cdr form)) 1)
-;;;  It is not safe to delete the function entirely
-;;;  (actually, it would be safe if we know the sole arg
-;;;  is not a marker or if it appears in other arithmetic).
-;;;	((null (cdr (cdr form))) (nth 1 form))
-	((let ((last (car (reverse form))))
-	   (cond ((eq 0 last)  (cons 'progn (cdr form)))
-		 ((eq 1 last)  (delq 1 (copy-sequence form)))
-		 ((eq -1 last) (list '- (delq -1 (copy-sequence form))))
-		 ((and (eq 2 last)
-		       (memq t (mapcar 'symbolp (cdr form))))
-		  (prog1 (setq form (delq 2 (copy-sequence form)))
-		    (while (not (symbolp (car (setq form (cdr form))))))
-		    (setcar form (list '+ (car form) (car form)))))
-		 (form))))))
-
 (defsubst byte-compile-butlast (form)
   (nreverse (cdr (reverse form))))
 
+(defun byte-optimize-plus (form)
+  ;; Don't call `byte-optimize-delay-constants-math' (bug#1334).
+  ;;(setq form (byte-optimize-delay-constants-math form 1 '+))
+  (if (memq 0 form) (setq form (delq 0 (copy-sequence form))))
+  ;; For (+ constants...), byte-optimize-predicate does the work.
+  (when (memq nil (mapcar 'numberp (cdr form)))
+    (cond
+     ;; (+ x 1) --> (1+ x) and (+ x -1) --> (1- x).
+     ((and (= (length form) 3)
+	   (or (memq (nth 1 form) '(1 -1))
+	       (memq (nth 2 form) '(1 -1))))
+      (let (integer other)
+	(if (memq (nth 1 form) '(1 -1))
+	    (setq integer (nth 1 form) other (nth 2 form))
+	  (setq integer (nth 2 form) other (nth 1 form)))
+	(setq form
+	      (list (if (eq integer 1) '1+ '1-) other))))
+     ;; Here, we could also do
+     ;;  (+ x y ... 1) --> (1+ (+ x y ...))
+     ;;  (+ x y ... -1) --> (1- (+ x y ...))
+     ;; The resulting bytecode is smaller, but is it faster? -- cyd
+     ))
+  (byte-optimize-predicate form))
+
+(defun byte-optimize-minus (form)
+  ;; Don't call `byte-optimize-delay-constants-math' (bug#1334).
+  ;;(setq form (byte-optimize-delay-constants-math form 2 '+))
+  ;; Remove zeros.
+  (when (and (nthcdr 3 form)
+	     (memq 0 (cddr form)))
+    (setq form (nconc (list (car form) (cadr form))
+		      (delq 0 (copy-sequence (cddr form)))))
+    ;; After the above, we must turn (- x) back into (- x 0)
+    (or (cddr form)
+	(setq form (nconc form (list 0)))))
+  ;; For (- constants..), byte-optimize-predicate does the work.
+  (when (memq nil (mapcar 'numberp (cdr form)))
+    (cond
+     ;; (- x 1) --> (1- x)
+     ((equal (nthcdr 2 form) '(1))
+      (setq form (list '1- (nth 1 form))))
+     ;; (- x -1) --> (1+ x)
+     ((equal (nthcdr 2 form) '(-1))
+      (setq form (list '1+ (nth 1 form))))
+     ;; (- 0 x) --> (- x)
+     ((and (eq (nth 1 form) 0)
+	   (= (length form) 3))
+      (setq form (list '- (nth 2 form))))
+     ;; Here, we could also do
+     ;;  (- x y ... 1) --> (1- (- x y ...))
+     ;;  (- x y ... -1) --> (1+ (- x y ...))
+     ;; The resulting bytecode is smaller, but is it faster? -- cyd
+     ))
+  (byte-optimize-predicate form))
+
+(defun byte-optimize-multiply (form)
+  (setq form (byte-optimize-delay-constants-math form 1 '*))
+  ;; For (* constants..), byte-optimize-predicate does the work.
+  (when (memq nil (mapcar 'numberp (cdr form)))
+    ;; After `byte-optimize-predicate', if there is a INTEGER constant
+    ;; in FORM, it is in the last element.
+    (let ((last (car (reverse (cdr form)))))
+      (cond
+       ;; Would handling (* ... 0) here cause floating point errors?
+       ;; See bug#1334.
+       ((eq 1 last) (setq form (byte-compile-butlast form)))
+       ((eq -1 last)
+	(setq form (list '- (if (nthcdr 3 form)
+				(byte-compile-butlast form)
+			      (nth 1 form))))))))
+  (byte-optimize-predicate form))
+
 (defun byte-optimize-divide (form)
   (setq form (byte-optimize-delay-constants-math form 2 '*))
+  ;; After `byte-optimize-predicate', if there is a INTEGER constant
+  ;; in FORM, it is in the last element.
   (let ((last (car (reverse (cdr (cdr form))))))
-    (if (numberp last)
-	(cond ((= (length form) 3)
-	       (if (and (numberp (nth 1 form))
-			(not (zerop last))
-			(condition-case nil
-			    (/ (nth 1 form) last)
-			  (error nil)))
-		   (setq form (list 'progn (/ (nth 1 form) last)))))
-	      ((= last 1)
-	       (setq form (byte-compile-butlast form)))
-	      ((numberp (nth 1 form))
-	       (setq form (cons (car form)
-				(cons (/ (nth 1 form) last)
-				      (byte-compile-butlast (cdr (cdr form)))))
-		     last nil))))
     (cond
-;;;	  ((null (cdr (cdr form)))
-;;;	   (nth 1 form))
-	  ((eq (nth 1 form) 0)
-	   (append '(progn) (cdr (cdr form)) '(0)))
-	  ((eq last -1)
-	   (list '- (if (nthcdr 3 form)
-			(byte-compile-butlast form)
-		      (nth 1 form))))
-	  (form))))
+     ;; Runtime error (leave it intact).
+     ((or (null last)
+	  (eq last 0)
+	  (memql 0.0 (cddr form))))
+     ;; No constants in expression
+     ((not (numberp last)))
+     ;; For (* constants..), byte-optimize-predicate does the work.
+     ((null (memq nil (mapcar 'numberp (cdr form)))))
+     ;; (/ x y.. 1) --> (/ x y..)
+     ((and (eq last 1) (nthcdr 3 form))
+      (setq form (byte-compile-butlast form)))
+     ;; (/ x -1), (/ x .. -1)  --> (- x), (- (/ x ..))
+     ((eq last -1)
+      (setq form (list '- (if (nthcdr 3 form)
+			      (byte-compile-butlast form)
+			    (nth 1 form)))))))
+  (byte-optimize-predicate form))
 
 (defun byte-optimize-logmumble (form)
   (setq form (byte-optimize-delay-constants-math form 1 (car form)))
@@ -992,17 +997,17 @@
     (setq rest form)
     (while (setq rest (cdr rest))
       (cond ((byte-compile-trueconstp (car-safe (car rest)))
-	     (cond ((eq rest (cdr form))
-		    (setq form
-			  (if (cdr (car rest))
-			      (if (cdr (cdr (car rest)))
-				  (cons 'progn (cdr (car rest)))
-				(nth 1 (car rest)))
-			    (car (car rest)))))
+             ;; This branch will always be taken: kill the subsequent ones.
+	     (cond ((eq rest (cdr form)) ;First branch of `cond'.
+		    (setq form `(progn ,@(car rest))))
 		   ((cdr rest)
 		    (setq form (copy-sequence form))
 		    (setcdr (memq (car rest) form) nil)))
-	     (setq rest nil)))))
+	     (setq rest nil))
+            ((and (consp (car rest))
+                  (byte-compile-nilconstp (caar rest)))
+             ;; This branch will never be taken: kill its body.
+             (setcdr (car rest) nil)))))
   ;;
   ;; Turn (cond (( <x> )) ... ) into (or <x> (cond ... ))
   (if (eq 'cond (car-safe form))
@@ -1016,17 +1021,26 @@
     form))
 
 (defun byte-optimize-if (form)
+  ;; (if (progn <insts> <test>) <rest>) ==> (progn <insts> (if <test> <rest>))
   ;; (if <true-constant> <then> <else...>) ==> <then>
   ;; (if <false-constant> <then> <else...>) ==> (progn <else...>)
   ;; (if <test> nil <else...>) ==> (if (not <test>) (progn <else...>))
   ;; (if <test> <then> nil) ==> (if <test> <then>)
   (let ((clause (nth 1 form)))
-    (cond ((byte-compile-trueconstp clause)
-	   (nth 2 form))
-	  ((null clause)
-	   (if (nthcdr 4 form)
-	       (cons 'progn (nthcdr 3 form))
-	     (nth 3 form)))
+    (cond ((and (eq (car-safe clause) 'progn)
+                ;; `clause' is a proper list.
+                (null (cdr (last clause))))
+           (if (null (cddr clause))
+               ;; A trivial `progn'.
+               (byte-optimize-if `(if ,(cadr clause) ,@(nthcdr 2 form)))
+             (nconc (butlast clause)
+                    (list
+                     (byte-optimize-if
+                      `(if ,(car (last clause)) ,@(nthcdr 2 form)))))))
+          ((byte-compile-trueconstp clause)
+	   `(progn ,clause ,(nth 2 form)))
+	  ((byte-compile-nilconstp clause)
+           `(progn ,clause ,@(nthcdr 3 form)))
 	  ((nth 2 form)
 	   (if (equal '(nil) (nthcdr 3 form))
 	       (list 'if clause (nth 2 form))
@@ -1139,9 +1153,11 @@
 (defun byte-optimize-featurep (form)
   ;; Emacs-21's byte-code doesn't run under XEmacs or SXEmacs anyway, so we
   ;; can safely optimize away this test.
-  (if (member (cdr-safe form) '((quote xemacs) (quote sxemacs)))
+  (if (member (cdr-safe form) '(((quote xemacs)) ((quote sxemacs))))
       nil
-    form))
+    (if (member (cdr-safe form) '(((quote emacs))))
+	t
+      form)))
 
 (put 'set 'byte-optimizer 'byte-optimize-set)
 (defun byte-optimize-set (form)
@@ -1186,8 +1202,9 @@
 	 char-equal char-to-string char-width
 	 compare-strings concat coordinates-in-window-p
 	 copy-alist copy-sequence copy-marker cos count-lines
+	 decode-char
 	 decode-time default-boundp default-value documentation downcase
-	 elt exp expt encode-time error-message-string
+	 elt encode-char exp expt encode-time error-message-string
 	 fboundp fceiling featurep ffloor
 	 file-directory-p file-exists-p file-locked-p file-name-absolute-p
 	 file-newer-than-file-p file-readable-p file-symlink-p file-writable-p
@@ -1198,7 +1215,7 @@
 	 int-to-string intern-soft
 	 keymap-parent
 	 length local-variable-if-set-p local-variable-p log log10 logand
-	 logb logior lognot logxor lsh
+	 logb logior lognot logxor lsh langinfo
 	 make-list make-string make-symbol
 	 marker-buffer max member memq min mod multibyte-char-to-unibyte
 	 next-window nth nthcdr number-to-string
@@ -1210,6 +1227,7 @@
 	 string-to-int string-to-number substring sxhash symbol-function
 	 symbol-name symbol-plist symbol-value string-make-unibyte
 	 string-make-multibyte string-as-multibyte string-as-unibyte
+	 string-to-multibyte
 	 tan truncate
 	 unibyte-char-to-multibyte upcase user-full-name
 	 user-login-name user-original-login-name user-variable-p
@@ -1221,7 +1239,8 @@
        '(arrayp atom
 	 bobp bolp bool-vector-p
 	 buffer-end buffer-list buffer-size buffer-string bufferp
-	 car-safe case-table-p cdr-safe char-or-string-p commandp cons consp
+	 car-safe case-table-p cdr-safe char-or-string-p characterp
+	 charsetp commandp cons consp
 	 current-buffer current-global-map current-indentation
 	 current-local-map current-minor-mode-maps current-time
 	 current-time-string current-time-zone
@@ -1233,11 +1252,13 @@
 	 invocation-directory invocation-name
 	 keymapp
 	 line-beginning-position line-end-position list listp
-	 make-marker mark mark-marker markerp memory-limit minibuffer-window
+	 make-marker mark mark-marker markerp max-char
+	 memory-limit minibuffer-window
 	 mouse-movement-p
 	 natnump nlistp not null number-or-marker-p numberp
 	 one-window-p overlayp
-	 point point-marker point-min point-max preceding-char processp
+	 point point-marker point-min point-max preceding-char primary-charset
+	 processp
 	 recent-keys recursion-depth
 	 safe-length selected-frame selected-window sequencep
 	 standard-case-table standard-syntax-table stringp subrp symbolp
@@ -1328,7 +1349,7 @@
 ;; This list contains numbers, which are pc values,
 ;; before each instruction.
 (defun byte-decompile-bytecode (bytes constvec)
-  "Turns BYTECODE into lapcode, referring to CONSTVEC."
+  "Turn BYTECODE into lapcode, referring to CONSTVEC."
   (let ((byte-compile-constants nil)
 	(byte-compile-variables nil)
 	(byte-compile-tag-number 0))
@@ -1998,17 +2019,17 @@ If FOR-EFFECT is non-nil, the return value is assumed to be of no importance."
      (assq 'byte-code (symbol-function 'byte-optimize-form))
      (let ((byte-optimize nil)
 	   (byte-compile-warnings nil))
-       (mapcar (lambda (x)
-		 (or noninteractive (message "compiling %s..." x))
-		 (byte-compile x)
-		 (or noninteractive (message "compiling %s...done" x)))
-	       '(byte-optimize-form
-		 byte-optimize-body
-		 byte-optimize-predicate
-		 byte-optimize-binary-predicate
-		 ;; Inserted some more than necessary, to speed it up.
-		 byte-optimize-form-code-walker
-		 byte-optimize-lapcode))))
+       (mapc (lambda (x)
+	       (or noninteractive (message "compiling %s..." x))
+	       (byte-compile x)
+	       (or noninteractive (message "compiling %s...done" x)))
+	     '(byte-optimize-form
+	       byte-optimize-body
+	       byte-optimize-predicate
+	       byte-optimize-binary-predicate
+	       ;; Inserted some more than necessary, to speed it up.
+	       byte-optimize-form-code-walker
+	       byte-optimize-lapcode))))
  nil)
 
 ;; arch-tag: 0f14076b-737e-4bef-aae6-908826ec1ff1

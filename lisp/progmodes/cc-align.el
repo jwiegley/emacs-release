@@ -1,13 +1,14 @@
 ;;; cc-align.el --- custom indentation functions for CC Mode
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    2004- Alan Mackenzie
 ;;             1998- Martin Stjernholm
 ;;             1992-1999 Barry A. Warsaw
-;;             1987 Dave Detlefs and Stewart Clamen
+;;             1987 Dave Detlefs
+;;             1987 Stewart Clamen
 ;;             1985 Richard M. Stallman
 ;; Maintainer: bug-cc-mode@gnu.org
 ;; Created:    22-Apr-1997 (split from cc-mode.el)
@@ -16,10 +17,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,9 +28,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -908,8 +907,48 @@ Works with: objc-method-call-cont."
 	   )
       (- target-col open-bracket-col extra))))
 
+(defun c-lineup-ObjC-method-call-colons (langelem)
+  "Line up selector args as Project Builder / XCode: colons of first
+   selector portions on successive lines are aligned.  If no decision can
+   be made return NIL, so that other lineup methods can be tried.  This is
+   typically chained with `c-lineup-ObjC-method-call'.
+
+Works with: objc-method-call-cont."
+  (save-excursion
+    (catch 'no-idea
+      (let* ((method-arg-len (progn
+			       (back-to-indentation)
+			       (if (search-forward ":" (c-point 'eol) 'move)
+				   (- (point) (c-point 'boi))
+				 ; no complete argument to indent yet
+				 (throw 'no-idea nil))))
+
+	     (extra (save-excursion 
+                      ; indent parameter to argument if needed
+		      (back-to-indentation)
+		      (c-backward-syntactic-ws (c-langelem-pos langelem))
+		      (if (eq ?: (char-before))
+			  c-objc-method-parameter-offset 0)))
+
+	     (open-bracket-col (c-langelem-col langelem))
+
+	     (arg-ralign-colon-ofs (progn
+			(forward-char) ; skip over '['
+			; skip over object/class name
+			; and first argument
+			(c-forward-sexp 2)
+			(if (search-forward ":" (c-point 'eol) 'move)
+			    (- (current-column) open-bracket-col
+			       method-arg-len extra)
+			  ; previous arg has no param
+  			  c-objc-method-arg-unfinished-offset))))
+
+	(if (>= arg-ralign-colon-ofs c-objc-method-arg-min-delta-to-bracket)
+	    (+ arg-ralign-colon-ofs extra)
+	  (throw 'no-idea nil))))))
+
 (defun c-lineup-ObjC-method-args (langelem)
-  "Line up the colons that separate args.
+  "Line up the colons that separate args in a method declaration.
 The colon on the current line is aligned with the one on the first
 line.
 
@@ -933,7 +972,7 @@ Works with: objc-method-args-cont."
 	  c-basic-offset)))))
 
 (defun c-lineup-ObjC-method-args-2 (langelem)
-  "Line up the colons that separate args.
+  "Line up the colons that separate args in a method declaration.
 The colon on the current line is aligned with the one on the previous
 line.
 
@@ -1247,7 +1286,7 @@ newline is added.  In either case, checking is stopped.  This supports
 exactly the old newline insertion behavior."
   ;; newline only after semicolon, but only if that semicolon is not
   ;; inside a parenthesis list (e.g. a for loop statement)
-  (if (not (eq last-command-char ?\;))
+  (if (not (eq last-command-event ?\;))
       nil				; continue checking
     (if (condition-case nil
 	    (save-excursion
@@ -1264,7 +1303,7 @@ If a comma was inserted, no determination is made.  If a semicolon was
 inserted, and the following line is not blank, no newline is inserted.
 Otherwise, no determination is made."
   (save-excursion
-    (if (and (= last-command-char ?\;)
+    (if (and (= last-command-event ?\;)
 	     ;;(/= (point-max)
 	     ;;    (save-excursion (skip-syntax-forward " ") (point))
 	     (zerop (forward-line 1))
@@ -1284,7 +1323,7 @@ For other semicolon contexts, no determination is made."
                (if (c-safe (up-list -1) t)
                    (c-point 'bol)
                  -1))))
-    (if (and (eq last-command-char ?\;)
+    (if (and (eq last-command-event ?\;)
              (eq (car (car syntax)) 'inclass)
              (eq (car (car (cdr syntax))) 'topmost-intro)
              (= (c-point 'bol) bol))
@@ -1294,5 +1333,5 @@ For other semicolon contexts, no determination is made."
 
 (cc-provide 'cc-align)
 
-;;; arch-tag: 4d71ed28-bf51-4509-a148-f39669669a2e
+;; arch-tag: 4d71ed28-bf51-4509-a148-f39669669a2e
 ;;; cc-align.el ends here

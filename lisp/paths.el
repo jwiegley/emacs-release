@@ -1,17 +1,17 @@
 ;;; paths.el --- define pathnames for use by various Emacs commands -*- no-byte-compile: t -*-
 
-;; Copyright (C) 1986, 1988, 1994, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1986, 1988, 1994, 1999, 2000, 2001, 2002, 2003, 2004,
+;;   2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -38,7 +36,7 @@
 ;; DOC file rather than in memory.
 
 (defun prune-directory-list (dirs &optional keep reject)
-  "Returns a copy of DIRS with all non-existent directories removed.
+  "Return a copy of DIRS with all non-existent directories removed.
 The optional argument KEEP is a list of directories to retain even if
 they don't exist, and REJECT is a list of directories to remove from
 DIRS, even if they exist; REJECT takes precedence over KEEP.
@@ -124,7 +122,7 @@ The name of the host running an NNTP server.
 The null string means use the local host as the server site.")
 
 (defvar gnus-nntp-service "nntp"
-  "NNTP service name, usually \"nntp\" or 119).
+  "NNTP service name, usually \"nntp\" or 119.
 Go to a local news spool if its value is nil, in which case `gnus-nntp-server'
 should be set to `(system-name)'.")
 
@@ -133,27 +131,21 @@ should be set to `(system-name)'.")
 The `ORGANIZATION' environment variable is used instead if defined.")
 
 (defcustom rmail-file-name "~/RMAIL"
-  "*Name of user's primary mail file."
+  "Name of user's primary mail file."
   :type 'string
   :group 'rmail
   :version "21.1")
 
 (defvar rmail-spool-directory
-  (cond ((string-match "^[^-]+-[^-]+-sco3.2v4" system-configuration)
-	 "/usr/spool/mail/")
-	;; On The Bull DPX/2 /usr/spool/mail is used although
-	;; it is usg-unix-v.
-	((string-match "^m68k-bull-sysv3" system-configuration)
-	 "/usr/spool/mail/")
-	;; SVR4 and recent BSD are said to use this.
-	;; Rather than trying to know precisely which systems use it,
-	;; let's assume this dir is never used for anything else.
-	((file-exists-p "/var/mail")
+  (cond ((file-exists-p "/var/mail")
+	 ;; SVR4 and recent BSD are said to use this.
+	 ;; Rather than trying to know precisely which systems use it,
+	 ;; let's assume this dir is never used for anything else.
 	 "/var/mail/")
 	;; Many GNU/Linux systems use this name.
 	((file-exists-p "/var/spool/mail")
 	 "/var/spool/mail/")
-	((memq system-type '(dgux hpux usg-unix-v unisoft-unix rtu irix))
+	((memq system-type '(hpux usg-unix-v irix))
 	 "/usr/mail/")
 	(t "/usr/spool/mail/"))
   "Name of directory used by system mailer for delivering new mail.
@@ -184,16 +176,14 @@ Its name should end with a slash.")
   :group 'environment
   :type 'file)
 
-(defvar term-file-prefix (if (eq system-type 'vax-vms) "[.term]" "term/") "\
+(defvar term-file-prefix "term/" "\
 If non-nil, Emacs startup does (load (concat term-file-prefix (getenv \"TERM\")))
 You may set this variable to nil in your `.emacs' file if you do not wish
 the terminal-initialization file to be loaded.")
 
 (defvar abbrev-file-name
-  (if (eq system-type 'vax-vms)
-      "~/abbrev.def"
-    (convert-standard-filename "~/.abbrev_defs"))
+  (convert-standard-filename "~/.abbrev_defs")
   "*Default name of file to read abbrevs from.")
 
-;;; arch-tag: bae27ffb-9944-4c87-b569-30d4635a99e1
+;; arch-tag: bae27ffb-9944-4c87-b569-30d4635a99e1
 ;;; paths.el ends here

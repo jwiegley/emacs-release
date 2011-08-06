@@ -1,13 +1,13 @@
 /* Definitions and headers for communication on the Microsoft W32 API.
    Copyright (C) 1995, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,55 +15,26 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #ifndef EMACS_W32GUI_H
 #define EMACS_W32GUI_H
 #include <windows.h>
 
-#include "w32bdf.h"
+/* Local memory management for menus.  */
+#define local_heap (GetProcessHeap ())
+#define local_alloc(n) (HeapAlloc (local_heap, HEAP_ZERO_MEMORY, (n)))
+#define local_free(p) (HeapFree (local_heap, 0, ((LPVOID) (p))))
 
-/* Emulate XCharStruct.  */
-typedef struct _XCharStruct
-{
-  short rbearing;
-  short lbearing;
-  short width;
-  short ascent;
-  short descent;
-} XCharStruct;
-
-enum w32_char_font_type
-{
-  UNKNOWN_FONT = 0 /* FONT_TYPE_UNKNOWN */,
-  ANSI_FONT,
-  UNICODE_FONT,
-  BDF_1D_FONT,
-  BDF_2D_FONT
-};
-
-typedef struct W32FontStruct {
-  enum w32_char_font_type font_type;
-  TEXTMETRIC tm;
-  HFONT hfont;
-  bdffont *bdf;
-  int double_byte_p;
-  XCharStruct max_bounds;
-  XCharStruct scratch;
-  /* Only store info for ascii chars, if not fixed pitch.  */
-  XCharStruct * per_char;
-} W32FontStruct;
-
-typedef struct W32FontStruct XFontStruct;
+#define malloc_widget_value() ((widget_value *) local_alloc (sizeof (widget_value)))
+#define free_widget_value(wv) (local_free ((wv)))
 
 /* Emulate X GC's by keeping color and font info in a structure.  */
 typedef struct _XGCValues
 {
   COLORREF foreground;
   COLORREF background;
-  XFontStruct * font;
+  struct font *font;
 } XGCValues;
 
 #define GCForeground 0x01

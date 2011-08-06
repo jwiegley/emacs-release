@@ -1,17 +1,18 @@
 ;;; pascal.el --- major mode for editing pascal source in Emacs
 
 ;; Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002
-;;               2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+;;               2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;               Free Software Foundation, Inc.
 
 ;; Author: Espen Skoglund <esk@gnu.org>
 ;; Keywords: languages
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -431,7 +430,7 @@ no args, if that value is non-nil."
 (defun electric-pascal-semi-or-dot ()
   "Insert `;' or `.' character and reindent the line."
   (interactive)
-  (insert last-command-char)
+  (insert last-command-event)
   (save-excursion
     (beginning-of-line)
     (pascal-indent-line))
@@ -441,7 +440,7 @@ no args, if that value is non-nil."
 (defun electric-pascal-colon ()
   "Insert `:' and do all indentions except line indent on this line."
   (interactive)
-  (insert last-command-char)
+  (insert last-command-event)
   ;; Do nothing if within string.
   (if (pascal-within-string)
       ()
@@ -454,7 +453,7 @@ no args, if that value is non-nil."
 (defun electric-pascal-equal ()
   "Insert `=', and do indention if within type declaration."
   (interactive)
-  (insert last-command-char)
+  (insert last-command-event)
   (if (eq (car (pascal-calculate-indent)) 'declaration)
       (let ((pascal-tab-always-indent nil))
 	(pascal-indent-command))))
@@ -462,7 +461,7 @@ no args, if that value is non-nil."
 (defun electric-pascal-hash ()
   "Insert `#', and indent to column 0 if this is a CPP directive."
   (interactive)
-  (insert last-command-char)
+  (insert last-command-event)
   (if (save-excursion (beginning-of-line) (looking-at "^[ \t]*#"))
       (save-excursion (beginning-of-line)
 		      (delete-horizontal-space))))
@@ -523,8 +522,8 @@ This puts the mark at the end, and point at the beginning."
   (pascal-end-of-defun)
   (push-mark (point))
   (pascal-beg-of-defun)
-  (if (fboundp 'zmacs-activate-region)
-      (zmacs-activate-region)))
+  (when (featurep 'xemacs)
+    (zmacs-activate-region)))
 
 (defun pascal-comment-area (start end)
   "Put the region into a Pascal comment.

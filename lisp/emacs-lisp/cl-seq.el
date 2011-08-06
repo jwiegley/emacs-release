@@ -1,7 +1,7 @@
-;;; cl-seq.el --- Common Lisp features, part 3  -*-byte-compile-dynamic: t;-*-
+;;; cl-seq.el --- Common Lisp features, part 3
 
-;; Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Dave Gillespie <daveg@synaptics.com>
 ;; Version: 2.02
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -32,8 +30,6 @@
 ;;
 ;; This package was written by Dave Gillespie; it is a complete
 ;; rewrite of Cesar Quiroz's original cl.el package of December 1986.
-;;
-;; This package works with Emacs 18, Emacs 19, and Lucid Emacs 19.
 ;;
 ;; Bug reports, comments, and suggestions are welcome!
 
@@ -45,9 +41,7 @@
 
 ;;; Code:
 
-(or (memq 'cl-19 features)
-    (error "Tried to load `cl-seq' before `cl'!"))
-
+(require 'cl)
 
 ;;; Keyword parsing.  This is special-cased here so that we can compile
 ;;; this file independent from cl-macs.
@@ -125,6 +119,7 @@
 (defvar cl-key)
 
 
+;;;###autoload
 (defun reduce (cl-func cl-seq &rest cl-keys)
   "Reduce two-argument FUNCTION across SEQ.
 \nKeywords supported:  :start :end :from-end :initial-value :key
@@ -145,6 +140,7 @@
 				  (cl-check-key (pop cl-seq))))))
       cl-accum)))
 
+;;;###autoload
 (defun fill (seq item &rest cl-keys)
   "Fill the elements of SEQ with ITEM.
 \nKeywords supported:  :start :end
@@ -164,6 +160,7 @@
 	  (setq cl-start (1+ cl-start)))))
     seq))
 
+;;;###autoload
 (defun replace (cl-seq1 cl-seq2 &rest cl-keys)
   "Replace the elements of SEQ1 with the elements of SEQ2.
 SEQ1 is destructively modified, then returned.
@@ -206,6 +203,7 @@ SEQ1 is destructively modified, then returned.
 	    (setq cl-start2 (1+ cl-start2) cl-start1 (1+ cl-start1))))))
     cl-seq1))
 
+;;;###autoload
 (defun remove* (cl-item cl-seq &rest cl-keys)
   "Remove all occurrences of ITEM in SEQ.
 This is a non-destructive function; it makes a copy of SEQ if necessary
@@ -251,6 +249,7 @@ to avoid corrupting the original SEQ.
 		cl-seq))
 	  cl-seq)))))
 
+;;;###autoload
 (defun remove-if (cl-pred cl-list &rest cl-keys)
   "Remove all items satisfying PREDICATE in SEQ.
 This is a non-destructive function; it makes a copy of SEQ if necessary
@@ -259,6 +258,7 @@ to avoid corrupting the original SEQ.
 \n(fn PREDICATE SEQ [KEYWORD VALUE]...)"
   (apply 'remove* nil cl-list :if cl-pred cl-keys))
 
+;;;###autoload
 (defun remove-if-not (cl-pred cl-list &rest cl-keys)
   "Remove all items not satisfying PREDICATE in SEQ.
 This is a non-destructive function; it makes a copy of SEQ if necessary
@@ -267,6 +267,7 @@ to avoid corrupting the original SEQ.
 \n(fn PREDICATE SEQ [KEYWORD VALUE]...)"
   (apply 'remove* nil cl-list :if-not cl-pred cl-keys))
 
+;;;###autoload
 (defun delete* (cl-item cl-seq &rest cl-keys)
   "Remove all occurrences of ITEM in SEQ.
 This is a destructive function; it reuses the storage of SEQ whenever possible.
@@ -310,6 +311,7 @@ This is a destructive function; it reuses the storage of SEQ whenever possible.
 	    cl-seq)
 	(apply 'remove* cl-item cl-seq cl-keys)))))
 
+;;;###autoload
 (defun delete-if (cl-pred cl-list &rest cl-keys)
   "Remove all items satisfying PREDICATE in SEQ.
 This is a destructive function; it reuses the storage of SEQ whenever possible.
@@ -317,6 +319,7 @@ This is a destructive function; it reuses the storage of SEQ whenever possible.
 \n(fn PREDICATE SEQ [KEYWORD VALUE]...)"
   (apply 'delete* nil cl-list :if cl-pred cl-keys))
 
+;;;###autoload
 (defun delete-if-not (cl-pred cl-list &rest cl-keys)
   "Remove all items not satisfying PREDICATE in SEQ.
 This is a destructive function; it reuses the storage of SEQ whenever possible.
@@ -324,12 +327,14 @@ This is a destructive function; it reuses the storage of SEQ whenever possible.
 \n(fn PREDICATE SEQ [KEYWORD VALUE]...)"
   (apply 'delete* nil cl-list :if-not cl-pred cl-keys))
 
+;;;###autoload
 (defun remove-duplicates (cl-seq &rest cl-keys)
   "Return a copy of SEQ with all duplicate elements removed.
 \nKeywords supported:  :test :test-not :key :start :end :from-end
 \n(fn SEQ [KEYWORD VALUE]...)"
   (cl-delete-duplicates cl-seq cl-keys t))
 
+;;;###autoload
 (defun delete-duplicates (cl-seq &rest cl-keys)
   "Remove all duplicate elements from SEQ (destructively).
 \nKeywords supported:  :test :test-not :key :start :end :from-end
@@ -376,6 +381,7 @@ This is a destructive function; it reuses the storage of SEQ whenever possible.
     (let ((cl-res (cl-delete-duplicates (append cl-seq nil) cl-keys nil)))
       (if (stringp cl-seq) (concat cl-res) (vconcat cl-res)))))
 
+;;;###autoload
 (defun substitute (cl-new cl-old cl-seq &rest cl-keys)
   "Substitute NEW for OLD in SEQ.
 This is a non-destructive function; it makes a copy of SEQ if necessary
@@ -397,6 +403,7 @@ to avoid corrupting the original SEQ.
 	  (apply 'nsubstitute cl-new cl-old cl-seq :count cl-count
 		 :start cl-i cl-keys))))))
 
+;;;###autoload
 (defun substitute-if (cl-new cl-pred cl-list &rest cl-keys)
   "Substitute NEW for all items satisfying PREDICATE in SEQ.
 This is a non-destructive function; it makes a copy of SEQ if necessary
@@ -405,6 +412,7 @@ to avoid corrupting the original SEQ.
 \n(fn NEW PREDICATE SEQ [KEYWORD VALUE]...)"
   (apply 'substitute cl-new nil cl-list :if cl-pred cl-keys))
 
+;;;###autoload
 (defun substitute-if-not (cl-new cl-pred cl-list &rest cl-keys)
   "Substitute NEW for all items not satisfying PREDICATE in SEQ.
 This is a non-destructive function; it makes a copy of SEQ if necessary
@@ -413,6 +421,7 @@ to avoid corrupting the original SEQ.
 \n(fn NEW PREDICATE SEQ [KEYWORD VALUE]...)"
   (apply 'substitute cl-new nil cl-list :if-not cl-pred cl-keys))
 
+;;;###autoload
 (defun nsubstitute (cl-new cl-old cl-seq &rest cl-keys)
   "Substitute NEW for OLD in SEQ.
 This is a destructive function; it reuses the storage of SEQ whenever possible.
@@ -446,6 +455,7 @@ This is a destructive function; it reuses the storage of SEQ whenever possible.
 	      (setq cl-start (1+ cl-start))))))
     cl-seq))
 
+;;;###autoload
 (defun nsubstitute-if (cl-new cl-pred cl-list &rest cl-keys)
   "Substitute NEW for all items satisfying PREDICATE in SEQ.
 This is a destructive function; it reuses the storage of SEQ whenever possible.
@@ -453,6 +463,7 @@ This is a destructive function; it reuses the storage of SEQ whenever possible.
 \n(fn NEW PREDICATE SEQ [KEYWORD VALUE]...)"
   (apply 'nsubstitute cl-new nil cl-list :if cl-pred cl-keys))
 
+;;;###autoload
 (defun nsubstitute-if-not (cl-new cl-pred cl-list &rest cl-keys)
   "Substitute NEW for all items not satisfying PREDICATE in SEQ.
 This is a destructive function; it reuses the storage of SEQ whenever possible.
@@ -460,6 +471,7 @@ This is a destructive function; it reuses the storage of SEQ whenever possible.
 \n(fn NEW PREDICATE SEQ [KEYWORD VALUE]...)"
   (apply 'nsubstitute cl-new nil cl-list :if-not cl-pred cl-keys))
 
+;;;###autoload
 (defun find (cl-item cl-seq &rest cl-keys)
   "Find the first occurrence of ITEM in SEQ.
 Return the matching ITEM, or nil if not found.
@@ -468,6 +480,7 @@ Return the matching ITEM, or nil if not found.
   (let ((cl-pos (apply 'position cl-item cl-seq cl-keys)))
     (and cl-pos (elt cl-seq cl-pos))))
 
+;;;###autoload
 (defun find-if (cl-pred cl-list &rest cl-keys)
   "Find the first item satisfying PREDICATE in SEQ.
 Return the matching item, or nil if not found.
@@ -475,6 +488,7 @@ Return the matching item, or nil if not found.
 \n(fn PREDICATE SEQ [KEYWORD VALUE]...)"
   (apply 'find nil cl-list :if cl-pred cl-keys))
 
+;;;###autoload
 (defun find-if-not (cl-pred cl-list &rest cl-keys)
   "Find the first item not satisfying PREDICATE in SEQ.
 Return the matching item, or nil if not found.
@@ -482,6 +496,7 @@ Return the matching item, or nil if not found.
 \n(fn PREDICATE SEQ [KEYWORD VALUE]...)"
   (apply 'find nil cl-list :if-not cl-pred cl-keys))
 
+;;;###autoload
 (defun position (cl-item cl-seq &rest cl-keys)
   "Find the first occurrence of ITEM in SEQ.
 Return the index of the matching item, or nil if not found.
@@ -512,6 +527,7 @@ Return the index of the matching item, or nil if not found.
 	(setq cl-start (1+ cl-start)))
       (and (< cl-start cl-end) cl-start))))
 
+;;;###autoload
 (defun position-if (cl-pred cl-list &rest cl-keys)
   "Find the first item satisfying PREDICATE in SEQ.
 Return the index of the matching item, or nil if not found.
@@ -519,6 +535,7 @@ Return the index of the matching item, or nil if not found.
 \n(fn PREDICATE SEQ [KEYWORD VALUE]...)"
   (apply 'position nil cl-list :if cl-pred cl-keys))
 
+;;;###autoload
 (defun position-if-not (cl-pred cl-list &rest cl-keys)
   "Find the first item not satisfying PREDICATE in SEQ.
 Return the index of the matching item, or nil if not found.
@@ -526,6 +543,7 @@ Return the index of the matching item, or nil if not found.
 \n(fn PREDICATE SEQ [KEYWORD VALUE]...)"
   (apply 'position nil cl-list :if-not cl-pred cl-keys))
 
+;;;###autoload
 (defun count (cl-item cl-seq &rest cl-keys)
   "Count the number of occurrences of ITEM in SEQ.
 \nKeywords supported:  :test :test-not :key :start :end
@@ -540,18 +558,21 @@ Return the index of the matching item, or nil if not found.
 	(setq cl-start (1+ cl-start)))
       cl-count)))
 
+;;;###autoload
 (defun count-if (cl-pred cl-list &rest cl-keys)
   "Count the number of items satisfying PREDICATE in SEQ.
 \nKeywords supported:  :key :start :end
 \n(fn PREDICATE SEQ [KEYWORD VALUE]...)"
   (apply 'count nil cl-list :if cl-pred cl-keys))
 
+;;;###autoload
 (defun count-if-not (cl-pred cl-list &rest cl-keys)
   "Count the number of items not satisfying PREDICATE in SEQ.
 \nKeywords supported:  :key :start :end
 \n(fn PREDICATE SEQ [KEYWORD VALUE]...)"
   (apply 'count nil cl-list :if-not cl-pred cl-keys))
 
+;;;###autoload
 (defun mismatch (cl-seq1 cl-seq2 &rest cl-keys)
   "Compare SEQ1 with SEQ2, return index of first mismatching element.
 Return nil if the sequences match.  If one sequence is a prefix of the
@@ -582,6 +603,7 @@ other, the return value indicates the end of the shorter sequence.
 	(and (or (< cl-start1 cl-end1) (< cl-start2 cl-end2))
 	     cl-start1)))))
 
+;;;###autoload
 (defun search (cl-seq1 cl-seq2 &rest cl-keys)
   "Search for SEQ1 as a subsequence of SEQ2.
 Return the index of the leftmost element of the first match found;
@@ -608,6 +630,7 @@ return nil if there are no matches.
 	  (if cl-from-end (setq cl-end2 cl-pos) (setq cl-start2 (1+ cl-pos))))
 	(and (< cl-start2 cl-end2) cl-pos)))))
 
+;;;###autoload
 (defun sort* (cl-seq cl-pred &rest cl-keys)
   "Sort the argument SEQ according to PREDICATE.
 This is a destructive function; it reuses the storage of SEQ if possible.
@@ -622,6 +645,7 @@ This is a destructive function; it reuses the storage of SEQ if possible.
 				 (funcall cl-pred (funcall cl-key cl-x)
 					  (funcall cl-key cl-y)))))))))
 
+;;;###autoload
 (defun stable-sort (cl-seq cl-pred &rest cl-keys)
   "Sort the argument SEQ stably according to PREDICATE.
 This is a destructive function; it reuses the storage of SEQ if possible.
@@ -629,6 +653,7 @@ This is a destructive function; it reuses the storage of SEQ if possible.
 \n(fn SEQ PREDICATE [KEYWORD VALUE]...)"
   (apply 'sort* cl-seq cl-pred cl-keys))
 
+;;;###autoload
 (defun merge (cl-type cl-seq1 cl-seq2 cl-pred &rest cl-keys)
   "Destructively merge the two sequences to produce a new sequence.
 TYPE is the sequence type to return, SEQ1 and SEQ2 are the two argument
@@ -647,6 +672,7 @@ sequences, and PREDICATE is a `less-than' predicate on the elements.
       (coerce (nconc (nreverse cl-res) cl-seq1 cl-seq2) cl-type))))
 
 ;;; See compiler macro in cl-macs.el
+;;;###autoload
 (defun member* (cl-item cl-list &rest cl-keys)
   "Find the first occurrence of ITEM in LIST.
 Return the sublist of LIST whose car is ITEM.
@@ -661,6 +687,7 @@ Return the sublist of LIST whose car is ITEM.
 	(member cl-item cl-list)
       (memq cl-item cl-list))))
 
+;;;###autoload
 (defun member-if (cl-pred cl-list &rest cl-keys)
   "Find the first item satisfying PREDICATE in LIST.
 Return the sublist of LIST whose car matches.
@@ -668,6 +695,7 @@ Return the sublist of LIST whose car matches.
 \n(fn PREDICATE LIST [KEYWORD VALUE]...)"
   (apply 'member* nil cl-list :if cl-pred cl-keys))
 
+;;;###autoload
 (defun member-if-not (cl-pred cl-list &rest cl-keys)
   "Find the first item not satisfying PREDICATE in LIST.
 Return the sublist of LIST whose car matches.
@@ -675,6 +703,7 @@ Return the sublist of LIST whose car matches.
 \n(fn PREDICATE LIST [KEYWORD VALUE]...)"
   (apply 'member* nil cl-list :if-not cl-pred cl-keys))
 
+;;;###autoload
 (defun cl-adjoin (cl-item cl-list &rest cl-keys)
   (if (cl-parsing-keywords (:key) t
 	(apply 'member* (cl-check-key cl-item) cl-list cl-keys))
@@ -682,6 +711,7 @@ Return the sublist of LIST whose car matches.
     (cons cl-item cl-list)))
 
 ;;; See compiler macro in cl-macs.el
+;;;###autoload
 (defun assoc* (cl-item cl-alist &rest cl-keys)
   "Find the first item whose car matches ITEM in LIST.
 \nKeywords supported:  :test :test-not :key
@@ -697,18 +727,21 @@ Return the sublist of LIST whose car matches.
 	(assoc cl-item cl-alist)
       (assq cl-item cl-alist))))
 
+;;;###autoload
 (defun assoc-if (cl-pred cl-list &rest cl-keys)
   "Find the first item whose car satisfies PREDICATE in LIST.
 \nKeywords supported:  :key
 \n(fn PREDICATE LIST [KEYWORD VALUE]...)"
   (apply 'assoc* nil cl-list :if cl-pred cl-keys))
 
+;;;###autoload
 (defun assoc-if-not (cl-pred cl-list &rest cl-keys)
   "Find the first item whose car does not satisfy PREDICATE in LIST.
 \nKeywords supported:  :key
 \n(fn PREDICATE LIST [KEYWORD VALUE]...)"
   (apply 'assoc* nil cl-list :if-not cl-pred cl-keys))
 
+;;;###autoload
 (defun rassoc* (cl-item cl-alist &rest cl-keys)
   "Find the first item whose cdr matches ITEM in LIST.
 \nKeywords supported:  :test :test-not :key
@@ -722,18 +755,21 @@ Return the sublist of LIST whose car matches.
 	(and cl-alist (car cl-alist)))
     (rassq cl-item cl-alist)))
 
+;;;###autoload
 (defun rassoc-if (cl-pred cl-list &rest cl-keys)
   "Find the first item whose cdr satisfies PREDICATE in LIST.
 \nKeywords supported:  :key
 \n(fn PREDICATE LIST [KEYWORD VALUE]...)"
   (apply 'rassoc* nil cl-list :if cl-pred cl-keys))
 
+;;;###autoload
 (defun rassoc-if-not (cl-pred cl-list &rest cl-keys)
   "Find the first item whose cdr does not satisfy PREDICATE in LIST.
 \nKeywords supported:  :key
 \n(fn PREDICATE LIST [KEYWORD VALUE]...)"
   (apply 'rassoc* nil cl-list :if-not cl-pred cl-keys))
 
+;;;###autoload
 (defun union (cl-list1 cl-list2 &rest cl-keys)
   "Combine LIST1 and LIST2 using a set-union operation.
 The result list contains all items that appear in either LIST1 or LIST2.
@@ -754,6 +790,7 @@ to avoid corrupting the original LIST1 and LIST2.
 	   (pop cl-list2))
 	 cl-list1)))
 
+;;;###autoload
 (defun nunion (cl-list1 cl-list2 &rest cl-keys)
   "Combine LIST1 and LIST2 using a set-union operation.
 The result list contains all items that appear in either LIST1 or LIST2.
@@ -764,6 +801,7 @@ whenever possible.
   (cond ((null cl-list1) cl-list2) ((null cl-list2) cl-list1)
 	(t (apply 'union cl-list1 cl-list2 cl-keys))))
 
+;;;###autoload
 (defun intersection (cl-list1 cl-list2 &rest cl-keys)
   "Combine LIST1 and LIST2 using a set-intersection operation.
 The result list contains all items that appear in both LIST1 and LIST2.
@@ -786,6 +824,7 @@ to avoid corrupting the original LIST1 and LIST2.
 	       (pop cl-list2))
 	     cl-res)))))
 
+;;;###autoload
 (defun nintersection (cl-list1 cl-list2 &rest cl-keys)
   "Combine LIST1 and LIST2 using a set-intersection operation.
 The result list contains all items that appear in both LIST1 and LIST2.
@@ -795,6 +834,7 @@ whenever possible.
 \n(fn LIST1 LIST2 [KEYWORD VALUE]...)"
   (and cl-list1 cl-list2 (apply 'intersection cl-list1 cl-list2 cl-keys)))
 
+;;;###autoload
 (defun set-difference (cl-list1 cl-list2 &rest cl-keys)
   "Combine LIST1 and LIST2 using a set-difference operation.
 The result list contains all items that appear in LIST1 but not LIST2.
@@ -814,6 +854,7 @@ to avoid corrupting the original LIST1 and LIST2.
 	  (pop cl-list1))
 	cl-res))))
 
+;;;###autoload
 (defun nset-difference (cl-list1 cl-list2 &rest cl-keys)
   "Combine LIST1 and LIST2 using a set-difference operation.
 The result list contains all items that appear in LIST1 but not LIST2.
@@ -824,6 +865,7 @@ whenever possible.
   (if (or (null cl-list1) (null cl-list2)) cl-list1
     (apply 'set-difference cl-list1 cl-list2 cl-keys)))
 
+;;;###autoload
 (defun set-exclusive-or (cl-list1 cl-list2 &rest cl-keys)
   "Combine LIST1 and LIST2 using a set-exclusive-or operation.
 The result list contains all items that appear in exactly one of LIST1, LIST2.
@@ -836,6 +878,7 @@ to avoid corrupting the original LIST1 and LIST2.
 	(t (append (apply 'set-difference cl-list1 cl-list2 cl-keys)
 		   (apply 'set-difference cl-list2 cl-list1 cl-keys)))))
 
+;;;###autoload
 (defun nset-exclusive-or (cl-list1 cl-list2 &rest cl-keys)
   "Combine LIST1 and LIST2 using a set-exclusive-or operation.
 The result list contains all items that appear in exactly one of LIST1, LIST2.
@@ -848,6 +891,7 @@ whenever possible.
 	(t (nconc (apply 'nset-difference cl-list1 cl-list2 cl-keys)
 		  (apply 'nset-difference cl-list2 cl-list1 cl-keys)))))
 
+;;;###autoload
 (defun subsetp (cl-list1 cl-list2 &rest cl-keys)
   "Return true if LIST1 is a subset of LIST2.
 I.e., if every element of LIST1 also appears in LIST2.
@@ -862,6 +906,7 @@ I.e., if every element of LIST1 also appears in LIST2.
 	       (pop cl-list1))
 	     (null cl-list1)))))
 
+;;;###autoload
 (defun subst-if (cl-new cl-pred cl-tree &rest cl-keys)
   "Substitute NEW for elements matching PREDICATE in TREE (non-destructively).
 Return a copy of TREE with all matching elements replaced by NEW.
@@ -869,6 +914,7 @@ Return a copy of TREE with all matching elements replaced by NEW.
 \n(fn NEW PREDICATE TREE [KEYWORD VALUE]...)"
   (apply 'sublis (list (cons nil cl-new)) cl-tree :if cl-pred cl-keys))
 
+;;;###autoload
 (defun subst-if-not (cl-new cl-pred cl-tree &rest cl-keys)
   "Substitute NEW for elts not matching PREDICATE in TREE (non-destructively).
 Return a copy of TREE with all non-matching elements replaced by NEW.
@@ -876,6 +922,7 @@ Return a copy of TREE with all non-matching elements replaced by NEW.
 \n(fn NEW PREDICATE TREE [KEYWORD VALUE]...)"
   (apply 'sublis (list (cons nil cl-new)) cl-tree :if-not cl-pred cl-keys))
 
+;;;###autoload
 (defun nsubst (cl-new cl-old cl-tree &rest cl-keys)
   "Substitute NEW for OLD everywhere in TREE (destructively).
 Any element of TREE which is `eql' to OLD is changed to NEW (via a call
@@ -884,6 +931,7 @@ to `setcar').
 \n(fn NEW OLD TREE [KEYWORD VALUE]...)"
   (apply 'nsublis (list (cons cl-old cl-new)) cl-tree cl-keys))
 
+;;;###autoload
 (defun nsubst-if (cl-new cl-pred cl-tree &rest cl-keys)
   "Substitute NEW for elements matching PREDICATE in TREE (destructively).
 Any element of TREE which matches is changed to NEW (via a call to `setcar').
@@ -891,6 +939,7 @@ Any element of TREE which matches is changed to NEW (via a call to `setcar').
 \n(fn NEW PREDICATE TREE [KEYWORD VALUE]...)"
   (apply 'nsublis (list (cons nil cl-new)) cl-tree :if cl-pred cl-keys))
 
+;;;###autoload
 (defun nsubst-if-not (cl-new cl-pred cl-tree &rest cl-keys)
   "Substitute NEW for elements not matching PREDICATE in TREE (destructively).
 Any element of TREE which matches is changed to NEW (via a call to `setcar').
@@ -898,6 +947,7 @@ Any element of TREE which matches is changed to NEW (via a call to `setcar').
 \n(fn NEW PREDICATE TREE [KEYWORD VALUE]...)"
   (apply 'nsublis (list (cons nil cl-new)) cl-tree :if-not cl-pred cl-keys))
 
+;;;###autoload
 (defun sublis (cl-alist cl-tree &rest cl-keys)
   "Perform substitutions indicated by ALIST in TREE (non-destructively).
 Return a copy of TREE with all matching elements replaced.
@@ -920,6 +970,7 @@ Return a copy of TREE with all matching elements replaced.
 	      (cons cl-a cl-d)))
 	cl-tree))))
 
+;;;###autoload
 (defun nsublis (cl-alist cl-tree &rest cl-keys)
   "Perform substitutions indicated by ALIST in TREE (destructively).
 Any matching element of TREE is changed via a call to `setcar'.
@@ -944,6 +995,7 @@ Any matching element of TREE is changed via a call to `setcar'.
 	  (progn (setcdr cl-tree (cdr (car cl-p))) (setq cl-tree nil))
 	(setq cl-tree (cdr cl-tree))))))
 
+;;;###autoload
 (defun tree-equal (cl-x cl-y &rest cl-keys)
   "Return t if trees TREE1 and TREE2 have `eql' leaves.
 Atoms are compared by `eql'; cons cells are compared recursively.
@@ -961,5 +1013,11 @@ Atoms are compared by `eql'; cons cells are compared recursively.
 
 (run-hooks 'cl-seq-load-hook)
 
-;;; arch-tag: ec1cc072-9006-4225-b6ba-d6b07ed1710c
+;; Local variables:
+;; byte-compile-dynamic: t
+;; byte-compile-warnings: (not cl-functions)
+;; generated-autoload-file: "cl-loaddefs.el"
+;; End:
+
+;; arch-tag: ec1cc072-9006-4225-b6ba-d6b07ed1710c
 ;;; cl-seq.el ends here

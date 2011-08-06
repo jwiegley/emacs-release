@@ -1,19 +1,20 @@
 ;;; cperl-mode.el --- Perl code editing commands for Emacs
 
 ;; Copyright (C) 1985, 1986, 1987, 1991, 1992, 1993, 1994, 1995, 1996, 1997,
-;; 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;     Free Software Foundation, Inc.
 
-;; Author: Ilya Zakharevich and Bob Olson
+;; Author: Ilya Zakharevich
+;;	Bob Olson
 ;; Maintainer: Ilya Zakharevich <ilyaz@cpan.org>
 ;; Keywords: languages, Perl
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Corrections made by Ilya Zakharevich ilyaz@cpan.org
 
@@ -78,9 +77,8 @@
       (condition-case nil
 	  (require 'man)
 	(error nil))
-      (defconst cperl-xemacs-p (string-match "XEmacs\\|Lucid" emacs-version))
       (defvar cperl-can-font-lock
-	(or cperl-xemacs-p
+	(or (featurep 'xemacs)
 	    (and (boundp 'emacs-major-version)
 		 (or window-system
 		     (> emacs-major-version 20)))))
@@ -131,14 +129,14 @@
 		 (cperl-make-face ,arg ,descr))
 	     (or (boundp (quote ,arg)) ; We use unquoted variants too
 		 (defvar ,arg (quote ,arg) ,descr))))
-      (if cperl-xemacs-p
+      (if (featurep 'xemacs)
 	  (defmacro cperl-etags-snarf-tag (file line)
 	    `(progn
                (beginning-of-line 2)
                (list ,file ,line)))
 	(defmacro cperl-etags-snarf-tag (file line)
 	  `(etags-snarf-tag)))
-      (if cperl-xemacs-p
+      (if (featurep 'xemacs)
 	  (defmacro cperl-etags-goto-tag-location (elt)
 	    ;;(progn
             ;; (switch-to-buffer (get-file-buffer (elt ,elt 0)))
@@ -151,10 +149,8 @@
 	(defmacro cperl-etags-goto-tag-location (elt)
 	  `(etags-goto-tag-location ,elt))))
 
-(defconst cperl-xemacs-p (string-match "XEmacs\\|Lucid" emacs-version))
-
 (defvar cperl-can-font-lock
-  (or cperl-xemacs-p
+  (or (featurep 'xemacs)
       (and (boundp 'emacs-major-version)
 	   (or window-system
 	       (> emacs-major-version 20)))))
@@ -464,7 +460,7 @@ Font for POD headers."
   :group 'cperl-faces)
 
 ;;; Some double-evaluation happened with font-locks...  Needed with 21.2...
-(defvar cperl-singly-quote-face cperl-xemacs-p)
+(defvar cperl-singly-quote-face (featurep 'xemacs))
 
 (defcustom cperl-invalid-face 'underline
   "*Face for highlighting trailing whitespace."
@@ -839,7 +835,7 @@ voice);
 
 3) Everything is customizable, one-by-one or in a big sweep;
 
-4) It has many easily-accessable \"tools\":
+4) It has many easily-accessible \"tools\":
         a) Can run program, check syntax, start debugger;
         b) Can lineup vertically \"middles\" of rows, like `=' in
                 a  = b;
@@ -1017,7 +1013,7 @@ In regular expressions (except character classes):
 (defmacro cperl-define-key (emacs-key definition &optional xemacs-key)
   `(define-key cperl-mode-map
      ,(if xemacs-key
-	  `(if cperl-xemacs-p ,xemacs-key ,emacs-key)
+	  `(if (featurep 'xemacs) ,xemacs-key ,emacs-key)
 	emacs-key)
      ,definition))
 
@@ -1030,7 +1026,7 @@ In regular expressions (except character classes):
      (setq cperl-del-back-ch (aref cperl-del-back-ch 0)))
 
 (defun cperl-mark-active () (mark))	; Avoid undefined warning
-(if cperl-xemacs-p
+(if (featurep 'xemacs)
     (progn
       ;; "Active regions" are on: use region only if active
       ;; "Active regions" are off: use region unconditionally
@@ -1046,7 +1042,7 @@ In regular expressions (except character classes):
 (defun cperl-putback-char (c)		; Emacs 19
   (set 'unread-command-events (list c))) ; Avoid undefined warning
 
-(if cperl-xemacs-p
+(if (featurep 'xemacs)
     (defun cperl-putback-char (c)	; XEmacs >= 19.12
       (setq unread-command-events (list (eval '(character-to-event c))))))
 
@@ -1113,11 +1109,11 @@ versions of Emacs."
 ;;;     (setq interpreter-mode-alist (append interpreter-mode-alist
 ;;;					  '(("miniperl" . perl-mode))))))
 (eval-when-compile
-  (mapcar (lambda (p)
-	    (condition-case nil
-		(require p)
-	      (error nil)))
-	  '(imenu easymenu etags timer man info))
+  (mapc (lambda (p)
+	  (condition-case nil
+	      (require p)
+	    (error nil)))
+	'(imenu easymenu etags timer man info))
   (if (fboundp 'ps-extend-face-list)
       (defmacro cperl-ps-extend-face-list (arg)
 	`(ps-extend-face-list ,arg))
@@ -1198,7 +1194,7 @@ versions of Emacs."
 		      ;;(concat (char-to-string help-char) "v") ; does not work
 		      'cperl-get-help
 		      [(control c) (control h) v]))
-  (if (and cperl-xemacs-p
+  (if (and (featurep 'xemacs)
 	   (<= emacs-minor-version 11) (<= emacs-major-version 19))
       (progn
 	;; substitute-key-definition is usefulness-deenhanced...
@@ -1519,6 +1515,8 @@ the last)."
      2 3))
   "Alist that specifies how to match errors in perl output.")
 
+(defvar compilation-error-regexp-alist)
+
 ;;;###autoload
 (defun cperl-mode ()
   "Major mode for editing Perl code.
@@ -1750,7 +1748,7 @@ or as help on variables `cperl-tips', `cperl-problems',
   (setq paragraph-separate paragraph-start)
   (make-local-variable 'paragraph-ignore-fill-prefix)
   (setq paragraph-ignore-fill-prefix t)
-  (if cperl-xemacs-p
+  (if (featurep 'xemacs)
     (progn
       (make-local-variable 'paren-backwards-message)
       (set 'paren-backwards-message t)))
@@ -1799,9 +1797,11 @@ or as help on variables `cperl-tips', `cperl-problems',
   (set 'vc-sccs-header cperl-vc-sccs-header)
   ;; This one is obsolete...
   (make-local-variable 'vc-header-alist)
-  (set 'vc-header-alist (or cperl-vc-header-alist ; Avoid warning
-			    `((SCCS ,(car cperl-vc-sccs-header))
-                              (RCS ,(car cperl-vc-rcs-header)))))
+  (with-no-warnings
+   (set 'vc-header-alist (or cperl-vc-header-alist ; Avoid warning
+			     `((SCCS ,(car cperl-vc-sccs-header))
+			       (RCS ,(car cperl-vc-rcs-header)))))
+   )
   (cond ((boundp 'compilation-error-regexp-alist-alist);; xemacs 20.x
 	 (make-local-variable 'compilation-error-regexp-alist-alist)
 	 (set 'compilation-error-regexp-alist-alist
@@ -1841,7 +1841,7 @@ or as help on variables `cperl-tips', `cperl-problems',
 	(or (boundp 'font-lock-unfontify-region-function)
 	    (set 'font-lock-unfontify-region-function
 		 'font-lock-default-unfontify-region))
-	(unless cperl-xemacs-p		; Our: just a plug for wrong font-lock
+	(unless (featurep 'xemacs)		; Our: just a plug for wrong font-lock
 	  (make-local-variable 'font-lock-unfontify-region-function)
 	  (set 'font-lock-unfontify-region-function ; not present with old Emacs
 	       'cperl-font-lock-unfontify-region-function))
@@ -2038,11 +2038,11 @@ char is \"{\", insert extra newline before only if
 	  (save-excursion
 	    (setq insertpos (point-marker))
 	    (goto-char other-end)
-	    (setq last-command-char ?\{)
+	    (setq last-command-event ?\{)
 	    (cperl-electric-lbrace arg insertpos))
 	  (forward-char 1))
       ;; Check whether we close something "usual" with `}'
-      (if (and (eq last-command-char ?\})
+      (if (and (eq last-command-event ?\})
 	       (not
 		(condition-case nil
 		    (save-excursion
@@ -2060,7 +2060,7 @@ char is \"{\", insert extra newline before only if
 			  (save-excursion
 			    (skip-chars-backward " \t")
 			    (bolp)))
-		     (and (eq last-command-char ?\{) ; Do not insert newline
+		     (and (eq last-command-event ?\{) ; Do not insert newline
 			  ;; if after ")" and `cperl-extra-newline-before-brace'
 			  ;; is nil, do not insert extra newline.
 			  (not cperl-extra-newline-before-brace)
@@ -2081,7 +2081,7 @@ char is \"{\", insert extra newline before only if
 	      (save-excursion
 		(if insertpos (progn (goto-char insertpos)
 				     (search-forward (make-string
-						      1 last-command-char))
+						      1 last-command-event))
 				     (setq insertpos (1- (point)))))
 		(delete-char -1))))
 	(if insertpos
@@ -2120,12 +2120,12 @@ char is \"{\", insert extra newline before only if
       (setq cperl-auto-newline nil))
     (cperl-electric-brace arg)
     (and (cperl-val 'cperl-electric-parens)
-	 (eq last-command-char ?{)
-	 (memq last-command-char
+	 (eq last-command-event ?{)
+	 (memq last-command-event
 	       (append cperl-electric-parens-string nil))
 	 (or (if other-end (goto-char (marker-position other-end)))
 	     t)
-	 (setq last-command-char ?} pos (point))
+	 (setq last-command-event ?} pos (point))
 	 (progn (cperl-electric-brace arg t)
 		(goto-char pos)))))
 
@@ -2142,11 +2142,11 @@ See `cperl-electric-parens'."
 			 (point-marker))
 		     nil)))
     (if (and (cperl-val 'cperl-electric-parens)
-	     (memq last-command-char
+	     (memq last-command-event
 		   (append cperl-electric-parens-string nil))
 	     (>= (save-excursion (cperl-to-comment-or-eol) (point)) (point))
 	     ;;(not (save-excursion (search-backward "#" beg t)))
-	     (if (eq last-command-char ?<)
+	     (if (eq last-command-event ?<)
 		 (progn
 		   (and abbrev-mode ; later it is too late, may be after `for'
 			(expand-abbrev))
@@ -2157,7 +2157,7 @@ See `cperl-electric-parens'."
 	  (if other-end (goto-char (marker-position other-end)))
 	  (insert (make-string
 		   (prefix-numeric-value arg)
-		   (cdr (assoc last-command-char '((?{ .?})
+		   (cdr (assoc last-command-event '((?{ .?})
 						   (?[ . ?])
 						   (?( . ?))
 						   (?< . ?>))))))
@@ -2172,7 +2172,7 @@ Affected by `cperl-electric-parens'."
   (let ((beg (save-excursion (beginning-of-line) (point)))
 	(other-end (if (and cperl-electric-parens-mark
 			    (cperl-val 'cperl-electric-parens)
-			    (memq last-command-char
+			    (memq last-command-event
 				  (append cperl-electric-parens-string nil))
 			    (cperl-mark-active)
 			    (< (mark) (point)))
@@ -2181,7 +2181,7 @@ Affected by `cperl-electric-parens'."
 	p)
     (if (and other-end
 	     (cperl-val 'cperl-electric-parens)
-	     (memq last-command-char '( ?\) ?\] ?\} ?\> ))
+	     (memq last-command-event '( ?\) ?\] ?\} ?\> ))
 	     (>= (save-excursion (cperl-to-comment-or-eol) (point)) (point))
 	     ;;(not (save-excursion (search-backward "#" beg t)))
 	     )
@@ -2191,7 +2191,7 @@ Affected by `cperl-electric-parens'."
 	  (if other-end (goto-char other-end))
 	  (insert (make-string
 		   (prefix-numeric-value arg)
-		   (cdr (assoc last-command-char '((?\} . ?\{)
+		   (cdr (assoc last-command-event '((?\} . ?\{)
 						   (?\] . ?\[)
 						   (?\) . ?\()
 						   (?\> . ?\<))))))
@@ -2203,9 +2203,9 @@ Affected by `cperl-electric-parens'."
 Help message may be switched off by setting `cperl-message-electric-keyword'
 to nil."
   (let ((beg (save-excursion (beginning-of-line) (point)))
-	(dollar (and (eq last-command-char ?$)
+	(dollar (and (eq last-command-event ?$)
 		     (eq this-command 'self-insert-command)))
-	(delete (and (memq last-command-char '(?\s ?\n ?\t ?\f))
+	(delete (and (memq last-command-event '(?\s ?\n ?\t ?\f))
 		     (memq this-command '(self-insert-command newline))))
 	my do)
     (and (save-excursion
@@ -2259,7 +2259,7 @@ to nil."
 				 (forward-char 1)
 			       (delete-char 1)))
 	     (search-backward ")")
-	     (if (eq last-command-char ?\()
+	     (if (eq last-command-event ?\()
 		 (progn			; Avoid "if (())"
 		   (delete-backward-char 1)
 		   (delete-backward-char -1))))
@@ -2280,7 +2280,7 @@ to nil."
 
 (defun cperl-electric-pod ()
   "Insert a POD chunk appropriate after a =POD directive."
-  (let ((delete (and (memq last-command-char '(?\s ?\n ?\t ?\f))
+  (let ((delete (and (memq last-command-event '(?\s ?\n ?\t ?\f))
 		     (memq this-command '(self-insert-command newline))))
 	head1 notlast name p really-delete over)
     (and (save-excursion
@@ -2500,7 +2500,7 @@ If in POD, insert appropriate lines."
   (interactive "P")
   (let ((end (point))
 	(auto (and cperl-auto-newline
-		   (or (not (eq last-command-char ?:))
+		   (or (not (eq last-command-event ?:))
 		       cperl-auto-newline-after-colon)))
 	insertpos)
     (if (and ;;(not arg)
@@ -2514,7 +2514,7 @@ If in POD, insert appropriate lines."
 		     ;; Colon is special only after a label
 		     ;; So quickly rule out most other uses of colon
 		     ;; and do no indentation for them.
-		     (and (eq last-command-char ?:)
+		     (and (eq last-command-event ?:)
 			  (save-excursion
 			    (forward-word 1)
 			    (skip-chars-forward " \t")
@@ -3608,7 +3608,7 @@ the sections using `cperl-pod-head-face', `cperl-pod-face',
 	 face head-face here-face b e bb tag qtag b1 e1 argument i c tail tb
 	 is-REx is-x-REx REx-subgr-start REx-subgr-end was-subgr i2 hairy-RE
 	 (case-fold-search nil) (inhibit-read-only t) (buffer-undo-list t)
-	 (modified (buffer-modified-p)) overshoot is-o-REx
+	 (modified (buffer-modified-p)) overshoot is-o-REx name
 	 (after-change-functions nil)
 	 (cperl-font-locking t)
 	 (use-syntax-state (and cperl-syntax-state
@@ -4586,7 +4586,7 @@ the sections using `cperl-pod-head-face', `cperl-pod-face',
 					   (setq qtag "Can't find })")))
 				  (progn
 				    (goto-char (1- e))
-				    (message qtag))
+				    (message "%s" qtag))
 				(cperl-postpone-fontification
 				 (1- tag) (1- (point))
 				 'face font-lock-variable-name-face)
@@ -5391,15 +5391,15 @@ indentation and initial hashes.  Behaves usually outside of comment."
 	(t
 	 (or name
 	     (setq name "+++BACK+++"))
-	 (mapcar (lambda (elt)
-		   (if (and (listp elt) (listp (cdr elt)))
-		       (progn
-			 ;; In the other order it goes up
-			 ;; one level only ;-(
-			 (setcdr elt (cons (cons name lst)
-					   (cdr elt)))
-			 (cperl-imenu-addback (cdr elt) t name))))
-		 (if isback (cdr lst) lst))
+	 (mapc (lambda (elt)
+		 (if (and (listp elt) (listp (cdr elt)))
+		     (progn
+		       ;; In the other order it goes up
+		       ;; one level only ;-(
+		       (setcdr elt (cons (cons name lst)
+					 (cdr elt)))
+		       (cperl-imenu-addback (cdr elt) t name))))
+	       (if isback (cdr lst) lst))
 	 lst)))
 
 (defun cperl-imenu--create-perl-index (&optional regexp)
@@ -5860,7 +5860,7 @@ indentation and initial hashes.  Behaves usually outside of comment."
 	   (and (fboundp 'turn-on-font-lock) ; Check for newer font-lock
 		;; not yet as of XEmacs 19.12, works with 21.1.11
 		(or
-		 (not cperl-xemacs-p)
+		 (not (featurep 'xemacs))
 		 (string< "21.1.9" emacs-version)
 		 (and (string< "21.1.10" emacs-version)
 		      (string< emacs-version "21.1.2")))
@@ -6021,7 +6021,7 @@ indentation and initial hashes.  Behaves usually outside of comment."
 	  ;;    (defconst cperl-nonoverridable-face
 	  ;;	'cperl-nonoverridable-face
 	  ;;	"Face to use for data types from another group."))
-	  ;;(if (not cperl-xemacs-p) nil
+	  ;;(if (not (featurep 'xemacs)) nil
 	  ;;  (or (boundp 'font-lock-comment-face)
 	  ;;	(defconst font-lock-comment-face
 	  ;;	  'font-lock-comment-face
@@ -6572,7 +6572,7 @@ Customized by setting variables `cperl-shrink-wrap-info-frame',
 			 ;; Non-functioning under OS/2:
 			 (if (eq char-height 1) (setq char-height 18))
 			 ;; Title, menubar, + 2 for slack
-			 (- (/ (x-display-pixel-height) char-height) 4)))
+			 (- (/ (display-pixel-height) char-height) 4)))
 		 (if (> height max-height) (setq height max-height))
 		 ;;(message "was %s doing %s" iniheight height)
 		 (if not-loner
@@ -6970,7 +6970,7 @@ Use as
     (save-excursion
       (cond (inbuffer nil)		; Already there
 	    ((file-exists-p tags-file-name)
-	     (if cperl-xemacs-p
+	     (if (featurep 'xemacs)
 		 (visit-tags-table-buffer)
 	       (visit-tags-table-buffer tags-file-name)))
 	    (t (set-buffer (find-file-noselect tags-file-name))))
@@ -6992,17 +6992,17 @@ Use as
 			(setq cperl-unreadable-ok t
 			      tm nil)	; Return empty list
 		      (error "Aborting: unreadable directory %s" file)))))))
-	  (mapcar (function
-		   (lambda (file)
-		     (cond
-		      ((string-match cperl-noscan-files-regexp file)
-		       nil)
-		      ((not (file-directory-p file))
-		       (if (string-match cperl-scan-files-regexp file)
-			   (cperl-write-tags file erase recurse nil t noxs topdir)))
-		      ((not recurse) nil)
-		      (t (cperl-write-tags file erase recurse t t noxs topdir)))))
-		  files)))
+	  (mapc (function
+		 (lambda (file)
+		   (cond
+		    ((string-match cperl-noscan-files-regexp file)
+		     nil)
+		    ((not (file-directory-p file))
+		     (if (string-match cperl-scan-files-regexp file)
+			 (cperl-write-tags file erase recurse nil t noxs topdir)))
+		    ((not recurse) nil)
+		    (t (cperl-write-tags file erase recurse t t noxs topdir)))))
+		files)))
        (t
 	(setq xs (string-match "\\.xs$" file))
 	(if (not (and xs noxs))
@@ -7090,6 +7090,8 @@ Use as
 			(cons cons1 (car cperl-hierarchy)))))))
       (end-of-line))))
 
+(declare-function x-popup-menu "xmenu.c" (position menu))
+
 (defun cperl-tags-hier-init (&optional update)
   "Show hierarchical menu of classes and methods.
 Finds info about classes by a scan of loaded TAGS files.
@@ -7106,7 +7108,7 @@ One may build such TAGS files from CPerl mode menu."
 	    pack name cons1 to l1 l2 l3 l4 b)
 	;; (setq cperl-hierarchy '(() () ())) ; Would write into '() later!
 	(setq cperl-hierarchy (list l1 l2 l3))
-	(if cperl-xemacs-p		; Not checked
+	(if (featurep 'xemacs)		; Not checked
 	    (progn
 	      (or tags-file-name
 		  ;; Does this work in XEmacs?
@@ -7116,16 +7118,16 @@ One may build such TAGS files from CPerl mode menu."
 	      (cperl-tags-hier-fill))
 	  (or tags-table-list
 	      (call-interactively 'visit-tags-table))
-	  (mapcar
+	  (mapc
 	   (function
 	    (lambda (tagsfile)
 	      (message "Updating list of classes... %s" tagsfile)
 	    (set-buffer (get-file-buffer tagsfile))
 	    (cperl-tags-hier-fill)))
-	 tags-table-list)
+	   tags-table-list)
 	  (message "Updating list of classes... postprocessing..."))
-	(mapcar remover (car cperl-hierarchy))
-	(mapcar remover (nth 1 cperl-hierarchy))
+	(mapc remover (car cperl-hierarchy))
+	(mapc remover (nth 1 cperl-hierarchy))
 	(setq to (list nil (cons "Packages: " (nth 1 cperl-hierarchy))
 		       (cons "Methods: " (car cperl-hierarchy))))
 	(cperl-tags-treeify to 1)
@@ -7189,40 +7191,40 @@ One may build such TAGS files from CPerl mode menu."
     (setcdr to l1)			; Init to dynamic space
     (setq writeto to)
     (setq ord 1)
-    (mapcar move-deeper packages)
+    (mapc move-deeper packages)
     (setq ord 2)
-    (mapcar move-deeper methods)
+    (mapc move-deeper methods)
     (if recurse
-	(mapcar (function (lambda (elt)
+	(mapc (function (lambda (elt)
 			  (cperl-tags-treeify elt (1+ level))))
-		(cdr to)))
+	      (cdr to)))
     ;;Now clean up leaders with one child only
-    (mapcar (function (lambda (elt)
-			(if (not (and (listp (cdr elt))
-				      (eq (length elt) 2))) nil
-			    (setcar elt (car (nth 1 elt)))
-			    (setcdr elt (cdr (nth 1 elt))))))
-	    (cdr to))
+    (mapc (function (lambda (elt)
+		      (if (not (and (listp (cdr elt))
+				    (eq (length elt) 2))) nil
+			(setcar elt (car (nth 1 elt)))
+			(setcdr elt (cdr (nth 1 elt))))))
+	  (cdr to))
     ;; Sort the roots of subtrees
     (if (default-value 'imenu-sort-function)
 	(setcdr to
 		(sort (cdr to) (default-value 'imenu-sort-function))))
     ;; Now add back functions removed from display
-    (mapcar (function (lambda (elt)
-			(setcdr to (cons elt (cdr to)))))
-	    (if (default-value 'imenu-sort-function)
-		(nreverse
-		 (sort root-functions (default-value 'imenu-sort-function)))
-	      root-functions))
+    (mapc (function (lambda (elt)
+		      (setcdr to (cons elt (cdr to)))))
+	  (if (default-value 'imenu-sort-function)
+	      (nreverse
+	       (sort root-functions (default-value 'imenu-sort-function)))
+	    root-functions))
     ;; Now add back packages removed from display
-    (mapcar (function (lambda (elt)
-			(setcdr to (cons (cons (concat "package " (car elt))
-					       (cdr elt))
-					 (cdr to)))))
-	    (if (default-value 'imenu-sort-function)
-		(nreverse
-		 (sort root-packages (default-value 'imenu-sort-function)))
-	      root-packages))))
+    (mapc (function (lambda (elt)
+		      (setcdr to (cons (cons (concat "package " (car elt))
+					     (cdr elt))
+				       (cdr to)))))
+	  (if (default-value 'imenu-sort-function)
+	      (nreverse
+	       (sort root-packages (default-value 'imenu-sort-function)))
+	    root-packages))))
 
 ;;;(x-popup-menu t
 ;;;   '(keymap "Name1"
@@ -8457,7 +8459,7 @@ the appropriate statement modifier."
 				  'variable-documentation))))
 	 (manual-program (if is-func "perldoc -f" "perldoc")))
     (cond
-     (cperl-xemacs-p
+     ((featurep 'xemacs)
       (let ((Manual-program "perldoc")
 	    (Manual-switches (if is-func (list "-f"))))
 	(manual-entry word)))
@@ -8499,7 +8501,7 @@ the appropriate statement modifier."
   (interactive)
   (require 'man)
   (cond
-   (cperl-xemacs-p
+   ((featurep 'xemacs)
     (let ((Manual-program "perldoc"))
       (manual-entry buffer-file-name)))
    (t
@@ -8694,6 +8696,8 @@ start with default arguments, then refine the slowdown regions."
       (setq delta (- (- tt (setq tt (funcall timems)))) tot (+ tot delta))
       (message "to %s:%6s,%7s" l delta tot))
     tot))
+
+(defvar font-lock-cache-position)
 
 (defun cperl-emulate-lazy-lock (&optional window-size)
   "Emulate `lazy-lock' without `condition-case', so `debug-on-error' works.
@@ -8891,5 +8895,5 @@ do extra unwind via `cperl-unwind-to-safe'."
 
 (provide 'cperl-mode)
 
-;;; arch-tag: 42e5b19b-e187-4537-929f-1a7408980ce6
+;; arch-tag: 42e5b19b-e187-4537-929f-1a7408980ce6
 ;;; cperl-mode.el ends here

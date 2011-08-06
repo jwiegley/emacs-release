@@ -1,17 +1,17 @@
 ;;; locate.el --- interface to the locate command
 
 ;; Copyright (C) 1996, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Peter Breton <pbreton@cs.umb.edu>
 ;; Keywords: unix files
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -406,14 +404,10 @@ there is no file name on the current line, the return value is
 meaningless.  You can check whether the current line contains a file
 listed by the locate program, using the function
 `locate-main-listing-line-p'."
-  (save-excursion
-    (end-of-line)
-    (let ((eol (point)))
-      (beginning-of-line)
-
-      ;; Assumes names end at the end of the line
-      (forward-char locate-filename-indentation)
-      (list (point) eol))))
+  (list (+ locate-filename-indentation
+           (line-beginning-position))
+        ;; Assume names end at the end of the line.
+        (line-end-position)))
 
 ;; From SQL-mode
 (defun locate-current-line-number ()
@@ -703,5 +697,5 @@ the database on the command line."
 
 (provide 'locate)
 
-;;; arch-tag: 60c4d098-b5d5-4b3c-a3e0-51a2e9f43898
+;; arch-tag: 60c4d098-b5d5-4b3c-a3e0-51a2e9f43898
 ;;; locate.el ends here

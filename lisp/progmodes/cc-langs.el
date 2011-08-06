@@ -1,13 +1,14 @@
 ;;; cc-langs.el --- language specific settings for CC Mode
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    2002- Alan Mackenzie
 ;;             1998- Martin Stjernholm
 ;;             1992-1999 Barry A. Warsaw
-;;             1987 Dave Detlefs and Stewart Clamen
+;;             1987 Dave Detlefs
+;;             1987 Stewart Clamen
 ;;             1985 Richard M. Stallman
 ;; Maintainer: bug-cc-mode@gnu.org
 ;; Created:    22-Apr-1997 (split from cc-mode.el)
@@ -16,10 +17,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,9 +28,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -115,6 +114,10 @@
 ;; language constants are requested.
 
 ;;; Code:
+
+;; For Emacs < 22.2.
+(eval-and-compile
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest r))))
 
 (eval-when-compile
   (let ((load-path
@@ -204,6 +207,12 @@ the evaluated constant value at compile time."
 ;  '
 (def-edebug-spec c-lang-defvar
   (&define name def-form &optional stringp)) ;)
+
+;; Suppress "might not be defined at runtime" warning.
+;; This file is only used when compiling other cc files.
+(declare-function delete-duplicates "cl-seq" (cl-seq &rest cl-keys))
+(declare-function mapcan "cl-extra" (cl-func cl-seq &rest cl-rest))
+(declare-function cl-macroexpand-all "cl-extra" (form &optional env))
 
 (eval-and-compile
   ;; Some helper functions used when building the language constants.
@@ -452,7 +461,7 @@ The function is called even when font locking is disabled.
 When the mode is initialized, this function is called with
 parameters \(point-min), \(point-max) and <buffer size>."
   t nil
-  (c c++ objc) 'c-neutralize-syntax-in-CPP
+  (c c++ objc) 'c-extend-and-neutralize-syntax-in-CPP
   awk 'c-awk-extend-and-syntax-tablify-region)
 (c-lang-defvar c-before-font-lock-function
 	       (c-lang-const c-before-font-lock-function))
@@ -987,7 +996,7 @@ This regexp is assumed to not match any non-operator identifier."
 ;; Note: the following alias is an old name which was a mis-spelling.  It has
 ;; been corrected above and throughout cc-engine.el.  It will be removed at
 ;; some release very shortly in the future.  ACM, 2006-04-14.
-(defalias 'c-opt-op-identitier-prefix 'c-opt-op-identifier-prefix)
+(defvaralias 'c-opt-op-identitier-prefix 'c-opt-op-identifier-prefix)
 (make-obsolete-variable 'c-opt-op-identitier-prefix 'c-opt-op-identifier-prefix
 			"CC Mode 5.31.4, 2006-04-14")
 
@@ -2106,6 +2115,17 @@ nevertheless contains a list separated with ';' and not ','."
 	(c-make-keywords-re t (c-lang-const c-asm-stmt-kwds))))
 (c-lang-defvar c-opt-asm-stmt-key (c-lang-const c-opt-asm-stmt-key))
 
+(c-lang-defconst c-case-kwds
+  "The keyword\(s) which introduce a \"case\" like construct.
+This construct is \"<keyword> <expression> :\"."
+  t '("case")
+  awk nil)
+
+(c-lang-defconst c-case-kwds-regexp
+  ;; Adorned regexp matching any "case"-like keyword.
+  t (c-make-keywords-re t (c-lang-const c-case-kwds)))
+(c-lang-defvar c-case-kwds-regexp (c-lang-const c-case-kwds-regexp))
+
 (c-lang-defconst c-label-kwds
   "Keywords introducing colon terminated labels in blocks."
   t '("case" "default")
@@ -2129,7 +2149,7 @@ nevertheless contains a list separated with ';' and not ','."
   t       nil
   (c c++) '("NULL" ;; Not a keyword, but practically works as one.
 	    "false" "true")		; Defined in C99.
-  objc    '("nil" "Nil")
+  objc    '("nil" "Nil" "YES" "NO" "NS_DURING" "NS_HANDLER" "NS_ENDHANDLER")
   idl     '("TRUE" "FALSE")
   java    '("true" "false" "null") ; technically "literals", not keywords
   pike    '("UNDEFINED")) ;; Not a keyword, but practically works as one.
@@ -3059,5 +3079,5 @@ evaluated and should not be quoted."
 
 (cc-provide 'cc-langs)
 
-;;; arch-tag: 1ab57482-cfc2-4c5b-b628-3539c3098822
+;; arch-tag: 1ab57482-cfc2-4c5b-b628-3539c3098822
 ;;; cc-langs.el ends here

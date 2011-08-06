@@ -1,18 +1,25 @@
 ;;; cmacexp.el --- expand C macros in a region
 
-;; Copyright (C) 1992, 1994, 1996, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-;; Free Software Foundation, Inc.
+;; Copyright (C) 1992, 1994, 1996, 2000, 2001, 2002, 2003, 2004, 2005,
+;;   2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Francesco Potorti` <pot@gnu.org>
 ;; Adapted-By: ESR
 ;; Keywords: c
 
+;; Yoni Rabkin <yoni@rabkins.net> contacted the maintainer of this
+;; file, and the maintainer agreed that when a bug is filed in the
+;; Emacs bug reporting system against this file, a copy of the bug
+;; report be sent to the maintainer's email address. However, the
+;; maintainer prefers not to be the only person maintaining this file
+;; in future.
+
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +27,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -398,5 +403,5 @@ Optional arg DISPLAY non-nil means show messages in the echo area."
       ;; Cleanup.
       (kill-buffer outbuf))))
 
-;;; arch-tag: 4f20253c-71ef-4e6d-a774-19087060910e
+;; arch-tag: 4f20253c-71ef-4e6d-a774-19087060910e
 ;;; cmacexp.el ends here

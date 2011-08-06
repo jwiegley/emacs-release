@@ -1,6 +1,6 @@
 ;;; swedish.el --- miscellaneous functions for dealing with Swedish
 
-;; Copyright (C) 1988, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 1988, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Howard Gayle
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,19 +20,21 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
+
+;; This file has been obsolete since Emacs 22.1.
+
+;; Fixme: Is this actually used?  if so, it should be in language,
+;; possibly as a feature property of Swedish, probably defining a
+;; `swascii' coding system.
 
 ;;; Code:
 
 ;; Written by Howard Gayle.  See case-table.el for details.
 
 ;; See iso-swed.el for a description of the character set.
-
-(require 'latin-1)
 
 (defvar mail-send-hook)
 (defvar news-group-hook-alist)
@@ -157,5 +159,5 @@ Leaves point just after the word that looks Swedish."
 
 (provide 'swedish)
 
-;;; arch-tag: a117019d-acac-4ac4-8eac-0dbd49a41d32
+;; arch-tag: a117019d-acac-4ac4-8eac-0dbd49a41d32
 ;;; swedish.el ends here

@@ -1,17 +1,17 @@
 ;;; mailalias.el --- expand and complete mailing address aliases
 
 ;; Copyright (C) 1985, 1987, 1995, 1996, 1997, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: mail
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -38,12 +36,12 @@
   :group 'mail)
 
 (defcustom mail-passwd-files '("/etc/passwd")
-  "*List of files from which to determine valid user names."
+  "List of files from which to determine valid user names."
   :type '(repeat string)
   :group 'mailalias)
 
 (defcustom mail-passwd-command nil
-  "*Shell command to retrieve text to add to `/etc/passwd', or nil."
+  "Shell command to retrieve text to add to `/etc/passwd', or nil."
   :type '(choice string (const nil))
   :group 'mailalias)
 
@@ -68,7 +66,7 @@ When t this still needs to be initialized.")
 	  ("Followup-To:" . (mail-sentto-newsgroups))
 	  ;;("Distribution:" ???)
 	  ))
-  "*Alist of header field and expression to return alist for completion.
+  "Alist of header field and expression to return alist for completion.
 The expression may reference the variable `pattern'
 which will hold the string being completed.
 If not on matching header, `mail-complete-function' gets called instead."
@@ -78,7 +76,7 @@ If not on matching header, `mail-complete-function' gets called instead."
 
 ;;;###autoload
 (defcustom mail-complete-style 'angles
-  "*Specifies how \\[mail-complete] formats the full name when it completes.
+  "Specifies how \\[mail-complete] formats the full name when it completes.
 If `nil', they contain just the return address like:
 	king@grassland.com
 If `parens', they look like:
@@ -89,26 +87,26 @@ If `angles', they look like:
   :group 'mailalias)
 
 (defcustom mail-complete-function 'ispell-complete-word
-  "*Function to call when completing outside `mail-complete-alist'-header."
+  "Function to call when completing outside `mail-complete-alist'-header."
   :type '(choice function (const nil))
   :group 'mailalias)
 
 (defcustom mail-directory-function nil
-  "*Function to get completions from directory service or nil for none.
+  "Function to get completions from directory service or nil for none.
 See `mail-directory-requery'."
   :type '(choice function (const nil))
   :group 'mailalias)
 
 ;; This is for when the directory is huge, or changes frequently.
 (defcustom mail-directory-requery nil
-  "*When non-nil call `mail-directory-function' for each completion.
+  "When non-nil call `mail-directory-function' for each completion.
 In that case, one argument gets passed to the function, the partial string
 entered so far."
   :type 'boolean
   :group 'mailalias)
 
 (defcustom mail-directory-process nil
-  "*Shell command to get the list of names from a mail directory.
+  "Shell command to get the list of names from a mail directory.
 This value is used when the value of `mail-directory-function'
 is `mail-directory-process'.  The value should be a list
 of the form (COMMAND ARG ...), where each of the list elements
@@ -129,13 +127,13 @@ or like this:
 (put 'mail-directory-process 'risky-local-variable t)
 
 (defcustom mail-directory-stream nil
-  "*List of (HOST SERVICE) for stream connection to mail directory."
+  "List of (HOST SERVICE) for stream connection to mail directory."
   :type 'sexp
   :group 'mailalias)
 (put 'mail-directory-stream 'risky-local-variable t)
 
 (defcustom mail-directory-parser nil
-  "*How to interpret the output of `mail-directory-function'.
+  "How to interpret the output of `mail-directory-function'.
 Three types of values are possible:
 
   - nil means to gather each line as one name
@@ -304,6 +302,7 @@ By default, this is the file specified by `mail-personal-alias-file'."
 
 ;; Always autoloadable in case the user wants to define aliases
 ;; interactively or in .emacs.
+;; define-mail-abbrev in mailabbrev.el duplicates much of this code.
 ;;;###autoload
 (defun define-mail-alias (name definition &optional from-mailrc-file)
   "Define NAME as a mail alias that translates to DEFINITION.
@@ -329,44 +328,64 @@ if it is quoted with double-quotes."
       (setq definition (substring definition (match-end 0))))
   (if (string-match "[ \t\n,]+\\'" definition)
       (setq definition (substring definition 0 (match-beginning 0))))
-  (let ((result '())
-	;; If DEFINITION is null string, avoid looping even once.
-	(start (and (not (equal definition "")) 0))
-	(L (length definition))
-	convert-backslash
-	end tem)
+
+  (let* ((L (length definition))
+	 (start (if (> L 0) 0))
+	 end this-entry result tem)
     (while start
-      (setq convert-backslash nil)
-      ;; If we're reading from the mailrc file, then addresses are delimited
-      ;; by spaces, and addresses with embedded spaces must be surrounded by
-      ;; double-quotes.  Otherwise, addresses are separated by commas.
-      (if from-mailrc-file
-	  (if (eq ?\" (aref definition start))
-	      ;; The following test on `found' compensates for a bug
-	      ;; in match-end, which does not return nil when match
-	      ;; failed.
-	      (let ((found (string-match "[^\\]\\(\\([\\][\\]\\)*\\)\"[ \t,]*"
-					 definition start)))
-		(setq start (1+ start)
-		      end (and found (match-end 1))
-		      convert-backslash t))
-	    (setq end (string-match "[ \t,]+" definition start)))
-	(setq end (string-match "[ \t\n,]*,[ \t\n,]*" definition start)))
-      (let ((temp (substring definition start end))
-	    (pos 0))
-	(setq start (and end
-			 (/= (match-end 0) L)
-			 (match-end 0)))
-	(if convert-backslash
-	    (while (string-match "[\\]" temp pos)
-	      (setq temp (replace-match "" t t temp))
-	      (if start
-		  (setq start (1- start)))
-	      (setq pos (match-end 0))))
-	(setq result (cons temp result))))
+      (cond
+       (from-mailrc-file
+	;; If we're reading from the mailrc file, addresses are
+	;; delimited by spaces, and addresses with embedded spaces are
+	;; surrounded by non-escaped double-quotes.
+	(if (eq ?\" (aref definition start))
+	    (setq start (1+ start)
+		  end (and (string-match
+			    "[^\\]\\(\\([\\][\\]\\)*\\)\"[ \t,]*"
+			    definition start)
+			   (match-end 1)))
+	  (setq end (string-match "[ \t,]+" definition start)))
+	;; Extract the address and advance the loop past it.
+	(setq this-entry (substring definition start end)
+	      start (and end (/= (match-end 0) L) (match-end 0)))
+	;; If the full name contains a problem character, quote it.
+	(and (string-match "\\(.+?\\)[ \t]*\\(<.*>\\)" this-entry)
+	     (string-match "[^- !#$%&'*+/0-9=?A-Za-z^_`{|}~]"
+			   (match-string 1 this-entry))
+	     (setq this-entry (replace-regexp-in-string
+			       "\\(.+?\\)[ \t]*\\(<.*>\\)"
+			       "\"\\1\" \\2"
+			       this-entry))))
+       ;; When we are not reading from .mailrc, addresses are
+       ;; separated by commas.  Try to accept a rfc822-like syntax.
+       ;; (Todo: extend rfc822.el to do the work for us.)
+       ((equal (string-match
+		"[ \t,]*\\(\"\\(?:[^\"]\\|[^\\]\\(?:[\\][\\]\\)*\"\\)*\"[ \t]*\
+<[-.!#$%&'*+/0-9=?A-Za-z^_`{|}~@]+>\\)[ \t,]*"
+		definition start)
+	       start)
+	;; If an entry has a valid [ "foo bar" <foo@example.com> ]
+	;; form, use it literally .  This also allows commas in the
+	;; quoted string, e.g.  [ "foo bar, jr" <foo@example.com> ]
+	(setq this-entry (match-string 1 definition)
+	      start (and (/= (match-end 0) L) (match-end 0))))
+       (t
+	;; Otherwise, read the next address by looking for a comma.
+	(setq end (string-match "[ \t\n,]*,[ \t\n]*" definition start))
+	(setq this-entry (substring definition start end))
+	;; Advance the loop past this address.
+	(setq start (and end (/= (match-end 0) L) (match-end 0)))
+	;; If the full name contains a problem character, quote it.
+	(and (string-match "\\(.+?\\)[ \t]*\\(<.*>\\)" this-entry)
+	     (string-match "[^- !#$%&'*+/0-9=?A-Za-z^_`{|}~]"
+			   (match-string 1 this-entry))
+	     (setq this-entry (replace-regexp-in-string
+			       "\\(.+?\\)[ \t]*\\(<.*>\\)" "\"\\1\" \\2"
+			       this-entry)))))
+      (push this-entry result))
+
     (setq definition (mapconcat (function identity)
-				(nreverse result)
-				", "))
+				(nreverse result) ", "))
     (setq tem (assoc name mail-aliases))
     (if tem
 	(rplacd tem definition)
@@ -553,5 +572,5 @@ See `mail-directory-stream'."
 
 (provide 'mailalias)
 
-;;; arch-tag: 1d6a0f87-eb34-4d45-8816-60c1b952cf46
+;; arch-tag: 1d6a0f87-eb34-4d45-8816-60c1b952cf46
 ;;; mailalias.el ends here

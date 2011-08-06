@@ -1,17 +1,17 @@
 ;;; fortune.el --- use fortune to create signatures
 
-;; Copyright (C) 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;  2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Holger Schauer <Holger.Schauer@gmx.de>
 ;; Keywords: games utils mail
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;; This utility allows you to automatically cut regions to a fortune
@@ -72,12 +70,12 @@
   :group 'mail)
 
 (defcustom fortune-dir "~/docs/ascii/misc/fortunes/"
-  "*The directory to look in for local fortune cookies files."
+  "The directory to look in for local fortune cookies files."
   :type 'directory
   :group 'fortune)
 (defcustom fortune-file
   (expand-file-name "usenet" fortune-dir)
-  "*The file in which local fortune cookies will be stored."
+  "The file in which local fortune cookies will be stored."
   :type 'file
   :group 'fortune)
 (defcustom fortune-database-extension  ".dat"
@@ -89,9 +87,11 @@ Normally you won't have a reason to change it."
   "Program to select a fortune cookie."
   :type 'string
   :group 'fortune)
-(defcustom fortune-program-options ""
-  "Options to pass to the fortune program (a string)."
-  :type 'string
+(defcustom fortune-program-options ()
+  "List of options to pass to the fortune program."
+  :type '(choice (repeat (string :tag "Option"))
+                 (string :tag "Obsolete string of options"))
+  :version "23.1"
   :group 'fortune)
 (defcustom fortune-strfile "strfile"
   "Program to compute a new fortune database."
@@ -109,7 +109,7 @@ Set this to \"\" if you would like to see the output."
   :group 'fortune)
 
 (defcustom fortune-always-compile t
-  "*Non-nil means automatically compile fortune files.
+  "Non-nil means automatically compile fortune files.
 If nil, you must invoke `fortune-compile' manually to do that."
   :type 'boolean
   :group 'fortune)
@@ -127,11 +127,11 @@ No need to add an `in'."
   :type 'string
   :group 'fortune-signature)
 (defcustom fortune-sigstart ""
-  "*Some text to insert before the fortune cookie, in a mail signature."
+  "Some text to insert before the fortune cookie, in a mail signature."
   :type 'string
   :group 'fortune-signature)
 (defcustom fortune-sigend ""
-  "*Some text to insert after the fortune cookie, in a mail signature."
+  "Some text to insert after the fortune cookie, in a mail signature."
   :type 'string
   :group 'fortune-signature)
 
@@ -301,11 +301,12 @@ when supplied, specifies the file to choose the fortune from."
       (if fortune-always-compile
 	  (fortune-compile fort-file))
 
-      (call-process
-        fortune-program  ;; programm to call
-	nil fortune-buffer nil ;; INFILE BUFFER DISPLAYP
-	(concat fortune-program-options fort-file)))))
-
+      (apply 'call-process
+             fortune-program            ; program to call
+             nil fortune-buffer nil     ; INFILE BUFFER DISPLAY
+             (append (if (stringp fortune-program-options)
+                         (split-string fortune-program-options)
+                       fortune-program-options) (list fort-file))))))
 
 ;;;###autoload
 (defun fortune (&optional file)
@@ -328,5 +329,5 @@ and choose the directory as the fortune-file."
 ;;; Provide ourselves.
 (provide 'fortune)
 
-;;; arch-tag: a1e4cb8a-3792-40e7-86a7-fc75ce094bcc
+;; arch-tag: a1e4cb8a-3792-40e7-86a7-fc75ce094bcc
 ;;; fortune.el ends here

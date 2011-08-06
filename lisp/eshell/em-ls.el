@@ -1,16 +1,16 @@
 ;;; em-ls.el --- implementation of ls in Lisp
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,15 +18,23 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
-(provide 'em-ls)
+;;; Commentary:
 
-(eval-when-compile (require 'esh-maint))
+;; Most of the command switches recognized by GNU's ls utility are
+;; supported ([(fileutils)ls invocation]).
 
-(defgroup eshell-ls nil
+;;; Code:
+
+(eval-when-compile
+  (require 'cl)
+  (require 'eshell))
+(require 'esh-util)
+(require 'esh-opt)
+
+;;;###autoload
+(eshell-defgroup eshell-ls nil
   "This module implements the \"ls\" utility fully in Lisp.  If it is
 passed any unrecognized command switches, it will revert to the
 operating system's version.  This version of \"ls\" uses text
@@ -34,14 +42,6 @@ properties to colorize its output based on the setting of
 `eshell-ls-use-colors'."
   :tag "Implementation of `ls' in Lisp"
   :group 'eshell-module)
-
-;;; Commentary:
-
-;; Most of the command switches recognized by GNU's ls utility are
-;; supported ([(fileutils)ls invocation]).
-
-(require 'esh-util)
-(require 'esh-opt)
 
 ;;; User Variables:
 
@@ -305,24 +305,23 @@ instead."
 
 (put 'eshell/ls 'eshell-no-numeric-conversions t)
 
-(eval-when-compile
-  (defvar block-size)
-  (defvar dereference-links)
-  (defvar dir-literal)
-  (defvar error-func)
-  (defvar flush-func)
-  (defvar human-readable)
-  (defvar ignore-pattern)
-  (defvar insert-func)
-  (defvar listing-style)
-  (defvar numeric-uid-gid)
-  (defvar reverse-list)
-  (defvar show-all)
-  (defvar show-recursive)
-  (defvar show-size)
-  (defvar sort-method)
-  (defvar ange-cache)
-  (defvar dired-flag))
+(defvar block-size)
+(defvar dereference-links)
+(defvar dir-literal)
+(defvar error-func)
+(defvar flush-func)
+(defvar human-readable)
+(defvar ignore-pattern)
+(defvar insert-func)
+(defvar listing-style)
+(defvar numeric-uid-gid)
+(defvar reverse-list)
+(defvar show-all)
+(defvar show-recursive)
+(defvar show-size)
+(defvar sort-method)
+(defvar ange-cache)
+(defvar dired-flag)
 
 (defun eshell-do-ls (&rest args)
   "Implementation of \"ls\" in Lisp, passing ARGS."
@@ -362,7 +361,7 @@ instead."
 	 "list entries by lines instead of by columns")
      (?C nil by-columns listing-style
 	 "list entries by columns")
-     (?L "deference" nil dereference-links
+     (?L "dereference" nil dereference-links
 	 "list entries pointed to by symbolic links")
      (?R "recursive" nil show-recursive
 	 "list subdirectories recursively")
@@ -484,31 +483,26 @@ whose cdr is the list of file attributes."
 		(if show-size
 		    (concat (eshell-ls-size-string attrs size-width) " "))
 		(format
-		 "%s%4d %-8s %-8s "
+		 (if numeric-uid-gid
+		     "%s%4d %-8s %-8s "
+		   "%s%4d %-14s %-8s ")
 		 (or (nth 8 attrs) "??????????")
 		 (or (nth 1 attrs) 0)
 		 (or (let ((user (nth 2 attrs)))
-		       (and (not numeric-uid-gid)
-			    user
-			    (eshell-substring
-			     (if (numberp user)
-				 (user-login-name user)
-			       user) 8)))
+		       (and (stringp user)
+			    (eshell-substring user 14)))
 		     (nth 2 attrs)
 		     "")
 		 (or (let ((group (nth 3 attrs)))
-		       (and (not numeric-uid-gid)
-			    group
-			    (eshell-substring
-			     (if (numberp group)
-				 (eshell-group-name group)
-			       group) 8)))
+		       (and (stringp group)
+			    (eshell-substring group 8)))
 		     (nth 3 attrs)
 		     ""))
 		(let* ((str (eshell-ls-printable-size (nth 7 attrs)))
 		       (len (length str)))
-		  (if (< len (or size-width 4))
-		      (concat (make-string (- (or size-width 4) len) ? ) str)
+		  ;; Let file sizes shorter than 9 align neatly.
+		  (if (< len (or size-width 8))
+		      (concat (make-string (- (or size-width 8) len) ? ) str)
 		    str))
 		" " (format-time-string
 		     (concat
@@ -547,7 +541,12 @@ relative to that directory."
 	(let ((entries (eshell-directory-files-and-attributes
 			dir nil (and (not show-all)
 				     eshell-ls-exclude-hidden
-				     "\\`[^.]") t)))
+				     "\\`[^.]") t
+				     ;; Asking for UID and GID as
+				     ;; strings saves another syscall
+				     ;; later when we are going to
+				     ;; display user and group names.
+				     (if numeric-uid-gid 'integer 'string))))
 	  (when (and (not show-all) eshell-ls-exclude-regexp)
 	    (while (and entries (string-match eshell-ls-exclude-regexp
 					      (caar entries)))
@@ -566,7 +565,11 @@ relative to that directory."
 			  size-width
 			  (max size-width
 			       (length (eshell-ls-printable-size
-					(nth 7 (cdr e)) t))))))
+					(nth 7 (cdr e))
+					(not
+					 ;; If we are under -l, count length
+					 ;; of sizes in bytes, not in blocks.
+					 (eq listing-style 'long-listing))))))))
 	      (funcall insert-func "total "
 		       (eshell-ls-printable-size total t) "\n")))
 	  (let ((default-directory (expand-file-name dir)))
@@ -639,9 +642,11 @@ In Eshell's implementation of ls, ENTRIES is always reversed."
 Each member of FILES is either a string or a cons cell of the form
 \(FILE .  ATTRS)."
   ;; Mimic behavior of coreutils ls, which lists a single file per
-  ;; line when output is not a tty.  Exceptions: if -x was supplied.
-  ;; Not really the same since not testing output destination.
+  ;; line when output is not a tty.  Exceptions: if -x was supplied,
+  ;; or if we are the _last_ command in a pipeline.
+  ;; FIXME Not really the same since not testing output destination.
   (if (or (and eshell-in-pipeline-p
+	       (not (eq eshell-in-pipeline-p 'last))
 	       (not (eq listing-style 'by-lines)))
 	  (memq listing-style '(long-listing single-column)))
       (eshell-for file files
@@ -927,7 +932,11 @@ to use, and each member of which is the width of that column
 				 (car file)))))
   (car file))
 
-;;; Code:
+(provide 'em-ls)
 
-;;; arch-tag: 9295181c-0cb2-499c-999b-89f5359842cb
+;; Local Variables:
+;; generated-autoload-file: "esh-groups.el"
+;; End:
+
+;; arch-tag: 9295181c-0cb2-499c-999b-89f5359842cb
 ;;; em-ls.el ends here

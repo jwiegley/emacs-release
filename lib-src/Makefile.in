@@ -1,13 +1,13 @@
 # Makefile for lib-src subdirectory in GNU Emacs.
 # Copyright (C) 1985, 1987, 1988, 1993, 1994, 2001, 2002, 2003, 2004,
-#               2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+#               2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 # This file is part of GNU Emacs.
 
-# GNU Emacs is free software; you can redistribute it and/or modify
+# GNU Emacs is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 
 # GNU Emacs is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,8 @@
 # GNU General Public License for more details.
 
 # You should have received a copy of the GNU General Public License
-# along with GNU Emacs; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-# Boston, MA 02110-1301, USA.
+# along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+
 
 # Avoid trouble on systems where the `SHELL' variable might be
 # inherited from the environment.
@@ -106,7 +105,7 @@ INSTALL_STRIP =
 
 # Things that a user might actually run,
 # which should be installed in bindir.
-INSTALLABLES = etags${EXEEXT} ctags${EXEEXT} emacsclient${EXEEXT} b2m${EXEEXT} ebrowse${EXEEXT}
+INSTALLABLES = etags${EXEEXT} ctags${EXEEXT} emacsclient${EXEEXT} b2m${EXEEXT} ebrowse${EXEEXT} @LIB_SRC_EXTRA_INSTALLABLES@
 INSTALLABLE_SCRIPTS = rcs-checkin grep-changelog
 
 # Things that Emacs runs internally, or during the build process,
@@ -121,9 +120,6 @@ DONT_INSTALL= test-distrib${EXEEXT} make-docfile${EXEEXT}
 SCRIPTS= rcs2log vcdiff
 
 EXECUTABLES= ${UTILITIES} ${INSTALLABLES} ${SCRIPTS} ${INSTALLABLE_SCRIPTS}
-
-SOURCES = COPYING ChangeLog Makefile.in README emacs.csh \
-	makedoc.com *.[chy] rcs2log vcdiff
 
 # Additional -D flags for movemail (add to MOVE_FLAGS if desired):
 # MAIL_USE_POP		Support mail retrieval from a POP mailbox.
@@ -144,21 +140,9 @@ MOVE_FLAGS=
 # ========================== start of cpp stuff =======================
 /* From here on, comments must be done in C syntax.  */
 
-#define NO_SHORTNAMES
 #define THIS_IS_MAKEFILE
 #define NOT_C_CODE
 #include "../src/config.h"
-
-/* Some machines don\'t find the standard C libraries in the usual place.  */
-#ifndef ORDINARY_LINK
-#ifndef LIB_STANDARD_LIBSRC
-#define LIB_STANDARD_LIBSRC -lc
-#endif
-#else
-#ifndef LIB_STANDARD_LIBSRC
-#define LIB_STANDARD_LIBSRC
-#endif
-#endif
 
 /* Some s/SYSTEM.h files define this to request special libraries.  */
 #ifndef LIBS_SYSTEM
@@ -240,7 +224,7 @@ LIBS_MAIL=-lmail
 #endif
 #endif
 
-LOADLIBES=LIBS_SYSTEM LIBS_MACHINE LIB_STANDARD_LIBSRC
+LOADLIBES=LIBS_SYSTEM LIBS_MACHINE
 
 /* We need to #define emacs to get the right versions of some files.
    Some other files - those shared with other GNU utilities - need
@@ -258,12 +242,17 @@ CPP_CFLAGS = C_SWITCH_SYSTEM C_SWITCH_MACHINE -DHAVE_CONFIG_H \
 BASE_CFLAGS = C_SWITCH_SYSTEM C_SWITCH_MACHINE -DHAVE_CONFIG_H \
    -I. -I../src -I${srcdir} -I${srcdir}/../src ${CPPFLAGS} ${CFLAGS}
 
+.SUFFIXES: .m
+
 /* This is the default compilation command.
    But we should never rely on it, because some make version
    failed to find it for getopt.o.
    Using an explicit command made it work.  */
 .c.o:
 	${CC} -c ${CPP_CFLAGS} $<
+
+.m.o:
+	$(CC) -c $(CPPFLAGS) $(ALL_CFLAGS) $<
 
 all: ${DONT_INSTALL} ${UTILITIES} ${INSTALLABLES} ${SCRIPTS} ${INSTALLABLE_SCRIPTS}
 
@@ -368,12 +357,6 @@ maintainer-clean: distclean
 extraclean: maintainer-clean
 	-rm -f *~ \#*
 
-unlock:
-	chmod u+w $(SOURCES)
-
-relock:
-	chmod u-w $(SOURCES)
-
 /* Test the contents of the directory.  */
 check:
 	@echo "We don't have any tests for GNU Emacs yet."
@@ -391,7 +374,7 @@ test-distrib${EXEEXT}: ${srcdir}/test-distrib.c
 	./test-distrib ${srcdir}/testfile
 
 /* We need the following in order to create a <getopt.h> when the system
-   doesn't have one that works with the given compiler.  */
+   does not have one that works with the given compiler.  */
 GETOPT_H = @GETOPT_H@
 getopt.h: getopt_.h
 	cp $(srcdir)/getopt_.h $@-t
@@ -404,13 +387,8 @@ getopt.o: ${srcdir}/getopt.c $(GETOPT_H) ${srcdir}/gettext.h
 getopt1.o: ${srcdir}/getopt1.c $(GETOPT_H)
 	${CC} -c ${CPP_CFLAGS} ${srcdir}/getopt1.c
 
-#ifdef REGEXP_IN_LIBC
-REGEXPOBJ =
-REGEXPDEPS =
-#else
 REGEXPOBJ = regex.o
 REGEXPDEPS = $(REGEXPOBJ) $(srcdir)/../src/regex.h
-#endif
 
 regex.o: $(srcdir)/../src/regex.c $(srcdir)/../src/regex.h ../src/config.h
 	${CC} -c ${BASE_CFLAGS} -DCONFIG_BROKETS -DINHIBIT_STRING_HEADER ${srcdir}/../src/regex.c
@@ -471,24 +449,3 @@ update-game-score${EXEEXT}: update-game-score.o $(GETOPTDEPS)
 update-game-score.o: ${srcdir}/update-game-score.c ../src/config.h $(GETOPT_H)
 	$(CC) -c ${CPP_CFLAGS} ${srcdir}/update-game-score.c \
 	  -DHAVE_SHARED_GAME_DIR="\"$(gamedir)\""
-
-/* These are NOT included in INSTALLABLES or UTILITIES.
-   See ../src/Makefile.in.  */
-emacstool${EXEEXT}: ${srcdir}/emacstool.c
-	$(CC) ${srcdir}/emacstool.c -o emacstool ${ALL_CFLAGS} \
-	  -lsuntool -lsunwindow -lpixrect $(LOADLIBES)
-
-/* For SUN Japanese Language Environment.  */
-nemacstool${EXEEXT}: ${srcdir}/emacstool.c
-	$(CC) -o nemacstool -DJLE ${ALL_CFLAGS} ${srcdir}/emacstool.c \
-	  -lsuntool -lmle -lsunwindow -lpixrect $(LOADLIBES)
-
-xvetool${EXEEXT}: ${srcdir}/emacstool.c
-	$(CC) -o xvetool -DXVIEW ${ALL_CFLAGS} ${srcdir}/emacstool.c \
-	  -lxview -lX -I$(OPENWINHOME)/include -L$(OPENWINHOME)/lib \
-	  $(LOADLIBES)
-
-xveterm${EXEEXT}: ${srcdir}/emacstool.c
-	$(CC) -o xveterm -DXVIEW -DTTERM ${ALL_CFLAGS} ${srcdir}/emacstool.c \
-	  -lxview -lolgx -lX  -I$(OPENWINHOME)/include -L$(OPENWINHOME)/lib \
-	  $(LOADLIBES)

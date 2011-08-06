@@ -1,17 +1,17 @@
 ;;; dos-fns.el --- MS-Dos specific functions
 
 ;; Copyright (C) 1991, 1993, 1995, 1996, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: Morten Welinder <terra@diku.dk>
 ;; Keywords: internal
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,15 +19,16 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;; Part of this code is taken from (or derived from) demacs.
 
 ;;; Code:
+
+(declare-function int86 "dosfns.c")
+(declare-function msdos-long-file-names "msdos.c")
 
 ;; This overrides a trivial definition in files.el.
 (defun convert-standard-filename (filename)
@@ -185,10 +186,29 @@ shell requires it (see `w32-shell-dos-semantics')."
 		    (dos-8+3-filename dir))
 		  string))))))
 
+;; This is for the sake of standard file names elsewhere in Emacs that
+;; are defined as constant strings or via defconst, and whose
+;; conversion via `convert-standard-filename' does not give good
+;; enough results.
+(defun dosified-file-name (file-name)
+  "Return a variant of FILE-NAME that is valid on MS-DOS filesystems.
+
+This function is for those rare cases where `convert-standard-filename'
+does not do a job that is good enough, e.g. if you need to preserve the
+file-name extension.  It recognizes only certain specific file names
+that are used in Emacs Lisp sources; any other file name will be
+returned unaltered."
+  (cond
+   ;; See files.el:dir-locals-file.
+   ((string= file-name ".dir-locals.el")
+    "_dir-locals.el")
+   (t
+    file-name)))
+
 ;; See dos-vars.el for defcustom.
 (defvar msdos-shells)
 
-;;; Override setting chosen at startup.
+;; Override settings chosen at startup.
 (defun set-default-process-coding-system ()
   (setq default-process-coding-system
 	(if default-enable-multibyte-characters
@@ -196,6 +216,27 @@ shell requires it (see `w32-shell-dos-semantics')."
 	  '(raw-text-dos . raw-text-dos))))
 
 (add-hook 'before-init-hook 'set-default-process-coding-system)
+
+;; File names defined in preloaded packages can be incorrect or
+;; invalid if long file names were available during dumping, but not
+;; at runtime, or vice versa, and if the default file name begins with
+;; a period.  Their defcustom's need to be reevaluated at startup.  To
+;; see if the list of defcustom's below is up to date, run the command
+;; "M-x apropos-value RET ~/\. RET".
+(defun dos-reevaluate-defcustoms ()
+  ;; This was computed in paths.el, but that was at dump time.
+  (setq abbrev-file-name
+	(if (msdos-long-file-names)
+	    "~/.abbrev_defs"
+	  "~/_abbrev.defs"))
+  ;; This was computed in loaddefs.el, but that was at dump time.
+  (setq calc-settings-file
+	(if (msdos-long-file-names)
+	    "~/.calc.el"
+	  "~/_calc.el"))
+  (custom-reevaluate-setting 'trash-directory))
+
+(add-hook 'before-init-hook 'dos-reevaluate-defcustoms)
 
 (defvar register-name-alist
   '((ax . 0) (bx . 1) (cx . 2) (dx . 3) (si . 4) (di . 5)
@@ -257,5 +298,5 @@ that your video hardware might not support 50-line mode."
 
 (provide 'dos-fns)
 
-;;; arch-tag: 00b03579-8ebb-4a02-8762-5c5a929774ad
+;; arch-tag: 00b03579-8ebb-4a02-8762-5c5a929774ad
 ;;; dos-fns.el ends here

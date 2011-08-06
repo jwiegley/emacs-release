@@ -1,17 +1,17 @@
 ;;; hi-lock.el --- minor mode for interactive automatic highlighting
 
-;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009 Free Software Foundation, Inc.
 
-;; Author: David M. Koppelman, koppel@ece.lsu.edu
+;; Author: David M. Koppelman <koppel@ece.lsu.edu>
 ;; Keywords: faces, minor-mode, matching, display
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -208,15 +206,20 @@ patterns."
 (defvar hi-lock-interactive-patterns nil
   "Patterns provided to hi-lock by user.  Should not be changed.")
 
-(defvar hi-lock-face-history
-  (list "hi-yellow" "hi-pink" "hi-green" "hi-blue" "hi-black-b"
-        "hi-blue-b" "hi-red-b" "hi-green-b" "hi-black-hb")
-      "History list of faces for hi-lock interactive functions.")
+(defvar hi-lock-face-defaults
+  '("hi-yellow" "hi-pink" "hi-green" "hi-blue" "hi-black-b"
+    "hi-blue-b" "hi-red-b" "hi-green-b" "hi-black-hb")
+  "Default faces for hi-lock interactive functions.")
 
-;(dolist (f hi-lock-face-history) (unless (facep f) (error "%s not a face" f)))
+;(dolist (f hi-lock-face-defaults) (unless (facep f) (error "%s not a face" f)))
 
-(defvar hi-lock-regexp-history nil
-  "History of regexps used for interactive fontification.")
+(define-obsolete-variable-alias 'hi-lock-face-history
+                                'hi-lock-face-defaults
+                                "23.1")
+
+(define-obsolete-variable-alias 'hi-lock-regexp-history
+                                'regexp-history
+                                "23.1")
 
 (defvar hi-lock-file-patterns-prefix "Hi-lock"
   "Search target for finding hi-lock patterns at top of file.")
@@ -234,8 +237,6 @@ a library is being loaded.")
 
 (make-variable-buffer-local 'hi-lock-interactive-patterns)
 (put 'hi-lock-interactive-patterns 'permanent-local t)
-(make-variable-buffer-local 'hi-lock-regexp-history)
-(put 'hi-lock-regexp-history 'permanent-local t)
 (make-variable-buffer-local 'hi-lock-file-patterns)
 (put 'hi-lock-file-patterns 'permanent-local t)
 
@@ -392,14 +393,13 @@ versions before 22 use the following in your .emacs file:
 
 Interactively, prompt for REGEXP then FACE.  Buffer-local history
 list maintained for regexps, global history maintained for faces.
-\\<minibuffer-local-map>Use \\[next-history-element] and \\[previous-history-element] to retrieve next or previous history item.
+\\<minibuffer-local-map>Use \\[previous-history-element] to retrieve previous history items,
+and \\[next-history-element] to retrieve default values.
 \(See info node `Minibuffer History'.)"
   (interactive
    (list
     (hi-lock-regexp-okay
-     (read-from-minibuffer "Regexp to highlight line: "
-                           (cons (or (car hi-lock-regexp-history) "") 1 )
-                           nil nil 'hi-lock-regexp-history))
+     (read-regexp "Regexp to highlight line" (car regexp-history)))
     (hi-lock-read-face-name)))
   (or (facep face) (setq face 'hi-yellow))
   (unless hi-lock-mode (hi-lock-mode 1))
@@ -417,14 +417,13 @@ list maintained for regexps, global history maintained for faces.
 
 Interactively, prompt for REGEXP then FACE.  Buffer-local history
 list maintained for regexps, global history maintained for faces.
-\\<minibuffer-local-map>Use \\[next-history-element] and \\[previous-history-element] to retrieve next or previous history item.
+\\<minibuffer-local-map>Use \\[previous-history-element] to retrieve previous history items,
+and \\[next-history-element] to retrieve default values.
 \(See info node `Minibuffer History'.)"
   (interactive
    (list
     (hi-lock-regexp-okay
-     (read-from-minibuffer "Regexp to highlight: "
-                           (cons (or (car hi-lock-regexp-history) "") 1 )
-                           nil nil 'hi-lock-regexp-history))
+     (read-regexp "Regexp to highlight" (car regexp-history)))
     (hi-lock-read-face-name)))
   (or (facep face) (setq face 'hi-yellow))
   (unless hi-lock-mode (hi-lock-mode 1))
@@ -442,13 +441,13 @@ lower-case letters made case insensitive."
    (list
     (hi-lock-regexp-okay
      (hi-lock-process-phrase
-      (read-from-minibuffer "Phrase to highlight: "
-                            (cons (or (car hi-lock-regexp-history) "") 1 )
-                            nil nil 'hi-lock-regexp-history)))
+      (read-regexp "Phrase to highlight" (car regexp-history))))
     (hi-lock-read-face-name)))
   (or (facep face) (setq face 'hi-yellow))
   (unless hi-lock-mode (hi-lock-mode 1))
   (hi-lock-set-pattern regexp face))
+
+(declare-function x-popup-menu "xmenu.c" (position menu))
 
 ;;;###autoload
 (defalias 'unhighlight-regexp 'hi-lock-unface-buffer)
@@ -462,7 +461,7 @@ interactive functions.  \(See `hi-lock-interactive-patterns'.\)
 \\<minibuffer-local-must-match-map>Use \\[minibuffer-complete] to complete a partially typed regexp.
 \(See info node `Minibuffer History'.\)"
   (interactive
-   (if (and (display-popup-menus-p) (vectorp (this-command-keys)))
+   (if (and (display-popup-menus-p) (not last-nonmenu-event))
        (catch 'snafu
 	 (or
 	  (x-popup-menu
@@ -515,7 +514,7 @@ be found in variable `hi-lock-interactive-patterns'."
   (if (null hi-lock-interactive-patterns)
       (error "There are no interactive patterns"))
   (let ((beg (point)))
-    (mapcar
+    (mapc
      (lambda (pattern)
        (insert (format "%s: (%s)\n"
 		       hi-lock-file-patterns-prefix
@@ -554,20 +553,29 @@ not suitable."
   (intern (completing-read
            "Highlight using face: "
            obarray 'facep t
-           (cons (car hi-lock-face-history)
+           (cons (car hi-lock-face-defaults)
                  (let ((prefix
                         (try-completion
-                         (substring (car hi-lock-face-history) 0 1)
-                         (mapcar (lambda (f) (cons f f))
-                                 hi-lock-face-history))))
+                         (substring (car hi-lock-face-defaults) 0 1)
+                         hi-lock-face-defaults)))
                    (if (and (stringp prefix)
-                            (not (equal prefix (car hi-lock-face-history))))
+                            (not (equal prefix (car hi-lock-face-defaults))))
                        (length prefix) 0)))
-           '(hi-lock-face-history . 0))))
+           'face-name-history
+	   (cdr hi-lock-face-defaults))))
+
+(defvar hi-lock--inhibit-font-lock-hook nil
+  "Inhibit the action of `hi-lock-font-lock-hook'.
+This is used by `hi-lock-set-pattern'.")
 
 (defun hi-lock-set-pattern (regexp face)
   "Highlight REGEXP with face FACE."
-  (let ((pattern (list regexp (list 0 (list 'quote face) t))))
+  (let ((pattern (list regexp (list 0 (list 'quote face) t)))
+	;; The call to `font-lock-add-keywords' below might disable
+	;; and re-enable font-lock mode.  If so, we don't want
+	;; `hi-lock-font-lock-hook' to run.  This can be removed once
+	;; Bug#635 is fixed. -- cyd
+	(hi-lock--inhibit-font-lock-hook t))
     (unless (member pattern hi-lock-interactive-patterns)
       (font-lock-add-keywords nil (list pattern) t)
       (push pattern hi-lock-interactive-patterns)
@@ -633,11 +641,12 @@ not suitable."
 
 (defun hi-lock-font-lock-hook ()
   "Add hi-lock patterns to font-lock's."
-  (if font-lock-mode
-      (progn
-	(font-lock-add-keywords nil hi-lock-file-patterns t)
-	(font-lock-add-keywords nil hi-lock-interactive-patterns t))
-    (hi-lock-mode -1)))
+  (unless hi-lock--inhibit-font-lock-hook
+    (if font-lock-mode
+	(progn
+	  (font-lock-add-keywords nil hi-lock-file-patterns t)
+	  (font-lock-add-keywords nil hi-lock-interactive-patterns t))
+      (hi-lock-mode -1))))
 
 (defvar hi-lock-string-serialize-hash
   (make-hash-table :test 'equal)
@@ -658,6 +667,12 @@ A string is considered new if it had not previously been used in a call to
                      (1+ hi-lock-string-serialize-serial))
                hi-lock-string-serialize-hash)
       hi-lock-string-serialize-serial)))
+
+(defun hi-lock-unload-function ()
+  "Unload the Hi-Lock library."
+  (global-hi-lock-mode -1)
+  ;; continue standard unloading
+  nil)
 
 (provide 'hi-lock)
 

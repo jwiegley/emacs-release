@@ -1,17 +1,17 @@
 ;;; calc-ext.el --- various extension functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -29,6 +27,51 @@
 
 (require 'calc)
 (require 'calc-macs)
+
+;; Declare functions which are defined elsewhere.
+(declare-function math-clip "calc-bin" (a &optional w))
+(declare-function math-round "calc-arith" (a &optional prec))
+(declare-function math-simplify "calc-alg" (top-expr))
+(declare-function math-simplify-extended "calc-alg" (a))
+(declare-function math-simplify-units "calc-units" (a))
+(declare-function calc-set-language "calc-lang" (lang &optional option no-refresh))
+(declare-function calc-flush-caches "calc-stuff" (&optional inhibit-msg))
+(declare-function calc-save-modes "calc-mode" ())
+(declare-function calc-embedded-modes-change "calc-embed" (vars))
+(declare-function calc-embedded-var-change "calc-embed" (var &optional buf))
+(declare-function math-mul-float "calc-arith" (a b))
+(declare-function math-arctan-raw "calc-math" (x))
+(declare-function math-sqrt-raw "calc-math" (a &optional guess))
+(declare-function math-sqrt-float "calc-math" (a &optional guess))
+(declare-function math-exp-minus-1-raw "calc-math" (x))
+(declare-function math-normalize-polar "calc-cplx" (a))
+(declare-function math-normalize-hms "calc-forms" (a))
+(declare-function math-normalize-mod "calc-forms" (a))
+(declare-function math-make-sdev "calc-forms" (x sigma))
+(declare-function math-make-intv "calc-forms" (mask lo hi))
+(declare-function math-normalize-logical-op "calc-prog" (a))
+(declare-function math-possible-signs "calc-arith" (a &optional origin))
+(declare-function math-infinite-dir "calc-math" (a &optional inf))
+(declare-function math-calcFunc-to-var "calc-map" (f))
+(declare-function calc-embedded-evaluate-expr "calc-embed" (x))
+(declare-function math-known-nonzerop "calc-arith" (a))
+(declare-function math-read-expr-level "calc-aent" (exp-prec &optional exp-term))
+(declare-function math-read-big-rec "calc-lang" (math-rb-h1 math-rb-v1 math-rb-h2 math-rb-v2 &optional baseline prec short))
+(declare-function math-read-big-balance "calc-lang" (h v what &optional commas))
+(declare-function math-format-date "calc-forms" (math-fd-date))
+(declare-function math-vector-is-string "calccomp" (a))
+(declare-function math-vector-to-string "calccomp" (a &optional quoted))
+(declare-function math-format-radix-float "calc-bin" (a prec))
+(declare-function math-compose-expr "calccomp" (a prec))
+(declare-function math-abs "calc-arith" (a))
+(declare-function math-format-bignum-binary "calc-bin" (a))
+(declare-function math-format-bignum-octal "calc-bin" (a))
+(declare-function math-format-bignum-hex "calc-bin" (a))
+(declare-function math-format-bignum-radix "calc-bin" (a))
+(declare-function math-compute-max-digits "calc-bin" (w r))
+(declare-function math-map-vec "calc-vec" (f a))
+(declare-function math-make-frac "calc-frac" (num den))
+
 
 (defvar math-simplifying nil)
 (defvar math-living-dangerously nil)   ; true if unsafe simplifications are okay.
@@ -91,6 +134,7 @@
   (define-key calc-mode-map "\M-k" 'calc-copy-as-kill)
   (define-key calc-mode-map "\C-w" 'calc-kill-region)
   (define-key calc-mode-map "\M-w" 'calc-copy-region-as-kill)
+  (define-key calc-mode-map "\M-\C-w" 'kill-ring-save)
   (define-key calc-mode-map "\C-_" 'calc-undo)
   (define-key calc-mode-map "\C-xu" 'calc-undo)
   (define-key calc-mode-map "\M-\C-m" 'calc-last-args)
@@ -209,6 +253,7 @@
   (define-key calc-mode-map "dt" 'calc-truncate-stack)
   (define-key calc-mode-map "dw" 'calc-auto-why)
   (define-key calc-mode-map "dz" 'calc-leading-zeros)
+  (define-key calc-mode-map "dA" 'calc-giac-language)
   (define-key calc-mode-map "dB" 'calc-big-language)
   (define-key calc-mode-map "dD" 'calc-redo)
   (define-key calc-mode-map "dC" 'calc-c-language)
@@ -222,6 +267,8 @@
   (define-key calc-mode-map "dL" 'calc-latex-language)
   (define-key calc-mode-map "dU" 'calc-unformatted-language)
   (define-key calc-mode-map "dW" 'calc-maple-language)
+  (define-key calc-mode-map "dX" 'calc-maxima-language)
+  (define-key calc-mode-map "dY" 'calc-yacas-language)
   (define-key calc-mode-map "d[" 'calc-truncate-up)
   (define-key calc-mode-map "d]" 'calc-truncate-down)
   (define-key calc-mode-map "d." 'calc-point-char)
@@ -410,6 +457,8 @@
   (define-key calc-mode-map "mX" 'calc-load-everything)
 
   (define-key calc-mode-map "r" nil)
+  (define-key calc-mode-map "ri" 'calc-insert-register)
+  (define-key calc-mode-map "rs" 'calc-copy-to-register)
   (define-key calc-mode-map "r?" 'calc-r-prefix-help)
 
   (define-key calc-mode-map "s" nil)
@@ -541,6 +590,7 @@
   (define-key calc-mode-map "vx" 'calc-index)
   (define-key calc-mode-map "vA" 'calc-apply)
   (define-key calc-mode-map "vC" 'calc-cross)
+  (define-key calc-mode-map "vK" 'calc-kron)
   (define-key calc-mode-map "vD" 'calc-mdet)
   (define-key calc-mode-map "vE" 'calc-set-enumerate)
   (define-key calc-mode-map "vF" 'calc-set-floor)
@@ -616,15 +666,15 @@
 
   (calc-init-prefixes)
 
-  (mapcar (function
-	   (lambda (x)
-	     (define-key calc-mode-map (format "c%c" x) 'calc-clean-num)
-	     (define-key calc-mode-map (format "j%c" x) 'calc-select-part)
-	     (define-key calc-mode-map (format "r%c" x) 'calc-recall-quick)
-	     (define-key calc-mode-map (format "s%c" x) 'calc-store-quick)
-	     (define-key calc-mode-map (format "t%c" x) 'calc-store-into-quick)
-	     (define-key calc-mode-map (format "u%c" x) 'calc-quick-units)))
-	  "0123456789")
+  (mapc (function
+	 (lambda (x)
+	  (define-key calc-mode-map (format "c%c" x) 'calc-clean-num)
+	  (define-key calc-mode-map (format "j%c" x) 'calc-select-part)
+	  (define-key calc-mode-map (format "r%c" x) 'calc-recall-quick)
+	  (define-key calc-mode-map (format "s%c" x) 'calc-store-quick)
+	  (define-key calc-mode-map (format "t%c" x) 'calc-store-into-quick)
+	  (define-key calc-mode-map (format "u%c" x) 'calc-quick-units)))
+	"0123456789")
 
   (let ((i ?A))
     (while (<= i ?z)
@@ -633,7 +683,7 @@
 		(cons 'keymap (cons (cons ?\e (aref (nth 1 calc-mode-map) i))
 				    (cdr (aref (nth 1 calc-mode-map) i))))))
       (setq i (1+ i))))
-  
+
   (setq calc-alg-map (copy-keymap calc-mode-map)
 	calc-alg-esc-map (copy-keymap esc-map))
   (let ((i 32))
@@ -649,7 +699,7 @@
   (define-key calc-alg-map "\e\177" 'calc-pop-above)
 
 ;;;; (Autoloads here)
-  (mapcar (function (lambda (x)
+  (mapc (function (lambda (x)
     (mapcar (function (lambda (func)
       (autoload func (car x)))) (cdr x))))
     '(
@@ -890,7 +940,7 @@ math-units-in-expr-p)
 
  ("calc-vec" calcFunc-append calcFunc-appendrev
 calcFunc-arrange calcFunc-cnorm calcFunc-cons calcFunc-cross
-calcFunc-ctrn calcFunc-cvec calcFunc-diag calcFunc-find
+calcFunc-kron calcFunc-ctrn calcFunc-cvec calcFunc-diag calcFunc-find
 calcFunc-getdiag calcFunc-grade calcFunc-head calcFunc-histogram
 calcFunc-idn calcFunc-index calcFunc-mcol calcFunc-mdims
 calcFunc-mrcol calcFunc-mrow calcFunc-mrrow calcFunc-pack
@@ -909,6 +959,8 @@ math-read-brackets math-reduce-cols math-reduce-vec math-transpose)
 
  ("calc-yank" calc-alg-edit calc-clean-newlines
 calc-do-grab-rectangle calc-do-grab-region calc-finish-stack-edit
+calc-copy-to-register calc-insert-register 
+calc-append-to-register calc-prepend-to-register
 calc-force-refresh calc-locate-cursor-element calc-show-edit-buffer)
 
 ))
@@ -1006,6 +1058,7 @@ calc-keypad-press)
 
  ("calc-lang" calc-big-language calc-c-language calc-eqn-language
 calc-flat-language calc-fortran-language calc-maple-language
+calc-yacas-language calc-maxima-language calc-giac-language
 calc-mathematica-language calc-normal-language calc-pascal-language
 calc-tex-language calc-latex-language calc-unformatted-language)
 
@@ -1019,7 +1072,7 @@ calc-arctan calc-arctan2 calc-arctanh calc-conj calc-cos calc-cosh
 calc-cot calc-coth calc-csc calc-csch
 calc-degrees-mode calc-exp calc-expm1 calc-hypot calc-ilog
 calc-imaginary calc-isqrt calc-ln calc-lnp1 calc-log calc-log10
-calc-pi calc-radians-mode calc-sec calc-sech 
+calc-pi calc-radians-mode calc-sec calc-sech
 calc-sin calc-sincos calc-sinh calc-sqrt
 calc-tan calc-tanh calc-to-degrees calc-to-radians)
 
@@ -1094,7 +1147,7 @@ calc-store-times calc-subscript calc-unstore)
 
  ("calc-stuff" calc-clean calc-clean-num calc-flush-caches
 calc-less-recursion-depth calc-more-recursion-depth calc-num-prefix
-calc-version calc-why)
+calc-why)
 
  ("calc-trail" calc-trail-backward calc-trail-first calc-trail-forward
 calc-trail-in calc-trail-isearch-backward calc-trail-isearch-forward
@@ -1112,7 +1165,7 @@ calc-remove-units calc-simplify-units calc-undefine-unit
 calc-view-units-table)
 
  ("calc-vec" calc-arrange-vector calc-build-vector calc-cnorm
-calc-conj-transpose calc-cons calc-cross calc-diag
+calc-conj-transpose calc-cons calc-cross calc-kron calc-diag
 calc-display-strings calc-expand-vector calc-grade calc-head
 calc-histogram calc-ident calc-index calc-mask-vector calc-mcol
 calc-mrow calc-pack calc-pack-bits calc-remove-duplicates
@@ -1275,7 +1328,7 @@ calc-kill calc-kill-region calc-yank))))
             calc-redo-list nil)
       (let (calc-stack calc-user-parse-tables calc-standard-date-formats
                        calc-invocation-macro)
-        (mapcar (function (lambda (v) (set v nil))) calc-local-var-list)
+        (mapc (function (lambda (v) (set v nil))) calc-local-var-list)
         (if (and arg (<= arg 0))
             (calc-mode-var-list-restore-default-values)
           (calc-mode-var-list-restore-saved-values)))
@@ -1355,7 +1408,7 @@ calc-kill calc-kill-region calc-yank))))
                        (with-current-buffer calc-main-buffer
                          calc-hyperbolic-flag)
                      calc-hyperbolic-flag))
-         (msg (if hyp-flag 
+         (msg (if hyp-flag
                  "Inverse Hyperbolic..."
                "Inverse...")))
     (calc-fancy-prefix 'calc-inverse-flag msg n)))
@@ -1387,32 +1440,32 @@ calc-kill calc-kill-region calc-yank))))
      (calc-set-command-flag 'no-align)
      (setq prefix (set flag (not (symbol-value flag)))
 	   prefix-arg n)
-     (message (if prefix msg "")))
+     (message "%s" (if prefix msg "")))
     (and prefix
 	 (not calc-is-keypad-press)
 	 (if (boundp 'overriding-terminal-local-map)
 	     (setq overriding-terminal-local-map calc-fancy-prefix-map)
 	   (let ((event (calc-read-key t)))
-	     (if (eq (setq last-command-char (car event)) ?\C-u)
+	     (if (eq (setq last-command-event (car event)) ?\C-u)
 		 (universal-argument)
-	       (if (or (not (integerp last-command-char))
-		       (and (>= last-command-char 0) (< last-command-char ? )
-			    (not (memq last-command-char '(?\e)))))
+	       (if (or (not (integerp last-command-event))
+		       (and (>= last-command-event 0) (< last-command-event ? )
+			    (not (memq last-command-event '(?\e)))))
 		   (calc-wrapper))  ; clear flags if not a Calc command.
                (setq last-command-event (cdr event))
-	       (if (or (not (integerp last-command-char))
-		       (eq last-command-char ?-))
+	       (if (or (not (integerp last-command-event))
+		       (eq last-command-event ?-))
 		   (calc-unread-command)
 		 (digit-argument n))))))))
 
 (defun calc-fancy-prefix-other-key (arg)
   (interactive "P")
   (if (and
-       (not (eq last-command-char 'tab))
-       (not (eq last-command-char 'M-tab))
-       (or (not (integerp last-command-char))
-           (and (>= last-command-char 0) (< last-command-char ? )
-                (not (eq last-command-char meta-prefix-char)))))
+       (not (eq last-command-event 'tab))
+       (not (eq last-command-event 'M-tab))
+       (or (not (integerp last-command-event))
+           (and (>= last-command-event 0) (< last-command-event ? )
+                (not (eq last-command-event meta-prefix-char)))))
      (calc-wrapper))  ; clear flags if not a Calc command.
   (setq prefix-arg arg)
   (calc-unread-command)
@@ -1436,7 +1489,7 @@ calc-kill calc-kill-region calc-yank))))
                        (with-current-buffer calc-main-buffer
                          calc-inverse-flag)
                      calc-inverse-flag))
-         (msg (if inv-flag 
+         (msg (if inv-flag
                   "Inverse Hyperbolic..."
                 "Hyperbolic...")))
     (calc-fancy-prefix 'calc-hyperbolic-flag msg n)))
@@ -1599,10 +1652,15 @@ calc-kill calc-kill-region calc-yank))))
    (calc-handle-whys)))
 
 
+(defvar calc-extended-command-history nil
+  "The history list for calc-execute-extended-command.")
+
 (defun calc-execute-extended-command (n)
   (interactive "P")
   (let* ((prompt (concat (calc-num-prefix-name n) "M-x "))
-	 (cmd (intern (completing-read prompt obarray 'commandp t "calc-"))))
+	 (cmd (intern 
+               (completing-read prompt obarray 'commandp t "calc-" 
+                                'calc-extended-command-history))))
     (setq prefix-arg n)
     (command-execute cmd)))
 
@@ -1780,8 +1838,8 @@ calc-kill calc-kill-region calc-yank))))
 ;;; User menu.
 
 (defun calc-user-key-map ()
-  (if calc-emacs-type-lucid
-      (error "User-defined keys are not supported in Lucid Emacs"))
+  (if (featurep 'xemacs)
+      (error "User-defined keys are not supported in XEmacs"))
   (let ((res (cdr (lookup-key calc-mode-map "z"))))
     (if (eq (car (car res)) 27)
 	(cdr res)
@@ -1847,7 +1905,7 @@ calc-kill calc-kill-region calc-yank))))
 		 (setq calc-z-prefix-buf (concat (if (= flags 1) "SHIFT + " "")
 				   desc))
 	       (if (> (+ (length calc-z-prefix-buf) (length desc)) 58)
-		   (setq calc-z-prefix-msgs 
+		   (setq calc-z-prefix-msgs
                          (cons calc-z-prefix-buf calc-z-prefix-msgs)
 			 calc-z-prefix-buf (concat (if (= flags 1) "SHIFT + " "")
 				     desc))
@@ -1876,8 +1934,19 @@ calc-kill calc-kill-region calc-yank))))
 	(last-prec (intern (concat (symbol-name name) "-last-prec")))
 	(last-val (intern (concat (symbol-name name) "-last"))))
     (list 'progn
-	  (list 'defvar cache-prec (if init (math-numdigs (nth 1 init)) -100))
-	  (list 'defvar cache-val (list 'quote init))
+;	  (list 'defvar cache-prec (if init (math-numdigs (nth 1 init)) -100))
+	  (list 'defvar cache-prec
+                `(cond
+                  ((consp ,init) (math-numdigs (nth 1 ,init)))
+                  (,init
+                   (nth 1 (math-numdigs (eval ,init))))
+                  (t
+                   -100)))
+	  (list 'defvar cache-val
+                `(cond
+                  ((consp ,init) ,init)
+                  (,init (eval ,init))
+                  (t ,init)))
 	  (list 'defvar last-prec -100)
 	  (list 'defvar last-val nil)
 	  (list 'setq 'math-cache-list
@@ -1912,7 +1981,11 @@ calc-kill calc-kill-region calc-yank))))
 (put 'math-defcache 'lisp-indent-hook 2)
 
 ;;; Betcha didn't know that pi = 16 atan(1/5) - 4 atan(1/239).   [F] [Public]
-(math-defcache math-pi (float (bigpos 463 238 793 589 653 592 141 3) -21)
+(defconst math-approx-pi
+  (math-read-number-simple "3.141592653589793238463")
+  "An approximation for pi.")
+
+(math-defcache math-pi math-approx-pi
   (math-add-float (math-mul-float '(float 16 0)
 				  (math-arctan-raw '(float 2 -1)))
 		  (math-mul-float '(float -4 0)
@@ -1943,7 +2016,11 @@ calc-kill calc-kill-region calc-yank))))
 (math-defcache math-sqrt-two-pi nil
   (math-sqrt-float (math-two-pi)))
 
-(math-defcache math-sqrt-e (float (bigpos 849 146 128 700 270 721 648 1) -21)
+(defconst math-approx-sqrt-e
+  (math-read-number-simple "1.648721270700128146849")
+  "An approximation for sqrt(3).")
+
+(math-defcache math-sqrt-e math-approx-sqrt-e
   (math-add-float '(float 1 0) (math-exp-minus-1-raw '(float 5 -1))))
 
 (math-defcache math-e nil
@@ -1953,10 +2030,13 @@ calc-kill calc-kill-region calc-yank))))
   (math-mul-float (math-add-float (math-sqrt-raw '(float 5 0)) '(float 1 0))
 		  '(float 5 -1)))
 
+(defconst math-approx-gamma-const
+  (math-read-number-simple
+   "0.5772156649015328606065120900824024310421593359399235988057672348848677267776646709369470632917467495")
+  "An approximation for gamma.")
+
 (math-defcache math-gamma-const nil
-  '(float (bigpos 495 467 917 632 470 369 709 646 776 267 677 848 348 672
-		  057 988 235 399 359 593 421 310 024 824 900 120 065 606
-		  328 015 649 156 772 5) -100))
+  math-approx-gamma-const)
 
 (defun math-half-circle (symb)
   (if (eq calc-angle-mode 'rad)
@@ -2066,7 +2146,7 @@ calc-kill calc-kill-region calc-yank))))
 ;;; True if A is a real or will evaluate to a real.  [P x] [Public]
 (defun math-provably-realp (a)
   (or (Math-realp a)
-      (math-provably-integer a)
+      (math-provably-integerp a)
       (memq (car-safe a) '(abs arg))))
 
 ;;; True if A is a non-real, complex number.  [P x] [Public]
@@ -2124,12 +2204,12 @@ calc-kill calc-kill-region calc-yank))))
   (unless a
     (setq a 1))
   (and
-   (not (memq nil (mapcar 
+   (not (memq nil (mapcar
                    (lambda (x) (eq x 0))
                    (nthcdr (1+ n) row))))
-   (not (memq nil (mapcar 
+   (not (memq nil (mapcar
                    (lambda (x) (eq x 0))
-                   (butlast 
+                   (butlast
                     (cdr row)
                     (- (length row) n)))))
    (eq (elt row n) a)))
@@ -2187,6 +2267,25 @@ calc-kill calc-kill-region calc-yank))))
       a
     (math-reject-arg a 'constp)))
 
+;;; Some functions for working with error forms.
+(defun math-get-value (x)
+  "Get the mean value of the error form X.
+If X is not an error form, return X."
+  (if (eq (car-safe x) 'sdev)
+      (nth 1 x)
+    x))
+
+(defun math-get-sdev (x &optional one)
+  "Get the standard deviation of the error form X.
+If X is not an error form, return 1."
+  (if (eq (car-safe x) 'sdev)
+      (nth 2 x)
+    (if one 1 0)))
+
+(defun math-contains-sdev-p (ls)
+  "Non-nil if the list LS contains an error form."
+  (let ((ls (if (eq (car-safe ls) 'vec) (cdr ls) ls)))
+    (memq t (mapcar (lambda (x) (eq (car-safe x) 'sdev)) ls))))
 
 ;;; Coerce integer A to be a small integer.  [S I]
 (defun math-fixnum (a)
@@ -2200,7 +2299,7 @@ calc-kill calc-kill-region calc-yank))))
 
 (defun math-fixnum-big (a)
   (if (cdr a)
-      (+ (car a) (* (math-fixnum-big (cdr a)) 1000))
+      (+ (car a) (* (math-fixnum-big (cdr a)) math-bignum-digit-size))
     (car a)))
 
 (defvar math-simplify-only nil)
@@ -2288,15 +2387,15 @@ calc-kill calc-kill-region calc-yank))))
     (and (symbolp (car math-normalize-a))
 	 (or (eq calc-simplify-mode 'none)
 	     (and (eq calc-simplify-mode 'num)
-		  (let ((aptr (setq math-normalize-a 
+		  (let ((aptr (setq math-normalize-a
                                     (cons
                                      (car math-normalize-a)
-                                     (mapcar 'math-normalize 
+                                     (mapcar 'math-normalize
                                              (cdr math-normalize-a))))))
 		    (while (and aptr (math-constp (car aptr)))
 		      (setq aptr (cdr aptr)))
 		    aptr)))
-	 (cons (car math-normalize-a) 
+	 (cons (car math-normalize-a)
                (mapcar 'math-normalize (cdr math-normalize-a))))))
 
 
@@ -2677,8 +2776,8 @@ calc-kill calc-kill-region calc-yank))))
 		      (setq mmt-nextval (funcall math-mt-func mmt-expr))
 		      (not (equal mmt-expr mmt-nextval)))
 	    (setq mmt-expr mmt-nextval
-		  math-mt-many (if (> math-mt-many 0) 
-                                   (1- math-mt-many) 
+		  math-mt-many (if (> math-mt-many 0)
+                                   (1- math-mt-many)
                                  (1+ math-mt-many))))
 	  (if (or (Math-primp mmt-expr)
 		  (<= math-mt-many 0))
@@ -2958,7 +3057,7 @@ calc-kill calc-kill-region calc-yank))))
 
 (defun math-read-plain-expr (exp-str &optional error-check)
   (let* ((calc-language nil)
-	 (math-expr-opers math-standard-opers)
+	 (math-expr-opers (math-standard-ops))
 	 (val (math-read-expr exp-str)))
     (and error-check
 	 (eq (car-safe val) 'error)
@@ -3003,10 +3102,10 @@ calc-kill calc-kill-region calc-yank))))
 	  math-read-big-baseline math-read-big-h2
 	  new-pos p)
       (while (setq new-pos (string-match "\n" str pos))
-	(setq math-read-big-lines 
+	(setq math-read-big-lines
               (cons (substring str pos new-pos) math-read-big-lines)
 	      pos (1+ new-pos)))
-      (setq math-read-big-lines 
+      (setq math-read-big-lines
             (nreverse (cons (substring str pos) math-read-big-lines))
 	    p math-read-big-lines)
       (while p
@@ -3114,7 +3213,7 @@ calc-kill calc-kill-region calc-yank))))
     (concat (substring (symbol-name (car a)) 9)
 	    "(" (math-vector-to-string (nth 1 a) t) ")"))
    (t
-    (let ((op (math-assq2 (car a) math-standard-opers)))
+    (let ((op (math-assq2 (car a) (math-standard-ops))))
       (cond ((and op (= (length a) 3))
 	     (if (> prec (min (nth 2 op) (nth 3 op)))
 		 (concat "(" (math-format-flat-expr a 0) ")")
@@ -3345,5 +3444,5 @@ A key may contain additional specs for Inverse, Hyperbolic, and Inv+Hyp.")
 
 (provide 'calc-ext)
 
-;;; arch-tag: 1814ba7f-a390-49dc-9e25-a5adc205e97e
+;; arch-tag: 1814ba7f-a390-49dc-9e25-a5adc205e97e
 ;;; calc-ext.el ends here

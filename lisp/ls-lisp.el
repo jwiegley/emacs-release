@@ -1,7 +1,7 @@
 ;;; ls-lisp.el --- emulate insert-directory completely in Emacs Lisp
 
 ;; Copyright (C) 1992, 1994, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Sebastian Kremer <sk@thp.uni-koeln.de>
 ;; Modified by: Francis J. Wright <F.J.Wright@maths.qmw.ac.uk>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -32,7 +30,7 @@
 ;; This file redefines the function `insert-directory' to implement it
 ;; directly from Emacs lisp, without running ls in a subprocess.  It
 ;; is useful if you cannot afford to fork Emacs on a real memory UNIX,
-;; under VMS or other non-UNIX platforms if you don't have the ls
+;; or other non-UNIX platforms if you don't have the ls
 ;; program, or if you want a different format from what ls offers.
 
 ;; This function can use regexps instead of shell wildcards.  If you
@@ -75,10 +73,10 @@
   (cond ((eq system-type 'macos) 'MacOS)
 	;; ((eq system-type 'windows-nt) 'MS-Windows)
 	((memq system-type
-	       '(hpux dgux usg-unix-v unisoft-unix rtu irix berkeley-unix))
+	       '(hpux usg-unix-v unisoft-unix irix berkeley-unix))
 	 'UNIX))			; very similar to GNU
   ;; Anything else defaults to nil, meaning GNU.
-  "*Platform to emulate: GNU (default), MacOS, MS-Windows, UNIX.
+  "Platform to emulate: GNU (default), MacOS, MS-Windows, UNIX.
 Corresponding value is one of the atoms: nil, MacOS, MS-Windows, UNIX.
 Sets default values for: `ls-lisp-ignore-case', `ls-lisp-dirs-first',
 `ls-lisp-verbosity'.  Need not match actual platform.  Changing this
@@ -93,12 +91,12 @@ option will have no effect until you restart Emacs."
   ;; Name change for consistency with other option names.
   (or (memq ls-lisp-emulation '(MS-Windows MacOS))
       (and (boundp 'ls-lisp-dired-ignore-case) ls-lisp-dired-ignore-case))
-  "*Non-nil causes ls-lisp alphabetic sorting to ignore case."
+  "Non-nil causes ls-lisp alphabetic sorting to ignore case."
   :type 'boolean
   :group 'ls-lisp)
 
 (defcustom ls-lisp-dirs-first (eq ls-lisp-emulation 'MS-Windows)
-  "*Non-nil causes ls-lisp to sort directories first in any ordering.
+  "Non-nil causes ls-lisp to sort directories first in any ordering.
 \(Or last if it is reversed.)  Follows Microsoft Windows Explorer."
   ;; Functionality suggested by Chris McMahan <cmcmahan@one.net>
   :type 'boolean
@@ -111,7 +109,7 @@ option will have no effect until you restart Emacs."
 	     '(links)))			; distinguish NT/2K from 9x
 	((eq ls-lisp-emulation 'UNIX) '(links uid)) ; UNIX ls
 	(t '(links uid gid)))		; GNU ls
-  "*A list of optional file attributes that ls-lisp should display.
+  "A list of optional file attributes that ls-lisp should display.
 It should contain none or more of the symbols: links, uid, gid.
 A value of nil (or an empty list) means display none of them.
 
@@ -132,7 +130,7 @@ if emulation is GNU then default is `(links uid gid)'."
 
 (defcustom ls-lisp-use-insert-directory-program
   (not (memq system-type '(macos ms-dos windows-nt)))
-  "*Non-nil causes ls-lisp to revert back to using `insert-directory-program'.
+  "Non-nil causes ls-lisp to revert back to using `insert-directory-program'.
 This is useful on platforms where ls-lisp is dumped into Emacs, such as
 Microsoft Windows, but you would still like to use a program to list
 the contents of a directory."
@@ -142,7 +140,7 @@ the contents of a directory."
 ;;; Autoloaded because it is let-bound in `recover-session', `mail-recover-1'.
 ;;;###autoload
 (defcustom ls-lisp-support-shell-wildcards t
-  "*Non-nil means ls-lisp treats file patterns as shell wildcards.
+  "Non-nil means ls-lisp treats file patterns as shell wildcards.
 Otherwise they are treated as Emacs regexps (for backward compatibility)."
   :type 'boolean
   :group 'ls-lisp)
@@ -150,7 +148,7 @@ Otherwise they are treated as Emacs regexps (for backward compatibility)."
 (defcustom ls-lisp-format-time-list
   '("%b %e %H:%M"
     "%b %e  %Y")
-  "*List of `format-time-string' specs to display file time stamps.
+  "List of `format-time-string' specs to display file time stamps.
 These specs are used ONLY if a valid locale can not be determined.
 
 If `ls-lisp-use-localized-time-format' is non-nil, these specs are used
@@ -170,7 +168,7 @@ current year. The OLD-TIME-FORMAT is used for older files.  To use ISO
   :group 'ls-lisp)
 
 (defcustom ls-lisp-use-localized-time-format nil
-  "*Non-nil causes ls-lisp to use `ls-lisp-format-time-list' even if
+  "Non-nil causes ls-lisp to use `ls-lisp-format-time-list' even if
 a valid locale is specified.
 
 WARNING: Using localized date/time format might cause Dired columns
@@ -180,6 +178,19 @@ to fail to lign up, e.g. if month names are not all of the same length."
 
 (defvar original-insert-directory nil
   "This holds the original function definition of `insert-directory'.")
+
+(defvar ls-lisp-uid-d-fmt "-%d"
+  "Format to display integer UIDs.")
+(defvar ls-lisp-uid-s-fmt "-%s"
+  "Format to display user names.")
+(defvar ls-lisp-gid-d-fmt "-%d"
+  "Format to display integer GIDs.")
+(defvar ls-lisp-gid-s-fmt "-%s"
+  "Format to display user group names.")
+(defvar ls-lisp-filesize-d-fmt "%d"
+  "Format to display integer file sizes.")
+(defvar ls-lisp-filesize-f-fmt "%.0f"
+  "Format to display float file sizes.")
 
 ;; Remember the original insert-directory function
 (or (featurep 'ls-lisp)  ; FJW: unless this file is being reloaded!
@@ -209,7 +220,7 @@ The Lisp emulation does not run any external programs or shells.  It
 supports ordinary shell wildcards if `ls-lisp-support-shell-wildcards'
 is non-nil; otherwise, it interprets wildcards as regular expressions
 to match file names.  It does not support all `ls' switches -- those
-that work are: A a c i r S s t u U X g G B C R and F partly."
+that work are: A a c i r S s t u U X g G B C R n and F partly."
   (if ls-lisp-use-insert-directory-program
       (funcall original-insert-directory
 	       file switches wildcard full-directory-p)
@@ -286,11 +297,18 @@ not contain `d', so that a full listing is expected."
       (let* ((dir (file-name-as-directory file))
 	     (default-directory dir)	; so that file-attributes works
 	     (file-alist
-	      (directory-files-and-attributes dir nil wildcard-regexp t 'string))
+	      (directory-files-and-attributes dir nil wildcard-regexp t
+					      (if (memq ?n switches)
+						  'integer
+						'string)))
 	     (now (current-time))
 	     (sum 0)
+	     (max-uid-len 0)
+	     (max-gid-len 0)
+	     (max-file-size 0)
 	     ;; do all bindings here for speed
-	     total-line files elt short file-size fil attr)
+	     total-line files elt short file-size fil attr
+	     fuid fgid uid-len gid-len)
 	(cond ((memq ?A switches)
 	       (setq file-alist
 		     (ls-lisp-delete-matching "^\\.\\.?$" file-alist)))
@@ -303,6 +321,40 @@ not contain `d', so that a full listing is expected."
 	(if (memq ?C switches)		; column (-C) format
 	    (ls-lisp-column-format file-alist)
 	  (setq total-line (cons (point) (car-safe file-alist)))
+	  ;; Find the appropriate format for displaying uid, gid, and
+	  ;; file size, by finding the longest strings among all the
+	  ;; files we are about to display.
+	  (dolist (elt file-alist)
+	    (setq attr (cdr elt)
+		  fuid (nth 2 attr)
+		  uid-len (if (stringp fuid) (string-width fuid)
+			    (length (format "%d" fuid)))
+		  fgid (nth 3 attr)
+		  gid-len (if (stringp fgid) (string-width fgid)
+			    (length (format "%d" fgid)))
+		  file-size (nth 7 attr))
+	    (if (> uid-len max-uid-len)
+		(setq max-uid-len uid-len))
+	    (if (> gid-len max-gid-len)
+		(setq max-gid-len gid-len))
+	    (if (> file-size max-file-size)
+		(setq max-file-size file-size)))
+	  (setq ls-lisp-uid-d-fmt (format " %%-%dd" max-uid-len))
+	  (setq ls-lisp-uid-s-fmt (format " %%-%ds" max-uid-len))
+	  (setq ls-lisp-gid-d-fmt (format " %%-%dd" max-gid-len))
+	  (setq ls-lisp-gid-s-fmt (format " %%-%ds" max-gid-len))
+	  (setq ls-lisp-filesize-d-fmt
+		(format " %%%dd"
+			(if (memq ?s switches)
+			    (length (format "%.0f"
+					    (fceiling (/ max-file-size 1024.0))))
+			  (length (format "%.0f" max-file-size)))))
+	  (setq ls-lisp-filesize-f-fmt
+		(format " %%%d.0f"
+			(if (memq ?s switches)
+			    (length (format "%.0f"
+					    (fceiling (/ max-file-size 1024.0))))
+			  (length (format "%.0f" max-file-size)))))
 	  (setq files file-alist)
 	  (while files			; long (-l) format
 	    (setq elt (car files)
@@ -338,7 +390,10 @@ not contain `d', so that a full listing is expected."
 	      (setq elt (car file-alist)
 		    file-alist (cdr file-alist))
 	      (when (and (eq (cadr elt) t) ; directory
-			 (not (string-match "\\`\\.\\.?\\'" (car elt))))
+			 ;; Under -F, we have already decorated all
+			 ;; directories, including "." and "..", with
+			 ;; a /, so allow for that as well.
+			 (not (string-match "\\`\\.\\.?/?\\'" (car elt))))
 		(setq elt (expand-file-name (car elt) dir))
 		(insert "\n" elt ":\n")
 		(ls-lisp-insert-directory
@@ -479,13 +534,17 @@ for directory, string (name linked to) for symbolic link, or nil."
         (type (cadr filedata)))
     (cond (type
 	   (cons
-	    (concat file-name (if (eq type t) "/" "@"))
+	    (concat (propertize file-name 'dired-filename t)
+		    (if (eq type t) "/" "@"))
 	    (cdr filedata)))
 	  ((string-match "x" (nth 9 filedata))
 	   (cons
-	    (concat file-name "*")
+	    (concat (propertize file-name 'dired-filename t) "*")
 	    (cdr filedata)))
-	  (t filedata))))
+	  (t
+	   (cons
+	    (propertize file-name 'dired-filename t)
+	    (cdr filedata))))))
 
 (defun ls-lisp-extension (filename)
   "Return extension of FILENAME (ignoring any version extension)
@@ -526,13 +585,37 @@ SWITCHES, TIME-INDEX and NOW give the full switch list and time data."
 	;; for symbolic link, or nil.
 	(drwxrwxrwx (nth 8 file-attr)))	; attribute string ("drwxrwxrwx")
     (concat (if (memq ?i switches)	; inode number
-		(format " %6d" (nth 10 file-attr)))
+		(let ((inode (nth 10 file-attr)))
+		  (if (consp inode)
+		      (if (consp (cdr inode))
+			  ;; 2^(24+16) = 1099511627776.0, but
+			  ;; multiplying by it and then adding the
+			  ;; other members of the cons cell in one go
+			  ;; loses precision, since a double does not
+			  ;; have enough significant digits to hold a
+			  ;; full 64-bit value.  So below we split
+			  ;; 1099511627776 into high 13 and low 5
+			  ;; digits and compute in two parts.
+			  (let ((p1 (* (car inode) 10995116.0))
+				(p2 (+ (* (car inode) 27776.0)
+				       (* (cadr inode) 65536.0)
+				       (cddr inode))))
+			    (format " %13.0f%05.0f "
+				    ;; Use floor to emulate integer
+				    ;; division.
+				    (+ p1 (floor p2 100000.0))
+				    (mod p2 100000.0)))
+			(format " %18.0f "
+				(+ (* (car inode) 65536.0)
+				   (cdr inode))))
+		    (format " %18d " inode))))
 	    ;; nil is treated like "" in concat
 	    (if (memq ?s switches)	; size in K
-		(format " %4.0f" (fceiling (/ file-size 1024.0))))
+		(format ls-lisp-filesize-f-fmt
+			(fceiling (/ file-size 1024.0))))
 	    drwxrwxrwx			; attribute string
 	    (if (memq 'links ls-lisp-verbosity)
-		(format " %3d" (nth 1 file-attr))) ; link count
+		(format "%3d" (nth 1 file-attr))) ; link count
 	    ;; Numeric uid/gid are more confusing than helpful;
 	    ;; Emacs should be able to make strings of them.
 	    ;; They tend to be bogus on non-UNIX platforms anyway so
@@ -540,17 +623,25 @@ SWITCHES, TIME-INDEX and NOW give the full switch list and time data."
 	    (if (memq 'uid ls-lisp-verbosity)
 		;; uid can be a sting or an integer
 		(let ((uid (nth 2 file-attr)))
-                  (format (if (stringp uid) " %-8s" " %-8d") uid)))
+                  (format (if (stringp uid)
+			      ls-lisp-uid-s-fmt
+			    ls-lisp-uid-d-fmt)
+			  uid)))
 	    (if (not (memq ?G switches)) ; GNU ls -- shows group by default
 		(if (or (memq ?g switches) ; UNIX ls -- no group by default
 			(memq 'gid ls-lisp-verbosity))
                     (let ((gid (nth 3 file-attr)))
-                      (format (if (stringp gid) " %-8s" " %-8d") gid))))
+                      (format (if (stringp gid)
+				  ls-lisp-gid-s-fmt
+				ls-lisp-gid-d-fmt)
+			      gid))))
 	    (ls-lisp-format-file-size file-size (memq ?h switches))
 	    " "
 	    (ls-lisp-format-time file-attr time-index now)
 	    " "
-	    (propertize file-name 'dired-filename t)
+	    (if (not (memq ?F switches)) ; ls-lisp-classify already did that
+		(propertize file-name 'dired-filename t)
+	      file-name)
 	    (if (stringp file-type)	; is a symbolic link
 		(concat " -> " file-type))
 	    "\n"
@@ -605,15 +696,20 @@ All ls time options, namely c, t and u, are handled."
       (error "Unk  0  0000"))))
 
 (defun ls-lisp-format-file-size (file-size human-readable)
-  (if (or (not human-readable)
-          (< file-size 1024))
-      (format (if (floatp file-size) " %9.0f" " %9d") file-size)
-    (do ((file-size (/ file-size 1024.0) (/ file-size 1024.0))
-         ;; kilo, mega, giga, tera, peta, exa
-         (post-fixes (list "k" "M" "G" "T" "P" "E") (cdr post-fixes)))
-        ((< file-size 1024) (format " %8.0f%s"  file-size (car post-fixes))))))
+  (if (not human-readable)
+      (format (if (floatp file-size)
+		  ls-lisp-filesize-f-fmt
+		ls-lisp-filesize-d-fmt)
+	      file-size)
+    (if (< file-size 1024)
+	(format " %4d" file-size)
+      (do ((file-size (/ file-size 1024.0) (/ file-size 1024.0))
+	   ;; kilo, mega, giga, tera, peta, exa
+	   (post-fixes (list "k" "M" "G" "T" "P" "E") (cdr post-fixes)))
+	  ((< file-size 1024)
+	   (format " %3.0f%s"  file-size (car post-fixes)))))))
 
 (provide 'ls-lisp)
 
-;;; arch-tag: e55f399b-05ec-425c-a6d5-f5e349c35ab4
+;; arch-tag: e55f399b-05ec-425c-a6d5-f5e349c35ab4
 ;;; ls-lisp.el ends here

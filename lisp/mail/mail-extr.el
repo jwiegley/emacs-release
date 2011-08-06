@@ -1,7 +1,7 @@
 ;;; mail-extr.el --- extract full name and address from RFC 822 mail header -*- coding: utf-8 -*-
 
 ;; Copyright (C) 1991, 1992, 1993, 1994, 1997, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Joe Wells <jbw@cs.bu.edu>
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -876,14 +874,14 @@ consing a string.)"
 	      ;; Do `(forward-word 1)', recognizing non-ASCII characters
 	      ;; except Latin-1 nbsp as words.
 	      (while (progn
-		       (skip-chars-forward "^\000-\177 ")
+		       (skip-chars-forward "^\000-\177 ")
 		       (and (not (eobp))
 			    (eq ?w (char-syntax (char-after)))
 			    (progn
 			      (forward-word 1)
 			      (and (not (eobp))
 				   (> (char-after) ?\177)
-				   (not (eq (char-after) ? )))))))))
+				   (not (eq (char-after) ? )))))))))
 	    (or (eq char ?\()
 		;; At the end of first address of a multiple address header.
 		(and (eq char ?,)
@@ -2175,5 +2173,5 @@ place.  It affects how `mail-extract-address-components' works."
 
 (provide 'mail-extr)
 
-;;; arch-tag: 7785fade-1073-4ed6-b4f6-28db34a7982d
+;; arch-tag: 7785fade-1073-4ed6-b4f6-28db34a7982d
 ;;; mail-extr.el ends here

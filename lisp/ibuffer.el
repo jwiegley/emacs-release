@@ -1,7 +1,7 @@
 ;;; ibuffer.el --- operate on buffers like dired
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Colin Walters <walters@verbum.org>
 ;; Maintainer: John Paul Wallington <jpw@gnu.org>
@@ -10,20 +10,18 @@
 
 ;; This file is part of GNU Emacs.
 
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 3, or (at
-;; your option) any later version.
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; This program is distributed in the hope that it will be useful, but
-;; WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program ; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -49,11 +47,19 @@
 (defvar ibuffer-filter-group-kill-ring)
 (defvar ibuffer-filter-groups)
 (defvar ibuffer-filtering-qualifiers)
+(defvar ibuffer-header-line-format)
 (defvar ibuffer-hidden-filter-groups)
 (defvar ibuffer-inline-columns)
 (defvar ibuffer-show-empty-filter-groups)
 (defvar ibuffer-tmp-hide-regexps)
 (defvar ibuffer-tmp-show-regexps)
+
+(declare-function ibuffer-mark-on-buffer "ibuf-ext"
+		  (func &optional ibuffer-mark-on-buffer-mark group))
+(declare-function ibuffer-format-qualifier "ibuf-ext" (qualifier))
+(declare-function ibuffer-generate-filter-groups "ibuf-ext"
+		  (bmarklist &optional noempty nodefault))
+(declare-function ibuffer-format-filter-group-data "ibuf-ext" (filter))
 
 (defgroup ibuffer nil
   "An advanced replacement for `buffer-menu'.
@@ -202,9 +208,11 @@ view of the buffers."
   :type '(choice (const :tag "Last view time" :value recency)
 		 (const :tag "Lexicographic" :value alphabetic)
 		 (const :tag "Buffer size" :value size)
+		 (const :tag "File name" :value filename/process)
 		 (const :tag "Major mode" :value major-mode))
   :group 'ibuffer)
 (defvar ibuffer-sorting-mode nil)
+(defvar ibuffer-last-sorting-mode nil)
 
 (defcustom ibuffer-default-sorting-reversep nil
   "If non-nil, reverse the default sorting order."
@@ -330,19 +338,19 @@ directory, like `default-directory'."
   :type 'regexp
   :group 'ibuffer)
 
+(define-obsolete-variable-alias 'ibuffer-hooks 'ibuffer-hook "22.1")
+
 (defcustom ibuffer-hook nil
   "Hook run when `ibuffer' is called."
   :type 'hook
   :group 'ibuffer)
-(define-obsolete-variable-alias 'ibuffer-hooks
-                                'ibuffer-hook "22.1")
+
+(define-obsolete-variable-alias 'ibuffer-mode-hooks 'ibuffer-mode-hook "22.1")
 
 (defcustom ibuffer-mode-hook nil
   "Hook run upon entry into `ibuffer-mode'."
   :type 'hook
   :group 'ibuffer)
-(define-obsolete-variable-alias 'ibuffer-mode-hooks
-                                'ibuffer-mode-hook "22.1")
 
 (defcustom ibuffer-load-hook nil
   "Hook run when Ibuffer is loaded."
@@ -402,6 +410,8 @@ directory, like `default-directory'."
     (define-key map (kbd "=") 'ibuffer-diff-with-file)
     (define-key map (kbd "j") 'ibuffer-jump-to-buffer)
     (define-key map (kbd "M-g") 'ibuffer-jump-to-buffer)
+    (define-key map (kbd "M-s a C-s") 'ibuffer-do-isearch)
+    (define-key map (kbd "M-s a M-C-s") 'ibuffer-do-isearch-regexp)
     (define-key map (kbd "DEL") 'ibuffer-unmark-backward)
     (define-key map (kbd "M-DEL") 'ibuffer-unmark-all)
     (define-key map (kbd "* *") 'ibuffer-unmark-all)
@@ -440,6 +450,7 @@ directory, like `default-directory'."
     (define-key map (kbd "s a") 'ibuffer-do-sort-by-alphabetic)
     (define-key map (kbd "s v") 'ibuffer-do-sort-by-recency)
     (define-key map (kbd "s s") 'ibuffer-do-sort-by-size)
+    (define-key map (kbd "s f") 'ibuffer-do-sort-by-filename/process)
     (define-key map (kbd "s m") 'ibuffer-do-sort-by-major-mode)
 
     (define-key map (kbd "/ m") 'ibuffer-filter-by-mode)
@@ -821,6 +832,11 @@ directory, like `default-directory'."
     (define-key map [down-mouse-3] 'ibuffer-mouse-popup-menu)
     map))
 
+(defvar ibuffer-filename/process-header-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [(mouse-1)] 'ibuffer-do-sort-by-filename/process)
+    map))
+
 (defvar ibuffer-mode-name-map
   (let ((map (make-sparse-keymap)))
     (define-key map [(mouse-2)] 'ibuffer-mouse-filter-by-mode)
@@ -1137,6 +1153,9 @@ a new window in the current frame, splitting vertically."
     (ibuffer-redisplay t)))
 
 (defun ibuffer-shrink-to-fit (&optional owin)
+  ;; Make sure that redisplay is performed, otherwise there can be a
+  ;; bad interaction with code in the window-scroll-functions hook
+  (redisplay t)
   (fit-window-to-buffer nil (when owin (/ (frame-height)
 					  (length (window-list (selected-frame)))))))
 
@@ -1219,6 +1238,18 @@ a new window in the current frame, splitting vertically."
 (defsubst ibuffer-map-deletion-lines (func)
   (ibuffer-map-on-mark ibuffer-deletion-char func))
 
+(defsubst ibuffer-assert-ibuffer-mode ()
+  (assert (derived-mode-p 'ibuffer-mode)))
+
+(defun ibuffer-buffer-file-name ()
+  (or buffer-file-name
+      (let ((dirname (or (and (boundp 'dired-directory)
+			      (if (stringp dired-directory)
+				  dired-directory
+				(car dired-directory)))
+			 (bound-and-true-p list-buffers-directory))))
+	(and dirname (expand-file-name dirname)))))
+
 (define-ibuffer-op ibuffer-do-save ()
   "Save marked buffers as with `save-buffer'."
   (:complex t
@@ -1242,11 +1273,13 @@ a new window in the current frame, splitting vertically."
    :modifier-p t)
   (set-buffer-modified-p (not (buffer-modified-p))))
 
-(define-ibuffer-op ibuffer-do-toggle-read-only ()
-  "Toggle read only status in marked buffers."
+(define-ibuffer-op ibuffer-do-toggle-read-only (&optional arg)
+  "Toggle read only status in marked buffers.
+With optional ARG, make read-only only if ARG is positive."
   (:opstring "toggled read only status in"
+   :interactive "P"
    :modifier-p t)
-  (toggle-read-only))
+  (toggle-read-only arg))
 
 (define-ibuffer-op ibuffer-do-delete ()
   "Kill marked buffers as with `kill-this-buffer'."
@@ -1338,7 +1371,7 @@ If point is on a group name, this function operates on that group."
   (ibuffer-mark-interactive arg ?\s -1))
 
 (defun ibuffer-mark-interactive (arg mark movement)
-  (assert (eq major-mode 'ibuffer-mode))
+  (ibuffer-assert-ibuffer-mode)
   (or arg (setq arg 1))
   (ibuffer-forward-line 0)
   (ibuffer-aif (get-text-property (point) 'ibuffer-filter-group-name)
@@ -1353,7 +1386,7 @@ If point is on a group name, this function operates on that group."
 	(setq arg (1- arg))))))
 
 (defun ibuffer-set-mark (mark)
-  (assert (eq major-mode 'ibuffer-mode))
+  (ibuffer-assert-ibuffer-mode)
   (let ((inhibit-read-only t))
     (ibuffer-set-mark-1 mark)
     (setq ibuffer-did-modification t)
@@ -1385,7 +1418,7 @@ If point is on a group name, this function operates on that group."
     (when must-be-live
       (if (bufferp buf)
 	  (unless (buffer-live-p buf)
-	    (error (substitute-command-keys "Buffer %s has been killed; use `\\[ibuffer-update]' to update") buf))
+	    (error "Buffer %s has been killed; %s" buf (substitute-command-keys "use `\\[ibuffer-update]' to update")))
 	(error "No buffer on this line")))
     buf))
 
@@ -1715,7 +1748,7 @@ If point is on a group name, this function operates on that group."
    ('mouse-face 'highlight
 		'keymap ibuffer-mode-name-map
 		'help-echo "mouse-2: filter by this mode"))
-  (format "%s" mode-name))
+  (format-mode-line mode-name nil nil (current-buffer)))
 
 (define-ibuffer-column process
   (:summarizer
@@ -1737,15 +1770,11 @@ If point is on a group name, this function operates on that group."
 	     (t (format "%d files" total))))))
   (let ((directory-abbrev-alist ibuffer-directory-abbrev-alist))
     (abbreviate-file-name
-     (or buffer-file-name
-	 (and (boundp 'dired-directory)
-	      (if (stringp dired-directory)
-		  dired-directory
-		(car dired-directory)))
-	 ""))))
+     (or (ibuffer-buffer-file-name) ""))))
 
 (define-ibuffer-column filename-and-process
   (:name "Filename/Process"
+   :header-mouse-map ibuffer-filename/process-header-map
    :summarizer
    (lambda (strings)
      (setq strings (delete "" strings))
@@ -1799,7 +1828,7 @@ If point is on a group name, this function operates on that group."
 
 (defun ibuffer-insert-buffer-line (buffer mark format)
   "Insert a line describing BUFFER and MARK using FORMAT."
-  (assert (eq major-mode 'ibuffer-mode))
+  (ibuffer-assert-ibuffer-mode)
   (let ((beg (point)))
     (funcall format buffer mark)
     (put-text-property beg (point) 'ibuffer-properties (list buffer mark)))
@@ -1808,7 +1837,7 @@ If point is on a group name, this function operates on that group."
 ;; This function knows a bit too much of the internals.  It would be
 ;; nice if it was all abstracted away.
 (defun ibuffer-redisplay-current ()
-  (assert (eq major-mode 'ibuffer-mode))
+  (ibuffer-assert-ibuffer-mode)
   (when (eobp)
     (forward-line -1))
   (beginning-of-line)
@@ -1842,7 +1871,7 @@ buffers in filtering group GROUP.
 
 FUNCTION is called with two arguments:
 the buffer object itself and the current mark symbol."
-  (assert (eq major-mode 'ibuffer-mode))
+  (ibuffer-assert-ibuffer-mode)
   (ibuffer-forward-line 0)
   (let* ((orig-target-line (1+ (count-lines (save-excursion
 					      (goto-char (point-min))
@@ -1977,7 +2006,10 @@ the value of point at the beginning of the line for that buffer."
   "Sort the buffers by last view time."
   (interactive)
   (setq ibuffer-sorting-mode 'recency)
-  (ibuffer-update nil t))
+  (when (eq ibuffer-last-sorting-mode 'recency)
+    (setq ibuffer-sorting-reversep (not ibuffer-sorting-reversep)))
+  (ibuffer-update nil t)
+  (setq ibuffer-last-sorting-mode 'recency))
 
 (defun ibuffer-update-format ()
   (when (null ibuffer-current-format)
@@ -1988,7 +2020,7 @@ the value of point at the beginning of the line for that buffer."
 (defun ibuffer-switch-format ()
   "Switch the current display format."
   (interactive)
-  (assert (eq major-mode 'ibuffer-mode))
+  (ibuffer-assert-ibuffer-mode)
   (unless (consp ibuffer-formats)
     (error "Ibuffer error: No formats!"))
   (setq ibuffer-current-format
@@ -1999,7 +2031,7 @@ the value of point at the beginning of the line for that buffer."
   (ibuffer-redisplay t))
 
 (defun ibuffer-update-title-and-summary (format)
-  (assert (eq major-mode 'ibuffer-mode))
+  (ibuffer-assert-ibuffer-mode)
   ;; Don't do funky font-lock stuff here
   (let ((after-change-functions nil))
     (if (get-text-property (point-min) 'ibuffer-title)
@@ -2034,7 +2066,7 @@ the value of point at the beginning of the line for that buffer."
 				  name)))
 		  (when hmap
 		    (setq
-		     strname 
+		     strname
 		     (propertize strname 'mouse-face 'highlight 'keymap hmap)))
 		  strname)))))
 	 (add-text-properties opos (point) `(ibuffer-title-header t))
@@ -2090,29 +2122,6 @@ the value of point at the beginning of the line for that buffer."
 	   (point))
 	 `(ibuffer-summary t)))))
 
-(defun ibuffer-update-mode-name ()
-  (setq mode-name (format "Ibuffer by %s" (if ibuffer-sorting-mode
-					      ibuffer-sorting-mode
-					    "view time")))
-  (when ibuffer-sorting-reversep
-    (setq mode-name (concat mode-name " [rev]")))
-  (when (and (featurep 'ibuf-ext)
-	     ibuffer-auto-mode)
-    (setq mode-name (concat mode-name " (Auto)")))
-  (let ((result ""))
-    (when (featurep 'ibuf-ext)
-      (dolist (qualifier ibuffer-filtering-qualifiers)
-	(setq result
-	      (concat result (ibuffer-format-qualifier qualifier))))
-      (if ibuffer-use-header-line
-	  (setq header-line-format
-		(when ibuffer-filtering-qualifiers
-		  (replace-regexp-in-string "%" "%%"
-					    (concat mode-name result))))
-	(progn
-	  (setq mode-name (concat mode-name result))
-	  (when (boundp 'header-line-format)
-	    (setq header-line-format nil)))))))
 
 (defun ibuffer-redisplay (&optional silent)
   "Redisplay the current list of buffers.
@@ -2130,7 +2139,6 @@ If optional arg SILENT is non-nil, do not display progress messages."
 	  (message "No buffers! (note: filtering in effect)")
 	(error "No buffers!")))
     (ibuffer-redisplay-engine blist t)
-    (ibuffer-update-mode-name)
     (unless silent
       (message "Redisplaying current buffer list...done"))
     (ibuffer-forward-line 0)))
@@ -2167,16 +2175,25 @@ If optional arg SILENT is non-nil, do not display progress messages."
     (unless silent
       (message "Updating buffer list..."))
     (ibuffer-redisplay-engine blist arg)
-    (ibuffer-update-mode-name)
     (unless silent
       (message "Updating buffer list...done")))
   (if (eq ibuffer-shrink-to-minimum-size 'onewindow)
       (ibuffer-shrink-to-fit t)
     (when ibuffer-shrink-to-minimum-size
       (ibuffer-shrink-to-fit)))
-  (ibuffer-forward-line 0))
+  (ibuffer-forward-line 0)
+  ;; I tried to update this automatically from the mode-line-process format,
+  ;; but changing nil-ness of header-line-format while computing
+  ;; mode-line-format is asking a bit too much it seems.  --Stef
+  (setq header-line-format
+        (and ibuffer-use-header-line
+             ibuffer-filtering-qualifiers
+             ibuffer-header-line-format)))
 
 (defun ibuffer-sort-bufferlist (bmarklist)
+  (unless ibuffer-sorting-functions-alist
+    ;; make sure the sorting functions are loaded
+    (require 'ibuf-ext))
   (let* ((sortdat (assq ibuffer-sorting-mode
 			ibuffer-sorting-functions-alist))
 	 (func (caddr sortdat)))
@@ -2221,7 +2238,7 @@ If optional arg SILENT is non-nil, do not display progress messages."
      name)))
 
 (defun ibuffer-redisplay-engine (bmarklist &optional ignore)
-  (assert (eq major-mode 'ibuffer-mode))
+  (ibuffer-assert-ibuffer-mode)
   (let* ((--ibuffer-insert-buffers-and-marks-format
 	  (ibuffer-current-format))
 	 (--ibuffer-expanded-format (mapcar #'ibuffer-expand-format-entry
@@ -2263,7 +2280,8 @@ If optional arg SILENT is non-nil, do not display progress messages."
       (setq buffer-read-only t)
       (set-buffer-modified-p ibuffer-did-modification)
       (setq ibuffer-did-modification nil)
-      (goto-line (1+ orig)))))
+      (goto-char (point-min))
+      (forward-line orig))))
 
 (defun ibuffer-quit ()
   "Quit this `ibuffer' session.
@@ -2366,6 +2384,8 @@ Operations on marked buffers:
   '\\[ibuffer-do-revert]' - Revert the marked buffers.
   '\\[ibuffer-do-toggle-read-only]' - Toggle read-only state of marked buffers.
   '\\[ibuffer-do-delete]' - Kill the marked buffers.
+  '\\[ibuffer-do-isearch]' - Do incremental search in the marked buffers.
+  '\\[ibuffer-do-isearch-regexp]' - Isearch for regexp in the marked buffers.
   '\\[ibuffer-do-replace-regexp]' - Replace by regexp in each of the marked
           buffers.
   '\\[ibuffer-do-query-replace]' - Query replace in each of the marked buffers.
@@ -2451,6 +2471,7 @@ Sorting commands:
   '\\[ibuffer-toggle-sorting-mode]' - Rotate between the various sorting modes.
   '\\[ibuffer-invert-sorting]' - Reverse the current sorting order.
   '\\[ibuffer-do-sort-by-alphabetic]' - Sort the buffers lexicographically.
+  '\\[ibuffer-do-sort-by-filename/process]' - Sort the buffers by the file name.
   '\\[ibuffer-do-sort-by-recency]' - Sort the buffers by last viewing time.
   '\\[ibuffer-do-sort-by-size]' - Sort the buffers by size.
   '\\[ibuffer-do-sort-by-major-mode]' - Sort the buffers by major mode.
@@ -2533,6 +2554,28 @@ will be inserted before the group at point."
   (use-local-map ibuffer-mode-map)
   (setq major-mode 'ibuffer-mode)
   (setq mode-name "Ibuffer")
+  ;; Include state info next to the mode name.
+  (set (make-local-variable 'mode-line-process)
+        '(" by "
+          (ibuffer-sorting-mode (:eval (symbol-name ibuffer-sorting-mode))
+                                "view time")
+          (ibuffer-sorting-reversep " [rev]")
+          (ibuffer-auto-mode " (Auto)")
+          ;; Only list the filters if they're not already in the header-line.
+          (header-line-format
+           ""
+           (:eval (if (functionp 'ibuffer-format-qualifier)
+                      (mapconcat 'ibuffer-format-qualifier
+                                 ibuffer-filtering-qualifiers ""))))))
+  ;; `ibuffer-update' puts this on header-line-format when needed.
+  (setq ibuffer-header-line-format
+        ;; Display the part that won't be in the mode-line.
+        (list* "" mode-name
+               (mapcar (lambda (elem)
+                         (if (eq (car-safe elem) 'header-line-format)
+                             (nth 2 elem) elem))
+                       mode-line-process)))
+
   (setq buffer-read-only t)
   (buffer-disable-undo)
   (setq truncate-lines ibuffer-truncate-lines)
@@ -2571,9 +2614,7 @@ will be inserted before the group at point."
   (when ibuffer-default-directory
     (setq default-directory ibuffer-default-directory))
   (add-hook 'change-major-mode-hook 'font-lock-defontify nil t)
-  (run-mode-hooks 'ibuffer-mode-hook)
-  ;; called after mode hooks to allow the user to add filters
-  (ibuffer-update-mode-name))
+  (run-mode-hooks 'ibuffer-mode-hook))
 
 (provide 'ibuffer)
 
@@ -2583,5 +2624,5 @@ will be inserted before the group at point."
 ;; coding: iso-8859-1
 ;; End:
 
-;;; arch-tag: 72581688-0603-4954-b8cf-837c700f62e8
+;; arch-tag: 72581688-0603-4954-b8cf-837c700f62e8
 ;;; ibuffer.el ends here

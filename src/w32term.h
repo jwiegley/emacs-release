@@ -1,13 +1,13 @@
 /* Definitions and headers for communication on the Microsoft W32 API.
    Copyright (C) 1995, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* Added by Kevin Gallo */
 
@@ -27,22 +25,12 @@ Boston, MA 02110-1301, USA.  */
 #define BLACK_PIX_DEFAULT(f) PALETTERGB(0,0,0)
 #define WHITE_PIX_DEFAULT(f) PALETTERGB(255,255,255)
 
-#define FONT_WIDTH(f)       \
-  ((f)->bdf ? (f)->bdf->width : (f)->tm.tmAveCharWidth)
-#define FONT_HEIGHT(f)      \
-   ((f)->bdf ? (f)->bdf->height : (f)->tm.tmHeight)
-#define FONT_BASE(f)        \
-  ((f)->bdf ? (f)->bdf->ury : (f)->tm.tmAscent)
-#define FONT_DESCENT(f)     \
-  ((f)->bdf ? -((f)->bdf->lly) : (f)->tm.tmDescent)
-#define FONT_MAX_WIDTH(f)   \
-  ((f)->bdf ? (f)->bdf->width : (f)->tm.tmMaxCharWidth)
+#define FONT_WIDTH(f)     ((f)->max_width)
+#define FONT_HEIGHT(f)    ((f)->height)
+#define FONT_BASE(f)      ((f)->ascent)
+#define FONT_DESCENT(f)   ((f)->descent)
 
 #define CP_DEFAULT 1004
-/* Special pseudo-codepages. */
-#define CP_8BIT      -1
-#define CP_UNICODE   -2
-#define CP_UNKNOWN   -3
 
 #define CHECK_W32_FRAME(f, frame)		\
   if (NILP (frame))				\
@@ -100,6 +88,9 @@ struct w32_display_info
   /* Chain of all w32_display_info structures.  */
   struct w32_display_info *next;
 
+  /* The generic display parameters corresponding to this w32 display.  */
+  struct terminal *terminal;
+
   /* This is a cons cell of the form (NAME . FONT-LIST-CACHE).
      The same cons cell also appears in x_display_name_list.  */
   Lisp_Object name_list_element;
@@ -115,10 +106,6 @@ struct w32_display_info
 
   /* Number of bits per pixel on this screen.  */
   int n_cbits;
-
-  /* Dimensions of this screen.  */
-  int height, width;
-  int height_in,width_in;
 
   /* Mask of things that cause the mouse to be grabbed.  */
   int grabbed;
@@ -148,12 +135,6 @@ struct w32_display_info
   /* Keystroke that has been faked by Emacs and will be ignored when
      received; value is reset after key is received.  */
   int faked_key;
-
-  /* A table of all the fonts we have already loaded.  */
-  struct font_info *font_table;
-
-  /* The current capacity of font_table.  */
-  int font_table_size;
 
   /* Minimum width over all characters in all fonts in font_table.  */
   int smallest_char_width;
@@ -230,9 +211,6 @@ struct w32_display_info
      frame.  It differs from w32_focus_frame when we're using a global
      minibuffer.  */
   struct frame *x_highlight_frame;
-
-  /* Cache of images.  */
-  struct image_cache *image_cache;
 };
 
 /* This is a chain of structures for all the displays currently in use.  */
@@ -255,11 +233,10 @@ Lisp_Object display_x_get_resource P_ ((struct w32_display_info *,
 					Lisp_Object, Lisp_Object));
 
 extern struct w32_display_info *w32_term_init ();
-
-extern Lisp_Object w32_list_fonts P_ ((struct frame *, Lisp_Object, int, int));
-extern struct font_info *w32_get_font_info (), *w32_query_font ();
-extern void w32_cache_char_metrics (XFontStruct *font);
-extern void w32_find_ccl_program();
+
+extern int x_display_pixel_height P_ ((struct w32_display_info *));
+extern int x_display_pixel_width P_ ((struct w32_display_info *));
+
 
 #define PIX_TYPE COLORREF
 
@@ -272,8 +249,10 @@ extern void w32_find_ccl_program();
    diffs between X and w32 code.  */
 struct x_output
 {
+#if 0 /* These are also defined in struct frame.  Use that instead.  */
   PIX_TYPE background_pixel;
   PIX_TYPE foreground_pixel;
+#endif
 
   /* Keep track of focus.  May be EXPLICIT if we received a FocusIn for this
      frame, or IMPLICIT if we received an EnterNotify.
@@ -320,7 +299,7 @@ struct w32_output
   Window parent_desc;
 
   /* Default ASCII font of this frame. */
-  XFontStruct *font;
+  struct font *font;
 
   /* The baseline offset of the default ASCII font.  */
   int baseline_offset;
@@ -353,12 +332,11 @@ struct w32_output
   Cursor hourglass_cursor;
   Cursor horizontal_drag_cursor;
 
-  /* Window whose cursor is hourglass_cursor.  This window is
-     temporarily mapped to display an hourglass cursor.  */
-  Window hourglass_window;
-
   /* Non-zero means hourglass cursor is currently displayed.  */
   unsigned hourglass_p : 1;
+
+  /* Non-hourglass cursor that is currently active.  */
+  Cursor current_cursor;
 
   /* Flag to set when the window needs to be completely repainted.  */
   int needs_exposure;
@@ -405,8 +383,6 @@ extern struct w32_output w32term_display;
 #define FRAME_W32_WINDOW(f) ((f)->output_data.w32->window_desc)
 #define FRAME_X_WINDOW(f) ((f)->output_data.w32->window_desc)
 
-#define FRAME_FOREGROUND_PIXEL(f) ((f)->output_data.x->foreground_pixel)
-#define FRAME_BACKGROUND_PIXEL(f) ((f)->output_data.x->background_pixel)
 #define FRAME_FONT(f) ((f)->output_data.w32->font)
 #define FRAME_FONTSET(f) ((f)->output_data.w32->fontset)
 #define FRAME_BASELINE_OFFSET(f) ((f)->output_data.w32->baseline_offset)
@@ -418,9 +394,6 @@ extern struct w32_output w32term_display;
 /* This is the `Display *' which frame F is on.  */
 #define FRAME_X_DISPLAY(f) (0)
 
-/* This is the 'font_info *' which frame F has.  */
-#define FRAME_W32_FONT_TABLE(f) (FRAME_W32_DISPLAY_INFO (f)->font_table)
-
 /* Value is the smallest width of any character in any font on frame F.  */
 
 #define FRAME_SMALLEST_CHAR_WIDTH(F) \
@@ -430,11 +403,6 @@ extern struct w32_output w32term_display;
 
 #define FRAME_SMALLEST_FONT_HEIGHT(F) \
      FRAME_W32_DISPLAY_INFO(F)->smallest_font_height
-
-/* Return a pointer to the image cache of frame F.  */
-
-#define FRAME_X_IMAGE_CACHE(F) FRAME_W32_DISPLAY_INFO ((F))->image_cache
-
 
 /* W32-specific scroll bar stuff.  */
 
@@ -487,6 +455,10 @@ struct scroll_bar {
      place where the user grabbed it.  If the handle isn't currently
      being dragged, this is Qnil.  */
   Lisp_Object dragging;
+
+  /* t if the background of the fringe that is adjacent to a scroll
+     bar is extended to the gap between the fringe and the bar.  */
+  Lisp_Object fringe_extended_p;
 };
 
 /* The number of elements a vector holding a struct scroll_bar needs.  */
@@ -576,23 +548,20 @@ extern void w32_fill_rect ();
 extern void w32_clear_window ();
 
 #define w32_fill_area(f,hdc,pix,x,y,nx,ny) \
-{ \
+do { \
     RECT rect; \
     rect.left = x; \
     rect.top = y; \
     rect.right = x + nx; \
     rect.bottom = y + ny; \
     w32_fill_rect (f,hdc,pix,&rect); \
-}
+} while (0)
 
 #define w32_clear_rect(f,hdc,lprect) \
-w32_fill_rect (f,hdc,f->output_data.x->background_pixel,lprect)
+  w32_fill_rect (f, hdc, FRAME_BACKGROUND_PIXEL (f), lprect)
 
 #define w32_clear_area(f,hdc,px,py,nx,ny) \
-w32_fill_area (f,hdc,f->output_data.x->background_pixel,px,py,nx,ny)
-
-extern struct font_info *w32_load_font ();
-extern void w32_unload_font ();
+  w32_fill_area (f, hdc, FRAME_BACKGROUND_PIXEL (f), px, py, nx, ny)
 
 /* Define for earlier versions of Visual C */
 #ifndef WM_MOUSEWHEEL
@@ -605,6 +574,19 @@ extern void w32_unload_font ();
 #define WM_XBUTTONDOWN                 (WM_MOUSEWHEEL + 1)
 #define WM_XBUTTONUP                   (WM_MOUSEWHEEL + 2)
 #endif /* WM_XBUTTONDOWN */
+#ifndef WM_MOUSEHWHEEL
+#define WM_MOUSEHWHEEL                 (WM_MOUSEWHEEL + 4)
+#endif /* WM_MOUSEHWHEEL  */
+#ifndef WM_APPCOMMAND
+#define WM_APPCOMMAND 0x319
+#define GET_APPCOMMAND_LPARAM(lParam)  (HIWORD(lParam) & 0x7fff)
+#endif
+#ifndef WM_UNICHAR 
+#define WM_UNICHAR 0x109
+#endif
+#ifndef UNICODE_NOCHAR
+#define UNICODE_NOCHAR 0xFFFF
+#endif
 
 #define WM_EMACS_START                 (WM_USER + 1)
 #define WM_EMACS_KILL                  (WM_EMACS_START + 0)
@@ -627,7 +609,8 @@ extern void w32_unload_font ();
 #define WM_EMACS_SHOW_CARET            (WM_EMACS_START + 17)
 #define WM_EMACS_HIDE_CARET            (WM_EMACS_START + 18)
 #define WM_EMACS_SETCURSOR             (WM_EMACS_START + 19)
-#define WM_EMACS_END                   (WM_EMACS_START + 20)
+#define WM_EMACS_PAINT                 (WM_EMACS_START + 20)
+#define WM_EMACS_END                   (WM_EMACS_START + 21)
 
 #define WND_FONTWIDTH_INDEX    (0)
 #define WND_LINEHEIGHT_INDEX   (4)
@@ -684,6 +667,9 @@ extern void wait_for_sync ();
 
 extern BOOL parse_button ();
 
+extern void w32_sys_ring_bell (struct frame *f);
+extern void x_delete_display (struct w32_display_info *dpyinfo);
+
 /* Keypad command key support.  W32 doesn't have virtual keys defined
    for the function keys on the keypad (they are mapped to the standard
    fuction keys), so we define our own.  */
@@ -735,19 +721,9 @@ struct face;
 
 XGCValues *XCreateGC (void *, Window, unsigned long, XGCValues *);
 struct frame * check_x_frame (Lisp_Object);
-Lisp_Object vga_stdcolor_name (int);
 
 EXFUN (Fx_display_color_p, 1);
 EXFUN (Fx_display_grayscale_p, 1);
-
-#define FONT_TYPE_FOR_UNIBYTE(font, ch)			\
-  ((font)->bdf ? BDF_1D_FONT : ANSI_FONT)
-
-#define FONT_TYPE_FOR_MULTIBYTE(font, ch)		\
-  (!(font)->bdf						\
-   ? UNICODE_FONT					\
-   : ((CHARSET_DIMENSION (CHAR_CHARSET ((ch))) == 1)	\
-      ? BDF_1D_FONT : BDF_2D_FONT))
 
 typedef DWORD (WINAPI * ClipboardSequence_Proc) ();
 typedef BOOL (WINAPI * AppendMenuW_Proc) (

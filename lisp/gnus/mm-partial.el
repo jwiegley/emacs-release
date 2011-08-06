@@ -1,27 +1,25 @@
 ;;; mm-partial.el --- showing message/partial
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Shenghuo Zhu <zsh@cs.rochester.edu>
 ;; Keywords: message partial
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published
-;; by the Free Software Foundation; either version 3, or (at your
-;; option) any later version.
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; GNU Emacs is distributed in the hope that it will be useful, but
-;; WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -34,8 +32,7 @@
 (require 'mm-decode)
 
 (defun mm-partial-find-parts (id &optional art)
-  (let ((headers (save-excursion
-		   (set-buffer gnus-summary-buffer)
+  (let ((headers (with-current-buffer gnus-summary-buffer
 		   gnus-newsgroup-headers))
 	phandles header)
     (while (setq header (pop headers))
@@ -153,5 +150,5 @@ If NO-DISPLAY is nil, display it. Otherwise, do nothing after replacing."
 
 (provide 'mm-partial)
 
-;;; arch-tag: 460e7424-05f2-4a1d-a0f2-70ec081eff7d
+;; arch-tag: 460e7424-05f2-4a1d-a0f2-70ec081eff7d
 ;;; mm-partial.el ends here

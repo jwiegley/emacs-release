@@ -1,14 +1,14 @@
 /* Lisp functions pertaining to editing.
    Copyright (C) 1985, 1986, 1987, 1989, 1993, 1994, 1995, 1996,
                  1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 #include <config.h>
@@ -52,7 +50,7 @@ Boston, MA 02110-1301, USA.  */
 
 #include "intervals.h"
 #include "buffer.h"
-#include "charset.h"
+#include "character.h"
 #include "coding.h"
 #include "frame.h"
 #include "window.h"
@@ -67,6 +65,10 @@ Boston, MA 02110-1301, USA.  */
 
 #ifndef NULL
 #define NULL 0
+#endif
+
+#ifndef USER_FULL_NAME
+#define USER_FULL_NAME pw->pw_gecos
 #endif
 
 #ifndef USE_CRT_DLL
@@ -84,6 +86,11 @@ extern char **environ;
 
 extern size_t emacs_strftimeu P_ ((char *, size_t, const char *,
 				   const struct tm *, int));
+
+#ifdef WINDOWSNT
+extern Lisp_Object w32_get_internal_run_time ();
+#endif
+
 static int tm_diff P_ ((struct tm *, struct tm *));
 static void find_field P_ ((Lisp_Object, Lisp_Object, Lisp_Object, int *, Lisp_Object, int *));
 static void update_buffer_properties P_ ((int, int));
@@ -91,10 +98,11 @@ static Lisp_Object region_limit P_ ((int));
 int lisp_time_argument P_ ((Lisp_Object, time_t *, int *));
 static size_t emacs_memftimeu P_ ((char *, size_t, const char *,
 				   size_t, const struct tm *, int));
-static void general_insert_function P_ ((void (*) (const unsigned char *, int),
-					 void (*) (Lisp_Object, int, int, int,
-						   int, int),
-					 int, int, Lisp_Object *));
+static void general_insert_function (void (*) (const unsigned char *, EMACS_INT),
+				     void (*) (Lisp_Object, EMACS_INT,
+					       EMACS_INT, EMACS_INT,
+					       EMACS_INT, int),
+				     int, int, Lisp_Object *);
 static Lisp_Object subst_char_in_region_unwind P_ ((Lisp_Object));
 static Lisp_Object subst_char_in_region_unwind_1 P_ ((Lisp_Object));
 static void transpose_markers P_ ((int, int, int, int, int, int, int, int));
@@ -205,11 +213,9 @@ usage: (char-to-string CHAR)  */)
   int len;
   unsigned char str[MAX_MULTIBYTE_LENGTH];
 
-  CHECK_NUMBER (character);
+  CHECK_CHARACTER (character);
 
-  len = (SINGLE_BYTE_CHAR_P (XFASTINT (character))
-	 ? (*str = (unsigned char)(XFASTINT (character)), 1)
-	 : char_to_string (XFASTINT (character), str));
+  len = CHAR_STRING (XFASTINT (character), str);
   return make_string_from_bytes (str, 1, len);
 }
 
@@ -1273,12 +1279,13 @@ This is based on the effective uid, not the real uid.
 Also, if the environment variables LOGNAME or USER are set,
 that determines the value of this function.
 
-If optional argument UID is an integer, return the login name of the user
-with that uid, or nil if there is no such user.  */)
+If optional argument UID is an integer or a float, return the login name
+of the user with that uid, or nil if there is no such user.  */)
      (uid)
      Lisp_Object uid;
 {
   struct passwd *pw;
+  uid_t id;
 
   /* Set up the user name info if we didn't do it before.
      (That can happen if Emacs is dumpable
@@ -1289,9 +1296,9 @@ with that uid, or nil if there is no such user.  */)
   if (NILP (uid))
     return Vuser_login_name;
 
-  CHECK_NUMBER (uid);
+  id = (uid_t)XFLOATINT (uid);
   BLOCK_INPUT;
-  pw = (struct passwd *) getpwuid (XINT (uid));
+  pw = (struct passwd *) getpwuid (id);
   UNBLOCK_INPUT;
   return (pw ? build_string (pw->pw_name) : Qnil);
 }
@@ -1313,23 +1320,33 @@ This ignores the environment variables LOGNAME and USER, so it differs from
 
 DEFUN ("user-uid", Fuser_uid, Suser_uid, 0, 0, 0,
        doc: /* Return the effective uid of Emacs.
-Value is an integer or float, depending on the value.  */)
+Value is an integer or a float, depending on the value.  */)
      ()
 {
   /* Assignment to EMACS_INT stops GCC whining about limited range of
      data type.  */
   EMACS_INT euid = geteuid ();
+
+  /* Make sure we don't produce a negative UID due to signed integer
+     overflow.  */
+  if (euid < 0)
+    return make_float ((double)geteuid ());
   return make_fixnum_or_float (euid);
 }
 
 DEFUN ("user-real-uid", Fuser_real_uid, Suser_real_uid, 0, 0, 0,
        doc: /* Return the real uid of Emacs.
-Value is an integer or float, depending on the value.  */)
+Value is an integer or a float, depending on the value.  */)
      ()
 {
   /* Assignment to EMACS_INT stops GCC whining about limited range of
      data type.  */
   EMACS_INT uid = getuid ();
+
+  /* Make sure we don't produce a negative UID due to signed integer
+     overflow.  */
+  if (uid < 0)
+    return make_float ((double)getuid ());
   return make_fixnum_or_float (uid);
 }
 
@@ -1483,9 +1500,13 @@ on systems that do not provide resolution finer than a second.  */)
   return list3 (make_number ((secs >> 16) & 0xffff),
 		make_number ((secs >> 0)  & 0xffff),
 		make_number (usecs));
-#else
+#else /* ! HAVE_GETRUSAGE  */
+#ifdef WINDOWSNT
+  return w32_get_internal_run_time ();
+#else /* ! WINDOWSNT  */
   return Fcurrent_time ();
-#endif
+#endif /* WINDOWSNT  */
+#endif /* HAVE_GETRUSAGE  */
 }
 
 
@@ -1544,7 +1565,7 @@ DEFUN ("float-time", Ffloat_time, Sfloat_time, 0, 1, 0,
        doc: /* Return the current time, as a float number of seconds since the epoch.
 If SPECIFIED-TIME is given, it is the time to convert to float
 instead of the current time.  The argument should have the form
-(HIGH LOW . IGNORED). Thus, you can use times obtained from
+(HIGH LOW) or (HIGH LOW USEC). Thus, you can use times obtained from
 `current-time' and from `file-attributes'.  SPECIFIED-TIME can also
 have the form (HIGH . LOW), but this is considered obsolete.
 
@@ -1839,7 +1860,7 @@ usage: (encode-time SECOND MINUTE HOUR DAY MONTH YEAR &optional ZONE)  */)
 	tzstring = (char *) SDATA (zone);
       else if (INTEGERP (zone))
 	{
-	  int abszone = abs (XINT (zone));
+	  int abszone = eabs (XINT (zone));
 	  sprintf (tzbuf, "XXX%s%d:%02d:%02d", "-" + (XINT (zone) < 0),
 		   abszone / (60*60), (abszone/60) % 60, abszone % 60);
 	  tzstring = tzbuf;
@@ -1974,6 +1995,7 @@ the data it can't find.  */)
       int offset = tm_diff (t, &gmt);
       char *s = 0;
       char buf[6];
+
 #ifdef HAVE_TM_ZONE
       if (t->tm_zone)
 	s = (char *)t->tm_zone;
@@ -1984,19 +2006,6 @@ the data it can't find.  */)
 #endif
 #endif /* not HAVE_TM_ZONE */
 
-#if defined HAVE_TM_ZONE || defined HAVE_TZNAME
-      if (s)
-	{
-	  /* On Japanese w32, we can get a Japanese string as time
-	     zone name.  Don't accept that.  */
-	  char *p;
-	  for (p = s; *p && (isalnum ((unsigned char)*p) || *p == ' '); ++p)
-	    ;
-	  if (p == s || *p)
-	    s = NULL;
-	}
-#endif
-
       if (!s)
 	{
 	  /* No local time zone name is available; use "+-NNNN" instead.  */
@@ -2004,6 +2013,7 @@ the data it can't find.  */)
 	  sprintf (buf, "%c%02d%02d", (offset < 0 ? '-' : '+'), am/60, am%60);
 	  s = buf;
 	}
+
       return Fcons (make_number (offset), Fcons (build_string (s), Qnil));
     }
   else
@@ -2015,6 +2025,11 @@ the data it can't find.  */)
    has never been called.  */
 static char **environbuf;
 
+/* This holds the startup value of the TZ environment variable so it
+   can be restored if the user calls set-time-zone-rule with a nil
+   argument.  */
+static char *initial_tz;
+
 DEFUN ("set-time-zone-rule", Fset_time_zone_rule, Sset_time_zone_rule, 1, 1, 0,
        doc: /* Set the local time zone using TZ, a string specifying a time zone rule.
 If TZ is nil, use implementation-defined default time zone information.
@@ -2024,8 +2039,12 @@ If TZ is t, use Universal Time.  */)
 {
   char *tzstring;
 
+  /* When called for the first time, save the original TZ.  */
+  if (!environbuf)
+    initial_tz = (char *) getenv ("TZ");
+
   if (NILP (tz))
-    tzstring = 0;
+    tzstring = initial_tz;
   else if (EQ (tz, Qt))
     tzstring = "UTC0";
   else
@@ -2035,8 +2054,7 @@ If TZ is t, use Universal Time.  */)
     }
 
   set_time_zone_rule (tzstring);
-  if (environbuf)
-    free (environbuf);
+  free (environbuf);
   environbuf = environ;
 
   return Qnil;
@@ -2144,12 +2162,12 @@ set_time_zone_rule (tzstring)
    INSERT_FROM_STRING_FUNC as the last argument.  */
 
 static void
-general_insert_function (insert_func, insert_from_string_func,
-			 inherit, nargs, args)
-     void (*insert_func) P_ ((const unsigned char *, int));
-     void (*insert_from_string_func) P_ ((Lisp_Object, int, int, int, int, int));
-     int inherit, nargs;
-     register Lisp_Object *args;
+general_insert_function (void (*insert_func)
+			      (const unsigned char *, EMACS_INT),
+			 void (*insert_from_string_func)
+			      (Lisp_Object, EMACS_INT, EMACS_INT,
+			       EMACS_INT, EMACS_INT, int),
+			 int inherit, int nargs, Lisp_Object *args)
 {
   register int argnum;
   register Lisp_Object val;
@@ -2157,7 +2175,7 @@ general_insert_function (insert_func, insert_from_string_func,
   for (argnum = 0; argnum < nargs; argnum++)
     {
       val = args[argnum];
-      if (INTEGERP (val))
+      if (CHARACTERP (val))
 	{
 	  unsigned char str[MAX_MULTIBYTE_LENGTH];
 	  int len;
@@ -2166,7 +2184,7 @@ general_insert_function (insert_func, insert_from_string_func,
 	    len = CHAR_STRING (XFASTINT (val), str);
 	  else
 	    {
-	      str[0] = (SINGLE_BYTE_CHAR_P (XINT (val))
+	      str[0] = (ASCII_CHAR_P (XINT (val))
 			? XINT (val)
 			: multibyte_char_to_unibyte (XINT (val), Qnil));
 	      len = 1;
@@ -2331,6 +2349,29 @@ from adjoining text, if those properties are sticky.  */)
 	insert (string, n);
     }
   return Qnil;
+}
+
+DEFUN ("insert-byte", Finsert_byte, Sinsert_byte, 2, 3, 0,
+       doc: /* Insert COUNT (second arg) copies of BYTE (first arg).
+Both arguments are required.
+BYTE is a number of the range 0..255.
+
+If BYTE is 128..255 and the current buffer is multibyte, the
+corresponding eight-bit character is inserted.
+
+Point, and before-insertion markers, are relocated as in the function `insert'.
+The optional third arg INHERIT, if non-nil, says to inherit text properties
+from adjoining text, if those properties are sticky.  */)
+     (byte, count, inherit)
+       Lisp_Object byte, count, inherit;
+{
+  CHECK_NUMBER (byte);
+  if (XINT (byte) < 0 || XINT (byte) > 255)
+    args_out_of_range_3 (byte, make_number (0), make_number (255));
+  if (XINT (byte) >= 128
+      && ! NILP (current_buffer->enable_multibyte_characters))
+    XSETFASTINT (byte, BYTE8_TO_CHAR (XINT (byte)));
+  return Finsert_char (byte, count, inherit);
 }
 
 
@@ -2894,12 +2935,73 @@ Both characters must have the same length of multi-byte form.  */)
   return Qnil;
 }
 
+
+static Lisp_Object check_translation P_ ((int, int, int, Lisp_Object));
+
+/* Helper function for Ftranslate_region_internal.
+
+   Check if a character sequence at POS (POS_BYTE) matches an element
+   of VAL.  VAL is a list (([FROM-CHAR ...] . TO) ...).  If a matching
+   element is found, return it.  Otherwise return Qnil.  */
+
+static Lisp_Object
+check_translation (pos, pos_byte, end, val)
+     int pos, pos_byte, end;
+     Lisp_Object val;
+{
+  int buf_size = 16, buf_used = 0;
+  int *buf = alloca (sizeof (int) * buf_size);
+
+  for (; CONSP (val); val = XCDR (val))
+    {
+      Lisp_Object elt;
+      int len, i;
+
+      elt = XCAR (val);
+      if (! CONSP (elt))
+	continue;
+      elt = XCAR (elt);
+      if (! VECTORP (elt))
+	continue;
+      len = ASIZE (elt);
+      if (len <= end - pos)
+	{
+	  for (i = 0; i < len; i++)
+	    {
+	      if (buf_used <= i)
+		{
+		  unsigned char *p = BYTE_POS_ADDR (pos_byte);
+		  int len;
+
+		  if (buf_used == buf_size)
+		    {
+		      int *newbuf;
+
+		      buf_size += 16;
+		      newbuf = alloca (sizeof (int) * buf_size);
+		      memcpy (newbuf, buf, sizeof (int) * buf_used);
+		      buf = newbuf;
+		    }
+		  buf[buf_used++] = STRING_CHAR_AND_LENGTH (p, 0, len);
+		  pos_byte += len;
+		}
+	      if (XINT (AREF (elt, i)) != buf[i])
+		break;
+	    }
+	  if (i == len)
+	    return XCAR (val);
+	}
+    }
+  return Qnil;
+}
+
+
 DEFUN ("translate-region-internal", Ftranslate_region_internal,
        Stranslate_region_internal, 3, 3, 0,
        doc: /* Internal use only.
 From START to END, translate characters according to TABLE.
-TABLE is a string; the Nth character in it is the mapping
-for the character with code N.
+TABLE is a string or a char-table; the Nth character in it is the
+mapping for the character with code N.
 It returns the number of characters changed.  */)
      (start, end, table)
      Lisp_Object start;
@@ -2913,10 +3015,13 @@ It returns the number of characters changed.  */)
   int pos, pos_byte, end_pos;
   int multibyte = !NILP (current_buffer->enable_multibyte_characters);
   int string_multibyte;
+  Lisp_Object val;
 
   validate_region (&start, &end);
   if (CHAR_TABLE_P (table))
     {
+      if (! EQ (XCHAR_TABLE (table)->purpose, Qtranslation_table))
+	error ("Not a translation table");
       size = MAX_CHAR;
       tt = NULL;
     }
@@ -2927,14 +3032,14 @@ It returns the number of characters changed.  */)
       if (! multibyte && (SCHARS (table) < SBYTES (table)))
 	table = string_make_unibyte (table);
       string_multibyte = SCHARS (table) < SBYTES (table);
-      size = SCHARS (table);
+      size = SBYTES (table);
       tt = SDATA (table);
     }
 
   pos = XINT (start);
   pos_byte = CHAR_TO_BYTE (pos);
   end_pos = XINT (end);
-  modify_region (current_buffer, pos, XINT (end), 0);
+  modify_region (current_buffer, pos, end_pos, 0);
 
   cnt = 0;
   for (; pos < end_pos; )
@@ -2943,6 +3048,7 @@ It returns the number of characters changed.  */)
       unsigned char *str, buf[MAX_MULTIBYTE_LENGTH];
       int len, str_len;
       int oc;
+      Lisp_Object val;
 
       if (multibyte)
 	oc = STRING_CHAR_AND_LENGTH (p, MAX_MULTIBYTE_LENGTH, len);
@@ -2965,7 +3071,7 @@ It returns the number of characters changed.  */)
 		  nc = tt[oc];
 		  if (! ASCII_BYTE_P (nc) && multibyte)
 		    {
-		      str_len = CHAR_STRING (nc, buf);
+		      str_len = BYTE8_STRING (nc, buf);
 		      str = buf;
 		    }
 		  else
@@ -2977,28 +3083,34 @@ It returns the number of characters changed.  */)
 	    }
 	  else
 	    {
-	      Lisp_Object val;
 	      int c;
 
 	      nc = oc;
 	      val = CHAR_TABLE_REF (table, oc);
-	      if (INTEGERP (val)
+	      if (CHARACTERP (val)
 		  && (c = XINT (val), CHAR_VALID_P (c, 0)))
 		{
 		  nc = c;
 		  str_len = CHAR_STRING (nc, buf);
 		  str = buf;
 		}
+	      else if (VECTORP (val) || (CONSP (val)))
+		{
+		  /* VAL is [TO_CHAR ...] or (([FROM-CHAR ...] .  TO) ...)
+		     where TO is TO-CHAR or [TO-CHAR ...].  */
+		  nc = -1;
+		}
 	    }
 
-	  if (nc != oc)
+	  if (nc != oc && nc >= 0)
 	    {
+	      /* Simple one char to one char translation.  */
 	      if (len != str_len)
 		{
 		  Lisp_Object string;
 
 		  /* This is less efficient, because it moves the gap,
-		     but it should multibyte characters correctly.  */
+		     but it should handle multibyte characters correctly.  */
 		  string = make_multibyte_string (str, 1, str_len);
 		  replace_range (pos, pos + 1, string, 1, 0, 1);
 		  len = str_len;
@@ -3012,6 +3124,41 @@ It returns the number of characters changed.  */)
 		  update_compositions (pos, pos + 1, CHECK_BORDER);
 		}
 	      ++cnt;
+	    }
+	  else if (nc < 0)
+	    {
+	      Lisp_Object string;
+
+	      if (CONSP (val))
+		{
+		  val = check_translation (pos, pos_byte, end_pos, val);
+		  if (NILP (val))
+		    {
+		      pos_byte += len;
+		      pos++;
+		      continue;
+		    }
+		  /* VAL is ([FROM-CHAR ...] . TO).  */
+		  len = ASIZE (XCAR (val));
+		  val = XCDR (val);
+		}
+	      else
+		len = 1;
+
+	      if (VECTORP (val))
+		{
+		  string = Fconcat (1, &val);
+		}
+	      else
+		{
+		  string = Fmake_string (make_number (1), val);
+		}
+	      replace_range (pos, pos + len, string, 1, 0, 1);
+	      pos_byte += SBYTES (string);
+	      pos += SCHARS (string);
+	      cnt += SCHARS (string);
+	      end_pos += SCHARS (string) - len;
+	      continue;
 	    }
 	}
       pos_byte += len;
@@ -3042,7 +3189,7 @@ DEFUN ("delete-and-extract-region", Fdelete_and_extract_region,
 {
   validate_region (&start, &end);
   if (XINT (start) == XINT (end))
-    return build_string ("");
+    return empty_unibyte_string;
   return del_range_1 (XINT (start), XINT (end), 1, 1);
 }
 
@@ -3635,8 +3782,8 @@ usage: (format STRING &rest OBJECTS)  */)
 	    thissize = 30 + (precision[n] > 0 ? precision[n] : 0);
 	    if (*format == 'c')
 	      {
-		if (! SINGLE_BYTE_CHAR_P (XINT (args[n]))
-		    /* Note: No one can remember why we have to treat
+		if (! ASCII_CHAR_P (XINT (args[n]))
+		    /* Note: No one can remeber why we have to treat
 		       the character 0 as a multibyte character here.
 		       But, until it causes a real problem, let's
 		       don't change it.  */
@@ -4046,8 +4193,10 @@ Case is ignored if `case-fold-search' is non-nil in the current buffer.  */)
      register Lisp_Object c1, c2;
 {
   int i1, i2;
-  CHECK_NUMBER (c1);
-  CHECK_NUMBER (c2);
+  /* Check they're chars, not just integers, otherwise we could get array
+     bounds violations in DOWNCASE.  */
+  CHECK_CHARACTER (c1);
+  CHECK_CHARACTER (c2);
 
   if (XINT (c1) == XINT (c2))
     return Qt;
@@ -4057,8 +4206,20 @@ Case is ignored if `case-fold-search' is non-nil in the current buffer.  */)
   /* Do these in separate statements,
      then compare the variables.
      because of the way DOWNCASE uses temp variables.  */
-  i1 = DOWNCASE (XFASTINT (c1));
-  i2 = DOWNCASE (XFASTINT (c2));
+  i1 = XFASTINT (c1);
+  if (NILP (current_buffer->enable_multibyte_characters)
+      && ! ASCII_CHAR_P (i1))
+    {
+      MAKE_CHAR_MULTIBYTE (i1);
+    }
+  i2 = XFASTINT (c2);
+  if (NILP (current_buffer->enable_multibyte_characters)
+      && ! ASCII_CHAR_P (i2))
+    {
+      MAKE_CHAR_MULTIBYTE (i2);
+    }
+  i1 = DOWNCASE (i1);
+  i2 = DOWNCASE (i2);
   return (i1 == i2 ? Qt :  Qnil);
 }
 
@@ -4148,7 +4309,7 @@ transpose_markers (start1, end1, start2, end2,
 
 DEFUN ("transpose-regions", Ftranspose_regions, Stranspose_regions, 4, 5, 0,
        doc: /* Transpose region STARTR1 to ENDR1 with STARTR2 to ENDR2.
-The regions may not be overlapping, because the size of the buffer is
+The regions should not be overlapping, because the size of the buffer is
 never changed in a transposition.
 
 Optional fifth arg LEAVE-MARKERS, if non-nil, means don't update
@@ -4158,9 +4319,9 @@ Transposing beyond buffer boundaries is an error.  */)
      (startr1, endr1, startr2, endr2, leave_markers)
      Lisp_Object startr1, endr1, startr2, endr2, leave_markers;
 {
-  register int start1, end1, start2, end2;
-  int start1_byte, start2_byte, len1_byte, len2_byte;
-  int gap, len1, len_mid, len2;
+  register EMACS_INT start1, end1, start2, end2;
+  EMACS_INT start1_byte, start2_byte, len1_byte, len2_byte;
+  EMACS_INT gap, len1, len_mid, len2;
   unsigned char *start1_addr, *start2_addr, *temp;
 
   INTERVAL cur_intv, tmp_interval1, tmp_interval_mid, tmp_interval2, tmp_interval3;
@@ -4446,6 +4607,7 @@ void
 syms_of_editfns ()
 {
   environbuf = 0;
+  initial_tz = 0;
 
   Qbuffer_access_fontify_functions
     = intern ("buffer-access-fontify-functions");
@@ -4553,6 +4715,7 @@ functions if all the text being accessed has this property.  */);
   defsubr (&Sinsert_and_inherit);
   defsubr (&Sinsert_and_inherit_before_markers);
   defsubr (&Sinsert_char);
+  defsubr (&Sinsert_byte);
 
   defsubr (&Suser_login_name);
   defsubr (&Suser_real_login_name);

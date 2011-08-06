@@ -1,7 +1,7 @@
 ;;; scheme.el --- Scheme (and DSSSL) editing mode
 
 ;; Copyright (C) 1986, 1987, 1988, 1997, 1998, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008  Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Bill Rozas <jinx@martigny.ai.mit.edu>
 ;; Adapted-by: Dave Love <d.love@dl.ac.uk>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -141,8 +139,6 @@
   ;; because lisp-fill-paragraph should do the job.
   (make-local-variable 'adaptive-fill-mode)
   (setq adaptive-fill-mode nil)
-  (make-local-variable 'normal-auto-fill-function)
-  (setq normal-auto-fill-function 'lisp-mode-auto-fill)
   (make-local-variable 'indent-line-function)
   (setq indent-line-function 'lisp-indent-line)
   (make-local-variable 'parse-sexp-ignore-comments)
@@ -334,6 +330,8 @@ See `run-hooks'."
 	       "call-with-input-file" "call-with-output-file" "case" "cond"
 	       "do" "else" "for-each" "if" "lambda"
 	       "let" "let*" "let-syntax" "letrec" "letrec-syntax"
+	       ;; SRFI 11 usage comes up often enough.
+	       "let-values" "let*-values"
 	       ;; Hannes Haug <hannes.haug@student.uni-tuebingen.de> wants:
 	       "and" "or" "delay" "force"
 	       ;; Stefan Monnier <stefan.monnier@epfl.ch> says don't bother:
@@ -541,6 +539,8 @@ that variable's value is a string."
 (put 'let 'scheme-indent-function 'scheme-let-indent)
 (put 'let* 'scheme-indent-function 1)
 (put 'letrec 'scheme-indent-function 1)
+(put 'let-values 'scheme-indent-function 1) ; SRFI 11
+(put 'let*-values 'scheme-indent-function 1) ; SRFI 11
 (put 'sequence 'scheme-indent-function 0) ; SICP, not r4rs
 (put 'let-syntax 'scheme-indent-function 1)
 (put 'letrec-syntax 'scheme-indent-function 1)

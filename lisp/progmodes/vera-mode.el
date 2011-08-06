@@ -1,13 +1,18 @@
 ;;; vera-mode.el --- major mode for editing Vera files.
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author:      Reto Zimmermann <reto@gnu.org>
 ;; Maintainer:  Reto Zimmermann <reto@gnu.org>
 ;; Version:     2.28
 ;; Keywords:    languages vera
 ;; WWW:         http://www.iis.ee.ethz.ch/~zimmi/emacs/vera-mode.html
+
+;; Yoni Rabkin <yoni@rabkins.net> contacted the maintainer of this
+;; file on 18/3/2008, and the maintainer agreed that when a bug is
+;; filed in the Emacs bug reporting system against this file, a copy
+;; of the bug report be sent to the maintainer's email address.
 
 (defconst vera-version "2.18"
   "Vera Mode version number.")
@@ -17,10 +22,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -28,9 +33,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Commentary:
@@ -48,7 +51,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Documentation
 
-;; See comment string of function `vera-mode' or type `C-c C-h' in Emacs.
+;; See comment string of function `vera-mode' or type `C-h m' in Emacs.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Installation
@@ -76,10 +79,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Code:
-
-;; XEmacs handling
-(defconst vera-xemacs (string-match "XEmacs" emacs-version)
-  "Non-nil if XEmacs is used.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Variables
@@ -122,36 +121,36 @@ If nil, TAB always indents current line."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Key bindings
 
-(defvar vera-mode-map ()
+(defvar vera-mode-map
+  (let ((map (make-sparse-keymap)))
+    ;; Backspace/delete key bindings.
+    (define-key map [backspace] 'backward-delete-char-untabify)
+    (unless (boundp 'delete-key-deletes-forward) ; XEmacs variable
+      (define-key map [delete]       'delete-char)
+      (define-key map [(meta delete)] 'kill-word))
+    ;; Standard key bindings.
+    (define-key map "\M-e"     'vera-forward-statement)
+    (define-key map "\M-a"     'vera-backward-statement)
+    (define-key map "\M-\C-e"  'vera-forward-same-indent)
+    (define-key map "\M-\C-a"  'vera-backward-same-indent)
+    ;; Mode specific key bindings.
+    (define-key map "\C-c\t"   'indent-according-to-mode)
+    (define-key map "\M-\C-\\" 'vera-indent-region)
+    (define-key map "\C-c\C-c" 'vera-comment-uncomment-region)
+    (define-key map "\C-c\C-f" 'vera-fontify-buffer)
+    (define-key map "\C-c\C-v" 'vera-version)
+    (define-key map "\M-\t"    'tab-to-tab-stop)
+    ;; Electric key bindings.
+    (define-key map "\t"       'vera-electric-tab)
+    (define-key map "\r"       'vera-electric-return)
+    (define-key map " "        'vera-electric-space)
+    (define-key map "{"        'vera-electric-opening-brace)
+    (define-key map "}"        'vera-electric-closing-brace)
+    (define-key map "#"        'vera-electric-pound)
+    (define-key map "*"        'vera-electric-star)
+    (define-key map "/"        'vera-electric-slash)
+    map)
   "Keymap for Vera Mode.")
-
-(setq vera-mode-map (make-sparse-keymap))
-;; backspace/delete key bindings
-(define-key vera-mode-map [backspace] 'backward-delete-char-untabify)
-(unless (boundp 'delete-key-deletes-forward) ; XEmacs variable
-  (define-key vera-mode-map [delete]       'delete-char)
-  (define-key vera-mode-map [(meta delete)] 'kill-word))
-;; standard key bindings
-(define-key vera-mode-map "\M-e"     'vera-forward-statement)
-(define-key vera-mode-map "\M-a"     'vera-backward-statement)
-(define-key vera-mode-map "\M-\C-e"  'vera-forward-same-indent)
-(define-key vera-mode-map "\M-\C-a"  'vera-backward-same-indent)
-;; mode specific key bindings
-(define-key vera-mode-map "\C-c\t"   'indent-according-to-mode)
-(define-key vera-mode-map "\M-\C-\\" 'vera-indent-region)
-(define-key vera-mode-map "\C-c\C-c" 'vera-comment-uncomment-region)
-(define-key vera-mode-map "\C-c\C-f" 'vera-fontify-buffer)
-(define-key vera-mode-map "\C-c\C-v" 'vera-version)
-(define-key vera-mode-map "\M-\t"    'tab-to-tab-stop)
-;; electric key bindings
-(define-key vera-mode-map "\t"       'vera-electric-tab)
-(define-key vera-mode-map "\r"       'vera-electric-return)
-(define-key vera-mode-map " "        'vera-electric-space)
-(define-key vera-mode-map "{"        'vera-electric-opening-brace)
-(define-key vera-mode-map "}"        'vera-electric-closing-brace)
-(define-key vera-mode-map "#"        'vera-electric-pound)
-(define-key vera-mode-map "*"        'vera-electric-star)
-(define-key vera-mode-map "/"        'vera-electric-slash)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Menu
@@ -231,7 +230,7 @@ If nil, TAB always indents current line."
     (modify-syntax-entry ?\{ "(}"   syntax-table)
     (modify-syntax-entry ?\} "){"   syntax-table)
     ;; comment
-    (if vera-xemacs
+    (if (featurep 'xemacs)
 	(modify-syntax-entry ?\/ ". 1456" syntax-table) ; XEmacs
       (modify-syntax-entry ?\/ ". 124b" syntax-table)) ; Emacs
     (modify-syntax-entry ?\* ". 23" syntax-table)
@@ -600,7 +599,7 @@ Key bindings:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; XEmacs compatibility
-(when vera-xemacs
+(when (featurep 'xemacs)
   (require 'font-lock)
   (copy-face 'font-lock-reference-face 'font-lock-constant-face)
   (copy-face 'font-lock-preprocessor-face 'font-lock-builtin-face))
@@ -844,21 +843,19 @@ This function does not modify point or mark."
 
 (defsubst vera-re-search-forward (regexp &optional bound noerror)
   "Like `re-search-forward', but skips over matches in literals."
-  (store-match-data '(nil nil))
-  (while (and (re-search-forward regexp bound noerror)
-	      (vera-skip-forward-literal)
-	      (progn (store-match-data '(nil nil))
-		     (if bound (< (point) bound) t))))
-  (match-end 0))
+  (let (ret)
+    (while (and (setq ret (re-search-forward regexp bound noerror))
+                (vera-skip-forward-literal)
+                (if bound (< (point) bound) t)))
+    ret))
 
 (defsubst vera-re-search-backward (regexp &optional bound noerror)
   "Like `re-search-backward', but skips over matches in literals."
-  (store-match-data '(nil nil))
-  (while (and (re-search-backward regexp bound noerror)
-	      (vera-skip-backward-literal)
-	      (progn (store-match-data '(nil nil))
-		     (if bound (> (point) bound) t))))
-  (match-end 0))
+  (let (ret)
+    (while (and (setq ret (re-search-backward regexp bound noerror))
+                (vera-skip-backward-literal)
+                (if bound (> (point) bound) t)))
+    ret))
 
 (defun vera-forward-syntactic-ws (&optional lim skip-directive)
   "Forward skip of syntactic whitespace."
@@ -1264,7 +1261,9 @@ If `vera-intelligent-tab' is nil, always indent line."
   (interactive "*P")
   (if vera-intelligent-tab
       (progn
-	(cond ((memq (char-syntax (preceding-char)) '(?w ?_))
+	(cond ((and (not (featurep 'xemacs)) (use-region-p))
+	       (vera-indent-region (region-beginning) (region-end) nil))
+	      ((memq (char-syntax (preceding-char)) '(?w ?_))
 	       (let ((case-fold-search t)
 		     (case-replace nil)
 		     (hippie-expand-only-buffers
@@ -1341,7 +1340,7 @@ If `vera-intelligent-tab' is nil, always indent line."
   (interactive "*P")
   (let* ((ch (char-before))
 	 (indentp (and (not arg)
-		       (eq last-command-char ?/)
+		       (eq last-command-event ?/)
 		       (or (and (eq ch ?/)
 				(not (vera-in-literal)))
 			   (and (eq ch ?*)

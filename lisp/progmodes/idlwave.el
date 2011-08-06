@@ -1,7 +1,7 @@
 ;; idlwave.el --- IDL editing mode for GNU Emacs
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Authors: J.D. Smith <jdsmith@as.arizona.edu>
 ;;          Carsten Dominik <dominik@science.uva.nl>
@@ -12,10 +12,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,9 +23,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -172,15 +170,11 @@
 	(require 'timer)
       (error nil)))
 
-(eval-and-compile
-  ;; Kludge to allow `defcustom' for Emacs 19.
-  (condition-case () (require 'custom) (error nil))
-  (if (and (featurep 'custom) (fboundp 'custom-declare-variable))
-      nil ;; We've got what we needed
-    ;; We have the old or no custom-library, hack around it!
-    (defmacro defgroup (&rest args) nil)
-    (defmacro defcustom (var value doc &rest args)
-      `(defvar ,var ,value ,doc))))
+(declare-function idlwave-shell-get-path-info "idlw-shell")
+(declare-function idlwave-shell-temp-file "idlw-shell")
+(declare-function idlwave-shell-is-running "idlw-shell")
+(declare-function widget-value "wid-edit" (widget))
+(declare-function comint-dynamic-complete-filename "comint" ())
 
 (defgroup idlwave nil
   "Major mode for editing IDL .pro files."
@@ -2115,21 +2109,17 @@ Returns point if comment found and nil otherwise."
            (backward-char 1)
            (point)))))
 
-(defvar transient-mark-mode)
-(defvar zmacs-regions)
-(defvar mark-active)
 (defun idlwave-region-active-p ()
-  "Is transient-mark-mode on and the region active?
-Works on both Emacs and XEmacs."
-  (if (featurep 'xemacs)
-      (and zmacs-regions (region-active-p))
-    (and transient-mark-mode mark-active)))
+  "Should we operate on an active region?"
+  (if (fboundp 'use-region-p)
+      (use-region-p)
+    (region-active-p)))
 
 (defun idlwave-show-matching-quote ()
   "Insert quote and show matching quote if this is end of a string."
   (interactive)
   (let ((bq (idlwave-in-quote))
-        (inq last-command-char))
+        (inq last-command-event))
     (if (and bq (not (idlwave-in-comment)))
         (let ((delim (char-after bq)))
           (insert inq)
@@ -2827,10 +2817,10 @@ If the optional argument EXPAND is non-nil then the actions in
         ;; Before indenting, run action routines.
         ;;
         (if (and expand idlwave-do-actions)
-            (mapcar 'idlwave-do-action idlwave-indent-expand-table))
+            (mapc 'idlwave-do-action idlwave-indent-expand-table))
         ;;
         (if idlwave-do-actions
-            (mapcar 'idlwave-do-action idlwave-indent-action-table))
+            (mapc 'idlwave-do-action idlwave-indent-action-table))
         ;;
         ;; No longer expand abbrevs on the line.  The user can do this
         ;; manually using expand-region-abbrevs.
@@ -3792,7 +3782,7 @@ unless the optional second argument NOINDENT is non-nil."
       (if (not noindent)
 	  (indent-region beg end nil))
       (if (stringp prompt)
-	  (message prompt)))))
+	  (message "%s" prompt)))))
 
 (defun idlwave-rw-case (string)
   "Make STRING have the case required by `idlwave-reserved-word-upcase'."
@@ -4242,9 +4232,9 @@ blank lines."
 
 (defun idlwave-sintern-keyword-list (kwd-list &optional set)
   "Sintern a set of keywords (file (key . link) (key2 . link2) ...)"
-  (mapcar (lambda(x)
-	    (setcar x (idlwave-sintern-keyword (car x) set)))
-	  (cdr kwd-list))
+  (mapc (lambda(x)
+	  (setcar x (idlwave-sintern-keyword (car x) set)))
+	(cdr kwd-list))
   kwd-list)
 
 (defun idlwave-sintern-rinfo-list (list &optional set default-dir)
@@ -4913,7 +4903,6 @@ Cache to disk for quick recovery."
 	(error "No such XML routine info file: %s" catalog-file)
       (if (not (file-readable-p catalog-file))
 	  (error "Cannot read XML routine info file: %s" catalog-file)))
-    (require 'xml)
     (message "Reading XML routine info...")
     (setq rinfo (xml-parse-file catalog-file))
     (message "Reading XML routine info...done")
@@ -5560,11 +5549,11 @@ directories and save the routine info.
     ;; Define the routine info list
     (insert "\n(setq idlwave-user-catalog-routines\n    '(")
     (let ((standard-output (current-buffer)))
-      (mapcar (lambda (x)
-		(insert "\n    ")
-		(prin1 x)
-		(goto-char (point-max)))
-	      idlwave-user-catalog-routines))
+      (mapc (lambda (x)
+	      (insert "\n    ")
+	      (prin1 x)
+	      (goto-char (point-max)))
+	    idlwave-user-catalog-routines))
     (insert (format "))\n\n;;; %s ends here\n"
 		    (file-name-nondirectory idlwave-user-catalog-file)))
     (goto-char (point-min))
@@ -5604,11 +5593,11 @@ directories and save the routine info.
     ;; Define the variable which contains a list of all scanned directories
     (insert "\n(setq idlwave-path-alist\n    '(")
     (let ((standard-output (current-buffer)))
-      (mapcar (lambda (x)
-		(insert "\n      ")
-		(prin1 x)
-		(goto-char (point-max)))
-	      idlwave-path-alist))
+      (mapc (lambda (x)
+	      (insert "\n      ")
+	      (prin1 x)
+	      (goto-char (point-max)))
+	    idlwave-path-alist))
     (insert "))\n")
     (save-buffer 0)
     (kill-buffer (current-buffer))))
@@ -6319,12 +6308,12 @@ When TYPE is not specified, both procedures and functions will be considered."
   (if (null method)
       (mapcar 'car (idlwave-class-alist))
     (let (rtn)
-      (mapcar (lambda (x)
-		(and (nth 2 x)
-		     (or (not type)
-			 (eq type (nth 1 x)))
-		     (push (nth 2 x) rtn)))
-	      (idlwave-all-assq method (idlwave-routines)))
+      (mapc (lambda (x)
+	      (and (nth 2 x)
+		   (or (not type)
+		       (eq type (nth 1 x)))
+		   (push (nth 2 x) rtn)))
+	    (idlwave-all-assq method (idlwave-routines)))
       (idlwave-uniquify rtn))))
 
 (defun idlwave-all-method-keyword-classes (method keyword &optional type)
@@ -6335,13 +6324,13 @@ When TYPE is not specified, both procedures and functions will be considered."
 	  (null keyword))
       nil
     (let (rtn)
-      (mapcar (lambda (x)
-		(and (nth 2 x)           ; non-nil class
-		     (or (not type)      ; correct or unspecified type
-			 (eq type (nth 1 x)))
-		     (assoc keyword (idlwave-entry-keywords x))
-		     (push (nth 2 x) rtn)))
-	      (idlwave-all-assq method (idlwave-routines)))
+      (mapc (lambda (x)
+	      (and (nth 2 x)		; non-nil class
+		   (or (not type)	; correct or unspecified type
+		       (eq type (nth 1 x)))
+		   (assoc keyword (idlwave-entry-keywords x))
+		   (push (nth 2 x) rtn)))
+	    (idlwave-all-assq method (idlwave-routines)))
       (idlwave-uniquify rtn))))
 
 (defun idlwave-members-only (list club)
@@ -6785,12 +6774,12 @@ accumulate information on matching completions."
       (message "Making completion list...")
 
       (unless idlwave-completion-help-links ; already set somewhere?
-	(mapcar (lambda (x)  ; Pass link prop through to highlight-linked
-		  (let ((link (get-text-property 0 'link (car x))))
-		    (if link
-			(push (cons (car x) link)
-			      idlwave-completion-help-links))))
-		list))
+	(mapc (lambda (x)  ; Pass link prop through to highlight-linked
+		(let ((link (get-text-property 0 'link (car x))))
+		  (if link
+		      (push (cons (car x) link)
+			    idlwave-completion-help-links))))
+	      list))
       (let* ((list all-completions)
 	     ;; "complete" means, this is already a valid completion
 	     (complete (memq spart all-completions))
@@ -7031,7 +7020,7 @@ sort the list before displaying"
 			 (select-window win)
 			 (eval idlwave-complete-after-success-form))
 		     (set-window-start cwin (point-min)))))
-	  (and message (message message)))
+	  (and message (message "%s" message)))
       (select-window win))))
 
 (defun idlwave-display-completion-list (list &optional message beg complete)
@@ -7062,7 +7051,7 @@ sort the list before displaying"
   (run-hooks 'idlwave-completion-setup-hook)
 
   ;; Display the message
-  (message (or message "Making completion list...done")))
+  (message "%s" (or message "Making completion list...done")))
 
 (defun idlwave-choose (function &rest args)
   "Call FUNCTION as a completion chooser and pass ARGS to it."
@@ -7551,7 +7540,7 @@ The list is cached in `idlwave-class-info' for faster access."
 If RECORD-LINK is non-nil, the keyword text is copied and a text
 property indicating the link is added."
   (let (kwds)
-    (mapcar
+    (mapc
      (lambda (key-list)
        (let ((file (car key-list)))
 	 (mapcar (lambda (key-cons)
@@ -7599,6 +7588,7 @@ property indicating the link is added."
 (defvar idlwave-current-class-tags nil)
 (defvar idlwave-current-native-class-tags nil)
 (defvar idlwave-sint-class-tags nil)
+(declare-function idlwave-sintern-class-tag "idlwave" t t)
 (idlwave-new-sintern-type 'class-tag)
 (add-to-list 'idlwave-complete-special 'idlwave-complete-class-structure-tag)
 (add-hook 'idlwave-update-rinfo-hook 'idlwave-class-tag-reset)
@@ -7657,6 +7647,8 @@ property indicating the link is added."
 
 (defvar idlwave-sint-sysvars nil)
 (defvar idlwave-sint-sysvartags nil)
+(declare-function idlwave-sintern-sysvar    "idlwave" t t)
+(declare-function idlwave-sintern-sysvartag "idlwave" t t)
 (idlwave-new-sintern-type 'sysvar)
 (idlwave-new-sintern-type 'sysvartag)
 (add-to-list 'idlwave-complete-special 'idlwave-complete-sysvar-or-tag)
@@ -8277,8 +8269,8 @@ demand _EXTRA in the keyword list."
 		 (memq (nth 2 entry) super-classes)      ; an inherited class
 		 (eq (nth 1 entry) type)                 ; correct type
 		 (eq (car entry) name)                   ; correct name
-		 (mapcar (lambda (k) (add-to-list 'keywords k))
-			 (idlwave-entry-keywords entry 'do-link))))
+		 (mapc (lambda (k) (add-to-list 'keywords k))
+		       (idlwave-entry-keywords entry 'do-link))))
       (setq keywords (idlwave-uniquify keywords)))
 
     ;; Return the final list
@@ -8437,7 +8429,7 @@ If we do not know about MODULE, just return KEYWORD literally."
 	(if (null keywords)
 	    (insert " No keywords accepted.")
 	  (setq col 9)
-	  (mapcar
+	  (mapc
 	   (lambda (x)
 	     (if (>= (+ col 1 (length (car x)))
 		     (window-width))
@@ -9295,20 +9287,17 @@ Assumes that point is at the beginning of the unit as found by
 (defun idlwave-show-commentary ()
   "Use the finder to view the file documentation from `idlwave.el'."
   (interactive)
-  (require 'finder)
   (finder-commentary "idlwave.el"))
 
 (defun idlwave-shell-show-commentary ()
   "Use the finder to view the file documentation from `idlw-shell.el'."
   (interactive)
-  (require 'finder)
   (finder-commentary "idlw-shell.el"))
 
 (defun idlwave-info ()
   "Read documentation for IDLWAVE in the info system."
   (interactive)
-  (require 'info)
-  (Info-goto-node "(idlwave)"))
+  (info "idlwave"))
 
 (defun idlwave-list-abbrevs (arg)
   "Show the code abbreviations define in IDLWAVE mode.
@@ -9379,8 +9368,6 @@ This function was written since `list-abbrevs' looks terrible for IDLWAVE mode."
 ;; Set an idle timer to load the routine info.
 ;; Will only work on systems which support this.
 (or idlwave-routines (idlwave-start-load-rinfo-timer))
-
-;;;###autoload (add-to-list 'auto-mode-alist '("\\.[Pp][Rr][Oo]\\'" . idlwave-mode))
 
 ;; Run the hook
 (run-hooks 'idlwave-load-hook)

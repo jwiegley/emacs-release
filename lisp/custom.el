@@ -1,7 +1,7 @@
 ;;; custom.el --- tools for declaring and initializing options
 ;;
 ;; Copyright (C) 1996, 1997, 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 ;;
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -168,6 +166,10 @@ set to nil, as the value is no longer rogue."
 		 (put symbol 'custom-get value))
 		((eq keyword :require)
 		 (push value requests))
+		((eq keyword :risky)
+		 (put symbol 'risky-local-variable value))
+		((eq keyword :safe)
+		 (put symbol 'safe-local-variable value))
 		((eq keyword :type)
 		 (put symbol 'custom-type (purecopy value)))
 		((eq keyword :options)
@@ -219,6 +221,8 @@ The following keywords are meaningful:
 	VALUE should be a feature symbol.  If you save a value
 	for this option, then when your `.emacs' file loads the value,
 	it does (require VALUE) first.
+:risky	Set SYMBOL's `risky-local-variable' property to VALUE.
+:safe	Set SYMBOL's `safe-local-variable' property to VALUE.
 
 The following common keywords are also meaningful.
 
@@ -572,6 +576,15 @@ This recursively follows aliases."
   (setq variable (indirect-variable variable))
   (or (get variable 'standard-value)
       (get variable 'custom-autoload)))
+
+(defun custom-note-var-changed (variable)
+  "Inform Custom that VARIABLE has been set (changed).
+VARIABLE is a symbol that names a user option.
+The result is that the change is treated as having been made through Custom."
+  (put variable 'customized-value (list (custom-quote (eval variable)))))
+
+
+;;; Custom Themes
 
 ;;; Loading files needed to customize a symbol.
 ;;; This is in custom.el because menu-bar.el needs it for toggle cmds.
@@ -1011,10 +1024,7 @@ Every theme X has a property `provide-theme' whose value is \"X-theme\".
 ;;; Loading themes.
 
 (defcustom custom-theme-directory
-  (if (eq system-type 'ms-dos)
-	 ;; MS-DOS cannot have initial dot.
-	 "~/_emacs.d/"
-      "~/.emacs.d/")
+  user-emacs-directory
   "Directory in which Custom theme files should be written.
 `load-theme' searches this directory in addition to load-path.
 The command `customize-create-theme' writes the files it produces
@@ -1167,9 +1177,9 @@ This function returns nil if no custom theme specifies a value for VARIABLE."
 (defun custom-theme-recalc-face (face)
   "Set FACE according to currently enabled custom themes."
   (if (facep face)
-      (let ((theme-faces (reverse (get face 'theme-face))))
-	(dolist (spec theme-faces)
-	  (face-spec-set face (cadr spec))))))
+      (face-spec-set face
+                     (get (or (get face 'face-alias) face)
+                          'face-override-spec))))
 
 ;;; XEmacs compability functions
 

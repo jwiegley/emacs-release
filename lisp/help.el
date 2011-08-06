@@ -1,17 +1,17 @@
 ;;; help.el --- help commands for Emacs
 
 ;; Copyright (C) 1985, 1986, 1993, 1994, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: help, internal
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -38,6 +36,26 @@
 (add-hook 'temp-buffer-setup-hook 'help-mode-setup)
 (add-hook 'temp-buffer-show-hook 'help-mode-finish)
 
+;; The variable `help-window' below is used by `help-mode-finish' to
+;; communicate the window displaying help (the "help window") to the
+;; macro `with-help-window'.  The latter sets `help-window' to t before
+;; invoking `with-output-to-temp-buffer'.  If and only if `help-window'
+;; is eq to t, `help-mode-finish' (called by `temp-buffer-setup-hook')
+;; sets `help-window' to the window selected by `display-buffer'.
+;; Exiting `with-help-window' and calling `print-help-return-message'
+;; reset `help-window' to nil.
+(defvar help-window nil
+  "Window chosen for displaying help.")
+
+;; `help-window-point-marker' is a marker you can move to a valid
+;; position of the buffer shown in the help window in order to override
+;; the standard positioning mechanism (`point-min') chosen by
+;; `with-output-to-temp-buffer'.  `with-help-window' has this point
+;; nowhere before exiting.  Currently used by `view-lossage' to assert
+;; that the last keystrokes are always visible.
+(defvar help-window-point-marker (make-marker)
+  "Marker to override default `window-point' of `help-window'.")
+
 (defvar help-map
   (let ((map (make-sparse-keymap)))
     (define-key map (char-to-string help-char) 'help-for-help)
@@ -48,12 +66,13 @@
 
     (define-key map "\C-a" 'about-emacs)
     (define-key map "\C-c" 'describe-copying)
-    (define-key map "\C-d" 'describe-distribution)
-    (define-key map "\C-e" 'view-emacs-problems)
+    (define-key map "\C-d" 'view-emacs-debugging)
+    (define-key map "\C-e" 'view-external-packages)
     (define-key map "\C-f" 'view-emacs-FAQ)
     (define-key map "\C-m" 'view-order-manuals)
     (define-key map "\C-n" 'view-emacs-news)
-    (define-key map "\C-p" 'describe-gnu-project)
+    (define-key map "\C-o" 'describe-distribution)
+    (define-key map "\C-p" 'view-emacs-problems)
     (define-key map "\C-t" 'view-emacs-todo)
     (define-key map "\C-w" 'describe-no-warranty)
 
@@ -73,6 +92,7 @@
     (define-key map "d" 'apropos-documentation)
     (define-key map "e" 'view-echo-area-messages)
     (define-key map "f" 'describe-function)
+    (define-key map "g" 'describe-gnu-project)
     (define-key map "h" 'view-hello-file)
 
     (define-key map "i" 'info)
@@ -124,6 +144,8 @@ It computes a message, and applies the optional argument FUNCTION to it.
 If FUNCTION is nil, it applies `message', thus displaying the message.
 In addition, this function sets up `help-return-method', which see, that
 specifies what to do when the user exits the help buffer."
+  ;; Reset `help-window' here to avoid confusing `help-mode-finish'.
+  (setq help-window nil)
   (and (not (get-buffer-window standard-output))
        (let ((first-message
 	      (cond ((or
@@ -179,63 +201,52 @@ specifies what to do when the user exits the help buffer."
 (defalias 'help-for-help 'help-for-help-internal)
 ;; It can't find this, but nobody will look.
 (make-help-screen help-for-help-internal
-  "a b c C e f F i I k C-k l L m p r s t v w C-c C-d C-f C-n C-p C-t C-w . or ? :"
+  "Type a help option: [abcCdefFgiIkKlLmnprstvw.] C-[cdefmnoptw] or ?"
   "You have typed %THIS-KEY%, the help character.  Type a Help option:
 \(Use SPC or DEL to scroll through this text.  Type \\<help-map>\\[help-quit] to exit the Help command.)
 
-a  command-apropos.  Type a list of words or a regexp; it shows a list of
-        commands whose names match.  See also the  apropos  command.
-b  describe-bindings.  Display a table of all key bindings.
-c  describe-key-briefly.  Type a key sequence;
-	it displays the command name run by that key sequence.
-C  describe-coding-system.  Type the name of the coding system to describe,
-        or just RET to describe the ones currently in use.
-d  apropos-documentation.  Type a pattern (a list of words or a regexp), and
-	it shows a list of functions, variables, and other items whose
-	documentation matches that pattern.  See also the apropos command.
-e  view-echo-area-messages.  Go to the buffer that logs echo-area messages.
-f  describe-function.  Type a function name and you see its documentation.
-F  Info-goto-emacs-command-node.  Type a command name;
-	it goes to the on-line manual's section that describes the command.
-h  Display the HELLO file which illustrates various scripts.
-i  info.  The Info documentation reader: read on-line manuals.
-I  describe-input-method.  Describe a specific input method (if you type
-	its name) or the current input method (if you type just RET).
-k  describe-key.  Type a key sequence;
-	it displays the full documentation for that key sequence.
-K  Info-goto-emacs-key-command-node.  Type a key sequence;
-	it goes to the on-line manual's section that describes
-	the command bound to that key.
-l  view-lossage.  Show last 100 characters you typed.
-L  describe-language-environment.  This describes either a
-	specific language environment (if you type its name)
-	or the current language environment (if you type just RET).
-m  describe-mode.  Display documentation of current minor modes,
-	and the current major mode, including their special commands.
-n  view-emacs-news.  Display news of recent Emacs changes.
-p  finder-by-keyword. Find packages matching a given topic keyword.
-r  info-emacs-manual.  Display the Emacs manual in Info mode.
-s  describe-syntax.  Display contents of syntax table, plus explanations.
-S  info-lookup-symbol.  Type a symbol; it goes to that symbol in the
-        on-line manual for the programming language used in this buffer.
-t  help-with-tutorial.  Select the Emacs learn-by-doing tutorial.
-v  describe-variable.  Type name of a variable;
-	it displays the variable's documentation and value.
-w  where-is.  Type a command name; it displays which keystrokes
-	invoke that command.
-.  display-local-help.  Display any available local help at point
-        in the echo area.
+a PATTERN   Show commands whose name matches the PATTERN (a list of words
+              or a regexp).  See also the `apropos' command.
+b           Display all key bindings.
+c KEYS      Display the command name run by the given key sequence.
+C CODING    Describe the given coding system, or RET for current ones.
+d PATTERN   Show a list of functions, variables, and other items whose
+              documentation matches the PATTERN (a list of words or a regexp).
+e           Go to the *Messages* buffer which logs echo-area messages.
+f FUNCTION  Display documentation for the given function.
+F COMMAND   Show the on-line manual's section that describes the command.
+g           Display information about the GNU project.
+h           Display the HELLO file which illustrates various scripts.
+i           Start the Info documentation reader: read on-line manuals.
+I METHOD    Describe a specific input method, or RET for current.
+k KEYS      Display the full documentation for the key sequence.
+K KEYS      Show the on-line manual's section for the command bound to KEYS.
+l           Show last 300 input keystrokes (lossage).
+L LANG-ENV  Describes a specific language environment, or RET for current.
+m           Display documentation of current minor modes and current major mode,
+              including their special commands.
+n           Display news of recent Emacs changes.
+p TOPIC     Find packages matching a given topic keyword.
+r           Display the Emacs manual in Info mode.
+s           Display contents of current syntax table, plus explanations.
+S SYMBOL    Show the section for the given symbol in the on-line manual
+              for the programming language used in this buffer.
+t           Start the Emacs learn-by-doing tutorial.
+v VARIABLE  Display the given variable's documentation and value.
+w COMMAND   Display which keystrokes invoke the given command (where-is).
+.           Display any available local help at point in the echo area.
 
-C-a Display information about Emacs.
-C-c Display Emacs copying permission (GNU General Public License).
-C-d Display Emacs ordering information.
-C-e Display info about Emacs problems.
-C-f Display the Emacs FAQ.
-C-m Display how to order printed Emacs manuals.
-C-n Display news of recent Emacs changes.
-C-p Display information about the GNU project.
-C-t Display the Emacs TODO list.
-C-w Display information on absence of warranty for GNU Emacs."
+C-a         Information about Emacs.
+C-c         Emacs copying permission (GNU General Public License).
+C-d         Instructions for debugging GNU Emacs.
+C-e         External packages and information about Emacs.
+C-f         Emacs FAQ.
+C-m         How to order printed Emacs manuals.
+C-n         News of recent Emacs changes.
+C-o         Emacs ordering and distribution information.
+C-p         Info about known Emacs problems.
+C-t         Emacs TODO list.
+C-w         Information on absence of warranty for GNU Emacs."
   help-map)
 
 
@@ -243,60 +254,63 @@ C-w Display information on absence of warranty for GNU Emacs."
 (defun function-called-at-point ()
   "Return a function around point or else called by the list containing point.
 If that doesn't give a function, return nil."
-  (or (with-syntax-table emacs-lisp-mode-syntax-table
-	(or (condition-case ()
-		(save-excursion
-		  (or (not (zerop (skip-syntax-backward "_w")))
-		      (eq (char-syntax (following-char)) ?w)
-		      (eq (char-syntax (following-char)) ?_)
-		      (forward-sexp -1))
-		  (skip-chars-forward "'")
-		  (let ((obj (read (current-buffer))))
-		    (and (symbolp obj) (fboundp obj) obj)))
-	      (error nil))
-	    (condition-case ()
-		(save-excursion
-		  (save-restriction
-		    (narrow-to-region (max (point-min)
-					   (- (point) 1000)) (point-max))
-		    ;; Move up to surrounding paren, then after the open.
-		    (backward-up-list 1)
-		    (forward-char 1)
-		    ;; If there is space here, this is probably something
-		    ;; other than a real Lisp function call, so ignore it.
-		    (if (looking-at "[ \t]")
-			(error "Probably not a Lisp function call"))
-		    (let ((obj (read (current-buffer))))
-		      (and (symbolp obj) (fboundp obj) obj))))
-	      (error nil))))
-      (let* ((str (find-tag-default))
-	     (sym (if str (intern-soft str))))
-	(if (and sym (fboundp sym))
-	    sym
-	  (save-match-data
-	    (when (and str (string-match "\\`\\W*\\(.*?\\)\\W*\\'" str))
-	      (setq sym (intern-soft (match-string 1 str)))
-	      (and (fboundp sym) sym)))))))
+  (with-syntax-table emacs-lisp-mode-syntax-table
+    (or (condition-case ()
+            (save-excursion
+              (or (not (zerop (skip-syntax-backward "_w")))
+                  (eq (char-syntax (following-char)) ?w)
+                  (eq (char-syntax (following-char)) ?_)
+                  (forward-sexp -1))
+              (skip-chars-forward "'")
+              (let ((obj (read (current-buffer))))
+                (and (symbolp obj) (fboundp obj) obj)))
+          (error nil))
+        (condition-case ()
+            (save-excursion
+              (save-restriction
+                (narrow-to-region (max (point-min)
+                                       (- (point) 1000)) (point-max))
+                ;; Move up to surrounding paren, then after the open.
+                (backward-up-list 1)
+                (forward-char 1)
+                ;; If there is space here, this is probably something
+                ;; other than a real Lisp function call, so ignore it.
+                (if (looking-at "[ \t]")
+                    (error "Probably not a Lisp function call"))
+                (let ((obj (read (current-buffer))))
+                  (and (symbolp obj) (fboundp obj) obj))))
+          (error nil))
+        (let* ((str (find-tag-default))
+               (sym (if str (intern-soft str))))
+          (if (and sym (fboundp sym))
+              sym
+            (save-match-data
+              (when (and str (string-match "\\`\\W*\\(.*?\\)\\W*\\'" str))
+                (setq sym (intern-soft (match-string 1 str)))
+                (and (fboundp sym) sym))))))))
 
 
 ;;; `User' help functions
 
+(defun view-help-file (file &optional dir)
+  (view-file (expand-file-name file (or dir data-directory)))
+  (goto-address-mode 1)
+  (goto-char (point-min)))
+
 (defun describe-distribution ()
   "Display info on how to obtain the latest version of GNU Emacs."
   (interactive)
-  (view-file (expand-file-name "DISTRIB" data-directory)))
+  (view-help-file "DISTRIB"))
 
 (defun describe-copying ()
   "Display info on how you may redistribute copies of GNU Emacs."
   (interactive)
-  (view-file (expand-file-name "COPYING" data-directory))
-  (goto-char (point-min)))
+  (view-help-file "COPYING"))
 
 (defun describe-gnu-project ()
   "Display info on the GNU project."
   (interactive)
-  (view-file (expand-file-name "THE-GNU-PROJECT" data-directory))
-  (goto-char (point-min)))
+  (view-help-file "THE-GNU-PROJECT"))
 
 (define-obsolete-function-alias 'describe-project 'describe-gnu-project "22.2")
 
@@ -336,7 +350,7 @@ With argument, display info only for the selected version."
   (when (consp version)
     (let* ((all-versions
 	    (let (res)
-	      (mapcar
+	      (mapc
 	       (lambda (file)
 		 (with-temp-buffer
 		   (insert-file-contents
@@ -397,11 +411,10 @@ With argument, display info only for the selected version."
 	   (beginning-of-line)
 	   (point)))))))
 
-
 (defun view-emacs-todo (&optional arg)
   "Display the Emacs TODO list."
   (interactive "P")
-  (view-file (expand-file-name "TODO" data-directory)))
+  (view-help-file "TODO"))
 
 (define-obsolete-function-alias 'view-todo 'view-emacs-todo "22.2")
 
@@ -416,8 +429,7 @@ is specified by the variable `message-log-max'."
 (defun view-order-manuals ()
   "Display the Emacs ORDERS file."
   (interactive)
-  (view-file (expand-file-name "ORDERS" data-directory))
-  (goto-address))
+  (view-help-file "ORDERS"))
 
 (defun view-emacs-FAQ ()
   "Display the Emacs Frequently Asked Questions (FAQ) file."
@@ -428,15 +440,25 @@ is specified by the variable `message-log-max'."
 (defun view-emacs-problems ()
   "Display info on known problems with Emacs and possible workarounds."
   (interactive)
-  (view-file (expand-file-name "PROBLEMS" data-directory)))
+  (view-help-file "PROBLEMS"))
+
+(defun view-emacs-debugging ()
+  "Display info on how to debug Emacs problems."
+  (interactive)
+  (view-help-file "DEBUG"))
+
+(defun view-external-packages ()
+  "Display external packages and information about Emacs."
+  (interactive)
+  (view-help-file "MORE.STUFF"))
 
 (defun view-lossage ()
-  "Display last 100 input keystrokes.
+  "Display last 300 input keystrokes.
 
 To record all your input on a file, use `open-dribble-file'."
   (interactive)
   (help-setup-xref (list #'view-lossage) (interactive-p))
-  (with-output-to-temp-buffer (help-buffer)
+  (with-help-window (help-buffer)
     (princ (mapconcat (lambda (key)
 			(if (or (integerp key) (symbolp key) (listp key))
 			    (single-key-description key)
@@ -448,8 +470,9 @@ To record all your input on a file, use `open-dribble-file'."
       (while (progn (move-to-column 50) (not (eobp)))
         (when (search-forward " " nil t)
           (delete-char -1))
-        (insert "\n")))
-    (print-help-return-message)))
+        (insert "\n"))
+      ;; jidanni wants to see the last keystrokes immediately.
+      (set-marker help-window-point-marker (point)))))
 
 
 ;; Key bindings
@@ -480,7 +503,7 @@ The optional argument PREFIX, if non-nil, should be a key sequence;
 then we display only bindings that start with that prefix."
   (interactive)
   (let ((buf (current-buffer)))
-    (with-output-to-temp-buffer "*Help*"
+    (with-help-window "*Help*"
       (with-current-buffer standard-output
 	(describe-buffer-bindings buf prefix menus)))))
 
@@ -724,11 +747,10 @@ temporarily enables it to allow getting help on disabled items and buttons."
 	    (setq sequence (vector up-event))
 	    (aset sequence 0 'mouse-1)
 	    (setq defn-up-tricky (key-binding sequence nil nil (event-start up-event))))))
-      (with-output-to-temp-buffer (help-buffer)
+      (with-help-window (help-buffer)
 	(princ (help-key-description key untranslated))
 	(princ (format "\
-%s runs the command %S
-  which is "
+%s runs the command %S, which is "
 		       mouse-msg defn))
 	(describe-function-1 defn)
 	(when up-event
@@ -739,12 +761,11 @@ temporarily enables it to allow getting help on disabled items and buttons."
 
 ----------------- up-event %s----------------
 
-<%S>%s%s runs the command %S
-  which is "
+<%S>%s%s runs the command %S, which is "
 			   (if mouse-1-tricky "(short click) " "")
 			   ev-type mouse-msg
 			   (if mouse-1-remapped
-			       " is remapped to <mouse-2>\nwhich" "")
+                               " is remapped to <mouse-2>, which" "")
 			   defn-up))
 	    (describe-function-1 defn-up))
 	  (unless (or (null defn-up-tricky)
@@ -755,13 +776,11 @@ temporarily enables it to allow getting help on disabled items and buttons."
 ----------------- up-event (long click) ----------------
 
 Pressing <%S>%s for longer than %d milli-seconds
-runs the command %S
-  which is "
+runs the command %S, which is "
 			   ev-type mouse-msg
 			   mouse-1-click-follows-link
 			   defn-up-tricky))
-	    (describe-function-1 defn-up-tricky)))
-	(print-help-return-message)))))
+	    (describe-function-1 defn-up-tricky)))))))
 
 (defun describe-mode (&optional buffer)
   "Display documentation of current major mode and minor modes.
@@ -778,7 +797,7 @@ whose documentation describes the minor mode."
 		   (interactive-p))
   ;; For the sake of help-do-xref and help-xref-go-back,
   ;; don't switch buffers before calling `help-buffer'.
-  (with-output-to-temp-buffer (help-buffer)
+  (with-help-window (help-buffer)
     (with-current-buffer buffer
       (let (minor-modes)
 	;; Older packages do not register in minor-mode-list but only in
@@ -843,11 +862,10 @@ whose documentation describes the minor mode."
 	(let ((mode mode-name))
 	  (with-current-buffer standard-output
             (let ((start (point)))
-              (insert (format-mode-line mode))
+              (insert (format-mode-line mode nil nil buffer))
               (add-text-properties start (point) '(face bold)))))
 	(princ " mode:\n")
-	(princ (documentation major-mode)))
-      (print-help-return-message))))
+	(princ (documentation major-mode))))))
 
 
 (defun describe-minor-mode (minor-mode)
@@ -979,6 +997,247 @@ out of view."
 	 (funcall temp-buffer-max-height (current-buffer))
        temp-buffer-max-height))))
 
+
+;;; help-window
+
+(defcustom help-window-select 'other
+    "Non-nil means select help window for viewing.
+Choices are:
+ never (nil) Select help window only if there is no other window
+             on its frame.
+ other       Select help window unless the selected window is the
+             only other window on its frame.
+ always (t)  Always select the help window.
+
+This option has effect if and only if the help window was created
+by `with-help-window'"
+  :type '(choice (const :tag "never (nil)" nil)
+		 (const :tag "other" other)
+		 (const :tag "always (t)" t))
+  :group 'help
+  :version "23.1")
+
+(defun help-window-display-message (quit-part window &optional other)
+  "Display message telling how to quit and scroll help window.
+QUIT-PART is a string telling how to quit the help window WINDOW.
+Optional argument OTHER non-nil means return text telling how to
+scroll the \"other\" window."
+  (let ((scroll-part
+	 (cond
+	  ((pos-visible-in-window-p
+	    (with-current-buffer (window-buffer window)
+	      (point-max)) window)
+	   ;; Buffer end is visible.
+	   ".")
+	  (other ", \\[scroll-other-window] to scroll help.")
+	  (t ", \\[scroll-up] to scroll help."))))
+    (message "%s"
+     (substitute-command-keys (concat quit-part scroll-part)))))
+
+(defun help-window-setup-finish (window &optional reuse keep-frame)
+  "Finish setting up help window WINDOW.
+Select WINDOW according to the value of `help-window-select'.
+Display message telling how to scroll and eventually quit WINDOW.
+
+Optional argument REUSE non-nil means WINDOW has been reused \(by
+`display-buffer'\) for displaying help.  Optional argument
+KEEP-FRAME non-nil means that quitting must no delete the frame
+of WINDOW."
+  (let ((number-of-windows
+	 (length (window-list (window-frame window) 'no-mini window))))
+    (cond
+     ((eq window (selected-window))
+      ;; The help window is the selected window, probably the
+      ;; `pop-up-windows' nil case.
+      (help-window-display-message
+       (if reuse
+	   "Type \"q\" to restore this window"
+	 ;; This should not be taken.
+	 "Type \"q\" to quit") window))
+     ((= number-of-windows 1)
+      ;; The help window is alone on a frame and not the selected
+      ;; window, could be the `pop-up-frames' t case.
+      (help-window-display-message
+       (cond
+	(keep-frame "Type \"q\" to delete this window")
+	(reuse "Type \"q\" to restore this window")
+	(view-remove-frame-by-deleting "Type \"q\" to delete this frame")
+	(t "Type \"q\" to iconify this frame"))
+       window))
+     ((and (= number-of-windows 2)
+	   (eq (window-frame window) (window-frame (selected-window))))
+      ;; There are two windows on the help window's frame and the other
+      ;; window is the selected one.
+      (if (memq help-window-select '(nil other))
+	  ;; Do not select the help window.
+	  (help-window-display-message
+	   (if reuse
+	       ;; Offer `display-buffer' for consistency with
+	       ;; `print-help-return-message'.  This is hardly TRT when
+	       ;; the other window and the selected window display the
+	       ;; same buffer but has been handled this way ever since.
+	       "Type \\[display-buffer] RET to restore the other window"
+	     ;; The classic "two windows" configuration.
+	     "Type \\[delete-other-windows] to delete the help window")
+	   window t)
+	;; Select help window and tell how to quit.
+	(select-window window)
+	(help-window-display-message
+	 (if reuse
+	     "Type \"q\" to restore this window"
+	   "Type \"q\" to delete this window") window)))
+     (help-window-select
+      ;; Issuing a message with 3 or more windows on the same frame
+      ;; without selecting the help window doesn't make any sense.
+      (select-window window)
+      (help-window-display-message
+       (if reuse
+	   "Type \"q\" to restore this window"
+	 "Type \"q\" to delete this window") window)))))
+
+(defun help-window-setup (list-of-frames list-of-window-tuples)
+  "Set up help window.
+LIST-OF-FRAMES and LIST-OF-WINDOW-TUPLES are the lists of frames
+and window quadruples built by `with-help-window'.  The help
+window itself is specified by the variable `help-window'."
+  (let* ((help-buffer (window-buffer help-window))
+	 ;; `help-buffer' now denotes the help window's buffer.
+	 (view-entry
+	  (assq help-window
+		(buffer-local-value 'view-return-to-alist help-buffer)))
+	 (help-entry (assq help-window list-of-window-tuples)))
+
+    ;; Handle `help-window-point-marker'.
+    (when (eq (marker-buffer help-window-point-marker) help-buffer)
+      (set-window-point help-window help-window-point-marker)
+      ;; Reset `help-window-point-marker'.
+      (set-marker help-window-point-marker nil))
+
+    (cond
+     (view-entry
+      ;; `view-return-to-alist' has an entry for the help window.
+      (cond
+       ((eq help-window (selected-window))
+	;; The help window is the selected window, probably because the
+	;; user followed a backward/forward button or a cross reference.
+	;; In this case just purge stale entries from
+	;; `view-return-to-alist' but leave the entry alone and don't
+	;; display a message.
+	(view-return-to-alist-update help-buffer))
+       ((and help-entry (eq (cadr help-entry) help-buffer))
+	;; The help window was not selected but displayed the help
+	;; buffer.  In this case reuse existing exit information but try
+	;; to get back to the selected window when quitting.  Don't
+	;; display a message since the user must have seen one before.
+	(view-return-to-alist-update
+	 help-buffer (cons help-window
+			   (cons (selected-window) (cddr view-entry)))))
+       (help-entry
+	;; The help window was not selected, did display the help buffer
+	;; earlier, but displayed another buffer when help was invoked.
+	;; Set up things so that quitting will show that buffer again.
+	(view-return-to-alist-update
+	 help-buffer (cons help-window
+			   (cons (selected-window) (cdr help-entry))))
+	(help-window-setup-finish help-window t))
+       (t
+	;; The help window is new but `view-return-to-alist' had an
+	;; entry for it.  This should never happen.
+	(view-return-to-alist-update
+	 help-buffer (cons help-window
+			   (cons (selected-window) 'quit-window)))
+	(help-window-setup-finish help-window t))))
+     (help-entry
+      ;; `view-return-to-alist' does not have an entry for help window
+      ;; but `list-of-window-tuples' does.  Hence `display-buffer' must
+      ;; have reused an existing window.
+      (if (eq (cadr help-entry) help-buffer)
+	  ;; The help window displayed `help-buffer' before but no
+	  ;; `view-return-to-alist' entry was found probably because the
+	  ;; user manually switched to the help buffer.  Set up things
+	  ;; for `quit-window' although `view-exit-action' should be
+	  ;; able to handle this case all by itself.
+	  (progn
+	    (view-return-to-alist-update
+	     help-buffer (cons help-window
+			       (cons (selected-window) 'quit-window)))
+	    (help-window-setup-finish help-window t))
+	;; The help window displayed another buffer before.  Set up
+	;; things in a way that quitting can orderly show that buffer
+	;; again.  The window-start and window-point information from
+	;; `list-of-window-tuples' provide the necessary information.
+	(view-return-to-alist-update
+	 help-buffer (cons help-window
+			   (cons (selected-window) (cdr help-entry))))
+	(help-window-setup-finish help-window t)))
+     ((memq (window-frame help-window) list-of-frames)
+      ;; The help window is a new window on an existing frame.  This
+      ;; case must be handled specially by `help-window-setup-finish'
+      ;; and `view-mode-exit' to ascertain that quitting does _not_
+      ;; inadvertently delete the frame.
+      (view-return-to-alist-update
+       help-buffer (cons help-window
+			 (cons (selected-window) 'keep-frame)))
+      (help-window-setup-finish help-window nil t))
+     (t
+      ;; The help window is shown on a new frame.  In this case quitting
+      ;; shall handle both, the help window _and_ its frame.  We changed
+      ;; the default of `view-remove-frame-by-deleting' to t in order to
+      ;; intuitively DTRT here.
+      (view-return-to-alist-update
+       help-buffer (cons help-window (cons (selected-window) t)))
+      (help-window-setup-finish help-window)))))
+
+;; `with-help-window' is a wrapper for `with-output-to-temp-buffer'
+;; providing the following additional twists:
+
+;; (1) Issue more accurate messages telling how to scroll and quit the
+;; help window.
+
+;; (2) Make `view-mode-exit' DTRT in more cases.
+
+;; (3) An option (customizable via `help-window-select') to select the
+;; help window automatically.
+
+;; (4) A marker (`help-window-point-marker') to move point in the help
+;; window to an arbitrary buffer position.
+
+;; Note: It's usually always wrong to use `print-help-return-message' in
+;; the body of `with-help-window'.
+(defmacro with-help-window (buffer-name &rest body)
+  "Display buffer BUFFER-NAME in a help window evaluating BODY.
+Select help window if the actual value of the user option
+`help-window-select' says so.  Return last value in BODY."
+  (declare (indent 1) (debug t))
+  ;; Bind list-of-frames to `frame-list' and list-of-window-tuples to a
+  ;; list of one <window window-buffer window-start window-point> tuple
+  ;; for each live window.
+  `(let ((list-of-frames (frame-list))
+	 (list-of-window-tuples
+	  (let (list)
+	    (walk-windows
+	     (lambda (window)
+	       (push (list window (window-buffer window)
+			   (window-start window) (window-point window))
+		     list))
+	     'no-mini t)
+	    list)))
+     ;; Make `help-window' t to trigger `help-mode-finish' to set
+     ;; `help-window' to the actual help window.
+     (setq help-window t)
+     ;; Make `help-window-point-marker' point nowhere (the only place
+     ;; where this should be set to a buffer position is within BODY).
+     (set-marker help-window-point-marker nil)
+     (prog1
+	 ;; Return value returned by `with-output-to-temp-buffer'.
+	 (with-output-to-temp-buffer ,buffer-name
+	   (progn ,@body))
+       (when (windowp help-window)
+	 ;; Set up help window.
+	 (help-window-setup list-of-frames list-of-window-tuples))
+       ;; Reset `help-window' to nil to avoid confusing future calls of
+       ;; `help-mode-finish' with plain `with-output-to-temp-buffer'.
+       (setq help-window nil))))
 
 (provide 'help)
 

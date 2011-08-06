@@ -1,7 +1,7 @@
 ;;; nndoc.el --- single file access for Gnus
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;;	Masanobu UMEDA <umerin@flab.flab.fujitsu.junet>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -122,7 +120,7 @@ from the document.")
      (subtype digest guess))
     (lanl-gov-announce
      (article-begin . "^\\\\\\\\\n")
-     (head-begin . "^Paper.*:")
+     (head-begin . "^\\(Paper.*:\\|arXiv:\\)")
      (head-end   . "\\(^\\\\\\\\.*\n\\|-----------------\\)")
      (body-begin . "")
      (body-end   . "\\(-------------------------------------------------\\|%-%-%-%-%-%-%-%-%-%-%-%-%-%-\\|%%--%%--%%--%%--%%--%%--%%--%%--\\|%%%---%%%---%%%---%%%---\\)")
@@ -624,25 +622,28 @@ from the document.")
 
 (defun nndoc-lanl-gov-announce-type-p ()
   (when (let ((case-fold-search nil))
-	  (re-search-forward "^\\\\\\\\\nPaper\\( (\\*cross-listing\\*)\\)?: [a-zA-Z-\\.]+/[0-9]+" nil t))
+	  (re-search-forward "^\\\\\\\\\n\\(Paper\\( (\\*cross-listing\\*)\\)?: [a-zA-Z-\\.]+/[0-9]+\\|arXiv:\\)" nil t))
     t))
 
 (defun nndoc-transform-lanl-gov-announce (article)
-  (goto-char (point-max))
-  (when (re-search-backward "^\\\\\\\\ +( *\\([^ ]*\\) , *\\([^ ]*\\))" nil t)
-    (replace-match "\n\nGet it at \\1 (\\2)" t nil))
-  (goto-char (point-min))
-  (while (re-search-forward "^\\\\\\\\$" nil t)
-    (replace-match "" t nil))
-  (goto-char (point-min))
-  (when (re-search-forward "^replaced with revised version +\\(.*[^ ]\\) +" nil t)
-    (replace-match "Date: \\1 (revised) " t nil))
-  (goto-char (point-min))
-  (unless (re-search-forward "^From" nil t)
+  (let ((case-fold-search nil))
+    (goto-char (point-max))
+    (when (re-search-backward "^\\\\\\\\ +( *\\([^ ]*\\) , *\\([^ ]*\\))" nil t)
+      (replace-match "\n\nGet it at \\1 (\\2)" t nil))
     (goto-char (point-min))
-    (when (re-search-forward "^Authors?: \\(.*\\)" nil t)
+    (while (re-search-forward "^\\\\\\\\$" nil t)
+      (replace-match "" t nil))
+    (goto-char (point-min))
+    (when (re-search-forward "^replaced with revised version +\\(.*[^ ]\\) +" nil t)
+      (replace-match "Date: \\1 (revised) " t nil))
+    (goto-char (point-min))
+    (unless (re-search-forward "^From" nil t)
       (goto-char (point-min))
-      (insert "From: " (match-string 1) "\n"))))
+      (when (re-search-forward "^Authors?: \\(.*\\)" nil t)
+	(goto-char (point-min))
+	(insert "From: " (match-string 1) "\n")))
+    (when (re-search-forward "^arXiv:" nil t)
+      (replace-match "Paper: arXiv:" t nil))))
 
 (defun nndoc-generate-lanl-gov-head (article)
   (let ((entry (cdr (assq article nndoc-dissection-alist)))
@@ -653,8 +654,8 @@ from the document.")
       (save-restriction
 	(narrow-to-region (car entry) (nth 1 entry))
 	(goto-char (point-min))
-	(when (looking-at "^Paper.*: \\([a-zA-Z-\\.]+/[0-9]+\\)")
-	  (setq subject (concat " (" (match-string 1) ")"))
+	(when (looking-at "^\\(Paper.*: \\|arXiv:\\)\\([0-9a-zA-Z-\\./]+\\)")
+	  (setq subject (concat " (" (match-string 2) ")"))
 	  (when (re-search-forward "^From: \\(.*\\)" nil t)
 	    (setq from (concat "<"
 			       (cadr (funcall gnus-extract-address-components
@@ -686,7 +687,7 @@ from the document.")
   (looking-at "JMF"))
 
 (defun nndoc-oe-dbx-type-p ()
-  (looking-at (mm-string-as-multibyte "\317\255\022\376")))
+  (looking-at (mm-string-to-multibyte "\317\255\022\376")))
 
 (defun nndoc-read-little-endian ()
   (+ (prog1 (char-after) (forward-char 1))
@@ -1024,5 +1025,5 @@ symbol in the alist."
 
 (provide 'nndoc)
 
-;;; arch-tag: f5c2970e-0387-47ac-a0b3-6cc317dffabe
+;; arch-tag: f5c2970e-0387-47ac-a0b3-6cc317dffabe
 ;;; nndoc.el ends here

@@ -1,7 +1,7 @@
 ;;; eudcb-ph.el --- Emacs Unified Directory Client - CCSO PH/QI Backend
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Oscar Figueiredo <oscar@cpe.fr>
 ;; Maintainer: Pavel Janík <Pavel@Janik.cz>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -179,7 +177,7 @@ SERVER is either a string naming the server or a list (NAME PORT)."
 	(set-buffer eudc-ph-process-buffer)
 	(erase-buffer)
 	(setq eudc-ph-read-point (point))
-	(and eudc-xemacs-mule-p
+	(and (featurep 'xemacs) (featurep 'mule)
 	     (set-buffer-file-coding-system 'binary t)))
       (setq process (open-network-stream "ph" eudc-ph-process-buffer host port))
       (if (null process)
@@ -245,5 +243,5 @@ depending on RETURN-RESPONSE."
 
 (provide 'eudcb-ph)
 
-;;; arch-tag: 4365bbf5-af20-453e-b5b6-2e7118ebfcdb
+;; arch-tag: 4365bbf5-af20-453e-b5b6-2e7118ebfcdb
 ;;; eudcb-ph.el ends here

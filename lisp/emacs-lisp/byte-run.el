@@ -1,7 +1,7 @@
 ;;; byte-run.el --- byte-compiler support for inlining
 
 ;; Copyright (C) 1992, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com>
 ;;	Hallvard Furuseth <hbf@ulrik.uio.no>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -47,14 +45,19 @@ The return value of this function is not used."
     ;; Ignore the first element of `decl' (it's always `declare').
     (while (setq decl (cdr decl))
       (setq d (car decl))
-      (cond ((and (consp d) (eq (car d) 'indent))
-	     (put macro 'lisp-indent-function (car (cdr d))))
-	    ((and (consp d) (eq (car d) 'debug))
-	     (put macro 'edebug-form-spec (car (cdr d))))
-	    ((and (consp d) (eq (car d) 'doc-string))
-	     (put macro 'doc-string-elt (car (cdr d))))
-	    (t
-	     (message "Unknown declaration %s" d))))))
+      (if (and (consp d)
+	       (listp (cdr d))
+	       (null (cdr (cdr d))))
+	  (cond ((eq (car d) 'indent)
+		 (put macro 'lisp-indent-function (car (cdr d))))
+		((eq (car d) 'debug)
+		 (put macro 'edebug-form-spec (car (cdr d))))
+		((eq (car d) 'doc-string)
+		 (put macro 'doc-string-elt (car (cdr d))))
+		(t
+		 (message "Unknown declaration %s" d)))
+	(message "Invalid declaration %s" d)))))
+
 
 (setq macro-declaration-function 'macro-declaration-function)
 
@@ -103,16 +106,11 @@ The return value of this function is not used."
      (eval-and-compile
        (put ',name 'byte-optimizer 'byte-compile-inline-expand))))
 
-(defmacro declare-function (&rest args)
-  "In Emacs 22, does nothing.  In 23, it will suppress byte-compiler warnings.
-This definition is so that packages may take advantage of the
-Emacs 23 feature and still remain compatible with Emacs 22."
-  nil)
-
 (defun make-obsolete (obsolete-name current-name &optional when)
   "Make the byte-compiler warn that OBSOLETE-NAME is obsolete.
 The warning will say that CURRENT-NAME should be used instead.
-If CURRENT-NAME is a string, that is the `use instead' message.
+If CURRENT-NAME is a string, that is the `use instead' message
+\(it should end with a period, and not start with a capital).
 If provided, WHEN should be a string indicating when the function
 was first made obsolete, for example a date or a release number."
   (interactive "aMake function obsolete: \nxObsoletion replacement: ")
@@ -165,6 +163,15 @@ is equivalent to the following two lines of code:
 
 \(defvaralias 'old-var 'new-var \"old-var's doc.\")
 \(make-obsolete-variable 'old-var 'new-var \"22.1\")
+
+If CURRENT-NAME is a defcustom (more generally, any variable
+where OBSOLETE-NAME may be set, e.g. in a .emacs file, before the
+alias is defined), then the define-obsolete-variable-alias
+statement should be placed before the defcustom.  This is so that
+any user customizations are applied before the defcustom tries to
+initialize the variable (this is due to the way `defvaralias' works).
+Exceptions to this rule occur for define-obsolete-variable-alias
+statements that are autoloaded, or in files dumped with Emacs.
 
 See the docstrings of `defvaralias' and `make-obsolete-variable' or
 Info node `(elisp)Variable Aliases' for more details."

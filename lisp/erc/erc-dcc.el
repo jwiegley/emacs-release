@@ -1,7 +1,7 @@
 ;;; erc-dcc.el --- CTCP DCC module for ERC
 
-;; Copyright (C) 1993, 1994, 1995, 1998, 2002, 2003, 2004, 2006, 2007, 2008
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1994, 1995, 1998, 2002, 2003, 2004, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Ben A. Mesander <ben@gnu.ai.mit.edu>
 ;;         Noah Friedman <friedman@prep.ai.mit.edu>
@@ -12,10 +12,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,9 +23,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -60,6 +58,12 @@
   (require 'cl)
   (require 'pcomplete))
 
+;;;###autoload (autoload 'erc-dcc-mode "erc-dcc")
+(define-erc-module dcc nil
+  "Provide Direct Client-to-Client support for ERC."
+  ((add-hook 'erc-server-401-functions 'erc-dcc-no-such-nick))
+  ((remove-hook 'erc-server-401-functions 'erc-dcc-no-such-nick)))
+
 (defgroup erc-dcc nil
   "DCC stands for Direct Client Communication, where you and your
 friend's client programs connect directly to each other,
@@ -70,10 +74,15 @@ Using DCC get and send, you can transfer files directly from and to other
 IRC users."
   :group 'erc)
 
-(defcustom erc-verbose-dcc t
+(defcustom erc-dcc-verbose nil
   "*If non-nil, be verbose about DCC activity reporting."
   :group 'erc-dcc
   :type 'boolean)
+
+(defconst erc-dcc-connection-types
+  '("CHAT" "GET" "SEND")
+  "List of valid DCC connection types.
+All values of the list must be uppercase strings.")
 
 (defvar erc-dcc-list nil
   "List of DCC connections. Looks like:
@@ -141,9 +150,9 @@ IRC users."
    (dcc-get-file-too-long
     . "DCC: %f: File longer than sender claimed; aborting transfer")
    (dcc-get-notfound . "DCC: %n hasn't offered %f for DCC transfer")
-   (dcc-list-head . "DCC: From      Type  Active  Size          Filename")
-   (dcc-list-line . "DCC: --------  ----  ------  ------------  --------")
-   (dcc-list-item . "DCC: %-8n  %-4t  %-6a  %-12s  %f")
+   (dcc-list-head . "DCC: From      Type  Active  Size            Filename")
+   (dcc-list-line . "DCC: --------  ----  ------  --------------  --------")
+   (dcc-list-item . "DCC: %-8n  %-4t  %-6a  %-14s  %f")
    (dcc-list-end  . "DCC: End of list.")
    (dcc-malformed . "DCC: error: %n (%u@%h) sent malformed request: %q")
    (dcc-privileged-port
@@ -195,24 +204,56 @@ compared with `erc-nick-equal-p' which is IRC case-insensitive."
           (setq list (cdr list)))))
     result))
 
-;; msa wrote this nifty little frob to convert an n-byte integer to a packed
-;; string.
-(defun erc-pack-int (value count)
-  (if (> count 0)
-      (concat (erc-pack-int (/ value 256) (1- count))
-              (char-to-string (% value 256)))
-    ""))
+(defun erc-pack-int (value)
+  "Convert an integer into a packed string in network byte order,
+which is big-endian."
+  ;; make sure value is not negative
+  (when (< value 0)
+    (error "ERC-DCC (erc-pack-int): packet size is negative"))
+  ;; make sure size is not larger than 4 bytes
+  (let ((len (if (= value 0) 0
+               (ceiling (/ (ceiling (/ (log value) (log 2))) 8.0)))))
+    (when (> len 4)
+      (error "ERC-DCC (erc-pack-int): packet too large")))
+  ;; pack
+  (let ((str (make-string 4 0))
+        (i 3))
+    (while (and (>= i 0) (> value 0))
+      (aset str i (% value 256))
+      (setq value (/ value 256))
+      (setq i (1- i)))
+    str))
+
+(defconst erc-most-positive-int-bytes
+  (ceiling (/ (ceiling (/ (log most-positive-fixnum) (log 2))) 8.0))
+  "Maximum number of bytes for a fixnum.")
+
+(defconst erc-most-positive-int-msb
+  (lsh most-positive-fixnum (- 0 (* 8 (1- erc-most-positive-int-bytes))))
+  "Content of the most significant byte of most-positive-fixnum.")
 
 (defun erc-unpack-int (str)
-  "Unpack a 1-4 character packed string into an integer."
-  (let ((len (length str))
-        (num 0)
-        (count 0))
-    (erc-assert (<= len 4)) ;; this isn't going to fit in elisp bounds
-    (while (< count len)
-      (setq num (+ num (lsh (aref str (- len count 1)) (* 8 count))))
-      (setq count (1+ count)))
-    num))
+  "Unpack a packed string into an integer."
+  (let ((len (length str)))
+    ;; strip leading 0-bytes
+    (let ((start 0))
+      (while (and (> len start) (eq (aref str start) 0))
+        (setq start (1+ start)))
+      (when (> start 0)
+        (setq str (substring str start))
+        (setq len (- len start))))
+    ;; make sure size is not larger than Emacs can handle
+    (when (or (> len (min 4 erc-most-positive-int-bytes))
+              (and (eq len erc-most-positive-int-bytes)
+                   (> (aref str 0) erc-most-positive-int-msb)))
+      (error "ERC-DCC (erc-unpack-int): packet to send is too large"))
+    ;; unpack
+    (let ((num 0)
+          (count 0))
+      (while (< count len)
+        (setq num (+ num (lsh (aref str (- len count 1)) (* 8 count))))
+        (setq count (1+ count)))
+      num)))
 
 (defconst erc-dcc-ipv4-regexp
   (concat "^"
@@ -256,12 +297,21 @@ The result is also a string."
 
 ;;; Server code
 
-(defcustom erc-dcc-host nil
-  "*IP address to use for outgoing DCC offers.
-Should be set to a string or nil, if nil, automatic detection of the
-host interface to use will be attempted."
+(defcustom erc-dcc-listen-host nil
+  "IP address to listen on when offering files.
+Should be set to a string or nil.  If nil, automatic detection of
+the host interface to use will be attempted."
   :group 'erc-dcc
   :type (list 'choice (list 'const :tag "Auto-detect" nil)
+              (list 'string :tag "IP-address"
+                    :valid-regexp erc-dcc-ipv4-regexp)))
+
+(defcustom erc-dcc-public-host nil
+  "IP address to use for outgoing DCC offers.
+Should be set to a string or nil.  If nil, use the value of
+`erc-dcc-listen-host'."
+  :group 'erc-dcc
+  :type (list 'choice (list 'const :tag "Same as erc-dcc-listen-host" nil)
               (list 'string :tag "IP-address"
                     :valid-regexp erc-dcc-ipv4-regexp)))
 
@@ -282,7 +332,7 @@ host interface to use will be attempted."
   "Determine the IP address we are using.
 If variable `erc-dcc-host' is non-nil, use it.  Otherwise call
 `erc-dcc-get-host' on the erc-server-process."
-  (or erc-dcc-host (erc-dcc-get-host erc-server-process)
+  (or erc-dcc-listen-host (erc-dcc-get-host erc-server-process)
       (error "Unable to determine local address")))
 
 (defcustom erc-dcc-port-range nil
@@ -311,6 +361,7 @@ created subprocess, or nil."
         process)
     (while (not process)
       (condition-case err
+          (progn
             (setq process
                   (make-network-process :name name
                                         :buffer nil
@@ -322,6 +373,12 @@ created subprocess, or nil."
                                         :sentinel sentinel
                                         :log #'erc-dcc-server-accept
                                         :server t))
+            (when (processp process)
+              (when (fboundp 'set-process-coding-system)
+                (set-process-coding-system process 'binary 'binary))
+              (when (fboundp 'set-process-filter-multibyte)
+                (with-no-warnings       ; obsolete since 23.1
+                  (set-process-filter-multibyte process nil)))))
         (file-error
          (unless (and (string= "Cannot bind server socket" (cadr err))
                       (string= "address already in use" (caddr err)))
@@ -426,19 +483,32 @@ where FOO is one of CLOSE, GET, SEND, LIST, CHAT, etc."
         t))))
 
 (defun erc-dcc-do-CLOSE-command (proc &optional type nick)
-  "/dcc close type nick
-type and nick are optional."
-  ;; FIXME, should also work if only nick is specified
-  (when (string-match (concat "^\\s-*\\(\\S-+\\)? *\\("
-                              erc-valid-nick-regexp "\\)?\\s-*$") line)
-    (let ((type (when (match-string 1 line)
-                  (intern (upcase (match-string 1 line)))))
-          (nick (match-string 2 line))
-          (ret t))
+  "Close a connection.  Usage: /dcc close type nick.
+At least one of TYPE and NICK must be provided."
+  ;; disambiguate type and nick if only one is provided
+  (when (and type (null nick)
+             (not (member (upcase type) erc-dcc-connection-types)))
+    (setq nick type)
+    (setq type nil))
+  ;; validate nick argument
+  (unless (and nick (string-match (concat "\\`" erc-valid-nick-regexp "\\'")
+                                  nick))
+    (setq nick nil))
+  ;; validate type argument
+  (if (and type (member (upcase type) erc-dcc-connection-types))
+      (setq type (intern (upcase type)))
+    (setq type nil))
+  (when (or nick type)
+    (let ((ret t))
       (while ret
-        (if nick
-            (setq ret (erc-dcc-member :type type :nick nick))
-          (setq ret (erc-dcc-member :type type)))
+        (cond ((and nick type)
+               (setq ret (erc-dcc-member :type type :nick nick)))
+              (nick
+               (setq ret (erc-dcc-member :nick nick)))
+              (type
+               (setq ret (erc-dcc-member :type type)))
+              (t
+               (setq ret nil)))
         (when ret
           ;; found a match - delete process if it exists.
           (and (processp (plist-get ret :peer))
@@ -449,9 +519,14 @@ type and nick are optional."
            'dcc-closed
            ?T (plist-get ret :type)
            ?n (erc-extract-nick (plist-get ret :nick))))))
-      t))
+    t))
 
-(defun erc-dcc-do-GET-command (proc nick &optional file)
+(defun erc-dcc-do-GET-command (proc nick &rest file)
+  "Do a DCC GET command.  NICK is the person who is sending the file.
+FILE is the filename.  If FILE is split into multiple arguments,
+re-join the arguments, separated by a space.
+PROC is the server process."
+  (setq file (and file (mapconcat #'identity file " ")))
   (let* ((elt (erc-dcc-member :nick nick :type 'GET))
          (filename (or file (plist-get elt :file) "unknown")))
     (if elt
@@ -476,6 +551,9 @@ type and nick are optional."
       (erc-display-message
        nil '(notice error) 'active
        'dcc-get-notfound ?n nick ?f filename))))
+
+(defvar erc-dcc-byte-count nil)
+(make-variable-buffer-local 'erc-dcc-byte-count)
 
 (defun erc-dcc-do-LIST-command (proc)
   "This is the handler for the /dcc list command.
@@ -512,20 +590,29 @@ It lists the current state of `erc-dcc-list' in an easy to read manner."
                            (plist-member elt :file)
                            (buffer-live-p (get-buffer (plist-get elt :file)))
                            (plist-member elt :size))
-                      (concat " (" (number-to-string
+                      (let ((byte-count (with-current-buffer
+                                            (get-buffer (plist-get elt :file))
+                                          (+ (buffer-size) 0.0
+                                             erc-dcc-byte-count))))
+                        (concat " ("
+                                (if (= byte-count 0)
+                                    "0"
+                                  (number-to-string
+                                   (truncate
                                     (* 100
-                                       (/ (buffer-size
-                                           (get-buffer (plist-get elt :file)))
-                                          (plist-get elt :size))))
-                              "%)")))
+                                       (/ byte-count (plist-get elt :size))))))
+                                "%)"))))
        ?f (or (and (plist-member elt :file) (plist-get elt :file)) "")))
     (erc-display-message
      nil 'notice 'active
      'dcc-list-end)
     t))
 
-(defun erc-dcc-do-SEND-command (proc nick file)
-  "Offer FILE to NICK by sending a ctcp dcc send message."
+(defun erc-dcc-do-SEND-command (proc nick &rest file)
+  "Offer FILE to NICK by sending a ctcp dcc send message.
+If FILE is split into multiple arguments, re-join the arguments,
+separated by a space."
+  (setq file (and file (mapconcat #'identity file " ")))
   (if (file-exists-p file)
       (progn
         (erc-display-message
@@ -698,7 +785,7 @@ bytes sent."
          (confirmed-marker (plist-get elt :sent))
          (sent-marker (plist-get elt :sent)))
     (with-current-buffer (process-buffer proc)
-      (when erc-verbose-dcc
+      (when erc-dcc-verbose
         (erc-display-message
          nil 'notice (erc-dcc-get-parent proc)
          (format "DCC: Confirmed %d, sent %d, sending block now"
@@ -713,8 +800,7 @@ bytes sent."
         (length string)))))
 
 (defun erc-dcc-send-filter (proc string)
-  (erc-assert (= (% (length string) 4) 0))
-  (let* ((size (erc-unpack-int (substring string (- (length string) 4))))
+  (let* ((size (erc-unpack-int string))
          (elt (erc-dcc-member :peer proc))
          (parent (plist-get elt :parent))
          (sent-marker (plist-get elt :sent))
@@ -742,16 +828,21 @@ bytes sent."
        ((> confirmed-marker sent-marker)
         (erc-display-message
          nil 'notice parent
-         (format "DCC: Client confirmed too much!"))
+         (format "DCC: Client confirmed too much (%s vs %s)!"
+                 (marker-position confirmed-marker)
+                 (marker-position sent-marker)))
+        (set-buffer-modified-p nil)
+        (kill-buffer (current-buffer))
         (delete-process proc))))))
 
+(defun erc-dcc-display-send (proc)
+  (erc-display-message
+   nil 'notice (erc-dcc-get-parent proc)
+   (format "DCC: SEND connect from %s"
+           (format-network-address (process-contact proc :remote)))))
+
 (defcustom erc-dcc-send-connect-hook
-  '((lambda (proc)
-      (erc-display-message
-       nil 'notice (erc-dcc-get-parent proc)
-       (format "DCC: SEND connect from %s"
-               (format-network-address (process-contact proc :remote)))))
-    erc-dcc-send-block)
+  '(erc-dcc-display-send erc-dcc-send-block)
   "*Hook run whenever the remote end of a DCC SEND offer connected to your
 listening port."
   :group 'erc-dcc
@@ -762,14 +853,14 @@ listening port."
   (erc-extract-nick (plist-get plist :nick)))
 
 (defun erc-dcc-send-sentinel (proc event)
-  (let* ((elt (erc-dcc-member :peer proc))
-         (buf (marker-buffer (plist-get elt :sent))))
+  (let* ((elt (erc-dcc-member :peer proc)))
     (cond
      ((string-match "^open from " event)
       (when elt
-        (with-current-buffer buf
-          (set-process-buffer proc buf)
-          (setq erc-dcc-entry-data elt))
+        (let ((buf (marker-buffer (plist-get elt :sent))))
+          (with-current-buffer buf
+            (set-process-buffer proc buf)
+            (setq erc-dcc-entry-data elt)))
         (run-hook-with-args 'erc-dcc-send-connect-hook proc))))))
 
 (defun erc-dcc-find-file (file)
@@ -807,15 +898,21 @@ other client."
         (process-send-string
          pproc (format "PRIVMSG %s :\C-aDCC SEND %s %s %d %d\C-a\n"
                        nick (erc-dcc-file-to-name file)
-                       (erc-ip-to-decimal (nth 0 contact))
+                       (erc-ip-to-decimal (or erc-dcc-public-host
+                                              (nth 0 contact)))
                        (nth 1 contact)
                        size)))
     (error "`make-network-process' not supported by your Emacs")))
 
 ;;; GET handling
 
-(defvar erc-dcc-byte-count nil)
-(make-variable-buffer-local 'erc-dcc-byte-count)
+(defcustom erc-dcc-receive-cache (* 1024 512)
+  "Number of bytes to let the receive buffer grow before flushing it."
+  :group 'erc-dcc
+  :type 'integer)
+
+(defvar erc-dcc-file-name nil)
+(make-variable-buffer-local 'erc-dcc-file-name)
 
 (defun erc-dcc-get-file (entry file parent-proc)
   "This function does the work of setting up a transfer from the remote client
@@ -825,6 +922,7 @@ filter and a process sentinel, and making the connection."
          proc)
     (with-current-buffer buffer
       (fundamental-mode)
+      (buffer-disable-undo (current-buffer))
       ;; This is necessary to have the buffer saved as-is in GNU
       ;; Emacs.
       ;; XEmacs change: We don't have `set-buffer-multibyte', setting
@@ -835,7 +933,14 @@ filter and a process sentinel, and making the connection."
       (setq mode-line-process '(":%s")
             buffer-file-type t
             buffer-read-only t)
-      (set-visited-file-name file)
+      (setq erc-dcc-file-name file)
+
+      ;; Truncate the given file to size 0 before appending to it.
+      (let ((inhibit-file-name-handlers
+             (append '(jka-compr-handler image-file-handler)
+                     inhibit-file-name-handlers))
+            (inhibit-file-name-operation 'write-region))
+        (write-region (point) (point) erc-dcc-file-name nil 'nomessage))
 
       (setq erc-server-process parent-proc
             erc-dcc-entry-data entry)
@@ -847,7 +952,6 @@ filter and a process sentinel, and making the connection."
                      (string-to-number (plist-get entry :port))
                      entry))
       (set-process-buffer proc buffer)
-      ;; The following two lines make saving as-is work under Windows
       (set-process-coding-system proc 'binary 'binary)
       (set-buffer-file-coding-system 'binary t)
 
@@ -856,6 +960,20 @@ filter and a process sentinel, and making the connection."
       (setq entry (plist-put entry :start-time (erc-current-time)))
       (setq entry (plist-put entry :peer proc)))))
 
+(defun erc-dcc-append-contents (buffer file)
+  "Append the contents of BUFFER to FILE.
+The contents of the BUFFER will then be erased."
+  (with-current-buffer buffer
+    (let ((coding-system-for-write 'binary)
+          (inhibit-read-only t)
+          (inhibit-file-name-handlers
+           (append '(jka-compr-handler image-file-handler)
+                   inhibit-file-name-handlers))
+          (inhibit-file-name-operation 'write-region))
+      (write-region (point-min) (point-max) erc-dcc-file-name t 'nomessage)
+      (setq erc-dcc-byte-count (+ (buffer-size) erc-dcc-byte-count))
+      (erase-buffer))))
+
 (defun erc-dcc-get-filter (proc str)
   "This is the process filter for transfers from other clients to this one.
 It reads incoming bytes from the network and stores them in the DCC
@@ -863,21 +981,24 @@ buffer, and sends back the replies after each block of data per the DCC
 protocol spec.  Well not really.  We write back a reply after each read,
 rather than every 1024 byte block, but nobody seems to care."
   (with-current-buffer (process-buffer proc)
-    (let ((inhibit-read-only t))
+    (let ((inhibit-read-only t)
+          received-bytes)
       (goto-char (point-max))
       (insert (string-make-unibyte str))
 
-      (setq erc-dcc-byte-count (+ (length str) erc-dcc-byte-count))
-      (erc-assert (= erc-dcc-byte-count (1- (point-max))))
-      (and erc-verbose-dcc
+      (when (> (point-max) erc-dcc-receive-cache)
+        (erc-dcc-append-contents (current-buffer) erc-dcc-file-name))
+      (setq received-bytes (+ (buffer-size) erc-dcc-byte-count))
+
+      (and erc-dcc-verbose
            (erc-display-message
             nil 'notice erc-server-process
             'dcc-get-bytes-received
             ?f (file-name-nondirectory buffer-file-name)
-            ?b (number-to-string erc-dcc-byte-count)))
+            ?b (number-to-string received-bytes)))
       (cond
        ((and (> (plist-get erc-dcc-entry-data :size) 0)
-             (> erc-dcc-byte-count (plist-get erc-dcc-entry-data :size)))
+             (> received-bytes (plist-get erc-dcc-entry-data :size)))
         (erc-display-message
          nil '(error notice) 'active
          'dcc-get-file-too-long
@@ -885,7 +1006,7 @@ rather than every 1024 byte block, but nobody seems to care."
         (delete-process proc))
        (t
         (process-send-string
-         proc (erc-pack-int erc-dcc-byte-count 4)))))))
+         proc (erc-pack-int received-bytes)))))))
 
 
 (defun erc-dcc-get-sentinel (proc event)
@@ -895,17 +1016,17 @@ transfer is complete."
   ;; FIXME, we should look at EVENT, and also check size.
   (with-current-buffer (process-buffer proc)
     (delete-process proc)
-    (setq buffer-read-only nil)
     (setq erc-dcc-list (delete erc-dcc-entry-data erc-dcc-list))
+    (unless (= (point-min) (point-max))
+      (erc-dcc-append-contents (current-buffer) erc-dcc-file-name))
     (erc-display-message
      nil 'notice erc-server-process
      'dcc-get-complete
-     ?f (file-name-nondirectory buffer-file-name)
-     ?s (number-to-string (buffer-size))
+     ?f erc-dcc-file-name
+     ?s (number-to-string erc-dcc-byte-count)
      ?t (format "%.0f"
                 (erc-time-diff (plist-get erc-dcc-entry-data :start-time)
-                               (erc-current-time))))
-    (save-buffer))
+                               (erc-current-time)))))
   (kill-buffer (process-buffer proc))
   (delete-process proc))
 
@@ -1125,8 +1246,6 @@ other client."
       (setq erc-dcc-list (delq elt erc-dcc-list))
       (if (processp peer) (delete-process peer)))
     nil))
-
-(add-hook 'erc-server-401-functions 'erc-dcc-no-such-nick)
 
 (provide 'erc-dcc)
 

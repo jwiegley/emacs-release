@@ -1,7 +1,8 @@
 ;;; mh-show.el --- MH-Show mode
 
 ;; Copyright (C) 1993, 1995, 1997,
-;;  2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -10,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -102,6 +101,17 @@ Use the command \\[mh-show] to show the message normally again."
       (goto-char (point-min))
       (mh-recenter 0))
     (setq mh-showing-with-headers t)))
+
+;;;###mh-autoload
+(defun  mh-show-preferred-alternative ()
+  "Display message with the default preferred alternative.
+This is as if `mm-discouraged-alternatives' is set to nil.
+
+Use the command \\[mh-show] to show the message normally again."
+  (interactive)
+  (let
+      ((mm-discouraged-alternatives))
+    (mh-show nil t)))
 
 
 
@@ -349,7 +359,7 @@ The current frame height is taken into consideration."
 If the buffer we start in is still visible and DONT-RETURN is nil
 then switch to it after that."
   `(defun ,function ()
-     ,(format "Calls %s from the message's folder.\n%s\nSee \"%s\" for more info.\n"
+     ,(format "Calls %s from the message's folder.\n%s\nSee `%s' for more info.\n"
               original-function
               (if dont-return ""
                 "When function completes, returns to the show buffer if it is
@@ -401,6 +411,7 @@ still visible.\n")
 (mh-defun-show-buffer mh-show-refile-or-write-again
                       mh-refile-or-write-again)
 (mh-defun-show-buffer mh-show-show mh-show)
+(mh-defun-show-buffer mh-show-show-preferred-alternative mh-show-preferred-alternative)
 (mh-defun-show-buffer mh-show-write-message-to-file
                       mh-write-msg-to-file)
 (mh-defun-show-buffer mh-show-extract-rejected-mail
@@ -513,6 +524,8 @@ still visible.\n")
   '("Message"
     ["Show Message"                     mh-show-show t]
     ["Show Message with Header"         mh-show-header-display t]
+    ["Show Message with Preferred Alternative"
+                                        mh-show-show-preferred-alternative t]
     ["Next Message"                     mh-show-next-undeleted-msg t]
     ["Previous Message"                 mh-show-previous-undeleted-msg t]
     ["Go to First Message"              mh-show-first-msg t]
@@ -568,6 +581,7 @@ still visible.\n")
   "'"    mh-show-toggle-tick
   ","    mh-show-header-display
   "."    mh-show-show
+  ":"    mh-show-show-preferred-alternative
   ">"    mh-show-write-message-to-file
   "?"    mh-help
   "E"    mh-show-extract-rejected-mail
@@ -834,7 +848,8 @@ See also `mh-folder-mode'.
 
 \\{mh-show-mode-map}"
   (mh-do-in-gnu-emacs
-    (set (make-local-variable 'tool-bar-map) mh-show-tool-bar-map))
+   (if (boundp 'tool-bar-map)
+       (set (make-local-variable 'tool-bar-map) mh-show-tool-bar-map)))
   (mh-do-in-xemacs
     (mh-tool-bar-init :show))
   (set (make-local-variable 'mail-header-separator) mh-mail-header-separator)
@@ -857,7 +872,7 @@ See also `mh-folder-mode'.
     (mh-gnus-article-highlight-citation))
    (t
     (setq font-lock-defaults '(mh-show-font-lock-keywords t))))
-  (if (and mh-xemacs-flag
+  (if (and (featurep 'xemacs)
            font-lock-auto-fontify)
       (turn-on-font-lock))
   (when mh-decode-mime-flag

@@ -1,29 +1,22 @@
-This is ../info/sc, produced by makeinfo version 4.11 from sc.texi.
+This is ../../info/sc, produced by makeinfo version 4.11 from sc.texi.
 
-This document describes the Supercite Version 3.1 package for citing and
-attributing the replies for various GNU Emacs mail and news reading
-subsystems.
+This document describes Supercite, an Emacs package for citing and
+attributing replies to mail and news messages.
 
-   Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-Free Software Foundation, Inc.
+   Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+2009 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
-     Version 1.2 or any later version published by the Free Software
+     Version 1.3 or any later version published by the Free Software
      Foundation; with no Invariant Sections, with the Front-Cover texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
-     "GNU Free Documentation License" in the Emacs manual.
+     "GNU Free Documentation License".
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
-
-     This document is part of a collection distributed under the GNU
-     Free Documentation License.  If you want to distribute this
-     document separately from the collection, you can do so by adding a
-     copy of the license to the document, as described in section 6 of
-     the license.
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
+     developing GNU and promoting software freedom."
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -34,9 +27,25 @@ END-INFO-DIR-ENTRY
 
 File: sc,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
 
-   This document describes the Supercite Version 3.1 package for citing
-and attributing the replies for various GNU Emacs mail and news reading
-subsystems.  The manual is divided into the following chapters.
+   This document describes Supercite, an Emacs package for citing and
+attributing replies to mail and news messages.
+
+   Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+2009 Free Software Foundation, Inc.
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, with the Front-Cover texts
+     being "A GNU Manual", and with the Back-Cover Texts as in (a)
+     below.  A copy of the license is included in the section entitled
+     "GNU Free Documentation License".
+
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
+     developing GNU and promoting software freedom."
+
+   The manual is divided into the following chapters.
 
 * Menu:
 
@@ -50,9 +59,7 @@ subsystems.  The manual is divided into the following chapters.
 * Information Keys and the Info Alist::
 * Reference Headers::
 * Hints to MUA Authors::
-* Version 3 Changes::
 * Thanks and History::
-* The Supercite Mailing List::
 
 * GNU Free Documentation License::
 * Concept Index::
@@ -66,17 +73,15 @@ File: sc,  Node: Introduction,  Next: Usage Overview,  Prev: Top,  Up: Top
 1 Introduction
 **************
 
-Supercite version 3.1 is a GNU Emacs package written entirely in Emacs
-Lisp. It interfaces to most of the commonly used Emacs mail user agents
-("MUAs") and news user agents ("NUAs"), and provides sophisticated
-facilities for the citing and attributing of message replies.
-Supercite has a very specific and limited role in the process of
-composing replies to both USENET network news and electronic mail.
+Supercite is a GNU Emacs package written entirely in Emacs Lisp. It
+interfaces to most of the commonly used Emacs mail user agents ("MUAs")
+and news user agents ("NUAs"), and provides sophisticated facilities
+for the citing and attributing of message replies.  Supercite has a
+very specific and limited role in the process of composing replies to
+both USENET network news and electronic mail.
 
    The preferred way to spell Supercite is with a capital `S',
-lowercase `upercite'.  There are a few alternate spellings out there
-and I won't be terribly offended if you use them.  People often ask
-though...
+lowercase `upercite'.
 
 * Menu:
 
@@ -85,32 +90,11 @@ though...
 * What Supercite Does::
 
    Supercite is only useful in conjunction with MUAs and NUAs such as
-VM, GNUS, RMAIL, etc. (hereafter referred to collectively as MUAs).
-Supercite is typically called by the MUA after a reply buffer has been
-setup.  Thereafter, Supercite's many commands and formatting styles are
-available in that reply buffer until the reply is sent.  Supercite is
-re-initialized in each new reply buffer.
-
-   Supercite is currently at major revision 3.1, and is known to work
-in the following environments:
-
-Emacs versions:
-     	GNU Emacs 18.57 through 18.59, all Emacs 19, 	all current
-     Lucid Emacs, and Epoch 4.
-
-MUAs:
-     	VM 4.37 and beyond (including VM version 5), RMAIL, MH-E 3.7 and
-     beyond, PCMAIL.
-
-NUAs:
-     	RNEWS, GNUS 3.12 and beyond, GNEWS.
-
-   For systems with version numbers, all known subsequent versions also
-work with Supercite.  For those systems without version numbers,
-Supercite probably works with any recently released version.  Note that
-only some of these systems will work with Supercite "out of the box."
-All others must overload interfacing routines to supply the necessary
-glue.  *Note Getting Connected::, for more details.
+VM, Gnus, RMAIL, MH-E, etc.  Supercite is typically called by the MUA
+after a reply buffer has been setup.  Thereafter, Supercite's many
+commands and formatting styles are available in that reply buffer until
+the reply is sent.  Supercite is re-initialized in each new reply
+buffer.
 
 
 File: sc,  Node: Usage Overview,  Next: What Supercite Does Not Do,  Prev: Introduction,  Up: Introduction
@@ -584,12 +568,19 @@ Supercite will execute the hook `sc-electric-mode-hook' before entering
 electric reference mode.
 
 
-File: sc,  Node: Getting Connected,  Next: Emacs 19 MUAs,  Prev: Recognizing Citations,  Up: Top
+File: sc,  Node: Getting Connected,  Next: Replying and Yanking,  Prev: Recognizing Citations,  Up: Top
 
 5 Getting Connected
 *******************
 
-Hitting `C-c C-y' in your MUA's reply buffer yanks and cites the
+In most cases, all that is necessary to begin using Supercite is to add
+the following to `~.emacs':
+
+     (add-hook 'mail-citation-hook 'sc-cite-original)
+
+For more details of the process, read on...
+
+   Hitting `C-c C-y' in your MUA's reply buffer yanks and cites the
 original message into the reply buffer.  In reality, the citation of the
 original message is performed via a call through a configurable hook
 variable.  The name of this variable has been agreed to in advance as
@@ -600,25 +591,12 @@ to the hook, thereby giving the variable a non-`nil' value, it tells
 the MUA to run the hook via `run-hooks' instead of using the default
 citation.
 
-* Menu:
-
-* Emacs 19 MUAs::
-* Emacs 18 MUAs::
-* MH-E with any Emacsen::
-* VM with any Emacsen::
-* GNEWS with any Emacsen::
-* Overloading for Non-conforming MUAs::
-
    Early in Supercite's development, the Supercite author, a few MUA
 authors, and some early Supercite users got together and agreed upon a
 standard interface between MUAs and citation packages (of which
-Supercite is currently the only known add-on :-).  With the recent
-release of the Free Software Foundation's GNU Emacs 19, the interface
-has undergone some modification and it is possible that not all MUAs
-support the new interface yet.  Some support only the old interface and
-some do not support the interface at all.  Still, it is possible for all
-known MUAs to use Supercite, and the following sections will outline the
-procedures you need to follow.
+Supercite is currently the only known add-on :-).  Supercite can
+probably be used with most Emacs MUAs, with a greater or lesser degree
+of effort.
 
    To learn exactly how to connect Supercite to the software systems you
 are using, read the appropriate following sections.  For details on the
@@ -627,21 +605,21 @@ interface specifications, or if you are writing or maintaining an MUA,
 
    The first thing that everyone should do, regardless of the MUA you
 are using is to set up Emacs so it will load Supercite at the
-appropriate time.  You can either dump Supercite into your Emacs binary
-(ask your local Emacs guru how to do this if you don't know), or you
-can set up an "autoload" for Supercite.  To do the latter, put the
-following in your `.emacs' file:
+appropriate time.  This happens automatically if Supercite is
+distributed with your Emacs version.  If not, you can set up an
+"autoload" for Supercite.
 
-     (autoload 'sc-cite-original     "supercite" "Supercite 3.1" t)
-     (autoload 'sc-submit-bug-report "supercite" "Supercite 3.1" t)
+   To do the latter, put the following in your `.emacs' file:
+
+     (autoload 'sc-cite-original "supercite" nil t)
 
    The function `sc-cite-original' is the top-level Supercite function
 designed to be run from the citation hook.  It expects `point' and
 `mark' to be set around the region to cite, and it expects the original
 article's mail headers to be present within this region.  Note that
 Supercite _never_ touches any text outside this region.  Note further
-that for Emacs 19, the region need not be active for `sc-cite-original'
-to do its job.  *Note Hints to MUA Authors::.
+that the region need not be active for `sc-cite-original' to do its job.
+*Note Hints to MUA Authors::.
 
    The other step in the getting connected process is to make sure your
 MUA calls `sc-cite-original' at the right time.  As mentioned above,
@@ -657,216 +635,7 @@ executed every time `sc-cite-original' is called.  *Note Reply Buffer
 Initialization::.
 
 
-File: sc,  Node: Emacs 19 MUAs,  Next: Emacs 18 MUAs,  Prev: Getting Connected,  Up: Getting Connected
-
-5.1 GNUS, RMAIL, or RNEWS with any Emacs 19
-===========================================
-
-These MUAs, distributed with Emacs and with Lucid Emacs, use Emacs's
-built-in yanking facility, which provides the citing hook variable
-`mail-citation-hook'.  By default, this hook's value is `nil', but by
-adding the following to your `.emacs' file, you can tell these MUAs to
-use Supercite to perform the citing of the original message:
-
-     (add-hook 'mail-citation-hook 'sc-cite-original)
-
-   GNUS users may also want to add the following bit of lisp as well.
-This prevents GNUS from inserting its default attribution header.
-Otherwise, both GNUS and Supercite will insert an attribution header:
-
-     (setq news-reply-header-hook nil)
-
-
-File: sc,  Node: Emacs 18 MUAs,  Next: MH-E with any Emacsen,  Prev: Emacs 19 MUAs,  Up: Getting Connected
-
-5.2 GNUS, RMAIL, PCMAIL, RNEWS with Emacs 18 or Epoch 4
-=======================================================
-
-These MUAs use Emacs' built-in yanking and citing routines, contained in
-the `sendmail.el' file.  `sendmail.el' for Emacs 18, and its derivative
-Epoch 4, do not know anything about the citation interface required by
-Supercite.  To connect Supercite to any of these MUAs under Emacs 18 or
-Epoch 4, you should first *note Overloading for Non-conforming MUAs::.
-Then follow the directions for using these MUAs under Emacs 19.  *Note
-Emacs 19 MUAs::.
-
-   Note that those instructions will tell you to use the function
-`add-hook'. This function is new with Emacs 19 and you will not have it
-by default if you are running Emacs 18 or Epoch 4.  You can either
-substitute the appropriate call to `setq', or you can use the
-`add-hook' function that is provided in the `sc-unsupp.el' file of
-unsupported Supercite hacks and ideas.  Or you can upgrade to some
-Emacs 19 variant!  :-)
-
-   To use `setq' instead of `add-hook', you would, for example, change
-this:
-
-     (add-hook 'mail-citation-hook 'sc-cite-original)
-
-   to:
-
-     (setq mail-citation-hook 'sc-cite-original)
-
-   Note the lack of a single quote on the first argument to `setq'.
-
-
-File: sc,  Node: MH-E with any Emacsen,  Next: VM with any Emacsen,  Prev: Emacs 18 MUAs,  Up: Getting Connected
-
-5.3 MH-E with any Emacsen
-=========================
-
-MH-E 4.x conforms to the `mail-citation-hook' interface supported by
-other MUAs.  At the time of this writing, MH-E 4.0 has not been
-released, but if you have it, put this in your `.emacs' file to connect
-Supercite and MH-E 4.x:
-
-     (add-hook 'mail-citation-hook 'sc-cite-original)
-
-   Note that if you are using Emacs 18 or Epoch 4, you will not have the
-`add-hook' function.  *Note Emacs 18 MUAs::, for details on how to
-proceed without `add-hook'.
-
-   MH-E version 3.x uses a slightly different interface than other MUAs.
-MH-E provides a hook variable `mh-yank-hooks', but it doesn't act like
-a hook, and doing an `add-hook' will not work.
-
-   To connect Supercite to MH-E 3.x, you should instead add the
-following to your `.emacs' file:
-
-     (add-hook 'mh-yank-hooks 'sc-cite-original)
-
-   You also need to make sure that MH-E includes all the original mail
-headers in the yanked message.  The variable that controls this is
-`mh-yank-from-start-of-msg'.  By default, this variable has the value
-`t', which tells MH-E to include all the mail headers when yanking the
-original message.  Before you switched to using Supercite, you may have
-set this variable to other values so as not to include the mail headers
-in the yanked message.  Since Supercite requires these headers (and
-cleans them out for you), you need to make sure the value is `t'.  This
-lisp, in your `.emacs' file will do the trick:
-
-     (setq mh-yank-from-start-of-msg t)
-
-   Note that versions of MH-E before 3.7 did not provide the
-`mh-yank-hooks' variable.  Your only option is to upgrade to MH-E
-version 3.7 or later.
-
-
-File: sc,  Node: VM with any Emacsen,  Next: GNEWS with any Emacsen,  Prev: MH-E with any Emacsen,  Up: Getting Connected
-
-5.4 VM with any Emacsen
-=======================
-
-Since release 4.40, VM has supported the citation interface required by
-Supercite.  But since the interface has changed recently the details of
-getting connected differ with the version of VM you are using.
-
-   If you are running any release of VM after 4.40, you can add the
-following to your `.emacs' to connect Supercite with VM:
-
-     (add-hook 'mail-yank-hooks 'sc-cite-original)
-
-   Note that if you are using Emacs 18 or Epoch 4, you will not have the
-`add-hook' function.  *Note Emacs 18 MUAs::, for details on how to
-proceed without `add-hook'.
-
-   Since version 5.34, VM has supported the newer `mail-citation-hook'
-interface, but `mail-yank-hooks' is still being supported for backward
-compatibility.  If you are running a newer version of VM and you want
-to maintain consistency with other MUAs, use this bit of code instead:
-
-     (add-hook 'mail-citation-hook 'sc-cite-original)
-
-
-File: sc,  Node: GNEWS with any Emacsen,  Next: Overloading for Non-conforming MUAs,  Prev: VM with any Emacsen,  Up: Getting Connected
-
-5.5 GNEWS with any Emacsen
-==========================
-
-As far as I know, no version of GNEWS supports the citation interface
-required by Supercite.  To connect Supercite with GNEWS, please first
-*note Overloading for Non-conforming MUAs::.
-
-   After you have followed the directions in that section.  You should
-add the following lisp code to your `.emacs' file:
-
-     (add-hook 'mail-citation-hook 'sc-cite-original)
-
-   Note that if you are using Emacs 18 or Epoch 4, you will not have the
-`add-hook' function.  *Note Emacs 18 MUAs::, for details on how to
-proceed without `add-hook'.
-
-
-File: sc,  Node: Overloading for Non-conforming MUAs,  Next: Replying and Yanking,  Prev: GNEWS with any Emacsen,  Up: Getting Connected
-
-5.6 Overloading for Non-conforming MUAs
-=======================================
-
-As mentioned elsewhere, some MUAs do not provide the necessary hooks to
-connect with Supercite.  Supercite version 3.1 provides an unsupported
-mechanism, called "overloading" which redefines certain key functions
-in the MUA, so that it will call the `mail-citation-hook' variable
-instead of the MUA's default hard-coded citing routines.  Since most
-newer versions of the known MUAs support the `mail-citation-hook'
-variable, it is recommended that you upgrade if at all possible.  But
-if you can't upgrade, at least you're not out of luck!  Once you set up
-overloading properly, you should follow the directions for connecting
-Supercite to the Emacs 19 MUAs.  *Note Emacs 19 MUAs::.
-
-   Users of Bob Weiner's Hyperbole package take note.  Hyperbole
-provides the necessary overloads (and a whole lot more!) and you can
-potentially clobber it if you were to load Supercite's overloading after
-Hyperbole's.  For this reason, Supercite will _not_ perform any
-overloading if it finds the variable `hyperb:version' is `boundp' (i.e.
-it exists because Hyperbole has been loaded into your Emacs session).
-If this is the case, Supercite will display a warning message in the
-minibuffer.  You should consult the Hyperbole manual for further
-details.
-
-   Overloading involves the re-definition of the citing function with
-the new, `mail-citation-hook' savvy version.  The function in
-`sc-oloads.el' that does this is `sc-perform-overloads'.  This function
-is smart enough to only overload the MUA functions when it is
-absolutely necessary, based on the version numbers it can figure out.
-Also, `sc-perform-overloads' will only install the new functions once.
-It is also smart enough to do nothing if the MUA is not yet loaded.
-
-   The tricky part is finding the right time and place to perform the
-overloading.  It must be done after the MUA has been loaded into your
-Emacs session, but before the first time you try to yank in a message.
-Fortunately, this has been figured out for you.
-
-   If you must overload, you should put the following lisp code in your
-`.emacs' file, to make sure the `sc-oloads.el' file gets loaded at the
-right time:
-
-     (autoload 'sc-perform-overloads "sc-oloads" "Supercite 3.1" t)
-
-   Then you must make sure that the function `sc-perform-overloads'
-gets run at the right time.  For GNUS, put this in your `.emacs' file:
-
-     (setq news-reply-mode-hook 'sc-perform-overloads)
-     (setq mail-setup-hook 'sc-perform-overloads)
-
-   If you are using RNEWS, put this in your `.emacs' file:
-
-     (setq news-reply-mode-hook 'sc-perform-overloads)
-
-   If you are using RMAIL or PCMAIL, put this in your `.emacs' file:
-
-     (setq mail-setup-hook 'sc-perform-overloads)
-
-   If you are using GNEWS, put this in your `.emacs' file:
-
-     (setq news-reply-mode-hook 'sc-perform-overloads)
-     (setq gnews-ready-hook 'sc-perform-overloads)
-
-   Now go back and follow the directions for getting the Emacs 19 MUAs
-connected to Supercite.  Be sure to *note Emacs 18 MUAs:: on substitutes
-for Emacs 19's `add-hook' function.
-
-
-File: sc,  Node: Replying and Yanking,  Next: Reply Buffer Initialization,  Prev: Overloading for Non-conforming MUAs,  Up: Top
+File: sc,  Node: Replying and Yanking,  Next: Reply Buffer Initialization,  Prev: Getting Connected,  Up: Top
 
 6 Replying and Yanking
 **********************
@@ -1261,7 +1030,7 @@ Supercite employs a number of heuristics to decipher the author's name
 based on value of the `From:' mail field of the original message.
 Supercite can recognize almost all of the common `From:' field formats
 in use.  If you encounter a `From:' field that Supercite cannot parse,
-please report this bug.  *Note The Supercite Mailing List::.
+please report this bug using `M-x report-emacs-bug'.
 
    There are a number of Supercite variables that control how author
 names are extracted from the `From:' header.  Some headers may contain a
@@ -1526,15 +1295,6 @@ functions on the region of text between `point' and `mark'.  Each of
 them sets the "undo boundary" before modifying the region so that the
 command can be undone in the standard Emacs way.
 
-   A quick note about Emacs 19.  Unlike in Emacs 18, the region
-delimited by `point' and `mark' can have two states.  It can be
-"active" or "inactive".  Although Emacs 19 and Lucid Emacs 19 use
-different terminology and functions, both employ the same convention
-such that when the region is inactive, commands that modify the region
-should generate an error.  The user needs to explicitly activate the
-region before successfully executing the command.  All Supercite
-commands conform to this convention.
-
    Here is the list of Supercite citing commands:
 
 `sc-cite-region' (`C-c C-p c')
@@ -1684,8 +1444,8 @@ Info Alist::.
      prompt you (with completion) for the key of the value you want to
      change.  It will then put you in the minibuffer with the key's
      current value so you can edit the value as you wish.  When you hit
-     <RET>, the key's value is changed.  For those of you running Emacs
-     19, minibuffer history is kept for the values.
+     <RET>, the key's value is changed.  Minibuffer history is kept for
+     the values.
 
      If you choose to delete a key-value pair, Supercite will prompt
      you (with completion) for the key to delete.
@@ -1719,26 +1479,8 @@ File: sc,  Node: Miscellaneous Commands,  Next: Information Keys and the Info Al
      citation string in front of the new line.  As with `open-line', an
      optional numeric argument inserts that many new lines.
 
-`sc-describe' (`C-c C-p h' and `C-c C-p ?')
-     This function has been obsoleted by the TeXinfo manual you are now
-     reading. It is still provided for compatibility, but it will
-     eventually go away.
-
-`sc-version' (`C-c C-p v')
-     Echos the version of Supercite you are using.  With the optional
-     universal argument (`C-u'), this command inserts the version
-     information into the current buffer.
-
-`sc-submit-bug-report' (`C-c C-p C-b')
-     If you encounter a bug, or wish to suggest an enhancement, use this
-     command to set up an outgoing mail buffer, with the proper address
-     to the Supercite maintainer automatically inserted in the `To:'
-     field.  This command also inserts information that the Supercite
-     maintainer can use to recreate your exact setup, making it easier
-     to verify your bug.
-
 
-File: sc,  Node: Hints to MUA Authors,  Next: Version 3 Changes,  Prev: Electric References,  Up: Top
+File: sc,  Node: Hints to MUA Authors,  Next: Thanks and History,  Prev: Electric References,  Up: Top
 
 10 Hints to MUA Authors
 ***********************
@@ -1768,15 +1510,12 @@ a mail message to the Supercite mailing list:
      	Martin> [Supercite]'s job to gather the original from obscure
      	Martin> sources. [...]
 
-   This specification was adopted, but with the recent release of Emacs
-19, it has undergone a slight modification.  Instead of the variable
-`mail-yank-hooks', the new preferred hook variable that the MUA should
-provide is `mail-citation-hook'.  `mail-yank-hooks' can be provided for
-backward compatibility, but `mail-citation-hook' should always take
-precedence.  Richard Stallman (of the FSF) suggests that the MUAs
-should `defvar' `mail-citation-hook' to `nil' and perform some default
-citing when that is the case.  Take a look at Emacs 19's `sendmail.el'
-file, specifically the `mail-yank-original' defun for details.
+   This specification was adopted, but underwent a slight modification
+with the release of Emacs 19.  Instead of the variable
+`mail-yank-hooks', the hook variable that the MUA should provide is
+`mail-citation-hook'.  Richard Stallman suggests that the MUAs should
+`defvar' `mail-citation-hook' to `nil' and perform some default citing
+when that is the case.
 
    If you are writing a new MUA package, or maintaining an existing MUA
 package, you should make it conform to this interface so that your users
@@ -1799,9 +1538,6 @@ steps:
      within this region.  Supercite will not venture outside the region
      for any reason, and anything within the region is fair game, so
      don't put anything that *must* remain unchanged inside the region.
-     Further note that for Emacs 19, the region need not be set active.
-     Supercite will work properly when the region is inactive, as
-     should any other like-minded package.
 
   3. Run the hook `mail-citation-hook'. You will probably want to
      provide some kind of default citation functions in cases where the
@@ -1812,72 +1548,13 @@ steps:
      want to connect to Supercite then need only add `sc-cite-original'
      to this list of hooks using `add-hook'.
 
-   If you do all this, your users will not need to overload your
-routines to use Supercite, and your MUA will join the ranks of those
-that conform to this interface "out of the box."
+   If you do all this your MUA will join the ranks of those that
+conform to this interface "out of the box."
 
 
-File: sc,  Node: Version 3 Changes,  Next: Thanks and History,  Prev: Hints to MUA Authors,  Up: Top
+File: sc,  Node: Thanks and History,  Next: GNU Free Documentation License,  Prev: Hints to MUA Authors,  Up: Top
 
-11 Version 3 Changes
-********************
-
-With version 3, Supercite has undergone an almost complete rewrite, and
-has hopefully benefited in a number of ways, including vast
-improvements in the speed of performance, a big reduction in size of the
-code and in the use of Emacs resources, and a much cleaner and flexible
-internal architecture.  The central construct of the info alist, and its
-role in Supercite has been expanded, and the other central concept, the
-general package Regi, was developed to provide a theoretically unlimited
-flexibility.
-
-   But most of this work is internal and not of very great importance
-to the casual user. There have been some changes at the user-visible
-level, but for the most part, the Supercite configuration variables from
-version 2 should still be relevant to version 3.  Below, I briefly
-outline those user-visible things that have changed since version 2. For
-details, look to other sections of this manual.
-
-  1. Supercite proper now comes in a single file, `supercite.el', which
-     contains everything except the unsupported noodlings, overloading
-     (which should be more or less obsolete with the release of Emacs
-     19), and the general lisp packages `reporter.el' and `regi.el'.
-     Finally, the TeXinfo manual comes in its own file as well.  In
-     particular, the file `sc.el' from the version 2 distribution is
-     obsolete, as is the file `sc-elec.el'.
-
-  2. `sc-spacify-name-chars' is gone in version 3.
-
-  3. `sc-nickname-alist' is gone in version 3.  The
-     `sc-attrib-selection-list' is a more general construct supporting
-     the same basic feature.
-
-  4. The version 2 variable `sc-preferred-attribution' has been changed
-     to `sc-preferred-attribution-list', and has been expanded upon to
-     allow you to specify an ordered list of preferred attributions.
-
-  5. `sc-mail-fields-list' has been removed, and header nuking in
-     general has been greatly improved, giving you wider flexibility in
-     specifying which headers to keep and remove while presenting a
-     simplified interface to commonly chosen defaults.
-
-  6. Post-yank paragraph filling has been completely removed from
-     Supercite, other packages just do it better than Supercite ever
-     would.  Supercite will still fill newly cited paragraphs.
-
-  7. The variable `sc-all-but-cite-p' has been replaced by
-     `sc-cite-region-limit'.
-
-  8. Keymap hacking in the reply buffer has been greatly simplified,
-     with, I believe, little reduction in functionality.
-
-  9. Hacking of the reply buffer's docstring has been completely
-     eliminated.
-
-
-File: sc,  Node: Thanks and History,  Next: The Supercite Mailing List,  Prev: Version 3 Changes,  Up: Top
-
-12 Thanks and History
+11 Thanks and History
 *********************
 
 The Supercite package was derived from its predecessor Superyank 1.11
@@ -1887,10 +1564,18 @@ non-nested citations and implemented some rough code to provide this
 style. Superyank and Supercite version 2 evolved to the point where much
 of the attribution selection mechanism was automatic, and features have
 been continuously added through the comments and suggestions of the
-Supercite mailing list participants.  Supercite version 3 represents a
-nearly complete rewrite with many of the algorithms and coding styles
-being vastly improved.  Hopefully Supercite version 3 is faster,
-smaller, and much more flexible than its predecessors.
+Supercite mailing list participants.
+
+   With version 3, Supercite underwent an almost complete rewrite,
+benefitting in a number of ways, including vast improvements in the
+speed of performance, a big reduction in size of the code and in the use
+of Emacs resources, and a much cleaner and flexible internal
+architecture.  Most of this work was internal and not of very great
+importance to the casual user.  There were some changes at the
+user-visible level, but for the most part, the Supercite configuration
+variables from version 2 should still be relevant to version 3.
+Hopefully Supercite version 3 is faster, smaller, and much more flexible
+than its predecessors.
 
    In the version 2 manual I thanked some specific people for their
 help in developing Supercite 2.  You folks know who you are and your
@@ -1905,49 +1590,21 @@ code to support this.
 
    All who have helped and contributed have been greatly appreciated.
 
-
-File: sc,  Node: The Supercite Mailing List,  Next: GNU Free Documentation License,  Prev: Thanks and History,  Up: Top
-
-13 The Supercite Mailing List
-*****************************
-
-The author runs a simple mail expanding mailing list for discussion of
-issues related to Supercite. This includes enhancement requests, bug
-reports, general help questions, etc.  To subscribe or unsubscribe to
-the mailing list, send a request to the administrative address:
-
-     supercite-request@python.org
-
-   Please be sure to include the most reliable and shortest (preferably
-Internet) address back to you.  To post articles to the list, send your
-message to this address (you do not need to be a member to post, but be
-sure to indicate this in your article or replies may not be CC'd to
-you):
-
-     supercite@python.org
-
-   If you are sending bug reports, they should go to the following
-address, but _please_! use the command `sc-submit-bug-report' since it
-will be much easier for me to duplicate your problem if you do so.  It
-will set up a mail buffer automatically with this address on the `To:'
-line:
-
-     supercite-help@python.org
+   Supercite was written by Barry Warsaw.
 
 
-File: sc,  Node: GNU Free Documentation License,  Next: Concept Index,  Prev: The Supercite Mailing List,  Up: Top
+File: sc,  Node: GNU Free Documentation License,  Next: Concept Index,  Prev: Thanks and History,  Up: Top
 
 Appendix A GNU Free Documentation License
 *****************************************
 
-                      Version 1.2, November 2002
+                     Version 1.3, 3 November 2008
 
-     Copyright (C) 2000,2001,2002  Free Software Foundation, Inc.
-     51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
      of this license document, but changing it is not allowed.
-
 
   0. PREAMBLE
 
@@ -1959,7 +1616,7 @@ Appendix A GNU Free Documentation License
      author and publisher a way to get credit for their work, while not
      being considered responsible for modifications made by others.
 
-     This License is a kind of "copyleft," which means that derivative
+     This License is a kind of "copyleft", which means that derivative
      works of the document must themselves be free in the same sense.
      It complements the GNU General Public License, which is a copyleft
      license designed for free software.
@@ -1973,7 +1630,6 @@ Appendix A GNU Free Documentation License
      We recommend this License principally for works whose purpose is
      instruction or reference.
 
-
   1. APPLICABILITY AND DEFINITIONS
 
      This License applies to any manual or other work, in any medium,
@@ -1981,8 +1637,8 @@ Appendix A GNU Free Documentation License
      can be distributed under the terms of this License.  Such a notice
      grants a world-wide, royalty-free license, unlimited in duration,
      to use that work under the conditions stated herein.  The
-     "Document," below, refers to any such manual or work.  Any member
-     of the public is a licensee, and is addressed as "you."  You
+     "Document", below, refers to any such manual or work.  Any member
+     of the public is a licensee, and is addressed as "you".  You
      accept the license if you copy, modify or distribute the work in a
      way requiring permission under copyright law.
 
@@ -1990,16 +1646,16 @@ Appendix A GNU Free Documentation License
      Document or a portion of it, either copied verbatim, or with
      modifications and/or translated into another language.
 
-     A "Secondary Section" is a named appendix or a front-matter
-     section of the Document that deals exclusively with the
-     relationship of the publishers or authors of the Document to the
-     Document's overall subject (or to related matters) and contains
-     nothing that could fall directly within that overall subject.
-     (Thus, if the Document is in part a textbook of mathematics, a
-     Secondary Section may not explain any mathematics.)  The
-     relationship could be a matter of historical connection with the
-     subject or with related matters, or of legal, commercial,
-     philosophical, ethical or political position regarding them.
+     A "Secondary Section" is a named appendix or a front-matter section
+     of the Document that deals exclusively with the relationship of the
+     publishers or authors of the Document to the Document's overall
+     subject (or to related matters) and contains nothing that could
+     fall directly within that overall subject.  (Thus, if the Document
+     is in part a textbook of mathematics, a Secondary Section may not
+     explain any mathematics.)  The relationship could be a matter of
+     historical connection with the subject or with related matters, or
+     of legal, commercial, philosophical, ethical or political position
+     regarding them.
 
      The "Invariant Sections" are certain Secondary Sections whose
      titles are designated, as being those of Invariant Sections, in
@@ -2027,7 +1683,7 @@ Appendix A GNU Free Documentation License
      markup, has been arranged to thwart or discourage subsequent
      modification by readers is not Transparent.  An image format is
      not Transparent if used for any substantial amount of text.  A
-     copy that is not "Transparent" is called "Opaque."
+     copy that is not "Transparent" is called "Opaque".
 
      Examples of suitable formats for Transparent copies include plain
      ASCII without markup, Texinfo input format, LaTeX input format,
@@ -2035,8 +1691,8 @@ Appendix A GNU Free Documentation License
      standard-conforming simple HTML, PostScript or PDF designed for
      human modification.  Examples of transparent image formats include
      PNG, XCF and JPG.  Opaque formats include proprietary formats that
-     can be read and edited only by proprietary word processors, SGML
-     or XML for which the DTD and/or processing tools are not generally
+     can be read and edited only by proprietary word processors, SGML or
+     XML for which the DTD and/or processing tools are not generally
      available, and the machine-generated HTML, PostScript or PDF
      produced by some word processors for output purposes only.
 
@@ -2047,11 +1703,14 @@ Appendix A GNU Free Documentation License
      Page" means the text near the most prominent appearance of the
      work's title, preceding the beginning of the body of the text.
 
+     The "publisher" means any person or entity that distributes copies
+     of the Document to the public.
+
      A section "Entitled XYZ" means a named subunit of the Document
      whose title either is precisely XYZ or contains XYZ in parentheses
      following text that translates XYZ in another language.  (Here XYZ
      stands for a specific section name mentioned below, such as
-     "Acknowledgements," "Dedications," "Endorsements," or "History.")
+     "Acknowledgements", "Dedications", "Endorsements", or "History".)
      To "Preserve the Title" of such a section when you modify the
      Document means that it remains a section "Entitled XYZ" according
      to this definition.
@@ -2129,59 +1788,75 @@ Appendix A GNU Free Documentation License
      whoever possesses a copy of it.  In addition, you must do these
      things in the Modified Version:
 
-     A. Use in the Title Page (and on the covers, if any) a title
-     distinct    from that of the Document, and from those of previous
-     versions    (which should, if there were any, be listed in the
-     History section    of the Document).  You may use the same title
-     as a previous version    if the original publisher of that version
-     gives permission.
-     B. List on the Title Page, as authors, one or more persons or
-     entities    responsible for authorship of the modifications in the
-     Modified    Version, together with at least five of the principal
-     authors of the    Document (all of its principal authors, if it
-     has fewer than five),    unless they release you from this
-     requirement.
-     C. State on the Title page the name of the publisher of the
-     Modified Version, as the publisher.
-     D. Preserve all the copyright notices of the Document.
-     E. Add an appropriate copyright notice for your modifications
-     adjacent to the other copyright notices.
-     F. Include, immediately after the copyright notices, a license
-     notice    giving the public permission to use the Modified Version
-     under the    terms of this License, in the form shown in the
-     Addendum below.
-     G. Preserve in that license notice the full lists of Invariant
-     Sections    and required Cover Texts given in the Document's
-     license notice.
-     H. Include an unaltered copy of this License.
-     I. Preserve the section Entitled "History," Preserve its Title,
-     and add    to it an item stating at least the title, year, new
-     authors, and    publisher of the Modified Version as given on the
-     Title Page.  If    there is no section Entitled "History" in the
-     Document, create one    stating the title, year, authors, and
-     publisher of the Document as    given on its Title Page, then add
-     an item describing the Modified    Version as stated in the
-     previous sentence.
-     J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and likewise
-       the network locations given in the Document for previous versions
-       it was based on.  These may be placed in the "History" section.
-       You may omit a network location for a work that was published at
-       least four years before the Document itself, or if the original
-      publisher of the version it refers to gives permission.
-     K. For any section Entitled "Acknowledgements" or "Dedications,"
-     Preserve the Title of the section, and preserve in the section all
-       the substance and tone of each of the contributor
-     acknowledgements    and/or dedications given therein.
-     L. Preserve all the Invariant Sections of the Document,
-     unaltered in their text and in their titles.  Section numbers
-     or the equivalent are not considered part of the section titles.
-     M. Delete any section Entitled "Endorsements."  Such a section
-     may not be included in the Modified Version.
-     N. Do not retitle any existing section to be Entitled
-     "Endorsements"    or to conflict in title with any Invariant
-     Section.
-     O. Preserve any Warranty Disclaimers.
+       A. Use in the Title Page (and on the covers, if any) a title
+          distinct from that of the Document, and from those of
+          previous versions (which should, if there were any, be listed
+          in the History section of the Document).  You may use the
+          same title as a previous version if the original publisher of
+          that version gives permission.
+
+       B. List on the Title Page, as authors, one or more persons or
+          entities responsible for authorship of the modifications in
+          the Modified Version, together with at least five of the
+          principal authors of the Document (all of its principal
+          authors, if it has fewer than five), unless they release you
+          from this requirement.
+
+       C. State on the Title page the name of the publisher of the
+          Modified Version, as the publisher.
+
+       D. Preserve all the copyright notices of the Document.
+
+       E. Add an appropriate copyright notice for your modifications
+          adjacent to the other copyright notices.
+
+       F. Include, immediately after the copyright notices, a license
+          notice giving the public permission to use the Modified
+          Version under the terms of this License, in the form shown in
+          the Addendum below.
+
+       G. Preserve in that license notice the full lists of Invariant
+          Sections and required Cover Texts given in the Document's
+          license notice.
+
+       H. Include an unaltered copy of this License.
+
+       I. Preserve the section Entitled "History", Preserve its Title,
+          and add to it an item stating at least the title, year, new
+          authors, and publisher of the Modified Version as given on
+          the Title Page.  If there is no section Entitled "History" in
+          the Document, create one stating the title, year, authors,
+          and publisher of the Document as given on its Title Page,
+          then add an item describing the Modified Version as stated in
+          the previous sentence.
+
+       J. Preserve the network location, if any, given in the Document
+          for public access to a Transparent copy of the Document, and
+          likewise the network locations given in the Document for
+          previous versions it was based on.  These may be placed in
+          the "History" section.  You may omit a network location for a
+          work that was published at least four years before the
+          Document itself, or if the original publisher of the version
+          it refers to gives permission.
+
+       K. For any section Entitled "Acknowledgements" or "Dedications",
+          Preserve the Title of the section, and preserve in the
+          section all the substance and tone of each of the contributor
+          acknowledgements and/or dedications given therein.
+
+       L. Preserve all the Invariant Sections of the Document,
+          unaltered in their text and in their titles.  Section numbers
+          or the equivalent are not considered part of the section
+          titles.
+
+       M. Delete any section Entitled "Endorsements".  Such a section
+          may not be included in the Modified Version.
+
+       N. Do not retitle any existing section to be Entitled
+          "Endorsements" or to conflict in title with any Invariant
+          Section.
+
+       O. Preserve any Warranty Disclaimers.
 
      If the Modified Version includes new front-matter sections or
      appendices that qualify as Secondary Sections and contain no
@@ -2191,11 +1866,11 @@ Appendix A GNU Free Documentation License
      Version's license notice.  These titles must be distinct from any
      other section titles.
 
-     You may add a section Entitled "Endorsements," provided it contains
+     You may add a section Entitled "Endorsements", provided it contains
      nothing but endorsements of your Modified Version by various
-     parties-for example, statements of peer review or that the text has
-     been approved by an organization as the authoritative definition
-     of a standard.
+     parties--for example, statements of peer review or that the text
+     has been approved by an organization as the authoritative
+     definition of a standard.
 
      You may add a passage of up to five words as a Front-Cover Text,
      and a passage of up to 25 words as a Back-Cover Text, to the end
@@ -2235,7 +1910,7 @@ Appendix A GNU Free Documentation License
      In the combination, you must combine any sections Entitled
      "History" in the various original documents, forming one section
      Entitled "History"; likewise combine any sections Entitled
-     "Acknowledgements," and any sections Entitled "Dedications."  You
+     "Acknowledgements", and any sections Entitled "Dedications".  You
      must delete all sections Entitled "Endorsements."
 
   6. COLLECTIONS OF DOCUMENTS
@@ -2288,20 +1963,37 @@ Appendix A GNU Free Documentation License
      this License or a notice or disclaimer, the original version will
      prevail.
 
-     If a section in the Document is Entitled "Acknowledgements,"
-     "Dedications," or "History," the requirement (section 4) to
+     If a section in the Document is Entitled "Acknowledgements",
+     "Dedications", or "History", the requirement (section 4) to
      Preserve its Title (section 1) will typically require changing the
      actual title.
 
   9. TERMINATION
 
      You may not copy, modify, sublicense, or distribute the Document
-     except as expressly provided for under this License.  Any other
-     attempt to copy, modify, sublicense or distribute the Document is
-     void, and will automatically terminate your rights under this
-     License.  However, parties who have received copies, or rights,
-     from you under this License will not have their licenses
-     terminated so long as such parties remain in full compliance.
+     except as expressly provided under this License.  Any attempt
+     otherwise to copy, modify, sublicense, or distribute it is void,
+     and will automatically terminate your rights under this License.
+
+     However, if you cease all violation of this License, then your
+     license from a particular copyright holder is reinstated (a)
+     provisionally, unless and until the copyright holder explicitly
+     and finally terminates your license, and (b) permanently, if the
+     copyright holder fails to notify you of the violation by some
+     reasonable means prior to 60 days after the cessation.
+
+     Moreover, your license from a particular copyright holder is
+     reinstated permanently if the copyright holder notifies you of the
+     violation by some reasonable means, this is the first time you have
+     received notice of violation of this License (for any work) from
+     that copyright holder, and you cure the violation prior to 30 days
+     after your receipt of the notice.
+
+     Termination of your rights under this section does not terminate
+     the licenses of parties who have received copies or rights from
+     you under this License.  If your rights have been terminated and
+     not permanently reinstated, receipt of a copy of some or all of
+     the same material does not give you any rights to use it.
 
  10. FUTURE REVISIONS OF THIS LICENSE
 
@@ -2309,7 +2001,7 @@ Appendix A GNU Free Documentation License
      the GNU Free Documentation License from time to time.  Such new
      versions will be similar in spirit to the present version, but may
      differ in detail to address new problems or concerns.  See
-     http://www.gnu.org/copyleft/.
+     `http://www.gnu.org/copyleft/'.
 
      Each version of the License is given a distinguishing version
      number.  If the Document specifies that a particular numbered
@@ -2319,7 +2011,40 @@ Appendix A GNU Free Documentation License
      published (not as a draft) by the Free Software Foundation.  If
      the Document does not specify a version number of this License,
      you may choose any version ever published (not as a draft) by the
-     Free Software Foundation.
+     Free Software Foundation.  If the Document specifies that a proxy
+     can decide which future versions of this License can be used, that
+     proxy's public statement of acceptance of a version permanently
+     authorizes you to choose that version for the Document.
+
+ 11. RELICENSING
+
+     "Massive Multiauthor Collaboration Site" (or "MMC Site") means any
+     World Wide Web server that publishes copyrightable works and also
+     provides prominent facilities for anybody to edit those works.  A
+     public wiki that anybody can edit is an example of such a server.
+     A "Massive Multiauthor Collaboration" (or "MMC") contained in the
+     site means any set of copyrightable works thus published on the MMC
+     site.
+
+     "CC-BY-SA" means the Creative Commons Attribution-Share Alike 3.0
+     license published by Creative Commons Corporation, a not-for-profit
+     corporation with a principal place of business in San Francisco,
+     California, as well as future copyleft versions of that license
+     published by that same organization.
+
+     "Incorporate" means to publish or republish a Document, in whole or
+     in part, as part of another Document.
+
+     An MMC is "eligible for relicensing" if it is licensed under this
+     License, and if all works that were first published under this
+     License somewhere other than this MMC, and subsequently
+     incorporated in whole or in part into the MMC, (1) had no cover
+     texts or invariant sections, and (2) were thus incorporated prior
+     to November 1, 2008.
+
+     The operator of an MMC Site may republish an MMC contained in the
+     site under CC-BY-SA on the same site at any time before August 1,
+     2009, provided the MMC is eligible for relicensing.
 
 
 ADDENDUM: How to use this License for your documents
@@ -2329,20 +2054,20 @@ To use this License in a document you have written, include a copy of
 the License in the document and put the following copyright and license
 notices just after the title page:
 
-     Copyright (C)  YEAR  YOUR NAME.
-     Permission is granted to copy, distribute and/or modify this document
-     under the terms of the GNU Free Documentation License, Version 1.2
-     or any later version published by the Free Software Foundation;
-     with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
-     A copy of the license is included in the section entitled ``GNU
-     Free Documentation License.''
+       Copyright (C)  YEAR  YOUR NAME.
+       Permission is granted to copy, distribute and/or modify this document
+       under the terms of the GNU Free Documentation License, Version 1.3
+       or any later version published by the Free Software Foundation;
+       with no Invariant Sections, no Front-Cover Texts, and no Back-Cover
+       Texts.  A copy of the license is included in the section entitled ``GNU
+       Free Documentation License''.
 
    If you have Invariant Sections, Front-Cover Texts and Back-Cover
 Texts, replace the "with...Texts." line with this:
 
-     with the Invariant Sections being LIST THEIR TITLES, with the
-     Front-Cover Texts being LIST, and with the Back-Cover Texts being
-     LIST.
+         with the Invariant Sections being LIST THEIR TITLES, with
+         the Front-Cover Texts being LIST, and with the Back-Cover Texts
+         being LIST.
 
    If you have Invariant Sections without Cover Texts, or some other
 combination of the three, merge those two alternatives to suit the
@@ -2362,15 +2087,7 @@ Concept Index
  [index ]
 * Menu:
 
-* .emacs file <1>:                       Overloading for Non-conforming MUAs.
-                                                               (line  3)
-* .emacs file <2>:                       VM with any Emacsen.  (line  3)
-* .emacs file <3>:                       MH-E with any Emacsen.
-                                                               (line  3)
-* .emacs file <4>:                       Emacs 18 MUAs.        (line  3)
-* .emacs file <5>:                       Emacs 19 MUAs.        (line  3)
-* .emacs file:                           Getting Connected.    (line 42)
-* add-hook substitute:                   Emacs 18 MUAs.        (line 14)
+* .emacs file:                           Getting Connected.    (line  6)
 * attribute, attributing:                Usage Overview.       (line  3)
 * attribution info field (sc-):          Information Keys and the Info Alist.
                                                                (line 40)
@@ -2380,7 +2097,7 @@ Concept Index
 * author info field (sc-):               Information Keys and the Info Alist.
                                                                (line 61)
 * author names:                          Author Names.         (line  3)
-* autoload:                              Getting Connected.    (line 42)
+* autoload:                              Getting Connected.    (line 36)
 * citation:                              Citations.            (line  3)
 * citation delimiter:                    Citation Elements.    (line 19)
 * citation info field (sc-):             Information Keys and the Info Alist.
@@ -2409,8 +2126,6 @@ Concept Index
 * header rewrite functions:              Reference Headers.    (line 21)
 * header rewrite functions, built-in:    The Built-in Header Rewrite Functions.
                                                                (line  3)
-* Hyperbole:                             Overloading for Non-conforming MUAs.
-                                                               (line 17)
 * Info Alist:                            Information Keys and the Info Alist.
                                                                (line  3)
 * info alist:                            What Supercite Does.  (line 14)
@@ -2424,42 +2139,32 @@ Concept Index
                                                                (line 15)
 * lastname info field (sc-):             Information Keys and the Info Alist.
                                                                (line 67)
-* mail-citation-hook:                    MH-E with any Emacsen.
-                                                               (line  3)
-* mailing list address:                  The Supercite Mailing List.
-                                                               (line  3)
-* mark:                                  Getting Connected.    (line 52)
+* mark:                                  Getting Connected.    (line 46)
 * middlename-1 info field (sc-):         Information Keys and the Info Alist.
                                                                (line 70)
 * modeline <1>:                          Reply Buffer Initialization.
                                                                (line 32)
 * modeline:                              What Supercite Does.  (line 25)
-* MUA:                                   Introduction.         (line 24)
+* MUA:                                   Introduction.         (line 22)
 * nested citations:                      Citations.            (line  3)
 * non-nested citations:                  Citations.            (line 35)
-* NUA:                                   Introduction.         (line 24)
+* NUA:                                   Introduction.         (line 22)
 * nuking mail headers:                   What Supercite Does.  (line 20)
-* overloading <1>:                       Overloading for Non-conforming MUAs.
-                                                               (line  3)
-* overloading:                           Emacs 18 MUAs.        (line  3)
-* point:                                 Getting Connected.    (line 52)
+* point:                                 Getting Connected.    (line 46)
 * reciting:                              Frames You Can Customize.
                                                                (line 22)
 * reference header:                      What Supercite Does.  (line 20)
 * reference headers:                     Reference Headers.    (line  3)
 * Regi:                                  Configuring the Citation Engine.
                                                                (line  3)
-* regi.el file:                          Version 3 Changes.    (line 22)
 * reply-address info field (sc-):        Information Keys and the Info Alist.
                                                                (line 49)
-* reporter.el file:                      Version 3 Changes.    (line 22)
 * sc-attribution info field:             Information Keys and the Info Alist.
                                                                (line 40)
 * sc-author info field:                  Information Keys and the Info Alist.
                                                                (line 61)
 * sc-citation info field:                Information Keys and the Info Alist.
                                                                (line 43)
-* sc-elec.el from version 2:             Version 3 Changes.    (line 22)
 * sc-emailname info field:               Information Keys and the Info Alist.
                                                                (line 55)
 * sc-firstname info field:               Information Keys and the Info Alist.
@@ -2472,23 +2177,13 @@ Concept Index
                                                                (line 67)
 * sc-middlename-1 info field:            Information Keys and the Info Alist.
                                                                (line 70)
-* sc-oloads.el:                          Overloading for Non-conforming MUAs.
-                                                               (line  3)
 * sc-reply-address info field:           Information Keys and the Info Alist.
                                                                (line 49)
 * sc-sender-address info field:          Information Keys and the Info Alist.
                                                                (line 52)
-* sc-unsupp.el file <1>:                 Version 3 Changes.    (line  6)
-* sc-unsupp.el file:                     Emacs 18 MUAs.        (line 14)
-* sc.el from version 2:                  Version 3 Changes.    (line 22)
 * sender-address info field (sc-):       Information Keys and the Info Alist.
                                                                (line 52)
 * sendmail.el:                           Hints to MUA Authors. (line 31)
-* sendmail.el file:                      Emacs 18 MUAs.        (line  3)
-* setq as a substitute for add-hook:     Emacs 18 MUAs.        (line 14)
-* supercite mailing list address:        The Supercite Mailing List.
-                                                               (line  3)
-* supercite.el file:                     Version 3 Changes.    (line 22)
 * toggling variables:                    Variable Toggling Shortcuts.
                                                                (line  3)
 * unciting:                              Frames You Can Customize.
@@ -2509,16 +2204,11 @@ each appears under its `sc-'COMMAND name and its COMMAND name.
  [index ]
 * Menu:
 
-* add-hook <1>:                          MH-E with any Emacsen.
-                                                               (line  3)
-* add-hook:                              Emacs 18 MUAs.        (line 14)
 * cite-original (sc-) <1>:               Reply Buffer Initialization.
                                                                (line  3)
-* cite-original (sc-):                   Getting Connected.    (line 42)
-* cite-region (sc-):                     Citing Commands.      (line 26)
+* cite-original (sc-):                   Getting Connected.    (line 36)
+* cite-region (sc-):                     Citing Commands.      (line 17)
 * defvar:                                Hints to MUA Authors. (line 31)
-* describe (sc-):                        Miscellaneous Commands.
-                                                               (line 11)
 * eref-abort (sc-):                      Electric References.  (line 61)
 * eref-exit (sc-):                       Electric References.  (line 57)
 * eref-goto (sc-):                       Electric References.  (line 43)
@@ -2558,17 +2248,13 @@ each appears under its `sc-'COMMAND name and its COMMAND name.
                                                                (line  6)
 * open-line (sc-):                       Miscellaneous Commands.
                                                                (line  6)
-* perform-overloads (sc-):               GNEWS with any Emacsen.
-                                                               (line  3)
-* recite-region (sc-):                   Citing Commands.      (line 44)
+* recite-region (sc-):                   Citing Commands.      (line 35)
 * regi-interpret:                        Using Regi.           (line  3)
 * sc-cite-original <1>:                  Reply Buffer Initialization.
                                                                (line  3)
-* sc-cite-original <2>:                  Getting Connected.    (line 42)
+* sc-cite-original <2>:                  Getting Connected.    (line 36)
 * sc-cite-original:                      What Supercite Does.  (line  3)
-* sc-cite-region:                        Citing Commands.      (line 26)
-* sc-describe:                           Miscellaneous Commands.
-                                                               (line 11)
+* sc-cite-region:                        Citing Commands.      (line 17)
 * sc-eref-abort:                         Electric References.  (line 61)
 * sc-eref-exit:                          Electric References.  (line 57)
 * sc-eref-goto:                          Electric References.  (line 43)
@@ -2602,30 +2288,17 @@ each appears under its `sc-'COMMAND name and its COMMAND name.
                                                                (line 26)
 * sc-open-line:                          Miscellaneous Commands.
                                                                (line  6)
-* sc-perform-overloads <1>:              Overloading for Non-conforming MUAs.
-                                                               (line  3)
-* sc-perform-overloads:                  GNEWS with any Emacsen.
-                                                               (line  3)
-* sc-recite-region:                      Citing Commands.      (line 44)
+* sc-recite-region:                      Citing Commands.      (line 35)
 * sc-setup-filladapt:                    Filling Cited Text.   (line  3)
-* sc-submit-bug-report <1>:              Miscellaneous Commands.
-                                                               (line 21)
-* sc-submit-bug-report:                  Getting Connected.    (line 42)
-* sc-uncite-region:                      Citing Commands.      (line 36)
-* sc-version:                            Miscellaneous Commands.
-                                                               (line 16)
+* sc-submit-bug-report:                  Getting Connected.    (line 36)
+* sc-uncite-region:                      Citing Commands.      (line 27)
 * set-variable:                          Variable Toggling Shortcuts.
                                                                (line 46)
-* setq:                                  Emacs 18 MUAs.        (line 14)
 * setup-filladapt (sc-):                 Filling Cited Text.   (line  3)
 * string-match:                          Frames You Can Customize.
                                                                (line 42)
-* submit-bug-report (sc-) <1>:           Miscellaneous Commands.
-                                                               (line 21)
-* submit-bug-report (sc-):               Getting Connected.    (line 42)
-* uncite-region (sc-):                   Citing Commands.      (line 36)
-* version (sc-):                         Miscellaneous Commands.
-                                                               (line 16)
+* submit-bug-report (sc-):               Getting Connected.    (line 36)
+* uncite-region (sc-):                   Citing Commands.      (line 27)
 
 
 File: sc,  Node: Key Index,  Next: Variable Index,  Prev: Command Index,  Up: Top
@@ -2640,11 +2313,7 @@ Key Index
                                                                (line  3)
 * C-c C-p:                               Reply Buffer Initialization.
                                                                (line 15)
-* C-c C-p ?:                             Miscellaneous Commands.
-                                                               (line 11)
-* C-c C-p c:                             Citing Commands.      (line 26)
-* C-c C-p C-b:                           Miscellaneous Commands.
-                                                               (line 21)
+* C-c C-p c:                             Citing Commands.      (line 17)
 * C-c C-p C-p <1>:                       Variable Toggling Shortcuts.
                                                                (line 64)
 * C-c C-p C-p:                           Filling Cited Text.   (line 42)
@@ -2652,19 +2321,15 @@ Key Index
                                                                (line 12)
 * C-c C-p f:                             Mail Field Commands.  (line 10)
 * C-c C-p g:                             Mail Field Commands.  (line 37)
-* C-c C-p h:                             Miscellaneous Commands.
-                                                               (line 11)
 * C-c C-p i:                             Insertion Commands.   (line 18)
 * C-c C-p o:                             Miscellaneous Commands.
                                                                (line  6)
-* C-c C-p r:                             Citing Commands.      (line 44)
-* C-c C-p u:                             Citing Commands.      (line 36)
-* C-c C-p v:                             Miscellaneous Commands.
-                                                               (line 16)
+* C-c C-p r:                             Citing Commands.      (line 35)
+* C-c C-p u:                             Citing Commands.      (line 27)
 * C-c C-p w:                             Insertion Commands.   (line  8)
 * C-c C-y:                               Usage Overview.       (line  3)
 * C-j:                                   Electric References.  (line 57)
-* C-u:                                   Citing Commands.      (line 26)
+* C-u:                                   Citing Commands.      (line 17)
 * f:                                     Usage Overview.       (line  3)
 * g:                                     Electric References.  (line 43)
 * j:                                     Electric References.  (line 49)
@@ -2688,7 +2353,6 @@ each appears under its `sc-'VARIABLE name and its VARIABLE name.
  [index ]
 * Menu:
 
-* attrib-selection-list:                 Version 3 Changes.   (line  32)
 * attrib-selection-list (sc-):           Attribution Preferences.
                                                               (line  38)
 * attribs-postselect-hook (sc-):         Anonymous Attributions.
@@ -2713,11 +2377,10 @@ each appears under its `sc-'VARIABLE name and its VARIABLE name.
                                                               (line  12)
 * cite-blank-lines-p (sc-):              Reply Buffer Initialization.
                                                               (line 108)
-* cite-region-limit:                     Version 3 Changes.   (line  49)
 * cite-region-limit (sc-)b:              Reply Buffer Initialization.
                                                               (line  85)
-* confirm-always-p:                      Citing Commands.     (line  26)
-* confirm-always-p (sc-) <1>:            Citing Commands.     (line  51)
+* confirm-always-p:                      Citing Commands.     (line  17)
+* confirm-always-p (sc-) <1>:            Citing Commands.     (line  42)
 * confirm-always-p (sc-) <2>:            Anonymous Attributions.
                                                               (line  39)
 * confirm-always-p (sc-):                Reply Buffer Initialization.
@@ -2734,30 +2397,17 @@ each appears under its `sc-'VARIABLE name and its VARIABLE name.
 * fill-prefix <1>:                       Filling Cited Text.  (line  25)
 * fill-prefix:                           What Supercite Does. (line  35)
 * fixup-whitespace-p (sc-):              Filling Cited Text.  (line  21)
-* gnews-ready-hook:                      GNEWS with any Emacsen.
-                                                              (line   3)
-* hyperb:version:                        Overloading for Non-conforming MUAs.
-                                                              (line  17)
 * load-hook (sc-) <1>:                   Filling Cited Text.  (line   3)
-* load-hook (sc-):                       Getting Connected.   (line  65)
+* load-hook (sc-):                       Getting Connected.   (line  59)
 * mail-citation-hook <1>:                Hints to MUA Authors.
                                                               (line  31)
-* mail-citation-hook <2>:                Overloading for Non-conforming MUAs.
-                                                              (line   3)
-* mail-citation-hook <3>:                VM with any Emacsen. (line   3)
-* mail-citation-hook <4>:                Emacs 18 MUAs.       (line   3)
-* mail-citation-hook:                    Emacs 19 MUAs.       (line   3)
+* mail-citation-hook:                    Getting Connected.   (line   6)
 * mail-header-separator:                 What Supercite Does Not Do.
                                                               (line  14)
 * mail-warn-if-non-rfc822-p (sc-):       Reply Buffer Initialization.
                                                               (line  41)
-* mail-yank-hooks <1>:                   Hints to MUA Authors.
+* mail-yank-hooks:                       Hints to MUA Authors.
                                                               (line  31)
-* mail-yank-hooks:                       VM with any Emacsen. (line   3)
-* mh-yank-from-start-of-msg:             MH-E with any Emacsen.
-                                                              (line  26)
-* mh-yank-hooks:                         MH-E with any Emacsen.
-                                                              (line   3)
 * mode-map-prefix (sc-) <1>:             Post-yank Formatting Commands.
                                                               (line   3)
 * mode-map-prefix (sc-):                 Reply Buffer Initialization.
@@ -2766,20 +2416,16 @@ each appears under its `sc-'VARIABLE name and its VARIABLE name.
                                                               (line  22)
 * name-filter-alist (sc-):               Author Names.        (line  26)
 * nested-citation-p (sc-):               Citations.           (line  50)
-* news-reply-mode-hook <1>:              Overloading for Non-conforming MUAs.
-                                                              (line  54)
-* news-reply-mode-hook:                  GNEWS with any Emacsen.
-                                                              (line   3)
 * nuke-mail-header-list (sc-):           Reply Buffer Initialization.
                                                               (line  52)
 * nuke-mail-headers (sc-):               Reply Buffer Initialization.
                                                               (line  52)
 * post-hook (sc-):                       Reply Buffer Initialization.
                                                               (line 122)
-* pre-cite-hook (sc-):                   Citing Commands.     (line  26)
+* pre-cite-hook (sc-):                   Citing Commands.     (line  17)
 * pre-hook (sc-) <1>:                    Reply Buffer Initialization.
                                                               (line   9)
-* pre-hook (sc-):                        Getting Connected.   (line  65)
+* pre-hook (sc-):                        Getting Connected.   (line  59)
 * preferred-attribution-list (sc-):      Selecting an Attribution.
                                                               (line   3)
 * preferred-header-style (sc-) <1>:      Insertion Commands.  (line   9)
@@ -2787,7 +2433,6 @@ each appears under its `sc-'VARIABLE name and its VARIABLE name.
 * reference-tag-string (sc-):            The Built-in Header Rewrite Functions.
                                                               (line  14)
 * rewrite-header-list (sc-):             Reference Headers.   (line  21)
-* sc-attrib-selection-list <1>:          Version 3 Changes.   (line  32)
 * sc-attrib-selection-list:              Attribution Preferences.
                                                               (line  38)
 * sc-attribs-postselect-hook:            Anonymous Attributions.
@@ -2814,11 +2459,10 @@ each appears under its `sc-'VARIABLE name and its VARIABLE name.
                                                               (line 108)
 * sc-cite-frame-alist:                   Frames You Can Customize.
                                                               (line  33)
-* sc-cite-region-limit <1>:              Version 3 Changes.   (line  49)
-* sc-cite-region-limit <2>:              Citing Commands.     (line   3)
+* sc-cite-region-limit <1>:              Citing Commands.     (line   3)
 * sc-cite-region-limit:                  Reply Buffer Initialization.
                                                               (line  85)
-* sc-confirm-always-p <1>:               Citing Commands.     (line  26)
+* sc-confirm-always-p <1>:               Citing Commands.     (line  17)
 * sc-confirm-always-p <2>:               Anonymous Attributions.
                                                               (line  39)
 * sc-confirm-always-p:                   Reply Buffer Initialization.
@@ -2840,7 +2484,7 @@ each appears under its `sc-'VARIABLE name and its VARIABLE name.
 * sc-electric-references-p:              Electric References. (line  15)
 * sc-fixup-whitespace-p:                 Filling Cited Text.  (line  21)
 * sc-load-hook <1>:                      Filling Cited Text.  (line   3)
-* sc-load-hook:                          Getting Connected.   (line  65)
+* sc-load-hook:                          Getting Connected.   (line  59)
 * sc-mail-field:                         Frames You Can Customize.
                                                               (line  42)
 * sc-mail-warn-if-non-rfc822-p:          Reply Buffer Initialization.
@@ -2861,10 +2505,10 @@ each appears under its `sc-'VARIABLE name and its VARIABLE name.
                                                               (line  52)
 * sc-post-hook:                          Reply Buffer Initialization.
                                                               (line 122)
-* sc-pre-cite-hook:                      Citing Commands.     (line  26)
+* sc-pre-cite-hook:                      Citing Commands.     (line  17)
 * sc-pre-hook <1>:                       Reply Buffer Initialization.
                                                               (line   9)
-* sc-pre-hook:                           Getting Connected.   (line  65)
+* sc-pre-hook:                           Getting Connected.   (line  59)
 * sc-preferred-attribution-list:         Selecting an Attribution.
                                                               (line   3)
 * sc-preferred-header-style <1>:         Insertion Commands.  (line   9)
@@ -2886,49 +2530,41 @@ each appears under its `sc-'VARIABLE name and its VARIABLE name.
 
 
 Tag Table:
-Node: Top1464
-Node: Introduction2199
-Node: Usage Overview4165
-Node: What Supercite Does Not Do5327
-Node: What Supercite Does6459
-Node: Citations9291
-Node: Citation Elements11581
-Node: Recognizing Citations13464
-Node: Information Keys and the Info Alist15223
-Node: Reference Headers17810
-Node: The Built-in Header Rewrite Functions19376
-Node: Electric References21826
-Node: Getting Connected24706
-Node: Emacs 19 MUAs28224
-Node: Emacs 18 MUAs29060
-Node: MH-E with any Emacsen30416
-Node: VM with any Emacsen32181
-Node: GNEWS with any Emacsen33249
-Node: Overloading for Non-conforming MUAs33976
-Node: Replying and Yanking37230
-Node: Reply Buffer Initialization37566
-Node: Filling Cited Text44454
-Node: Selecting an Attribution47927
-Node: Attribution Preferences48785
-Node: Anonymous Attributions52701
-Node: Author Names55741
-Node: Configuring the Citation Engine58229
-Node: Using Regi59954
-Node: Frames You Can Customize63829
-Node: Post-yank Formatting Commands66357
-Node: Citing Commands67503
-Node: Insertion Commands70220
-Node: Variable Toggling Shortcuts71160
-Node: Mail Field Commands73519
-Node: Miscellaneous Commands75891
-Node: Hints to MUA Authors77163
-Node: Version 3 Changes81184
-Node: Thanks and History83883
-Node: The Supercite Mailing List85482
-Node: GNU Free Documentation License86613
-Node: Concept Index108849
-Node: Command Index118887
-Node: Key Index127696
-Node: Variable Index130621
+Node: Top1110
+Node: Introduction2517
+Node: Usage Overview3544
+Node: What Supercite Does Not Do4706
+Node: What Supercite Does5838
+Node: Citations8670
+Node: Citation Elements10960
+Node: Recognizing Citations12843
+Node: Information Keys and the Info Alist14602
+Node: Reference Headers17189
+Node: The Built-in Header Rewrite Functions18755
+Node: Electric References21205
+Node: Getting Connected24085
+Node: Replying and Yanking27218
+Node: Reply Buffer Initialization27536
+Node: Filling Cited Text34424
+Node: Selecting an Attribution37897
+Node: Attribution Preferences38755
+Node: Anonymous Attributions42671
+Node: Author Names45711
+Node: Configuring the Citation Engine48191
+Node: Using Regi49916
+Node: Frames You Can Customize53791
+Node: Post-yank Formatting Commands56319
+Node: Citing Commands57465
+Node: Insertion Commands59676
+Node: Variable Toggling Shortcuts60616
+Node: Mail Field Commands62975
+Node: Miscellaneous Commands65312
+Node: Hints to MUA Authors65750
+Node: Thanks and History69252
+Node: GNU Free Documentation License71309
+Node: Concept Index96486
+Node: Command Index104340
+Node: Key Index111611
+Node: Variable Index113984
 
 End Tag Table

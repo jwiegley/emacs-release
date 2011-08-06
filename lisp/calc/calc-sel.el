@@ -1,17 +1,17 @@
 ;;; calc-sel.el --- data selection functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -134,7 +132,7 @@
 
 (defun calc-select-part (num)
   (interactive "P")
-  (or num (setq num (- last-command-char ?0)))
+  (or num (setq num (- last-command-event ?0)))
   (calc-wrapper
    (calc-prepare-selection)
    (let ((sel (calc-find-nth-part (or (nth 2 calc-selection-cache-entry)
@@ -754,11 +752,12 @@
 				     (list (and calc-sel-reselect val))))))
      (calc-handle-whys))))
 
-(defun calc-sel-mult-both-sides (no-simp &optional divide)
+(defun calc-sel-mult-both-sides (arg &optional divide)
   (interactive "P")
   (calc-wrapper
    (calc-preserve-point)
-   (let* ((num (max 1 (calc-locate-cursor-element (point))))
+   (let* ((no-simp (consp arg))
+          (num (max 1 (calc-locate-cursor-element (point))))
 	  (calc-sel-reselect calc-keep-selection)
 	  (entry (calc-top num 'entry))
 	  (expr (car entry))
@@ -796,10 +795,14 @@
 			      rhs (math-simplify rhs))
 			(and (eq func '/)
 			     (or (Math-equal (nth 1 sel) 1)
-				 (Math-equal (nth 1 sel) -1)
-				 (and (memq (car-safe (nth 2 sel)) '(+ -))
-				      (memq (car-safe alg) '(+ -))))
-			     (setq rhs (math-expand-term rhs)))))
+				 (Math-equal (nth 1 sel) -1))
+;				 (and (memq (car-safe (nth 2 sel)) '(+ -))
+;				      (memq (car-safe alg) '(+ -))))
+                             (unless arg
+                               (setq rhs (math-expand-term rhs))))))
+                  (if (and arg (not no-simp))
+                      (setq rhs (math-simplify
+                                 (calcFunc-expand rhs (unless (= arg 0) arg)))))
 		  (setq alg (calc-encase-atoms
 			     (calc-normalize (list func lhs rhs)))))
 	      (setq rhs (list (if divide '* '/) sel alg))
@@ -867,5 +870,5 @@
 
 (provide 'calc-sel)
 
-;;; arch-tag: e5169792-777d-428f-bff5-acca66813fa2
+;; arch-tag: e5169792-777d-428f-bff5-acca66813fa2
 ;;; calc-sel.el ends here

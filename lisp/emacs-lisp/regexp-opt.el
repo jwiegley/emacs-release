@@ -1,7 +1,7 @@
 ;;; regexp-opt.el --- generate efficient regexps to match strings
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Simon Marshall <simon@gnu.org>
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -101,15 +99,15 @@ If PAREN is `words', then the resulting regexp is additionally surrounded
 by \\=\\< and \\>."
   (save-match-data
     ;; Recurse on the sorted list.
-    (let* ((max-lisp-eval-depth (* 1024 1024))
-	   (max-specpdl-size (* 1024 1024))
+    (let* ((max-lisp-eval-depth 10000)
+	   (max-specpdl-size 10000)
 	   (completion-ignore-case nil)
 	   (completion-regexp-list nil)
 	   (words (eq paren 'words))
 	   (open (cond ((stringp paren) paren) (paren "\\(")))
 	   (sorted-strings (delete-dups
 			    (sort (copy-sequence strings) 'string-lessp)))
-	   (re (regexp-opt-group sorted-strings open)))
+	   (re (regexp-opt-group sorted-strings (or open t) (not open))))
       (if words (concat "\\<" re "\\>") re))))
 
 ;;;###autoload
@@ -226,7 +224,7 @@ This means the number of non-shy regexp grouping constructs
 
 	      ;; Otherwise, divide the list into those that start with a
 	      ;; particular letter and those that do not, and recurse on them.
-	      (let* ((char (char-to-string (string-to-char (car strings))))
+	      (let* ((char (substring-no-properties (car strings) 0 1))
 		     (half1 (all-completions char strings))
 		     (half2 (nthcdr (length half1) strings)))
 		(concat open-group
@@ -263,13 +261,21 @@ This means the number of non-shy regexp grouping constructs
     (map-char-table
      (lambda (c v)
        (when v
-	 (if (= (1- c) end) (setq end c)
-	   (if (> end (+ start 2))
+	 (if (consp c)
+	     (if (= (1- (car c)) end) (setq end (cdr c))
+	       (if (> end (+ start 2))
+		   (setq charset (format "%s%c-%c" charset start end))
+		 (while (>= end start)
+		   (setq charset (format "%s%c" charset start))
+		   (incf start)))
+	       (setq start (car c) end (cdr c)))
+	   (if (= (1- c) end) (setq end c)
+	     (if (> end (+ start 2))
 	       (setq charset (format "%s%c-%c" charset start end))
 	     (while (>= end start)
 	       (setq charset (format "%s%c" charset start))
 	       (incf start)))
-	   (setq start c end c))))
+	     (setq start c end c)))))
      charmap)
     (when (>= end start)
       (if (> end (+ start 2))

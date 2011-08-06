@@ -1,17 +1,17 @@
 ;;; xscheme.el --- run MIT Scheme under Emacs
 
-;; Copyright (C) 1986, 1987, 1989, 1990, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-;;  Free Software Foundation, Inc.
+;; Copyright (C) 1986, 1987, 1989, 1990, 2001, 2002, 2003, 2004, 2005,
+;;   2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: languages, lisp
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -101,17 +99,17 @@ from being inserted into the process-buffer.")
 (setq-default scheme-mode-line-process
 	      '("" xscheme-runlight))
 
-(mapcar 'make-variable-buffer-local
-	'(xscheme-expressions-ring
-	  xscheme-expressions-ring-yank-pointer
-	  xscheme-process-filter-state
-	  xscheme-running-p
-	  xscheme-control-g-disabled-p
-	  xscheme-allow-output-p
-	  xscheme-prompt
-	  xscheme-string-accumulator
-	  xscheme-mode-string
-	  scheme-mode-line-process))
+(mapc 'make-variable-buffer-local
+      '(xscheme-expressions-ring
+	xscheme-expressions-ring-yank-pointer
+	xscheme-process-filter-state
+	xscheme-running-p
+	xscheme-control-g-disabled-p
+	xscheme-allow-output-p
+	xscheme-prompt
+	xscheme-string-accumulator
+	xscheme-mode-string
+	scheme-mode-line-process))
 
 (defgroup xscheme nil
   "Major mode for editing Scheme and interacting with MIT's C-Scheme."
@@ -517,7 +515,7 @@ Commands:
 (defun scheme-debugger-self-insert ()
   "Transmit this character to the Scheme process."
   (interactive)
-  (xscheme-send-char last-command-char))
+  (xscheme-send-char last-command-event))
 
 (defun xscheme-enter-debugger-mode (prompt-string)
   (save-excursion
@@ -1235,5 +1233,5 @@ the remaining input.")
 
 (provide 'xscheme)
 
-;;; arch-tag: cfc14adc-2917-409e-ad16-432e8d0017de
+;; arch-tag: cfc14adc-2917-409e-ad16-432e8d0017de
 ;;; xscheme.el ends here

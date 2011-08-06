@@ -1,17 +1,17 @@
 ;;; gs.el --- interface to Ghostscript
 
-;; Copyright (C) 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -95,6 +93,9 @@ FILE is the value to substitute for the place-holder `<file>'."
 ;; specified in PostScript points.  If omitted, the margins are
 ;; assumed to be 0.
 
+(declare-function x-display-mm-width "xfns.c" (&optional terminal))
+(declare-function x-display-pixel-width "xfns.c" (&optional terminal))
+
 (defun gs-width-in-pt (frame pixel-width)
   "Return, on FRAME, pixel width PIXEL-WIDTH tranlated to pt."
   (let ((mm (* (float pixel-width)
@@ -102,6 +103,8 @@ FILE is the value to substitute for the place-holder `<file>'."
 		  (float (x-display-pixel-width frame))))))
     (/ (* 25.4 mm) 72.0)))
 
+(declare-function x-display-mm-height "xfns.c" (&optional terminal))
+(declare-function x-display-pixel-height "xfns.c" (&optional terminal))
 
 (defun gs-height-in-pt (frame pixel-height)
   "Return, on FRAME, pixel height PIXEL-HEIGHT tranlated to pt."
@@ -110,6 +113,8 @@ FILE is the value to substitute for the place-holder `<file>'."
 		  (float (x-display-pixel-height frame))))))
     (/ (* 25.4 mm) 72.0)))
 
+(declare-function x-change-window-property "xfns.c"
+		  (prop value &optional frame type format outer-p))
 
 (defun gs-set-ghostview-window-prop (frame spec img-width img-height)
   "Set the `GHOSTVIEW' window property of FRAME.
@@ -133,6 +138,7 @@ image in pixels."
 				      rotation llx lly urx ury xdpi ydpi)
 			      frame)))
 
+(declare-function x-display-grayscale-p "xfns.c" (&optional terminal))
 
 (defun gs-set-ghostview-colors-window-prop (frame pixel-colors)
   "Set the `GHOSTVIEW_COLORS' environment variable depending on FRAME."
@@ -143,8 +149,9 @@ image in pixels."
 			      (format "%s %s" mode pixel-colors)
 			      frame)))
 
+(declare-function x-window-property "xfns.c"
+		  (prop &optional frame type source delete-p vector-ret-p))
 
-;
 ;;;###autoload
 (defun gs-load-image (frame spec img-width img-height window-and-pixmap-id
 			    pixel-colors)
@@ -189,7 +196,7 @@ the form \"WINDOW-ID PIXMAP-ID\".  Value is non-nil if successful."
  	;; proper implementation not waiting at all but creating
  	;; appropriate queues, or b) permanently bad display due to
  	;; bad cached images.  So remember that this
- 	;; is just a hack and if people don't like the behaviour, they
+ 	;; is just a hack and if people don't like the behavior, they
  	;; will most likely like the easy alternatives even less.
  	;; And at least the image cache will make the delay apparent
  	;; just once.
@@ -214,5 +221,5 @@ the form \"WINDOW-ID PIXMAP-ID\".  Value is non-nil if successful."
 
 (provide 'gs)
 
-;;; arch-tag: 06ab51b8-4932-4cfe-9f60-b924a8edb3f0
+;; arch-tag: 06ab51b8-4932-4cfe-9f60-b924a8edb3f0
 ;;; gs.el ends here

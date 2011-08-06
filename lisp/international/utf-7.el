@@ -1,24 +1,25 @@
 ;;; utf-7.el --- utf-7 coding system
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Dave Love <fx@gnu.org>
 ;; Keywords: i18n, mail
 
-;; This file is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; This file is part of GNU Emacs.
 
-;; This file is distributed in the hope that it will be useful,
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -30,29 +31,11 @@
 ;; implementation in Gnus, but has been substantially re-done.
 
 ;; This probably needs more attention.  In particular, it's not
-;; completely consistent with iconv's behaviour.  It's arguable
+;; completely consistent with iconv's behavior.  It's arguable
 ;; whether the IMAP version should be a coding system since it's
 ;; apparently only used for IMAP mailbox names, so it's commented out.
 
 ;;; Code:
-
-;;;###autoload(autoload-coding-system 'utf-7 '(require 'utf-7))
-(make-coding-system
- 'utf-7 0 ?U
- "UTF-7 encoding of Unicode (RFC 2152)"
- nil
- `((safe-chars . ,(coding-system-get 'utf-16be 'safe-chars))
-   (mime-charset . utf-7)
-   (pre-write-conversion . utf-7-pre-write-conversion)
-   (post-read-conversion . utf-7-post-read-conversion)))
-
-;; (make-coding-system
-;;  'utf-7-imap 0 ?u
-;;  "UTF-7 encoding of Unicode, IMAP version (RFC 2060)"
-;;  nil
-;;  `((safe-chars . ,(coding-system-get 'utf-16be 'safe-chars))
-;;    (pre-write-conversion . utf-7-imap-pre-write-conversion)
-;;    (post-read-conversion . utf-7-imap-post-read-conversion)))
 
 (defun utf-7-decode (len imap)
   "Decode LEN bytes of UTF-7 at point.
@@ -82,11 +65,13 @@ IMAP non-nil means use the IMAP version."
 		  (delete-backward-char 1)))))))
       (- (point-max) (point-min)))))
 
+;;;###autoload
 (defun utf-7-post-read-conversion (len)
   (utf-7-decode len nil))
 
-;; (defun utf-7-imap-post-read-conversion (len)
-;;   (utf-7-decode len t))
+;;;###autoload
+(defun utf-7-imap-post-read-conversion (len)
+  (utf-7-decode len t))
 
 (defun utf-7-encode (from to imap)
   "Encode bytes between FROM and TO to UTF-7.
@@ -107,7 +92,7 @@ ESC and SKIP-CHARS are adjusted for the normal and IMAP versions."
     (goto-char (point-min))
     (while (not (eobp))
       (skip-chars-forward skip-chars)
-      (if (eq ?+ (char-after))
+      (if (eq esc (char-after))
 	  (progn (forward-char)
 		 (insert ?-))
 	(unless (eobp)
@@ -132,13 +117,15 @@ ESC and SKIP-CHARS are adjusted for the normal and IMAP versions."
 	    (insert ?-)))))
     nil))
 
+;;;###autoload
 (defun utf-7-pre-write-conversion (from to)
   (utf-7-encode from to nil))
 
-;; (defun utf-7-imap-pre-write-conversion (from to)
-;;   (utf-7-encode from to t))
+;;;###autoload
+(defun utf-7-imap-pre-write-conversion (from to)
+  (utf-7-encode from to t))
 
 (provide 'utf-7)
 
-;;; arch-tag: 975ee403-90a4-4286-97d2-4ed1323f4ef9
+;; arch-tag: 975ee403-90a4-4286-97d2-4ed1323f4ef9
 ;;; utf-7.el ends here

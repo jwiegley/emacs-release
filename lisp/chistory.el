@@ -1,7 +1,7 @@
 ;;; chistory.el --- list command history
 
 ;; Copyright (C) 1985, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: K. Shane Hartman
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -69,7 +67,7 @@ editing and the result is evaluated."
   '(command-history-mode
     list-command-history
     electric-command-history)
-  "*A list of symbols to be ignored by `default-command-history-filter'.
+  "A list of symbols to be ignored by `default-command-history-filter'.
 If that function is given a list whose car is an element of this list,
 then it will return non-nil (indicating the list should be discarded from
 the history).
@@ -92,7 +90,7 @@ from the command history."
       (memq (car frob) default-command-history-filter-garbage)))
 
 (defcustom list-command-history-max 32
-  "*If non-nil, maximum length of the listing produced by `list-command-history'."
+  "If non-nil, maximum length of the listing produced by `list-command-history'."
   :type '(choice integer (const nil))
   :group 'chistory)
 
@@ -111,8 +109,7 @@ The buffer is left in Command History mode."
 	  (buffer-read-only nil)
 	  (count (or list-command-history-max -1)))
       (while (and (/= count 0) history)
-	(if (and (boundp 'list-command-history-filter)
-		 list-command-history-filter
+	(if (and (bound-and-true-p list-command-history-filter)
 		 (funcall list-command-history-filter (car history)))
 	    nil
 	  (setq count (1- count))
@@ -126,15 +123,16 @@ The buffer is left in Command History mode."
 	  (error "No command history")
 	(command-history-mode)))))
 
-(defvar command-history-map nil)
-(unless command-history-map
-  (setq command-history-map (make-sparse-keymap))
-  (set-keymap-parent command-history-map lisp-mode-shared-map)
-  (suppress-keymap command-history-map)
-  (define-key command-history-map "x" 'command-history-repeat)
-  (define-key command-history-map "\n" 'next-line)
-  (define-key command-history-map "\r" 'next-line)
-  (define-key command-history-map "\177" 'previous-line))
+(defvar command-history-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map lisp-mode-shared-map)
+    (suppress-keymap map)
+    (define-key map "x" 'command-history-repeat)
+    (define-key map "\n" 'next-line)
+    (define-key map "\r" 'next-line)
+    (define-key map "\177" 'previous-line)
+    map)
+  "Keymap for `command-history-mode'.")
 
 (defun command-history-mode ()
   "Major mode for listing and repeating recent commands.
@@ -192,5 +190,5 @@ and runs the normal hook `command-history-hook'."
 
 (provide 'chistory)
 
-;;; arch-tag: c201a0cd-89f2-4d39-a532-4cb309391dbd
+;; arch-tag: c201a0cd-89f2-4d39-a532-4cb309391dbd
 ;;; chistory.el ends here

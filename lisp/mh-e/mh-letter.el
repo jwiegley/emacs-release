@@ -1,7 +1,8 @@
 ;;; mh-letter.el --- MH-Letter mode
 
 ;; Copyright (C) 1993, 1995, 1997,
-;;  2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -10,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -312,7 +311,8 @@ order).
   (mh-do-in-gnu-emacs
     (unless mh-letter-tool-bar-map
       (mh-tool-bar-letter-buttons-init))
-    (set (make-local-variable 'tool-bar-map) mh-letter-tool-bar-map))
+    (if (boundp 'tool-bar-map)
+        (set (make-local-variable 'tool-bar-map) mh-letter-tool-bar-map)))
   (mh-do-in-xemacs
     (mh-tool-bar-init :letter))
   ;; Set the local value of mh-mail-header-separator according to what is
@@ -618,7 +618,7 @@ a copy of the draft."
                                   mh-default-folder-for-message-function)))
                           "")
                       t)))
-  (let ((last-input-char ?\C-f))
+  (let ((last-input-event ?\C-f))
     (expand-abbrev)
     (save-excursion
       (mh-to-field)
@@ -648,10 +648,10 @@ Create the field if it does not exist.
 Set the mark to point before moving."
   (interactive)
   (expand-abbrev)
-  (let ((target (cdr (or (assoc (char-to-string (logior last-input-char ?`))
+  (let ((target (cdr (or (assoc (char-to-string (logior last-input-event ?`))
                                 mh-to-field-choices)
                          ;; also look for a char for version 4 compat
-                         (assoc (logior last-input-char ?`)
+                         (assoc (logior last-input-event ?`)
                                 mh-to-field-choices))))
         (case-fold-search t))
     (push-mark)
@@ -659,7 +659,7 @@ Set the mark to point before moving."
            (let ((eol (point)))
              (skip-chars-backward " \t")
              (delete-region (point) eol))
-           (if (and (not (eq (logior last-input-char ?`) ?s))
+           (if (and (not (eq (logior last-input-event ?`) ?s))
                     (save-excursion
                       (backward-char 1)
                       (not (looking-at "[:,]"))))
@@ -876,7 +876,7 @@ downcasing the field name."
 
 ;;;###mh-autoload
 (defun mh-complete-word (word choices begin end)
-  "Complete WORD at from CHOICES.
+  "Complete WORD from CHOICES.
 Any match found replaces the text from BEGIN to END."
   (let ((completion (try-completion word choices))
         (completions-buffer "*Completions*"))

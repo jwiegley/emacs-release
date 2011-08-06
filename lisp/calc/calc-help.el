@@ -1,17 +1,17 @@
 ;;; calc-help.el --- help display functions for Calc,
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -31,6 +29,11 @@
 
 (require 'calc-ext)
 (require 'calc-macs)
+
+;; Declare functions which are defined elsewhere.
+(declare-function Info-goto-node "info" (nodename &optional fork))
+(declare-function Info-last "info" ())
+
 
 (defun calc-help-prefix (arg)
   "This key is the prefix for Calc help functions.  See calc-help-for-help."
@@ -172,6 +175,8 @@ C-w  Describe how there is no warranty for Calc."
 	  (setq desc (concat "M-" (substring desc 4))))
       (while (string-match "^M-# \\(ESC \\|C-\\)" desc)
 	(setq desc (concat "M-# " (substring desc (match-end 0)))))
+      (if (string-match "\\(DEL\\|\\LFD\\|RET\\|SPC\\|TAB\\)" desc)
+          (setq desc (replace-match "<\\&>" nil nil desc)))
       (if briefly
 	  (let ((msg (save-excursion
 		       (set-buffer (get-buffer-create "*Calc Summary*"))
@@ -321,11 +326,11 @@ C-w  Describe how there is no warranty for Calc."
 (defun calc-describe-function (&optional func)
   (interactive)
   (unless calc-help-function-list
-    (setq calc-help-function-list 
+    (setq calc-help-function-list
           (calc-help-index-entries "Function" "Command")))
   (or func
       (setq func (completing-read "Describe function: "
-                                  calc-help-function-list 
+                                  calc-help-function-list
                                   nil t)))
   (if (string-match "\\`calc-." func)
       (calc-describe-thing func "Command Index")
@@ -334,7 +339,7 @@ C-w  Describe how there is no warranty for Calc."
 (defun calc-describe-variable (&optional var)
   (interactive)
   (unless calc-help-variable-list
-    (setq calc-help-variable-list 
+    (setq calc-help-variable-list
           (calc-help-index-entries "Variable")))
   (or var
       (setq var (completing-read "Describe variable: "
@@ -363,20 +368,20 @@ C-w  Describe how there is no warranty for Calc."
     (let (Info-history)
       (Info-goto-node (buffer-substring (match-beginning 1) (match-end 1))))
     (or (let ((case-fold-search nil))
-	  (or (search-forward (format "\\[`%s'\\]\\|(`%s')\\|\\<The[ \n]`%s'"
-				      (or target thing)
-				      (or target thing)
-				      (or target thing)) nil t)
+	  (or (re-search-forward (format "\\[`%s'\\]\\|(`%s')\\|\\<The[ \n]`%s'"
+                                         (or target thing)
+                                         (or target thing)
+                                         (or target thing)) nil t)
 	      (and not-quoted
 		   (let ((case-fold-search t))
 		     (search-forward (or target thing) nil t)))
 	      (search-forward (format "`%s'" (or target thing)) nil t)
 	      (search-forward (or target thing) nil t)))
 	(let ((case-fold-search t))
-	  (or (search-forward (format "\\[`%s'\\]\\|(`%s')\\|\\<The[ \n]`%s'"
-				      (or target thing)
-				      (or target thing)
-				      (or target thing)) nil t)
+	  (or (re-search-forward (format "\\[`%s'\\]\\|(`%s')\\|\\<The[ \n]`%s'"
+                                         (or target thing)
+                                         (or target thing)
+                                         (or target thing)) nil t)
 	      (search-forward (format "`%s'" (or target thing)) nil t)
 	      (search-forward (or target thing) nil t))))
     (beginning-of-line)
@@ -411,57 +416,56 @@ C-w  Describe how there is no warranty for Calc."
 (defun calc-full-help ()
   (interactive)
   (with-output-to-temp-buffer "*Help*"
-    (princ (format "GNU Emacs Calculator version %s.\n"
-		   calc-version))
+    (princ "GNU Emacs Calculator.\n")
     (princ "  By Dave Gillespie.\n")
     (princ (format "  %s\n\n" emacs-copyright))
     (princ "Type `h s' for a more detailed summary.\n")
     (princ "Or type `h i' to read the full Calc manual on-line.\n\n")
     (princ "Basic keys:\n")
     (let* ((calc-full-help-flag t))
-      (mapcar (function (lambda (x) (princ (format "  %s\n" x))))
-	      (nreverse (cdr (reverse (cdr (calc-help))))))
-      (mapcar (function (lambda (prefix)
-			  (let ((msgs (condition-case err
-					  (funcall prefix)
-					(error nil))))
-			    (if (car msgs)
-				(princ
-				 (if (eq (nth 2 msgs) ?v)
-				     "\n`v' or `V' prefix (vector/matrix) keys: \n"
-				   (if (nth 2 msgs)
-				       (format
-					"\n`%c' prefix (%s) keys:\n"
-					(nth 2 msgs)
-					(or (cdr (assq (nth 2 msgs)
-						       calc-help-long-names))
-					    (nth 1 msgs)))
-				     (format "\n%s-modified keys:\n"
-					     (capitalize (nth 1 msgs)))))))
-			    (mapcar (function (lambda (x)
-						(princ (format "  %s\n" x))))
-				    (car msgs)))))
-	      '(calc-inverse-prefix-help
-		calc-hyperbolic-prefix-help
-		calc-inv-hyp-prefix-help
-		calc-a-prefix-help
-		calc-b-prefix-help
-		calc-c-prefix-help
-		calc-d-prefix-help
-		calc-f-prefix-help
-		calc-g-prefix-help
-		calc-h-prefix-help
-		calc-j-prefix-help
-		calc-k-prefix-help
-		calc-m-prefix-help
-		calc-r-prefix-help
-		calc-s-prefix-help
-		calc-t-prefix-help
-		calc-u-prefix-help
-		calc-v-prefix-help
-		calc-shift-Y-prefix-help
-		calc-shift-Z-prefix-help
-		calc-z-prefix-help)))
+      (mapc (function (lambda (x) (princ (format "  %s\n" x))))
+	    (nreverse (cdr (reverse (cdr (calc-help))))))
+      (mapc (function (lambda (prefix)
+			(let ((msgs (condition-case err
+					(funcall prefix)
+				      (error nil))))
+			  (if (car msgs)
+			      (princ
+			       (if (eq (nth 2 msgs) ?v)
+				   "\n`v' or `V' prefix (vector/matrix) keys: \n"
+				 (if (nth 2 msgs)
+				     (format
+				      "\n`%c' prefix (%s) keys:\n"
+				      (nth 2 msgs)
+				      (or (cdr (assq (nth 2 msgs)
+						     calc-help-long-names))
+					  (nth 1 msgs)))
+				   (format "\n%s-modified keys:\n"
+					   (capitalize (nth 1 msgs)))))))
+			  (mapcar (function (lambda (x)
+				    (princ (format "  %s\n" x))))
+				  (car msgs)))))
+	    '(calc-inverse-prefix-help
+	      calc-hyperbolic-prefix-help
+	      calc-inv-hyp-prefix-help
+	      calc-a-prefix-help
+	      calc-b-prefix-help
+	      calc-c-prefix-help
+	      calc-d-prefix-help
+	      calc-f-prefix-help
+	      calc-g-prefix-help
+	      calc-h-prefix-help
+	      calc-j-prefix-help
+	      calc-k-prefix-help
+	      calc-m-prefix-help
+	      calc-r-prefix-help
+	      calc-s-prefix-help
+	      calc-t-prefix-help
+	      calc-u-prefix-help
+	      calc-v-prefix-help
+	      calc-shift-Y-prefix-help
+	      calc-shift-Z-prefix-help
+	      calc-z-prefix-help)))
     (print-help-return-message)))
 
 (defun calc-h-prefix-help ()
@@ -536,8 +540,9 @@ C-w  Describe how there is no warranty for Calc."
 (defun calc-r-prefix-help ()
   (interactive)
   (calc-do-prefix-help
-   '("digits 0-9: recall, same as `s r 0-9'")
-   "recall" ?r))
+   '("digits 0-9: recall, same as `s r 0-9'"
+     "Save to register, Insert from register")
+   "recall/register" ?r))
 
 
 (defun calc-j-prefix-help ()
@@ -596,6 +601,7 @@ C-w  Describe how there is no warranty for Calc."
      "\" (strings); Truncate, [, ]; SPC (refresh), RET, @"
      "SHIFT + language: Normal, One-line, Big, Unformatted"
      "SHIFT + language: C, Pascal, Fortran; TeX, LaTeX, Eqn"
+     "SHIFT + language: Yacas, X=Maxima, A=Giac"
      "SHIFT + language: Mathematica, W=Maple")
    "display" ?d))
 

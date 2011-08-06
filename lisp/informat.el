@@ -1,17 +1,17 @@
 ;;; informat.el --- info support functions package for Emacs
 
 ;; Copyright (C) 1986, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: help
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -31,6 +29,8 @@
 ;;; Code:
 
 (require 'info)
+
+(declare-function texinfo-format-refill "texinfmt" ())
 
 ;;;###autoload
 (defun Info-tagify (&optional input-buffer-name)
@@ -153,9 +153,17 @@
 
 
 ;;;###autoload
+(defcustom Info-split-threshold 262144
+  "The number of characters by which `Info-split' splits an info file."
+  :type 'integer
+  :version "23.1"
+  :group 'texinfo)
+
+;;;###autoload
 (defun Info-split ()
   "Split an info file into an indirect file plus bounded-size subfiles.
-Each subfile will be up to 50,000 characters plus one node.
+Each subfile will be up to the number of characters that
+`Info-split-threshold' specifies, plus one node.
 
 To use this command, first visit a large Info file that has a tag
 table.  The buffer is modified into a (small) indirect info file which
@@ -167,7 +175,7 @@ file name.  The indirect file still functions as an Info file, but it
 contains just the tag table and a directory of subfiles."
 
   (interactive)
-  (if (< (buffer-size) 70000)
+  (if (< (buffer-size) (+ 20000 Info-split-threshold))
       (error "This is too small to be worth splitting"))
   (goto-char (point-min))
   (search-forward "\^_")
@@ -192,7 +200,7 @@ contains just the tag table and a directory of subfiles."
       (narrow-to-region (point-min) (point))
       (goto-char (point-min))
       (while (< (1+ (point)) (point-max))
-	(goto-char (min (+ (point) 50000) (point-max)))
+	(goto-char (min (+ (point) Info-split-threshold) (point-max)))
 	(search-forward "\^_" nil 'move)
 	(setq subfiles
 	      (cons (list (+ start chars-deleted)
@@ -504,5 +512,5 @@ For example, invoke \"emacs -batch -f batch-info-validate $info/ ~/*.info\""
 
 (provide 'informat)
 
-;;; arch-tag: 581c440e-5be1-4f31-b005-2d5824bbf569
+;; arch-tag: 581c440e-5be1-4f31-b005-2d5824bbf569
 ;;; informat.el ends here

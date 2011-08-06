@@ -1,17 +1,17 @@
 ;; dos-w32.el --- Functions shared among MS-DOS and W32 (NT/95) platforms
 
 ;; Copyright (C) 1996, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: Geoff Voelker <voelker@cs.washington.edu>
 ;; Keywords: internal
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -131,9 +129,9 @@ set to the appropriate coding system, and the value of
 `buffer-file-coding-system' will be used when writing the file."
 
   (let ((op (nth 0 command))
-	(target)
 	(binary nil) (text nil)
-	(undecided nil) (undecided-unix nil))
+	(undecided nil) (undecided-unix nil)
+	target target-buf)
     (cond ((eq op 'insert-file-contents)
 	   (setq target (nth 1 command))
 	   ;; If TARGET is a cons cell, it has the form (FILENAME . BUFFER),
@@ -142,7 +140,11 @@ set to the appropriate coding system, and the value of
 	   ;; arguments is used, e.g., in arc-mode.el.)  This function
 	   ;; doesn't care about the contents, it only looks at the file's
 	   ;; name, which is the CAR of the cons cell.
-	   (if (consp target) (setq target (car target)))
+	   (when (consp target)
+	     (setq target-buf
+		   (and (bufferp (cdr target))
+			(buffer-name (cdr target))))
+	     (setq target (car target)))
 	   ;; First check for a file name that indicates
 	   ;; it is truly binary.
 	   (setq binary (find-buffer-file-type target))
@@ -151,7 +153,17 @@ set to the appropriate coding system, and the value of
 		 ((find-buffer-file-type-match target)
 		  (setq text t))
 		 ;; For any other existing file, decide based on contents.
-		 ((file-exists-p target)
+		 ((or
+		   (file-exists-p target)
+		   ;; If TARGET does not exist as a file, replace its
+		   ;; base name with TARGET-BUF and try again.  This
+		   ;; is for jka-compr's sake, which strips the
+		   ;; compression (.gz etc.) extension from the
+		   ;; FILENAME, but leaves it in the BUFFER's name.
+		   (and (stringp target-buf)
+			(file-exists-p
+			 (expand-file-name target-buf
+					   (file-name-directory target)))))
 		  (setq undecided t))
 		 ;; Next check for a non-DOS file system.
 		 ((untranslated-file-p target)
@@ -206,7 +218,7 @@ set to the appropriate coding system, and the value of
 (add-hook 'find-file-not-found-functions
 	  'find-file-not-found-set-buffer-file-coding-system)
 
-;;; To accomodate filesystems that do not require CR/LF translation.
+;;; To accommodate filesystems that do not require CR/LF translation.
 (defvar untranslated-filesystem-list nil
   "List of filesystems that require no CR/LF translation when reading
 and writing files.  Each filesystem in the list is a string naming
@@ -370,6 +382,8 @@ filesystem mounted on drive Z:, FILESYSTEM could be \"Z:\"."
 
 (defvar printer-name)
 
+(declare-function default-printer-name "w32fns.c")
+
 (defun direct-print-region-function (start end
 					   &optional lpr-prog
 					   delete-text buf display
@@ -404,6 +418,8 @@ indicates a specific program should be invoked."
     (direct-print-region-helper printer start end lpr-prog
 				delete-text buf display rest)))
 
+(defvar print-region-function)
+(defvar lpr-headers-switches)
 (setq print-region-function 'direct-print-region-function)
 
 ;; Set this to nil if you have a port of the `pr' program
@@ -435,6 +451,7 @@ indicates a specific program should be invoked."
     (direct-print-region-helper printer start end lpr-prog
 				delete-text buf display rest)))
 
+(defvar ps-print-region-function)
 (setq ps-print-region-function 'direct-ps-print-region-function)
 
 ;(setq ps-lpr-command "gs")
@@ -444,5 +461,5 @@ indicates a specific program should be invoked."
 
 (provide 'dos-w32)
 
-;;; arch-tag: dcfefdd2-362f-4fbc-9141-9634f5f4d6a7
+;; arch-tag: dcfefdd2-362f-4fbc-9141-9634f5f4d6a7
 ;;; dos-w32.el ends here

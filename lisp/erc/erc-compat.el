@@ -1,16 +1,17 @@
 ;;; erc-compat.el --- ERC compatibility code for XEmacs
 
-;; Copyright (C) 2002, 2003, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Alex Schroeder <alex@gnu.org>
 ;; URL: http://www.emacswiki.org/cgi-bin/wiki/ERC
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -46,15 +45,31 @@ See `erc-encoding-coding-alist'."
 
 (defalias 'erc-propertize 'propertize)
 (defalias 'erc-view-mode-enter 'view-mode-enter)
+(autoload 'help-function-arglist "help-fns")
 (defalias 'erc-function-arglist 'help-function-arglist)
 (defalias 'erc-delete-dups 'delete-dups)
 (defalias 'erc-replace-regexp-in-string 'replace-regexp-in-string)
+
+(defun erc-set-write-file-functions (new-val)
+  (set (make-local-variable 'write-file-functions) new-val))
 
 (defvar erc-emacs-build-time
   (if (stringp emacs-build-time)
       emacs-build-time
     (format-time-string "%Y-%m-%d" emacs-build-time))
   "Time at which Emacs was dumped out.")
+
+;; Emacs 21 and XEmacs do not have user-emacs-directory, but XEmacs
+;; has user-init-directory.
+(defvar erc-user-emacs-directory
+  (cond ((boundp 'user-emacs-directory)
+	 user-emacs-directory)
+	((boundp 'user-init-directory)
+	 user-init-directory)
+	(t "~/.emacs.d/"))
+  "Directory beneath which additional per-user Emacs-specific files
+are placed.
+Note that this should end with a directory separator.")
 
 ;; XEmacs' `replace-match' does not replace matching subexpressions in strings.
 (defun erc-replace-match-subexpression-in-string
@@ -68,56 +83,10 @@ See `replace-match' for explanations of FIXEDCASE and LITERAL."
 	 (replace-match newtext fixedcase literal string))
 	(t (replace-match newtext fixedcase literal string subexp))))
 
+(defalias 'erc-with-selected-window 'with-selected-window)
 (defalias 'erc-cancel-timer 'cancel-timer)
 (defalias 'erc-make-obsolete 'make-obsolete)
 (defalias 'erc-make-obsolete-variable 'make-obsolete-variable)
-
-;; Provde an equivalent of `assert', based on the code from cl-macs.el
-(defun erc-const-expr-p (x)
-  (cond ((consp x)
-	 (or (eq (car x) 'quote)
-	     (and (memq (car x) '(function function*))
-		  (or (symbolp (nth 1 x))
-		      (and (eq (and (consp (nth 1 x))
-				    (car (nth 1 x))) 'lambda) 'func)))))
-	((symbolp x) (and (memq x '(nil t)) t))
-	(t t)))
-
-(put 'erc-assertion-failed 'error-conditions '(error))
-(put 'erc-assertion-failed 'error-message "Assertion failed")
-
-(defun erc-list* (arg &rest rest)
-  "Return a new list with specified args as elements, cons'd to last arg.
-Thus, `(list* A B C D)' is equivalent to `(nconc (list A B C) D)', or to
-`(cons A (cons B (cons C D)))'."
-  (cond ((not rest) arg)
-	((not (cdr rest)) (cons arg (car rest)))
-	(t (let* ((n (length rest))
-		  (copy (copy-sequence rest))
-		  (last (nthcdr (- n 2) copy)))
-	     (setcdr last (car (cdr last)))
-	     (cons arg copy)))))
-
-(defmacro erc-assert (form &optional show-args string &rest args)
-  "Verify that FORM returns non-nil; signal an error if not.
-Second arg SHOW-ARGS means to include arguments of FORM in message.
-Other args STRING and ARGS... are arguments to be passed to `error'.
-They are not evaluated unless the assertion fails.  If STRING is
-omitted, a default message listing FORM itself is used."
-  (let ((sargs
-	 (and show-args
-	      (delq nil (mapcar
-			 (function
-			  (lambda (x)
-			    (and (not (erc-const-expr-p x)) x)))
-			 (cdr form))))))
-    (list 'progn
-	  (list 'or form
-		(if string
-		    (erc-list* 'error string (append sargs args))
-		  (list 'signal '(quote erc-assertion-failed)
-			(erc-list* 'list (list 'quote form) sargs))))
-	  nil)))
 
 ;; Provide a simpler replacement for `member-if'
 (defun erc-member-if (predicate list)

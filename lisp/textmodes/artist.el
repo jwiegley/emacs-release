@@ -1,7 +1,7 @@
 ;;; artist.el --- draw ascii graphics with your mouse
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author:       Tomas Abrahamsson <tab@lysator.liu.se>
 ;; Maintainer:   Tomas Abrahamsson <tab@lysator.liu.se>
@@ -10,12 +10,17 @@
 ;; Release-date: 6-Aug-2004
 ;; Location:     http://www.lysator.liu.se/~tab/artist/
 
+;; Yoni Rabkin <yoni@rabkins.net> contacted the maintainer of this
+;; file on 19/3/2008, and the maintainer agreed that when a bug is filed in
+;; the Emacs bug reporting system against this file, a copy of the bug
+;; report be sent to the maintainer's email address.
+
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,9 +28,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -104,7 +107,6 @@
 ;; See the short guide at the end of this file.
 ;; If you add a new drawing mode, send it to me, and I would gladly
 ;; include in the next release!
-
 
 ;;; Installation:
 
@@ -201,20 +203,6 @@
 
 (defvar x-pointer-crosshair)
 
-(eval-and-compile
- (condition-case ()
-     (require 'custom)
-   (error nil))
- (if (and (featurep 'custom) (fboundp 'custom-declare-variable))
-     nil ;; We've got what we needed
-     ;; We have the old custom-library, hack around it!
-     (defmacro defgroup (&rest args)
-       nil)
-     (defmacro defface (var values doc &rest args)
-       `(make-face ,var))
-     (defmacro defcustom (var value doc &rest args)
-       `(defvar ,var ,value ,doc))))
-
 ;; User options
 ;; vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
@@ -275,7 +263,7 @@ The directions are as follows:
 
 (defcustom artist-aspect-ratio 1
   "Defines the character height-to-width aspect ratio.
-This is used when drawing squares and circles.  If the height of the"
+This is used when drawing squares and circles."
   :group 'artist
   :type 'number)
 
@@ -355,8 +343,8 @@ Example:
                       \\/ /
             A----*----/\\/----------B
                      / /\\
- (in fact, only the left part (between the A and the leftmost ``/''
- crossing the line) will be vaporized)"
+ (in fact, only the left part [between the A and the leftmost ``/''
+ crossing the line] will be vaporized)."
   :group 'artist
   :type 'integer)
 
@@ -411,17 +399,15 @@ Example:
   ;; package shows lists of characters as a lists of integers,
   ;; which is confusing
   "*Characters (``color'') to use when spraying.
-They should be ordered
-from the ``lightest'' to the ``heaviest'' since spraying replaces a
-light character with the next heavier one.")
+They should be ordered from the ``lightest'' to the ``heaviest''
+since spraying replaces a light character with the next heavier one.")
 
 
 (defvar artist-spray-new-char ?.
   "*Initial character to use when spraying.
-This character is used if spraying upon a character that is
-not in `artist-spray-chars'.  The character defined by this variable
-should be in `artist-spray-chars', or spraying will behave
-strangely.")
+This character is used if spraying upon a character that is not in
+`artist-spray-chars'.  The character defined by this variable should
+be in `artist-spray-chars', or spraying will behave strangely.")
 
 
 ;; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -435,7 +421,7 @@ strangely.")
 (make-variable-buffer-local 'artist-mode)
 
 (defvar artist-mode-name " Artist"
-  "Name of artist mode beginning with a space (appears in the mode-line).")
+  "Name of Artist mode beginning with a space (appears in the mode-line).")
 
 (defvar artist-curr-go 'pen-char
   "Current selected graphics operation.")
@@ -489,7 +475,7 @@ where the elements are as follows:
 * OP is an atom: the KEY-SYMBOL in the `artist-mt' structure
 * PREV-OP and NEXT-OP are strings: the KEYWORD in the `artist-mt' structure
 
-This variable is initialized by the artist-make-prev-next-op-alist function.")
+This variable is initialized by the `artist-make-prev-next-op-alist' function.")
 
 (eval-when-compile
   ;; Make rect available at compile-time
@@ -735,14 +721,14 @@ This variable is initialized by the artist-make-prev-next-op-alist function.")
 		 2
 		 artist-draw-rect
 		 (artist-undraw-rect
-		  artist-t artist-cut-rect)
+		  artist-t artist-cut-rect))
 		("cut square" cut-s "cut-s"
 		 artist-no-arrows nil
 		 nil nil nil
 		 2
 		 artist-draw-square
 		 (artist-undraw-square
-		  artist-t artist-cut-square))))))
+		  artist-t artist-cut-square)))))
 
        (graphics-operation
 	("Copy" (("copy rectangle" copy-r "copy-r"
@@ -751,14 +737,14 @@ This variable is initialized by the artist-make-prev-next-op-alist function.")
 		  2
 		  artist-draw-rect
 		  (artist-undraw-rect
-		   artist-t artist-copy-rect)
+		   artist-t artist-copy-rect))
 		 ("copy square" copy-s "copy-s"
 		  artist-no-arrows nil
 		  nil nil nil
 		  2
 		  artist-draw-square
 		  (artist-undraw-square
-		   artist-t artist-copy-square))))))
+		   artist-t artist-copy-square)))))
 
        (graphics-operation
 	("Paste" (("paste" paste "paste"
@@ -815,7 +801,7 @@ This variable is initialized by the artist-make-prev-next-op-alist function.")
 
   "Master Table for `artist-mode'.
 This table is primarily a table over the different graphics operations
-available in artist mode, but it also holds layout information for the
+available in Artist mode, but it also holds layout information for the
 popup menu.
 
 The master table is a list of table elements.  The elements of this table
@@ -947,7 +933,7 @@ If DRAW-HOW is 2:
 
   ENDPOINT-1 and ENDPOINT-2 are endpoints which are created with
   `artist-make-endpoint'
-  SHAPE is an opaque structure, created by the DRAW-FN and intented
+  SHAPE is an opaque structure, created by the DRAW-FN and intended
   to be used only by the UNDRAW-FN.
 
 If DRAW-HOW is `artist-do-poly':
@@ -962,7 +948,7 @@ If DRAW-HOW is `artist-do-poly':
 
   ENDPOINT-1 and ENDPOINT-2 are endpoints which are created with
   `artist-make-endpoint'.
-  SHAPE is an opaque structure, created by the DRAW-FN and intented
+  SHAPE is an opaque structure, created by the DRAW-FN and intended
   to be used only by the UNDRAW-FN.
   POINT-LIST is a list of vectors [X Y].")
 
@@ -1151,14 +1137,14 @@ PREV-OP-ARG are used when invoked recursively during the build-up."
   (interactive)
   (let ((next-op (cdr (cdr (assoc artist-curr-go artist-prev-next-op-alist)))))
     (artist-select-operation next-op)
-    (message next-op)))
+    (message "%s" next-op)))
 
 (defun artist-select-prev-op-in-list ()
   "Cyclically select previous drawing mode operation."
   (interactive)
   (let ((prev-op (car (cdr (assoc artist-curr-go artist-prev-next-op-alist)))))
     (artist-select-operation prev-op)
-    (message prev-op)))
+    (message "%s" prev-op)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1168,11 +1154,12 @@ PREV-OP-ARG are used when invoked recursively during the build-up."
 
 ;;;###autoload
 (defun artist-mode (&optional state)
-  "Toggle artist mode. With arg, turn artist mode on if arg is positive.
-Artist lets you draw lines, squares, rectangles and poly-lines, ellipses
-and circles with your mouse and/or keyboard.
+  "Toggle Artist mode.
+With argument STATE, turn Artist mode on if STATE is positive.
+Artist lets you draw lines, squares, rectangles and poly-lines,
+ellipses and circles with your mouse and/or keyboard.
 
-How to quit artist mode
+How to quit Artist mode
 
  Type \\[artist-mode-off] to quit artist-mode.
 
@@ -1227,10 +1214,10 @@ Drawing with the mouse:
 		* Straight lines can only go horizontally, vertically
 		  or diagonally.
 
-		* Poly-lines are drawn while holding mouse-1 down. When you
-		  release the button, the point is set. If you want a segment
+		* Poly-lines are drawn while holding mouse-1 down.  When you
+		  release the button, the point is set.  If you want a segment
 		  to be straight, hold down shift before pressing the
-		  mouse-1 button. Click mouse-2 or mouse-3 to stop drawing
+		  mouse-1 button.  Click mouse-2 or mouse-3 to stop drawing
 		  poly-lines.
 
 		* See thru for text means that text already in the buffer
@@ -1238,7 +1225,7 @@ Drawing with the mouse:
 		  overwrite means the opposite.
 
 		* Vaporizing connected lines only vaporizes lines whose
-		  _endpoints_ are connected. See also the variable
+		  _endpoints_ are connected.  See also the variable
 		  `artist-vaporize-fuzziness'.
 
 		* Cut copies, then clears the rectangle/square.
@@ -1271,7 +1258,7 @@ Settings
  Trimming	Toggles trimming of line-endings (that is: when the shape
 		is drawn, extraneous white-space at end of lines is removed)
 
- Borders        Toggles the drawing of line borders around filled shapes.
+ Borders        Toggles the drawing of line borders around filled shapes
 
 
 Drawing with keys
@@ -1287,9 +1274,9 @@ Drawing with keys
 
  Move around with \\[artist-next-line], \\[artist-previous-line], \\[artist-forward-char] and \\[artist-backward-char].
 
- \\[artist-select-fill-char]	Sets the charater to use when filling
- \\[artist-select-line-char]	Sets the charater to use when drawing
- \\[artist-select-erase-char]	Sets the charater to use when erasing
+ \\[artist-select-fill-char]	Sets the character to use when filling
+ \\[artist-select-line-char]	Sets the character to use when drawing
+ \\[artist-select-erase-char]	Sets the character to use when erasing
  \\[artist-toggle-rubber-banding]	Toggles rubber-banding
  \\[artist-toggle-trim-line-endings]	Toggles trimming of line-endings
  \\[artist-toggle-borderless-shapes]	Toggles borders on drawn shapes
@@ -1387,6 +1374,9 @@ Keymap summary
 ;; Init and exit
 (defun artist-mode-init ()
   "Init Artist mode.  This will call the hook `artist-mode-init-hook'."
+  ;; Set up a conversion table for mapping tabs and new-lines to spaces.
+  ;; the last case, 0, is for the last position in buffer/region, where
+  ;; the `following-char' function returns 0.
   (let ((i 0))
     (while (< i 256)
       (aset artist-replacement-table i i)
@@ -1394,6 +1384,7 @@ Keymap summary
   (aset artist-replacement-table ?\n ?\s)
   (aset artist-replacement-table ?\t ?\s)
   (aset artist-replacement-table 0 ?\s)
+  ;; More setup
   (make-local-variable 'artist-key-is-drawing)
   (make-local-variable 'artist-key-endpoint1)
   (make-local-variable 'artist-key-poly-point-list)
@@ -1449,7 +1440,7 @@ Keymap summary
   (sit-for 0))
 
 (defun artist-mode-line-show-curr-operation (is-drawing)
-  "Show current operation in  mode-line.  If IS-DRAWING, show that."
+  "Show current operation in mode-line.  If IS-DRAWING, show that."
   (let ((mtext (concat artist-mode-name "/"
 		       (artist-go-get-mode-line-from-symbol artist-curr-go)
 		       (if is-drawing "/*" ""))))
@@ -1562,7 +1553,7 @@ The returned value is suitable for the `x-popup-menu' function."
 (defun artist-mt-get-symbol-from-keyword-sub (table kwd)
   "Search TABLE for keyword KWD and return its symbol."
   (catch 'found
-    (mapcar
+    (mapc
      (lambda (element)
        (let ((element-tag (artist-mt-get-tag element)))
 	 (cond ((eq element-tag 'graphics-operation)
@@ -1611,7 +1602,7 @@ info-variant-part."
 Calls RETRIEVE-FN to retrieve information from that symbol's
 info-variant-part."
   (catch 'found
-    (mapcar
+    (mapc
      (lambda (element)
        (let ((element-tag (artist-mt-get-tag element)))
 	 (cond ((eq element-tag 'graphics-operation)
@@ -1692,15 +1683,15 @@ info-variant-part."
 (defun artist-go-get-symbol-shift (symbol is-shifted)
   "Search for (shifted or unshifted) graphics operation SYMBOL.
 If IS-SHIFTED is non-nil, return the shifted symbol,
-otherwise the shifted symbol."
+otherwise the unshifted symbol."
   (artist-go-get-symbol-shift-sub artist-mt symbol is-shifted))
 
 (defun artist-go-get-symbol-shift-sub (table symbol is-shifted)
   "Search TABLE for (shifted or unshifted) graphics SYMBOL.
 If IS-SHIFTED is non-nil, return the shifted symbol,
-otherwise the shifted symbol."
+otherwise the unshifted symbol."
   (catch 'found
-    (mapcar
+    (mapc
      (lambda (element)
        (let ((element-tag (artist-mt-get-tag element)))
 	 (cond ((eq element-tag 'graphics-operation)
@@ -1737,7 +1728,7 @@ info-variant-part."
 Calls RETRIEVE-FN to retrieve information from that symbol's
 info-variant-part."
   (catch 'found
-    (mapcar
+    (mapc
      (lambda (element)
        (let ((element-tag (artist-mt-get-tag element)))
 	 (cond ((eq element-tag 'function-call)
@@ -1822,17 +1813,11 @@ Optional args PROGRAM-ARGS are arguments to PROGRAM.
 Return a list (RETURN-CODE STDOUT STDERR)."
   (save-excursion
     (let* ((tmp-stdin-file-name (if stdin
-				    (make-temp-file
-				     (concat (file-name-as-directory
-					      (or (getenv "TMPDIR") "/tmp"))
-					     "artist-stdin."))
+				    (make-temp-file "artist-stdin.")
 				  nil))
 	   (tmp-stdout-buffer (get-buffer-create
 			       (concat "*artist-" program "*")))
-	   (tmp-stderr-file-name (make-temp-file
-				  (concat (file-name-as-directory
-					   (or (getenv "TMPDIR") "/tmp"))
-					  "artist-stdout.")))
+	   (tmp-stderr-file-name (make-temp-file "artist-stdout."))
 	   (binary-process-input nil)	; for msdos
 	   (binary-process-output nil))
 
@@ -1956,10 +1941,21 @@ Also updates the variables `artist-draw-min-y' and `artist-draw-max-y'."
   (following-char))
 
 
+(defsubst artist-get-replacement-char (c)
+  "Retrieve a replacement for character C from `artist-replacement-table'.
+The replacement is used to convert tabs and new-lines to spaces."
+  ;; Characters may be outside the range of the `artist-replacement-table',
+  ;; for example if they are unicode code points >= 256.
+  ;; Check so we don't attempt to access the array out of its bounds,
+  ;; assuming no such character needs to be replaced.
+  (if (< c (length artist-replacement-table))
+      (aref artist-replacement-table c)
+    c))
+
 (defun artist-get-char-at-xy-conv (x y)
   "Retrieve the character at X, Y, converting tabs and new-lines to spaces."
   (save-excursion
-    (aref artist-replacement-table (artist-get-char-at-xy x y))))
+    (artist-get-replacement-char (artist-get-char-at-xy x y))))
 
 
 (defun artist-replace-char (new-char)
@@ -1975,12 +1971,12 @@ Also updates the variables `artist-draw-min-y' and `artist-draw-max-y'."
 	(artist-move-to-xy (1+ (artist-current-column))
 			   (artist-current-line))
 	(delete-char -1)
-	(insert (aref artist-replacement-table new-char)))
+	(insert (artist-get-replacement-char new-char)))
     ;; In emacs-19, the self-insert-command works better and faster
     (let ((overwrite-mode 'overwrite-mode-textual)
 	  (fill-column 32765)		; Large :-)
 	  (blink-matching-paren nil))
-      (setq last-command-event (aref artist-replacement-table new-char))
+      (setq last-command-event (artist-get-replacement-char new-char))
       (self-insert-command 1))))
 
 (defun artist-replace-chars (new-char count)
@@ -1992,7 +1988,7 @@ Also updates the variables `artist-draw-min-y' and `artist-draw-max-y'."
       ;; The self-insert-command doesn't care about the overwrite-mode,
       ;; so the insertion is done in the same way as in picture mode.
       ;; This seems to be a little bit slower.
-      (let* ((replaced-c (aref artist-replacement-table new-char))
+      (let* ((replaced-c (artist-get-replacement-char new-char))
 	     (replaced-s (make-string count replaced-c)))
 	(artist-move-to-xy (+ (artist-current-column) count)
 			   (artist-current-line))
@@ -2002,12 +1998,12 @@ Also updates the variables `artist-draw-min-y' and `artist-draw-max-y'."
     (let ((overwrite-mode 'overwrite-mode-textual)
 	  (fill-column 32765)		; Large :-)
 	  (blink-matching-paren nil))
-      (setq last-command-event (aref artist-replacement-table new-char))
+      (setq last-command-event (artist-get-replacement-char new-char))
       (self-insert-command count))))
 
 (defsubst artist-replace-string (string &optional see-thru)
   "Replace contents at point with STRING.
-With optional argument SEE-THRU, set to non-nil, text in the buffer
+With optional argument SEE-THRU set to non-nil, text in the buffer
 ``shines thru'' blanks in the STRING."
   (let ((char-list (append string nil))	; convert the string to a list
 	(overwrite-mode 'overwrite-mode-textual)
@@ -2015,7 +2011,7 @@ With optional argument SEE-THRU, set to non-nil, text in the buffer
 	(blink-matching-paren nil))
     (while char-list
       (let ((c (car char-list)))
-	(if (and see-thru (= (aref artist-replacement-table c) ?\s))
+	(if (and see-thru (= (artist-get-replacement-char c) ?\s))
 	    (artist-move-to-xy (1+ (artist-current-column))
 			       (artist-current-line))
 	  (artist-replace-char c)))
@@ -2318,6 +2314,7 @@ Octant are numbered 1--8, anti-clockwise as:
 ;; Some inline funtions for creating, setting and reading
 ;; members of a coordinate
 ;;
+
 (defsubst artist-new-coord (x y &optional new-char)
   "Create a new coordinate at X,Y for use in a line.
 Optional argument NEW-CHAR can be used for setting the new-char component
@@ -2530,7 +2527,7 @@ This function returns a point-list."
 ;;
 
 (defun artist-draw-line (x1 y1 x2 y2)
-  "Draws a line from X1, Y1 to X2, Y2.
+  "Draw a line from X1, Y1 to X2, Y2.
 
 Output is a line, which is a list (END-POINT-1 END-POINT-2 SHAPE-INFO).
 
@@ -2555,7 +2552,7 @@ SHAPE-INFO is a list of vectors [X Y SAVED-CHAR NEW-CHAR]."
 	 (artist-eight-point x1 y1 x2 y2))))))))
 
 (defun artist-undraw-line (line)
-  "Undraws LINE."
+  "Undraw LINE."
   (mapcar
    (lambda (coord)
      (artist-move-to-xy (artist-coord-get-x coord)
@@ -2569,7 +2566,7 @@ SHAPE-INFO is a list of vectors [X Y SAVED-CHAR NEW-CHAR]."
 ;;
 
 (defun artist-draw-sline (x1 y1 x2 y2)
-  "Draw a strait line from X1, Y1 to X2, Y2.
+  "Draw a straight line from X1, Y1 to X2, Y2.
 Straight lines are vertical, horizontal or diagonal lines.
 They are faster to draw and most often they are what you need
 when drawing a simple image.
@@ -2627,7 +2624,7 @@ SHAPE-INFO is a vector [START-X START-Y LENGTH-OF-LINE DIRECTION
 ;;
 
 (defun artist-draw-rect (x1 y1 x2 y2)
-  "Draws a rectangle with corners at X1, Y1 and X2, Y2.
+  "Draw a rectangle with corners at X1, Y1 and X2, Y2.
 
 Output is a rectangle, which is a list on the form
 \(END-POINT-1 END-POINT-2 SHAPE-INFO).
@@ -2647,7 +2644,7 @@ SHAPE-INFO is a list of four straight lines."
 			       (list line1 line2 line3 line4))))
 
 (defun artist-undraw-rect (rectangle)
-  "Undraws RECTANGLE."
+  "Undraw RECTANGLE."
   (if rectangle
       (let ((shape-info (artist-2point-get-shapeinfo rectangle)))
 	(artist-undraw-sline (elt shape-info 3))
@@ -2658,8 +2655,8 @@ SHAPE-INFO is a list of four straight lines."
 
 (defun artist-rect-corners-squarify (x1 y1 x2 y2)
   "Compute square corners from rectangle corners at X1, Y1 and X2, Y2.
-The square's first corner will be X1, Y1. The position of the second corner
-depends on which of X2 and Y2 is most far away from X1, Y1."
+The square's first corner will be X1, Y1.  The position of the second
+corner depends on which of X2 and Y2 is most far away from X1, Y1."
   (let* ((delta-x      (- x2 x1))
 	 (delta-y      (- y2 y1))
 	 (delta-x-sign (if (< delta-x 0) -1 1))
@@ -2713,7 +2710,7 @@ SHAPE-INFO is a list of four straight lines."
 			       (list line1 line2 line3 line4))))
 
 (defun artist-undraw-square (square)
-  "Undraws SQUARE."
+  "Undraw SQUARE."
   (if square
       (let ((shape-info (artist-2point-get-shapeinfo square)))
 	(artist-undraw-sline (elt shape-info 3))
@@ -2738,7 +2735,7 @@ SHAPE-INFO is a list of four straight lines."
 	(setq y (1+ y))))))
 
 (defun artist-fill-square (square x1 y1 x2 y2)
-  "Fills a SQUARE from X1,Y1 to X2,Y2."
+  "Fill a SQUARE from X1,Y1 to X2,Y2."
   (let* ((square-corners (artist-rect-corners-squarify x1 y1 x2 y2))
 	 (new-x1 (elt square-corners 0))
 	 (new-y1 (elt square-corners 1))
@@ -2760,7 +2757,7 @@ SHAPE-INFO is a list of four straight lines."
 ;;
 
 (defun artist-pen (x1 y1)
-  "Draws a character at X1, Y1.
+  "Draw a character at X1, Y1.
 The character is replaced with the character in `artist-fill-char'."
   (artist-move-to-xy x1 y1)
   (artist-replace-char (if artist-line-char-set
@@ -2771,7 +2768,7 @@ The character is replaced with the character in `artist-fill-char'."
 
 
 (defun artist-pen-line (x1 y1)
-  "Draws a line from last pen position to X1, Y1.
+  "Draw a line from last pen position to X1, Y1.
 The character is replaced with the character in `artist-fill-char'.
 This will store all points in `artist-key-poly-point-list' in reversed
 order (I assume it is faster to cons to the beginning of the list than
@@ -2888,7 +2885,7 @@ Returns a list of strings."
 
 (defun artist-text-insert-common (x y text see-thru)
   "At position X, Y, insert text TEXT.
-If SEE-THRU is non-nil, then blanks in TEXT does not replace text
+If SEE-THRU is non-nil, then blanks in TEXT do not replace text
 in the buffer."
   (let* ((string-list (artist-string-split text "\n"))
 	 (i 0)
@@ -2927,7 +2924,7 @@ This is done by calling the function specified by
 `artist-text-renderer-function', which must return a list of strings,
 to be inserted in the buffer.
 
-Blanks in the rendered text overwrites any text in the buffer."
+Blanks in the rendered text overwrite any text in the buffer."
   (let* ((input-text (read-string "Type text to render: "))
 	 (rendered-text (artist-funcall artist-text-renderer-function input-text)))
     (artist-text-insert-overwrite x y rendered-text)))
@@ -2937,7 +2934,7 @@ Blanks in the rendered text overwrites any text in the buffer."
 ;;
 
 (defun artist-spray-get-interval ()
-  "Retrieves the interval for repeated spray."
+  "Retrieve the interval for repeated spray."
   artist-spray-interval)
 
 (defun artist-spray-random-points (n radius)
@@ -2975,7 +2972,7 @@ Returns a list of points.  Each point is on the form (X1 . Y1)."
       (setq spray-points (cdr spray-points)))))
 
 (defun artist-spray-clear-circle (circle x1 y1 x2 y2)
-  "Clears circle CIRCLE at X1, Y1 through X2, Y2."
+  "Clear circle CIRCLE at X1, Y1 through X2, Y2."
   (artist-undraw-circle circle))
 
 (defun artist-spray-set-radius (circle x1 y1 x2 y2)
@@ -2991,7 +2988,7 @@ Returns a list of points.  Each point is on the form (X1 . Y1)."
 ;;
 
 (defun artist-erase-char (x1 y1)
-  "Erases a character at X1, Y1.
+  "Erase a character at X1, Y1.
 The character is replaced with the character in `artist-erase-char'."
   (artist-move-to-xy x1 y1)
   (artist-replace-char artist-erase-char))
@@ -3157,10 +3154,10 @@ An endpoint is a pair (X . Y)."
 (defun artist-vaporize-line (x1 y1)
   "Vaporize (erase) the straight line through X1, Y1.
 Do this by replacing the characters that forms the line with
-`artist-erase-char'.  Output is a list of endpoints for lines
-through X1, Y1. An endpoint is a cons pair, (ENDPOINT-X . ENDPOINT-Y)."
+`artist-erase-char'.  Output is a list of endpoints for lines through
+X1, Y1.  An endpoint is a cons pair, (ENDPOINT-X . ENDPOINT-Y)."
   (let ((endpoints (artist-vap-find-endpoints x1 y1)))
-    (mapcar
+    (mapc
      (lambda (endpoints)
        (let ((ep1 (car endpoints))
 	     (ep2 (car (cdr endpoints))))
@@ -3213,14 +3210,14 @@ through X1, Y1. An endpoint is a cons pair, (ENDPOINT-X . ENDPOINT-Y)."
 (defun artist-vaporize-lines (x1 y1)
   "Vaporize lines reachable from point X1, Y1."
   (let ((ep-stack nil))
-    (mapcar
+    (mapc
      (lambda (ep) (push ep ep-stack))
      (artist-vap-find-endpoints x1 y1))
     (while (not (null ep-stack))
       (let* ((vaporize-point (pop ep-stack))
 	     (new-endpoints (artist-vaporize-line (car vaporize-point)
 						  (cdr vaporize-point))))
-	(mapcar
+	(mapc
 	 (lambda (endpoint) (push endpoint ep-stack))
 	 new-endpoints)))))
 
@@ -3231,7 +3228,7 @@ through X1, Y1. An endpoint is a cons pair, (ENDPOINT-X . ENDPOINT-Y)."
 (defun artist-ellipse-generate-quadrant (x-radius y-radius)
   "Create a point-list for first quadrant.
 Points go from (X-RADIUS, 0) to (0, Y-RADIUS).
-Quadrant is generated around origo."
+Quadrant is generated around origin."
   (let* ((rx2 (* x-radius x-radius))
 	 (ry2 (* y-radius y-radius))
 	 (2rx2 (* 2 rx2))
@@ -3340,7 +3337,7 @@ The POINT-LIST is expected to cover the first quadrant."
 
     ;; Create first half (the lower one (since y grows downwards)) from
     ;; the first quadrant.
-    (mapcar
+    (mapc
      (lambda (coord)
        (let* ((x         (artist-coord-get-x coord))
 	      (y         (artist-coord-get-y coord))
@@ -3359,7 +3356,7 @@ The POINT-LIST is expected to cover the first quadrant."
     ;; Create the other half by mirroring the first half.
     (setq both-halves
 	  (append first-half
-		  (mapcar
+		  (mapc
 		   (lambda (i)
 		     (artist-new-fill-item (artist-fill-item-get-x i)
 					   (- (artist-fill-item-get-y i))
@@ -3652,7 +3649,7 @@ original contents of that area in the buffer."
   (artist-copy-generic x1 y1 x2 y2))
 
 (defun artist-copy-square (square x1 y1 x2 y2)
-  "Copies a SQUARE drawn from X1, Y1 to X2, Y2 (but made square)."
+  "Copy a SQUARE drawn from X1, Y1 to X2, Y2 (but made square)."
   (artist-undraw-square square)
   (let* ((square-corners (artist-rect-corners-squarify x1 y1 x2 y2))
 	 (new-x1 (elt square-corners 0))
@@ -3662,7 +3659,7 @@ original contents of that area in the buffer."
     (artist-copy-generic new-x1 new-y1 new-x2 new-y2)))
 
 (defun artist-paste (x y)
-  "Pastes the contents of the copy-buffer at X,Y."
+  "Paste the contents of the copy-buffer at X,Y."
   (let ((copy-buf (if artist-interface-with-rect
 		      killed-rectangle
 		    artist-copy-buffer)))
@@ -3718,7 +3715,7 @@ original contents of that area in the buffer."
         (>= y last-line)))))
 
 (defun artist-flood-fill (x1 y1)
-  "Flood-fill starting at X1, Y1. Fill with the char in `artist-fill-char'."
+  "Flood-fill starting at X1, Y1.  Fill with the char in `artist-fill-char'."
   (let ((stack nil)
 	(input-queue nil)
 	;; We are flood-filling the area that has this character.
@@ -3943,25 +3940,25 @@ The 2-point shape SHAPE is drawn from X1, Y1 to X2, Y2."
 ;; user has released the button, so the timer will always be cancelled
 ;; at that point.
 (defun artist-key-draw-continously (x y)
-  "Draws current continous shape at X,Y."
+  "Draw current continous shape at X,Y."
   (let ((draw-fn   (artist-go-get-draw-fn-from-symbol artist-curr-go)))
     (setq artist-key-shape (artist-funcall draw-fn x y))))
 
 (defun artist-key-draw-poly (x y)
-  "Draws current poly-point shape with nth point at X,Y."
+  "Draw current poly-point shape with nth point at X,Y."
   (let ((draw-fn   (artist-go-get-draw-fn-from-symbol artist-curr-go))
 	(x1        (artist-endpoint-get-x artist-key-endpoint1))
 	(y1        (artist-endpoint-get-y artist-key-endpoint1)))
     (setq artist-key-shape (artist-funcall draw-fn x1 y1 x y))))
 
 (defun artist-key-draw-1point (x y)
-  "Draws current 1-point shape at X,Y."
+  "Draw current 1-point shape at X,Y."
   (let ((draw-fn   (artist-go-get-draw-fn-from-symbol artist-curr-go)))
     (setq artist-key-shape (artist-funcall draw-fn x y))))
 
 
 (defun artist-key-draw-2points (x y)
-  "Draws current 2-point shape at X,Y."
+  "Draw current 2-point shape at X,Y."
   (let ((draw-fn   (artist-go-get-draw-fn-from-symbol artist-curr-go))
 	(x1        (artist-endpoint-get-x artist-key-endpoint1))
 	(y1        (artist-endpoint-get-y artist-key-endpoint1)))
@@ -4379,34 +4376,28 @@ With non-nil ARG, set the last point."
 ;;
 
 (defun artist-previous-line (&optional n)
-  "Move cursor up optional N lines (default is 1), updating current shape.
+  "Move cursor up N lines (default is 1), updating current shape.
 If N is negative, move cursor down."
   (interactive "p")
   (let ((col (artist-current-column)))
-    (if (not artist-key-is-drawing)
-	(progn
-	  (previous-line n)
-	  (move-to-column col t))
-      (previous-line n)
-      (move-to-column col t)
-      (artist-key-do-continously-common))))
+    (forward-line (- n))
+    (move-to-column col t))
+  (when artist-key-is-drawing
+    (artist-key-do-continously-common)))
 
 
 (defun artist-next-line (&optional n)
-  "Move cursor down optional N lines (default is 1), updating current shape.
+  "Move cursor down N lines (default is 1), updating current shape.
 If N is negative, move cursor up."
   (interactive "p")
   (let ((col (artist-current-column)))
-    (if (not artist-key-is-drawing)
-	(progn
-	  (next-line n)
-	  (move-to-column col t))
-      (next-line n)
-      (move-to-column col t)
-      (artist-key-do-continously-common))))
+    (forward-line n)
+    (move-to-column col t))
+  (when artist-key-is-drawing
+    (artist-key-do-continously-common)))
 
 (defun artist-backward-char (&optional n)
-  "Move cursor backward optional N chars (default is 1), updating curr shape.
+  "Move cursor backward N chars (default is 1), updating current shape.
 If N is negative, move forward."
   (interactive "p")
   (if (> n 0)
@@ -4414,7 +4405,7 @@ If N is negative, move forward."
     (artist-forward-char n)))
 
 (defun artist-forward-char (&optional n)
-  "Move cursor forward optional N chars (default is 1), updating curr shape.
+  "Move cursor forward N chars (default is 1), updating current shape.
 If N is negative, move backward."
   (interactive "p")
   (let* ((step-x   (if (>= n 0) 1 -1))
@@ -4467,11 +4458,7 @@ If N is negative, move backward."
 
 (defun artist-charlist-to-string (char-list)
   "Convert a list of characters, CHAR-LIST, to a string."
-  (let ((result ""))
-    (while (not (null char-list))
-      (setq result (concat result (char-to-string (car char-list))))
-      (setq char-list (cdr char-list)))
-    result))
+  (concat char-list))
 
 (defun artist-string-to-charlist (str)
   "Convert a string, STR, to list of characters."
@@ -4751,6 +4738,8 @@ If optional argument STATE is positive, turn borders on."
   "Perform the update of the X Windows pointer shape."
   (set-mouse-color nil))
 
+(defvar x-pointer-shape)
+
 (defun artist-set-pointer-shape (new-pointer-shape)
   "Set the shape of the X Windows pointer to NEW-POINTER-SHAPE."
   (setq x-pointer-shape new-pointer-shape)
@@ -4909,7 +4898,7 @@ If optional argument STATE is positive, turn borders on."
 
 
 (defun artist-mouse-draw-continously (ev)
-  "Generic function for shapes that requires 1 point as input.
+  "Generic function for shapes that require 1 point as input.
 Operation is done continously while the mouse button is hold down.
 The event, EV, is the mouse event."
   (let* ((unshifted    (artist-go-get-symbol-shift artist-curr-go nil))
@@ -5361,7 +5350,7 @@ The event, EV, is the mouse event."
 		    artist-arrow-point-1
 		    artist-arrow-point-2)))
 	;; Remove those variables from vars that are not bound
-	(mapcar
+	(mapc
 	 (function
 	  (lambda (x)
 	    (if (not (and (boundp x) (symbol-value x)))
@@ -5566,5 +5555,5 @@ The event, EV, is the mouse event."
 ;; Don't hesitate to ask me any questions.
 
 
-;;; arch-tag: 3e63b881-aaaa-4b83-a072-220d4661a8a3
+;; arch-tag: 3e63b881-aaaa-4b83-a072-220d4661a8a3
 ;;; artist.el ends here

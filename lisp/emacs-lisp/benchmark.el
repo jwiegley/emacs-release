@@ -1,24 +1,25 @@
 ;;; benchmark.el --- support for benchmarking code
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Dave Love  <fx@gnu.org>
 ;; Keywords: lisp, extensions
 
-;; This file is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; This file is part of GNU Emacs.
 
-;; This file is distributed in the hope that it will be useful,
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -103,8 +104,8 @@ result.  The overhead of the `lambda's is accounted for."
 ;;;###autoload
 (defun benchmark (repetitions form)
   "Print the time taken for REPETITIONS executions of FORM.
-Interactively, REPETITIONS is taken from the prefix arg.  For
-non-interactive use see also `benchmark-run' and
+Interactively, REPETITIONS is taken from the prefix arg.
+For non-interactive use see also `benchmark-run' and
 `benchmark-run-compiled'."
   (interactive "p\nxForm: ")
   (let ((result (eval `(benchmark-run ,repetitions ,form))))
@@ -115,5 +116,5 @@ non-interactive use see also `benchmark-run' and
 
 (provide 'benchmark)
 
-;;; arch-tag: be570e24-4b51-4784-adf3-fa2b56c31946
+;; arch-tag: be570e24-4b51-4784-adf3-fa2b56c31946
 ;;; benchmark.el ends here

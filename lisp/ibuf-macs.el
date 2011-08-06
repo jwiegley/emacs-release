@@ -1,7 +1,7 @@
 ;;; ibuf-macs.el --- macros for ibuffer
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Colin Walters <walters@verbum.org>
 ;; Maintainer: John Paul Wallington <jpw@gnu.org>
@@ -10,20 +10,18 @@
 
 ;; This file is part of GNU Emacs.
 
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 3, or (at
-;; your option) any later version.
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; This program is distributed in the hope that it will be useful, but
-;; WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program ; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -38,6 +36,7 @@
 If TEST returns non-nil, bind `it' to the value, and evaluate
 TRUE-BODY.  Otherwise, evaluate forms in FALSE-BODY as if in `progn'.
 Compare with `if'."
+  (declare (indent 2))
   (let ((sym (make-symbol "ibuffer-aif-sym")))
     `(let ((,sym ,test))
        (if ,sym
@@ -45,18 +44,18 @@ Compare with `if'."
 	     ,true-body)
 	 (progn
 	   ,@false-body)))))
-;; (put 'ibuffer-aif 'lisp-indent-function 2)
 
 (defmacro ibuffer-awhen (test &rest body)
   "Evaluate BODY if TEST returns non-nil.
 During evaluation of body, bind `it' to the value returned by TEST."
+  (declare (indent 1))
   `(ibuffer-aif ,test
        (progn ,@body)
      nil))
-;; (put 'ibuffer-awhen 'lisp-indent-function 1)
 
 (defmacro ibuffer-save-marks (&rest body)
   "Save the marked status of the buffers and execute BODY; restore marks."
+  (declare (indent 0))
   (let ((bufsym (make-symbol "bufsym")))
     `(let ((,bufsym (current-buffer))
 	   (ibuffer-save-marks-tmp-mark-list (ibuffer-current-state-list)))
@@ -72,10 +71,9 @@ During evaluation of body, bind `it' to the value returned by TEST."
 					  e))
 			  ibuffer-save-marks-tmp-mark-list)))
 	   (ibuffer-redisplay t))))))
-;; (put 'ibuffer-save-marks 'lisp-indent-function 0)
 
 ;;;###autoload
-(defmacro* define-ibuffer-column (symbol (&key name inline props summarizer 
+(defmacro* define-ibuffer-column (symbol (&key name inline props summarizer
 					       header-mouse-map) &rest body)
   "Define a column SYMBOL for use with `ibuffer-formats'.
 
@@ -100,14 +98,15 @@ change its definition, you should explicitly call
 `ibuffer-recompile-formats'.
 
 \(fn SYMBOL (&key NAME INLINE PROPS SUMMARIZER) &rest BODY)"
+  (declare (indent defun))
   (let* ((sym (intern (concat "ibuffer-make-column-"
 			      (symbol-name symbol))))
 	 (bod-1 `(with-current-buffer buffer
 		   ,@body))
 	 (bod (if props
-		 `(propertize
-		   ,bod-1
-		   ,@props)
+		  `(propertize
+		    ,bod-1
+		    ,@props)
 		bod-1)))
     `(progn
        ,(if inline
@@ -128,7 +127,6 @@ change its definition, you should explicitly call
 	    ;; summary.
 	    `(put (quote ,sym) 'ibuffer-column-summary nil))
        :autoload-end)))
-;; (put 'define-ibuffer-column 'lisp-indent-function 'defun)
 
 ;;;###autoload
 (defmacro* define-ibuffer-sorter (name documentation
@@ -145,18 +143,21 @@ buffer object, and `b' bound to another.  BODY should return a non-nil
 value if and only if `a' is \"less than\" `b'.
 
 \(fn NAME DOCUMENTATION (&key DESCRIPTION) &rest BODY)"
+  (declare (indent 1))
   `(progn
      (defun ,(intern (concat "ibuffer-do-sort-by-" (symbol-name name))) ()
        ,(or documentation "No :documentation specified for this sorting method.")
        (interactive)
        (setq ibuffer-sorting-mode ',name)
-       (ibuffer-redisplay t))
+       (when (eq ibuffer-sorting-mode ibuffer-last-sorting-mode)
+	 (setq ibuffer-sorting-reversep (not ibuffer-sorting-reversep)))
+       (ibuffer-redisplay t)
+       (setq ibuffer-last-sorting-mode ',name))
      (push (list ',name ,description
 		 #'(lambda (a b)
 		     ,@body))
 	   ibuffer-sorting-functions-alist)
      :autoload-end))
-;; (put 'define-ibuffer-sorter 'lisp-indent-function 1)
 
 ;;;###autoload
 (defmacro* define-ibuffer-op (op args
@@ -201,66 +202,66 @@ COMPLEX means this function is special; see the source code of this
 macro for exactly what it does.
 
 \(fn OP ARGS DOCUMENTATION (&key INTERACTIVE MARK MODIFIER-P DANGEROUS OPSTRING ACTIVE-OPSTRING COMPLEX) &rest BODY)"
+  (declare (indent 2))
   `(progn
-    (defun ,(intern (concat (if (string-match "^ibuffer-do" (symbol-name op))
-				"" "ibuffer-do-") (symbol-name op)))
-      ,args
-     ,(if (stringp documentation)
-	  documentation
-	(format "%s marked buffers." active-opstring))
-     ,(if (not (null interactive))
-	  `(interactive ,interactive)
-	'(interactive))
-     (assert (eq major-mode 'ibuffer-mode))
-     (setq ibuffer-did-modification nil)
-     (let ((marked-names  (,(case mark
-			      (:deletion
-			       'ibuffer-deletion-marked-buffer-names)
-			      (t
-			       'ibuffer-marked-buffer-names)))))
-       (when (null marked-names)
-	 (setq marked-names (list (buffer-name (ibuffer-current-buffer))))
-	 (ibuffer-set-mark ,(case mark
-			      (:deletion
-			       'ibuffer-deletion-char)
-			      (t
-			       'ibuffer-marked-char))))
-       ,(let* ((finish (append
-			'(progn)
-			(if (eq modifier-p t)
-			    '((setq ibuffer-did-modification t))
-			  ())
-			`((ibuffer-redisplay t)
-			  (message ,(concat "Operation finished; " opstring " %s buffers") count))))
-	       (inner-body (if complex
-			       `(progn ,@body)
-			     `(progn
-				(with-current-buffer buf
-				  (save-excursion
-				    ,@body))
-				t)))
-	       (body `(let ((count
-			     (,(case mark
-				 (:deletion
-				  'ibuffer-map-deletion-lines)
-				 (t
-				  'ibuffer-map-marked-lines))
-			      #'(lambda (buf mark)
-				  ,(if (eq modifier-p :maybe)
-				       `(let ((ibuffer-tmp-previous-buffer-modification
-					       (buffer-modified-p buf)))
-					  (prog1 ,inner-body
-					    (when (not (eq ibuffer-tmp-previous-buffer-modification
-							   (buffer-modified-p buf)))
-					      (setq ibuffer-did-modification t))))
-				     inner-body)))))
-			,finish)))
-	  (if dangerous
-	      `(when (ibuffer-confirm-operation-on ,active-opstring marked-names)
-		 ,body)
-	    body))))
-    :autoload-end))
-;; (put 'define-ibuffer-op 'lisp-indent-function 2)
+     (defun ,(intern (concat (if (string-match "^ibuffer-do" (symbol-name op))
+				 "" "ibuffer-do-") (symbol-name op)))
+       ,args
+       ,(if (stringp documentation)
+	    documentation
+	  (format "%s marked buffers." active-opstring))
+       ,(if (not (null interactive))
+	    `(interactive ,interactive)
+	  '(interactive))
+       (assert (derived-mode-p 'ibuffer-mode))
+       (setq ibuffer-did-modification nil)
+       (let ((marked-names  (,(case mark
+				(:deletion
+				 'ibuffer-deletion-marked-buffer-names)
+				(t
+				 'ibuffer-marked-buffer-names)))))
+	 (when (null marked-names)
+	   (setq marked-names (list (buffer-name (ibuffer-current-buffer))))
+	   (ibuffer-set-mark ,(case mark
+				(:deletion
+				 'ibuffer-deletion-char)
+				(t
+				 'ibuffer-marked-char))))
+	 ,(let* ((finish (append
+			  '(progn)
+			  (if (eq modifier-p t)
+			      '((setq ibuffer-did-modification t))
+			    ())
+			  `((ibuffer-redisplay t)
+			    (message ,(concat "Operation finished; " opstring " %s buffers") count))))
+		 (inner-body (if complex
+				 `(progn ,@body)
+			       `(progn
+				  (with-current-buffer buf
+				    (save-excursion
+				      ,@body))
+				  t)))
+		 (body `(let ((count
+			       (,(case mark
+				   (:deletion
+				    'ibuffer-map-deletion-lines)
+				   (t
+				    'ibuffer-map-marked-lines))
+				#'(lambda (buf mark)
+				    ,(if (eq modifier-p :maybe)
+					 `(let ((ibuffer-tmp-previous-buffer-modification
+						 (buffer-modified-p buf)))
+					    (prog1 ,inner-body
+					      (when (not (eq ibuffer-tmp-previous-buffer-modification
+							     (buffer-modified-p buf)))
+						(setq ibuffer-did-modification t))))
+				       inner-body)))))
+			  ,finish)))
+	    (if dangerous
+		`(when (ibuffer-confirm-operation-on ,active-opstring marked-names)
+		   ,body)
+	      body))))
+     :autoload-end))
 
 ;;;###autoload
 (defmacro* define-ibuffer-filter (name documentation
@@ -279,25 +280,25 @@ will be evaluated with BUF bound to the buffer object, and QUALIFIER
 bound to the current value of the filter.
 
 \(fn NAME DOCUMENTATION (&key READER DESCRIPTION) &rest BODY)"
+  (declare (indent 2))
   (let ((fn-name (intern (concat "ibuffer-filter-by-" (symbol-name name)))))
     `(progn
        (defun ,fn-name (qualifier)
-	 ,(concat (or documentation "This filter is not documented."))
+	 ,(or documentation "This filter is not documented.")
 	 (interactive (list ,reader))
 	 (ibuffer-push-filter (cons ',name qualifier))
 	 (message "%s"
-	  (format ,(concat (format "Filter by %s added: " description)
-			   " %s")
-		  qualifier))
+		  (format ,(concat (format "Filter by %s added: " description)
+				   " %s")
+			  qualifier))
 	 (ibuffer-update nil t))
        (push (list ',name ,description
 		   #'(lambda (buf qualifier)
 		       ,@body))
 	     ibuffer-filtering-alist)
        :autoload-end)))
-;; (put 'define-ibuffer-filter 'lisp-indent-function 2)
 
 (provide 'ibuf-macs)
 
-;;; arch-tag: 2748edce-82c9-4cd9-9d9d-bd73e43c20c5
+;; arch-tag: 2748edce-82c9-4cd9-9d9d-bd73e43c20c5
 ;;; ibuf-macs.el ends here

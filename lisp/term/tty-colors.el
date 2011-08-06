@@ -1,7 +1,7 @@
 ;;; tty-colors.el --- color support for character terminals
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Eli Zaretskii
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -51,14 +49,16 @@
 ;; color.
 
 ;; `tty-defined-color-alist' is created at startup by calling the
-;; function `tty-color-define', defined below, passing it each
-;; supported color, its index, and its RGB values.  The standard list
-;; of colors supported by many Unix color terminals, including xterm,
-;; FreeBSD, and GNU/Linux, is supplied below in `tty-standard-colors'.
-;; If your terminal supports different or additional colors, call
-;; `tty-color-define' from your `.emacs' or `site-start.el'.  For
-;; more-or-less standard definitions of VGA text-mode colors, see the
-;; beginning of lisp/term/pc-win.el.
+;; function `tty-register-default-colors', defined below, which in
+;; turn calls `tty-color-define', passing it each supported color, its
+;; index, and its RGB values.  The standard list of colors supported
+;; by many Unix color terminals, including xterm, FreeBSD, and
+;; GNU/Linux, is supplied below in `tty-standard-colors'.  Some
+;; terminal-specific files in lisp/term define their own standard
+;; colors.  If your terminal supports different or additional colors,
+;; call `tty-color-define' from your `.emacs' or `site-start.el'.  For
+;; more-or-less standard definitions of VGA text-mode colors, see
+;; lisp/term/pc-win.el.
 
 ;;; Code:
 
@@ -813,11 +813,7 @@ Value is the modified color alist for FRAME."
 
 (defun tty-register-default-colors ()
   "Register the default set of colors for a character terminal."
-  (let* ((colors (cond ((eq window-system 'pc)
-			msdos-color-values)
-		       ((eq system-type 'windows-nt)
-			w32-tty-standard-colors)
-		       (t tty-standard-colors)))
+  (let* ((colors tty-standard-colors)
 	 (color (car colors)))
     (while colors
       (tty-color-define (car color) (cadr color) (cddr color))
@@ -1045,5 +1041,5 @@ A color is considered gray if the 3 components of its RGB value are equal."
       (setq colors (cdr colors)))
     count))
 
-;;; arch-tag: 84d5c3ef-ae22-4754-99ac-e6350c0967ae
+;; arch-tag: 84d5c3ef-ae22-4754-99ac-e6350c0967ae
 ;;; tty-colors.el ends here

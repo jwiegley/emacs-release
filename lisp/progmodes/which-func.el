@@ -1,7 +1,7 @@
 ;;; which-func.el --- print current function in mode line
 
-;; Copyright (C) 1994, 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-;;           Free Software Foundation, Inc.
+;; Copyright (C) 1994, 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006
+;;   2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Author:   Alex Rezinsky <alexr@msil.sps.mot.com>
 ;;           (doesn't seem to be responsive any more)
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -76,8 +74,9 @@
   :version "20.3")
 
 (defcustom which-func-modes
-  '(emacs-lisp-mode c-mode c++-mode perl-mode cperl-mode makefile-mode
-		    sh-mode fortran-mode f90-mode ada-mode)
+  '(emacs-lisp-mode c-mode c++-mode perl-mode cperl-mode python-mode
+		    makefile-mode sh-mode fortran-mode f90-mode ada-mode
+		    diff-mode)
   "List of major modes for which Which Function mode should be used.
 For other modes it is disabled.  If this is equal to t,
 then Which Function mode is enabled in any major mode that supports it."
@@ -152,6 +151,12 @@ Zero means compute the Imenu menu regardless of size."
   :group 'which-func
   :type 'sexp)
 ;;;###autoload (put 'which-func-format 'risky-local-variable t)
+
+(defvar which-func-imenu-joiner-function #'last
+  "Function to join together multiple levels of imenu nomenclature.
+Called with a single argument, a list of strings giving the names
+of the menus we had to traverse to get to the item.  Returns a
+single string, the new name of the item.")
 
 (defvar which-func-cleanup-function nil
   "Function to transform a string before displaying it in the mode line.
@@ -282,25 +287,35 @@ If no function name is found, return nil."
 	       (boundp 'imenu--index-alist) imenu--index-alist)
       (let ((alist imenu--index-alist)
             (minoffset (point-max))
-            offset elem pair mark)
-        (while alist
-          (setq elem  (car-safe alist)
-                alist (cdr-safe alist))
-          ;; Elements of alist are either ("name" . marker), or
-          ;; ("submenu" ("name" . marker) ... ).
-          (unless (listp (cdr elem))
-              (setq elem (list elem)))
-          (while elem
-            (setq pair (car elem)
-                  elem (cdr elem))
-            (and (consp pair)
-                 (number-or-marker-p (setq mark (cdr pair)))
-                 (if (>= (setq offset (- (point) mark)) 0)
-                     (if (< offset minoffset) ; find the closest item
-                         (setq minoffset offset
-                               name (car pair)))
-                   ;; Entries in order, so can skip all those after point.
-                   (setq elem nil)))))))
+            offset pair mark imstack namestack)
+        ;; Elements of alist are either ("name" . marker), or
+        ;; ("submenu" ("name" . marker) ... ). The list can be
+        ;; arbitrarily nested.
+        (while (or alist imstack)
+          (if alist
+              (progn
+                (setq pair (car-safe alist)
+                      alist (cdr-safe alist))
+
+                (cond ((atom pair))     ; skip anything not a cons
+
+                      ((imenu--subalist-p pair)
+                       (setq imstack   (cons alist imstack)
+                             namestack (cons (car pair) namestack)
+                             alist     (cdr pair)))
+
+                      ((number-or-marker-p (setq mark (cdr pair)))
+                       (if (>= (setq offset (- (point) mark)) 0)
+                           (if (< offset minoffset) ; find the closest item
+                               (setq minoffset offset
+                                     name (funcall
+                                           which-func-imenu-joiner-function
+					   (reverse (cons (car pair)
+							  namestack)))))))))
+            (setq alist     (car imstack)
+                  namestack (cdr namestack)
+                  imstack   (cdr imstack))))))
+
     ;; Try using add-log support.
     (when (and (null name) (boundp 'add-log-current-defun-function)
 	       add-log-current-defun-function)

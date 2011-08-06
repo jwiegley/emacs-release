@@ -1,7 +1,7 @@
 ;;; pgg-gpg.el --- GnuPG support for PGG.
 
 ;; Copyright (C) 1999, 2000, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Daiki Ueno <ueno@unixuser.org>
 ;; Symmetric encryption and gpg-agent support added by: 
@@ -11,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Code:
 
@@ -191,9 +189,9 @@ Optional ALL non-nil means search all keys, including secret keys."
   (let ((args (list "--with-colons" "--no-greeting" "--batch"
 		    (if all "--list-secret-keys" "--list-keys")
 		    string))
-	(key-regexp (concat "^\\(sec\\|pub\\)"
+	(key-regexp (concat "^\\(sec\\|pub\\|uid\\)"
 			    ":[^:]*:[^:]*:[^:]*:\\([^:]*\\):[^:]*"
-			    ":[^:]*:[^:]*:[^:]*:\\([^:]*\\):")))
+			    ":[^:]*:[^:]*:[^:]*:\\([^:]+\\):")))
     (with-temp-buffer
       (apply #'call-process pgg-gpg-program nil t nil args)
       (goto-char (point-min))
@@ -408,5 +406,5 @@ passphrase cache or user."
 
 (provide 'pgg-gpg)
 
-;;; arch-tag: 2aa5d5d8-93a0-4865-9312-33e29830e000
+;; arch-tag: 2aa5d5d8-93a0-4865-9312-33e29830e000
 ;;; pgg-gpg.el ends here

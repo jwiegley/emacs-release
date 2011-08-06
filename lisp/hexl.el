@@ -1,7 +1,7 @@
 ;;; hexl.el --- edit a file in a hex dump format using the hexl filter
 
 ;; Copyright (C) 1989, 1994, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Keith Gabryelski <ag@wheaties.ai.mit.edu>
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -120,6 +118,7 @@ Quoting cannot be used, so the arguments cannot themselves contain spaces."
 (defvar hexl-mode-old-require-final-newline)
 (defvar hexl-mode-old-syntax-table)
 (defvar hexl-mode-old-font-lock-keywords)
+(defvar hexl-mode-old-eldoc-documentation-function)
 
 (defvar hexl-ascii-overlay nil
   "Overlay used to highlight ASCII element corresponding to current point.")
@@ -279,7 +278,6 @@ You can use \\[hexl-find-file] to visit a file in Hexl mode.
 
     (make-local-variable 'hexl-mode-old-font-lock-keywords)
     (setq hexl-mode-old-font-lock-keywords font-lock-defaults)
-    (make-local-variable 'font-lock-defaults)
     (setq font-lock-defaults '(hexl-font-lock-keywords t))
 
     ;; Add hooks to rehexlify or dehexlify on various events.
@@ -289,6 +287,10 @@ You can use \\[hexl-find-file] to visit a file in Hexl mode.
     (add-hook 'change-major-mode-hook 'hexl-maybe-dehexlify-buffer nil t)
 
     ;; Set a callback function for eldoc.
+    (make-local-variable 'hexl-mode-old-eldoc-documentation-function)
+    (setq hexl-mode-old-eldoc-documentation-function
+	  (bound-and-true-p eldoc-documentation-function))
+
     (set (make-local-variable 'eldoc-documentation-function)
 	 'hexl-print-current-point-info)
     (eldoc-add-command-completions "hexl-")
@@ -405,6 +407,10 @@ With arg, don't unhexlify buffer."
     (setq hl-line-range-function hexl-mode-old-hl-line-range-function))
   (when (boundp 'hexl-mode-old-hl-line-face)
     (setq hl-line-face hexl-mode-old-hl-line-face))
+
+  (when (boundp 'hexl-mode-old-eldoc-documentation-function)
+    (setq eldoc-documentation-function
+	  hexl-mode-old-eldoc-documentation-function))
 
   (setq require-final-newline hexl-mode-old-require-final-newline)
   (setq mode-name hexl-mode-old-mode-name)
@@ -829,7 +835,7 @@ Interactively, with a numeric argument, insert this character that many times.
 Non-ASCII characters are first encoded with `buffer-file-coding-system',
 and their encoded form is inserted byte by byte."
   (interactive "p")
-  (hexl-insert-multibyte-char last-command-char arg))
+  (hexl-insert-multibyte-char last-command-event arg))
 
 (defun hexl-insert-char (ch num)
   "Insert the character CH NUM times in a hexl buffer.

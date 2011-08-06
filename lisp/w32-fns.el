@@ -1,17 +1,17 @@
 ;;; w32-fns.el --- Lisp routines for Windows NT
 
 ;; Copyright (C) 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Geoff Voelker <voelker@cs.washington.edu>
 ;; Keywords: internal
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,36 +19,64 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
-;; (August 12, 1993)
-;; Created.
-
-;; (November 21, 1994)
-;; [C-M-backspace] defined.
-;; mode-line-format defined to show buffer file type.
-;; audio bell initialized.
 
 ;;; Code:
+(require 'w32-vars)
 
 (defvar explicit-shell-file-name)
 
-;; Map delete and backspace
-(define-key function-key-map [backspace] "\177")
-(define-key function-key-map [delete] "\C-d")
-(define-key function-key-map [M-backspace] [?\M-\177])
-(define-key function-key-map [C-M-backspace] [\C-\M-delete])
+;;;; Function keys
 
-;; Ignore case on file-name completion
-(setq completion-ignore-case t)
+(defvar x-alternatives-map
+  (let ((map (make-sparse-keymap)))
+    ;; Map certain keypad keys into ASCII characters that people usually expect.
+    (define-key map [backspace] [127])
+    (define-key map [delete] [127])
+    (define-key map [tab] [?\t])
+    (define-key map [linefeed] [?\n])
+    (define-key map [clear] [?\C-l])
+    (define-key map [return] [?\C-m])
+    (define-key map [escape] [?\e])
+    (define-key map [M-backspace] [?\M-\d])
+    (define-key map [M-delete] [?\M-\d])
+    (define-key map [M-tab] [?\M-\t])
+    (define-key map [M-linefeed] [?\M-\n])
+    (define-key map [M-clear] [?\M-\C-l])
+    (define-key map [M-return] [?\M-\C-m])
+    (define-key map [M-escape] [?\M-\e])
+    (define-key map [iso-lefttab] [backtab])
+    (define-key map [S-iso-lefttab] [backtab])
+    (define-key map [S-tab] [backtab])
+    map)
+  "Keymap of possible alternative meanings for some keys.")
+
+(defun x-setup-function-keys (frame)
+  "Set up `function-key-map' on the graphical frame FRAME."
+  ;; Don't do this twice on the same display, or it would break
+  ;; normal-erase-is-backspace-mode.
+  (unless (terminal-parameter frame 'x-setup-function-keys)
+    ;; Map certain keypad keys into ASCII characters that people usually expect.
+    (with-selected-frame frame
+      (let ((map (copy-keymap x-alternatives-map)))
+        (set-keymap-parent map (keymap-parent local-function-key-map))
+        (set-keymap-parent local-function-key-map map)))
+    (set-terminal-parameter frame 'x-setup-function-keys t)))
+
+(declare-function set-message-beep "w32console.c")
+(declare-function w32-get-clipboard-data "w32select.c")
+(declare-function w32-get-locale-info "w32proc.c")
+(declare-function w32-get-valid-locale-ids "w32proc.c")
+(declare-function w32-set-clipboard-data "w32select.c")
 
 ;; Map all versions of a filename (8.3, longname, mixed case) to the
 ;; same buffer.
 (setq find-file-visit-truename t)
+
+(declare-function x-server-version "w32fns.c" (&optional display))
 
 (defun w32-version ()
   "Return the MS-Windows version numbers.
@@ -57,7 +85,7 @@ numbers, and the build number."
   (x-server-version))
 
 (defun w32-using-nt ()
-  "Return non-nil if running on a 32-bit Windows system.
+  "Return non-nil if running on a Windows NT descendant.
 That includes all Windows systems except for 9X/Me."
   (and (eq system-type 'windows-nt) (getenv "SystemRoot")))
 
@@ -75,14 +103,16 @@ That includes all Windows systems except for 9X/Me."
 	       w32-system-shells)))
 
 (defun w32-shell-dos-semantics ()
-  "Return non-nil if the interactive shell being used expects MSDOS shell semantics."
+  "Return non-nil if the interactive shell being used expects MS-DOS shell semantics."
   (or (w32-system-shell-p (w32-shell-name))
       (and (member (downcase (file-name-nondirectory (w32-shell-name)))
 		   '("cmdproxy" "cmdproxy.exe"))
 	   (w32-system-shell-p (getenv "COMSPEC")))))
 
+(defvar w32-quote-process-args)  ;; defined in w32proc.c
+
 (defun w32-check-shell-configuration ()
-  "Check the configuration of shell variables on Windows NT/9X.
+  "Check the configuration of shell variables on Windows.
 This function is invoked after loading the init files and processing
 the command line arguments.  It issues a warning if the user or site
 has configured the shell with inappropriate settings."
@@ -187,21 +217,15 @@ You should set this to t when using a non-system shell.\n\n"))))
 (defun w32-list-locales ()
   "List the name and id of all locales supported by Windows."
   (interactive)
-  (if (null w32-valid-locales)
-      (setq w32-valid-locales (w32-get-valid-locale-ids)))
-  (switch-to-buffer-other-window (get-buffer-create "*Supported Locales*"))
-  (erase-buffer)
-  (insert "LCID\tAbbrev\tFull name\n\n")
-  (insert (mapconcat
-	   '(lambda (x)
-	      (format "%d\t%s\t%s"
-		      x
-		      (w32-get-locale-info x)
-		      (w32-get-locale-info x t)))
-	   w32-valid-locales "\n"))
-  (insert "\n")
-  (goto-char (point-min)))
-
+  (when (null w32-valid-locales)
+    (setq w32-valid-locales (sort (w32-get-valid-locale-ids) #'<)))
+  (with-output-to-temp-buffer "*Supported Locales*"
+    (princ "LCID\tAbbrev\tFull name\n\n")
+    (dolist (locale w32-valid-locales)
+      (princ (format "%d\t%s\t%s\n"
+		     locale
+		     (w32-get-locale-info locale)
+		     (w32-get-locale-info locale t))))))
 
 ;;; Setup Info-default-directory-list to include the info directory
 ;;; near where Emacs executable was installed.  We used to set INFOPATH,
@@ -270,10 +294,45 @@ shell requires it (see `w32-shell-dos-semantics')."
 
 ;;; Fix interface to (X-specific) mouse.el
 (defun x-set-selection (type data)
+  "Make an X Windows selection of type TYPE and value DATA.
+The argument TYPE (nil means `PRIMARY') says which selection, and
+DATA specifies the contents.  TYPE must be a symbol.  \(It can also
+be a string, which stands for the symbol with that name, but this
+is considered obsolete.)  DATA may be a string, a symbol, an
+integer (or a cons of two integers or list of two integers).
+
+The selection may also be a cons of two markers pointing to the same buffer,
+or an overlay.  In these cases, the selection is considered to be the text
+between the markers *at whatever time the selection is examined*.
+Thus, editing done in the buffer after you specify the selection
+can alter the effective value of the selection.
+
+The data may also be a vector of valid non-vector selection values.
+
+The return value is DATA.
+
+Interactively, this command sets the primary selection.  Without
+prefix argument, it reads the selection in the minibuffer.  With
+prefix argument, it uses the text of the region as the selection value.
+
+Note that on MS-Windows, primary and secondary selections set by Emacs
+are not available to other programs."
   (or type (setq type 'PRIMARY))
   (put 'x-selections type data))
 
 (defun x-get-selection (&optional type data-type)
+  "Return the value of an X Windows selection.
+The argument TYPE (default `PRIMARY') says which selection,
+and the argument DATA-TYPE (default `STRING') says
+how to convert the data.
+
+TYPE may be any symbol \(but nil stands for `PRIMARY').  However,
+only a few symbols are commonly used.  They conventionally have
+all upper-case names.  The most often used ones, in addition to
+`PRIMARY', are `SECONDARY' and `CLIPBOARD'.
+
+DATA-TYPE is usually `STRING', but can also be one of the symbols
+in `selection-converter-alist', which see."
   (or type (setq type 'PRIMARY))
   (get 'x-selections type))
 
@@ -307,25 +366,6 @@ This function is provided for backward compatibility, since
 (global-set-key [lwindow] 'ignore)
 (global-set-key [rwindow] 'ignore)
 
-;; Map certain keypad keys into ASCII characters
-;; that people usually expect.
-(define-key function-key-map [tab] [?\t])
-(define-key function-key-map [linefeed] [?\n])
-(define-key function-key-map [clear] [11])
-(define-key function-key-map [return] [13])
-(define-key function-key-map [escape] [?\e])
-(define-key function-key-map [M-tab] [?\M-\t])
-(define-key function-key-map [M-linefeed] [?\M-\n])
-(define-key function-key-map [M-clear] [?\M-\013])
-(define-key function-key-map [M-return] [?\M-\015])
-(define-key function-key-map [M-escape] [?\M-\e])
-
-;; These don't do the right thing (voelker)
-;(define-key function-key-map [backspace] [127])
-;(define-key function-key-map [delete] [127])
-;(define-key function-key-map [M-backspace] [?\M-\d])
-;(define-key function-key-map [M-delete] [?\M-\d])
-
 ;; These tell read-char how to convert
 ;; these special chars to ASCII.
 (put 'tab 'ascii-character ?\t)
@@ -336,75 +376,59 @@ This function is provided for backward compatibility, since
 (put 'backspace 'ascii-character 127)
 (put 'delete 'ascii-character 127)
 
-;; W32 uses different color indexes than standard:
-
-(defvar w32-tty-standard-colors
-  '(("black"          0     0     0     0)
-    ("blue"           1     0     0 52480) ; MediumBlue
-    ("green"          2  8704 35584  8704) ; ForestGreen
-    ("cyan"           3     0 52736 53504) ; DarkTurquoise
-    ("red"            4 45568  8704  8704) ; FireBrick
-    ("magenta"        5 35584     0 35584) ; DarkMagenta
-    ("brown"          6 40960 20992 11520) ; Sienna
-    ("lightgray"      7 48640 48640 48640) ; Gray
-    ("darkgray"       8 26112 26112 26112) ; Gray40
-    ("lightblue"      9     0     0 65535) ; Blue
-    ("lightgreen"    10     0 65535     0) ; Green
-    ("lightcyan"     11     0 65535 65535) ; Cyan
-    ("lightred"      12 65535     0     0) ; Red
-    ("lightmagenta"  13 65535     0 65535) ; Magenta
-    ("yellow"        14 65535 65535     0) ; Yellow
-    ("white"         15 65535 65535 65535))
-"A list of VGA console colors, their indices and 16-bit RGB values.")
-
-
 (defun w32-add-charset-info (xlfd-charset windows-charset codepage)
   "Function to add character sets to display with Windows fonts.
 Creates entries in `w32-charset-info-alist'.
 XLFD-CHARSET is a string which will appear in the XLFD font name to
-identify the character set. WINDOWS-CHARSET is a symbol identifying
+identify the character set.  WINDOWS-CHARSET is a symbol identifying
 the Windows character set this maps to.  For the list of possible
 values, see the documentation for `w32-charset-info-alist'.  CODEPAGE
 can be a numeric codepage that Windows uses to display the character
 set, t for Unicode output with no codepage translation or nil for 8
 bit output with no translation."
   (add-to-list 'w32-charset-info-alist
-               (cons xlfd-charset (cons windows-charset codepage)))
-  )
+               (cons xlfd-charset (cons windows-charset codepage))))
 
 ;; The last charset we add becomes the "preferred" charset for the return
 ;; value from w32-select-font etc, so list the most important charsets last.
 (w32-add-charset-info "iso8859-14" 'w32-charset-ansi  28604)
 (w32-add-charset-info "iso8859-15" 'w32-charset-ansi  28605)
+;; The following two are included for pattern matching.
+(w32-add-charset-info "jisx0201" 'w32-charset-shiftjis 932)
+(w32-add-charset-info "jisx0208" 'w32-charset-shiftjis 932)
 (w32-add-charset-info "jisx0201-latin" 'w32-charset-shiftjis 932)
 (w32-add-charset-info "jisx0201-katakana" 'w32-charset-shiftjis 932)
-(w32-add-charset-info "jisx0208-sjis" 'w32-charset-shiftjis 932)
 (w32-add-charset-info "ksc5601.1989" 'w32-charset-hangeul 949)
 (w32-add-charset-info "big5" 'w32-charset-chinesebig5 950)
 (w32-add-charset-info "gb2312.1980" 'w32-charset-gb2312 936)
 (w32-add-charset-info "ms-symbol" 'w32-charset-symbol nil)
 (w32-add-charset-info "ms-oem" 'w32-charset-oem 437)
 (w32-add-charset-info "ms-oemlatin" 'w32-charset-oem 850)
-(if (boundp 'w32-extra-charsets-defined)
-    (progn
-      (w32-add-charset-info "iso8859-2" 'w32-charset-easteurope 28592)
-      (w32-add-charset-info "iso8859-3" 'w32-charset-turkish 28593)
-      (w32-add-charset-info "iso8859-4" 'w32-charset-baltic 28594)
-      (w32-add-charset-info "iso8859-6" 'w32-charset-arabic 28596)
-      (w32-add-charset-info "iso8859-7" 'w32-charset-greek 28597)
-      (w32-add-charset-info "iso8859-8" 'w32-charset-hebrew 1255)
-      (w32-add-charset-info "iso8859-9" 'w32-charset-turkish 1254)
-      (w32-add-charset-info "iso8859-13" 'w32-charset-baltic 1257)
-      (w32-add-charset-info "koi8-r" 'w32-charset-russian 20866)
-      (w32-add-charset-info "iso8859-5" 'w32-charset-russian 28595)
-      (w32-add-charset-info "tis620" 'w32-charset-thai 874)
-      (w32-add-charset-info "ksc5601.1992" 'w32-charset-johab 1361)
-      (w32-add-charset-info "mac-latin" 'w32-charset-mac nil)))
-(if (boundp 'w32-unicode-charset-defined)
-    (progn
-      (w32-add-charset-info "iso10646-1" 'w32-charset-unicode t))
-  ;; If unicode windows charset is not defined, use ansi fonts.
-  (w32-add-charset-info "iso10646-1" 'w32-charset-ansi t))
+(w32-add-charset-info "iso8859-2" 'w32-charset-easteurope 28592)
+(w32-add-charset-info "iso8859-3" 'w32-charset-turkish 28593)
+(w32-add-charset-info "iso8859-4" 'w32-charset-baltic 28594)
+(w32-add-charset-info "iso8859-6" 'w32-charset-arabic 28596)
+(w32-add-charset-info "iso8859-7" 'w32-charset-greek 28597)
+(w32-add-charset-info "iso8859-8" 'w32-charset-hebrew 1255)
+(w32-add-charset-info "iso8859-9" 'w32-charset-turkish 1254)
+(w32-add-charset-info "iso8859-13" 'w32-charset-baltic 1257)
+(w32-add-charset-info "koi8-r" 'w32-charset-russian 20866)
+(w32-add-charset-info "iso8859-5" 'w32-charset-russian 28595)
+(w32-add-charset-info "tis620-2533" 'w32-charset-thai 874)
+(w32-add-charset-info "windows-1258" 'w32-charset-vietnamese 1258)
+(w32-add-charset-info "ksc5601.1992" 'w32-charset-johab 1361)
+(w32-add-charset-info "mac-roman" 'w32-charset-mac 10000)
+(w32-add-charset-info "iso10646-1" 'w32-charset-default t)
+
+;;   ;; If unicode windows charset is not defined, use ansi fonts.
+;;   (w32-add-charset-info "iso10646-1" 'w32-charset-ansi t))
+
+;; Prefered names
+(w32-add-charset-info "big5-0" 'w32-charset-chinesebig5 950)
+(w32-add-charset-info "gb2312.1980-0" 'w32-charset-gb2312 936)
+(w32-add-charset-info "jisx0208-sjis" 'w32-charset-shiftjis 932)
+(w32-add-charset-info "ksc5601.1987-0" 'w32-charset-hangeul 949)
+(w32-add-charset-info "tis620-0" 'w32-charset-thai 874)
 (w32-add-charset-info "iso8859-1" 'w32-charset-ansi 1252)
 
 (make-obsolete-variable 'w32-enable-italics
@@ -426,9 +450,19 @@ bit output with no translation."
   "Max number of characters to put in the cut buffer.")
 
 (defun x-select-text (text &optional push)
-  "Make TEXT the last selected text.
-If `x-select-enable-clipboard' is non-nil, copy the text to the system
-clipboard as well.  Optional PUSH is ignored on Windows."
+  "Select TEXT, a string, according to the window system.
+
+On X, put TEXT in the primary X selection.  For backward
+compatibility with older X applications, set the value of X cut
+buffer 0 as well, and if the optional argument PUSH is non-nil,
+rotate the cut buffers.  If `x-select-enable-clipboard' is
+non-nil, copy the text to the X clipboard as well.
+
+On Windows, make TEXT the current selection.  If
+`x-select-enable-clipboard' is non-nil, copy the text to the
+clipboard as well.  The argument PUSH is ignored.
+
+On Nextstep, put TEXT in the pasteboard; PUSH is ignored."
   (if x-select-enable-clipboard
       (w32-set-clipboard-data text))
   (setq x-last-selected-text text))
@@ -487,5 +521,5 @@ to include Sed, which is used by leim/Makefile.in to do the job."
   (delete-matching-lines "^$\\|^;")
   (save-buffers-kill-emacs t))
 
-;;; arch-tag: c49b48cc-0f4f-454f-a274-c2dc34815e14
+;; arch-tag: c49b48cc-0f4f-454f-a274-c2dc34815e14
 ;;; w32-fns.el ends here

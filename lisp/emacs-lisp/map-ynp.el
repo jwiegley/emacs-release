@@ -1,7 +1,7 @@
 ;;; map-ynp.el --- general-purpose boolean question-asker
 
 ;; Copyright (C) 1991, 1992, 1993, 1994, 1995, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Roland McGrath <roland@gnu.org>
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -35,6 +33,8 @@
 ;; y once and then n for the remainder; and you can get help with C-h.
 
 ;;; Code:
+
+(declare-function x-popup-dialog "xmenu.c" (position contents &optional header))
 
 (defun map-y-or-n-p (prompter actor list &optional help action-alist
 			      no-cursor-in-echo-area)
@@ -83,20 +83,14 @@ Returns the number of actions taken."
 	 ;; Non-nil means we should use mouse menus to ask.
 	 use-menus
 	 delayed-switch-frame
-	 (next (if (or (and list (symbolp list))
-		       (subrp list)
-		       (byte-code-function-p list)
-		       (and (consp list)
-			    (eq (car list) 'lambda)))
-		   (function (lambda ()
-			       (setq elt (funcall list))))
-		 (function (lambda ()
-			     (if list
-				 (progn
-				   (setq elt (car list)
-					 list (cdr list))
-				   t)
-			       nil))))))
+         ;; Rebind other-window-scroll-buffer so that subfunctions can set
+         ;; it temporarily, without risking affecting the caller.
+         (other-window-scroll-buffer other-window-scroll-buffer)
+	 (next (if (functionp list)
+                   (lambda () (setq elt (funcall list)))
+                 (lambda () (when list
+                         (setq elt (pop list))
+                         t)))))
     (if (and (listp last-nonmenu-event)
 	     use-dialog-box)
 	;; Make a list describing a dialog box.
@@ -118,20 +112,30 @@ Returns the number of actions taken."
 		use-menus t
 		mouse-event last-nonmenu-event))
       (setq user-keys (if action-alist
-			  (concat (mapconcat (function
-					      (lambda (elt)
-						(key-description
-						 (char-to-string (car elt)))))
+			  (concat (mapconcat (lambda (elt)
+                                               (key-description
+                                                (vector (car elt))))
 					     action-alist ", ")
 				  " ")
 			"")
 	    ;; Make a map that defines each user key as a vector containing
 	    ;; its definition.
-	    map (cons 'keymap
-		      (append (mapcar (lambda (elt)
-					(cons (car elt) (vector (nth 1 elt))))
-				      action-alist)
-			      query-replace-map))))
+	    map
+            (let ((map (make-sparse-keymap)))
+              (set-keymap-parent map query-replace-map)
+              (define-key map [?\C-\M-v] 'scroll-other-window)
+              (define-key map [M-next] 'scroll-other-window)
+              (define-key map [?\C-\M-\S-v] 'scroll-other-window-down)
+              (define-key map [M-prior] 'scroll-other-window-down)
+              ;; The above are rather inconvenient, so maybe we should
+              ;; provide the non-other keys for the other-scroll as well.
+              ;; (define-key map [?\C-v] 'scroll-other-window)
+              ;; (define-key map [next] 'scroll-other-window)
+              ;; (define-key map [?\M-v] 'scroll-other-window-down)
+              ;; (define-key map [prior] 'scroll-other-window-down)
+              (dolist (elt action-alist)
+                (define-key map (vector (car elt)) (vector (nth 1 elt))))
+              map)))
     (unwind-protect
 	(progn
 	  (if (stringp prompter)
@@ -167,7 +171,7 @@ Returns the number of actions taken."
 				(single-key-description char)))
 		     (setq def (lookup-key map (vector char))))
 		   (cond ((eq def 'exit)
-			  (setq next (function (lambda () nil))))
+			  (setq next (lambda () nil)))
 			 ((eq def 'act)
 			  ;; Act on the object.
 			  (funcall actor elt)
@@ -179,7 +183,7 @@ Returns the number of actions taken."
 			  ;; Act on the object and then exit.
 			  (funcall actor elt)
 			  (setq actions (1+ actions)
-				next (function (lambda () nil))))
+				next (lambda () nil)))
 			 ((eq def 'quit)
 			  (setq quit-flag t)
 			  (setq next `(lambda ()
@@ -222,13 +226,18 @@ C-g to quit (cancel the whole command);
 				(format "or . (period) to %s \
 the current %s and exit."
 					action object))))
-			    (save-excursion
-			      (set-buffer standard-output)
+			    (with-current-buffer standard-output
 			      (help-mode)))
 
 			  (setq next `(lambda ()
 				       (setq next ',next)
 				       ',elt)))
+                         ((and (symbolp def) (commandp def))
+                          (call-interactively def)
+                          ;; Regurgitated; try again.
+                          (setq next `(lambda ()
+                                        (setq next ',next)
+                                        ',elt)))
 			 ((vectorp def)
 			  ;; A user-defined key.
 			  (if (funcall (aref def 0) elt) ;Call its function.
@@ -266,5 +275,5 @@ the current %s and exit."
     ;; Return the number of actions that were taken.
     actions))
 
-;;; arch-tag: 1d0a3201-a151-4c10-b231-4da47c9e6dc3
+;; arch-tag: 1d0a3201-a151-4c10-b231-4da47c9e6dc3
 ;;; map-ynp.el ends here

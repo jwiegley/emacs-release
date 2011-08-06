@@ -1,7 +1,7 @@
 ;;; tpu-edt.el --- Emacs emulating TPU emulating EDT
 
 ;; Copyright (C) 1993, 1994, 1995, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Rob Riepel <riepel@networking.stanford.edu>
 ;; Maintainer: Rob Riepel <riepel@networking.stanford.edu>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; TPU-edt is based on tpu.el by Jeff Kowalski and Bob Covey.
 
@@ -66,11 +64,10 @@
 ;;    style keyboards.  VT terminal emulators, including xterm with the
 ;;    appropriate key translations, work just fine too.
 
-;;    TPU-edt works with X-windows.  This is accomplished through a TPU-edt X
-;;    key map.  The TPU-edt module tpu-mapper creates this map and stores it
-;;    in a file.  Tpu-mapper will be run automatically the first time you
-;;    invoke the X-windows version of emacs, or you can run it by hand.  See
-;;    the commentary in tpu-mapper.el for details.
+;;    TPU-edt works with X-windows.  This is accomplished through a TPU-edt
+;;    X key map.  The tpu-mapper command creates this map and stores it in a
+;;    file.  See the tpu-mapper command help for more information, or just
+;;    run it and follow the directions.
 
 
 ;; %% Differences Between TPU-edt and DEC TPU/edt
@@ -80,7 +77,7 @@
 ;;    mark".  The mark is set at one end of a selected region; the cursor is
 ;;    at the other.  In cases where the selected region cannot be shown in
 ;;    inverse video an at sign (@) appears in the mode line when mark is set.
-;;    The native emacs command ^X^X (Control-X twice) exchanges the cursor
+;;    The native Emacs command ^X^X (Control-X twice) exchanges the cursor
 ;;    with the mark; this provides a handy way to find the location of the
 ;;    mark.
 
@@ -92,8 +89,8 @@
 ;;    approximation of free mode, see the commentary in tpu-extras.el for
 ;;    details.
 
-;;    Like TPU, emacs uses multiple buffers.  Some buffers are used to hold
-;;    files you are editing; other "internal" buffers are used for emacs' own
+;;    Like TPU, Emacs uses multiple buffers.  Some buffers are used to hold
+;;    files you are editing; other "internal" buffers are used for Emacs' own
 ;;    purposes (like showing you help).  Here are some commands for dealing
 ;;    with buffers.
 
@@ -115,9 +112,9 @@
 ;;    Note that the buffers associated with deleted windows still exist!
 
 ;;    Like TPU, TPU-edt has a "command" function, invoked with Gold-KP7 or
-;;    Do.  Most of the commands available are emacs commands.  Some TPU
+;;    Do.  Most of the commands available are Emacs commands.  Some TPU
 ;;    commands are available, they are: replace, exit, quit, include, and
-;;    Get (unfortunately, "get" is an internal emacs function, so we are
+;;    Get (unfortunately, "get" is an internal Emacs function, so we are
 ;;    stuck with "Get" - to make life easier, Get is available as Gold-g).
 
 ;;    TPU-edt supports the recall of commands, file names, and search
@@ -128,10 +125,10 @@
 ;;    a small help file showing the default keypad layout, control key
 ;;    functions, and Gold key functions.  Pressing any key inside of help
 ;;    splits the screen and prints a description of the function of the
-;;    pressed key.  Gold-PF2 invokes the native emacs help, with its
+;;    pressed key.  Gold-PF2 invokes the native Emacs help, with its
 ;;    zillions of options.
 
-;;    Thanks to emacs, TPU-edt has some extensions that may make your life
+;;    Thanks to Emacs, TPU-edt has some extensions that may make your life
 ;;    easier, or at least more interesting.  For example, Gold-r toggles
 ;;    TPU-edt rectangular mode.  In rectangular mode, Remove and Insert work
 ;;    on rectangles.  Likewise, Gold-* toggles TPU-edt regular expression
@@ -147,27 +144,27 @@
 ;;    twice) on a particular line moves you back to the original window
 ;;    at that line.  Occur is on Gold-o.
 
-;;    Finally, as you edit, remember that all the power of emacs is at
+;;    Finally, as you edit, remember that all the power of Emacs is at
 ;;    your disposal.  It really is a fantastic tool.  You may even want to
-;;    take some time and read the emacs tutorial; perhaps not to learn the
-;;    native emacs key bindings, but to get a feel for all the things
-;;    emacs can do for you.  The emacs tutorial is available from the
-;;    emacs help function: "Gold-PF2 t"
+;;    take some time and read the Emacs tutorial; perhaps not to learn the
+;;    native Emacs key bindings, but to get a feel for all the things
+;;    Emacs can do for you.  The Emacs tutorial is available from the
+;;    Emacs help function: "Gold-PF2 t"
 
 
 ;; %% Starting TPU-edt
 
 ;;    All you have to do to start TPU-edt, is turn it on.  This can be
-;;    done from the command line when running emacs.
+;;    done from the command line when running Emacs.
 
 ;;        prompt> emacs -f tpu-edt
 
-;;    If you've already started emacs, turn on TPU-edt using the tpu-edt
+;;    If you've already started Emacs, turn on TPU-edt using the tpu-edt
 ;;    command.  First press `M-x' (that's usually `ESC' followed by `x')
 ;;    and type `tpu-edt' followed by a carriage return.
 
 ;;    If you like TPU-edt and want to use it all the time, you can start
-;;    TPU-edt using the emacs initialization file, .emacs.  Simply create
+;;    TPU-edt using the Emacs initialization file, .emacs.  Simply create
 ;;    a .emacs file in your home directory containing the line:
 
 ;;        (tpu-edt)
@@ -177,10 +174,10 @@
 
 ;; %% Customizing TPU-edt using the Emacs Initialization File
 
-;;    The following is a sample emacs initialization file.  It shows how to
+;;    The following is a sample Emacs initialization file.  It shows how to
 ;;    invoke TPU-edt, and how to customize it.
 
-;;    ; .emacs - a sample emacs initialization file
+;;    ; .emacs - a sample Emacs initialization file
 
 ;;    ; Turn on TPU-edt
 ;;    (tpu-edt)
@@ -200,23 +197,23 @@
 ;;    (setq require-final-newline t)
 
 ;;    ; Emacs uses Control-s and Control-q.  Problems can occur when using
-;;    ; emacs on terminals that use these codes for flow control (Xon/Xoff
-;;    ; flow control).  These lines disable emacs' use of these characters.
+;;    ; Emacs on terminals that use these codes for flow control (Xon/Xoff
+;;    ; flow control).  These lines disable Emacs' use of these characters.
 ;;    (global-unset-key "\C-s")
 ;;    (global-unset-key "\C-q")
 
-;;    ; The emacs universal-argument function is very useful.
+;;    ; The Emacs universal-argument function is very useful.
 ;;    ; This line maps universal-argument to Gold-PF1.
-;;    (define-key GOLD-SS3-map "P" 'universal-argument)          ; Gold-PF1
+;;    (define-key tpu-gold-map [kp_f1] 'universal-argument)      ; Gold-PF1
 
 ;;    ; Make KP7 move by paragraphs, instead of pages.
-;;    (define-key SS3-map "w" 'tpu-paragraph)                    ; KP7
+;;    (define-key tpu-global-map [kf_7] 'tpu-paragraph)          ; KP7
 
 ;;    ; Repeat the preceding mappings for X-windows.
 ;;    (cond
 ;;     (window-system
-;;      (global-set-key [kp_7] 'tpu-paragraph)                   ; KP7
-;;      (define-key GOLD-map [kp_f1] 'universal-argument)))      ; GOLD-PF1
+;;      (define-key tpu-global-map [kp_7] 'tpu-paragraph)        ; KP7
+;;      (define-key tpu-gold-map [kp_f1] 'universal-argument)))  ; GOLD-PF1
 
 ;;    ; Display the TPU-edt version.
 ;;    (tpu-version)
@@ -225,9 +222,9 @@
 ;; %% Regular Expressions in TPU-edt
 
 ;;    Gold-* toggles TPU-edt regular expression mode.  In regular expression
-;;    mode, find, find next, replace, and substitute accept emacs regular
-;;    expressions.  A complete list of emacs regular expressions can be found
-;;    using the emacs "info" command (it's somewhat like the VMS help
+;;    mode, find, find next, replace, and substitute accept Emacs regular
+;;    expressions.  A complete list of Emacs regular expressions can be found
+;;    using the Emacs "info" command (it's somewhat like the VMS help
 ;;    command).  Try the following sequence of commands:
 
 ;;        DO info             <enter info mode>
@@ -256,13 +253,13 @@
 ;;        Gold-^  Add a string at BOL in region or buffer
 ;;        Gold-$  Add a string at EOL in region or buffer
 
-;;    There is also a TPU-edt interface to the native emacs string replacement
+;;    There is also a TPU-edt interface to the native Emacs string replacement
 ;;    commands.  Gold-/ invokes this command.  It accepts regular expressions
 ;;    if TPU-edt is in regular expression mode.  Given a repeat count, it will
 ;;    perform the replacement without prompting for confirmation.
 
 ;;    This command replaces empty strings correctly, however, it has its
-;;    drawbacks.  As a native emacs command, it has a different interface
+;;    drawbacks.  As a native Emacs command, it has a different interface
 ;;    than the emulated TPU commands.  Also, it works only in the forward
 ;;    direction, regardless of the current TPU-edt direction.
 
@@ -273,7 +270,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
 ;; we use picture-mode functions
 (require 'picture)
 
@@ -293,308 +289,277 @@
 ;;;  User Configurable Variables
 ;;;
 (defcustom tpu-have-ispell t
-  "*If non-nil (default), TPU-edt uses ispell for spell checking."
+  "Non-nil means `tpu-spell-check' uses `ispell-region' for spell checking.
+Otherwise, use `spell-region'."
   :type 'boolean
   :group 'tpu)
+(make-obsolete-variable 'tpu-have-ispell "the `spell' package is obsolete."
+                        "23.1")
 
 (defcustom tpu-kill-buffers-silently nil
-  "*If non-nil, TPU-edt kills modified buffers without asking."
+  "If non-nil, TPU-edt kills modified buffers without asking."
   :type 'boolean
   :group 'tpu)
 
 (defcustom tpu-percent-scroll 75
-  "*Percentage of the screen to scroll for next/previous screen commands."
+  "Percentage of the screen to scroll for next/previous screen commands."
   :type 'integer
   :group 'tpu)
 
 (defcustom tpu-pan-columns 16
-  "*Number of columns the tpu-pan functions scroll left or right."
+  "Number of columns the tpu-pan functions scroll left or right."
   :type 'integer
   :group 'tpu)
 
 
 ;;;
-;;;  Emacs version identifiers - currently referenced by
-;;;
-;;;     o tpu-mark              o tpu-set-mark
-;;;     o mode line section     o tpu-load-xkeys
-;;;
-(defconst tpu-lucid-emacs-p
-  (string-match "Lucid" emacs-version)
-  "Non-nil if we are running Lucid Emacs.")
-
-;;;
 ;;;  Global Keymaps
 ;;;
-(defvar CSI-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map "A" 'tpu-previous-line)               ; up
-    (define-key map "B" 'tpu-next-line)                   ; down
-    (define-key map "D" 'tpu-backward-char)               ; left
-    (define-key map "C" 'tpu-forward-char)                ; right
 
-    (define-key map "1~" 'tpu-search)                     ; Find
-    (define-key map "2~" 'tpu-paste)                      ; Insert Here
-    (define-key map "3~" 'tpu-cut)                        ; Remove
-    (define-key map "4~" 'tpu-select)                     ; Select
-    (define-key map "5~" 'tpu-scroll-window-down)         ; Prev Screen
-    (define-key map "6~" 'tpu-scroll-window-up)           ; Next Screen
-
-    (define-key map "11~" 'nil)                           ; F1
-    (define-key map "12~" 'nil)                           ; F2
-    (define-key map "13~" 'nil)                           ; F3
-    (define-key map "14~" 'nil)                           ; F4
-    (define-key map "15~" 'nil)                           ; F5
-    (define-key map "17~" 'nil)                           ; F6
-    (define-key map "18~" 'nil)                           ; F7
-    (define-key map "19~" 'nil)                           ; F8
-    (define-key map "20~" 'nil)                           ; F9
-    (define-key map "21~" 'tpu-exit)                      ; F10
-    (define-key map "23~" 'tpu-insert-escape)             ; F11 (ESC)
-    (define-key map "24~" 'tpu-next-beginning-of-line)    ; F12 (BS)
-    (define-key map "25~" 'tpu-delete-previous-word)      ; F13 (LF)
-    (define-key map "26~" 'tpu-toggle-overwrite-mode)     ; F14
-    (define-key map "28~" 'tpu-help)                      ; HELP
-    (define-key map "29~" 'execute-extended-command)      ; DO
-    (define-key map "31~" 'tpu-goto-breadcrumb)           ; F17
-    (define-key map "32~" 'nil)                           ; F18
-    (define-key map "33~" 'nil)                           ; F19
-    (define-key map "34~" 'nil)                           ; F20
-    map)
-  "Maps the CSI function keys on the VT100 keyboard.
-CSI is DEC's name for the sequence <ESC>[.")
-
-(defvar GOLD-CSI-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map "A" 'tpu-move-to-beginning)      ; up-arrow
-    (define-key map "B" 'tpu-move-to-end)            ; down-arrow
-    (define-key map "C" 'end-of-line)                ; right-arrow
-    (define-key map "D" 'beginning-of-line)          ; left-arrow
-
-    (define-key map "1~" 'nil)                       ; Find
-    (define-key map "2~" 'nil)                       ; Insert Here
-    (define-key map "3~" 'tpu-store-text)            ; Remove
-    (define-key map "4~" 'tpu-unselect)              ; Select
-    (define-key map "5~" 'tpu-previous-window)       ; Prev Screen
-    (define-key map "6~" 'tpu-next-window)           ; Next Screen
-
-    (define-key map "11~" 'nil)                      ; F1
-    (define-key map "12~" 'nil)                      ; F2
-    (define-key map "13~" 'nil)                      ; F3
-    (define-key map "14~" 'nil)                      ; F4
-    (define-key map "16~" 'nil)                      ; F5
-    (define-key map "17~" 'nil)                      ; F6
-    (define-key map "18~" 'nil)                      ; F7
-    (define-key map "19~" 'nil)                      ; F8
-    (define-key map "20~" 'nil)                      ; F9
-    (define-key map "21~" 'nil)                      ; F10
-    (define-key map "23~" 'nil)                      ; F11
-    (define-key map "24~" 'nil)                      ; F12
-    (define-key map "25~" 'nil)                      ; F13
-    (define-key map "26~" 'nil)                      ; F14
-    (define-key map "28~" 'describe-bindings)        ; HELP
-    (define-key map "29~" 'nil)                      ; DO
-    (define-key map "31~" 'tpu-drop-breadcrumb)      ; F17
-    (define-key map "32~" 'nil)                      ; F18
-    (define-key map "33~" 'nil)                      ; F19
-    (define-key map "34~" 'nil)                      ; F20
-    map)
-  "Maps the function keys on the VT100 keyboard preceded by GOLD-CSI.")
-
-(defvar GOLD-SS3-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map "A" 'tpu-move-to-beginning)      ; up-arrow
-    (define-key map "B" 'tpu-move-to-end)            ; down-arrow
-    (define-key map "C" 'end-of-line)                ; right-arrow
-    (define-key map "D" 'beginning-of-line)          ; left-arrow
-
-    (define-key map "P" 'keyboard-quit)              ; PF1
-    (define-key map "Q" 'help-for-help)              ; PF2
-    (define-key map "R" 'tpu-search)                 ; PF3
-    (define-key map "S" 'tpu-undelete-lines)         ; PF4
-    (define-key map "p" 'open-line)                  ; KP0
-    (define-key map "q" 'tpu-change-case)            ; KP1
-    (define-key map "r" 'tpu-delete-to-eol)          ; KP2
-    (define-key map "s" 'tpu-special-insert)         ; KP3
-    (define-key map "t" 'tpu-move-to-end)            ; KP4
-    (define-key map "u" 'tpu-move-to-beginning)      ; KP5
-    (define-key map "v" 'tpu-paste)                  ; KP6
-    (define-key map "w" 'execute-extended-command)   ; KP7
-    (define-key map "x" 'tpu-fill)                   ; KP8
-    (define-key map "y" 'tpu-replace)                ; KP9
-    (define-key map "m" 'tpu-undelete-words)         ; KP-
-    (define-key map "l" 'tpu-undelete-char)          ; KP,
-    (define-key map "n" 'tpu-unselect)               ; KP.
-    (define-key map "M" 'tpu-substitute)             ; KPenter
-    map)
-  "Maps the function keys on the VT100 keyboard preceded by GOLD-SS3.")
-
-(defvar GOLD-map
+(defvar tpu-gold-map
   (let ((map (make-keymap)))
-    (define-key map "\e[" GOLD-CSI-map)                  ; GOLD-CSI map
-    (define-key map "\eO" GOLD-SS3-map)                  ; GOLD-SS3 map
+    ;; Previously we used escape sequences here.  We now instead presume
+    ;; that term/*.el does its job to map the escape sequence to the right
+    ;; key-symbol.
+
+    (define-key map [up]    'tpu-move-to-beginning)	; up-arrow
+    (define-key map [down]  'tpu-move-to-end)		; down-arrow
+    (define-key map [right] 'end-of-line)		; right-arrow
+    (define-key map [left]  'beginning-of-line)		; left-arrow
+
+    ;; (define-key map [find]   nil)			; Find
+    ;; (define-key map [insert] nil)			; Insert Here
+    (define-key map [delete] 'tpu-store-text)		; Remove
+    (define-key map [select] 'tpu-unselect)		; Select
+    (define-key map [prior]  'tpu-previous-window)	; Prev Screen
+    (define-key map [next]   'tpu-next-window)		; Next Screen
+
+    ;; (define-key map [f1] nil)			; F1
+    ;; (define-key map [f2] nil)			; F2
+    ;; (define-key map [f3] nil)			; F3
+    ;; (define-key map [f4] nil)			; F4
+    ;; (define-key map [f5] nil)			; F5
+    ;; (define-key map [f6] nil)			; F6
+    ;; (define-key map [f7] nil)			; F7
+    ;; (define-key map [f8] nil)			; F8
+    ;; (define-key map [f9] nil)			; F9
+    ;; (define-key map [f10] nil)			; F10
+    ;; (define-key map [f11] nil)			; F11
+    ;; (define-key map [f12] nil)			; F12
+    ;; (define-key map [f13] nil)			; F13
+    ;; (define-key map [f14] nil)			; F14
+    (define-key map [help] 'describe-bindings)		; HELP
+    ;; (define-key map [menu] nil)			; DO
+    (define-key map [f17] 'tpu-drop-breadcrumb)		; F17
+    ;; (define-key map [f18] nil)			; F18
+    ;; (define-key map [f19] nil)			; F19
+    ;; (define-key map [f20] nil)			; F20
+
+    (define-key map [kp-f1] 'keyboard-quit)		; PF1
+    (define-key map [kp-f2] 'help-for-help)		; PF2
+    (define-key map [kp-f3] 'tpu-search)		; PF3
+    (define-key map [kp-f4] 'tpu-undelete-lines)	; PF4
+    (define-key map [kp-0] 'open-line)			; KP0
+    (define-key map [kp-1] 'tpu-change-case)		; KP1
+    (define-key map [kp-2] 'tpu-delete-to-eol)		; KP2
+    (define-key map [kp-3] 'tpu-special-insert)		; KP3
+    (define-key map [kp-4] 'tpu-move-to-end)		; KP4
+    (define-key map [kp-5] 'tpu-move-to-beginning)	; KP5
+    (define-key map [kp-6] 'tpu-paste)			; KP6
+    (define-key map [kp-7] 'execute-extended-command)	; KP7
+    (define-key map [kp-8] 'tpu-fill)			; KP8
+    (define-key map [kp-9] 'tpu-replace)		; KP9
+    (define-key map [kp-subtract] 'tpu-undelete-words)	; KP-
+    (define-key map [kp-separator] 'tpu-undelete-char)	; KP,
+    (define-key map [kp-decimal] 'tpu-unselect)		; KP.
+    (define-key map [kp-enter] 'tpu-substitute)		; KPenter
+
     ;;
-    (define-key map "\C-A" 'tpu-toggle-overwrite-mode)   ; ^A
-    (define-key map "\C-B" 'nil)                         ; ^B
-    (define-key map "\C-C" 'nil)                         ; ^C
-    (define-key map "\C-D" 'nil)                         ; ^D
-    (define-key map "\C-E" 'nil)                         ; ^E
-    (define-key map "\C-F" 'set-visited-file-name)       ; ^F
-    (define-key map "\C-g" 'keyboard-quit)               ; safety first
-    (define-key map "\C-h" 'delete-other-windows)        ; BS
-    (define-key map "\C-i" 'other-window)                ; TAB
-    (define-key map "\C-J" 'nil)                         ; ^J
-    (define-key map "\C-K" 'tpu-define-macro-key)        ; ^K
-    (define-key map "\C-l" 'downcase-region)             ; ^L
-    (define-key map "\C-M" 'nil)                         ; ^M
-    (define-key map "\C-N" 'nil)                         ; ^N
-    (define-key map "\C-O" 'nil)                         ; ^O
-    (define-key map "\C-P" 'nil)                         ; ^P
-    (define-key map "\C-Q" 'nil)                         ; ^Q
-    (define-key map "\C-R" 'nil)                         ; ^R
-    (define-key map "\C-S" 'nil)                         ; ^S
-    (define-key map "\C-T" 'tpu-toggle-control-keys)     ; ^T
-    (define-key map "\C-u" 'upcase-region)               ; ^U
-    (define-key map "\C-V" 'nil)                         ; ^V
-    (define-key map "\C-w" 'tpu-write-current-buffers)   ; ^W
-    (define-key map "\C-X" 'nil)                         ; ^X
-    (define-key map "\C-Y" 'nil)                         ; ^Y
-    (define-key map "\C-Z" 'nil)                         ; ^Z
-    (define-key map " " 'undo)                           ; SPC
-    (define-key map "!" 'nil)                            ; !
-    (define-key map "#" 'nil)                            ; #
-    (define-key map "$" 'tpu-add-at-eol)                 ; $
-    (define-key map "%" 'tpu-goto-percent)               ; %
-    (define-key map "&" 'nil)                            ; &
-    (define-key map "(" 'nil)                            ; (
-    (define-key map ")" 'nil)                            ; )
-    (define-key map "*" 'tpu-toggle-regexp)              ; *
-    (define-key map "+" 'nil)                            ; +
-    (define-key map "," 'tpu-goto-breadcrumb)            ; ,
-    (define-key map "-" 'negative-argument)              ; -
-    (define-key map "." 'tpu-drop-breadcrumb)            ; .
-    (define-key map "/" 'tpu-emacs-replace)              ; /
-    (define-key map "0" 'digit-argument)                 ; 0
-    (define-key map "1" 'digit-argument)                 ; 1
-    (define-key map "2" 'digit-argument)                 ; 2
-    (define-key map "3" 'digit-argument)                 ; 3
-    (define-key map "4" 'digit-argument)                 ; 4
-    (define-key map "5" 'digit-argument)                 ; 5
-    (define-key map "6" 'digit-argument)                 ; 6
-    (define-key map "7" 'digit-argument)                 ; 7
-    (define-key map "8" 'digit-argument)                 ; 8
-    (define-key map "9" 'digit-argument)                 ; 9
-    (define-key map ":" 'nil)                            ; :
-    (define-key map ";" 'tpu-trim-line-ends)             ; ;
-    (define-key map "<" 'nil)                            ; <
-    (define-key map "=" 'nil)                            ; =
-    (define-key map ">" 'nil)                            ; >
-    (define-key map "?" 'tpu-spell-check)                ; ?
-    (define-key map "A" 'tpu-toggle-newline-and-indent)  ; A
-    (define-key map "B" 'tpu-next-buffer)                ; B
-    (define-key map "C" 'repeat-complex-command)         ; C
-    (define-key map "D" 'shell-command)                  ; D
-    (define-key map "E" 'tpu-exit)                       ; E
-    (define-key map "F" 'tpu-set-cursor-free)            ; F
-    (define-key map "G" 'tpu-get)                        ; G
-    (define-key map "H" 'nil)                            ; H
-    (define-key map "I" 'tpu-include)                    ; I
-    (define-key map "K" 'tpu-kill-buffer)                ; K
-    (define-key map "L" 'tpu-what-line)                  ; L
-    (define-key map "M" 'buffer-menu)                    ; M
-    (define-key map "N" 'tpu-next-file-buffer)           ; N
-    (define-key map "O" 'occur)                          ; O
-    (define-key map "P" 'lpr-buffer)                     ; P
-    (define-key map "Q" 'tpu-quit)                       ; Q
-    (define-key map "R" 'tpu-toggle-rectangle)           ; R
-    (define-key map "S" 'replace)                        ; S
-    (define-key map "T" 'tpu-line-to-top-of-window)      ; T
-    (define-key map "U" 'undo)                           ; U
-    (define-key map "V" 'tpu-version)                    ; V
-    (define-key map "W" 'save-buffer)                    ; W
-    (define-key map "X" 'tpu-save-all-buffers-kill-emacs) ; X
-    (define-key map "Y" 'copy-region-as-kill)             ; Y
-    (define-key map "Z" 'suspend-emacs)                   ; Z
-    (define-key map "[" 'blink-matching-open)             ; [
-    (define-key map "\\" 'nil)                            ; \
-    (define-key map "]" 'blink-matching-open)             ; ]
-    (define-key map "^" 'tpu-add-at-bol)                  ; ^
-    (define-key map "_" 'split-window-vertically)         ; -
-    (define-key map "`" 'what-line)                       ; `
-    (define-key map "a" 'tpu-toggle-newline-and-indent)   ; a
-    (define-key map "b" 'tpu-next-buffer)                 ; b
-    (define-key map "c" 'repeat-complex-command)          ; c
-    (define-key map "d" 'shell-command)                   ; d
-    (define-key map "e" 'tpu-exit)                        ; e
-    (define-key map "f" 'tpu-set-cursor-free)             ; f
-    (define-key map "g" 'tpu-get)                         ; g
-    (define-key map "h" 'nil)                             ; h
-    (define-key map "i" 'tpu-include)                     ; i
-    (define-key map "k" 'tpu-kill-buffer)                 ; k
-    (define-key map "l" 'goto-line)                       ; l
-    (define-key map "m" 'buffer-menu)                     ; m
-    (define-key map "n" 'tpu-next-file-buffer)            ; n
-    (define-key map "o" 'occur)                           ; o
-    (define-key map "p" 'lpr-region)                      ; p
-    (define-key map "q" 'tpu-quit)                        ; q
-    (define-key map "r" 'tpu-toggle-rectangle)            ; r
-    (define-key map "s" 'replace)                         ; s
-    (define-key map "t" 'tpu-line-to-top-of-window)       ; t
-    (define-key map "u" 'undo)                            ; u
-    (define-key map "v" 'tpu-version)                     ; v
-    (define-key map "w" 'save-buffer)                     ; w
+    (define-key map "\C-A" 'tpu-toggle-overwrite-mode)	; ^A
+    ;; (define-key map "\C-B" nil)			; ^B
+    ;; (define-key map "\C-C" nil)			; ^C
+    ;; (define-key map "\C-D" nil)			; ^D
+    ;; (define-key map "\C-E" nil)			; ^E
+    (define-key map "\C-F" 'set-visited-file-name)	; ^F
+    (define-key map "\C-g" 'keyboard-quit)		; safety first
+    (define-key map "\C-h" 'delete-other-windows)	; BS
+    (define-key map "\C-i" 'other-window)		; TAB
+    ;; (define-key map "\C-J" nil)			; ^J
+    (define-key map "\C-K" 'tpu-define-macro-key)	; ^K
+    (define-key map "\C-l" 'downcase-region)		; ^L
+    ;; (define-key map "\C-M" nil)			; ^M
+    ;; (define-key map "\C-N" nil)			; ^N
+    ;; (define-key map "\C-O" nil)			; ^O
+    ;; (define-key map "\C-P" nil)			; ^P
+    ;; (define-key map "\C-Q" nil)			; ^Q
+    ;; (define-key map "\C-R" nil)			; ^R
+    ;; (define-key map "\C-S" nil)			; ^S
+    (define-key map "\C-T" 'tpu-toggle-control-keys)	; ^T
+    (define-key map "\C-u" 'upcase-region)		; ^U
+    ;; (define-key map "\C-V" nil)			; ^V
+    (define-key map "\C-w" 'tpu-write-current-buffers)	; ^W
+    ;; (define-key map "\C-X" nil)			; ^X
+    ;; (define-key map "\C-Y" nil)			; ^Y
+    ;; (define-key map "\C-Z" nil)			; ^Z
+    (define-key map " " 'undo)				; SPC
+    ;; (define-key map "!" nil)				; !
+    ;; (define-key map "#" nil)				; #
+    (define-key map "$" 'tpu-add-at-eol)		; $
+    (define-key map "%" 'tpu-goto-percent)		; %
+    ;; (define-key map "&" nil)				; &
+    ;; (define-key map "(" nil)				; (
+    ;; (define-key map ")" nil)				; )
+    (define-key map "*" 'tpu-toggle-regexp)		; *
+    ;; (define-key map "+" nil)				; +
+    (define-key map "," 'tpu-goto-breadcrumb)		; ,
+    (define-key map "-" 'negative-argument)		; -
+    (define-key map "." 'tpu-drop-breadcrumb)		; .
+    (define-key map "/" 'tpu-emacs-replace)		; /
+    (define-key map "0" 'digit-argument)		; 0
+    (define-key map "1" 'digit-argument)		; 1
+    (define-key map "2" 'digit-argument)		; 2
+    (define-key map "3" 'digit-argument)		; 3
+    (define-key map "4" 'digit-argument)		; 4
+    (define-key map "5" 'digit-argument)		; 5
+    (define-key map "6" 'digit-argument)		; 6
+    (define-key map "7" 'digit-argument)		; 7
+    (define-key map "8" 'digit-argument)		; 8
+    (define-key map "9" 'digit-argument)		; 9
+    ;; (define-key map ":" nil)				; :
+    (define-key map ";" 'tpu-trim-line-ends)		; ;
+    ;; (define-key map "<" nil)				; <
+    ;; (define-key map "=" nil)				; =
+    ;; (define-key map ">" nil)				; >
+    (define-key map "?" 'tpu-spell-check)		; ?
+    ;; (define-key map "A" 'tpu-toggle-newline-and-indent) ; A
+    ;; (define-key map "B" 'tpu-next-buffer)		; B
+    ;; (define-key map "C" 'repeat-complex-command)	; C
+    ;; (define-key map "D" 'shell-command)		; D
+    ;; (define-key map "E" 'tpu-exit)			; E
+    ;; (define-key map "F" 'tpu-cursor-free-mode)	; F
+    ;; (define-key map "G" 'tpu-get)			; G
+    ;; (define-key map "H" nil)				; H
+    ;; (define-key map "I" 'tpu-include)		; I
+    ;; (define-key map "K" 'tpu-kill-buffer)		; K
+    (define-key map "L" 'tpu-what-line)			; L
+    ;; (define-key map "M" 'buffer-menu)		; M
+    ;; (define-key map "N" 'tpu-next-file-buffer)	; N
+    ;; (define-key map "O" 'occur)			; O
+    (define-key map "P" 'lpr-buffer)			; P
+    ;; (define-key map "Q" 'tpu-quit)			; Q
+    ;; (define-key map "R" 'tpu-toggle-rectangle)	; R
+    ;; (define-key map "S" 'replace)			; S
+    ;; (define-key map "T" 'tpu-line-to-top-of-window)	; T
+    ;; (define-key map "U" 'undo)			; U
+    ;; (define-key map "V" 'tpu-version)		; V
+    ;; (define-key map "W" 'save-buffer)		; W
+    ;; (define-key map "X" 'tpu-save-all-buffers-kill-emacs) ; X
+    ;; (define-key map "Y" 'copy-region-as-kill)	; Y
+    ;; (define-key map "Z" 'suspend-emacs)		; Z
+    (define-key map "[" 'blink-matching-open)		; [
+    ;; (define-key map "\\" nil)			; \
+    (define-key map "]" 'blink-matching-open)		; ]
+    (define-key map "^" 'tpu-add-at-bol)		; ^
+    (define-key map "_" 'split-window-vertically)	; -
+    (define-key map "`" 'what-line)			; `
+    (define-key map "a" 'tpu-toggle-newline-and-indent)	; a
+    (define-key map "b" 'tpu-next-buffer)		; b
+    (define-key map "c" 'repeat-complex-command)	; c
+    (define-key map "d" 'shell-command)			; d
+    (define-key map "e" 'tpu-exit)			; e
+    (define-key map "f" 'tpu-cursor-free-mode)		; f
+    (define-key map "g" 'tpu-get)			; g
+    ;; (define-key map "h" nil)				; h
+    (define-key map "i" 'tpu-include)			; i
+    (define-key map "k" 'tpu-kill-buffer)		; k
+    (define-key map "l" 'goto-line)			; l
+    (define-key map "m" 'buffer-menu)			; m
+    (define-key map "n" 'tpu-next-file-buffer)		; n
+    (define-key map "o" 'occur)				; o
+    (define-key map "p" 'lpr-region)			; p
+    (define-key map "q" 'tpu-quit)			; q
+    (define-key map "r" 'tpu-toggle-rectangle)		; r
+    (define-key map "s" 'replace)			; s
+    (define-key map "t" 'tpu-line-to-top-of-window)	; t
+    (define-key map "u" 'undo)				; u
+    (define-key map "v" 'tpu-version)			; v
+    (define-key map "w" 'save-buffer)			; w
     (define-key map "x" 'tpu-save-all-buffers-kill-emacs) ; x
-    (define-key map "y" 'copy-region-as-kill)             ; y
-    (define-key map "z" 'suspend-emacs)                   ; z
-    (define-key map "{" 'nil)                             ; {
-    (define-key map "|" 'split-window-horizontally)       ; |
-    (define-key map "}" 'nil)                             ; }
-    (define-key map "~" 'exchange-point-and-mark)         ; ~
-    (define-key map "\177" 'delete-window)                ; <X]
+    (define-key map "y" 'copy-region-as-kill)		; y
+    (define-key map "z" 'suspend-emacs)			; z
+    ;; (define-key map "{" nil)				; {
+    (define-key map "|" 'split-window-horizontally)	; |
+    ;; (define-key map "}" nil)				; }
+    (define-key map "~" 'exchange-point-and-mark)	; ~
+    (define-key map "\177" 'delete-window)		; <X]
     map)
   "Maps the function keys on the VT100 keyboard preceded by PF1.
 GOLD is the ASCII 7-bit escape sequence <ESC>OP.")
-
-(defvar SS3-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map "P" GOLD-map)                         ; GOLD map
-    ;;
-    (define-key map "A" 'tpu-previous-line)               ; up
-    (define-key map "B" 'tpu-next-line)                   ; down
-    (define-key map "C" 'tpu-forward-char)                ; right
-    (define-key map "D" 'tpu-backward-char)               ; left
-
-    (define-key map "Q" 'tpu-help)                        ; PF2
-    (define-key map "R" 'tpu-search-again)                ; PF3
-    (define-key map "S" 'tpu-delete-current-line)         ; PF4
-    (define-key map "p" 'tpu-line)                        ; KP0
-    (define-key map "q" 'tpu-word)                        ; KP1
-    (define-key map "r" 'tpu-end-of-line)                 ; KP2
-    (define-key map "s" 'tpu-char)                        ; KP3
-    (define-key map "t" 'tpu-advance-direction)           ; KP4
-    (define-key map "u" 'tpu-backup-direction)            ; KP5
-    (define-key map "v" 'tpu-cut)                         ; KP6
-    (define-key map "w" 'tpu-page)                        ; KP7
-    (define-key map "x" 'tpu-scroll-window)               ; KP8
-    (define-key map "y" 'tpu-append-region)               ; KP9
-    (define-key map "m" 'tpu-delete-current-word)         ; KP-
-    (define-key map "l" 'tpu-delete-current-char)         ; KP,
-    (define-key map "n" 'tpu-select)                      ; KP.
-    (define-key map "M" 'newline)                         ; KPenter
-    map)
-  "Maps the SS3 function keys on the VT100 keyboard.
-SS3 is DEC's name for the sequence <ESC>O.")
+(define-obsolete-variable-alias 'GOLD-map 'tpu-gold-map "23.1")
 
 (defvar tpu-global-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\e[" CSI-map)
-    (define-key map "\eO" SS3-map)
+
+    ;; Previously defined in CSI-map.  We now presume that term/*.el does
+    ;; its job to map the escape sequence to the right key-symbol.
+    (define-key map [find]   'tpu-search)		; Find
+    (define-key map [insert] 'tpu-paste)		; Insert Here
+    (define-key map [delete] 'tpu-cut)			; Remove
+    (define-key map [select] 'tpu-select)		; Select
+    (define-key map [prior]  'tpu-scroll-window-down)	; Prev Screen
+    (define-key map [next]   'tpu-scroll-window-up)	; Next Screen
+
+    ;; (define-key map [f1] nil)			; F1
+    ;; (define-key map [f2] nil)			; F2
+    ;; (define-key map [f3] nil)			; F3
+    ;; (define-key map [f4] nil)			; F4
+    ;; (define-key map [f5] nil)			; F5
+    ;; (define-key map [f6] nil)			; F6
+    ;; (define-key map [f7] nil)			; F7
+    ;; (define-key map [f8] nil)			; F8
+    ;; (define-key map [f9] nil)			; F9
+    (define-key map [f10] 'tpu-exit)			; F10
+    (define-key map [f11] 'tpu-insert-escape)		; F11 (ESC)
+    (define-key map [f12] 'tpu-next-beginning-of-line)	; F12 (BS)
+    (define-key map [f13] 'tpu-delete-previous-word)	; F13 (LF)
+    (define-key map [f14] 'tpu-toggle-overwrite-mode)	; F14
+    (define-key map [help] 'tpu-help)			; HELP
+    (define-key map [menu] 'execute-extended-command)	; DO
+    (define-key map [f17] 'tpu-goto-breadcrumb)		; F17
+    ;; (define-key map [f18] nil)			; F18
+    ;; (define-key map [f19] nil)			; F19
+    ;; (define-key map [f20] nil)			; F20
+
+
+    ;; Previously defined in SS3-map.  We now presume that term/*.el does
+    ;; its job to map the escape sequence to the right key-symbol.
+    (define-key map [kp-f1] tpu-gold-map)		; GOLD map
+    ;;
+    (define-key map [up]    'tpu-previous-line)		; up
+    (define-key map [down]  'tpu-next-line)		; down
+    (define-key map [right] 'tpu-forward-char)		; right
+    (define-key map [left]  'tpu-backward-char)		; left
+
+    (define-key map [kp-f2] 'tpu-help)			; PF2
+    (define-key map [kp-f3] 'tpu-search-again)		; PF3
+    (define-key map [kp-f4] 'tpu-delete-current-line)	; PF4
+    (define-key map [kp-0] 'tpu-line)			; KP0
+    (define-key map [kp-1] 'tpu-word)			; KP1
+    (define-key map [kp-2] 'tpu-end-of-line)		; KP2
+    (define-key map [kp-3] 'tpu-char)			; KP3
+    (define-key map [kp-4] 'tpu-advance-direction)	; KP4
+    (define-key map [kp-5] 'tpu-backup-direction)	; KP5
+    (define-key map [kp-6] 'tpu-cut)			; KP6
+    (define-key map [kp-7] 'tpu-page)			; KP7
+    (define-key map [kp-8] 'tpu-scroll-window)		; KP8
+    (define-key map [kp-9] 'tpu-append-region)		; KP9
+    (define-key map [kp-subtract] 'tpu-delete-current-word) ; KP-
+    (define-key map [kp-separator] 'tpu-delete-current-char) ; KP,
+    (define-key map [kp-decimal] 'tpu-select)		; KP.
+    (define-key map [kp-enter] 'newline)		; KPenter
+
     map)
   "TPU-edt global keymap.")
-
-(and (not (boundp 'minibuffer-local-ns-map))
-     (defvar minibuffer-local-ns-map (make-sparse-keymap)
-       "Hack to give Lucid Emacs the same maps as ordinary Emacs."))
 
 
 ;;;
@@ -698,7 +663,7 @@ SS3 is DEC's name for the sequence <ESC>O.")
   (setq tpu-mark-flag (if transient-mark-mode "" (if (tpu-mark) " @" "  ")))
   (force-mode-line-update))
 
-(cond (tpu-lucid-emacs-p
+(cond ((featurep 'xemacs)
        (add-hook 'zmacs-deactivate-region-hook 'tpu-update-mode-line)
        (add-hook 'zmacs-activate-region-hook 'tpu-update-mode-line))
       (t
@@ -770,16 +735,12 @@ Otherwise sets the tpu-match markers to nil and returns nil."
 ;;;
 ;;;  Utilities
 ;;;
-(defun tpu-caar (thingy) (car (car thingy)))
-(defun tpu-cadr (thingy) (car (cdr thingy)))
-
-(defvar zmacs-regions)
 
 (defun tpu-mark nil
   "TPU-edt version of the mark function.
 Return the appropriate value of the mark for the current
 version of Emacs."
-  (cond (tpu-lucid-emacs-p (mark (not zmacs-regions)))
+  (cond ((featurep 'xemacs) (mark (not zmacs-regions)))
 	(t (and mark-active (mark (not transient-mark-mode))))))
 
 (defun tpu-set-mark (pos)
@@ -787,9 +748,7 @@ version of Emacs."
 Sets the mark at POS and activates the region according to the
 current version of Emacs."
   (set-mark pos)
-  ;; We use a separate `if' for the fboundp so the byte-compiler notices it
-  ;; and doesn't complain about the subsequent call.
-  (if (fboundp 'zmacs-activate-region) (if pos (zmacs-activate-region))))
+  (when (featurep 'xemacs) (when pos (zmacs-activate-region))))
 
 (defun tpu-string-prompt (prompt history-symbol)
   "Read a string with PROMPT."
@@ -853,7 +812,7 @@ Top line is 0.  Counts each text line only once, even if it wraps."
   (interactive "p")
   (cond ((get tpu-breadcrumb-plist num)
 	 (switch-to-buffer (car (get tpu-breadcrumb-plist num)))
-	 (goto-char (tpu-cadr (get tpu-breadcrumb-plist num)))
+	 (goto-char (cadr (get tpu-breadcrumb-plist num)))
 	 (message "mark %d found." num))
 	(t
 	 (message "mark %d not found." num))))
@@ -931,13 +890,16 @@ With argument, fill and justify."
 
 (defun tpu-spell-check nil
   "Check the spelling of the region, or of the entire buffer,
- if no region is selected."
+if no region is selected."
   (interactive)
-  (cond (tpu-have-ispell
-	 (if (tpu-mark) (ispell-region (tpu-mark) (point)) (ispell-buffer)))
-	(t
-	 (if (tpu-mark) (spell-region (tpu-mark) (point)) (spell-buffer))))
-  (if (tpu-mark) (tpu-unselect t)))
+  (let ((m (tpu-mark)))
+    (apply (if tpu-have-ispell 'ispell-region
+             'spell-region)
+           (if m
+               (if (> m (point)) (list (point) m)
+                 (list m (point)))
+             (list (point-min) (point-max))))
+    (if m (tpu-unselect t))))
 
 (defun tpu-toggle-overwrite-mode nil
   "Switch in and out of overwrite mode."
@@ -951,11 +913,10 @@ With argument, fill and justify."
 	 (overwrite-mode 1))))
 
 (defun tpu-special-insert (num)
-  "Insert a character or control code according to
-its ASCII decimal value."
+  "Insert a character or control code according to its ASCII decimal value."
   (interactive "P")
   (if overwrite-mode (delete-char 1))
-  (insert (if num num 0)))
+  (insert (or num 0)))
 
 (defun tpu-quoted-insert (num)
   "Read next input character and insert it.
@@ -982,7 +943,7 @@ This is useful for inserting control characters."
 
 (defun tpu-what-line nil
   "Tell what line the point is on,
- and the total number of lines in the buffer."
+and the total number of lines in the buffer."
   (interactive)
   (if (eobp)
       (message "You are at the End of Buffer.  The last line is %d."
@@ -1402,9 +1363,12 @@ The search is performed in the current direction."
 ;;       tpu-search-forward (t)        tpu-search-reverse (t)
 ;;       tpu-search-forward-exit (t)   tpu-search-backward-exit (t)
 
+(declare-function tpu-emacs-search "tpu-edt")
+(declare-function tpu-emacs-rev-search "tpu-edt")
+
 (defun tpu-set-search (&optional arg)
-  "Set the search functions and set the search direction to the current
-direction.  If an argument is specified, don't set the search direction."
+  "Set the search functions and set the search direction to the current direction.
+If an argument is specified, don't set the search direction."
   (if (not arg) (setq tpu-searching-forward tpu-advance))
   (cond (tpu-searching-forward
 	 (cond (tpu-regexp-p
@@ -1542,8 +1506,7 @@ Used for reversing a search in progress."
 		(if tpu-rectangular-p "en" "dis"))))
 
 (defun tpu-arrange-rectangle nil
-  "Adjust point and mark to mark upper left and lower right
-corners of a rectangle."
+  "Adjust point and mark to upper left and lower right corners of a rectangle."
   (let ((mc (current-column))
 	(pc (progn (exchange-point-and-mark) (current-column))))
 
@@ -1775,8 +1738,8 @@ With argument reinserts the character that many times."
 	 (tpu-error "No selection active."))))
 
 (defun tpu-substitute (num)
-  "Replace the selected region with the contents of the cut buffer, and
-repeat most recent search.  A numeric argument serves as a repeat count.
+  "Replace the selected region with the contents of the cut buffer,
+and repeat most recent search.  A numeric argument serves as a repeat count.
 A negative argument means replace all occurrences of the search string."
   (interactive "p")
   (cond ((or (tpu-mark) (tpu-check-match))
@@ -2261,8 +2224,8 @@ Accepts a prefix argument for the number of tpu-pan-columns to scroll."
 ;;;
 ;;;  Minibuffer map additions to set search direction
 ;;;
-(define-key minibuffer-local-map "\eOt" 'tpu-search-forward-exit)  ;KP4
-(define-key minibuffer-local-map "\eOu" 'tpu-search-backward-exit) ;KP5
+(define-key minibuffer-local-map [kp-4] 'tpu-search-forward-exit)  ;KP4
+(define-key minibuffer-local-map [kp-5] 'tpu-search-backward-exit) ;KP5
 
 
 ;;;
@@ -2358,13 +2321,13 @@ Accepts a prefix argument for the number of tpu-pan-columns to scroll."
 (defun tpu-load-xkeys (file)
   "Load the TPU-edt X-windows key definitions FILE.
 If FILE is nil, try to load a default file.  The default file names are
-`~/.tpu-lucid-keys' for Lucid emacs, and `~/.tpu-keys' for Emacs."
+`~/.tpu-lucid-keys' for XEmacs, and `~/.tpu-keys' for Emacs."
   (interactive "fX key definition file: ")
   (cond (file
 	 (setq file (expand-file-name file)))
 	(tpu-xkeys-file
 	 (setq file (expand-file-name tpu-xkeys-file)))
-	(tpu-lucid-emacs-p
+	((featurep 'xemacs)
 	 (setq file (convert-standard-filename
 		     (expand-file-name "~/.tpu-lucid-keys"))))
 	(t
@@ -2380,34 +2343,11 @@ If FILE is nil, try to load a default file.  The default file names are
   (cond ((file-readable-p file)
 	 (load-file file))
 	(t
-	 (switch-to-buffer "*scratch*")
-	 (erase-buffer)
-	 (insert "
-
-     Ack!!  You're running TPU-edt under X-windows without loading an
-     X  key definition file.   To create a  TPU-edt X  key definition
-     file, run the tpu-mapper.el program.  It  came with TPU-edt.  It
-     even includes directions on how to  use it!   Perhaps it's lying
-     around here someplace.  ")
-	 (let ((file "tpu-mapper.el")
-	       (found nil)
-	       (path nil)
-	       (search-list (append (list (expand-file-name ".")) load-path)))
-	   (while (and (not found) search-list)
-	     (setq path (concat (car search-list)
-				(if (string-match "/$" (car search-list)) "" "/")
-				file))
-	     (if (and (file-exists-p path) (not (file-directory-p path)))
-		 (setq found t))
-	     (setq search-list (cdr search-list)))
-	   (cond (found
-		  (insert (format
-			   "Ah yes, there it is, in \n\n       %s \n\n" path))
-		  (if (tpu-y-or-n-p "Do you want to run it now? ")
-		      (load-file path)))
-		 (t
-		  (insert "Nope, I can't seem to find it.  :-(\n\n")
-		  (sit-for 120)))))))
+         ;; This used to force the user to build `file'.  With the
+         ;; new code, such a file may not be necessary.  In case it
+         ;; is, issue a message giving a hint as to how to build it.
+         (message "%s not found: use M-x tpu-mapper to create it"
+                  (abbreviate-file-name file)))))
 
 (defun tpu-copy-keyfile (oldname newname)
   "Copy the TPU-edt X key definitions file to the new default name."
@@ -2490,9 +2430,39 @@ If FILE is nil, try to load a default file.  The default file names are
         (if (eq tpu-global-map parent)
             (set-keymap-parent map (keymap-parent parent))
           (setq map parent)))))
-  (ignore-errors (ad-disable-regexp "\\`tpu-"))
+  ;; Only has an effect if the advice in tpu-extras has been activated.
+  (condition-case nil
+      (with-no-warnings (ad-disable-regexp "\\`tpu-"))
+    (error nil))
   (setq tpu-edt-mode nil))
 
+
+;;;### (autoloads (tpu-set-cursor-bound tpu-set-cursor-free tpu-set-scroll-margins
+;;;;;;  tpu-cursor-free-mode) "tpu-extras" "tpu-extras.el" "a7e10e36bed23a02f05ec5a69ae8569a")
+;;; Generated autoloads from tpu-extras.el
+
+(autoload 'tpu-cursor-free-mode "tpu-extras" "\
+Minor mode to allow the cursor to move freely about the screen.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'tpu-set-scroll-margins "tpu-extras" "\
+Set scroll margins.
+
+\(fn TOP BOTTOM)" t nil)
+
+(autoload 'tpu-set-cursor-free "tpu-extras" "\
+Allow the cursor to move freely about the screen.
+
+\(fn)" t nil)
+
+(autoload 'tpu-set-cursor-bound "tpu-extras" "\
+Constrain the cursor to the flow of the text.
+
+\(fn)" t nil)
+
+;;;***
+
 (provide 'tpu-edt)
 
 ;; arch-tag: f3dfe61c-2cbd-4f73-b9cc-eb215020b857

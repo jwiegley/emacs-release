@@ -1,7 +1,7 @@
 ;;; find-dired.el --- run a `find' command and dired the output
 
 ;; Copyright (C) 1992, 1994, 1995, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Roland McGrath <roland@gnu.org>,
 ;;	   Sebastian Kremer <sk@thp.uni-koeln.de>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -42,7 +40,7 @@
 (defcustom find-ls-option
   (if (eq system-type 'berkeley-unix) '("-ls" . "-gilsb")
     '("-exec ls -ld {} \\;" . "-ld"))
-  "*Description of the option to `find' to produce an `ls -l'-type listing.
+  "Description of the option to `find' to produce an `ls -l'-type listing.
 This is a cons of two strings (FIND-OPTION . LS-SWITCHES).  FIND-OPTION
 gives the option (or options) to `find' that produce the desired output.
 LS-SWITCHES is a list of `ls' switches to tell dired how to parse the output."
@@ -66,7 +64,7 @@ them for `find-ls-option'."
 	  (string-match "solaris2" system-configuration)
 	  (string-match "irix" system-configuration))
       "-s" "-q")
-  "*Option to grep to be as silent as possible.
+  "Option to grep to be as silent as possible.
 On Berkeley systems, this is `-s'; on Posix, and with GNU grep, `-q' does it.
 On other systems, the closest you can come is to use `-l'."
   :type 'string
@@ -77,7 +75,7 @@ On other systems, the closest you can come is to use `-l'."
   (if read-file-name-completion-ignore-case
       "-iname"
     "-name")
-  "*Argument used to specify file name pattern.
+  "Argument used to specify file name pattern.
 If `read-file-name-completion-ignore-case' is non-nil, -iname is used so that
 find also ignores case. Otherwise, -name is used."
   :type 'string
@@ -242,48 +240,49 @@ Thus ARG can also contain additional grep options."
 	(inhibit-read-only t))
     (if (buffer-name buf)
 	(with-current-buffer buf
-	  (save-restriction
-	    (widen)
-	    (let ((buffer-read-only nil)
-		  (beg (point-max))
-		  (l-opt (and (consp find-ls-option)
-			      (string-match "l" (cdr find-ls-option))))
-		  (ls-regexp (concat "^ +[^ \t\r\n]+\\( +[^ \t\r\n]+\\) +"
-				     "[^ \t\r\n]+ +[^ \t\r\n]+\\( +[0-9]+\\)")))
-	      (goto-char beg)
-	      (insert string)
-	      (goto-char beg)
-	      (or (looking-at "^")
-		  (forward-line 1))
-	      (while (looking-at "^")
-		(insert "  ")
-		(forward-line 1))
-	      ;; Convert ` ./FILE' to ` FILE'
-	      ;; This would lose if the current chunk of output
-	      ;; starts or ends within the ` ./', so back up a bit:
-	      (goto-char (- beg 3))	; no error if < 0
-	      (while (search-forward " ./" nil t)
-		(delete-region (point) (- (point) 2)))
-	      ;; Pad the number of links and file size.  This is a
-	      ;; quick and dirty way of getting the columns to line up
-	      ;; most of the time, but it's not foolproof.
-	      (when l-opt
+	  (save-excursion
+	    (save-restriction
+	      (widen)
+	      (let ((buffer-read-only nil)
+		    (beg (point-max))
+		    (l-opt (and (consp find-ls-option)
+				(string-match "l" (cdr find-ls-option))))
+		    (ls-regexp (concat "^ +[^ \t\r\n]+\\( +[^ \t\r\n]+\\) +"
+				       "[^ \t\r\n]+ +[^ \t\r\n]+\\( +[0-9]+\\)")))
 		(goto-char beg)
-		(goto-char (line-beginning-position))
-		(while (re-search-forward ls-regexp nil t)
-		  (replace-match (format "%4s" (match-string 1))
-				 nil nil nil 1)
-		  (replace-match (format "%9s" (match-string 2))
-				 nil nil nil 2)
-		  (forward-line 1)))
-	      ;; Find all the complete lines in the unprocessed
-	      ;; output and process it to add text properties.
-	      (goto-char (point-max))
-	      (if (search-backward "\n" (process-mark proc) t)
-		  (progn
-		    (dired-insert-set-properties (process-mark proc)
-						 (1+ (point)))
-		    (move-marker (process-mark proc) (1+ (point))))))))
+		(insert string)
+		(goto-char beg)
+		(or (looking-at "^")
+		    (forward-line 1))
+		(while (looking-at "^")
+		  (insert "  ")
+		  (forward-line 1))
+		;; Convert ` ./FILE' to ` FILE'
+		;; This would lose if the current chunk of output
+		;; starts or ends within the ` ./', so back up a bit:
+		(goto-char (- beg 3))	; no error if < 0
+		(while (search-forward " ./" nil t)
+		  (delete-region (point) (- (point) 2)))
+		;; Pad the number of links and file size.  This is a
+		;; quick and dirty way of getting the columns to line up
+		;; most of the time, but it's not foolproof.
+		(when l-opt
+		  (goto-char beg)
+		  (goto-char (line-beginning-position))
+		  (while (re-search-forward ls-regexp nil t)
+		    (replace-match (format "%4s" (match-string 1))
+				   nil nil nil 1)
+		    (replace-match (format "%9s" (match-string 2))
+				   nil nil nil 2)
+		    (forward-line 1)))
+		;; Find all the complete lines in the unprocessed
+		;; output and process it to add text properties.
+		(goto-char (point-max))
+		(if (search-backward "\n" (process-mark proc) t)
+		    (progn
+		      (dired-insert-set-properties (process-mark proc)
+						   (1+ (point)))
+		      (move-marker (process-mark proc) (1+ (point)))))))))
       ;; The buffer has been killed.
       (delete-process proc))))
 
@@ -314,5 +313,5 @@ Thus ARG can also contain additional grep options."
 
 (provide 'find-dired)
 
-;;; arch-tag: 8edece95-af00-4221-bc74-a4bd2f75f9b0
+;; arch-tag: 8edece95-af00-4221-bc74-a4bd2f75f9b0
 ;;; find-dired.el ends here

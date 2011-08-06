@@ -1,6 +1,7 @@
 ;;; mh-folder.el --- MH-Folder mode
 
-;; Copyright (C) 2002, 2003, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -9,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -156,6 +155,8 @@ annotation.")
   '("Message"
     ["Show Message"                     mh-show (mh-get-msg-num nil)]
     ["Show Message with Header"         mh-header-display (mh-get-msg-num nil)]
+    ["Show Message with Preferred Alternative"
+                                        mh-show-preferred-alternative (mh-get-msg-num nil)]
     ["Next Message"                     mh-next-undeleted-msg t]
     ["Previous Message"                 mh-previous-undeleted-msg t]
     ["Go to First Message"              mh-first-msg t]
@@ -225,6 +226,7 @@ annotation.")
   "'"           mh-toggle-tick
   ","           mh-header-display
   "."           mh-alt-show
+  ":"           mh-show-preferred-alternative
   ";"           mh-toggle-mh-decode-mime-flag
   ">"           mh-write-msg-to-file
   "?"           mh-help
@@ -348,7 +350,7 @@ annotation.")
   "\M-\t"       mh-prev-button)
 
 (cond
- (mh-xemacs-flag
+ ((featurep 'xemacs)
   (define-key mh-folder-mode-map [button2] 'mh-show-mouse))
  (t
   (define-key mh-folder-mode-map [mouse-2] 'mh-show-mouse)))
@@ -388,8 +390,9 @@ annotation.")
     (?/ "Limit to [c]c, ran[g]e, fro[m], [s]ubject, [t]o; [w]iden")
     (?X "un[s]har, [u]udecode message")
     (?D "[b]urst digest")
-    (?K "[v]iew, [i]nline, [o]utput/save MIME part; save [a]ll parts; \n"
-        "[TAB] next; [SHIFT-TAB] previous")
+    (?K "[v]iew, [i]nline, with [e]xternal viewer; \n"
+        "[o]utput/save MIME part; save [a]ll parts; \n"
+        "[t]oggle buttons; [TAB] next; [SHIFT-TAB] previous")
     (?J "[b]lacklist, [w]hitelist message"))
   "Key binding cheat sheet.
 See `mh-set-help'.")
@@ -510,7 +513,7 @@ font-lock is done highlighting.")
 
 (defmacro mh-remove-xemacs-horizontal-scrollbar ()
   "Get rid of the horizontal scrollbar that XEmacs insists on putting in."
-  (when mh-xemacs-flag
+  (when (featurep 'xemacs)
     `(if (and (featurep 'scrollbar)
               (fboundp 'set-specifier))
          (set-specifier horizontal-scrollbar-visible-p nil
@@ -589,7 +592,8 @@ perform the operation on all messages in that region.
   (mh-do-in-gnu-emacs
     (unless mh-folder-tool-bar-map
         (mh-tool-bar-folder-buttons-init))
-    (set (make-local-variable 'tool-bar-map) mh-folder-tool-bar-map))
+    (if (boundp 'tool-bar-map)
+        (set (make-local-variable 'tool-bar-map) mh-folder-tool-bar-map)))
   (mh-do-in-xemacs
     (mh-tool-bar-init :folder))
   (make-local-variable 'font-lock-defaults)
@@ -653,7 +657,7 @@ perform the operation on all messages in that region.
   (easy-menu-add mh-folder-folder-menu)
   (mh-inc-spool-make)
   (mh-set-help mh-folder-mode-help-messages)
-  (if (and mh-xemacs-flag
+  (if (and (featurep 'xemacs)
            font-lock-auto-fontify)
       (turn-on-font-lock)))             ; Force font-lock in XEmacs.
 
@@ -1755,7 +1759,7 @@ If UPDATE, append the scan lines, otherwise replace."
       (goto-char scan-start)
       (cond ((looking-at "scan: no messages in")
              (keep-lines mh-scan-valid-regexp)) ; Flush random scan lines
-            ((looking-at (if (mh-variant-p 'mu-mh)
+            ((looking-at (if (mh-variant-p 'gnu-mh)
                              "scan: message set .* does not exist"
                            "scan: bad message list "))
              (keep-lines mh-scan-valid-regexp))

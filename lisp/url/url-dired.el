@@ -1,16 +1,16 @@
 ;;; url-dired.el --- URL Dired minor mode
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Keywords: comm, files
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Code:
 
@@ -34,7 +32,7 @@
   "Keymap used when browsing directories.")
 
 (defvar url-dired-minor-mode nil
-  "Whether we are in url-dired-minor-mode")
+  "Whether we are in url-dired-minor-mode.")
 
 (make-variable-buffer-local 'url-dired-minor-mode)
 
@@ -92,5 +90,5 @@ Example:  (add-minor-mode 'view-minor-mode \" View\" view-mode-map)"
 
 (provide 'url-dired)
 
-;;; arch-tag: 2694f21a-43e1-4391-b3cb-cf6e5349f15f
+;; arch-tag: 2694f21a-43e1-4391-b3cb-cf6e5349f15f
 ;;; url-dired.el ends here

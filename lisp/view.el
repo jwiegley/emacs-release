@@ -1,7 +1,7 @@
 ;;; view.el --- peruse file or buffer without editing
 
 ;; Copyright (C) 1985, 1989, 1994, 1995, 1997, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: K. Shane Hartman
 ;; Maintainer: Inge Frick <inge@nada.kth.se>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -54,7 +52,7 @@
   :group 'editing)
 
 (defcustom view-highlight-face 'highlight
-   "*The face used for highlighting the match found by View mode search."
+   "The face used for highlighting the match found by View mode search."
    :type 'face
    :group 'view)
 
@@ -63,28 +61,32 @@
 ;; doesn't say if leaving view mode should restore windows or not.  The latter
 ;; is now controlled by the presence of a value in `view-return-to-alist'.
 (defcustom view-scroll-auto-exit nil
-  "*Non-nil means scrolling past the end of buffer exits View mode.
+  "Non-nil means scrolling past the end of buffer exits View mode.
 A value of nil means attempting to scroll past the end of the buffer,
 only rings the bell and gives a message on how to leave."
   :type 'boolean
   :group 'view)
 
 (defcustom view-try-extend-at-buffer-end nil
- "*Non-nil means try to load more of file when reaching end of buffer.
+ "Non-nil means try to load more of file when reaching end of buffer.
 This variable is mainly intended to be temporarily set to non-nil by
 the F command in view-mode, but you can set it to t if you want the action
 for all scroll commands in view mode."
   :type 'boolean
   :group 'view)
 
-(defcustom view-remove-frame-by-deleting nil
-  "*Determine how View mode removes a frame no longer needed.
+;;;###autoload
+(defcustom view-remove-frame-by-deleting t
+  "Determine how View mode removes a frame no longer needed.
 If nil, make an icon of the frame.  If non-nil, delete the frame."
   :type 'boolean
-  :group 'view)
+  :group 'view
+  ;; Changed the default of this to t for Emacs 23.  Users consider
+  ;; frame iconification annoying.
+  :version "23.1")
 
 (defcustom view-exits-all-viewing-windows nil
-  "*Non-nil means restore all windows used to view buffer.
+  "Non-nil means restore all windows used to view buffer.
 Commands that restore windows when finished viewing a buffer, apply to all
 windows that display the buffer and have restore information in
 `view-return-to-alist'.
@@ -94,7 +96,7 @@ considered for restoring."
   :group 'view)
 
 (defcustom view-inhibit-help-message nil
-  "*Non-nil inhibits the help message shown upon entering View mode."
+  "Non-nil inhibits the help message shown upon entering View mode."
   :type 'boolean
   :group 'view
   :version "22.1")
@@ -146,10 +148,11 @@ See RETURN-TO-ALIST argument of function `view-mode-exit' for the format of
 (put 'view-return-to-alist 'permanent-local t)
 
 (defvar view-exit-action nil
-  "nil or a function with one argument (a buffer) called when finished viewing.
-This is local in each buffer being viewed.
-The \\[view-file] and \\[view-file-other-window] commands may set this to
-`kill-buffer'.")
+  "If non-nil, a function with one argument (a buffer) called when finished viewing.
+Commands like \\[view-file] and \\[view-file-other-window] may
+set this to bury or kill the viewed buffer.
+Observe that the buffer viewed might not appear in any window at
+the time this function is called.")
 (make-variable-buffer-local 'view-exit-action)
 
 (defvar view-no-disable-on-exit nil
@@ -179,13 +182,13 @@ This is local in each buffer, once it is used.")
     (define-key map "c" 'View-leave)
     (define-key map "Q" 'View-quit-all)
     (define-key map "E" 'View-exit-and-edit)
-;    (define-key map "v" 'View-exit)
+    ;; (define-key map "v" 'View-exit)
     (define-key map "e" 'View-exit)
     (define-key map "q" 'View-quit)
-;    (define-key map "N" 'View-search-last-regexp-backward)
+    ;; (define-key map "N" 'View-search-last-regexp-backward)
     (define-key map "p" 'View-search-last-regexp-backward)
     (define-key map "n" 'View-search-last-regexp-forward)
-;    (define-key map "?" 'View-search-regexp-backward) ; Less does this.
+    ;; (define-key map "?" 'View-search-regexp-backward) ; Less does this.
     (define-key map "\\" 'View-search-regexp-backward)
     (define-key map "/" 'View-search-regexp-forward)
     (define-key map "r" 'isearch-backward)
@@ -196,22 +199,22 @@ This is local in each buffer, once it is used.")
     (define-key map "@" 'View-back-to-mark)
     (define-key map "." 'set-mark-command)
     (define-key map "%" 'View-goto-percent)
-;    (define-key map "G" 'View-goto-line-last)
+    ;; (define-key map "G" 'View-goto-line-last)
     (define-key map "g" 'View-goto-line)
     (define-key map "=" 'what-line)
     (define-key map "F" 'View-revert-buffer-scroll-page-forward)
-;    (define-key map "k" 'View-scroll-line-backward)
+    ;; (define-key map "k" 'View-scroll-line-backward)
     (define-key map "y" 'View-scroll-line-backward)
-;    (define-key map "j" 'View-scroll-line-forward)
+    ;; (define-key map "j" 'View-scroll-line-forward)
     (define-key map "\n" 'View-scroll-line-forward)
     (define-key map "\r" 'View-scroll-line-forward)
     (define-key map "u" 'View-scroll-half-page-backward)
     (define-key map "d" 'View-scroll-half-page-forward)
     (define-key map "z" 'View-scroll-page-forward-set-page-size)
     (define-key map "w" 'View-scroll-page-backward-set-page-size)
-;    (define-key map "b" 'View-scroll-page-backward)
+    ;; (define-key map "b" 'View-scroll-page-backward)
     (define-key map "\C-?" 'View-scroll-page-backward)
-;    (define-key map "f" 'View-scroll-page-forward)
+    ;; (define-key map "f" 'View-scroll-page-forward)
     (define-key map " " 'View-scroll-page-forward)
     (define-key map "o" 'View-scroll-to-buffer-end)
     (define-key map ">" 'end-of-buffer)
@@ -242,6 +245,7 @@ This is local in each buffer, once it is used.")
 ;; kill a buffer modified by the user.  A buffer in view mode can
 ;; become modified if the user types C-x C-q, edits the buffer, then
 ;; types C-x C-q again to return to view mode.
+;;;###autoload
 (defun kill-buffer-if-not-modified (buf)
   "Like `kill-buffer', but does nothing if the buffer is modified."
   (let ((buf (get-buffer buf)))
@@ -251,11 +255,11 @@ This is local in each buffer, once it is used.")
 ;;;###autoload
 (defun view-file (file)
   "View FILE in View mode, returning to previous buffer when done.
-Emacs commands editing the buffer contents are not available; instead,
-a special set of commands (mostly letters and punctuation)
-are defined for moving around in the buffer.
+Emacs commands editing the buffer contents are not available; instead, a
+special set of commands (mostly letters and punctuation) are defined for
+moving around in the buffer.
 Space scrolls forward, Delete scrolls backward.
-For list of all View commands, type H or h while viewing.
+For a list of all View commands, type H or h while viewing.
 
 This command runs the normal hook `view-mode-hook'."
   (interactive "fView file: ")
@@ -280,7 +284,7 @@ Emacs commands editing the buffer contents are not available; instead,
 a special set of commands (mostly letters and punctuation)
 are defined for moving around in the buffer.
 Space scrolls forward, Delete scrolls backward.
-For list of all View commands, type H or h while viewing.
+For a list of all View commands, type H or h while viewing.
 
 This command runs the normal hook `view-mode-hook'."
   (interactive "fIn other window view file: ")
@@ -302,7 +306,7 @@ Emacs commands editing the buffer contents are not available; instead,
 a special set of commands (mostly letters and punctuation)
 are defined for moving around in the buffer.
 Space scrolls forward, Delete scrolls backward.
-For list of all View commands, type H or h while viewing.
+For a list of all View commands, type H or h while viewing.
 
 This command runs the normal hook `view-mode-hook'."
   (interactive "fIn other frame view file: ")
@@ -317,18 +321,22 @@ This command runs the normal hook `view-mode-hook'."
 ;;;###autoload
 (defun view-buffer (buffer &optional exit-action)
   "View BUFFER in View mode, returning to previous buffer when done.
-Emacs commands editing the buffer contents are not available; instead,
-a special set of commands (mostly letters and punctuation)
-are defined for moving around in the buffer.
+Emacs commands editing the buffer contents are not available; instead, a
+special set of commands (mostly letters and punctuation) are defined for
+moving around in the buffer.
 Space scrolls forward, Delete scrolls backward.
-For list of all View commands, type H or h while viewing.
+For a list of all View commands, type H or h while viewing.
 
 This command runs the normal hook `view-mode-hook'.
 
 Optional argument EXIT-ACTION is either nil or a function with buffer as
-argument.  This function is called when finished viewing buffer.
-Use this argument instead of explicitly setting `view-exit-action'."
+argument.  This function is called when finished viewing buffer.  Use
+this argument instead of explicitly setting `view-exit-action'.
 
+Do not set EXIT-ACTION to `kill-buffer' when BUFFER visits a
+file: Users may suspend viewing in order to modify the buffer.
+Exiting View mode will then discard the user's edits.  Setting
+EXIT-ACTION to `kill-buffer-if-not-modified' avoids this."
   (interactive "bView buffer: ")
   (let ((undo-window (list (window-buffer) (window-start) (window-point))))
     (switch-to-buffer buffer)
@@ -338,18 +346,18 @@ Use this argument instead of explicitly setting `view-exit-action'."
 ;;;###autoload
 (defun view-buffer-other-window (buffer &optional not-return exit-action)
   "View BUFFER in View mode in another window.
-Return to previous buffer when done, unless optional NOT-RETURN is non-nil.
-Emacs commands editing the buffer contents are not available; instead,
-a special set of commands (mostly letters and punctuation)
-are defined for moving around in the buffer.
+Return to previous buffer when done, unless optional NOT-RETURN is
+non-nil.  Emacs commands editing the buffer contents are not available;
+instead, a special set of commands (mostly letters and punctuation) are
+defined for moving around in the buffer.
 Space scrolls forward, Delete scrolls backward.
-For list of all View commands, type H or h while viewing.
+For a list of all View commands, type H or h while viewing.
 
 This command runs the normal hook `view-mode-hook'.
 
 Optional argument EXIT-ACTION is either nil or a function with buffer as
-argument.  This function is called when finished viewing buffer.
-Use this argument instead of explicitly setting `view-exit-action'."
+argument.  This function is called when finished viewing buffer.  Use
+this argument instead of explicitly setting `view-exit-action'."
   (interactive "bIn other window view buffer:\nP")
   (let* ((win				; This window will be selected by
 	  (get-lru-window))		; switch-to-buffer-other-window below.
@@ -369,18 +377,18 @@ Use this argument instead of explicitly setting `view-exit-action'."
 ;;;###autoload
 (defun view-buffer-other-frame (buffer &optional not-return exit-action)
   "View BUFFER in View mode in another frame.
-Return to previous buffer when done, unless optional NOT-RETURN is non-nil.
-Emacs commands editing the buffer contents are not available; instead,
-a special set of commands (mostly letters and punctuation)
-are defined for moving around in the buffer.
+Return to previous buffer when done, unless optional NOT-RETURN is
+non-nil.  Emacs commands editing the buffer contents are not available;
+instead, a special set of commands (mostly letters and punctuation) are
+defined for moving around in the buffer.
 Space scrolls forward, Delete scrolls backward.
-For list of all View commands, type H or h while viewing.
+For a list of all View commands, type H or h while viewing.
 
 This command runs the normal hook `view-mode-hook'.
 
 Optional argument EXIT-ACTION is either nil or a function with buffer as
-argument.  This function is called when finished viewing buffer.
-Use this argument instead of explicitly setting `view-exit-action'."
+argument.  This function is called when finished viewing buffer.  Use
+this argument instead of explicitly setting `view-exit-action'."
   (interactive "bView buffer in other frame: \nP")
   (let ((return-to
 	 (and (not not-return) (cons (selected-window) t)))) ; Old window.
@@ -514,34 +522,73 @@ Entry to view-mode runs the normal hook `view-mode-hook'."
       (setq buffer-read-only view-old-buffer-read-only)))
 
 ;;;###autoload
-(defun view-mode-enter (&optional return-to exit-action) "\
-Enter View mode and set up exit from view mode depending on optional arguments.
-If RETURN-TO is non-nil it is added as an element to the buffer local alist
-`view-return-to-alist'.
-Save EXIT-ACTION in buffer local variable `view-exit-action'.
-It should be either nil or a function that takes a buffer as argument.
-This function will be called by `view-mode-exit'.
+(defun view-return-to-alist-update (buffer &optional item)
+  "Update `view-return-to-alist' of buffer BUFFER.
+Remove from `view-return-to-alist' all entries referencing dead
+windows.  Optional argument ITEM non-nil means add ITEM to
+`view-return-to-alist' after purging.  For a decsription of items
+that can be added see the RETURN-TO-ALIST argument of the
+function `view-mode-exit'.  If `view-return-to-alist' contains an
+entry for the selected window, purge that entry from
+`view-return-to-alist' before adding ITEM."
+  (with-current-buffer buffer
+    (when view-return-to-alist
+      (let* ((list view-return-to-alist)
+	     entry entry-window last)
+	(while list
+	  (setq entry (car list))
+	  (setq entry-window (car entry))
+	  (if (and (windowp entry-window)
+		   (or (and item (eq entry-window (selected-window)))
+		       (not (window-live-p entry-window))))
+	      ;; Remove that entry.
+	      (if last
+		  (setcdr last (cdr list))
+		(setq view-return-to-alist
+		      (cdr view-return-to-alist)))
+	    ;; Leave entry alone.
+	    (setq last entry))
+	  (setq list (cdr list)))))
+    ;; Add ITEM.
+    (when item
+      (setq view-return-to-alist
+	    (cons item view-return-to-alist)))))
 
-RETURN-TO is either nil, meaning do nothing when exiting view mode, or
-it has the format (WINDOW OLD-WINDOW . OLD-BUF-INFO).
-WINDOW is a window used for viewing.
-OLD-WINDOW is nil or the window to select after viewing.
-OLD-BUF-INFO tells what to do with WINDOW when exiting.  It is one of:
-1) nil       Do nothing.
-2) t         Delete WINDOW or, if it is the only window, its frame.
+;;;###autoload
+(defun view-mode-enter (&optional return-to exit-action)
+  "Enter View mode and set up exit from view mode depending on optional arguments.
+RETURN-TO non-nil means add RETURN-TO as an element to the buffer
+local alist `view-return-to-alist'.  Save EXIT-ACTION in buffer
+local variable `view-exit-action'.  It should be either nil or a
+function that takes a buffer as argument.  This function will be
+called by `view-mode-exit'.
+
+RETURN-TO is either nil, meaning do nothing when exiting view
+mode, or must have the format (WINDOW OLD-WINDOW . OLD-BUF-INFO).
+WINDOW is the window used for viewing.  OLD-WINDOW is nil or the
+window to select after viewing.  OLD-BUF-INFO tells what to do
+with WINDOW when exiting.  It is one of:
+1) nil            Do nothing.
+2) t              Delete WINDOW or, if it is the only window and
+                  `view-remove-frame-by-deleting' is non-nil, its
+                  frame.
 3) (OLD-BUFF START POINT)  Display buffer OLD-BUFF with displayed text
-                           starting at START and point at POINT in WINDOW.
-4) quit-window   Do `quit-window' in WINDOW.
+                  starting at START and point at POINT in WINDOW.
+4) quit-window    Do `quit-window' in WINDOW.
+5) keep-frame     Like case 2) but do not delete the frame.
 
-For list of all View commands, type H or h while viewing.
+For a list of all View commands, type H or h while viewing.
 
 This function runs the normal hook `view-mode-hook'."
-  (if return-to
-      (let ((entry (assq (car return-to) view-return-to-alist)))
-	(if entry (setcdr entry (cdr return-to))
-	  (setq view-return-to-alist (cons return-to view-return-to-alist)))))
-  (if exit-action (setq view-exit-action exit-action))
-  (unless view-mode			; Do nothing if already in view mode.
+  (when return-to
+    (let ((entry (assq (car return-to) view-return-to-alist)))
+      (if entry
+	  (setcdr entry (cdr return-to))
+	(setq view-return-to-alist (cons return-to view-return-to-alist)))))
+  (when exit-action
+    (setq view-exit-action exit-action))
+
+  (unless view-mode
     (view-mode-enable)
     (force-mode-line-update)
     (unless view-inhibit-help-message
@@ -551,88 +598,106 @@ View mode: type \\[help-command] for help, \\[describe-mode] for commands, \\[Vi
 
 (defun view-mode-exit (&optional return-to-alist exit-action all-win)
   "Exit View mode in various ways, depending on optional arguments.
-RETURN-TO-ALIST, EXIT-ACTION and ALL-WIN determine what to do after exit.
-EXIT-ACTION is nil or a function that is called with current buffer as
-argument.
-RETURN-TO-ALIST is an alist that for some of the windows displaying the
-current buffer, associate information on what to do with those windows.
-If ALL-WIN or the variable `view-exits-all-viewing-windows' is non-nil,
-then all windows on RETURN-TO-ALIST are restored to their old state.
-Otherwise only the selected window is affected (if it is on RETURN-TO-ALIST).
+RETURN-TO-ALIST, EXIT-ACTION and ALL-WIN determine what to do
+after exit.  EXIT-ACTION is nil or a function that is called with
+current buffer as argument.
 
-Elements of RETURN-TO-ALIST have the format (WINDOW OLD-WINDOW . OLD-BUF-INFO).
-WINDOW is a window displaying the current buffer.
-OLD-WINDOW is nil or a window to select after viewing.
-OLD-BUF-INFO is information on what to do with WINDOW and is one of:
-1) nil       Do nothing.
-2) t         Delete WINDOW and, if it is the only window, its frame.
+RETURN-TO-ALIST is an alist that, for some of the windows
+displaying the current buffer, maintains information on what to
+do when exiting those windows.  If ALL-WIN is non-nil or the
+variable `view-exits-all-viewing-windows' is non-nil,
+view-mode-exit attempts to restore all windows showing the
+current buffer to their old state.  Otherwise, only the selected
+window is affected (provided it is on RETURN-TO-ALIST).
+
+Elements of RETURN-TO-ALIST must have the format
+  (WINDOW OLD-WINDOW . OLD-BUF-INFO) where
+
+WINDOW is a window displaying the current buffer and OLD-WINDOW
+is either nil or a window to select after viewing.  OLD-BUF-INFO
+provides information on what to do with WINDOW and may be one of:
+1) nil            Do nothing.
+2) t              Delete WINDOW and, if it is the only window and
+                  `view-remove-frame-by-deleting' is non-nil, its
+                  frame.
 3) (OLD-BUF START POINT)  Display buffer OLD-BUF with displayed text
-                          starting at START and point at POINT in WINDOW.
-4) quit-window   Do `quit-window' in WINDOW.
+                  starting at START and point at POINT in WINDOW.
+4) quit-window    Do `quit-window' in WINDOW.
+5) keep-frame     Like case 2) but do not delete the frame.
 
-If one of the WINDOW in RETURN-TO-ALIST is the selected window and the
-corresponding OLD-WINDOW is a live window, then select OLD-WINDOW."
-  (setq all-win
-	(and return-to-alist (or all-win view-exits-all-viewing-windows)))
-  (if view-mode		; Only do something if in view mode.
-      (let* ((buffer (current-buffer))
-	     window notlost
-	     (sel-old (assq (selected-window) return-to-alist))
-	     (alist (cond
-		     (all-win		; Try to restore all windows.
-		      (append return-to-alist nil)) ; Copy.
-		     (sel-old		; Only selected window.
-		      (list sel-old))))
-	     (old-window (if sel-old (car (cdr sel-old)))))
-	(if all-win			; Follow chains of old-windows.
-	    (let ((c (length alist)) a)
-	      (while (and (> c 0)	; Safety if mutually refering windows.
-			  (or (not (window-live-p old-window))
-			      (eq buffer (window-buffer old-window)))
-			  (setq a (assq old-window alist)))
-		(setq c (1- c))
-		(setq old-window (car (cdr a))))
-	      (if (or (zerop c) (not (window-live-p old-window)))
-		  (setq old-window (selected-window)))))
-	(or view-no-disable-on-exit
-	    (view-mode-disable))
-	(while alist			; Restore windows with info.
-	  (setq notlost nil)
-	  (if (and (window-live-p (setq window (car (car alist))))
+If one of the WINDOW in RETURN-TO-ALIST is the selected window
+and the corresponding OLD-WINDOW is a live window, then select
+OLD-WINDOW."
+  (when view-mode		    ; Only do something if in view mode.
+    (setq all-win
+	  (and return-to-alist
+	       (or all-win view-exits-all-viewing-windows)))
+    (let* ((buffer (current-buffer))
+	   window notlost
+	   (sel-old (assq (selected-window) return-to-alist))
+	   (alist (cond
+		   (all-win		   ; Try to restore all windows.
+		    (append return-to-alist nil)) ; Copy.
+		   (sel-old			; Only selected window.
+		    (list sel-old))))
+	   (old-window (if sel-old (car (cdr sel-old)))))
+      (if all-win			 ; Follow chains of old-windows.
+	  (let ((c (length alist)) a)
+	    (while (and (> c 0)	  ; Safety if mutually refering windows.
+			(or (not (window-live-p old-window))
+			    (eq buffer (window-buffer old-window)))
+			(setq a (assq old-window alist)))
+	      (setq c (1- c))
+	      (setq old-window (car (cdr a))))
+	    (if (or (zerop c) (not (window-live-p old-window)))
+		(setq old-window (selected-window)))))
+      (unless view-no-disable-on-exit
+	(view-mode-disable))
+      (while alist			    ; Restore windows with info.
+	(setq notlost nil)
+	(when (and (window-live-p (setq window (car (car alist))))
 		   (eq buffer (window-buffer window)))
-	      (let ((frame (window-frame window))
-		    (old-buf-info (cdr (cdr (car alist)))))
-		(if all-win (select-window window))
-		(cond
-		 ((and (consp old-buf-info) ; Case 3.
-		       (buffer-live-p (car old-buf-info)))
-		  (set-window-buffer window (car old-buf-info)) ; old-buf
-		  (set-window-start window (car (cdr old-buf-info)))
-		  (set-window-point window (car (cdr (cdr old-buf-info)))))
-		 ((eq old-buf-info 'quit-window)
-		  (quit-window))	; Case 4.
-		 ((not (eq old-buf-info t)) nil) ; Not case 2, do nothing.
-		 ((not (one-window-p t)) (delete-window))
-		 ((not (eq frame (next-frame)))
-		  ;; Not the only frame, so can safely be removed.
-		  (if view-remove-frame-by-deleting
-		      (delete-frame frame)
-		    (setq notlost t)	; Keep the window. See below.
-		    (iconify-frame frame))))))
-	  ;; If a frame is removed by iconifying it, then the window is not
-	  ;; really lost.  In this case we keep the entry in
-	  ;; view-return-to-alist so that if the user deiconifies the frame
-	  ;; and then press q, then the frame is iconified again.
-	  (unless notlost
+	  (let ((frame (window-frame window))
+		(old-buf-info (cdr (cdr (car alist)))))
+	    (if all-win (select-window window))
+	    (cond
+	     ((and (consp old-buf-info)		; Case 3.
+		   (buffer-live-p (car old-buf-info)))
+	      (set-window-buffer window (car old-buf-info)) ; old-buf
+	      (set-window-start window (car (cdr old-buf-info)))
+	      (set-window-point window (car (cdr (cdr old-buf-info)))))
+	     ((eq old-buf-info 'quit-window)
+	      (quit-window))			; Case 4.
+	     (old-buf-info			; Case 2 or 5.
+	      (cond
+	       ((not (one-window-p t))		; Not only window.
+		(delete-window))
+	       ((eq old-buf-info 'keep-frame)	; Case 5.
+		(bury-buffer))
+	       ((not (eq frame (next-frame)))  ; Case 2 and only window.
+		;; Not the only frame, so can safely be removed.
+		(if view-remove-frame-by-deleting
+		    (delete-frame frame)
+		  (setq notlost t)	   ; Keep the window. See below.
+		  (iconify-frame frame))))))))
+	;; If a frame is removed by iconifying it, the window is not
+	;; really lost.  In this case we keep the entry in
+	;; `view-return-to-alist' so that if the user deiconifies the
+	;; frame and then hits q, the frame is iconified again.
+	(unless notlost
+	  (with-current-buffer buffer
 	    (setq view-return-to-alist
-		  (delete (car alist) view-return-to-alist)))
-	  (setq alist (cdr alist)))
-	(if (window-live-p old-window)	; still existing window
-	    (select-window old-window))
-	(when exit-action
-	  (setq view-exit-action nil)
-	  (funcall exit-action buffer))
-	(force-mode-line-update))))
+		  (delete (car alist) view-return-to-alist))))
+	(setq alist (cdr alist)))
+      (when (window-live-p old-window)
+	;; old-window is still alive => select it.
+	(select-window old-window))
+      (when exit-action
+	;; Don't do that: If the user wants to quit the *Help* buffer a
+	;; second time it won't have any effect.
+	;;(setq view-exit-action nil)
+	(funcall exit-action buffer))
+      (force-mode-line-update))))
 
 (defun View-exit ()
   "Exit View mode but stay in current buffer."
@@ -675,32 +740,40 @@ previous state and go to previous buffer or window."
 ;;; Some help routines.
 
 (defun view-window-size ()
-  ;; Window height excluding mode line.
-  (1- (window-height)))
+  ;; Return the height of the current window, excluding the mode line.
+  ;; Using `window-line-height' accounts for variable-height fonts.
+  (let ((h (window-line-height -1)))
+    (if h
+	(1+ (nth 1 h))
+      ;; This should not happen, but if `window-line-height' returns
+      ;; nil, fall back on `window-height'.
+      (1- (window-height)))))
 
-;(defun view-last-command (&optional who what)
-;  (setq view-last-command-entry this-command)
-;  (setq view-last-command who)
-;  (setq view-last-command-argument what))
+;; (defun view-last-command (&optional who what)
+;;  (setq view-last-command-entry this-command)
+;;  (setq view-last-command who)
+;;  (setq view-last-command-argument what))
 
-;(defun View-repeat-last-command ()
-;  "Repeat last command issued in View mode."
-;  (interactive)
-;  (if (and view-last-command
-;	   (eq view-last-command-entry last-command))
-;      (funcall view-last-command view-last-command-argument))
-;  (setq this-command view-last-command-entry))
+;; (defun View-repeat-last-command ()
+;;  "Repeat last command issued in View mode."
+;;  (interactive)
+;;  (if (and view-last-command
+;; 	   (eq view-last-command-entry last-command))
+;;      (funcall view-last-command view-last-command-argument))
+;;  (setq this-command view-last-command-entry))
 
 (defun view-recenter ()
-  ;; Center point in window.
-  (recenter (/ (view-window-size) 2)))
+  ;; Recenter point in window and redisplay normally.
+  (recenter '(1)))
 
 (defun view-page-size-default (lines)
-  ;; Get page size.
-  (let ((default (- (view-window-size) next-screen-context-lines)))
-    (if (or (null lines) (zerop (setq lines (prefix-numeric-value lines))))
-	default
-      (min (abs lines) default))))
+  ;; If LINES is nil, 0, or larger than `view-window-size', return nil.
+  ;; Otherwise, return LINES.
+  (and lines
+       (not (zerop (setq lines (prefix-numeric-value lines))))
+       (<= (abs lines)
+	   (abs (- (view-window-size) next-screen-context-lines)))
+       (abs lines)))
 
 (defun view-set-half-page-size-default (lines)
   ;; Get and maybe set half page size.
@@ -728,16 +801,16 @@ Also set the mark at the position where point was."
      (point-max)))
   (view-recenter))
 
-;(defun View-goto-line-last (&optional line)
-;"Move to last (or prefix LINE) line in View mode.
-;Display is centered at LINE.
-;Sets mark at starting position and pushes mark ring."
-;  (interactive "P")
-;  (push-mark)
-;  (if line (goto-line (prefix-numeric-value line))
-;    (goto-char (point-max))
-;    (beginning-of-line))
-;  (view-recenter))
+;; (defun View-goto-line-last (&optional line)
+;; "Move to last (or prefix LINE) line in View mode.
+;; Display is centered at LINE.
+;; Sets mark at starting position and pushes mark ring."
+;;  (interactive "P")
+;;  (push-mark)
+;;  (if line (goto-line (prefix-numeric-value line))
+;;    (goto-char (point-max))
+;;    (beginning-of-line))
+;;  (view-recenter))
 
 (defun View-goto-line (&optional line)
   "Move to first (or prefix LINE) line in View mode.
@@ -760,30 +833,24 @@ invocations return to earlier marks."
 
 (defun view-scroll-lines (lines backward default maxdefault)
   ;; This function does the job for all the scrolling commands.
-  ;; Scroll forward LINES lines.  If BACKWARD is true scroll backwards.
-  ;; If LINES is negative scroll in the other direction.  If LINES is 0 or nil,
-  ;; scroll DEFAULT lines.  If MAXDEFAULT is true then scroll no more than a
-  ;; window full.
+  ;; Scroll forward LINES lines.  If BACKWARD is non-nil, scroll backwards.
+  ;; If LINES is negative scroll in the other direction.
+  ;; If LINES is 0 or nil, scroll DEFAULT lines (if DEFAULT is nil, scroll
+  ;; by one page). If MAXDEFAULT is non-nil, scroll no more than a window.
   (if (or (null lines) (zerop (setq lines (prefix-numeric-value lines))))
       (setq lines default))
-  (when (< lines 0)
-    (setq backward (not backward)) (setq lines (- lines)))
-  (setq default (view-page-size-default nil)) ; Max scrolled at a time.
-  (if maxdefault (setq lines (min lines default)))
-  (cond
-   (backward (scroll-down lines))
-   ((view-really-at-end)
-    (if view-scroll-auto-exit (View-quit)
-      (ding)
-      (view-end-message)))
-   (t (while (> lines default)
-	(scroll-up default)
-	(setq lines (- lines default))
-	(if (view-really-at-end) (setq lines 0)))
-      (scroll-up lines)
-      (if (view-really-at-end) (view-end-message))
-      (move-to-window-line -1)
-      (beginning-of-line))))
+  (when (and lines (< lines 0))
+    (setq backward (not backward) lines (- lines)))
+  (when (and maxdefault lines (> lines (view-window-size)))
+    (setq lines nil))
+  (cond (backward (scroll-down lines))
+	((view-really-at-end)
+	 (if view-scroll-auto-exit
+	     (View-quit)
+	   (ding)
+	   (view-end-message)))
+	(t (scroll-up lines)
+	   (if (view-really-at-end) (view-end-message)))))
 
 (defun view-really-at-end ()
   ;; Return true if buffer end visible.  Maybe revert buffer and test.
@@ -967,7 +1034,7 @@ for highlighting the match that is found."
   ;; This function does the job for all the View-search- commands.
   ;; Search for the TIMESt match for REGEXP. If TIMES is negative
   ;; search backwards. If REGEXP is nil use `view-last-regexp'.
-  ;; Charcters "!" and "@" have a special meaning at the beginning of
+  ;; Characters "!" and "@" have a special meaning at the beginning of
   ;; REGEXP and are removed from REGEXP before the search "!" means
   ;; search for lines with no match for REGEXP.  "@" means search in
   ;; the whole buffer, don't start searching from the present point.
@@ -1033,5 +1100,5 @@ If TIMES is negative, search backwards."
 
 (provide 'view)
 
-;;; arch-tag: 6d0ace36-1d12-4de3-8de3-1fa3231636d7
+;; arch-tag: 6d0ace36-1d12-4de3-8de3-1fa3231636d7
 ;;; view.el ends here

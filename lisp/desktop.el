@@ -1,7 +1,7 @@
 ;;; desktop.el --- save partial status of Emacs when killed
 
 ;; Copyright (C) 1993, 1994, 1995, 1997, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Morten Welinder <terra@diku.dk>
 ;; Keywords: convenience
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -42,7 +40,7 @@
 ;;	(desktop-save-mode 1)
 ;;
 ;; For further usage information, look at the section
-;; "Saving Emacs Sessions" in the GNU Emacs Manual.
+;; (info "(emacs)Saving Emacs Sessions") in the GNU Emacs Manual.
 
 ;; When the desktop module is loaded, the function `desktop-kill' is
 ;; added to the `kill-emacs-hook'.  This function is responsible for
@@ -84,7 +82,7 @@
 ;;    (add-to-list 'desktop-minor-mode-handlers
 ;;                 '(bar-mode . bar-desktop-restore))
 
-;; in the module itself, and make shure that the mode function is
+;; in the module itself, and make sure that the mode function is
 ;; autoloaded.  See the docstrings of `desktop-buffer-mode-handlers' and
 ;; `desktop-minor-mode-handlers' for more info.
 
@@ -167,7 +165,7 @@ and function `desktop-read' for details."
   (desktop-save-mode 0))
 
 (defcustom desktop-save 'ask-if-new
-  "*Specifies whether the desktop should be saved when it is killed.
+  "Specifies whether the desktop should be saved when it is killed.
 A desktop is killed when the user changes desktop or quits Emacs.
 Possible values are:
    t             -- always save.
@@ -206,13 +204,14 @@ the normal hook `desktop-not-loaded-hook' is run."
   :group 'desktop
   :version "22.2")
 
+(define-obsolete-variable-alias 'desktop-basefilename
+                                'desktop-base-file-name "22.1")
+
 (defcustom desktop-base-file-name
   (convert-standard-filename ".emacs.desktop")
   "Name of file for Emacs desktop, excluding the directory part."
   :type 'file
   :group 'desktop)
-(define-obsolete-variable-alias 'desktop-basefilename
-                                'desktop-base-file-name "22.1")
 
 (defcustom desktop-base-lock-name
   (convert-standard-filename ".emacs.desktop.lock")
@@ -303,7 +302,7 @@ to the value obtained by evaluating FORM."
 
 (defcustom desktop-clear-preserve-buffers
   '("\\*scratch\\*" "\\*Messages\\*" "\\*server\\*" "\\*tramp/.+\\*")
-  "*List of buffers that `desktop-clear' should not delete.
+  "List of buffers that `desktop-clear' should not delete.
 Each element is a regular expression.  Buffers with a name matched by any of
 these won't be deleted."
   :type '(repeat string)
@@ -356,7 +355,7 @@ modes are restored automatically; they should not be listed here."
   :group 'desktop)
 
 (defcustom desktop-file-name-format 'absolute
-  "*Format in which desktop file names should be saved.
+  "Format in which desktop file names should be saved.
 Possible values are:
    absolute -- Absolute file name.
    tilde    -- Relative to ~.
@@ -455,6 +454,7 @@ Furthermore the major mode function must be autoloaded.")
   '((auto-fill-function auto-fill-mode)
     (vc-mode nil)
     (vc-dired-mode nil)
+    (erc-track-minor-mode nil)
     (savehist-mode nil))
   "Table mapping minor mode variables to minor mode functions.
 Each entry has the form (NAME RESTORE-FUNCTION).
@@ -838,6 +838,7 @@ DIRNAME must be the directory in which the desktop file will be saved."
     ((eq desktop-file-name-format 'local) (file-relative-name filename dirname))
     (t (expand-file-name filename))))
 
+
 ;; ----------------------------------------------------------------------------
 ;;;###autoload
 (defun desktop-save (dirname &optional release)
@@ -1046,7 +1047,7 @@ directory DIRNAME."
   (if desktop-dirname
       (desktop-save desktop-dirname)
     (call-interactively 'desktop-save))
-  (message "Desktop saved in %s" desktop-dirname))
+  (message "Desktop saved in %s" (abbreviate-file-name desktop-dirname)))
 
 ;; ----------------------------------------------------------------------------
 ;;;###autoload
@@ -1129,7 +1130,7 @@ directory DIRNAME."
     (desktop-load-file desktop-buffer-major-mode)
     (let ((buffer-list (buffer-list))
           (result
-           (condition-case err
+           (condition-case-no-debug err
                (funcall (or (cdr (assq desktop-buffer-major-mode
                                        desktop-buffer-mode-handlers))
                             'desktop-restore-file-buffer)

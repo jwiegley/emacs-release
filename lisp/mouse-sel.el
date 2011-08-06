@@ -1,17 +1,17 @@
 ;;; mouse-sel.el --- multi-click selection support for Emacs 19
 
 ;; Copyright (C) 1993, 1994, 1995, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Mike Williams <mdub@bigfoot.com>
 ;; Keywords: mouse
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -115,14 +113,14 @@
 ;; * I like to leave point at the end of the region nearest to where the
 ;;   mouse was, even though this makes region highlighting mis-leading (the
 ;;   cursor makes it look like one extra character is selected).  You can
-;;   disable this behaviour with:
+;;   disable this behavior with:
 ;;
 ;;     (setq mouse-sel-leave-point-near-mouse nil)
 ;;
 ;; * By default, mouse-select cycles the click count after 4 clicks.  That
 ;;   is, clicking mouse-1 five times has the same effect as clicking it
 ;;   once, clicking six times has the same effect as clicking twice, etc.
-;;   Disable this behaviour with:
+;;   Disable this behavior with:
 ;;
 ;;     (setq mouse-sel-cycle-clicks nil)
 ;;
@@ -152,7 +150,7 @@
   :group 'mouse)
 
 (defcustom mouse-sel-leave-point-near-mouse t
-  "*Leave point near last mouse position.
+  "Leave point near last mouse position.
 If non-nil, \\[mouse-select] and \\[mouse-extend] will leave point at the end
 of the region nearest to where the mouse last was.
 If nil, point will always be placed at the beginning of the region."
@@ -160,12 +158,12 @@ If nil, point will always be placed at the beginning of the region."
   :group 'mouse-sel)
 
 (defcustom mouse-sel-cycle-clicks t
-  "*If non-nil, \\[mouse-select] cycles the click-counts after 4 clicks."
+  "If non-nil, \\[mouse-select] cycles the click-counts after 4 clicks."
   :type 'boolean
   :group 'mouse-sel)
 
 (defcustom mouse-sel-default-bindings t
-  "*Control mouse bindings."
+  "Control mouse bindings."
   :type '(choice (const :tag "none" nil)
 		 (const :tag "cut and paste" interprogram-cut-paste)
 		 (other :tag "default bindings" t))
@@ -307,6 +305,8 @@ where   SELECTION-NAME          = name of selection
 	SELECTION-THING-SYMBOL 	= name of variable where the current selection
  				  type for this selection should be stored.")
 
+(declare-function x-select-text "term/x-win" (text &optional push))
+
 (defvar mouse-sel-set-selection-function
   (if (eq mouse-sel-default-bindings 'interprogram-cut-paste)
       'x-set-selection
@@ -322,6 +322,8 @@ Called with two arguments:
 
 This sets the selection as well as the cut buffer for the older applications,
 unless `mouse-sel-default-bindings' is `interprogram-cut-paste'.")
+
+(declare-function x-cut-buffer-or-selection-value "term/x-win" ())
 
 (defvar mouse-sel-get-selection-function
   (lambda (selection)

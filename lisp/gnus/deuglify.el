@@ -1,29 +1,27 @@
 ;;; deuglify.el --- deuglify broken Outlook (Express) articles
 
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Raymond Scholz <rscholz@zonix.de>
-;;         Thomas Steffen (unwrapping algorithm,
-;;                         based on an idea of Stefan Monnier)
+;;         Thomas Steffen
+;; (unwrapping algorithm, based on an idea of Stefan Monnier)
 ;; Keywords: mail, news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -315,71 +313,77 @@ You can control what lines will be unwrapped by frobbing
 indicating the minimum and maximum length of an unwrapped citation line.  If
 NODISPLAY is non-nil, don't redisplay the article buffer."
   (interactive "P")
-  (save-excursion
-    (let ((case-fold-search nil)
-	  (inhibit-read-only t)
-	  (cite-marks gnus-outlook-deuglify-cite-marks)
-	  (no-wrap gnus-outlook-deuglify-no-wrap-chars)
-	  (stop-chars gnus-outlook-deuglify-unwrap-stop-chars))
-      (gnus-with-article-buffer
-	(article-goto-body)
-	(while (re-search-forward
-		(concat
-		 "^\\([ \t" cite-marks "]*\\)"
-		 "\\([" cite-marks "].*[^\n " stop-chars "]\\)[ \t]?\n"
-		 "\\1\\([^\n " cite-marks no-wrap "]+.*\\)$")
+  (let ((case-fold-search nil)
+	(inhibit-read-only t)
+	(cite-marks gnus-outlook-deuglify-cite-marks)
+	(no-wrap gnus-outlook-deuglify-no-wrap-chars)
+	(stop-chars gnus-outlook-deuglify-unwrap-stop-chars))
+    (gnus-with-article-buffer
+      (article-goto-body)
+      (while (re-search-forward
+	      (concat
+	       "^\\([ \t" cite-marks "]*\\)"
+	       "\\([" cite-marks "].*[^\n " stop-chars "]\\)[ \t]?\n"
+	       "\\1\\([^\n " cite-marks no-wrap "]+.*\\)$")
               nil t)
-	  (let ((len12 (- (match-end 2) (match-beginning 1)))
+	(let ((len12 (- (match-end 2) (match-beginning 1)))
 	      (len3 (- (match-end 3) (match-beginning 3))))
-	    (if (and (> len12 gnus-outlook-deuglify-unwrap-min)
+	  (when (and (> len12 gnus-outlook-deuglify-unwrap-min)
 		     (< (+ len12 len3) gnus-outlook-deuglify-unwrap-max))
-		(progn
-		  (replace-match "\\1\\2 \\3")
-		  (goto-char (match-beginning 0)))))))))
+	    (replace-match "\\1\\2 \\3")
+	    (goto-char (match-beginning 0)))))))
   (unless nodisplay (gnus-outlook-display-article-buffer)))
 
 (defun gnus-outlook-rearrange-article (attr-start)
   "Put the text from ATTR-START to the end of buffer at the top of the article buffer."
-  (save-excursion
-    (let ((inhibit-read-only t)
-	  (cite-marks gnus-outlook-deuglify-cite-marks))
-      (gnus-with-article-buffer
-	(article-goto-body)
-	;; article does not start with attribution
-	(unless (= (point) attr-start)
-	  (gnus-kill-all-overlays)
-	  (let ((cur (point))
-		;; before signature or end of buffer
-		(to (if (gnus-article-search-signature)
-			(point)
-		      (point-max))))
-	    ;; handle the case where the full quote is below the
-	    ;; signature
-	    (if (< to attr-start)
-		(setq to (point-max)))
-	    (transpose-regions cur attr-start attr-start to)))))))
+  ;; FIXME: 1.  (*) text/plain          ( ) text/html
+  (let ((inhibit-read-only t)
+	(cite-marks gnus-outlook-deuglify-cite-marks))
+    (gnus-with-article-buffer
+      (article-goto-body)
+      ;; article does not start with attribution
+      (unless (= (point) attr-start)
+	(gnus-kill-all-overlays)
+	(let ((cur (point))
+	      ;; before signature or end of buffer
+	      (to (if (gnus-article-search-signature)
+		      (point)
+		    (point-max))))
+	  ;; handle the case where the full quote is below the
+	  ;; signature
+	  (when (< to attr-start)
+	    (setq to (point-max)))
+	  (save-excursion
+	    (narrow-to-region attr-start to)
+	    (goto-char attr-start)
+	    (forward-line)
+	    (unless (looking-at ">")
+	      (message-indent-citation (point) (point-max) 'yank-only)
+	      (goto-char (point-max))
+	      (newline)
+	      (setq to (point-max)))
+	    (widen))
+	  (transpose-regions cur attr-start attr-start to))))))
 
 ;; John Doe <john.doe@some.domain> wrote in message
 ;; news:a87usw8$dklsssa$2@some.news.server...
 
 (defun gnus-outlook-repair-attribution-outlook ()
   "Repair a broken attribution line (Outlook)."
-  (save-excursion
-    (let ((case-fold-search nil)
-	  (inhibit-read-only t)
-	  (cite-marks gnus-outlook-deuglify-cite-marks))
-      (gnus-with-article-buffer
-	(article-goto-body)
-	(if (re-search-forward
+  (let ((case-fold-search nil)
+	(inhibit-read-only t)
+	(cite-marks gnus-outlook-deuglify-cite-marks))
+    (gnus-with-article-buffer
+      (article-goto-body)
+      (when (re-search-forward
 	     (concat "^\\([^" cite-marks "].+\\)"
 		     "\\(" gnus-outlook-deuglify-attrib-verb-regexp "\\)"
 		     "\\(.*\n?[^\n" cite-marks "].*\\)?"
 		     "\\(" gnus-outlook-deuglify-attrib-end-regexp "\\)$")
 	     nil t)
-	    (progn
-	      (gnus-kill-all-overlays)
-	      (replace-match "\\1\\2\\4")
-	      (match-beginning 0)))))))
+	(gnus-kill-all-overlays)
+	(replace-match "\\1\\2\\4")
+	(match-beginning 0)))))
 
 
 ;; ----- Original Message -----
@@ -390,42 +394,38 @@ NODISPLAY is non-nil, don't redisplay the article buffer."
 
 (defun gnus-outlook-repair-attribution-block ()
   "Repair a big broken attribution block."
-  (save-excursion
-    (let ((case-fold-search nil)
-	  (inhibit-read-only t)
-	  (cite-marks gnus-outlook-deuglify-cite-marks))
-      (gnus-with-article-buffer
-	(article-goto-body)
-	(if (re-search-forward
-            (concat "^[" cite-marks " \t]*--* ?[^-]+ [^-]+ ?--*\\s *\n"
+  (let ((case-fold-search nil)
+	(inhibit-read-only t)
+	(cite-marks gnus-outlook-deuglify-cite-marks))
+    (gnus-with-article-buffer
+      (article-goto-body)
+      (when (re-search-forward
+	     (concat "^[" cite-marks " \t]*--* ?[^-]+ [^-]+ ?--*\\s *\n"
 		     "[^\n:]+:[ \t]*\\([^\n]+\\)\n"
 		     "\\([^\n:]+:[ \t]*[^\n]+\n\\)+")
 	     nil t)
-	    (progn
-	      (gnus-kill-all-overlays)
-	      (replace-match "\\1 wrote:\n")
-	      (match-beginning 0)))))))
+	(gnus-kill-all-overlays)
+	(replace-match "\\1 wrote:\n")
+	(match-beginning 0)))))
 
 ;; On Wed, 16 Jan 2002 23:23:30 +0100, John Doe <john.doe@some.domain> wrote:
 
 (defun gnus-outlook-repair-attribution-other ()
   "Repair a broken attribution line (other user agents than Outlook)."
-  (save-excursion
-    (let ((case-fold-search nil)
-	  (inhibit-read-only t)
-	  (cite-marks gnus-outlook-deuglify-cite-marks))
-      (gnus-with-article-buffer
-	(article-goto-body)
-	(if (re-search-forward
+  (let ((case-fold-search nil)
+	(inhibit-read-only t)
+	(cite-marks gnus-outlook-deuglify-cite-marks))
+    (gnus-with-article-buffer
+      (article-goto-body)
+      (when (re-search-forward
 	     (concat "^\\("gnus-outlook-deuglify-attrib-cut-regexp"\\)?"
 		     "\\([^" cite-marks "].+\\)\n\\([^\n" cite-marks "].*\\)?"
 		     "\\(" gnus-outlook-deuglify-attrib-verb-regexp "\\).*"
 		     "\\(" gnus-outlook-deuglify-attrib-end-regexp "\\)$")
 	     nil t)
-	    (progn
-	      (gnus-kill-all-overlays)
-	      (replace-match "\\4 \\5\\6\\7")
-	      (match-beginning 0)))))))
+	(gnus-kill-all-overlays)
+	(replace-match "\\4 \\5\\6\\7")
+	(match-beginning 0)))))
 
 ;;;###autoload
 (defun gnus-article-outlook-repair-attribution (&optional nodisplay)
@@ -476,5 +476,5 @@ NODISPLAY is non-nil, don't redisplay the article buffer."
 ;; coding: iso-8859-1
 ;; End:
 
-;;; arch-tag: 5f895cc9-51a9-487c-b42e-28844d79eb73
+;; arch-tag: 5f895cc9-51a9-487c-b42e-28844d79eb73
 ;;; deuglify.el ends here

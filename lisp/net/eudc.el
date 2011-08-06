@@ -1,7 +1,7 @@
 ;;; eudc.el --- Emacs Unified Directory Client
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Oscar Figueiredo <oscar@cpe.fr>
 ;; Maintainer: Pavel Janík <Pavel@Janik.cz>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;    This package provides a common interface to query directory servers using
@@ -66,15 +64,18 @@
 
 ;;{{{      Internal variables and compatibility tricks
 
-(defconst eudc-xemacs-p (string-match "XEmacs" emacs-version))
-(defconst eudc-emacs-p (not eudc-xemacs-p))
-(defconst eudc-xemacs-mule-p (and eudc-xemacs-p
-				  (featurep 'mule)))
-(defconst eudc-emacs-mule-p (and eudc-emacs-p
-				 (featurep 'mule)))
-
 (defvar eudc-form-widget-list nil)
-(defvar eudc-mode-map nil)
+
+(defvar eudc-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "q" 'kill-this-buffer)
+    (define-key map "x" 'kill-this-buffer)
+    (define-key map "f" 'eudc-query-form)
+    (define-key map "b" 'eudc-try-bbdb-insert)
+    (define-key map "n" 'eudc-move-to-next-record)
+    (define-key map "p" 'eudc-move-to-previous-record)
+    map))
+(set-keymap-parent eudc-mode-map widget-keymap)
 
 (defvar mode-popup-menu)
 
@@ -502,15 +503,15 @@ otherwise they are formatted according to `eudc-user-attribute-names-alist'."
 		 records))
 	  ;; Display the records
 	  (setq first-record (point))
-	  (mapcar
+	  (mapc
 	   (function
 	    (lambda (record)
 	      (setq beg (point))
 	      ;; Map over the record fields to print the attribute/value pairs
-	      (mapcar (function
-		       (lambda (field)
-			 (eudc-print-record-field field width)))
-		      record)
+	      (mapc (function
+		     (lambda (field)
+		       (eudc-print-record-field field width)))
+		    record)
 	      ;; Store the record internal format in some convenient place
 	      (overlay-put (make-overlay beg (point))
 			   'eudc-record
@@ -540,13 +541,13 @@ otherwise they are formatted according to `eudc-user-attribute-names-alist'."
     (if (not (and (boundp 'eudc-form-widget-list)
 		  eudc-form-widget-list))
 	(error "Not in a directory query form buffer")
-      (mapcar (function
-	       (lambda (wid-field)
-		 (setq value (widget-value (cdr wid-field)))
-		 (if (not (string= value ""))
-		     (setq query-alist (cons (cons (car wid-field) value)
-					     query-alist)))))
-	      eudc-form-widget-list)
+      (mapc (function
+	     (lambda (wid-field)
+	       (setq value (widget-value (cdr wid-field)))
+	       (if (not (string= value ""))
+		   (setq query-alist (cons (cons (car wid-field) value)
+					   query-alist)))))
+	    eudc-form-widget-list)
       (kill-buffer (current-buffer))
       (eudc-display-records (eudc-query query-alist) eudc-use-raw-directory-names))))
 
@@ -565,15 +566,15 @@ otherwise they are formatted according to `eudc-user-attribute-names-alist'."
 
     (if (null (eudc-cdar rec))
 	(list record)			; No duplicate attrs in this record
-      (mapcar (function
-	       (lambda (field)
-		 (if (listp (cdr field))
-		     (setq duplicates (cons field duplicates))
-		   (setq unique (cons field unique)))))
-	      record)
+      (mapc (function
+	     (lambda (field)
+	       (if (listp (cdr field))
+		   (setq duplicates (cons field duplicates))
+		 (setq unique (cons field unique)))))
+	    record)
       (setq result (list unique))
       ;; Map over the record fields that have multiple values
-      (mapcar
+      (mapc
        (function
 	(lambda (field)
 	  (let ((method (if (consp eudc-duplicate-attribute-handling-method)
@@ -641,7 +642,7 @@ Each copy is added a new field containing one of the values of FIELD."
     (while values
       (setcdr values (delete (car values) (cdr values)))
       (setq values (cdr values)))
-    (mapcar
+    (mapc
      (function
       (lambda (value)
 	(let ((result-list (copy-sequence records)))
@@ -670,7 +671,7 @@ These are the special commands of EUDC mode:
   (setq major-mode 'eudc-mode)
   (setq mode-name "EUDC")
   (use-local-map eudc-mode-map)
-  (if eudc-emacs-p
+  (if (not (featurep 'xemacs))
       (easy-menu-define eudc-emacs-menu eudc-mode-map "" (eudc-menu))
     (setq mode-popup-menu (eudc-menu)))
   (run-mode-hooks 'eudc-mode-hook))
@@ -974,11 +975,11 @@ queries the server for the existing fields and displays a corresponding form."
 				   (capitalize (symbol-name field)))))
 			    fields)))
     ;; Loop over prompt strings to find the longest one
-    (mapcar (function
-	     (lambda (prompt)
-		     (if (> (length prompt) width)
-			 (setq width (length prompt)))))
-	    prompts)
+    (mapc (function
+	   (lambda (prompt)
+	     (if (> (length prompt) width)
+		 (setq width (length prompt)))))
+	  prompts)
     ;; Insert the first widget out of the mapcar to leave the cursor
     ;; in the first field
     (widget-insert "\n\n" (format (concat "%" (int-to-string width) "s: ") (car prompts)))
@@ -988,15 +989,15 @@ queries the server for the existing fields and displays a corresponding form."
 				      eudc-form-widget-list))
     (setq fields (cdr fields))
     (setq prompts (cdr prompts))
-    (mapcar (function
-	     (lambda (field)
-	       (widget-insert "\n\n" (format (concat "%" (int-to-string width) "s: ") (car prompts)))
-	       (setq widget (widget-create 'editable-field
-					   :size 15))
-	       (setq eudc-form-widget-list (cons (cons field widget)
-						 eudc-form-widget-list))
-	       (setq prompts (cdr prompts))))
-	    fields)
+    (mapc (function
+	   (lambda (field)
+	     (widget-insert "\n\n" (format (concat "%" (int-to-string width) "s: ") (car prompts)))
+	     (setq widget (widget-create 'editable-field
+					 :size 15))
+	     (setq eudc-form-widget-list (cons (cons field widget)
+					       eudc-form-widget-list))
+	     (setq prompts (cdr prompts))))
+	  fields)
     (widget-insert "\n\n")
     (widget-create 'push-button
 		   :notify (lambda (&rest ignore)
@@ -1112,45 +1113,44 @@ queries the server for the existing fields and displays a corresponding form."
 
 (require 'easymenu)
 
-(setq eudc-mode-map
-      (let ((map (make-sparse-keymap)))
-	(define-key map "q" 'kill-this-buffer)
-	(define-key map "x" 'kill-this-buffer)
-	(define-key map "f" 'eudc-query-form)
-	(define-key map "b" 'eudc-try-bbdb-insert)
-	(define-key map "n" 'eudc-move-to-next-record)
-	(define-key map "p" 'eudc-move-to-previous-record)
-	map))
-(set-keymap-parent eudc-mode-map widget-keymap)
-
 (defconst eudc-custom-generated-menu (cdr (custom-menu-create 'eudc)))
 
 (defconst eudc-tail-menu
   `(["---" nil nil]
-    ["Query with Form" eudc-query-form t]
-    ["Expand Inline Query" eudc-expand-inline t]
+    ["Query with Form" eudc-query-form
+     :help "Display a form to query the directory server"]
+    ["Expand Inline Query" eudc-expand-inline
+     :help "Query the directory server, and expand the query string before point"]
     ["Insert Record into BBDB" eudc-insert-record-at-point-into-bbdb
      (and (or (featurep 'bbdb)
 	      (prog1 (locate-library "bbdb") (message "")))
 	  (overlays-at (point))
-	  (overlay-get (car (overlays-at (point))) 'eudc-record))]
+	  (overlay-get (car (overlays-at (point))) 'eudc-record))
+     :help "Insert record at point into the BBDB database"]
     ["Insert All Records into BBDB" eudc-batch-export-records-to-bbdb
      (and (eq major-mode 'eudc-mode)
 	  (or (featurep 'bbdb)
-	      (prog1 (locate-library "bbdb") (message ""))))]
+	      (prog1 (locate-library "bbdb") (message ""))))
+     :help "Insert all the records returned by a directory query into BBDB"]
     ["---" nil nil]
-    ["Get Email" eudc-get-email t]
-    ["Get Phone" eudc-get-phone t]
-    ["List Valid Attribute Names" eudc-get-attribute-list t]
+    ["Get Email" eudc-get-email
+     :help "Get the email field of NAME from the directory server"]
+    ["Get Phone" eudc-get-phone
+     :help "Get the phone field of name from the directory server"]
+    ["List Valid Attribute Names" eudc-get-attribute-list
+     :help "Return a list of valid attributes for the current server"]
     ["---" nil nil]
     ,(cons "Customize" eudc-custom-generated-menu)))
 
 
 (defconst eudc-server-menu
   '(["---" nil nil]
-    ["Bookmark Current Server" eudc-bookmark-current-server t]
-    ["Edit Server List" eudc-edit-hotlist t]
-    ["New Server" eudc-set-server t]))
+    ["Bookmark Current Server" eudc-bookmark-current-server
+     :help "Add current server to the EUDC `servers' hotlist"]
+    ["Edit Server List" eudc-edit-hotlist
+     :help "Edit the hotlist of directory servers in a specialized buffer"]
+    ["New Server" eudc-set-server
+     :help "Set the directory server to SERVER using PROTOCOL"]))
 
 (defun eudc-menu ()
   (let (command)
@@ -1186,9 +1186,9 @@ queries the server for the existing fields and displays a corresponding form."
 
 (defun eudc-install-menu ()
   (cond
-   ((and eudc-xemacs-p (featurep 'menubar))
+   ((and (featurep 'xemacs) (featurep 'menubar))
     (add-submenu '("Tools") (eudc-menu)))
-   (eudc-emacs-p
+   ((not (featurep 'xemacs))
     (cond
      ((fboundp 'easy-menu-create-menu)
       (define-key
@@ -1236,58 +1236,64 @@ This does nothing except loading eudc by autoload side-effect."
   nil)
 
 ;;;###autoload
-(cond ((not (string-match "XEmacs" emacs-version))
-       (defvar eudc-tools-menu (make-sparse-keymap "Directory Search"))
-       (fset 'eudc-tools-menu (symbol-value 'eudc-tools-menu))
-       (define-key eudc-tools-menu [phone]
-	 '("Get Phone" . eudc-get-phone))
-       (define-key eudc-tools-menu [email]
-	 '("Get Email" . eudc-get-email))
-       (define-key eudc-tools-menu [separator-eudc-email]
-	 '("--"))
-       (define-key eudc-tools-menu [expand-inline]
-	 '("Expand Inline Query" . eudc-expand-inline))
-       (define-key eudc-tools-menu [query]
-	 '("Query with Form" . eudc-query-form))
-       (define-key eudc-tools-menu [separator-eudc-query]
-	 '("--"))
-       (define-key eudc-tools-menu [new]
-	 '("New Server" . eudc-set-server))
-       (define-key eudc-tools-menu [load]
-	 '("Load Hotlist of Servers" . eudc-load-eudc)))
-
-      (t
-       (let ((menu  '("Directory Search"
-		      ["Load Hotlist of Servers" eudc-load-eudc t]
-		      ["New Server" eudc-set-server t]
-		      ["---" nil nil]
-		      ["Query with Form" eudc-query-form t]
-		      ["Expand Inline Query" eudc-expand-inline t]
-		      ["---" nil nil]
-		      ["Get Email" eudc-get-email t]
-		      ["Get Phone" eudc-get-phone t])))
-	 (if (not (featurep 'eudc-autoloads))
-	     (if eudc-xemacs-p
-		 (if (and (featurep 'menubar)
-			  (not (featurep 'infodock)))
-		     (add-submenu '("Tools") menu))
-	       (require 'easymenu)
-	       (cond
-		((fboundp 'easy-menu-add-item)
-		 (easy-menu-add-item nil '("tools")
-				     (easy-menu-create-menu (car menu)
-							    (cdr menu))))
-		((fboundp 'easy-menu-create-keymaps)
-		 (define-key
-		   global-map
-		   [menu-bar tools eudc]
-		   (cons "Directory Search"
-			 (easy-menu-create-keymaps "Directory Search"
-						   (cdr menu)))))))))))
+(cond
+ ((not (featurep 'xemacs))
+  (defvar eudc-tools-menu
+    (let ((map (make-sparse-keymap "Directory Search")))
+      (define-key map [phone]
+	'(menu-item "Get Phone" eudc-get-phone
+		    :help "Get the phone field of name from the directory server"))
+      (define-key map [email]
+	'(menu-item "Get Email" eudc-get-email
+		    :help "Get the email field of NAME from the directory server"))
+      (define-key map [separator-eudc-email] '("--"))
+      (define-key map [expand-inline]
+	'(menu-item "Expand Inline Query" eudc-expand-inline
+		    :help "Query the directory server, and expand the query string before point"))
+      (define-key map [query]
+	'(menu-item "Query with Form" eudc-query-form
+		    :help "Display a form to query the directory server"))
+      (define-key map [separator-eudc-query] '("--"))
+      (define-key map [new]
+	'(menu-item "New Server" eudc-set-server
+		    :help "Set the directory server to SERVER using PROTOCOL"))
+      (define-key map [load]
+	'(menu-item "Load Hotlist of Servers" eudc-load-eudc
+		    :help "Load the Emacs Unified Directory Client"))
+      map))
+  (fset 'eudc-tools-menu (symbol-value 'eudc-tools-menu)))
+ (t
+  (let ((menu  '("Directory Search"
+		 ["Load Hotlist of Servers" eudc-load-eudc t]
+		 ["New Server" eudc-set-server t]
+		 ["---" nil nil]
+		 ["Query with Form" eudc-query-form t]
+		 ["Expand Inline Query" eudc-expand-inline t]
+		 ["---" nil nil]
+		 ["Get Email" eudc-get-email t]
+		 ["Get Phone" eudc-get-phone t])))
+    (if (not (featurep 'eudc-autoloads))
+	(if (featurep 'xemacs)
+	    (if (and (featurep 'menubar)
+		     (not (featurep 'infodock)))
+		(add-submenu '("Tools") menu))
+	  (require 'easymenu)
+	  (cond
+	   ((fboundp 'easy-menu-add-item)
+	    (easy-menu-add-item nil '("tools")
+				(easy-menu-create-menu (car menu)
+						       (cdr menu))))
+	   ((fboundp 'easy-menu-create-keymaps)
+	    (define-key
+	      global-map
+	      [menu-bar tools eudc]
+	      (cons "Directory Search"
+		    (easy-menu-create-keymaps "Directory Search"
+					      (cdr menu)))))))))))
 
 ;;}}}
 
 (provide 'eudc)
 
-;;; arch-tag: e18872b6-db83-400b-869d-be54e9a4160c
+;; arch-tag: e18872b6-db83-400b-869d-be54e9a4160c
 ;;; eudc.el ends here

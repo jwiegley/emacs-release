@@ -1,32 +1,30 @@
-This is ../info/mh-e, produced by makeinfo version 4.11 from mh-e.texi.
+This is ../../info/mh-e, produced by makeinfo version 4.11 from
+mh-e.texi.
 
-This is version 8.0.3 of `The MH-E Manual', last updated 2006-11-12.
+This is version 8.2 of `The MH-E Manual', last updated 2009-06-13.
 
-   Copyright (C) 1995, 2001, 2002, 2003, 2005, 2006, 2007, 2008 Free
-Software Foundation, Inc.
+   Copyright (C) 1995, 2001, 2002, 2003, 2005, 2006, 2007, 2008, 2009
+Free Software Foundation, Inc.
 
-     The MH-E manual is free documentation; you can redistribute it
-     and/or modify it under the terms of either:
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of either:
 
-       a. the GNU Free Documentation License, Version 1.2 or any later
+       a. the GNU Free Documentation License, Version 1.3 or any later
           version published by the Free Software Foundation; with no
-          Invariant Sections, no Front-Cover Texts, and no Back-Cover
-          Texts.
+          Invariant Sections, with the Front-Cover texts being "A GNU
+          Manual," and with the Back-Cover Texts as in (a) below. A
+          copy of the license is included in the section entitled "GNU
+          Free Documentation License."
+
+          (a) The FSF's Back-Cover Text is: "You have the freedom to
+          copy and modify this GNU manual. Buying copies from the FSF
+          supports it in developing GNU and promoting software freedom."
 
        b. the GNU General Public License as published by the Free
           Software Foundation; either version 3, or (at your option)
-          any later version.
+          any later version. A copy of the license is included in the
+          section entitled "GNU General Public License."
 
-     The MH-E manual is distributed in the hope that it will be useful,
-     but WITHOUT ANY WARRANTY; without even the implied warranty of
-     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-     General Public License or GNU Free Documentation License for more
-     details.
-
-     The GNU General Public License and the GNU Free Documentation
-     License appear as appendices to this document. You may also
-     request copies by writing to the Free Software Foundation, Inc.,
-     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -35,143 +33,143 @@ END-INFO-DIR-ENTRY
 
 
 Indirect:
-mh-e-1: 1435
-mh-e-2: 282139
+mh-e-1: 1340
+mh-e-2: 267908
 
 Tag Table:
 (Indirect)
-Node: Top1435
-Node: Preface5286
-Ref: Preface-Footnote-17217
-Node: Conventions7477
-Ref: Conventions-Footnote-112923
-Node: Getting Started13016
-Ref: Getting Started-Footnote-116966
-Ref: Getting Started-Footnote-217284
-Node: Tour Through MH-E17401
-Ref: Tour Through MH-E-Footnote-118131
-Node: Sending Mail Tour18370
-Ref: Sending Mail Tour-Footnote-119986
-Ref: Sending Mail Tour-Footnote-220070
-Ref: Sending Mail Tour-Footnote-320251
-Node: Reading Mail Tour20394
-Ref: Reading Mail Tour-Footnote-122004
-Ref: Reading Mail Tour-Footnote-222130
-Node: Processing Mail Tour22274
-Node: Leaving MH-E26064
-Node: More About MH-E27212
-Node: Using This Manual28707
-Ref: Using This Manual-Footnote-131434
-Ref: Using This Manual-Footnote-231518
-Node: Options31996
-Node: Ranges33920
-Node: Folder Selection35646
-Node: Incorporating Mail37929
-Node: Reading Mail41912
-Ref: Reading Mail-Footnote-150009
-Node: Viewing50268
-Ref: Viewing-Footnote-158436
-Ref: Viewing-Footnote-258564
-Ref: Viewing-Footnote-358892
-Node: Viewing Attachments59102
-Ref: Viewing Attachments-Footnote-166578
-Ref: Viewing Attachments-Footnote-266704
-Ref: Viewing Attachments-Footnote-366822
-Ref: Viewing Attachments-Footnote-467017
-Node: HTML67083
-Ref: HTML-Footnote-171558
-Node: Digests71631
-Ref: Digests-Footnote-173021
-Node: Reading PGP73132
-Ref: Reading PGP-Footnote-175894
-Ref: Reading PGP-Footnote-276138
-Node: Printing76314
-Ref: Printing-Footnote-179075
-Node: Files and Pipes79185
-Node: Navigating81113
-Node: Miscellaneous Commands and Options83741
-Ref: Miscellaneous Commands and Options-Footnote-187637
-Ref: Miscellaneous Commands and Options-Footnote-287934
-Node: Folders88017
-Ref: Folders-Footnote-1102647
-Ref: Folders-Footnote-2102870
-Ref: Folders-Footnote-3102945
-Node: Sending Mail103062
-Node: Composing105670
-Ref: Composing-Footnote-1109024
-Ref: Composing-Footnote-2109261
-Node: Replying109429
-Ref: Replying-Footnote-1112116
-Node: Forwarding112236
-Ref: Forwarding-Footnote-1114055
-Node: Redistributing114174
-Ref: Redistributing-Footnote-1115218
-Ref: Redistributing-Footnote-2115343
-Node: Editing Again115465
-Node: Editing Drafts116533
-Node: Editing Message123238
-Node: Inserting Letter128071
-Ref: Inserting Letter-Footnote-1131977
-Ref: Inserting Letter-Footnote-2132090
-Ref: Inserting Letter-Footnote-3132259
-Node: Inserting Messages132361
-Node: Signature133207
-Node: Picture134886
-Node: Adding Attachments136412
-Ref: Adding Attachments-Footnote-1146048
-Ref: Adding Attachments-Footnote-2146129
-Ref: Adding Attachments-Footnote-3146247
-Ref: Adding Attachments-Footnote-4146304
-Ref: Adding Attachments-Footnote-5146381
-Node: Sending PGP146499
-Node: Checking Recipients148419
-Ref: Checking Recipients-Footnote-1148826
-Node: Sending Message148962
-Ref: Sending Message-Footnote-1149768
-Node: Killing Draft149890
-Node: Aliases150272
-Ref: Aliases-Footnote-1159262
-Node: Identities159362
-Ref: Identities-Footnote-1166319
-Node: Speedbar166368
-Ref: Speedbar-Footnote-1168808
-Node: Menu Bar168942
-Node: Tool Bar169901
-Node: Searching172447
-Node: Threading184229
-Ref: Threading-Footnote-1187111
-Node: Limits187682
-Ref: Limits-Footnote-1189549
-Node: Sequences189682
-Ref: Sequences-Footnote-1194674
-Ref: Sequences-Footnote-2194788
-Ref: Sequences-Footnote-3194818
-Node: Junk194943
-Ref: Junk-Footnote-1204492
-Node: Miscellaneous204800
-Node: Scan Line Formats206623
-Ref: Scan Line Formats-Footnote-1222517
-Ref: Scan Line Formats-Footnote-2222661
-Node: Procmail222787
-Ref: Procmail-Footnote-1228195
-Ref: Procmail-Footnote-2228337
-Ref: Procmail-Footnote-3228495
-Node: Odds and Ends228567
-Node: Bug Reports228977
-Node: Mailing Lists229492
-Node: MH FAQ and Support230007
-Node: Getting MH-E230701
-Node: History232367
-Node: From Brian Reid232989
-Ref: From Brian Reid-Footnote-1234141
-Node: From Jim Larus234620
-Node: From Stephen Gildea236869
-Node: From Bill Wohler239020
-Node: GFDL240783
-Node: GPL262966
-Node: Key Index282139
-Node: Command Index312298
-Node: Option Index335012
-Node: Concept Index358163
+Node: Top1340
+Node: Preface5101
+Ref: Preface-Footnote-17092
+Node: Conventions7357
+Ref: Conventions-Footnote-112803
+Node: Getting Started12896
+Ref: Getting Started-Footnote-116914
+Ref: Getting Started-Footnote-217232
+Node: Tour Through MH-E17349
+Ref: Tour Through MH-E-Footnote-118079
+Node: Sending Mail Tour18318
+Ref: Sending Mail Tour-Footnote-119934
+Ref: Sending Mail Tour-Footnote-220018
+Ref: Sending Mail Tour-Footnote-320199
+Node: Reading Mail Tour20342
+Ref: Reading Mail Tour-Footnote-121952
+Ref: Reading Mail Tour-Footnote-222078
+Node: Processing Mail Tour22222
+Node: Leaving MH-E26012
+Node: More About MH-E27160
+Node: Using This Manual28655
+Ref: Using This Manual-Footnote-131382
+Ref: Using This Manual-Footnote-231466
+Node: Options31944
+Node: Ranges33868
+Node: Folder Selection35594
+Node: Incorporating Mail37877
+Node: Reading Mail41860
+Ref: Reading Mail-Footnote-150072
+Node: Viewing50331
+Ref: Viewing-Footnote-158585
+Ref: Viewing-Footnote-258713
+Ref: Viewing-Footnote-359041
+Node: Viewing Attachments59251
+Ref: Viewing Attachments-Footnote-167045
+Ref: Viewing Attachments-Footnote-267171
+Ref: Viewing Attachments-Footnote-367289
+Ref: Viewing Attachments-Footnote-467484
+Node: HTML67550
+Ref: HTML-Footnote-172229
+Node: Digests72302
+Ref: Digests-Footnote-173692
+Node: Reading PGP73803
+Ref: Reading PGP-Footnote-176565
+Ref: Reading PGP-Footnote-276809
+Node: Printing76985
+Ref: Printing-Footnote-179746
+Node: Files and Pipes79856
+Node: Navigating81784
+Node: Miscellaneous Commands and Options84412
+Ref: Miscellaneous Commands and Options-Footnote-188308
+Ref: Miscellaneous Commands and Options-Footnote-288605
+Node: Folders88688
+Ref: Folders-Footnote-1103575
+Ref: Folders-Footnote-2103798
+Ref: Folders-Footnote-3103873
+Node: Sending Mail103990
+Node: Composing106992
+Ref: Composing-Footnote-1110346
+Ref: Composing-Footnote-2110583
+Node: Replying110751
+Ref: Replying-Footnote-1113438
+Node: Forwarding113558
+Ref: Forwarding-Footnote-1115490
+Node: Redistributing115609
+Ref: Redistributing-Footnote-1116763
+Ref: Redistributing-Footnote-2116888
+Node: Editing Again117010
+Node: Editing Drafts118078
+Node: Editing Message124783
+Node: Inserting Letter129616
+Ref: Inserting Letter-Footnote-1133522
+Ref: Inserting Letter-Footnote-2133635
+Ref: Inserting Letter-Footnote-3133804
+Node: Inserting Messages133906
+Node: Signature134752
+Node: Picture136431
+Node: Adding Attachments137957
+Ref: Adding Attachments-Footnote-1147593
+Ref: Adding Attachments-Footnote-2147674
+Ref: Adding Attachments-Footnote-3147792
+Ref: Adding Attachments-Footnote-4147849
+Ref: Adding Attachments-Footnote-5147926
+Node: Sending PGP148044
+Node: Checking Recipients149964
+Ref: Checking Recipients-Footnote-1150371
+Node: Sending Message150507
+Ref: Sending Message-Footnote-1151423
+Node: Killing Draft151545
+Node: Aliases151927
+Ref: Aliases-Footnote-1160917
+Node: Identities161017
+Ref: Identities-Footnote-1167974
+Node: Speedbar168023
+Ref: Speedbar-Footnote-1170463
+Node: Menu Bar170597
+Node: Tool Bar171556
+Node: Searching174102
+Node: Threading185884
+Ref: Threading-Footnote-1188766
+Node: Limits189337
+Ref: Limits-Footnote-1191204
+Node: Sequences191337
+Ref: Sequences-Footnote-1196329
+Ref: Sequences-Footnote-2196443
+Ref: Sequences-Footnote-3196473
+Node: Junk196598
+Ref: Junk-Footnote-1206147
+Node: Miscellaneous206455
+Node: Scan Line Formats208278
+Ref: Scan Line Formats-Footnote-1224351
+Ref: Scan Line Formats-Footnote-2224495
+Node: Procmail224621
+Ref: Procmail-Footnote-1230029
+Ref: Procmail-Footnote-2230171
+Ref: Procmail-Footnote-3230329
+Node: Odds and Ends230401
+Node: Bug Reports230811
+Node: Mailing Lists231326
+Node: MH FAQ and Support231841
+Node: Getting MH-E232535
+Node: History234201
+Node: From Brian Reid234823
+Ref: From Brian Reid-Footnote-1235975
+Node: From Jim Larus236454
+Node: From Stephen Gildea238703
+Node: From Bill Wohler240854
+Node: GFDL242776
+Node: GPL267908
+Node: Key Index305453
+Node: Command Index335758
+Node: Option Index358764
+Node: Concept Index382280
 
 End Tag Table

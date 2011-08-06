@@ -1,17 +1,17 @@
 ;;; calc-poly.el --- polynomial functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -963,29 +961,37 @@
 	((eq (car expr) '-)
 	 (math-sub (calcFunc-apart (nth 1 expr) var)
 		   (calcFunc-apart (nth 2 expr) var)))
-	((not (math-ratpoly-p expr var))
-	 (math-reject-arg expr "Expected a rational function"))
+        ((and var (not (math-ratpoly-p expr var)))
+         (math-reject-arg expr "Expected a rational function"))
 	(t
-	 (let* ((calc-prefer-frac t)
-		(rat (math-to-ratpoly expr))
-		(num (car rat))
-		(den (cdr rat))
-		(qr (math-poly-div num den))
-		(q (car qr))
-		(r (cdr qr)))
-	   (or var
-	       (setq var (math-polynomial-base den)))
-	   (math-add q (or (and var
-				(math-expr-contains den var)
-				(math-partial-fractions r den var))
-			   (math-div r den)))))))
+         (let* ((calc-prefer-frac t)
+                (rat (math-to-ratpoly expr))
+                (num (car rat))
+                (den (cdr rat)))
+           (or var
+               (setq var (math-polynomial-base den)))
+           (if (not (math-ratpoly-p expr var))
+               (math-reject-arg expr "Expected a rational function")
+             (let* ((qr (math-poly-div num den))
+                    (q (car qr))
+                    (r (cdr qr)))
+               (math-add q (or (and var
+                                    (math-expr-contains den var)
+                                    (math-partial-fractions r den var))
+                               (math-div r den)))))))))
 
 
 (defun math-padded-polynomial (expr var deg)
+  "Return a polynomial as list of coefficients.
+If EXPR is of the form \"a + bx + cx^2 + ...\" in the variable VAR, return
+the list (a b c ...) with at least DEG elements, else return NIL."
   (let ((p (math-is-polynomial expr var deg)))
     (append p (make-list (- deg (length p)) 0))))
 
 (defun math-partial-fractions (r den var)
+  "Return R divided by DEN expressed in partial fractions of VAR.
+All whole factors of DEN have already been split off from R.
+If no partial fraction representation can be found, return nil."
   (let* ((fden (calcFunc-factors den var))
 	 (tdeg (math-polynomial-p den var))
 	 (fp fden)
@@ -1194,5 +1200,5 @@
 
 (provide 'calc-poly)
 
-;;; arch-tag: d2566c51-2ccc-45f1-8c50-f3462c2953ff
+;; arch-tag: d2566c51-2ccc-45f1-8c50-f3462c2953ff
 ;;; calc-poly.el ends here

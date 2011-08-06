@@ -1,16 +1,16 @@
 ;;; tutorial.el --- tutorial for Emacs
 
-;; Copyright (C) 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: help, internal
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -155,9 +153,9 @@ options:
                           " RET instead."))
               (insert "\n\nWith your current key bindings"
                       " you can use "
-                      (if (string-equal "the menus" where)
+                      (if (string-match "^the .*menus?$" where)
                           ""
-                        "the key ")
+                        "the key")
                       where
                       " to get the function `"
                       (format "%s" db)
@@ -210,19 +208,17 @@ LEFT and RIGHT are the elements to compare."
 (defconst tutorial--default-keys
   ;; On window system, `suspend-emacs' is replaced in the default
   ;; keymap
-  (let* ((suspend-emacs (if window-system
-                            'iconify-or-deiconify-frame
-                          'suspend-emacs))
+  (let* ((suspend-emacs 'suspend-frame)
          (default-keys
            `((ESC-prefix [27])
              (Control-X-prefix [?\C-x])
              (mode-specific-command-prefix [?\C-c])
-             (save-buffers-kill-emacs [?\C-x ?\C-c])
+             (save-buffers-kill-terminal [?\C-x ?\C-c])
 
              ;; * SUMMARY
              (scroll-up [?\C-v])
              (scroll-down [?\M-v])
-             (recenter [?\C-l])
+             (recenter-top-bottom [?\C-l])
 
              ;; * BASIC CURSOR CONTROL
              (forward-char [?\C-f])
@@ -406,7 +402,7 @@ where
   WHERE       is a text describing the key sequences to which DEF-FUN is
               bound now (or, if it is remapped, a key sequence
               for the function it is remapped to)
-  REMARK      is a list with info about rebinding.  It has either of
+  REMARK      is a list with info about rebinding. It has either of
               these formats:
 
                 \(TEXT cua-mode)
@@ -439,15 +435,27 @@ where
 			  (if (eq def-fun 'Control-X-prefix)
 			      (lookup-key global-map [24])
 			    (key-binding key))))
-	       (where (where-is-internal (if rem-fun rem-fun def-fun))))
+	       (where (where-is-internal (if rem-fun rem-fun def-fun)))
+	       cwhere)
 
 	  (if where
 	      (progn
-		(setq where (key-description (car where)))
+		(setq cwhere (car where)
+		      where (key-description cwhere))
 		(when (and (< 10 (length where))
 			   (string= (substring where 0 (length "<menu-bar>"))
 				    "<menu-bar>"))
-		  (setq where "the menus")))
+		  (setq where
+			(if (and (vectorp cwhere)
+				 (setq cwhere (elt cwhere 1))
+				 (setq cwhere
+				       (cadr
+					(assoc cwhere
+					       (lookup-key global-map
+							   [menu-bar]))))
+				 (stringp cwhere))
+			    (format "the `%s' menu" cwhere)
+			  "the menus"))))
 	    (setq where ""))
 	  (setq remark nil)
 	  (unless
@@ -617,8 +625,7 @@ with some explanatory links."
 
 (defun tutorial--saved-dir ()
   "Directory to which tutorials are saved."
-  (expand-file-name "tutorial"
-		    (if (eq system-type 'ms-dos) "~/_emacs.d/" "~/.emacs.d/")))
+  (locate-user-emacs-file "tutorial/"))
 
 (defun tutorial--saved-file ()
   "File name in which to save tutorials."
@@ -766,9 +773,7 @@ Run the Viper tutorial? "))
                        current-language-environment
                      "English")))
            (filename (get-language-info lang 'tutorial))
-           ;; Choose a buffer name including the language so that
-           ;; several languages can be tested simultaneously:
-           (tut-buf-name (concat "TUTORIAL (" lang ")"))
+           (tut-buf-name filename)
            (old-tut-buf (get-buffer tut-buf-name))
            (old-tut-win (when old-tut-buf (get-buffer-window old-tut-buf t)))
            (old-tut-is-ok (when old-tut-buf
@@ -800,7 +805,7 @@ Run the Viper tutorial? "))
       ;; (Re)build the tutorial buffer if it is not ok
       (unless old-tut-is-ok
         (switch-to-buffer (get-buffer-create tut-buf-name))
-        (unless old-tut-buf (text-mode))
+        ;; (unless old-tut-buf (text-mode))
         (unless lang (error "Variable lang is nil"))
         (setq tutorial--lang lang)
         (setq old-tut-file (file-exists-p (tutorial--saved-file)))
@@ -837,7 +842,7 @@ Run the Viper tutorial? "))
               (delete-region (point-min) (point))
               (goto-char tutorial--point-before-chkeys)
               (setq tutorial--point-before-chkeys (point-marker)))
-          (insert-file-contents (expand-file-name filename data-directory))
+          (insert-file-contents (expand-file-name filename tutorial-directory))
           (forward-line)
           (setq tutorial--point-before-chkeys (point-marker)))
 

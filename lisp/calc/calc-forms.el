@@ -1,17 +1,17 @@
 ;;; calc-forms.el --- data format conversion functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -31,6 +29,12 @@
 
 (require 'calc-ext)
 (require 'calc-macs)
+
+;; Declare functions which are defined elsewhere.
+(declare-function calendar-current-time-zone "cal-dst" ())
+(declare-function calendar-absolute-from-gregorian "calendar" (date))
+(declare-function dst-in-effect "cal-dst" (date))
+
 
 (defun calc-time ()
   (interactive)
@@ -544,6 +548,14 @@
 	       (setcdr math-fd-dt nil))
 	  fmt))))
 
+(defconst math-julian-date-beginning '(float 17214235 -1)
+  "The beginning of the Julian calendar,
+as measured in the number of days before January 1 of the year 1AD.")
+
+(defconst math-julian-date-beginning-int 1721424
+  "The beginning of the Julian calendar,
+as measured in the integer number of days before January 1 of the year 1AD.")
+
 (defun math-format-date-part (x)
   (cond ((stringp x)
 	 x)
@@ -558,9 +570,12 @@
 	((eq x 'n)
 	 (math-format-number (math-floor math-fd-date)))
 	((eq x 'J)
-	 (math-format-number (math-add math-fd-date '(float (bigpos 235 214 17) -1))))
+	 (math-format-number 
+          (math-add math-fd-date math-julian-date-beginning)))
 	((eq x 'j)
-	 (math-format-number (math-add (math-floor math-fd-date) '(bigpos 424 721 1))))
+	 (math-format-number (math-add 
+                              (math-floor math-fd-date) 
+                              math-julian-date-beginning-int)))
 	((eq x 'U)
 	 (math-format-number (nth 1 (math-date-parts math-fd-date 719164))))
 	((progn
@@ -935,9 +950,8 @@
 					      0
 					    (if (or (eq this 'j)
 						    (math-integerp num))
-						'(bigpos 424 721 1)
-					      '(float (bigpos 235 214 17)
-						      -1))))
+                                                math-julian-date-beginning-int
+                                              math-julian-date-beginning)))
 			    hour (or (nth 3 num) hour)
 			    minute (or (nth 4 num) minute)
 			    second (or (nth 5 num) second)
@@ -1146,14 +1160,14 @@
 (defun calcFunc-julian (date &optional zone)
   (if (math-realp date)
       (list 'date (if (math-integerp date)
-		      (math-sub date '(bigpos 424 721 1))
-		    (setq date (math-sub date '(float (bigpos 235 214 17) -1)))
+		      (math-sub date math-julian-date-beginning-int)
+		    (setq date (math-sub date math-julian-date-beginning))
 		    (math-sub date (math-div (calcFunc-tzone zone date)
 					     '(float 864 2)))))
     (if (eq (car date) 'date)
 	(math-add (nth 1 date) (if (math-integerp (nth 1 date))
-				   '(bigpos 424 721 1)
-				 (math-add '(float (bigpos 235 214 17) -1)
+                                   math-julian-date-beginning-int
+				 (math-add math-julian-date-beginning
 					   (math-div (calcFunc-tzone zone date)
 						     '(float 864 2)))))
       (math-reject-arg date 'datep))))
@@ -1191,7 +1205,29 @@
     )
   "No doc yet.  See calc manual for now. ")
 
-(defvar var-TimeZone)
+(defvar var-TimeZone nil)
+
+;; From cal-dst
+(defvar calendar-current-time-zone-cache)
+
+(defvar math-calendar-tzinfo 
+  nil
+  "Information about the timezone, retrieved from the calendar.")
+
+(defun math-get-calendar-tzinfo ()
+  "Get information about the timezone from the calendar.
+The result should be a list of two items about the current time zone:
+first, the number of seconds difference from GMT
+second, the number of seconds offset for daylight savings."
+  (if math-calendar-tzinfo
+      math-calendar-tzinfo
+    (require 'cal-dst)
+    (let ((tzinfo (progn
+                    (calendar-current-time-zone)
+                    calendar-current-time-zone-cache)))
+      (setq math-calendar-tzinfo
+            (list (* 60 (abs (nth 0 tzinfo)))
+                  (* 60 (nth 1 tzinfo)))))))
 
 (defun calcFunc-tzone (&optional zone date)
   (if zone
@@ -1223,53 +1259,9 @@
 	    (t (math-reject-arg zone "*Expected a time zone")))
     (if (calc-var-value 'var-TimeZone)
 	(calcFunc-tzone (calc-var-value 'var-TimeZone) date)
-      (let ((p math-tzone-names)
-	    (offset 0)
-	    (tz '(var error var-error)))
-	(save-excursion
-	  (set-buffer (get-buffer-create " *Calc Temporary*"))
-	  (erase-buffer)
-	  (call-process "date" nil t)
-	  (goto-char 1)
-	  (let ((case-fold-search t))
-	    (while (and p (not (search-forward (car (car p)) nil t)))
-	      (setq p (cdr p))))
-	  (if (looking-at "\\([-+][0-9]?[0-9]\\)\\([0-9][0-9]\\)?\\(\\'\\|[^0-9]\\)")
-	      (setq offset (math-add
-			    (string-to-number (buffer-substring
-					    (match-beginning 1)
-					    (match-end 1)))
-			    (if (match-beginning 2)
-				(math-div (string-to-number (buffer-substring
-                                                             (match-beginning 2)
-                                                             (match-end 2)))
-					  60)
-			      0)))))
-	(if p
-	    (progn
-	      (setq p (car p))
-	      ;; Try to convert to a generalized time zone.
-	      (if (integerp (nth 2 p))
-		  (let ((gen math-tzone-names))
-		    (while (and gen
-				(not (equal (nth 2 (car gen)) (car p)))
-				(not (equal (nth 3 (car gen)) (car p)))
-				(not (equal (nth 4 (car gen)) (car p)))
-				(not (equal (nth 5 (car gen)) (car p))))
-		      (setq gen (cdr gen)))
-		    (and gen
-			 (setq gen (car gen))
-			 (equal (math-daylight-savings-adjust nil (car gen))
-				(nth 2 p))
-			 (setq p gen))))
-	      (setq tz (math-add (list 'var
-				       (intern (car p))
-				       (intern (concat "var-" (car p))))
-				 offset))))
-	(kill-buffer " *Calc Temporary*")
-	(setq var-TimeZone tz)
-	(calc-refresh-evaltos 'var-TimeZone)
-	(calcFunc-tzone tz date)))))
+      (let ((tzinfo (math-get-calendar-tzinfo)))
+        (+ (nth 0 tzinfo) 
+           (* (math-cal-daylight-savings-adjust date) (nth 1 tzinfo)))))))
 
 (defvar math-daylight-savings-hook 'math-std-daylight-savings)
 
@@ -1290,21 +1282,60 @@
     (and math-daylight-savings-hook
 	 (funcall math-daylight-savings-hook date dt zone bump))))
 
+;;; Based on part of dst-adjust-time in cal-dst.el
+;;; For calcFunc-dst, when zone=nil
+(defun math-cal-daylight-savings-adjust (date)
+  "Return -1 if DATE is using daylight saving, 0 otherwise."
+  (require 'cal-dst)
+  (unless date (setq date (calcFunc-now)))
+  (let* ((dt (math-date-to-dt date))
+         (time (cond
+                ((nth 3 dt)
+                 (nth 3 dt))
+                ((nth 4 dt)
+                 (+ (nth 3 dt) (/ (nth 4 dt) 60.0)))
+                (t
+                 0)))
+         (rounded-abs-date 
+          (+ 
+           (calendar-absolute-from-gregorian 
+            (list (nth 1 dt) (nth 2 dt) (nth 0 dt)))
+           (/ (round (* 60 time)) 60.0 24.0))))
+    (if (dst-in-effect rounded-abs-date)
+        -1
+      0)))
+
 (defun calcFunc-dsadj (date &optional zone)
   (if zone
       (or (eq (car-safe zone) 'var)
 	  (math-reject-arg zone "*Time zone variable expected"))
-    (setq zone (or (calc-var-value 'var-TimeZone)
-		   (progn
-		     (calcFunc-tzone)
-		     (calc-var-value 'var-TimeZone)))))
-  (setq zone (and (eq (car-safe zone) 'var)
-		  (upcase (symbol-name (nth 1 zone)))))
-  (let ((zadj (assoc zone math-tzone-names)))
-    (or zadj (math-reject-arg zone "*Unrecognized time zone name"))
-    (if (integerp (nth 2 zadj))
-	(nth 2 zadj)
-      (math-daylight-savings-adjust date zone))))
+    (setq zone (calc-var-value 'var-TimeZone)))
+  (if zone
+      (progn
+        (setq zone (and (eq (car-safe zone) 'var)
+                        (upcase (symbol-name (nth 1 zone)))))
+        (let ((zadj (assoc zone math-tzone-names)))
+          (or zadj (math-reject-arg zone "*Unrecognized time zone name"))
+          (if (integerp (nth 2 zadj))
+              (nth 2 zadj)
+            (math-daylight-savings-adjust date zone))))
+    (math-cal-daylight-savings-adjust date)))
+
+;; (defun calcFunc-dsadj (date &optional zone)
+;;   (if zone
+;;       (or (eq (car-safe zone) 'var)
+;; 	  (math-reject-arg zone "*Time zone variable expected"))
+;;     (setq zone (or (calc-var-value 'var-TimeZone)
+;; 		   (progn
+;; 		     (calcFunc-tzone)
+;; 		     (calc-var-value 'var-TimeZone)))))
+;;   (setq zone (and (eq (car-safe zone) 'var)
+;; 		  (upcase (symbol-name (nth 1 zone)))))
+;;   (let ((zadj (assoc zone math-tzone-names)))
+;;     (or zadj (math-reject-arg zone "*Unrecognized time zone name"))
+;;     (if (integerp (nth 2 zadj))
+;; 	(nth 2 zadj)
+;;       (math-daylight-savings-adjust date zone))))
 
 (defun calcFunc-tzconv (date z1 z2)
   (if (math-realp date)
@@ -1890,5 +1921,5 @@ and ends on the last Sunday of October at 2 a.m."
 
 (provide 'calc-forms)
 
-;;; arch-tag: a3d8f33b-9508-4043-8060-d02b8c9c750c
+;; arch-tag: a3d8f33b-9508-4043-8060-d02b8c9c750c
 ;;; calc-forms.el ends here

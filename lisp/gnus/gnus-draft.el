@@ -1,27 +1,25 @@
 ;;; gnus-draft.el --- draft message support for Gnus
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -75,7 +73,7 @@
       ;; Set up the menu.
       (when (gnus-visual-p 'draft-menu 'menu)
 	(gnus-draft-make-menu-bar))
-      (gnus-add-minor-mode 'gnus-draft-mode " Draft" gnus-draft-mode-map)
+      (add-minor-mode 'gnus-draft-mode " Draft" gnus-draft-mode-map)
       (gnus-run-hooks 'gnus-draft-mode-hook))))
 
 ;;; Commands
@@ -105,7 +103,9 @@
       (save-restriction
 	(message-narrow-to-headers)
 	(message-remove-header "date")))
-    (save-buffer)
+    (let ((message-draft-headers
+	   (delq 'Date (copy-sequence message-draft-headers))))
+      (save-buffer))
     (let ((gnus-verbose-backends nil))
       (gnus-request-expire-articles (list article) group t))
     (push
@@ -146,6 +146,8 @@ Obeys the standard process/prefix convention."
                                  message-send-hook))
          (message-setup-hook (and (not is-queue)
                                   message-setup-hook))
+	 (gnus-message-setup-hook (and (not is-queue)
+				       gnus-message-setup-hook))
 	 (message-signature (and (not is-queue)
 				 message-signature))
          (gnus-agent-queue-mail (and (not is-queue)
@@ -161,7 +163,7 @@ Obeys the standard process/prefix convention."
 	     (concat "^" (regexp-quote gnus-agent-target-move-group-header)
 		     ":") nil t)
 	(skip-syntax-forward "-")
-	(setq move-to (buffer-substring (point) (gnus-point-at-eol)))
+	(setq move-to (buffer-substring (point) (point-at-eol)))
 	(message-remove-header gnus-agent-target-move-group-header))
       (goto-char (point-min))
       (when (re-search-forward
@@ -216,6 +218,7 @@ Obeys the standard process/prefix convention."
 				     (gnus-info-marks
 				      (gnus-get-info "nndraft:queue"))))))
 	     (gnus-posting-styles nil)
+	     message-send-mail-partially-limit
 	     (total (length articles))
 	     article)
 	(while (setq article (pop articles))
@@ -238,6 +241,12 @@ Obeys the standard process/prefix convention."
 		(if (y-or-n-p "There are unsent drafts.  Confirm to exit? ")
 		    (throw 'continue t)
 		  (error "Stop!"))))))))
+
+(defcustom gnus-draft-setup-hook nil
+  "Hook run after setting up a draft buffer."
+  :group 'gnus-message
+  :version "23.1" ;; No Gnus
+  :type 'hook)
 
 ;;; Utility functions
 
@@ -286,7 +295,8 @@ Obeys the standard process/prefix convention."
 		(gnus-add-mark ,(car ga) 'replied ,article)
 		(gnus-request-set-mark ,(car ga) (list (list (list ,article)
 							     'add '(reply)))))
-	     'send)))))))
+	     'send))))
+      (run-hooks 'gnus-draft-setup-hook))))
 
 (defun gnus-draft-article-sendable-p (article)
   "Say whether ARTICLE is sendable."
@@ -320,5 +330,5 @@ Obeys the standard process/prefix convention."
 
 (provide 'gnus-draft)
 
-;;; arch-tag: 3d92af58-8c97-4a5c-9db4-a98e85198022
+;; arch-tag: 3d92af58-8c97-4a5c-9db4-a98e85198022
 ;;; gnus-draft.el ends here

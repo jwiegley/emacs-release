@@ -1,28 +1,22 @@
-This is ../info/newsticker, produced by makeinfo version 4.11 from
+This is ../../info/newsticker, produced by makeinfo version 4.11 from
 newsticker.texi.
 
-This manual is for Newsticker (version 1.9, November 2005).
+This manual is for Newsticker (version 1.99, June 2008).
 
-Copyright (C) 2004, 2005, 2006, 2007, 2008  Free Software Foundation,
-Inc.
+Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Free Software
+Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
-     Version 1.2 or any later version published by the Free Software
+     Version 1.3 or any later version published by the Free Software
      Foundation; with no Invariant Sections, with the Front-Cover texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
-     "GNU Free Documentation License" in the Emacs manual.
+     "GNU Free Documentation License".
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
-
-     This document is part of a collection distributed under the GNU
-     Free Documentation License.  If you want to distribute this
-     document separately from the collection, you can do so by adding a
-     copy of the license to the document, as described in section 6 of
-     the license.
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
+     developing GNU and promoting software freedom."
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -34,6 +28,23 @@ File: newsticker,  Node: Top,  Next: Overview,  Up: (dir)
 
 Newsticker
 **********
+
+This manual is for Newsticker (version 1.99, June 2008).
+
+Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Free Software
+Foundation, Inc.
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, with the Front-Cover texts
+     being "A GNU Manual", and with the Back-Cover Texts as in (a)
+     below.  A copy of the license is included in the section entitled
+     "GNU Free Documentation License".
+
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
+     developing GNU and promoting software freedom."
 
 * Menu:
 
@@ -59,7 +70,7 @@ corresponding articles in a web browser.
 
    Headlines consist of a title and (possibly) a small description.
 They are contained in "RSS" (RDF Site Summary) or "Atom" files.
-Newsticker should work with the following RSS formats:
+Newsticker works with the following RSS formats:
 
    * RSS 0.91 (see `http://backend.userland.com/rss091' or
      `http://my.netscape.com/publish/formats/rss-spec-0.91.html'),
@@ -77,8 +88,8 @@ Newsticker should work with the following RSS formats:
    * Atom 1.0 (see
      `http://www.ietf.org/internet-drafts/draft-ietf-atompub-format-11.txt').
 
-   That makes Newsticker.el an "Atom aggregator, "RSS reader", or "RSS
-aggregator".
+   That makes Newsticker.el an "Atom aggregator", "RSS reader", "Feed
+aggregator", or "Feed reader".
 
    Newsticker provides several commands for reading headlines,
 navigating through them, marking them as read/unread, hiding old
@@ -104,9 +115,11 @@ well as XEmacs (http://www.xemacs.org).  It requires an XML-parser
 (`xml.el') which is part of GNU Emacs.  If you are using XEmacs you
 want to get the `net-utils' package which contains `xml.el' for XEmacs.
 
-   Newsticker requires a program which can retrieve files via http and
-prints them to stdout.  By default Newsticker will use wget
-(http://www.gnu.org/software/wget/wget.html) for this task.
+   Newsticker retrieves headlines either via Emacs' built-in retrieval
+functions, by an arbitrary external program that retrieves files via
+http and prints them to stdout (like wget
+(http://www.gnu.org/software/wget/wget.html), or - on a per feed basis
+- via an arbitrary Lisp command.
 
 
 File: newsticker,  Node: Installation,  Next: Usage,  Prev: Requirements,  Up: Top
@@ -131,13 +144,21 @@ File: newsticker,  Node: Usage,  Next: Configuration,  Prev: Installation,  Up: 
 4 Usage
 *******
 
-The command `newsticker-show-news' will display all available headlines
-in a special buffer, called `*newsticker*'.  It will also start the
-asynchronous download of headlines.  The modeline in the `*newsticker*'
-buffer informs whenever new headlines have arrived.  Clicking
-mouse-button 2 or pressing RET in this buffer on a headline will call
-`browse-url' to load the corresponding news story in your favourite web
-browser.
+The command `newsticker-show-news' will display all available
+headlines.  It will also start the asynchronous download of headlines.
+
+   You can choose between two different frontends for reading headlines:
+   * Newsticker's _treeview_ uses separate windows for the feeds (in
+     tree form), a list of headlines for the current feed, and the
+     content of the current headline. Feeds can be placed into groups
+     which itself can be placed in groups and so on.
+
+   * Newsticker's _plainview_ displays all headlines in a single
+     buffer, called `*newsticker*'. The modeline in the `*newsticker*'
+     buffer informs whenever new headlines have arrived.
+   In both views clicking mouse-button 2 or pressing RET on a headline
+will call `browse-url' to load the corresponding news story in your
+favourite web browser.
 
    The scrolling, or flashing of headlines in the echo area, can be
 started with the command `newsticker-start-ticker'. It can be stopped
@@ -161,13 +182,18 @@ enter `newsticker' for the customization group.
 most cases it is not necessary to customize settings before starting
 Newsticker for the first time.
 
-   Newsticker options are organized in the following groups.
+   The following list shows the available groups of newsticker options
+and some of the most important options.
 
-   * `newsticker-feed' contains options that define which news feeds
-     are retrieved and how this is done.
+   * `newsticker-retrieval' contains options that define which news
+     feeds are retrieved and how this is done.
 
         * `newsticker-url-list' defines the list of headlines which are
           retrieved.
+
+        * `newsticker-retrieval-method' defines how headlines are
+          retrieved. This is either done using Emacs' built-in download
+          capabilities or using an external tool.
 
         * `newsticker-retrieval-interval' defines how often headlines
           are retrieved.
@@ -179,18 +205,8 @@ Newsticker for the first time.
           headlines that have been removed from the feed are kept in the
           Newsticker cache.
 
-   * `newsticker-layout' contains options that define how the buffer
-     for reading news headlines is formatted.
-
-        * `newsticker-item-format' defines how the title of a headline
-          is formatted.
-
-   * `newsticker-ticker' contains options that define how headlines are
-     shown in the echo area.
-
-        * `newsticker-display-interval' and
-          `newsticker-scroll-smoothly' define how headlines are shown in
-          the echo area.
+        * `newsticker-auto-mark-filter-list' provides the possibility to
+          automatically mark headlines as immortal or old.
 
    * `newsticker-hooks' contains options for hooking other Emacs
      commands to newsticker functions.
@@ -198,11 +214,33 @@ Newsticker for the first time.
           processing of headlines. See `newsticker-download-images', and
           `newsticker-download-enclosures' for sample functions.
 
+        * The subgroup `newsticker-plainview-hooks' contains hook which
+          apply to the plainview reader only.
+
    * `newsticker-miscellaneous' contains other Newsticker options.
 
+   * `newsticker-ticker' contains options that define how headlines are
+     shown in the echo area, i.e. the "ticker".
 
-   Please have a look at the customization buffers for the complete list
-of options.
+        * `newsticker-ticker-interval' and `newsticker-scroll-smoothly'
+          define how headlines are shown in the echo area.
+
+   * `newsticker-reader' contains options for adjusting the headline
+     reader.
+
+        * `newsticker-frontend' determines the actual headline reader.
+          The "plainview" reader uses a single buffer, the "treeview"
+          uses separate buffers and windows.
+
+        * The subgroup `newsticker-plainview' contains options for the
+          plainview reader.
+
+        * The subgroup `newsticker-treeview' contains options for the
+          treeview reader.
+
+
+   For the complete list of options please have a look at the
+customization buffers.
 
 
 File: newsticker,  Node: Remarks,  Next: GNU Free Documentation License,  Prev: Configuration,  Up: Top
@@ -210,12 +248,7 @@ File: newsticker,  Node: Remarks,  Next: GNU Free Documentation License,  Prev: 
 6 Remarks
 *********
 
-This newsticker is designed do its job silently in the background
-without disturbing you.  However, it is probably impossible to prevent
-such a tool from slightly attenuating your Editor's responsiveness
-every once in a while.
-
-   Byte-compiling newsticker.el is recommended.
+Byte-compiling newsticker.el is recommended.
 
 
 File: newsticker,  Node: GNU Free Documentation License,  Next: Index,  Prev: Remarks,  Up: Top
@@ -223,14 +256,13 @@ File: newsticker,  Node: GNU Free Documentation License,  Next: Index,  Prev: Re
 Appendix A GNU Free Documentation License
 *****************************************
 
-                      Version 1.2, November 2002
+                     Version 1.3, 3 November 2008
 
-     Copyright (C) 2000,2001,2002  Free Software Foundation, Inc.
-     51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
      of this license document, but changing it is not allowed.
-
 
   0. PREAMBLE
 
@@ -242,7 +274,7 @@ Appendix A GNU Free Documentation License
      author and publisher a way to get credit for their work, while not
      being considered responsible for modifications made by others.
 
-     This License is a kind of "copyleft," which means that derivative
+     This License is a kind of "copyleft", which means that derivative
      works of the document must themselves be free in the same sense.
      It complements the GNU General Public License, which is a copyleft
      license designed for free software.
@@ -256,7 +288,6 @@ Appendix A GNU Free Documentation License
      We recommend this License principally for works whose purpose is
      instruction or reference.
 
-
   1. APPLICABILITY AND DEFINITIONS
 
      This License applies to any manual or other work, in any medium,
@@ -264,8 +295,8 @@ Appendix A GNU Free Documentation License
      can be distributed under the terms of this License.  Such a notice
      grants a world-wide, royalty-free license, unlimited in duration,
      to use that work under the conditions stated herein.  The
-     "Document," below, refers to any such manual or work.  Any member
-     of the public is a licensee, and is addressed as "you."  You
+     "Document", below, refers to any such manual or work.  Any member
+     of the public is a licensee, and is addressed as "you".  You
      accept the license if you copy, modify or distribute the work in a
      way requiring permission under copyright law.
 
@@ -273,16 +304,16 @@ Appendix A GNU Free Documentation License
      Document or a portion of it, either copied verbatim, or with
      modifications and/or translated into another language.
 
-     A "Secondary Section" is a named appendix or a front-matter
-     section of the Document that deals exclusively with the
-     relationship of the publishers or authors of the Document to the
-     Document's overall subject (or to related matters) and contains
-     nothing that could fall directly within that overall subject.
-     (Thus, if the Document is in part a textbook of mathematics, a
-     Secondary Section may not explain any mathematics.)  The
-     relationship could be a matter of historical connection with the
-     subject or with related matters, or of legal, commercial,
-     philosophical, ethical or political position regarding them.
+     A "Secondary Section" is a named appendix or a front-matter section
+     of the Document that deals exclusively with the relationship of the
+     publishers or authors of the Document to the Document's overall
+     subject (or to related matters) and contains nothing that could
+     fall directly within that overall subject.  (Thus, if the Document
+     is in part a textbook of mathematics, a Secondary Section may not
+     explain any mathematics.)  The relationship could be a matter of
+     historical connection with the subject or with related matters, or
+     of legal, commercial, philosophical, ethical or political position
+     regarding them.
 
      The "Invariant Sections" are certain Secondary Sections whose
      titles are designated, as being those of Invariant Sections, in
@@ -310,7 +341,7 @@ Appendix A GNU Free Documentation License
      markup, has been arranged to thwart or discourage subsequent
      modification by readers is not Transparent.  An image format is
      not Transparent if used for any substantial amount of text.  A
-     copy that is not "Transparent" is called "Opaque."
+     copy that is not "Transparent" is called "Opaque".
 
      Examples of suitable formats for Transparent copies include plain
      ASCII without markup, Texinfo input format, LaTeX input format,
@@ -318,8 +349,8 @@ Appendix A GNU Free Documentation License
      standard-conforming simple HTML, PostScript or PDF designed for
      human modification.  Examples of transparent image formats include
      PNG, XCF and JPG.  Opaque formats include proprietary formats that
-     can be read and edited only by proprietary word processors, SGML
-     or XML for which the DTD and/or processing tools are not generally
+     can be read and edited only by proprietary word processors, SGML or
+     XML for which the DTD and/or processing tools are not generally
      available, and the machine-generated HTML, PostScript or PDF
      produced by some word processors for output purposes only.
 
@@ -330,11 +361,14 @@ Appendix A GNU Free Documentation License
      Page" means the text near the most prominent appearance of the
      work's title, preceding the beginning of the body of the text.
 
+     The "publisher" means any person or entity that distributes copies
+     of the Document to the public.
+
      A section "Entitled XYZ" means a named subunit of the Document
      whose title either is precisely XYZ or contains XYZ in parentheses
      following text that translates XYZ in another language.  (Here XYZ
      stands for a specific section name mentioned below, such as
-     "Acknowledgements," "Dedications," "Endorsements," or "History.")
+     "Acknowledgements", "Dedications", "Endorsements", or "History".)
      To "Preserve the Title" of such a section when you modify the
      Document means that it remains a section "Entitled XYZ" according
      to this definition.
@@ -412,59 +446,75 @@ Appendix A GNU Free Documentation License
      whoever possesses a copy of it.  In addition, you must do these
      things in the Modified Version:
 
-     A. Use in the Title Page (and on the covers, if any) a title
-     distinct    from that of the Document, and from those of previous
-     versions    (which should, if there were any, be listed in the
-     History section    of the Document).  You may use the same title
-     as a previous version    if the original publisher of that version
-     gives permission.
-     B. List on the Title Page, as authors, one or more persons or
-     entities    responsible for authorship of the modifications in the
-     Modified    Version, together with at least five of the principal
-     authors of the    Document (all of its principal authors, if it
-     has fewer than five),    unless they release you from this
-     requirement.
-     C. State on the Title page the name of the publisher of the
-     Modified Version, as the publisher.
-     D. Preserve all the copyright notices of the Document.
-     E. Add an appropriate copyright notice for your modifications
-     adjacent to the other copyright notices.
-     F. Include, immediately after the copyright notices, a license
-     notice    giving the public permission to use the Modified Version
-     under the    terms of this License, in the form shown in the
-     Addendum below.
-     G. Preserve in that license notice the full lists of Invariant
-     Sections    and required Cover Texts given in the Document's
-     license notice.
-     H. Include an unaltered copy of this License.
-     I. Preserve the section Entitled "History," Preserve its Title,
-     and add    to it an item stating at least the title, year, new
-     authors, and    publisher of the Modified Version as given on the
-     Title Page.  If    there is no section Entitled "History" in the
-     Document, create one    stating the title, year, authors, and
-     publisher of the Document as    given on its Title Page, then add
-     an item describing the Modified    Version as stated in the
-     previous sentence.
-     J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and likewise
-       the network locations given in the Document for previous versions
-       it was based on.  These may be placed in the "History" section.
-       You may omit a network location for a work that was published at
-       least four years before the Document itself, or if the original
-      publisher of the version it refers to gives permission.
-     K. For any section Entitled "Acknowledgements" or "Dedications,"
-     Preserve the Title of the section, and preserve in the section all
-       the substance and tone of each of the contributor
-     acknowledgements    and/or dedications given therein.
-     L. Preserve all the Invariant Sections of the Document,
-     unaltered in their text and in their titles.  Section numbers
-     or the equivalent are not considered part of the section titles.
-     M. Delete any section Entitled "Endorsements."  Such a section
-     may not be included in the Modified Version.
-     N. Do not retitle any existing section to be Entitled
-     "Endorsements"    or to conflict in title with any Invariant
-     Section.
-     O. Preserve any Warranty Disclaimers.
+       A. Use in the Title Page (and on the covers, if any) a title
+          distinct from that of the Document, and from those of
+          previous versions (which should, if there were any, be listed
+          in the History section of the Document).  You may use the
+          same title as a previous version if the original publisher of
+          that version gives permission.
+
+       B. List on the Title Page, as authors, one or more persons or
+          entities responsible for authorship of the modifications in
+          the Modified Version, together with at least five of the
+          principal authors of the Document (all of its principal
+          authors, if it has fewer than five), unless they release you
+          from this requirement.
+
+       C. State on the Title page the name of the publisher of the
+          Modified Version, as the publisher.
+
+       D. Preserve all the copyright notices of the Document.
+
+       E. Add an appropriate copyright notice for your modifications
+          adjacent to the other copyright notices.
+
+       F. Include, immediately after the copyright notices, a license
+          notice giving the public permission to use the Modified
+          Version under the terms of this License, in the form shown in
+          the Addendum below.
+
+       G. Preserve in that license notice the full lists of Invariant
+          Sections and required Cover Texts given in the Document's
+          license notice.
+
+       H. Include an unaltered copy of this License.
+
+       I. Preserve the section Entitled "History", Preserve its Title,
+          and add to it an item stating at least the title, year, new
+          authors, and publisher of the Modified Version as given on
+          the Title Page.  If there is no section Entitled "History" in
+          the Document, create one stating the title, year, authors,
+          and publisher of the Document as given on its Title Page,
+          then add an item describing the Modified Version as stated in
+          the previous sentence.
+
+       J. Preserve the network location, if any, given in the Document
+          for public access to a Transparent copy of the Document, and
+          likewise the network locations given in the Document for
+          previous versions it was based on.  These may be placed in
+          the "History" section.  You may omit a network location for a
+          work that was published at least four years before the
+          Document itself, or if the original publisher of the version
+          it refers to gives permission.
+
+       K. For any section Entitled "Acknowledgements" or "Dedications",
+          Preserve the Title of the section, and preserve in the
+          section all the substance and tone of each of the contributor
+          acknowledgements and/or dedications given therein.
+
+       L. Preserve all the Invariant Sections of the Document,
+          unaltered in their text and in their titles.  Section numbers
+          or the equivalent are not considered part of the section
+          titles.
+
+       M. Delete any section Entitled "Endorsements".  Such a section
+          may not be included in the Modified Version.
+
+       N. Do not retitle any existing section to be Entitled
+          "Endorsements" or to conflict in title with any Invariant
+          Section.
+
+       O. Preserve any Warranty Disclaimers.
 
      If the Modified Version includes new front-matter sections or
      appendices that qualify as Secondary Sections and contain no
@@ -474,11 +524,11 @@ Appendix A GNU Free Documentation License
      Version's license notice.  These titles must be distinct from any
      other section titles.
 
-     You may add a section Entitled "Endorsements," provided it contains
+     You may add a section Entitled "Endorsements", provided it contains
      nothing but endorsements of your Modified Version by various
-     parties-for example, statements of peer review or that the text has
-     been approved by an organization as the authoritative definition
-     of a standard.
+     parties--for example, statements of peer review or that the text
+     has been approved by an organization as the authoritative
+     definition of a standard.
 
      You may add a passage of up to five words as a Front-Cover Text,
      and a passage of up to 25 words as a Back-Cover Text, to the end
@@ -518,7 +568,7 @@ Appendix A GNU Free Documentation License
      In the combination, you must combine any sections Entitled
      "History" in the various original documents, forming one section
      Entitled "History"; likewise combine any sections Entitled
-     "Acknowledgements," and any sections Entitled "Dedications."  You
+     "Acknowledgements", and any sections Entitled "Dedications".  You
      must delete all sections Entitled "Endorsements."
 
   6. COLLECTIONS OF DOCUMENTS
@@ -571,20 +621,37 @@ Appendix A GNU Free Documentation License
      this License or a notice or disclaimer, the original version will
      prevail.
 
-     If a section in the Document is Entitled "Acknowledgements,"
-     "Dedications," or "History," the requirement (section 4) to
+     If a section in the Document is Entitled "Acknowledgements",
+     "Dedications", or "History", the requirement (section 4) to
      Preserve its Title (section 1) will typically require changing the
      actual title.
 
   9. TERMINATION
 
      You may not copy, modify, sublicense, or distribute the Document
-     except as expressly provided for under this License.  Any other
-     attempt to copy, modify, sublicense or distribute the Document is
-     void, and will automatically terminate your rights under this
-     License.  However, parties who have received copies, or rights,
-     from you under this License will not have their licenses
-     terminated so long as such parties remain in full compliance.
+     except as expressly provided under this License.  Any attempt
+     otherwise to copy, modify, sublicense, or distribute it is void,
+     and will automatically terminate your rights under this License.
+
+     However, if you cease all violation of this License, then your
+     license from a particular copyright holder is reinstated (a)
+     provisionally, unless and until the copyright holder explicitly
+     and finally terminates your license, and (b) permanently, if the
+     copyright holder fails to notify you of the violation by some
+     reasonable means prior to 60 days after the cessation.
+
+     Moreover, your license from a particular copyright holder is
+     reinstated permanently if the copyright holder notifies you of the
+     violation by some reasonable means, this is the first time you have
+     received notice of violation of this License (for any work) from
+     that copyright holder, and you cure the violation prior to 30 days
+     after your receipt of the notice.
+
+     Termination of your rights under this section does not terminate
+     the licenses of parties who have received copies or rights from
+     you under this License.  If your rights have been terminated and
+     not permanently reinstated, receipt of a copy of some or all of
+     the same material does not give you any rights to use it.
 
  10. FUTURE REVISIONS OF THIS LICENSE
 
@@ -592,7 +659,7 @@ Appendix A GNU Free Documentation License
      the GNU Free Documentation License from time to time.  Such new
      versions will be similar in spirit to the present version, but may
      differ in detail to address new problems or concerns.  See
-     http://www.gnu.org/copyleft/.
+     `http://www.gnu.org/copyleft/'.
 
      Each version of the License is given a distinguishing version
      number.  If the Document specifies that a particular numbered
@@ -602,7 +669,40 @@ Appendix A GNU Free Documentation License
      published (not as a draft) by the Free Software Foundation.  If
      the Document does not specify a version number of this License,
      you may choose any version ever published (not as a draft) by the
-     Free Software Foundation.
+     Free Software Foundation.  If the Document specifies that a proxy
+     can decide which future versions of this License can be used, that
+     proxy's public statement of acceptance of a version permanently
+     authorizes you to choose that version for the Document.
+
+ 11. RELICENSING
+
+     "Massive Multiauthor Collaboration Site" (or "MMC Site") means any
+     World Wide Web server that publishes copyrightable works and also
+     provides prominent facilities for anybody to edit those works.  A
+     public wiki that anybody can edit is an example of such a server.
+     A "Massive Multiauthor Collaboration" (or "MMC") contained in the
+     site means any set of copyrightable works thus published on the MMC
+     site.
+
+     "CC-BY-SA" means the Creative Commons Attribution-Share Alike 3.0
+     license published by Creative Commons Corporation, a not-for-profit
+     corporation with a principal place of business in San Francisco,
+     California, as well as future copyleft versions of that license
+     published by that same organization.
+
+     "Incorporate" means to publish or republish a Document, in whole or
+     in part, as part of another Document.
+
+     An MMC is "eligible for relicensing" if it is licensed under this
+     License, and if all works that were first published under this
+     License somewhere other than this MMC, and subsequently
+     incorporated in whole or in part into the MMC, (1) had no cover
+     texts or invariant sections, and (2) were thus incorporated prior
+     to November 1, 2008.
+
+     The operator of an MMC Site may republish an MMC contained in the
+     site under CC-BY-SA on the same site at any time before August 1,
+     2009, provided the MMC is eligible for relicensing.
 
 
 ADDENDUM: How to use this License for your documents
@@ -612,20 +712,20 @@ To use this License in a document you have written, include a copy of
 the License in the document and put the following copyright and license
 notices just after the title page:
 
-     Copyright (C)  YEAR  YOUR NAME.
-     Permission is granted to copy, distribute and/or modify this document
-     under the terms of the GNU Free Documentation License, Version 1.2
-     or any later version published by the Free Software Foundation;
-     with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
-     A copy of the license is included in the section entitled ``GNU
-     Free Documentation License.''
+       Copyright (C)  YEAR  YOUR NAME.
+       Permission is granted to copy, distribute and/or modify this document
+       under the terms of the GNU Free Documentation License, Version 1.3
+       or any later version published by the Free Software Foundation;
+       with no Invariant Sections, no Front-Cover Texts, and no Back-Cover
+       Texts.  A copy of the license is included in the section entitled ``GNU
+       Free Documentation License''.
 
    If you have Invariant Sections, Front-Cover Texts and Back-Cover
 Texts, replace the "with...Texts." line with this:
 
-     with the Invariant Sections being LIST THEIR TITLES, with the
-     Front-Cover Texts being LIST, and with the Back-Cover Texts being
-     LIST.
+         with the Invariant Sections being LIST THEIR TITLES, with
+         the Front-Cover Texts being LIST, and with the Back-Cover Texts
+         being LIST.
 
    If you have Invariant Sections without Cover Texts, or some other
 combination of the three, merge those two alternatives to suit the
@@ -645,30 +745,35 @@ Index
  [index ]
 * Menu:
 
-* newsticker-display-interval:           Configuration.        (line 41)
-* newsticker-heading-format:             Configuration.        (line 35)
-* newsticker-keep-obsolete-items:        Configuration.        (line 28)
-* newsticker-new-item-functions:         Configuration.        (line 47)
-* newsticker-retrieval-interval:         Configuration.        (line 22)
-* newsticker-scroll-smoothly:            Configuration.        (line 41)
+* newsticker-auto-mark-filter-list:      Configuration.        (line 37)
+* newsticker-display-interval:           Configuration.        (line 54)
+* newsticker-frontend:                   Configuration.        (line 60)
+* newsticker-keep-obsolete-items:        Configuration.        (line 33)
+* newsticker-new-item-functions:         Configuration.        (line 42)
+* newsticker-plainview:                  Configuration.        (line 64)
+* newsticker-plainview-hooks:            Configuration.        (line 46)
+* newsticker-retrieval-interval:         Configuration.        (line 27)
+* newsticker-retrieval-method:           Configuration.        (line 23)
+* newsticker-scroll-smoothly:            Configuration.        (line 54)
 * newsticker-show-news:                  Usage.                (line  6)
-* newsticker-start:                      Usage.                (line 18)
-* newsticker-start-ticker:               Usage.                (line 14)
-* newsticker-stop:                       Usage.                (line 18)
-* newsticker-stop-ticker:                Usage.                (line 14)
-* newsticker-url-list:                   Configuration.        (line 19)
+* newsticker-start:                      Usage.                (line 26)
+* newsticker-start-ticker:               Usage.                (line 22)
+* newsticker-stop:                       Usage.                (line 26)
+* newsticker-stop-ticker:                Usage.                (line 22)
+* newsticker-treeview:                   Configuration.        (line 67)
+* newsticker-url-list:                   Configuration.        (line 20)
 
 
 
 Tag Table:
-Node: Top1315
-Node: Overview1858
-Node: Requirements3453
-Node: Installation4083
-Node: Usage4554
-Node: Configuration5462
-Node: Remarks7500
-Node: GNU Free Documentation License7905
-Node: Index30122
+Node: Top996
+Node: Overview2331
+Node: Requirements3937
+Node: Installation4662
+Node: Usage5133
+Node: Configuration6438
+Node: Remarks9236
+Node: GNU Free Documentation License9410
+Node: Index34576
 
 End Tag Table

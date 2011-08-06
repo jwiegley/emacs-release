@@ -1,7 +1,7 @@
 ;;; webjump.el --- programmable Web hotlist
 
 ;; Copyright (C) 1996, 1997, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author:    Neil W. Van Dyke <nwv@acm.org>
 ;; Created:   09-Aug-1996
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -229,7 +227,6 @@
     ("Yahoo" .
      [simple-query "www.yahoo.com" "search.yahoo.com/search?p=" ""])
     ("Yahoo: Reference" . "www.yahoo.com/Reference/")
-
     ("Wikipedia" .
      [simple-query "wikipedia.org" "wikipedia.org/wiki/" ""])
 
@@ -452,14 +449,12 @@ Please submit bug reports and other feedback to the author, Neil W. Van Dyke
 
 (defun webjump-url-encode (str)
   (mapconcat '(lambda (c)
-		(cond ((= c 32) "+")
-		      ((or (and (>= c ?a) (<= c ?z))
-			   (and (>= c ?A) (<= c ?Z))
-			   (and (>= c ?0) (<= c ?9)))
-		       (char-to-string c))
-		      (t (upcase (format "%%%02x" c)))))
-	     str
-	     ""))
+                (let ((s (char-to-string c)))
+                  (cond ((string= s " ") "+")
+                        ((string-match "[a-zA-Z_.-/]" s) s)
+                        (t (upcase (format "%%%02x" c))))))
+             (encode-coding-string str 'utf-8)
+             ""))
 
 (defun webjump-url-fix (url)
   (if (webjump-null-or-blank-string-p url)
@@ -485,5 +480,5 @@ Please submit bug reports and other feedback to the author, Neil W. Van Dyke
 
 (provide 'webjump)
 
-;;; arch-tag: f1d20156-0a6f-488b-bd91-f69ee8b6d5cc
+;; arch-tag: f1d20156-0a6f-488b-bd91-f69ee8b6d5cc
 ;;; webjump.el ends here

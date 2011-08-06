@@ -1,16 +1,16 @@
 ;;; esh-io.el --- I/O management
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,20 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-(provide 'esh-io)
-
-(eval-when-compile (require 'esh-maint))
-
-(defgroup eshell-io nil
-  "Eshell's I/O management code provides a scheme for treating many
-different kinds of objects -- symbols, files, buffers, etc. -- as
-though they were files."
-  :tag "I/O management"
-  :group 'eshell)
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -67,6 +54,21 @@ though they were files."
 ;;
 ;;   (+ 1 2) > a > b > c   ; prints number to all three files
 ;;   (+ 1 2) > a | wc      ; prints to 'a', and pipes to 'wc'
+
+;;; Code:
+
+(provide 'esh-io)
+
+(eval-when-compile
+  (require 'cl)
+  (require 'eshell))
+
+(defgroup eshell-io nil
+  "Eshell's I/O management code provides a scheme for treating many
+different kinds of objects -- symbols, files, buffers, etc. -- as
+though they were files."
+  :tag "I/O management"
+  :group 'eshell)
 
 ;;; User Variables:
 
@@ -382,8 +384,7 @@ it defaults to `insert'."
     (error "Invalid redirection target: %s"
 	   (eshell-stringify target)))))
 
-(eval-when-compile
-  (defvar grep-null-device))
+(defvar grep-null-device)
 
 (defun eshell-set-output-handle (index mode &optional target)
   "Set handle INDEX, using MODE, to point to TARGET."
@@ -417,6 +418,10 @@ it defaults to `insert'."
 (defvar eshell-print-queue nil)
 (defvar eshell-print-queue-count -1)
 
+(defsubst eshell-print (object)
+  "Output OBJECT to the standard output handle."
+  (eshell-output-object object eshell-output-handle))
+
 (defun eshell-flush (&optional reset-p)
   "Flush out any lines that have been queued for printing.
 Must be called before printing begins with -1 as its argument, and
@@ -444,10 +449,6 @@ after all printing is over with no argument."
     (setq eshell-print-queue
 	  (concat eshell-print-queue (apply 'concat strings))
 	  eshell-print-queue-count (1+ eshell-print-queue-count))))
-
-(defsubst eshell-print (object)
-  "Output OBJECT to the standard output handle."
-  (eshell-output-object object eshell-output-handle))
 
 (defsubst eshell-error (object)
   "Output OBJECT to the standard error handle."
@@ -514,7 +515,5 @@ Returns what was actually sent, or nil if nothing was sent."
 	(eshell-output-object-to-target object (car target))
 	(setq target (cdr target))))))
 
-;;; Code:
-
-;;; arch-tag: 9ca2080f-d5e0-4b26-aa0b-d59194a905a2
+;; arch-tag: 9ca2080f-d5e0-4b26-aa0b-d59194a905a2
 ;;; esh-io.el ends here

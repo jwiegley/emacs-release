@@ -1,14 +1,14 @@
 /* s/ file for netbsd system.
 
-   Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006,
-                 2007, 2008  Free Software Foundation, Inc.
+   Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+                 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,13 +16,11 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
-/* Get most of the stuff from bsd4.3 */
-#include "bsd4-3.h"
+/* Get most of the stuff from bsd-common */
+#include "bsd-common.h"
 
 #if defined (__alpha__) && !defined (__ELF__)
 #define NO_SHARED_LIBS
@@ -35,8 +33,6 @@ Boston, MA 02110-1301, USA.  */
 #undef LDAV_SYMBOL
 #define HAVE_GETLOADAVG 1
 
-#define HAVE_UNION_WAIT
-
 #define SIGNALS_VIA_CHARACTERS
 
 #define PENDING_OUTPUT_COUNT(FILE) ((FILE)->_p - (FILE)->_bf._base)
@@ -44,9 +40,6 @@ Boston, MA 02110-1301, USA.  */
 /* netbsd uses OXTABS instead of the expected TAB3.  */
 #define TABDLY OXTABS
 #define TAB3 OXTABS
-
-#define A_TEXT_OFFSET(x) (sizeof (struct exec))
-#define A_TEXT_SEEK(hdr) (N_TXTOFF(hdr) + A_TEXT_OFFSET(hdr))
 
 #define HAVE_TERMIOS
 #define NO_TERMIO
@@ -62,8 +55,6 @@ Boston, MA 02110-1301, USA.  */
 /* Netbsd has POSIX-style pgrp behavior.  */
 #undef BSD_PGRPS
 
-#define GETPGRP_NO_ARG
-
 #if !defined (NO_SHARED_LIBS) && ! defined (__ELF__)
 /* These definitions should work for either dynamic or static linking,
    whichever is the default for `cc -nostdlib'.  */
@@ -72,12 +63,6 @@ Boston, MA 02110-1301, USA.  */
 #define UNEXEC unexsunos4.o
 #define RUN_TIME_REMAP
 
-/* Try to make this work for both 0.9 and >0.9.  */
-#ifndef N_TRELOFF
-#define N_PAGSIZ(x) __LDPGSZ
-#define N_BSSADDR(x) (N_ALIGN(x, N_DATADDR(x)+x.a_data))
-#define N_TRELOFF(x) N_RELOFF(x)
-#endif
 #endif /* not NO_SHARED_LIBS and not ELF */
 
 #if !defined (NO_SHARED_LIBS) && defined (__ELF__)
@@ -95,9 +80,6 @@ Boston, MA 02110-1301, USA.  */
 #define START_FILES_1
 #define END_FILES_1
 #endif
-
-#define HAVE_WAIT_HEADER
-#define WAIT_USE_INT
 
 #define AMPERSAND_FULL_NAME
 

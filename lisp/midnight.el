@@ -1,7 +1,7 @@
 ;;; midnight.el --- run something every midnight, e.g., kill old buffers
 
 ;; Copyright (C) 1998, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Sam Steingold <sds@usa.net>
 ;; Maintainer: Sam Steingold <sds@usa.net>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -55,7 +53,7 @@ Use `cancel-timer' to stop it and `midnight-delay-set' to change
 the time when it is run.")
 
 (defcustom midnight-mode nil
-  "*Non-nil means run `midnight-hook' at midnight.
+  "Non-nil means run `midnight-hook' at midnight.
 Setting this variable outside customize has no effect;
 call `cancel-timer' or `timer-activate' on `midnight-timer' instead."
   :type 'boolean
@@ -83,7 +81,7 @@ call `cancel-timer' or `timer-activate' on `midnight-timer' instead."
 ;;; clean-buffer-list stuff
 
 (defcustom clean-buffer-list-delay-general 3
-  "*The number of days before any buffer becomes eligible for autokilling.
+  "The number of days before any buffer becomes eligible for autokilling.
 The autokilling is done by `clean-buffer-list' when is it in `midnight-hook'.
 Currently displayed and/or modified (unsaved) buffers, as well as buffers
 matching `clean-buffer-list-kill-never-buffer-names' and
@@ -92,7 +90,7 @@ matching `clean-buffer-list-kill-never-buffer-names' and
   :group 'midnight)
 
 (defcustom clean-buffer-list-delay-special 3600
-  "*The number of seconds before some buffers become eligible for autokilling.
+  "The number of seconds before some buffers become eligible for autokilling.
 Buffers matched by `clean-buffer-list-kill-regexps' and
 `clean-buffer-list-kill-buffer-names' are killed if they were last
 displayed more than this many seconds ago."
@@ -100,7 +98,7 @@ displayed more than this many seconds ago."
   :group 'midnight)
 
 (defcustom clean-buffer-list-kill-regexps nil
-  "*List of regexps saying which buffers will be killed at midnight.
+  "List of regexps saying which buffers will be killed at midnight.
 If buffer name matches a regexp in the list and the buffer was not displayed
 in the last `clean-buffer-list-delay-special' seconds, it is killed by
 `clean-buffer-list' when is it in `midnight-hook'.
@@ -115,7 +113,7 @@ See also `clean-buffer-list-kill-buffer-names',
 (defcustom clean-buffer-list-kill-buffer-names
     '("*Help*" "*Apropos*" "*Man " "*Buffer List*" "*Compile-Log*" "*info*"
       "*vc*" "*vc-diff*" "*diff*")
-  "*List of strings saying which buffers will be killed at midnight.
+  "List of strings saying which buffers will be killed at midnight.
 Buffers with names in this list, which were not displayed in the last
 `clean-buffer-list-delay-special' seconds, are killed by `clean-buffer-list'
 when is it in `midnight-hook'.
@@ -129,7 +127,7 @@ See also `clean-buffer-list-kill-regexps',
 
 (defcustom clean-buffer-list-kill-never-buffer-names
     '("*scratch*" "*Messages*" "*server*")
-  "*List of buffer names which will never be killed by `clean-buffer-list'.
+  "List of buffer names which will never be killed by `clean-buffer-list'.
 See also `clean-buffer-list-kill-never-regexps'.
 Note that this does override `clean-buffer-list-kill-regexps' and
 `clean-buffer-list-kill-buffer-names' so a buffer matching any of these
@@ -138,7 +136,7 @@ two lists will NOT be killed if it is also present in this list."
   :group 'midnight)
 
 (defcustom clean-buffer-list-kill-never-regexps '("^ \\*Minibuf-.*\\*$")
-  "*List of regexp saying which buffers will never be killed at midnight.
+  "List of regexp saying which buffers will never be killed at midnight.
 See also `clean-buffer-list-kill-never-buffer-names'.
 Killing is done by `clean-buffer-list'.
 Note that this does override `clean-buffer-list-kill-regexps' and
@@ -207,7 +205,8 @@ The default value is `clean-buffer-list'."
 
 (defun midnight-next ()
   "Return the number of seconds till the next midnight."
-  (multiple-value-bind (sec min hrs) (decode-time)
+  (multiple-value-bind (sec min hrs) 
+      (values-list (decode-time))
     (- (* 24 60 60) (* 60 60 hrs) (* 60 min) sec)))
 
 ;;;###autoload
@@ -224,7 +223,7 @@ to its second argument TM."
                      midnight-period 'run-hooks 'midnight-hook)))
 
 (defcustom midnight-delay 3600
-  "*The number of seconds after the midnight when the `midnight-timer' is run.
+  "The number of seconds after the midnight when the `midnight-timer' is run.
 You should set this variable before loading midnight.el, or
 set it by calling `midnight-delay-set', or use `custom'.
 If you wish, you can use a string instead, it will be passed as the
@@ -235,5 +234,5 @@ first argument to `run-at-time'."
 
 (provide 'midnight)
 
-;;; arch-tag: a5979be9-2890-46a3-ba84-791f0a4a6e80
+;; arch-tag: a5979be9-2890-46a3-ba84-791f0a4a6e80
 ;;; midnight.el ends here

@@ -1,7 +1,8 @@
 ;;; mh-mime.el --- MH-E MIME support
 
 ;; Copyright (C) 1993, 1995,
-;;  2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -10,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -60,6 +59,9 @@
 (autoload 'mail-decode-encoded-word-string "mail-parse")
 (autoload 'mail-header-parse-content-type "mail-parse")
 (autoload 'mail-header-strip "mail-parse")
+(autoload 'mail-strip-quoted-names "mail-utils")
+(autoload 'message-options-get "message")
+(autoload 'message-options-set "message")
 (autoload 'message-options-set-recipient "message")
 (autoload 'mm-decode-body "mm-bodies")
 (autoload 'mm-uu-dissect "mm-uu")
@@ -1220,16 +1222,11 @@ MESSAGE number."
                  mh-sent-from-msg
                (string-to-number message))))
     (cond ((integerp msg)
-           (if (string= "" description)
-               ;; Rationale: mml-attach-file constructs a malformed composition
-               ;; if the description string is empty.  This fixes SF #625168.
-               (mml-attach-file (format "%s%s/%d"
-                                        mh-user-path (substring folder 1) msg)
-                                "message/rfc822")
-             (mml-attach-file (format "%s%s/%d"
-                                      mh-user-path (substring folder 1) msg)
-                              "message/rfc822"
-                              description)))
+           (mml-attach-file (format "%s%s/%d"
+                                    mh-user-path (substring folder 1) msg)
+                            "message/rfc822"
+                            (if (string= "" description) nil description)
+                            "inline"))
           (t (error "The message number, %s, is not a integer" msg)))))
 
 (defun mh-mh-forward-message (&optional description folder messages)
@@ -1489,7 +1486,7 @@ The effects of this command can be undone by running
                        "mhn"
                        (if extra-args mh-mh-to-mime-args)
                        buffer-file-name)))
-  (revert-buffer t t)
+  (revert-buffer t t t)
   (message "Running %s...done" (if (mh-variant-p 'nmh) "mhbuild" "mhn"))
   (run-hooks 'mh-mh-to-mime-hook))
 
@@ -1535,7 +1532,7 @@ a prefix argument NOCONFIRM."
     (let ((buffer-read-only nil))
       (erase-buffer)
       (insert-file-contents backup-file))
-    (after-find-file nil)))
+    (after-find-file nil nil nil nil t)))
 
 ;; Shush compiler.
 (defvar mh-identity-pgg-default-user-id)
@@ -1621,8 +1618,23 @@ encoding if you wish by running this command.
 This action can be undone by running \\[undo]."
   (interactive)
   (require 'message)
-  (when mh-pgp-support-flag ;; This is only needed for PGP
-    (message-options-set-recipient))
+  (when mh-pgp-support-flag
+    ;; PGP requires actual e-mail addresses, not aliases.
+    ;; Parse the recipients and sender from the message.
+    (message-options-set-recipient)
+    ;; Do an alias lookup on sender (if From field is present).
+    (when (message-options-get 'message-sender)
+      (message-options-set 'message-sender
+                           (mail-strip-quoted-names
+                            (mh-alias-expand
+                             (message-options-get 'message-sender)))))
+    ;; Do an alias lookup on recipients
+    (message-options-set 'message-recipients
+                         (mapconcat
+                          '(lambda (ali)
+                             (mail-strip-quoted-names (mh-alias-expand ali)))
+                          (split-string (message-options-get 'message-recipients) "[, ]+")
+                          ", ")))
   (let ((saved-text (buffer-string))
         (buffer (current-buffer))
         (modified-flag (buffer-modified-p)))

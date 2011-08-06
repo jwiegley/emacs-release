@@ -1,14 +1,14 @@
 /* Record indices of function doc strings stored in a file.
    Copyright (C) 1985, 1986, 1993, 1994, 1995, 1997, 1998, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,15 +16,13 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 #include <config.h>
 
 #include <sys/types.h>
-#include <sys/file.h>	/* Must be after sys/types.h for USG and BSD4_1*/
+#include <sys/file.h>	/* Must be after sys/types.h for USG*/
 #include <ctype.h>
 
 #ifdef HAVE_FCNTL_H
@@ -42,7 +40,7 @@ Boston, MA 02110-1301, USA.  */
 #include "lisp.h"
 #include "buffer.h"
 #include "keyboard.h"
-#include "charset.h"
+#include "character.h"
 #include "keymap.h"
 
 #ifdef HAVE_INDEX
@@ -59,28 +57,6 @@ static Lisp_Object Vbuild_files;
 extern Lisp_Object Voverriding_local_map;
 
 extern Lisp_Object Qremap;
-
-/* For VMS versions with limited file name syntax,
-   convert the name to something VMS will allow.  */
-static void
-munge_doc_file_name (name)
-     char *name;
-{
-#ifdef VMS
-#ifndef NO_HYPHENS_IN_FILENAMES
-  extern char * sys_translate_unix (char *ufile);
-  strcpy (name, sys_translate_unix (name));
-#else /* NO_HYPHENS_IN_FILENAMES */
-  char *p = name;
-  while (*p)
-    {
-      if (*p == '-')
-	*p = '_';
-      p++;
-    }
-#endif /* NO_HYPHENS_IN_FILENAMES */
-#endif /* VMS */
-}
 
 /* Buffer used for reading from documentation file.  */
 static char *get_doc_string_buffer;
@@ -171,7 +147,6 @@ get_doc_string (filepos, unibyte, definition)
       name = (char *) alloca (minsize + SCHARS (file) + 8);
       strcpy (name, SDATA (Vdoc_directory));
       strcat (name, SDATA (file));
-      munge_doc_file_name (name);
     }
   else
     {
@@ -188,7 +163,6 @@ get_doc_string (filepos, unibyte, definition)
 	     So check in ../etc. */
 	  strcpy (name, "../etc/");
 	  strcat (name, SDATA (file));
-	  munge_doc_file_name (name);
 
 	  fd = emacs_open (name, O_RDONLY, 0);
 	}
@@ -447,6 +421,18 @@ string is passed through `substitute-command-keys'.  */)
       xsignal1 (Qinvalid_function, fun);
     }
 
+  /* Check for an advised function.  Its doc string
+     has an `ad-advice-info' text property.  */
+  if (STRINGP (doc))
+    {
+      Lisp_Object innerfunc;
+      innerfunc = Fget_text_property (make_number (0),
+				      intern ("ad-advice-info"),
+				      doc);
+      if (! NILP (innerfunc))
+	doc = call1 (intern ("ad-make-advised-docstring"), innerfunc);
+    }
+
   /* If DOC is 0, it's typically because of a dumped file missing
      from the DOC file (bug in src/Makefile.in).  */
   if (EQ (doc, make_number (0)))
@@ -562,7 +548,7 @@ store_function_docstring (fun, offset)
       /* This bytecode object must have a slot for the
 	 docstring, since we've found a docstring for it.  */
       if ((ASIZE (fun) & PSEUDOVECTOR_SIZE_MASK) > COMPILED_DOC_STRING)
-	XSETFASTINT (AREF (fun, COMPILED_DOC_STRING), offset);
+	ASET (fun, COMPILED_DOC_STRING, make_number (offset));
     }
 }
 
@@ -608,7 +594,6 @@ the same file name is found in the `doc-directory'.  */)
       strcpy (name, SDATA (Vdoc_directory));
     }
   strcat (name, SDATA (filename)); 	/*** Add this line ***/
-  munge_doc_file_name (name);
 
   /* Vbuild_files is nil when temacs is run, and non-nil after that.  */
   if (NILP (Vbuild_files))
@@ -692,15 +677,17 @@ the same file name is found in the `doc-directory'.  */)
               if (fromfile[len-1] == 'c')
                 fromfile[len-1] = 'o';
 
-              if (EQ (Fmember (build_string (fromfile), Vbuild_files), Qnil))
-                skip_file = 1;
-              else
-                skip_file = 0;
+	      skip_file = NILP (Fmember (build_string (fromfile),
+					 Vbuild_files));
             }
 
 	  sym = oblookup (Vobarray, p + 2,
 			  multibyte_chars_in_text (p + 2, end - p - 2),
 			  end - p - 2);
+	  /* Check skip_file so that when a function is defined several
+	     times in different files (typically, once in xterm, once in
+	     w32term, ...), we only pay attention to the one that
+	     matters.  */
 	  if (! skip_file && SYMBOLP (sym))
 	    {
 	      /* Attach a docstring to a variable?  */
@@ -884,7 +871,7 @@ a new string, without any text properties, is returned.  */)
 	  struct buffer *oldbuf;
 	  int start_idx;
 	  /* This is for computing the SHADOWS arg for describe_map_tree.  */
-	  Lisp_Object active_maps = Fcurrent_active_maps (Qnil);
+	  Lisp_Object active_maps = Fcurrent_active_maps (Qnil, Qnil);
 	  Lisp_Object earlier_maps;
 
 	  changed = 1;

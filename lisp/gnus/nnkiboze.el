@@ -1,17 +1,17 @@
 ;;; nnkiboze.el --- select virtual news access for Gnus
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -198,8 +196,7 @@
   "\"Usage: emacs -batch -l nnkiboze -f nnkiboze-generate-groups\".
 Finds out what articles are to be part of the nnkiboze groups."
   (interactive)
-  (let ((nnmail-spool-file nil)
-	(mail-sources nil)
+  (let ((mail-sources nil)
 	(gnus-use-dribble-file nil)
 	(gnus-read-active-file t)
 	(gnus-expert-user t))
@@ -227,7 +224,7 @@ Finds out what articles are to be part of the nnkiboze groups."
 			  "." gnus-score-file-suffix))))))
 
 (defun nnkiboze-generate-group (group &optional inhibit-list-groups)
-  (let* ((info (nth 2 (gnus-gethash group gnus-newsrc-hashtb)))
+  (let* ((info (gnus-get-info group))
 	 (newsrc-file (concat nnkiboze-directory
 			      (nnheader-translate-file-chars
 			       (concat group ".newsrc"))))
@@ -250,105 +247,102 @@ Finds out what articles are to be part of the nnkiboze groups."
     (unless info
       (error "No such group: %s" group))
     ;; Load the kiboze newsrc file for this group.
-    (mm-with-unibyte
-      (when (file-exists-p newsrc-file)
-	(load newsrc-file))
-      (let ((coding-system-for-write nnkiboze-file-coding-system))
-	(gnus-make-directory (file-name-directory nov-file))
-	(with-temp-file nov-file
-	  (when (file-exists-p nov-file)
-	    (insert-file-contents nov-file))
-	  (setq nov-buffer (current-buffer))
-	  ;; Go through the active hashtb and add new all groups that match the
-	  ;; kiboze regexp.
-	  (mapatoms
-	   (lambda (group)
-	     (and (string-match nnkiboze-regexp
-				(setq gname (symbol-name group))) ; Match
-		  (not (assoc gname nnkiboze-newsrc)) ; It isn't registered
-		  (numberp (car (symbol-value group))) ; It is active
-		  (or (> nnkiboze-level 7)
-		      (and (setq glevel
-				 (nth 1 (nth 2 (gnus-gethash
-						gname gnus-newsrc-hashtb))))
-			   (>= nnkiboze-level glevel)))
-		  (not (string-match "^nnkiboze:" gname)) ; Exclude kibozes
-		  (push (cons gname (1- (car (symbol-value group))))
-			nnkiboze-newsrc)))
-	   gnus-active-hashtb)
-	  ;; `newsrc' is set to the list of groups that possibly are
-	  ;; component groups to this kiboze group.  This list has elements
-	  ;; on the form `(GROUP . NUMBER)', where NUMBER is the highest
-	  ;; number that has been kibozed in GROUP in this kiboze group.
-	  (setq newsrc nnkiboze-newsrc)
-	  (while newsrc
-	    (if (not (setq active (gnus-gethash
-				   (caar newsrc) gnus-active-hashtb)))
-		;; This group isn't active after all, so we remove it from
-		;; the list of component groups.
-		(setq nnkiboze-newsrc (delq (car newsrc) nnkiboze-newsrc))
-	      (setq lowest (cdar newsrc))
-	      ;; Ok, we have a valid component group, so we jump to it.
-	      (switch-to-buffer gnus-group-buffer)
-	      (gnus-group-jump-to-group (caar newsrc))
-	      (gnus-message 3 "nnkiboze: Checking %s..." (caar newsrc))
-	      (setq ginfo (gnus-get-info (gnus-group-group-name))
-		    orig-info (gnus-copy-sequence ginfo)
-		    num-unread (car (gnus-gethash (caar newsrc)
-						  gnus-newsrc-hashtb)))
-	      (unwind-protect
-		  (progn
-		    ;; We set all list of article marks to nil.  Since we operate
-		    ;; on copies of the real lists, we can destroy anything we
-		    ;; want here.
-		    (when (nth 3 ginfo)
-		      (setcar (nthcdr 3 ginfo) nil))
-		    ;; We set the list of read articles to be what we expect for
-		    ;; this kiboze group -- either nil or `(1 . LOWEST)'.
-		    (when ginfo
-		      (setcar (nthcdr 2 ginfo)
-			      (and (not (= lowest 1)) (cons 1 lowest))))
-		    (when (and (or (not ginfo)
-				   (> (length (gnus-list-of-unread-articles
-					       (car ginfo)))
-				      0))
-			       (progn
-				 (ignore-errors
-				   (gnus-group-select-group nil))
-				 (eq major-mode 'gnus-summary-mode)))
-		      ;; We are now in the group where we want to be.
-		      (setq method (gnus-find-method-for-group
-				    gnus-newsgroup-name))
-		      (when (eq method gnus-select-method)
-			(setq method nil))
-		      ;; We go through the list of scored articles.
-		      (while gnus-newsgroup-scored
-			(when (> (caar gnus-newsgroup-scored) lowest)
-			  ;; If it has a good score, then we enter this article
-			  ;; into the kiboze group.
-			  (nnkiboze-enter-nov
-			   nov-buffer
-			   (gnus-summary-article-header
-			    (caar gnus-newsgroup-scored))
-			   gnus-newsgroup-name))
-			(setq gnus-newsgroup-scored (cdr gnus-newsgroup-scored)))
-		      ;; That's it.  We exit this group.
-		      (when (eq major-mode 'gnus-summary-mode)
-			(kill-buffer (current-buffer)))))
-		;; Restore the proper info.
-		(when ginfo
-		  (setcdr ginfo (cdr orig-info)))
-		(setcar (gnus-gethash (caar newsrc) gnus-newsrc-hashtb)
-			num-unread)))
-	    (setcdr (car newsrc) (cdr active))
-	    (gnus-message 3 "nnkiboze: Checking %s...done" (caar newsrc))
-	    (setq newsrc (cdr newsrc)))))
-      ;; We save the kiboze newsrc for this group.
-      (gnus-make-directory (file-name-directory newsrc-file))
-      (with-temp-file newsrc-file
-	(insert "(setq nnkiboze-newsrc '")
-	(gnus-prin1 nnkiboze-newsrc)
-	(insert ")\n")))
+    (when (file-exists-p newsrc-file)
+      (load newsrc-file))
+    (let ((coding-system-for-write nnkiboze-file-coding-system))
+      (gnus-make-directory (file-name-directory nov-file))
+      (with-temp-file nov-file
+        (mm-disable-multibyte)
+        (when (file-exists-p nov-file)
+          (insert-file-contents nov-file))
+        (setq nov-buffer (current-buffer))
+        ;; Go through the active hashtb and add new all groups that match the
+        ;; kiboze regexp.
+        (mapatoms
+         (lambda (group)
+           (and (string-match nnkiboze-regexp
+                              (setq gname (symbol-name group))) ; Match
+                (not (assoc gname nnkiboze-newsrc)) ; It isn't registered
+                (numberp (car (symbol-value group))) ; It is active
+                (or (> nnkiboze-level 7)
+                    (and (setq glevel
+                               (gnus-info-level (gnus-get-info gname)))
+                         (>= nnkiboze-level glevel)))
+                (not (string-match "^nnkiboze:" gname)) ; Exclude kibozes
+                (push (cons gname (1- (car (symbol-value group))))
+                      nnkiboze-newsrc)))
+         gnus-active-hashtb)
+        ;; `newsrc' is set to the list of groups that possibly are
+        ;; component groups to this kiboze group.  This list has elements
+        ;; on the form `(GROUP . NUMBER)', where NUMBER is the highest
+        ;; number that has been kibozed in GROUP in this kiboze group.
+        (setq newsrc nnkiboze-newsrc)
+        (while newsrc
+          (if (not (setq active (gnus-active (caar newsrc))))
+              ;; This group isn't active after all, so we remove it from
+              ;; the list of component groups.
+              (setq nnkiboze-newsrc (delq (car newsrc) nnkiboze-newsrc))
+            (setq lowest (cdar newsrc))
+            ;; Ok, we have a valid component group, so we jump to it.
+            (switch-to-buffer gnus-group-buffer)
+            (gnus-group-jump-to-group (caar newsrc))
+            (gnus-message 3 "nnkiboze: Checking %s..." (caar newsrc))
+            (setq ginfo (gnus-get-info (gnus-group-group-name))
+                  orig-info (gnus-copy-sequence ginfo)
+                  num-unread (gnus-group-unread (caar newsrc)))
+            (unwind-protect
+                (progn
+                  ;; We set all list of article marks to nil.  Since we operate
+                  ;; on copies of the real lists, we can destroy anything we
+                  ;; want here.
+                  (when (nth 3 ginfo)
+                    (setcar (nthcdr 3 ginfo) nil))
+                  ;; We set the list of read articles to be what we expect for
+                  ;; this kiboze group -- either nil or `(1 . LOWEST)'.
+                  (when ginfo
+                    (setcar (nthcdr 2 ginfo)
+                            (and (not (= lowest 1)) (cons 1 lowest))))
+                  (when (and (or (not ginfo)
+                                 (> (length (gnus-list-of-unread-articles
+                                             (car ginfo)))
+                                    0))
+                             (progn
+                               (ignore-errors
+                                 (gnus-group-select-group nil))
+                               (eq major-mode 'gnus-summary-mode)))
+                    ;; We are now in the group where we want to be.
+                    (setq method (gnus-find-method-for-group
+                                  gnus-newsgroup-name))
+                    (when (eq method gnus-select-method)
+                      (setq method nil))
+                    ;; We go through the list of scored articles.
+                    (while gnus-newsgroup-scored
+                      (when (> (caar gnus-newsgroup-scored) lowest)
+                        ;; If it has a good score, then we enter this article
+                        ;; into the kiboze group.
+                        (nnkiboze-enter-nov
+                         nov-buffer
+                         (gnus-summary-article-header
+                          (caar gnus-newsgroup-scored))
+                         gnus-newsgroup-name))
+                      (setq gnus-newsgroup-scored (cdr gnus-newsgroup-scored)))
+                    ;; That's it.  We exit this group.
+                    (when (eq major-mode 'gnus-summary-mode)
+                      (kill-buffer (current-buffer)))))
+              ;; Restore the proper info.
+              (when ginfo
+                (setcdr ginfo (cdr orig-info)))
+              (setcar (gnus-group-entry (caar newsrc)) num-unread)))
+          (setcdr (car newsrc) (cdr active))
+          (gnus-message 3 "nnkiboze: Checking %s...done" (caar newsrc))
+          (setq newsrc (cdr newsrc)))))
+    ;; We save the kiboze newsrc for this group.
+    (gnus-make-directory (file-name-directory newsrc-file))
+    (with-temp-file newsrc-file
+      (mm-disable-multibyte)
+      (insert "(setq nnkiboze-newsrc '")
+      (gnus-prin1 nnkiboze-newsrc)
+      (insert ")\n"))
   (unless inhibit-list-groups
     (save-excursion
       (set-buffer gnus-group-buffer)
@@ -393,5 +387,5 @@ Finds out what articles are to be part of the nnkiboze groups."
 
 (provide 'nnkiboze)
 
-;;; arch-tag: 66068271-bdc9-4801-bcde-779702e73a05
+;; arch-tag: 66068271-bdc9-4801-bcde-779702e73a05
 ;;; nnkiboze.el ends here

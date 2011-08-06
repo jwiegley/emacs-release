@@ -1,13 +1,13 @@
 /* Terminal hooks for GNU Emacs on the Microsoft W32 API.
-   Copyright (C) 1992, 1999, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+   Copyright (C) 1992, 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+                 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,10 +15,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
+/*
    Tim Fleehart (apollo@online.com)		1-17-92
    Geoff Voelker (voelker@cs.washington.edu)	9-12-93
 */
@@ -32,14 +31,13 @@ Boston, MA 02110-1301, USA.
 #include <string.h>
 
 #include "lisp.h"
-#include "charset.h"
+#include "character.h"
 #include "coding.h"
 #include "disptab.h"
-#include "termhooks.h"
-#include "dispextern.h"
-/* Disable features in frame.h that require a Window System.  */
-#undef HAVE_WINDOW_SYSTEM
 #include "frame.h"
+#include "termhooks.h"
+#include "termchar.h"
+#include "dispextern.h"
 #include "w32inevt.h"
 
 /* from window.c */
@@ -51,21 +49,17 @@ extern int detect_input_pending ();
 /* from sysdep.c */
 extern int read_input_pending ();
 
-extern struct frame * updating_frame;
-extern int meta_key;
-
-static void w32con_move_cursor (int row, int col);
-static void w32con_clear_to_end (void);
-static void w32con_clear_frame (void);
-static void w32con_clear_end_of_line (int);
-static void w32con_ins_del_lines (int vpos, int n);
-static void w32con_insert_glyphs (struct glyph *start, int len);
-static void w32con_write_glyphs (struct glyph *string, int len);
-static void w32con_delete_glyphs (int n);
-void w32_sys_ring_bell (void);
-static void w32con_reset_terminal_modes (void);
-static void w32con_set_terminal_modes (void);
-static void w32con_set_terminal_window (int size);
+static void w32con_move_cursor (struct frame *f, int row, int col);
+static void w32con_clear_to_end (struct frame *f);
+static void w32con_clear_frame (struct frame *f);
+static void w32con_clear_end_of_line (struct frame *f, int);
+static void w32con_ins_del_lines (struct frame *f, int vpos, int n);
+static void w32con_insert_glyphs (struct frame *f, struct glyph *start, int len);
+static void w32con_write_glyphs (struct frame *f, struct glyph *string, int len);
+static void w32con_delete_glyphs (struct frame *f, int n);
+static void w32con_reset_terminal_modes (struct terminal *t);
+static void w32con_set_terminal_modes (struct terminal *t);
+static void w32con_set_terminal_window (struct frame *f, int size);
 static void w32con_update_begin (struct frame * f);
 static void w32con_update_end (struct frame * f);
 static WORD w32_face_attributes (struct frame *f, int face_id);
@@ -78,6 +72,8 @@ static DWORD   prev_console_mode;
 #ifndef USE_SEPARATE_SCREEN
 static CONSOLE_CURSOR_INFO prev_console_cursor;
 #endif
+
+extern Lisp_Object Vtty_defined_color_alist;
 
 /* Determine whether to make frame dimensions match the screen buffer,
    or the current window size.  The former is desirable when running
@@ -99,38 +95,31 @@ ctrl_c_handler (unsigned long type)
 	  && (type == CTRL_C_EVENT || type == CTRL_BREAK_EVENT));
 }
 
-/* If we're updating a frame, use it as the current frame
-   Otherwise, use the selected frame.  */
-#define PICK_FRAME() (updating_frame ? updating_frame : SELECTED_FRAME ())
 
-/* Move the cursor to (row, col).  */
+/* Move the cursor to (ROW, COL) on FRAME.  */
 static void
-w32con_move_cursor (int row, int col)
+w32con_move_cursor (struct frame *f, int row, int col)
 {
   cursor_coords.X = col;
   cursor_coords.Y = row;
 
-  if (updating_frame == (struct frame *) NULL)
-    {
-      SetConsoleCursorPosition (cur_screen, cursor_coords);
-    }
+  /* TODO: for multi-tty support, cur_screen should be replaced with a
+     reference to the terminal for this frame.  */
+  SetConsoleCursorPosition (cur_screen, cursor_coords);
 }
 
 /* Clear from cursor to end of screen.  */
 static void
-w32con_clear_to_end (void)
+w32con_clear_to_end (struct frame *f)
 {
-  struct frame * f = PICK_FRAME ();
-
-  w32con_clear_end_of_line (FRAME_COLS (f) - 1);
-  w32con_ins_del_lines (cursor_coords.Y, FRAME_LINES (f) - cursor_coords.Y - 1);
+  w32con_clear_end_of_line (f, FRAME_COLS (f) - 1);
+  w32con_ins_del_lines (f, cursor_coords.Y, FRAME_LINES (f) - cursor_coords.Y - 1);
 }
 
 /* Clear the frame.  */
 static void
-w32con_clear_frame (void)
+w32con_clear_frame (struct frame *f)
 {
-  struct frame *  f = PICK_FRAME ();
   COORD	     dest;
   int        n;
   DWORD      r;
@@ -145,7 +134,7 @@ w32con_clear_frame (void)
   FillConsoleOutputAttribute (cur_screen, char_attr_normal, n, dest, &r);
   FillConsoleOutputCharacter (cur_screen, ' ', n, dest, &r);
 
-  w32con_move_cursor (0, 0);
+  w32con_move_cursor (f, 0, 0);
 }
 
 
@@ -154,7 +143,7 @@ static BOOL  ceol_initialized = FALSE;
 
 /* Clear from Cursor to end (what's "standout marker"?).  */
 static void
-w32con_clear_end_of_line (int end)
+w32con_clear_end_of_line (struct frame *f, int end)
 {
   if (!ceol_initialized)
     {
@@ -165,18 +154,18 @@ w32con_clear_end_of_line (int end)
         }
       ceol_initialized = TRUE;
     }
-  w32con_write_glyphs (glyph_base, end - cursor_coords.X);	/* fencepost ?	*/
+  w32con_write_glyphs (f, glyph_base, end - cursor_coords.X);	/* fencepost ?	*/
 }
 
 /* Insert n lines at vpos. if n is negative delete -n lines.  */
 static void
-w32con_ins_del_lines (int vpos, int n)
+w32con_ins_del_lines (struct frame *f, int vpos, int n)
 {
   int	     i, nb;
   SMALL_RECT scroll;
+  SMALL_RECT clip;
   COORD	     dest;
   CHAR_INFO  fill;
-  struct frame *  f = PICK_FRAME ();
 
   if (n < 0)
     {
@@ -190,15 +179,16 @@ w32con_ins_del_lines (int vpos, int n)
       scroll.Bottom = FRAME_LINES (f) - n;
       dest.Y = vpos + n;
     }
-  scroll.Left = 0;
-  scroll.Right = FRAME_COLS (f);
+  clip.Top = clip.Left = scroll.Left = 0;
+  clip.Right = scroll.Right = FRAME_COLS (f);
+  clip.Bottom = FRAME_LINES (f);
 
   dest.X = 0;
 
   fill.Char.AsciiChar = 0x20;
   fill.Attributes = char_attr_normal;
 
-  ScrollConsoleScreenBuffer (cur_screen, &scroll, NULL, dest, &fill);
+  ScrollConsoleScreenBuffer (cur_screen, &scroll, &clip, dest, &fill);
 
   /* Here we have to deal with a w32 console flake: If the scroll
      region looks like abc and we scroll c to a and fill with d we get
@@ -213,8 +203,8 @@ w32con_ins_del_lines (int vpos, int n)
         {
 	  for (i = scroll.Bottom; i < dest.Y; i++)
             {
-	      w32con_move_cursor (i, 0);
-	      w32con_clear_end_of_line (FRAME_COLS (f));
+	      w32con_move_cursor (f, i, 0);
+	      w32con_clear_end_of_line (f, FRAME_COLS (f));
             }
         }
     }
@@ -226,8 +216,8 @@ w32con_ins_del_lines (int vpos, int n)
         {
 	  for (i = nb; i < scroll.Top; i++)
             {
-	      w32con_move_cursor (i, 0);
-	      w32con_clear_end_of_line (FRAME_COLS (f));
+	      w32con_move_cursor (f, i, 0);
+	      w32con_clear_end_of_line (f, FRAME_COLS (f));
             }
         }
     }
@@ -242,17 +232,17 @@ w32con_ins_del_lines (int vpos, int n)
 #define	RIGHT	0
 
 static void
-scroll_line (int dist, int direction)
+scroll_line (struct frame *f, int dist, int direction)
 {
   /* The idea here is to implement a horizontal scroll in one line to
      implement delete and half of insert.  */
-  SMALL_RECT scroll;
+  SMALL_RECT scroll, clip;
   COORD	     dest;
   CHAR_INFO  fill;
-  struct frame *  f = PICK_FRAME ();
 
-  scroll.Top = cursor_coords.Y;
-  scroll.Bottom = cursor_coords.Y;
+  clip.Top = scroll.Top = clip.Bottom = scroll.Bottom = cursor_coords.Y;
+  clip.Left = 0;
+  clip.Right = FRAME_COLS (f);
 
   if (direction == LEFT)
     {
@@ -271,15 +261,15 @@ scroll_line (int dist, int direction)
   fill.Char.AsciiChar = 0x20;
   fill.Attributes = char_attr_normal;
 
-  ScrollConsoleScreenBuffer (cur_screen, &scroll, NULL, dest, &fill);
+  ScrollConsoleScreenBuffer (cur_screen, &scroll, &clip, dest, &fill);
 }
 
 
 /* If start is zero insert blanks instead of a string at start ?. */
 static void
-w32con_insert_glyphs (register struct glyph *start, register int len)
+w32con_insert_glyphs (struct frame *f, register struct glyph *start, register int len)
 {
-  scroll_line (len, RIGHT);
+  scroll_line (f, len, RIGHT);
 
   /* Move len chars to the right starting at cursor_coords, fill with blanks */
   if (start)
@@ -287,11 +277,11 @@ w32con_insert_glyphs (register struct glyph *start, register int len)
       /* Print the first len characters of start, cursor_coords.X adjusted
 	 by write_glyphs.  */
 
-      w32con_write_glyphs (start, len);
+      w32con_write_glyphs (f, start, len);
     }
   else
     {
-      w32con_clear_end_of_line (cursor_coords.X + len);
+      w32con_clear_end_of_line (f, cursor_coords.X + len);
     }
 }
 
@@ -299,11 +289,10 @@ extern unsigned char *encode_terminal_code P_ ((struct glyph *, int,
 						struct coding_system *));
 
 static void
-w32con_write_glyphs (register struct glyph *string, register int len)
+w32con_write_glyphs (struct frame *f, register struct glyph *string,
+                     register int len)
 {
-  int produced, consumed;
   DWORD r;
-  struct frame * f = PICK_FRAME ();
   WORD char_attr;
   unsigned char *conversion_buffer;
   struct coding_system *coding;
@@ -314,11 +303,11 @@ w32con_write_glyphs (register struct glyph *string, register int len)
   /* If terminal_coding does any conversion, use it, otherwise use
      safe_terminal_coding.  We can't use CODING_REQUIRE_ENCODING here
      because it always return 1 if the member src_multibyte is 1.  */
-  coding = (terminal_coding.common_flags & CODING_REQUIRE_ENCODING_MASK
-	    ? &terminal_coding : &safe_terminal_coding);
+  coding = (FRAME_TERMINAL_CODING (f)->common_flags & CODING_REQUIRE_ENCODING_MASK
+	    ? FRAME_TERMINAL_CODING (f) : &safe_terminal_coding);
   /* The mode bit CODING_MODE_LAST_BLOCK should be set to 1 only at
      the tail.  */
-  terminal_coding.mode &= ~CODING_MODE_LAST_BLOCK;
+  coding->mode &= ~CODING_MODE_LAST_BLOCK;
 
   while (len > 0)
     {
@@ -360,7 +349,7 @@ w32con_write_glyphs (register struct glyph *string, register int len)
 	    }
 
 	  cursor_coords.X += coding->produced;
-	  w32con_move_cursor (cursor_coords.Y, cursor_coords.X);
+	  w32con_move_cursor (f, cursor_coords.Y, cursor_coords.X);
 	}
       len -= n;
       string += n;
@@ -369,20 +358,20 @@ w32con_write_glyphs (register struct glyph *string, register int len)
 
 
 static void
-w32con_delete_glyphs (int n)
+w32con_delete_glyphs (struct frame *f, int n)
 {
   /* delete chars means scroll chars from cursor_coords.X + n to
      cursor_coords.X, anything beyond the edge of the screen should
      come out empty...  */
 
-  scroll_line (n, LEFT);
+  scroll_line (f, n, LEFT);
 }
 
 static unsigned int sound_type = 0xFFFFFFFF;
 #define MB_EMACS_SILENT (0xFFFFFFFF - 1)
 
 void
-w32_sys_ring_bell (void)
+w32_sys_ring_bell (struct frame *f)
 {
   if (sound_type == 0xFFFFFFFF)
     {
@@ -428,18 +417,38 @@ SOUND is nil to use the normal beep.  */)
 }
 
 static void
-w32con_reset_terminal_modes (void)
+w32con_reset_terminal_modes (struct terminal *t)
 {
+  COORD dest;
+  CONSOLE_SCREEN_BUFFER_INFO info;
+  int n;
+  DWORD r;
+
+  /* Clear the complete screen buffer.  This is required because Emacs
+     sets the cursor position to the top of the buffer, but there might
+     be other output below the bottom of the Emacs frame if the screen buffer
+     is larger than the window size.  */
+  GetConsoleScreenBufferInfo (cur_screen, &info);
+  dest.X = 0;
+  dest.Y = 0;
+  n = info.dwSize.X * info.dwSize.Y;
+
+  FillConsoleOutputAttribute (cur_screen, char_attr_normal, n, dest, &r);
+  FillConsoleOutputCharacter (cur_screen, ' ', n, dest, &r);
+  /* Now that the screen is clear, put the cursor at the top.  */
+  SetConsoleCursorPosition (cur_screen, dest);
+  
 #ifdef USE_SEPARATE_SCREEN
   SetConsoleActiveScreenBuffer (prev_screen);
 #else
   SetConsoleCursorInfo (prev_screen, &prev_console_cursor);
 #endif
+
   SetConsoleMode (keyboard_handle, prev_console_mode);
 }
 
 static void
-w32con_set_terminal_modes (void)
+w32con_set_terminal_modes (struct terminal *t)
 {
   CONSOLE_CURSOR_INFO cci;
 
@@ -473,7 +482,7 @@ w32con_update_end (struct frame * f)
 }
 
 static void
-w32con_set_terminal_window (int size)
+w32con_set_terminal_window (struct frame *f, int size)
 {
 }
 
@@ -496,32 +505,31 @@ w32_face_attributes (f, face_id)
 
   char_attr = char_attr_normal;
 
-  if (face->foreground != FACE_TTY_DEFAULT_FG_COLOR
-      && face->foreground != FACE_TTY_DEFAULT_COLOR)
-    char_attr = (char_attr & 0xfff0) + (face->foreground % 16);
-
-  if (face->background != FACE_TTY_DEFAULT_BG_COLOR
-      && face->background != FACE_TTY_DEFAULT_COLOR)
-    char_attr = (char_attr & 0xff0f) + ((face->background % 16) << 4);
-
-
-  /* NTEMACS_TODO: Faces defined during startup get both foreground
-     and background of 0. Need a better way around this - for now detect
-     the problem and invert one of the faces to make the text readable. */
-  if (((char_attr & 0x00f0) >> 4) == (char_attr & 0x000f))
-    char_attr ^= 0x0007;
-
+  /* Reverse the default color if requested. If background and
+     foreground are specified, then they have been reversed already.  */
   if (face->tty_reverse_p)
     char_attr = (char_attr & 0xff00) + ((char_attr & 0x000f) << 4)
       + ((char_attr & 0x00f0) >> 4);
 
+  /* Before the terminal is properly initialized, all colors map to 0.
+     Don't try to resolve them.  */
+  if (NILP (Vtty_defined_color_alist))
+    return char_attr;
+
+  /* Colors should be in the range 0...15 unless they are one of
+     FACE_TTY_DEFAULT_COLOR, FACE_TTY_DEFAULT_FG_COLOR or
+     FACE_TTY_DEFAULT_BG_COLOR.  Other out of range colors are
+     invalid, so it is better to use the default color if they ever
+     get through to here.  */
+  if (face->foreground >= 0 && face->foreground < 16)
+    char_attr = (char_attr & 0xfff0) + face->foreground;
+
+  if (face->background >= 0 && face->background < 16)
+    char_attr = (char_attr & 0xff0f) + (face->background << 4);
+
   return char_attr;
 }
 
-
-/* Emulation of some X window features from xfns.c and xfaces.c.  */
-
-extern char unspecified_fg[], unspecified_bg[];
 
 
 /* Given a color index, return its standard name.  */
@@ -547,28 +555,38 @@ vga_stdcolor_name (int idx)
 typedef int (*term_hook) ();
 
 void
-initialize_w32_display (void)
+initialize_w32_display (struct terminal *term)
 {
   CONSOLE_SCREEN_BUFFER_INFO	info;
 
-  cursor_to_hook		= w32con_move_cursor;
-  raw_cursor_to_hook		= w32con_move_cursor;
-  clear_to_end_hook		= w32con_clear_to_end;
-  clear_frame_hook		= w32con_clear_frame;
-  clear_end_of_line_hook	= w32con_clear_end_of_line;
-  ins_del_lines_hook		= w32con_ins_del_lines;
-  insert_glyphs_hook		= w32con_insert_glyphs;
-  write_glyphs_hook		= w32con_write_glyphs;
-  delete_glyphs_hook		= w32con_delete_glyphs;
-  ring_bell_hook		= w32_sys_ring_bell;
-  reset_terminal_modes_hook	= w32con_reset_terminal_modes;
-  set_terminal_modes_hook	= w32con_set_terminal_modes;
-  set_terminal_window_hook	= w32con_set_terminal_window;
-  update_begin_hook		= w32con_update_begin;
-  update_end_hook		= w32con_update_end;
+  term->rif = 0; /* No window based redisplay on the console.  */
+  term->cursor_to_hook		= w32con_move_cursor;
+  term->raw_cursor_to_hook		= w32con_move_cursor;
+  term->clear_to_end_hook		= w32con_clear_to_end;
+  term->clear_frame_hook		= w32con_clear_frame;
+  term->clear_end_of_line_hook	= w32con_clear_end_of_line;
+  term->ins_del_lines_hook		= w32con_ins_del_lines;
+  term->insert_glyphs_hook		= w32con_insert_glyphs;
+  term->write_glyphs_hook		= w32con_write_glyphs;
+  term->delete_glyphs_hook		= w32con_delete_glyphs;
+  term->ring_bell_hook		= w32_sys_ring_bell;
+  term->reset_terminal_modes_hook	= w32con_reset_terminal_modes;
+  term->set_terminal_modes_hook	= w32con_set_terminal_modes;
+  term->set_terminal_window_hook	= w32con_set_terminal_window;
+  term->update_begin_hook		= w32con_update_begin;
+  term->update_end_hook		= w32con_update_end;
 
-  read_socket_hook = w32_console_read_socket;
-  mouse_position_hook = w32_console_mouse_position;
+  term->read_socket_hook = w32_console_read_socket;
+  term->mouse_position_hook = w32_console_mouse_position;
+
+  /* The following are not used on the console.  */
+  term->frame_rehighlight_hook = 0;
+  term->frame_raise_lower_hook = 0;
+  term->set_vertical_scroll_bar_hook = 0;
+  term->condemn_scroll_bars_hook = 0;
+  term->redeem_scroll_bar_hook = 0;
+  term->judge_scroll_bars_hook = 0;
+  term->frame_up_to_date_hook = 0;
 
   /* Initialize interrupt_handle.  */
   init_crit ();
@@ -633,7 +651,6 @@ initialize_w32_display (void)
 
   GetConsoleScreenBufferInfo (cur_screen, &info);
 
-  meta_key = 1;
   char_attr_normal = info.wAttributes;
 
   /* Determine if the info returned by GetConsoleScreenBufferInfo
@@ -673,6 +690,7 @@ initialize_w32_display (void)
   w32_initialize_display_info (build_string ("Console"));
 
 }
+
 
 DEFUN ("set-screen-color", Fset_screen_color, Sset_screen_color, 2, 2, 0,
        doc: /* Set screen colors.  */)

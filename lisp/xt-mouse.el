@@ -1,17 +1,17 @@
 ;;; xt-mouse.el --- support the mouse when emacs run in an xterm
 
 ;; Copyright (C) 1994, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Keywords: mouse, terminals
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -43,7 +41,7 @@
 
 ;;; Code:
 
-(define-key function-key-map "\e[M" 'xterm-mouse-translate)
+(defvar xterm-mouse-debug-buffer nil)
 
 (defvar xterm-mouse-last)
 
@@ -75,7 +73,7 @@
 	    (error "Unexpected escape sequence from XTerm")))
 
 	(let* ((click (if is-click down (xterm-mouse-event)))
-	       (click-command (nth 0 click))
+	       ;; (click-command (nth 0 click))
 	       (click-data (nth 1 click))
 	       (click-where (nth 1 click-data)))
 	  (if (memq down-binding '(nil ignore))
@@ -95,16 +93,20 @@
 		       (list (intern (format "drag-mouse-%d"
 					     (+ 1 xterm-mouse-last)))
 			     down-data click-data)))))
+	    (if xterm-mouse-debug-buffer
+		(print unread-command-events xterm-mouse-debug-buffer))
 	    (if (and (symbolp down-where)
 		     (consp down-where))
 		(vector (list down-where down-data) down)
 	      (vector down))))))))
 
-(defvar xterm-mouse-x 0
-  "Position of last xterm mouse event relative to the frame.")
-
-(defvar xterm-mouse-y 0
-  "Position of last xterm mouse event relative to the frame.")
+;; These two variables have been converted to terminal parameters.
+;;
+;;(defvar xterm-mouse-x 0
+;;  "Position of last xterm mouse event relative to the frame.")
+;;
+;;(defvar xterm-mouse-y 0
+;;  "Position of last xterm mouse event relative to the frame.")
 
 (defvar xt-mouse-epoch nil)
 
@@ -112,7 +114,9 @@
 
 (defun xterm-mouse-position-function (pos)
   "Bound to `mouse-position-function' in XTerm mouse mode."
-  (setcdr pos (cons xterm-mouse-x xterm-mouse-y))
+  (when (terminal-parameter nil 'xterm-mouse-x)
+    (setcdr pos (cons (terminal-parameter nil 'xterm-mouse-x)
+		      (terminal-parameter nil 'xterm-mouse-y))))
   pos)
 
 ;; read xterm sequences above ascii 127 (#x7f)
@@ -137,7 +141,6 @@
             (fdiff (- f (* 1.0 maxwrap dbig))))
        (+ (truncate fdiff) (* maxwrap dbig))))))
 
-
 (defun xterm-mouse-event ()
   "Convert XTerm mouse event to Emacs mouse event."
   (let* ((type (- (xterm-mouse-event-read) #o40))
@@ -146,11 +149,11 @@
 	 ;; Emulate timestamp information.  This is accurate enough
 	 ;; for default value of mouse-1-click-follows-link (450msec).
 	 (timestamp (xterm-mouse-truncate-wrap
-		     (* 1000
-			(- (float-time)
-			   (or xt-mouse-epoch
-			       (setq xt-mouse-epoch (float-time)))))))
-	 (mouse (intern
+                     (* 1000
+                        (- (float-time)
+                           (or xt-mouse-epoch
+                               (setq xt-mouse-epoch (float-time)))))))
+         (mouse (intern
 		 ;; For buttons > 3, the release-event looks
 		 ;; differently (see xc/programs/xterm/button.c,
 		 ;; function EditorButton), and there seems to come in
@@ -163,7 +166,10 @@
 		       ((= type 11)
 			(format "mouse-%d" (- xterm-mouse-last 7)))
 		       ((= type 3)
-			(format "mouse-%d" (+ 1 xterm-mouse-last)))
+			;; For buttons > 5 xterm only reports a
+			;; button-release event.  Avoid error by mapping
+			;; them all to mouse-1.
+			(format "mouse-%d" (+ 1 (or xterm-mouse-last 0))))
 		       (t
 			(setq xterm-mouse-last type)
 			(format "down-mouse-%d" (+ 1 type))))))
@@ -172,8 +178,8 @@
          (left (nth 0 ltrb))
          (top (nth 1 ltrb)))
 
-    (setq xterm-mouse-x x
-	  xterm-mouse-y y)
+    (set-terminal-parameter nil 'xterm-mouse-x x)
+    (set-terminal-parameter nil 'xterm-mouse-y y)
     (setq
      last-input-event
      (list mouse
@@ -197,9 +203,21 @@ single clicks are supported.  When turned on, the normal xterm
 mouse functionality for such clicks is still available by holding
 down the SHIFT key while pressing the mouse button."
   :global t :group 'mouse
+  (let ((do-hook (if xterm-mouse-mode 'add-hook 'remove-hook)))
+    (funcall do-hook 'terminal-init-xterm-hook
+             'turn-on-xterm-mouse-tracking-on-terminal)
+    (funcall do-hook 'delete-terminal-functions
+             'turn-off-xterm-mouse-tracking-on-terminal)
+    (funcall do-hook 'suspend-tty-functions
+             'turn-off-xterm-mouse-tracking-on-terminal)
+    (funcall do-hook 'resume-tty-functions
+             'turn-on-xterm-mouse-tracking-on-terminal)
+    (funcall do-hook 'suspend-hook 'turn-off-xterm-mouse-tracking)
+    (funcall do-hook 'suspend-resume-hook 'turn-on-xterm-mouse-tracking)
+    (funcall do-hook 'kill-emacs-hook 'turn-off-xterm-mouse-tracking))
   (if xterm-mouse-mode
       ;; Turn it on
-      (unless window-system
+      (progn
 	(setq mouse-position-function #'xterm-mouse-position-function)
 	(turn-on-xterm-mouse-tracking))
     ;; Turn it off
@@ -208,18 +226,42 @@ down the SHIFT key while pressing the mouse button."
 
 (defun turn-on-xterm-mouse-tracking ()
   "Enable Emacs mouse tracking in xterm."
-  (if xterm-mouse-mode
-      (send-string-to-terminal "\e[?1000h")))
+  (dolist (terminal (terminal-list))
+    (turn-on-xterm-mouse-tracking-on-terminal terminal)))
 
 (defun turn-off-xterm-mouse-tracking (&optional force)
   "Disable Emacs mouse tracking in xterm."
-  (if (or force xterm-mouse-mode)
-      (send-string-to-terminal "\e[?1000l")))
+  (dolist (terminal (terminal-list))
+    (turn-off-xterm-mouse-tracking-on-terminal terminal)))
 
-;; Restore normal mouse behaviour outside Emacs.
-(add-hook 'suspend-hook 'turn-off-xterm-mouse-tracking)
-(add-hook 'suspend-resume-hook 'turn-on-xterm-mouse-tracking)
-(add-hook 'kill-emacs-hook 'turn-off-xterm-mouse-tracking)
+(defun turn-on-xterm-mouse-tracking-on-terminal (&optional terminal)
+  "Enable xterm mouse tracking on TERMINAL."
+  (when (and xterm-mouse-mode (eq t (terminal-live-p terminal))
+	     ;; Avoid the initial terminal which is not a termcap device.
+	     ;; FIXME: is there more elegant way to detect the initial terminal?
+	     (not (string= (terminal-name terminal) "initial_terminal")))
+    (unless (terminal-parameter terminal 'xterm-mouse-mode)
+      ;; Simulate selecting a terminal by selecting one of its frames ;-(
+      (with-selected-frame (car (frames-on-display-list terminal))
+        (define-key input-decode-map "\e[M" 'xterm-mouse-translate))
+      (set-terminal-parameter terminal 'xterm-mouse-mode t))
+    (send-string-to-terminal "\e[?1000h" terminal)))
+
+(defun turn-off-xterm-mouse-tracking-on-terminal (terminal)
+  "Disable xterm mouse tracking on TERMINAL."
+  ;; Only send the disable command to those terminals to which we've already
+  ;; sent the enable command.
+  (when (and (terminal-parameter terminal 'xterm-mouse-mode)
+             (eq t (terminal-live-p terminal))
+	     ;; Avoid the initial terminal which is not a termcap device.
+	     ;; FIXME: is there more elegant way to detect the initial terminal?
+	     (not (string= (terminal-name terminal) "initial_terminal")))
+    ;; We could remove the key-binding and unset the `xterm-mouse-mode'
+    ;; terminal parameter, but it seems less harmful to send this escape
+    ;; command too many times (or to catch an unintended key sequence), than
+    ;; to send it too few times (or to fail to let xterm-mouse events
+    ;; pass by untranslated).
+    (send-string-to-terminal "\e[?1000l" terminal)))
 
 (provide 'xt-mouse)
 

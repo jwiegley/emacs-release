@@ -1,17 +1,17 @@
 ;;; pc-win.el --- setup support for `PC windows' (whatever that is)
 
 ;; Copyright (C) 1994, 1996, 1997, 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Morten Welinder <terra@diku.dk>
 ;; Maintainer: FSF
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,17 +19,35 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
+;; This file is preloaded into Emacs by loadup.el.  The functions in
+;; this file are then called during startup from startup.el.  This
+;; means that just loading this file should not have any side effects
+;; besides defining functions and variables, and in particular should
+;; NOT initialize any window systems.
+
+;; The main entry points to this file's features are msdos-handle-args,
+;; msdos-create-frame-with-faces, msdos-initialize-window-system,
+;; terminal-init-internal.  The last one is not supposed to be called,
+;; so it just errors out.
+
 ;;; Code:
+
+(if (not (fboundp 'msdos-remember-default-colors))
+    (error "%s: Loading pc-win.el but not compiled for MS-DOS"
+	   (invocation-name)))
 
 (load "term/internal" nil t)
 
-;;; This is copied from etc/rgb.txt, except that some values were changed
+(declare-function msdos-remember-default-colors "msdos.c")
+(declare-function w16-set-clipboard-data "w16select.c")
+(declare-function w16-get-clipboard-data "w16select.c")
+(declare-function msdos-setup-keyboard "internal" (frame))
+
+;;; This was copied from etc/rgb.txt, except that some values were changed
 ;;; a bit to make them consistent with DOS console colors, and the RGB
 ;;; values were scaled up to 16 bits, as `tty-define-color' requires.
 ;;;
@@ -65,25 +83,23 @@
 ;; ---------------------------------------------------------------------------
 ;; We want to delay setting frame parameters until the faces are setup
 (defvar default-frame-alist nil)
-(modify-frame-parameters terminal-frame default-frame-alist)
-(tty-color-clear)
+;(modify-frame-parameters terminal-frame default-frame-alist)
 
 (defun msdos-face-setup ()
-  (set-face-foreground 'bold "yellow" terminal-frame)
-  (set-face-foreground 'italic "red" terminal-frame)
-  (set-face-foreground 'bold-italic "lightred" terminal-frame)
-  (set-face-foreground 'underline "white" terminal-frame)
+  "Initial setup of faces for the MS-DOS display."
+  (set-face-foreground 'bold "yellow")
+  (set-face-foreground 'italic "red")
+  (set-face-foreground 'bold-italic "lightred")
+  (set-face-foreground 'underline "white")
 
   (make-face 'msdos-menu-active-face)
   (make-face 'msdos-menu-passive-face)
   (make-face 'msdos-menu-select-face)
-  (set-face-foreground 'msdos-menu-active-face "white" terminal-frame)
-  (set-face-foreground 'msdos-menu-passive-face "lightgray" terminal-frame)
-  (set-face-background 'msdos-menu-active-face "blue" terminal-frame)
-  (set-face-background 'msdos-menu-passive-face "blue" terminal-frame)
-  (set-face-background 'msdos-menu-select-face "red" terminal-frame))
-
-(add-hook 'before-init-hook 'msdos-face-setup)
+  (set-face-foreground 'msdos-menu-active-face "white")
+  (set-face-foreground 'msdos-menu-passive-face "lightgray")
+  (set-face-background 'msdos-menu-active-face "blue")
+  (set-face-background 'msdos-menu-passive-face "blue")
+  (set-face-background 'msdos-menu-select-face "red"))
 
 (defun msdos-handle-reverse-video (frame parameters)
   "Handle the reverse-video frame parameter on MS-DOS frames."
@@ -101,8 +117,7 @@
 
 ;; This must run after all the default colors are inserted into
 ;; tty-color-alist, since msdos-handle-reverse-video needs to know the
-;; actual frame colors.  tty-color-alist is set up by startup.el, but
-;; only after it runs before-init-hook and after-init-hook.
+;; actual frame colors.
 (defun msdos-setup-initial-frame ()
   (modify-frame-parameters terminal-frame default-frame-alist)
   ;; This remembers the screen colors after applying default-frame-alist,
@@ -115,22 +130,28 @@
   (frame-set-background-mode terminal-frame)
   (face-set-after-frame-default terminal-frame))
 
-(add-hook 'term-setup-hook 'msdos-setup-initial-frame)
-
-;; We create frames as if we were a terminal, but with a twist.
-(defun make-msdos-frame (&optional parameters)
+;; We create frames as if we were a terminal, but without invoking the
+;; terminal-initialization function.  Also, our handling of reverse
+;; video is slightly different.
+(defun msdos-create-frame-with-faces (&optional parameters)
+  "Create an frame on MS-DOS display.
+Optional frame parameters PARAMETERS specify the frame parameters.
+Parameters not specified by PARAMETERS are taken from
+`default-frame-alist'.  If either PARAMETERS or `default-frame-alist'
+contains a `reverse' parameter, handle that.  Value is the new frame
+created."
   (let ((frame (make-terminal-frame parameters))
 	success)
     (unwind-protect
-	(progn
+	(with-selected-frame frame
 	  (msdos-handle-reverse-video frame (frame-parameters frame))
+          (unless (terminal-parameter frame 'terminal-initted)
+            (set-terminal-parameter frame 'terminal-initted t))
 	  (frame-set-background-mode frame)
 	  (face-set-after-frame-default frame)
 	  (setq success t))
       (unless success (delete-frame frame)))
     frame))
-
-(setq frame-creation-function 'make-msdos-frame)
 
 ;; ---------------------------------------------------------------------------
 ;; More or less useful imitations of certain X-functions.  A lot of the
@@ -160,10 +181,14 @@
 
 ;; From lisp/term/x-win.el
 (defvar x-display-name "pc"
-  "The display name specifying the MS-DOS display and frame type.")
-(setq split-window-keep-point t)
+  "The name of the window display on which Emacs was started.
+On X, the display name of individual X frames is recorded in the
+`display' frame parameter.")
 (defvar x-colors (mapcar 'car msdos-color-values)
-  "The list of colors available on a PC display under MS-DOS.")
+  "List of basic colors available on color displays.
+For X, the list comes from the `rgb.txt' file,v 10.41 94/02/20.
+For Nextstep, this is a list of non-PANTONE colors returned by
+the operating system.")
 
 ;; From lisp/term/w32-win.el
 ;
@@ -176,12 +201,28 @@
 
 (defcustom x-select-enable-clipboard t
   "Non-nil means cutting and pasting uses the clipboard.
-This is the default on this system, since MS-Windows does not
-support other types of selections."
+This is in addition to, but in preference to, the primary selection.
+
+On MS-Windows, this is non-nil by default, since Windows does not
+support other types of selections.  \(The primary selection that is
+set by Emacs is not accessible to other programs on Windows.\)"
   :type 'boolean
   :group 'killing)
 
 (defun x-select-text (text &optional push)
+  "Select TEXT, a string, according to the window system.
+
+On X, put TEXT in the primary X selection.  For backward
+compatibility with older X applications, set the value of X cut
+buffer 0 as well, and if the optional argument PUSH is non-nil,
+rotate the cut buffers.  If `x-select-enable-clipboard' is
+non-nil, copy the text to the X clipboard as well.
+
+On Windows, make TEXT the current selection.  If
+`x-select-enable-clipboard' is non-nil, copy the text to the
+clipboard as well.  The argument PUSH is ignored.
+
+On Nextstep, put TEXT in the pasteboard; PUSH is ignored."
   (if x-select-enable-clipboard
       (w16-set-clipboard-data text))
   (setq x-last-selected-text text))
@@ -207,10 +248,6 @@ support other types of selections."
 	 (t
 	  (setq x-last-selected-text text))))))
 
-;;; Arrange for the kill and yank functions to set and check the clipboard.
-(setq interprogram-cut-function 'x-select-text)
-(setq interprogram-paste-function 'x-get-selection-value)
-
 ;; From lisp/faces.el: we only have one font, so always return
 ;; it, no matter which variety they've asked for.
 (defun x-frob-font-slant (font which)
@@ -219,13 +256,6 @@ support other types of selections."
 (defun x-frob-font-weight (font which)
   font)
 (make-obsolete 'x-frob-font-weight 'make-face-... "21.1")
-(defun x-font-family-list ()
-  "Return a list of available font families on FRAME.\n\
-If FRAME is omitted or nil, use the selected frame.\n\
-Value is a list of conses (FAMILY . FIXED-P) where FAMILY\n\
-is a font family, and FIXED-P is non-nil if fonts of that family\n\
-are fixed-pitch."
-  '(("default" . t)))
 
 ;; From src/fontset.c:
 (fset 'query-fontset 'ignore)
@@ -239,7 +269,115 @@ are fixed-pitch."
 (fset 'set-cursor-color 'ignore)	; Hardware determined by char under.
 (fset 'set-border-color 'ignore)	; Not useful.
 
+(defvar msdos-last-help-message nil
+  "The last help message received via `show-help-function'.
+This is used by `msdos-show-help'.")
+
+(defvar msdos-previous-message nil
+  "The content of the echo area before help echo was displayed.")
+
+(defun msdos-show-help (help)
+  "Function installed as `show-help-function' on MS-DOS frames."
+  (when (and (not (window-minibuffer-p)) ;Don't overwrite minibuffer contents.
+             (not cursor-in-echo-area)) ;Don't overwrite a prompt.
+    (cond
+     ((stringp help)
+      (setq help (replace-regexp-in-string "\n" ", " help))
+      (unless (or msdos-previous-message
+		  (string-equal help (current-message))
+		  (and (stringp msdos-last-help-message)
+		       (string-equal msdos-last-help-message
+				     (current-message))))
+        (setq msdos-previous-message (current-message)))
+      (setq msdos-last-help-message help)
+      (let ((message-truncate-lines nil)
+            (message-log-max nil))
+        (message "%s" help)))
+     ((stringp msdos-previous-message)
+      (let ((message-log-max nil))
+        (message "%s" msdos-previous-message)
+        (setq msdos-previous-message nil)))
+     (t
+      (message nil)))))
+
+
+;; Initialization.
+;; ---------------------------------------------------------------------------
+;; This function is run, by faces.el:tty-create-frame-with-faces, only
+;; for the initial frame (on each terminal, but we have only one).
+;; This works by setting the `terminal-initted' terminal parameter to
+;; this function, the first time `tty-create-frame-with-faces' is
+;; called on that terminal.  `tty-create-frame-with-faces' is called
+;; directly from startup.el and also by `make-frame' through
+;; `frame-creation-function-alist'.  `make-frame' will call this
+;; function if `msdos-create-frame-with-faces' (see below) is not
+;; found in `frame-creation-function-alist', which means something is
+;; _very_ wrong, because "internal" terminal emulator should not be
+;; turned on if our window-system is not `pc'.  Therefore, the only
+;; Right Thing for us to do here is scream bloody murder.
+(defun terminal-init-internal ()
+  "Terminal initialization function for the MS-DOS \"internal\" terminal.
+Errors out because it is not supposed to be called, ever."
+  (error "terminal-init-internal called for window-system `%s'"
+	 (window-system)))
+
+(defun msdos-initialize-window-system ()
+  "Initialization function for the `pc' \"window system\"."
+  (or (eq (window-system) 'pc)
+      (error
+       "`msdos-initialize-window-system' called, but window-system is `%s'"
+       (window-system)))
+  ;; First, the keyboard.
+  (msdos-setup-keyboard terminal-frame)	; see internal.el
+  ;; Next, register the default colors.
+  (let* ((colors msdos-color-values)
+	 (color (car colors)))
+    (tty-color-clear)
+    (while colors
+      (tty-color-define (car color) (cadr color) (cddr color))
+      (setq colors (cdr colors) color (car colors))))
+  ;; Modifying color mappings means realized faces don't
+  ;; use the right colors, so clear them.
+  (clear-face-cache)
+  ;; Now set up some additional faces.
+  (msdos-face-setup)
+  ;; Set up the initial frame.
+  (msdos-setup-initial-frame)
+  ;; Help echo is displayed in the echo area.
+  (setq show-help-function 'msdos-show-help)
+  ;; We want to delay the codepage-related setup until after user's
+  ;; .emacs is processed, because people might define their
+  ;; `dos-codepage-setup-hook' there.
+  (add-hook 'after-init-hook 'dos-codepage-setup)
+  ;; In multibyte mode, we want unibyte buffers to be displayed
+  ;; using the terminal coding system, so that they display
+  ;; correctly on the DOS terminal; in unibyte mode we want to see
+  ;; all 8-bit characters verbatim.  In both cases, we want the
+  ;; entire range of 8-bit characters to arrive at our display code
+  ;; verbatim.
+  (standard-display-8bit 127 255)
+  ;; We are fast enough to make this optimization unnecessary.
+  (setq split-window-keep-point t)
+  ;; Arrange for the kill and yank functions to set and check the
+  ;; clipboard.
+  (setq interprogram-cut-function 'x-select-text)
+  (setq interprogram-paste-function 'x-get-selection-value)
+  (menu-bar-enable-clipboard)
+  (run-hooks 'terminal-init-msdos-hook))
+
+;; frame-creation-function-alist is examined by frame.el:make-frame.
+(add-to-list 'frame-creation-function-alist
+	     '(pc . msdos-create-frame-with-faces))
+;; window-system-initialization-alist is examined by startup.el:command-line.
+(add-to-list 'window-system-initialization-alist
+	     '(pc . msdos-initialize-window-system))
+;; We don't need anything beyond tty-handle-args for handling
+;; command-line argument; see startup.el.
+(add-to-list 'handle-args-function-alist '(pc . tty-handle-args))
+
 ;; ---------------------------------------------------------------------------
 
-;;; arch-tag: 5cbdb455-b495-427b-95d0-e417d77d00b4
+(provide 'pc-win)
+
+;; arch-tag: 5cbdb455-b495-427b-95d0-e417d77d00b4
 ;;; pc-win.el ends here

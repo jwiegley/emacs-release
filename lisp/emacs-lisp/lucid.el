@@ -1,17 +1,17 @@
 ;;; lucid.el --- emulate some Lucid Emacs functions
 
 ;; Copyright (C) 1993, 1995, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: emulations
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -92,7 +90,8 @@ This function exists for compatibility with XEmacs."
 
 (defalias 'find-face 'internal-find-face)
 (defalias 'get-face 'internal-get-face)
-(defalias 'try-face-font 'internal-try-face-font)
+;; internal-try-face-font was removed from faces.el in rev 1.139, 1999/07/21.
+;;;(defalias 'try-face-font 'internal-try-face-font)
 
 (defalias 'exec-to-string 'shell-command-to-string)
 
@@ -234,5 +233,5 @@ This is an XEmacs compatibility function."
 
 (provide 'lucid)
 
-;;; arch-tag: 80f9ab46-0b36-4151-86ed-3edb6d449c9e
+;; arch-tag: 80f9ab46-0b36-4151-86ed-3edb6d449c9e
 ;;; lucid.el ends here

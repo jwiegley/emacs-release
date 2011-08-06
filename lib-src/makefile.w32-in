@@ -1,30 +1,28 @@
 #  -*- Makefile -*- for GNU Emacs on the Microsoft W32 API.
-#  Copyright (C) 2000, 2001, 2002, 2003, 2004,
-#                2005, 2006, 2007, 2008 Free Software Foundation, Inc.
-#
-#  This file is part of GNU Emacs.
-#
-#  GNU Emacs is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 3, or (at your option)
-#  any later version.
-#
-#  GNU Emacs is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with GNU Emacs; see the file COPYING.  If not, write to the
-#  Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-#  Boston, MA 02110-1301, USA.
-#
+# Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+#   2008, 2009 Free Software Foundation, Inc.
+
+# This file is part of GNU Emacs.
+
+# GNU Emacs is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# GNU Emacs is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+
 
 ALL = make-docfile hexl ctags etags movemail ebrowse sorted-doc digest-doc emacsclient
 
 .PHONY: $(ALL)
 
-VERSION		= 22.3
+VERSION		= 23.1
 
 LOCAL_FLAGS	= -DWINDOWSNT -DDOS_NT -DSTDC_HEADERS=1 -DNO_LDAV=1 \
 		  -DNO_ARCHIVES=1 -DHAVE_CONFIG_H=1 -I../nt/inc \
@@ -143,21 +141,22 @@ $(BLD)/ctags.$(O): ctags.c
 # make-docfile blindly replaces .o with .c anyway.  Keep .o in this list
 # as it is required by code in doc.c.
 #
-obj=    sunfns.o dosfns.o msdos.o \
-	xterm.o xfns.o xmenu.o xselect.o xrdb.o  fringe.o image.o \
-	mac.o macterm.o macfns.o macmenu.o fontset.o \
-	w32.o w32bdf.o w32console.o w32fns.o w32heap.o w32inevt.o \
+obj =   dosfns.o msdos.o \
+	xterm.o xfns.o xmenu.o xselect.o xrdb.o xsmfns.o fringe.o image.o \
+	fontset.o \
+	w32.o w32console.o w32fns.o w32heap.o w32inevt.o \
 	w32menu.o w32proc.o w32reg.o w32select.o w32term.o w32xfns.o \
+	font.o w32font.o \
 	dispnew.o frame.o scroll.o xdisp.o window.o \
-	charset.o coding.o category.o ccl.o \
-	cm.o term.o xfaces.o \
+	charset.o coding.o category.o ccl.o character.o chartab.o \
+	cm.o term.o terminal.o xfaces.o \
 	emacs.o keyboard.o macros.o keymap.o sysdep.o \
 	buffer.o filelock.o insdel.o marker.o \
 	minibuf.o fileio.o dired.o filemode.o \
 	cmds.o casetab.o casefiddle.o indent.o search.o regex.o undo.o \
 	alloc.o data.o doc.o editfns.o callint.o \
 	eval.o floatfns.o fns.o print.o lread.o \
-	abbrev.o syntax.o bytecode.o \
+	syntax.o bytecode.o \
 	process.o callproc.o \
 	region-cache.o sound.o atimer.o \
 	doprnt.o strftime.o intervals.o textprop.o composite.o md5.o
@@ -167,30 +166,54 @@ obj=    sunfns.o dosfns.o msdos.o \
 #
 lispsource = ../lisp/
 
-MOUSE_SUPPORT = $(lispsource)select.elc $(lispsource)scroll-bar.elc $(lispsource)mouse.elc $(lispsource)tooltip.elc
-WINNT_SUPPORT = $(lispsource)ls-lisp.elc $(lispsource)disp-table.elc $(lispsource)w32-fns.elc $(lispsource)dos-w32.elc $(lispsource)w32-vars.elc
+MOUSE_SUPPORT = \
+	$(lispsource)select.elc \
+	$(lispsource)scroll-bar.elc \
+	$(lispsource)mouse.elc
+WINNT_SUPPORT = \
+	$(lispsource)ls-lisp.elc \
+	$(lispsource)disp-table.elc \
+	$(lispsource)w32-fns.elc \
+	$(lispsource)dos-w32.elc \
+	$(lispsource)w32-vars.elc \
+	$(lispsource)term/common-win.elc \
+	$(lispsource)term/w32-win.elc
+TOOLTIP_SUPPORT = $(lispsource)tooltip.elc
+WINDOW_SUPPORT = \
+	$(lispsource)fringe.elc \
+	$(lispsource)image.elc \
+	$(lispsource)international/fontset.elc \
+	$(lispsource)dnd.elc \
+	$(lispsource)tool-bar.elc \
+	$(lispsource)mwheel.elc
 
 # lisp files that are loaded up on other platforms
-MSDOS_SUPPORT = $(lispsource)dos-fns.elc $(lispsource)dos-vars.elc $(lispsource)international/ccl.elc $(lispsource)international/codepage.elc
-VMS_SUPPORT = $(lispsource)vmsproc.elc $(lispsource)vms-patch.elc
+OTHER_PLATFORM_SUPPORT = \
+	$(lispsource)dos-fns.elc \
+	$(lispsource)dos-vars.elc \
+	$(lispsource)x-dnd.elc \
+	$(lispsource)term/x-win.elc
+
 
 lisp1= \
 	$(lispsource)abbrev.elc \
 	$(lispsource)buff-menu.elc \
 	$(lispsource)button.elc \
 	$(lispsource)emacs-lisp/byte-run.elc \
+	$(lispsource)composite.elc \
 	$(lispsource)cus-face.elc \
 	$(lispsource)cus-start.elc \
 	$(lispsource)custom.elc \
 	$(lispsource)emacs-lisp/backquote.elc \
 	$(lispsource)emacs-lisp/lisp-mode.elc \
 	$(lispsource)emacs-lisp/lisp.elc \
-	$(lispsource)facemenu.elc \
-	$(MOUSE_SUPPORT) \
+	$(lispsource)env.elc \
 	$(lispsource)faces.elc \
 	$(lispsource)files.elc \
-	$(lispsource)emacs-lisp/float-sup.elc \
 	$(lispsource)format.elc \
+	$(lispsource)facemenu.elc \
+	$(MOUSE_SUPPORT) \
+	$(lispsource)emacs-lisp/float-sup.elc \
 	$(lispsource)frame.elc \
 	$(lispsource)help.elc \
 	$(lispsource)indent.elc \
@@ -200,37 +223,19 @@ lisp1= \
 	$(lispsource)loaddefs.el \
 	$(lispsource)bindings.elc \
 	$(lispsource)emacs-lisp/map-ynp.elc \
-	$(lispsource)env.elc \
+	$(lispsource)menu-bar.elc \
 	$(lispsource)international/mule.elc \
 	$(lispsource)international/mule-conf.el \
 	$(lispsource)international/mule-cmds.elc \
 	$(lispsource)international/characters.elc \
-	$(lispsource)international/ucs-tables.elc \
-	$(lispsource)international/utf-8.elc \
-	$(lispsource)international/utf-16.elc \
-	$(lispsource)international/latin-1.el \
-	$(lispsource)international/latin-2.el \
-	$(lispsource)international/latin-3.el \
-	$(lispsource)international/latin-4.el \
-	$(lispsource)international/latin-5.el \
-	$(lispsource)international/latin-8.el \
-	$(lispsource)international/latin-9.el \
-	$(lispsource)fringe.elc \
-	$(lispsource)image.elc \
-	$(lispsource)international/fontset.elc \
-	$(lispsource)dnd.elc \
-	$(lispsource)mwheel.elc \
-	$(lispsource)tool-bar.elc \
+	$(lispsource)international/charprop.el \
 	$(lispsource)case-table.elc
 
 lisp2 = \
-	$(lispsource)language/chinese.elc \
-	$(lispsource)language/cyrillic.elc \
-	$(lispsource)language/indian.elc \
-	$(lispsource)language/devanagari.el \
-	$(lispsource)language/kannada.el \
-	$(lispsource)language/malayalam.el \
-	$(lispsource)language/tamil.el \
+	$(lispsource)language/chinese.el \
+	$(lispsource)language/cyrillic.el \
+	$(lispsource)language/indian.el \
+	$(lispsource)language/sinhala.el \
 	$(lispsource)language/english.el \
 	$(lispsource)language/ethiopic.elc \
 	$(lispsource)language/european.elc \
@@ -242,17 +247,21 @@ lisp2 = \
 	$(lispsource)language/japanese.el \
 	$(lispsource)language/korean.el \
 	$(lispsource)language/lao.el \
+	$(lispsource)language/cham.el \
+	$(lispsource)language/tai-viet.el \
 	$(lispsource)language/thai.el \
 	$(lispsource)language/tibetan.elc \
-	$(lispsource)language/vietnamese.elc \
+	$(lispsource)language/vietnamese.el \
 	$(lispsource)language/misc-lang.el \
 	$(lispsource)language/utf-8-lang.el \
 	$(lispsource)language/georgian.el \
-	$(lispsource)menu-bar.elc \
+	$(lispsource)language/khmer.el \
+	$(lispsource)language/burmese.el \
 	$(lispsource)paths.el \
 	$(lispsource)register.elc \
 	$(lispsource)replace.elc \
 	$(lispsource)simple.elc \
+	$(lispsource)minibuffer.elc \
 	$(lispsource)startup.elc \
 	$(lispsource)subr.elc \
 	$(lispsource)term/tty-colors.elc \
@@ -265,12 +274,13 @@ lisp2 = \
 	$(lispsource)textmodes/paragraphs.elc \
 	$(lispsource)textmodes/text-mode.elc \
 	$(lispsource)emacs-lisp/timer.elc \
-	$(lispsource)vc-hooks.elc \
 	$(lispsource)jka-cmpr-hook.elc \
+	$(lispsource)vc-hooks.elc \
 	$(lispsource)ediff-hook.elc \
-	$(VMS_SUPPORT) \
-	$(MSDOS_SUPPORT) \
+	$(lispsource)epa-hook.elc \
+	$(TOOLTIP_SUPPORT) \
 	$(WINNT_SUPPORT) \
+	$(WINDOW_SUPPORT) \
 	$(lispsource)widget.elc \
 	$(lispsource)window.elc \
 	$(lispsource)version.el
@@ -286,11 +296,12 @@ lisp2 = \
 	- $(DEL) temacs.exe
 
 DOC	      = DOC
-$(DOC):		stamp_BLD $(BLD)/make-docfile.exe ../src/$(BLD)/temacs.exe $(lisp1) $(lisp2)
+$(DOC):		stamp_BLD $(BLD)/make-docfile.exe ../src/$(BLD)/temacs.exe $(lisp1) $(lisp2) $(OTHER_PLATFORM_SUPPORT)
 		- $(DEL) $(DOC)
 		"$(THISDIR)/$(BLD)/make-docfile" -o $(DOC) -d ../src $(obj)
 		"$(THISDIR)/$(BLD)/make-docfile" -a $(DOC) -d ../src $(lisp1)
 		"$(THISDIR)/$(BLD)/make-docfile" -a $(DOC) -d ../src $(lisp2)
+		"$(THISDIR)/$(BLD)/make-docfile" -a $(DOC) -d ../src $(OTHER_PLATFORM_SUPPORT)
 		$(CP) $(DOC) ../etc/DOC-X
 		- mkdir "../src/$(OBJDIR)"
 		- mkdir "../src/$(OBJDIR)/etc"
@@ -333,6 +344,12 @@ clean:
 		- $(DEL) getopt.h
 		- $(DEL_TREE) $(OBJDIR)
 		- $(DEL) stamp_BLD
+
+distclean: cleanall
+	- $(DEL) TAGS
+	- $(DEL) Makefile
+
+maintainer-clean: distclean
 
 cleanall:	clean
 		- $(DEL_TREE) obj
@@ -473,7 +490,7 @@ $(BLD)/sorted-doc.$(O) : \
 	$(SRC)/sorted-doc.c \
 	$(EMACS_ROOT)/src/s/ms-w32.h \
 	$(EMACS_ROOT)/src/m/intel386.h \
-	$(EMACS_ROOT)/src/config.h \
+	$(EMACS_ROOT)/src/config.h
 
 $(BLD)/tcp.$(O) : \
 	$(SRC)/tcp.c

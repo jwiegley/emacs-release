@@ -1,16 +1,16 @@
 ;;; em-hist.el --- history list management
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,19 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-(provide 'em-hist)
-
-(eval-when-compile (require 'esh-maint))
-(require 'eshell)
-
-(defgroup eshell-hist nil
-  "This module provides command history management."
-  :tag "History list management"
-  :group 'eshell-module)
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -67,9 +55,19 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'cl))
+
 (require 'ring)
 (require 'esh-opt)
 (require 'em-pred)
+(require 'eshell)
+
+;;;###autoload
+(eshell-defgroup eshell-hist nil
+  "This module provides command history management."
+  :tag "History list management"
+  :group 'eshell-module)
 
 ;;; User Variables:
 
@@ -106,7 +104,7 @@ This mirrors the optional behavior of bash."
   :type 'boolean
   :group 'eshell-hist)
 
-(defcustom eshell-save-history-on-exit 'ask
+(defcustom eshell-save-history-on-exit t
   "*Determine if history should be automatically saved.
 History is always preserved after sanely exiting an Eshell buffer.
 However, when Emacs is being shut down, this variable determines
@@ -988,5 +986,11 @@ If N is negative, search backwards for the -Nth previous match."
   (isearch-done)
   (eshell-send-input))
 
-;;; arch-tag: 1a847333-f864-4b96-9acd-b549d620b6c6
+(provide 'em-hist)
+
+;; Local Variables:
+;; generated-autoload-file: "esh-groups.el"
+;; End:
+
+;; arch-tag: 1a847333-f864-4b96-9acd-b549d620b6c6
 ;;; em-hist.el ends here

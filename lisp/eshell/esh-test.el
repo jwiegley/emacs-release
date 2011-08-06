@@ -1,16 +1,16 @@
 ;;; esh-test.el --- Eshell test suite
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,18 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-(provide 'esh-test)
-
-(eval-when-compile (require 'esh-maint))
-
-(defgroup eshell-test nil
-  "This module is meant to ensure that Eshell is working correctly."
-  :tag "Eshell test suite"
-  :group 'eshell)
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -39,7 +28,15 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'eshell)
+  (require 'esh-util))
 (require 'esh-mode)
+
+(defgroup eshell-test nil
+  "This module is meant to ensure that Eshell is working correctly."
+  :tag "Eshell test suite"
+  :group 'eshell)
 
 ;;; User Variables:
 
@@ -74,8 +71,7 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (defvar test-buffer))
+(defvar test-buffer)
 
 (defun eshell-insert-command (text &optional func)
   "Insert a command at the end of the buffer."
@@ -236,5 +232,7 @@
 		 "\n"))))
 	    nil t))
 
-;;; arch-tag: 6e32275a-8285-4a4e-b7cf-819aa7c86b8e
+(provide 'esh-test)
+
+;; arch-tag: 6e32275a-8285-4a4e-b7cf-819aa7c86b8e
 ;;; esh-test.el ends here

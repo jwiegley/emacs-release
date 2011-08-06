@@ -1,17 +1,19 @@
 ;;; bib-mode.el --- major mode for editing bib files
 
-;; Copyright (C) 1989, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1989, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+;;   2009  Free Software Foundation, Inc.
 
+;; Author: Henry Kautz
+;; (according to authors.el)
 ;; Maintainer: FSF
 ;; Keywords: bib
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -127,7 +127,7 @@ with the cdr.")
       ((null slots)
 	 (if (bobp)
 	    ""
-	    (progn (previous-line 1) (bib-find-key bib-assoc))))
+	    (progn (forward-line -1) (bib-find-key bib-assoc))))
       ((looking-at (car (car slots)))
 	 (cdr (car slots)))
       (t (bib-find-key (cdr slots)))
@@ -181,7 +181,7 @@ with the cdr.")
    (beginning-of-line nil)
    (push-mark (point))
    (re-search-forward "^ *$" nil 2)
-   (next-line 1)
+   (forward-line 1)
    (beginning-of-line nil))
 
 (defun unread-bib ()
@@ -237,5 +237,5 @@ named by variable `unread-bib-file'."
 
 (provide 'bib-mode)
 
-;;; arch-tag: e3a97958-3c2c-487f-9557-fafc3c98452d
+;; arch-tag: e3a97958-3c2c-487f-9557-fafc3c98452d
 ;;; bib-mode.el ends here

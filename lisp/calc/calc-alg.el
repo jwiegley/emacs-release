@@ -1,17 +1,17 @@
 ;;; calc-alg.el --- algebraic functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger  <jay.p.belanger@gmail.com>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -1600,9 +1598,8 @@
 (defun calcFunc-collect (expr base)
   (let ((p (math-is-polynomial expr base 50 t)))
     (if (cdr p)
-	(math-normalize   ; fix selection bug
-	 (math-build-polynomial-expr p base))
-      expr)))
+        (math-build-polynomial-expr (mapcar 'math-normalize p) base)
+      (car p))))
 
 ;;; If expr is of the form "a + bx + cx^2 + ...", return the list (a b c ...),
 ;;; else return nil if not in polynomial form.  If "loose" (math-is-poly-loose), 
@@ -1866,5 +1863,5 @@
 
 (provide 'calc-alg)
 
-;;; arch-tag: 52e7dcdf-9688-464d-a02b-4bbe789348d0
+;; arch-tag: 52e7dcdf-9688-464d-a02b-4bbe789348d0
 ;;; calc-alg.el ends here

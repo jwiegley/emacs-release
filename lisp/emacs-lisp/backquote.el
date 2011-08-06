@@ -1,7 +1,7 @@
 ;;; backquote.el --- implement the ` Lisp construct
 
 ;; Copyright (C) 1990, 1992, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Rick Sladkey <jrs@world.std.com>
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -91,8 +89,7 @@ For example (backquote-list* 'a 'b 'c) => (a b . c)"
 (defconst backquote-splice-symbol '\,@
   "Symbol used to represent a splice inside a backquote.")
 
-;;;###autoload
-(defmacro backquote (arg)
+(defmacro backquote (structure)
   "Argument STRUCTURE describes a template to build.
 
 The whole structure acts as if it were quoted except for certain
@@ -106,11 +103,10 @@ b              => (ba bb bc)		; assume b has this value
 `(a ,@b c)     => (a ba bb bc c)	; splice in the value of b
 
 Vectors work just like lists.  Nested backquotes are permitted."
-  (cdr (backquote-process arg)))
+  (cdr (backquote-process structure)))
 
 ;; GNU Emacs has no reader macros
 
-;;;###autoload
 (defalias '\` (symbol-function 'backquote))
 
 ;; backquote-process returns a dotted-pair of a tag (0, 1, or 2) and

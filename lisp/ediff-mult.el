@@ -1,16 +1,16 @@
 ;;; ediff-mult.el --- support for multi-file/multi-buffer processing in Ediff
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -105,6 +103,8 @@
 ;;; Code:
 
 
+(provide 'ediff-mult)
+
 (defgroup ediff-mult nil
   "Multi-file and multi-buffer processing in Ediff."
   :prefix "ediff-"
@@ -113,12 +113,8 @@
 
 ;; compiler pacifier
 (eval-when-compile
-  (let ((load-path (cons (expand-file-name ".") load-path)))
-    (or (featurep 'ediff-init)
-	(load "ediff-init.el" nil nil 'nosuffix))
-    (or (featurep 'ediff-util)
-	(load "ediff-util.el" nil nil 'nosuffix))
-    ))
+  (require 'ediff-ptch)
+  (require 'ediff))
 ;; end pacifier
 
 (require 'ediff-init)
@@ -129,9 +125,15 @@
 ;; the registry buffer
 (defvar ediff-registry-buffer nil)
 
-(defconst ediff-meta-buffer-message "This is an Ediff Session Group Panel: %s
+(defconst ediff-meta-buffer-brief-message "Ediff Session Group Panel: %s
 
-Useful commands:
+     Type ? to show useful commands in this buffer
+
+")
+
+(defconst ediff-meta-buffer-verbose-message "Ediff Session Group Panel: %s
+
+Useful commands (type ? to hide them and free up screen):
      button2, v, or RET over session record:   start that Ediff session
      M:\tin sessions invoked from here, brings back this group panel
      R:\tdisplay the registry of active Ediff sessions
@@ -200,47 +202,47 @@ Should be a sexp.  For instance (car ediff-filtering-regexp-history) or nil."
 (defvar ediff-session-registry nil)
 
 (defcustom ediff-meta-truncate-filenames t
-  "*If non-nil, truncate long file names in the session group buffers.
+  "If non-nil, truncate long file names in the session group buffers.
 This can be toggled with `ediff-toggle-filename-truncation'."
   :type 'boolean
   :group 'ediff-mult)
 
 (defcustom ediff-meta-mode-hook nil
-  "*Hooks run just after setting up meta mode."
+  "Hooks run just after setting up meta mode."
   :type 'hook
   :group 'ediff-mult)
 
 (defcustom ediff-registry-setup-hook nil
-  "*Hooks run just after the registry control panel is set up."
+  "Hooks run just after the registry control panel is set up."
   :type 'hook
   :group 'ediff-mult)
 
 (defcustom ediff-before-session-group-setup-hooks nil
-  "*Hooks to run before Ediff arranges the window for group-level operations.
+  "Hooks to run before Ediff arranges the window for group-level operations.
 It is used by commands such as `ediff-directories'.
 This hook can be used to save the previous window config, which can be restored
 on `ediff-quit', `ediff-suspend', or `ediff-quit-session-group-hook'."
   :type 'hook
   :group 'ediff-hook)
 (defcustom ediff-after-session-group-setup-hook nil
-  "*Hooks run just after a meta-buffer controlling a session group, such as
+  "Hooks run just after a meta-buffer controlling a session group, such as
 ediff-directories, is run."
   :type 'hook
   :group 'ediff-mult)
 (defcustom ediff-quit-session-group-hook nil
-  "*Hooks run just before exiting a session group."
+  "Hooks run just before exiting a session group."
   :type 'hook
   :group 'ediff-mult)
 (defcustom ediff-show-registry-hook nil
-  "*Hooks run just after the registry buffer is shown."
+  "Hooks run just after the registry buffer is shown."
   :type 'hook
   :group 'ediff-mult)
 (defcustom ediff-show-session-group-hook '(delete-other-windows)
-  "*Hooks run just after a session group buffer is shown."
+  "Hooks run just after a session group buffer is shown."
   :type 'hook
   :group 'ediff-mult)
 (defcustom ediff-meta-buffer-keymap-setup-hook nil
-  "*Hooks run just after setting up the `ediff-meta-buffer-map'.
+  "Hooks run just after setting up the `ediff-meta-buffer-map'.
 This keymap controls key bindings in the meta buffer and is a local variable.
 This means that you can set different bindings for different kinds of meta
 buffers."
@@ -360,10 +362,24 @@ buffers."
        (if (stringp (ediff-get-session-objC-name session-info))
 	   (file-directory-p (ediff-get-session-objC-name session-info)) t)))
 
+
+(ediff-defvar-local ediff-verbose-help-enabled nil
+  "If t, display redundant help in ediff-directories and other meta buffers.
+Toggled by ediff-toggle-verbose-help-meta-buffer" )
+
+;; Toggle verbose help in meta-buffers
+;; TODO: Someone who understands all this can make it better.
+(defun ediff-toggle-verbose-help-meta-buffer ()
+  "Toggle showing tediously verbose help in meta buffers."
+  (interactive)
+  (setq ediff-verbose-help-enabled (not ediff-verbose-help-enabled))
+  (ediff-update-meta-buffer (current-buffer) 'must-redraw))
+
 ;; set up the keymap in the meta buffer
 (defun ediff-setup-meta-map ()
   (setq ediff-meta-buffer-map (make-sparse-keymap))
   (suppress-keymap ediff-meta-buffer-map)
+  (define-key ediff-meta-buffer-map "?" 'ediff-toggle-verbose-help-meta-buffer)
   (define-key ediff-meta-buffer-map "q" 'ediff-quit-meta-buffer)
   (define-key ediff-meta-buffer-map "T" 'ediff-toggle-filename-truncation)
   (define-key ediff-meta-buffer-map "R" 'ediff-show-registry)
@@ -384,7 +400,7 @@ buffers."
 	(define-key ediff-meta-buffer-map "=h" 'ediff-meta-mark-equal-files)))
   (if ediff-no-emacs-help-in-control-buffer
       (define-key ediff-meta-buffer-map  "\C-h"  'ediff-previous-meta-item))
-  (if ediff-emacs-p
+  (if (featurep 'emacs)
       (define-key ediff-meta-buffer-map [mouse-2] ediff-meta-action-function)
     (define-key ediff-meta-buffer-map [button2] ediff-meta-action-function))
 
@@ -428,7 +444,7 @@ Commands:
 (define-key ediff-dir-diffs-buffer-map "\C-?" 'previous-line)
 (define-key ediff-dir-diffs-buffer-map "p" 'previous-line)
 (define-key ediff-dir-diffs-buffer-map "C" 'ediff-dir-diff-copy-file)
-(if ediff-emacs-p
+(if (featurep 'emacs)
     (define-key ediff-dir-diffs-buffer-map [mouse-2] 'ediff-dir-diff-copy-file)
   (define-key ediff-dir-diffs-buffer-map [button2] 'ediff-dir-diff-copy-file))
 (define-key ediff-dir-diffs-buffer-map [delete] 'previous-line)
@@ -621,15 +637,15 @@ behavior."
     ;; If file belongs to dir 1 only, the membership code is 2.
     ;; If it is in dir1 and dir3, then the membership code is 2*5=10;
     ;; if it is in dir1 and dir2, then the membership code is 2*3=6, etc.
-    (mapcar (lambda (elt)
-	      (if (member (car elt) lis1)
-		  (setcdr elt (* (cdr elt) ediff-membership-code1)))
-	      (if (member (car elt) lis2)
-		  (setcdr elt (* (cdr elt) ediff-membership-code2)))
-	      (if (member (car elt) lis3)
-		  (setcdr elt (* (cdr elt) ediff-membership-code3)))
-	      )
-	    difflist)
+    (mapc (lambda (elt)
+	    (if (member (car elt) lis1)
+		(setcdr elt (* (cdr elt) ediff-membership-code1)))
+	    (if (member (car elt) lis2)
+		(setcdr elt (* (cdr elt) ediff-membership-code2)))
+	    (if (member (car elt) lis3)
+		(setcdr elt (* (cdr elt) ediff-membership-code3)))
+	    )
+	  difflist)
     (setq difflist (cons
 		    ;; diff metalist header
 		    (ediff-make-new-meta-list-header regexp
@@ -919,32 +935,35 @@ behavior."
       (erase-buffer)
       ;; delete phony overlays that used to represent sessions before the buff
       ;; was redrawn
-      (ediff-cond-compile-for-xemacs-or-emacs
-       (map-extents 'delete-extent)   ; xemacs
-       (mapcar 'delete-overlay (overlays-in 1 1))  ; emacs
-       )
-
-      (insert (format ediff-meta-buffer-message
-		      (ediff-abbrev-jobname ediff-metajob-name)))
+      (if (featurep 'xemacs)
+	  (map-extents 'delete-extent)
+	(mapc 'delete-overlay (overlays-in 1 1)))
 
       (setq regexp (ediff-get-group-regexp meta-list)
 	    merge-autostore-dir
 	    (ediff-get-group-merge-autostore-dir meta-list))
 
-      (cond ((ediff-collect-diffs-metajob)
-	     (insert
-	      "     P:\tcollect custom diffs of all marked sessions\n"))
-	    ((ediff-patch-metajob)
-	     (insert
-	      "     P:\tshow patch appropriately for the context (session or group)\n")))
-      (insert
-       "     ^:\tshow parent session group\n")
-      (or (ediff-one-filegroup-metajob)
-	  (insert
-	   "     D:\tshow differences among directories\n"
-	   "    ==:\tfor each session, show which files are identical\n"
-	   "    =h:\tlike ==, but also marks those sessions for hiding\n"
-	   "    =m:\tlike ==, but also marks those sessions for operation\n\n"))
+      (if ediff-verbose-help-enabled
+	  (progn
+	    (insert (format ediff-meta-buffer-verbose-message
+			    (ediff-abbrev-jobname ediff-metajob-name)))
+
+	    (cond ((ediff-collect-diffs-metajob)
+		   (insert
+		    "     P:\tcollect custom diffs of all marked sessions\n"))
+		  ((ediff-patch-metajob)
+		   (insert
+		    "     P:\tshow patch appropriately for the context (session or group)\n")))
+	    (insert
+	     "     ^:\tshow parent session group\n")
+	    (or (ediff-one-filegroup-metajob)
+		(insert
+		 "     D:\tshow differences among directories\n"
+		 "    ==:\tfor each session, show which files are identical\n"
+		 "    =h:\tlike ==, but also marks sessions for hiding\n"
+		 "    =m:\tlike ==, but also marks sessions for operation\n\n")))
+	(insert (format ediff-meta-buffer-brief-message
+			(ediff-abbrev-jobname ediff-metajob-name))))
 
       (insert "\n")
       (if (and (stringp regexp) (> (length regexp) 0))
@@ -1023,32 +1042,30 @@ behavior."
 (defun ediff-update-session-marker-in-dir-meta-buffer (session-num)
   (let (buffer-meta-overlays session-info overl buffer-read-only)
     (setq overl
-	  (ediff-cond-compile-for-xemacs-or-emacs
-	   (map-extents ; xemacs
-	    (lambda (ext maparg)
-	      (if (and
-		   (ediff-overlay-get ext 'ediff-meta-info)
-		   (eq (ediff-overlay-get ext 'ediff-meta-session-number)
-		       session-num))
-		  ext)))
+	  (if (featurep 'xemacs)
+	      (map-extents
+	       (lambda (ext maparg)
+		 (if (and
+		      (ediff-overlay-get ext 'ediff-meta-info)
+		      (eq (ediff-overlay-get ext 'ediff-meta-session-number)
+			  session-num))
+		     ext)))
 	    ;; Emacs doesn't have map-extents, so try harder
 	    ;; Splice overlay lists to get all buffer overlays
-	   (progn
-	     (setq buffer-meta-overlays (overlay-lists)
-		   buffer-meta-overlays (append (car buffer-meta-overlays)
+	    (setq buffer-meta-overlays (overlay-lists)
+		  buffer-meta-overlays (append (car buffer-meta-overlays)
 						(cdr buffer-meta-overlays)))
-	     (car
-	      (delq nil
-		    (mapcar
-		     (lambda (overl)
-		       (if (and
-			    (ediff-overlay-get overl 'ediff-meta-info)
-			    (eq (ediff-overlay-get
-				 overl 'ediff-meta-session-number)
-				session-num))
-			   overl))
-		     buffer-meta-overlays))))
-	   ))
+	    (car
+	     (delq nil
+		   (mapcar
+		    (lambda (overl)
+		      (if (and
+			   (ediff-overlay-get overl 'ediff-meta-info)
+			   (eq (ediff-overlay-get
+				overl 'ediff-meta-session-number)
+			       session-num))
+			  overl))
+		    buffer-meta-overlays)))))
     (or overl
 	(error
 	 "Bug in ediff-update-session-marker-in-dir-meta-buffer: no overlay with given number %S"
@@ -1305,7 +1322,7 @@ Useful commands:
 
     ;; copy file to directories where it doesn't exist, update
     ;; ediff-dir-difference-list and redisplay
-    (mapcar
+    (mapc
      (lambda (otherfile-struct)
        (let ((otherfile (car otherfile-struct))
 	     (file-mem-code (cdr otherfile-struct)))
@@ -1364,10 +1381,9 @@ Useful commands:
       (erase-buffer)
       ;; delete phony overlays that used to represent sessions before the buff
       ;; was redrawn
-      (ediff-cond-compile-for-xemacs-or-emacs
-       (map-extents 'delete-extent) ; xemacs
-       (mapcar 'delete-overlay (overlays-in 1 1)) ; emacs
-       )
+      (if (featurep 'xemacs)
+	  (map-extents 'delete-extent)
+       (mapc 'delete-overlay (overlays-in 1 1)))
 
       (insert "This is a registry of all active Ediff sessions.
 
@@ -1386,11 +1402,11 @@ Useful commands:
 
 ")
       ;; purge registry list from dead buffers
-      (mapcar (lambda (elt)
-		(if (not (ediff-buffer-live-p elt))
-		    (setq ediff-session-registry
-			  (delq elt ediff-session-registry))))
-	      ediff-session-registry)
+      (mapc (lambda (elt)
+	      (if (not (ediff-buffer-live-p elt))
+		  (setq ediff-session-registry
+			(delq elt ediff-session-registry))))
+	    ediff-session-registry)
 
       (if (null ediff-session-registry)
 	  (insert "       ******* No active Ediff sessions *******\n"))
@@ -1469,7 +1485,7 @@ Useful commands:
 (defun ediff-set-meta-overlay (b e prop &optional session-number hidden)
   (let (overl)
     (setq overl (ediff-make-overlay b e))
-    (if ediff-emacs-p
+    (if (featurep 'emacs)
 	(ediff-overlay-put overl 'mouse-face 'highlight)
       (ediff-overlay-put overl 'highlight t))
     (ediff-overlay-put overl 'ediff-meta-info prop)
@@ -2189,44 +2205,35 @@ If this is a session registry buffer then just bury it."
   (let (result olist tmp)
     (if (and point (ediff-buffer-live-p buf))
 	(ediff-with-current-buffer buf
-	  (ediff-cond-compile-for-xemacs-or-emacs
-	   (setq result  ; xemacs
-		 (if (setq tmp (extent-at point buf 'ediff-meta-info))
-		     (ediff-overlay-get tmp 'ediff-meta-info)))
-	   (progn ; emacs
-	     (setq olist (overlays-at point))
-	     (setq olist
-		   (mapcar (lambda (elt)
-			     (unless (overlay-get elt 'invisible)
-			       (overlay-get elt 'ediff-meta-info)))
-			   olist))
-	     (while (and olist (null (car olist)))
-	       (setq olist (cdr olist)))
-	     (setq result (car olist)))
-	   )
-	  ))
-    (if result
-	result
-      (if noerror
-	  nil
-	(ediff-update-registry)
-	(error "No session info in this line")))))
+	  (if (featurep 'xemacs)
+	      (setq result
+		    (if (setq tmp (extent-at point buf 'ediff-meta-info))
+			(ediff-overlay-get tmp 'ediff-meta-info)))
+	    (setq olist
+		  (mapcar (lambda (elt)
+			    (unless (overlay-get elt 'invisible)
+			      (overlay-get elt 'ediff-meta-info)))
+			  (overlays-at point)))
+	    (while (and olist (null (car olist)))
+	      (setq olist (cdr olist)))
+	    (setq result (car olist)))))
+    (or result
+	(unless noerror
+	  (ediff-update-registry)
+	  (error "No session info in this line")))))
 
 
 (defun ediff-get-meta-overlay-at-pos (point)
-  (ediff-cond-compile-for-xemacs-or-emacs
-   (extent-at point (current-buffer) 'ediff-meta-info) ; xemacs
-   ;; emacs
-   (let* ((overl-list (overlays-at point))
-	  (overl (car overl-list)))
-     (while (and overl (null (overlay-get overl 'ediff-meta-info)))
-       (setq overl-list (cdr overl-list)
-	     overl (car overl-list)))
-     overl)
-   )
-  )
+  (if (featurep 'xemacs)
+      (extent-at point (current-buffer) 'ediff-meta-info)
+    (let* ((overl-list (overlays-at point))
+	   (overl (car overl-list)))
+      (while (and overl (null (overlay-get overl 'ediff-meta-info)))
+	(setq overl-list (cdr overl-list)
+	      overl (car overl-list)))
+      overl)))
 
-(defsubst ediff-get-session-number-at-pos (point &optional meta-buffer)
+(defun ediff-get-session-number-at-pos (point &optional meta-buffer)
   (setq meta-buffer (if (ediff-buffer-live-p meta-buffer)
 			meta-buffer
 		      (current-buffer)))
@@ -2240,52 +2247,46 @@ If this is a session registry buffer then just bury it."
   (if (eobp)
       (goto-char (point-min))
     (let ((overl (ediff-get-meta-overlay-at-pos point)))
-      (ediff-cond-compile-for-xemacs-or-emacs
-       (progn ; xemacs
-	 (if overl
-	     (setq overl (next-extent overl))
-	   (setq overl (next-extent (current-buffer))))
-	 (if overl
-	     (extent-start-position overl)
-	   (point-max)))
-       ;; emacs
-       (if overl
-	   ;; note: end of current overlay is the beginning of the next one
-	   (overlay-end overl)
-	 (next-overlay-change point))
-       )
-      )
-    ))
+      (if (featurep 'xemacs)
+	  (progn ; xemacs
+	    (if overl
+		(setq overl (next-extent overl))
+	      (setq overl (next-extent (current-buffer))))
+	    (if overl
+		(extent-start-position overl)
+	      (point-max)))
+	;; emacs
+	(if overl
+	    ;; note: end of current overlay is the beginning of the next one
+	    (overlay-end overl)
+	  (next-overlay-change point))))))
 
 
 (defun ediff-previous-meta-overlay-start (point)
   (if (bobp)
       (goto-char (point-max))
     (let ((overl (ediff-get-meta-overlay-at-pos point)))
-      (ediff-cond-compile-for-xemacs-or-emacs
-       (progn
-	 (if overl
-	     (setq overl (previous-extent overl))
-	   (setq overl (previous-extent (current-buffer))))
-	 (if overl
-	     (extent-start-position overl)
-	   (point-min)))
-       (progn
-	 (if overl (setq point (overlay-start overl)))
-	 ;; to get to the beginning of prev overlay
-	 (if (not (bobp))
-	     ;; trick to overcome an emacs bug--doesn't always find previous
-	     ;; overlay change correctly
-	     (setq point (1- point)))
-	 (setq point (previous-overlay-change point))
-	 ;; If we are not over an overlay after subtracting 1, it means we are
-	 ;; in the description area preceding session records.  In this case,
-	 ;; goto the top of the registry buffer.
-	 (or (car (overlays-at point))
-	     (setq point (point-min)))
-	 point)
-       )
-      )))
+      (if (featurep 'xemacs)
+	  (progn
+	    (if overl
+		(setq overl (previous-extent overl))
+	      (setq overl (previous-extent (current-buffer))))
+	    (if overl
+		(extent-start-position overl)
+	      (point-min)))
+	(if overl (setq point (overlay-start overl)))
+	;; to get to the beginning of prev overlay
+	(if (not (bobp))
+	    ;; trick to overcome an emacs bug--doesn't always find previous
+	    ;; overlay change correctly
+	    (setq point (1- point)))
+	(setq point (previous-overlay-change point))
+	;; If we are not over an overlay after subtracting 1, it means we are
+	;; in the description area preceding session records.  In this case,
+	;; goto the top of the registry buffer.
+	(or (car (overlays-at point))
+	    (setq point (point-min)))
+	point))))
 
 ;; this is the action invoked when the user selects a patch from the meta
 ;; buffer.
@@ -2343,10 +2344,10 @@ If this is a session registry buffer then just bury it."
 This is used only for sessions that involve 2 or 3 files at the same time.
 ACTION is an optional argument that can be ?h, ?m, ?=, to mark for hiding, mark
 for operation, or simply indicate which are equal files.  If it is nil, then
-`last-command-char' is used to decide which action to take."
+`last-command-event' is used to decide which action to take."
   (interactive)
   (if (null action)
-      (setq action last-command-char))
+      (setq action last-command-event))
   (let ((list (cdr ediff-meta-list))
 	marked1 marked2 marked3
 	fileinfo1 fileinfo2 fileinfo3 elt)
@@ -2394,14 +2395,12 @@ for operation, or simply indicate which are equal files.  If it is nil, then
     ))
 
 
-(provide 'ediff-mult)
 
+;; Local Variables:
+;; eval: (put 'ediff-defvar-local 'lisp-indent-hook 'defun)
+;; eval: (put 'ediff-with-current-buffer 'lisp-indent-hook 1)
+;; eval: (put 'ediff-with-current-buffer 'edebug-form-spec '(form body))
+;; End:
 
-;;; Local Variables:
-;;; eval: (put 'ediff-defvar-local 'lisp-indent-hook 'defun)
-;;; eval: (put 'ediff-with-current-buffer 'lisp-indent-hook 1)
-;;; eval: (put 'ediff-with-current-buffer 'edebug-form-spec '(form body))
-;;; End:
-
-;;; arch-tag: c8a76898-f96f-4d9c-be9d-129134017188
+;; arch-tag: c8a76898-f96f-4d9c-be9d-129134017188
 ;;; ediff-mult.el ends here

@@ -1,27 +1,25 @@
 ;;; gnus-undo.el --- minor mode for undoing in Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -50,7 +48,6 @@
 
 (require 'gnus-util)
 (require 'gnus)
-(require 'custom)
 
 (defgroup gnus-undo nil
   "Undoing in Gnus buffers."
@@ -113,7 +110,7 @@
     ;; Set up the menu.
     (when (gnus-visual-p 'undo-menu 'menu)
       (gnus-undo-make-menu-bar))
-    (gnus-add-minor-mode 'gnus-undo-mode "" gnus-undo-mode-map)
+    (add-minor-mode 'gnus-undo-mode "" gnus-undo-mode-map)
     (gnus-make-local-hook 'post-command-hook)
     (add-hook 'post-command-hook 'gnus-undo-boundary nil t)
     (gnus-run-hooks 'gnus-undo-mode-hook)))
@@ -187,10 +184,9 @@ A numeric argument serves as a repeat count."
       (error "Nothing further to undo"))
     (setq gnus-undo-actions (delq action gnus-undo-actions))
     (setq gnus-undo-boundary t)
-    (while action
-      (funcall (pop action)))))
+    (mapc 'funcall action)))
 
 (provide 'gnus-undo)
 
-;;; arch-tag: 0d787bc7-787d-499a-837f-211d2cb07f2e
+;; arch-tag: 0d787bc7-787d-499a-837f-211d2cb07f2e
 ;;; gnus-undo.el ends here

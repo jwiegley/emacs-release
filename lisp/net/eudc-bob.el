@@ -1,7 +1,7 @@
 ;;; eudc-bob.el --- Binary Objects Support for EUDC
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Oscar Figueiredo <oscar@cpe.fr>
 ;; Maintainer: Pavel Janík <Pavel@Janik.cz>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -149,7 +147,7 @@ display a button."
   "Toggle inline display of an image."
   (interactive)
   (when (eudc-bob-can-display-inline-images)
-    (cond (eudc-xemacs-p
+    (cond ((featurep 'xemacs)
 	   (let ((overlays (append (overlays-at (1- (point)))
 				   (overlays-at (point))))
 		 overlay glyph)
@@ -266,7 +264,7 @@ display a button."
   (interactive "@e")
   (run-hooks 'activate-menubar-hook)
   (eudc-jump-to-event event)
-  (if eudc-xemacs-p
+  (if (featurep 'xemacs)
       (progn
 	(run-hooks 'activate-popup-menu-hook)
 	(popup-menu (eudc-bob-menu)))
@@ -282,7 +280,7 @@ display a button."
       (let ((map (make-sparse-keymap)))
 	(define-key map "s" 'eudc-bob-save-object)
 	(define-key map "!" 'eudc-bob-pipe-object-to-external-program)
-	(define-key map (if eudc-xemacs-p
+	(define-key map (if (featurep 'xemacs)
 			    [button3]
 			  [down-mouse-3]) 'eudc-bob-popup-menu)
 	map))
@@ -295,7 +293,7 @@ display a button."
 (setq eudc-bob-sound-keymap
       (let ((map (make-sparse-keymap)))
 	(define-key map [return] 'eudc-bob-play-sound-at-point)
-	(define-key map (if eudc-xemacs-p
+	(define-key map (if (featurep 'xemacs)
 			    [button2]
 			  [down-mouse-2]) 'eudc-bob-play-sound-at-mouse)
 	map))
@@ -303,7 +301,7 @@ display a button."
 (setq eudc-bob-url-keymap
       (let ((map (make-sparse-keymap)))
 	(define-key map [return] 'browse-url-at-point)
-	(define-key map (if eudc-xemacs-p
+	(define-key map (if (featurep 'xemacs)
 			    [button2]
 			  [down-mouse-2]) 'browse-url-at-mouse)
 	map))
@@ -311,7 +309,7 @@ display a button."
 (setq eudc-bob-mail-keymap
       (let ((map (make-sparse-keymap)))
 	(define-key map [return] 'goto-address-at-point)
-	(define-key map (if eudc-xemacs-p
+	(define-key map (if (featurep 'xemacs)
 			    [button2]
 			  [down-mouse-2]) 'goto-address-at-mouse)
 	map))
@@ -319,20 +317,19 @@ display a button."
 (set-keymap-parent eudc-bob-image-keymap eudc-bob-generic-keymap)
 (set-keymap-parent eudc-bob-sound-keymap eudc-bob-generic-keymap)
 
-(if eudc-emacs-p
-    (progn
-      (easy-menu-define eudc-bob-generic-menu
-			eudc-bob-generic-keymap
-			""
-			eudc-bob-generic-menu)
-      (easy-menu-define eudc-bob-image-menu
-			eudc-bob-image-keymap
-			""
-			eudc-bob-image-menu)
-      (easy-menu-define eudc-bob-sound-menu
-			eudc-bob-sound-keymap
-			""
-			eudc-bob-sound-menu)))
+(when (not (featurep 'xemacs))
+  (easy-menu-define eudc-bob-generic-menu
+    eudc-bob-generic-keymap
+    ""
+    eudc-bob-generic-menu)
+  (easy-menu-define eudc-bob-image-menu
+    eudc-bob-image-keymap
+    ""
+    eudc-bob-image-menu)
+  (easy-menu-define eudc-bob-sound-menu
+    eudc-bob-sound-keymap
+    ""
+    eudc-bob-sound-menu))
 
 ;;;###autoload
 (defun eudc-display-generic-binary (data)
@@ -366,5 +363,5 @@ display a button."
   "Display a button for the JPEG DATA."
   (eudc-bob-display-jpeg data nil))
 
-;;; arch-tag: 8f1853df-c9b6-4c5a-bdb1-d94dbd651fb3
+;; arch-tag: 8f1853df-c9b6-4c5a-bdb1-d94dbd651fb3
 ;;; eudc-bob.el ends here

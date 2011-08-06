@@ -1,17 +1,17 @@
 ;;; gnus-setup.el --- Initialization & Setup for Gnus 5
 
 ;; Copyright (C) 1995, 1996, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Steven L. Baur <steve@miranova.com>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;; My head is starting to spin with all the different mail/news packages.
@@ -140,8 +138,7 @@
 
 (when gnus-use-sc
   (add-hook 'mail-citation-hook 'sc-cite-original)
-  (setq message-cite-function 'sc-cite-original)
-  (autoload 'sc-cite-original "supercite"))
+  (setq message-cite-function 'sc-cite-original))
 
 ;;;### (autoloads (gnus gnus-slave gnus-no-server) "gnus" "lisp/gnus.el" (12473 2137))
 ;;; Generated autoloads from lisp/gnus.el
@@ -192,5 +189,5 @@ score the alt hierarchy, you'd say \"!alt.all\"." t nil))
 
 (run-hooks 'gnus-setup-load-hook)
 
-;;; arch-tag: 08e4af93-8565-46bf-905c-36229400609d
+;; arch-tag: 08e4af93-8565-46bf-905c-36229400609d
 ;;; gnus-setup.el ends here

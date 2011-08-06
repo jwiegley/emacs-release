@@ -1,16 +1,17 @@
 ;;; url-gw.el --- Gateway munging for URL loading
 
-;; Copyright (C) 1997, 1998, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1997, 1998, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Bill Perry <wmperry@gnu.org>
 ;; Keywords: comm, data, processes
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Code:
 
@@ -99,7 +98,7 @@ This list will be executed as a command after logging in via telnet."
   "*Whether to use nslookup to resolve hostnames.
 This should be used when your version of Emacs cannot correctly use DNS,
 but your machine can.  This usually happens if you are running a statically
-linked Emacs under SunOS 4.x"
+linked Emacs under SunOS 4.x."
   :type 'boolean
   :group 'url-gateway)
 
@@ -265,7 +264,7 @@ Might do a non-blocking connection; use `process-status' to check."
 			  (error "Bad setting of url-gateway-method: %s"
 				 url-gateway-method)))))
         ;; Ignoring errors here seems wrong.  E.g. it'll throw away the
-        ;; error signalled two lines above.  It was also found inconvenient
+        ;; error signaled two lines above.  It was also found inconvenient
         ;; during debugging.
 	;; (error
 	;;  (setq conn nil))

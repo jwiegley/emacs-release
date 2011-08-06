@@ -1,16 +1,16 @@
 ;;; em-alias.el --- creation and management of command aliases
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,20 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-(provide 'em-alias)
-
-(eval-when-compile (require 'esh-maint))
-(require 'eshell)
-
-(defgroup eshell-alias nil
-  "Command aliases allow for easy definition of alternate commands."
-  :tag "Command aliases"
-  ;; :link '(info-link "(eshell)Command aliases")
-  :group 'eshell-module)
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -62,19 +49,8 @@
 ;;
 ;; Aliases are written to disk immediately after being defined or
 ;; deleted.  The filename in which they are kept is defined by the
-;; following variable:
+;; variable eshell-aliases-file.
 
-(defcustom eshell-aliases-file (concat eshell-directory-name "alias")
-  "*The file in which aliases are kept.
-Whenever an alias is defined by the user, using the `alias' command,
-it will be written to this file.  Thus, alias definitions (and
-deletions) are always permanent.  This approach was chosen for the
-sake of simplicity, since that's pretty much the only benefit to be
-gained by using this module."
-  :type 'file
-  :group 'eshell-alias)
-
-;;;
 ;; The format of this file is quite basic.  It specifies the alias
 ;; definitions in almost exactly the same way that the user entered
 ;; them, minus any argument quoting (since interpolation is not done
@@ -102,25 +78,45 @@ gained by using this module."
 ;; mispelled command, once a given tolerance threshold has been
 ;; reached.
 
-(defcustom eshell-bad-command-tolerance 3
-  "*The number of failed commands to ignore before creating an alias."
-  :type 'integer
-  ;; :link '(custom-manual "(eshell)Auto-correction of bad commands")
-  :group 'eshell-alias)
-
-;;;
-;; Whenever the same bad command name is encountered this many times,
-;; the user will be prompted in the minibuffer to provide an alias
-;; name.  An alias definition will then be created which will result
-;; in an equal call to the correct name.  In this way, Eshell
-;; gradually learns about the commands that the user mistypes
-;; frequently, and will automatically correct them!
+;; Whenever the same bad command name is encountered
+;; `eshell-bad-command-tolerance' times, the user will be prompted in
+;; the minibuffer to provide an alias name.  An alias definition will
+;; then be created which will result in an equal call to the correct
+;; name.  In this way, Eshell gradually learns about the commands that
+;; the user mistypes frequently, and will automatically correct them!
 ;;
 ;; Note that a '$*' is automatically appended at the end of the alias
 ;; definition, so that entering it is unnecessary when specifying the
 ;; corrected command name.
 
 ;;; Code:
+
+(eval-when-compile
+  (require 'esh-util))
+(require 'eshell)
+
+;;;###autoload
+(eshell-defgroup eshell-alias nil
+  "Command aliases allow for easy definition of alternate commands."
+  :tag "Command aliases"
+  ;; :link '(info-link "(eshell)Command aliases")
+  :group 'eshell-module)
+
+(defcustom eshell-aliases-file (concat eshell-directory-name "alias")
+  "*The file in which aliases are kept.
+Whenever an alias is defined by the user, using the `alias' command,
+it will be written to this file.  Thus, alias definitions (and
+deletions) are always permanent.  This approach was chosen for the
+sake of simplicity, since that's pretty much the only benefit to be
+gained by using this module."
+  :type 'file
+  :group 'eshell-alias)
+
+(defcustom eshell-bad-command-tolerance 3
+  "*The number of failed commands to ignore before creating an alias."
+  :type 'integer
+  ;; :link '(custom-manual "(eshell)Auto-correction of bad commands")
+  :group 'eshell-alias)
 
 (defcustom eshell-alias-load-hook '(eshell-alias-initialize)
   "*A hook that gets run when `eshell-alias' is loaded."
@@ -179,6 +175,9 @@ command, which will automatically write them to the file named by
 	      (cons alias-def eshell-command-aliases-list))))
     (eshell-write-aliases-list))
   nil)
+
+(defvar pcomplete-stub)
+(autoload 'pcomplete-here "pcomplete")
 
 (defun pcomplete/eshell-mode/alias ()
   "Completion function for Eshell's `alias' command."
@@ -274,5 +273,11 @@ These are all the command aliases which begin with NAME."
 					eshell-prevent-alias-expansion))))
 		     (eshell-parse-command alias))))))))))
 
-;;; arch-tag: 8b018fc1-4e07-4ccc-aa73-c0a1ba361f82
+(provide 'em-alias)
+
+;; Local Variables:
+;; generated-autoload-file: "esh-groups.el"
+;; End:
+
+;; arch-tag: 8b018fc1-4e07-4ccc-aa73-c0a1ba361f82
 ;;; em-alias.el ends here

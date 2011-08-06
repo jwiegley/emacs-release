@@ -1,27 +1,25 @@
 ;;; gnus-win.el --- window configuration functions for Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -120,6 +118,10 @@ used to display Gnus windows."
      (vertical 1.0
 	       (summary 0.25)
 	       (edit-score 1.0 point)))
+    (edit-server
+     (vertical 1.0
+	       (server 0.5)
+	       (edit-form 1.0 point)))
     (post
      (vertical 1.0
 	       (post 1.0 point)))
@@ -166,8 +168,12 @@ used to display Gnus windows."
 	       (article 0.5)
 	       (message 1.0 point)))
     (display-term
-      (vertical 1.0
-		("*display*" 1.0))))
+     (vertical 1.0
+	       ("*display*" 1.0)))
+    (mml-preview
+     (vertical 1.0
+	       (message 0.5)
+	       (mml-preview 1.0 point))))
   "Window configuration for all possible Gnus buffers.
 See the Gnus manual for an explanation of the syntax used.")
 
@@ -195,7 +201,8 @@ See the Gnus manual for an explanation of the syntax used.")
     (info . gnus-info-buffer)
     (category . gnus-category-buffer)
     (article-copy . gnus-article-copy)
-    (draft . gnus-draft-buffer))
+    (draft . gnus-draft-buffer)
+    (mml-preview . mml-preview-buffer))
   "Mapping from short symbols to buffer names or buffer variables.")
 
 (defcustom gnus-configure-windows-hook nil
@@ -308,7 +315,7 @@ See the Gnus manual for an explanation of the syntax used.")
     ;; The SPLIT might be something that is to be evaled to
     ;; return a new SPLIT.
     (while (and (not (assq (car split) gnus-window-to-buffer))
-		(functionp (car split)))
+		(symbolp (car split)) (fboundp (car split)))
       (setq split (eval split)))
     (let* ((type (car split))
 	   (subs (cddr split))
@@ -371,7 +378,7 @@ See the Gnus manual for an explanation of the syntax used.")
 	  (while subs
 	    (setq sub (append (pop subs) nil))
 	    (while (and (not (assq (car sub) gnus-window-to-buffer))
-			(functionp (car sub)))
+			(symbolp (car sub)) (fboundp (car sub)))
 	      (setq sub (eval sub)))
 	    (when sub
 	      (push sub comp-subs)
@@ -511,7 +518,7 @@ should have point."
       ;; The SPLIT might be something that is to be evaled to
       ;; return a new SPLIT.
       (while (and (not (assq (car split) gnus-window-to-buffer))
-		  (functionp (car split)))
+		  (symbolp (car split)) (fboundp (car split)))
 	(setq split (eval split)))
 
       (setq type (elt split 0))
@@ -583,5 +590,5 @@ should have point."
 
 (provide 'gnus-win)
 
-;;; arch-tag: ccd5a394-2ddf-4397-b8f8-6d80d3e46e2b
+;; arch-tag: ccd5a394-2ddf-4397-b8f8-6d80d3e46e2b
 ;;; gnus-win.el ends here

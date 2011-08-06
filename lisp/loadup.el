@@ -1,17 +1,17 @@
 ;;; loadup.el --- load up standardly loaded Lisp files for Emacs
 
 ;; Copyright (C) 1985, 1986, 1992, 1994, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -33,6 +31,8 @@
 ;; get autoloaded when bootstrapping
 (if (or (equal (nth 3 command-line-args) "bootstrap")
 	(equal (nth 4 command-line-args) "bootstrap")
+	(equal (nth 3 command-line-args) "unidata-gen.el")
+	(equal (nth 4 command-line-args) "unidata-gen-files")
 	;; in case CANNOT_DUMP
 	(equal (nth 0 command-line-args) "../src/bootstrap-emacs"))
     (let ((dir (car load-path)))
@@ -45,6 +45,12 @@
 			    (expand-file-name "textmodes" dir)))))
 
 (message "Using load-path %s" load-path)
+
+(if (or (member (nth 3 command-line-args) '("dump" "bootstrap"))
+	(member (nth 4 command-line-args) '("dump" "bootstrap")))
+    ;; To reduce the size of dumped Emacs, we avoid making huge
+    ;; char-tables.
+    (setq inhibit-load-charset-map t))
 
 ;; We don't want to have any undo records in the dumped Emacs.
 (set-buffer "*scratch*")
@@ -60,10 +66,10 @@
 (load "widget")
 (load "custom")
 (load "emacs-lisp/map-ynp")
-(load "env")
 (load "cus-start")
 (load "international/mule")
 (load "international/mule-conf.el") ;Don't get confused if someone compiled this by mistake.
+(load "env")
 (load "format")
 (load "bindings")
 (setq load-source-file-function 'load-with-code-conversion)
@@ -71,6 +77,7 @@
 
 (load "cus-face")
 (load "faces")  ; after here, `defface' may be used.
+(load "minibuffer")
 
 (load "button")
 (load "startup")
@@ -78,37 +85,36 @@
 (message "Lists of integers (garbage collection statistics) are normal output")
 (message "while building Emacs; they do not indicate a problem.")
 (message "%s" (garbage-collect))
-(load "loaddefs.el")  ;Don't get confused if someone compiled this by mistake.
+
+(condition-case nil
+    ;; Don't get confused if someone compiled this by mistake.
+    (load "loaddefs.el")
+  ;; In case loaddefs hasn't been generated yet.
+  (file-error (load "ldefs-boot.el")))
+
 (message "%s" (garbage-collect))
+(load "abbrev")         ;lisp-mode.el and simple.el use define-abbrev-table.
 (load "simple")
 
 (load "help")
 
 (load "jka-cmpr-hook")
+(load "epa-hook")
 ;; Any Emacs Lisp source file (*.el) loaded here after can contain
 ;; multilingual text.
 (load "international/mule-cmds")
 (load "case-table")
-(load "international/utf-8")
-(load "international/utf-16")
 (load "international/characters")
+(load "composite")
+;; This file doesn't exist when building Emacs from CVS.  It is
+;; generated just after temacs is build.
+(load "international/charprop.el" t)
 
-(let ((set-case-syntax-set-multibyte t))
-  (load "international/latin-1")
-  (load "international/latin-2")
-  (load "international/latin-3")
-  (load "international/latin-4")
-  (load "international/latin-5")
-  (load "international/latin-8")
-  (load "international/latin-9"))
 ;; Load language-specific files.
 (load "language/chinese")
 (load "language/cyrillic")
 (load "language/indian")
-(load "language/devanagari")	 ; This should be loaded after indian.
-(load "language/malayalam")	 ; This should be loaded after indian.
-(load "language/tamil")		 ; This should be loaded after indian.
-(load "language/kannada")	 ; This should be loaded after indian.
+(load "language/sinhala")
 (load "language/english")
 (load "language/ethiopic")
 (load "language/european")
@@ -120,16 +126,16 @@
 (load "language/japanese")
 (load "language/korean")
 (load "language/lao")
+(load "language/tai-viet")
 (load "language/thai")
 (load "language/tibetan")
 (load "language/vietnamese")
 (load "language/misc-lang")
 (load "language/utf-8-lang")
 (load "language/georgian")
-
-(load "international/ucs-tables")
-
-(update-coding-systems-internal)
+(load "language/khmer")
+(load "language/burmese")
+(load "language/cham")
 
 (load "indent")
 (load "window")
@@ -166,10 +172,6 @@
 (message "%s" (garbage-collect))
 
 (load "replace")
-(if (eq system-type 'vax-vms)
-    (progn
-      (load "vmsproc")))
-(load "abbrev")
 (load "buff-menu")
 
 (if (fboundp 'x-create-frame)
@@ -181,31 +183,39 @@
       (load "mwheel")
       (load "tool-bar")))
 (if (featurep 'x)
-    (load "x-dnd"))
+    (progn
+      (load "x-dnd")
+      (load "term/common-win")
+      (load "term/x-win")))
+
 (message "%s" (garbage-collect))
 
-(if (eq system-type 'vax-vms)
-    (progn
-      (load "vms-patch")))
 (if (eq system-type 'windows-nt)
     (progn
-      (load "ls-lisp")
-      (load "disp-table") ; needed to setup ibm-pc char set, see internal.el
-      (load "dos-w32")
       (load "w32-vars")
+      (load "term/common-win")
+      (load "term/w32-win")
+      (load "ls-lisp")
+      (load "disp-table")
+      (load "dos-w32")
       (load "w32-fns")))
 (if (eq system-type 'ms-dos)
     (progn
-      (load "ls-lisp")
       (load "dos-w32")
       (load "dos-fns")
       (load "dos-vars")
-      (load "international/ccl")	; codepage.el uses CCL en/decoder
-      (load "international/codepage")	; internal.el uses cpNNN coding systems
+      ;; Don't load term/common-win: it isn't appropriate for the `pc'
+      ;; ``window system'', which generally behaves like a terminal.
+      (load "term/pc-win")
+      (load "ls-lisp")
       (load "disp-table"))) ; needed to setup ibm-pc char set, see internal.el
 (if (eq system-type 'macos)
     (progn
       (load "ls-lisp")))
+(if (featurep 'ns)
+    (progn
+      (load "emacs-lisp/easymenu")  ;; for platform-related menu adjustments
+      (load "term/ns-win")))
 (if (fboundp 'atan)	; preload some constants and
     (progn		; floating pt. functions if we have float support.
       (load "emacs-lisp/float-sup")))
@@ -221,7 +231,7 @@
 ;doc strings kept in the DOC file rather than in core,
 ;you may load them with a "site-load.el" file.
 ;But you must also cause them to be scanned when the DOC file
-;is generated.  For VMS, you must edit ../vms/makedoc.com.
+;is generated.
 ;For other systems, you must edit ../src/Makefile.in.
 (if (load "site-load" t)
     (garbage-collect))
@@ -321,6 +331,8 @@
 	(equal (nth 4 command-line-args) "bootstrap"))
     (setcdr load-path nil))
 
+(setq inhibit-load-charset-map nil)
+(clear-charset-maps)
 (garbage-collect)
 
 ;;; At this point, we're ready to resume undo recording for scratch.
@@ -331,19 +343,10 @@
 
 (if (or (member (nth 3 command-line-args) '("dump" "bootstrap"))
 	(member (nth 4 command-line-args) '("dump" "bootstrap")))
-    (if (eq system-type 'vax-vms)
-	(progn
-	  (message "Dumping data as file temacs.dump")
-	  (dump-emacs "temacs.dump" "temacs")
-	  (kill-emacs))
-      (let ((name (concat "emacs-" emacs-version)))
-	(while (string-match "[^-+_.a-zA-Z0-9]+" name)
-	  (setq name (concat (downcase (substring name 0 (match-beginning 0)))
-			     "-"
-			     (substring name (match-end 0)))))
-	(if (memq system-type '(ms-dos windows-nt cygwin))
-	    (message "Dumping under the name emacs")
-	  (message "Dumping under names emacs and %s" name)))
+    (progn
+      (if (memq system-type '(ms-dos windows-nt cygwin))
+          (message "Dumping under the name emacs")
+        (message "Dumping under the name emacs"))
       (condition-case ()
 	  (delete-file "emacs")
 	(file-error nil))
@@ -354,12 +357,17 @@
       (dump-emacs "emacs" "temacs")
       (message "%d pure bytes used" pure-bytes-used)
       ;; Recompute NAME now, so that it isn't set when we dump.
-      (if (not (memq system-type '(ms-dos windows-nt cygwin)))
+      (if (not (or (memq system-type '(ms-dos windows-nt cygwin))
+                   ;; Don't bother adding another name if we're just
+                   ;; building bootstrap-emacs.
+                   (equal (nth 3 command-line-args) "bootstrap")
+                   (equal (nth 4 command-line-args) "bootstrap")))
 	  (let ((name (concat "emacs-" emacs-version)))
 	    (while (string-match "[^-+_.a-zA-Z0-9]+" name)
 	      (setq name (concat (downcase (substring name 0 (match-beginning 0)))
 				 "-"
 				 (substring name (match-end 0)))))
+            (message "Adding name %s" name)
 	    (add-name-to-file "emacs" name t)))
       (kill-emacs)))
 
@@ -377,10 +385,10 @@
 (eval top-level)
 
 
-;;; Local Variables:
-;;; no-byte-compile: t
-;;; no-update-autoloads: t
-;;; End:
+;; Local Variables:
+;; no-byte-compile: t
+;; no-update-autoloads: t
+;; End:
 
-;;; arch-tag: 121e1dd4-36e1-45ac-860e-239f577a6335
+;; arch-tag: 121e1dd4-36e1-45ac-860e-239f577a6335
 ;;; loadup.el ends here

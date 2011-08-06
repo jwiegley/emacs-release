@@ -1,39 +1,59 @@
 ;;; vc-mtn.el --- VC backend for Monotone
 
-;; Copyright (C) 2007, 2008  Free Software Foundation, Inc.
+;; Copyright (C) 2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Keywords: 
 
-;; This file is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; This file is part of GNU Emacs.
 
-;; This file is distributed in the hope that it will be useful,
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;; 
 
+;;; TODO:
+
+;; - The `previous-version' VC method needs to be supported, 'D' in
+;;   log-view-mode uses it.
+
 ;;; Code:
 
 (eval-when-compile (require 'cl) (require 'vc))
+
+(defcustom vc-mtn-diff-switches t
+  "String or list of strings specifying switches for monotone diff under VC.
+If nil, use the value of `vc-diff-switches'.  If t, use no switches."
+  :type '(choice (const :tag "Unspecified" nil)
+		 (const :tag "None" t)
+		 (string :tag "Argument String")
+		 (repeat :tag "Argument List" :value ("") string))
+  :version "23.1"
+  :group 'vc)
+
+(define-obsolete-variable-alias 'vc-mtn-command 'vc-mtn-program "23.1")
+(defcustom vc-mtn-program "mtn"
+  "Name of the monotone executable."
+  :type 'string
+  :group 'vc)
 
 ;; Clear up the cache to force vc-call to check again and discover
 ;; new functions when we reload this file.
 (put 'Mtn 'vc-functions nil)
 
-(defvar vc-mtn-command "mtn")
-(unless (executable-find vc-mtn-command)
+(unless (executable-find vc-mtn-program)
   ;; vc-mtn.el is 100% non-functional without the `mtn' executable.
   (setq vc-handled-backends (delq 'Mtn vc-handled-backends)))
 
@@ -49,7 +69,7 @@
 ;;;###autoload         (vc-mtn-registered file))))
 
 (defun vc-mtn-revision-granularity () 'repository)
-(defun vc-mtn-checkout-model (file) 'implicit)
+(defun vc-mtn-checkout-model (files) 'implicit)
 
 (defun vc-mtn-root (file)
   (setq file (if (file-directory-p file)
@@ -67,7 +87,11 @@
 
 (defun vc-mtn-command (buffer okstatus files &rest flags)
   "A wrapper around `vc-do-command' for use in vc-mtn.el."
-  (apply 'vc-do-command buffer okstatus vc-mtn-command files flags))
+  (let ((process-environment
+         ;; Avoid localization of messages so we can parse the output.
+         (cons "LC_MESSAGES=C" process-environment)))
+    (apply 'vc-do-command (or buffer "*vc*") okstatus vc-mtn-program
+           files flags)))
 
 (defun vc-mtn-state (file)
   ;; If `mtn' fails or returns status>0, or if the search files, just
@@ -76,12 +100,13 @@
     (with-temp-buffer
       (vc-mtn-command t 0 file "status")
       (goto-char (point-min))
-      (re-search-forward "^  \\(?:patched \\(.*\\)\\|no changes$\\)")
-      (if (match-end 1)
-          'edited
-        'up-to-date))))
+      (re-search-forward
+       "^  \\(?:\\(patched\\)\\|\\(added\\) \\(?:.*\\)\\)\\|no changes$")
+      (cond  ((match-end 1) 'edited)
+	     ((match-end 2) 'added)
+	     (t 'up-to-date)))))
 
-(defun vc-mtn-workfile-version (file)
+(defun vc-mtn-working-revision (file)
   ;; If `mtn' fails or returns status>0, or if the search fails, just
   ;; return nil.
   (ignore-errors
@@ -121,12 +146,12 @@
 	  (setq branch (replace-match (cdr rule) t nil branch))))
     (format "Mtn%c%s"
 	    (case (vc-state file)
-	      ((up-to-date needs-patch) ?-)
+	      ((up-to-date needs-update) ?-)
 	      (added ?@)
 	      (t ?:))
 	    branch)))
 
-(defun vc-mtn-register (files &optional rest)
+(defun vc-mtn-register (files &optional rev comment)
   (vc-mtn-command nil 0 files "add"))
 
 (defun vc-mtn-responsible-p (file) (vc-mtn-root file))
@@ -135,7 +160,7 @@
 (defun vc-mtn-checkin (files rev comment)
   (vc-mtn-command nil 0 files "commit" "-m" comment))
 
-(defun vc-mtn-find-version (file rev buffer)
+(defun vc-mtn-find-revision (file rev buffer)
   (vc-mtn-command buffer 0 file "cat" "-r" rev))
 
 ;; (defun vc-mtn-checkout (file &optional editable rev)
@@ -151,9 +176,15 @@
 (defun vc-mtn-print-log (files &optional buffer)
   (vc-mtn-command buffer 0 files "log"))
 
+(defvar log-view-message-re)
+(defvar log-view-file-re)
+(defvar log-view-font-lock-keywords)
+(defvar log-view-per-file-logs)
+
 (define-derived-mode vc-mtn-log-view-mode log-view-mode "Mtn-Log-View"
-  ;; TODO: Not sure what to do about file markers for now.
-  (set (make-local-variable 'log-view-file-re) "\\'\\`")
+  ;; Don't match anything.
+  (set (make-local-variable 'log-view-file-re) "\\`a\\`")
+  (set (make-local-variable 'log-view-per-file-logs) nil)
   ;; TODO: Use a more precise regexp than "[ |/]+" to avoid false positives
   ;; in the ChangeLog text.
   (set (make-local-variable 'log-view-message-re)
@@ -164,19 +195,21 @@
                '(("^[ |]+Author: \\(.*\\)" (1 'change-log-email))
                  ("^[ |]+Date: \\(.*\\)" (1 'change-log-date-face))))))
 
-;; (defun vc-mtn-show-log-entry (version)
+;; (defun vc-mtn-show-log-entry (revision)
 ;;   )
 
-(defun vc-mtn-wash-log (file))
-
-(defalias 'vc-mtn-diff-tree 'vc-mtn-diff)
 (defun vc-mtn-diff (files &optional rev1 rev2 buffer)
+  "Get a difference report using monotone between two revisions of FILES."
   (apply 'vc-mtn-command (or buffer "*vc-diff*") 1 files "diff"
-         (append (if rev1 (list "-r" rev1)) (if rev2 (list "-r" rev2)))))
+         (append
+           (vc-switches 'mtn 'diff)
+           (if rev1 (list "-r" rev1)) (if rev2 (list "-r" rev2)))))
 
 (defun vc-mtn-annotate-command (file buf &optional rev)
   (apply 'vc-mtn-command buf 0 file "annotate"
          (if rev (list "-r" rev))))
+
+(declare-function vc-annotate-convert-time "vc-annotate" (time))
 
 (defconst vc-mtn-annotate-full-re
   "^ *\\([0-9a-f]+\\)\\.* by [^ ]+ \\([0-9]+\\)-\\([0-9]+\\)-\\([0-9]+\\): ")
@@ -240,10 +273,11 @@
         (push (match-string 0) ids))
       ids)))
 
-(defun vc-mtn-revision-completion-table (file)
+(defun vc-mtn-revision-completion-table (files)
   ;; TODO: Implement completion for for selectors
   ;; TODO: Implement completion for composite selectors.
-  (lexical-let ((file file))
+  (lexical-let ((files files))
+    ;; What about using `files'?!?  --Stef
     (lambda (string pred action)
       (cond
        ;; "Tag" selectors.
@@ -277,8 +311,8 @@
                                 ;; Completion not implemented for these.
                                 "a:" "c:" "d:" "e:" "l:")
                               string pred))))))
-        
-        
+
+
 
 (provide 'vc-mtn)
 

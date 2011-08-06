@@ -1,20 +1,23 @@
-;;; lao.el --- support for Lao -*- coding: iso-2022-7bit; no-byte-compile: t -*-
+;;; lao.el --- support for Lao -*- coding: utf-8; no-byte-compile: t -*-
 
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008
+;;   2007, 2008, 2009
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
+;; Copyright (C) 2003
+;;   National Institute of Advanced Industrial Science and Technology (AIST)
+;;   Registration Number H13PRO009
 
 ;; Keywords: multilingual, Lao
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,51 +25,63 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
 
-(make-coding-system
- 'lao 2 ?L
- "8-bit encoding for ASCII (MSB=0) and LAO (MSB=1)."
- '(ascii lao nil nil
-   nil nil nil nil nil nil nil nil nil nil nil t)
- '((safe-charsets ascii lao)
-   (post-read-conversion . lao-post-read-conversion)))
+(define-coding-system 'lao
+  "8-bit encoding for ASCII (MSB=0) and LAO (MSB=1)."
+  :coding-type 'charset
+  :mnemonic ?L
+  :charset-list '(lao))
 
 (set-language-info-alist
  "Lao" '((charset lao)
 	 (coding-system lao)
 	 (coding-priority lao)
 	 (input-method . "lao")
-	 (nonascii-translation . lao)
 	 (unibyte-display . lao)
 	 (features lao-util)
 	 (documentation . t)))
 
-(aset use-default-ascent ?(1;(B t)
-(aset use-default-ascent ?$,1D;(B t)
-(aset use-default-ascent ?(1=(B t)
-(aset use-default-ascent ?$,1D=(B t)
-(aset use-default-ascent ?(1?(B t)
-(aset use-default-ascent ?$,1D?(B t)
-(aset use-default-ascent ?(1B(B t)
-(aset use-default-ascent ?$,1DB(B t)
-(aset ignore-relative-composition ?(1\(B t)
-(aset ignore-relative-composition ?$,1D\(B t)
-
-;; Register a function to compose Lao characters.
-(let ((patterns '(("\\c0\\c9?\\(\\(\\c2\\|\\c3\\)\\c4?\\|\\c4\\)?"
-	 . lao-composition-function))))
-  (aset composition-function-table (make-char 'lao) patterns)
-  (dotimes (i (1+ (- #xeff #xe80)))
-    (aset composition-function-table (decode-char 'ucs (+ i #xe80)) patterns)))
+(let ((consonant "ກ-ຮໜໝ")
+      (tone "່-໌")
+      (vowel-upper-lower "ັິ-ົໍ")
+      (semivowel-lower "ຼ")
+      (fallback-rule [nil 0 compose-gstring-for-graphic]))
+  ;;            target characters    regexp
+  ;;            -----------------    ------
+  (dolist (l `((,vowel-upper-lower . "[c].[t]?")
+	       (,tone .              "[c].")
+	       (,semivowel-lower .   "[c].[v][t]?")
+	       (,semivowel-lower .   "[c].[t]")))
+    (let* ((chars (car l))
+	   (len (length chars))
+	   ;; Replace `c', `t', `v' to consonant, tone, and vowel.
+	   (regexp (mapconcat #'(lambda (c)
+				  (cond ((= c ?c) consonant)
+					((= c ?t) tone)
+					((= c ?v) vowel-upper-lower)
+					(t (string c))))
+			      (cdr l) ""))
+	   ;; Element of composition-function-table.
+	   (elt (list (vector regexp 1 'lao-composition-function)
+		      fallback-rule))
+	   ch)
+      (dotimes (i len)
+	(setq ch (aref chars i))
+	(if (and (> i 1) (= (aref chars (1- i)) ?-))
+	    ;; End of character range.
+	    (set-char-table-range composition-function-table
+				  (cons (aref chars (- i 2)) ch) elt)
+	  (if (or (= (1+ i) len)
+		  (and (/= ch ?-) (/= (aref chars (1+ i)) ?-)))
+	      ;; A character not forming a range.
+	      (set-char-table-range composition-function-table ch elt)))))))
 
 (provide 'lao)
 
-;;; arch-tag: ba540fd9-6352-4449-a9cd-669afd21fa57
+;; arch-tag: ba540fd9-6352-4449-a9cd-669afd21fa57
 ;;; lao.el ends here

@@ -1,7 +1,7 @@
 ;;; telnet.el --- run a telnet session from within an Emacs buffer
 
 ;; Copyright (C) 1985, 1988, 1992, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: William F. Schelter
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -161,8 +159,7 @@ rejecting one login and prompting again for a username and password.")
     (comint-send-string proc telnet-new-line)))
 
 (defun telnet-filter (proc string)
-  (save-excursion
-    (set-buffer (process-buffer proc))
+  (with-current-buffer (process-buffer proc)
     (let* ((last-insertion (marker-position (process-mark proc)))
 	   (delta (- (point) last-insertion))
 	   (ie (and comint-last-input-end
@@ -170,7 +167,7 @@ rejecting one login and prompting again for a username and password.")
 	   (w (get-buffer-window (current-buffer)))
 	   (ws (and w (window-start w))))
       (goto-char last-insertion)
-      (insert-before-markers string)
+      (insert string)
       (set-marker comint-last-output-start last-insertion)
       (set-marker (process-mark proc) (point))
       (if ws (set-window-start w ws t))
@@ -247,6 +244,7 @@ It has most of the same commands as comint-mode.
 There is a variable ``telnet-interrupt-string'' which is the character
 sent to try to stop execution of a job on the remote host.
 Data is sent to the remote host when RET is typed."
+  (set (make-local-variable 'window-point-insertion-type) t)
   (set (make-local-variable 'comint-prompt-regexp) telnet-prompt-pattern)
   (set (make-local-variable 'comint-use-prompt-regexp) t))
 
@@ -267,5 +265,5 @@ Normally input is edited in Emacs and sent a line at a time."
 
 (provide 'telnet)
 
-;;; arch-tag: 98218821-d04a-48b6-9058-57d0d4677a56
+;; arch-tag: 98218821-d04a-48b6-9058-57d0d4677a56
 ;;; telnet.el ends here

@@ -1,6 +1,7 @@
 ;;; mh-compat.el --- make MH-E compatibile with various versions of Emacs
 
-;; Copyright (C) 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -9,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -77,13 +76,17 @@ introduced in Emacs 22."
       'cancel-timer
     'delete-itimer))
 
-(defun-mh mh-display-color-cells display-color-cells (&optional display)
+(defun mh-display-color-cells (&optional display)
   "Return the number of color cells supported by DISPLAY.
-This function is used by XEmacs to return 2 when
-`device-color-cells' returns nil. This happens when compiling or
+This function is used by XEmacs to return 2 when `device-color-cells'
+or `display-color-cells' returns nil. This happens when compiling or
 running on a tty and causes errors since `display-color-cells' is
 expected to return an integer."
-  (or (device-color-cells display) 2))
+  (cond ((fboundp 'display-color-cells) ; GNU Emacs, XEmacs 21.5b28
+         (or (display-color-cells display) 2))
+        ((fboundp 'device-color-cells)  ; XEmacs 21.4
+         (or (device-color-cells display) 2))
+        (t 2)))
 
 (defmacro mh-display-completion-list (completions &optional common-substring)
   "Display the list of COMPLETIONS.

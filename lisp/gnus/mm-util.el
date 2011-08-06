@@ -1,73 +1,101 @@
 ;;; mm-util.el --- Utility functions for Mule and low level things
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;;	MORIOKA Tomohiko <morioka@jaist.ac.jp>
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
 
+;; For Emacs < 22.2.
+(eval-and-compile
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest r))))
+
 (eval-when-compile (require 'cl))
 (require 'mail-prsvr)
 
 (eval-and-compile
-  (mapcar
+  (if (featurep 'xemacs)
+      (unless (ignore-errors
+		(require 'timer-funcs))
+	(require 'timer))
+    (require 'timer)))
+
+(defvar mm-mime-mule-charset-alist )
+
+;; Emulate functions that are not available in every (X)Emacs version.
+;; The name of a function is prefixed with mm-, like `mm-char-int' for
+;; `char-int' that is a native XEmacs function, not available in Emacs.
+;; Gnus programs all should use mm- functions, not the original ones.
+(eval-and-compile
+  (mapc
    (lambda (elem)
      (let ((nfunc (intern (format "mm-%s" (car elem)))))
        (if (fboundp (car elem))
 	   (defalias nfunc (car elem))
 	 (defalias nfunc (cdr elem)))))
-   '((coding-system-list . ignore)
+   `(;; `coding-system-list' is not available in XEmacs 21.4 built
+     ;; without the `file-coding' feature.
+     (coding-system-list . ignore)
+     ;; `char-int' is an XEmacs function, not available in Emacs.
      (char-int . identity)
+     ;; `coding-system-equal' is an Emacs function, not available in XEmacs.
      (coding-system-equal . equal)
+     ;; `annotationp' is an XEmacs function, not available in Emacs.
      (annotationp . ignore)
+     ;; `set-buffer-file-coding-system' is not available in XEmacs 21.4
+     ;; built without the `file-coding' feature.
      (set-buffer-file-coding-system . ignore)
-     (make-char
-      . (lambda (charset int)
-	  (int-to-char int)))
+     ;; `read-charset' is an Emacs function, not available in XEmacs.
      (read-charset
-      . (lambda (prompt)
-	  "Return a charset."
-	  (intern
-	   (completing-read
-	    prompt
-	    (mapcar (lambda (e) (list (symbol-name (car e))))
-		    mm-mime-mule-charset-alist)
-	    nil t))))
+      . ,(lambda (prompt)
+	   "Return a charset."
+	   (intern
+	    (completing-read
+	     prompt
+	     (mapcar (lambda (e) (list (symbol-name (car e))))
+		     mm-mime-mule-charset-alist)
+	     nil t))))
+     ;; `subst-char-in-string' is not available in XEmacs 21.4.
      (subst-char-in-string
-      . (lambda (from to string &optional inplace)
-	  ;; stolen (and renamed) from nnheader.el
-	  "Replace characters in STRING from FROM to TO.
+      . ,(lambda (from to string &optional inplace)
+	   ;; stolen (and renamed) from nnheader.el
+	   "Replace characters in STRING from FROM to TO.
 	  Unless optional argument INPLACE is non-nil, return a new string."
-	  (let ((string (if inplace string (copy-sequence string)))
-		(len (length string))
-		(idx 0))
-	    ;; Replace all occurrences of FROM with TO.
-	    (while (< idx len)
-	      (when (= (aref string idx) from)
-		(aset string idx to))
-	      (setq idx (1+ idx)))
-	    string)))
+	   (let ((string (if inplace string (copy-sequence string)))
+		 (len (length string))
+		 (idx 0))
+	     ;; Replace all occurrences of FROM with TO.
+	     (while (< idx len)
+	       (when (= (aref string idx) from)
+		 (aset string idx to))
+	       (setq idx (1+ idx)))
+	     string)))
+     ;; `replace-in-string' is an XEmacs function, not available in Emacs.
+     (replace-in-string
+      . ,(lambda (string regexp rep &optional literal)
+	   "See `replace-regexp-in-string', only the order of args differs."
+	   (replace-regexp-in-string regexp rep string nil literal)))
+     ;; `string-as-unibyte' is an Emacs function, not available in XEmacs.
      (string-as-unibyte . identity)
+     ;; `string-make-unibyte' is an Emacs function, not available in XEmacs.
      (string-make-unibyte . identity)
      ;; string-as-multibyte often doesn't really do what you think it does.
      ;; Example:
@@ -87,15 +115,69 @@
      ;; (string-as-multibyte s)   ~= (decode-coding-string s 'emacs-mule)
      ;; (string-to-multibyte s)   ~= (decode-coding-string s 'binary)
      ;; (string-make-multibyte s) ~= (decode-coding-string s locale-coding-system)
+     ;; `string-as-multibyte' is an Emacs function, not available in XEmacs.
      (string-as-multibyte . identity)
+     ;; `multibyte-string-p' is an Emacs function, not available in XEmacs.
      (multibyte-string-p . ignore)
+     ;; `insert-byte' is available only in Emacs 23.1 or greater.
      (insert-byte . insert-char)
-     (multibyte-char-to-unibyte . identity))))
+     ;; `multibyte-char-to-unibyte' is an Emacs function, not available
+     ;; in XEmacs.
+     (multibyte-char-to-unibyte . identity)
+     ;; `set-buffer-multibyte' is an Emacs function, not available in XEmacs.
+     (set-buffer-multibyte . ignore)
+     ;; `special-display-p' is an Emacs function, not available in XEmacs.
+     (special-display-p
+      . ,(lambda (buffer-name)
+	   "Returns non-nil if a buffer named BUFFER-NAME gets a special frame."
+	   (and special-display-function
+		(or (and (member buffer-name special-display-buffer-names) t)
+		    (cdr (assoc buffer-name special-display-buffer-names))
+		    (catch 'return
+		      (dolist (elem special-display-regexps)
+			(and (stringp elem)
+			     (string-match elem buffer-name)
+			     (throw 'return t))
+			(and (consp elem)
+			     (stringp (car elem))
+			     (string-match (car elem) buffer-name)
+			     (throw 'return (cdr elem)))))))))
+     ;; `substring-no-properties' is available only in Emacs 22.1 or greater.
+     (substring-no-properties
+      . ,(lambda (string &optional from to)
+	   "Return a substring of STRING, without text properties.
+It starts at index FROM and ending before TO.
+TO may be nil or omitted; then the substring runs to the end of STRING.
+If FROM is nil or omitted, the substring starts at the beginning of STRING.
+If FROM or TO is negative, it counts from the end.
 
+With one argument, just copy STRING without its properties."
+	   (setq string (substring string (or from 0) to))
+	   (set-text-properties 0 (length string) nil string)
+	   string))
+     ;; `line-number-at-pos' is available only in Emacs 22.1 or greater
+     ;; and XEmacs 21.5.
+     (line-number-at-pos
+      . ,(lambda (&optional pos)
+	   "Return (narrowed) buffer line number at position POS.
+If POS is nil, use current buffer location.
+Counting starts at (point-min), so the value refers
+to the contents of the accessible portion of the buffer."
+	   (let ((opoint (or pos (point))) start)
+	     (save-excursion
+	       (goto-char (point-min))
+	       (setq start (point))
+	       (goto-char opoint)
+	       (forward-line 0)
+	       (1+ (count-lines start (point))))))))))
+
+;; `decode-coding-string', `encode-coding-string', `decode-coding-region'
+;; and `encode-coding-region' are available in Emacs and XEmacs built with
+;; the `file-coding' feature, but the XEmacs versions treat nil, that is
+;; given as the `coding-system' argument, as the `binary' coding system.
 (eval-and-compile
   (if (featurep 'xemacs)
       (if (featurep 'file-coding)
-	  ;; Don't modify string if CODING-SYSTEM is nil.
 	  (progn
 	    (defun mm-decode-coding-string (str coding-system)
 	      (if coding-system
@@ -120,32 +202,7 @@
     (defalias 'mm-decode-coding-region 'decode-coding-region)
     (defalias 'mm-encode-coding-region 'encode-coding-region)))
 
-(eval-and-compile
-  (cond
-   ((fboundp 'replace-in-string)
-    (defalias 'mm-replace-in-string 'replace-in-string))
-   ((fboundp 'replace-regexp-in-string)
-    (defun mm-replace-in-string (string regexp newtext &optional literal)
-      "Replace all matches for REGEXP with NEWTEXT in STRING.
-If LITERAL is non-nil, insert NEWTEXT literally.  Return a new
-string containing the replacements.
-
-This is a compatibility function for different Emacsen."
-      (replace-regexp-in-string regexp newtext string nil literal)))
-   (t
-    (defun mm-replace-in-string (string regexp newtext &optional literal)
-      "Replace all matches for REGEXP with NEWTEXT in STRING.
-If LITERAL is non-nil, insert NEWTEXT literally.  Return a new
-string containing the replacements.
-
-This is a compatibility function for different Emacsen."
-      (let ((start 0) tail)
-	(while (string-match regexp string start)
-	  (setq tail (- (length string) (match-end 0)))
-	  (setq string (replace-match newtext nil literal string))
-	  (setq start (- (length string) tail))))
-      string))))
-
+;; `string-to-multibyte' is available only in Emacs 22.1 or greater.
 (defalias 'mm-string-to-multibyte
   (cond
    ((featurep 'xemacs)
@@ -154,17 +211,56 @@ This is a compatibility function for different Emacsen."
     'string-to-multibyte)
    (t
     (lambda (string)
-      "Return a multibyte string with the same individual chars as string."
+      "Return a multibyte string with the same individual chars as STRING."
       (mapconcat
        (lambda (ch) (mm-string-as-multibyte (char-to-string ch)))
        string "")))))
 
+;; `char-or-char-int-p' is an XEmacs function, not available in Emacs.
 (eval-and-compile
   (defalias 'mm-char-or-char-int-p
     (cond
      ((fboundp 'char-or-char-int-p) 'char-or-char-int-p)
      ((fboundp 'char-valid-p) 'char-valid-p)
      (t 'identity))))
+
+;; `ucs-to-char' is a function that Mule-UCS provides.
+(if (featurep 'xemacs)
+    (cond ((and (fboundp 'unicode-to-char) ;; XEmacs 21.5.
+		(subrp (symbol-function 'unicode-to-char)))
+	   (if (featurep 'mule)
+	       (defalias 'mm-ucs-to-char 'unicode-to-char)
+	     (defun mm-ucs-to-char (codepoint)
+	       "Convert Unicode codepoint to character."
+	       (or (unicode-to-char codepoint) ?#))))
+	  ((featurep 'mule)
+	   (defun mm-ucs-to-char (codepoint)
+	     "Convert Unicode codepoint to character."
+	     (if (fboundp 'ucs-to-char) ;; Mule-UCS is loaded.
+		 (progn
+		   (defalias 'mm-ucs-to-char
+		     (lambda (codepoint)
+		       "Convert Unicode codepoint to character."
+		       (condition-case nil
+			   (or (ucs-to-char codepoint) ?#)
+			 (error ?#))))
+		   (mm-ucs-to-char codepoint))
+	       (condition-case nil
+		   (or (int-to-char codepoint) ?#)
+		 (error ?#)))))
+	  (t
+	   (defun mm-ucs-to-char (codepoint)
+	     "Convert Unicode codepoint to character."
+	     (condition-case nil
+		 (or (int-to-char codepoint) ?#)
+	       (error ?#)))))
+  (if (let ((char (make-char 'japanese-jisx0208 36 34)))
+	(eq char (decode-char 'ucs char)))
+      ;; Emacs 23.
+      (defalias 'mm-ucs-to-char 'identity)
+    (defun mm-ucs-to-char (codepoint)
+      "Convert Unicode codepoint to character."
+      (or (decode-char 'ucs codepoint) ?#))))
 
 ;; Fixme:  This seems always to be used to read a MIME charset, so it
 ;; should be re-named and fixed (in Emacs) to offer completion only on
@@ -216,7 +312,10 @@ non-nil, an alias is created and added to
 the alias.  Else windows-NUMBER is used."
   (interactive
    (let ((completion-ignore-case t)
-	 (candidates (cp-supported-codepages)))
+	 (candidates (if (fboundp 'cp-supported-codepages)
+			 (cp-supported-codepages)
+		       ;; Removed in Emacs 23 (unicode), so signal an error:
+		       (error "`codepage-setup' not present in this Emacs version."))))
      (list (completing-read "Setup DOS Codepage: (default 437) " candidates
 			    nil t nil nil "437"))))
   (when alias
@@ -225,7 +324,9 @@ the alias.  Else windows-NUMBER is used."
 		  (intern (format "windows-%s" number)))))
   (let* ((cp (intern (format "cp%s" number))))
     (unless (mm-coding-system-p cp)
-      (codepage-setup number))
+      (if (fboundp 'codepage-setup)	; silence compiler
+	  (codepage-setup number)
+	(error "`codepage-setup' not present in this Emacs version.")))
     (when (and alias
 	       ;; Don't add alias if setup of cp failed.
 	       (mm-coding-system-p cp))
@@ -262,6 +363,18 @@ the alias.  Else windows-NUMBER is used."
     ,@(when (and (not (mm-coding-system-p 'gbk))
 		 (mm-coding-system-p 'cp936))
 	'((gbk . cp936)))
+    ;; UTF8 is a bogus name for UTF-8
+    ,@(when (and (not (mm-coding-system-p 'utf8))
+		 (mm-coding-system-p 'utf-8))
+	'((utf8 . utf-8)))
+    ;; ISO8859-1 is a bogus name for ISO-8859-1
+    ,@(when (and (not (mm-coding-system-p 'iso8859-1))
+		 (mm-coding-system-p 'iso-8859-1))
+	'((iso8859-1 . iso-8859-1)))
+    ;; ISO_8859-1 is a bogus name for ISO-8859-1
+    ,@(when (and (not (mm-coding-system-p 'iso_8859-1))
+		 (mm-coding-system-p 'iso-8859-1))
+	'((iso_8859-1 . iso-8859-1)))
     )
   "A mapping from unknown or invalid charset names to the real charset names.
 
@@ -377,23 +490,7 @@ Unless LIST is given, `mm-codepage-ibm-list' is used."
 (mm-setup-codepage-iso-8859)
 (mm-setup-codepage-ibm)
 
-(defcustom mm-charset-override-alist
-  `((iso-8859-1 . windows-1252))
-  "A mapping from undesired charset names to their replacement.
-
-You may add pairs like (iso-8859-1 . windows-1252) here,
-i.e. treat iso-8859-1 as windows-1252.  windows-1252 is a
-superset of iso-8859-1."
-  :type '(list (set :inline t
-		    (const (iso-8859-1 . windows-1252))
-		    (const (undecided  . windows-1252)))
-	       (repeat :inline t
-		       :tag "Other options"
-		       (cons (symbol :tag "From charset")
-			     (symbol :tag "To charset"))))
-  :version "22.1" ;; Gnus 5.10.9
-  :group 'mime)
-
+;; Note: this has to be defined before `mm-charset-to-coding-system'.
 (defcustom mm-charset-eval-alist
   (if (featurep 'xemacs)
       nil ;; I don't know what would be useful for XEmacs.
@@ -421,6 +518,156 @@ could use `autoload-coding-system' here."
 			     (symbol :tag "form"))))
   :group 'mime)
 (put 'mm-charset-eval-alist 'risky-local-variable t)
+
+(defvar mm-charset-override-alist)
+
+;; Note: this function has to be defined before `mm-charset-override-alist'
+;; since it will use this function in order to determine its default value
+;; when loading mm-util.elc.
+(defun mm-charset-to-coding-system (charset &optional lbt
+					    allow-override silent)
+  "Return coding-system corresponding to CHARSET.
+CHARSET is a symbol naming a MIME charset.
+If optional argument LBT (`unix', `dos' or `mac') is specified, it is
+used as the line break code type of the coding system.
+
+If ALLOW-OVERRIDE is given, use `mm-charset-override-alist' to
+map undesired charset names to their replacement.  This should
+only be used for decoding, not for encoding.
+
+A non-nil value of SILENT means don't issue a warning even if CHARSET
+is not available."
+  ;; OVERRIDE is used (only) in `mm-decode-body' and `mm-decode-string'.
+  (when (stringp charset)
+    (setq charset (intern (downcase charset))))
+  (when lbt
+    (setq charset (intern (format "%s-%s" charset lbt))))
+  (cond
+   ((null charset)
+    charset)
+   ;; Running in a non-MULE environment.
+   ((or (null (mm-get-coding-system-list))
+	(not (fboundp 'coding-system-get)))
+    charset)
+   ;; Check override list quite early.  Should only used for decoding, not for
+   ;; encoding!
+   ((and allow-override
+	 (let ((cs (cdr (assq charset mm-charset-override-alist))))
+	   (and cs (mm-coding-system-p cs) cs))))
+   ;; ascii
+   ((eq charset 'us-ascii)
+    'ascii)
+   ;; Check to see whether we can handle this charset.  (This depends
+   ;; on there being some coding system matching each `mime-charset'
+   ;; property defined, as there should be.)
+   ((and (mm-coding-system-p charset)
+;;; Doing this would potentially weed out incorrect charsets.
+;;; 	 charset
+;;; 	 (eq charset (coding-system-get charset 'mime-charset))
+	 )
+    charset)
+   ;; Eval expressions from `mm-charset-eval-alist'
+   ((let* ((el (assq charset mm-charset-eval-alist))
+	   (cs (car el))
+	   (form (cdr el)))
+      (and cs
+	   form
+	   (prog2
+	       ;; Avoid errors...
+	       (condition-case nil (eval form) (error nil))
+	       ;; (message "Failed to eval `%s'" form))
+	       (mm-coding-system-p cs)
+	     (message "Added charset `%s' via `mm-charset-eval-alist'" cs))
+	   cs)))
+   ;; Translate invalid charsets.
+   ((let ((cs (cdr (assq charset mm-charset-synonym-alist))))
+      (and cs
+	   (mm-coding-system-p cs)
+	   ;; (message
+	   ;;  "Using synonym `%s' from `mm-charset-synonym-alist' for `%s'"
+	   ;;  cs charset)
+	   cs)))
+   ;; Last resort: search the coding system list for entries which
+   ;; have the right mime-charset in case the canonical name isn't
+   ;; defined (though it should be).
+   ((let (cs)
+      ;; mm-get-coding-system-list returns a list of cs without lbt.
+      ;; Do we need -lbt?
+      (dolist (c (mm-get-coding-system-list))
+	(if (and (null cs)
+		 (eq charset (or (coding-system-get c :mime-charset)
+				 (coding-system-get c 'mime-charset))))
+	    (setq cs c)))
+      (unless (or silent cs)
+	;; Warn the user about unknown charset:
+	(if (fboundp 'gnus-message)
+	    (gnus-message 7 "Unknown charset: %s" charset)
+	  (message "Unknown charset: %s" charset)))
+      cs))))
+
+;; Note: `mm-charset-to-coding-system' has to be defined before this.
+(defcustom mm-charset-override-alist
+  ;; Note: pairs that cannot be used in the Emacs version currently running
+  ;; will be removed.
+  '((gb2312 . gbk)
+    (iso-8859-1 . windows-1252)
+    (iso-8859-8 . windows-1255)
+    (iso-8859-9 . windows-1254))
+  "A mapping from undesired charset names to their replacement.
+
+You may add pairs like (iso-8859-1 . windows-1252) here,
+i.e. treat iso-8859-1 as windows-1252.  windows-1252 is a
+superset of iso-8859-1."
+  :type
+  '(list
+    :convert-widget
+    (lambda (widget)
+      (let ((defaults
+	      (delq nil
+		    (mapcar (lambda (pair)
+			      (if (mm-charset-to-coding-system (cdr pair)
+							       nil nil t)
+				  pair))
+			    '((gb2312 . gbk)
+			      (iso-8859-1 . windows-1252)
+			      (iso-8859-8 . windows-1255)
+			      (iso-8859-9 . windows-1254)
+			      (undecided  . windows-1252)))))
+	    (val (copy-sequence (default-value 'mm-charset-override-alist)))
+	    pair rest)
+	(while val
+	  (push (if (and (prog1
+			     (setq pair (assq (caar val) defaults))
+			   (setq defaults (delq pair defaults)))
+			 (equal (car val) pair))
+		    `(const ,pair)
+		  `(cons :format "%v"
+			 (const :format "(%v" ,(caar val))
+			 (symbol :size 3 :format " . %v)\n" ,(cdar val))))
+		rest)
+	  (setq val (cdr val)))
+	(while defaults
+	  (push `(const ,(pop defaults)) rest))
+	(widget-convert
+	 'list
+	 `(set :inline t :format "%v" ,@(nreverse rest))
+	 `(repeat :inline t :tag "Other options"
+		  (cons :format "%v"
+			(symbol :size 3 :format "(%v")
+			(symbol :size 3 :format " . %v)\n")))))))
+  ;; Remove pairs that cannot be used in the Emacs version currently
+  ;; running.  Note that this section will be evaluated when loading
+  ;; mm-util.elc.
+  :set (lambda (symbol value)
+	 (custom-set-default
+	  symbol (delq nil
+		       (mapcar (lambda (pair)
+				 (if (mm-charset-to-coding-system (cdr pair)
+								  nil nil t)
+				     pair))
+			       value))))
+  :version "22.1" ;; Gnus 5.10.9
+  :group 'mime)
 
 (defvar mm-binary-coding-system
   (cond
@@ -481,6 +728,10 @@ could use `autoload-coding-system' here."
     (iso-2022-jp latin-jisx0201 japanese-jisx0208 japanese-jisx0208-1978)
     (euc-kr korean-ksc5601)
     (gb2312 chinese-gb2312)
+    (gbk chinese-gbk)
+    (gb18030 gb18030-2-byte
+	     gb18030-4-byte-bmp gb18030-4-byte-smp
+	     gb18030-4-byte-ext-1 gb18030-4-byte-ext-2)
     (big5 chinese-big5-1 chinese-big5-2)
     (tibetan tibetan)
     (thai-tis620 thai-tis620)
@@ -549,7 +800,7 @@ with Mule charsets.  It is completely useless for Emacs."
 	  cs mime mule alist)
       (while css
 	(setq cs (pop css)
-	      mime (or (coding-system-get cs :mime-charset) ; Emacs 23 (unicode)
+	      mime (or (coding-system-get cs :mime-charset); Emacs 23 (unicode)
 		       (coding-system-get cs 'mime-charset)))
 	(when (and mime
 		   (not (eq t (setq mule
@@ -589,13 +840,16 @@ Valid elements include:
   "A table of the difference character between ISO-8859-X and ISO-8859-15.")
 
 (defcustom mm-coding-system-priorities
-  (if (boundp 'current-language-environment)
-      (let ((lang (symbol-value 'current-language-environment)))
-	(cond ((string= lang "Japanese")
-	       ;; Japanese users prefer iso-2022-jp to euc-japan or
-	       ;; shift_jis, however iso-8859-1 should be used when
-	       ;; there are only ASCII text and Latin-1 characters.
-	       '(iso-8859-1 iso-2022-jp iso-2022-jp-2 shift_jis utf-8)))))
+  (let ((lang (if (boundp 'current-language-environment)
+		  (symbol-value 'current-language-environment))))
+    (cond (;; XEmacs without Mule but with `file-coding'.
+	   (not lang) nil)
+	  ;; In XEmacs 21.5 it may be the one like "Japanese (UTF-8)".
+	  ((string-match "\\`Japanese" lang)
+	   ;; Japanese users prefer iso-2022-jp to euc-japan or
+	   ;; shift_jis, however iso-8859-1 should be used when
+	   ;; there are only ASCII text and Latin-1 characters.
+	   '(iso-8859-1 iso-2022-jp iso-2022-jp-2 shift_jis utf-8))))
   "Preferred coding systems for encoding outgoing messages.
 
 More than one suitable coding system may be found for some text.
@@ -643,87 +897,6 @@ mail with multiple parts is preferred to sending a Unicode one.")
 		alist nil))
 	(pop alist))
       out)))
-
-(defun mm-charset-to-coding-system (charset &optional lbt
-					    allow-override)
-  "Return coding-system corresponding to CHARSET.
-CHARSET is a symbol naming a MIME charset.
-If optional argument LBT (`unix', `dos' or `mac') is specified, it is
-used as the line break code type of the coding system.
-
-If ALLOW-OVERRIDE is given, use `mm-charset-override-alist' to
-map undesired charset names to their replacement.  This should
-only be used for decoding, not for encoding."
-  ;; OVERRIDE is used (only) in `mm-decode-body' and `mm-decode-string'.
-  (when (stringp charset)
-    (setq charset (intern (downcase charset))))
-  (when lbt
-    (setq charset (intern (format "%s-%s" charset lbt))))
-  (cond
-   ((null charset)
-    charset)
-   ;; Running in a non-MULE environment.
-   ((or (null (mm-get-coding-system-list))
-	(not (fboundp 'coding-system-get)))
-    charset)
-   ;; Check override list quite early.  Should only used for decoding, not for
-   ;; encoding!
-   ((and allow-override
-	 (let ((cs (cdr (assq charset mm-charset-override-alist))))
-	   (and cs (mm-coding-system-p cs) cs))))
-   ;; ascii
-   ((eq charset 'us-ascii)
-    'ascii)
-   ;; Check to see whether we can handle this charset.  (This depends
-   ;; on there being some coding system matching each `mime-charset'
-   ;; property defined, as there should be.)
-   ((and (mm-coding-system-p charset)
-;;; Doing this would potentially weed out incorrect charsets.
-;;; 	 charset
-;;; 	 (eq charset (coding-system-get charset 'mime-charset))
-	 )
-    charset)
-   ;; Eval expressions from `mm-charset-eval-alist'
-   ((let* ((el (assq charset mm-charset-eval-alist))
-	   (cs (car el))
-	   (form (cdr el)))
-      (and cs
-	   form
-	   (prog2
-	       ;; Avoid errors...
-	       (condition-case nil (eval form) (error nil))
-	       ;; (message "Failed to eval `%s'" form))
-	       (mm-coding-system-p cs)
-	     (message "Added charset `%s' via `mm-charset-eval-alist'" cs))
-	   cs)))
-   ;; Translate invalid charsets.
-   ((let ((cs (cdr (assq charset mm-charset-synonym-alist))))
-      (and cs
-	   (mm-coding-system-p cs)
-	   ;; (message
-	   ;;  "Using synonym `%s' from `mm-charset-synonym-alist' for `%s'"
-	   ;;  cs charset)
-	   cs)))
-   ;; Last resort: search the coding system list for entries which
-   ;; have the right mime-charset in case the canonical name isn't
-   ;; defined (though it should be).
-   ((let (cs)
-      ;; mm-get-coding-system-list returns a list of cs without lbt.
-      ;; Do we need -lbt?
-      (dolist (c (mm-get-coding-system-list))
-	(if (and (null cs)
-		 (eq charset (or (coding-system-get c :mime-charset)
-				 (coding-system-get c 'mime-charset))))
-	    (setq cs c)))
-      (unless cs
-	;; Warn the user about unknown charset:
-	(if (fboundp 'gnus-message)
-	    (gnus-message 7 "Unknown charset: %s" charset)
-	  (message "Unknown charset: %s" charset)))
-      cs))))
-
-(defsubst mm-replace-chars-in-string (string from to)
-  (mm-subst-char-in-string from to string))
 
 (eval-and-compile
   (defvar mm-emacs-mule (and (not (featurep 'xemacs))
@@ -882,9 +1055,10 @@ This affects whether coding conversion should be attempted generally."
   (autoload 'latin-unity-massage-name "latin-unity")
   (autoload 'latin-unity-maybe-remap "latin-unity")
   (autoload 'latin-unity-representations-feasible-region "latin-unity")
-  (autoload 'latin-unity-representations-present-region "latin-unity")
-  (defvar latin-unity-coding-systems)
-  (defvar latin-unity-ucs-list))
+  (autoload 'latin-unity-representations-present-region "latin-unity"))
+
+(defvar latin-unity-coding-systems)
+(defvar latin-unity-ucs-list)
 
 (defun mm-xemacs-find-mime-charset-1 (begin end)
   "Determine which MIME charset to use to send region as message.
@@ -908,7 +1082,7 @@ But this is very much a corner case, so don't worry about it."
 
     ;; Load the Latin Unity library, if available.
     (when (and (not (featurep 'latin-unity)) (locate-library "latin-unity"))
-      (ignore-errors (require 'latin-unity)))
+      (require 'latin-unity))
 
     ;; Now, can we use it?
     (if (featurep 'latin-unity)
@@ -954,6 +1128,8 @@ But this is very much a corner case, so don't worry about it."
 (defmacro mm-xemacs-find-mime-charset (begin end)
   (when (featurep 'xemacs)
     `(and (featurep 'mule) (mm-xemacs-find-mime-charset-1 ,begin ,end))))
+
+(declare-function mm-delete-duplicates "mm-util" (list))
 
 (defun mm-find-mime-charset-region (b e &optional hack-charsets)
   "Return the MIME charsets needed to encode the region between B and E.
@@ -1001,6 +1177,8 @@ charset, and a longer list means no appropriate charset."
 	;; Otherwise, we'll get nil, and the next setq will get invoked.
 	(setq charsets (mm-xemacs-find-mime-charset b e))
 
+	;; Fixme: won't work for unibyte Emacs 23:
+
 	;; We're not multibyte, or a single coding system won't cover it.
 	(setq charsets
 	      (mm-delete-duplicates
@@ -1011,8 +1189,8 @@ charset, and a longer list means no appropriate charset."
 	     (memq 'iso-8859-15 charsets)
 	     (memq 'iso-8859-15 hack-charsets)
 	     (save-excursion (mm-iso-8859-x-to-15-region b e)))
-	(mapcar (lambda (x) (setq charsets (delq (car x) charsets)))
-		mm-iso-8859-15-compatible))
+	(dolist (x mm-iso-8859-15-compatible)
+	  (setq charsets (delq (car x) charsets))))
     (if (and (memq 'iso-2022-jp-2 charsets)
 	     (memq 'iso-2022-jp-2 hack-charsets))
 	(setq charsets (delq 'iso-2022-jp charsets)))
@@ -1032,16 +1210,18 @@ charset, and a longer list means no appropriate charset."
 (defmacro mm-with-unibyte-buffer (&rest forms)
   "Create a temporary buffer, and evaluate FORMS there like `progn'.
 Use unibyte mode for this."
-  `(let (default-enable-multibyte-characters)
-     (with-temp-buffer ,@forms)))
+  `(with-temp-buffer
+     (mm-disable-multibyte)
+     ,@forms))
 (put 'mm-with-unibyte-buffer 'lisp-indent-function 0)
 (put 'mm-with-unibyte-buffer 'edebug-form-spec '(body))
 
 (defmacro mm-with-multibyte-buffer (&rest forms)
   "Create a temporary buffer, and evaluate FORMS there like `progn'.
 Use multibyte mode for this."
-  `(let ((default-enable-multibyte-characters t))
-     (with-temp-buffer ,@forms)))
+  `(with-temp-buffer
+     (mm-enable-multibyte)
+     ,@forms))
 (put 'mm-with-multibyte-buffer 'lisp-indent-function 0)
 (put 'mm-with-multibyte-buffer 'edebug-form-spec '(body))
 
@@ -1072,20 +1252,6 @@ Emacs 23 (unicode)."
 (put 'mm-with-unibyte-current-buffer 'lisp-indent-function 0)
 (put 'mm-with-unibyte-current-buffer 'edebug-form-spec '(body))
 
-(defmacro mm-with-unibyte (&rest forms)
-  "Eval the FORMS with the default value of `enable-multibyte-characters' nil."
-  `(let (default-enable-multibyte-characters)
-     ,@forms))
-(put 'mm-with-unibyte 'lisp-indent-function 0)
-(put 'mm-with-unibyte 'edebug-form-spec '(body))
-
-(defmacro mm-with-multibyte (&rest forms)
-  "Eval the FORMS with the default value of `enable-multibyte-characters' t."
-  `(let ((default-enable-multibyte-characters t))
-     ,@forms))
-(put 'mm-with-multibyte 'lisp-indent-function 0)
-(put 'mm-with-multibyte 'edebug-form-spec '(body))
-
 (defun mm-find-charset-region (b e)
   "Return a list of Emacs charsets in the region B to E."
   (cond
@@ -1094,10 +1260,10 @@ Emacs 23 (unicode)."
     ;; Remove composition since the base charsets have been included.
     ;; Remove eight-bit-*, treat them as ascii.
     (let ((css (find-charset-region b e)))
-      (mapcar (lambda (cs) (setq css (delq cs css)))
-	      '(composition eight-bit-control eight-bit-graphic
-			    control-1))
-      css))
+      (dolist (cs
+	       '(composition eight-bit-control eight-bit-graphic control-1)
+	       css)
+	(setq css (delq cs css)))))
    (t
     ;; We are in a unibyte buffer or XEmacs non-mule, so we futz around a bit.
     (save-excursion
@@ -1120,21 +1286,6 @@ Emacs 23 (unicode)."
 				       mm-mime-mule-charset-alist)))))
 	    (list 'ascii (or charset 'latin-iso8859-1)))))))))
 
-(if (fboundp 'shell-quote-argument)
-    (defalias 'mm-quote-arg 'shell-quote-argument)
-  (defun mm-quote-arg (arg)
-    "Return a version of ARG that is safe to evaluate in a shell."
-    (let ((pos 0) new-pos accum)
-      ;; *** bug: we don't handle newline characters properly
-      (while (setq new-pos (string-match "[]*[;!'`\"$\\& \t{} |()<>]" arg pos))
-	(push (substring arg pos new-pos) accum)
-	(push "\\" accum)
-	(push (list (aref arg new-pos)) accum)
-	(setq pos (1+ new-pos)))
-      (if (= pos 0)
-	  arg
-	(apply 'concat (nconc (nreverse accum) (list (substring arg pos))))))))
-
 (defun mm-auto-mode-alist ()
   "Return an `auto-mode-alist' with only the .gz (etc) thingies."
   (let ((alist auto-mode-alist)
@@ -1146,7 +1297,7 @@ Emacs 23 (unicode)."
     (nreverse out)))
 
 (defvar mm-inhibit-file-name-handlers
-  '(jka-compr-handler image-file-handler)
+  '(jka-compr-handler image-file-handler epa-file-handler)
   "A list of handlers doing (un)compression (etc) thingies.")
 
 (defun mm-insert-file-contents (filename &optional visit beg end replace
@@ -1220,6 +1371,8 @@ If INHIBIT is non-nil, inhibit `mm-inhibit-file-name-handlers'."
 	   inhibit-file-name-handlers)))
     (write-region start end filename append visit lockname)))
 
+(autoload 'gmm-write-region "gmm-utils")
+
 ;; It is not a MIME function, but some MIME functions use it.
 (if (and (fboundp 'make-temp-file)
 	 (ignore-errors
@@ -1232,7 +1385,7 @@ If INHIBIT is non-nil, inhibit `mm-inhibit-file-name-handlers'."
 		  (>= (length def) 4)
 		  (eq (nth 3 def) 'suffix)))))
     (defalias 'mm-make-temp-file 'make-temp-file)
-  ;; Stolen (and modified for Emacs 20 and XEmacs) from Emacs 22.
+  ;; Stolen (and modified for XEmacs) from Emacs 22.
   (defun mm-make-temp-file (prefix &optional dir-flag suffix)
     "Create a temporary file.
 The returned file name (created by appending some random characters at the end
@@ -1272,10 +1425,9 @@ If SUFFIX is non-nil, add that at the end of the file name."
 					     nil 'excl))
 			 nil)
 		     (file-already-exists t)
-		     ;; The Emacs 20 and XEmacs versions of
-		     ;; `make-directory' issue `file-error'.
-		     (file-error (or (and (or (featurep 'xemacs)
-					      (= emacs-major-version 20))
+		     ;; The XEmacs version of `make-directory' issues
+		     ;; `file-error'.
+		     (file-error (or (and (featurep 'xemacs)
 					  (file-exists-p file))
 				     (signal (car err) (cdr err)))))
 	      ;; the file was somehow created by someone else between
@@ -1312,6 +1464,8 @@ If SUFFIX is non-nil, add that at the end of the file name."
 	  (if (eq (point) end) 'ascii (mm-guess-charset))
 	(goto-char point)))))
 
+(declare-function mm-detect-coding-region "mm-util" (start end))
+
 (if (fboundp 'coding-system-get)
     (defun mm-detect-mime-charset-region (start end)
       "Detect MIME charset of the text in the region between START and END."
@@ -1323,6 +1477,187 @@ If SUFFIX is non-nil, add that at the end of the file name."
     (let ((cs (mm-detect-coding-region start end)))
       cs)))
 
+(eval-when-compile
+  (unless (fboundp 'coding-system-to-mime-charset)
+    (defalias 'coding-system-to-mime-charset 'ignore)))
+
+(defun mm-coding-system-to-mime-charset (coding-system)
+  "Return the MIME charset corresponding to CODING-SYSTEM.
+To make this function work with XEmacs, the APEL package is required."
+  (when coding-system
+    (or (and (fboundp 'coding-system-get)
+	     (or (coding-system-get coding-system :mime-charset)
+		 (coding-system-get coding-system 'mime-charset)))
+	(and (featurep 'xemacs)
+	     (or (and (fboundp 'coding-system-to-mime-charset)
+		      (not (eq (symbol-function 'coding-system-to-mime-charset)
+			       'ignore)))
+		 (and (condition-case nil
+			  (require 'mcharset)
+			(error nil))
+		      (fboundp 'coding-system-to-mime-charset)))
+	     (coding-system-to-mime-charset coding-system)))))
+
+(eval-when-compile
+  (require 'jka-compr))
+
+(defun mm-decompress-buffer (filename &optional inplace force)
+  "Decompress buffer's contents, depending on jka-compr.
+Only when FORCE is t or `auto-compression-mode' is enabled and FILENAME
+agrees with `jka-compr-compression-info-list', decompression is done.
+Signal an error if FORCE is neither nil nor t and compressed data are
+not decompressed because `auto-compression-mode' is disabled.
+If INPLACE is nil, return decompressed data or nil without modifying
+the buffer.  Otherwise, replace the buffer's contents with the
+decompressed data.  The buffer's multibyteness must be turned off."
+  (when (and filename
+	     (if force
+		 (prog1 t (require 'jka-compr))
+	       (and (fboundp 'jka-compr-installed-p)
+		    (jka-compr-installed-p))))
+    (let ((info (jka-compr-get-compression-info filename)))
+      (when info
+	(unless (or (memq force (list nil t))
+		    (jka-compr-installed-p))
+	  (error ""))
+	(let ((prog (jka-compr-info-uncompress-program info))
+	      (args (jka-compr-info-uncompress-args info))
+	      (msg (format "%s %s..."
+			   (jka-compr-info-uncompress-message info)
+			   filename))
+	      (err-file (jka-compr-make-temp-name))
+	      (cur (current-buffer))
+	      (coding-system-for-read mm-binary-coding-system)
+	      (coding-system-for-write mm-binary-coding-system)
+	      retval err-msg)
+	  (message "%s" msg)
+	  (mm-with-unibyte-buffer
+	    (insert-buffer-substring cur)
+	    (condition-case err
+		(progn
+		  (unless (memq (apply 'call-process-region
+				       (point-min) (point-max)
+				       prog t (list t err-file) nil args)
+				jka-compr-acceptable-retval-list)
+		    (erase-buffer)
+		    (insert (mapconcat
+			     'identity
+			     (delete "" (split-string
+					 (prog2
+					     (insert-file-contents err-file)
+					     (buffer-string)
+					   (erase-buffer))))
+			     " ")
+			    "\n")
+		    (setq err-msg
+			  (format "Error while executing \"%s %s < %s\""
+				  prog (mapconcat 'identity args " ")
+				  filename)))
+		  (setq retval (buffer-string)))
+	      (error
+	       (setq err-msg (error-message-string err)))))
+	  (when (file-exists-p err-file)
+	    (ignore-errors (jka-compr-delete-temp-file err-file)))
+	  (when inplace
+	    (unless err-msg
+	      (delete-region (point-min) (point-max))
+	      (insert retval))
+	    (setq retval nil))
+	  (message "%s" (or err-msg (concat msg "done")))
+	  retval)))))
+
+(eval-when-compile
+  (unless (fboundp 'coding-system-name)
+    (defalias 'coding-system-name 'ignore))
+  (unless (fboundp 'find-file-coding-system-for-read-from-filename)
+    (defalias 'find-file-coding-system-for-read-from-filename 'ignore))
+  (unless (fboundp 'find-operation-coding-system)
+    (defalias 'find-operation-coding-system 'ignore)))
+
+(defun mm-find-buffer-file-coding-system (&optional filename)
+  "Find coding system used to decode the contents of the current buffer.
+This function looks for the coding system magic cookie or examines the
+coding system specified by `file-coding-system-alist' being associated
+with FILENAME which defaults to `buffer-file-name'.  Data compressed by
+gzip, bzip2, etc. are allowed."
+  (unless filename
+    (setq filename buffer-file-name))
+  (save-excursion
+    (let ((decomp (unless ;; No worth to examine charset of tar files.
+		      (and filename
+			   (string-match
+			    "\\.\\(?:tar\\.[^.]+\\|tbz\\|tgz\\)\\'"
+			    filename))
+		    (mm-decompress-buffer filename nil t))))
+      (when decomp
+	(set-buffer (let (default-enable-multibyte-characters)
+		      (generate-new-buffer " *temp*")))
+	(insert decomp)
+	(setq filename (file-name-sans-extension filename)))
+      (goto-char (point-min))
+      (prog1
+	  (cond
+	   ((boundp 'set-auto-coding-function) ;; Emacs
+	    (if filename
+		(or (funcall (symbol-value 'set-auto-coding-function)
+			     filename (- (point-max) (point-min)))
+		    (car (find-operation-coding-system 'insert-file-contents
+						       filename)))
+	      (let (auto-coding-alist)
+		(condition-case nil
+		    (funcall (symbol-value 'set-auto-coding-function)
+			     nil (- (point-max) (point-min)))
+		  (error nil)))))
+	   ((and (featurep 'xemacs) (featurep 'file-coding)) ;; XEmacs
+	    (let ((case-fold-search t)
+		  (end (point-at-eol))
+		  codesys start)
+	      (or
+	       (and (re-search-forward "-\\*-+[\t ]*" end t)
+		    (progn
+		      (setq start (match-end 0))
+		      (re-search-forward "[\t ]*-+\\*-" end t))
+		    (progn
+		      (setq end (match-beginning 0))
+		      (goto-char start)
+		      (or (looking-at "coding:[\t ]*\\([^\t ;]+\\)")
+			  (re-search-forward
+			   "[\t ;]+coding:[\t ]*\\([^\t ;]+\\)"
+			   end t)))
+		    (find-coding-system (setq codesys
+					      (intern (match-string 1))))
+		    codesys)
+	       (and (re-search-forward "^[\t ]*;+[\t ]*Local[\t ]+Variables:"
+				       nil t)
+		    (progn
+		      (setq start (match-end 0))
+		      (re-search-forward "^[\t ]*;+[\t ]*End:" nil t))
+		    (progn
+		      (setq end (match-beginning 0))
+		      (goto-char start)
+		      (re-search-forward
+		       "^[\t ]*;+[\t ]*coding:[\t ]*\\([^\t\n\r ]+\\)"
+		       end t))
+		    (find-coding-system (setq codesys
+					      (intern (match-string 1))))
+		    codesys)
+	       (and (progn
+		      (goto-char (point-min))
+		      (setq case-fold-search nil)
+		      (re-search-forward "^;;;coding system: "
+					 ;;(+ (point-min) 3000) t))
+					 nil t))
+		    (looking-at "[^\t\n\r ]+")
+		    (find-coding-system
+		     (setq codesys (intern (match-string 0))))
+		    codesys)
+	       (and filename
+		    (setq codesys
+			  (find-file-coding-system-for-read-from-filename
+			   filename))
+		    (coding-system-name (coding-system-base codesys)))))))
+	(when decomp
+	  (kill-buffer (current-buffer)))))))
 
 (provide 'mm-util)
 

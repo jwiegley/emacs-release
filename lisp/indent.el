@@ -1,16 +1,16 @@
 ;;; indent.el --- indentation commands for Emacs
 
 ;; Copyright (C) 1985, 1995, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -34,7 +32,7 @@
   :group 'editing)
 
 (defcustom standard-indent 4
-  "*Default number of columns for margin-changing functions to indent."
+  "Default number of columns for margin-changing functions to indent."
   :group 'indent
   :type 'integer)
 
@@ -42,16 +40,16 @@
   "Function to indent the current line.
 This function will be called with no arguments.
 If it is called somewhere where auto-indentation cannot be done
-\(f.ex. inside a string), the function should simply return `noindent'.
+\(e.g. inside a string), the function should simply return `noindent'.
 Setting this function is all you need to make TAB indent appropriately.
 Don't rebind TAB unless you really need to.")
 
 (defcustom tab-always-indent t
-  "*Controls the operation of the TAB key.
+  "Controls the operation of the TAB key.
 If t, hitting TAB always just indents the current line.
 If nil, hitting TAB indents the current line if point is at the left margin
-or in the line's indentation, otherwise it insert a \"real\" TAB character.
-Most programming language modes have their own variable to control this,
+or in the line's indentation, otherwise it inserts a \"real\" TAB character.
+Some programming language modes have their own variable to control this,
 e.g., `c-tab-always-indent', and do not respect this variable."
   :group 'indent
   :type '(choice (const nil) (const t) (const always)))
@@ -78,14 +76,25 @@ special; we don't actually use them here."
     (funcall indent-line-function)))
 
 (defun indent-for-tab-command (&optional arg)
-  "Indent line in proper way for current major mode or insert a tab.
+  "Indent line or region in proper way for current major mode or insert a tab.
 Depending on `tab-always-indent', either insert a tab or indent.
 If initial point was within line's indentation, position after
 the indentation.  Else stay at same point in text.
-The function actually called to indent is determined by the value of
+
+If a prefix argument is given, also rigidly indent the entire
+balanced expression which starts at the beginning of the current
+line to reflect the current line's change in indentation.
+
+If `transient-mark-mode' is turned on and the region is active,
+indent the region (in this case, any prefix argument is ignored).
+
+The function actually called to indent the line is determined by the value of
 `indent-line-function'."
   (interactive "P")
   (cond
+   ;; The region is active, indent it.
+   ((use-region-p)
+    (indent-region (region-beginning) (region-end)))
    ((or ;; indent-to-left-margin is only meant for indenting,
 	;; so we force it to always insert a tab here.
 	(eq indent-line-function 'indent-to-left-margin)
@@ -93,12 +102,27 @@ The function actually called to indent is determined by the value of
 	     (or (> (current-column) (current-indentation))
 		 (eq this-command last-command))))
     (insert-tab arg))
-   ;; Those functions are meant specifically for tabbing and not for
-   ;; indenting, so we can't pass them to indent-according-to-mode.
-   ((memq indent-line-function '(indent-relative indent-relative-maybe))
-    (funcall indent-line-function))
-   (t ;; The normal case.
-    (indent-according-to-mode))))
+   (t
+    (let ((end-marker
+	   (and arg
+		(save-excursion
+		  (forward-line 0) (forward-sexp) (point-marker))))
+	  (old-indent
+	   (current-indentation)))
+
+      ;; Indent the line.
+      (funcall indent-line-function)
+
+      ;; If a prefix argument was given, rigidly indent the following
+      ;; sexp to match the change in the current line's indentation.
+      ;;
+      (when arg
+	(let ((indentation-change (- (current-indentation) old-indent)))
+	  (unless (zerop indentation-change)
+	    (save-excursion
+	      (forward-line 1)
+	      (when (< (point) end-marker)
+		(indent-rigidly (point) end-marker indentation-change))))))))))
 
 (defun insert-tab (&optional arg)
   (let ((count (prefix-numeric-value arg)))
@@ -443,10 +467,11 @@ See also `indent-relative-maybe'."
 
 (defcustom tab-stop-list
   '(8 16 24 32 40 48 56 64 72 80 88 96 104 112 120)
-  "*List of tab stop positions used by `tab-to-tab-stop'.
+  "List of tab stop positions used by `tab-to-tab-stop'.
 This should be a list of integers, ordered from smallest to largest."
   :group 'indent
   :type '(repeat integer))
+(put 'tab-stop-list 'safe-local-variable 'listp)
 
 (defvar edit-tab-stops-map
   (let ((map (make-sparse-keymap)))
@@ -549,5 +574,5 @@ Use \\[edit-tab-stops] to edit them interactively."
 (define-key ctl-x-map "\t" 'indent-rigidly)
 (define-key esc-map "i" 'tab-to-tab-stop)
 
-;;; arch-tag: f402b2a7-e44f-492f-b5b8-38996020b7c3
+;; arch-tag: f402b2a7-e44f-492f-b5b8-38996020b7c3
 ;;; indent.el ends here

@@ -1,7 +1,7 @@
 ;;; nnsoup.el --- SOUP access for Gnus
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;;	Masanobu UMEDA <umerin@flab.flab.fujitsu.junet>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -371,9 +369,7 @@ backend for the messages.")
 	    entry e min max)
 	(while (setq e (cdr (setq entry (pop alist))))
 	  (setq min (caaar e))
-	  (while (cdr e)
-	    (setq e (cdr e)))
-	  (setq max (cdar (car e)))
+	  (setq max (cdar (car (last e))))
 	  (setcdr entry (cons (cons min max) (cdr entry)))))
       (setq nnsoup-group-alist-touched t))
     nnsoup-group-alist))
@@ -558,9 +554,8 @@ backend for the messages.")
 (defun nnsoup-unpack-packets ()
   "Unpack all packets in `nnsoup-packet-directory'."
   (let ((packets (directory-files
-		  nnsoup-packet-directory t nnsoup-packet-regexp))
-	packet)
-    (while (setq packet (pop packets))
+		  nnsoup-packet-directory t nnsoup-packet-regexp)))
+    (dolist (packet packets)
       (nnheader-message 5 "nnsoup: unpacking %s..." packet)
       (if (not (gnus-soup-unpack-packet
 		nnsoup-tmp-directory nnsoup-unpacker packet))
@@ -759,20 +754,18 @@ backend for the messages.")
 				 (string-to-number (match-string 1 f2)))))))
 	active group lines ident elem min)
     (set-buffer (get-buffer-create " *nnsoup work*"))
-    (while files
-      (nnheader-message 5 "Doing %s..." (car files))
+    (dolist (file files)
+      (nnheader-message 5 "Doing %s..." file)
       (erase-buffer)
-      (nnheader-insert-file-contents (car files))
+      (nnheader-insert-file-contents file)
       (goto-char (point-min))
       (if (not (re-search-forward "^[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t *\\(Xref: \\)? *[^ ]* \\([^ ]+\\):[0-9]" nil t))
 	  (setq group "unknown")
 	(setq group (match-string 2)))
       (setq lines (count-lines (point-min) (point-max)))
       (setq ident (progn (string-match
-			  "/\\([0-9]+\\)\\." (car files))
-			 (substring
-			  (car files) (match-beginning 1)
-			  (match-end 1))))
+			  "/\\([0-9]+\\)\\." file)
+			 (match-string 1 file)))
       (if (not (setq elem (assoc group active)))
 	  (push (list group (cons 1 lines)
 		      (list (cons 1 lines)
@@ -783,8 +776,7 @@ backend for the messages.")
 		(list (cons (1+ (setq min (cdadr elem)))
 			    (+ min lines))
 		      (vector ident group "ucm" "" lines))))
-	(setcdr (cadr elem) (+ min lines)))
-      (setq files (cdr files)))
+	(setcdr (cadr elem) (+ min lines))))
     (nnheader-message 5 "")
     (setq nnsoup-group-alist active)
     (nnsoup-write-active-file t)))
@@ -801,9 +793,9 @@ backend for the messages.")
 			       nnsoup-group-alist)))
 	 (regexp "\\.MSG$\\|\\.IDX$")
 	 (files (directory-files nnsoup-directory nil regexp))
-	 non-files file)
+	 non-files)
     ;; Find all files that aren't known by nnsoup.
-    (while (setq file (pop files))
+    (dolist (file files)
       (string-match regexp file)
       (unless (member (substring file 0 (match-beginning 0)) known)
 	(push file non-files)))
@@ -816,5 +808,5 @@ backend for the messages.")
 
 (provide 'nnsoup)
 
-;;; arch-tag: b0451389-5703-4450-9425-f66f6b38c828
+;; arch-tag: b0451389-5703-4450-9425-f66f6b38c828
 ;;; nnsoup.el ends here

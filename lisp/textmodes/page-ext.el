@@ -1,17 +1,18 @@
 ;;; page-ext.el --- extended page handling commands
 
-;; Copyright (C) 1990, 1991, 1993, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1990, 1991, 1993, 1994, 2001, 2002, 2003, 2004, 2005, 2006,
+;;   2007, 2008, 2009  Free Software Foundation, Inc.
 
-;; Maintainer: Robert J. Chassell <bob@gnu.org>
+;; Author: Robert J. Chassell <bob@gnu.org>
+;; (according to ack.texi)
 ;; Keywords: wp data
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -642,10 +641,10 @@ directory for only the accessible portion of the buffer."
     (forward-line (if (= 0 pages-buffer-original-page)
                       1
                     pages-buffer-original-page))))
-(eval-when-compile
-  (defvar pages-buffer-original-position)
-  (defvar pages-buffer-original-page)
-  (defvar pages-buffer-original-page))
+
+(defvar pages-buffer-original-position)
+(defvar pages-buffer-original-page)
+(defvar pages-buffer-original-page)
 
 (defun pages-copy-header-and-position (count-lines-p)
   "Copy page header and its position to the Pages Directory.
@@ -804,5 +803,5 @@ to the same line in the pages buffer."
 
 (provide 'page-ext)
 
-;;; arch-tag: 2f311550-c6e0-4458-9c12-7f039c058bdb
+;; arch-tag: 2f311550-c6e0-4458-9c12-7f039c058bdb
 ;;; page-ext.el ends here

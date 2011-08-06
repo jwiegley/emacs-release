@@ -1,16 +1,17 @@
 ;;; rxvt.el --- define function key sequences and standard colors for rxvt
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Eli Zaretskii
 ;; Keywords: terminals
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,59 +19,16 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
 
-(defun terminal-init-rxvt ()
-  "Terminal initialization function for rxvt."
-  ;; The terminal intialization C code file might have initialized
-  ;; function keys F11->F42 from the termcap/terminfo information.  On
-  ;; a PC-style keyboard these keys correspond to
-  ;; MODIFIER-FUNCTION_KEY, where modifier is S-, C-, C-S-.  The
-  ;; code here subsitutes the corresponding defintions in
-  ;; function-key-map.  This substitution is needed because if a key
-  ;; definition if found in function-key-map, there are no further
-  ;; lookups in other keymaps.
-  (substitute-key-definition [f11] [S-f1] function-key-map)
-  (substitute-key-definition [f12] [S-f2] function-key-map)
-  (substitute-key-definition [f13] [S-f3] function-key-map)
-  (substitute-key-definition [f14] [S-f4] function-key-map)
-  (substitute-key-definition [f15] [S-f5] function-key-map)
-  (substitute-key-definition [f16] [S-f6] function-key-map)
-  (substitute-key-definition [f17] [S-f7] function-key-map)
-  (substitute-key-definition [f18] [S-f8] function-key-map)
-  (substitute-key-definition [f19] [S-f9] function-key-map)
-  (substitute-key-definition [f20] [S-f10] function-key-map)
-
-  (substitute-key-definition [f23] [C-f1] function-key-map)
-  (substitute-key-definition [f24] [C-f2] function-key-map)
-  (substitute-key-definition [f25] [C-f3] function-key-map)
-  (substitute-key-definition [f26] [C-f4] function-key-map)
-  (substitute-key-definition [f27] [C-f5] function-key-map)
-  (substitute-key-definition [f28] [C-f6] function-key-map)
-  (substitute-key-definition [f29] [C-f7] function-key-map)
-  (substitute-key-definition [f30] [C-f8] function-key-map)
-  (substitute-key-definition [f31] [C-f9] function-key-map)
-  (substitute-key-definition [f32] [C-f10] function-key-map)
-
-  (substitute-key-definition [f33] [C-S-f1] function-key-map)
-  (substitute-key-definition [f34] [C-S-f2] function-key-map)
-  (substitute-key-definition [f35] [C-S-f3] function-key-map)
-  (substitute-key-definition [f36] [C-S-f4] function-key-map)
-  (substitute-key-definition [f37] [C-S-f5] function-key-map)
-  (substitute-key-definition [f38] [C-S-f6] function-key-map)
-  (substitute-key-definition [f39] [C-S-f7] function-key-map)
-  (substitute-key-definition [f40] [C-S-f8] function-key-map)
-  (substitute-key-definition [f41] [C-S-f9] function-key-map)
-  (substitute-key-definition [f42] [C-S-f10] function-key-map)
-
-  ;; Set up function-key-map entries that termcap and terminfo don't know.
+(defvar rxvt-function-map
   (let ((map (make-sparse-keymap)))
+
+    ;; Set up input-decode-map entries that termcap and terminfo don't know.
     (define-key map "\e[A" [up])
     (define-key map "\e[B" [down])
     (define-key map "\e[C" [right])
@@ -94,8 +52,8 @@
     (define-key map "\e[21~" [f10])
     ;; The strings emitted by f11 and f12 are the same as the strings
     ;; emitted by S-f1 and S-f2, so don't define f11 and f12.
-    ;; (define-key map "\e[23~" [f11])
-    ;; (define-key map "\e[24~" [f12])
+    ;; (define-key rxvt-function-map "\e[23~" [f11])
+    ;; (define-key rxvt-function-map "\e[24~" [f12])
     (define-key map "\e[29~" [print])
 
     (define-key map "\e[11^" [C-f1])
@@ -152,12 +110,67 @@
     (define-key map "\e[c" [S-right])
     (define-key map "\e[a" [S-up])
     (define-key map "\e[b" [S-down])
+    map)
+  "Function key overrides for rxvt.")
 
-    ;; Use inheritance to let the main keymap override those defaults.
-    ;; This way we don't override terminfo-derived settings or settings
-    ;; made in the .emacs file.
-    (set-keymap-parent map (keymap-parent function-key-map))
-    (set-keymap-parent function-key-map map))
+(defvar rxvt-alternatives-map
+  (let ((map (make-sparse-keymap)))
+    ;; The terminal intialization C code file might have initialized
+    ;; function keys F11->F42 from the termcap/terminfo information.  On
+    ;; a PC-style keyboard these keys correspond to
+    ;; MODIFIER-FUNCTION_KEY, where modifier is S-, C-, C-S-.  The
+    ;; code here subsitutes the corresponding defintions in
+    ;; function-key-map.  This substitution is needed because if a key
+    ;; definition if found in function-key-map, there are no further
+    ;; lookups in other keymaps.
+    (define-key map [f11] [S-f1])
+    (define-key map [f12] [S-f2])
+    (define-key map [f13] [S-f3])
+    (define-key map [f14] [S-f4])
+    (define-key map [f15] [S-f5])
+    (define-key map [f16] [S-f6])
+    (define-key map [f17] [S-f7])
+    (define-key map [f18] [S-f8])
+    (define-key map [f19] [S-f9])
+    (define-key map [f20] [S-f10])
+
+    (define-key map [f23] [C-f1])
+    (define-key map [f24] [C-f2])
+    (define-key map [f25] [C-f3])
+    (define-key map [f26] [C-f4])
+    (define-key map [f27] [C-f5])
+    (define-key map [f28] [C-f6])
+    (define-key map [f29] [C-f7])
+    (define-key map [f30] [C-f8])
+    (define-key map [f31] [C-f9])
+    (define-key map [f32] [C-f10])
+
+    (define-key map [f33] [C-S-f1])
+    (define-key map [f34] [C-S-f2])
+    (define-key map [f35] [C-S-f3])
+    (define-key map [f36] [C-S-f4])
+    (define-key map [f37] [C-S-f5])
+    (define-key map [f38] [C-S-f6])
+    (define-key map [f39] [C-S-f7])
+    (define-key map [f40] [C-S-f8])
+    (define-key map [f41] [C-S-f9])
+    (define-key map [f42] [C-S-f10])
+    map)
+  "Keymap of possible alternative meanings for some keys.")
+
+(defun terminal-init-rxvt ()
+  "Terminal initialization function for rxvt."
+
+  (let ((map (copy-keymap rxvt-alternatives-map)))
+    (set-keymap-parent map (keymap-parent local-function-key-map))
+    (set-keymap-parent local-function-key-map map))
+
+  ;; Use inheritance to let the main keymap override those defaults.
+  ;; This way we don't override terminfo-derived settings or settings
+  ;; made in the .emacs file.
+  (let ((m (copy-keymap rxvt-function-map)))
+    (set-keymap-parent m (keymap-parent input-decode-map))
+    (set-keymap-parent input-decode-map m))
 
   ;; Initialize colors and background mode.
   (rxvt-register-default-colors)
@@ -239,7 +252,7 @@ for the currently selected frame."
 			    (- 256 ncolors)
 			    (list color color color))
 	  (setq ncolors (1- ncolors))))
-       
+
        ((= ncolors 72) ; rxvt-unicode
 	;; 64 non-gray colors
 	(let ((levels '(0 139 205 255))
@@ -282,7 +295,7 @@ for the currently selected frame."
   "Set background mode as appropriate for the default rxvt colors."
   (let ((fgbg (getenv "COLORFGBG"))
 	bg rgb)
-    (setq default-frame-background-mode 'light)
+    (set-terminal-parameter nil 'background-mode 'light)
     (when (and fgbg
 	       (string-match ".*;\\([0-9][0-9]?\\)\\'" fgbg))
       (setq bg (string-to-number (substring fgbg (match-beginning 1))))
@@ -295,8 +308,7 @@ for the currently selected frame."
 	     ;; The following line assumes that white is the 15th
 	     ;; color in rxvt-standard-colors.
 	     (* (apply '+ (car (cddr (nth 15 rxvt-standard-colors)))) 0.6))
-	  (setq default-frame-background-mode 'dark)))
-    (frame-set-background-mode (selected-frame))))
+	  (set-terminal-parameter nil 'background-mode 'dark)))))
 
 ;; arch-tag: 20cf2fb6-6318-4bab-9dbf-1d15048f2257
 ;;; rxvt.el ends here

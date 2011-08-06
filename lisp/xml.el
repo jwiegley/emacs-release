@@ -1,7 +1,7 @@
 ;;; xml.el --- XML parser
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Emmanuel Briot  <briot@gnat.com>
 ;; Maintainer: Mark A. Hershberger <mah@everybody.org>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -496,9 +494,7 @@ Returns one of:
 (defun xml-parse-string ()
   "Parse the next whatever.  Could be a string, or an element."
   (let* ((pos (point))
-	 (string (progn (if (search-forward "<" nil t)
-			    (forward-char -1)
-			  (goto-char (point-max)))
+	 (string (progn (skip-chars-forward "^<")
 			(buffer-substring-no-properties pos (point)))))
     ;; Clean up the string.  As per XML specifications, the XML
     ;; processor should always pass the whole string to the
@@ -844,6 +840,18 @@ The first line is indented with the optional INDENT-STRING."
 
 (defalias 'xml-print 'xml-debug-print)
 
+(defun xml-escape-string (string)
+  "Return the string with entity substitutions made from
+xml-entity-alist."
+  (mapconcat (lambda (byte)
+               (let ((char (char-to-string byte)))
+                 (if (rassoc char xml-entity-alist)
+                     (concat "&" (car (rassoc char xml-entity-alist)) ";")
+                   char)))
+             ;; This differs from the non-unicode branch.  Just
+             ;; grabbing the string works here.
+             string ""))
+
 (defun xml-debug-print-internal (xml indent-string)
   "Outputs the XML tree in the current buffer.
 The first line is indented with INDENT-STRING."
@@ -854,7 +862,8 @@ The first line is indented with INDENT-STRING."
     ;;  output the attribute list
     (setq attlist (xml-node-attributes tree))
     (while attlist
-      (insert ?\  (symbol-name (caar attlist)) "=\"" (cdar attlist) ?\")
+      (insert ?\  (symbol-name (caar attlist)) "=\""
+              (xml-escape-string (cdar attlist)) ?\")
       (setq attlist (cdr attlist)))
 
     (setq tree (xml-node-children tree))
@@ -869,7 +878,8 @@ The first line is indented with INDENT-STRING."
 	 ((listp node)
 	  (insert ?\n)
 	  (xml-debug-print-internal node (concat indent-string "  ")))
-	 ((stringp node) (insert node))
+	 ((stringp node)
+          (insert (xml-escape-string node)))
 	 (t
 	  (error "Invalid XML tree"))))
 

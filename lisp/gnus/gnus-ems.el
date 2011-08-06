@@ -1,17 +1,17 @@
 ;;; gnus-ems.el --- functions for making Gnus work under different Emacsen
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -38,21 +36,17 @@
 (defvar gnus-down-mouse-2 [down-mouse-2])
 (defvar gnus-widget-button-keymap nil)
 (defvar gnus-mode-line-modified
-  (if (or (featurep 'xemacs)
-	  (< emacs-major-version 20))
+  (if (featurep 'xemacs)
       '("--**-" . "-----")
     '("**" "--")))
 
 (eval-and-compile
   (autoload 'gnus-xmas-define "gnus-xmas")
-  (autoload 'gnus-xmas-redefine "gnus-xmas")
-  (autoload 'appt-select-lowest-window "appt")
-  (autoload 'gnus-get-buffer-create "gnus")
-  (autoload 'nnheader-find-etc-directory "nnheader"))
+  (autoload 'gnus-xmas-redefine "gnus-xmas"))
 
+(autoload 'gnus-get-buffer-create "gnus")
+(autoload 'nnheader-find-etc-directory "nnheader")
 (autoload 'smiley-region "smiley")
-;; Fixme: shouldn't require message
-(autoload 'message-text-with-property "message")
 
 (defun gnus-kill-all-overlays ()
   "Delete all overlays in the current buffer."
@@ -73,30 +67,23 @@
        valstr)))
 
 (eval-and-compile
-  (defalias 'gnus-char-width
-    (if (fboundp 'char-width)
-	'char-width
-      (lambda (ch) 1)))) ;; A simple hack.
-
-(eval-and-compile
   (if (featurep 'xemacs)
       (gnus-xmas-define)
     (defvar gnus-mouse-face-prop 'mouse-face
       "Property used for highlighting mouse regions.")))
 
-(eval-when-compile
-  (defvar gnus-tmp-unread)
-  (defvar gnus-tmp-replied)
-  (defvar gnus-tmp-score-char)
-  (defvar gnus-tmp-indentation)
-  (defvar gnus-tmp-opening-bracket)
-  (defvar gnus-tmp-lines)
-  (defvar gnus-tmp-name)
-  (defvar gnus-tmp-closing-bracket)
-  (defvar gnus-tmp-subject-or-nil)
-  (defvar gnus-check-before-posting)
-  (defvar gnus-mouse-face)
-  (defvar gnus-group-buffer))
+(defvar gnus-tmp-unread)
+(defvar gnus-tmp-replied)
+(defvar gnus-tmp-score-char)
+(defvar gnus-tmp-indentation)
+(defvar gnus-tmp-opening-bracket)
+(defvar gnus-tmp-lines)
+(defvar gnus-tmp-name)
+(defvar gnus-tmp-closing-bracket)
+(defvar gnus-tmp-subject-or-nil)
+(defvar gnus-check-before-posting)
+(defvar gnus-mouse-face)
+(defvar gnus-group-buffer)
 
 (defun gnus-ems-redefine ()
   (cond
@@ -149,6 +136,18 @@
        gnus-mouse-face-prop gnus-mouse-face)
       (insert " " gnus-tmp-subject-or-nil "\n")))))
 
+;; Clone of `appt-select-lowest-window' in appt.el.
+(defun gnus-select-lowest-window ()
+"Select the lowest window on the frame."
+  (let ((lowest-window (selected-window))
+	(bottom-edge (nth 3 (window-edges))))
+    (walk-windows (lambda (w)
+		    (let ((next-bottom-edge (nth 3 (window-edges w))))
+		      (when (< bottom-edge next-bottom-edge)
+			(setq bottom-edge next-bottom-edge
+			      lowest-window w)))))
+    (select-window lowest-window)))
+
 (defun gnus-region-active-p ()
   "Say whether the region is active."
   (and (boundp 'transient-mark-mode)
@@ -160,15 +159,8 @@
   "Non-nil means the mark and region are currently active in this buffer."
   mark-active) ; aliased to region-exists-p in XEmacs.
 
-(if (fboundp 'add-minor-mode)
-    (defalias 'gnus-add-minor-mode 'add-minor-mode)
-  (defun gnus-add-minor-mode (mode name map &rest rest)
-    (set (make-local-variable mode) t)
-    (unless (assq mode minor-mode-alist)
-      (push `(,mode ,name) minor-mode-alist))
-    (unless (assq mode minor-mode-map-alist)
-      (push (cons mode map)
-	    minor-mode-map-alist))))
+(autoload 'gnus-alive-p "gnus-util")
+(autoload 'mm-disable-multibyte "mm-util")
 
 (defun gnus-x-splash ()
   "Show a splash screen using a pixmap in the current buffer."
@@ -186,9 +178,9 @@
     (sit-for 0) ;; Necessary for measuring the window size correctly.
     (when (and file
 	       (ignore-errors
-		(let ((coding-system-for-read 'raw-text)
-		      default-enable-multibyte-characters)
+		(let ((coding-system-for-read 'raw-text))
 		  (with-temp-buffer
+                    (mm-disable-multibyte)
 		    (insert-file-contents file)
 		    (goto-char (point-min))
 		    (setq pixmap (read (current-buffer)))))))
@@ -222,7 +214,8 @@
 		    (car sbars)
 		    (/ (or (car fringes) 0) fcw))
 	    yoffset (cadr (window-edges))
-	    top (max 0 (- (* (max (if (and tool-bar-mode
+	    top (max 0 (- (* (max (if (and (boundp 'tool-bar-mode)
+					   tool-bar-mode
 					   (not (featurep 'gtk))
 					   (eq (frame-first-window)
 					       (selected-window)))
@@ -291,15 +284,28 @@
     glyph))
 
 (defun gnus-remove-image (image &optional category)
-  (dolist (position (message-text-with-property 'display))
-    (when (and (equal (get-text-property position 'display) image)
-	       (equal (get-text-property position 'gnus-image-category)
+  "Remove the image matching IMAGE and CATEGORY found first."
+  (let ((start (point-min))
+	val end)
+    (while (and (not end)
+		(or (setq val (get-text-property start 'display))
+		    (and (setq start
+			       (next-single-property-change start 'display))
+			 (setq val (get-text-property start 'display)))))
+      (setq end (or (next-single-property-change start 'display)
+		    (point-max)))
+      (if (and (equal val image)
+	       (equal (get-text-property start 'gnus-image-category)
 		      category))
-      (put-text-property position (1+ position) 'display nil)
-      (when (get-text-property position 'gnus-image-text-deletable)
-	(delete-region position (1+ position))))))
+	  (progn
+	    (put-text-property start end 'display nil)
+	    (when (get-text-property start 'gnus-image-text-deletable)
+	      (delete-region start end)))
+	(unless (= end (point-max))
+	  (setq start end
+		end nil))))))
 
 (provide 'gnus-ems)
 
-;;; arch-tag: e7360b45-14b5-4171-aa39-69a44aed3cdb
+;; arch-tag: e7360b45-14b5-4171-aa39-69a44aed3cdb
 ;;; gnus-ems.el ends here

@@ -1,16 +1,16 @@
 ;;; url-cache.el --- Uniform Resource Locator retrieval tool
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes, hypermedia
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Code:
 
@@ -48,8 +46,8 @@ Creates any necessary parent directories, deleting any non-directory files
 that would stop this.  Returns nil if parent directories can not be
 created.  If FILE already exists as a non-directory, it changes
 permissions of FILE or deletes FILE to make it possible to write a new
-version of FILE.  Returns nil if this can not be done.  Returns nil if
-FILE already exists as a directory.  Otherwise, returns t, indicating that
+version of FILE.  Returns nil if this can not be done, or if FILE already
+exists as a directory.  Otherwise, returns t, indicating that
 FILE can be created or overwritten."
   (cond
    ((url-cache-file-writable-p file)
@@ -84,7 +82,7 @@ FILE can be created or overwritten."
 	 (nth 5 attribs))))		; Can get last mod-time
 
 (defun url-cache-create-filename-human-readable (url)
-  "Return a filename in the local cache for URL"
+  "Return a filename in the local cache for URL."
   (if url
       (let* ((url (if (vectorp url) (url-recreate-url url) url))
 	     (urlobj (url-generic-parse-url url))
@@ -180,7 +178,7 @@ Very fast if you have an `md5' primitive function, suitably fast otherwise."
 
 ;;;###autoload
 (defun url-cache-extract (fnam)
-  "Extract FNAM from the local disk cache"
+  "Extract FNAM from the local disk cache."
   (erase-buffer)
   (insert-file-contents-literally fnam))
 

@@ -1,17 +1,17 @@
 ;;; cua-rect.el --- CUA unified rectangle support
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Kim F. Storm <storm@cua.dk>
 ;; Keywords: keyboard emulations convenience CUA
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Acknowledgements
 
@@ -33,12 +31,8 @@
 
 ;;; Code:
 
-(provide 'cua-rect)
-
 (eval-when-compile
-  (require 'cua-base)
-  (require 'cua-gmrk)
-)
+  (require 'cua-base))
 
 ;;; Rectangle support
 
@@ -731,7 +725,7 @@ If command is repeated at same position, delete the rectangle."
 
 (defun cua--deactivate-rectangle ()
   ;; This is used to clean up after `cua--activate-rectangle'.
-  (mapcar (function delete-overlay) cua--rectangle-overlays)
+  (mapc (function delete-overlay) cua--rectangle-overlays)
   (setq cua--last-rectangle (cons (current-buffer)
                                   (cons (point) ;; cua-save-point
                                         cua--rectangle))
@@ -837,7 +831,7 @@ If command is repeated at same position, delete the rectangle."
 	     (overlay-put overlay 'window (selected-window))
 	     (setq new (cons overlay new))))))
     ;; Trim old trailing overlays.
-    (mapcar (function delete-overlay) old)
+    (mapc (function delete-overlay) old)
     (setq cua--rectangle-overlays (nreverse new))))
 
 (defun cua--indent-rectangle (&optional ch to-col clear)
@@ -853,7 +847,7 @@ If command is repeated at same position, delete the rectangle."
              (move-to-column col t))
 	 (cond
 	  (to-col (indent-to to-col))
-	  (ch (insert ch))
+	  ((and ch (not (eq ch ?\t))) (insert ch))
 	  (t (tab-to-tab-stop)))
          (if (cua--rectangle-right-side t)
              (cua--rectangle-insert-col (current-column))
@@ -1060,6 +1054,9 @@ The text previously in the rectangle is overwritten by the blanks."
         (move-to-column l)
         ;; (setq cua-save-point (point))
         ))))
+
+(declare-function cua--cut-rectangle-to-global-mark  "cua-gmrk" (as-text))
+(declare-function cua--copy-rectangle-to-global-mark "cua-gmrk" (as-text))
 
 (defun cua-copy-rectangle-as-text (&optional arg delete)
   "Copy rectangle, but store as normal text."
@@ -1401,7 +1398,7 @@ With prefix arg, indent to that column."
         (cua--deactivate-rectangle))
     (when cua--rectangle-overlays
       ;; clean-up after revert-buffer
-      (mapcar (function delete-overlay) cua--rectangle-overlays)
+      (mapc (function delete-overlay) cua--rectangle-overlays)
       (setq cua--rectangle-overlays nil)
       (setq deactivate-mark t)))
   (when cua--rect-undo-set-point
@@ -1491,5 +1488,7 @@ With prefix arg, indent to that column."
 
   (setq cua--rectangle-initialized t))
 
-;;; arch-tag: b730df53-17b9-4a89-bd63-4a71ec196731
+(provide 'cua-rect)
+
+;; arch-tag: b730df53-17b9-4a89-bd63-4a71ec196731
 ;;; cua-rect.el ends here

@@ -1,22 +1,27 @@
 ;;; ediff.el --- a comprehensive visual interface to diff & patch
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 ;; Created: February 2, 1994
 ;; Keywords: comparing, merging, patching, tools, unix
 
-(defconst ediff-version "2.81.1" "The current version of Ediff")
-(defconst ediff-date "October 23, 2006" "Date of last update")
+;; Yoni Rabkin <yoni@rabkins.net> contacted the maintainer of this
+;; file on 20/3/2008, and the maintainer agreed that when a bug is
+;; filed in the Emacs bug reporting system against this file, a copy
+;; of the bug report be sent to the maintainer's email address.
+
+(defconst ediff-version "2.81.2" "The current version of Ediff")
+(defconst ediff-date "November 22, 2008" "Date of last update")
 
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -24,9 +29,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -107,29 +110,17 @@
 
 ;;; Code:
 
+(provide 'ediff)
 
 ;; Compiler pacifier
-(defvar cvs-cookie-handle)
-(defvar ediff-last-dir-patch)
-(defvar ediff-patch-default-directory)
+(eval-and-compile
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest  r))))
 
-(and noninteractive
-     (eval-when-compile
-	 (load-library "dired")
-	 (load-library "info")
-	 (load "pcl-cvs" 'noerror)))
+
 (eval-when-compile
-  (let ((load-path (cons (expand-file-name ".") load-path)))
-    (provide 'ediff) ; to break recursive load cycle
-    (or (featurep 'ediff-init)
-	(load "ediff-init.el" nil nil 'nosuffix))
-    (or (featurep 'ediff-mult)
-	(load "ediff-mult.el" nil nil 'nosuffix))
-    (or (featurep 'ediff-ptch)
-	(load "ediff-ptch.el" nil nil 'nosuffix))
-    (or (featurep 'ediff-vers)
-	(load "ediff-vers.el" nil nil 'nosuffix))
-    ))
+  (require 'dired)
+  (require 'ediff-util)
+  (require 'ediff-ptch))
 ;; end pacifier
 
 (require 'ediff-init)
@@ -142,7 +133,7 @@
 
 
 (defcustom ediff-use-last-dir nil
-  "*If t, Ediff will use previous directory as default when reading file name."
+  "If t, Ediff will use previous directory as default when reading file name."
   :type 'boolean
   :group 'ediff)
 
@@ -282,16 +273,17 @@
 (defalias 'ediff3 'ediff-files3)
 
 
-;; Visit FILE and arrange its buffer to Ediff's liking.
-;; FILE is actually a variable symbol that must contain a true file name.
-;; BUFFER-NAME is a variable symbol, which will get the buffer object into
-;; which FILE is read.
-;; LAST-DIR is the directory variable symbol where FILE's
-;; directory name should be returned.  HOOKS-VAR is a variable symbol that will
-;; be assigned the hook to be executed after `ediff-startup' is finished.
-;; `ediff-find-file' arranges that the temp files it might create will be
-;; deleted.
 (defun ediff-find-file (file-var buffer-name &optional last-dir hooks-var)
+  "Visit FILE and arrange its buffer to Ediff's liking.
+FILE-VAR is actually a variable symbol whose value must contain a true
+file name.
+BUFFER-NAME is a variable symbol, which will get the buffer object into
+which FILE is read.
+LAST-DIR is the directory variable symbol where FILE's
+directory name should be returned.  HOOKS-VAR is a variable symbol that will
+be assigned the hook to be executed after `ediff-startup' is finished.
+`ediff-find-file' arranges that the temp files it might create will be
+deleted."
   (let* ((file (symbol-value file-var))
 	 (file-magic (ediff-filename-magic-p file))
 	 (temp-file-name-prefix (file-name-nondirectory file)))
@@ -363,6 +355,7 @@
 		 (list (cons 'ediff-job-name job-name))
 		 merge-buffer-file)))
 
+(declare-function diff-latest-backup-file "diff" (fn))
 
 ;;;###autoload
 (defalias 'ediff 'ediff-files)
@@ -1303,20 +1296,6 @@ buffer."
      (intern (format "ediff-%S-merge-internal" ediff-version-control-package))
      rev1 rev2 ancestor-rev startup-hooks merge-buffer-file)))
 
-;; MK: Check. This function doesn't seem to be used any more by pcvs or pcl-cvs
-;;;###autoload
-(defun run-ediff-from-cvs-buffer (pos)
-  "Run Ediff-merge on appropriate revisions of the selected file.
-First run after `M-x cvs-update'.  Then place the cursor on a line describing a
-file and then run `run-ediff-from-cvs-buffer'."
-  (interactive "d")
-  (ediff-load-version-control)
-  (let ((tin (tin-locate cvs-cookie-handle pos)))
-    (if tin
-	(cvs-run-ediff-on-file-descriptor tin)
-      (error "There is no file to merge"))))
-
-
 ;;; Apply patch
 
 ;;;###autoload
@@ -1438,9 +1417,11 @@ Uses `vc.el' or `rcs.el' depending on `ediff-version-control-package'."
 When called interactively, displays the version."
   (interactive)
   (if (interactive-p)
-      (message (ediff-version))
+      (message "%s" (ediff-version))
     (format "Ediff %s of %s" ediff-version ediff-date)))
 
+;; info is run first, and will autoload info.el.
+(declare-function Info-goto-node "info" (nodename &optional fork))
 
 ;;;###autoload
 (defun ediff-documentation (&optional node)
@@ -1454,7 +1435,7 @@ With optional NODE, goes to that node."
     (condition-case nil
 	(progn
 	  (pop-to-buffer (get-buffer-create "*info*"))
-	  (info (if ediff-xemacs-p "ediff.info" "ediff"))
+	  (info (if (featurep 'xemacs) "ediff.info" "ediff"))
 	  (if node
 	      (Info-goto-node node)
 	    (message "Type `i' to search for a specific topic"))
@@ -1523,14 +1504,12 @@ With optional NODE, goes to that node."
 
 (run-hooks 'ediff-load-hook)
 
-(provide 'ediff)
 
+;; Local Variables:
+;; eval: (put 'ediff-defvar-local 'lisp-indent-hook 'defun)
+;; eval: (put 'ediff-with-current-buffer 'lisp-indent-hook 1)
+;; eval: (put 'ediff-with-current-buffer 'edebug-form-spec '(form body))
+;; End:
 
-;;; Local Variables:
-;;; eval: (put 'ediff-defvar-local 'lisp-indent-hook 'defun)
-;;; eval: (put 'ediff-with-current-buffer 'lisp-indent-hook 1)
-;;; eval: (put 'ediff-with-current-buffer 'edebug-form-spec '(form body))
-;;; End:
-
-;;; arch-tag: 97c71396-db02-4f41-8b48-6a51c3348fcc
+;; arch-tag: 97c71396-db02-4f41-8b48-6a51c3348fcc
 ;;; ediff.el ends here

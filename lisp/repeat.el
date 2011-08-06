@@ -1,7 +1,7 @@
 ;;; repeat.el --- convenient way to repeat the previous command
 
 ;; Copyright (C) 1998, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Will Mengarini <seldon@eskimo.com>
 ;; Created: Mo 02 Mar 98
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -102,9 +100,9 @@
   :type '(repeat function))
 
 ;; If the last command was self-insert-command, the char to be inserted was
-;; obtained by that command from last-command-char, which has now been
+;; obtained by that command from last-command-event, which has now been
 ;; clobbered by the command sequence that invoked `repeat'.  We could get it
-;; from (recent-keys) & set last-command-char to that, "unclobbering" it, but
+;; from (recent-keys) & set last-command-event to that, "unclobbering" it, but
 ;; this has the disadvantage that if the user types a sequence of different
 ;; chars then invokes repeat, only the final char will be inserted.  In vi,
 ;; the dot command can reinsert the entire most-recently-inserted sequence.
@@ -200,6 +198,14 @@ this function is always whether the value of `this-command' would've been
 (defvar repeat-previous-repeated-command nil
   "The previous repeated command.")
 
+;; The following variable counts repeated self-insertions.  The idea is
+;; that repeating a self-insertion command and subsequently undoing it
+;; should have almost the same effect as if the characters were inserted
+;; manually.  The basic difference is that we leave in one undo-boundary
+;; between the original insertion and its first repetition.
+(defvar repeat-undo-count nil
+  "Number of self-insertions since last `undo-boundary'.")
+
 ;;;###autoload
 (defun repeat (repeat-arg)
   "Repeat most recently executed command.
@@ -241,20 +247,14 @@ recently executed command not bound to an input event\"."
     (setq repeat-arg last-prefix-arg))
   ;; Now determine whether to loop on repeated taps of the final character
   ;; of the key sequence that invoked repeat.  The Emacs global
-  ;; last-command-char contains the final character now, but may not still
+  ;; last-command-event contains the final character now, but may not still
   ;; contain it after the previous command is repeated, so the character
   ;; needs to be saved.
   (let ((repeat-repeat-char
          (if (eq repeat-on-final-keystroke t)
-	     ;; The following commented out since it's equivalent to
-	     ;; last-comment-char (martin 2007-08-29).
-;;;              ;; allow any final input event that was a character
-;;;              (when (eq last-command-char
-;;;                        last-command-event)
-;;;                last-command-char)
-	     last-command-char
+	     last-command-event
            ;; allow only specified final keystrokes
-           (car (memq last-command-char
+           (car (memq last-command-event
                       (listify-key-sequence
                        repeat-on-final-keystroke))))))
     (if (memq last-repeatable-command '(exit-minibuffer
@@ -293,11 +293,22 @@ recently executed command not bound to an input event\"."
 		  (i 0))
 	      ;; Run pre- and post-command hooks for self-insertion too.
 	      (run-hooks 'pre-command-hook)
+	      (cond
+	       ((not repeat-undo-count))
+	       ((< repeat-undo-count 20)
+		;; Don't make an undo-boundary here.
+		(setq repeat-undo-count (1+ repeat-undo-count)))
+	       (t
+		;; Make an undo-boundary after 20 repetitions only.
+		(undo-boundary)
+		(setq repeat-undo-count 1)))
 	      (while (< i count)
 		(repeat-self-insert insertion)
 		(setq i (1+ i)))
 	      (run-hooks 'post-command-hook)))
 	(let ((indirect (indirect-function last-repeatable-command)))
+	  ;; Make each repetition undo separately.
+	  (undo-boundary)
 	  (if (or (stringp indirect)
 		  (vectorp indirect))
 	      ;; Bind real-last-command so that executing the macro does
@@ -314,18 +325,26 @@ recently executed command not bound to an input event\"."
       ;; (only 32 repetitions are possible given the default value of 200 for
       ;; max-lisp-eval-depth), but if I now locally disable the repeat char I
       ;; can iterate indefinitely here around a single level of recursion.
-      (let (repeat-on-final-keystroke)
+      (let (repeat-on-final-keystroke
+	    ;; Bind `undo-inhibit-record-point' to t in order to avoid
+	    ;; recording point in `buffer-undo-list' here.  We have to
+	    ;; do this since the command loop does not set the last
+	    ;; position of point thus confusing the point recording
+	    ;; mechanism when inserting or deleting text.
+	    (undo-inhibit-record-point t))
 	(setq real-last-command 'repeat)
-        (while (eq (read-event) repeat-repeat-char)
-	  ;; Make each repetition undo separately.
-	  (undo-boundary)
-          (repeat repeat-arg))
+	(setq repeat-undo-count 1)
+	(unwind-protect
+	    (while (eq (read-event) repeat-repeat-char)
+	      (repeat repeat-arg))
+	  ;; Make sure `repeat-undo-count' is reset.
+	  (setq repeat-undo-count nil))
         (setq unread-command-events (list last-input-event))))))
 
 (defun repeat-self-insert (string)
   (let ((i 0))
     (while (< i (length string))
-      (let ((last-command-char (aref string i)))
+      (let ((last-command-event (aref string i)))
 	(self-insert-command 1))
       (setq i (1+ i)))))
 
@@ -368,5 +387,5 @@ recently executed command not bound to an input event\"."
 
 (provide 'repeat)
 
-;;; arch-tag: cd569600-a1ad-4fa7-9062-bb91dfeaf1db
+;; arch-tag: cd569600-a1ad-4fa7-9062-bb91dfeaf1db
 ;;; repeat.el ends here

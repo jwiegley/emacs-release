@@ -1,7 +1,7 @@
 ;;; pgg-parse.el --- OpenPGP packet parsing
 
 ;; Copyright (C) 1999, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Daiki Ueno <ueno@unixuser.org>
 ;; Created: 1999/10/28
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -36,7 +34,9 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(eval-when-compile
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest r)))
+  (require 'cl))
 
 (defgroup pgg-parse ()
   "OpenPGP packet parsing."
@@ -177,6 +177,8 @@
 	     ((r5 += 1)
 	      (repeat))))
 	(repeat)))))
+
+  (defvar pgg-parse-crc24)
 
   (defun pgg-parse-crc24-string (string)
     (let ((h (vector nil 183 1230 nil nil nil nil nil nil)))
@@ -463,6 +465,10 @@
 		       pgg-parse-public-key-algorithm-alist)))
     result))
 
+;; p-d-p only calls this if it is defined, but the compiler does not
+;; recognize that.
+(declare-function pgg-parse-crc24-string "pgg-parse" (string))
+
 (defun pgg-decode-packets ()
   (if (re-search-forward "^=\\([A-Za-z0-9+/]\\{4\\}\\)$" nil t)
       (let ((p (match-beginning 0))
@@ -512,5 +518,5 @@
 
 (provide 'pgg-parse)
 
-;;; arch-tag: 16c2eb82-1313-4a7c-a70f-420709b5b43e
+;; arch-tag: 16c2eb82-1313-4a7c-a70f-420709b5b43e
 ;;; pgg-parse.el ends here

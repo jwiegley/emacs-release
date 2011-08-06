@@ -1,17 +1,17 @@
 ;;; rect.el --- rectangle functions for GNU Emacs
 
 ;; Copyright (C) 1985, 1999, 2000, 2001, 2002, 2003, 2004
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: Didier Verna <didier@xemacs.org>
 ;; Keywords: internal
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -33,6 +31,14 @@
 ;; intrusive and fill lines with whitespaces only when needed. A few functions
 ;; are untouched though, as noted above their definition.
 
+;;; Global key bindings
+
+;;;###autoload (define-key ctl-x-r-map "c" 'clear-rectangle)
+;;;###autoload (define-key ctl-x-r-map "k" 'kill-rectangle)
+;;;###autoload (define-key ctl-x-r-map "d" 'delete-rectangle)
+;;;###autoload (define-key ctl-x-r-map "y" 'yank-rectangle)
+;;;###autoload (define-key ctl-x-r-map "o" 'open-rectangle)
+;;;###autoload (define-key ctl-x-r-map "t" 'string-rectangle)
 
 ;;; Code:
 
@@ -181,9 +187,9 @@ the function is called."
 
 ;; this one is untouched --dv
 (defun spaces-string (n)
-  "Returns a string with N spaces."
+  "Return a string with N spaces."
   (if (<= n 8) (aref spaces-strings n)
-    (make-string n ? )))
+    (make-string n ?\s)))
 
 ;;;###autoload
 (defun delete-rectangle (start end &optional fill)
@@ -284,8 +290,8 @@ The text previously in the region is not overwritten by the blanks,
 but instead winds up to the right of the rectangle.
 
 When called from a program the rectangle's corners are START and END.
-With a prefix (or a FILL) argument, fill with blanks even if there is no text
-on the right side of the rectangle."
+With a prefix (or a FILL) argument, fill with blanks even if there is
+no text on the right side of the rectangle."
   (interactive "*r\nP")
   (apply-on-rectangle 'open-rectangle-line start end fill)
   (goto-char start))
@@ -391,5 +397,5 @@ rectangle which were empty."
 
 (provide 'rect)
 
-;;; arch-tag: 178847b3-1f50-4b03-83de-a6e911cc1d16
+;; arch-tag: 178847b3-1f50-4b03-83de-a6e911cc1d16
 ;;; rect.el ends here

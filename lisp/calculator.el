@@ -1,28 +1,25 @@
 ;;; calculator.el --- a [not so] simple calculator for Emacs
 
-;; Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004,  2005, 2006, 2007,
+;;   2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Eli Barzilay <eli@barzilay.org>
 ;; Keywords: tools, convenience
-;; Time-stamp: <2006-02-06 13:36:00 ttn>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify it
-;; under the terms of the GNU General Public License as published by the
-;; Free Software Foundation; either version 3, or (at your option) any
-;; later version.
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; GNU Emacs is distributed in the hope that it will be useful, but
-;; WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-;; MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;;=====================================================================
 ;;; Commentary:
@@ -47,10 +44,7 @@
 ;;; History:
 ;; I hate history.
 
-(eval-and-compile
-  (if (fboundp 'defgroup) nil
-    (defmacro defgroup (&rest forms) nil)
-    (defmacro defcustom (s v d &rest r) (list 'defvar s v d))))
+(eval-when-compile (require 'cl))
 
 ;;;=====================================================================
 ;;; Customization:
@@ -63,31 +57,31 @@
   :group 'convenience)
 
 (defcustom calculator-electric-mode nil
-  "*Run `calculator' electrically, in the echo area.
+  "Run `calculator' electrically, in the echo area.
 Electric mode saves some place but changes the way you interact with the
 calculator."
   :type  'boolean
   :group 'calculator)
 
 (defcustom calculator-use-menu t
-  "*Make `calculator' create a menu.
+  "Make `calculator' create a menu.
 Note that this requires easymenu.  Must be set before loading."
   :type  'boolean
   :group 'calculator)
 
 (defcustom calculator-bind-escape nil
-  "*If non-nil, set escape to exit the calculator."
+  "If non-nil, set escape to exit the calculator."
   :type  'boolean
   :group 'calculator)
 
 (defcustom calculator-unary-style 'postfix
-  "*Value is either 'prefix or 'postfix.
+  "Value is either 'prefix or 'postfix.
 This determines the default behavior of unary operators."
   :type    '(choice (const prefix) (const postfix))
   :group   'calculator)
 
 (defcustom calculator-prompt "Calc=%s> "
-  "*The prompt used by the Emacs calculator.
+  "The prompt used by the Emacs calculator.
 It should contain a \"%s\" somewhere that will indicate the i/o radixes;
 this will be a two-character string as described in the documentation
 for `calculator-mode'."
@@ -95,7 +89,7 @@ for `calculator-mode'."
   :group 'calculator)
 
 (defcustom calculator-number-digits 3
-  "*The calculator's number of digits used for standard display.
+  "The calculator's number of digits used for standard display.
 Used by the `calculator-standard-display' function - it will use the
 format string \"%.NC\" where this number is N and C is a character given
 at runtime."
@@ -103,7 +97,7 @@ at runtime."
   :group 'calculator)
 
 (defcustom calculator-radix-grouping-mode t
-  "*Use digit grouping in radix output mode.
+  "Use digit grouping in radix output mode.
 If this is set, chunks of `calculator-radix-grouping-digits' characters
 will be separated by `calculator-radix-grouping-separator' when in radix
 output mode is active (determined by `calculator-output-radix')."
@@ -111,19 +105,19 @@ output mode is active (determined by `calculator-output-radix')."
   :group 'calculator)
 
 (defcustom calculator-radix-grouping-digits 4
-  "*The number of digits used for grouping display in radix modes.
+  "The number of digits used for grouping display in radix modes.
 See `calculator-radix-grouping-mode'."
   :type  'integer
   :group 'calculator)
 
 (defcustom calculator-radix-grouping-separator "'"
-  "*The separator used in radix grouping display.
+  "The separator used in radix grouping display.
 See `calculator-radix-grouping-mode'."
   :type  'string
   :group 'calculator)
 
 (defcustom calculator-remove-zeros t
-  "*Non-nil value means delete all redundant zero decimal digits.
+  "Non-nil value means delete all redundant zero decimal digits.
 If this value is not t, and not nil, redundant zeros are removed except
 for one and if it is nil, nothing is removed.
 Used by the `calculator-remove-zeros' function."
@@ -131,7 +125,7 @@ Used by the `calculator-remove-zeros' function."
   :group 'calculator)
 
 (defcustom calculator-displayer '(std ?n)
-  "*A displayer specification for numerical values.
+  "A displayer specification for numerical values.
 This is the displayer used to show all numbers in an expression.  Result
 values will be displayed according to the first element of
 `calculator-displayers'.
@@ -156,7 +150,7 @@ will be used with this character for a format string."
     ((std ?f) "Standard display, decimal point")
     ((std ?e) "Standard display, scientific")
     ("%S"     "Emacs printer"))
-  "*A list of displayers.
+  "A list of displayers.
 Each element is a list of a displayer and a description string.  The
 first element is the one which is currently used, this is for the display
 of result values not values in expressions.  A displayer specification
@@ -167,14 +161,14 @@ is the same as the values that can be stored in `calculator-displayer'.
   :group 'calculator)
 
 (defcustom calculator-paste-decimals t
-  "*If non-nil, convert pasted integers so they have a decimal point.
+  "If non-nil, convert pasted integers so they have a decimal point.
 This makes it possible to paste big integers since they will be read as
 floats, otherwise the Emacs reader will fail on them."
   :type  'boolean
   :group 'calculator)
 
 (defcustom calculator-copy-displayer nil
-  "*If non-nil, this is any value that can be used for
+  "If non-nil, this is any value that can be used for
 `calculator-displayer', to format a string before copying it with
 `calculator-copy'.  If nil, then `calculator-displayer's normal value is
 used."
@@ -182,13 +176,13 @@ used."
   :group 'calculator)
 
 (defcustom calculator-2s-complement nil
-  "*If non-nil, show negative numbers in 2s complement in radix modes.
+  "If non-nil, show negative numbers in 2s complement in radix modes.
 Otherwise show as a negative number."
   :type  'boolean
   :group 'calculator)
 
 (defcustom calculator-mode-hook nil
-  "*List of hook functions for `calculator-mode' to run.
+  "List of hook functions for `calculator-mode' to run.
 Note: if `calculator-electric-mode' is on, then this hook will get
 activated in the minibuffer - in that case it should not do much more
 than local key settings and other effects that will change things
@@ -197,7 +191,7 @@ outside the scope of calculator related code."
   :group 'calculator)
 
 (defcustom calculator-user-registers nil
-  "*An association list of user-defined register bindings.
+  "An association list of user-defined register bindings.
 Each element in this list is a list of a character and a number that
 will be stored in that character's register.
 
@@ -213,7 +207,7 @@ before you load calculator."
   :group 'calculator)
 
 (defcustom calculator-user-operators nil
-  "*A list of additional operators.
+  "A list of additional operators.
 This is a list in the same format as specified in the documentation for
 `calculator-operators', that you can use to bind additional calculator
 operators.  It is probably not a good idea to modify this value with
@@ -278,7 +272,7 @@ Examples:
     ("IC" acos (D (acos X))    x  6)
     ("IT" atan (D (atan X))    x  6)
     ("Q"  sqrt sqrt            x  7)
-    ("^"  ^    expt            2  7)
+    ("^"  ^    calculator-expt 2  7)
     ("!"  !    calculator-fact x  7)
     (";"  1/   (/ 1 X)         1  7)
     ("_"  -    -               1  8)
@@ -596,7 +590,8 @@ specified, then it is fixed, otherwise it depends on this variable).
 `+' and `-' can be used as either binary operators or prefix unary
 operators.  Numbers can be entered with exponential notation using `e',
 except when using a non-decimal radix mode for input (in this case `e'
-will be the hexadecimal digit).
+will be the hexadecimal digit).  If the result of a calculation is too
+large (out of range for Emacs), the value of \"inf\" is returned.
 
 Here are the editing keys:
 * `RET' `='      evaluate the current expression
@@ -1001,8 +996,8 @@ If radix output mode is active, decrease the grouping size."
               (calculator-standard-displayer 'right (cadr disp))))))))
 
 (defun calculator-remove-zeros (numstr)
-  "Get a number string NUMSTR and remove unnecessary zeroes.
-the behavior of this function is controlled by
+  "Get a number string NUMSTR and remove unnecessary zeros.
+The behavior of this function is controlled by
 `calculator-remove-zeros'."
   (cond ((and (eq calculator-remove-zeros t)
               (string-match "\\.0+\\([eE][+-]?[0-9]*\\)?$" numstr))
@@ -1462,8 +1457,7 @@ Optional string argument KEYS will force using it as the keys entered."
 (defun calculator-op-or-exp ()
   "Either enter an operator or a digit.
 Used with +/- for entering them as digits in numbers like 1e-3 (there is
-no need for negative numbers since these are handled by unary
-operators)."
+no need for negative numbers since these are handled by unary operators)."
   (interactive)
   (if (and (not calculator-display-fragile)
            calculator-curnum
@@ -1713,7 +1707,7 @@ Used by `calculator-paste' and `get-register'."
         (use-global-map calculator-saved-global-map))
       (if (or (not calculator-electric-mode)
               ;; XEmacs has a problem with electric-describe-mode
-              (string-match "XEmacs" (emacs-version)))
+              (featurep 'xemacs))
         (describe-mode)
         (electric-describe-mode))
       (if calculator-electric-mode
@@ -1760,7 +1754,7 @@ Used by `calculator-paste' and `get-register'."
   (calculator-quit))
 
 (defun calculator-repR (x)
-  "Repeats the last binary operation with its second argument and X.
+  "Repeat the last binary operation with its second argument and X.
 To use this, apply a binary operator (evaluate it), then call this."
   (if calculator-last-opXY
     ;; avoid rebinding calculator-last-opXY
@@ -1770,7 +1764,7 @@ To use this, apply a binary operator (evaluate it), then call this."
     x))
 
 (defun calculator-repL (x)
-  "Repeats the last binary operation with its first argument and X.
+  "Repeat the last binary operation with its first argument and X.
 To use this, apply a binary operator (evaluate it), then call this."
   (if calculator-last-opXY
     ;; avoid rebinding calculator-last-opXY
@@ -1779,13 +1773,57 @@ To use this, apply a binary operator (evaluate it), then call this."
        (car calculator-last-opXY) (nth 1 calculator-last-opXY) x))
     x))
 
+(defun calculator-integer-p (x)
+  "Non-nil if X is equal to an integer."
+  (condition-case nil
+      (= x (ftruncate x))
+    (error nil)))
+
+(defun calculator-expt (x y)
+  "Compute X^Y, dealing with errors appropriately."
+  (condition-case
+      nil
+      (expt x y)
+    (domain-error 0.0e+NaN)
+    (range-error
+     (cond
+      ((and (< x 1.0) (> x -1.0))
+       ;; For small x, the range error comes from large y.
+       0.0)
+      ((and (> x 0.0) (< y 0.0))
+       ;; For large positive x and negative y, the range error
+       ;; comes from large negative y.
+       0.0)
+      ((and (> x 0.0) (> y 0.0))
+       ;; For large positive x and positive y, the range error
+       ;; comes from large y.
+       1.0e+INF)
+      ;; For the rest, x must be large and negative.
+      ;; The range errors come from large integer y.
+      ((< y 0.0)
+       0.0)
+      ((eq (logand (truncate y) 1) 1)   ; expansion of cl `oddp'
+       ;; If y is odd
+       -1.0e+INF)
+      (t
+       ;;
+       1.0e+INF)))
+    (error 0.0e+NaN)))
+
 (defun calculator-fact (x)
   "Simple factorial of X."
-  (let ((r (if (<= x 10) 1 1.0)))
-    (while (> x 0)
-      (setq r (* r (truncate x)))
-      (setq x (1- x)))
-    (+ 0.0 r)))
+  (if (and (>= x 0)
+           (calculator-integer-p x))
+      (if (= (calculator-expt (/ x 3.0) x) 1.0e+INF)
+          1.0e+INF
+        (let ((r (if (<= x 10) 1 1.0)))
+          (while (> x 0)
+            (setq r (* r (truncate x)))
+            (setq x (1- x)))
+          (+ 0.0 r)))
+    (if (= x 1.0e+INF)
+        x
+      0.0e+NaN)))
 
 (defun calculator-truncate (n)
   "Truncate N, return 0 in case of overflow."
@@ -1794,5 +1832,5 @@ To use this, apply a binary operator (evaluate it), then call this."
 
 (provide 'calculator)
 
-;;; arch-tag: a1b9766c-af8a-4a74-b466-65ad8eeb0c73
+;; arch-tag: a1b9766c-af8a-4a74-b466-65ad8eeb0c73
 ;;; calculator.el ends here

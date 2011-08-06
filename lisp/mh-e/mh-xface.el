@@ -1,6 +1,7 @@
 ;;; mh-xface.el --- MH-E X-Face and Face header field display
 
-;; Copyright (C) 2002, 2003, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -9,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -36,7 +35,7 @@
 (autoload 'message-fetch-field "message")
 
 (defvar mh-show-xface-function
-  (cond ((and mh-xemacs-flag (locate-library "x-face") (not (featurep 'xface)))
+  (cond ((and (featurep 'xemacs) (locate-library "x-face") (not (featurep 'xface)))
          (load "x-face" t t)
          #'mh-face-display-function)
         ((>= emacs-major-version 21)
@@ -59,9 +58,6 @@
                  mh-clean-message-header-flag))
     (funcall mh-show-xface-function)))
 
-;; Shush compiler.
-(defvar default-enable-multibyte-characters) ; XEmacs
-
 (defun mh-face-display-function ()
   "Display a Face, X-Face, or X-Image-URL header field.
 If more than one of these are present, then the first one found
@@ -71,7 +67,6 @@ in this order is used."
     (re-search-forward "\n\n" (point-max) t)
     (narrow-to-region (point-min) (point))
     (let* ((case-fold-search t)
-           (default-enable-multibyte-characters nil)
            (face (message-fetch-field "face" t))
            (x-face (message-fetch-field "x-face" t))
            (url (message-fetch-field "x-image-url" t))
@@ -81,7 +76,8 @@ in this order is used."
             (x-face (setq raw (mh-uncompface x-face)
                           type 'pbm))
             (url (setq type 'url))
-            (t (multiple-value-setq (type raw) (mh-picon-get-image))))
+            (t (multiple-value-setq (type raw)
+                 (values-list (mh-picon-get-image)))))
       (when type
         (goto-char (point-min))
         (when (re-search-forward "^from:" (point-max) t)
@@ -130,6 +126,7 @@ in this order is used."
 (defun mh-face-to-png (data)
   "Convert base64 encoded DATA to png image."
   (with-temp-buffer
+    (set-buffer-multibyte nil)
     (insert data)
     (ignore-errors (base64-decode-region (point-min) (point-max)))
     (buffer-string)))
@@ -137,6 +134,7 @@ in this order is used."
 (defun mh-uncompface (data)
   "Run DATA through `uncompface' to generate bitmap."
   (with-temp-buffer
+    (set-buffer-multibyte nil)
     (insert data)
     (when (and mh-uncompface-executable
                (equal (call-process-region (point-min) (point-max)
@@ -274,11 +272,12 @@ file contents as a string is returned. If FILE is nil, then both
 elements of the list are nil."
   (if (stringp file)
       (with-temp-buffer
+        (set-buffer-multibyte nil)
         (let ((type (and (string-match ".*\\.\\(...\\)$" file)
                          (intern (match-string 1 file)))))
           (insert-file-contents-literally file)
-          (values type (buffer-string))))
-    (values nil nil)))
+          (list type (buffer-string))))
+    (list nil nil)))
 
 
 
@@ -397,10 +396,8 @@ filenames.  In addition, replaces * with %2a. See URL
 
 (defun mh-x-image-display (image marker)
   "Display IMAGE at MARKER."
-  (save-excursion
-    (set-buffer (marker-buffer marker))
-    (let ((buffer-read-only nil)
-          (default-enable-multibyte-characters nil)
+  (with-current-buffer (marker-buffer marker)
+    (let ((inhibit-read-only t)
           (buffer-modified-flag (buffer-modified-p)))
       (unwind-protect
           (when (and (file-readable-p image) (not (file-symlink-p image))
@@ -428,8 +425,7 @@ actual display is carried out by the SENTINEL function."
                                         mh-temp-fetch-buffer)))
             (filename (or (mh-funcall-if-exists make-temp-file "mhe-fetch")
                           (expand-file-name (make-temp-name "~/mhe-fetch")))))
-        (save-excursion
-          (set-buffer buffer)
+        (with-current-buffer buffer
           (set (make-local-variable 'mh-x-image-url-cache-file) cache-file)
           (set (make-local-variable 'mh-x-image-marker) marker)
           (set (make-local-variable 'mh-x-image-temp-file) filename))
@@ -445,8 +441,7 @@ actual display is carried out by the SENTINEL function."
 The argument CHANGE is ignored."
   (when (eq (process-status process) 'exit)
     (let (marker temp-file cache-filename wget-buffer)
-      (save-excursion
-        (set-buffer (setq wget-buffer (process-buffer process)))
+      (with-current-buffer (setq wget-buffer (process-buffer process))
         (setq marker mh-x-image-marker
               cache-filename mh-x-image-url-cache-file
               temp-file mh-x-image-temp-file))

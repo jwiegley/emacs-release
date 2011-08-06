@@ -1,7 +1,7 @@
 ;;; terminal.el --- terminal emulator for GNU Emacs
 
 ;; Copyright (C) 1986, 1987, 1988, 1989, 1993, 1994, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Richard Mlynarik <mly@eddie.mit.edu>
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -52,7 +50,7 @@
 
 
 (defcustom terminal-escape-char ?\C-^
-  "*All characters except for this are passed verbatim through the
+  "All characters except for this are passed verbatim through the
 terminal-emulator.  This character acts as a prefix for commands
 to the emulator program itself.  Type this character twice to send
 it through the emulator.  Type ? after typing it for a list of
@@ -62,7 +60,7 @@ This variable is local to each terminal-emulator buffer."
   :group 'terminal)
 
 (defcustom terminal-scrolling t ;;>> Setting this to t sort-of defeats my whole aim in writing this package...
-  "*If non-nil, the terminal-emulator will losingly `scroll' when output occurs
+  "If non-nil, the terminal-emulator will losingly `scroll' when output occurs
 past the bottom of the screen.  If nil, output will win and `wrap' to the top
 of the screen.
 This variable is local to each terminal-emulator buffer."
@@ -70,7 +68,7 @@ This variable is local to each terminal-emulator buffer."
   :group 'terminal)
 
 (defcustom terminal-more-processing t
-  "*If non-nil, do more-processing.
+  "If non-nil, do more-processing.
 This variable is local to each terminal-emulator buffer."
   :type 'boolean
   :group 'terminal)
@@ -79,7 +77,7 @@ This variable is local to each terminal-emulator buffer."
 ;; and expects to actually see anything, you should probably set this to
 ;; around 400
 (defcustom terminal-redisplay-interval 5000
-  "*Maximum number of characters which will be processed by the
+  "Maximum number of characters which will be processed by the
 terminal-emulator before a screen redisplay is forced.
 Set this to a large value for greater throughput,
 set it smaller for more frequent updates but overall slower
@@ -227,7 +225,7 @@ performance."
      ;;  you hit esc key...
      ((and (stringp s)
 	   (string= s (make-string 1 terminal-escape-char)))
-      (setq last-command-char terminal-escape-char)
+      (setq last-command-event terminal-escape-char)
       (let ((terminal-escape-char -259))
 	(te-pass-through)))
 
@@ -398,10 +396,10 @@ set it smaller for more frequent updates (but overall slower performance."
 (put 'te-more-break-unread 'suppress-keymap t)
 (defun te-more-break-unread ()
   (interactive)
-  (if (eq last-input-char terminal-escape-char)
+  (if (eq last-input-event terminal-escape-char)
       (call-interactively 'te-escape)
     (message "Continuing from more break (\"%s\" typed, %d chars output pending...)"
-	     (single-key-description last-input-char)
+	     (single-key-description last-input-event)
 	     (te-pending-output-length))
     (setq te-more-count 259259)
     (te-more-break-unwind)
@@ -471,29 +469,29 @@ One characters is treated specially:
 the terminal escape character (normally C-^)
 lets you type a terminal emulator command."
   (interactive)
-  (cond ((eq last-input-char terminal-escape-char)
+  (cond ((eq last-input-event terminal-escape-char)
 	 (call-interactively 'te-escape))
 	(t
 	 ;; Convert `return' to C-m, etc.
-	 (if (and (symbolp last-input-char)
-		  (get last-input-char 'ascii-character))
-	     (setq last-input-char (get last-input-char 'ascii-character)))
+	 (if (and (symbolp last-input-event)
+		  (get last-input-event 'ascii-character))
+	     (setq last-input-event (get last-input-event 'ascii-character)))
 	 ;; Convert meta characters to 8-bit form for transmission.
-	 (if (and (integerp last-input-char)
-		  (not (zerop (logand last-input-char ?\M-\^@))))
-	     (setq last-input-char (+ 128 (logand last-input-char 127))))
+	 (if (and (integerp last-input-event)
+		  (not (zerop (logand last-input-event ?\M-\^@))))
+	     (setq last-input-event (+ 128 (logand last-input-event 127))))
 	 ;; Now ignore all but actual characters.
 	 ;; (It ought to be possible to send through function
 	 ;; keys as character sequences if we add a description
 	 ;; to our termcap entry of what they should look like.)
-	 (if (integerp last-input-char)
+	 (if (integerp last-input-event)
 	     (progn
 	       (and terminal-more-processing (null (cdr te-pending-output))
 		    (te-set-more-count nil))
-	       (process-send-string te-process (make-string 1 last-input-char))
+	       (process-send-string te-process (make-string 1 last-input-event))
 	       (te-process-output t))
 	   (message "Function key `%s' ignored"
-		    (single-key-description last-input-char))))))
+		    (single-key-description last-input-event))))))
 
 
 (defun te-set-window-start ()
@@ -1064,7 +1062,7 @@ move to start of new line, clear to end of line."
 ;; and it's apparently not needed in BSD.
 
 (defcustom explicit-shell-file-name nil
-  "*If non-nil, is file name to use for explicitly requested inferior shell."
+  "If non-nil, is file name to use for explicitly requested inferior shell."
   :type '(choice (const :tag "None" nil)
 		 file)
   :group 'terminal)
@@ -1346,5 +1344,5 @@ in the directory specified by `te-terminfo-directory'."
 
 (provide 'terminal)
 
-;;; arch-tag: 0ae1d7d7-90ef-4566-a531-6e7ff8c79b2f
+;; arch-tag: 0ae1d7d7-90ef-4566-a531-6e7ff8c79b2f
 ;;; terminal.el ends here

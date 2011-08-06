@@ -1,20 +1,23 @@
 ;;; mule-cmds.el --- commands for multilingual environment -*-coding: iso-2022-7bit -*-
 
-;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008  Free Software Foundation, Inc.
+;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
+;;   2007, 2008, 2009  Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008
+;;   2005, 2006, 2007, 2008, 2009
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
+;; Copyright (C) 2003
+;;   National Institute of Advanced Industrial Science and Technology (AIST)
+;;   Registration Number H13PRO009
 
-;; Keywords: mule, multilingual
+;; Keywords: mule, i18n
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,20 +25,16 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
 
-(eval-when-compile
-  (defvar dos-codepage)
-  (autoload 'widget-value "wid-edit"))
+(defvar dos-codepage)
+(autoload 'widget-value "wid-edit")
 
 (defvar mac-system-coding-system)
-(defvar mac-system-locale)
 
 ;;; MULE related key bindings and menus.
 
@@ -148,7 +147,7 @@
   t)
 (define-key-after set-coding-system-map [set-terminal-coding-system]
   '(menu-item "For Terminal" set-terminal-coding-system
-	      :enable (null (memq window-system '(x w32 mac)))
+	      :enable (null (memq initial-window-system '(x w32 ns)))
 	      :help "How to encode terminal output")
   t)
 (define-key-after set-coding-system-map [separator-3]
@@ -244,9 +243,47 @@ how text is formatted automatically while decoding."
      (if coding coding 'undecided)
      (if (numberp eol-type) (aref [unix dos mac] eol-type)))))
 
+;; Canonicalize the coding system name NAME by removing some prefixes
+;; and delimiter characters.  Support function of
+;; coding-system-from-name.
+(defun canonicalize-coding-system-name (name)
+  (if (string-match "^iso[-_ ]?[0-9]" name)
+      ;; "iso-8859-1" -> "8859-1", "iso-2022-jp" ->"2022-jp"
+      (setq name (substring name (1- (match-end 0)))))
+  (let ((idx (string-match "[-_ /]" name)))
+    ;; Delete "-", "_", " ", "/" but do distinguish "16-be" and "16be".
+    (while idx
+      (if (and (>= idx 2)
+	       (eq (string-match "16-[lb]e$" name (- idx 2))
+		   (- idx 2)))
+	  (setq idx (string-match "[-_ /]" name (match-end 0)))
+	(setq name (concat (substring name 0 idx) (substring name (1+ idx)))
+	      idx (string-match "[-_ /]" name idx))))
+    name))
+
+(defun coding-system-from-name (name)
+  "Return a coding system whose name matches with NAME (string or symbol)."
+  (let (sym)
+    (if (stringp name) (setq sym (intern name))
+      (setq sym name name (symbol-name name)))
+    (if (coding-system-p sym)
+	sym
+      (let ((eol-type
+	     (if (string-match "-\\(unix\\|dos\\|mac\\)$" name)
+		 (prog1 (intern (match-string 1 name))
+		   (setq name (substring name 0 (match-beginning 0)))))))
+	(setq name (canonicalize-coding-system-name (downcase name)))
+	(catch 'tag
+	  (dolist (elt (coding-system-list))
+	    (if (string= (canonicalize-coding-system-name (symbol-name elt))
+			 name)
+		(throw 'tag (if eol-type (coding-system-change-eol-conversion
+					  elt eol-type)
+			      elt)))))))))
+
 (defun toggle-enable-multibyte-characters (&optional arg)
   "Change whether this buffer uses multibyte characters.
-With arg, use multibyte characters if the arg is positive.
+With ARG, use multibyte characters if the ARG is positive.
 
 Note that this command does not convert the byte contents of
 the buffer; it only changes the way those bytes are interpreted.
@@ -264,7 +301,7 @@ wrong, use this command again to toggle back to the right mode."
   (force-mode-line-update))
 
 (defun view-hello-file ()
-  "Display the HELLO file which list up many languages and characters."
+  "Display the HELLO file, which lists many languages and characters."
   (interactive)
   ;; We have to decode the file in any environment.
   (let ((default-enable-multibyte-characters t)
@@ -276,7 +313,7 @@ wrong, use this command again to toggle back to the right mode."
   (interactive
    (let ((default (and buffer-file-coding-system
 		       (not (eq (coding-system-type buffer-file-coding-system)
-				t))
+				'undecided))
 		       buffer-file-coding-system)))
      (list (read-coding-system
 	    (if default
@@ -287,8 +324,11 @@ wrong, use this command again to toggle back to the right mode."
 		  (format "Command to execute with %s:" coding-system)))
 	 (cmd (key-binding keyseq))
 	 prefix)
-
-    (when (eq cmd 'universal-argument)
+    ;; read-key-sequence ignores quit, so make an explicit check.
+    ;; Like many places, this assumes quit == C-g, but it need not be.
+    (if (equal last-input-event ?\C-g)
+	(keyboard-quit))
+    (when (memq cmd '(universal-argument digit-argument))
       (call-interactively cmd)
 
       ;; Process keys bound in `universal-argument-map'.
@@ -297,10 +337,10 @@ wrong, use this command again to toggle back to the right mode."
 		     cmd (key-binding keyseq t))
 	       (not (eq cmd 'universal-argument-other-key)))
 	(let ((current-prefix-arg prefix-arg)
-	      ;; Have to bind `last-command-char' here so that
+	      ;; Have to bind `last-command-event' here so that
 	      ;; `digit-argument', for instance, can compute the
 	      ;; prefix arg.
-	      (last-command-char (aref keyseq 0)))
+	      (last-command-event (aref keyseq 0)))
 	  (call-interactively cmd)))
 
       ;; This is the final call to `universal-argument-other-key', which
@@ -328,7 +368,7 @@ This sets the following coding systems:
 This also sets the following values:
   o default value used as `file-name-coding-system' for converting file names
       if CODING-SYSTEM is ASCII-compatible
-  o default value for the command `set-terminal-coding-system' (not on MSDOS)
+  o default value for the command `set-terminal-coding-system'
   o default value for the command `set-keyboard-coding-system'
       if CODING-SYSTEM is ASCII-compatible"
   (check-coding-system coding-system)
@@ -343,15 +383,10 @@ This also sets the following values:
       (setq default-file-name-coding-system 'utf-8)
     (if (and default-enable-multibyte-characters
 	     (or (not coding-system)
-		 (not (coding-system-get coding-system 'ascii-incompatible))))
+		 (coding-system-get coding-system 'ascii-compatible-p)))
 	(setq default-file-name-coding-system coding-system)))
-  ;; If coding-system is nil, honor that on MS-DOS as well, so
-  ;; that they could reset the terminal coding system.
-  (unless (and (eq window-system 'pc) coding-system)
-    (setq default-terminal-coding-system coding-system))
-  (if (or (not coding-system)
-	  (not (coding-system-get coding-system 'ascii-incompatible)))
-      (setq default-keyboard-coding-system coding-system))
+  (setq default-terminal-coding-system coding-system)
+  (setq default-keyboard-coding-system coding-system)
   ;; Preserve eol-type from existing default-process-coding-systems.
   ;; On non-unix-like systems in particular, these may have been set
   ;; carefully by the user, or by the startup code, to deal with the
@@ -373,45 +408,31 @@ This also sets the following coding systems:
   o default coding system for subprocess I/O
 This also sets the following values:
   o default value used as `file-name-coding-system' for converting file names
-  o default value for the command `set-terminal-coding-system' (not on MSDOS)
+  o default value for the command `set-terminal-coding-system'
   o default value for the command `set-keyboard-coding-system'
 
 If CODING-SYSTEM specifies a certain type of EOL conversion, the coding
 systems set by this function will use that type of EOL conversion.
 
-This command does not change the default value of terminal coding system
-for MS-DOS terminal, because DOS terminals only support a single coding
-system, and Emacs automatically sets the default to that coding system at
-startup.
-
-A coding system that requires automatic detection of text
-encoding (e.g. undecided, unix) can't be preferred.
-
-See also `coding-category-list' and `coding-system-category'."
+A coding system that requires automatic detection of text+encoding
+\(e.g. undecided, unix) can't be preferred."
   (interactive "zPrefer coding system: ")
   (if (not (and coding-system (coding-system-p coding-system)))
       (error "Invalid coding system `%s'" coding-system))
-  (let ((coding-category (coding-system-category coding-system))
-	(base (coding-system-base coding-system))
+  (if (memq (coding-system-type coding-system) '(raw-text undecided))
+      (error "Can't prefer the coding system `%s'" coding-system))
+  (let ((base (coding-system-base coding-system))
 	(eol-type (coding-system-eol-type coding-system)))
-    (if (not coding-category)
-	;; CODING-SYSTEM is no-conversion or undecided.
-	(error "Can't prefer the coding system `%s'" coding-system))
-    (set coding-category (or base coding-system))
-    ;; Changing the binding of a coding category requires this call.
-    (update-coding-systems-internal)
-    (or (eq coding-category (car coding-category-list))
-	;; We must change the order.
-	(set-coding-priority (list coding-category)))
-    (if (and base (interactive-p))
-	(message "Highest priority is set to %s (base of %s)"
-		 base coding-system))
+    (set-coding-system-priority base)
+    (and (interactive-p)
+	 (or (eq base coding-system)
+	     (message "Highest priority is set to %s (base of %s)"
+		      base coding-system)))
     ;; If they asked for specific EOL conversion, honor that.
     (if (memq eol-type '(0 1 2))
-	(setq coding-system
-	      (coding-system-change-eol-conversion base eol-type))
-      (setq coding-system base))
-    (set-default-coding-systems coding-system)))
+	(setq base
+	      (coding-system-change-eol-conversion base eol-type)))
+    (set-default-coding-systems base)))
 
 (defvar sort-coding-systems-predicate nil
   "If non-nil, a predicate function to sort coding systems.
@@ -435,9 +456,8 @@ If the variable `sort-coding-systems-predicate' (which see) is
 non-nil, it is used to sort CODINGS instead."
   (if sort-coding-systems-predicate
       (sort codings sort-coding-systems-predicate)
-    (let* ((from-categories (mapcar #'(lambda (x) (symbol-value x))
-				    coding-category-list))
-	   (most-preferred (car from-categories))
+    (let* ((from-priority (coding-system-priority-list))
+	   (most-preferred (car from-priority))
 	   (lang-preferred (get-language-info current-language-environment
 					      'coding-system))
 	   (func (function
@@ -454,44 +474,48 @@ non-nil, it is used to sort CODINGS instead."
 		      (logior
 		       (lsh (if (eq base most-preferred) 1 0) 7)
 		       (lsh
-			(let ((mime (coding-system-get base 'mime-charset)))
+			(let ((mime (coding-system-get base :mime-charset)))
 			   ;; Prefer coding systems corresponding to a
 			   ;; MIME charset.
 			   (if mime
 			       ;; Lower utf-16 priority so that we
 			       ;; normally prefer utf-8 to it, and put
 			       ;; x-ctext below that.
-			       (cond ((string-match "utf-16"
-						    (symbol-name mime))
+			       (cond ((string-match-p "utf-16"
+						      (symbol-name mime))
 				      2)
-				     ((string-match "^x-" (symbol-name mime))
+				     ((string-match-p "^x-" (symbol-name mime))
 				      1)
 				     (t 3))
 			     0))
 			5)
 		       (lsh (if (memq base lang-preferred) 1 0) 4)
-		       (lsh (if (memq base from-categories) 1 0) 3)
-		       (lsh (if (string-match "-with-esc\\'"
-					      (symbol-name base))
+		       (lsh (if (memq base from-priority) 1 0) 3)
+		       (lsh (if (string-match-p "-with-esc\\'"
+						(symbol-name base))
 				0 1) 2)
-		       (if (eq (coding-system-type base) 2)
-			   ;; For ISO based coding systems, prefer
-			   ;; one that doesn't use escape sequences.
-			   (let ((flags (coding-system-flags base)))
-			     (if (or (consp (aref flags 0))
-				     (consp (aref flags 1))
-				     (consp (aref flags 2))
-				     (consp (aref flags 3)))
-				 (if (or (aref flags 8) (aref flags 9))
-				     0
-				   1)
-			       2))
-			 1)))))))
+		       (if (eq (coding-system-type base) 'iso-2022)
+			   (let ((category (coding-system-category base)))
+			     ;; For ISO based coding systems, prefer
+			     ;; one that doesn't use designation nor
+			     ;; locking/single shifting.
+			       (cond
+				((or (eq category 'coding-category-iso-8-1)
+				     (eq category 'coding-category-iso-8-2))
+				 2)
+				((or (eq category 'coding-category-iso-7-tight)
+				     (eq category 'coding-category-iso-7))
+				 1)
+				(t
+				 0)))
+			   1)
+			 ))))))
       (sort codings (function (lambda (x y)
 				(> (funcall func x) (funcall func y))))))))
 
 (defun find-coding-systems-region (from to)
   "Return a list of proper coding systems to encode a text between FROM and TO.
+
 If FROM is a string, find coding systems in that instead of the buffer.
 All coding systems in the list can safely encode any multibyte characters
 in the text.
@@ -518,43 +542,38 @@ element `undecided'."
 (defun find-coding-systems-for-charsets (charsets)
   "Return a list of proper coding systems to encode characters of CHARSETS.
 CHARSETS is a list of character sets.
-It actually checks at most the first 96 characters of each charset.
-So, if a charset of dimension two is included in CHARSETS, the value may
-contain a coding system that can't encode all characters of the charset."
+
+This only finds coding systems of type `charset', whose
+`:charset-list' property includes all of CHARSETS (plus `ascii' for
+ASCII-compatible coding systems).  It was used in older versions of
+Emacs, but is unlikely to be what you really want now."
+  ;; Deal with aliases.
+  (setq charsets (mapcar (lambda (c)
+			   (get-charset-property c :name))
+			 charsets))
   (cond ((or (null charsets)
 	     (and (= (length charsets) 1)
 		  (eq 'ascii (car charsets))))
 	 '(undecided))
 	((or (memq 'eight-bit-control charsets)
 	     (memq 'eight-bit-graphic charsets))
-	 '(raw-text emacs-mule))
+	 '(raw-text utf-8-emacs))
 	(t
-	 (let ((codings t)
-	       charset l str)
-	   (while (and codings charsets)
-	     (setq charset (car charsets) charsets (cdr charsets))
-	     (unless (eq charset 'ascii)
-	       (setq str (make-string 96 32))
-	       (if (= (charset-dimension charset) 1)
-		   (if (= (charset-chars charset) 96)
-		       (dotimes (i 96)
-			 (aset str i (make-char charset (+ i 32))))
-		     (dotimes (i 94)
-		       (aset str i (make-char charset (+ i 33)))))
-		 (if (= (charset-chars charset) 96)
-		     (dotimes (i 96)
-		       (aset str i (make-char charset 32 (+ i 32))))
-		   (dotimes (i 94)
-		     (aset str i (make-char charset 33 (+ i 33))))))
-	       (setq l (find-coding-systems-string str))
-	       (if (eq codings t)
-		   (setq codings l)
-		 (let ((ll nil))
-		   (dolist (elt codings)
-		     (if (memq elt l)
-			 (setq ll (cons elt ll))))
-		   (setq codings ll)))))
-	   codings))))
+	 (let (codings)
+	   (dolist (cs (coding-system-list t))
+	     (let ((cs-charsets (and (eq (coding-system-type cs) 'charset)
+				     (coding-system-charset-list cs)))
+		   (charsets charsets))
+	       (if (coding-system-get cs :ascii-compatible-p)
+		   (add-to-list 'cs-charsets 'ascii))
+	       (if (catch 'ok
+		     (when cs-charsets
+		       (while charsets
+			 (unless (memq (pop charsets) cs-charsets)
+			   (throw 'ok nil)))
+		       t))
+		   (push cs codings))))
+	   (nreverse codings)))))
 
 (defun find-multibyte-characters (from to &optional maxcount excludes)
   "Find multibyte characters in the region specified by FROM and TO.
@@ -566,49 +585,41 @@ where
   COUNT is a number of characters,
   CHARs are the characters found from the character set.
 Optional 3rd arg MAXCOUNT limits how many CHARs are put in the above list.
-Optional 4th arg EXCLUDES is a list of character sets to be ignored.
-
-For invalid characters, CHARs are actually strings."
+Optional 4th arg EXCLUDES is a list of character sets to be ignored."
   (let ((chars nil)
 	charset char)
     (if (stringp from)
-	(let ((idx 0))
-	  (while (setq idx (string-match "[^\000-\177]" from idx))
-	    (setq char (aref from idx)
-		  charset (char-charset char))
-	    (if (eq charset 'unknown)
-		(setq char (match-string 0)))
-	    (if (or (memq charset '(unknown
-				    eight-bit-control eight-bit-graphic))
-		    (not (or (eq excludes t) (memq charset excludes))))
+	(if (multibyte-string-p from)
+	    (let ((idx 0))
+	      (while (setq idx (string-match-p "[^\000-\177]" from idx))
+		(setq char (aref from idx)
+		      charset (char-charset char))
+		(unless (memq charset excludes)
+		  (let ((slot (assq charset chars)))
+		    (if slot
+			(if (not (memq char (nthcdr 2 slot)))
+			    (let ((count (nth 1 slot)))
+			      (setcar (cdr slot) (1+ count))
+			      (if (or (not maxcount) (< count maxcount))
+				  (nconc slot (list char)))))
+		      (setq chars (cons (list charset 1 char) chars)))))
+		(setq idx (1+ idx)))))
+      (if enable-multibyte-characters
+	  (save-excursion
+	    (goto-char from)
+	    (while (re-search-forward "[^\000-\177]" to t)
+	      (setq char (preceding-char)
+		    charset (char-charset char))
+	      (unless (memq charset excludes)
 		(let ((slot (assq charset chars)))
 		  (if slot
-		      (if (not (memq char (nthcdr 2 slot)))
+		      (if (not (member char (nthcdr 2 slot)))
 			  (let ((count (nth 1 slot)))
 			    (setcar (cdr slot) (1+ count))
 			    (if (or (not maxcount) (< count maxcount))
 				(nconc slot (list char)))))
-		    (setq chars (cons (list charset 1 char) chars)))))
-	    (setq idx (1+ idx))))
-      (save-excursion
-	(goto-char from)
-	(while (re-search-forward "[^\000-\177]" to t)
-	  (setq char (preceding-char)
-		charset (char-charset char))
-	  (if (eq charset 'unknown)
-	      (setq char (match-string 0)))
-	  (if (or (memq charset '(unknown eight-bit-control eight-bit-graphic))
-		  (not (or (eq excludes t) (memq charset excludes))))
-	      (let ((slot (assq charset chars)))
-		(if slot
-		    (if (not (member char (nthcdr 2 slot)))
-			(let ((count (nth 1 slot)))
-			  (setcar (cdr slot) (1+ count))
-			  (if (or (not maxcount) (< count maxcount))
-			      (nconc slot (list char)))))
-		  (setq chars (cons (list charset 1 char) chars))))))))
+		    (setq chars (cons (list charset 1 char) chars)))))))))
     (nreverse chars)))
-
 
 (defun search-unencodable-char (coding-system)
   "Search forward from point for a character that is not encodable.
@@ -628,7 +639,6 @@ character found, or nil if all characters are encodable."
 	(goto-char (1+ pos))
       (message "All following characters are encodable by %s" coding-system))
     pos))
-
 
 (defvar last-coding-system-specified nil
   "Most recent coding system explicitly specified by the user when asked.
@@ -680,8 +690,9 @@ DEFAULT is the coding system to use by default in the query."
   (let ((l codings)
 	mime-charset)
     (while l
-      (setq mime-charset (coding-system-get (car l) 'mime-charset))
-      (if (and mime-charset (coding-system-p mime-charset))
+      (setq mime-charset (coding-system-get (car l) :mime-charset))
+      (if (and mime-charset (coding-system-p mime-charset)
+	       (coding-system-equal (car l) mime-charset))
 	  (setcar l mime-charset))
       (setq l (cdr l))))
 
@@ -733,7 +744,7 @@ DEFAULT is the coding system to use by default in the query."
 	    (let ((pos (point))
 		  (fill-prefix "  "))
 	      (dolist (x (append rejected unsafe))
-		(princ "  ") (princ (car x)))
+		(princ "  ") (princ x))
 	      (insert "\n")
 	      (fill-region-as-paragraph pos (point)))
 	    (when rejected
@@ -824,13 +835,12 @@ The candidates of coding systems which can safely encode a text
 between FROM and TO are shown in a popup window.  Among them, the most
 proper one is suggested as the default.
 
-The list of `buffer-file-coding-system' of the current buffer,
-the `default-buffer-file-coding-system', and the
-most preferred coding system (if it corresponds to a MIME charset) is
-treated as the default coding system list.  Among them, the first one
-that safely encodes the text is normally selected silently and
-returned without any user interaction.  See also the command
-`prefer-coding-system'.
+The list of `buffer-file-coding-system' of the current buffer, the
+`default-buffer-file-coding-system', and the most preferred coding
+system (if it corresponds to a MIME charset) is treated as the
+default coding system list.  Among them, the first one that safely
+encodes the text is normally selected silently and returned without
+any user interaction.  See also the command `prefer-coding-system'.
 
 However, the user is queried if the chosen coding system is
 inconsistent with what would be selected by `find-auto-coding' from
@@ -854,8 +864,8 @@ Optional 5th arg FILE is the file name to use for this purpose.
 That is different from `buffer-file-name' when handling `write-region'
 \(for example).
 
-The variable `select-safe-coding-system-accept-default-p', if
-non-nil, overrides ACCEPT-DEFAULT-P.
+The variable `select-safe-coding-system-accept-default-p', if non-nil,
+overrides ACCEPT-DEFAULT-P.
 
 Kludgy feature: if FROM is a string, the string is the target text,
 and TO is ignored."
@@ -878,14 +888,15 @@ and TO is ignored."
 	      (if (coding-system-p (car auto-cs))
 		  (setq auto-cs (car auto-cs))
 		(display-warning
-		 :warning
+		 'mule
 		 (format "\
 Invalid coding system `%s' is specified
 for the current buffer/file by the %s.
 It is highly recommended to fix it before writing to a file."
 			 (car auto-cs)
 			 (if (eq (cdr auto-cs) :coding) ":coding tag"
-			   (format "variable `%s'" (cdr auto-cs)))))
+			   (format "variable `%s'" (cdr auto-cs))))
+		 :warning)
 		(or (yes-or-no-p "Really proceed with writing? ")
 		    (error "Save aborted"))
 		(setq auto-cs nil))))))
@@ -919,30 +930,30 @@ It is highly recommended to fix it before writing to a file."
 		      (append default-coding-system
 			      (list (cons buffer-file-coding-system base)))))))
 
-      ;; If default-buffer-file-coding-system is not nil nor undecided,
-      ;; append it to the defaults.
-      (if default-buffer-file-coding-system
-	  (let ((base (coding-system-base default-buffer-file-coding-system)))
-	    (or (eq base 'undecided)
-		(rassq base default-coding-system)
-		(setq default-coding-system
-		      (append default-coding-system
-			      (list (cons default-buffer-file-coding-system
-					  base)))))))
+      (unless (and buffer-file-coding-system-explicit
+		   (cdr buffer-file-coding-system-explicit))
+	;; If default-buffer-file-coding-system is not nil nor undecided,
+	;; append it to the defaults.
+	(if default-buffer-file-coding-system
+	    (let ((base (coding-system-base default-buffer-file-coding-system)))
+	      (or (eq base 'undecided)
+		  (rassq base default-coding-system)
+		  (setq default-coding-system
+			(append default-coding-system
+				(list (cons default-buffer-file-coding-system
+					    base)))))))
 
-      ;; If the most preferred coding system has the property mime-charset,
-      ;; append it to the defaults.
-      (let ((tail coding-category-list)
-	    preferred base)
-	(while (and tail (not (setq preferred (symbol-value (car tail)))))
-	  (setq tail (cdr tail)))
-	(and (coding-system-p preferred)
-	     (setq base (coding-system-base preferred))
-	     (coding-system-get preferred 'mime-charset)
-	     (not (rassq base default-coding-system))
-	     (setq default-coding-system
-		   (append default-coding-system
-			   (list (cons preferred base)))))))
+	;; If the most preferred coding system has the property mime-charset,
+	;; append it to the defaults.
+	(let ((preferred (coding-system-priority-list t))
+	      base)
+	  (and (coding-system-p preferred)
+	       (setq base (coding-system-base preferred))
+	       (coding-system-get preferred :mime-charset)
+	       (not (rassq base default-coding-system))
+	       (setq default-coding-system
+		     (append default-coding-system
+			     (list (cons preferred base))))))))
 
     (if select-safe-coding-system-accept-default-p
 	(setq accept-default-p select-safe-coding-system-accept-default-p))
@@ -966,7 +977,7 @@ It is highly recommended to fix it before writing to a file."
 
     (let ((codings (find-coding-systems-region from to))
 	  (coding-system nil)
-	  (tick (if (not (stringp from)) (buffer-modified-tick)))
+	  (tick (if (not (stringp from)) (buffer-chars-modified-tick)))
 	  safe rejected unsafe)
       (if (eq (car codings) 'undecided)
 	  ;; Any coding system is ok.
@@ -977,7 +988,8 @@ It is highly recommended to fix it before writing to a file."
 
 	;; Classify the defaults into safe, rejected, and unsafe.
 	(dolist (elt default-coding-system)
-	  (if (memq (cdr elt) codings)
+	  (if (or (eq (car codings) 'undecided)
+		  (memq (cdr elt) codings))
 	      (if (and (functionp accept-default-p)
 		       (not (funcall accept-default-p (cdr elt))))
 		  (push (car elt) rejected)
@@ -1031,7 +1043,7 @@ It is highly recommended to fix it before writing to a file."
 %s specified by file contents.  Really save (else edit coding cookies \
 and try again)? " coding-system auto-cs))
 	      (error "Save aborted"))))
-      (when (and tick (/= tick (buffer-modified-tick)))
+      (when (and tick (/= tick (buffer-chars-modified-tick)))
 	(error "Cancelled because the buffer was modified"))
       coding-system)))
 
@@ -1057,19 +1069,10 @@ it asks the user to select a proper coding system."
 	;; We should never use no-conversion for outgoing mail.
 	(setq coding nil))
     (if (fboundp select-safe-coding-system-function)
-	(setq coding
-	      (funcall select-safe-coding-system-function
-		       (point-min) (point-max) coding
-		       (function (lambda (x)
-				   (coding-system-get x 'mime-charset))))))
-    (if coding
-	;; Be sure to use LF for end-of-line.
-	(setq coding (coding-system-change-eol-conversion coding 'unix))
-      ;; No coding system is decided.  Usually this is the case that
-      ;; the current buffer contains only ASCII.  So, we hope
-      ;; iso-8859-1 works.
-      (setq coding 'iso-8859-1-unix))
-    coding))
+	(funcall select-safe-coding-system-function
+		 (point-min) (point-max) coding
+		 (function (lambda (x) (coding-system-get x :mime-charset))))
+      coding)))
 
 ;;; Language support stuff.
 
@@ -1084,8 +1087,8 @@ Meaningful values for KEY include
 
   documentation      value is documentation of what this language environment
 			is meant for, and how to use it.
-  charset	     value is a list of the character sets used by this
-			language environment.
+  charset	     value is a list of the character sets mainly used
+			by this language environment.
   sample-text	     value is an expression which is evalled to generate
                         a line of text written using characters appropriate
                         for this language environment.
@@ -1093,8 +1096,8 @@ Meaningful values for KEY include
 			language environment.
   exit-function      value is a function to call to leave this
 		        language environment.
-  coding-system      value is a list of coding systems that are good
-			for saving text written in this language environment.
+  coding-system      value is a list of coding systems that are good for
+			saving text written in this language environment.
 			This list serves as suggestions to the user;
 			in effect, as a kind of documentation.
   coding-priority    value is a list of coding systems for this language
@@ -1102,34 +1105,26 @@ Meaningful values for KEY include
 			This is used to set up the coding system priority
 			list when you switch to this language environment.
   nonascii-translation
-		     value is a translation table to be set in the
-			variable `nonascii-translation-table' in this
-			language environment, or a character set from
-			which `nonascii-insert-offset' is calculated.
+		     value is a charset of dimension one to use for
+			converting a unibyte character to multibyte
+			and vice versa.
   input-method       value is a default input method for this language
 			environment.
   features           value is a list of features requested in this
 			language environment.
   ctext-non-standard-encodings
-		     value is a list of non-standard encoding
-		     names used in extended segments of CTEXT.
-		     See the variable
-		     `ctext-non-standard-encodings' for more
-		     detail.
+		     value is a list of non-standard encoding names used
+			in extended segments of CTEXT.  See the variable
+			`ctext-non-standard-encodings' for more detail.
 
 The following keys take effect only when multibyte characters are
 globally disabled, i.e. the value of `default-enable-multibyte-characters'
 is nil.
 
-  unibyte-syntax     value is a library name to load to set
-			unibyte 8-bit character syntaxes for this
-			language environment.
-
-  unibyte-display    value is a coding system to encode characters
-			for the terminal.  Characters in the range
-			of 160 to 255 display not as octal escapes,
-			but as non-ASCII characters in this language
-			environment.")
+  unibyte-display    value is a coding system to encode characters for
+			the terminal.  Characters in the range of 160 to
+			255 display not as octal escapes, but as non-ASCII
+			characters in this language environment.")
 
 (defun get-language-info (lang-env key)
   "Return information listed under KEY for language environment LANG-ENV.
@@ -1156,15 +1151,14 @@ see `language-info-alist'."
   (set-language-info-internal lang-env key info)
   (if (equal lang-env current-language-environment)
       (cond ((eq key 'coding-priority)
-	     (set-language-environment-coding-systems lang-env))
+	     (set-language-environment-coding-systems lang-env)
+	     (set-language-environment-charset lang-env))
 	    ((eq key 'input-method)
 	     (set-language-environment-input-method lang-env))
 	    ((eq key 'nonascii-translation)
 	     (set-language-environment-nonascii-translation lang-env))
 	    ((eq key 'charset)
 	     (set-language-environment-charset lang-env))
-	    ((eq key 'overriding-fontspec)
-	     (set-language-environment-fontset lang-env))
 	    ((and (not default-enable-multibyte-characters)
 		  (or (eq key 'unibyte-syntax) (eq key 'unibyte-display)))
 	     (set-language-environment-unibyte lang-env)))))
@@ -1276,7 +1270,9 @@ in the format of Lisp expression for registering each input method.
 Emacs loads this file at startup time.")
 
 (defvar leim-list-header (format
-";;; %s -- list of LEIM (Library of Emacs Input Method) -*-coding: iso-2022-7bit;-*-
+";;; %s -- list of LEIM (Library of Emacs Input Method) -*-coding: utf-8;-*-
+;;
+;; This file is automatically generated.
 ;;
 ;; This file contains a list of LEIM (Library of Emacs Input Method)
 ;; methods in the same directory as this file.  Loading this file
@@ -1289,7 +1285,7 @@ Emacs loads this file at startup time.")
 ;;    ARG ...)
 ;; See the function `register-input-method' for the meanings of the arguments.
 ;;
-;; If this directory is included in load-path, Emacs automatically
+;; If this directory is included in `load-path', Emacs automatically
 ;; loads this file at startup time.
 
 "
@@ -1307,10 +1303,8 @@ Each function is called with one arg, LEIM directory name.")
 
 (defun update-leim-list-file (&rest dirs)
   "Update LEIM list file in directories DIRS."
-  (let ((functions update-leim-list-functions))
-    (while functions
-      (apply (car functions) dirs)
-      (setq functions (cdr functions)))))
+  (dolist (function update-leim-list-functions)
+    (apply function dirs)))
 
 (defvar current-input-method nil
   "The current input method for multilingual text.
@@ -1324,7 +1318,7 @@ If nil, that means no input method is activated now.")
 (put 'current-input-method-title 'permanent-local t)
 
 (defcustom default-input-method nil
-  "*Default input method for multilingual text (a string).
+  "Default input method for multilingual text (a string).
 This is the input method activated automatically by the command
 `toggle-input-method' (\\[toggle-input-method])."
   :link  '(custom-manual "(emacs)Input Methods")
@@ -1467,12 +1461,13 @@ If INPUT-METHOD is nil, deactivate any current input method."
 		      (delete current-input-method input-method-history))))
       (setq input-method-history (list current-input-method)))
     (unwind-protect
-	(funcall inactivate-current-input-method-function)
+	(progn
+	  (setq input-method-function nil
+		current-input-method-title nil)
+	  (funcall inactivate-current-input-method-function))
       (unwind-protect
 	  (run-hooks 'input-method-inactivate-hook)
-	(setq current-input-method nil
-	      input-method-function nil
-	      current-input-method-title nil)
+	(setq current-input-method nil)
 	(force-mode-line-update)))))
 
 (defun set-input-method (input-method &optional interactive)
@@ -1505,18 +1500,17 @@ To deactivate it programmatically, use `inactivate-input-method'."
   "Enable or disable multilingual text input method for the current buffer.
 Only one input method can be enabled at any time in a given buffer.
 
-The normal action is to enable an input method if none was
-enabled, and disable the current one otherwise.  Which input method
-to enable can be determined in various ways--either the one most
-recently used, or the one specified by `default-input-method', or
-as a last resort by reading the name of an input method in the
-minibuffer.
+The normal action is to enable an input method if none was enabled,
+and disable the current one otherwise.  Which input method to enable
+can be determined in various ways--either the one most recently used,
+or the one specified by `default-input-method', or as a last resort
+by reading the name of an input method in the minibuffer.
 
-With a prefix argument, read an input method name with the minibuffer
+With a prefix argument ARG, read an input method name with the minibuffer
 and enable that one.  The default is the most recent input method specified
 \(not including the currently active input method, if any).
 
-When called interactively, the optional arg INTERACTIVE is non-nil,
+When called interactively, the optional argument INTERACTIVE is non-nil,
 which marks the variable `default-input-method' as set for Custom buffers."
 
   (interactive "P\np")
@@ -1541,6 +1535,8 @@ which marks the variable `default-input-method' as set for Custom buffers."
 	    (setq default-input-method current-input-method)
 	  (when interactive
 	    (customize-mark-as-set 'default-input-method)))))))
+
+(autoload 'help-buffer "help-mode")
 
 (defun describe-input-method (input-method)
   "Describe input method INPUT-METHOD."
@@ -1587,11 +1583,10 @@ This is a subroutine for `describe-input-method'."
 (defun read-multilingual-string (prompt &optional initial-input input-method)
   "Read a multilingual string from minibuffer, prompting with string PROMPT.
 The input method selected last time is activated in minibuffer.
-If optional second arg INITIAL-INPUT is non-nil, insert it in the minibuffer
-initially.
-Optional 3rd argument INPUT-METHOD specifies the input method
-to be activated instead of the one selected last time.  It is a symbol
-or a string."
+If optional second argument INITIAL-INPUT is non-nil, insert it in the
+minibuffer initially.
+Optional 3rd argument INPUT-METHOD specifies the input method to be activated
+instead of the one selected last time.  It is a symbol or a string."
   (setq input-method
 	(or input-method
 	    current-input-method
@@ -1610,7 +1605,7 @@ or a string."
 ;; should react to these variables.
 
 (defcustom input-method-verbose-flag 'default
-  "*A flag to control extra guidance given by input methods.
+  "A flag to control extra guidance given by input methods.
 The value should be nil, t, `complex-only', or `default'.
 
 The extra guidance is done by showing list of available keys in echo
@@ -1633,7 +1628,7 @@ See also the variable `input-method-highlight-flag'."
   :group 'mule)
 
 (defcustom input-method-highlight-flag t
-  "*If this flag is non-nil, input methods highlight partially-entered text.
+  "If this flag is non-nil, input methods highlight partially-entered text.
 For instance, while you are in the middle of a Quail input method sequence,
 the text inserted so far is temporarily underlined.
 The underlining goes away when you finish or abort the input method sequence.
@@ -1641,34 +1636,42 @@ See also the variable `input-method-verbose-flag'."
   :type 'boolean
   :group 'mule)
 
-(defvar input-method-activate-hook nil
+(defcustom input-method-activate-hook nil
   "Normal hook run just after an input method is activated.
 
 The variable `current-input-method' keeps the input method name
-just activated.")
+just activated."
+  :type 'hook
+  :group 'mule)
 
-(defvar input-method-inactivate-hook nil
+(defcustom input-method-inactivate-hook nil
   "Normal hook run just after an input method is inactivated.
 
 The variable `current-input-method' still keeps the input method name
-just inactivated.")
+just inactivated."
+  :type 'hook
+  :group 'mule)
 
-(defvar input-method-after-insert-chunk-hook nil
-  "Normal hook run just after an input method insert some chunk of text.")
+(defcustom input-method-after-insert-chunk-hook nil
+  "Normal hook run just after an input method insert some chunk of text."
+  :type 'hook
+  :group 'mule)
 
 (defvar input-method-exit-on-first-char nil
   "This flag controls when an input method returns.
 Usually, the input method does not return while there's a possibility
 that it may find a different translation if a user types another key.
-But, if this flag is non-nil, the input method returns as soon as
-the current key sequence gets long enough to have some valid translation.")
+But, if this flag is non-nil, the input method returns as soon as the
+current key sequence gets long enough to have some valid translation.")
 
-(defvar input-method-use-echo-area nil
+(defcustom input-method-use-echo-area nil
   "This flag controls how an input method shows an intermediate key sequence.
 Usually, the input method inserts the intermediate key sequence,
 or candidate translations corresponding to the sequence,
 at point in the current buffer.
-But, if this flag is non-nil, it displays them in echo area instead.")
+But, if this flag is non-nil, it displays them in echo area instead."
+  :type 'hook
+  :group 'mule)
 
 (defvar input-method-exit-on-invalid-key nil
   "This flag controls the behavior of an input method on invalid key input.
@@ -1678,21 +1681,25 @@ input method temporarily.  After that key, the input method is re-enabled.
 But, if this flag is non-nil, the input method is never back on.")
 
 
-(defvar set-language-environment-hook nil
+(defcustom set-language-environment-hook nil
   "Normal hook run after some language environment is set.
 
 When you set some hook function here, that effect usually should not
 be inherited to another language environment.  So, you had better set
 another function in `exit-language-environment-hook' (which see) to
-cancel the effect.")
+cancel the effect."
+  :type 'hook
+  :group 'mule)
 
-(defvar exit-language-environment-hook nil
+(defcustom exit-language-environment-hook nil
   "Normal hook run after exiting from some language environment.
 When this hook is run, the variable `current-language-environment'
 is still bound to the language environment being exited.
 
 This hook is mainly used for canceling the effect of
-`set-language-environment-hook' (which see).")
+`set-language-environment-hook' (which see)."
+  :type 'hook
+  :group 'mule)
 
 (put 'setup-specified-language-environment 'apropos-inhibit t)
 
@@ -1742,64 +1749,26 @@ The default status is as follows:
   The default value for the command `set-terminal-coding-system' is nil.
   The default value for the command `set-keyboard-coding-system' is nil.
 
-  The order of priorities of coding categories and the coding system
-  bound to each category are as follows
-	coding category			coding system
-	--------------------------------------------------
-	coding-category-iso-8-1		iso-latin-1
-	coding-category-iso-8-2		iso-latin-1
-	coding-category-utf-8		mule-utf-8
-	coding-category-utf-16-be	mule-utf-16be-with-signature
-	coding-category-utf-16-le	mule-utf-16le-with-signature
-	coding-category-iso-7-tight	iso-2022-jp
-	coding-category-iso-7		iso-2022-7bit
-	coding-category-iso-7-else	iso-2022-7bit-lock
-	coding-category-iso-8-else	iso-2022-8bit-ss2
-	coding-category-emacs-mule 	emacs-mule
-	coding-category-raw-text	raw-text
-	coding-category-sjis		japanese-shift-jis
-	coding-category-big5		chinese-big5
-	coding-category-ccl		nil
-	coding-category-binary		no-conversion"
+  The order of priorities of coding systems are as follows:
+	utf-8
+	iso-2022-7bit
+	iso-latin-1
+	iso-2022-7bit-lock
+	iso-2022-8bit-ss2
+	emacs-mule
+	raw-text"
   (interactive)
   ;; This function formerly set default-enable-multibyte-characters to t,
   ;; but that is incorrect.  It should not alter the unibyte/multibyte choice.
 
-  (setq coding-category-iso-7-tight	'iso-2022-jp
-	coding-category-iso-7		'iso-2022-7bit
-	coding-category-iso-8-1		'iso-latin-1
-	coding-category-iso-8-2		'iso-latin-1
-	coding-category-iso-7-else	'iso-2022-7bit-lock
-	coding-category-iso-8-else	'iso-2022-8bit-ss2
-	coding-category-emacs-mule	'emacs-mule
-	coding-category-raw-text	'raw-text
-	coding-category-sjis		'japanese-shift-jis
-	coding-category-big5		'chinese-big5
-	coding-category-utf-16-be       'mule-utf-16be-with-signature
-	coding-category-utf-16-le       'mule-utf-16le-with-signature
-	coding-category-utf-8           'mule-utf-8
-	coding-category-ccl		nil
-	coding-category-binary		'no-conversion)
-
-  (set-coding-priority
-   '(coding-category-iso-8-1
-     coding-category-iso-8-2
-     coding-category-utf-8
-     coding-category-utf-16-be
-     coding-category-utf-16-le
-     coding-category-iso-7-tight
-     coding-category-iso-7
-     coding-category-iso-7-else
-     coding-category-iso-8-else
-     coding-category-emacs-mule
-     coding-category-raw-text
-     coding-category-sjis
-     coding-category-big5
-     coding-category-ccl
-     coding-category-binary))
-
-  ;; Changing the binding of a coding category requires this call.
-  (update-coding-systems-internal)
+  (set-coding-system-priority
+   'utf-8
+   'iso-2022-7bit
+   'iso-latin-1
+   'iso-2022-7bit-lock
+   'iso-2022-8bit-ss2
+   'emacs-mule
+   'raw-text)
 
   (set-default-coding-systems nil)
   (setq default-sendmail-coding-system 'iso-latin-1)
@@ -1825,6 +1794,11 @@ The default status is as follows:
 	   (coding-system-error 'iso-latin-1))))
     (setq default-process-coding-system
 	  (cons output-coding input-coding)))
+  ;; Put the highest priority to the charset iso-8859-1 to prefer the
+  ;; registry iso8859-1 over iso8859-2 in font selection.  It also
+  ;; makes unibyte-display-via-language-environment to use iso-8859-1
+  ;; as the unibyte charset.
+  (set-charset-priority 'iso-8859-1)
 
   ;; Don't alter the terminal and keyboard coding systems here.
   ;; The terminal still supports the same coding system
@@ -1832,17 +1806,15 @@ The default status is as follows:
   ;; (set-terminal-coding-system-internal nil)
   ;; (set-keyboard-coding-system-internal nil)
 
-  (setq nonascii-translation-table nil
-	nonascii-insert-offset 0)
-
-  ;; Don't invoke fontset-related functions if fontsets aren't
-  ;; supported in this build of Emacs.
-  (and (fboundp 'fontset-list)
-       (set-overriding-fontspec-internal nil)))
+  ;; Back in Emacs-20, it was necessary to provide some fallback implicit
+  ;; conversion, because almost no packages handled coding-system issues.
+  ;; Nowadays it'd just paper over bugs.
+  ;; (set-unibyte-charset 'iso-8859-1)
+  )
 
 (reset-language-environment)
 
-(defun set-display-table-and-terminal-coding-system (language-name &optional coding-system)
+(defun set-display-table-and-terminal-coding-system (language-name &optional coding-system display)
   "Set up the display table and terminal coding system for LANGUAGE-NAME."
   (let ((coding (get-language-info language-name 'unibyte-display)))
     (if (and coding
@@ -1852,13 +1824,11 @@ The default status is as follows:
       ;; The following 2 lines undo the 8-bit display that we set up
       ;; in standard-display-european-internal, which see.  This is in
       ;; case the user has used standard-display-european earlier in
-      ;; this session.  (The MS-DOS port doesn't use that setup, so it
-      ;; doesn't need to undo it.)
+      ;; this session.
       (when standard-display-table
 	(dotimes (i 128)
 	  (aset standard-display-table (+ i 128) nil))))
-    (or (eq window-system 'pc)
-	(set-terminal-coding-system (or coding-system coding)))))
+    (set-terminal-coding-system (or coding-system coding) display)))
 
 (defun set-language-environment (language-name)
   "Set up multi-lingual environment for using LANGUAGE-NAME.
@@ -1896,7 +1866,6 @@ specifies the character set for the major languages of Western Europe."
   (set-language-environment-input-method language-name)
   (set-language-environment-nonascii-translation language-name)
   (set-language-environment-charset language-name)
-  (set-language-environment-fontset language-name)
   ;; Unibyte setups if necessary.
   (unless default-enable-multibyte-characters
     (set-language-environment-unibyte language-name))
@@ -1905,8 +1874,77 @@ specifies the character set for the major languages of Western Europe."
     (if (functionp func)
 	(funcall func)))
 
+  (setq current-iso639-language
+	(or (get-language-info language-name 'iso639-language)
+	    current-iso639-language))
+
   (run-hooks 'set-language-environment-hook)
   (force-mode-line-update t))
+
+(define-widget 'charset 'symbol
+  "An Emacs charset."
+  :tag "Charset"
+  :complete-function (lambda ()
+		       (interactive)
+		       (lisp-complete-symbol 'charsetp))
+  :completion-ignore-case t
+  :value 'ascii
+  :validate (lambda (widget)
+	      (unless (charsetp (widget-value widget))
+		(widget-put widget :error (format "Invalid charset: %S"
+						  (widget-value widget)))
+		widget))
+  :prompt-history 'charset-history)
+
+(defcustom language-info-custom-alist nil
+  "Customizations of language environment parameters.
+Value is an alist with elements like those of `language-info-alist'.
+These are used to set values in `language-info-alist' which replace
+the defaults.  A typical use is replacing the default input method for
+the environment.  Use \\[describe-language-environment] to find the environment's settings.
+
+This option is intended for use at startup.  Removing items doesn't
+remove them from the language info until you next restart Emacs.
+
+Setting this variable directly does not take effect.
+See `set-language-info-alist' for use in programs."
+  :group 'mule
+  :version "23.1"
+  :set (lambda (s v)
+	 (custom-set-default s v)
+	 ;; Can't do this before language environments are set up.
+	 (when v
+	   ;; modify language-info-alist
+	   (dolist (elt v)
+	     (set-language-info-alist (car elt) (cdr elt)))
+	   ;; re-set the environment in case its parameters changed
+	   (set-language-environment current-language-environment)))
+  :type `(alist
+	  :key-type (string :tag "Language environment"
+			    :completion-ignore-case t
+			    :complete-function widget-string-complete
+			    :completion-alist language-info-alist)
+	  :value-type
+	  (alist :key-type symbol
+		 :options ((documentation string)
+			   (charset (repeat charset))
+			   (sample-text string)
+			   (setup-function function)
+			   (exit-function function)
+			   (coding-system (repeat coding-system))
+			   (coding-priority (repeat coding-system))
+			   (nonascii-translation charset)
+			   (input-method
+			    (string
+			     :completion-ignore-case t
+			     :complete-function widget-string-complete
+			     :completion-alist input-method-alist
+			     :prompt-history input-method-history))
+			   (features (repeat symbol))
+			   (unibyte-display coding-system)))))
+
+(declare-function x-server-vendor "xfns.c" (&optional terminal))
+(declare-function x-server-version "xfns.c" (&optional terminal))
 
 (defun standard-display-european-internal ()
   ;; Actually set up direct output of non-ASCII characters.
@@ -1937,20 +1975,32 @@ specifies the character set for the major languages of Western Europe."
   "Do various coding system setups for language environment LANGUAGE-NAME."
   (let* ((priority (get-language-info language-name 'coding-priority))
 	 (default-coding (car priority))
-	 (eol-type (coding-system-eol-type default-buffer-file-coding-system)))
-    (if priority
-	(let ((categories (mapcar 'coding-system-category priority)))
-	  (set-default-coding-systems
-	   (if (memq eol-type '(0 1 2 unix dos mac))
-	       (coding-system-change-eol-conversion default-coding eol-type)
-	     default-coding))
-	  (setq default-sendmail-coding-system default-coding)
-	  (set-coding-priority categories)
-	  (while priority
-	    (set (car categories) (car priority))
-	    (setq priority (cdr priority) categories (cdr categories)))
-	  ;; Changing the binding of a coding category requires this call.
-	  (update-coding-systems-internal)))))
+	 ;; If default-buffer-file-coding-system is nil, don't use
+	 ;; coding-system-eol-type, because it treats nil as
+	 ;; `no-conversion'.  default-buffer-file-coding-system is set
+	 ;; to nil by reset-language-environment, and in that case we
+	 ;; want to have here the native EOL type for each platform.
+	 ;; FIXME: there should be a common code that runs both on
+	 ;; startup and here to set the default EOL type correctly.
+	 ;; Right now, DOS/Windows platforms set this on dos-w32.el,
+	 ;; which works only as long as the order of loading files at
+	 ;; dump time and calling functions at startup is not modified
+	 ;; significantly, i.e. as long as this function is called
+	 ;; _after_ default-buffer-file-coding-system was set by
+	 ;; dos-w32.el.
+	 (eol-type
+	  (if (null default-buffer-file-coding-system)
+	      (cond ((memq system-type '(windows-nt ms-dos)) 1)
+		    ((eq system-type 'macos) 2)
+		    (t 0))
+	    (coding-system-eol-type default-buffer-file-coding-system))))
+    (when priority
+      (set-default-coding-systems
+       (if (memq eol-type '(0 1 2 unix dos mac))
+	   (coding-system-change-eol-conversion default-coding eol-type)
+	 default-coding))
+      (setq default-sendmail-coding-system default-coding)
+      (apply 'set-coding-system-priority priority))))
 
 (defun set-language-environment-input-method (language-name)
   "Do various input method setups for language environment LANGUAGE-NAME."
@@ -1964,66 +2014,34 @@ specifies the character set for the major languages of Western Europe."
 
 (defun set-language-environment-nonascii-translation (language-name)
   "Do unibyte/multibyte translation setup for language environment LANGUAGE-NAME."
-  (let ((nonascii (get-language-info language-name 'nonascii-translation))
-	(dos-table
-	 (if (eq window-system 'pc)
-	     (intern
-	      (format "cp%d-nonascii-translation-table" dos-codepage)))))
-    (cond
-     ((char-table-p nonascii)
-      (setq nonascii-translation-table nonascii))
-     ((and (eq window-system 'pc) (boundp dos-table))
-      ;; DOS terminals' default is to use a special non-ASCII translation
-      ;; table as appropriate for the installed codepage.
-      (setq nonascii-translation-table (symbol-value dos-table)))
-     ((charsetp nonascii)
-      (setq nonascii-insert-offset (- (make-char nonascii) 128))))))
+  ;; Note: For DOS, we assumed that the charset cpXXX is already
+  ;; defined.
+  (let ((nonascii (get-language-info language-name 'nonascii-translation)))
+    (if (eq window-system 'pc)
+	(setq nonascii (intern (format "cp%d" dos-codepage))))
+    (or (and (charsetp nonascii)
+	     (get-charset-property nonascii :ascii-compatible-p))
+	(setq nonascii 'iso-8859-1))
+    ;; Back in Emacs-20, it was necessary to provide some fallback implicit
+    ;; conversion, because almost no packages handled coding-system issues.
+    ;; Nowadays it'd just paper over bugs.
+    ;; (set-unibyte-charset nonascii)
+    ))
 
 (defun set-language-environment-charset (language-name)
   "Do various charset setups for language environment LANGUAGE-NAME."
-  (if (and utf-translate-cjk-mode
-	   (not (eq utf-translate-cjk-lang-env language-name))
-	   (catch 'tag
-	     (dolist (charset (get-language-info language-name 'charset))
-	       (if (memq charset utf-translate-cjk-charsets)
-		   (throw 'tag t)))
-	     nil))
-      (utf-translate-cjk-load-tables)))
-
-(defun set-language-environment-fontset (language-name)
-  "Do various fontset setups for language environment LANGUAGE-NAME."
-  ;; Don't invoke fontset-related functions if fontsets aren't
-  ;; supported in this build of Emacs.
-  (if (fboundp 'fontset-list)
-      (set-overriding-fontspec-internal
-       (get-language-info language-name 'overriding-fontspec))))
+  ;; Put higher priorities to such charsets that are supported by the
+  ;; coding systems of higher priorities in this environment.
+  (let ((charsets (get-language-info language-name 'charset)))
+    (dolist (coding (get-language-info language-name 'coding-priority))
+      (let ((list (coding-system-charset-list coding)))
+	(if (consp list)
+	    (setq charsets (append charsets list)))))
+    (if charsets
+	(apply 'set-charset-priority charsets))))
 
 (defun set-language-environment-unibyte (language-name)
   "Do various unibyte-mode setups for language environment LANGUAGE-NAME."
-  ;; Syntax and case table.
-  (let ((syntax (get-language-info language-name 'unibyte-syntax)))
-    (if syntax
-	(let ((set-case-syntax-set-multibyte nil))
-	  (load syntax nil t))
-      ;; No information for syntax and case.  Reset to the defaults.
-      (let ((syntax-table (standard-syntax-table))
-	    (standard-table (standard-case-table))
-	    (case-table (make-char-table 'case-table))
-	    (ch (if (eq window-system 'pc) 128 160)))
-	(while (< ch 256)
-	  (modify-syntax-entry ch " " syntax-table)
-	  (setq ch (1+ ch)))
-	(dotimes (i 128)
-	  (aset case-table i (aref standard-table i)))
-	(set-char-table-extra-slot case-table 0 nil)
-	(set-char-table-extra-slot case-table 1 nil)
-	(set-char-table-extra-slot case-table 2 nil)
-	(set-standard-case-table case-table))
-      (let ((list (buffer-list)))
-	(while list
-	  (with-current-buffer (car list)
-	    (set-case-table (standard-case-table)))
-	  (setq list (cdr list))))))
   (set-display-table-and-terminal-coding-system language-name))
 
 (defsubst princ-list (&rest args)
@@ -2076,29 +2094,34 @@ specifies the character set for the major languages of Western Europe."
 	(condition-case nil
 	    (let ((str (eval (get-language-info language-name 'sample-text))))
 	      (if (stringp str)
-		  (insert "Sample text:\n  " str "\n\n")))
+		  (insert "Sample text:\n  "
+			  (replace-regexp-in-string "\n" "\n  " str)
+			  "\n\n")))
 	  (error nil))
 	(let ((input-method (get-language-info language-name 'input-method))
-	      (l (copy-sequence input-method-alist)))
-	  (insert "Input methods")
-	  (when input-method
-	    (insert " (default " input-method ")")
-	    (setq input-method (assoc input-method input-method-alist))
-	    (setq l (cons input-method (delete input-method l))))
-	  (insert ":\n")
-	  (while l
-	    (when (string= language-name (nth 1 (car l)))
-	      (insert "  " (car (car l)))
-	      (search-backward (car (car l)))
-	      (help-xref-button 0 'help-input-method (car (car l)))
+	      (l (copy-sequence input-method-alist))
+	      (first t))
+	  (when (and input-method
+		     (setq input-method (assoc input-method l)))
+	    (insert "Input methods (default " (car input-method) ")\n")
+	    (setq l (cons input-method (delete input-method l))
+		  first nil))
+	  (dolist (elt l)
+	    (when (or (eq input-method elt)
+		      (eq t (compare-strings language-name nil nil
+					     (nth 1 elt) nil nil t)))
+	      (when first
+		(insert "Input methods:\n")
+		(setq first nil))
+	      (insert "  " (car elt))
+	      (search-backward (car elt))
+	      (help-xref-button 0 'help-input-method (car elt))
 	      (goto-char (point-max))
 	      (insert " (\""
-		      (if (stringp (nth 3 (car l)))
-			  (nth 3 (car l))
-			(car (nth 3 (car l))))
-		      "\" in mode line)\n"))
-	    (setq l (cdr l)))
-	  (insert "\n"))
+		      (if (stringp (nth 3 elt)) (nth 3 elt) (car (nth 3 elt)))
+		      "\" in mode line)\n")))
+	  (or first
+	      (insert "\n")))
 	(insert "Character sets:\n")
 	(let ((l (get-language-info language-name 'charset)))
 	  (if (null l)
@@ -2125,8 +2148,7 @@ specifies the character set for the major languages of Western Europe."
 		      "' in mode line):\n\t"
 		      (coding-system-doc-string (car l))
 		      "\n")
-	      (let ((aliases (coding-system-get (car l)
-						'alias-coding-systems)))
+	      (let ((aliases (coding-system-aliases (car l))))
 		(when aliases
 		  (insert "\t(alias:")
 		  (while aliases
@@ -2291,7 +2313,6 @@ specifies the character set for the major languages of Western Europe."
     ("so_ET" "UTF-8") ; Somali
     ("so" "Latin-1") ; Somali
     ("sq" . "Latin-1") ; Albanian
-    ("sr_YU@cyrillic" . "Cyrillic-ISO")	; Serbian (Cyrillic alphabet)
     ("sr" . "Latin-2") ; Serbian (Latin alphabet)
     ; ss Siswati
     ("st" . "Latin-1") ;  Sesotho
@@ -2326,12 +2347,14 @@ specifies the character set for the major languages of Western Europe."
     ; yo Yoruba
     ; za Zhuang
     ("zh_HK" . "Chinese-Big5")
+    ; zh_HK/BIG5-HKSCS \
     ("zh_TW" . "Chinese-Big5")
+    ("zh_CN.GB2312" "Chinese-GB")
+    ("zh_CN.GBK" "Chinese-GBK")
+    ("zh_CN.GB18030" "Chinese-GB18030")
+    ("zh_CN.UTF-8" . "Chinese-GBK")
     ("zh_CN" . "Chinese-GB")
     ("zh" . "Chinese-GB")
-    ; zh_CN.GB18030/GB18030 \
-    ; zh_CN.GBK/GBK \
-    ; zh_HK/BIG5-HKSCS \
     ("zu" . "Latin-1") ; Zulu
 
     ;; ISO standard locales
@@ -2349,7 +2372,7 @@ specifies the character set for the major languages of Western Europe."
     ("sp" . "Cyrillic-ISO") ; Serbian (Cyrillic alphabet), e.g. X11R6.4
     ("su" . "Latin-1") ; Finnish, e.g. Solaris 2.6
     ("jp" . "Japanese") ; e.g. MS Windows
-    ("chs" . "Chinese-GB") ; MS Windows Chinese Simplified
+    ("chs" . "Chinese-GBK") ; MS Windows Chinese Simplified
     ("cht" . "Chinese-BIG5") ; MS Windows Chinese Traditional
     ("gbz" . "UTF-8") ; MS Windows Dari Persian
     ("div" . "UTF-8") ; MS Windows Divehi (Maldives)
@@ -2402,14 +2425,13 @@ This language name is used if the locale is not listed in
      ("koi8-?r" . koi8-r)
      ("koi8-?u" . koi8-u)
      ("tcvn" . tcvn)
+     ("big5[-_]?hkscs" . big5-hkscs)
      ("big5" . big5)
      ("euc-?tw" . euc-tw)
-     ;; We don't support GBK, but as it is upper compatible with
-     ;; GB-2312, we setup the default coding system to gb2312.
-     ("gbk" . gb2312)
-     ;; We don't support BIG5-HKSCS, but as it is upper compatible with
-     ;; BIG5, we setup the default coding system to big5.
-     ("big5hkscs" . big5)
+     ("euc-?cn" . euc-cn)
+     ("gb2312" . gb2312)
+     ("gbk" . gbk)
+     ("gb18030" . gb18030)
      ("ja.*[._]euc" . japanese-iso-8bit)
      ("ja.*[._]jis7" . iso-2022-jp)
      ("ja.*[._]pck" . japanese-shift-jis)
@@ -2427,7 +2449,7 @@ Return the value corresponding to the first regexp that matches the
 start of KEY, or nil if there is no match."
   (let (element)
     (while (and alist (not element))
-      (if (string-match (concat "\\`\\(?:" (car (car alist)) "\\)") key)
+      (if (string-match-p (concat "\\`\\(?:" (car (car alist)) "\\)") key)
 	  (setq element (car alist)))
       (setq alist (cdr alist)))
     (cdr element)))
@@ -2466,7 +2488,20 @@ is returned.  Thus, for instance, if charset \"ISO8859-2\",
 ;; too, for setting things such as calendar holidays, ps-print paper
 ;; size, spelling dictionary.
 
-(defun set-locale-environment (&optional locale-name)
+(defun locale-translate (locale)
+  "Expand LOCALE according to `locale-translation-file-name', if possible.
+For example, translate \"swedish\" into \"sv_SE.ISO8859-1\"."
+  (if locale-translation-file-name
+      (with-temp-buffer
+        (set-buffer-multibyte nil)
+        (insert-file-contents locale-translation-file-name)
+        (if (re-search-forward
+             (concat "^" (regexp-quote locale) ":?[ \t]+") nil t)
+            (buffer-substring (point) (line-end-position))
+          locale))
+    locale))
+
+(defun set-locale-environment (&optional locale-name frame)
   "Set up multi-lingual environment for using LOCALE-NAME.
 This sets the language environment, the coding system priority,
 the default input method and sometimes other things.
@@ -2486,6 +2521,10 @@ The locale names supported by your system can typically be found in a
 directory named `/usr/share/locale' or `/usr/lib/locale'.  LOCALE-NAME
 will be translated according to the table specified by
 `locale-translation-file-name'.
+
+If FRAME is non-nil, only set the keyboard coding system and the
+terminal coding system for the terminal of that frame, and don't
+touch session-global parameters like the language environment.
 
 See also `locale-charset-language-names', `locale-language-names',
 `locale-preferred-coding-systems' and `locale-coding-system'."
@@ -2516,30 +2555,10 @@ See also `locale-charset-language-names', `locale-language-names',
       (let ((vars '("LC_ALL" "LC_CTYPE" "LANG")))
 	(while (and vars
 		    (= 0 (length locale))) ; nil or empty string
-	  (setq locale (getenv (pop vars))))))
-
-    (unless locale
-      ;; The two tests are kept separate so the byte-compiler sees
-      ;; that mac-get-preference is only called after checking its existence.
-      (when (fboundp 'mac-get-preference)
-        (setq locale (mac-get-preference "AppleLocale"))
-        (unless locale
-          (let ((languages (mac-get-preference "AppleLanguages")))
-            (unless (= (length languages) 0) ; nil or empty vector
-              (setq locale (aref languages 0)))))))
-    (unless (or locale (not (boundp 'mac-system-locale)))
-      (setq locale mac-system-locale))
+	  (setq locale (getenv (pop vars) frame)))))
 
     (when locale
-
-      ;; Translate "swedish" into "sv_SE.ISO8859-1", and so on,
-      ;; using the translation file that many systems have.
-      (when locale-translation-file-name
-	(with-temp-buffer
-	  (insert-file-contents locale-translation-file-name)
-	  (when (re-search-forward
-		 (concat "^" (regexp-quote locale) ":?[ \t]+") nil t)
-	    (setq locale (buffer-substring (point) (line-end-position))))))
+      (setq locale (locale-translate locale))
 
       ;; Leave the system locales alone if the caller did not specify
       ;; an explicit locale name, as their defaults are set from
@@ -2549,6 +2568,17 @@ See also `locale-charset-language-names', `locale-language-names',
 	(setq system-messages-locale locale)
 	(setq system-time-locale locale))
 
+      (if (string-match "^[a-z][a-z]" locale)
+	  (setq current-iso639-language (intern (match-string 0 locale)))))
+
+    (setq woman-locale
+          (or system-messages-locale
+              (let ((msglocale (getenv "LC_MESSAGES" frame)))
+                (if (zerop (length msglocale))
+                    locale
+                  (locale-translate msglocale)))))
+
+    (when locale
       (setq locale (downcase locale))
 
       (let ((language-name
@@ -2562,8 +2592,7 @@ See also `locale-charset-language-names', `locale-language-names',
 		 (when locale
 		   (if (string-match "\\.\\([^@]+\\)" locale)
 		       (locale-charset-to-coding-system
-			(match-string 1 locale))))
-		 (and (eq system-type 'macos) mac-system-coding-system))))
+			(match-string 1 locale)))))))
 
 	(if (consp language-name)
 	    ;; locale-language-names specify both lang-env and coding.
@@ -2590,28 +2619,34 @@ See also `locale-charset-language-names', `locale-language-names',
 
 	  ;; Set up for this character set.  This is now the right way
 	  ;; to do it for both unibyte and multibyte modes.
-	  (set-language-environment language-name)
+	  (unless frame
+	    (set-language-environment language-name))
 
 	  ;; If default-enable-multibyte-characters is nil,
 	  ;; we are using single-byte characters,
 	  ;; so the display table and terminal coding system are irrelevant.
 	  (when default-enable-multibyte-characters
 	    (set-display-table-and-terminal-coding-system
-	     language-name coding-system))
+	     language-name coding-system frame))
 
 	  ;; Set the `keyboard-coding-system' if appropriate (tty
 	  ;; only).  At least X and MS Windows can generate
 	  ;; multilingual input.
-	  (unless window-system
-	    (let ((kcs (or coding-system
-			   (car (get-language-info language-name
-						   'coding-system)))))
-	      (if kcs (set-keyboard-coding-system kcs))))
+	  ;; XXX This was disabled unless `window-system', but that
+	  ;; leads to buggy behavior when a tty frame is opened
+	  ;; later.  Setting the keyboard coding system has no adverse
+	  ;; effect on X, so let's do it anyway. -- Lorentey
+	  (let ((kcs (or coding-system
+			 (car (get-language-info language-name
+						 'coding-system)))))
+	    (if kcs (set-keyboard-coding-system kcs frame)))
 
-	  (setq locale-coding-system
-		(car (get-language-info language-name 'coding-priority))))
+	  (unless frame
+	    (setq locale-coding-system
+		  (car (get-language-info language-name 'coding-priority)))))
 
-	(when (and coding-system
+	(when (and (not frame)
+		   coding-system
 		   (not (coding-system-equal coding-system
 					     locale-coding-system)))
 	  (prefer-coding-system coding-system)
@@ -2626,9 +2661,9 @@ See also `locale-charset-language-names', `locale-language-names',
     (when (boundp 'w32-ansi-code-page)
       (let ((code-page-coding (intern (format "cp%d" w32-ansi-code-page))))
 	(when (coding-system-p code-page-coding)
-	  (setq locale-coding-system code-page-coding)
-	  (set-keyboard-coding-system code-page-coding)
-	  (set-terminal-coding-system code-page-coding)
+	  (unless frame (setq locale-coding-system code-page-coding))
+	  (set-keyboard-coding-system code-page-coding frame)
+	  (set-terminal-coding-system code-page-coding frame)
 	  ;; Set default-file-name-coding-system last, so that Emacs
 	  ;; doesn't try to use cpNNNN when it defines keyboard and
 	  ;; terminal encoding.  That's because the above two lines
@@ -2647,82 +2682,147 @@ See also `locale-charset-language-names', `locale-language-names',
       ;; Mac OS X's Terminal.app by default uses utf-8 regardless of
       ;; the locale.
       (when (and (null window-system)
-		 (equal (getenv "TERM_PROGRAM") "Apple_Terminal"))
+		 (equal (getenv "TERM_PROGRAM" frame) "Apple_Terminal"))
 	(set-terminal-coding-system 'utf-8)
 	(set-keyboard-coding-system 'utf-8)))
 
     ;; Default to A4 paper if we're not in a C, POSIX or US locale.
     ;; (See comments in Flocale_info.)
-    (let ((locale locale)
-	  (paper (locale-info 'paper)))
-      (if paper
-	  ;; This will always be null at the time of writing.
-	  (cond
-	   ((equal paper '(216 279))
-	    (setq ps-paper-type 'letter))
-	   ((equal paper '(210 297))
-	    (setq ps-paper-type 'a4)))
-	(let ((vars '("LC_ALL" "LC_PAPER" "LANG")))
-	  (while (and vars (= 0 (length locale)))
-	    (setq locale (getenv (pop vars)))))
-	(when locale
-	  ;; As of glibc 2.2.5, these are the only US Letter locales,
-	  ;; and the rest are A4.
-	  (setq ps-paper-type
-		(or (locale-name-match locale '(("c$" . letter)
-						("posix$" . letter)
-						(".._us" . letter)
-						(".._pr" . letter)
-						(".._ca" . letter)
-						("enu$" . letter) ; Windows
-						("esu$" . letter)
-						("enc$" . letter)
-						("frc$" . letter)))
-		    'a4))))))
+    (unless frame
+      (let ((locale locale)
+	    (paper (locale-info 'paper)))
+	(if paper
+	    ;; This will always be null at the time of writing.
+	    (cond
+	     ((equal paper '(216 279))
+	      (setq ps-paper-type 'letter))
+	     ((equal paper '(210 297))
+	      (setq ps-paper-type 'a4)))
+	  (let ((vars '("LC_ALL" "LC_PAPER" "LANG")))
+	    (while (and vars (= 0 (length locale)))
+	      (setq locale (getenv (pop vars) frame))))
+	  (when locale
+	    ;; As of glibc 2.2.5, these are the only US Letter locales,
+	    ;; and the rest are A4.
+	    (setq ps-paper-type
+		  (or (locale-name-match locale '(("c$" . letter)
+						  ("posix$" . letter)
+						  (".._us" . letter)
+						  (".._pr" . letter)
+						  (".._ca" . letter)
+						  ("enu$" . letter) ; Windows
+						  ("esu$" . letter)
+						  ("enc$" . letter)
+						  ("frc$" . letter)))
+		      'a4)))))))
   nil)
 
-;;; Charset property
+;;; Character property
 
-(defun get-charset-property (charset propname)
-  "Return the value of CHARSET's PROPNAME property.
-This is the last value stored with
- (put-charset-property CHARSET PROPNAME VALUE)."
-  (and (not (eq charset 'composition))
-       (plist-get (charset-plist charset) propname)))
+;; Each element has the form (PROP . TABLE).
+;; PROP is a symbol representing a character property.
+;; TABLE is a char-table containing the property value for each character.
+;; TABLE may be a name of file to load to build a char-table.
+;; Don't modify this variable directly but use `define-char-code-property'.
 
-(defun put-charset-property (charset propname value)
-  "Store CHARSETS's PROPNAME property with value VALUE.
-It can be retrieved with `(get-charset-property CHARSET PROPNAME)'."
-  (or (eq charset 'composition)
-      (set-charset-plist charset
-			 (plist-put (charset-plist charset) propname value))))
+(defvar char-code-property-alist nil
+  "Alist of character property name vs char-table containing property values.
+Internal use only.")
 
-;;; Character code property
-(put 'char-code-property-table 'char-table-extra-slots 0)
+(put 'char-code-property-table 'char-table-extra-slots 5)
+
+(defun define-char-code-property (name table &optional docstring)
+  "Define NAME as a character code property given by TABLE.
+TABLE is a char-table of purpose `char-code-property-table' with
+these extra slots:
+  1st: NAME.
+  2nd: Function to call to get a property value of a character.
+    It is called with three arguments CHAR, VAL, and TABLE, where
+    CHAR is a character, VAL is the value of (aref TABLE CHAR).
+  3rd: Function to call to put a property value of a character.
+    It is called with the same arguments as above.
+  4th: Function to call to get a description string of a property value.
+    It is called with one argument VALUE, a property value.
+  5th: Data used by the above functions.
+
+TABLE may be a name of file to load to build a char-table.  The
+file should contain a call of `define-char-code-property' with a
+char-table of the above format as the argument TABLE.
+
+TABLE may also be nil, in which case no property value is pre-assigned.
+
+Optional 3rd argument DOCSTRING is a documentation string of the property.
+
+See also the documentation of `get-char-code-property' and
+`put-char-code-property'."
+  (or (symbolp name)
+      (error "Not a symbol: %s" name))
+  (if (char-table-p table)
+      (or (and (eq (char-table-subtype table) 'char-code-property-table)
+	       (eq (char-table-extra-slot table 0) name))
+	  (error "Invalid char-table: %s" table))
+    (or (stringp table)
+	(error "Not a char-table nor a file name: %s" table)))
+  (let ((slot (assq name char-code-property-alist)))
+    (if slot
+	(setcdr slot table)
+      (setq char-code-property-alist
+	    (cons (cons name table) char-code-property-alist))))
+  (put name 'char-code-property-documentation docstring))
 
 (defvar char-code-property-table
   (make-char-table 'char-code-property-table)
   "Char-table containing a property list of each character code.
-
+This table is used for properties not listed in `char-code-property-alist'.
 See also the documentation of `get-char-code-property' and
 `put-char-code-property'.")
 
 (defun get-char-code-property (char propname)
-  "Return the value of CHAR's PROPNAME property in `char-code-property-table'."
-  (let ((plist (aref char-code-property-table char)))
-    (if (listp plist)
-	(car (cdr (memq propname plist))))))
+  "Return the value of CHAR's PROPNAME property."
+  (let ((slot (assq propname char-code-property-alist)))
+    (if slot
+	(let (table value func)
+	  (if (stringp (cdr slot))
+	      (load (cdr slot) nil t))
+	  (setq table (cdr slot)
+		value (aref table char)
+		func (char-table-extra-slot table 1))
+	  (if (functionp func)
+	      (setq value (funcall func char value table)))
+	  value)
+      (plist-get (aref char-code-property-table char) propname))))
 
 (defun put-char-code-property (char propname value)
-  "Store CHAR's PROPNAME property with VALUE in `char-code-property-table'.
+  "Store CHAR's PROPNAME property with VALUE.
 It can be retrieved with `(get-char-code-property CHAR PROPNAME)'."
-  (let ((plist (aref char-code-property-table char)))
-    (if plist
-	(let ((slot (memq propname plist)))
-	  (if slot
-	      (setcar (cdr slot) value)
-	    (nconc plist (list propname value))))
-      (aset char-code-property-table char (list propname value)))))
+  (let ((slot (assq propname char-code-property-alist)))
+    (if slot
+	(let (table func)
+	  (if (stringp (cdr slot))
+	      (load (cdr slot) nil t))
+	  (setq table (cdr slot)
+		func (char-table-extra-slot table 2))
+	  (if (functionp func)
+	      (funcall func char value table)
+	    (aset table char value)))
+      (let* ((plist (aref char-code-property-table char))
+	     (x (plist-put plist propname value)))
+	(or (eq x plist)
+	    (aset char-code-property-table char x))))
+    value))
+
+(defun char-code-property-description (prop value)
+  "Return a description string of character property PROP's value VALUE.
+If there's no description string for VALUE, return nil."
+  (let ((slot (assq prop char-code-property-alist)))
+    (if slot
+	(let (table func)
+	  (if (stringp (cdr slot))
+	      (load (cdr slot) nil t))
+	  (setq table (cdr slot)
+		func (char-table-extra-slot table 3))
+	  (if (functionp func)
+	      (funcall func value))))))
 
 
 ;; Pretty description of encoded string
@@ -2740,44 +2840,121 @@ It can be retrieved with `(get-char-code-property CHAR PROPNAME)'."
   "Return a pretty description of STR that is encoded by CODING-SYSTEM."
   (setq str (string-as-unibyte str))
   (mapconcat
-   (if (and coding-system (eq (coding-system-type coding-system) 2))
+   (if (and coding-system (eq (coding-system-type coding-system) 'iso-2022))
        ;; Try to get a pretty description for ISO 2022 escape sequences.
        (function (lambda (x) (or (cdr (assq x iso-2022-control-alist))
 				 (format "#x%02X" x))))
      (function (lambda (x) (format "#x%02X" x))))
    str " "))
 
-(defun encode-coding-char (char coding-system)
+(defun encode-coding-char (char coding-system &optional charset)
   "Encode CHAR by CODING-SYSTEM and return the resulting string.
-If CODING-SYSTEM can't safely encode CHAR, return nil."
-  (let ((str1 (string-as-multibyte (char-to-string char)))
-	(str2 (string-as-multibyte (make-string 2 char)))
-	(safe-chars (and coding-system
-			 (coding-system-get coding-system 'safe-chars)))
-	(charset (char-charset char))
+If CODING-SYSTEM can't safely encode CHAR, return nil.
+The 3rd optional argument CHARSET, if non-nil, is a charset preferred
+on encoding."
+  (let* ((str1 (string-as-multibyte (string char)))
+	 (str2 (string-as-multibyte (string char char)))
+	 (found (find-coding-systems-string str1))
 	enc1 enc2 i1 i2)
-    (when (or (eq safe-chars t)
-	      (eq charset 'ascii)
-	      (and safe-chars (aref safe-chars char)))
-      ;; We must find the encoded string of CHAR.  But, just encoding
-      ;; CHAR will put extra control sequences (usually to designate
-      ;; ASCII charset) at the tail if type of CODING is ISO 2022.
-      ;; To exclude such tailing bytes, we at first encode one-char
-      ;; string and two-char string, then check how many bytes at the
-      ;; tail of both encoded strings are the same.
+    (if (and (consp found)
+	     (eq (car found) 'undecided))
+	str1
+      (when (memq (coding-system-base coding-system) found)
+	;; We must find the encoded string of CHAR.  But, just encoding
+	;; CHAR will put extra control sequences (usually to designate
+	;; ASCII charset) at the tail if type of CODING is ISO 2022.
+	;; To exclude such tailing bytes, we at first encode one-char
+	;; string and two-char string, then check how many bytes at the
+	;; tail of both encoded strings are the same.
 
-      (setq enc1 (encode-coding-string str1 coding-system)
-	    i1 (length enc1)
-	    enc2 (encode-coding-string str2 coding-system)
-	    i2 (length enc2))
-      (while (and (> i1 0) (= (aref enc1 (1- i1)) (aref enc2 (1- i2))))
-	(setq i1 (1- i1) i2 (1- i2)))
+	(when charset
+	  (put-text-property 0 1 'charset charset str1)
+	  (put-text-property 0 2 'charset charset str2))
+	(setq enc1 (encode-coding-string str1 coding-system)
+	      i1 (length enc1)
+	      enc2 (encode-coding-string str2 coding-system)
+	      i2 (length enc2))
+	(while (and (> i1 0) (= (aref enc1 (1- i1)) (aref enc2 (1- i2))))
+	  (setq i1 (1- i1) i2 (1- i2)))
 
-      ;; Now (substring enc1 i1) and (substring enc2 i2) are the same,
-      ;; and they are the extra control sequences at the tail to
-      ;; exclude.
-      (substring enc2 0 i2))))
+	;; Now (substring enc1 i1) and (substring enc2 i2) are the same,
+	;; and they are the extra control sequences at the tail to
+	;; exclude.
+	(substring enc2 0 i2)))))
 
+;; Backwards compatibility.  These might be better with :init-value t,
+;; but that breaks loadup.
+(define-minor-mode unify-8859-on-encoding-mode
+  "Obsolete."
+  :group 'mule
+  :global t)
+(define-minor-mode unify-8859-on-decoding-mode
+  "Obsolete."
+  :group 'mule
+  :global t)
+
+(defvar nonascii-insert-offset 0 "This variable is obsolete.")
+(defvar nonascii-translation-table nil "This variable is obsolete.")
+
+(defvar ucs-names nil
+  "Alist of cached (CHAR-NAME . CHAR-CODE) pairs.")
+
+(defun ucs-names ()
+  "Return alist of (CHAR-NAME . CHAR-CODE) pairs cached in `ucs-names'."
+  (or ucs-names
+      (setq ucs-names
+	    (let (name names)
+	      (dotimes-with-progress-reporter (c #xEFFFF)
+		  "Loading Unicode character names..."
+		(unless (or
+			 (and (>= c #x3400 ) (<= c #x4dbf )) ; CJK Ideograph Extension A
+			 (and (>= c #x4e00 ) (<= c #x9fff )) ; CJK Ideograph
+			 (and (>= c #xd800 ) (<= c #xfaff )) ; Private/Surrogate
+			 (and (>= c #x20000) (<= c #x2ffff)) ; CJK Ideograph Extension B
+			 )
+		  (if (setq name (get-char-code-property c 'name))
+		      (setq names (cons (cons name c) names)))
+		  (if (setq name (get-char-code-property c 'old-name))
+		      (setq names (cons (cons name c) names)))))
+	      names))))
+
+(defvar ucs-completions (lazy-completion-table ucs-completions ucs-names)
+  "Lazy completion table for completing on Unicode character names.")
+(put 'ucs-completions 'risky-local-variable t)
+
+(defun read-char-by-name (prompt)
+  "Read a character by its Unicode name or hex number string.
+Display PROMPT and read a string that represents a character by its
+Unicode property `name' or `old-name'.  You can type a few of first
+letters of the Unicode name and use completion.  This function also
+accepts a hexadecimal number of Unicode code point or a number in
+hash notation, e.g. #o21430 for octal, #x2318 for hex, or #10r8984
+for decimal.  Returns a character as a number."
+  (let* ((completion-ignore-case t)
+	 (input (completing-read prompt ucs-completions)))
+    (cond
+     ((string-match-p "^[0-9a-fA-F]+$" input)
+      (string-to-number input 16))
+     ((string-match-p "^#" input)
+      (read input))
+     (t
+      (cdr (assoc-string input (ucs-names) t))))))
+
+(defun ucs-insert (arg)
+  "Insert a character of the given Unicode code point.
+Interactively, prompts for a Unicode character name or a hex number
+using `read-char-by-name'."
+  (interactive (list (read-char-by-name "Unicode (name or hex): ")))
+  (if (stringp arg)
+      (setq arg (string-to-number arg 16)))
+  (cond
+   ((not (integerp arg))
+    (error "Not a Unicode character code: %S" arg))
+   ((or (< arg 0) (> arg #x10FFFF))
+    (error "Not a Unicode character code: 0x%X" arg)))
+  (insert-and-inherit arg))
+
+(define-key ctl-x-map "8\r" 'ucs-insert)
 
 ;; arch-tag: b382c432-4b36-460e-bf4c-05efd0bb18dc
 ;;; mule-cmds.el ends here

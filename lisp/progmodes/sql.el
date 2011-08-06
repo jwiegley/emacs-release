@@ -1,7 +1,7 @@
 ;;; sql.el --- specialized comint.el for SQL interpreters
 
-;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-;; Free Software Foundation, Inc.
+;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
+;;   2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Alex Schroeder <alex@gnu.org>
 ;; Maintainer: Michael Mauger <mmaug@yahoo.com>
@@ -12,10 +12,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,9 +23,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -358,7 +356,7 @@ highlighted properly when you open them."
      :sqli-prompt-length 0)
     (sqlite
      :font-lock sql-mode-sqlite-font-lock-keywords
-     :sqli-login (user password server database)
+     :sqli-login (database)
      :sqli-connect sql-connect-sqlite
      :sqli-prompt-regexp "^sqlite> "
      :sqli-prompt-length 8)
@@ -410,7 +408,7 @@ following:
                         special character treatment by font-lock and
                         imenu. ")
 
-;; misc customization of sql.el behaviour
+;; misc customization of sql.el behavior
 
 (defcustom sql-electric-stuff nil
   "Treat some input as electric.
@@ -863,7 +861,7 @@ Based on `comint-mode-map'.")
 (unless sql-mode-abbrev-table
   (define-abbrev-table 'sql-mode-abbrev-table nil))
 
-(mapcar
+(mapc
  ;; In Emacs 22+, provide SYSTEM-FLAG to define-abbrev.
  '(lambda (abbrev)
     (let ((name (car abbrev))
@@ -2613,12 +2611,6 @@ parameters and command options."
   (let ((params))
     (if (not (string= "" sql-database))
 	(setq params (append (list sql-database) params)))
-    (if (not (string= "" sql-server))
-	(setq params (append (list (concat "--host=" sql-server)) params)))
-    (if (not (string= "" sql-password))
-	(setq params (append (list (concat "--password=" sql-password)) params)))
-    (if (not (string= "" sql-user))
-	(setq params (append (list (concat "--user=" sql-user)) params)))
     (if (not (null sql-sqlite-options))
 	(setq params (append sql-sqlite-options params)))
     (set-buffer (apply 'make-comint "SQL" sql-sqlite-program
@@ -2991,5 +2983,5 @@ parameters and command options."
 
 (provide 'sql)
 
-;;; arch-tag: 7e1fa1c4-9ca2-402e-87d2-83a5eccb7ac3
+;; arch-tag: 7e1fa1c4-9ca2-402e-87d2-83a5eccb7ac3
 ;;; sql.el ends here

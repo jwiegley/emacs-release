@@ -1,7 +1,7 @@
 ;;; gnus-kill.el --- kill commands for Gnus
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Masanobu UMEDA <umerin@flab.flab.fujitsu.junet>
 ;;	Lars Magne Ingebrigtsen <larsi@gnus.org>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -497,7 +495,7 @@ Optional 1st argument COMMAND is default to
 	(gnus-summary-mark-as-read nil \"X\").
 If optional 2nd argument ALL is non-nil, articles marked are also applied to.
 If FIELD is an empty string (or nil), entire article body is searched for.
-COMMAND must be a lisp expression or a string representing a key sequence."
+COMMAND must be a Lisp expression or a string representing a key sequence."
   ;; We don't want to change current point nor window configuration.
   (let ((old-buffer (current-buffer)))
     (save-excursion
@@ -625,7 +623,7 @@ COMMAND must be a lisp expression or a string representing a key sequence."
       did-kill)))
 
 (defun gnus-execute (field regexp form &optional backward unread)
-  "If FIELD of article header matches REGEXP, execute lisp FORM (or a string).
+  "If FIELD of article header matches REGEXP, execute Lisp FORM (or a string).
 If FIELD is an empty string (or nil), entire article body is searched for.
 If optional 1st argument BACKWARD is non-nil, do backward instead.
 If optional 2nd argument UNREAD is non-nil, articles which are
@@ -687,11 +685,10 @@ Usage: emacs -batch -l ~/.emacs -l gnus -f gnus-batch-score"
 	   (concat "options -n "
 		   (mapconcat 'identity command-line-args-left " "))))
 	 (gnus-expert-user t)
-	 (nnmail-spool-file nil)
 	 (mail-sources nil)
 	 (gnus-use-dribble-file nil)
 	 (gnus-batch-mode t)
-	 info group newsrc entry
+	 info group newsrc unread
 	 ;; Disable verbose message.
 	 gnus-novice-user gnus-large-newsgroup
 	 gnus-options-subscribe gnus-auto-subscribed-groups
@@ -703,11 +700,11 @@ Usage: emacs -batch -l ~/.emacs -l gnus -f gnus-batch-score"
     (setq newsrc (cdr gnus-newsrc-alist))
     (while (setq info (pop newsrc))
       (setq group (gnus-info-group info)
-	    entry (gnus-gethash group gnus-newsrc-hashtb))
+	    unread (gnus-group-unread group))
       (when (and (<= (gnus-info-level info) gnus-level-subscribed)
-		 (and (car entry)
-		      (or (eq (car entry) t)
-			  (not (zerop (car entry))))))
+		 (and unread
+		      (or (eq unread t)
+			  (not (zerop unread)))))
 	(ignore-errors
 	  (gnus-summary-read-group group nil t nil t))
 	(when (eq (current-buffer) (get-buffer gnus-summary-buffer))
@@ -718,5 +715,5 @@ Usage: emacs -batch -l ~/.emacs -l gnus -f gnus-batch-score"
 
 (provide 'gnus-kill)
 
-;;; arch-tag: b30c0f53-df1a-490b-b81e-17b13474f395
+;; arch-tag: b30c0f53-df1a-490b-b81e-17b13474f395
 ;;; gnus-kill.el ends here

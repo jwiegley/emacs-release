@@ -1,25 +1,23 @@
 ;;; ietf-drums.el --- Functions for parsing RFC822bis headers
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -99,14 +97,14 @@ backslash and doublequote.")
 	  (push c out)))
        (range
 	(while (<= b c)
-	  (push (mm-make-char 'ascii b) out)
+	  (push (make-char 'ascii b) out)
 	  (incf b))
 	(setq range nil))
        ((= i (length token))
-	(push (mm-make-char 'ascii c) out))
+	(push (make-char 'ascii c) out))
        (t
 	(when b
-	  (push (mm-make-char 'ascii b) out))
+	  (push (make-char 'ascii b) out))
 	(setq b c))))
     (nreverse out)))
 
@@ -125,9 +123,18 @@ backslash and doublequote.")
 	(setq c (char-after))
 	(cond
 	 ((eq c ?\")
-	  (forward-sexp 1))
+	  (condition-case err
+	      (forward-sexp 1)
+	    (error (goto-char (point-max)))))
 	 ((eq c ?\()
-	  (delete-region (point) (progn (forward-sexp 1) (point))))
+	  (delete-region
+	       (point)
+	       (condition-case nil
+		   (with-syntax-table (copy-syntax-table ietf-drums-syntax-table)
+		     (modify-syntax-entry ?\" "w")
+		     (forward-sexp 1)
+		     (point))
+		 (error (point-max)))))
 	 (t
 	  (forward-char 1))))
       (buffer-string))))
@@ -200,7 +207,9 @@ backslash and doublequote.")
 		  (buffer-substring
 		   (1+ (point))
 		   (progn (forward-sexp 1) (1- (point))))))))
-	 (t (error "Unknown symbol: %c" c))))
+	 (t
+	  (message "Unknown symbol: %c" c)
+	  (forward-char 1))))
       ;; If we found no display-name, then we look for comments.
       (if display-name
 	  (setq display-string
@@ -213,8 +222,10 @@ backslash and doublequote.")
 	     (ietf-drums-get-comment string)))
 	(cons mailbox display-string)))))
 
-(defun ietf-drums-parse-addresses (string)
-  "Parse STRING and return a list of MAILBOX / DISPLAY-NAME pairs."
+(defun ietf-drums-parse-addresses (string &optional rawp)
+  "Parse STRING and return a list of MAILBOX / DISPLAY-NAME pairs.
+If RAWP, don't actually parse the addresses, but instead return
+a list of address strings."
   (if (null string)
       nil
     (with-temp-buffer
@@ -231,20 +242,24 @@ backslash and doublequote.")
 	       (skip-chars-forward "^,"))))
 	   ((eq c ?,)
 	    (setq address
-		  (condition-case nil
-		      (ietf-drums-parse-address
-		       (buffer-substring beg (point)))
-		    (error nil)))
+		  (if rawp
+		      (buffer-substring beg (point))
+		    (condition-case nil
+			(ietf-drums-parse-address
+			 (buffer-substring beg (point)))
+		      (error nil))))
 	    (if address (push address pairs))
 	    (forward-char 1)
 	    (setq beg (point)))
 	   (t
 	    (forward-char 1))))
 	(setq address
-	      (condition-case nil
-		  (ietf-drums-parse-address
-		   (buffer-substring beg (point)))
-		(error nil)))
+	      (if rawp
+		  (buffer-substring beg (point))
+		(condition-case nil
+		    (ietf-drums-parse-address
+		     (buffer-substring beg (point)))
+		  (error nil))))
 	(if address (push address pairs))
 	(nreverse pairs)))))
 
@@ -274,7 +289,12 @@ backslash and doublequote.")
       (concat "\"" string "\"")
     string))
 
+(defun ietf-drums-make-address (name address)
+  (if name
+      (concat (ietf-drums-quote-string name) " <" address ">")
+    address))
+
 (provide 'ietf-drums)
 
-;;; arch-tag: 379a0191-dbae-4ca6-a0f5-d4202c209ef9
+;; arch-tag: 379a0191-dbae-4ca6-a0f5-d4202c209ef9
 ;;; ietf-drums.el ends here

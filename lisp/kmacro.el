@@ -1,17 +1,17 @@
 ;;; kmacro.el --- enhanced keyboard macros
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Kim F. Storm <storm@cua.dk>
 ;; Keywords: keyboard convenience
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -41,7 +39,7 @@
 ;; you can give a numeric prefix argument specifying the number of
 ;; times to repeat the macro.  Macro execution automatically
 ;; terminates when point reaches the end of the buffer or if an error
-;; is signalled by ringing the bell.
+;; is signaled by ringing the bell.
 
 ;; When you define a macro with F3/F4, it is automatically added to
 ;; the head of the "keyboard macro ring", and F4 actually executes the
@@ -255,8 +253,9 @@ macro to be executed before appending to it."
 
 
 (defun kmacro-insert-counter (arg)
-  "Insert macro counter and increment with ARG or 1 if missing.
-With \\[universal-argument], insert previous `kmacro-counter' (but do not modify counter)."
+  "Insert macro counter, then increment it by ARG.
+Interactively, ARG defaults to 1.  With \\[universal-argument], insert
+previous `kmacro-counter', and do not modify counter."
   (interactive "P")
   (if kmacro-initial-counter-value
       (setq kmacro-counter kmacro-initial-counter-value
@@ -404,7 +403,7 @@ Optional arg EMPTY is message to print if no macros are defined."
 		   (format " [%s]"
 			   (format kmacro-counter-format-start kmacro-counter)))
 		 (if z (substring m 0 (1- x)) m) (if z "..." "")))
-    (message (or empty "No keyboard macros defined"))))
+    (message "%s" (or empty "No keyboard macros defined"))))
 
 
 (defun kmacro-repeat-on-last-key (keys)
@@ -607,8 +606,11 @@ An argument of zero means repeat until error."
   (unless executing-kbd-macro
     (end-kbd-macro arg #'kmacro-loop-setup-function)
     (when (and last-kbd-macro (= (length last-kbd-macro) 0))
+      (setq last-kbd-macro nil)
       (message "Ignore empty macro")
-      (kmacro-pop-ring))))
+      ;; Don't call `kmacro-ring-empty-p' to avoid its messages.
+      (while (and (null last-kbd-macro) kmacro-ring)
+	(kmacro-pop-ring1)))))
 
 
 ;;;###autoload
@@ -894,7 +896,7 @@ without repeating the prefix."
 
 
 (defun kmacro-edit-lossage ()
-  "Edit most recent 100 keystrokes as a keyboard macro."
+  "Edit most recent 300 keystrokes as a keyboard macro."
   (interactive)
   (kmacro-push-ring)
   (edit-kbd-macro "\C-hl"))
@@ -1194,7 +1196,7 @@ following additional answers: `insert', `insert-1', `replace', `replace-1',
 	(setq this-command 'ignore)
       (setq this-command cmd)
       (if (memq this-command '(self-insert-command digit-argument))
-	  (setq last-command-char (aref keys (1- (length keys)))))
+	  (setq last-command-event (aref keys (1- (length keys)))))
       (if keys
 	  (setq kmacro-step-edit-new-macro (vconcat kmacro-step-edit-new-macro keys))))
     (setq kmacro-step-edit-key-index next-index)))
@@ -1266,5 +1268,5 @@ To customize possible responses, change the \"bindings\" in `kmacro-step-edit-ma
 
 (provide 'kmacro)
 
-;;; arch-tag: d3fe0b24-ae41-47de-a4d6-41a77d5559f0
+;; arch-tag: d3fe0b24-ae41-47de-a4d6-41a77d5559f0
 ;;; kmacro.el ends here

@@ -1,7 +1,7 @@
 ;;; autoinsert.el --- automatic mode-dependent insertion of text into new files
 
 ;; Copyright (C) 1985, 1986, 1987, 1994, 1995, 1998, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Charlie Martin <crm@cs.duke.edu>
 ;; Adapted-By: Daniel Pfeiffer <occitan@esperanto.org>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -55,11 +53,12 @@
   "Automatic mode-dependent insertion of text into new files."
   :prefix "auto-insert-"
   :group 'files
-  :group 'convenience)
+  :group 'convenience
+  :link '(custom-manual "(autotype) Autoinserting"))
 
 
 (defcustom auto-insert 'not-modified
-  "*Controls automatic insertion into newly found empty files.
+  "Controls automatic insertion into newly found empty files.
 Possible values:
 	nil	do nothing
 	t	insert if possible
@@ -77,7 +76,7 @@ With \\[auto-insert], this is always treated as if it were t."
   :group 'auto-insert)
 
 (defcustom auto-insert-query 'function
-  "*Non-nil means ask user before auto-inserting.
+  "Non-nil means ask user before auto-inserting.
 When this is `function', only ask when called non-interactively."
   :type '(choice (const :tag "Don't ask" nil)
                  (const :tag "Ask if called non-interactively" function)
@@ -85,7 +84,7 @@ When this is `function', only ask when called non-interactively."
   :group 'auto-insert)
 
 (defcustom auto-insert-prompt "Perform %s auto-insertion? "
-  "*Prompt to use when querying whether to auto-insert.
+  "Prompt to use when querying whether to auto-insert.
 If this contains a %s, that will be replaced by the matching rule."
   :type 'string
   :group 'auto-insert)
@@ -94,9 +93,9 @@ If this contains a %s, that will be replaced by the matching rule."
 (defcustom auto-insert-alist
   '((("\\.\\([Hh]\\|hh\\|hpp\\)\\'" . "C / C++ header")
      (upcase (concat (file-name-nondirectory
-		      (substring buffer-file-name 0 (match-beginning 0)))
+		      (file-name-sans-extension buffer-file-name))
 		     "_"
-		     (substring buffer-file-name (1+ (match-beginning 0)))))
+		     (file-name-extension buffer-file-name)))
      "#ifndef " str \n
      "#define " str "\n\n"
      _ "\n\n#endif")
@@ -186,33 +185,113 @@ If this contains a %s, that will be replaced by the matching rule."
     (completing-read "Keyword, C-h: " v1 nil t))
     str ", ") & -2 "
 
-;; This file is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+\;; This program is free software; you can redistribute it and/or modify
+\;; it under the terms of the GNU General Public License as published by
+\;; the Free Software Foundation, either version 3 of the License, or
+\;; (at your option) any later version.
 
-;; This file is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
+\;; This program is distributed in the hope that it will be useful,
+\;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+\;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+\;; GNU General Public License for more details.
 
-;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+\;; You should have received a copy of the GNU General Public License
+\;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-;;; Commentary:
+\;;; Commentary:
 
-;; " _ "
+\;; " _ "
 
-;;; Code:
+\;;; Code:
 
 
 
 \(provide '"
        (file-name-sans-extension (file-name-nondirectory (buffer-file-name)))
        ")
-;;; " (file-name-nondirectory (buffer-file-name)) " ends here\n"))
+\;;; " (file-name-nondirectory (buffer-file-name)) " ends here\n")
+    (("\\.texi\\(nfo\\)?\\'" . "Texinfo file skeleton")
+     "Title: "
+     "\\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename "
+     (file-name-sans-extension
+      (file-name-nondirectory (buffer-file-name))) ".info\n"
+      "@settitle " str "
+@c %**end of header
+@copying\n"
+      (setq short-description (read-string "Short description: "))
+      ".\n\n"
+      "Copyright @copyright{} " (substring (current-time-string) -4) "  "
+      (getenv "ORGANIZATION") | (progn user-full-name) "
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3
+or any later version published by the Free Software Foundation;
+with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+A copy of the license is included in the section entitled ``GNU
+Free Documentation License''.
+
+A copy of the license is also available from the Free Software
+Foundation Web site at @url{http://www.gnu.org/licenses/fdl.html}.
+
+@end quotation
+
+The document was typeset with
+@uref{http://www.texinfo.org/, GNU Texinfo}.
+
+@end copying
+
+@titlepage
+@title " str "
+@subtitle " short-description "
+@author " (getenv "ORGANIZATION") | (progn user-full-name)
+     " <" (progn user-mail-address) ">
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@c Output the table of the contents at the beginning.
+@contents
+
+@ifnottex
+@node Top
+@top " str "
+
+@insertcopying
+@end ifnottex
+
+@c Generate the nodes for this menu with `C-c C-u C-m'.
+@menu
+@end menu
+
+@c Update all node entries with `C-c C-u C-n'.
+@c Insert new nodes with `C-c C-c n'.
+@node Chapter One
+@chapter Chapter One
+
+" _ "
+
+@node Copying This Manual
+@appendix Copying This Manual
+
+@menu
+* GNU Free Documentation License::  License for copying this manual.
+@end menu
+
+@c Get fdl.texi from http://www.gnu.org/licenses/fdl.html
+@include fdl.texi
+
+@node Index
+@unnumbered Index
+
+@printindex cp
+
+@bye
+
+@c " (file-name-nondirectory (buffer-file-name)) " ends here\n"))
   "A list specifying text to insert by default into a new file.
 Elements look like (CONDITION . ACTION) or ((CONDITION . DESCRIPTION) . ACTION).
 CONDITION may be a regexp that must match the new file's name, or it may be
@@ -229,7 +308,7 @@ described above, e.g. [\"header.insert\" date-and-author-update]."
 
 ;; Establish a default value for auto-insert-directory
 (defcustom auto-insert-directory "~/insert/"
-  "*Directory from which auto-inserted files are taken.
+  "Directory from which auto-inserted files are taken.
 The value must be an absolute directory name;
 thus, on a GNU or Unix system, it must end in a slash."
   :type 'directory
@@ -264,19 +343,19 @@ Matches the visited file name against the elements of `auto-insert-alist'."
 
 	 ;; Now, if we found something, do it
 	 (and action
-	      (if (stringp action)
-		  (file-readable-p (concat auto-insert-directory action))
-		t)
-	      (if auto-insert-query
-		  (or (if (eq auto-insert-query 'function)
-			  (eq this-command 'auto-insert))
-		      (y-or-n-p (format auto-insert-prompt desc)))
-		t)
-	      (mapcar
+	      (or (not (stringp action))
+                  (file-readable-p (expand-file-name
+                                    action auto-insert-directory)))
+	      (or (not auto-insert-query)
+                  (if (eq auto-insert-query 'function)
+                      (eq this-command 'auto-insert))
+                  (y-or-n-p (format auto-insert-prompt desc)))
+	      (mapc
 	       (lambda (action)
 		 (if (stringp action)
 		     (if (file-readable-p
-			  (setq action (concat auto-insert-directory action)))
+			  (setq action (expand-file-name
+                                        action auto-insert-directory)))
 			 (insert-file-contents action))
 		   (save-window-excursion
 		     ;; make buffer visible before skeleton or function
@@ -314,8 +393,7 @@ or if CONDITION had no actions, after all other CONDITIONs."
 		    (vector action (cdr elt)))))
       (if after
 	  (nconc auto-insert-alist (list (cons condition action)))
-	(setq auto-insert-alist (cons (cons condition action)
-				      auto-insert-alist))))))
+        (push (cons condition action) auto-insert-alist)))))
 
 ;;;###autoload
 (define-minor-mode auto-insert-mode

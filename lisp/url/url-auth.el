@@ -1,16 +1,16 @@
 ;;; url-auth.el --- Uniform Resource Locator authorization modules
 
-;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1996, 1997, 1998, 1999, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes, hypermedia
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,15 +18,14 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Code:
 
 (require 'url-vars)
 (require 'url-parse)
 (autoload 'url-warn "url")
+(autoload 'auth-source-user-or-password "auth-source")
 
 (defsubst url-auth-user-prompt (url realm)
   "String to usefully prompt for a username."
@@ -52,7 +51,7 @@
 Must be a symbol pointing to another variable that will actually store
 the information.  The value of this variable is an assoc list of assoc
 lists.  The first assoc list is keyed by the server name.  The cdr of
-this is an assoc list based on the 'directory' specified by the url we
+this is an assoc list based on the 'directory' specified by the URL we
 are looking up.")
 
 (defun url-basic-auth (url &optional prompt overwrite realm args)
@@ -66,6 +65,7 @@ instead of the filename inheritance method."
 		   (url-generic-parse-url url)
 		 url))
 	 (server (url-host href))
+	 (type (url-type href))
 	 (port (url-port href))
 	 (file (url-filename href))
 	 (user (url-user href))
@@ -81,15 +81,20 @@ instead of the filename inheritance method."
 				  (symbol-value url-basic-auth-storage))))
     (cond
      ((and prompt (not byserv))
-      (setq user (read-string (url-auth-user-prompt url realm)
-			      (or user (user-real-login-name)))
-	    pass (read-passwd "Password: " nil (or pass "")))
+      (setq user (or
+		  (auth-source-user-or-password "login" server type)
+		  (read-string (url-auth-user-prompt url realm)
+			       (or user (user-real-login-name))))
+	    pass (or
+		  (auth-source-user-or-password "password" server type)
+		  (read-passwd "Password: " nil (or pass ""))))
       (set url-basic-auth-storage
 	   (cons (list server
 		       (cons file
 			     (setq retval
 				   (base64-encode-string
-				    (format "%s:%s" user pass)))))
+				    (format "%s:%s" user
+					    (encode-coding-string pass 'utf-8))))))
 		 (symbol-value url-basic-auth-storage))))
      (byserv
       (setq retval (cdr-safe (assoc file byserv)))
@@ -105,9 +110,13 @@ instead of the filename inheritance method."
 	    (setq byserv (cdr byserv))))
       (if (or (and (not retval) prompt) overwrite)
 	  (progn
-	    (setq user (read-string (url-auth-user-prompt url realm)
-				    (user-real-login-name))
-		  pass (read-passwd "Password: ")
+	    (setq user (or
+			(auth-source-user-or-password "login" server type)
+			(read-string (url-auth-user-prompt url realm)
+				     (user-real-login-name)))
+		  pass (or
+			(auth-source-user-or-password "password" server type)
+			(read-passwd "Password: "))
 		  retval (base64-encode-string (format "%s:%s" user pass))
 		  byserv (assoc server (symbol-value url-basic-auth-storage)))
 	    (setcdr byserv
@@ -126,10 +135,10 @@ instead of the filename inheritance method."
 ;;; This is very secure
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defvar url-digest-auth-storage nil
-  "Where usernames and passwords are stored.  Its value is an assoc list of
-assoc lists.  The first assoc list is keyed by the server name.  The cdr of
-this is an assoc list based on the 'directory' specified by the url we are
-looking up.")
+  "Where usernames and passwords are stored.
+Its value is an assoc list of assoc lists.  The first assoc list is
+keyed by the server name.  The cdr of this is an assoc list based
+on the 'directory' specified by the url we are looking up.")
 
 (defun url-digest-auth-create-key (username password realm method uri)
   "Create a key for digest authentication method"
@@ -143,7 +152,7 @@ looking up.")
 (defun url-digest-auth (url &optional prompt overwrite realm args)
   "Get the username/password for the specified URL.
 If optional argument PROMPT is non-nil, ask for the username/password
-to use for the url and its descendants.  If optional third argument
+to use for the URL and its descendants.  If optional third argument
 OVERWRITE is non-nil, overwrite the old username/password pair if it
 is found in the assoc list.  If REALM is specified, use that as the realm
 instead of hostname:portnum."
@@ -152,6 +161,7 @@ instead of hostname:portnum."
 		       (url-generic-parse-url url)
 		     url))
 	     (server (url-host href))
+	     (type (url-type href))
 	     (port (url-port href))
 	     (file (url-filename href))
 	     user pass byserv retval data)
@@ -163,9 +173,13 @@ instead of hostname:portnum."
 	      byserv (cdr-safe (assoc server url-digest-auth-storage)))
 	(cond
 	 ((and prompt (not byserv))
-	  (setq user (read-string (url-auth-user-prompt url realm)
-				  (user-real-login-name))
-		pass (read-passwd "Password: ")
+	  (setq user (or
+		      (auth-source-user-or-password "login" server type)
+		      (read-string (url-auth-user-prompt url realm)
+				   (user-real-login-name)))
+		pass (or
+		      (auth-source-user-or-password "password" server type)
+		      (read-passwd "Password: "))
 		url-digest-auth-storage
 		(cons (list server
 			    (cons file
@@ -190,9 +204,13 @@ instead of hostname:portnum."
 		(setq byserv (cdr byserv))))
 	  (if overwrite
 	      (if (and (not retval) prompt)
-		  (setq user (read-string (url-auth-user-prompt url realm)
-					  (user-real-login-name))
-			pass (read-passwd "Password: ")
+		  (setq user (or
+			      (auth-source-user-or-password "login" server type)
+			      (read-string (url-auth-user-prompt url realm)
+					   (user-real-login-name)))
+			pass (or
+			      (auth-source-user-or-password "password" server type)
+			      (read-passwd "Password: "))
 			retval (setq retval
 				     (cons user
 					   (url-digest-auth-create-key
@@ -291,11 +309,11 @@ PROMPT is boolean - specifies whether to ask the user for a username/password
 (defun url-register-auth-scheme (type &optional function rating)
   "Register an HTTP authentication method.
 
-TYPE     is a string or symbol specifying the name of the method.   This
-         should be the same thing you expect to get returned in an Authenticate
-         header in HTTP/1.0 - it will be downcased.
-FUNCTION is the function to call to get the authorization information.  This
-         defaults to `url-?-auth', where ? is TYPE
+TYPE     is a string or symbol specifying the name of the method.
+         This should be the same thing you expect to get returned in
+         an Authenticate header in HTTP/1.0 - it will be downcased.
+FUNCTION is the function to call to get the authorization information.
+         This defaults to `url-?-auth', where ? is TYPE.
 RATING   a rating between 1 and 10 of the strength of the authentication.
          This is used when asking for the best authentication for a specific
          URL.  The item with the highest rating is returned."
@@ -327,5 +345,5 @@ RATING   a rating between 1 and 10 of the strength of the authentication.
 
 (provide 'url-auth)
 
-;;; arch-tag: 04058625-616d-44e4-9dbf-4b46b00b2a91
+;; arch-tag: 04058625-616d-44e4-9dbf-4b46b00b2a91
 ;;; url-auth.el ends here

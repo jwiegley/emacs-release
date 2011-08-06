@@ -1,7 +1,7 @@
 ;;; nndb.el --- nndb access for Gnus
 
-;; Copyright (C) 1997, 1998, 2000, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1997, 1998, 2000, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Masanobu UMEDA <umerin@flab.flab.fujitsu.junet>
 ;;         Kai Grossjohann <grossjohann@ls6.informatik.uni-dortmund.de>
@@ -11,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -48,14 +46,18 @@
 ;; * make the backend TOUCH an article when marked as expireable (will
 ;;   make article expire 'expiry' days after that moment).
 
+;;; Code:
+
+;; For Emacs < 22.2.
+(eval-and-compile
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest r))))
+
 ;;-
 ;; Register nndb with known select methods.
 
 (require 'gnus-start)
 (unless (assoc "nndb" gnus-valid-select-methods)
   (gnus-declare-backend "nndb" 'mail 'respool 'address 'prompt-address))
-
-;;; Code:
 
 (require 'nnmail)
 (require 'nnheader)
@@ -240,8 +242,11 @@ expiry mechanism."
       (nndb-request-expire-articles-remote articles group server force)
     (nndb-request-expire-articles-local articles group server force)))
 
+;; _Something_ defines it...
+(declare-function nndb-request-article "nndb" t t)
+
 (deffoo nndb-request-move-article
-    (article group server accept-form &optional last)
+    (article group server accept-form &optional last move-is-internal)
   "Move ARTICLE (a number) from GROUP on SERVER.
 Evals ACCEPT-FORM in current buffer, where the article is.
 Optional LAST is ignored."
@@ -302,7 +307,7 @@ Optional LAST is ignored."
 			    ; nndb-request-rename-group does not exist
 					; todo -- maybe later
 
-;; -- standard compatability functions
+;; -- standard compatibility functions
 
 (deffoo nndb-status-message (&optional server)
   "Return server status as a string."
@@ -316,5 +321,5 @@ Optional LAST is ignored."
 
 (provide 'nndb)
 
-;;; arch-tag: 83bd6fb4-58d9-4fed-a901-c6c625ad5f8a
+;; arch-tag: 83bd6fb4-58d9-4fed-a901-c6c625ad5f8a
 ;;; nndb.el ends here

@@ -1,17 +1,17 @@
 ;;; spell.el --- spelling correction interface for Emacs
 
 ;; Copyright (C) 1985, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: wp, unix
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -61,7 +59,11 @@ and then put into a query-replace to fix some or all occurrences.
 If you do not want to change a word, just give the same word
 as its \"correct\" spelling; then the query replace is skipped."
   (interactive)
-  (spell-region (point-min) (point-max) "buffer"))
+  ;; Don't warn about spell-region being obsolete.
+  (with-no-warnings
+    (spell-region (point-min) (point-max) "buffer")))
+;;;###autoload
+(make-obsolete 'spell-buffer 'ispell-buffer "23.1")
 
 ;;;###autoload
 (defun spell-word ()
@@ -76,7 +78,11 @@ and `query-replace' the entire buffer to substitute it."
      (setq beg (point))
      (forward-word 1)
      (setq end (point)))
-    (spell-region beg end (buffer-substring beg end))))
+    ;; Don't warn about spell-region being obsolete.
+    (with-no-warnings
+      (spell-region beg end (buffer-substring beg end)))))
+;;;###autoload
+(make-obsolete 'spell-word 'ispell-word "23.1")
 
 ;;;###autoload
 (defun spell-region (start end &optional description)
@@ -138,7 +144,8 @@ for example, \"word\"."
 	     (goto-char (point-min))
 	     (query-replace-regexp (concat "\\b" (regexp-quote word) "\\b")
 				   newword)))))))
-
+;;;###autoload
+(make-obsolete 'spell-region 'ispell-region "23.1")
 
 ;;;###autoload
 (defun spell-string (string)
@@ -161,8 +168,11 @@ for example, \"word\"."
        (while (search-forward "\n" nil t)
 	 (replace-match " "))
        (message "%sincorrect" (buffer-substring 1 (point-max)))))))
+;;;###autoload
+(make-obsolete 'spell-string "The `spell' package is obsolete - use `ispell'."
+               "23.1")
 
 (provide 'spell)
 
-;;; arch-tag: 7eabb848-9c76-431a-bcdb-0e0592d2db04
+;; arch-tag: 7eabb848-9c76-431a-bcdb-0e0592d2db04
 ;;; spell.el ends here

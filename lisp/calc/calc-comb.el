@@ -1,17 +1,17 @@
 ;;; calc-comb.el --- combinatoric functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -294,6 +292,18 @@
 
 ;;; Factorial and related functions.
 
+(defconst math-small-factorial-table
+  (vector 1 1 2 6 24 120 720 5040 40320 362880 3628800 39916800
+          (math-read-number-simple "479001600")
+          (math-read-number-simple "6227020800")
+          (math-read-number-simple "87178291200")
+          (math-read-number-simple "1307674368000")
+          (math-read-number-simple "20922789888000")
+          (math-read-number-simple "355687428096000")
+          (math-read-number-simple "6402373705728000")
+          (math-read-number-simple "121645100408832000")
+          (math-read-number-simple "2432902008176640000")))
+
 (defun calcFunc-fact (n)   ; [I I] [F F] [Public]
   (let (temp)
     (cond ((Math-integer-negp n)
@@ -302,14 +312,7 @@
 	     (math-reject-arg n 'range)))
 	  ((integerp n)
 	   (if (<= n 20)
-	       (aref '[1 1 2 6 24 120 720 5040 40320 362880
-			 (bigpos 800 628 3) (bigpos 800 916 39)
-			 (bigpos 600 1 479) (bigpos 800 20 227 6)
-			 (bigpos 200 291 178 87) (bigpos 0 368 674 307 1)
-			 (bigpos 0 888 789 922 20) (bigpos 0 96 428 687 355)
-			 (bigpos 0 728 705 373 402 6)
-			 (bigpos 0 832 408 100 645 121)
-			 (bigpos 0 640 176 8 902 432 2)] n)
+	       (aref math-small-factorial-table n)
 	     (math-factorial-iter (1- n) 2 1)))
 	  ((and (math-messy-integerp n)
 		(Math-lessp n 100))
@@ -551,9 +554,9 @@
 	  nil
 	(if (Math-integerp var-RandSeed)
 	    (let* ((seed (math-sub 161803 var-RandSeed))
-		   (mj (1+ (math-mod seed '(bigpos 0 0 1))))
-		   (mk (1+ (math-mod (math-quotient seed '(bigpos 0 0 1))
-				     '(bigpos 0 0 1))))
+		   (mj (1+ (math-mod seed 1000000)))
+		   (mk (1+ (math-mod (math-quotient seed 1000000)
+                                     1000000)))
 		   (i 0))
 	      (setq math-random-table (cons 'vec (make-list 55 mj)))
 	      (while (<= (setq i (1+ i)) 54)
@@ -601,7 +604,8 @@
 ;;; Avoid various pitfalls that may lurk in the built-in (random) function!
 ;;; Shuffling algorithm from Numerical Recipes, section 7.1.
 (defvar math-random-last)
-(defun math-random-digit ()
+(defun math-random-three-digit-number ()
+  "Return a random three digit number."
   (let (i)
     (or (and (boundp 'var-RandSeed) (eq var-RandSeed math-last-RandSeed))
 	(math-init-random-base))
@@ -621,17 +625,17 @@
 
 ;;; Produce an N-digit random integer.
 (defun math-random-digits (n)
-  (cond ((<= n 6)
-	 (math-scale-right (+ (* (math-random-digit) 1000) (math-random-digit))
-			   (- 6 n)))
-	(t (let* ((slop (% (- 900003 n) 3))
-		  (i (/ (+ n slop) 3))
-		  (digs nil))
-	     (while (> i 0)
-	       (setq digs (cons (math-random-digit) digs)
-		     i (1- i)))
-	     (math-normalize (math-scale-right (cons 'bigpos digs)
-					       slop))))))
+  "Produce a random N digit integer."
+  (let* ((slop (% (- 3 (% n 3)) 3))
+         (i (/ (+ n slop) 3))
+         (rnum 0))
+    (while (> i 0)
+      (setq rnum 
+            (math-add
+             (math-random-three-digit-number)
+             (math-mul rnum 1000)))
+      (setq i (1- i)))
+    (math-normalize (math-scale-right rnum slop))))
 
 ;;; Produce a uniformly-distributed random float 0 <= N < 1.
 (defun math-random-float ()
@@ -802,7 +806,7 @@
 		   (error "Argument must be an integer"))
 		  ((Math-integer-negp n)
 		   '(nil))
-		  ((Math-natnum-lessp n '(bigpos 0 0 8))
+		  ((Math-natnum-lessp n 8000000)
 		   (setq n (math-fixnum n))
 		   (let ((i -1) v)
 		     (while (and (> (% n (setq v (aref math-primes-table
@@ -815,15 +819,17 @@
 		  ((not (equal n (car math-prime-test-cache)))
 		   (cond ((= (% (nth 1 n) 2) 0) '(nil 2))
 			 ((= (% (nth 1 n) 5) 0) '(nil 5))
-			 (t (let ((dig (cdr n)) (sum 0))
-			      (while dig
-				(if (cdr dig)
-				    (setq sum (% (+ (+ sum (car dig))
-						    (* (nth 1 dig) 1000))
-						 111111)
-					  dig (cdr (cdr dig)))
-				  (setq sum (% (+ sum (car dig)) 111111)
-					dig nil)))
+			 (t (let ((q n) (sum 0))
+                              (while (not (eq q 0))
+                                (setq sum (%
+                                           (+
+                                            sum
+                                            (calcFunc-mod 
+                                             q 1000000))
+                                           111111))
+                                (setq q 
+                                      (math-quotient 
+                                       q 1000000)))
 			      (cond ((= (% sum 3) 0) '(nil 3))
 				    ((= (% sum 7) 0) '(nil 7))
 				    ((= (% sum 11) 0) '(nil 11))
@@ -1021,5 +1027,5 @@
 
 (provide 'calc-comb)
 
-;;; arch-tag: 1d75ee9b-0815-42bd-a321-bb3dc001cc02
+;; arch-tag: 1d75ee9b-0815-42bd-a321-bb3dc001cc02
 ;;; calc-comb.el ends here

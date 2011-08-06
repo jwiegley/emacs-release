@@ -1,17 +1,17 @@
 ;;; font-core.el --- Core interface to font-lock
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: languages, faces
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Code:
 
@@ -34,10 +32,15 @@ Defaults should be of the form:
 
  (KEYWORDS [KEYWORDS-ONLY [CASE-FOLD [SYNTAX-ALIST [SYNTAX-BEGIN ...]]]])
 
-KEYWORDS may be a symbol (a variable or function whose value is the keywords to
-use for fontification) or a list of symbols.  If KEYWORDS-ONLY is non-nil,
-syntactic fontification (strings and comments) is not performed.
+KEYWORDS may be a symbol (a variable or function whose value is the keywords
+to use for fontification) or a list of symbols (specifying different levels
+of fontification).
+
+If KEYWORDS-ONLY is non-nil, syntactic fontification (strings and
+comments) is not performed.
+
 If CASE-FOLD is non-nil, the case of the keywords is ignored when fontifying.
+
 If SYNTAX-ALIST is non-nil, it should be a list of cons pairs of the form
 \(CHAR-OR-STRING . STRING) used to set the local Font Lock syntax table, for
 keyword and syntactic fontification (see `modify-syntax-entry').
@@ -49,6 +52,8 @@ be outside a syntactic block), or `beginning-of-defun' for programming modes or
 `backward-paragraph' for textual modes (i.e., the mode-dependent function is
 known to move outside a syntactic block).  If nil, the beginning of the buffer
 is used as a position outside of a syntactic block, in the worst case.
+
+\(See also Info node `(elisp)Font Lock Basics'.)
 
 These item elements are used by Font Lock mode to set the variables
 `font-lock-keywords', `font-lock-keywords-only',
@@ -81,7 +86,7 @@ Each item should be a list of the form:
 
 where MAJOR-MODE is a symbol and FONT-LOCK-DEFAULTS is a list of default
 settings.  See the variable `font-lock-defaults', which takes precedence.")
-(make-obsolete-variable 'font-lock-defaults-alist 'font-lock-defaults)
+(make-obsolete-variable 'font-lock-defaults-alist 'font-lock-defaults "21.1")
 
 (defvar font-lock-function 'font-lock-default-function
   "A function which is called when `font-lock-mode' is toggled.
@@ -234,7 +239,7 @@ this function onto `change-major-mode-hook'."
 ;; hook is run, the major mode is in the process of being changed and we do not
 ;; know what the final major mode will be.  So, `font-lock-change-major-mode'
 ;; only (a) notes the name of the current buffer, and (b) adds our function
-;; `turn-on-font-lock-if-enabled' to the hook variables
+;; `turn-on-font-lock-if-desired' to the hook variables
 ;; `after-change-major-mode-hook' and `post-command-hook' (for modes
 ;; that do not yet run `after-change-major-mode-hook').  By the time
 ;; the functions on the first of these hooks to be run are run, the new major
@@ -254,7 +259,7 @@ this function onto `change-major-mode-hook'."
 ;; Although Global Font Lock mode is a pseudo-mode, I think that the user
 ;; interface should conform to the usual Emacs convention for modes, i.e., a
 ;; command to toggle the feature (`global-font-lock-mode') with a variable for
-;; finer control of the mode's behaviour (`font-lock-global-modes').
+;; finer control of the mode's behavior (`font-lock-global-modes').
 ;;
 ;; The feature should not be enabled by loading font-lock.el, since other
 ;; mechanisms for turning on Font Lock mode, such as M-x font-lock-mode RET or
@@ -264,7 +269,7 @@ this function onto `change-major-mode-hook'."
 ;; would also be contrary to the Principle of Least Surprise.  sm.
 
 (defcustom font-lock-global-modes t
-  "*Modes for which Font Lock mode is automagically turned on.
+  "Modes for which Font Lock mode is automagically turned on.
 Global Font Lock mode is controlled by the command `global-font-lock-mode'.
 If nil, means no modes have Font Lock mode automatically turned on.
 If t, all modes that support Font Lock mode have it automatically turned on.
@@ -281,14 +286,17 @@ means that Font Lock mode is turned on for buffers in C and C++ modes only."
 		      (repeat :inline t (symbol :tag "mode"))))
   :group 'font-lock)
 
-(defun turn-on-font-lock-if-enabled ()
-  (unless (and (eq (car-safe font-lock-global-modes) 'not)
-	       (memq major-mode (cdr font-lock-global-modes)))
+(defun turn-on-font-lock-if-desired ()
+  (when (cond ((eq font-lock-global-modes t)
+	       t)
+	      ((eq (car-safe font-lock-global-modes) 'not)
+	       (not (memq major-mode (cdr font-lock-global-modes))))
+	      (t (memq major-mode font-lock-global-modes)))
     (let (inhibit-quit)
       (turn-on-font-lock))))
 
 (define-globalized-minor-mode global-font-lock-mode
-  font-lock-mode turn-on-font-lock-if-enabled
+  font-lock-mode turn-on-font-lock-if-desired
   :extra-args (dummy)
   :initialize 'custom-initialize-safe-default
   :init-value (not (or noninteractive emacs-basic-display))

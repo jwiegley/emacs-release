@@ -1,7 +1,7 @@
 ;;; cookie1.el --- retrieve random phrases from fortune cookie files
 
 ;; Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Eric S. Raymond <esr@snark.thyrsus.com>
 ;; Maintainer: FSF
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -53,9 +51,6 @@
 ;; has been generalized so that it supports multiple simultaneous
 ;; cookie databases and fortune files.  It is intended to be called
 ;; from other packages such as yow.el and spook.el.
-;;
-;; TO DO: teach cookie-snarf to auto-detect ITS PINS or UNIX fortune(6)
-;; format and do the right thing.
 
 ;;; Code:
 
@@ -169,5 +164,5 @@ Optional fifth arg REQUIRE-MATCH non-nil forces a matching cookie."
 
 (provide 'cookie1)
 
-;;; arch-tag: 4a8a8712-df6a-4f34-b030-108a1b47f9f2
+;; arch-tag: 4a8a8712-df6a-4f34-b030-108a1b47f9f2
 ;;; cookie1.el ends here

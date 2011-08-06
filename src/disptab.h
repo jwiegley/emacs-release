@@ -1,13 +1,13 @@
 /* Things for GLYPHS and glyph tables.
    Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* Access the slots of a display-table, according to their purpose.  */
 
@@ -36,8 +34,14 @@ Boston, MA 02110-1301, USA.  */
 
 extern Lisp_Object disp_char_vector P_ ((struct Lisp_Char_Table *, int));
 
-#define DISP_CHAR_VECTOR(dp, c) \
-  (SINGLE_BYTE_CHAR_P(c) ? (dp)->contents[c] : disp_char_vector ((dp), (c)))
+#define DISP_CHAR_VECTOR(dp, c)				\
+  (ASCII_CHAR_P(c)					\
+   ? (NILP ((dp)->ascii)				\
+      ? (dp)->defalt					\
+      : (SUB_CHAR_TABLE_P ((dp)->ascii)			\
+	 ? XSUB_CHAR_TABLE ((dp)->ascii)->contents[c]	\
+	 : (dp)->ascii))				\
+   : disp_char_vector ((dp), (c)))
 
 /* Defined in window.c.  */
 extern struct Lisp_Char_Table *window_display_table P_ ((struct window *));
@@ -68,38 +72,37 @@ extern Lisp_Object Vglyph_table;
 /* Given BASE and LEN returned by the two previous macros,
    return nonzero if the GLYPH code G should be output as a single
    character with code G.  Return zero if G has a string in the table.  */
-#define GLYPH_SIMPLE_P(base,len,g) ((g) >= (len) || !STRINGP (base[g]))
+#define GLYPH_SIMPLE_P(base,len,g) \
+  (GLYPH_FACE (g) != DEFAULT_FACE_ID || GLYPH_CHAR (g) >= (len) || !STRINGP (base[GLYPH_CHAR (g)]))
 
 /* Given BASE and LEN returned by the two previous macros,
    return nonzero if GLYPH code G is aliased to a different code.  */
-#define GLYPH_ALIAS_P(base,len,g) ((g) < (len) && INTEGERP (base[g]))
-
-/* Assuming that GLYPH_SIMPLE_P (BASE, LEN, G) is 1,
-   return the alias for G.  */
-#define GLYPH_ALIAS(base, g) XINT (base[g])
+#define GLYPH_ALIAS_P(base,len,g) \
+  (GLYPH_FACE (g) == DEFAULT_FACE_ID && GLYPH_CHAR (g) < (len) && INTEGERP (base[GLYPH_CHAR (g)]))
 
 /* Follow all aliases for G in the glyph table given by (BASE,
    LENGTH), and set G to the final glyph.  */
-#define GLYPH_FOLLOW_ALIASES(base, length, g)		\
-  do {							\
-    while (GLYPH_ALIAS_P ((base), (length), (g)))	\
-      (g) = GLYPH_ALIAS ((base), (g));			\
-    if (!GLYPH_CHAR_VALID_P (FAST_GLYPH_CHAR (g)))	\
-      g = FAST_MAKE_GLYPH (' ', FAST_GLYPH_FACE (g));	\
+#define GLYPH_FOLLOW_ALIASES(base, length, g)			\
+  do {								\
+    while (GLYPH_ALIAS_P ((base), (length), (g)))		\
+      SET_GLYPH_CHAR ((g), XINT ((base)[GLYPH_CHAR (g)]));	\
+    if (!GLYPH_CHAR_VALID_P (g))				\
+      SET_GLYPH_CHAR (g, ' ');					\
   } while (0)
 
 /* Assuming that GLYPH_SIMPLE_P (BASE, LEN, G) is 0,
    return the length and the address of the character-sequence
    used for outputting GLYPH G.  */
-#define GLYPH_LENGTH(base,g)   SCHARS (base[g])
-#define GLYPH_STRING(base,g)   SDATA (base[g])
+#define GLYPH_LENGTH(base,g)   SCHARS (base[GLYPH_CHAR (g)])
+#define GLYPH_STRING(base,g)   SDATA (base[GLYPH_CHAR (g)])
 
 /* GLYPH for a space character.  */
 
 #define SPACEGLYPH 040
 #define NULL_GLYPH 00
 
-#define GLYPH_FROM_CHAR(c) (c)
+#define SET_GLYPH_FROM_CHAR(glyph, c) \
+  SET_GLYPH (glyph, c, DEFAULT_FACE_ID)
 
 /* arch-tag: d7f792d2-f59c-4904-a91e-91522e3ab349
    (do not change this comment) */

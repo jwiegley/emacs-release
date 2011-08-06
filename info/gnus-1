@@ -1,46 +1,20 @@
-This is ../info/gnus, produced by makeinfo version 4.11 from gnus.texi.
+This is ../../info/gnus, produced by makeinfo version 4.11 from
+gnus.texi.
 
 Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
-     Version 1.2 or any later version published by the Free Software
+     Version 1.3 or any later version published by the Free Software
      Foundation; with no Invariant Sections, with the Front-Cover texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
-     "GNU Free Documentation License" in the Emacs manual.
+     "GNU Free Documentation License".
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
-
-     This document is part of a collection distributed under the GNU
-     Free Documentation License.  If you want to distribute this
-     document separately from the collection, you can do so by adding a
-     copy of the license to the document, as described in section 6 of
-     the license.
-
-   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
-
-     Permission is granted to copy, distribute and/or modify this
-     document under the terms of the GNU Free Documentation License,
-     Version 1.2 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
-     being "A GNU Manual", and with the Back-Cover Texts as in (a)
-     below.  A copy of the license is included in the section entitled
-     "GNU Free Documentation License" in the Emacs manual.
-
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
-
-     This document is part of a collection distributed under the GNU
-     Free Documentation License.  If you want to distribute this
-     document separately from the collection, you can do so by adding a
-     copy of the license to the document, as described in section 6 of
-     the license.
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
+     developing GNU and promoting software freedom."
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -58,7 +32,22 @@ can be gotten by any nefarious means you can think of--NNTP, local
 spool or your mbox file.  All at the same time, if you want to push your
 luck.
 
-   This manual corresponds to Gnus v5.11.
+   This manual corresponds to Gnus v5.13
+
+   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
+2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, with the Front-Cover texts
+     being "A GNU Manual", and with the Back-Cover Texts as in (a)
+     below.  A copy of the license is included in the section entitled
+     "GNU Free Documentation License".
+
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
+     developing GNU and promoting software freedom."
 
 * Menu:
 
@@ -82,6 +71,7 @@ Other related manuals
 * Emacs-MIME:(emacs-mime).   Composing messages; MIME-specific parts.
 * Sieve:(sieve).             Managing Sieve scripts in Emacs.
 * PGG:(pgg).                 PGP/MIME with Gnus.
+* SASL:(sasl).               SASL authentication in Emacs.
 
  --- The Detailed Node Listing ---
 
@@ -123,6 +113,7 @@ Group Buffer
 * Browse Foreign Server::       You can browse a server.  See what it has to offer.
 * Exiting Gnus::                Stop reading news and get some work done.
 * Group Topics::                A folding group mode divided into topics.
+* Non-ASCII Group Names::       Accessing groups of non-English names.
 * Misc Group Stuff::            Other stuff that you can to do.
 
 Group Buffer Format
@@ -162,6 +153,7 @@ Summary Buffer
 * Asynchronous Fetching::       Gnus might be able to pre-fetch articles.
 * Article Caching::             You may store articles in a cache.
 * Persistent Articles::         Making articles expiry-resistant.
+* Sticky Articles::             Article buffers that are not reused.
 * Article Backlog::             Having already read articles hang around.
 * Saving Articles::             Ways of customizing article saving.
 * Decoding Articles::           Gnus can treat series of (uu)encoded articles.
@@ -315,6 +307,7 @@ NNTP
 * Direct Functions::            Connecting directly to the server.
 * Indirect Functions::          Connecting indirectly to the server.
 * Common Variables::            Understood by several connection functions.
+* NNTP marks::                  Storing marks for NNTP servers.
 
 Getting Mail
 
@@ -341,7 +334,7 @@ Mail Sources
 Choosing a Mail Back End
 
 * Unix Mail Box::               Using the (quite) standard Un*x mbox.
-* Rmail Babyl::                 Emacs programs use the Rmail Babyl format.
+* Babyl::                       Babyl was used by older versions of Rmail.
 * Mail Spool::                  Store your mail in a private spool?
 * MH Spool::                    An mhspool-like back end.
 * Maildir::                     Another one-file-per-message format.
@@ -418,6 +411,7 @@ Gnus Unplugged
 * Agent as Cache::              The Agent is a big cache too.
 * Agent Expiry::                How to make old articles go away.
 * Agent Regeneration::          How to recover from lost connections and other accidents.
+* Agent and flags::             How the Agent maintains flags.
 * Agent and IMAP::              How to use the Agent with IMAP.
 * Outgoing Messages::           What happens when you post/mail something?
 * Agent Variables::             Customizing is fun.
@@ -453,16 +447,8 @@ Scoring
 * Global Score Files::          Earth-spanning, ear-splitting score files.
 * Kill Files::                  They are still here, but they can be ignored.
 * Converting Kill Files::       Translating kill files to score files.
-* GroupLens::                   Getting predictions on what you like to read.
 * Advanced Scoring::            Using logical expressions to build score rules.
 * Score Decays::                It can be useful to let scores wither away.
-
-GroupLens
-
-* Using GroupLens::             How to make Gnus use GroupLens.
-* Rating Articles::             Letting GroupLens know how you rate articles.
-* Displaying Predictions::      Displaying predictions given by GroupLens.
-* GroupLens Variables::         Customizing GroupLens.
 
 Advanced Scoring
 
@@ -491,6 +477,7 @@ Various
 * Fuzzy Matching::              What's the big fuzz?
 * Thwarting Email Spam::        Simple ways to avoid unsolicited commercial email.
 * Spam Package::                A package for filtering and processing spam.
+* The Gnus Registry::           A package for tracking messages by Message-ID.
 * Other modes::                 Interaction with other modes.
 * Various Various::             Things that are really various.
 
@@ -570,6 +557,7 @@ New Features
 * Quassia Gnus::                Two times two is four, or Gnus 5.6/5.7.
 * Pterodactyl Gnus::            Pentad also starts with P, AKA Gnus 5.8/5.9.
 * Oort Gnus::                   It's big.  It's far out.  Gnus 5.10/5.11.
+* No Gnus::                     Very punny.
 
 Customization
 
@@ -711,6 +699,11 @@ groups are.
 you would typically set this variable to
 
      (setq gnus-secondary-select-methods '((nnmbox "")))
+
+   Note: the NNTP back end stores marks in marks files (*note NNTP
+marks::).  This feature makes it easy to share marks between several
+Gnus installations, but may slow down things a bit when fetching new
+articles.  *Note NNTP marks::, for more information.
 
 
 File: gnus,  Node: The First Time,  Next: The Server is Down,  Prev: Finding the News,  Up: Starting Up
@@ -1193,7 +1186,7 @@ File: gnus,  Node: Startup Variables,  Prev: The Active File,  Up: Starting Up
      times you start Gnus.
 
 `gnus-before-startup-hook'
-     A hook run after starting up Gnus successfully.
+     A hook called as the first thing when Gnus is started.
 
 `gnus-startup-hook'
      A hook run as the very last thing after starting up Gnus
@@ -1260,6 +1253,8 @@ long as Gnus is active.
 * Browse Foreign Server::       You can browse a server.  See what it has to offer.
 * Exiting Gnus::                Stop reading news and get some work done.
 * Group Topics::                A folding group mode divided into topics.
+* Non-ASCII Group Names::       Accessing groups of non-English names.
+* Searching::                   Mail search engines.
 * Misc Group Stuff::            Other stuff that you can to do.
 
 
@@ -1360,7 +1355,15 @@ instead of wasting time reading news.)
      messages might be available efficiently, use the same limited
      interface.  To remove this restriction from Gnus means that the
      back end interface has to be changed, which is not an easy job.
-     If you want to work on this, please contact the Gnus mailing list.
+
+     The nnml backend (*note Mail Spool::) has a feature called "group
+     compaction" which circumvents this deficiency: the idea is to
+     renumber all articles from 1, removing all gaps between numbers,
+     hence getting a correct total count.  Other backends may support
+     this in the future.  In order to keep your total article count
+     relatively up to date, you might want to compact your groups (or
+     even directly your server) from time to time. *Note Misc Group
+     Stuff::, *Note Server Commands::.
 
 `y'
      Number of unread, unticked, non-dormant articles.
@@ -1421,6 +1424,12 @@ instead of wasting time reading news.)
 `d'
      A string that says when you last read the group (*note Group
      Timestamp::).
+
+`F'
+     The disk space used by the articles fetched by both the cache and
+     agent.  The value is automatically scaled to bytes(B),
+     kilobytes(K), megabytes(M), or gigabytes(G) to minimize the column
+     width.  A format of %7F is sufficient for a fixed-width column.
 
 `u'
      User defined specifier.  The next character in the format string
@@ -1579,6 +1588,11 @@ expected, hopefully.
 move to the next group, not the next unread group.  Even the commands
 that say they move to the next unread group.  The default is `t'.
 
+   If `gnus-summary-next-group-on-exit' is `t', when a summary is
+exited, the point in the group buffer is moved to the next unread group.
+Otherwise, the point is set to the group just exited.  The default is
+`t'.
+
 
 File: gnus,  Node: Selecting a Group,  Next: Subscription Commands,  Prev: Group Maneuvering,  Up: Group Buffer
 
@@ -1665,8 +1679,8 @@ never ignores old articles.
 
    If `gnus-auto-select-first' is non-`nil', select an article
 automatically when entering a group with the `SPACE' command.  Which
-article this is is controlled by the `gnus-auto-select-subject'
-variable.  Valid values for this variable are:
+article this is controlled by the `gnus-auto-select-subject' variable.
+Valid values for this variable are:
 
 `unread'
      Place point on the subject line of the first unread article.
@@ -2058,6 +2072,45 @@ This might take quite a while, especially if you subscribe to lots of
 groups from different NNTP servers.  Also *note Group Levels::;
 `gnus-activate-level' also affects activation of foreign newsgroups.
 
+   The following commands create ephemeral groups.  They can be called
+not only from the Group buffer, but in any Gnus buffer.
+
+`gnus-read-ephemeral-gmane-group'
+     Read an ephemeral group on Gmane.org.  The articles are downloaded
+     via HTTP using the URL specified by
+     `gnus-gmane-group-download-format'.  Gnus will prompt you for a
+     group name, the start article number and an the article range.
+
+`gnus-read-ephemeral-gmane-group-url'
+     This command is similar to `gnus-read-ephemeral-gmane-group', but
+     the group name and the article number and range are constructed
+     from a given URL.  Supported URL formats include e.g.
+     `http://thread.gmane.org/gmane.foo.bar/12300/focus=12399',
+     `http://thread.gmane.org/gmane.foo.bar/12345/',
+     `http://article.gmane.org/gmane.foo.bar/12345/',
+     `http://permalink.gmane.org/gmane.foo.bar/12345/', and
+     `http://news.gmane.org/group/gmane.foo.bar/thread=12345'.
+
+`gnus-read-ephemeral-emacs-bug-group'
+     Read an Emacs bug report in an ephemeral group.  Gnus will prompt
+     for a bug number.  The default is the number at point.  The URL is
+     specified in `gnus-bug-group-download-format-alist'.
+
+`gnus-read-ephemeral-debian-bug-group'
+     Read a Debian bug report in an ephemeral group.  Analog to
+     `gnus-read-ephemeral-emacs-bug-group'.
+
+   Some of these command are also useful for article buttons, *Note
+Article Buttons::.
+
+   Here is an example:
+     (require 'gnus-art)
+     (add-to-list
+      'gnus-button-alist
+      '("#\\([0-9]+\\)\\>" 1
+        (string-match "\\<emacs\\>" (or gnus-newsgroup-name ""))
+        gnus-read-ephemeral-emacs-bug-group 1))
+
 
 File: gnus,  Node: Group Parameters,  Next: Listing Groups,  Prev: Foreign Groups,  Up: Group Buffer
 
@@ -2301,9 +2354,22 @@ which is an alist of regexps and values.
             ("X-My-Header" "Funky Value")
             (signature "Funky Signature"))
 
+     If you're using topics to organize your group buffer (*note Group
+     Topics::), note that posting styles can also be set in the topics
+     parameters. Posting styles in topic parameters apply to all groups
+     in this topic. More precisely, the posting-style settings for a
+     group result from the hierarchical merging of all posting-style
+     entries in the parameters of this group and all the topics it
+     belongs to.
+
 `post-method'
      If it is set, the value is used as the method for posting message
      instead of `gnus-post-method'.
+
+`mail-source'
+     If it is set, and the setting of `mail-sources' includes a `group'
+     mail source (*note Mail Sources::), the value is a mail source for
+     this group.
 
 `banner'
      An item like `(banner . REGEXP)' causes any part of an article
@@ -2323,9 +2389,21 @@ which is an alist of regexps and values.
      translating the group parameter into a Sieve script (*note Sieve
      Commands::) the following Sieve code is generated:
 
-          if address \"sender\" \"sieve-admin@extundo.com\" {
-                  fileinto \"INBOX.list.sieve\";
+          if address "sender" "sieve-admin@extundo.com" {
+                  fileinto "INBOX.list.sieve";
           }
+
+     To generate tests for multiple email-addresses use a group
+     parameter like `(sieve address "sender" ("name@one.org"
+     else@two.org"))'.  When generating a sieve script (*note Sieve
+     Commands::) Sieve code like the following is generated:
+
+          if address "sender" ["name@one.org", "else@two.org"] {
+                  fileinto "INBOX.list.sieve";
+          }
+
+     See *note Sieve Commands:: for commands and variables that might
+     be of interest in relation to the sieve parameter.
 
      The Sieve language is described in RFC 3028.  *Note Emacs Sieve:
      (sieve)Top.
@@ -2346,13 +2424,18 @@ which is an alist of regexps and values.
      form `nil' will be `eval'ed there.
 
      Note that this feature sets the variable locally to the summary
-     buffer.  But some variables are evaluated in the article buffer,
-     or in the message buffer (of a reply or followup or otherwise
-     newly created message).  As a workaround, it might help to add the
-     variable in question to `gnus-newsgroup-variables'.  *Note Various
-     Summary Stuff::.  So if you want to set `message-from-style' via
-     the group parameters, then you may need the following statement
-     elsewhere in your `~/.gnus' file:
+     buffer if and only if VARIABLE has been bound as a variable.
+     Otherwise, only evaluating the form will take place.  So, you may
+     want to bind the variable in advance using `defvar' or other if
+     the result of the form needs to be set to it.
+
+     But some variables are evaluated in the article buffer, or in the
+     message buffer (of a reply or followup or otherwise newly created
+     message).  As a workaround, it might help to add the variable in
+     question to `gnus-newsgroup-variables'.  *Note Various Summary
+     Stuff::.  So if you want to set `message-from-style' via the group
+     parameters, then you may need the following statement elsewhere in
+     your `~/.gnus.el' file:
 
           (add-to-list 'gnus-newsgroup-variables 'message-from-style)
 
@@ -2369,8 +2452,8 @@ which is an alist of regexps and values.
      This can also be used as a group-specific hook function.  If you
      want to hear a beep when you enter a group, you could put
      something like `(dummy-variable (ding))' in the parameters of that
-     group.  `dummy-variable' will be set to the (meaningless) result
-     of the `(ding)' form.
+     group.  If `dummy-variable' has been bound (see above), it will be
+     set to the (meaningless) result of the `(ding)' form.
 
      Alternatively, since the VARIABLE becomes local to the group, this
      pattern can be used to temporarily change a hook.  For example, if
@@ -2419,6 +2502,29 @@ the `INBOX.foo' group.  If you want to make those regexps always
 case-sensitive, set the value of the `gnus-parameters-case-fold-search'
 variable to `nil'.  Otherwise, set it to `t' if you want to compare them
 always in a case-insensitive manner.
+
+   You can define different sorting to different groups via
+`gnus-parameters'.  Here is an example to sort an NNTP group by reverse
+date to see the latest news at the top and an RSS group by subject.  In
+this example, the first group is the Debian daily news group
+`gmane.linux.debian.user.news' from news.gmane.org.  The RSS group
+corresponds to the Debian weekly news RSS feed
+`http://packages.debian.org/unstable/newpkg_main.en.rdf', *Note RSS::.
+
+     (setq
+      gnus-parameters
+      '(("nntp.*gmane\\.debian\\.user\\.news"
+         (gnus-show-threads nil)
+         (gnus-article-sort-functions '((not gnus-article-sort-by-date)))
+         (gnus-use-adaptive-scoring nil)
+         (gnus-use-scoring nil))
+        ("nnrss.*debian"
+         (gnus-show-threads nil)
+         (gnus-article-sort-functions 'gnus-article-sort-by-subject)
+         (gnus-use-adaptive-scoring nil)
+         (gnus-use-scoring t)
+         (gnus-score-find-score-files-function 'gnus-score-find-single)
+         (gnus-summary-line-format "%U%R%z%d %I%(%[ %s %]%)\n"))))
 
 
 File: gnus,  Node: Listing Groups,  Next: Sorting Groups,  Prev: Group Parameters,  Up: Group Buffer
@@ -2732,7 +2838,7 @@ Gnus.
      back of her plastic chair.
 
 
-File: gnus,  Node: Group Topics,  Next: Misc Group Stuff,  Prev: Exiting Gnus,  Up: Group Buffer
+File: gnus,  Node: Group Topics,  Next: Non-ASCII Group Names,  Prev: Exiting Gnus,  Up: Group Buffer
 
 2.16 Group Topics
 =================
@@ -2930,7 +3036,7 @@ key.
      Go to the next topic (`gnus-topic-goto-next-topic').
 
 `T M-p'
-     Go to the next topic (`gnus-topic-goto-previous-topic').
+     Go to the previous topic (`gnus-topic-goto-previous-topic').
 
 `G p'
      Edit the topic parameters (`gnus-topic-edit-parameters').  *Note
@@ -3134,9 +3240,764 @@ happen.  In fact, I hereby declare that it is "undefined" what happens.
 You just have to be careful if you do stuff like that.
 
 
-File: gnus,  Node: Misc Group Stuff,  Prev: Group Topics,  Up: Group Buffer
+File: gnus,  Node: Non-ASCII Group Names,  Next: Searching,  Prev: Group Topics,  Up: Group Buffer
 
-2.17 Misc Group Stuff
+2.17 Accessing groups of non-English names
+==========================================
+
+There are some news servers that provide groups of which the names are
+expressed with their native languages in the world.  For instance, in a
+certain news server there are some newsgroups of which the names are
+spelled in Chinese, where people are talking in Chinese.  You can, of
+course, subscribe to such news groups using Gnus.  Currently Gnus
+supports non-ASCII group names not only with the `nntp' back end but
+also with the `nnml' back end and the `nnrss' back end.
+
+   Every such group name is encoded by a certain charset in the server
+side (in an NNTP server its administrator determines the charset, but
+for groups in the other back ends it is determined by you).  Gnus has
+to display the decoded ones for you in the group buffer and the article
+buffer, and needs to use the encoded ones when communicating with
+servers.  However, Gnus doesn't know what charset is used for each
+non-ASCII group name.  The following two variables are just the ones
+for telling Gnus what charset should be used for each group:
+
+`gnus-group-name-charset-method-alist'
+     An alist of select methods and charsets.  The default value is
+     `nil'.  The names of groups in the server specified by that select
+     method are all supposed to use the corresponding charset.  For
+     example:
+
+          (setq gnus-group-name-charset-method-alist
+                '(((nntp "news.com.cn") . cn-gb-2312)))
+
+     Charsets specified for groups with this variable are preferred to
+     the ones specified for the same groups with the
+     `gnus-group-name-charset-group-alist' variable (see below).
+
+     A select method can be very long, like:
+
+          (nntp "gmane"
+                (nntp-address "news.gmane.org")
+                (nntp-end-of-line "\n")
+                (nntp-open-connection-function
+                 nntp-open-via-rlogin-and-telnet)
+                (nntp-via-rlogin-command "ssh")
+                (nntp-via-rlogin-command-switches
+                 ("-C" "-t" "-e" "none"))
+                (nntp-via-address ...))
+
+     In that case, you can truncate it into `(nntp "gmane")' in this
+     variable.  That is, it is enough to contain only the back end name
+     and the server name.
+
+`gnus-group-name-charset-group-alist'
+     An alist of regexp of group name and the charset for group names.
+     `((".*" . utf-8))' is the default value if UTF-8 is supported,
+     otherwise the default is `nil'.  For example:
+
+          (setq gnus-group-name-charset-group-alist
+                '(("\\.com\\.cn:" . cn-gb-2312)
+                  (".*" . utf-8)))
+
+     Note that this variable is ignored if the match is made with
+     `gnus-group-name-charset-method-alist'.
+
+   Those two variables are used also to determine the charset for
+encoding and decoding non-ASCII group names that are in the back ends
+other than `nntp'.  It means that it is you who determine it.  If you
+do nothing, the charset used for group names in those back ends will
+all be `utf-8' because of the last element of
+`gnus-group-name-charset-group-alist'.
+
+   There is one more important variable for non-ASCII group names:
+
+`nnmail-pathname-coding-system'
+     The value of this variable should be a coding system or `nil'.  The
+     default is `nil' in Emacs, or is the aliasee of the coding system
+     named `file-name' (a certain coding system of which an alias is
+     `file-name') in XEmacs.
+
+     The `nnml' back end, the `nnrss' back end, the NNTP marks feature
+     (*note NNTP marks::), the agent, and the cache use non-ASCII group
+     names in those files and directories.  This variable overrides the
+     value of `file-name-coding-system' which specifies the coding
+     system used when encoding and decoding those file names and
+     directory names.
+
+     In XEmacs (with the `mule' feature), `file-name-coding-system' is
+     the only means to specify the coding system used to encode and
+     decode file names.  On the other hand, Emacs uses the value of
+     `default-file-name-coding-system' if `file-name-coding-system' is
+     `nil' or it is bound to the value of
+     `nnmail-pathname-coding-system' which is `nil'.
+
+     Normally the value of `default-file-name-coding-system' in Emacs or
+     `nnmail-pathname-coding-system' in XEmacs is initialized according
+     to the locale, so you will need to do nothing if the value is
+     suitable to encode and decode non-ASCII group names.
+
+     The value of this variable (or `default-file-name-coding-system')
+     does not necessarily need to be the same value that is determined
+     by `gnus-group-name-charset-method-alist' and
+     `gnus-group-name-charset-group-alist'.
+
+     If `default-file-name-coding-system' or this variable is
+     initialized by default to `iso-latin-1' for example, although you
+     want to subscribe to the groups spelled in Chinese, that is the
+     most typical case where you have to customize
+     `nnmail-pathname-coding-system'.  The `utf-8' coding system is a
+     good candidate for it.  Otherwise, you may change the locale in
+     your system so that `default-file-name-coding-system' or this
+     variable may be initialized to an appropriate value.
+
+   Note that when you copy or move articles from a non-ASCII group to
+another group, the charset used to encode and decode group names should
+be the same in both groups.  Otherwise the Newsgroups header will be
+displayed incorrectly in the article buffer.
+
+
+File: gnus,  Node: Searching,  Next: Misc Group Stuff,  Prev: Non-ASCII Group Names,  Up: Group Buffer
+
+2.18 Searching
+==============
+
+* Menu:
+
+* nnir::                     Searching on IMAP, with swish, namazu, etc.
+* nnmairix::                 Searching maildir, MH or mbox with Mairix.
+
+   FIXME: This node is a stub.
+
+   FIXME: Add a brief overview of Gnus search capabilities.  A brief
+comparison of nnir, nnmairix, contrib/gnus-namazu would be nice as well.
+
+   FIXME: Explain difference to *note Searching for Articles::, add
+reference and back-reference.
+
+
+File: gnus,  Node: nnir,  Next: nnmairix,  Up: Searching
+
+2.18.1 nnir
+-----------
+
+FIXME: As a first step, convert the commentary of `nnir' to texi.  
+
+
+File: gnus,  Node: nnmairix,  Prev: nnir,  Up: Searching
+
+2.18.2 nnmairix
+---------------
+
+This paragraph describes how to set up mairix and the back end
+`nnmairix' for indexing and searching your mail from within Gnus.
+Additionally, you can create permanent "smart" groups which are bound
+to mairix searches and are automatically updated.
+
+* Menu:
+
+* About mairix::                About the mairix mail search engine
+* nnmairix requirements::       What you will need for using nnmairix
+* What nnmairix does::          What does nnmairix actually do?
+* Setting up mairix::           Set up your mairix installation
+* Configuring nnmairix::        Set up the nnmairix back end
+* nnmairix keyboard shortcuts:: List of available keyboard shortcuts
+* Propagating marks::           How to propagate marks from nnmairix groups
+* nnmairix tips and tricks::    Some tips, tricks and examples
+* nnmairix caveats::            Some more stuff you might want to know
+
+
+File: gnus,  Node: About mairix,  Next: nnmairix requirements,  Up: nnmairix
+
+2.18.2.1 About mairix
+.....................
+
+Mairix is a tool for indexing and searching words in locally stored
+mail.  It was written by Richard Curnow and is licensed under the GPL.
+Mairix comes with most popular GNU/Linux distributions, but it also
+runs under Windows (with cygwin), Mac OS X and Solaris.  The homepage
+can be found at `http://www.rpcurnow.force9.co.uk/mairix/index.html'
+
+   Though mairix might not be as flexible as other search tools like
+swish++ or namazu, which you can use via the `nnir' back end, it has
+the prime advantage of being incredibly fast.  On current systems, it
+can easily search through headers and message bodies of thousands and
+thousands of mails in well under a second.  Building the database
+necessary for searching might take a minute or two, but only has to be
+done once fully.  Afterwards, the updates are done incrementally and
+therefore are really fast, too.  Additionally, mairix is very easy to
+set up.
+
+   For maximum speed though, mairix should be used with mails stored in
+`Maildir' or `MH' format (this includes the `nnml' back end), although
+it also works with mbox.  Mairix presents the search results by
+populating a _virtual_ maildir/MH folder with symlinks which point to
+the "real" message files (if mbox is used, copies are made).  Since
+mairix already presents search results in such a virtual mail folder,
+it is very well suited for using it as an external program for creating
+_smart_ mail folders, which represent certain mail searches.  This is
+similar to a Kiboze group (*note Kibozed Groups::), but much faster.
+
+
+File: gnus,  Node: nnmairix requirements,  Next: What nnmairix does,  Prev: About mairix,  Up: nnmairix
+
+2.18.2.2 nnmairix requirements
+..............................
+
+Mairix searches local mail--that means, mairix absolutely must have
+direct access to your mail folders.  If your mail resides on another
+server (e.g. an IMAP server) and you happen to have shell access,
+`nnmairix' supports running mairix remotely, e.g. via ssh.
+
+   Additionally, `nnmairix' only supports the following Gnus back ends:
+`nnml', `nnmaildir', and `nnimap'.  You must use one of these back ends
+for using `nnmairix'.  Other back ends, like `nnmbox', `nnfolder' or
+`nnmh', won't work.
+
+   If you absolutely must use mbox and still want to use `nnmairix',
+you can set up a local IMAP server, which you then access via `nnimap'.
+This is a rather massive setup for accessing some mbox files, so just
+change to MH or Maildir already...  However, if you're really, really
+passionate about using mbox, you might want to look into the package
+`mairix.el', which comes with Emacs 23.
+
+
+File: gnus,  Node: What nnmairix does,  Next: Setting up mairix,  Prev: nnmairix requirements,  Up: nnmairix
+
+2.18.2.3 What nnmairix does
+...........................
+
+The back end `nnmairix' enables you to call mairix from within Gnus,
+either to query mairix with a search term or to update the database.
+While visiting a message in the summary buffer, you can use several
+pre-defined shortcuts for calling mairix, e.g. to quickly search for
+all mails from the sender of the current message or to display the
+whole thread associated with the message, even if the mails are in
+different folders.
+
+   Additionally, you can create permanent `nnmairix' groups which are
+bound to certain mairix searches.  This way, you can easily create a
+group containing mails from a certain sender, with a certain subject
+line or even for one specific thread based on the Message-ID.  If you
+check for new mail in these folders (e.g. by pressing `g' or `M-g'),
+they automatically update themselves by calling mairix.
+
+   You might ask why you need `nnmairix' at all, since mairix already
+creates the group, populates it with links to the mails so that you can
+then access it with Gnus, right?  Well, this _might_ work, but often
+does not--at least not without problems.  Most probably you will get
+strange article counts, and sometimes you might see mails which Gnus
+claims have already been canceled and are inaccessible.  This is due to
+the fact that Gnus isn't really amused when things are happening behind
+its back.  Another problem can be the mail back end itself, e.g. if you
+use mairix with an IMAP server (I had Dovecot complaining about corrupt
+index files when mairix changed the contents of the search group).
+Using `nnmairix' should circumvent these problems.
+
+   `nnmairix' is not really a mail back end--it's actually more like a
+wrapper, sitting between a "real" mail back end where mairix stores the
+searches and the Gnus front end.  You can choose between three
+different mail back ends for the mairix folders: `nnml', `nnmaildir' or
+`nnimap'.  `nnmairix' will call the mairix binary so that the search
+results are stored in folders named `zz_mairix-<NAME>-<NUMBER>' on this
+mail back end, but it will present these folders in the Gnus front end
+only with `<NAME>'.  You can use an existing mail back end where you
+already store your mail, but if you're uncomfortable with `nnmairix'
+creating new mail groups alongside your other mail, you can also create
+e.g. a new `nnmaildir' or `nnml' server exclusively for mairix, but then
+make sure those servers do not accidentally receive your new mail
+(*note nnmairix caveats::).  A special case exists if you want to use
+mairix remotely on an IMAP server with `nnimap'--here the mairix
+folders and your other mail must be on the same `nnimap' back end.
+
+
+File: gnus,  Node: Setting up mairix,  Next: Configuring nnmairix,  Prev: What nnmairix does,  Up: nnmairix
+
+2.18.2.4 Setting up mairix
+..........................
+
+First: create a backup of your mail folders (*note nnmairix caveats::).
+
+   Setting up mairix is easy: simply create a `.mairixrc' file with (at
+least) the following entries:
+
+     # Your Maildir/MH base folder
+     base=~/Maildir
+
+   This is the base folder for your mails.  All the following
+directories are relative to this base folder.  If you want to use
+`nnmairix' with `nnimap', this base directory has to point to the mail
+directory where the IMAP server stores the mail folders!
+
+     maildir= ... your maildir folders which should be indexed ...
+     mh= ... your nnml/mh folders which should be indexed ...
+     mbox = ... your mbox files which should be indexed ...
+
+   This specifies all your mail folders and mbox files (relative to the
+base directory!) you want to index with mairix.  Note that the `nnml'
+back end saves mails in MH format, so you have to put those directories
+in the `mh' line.  See the example at the end of this section and
+mairixrc's man-page for further details.
+
+     omit=zz_mairix-*
+
+   This should make sure that you don't accidentally index the mairix
+search results.  You can change the prefix of these folders with the
+variable `nnmairix-group-prefix'.
+
+     mformat= ... 'maildir' or 'mh' ...
+     database= ... location of database file ...
+
+   The `format' setting specifies the output format for the mairix
+search folder.  Set this to `mh' if you want to access search results
+with `nnml'.  Otherwise choose `maildir'.
+
+   To summarize, here is my shortened `.mairixrc' file as an example:
+
+     base=~/Maildir
+     maildir=.personal:.work:.logcheck:.sent
+     mh=../Mail/nnml/*...
+     mbox=../mboxmail/mailarchive_year*
+     mformat=maildir
+     omit=zz_mairix-*
+     database=~/.mairixdatabase
+
+   In this case, the base directory is `~/Maildir', where all my Maildir
+folders are stored.  As you can see, the folders are separated by
+colons.  If you wonder why every folder begins with a dot: this is
+because I use Dovecot as IMAP server, which again uses `Maildir++'
+folders.  For testing nnmairix, I also have some `nnml' mail, which is
+saved in `~/Mail/nnml'.  Since this has to be specified relative to the
+`base' directory, the `../Mail' notation is needed.  Note that the line
+ends in `*...', which means to recursively scan all files under this
+directory.  Without the three dots, the wildcard `*' will not work
+recursively.  I also have some old mbox files with archived mail lying
+around in `~/mboxmail'.  The other lines should be obvious.
+
+   See the man page for `mairixrc' for details and further options,
+especially regarding wildcard usage, which may be a little different
+than you are used to.
+
+   Now simply call `mairix' to create the index for the first time.
+Note that this may take a few minutes, but every following index will do
+the updates incrementally and hence is very fast.
+
+
+File: gnus,  Node: Configuring nnmairix,  Next: nnmairix keyboard shortcuts,  Prev: Setting up mairix,  Up: nnmairix
+
+2.18.2.5 Configuring nnmairix
+.............................
+
+In group mode, type `G b c'
+(`nnmairix-create-server-and-default-group').  This will ask you for all
+necessary information and create a `nnmairix' server as a foreign
+server.  You will have to specify the following:
+
+   * The *name* of the `nnmairix' server--choose whatever you want.
+
+   * The name of the *back end server* where mairix should store its
+     searches.  This must be a full server name, like `nnml:mymail'.
+     Just hit `TAB' to see the available servers.  Currently, servers
+     which are accessed through `nnmaildir', `nnimap' and `nnml' are
+     supported.  As explained above, for locally stored mails, this can
+     be an existing server where you store your mails.  However, you
+     can also create e.g. a new `nnmaildir' or `nnml' server
+     exclusively for `nnmairix' in your secondary select methods (*note
+     Finding the News::).  If you use a secondary `nnml' server just
+     for mairix, make sure that you explicitly set the server variable
+     `nnml-get-new-mail' to `nil', or you might loose mail (*note
+     nnmairix caveats::).  If you want to use mairix remotely on an
+     IMAP server, you have to choose the corresponding `nnimap' server
+     here.
+
+   * The *command* to call the mairix binary.  This will usually just
+     be `mairix', but you can also choose something like `ssh SERVER
+     mairix' if you want to call mairix remotely, e.g. on your IMAP
+     server.  If you want to add some default options to mairix, you
+     could do this here, but better use the variable
+     `nnmairix-mairix-search-options' instead.
+
+   * The name of the *default search group*.  This will be the group
+     where all temporary mairix searches are stored, i.e. all searches
+     which are not bound to permanent `nnmairix' groups.  Choose
+     whatever you like.
+
+   * If the mail back end is `nnimap' or `nnmaildir', you will be asked
+     if you work with *Maildir++*, i.e. with hidden maildir folders
+     (=beginning with a dot).  For example, you have to answer `yes'
+     here if you work with the Dovecot IMAP server.  Otherwise, you
+     should answer `no' here.
+
+
+
+File: gnus,  Node: nnmairix keyboard shortcuts,  Next: Propagating marks,  Prev: Configuring nnmairix,  Up: nnmairix
+
+2.18.2.6 nnmairix keyboard shortcuts
+....................................
+
+In group mode:
+
+`G b c'
+     Creates `nnmairix' server and default search group for this server
+     (`nnmairix-create-server-and-default-group').  You should have done
+     this by now (*note Configuring nnmairix::).
+
+`G b s'
+     Prompts for query which is then sent to the mairix binary.  Search
+     results are put into the default search group which is
+     automatically displayed (`nnmairix-search').
+
+`G b m'
+     Allows you to create a mairix search or a permanent group more
+     comfortably using graphical widgets, similar to a customization
+     group.  Just try it to see how it works (`nnmairix-widget-search').
+
+`G b i'
+     Another command for creating a mairix query more comfortably, but
+     uses only the minibuffer (`nnmairix-search-interactive').
+
+`G b g'
+     Creates a permanent group which is associated with a search query
+     (`nnmairix-create-search-group').  The `nnmairix' back end
+     automatically calls mairix when you update this group with `g' or
+     `M-g'.
+
+`G b q'
+     Changes the search query for the `nnmairix' group under cursor
+     (`nnmairix-group-change-query-this-group').
+
+`G b t'
+     Toggles the 'threads' parameter for the `nnmairix' group under
+     cursor, i.e.  if you want see the whole threads of the found
+     messages (`nnmairix-group-toggle-threads-this-group').
+
+`G b u'
+     Calls mairix binary for updating the database
+     (`nnmairix-update-database').  The default parameters are `-F' and
+     `-Q' for making this as fast as possible (see variable
+     `nnmairix-mairix-update-options' for defining these default
+     options).
+
+`G b r'
+     Keep articles in this `nnmairix' group always read or unread, or
+     leave the marks unchanged
+     (`nnmairix-group-toggle-readmarks-this-group').
+
+`G b d'
+     Recreate `nnmairix' group on the "real" mail back end
+     (`nnmairix-group-delete-recreate-this-group').  You can do this if
+     you always get wrong article counts with a `nnmairix' group.
+
+`G b a'
+     Toggles the `allow-fast' parameters for group under cursor
+     (`nnmairix-group-toggle-allowfast-this-group').  The default
+     behavior of `nnmairix' is to do a mairix search every time you
+     update or enter the group.  With the `allow-fast' parameter set,
+     mairix will only be called when you explicitly update the group,
+     but not upon entering.  This makes entering the group faster, but
+     it may also lead to dangling symlinks if something changed between
+     updating and entering the group which is not yet in the mairix
+     database.
+
+`G b p'
+     Toggle marks propagation for this group
+     (`nnmairix-group-toggle-propmarks-this-group').  (*note
+     Propagating marks::).
+
+`G b o'
+     Manually propagate marks (`nnmairix-propagate-marks'); needed only
+     when `nnmairix-propagate-marks-upon-close' is set to `nil'.
+
+
+   In summary mode:
+
+`$ m'
+     Allows you to create a mairix query or group based on the current
+     message using graphical widgets (same as `nnmairix-widget-search')
+     (`nnmairix-widget-search-from-this-article').
+
+`$ g'
+     Interactively creates a new search group with query based on the
+     current message, but uses the minibuffer instead of graphical
+     widgets (`nnmairix-create-search-group-from-message').
+
+`$ t'
+     Searches thread for the current article
+     (`nnmairix-search-thread-this-article').  This is effectively a
+     shortcut for calling `nnmairix-search' with `m:msgid' of the
+     current article and enabled threads.
+
+`$ f'
+     Searches all messages from sender of the current article
+     (`nnmairix-search-from-this-article').  This is a shortcut for
+     calling `nnmairix-search' with `f:From'.
+
+`$ o'
+     (Only in `nnmairix' groups!) Tries determine the group this article
+     originally came from and displays the article in this group, so
+     that e.g. replying to this article the correct posting styles/group
+     parameters are applied (`nnmairix-goto-original-article').  This
+     function will use the registry if available, but can also parse the
+     article file name as a fallback method.
+
+`$ u'
+     Remove possibly existing tick mark from original article
+     (`nnmairix-remove-tick-mark-original-article').  (*note nnmairix
+     tips and tricks::).
+
+
+
+File: gnus,  Node: Propagating marks,  Next: nnmairix tips and tricks,  Prev: nnmairix keyboard shortcuts,  Up: nnmairix
+
+2.18.2.7 Propagating marks
+..........................
+
+First of: you really need a patched mairix binary for using the marks
+propagation feature efficiently. Otherwise, you would have to update
+the mairix database all the time. You can get the patch at
+
+   `http://www.randomsample.de/mairix-maildir-patch.tar'
+
+   You need the mairix v0.21 source code for this patch; everything else
+is explained in the accompanied readme file. If you don't want to use
+marks propagation, you don't have to apply these patches, but they also
+fix some annoyances regarding changing maildir flags, so it might still
+be useful to you.
+
+   With the patched mairix binary, you can use `nnmairix' as an
+alternative to mail splitting (*note Fancy Mail Splitting::). For
+example, instead of splitting all mails from `david@foobar.com' into a
+group, you can simply create a search group with the query
+`f:david@foobar.com'. This is actually what "smart folders" are all
+about: simply put everything in one mail folder and dynamically create
+searches instead of splitting. This is more flexible, since you can
+dynamically change your folders any time you want to. This also implies
+that you will usually read your mails in the `nnmairix' groups instead
+of your "real" mail groups.
+
+   There is one problem, though: say you got a new mail from
+`david@foobar.com'; it will now show up in two groups, the "real" group
+(your INBOX, for example) and in the `nnmairix' search group (provided
+you have updated the mairix database). Now you enter the `nnmairix'
+group and read the mail. The mail will be marked as read, but only in
+the `nnmairix' group--in the "real" mail group it will be still shown
+as unread.
+
+   You could now catch up the mail group (*note Group Data::), but this
+is tedious and error prone, since you may overlook mails you don't have
+created `nnmairix' groups for. Of course, you could first use
+`nnmairix-goto-original-article' (*note nnmairix keyboard shortcuts::)
+and then read the mail in the original group, but that's even more
+cumbersome.
+
+   Clearly, the easiest way would be if marks could somehow be
+automatically set for the original article. This is exactly what _marks
+propagation_ is about.
+
+   Marks propagation is deactivated by default. You can activate it for
+a certain `nnmairix' group with
+`nnmairix-group-toggle-propmarks-this-group' (bound to `G b p'). This
+function will warn you if you try to use it with your default search
+group; the reason is that the default search group is used for
+temporary searches, and it's easy to accidentally propagate marks from
+this group. However, you can ignore this warning if you really want to.
+
+   With marks propagation enabled, all the marks you set in a `nnmairix'
+group should now be propagated to the original article. For example,
+you can now tick an article (by default with `!') and this mark should
+magically be set for the original article, too.
+
+   A few more remarks which you may or may not want to know:
+
+   Marks will not be set immediately, but only upon closing a group.
+This not only makes marks propagation faster, it also avoids problems
+with dangling symlinks when dealing with maildir files (since changing
+flags will change the file name). You can also control when to
+propagate marks via `nnmairix-propagate-marks-upon-close' (see the
+doc-string for details).
+
+   Obviously, `nnmairix' will have to look up the original group for
+every article you want to set marks for. If available, `nnmairix' will
+first use the registry for determining the original group. The registry
+is very fast, hence you should really, really enable the registry when
+using marks propagation. If you don't have to worry about RAM and disc
+space, set `gnus-registry-max-entries' to a large enough value; to be on
+the safe side, choose roughly the amount of mails you index with mairix.
+
+   If you don't want to use the registry or the registry hasn't seen the
+original article yet, `nnmairix' will use an additional mairix search
+for determining the file name of the article. This, of course, is way
+slower than the registry--if you set hundreds or even thousands of
+marks this way, it might take some time. You can avoid this situation by
+setting `nnmairix-only-use-registry' to t.
+
+   Maybe you also want to propagate marks the other way round, i.e. if
+you tick an article in a "real" mail group, you'd like to have the same
+article in a `nnmairix' group ticked, too. For several good reasons,
+this can only be done efficiently if you use maildir. To immediately
+contradict myself, let me mention that it WON'T work with `nnmaildir',
+since `nnmaildir' stores the marks externally and not in the file name.
+Therefore, propagating marks to `nnmairix' groups will usually only
+work if you use an IMAP server which uses maildir as its file format.
+
+   If you work with this setup, just set
+`nnmairix-propagate-marks-to-nnmairix-groups' to `t' and see what
+happens. If you don't like what you see, just set it to `nil' again. One
+problem might be that you get a wrong number of unread articles; this
+usually happens when you delete or expire articles in the original
+groups. When this happens, you can recreate the `nnmairix' group on the
+back end using `G b d'.
+
+
+File: gnus,  Node: nnmairix tips and tricks,  Next: nnmairix caveats,  Prev: Propagating marks,  Up: nnmairix
+
+2.18.2.8 nnmairix tips and tricks
+.................................
+
+   * Checking Mail
+
+     I put all my important mail groups at group level 1. The mairix
+     groups have group level 5, so they do not get checked at start up
+     (*note Group Levels::).
+
+     I use the following to check for mails:
+
+          (defun my-check-mail-mairix-update (level)
+            (interactive "P")
+            ;; if no prefix given, set level=1
+            (gnus-group-get-new-news (or level 1))
+            (nnmairix-update-groups "mairixsearch" t t)
+            (gnus-group-list-groups))
+
+          (define-key gnus-group-mode-map "g" 'my-check-mail-mairix-update)
+
+     Instead of `"mairixsearch"' use the name of your `nnmairix'
+     server. See the doc string for `nnmairix-update-groups' for
+     details.
+
+   * Example: search group for ticked articles
+
+     For example, you can create a group for all ticked articles, where
+     the articles always stay unread:
+
+     Hit `G b g', enter group name (e.g. `important'), use `F:f' as
+     query and do not include threads.
+
+     Now activate marks propagation for this group by using `G b p'.
+     Then activate the always-unread feature by using `G b r' twice.
+
+     So far so good--but how do you remove the tick marks in the
+     `nnmairix' group?  There are two options: You may simply use
+     `nnmairix-remove-tick-mark-original-article' (bound to `$ u') to
+     remove tick marks from the original article. The other possibility
+     is to set `nnmairix-propagate-marks-to-nnmairix-groups' to `t',
+     but see the above comments about this option.  If it works for
+     you, the tick marks should also exist in the `nnmairix' group and
+     you can remove them as usual, e.g. by marking an article as read.
+
+     When you have removed a tick mark from the original article, this
+     article should vanish from the `nnmairix' group after you have
+     updated the mairix database and updated the group.  Fortunately,
+     there is a function for doing exactly that:
+     `nnmairix-update-groups'. See the previous code snippet and the
+     doc string for details.
+
+   * Dealing with auto-subscription of mail groups
+
+     As described before, all `nnmairix' groups are in fact stored on
+     the mail back end in the form `zz_mairix-<NAME>-<NUMBER>'. You can
+     see them when you enter the back end server in the server buffer.
+     You should not subscribe these groups! Unfortunately, these groups
+     will usually get _auto-subscribed_ when you use `nnmaildir' or
+     `nnml', i.e. you will suddenly see groups of the form `zz_mairix*'
+     pop up in your group buffer. If this happens to you, simply kill
+     these groups with C-k.  For avoiding this, turn off
+     auto-subscription completely by setting the variable
+     `gnus-auto-subscribed-groups' to `nil' (*note Filtering New
+     Groups::), or if you like to keep this feature use the following
+     kludge for turning it off for all groups beginning with `zz_':
+
+          (setq gnus-auto-subscribed-groups
+                "^\\(nnml\\|nnfolder\\|nnmbox\\|nnmh\\|nnbabyl\\|nnmaildir\\).*:\\([^z]\\|z$\\|\\z[^z]\\|zz$\\|zz[^_]\\|zz_$\\).*")
+
+
+
+File: gnus,  Node: nnmairix caveats,  Prev: nnmairix tips and tricks,  Up: nnmairix
+
+2.18.2.9 nnmairix caveats
+.........................
+
+   * You can create a secondary `nnml' server just for nnmairix, but
+     then you have to explicitly set the corresponding server variable
+     `nnml-get-new-mail' to `nil'.  Otherwise, new mail might get put
+     into this secondary server (and would never show up again).  Here's
+     an example server definition:
+
+          (nnml "mairix" (nnml-directory "mairix") (nnml-get-new-mail nil))
+
+     (The `nnmaildir' back end also has a server variabe
+     `get-new-mail', but its default value is `nil', so you don't have
+     to explicitly set it if you use a `nnmaildir' server just for
+     mairix.)
+
+   * If you use the Gnus registry: don't use the registry with
+     `nnmairix' groups (put them in `gnus-registry-unfollowed-groups').
+     Be _extra careful_ if you use
+     `gnus-registry-split-fancy-with-parent'; mails which are split
+     into `nnmairix' groups are usually gone for good as soon as you
+     check the group for new mail (yes, it has happened to me...).
+
+   * Therefore: _Never ever_ put "real" mails into `nnmairix' groups
+     (you shouldn't be able to, anyway).
+
+   * If you use the Gnus agent (*note Gnus Unplugged::): don't agentize
+     `nnmairix' groups (though I have no idea what happens if you do).
+
+   * mairix does only support us-ascii characters.
+
+   * `nnmairix' uses a rather brute force method to force Gnus to
+     completely reread the group on the mail back end after mairix was
+     called--it simply deletes and re-creates the group on the mail
+     back end. So far, this has worked for me without any problems, and
+     I don't see how `nnmairix' could delete other mail groups than its
+     own, but anyway: you really should have a backup of your mail
+     folders.
+
+   * All necessary information is stored in the group parameters (*note
+     Group Parameters::). This has the advantage that no active file is
+     needed, but also implies that when you kill a `nnmairix' group, it
+     is gone for good.
+
+   * If you create and kill a lot of `nnmairix' groups, the
+     "zz_mairix-*" groups will accumulate on the mail back end server.
+     To delete old groups which are no longer needed, call
+     `nnmairix-purge-old-groups'. Note that this assumes that you don't
+     save any "real" mail in folders of the form
+     `zz_mairix-<NAME>-<NUMBER>'. You can change the prefix of
+     `nnmairix' groups by changing the variable `nnmairix-group-prefix'.
+
+   * The following only applies if you _don't_ use the mentioned patch
+     for mairix (*note Propagating marks::):
+
+     A problem can occur when using `nnmairix' with maildir folders and
+     comes with the fact that maildir stores mail flags like `Seen' or
+     `Replied' by appending chars `S' and `R' to the message file name,
+     respectively. This implies that currently you would have to update
+     the mairix database not only when new mail arrives, but also when
+     mail flags are changing. The same applies to new mails which are
+     indexed while they are still in the `new' folder but then get
+     moved to `cur' when Gnus has seen the mail. If you don't update
+     the database after this has happened, a mairix query can lead to
+     symlinks pointing to non-existing files. In Gnus, these messages
+     will usually appear with "(none)" entries in the header and can't
+     be accessed. If this happens to you, using `G b u' and updating
+     the group will usually fix this.
+
+
+
+File: gnus,  Node: Misc Group Stuff,  Prev: Searching,  Up: Group Buffer
+
+2.19 Misc Group Stuff
 =====================
 
 * Menu:
@@ -3189,6 +4050,12 @@ File: gnus,  Node: Misc Group Stuff,  Prev: Group Topics,  Up: Group Buffer
      directly to the group in question.  The corresponding back end
      must have a request-post method for this to work though.
 
+`G z'
+     Compact the group under point (`gnus-group-compact-group').
+     Currently implemented only in nnml (*note Mail Spool::).  This
+     removes gaps between article numbers, hence getting a correct
+     total article count.
+
 
    Variables for the group buffer:
 
@@ -3207,29 +4074,11 @@ File: gnus,  Node: Misc Group Stuff,  Prev: Group Topics,  Up: Group Buffer
      Groups matching this regexp will always be listed in the group
      buffer, whether they are empty or not.
 
-`gnus-group-name-charset-method-alist'
-     An alist of method and the charset for group names.  It is used to
-     show non-ASCII group names.
-
-     For example:
-          (setq gnus-group-name-charset-method-alist
-              '(((nntp "news.com.cn") . cn-gb-2312)))
-
-`gnus-group-name-charset-group-alist'
-     An alist of regexp of group name and the charset for group names.
-     It is used to show non-ASCII group names.  `((".*" utf-8))' is the
-     default value if UTF-8 is supported, otherwise the default is
-     `nil'.
-
-     For example:
-          (setq gnus-group-name-charset-group-alist
-              '(("\\.com\\.cn:" . cn-gb-2312)))
-
 
 
 File: gnus,  Node: Scanning New Messages,  Next: Group Information,  Up: Misc Group Stuff
 
-2.17.1 Scanning New Messages
+2.19.1 Scanning New Messages
 ----------------------------
 
 `g'
@@ -3262,7 +4111,7 @@ news.
 
 File: gnus,  Node: Group Information,  Next: Group Timestamp,  Prev: Scanning New Messages,  Up: Misc Group Stuff
 
-2.17.2 Group Information
+2.19.2 Group Information
 ------------------------
 
 `H f'
@@ -3323,7 +4172,7 @@ File: gnus,  Node: Group Information,  Next: Group Timestamp,  Prev: Scanning Ne
 
 File: gnus,  Node: Group Timestamp,  Next: File Commands,  Prev: Group Information,  Up: Misc Group Stuff
 
-2.17.3 Group Timestamp
+2.19.3 Group Timestamp
 ----------------------
 
 It can be convenient to let Gnus keep track of when you last read a
@@ -3367,7 +4216,7 @@ trick:
 
 File: gnus,  Node: File Commands,  Next: Sieve Commands,  Prev: Group Timestamp,  Up: Misc Group Stuff
 
-2.17.4 File Commands
+2.19.4 File Commands
 --------------------
 
 `r'
@@ -3383,7 +4232,7 @@ File: gnus,  Node: File Commands,  Next: Sieve Commands,  Prev: Group Timestamp,
 
 File: gnus,  Node: Sieve Commands,  Prev: File Commands,  Up: Misc Group Stuff
 
-2.17.5 Sieve Commands
+2.19.5 Sieve Commands
 ---------------------
 
 Sieve is a server-side mail filtering language.  In Gnus you can use
@@ -3462,6 +4311,7 @@ or better use it as a prefix key.  For example:
 * Asynchronous Fetching::       Gnus might be able to pre-fetch articles.
 * Article Caching::             You may store articles in a cache.
 * Persistent Articles::         Making articles expiry-resistant.
+* Sticky Articles::             Article buffers that are not reused.
 * Article Backlog::             Having already read articles hang around.
 * Saving Articles::             Ways of customizing article saving.
 * Decoding Articles::           Gnus can treat series of (uu)encoded articles.
@@ -3756,6 +4606,12 @@ where to display it; and when to display it.
      summary line spec returns the `To', `Newsreader' or `From' header.
      If this regexp matches the contents of the `From' header, the
      value of the `To' or `Newsreader' headers are used instead.
+
+     To distinguish regular articles from those where the `From' field
+     has been swapped, a string is prefixed to the `To' or `Newsgroups'
+     header in the summary line.  By default the string is `-> ' for
+     `To' and `=> ' for `Newsgroups', you can customize these strings
+     with `gnus-summary-to-prefix' and `gnus-summary-newsgroup-prefix'.
 
 
    A related variable is `nnmail-extra-headers', which controls when to
@@ -4936,9 +5792,9 @@ subset of the articles currently in the group.  The effect most limit
 commands have is to remove a few (or many) articles from the summary
 buffer.
 
-   All limiting commands work on subsets of the articles already fetched
-from the servers.  None of these commands query the server for
-additional articles.
+   Limiting commands work on subsets of the articles already fetched
+from the servers.  These commands don't query the server for additional
+articles.
 
 `/ /'
 `/ s'
@@ -4950,6 +5806,22 @@ additional articles.
      Limit the summary buffer to articles that match some author
      (`gnus-summary-limit-to-author').  If given a prefix, exclude
      matching articles.
+
+`/ R'
+     Limit the summary buffer to articles that match some recipient
+     (`gnus-summary-limit-to-recipient').  If given a prefix, exclude
+     matching articles.
+
+`/ A'
+     Limit the summary buffer to articles in which contents of From, To
+     or Cc header match a given address
+     (`gnus-summary-limit-to-address').  If given a prefix, exclude
+     matching articles.
+
+`/ S'
+     Limit the summary buffer to articles that aren't part of any
+     displayed threads (`gnus-summary-limit-to-singletons').  If given
+     a prefix, limit to articles that are part of displayed threads.
 
 `/ x'
      Limit the summary buffer to articles that match one of the "extra"
@@ -4998,6 +5870,11 @@ additional articles.
      (`gnus-summary-limit-to-display-predicate').  *Note Group
      Parameters::, for more on this predicate.
 
+`/ r'
+     Limit the summary buffer to replied articles
+     (`gnus-summary-limit-to-replied').  If given a prefix, exclude
+     replied articles.
+
 `/ E'
 `M S'
      Include all expunged articles in the limit
@@ -5029,6 +5906,20 @@ additional articles.
      Mark all excluded unread articles as read
      (`gnus-summary-limit-mark-excluded-as-read').  If given a prefix,
      also mark excluded ticked and dormant articles as read.
+
+`/ b'
+     Limit the summary buffer to articles that have bodies that match a
+     certain regexp (`gnus-summary-limit-to-bodies').  If given a
+     prefix, reverse the limit.  This command is quite slow since it
+     requires selecting each article to find the matches.
+
+`/ h'
+     Like the previous command, only limit to headers instead
+     (`gnus-summary-limit-to-headers').
+
+
+   The following commands aren't limiting commands, but use the `/'
+prefix as well.
 
 `/ N'
      Insert all new articles in the summary buffer.  It scans for new
@@ -5274,6 +6165,13 @@ File: gnus,  Node: Filling In Threads,  Next: More Threading,  Prev: Loose Threa
      visible effects, but is useful if you use the `A T' command a lot
      (*note Finding the Parent::).
 
+     The server has to support NOV for any of this to work.
+
+     This feature can seriously impact performance it ignores all
+     locally cached header entries.  Setting it to `t' for groups for a
+     server that doesn't expire articles (such as news.gmane.org),
+     leads to very slow summary generation.
+
 `gnus-fetch-old-ephemeral-headers'
      Same as `gnus-fetch-old-headers', but only used for ephemeral
      newsgroups.
@@ -5451,6 +6349,10 @@ File: gnus,  Node: Thread Commands,  Prev: Customizing Threading,  Up: Threading
      Make the current article the child of the marked (or previous)
      article (`gnus-summary-reparent-thread').
 
+`T M-^'
+     Make the current article the parent of the marked articles
+     (`gnus-summary-reparent-children').
+
 
    The following commands are thread movement commands.  They all
 understand the numeric prefix.
@@ -5499,9 +6401,9 @@ some-function)' elements.
 
    By default, sorting is done on article numbers.  Ready-made sorting
 predicate functions include `gnus-thread-sort-by-number',
-`gnus-thread-sort-by-author', `gnus-thread-sort-by-subject',
-`gnus-thread-sort-by-date', `gnus-thread-sort-by-score',
-`gnus-thread-sort-by-most-recent-number',
+`gnus-thread-sort-by-author', `gnus-thread-sort-by-recipient',
+`gnus-thread-sort-by-subject', `gnus-thread-sort-by-date',
+`gnus-thread-sort-by-score', `gnus-thread-sort-by-most-recent-number',
 `gnus-thread-sort-by-most-recent-date', `gnus-thread-sort-by-random' and
 `gnus-thread-sort-by-total-score'.
 
@@ -5534,8 +6436,7 @@ which the articles arrived.
 could say something like:
 
      (setq gnus-thread-sort-functions
-           '((lambda (t1 t2)
-               (not (gnus-thread-sort-by-number t1 t2)))
+           '((not gnus-thread-sort-by-number)
              gnus-thread-sort-by-score))
 
    The function in the `gnus-thread-score-function' variable (default
@@ -5558,6 +6459,9 @@ could say something like:
      (setq gnus-article-sort-functions
            '(gnus-article-sort-by-number
              gnus-article-sort-by-subject))
+
+   You can define group specific sorting via `gnus-parameters', *Note
+Group Parameters::.
 
 
 File: gnus,  Node: Asynchronous Fetching,  Next: Article Caching,  Prev: Sorting the Summary Buffer,  Up: Summary Buffer
@@ -5708,7 +6612,7 @@ and `gnus-cache-generate-active' will (re)generate the active file.
 to some other location.  You get asked to where, isn't that cool?
 
 
-File: gnus,  Node: Persistent Articles,  Next: Article Backlog,  Prev: Article Caching,  Up: Summary Buffer
+File: gnus,  Node: Persistent Articles,  Next: Sticky Articles,  Prev: Article Caching,  Up: Summary Buffer
 
 3.13 Persistent Articles
 ========================
@@ -5745,9 +6649,48 @@ interested in persistent articles:
      (setq gnus-use-cache 'passive)
 
 
-File: gnus,  Node: Article Backlog,  Next: Saving Articles,  Prev: Persistent Articles,  Up: Summary Buffer
+File: gnus,  Node: Sticky Articles,  Next: Article Backlog,  Prev: Persistent Articles,  Up: Summary Buffer
 
-3.14 Article Backlog
+3.14 Sticky Articles
+====================
+
+When you select an article the current article buffer will be reused
+according to the value of the variable `gnus-single-article-buffer'.
+If its value is non-`nil' (the default) all articles reuse the same
+article buffer.  Else each group has its own article buffer.
+
+   This implies that it's not possible to have more than one article
+buffer in a group at a time.  But sometimes you might want to display
+all the latest emails from your mother, your father, your aunt, your
+uncle and your 17 cousins to coordinate the next christmas party.
+
+   That's where sticky articles come in handy.  A sticky article buffer
+basically is a normal article buffer, but it won't be reused when you
+select another article.  You can make an article sticky with:
+
+`A S'
+     Make the current article sticky.  If a prefix arg is given, ask
+     for a name for this sticky article buffer.
+
+   To close a sticky article buffer you can use these commands:
+
+`q'
+     Puts this sticky article buffer at the end of the list of all
+     buffers.
+
+`k'
+     Kills this sticky article buffer.
+
+   To kill all sticky article buffers you can use:
+
+ -- Function: gnus-kill-sticky-article-buffers ARG
+     Kill all sticky article buffers.  If a prefix ARG is given, ask
+     for confirmation.
+
+
+File: gnus,  Node: Article Backlog,  Next: Saving Articles,  Prev: Sticky Articles,  Up: Summary Buffer
+
+3.15 Article Backlog
 ====================
 
 If you have a slow connection, but the idea of using caching seems
@@ -5771,7 +6714,7 @@ just to keep y'all on your toes.
 
 File: gnus,  Node: Saving Articles,  Next: Decoding Articles,  Prev: Article Backlog,  Up: Summary Buffer
 
-3.15 Saving Articles
+3.16 Saving Articles
 ====================
 
 Gnus can save articles in a number of ways.  Below is the documentation
@@ -5802,7 +6745,8 @@ deleted before saving.
 
 `O r'
      Save the current article in Rmail format
-     (`gnus-summary-save-article-rmail').
+     (`gnus-summary-save-article-rmail').  This is mbox since Emacs 23,
+     Babyl in older versions.
 
 `O f'
      Save the current article in plain file format
@@ -5830,7 +6774,11 @@ deleted before saving.
      is--Pipe the current article to a process
      (`gnus-summary-pipe-output').  If given a symbolic prefix (*note
      Symbolic Prefixes::), include the complete headers in the piped
-     output.
+     output.  The symbolic prefix `r' is special; it lets this command
+     pipe a raw article including all headers.  The
+     `gnus-summary-pipe-output-default-command' variable can be set to
+     a string containing the default command and options (default
+     `nil').
 
 `O P'
      Save the current article into muttprint.  That is, print it using
@@ -5857,9 +6805,13 @@ Gnus do what you want it to.  You can use any of the eight ready-made
 functions below, or you can create your own.
 
 `gnus-summary-save-in-rmail'
-     This is the default format, "Babyl".  Uses the function in the
-     `gnus-rmail-save-name' variable to get a file name to save the
-     article in.  The default is `gnus-plain-save-name'.
+     This is the default format, that used by the Rmail package.  Since
+     Emacs 23, Rmail uses standard mbox format.  Before this, it used
+     the "Babyl" format.  Accordingly, this command writes mbox format
+     since Emacs 23, unless appending to an existing Babyl file.  In
+     older versions of Emacs, it always uses Babyl format.  Uses the
+     function in the `gnus-rmail-save-name' variable to get a file name
+     to save the article in.  The default is `gnus-plain-save-name'.
 
 `gnus-summary-save-in-mail'
      Save in a Unix mail (mbox) file.  Uses the function in the
@@ -5899,13 +6851,32 @@ functions below, or you can create your own.
      Save the article in a VM folder.  You have to have the VM mail
      reader to use this setting.
 
+`gnus-summary-save-in-pipe'
+     Pipe the article to a shell command.  This function takes optional
+     two arguments COMMAND and RAW.  Valid values for COMMAND include:
+
+        * a string
+          The executable command name and possibly arguments.
+
+        * `nil'
+          You will be prompted for the command in the minibuffer.
+
+        * the symbol `default'
+          It will be replaced with the command which the variable
+          `gnus-summary-pipe-output-default-command' holds or the
+          command last used for saving.
+
+     Non-`nil' value for RAW overrides `:decode' and `:headers'
+     properties (see below) and the raw article including all headers
+     will be piped.
+
    The symbol of each function may have the following properties:
 
 `:decode'
      The value non-`nil' means save decoded articles.  This is
      meaningful only with `gnus-summary-save-in-file',
-     `gnus-summary-save-body-in-file', `gnus-summary-write-to-file', and
-     `gnus-summary-write-body-to-file'.
+     `gnus-summary-save-body-in-file', `gnus-summary-write-to-file',
+     `gnus-summary-write-body-to-file', and `gnus-summary-save-in-pipe'.
 
 `:function'
      The value specifies an alternative function which appends, not
@@ -6018,7 +6989,7 @@ the groups/directories with `nneething'.
 
 File: gnus,  Node: Decoding Articles,  Next: Article Treatment,  Prev: Saving Articles,  Up: Summary Buffer
 
-3.16 Decoding Articles
+3.17 Decoding Articles
 ======================
 
 Sometime users post articles (or series of articles) that have been
@@ -6055,7 +7026,7 @@ commands, and you have to mark the articles manually with `#'.
 
 File: gnus,  Node: Uuencoded Articles,  Next: Shell Archives,  Up: Decoding Articles
 
-3.16.1 Uuencoded Articles
+3.17.1 Uuencoded Articles
 -------------------------
 
 `X u'
@@ -6093,7 +7064,7 @@ off.
 
 File: gnus,  Node: Shell Archives,  Next: PostScript Files,  Prev: Uuencoded Articles,  Up: Decoding Articles
 
-3.16.2 Shell Archives
+3.17.2 Shell Archives
 ---------------------
 
 Shell archives ("shar files") used to be a popular way to distribute
@@ -6118,7 +7089,7 @@ some commands to deal with these:
 
 File: gnus,  Node: PostScript Files,  Next: Other Files,  Prev: Shell Archives,  Up: Decoding Articles
 
-3.16.3 PostScript Files
+3.17.3 PostScript Files
 -----------------------
 
 `X p'
@@ -6139,7 +7110,7 @@ File: gnus,  Node: PostScript Files,  Next: Other Files,  Prev: Shell Archives, 
 
 File: gnus,  Node: Other Files,  Next: Decoding Variables,  Prev: PostScript Files,  Up: Decoding Articles
 
-3.16.4 Other Files
+3.17.4 Other Files
 ------------------
 
 `X o'
@@ -6149,10 +7120,13 @@ File: gnus,  Node: Other Files,  Next: Decoding Variables,  Prev: PostScript Fil
      Unbinhex the current series (`gnus-uu-decode-binhex').  This
      doesn't really work yet.
 
+`X Y'
+     yEnc-decode the current series and save it (`gnus-uu-decode-yenc').
+
 
 File: gnus,  Node: Decoding Variables,  Next: Viewing Files,  Prev: Other Files,  Up: Decoding Articles
 
-3.16.5 Decoding Variables
+3.17.5 Decoding Variables
 -------------------------
 
 Adjective, not verb.
@@ -6166,7 +7140,7 @@ Adjective, not verb.
 
 File: gnus,  Node: Rule Variables,  Next: Other Decode Variables,  Up: Decoding Variables
 
-3.16.5.1 Rule Variables
+3.17.5.1 Rule Variables
 .......................
 
 Gnus uses "rule variables" to decide how to view a file.  All these
@@ -6194,7 +7168,7 @@ variables are of the form
 
 File: gnus,  Node: Other Decode Variables,  Next: Uuencoding and Posting,  Prev: Rule Variables,  Up: Decoding Variables
 
-3.16.5.2 Other Decode Variables
+3.17.5.2 Other Decode Variables
 ...............................
 
 `gnus-uu-grabbed-file-functions'
@@ -6277,7 +7251,7 @@ File: gnus,  Node: Other Decode Variables,  Next: Uuencoding and Posting,  Prev:
 
 File: gnus,  Node: Uuencoding and Posting,  Prev: Other Decode Variables,  Up: Decoding Variables
 
-3.16.5.3 Uuencoding and Posting
+3.17.5.3 Uuencoding and Posting
 ...............................
 
 `gnus-uu-post-include-before-composing'
@@ -6308,7 +7282,7 @@ File: gnus,  Node: Uuencoding and Posting,  Prev: Other Decode Variables,  Up: D
 
 File: gnus,  Node: Viewing Files,  Prev: Decoding Variables,  Up: Decoding Articles
 
-3.16.6 Viewing Files
+3.17.6 Viewing Files
 --------------------
 
 After decoding, if the file is some sort of archive, Gnus will attempt
@@ -6347,7 +7321,7 @@ real anymore? How did we get here?
 
 File: gnus,  Node: Article Treatment,  Next: MIME Commands,  Prev: Decoding Articles,  Up: Summary Buffer
 
-3.17 Article Treatment
+3.18 Article Treatment
 ======================
 
 Reading through this huge manual, you may have quite forgotten that the
@@ -6373,7 +7347,7 @@ these articles easier.
 
 File: gnus,  Node: Article Highlighting,  Next: Article Fontisizing,  Up: Article Treatment
 
-3.17.1 Article Highlighting
+3.18.1 Article Highlighting
 ---------------------------
 
 Not only do you want your article buffer to look like fruit salad, but
@@ -6455,7 +7429,7 @@ automatically.
 
 File: gnus,  Node: Article Fontisizing,  Next: Article Hiding,  Prev: Article Highlighting,  Up: Article Treatment
 
-3.17.2 Article Fontisizing
+3.18.2 Article Fontisizing
 --------------------------
 
 People commonly add emphasis to words in news articles by writing things
@@ -6500,7 +7474,7 @@ automatically.
 
 File: gnus,  Node: Article Hiding,  Next: Article Washing,  Prev: Article Fontisizing,  Up: Article Treatment
 
-3.17.3 Article Hiding
+3.18.3 Article Hiding
 ---------------------
 
 Or rather, hiding certain things in each article.  There usually is much
@@ -6631,1255 +7605,8 @@ customization.
    *Note Customizing Articles::, for how to hide article elements
 automatically.
 
-
-File: gnus,  Node: Article Washing,  Next: Article Header,  Prev: Article Hiding,  Up: Article Treatment
-
-3.17.4 Article Washing
-----------------------
-
-We call this "article washing" for a really good reason.  Namely, the
-`A' key was taken, so we had to use the `W' key instead.
-
-   "Washing" is defined by us as "changing something from something to
-something else", but normally results in something looking better.
-Cleaner, perhaps.
-
-   *Note Customizing Articles::, if you want to change how Gnus displays
-articles by default.
-
-`C-u g'
-     This is not really washing, it's sort of the opposite of washing.
-     If you type this, you see the article exactly as it exists on disk
-     or on the server.
-
-`g'
-     Force redisplaying of the current article
-     (`gnus-summary-show-article').  This is also not really washing.
-     If you type this, you see the article without any previously
-     applied interactive Washing functions but with all default
-     treatments (*note Customizing Articles::).
-
-`W l'
-     Remove page breaks from the current article
-     (`gnus-summary-stop-page-breaking').  *Note Misc Article::, for
-     page delimiters.
-
-`W r'
-     Do a Caesar rotate (rot13) on the article buffer
-     (`gnus-summary-caesar-message').  Unreadable articles that tell
-     you to read them with Caesar rotate or rot13.  (Typically
-     offensive jokes and such.)
-
-     It's commonly called "rot13" because each letter is rotated 13
-     positions in the alphabet, e. g. `B' (letter #2) -> `O' (letter
-     #15).  It is sometimes referred to as "Caesar rotate" because
-     Caesar is rumored to have employed this form of, uh, somewhat weak
-     encryption.
-
-`W m'
-     Morse decode the article buffer (`gnus-summary-morse-message').
-
-`W t'
-
-`t'
-     Toggle whether to display all headers in the article buffer
-     (`gnus-summary-toggle-header').
-
-`W v'
-     Toggle whether to display all headers in the article buffer
-     permanently (`gnus-summary-verbose-headers').
-
-`W o'
-     Treat overstrike (`gnus-article-treat-overstrike').
-
-`W d'
-     Treat M****s*** sm*rtq**t*s according to
-     `gnus-article-dumbquotes-map' (`gnus-article-treat-dumbquotes').
-     Note that this function guesses whether a character is a
-     sm*rtq**t* or not, so it should only be used interactively.
-
-     Sm*rtq**t*s are M****s***'s unilateral extension to the character
-     map in an attempt to provide more quoting characters.  If you see
-     something like `\222' or `\264' where you're expecting some kind of
-     apostrophe or quotation mark, then try this wash.
-
-`W Y f'
-     Full deuglify of broken Outlook (Express) articles: Treat
-     dumbquotes, unwrap lines, repair attribution and rearrange
-     citation.  (`gnus-article-outlook-deuglify-article').
-
-`W Y u'
-     Unwrap lines that appear to be wrapped citation lines.  You can
-     control what lines will be unwrapped by frobbing
-     `gnus-outlook-deuglify-unwrap-min' and
-     `gnus-outlook-deuglify-unwrap-max', indicating the minimum and
-     maximum length of an unwrapped citation line.
-     (`gnus-article-outlook-unwrap-lines').
-
-`W Y a'
-     Repair a broken attribution line.
-     (`gnus-article-outlook-repair-attribution').
-
-`W Y c'
-     Repair broken citations by rearranging the text.
-     (`gnus-article-outlook-rearrange-citation').
-
-`W w'
-     Do word wrap (`gnus-article-fill-cited-article').
-
-     You can give the command a numerical prefix to specify the width
-     to use when filling.
-
-`W Q'
-     Fill long lines (`gnus-article-fill-long-lines').
-
-`W C'
-     Capitalize the first word in each sentence
-     (`gnus-article-capitalize-sentences').
-
-`W c'
-     Translate CRLF pairs (i. e., `^M's on the end of the lines) into LF
-     (this takes care of DOS line endings), and then translate any
-     remaining CRs into LF (this takes care of Mac line endings)
-     (`gnus-article-remove-cr').
-
-`W q'
-     Treat quoted-printable (`gnus-article-de-quoted-unreadable').
-     Quoted-Printable is one common MIME encoding employed when sending
-     non-ASCII (i.e., 8-bit) articles.  It typically makes strings like
-     `déjà vu' look like `d=E9j=E0 vu', which doesn't look very
-     readable to me.  Note that this is usually done automatically by
-     Gnus if the message in question has a `Content-Transfer-Encoding'
-     header that says that this encoding has been done.  If a prefix is
-     given, a charset will be asked for.
-
-`W 6'
-     Treat base64 (`gnus-article-de-base64-unreadable').  Base64 is one
-     common MIME encoding employed when sending non-ASCII (i.e., 8-bit)
-     articles.  Note that this is usually done automatically by Gnus if
-     the message in question has a `Content-Transfer-Encoding' header
-     that says that this encoding has been done.  If a prefix is given,
-     a charset will be asked for.
-
-`W Z'
-     Treat HZ or HZP (`gnus-article-decode-HZ').  HZ (or HZP) is one
-     common encoding employed when sending Chinese articles.  It
-     typically makes strings look like `~{<:Ky2;S{#,NpJ)l6HK!#~}'.
-
-`W u'
-     Remove newlines from within URLs.  Some mailers insert newlines
-     into outgoing email messages to keep lines short.  This
-     reformatting can split long URLs onto multiple lines.  Repair
-     those URLs by removing the newlines (`gnus-article-unsplit-urls').
-
-`W h'
-     Treat HTML (`gnus-article-wash-html').  Note that this is usually
-     done automatically by Gnus if the message in question has a
-     `Content-Type' header that says that the message is HTML.
-
-     If a prefix is given, a charset will be asked for.  If it is a
-     number, the charset defined in
-     `gnus-summary-show-article-charset-alist' (*note Paging the
-     Article::) will be used.
-
-     The default is to use the function specified by
-     `mm-text-html-renderer' (*note Display Customization:
-     (emacs-mime)Display Customization.) to convert the HTML, but this
-     is controlled by the `gnus-article-wash-function' variable.
-     Pre-defined functions you can use include:
-
-    `w3'
-          Use Emacs/W3.
-
-    `w3m'
-          Use emacs-w3m (http://emacs-w3m.namazu.org/).
-
-    `w3m-standalone'
-          Use w3m (http://w3m.sourceforge.net/).
-
-    `links'
-          Use Links (http://links.sf.net/).
-
-    `lynx'
-          Use Lynx (http://lynx.isc.org/).
-
-    `html2text'
-          Use html2text--a simple HTML converter included with Gnus.
-
-
-`W b'
-     Add clickable buttons to the article (`gnus-article-add-buttons').
-     *Note Article Buttons::.
-
-`W B'
-     Add clickable buttons to the article headers
-     (`gnus-article-add-buttons-to-head').
-
-`W p'
-     Verify a signed control message (`gnus-article-verify-x-pgp-sig').
-     Control messages such as `newgroup' and `checkgroups' are usually
-     signed by the hierarchy maintainer.  You need to add the PGP
-     public key of the maintainer to your keyring to verify the
-     message.(1)
-
-`W s'
-     Verify a signed (PGP, PGP/MIME or S/MIME) message
-     (`gnus-summary-force-verify-and-decrypt'). *Note Security::.
-
-`W a'
-     Strip headers like the `X-No-Archive' header from the beginning of
-     article bodies (`gnus-article-strip-headers-in-body').
-
-`W E l'
-     Remove all blank lines from the beginning of the article
-     (`gnus-article-strip-leading-blank-lines').
-
-`W E m'
-     Replace all blank lines with empty lines and then all multiple
-     empty lines with a single empty line.
-     (`gnus-article-strip-multiple-blank-lines').
-
-`W E t'
-     Remove all blank lines at the end of the article
-     (`gnus-article-remove-trailing-blank-lines').
-
-`W E a'
-     Do all the three commands above (`gnus-article-strip-blank-lines').
-
-`W E A'
-     Remove all blank lines (`gnus-article-strip-all-blank-lines').
-
-`W E s'
-     Remove all white space from the beginning of all lines of the
-     article body (`gnus-article-strip-leading-space').
-
-`W E e'
-     Remove all white space from the end of all lines of the article
-     body (`gnus-article-strip-trailing-space').
-
-
-   *Note Customizing Articles::, for how to wash articles automatically.
-
-   ---------- Footnotes ----------
-
-   (1) PGP keys for many hierarchies are available at
-`ftp://ftp.isc.org/pub/pgpcontrol/README.html'
 
 
-File: gnus,  Node: Article Header,  Next: Article Buttons,  Prev: Article Washing,  Up: Article Treatment
-
-3.17.5 Article Header
----------------------
-
-These commands perform various transformations of article header.
-
-`W G u'
-     Unfold folded header lines (`gnus-article-treat-unfold-headers').
-
-`W G n'
-     Fold the `Newsgroups' and `Followup-To' headers
-     (`gnus-article-treat-fold-newsgroups').
-
-`W G f'
-     Fold all the message headers (`gnus-article-treat-fold-headers').
-
-`W E w'
-     Remove excessive whitespace from all headers
-     (`gnus-article-remove-leading-whitespace').
-
-
-
-File: gnus,  Node: Article Buttons,  Next: Article Button Levels,  Prev: Article Header,  Up: Article Treatment
-
-3.17.6 Article Buttons
-----------------------
-
-People often include references to other stuff in articles, and it would
-be nice if Gnus could just fetch whatever it is that people talk about
-with the minimum of fuzz when you hit `RET' or use the middle mouse
-button on these references.
-
-   Gnus adds "buttons" to certain standard references by default:
-Well-formed URLs, mail addresses, Message-IDs, Info links, man pages and
-Emacs or Gnus related references.  This is controlled by two variables,
-one that handles article bodies and one that handles article heads:
-
-`gnus-button-alist'
-     This is an alist where each entry has this form:
-
-          (REGEXP BUTTON-PAR USE-P FUNCTION DATA-PAR)
-
-    REGEXP
-          All text that match this regular expression (case
-          insensitive) will be considered an external reference.
-          Here's a typical regexp that matches embedded URLs:
-          `<URL:\\([^\n\r>]*\\)>'.  This can also be a variable
-          containing a regexp, useful variables to use include
-          `gnus-button-url-regexp' and `gnus-button-mid-or-mail-regexp'.
-
-    BUTTON-PAR
-          Gnus has to know which parts of the matches is to be
-          highlighted.  This is a number that says what sub-expression
-          of the regexp is to be highlighted.  If you want it all
-          highlighted, you use 0 here.
-
-    USE-P
-          This form will be `eval'ed, and if the result is non-`nil',
-          this is considered a match.  This is useful if you want extra
-          sifting to avoid false matches.  Often variables named
-          `gnus-button-*-level' are used here, *Note Article Button
-          Levels::, but any other form may be used too.
-
-    FUNCTION
-          This function will be called when you click on this button.
-
-    DATA-PAR
-          As with BUTTON-PAR, this is a sub-expression number, but this
-          one says which part of the match is to be sent as data to
-          FUNCTION.
-
-
-     So the full entry for buttonizing URLs is then
-
-          ("<URL:\\([^\n\r>]*\\)>" 0 t gnus-button-url 1)
-
-`gnus-header-button-alist'
-     This is just like the other alist, except that it is applied to the
-     article head only, and that each entry has an additional element
-     that is used to say what headers to apply the buttonize coding to:
-
-          (HEADER REGEXP BUTTON-PAR USE-P FUNCTION DATA-PAR)
-
-     HEADER is a regular expression.
-
-3.17.6.1 Related variables and functions
-........................................
-
-`gnus-button-*-level'
-     *Note Article Button Levels::.
-
-`gnus-button-url-regexp'
-     A regular expression that matches embedded URLs.  It is used in the
-     default values of the variables above.
-
-`gnus-button-man-handler'
-     The function to use for displaying man pages.  It must take at
-     least one argument with a string naming the man page.
-
-`gnus-button-mid-or-mail-regexp'
-     Regular expression that matches a message ID or a mail address.
-
-`gnus-button-prefer-mid-or-mail'
-     This variable determines what to do when the button on a string as
-     `foo123@bar.invalid' is pushed.  Strings like this can be either a
-     message ID or a mail address.  If it is one of the symbols `mid' or
-     `mail', Gnus will always assume that the string is a message ID or
-     a mail address, respectively.  If this variable is set to the
-     symbol `ask', always query the user what to do.  If it is a
-     function, this function will be called with the string as its only
-     argument.  The function must return `mid', `mail', `invalid' or
-     `ask'.  The default value is the function
-     `gnus-button-mid-or-mail-heuristic'.
-
-`gnus-button-mid-or-mail-heuristic'
-     Function that guesses whether its argument is a message ID or a
-     mail address.  Returns `mid' if it's a message IDs, `mail' if it's
-     a mail address, `ask' if unsure and `invalid' if the string is
-     invalid.
-
-`gnus-button-mid-or-mail-heuristic-alist'
-     An alist of `(RATE . REGEXP)' pairs used by the function
-     `gnus-button-mid-or-mail-heuristic'.
-
-`gnus-button-ctan-handler'
-     The function to use for displaying CTAN links.  It must take one
-     argument, the string naming the URL.
-
-`gnus-ctan-url'
-     Top directory of a CTAN (Comprehensive TeX Archive Network)
-     archive used by `gnus-button-ctan-handler'.
-
-`gnus-article-button-face'
-     Face used on buttons.
-
-`gnus-article-mouse-face'
-     Face used when the mouse cursor is over a button.
-
-
-   *Note Customizing Articles::, for how to buttonize articles
-automatically.
-
-
-File: gnus,  Node: Article Button Levels,  Next: Article Date,  Prev: Article Buttons,  Up: Article Treatment
-
-3.17.7 Article button levels
-----------------------------
-
-The higher the value of the variables `gnus-button-*-level', the more
-buttons will appear.  If the level is zero, no corresponding buttons
-are displayed.  With the default value (which is 5) you should already
-see quite a lot of buttons.  With higher levels, you will see more
-buttons, but you may also get more false positives.  To avoid them, you
-can set the variables `gnus-button-*-level' local to specific groups
-(*note Group Parameters::).  Here's an example for the variable
-`gnus-parameters':
-
-     ;; increase `gnus-button-*-level' in some groups:
-     (setq gnus-parameters
-           '(("\\<\\(emacs\\|gnus\\)\\>" (gnus-button-emacs-level 10))
-             ("\\<unix\\>"               (gnus-button-man-level 10))
-             ("\\<tex\\>"                (gnus-button-tex-level 10))))
-
-`gnus-button-browse-level'
-     Controls the display of references to message IDs, mail addresses
-     and news URLs.  Related variables and functions include
-     `gnus-button-url-regexp', `browse-url', and
-     `browse-url-browser-function'.
-
-`gnus-button-emacs-level'
-     Controls the display of Emacs or Gnus references.  Related
-     functions are `gnus-button-handle-custom',
-     `gnus-button-handle-describe-function',
-     `gnus-button-handle-describe-variable',
-     `gnus-button-handle-symbol', `gnus-button-handle-describe-key',
-     `gnus-button-handle-apropos', `gnus-button-handle-apropos-command',
-     `gnus-button-handle-apropos-variable',
-     `gnus-button-handle-apropos-documentation', and
-     `gnus-button-handle-library'.
-
-`gnus-button-man-level'
-     Controls the display of references to (Unix) man pages.  See
-     `gnus-button-man-handler'.
-
-`gnus-button-message-level'
-     Controls the display of message IDs, mail addresses and news URLs.
-     Related variables and functions include
-     `gnus-button-mid-or-mail-regexp', `gnus-button-prefer-mid-or-mail',
-     `gnus-button-mid-or-mail-heuristic', and
-     `gnus-button-mid-or-mail-heuristic-alist'.
-
-`gnus-button-tex-level'
-     Controls the display of references to TeX or LaTeX stuff, e.g. for
-     CTAN URLs.  See the variables `gnus-ctan-url',
-     `gnus-button-ctan-handler', `gnus-button-ctan-directory-regexp',
-     and `gnus-button-handle-ctan-bogus-regexp'.
-
-
-
-File: gnus,  Node: Article Date,  Next: Article Display,  Prev: Article Button Levels,  Up: Article Treatment
-
-3.17.8 Article Date
--------------------
-
-The date is most likely generated in some obscure timezone you've never
-heard of, so it's quite nice to be able to find out what the time was
-when the article was sent.
-
-`W T u'
-     Display the date in UT (aka. GMT, aka ZULU)
-     (`gnus-article-date-ut').
-
-`W T i'
-     Display the date in international format, aka. ISO 8601
-     (`gnus-article-date-iso8601').
-
-`W T l'
-     Display the date in the local timezone (`gnus-article-date-local').
-
-`W T p'
-     Display the date in a format that's easily pronounceable in English
-     (`gnus-article-date-english').
-
-`W T s'
-     Display the date using a user-defined format
-     (`gnus-article-date-user').  The format is specified by the
-     `gnus-article-time-format' variable, and is a string that's passed
-     to `format-time-string'.  See the documentation of that variable
-     for a list of possible format specs.
-
-`W T e'
-     Say how much time has elapsed between the article was posted and
-     now (`gnus-article-date-lapsed').  It looks something like:
-
-          X-Sent: 6 weeks, 4 days, 1 hour, 3 minutes, 8 seconds ago
-
-     The value of `gnus-article-date-lapsed-new-header' determines
-     whether this header will just be added below the old Date one, or
-     will replace it.
-
-     An advantage of using Gnus to read mail is that it converts simple
-     bugs into wonderful absurdities.
-
-     If you want to have this line updated continually, you can put
-
-          (gnus-start-date-timer)
-
-     in your `~/.gnus.el' file, or you can run it off of some hook.  If
-     you want to stop the timer, you can use the `gnus-stop-date-timer'
-     command.
-
-`W T o'
-     Display the original date (`gnus-article-date-original').  This can
-     be useful if you normally use some other conversion function and
-     are worried that it might be doing something totally wrong.  Say,
-     claiming that the article was posted in 1854.  Although something
-     like that is _totally_ impossible.  Don't you trust me? *titter*
-
-
-   *Note Customizing Articles::, for how to display the date in your
-preferred format automatically.
-
-
-File: gnus,  Node: Article Display,  Next: Article Signature,  Prev: Article Date,  Up: Article Treatment
-
-3.17.9 Article Display
-----------------------
-
-These commands add various frivolous display gimmicks to the article
-buffer in Emacs versions that support them.
-
-   `X-Face' headers are small black-and-white images supplied by the
-message headers (*note X-Face::).
-
-   `Face' headers are small colored images supplied by the message
-headers (*note Face::).
-
-   Smileys are those little `:-)' symbols that people like to litter
-their messages with (*note Smileys::).
-
-   Picons, on the other hand, reside on your own system, and Gnus will
-try to match the headers to what you have (*note Picons::).
-
-   All these functions are toggles--if the elements already exist,
-they'll be removed.
-
-`W D x'
-     Display an `X-Face' in the `From' header.
-     (`gnus-article-display-x-face').
-
-`W D d'
-     Display a `Face' in the `From' header.
-     (`gnus-article-display-face').
-
-`W D s'
-     Display smileys (`gnus-treat-smiley').
-
-`W D f'
-     Piconify the `From' header (`gnus-treat-from-picon').
-
-`W D m'
-     Piconify all mail headers (i. e., `Cc', `To')
-     (`gnus-treat-mail-picon').
-
-`W D n'
-     Piconify all news headers (i. e., `Newsgroups' and `Followup-To')
-     (`gnus-treat-newsgroups-picon').
-
-`W D D'
-     Remove all images from the article buffer
-     (`gnus-article-remove-images').
-
-
-
-File: gnus,  Node: Article Signature,  Next: Article Miscellanea,  Prev: Article Display,  Up: Article Treatment
-
-3.17.10 Article Signature
--------------------------
-
-Each article is divided into two parts--the head and the body.  The
-body can be divided into a signature part and a text part.  The variable
-that says what is to be considered a signature is
-`gnus-signature-separator'.  This is normally the standard `^-- $' as
-mandated by son-of-RFC 1036.  However, many people use non-standard
-signature separators, so this variable can also be a list of regular
-expressions to be tested, one by one.  (Searches are done from the end
-of the body towards the beginning.)  One likely value is:
-
-     (setq gnus-signature-separator
-           '("^-- $"         ; The standard
-             "^-- *$"        ; A common mangling
-             "^-------*$"    ; Many people just use a looong
-                             ; line of dashes.  Shame!
-             "^ *--------*$" ; Double-shame!
-             "^________*$"   ; Underscores are also popular
-             "^========*$")) ; Pervert!
-
-   The more permissive you are, the more likely it is that you'll get
-false positives.
-
-   `gnus-signature-limit' provides a limit to what is considered a
-signature when displaying articles.
-
-  1. If it is an integer, no signature may be longer (in characters)
-     than that integer.
-
-  2. If it is a floating point number, no signature may be longer (in
-     lines) than that number.
-
-  3. If it is a function, the function will be called without any
-     parameters, and if it returns `nil', there is no signature in the
-     buffer.
-
-  4. If it is a string, it will be used as a regexp.  If it matches,
-     the text in question is not a signature.
-
-   This variable can also be a list where the elements may be of the
-types listed above.  Here's an example:
-
-     (setq gnus-signature-limit
-           '(200.0 "^---*Forwarded article"))
-
-   This means that if there are more than 200 lines after the signature
-separator, or the text after the signature separator is matched by the
-regular expression `^---*Forwarded article', then it isn't a signature
-after all.
-
-
-File: gnus,  Node: Article Miscellanea,  Prev: Article Signature,  Up: Article Treatment
-
-3.17.11 Article Miscellanea
----------------------------
-
-`A t'
-     Translate the article from one language to another
-     (`gnus-article-babel').
-
-
-
-File: gnus,  Node: MIME Commands,  Next: Charsets,  Prev: Article Treatment,  Up: Summary Buffer
-
-3.18 MIME Commands
-==================
-
-The following commands all understand the numerical prefix.  For
-instance, `3 b' means "view the third MIME part".
-
-`b'
-`K v'
-     View the MIME part.
-
-`K o'
-     Save the MIME part.
-
-`K c'
-     Copy the MIME part.
-
-`K e'
-     View the MIME part externally.
-
-`K i'
-     View the MIME part internally.
-
-`K |'
-     Pipe the MIME part to an external command.
-
-   The rest of these MIME commands do not use the numerical prefix in
-the same manner:
-
-`K b'
-     Make all the MIME parts have buttons in front of them.  This is
-     mostly useful if you wish to save (or perform other actions) on
-     inlined parts.
-
-`K m'
-     Some multipart messages are transmitted with missing or faulty
-     headers.  This command will attempt to "repair" these messages so
-     that they can be viewed in a more pleasant manner
-     (`gnus-summary-repair-multipart').
-
-`X m'
-     Save all parts matching a MIME type to a directory
-     (`gnus-summary-save-parts').  Understands the process/prefix
-     convention (*note Process/Prefix::).
-
-`M-t'
-     Toggle the buttonized display of the article buffer
-     (`gnus-summary-toggle-display-buttonized').
-
-`W M w'
-     Decode RFC 2047-encoded words in the article headers
-     (`gnus-article-decode-mime-words').
-
-`W M c'
-     Decode encoded article bodies as well as charsets
-     (`gnus-article-decode-charset').
-
-     This command looks in the `Content-Type' header to determine the
-     charset.  If there is no such header in the article, you can give
-     it a prefix, which will prompt for the charset to decode as.  In
-     regional groups where people post using some common encoding (but
-     do not include MIME headers), you can set the `charset' group/topic
-     parameter to the required charset (*note Group Parameters::).
-
-`W M v'
-     View all the MIME parts in the current article
-     (`gnus-mime-view-all-parts').
-
-
-   Relevant variables:
-
-`gnus-ignored-mime-types'
-     This is a list of regexps.  MIME types that match a regexp from
-     this list will be completely ignored by Gnus.  The default value is
-     `nil'.
-
-     To have all Vcards be ignored, you'd say something like this:
-
-          (setq gnus-ignored-mime-types
-                '("text/x-vcard"))
-
-`gnus-article-loose-mime'
-     If non-`nil', Gnus won't require the `MIME-Version' header before
-     interpreting the message as a MIME message.  This helps when
-     reading messages from certain broken mail user agents.  The
-     default is `nil'.
-
-`gnus-article-emulate-mime'
-     There are other, non-MIME encoding methods used.  The most common
-     is `uuencode', but yEncode is also getting to be popular.  If this
-     variable is non-`nil', Gnus will look in message bodies to see if
-     it finds these encodings, and if so, it'll run them through the
-     Gnus MIME machinery.  The default is `t'.  Only single-part yEnc
-     encoded attachments can be decoded.  There's no support for
-     encoding in Gnus.
-
-`gnus-unbuttonized-mime-types'
-     This is a list of regexps.  MIME types that match a regexp from
-     this list won't have MIME buttons inserted unless they aren't
-     displayed or this variable is overridden by
-     `gnus-buttonized-mime-types'.  The default value is `(".*/.*")'.
-     This variable is only used when `gnus-inhibit-mime-unbuttonizing'
-     is `nil'.
-
-`gnus-buttonized-mime-types'
-     This is a list of regexps.  MIME types that match a regexp from
-     this list will have MIME buttons inserted unless they aren't
-     displayed.  This variable overrides
-     `gnus-unbuttonized-mime-types'.  The default value is `nil'.  This
-     variable is only used when `gnus-inhibit-mime-unbuttonizing' is
-     `nil'.
-
-     To see e.g. security buttons but no other buttons, you could set
-     this variable to `("multipart/signed")' and leave
-     `gnus-unbuttonized-mime-types' at the default value.
-
-     You could also add `"multipart/alternative"' to this list to
-     display radio buttons that allow you to choose one of two media
-     types those mails include.  See also `mm-discouraged-alternatives'
-     (*note Display Customization: (emacs-mime)Display Customization.).
-
-`gnus-inhibit-mime-unbuttonizing'
-     If this is non-`nil', then all MIME parts get buttons.  The
-     default value is `nil'.
-
-`gnus-article-mime-part-function'
-     For each MIME part, this function will be called with the MIME
-     handle as the parameter.  The function is meant to be used to allow
-     users to gather information from the article (e. g., add Vcard
-     info to the bbdb database) or to do actions based on parts (e. g.,
-     automatically save all jpegs into some directory).
-
-     Here's an example function the does the latter:
-
-          (defun my-save-all-jpeg-parts (handle)
-            (when (equal (car (mm-handle-type handle)) "image/jpeg")
-              (with-temp-buffer
-                (insert (mm-get-part handle))
-                (write-region (point-min) (point-max)
-                              (read-file-name "Save jpeg to: ")))))
-          (setq gnus-article-mime-part-function
-                'my-save-all-jpeg-parts)
-
-`gnus-mime-multipart-functions'
-     Alist of MIME multipart types and functions to handle them.
-
-`gnus-mime-display-multipart-alternative-as-mixed'
-     Display "multipart/alternative" parts as "multipart/mixed".
-
-`gnus-mime-display-multipart-related-as-mixed'
-     Display "multipart/related" parts as "multipart/mixed".
-
-     If displaying `text/html' is discouraged, see
-     `mm-discouraged-alternatives', images or other material inside a
-     "multipart/related" part might be overlooked when this variable is
-     `nil'.  *note Display Customization: (emacs-mime)Display
-     Customization.
-
-`gnus-mime-display-multipart-as-mixed'
-     Display "multipart" parts as "multipart/mixed".  If `t', it
-     overrides `nil' values of
-     `gnus-mime-display-multipart-alternative-as-mixed' and
-     `gnus-mime-display-multipart-related-as-mixed'.
-
-`mm-file-name-rewrite-functions'
-     List of functions used for rewriting file names of MIME parts.
-     Each function takes a file name as input and returns a file name.
-
-     Ready-made functions include
-     `mm-file-name-delete-whitespace', `mm-file-name-trim-whitespace',
-     `mm-file-name-collapse-whitespace', and
-     `mm-file-name-replace-whitespace'.  The later uses the value of
-     the variable `mm-file-name-replace-whitespace' to replace each
-     whitespace character in a file name with that string; default value
-     is `"_"' (a single underscore).  
-
-     The standard functions `capitalize', `downcase', `upcase', and
-     `upcase-initials' may be useful, too.
-
-     Everybody knows that whitespace characters in file names are evil,
-     except those who don't know.  If you receive lots of attachments
-     from such unenlightened users, you can make live easier by adding
-
-          (setq mm-file-name-rewrite-functions
-                '(mm-file-name-trim-whitespace
-                  mm-file-name-collapse-whitespace
-                  mm-file-name-replace-whitespace))
-
-     to your `~/.gnus.el' file.
-
-
-
-File: gnus,  Node: Charsets,  Next: Article Commands,  Prev: MIME Commands,  Up: Summary Buffer
-
-3.19 Charsets
-=============
-
-People use different charsets, and we have MIME to let us know what
-charsets they use.  Or rather, we wish we had.  Many people use
-newsreaders and mailers that do not understand or use MIME, and just
-send out messages without saying what character sets they use.  To help
-a bit with this, some local news hierarchies have policies that say
-what character set is the default.  For instance, the `fj' hierarchy
-uses `iso-2022-jp'.
-
-   This knowledge is encoded in the `gnus-group-charset-alist'
-variable, which is an alist of regexps (use the first item to match full
-group names) and default charsets to be used when reading these groups.
-
-   In addition, some people do use soi-disant MIME-aware agents that
-aren't.  These blithely mark messages as being in `iso-8859-1' even if
-they really are in `koi-8'.  To help here, the
-`gnus-newsgroup-ignored-charsets' variable can be used.  The charsets
-that are listed here will be ignored.  The variable can be set on a
-group-by-group basis using the group parameters (*note Group
-Parameters::).  The default value is `(unknown-8bit x-unknown)', which
-includes values some agents insist on having in there.
-
-   When posting, `gnus-group-posting-charset-alist' is used to
-determine which charsets should not be encoded using the MIME
-encodings.  For instance, some hierarchies discourage using
-quoted-printable header encoding.
-
-   This variable is an alist of regexps and permitted unencoded charsets
-for posting.  Each element of the alist has the form `('TEST HEADER
-BODY-LIST`)', where:
-
-TEST
-     is either a regular expression matching the newsgroup header or a
-     variable to query,
-
-HEADER
-     is the charset which may be left unencoded in the header (`nil'
-     means encode all charsets),
-
-BODY-LIST
-     is a list of charsets which may be encoded using 8bit
-     content-transfer encoding in the body, or one of the special
-     values `nil' (always encode using quoted-printable) or `t' (always
-     use 8bit).
-
-   *Note Encoding Customization: (emacs-mime)Encoding Customization,
-for additional variables that control which MIME charsets are used when
-sending messages.
-
-   Other charset tricks that may be useful, although not Gnus-specific:
-
-   If there are several MIME charsets that encode the same Emacs
-charset, you can choose what charset to use by saying the following:
-
-     (put-charset-property 'cyrillic-iso8859-5
-                           'preferred-coding-system 'koi8-r)
-
-   This means that Russian will be encoded using `koi8-r' instead of
-the default `iso-8859-5' MIME charset.
-
-   If you want to read messages in `koi8-u', you can cheat and say
-
-     (define-coding-system-alias 'koi8-u 'koi8-r)
-
-   This will almost do the right thing.
-
-   And finally, to read charsets like `windows-1251', you can say
-something like
-
-     (codepage-setup 1251)
-     (define-coding-system-alias 'windows-1251 'cp1251)
-
-
-File: gnus,  Node: Article Commands,  Next: Summary Sorting,  Prev: Charsets,  Up: Summary Buffer
-
-3.20 Article Commands
-=====================
-
-`A P'
-     Generate and print a PostScript image of the article buffer
-     (`gnus-summary-print-article').  `gnus-ps-print-hook' will be run
-     just before printing the buffer.  An alternative way to print
-     article is to use Muttprint (*note Saving Articles::).
-
-
-
-File: gnus,  Node: Summary Sorting,  Next: Finding the Parent,  Prev: Article Commands,  Up: Summary Buffer
-
-3.21 Summary Sorting
-====================
-
-You can have the summary buffer sorted in various ways, even though I
-can't really see why you'd want that.
-
-`C-c C-s C-n'
-     Sort by article number (`gnus-summary-sort-by-number').
-
-`C-c C-s C-a'
-     Sort by author (`gnus-summary-sort-by-author').
-
-`C-c C-s C-s'
-     Sort by subject (`gnus-summary-sort-by-subject').
-
-`C-c C-s C-d'
-     Sort by date (`gnus-summary-sort-by-date').
-
-`C-c C-s C-l'
-     Sort by lines (`gnus-summary-sort-by-lines').
-
-`C-c C-s C-c'
-     Sort by article length (`gnus-summary-sort-by-chars').
-
-`C-c C-s C-i'
-     Sort by score (`gnus-summary-sort-by-score').
-
-`C-c C-s C-r'
-     Randomize (`gnus-summary-sort-by-random').
-
-`C-c C-s C-o'
-     Sort using the default sorting method
-     (`gnus-summary-sort-by-original').
-
-   These functions will work both when you use threading and when you
-don't use threading.  In the latter case, all summary lines will be
-sorted, line by line.  In the former case, sorting will be done on a
-root-by-root basis, which might not be what you were looking for.  To
-toggle whether to use threading, type `T T' (*note Thread Commands::).
-
-
-File: gnus,  Node: Finding the Parent,  Next: Alternative Approaches,  Prev: Summary Sorting,  Up: Summary Buffer
-
-3.22 Finding the Parent
-=======================
-
-`^'
-     If you'd like to read the parent of the current article, and it is
-     not displayed in the summary buffer, you might still be able to.
-     That is, if the current group is fetched by NNTP, the parent
-     hasn't expired and the `References' in the current article are not
-     mangled, you can just press `^' or `A r'
-     (`gnus-summary-refer-parent-article').  If everything goes well,
-     you'll get the parent.  If the parent is already displayed in the
-     summary buffer, point will just move to this article.
-
-     If given a positive numerical prefix, fetch that many articles
-     back into the ancestry.  If given a negative numerical prefix,
-     fetch just that ancestor.  So if you say `3 ^', Gnus will fetch
-     the parent, the grandparent and the grandgrandparent of the
-     current article.  If you say `-3 ^', Gnus will only fetch the
-     grandgrandparent of the current article.
-
-`A R (Summary)'
-     Fetch all articles mentioned in the `References' header of the
-     article (`gnus-summary-refer-references').
-
-`A T (Summary)'
-     Display the full thread where the current article appears
-     (`gnus-summary-refer-thread').  This command has to fetch all the
-     headers in the current group to work, so it usually takes a while.
-     If you do it often, you may consider setting
-     `gnus-fetch-old-headers' to `invisible' (*note Filling In
-     Threads::).  This won't have any visible effects normally, but
-     it'll make this command work a whole lot faster.  Of course, it'll
-     make group entry somewhat slow.
-
-     The `gnus-refer-thread-limit' variable says how many old (i. e.,
-     articles before the first displayed in the current group) headers
-     to fetch when doing this command.  The default is 200.  If `t', all
-     the available headers will be fetched.  This variable can be
-     overridden by giving the `A T' command a numerical prefix.
-
-`M-^ (Summary)'
-     You can also ask Gnus for an arbitrary article, no matter what
-     group it belongs to.  `M-^' (`gnus-summary-refer-article') will
-     ask you for a `Message-ID', which is one of those long,
-     hard-to-read thingies that look something like
-     `<38o6up$6f2@hymir.ifi.uio.no>'.  You have to get it all exactly
-     right.  No fuzzy searches, I'm afraid.
-
-     Gnus looks for the `Message-ID' in the headers that have already
-     been fetched, but also tries all the select methods specified by
-     `gnus-refer-article-method' if it is not found.
-
-   If the group you are reading is located on a back end that does not
-support fetching by `Message-ID' very well (like `nnspool'), you can
-set `gnus-refer-article-method' to an NNTP method.  It would, perhaps,
-be best if the NNTP server you consult is the one updating the spool
-you are reading from, but that's not really necessary.
-
-   It can also be a list of select methods, as well as the special
-symbol `current', which means to use the current select method.  If it
-is a list, Gnus will try all the methods in the list until it finds a
-match.
-
-   Here's an example setting that will first try the current method, and
-then ask Google if that fails:
-
-     (setq gnus-refer-article-method
-           '(current
-             (nnweb "google" (nnweb-type google))))
-
-   Most of the mail back ends support fetching by `Message-ID', but do
-not do a particularly excellent job at it.  That is, `nnmbox',
-`nnbabyl', `nnmaildir', `nnml', are able to locate articles from any
-groups, while `nnfolder', and `nnimap' are only able to locate articles
-that have been posted to the current group.  (Anything else would be
-too time consuming.)  `nnmh' does not support this at all.
-
-
-File: gnus,  Node: Alternative Approaches,  Next: Tree Display,  Prev: Finding the Parent,  Up: Summary Buffer
-
-3.23 Alternative Approaches
-===========================
-
-Different people like to read news using different methods.  This being
-Gnus, we offer a small selection of minor modes for the summary buffers.
-
-* Menu:
-
-* Pick and Read::               First mark articles and then read them.
-* Binary Groups::               Auto-decode all articles.
-
-
-File: gnus,  Node: Pick and Read,  Next: Binary Groups,  Up: Alternative Approaches
-
-3.23.1 Pick and Read
---------------------
-
-Some newsreaders (like `nn' and, uhm, `Netnews' on VM/CMS) use a
-two-phased reading interface.  The user first marks in a summary buffer
-the articles she wants to read.  Then she starts reading the articles
-with just an article buffer displayed.
-
-   Gnus provides a summary buffer minor mode that allows
-this--`gnus-pick-mode'.  This basically means that a few process mark
-commands become one-keystroke commands to allow easy marking, and it
-provides one additional command for switching to the summary buffer.
-
-   Here are the available keystrokes when using pick mode:
-
-`.'
-     Pick the article or thread on the current line
-     (`gnus-pick-article-or-thread').  If the variable
-     `gnus-thread-hide-subtree' is true, then this key selects the
-     entire thread when used at the first article of the thread.
-     Otherwise, it selects just the article.  If given a numerical
-     prefix, go to that thread or article and pick it.  (The line
-     number is normally displayed at the beginning of the summary pick
-     lines.)
-
-`SPACE'
-     Scroll the summary buffer up one page (`gnus-pick-next-page').  If
-     at the end of the buffer, start reading the picked articles.
-
-`u'
-     Unpick the thread or article
-     (`gnus-pick-unmark-article-or-thread').  If the variable
-     `gnus-thread-hide-subtree' is true, then this key unpicks the
-     thread if used at the first article of the thread.  Otherwise it
-     unpicks just the article.  You can give this key a numerical
-     prefix to unpick the thread or article at that line.
-
-`RET'
-     Start reading the picked articles (`gnus-pick-start-reading').  If
-     given a prefix, mark all unpicked articles as read first.  If
-     `gnus-pick-display-summary' is non-`nil', the summary buffer will
-     still be visible when you are reading.
-
-
-   All the normal summary mode commands are still available in the
-pick-mode, with the exception of `u'.  However `!' is available which
-is mapped to the same function `gnus-summary-tick-article-forward'.
-
-   If this sounds like a good idea to you, you could say:
-
-     (add-hook 'gnus-summary-mode-hook 'gnus-pick-mode)
-
-   `gnus-pick-mode-hook' is run in pick minor mode buffers.
-
-   If `gnus-mark-unpicked-articles-as-read' is non-`nil', mark all
-unpicked articles as read.  The default is `nil'.
-
-   The summary line format in pick mode is slightly different from the
-standard format.  At the beginning of each line the line number is
-displayed.  The pick mode line format is controlled by the
-`gnus-summary-pick-line-format' variable (*note Formatting
-Variables::).  It accepts the same format specs that
-`gnus-summary-line-format' does (*note Summary Buffer Lines::).
-
-
-File: gnus,  Node: Binary Groups,  Prev: Pick and Read,  Up: Alternative Approaches
-
-3.23.2 Binary Groups
---------------------
-
-If you spend much time in binary groups, you may grow tired of hitting
-`X u', `n', `RET' all the time.  `M-x gnus-binary-mode' is a minor mode
-for summary buffers that makes all ordinary Gnus article selection
-functions uudecode series of articles and display the result instead of
-just displaying the articles the normal way.
-
-   The only way, in fact, to see the actual articles is the `g'
-command, when you have turned on this mode (`gnus-binary-show-article').
-
-   `gnus-binary-mode-hook' is called in binary minor mode buffers.
-
-
-File: gnus,  Node: Tree Display,  Next: Mail Group Commands,  Prev: Alternative Approaches,  Up: Summary Buffer
-
-3.24 Tree Display
-=================
-
-If you don't like the normal Gnus summary display, you might try setting
-`gnus-use-trees' to `t'.  This will create (by default) an additional
-"tree buffer".  You can execute all summary mode commands in the tree
-buffer.
-
-   There are a few variables to customize the tree display, of course:
-
-`gnus-tree-mode-hook'
-     A hook called in all tree mode buffers.
-
-`gnus-tree-mode-line-format'
-     A format string for the mode bar in the tree mode buffers (*note
-     Mode Line Formatting::).  The default is `Gnus: %%b %S %Z'.  For a
-     list of valid specs, *note Summary Buffer Mode Line::.
-
-`gnus-selected-tree-face'
-     Face used for highlighting the selected article in the tree
-     buffer.  The default is `modeline'.
-
-`gnus-tree-line-format'
-     A format string for the tree nodes.  The name is a bit of a
-     misnomer, though--it doesn't define a line, but just the node.
-     The default value is `%(%[%3,3n%]%)', which displays the first
-     three characters of the name of the poster.  It is vital that all
-     nodes are of the same length, so you _must_ use `%4,4n'-like
-     specifiers.
-
-     Valid specs are:
-
-    `n'
-          The name of the poster.
-
-    `f'
-          The `From' header.
-
-    `N'
-          The number of the article.
-
-    `['
-          The opening bracket.
-
-    `]'
-          The closing bracket.
-
-    `s'
-          The subject.
-
-     *Note Formatting Variables::.
-
-     Variables related to the display are:
-
-    `gnus-tree-brackets'
-          This is used for differentiating between "real" articles and
-          "sparse" articles.  The format is
-               ((REAL-OPEN . REAL-CLOSE)
-                (SPARSE-OPEN . SPARSE-CLOSE)
-                (DUMMY-OPEN . DUMMY-CLOSE))
-          and the default is `((?[ . ?]) (?( . ?)) (?{ . ?}) (?< .
-          ?>))'.
-
-    `gnus-tree-parent-child-edges'
-          This is a list that contains the characters used for
-          connecting parent nodes to their children.  The default is
-          `(?- ?\\ ?|)'.
-
-
-`gnus-tree-minimize-window'
-     If this variable is non-`nil', Gnus will try to keep the tree
-     buffer as small as possible to allow more room for the other Gnus
-     windows.  If this variable is a number, the tree buffer will never
-     be higher than that number.  The default is `t'.  Note that if you
-     have several windows displayed side-by-side in a frame and the tree
-     buffer is one of these, minimizing the tree window will also
-     resize all other windows displayed next to it.
-
-     You may also wish to add the following hook to keep the window
-     minimized at all times:
-
-          (add-hook 'gnus-configure-windows-hook
-                    'gnus-tree-perhaps-minimize)
-
-`gnus-generate-tree-function'
-     The function that actually generates the thread tree.  Two
-     predefined functions are available:
-     `gnus-generate-horizontal-tree' and `gnus-generate-vertical-tree'
-     (which is the default).
-
-
-   Here's an example from a horizontal tree buffer:
-
-     {***}-(***)-[odd]-[Gun]
-          |      \[Jan]
-          |      \[odd]-[Eri]
-          |      \(***)-[Eri]
-          |            \[odd]-[Paa]
-          \[Bjo]
-          \[Gun]
-          \[Gun]-[Jor]
-
-   Here's the same thread displayed in a vertical tree buffer:
-
-     {***}
-       |--------------------------\-----\-----\
-     (***)                         [Bjo] [Gun] [Gun]
-       |--\-----\-----\                          |
-     [odd] [Jan] [odd] (***)                   [Jor]
-       |           |     |--\
-     [Gun]       [Eri] [Eri] [odd]
-                               |
-                             [Paa]
-
-   If you're using horizontal trees, it might be nice to display the
-trees side-by-side with the summary buffer.  You could add something
-like the following to your `~/.gnus.el' file:
-
-     (setq gnus-use-trees t
-           gnus-generate-tree-function 'gnus-generate-horizontal-tree
-           gnus-tree-minimize-window nil)
-     (gnus-add-configuration
-      '(article
-        (vertical 1.0
-                  (horizontal 0.25
-                              (summary 0.75 point)
-                              (tree 1.0))
-                  (article 1.0))))
-
-   *Note Window Layout::.
-
+Local Variables:
+coding: iso-8859-1
+End:

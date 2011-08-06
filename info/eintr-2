@@ -1,4 +1,4 @@
-This is ../info/eintr, produced by makeinfo version 4.11 from
+This is ../../info/eintr, produced by makeinfo version 4.11 from
 emacs-lisp-intro.texi.
 
 INFO-DIR-SECTION Emacs
@@ -10,10 +10,11 @@ END-INFO-DIR-ENTRY
    This is an `Introduction to Programming in Emacs Lisp', for people
 who are not programmers.
 
-   Edition 3.07, 9 November 2006
+   Edition 3.08, 4 October 2008
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1997, 2001,
-2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software
+Foundation, Inc.
 
    Published by the:
 
@@ -27,16 +28,16 @@ who are not programmers.
    ISBN 1-882114-43-4
 
    Permission is granted to copy, distribute and/or modify this document
-under the terms of the GNU Free Documentation License, Version 1.2 or
+under the terms of the GNU Free Documentation License, Version 1.3 or
 any later version published by the Free Software Foundation; there
 being no Invariant Section, with the Front-Cover Texts being "A GNU
 Manual", and with the Back-Cover Texts as in (a) below.  A copy of the
 license is included in the section entitled "GNU Free Documentation
 License".
 
-   (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-modify this GNU Manual, like GNU software.  Copies published by the
-Free Software Foundation raise funds for GNU development."
+   (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+modify this GNU manual.  Buying copies from the FSF supports it in
+developing GNU and promoting software freedom."
 
 
 File: eintr,  Node: Digression into C,  Next: defvar,  Prev: copy-region-as-kill,  Up: Cutting & Storing Text
@@ -260,9 +261,9 @@ instead, since that special form provides a path into the Customization
 commands.  (*Note Specifying Variables using `defcustom': defcustom.)
 
    When you specified a variable using the `defvar' special form, you
-could distinguish a readily settable variable from others by typing an
-asterisk, `*', in the first column of its documentation string.  For
-example:
+could distinguish a variable that a user might want to change from
+others by typing an asterisk, `*', in the first column of its
+documentation string.  For example:
 
      (defvar shell-command-default-error-buffer nil
        "*Buffer name for `shell-command' ... error output.
@@ -1796,8 +1797,8 @@ different thread of execution, with different arguments than the first
 instance.
 
    Put in yet another way, if the list is not empty, the first robot
-assemblies a second robot and tells it what to do; the second robot is
-a different individual from the first, but is the same model.
+assembles a second robot and tells it what to do; the second robot is a
+different individual from the first, but is the same model.
 
    When the second evaluation occurs, the `when' expression is
 evaluated and if true, prints the first element of the list it receives
@@ -1821,8 +1822,8 @@ tests the value of `list'.  Since the value of `list' is `nil', the
 `when' expression tests false so the then-part is not evaluated.  The
 function as a whole then returns `nil'.
 
-   When you evaluate `(print-elements-recursively animals)' in the
-`*scratch*' buffer, you see this result:
+   When you evaluate the expression `(print-elements-recursively
+animals)' in the `*scratch*' buffer, you see this result:
 
      gazelle
 
@@ -1944,10 +1945,10 @@ Step 2    Evaluate the innermost expression of the else-part.
 Step 3    Evaluate the `triangle-recursively' function.
      The number 2 is passed to the `triangle-recursively' function.
 
-     We know what happens when Emacs evaluates `triangle-recursively'
-     with an argument of 2.  After going through the sequence of
-     actions described earlier, it returns a value of 3.  So that is
-     what will happen here.
+     We already know what happens when Emacs evaluates
+     `triangle-recursively' with an argument of 2.  After going through
+     the sequence of actions described earlier, it returns a value of
+     3.  So that is what will happen here.
 
 Step 4    Evaluate the addition.
      3 will be passed as an argument to the addition and will be added
@@ -5991,7 +5992,7 @@ person hopes to do with an unadorned file?  Fundamental mode is the
 right default for such a file, just as C mode is the right default for
 editing C code.  (Enough programming languages have syntaxes that
 enable them to share or nearly share features, so C mode is now
-provided by by CC mode, the `C Collection'.)
+provided by CC mode, the `C Collection'.)
 
    But when you do know who is going to use Emacs--you, yourself--then
 it makes sense to customize Emacs.
@@ -6600,8 +6601,9 @@ load path:
      This is an interface to the function `load'."
        (interactive
         (list (completing-read "Load library: "
-                               'locate-file-completion
-                               (cons load-path (get-load-suffixes)))))
+     			  (apply-partially 'locate-file-completion-table
+                                                load-path
+                                                (get-load-suffixes)))))
        (load library))
 
    The name of the function, `load-library', comes from the use of
@@ -6663,8 +6665,8 @@ object--`autoload' can handle a keymap or macro as well as a function
 standard part of the distribution.)
 
 This expression autoloads the `html-helper-mode' function.  It takes it
-from the `html-helper-mode.el' file (or from the byte compiled file
-`html-helper-mode.elc', if it exists.)  The file must be located in a
+from the `html-helper-mode.el' file (or from the byte compiled version
+`html-helper-mode.elc', if that exists.)  The file must be located in a
 directory specified by `load-path'.  The documentation says that this
 is a mode to help you edit documents written in the HyperText Markup
 Language.  You can call this mode interactively by typing `M-x
@@ -6711,15 +6713,15 @@ key bindings for each different make of terminal.)
    For more information, see *note Rebinding Keys in Your Init File:
 (emacs)Init Rebinding.
 
-   If you run two versions of GNU Emacs, such as versions 21 and 22, and
+   If you run two versions of GNU Emacs, such as versions 22 and 23, and
 use one `.emacs' file, you can select which code to evaluate with the
 following conditional:
 
      (cond
-      (= 21 emacs-major-version)
+      ((= 22 emacs-major-version)
        ;; evaluate version 21 code
        ( ... ))
-      (= 22 emacs-major-version)
+      ((= 23 emacs-major-version)
        ;; evaluate version 22 code
        ( ... )))
 
@@ -6727,35 +6729,26 @@ following conditional:
 their cursors by default.  I hate such blinking, as well as other
 features, so I placed the following in my `.emacs' file(1):
 
-     (when (or (= 21 emacs-major-version)
-               (= 22 emacs-major-version))
-           (blink-cursor-mode 0)
-           ;; Insert newline when you press `C-n' (next-line)
-           ;; at the end of the buffer
-           (setq next-line-add-newlines t)
-           ;; Turn on image viewing
-           (auto-image-file-mode t)
-           ;; Turn on menu bar (this bar has text)
-           ;; (Use numeric argument to turn on)
-           (menu-bar-mode 1)
-           ;; Turn off tool bar (this bar has icons)
-           ;; (Use numeric argument to turn on)
-           (tool-bar-mode nil)
-           ;; Turn off tooltip mode for tool bar
-           ;; (This mode causes icon explanations to pop up)
-           ;; (Use numeric argument to turn on)
-           (tooltip-mode nil)
-           ;; If tooltips turned on, make tips appear promptly
-           (setq tooltip-delay 0.1)  ; default is 0.7 second
-            )
-
-   Alternatively, since `blink-cursor-mode' has existed since Emacs
-version 21 and is likely to continue, you could write
-
      (when (>= emacs-major-version 21)
        (blink-cursor-mode 0)
-
-and add other expressions, too.
+       ;; Insert newline when you press `C-n' (next-line)
+       ;; at the end of the buffer
+       (setq next-line-add-newlines t)
+       ;; Turn on image viewing
+       (auto-image-file-mode t)
+       ;; Turn on menu bar (this bar has text)
+       ;; (Use numeric argument to turn on)
+       (menu-bar-mode 1)
+       ;; Turn off tool bar (this bar has icons)
+       ;; (Use numeric argument to turn on)
+       (tool-bar-mode nil)
+       ;; Turn off tooltip mode for tool bar
+       ;; (This mode causes icon explanations to pop up)
+       ;; (Use numeric argument to turn on)
+       (tooltip-mode nil)
+       ;; If tooltips turned on, make tips appear promptly
+       (setq tooltip-delay 0.1)  ; default is 0.7 second
+       )
 
    ---------- Footnotes ----------
 
@@ -7342,7 +7335,7 @@ after the function's closing parenthesis and typing `C-x C-e'
 (`eval-last-sexp') or else by positioning your cursor within the
 definition and typing `C-M-x' (`eval-defun').  (By default, the
 `eval-defun' command works only in Emacs Lisp mode or in Lisp
-Interactive mode.)
+Interaction mode.)
 
    However, to prepare this function definition for Edebug, you must
 first "instrument" the code using a different command.  You can do this

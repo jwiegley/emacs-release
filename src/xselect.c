@@ -1,13 +1,13 @@
 /* X Selection processing for Emacs.
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 /* Rewritten by jwz */
@@ -123,13 +121,6 @@ Lisp_Object QCUT_BUFFER0, QCUT_BUFFER1, QCUT_BUFFER2, QCUT_BUFFER3,
 
 static Lisp_Object Vx_lost_selection_functions;
 static Lisp_Object Vx_sent_selection_functions;
-/* Coding system for communicating with other X clients via selection
-   and clipboard.  */
-static Lisp_Object Vselection_coding_system;
-
-/* Coding system for the next communicating with other X clients.  */
-static Lisp_Object Vnext_selection_coding_system;
-
 static Lisp_Object Qforeign_selection;
 
 /* If this is a smaller number than the max-request-size of the display,
@@ -140,11 +131,7 @@ static Lisp_Object Qforeign_selection;
    incremental transfer stuff, but it might improve server performance.  */
 #define MAX_SELECTION_QUANTUM 0xFFFFFF
 
-#ifdef HAVE_X11R4
 #define SELECTION_QUANTUM(dpy) ((XMaxRequestSize(dpy) << 2) - 100)
-#else
-#define SELECTION_QUANTUM(dpy) (((dpy)->max_request_size << 2) - 100)
-#endif
 
 /* The timestamp of the last input event Emacs received from the X server.  */
 /* Defined in keyboard.c.  */
@@ -398,12 +385,19 @@ x_own_selection (selection_name, selection_value)
      Lisp_Object selection_name, selection_value;
 {
   struct frame *sf = SELECTED_FRAME ();
-  Window selecting_window = FRAME_X_WINDOW (sf);
-  Display *display = FRAME_X_DISPLAY (sf);
+  Window selecting_window;
+  Display *display;
   Time time = last_event_timestamp;
   Atom selection_atom;
-  struct x_display_info *dpyinfo = FRAME_X_DISPLAY_INFO (sf);
+  struct x_display_info *dpyinfo;
 
+  if (! FRAME_X_P (sf))
+    return;
+
+  selecting_window = FRAME_X_WINDOW (sf);
+  display = FRAME_X_DISPLAY (sf);
+  dpyinfo = FRAME_X_DISPLAY_INFO (sf);
+  
   CHECK_SYMBOL (selection_name);
   selection_atom = symbol_to_x_atom (dpyinfo, display, selection_name);
 
@@ -435,7 +429,7 @@ x_own_selection (selection_name, selection_value)
     if (!NILP (prev_value))
       {
 	Lisp_Object rest;	/* we know it's not the CAR, so it's easy.  */
-	for (rest = Vselection_alist; !NILP (rest); rest = Fcdr (rest))
+	for (rest = Vselection_alist; CONSP (rest); rest = XCDR (rest))
 	  if (EQ (prev_value, Fcar (XCDR (rest))))
 	    {
 	      XSETCDR (rest, Fcdr (XCDR (rest)));
@@ -671,7 +665,8 @@ some_frame_on_display (dpyinfo)
 
   FOR_EACH_FRAME (list, frame)
     {
-      if (FRAME_X_DISPLAY_INFO (XFRAME (frame)) == dpyinfo)
+      if (FRAME_X_P (XFRAME (frame))
+          && FRAME_X_DISPLAY_INFO (XFRAME (frame)) == dpyinfo)
 	return frame;
     }
 
@@ -813,7 +808,7 @@ x_reply_selection_request (event, format, data, size, type)
 	{
           int i = ((bytes_remaining < max_bytes)
                    ? bytes_remaining
-                   : max_bytes);
+                   : max_bytes) / format_bytes;
 
 	  BLOCK_INPUT;
 
@@ -821,15 +816,18 @@ x_reply_selection_request (event, format, data, size, type)
 	    = expect_property_change (display, window, reply.property,
 				      PropertyDelete);
 
-	  TRACE1 ("Sending increment of %d bytes", i);
+	  TRACE1 ("Sending increment of %d elements", i);
 	  TRACE1 ("Set %s to increment data",
 		  XGetAtomName (display, reply.property));
 
 	  /* Append the next chunk of data to the property.  */
 	  XChangeProperty (display, window, reply.property, type, format,
-			   PropModeAppend, data, i / format_bytes);
-	  bytes_remaining -= i;
-	  data += i;
+			   PropModeAppend, data, i);
+	  bytes_remaining -= i * format_bytes;
+	  if (format == 32)
+	    data += i * sizeof (long);
+	  else
+	    data += i * format_bytes;
 	  XFlush (display);
 	  had_errors = x_had_errors_p (display);
 	  UNBLOCK_INPUT;
@@ -1024,7 +1022,7 @@ x_handle_selection_clear (event)
      to see if this Emacs job now owns the selection
      through that display.  */
   for (t_dpyinfo = x_display_list; t_dpyinfo; t_dpyinfo = t_dpyinfo->next)
-    if (t_dpyinfo->kboard == dpyinfo->kboard)
+    if (t_dpyinfo->terminal->kboard == dpyinfo->terminal->kboard)
       {
 	Window owner_window
 	  = XGetSelectionOwner (t_dpyinfo->display, selection);
@@ -1035,7 +1033,7 @@ x_handle_selection_clear (event)
 	  }
       }
   UNBLOCK_INPUT;
-
+  
   selection_symbol = x_atom_to_symbol (display, selection);
 
   local_selection_data = assq_no_quit (selection_symbol, Vselection_alist);
@@ -1062,7 +1060,7 @@ x_handle_selection_clear (event)
   else
     {
       Lisp_Object rest;
-      for (rest = Vselection_alist; !NILP (rest); rest = Fcdr (rest))
+      for (rest = Vselection_alist; CONSP (rest); rest = XCDR (rest))
 	if (EQ (local_selection_data, Fcar (XCDR (rest))))
 	  {
 	    XSETCDR (rest, Fcdr (XCDR (rest)));
@@ -1143,7 +1141,7 @@ x_clear_frame_selections (f)
     }
 
   /* Delete elements after the beginning of Vselection_alist.  */
-  for (rest = Vselection_alist; !NILP (rest); rest = Fcdr (rest))
+  for (rest = Vselection_alist; CONSP (rest); rest = XCDR (rest))
     if (EQ (frame, Fcar (Fcdr (Fcdr (Fcdr (Fcar (XCDR (rest))))))))
       {
 	/* Let random Lisp code notice that the selection has been stolen.  */
@@ -1383,16 +1381,25 @@ x_get_foreign_selection (selection_symbol, target_type, time_stamp)
      Lisp_Object selection_symbol, target_type, time_stamp;
 {
   struct frame *sf = SELECTED_FRAME ();
-  Window requestor_window = FRAME_X_WINDOW (sf);
-  Display *display = FRAME_X_DISPLAY (sf);
-  struct x_display_info *dpyinfo = FRAME_X_DISPLAY_INFO (sf);
+  Window requestor_window;
+  Display *display;
+  struct x_display_info *dpyinfo;
   Time requestor_time = last_event_timestamp;
-  Atom target_property = dpyinfo->Xatom_EMACS_TMP;
-  Atom selection_atom = symbol_to_x_atom (dpyinfo, display, selection_symbol);
+  Atom target_property;
+  Atom selection_atom;
   Atom type_atom;
   int secs, usecs;
   int count = SPECPDL_INDEX ();
   Lisp_Object frame;
+
+  if (! FRAME_X_P (sf))
+    return Qnil;
+
+  requestor_window = FRAME_X_WINDOW (sf);
+  display = FRAME_X_DISPLAY (sf);
+  dpyinfo = FRAME_X_DISPLAY_INFO (sf);
+  target_property = dpyinfo->Xatom_EMACS_TMP;
+  selection_atom = symbol_to_x_atom (dpyinfo, display, selection_symbol);
 
   if (CONSP (target_type))
     type_atom = symbol_to_x_atom (dpyinfo, display, XCAR (target_type));
@@ -1464,7 +1471,7 @@ x_get_foreign_selection (selection_symbol, target_type, time_stamp)
   if (NILP (XCAR (reading_selection_reply)))
     error ("Timed out waiting for reply from selection owner");
   if (EQ (XCAR (reading_selection_reply), Qlambda))
-    error ("No `%s' selection", SDATA (SYMBOL_NAME (selection_symbol)));
+    return Qnil;
 
   /* Otherwise, the selection is waiting for us on the requested property.  */
   return
@@ -1664,7 +1671,7 @@ receive_incremental_selection (display, window, property, target_type,
 	    XSelectInput (display, window, STANDARD_EVENT_SET);
 	  /* Use xfree, not XFree, because x_get_window_property
 	     calls xmalloc itself.  */
-	  if (tmp_data) xfree (tmp_data);
+	  xfree (tmp_data);
 	  break;
 	}
 
@@ -2209,6 +2216,9 @@ Disowning it means there is no such selection.  */)
   struct frame *sf = SELECTED_FRAME ();
 
   check_x ();
+  if (! FRAME_X_P (sf))
+    return Qnil;
+
   display = FRAME_X_DISPLAY (sf);
   dpyinfo = FRAME_X_DISPLAY_INFO (sf);
   CHECK_SYMBOL (selection);
@@ -2359,7 +2369,7 @@ DEFUN ("x-get-cut-buffer-internal", Fx_get_cut_buffer_internal,
 {
   Window window;
   Atom buffer_atom;
-  unsigned char *data;
+  unsigned char *data = NULL;
   int bytes;
   Atom type;
   int format;
@@ -2370,6 +2380,10 @@ DEFUN ("x-get-cut-buffer-internal", Fx_get_cut_buffer_internal,
   struct frame *sf = SELECTED_FRAME ();
 
   check_x ();
+
+  if (! FRAME_X_P (sf))
+    return Qnil;
+
   display = FRAME_X_DISPLAY (sf);
   dpyinfo = FRAME_X_DISPLAY_INFO (sf);
   window = RootWindow (display, 0); /* Cut buffers are on screen 0 */
@@ -2378,8 +2392,13 @@ DEFUN ("x-get-cut-buffer-internal", Fx_get_cut_buffer_internal,
 
   x_get_window_property (display, window, buffer_atom, &data, &bytes,
 			 &type, &format, &size, 0);
+
   if (!data || !format)
-    return Qnil;
+    {
+      if (data)
+	xfree (data);
+      return Qnil;
+    }
 
   if (format != 8 || type != XA_STRING)
     signal_error ("Cut buffer doesn't contain 8-bit data",
@@ -2410,6 +2429,10 @@ DEFUN ("x-store-cut-buffer-internal", Fx_store_cut_buffer_internal,
   struct frame *sf = SELECTED_FRAME ();
 
   check_x ();
+
+  if (! FRAME_X_P (sf))
+    return Qnil;
+
   display = FRAME_X_DISPLAY (sf);
   window = RootWindow (display, 0); /* Cut buffers are on screen 0 */
 
@@ -2457,8 +2480,8 @@ DEFUN ("x-store-cut-buffer-internal", Fx_store_cut_buffer_internal,
 
 DEFUN ("x-rotate-cut-buffers-internal", Fx_rotate_cut_buffers_internal,
        Sx_rotate_cut_buffers_internal, 1, 1, 0,
-       doc: /* Rotate the values of the cut buffers by the given number of step.
-Positive means shift the values forward, negative means backward.  */)
+       doc: /* Rotate the values of the cut buffers by N steps.
+Positive N means shift the values forward, negative means backward.  */)
      (n)
      Lisp_Object n;
 {
@@ -2466,8 +2489,12 @@ Positive means shift the values forward, negative means backward.  */)
   Atom props[8];
   Display *display;
   struct frame *sf = SELECTED_FRAME ();
-
+  
   check_x ();
+
+  if (! FRAME_X_P (sf))
+    return Qnil;
+
   display = FRAME_X_DISPLAY (sf);
   window = RootWindow (display, 0); /* Cut buffers are on screen 0 */
   CHECK_NUMBER (n);
@@ -2681,7 +2708,7 @@ If the value is 0 or the atom is not known, return the empty string.  */)
     ret = make_string (name, strlen (name));
 
   if (atom && name) XFree (name);
-  if (NILP (ret)) ret = make_string ("", 0);
+  if (NILP (ret)) ret = empty_unibyte_string;
 
   UNBLOCK_INPUT;
 
@@ -2768,15 +2795,15 @@ x_handle_dnd_message (f, event, dpyinfo, bufp)
     }
 
   vec = Fmake_vector (make_number (4), Qnil);
-  AREF (vec, 0) = SYMBOL_NAME (x_atom_to_symbol (FRAME_X_DISPLAY (f),
-                                                 event->message_type));
-  AREF (vec, 1) = frame;
-  AREF (vec, 2) = make_number (event->format);
-  AREF (vec, 3) = x_property_data_to_lisp (f,
-                                           data,
-                                           event->message_type,
-                                           event->format,
-                                           size);
+  ASET (vec, 0, SYMBOL_NAME (x_atom_to_symbol (FRAME_X_DISPLAY (f),
+					       event->message_type)));
+  ASET (vec, 1, frame);
+  ASET (vec, 2, make_number (event->format));
+  ASET (vec, 3, x_property_data_to_lisp (f,
+					 data,
+					 event->message_type,
+					 event->format,
+					 size));
 
   mouse_position_for_drop (f, &x, &y);
   bufp->kind = DRAG_N_DROP_EVENT;
@@ -2975,30 +3002,6 @@ to convert into a type that we don't know about or that is inappropriate.
 This hook doesn't let you change the behavior of Emacs's selection replies,
 it merely informs you that they have happened.  */);
   Vx_sent_selection_functions = Qnil;
-
-  DEFVAR_LISP ("selection-coding-system", &Vselection_coding_system,
-	       doc: /* Coding system for communicating with other X clients.
-
-When sending text via selection and clipboard, if the requested
-data-type is not "UTF8_STRING", the text is encoded by this coding
-system.
-
-When receiving text, if the data-type of the received text is not
-"UTF8_STRING", it is decoded by this coding system.
-
-See also the documentation of the variable `x-select-request-type' how
-to control which data-type to request for receiving text.
-
-The default value is `compound-text-with-extensions'.  */);
-  Vselection_coding_system = intern ("compound-text-with-extensions");
-
-  DEFVAR_LISP ("next-selection-coding-system", &Vnext_selection_coding_system,
-	       doc: /* Coding system for the next communication with other X clients.
-Usually, `selection-coding-system' is used for communicating with
-other X clients.  But, if this variable is set, it is used for the
-next communication only.  After the communication, this variable is
-set to nil.  */);
-  Vnext_selection_coding_system = Qnil;
 
   DEFVAR_INT ("x-selection-timeout", &x_selection_timeout,
 	      doc: /* Number of milliseconds to wait for a selection reply.

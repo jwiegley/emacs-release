@@ -1,16 +1,16 @@
 ;;; vc-hg.el --- VC backend for the mercurial version control system
 
-;; Copyright (C) 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Ivan Kanis
 ;; Keywords: tools
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -34,59 +32,61 @@
 
 ;;; Todo:
 
-;; Implement the rest of the vc interface. See the comment at the
+;; 1) Implement the rest of the vc interface. See the comment at the
 ;; beginning of vc.el. The current status is:
 
 ;; FUNCTION NAME                               STATUS
+;; BACKEND PROPERTIES
+;; * revision-granularity                      OK
+;; STATE-QUERYING FUNCTIONS
 ;; * registered (file)                         OK
 ;; * state (file)                              OK
-;; - state-heuristic (file)                    ?? PROBABLY NOT NEEDED
-;; - dir-state (dir)                           OK
-;; * workfile-version (file)                   OK
+;; - state-heuristic (file)                    NOT NEEDED
+;; - dir-status (dir update-function)          OK
+;; - dir-status-files (dir files ds uf)        OK
+;; - dir-extra-headers (dir)                   OK
+;; - dir-printer (fileinfo)                    OK
+;; * working-revision (file)                   OK
 ;; - latest-on-branch-p (file)                 ??
-;; * checkout-model (file)                     OK
+;; * checkout-model (files)                    OK
 ;; - workfile-unchanged-p (file)               OK
 ;; - mode-line-string (file)                   NOT NEEDED
-;; - dired-state-info (file)                   OK
 ;; STATE-CHANGING FUNCTIONS
-;; * register (file &optional rev comment)     OK
-;; - init-version ()                           NOT NEEDED
+;; * register (files &optional rev comment)    OK
+;; * create-repo ()                            OK
+;; - init-revision ()                          NOT NEEDED
 ;; - responsible-p (file)                      OK
 ;; - could-register (file)                     OK
 ;; - receive-file (file rev)                   ?? PROBABLY NOT NEEDED
 ;; - unregister (file)                         COMMENTED OUT, MAY BE INCORRECT
-;; * checkin (file rev comment)                OK
-;; * find-version (file rev buffer)            OK
+;; * checkin (files rev comment)               OK
+;; * find-revision (file rev buffer)           OK
 ;; * checkout (file &optional editable rev)    OK
 ;; * revert (file &optional contents-done)     OK
-;; - cancel-version (file editable)            ?? PROBABLY NOT NEEDED   
+;; - rollback (files)                          ?? PROBABLY NOT NEEDED
 ;; - merge (file rev1 rev2)                    NEEDED
 ;; - merge-news (file)                         NEEDED
-;; - steal-lock (file &optional version)       NOT NEEDED
+;; - steal-lock (file &optional revision)      NOT NEEDED
 ;; HISTORY FUNCTIONS
-;; * print-log (file &optional buffer)         OK
+;; * print-log (files &optional buffer)        OK
 ;; - log-view-mode ()                          OK
-;; - show-log-entry (version)                  NOT NEEDED, DEFAULT IS GOOD
-;; - wash-log (file)                           ??
-;; - logentry-check ()                         NOT NEEDED
+;; - show-log-entry (revision)                 NOT NEEDED, DEFAULT IS GOOD
 ;; - comment-history (file)                    NOT NEEDED
 ;; - update-changelog (files)                  NOT NEEDED
-;; * diff (file &optional rev1 rev2 buffer)    OK
-;; - revision-completion-table (file)          COMMENTED OUT AS A WORKAROUND FOR A BUG
-;; - diff-tree (dir &optional rev1 rev2)       TEST IT
+;; * diff (files &optional rev1 rev2 buffer)   OK
+;; - revision-completion-table (files)         OK?
 ;; - annotate-command (file buf &optional rev) OK
 ;; - annotate-time ()                          OK
-;; - annotate-current-time ()                  ?? NOT NEEDED
+;; - annotate-current-time ()                  NOT NEEDED
 ;; - annotate-extract-revision-at-line ()      OK
-;; SNAPSHOT SYSTEM
-;; - create-snapshot (dir name branchp)        NEEDED (probably branch?)
-;; - assign-name (file name)                   NOT NEEDED
-;; - retrieve-snapshot (dir name update)       ?? NEEDED??
+;; TAG SYSTEM
+;; - create-tag (dir name branchp)             NEEDED
+;; - retrieve-tag (dir name update)            NEEDED
 ;; MISCELLANEOUS
 ;; - make-version-backups-p (file)             ??
-;; - repository-hostname (dirname)             ?? 
-;; - previous-version (file rev)               OK
-;; - next-version (file rev)                   OK
+;; - repository-hostname (dirname)             ??
+;; - previous-revision (file rev)              OK
+;; - next-revision (file rev)                  OK
 ;; - check-headers ()                          ??
 ;; - clear-headers ()                          ??
 ;; - delete-file (file)                        TEST IT
@@ -94,7 +94,7 @@
 ;; - find-file-hook ()                         PROBABLY NOT NEEDED
 ;; - find-file-not-found-hook ()               PROBABLY NOT NEEDED
 
-;; Implement Stefan Monnier's advice:
+;; 2) Implement Stefan Monnier's advice:
 ;; vc-hg-registered and vc-hg-state
 ;; Both of those functions should be super extra careful to fail gracefully in
 ;; unexpected circumstances. The reason this is important is that any error
@@ -111,19 +111,34 @@
 
 (eval-when-compile
   (require 'cl)
-  (require 'vc))
+  (require 'vc)
+  (require 'vc-dir))
 
 ;;; Customization options
 
 (defcustom vc-hg-global-switches nil
-  "*Global switches to pass to any Hg command."
+  "Global switches to pass to any Hg command."
   :type '(choice (const :tag "None" nil)
          (string :tag "Argument String")
-         (repeat :tag "Argument List"
-             :value ("")
-             string))
+         (repeat :tag "Argument List" :value ("") string))
   :version "22.2"
   :group 'vc)
+
+(defcustom vc-hg-diff-switches t ; Hg doesn't support common args like -u
+  "String or list of strings specifying switches for Hg diff under VC.
+If nil, use the value of `vc-diff-switches'.  If t, use no switches."
+  :type '(choice (const :tag "Unspecified" nil)
+		 (const :tag "None" t)
+		 (string :tag "Argument String")
+		 (repeat :tag "Argument List" :value ("") string))
+  :version "23.1"
+  :group 'vc)
+
+
+;;; Properties of the backend
+
+(defun vc-hg-revision-granularity () 'repository)
+(defun vc-hg-checkout-model (files) 'implicit)
 
 ;;; State querying functions
 
@@ -134,15 +149,16 @@
 ;;;###autoload         (load "vc-hg")
 ;;;###autoload         (vc-hg-registered file))))
 
-;; Modelled after the similar function in vc-bzr.el
+;; Modeled after the similar function in vc-bzr.el
 (defun vc-hg-registered (file)
   "Return non-nil if FILE is registered with hg."
   (when (vc-hg-root file)           ; short cut
-    (vc-file-setprop file 'vc-state (vc-hg-state file)))) ; expensive
+    (let ((state (vc-hg-state file)))  ; expensive
+      (and state (not (memq state '(ignored unregistered)))))))
 
 (defun vc-hg-state (file)
   "Hg-specific version of `vc-state'."
-  (let* 
+  (let*
       ((status nil)
        (out
 	(with-output-to-string
@@ -153,55 +169,27 @@
 		      ;; Ignore all errors.
 		      (call-process
 		       "hg" nil t nil "--cwd" (file-name-directory file)
-		       "status" (file-name-nondirectory file))
+		       "status" "-A" (file-name-nondirectory file))
 		    ;; Some problem happened.  E.g. We can't find an `hg'
 		    ;; executable.
 		    (error nil)))))))
     (when (eq 0 status)
-      (if (eq 0 (length out)) 'up-to-date
 	(when (null (string-match ".*: No such file or directory$" out))
 	  (let ((state (aref out 0)))
 	    (cond
-	     ((eq state ?A) 'edited)
+	     ((eq state ?=) 'up-to-date)
+	     ((eq state ?A) 'added)
 	     ((eq state ?M) 'edited)
-	     ((eq state ?R) nil)
-	     ((eq state ??) nil)
-	     (t 'up-to-date))))))))
+	     ((eq state ?I) 'ignored)
+	     ((eq state ?R) 'removed)
+	     ((eq state ?!) 'missing)
+	     ((eq state ??) 'unregistered)
+	     ((eq state ?C) 'up-to-date) ;; Older mercurials use this
+	     (t 'up-to-date)))))))
 
-(defun vc-hg-dir-state (dir)
-  (with-temp-buffer
-    (vc-hg-command (current-buffer) nil dir "status")
-    (goto-char (point-min))
-    (let ((status-char nil)
-	  (file nil))
-      (while (not (eobp))
-	(setq status-char (char-after))
-	(setq file 
-	      (expand-file-name
-	       (buffer-substring-no-properties (+ (point) 2) 
-					       (line-end-position))))
-	(cond
-	 ;; The rest of the possible states in "hg status" output:
-	 ;; 	 R = removed
-	 ;; 	 ! = deleted, but still tracked
-	 ;; 	 ? = not tracked
-	 ;; should not show up in vc-dired, so don't deal with them
-	 ;; here.
-	 ((eq status-char ?A)
-	  (vc-file-setprop file 'vc-backend 'Hg)
-	  (vc-file-setprop file 'vc-workfile-version "0")
-	  (vc-file-setprop file 'vc-state 'edited))
-	 ((eq status-char ?M)
-	  (vc-file-setprop file 'vc-backend 'Hg)
-	  (vc-file-setprop file 'vc-state 'edited))
-	 ((eq status-char ??)
-	  (vc-file-setprop file 'vc-backend 'none)
-	  (vc-file-setprop file 'vc-state 'nil)))
-	(forward-line)))))
-
-(defun vc-hg-workfile-version (file)
-  "Hg-specific version of `vc-workfile-version'."
-  (let* 
+(defun vc-hg-working-revision (file)
+  "Hg-specific version of `vc-working-revision'."
+  (let*
       ((status nil)
        (out
 	(with-output-to-string
@@ -223,9 +211,16 @@
 
 ;;; History functions
 
-(defun vc-hg-print-log(file &optional buffer)
-  "Get change log associated with FILE."
-  ;; `log-view-mode' needs to have the file name in order to function
+(defcustom vc-hg-log-switches nil
+  "String or list of strings specifying switches for hg log under VC."
+  :type '(choice (const :tag "None" nil)
+                 (string :tag "Argument String")
+                 (repeat :tag "Argument List" :value ("") string))
+  :group 'vc-hg)
+
+(defun vc-hg-print-log (files &optional buffer)
+  "Get change log associated with FILES."
+  ;; `log-view-mode' needs to have the file names in order to function
   ;; correctly. "hg log" does not print it, so we insert it here by
   ;; hand.
 
@@ -237,20 +232,17 @@
   (let ((inhibit-read-only t))
     (with-current-buffer
 	buffer
-      (insert "File:        " (file-name-nondirectory file) "\n")))
-  (vc-hg-command
-   buffer
-   (if (and (vc-stay-local-p file) (fboundp 'start-process)) 'async 0)
-   file "log"))
+      (apply 'vc-hg-command buffer 0 files "log" vc-hg-log-switches))))
 
 (defvar log-view-message-re)
 (defvar log-view-file-re)
 (defvar log-view-font-lock-keywords)
+(defvar log-view-per-file-logs)
 
 (define-derived-mode vc-hg-log-view-mode log-view-mode "Hg-Log-View"
-  (require 'add-log) ;; we need the faces add-log
-  ;; Don't have file markers, so use impossible regexp.
-  (set (make-local-variable 'log-view-file-re) "^File:[ \t]+\\(.+\\)")
+  (require 'add-log) ;; we need the add-log faces
+  (set (make-local-variable 'log-view-file-re) "\\`a\\`")
+  (set (make-local-variable 'log-view-per-file-logs) nil)
   (set (make-local-variable 'log-view-message-re)
        "^changeset:[ \t]*\\([0-9]+\\):\\(.+\\)")
   (set (make-local-variable 'log-view-font-lock-keywords)
@@ -263,57 +255,61 @@
 	   (1 'change-log-name)
 	   (2 'change-log-email))
 	  ;; Handle the cases:
-	  ;; user: foo@bar 
-	  ;; and 
+	  ;; user: foo@bar
+	  ;; and
 	  ;; user: foo
 	  ("^user:[ \t]+\\([A-Za-z0-9_.+-]+\\(?:@[A-Za-z0-9_.-]+\\)?\\)"
 	   (1 'change-log-email))
 	  ("^date: \\(.+\\)" (1 'change-log-date))
 	  ("^summary:[ \t]+\\(.+\\)" (1 'log-view-message))))))
 
-(defun vc-hg-diff (file &optional oldvers newvers buffer)
-  "Get a difference report using hg between two versions of FILE."
-  (let ((working (vc-workfile-version file)))
-    (if (and (equal oldvers working) (not newvers))
-	(setq oldvers nil))
-    (if (and (not oldvers) newvers)
-	(setq oldvers working))
+(defun vc-hg-diff (files &optional oldvers newvers buffer)
+  "Get a difference report using hg between two revisions of FILES."
+  (let* ((firstfile (car files))
+	 (cwd (if firstfile (file-name-directory firstfile)
+		(expand-file-name default-directory)))
+	 (working (and firstfile (vc-working-revision firstfile))))
+    (when (and (equal oldvers working) (not newvers))
+      (setq oldvers nil))
+    (when (and (not oldvers) newvers)
+      (setq oldvers working))
     (apply #'vc-hg-command (or buffer "*vc-diff*") nil
-	   (file-name-nondirectory file)
-	   "--cwd" (file-name-directory file) 
+	   (mapcar (lambda (file) (file-relative-name file cwd)) files)
+	   "--cwd" cwd
 	   "diff"
 	   (append
-	    (if oldvers
-		(if newvers
-		    (list "-r" oldvers "-r" newvers)
-		  (list "-r" oldvers)))))))
+	    (vc-switches 'hg 'diff)
+	    (when oldvers
+	      (if newvers
+		  (list "-r" oldvers "-r" newvers)
+		(list "-r" oldvers)))))))
 
-(defun vc-hg-revision-table (file)
-  (let ((default-directory (file-name-directory file)))
+(defun vc-hg-revision-table (files)
+  (let ((default-directory (file-name-directory (car files))))
     (with-temp-buffer
-      (vc-hg-command t nil file "log" "--template" "{rev} ")
-      (split-string 
+      (vc-hg-command t nil files "log" "--template" "{rev} ")
+      (split-string
        (buffer-substring-no-properties (point-min) (point-max))))))
 
-;; Modelled after the similar function in vc-cvs.el
-(defun vc-hg-revision-completion-table (file)
-  (lexical-let ((file file)
+;; Modeled after the similar function in vc-cvs.el
+(defun vc-hg-revision-completion-table (files)
+  (lexical-let ((files files)
                 table)
     (setq table (lazy-completion-table
-                 table (lambda () (vc-hg-revision-table file))))
+                 table (lambda () (vc-hg-revision-table files))))
     table))
 
-(defalias 'vc-hg-diff-tree 'vc-hg-diff)
-
-(defun vc-hg-annotate-command (file buffer &optional version)
+(defun vc-hg-annotate-command (file buffer &optional revision)
   "Execute \"hg annotate\" on FILE, inserting the contents in BUFFER.
-Optional arg VERSION is a version to annotate from."
-  (vc-hg-command buffer 0 file "annotate" "-d" "-n" (if version (concat "-r" version)))
+Optional arg REVISION is a revision to annotate from."
+  (vc-hg-command buffer 0 file "annotate" "-d" "-n"
+		 (when revision (concat "-r" revision)))
   (with-current-buffer buffer
     (goto-char (point-min))
     (re-search-forward "^[ \t]*[0-9]")
     (delete-region (point-min) (match-beginning 0))))
 
+(declare-function vc-annotate-convert-time "vc-annotate" (time))
 
 ;; The format for one line output by "hg annotate -d -n" looks like this:
 ;;215 Wed Jun 20 21:22:58 2007 -0700: CONTENTS
@@ -335,25 +331,25 @@ Optional arg VERSION is a version to annotate from."
     (beginning-of-line)
     (when (looking-at vc-hg-annotate-re) (match-string-no-properties 1))))
 
-(defun vc-hg-previous-version (file rev)
+(defun vc-hg-previous-revision (file rev)
   (let ((newrev (1- (string-to-number rev))))
     (when (>= newrev 0)
       (number-to-string newrev))))
 
-(defun vc-hg-next-version (file rev)
+(defun vc-hg-next-revision (file rev)
   (let ((newrev (1+ (string-to-number rev)))
-	(tip-version 
+	(tip-revision
 	 (with-temp-buffer
 	   (vc-hg-command t 0 nil "tip")
 	   (goto-char (point-min))
 	   (re-search-forward "^changeset:[ \t]*\\([0-9]+\\):")
 	   (string-to-number (match-string-no-properties 1)))))
-    ;; We don't want to exceed the maximum possible version number, ie
-    ;; the tip version.
-    (when (<= newrev tip-version)
+    ;; We don't want to exceed the maximum possible revision number, ie
+    ;; the tip revision.
+    (when (<= newrev tip-revision)
       (number-to-string newrev))))
 
-;; Modelled after the similar function in vc-bzr.el
+;; Modeled after the similar function in vc-bzr.el
 (defun vc-hg-delete-file (file)
   "Delete FILE and delete it in the hg repository."
   (condition-case ()
@@ -361,20 +357,24 @@ Optional arg VERSION is a version to annotate from."
     (file-error nil))
   (vc-hg-command nil 0 file "remove" "--after" "--force"))
 
-;; Modelled after the similar function in vc-bzr.el
+;; Modeled after the similar function in vc-bzr.el
 (defun vc-hg-rename-file (old new)
   "Rename file from OLD to NEW using `hg mv'."
-  (vc-hg-command nil 0 new old "mv"))
+  (vc-hg-command nil 0 new "mv" old))
 
-(defun vc-hg-register (file &optional rev comment)
-  "Register FILE under hg.
+(defun vc-hg-register (files &optional rev comment)
+  "Register FILES under hg.
 REV is ignored.
 COMMENT is ignored."
-  (vc-hg-command nil 0 file "add"))
+  (vc-hg-command nil 0 files "add"))
+
+(defun vc-hg-create-repo ()
+  "Create a new Mercurial repository."
+  (vc-hg-command nil 0 nil "init"))
 
 (defalias 'vc-hg-responsible-p 'vc-hg-root)
 
-;; Modelled after the similar function in vc-bzr.el
+;; Modeled after the similar function in vc-bzr.el
 (defun vc-hg-could-register (file)
   "Return non-nil if FILE could be registered under hg."
   (and (vc-hg-responsible-p file)      ; shortcut
@@ -385,24 +385,24 @@ COMMENT is ignored."
              ;; registered.
          (error))))
 
-;; XXX This would remove the file. Is that correct?
+;; FIXME: This would remove the file. Is that correct?
 ;; (defun vc-hg-unregister (file)
 ;;   "Unregister FILE from hg."
 ;;   (vc-hg-command nil nil file "remove"))
 
-(defun vc-hg-checkin (file rev comment)
+(defun vc-hg-checkin (files rev comment)
   "Hg-specific version of `vc-backend-checkin'.
 REV is ignored."
-  (vc-hg-command nil 0 file  "commit" "-m" comment))
+  (vc-hg-command nil 0 files  "commit" "-m" comment))
 
-(defun vc-hg-find-version (file rev buffer)
+(defun vc-hg-find-revision (file rev buffer)
   (let ((coding-system-for-read 'binary)
         (coding-system-for-write 'binary))
     (if rev
 	(vc-hg-command buffer 0 file "cat" "-r" rev)
       (vc-hg-command buffer 0 file "cat"))))
 
-;; Modelled after the similar function in vc-bzr.el
+;; Modeled after the similar function in vc-bzr.el
 (defun vc-hg-checkout (file &optional editable rev)
   "Retrieve a revision of FILE.
 EDITABLE is ignored.
@@ -414,34 +414,194 @@ REV is the revision to check out into WORKFILE."
         (vc-hg-command t 0 file "cat" "-r" rev)
       (vc-hg-command t 0 file "cat")))))
 
-(defun vc-hg-checkout-model (file)
-  'implicit)
-
-;; Modelled after the similar function in vc-bzr.el
+;; Modeled after the similar function in vc-bzr.el
 (defun vc-hg-workfile-unchanged-p (file)
   (eq 'up-to-date (vc-hg-state file)))
 
-(defun vc-hg-dired-state-info (file)
-  "Hg-specific version of `vc-dired-state-info'."
-  (let ((hg-state (vc-state file)))
-    (if (eq hg-state 'edited)
-	(if (equal (vc-workfile-version file) "0")
-	    "(added)" "(modified)")
-      ;; fall back to the default VC representation
-      (vc-default-dired-state-info 'Hg file))))
-
-;; Modelled after the similar function in vc-bzr.el
+;; Modeled after the similar function in vc-bzr.el
 (defun vc-hg-revert (file &optional contents-done)
   (unless contents-done
     (with-temp-buffer (vc-hg-command t 0 file "revert"))))
 
+;;; Hg specific functionality.
+
+(defvar vc-hg-extra-menu-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [incoming] '(menu-item "Show incoming" vc-hg-incoming))
+    (define-key map [outgoing] '(menu-item "Show outgoing" vc-hg-outgoing))
+    map))
+
+(defun vc-hg-extra-menu () vc-hg-extra-menu-map)
+
+(defun vc-hg-extra-status-menu () vc-hg-extra-menu-map)
+
+(define-derived-mode vc-hg-outgoing-mode vc-hg-log-view-mode "Hg-Outgoing")
+
+(define-derived-mode vc-hg-incoming-mode vc-hg-log-view-mode "Hg-Incoming")
+
+(defstruct (vc-hg-extra-fileinfo
+            (:copier nil)
+            (:constructor vc-hg-create-extra-fileinfo (rename-state extra-name))
+            (:conc-name vc-hg-extra-fileinfo->))
+  rename-state        ;; rename or copy state
+  extra-name)         ;; original name for copies and rename targets, new name for
+
+(declare-function vc-default-dir-printer "vc-dir" (backend fileentry))
+
+(defun vc-hg-dir-printer (info)
+  "Pretty-printer for the vc-dir-fileinfo structure."
+  (let ((extra (vc-dir-fileinfo->extra info)))
+    (vc-default-dir-printer 'Hg info)
+    (when extra
+      (insert (propertize
+	       (format "   (%s %s)"
+		       (case (vc-hg-extra-fileinfo->rename-state extra)
+			 ('copied "copied from")
+			 ('renamed-from "renamed from")
+			 ('renamed-to "renamed to"))
+		       (vc-hg-extra-fileinfo->extra-name extra))
+	       'face 'font-lock-comment-face)))))
+
+(defun vc-hg-after-dir-status (update-function)
+  (let ((status-char nil)
+	(file nil)
+	(translation '((?= . up-to-date)
+		       (?C . up-to-date)
+		       (?A . added)
+		       (?R . removed)
+		       (?M . edited)
+		       (?I . ignored)
+		       (?! . missing)
+		       (?  . copy-rename-line)
+		       (?? . unregistered)))
+	(translated nil)
+	(result nil)
+	(last-added nil)
+	(last-line-copy nil))
+      (goto-char (point-min))
+      (while (not (eobp))
+	(setq translated (cdr (assoc (char-after) translation)))
+	(setq file
+	      (buffer-substring-no-properties (+ (point) 2)
+					      (line-end-position)))
+	(cond ((not translated)
+	       (setq last-line-copy nil))
+	      ((eq translated 'up-to-date)
+	       (setq last-line-copy nil))
+	      ((eq translated 'copy-rename-line)
+	       ;; For copied files the output looks like this:
+	       ;; A COPIED_FILE_NAME
+	       ;;   ORIGINAL_FILE_NAME
+	       (setf (nth 2 last-added)
+		     (vc-hg-create-extra-fileinfo 'copied file))
+	       (setq last-line-copy t))
+	      ((and last-line-copy (eq translated 'removed))
+	       ;; For renamed files the output looks like this:
+	       ;; A NEW_FILE_NAME
+	       ;;   ORIGINAL_FILE_NAME
+	       ;; R ORIGINAL_FILE_NAME
+	       ;; We need to adjust the previous entry to not think it is a copy.
+	       (setf (vc-hg-extra-fileinfo->rename-state (nth 2 last-added))
+		     'renamed-from)
+	       (push (list file translated
+			   (vc-hg-create-extra-fileinfo
+			    'renamed-to (nth 0 last-added))) result)
+	       (setq last-line-copy nil))
+	      (t
+	       (setq last-added (list file translated nil))
+	       (push last-added result)
+	       (setq last-line-copy nil)))
+	(forward-line))
+      (funcall update-function result)))
+
+(defun vc-hg-dir-status (dir update-function)
+  (vc-hg-command (current-buffer) 'async dir "status" "-C")
+  (vc-exec-after
+   `(vc-hg-after-dir-status (quote ,update-function))))
+
+(defun vc-hg-dir-status-files (dir files default-state update-function)
+  (apply 'vc-hg-command (current-buffer) 'async dir "status" "-C" files)
+  (vc-exec-after
+   `(vc-hg-after-dir-status (quote ,update-function))))
+
+(defun vc-hg-dir-extra-header (name &rest commands)
+  (concat (propertize name 'face 'font-lock-type-face)
+          (propertize
+           (with-temp-buffer
+             (apply 'vc-hg-command (current-buffer) 0 nil commands)
+             (buffer-substring-no-properties (point-min) (1- (point-max))))
+           'face 'font-lock-variable-name-face)))
+
+(defun vc-hg-dir-extra-headers (dir)
+  "Generate extra status headers for a Mercurial tree."
+  (let ((default-directory dir))
+    (concat
+     (vc-hg-dir-extra-header "Root       : " "root") "\n"
+     (vc-hg-dir-extra-header "Branch     : " "id" "-b") "\n"
+     (vc-hg-dir-extra-header "Tags       : " "id" "-t") ; "\n"
+     ;; these change after each commit
+     ;; (vc-hg-dir-extra-header "Local num  : " "id" "-n") "\n"
+     ;; (vc-hg-dir-extra-header "Global id  : " "id" "-i")
+     )))
+
+;; FIXME: this adds another top level menu, instead figure out how to
+;; replace the Log-View menu.
+(easy-menu-define log-view-mode-menu vc-hg-outgoing-mode-map
+  "Hg-outgoing Display Menu"
+  `("Hg-outgoing"
+    ["Push selected"  vc-hg-push]))
+
+(easy-menu-define log-view-mode-menu vc-hg-incoming-mode-map
+  "Hg-incoming Display Menu"
+  `("Hg-incoming"
+    ["Pull selected"  vc-hg-pull]))
+
+(defun vc-hg-outgoing ()
+  (interactive)
+  (let ((bname "*Hg outgoing*"))
+    (vc-hg-command bname 0 nil "outgoing" "-n")
+    (pop-to-buffer bname)
+    (vc-hg-outgoing-mode)))
+
+(defun vc-hg-incoming ()
+  (interactive)
+  (let ((bname "*Hg incoming*"))
+    (vc-hg-command bname 0 nil "incoming" "-n")
+    (pop-to-buffer bname)
+    (vc-hg-incoming-mode)))
+
+(declare-function log-view-get-marked "log-view" ())
+
+;; XXX maybe also add key bindings for these functions.
+(defun vc-hg-push ()
+  (interactive)
+  (let ((marked-list (log-view-get-marked)))
+    (if marked-list
+	(vc-hg-command
+	 nil 0 nil
+	 (cons "push"
+	       (apply 'nconc
+		      (mapcar (lambda (arg) (list "-r" arg)) marked-list))))
+	 (error "No log entries selected for push"))))
+
+(defun vc-hg-pull ()
+  (interactive)
+  (let ((marked-list (log-view-get-marked)))
+    (if marked-list
+	(vc-hg-command
+	 nil 0 nil
+	 (cons "pull"
+	       (apply 'nconc
+		      (mapcar (lambda (arg) (list "-r" arg)) marked-list))))
+      (error "No log entries selected for pull"))))
+
 ;;; Internal functions
 
-(defun vc-hg-command (buffer okstatus file &rest flags)
+(defun vc-hg-command (buffer okstatus file-or-list &rest flags)
   "A wrapper around `vc-do-command' for use in vc-hg.el.
 The difference to vc-do-command is that this function always invokes `hg',
 and that it passes `vc-hg-global-switches' to it before FLAGS."
-  (apply 'vc-do-command buffer okstatus "hg" file
+  (apply 'vc-do-command (or buffer "*vc*") okstatus "hg" file-or-list
          (if (stringp vc-hg-global-switches)
              (cons vc-hg-global-switches flags)
            (append vc-hg-global-switches

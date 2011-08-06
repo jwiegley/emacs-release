@@ -1,6 +1,7 @@
 ;;; url-dav.el --- WebDAV support
 
-;; Copyright (C) 2001, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2001, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Bill Perry <wmperry@gnu.org>
 ;; Maintainer: Bill Perry <wmperry@gnu.org>
@@ -8,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; DAV is in RFC 2518.
 
@@ -40,7 +39,7 @@
   "List of supported DAV versions.")
 
 (defun url-intersection (l1 l2)
-  "Return a list of the elements occuring in both of the lists L1 and L2."
+  "Return a list of the elements occurring in both of the lists L1 and L2."
   (if (null l2)
       l2
     (let (result)
@@ -102,7 +101,7 @@
     (list (concat "^" full-date)
 	  (concat "T" partial-time)
 	  (concat "Z" time-numoffset)))
-  "List of regular expressions matching iso8601 dates.
+  "List of regular expressions matching ISO 8601 dates.
 1st regular expression matches the date.
 2nd regular expression matches the time.
 3rd regular expression matches the (optional) timezone specification.")
@@ -194,7 +193,7 @@
     (while children
       (setq node (car children)
 	    node-type (intern
-		       (or 
+		       (or
 			(cdr-safe (assq url-dav-datatype-attribute
 					(xml-node-attributes node)))
 			"unknown"))
@@ -474,7 +473,7 @@ names (ie: DAV:resourcetype)."
 		   depth nil namespaces))
 
 (defmacro url-dav-http-success-p (status)
-  "Return whether PROPERTIES was the result of a successful DAV request."
+  "Return whether STATUS was the result of a successful DAV request."
   `(= (/ (or ,status 500) 100) 2))
 
 
@@ -716,8 +715,7 @@ OBJ may be a buffer or a string."
   (defmacro url-dav-delete-something (url lock-token &rest error-checking)
     "Delete URL completely, with no sanity checking whatsoever.  DO NOT USE.
 This is defined as a macro that will not be visible from compiled files.
-Use with care, and even then think three times.
-"
+Use with care, and even then think three times."
     `(progn
        ,@error-checking
        (url-dav-request ,url "DELETE" nil nil -1
@@ -746,7 +744,7 @@ files in the collection as well."
 	     (setq status (plist-get (cdr result) 'DAV:status))
 	     (if (not (url-dav-http-success-p status))
 		 (signal 'file-error (list "Removing directory"
-					   "Errror removing"
+					   "Error removing"
 					   (car result) status))))
 	   props))
   nil)
@@ -771,7 +769,7 @@ files in the collection as well."
   nil)
 
 (defun url-dav-directory-files (url &optional full match nosort files-only)
-  "Return a list of names of files in DIRECTORY.
+  "Return a list of names of files in URL.
 There are three optional arguments:
 If FULL is non-nil, return absolute file names.  Otherwise return names
  that are relative to the specified directory.
@@ -864,7 +862,7 @@ If NOSORT is non-nil, the list is not sorted--its order is unpredictable.
 	 (exists-p (url-http-file-exists-p newname)))
 
     (if (and exists-p
-	     (or 
+	     (or
 	      (null overwrite)
 	      (and (numberp overwrite)
 		   (not (yes-or-no-p
@@ -891,16 +889,16 @@ If NOSORT is non-nil, the list is not sorted--its order is unpredictable.
     t))
 
 (defun url-dav-file-name-all-completions (file url)
-  "Return a list of all completions of file name FILE in directory DIRECTORY.
-These are all file names in directory DIRECTORY which begin with FILE."
+  "Return a list of all completions of file name FILE in URL.
+These are all file names in URL which begin with FILE."
   (url-dav-directory-files url nil (concat "^" file ".*")))
 
 (defun url-dav-file-name-completion (file url)
-  "Complete file name FILE in directory DIRECTORY.
-Returns the longest string
-common to all file names in DIRECTORY that start with FILE.
+  "Complete file name FILE in URL.
+Returns the longest string common to all file names in URL
+that start with FILE.
 If there is only one and FILE matches it exactly, returns t.
-Returns nil if DIR contains no name starting with FILE."
+Returns nil if URL contains no name starting with FILE."
   (let ((matches (url-dav-file-name-all-completions file url))
 	(result nil))
     (cond
@@ -933,19 +931,19 @@ Returns nil if DIR contains no name starting with FILE."
 (defun url-dav-register-handler (op)
   (put op 'url-file-handlers (intern-soft (format "url-dav-%s" op))))
 
-(mapcar 'url-dav-register-handler
-        ;; These handlers are disabled because they incorrectly presume that
-        ;; the URL specifies an HTTP location and thus break FTP URLs.
-	'(;; file-name-all-completions
-	  ;; file-name-completion
-	  ;; rename-file
-	  ;; make-directory
-	  ;; file-directory-p
-	  ;; directory-files
-	  ;; delete-file
-	  ;; delete-directory
-	  ;; file-attributes
-          ))
+(mapc 'url-dav-register-handler
+      ;; These handlers are disabled because they incorrectly presume that
+      ;; the URL specifies an HTTP location and thus break FTP URLs.
+      '(;; file-name-all-completions
+	;; file-name-completion
+	;; rename-file
+	;; make-directory
+	;; file-directory-p
+	;; directory-files
+	;; delete-file
+	;; delete-directory
+	;; file-attributes
+	))
 
 
 ;;; Version Control backend cruft

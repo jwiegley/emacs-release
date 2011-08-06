@@ -1,7 +1,7 @@
 ;;; elp.el --- Emacs Lisp Profiler
 
 ;; Copyright (C) 1994, 1995, 1997, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Barry A. Warsaw
 ;; Maintainer: FSF
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -342,9 +340,12 @@ Argument FUNSYM is the symbol of a defined function."
 
 ;;;###autoload
 (defun elp-instrument-list (&optional list)
-  "Instrument for profiling, all functions in `elp-function-list'.
-Use optional LIST if provided instead."
+  "Instrument, for profiling, all functions in `elp-function-list'.
+Use optional LIST if provided instead.
+If called interactively, read LIST using the minibuffer."
   (interactive "PList of functions to instrument: ")
+  (unless (listp list)
+    (signal 'wrong-type-argument (list 'listp list)))
   (let ((list (or list elp-function-list)))
     (mapcar 'elp-instrument-function list)))
 
@@ -536,6 +537,7 @@ original definition, use \\[elp-restore-function] or \\[elp-restore-all]."
 (defvar elp-results-symname-map
   (let ((map (make-sparse-keymap)))
     (define-key map [mouse-2] 'elp-results-jump-to-definition)
+    (define-key map [follow-link] 'mouse-face)
     (define-key map "\C-m" 'elp-results-jump-to-definition)
     map)
   "Keymap used on the function name column." )
@@ -596,39 +598,61 @@ displayed."
 			    symname)))))
 	     elp-all-instrumented-list))
 	   )				; end let*
-      (insert title)
-      (if (> longest titlelen)
-	  (progn
-	    (insert-char 32 (- longest titlelen))
-	    (setq elp-field-len longest)))
-      (insert "  " cc-header "  " et-header "  " at-header "\n")
-      (insert-char ?= elp-field-len)
-      (insert "  ")
-      (insert-char ?= elp-cc-len)
-      (insert "  ")
-      (insert-char ?= elp-et-len)
-      (insert "  ")
-      (insert-char ?= elp-at-len)
-      (insert "\n")
+      ;; If printing to stdout, insert the header so it will print.
+      ;; Otherwise use header-line-format.
+      (setq elp-field-len (max titlelen longest))
+      (if (or elp-use-standard-output noninteractive)
+         (progn
+           (insert title)
+           (if (> longest titlelen)
+               (progn
+                 (insert-char 32 (- longest titlelen))))
+           (insert "  " cc-header "  " et-header "  " at-header "\n")
+           (insert-char ?= elp-field-len)
+           (insert "  ")
+           (insert-char ?= elp-cc-len)
+           (insert "  ")
+           (insert-char ?= elp-et-len)
+           (insert "  ")
+           (insert-char ?= elp-at-len)
+           (insert "\n"))
+       (let ((column 0))
+         (setq header-line-format
+               (mapconcat
+                (lambda (title)
+                  (prog1
+                      (concat
+                       (propertize " "
+                                   'display (list 'space :align-to column)
+                                   'face 'fixed-pitch)
+                       title)
+                    (setq column (+ column 1
+                                    (if (= column 0)
+                                        elp-field-len
+                                      (length title))))))
+                (list title cc-header et-header at-header) ""))))
       ;; if sorting is enabled, then sort the results list. in either
       ;; case, call elp-output-result to output the result in the
       ;; buffer
       (if elp-sort-by-function
 	  (setq resvec (sort resvec elp-sort-by-function)))
-      (mapcar 'elp-output-result resvec))
+      (mapc 'elp-output-result resvec))
     ;; now pop up results buffer
     (set-buffer curbuf)
     (pop-to-buffer resultsbuf)
     ;; copy results to standard-output?
     (if (or elp-use-standard-output noninteractive)
-	(princ (buffer-substring (point-min) (point-max))))
+       (princ (buffer-substring (point-min) (point-max)))
+      (goto-char (point-min)))
     ;; reset profiling info if desired
     (and elp-reset-after-results
 	 (elp-reset-all))))
 
-(defun elp-unload-hook ()
-  (elp-restore-all))
-(add-hook 'elp-unload-hook 'elp-unload-hook)
+(defun elp-unload-function ()
+  "Unload the Emacs Lisp Profiler."
+  (elp-restore-all)
+  ;; continue standard unloading
+  nil)
 
 (provide 'elp)
 

@@ -1,15 +1,13 @@
-/* Template for system description header files.
-   This file describes the parameters that system description files
-   should define or not.
-   Copyright (C) 1985, 1986, 1992, 1999, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+/* System description header file for Cygwin.
+   Copyright (C) 1985, 1986, 1992, 1999, 2002, 2003, 2004, 2005, 2006,
+                 2007, 2008, 2009 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* SYSTEM_TYPE should indicate the kind of system you are using.
  It sets the Lisp variable system-type.  */
@@ -88,14 +84,6 @@ Boston, MA 02110-1301, USA.  */
 
 #define BSTRING
 
-/* subprocesses should be defined if you want to
-   have code for asynchronous subprocesses
-   (as used in M-x compile and M-x shell).
-   This is generally OS dependent, and not supported
-   under most USG systems. */
-
-#define subprocesses
-
 /* Define CLASH_DETECTION if you want lock files to be written
    so that Emacs can tell instantly when you try to modify
    a file that someone else has modified in his Emacs.  */
@@ -114,9 +102,7 @@ Boston, MA 02110-1301, USA.  */
 #define CYGWIN 1
 
 #define PENDING_OUTPUT_COUNT(FILE) ((FILE)->_p - (FILE)->_bf._base)
-#define GETPGRP_NO_ARG 1
 #define SYSV_SYSTEM_DIR 1
-#define LIB_STANDARD_LIBSRC
 #define UNEXEC unexcw.o
 #define POSIX_SIGNALS 1
 /* force the emacs image to start high in memory, so dll relocation
@@ -130,15 +116,19 @@ Boston, MA 02110-1301, USA.  */
 #define TERMINFO
 
 #define HAVE_SOCKETS
-/* C-g aborts emacs without this */
-/*#define HAVE_VFORK*/
-/* Xaw3d causes problems -- might have been fixed by NARROWPROTO
-   above, but I haven't tried it */
-/*#undef HAVE_XAW3D*/
 
 /* vfork() interacts badly with setsid(), causing ptys to fail to
    change their controlling terminal */
 #define vfork fork
+
+/* This should work (at least when compiling with gcc).  But I have no way
+   or intention to verify or even test it.  If you encounter a problem with
+   it, feel free to change this setting, but please add a comment here about
+   why it needed to be changed.  */
+#define GC_MARK_STACK GC_MAKE_GCPROS_NOOPS
+
+/* Virtual addresses of pure and impure space can vary, as on Windows.  */
+#define VIRT_ADDR_VARIES
 
 /* the end */
 

@@ -1,17 +1,17 @@
 ;;; rnews.el --- USENET news reader for GNU Emacs
 
 ;; Copyright (C) 1985, 1986, 1987, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,11 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; This file has been obsolete since Emacs 21.1.
 
 ;;; Change Log:
 
@@ -51,8 +53,6 @@
 ;; added caesar-region, rename news-caesar-buffer-body, hacked accordingly
 ;;	tower@gnu.org Nov 21 1986
 ;; added tower@gnu.org 22 Apr 87
-
-;;; Commentary:
 
 ;;; Code:
 
@@ -271,19 +271,6 @@ Type \\[describe-mode] once reading news to get a list of rnews commands."
     (if cgc (setcdr cgc news-current-certifiable)
       (news-push (cons news-current-news-group news-current-certifiable)
 		 news-current-certifications))))
-
-(defun news-set-minor-modes ()
-  "Creates a minor mode list that has group name, total articles,
-and attribute for current article."
-  (setq news-minor-modes (list (cons 'foo
-				     (concat news-current-message-number
-					     "/"
-					     news-total-current-group
-					     (news-get-attribute-string)))))
-  ;; Detect Emacs versions 18.16 and up, which display
-  ;; directly from news-minor-modes by using a list for mode-name.
-  (or (boundp 'minor-mode-alist)
-      (setq minor-modes news-minor-modes)))
 
 (defun news-set-message-counters ()
   "Scan through current news-groups filelist to figure out how many messages
@@ -991,5 +978,5 @@ Mail and USENET news headers are not rotated."
 
 (provide 'rnews)
 
-;;; arch-tag: c032a20b-cafb-466c-b3fa-5be404a18f8c
+;; arch-tag: c032a20b-cafb-466c-b3fa-5be404a18f8c
 ;;; rnews.el ends here

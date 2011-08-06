@@ -1,7 +1,7 @@
 ;;; generic-x.el --- A collection of generic modes
 
 ;; Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author:  Peter Breton <pbreton@cs.umb.edu>
 ;; Created: Tue Oct 08 1996
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -122,21 +120,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defcustom generic-use-find-file-hook t
-  "*If non-nil, add a hook to enter `default-generic-mode' automatically.
+  "If non-nil, add a hook to enter `default-generic-mode' automatically.
 This is done if the first few lines of a file in fundamental mode
 start with a hash comment character."
   :group 'generic-x
   :type  'boolean)
 
 (defcustom generic-lines-to-scan 3
-  "*Number of lines that `generic-mode-find-file-hook' looks at.
+  "Number of lines that `generic-mode-find-file-hook' looks at.
 Relevant when deciding whether to enter Default-Generic mode automatically.
 This variable should be set to a small positive number."
   :group 'generic-x
   :type  'integer)
 
 (defcustom generic-find-file-regexp "^#"
-  "*Regular expression used by `generic-mode-find-file-hook'.
+  "Regular expression used by `generic-mode-find-file-hook'.
 Files in fundamental mode whose first few lines contain a match
 for this regexp, should be put into Default-Generic mode instead.
 The number of lines tested for the matches is specified by the
@@ -145,7 +143,7 @@ value of the variable `generic-lines-to-scan', which see."
   :type  'regexp)
 
 (defcustom generic-ignore-files-regexp "[Tt][Aa][Gg][Ss]\\'"
-  "*Regular expression used by `generic-mode-find-file-hook'.
+  "Regular expression used by `generic-mode-find-file-hook'.
 Files whose names match this regular expression should not be put
 into Default-Generic mode, even if they have lines which match
 the regexp in `generic-find-file-regexp'.  If the value is nil,
@@ -173,7 +171,7 @@ This hook will be installed if the variable
 `generic-lines-to-scan' determines the number of lines to look at."
   (when (and (eq major-mode 'fundamental-mode)
 	     (or (null generic-ignore-files-regexp)
-		 (not (string-match
+		 (not (string-match-p
 		       generic-ignore-files-regexp
 		       (file-name-sans-versions buffer-file-name)))))
     (save-excursion
@@ -221,6 +219,7 @@ This hook will be installed if the variable
     etc-modules-conf-generic-mode
     etc-passwd-generic-mode
     etc-services-generic-mode
+    etc-sudoers-generic-mode
     fvwm-generic-mode
     inetd-conf-generic-mode
     mailagent-rules-generic-mode
@@ -238,11 +237,11 @@ This hook will be installed if the variable
     ibis-generic-mode
     pkginfo-generic-mode
     spice-generic-mode)
-  "List of generic mode that are not defined by default.")
+  "List of generic modes that are not defined by default.")
 
 (defcustom generic-define-mswindows-modes
   (memq system-type '(windows-nt ms-dos))
-  "*Non-nil means the modes in `generic-mswindows-modes' will be defined.
+  "Non-nil means the modes in `generic-mswindows-modes' will be defined.
 This is a list of MS-Windows specific generic modes.  This variable
 only affects the default value of `generic-extras-enable-list'."
   :group 'generic-x
@@ -252,7 +251,7 @@ only affects the default value of `generic-extras-enable-list'."
 
 (defcustom generic-define-unix-modes
   (not (memq system-type '(windows-nt ms-dos)))
-  "*Non-nil means the modes in `generic-unix-modes' will be defined.
+  "Non-nil means the modes in `generic-unix-modes' will be defined.
 This is a list of Unix specific generic modes.  This variable only
 affects the default value of `generic-extras-enable-list'."
   :group 'generic-x
@@ -317,7 +316,7 @@ your changes into effect."
      (2 font-lock-variable-name-face)))
   '("access_log\\'")
   nil
-  "Mode for Apache log files."))
+  "Generic mode for Apache log files."))
 
 ;;; Samba
 (when (memq 'samba-generic-mode generic-extras-enable-list)
@@ -377,12 +376,16 @@ your changes into effect."
 (define-generic-mode hosts-generic-mode
   '(?#)
   '("localhost")
-  '(("\\([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\\)" 1 font-lock-constant-face))
+  '(("\\([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+\\)" 1 font-lock-constant-face))
   '("[hH][oO][sS][tT][sS]\\'")
   nil
   "Generic mode for HOSTS files."))
 
 ;;; Windows INF files
+
+;; If i-g-m-f-f-h is defined, then so is i-g-m.
+(declare-function ini-generic-mode "generic-x")
+
 (when (memq 'inf-generic-mode generic-extras-enable-list)
 
 (define-generic-mode inf-generic-mode
@@ -442,6 +445,8 @@ like an INI file.  You can add this hook to `find-file-hook'."
       (setq imenu-generic-expression
 	    '((nil "^\\s-*\\(.*\\)\\s-*=" 1))))))
   "Generic mode for MS-Windows Registry files."))
+
+(declare-function w32-shell-name "w32-fns" ())
 
 ;;; DOS/Windows BAT files
 (when (memq 'bat-generic-mode generic-extras-enable-list)
@@ -595,7 +600,7 @@ like an INI file.  You can add this hook to `find-file-hook'."
     (lambda ()
       (setq imenu-generic-expression
 	    '((nil "\\s-/\\([^/]+\\)/[i, \t\n]" 1))))))
-  "Mode for Mailagent rules files."))
+  "Generic mode for Mailagent rules files."))
 
 ;; Solaris/Sys V prototype files
 (when (memq 'prototype-generic-mode generic-extras-enable-list)
@@ -618,7 +623,7 @@ like an INI file.  You can add this hook to `find-file-hook'."
      (2 font-lock-variable-name-face)))
   '("prototype\\'")
   nil
-  "Mode for Sys V prototype files."))
+  "Generic mode for Sys V prototype files."))
 
 ;; Solaris/Sys V pkginfo files
 (when (memq 'pkginfo-generic-mode generic-extras-enable-list)
@@ -631,7 +636,7 @@ like an INI file.  You can add this hook to `find-file-hook'."
      (2 font-lock-variable-name-face)))
   '("pkginfo\\'")
   nil
-  "Mode for Sys V pkginfo files."))
+  "Generic mode for Sys V pkginfo files."))
 
 ;; Javascript mode
 ;; Includes extra keywords from Armando Singer [asinger@MAIL.COLGATE.EDU]
@@ -710,7 +715,7 @@ like an INI file.  You can add this hook to `find-file-hook'."
       (setq imenu-generic-expression
 	    '((nil "^function\\s-+\\([A-Za-z0-9_]+\\)" 1)
 	      ("*Variables*" "^var\\s-+\\([A-Za-z0-9_]+\\)" 1))))))
-  "Mode for JavaScript files."))
+  "Generic mode for JavaScript files."))
 
 ;; VRML files
 (when (memq 'vrml-generic-mode generic-extras-enable-list)
@@ -784,7 +789,7 @@ like an INI file.  You can add this hook to `find-file-hook'."
      (2 font-lock-constant-face)))
   '("[mM][aA][nN][iI][fF][eE][sS][tT]\\.[mM][fF]\\'")
   nil
-  "Mode for Java Manifest files."))
+  "Generic mode for Java Manifest files."))
 
 ;; Java properties files
 (when (memq 'java-properties-generic-mode generic-extras-enable-list)
@@ -816,7 +821,7 @@ like an INI file.  You can add this hook to `find-file-hook'."
     (lambda ()
       (setq imenu-generic-expression
 	    '((nil "^\\([^#! \t\n\r=:]+\\)" 1))))))
-  "Mode for Java properties files."))
+  "Generic mode for Java properties files."))
 
 ;; C shell alias definitions
 (when (memq 'alias-generic-mode generic-extras-enable-list)
@@ -834,7 +839,7 @@ like an INI file.  You can add this hook to `find-file-hook'."
     (lambda ()
       (setq imenu-generic-expression
 	    '((nil "^\\(alias\\|unalias\\)\\s-+\\([-a-zA-Z0-9_]+\\)" 2))))))
-  "Mode for C Shell alias files."))
+  "Generic mode for C Shell alias files."))
 
 ;;; Windows RC files
 ;; Contributed by ACorreir@pervasive-sw.com (Alfred Correira)
@@ -1730,6 +1735,21 @@ like an INI file.  You can add this hook to `find-file-hook'."
       (setq imenu-generic-expression
 	    '((nil "^\\([^# \t]+\\)\\s-+" 1))))))))
 
+;; /etc/sudoers
+(when (memq 'etc-sudoers-generic-mode generic-extras-enable-list)
+
+(define-generic-mode etc-sudoers-generic-mode
+  '(?#)
+  '("User_Alias" "Runas_Alias" "Host_Alias"  "Cmnd_Alias"
+    "NOPASSWD" "PASSWD" "NOEXEC" "EXEC"
+    "ALL")
+  '(("\\<\\(root\\|su\\)\\>" 1 font-lock-warning-face)
+    ("\\(\\*\\)" 1 font-lock-warning-face)
+    ("\\<\\(%[A-Za-z0-9_]+\\)\\>" 1 font-lock-variable-name-face))
+  '("/etc/sudoers\\'")
+  nil
+  "Generic mode for sudoers configuration files."))
+
 ;; From Jacques Duthen <jacques.duthen@sncf.fr>
 (when (memq 'show-tabs-generic-mode generic-extras-enable-list)
 
@@ -1791,7 +1811,7 @@ like an INI file.  You can add this hook to `find-file-hook'."
   '("cache" "primary" "secondary" "forwarders" "limit" "options"
     "directory" "check-names")
   ;; List of additional font-lock-expressions
-  '(("\\([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\\)" 1 font-lock-constant-face)
+  '(("\\([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+\\)" 1 font-lock-constant-face)
     ("^directory\\s-+\\(.*\\)"              1 font-lock-variable-name-face)
     ("^\\(primary\\|cache\\)\\s-+\\([.A-Za-z]+\\)\\s-+\\(.*\\)"
      (2 font-lock-variable-name-face)
@@ -1809,7 +1829,7 @@ like an INI file.  You can add this hook to `find-file-hook'."
   ;; List of keywords
   '("IN" "NS" "CNAME" "SOA" "PTR" "MX" "A")
   ;; List of additional font-lock-expressions
-  '(("\\([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\\)" 1 font-lock-constant-face)
+  '(("\\([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+\\)" 1 font-lock-constant-face)
     ("^\\([.A-Za-z0-9]+\\)"                 1 font-lock-variable-name-face))
   ;; List of additional auto-mode-alist expressions
   nil
@@ -1976,5 +1996,5 @@ like an INI file.  You can add this hook to `find-file-hook'."
 
 (provide 'generic-x)
 
-;;; arch-tag: cde692a5-9ff6-4506-9999-c67999c2bdb5
+;; arch-tag: cde692a5-9ff6-4506-9999-c67999c2bdb5
 ;;; generic-x.el ends here

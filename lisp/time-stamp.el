@@ -1,7 +1,7 @@
 ;;; time-stamp.el --- Maintain last change time stamps in files edited by Emacs
 
 ;; Copyright (C) 1989, 1993, 1994, 1995, 1997, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -9,10 +9,10 @@
 ;; Maintainer: Stephen Gildea <gildea@stop.mail-abuse.org>
 ;; Keywords: tools
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -46,7 +44,7 @@
   :group 'extensions)
 
 (defcustom time-stamp-format "%:y-%02m-%02d %02H:%02M:%02S %u"
-  "*Format of the string inserted by \\[time-stamp].
+  "Format of the string inserted by \\[time-stamp].
 The value may be a string or a list.  Lists are supported only for
 backward compatibility; see variable `time-stamp-old-format-warn'.
 
@@ -96,7 +94,7 @@ historical default."
 ;;;###autoload(put 'time-stamp-format 'safe-local-variable 'stringp)
 
 (defcustom time-stamp-active t
-  "*Non-nil to enable time-stamping of buffers by \\[time-stamp].
+  "Non-nil to enable time-stamping of buffers by \\[time-stamp].
 Can be toggled by \\[time-stamp-toggle-active].
 See also the variable `time-stamp-warn-inactive'."
   :type 'boolean
@@ -269,7 +267,7 @@ The time stamp is updated only if the variable `time-stamp-active' is non-nil.
 The format of the time stamp is set by the variable `time-stamp-pattern' or
 `time-stamp-format'.  The variables `time-stamp-pattern',
 `time-stamp-line-limit', `time-stamp-start', `time-stamp-end',
-`time-stamp-count', and `time-stamp-inserts-lines' control finding 
+`time-stamp-count', and `time-stamp-inserts-lines' control finding
 the template."
   (interactive)
   (let ((line-limit time-stamp-line-limit)
@@ -710,7 +708,7 @@ around literals."
 ;;; Some functions used in time-stamp-format
 
 ;;; These functions have been obsolete since 1995
-;;; and will be removed in a future Emacs release.
+;;; and will be removed in Emacs 23.
 ;;; Meanwhile, discourage other packages from using them.
 (dolist (function '(time-stamp-month-dd-yyyy time-stamp-dd/mm/yyyy
 		    time-stamp-mon-dd-yyyy   time-stamp-dd-mon-yy
@@ -776,5 +774,5 @@ The first character of DD is space if the value is less than 10."
 
 (provide 'time-stamp)
 
-;;; arch-tag: 8a12c5c3-25d6-4a71-adc5-24b0e025a1e7
+;; arch-tag: 8a12c5c3-25d6-4a71-adc5-24b0e025a1e7
 ;;; time-stamp.el ends here

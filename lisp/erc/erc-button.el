@@ -1,7 +1,7 @@
 ;; erc-button.el --- A way of buttonizing certain things in ERC buffers
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Mario Lang <mlang@delysid.org>
 ;; Keywords: irc, button, url, regexp
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -57,16 +55,15 @@
   ((add-hook 'erc-insert-modify-hook 'erc-button-add-buttons 'append)
    (add-hook 'erc-send-modify-hook 'erc-button-add-buttons 'append)
    (add-hook 'erc-complete-functions 'erc-button-next)
-   (add-hook 'erc-mode-hook 'erc-button-add-keys))
+   (add-hook 'erc-mode-hook 'erc-button-setup))
   ((remove-hook 'erc-insert-modify-hook 'erc-button-add-buttons)
    (remove-hook 'erc-send-modify-hook 'erc-button-add-buttons)
    (remove-hook 'erc-complete-functions 'erc-button-next)
-   (remove-hook 'erc-mode-hook 'erc-button-add-keys)))
-
-;; Make XEmacs use `erc-button-face'.
-(when (featurep 'xemacs)
-  (add-hook 'erc-mode-hook
-            (lambda () (set (make-local-variable 'widget-button-face) nil))))
+   (remove-hook 'erc-mode-hook 'erc-button-setup)
+   (when (featurep 'xemacs)
+     (dolist (buffer (erc-buffer-list))
+       (with-current-buffer buffer
+         (kill-local-variable 'widget-button-face))))))
 
 ;;; Variables
 
@@ -99,7 +96,7 @@ above them."
   (concat "\\(www\\.\\|\\(s?https?\\|"
           "ftp\\|file\\|gopher\\|news\\|telnet\\|wais\\|mailto\\):\\)"
           "\\(//[-a-zA-Z0-9_.]+:[0-9]*\\)?"
-          "[-a-zA-Z0-9_=!?#$@~`%&*+\\/:;.,]+[-a-zA-Z0-9_=#$@~`%&*+\\/]")
+          "[-a-zA-Z0-9_=!?#$@~`%&*+\\/:;.,()]+[-a-zA-Z0-9_=#$@~`%&*+\\/()]")
   "Regular expression that matches URLs."
   :group 'erc-button
   :type 'regexp)
@@ -247,8 +244,12 @@ constituents.")
   "Internal variable used to keep track of whether we've added the
 global-level ERC button keys yet.")
 
-(defun erc-button-add-keys ()
+(defun erc-button-setup ()
   "Add ERC mode-level button movement keys.  This is only done once."
+  ;; Make XEmacs use `erc-button-face'.
+  (when (featurep 'xemacs)
+    (set (make-local-variable 'widget-button-face) nil))
+  ;; Add keys.
   (unless erc-button-keys-added
     (define-key erc-mode-map (kbd "<backtab>") 'erc-button-previous)
     (setq erc-button-keys-added t)))
@@ -299,9 +300,10 @@ specified by `erc-button-alist'."
         (setq bounds (bounds-of-thing-at-point 'word))
         (setq word (buffer-substring-no-properties
                     (car bounds) (cdr bounds)))
-        (if (erc-get-server-user word)
-            (erc-button-add-button (car bounds) (cdr bounds)
-                                   fun t (list word)))))))
+        (when (or (and (erc-server-buffer-p) (erc-get-server-user word))
+                  (and erc-channel-users (erc-get-channel-user word)))
+          (erc-button-add-button (car bounds) (cdr bounds)
+                                 fun t (list word)))))))
 
 (defun erc-button-add-buttons-1 (regexp entry)
   "Search through the buffer for matches to ENTRY and add buttons."

@@ -1,7 +1,7 @@
 /* The lwlib interface to Athena widgets.
 Copyright (C) 1993 Chuck Thompson <cthomp@cs.uiuc.edu>
 Copyright (C) 1994, 2001, 2002, 2003, 2004, 2005, 2006,
-  2007, 2008 Free Software Foundation, Inc.
+  2007, 2008, 2009 Free Software Foundation, Inc.
 
 This file is part of the Lucid Widget Library.
 
@@ -35,12 +35,21 @@ Boston, MA 02110-1301, USA.  */
 #include <X11/CoreP.h>
 #include <X11/Shell.h>
 
+#ifdef HAVE_XAW3D
+#include <X11/Xaw3d/Scrollbar.h>
+#include <X11/Xaw3d/Paned.h>
+#include <X11/Xaw3d/Dialog.h>
+#include <X11/Xaw3d/Form.h>
+#include <X11/Xaw3d/Command.h>
+#include <X11/Xaw3d/Label.h>
+#else /* !HAVE_XAW3D */
 #include <X11/Xaw/Scrollbar.h>
 #include <X11/Xaw/Paned.h>
 #include <X11/Xaw/Dialog.h>
 #include <X11/Xaw/Form.h>
 #include <X11/Xaw/Command.h>
 #include <X11/Xaw/Label.h>
+#endif /* HAVE_XAW3D */
 
 #include <X11/Xatom.h>
 

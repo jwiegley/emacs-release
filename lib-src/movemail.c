@@ -1,14 +1,14 @@
 /* movemail foo bar -- move file foo to file bar,
    locking file foo the way /bin/mail respects.
    Copyright (C) 1986, 1992, 1993, 1994, 1996, 1999, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
+
 
 /* Important notice: defining MAIL_USE_FLOCK or MAIL_USE_LOCKF *will
    cause loss of mail* if you do it on a system that does not normally
@@ -55,13 +54,13 @@ Boston, MA 02110-1301, USA.  */
  *
  */
 
-#define NO_SHORTNAMES   /* Tell config not to load remap.h */
 #include <config.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <stdio.h>
 #include <errno.h>
+#include <time.h>
 
 #include <getopt.h>
 #ifdef HAVE_UNISTD_H
@@ -113,7 +112,7 @@ Boston, MA 02110-1301, USA.  */
 #define R_OK 4
 #endif
 
-#if defined (XENIX) || defined (WINDOWSNT)
+#ifdef WINDOWSNT
 #include <sys/locking.h>
 #endif
 
@@ -175,7 +174,7 @@ main (argc, argv)
   char *inname, *outname;
   int indesc, outdesc;
   int nread;
-  WAITTYPE status;
+  int status;
   int c, preserve_mail = 0;
 
 #ifndef MAIL_USE_SYSTEM_LOCK
@@ -230,7 +229,7 @@ main (argc, argv)
       )
     {
 #ifdef MAIL_USE_POP
-      fprintf (stderr, "Usage: movemail [-p] inbox destfile%s\n",
+      fprintf (stderr, "Usage: movemail [-p] [-r] inbox destfile%s\n",
 	       " [POP-password]");
 #else
       fprintf (stderr, "Usage: movemail [-p] inbox destfile%s\n", "");
@@ -343,6 +342,13 @@ main (argc, argv)
 	  close (desc);
 
 	  tem = link (tempname, lockname);
+
+#ifdef EPERM
+	  if (tem < 0 && errno == EPERM)
+	    fatal ("Unable to create hard link between %s and %s",
+		   tempname, lockname);
+#endif
+
 	  unlink (tempname);
 	  if (tem >= 0)
 	    break;
@@ -370,7 +376,7 @@ main (argc, argv)
       int lockcount = 0;
       int status = 0;
 #if defined (MAIL_USE_MAILLOCK) && defined (HAVE_TOUCHLOCK)
-      long touched_lock, now;
+      time_t touched_lock, now;
 #endif
 
       setuid (getuid ());
@@ -388,13 +394,13 @@ main (argc, argv)
       if (indesc < 0)
 	pfatal_with_name (inname);
 
-#if defined (BSD_SYSTEM) || defined (XENIX)
+#ifdef BSD_SYSTEM
       /* In case movemail is setuid to root, make sure the user can
 	 read the output file.  */
       /* This is desirable for all systems
 	 but I don't want to assume all have the umask system call */
       umask (umask (0) & 0333);
-#endif /* BSD_SYSTEM || XENIX */
+#endif /* BSD_SYSTEM */
       outdesc = open (outname, O_WRONLY | O_CREAT | O_EXCL, 0666);
       if (outdesc < 0)
 	pfatal_with_name (outname);
@@ -422,14 +428,10 @@ main (argc, argv)
 #ifdef MAIL_USE_LOCKF
 	  status = lockf (indesc, F_LOCK, 0);
 #else /* not MAIL_USE_LOCKF */
-#ifdef XENIX
-	  status = locking (indesc, LK_RLCK, 0L);
-#else
 #ifdef WINDOWSNT
 	  status = locking (indesc, LK_RLCK, -1L);
 #else
 	  status = flock (indesc, LOCK_EX);
-#endif
 #endif
 #endif /* not MAIL_USE_LOCKF */
 #endif /* MAIL_USE_SYSTEM_LOCK */
@@ -503,13 +505,7 @@ main (argc, argv)
 #ifdef MAIL_USE_SYSTEM_LOCK
       if (! preserve_mail)
 	{
-#if defined (STRIDE) || defined (XENIX)
-	  /* Stride, xenix have file locking, but no ftruncate.
-	     This mess will do. */
-	  close (open (inname, O_CREAT | O_TRUNC | O_RDWR, 0666));
-#else
 	  ftruncate (indesc, 0L);
-#endif /* STRIDE or XENIX */
 	}
 #endif /* MAIL_USE_SYSTEM_LOCK */
 
@@ -688,6 +684,7 @@ xmalloc (size)
 #include <winsock.h>
 #endif
 #include <pwd.h>
+#include <string.h>
 
 #define NOTOK (-1)
 #define OK 0
@@ -928,7 +925,16 @@ int
 mbx_delimit_begin (mbf)
      FILE *mbf;
 {
-  if (fputs ("\f\n0, unseen,,\n", mbf) == EOF)
+  time_t now;
+  struct tm *ltime;
+  char fromline[40] = "From movemail ";
+
+  now = time (NULL);
+  ltime = localtime (&now);
+
+  strcat (fromline, asctime (ltime));
+
+  if (fputs (fromline, mbf) == EOF)
     return (NOTOK);
   return (OK);
 }
@@ -937,7 +943,7 @@ int
 mbx_delimit_end (mbf)
      FILE *mbf;
 {
-  if (putc ('\037', mbf) == EOF)
+  if (putc ('\n', mbf) == EOF)
     return (NOTOK);
   return (OK);
 }

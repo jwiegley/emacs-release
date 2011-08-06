@@ -1,16 +1,16 @@
 ;;; em-dirs.el --- directory navigation commands
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,23 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-(provide 'em-dirs)
-
-(eval-when-compile (require 'esh-maint))
-(require 'eshell)
-
-(defgroup eshell-dirs nil
-  "Directory navigation involves changing directories, examining the
-current directory, maintaining a directory stack, and also keeping
-track of a history of the last directory locations the user was in.
-Emacs does provide standard Lisp definitions of `pwd' and `cd', but
-they lack somewhat in feel from the typical shell equivalents."
-  :tag "Directory navigation"
-  :group 'eshell-module)
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -57,8 +41,21 @@ they lack somewhat in feel from the typical shell equivalents."
 ;; Eshell sessions.  It is a separate mechanism from `pushd' and
 ;; `popd', and the two may be used at the same time.
 
+;;; Code:
+
+(require 'eshell)
 (require 'ring)
 (require 'esh-opt)
+
+;;;###autoload
+(eshell-defgroup eshell-dirs nil
+  "Directory navigation involves changing directories, examining the
+current directory, maintaining a directory stack, and also keeping
+track of a history of the last directory locations the user was in.
+Emacs does provide standard Lisp definitions of `pwd' and `cd', but
+they lack somewhat in feel from the typical shell equivalents."
+  :tag "Directory navigation"
+  :group 'eshell-module)
 
 ;;; User Variables:
 
@@ -344,8 +341,7 @@ in the minibuffer:
 		  index (1+ index)))))
     oldpath))
 
-(eval-when-compile
-  (defvar dired-directory))
+(defvar dired-directory)
 
 (defun eshell/cd (&rest args)           ; all but first ignored
   "Alias to extend the behavior of `cd'."
@@ -566,7 +562,11 @@ in the minibuffer:
 	   (write-region (point-min) (point-max) file nil
 			 'no-message))))))))
 
-;;; Code:
+(provide 'em-dirs)
 
-;;; arch-tag: 1e9c5a95-f1bd-45f8-ad36-55aac706e787
+;; Local Variables:
+;; generated-autoload-file: "esh-groups.el"
+;; End:
+
+;; arch-tag: 1e9c5a95-f1bd-45f8-ad36-55aac706e787
 ;;; em-dirs.el ends here

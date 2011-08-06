@@ -1,7 +1,7 @@
 ;;; loadhist.el --- lisp functions for working with feature groups
 
 ;; Copyright (C) 1995, 1998, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Eric S. Raymond <esr@snark.thyrsus.com>
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -38,12 +36,11 @@
   "Return the file and list of definitions associated with FEATURE.
 The value is actually the element of `load-history'
 for the file that did (provide FEATURE)."
-   (catch 'foundit
-     (mapc (lambda (x)
-	     (if (member (cons 'provide feature) (cdr x))
-		 (throw 'foundit x)))
-	   load-history)
-     nil))
+  (catch 'foundit
+    (let ((element (cons 'provide feature)))
+      (dolist (x load-history nil)
+	(when (member element (cdr x))
+	  (throw 'foundit x))))))
 
 (defun feature-file (feature)
   "Return the file name from which a given FEATURE was loaded.
@@ -72,32 +69,25 @@ A library name is equivalent to the file name that `load-library' would load."
   "Return the list of features provided by FILE as it was loaded.
 FILE can be a file name, or a library name.
 A library name is equivalent to the file name that `load-library' would load."
-  (let ((symbols (file-loadhist-lookup file))
-	provides)
-    (mapc (lambda (x)
-	    (if (and (consp x) (eq (car x) 'provide))
-		(setq provides (cons (cdr x) provides))))
-	  symbols)
-    provides))
+  (let (provides)
+    (dolist (x (file-loadhist-lookup file) provides)
+      (when (eq (car-safe x) 'provide)
+	(push (cdr x) provides)))))
 
 (defun file-requires (file)
   "Return the list of features required by FILE as it was loaded.
 FILE can be a file name, or a library name.
 A library name is equivalent to the file name that `load-library' would load."
-  (let ((symbols (file-loadhist-lookup file))
-	requires)
-    (mapc (lambda (x)
-	    (if (and (consp x) (eq (car x) 'require))
-		(setq requires (cons (cdr x) requires))))
-	  symbols)
-    requires))
+  (let (requires)
+    (dolist (x (file-loadhist-lookup file) requires)
+      (when (eq (car-safe x) 'require)
+	(push (cdr x) requires)))))
 
 (defsubst file-set-intersect (p q)
   "Return the set intersection of two lists."
-  (let ((ret nil))
+  (let (ret)
     (dolist (x p ret)
-      (if (memq x q) (setq ret (cons x ret))))
-    ret))
+      (when (memq x q) (push x ret)))))
 
 (defun file-dependents (file)
   "Return the list of loaded libraries that depend on FILE.
@@ -107,9 +97,8 @@ A library name is equivalent to the file name that `load-library' would load."
   (let ((provides (file-provides file))
 	(dependents nil))
     (dolist (x load-history dependents)
-      (if (file-set-intersect provides (file-requires (car x)))
-	  (setq dependents (cons (car x) dependents))))
-    dependents))
+      (when (file-set-intersect provides (file-requires (car x)))
+	(push (car x) dependents)))))
 
 (defun read-feature (prompt &optional loaded-p)
   "Read feature name from the minibuffer, prompting with string PROMPT.
@@ -128,7 +117,8 @@ from a file."
 (defvar unload-feature-special-hooks
   '(after-change-functions after-insert-file-functions
     after-make-frame-functions auto-fill-function before-change-functions
-    blink-paren-function buffer-access-fontify-functions command-line-functions
+    blink-paren-function buffer-access-fontify-functions
+    choose-completion-string-functions command-line-functions
     comment-indent-function compilation-finish-functions delete-frame-functions
     disabled-command-function find-file-not-found-functions
     font-lock-beginning-of-syntax-function font-lock-fontify-buffer-function
@@ -136,9 +126,9 @@ from a file."
     font-lock-syntactic-face-function font-lock-unfontify-buffer-function
     font-lock-unfontify-region-function kill-buffer-query-functions
     kill-emacs-query-functions lisp-indent-function mouse-position-function
-    redisplay-end-trigger-functions temp-buffer-show-function
-    window-scroll-functions window-size-change-functions
-    write-contents-functions write-file-functions
+    redisplay-end-trigger-functions suspend-tty-functions
+    temp-buffer-show-function window-scroll-functions
+    window-size-change-functions write-contents-functions write-file-functions
     write-region-annotate-functions)
   "A list of special hooks from Info node `(elisp)Standard Hooks'.
 

@@ -1,16 +1,16 @@
 ;;; esh-opt.el --- command options processing
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,21 +18,21 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;;; Code:
 
 (provide 'esh-opt)
 
-(eval-when-compile (require 'esh-maint))
+(eval-when-compile (require 'esh-ext))
 
 (defgroup eshell-opt nil
   "The options processing code handles command argument parsing for
 Eshell commands implemented in Lisp."
   :tag "Command options processing"
   :group 'eshell)
-
-;;; Commentary:
 
 ;;; User Functions:
 
@@ -58,6 +58,7 @@ BODY-FORMS.  If instead an external command is run, the tag
 
 Lastly, any remaining arguments will be available in a locally
 interned variable `args' (created using a `let' form)."
+  (declare (debug (form form sexp body)))
   `(let ((temp-args
 	  ,(if (memq ':preserve-args (cadr options))
 	       macro-args
@@ -73,12 +74,11 @@ interned variable `args' (created using a `let' form)."
 
 ;;; Internal Functions:
 
-(eval-when-compile
-  (defvar temp-args)
-  (defvar last-value)
-  (defvar usage-msg)
-  (defvar ext-command)
-  (defvar args))
+(defvar temp-args)
+(defvar last-value)
+(defvar usage-msg)
+(defvar ext-command)
+(defvar args)
 
 (defun eshell-do-opt (name options body-forms)
   "Helper function for `eshell-eval-using-options'.
@@ -101,7 +101,7 @@ This code doesn't really need to be macro expanded everywhere."
 		  nil))
 	   (error "%s" usage-msg))))
       (throw 'eshell-external
-	     (eshell-external-command ext-command args))
+             (eshell-external-command ext-command args))
     last-value))
 
 (defun eshell-show-usage (name options)
@@ -195,7 +195,7 @@ switch is unrecognized."
 	  (setq extcmd (eshell-search-path (cadr extcmd)))
 	  (if extcmd
 	      (throw 'eshell-ext-command extcmd)
-	    (if (char-valid-p switch)
+	    (if (characterp switch)
 		(error "%s: unrecognized option -%c" name switch)
 	      (error "%s: unrecognized option --%s" name switch))))))))
 
@@ -224,7 +224,5 @@ This assumes that symbols have been intern'd by `eshell-with-options'."
 		(setq index (1+ index)))))))))
   args)
 
-;;; Code:
-
-;;; arch-tag: 45c6c2d0-8091-46a1-a205-2f4bafd8230c
+;; arch-tag: 45c6c2d0-8091-46a1-a205-2f4bafd8230c
 ;;; esh-opt.el ends here

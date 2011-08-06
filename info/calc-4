@@ -1,27 +1,393 @@
-This is ../info/calc, produced by makeinfo version 4.11 from calc.texi.
+This is ../../info/calc, produced by makeinfo version 4.11 from
+calc.texi.
 
 This file documents Calc, the GNU Emacs calculator.
 
-   Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008 Free Software Foundation, Inc.
+Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+2008, 2009 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
-     Version 1.2 or any later version published by the Free Software
+     Version 1.3 or any later version published by the Free Software
      Foundation; with the Invariant Sections being just "GNU GENERAL
      PUBLIC LICENSE", with the Front-Cover texts being "A GNU Manual,"
      and with the Back-Cover Texts as in (a) below.  A copy of the
      license is included in the section entitled "GNU Free
      Documentation License."
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
+     developing GNU and promoting software freedom."
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Calc: (calc).         Advanced desk calculator and mathematical tool.
 END-INFO-DIR-ENTRY
+
+
+File: calc,  Node: Logical Operations,  Next: Rewrite Rules,  Prev: Summations,  Up: Algebra
+
+12.10 Logical Operations
+========================
+
+The following commands and algebraic functions return true/false values,
+where 1 represents "true" and 0 represents "false."  In cases where a
+truth value is required (such as for the condition part of a rewrite
+rule, or as the condition for a `Z [ Z ]' control structure), any
+nonzero value is accepted to mean "true."  (Specifically, anything for
+which `dnonzero' returns 1 is "true," and anything for which `dnonzero'
+returns 0 or cannot decide is assumed "false."  Note that this means
+that `Z [ Z ]' will execute the "then" portion if its condition is
+provably true, but it will execute the "else" portion for any condition
+like `a = b' that is not provably true, even if it might be true.
+Algebraic functions that have conditions as arguments, like `? :' and
+`&&', remain unevaluated if the condition is neither provably true nor
+provably false.  *Note Declarations::.)
+
+   The `a =' (`calc-equal-to') command, or `eq(a,b)' function (which
+can also be written `a = b' or `a == b' in an algebraic formula) is
+true if `a' and `b' are equal, either because they are identical
+expressions, or because they are numbers which are numerically equal.
+(Thus the integer 1 is considered equal to the float 1.0.)  If the
+equality of `a' and `b' cannot be determined, the comparison is left in
+symbolic form.  Note that as a command, this operation pops two values
+from the stack and pushes back either a 1 or a 0, or a formula `a = b'
+if the values' equality cannot be determined.
+
+   Many Calc commands use `=' formulas to represent "equations".  For
+example, the `a S' (`calc-solve-for') command rearranges an equation to
+solve for a given variable.  The `a M' (`calc-map-equation') command
+can be used to apply any function to both sides of an equation; for
+example, `2 a M *' multiplies both sides of the equation by two.  Note
+that just `2 *' would not do the same thing; it would produce the
+formula `2 (a = b)' which represents 2 if the equality is true or zero
+if not.
+
+   The `eq' function with more than two arguments (e.g., `C-u 3 a =' or
+`a = b = c') tests if all of its arguments are equal.  In algebraic
+notation, the `=' operator is unusual in that it is neither left- nor
+right-associative:  `a = b = c' is not the same as `(a = b) = c' or `a
+= (b = c)' (which each compare one variable with the 1 or 0 that
+results from comparing two other variables).
+
+   The `a #' (`calc-not-equal-to') command, or `neq(a,b)' or `a != b'
+function, is true if `a' and `b' are not equal.  This also works with
+more than two arguments; `a != b != c != d' tests that all four of `a',
+`b', `c', and `d' are distinct numbers.
+
+   The `a <' (`calc-less-than') [`lt(a,b)' or `a < b'] operation is
+true if `a' is less than `b'.  Similar functions are `a >'
+(`calc-greater-than') [`gt(a,b)' or `a > b'], `a [' (`calc-less-equal')
+[`leq(a,b)' or `a <= b'], and `a ]' (`calc-greater-equal') [`geq(a,b)'
+or `a >= b'].
+
+   While the inequality functions like `lt' do not accept more than two
+arguments, the syntax `a <= b < c' is translated to an equivalent
+expression involving intervals: `b in [a .. c)'.  (See the description
+of `in' below.)  All four combinations of `<' and `<=' are allowed, or
+any of the four combinations of `>' and `>='.  Four-argument
+constructions like `a < b < c < d', and mixtures like `a < b = c' that
+involve both equalities and inequalities, are not allowed.
+
+   The `a .' (`calc-remove-equal') [`rmeq'] command extracts the
+righthand side of the equation or inequality on the top of the stack.
+It also works elementwise on vectors.  For example, if `[x = 2.34, y =
+z / 2]' is on the stack, then `a .' produces `[2.34, z / 2]'.  As a
+special case, if the righthand side is a variable and the lefthand side
+is a number (as in `2.34 = x'), then Calc keeps the lefthand side
+instead.  Finally, this command works with assignments `x := 2.34' as
+well as equations, always taking the righthand side, and for `=>'
+(evaluates-to) operators, always taking the lefthand side.
+
+   The `a &' (`calc-logical-and') [`land(a,b)' or `a && b'] function is
+true if both of its arguments are true, i.e., are non-zero numbers.  In
+this case, the result will be either `a' or `b', chosen arbitrarily.
+If either argument is zero, the result is zero.  Otherwise, the formula
+is left in symbolic form.
+
+   The `a |' (`calc-logical-or') [`lor(a,b)' or `a || b'] function is
+true if either or both of its arguments are true (nonzero).  The result
+is whichever argument was nonzero, choosing arbitrarily if both are
+nonzero.  If both `a' and `b' are zero, the result is zero.
+
+   The `a !' (`calc-logical-not') [`lnot(a)' or `! a'] function is true
+if `a' is false (zero), or false if `a' is true (nonzero).  It is left
+in symbolic form if `a' is not a number.
+
+   The `a :' (`calc-logical-if') [`if(a,b,c)' or `a ? b : c'] function
+is equal to either `b' or `c' if `a' is a nonzero number or zero,
+respectively.  If `a' is not a number, the test is left in symbolic
+form and neither `b' nor `c' is evaluated in any way.  In algebraic
+formulas, this is one of the few Calc functions whose arguments are not
+automatically evaluated when the function itself is evaluated.  The
+others are `lambda', `quote', and `condition'.
+
+   One minor surprise to watch out for is that the formula `a?3:4' will
+not work because the `3:4' is parsed as a fraction instead of as three
+separate symbols.  Type something like `a ? 3 : 4' or `a?(3):4' instead.
+
+   As a special case, if `a' evaluates to a vector, then both `b' and
+`c' are evaluated; the result is a vector of the same length as `a'
+whose elements are chosen from corresponding elements of `b' and `c'
+according to whether each element of `a' is zero or nonzero.  Each of
+`b' and `c' must be either a vector of the same length as `a', or a
+non-vector which is matched with all elements of `a'.
+
+   The `a {' (`calc-in-set') [`in(a,b)'] function is true if the number
+`a' is in the set of numbers represented by `b'.  If `b' is an interval
+form, `a' must be one of the values encompassed by the interval.  If
+`b' is a vector, `a' must be equal to one of the elements of the
+vector.  (If any vector elements are intervals, `a' must be in any of
+the intervals.)  If `b' is a plain number, `a' must be numerically
+equal to `b'.  *Note Set Operations::, for a group of commands that
+manipulate sets of this sort.
+
+   The `typeof(a)' function produces an integer or variable which
+characterizes `a'.  If `a' is a number, vector, or variable, the result
+will be one of the following numbers:
+
+      1   Integer
+      2   Fraction
+      3   Floating-point number
+      4   HMS form
+      5   Rectangular complex number
+      6   Polar complex number
+      7   Error form
+      8   Interval form
+      9   Modulo form
+     10   Date-only form
+     11   Date/time form
+     12   Infinity (inf, uinf, or nan)
+     100  Variable
+     101  Vector (but not a matrix)
+     102  Matrix
+
+   Otherwise, `a' is a formula, and the result is a variable which
+represents the name of the top-level function call.
+
+   The `integer(a)' function returns true if `a' is an integer.  The
+`real(a)' function is true if `a' is a real number, either integer,
+fraction, or float.  The `constant(a)' function returns true if `a' is
+any of the objects for which `typeof' would produce an integer code
+result except for variables, and provided that the components of an
+object like a vector or error form are themselves constant.  Note that
+infinities do not satisfy any of these tests, nor do special constants
+like `pi' and `e'.
+
+   *Note Declarations::, for a set of similar functions that recognize
+formulas as well as actual numbers.  For example, `dint(floor(x))' is
+true because `floor(x)' is provably integer-valued, but
+`integer(floor(x))' does not because `floor(x)' is not literally an
+integer constant.
+
+   The `refers(a,b)' function is true if the variable (or
+sub-expression) `b' appears in `a', or false otherwise.  Unlike the
+other tests described here, this function returns a definite "no" answer
+even if its arguments are still in symbolic form.  The only case where
+`refers' will be left unevaluated is if `a' is a plain variable
+(different from `b').
+
+   The `negative(a)' function returns true if `a' "looks" negative,
+because it is a negative number, because it is of the form `-x', or
+because it is a product or quotient with a term that looks negative.
+This is most useful in rewrite rules.  Beware that `negative(a)'
+evaluates to 1 or 0 for _any_ argument `a', so it can only be stored in
+a formula if the default simplifications are turned off first with `m
+O' (or if it appears in an unevaluated context such as a rewrite rule
+condition).
+
+   The `variable(a)' function is true if `a' is a variable, or false if
+not.  If `a' is a function call, this test is left in symbolic form.
+Built-in variables like `pi' and `inf' are considered variables like
+any others by this test.
+
+   The `nonvar(a)' function is true if `a' is a non-variable.  If its
+argument is a variable it is left unsimplified; it never actually
+returns zero.  However, since Calc's condition-testing commands
+consider "false" anything not provably true, this is often good enough.
+
+   The functions `lin', `linnt', `islin', and `islinnt' check if an
+expression is "linear," i.e., can be written in the form `a + b x' for
+some constants `a' and `b', and some variable or subformula `x'.  The
+function `islin(f,x)' checks if formula `f' is linear in `x', returning
+1 if so.  For example, `islin(x,x)', `islin(-x,x)', `islin(3,x)', and
+`islin(x y / 3 - 2, x)' all return 1.  The `lin(f,x)' function is
+similar, except that instead of returning 1 it returns the vector `[a,
+b, x]'.  For the above examples, this vector would be `[0, 1, x]', `[0,
+-1, x]', `[3, 0, x]', and `[-2, y/3, x]', respectively.  Both `lin' and
+`islin' generally remain unevaluated for expressions which are not
+linear, e.g., `lin(2 x^2, x)' and `lin(sin(x), x)'.  The second
+argument can also be a formula; `islin(2 + 3 sin(x), sin(x))' returns
+true.
+
+   The `linnt' and `islinnt' functions perform a similar check, but
+require a "non-trivial" linear form, which means that the `b'
+coefficient must be non-zero.  For example, `lin(2,x)' returns `[2, 0,
+x]' and `lin(y,x)' returns `[y, 0, x]', but `linnt(2,x)' and
+`linnt(y,x)' are left unevaluated (in other words, these formulas are
+considered to be only "trivially" linear in `x').
+
+   All four linearity-testing functions allow you to omit the second
+argument, in which case the input may be linear in any non-constant
+formula.  Here, the `a=0', `b=1' case is also considered trivial, and
+only constant values for `a' and `b' are recognized.  Thus, `lin(2 x
+y)' returns `[0, 2, x y]', `lin(2 - x y)' returns `[2, -1, x y]', and
+`lin(x y)' returns `[0, 1, x y]'.  The `linnt' function would allow the
+first two cases but not the third.  Also, neither `lin' nor `linnt'
+accept plain constants as linear in the one-argument case: `islin(2,x)'
+is true, but `islin(2)' is false.
+
+   The `istrue(a)' function returns 1 if `a' is a nonzero number or
+provably nonzero formula, or 0 if `a' is anything else.  Calls to
+`istrue' can only be manipulated if `m O' mode is used to make sure
+they are not evaluated prematurely.  (Note that declarations are used
+when deciding whether a formula is true; `istrue' returns 1 when
+`dnonzero' would return 1, and it returns 0 when `dnonzero' would
+return 0 or leave itself in symbolic form.)
+
+
+File: calc,  Node: Rewrite Rules,  Prev: Logical Operations,  Up: Algebra
+
+12.11 Rewrite Rules
+===================
+
+The `a r' (`calc-rewrite') [`rewrite'] command makes substitutions in a
+formula according to a specified pattern or patterns known as "rewrite
+rules".  Whereas `a b' (`calc-substitute') matches literally, so that
+substituting `sin(x)' with `cos(x)' matches only the `sin' function
+applied to the variable `x', rewrite rules match general kinds of
+formulas; rewriting using the rule `sin(x) := cos(x)' matches `sin' of
+any argument and replaces it with `cos' of that same argument.  The
+only significance of the name `x' is that the same name is used on both
+sides of the rule.
+
+   Rewrite rules rearrange formulas already in Calc's memory.  *Note
+Syntax Tables::, to read about "syntax rules", which are similar to
+algebraic rewrite rules but operate when new algebraic entries are
+being parsed, converting strings of characters into Calc formulas.
+
+* Menu:
+
+* Entering Rewrite Rules::
+* Basic Rewrite Rules::
+* Conditional Rewrite Rules::
+* Algebraic Properties of Rewrite Rules::
+* Other Features of Rewrite Rules::
+* Composing Patterns in Rewrite Rules::
+* Nested Formulas with Rewrite Rules::
+* Multi-Phase Rewrite Rules::
+* Selections with Rewrite Rules::
+* Matching Commands::
+* Automatic Rewrites::
+* Debugging Rewrites::
+* Examples of Rewrite Rules::
+
+
+File: calc,  Node: Entering Rewrite Rules,  Next: Basic Rewrite Rules,  Prev: Rewrite Rules,  Up: Rewrite Rules
+
+12.11.1 Entering Rewrite Rules
+------------------------------
+
+Rewrite rules normally use the "assignment" operator `OLD := NEW'.
+This operator is equivalent to the function call `assign(old, new)'.
+The `assign' function is undefined by itself in Calc, so an assignment
+formula such as a rewrite rule will be left alone by ordinary Calc
+commands.  But certain commands, like the rewrite system, interpret
+assignments in special ways.
+
+   For example, the rule `sin(x)^2 := 1-cos(x)^2' says to replace every
+occurrence of the sine of something, squared, with one minus the square
+of the cosine of that same thing.  All by itself as a formula on the
+stack it does nothing, but when given to the `a r' command it turns
+that command into a sine-squared-to-cosine-squared converter.
+
+   To specify a set of rules to be applied all at once, make a vector of
+rules.
+
+   When `a r' prompts you to enter the rewrite rules, you can answer in
+several ways:
+
+  1. With a rule:  `f(x) := g(x) <RET>'.
+
+  2. With a vector of rules:  `[f1(x) := g1(x), f2(x) := g2(x)] <RET>'.
+     (You can omit the enclosing square brackets if you wish.)
+
+  3. With the name of a variable that contains the rule or rules vector:
+     `myrules <RET>'.
+
+  4. With any formula except a rule, a vector, or a variable name; this
+     will be interpreted as the OLD half of a rewrite rule, and you
+     will be prompted a second time for the NEW half: `f(x) <RET> g(x)
+     <RET>'.
+
+  5. With a blank line, in which case the rule, rules vector, or
+     variable will be taken from the top of the stack (and the formula
+     to be rewritten will come from the second-to-top position).
+
+   If you enter the rules directly (as opposed to using rules stored in
+a variable), those rules will be put into the Trail so that you can
+retrieve them later.  *Note Trail Commands::.
+
+   It is most convenient to store rules you use often in a variable and
+invoke them by giving the variable name.  The `s e'
+(`calc-edit-variable') command is an easy way to create or edit a rule
+set stored in a variable.  You may also wish to use `s p'
+(`calc-permanent-variable') to save your rules permanently; *note
+Operations on Variables::.
+
+   Rewrite rules are compiled into a special internal form for faster
+matching.  If you enter a rule set directly it must be recompiled every
+time.  If you store the rules in a variable and refer to them through
+that variable, they will be compiled once and saved away along with the
+variable for later reference.  This is another good reason to store
+your rules in a variable.
+
+   Calc also accepts an obsolete notation for rules, as vectors `[OLD,
+NEW]'.  But because it is easily confused with a vector of two rules,
+the use of this notation is no longer recommended.
+
+
+File: calc,  Node: Basic Rewrite Rules,  Next: Conditional Rewrite Rules,  Prev: Entering Rewrite Rules,  Up: Rewrite Rules
+
+12.11.2 Basic Rewrite Rules
+---------------------------
+
+To match a particular formula `x' with a particular rewrite rule `OLD
+:= NEW', Calc compares the structure of `x' with the structure of OLD.
+Variables that appear in OLD are treated as "meta-variables"; the
+corresponding positions in `x' may contain any sub-formulas.  For
+example, the pattern `f(x,y)' would match the expression `f(12, a+1)'
+with the meta-variable `x' corresponding to 12 and with `y'
+corresponding to `a+1'.  However, this pattern would not match `f(12)'
+or `g(12, a+1)', since there is no assignment of the meta-variables
+that will make the pattern match these expressions.  Notice that if the
+pattern is a single meta-variable, it will match any expression.
+
+   If a given meta-variable appears more than once in OLD, the
+corresponding sub-formulas of `x' must be identical.  Thus the pattern
+`f(x,x)' would match `f(12, 12)' and `f(a+1, a+1)' but not `f(12, a+1)'
+or `f(a+b, b+a)'.  (*Note Conditional Rewrite Rules::, for a way to
+match the latter.)
+
+   Things other than variables must match exactly between the pattern
+and the target formula.  To match a particular variable exactly, use
+the pseudo-function `quote(v)' in the pattern.  For example, the
+pattern `x+quote(y)' matches `x+y', `2+y', or `sin(a)+y'.
+
+   The special variable names `e', `pi', `i', `phi', `gamma', `inf',
+`uinf', and `nan' always match literally.  Thus the pattern `sin(d + e
++ f)' acts exactly like `sin(d + quote(e) + f)'.
+
+   If the OLD pattern is found to match a given formula, that formula
+is replaced by NEW, where any occurrences in NEW of meta-variables from
+the pattern are replaced with the sub-formulas that they matched.
+Thus, applying the rule `f(x,y) := g(y+x,x)' to `f(12, a+1)' would
+produce `g(a+13, 12)'.
+
+   The normal `a r' command applies rewrite rules over and over
+throughout the target formula until no further changes are possible (up
+to a limit of 100 times).  Use `C-u 1 a r' to make only one change at a
+time.
 
 
 File: calc,  Node: Conditional Rewrite Rules,  Next: Algebraic Properties of Rewrite Rules,  Prev: Basic Rewrite Rules,  Up: Rewrite Rules
@@ -1401,14 +1767,27 @@ current angular mode.
 
    The `u c' (`calc-convert-units') command converts a units expression
 to new, compatible units.  For example, given the units expression `55
-mph', typing `u c m/s <RET>' produces `24.5872 m/s'.  If the units you
-request are inconsistent with the original units, the number will be
-converted into your units times whatever "remainder" units are left
-over.  For example, converting `55 mph' into acres produces `6.08e-3
-acre / m s'.  (Recall that multiplication binds more strongly than
-division in Calc formulas, so the units here are acres per
-meter-second.)  Remainder units are expressed in terms of "fundamental"
-units like `m' and `s', regardless of the input units.
+mph', typing `u c m/s <RET>' produces `24.5872 m/s'.  If you have
+previously converted a units expression with the same type of units (in
+this case, distance over time), you will be offered the previous choice
+of new units as a default.  Continuing the above example, entering the
+units expression `100 km/hr' and typing `u c <RET>' (without specifying
+new units) produces `27.7777777778 m/s'.
+
+   While many of Calc's conversion factors are exact, some are
+necessarily approximate.  If Calc is in fraction mode (*note Fraction
+Mode::), then unit conversions will try to give exact, rational
+conversions, but it isn't always possible.  Given `55 mph' in fraction
+mode, typing `u c m/s <RET>' produces  `15367:625 m/s', for example,
+while typing `u c au/yr <RET>' produces `5.18665819999e-3 au/yr'.
+
+   If the units you request are inconsistent with the original units,
+the number will be converted into your units times whatever "remainder"
+units are left over.  For example, converting `55 mph' into acres
+produces `6.08e-3 acre / m s'.  (Recall that multiplication binds more
+strongly than division in Calc formulas, so the units here are acres
+per meter-second.)  Remainder units are expressed in terms of
+"fundamental" units like `m' and `s', regardless of the input units.
 
    One special exception is that if you specify a single unit name, and
 a compatible unit appears somewhere in the units expression, then that
@@ -1557,14 +1936,37 @@ File: calc,  Node: Predefined Units,  Next: User-Defined Units,  Prev: The Units
 13.3 Predefined Units
 =====================
 
-Since the exact definitions of many kinds of units have evolved over the
-years, and since certain countries sometimes have local differences in
-their definitions, it is a good idea to examine Calc's definition of a
-unit before depending on its exact value.  For example, there are three
-different units for gallons, corresponding to the US (`gal'), Canadian
-(`galC'), and British (`galUK') definitions.  Also, note that `oz' is a
-standard ounce of mass, `ozt' is a Troy ounce, and `ozfl' is a fluid
-ounce.
+The definitions of many units have changed over the years.  For example,
+the meter was originally defined in 1791 as one ten-millionth of the
+distance from the equator to the north pole.  In order to be more
+precise, the definition was adjusted several times, and now a meter is
+defined as the distance that light will travel in a vacuum in
+1/299792458 of a second; consequently, the speed of light in a vacuum
+is exactly 299792458 m/s.  Many other units have been redefined in
+terms of fundamental physical processes; a second, for example, is
+currently defined as 9192631770 periods of a certain radiation related
+to the cesium-133 atom.  The only SI unit that is not based on a
+fundamental physical process (although there are efforts to change
+this) is the kilogram, which was originally defined as the mass of one
+liter of water, but is now defined as the mass of the International
+Prototype Kilogram (IPK), a cylinder of platinum-iridium kept at the
+Bureau International des Poids et Mesures in Se`vres, France.  (There
+are several copies of the IPK throughout the world.)  The British
+imperial units, once defined in terms of physical objects, were
+redefined in 1963 in terms of SI units.  The US customary units, which
+were the same as British units until the British imperial system was
+created in 1824, were also defined in terms of the SI units in 1893.
+Because of these redefinitions, conversions between metric, British
+Imperial, and US customary units can often be done precisely.
+
+   Since the exact definitions of many kinds of units have evolved over
+the years, and since certain countries sometimes have local differences
+in their definitions, it is a good idea to examine Calc's definition of
+a unit before depending on its exact value.  For example, there are
+three different units for gallons, corresponding to the US (`gal'),
+Canadian (`galC'), and British (`galUK') definitions.  Also, note that
+`oz' is a standard ounce of mass, `ozt' is a Troy ounce, and `ozfl' is
+a fluid ounce.
 
    The temperature units corresponding to degrees Kelvin and Centigrade
 (Celsius) are the same in this table, since most units commands treat
@@ -1656,6 +2058,11 @@ defines the new unit `rod' to be equivalent to 16.5 feet.  The unit
 conversion and simplification commands will now treat `rod' just like
 any other unit of length.  You will also be prompted for an optional
 English description of the unit, which will appear in the Units Table.
+If you wish the definition of this unit to be displayed in a special
+way in the Units Table buffer (such as with an asterisk to indicate an
+approximate value), then you can call this command with an argument,
+`C-u u d'; you will then also be prompted for a string that will be
+used to display the definition.
 
    The `u u' (`calc-undefine-unit') command removes a user-defined
 unit.  It is not possible to remove one of the predefined units,
@@ -1874,8 +2281,7 @@ former will simply leave the formula `a' on the stack whereas the
 latter will produce an error message.
 
    The `r' prefix may be followed by a digit, so that `r 9' is
-equivalent to `s r 9'.  (The `r' prefix is otherwise unused in the
-current version of Calc.)
+equivalent to `s r 9'.
 
 
 File: calc,  Node: Operations on Variables,  Next: Let Command,  Prev: Recalling Variables,  Up: Store and Recall
@@ -2189,11 +2595,13 @@ variables.
 
    The "x" and "y" values for the data points (as pulled from the
 vectors, calculated from the formulas, or interpolated from the
-intervals) should be real numbers (integers, fractions, or floats).  If
-either the "x" value or the "y" value of a given data point is not a
-real number, that data point will be omitted from the graph.  The
-points on either side of the invalid point will _not_ be connected by a
-line.
+intervals) should be real numbers (integers, fractions, or floats).
+One exception to this is that the "y" entry can consist of a vector of
+numbers combined with error forms, in which case the points will be
+plotted with the appropriate error bars.  Other than this, if either
+the "x" value or the "y" value of a given data point is not a real
+number, that data point will be omitted from the graph.  The points on
+either side of the invalid point will _not_ be connected by a line.
 
    See the documentation for `g a' below for a description of the way
 numeric prefix arguments affect `g f'.
@@ -2512,6 +2920,9 @@ line styles available for any device.
    The `g S' (`calc-graph-point-style') command similarly turns the
 symbols at the data points on or off, or sets the point style.  If you
 turn both lines and points off, the data points will show as tiny dots.
+If the "y" values being plotted contain error forms and the connecting
+lines are turned off, then this command will also turn the error bars
+on or off.
 
    Another way to specify curve styles is with the `LineStyles' and
 `PointStyles' variables.  These variables initially have no stored
@@ -2695,6 +3106,8 @@ work with Calc from a regular editing buffer.  *Note Embedded Mode::.
 
 * Killing From Stack::
 * Yanking Into Stack::
+* Saving Into Registers::
+* Inserting From Registers::
 * Grabbing From Buffers::
 * Yanking Into Buffers::
 * X Cut and Paste::
@@ -2710,19 +3123,20 @@ ring," from which it can later be "yanked" by a `C-y' command.  Three
 common kill commands in normal Emacs are `C-k', which kills one line,
 `C-w', which kills the region between mark and point, and `M-w', which
 puts the region into the kill ring without actually deleting it.  All
-of these commands work in the Calculator, too.  Also, `M-k' has been
-provided to complete the set; it puts the current line into the kill
-ring without deleting anything.
+of these commands work in the Calculator, too, although in the
+Calculator they operate on whole stack entries, so they "round up" the
+specified region to encompass full lines.  (To copy only parts of
+lines, the `M-C-w' command in the Calculator will copy the region to
+the kill ring without any "rounding up", just like the `M-w' command in
+normal Emacs.)  Also, `M-k' has been provided to complete the set; it
+puts the current line into the kill ring without deleting anything.
 
    The kill commands are unusual in that they pay attention to the
 location of the cursor in the Calculator buffer.  If the cursor is on
 or below the bottom line, the kill commands operate on the top of the
 stack.  Otherwise, they operate on whatever stack element the cursor is
-on.  Calc's kill commands always operate on whole stack entries.  (They
-act the same as their standard Emacs cousins except they "round up" the
-specified region to encompass full lines.)  The text is copied into the
-kill ring exactly as it appears on the screen, including line numbers
-if they are enabled.
+on.  The text is copied into the kill ring exactly as it appears on the
+screen, including line numbers if they are enabled.
 
    A numeric prefix argument to `C-k' or `M-k' affects the number of
 lines killed.  A positive argument kills the current line and `n-1'
@@ -2734,7 +3148,7 @@ argument copies only the number itself into the kill ring, whereas
 newline.
 
 
-File: calc,  Node: Yanking Into Stack,  Next: Grabbing From Buffers,  Prev: Killing From Stack,  Up: Kill and Yank
+File: calc,  Node: Yanking Into Stack,  Next: Saving Into Registers,  Prev: Killing From Stack,  Up: Kill and Yank
 
 16.2 Yanking into the Stack
 ===========================
@@ -2753,9 +3167,52 @@ into any other buffer would yank the number in its displayed form,
 precision, this feature normally makes no difference.)
 
 
-File: calc,  Node: Grabbing From Buffers,  Next: Yanking Into Buffers,  Prev: Yanking Into Stack,  Up: Kill and Yank
+File: calc,  Node: Saving Into Registers,  Next: Inserting From Registers,  Prev: Yanking Into Stack,  Up: Kill and Yank
 
-16.3 Grabbing from Other Buffers
+16.3 Saving into Registers
+==========================
+
+An alternative to killing and yanking stack entries is using registers
+in Calc.  Saving stack entries in registers is like saving text in
+normal Emacs registers; although, like Calc's kill commands, register
+commands always operate on whole stack entries.
+
+   Registers in Calc are places to store stack entries for later use;
+each register is indexed by a single character.  To store the current
+region (rounded up, of course, to include full stack entries) into a
+register, use the command `r s' (`calc-copy-to-register').  You will
+then be prompted for a register to use, the next character you type
+will be the index for the register.  To store the region in register R,
+the full command will be `r s R'.  With an argument, `C-u r s R', the
+region being copied to the register will be deleted from the Calc
+buffer.
+
+   It is possible to add additional stack entries to a register.  The
+command `M-x calc-append-to-register' will prompt for a register, then
+add the stack entries in the region to the end of the register
+contents. The command `M-x calc-prepend-to-register' will similarly
+prompt for a register and add  the stack entries in the region to the
+beginning of the register contents.  Both commands take `C-u'
+arguments, which will cause the region to be deleted after being added
+to the register.
+
+
+File: calc,  Node: Inserting From Registers,  Next: Grabbing From Buffers,  Prev: Saving Into Registers,  Up: Kill and Yank
+
+16.4 Inserting from Registers
+=============================
+
+The command `r i' (`calc-insert-register') will prompt for a register,
+then insert the contents of that register into the Calculator.  If the
+contents of the register were placed there from within Calc, then the
+full internal structure of the contents will be inserted into the
+Calculator, otherwise whatever text is in the register is reparsed and
+then inserted into the Calculator.
+
+
+File: calc,  Node: Grabbing From Buffers,  Next: Yanking Into Buffers,  Prev: Inserting From Registers,  Up: Kill and Yank
+
+16.5 Grabbing from Other Buffers
 ================================
 
 The `C-x * g' (`calc-grab-region') command takes the text between point
@@ -2861,7 +3318,7 @@ reduction command, `V R : *'.
 
 File: calc,  Node: Yanking Into Buffers,  Next: X Cut and Paste,  Prev: Grabbing From Buffers,  Up: Kill and Yank
 
-16.4 Yanking into Other Buffers
+16.6 Yanking into Other Buffers
 ===============================
 
 The plain `y' (`calc-copy-to-buffer') command inserts the number at the
@@ -2915,7 +3372,7 @@ guarantee that Calc knows which editing buffer you want to use!
 
 File: calc,  Node: X Cut and Paste,  Prev: Yanking Into Buffers,  Up: Kill and Yank
 
-16.5 X Cut and Paste
+16.7 X Cut and Paste
 ====================
 
 If you are using Emacs with the X window system, there is an easier way
@@ -2997,7 +3454,7 @@ File: calc,  Node: Keypad Main Menu,  Next: Keypad Functions Menu,  Prev: Keypad
 17.1 Main Menu
 ==============
 
-     |----+-----Calc 2.1------+----1
+     |----+----+--Calc---+----+----1
      |FLR |CEIL|RND |TRNC|CLN2|FLT |
      |----+----+----+----+----+----|
      | LN |EXP |    |ABS |IDIV|MOD |
@@ -4027,9 +4484,9 @@ This is almost the same as the other one, except it now uses `\''
 another way of describing a blank line that is more appropriate for this
 case).
 
-   The `calc-embedded-open-word' and `calc-embedded-close-word'
-variables are similar expressions used when you type `C-x * w' instead
-of `C-x * e' to enable Embedded mode.
+   The `calc-embedded-word-regexp' variable holds a regular expression
+used to define an expression to look for (a "word") when you type `C-x
+* w' to enable Embedded mode.
 
    The `calc-embedded-open-plain' variable is a string which begins a
 "plain" formula written in front of the formatted formula when `d p'
@@ -5844,463 +6301,4 @@ objects if they wish to return multiple values.  (The latter case is
 allowed only for functions which are the outer-level call in an
 expression whose value is about to be pushed on the stack; this feature
 is considered obsolete and is not used by any built-in Calc functions.)
-
-
-File: calc,  Node: Interactive Lisp Functions,  Next: Stack Lisp Functions,  Prev: Data Type Formats,  Up: Internals
-
-19.5.7.2 Interactive Functions
-..............................
-
-The functions described here are used in implementing interactive Calc
-commands.  Note that this list is not exhaustive!  If there is an
-existing command that behaves similarly to the one you want to define,
-you may find helpful tricks by checking the source code for that
-command.
-
- -- Function: calc-set-command-flag flag
-     Set the command flag FLAG.  This is generally a Lisp symbol, but
-     may in fact be anything.  The effect is to add FLAG to the list
-     stored in the variable `calc-command-flags', unless it is already
-     there.  *Note Defining Simple Commands::.
-
- -- Function: calc-clear-command-flag flag
-     If FLAG appears among the list of currently-set command flags,
-     remove it from that list.
-
- -- Function: calc-record-undo rec
-     Add the "undo record" REC to the list of steps to take if the
-     current operation should need to be undone.  Stack push and pop
-     functions automatically call `calc-record-undo', so the kinds of
-     undo records you might need to create take the form `(set SYM
-     VALUE)', which says that the Lisp variable SYM was changed and had
-     previously contained VALUE; `(store VAR VALUE)' which says that
-     the Calc variable VAR (a string which is the name of the symbol
-     that contains the variable's value) was stored and its previous
-     value was VALUE (either a Calc data object, or `nil' if the
-     variable was previously void); or `(eval UNDO REDO ARGS ...)',
-     which means that to undo requires calling the function `(UNDO ARGS
-     ...)' and, if the undo is later redone, calling `(REDO ARGS ...)'.
-
- -- Function: calc-record-why msg args
-     Record the error or warning message MSG, which is normally a
-     string.  This message will be replayed if the user types `w'
-     (`calc-why'); if the message string begins with a `*', it is
-     considered important enough to display even if the user doesn't
-     type `w'.  If one or more ARGS are present, the displayed message
-     will be of the form, `MSG: ARG1, ARG2, ...', where the arguments
-     are formatted on the assumption that they are either strings or
-     Calc objects of some sort.  If MSG is a symbol, it is the name of
-     a Calc predicate (such as `integerp' or `numvecp') which the
-     arguments did not satisfy; it is expanded to a suitable string
-     such as "Expected an integer."  The `reject-arg' function calls
-     `calc-record-why' automatically; *note Predicates::.
-
- -- Function: calc-is-inverse
-     This predicate returns true if the current command is inverse,
-     i.e., if the Inverse (`I' key) flag was set.
-
- -- Function: calc-is-hyperbolic
-     This predicate is the analogous function for the `H' key.
-
-
-File: calc,  Node: Stack Lisp Functions,  Next: Predicates,  Prev: Interactive Lisp Functions,  Up: Internals
-
-19.5.7.3 Stack-Oriented Functions
-.................................
-
-The functions described here perform various operations on the Calc
-stack and trail.  They are to be used in interactive Calc commands.
-
- -- Function: calc-push-list vals n
-     Push the Calc objects in list VALS onto the stack at stack level
-     N.  If N is omitted it defaults to 1, so that the elements are
-     pushed at the top of the stack.  If N is greater than 1, the
-     elements will be inserted into the stack so that the last element
-     will end up at level N, the next-to-last at level N+1, etc.  The
-     elements of VALS are assumed to be valid Calc objects, and are not
-     evaluated, rounded, or renormalized in any way.  If VALS is an
-     empty list, nothing happens.
-
-     The stack elements are pushed without any sub-formula selections.
-     You can give an optional third argument to this function, which
-     must be a list the same size as VALS of selections.  Each selection
-     must be `eq' to some sub-formula of the corresponding formula in
-     VALS, or `nil' if that formula should have no selection.
-
- -- Function: calc-top-list n m
-     Return a list of the N objects starting at level M of the stack.
-     If M is omitted it defaults to 1, so that the elements are taken
-     from the top of the stack.  If N is omitted, it also defaults to
-     1, so that the top stack element (in the form of a one-element
-     list) is returned.  If M is greater than 1, the Mth stack element
-     will be at the end of the list, the M+1st element will be
-     next-to-last, etc.  If N or M are out of range, the command is
-     aborted with a suitable error message.  If N is zero, the function
-     returns an empty list.  The stack elements are not evaluated,
-     rounded, or renormalized.
-
-     If any stack elements contain selections, and selections have not
-     been disabled by the `j e' (`calc-enable-selections') command,
-     this function returns the selected portions rather than the entire
-     stack elements.  It can be given a third "selection-mode" argument
-     which selects other behaviors.  If it is the symbol `t', then a
-     selection in any of the requested stack elements produces an
-     "invalid operation on selections" error.  If it is the symbol
-     `full', the whole stack entry is always returned regardless of
-     selections.  If it is the symbol `sel', the selected portion is
-     always returned, or `nil' if there is no selection.  (This mode
-     ignores the `j e' command.)  If the symbol is `entry', the
-     complete stack entry in list form is returned; the first element
-     of this list will be the whole formula, and the third element will
-     be the selection (or `nil').
-
- -- Function: calc-pop-stack n m
-     Remove the specified elements from the stack.  The parameters N
-     and M are defined the same as for `calc-top-list'.  The return
-     value of `calc-pop-stack' is uninteresting.
-
-     If there are any selected sub-formulas among the popped elements,
-     and `j e' has not been used to disable selections, this produces an
-     error without changing the stack.  If you supply an optional third
-     argument of `t', the stack elements are popped even if they
-     contain selections.
-
- -- Function: calc-record-list vals tag
-     This function records one or more results in the trail.  The VALS
-     are a list of strings or Calc objects.  The TAG is the
-     four-character tag string to identify the values.  If TAG is
-     omitted, a blank tag will be used.
-
- -- Function: calc-normalize n
-     This function takes a Calc object and "normalizes" it.  At the very
-     least this involves re-rounding floating-point values according to
-     the current precision and other similar jobs.  Also, unless the
-     user has selected No-Simplify mode (*note Simplification Modes::),
-     this involves actually evaluating a formula object by executing
-     the function calls it contains, and possibly also doing algebraic
-     simplification, etc.
-
- -- Function: calc-top-list-n n m
-     This function is identical to `calc-top-list', except that it calls
-     `calc-normalize' on the values that it takes from the stack.  They
-     are also passed through `check-complete', so that incomplete
-     objects will be rejected with an error message.  All computational
-     commands should use this in preference to `calc-top-list'; the only
-     standard Calc commands that operate on the stack without
-     normalizing are stack management commands like `calc-enter' and
-     `calc-roll-up'.  This function accepts the same optional
-     selection-mode argument as `calc-top-list'.
-
- -- Function: calc-top-n m
-     This function is a convenient form of `calc-top-list-n' in which
-     only a single element of the stack is taken and returned, rather
-     than a list of elements.  This also accepts an optional
-     selection-mode argument.
-
- -- Function: calc-enter-result n tag vals
-     This function is a convenient interface to most of the above
-     functions.  The VALS argument should be either a single Calc
-     object, or a list of Calc objects; the object or objects are
-     normalized, and the top N stack entries are replaced by the
-     normalized objects.  If TAG is non-`nil', the normalized objects
-     are also recorded in the trail.  A typical stack-based
-     computational command would take the form,
-
-          (calc-enter-result N TAG (cons 'calcFunc-FUNC
-                                         (calc-top-list-n N)))
-
-     If any of the N stack elements replaced contain sub-formula
-     selections, and selections have not been disabled by `j e', this
-     function takes one of two courses of action.  If N is equal to the
-     number of elements in VALS, then each element of VALS is spliced
-     into the corresponding selection; this is what happens when you
-     use the <TAB> key, or when you use a unary arithmetic operation
-     like `sqrt'.  If VALS has only one element but N is greater than
-     one, there must be only one selection among the top N stack
-     elements; the element from VALS is spliced into that selection.
-     This is what happens when you use a binary arithmetic operation
-     like `+'.  Any other combination of N and VALS is an error when
-     selections are present.
-
- -- Function: calc-unary-op tag func arg
-     This function implements a unary operator that allows a numeric
-     prefix argument to apply the operator over many stack entries.  If
-     the prefix argument ARG is `nil', this uses `calc-enter-result' as
-     outlined above.  Otherwise, it maps the function over several stack
-     elements; *note Prefix Arguments::.  For example,
-
-          (defun calc-zeta (arg)
-            (interactive "P")
-            (calc-unary-op "zeta" 'calcFunc-zeta arg))
-
- -- Function: calc-binary-op tag func arg ident unary
-     This function implements a binary operator, analogously to
-     `calc-unary-op'.  The optional IDENT and UNARY arguments specify
-     the behavior when the prefix argument is zero or one,
-     respectively.  If the prefix is zero, the value IDENT is pushed
-     onto the stack, if specified, otherwise an error message is
-     displayed.  If the prefix is one, the unary function UNARY is
-     applied to the top stack element, or, if UNARY is not specified,
-     nothing happens.  When the argument is two or more, the binary
-     function FUNC is reduced across the top ARG stack elements; when
-     the argument is negative, the function is mapped between the
-     next-to-top -ARG stack elements and the top element.
-
- -- Function: calc-stack-size
-     Return the number of elements on the stack as an integer.  This
-     count does not include elements that have been temporarily hidden
-     by stack truncation; *note Truncating the Stack::.
-
- -- Function: calc-cursor-stack-index n
-     Move the point to the Nth stack entry.  If N is zero, this will be
-     the `.' line.  If N is from 1 to the current stack size, this will
-     be the beginning of the first line of that stack entry's display.
-     If line numbers are enabled, this will move to the first character
-     of the line number, not the stack entry itself.
-
- -- Function: calc-substack-height n
-     Return the number of lines between the beginning of the Nth stack
-     entry and the bottom of the buffer.  If N is zero, this will be
-     one (assuming no stack truncation).  If all stack entries are one
-     line long (i.e., no matrices are displayed), the return value will
-     be equal N+1 as long as N is in range.  (Note that in Big mode,
-     the return value includes the blank lines that separate stack
-     entries.)
-
- -- Function: calc-refresh
-     Erase the `*Calculator*' buffer and reformat its contents from
-     memory.  This must be called after changing any parameter, such as
-     the current display radix, which might change the appearance of
-     existing stack entries.  (During a keyboard macro invoked by the
-     `X' key, refreshing is suppressed, but a flag is set so that the
-     entire stack will be refreshed rather than just the top few
-     elements when the macro finishes.)
-
-
-File: calc,  Node: Predicates,  Next: Computational Lisp Functions,  Prev: Stack Lisp Functions,  Up: Internals
-
-19.5.7.4 Predicates
-...................
-
-The functions described here are predicates, that is, they return a
-true/false value where `nil' means false and anything else means true.
-These predicates are expanded by `defmath', for example, from `zerop'
-to `math-zerop'.  In many cases they correspond to native Lisp
-functions by the same name, but are extended to cover the full range of
-Calc data types.
-
- -- Function: zerop x
-     Returns true if X is numerically zero, in any of the Calc data
-     types.  (Note that for some types, such as error forms and
-     intervals, it never makes sense to return true.)  In `defmath',
-     the expression `(= x 0)' will automatically be converted to
-     `(math-zerop x)', and `(/= x 0)' will be converted to `(not
-     (math-zerop x))'.
-
- -- Function: negp x
-     Returns true if X is negative.  This accepts negative real numbers
-     of various types, negative HMS and date forms, and intervals in
-     which all included values are negative.  In `defmath', the
-     expression `(< x 0)' will automatically be converted to
-     `(math-negp x)', and `(>= x 0)' will be converted to `(not
-     (math-negp x))'.
-
- -- Function: posp x
-     Returns true if X is positive (and non-zero).  For complex
-     numbers, none of these three predicates will return true.
-
- -- Function: looks-negp x
-     Returns true if X is "negative-looking."  This returns true if X
-     is a negative number, or a formula with a leading minus sign such
-     as `-a/b'.  In other words, this is an object which can be made
-     simpler by calling `(- X)'.
-
- -- Function: integerp x
-     Returns true if X is an integer of any size.
-
- -- Function: fixnump x
-     Returns true if X is a native Lisp integer.
-
- -- Function: natnump x
-     Returns true if X is a nonnegative integer of any size.
-
- -- Function: fixnatnump x
-     Returns true if X is a nonnegative Lisp integer.
-
- -- Function: num-integerp x
-     Returns true if X is numerically an integer, i.e., either a true
-     integer or a float with no significant digits to the right of the
-     decimal point.
-
- -- Function: messy-integerp x
-     Returns true if X is numerically, but not literally, an integer.
-     A value is `num-integerp' if it is `integerp' or `messy-integerp'
-     (but it is never both at once).
-
- -- Function: num-natnump x
-     Returns true if X is numerically a nonnegative integer.
-
- -- Function: evenp x
-     Returns true if X is an even integer.
-
- -- Function: looks-evenp x
-     Returns true if X is an even integer, or a formula with a leading
-     multiplicative coefficient which is an even integer.
-
- -- Function: oddp x
-     Returns true if X is an odd integer.
-
- -- Function: ratp x
-     Returns true if X is a rational number, i.e., an integer or a
-     fraction.
-
- -- Function: realp x
-     Returns true if X is a real number, i.e., an integer, fraction, or
-     floating-point number.
-
- -- Function: anglep x
-     Returns true if X is a real number or HMS form.
-
- -- Function: floatp x
-     Returns true if X is a float, or a complex number, error form,
-     interval, date form, or modulo form in which at least one component
-     is a float.
-
- -- Function: complexp x
-     Returns true if X is a rectangular or polar complex number (but
-     not a real number).
-
- -- Function: rect-complexp x
-     Returns true if X is a rectangular complex number.
-
- -- Function: polar-complexp x
-     Returns true if X is a polar complex number.
-
- -- Function: numberp x
-     Returns true if X is a real number or a complex number.
-
- -- Function: scalarp x
-     Returns true if X is a real or complex number or an HMS form.
-
- -- Function: vectorp x
-     Returns true if X is a vector (this simply checks if its argument
-     is a list whose first element is the symbol `vec').
-
- -- Function: numvecp x
-     Returns true if X is a number or vector.
-
- -- Function: matrixp x
-     Returns true if X is a matrix, i.e., a vector of one or more
-     vectors, all of the same size.
-
- -- Function: square-matrixp x
-     Returns true if X is a square matrix.
-
- -- Function: objectp x
-     Returns true if X is any numeric Calc object, including real and
-     complex numbers, HMS forms, date forms, error forms, intervals, and
-     modulo forms.  (Note that error forms and intervals may include
-     formulas as their components; see `constp' below.)
-
- -- Function: objvecp x
-     Returns true if X is an object or a vector.  This also accepts
-     incomplete objects, but it rejects variables and formulas (except
-     as mentioned above for `objectp').
-
- -- Function: primp x
-     Returns true if X is a "primitive" or "atomic" Calc object, i.e.,
-     one whose components cannot be regarded as sub-formulas.  This
-     includes variables, and all `objectp' types except error forms and
-     intervals.
-
- -- Function: constp x
-     Returns true if X is constant, i.e., a real or complex number, HMS
-     form, date form, or error form, interval, or vector all of whose
-     components are `constp'.
-
- -- Function: lessp x y
-     Returns true if X is numerically less than Y.  Returns false if X
-     is greater than or equal to Y, or if the order is undefined or
-     cannot be determined.  Generally speaking, this works by checking
-     whether `X - Y' is `negp'.  In `defmath', the expression `(< x y)'
-     will automatically be converted to `(lessp x y)'; expressions
-     involving `>', `<=', and `>=' are similarly converted in terms of
-     `lessp'.
-
- -- Function: beforep x y
-     Returns true if X comes before Y in a canonical ordering of Calc
-     objects.  If X and Y are both real numbers, this will be the same
-     as `lessp'.  But whereas `lessp' considers other types of objects
-     to be unordered, `beforep' puts any two objects into a definite,
-     consistent order.  The `beforep' function is used by the `V S'
-     vector-sorting command, and also by `a s' to put the terms of a
-     product into canonical order: This allows `x y + y x' to be
-     simplified easily to `2 x y'.
-
- -- Function: equal x y
-     This is the standard Lisp `equal' predicate; it returns true if X
-     and Y are structurally identical.  This is the usual way to
-     compare numbers for equality, but note that `equal' will treat 0
-     and 0.0 as different.
-
- -- Function: math-equal x y
-     Returns true if X and Y are numerically equal, either because they
-     are `equal', or because their difference is `zerop'.  In
-     `defmath', the expression `(= x y)' will automatically be
-     converted to `(math-equal x y)'.
-
- -- Function: equal-int x n
-     Returns true if X and N are numerically equal, where N is a fixnum
-     which is not a multiple of 10.  This will automatically be used by
-     `defmath' in place of the more general `math-equal' whenever
-     possible.
-
- -- Function: nearly-equal x y
-     Returns true if X and Y, as floating-point numbers, are equal
-     except possibly in the last decimal place.  For example, 314.159
-     and 314.166 are considered nearly equal if the current precision
-     is 6 (since they differ by 7 units), but not if the current
-     precision is 7 (since they differ by 70 units).  Most functions
-     which use series expansions use `with-extra-prec' to evaluate the
-     series with 2 extra digits of precision, then use `nearly-equal'
-     to decide when the series has converged; this guards against
-     cumulative error in the series evaluation without doing extra work
-     which would be lost when the result is rounded back down to the
-     current precision.  In `defmath', this can be written `(~= X Y)'.
-     The X and Y can be numbers of any kind, including complex.
-
- -- Function: nearly-zerop x y
-     Returns true if X is nearly zero, compared to Y.  This checks
-     whether X plus Y would by be `nearly-equal' to Y itself, to within
-     the current precision, in other words, if adding X to Y would have
-     a negligible effect on Y due to roundoff error.  X may be a real
-     or complex number, but Y must be real.
-
- -- Function: is-true x
-     Return true if the formula X represents a true value in Calc, not
-     Lisp, terms.  It tests if X is a non-zero number or a provably
-     non-zero formula.
-
- -- Function: reject-arg val pred
-     Abort the current function evaluation due to unacceptable argument
-     values.  This calls `(calc-record-why PRED VAL)', then signals a
-     Lisp error which `normalize' will trap.  The net effect is that the
-     function call which led here will be left in symbolic form.
-
- -- Function: inexact-value
-     If Symbolic mode is enabled, this will signal an error that causes
-     `normalize' to leave the formula in symbolic form, with the message
-     "Inexact result."  (This function has no effect when not in
-     Symbolic mode.)  Note that if your function calls `(sin 5)' in
-     Symbolic mode, the `sin' function will call `inexact-value', which
-     will cause your function to be left unsimplified.  You may instead
-     wish to call `(normalize (list 'calcFunc-sin 5))', which in
-     Symbolic mode will return the formula `sin(5)' to your function.
-
- -- Function: overflow
-     This signals an error that will be reported as a floating-point
-     overflow.
-
- -- Function: underflow
-     This signals a floating-point underflow.
 

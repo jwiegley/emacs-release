@@ -1,7 +1,7 @@
 ;;; landmark.el --- neural-network robot that learns landmarks
 
 ;; Copyright (C) 1996, 1997, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Terrence Brannon (was: <brannon@rana.usc.edu>)
 ;; Created: December 16, 1996 - first release to usenet
@@ -15,10 +15,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,9 +26,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 
 ;;; Commentary:
@@ -1052,13 +1050,13 @@ mouse-1: get robot moving, mouse-2: play on this square")))
   "Move point down one row on the Lm board."
   (interactive)
   (if (< (lm-point-y) lm-board-height)
-      (next-line 1)));;; lm-square-height)))
+      (forward-line 1)));;; lm-square-height)))
 
 (defun lm-move-up ()
   "Move point up one row on the Lm board."
   (interactive)
   (if (> (lm-point-y) 1)
-      (previous-line lm-square-height)))
+      (forward-line (- lm-square-height))))
 
 (defun lm-move-ne ()
   "Move point North East on the Lm board."
@@ -1709,5 +1707,5 @@ Use \\[describe-mode] for more info."
 
 (provide 'landmark)
 
-;;; arch-tag: ae5031be-96e6-459e-a3df-1df53117d3f2
+;; arch-tag: ae5031be-96e6-459e-a3df-1df53117d3f2
 ;;; landmark.el ends here

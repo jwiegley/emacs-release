@@ -1,9 +1,9 @@
-;;; ethiopic.el --- support for Ethiopic -*- coding: iso-2022-7bit; -*-
+;;; ethiopic.el --- support for Ethiopic	-*- coding: utf-8-emacs; -*-
 
-;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008
+;;   2005, 2006, 2007, 2008, 2009
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
@@ -11,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; Author: TAKAHASHI Naoto <ntakahas@m17n.org>
 
@@ -44,10 +42,10 @@
      (r1 *= 94)
      (r2 += r1)
      (if (r2 < 256)
-	 (r1 = ?\x12)
+	 (r1 = #x12)
        (if (r2 < 448)
-	   ((r1 = ?\x13) (r2 -= 256))
-	 ((r1 = ?\xfd) (r2 -= 208))
+	   ((r1 = #x13) (r2 -= 256))
+	 ((r1 = #xfd) (r2 -= 208))
 	 ))))
   "CCL program to encode an Ethiopic code to code point of Ethiopic font.")
 
@@ -58,31 +56,34 @@
  "Ethiopic" '((setup-function . setup-ethiopic-environment-internal)
 	      (exit-function . exit-ethiopic-environment)
 	      (charset ethiopic)
-	      (coding-system iso-2022-7bit)
-	      (coding-priority iso-2022-7bit)
+	      (coding-system utf-8-emacs)
+	      (coding-priority utf-8-emacs)
 	      (input-method . "ethiopic")
 	      (features ethio-util)
-	      (sample-text . "$(3$Q#U!.(B")
+	      (sample-text . "áŠá‹°áˆ")
 	      (documentation .
-"This language envrironment provides these function key bindings
-    \(old bindings are shown in parentheses):
-    [f3]   ethio-fidel-to-sera-buffer         (f5)
-    [S-f3] ethio-fidel-to-sera-region         (f5)
-    [C-f3] ethio-fidel-to-sera-mail-or-marker (f5)
+"This language envrironment provides these function key bindings:
+    [f3]   ethio-fidel-to-sera-buffer
+    [S-f3] ethio-fidel-to-sera-region
+    [C-f3] ethio-fidel-to-sera-marker
 
-    [f4]   ethio-sera-to-fidel-buffer         (unchanged)
-    [S-f4] ethio-sera-to-fidel-region         (unchanged)
-    [C-f4] ethio-sera-to-fidel-mail-or-marker (unchanged)
+    [f4]   ethio-sera-to-fidel-buffer
+    [S-f4] ethio-sera-to-fidel-region
+    [C-f4] ethio-sera-to-fidel-marker
 
-    [S-f5] ethio-toggle-punctuation           (f3)
-    [S-f6] ethio-modify-vowel                 (f6)
-    [S-f7] ethio-replace-space                (f7)
-    [S-f8] ethio-input-special-character      (f8)
-    [S-f9] ethio-replace-space                (unchanged)
-    [C-f9] ethio-toggle-space                 (f2)"
+    [S-f5] ethio-toggle-punctuation
+    [S-f6] ethio-modify-vowel
+    [S-f7] ethio-replace-space
+
+    [S-f9] ethio-replace-space
+    [C-f9] ethio-toggle-space"
 )))
+
+;; For automatic composition
+(aset composition-function-table ?ö ‡Š 'ethio-composition-function)
+(aset composition-function-table ?áŸ 'ethio-composition-function)
 
 (provide 'ethiopic)
 
-;;; arch-tag: e81329d9-1286-43ba-92fd-54ce5c7b213c
+;; arch-tag: e81329d9-1286-43ba-92fd-54ce5c7b213c
 ;;; ethiopic.el ends here

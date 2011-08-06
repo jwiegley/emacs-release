@@ -1,7 +1,7 @@
 ;;; disp-table.el --- functions for dealing with char tables
 
 ;; Copyright (C) 1987, 1994, 1995, 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Erik Naggum <erik@naggum.no>
 ;; Based on a previous version by Howard Gayle
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -75,7 +73,7 @@ Valid symbols are `truncation', `wrap', `escape', `control',
 ;;;###autoload
 (defun describe-display-table (dt)
   "Describe the display table DT in a help buffer."
-  (with-output-to-temp-buffer "*Help*"
+  (with-help-window "*Help*"
     (princ "\nTruncation glyph: ")
     (prin1 (display-table-slot dt 'truncation))
     (princ "\nWrap glyph: ")
@@ -97,8 +95,7 @@ Valid symbols are `truncation', `wrap', `escape', `control',
 	  (aset vector i (aref dt i))
 	  (setq i (1+ i)))
 	(describe-vector vector))
-      (help-mode))
-    (print-help-return-message)))
+      (help-mode))))
 
 ;;;###autoload
 (defun describe-current-display-table ()
@@ -126,7 +123,7 @@ Valid symbols are `truncation', `wrap', `escape', `control',
   (or standard-display-table
       (setq standard-display-table (make-display-table)))
   (while (<= l h)
-    (if (and (>= l ?\s) (char-valid-p l))
+    (if (and (>= l ?\s) (characterp l))
 	(aset standard-display-table l nil))
     (setq l (1+ l))))
 
@@ -145,7 +142,7 @@ Valid symbols are `truncation', `wrap', `escape', `control',
   "Display character C as character SC in the g1 character set.
 This function assumes that your terminal uses the SO/SI characters;
 it is meaningless for an X frame."
-  (if (memq window-system '(x w32 mac))
+  (if (memq window-system '(x w32 ns))
       (error "Cannot use string glyphs in a windowing system"))
   (or standard-display-table
       (setq standard-display-table (make-display-table)))
@@ -157,7 +154,7 @@ it is meaningless for an X frame."
   "Display character C as character GC in graphics character set.
 This function assumes VT100-compatible escapes; it is meaningless for an
 X frame."
-  (if (memq window-system '(x w32 mac))
+  (if (memq window-system '(x w32 ns))
       (error "Cannot use string glyphs in a windowing system"))
   (or standard-display-table
       (setq standard-display-table (make-display-table)))
@@ -190,25 +187,30 @@ X frame."
 (defun make-glyph-code (char &optional face)
   "Return a glyph code representing char CHAR with face FACE."
   ;; Due to limitations on Emacs integer values, faces with
-  ;; face id greater that 4091 are silently ignored.
-  (if (and face (<= (face-id face) #xfff))
-      (logior char (lsh (face-id face) 19))
-    char))
+  ;; face id greater that 512 are silently ignored.
+  (if (not face)
+      char
+    (let ((fid (face-id face)))
+      (if (< fid 64) ; we have 32 - 3(LSB) - 1(SIGN) - 22(CHAR) = 6 bits for face id
+	  (logior char (lsh fid 22))
+	(cons char fid)))))
 
 ;;;###autoload
 (defun glyph-char (glyph)
   "Return the character of glyph code GLYPH."
-  (logand glyph #x7ffff))
+  (if (consp glyph)
+      (car glyph)
+    (logand glyph #x3fffff)))
 
 ;;;###autoload
 (defun glyph-face (glyph)
   "Return the face of glyph code GLYPH, or nil if glyph has default face."
-  (let ((face-id (lsh glyph -19)))
+  (let ((face-id (if (consp glyph) (cdr glyph) (lsh glyph -22))))
     (and (> face-id 0)
-	 (car (delq nil (mapcar (lambda (face)
-				  (and (eq (get face 'face) face-id)
-				       face))
-				(face-list)))))))
+	 (catch 'face
+	   (dolist (face (face-list))
+	     (when (eq (face-id face) face-id)
+	       (throw 'face face)))))))
 
 ;;;###autoload
 (defun standard-display-european (arg)
@@ -220,7 +222,7 @@ with either the `--unibyte' option or the EMACS_UNIBYTE environment
 variable, or else customize `enable-multibyte-characters'.
 
 With prefix argument, this command enables European character display
-if arg is positive, disables it otherwise.  Otherwise, it toggles
+if ARG is positive, disables it otherwise.  Otherwise, it toggles
 European character display.
 
 When this mode is enabled, characters in the range of 160 to 255
@@ -241,7 +243,7 @@ for users who call this function in `.emacs'."
 	       (equal (aref standard-display-table 161) [161])))
       (progn
 	(standard-display-default 160 255)
-	(unless (or (memq window-system '(x w32 mac)))
+	(unless (or (memq window-system '(x w32 ns)))
 	  (and (terminal-coding-system)
 	       (set-terminal-coding-system nil))))
 
@@ -253,7 +255,7 @@ for users who call this function in `.emacs'."
     ;; unless some other has been specified.
     (if (equal current-language-environment "English")
 	(set-language-environment "latin-1"))
-    (unless (or noninteractive (memq window-system '(x w32 mac)))
+    (unless (or noninteractive (memq window-system '(x w32 ns)))
       ;; Send those codes literally to a character-based terminal.
       ;; If we are using single-byte characters,
       ;; it doesn't matter which coding system we use.
@@ -264,5 +266,5 @@ for users who call this function in `.emacs'."
 
 (provide 'disp-table)
 
-;;; arch-tag: ffe4c28c-960c-47aa-b8a8-ae89d371ffc7
+;; arch-tag: ffe4c28c-960c-47aa-b8a8-ae89d371ffc7
 ;;; disp-table.el ends here

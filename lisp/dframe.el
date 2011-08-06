@@ -1,7 +1,7 @@
 ;;; dframe --- dedicate frame support modes
 
 ;;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;    2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;    2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: file, tags, tools
@@ -11,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -43,7 +41,7 @@
 ;; * Frame/buffer killing hooks
 ;; * Mouse-3 position relative menu
 ;; * Mouse motion, help-echo hacks
-;; * Mouse clicking, double clicking, & Xemacs image clicking hack
+;; * Mouse clicking, double clicking, & XEmacs image clicking hack
 ;; * Mode line hacking
 ;; * Utilities for use in a program covering:
 ;;    o keymap massage for some actions
@@ -108,41 +106,12 @@
 ;;; Bugs
 ;;
 ;;  * The timer managers doesn't handle multiple different timeouts.
-;;  * You can't specify continuous timouts (as opposed to just lidle timers.)
+;;  * You can't specify continuous timeouts (as opposed to just idle timers.)
 
 (defvar x-pointer-hand2)
 (defvar x-pointer-top-left-arrow)
 
 ;;; Code:
-
-;; From custom web page for compatibility between versions of custom
-;; with help from ptype@dera.gov.uk (Proto Type)
-(eval-and-compile
-  (condition-case ()
-      (require 'custom)
-    (error nil))
-  (if (and (featurep 'custom) (fboundp 'custom-declare-variable)
-	   ;; Some XEmacsen w/ custom don't have :set keyword.
-	   ;; This protects them against custom.
-	   (fboundp 'custom-initialize-set))
-      nil ;; We've got what we needed
-    ;; We have the old custom-library, hack around it!
-    (if (boundp 'defgroup)
-	nil
-      (defmacro defgroup (&rest args)
-	nil))
-    (if (boundp 'defface)
-	nil
-      (defmacro defface (var values doc &rest args)
-        ;; To make colors for your faces you need to set your .Xdefaults
-        ;; or set them up ahead of time in your .emacs file.
-        `(make-face ,var)
-        ))
-    (if (boundp 'defcustom)
-	nil
-      (defmacro defcustom (var value doc &rest args)
-	`(defvar ,var ,value ,doc)))))
-
 
 ;;; Compatibility functions
 ;;
@@ -160,20 +129,15 @@
   :prefix "dframe-"
   :group 'dframe)
 
-(defvar dframe-have-timer-flag
-  (and (or (fboundp 'run-with-idle-timer)
-	   (fboundp 'start-itimer)
-	   (boundp 'post-command-idle-hook))
-       (if (fboundp 'display-graphic-p)
-	   (display-graphic-p)
-	 window-system))
-  "Non-nil means that timers are available for this Emacs.")
+(defvar dframe-have-timer-flag (if (fboundp 'display-graphic-p)
+				   (display-graphic-p)
+				 window-system)
+  "Non-nil means that timers are available for this Emacs.
+This is nil for terminals, since updating a frame in a terminal
+is not useful to the user.")
 
 (defcustom dframe-update-speed
-  (if (featurep 'xemacs)
-      (if (>= emacs-major-version 20)
-	  2				; 1 is too obrusive in XEmacs
-	5)				; when no idleness, need long delay
+  (if (featurep 'xemacs) 2		; 1 is too obrusive in XEmacs
     1)
   "Idle time in seconds needed before dframe will update itself.
 Updates occur to allow dframe to display directory information
@@ -209,7 +173,7 @@ Valid clicks are mouse 2, our double mouse 1.")
 (make-variable-buffer-local 'dframe-mouse-click-function)
 
 (defvar dframe-mouse-position-function nil
-  "*A function to called to position the cursor for a mouse click.")
+  "*A function to call to position the cursor for a mouse click.")
 (make-variable-buffer-local 'dframe-mouse-position-function)
 
 (defvar dframe-power-click nil
@@ -420,8 +384,7 @@ CREATE-HOOK are hooks to run after creating a frame."
 			   paramsa
 			   (list (cons 'width (frame-width))))))
 		       (frame
-			(if (or (< emacs-major-version 20)
-				(not (eq window-system 'x)))
+			(if (not (eq window-system 'x))
 			    (make-frame params)
 			  (let ((x-pointer-shape x-pointer-top-left-arrow)
 				(x-sensitive-text-pointer-shape
@@ -454,22 +417,24 @@ LOCATION can be one of 'random, 'left, 'right, 'left-right, or 'top-bottom."
       (dframe-reposition-frame-xemacs new-frame parent-frame location)
     (dframe-reposition-frame-emacs new-frame parent-frame location)))
 
+;; Not defined in builds without X, but behind window-system test.
+(declare-function x-display-pixel-width "xfns.c" (&optional terminal))
+(declare-function x-display-pixel-height "xfns.c" (&optional terminal))
+
 (defun dframe-reposition-frame-emacs (new-frame parent-frame location)
   "Move NEW-FRAME to be relative to PARENT-FRAME.
 LOCATION can be one of 'random, 'left-right, 'top-bottom, or
-a cons cell indicationg a position of the form (LEFT . TOP)."
-  (let* ((pfx (dframe-frame-parameter parent-frame 'left))
-	 (pfy (dframe-frame-parameter parent-frame 'top))
-	 (pfw (frame-pixel-width parent-frame))
-	 (pfh (frame-pixel-height parent-frame))
-	 (nfw (frame-pixel-width new-frame))
-	 (nfh (frame-pixel-height new-frame))
-	 newleft newtop
-	 )
-    ;; Position dframe.
-    (if (or (not window-system) (eq window-system 'pc))
-	;; Do no positioning if not on a windowing system,
-	nil
+a cons cell indicating a position of the form (LEFT . TOP)."
+  ;; Position dframe.
+  ;; Do no positioning if not on a windowing system,
+  (unless (or (not window-system) (eq window-system 'pc))
+    (let* ((pfx (dframe-frame-parameter parent-frame 'left))
+	   (pfy (dframe-frame-parameter parent-frame 'top))
+	   (pfw (frame-pixel-width parent-frame))
+	   (pfh (frame-pixel-height parent-frame))
+	   (nfw (frame-pixel-width new-frame))
+	   (nfh (frame-pixel-height new-frame))
+	   newleft newtop)
       ;; Rebuild pfx,pfy to be absolute positions.
       (setq pfx (if (not (consp pfx))
 		    pfx
@@ -492,8 +457,7 @@ a cons cell indicationg a position of the form (LEFT . TOP)."
 		      ;; A - means distance from the right edge
 		      ;; of the display, or DW - pfx - framewidth
 		      (- (x-display-pixel-height) (car (cdr pfy)) pfh)
-		    (car (cdr pfy))))
-	    )
+		    (car (cdr pfy)))))
       (cond ((eq location 'right)
 	     (setq newleft (+ pfx pfw 5)
 		   newtop pfy))
@@ -516,8 +480,7 @@ a cons cell indicationg a position of the form (LEFT . TOP)."
 			   ;; otherwise choose side we overlap less
 			   ((> left-margin right-margin) 0)
 			   (t (- (x-display-pixel-width) nfw 5))))
-		   newtop pfy
-		   ))
+		   newtop pfy))
 	    ((eq location 'top-bottom)
 	     (setq newleft pfx
 		   newtop
@@ -531,15 +494,14 @@ a cons cell indicationg a position of the form (LEFT . TOP)."
 			   ((>= bottom-margin 0) bottom-guess)
 			   ;; Choose a side to overlap the least.
 			   ((> top-margin bottom-margin) 0)
-			   (t (- (x-display-pixel-height) nfh 5)))))
-	     )
+			   (t (- (x-display-pixel-height) nfh 5))))))
 	    ((consp location)
 	     (setq newleft (or (car location) 0)
 		   newtop (or (cdr location) 0)))
 	    (t nil))
       (modify-frame-parameters new-frame
-       (list (cons 'left newleft)
-	     (cons 'top newtop))))))
+			       (list (cons 'left newleft)
+				     (cons 'top newtop))))))
 
 (defun dframe-reposition-frame-xemacs (new-frame parent-frame location)
   "Move NEW-FRAME to be relative to PARENT-FRAME.
@@ -773,47 +735,18 @@ If NULL-ON-ERROR is a symbol, set it to nil if we cannot create a timer."
       (dframe-set-timer-internal timeout null-on-error)))
 
 (defun dframe-set-timer-internal (timeout &optional null-on-error)
-  "Apply a timer with TIMEOUT to call the dframe timer manager.
-If NULL-ON-ERROR is a symbol, set it to nil if we cannot create a timer."
-  (cond
-   ;; XEmacs
-   ((featurep 'xemacs)
-    (if dframe-timer
-	(progn (delete-itimer dframe-timer)
-	       (setq dframe-timer nil)))
-    (if timeout
-	(if (or (>= emacs-major-version 21)
-                (and (= emacs-major-version 20)
-                     (> emacs-minor-version 0))
-                (and (= emacs-major-version 19)
-                     (>= emacs-minor-version 15)))
-	    (setq dframe-timer (start-itimer "dframe"
-					     'dframe-timer-fn
-					     timeout
-					     timeout
-					     t))
-	  (setq dframe-timer (start-itimer "dframe"
-					   'dframe-timer-fn
-					   timeout
-					   nil)))))
-   ;; Post 19.31 Emacs
-   ((fboundp 'run-with-idle-timer)
-    (if dframe-timer
-	(progn (cancel-timer dframe-timer)
-	       (setq dframe-timer nil)))
-    (if timeout
-	(setq dframe-timer
-	      (run-with-idle-timer timeout t 'dframe-timer-fn))))
-   ;; Emacs 19.30 (Thanks twice: ptype@dra.hmg.gb)
-   ((boundp 'post-command-idle-hook)
-    (if timeout
-	(add-hook 'post-command-idle-hook 'dframe-timer-fn)
-      (remove-hook 'post-command-idle-hook 'dframe-timer-fn)))
-   ;; Older or other Emacsen with no timers.  Set up so that its
-   ;; obvious this emacs can't handle the updates
-   ((symbolp null-on-error)
-    (set null-on-error nil)))
-  )
+  "Apply a timer with TIMEOUT to call the dframe timer manager."
+  (when dframe-timer
+    (if (featurep 'xemacs)
+	(delete-itimer dframe-timer)
+      (cancel-timer dframe-timer))
+    (setq dframe-timer nil))
+  (when timeout
+    (setq dframe-timer
+	  (if (featurep 'xemacs)
+	      (start-itimer "dframe" 'dframe-timer-fn
+			    timeout timeout t)
+	    (run-with-idle-timer timeout t 'dframe-timer-fn)))))
 
 (defun dframe-timer-fn ()
   "Called due to the dframe timer.
@@ -833,7 +766,7 @@ Evaluates all cached timer functions in sequence."
          (fboundp 'function-max-args)
          (setq max-args (function-max-args 'popup-mode-menu))
          (not (zerop max-args))))
-  "The EVENT arg to 'popup-mode-menu' was introduced in XEmacs 21.4.0.")
+  "The EVENT arg to `popup-mode-menu' was introduced in XEmacs 21.4.0.")
 
 ;; In XEmacs, we make popup menus work on the item over mouse (as
 ;; opposed to where the point happens to be.)  We attain this by
@@ -869,9 +802,10 @@ Must be bound to event E."
         ;; This gets the cursor where the user can see it.
         (if (not (bolp)) (forward-char -1))
         (sit-for 0)
-        (if (< emacs-major-version 20)
-            (mouse-major-mode-menu e)
-          (mouse-major-mode-menu e nil))))))
+	(if (fboundp 'mouse-menu-major-mode-map)
+	    (popup-menu (mouse-menu-major-mode-map) e)
+	  (with-no-warnings	  ; don't warn about obsolete fallback
+	    (mouse-major-mode-menu e nil)))))))
 
 ;;; Interactive user functions for the mouse
 ;;
@@ -918,7 +852,7 @@ BUFFER and POSITION are optional because XEmacs doesn't use them."
 	  (funcall dframe-help-echo-function))))))
 
 (defun dframe-mouse-set-point (e)
-  "Set POINT based on event E.
+  "Set point based on event E.
 Handles clicking on images in XEmacs."
   (if (and (featurep 'xemacs)
            (save-excursion

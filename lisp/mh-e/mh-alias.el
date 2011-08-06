@@ -1,7 +1,8 @@
 ;;; mh-alias.el --- MH-E mail alias completion and expansion
 
 ;; Copyright (C) 1994, 1995, 1996, 1997,
-;;  2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Peter S. Galbraith <psg@debian.org>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -10,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -45,13 +44,11 @@
   "Alist of aliases extracted from passwd file and their expansions.")
 (defvar mh-alias-tstamp nil
   "Time aliases were last loaded.")
-(defvar mh-alias-read-address-map nil)
-(unless mh-alias-read-address-map
-  (setq mh-alias-read-address-map
-        (copy-keymap minibuffer-local-completion-map))
-  (define-key mh-alias-read-address-map
-    "," 'mh-alias-minibuffer-confirm-address)
-  (define-key mh-alias-read-address-map " " 'self-insert-command))
+(defvar mh-alias-read-address-map
+  (let ((map (copy-keymap minibuffer-local-completion-map)))
+    (define-key map "," 'mh-alias-minibuffer-confirm-address)
+    (define-key map " " 'self-insert-command)
+    map))
 
 (defvar mh-alias-system-aliases
   '("/etc/nmh/MailAliases" "/etc/mh/MailAliases"
@@ -244,6 +241,7 @@ returns the string unchanged if not defined. The same is done here."
              (message "%s" (error-message-string err))
              alias))))
 
+;;;###mh-autoload
 (defun mh-alias-expand (alias)
   "Return expansion for ALIAS.
 Blind aliases or users from /etc/passwd are not expanded."

@@ -1,16 +1,16 @@
 ;;; yenc.el --- elisp native yenc decoder
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Jesper Harder <harder@ifa.au.dk>
 ;; Keywords: yenc news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -54,6 +52,25 @@
        174 175 176 177 178 179 180 181 182 183 184 185 186 187 188 189 190
        191 192 193 194 195 196 197 198 199 200 201 202 203 204 205 206 207
        208 209 210 211 212 213])
+
+(defun yenc-first-part-p ()
+  "Say whether the buffer contains the first part of a yEnc file."
+  (save-excursion
+    (goto-char (point-min))
+    (re-search-forward "^=ybegin part=1 " nil t)))
+
+(defun yenc-last-part-p ()
+  "Say whether the buffer contains the last part of a yEnc file."
+  (save-excursion
+    (goto-char (point-min))
+    (let (total-size end-size)
+      (when (re-search-forward "^=ybegin.*size=\\([0-9]+\\)" nil t)
+	(setq total-size (match-string 1)))
+      (when (re-search-forward "^=ypart.*end=\\([0-9]+\\)" nil t)
+	(setq end-size (match-string 1)))
+      (and total-size
+	   end-size
+	   (string= total-size end-size)))))
 
 ;;;###autoload
 (defun yenc-decode-region (start end)
@@ -118,5 +135,5 @@
 
 (provide 'yenc)
 
-;;; arch-tag: 74df17e8-6fa8-4071-9f7d-54d548d79d9a
+;; arch-tag: 74df17e8-6fa8-4071-9f7d-54d548d79d9a
 ;;; yenc.el ends here

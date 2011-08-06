@@ -1,7 +1,7 @@
 ;;; reftex-dcr.el --- viewing cross references and citations with RefTeX
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <dominik@science.uva.nl>
 ;; Maintainer: auctex-devel@gnu.org
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -352,12 +350,14 @@ will display info in the echo area."
     (message "Automatic display of crossref information was turned on")))
 
 (defun reftex-start-itimer-once ()
-   (and reftex-mode
+   (and (featurep 'xemacs) reftex-mode
         (not (itimer-live-p reftex-auto-view-crossref-timer))
         (setq reftex-auto-view-crossref-timer
               (start-itimer "RefTeX Idle Timer"
                             'reftex-view-crossref-when-idle 
                             reftex-idle-time nil t))))
+
+(declare-function bibtex-beginning-of-entry "bibtex" ())
 
 (defun reftex-view-crossref-from-bibtex (&optional arg)
   "View location in a LaTeX document which cites the BibTeX entry at point.
@@ -483,5 +483,5 @@ Calling this function several times find successive citation locations."
       (move-marker reftex-global-search-marker nil)
       (error "All files processed"))))
 
-;;; arch-tag: d2f52b56-744e-44ad-830d-1fc193b90eda
+;; arch-tag: d2f52b56-744e-44ad-830d-1fc193b90eda
 ;;; reftex-dcr.el ends here

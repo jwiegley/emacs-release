@@ -1,7 +1,8 @@
 ;;; dired.el --- directory-browsing commands
 
 ;; Copyright (C) 1985, 1986, 1992, 1993, 1994, 1995, 1996, 1997, 2000,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Sebastian Kremer <sk@thp.uni-koeln.de>
 ;; Maintainer: FSF
@@ -9,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -34,6 +33,8 @@
 ;; Finished up by rms in 1992.
 
 ;;; Code:
+
+(eval-when-compile (require 'cl))
 
 ;;; Customizable variables
 
@@ -50,7 +51,7 @@
 
 ;;;###autoload
 (defcustom dired-listing-switches "-al"
-  "*Switches passed to `ls' for Dired.  MUST contain the `l' option.
+  "Switches passed to `ls' for Dired.  MUST contain the `l' option.
 May contain all other options that don't contradict `-l';
 may contain even `F', `b', `i' and `s'.  See also the variable
 `dired-ls-F-marks-symlinks' concerning the `F' switch.
@@ -70,7 +71,7 @@ If nil, `dired-listing-switches' is used.")
 
 ;;;###autoload
 (defvar dired-chown-program
-  (if (memq system-type '(hpux dgux usg-unix-v irix linux gnu/linux cygwin))
+  (if (memq system-type '(hpux usg-unix-v irix linux gnu/linux cygwin))
       "chown"
     (if (file-exists-p "/usr/sbin/chown")
 	"/usr/sbin/chown"
@@ -88,7 +89,7 @@ If nil, `dired-listing-switches' is used.")
 
 ;;;###autoload
 (defcustom dired-ls-F-marks-symlinks nil
-  "*Informs Dired about how `ls -lF' marks symbolic links.
+  "Informs Dired about how `ls -lF' marks symbolic links.
 Set this to t if `ls' (or whatever program is specified by
 `insert-directory-program') with `-lF' marks the symbolic link
 itself with a trailing @ (usually the case under Ultrix).
@@ -105,7 +106,7 @@ always set this variable to t."
 
 ;;;###autoload
 (defcustom dired-trivial-filenames "^\\.\\.?$\\|^#"
-  "*Regexp of files to skip when finding first file of a directory.
+  "Regexp of files to skip when finding first file of a directory.
 A value of nil means move to the subdir line.
 A value of t means move to first file."
   :type '(choice (const :tag "Move to subdir" nil)
@@ -116,7 +117,7 @@ A value of t means move to first file."
 ;;;###autoload
 (defcustom dired-keep-marker-rename t
   ;; Use t as default so that moved files "take their markers with them".
-  "*Controls marking of renamed files.
+  "Controls marking of renamed files.
 If t, files keep their previous marks when they are renamed.
 If a character, renamed files (whether previously marked or not)
 are afterward marked with that character."
@@ -126,7 +127,7 @@ are afterward marked with that character."
 
 ;;;###autoload
 (defcustom dired-keep-marker-copy ?C
-  "*Controls marking of copied files.
+  "Controls marking of copied files.
 If t, copied files are marked if and as the corresponding original files were.
 If a character, copied files are unconditionally marked with that character."
   :type '(choice (const :tag "Keep" t)
@@ -135,7 +136,7 @@ If a character, copied files are unconditionally marked with that character."
 
 ;;;###autoload
 (defcustom dired-keep-marker-hardlink ?H
-  "*Controls marking of newly made hard links.
+  "Controls marking of newly made hard links.
 If t, they are marked if and as the files linked to were marked.
 If a character, new links are unconditionally marked with that character."
   :type '(choice (const :tag "Keep" t)
@@ -144,7 +145,7 @@ If a character, new links are unconditionally marked with that character."
 
 ;;;###autoload
 (defcustom dired-keep-marker-symlink ?Y
-  "*Controls marking of newly made symbolic links.
+  "Controls marking of newly made symbolic links.
 If t, they are marked if and as the files linked to were marked.
 If a character, new links are unconditionally marked with that character."
   :type '(choice (const :tag "Keep" t)
@@ -153,7 +154,7 @@ If a character, new links are unconditionally marked with that character."
 
 ;;;###autoload
 (defcustom dired-dwim-target nil
-  "*If non-nil, Dired tries to guess a default target directory.
+  "If non-nil, Dired tries to guess a default target directory.
 This means: if there is a dired buffer displayed in the next window,
 use its current subdir, instead of the current subdir of this dired buffer.
 
@@ -163,7 +164,7 @@ The target is used in the prompt for file copy, rename etc."
 
 ;;;###autoload
 (defcustom dired-copy-preserve-time t
-  "*If non-nil, Dired preserves the last-modified time in a file copy.
+  "If non-nil, Dired preserves the last-modified time in a file copy.
 \(This works on only some systems.)"
   :type 'boolean
   :group 'dired)
@@ -382,9 +383,6 @@ Subexpression 2 must end right before the \\n or \\r.")
 (defvar dired-font-lock-keywords
   (list
    ;;
-   ;; Directory headers.
-   (list dired-subdir-regexp '(1 dired-header-face))
-   ;;
    ;; Dired marks.
    (list dired-re-mark '(0 dired-mark-face))
    ;;
@@ -451,6 +449,14 @@ Subexpression 2 must end right before the \\n or \\r.")
 		    (unless (get-text-property (1- (point)) 'mouse-face)
 		      (dired-move-to-filename)))
 	     nil (0 dired-ignored-face))))
+   ;;
+   ;; Explicitly put the default face on file names ending in a colon to
+   ;; avoid fontifying them as directory header.
+   (list (concat dired-re-maybe-mark dired-re-inode-size dired-re-perms ".*:$")
+	 '(".+" (dired-move-to-filename) nil (0 'default)))
+   ;;
+   ;; Directory headers.
+   (list dired-subdir-regexp '(1 dired-header-face))
 )
   "Additional expressions to highlight in Dired mode.")
 
@@ -464,7 +470,7 @@ PREDICATE is evaluated on each line, with point at beginning of line.
 MSG is a noun phrase for the type of files being marked.
 It should end with a noun that can be pluralized by adding `s'.
 Return value is the number of files marked, or nil if none were marked."
-  `(let (buffer-read-only count)
+  `(let ((inhibit-read-only t) count)
     (save-excursion
       (setq count 0)
       (if ,msg (message "Marking %ss..." ,msg))
@@ -489,11 +495,12 @@ Return value is the number of files marked, or nil if none were marked."
 				     distinguish-one-marked)
   "Eval BODY with point on each marked line.  Return a list of BODY's results.
 If no marked file could be found, execute BODY on the current line.
-  If ARG is an integer, use the next ARG (or previous -ARG, if ARG<0)
-  files instead of the marked files.
-  In that case point is dragged along.  This is so that commands on
-  the next ARG (instead of the marked) files can be chained easily.
-  If ARG is otherwise non-nil, use current file instead.
+ARG, if non-nil, specifies the files to use instead of the marked files.
+  If ARG is an integer, use the next ARG (or previous -ARG, if
+   ARG<0) files.  In that case, point is dragged along.  This is
+   so that commands on the next ARG (instead of the marked) files
+   can be chained easily.
+  For any other non-nil value of ARG, use the current file.
 If optional third arg SHOW-PROGRESS evaluates to non-nil,
   redisplay the dired buffer after each file is processed.
 No guarantee is made about the position on the marked line.
@@ -510,7 +517,7 @@ return (t FILENAME) instead of (FILENAME)."
   ;;endless loop.
   ;;This warning should not apply any longer, sk  2-Sep-1991 14:10.
   `(prog1
-       (let (buffer-read-only case-fold-search found results)
+       (let ((inhibit-read-only t) case-fold-search found results)
 	 (if ,arg
 	     (if (integerp ,arg)
 		 (progn	;; no save-excursion, want to move point.
@@ -558,10 +565,11 @@ The list is in the same order as the buffer, that is, the car is the
   first marked file.
 Values returned are normally absolute file names.
 Optional arg LOCALP as in `dired-get-filename'.
-Optional second argument ARG specifies files near point
- instead of marked files.  If ARG is an integer, use the next ARG files.
-  If ARG is otherwise non-nil, use file.  Usually ARG comes from
-  the command's prefix arg.
+Optional second argument ARG, if non-nil, specifies files near
+ point instead of marked files.  It usually comes from the prefix
+ argument.
+  If ARG is an integer, use the next ARG files.
+  Any other non-nil value means to use the current file instead.
 Optional third argument FILTER, if non-nil, is a function to select
   some of the files--those for which (funcall FILTER FILENAME) is non-nil.
 
@@ -597,8 +605,65 @@ Don't use that together with FILTER."
 	    (if (next-read-file-uses-dialog-p)
 		(read-directory-name (format "Dired %s(directory): " str)
 				     nil default-directory nil)
-	      (read-file-name (format "Dired %s(directory): " str)
-			      nil default-directory nil)))))
+	      (let ((default (and buffer-file-name
+				  (abbreviate-file-name buffer-file-name))))
+		(minibuffer-with-setup-hook
+		    (lambda () (setq minibuffer-default default))
+		  (read-file-name (format "Dired %s(directory): " str)
+				  nil default-directory nil)))))))
+
+;; We want to switch to a more sophisticated version of
+;; dired-read-dir-and-switches like the following, if there is a way
+;; to make it more intuitive.  See bug#1285.
+
+;; (defun dired-read-dir-and-switches (str)
+;;   ;; For use in interactive.
+;;   (reverse
+;;    (list
+;;     (if current-prefix-arg
+;;         (read-string "Dired listing switches: "
+;;                      dired-listing-switches))
+;;     ;; If a dialog is about to be used, call read-directory-name so
+;;     ;; the dialog code knows we want directories.  Some dialogs can
+;;     ;; only select directories or files when popped up, not both.
+;;     (if (next-read-file-uses-dialog-p)
+;;         (read-directory-name (format "Dired %s(directory): " str)
+;;                              nil default-directory nil)
+;;       (let ((cie ()))
+;;         (dolist (ext completion-ignored-extensions)
+;;           (if (eq ?/ (aref ext (1- (length ext)))) (push ext cie)))
+;;         (setq cie (concat (regexp-opt cie "\\(?:") "\\'"))
+;;         (lexical-let* ((default (and buffer-file-name
+;;                                      (abbreviate-file-name buffer-file-name)))
+;;                        (cie cie)
+;;                        (completion-table
+;;                         ;; We need a mix of read-file-name and
+;;                         ;; read-directory-name so that completion to directories
+;;                         ;; is preferred, but if the user wants to enter a global
+;;                         ;; pattern, he can still use completion on filenames to
+;;                         ;; help him write the pattern.
+;;                         ;; Essentially, we want to use
+;;                         ;; (completion-table-with-predicate
+;;                         ;;  'read-file-name-internal 'file-directory-p nil)
+;;                         ;; but that doesn't work because read-file-name-internal
+;;                         ;; does not obey its `predicate' argument.
+;;                         (completion-table-in-turn
+;;                          (lambda (str pred action)
+;;                            (let ((read-file-name-predicate
+;;                                   (lambda (f)
+;;                                     (and (not (member f '("./" "../")))
+;;                                          ;; Hack! Faster than file-directory-p!
+;;                                          (eq (aref f (1- (length f))) ?/)
+;;                                          (not (string-match cie f))))))
+;;                              (complete-with-action
+;;                               action 'read-file-name-internal str nil)))
+;;                          'read-file-name-internal)))
+;;           (minibuffer-with-setup-hook
+;;               (lambda ()
+;;                 (setq minibuffer-default default)
+;;                 (setq minibuffer-completion-table completion-table))
+;;             (read-file-name (format "Dired %s(directory): " str)
+;;                             nil default-directory nil))))))))
 
 ;;;###autoload (define-key ctl-x-map "d" 'dired)
 ;;;###autoload
@@ -683,9 +748,11 @@ for a remote directory.  This feature is used by Auto Revert Mode."
     (and (stringp dirname)
 	 (not (when noconfirm (file-remote-p dirname)))
 	 (file-readable-p dirname)
+	 ;; Do not auto-revert when the dired buffer can be currently
+	 ;; written by the user as in `wdired-mode'.
+	 buffer-read-only
 	 (dired-directory-changed-p dirname))))
 
-;; Separate function from dired-noselect for the sake of dired-vms.el.
 (defun dired-internal-noselect (dir-or-list &optional switches mode)
   ;; If there is an existing dired buffer for DIRNAME, just leave
   ;; buffer as it is (don't even call dired-revert).
@@ -792,7 +859,11 @@ wildcards, erases the buffer, and builds the subdir-alist anew
 
   ;; default-directory and dired-actual-switches must be buffer-local
   ;; and initialized by now.
-  (let (dirname)
+  (let (dirname
+	;; This makes readin much much faster.
+	;; In particular, it prevents the font lock hook from running
+	;; until the directory is all read in.
+	(inhibit-modification-hooks t))
     (if (consp dired-directory)
 	(setq dirname (car dired-directory))
       (setq dirname dired-directory))
@@ -807,7 +878,7 @@ wildcards, erases the buffer, and builds the subdir-alist anew
       (make-local-variable 'file-name-coding-system)
       (setq file-name-coding-system
 	    (or coding-system-for-read file-name-coding-system))
-      (let (buffer-read-only
+      (let ((inhibit-read-only t)
 	    ;; Don't make undo entries for readin.
 	    (buffer-undo-list t))
 	(widen)
@@ -1010,7 +1081,9 @@ If HDR is non-nil, insert a header line with the directory name."
     ;; Insert text at the beginning to standardize things.
     (save-excursion
       (goto-char opoint)
-      (if (and (or hdr wildcard) (not (looking-at "^  /.*:$")))
+      (if (and (or hdr wildcard)
+               (not (and (looking-at "^  \\(.*\\):$")
+                         (file-name-absolute-p (match-string 1)))))
 	  ;; Note that dired-build-subdir-alist will replace the name
 	  ;; by its expansion, so it does not matter whether what we insert
 	  ;; here is fully expanded, but it should be absolute.
@@ -1032,6 +1105,7 @@ If HDR is non-nil, insert a header line with the directory name."
 		 (dired-move-to-end-of-filename)
 		 (point))
 	       '(mouse-face highlight
+		 dired-filename t
 		 help-echo "mouse-2: visit this file in other window")))
 	(error nil))
       (forward-line 1))))
@@ -1051,7 +1125,7 @@ Preserves old cursor, marks/flags, hidden-p."
 	(hidden-subdirs (dired-remember-hidden))
 	(old-subdir-alist (cdr (reverse dired-subdir-alist))) ; except pwd
 	(case-fold-search nil)		; we check for upper case ls flags
-	buffer-read-only)
+	(inhibit-read-only t))
     (goto-char (point-min))
     (setq mark-alist;; only after dired-remember-hidden since this unhides:
 	  (dired-remember-marks (point-min) (point-max)))
@@ -1085,7 +1159,7 @@ Preserves old cursor, marks/flags, hidden-p."
 (defun dired-remember-marks (beg end)
   "Return alist of files and their marks, from BEG to END."
   (if selective-display			; must unhide to make this work.
-      (let (buffer-read-only)
+      (let ((inhibit-read-only t))
 	(subst-char-in-region beg end ?\r ?\n)))
   (let (fil chr alist)
     (save-excursion
@@ -1158,7 +1232,6 @@ Do so according to the former subdir alist OLD-SUBDIR-ALIST."
     (define-key map "#" 'dired-flag-auto-save-files)
     (define-key map "." 'dired-clean-directory)
     (define-key map "~" 'dired-flag-backup-files)
-    (define-key map "&" 'dired-flag-garbage-files)
     ;; Upper case keys (except !) for operating on the marked files
     (define-key map "A" 'dired-do-search)
     (define-key map "C" 'dired-do-copy)
@@ -1177,6 +1250,7 @@ Do so according to the former subdir alist OLD-SUBDIR-ALIST."
     (define-key map "X" 'dired-do-shell-command)
     (define-key map "Z" 'dired-do-compress)
     (define-key map "!" 'dired-do-shell-command)
+    (define-key map "&" 'dired-do-async-shell-command)
     ;; Comparison commands
     (define-key map "=" 'dired-diff)
     (define-key map "\M-=" 'dired-backup-diff)
@@ -1204,6 +1278,7 @@ Do so according to the former subdir alist OLD-SUBDIR-ALIST."
     (define-key map "%H" 'dired-do-hardlink-regexp)
     (define-key map "%R" 'dired-do-rename-regexp)
     (define-key map "%S" 'dired-do-symlink-regexp)
+    (define-key map "%&" 'dired-flag-garbage-files)
     ;; Commands for marking and unmarking.
     (define-key map "*" nil)
     (define-key map "**" 'dired-mark-executables)
@@ -1259,7 +1334,13 @@ Do so according to the former subdir alist OLD-SUBDIR-ALIST."
     ;; hiding
     (define-key map "$" 'dired-hide-subdir)
     (define-key map "\M-$" 'dired-hide-all)
+    ;; isearch
+    (define-key map (kbd "M-s a C-s")   'dired-do-isearch)
+    (define-key map (kbd "M-s a M-C-s") 'dired-do-isearch-regexp)
+    (define-key map (kbd "M-s f C-s")   'dired-isearch-filenames)
+    (define-key map (kbd "M-s f M-C-s") 'dired-isearch-filenames-regexp)
     ;; misc
+    (define-key map "\C-x\C-q" 'dired-toggle-read-only)
     (define-key map "?" 'dired-summary)
     (define-key map "\177" 'dired-unmark-backward)
     (define-key map [remap undo] 'dired-undo)
@@ -1277,6 +1358,11 @@ Do so according to the former subdir alist OLD-SUBDIR-ALIST."
     (define-key map "\C-tf" 'image-dired-mark-tagged-files)
     (define-key map "\C-t\C-t" 'image-dired-dired-insert-marked-thumbs)
     (define-key map "\C-te" 'image-dired-dired-edit-comment-and-tags)
+    ;; encryption and decryption (epa-dired)
+    (define-key map ":d" 'epa-dired-do-decrypt)
+    (define-key map ":v" 'epa-dired-do-verify)
+    (define-key map ":s" 'epa-dired-do-sign)
+    (define-key map ":e" 'epa-dired-do-encrypt)
 
     ;; Make menu bar items.
 
@@ -1323,6 +1409,29 @@ Do so according to the former subdir alist OLD-SUBDIR-ALIST."
       (cons "Immediate" (make-sparse-keymap "Immediate")))
 
     (define-key map
+      [menu-bar immediate epa-dired-do-decrypt]
+      '(menu-item "Decrypt" epa-dired-do-decrypt
+		  :help "Decrypt file at cursor"))
+
+    (define-key map
+      [menu-bar immediate epa-dired-do-verify]
+      '(menu-item "Verify" epa-dired-do-verify
+		  :help "Verify digital signature of file at cursor"))
+
+    (define-key map
+      [menu-bar immediate epa-dired-do-sign]
+      '(menu-item "Sign" epa-dired-do-sign
+		  :help "Create digital signature of file at cursor"))
+
+    (define-key map
+      [menu-bar immediate epa-dired-do-encrypt]
+      '(menu-item "Encrypt" epa-dired-do-encrypt
+		  :help "Encrypt file at cursor"))
+
+    (define-key map [menu-bar immediate dashes-4]
+      '("--"))
+
+    (define-key map
       [menu-bar immediate image-dired-dired-display-external]
       '(menu-item "Display Image Externally" image-dired-dired-display-external
                   :help "Display image in external viewer"))
@@ -1341,6 +1450,12 @@ Do so according to the former subdir alist OLD-SUBDIR-ALIST."
     (define-key map [menu-bar immediate dashes]
       '("--"))
 
+    (define-key map [menu-bar immediate isearch-filenames-regexp]
+      '(menu-item "Isearch Regexp in File Names..." dired-isearch-filenames-regexp
+		  :help "Incrementally search for regexp in file names only"))
+    (define-key map [menu-bar immediate isearch-filenames]
+      '(menu-item "Isearch in File Names..." dired-isearch-filenames
+		  :help "Incrementally search for string in file names only."))
     (define-key map [menu-bar immediate compare-directories]
       '(menu-item "Compare Directories..." dired-compare-directories
 		  :help "Mark files with different attributes in two dired buffers"))
@@ -1363,9 +1478,13 @@ Do so according to the former subdir alist OLD-SUBDIR-ALIST."
       '(menu-item "Find This File" dired-find-file
 		  :help "Edit file at cursor"))
     (define-key map [menu-bar immediate create-directory]
-      '(menu-item "Create Directory..." dired-create-directory))
+      '(menu-item "Create Directory..." dired-create-directory
+		  :help "Create a directory"))
     (define-key map [menu-bar immediate wdired-mode]
-      '(menu-item "Edit File Names" wdired-change-to-wdired-mode))
+      '(menu-item "Edit File Names" wdired-change-to-wdired-mode
+		  :help "Put a dired buffer in a mode in which filenames are editable"
+		  :keys "C-x C-q"
+		  :filter (lambda (x) (if (eq major-mode 'dired-mode) x))))
 
     (define-key map [menu-bar regexp]
       (cons "Regexp" (make-sparse-keymap "Regexp")))
@@ -1464,6 +1583,7 @@ Do so according to the former subdir alist OLD-SUBDIR-ALIST."
 
     (define-key map [menu-bar operate]
       (cons "Operate" (make-sparse-keymap "Operate")))
+
     (define-key map
       [menu-bar operate image-dired-delete-tag]
       '(menu-item "Delete Image Tag..." image-dired-delete-tag
@@ -1478,8 +1598,8 @@ Do so according to the former subdir alist OLD-SUBDIR-ALIST."
                   :help "Add image comment to current or marked files"))
     (define-key map
       [menu-bar operate image-dired-display-thumbs]
-      '(menu-item "Display Image-Dired" image-dired-display-thumbs
-                  :help "Display image-dired for current or marked image files"))
+      '(menu-item "Display image thumbnails" image-dired-display-thumbs
+                  :help "Display image thumbnails for current or marked image files"))
 
     (define-key map [menu-bar operate dashes-3]
       '("--"))
@@ -1490,6 +1610,12 @@ Do so according to the former subdir alist OLD-SUBDIR-ALIST."
     (define-key map [menu-bar operate search]
       '(menu-item "Search Files..." dired-do-search
 		  :help "Search marked files for regexp"))
+    (define-key map [menu-bar operate isearch-regexp]
+      '(menu-item "Isearch Regexp Files..." dired-do-isearch-regexp
+		  :help "Incrementally search marked files for regexp"))
+    (define-key map [menu-bar operate isearch]
+      '(menu-item "Isearch Files..." dired-do-isearch
+		  :help "Incrementally search marked files for string"))
     (define-key map [menu-bar operate chown]
       '(menu-item "Change Owner..." dired-do-chown
 		  :visible (not (memq system-type '(ms-dos windows-nt)))
@@ -1644,6 +1770,7 @@ Keybindings:
   (when (featurep 'dnd)
     (set (make-local-variable 'dnd-protocol-alist)
 	 (append dired-dnd-protocol-alist dnd-protocol-alist)))
+  (add-hook 'isearch-mode-hook 'dired-isearch-filenames-setup nil t)
   (run-mode-hooks 'dired-mode-hook))
 
 ;; Idiosyncratic dired commands that don't deal with marks.
@@ -1661,24 +1788,34 @@ Keybindings:
 This doesn't recover lost files, it just undoes changes in the buffer itself.
 You can use it to recover marks, killed lines or subdirs."
   (interactive)
-  (let (buffer-read-only)
+  (let ((inhibit-read-only t))
     (undo))
   (dired-build-subdir-alist)
   (message "Change in dired buffer undone.
 Actual changes in files cannot be undone by Emacs."))
 
+(defun dired-toggle-read-only ()
+  "Edit dired buffer with Wdired, or set it read-only.
+Call `wdired-change-to-wdired-mode' in dired buffers whose editing is
+supported by Wdired (the major mode of the dired buffer is `dired-mode').
+Otherwise, for buffers inheriting from dired-mode, call `toggle-read-only'."
+  (interactive)
+  (if (eq major-mode 'dired-mode)
+      (wdired-change-to-wdired-mode)
+    (toggle-read-only)))
+
 (defun dired-next-line (arg)
   "Move down lines then position at filename.
 Optional prefix ARG says how many lines to move; default is one line."
   (interactive "p")
-  (next-line arg)
+  (forward-line arg)
   (dired-move-to-filename))
 
 (defun dired-previous-line (arg)
   "Move up lines then position at filename.
 Optional prefix ARG says how many lines to move; default is one line."
   (interactive "p")
-  (previous-line arg)
+  (forward-line (- arg))
   (dired-move-to-filename))
 
 (defun dired-next-dirline (arg &optional opoint)
@@ -1730,7 +1867,7 @@ Creates a buffer if necessary."
 	  (error "File is a symlink to a nonexistent target")
 	(error "File no longer exists; type `g' to update dired buffer")))))
 
-;; Force `f' rather than `e' in the mode doc:
+;; Force C-m keybinding rather than `f' or `e' in the mode doc:
 (defalias 'dired-advertised-find-file 'dired-find-file)
 (defun dired-find-file ()
   "In Dired, visit the file or directory named on this line."
@@ -1813,17 +1950,14 @@ Otherwise, an error occurs in these cases."
 	  ;; Get rid of the mouse-face property that file names have.
 	  (set-text-properties 0 (length file) nil file)
 	  ;; Unquote names quoted by ls or by dired-insert-directory.
-	  ;; Using read to unquote is much faster than substituting
-	  ;; \007 (4 chars) -> ^G  (1 char) etc. in a lisp loop.
-	  (setq file
-		(read
-		 (concat "\""
-			 ;; Some ls -b don't escape quotes, argh!
-			 ;; This is not needed for GNU ls, though.
-			 (or (dired-string-replace-match
-			      "\\([^\\]\\|\\`\\)\"" file "\\1\\\\\"" nil t)
-			     file)
-			 "\"")))
+	  ;; This code was written using `read' to unquote, because
+          ;; it's faster than substituting \007 (4 chars) -> ^G (1
+          ;; char) etc. in a lisp loop.  Unfortunately, this decision
+          ;; has necessitated hacks such as dealing with filenames
+          ;; with quotation marks in their names.
+	  (while (string-match "\\(?:[^\\]\\|\\`\\)\\(\"\\)" file)
+	    (setq file (replace-match "\\\"" nil t file 1)))
+          (setq file (read (concat "\"" file "\"")))
 	  ;; The above `read' will return a unibyte string if FILE
 	  ;; contains eight-bit-control/graphic characters.
 	  (if (and enable-multibyte-characters
@@ -1887,8 +2021,7 @@ Optional arg GLOBAL means to replace all matches."
   ;;"Convert FILE (a file name relative to DIR) to an absolute file name."
   ;; We can't always use expand-file-name as this would get rid of `.'
   ;; or expand in / instead default-directory if DIR=="".
-  ;; This should be good enough for ange-ftp, but might easily be
-  ;; redefined (for VMS?).
+  ;; This should be good enough for ange-ftp.
   ;; It should be reasonably fast, though, as it is called in
   ;; dired-get-filename.
   (concat (or dir default-directory) file))
@@ -1994,7 +2127,7 @@ Return the position of the beginning of the filename, or nil if none found."
 	       (forward-char -1))))
       (or no-error
 	  (not (eq opoint (point)))
-	  (error (if hidden
+	  (error "%s" (if hidden
 		     (substitute-command-keys
 		      "File line is hidden, type \\[dired-hide-subdir] to unhide")
 		   "No file on this line")))
@@ -2204,7 +2337,7 @@ instead of `dired-actual-switches'."
   (dired-clear-alist)
   (save-excursion
     (let* ((count 0)
-	   (buffer-read-only nil)
+	   (inhibit-read-only t)
 	   (buffer-undo-list t)
 	   (switches (or switches dired-actual-switches))
 	   new-dir-name
@@ -2372,7 +2505,7 @@ Optional argument means return a file name relative to `default-directory'."
 ;; Deleting files
 
 (defcustom dired-recursive-deletes 'top
-  "*Decide whether recursive deletes are allowed.
+  "Decide whether recursive deletes are allowed.
 A value of nil means no recursive deletes.
 `always' means delete recursively without asking.  This is DANGEROUS!
 `top' means ask for each directory at top level, but delete its subdirectories
@@ -2420,8 +2553,8 @@ Anything else, ask for each sub-directory."
   "In Dired, delete the files flagged for deletion.
 If NOMESSAGE is non-nil, we don't display any message
 if there are no flagged files.
-`dired-recursive-deletes' controls whether 
-deletion of non-empty directories is allowed."
+`dired-recursive-deletes' controls whether deletion of
+non-empty directories is allowed."
   (interactive)
   (let* ((dired-marker-char dired-del-marker)
 	 (regexp (dired-marker-regexp))
@@ -2438,8 +2571,8 @@ deletion of non-empty directories is allowed."
 
 (defun dired-do-delete (&optional arg)
   "Delete all marked (or next ARG) files.
-`dired-recursive-deletes' controls whether 
-deletion of non-empty directories is allowed."
+`dired-recursive-deletes' controls whether deletion of
+non-empty directories is allowed."
   ;; This is more consistent with the file marking feature than
   ;; dired-do-flagged-delete.
   (interactive "P")
@@ -2454,7 +2587,7 @@ deletion of non-empty directories is allowed."
 (defun dired-internal-do-deletions (l arg)
   ;; L is an alist of files to delete, with their buffer positions.
   ;; ARG is the prefix arg.
-  ;; Filenames are absolute (VMS needs this for logical search paths).
+  ;; Filenames are absolute.
   ;; (car L) *must* be the *last* (bottommost) file in the dired buffer.
   ;; That way as changes are made in the buffer they do not shift the
   ;; lines still to be changed, so the (point) values in L stay valid.
@@ -2472,7 +2605,7 @@ deletion of non-empty directories is allowed."
 	  (let (failures);; files better be in reverse order for this loop!
 	    (while l
 	      (goto-char (cdr (car l)))
-	      (let (buffer-read-only)
+	      (let ((inhibit-read-only t))
 		(condition-case err
 		    (let ((fn (car (car l))))
 		      (dired-delete-file fn dired-recursive-deletes)
@@ -2514,7 +2647,7 @@ deletion of non-empty directories is allowed."
 (defun dired-delete-entry (file)
   (save-excursion
     (and (dired-goto-file file)
-	 (let (buffer-read-only)
+	 (let ((inhibit-read-only t))
 	   (delete-region (progn (beginning-of-line) (point))
 			  (save-excursion (forward-line 1) (point))))))
   (dired-clean-up-after-deletion file))
@@ -2552,45 +2685,22 @@ name, or the marker and a count of marked files."
 	(format "%c [%d files]" dired-marker-char count)))))
 
 (defun dired-pop-to-buffer (buf)
-  ;; Pop up buffer BUF.
+  "Pop up buffer BUF in a way suitable for Dired."
+  (let ((split-window-preferred-function
+	 (lambda (window)
+	   (or (and (let ((split-height-threshold 0))
+		      (window-splittable-p (selected-window)))
+		    ;; Try to split the selected window vertically if
+		    ;; that's possible.  (Bug#1806)
+		    (split-window-vertically))
+	       ;; Otherwise, try to split WINDOW sensibly.
+	       (split-window-sensibly window)))))
+    (pop-to-buffer (get-buffer-create buf)))
   ;; If dired-shrink-to-fit is t, make its window fit its contents.
-  (if (not dired-shrink-to-fit)
-      (pop-to-buffer (get-buffer-create buf))
-    ;; let window shrink to fit:
-    (let ((window (selected-window))
-	  target-lines w2)
-      (cond ;; if split-height-threshold is enabled, use the largest window
-            ((and (> (window-height (setq w2 (get-largest-window)))
-		     split-height-threshold)
-		  (window-full-width-p w2))
-	     (setq window w2))
-	    ;; if the least-recently-used window is big enough, use it
-	    ((and (> (window-height (setq w2 (get-lru-window)))
-		     (* 2 window-min-height))
-		  (window-full-width-p w2))
-	     (setq window w2)))
-      (save-excursion
-	(set-buffer buf)
-	(goto-char (point-max))
-	(skip-chars-backward "\n\r\t ")
-	(setq target-lines (count-lines (point-min) (point)))
-	;; Don't forget to count the last line.
-	(if (not (bolp))
-	    (setq target-lines (1+ target-lines))))
-      (if (<= (window-height window) (* 2 window-min-height))
-	  ;; At this point, every window on the frame is too small to split.
-	  (setq w2 (display-buffer buf))
-	(setq w2 (split-window window
-		  (max window-min-height
-		       (- (window-height window)
-			  (1+ (max window-min-height target-lines)))))))
-      (set-window-buffer w2 buf)
-      (if (< (1- (window-height w2)) target-lines)
-	  (progn
-	    (select-window w2)
-	    (enlarge-window (- target-lines (1- (window-height w2))))))
-      (set-window-start w2 1)
-      )))
+  (when dired-shrink-to-fit
+    ;; Try to not delete window when we want to display less than
+    ;; `window-min-height' lines.
+    (fit-window-to-buffer (get-buffer-window buf) nil 1)))
 
 (defcustom dired-no-confirm nil
   "A list of symbols for commands Dired should not confirm.
@@ -2637,31 +2747,9 @@ just the current file."
       (apply function args))))
 
 (defun dired-format-columns-of-files (files)
-  ;; Files should be in forward order for this loop.
-  ;; i.e., (car files) = first file in buffer.
-  ;; Returns the number of lines used.
-  (let* ((maxlen (+ 2 (apply 'max (mapcar 'length files))))
-	 (width (- (window-width (selected-window)) 2))
-	 (columns (max 1 (/ width maxlen)))
-	 (nfiles (length files))
-	 (rows (+ (/ nfiles columns)
-		  (if (zerop (% nfiles columns)) 0 1)))
-	 (i 0)
-	 (j 0))
-    (setq files (nconc (copy-sequence files) ; fill up with empty fns
-		       (make-list (- (* columns rows) nfiles) "")))
-    (setcdr (nthcdr (1- (length files)) files) files) ; make circular
-    (while (< j rows)
-      (while (< i columns)
-	(indent-to (* i maxlen))
-	(insert (car files))
-	(setq files (nthcdr rows files)
-	      i (1+ i)))
-      (insert "\n")
-      (setq i 0
-	    j (1+ j)
-	    files (cdr files)))
-    rows))
+  (let ((beg (point)))
+    (completion--insert-strings files)
+    (put-text-property beg (point) 'mouse-face nil)))
 
 ;; Commands to mark or flag file(s) at or near current line.
 
@@ -2727,7 +2815,7 @@ just the current file."
 	       (following-char))))))
 
 (defun dired-mark-files-in-region (start end)
-  (let (buffer-read-only)
+  (let ((inhibit-read-only t))
     (if (> start end)
 	(error "start > end"))
     (goto-char start)			; assumed at beginning of line
@@ -2752,7 +2840,7 @@ this subdir."
   (interactive "P")
   (if (dired-get-subdir)
       (save-excursion (dired-mark-subdir-files))
-    (let (buffer-read-only)
+    (let ((inhibit-read-only t))
       (dired-repeat-over-lines
        (prefix-numeric-value arg)
        (function (lambda () (delete-char 1) (insert dired-marker-char)))))))
@@ -2787,7 +2875,7 @@ As always, hidden subdirs are not affected."
   (interactive)
   (save-excursion
     (goto-char (point-min))
-    (let (buffer-read-only)
+    (let ((inhibit-read-only t))
       (while (not (eobp))
         (or (dired-between-files)
             (looking-at dired-re-dot)
@@ -2967,7 +3055,7 @@ OLD and NEW are both characters used to mark files."
   (if (or (eq old ?\r) (eq new ?\r))
       (ding)
     (let ((string (format "\n%c" old))
-	  (buffer-read-only))
+	  (inhibit-read-only t))
       (save-excursion
 	(goto-char (point-min))
 	(while (search-forward string nil t)
@@ -2992,7 +3080,7 @@ Type \\[help-command] at that time for help."
   (interactive "cRemove marks (RET means all): \nP")
   (save-excursion
     (let* ((count 0)
-	   buffer-read-only case-fold-search query
+	   (inhibit-read-only t) case-fold-search query
 	   (string (format "\n%c" mark))
 	   (help-form "\
 Type SPC or `y' to unmark one file, DEL or `n' to skip to next,
@@ -3222,7 +3310,7 @@ To be called first in body of `dired-sort-other', etc."
 ;;;;  Drag and drop support
 
 (defcustom dired-recursive-copies 'top
-  "*Decide whether recursive copies are allowed.
+  "Decide whether recursive copies are allowed.
 A value of nil means no recursive copies.
 `always' means copy recursively without asking.
 `top' means ask for each directory at top level.
@@ -3238,6 +3326,7 @@ Anything else means ask for each directory."
   (message-box
    "Dired recursive copies are currently disabled.\nSee the variable `dired-recursive-copies'."))
 
+(declare-function x-popup-menu "xmenu.c" (position menu))
 
 (defun dired-dnd-do-ask-action (uri)
   ;; No need to get actions and descriptions from the source,
@@ -3254,6 +3343,13 @@ Anything else means ask for each directory."
     (if action
 	(dired-dnd-handle-local-file uri action)
       nil)))
+
+(declare-function dired-relist-entry "dired-aux" (file))
+(declare-function make-symbolic-link "fileio.c")
+
+;; Only used when (featurep 'dnd).
+(declare-function dnd-get-local-file-name "dnd" (uri &optional must-exist))
+(declare-function dnd-get-local-file-uri "dnd" (uri))
 
 (defun dired-dnd-handle-local-file (uri action)
   "Copy, move or link a file to the dired directory.
@@ -3347,7 +3443,7 @@ Ask means pop up a menu for the user to select one of copy, move or link."
           (dired dired-dir)
           ;; The following elements of `desktop-buffer-misc' are the keys
           ;; from `dired-subdir-alist'.
-          (mapcar 'dired-maybe-insert-subdir (cdr desktop-buffer-misc))
+          (mapc 'dired-maybe-insert-subdir (cdr desktop-buffer-misc))
           (current-buffer))
       (message "Desktop: Directory %s no longer exists." dir)
       (when desktop-missing-file-warning (sit-for 1))
@@ -3357,9 +3453,6 @@ Ask means pop up a menu for the user to select one of copy, move or link."
 	     '(dired-mode . dired-restore-desktop-buffer))
 
 
-(if (eq system-type 'vax-vms)
-    (load "dired-vms"))
-
 (provide 'dired)
 
 (run-hooks 'dired-load-hook)		; for your customizations

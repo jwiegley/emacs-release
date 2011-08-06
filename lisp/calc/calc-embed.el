@@ -1,17 +1,17 @@
 ;;; calc-embed.el --- embed Calc in a buffer
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -31,6 +29,10 @@
 
 (require 'calc-ext)
 (require 'calc-macs)
+
+;; Declare functions which are defined elsewhere.
+(declare-function thing-at-point-looking-at "thingatpt" (regexp))
+
 
 (defun calc-show-plain (n)
   (interactive "P")
@@ -53,14 +55,13 @@
 (defvar calc-embedded-announce-formula)
 (defvar calc-embedded-open-formula)
 (defvar calc-embedded-close-formula)
-(defvar calc-embedded-open-word)
-(defvar calc-embedded-close-word)
 (defvar calc-embedded-open-plain)
 (defvar calc-embedded-close-plain)
 (defvar calc-embedded-open-new-formula)
 (defvar calc-embedded-close-new-formula)
 (defvar calc-embedded-open-mode)
 (defvar calc-embedded-close-mode)
+(defvar calc-embedded-word-regexp)
 
 (defconst calc-embedded-mode-vars '(("precision" . calc-internal-prec)
 				    ("word-size" . calc-word-size)
@@ -96,29 +97,29 @@
 ))
 
 
-;;; Format of calc-embedded-info vector:
-;;;    0   Editing buffer.
-;;;    1   Calculator buffer.
-;;;    2   Top of current formula (marker).
-;;;    3   Bottom of current formula (marker).
-;;;    4   Top of current formula's delimiters (marker).
-;;;    5   Bottom of current formula's delimiters (marker).
-;;;    6   String representation of current formula.
-;;;    7   Non-nil if formula is embedded within a single line.
-;;;    8   Internal representation of current formula.
-;;;    9   Variable assigned by this formula, or nil.
-;;;   10   List of variables upon which this formula depends.
-;;;   11   Evaluated value of the formula, or nil.
-;;;   12   Mode settings for current formula.
-;;;   13   Local mode settings for current formula.
-;;;   14   Permanent mode settings for current formula.
-;;;   15   Global mode settings for editing buffer.
+;; Format of calc-embedded-info vector:
+;;    0   Editing buffer.
+;;    1   Calculator buffer.
+;;    2   Top of current formula (marker).
+;;    3   Bottom of current formula (marker).
+;;    4   Top of current formula's delimiters (marker).
+;;    5   Bottom of current formula's delimiters (marker).
+;;    6   String representation of current formula.
+;;    7   Non-nil if formula is embedded within a single line.
+;;    8   Internal representation of current formula.
+;;    9   Variable assigned by this formula, or nil.
+;;   10   List of variables upon which this formula depends.
+;;   11   Evaluated value of the formula, or nil.
+;;   12   Mode settings for current formula.
+;;   13   Local mode settings for current formula.
+;;   14   Permanent mode settings for current formula.
+;;   15   Global mode settings for editing buffer.
 
 
-;;; calc-embedded-active is an a-list keyed on buffers; each cdr is a
-;;; sorted list of calc-embedded-infos in that buffer.  We do this
-;;; rather than using buffer-local variables because the latter are
-;;; thrown away when a buffer changes major modes.
+;; calc-embedded-active is an a-list keyed on buffers; each cdr is a
+;; sorted list of calc-embedded-infos in that buffer.  We do this
+;; rather than using buffer-local variables because the latter are
+;; thrown away when a buffer changes major modes.
 
 (defvar calc-embedded-original-modes nil
   "The mode settings for Calc buffer when put in embedded mode.")
@@ -158,10 +159,9 @@
         (message "Current modes will be preserved when leaving embedded mode."))
     (message "Not in embedded mode.")))
 
-(defun calc-embedded-restore-original-modes ()
+(defun calc-embedded-restore-original-modes (calcbuf)
   "Restore the original Calc modes when leaving embedded mode."
-  (let ((calcbuf (get-buffer "*Calculator*"))
-        (changed nil)
+  (let ((changed nil)
         (lang (car calc-embedded-original-modes))
         (modes (cdr calc-embedded-original-modes)))
     (if (and calcbuf calc-embedded-original-modes)
@@ -231,7 +231,8 @@
 
 	    ((eq (current-buffer) (aref calc-embedded-info 0))
 	     (let* ((info calc-embedded-info)
-		    (mode calc-embedded-modes))
+		    (mode calc-embedded-modes)
+                    (calcbuf (aref calc-embedded-info 1)))
 	       (save-excursion
 		 (set-buffer (aref info 1))
 		 (if (and (> (calc-stack-size) 0)
@@ -252,9 +253,9 @@
                (setq minor-mode-overriding-map-alist
                      (remq calc-override-minor-modes minor-mode-overriding-map-alist))
 	       (set-buffer-modified-p (buffer-modified-p))
-               (calc-embedded-restore-original-modes)
+               (calc-embedded-restore-original-modes calcbuf)
 	       (or calc-embedded-quiet
-		   (message "Back to %s mode" mode-name))))
+		   (message "Back to %s mode" (format-mode-line mode-name)))))
 
 	    (t
 	     (if (buffer-name (aref calc-embedded-info 0))
@@ -403,7 +404,7 @@
     (let ((val (save-excursion
 		 (set-buffer (aref info 1))
 		 (let ((calc-language nil)
-		       (math-expr-opers math-standard-opers))
+		       (math-expr-opers (math-standard-ops)))
 		   (math-read-expr str)))))
       (if (eq (car-safe val) 'error)
 	  (progn
@@ -414,6 +415,7 @@
       (aset info 8 val)
       (calc-embedded-update info 14 t t))))
 
+;;;###autoload
 (defun calc-do-embedded-activate (calc-embed-arg cbuf)
   (calc-plain-buffer-only)
   (if calc-embed-arg
@@ -830,7 +832,7 @@ The command \\[yank] can retrieve it from there."
                calc-embedded-firsttime-buf t)
          (let ((newann (assoc major-mode calc-embedded-announce-formula-alist))
                (newform (assoc major-mode calc-embedded-open-close-formula-alist))
-               (newword (assoc major-mode calc-embedded-open-close-word-alist))
+               (newword (assoc major-mode calc-embedded-word-regexp-alist))
                (newplain (assoc major-mode calc-embedded-open-close-plain-alist))
                (newnewform 
                 (assoc major-mode calc-embedded-open-close-new-formula-alist))
@@ -844,10 +846,8 @@ The command \\[yank] can retrieve it from there."
              (setq calc-embedded-open-formula (nth 0 (cdr newform)))
              (setq calc-embedded-close-formula (nth 1 (cdr newform))))
            (when newword
-             (make-local-variable 'calc-embedded-open-word)
-             (make-local-variable 'calc-embedded-close-word)
-             (setq calc-embedded-open-word (nth 0 (cdr newword)))
-             (setq calc-embedded-close-word (nth 1 (cdr newword))))
+             (make-local-variable 'calc-embedded-word-regexp)
+             (setq calc-embedded-word-regexp (nth 1 newword)))
            (when newplain
              (make-local-variable 'calc-embedded-open-plain)
              (make-local-variable 'calc-embedded-close-plain)
@@ -903,9 +903,18 @@ The command \\[yank] can retrieve it from there."
 	  (setq calc-embed-top (aref info 2)
 		fixed calc-embed-top)
 	(if (consp calc-embed-top)
-	    (let ((calc-embedded-open-formula calc-embedded-open-word)
-		  (calc-embedded-close-formula calc-embedded-close-word))
-	      (calc-embedded-find-bounds 'plain))
+            (progn
+              (require 'thingatpt)
+              (if (thing-at-point-looking-at calc-embedded-word-regexp)
+                  (progn
+                    (setq calc-embed-top (copy-marker (match-beginning 0)))
+                    (setq calc-embed-bot (copy-marker (match-end 0)))
+                    (setq calc-embed-outer-top calc-embed-top)
+                    (setq calc-embed-outer-bot calc-embed-bot))
+                (setq calc-embed-top (point-marker))
+                (setq calc-embed-bot (point-marker))
+                (setq calc-embed-outer-top calc-embed-top)
+                (setq calc-embed-outer-bot calc-embed-bot)))
 	  (or calc-embed-top
 	      (calc-embedded-find-bounds 'plain)))
 	(aset info 2 (copy-marker (min calc-embed-top calc-embed-bot)))
@@ -1374,5 +1383,9 @@ The command \\[yank] can retrieve it from there."
 
 (provide 'calc-embed)
 
-;;; arch-tag: 1b8f311e-fba1-40d3-b8c3-1d6f68fd26fc
+;; Local variables:
+;; generated-autoload-file: "calc-loaddefs.el"
+;; End:
+
+;; arch-tag: 1b8f311e-fba1-40d3-b8c3-1d6f68fd26fc
 ;;; calc-embed.el ends here

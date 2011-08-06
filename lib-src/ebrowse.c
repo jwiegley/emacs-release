@@ -1,25 +1,24 @@
 /* ebrowse.c --- parsing files for the ebrowse C++ browser
 
-   Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008
-                 Free Software Foundation, Inc.
+Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
+              2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+              Free Software Foundation, Inc.
 
-   This file is part of GNU Emacs.
+This file is part of GNU Emacs.
 
-   GNU Emacs is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3, or (at your option)
-   any later version.
+GNU Emacs is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   GNU Emacs is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+GNU Emacs is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with GNU Emacs; see the file COPYING.  If not, write to the
-   Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+You should have received a copy of the GNU General Public License
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
+
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -587,17 +586,6 @@ xrealloc (p, sz)
       exit (EXIT_FAILURE);
     }
   return p;
-}
-
-
-/* Like free but always check for null pointers..  */
-
-void
-xfree (p)
-     void *p;
-{
-  if (p)
-    free (p);
 }
 
 
@@ -2045,7 +2033,7 @@ matching_regexp ()
       while (in - p < min_regexp && p > inbuffer)
         {
           /* Line probably not significant enough */
-          for (--p; p >= inbuffer && *p != '\n'; --p)
+          for (--p; p > inbuffer && *p != '\n'; --p)
             ;
         }
       if (*p == '\n')
@@ -2760,7 +2748,7 @@ member (cls, vis)
           if (LOOKING_AT ('{') && id && cls)
 	    add_member_defn (cls, id, regexp, pos, hash, 0, sc, flags);
 
-	  xfree (id);
+	  free (id);
           id = NULL;
           sc = SC_MEMBER;
           break;
@@ -2839,7 +2827,7 @@ member (cls, vis)
       print_info ();
     }
 
-  xfree (id);
+  free (id);
 }
 
 
@@ -3076,7 +3064,7 @@ parse_qualified_ident_or_type (last_id)
 	    cls = add_sym (id, cls);
 
 	  *last_id = NULL;
-	  xfree (id);
+	  free (id);
 	  id = NULL;
 	  id_size = 0;
 	  MATCH ();
@@ -3279,7 +3267,7 @@ add_declarator (cls, id, flags, sc)
       print_info ();
     }
 
-  xfree (*id);
+  free (*id);
   *id = NULL;
   *cls = NULL;
 }
@@ -3332,7 +3320,7 @@ declaration (flags)
              `declare (X, Y)\n class A : ...'.  */
           if (id)
 	    {
-	      xfree (id);
+	      free (id);
 	      return;
 	    }
 
@@ -3426,7 +3414,7 @@ declaration (flags)
           if (!cls && id && LOOKING_AT ('{'))
 	    add_global_defn (id, regexp, pos, hash, 0, sc, flags);
 
-	  xfree (id);
+	  free (id);
           id = NULL;
           break;
         }
@@ -3482,7 +3470,7 @@ globals (start_flags)
                     MATCH_IF ('}');
                   }
 
-		xfree (namespace_name);
+		free (namespace_name);
               }
           }
           break;
@@ -3691,8 +3679,11 @@ usage (error)
 void
 version ()
 {
+  /* Makes it easier to update automatically. */
+  char emacs_copyright[] = "Copyright (C) 2009 Free Software Foundation, Inc.";
+
   printf ("ebrowse %s\n", VERSION);
-  puts ("Copyright (C) 2008 Free Software Foundation, Inc.");
+  puts (emacs_copyright);
   puts ("This program is distributed under the same terms as Emacs.");
   exit (EXIT_SUCCESS);
 }

@@ -1,13 +1,13 @@
 /* Declarations having to do with GNU Emacs syntax tables.
    Copyright (C) 1985, 1993, 1994, 1997, 1998, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 extern Lisp_Object Qsyntax_table_p;
@@ -58,37 +56,14 @@ enum syntaxcode
 
 /* Set the syntax entry VAL for char C in table TABLE.  */
 
-#define SET_RAW_SYNTAX_ENTRY(table, c, val)				\
-  ((((c) & 0xFF) == (c))						\
-   ? (XCHAR_TABLE (table)->contents[(unsigned char) (c)] = (val))	\
-   : Faset ((table), make_number (c), (val)))
+#define SET_RAW_SYNTAX_ENTRY(table, c, val)	\
+  CHAR_TABLE_SET ((table), c, (val))
 
-/* Fetch the syntax entry for char C in syntax table TABLE.
-   This macro is called only when C is less than CHAR_TABLE_ORDINARY_SLOTS.
-   Do inheritance.  */
+/* Set the syntax entry VAL for char-range RANGE in table TABLE.
+   RANGE is a cons (FROM . TO) specifying the range of characters.  */
 
-#ifdef __GNUC__
-#define SYNTAX_ENTRY_FOLLOW_PARENT(table, c)			\
-  ({ Lisp_Object _syntax_tbl = (table);				\
-     Lisp_Object _syntax_temp = XCHAR_TABLE (_syntax_tbl)->contents[(c)]; \
-     while (NILP (_syntax_temp))				\
-       {							\
-	 _syntax_tbl = XCHAR_TABLE (_syntax_tbl)->parent;	\
-	 if (NILP (_syntax_tbl))				\
-	   break;						\
-	 _syntax_temp = XCHAR_TABLE (_syntax_tbl)->contents[(c)]; \
-       }							\
-     _syntax_temp; })
-#else
-extern Lisp_Object syntax_temp;
-extern Lisp_Object syntax_parent_lookup P_ ((Lisp_Object, int));
-
-#define SYNTAX_ENTRY_FOLLOW_PARENT(table, c)	    	\
-  (syntax_temp = XCHAR_TABLE (table)->contents[(c)],	\
-   (NILP (syntax_temp)				    	\
-    ? syntax_parent_lookup (table, (c))		    	\
-    : syntax_temp))
-#endif
+#define SET_RAW_SYNTAX_ENTRY_RANGE(table, range, val)	\
+  Fset_char_table_range ((table), (range), (val))
 
 /* SYNTAX_ENTRY fetches the information from the entry for character C
    in syntax table TABLE, or from globally kept data (gl_state).
@@ -106,12 +81,7 @@ extern Lisp_Object syntax_parent_lookup P_ ((Lisp_Object, int));
 #  define CURRENT_SYNTAX_TABLE current_buffer->syntax_table
 #endif
 
-#define SYNTAX_ENTRY_INT(c)				\
-  ((((c) & 0xFF) == (c))				\
-   ? SYNTAX_ENTRY_FOLLOW_PARENT (CURRENT_SYNTAX_TABLE,	\
-				 (unsigned char) (c))	\
-   : Faref (CURRENT_SYNTAX_TABLE,			\
-	    make_number (c)))
+#define SYNTAX_ENTRY_INT(c) CHAR_TABLE_REF (CURRENT_SYNTAX_TABLE, (c))
 
 /* Extract the information from the entry for character C
    in the current syntax table.  */
@@ -138,6 +108,7 @@ extern Lisp_Object syntax_parent_lookup P_ ((Lisp_Object, int));
       ? XCDR (_syntax_temp)						\
       : Qnil); })
 #else
+extern Lisp_Object syntax_temp;
 #define SYNTAX(c)							\
   (syntax_temp = SYNTAX_ENTRY ((c)),					\
    (CONSP (syntax_temp)							\
@@ -283,7 +254,7 @@ extern char syntax_code_spec[16];
  */
 
 #define SETUP_SYNTAX_TABLE(FROM, COUNT)					\
-if (1)									\
+do									\
   {									\
     gl_state.b_property = BEGV;						\
     gl_state.e_property = ZV + 1;					\
@@ -296,7 +267,7 @@ if (1)									\
         update_syntax_table ((COUNT) > 0 ? (FROM) : (FROM) - 1, (COUNT),\
 			     1, Qnil);					\
   }									\
-else
+while (0)
 
 /* Same as above, but in OBJECT.  If OBJECT is nil, use current buffer.
    If it is t, ignore properties altogether.
@@ -306,7 +277,7 @@ else
    So if it is a buffer, we set the offset field to BEGV.  */
 
 #define SETUP_SYNTAX_TABLE_FOR_OBJECT(OBJECT, FROM, COUNT)		\
-if (1)									\
+do									\
   {									\
     gl_state.object = (OBJECT);						\
     if (BUFFERP (gl_state.object))					\
@@ -341,7 +312,7 @@ if (1)									\
 			    + (COUNT > 0 ? 0 :  -1)),			\
 			   COUNT, 1, gl_state.object);			\
   }									\
-else
+while (0)
 
 struct gl_state_s
 {

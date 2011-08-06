@@ -1,17 +1,17 @@
 ;;; x-win.el --- parse relevant switches and set up for X  -*-coding: iso-2022-7bit;-*-
 
-;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: FSF
 ;; Keywords: terminals, i18n
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,16 +19,19 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
-;; X-win.el:  this file is loaded from ../lisp/startup.el when it recognizes
-;; that X windows are to be used.  Command line switches are parsed and those
-;; pertaining to X are processed and removed from the command line.  The
-;; X display is opened and hooks are set for popping up the initial window.
+;; X-win.el: this file defines functions to initialize the X window
+;; system and process X-specific command line parameters before
+;; creating the first X frame.
+
+;; Beginning in Emacs 23, the act of loading this file should not have
+;; the side effect of initializing the window system or processing
+;; command line arguments (this file is now loaded in loadup.el).  See
+;; the variables `handle-args-function-alist' and
+;; `window-system-initialization-alist' for more details.
 
 ;; startup.el will then examine startup files, and eventually call the hooks
 ;; which create the first window(s).
@@ -65,7 +68,7 @@
 ;; An alist of X options and the function which handles them.  See
 ;; ../startup.el.
 
-(if (not (eq window-system 'x))
+(if (not (fboundp 'x-create-frame))
     (error "%s: Loading x-win.el but not compiled for X" (invocation-name)))
 
 (require 'frame)
@@ -83,167 +86,18 @@
 (defvar x-session-id)
 (defvar x-session-previous-id)
 
-(defvar x-command-line-resources nil)
-
-;; Handler for switches of the form "-switch value" or "-switch".
-(defun x-handle-switch (switch)
-  (let ((aelt (assoc switch command-line-x-option-alist)))
-    (if aelt
-	(let ((param (nth 3 aelt))
-	      (value (nth 4 aelt)))
-	  (if value
-	      (setq default-frame-alist
-		    (cons (cons param value)
-			  default-frame-alist))
-	    (setq default-frame-alist
-		  (cons (cons param
-			      (car x-invocation-args))
-			default-frame-alist)
-		  x-invocation-args (cdr x-invocation-args)))))))
-
-;; Handler for switches of the form "-switch n"
-(defun x-handle-numeric-switch (switch)
-  (let ((aelt (assoc switch command-line-x-option-alist)))
-    (if aelt
-	(let ((param (nth 3 aelt)))
-	  (setq default-frame-alist
-		(cons (cons param
-			    (string-to-number (car x-invocation-args)))
-		      default-frame-alist)
-		x-invocation-args
-		(cdr x-invocation-args))))))
-
-;; Handle options that apply to initial frame only
-(defun x-handle-initial-switch (switch)
-  (let ((aelt (assoc switch command-line-x-option-alist)))
-    (if aelt
-	(let ((param (nth 3 aelt))
-	      (value (nth 4 aelt)))
-	  (if value
-	      (setq initial-frame-alist
-		    (cons (cons param value)
-			  initial-frame-alist))
-	    (setq initial-frame-alist
-		  (cons (cons param
-			      (car x-invocation-args))
-			initial-frame-alist)
-		  x-invocation-args (cdr x-invocation-args)))))))
-
 (defun x-handle-no-bitmap-icon (switch)
   (setq default-frame-alist (cons '(icon-type) default-frame-alist)))
 
-;; Make -iconic apply only to the initial frame!
-(defun x-handle-iconic (switch)
-  (setq initial-frame-alist
-	(cons '(visibility . icon) initial-frame-alist)))
-
-;; Handle the -xrm option.
-(defun x-handle-xrm-switch (switch)
-  (unless (consp x-invocation-args)
-    (error "%s: missing argument to `%s' option" (invocation-name) switch))
-  (setq x-command-line-resources
-	(if (null x-command-line-resources)
-	    (car x-invocation-args)
-	  (concat x-command-line-resources "\n" (car x-invocation-args))))
-  (setq x-invocation-args (cdr x-invocation-args)))
-
-;; Handle the geometry option
-(defun x-handle-geometry (switch)
-  (let* ((geo (x-parse-geometry (car x-invocation-args)))
-	 (left (assq 'left geo))
-	 (top (assq 'top geo))
-	 (height (assq 'height geo))
-	 (width (assq 'width geo)))
-    (if (or height width)
-	(setq default-frame-alist
-	      (append default-frame-alist
-		      '((user-size . t))
-		      (if height (list height))
-		      (if width (list width)))
-	      initial-frame-alist
-	      (append initial-frame-alist
-		      '((user-size . t))
-		      (if height (list height))
-		      (if width (list width)))))
-    (if (or left top)
-	(setq initial-frame-alist
-	      (append initial-frame-alist
-		      '((user-position . t))
-		      (if left (list left))
-		      (if top (list top)))))
-    (setq x-invocation-args (cdr x-invocation-args))))
-
-;; Handle the -name option.  Set the variable x-resource-name
-;; to the option's operand; set the name of
-;; the initial frame, too.
-(defun x-handle-name-switch (switch)
+;; Handle the --parent-id option.
+(defun x-handle-parent-id (switch)
   (or (consp x-invocation-args)
       (error "%s: missing argument to `%s' option" (invocation-name) switch))
-  (setq x-resource-name (car x-invocation-args)
-	x-invocation-args (cdr x-invocation-args))
-  (setq initial-frame-alist (cons (cons 'name x-resource-name)
-				  initial-frame-alist)))
-
-(defvar x-display-name nil
-  "The name of the X display on which Emacs was started.
-
-For the X display name of individual frames, see the `display'
-frame parameter.")
-
-(defun x-handle-display (switch)
-  "Handle -display DISPLAY option."
-  (setq x-display-name (car x-invocation-args)
-	x-invocation-args (cdr x-invocation-args))
-  ;; Make subshell programs see the same DISPLAY value Emacs really uses.
-  ;; Note that this isn't completely correct, since Emacs can use
-  ;; multiple displays.  However, there is no way to tell an already
-  ;; running subshell which display the user is currently typing on.
-  (setenv "DISPLAY" x-display-name))
-
-(defun x-handle-args (args)
-  "Process the X-related command line options in ARGS.
-This is done before the user's startup file is loaded.  They are copied to
-`x-invocation-args', from which the X-related things are extracted, first
-the switch (e.g., \"-fg\") in the following code, and possible values
-\(e.g., \"black\") in the option handler code (e.g., x-handle-switch).
-This function returns ARGS minus the arguments that have been processed."
-  ;; We use ARGS to accumulate the args that we don't handle here, to return.
-  (setq x-invocation-args args
-	args nil)
-  (while (and x-invocation-args
-	      (not (equal (car x-invocation-args) "--")))
-    (let* ((this-switch (car x-invocation-args))
-	   (orig-this-switch this-switch)
-	   completion argval aelt handler)
-      (setq x-invocation-args (cdr x-invocation-args))
-      ;; Check for long options with attached arguments
-      ;; and separate out the attached option argument into argval.
-      (if (string-match "^--[^=]*=" this-switch)
-	  (setq argval (substring this-switch (match-end 0))
-		this-switch (substring this-switch 0 (1- (match-end 0)))))
-      ;; Complete names of long options.
-      (if (string-match "^--" this-switch)
-	  (progn
-	    (setq completion (try-completion this-switch command-line-x-option-alist))
-	    (if (eq completion t)
-		;; Exact match for long option.
-		nil
-	      (if (stringp completion)
-		  (let ((elt (assoc completion command-line-x-option-alist)))
-		    ;; Check for abbreviated long option.
-		    (or elt
-			(error "Option `%s' is ambiguous" this-switch))
-		    (setq this-switch completion))))))
-      (setq aelt (assoc this-switch command-line-x-option-alist))
-      (if aelt (setq handler (nth 2 aelt)))
-      (if handler
-	  (if argval
-	      (let ((x-invocation-args
-		     (cons argval x-invocation-args)))
-		(funcall handler this-switch))
-	    (funcall handler this-switch))
-	(setq args (cons orig-this-switch args)))))
-  (nconc (nreverse args) x-invocation-args))
+  (setq initial-frame-alist (cons
+                             (cons 'parent-id
+                                   (string-to-number (car x-invocation-args)))
+                             initial-frame-alist)
+        x-invocation-args (cdr x-invocation-args)))
 
 ;; Handle the --smid switch.  This is used by the session manager
 ;; to give us back our session id we had on the previous run.
@@ -266,7 +120,7 @@ See also `emacs-session-save'.")
 If the directory ~/.emacs.d exists, we make a filename in there, otherwise
 a file in the home directory."
   (let ((basename (concat "session." session-id))
-	(emacs-dir "~/.emacs.d/"))
+	(emacs-dir user-emacs-directory))
     (expand-file-name (if (file-directory-p emacs-dir)
 			  (concat emacs-dir basename)
 			(concat "~/.emacs-" basename)))))
@@ -395,768 +249,13 @@ exists."
 (defconst x-pointer-ur-angle 148)
 (defconst x-pointer-watch 150)
 (defconst x-pointer-xterm 152)
-
-;;
-;; Available colors
-;;
+(defconst x-pointer-invisible 255)
 
-(defvar x-colors '("LightGreen"
-		   "light green"
-		   "DarkRed"
-		   "dark red"
-		   "DarkMagenta"
-		   "dark magenta"
-		   "DarkCyan"
-		   "dark cyan"
-		   "DarkBlue"
-		   "dark blue"
-		   "DarkGray"
-		   "dark gray"
-		   "DarkGrey"
-		   "dark grey"
-		   "grey100"
-		   "gray100"
-		   "grey99"
-		   "gray99"
-		   "grey98"
-		   "gray98"
-		   "grey97"
-		   "gray97"
-		   "grey96"
-		   "gray96"
-		   "grey95"
-		   "gray95"
-		   "grey94"
-		   "gray94"
-		   "grey93"
-		   "gray93"
-		   "grey92"
-		   "gray92"
-		   "grey91"
-		   "gray91"
-		   "grey90"
-		   "gray90"
-		   "grey89"
-		   "gray89"
-		   "grey88"
-		   "gray88"
-		   "grey87"
-		   "gray87"
-		   "grey86"
-		   "gray86"
-		   "grey85"
-		   "gray85"
-		   "grey84"
-		   "gray84"
-		   "grey83"
-		   "gray83"
-		   "grey82"
-		   "gray82"
-		   "grey81"
-		   "gray81"
-		   "grey80"
-		   "gray80"
-		   "grey79"
-		   "gray79"
-		   "grey78"
-		   "gray78"
-		   "grey77"
-		   "gray77"
-		   "grey76"
-		   "gray76"
-		   "grey75"
-		   "gray75"
-		   "grey74"
-		   "gray74"
-		   "grey73"
-		   "gray73"
-		   "grey72"
-		   "gray72"
-		   "grey71"
-		   "gray71"
-		   "grey70"
-		   "gray70"
-		   "grey69"
-		   "gray69"
-		   "grey68"
-		   "gray68"
-		   "grey67"
-		   "gray67"
-		   "grey66"
-		   "gray66"
-		   "grey65"
-		   "gray65"
-		   "grey64"
-		   "gray64"
-		   "grey63"
-		   "gray63"
-		   "grey62"
-		   "gray62"
-		   "grey61"
-		   "gray61"
-		   "grey60"
-		   "gray60"
-		   "grey59"
-		   "gray59"
-		   "grey58"
-		   "gray58"
-		   "grey57"
-		   "gray57"
-		   "grey56"
-		   "gray56"
-		   "grey55"
-		   "gray55"
-		   "grey54"
-		   "gray54"
-		   "grey53"
-		   "gray53"
-		   "grey52"
-		   "gray52"
-		   "grey51"
-		   "gray51"
-		   "grey50"
-		   "gray50"
-		   "grey49"
-		   "gray49"
-		   "grey48"
-		   "gray48"
-		   "grey47"
-		   "gray47"
-		   "grey46"
-		   "gray46"
-		   "grey45"
-		   "gray45"
-		   "grey44"
-		   "gray44"
-		   "grey43"
-		   "gray43"
-		   "grey42"
-		   "gray42"
-		   "grey41"
-		   "gray41"
-		   "grey40"
-		   "gray40"
-		   "grey39"
-		   "gray39"
-		   "grey38"
-		   "gray38"
-		   "grey37"
-		   "gray37"
-		   "grey36"
-		   "gray36"
-		   "grey35"
-		   "gray35"
-		   "grey34"
-		   "gray34"
-		   "grey33"
-		   "gray33"
-		   "grey32"
-		   "gray32"
-		   "grey31"
-		   "gray31"
-		   "grey30"
-		   "gray30"
-		   "grey29"
-		   "gray29"
-		   "grey28"
-		   "gray28"
-		   "grey27"
-		   "gray27"
-		   "grey26"
-		   "gray26"
-		   "grey25"
-		   "gray25"
-		   "grey24"
-		   "gray24"
-		   "grey23"
-		   "gray23"
-		   "grey22"
-		   "gray22"
-		   "grey21"
-		   "gray21"
-		   "grey20"
-		   "gray20"
-		   "grey19"
-		   "gray19"
-		   "grey18"
-		   "gray18"
-		   "grey17"
-		   "gray17"
-		   "grey16"
-		   "gray16"
-		   "grey15"
-		   "gray15"
-		   "grey14"
-		   "gray14"
-		   "grey13"
-		   "gray13"
-		   "grey12"
-		   "gray12"
-		   "grey11"
-		   "gray11"
-		   "grey10"
-		   "gray10"
-		   "grey9"
-		   "gray9"
-		   "grey8"
-		   "gray8"
-		   "grey7"
-		   "gray7"
-		   "grey6"
-		   "gray6"
-		   "grey5"
-		   "gray5"
-		   "grey4"
-		   "gray4"
-		   "grey3"
-		   "gray3"
-		   "grey2"
-		   "gray2"
-		   "grey1"
-		   "gray1"
-		   "grey0"
-		   "gray0"
-		   "thistle4"
-		   "thistle3"
-		   "thistle2"
-		   "thistle1"
-		   "MediumPurple4"
-		   "MediumPurple3"
-		   "MediumPurple2"
-		   "MediumPurple1"
-		   "purple4"
-		   "purple3"
-		   "purple2"
-		   "purple1"
-		   "DarkOrchid4"
-		   "DarkOrchid3"
-		   "DarkOrchid2"
-		   "DarkOrchid1"
-		   "MediumOrchid4"
-		   "MediumOrchid3"
-		   "MediumOrchid2"
-		   "MediumOrchid1"
-		   "plum4"
-		   "plum3"
-		   "plum2"
-		   "plum1"
-		   "orchid4"
-		   "orchid3"
-		   "orchid2"
-		   "orchid1"
-		   "magenta4"
-		   "magenta3"
-		   "magenta2"
-		   "magenta1"
-		   "VioletRed4"
-		   "VioletRed3"
-		   "VioletRed2"
-		   "VioletRed1"
-		   "maroon4"
-		   "maroon3"
-		   "maroon2"
-		   "maroon1"
-		   "PaleVioletRed4"
-		   "PaleVioletRed3"
-		   "PaleVioletRed2"
-		   "PaleVioletRed1"
-		   "LightPink4"
-		   "LightPink3"
-		   "LightPink2"
-		   "LightPink1"
-		   "pink4"
-		   "pink3"
-		   "pink2"
-		   "pink1"
-		   "HotPink4"
-		   "HotPink3"
-		   "HotPink2"
-		   "HotPink1"
-		   "DeepPink4"
-		   "DeepPink3"
-		   "DeepPink2"
-		   "DeepPink1"
-		   "red4"
-		   "red3"
-		   "red2"
-		   "red1"
-		   "OrangeRed4"
-		   "OrangeRed3"
-		   "OrangeRed2"
-		   "OrangeRed1"
-		   "tomato4"
-		   "tomato3"
-		   "tomato2"
-		   "tomato1"
-		   "coral4"
-		   "coral3"
-		   "coral2"
-		   "coral1"
-		   "DarkOrange4"
-		   "DarkOrange3"
-		   "DarkOrange2"
-		   "DarkOrange1"
-		   "orange4"
-		   "orange3"
-		   "orange2"
-		   "orange1"
-		   "LightSalmon4"
-		   "LightSalmon3"
-		   "LightSalmon2"
-		   "LightSalmon1"
-		   "salmon4"
-		   "salmon3"
-		   "salmon2"
-		   "salmon1"
-		   "brown4"
-		   "brown3"
-		   "brown2"
-		   "brown1"
-		   "firebrick4"
-		   "firebrick3"
-		   "firebrick2"
-		   "firebrick1"
-		   "chocolate4"
-		   "chocolate3"
-		   "chocolate2"
-		   "chocolate1"
-		   "tan4"
-		   "tan3"
-		   "tan2"
-		   "tan1"
-		   "wheat4"
-		   "wheat3"
-		   "wheat2"
-		   "wheat1"
-		   "burlywood4"
-		   "burlywood3"
-		   "burlywood2"
-		   "burlywood1"
-		   "sienna4"
-		   "sienna3"
-		   "sienna2"
-		   "sienna1"
-		   "IndianRed4"
-		   "IndianRed3"
-		   "IndianRed2"
-		   "IndianRed1"
-		   "RosyBrown4"
-		   "RosyBrown3"
-		   "RosyBrown2"
-		   "RosyBrown1"
-		   "DarkGoldenrod4"
-		   "DarkGoldenrod3"
-		   "DarkGoldenrod2"
-		   "DarkGoldenrod1"
-		   "goldenrod4"
-		   "goldenrod3"
-		   "goldenrod2"
-		   "goldenrod1"
-		   "gold4"
-		   "gold3"
-		   "gold2"
-		   "gold1"
-		   "yellow4"
-		   "yellow3"
-		   "yellow2"
-		   "yellow1"
-		   "LightYellow4"
-		   "LightYellow3"
-		   "LightYellow2"
-		   "LightYellow1"
-		   "LightGoldenrod4"
-		   "LightGoldenrod3"
-		   "LightGoldenrod2"
-		   "LightGoldenrod1"
-		   "khaki4"
-		   "khaki3"
-		   "khaki2"
-		   "khaki1"
-		   "DarkOliveGreen4"
-		   "DarkOliveGreen3"
-		   "DarkOliveGreen2"
-		   "DarkOliveGreen1"
-		   "OliveDrab4"
-		   "OliveDrab3"
-		   "OliveDrab2"
-		   "OliveDrab1"
-		   "chartreuse4"
-		   "chartreuse3"
-		   "chartreuse2"
-		   "chartreuse1"
-		   "green4"
-		   "green3"
-		   "green2"
-		   "green1"
-		   "SpringGreen4"
-		   "SpringGreen3"
-		   "SpringGreen2"
-		   "SpringGreen1"
-		   "PaleGreen4"
-		   "PaleGreen3"
-		   "PaleGreen2"
-		   "PaleGreen1"
-		   "SeaGreen4"
-		   "SeaGreen3"
-		   "SeaGreen2"
-		   "SeaGreen1"
-		   "DarkSeaGreen4"
-		   "DarkSeaGreen3"
-		   "DarkSeaGreen2"
-		   "DarkSeaGreen1"
-		   "aquamarine4"
-		   "aquamarine3"
-		   "aquamarine2"
-		   "aquamarine1"
-		   "DarkSlateGray4"
-		   "DarkSlateGray3"
-		   "DarkSlateGray2"
-		   "DarkSlateGray1"
-		   "cyan4"
-		   "cyan3"
-		   "cyan2"
-		   "cyan1"
-		   "turquoise4"
-		   "turquoise3"
-		   "turquoise2"
-		   "turquoise1"
-		   "CadetBlue4"
-		   "CadetBlue3"
-		   "CadetBlue2"
-		   "CadetBlue1"
-		   "PaleTurquoise4"
-		   "PaleTurquoise3"
-		   "PaleTurquoise2"
-		   "PaleTurquoise1"
-		   "LightCyan4"
-		   "LightCyan3"
-		   "LightCyan2"
-		   "LightCyan1"
-		   "LightBlue4"
-		   "LightBlue3"
-		   "LightBlue2"
-		   "LightBlue1"
-		   "LightSteelBlue4"
-		   "LightSteelBlue3"
-		   "LightSteelBlue2"
-		   "LightSteelBlue1"
-		   "SlateGray4"
-		   "SlateGray3"
-		   "SlateGray2"
-		   "SlateGray1"
-		   "LightSkyBlue4"
-		   "LightSkyBlue3"
-		   "LightSkyBlue2"
-		   "LightSkyBlue1"
-		   "SkyBlue4"
-		   "SkyBlue3"
-		   "SkyBlue2"
-		   "SkyBlue1"
-		   "DeepSkyBlue4"
-		   "DeepSkyBlue3"
-		   "DeepSkyBlue2"
-		   "DeepSkyBlue1"
-		   "SteelBlue4"
-		   "SteelBlue3"
-		   "SteelBlue2"
-		   "SteelBlue1"
-		   "DodgerBlue4"
-		   "DodgerBlue3"
-		   "DodgerBlue2"
-		   "DodgerBlue1"
-		   "blue4"
-		   "blue3"
-		   "blue2"
-		   "blue1"
-		   "RoyalBlue4"
-		   "RoyalBlue3"
-		   "RoyalBlue2"
-		   "RoyalBlue1"
-		   "SlateBlue4"
-		   "SlateBlue3"
-		   "SlateBlue2"
-		   "SlateBlue1"
-		   "azure4"
-		   "azure3"
-		   "azure2"
-		   "azure1"
-		   "MistyRose4"
-		   "MistyRose3"
-		   "MistyRose2"
-		   "MistyRose1"
-		   "LavenderBlush4"
-		   "LavenderBlush3"
-		   "LavenderBlush2"
-		   "LavenderBlush1"
-		   "honeydew4"
-		   "honeydew3"
-		   "honeydew2"
-		   "honeydew1"
-		   "ivory4"
-		   "ivory3"
-		   "ivory2"
-		   "ivory1"
-		   "cornsilk4"
-		   "cornsilk3"
-		   "cornsilk2"
-		   "cornsilk1"
-		   "LemonChiffon4"
-		   "LemonChiffon3"
-		   "LemonChiffon2"
-		   "LemonChiffon1"
-		   "NavajoWhite4"
-		   "NavajoWhite3"
-		   "NavajoWhite2"
-		   "NavajoWhite1"
-		   "PeachPuff4"
-		   "PeachPuff3"
-		   "PeachPuff2"
-		   "PeachPuff1"
-		   "bisque4"
-		   "bisque3"
-		   "bisque2"
-		   "bisque1"
-		   "AntiqueWhite4"
-		   "AntiqueWhite3"
-		   "AntiqueWhite2"
-		   "AntiqueWhite1"
-		   "seashell4"
-		   "seashell3"
-		   "seashell2"
-		   "seashell1"
-		   "snow4"
-		   "snow3"
-		   "snow2"
-		   "snow1"
-		   "thistle"
-		   "MediumPurple"
-		   "medium purple"
-		   "purple"
-		   "BlueViolet"
-		   "blue violet"
-		   "DarkViolet"
-		   "dark violet"
-		   "DarkOrchid"
-		   "dark orchid"
-		   "MediumOrchid"
-		   "medium orchid"
-		   "orchid"
-		   "plum"
-		   "violet"
-		   "magenta"
-		   "VioletRed"
-		   "violet red"
-		   "MediumVioletRed"
-		   "medium violet red"
-		   "maroon"
-		   "PaleVioletRed"
-		   "pale violet red"
-		   "LightPink"
-		   "light pink"
-		   "pink"
-		   "DeepPink"
-		   "deep pink"
-		   "HotPink"
-		   "hot pink"
-		   "red"
-		   "OrangeRed"
-		   "orange red"
-		   "tomato"
-		   "LightCoral"
-		   "light coral"
-		   "coral"
-		   "DarkOrange"
-		   "dark orange"
-		   "orange"
-		   "LightSalmon"
-		   "light salmon"
-		   "salmon"
-		   "DarkSalmon"
-		   "dark salmon"
-		   "brown"
-		   "firebrick"
-		   "chocolate"
-		   "tan"
-		   "SandyBrown"
-		   "sandy brown"
-		   "wheat"
-		   "beige"
-		   "burlywood"
-		   "peru"
-		   "sienna"
-		   "SaddleBrown"
-		   "saddle brown"
-		   "IndianRed"
-		   "indian red"
-		   "RosyBrown"
-		   "rosy brown"
-		   "DarkGoldenrod"
-		   "dark goldenrod"
-		   "goldenrod"
-		   "LightGoldenrod"
-		   "light goldenrod"
-		   "gold"
-		   "yellow"
-		   "LightYellow"
-		   "light yellow"
-		   "LightGoldenrodYellow"
-		   "light goldenrod yellow"
-		   "PaleGoldenrod"
-		   "pale goldenrod"
-		   "khaki"
-		   "DarkKhaki"
-		   "dark khaki"
-		   "OliveDrab"
-		   "olive drab"
-		   "ForestGreen"
-		   "forest green"
-		   "YellowGreen"
-		   "yellow green"
-		   "LimeGreen"
-		   "lime green"
-		   "GreenYellow"
-		   "green yellow"
-		   "MediumSpringGreen"
-		   "medium spring green"
-		   "chartreuse"
-		   "green"
-		   "LawnGreen"
-		   "lawn green"
-		   "SpringGreen"
-		   "spring green"
-		   "PaleGreen"
-		   "pale green"
-		   "LightSeaGreen"
-		   "light sea green"
-		   "MediumSeaGreen"
-		   "medium sea green"
-		   "SeaGreen"
-		   "sea green"
-		   "DarkSeaGreen"
-		   "dark sea green"
-		   "DarkOliveGreen"
-		   "dark olive green"
-		   "DarkGreen"
-		   "dark green"
-		   "aquamarine"
-		   "MediumAquamarine"
-		   "medium aquamarine"
-		   "CadetBlue"
-		   "cadet blue"
-		   "LightCyan"
-		   "light cyan"
-		   "cyan"
-		   "turquoise"
-		   "MediumTurquoise"
-		   "medium turquoise"
-		   "DarkTurquoise"
-		   "dark turquoise"
-		   "PaleTurquoise"
-		   "pale turquoise"
-		   "PowderBlue"
-		   "powder blue"
-		   "LightBlue"
-		   "light blue"
-		   "LightSteelBlue"
-		   "light steel blue"
-		   "SteelBlue"
-		   "steel blue"
-		   "LightSkyBlue"
-		   "light sky blue"
-		   "SkyBlue"
-		   "sky blue"
-		   "DeepSkyBlue"
-		   "deep sky blue"
-		   "DodgerBlue"
-		   "dodger blue"
-		   "blue"
-		   "RoyalBlue"
-		   "royal blue"
-		   "MediumBlue"
-		   "medium blue"
-		   "LightSlateBlue"
-		   "light slate blue"
-		   "MediumSlateBlue"
-		   "medium slate blue"
-		   "SlateBlue"
-		   "slate blue"
-		   "DarkSlateBlue"
-		   "dark slate blue"
-		   "CornflowerBlue"
-		   "cornflower blue"
-		   "NavyBlue"
-		   "navy blue"
-		   "navy"
-		   "MidnightBlue"
-		   "midnight blue"
-		   "LightGray"
-		   "light gray"
-		   "LightGrey"
-		   "light grey"
-		   "grey"
-		   "gray"
-		   "LightSlateGrey"
-		   "light slate grey"
-		   "LightSlateGray"
-		   "light slate gray"
-		   "SlateGrey"
-		   "slate grey"
-		   "SlateGray"
-		   "slate gray"
-		   "DimGrey"
-		   "dim grey"
-		   "DimGray"
-		   "dim gray"
-		   "DarkSlateGrey"
-		   "dark slate grey"
-		   "DarkSlateGray"
-		   "dark slate gray"
-		   "black"
-		   "white"
-		   "MistyRose"
-		   "misty rose"
-		   "LavenderBlush"
-		   "lavender blush"
-		   "lavender"
-		   "AliceBlue"
-		   "alice blue"
-		   "azure"
-		   "MintCream"
-		   "mint cream"
-		   "honeydew"
-		   "seashell"
-		   "LemonChiffon"
-		   "lemon chiffon"
-		   "ivory"
-		   "cornsilk"
-		   "moccasin"
-		   "NavajoWhite"
-		   "navajo white"
-		   "PeachPuff"
-		   "peach puff"
-		   "bisque"
-		   "BlanchedAlmond"
-		   "blanched almond"
-		   "PapayaWhip"
-		   "papaya whip"
-		   "AntiqueWhite"
-		   "antique white"
-		   "linen"
-		   "OldLace"
-		   "old lace"
-		   "FloralWhite"
-		   "floral white"
-		   "gainsboro"
-		   "WhiteSmoke"
-		   "white smoke"
-		   "GhostWhite"
-		   "ghost white"
-		   "snow")
-  "The list of X colors from the `rgb.txt' file.
-XConsortium: rgb.txt,v 10.41 94/02/20 18:39:36 rws Exp")
+
+(defvar x-colors)
 
 (defun xw-defined-colors (&optional frame)
-  "Internal function called by `defined-colors', which see."
+  "Internal function called by `defined-colors'."
   (or frame (setq frame (selected-frame)))
   (let ((all-colors x-colors)
 	(this-color nil)
@@ -1170,27 +269,39 @@ XConsortium: rgb.txt,v 10.41 94/02/20 18:39:36 rws Exp")
 
 ;;;; Function keys
 
-(substitute-key-definition 'suspend-emacs 'iconify-or-deiconify-frame
-			   global-map)
+(defvar x-alternatives-map
+  (let ((map (make-sparse-keymap)))
+    ;; Map certain keypad keys into ASCII characters that people usually expect.
+    (define-key map [backspace] [127])
+    (define-key map [delete] [127])
+    (define-key map [tab] [?\t])
+    (define-key map [linefeed] [?\n])
+    (define-key map [clear] [?\C-l])
+    (define-key map [return] [?\C-m])
+    (define-key map [escape] [?\e])
+    (define-key map [M-backspace] [?\M-\d])
+    (define-key map [M-delete] [?\M-\d])
+    (define-key map [M-tab] [?\M-\t])
+    (define-key map [M-linefeed] [?\M-\n])
+    (define-key map [M-clear] [?\M-\C-l])
+    (define-key map [M-return] [?\M-\C-m])
+    (define-key map [M-escape] [?\M-\e])
+    (define-key map [iso-lefttab] [backtab])
+    (define-key map [S-iso-lefttab] [backtab])
+    map)
+  "Keymap of possible alternative meanings for some keys.")
 
-;; Map certain keypad keys into ASCII characters
-;; that people usually expect.
-(define-key function-key-map [backspace] [127])
-(define-key function-key-map [delete] [127])
-(define-key function-key-map [tab] [?\t])
-(define-key function-key-map [linefeed] [?\n])
-(define-key function-key-map [clear] [?\C-l])
-(define-key function-key-map [return] [?\C-m])
-(define-key function-key-map [escape] [?\e])
-(define-key function-key-map [M-backspace] [?\M-\d])
-(define-key function-key-map [M-delete] [?\M-\d])
-(define-key function-key-map [M-tab] [?\M-\t])
-(define-key function-key-map [M-linefeed] [?\M-\n])
-(define-key function-key-map [M-clear] [?\M-\C-l])
-(define-key function-key-map [M-return] [?\M-\C-m])
-(define-key function-key-map [M-escape] [?\M-\e])
-(define-key function-key-map [iso-lefttab] [backtab])
-(define-key function-key-map [S-iso-lefttab] [backtab])
+(defun x-setup-function-keys (frame)
+  "Set up `function-key-map' on the graphical frame FRAME."
+  ;; Don't do this twice on the same display, or it would break
+  ;; normal-erase-is-backspace-mode.
+  (unless (terminal-parameter frame 'x-setup-function-keys)
+    ;; Map certain keypad keys into ASCII characters that people usually expect.
+    (with-selected-frame frame
+      (let ((map (copy-keymap x-alternatives-map)))
+        (set-keymap-parent map (keymap-parent local-function-key-map))
+        (set-keymap-parent local-function-key-map map)))
+    (set-terminal-parameter frame 'x-setup-function-keys t)))
 
 ;; These tell read-char how to convert
 ;; these special chars to ASCII.
@@ -1209,30 +320,7 @@ XConsortium: rgb.txt,v 10.41 94/02/20 18:39:36 rws Exp")
   "Return the appropriate value of `system-key-alist' for VENDOR.
 VENDOR is a string containing the name of the X Server's vendor,
 as returned by `x-server-vendor'."
-  ;; Fixme: Drop Apollo now?
-  (cond ((string-equal vendor "Apollo Computer Inc.")
-	 '((65280 . linedel)
-	   (65281 . chardel)
-	   (65282 . copy)
-	   (65283 . cut)
-	   (65284 . paste)
-	   (65285 . move)
-	   (65286 . grow)
-	   (65287 . cmd)
-	   (65288 . shell)
-	   (65289 . leftbar)
-	   (65290 . rightbar)
-	   (65291 . leftbox)
-	   (65292 . rightbox)
-	   (65293 . upbox)
-	   (65294 . downbox)
-	   (65295 . pop)
-	   (65296 . read)
-	   (65297 . edit)
-	   (65298 . save)
-	   (65299 . exit)
-	   (65300 . repeat)))
-	((or (string-equal vendor "Hewlett-Packard Incorporated")
+  (cond ((or (string-equal vendor "Hewlett-Packard Incorporated")
 	     (string-equal vendor "Hewlett-Packard Company"))
 	 '((  168 . mute-acute)
 	   (  169 . mute-grave)
@@ -1270,9 +358,10 @@ as returned by `x-server-vendor'."
 	 ;; This is used by DEC's X server.
 	 '((65280 . remove)))))
 
+;; Latin-1
 (let ((i 160))
   (while (< i 256)
-    (puthash i (make-char 'latin-iso8859-1 i) x-keysym-table)
+    (puthash i i x-keysym-table)
     (setq i (1+ i))))
 
 ;; Table from Kuhn's proposed additions to the `KEYSYM Encoding'
@@ -1400,70 +489,70 @@ as returned by `x-server-vendor'."
 	;; Kana: Fixme: needs conversion to Japanese charset -- seems
 	;; to require jisx0213, for which the Unicode translation
 	;; isn't clear.
-	(#x47e . ?$,1s>(B)
-	(#x4a1 . ?$,2=B(B)
-	(#x4a2 . ?\$,2=L(B)
-	(#x4a3 . ?\$,2=M(B)
-	(#x4a4 . ?$,2=A(B)
-	(#x4a5 . ?$,2?{(B)
-	(#x4a6 . ?$,2?r(B)
-	(#x4a7 . ?$,2?!(B)
-	(#x4a8 . ?$,2?#(B)
-	(#x4a9 . ?$,2?%(B)
-	(#x4aa . ?$,2?'(B)
-	(#x4ab . ?$,2?)(B)
-	(#x4ac . ?$,2?c(B)
-	(#x4ad . ?$,2?e(B)
-	(#x4ae . ?$,2?g(B)
-	(#x4af . ?$,2?C(B)
-	(#x4b0 . ?$,2?|(B)
-	(#x4b1 . ?$,2?"(B)
-	(#x4b2 . ?$,2?$(B)
-	(#x4b3 . ?$,2?&(B)
-	(#x4b4 . ?$,2?((B)
-	(#x4b5 . ?$,2?*(B)
-	(#x4b6 . ?$,2?+(B)
-	(#x4b7 . ?$,2?-(B)
-	(#x4b8 . ?$,2?/(B)
-	(#x4b9 . ?$,2?1(B)
-	(#x4ba . ?$,2?3(B)
-	(#x4bb . ?$,2?5(B)
-	(#x4bc . ?$,2?7(B)
-	(#x4bd . ?$,2?9(B)
-	(#x4be . ?$,2?;(B)
-	(#x4bf . ?$,2?=(B)
-	(#x4c0 . ?$,2??(B)
-	(#x4c1 . ?$,2?A(B)
-	(#x4c2 . ?$,2?D(B)
-	(#x4c3 . ?$,2?F(B)
-	(#x4c4 . ?$,2?H(B)
-	(#x4c5 . ?$,2?J(B)
-	(#x4c6 . ?$,2?K(B)
-	(#x4c7 . ?$,2?L(B)
-	(#x4c8 . ?$,2?M(B)
-	(#x4c9 . ?$,2?N(B)
-	(#x4ca . ?$,2?O(B)
-	(#x4cb . ?$,2?R(B)
-	(#x4cc . ?$,2?U(B)
-	(#x4cd . ?$,2?X(B)
-	(#x4ce . ?$,2?[(B)
-	(#x4cf . ?$,2?^(B)
-	(#x4d0 . ?$,2?_(B)
-	(#x4d1 . ?$,2?`(B)
-	(#x4d2 . ?$,2?a(B)
-	(#x4d3 . ?$,2?b(B)
-	(#x4d4 . ?$,2?d(B)
-	(#x4d5 . ?$,2?f(B)
-	(#x4d6 . ?$,2?h(B)
-	(#x4d7 . ?$,2?i(B)
-	(#x4d8 . ?$,2?j(B)
-	(#x4d9 . ?$,2?k(B)
-	(#x4da . ?$,2?l(B)
-	(#x4db . ?$,2?m(B)
-	(#x4dc . ?$,2?o(B)
-	(#x4dd . ?$,2?s(B)
-	(#x4de . ?$,2>{(B)
-	(#x4df . ?$,2>|(B)
+	(#x47e . ?(J~(B)
+	(#x4a1 . ?$A!#(B)
+	(#x4a2 . ?\$A!8(B)
+	(#x4a3 . ?\$A!9(B)
+	(#x4a4 . ?$A!"(B)
+	(#x4a5 . ?$A!$(B)
+	(#x4a6 . ?$A%r(B)
+	(#x4a7 . ?$A%!(B)
+	(#x4a8 . ?$A%#(B)
+	(#x4a9 . ?$A%%(B)
+	(#x4aa . ?$A%'(B)
+	(#x4ab . ?$A%)(B)
+	(#x4ac . ?$A%c(B)
+	(#x4ad . ?$A%e(B)
+	(#x4ae . ?$A%g(B)
+	(#x4af . ?$A%C(B)
+	(#x4b0 . ?$B!<(B)
+	(#x4b1 . ?$A%"(B)
+	(#x4b2 . ?$A%$(B)
+	(#x4b3 . ?$A%&(B)
+	(#x4b4 . ?$A%((B)
+	(#x4b5 . ?$A%*(B)
+	(#x4b6 . ?$A%+(B)
+	(#x4b7 . ?$A%-(B)
+	(#x4b8 . ?$A%/(B)
+	(#x4b9 . ?$A%1(B)
+	(#x4ba . ?$A%3(B)
+	(#x4bb . ?$A%5(B)
+	(#x4bc . ?$A%7(B)
+	(#x4bd . ?$A%9(B)
+	(#x4be . ?$A%;(B)
+	(#x4bf . ?$A%=(B)
+	(#x4c0 . ?$A%?(B)
+	(#x4c1 . ?$A%A(B)
+	(#x4c2 . ?$A%D(B)
+	(#x4c3 . ?$A%F(B)
+	(#x4c4 . ?$A%H(B)
+	(#x4c5 . ?$A%J(B)
+	(#x4c6 . ?$A%K(B)
+	(#x4c7 . ?$A%L(B)
+	(#x4c8 . ?$A%M(B)
+	(#x4c9 . ?$A%N(B)
+	(#x4ca . ?$A%O(B)
+	(#x4cb . ?$A%R(B)
+	(#x4cc . ?$A%U(B)
+	(#x4cd . ?$A%X(B)
+	(#x4ce . ?$A%[(B)
+	(#x4cf . ?$A%^(B)
+	(#x4d0 . ?$A%_(B)
+	(#x4d1 . ?$A%`(B)
+	(#x4d2 . ?$A%a(B)
+	(#x4d3 . ?$A%b(B)
+	(#x4d4 . ?$A%d(B)
+	(#x4d5 . ?$A%f(B)
+	(#x4d6 . ?$A%h(B)
+	(#x4d7 . ?$A%i(B)
+	(#x4d8 . ?$A%j(B)
+	(#x4d9 . ?$A%k(B)
+	(#x4da . ?$A%l(B)
+	(#x4db . ?$A%m(B)
+	(#x4dc . ?$A%o(B)
+	(#x4dd . ?$A%s(B)
+	(#x4de . ?$B!+(B)
+	(#x4df . ?$B!,(B)
 	;; Arabic
 	(#x5ac . ?,G,(B)
 	(#x5bb . ?,G;(B)
@@ -1711,11 +800,11 @@ as returned by `x-server-vendor'."
 	(#x7f9 . ?,Fy(B)
 	 ;; Technical
 	(#x8a1 . ?$,1|W(B)
-	(#x8a2 . ?$,2 ,(B)
-	(#x8a3 . ?$,2  (B)
+	(#x8a2 . ?$A)0(B)
+	(#x8a3 . ?$A)$(B)
 	(#x8a4 . ?$,1{ (B)
 	(#x8a5 . ?$,1{!(B)
-	(#x8a6 . ?$,2 "(B)
+	(#x8a6 . ?$A)&(B)
 	(#x8a7 . ?$,1|A(B)
 	(#x8a8 . ?$,1|C(B)
 	(#x8a9 . ?$,1|D(B)
@@ -1726,56 +815,56 @@ as returned by `x-server-vendor'."
 	(#x8ae . ?$,1|@(B)
 	(#x8af . ?$,1|H(B)
 	(#x8b0 . ?$,1|L(B)
-	(#x8bc . ?$,1y$(B)
-	(#x8bd . ?$,1y (B)
-	(#x8be . ?$,1y%(B)
-	(#x8bf . ?$,1xK(B)
-	(#x8c0 . ?$,1xT(B)
-	(#x8c1 . ?$,1x=(B)
-	(#x8c2 . ?$,1x>(B)
-	(#x8c5 . ?$,1x'(B)
-	(#x8c8 . ?$,1x\(B)
-	(#x8c9 . ?$,1xc(B)
-	(#x8cd . ?$,1wT(B)
-	(#x8ce . ?$,1wR(B)
-	(#x8cf . ?$,1y!(B)
-	(#x8d6 . ?$,1x:(B)
-	(#x8da . ?$,1yB(B)
-	(#x8db . ?$,1yC(B)
-	(#x8dc . ?$,1xI(B)
-	(#x8dd . ?$,1xJ(B)
-	(#x8de . ?$,1xG(B)
-	(#x8df . ?$,1xH(B)
-	(#x8ef . ?$,1x"(B)
+	(#x8bc . ?$A!\(B)
+	(#x8bd . ?$A!Y(B)
+	(#x8be . ?$A!](B)
+	(#x8bf . ?$A!R(B)
+	(#x8c0 . ?$A!`(B)
+	(#x8c1 . ?$A!X(B)
+	(#x8c2 . ?$A!^(B)
+	(#x8c5 . ?$B"`(B)
+	(#x8c8 . ?$(G"D(B)
+	(#x8c9 . ?$(O"l(B)
+	(#x8cd . ?$B"N(B)
+	(#x8ce . ?$B"M(B)
+	(#x8cf . ?$A!T(B)
+	(#x8d6 . ?$A!L(B)
+	(#x8da . ?$B">(B)
+	(#x8db . ?$B"?(B)
+	(#x8dc . ?$A!I(B)
+	(#x8dd . ?$A!H(B)
+	(#x8de . ?$A!D(B)
+	(#x8df . ?$A!E(B)
+	(#x8ef . ?$B"_(B)
 	(#x8f6 . ?$,1!R(B)
-	(#x8fb . ?$,1vp(B)
-	(#x8fc . ?$,1vq(B)
-	(#x8fd . ?$,1vr(B)
-	(#x8fe . ?$,1vs(B)
+	(#x8fb . ?$A!{(B)
+	(#x8fc . ?$A!|(B)
+	(#x8fd . ?$A!z(B)
+	(#x8fe . ?$A!}(B)
 	;; Special
-	(#x9e0 . ?$,2"&(B)
-	(#x9e1 . ?$,2!R(B)
-	(#x9e2 . ?$,1}I(B)
-	(#x9e3 . ?$,1}L(B)
-	(#x9e4 . ?$,1}M(B)
-	(#x9e5 . ?$,1}J(B)
+	(#x9e0 . ?$A!t(B)
+	(#x9e1 . ?$(C"F(B)
+	(#x9e2 . ?$(GB*(B)
+	(#x9e3 . ?$(GB-(B)
+	(#x9e4 . ?$(GB.(B)
+	(#x9e5 . ?$(GB+(B)
 	(#x9e8 . ?$,1}d(B)
-	(#x9e9 . ?$,1}K(B)
-	(#x9ea . ?$,2 8(B)
-	(#x9eb . ?$,2 0(B)
-	(#x9ec . ?$,2 ,(B)
-	(#x9ed . ?$,2 4(B)
-	(#x9ee . ?$,2 \(B)
+	(#x9e9 . ?$(GB,(B)
+	(#x9ea . ?$A)<(B)
+	(#x9eb . ?$A)4(B)
+	(#x9ec . ?$A)0(B)
+	(#x9ed . ?$A)8(B)
+	(#x9ee . ?$A)`(B)
 	(#x9ef . ?$,1|Z(B)
 	(#x9f0 . ?$,1|[(B)
-	(#x9f1 . ?$,2  (B)
+	(#x9f1 . ?$A)$(B)
 	(#x9f2 . ?$,1|\(B)
 	(#x9f3 . ?$,1|](B)
-	(#x9f4 . ?$,2 <(B)
-	(#x9f5 . ?$,2 D(B)
-	(#x9f6 . ?$,2 T(B)
-	(#x9f7 . ?$,2 L(B)
-	(#x9f8 . ?$,2 "(B)
+	(#x9f4 . ?$A)@(B)
+	(#x9f5 . ?$A)H(B)
+	(#x9f6 . ?$A)X(B)
+	(#x9f7 . ?$A)P(B)
+	(#x9f8 . ?$A)&(B)
 	;; Publishing
 	(#xaa1 . ?$,1rc(B)
 	(#xaa2 . ?$,1rb(B)
@@ -1785,93 +874,93 @@ as returned by `x-server-vendor'."
 	(#xaa6 . ?$,1rh(B)
 	(#xaa7 . ?$,1ri(B)
 	(#xaa8 . ?$,1rj(B)
-	(#xaa9 . ?$,1rt(B)
-	(#xaaa . ?$,1rs(B)
-	(#xaae . ?$,1s&(B)
-	(#xaaf . ?$,1s%(B)
-	(#xab0 . ?$,1v3(B)
-	(#xab1 . ?$,1v4(B)
-	(#xab2 . ?$,1v5(B)
+	(#xaa9 . ?$(G!7(B)
+	(#xaaa . ?$(G!9(B)
+	(#xaae . ?$A!-(B)
+	(#xaaf . ?$(G!-(B)
+	(#xab0 . ?$(O'x(B)
+	(#xab1 . ?$(O'y(B)
+	(#xab2 . ?$(O'z(B)
 	(#xab3 . ?$,1v6(B)
 	(#xab4 . ?$,1v7(B)
 	(#xab5 . ?$,1v8(B)
 	(#xab6 . ?$,1v9(B)
 	(#xab7 . ?$,1v:(B)
-	(#xab8 . ?$,1uE(B)
+	(#xab8 . ?$(G""(B)
 	(#xabb . ?$,1rr(B)
 	(#xabc . ?$,1{)(B)
 	(#xabe . ?$,1{*(B)
-	(#xac3 . ?$,1v;(B)
-	(#xac4 . ?$,1v<(B)
-	(#xac5 . ?$,1v=(B)
-	(#xac6 . ?$,1v>(B)
-	(#xac9 . ?$,1ub(B)
+	(#xac3 . ?$(C({(B)
+	(#xac4 . ?$(C(|(B)
+	(#xac5 . ?$(C(}(B)
+	(#xac6 . ?$(C(~(B)
+	(#xac9 . ?$(D"o(B)
 	(#xaca . ?$,2"s(B)
-	(#xacc . ?$,2"!(B)
-	(#xacd . ?$,2!w(B)
-	(#xace . ?$,2"+(B)
+	(#xacc . ?$(O##(B)
+	(#xacd . ?$(O#!(B)
+	(#xace . ?$A!p(B)
 	(#xacf . ?$,2!o(B)
-	(#xad0 . ?$,1rx(B)
-	(#xad1 . ?$,1ry(B)
-	(#xad2 . ?$,1r|(B)
-	(#xad3 . ?$,1r}(B)
+	(#xad0 . ?,F!(B)
+	(#xad1 . ?,F"(B)
+	(#xad2 . ?,Y4(B)
+	(#xad3 . ?,Y!(B)
 	(#xad4 . ?$,1u^(B)
-	(#xad6 . ?$,1s2(B)
-	(#xad7 . ?$,1s3(B)
+	(#xad6 . ?$A!d(B)
+	(#xad7 . ?$A!e(B)
 	(#xad9 . ?$,2%](B)
 	(#xadb . ?$,2!l(B)
-	(#xadc . ?$,2" (B)
-	(#xadd . ?$,2!v(B)
-	(#xade . ?$,2"/(B)
+	(#xadc . ?$(O#$(B)
+	(#xadd . ?$(O#"(B)
+	(#xade . ?$A!q(B)
 	(#xadf . ?$,2!n(B)
-	(#xae0 . ?$,2"F(B)
+	(#xae0 . ?$(O#?(B)
 	(#xae1 . ?$,2!k(B)
 	(#xae2 . ?$,2!m(B)
-	(#xae3 . ?$,2!s(B)
-	(#xae4 . ?$,2!}(B)
-	(#xae5 . ?$,2"f(B)
-	(#xae6 . ?$,1s"(B)
+	(#xae3 . ?$A!w(B)
+	(#xae4 . ?$(G!}(B)
+	(#xae5 . ?$A!n(B)
+	(#xae6 . ?$(O#@(B)
 	(#xae7 . ?$,2!j(B)
-	(#xae8 . ?$,2!r(B)
-	(#xae9 . ?$,2!|(B)
-	(#xaea . ?$,2"|(B)
-	(#xaeb . ?$,2"~(B)
-	(#xaec . ?$,2#c(B)
-	(#xaed . ?$,2#f(B)
-	(#xaee . ?$,2#e(B)
+	(#xae8 . ?$A!x(B)
+	(#xae9 . ?$(G!~(B)
+	(#xaea . ?$(C"P(B)
+	(#xaeb . ?$(O-~(B)
+	(#xaec . ?$(O&@(B)
+	(#xaed . ?$(O&<(B)
+	(#xaee . ?$(O&>(B)
 	(#xaf0 . ?$,2%`(B)
-	(#xaf1 . ?$,1s (B)
-	(#xaf2 . ?$,1s!(B)
-	(#xaf3 . ?$,2%S(B)
+	(#xaf1 . ?$B"w(B)
+	(#xaf2 . ?$B"x(B)
+	(#xaf3 . ?$(O'{(B)
 	(#xaf4 . ?$,2%W(B)
-	(#xaf5 . ?$,2#o(B)
-	(#xaf6 . ?$,2#m(B)
-	(#xaf7 . ?$,2#B(B)
-	(#xaf8 . ?$,2#@(B)
-	(#xaf9 . ?$,2"n(B)
+	(#xaf5 . ?$B"t(B)
+	(#xaf6 . ?$B"u(B)
+	(#xaf7 . ?$A!a(B)
+	(#xaf8 . ?$A!b(B)
+	(#xaf9 . ?$(O&g(B)
 	(#xafa . ?$,1zu(B)
 	(#xafb . ?$,1uW(B)
 	(#xafc . ?$,1s8(B)
 	(#xafd . ?$,1rz(B)
-	(#xafe . ?$,1r~(B)
+	(#xafe . ?,Y%(B)
 	;; APL
 	(#xba3 . ?<)
 	(#xba6 . ?>)
-	(#xba8 . ?$,1xH(B)
-	(#xba9 . ?$,1xG(B)
+	(#xba8 . ?$A!E(B)
+	(#xba9 . ?$A!D(B)
 	(#xbc0 . ?,A/(B)
-	(#xbc2 . ?$,1ye(B)
-	(#xbc3 . ?$,1xI(B)
+	(#xbc2 . ?$A!M(B)
+	(#xbc3 . ?$A!I(B)
 	(#xbc4 . ?$,1zj(B)
 	(#xbc6 . ?_)
 	(#xbca . ?$,1x8(B)
 	(#xbcc . ?$,1|5(B)
 	(#xbce . ?$,1yd(B)
-	(#xbcf . ?$,2"+(B)
+	(#xbcf . ?$A!p(B)
 	(#xbd3 . ?$,1zh(B)
-	(#xbd6 . ?$,1xJ(B)
-	(#xbd8 . ?$,1yC(B)
-	(#xbda . ?$,1yB(B)
+	(#xbd6 . ?$A!H(B)
+	(#xbd8 . ?$B"?(B)
+	(#xbda . ?$B">(B)
 	(#xbdc . ?$,1yb(B)
 	(#xbfc . ?$,1yc(B)
 	;; Hebrew
@@ -2086,7 +1175,7 @@ as returned by `x-server-vendor'."
 	;; Latin-9
 	(#x13bc . ?,b<(B)
 	(#x13bd . ?,b=(B)
-	(#x13be . ?,b>(B)
+	(#x13be . ?,_/(B)
 	;; Currency
 	(#x20a0 . ?$,1t@(B)
 	(#x20a1 . ?$,1tA(B)
@@ -2150,144 +1239,88 @@ It is said that overlarge strings are slow to put into the cut buffer.")
 
 (defcustom x-select-enable-clipboard nil
   "Non-nil means cutting and pasting uses the clipboard.
-This is in addition to, but in preference to, the primary selection."
+This is in addition to, but in preference to, the primary selection.
+
+On MS-Windows, this is non-nil by default, since Windows does not
+support other types of selections.  \(The primary selection that is
+set by Emacs is not accessible to other programs on Windows.\)"
+  :type 'boolean
+  :group 'killing)
+
+(defcustom x-select-enable-primary t
+  "Non-nil means cutting and pasting uses the primary selection."
   :type 'boolean
   :group 'killing)
 
 (defun x-select-text (text &optional push)
-  "Make TEXT, a string, the primary X selection.
-Also, set the value of X cut buffer 0, for backward compatibility
-with older X applications.
-gildea@stop.mail-abuse.org says it's not desirable to put kills
-in the clipboard."
-  ;; Don't send the cut buffer too much text.
-  ;; It becomes slow, and if really big it causes errors.
-  (cond ((>= (length text) x-cut-buffer-max)
-	 (x-set-cut-buffer "" push)
-	 (setq x-last-selected-text-cut ""
-	       x-last-selected-text-cut-encoded ""))
-	(t
-	 (setq x-last-selected-text-cut text
-	       x-last-cut-buffer-coding 'iso-latin-1
-	       x-last-selected-text-cut-encoded
-	       ;; ICCCM says cut buffer always contain ISO-Latin-1
-	       (encode-coding-string text 'iso-latin-1))
-	 (x-set-cut-buffer x-last-selected-text-cut-encoded push)))
-  (x-set-selection 'PRIMARY text)
-  (setq x-last-selected-text-primary text)
-  (when x-select-enable-clipboard
-    (x-set-selection 'CLIPBOARD text)
-    (setq x-last-selected-text-clipboard text))
-  )
+  "Select TEXT, a string, according to the window system.
+
+On X, put TEXT in the primary X selection.  For backward
+compatibility with older X applications, set the value of X cut
+buffer 0 as well, and if the optional argument PUSH is non-nil,
+rotate the cut buffers.  If `x-select-enable-clipboard' is
+non-nil, copy the text to the X clipboard as well.
+
+On Windows, make TEXT the current selection.  If
+`x-select-enable-clipboard' is non-nil, copy the text to the
+clipboard as well.  The argument PUSH is ignored.
+
+On Nextstep, put TEXT in the pasteboard; PUSH is ignored."
+  ;; With multi-tty, this function may be called from a tty frame.
+  (when (eq (framep (selected-frame)) 'x)
+    ;; Don't send the cut buffer too much text.
+    ;; It becomes slow, and if really big it causes errors.
+    (cond ((>= (length text) x-cut-buffer-max)
+           (x-set-cut-buffer "" push)
+           (setq x-last-selected-text-cut ""
+                 x-last-selected-text-cut-encoded ""))
+          (t
+           (setq x-last-selected-text-cut text
+                 x-last-cut-buffer-coding 'iso-latin-1
+                 x-last-selected-text-cut-encoded
+                 ;; ICCCM says cut buffer always contain ISO-Latin-1
+                 (encode-coding-string text 'iso-latin-1))
+           (x-set-cut-buffer x-last-selected-text-cut-encoded push)))
+    (when x-select-enable-primary
+      (x-set-selection 'PRIMARY text)
+      (setq x-last-selected-text-primary text))
+    (when x-select-enable-clipboard
+      (x-set-selection 'CLIPBOARD text)
+      (setq x-last-selected-text-clipboard text))))
 
 (defvar x-select-request-type nil
   "*Data type request for X selection.
-The value is nil, one of the following data types, or a list of them:
+The value is one of the following data types, a list of them, or nil:
   `COMPOUND_TEXT', `UTF8_STRING', `STRING', `TEXT'
-
-If the value is nil, try `COMPOUND_TEXT' and `UTF8_STRING', and
-use the more appropriate result.  If both fail, try `STRING', and
-then `TEXT'.
 
 If the value is one of the above symbols, try only the specified
 type.
 
 If the value is a list of them, try each of them in the specified
-order until succeed.")
+order until succeed.
 
-;; Helper function for x-selection-value.  Select UTF8 or CTEXT
-;; whichever is more appropriate.  Here, we use this heurisitcs.
-;;
-;;   (1) If their lengthes are different, select the longer one.  This
-;;   is because an X client may just cut off unsupported characters.
-;;
-;;   (2) Otherwise, if they are different at Nth character, and that
-;;   of UTF8 is a Latin character and that of CTEXT belongs to a CJK
-;;   character set, select UTF8.  Also select UTF8 if the Nth
-;;   character of UTF8 is non-ASCII where as that of CTEXT is ASCII.
-;;   This is because an X client may replace unsupported characters
-;;   with some ASCII character (typically ` ' or `?') in CTEXT.
-;;
-;;   (3) Otherwise, select CTEXT.  This is because legacy charsets are
-;;   better for the current Emacs, especially when the selection owner
-;;   is also Emacs.
-
-(defun x-select-utf8-or-ctext (utf8 ctext)
-  (let ((len-utf8 (length utf8))
-	(len-ctext (length ctext))
-	(selected ctext)
-	(i 0)
-	char)
-    (if (/= len-utf8 len-ctext)
-	(if (> len-utf8 len-ctext) utf8 ctext)
-      (let ((result (compare-strings utf8 0 len-utf8 ctext 0 len-ctext)))
-	(if (eq result t)
-	    ctext
-	  (let ((utf8-char (aref utf8 (1- (abs result))))
-		(ctext-char (aref ctext (1- (abs result)))))
-	    (if (or (and (aref (char-category-set utf8-char) ?l)
-			 (aref (char-category-set ctext-char) ?C))
-		    (and (>= utf8-char 128)
-			 (< ctext-char  128)))
-		utf8
-	      ctext)))))))
+The value nil is the same as this list:
+  \(UTF8_STRING COMPOUND_TEXT STRING)
+")
 
 ;; Get a selection value of type TYPE by calling x-get-selection with
-;; an appropiate DATA-TYPE argument decidd by `x-select-request-type'.
+;; an appropiate DATA-TYPE argument decided by `x-select-request-type'.
 ;; The return value is already decoded.  If x-get-selection causes an
 ;; error, this function return nil.
 
 (defun x-selection-value (type)
-  (let (text)
-    (cond ((null x-select-request-type)
-	   (let (utf8 ctext utf8-coding)
-	     ;; We try both UTF8_STRING and COMPOUND_TEXT, and choose
-	     ;; the more appropriate one.  If both fail, try STRING.
-
-	     ;; At first try UTF8_STRING.
-	     (setq utf8 (condition-case nil
-			    (x-get-selection type 'UTF8_STRING)
-			  (error nil))
-		   utf8-coding last-coding-system-used)
-	     (if utf8
-		 ;; If it is a local selection, or it contains only
-		 ;; ASCII characers, choose it.
-		 (if (or (not (get-text-property 0 'foreign-selection utf8))
-			 (= (length utf8) (string-bytes utf8)))
-		     (setq text utf8)))
-	     ;; If not yet decided, try COMPOUND_TEXT.
-	     (if (not text)
-		 (if (setq ctext (condition-case nil
-				     (x-get-selection type 'COMPOUND_TEXT)
-				   (error nil)))
-		     ;; If UTF8_STRING was also successful, choose the
-		     ;; more appropriate one from UTF8 and CTEXT.
-		     (if utf8
-			 (setq text (x-select-utf8-or-ctext utf8 ctext))
-		       ;; Othewise, choose CTEXT.
-		       (setq text ctext))
-		   (setq text utf8)))
-	     ;; If not yet decided, try STRING.
-	     (or text
-		 (setq text (condition-case nil
-				(x-get-selection type 'STRING)
-			      (error nil))))
-	     (if (eq text utf8)
-		 (setq last-coding-system-used utf8-coding))))
-
-	  ((consp x-select-request-type)
-	   (let ((tail x-select-request-type))
-	     (while (and tail (not text))
-	       (condition-case nil
-		   (setq text (x-get-selection type (car tail)))
-		 (error nil))
-	       (setq tail (cdr tail)))))
-
-	  (t
-	   (condition-case nil
-	       (setq text (x-get-selection type x-select-request-type))
-	     (error nil))))
-
+  (let ((request-type (or x-select-request-type
+			  '(UTF8_STRING COMPOUND_TEXT STRING)))
+	text)
+    (if (consp request-type)
+	(while (and request-type (not text))
+	  (condition-case nil
+	      (setq text (x-get-selection type (car request-type)))
+	    (error nil))
+	  (setq request-type (cdr request-type)))
+      (condition-case nil
+	  (setq text (x-get-selection type request-type))
+	(error nil)))
     (if text
 	(remove-text-properties 0 (length text) '(foreign-selection nil) text))
     text))
@@ -2299,235 +1332,105 @@ order until succeed.")
 ;; it returns nil the second time.  This is so that a single
 ;; selection won't be added to the kill ring over and over.
 (defun x-cut-buffer-or-selection-value ()
-  (let (clip-text primary-text cut-text)
-    (when x-select-enable-clipboard
-      (setq clip-text (x-selection-value 'CLIPBOARD))
-      (if (string= clip-text "") (setq clip-text nil))
+  ;; With multi-tty, this function may be called from a tty frame.
+  (when (eq (framep (selected-frame)) 'x)
+    (let (clip-text primary-text cut-text)
+      (when x-select-enable-clipboard
+        (setq clip-text (x-selection-value 'CLIPBOARD))
+        (if (string= clip-text "") (setq clip-text nil))
 
-      ;; Check the CLIPBOARD selection for 'newness', is it different
+        ;; Check the CLIPBOARD selection for 'newness', is it different
+        ;; from what we remebered them to be last time we did a
+        ;; cut/paste operation.
+        (setq clip-text
+              (cond ;; check clipboard
+               ((or (not clip-text) (string= clip-text ""))
+                (setq x-last-selected-text-clipboard nil))
+               ((eq      clip-text x-last-selected-text-clipboard) nil)
+               ((string= clip-text x-last-selected-text-clipboard)
+                ;; Record the newer string,
+                ;; so subsequent calls can use the `eq' test.
+                (setq x-last-selected-text-clipboard clip-text)
+                nil)
+               (t (setq x-last-selected-text-clipboard clip-text)))))
+
+      (when x-select-enable-primary
+	(setq primary-text (x-selection-value 'PRIMARY))
+	;; Check the PRIMARY selection for 'newness', is it different
+	;; from what we remebered them to be last time we did a
+	;; cut/paste operation.
+	(setq primary-text
+	      (cond ;; check primary selection
+	       ((or (not primary-text) (string= primary-text ""))
+		(setq x-last-selected-text-primary nil))
+	       ((eq      primary-text x-last-selected-text-primary) nil)
+	       ((string= primary-text x-last-selected-text-primary)
+		;; Record the newer string,
+		;; so subsequent calls can use the `eq' test.
+		(setq x-last-selected-text-primary primary-text)
+		nil)
+	       (t
+		(setq x-last-selected-text-primary primary-text)))))
+
+      (setq cut-text (x-get-cut-buffer 0))
+
+      ;; Check the x cut buffer for 'newness', is it different
       ;; from what we remebered them to be last time we did a
       ;; cut/paste operation.
-      (setq clip-text
-	    (cond;; check clipboard
-	     ((or (not clip-text) (string= clip-text ""))
-	      (setq x-last-selected-text-clipboard nil))
-	     ((eq      clip-text x-last-selected-text-clipboard) nil)
-	     ((string= clip-text x-last-selected-text-clipboard)
-	      ;; Record the newer string,
-	      ;; so subsequent calls can use the `eq' test.
-	      (setq x-last-selected-text-clipboard clip-text)
-	      nil)
-	     (t
-	      (setq x-last-selected-text-clipboard clip-text))))
-      )
+      (setq cut-text
+            (let ((next-coding (or next-selection-coding-system 'iso-latin-1)))
+              (cond ;; check cut buffer
+               ((or (not cut-text) (string= cut-text ""))
+                (setq x-last-selected-text-cut nil))
+               ;; This short cut doesn't work because x-get-cut-buffer
+               ;; always returns a newly created string.
+               ;; ((eq      cut-text x-last-selected-text-cut) nil)
+               ((and (string= cut-text x-last-selected-text-cut-encoded)
+                     (eq x-last-cut-buffer-coding next-coding))
+                ;; See the comment above.  No need of this recording.
+                ;; Record the newer string,
+                ;; so subsequent calls can use the `eq' test.
+                ;; (setq x-last-selected-text-cut cut-text)
+                nil)
+               (t
+                (setq x-last-selected-text-cut-encoded cut-text
+                      x-last-cut-buffer-coding next-coding
+                      x-last-selected-text-cut
+                      ;; ICCCM says cut buffer always contain ISO-Latin-1, but
+                      ;; use next-selection-coding-system if not nil.
+                      (decode-coding-string
+                       cut-text next-coding))))))
 
-    (setq primary-text (x-selection-value 'PRIMARY))
-    ;; Check the PRIMARY selection for 'newness', is it different
-    ;; from what we remebered them to be last time we did a
-    ;; cut/paste operation.
-    (setq primary-text
-	  (cond;; check primary selection
-	   ((or (not primary-text) (string= primary-text ""))
-	    (setq x-last-selected-text-primary nil))
-	   ((eq      primary-text x-last-selected-text-primary) nil)
-	   ((string= primary-text x-last-selected-text-primary)
-	    ;; Record the newer string,
-	    ;; so subsequent calls can use the `eq' test.
-	    (setq x-last-selected-text-primary primary-text)
-	    nil)
-	   (t
-	    (setq x-last-selected-text-primary primary-text))))
+      ;; As we have done one selection, clear this now.
+      (setq next-selection-coding-system nil)
 
-    (setq cut-text (x-get-cut-buffer 0))
-
-    ;; Check the x cut buffer for 'newness', is it different
-    ;; from what we remebered them to be last time we did a
-    ;; cut/paste operation.
-    (setq cut-text
-	  (let ((next-coding (or next-selection-coding-system 'iso-latin-1)))
-	    (cond;; check cut buffer
-	     ((or (not cut-text) (string= cut-text ""))
-	      (setq x-last-selected-text-cut nil))
-	     ;; This short cut doesn't work because x-get-cut-buffer 	 
-	     ;; always returns a newly created string. 	 
-	     ;; ((eq      cut-text x-last-selected-text-cut) nil) 	 
-	     ((and (string= cut-text x-last-selected-text-cut-encoded)
-		   (eq x-last-cut-buffer-coding next-coding))
-	      ;; See the comment above.  No need of this recording. 	 
-	      ;; Record the newer string, 	 
-	      ;; so subsequent calls can use the `eq' test. 	 
-	      ;; (setq x-last-selected-text-cut cut-text) 	 
-	      nil)
-	     (t
-	      (setq x-last-selected-text-cut-encoded cut-text
-		  x-last-cut-buffer-coding next-coding
-		  x-last-selected-text-cut
-		  ;; ICCCM says cut buffer always contain ISO-Latin-1, but
-		  ;; use next-selection-coding-system if not nil.
-		  (decode-coding-string 
-		   cut-text next-coding))))))
-
-    ;; As we have done one selection, clear this now.
-    (setq next-selection-coding-system nil)
-
-    ;; At this point we have recorded the current values for the
-    ;; selection from clipboard (if we are supposed to) primary,
-    ;; and cut buffer.  So return the first one that has changed
-    ;; (which is the first non-null one).
-    ;;
-    ;; NOTE: There will be cases where more than one of these has
-    ;; changed and the new values differ.  This indicates that
-    ;; something like the following has happened since the last time
-    ;; we looked at the selections: Application X set all the
-    ;; selections, then Application Y set only one or two of them (say
-    ;; just the cut-buffer).  In this case since we don't have
-    ;; timestamps there is no way to know what the 'correct' value to
-    ;; return is.  The nice thing to do would be to tell the user we
-    ;; saw multiple possible selections and ask the user which was the
-    ;; one they wanted.
-    ;; This code is still a big improvement because now the user can
-    ;; futz with the current selection and get emacs to pay attention
-    ;; to the cut buffer again (previously as soon as clipboard or
-    ;; primary had been set the cut buffer would essentially never be
-    ;; checked again).
-    (or clip-text primary-text cut-text)
-    ))
-
-
-;; Do the actual X Windows setup here; the above code just defines
-;; functions and variables that we use now.
-
-(setq command-line-args (x-handle-args command-line-args))
-
-;; Make sure we have a valid resource name.
-(or (stringp x-resource-name)
-    (let (i)
-      (setq x-resource-name (invocation-name))
-
-      ;; Change any . or * characters in x-resource-name to hyphens,
-      ;; so as not to choke when we use it in X resource queries.
-      (while (setq i (string-match "[.*]" x-resource-name))
-	(aset x-resource-name i ?-))))
-
-(x-open-connection (or x-display-name
-		       (setq x-display-name (getenv "DISPLAY")))
-		   x-command-line-resources
-		   ;; Exit Emacs with fatal error if this fails.
-		   t)
-
-(setq frame-creation-function 'x-create-frame-with-faces)
-
-(setq x-cut-buffer-max (min (- (/ (x-server-max-request-size) 2) 100)
-			    x-cut-buffer-max))
-
-;; Setup the default fontset.
-(setup-default-fontset)
-
-;; Create the standard fontset.
-(create-fontset-from-fontset-spec standard-fontset-spec t)
-
-;; Create fontset specified in X resources "Fontset-N" (N is 0, 1, ...).
-(create-fontset-from-x-resource)
-
-;; Try to create a fontset from a font specification which comes
-;; from initial-frame-alist, default-frame-alist, or X resource.
-;; A font specification in command line argument (i.e. -fn XXXX)
-;; should be already in default-frame-alist as a `font'
-;; parameter.  However, any font specifications in site-start
-;; library, user's init file (.emacs), and default.el are not
-;; yet handled here.
-
-(let ((font (or (cdr (assq 'font initial-frame-alist))
-		(cdr (assq 'font default-frame-alist))
-		(x-get-resource "font" "Font")))
-      xlfd-fields resolved-name)
-  (if (and font
-	   (not (query-fontset font))
-	   (setq resolved-name (x-resolve-font-name font))
-	   (setq xlfd-fields (x-decompose-font-name font)))
-      (if (string= "fontset" (aref xlfd-fields xlfd-regexp-registry-subnum))
-	  (new-fontset font (x-complement-fontset-spec xlfd-fields nil))
-	;; Create a fontset from FONT.  The fontset name is
-	;; generated from FONT.
-	(create-fontset-from-ascii-font font resolved-name "startup"))))
-
-;; Apply a geometry resource to the initial frame.  Put it at the end
-;; of the alist, so that anything specified on the command line takes
-;; precedence.
-(let* ((res-geometry (x-get-resource "geometry" "Geometry"))
-       parsed)
-  (if res-geometry
-      (progn
-	(setq parsed (x-parse-geometry res-geometry))
-	;; If the resource specifies a position,
-	;; call the position and size "user-specified".
-	(if (or (assq 'top parsed) (assq 'left parsed))
-	    (setq parsed (cons '(user-position . t)
-			       (cons '(user-size . t) parsed))))
-	;; All geometry parms apply to the initial frame.
-	(setq initial-frame-alist (append initial-frame-alist parsed))
-	;; The size parms apply to all frames.  Don't set it if there are
-	;; sizes there already (from command line).
-	(if (and (assq 'height parsed)
-		 (not (assq 'height default-frame-alist)))
-	    (setq default-frame-alist
-		  (cons (cons 'height (cdr (assq 'height parsed)))
-			default-frame-alist)))
-	(if (and (assq 'width parsed)
-		 (not (assq 'width default-frame-alist)))
-	    (setq default-frame-alist
-		  (cons (cons 'width (cdr (assq 'width parsed)))
-			default-frame-alist))))))
-
-;; Check the reverseVideo resource.
-(let ((case-fold-search t))
-  (let ((rv (x-get-resource "reverseVideo" "ReverseVideo")))
-    (if (and rv
-	     (string-match "^\\(true\\|yes\\|on\\)$" rv))
-	(setq default-frame-alist
-	      (cons '(reverse . t) default-frame-alist)))))
-
-;; Set x-selection-timeout, measured in milliseconds.
-(let ((res-selection-timeout
-       (x-get-resource "selectionTimeout" "SelectionTimeout")))
-  (setq x-selection-timeout 20000)
-  (if res-selection-timeout
-      (setq x-selection-timeout (string-to-number res-selection-timeout))))
-
-;; Set scroll bar mode to right if set by X resources. Default is left.
-(if (equal (x-get-resource "verticalScrollBars" "ScrollBars") "right")
-    (customize-set-variable 'scroll-bar-mode 'right))
-
-(defun x-win-suspend-error ()
-  (error "Suspending an Emacs running under X makes no sense"))
-(add-hook 'suspend-hook 'x-win-suspend-error)
+      ;; At this point we have recorded the current values for the
+      ;; selection from clipboard (if we are supposed to) primary,
+      ;; and cut buffer.  So return the first one that has changed
+      ;; (which is the first non-null one).
+      ;;
+      ;; NOTE: There will be cases where more than one of these has
+      ;; changed and the new values differ.  This indicates that
+      ;; something like the following has happened since the last time
+      ;; we looked at the selections: Application X set all the
+      ;; selections, then Application Y set only one or two of them (say
+      ;; just the cut-buffer).  In this case since we don't have
+      ;; timestamps there is no way to know what the 'correct' value to
+      ;; return is.  The nice thing to do would be to tell the user we
+      ;; saw multiple possible selections and ask the user which was the
+      ;; one they wanted.
+      ;; This code is still a big improvement because now the user can
+      ;; futz with the current selection and get emacs to pay attention
+      ;; to the cut buffer again (previously as soon as clipboard or
+      ;; primary had been set the cut buffer would essentially never be
+      ;; checked again).
+      (or clip-text primary-text cut-text)
+      )))
 
 ;; Arrange for the kill and yank functions to set and check the clipboard.
 (setq interprogram-cut-function 'x-select-text)
 (setq interprogram-paste-function 'x-cut-buffer-or-selection-value)
 
-;; Turn off window-splitting optimization; X is usually fast enough
-;; that this is only annoying.
-(setq split-window-keep-point t)
-
-;; Don't show the frame name; that's redundant with X.
-(setq-default mode-line-frame-identification "  ")
-
-;; Motif direct handling of f10 wasn't working right,
-;; So temporarily we've turned it off in lwlib-Xm.c
-;; and turned the Emacs f10 back on.
-;; ;; Motif normally handles f10 itself, so don't try to handle it a second time.
-;; (if (featurep 'motif)
-;;     (global-set-key [f10] 'ignore))
-
-;; Turn on support for mouse wheels.
-(mouse-wheel-mode 1)
-
-
-;; Enable CLIPBOARD copy/paste through menu bar commands.
-(menu-bar-enable-clipboard)
-
-;; Override Paste so it looks at CLIPBOARD first.
 (defun x-clipboard-yank ()
   "Insert the clipboard contents, or the last stretch of killed text."
   (interactive "*")
@@ -2537,24 +1440,161 @@ order until succeed.")
 	(kill-new clipboard-text))
     (yank)))
 
-(define-key menu-bar-edit-menu [paste]
-  '(menu-item "Paste" x-clipboard-yank
-	      :enable (not buffer-read-only)
-	      :help "Paste (yank) text most recently cut/copied"))
+(declare-function accelerate-menu "xmenu.c" (&optional frame) t)
+
+(defun x-menu-bar-open (&optional frame)
+  "Open the menu bar if `menu-bar-mode' is on. otherwise call `tmm-menubar'."
+  (interactive "i")
+  (if menu-bar-mode (accelerate-menu frame)
+    (tmm-menubar)))
+
+
+;;; Window system initialization.
+
+(defun x-win-suspend-error ()
+  ;; Don't allow suspending if any of the frames are X frames.
+  (if (memq 'x (mapcar 'window-system (frame-list)))
+      (error "Cannot suspend Emacs while running under X")))
+
+(defvar x-initialized nil
+  "Non-nil if the X window system has been initialized.")
+
+(declare-function x-open-connection "xfns.c"
+		  (display &optional xrm-string must-succeed))
+(declare-function x-server-max-request-size "xfns.c" (&optional terminal))
+(declare-function x-get-resource "frame.c"
+		  (attribute class &optional component subclass))
+(declare-function x-parse-geometry "frame.c" (string))
+(defvar x-resource-name)
+(defvar x-display-name)
+(defvar x-command-line-resources)
+
+(defun x-initialize-window-system ()
+  "Initialize Emacs for X frames and open the first connection to an X server."
+  ;; Make sure we have a valid resource name.
+  (or (stringp x-resource-name)
+      (let (i)
+	(setq x-resource-name (invocation-name))
+
+	;; Change any . or * characters in x-resource-name to hyphens,
+	;; so as not to choke when we use it in X resource queries.
+	(while (setq i (string-match "[.*]" x-resource-name))
+	  (aset x-resource-name i ?-))))
+
+  (x-open-connection (or x-display-name
+			 (setq x-display-name (or (getenv "DISPLAY" (selected-frame))
+						  (getenv "DISPLAY"))))
+		     x-command-line-resources
+		     ;; Exit Emacs with fatal error if this fails and we
+		     ;; are the initial display.
+		     (eq initial-window-system 'x))
+
+  (setq x-cut-buffer-max (min (- (/ (x-server-max-request-size) 2) 100)
+			      x-cut-buffer-max))
+
+  ;; Create the default fontset.
+  (create-default-fontset)
+
+  ;; Create the standard fontset.
+  (condition-case err
+	(create-fontset-from-fontset-spec standard-fontset-spec t)
+    (error (display-warning 
+	    'initialization
+	    (format "Creation of the standard fontset failed: %s" err)
+	    :error)))
+
+  ;; Create fontset specified in X resources "Fontset-N" (N is 0, 1, ...).
+  (create-fontset-from-x-resource)
+
+  ;; Set scroll bar mode to right if set by X resources. Default is left.
+  (if (equal (x-get-resource "verticalScrollBars" "ScrollBars") "right")
+      (customize-set-variable 'scroll-bar-mode 'right))
+
+  ;; Apply a geometry resource to the initial frame.  Put it at the end
+  ;; of the alist, so that anything specified on the command line takes
+  ;; precedence.
+  (let* ((res-geometry (x-get-resource "geometry" "Geometry"))
+	 parsed)
+    (if res-geometry
+	(progn
+	  (setq parsed (x-parse-geometry res-geometry))
+	  ;; If the resource specifies a position,
+	  ;; call the position and size "user-specified".
+	  (if (or (assq 'top parsed) (assq 'left parsed))
+	      (setq parsed (cons '(user-position . t)
+				 (cons '(user-size . t) parsed))))
+	  ;; All geometry parms apply to the initial frame.
+	  (setq initial-frame-alist (append initial-frame-alist parsed))
+	  ;; The size parms apply to all frames.  Don't set it if there are
+	  ;; sizes there already (from command line).
+	  (if (and (assq 'height parsed)
+		   (not (assq 'height default-frame-alist)))
+	      (setq default-frame-alist
+		    (cons (cons 'height (cdr (assq 'height parsed)))
+			  default-frame-alist)))
+	  (if (and (assq 'width parsed)
+		   (not (assq 'width default-frame-alist)))
+	      (setq default-frame-alist
+		    (cons (cons 'width (cdr (assq 'width parsed)))
+			  default-frame-alist))))))
+
+  ;; Check the reverseVideo resource.
+  (let ((case-fold-search t))
+    (let ((rv (x-get-resource "reverseVideo" "ReverseVideo")))
+      (if (and rv
+	       (string-match "^\\(true\\|yes\\|on\\)$" rv))
+	  (setq default-frame-alist
+		(cons '(reverse . t) default-frame-alist)))))
+
+  ;; Set x-selection-timeout, measured in milliseconds.
+  (let ((res-selection-timeout
+	 (x-get-resource "selectionTimeout" "SelectionTimeout")))
+    (setq x-selection-timeout 20000)
+    (if res-selection-timeout
+	(setq x-selection-timeout (string-to-number res-selection-timeout))))
+
+  ;; Don't let Emacs suspend under X.
+  (add-hook 'suspend-hook 'x-win-suspend-error)
+
+  ;; During initialization, we defer sending size hints to the window
+  ;; manager, because that can induce a race condition:
+  ;; http://lists.gnu.org/archive/html/emacs-devel/2008-10/msg00033.html
+  ;; Send the size hints once initialization is done.
+  (add-hook 'after-init-hook 'x-wm-set-size-hint)
+
+  ;; Turn off window-splitting optimization; X is usually fast enough
+  ;; that this is only annoying.
+  (setq split-window-keep-point t)
+
+  ;; Motif direct handling of f10 wasn't working right,
+  ;; So temporarily we've turned it off in lwlib-Xm.c
+  ;; and turned the Emacs f10 back on.
+  ;; ;; Motif normally handles f10 itself, so don't try to handle it a second time.
+  ;; (if (featurep 'motif)
+  ;;     (global-set-key [f10] 'ignore))
+
+  ;; Turn on support for mouse wheels.
+  (mouse-wheel-mode 1)
+
+  ;; Enable CLIPBOARD copy/paste through menu bar commands.
+  (menu-bar-enable-clipboard)
+
+  ;; Override Paste so it looks at CLIPBOARD first.
+  (define-key menu-bar-edit-menu [paste]
+    (append '(menu-item "Paste" x-clipboard-yank
+			:enable (not buffer-read-only)
+			:help "Paste (yank) text most recently cut/copied")
+	    nil))
+
+  (setq x-initialized t))
+
+(add-to-list 'handle-args-function-alist '(x . x-handle-args))
+(add-to-list 'frame-creation-function-alist '(x . x-create-frame-with-faces))
+(add-to-list 'window-system-initialization-alist '(x . x-initialize-window-system))
 
 ;; Initiate drag and drop
 (add-hook 'after-make-frame-functions 'x-dnd-init-frame)
 (define-key special-event-map [drag-n-drop] 'x-dnd-handle-drag-n-drop-event)
-
-;; Let F10 do menu bar navigation.
-(defun x-menu-bar-open (&optional frame)
-  "Open the menu bar if `menu-bar-mode' is on. otherwise call `tmm-menubar'."
-  (interactive "i")
-  (if menu-bar-mode (menu-bar-open frame)
-    (tmm-menubar)))
-		   
-(and (fboundp 'menu-bar-open)
-     (global-set-key [f10] 'x-menu-bar-open))
 
 (defcustom x-gtk-stock-map
   '(
@@ -2578,16 +1618,56 @@ order until succeed.")
     ("etc/images/jump-to" . "gtk-jump-to")
     ("etc/images/index" . "gtk-index")
     ("etc/images/search" . "gtk-find")
-    ("etc/images/exit" . "gtk-quit"))
+    ("etc/images/exit" . "gtk-quit")
+    ("etc/images/cancel" . "gtk-cancel")
+    ("etc/images/info" . "gtk-info")
+    ("etc/images/bookmark_add" . "n:bookmark_add")
+    ;; Used in Gnus and/or MH-E:
+    ("etc/images/attach" . "gtk-attach")
+    ("etc/images/connect" . "gtk-connect")
+    ("etc/images/contact" . "gtk-contact")
+    ("etc/images/delete" . "gtk-delete")
+    ("etc/images/describe" . "gtk-properties")
+    ("etc/images/disconnect" . "gtk-disconnect")
+    ;; ("etc/images/exit" . "gtk-exit")
+    ("etc/images/lock-broken" . "gtk-lock_broken")
+    ("etc/images/lock-ok" . "gtk-lock_ok")
+    ("etc/images/lock" . "gtk-lock")
+    ("etc/images/next-page" . "gtk-next-page")
+    ("etc/images/refresh" . "gtk-refresh")
+    ("etc/images/sort-ascending" . "gtk-sort-ascending")
+    ("etc/images/sort-column-ascending" . "gtk-sort-column-ascending")
+    ("etc/images/sort-criteria" . "gtk-sort-criteria")
+    ("etc/images/sort-descending" . "gtk-sort-descending")
+    ("etc/images/sort-row-ascending" . "gtk-sort-row-ascending")
+    ("images/gnus/toggle-subscription" . "gtk-task-recurring")
+    ("images/mail/compose" . "gtk-mail-compose")
+    ("images/mail/copy" . "gtk-mail-copy")
+    ("images/mail/forward" . "gtk-mail-forward")
+    ("images/mail/inbox" . "gtk-inbox")
+    ("images/mail/move" . "gtk-mail-move")
+    ("images/mail/not-spam" . "gtk-not-spam")
+    ("images/mail/outbox" . "gtk-outbox")
+    ("images/mail/reply-all" . "gtk-mail-reply-to-all")
+    ("images/mail/reply" . "gtk-mail-reply")
+    ("images/mail/save-draft" . "gtk-mail-handling")
+    ("images/mail/send" . "gtk-mail-send")
+    ("images/mail/spam" . "gtk-spam")
+    ;; No themed versions available:
+    ;; mail/preview (combining stock_mail and stock_zoom)
+    ;; mail/save    (combining stock_mail, stock_save and stock_convert)
+    )
   "How icons for tool bars are mapped to Gtk+ stock items.
 Emacs must be compiled with the Gtk+ toolkit for this to have any effect.
 A value that begins with n: denotes a named icon instead of a stock icon."
   :version "22.2"
-  :type 'alist
+  :type '(choice (repeat (choice symbol
+				 (cons (string :tag "Emacs icon")
+				       (string :tag "Stock/named")))))
   :group 'x)
 
-(defvar icon-map-list nil
-  "*A list of alists that maps icon file names to stock/named icons.
+(defcustom icon-map-list '(x-gtk-stock-map)
+  "A list of alists that maps icon file names to stock/named icons.
 The alists are searched in the order they appear.  The first match is used.
 The keys in the alists are file names without extension and with two directory
 components.  For example, to map /usr/share/emacs/22.1.1/etc/images/open.xpm
@@ -2599,22 +1679,44 @@ Themes also have named icons.  To map to one of those, use n: before the name:
 
   (\"etc/images/diropen\" . \"n:system-file-manager\")
 
-The list elements are either the symbol name for the alist or the alist itself.")
+The list elements are either the symbol name for the alist or the
+alist itself.
+
+If you don't want stock icons, set the variable to nil."
+  :version "22.2"
+  :type '(choice (const :tag "Don't use stock icons" nil)
+		 (repeat (choice symbol
+				 (cons (string :tag "Emacs icon")
+				       (string :tag "Stock/named")))))
+  :group 'x)
+
+(defconst x-gtk-stock-cache (make-hash-table :weakness t :test 'equal))
 
 (defun x-gtk-map-stock (file)
-  "Map icon with file name FILE to a Gtk+ stock name, using `x-gtk-stock-map'."
-  (if (stringp file)
-      (let* ((file-sans (file-name-sans-extension file))
-	     (key (and (string-match "/\\([^/]+/[^/]+/[^/]+$\\)" file-sans)
-		       (match-string 1 file-sans)))
-	     (value))
-	(mapc (lambda (elem)
-		(let ((assoc (if (symbolp elem) (symbol-value elem) elem)))
-		  (or value (setq value (assoc-string (or key file-sans)
-						      assoc)))))
-	      icon-map-list)
-	(and value (cdr value)))
-    nil))
+  "Map icon with file name FILE to a Gtk+ stock name.
+This uses `icon-map-list' to map icon file names to stock icon names."
+  (when (stringp file)
+    (or (gethash file x-gtk-stock-cache)
+	(puthash
+	 file
+	 (save-match-data
+	   (let* ((file-sans (file-name-sans-extension file))
+		  (key (and (string-match "/\\([^/]+/[^/]+/[^/]+$\\)"
+					  file-sans)
+			    (match-string 1 file-sans)))
+		  (icon-map icon-map-list)
+		  elem value)
+	     (while (and (null value) icon-map)
+	       (setq elem (car icon-map)
+		     value (assoc-string (or key file-sans)
+					 (if (symbolp elem)
+					     (symbol-value elem)
+					   elem))
+		     icon-map (cdr icon-map)))
+	     (and value (cdr value))))
+	 x-gtk-stock-cache))))
+
+(provide 'x-win)
 
 ;; arch-tag: f1501302-db8b-4d95-88e3-116697d89f78
 ;;; x-win.el ends here

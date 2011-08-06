@@ -1,8 +1,8 @@
 /* Proxy shell designed for use with Emacs on Windows 95 and NT.
-   Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005,
-      2006, 2007, 2008  Free Software Foundation, Inc.
+   Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+     2008, 2009  Free Software Foundation, Inc.
 
-   Accepts subset of Unix sh(1) command-line options, for compatability
+   Accepts subset of Unix sh(1) command-line options, for compatibility
    with elisp code written for Unix.  When possible, executes external
    programs directly (a common use of /bin/sh by Emacs), otherwise
    invokes the user-specified command processor to handle built-in shell
@@ -15,10 +15,10 @@
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,9 +26,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <windows.h>
 
@@ -343,7 +341,7 @@ console_event_handler (DWORD event)
     case CTRL_BREAK_EVENT:
       if (!interactive)
 	{
-	  /* Both command.com and cmd.exe have the annoying behaviour of
+	  /* Both command.com and cmd.exe have the annoying behavior of
 	     prompting "Terminate batch job (y/n)?" when interrupted
 	     while running a batch file, even if running in
 	     non-interactive (-c) mode.  Try to make up for this
@@ -515,10 +513,10 @@ main (int argc, char ** argv)
     {
       ++argv;
       /* Act on switches we recognize (mostly single letter switches,
-	 except for -e); all unrecognised switches and extra args are
+	 except for -e); all unrecognized switches and extra args are
 	 passed on to real shell if used (only really of benefit for
 	 interactive use, but allow for batch use as well).  Accept / as
-	 switch char for compatability with cmd.exe.  */
+	 switch char for compatibility with cmd.exe.  */
       if (((*argv)[0] == '-' || (*argv)[0] == '/') && (*argv)[1] != '\0')
 	{
 	  if (((*argv)[1] == 'c' || (*argv)[1] == 'C') && ((*argv)[2] == '\0'))

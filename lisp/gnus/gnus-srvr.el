@@ -1,17 +1,17 @@
 ;;; gnus-srvr.el --- virtual server support for Gnus
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -52,7 +50,7 @@ with some simple extensions.
 
 The following specs are understood:
 
-%h backend
+%h back end
 %n name
 %w address
 %s status
@@ -116,6 +114,7 @@ If nil, a faster, but more primitive, buffer is used instead."
        ["Copy" gnus-server-copy-server t]
        ["Edit" gnus-server-edit-server t]
        ["Regenerate" gnus-server-regenerate-server t]
+       ["Compact" gnus-server-compact-server t]
        ["Exit" gnus-server-exit t]))
 
     (easy-menu-define
@@ -165,6 +164,8 @@ If nil, a faster, but more primitive, buffer is used instead."
 
     "g" gnus-server-regenerate-server
 
+    "z" gnus-server-compact-server
+
     "\C-c\C-i" gnus-info-find-node
     "\C-c\C-b" gnus-bug))
 
@@ -189,7 +190,7 @@ If nil, a faster, but more primitive, buffer is used instead."
 (defface gnus-server-closed
   '((((class color) (background light)) (:foreground "Steel Blue" :italic t))
     (((class color) (background dark))
-     (:foreground "Light Steel Blue" :italic t))
+     (:foreground "LightBlue" :italic t))
     (t (:italic t)))
   "Face used for displaying CLOSED servers"
   :group 'gnus-server-visual)
@@ -277,19 +278,23 @@ The following commands are available:
        ;; Insert the text.
        (eval gnus-server-line-format-spec))
      (list 'gnus-server (intern gnus-tmp-name)
-           'gnus-named-server (intern (gnus-method-to-server method))))))
+           'gnus-named-server (intern (gnus-method-to-server method t))))))
 
 (defun gnus-enter-server-buffer ()
   "Set up the server buffer."
   (gnus-server-setup-buffer)
   (gnus-configure-windows 'server)
-  (gnus-server-prepare))
+  ;; Usually `gnus-configure-windows' will finish with the
+  ;; `gnus-server-buffer' selected as the current buffer, but not always (I
+  ;; bumped into it when starting from a dedicated *Group* frame, and
+  ;; gnus-configure-windows opened *Server* into its own dedicated frame).
+  (with-current-buffer (get-buffer gnus-server-buffer)
+    (gnus-server-prepare)))
 
 (defun gnus-server-setup-buffer ()
   "Initialize the server buffer."
   (unless (get-buffer gnus-server-buffer)
-    (save-excursion
-      (set-buffer (gnus-get-buffer-create gnus-server-buffer))
+    (with-current-buffer (gnus-get-buffer-create gnus-server-buffer)
       (gnus-server-mode)
       (when gnus-carpal
 	(gnus-carpal-setup-buffer 'server)))))
@@ -299,7 +304,6 @@ The following commands are available:
   (gnus-set-format 'server t)
   (let ((alist gnus-server-alist)
 	(buffer-read-only nil)
-	(opened gnus-opened-servers)
 	done server op-ser)
     (erase-buffer)
     (setq gnus-inserted-opened-servers nil)
@@ -314,27 +318,26 @@ The following commands are available:
 	(pop alist)))
     ;; Then we insert the list of servers that have been opened in
     ;; this session.
-    (while opened
-      (when (and (not (member (caar opened) done))
+    (dolist (open gnus-opened-servers)
+      (when (and (not (member (car open) done))
 		 ;; Just ignore ephemeral servers.
-		 (not (member (caar opened) gnus-ephemeral-servers)))
-	(push (caar opened) done)
+		 (not (member (car open) gnus-ephemeral-servers)))
+	(push (car open) done)
 	(gnus-server-insert-server-line
-	 (setq op-ser (format "%s:%s" (caaar opened) (nth 1 (caar opened))))
-	 (caar opened))
-	(push (list op-ser (caar opened)) gnus-inserted-opened-servers))
-      (setq opened (cdr opened))))
+	 (setq op-ser (format "%s:%s" (caar open) (nth 1 (car open))))
+	 (car open))
+	(push (list op-ser (car open)) gnus-inserted-opened-servers))))
   (goto-char (point-min))
   (gnus-server-position-point))
 
 (defun gnus-server-server-name ()
-  (let ((server (get-text-property (gnus-point-at-bol) 'gnus-server)))
+  (let ((server (get-text-property (point-at-bol) 'gnus-server)))
     (and server (symbol-name server))))
 
 (defun gnus-server-named-server ()
-  "Returns a server name that matches one of the names returned by
-gnus-method-to-server."
-  (let ((server (get-text-property (gnus-point-at-bol) 'gnus-named-server)))
+  "Return a server name that matches one of the names returned by
+`gnus-method-to-server'."
+  (let ((server (get-text-property (point-at-bol) 'gnus-named-server)))
     (and server (symbol-name server))))
 
 (defalias 'gnus-server-position-point 'gnus-goto-colon)
@@ -342,8 +345,7 @@ gnus-method-to-server."
 (defconst gnus-server-edit-buffer "*Gnus edit server*")
 
 (defun gnus-server-update-server (server)
-  (save-excursion
-    (set-buffer gnus-server-buffer)
+  (with-current-buffer gnus-server-buffer
     (let* ((buffer-read-only nil)
 	   (entry (assoc server gnus-server-alist))
 	   (oentry (assoc (gnus-server-to-method server)
@@ -377,7 +379,14 @@ gnus-method-to-server."
       (if cached
 	  (setq gnus-server-method-cache
 		(delq cached gnus-server-method-cache)))
-      (if entry (setcdr entry info)
+      (if entry
+	  (progn
+	    ;; Remove the server from `gnus-opened-servers' since
+	    ;; it has never been opened with the new `info' yet.
+	    (gnus-opened-servers-remove (cdr entry))
+	    ;; Don't make a new Lisp object.
+	    (setcar (cdr entry) (car info))
+	    (setcdr (cdr entry) (cdr info)))
 	(setq gnus-server-alist
 	      (nconc gnus-server-alist (list (cons server info))))))))
 
@@ -478,9 +487,8 @@ gnus-method-to-server."
 (defun gnus-server-open-all-servers ()
   "Open all servers."
   (interactive)
-  (let ((servers gnus-inserted-opened-servers))
-    (while servers
-      (gnus-server-open-server (car (pop servers))))))
+  (dolist (server gnus-inserted-opened-servers)
+    (gnus-server-open-server (car server))))
 
 (defun gnus-server-close-server (server)
   "Close SERVER."
@@ -510,6 +518,8 @@ gnus-method-to-server."
   "Close all servers."
   (interactive)
   (dolist (server gnus-inserted-opened-servers)
+    (gnus-server-close-server (car server)))
+  (dolist (server gnus-server-alist)
     (gnus-server-close-server (car server))))
 
 (defun gnus-server-deny-server (server)
@@ -586,7 +596,8 @@ gnus-method-to-server."
      `(lambda (form)
 	(gnus-server-set-info ,server form)
 	(gnus-server-list-servers)
-	(gnus-server-position-point)))))
+	(gnus-server-position-point))
+     'edit-server)))
 
 (defun gnus-server-scan-server (server)
   "Request a scan from the current server."
@@ -610,8 +621,7 @@ gnus-method-to-server."
   (let ((buf (current-buffer)))
     (prog1
 	(gnus-browse-foreign-server server buf)
-      (save-excursion
-	(set-buffer buf)
+      (with-current-buffer buf
 	(gnus-server-update-server (gnus-server-server-name))
 	(gnus-server-position-point)))))
 
@@ -717,11 +727,12 @@ gnus-method-to-server."
 	      (while (not (eobp))
 		(ignore-errors
 		  (push (cons
-			 (buffer-substring
-			  (point)
-			  (progn
-			    (skip-chars-forward "^ \t")
-			    (point)))
+			 (mm-string-as-unibyte
+			  (buffer-substring
+			   (point)
+			   (progn
+			     (skip-chars-forward "^ \t")
+			     (point))))
 			 (let ((last (read cur)))
 			   (cons (read cur) last)))
 			groups))
@@ -729,18 +740,19 @@ gnus-method-to-server."
 	    (while (not (eobp))
 	      (ignore-errors
 		(push (cons
-		       (if (eq (char-after) ?\")
-			   (read cur)
-			 (let ((p (point)) (name ""))
-			   (skip-chars-forward "^ \t\\\\")
-			   (setq name (buffer-substring p (point)))
-			   (while (eq (char-after) ?\\)
-			     (setq p (1+ (point)))
-			     (forward-char 2)
-			     (skip-chars-forward "^ \t\\\\")
-			     (setq name (concat name (buffer-substring
-						      p (point)))))
-			   name))
+		       (mm-string-as-unibyte
+			(if (eq (char-after) ?\")
+			    (read cur)
+			  (let ((p (point)) (name ""))
+			    (skip-chars-forward "^ \t\\\\")
+			    (setq name (buffer-substring p (point)))
+			    (while (eq (char-after) ?\\)
+			      (setq p (1+ (point)))
+			      (forward-char 2)
+			      (skip-chars-forward "^ \t\\\\")
+			      (setq name (concat name (buffer-substring
+						       p (point)))))
+			    name)))
 		       (let ((last (read cur)))
 			 (cons (read cur) last)))
 		      groups))
@@ -783,18 +795,26 @@ gnus-method-to-server."
 	     (prog1 (1+ (point))
 	       (insert
 		(format "%c%7d: %s\n"
-			(let ((level (gnus-group-level
-				      (concat prefix (setq name (car group))))))
-			      (cond
-			       ((<= level gnus-level-subscribed) ? )
-			       ((<= level gnus-level-unsubscribed) ?U)
-			       ((= level gnus-level-zombie) ?Z)
-			       (t ?K)))
+			(let ((level
+			       (if (string= prefix "")
+				   (gnus-group-level (setq name (car group)))
+				 (gnus-group-level
+				  (concat prefix (setq name (car group)))))))
+			  (cond
+			   ((<= level gnus-level-subscribed) ? )
+			   ((<= level gnus-level-unsubscribed) ?U)
+			   ((= level gnus-level-zombie) ?Z)
+			   (t ?K)))
 			(max 0 (- (1+ (cddr group)) (cadr group)))
-			(mm-decode-coding-string
-			 name
-			 (inline (gnus-group-name-charset method name))))))
-	     (list 'gnus-group name))))
+			;; Don't decode if name is ASCII
+			(if (and (fboundp 'detect-coding-string)
+				 (eq (detect-coding-string name t) 'undecided))
+			    name
+			  (mm-decode-coding-string
+			   name
+			   (inline (gnus-group-name-charset method name)))))))
+	     (list 'gnus-group name)
+	     )))
 	(switch-to-buffer (current-buffer)))
       (goto-char (point-min))
       (gnus-group-position-point)
@@ -885,7 +905,7 @@ If NUMBER, fetch this number of articles."
   (save-excursion
     (beginning-of-line)
     (let ((name (get-text-property (point) 'gnus-group)))
-      (when (re-search-forward ": \\(.*\\)$" (gnus-point-at-eol) t)
+      (when (re-search-forward ": \\(.*\\)$" (point-at-eol) t)
 	(concat (gnus-method-to-server-name gnus-browse-current-method) ":"
 		(or name
 		    (match-string-no-properties 1)))))))
@@ -926,8 +946,7 @@ If NUMBER, fetch this number of articles."
 				  gnus-browse-current-method))))
 	     gnus-level-default-subscribed (gnus-group-level group)
 	     (and (car (nth 1 gnus-newsrc-alist))
-		  (gnus-gethash (car (nth 1 gnus-newsrc-alist))
-				gnus-newsrc-hashtb))
+		  (gnus-group-entry (car (nth 1 gnus-newsrc-alist))))
 	     (null (gnus-group-entry group)))
 	    (delete-char 1)
 	    (insert ? ))
@@ -943,8 +962,7 @@ If NUMBER, fetch this number of articles."
   (when (eq major-mode 'gnus-browse-mode)
     (gnus-kill-buffer (current-buffer)))
   ;; Insert the newly subscribed groups in the group buffer.
-  (save-excursion
-    (set-buffer gnus-group-buffer)
+  (with-current-buffer gnus-group-buffer
     (gnus-group-list-groups nil))
   (if gnus-browse-return-buffer
       (gnus-configure-windows 'server 'force)
@@ -966,7 +984,7 @@ If NUMBER, fetch this number of articles."
 	(gnus-get-function (gnus-server-to-method server)
 			   'request-regenerate)
       (error
-	(error "This backend doesn't support regeneration")))
+	(error "This back end doesn't support regeneration")))
     (gnus-message 5 "Requesting regeneration of %s..." server)
     (unless (gnus-open-server server)
       (error "Couldn't open server"))
@@ -974,7 +992,41 @@ If NUMBER, fetch this number of articles."
 	(gnus-message 5 "Requesting regeneration of %s...done" server)
       (gnus-message 5 "Couldn't regenerate %s" server))))
 
+
+;;;
+;;; Server compaction. -- dvl
+;;;
+
+;; #### FIXME: this function currently fails to update the Group buffer's
+;; #### appearance.
+(defun gnus-server-compact-server ()
+  "Issue a command to the server to compact all its groups.
+
+Note: currently only implemented in nnml."
+  (interactive)
+  (let ((server (gnus-server-server-name)))
+    (unless server
+      (error "No server on the current line"))
+    (condition-case ()
+	(gnus-get-function (gnus-server-to-method server)
+			   'request-compact)
+      (error
+       (error "This back end doesn't support compaction")))
+    (gnus-message 5 "\
+Requesting compaction of %s... (this may take a long time)"
+		  server)
+    (unless (gnus-open-server server)
+      (error "Couldn't open server"))
+    (if (not (gnus-request-compact server))
+	(gnus-message 5 "Couldn't compact %s" server)
+      (gnus-message 5 "Requesting compaction of %s...done" server)
+      ;; Invalidate the original article buffer which might be out of date.
+      ;; #### NOTE: Yes, this might be a bit rude, but since compaction
+      ;; #### will not happen very often, I think this is acceptable.
+      (let ((original (get-buffer gnus-original-article-buffer)))
+	(and original (gnus-kill-buffer original))))))
+
 (provide 'gnus-srvr)
 
-;;; arch-tag: c0117f64-27ca-475d-9406-8da6854c7a25
+;; arch-tag: c0117f64-27ca-475d-9406-8da6854c7a25
 ;;; gnus-srvr.el ends here

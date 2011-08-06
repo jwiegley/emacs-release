@@ -1,12 +1,15 @@
 ;;; nnnil.el --- empty backend for Gnus
-;; Public domain.
+
+;; This file is in the public domain.
 
 ;; Author: Paul Jarc <prj@po.cwru.edu>
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; This file is part of GNU Emacs.
+
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,9 +17,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -32,8 +33,7 @@
 (defvar nnnil-status-string "")
 
 (defun nnnil-retrieve-headers (articles &optional group server fetch-old)
-  (save-excursion
-    (set-buffer nntp-server-buffer)
+  (with-current-buffer nntp-server-buffer
     (erase-buffer))
   'nov)
 
@@ -69,8 +69,7 @@
   t)
 
 (defun nnnil-request-list (&optional server)
-  (save-excursion
-    (set-buffer nntp-server-buffer)
+  (with-current-buffer nntp-server-buffer
     (erase-buffer))
   t)
 
@@ -80,4 +79,4 @@
 
 (provide 'nnnil)
 
-;;; arch-tag: a982a1a3-bc5e-4fb1-a233-d7657a3e3257
+;; arch-tag: a982a1a3-bc5e-4fb1-a233-d7657a3e3257

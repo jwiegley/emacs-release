@@ -1,21 +1,27 @@
 ;;; ps-bdf.el --- BDF font file handler for ps-print
 
-;; Copyright (C) 1998, 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 1998, 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+;;   2009
 ;;   Free Software Foundation, Inc.
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008
+;;   2008, 2009
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
+;; Copyright (C) 2003
+;;   National Institute of Advanced Industrial Science and Technology (AIST)
+;;   Registration Number H13PRO009
+
+;; Author: Kenichi Handa <handa@m17n.org>
+;; (according to ack.texi)
 ;; Keywords: wp, BDF, font, PostScript
-;; Maintainer: Kenichi Handa <handa@m17n.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,9 +29,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -35,19 +39,18 @@
 ;;; Code:
 
 (eval-and-compile
-  (require 'ps-mule)
-
-  ;; to avoid XEmacs compilation gripes
-  (defvar installation-directory nil)
-  (defvar coding-system-for-read nil))
+  (require 'ps-mule))
 
 ;;;###autoload
-(defvar bdf-directory-list
+(defcustom bdf-directory-list
   (if (memq system-type '(ms-dos windows-nt))
       (list (expand-file-name "fonts/bdf" installation-directory))
     '("/usr/local/share/emacs/fonts/bdf"))
-  "*List of directories to search for `BDF' font files.
-The default value is '(\"/usr/local/share/emacs/fonts/bdf\").")
+  "List of directories to search for `BDF' font files.
+The default value is '(\"/usr/local/share/emacs/fonts/bdf\")."
+  :type '(repeat :tag "BDF font directory list"
+		 (directory :tag "BDF font directory"))
+  :group 'ps-print-miscellany)
 
 ;; MS-DOS and MS-Windows users like to move the binary around after
 ;; it's built, but the value above is computed at load-up time.
@@ -62,15 +65,11 @@ for BDFNAME."
   (if (file-name-absolute-p bdfname)
       (and (file-readable-p bdfname)
 	   bdfname)
-    (let ((dir-list bdf-directory-list)
-	  dir)
-      (while (and dir-list
-		  (progn
-		    (setq dir (expand-file-name bdfname (car dir-list)))
-		    (not (file-readable-p dir))))
-	(setq dir nil
-	      dir-list (cdr dir-list)))
-      dir)))
+    (catch 'tag
+      (dolist (dir bdf-directory-list)
+	(let ((absolute-path (expand-file-name bdfname dir)))
+	  (if (file-readable-p absolute-path)
+	    (throw 'tag absolute-path)))))))
 
 (defsubst bdf-file-mod-time (filename)
   "Return modification time of FILENAME.
@@ -82,28 +81,24 @@ The value is a list of two integers, the first integer has high-order
   "Return non-nil if and only if FILENAME is newer than MOD-TIME.
 MOD-TIME is a modification time as a list of two integers, the first
 integer has high-order 16 bits, the second has low 16 bits."
-  (let ((file-name (bdf-expand-file-name filename)))
-    (and file-name
-	 (let* ((new-mod-time (bdf-file-mod-time file-name))
-		(new-time (car new-mod-time))
-		(time (car mod-time)))
-	   (or (> new-time time)
-	       (and (= new-time time)
-		    (> (nth 1 new-mod-time) (nth 1 mod-time))))))))
+  (let* ((new-mod-time (bdf-file-mod-time filename))
+	 (new-time (car new-mod-time))
+	 (time (car mod-time)))
+    (or (> new-time time)
+	(and (= new-time time)
+	     (> (nth 1 new-mod-time) (nth 1 mod-time))))))
 
 (defun bdf-find-file (bdfname)
   "Return a buffer visiting a bdf file BDFNAME.
-If BDFNAME is not an absolute path, directories listed in
-`bdf-directory-list' is searched.
+BDFNAME must be an absolute file name.
 If BDFNAME doesn't exist, return nil."
-  (let ((file-name (bdf-expand-file-name bdfname)))
-    (and file-name
-	 (let ((buf (generate-new-buffer " *bdf-work*"))
-	       (coding-system-for-read 'no-conversion))
-	   (save-excursion
-	     (set-buffer buf)
-	     (insert-file-contents file-name)
-	     buf)))))
+  (and (file-readable-p bdfname)
+       (let ((buf (generate-new-buffer " *bdf-work*"))
+	     (coding-system-for-read 'no-conversion))
+	 (save-excursion
+	   (set-buffer buf)
+	   (insert-file-contents bdfname)
+	   buf))))
 
 (defvar bdf-cache-file (if (eq system-type 'ms-dos)
 			   ;; convert-standard-filename doesn't
@@ -116,7 +111,7 @@ If BDFNAME doesn't exist, return nil."
 (defvar bdf-cache nil
   "Cached information of `BDF' font files.  It is a list of FONT-INFO.
 FONT-INFO is a list of the following format:
-    (BDFFILE ABSOLUTE-PATH MOD-TIME SIZE FONT-BOUNDING-BOX
+    (ABSOLUTE-FILE-NAME MOD-TIME SIZE FONT-BOUNDING-BOX
      RELATIVE-COMPOSE BASELINE-OFFSET CODE-RANGE MAXLEN OFFSET-VECTOR)
 See the documentation of the function `bdf-read-font-info' for more detail.")
 
@@ -147,7 +142,7 @@ The file is written if and only if the file already exists and writable."
 (defun bdf-set-cache (font-info)
   "Cache FONT-INFO as information about one `BDF' font file.
 FONT-INFO is a list of the following format:
-    (BDFFILE ABSOLUTE-PATH MOD-TIME SIZE FONT-BOUNDING-BOX
+    (ABSOLUTE-FILE-NAME MOD-TIME SIZE FONT-BOUNDING-BOX
      RELATIVE-COMPOSE BASELINE-OFFSET CODE-RANGE MAXLEN OFFSET-VECTOR)
 See the documentation of the function `bdf-read-font-info' for more detail."
   (let ((slot (assoc (car font-info) bdf-cache)))
@@ -182,19 +177,16 @@ See the documentation of the function `bdf-read-font-info' for more detail."
 
 (defun bdf-read-font-info (bdfname)
   "Read `BDF' font file BDFNAME and return information (FONT-INFO) of the file.
+BDFNAME must be an absolute file name.
 FONT-INFO is a list of the following format:
-    (BDFFILE ABSOLUTE-PATH MOD-TIME FONT-BOUNDING-BOX
+    (BDFFILE MOD-TIME FONT-BOUNDING-BOX
      RELATIVE-COMPOSE BASELINE-OFFSET CODE-RANGE MAXLEN OFFSET-VECTOR)
-
-BDFFILE is a name of a font file (excluding directory part).
-
-ABSOLUTE-PATH is an absolute path of the font file.
 
 MOD-TIME is last modification time as a list of two integers, the
 first integer has high-order 16 bits, the second has low 16 bits.
 
-SIZE is a size of the font.  This value is got from SIZE record of the
-font.
+SIZE is a size of the font on 72 dpi device.  This value is got
+from SIZE record of the font.
 
 FONT-BOUNDING-BOX is the font bounding box as a list of four integers,
 BBX-WIDTH, BBX-HEIGHT, BBX-XOFF, and BBX-YOFF.
@@ -219,12 +211,12 @@ of the glyph in the font file.
 Nth element of OFFSET-VECTOR is a file position for the glyph of code
 CODE, where N and CODE are in the following relation:
     (bdf-compact-code CODE) => N, (bdf-expand-code N) => CODE"
-  (let* ((absolute-path (bdf-expand-file-name bdfname))
-	 (buf (and absolute-path (bdf-find-file absolute-path)))
+  (let* ((buf (bdf-find-file bdfname))
 	 (maxlen 0)
 	 (relative-compose 'false)
 	 (baseline-offset 0)
 	 size
+	 dpi
 	 font-bounding-box
 	 default-char
 	 code-range
@@ -249,12 +241,19 @@ CODE, where N and CODE are in the following relation:
 		     (- (aref font-bounding-box 3))))
 
 	  (goto-char (point-min))
-	  (search-forward "\nSIZE ")
-	  (setq size (read (current-buffer)))
-	  ;; The following kludgy code is t avoid bugs of several
-	  ;; fonts which have wrong SIZE record.
-	  (and (<= size (/ (aref font-bounding-box 1) 3))
-	       (setq size (aref font-bounding-box 1)))
+	  (search-forward "\nFONT ")
+	  (if (looking-at "-[^-]*-[^-]*-[^-]*-[^-]*-[^-]*-[^-]*-\\([0-9]+\\)")
+	      (setq size (string-to-number (match-string 1)))
+	    (search-forward "\nSIZE ")
+	    (setq size (read (current-buffer)))
+	    ;; The following kludgy code is to avoid bugs of several
+	    ;; fonts which have wrong SIZE record.
+	    (and (string-match "jiskan" bdfname)
+		 (<= size (/ (aref font-bounding-box 1) 3))
+		 (setq size (aref font-bounding-box 1)))
+	    (setq dpi (read (current-buffer)))
+	    (if (and (> dpi 0) (/= dpi 72))
+		(setq size (/ (* size dpi) 72))))
 
 	  (setq default-char (bdf-search-and-read "\nDEFAULT_CHAR" nil))
 
@@ -306,55 +305,39 @@ CODE, where N and CODE are in the following relation:
 
     (kill-buffer buf))
   (message "Reading %s...done" bdfname)
-  (list bdfname absolute-path (bdf-file-mod-time absolute-path)
+  (list bdfname (bdf-file-mod-time bdfname)
 	size font-bounding-box relative-compose baseline-offset
 	code-range maxlen offset-vector)))
 
-(defsubst bdf-info-absolute-path (font-info)     (nth 1 font-info))
-(defsubst bdf-info-mod-time (font-info)          (nth 2 font-info))
-(defsubst bdf-info-size (font-info)              (nth 3 font-info))
-(defsubst bdf-info-font-bounding-box (font-info) (nth 4 font-info))
-(defsubst bdf-info-relative-compose (font-info)  (nth 5 font-info))
-(defsubst bdf-info-baseline-offset (font-info)   (nth 6 font-info))
-(defsubst bdf-info-code-range (font-info)        (nth 7 font-info))
-(defsubst bdf-info-maxlen (font-info)            (nth 8 font-info))
-(defsubst bdf-info-offset-vector (font-info)     (nth 9 font-info))
+(defsubst bdf-info-absolute-path (font-info)     (nth 0 font-info))
+(defsubst bdf-info-mod-time (font-info)          (nth 1 font-info))
+(defsubst bdf-info-size (font-info)              (nth 2 font-info))
+(defsubst bdf-info-font-bounding-box (font-info) (nth 3 font-info))
+(defsubst bdf-info-relative-compose (font-info)  (nth 4 font-info))
+(defsubst bdf-info-baseline-offset (font-info)   (nth 5 font-info))
+(defsubst bdf-info-code-range (font-info)        (nth 6 font-info))
+(defsubst bdf-info-maxlen (font-info)            (nth 7 font-info))
+(defsubst bdf-info-offset-vector (font-info)     (nth 8 font-info))
 
 (defun bdf-get-font-info (bdfname)
   "Return information about `BDF' font file BDFNAME.
+BDFNAME must be an absolute file name.
 The value FONT-INFO is a list of the following format:
-    (BDFFILE ABSOLUTE-PATH MOD-TIME SIZE FONT-BOUNDING-BOX
+    (BDFNAME MOD-TIME SIZE FONT-BOUNDING-BOX
      RELATIVE-COMPOSE BASELINE-OFFSET CODE-RANGE MAXLEN OFFSET-VECTOR)
 See the documentation of the function `bdf-read-font-info' for more detail."
   (or bdf-cache
       (bdf-read-cache))
   (let ((font-info (assoc bdfname bdf-cache)))
     (if (or (not font-info)
-	    (not (file-readable-p (bdf-info-absolute-path font-info)))
+	    (not (file-readable-p bdfname))
 	    (bdf-file-newer-than-time bdfname (bdf-info-mod-time font-info)))
 	(progn
 	  (setq font-info (bdf-read-font-info bdfname))
 	  (bdf-set-cache font-info)))
     font-info))
 
-(defun bdf-find-font-info (bdfnames)
-  "Return information about `BDF' font file with alternative names BDFNAMES.
-
-If BDFNAMES is a list of file names, this function finds the first file
-in the list which exists and is readable, then calls `bdf-get-font-info'
-on that file name."
-  (let ((fnlist bdfnames)
-	(fname bdfnames))
-    (if (consp fnlist)
-	(while (and fnlist
-		    (progn
-		      (setq fname (car fnlist))
-		      (null (bdf-expand-file-name fname))))
-	  (setq fname nil
-		fnlist (cdr fnlist))))
-    (bdf-get-font-info (or fname (car bdfnames)))))
-
-(defun bdf-read-bitmap (bdfname offset maxlen)
+(defun bdf-read-bitmap (bdfname offset maxlen relative-compose)
   "Read `BDF' font file BDFNAME to get bitmap data at file position OFFSET.
 BDFNAME is an absolute path name of the font file.
 MAXLEN specifies how many bytes we should read at least.
@@ -363,7 +346,7 @@ DWIDTH is a pixel width of a glyph.
 BBX is a bounding box of the glyph.
 BITMAP-STRING is a string representing bits by hexadecimal digits."
   (let* ((coding-system-for-read 'no-conversion)
-	 (bbx (elt (bdf-get-font-info bdfname) 4))
+	 (bbx (bdf-info-font-bounding-box (bdf-get-font-info bdfname)))
 	 (dwidth (elt bbx 0))
 	 (bitmap-string "")
 	 height yoff)
@@ -373,6 +356,8 @@ BITMAP-STRING is a string representing bits by hexadecimal digits."
 	  (goto-char (point-min))
 	  (search-forward "\nDWIDTH")
 	  (setq dwidth (read (current-buffer)))
+	  (if (= dwidth 0)
+	      (setq dwidth 0.1))
 	  (goto-char (point-min))
 	  (search-forward "\nBBX")
 	  (setq bbx (vector (read (current-buffer)) (read (current-buffer))
@@ -404,29 +389,26 @@ BITMAP-STRING is a string representing bits by hexadecimal digits."
 	    (delete-char 1))
 	  (setq bitmap-string (buffer-string)))
       (error nil))
-    (list dwidth bbx bitmap-string)))
+    (vector dwidth (aref bbx 0) (aref bbx 1) (aref bbx 2) (aref bbx 3)
+	    (concat "<" bitmap-string ">")
+	    (or relative-compose 'false))))
 
-(defun bdf-get-bitmaps (bdfname codes)
-  "Return bitmap information of glyphs of CODES in `BDF' font file BDFNAME.
-CODES is a list of encoding number of glyphs in the file.
-The value is a list of CODE, DWIDTH, BBX, and BITMAP-STRING.
+(defun bdf-get-bitmap (bdfname code)
+  "Return bitmap information of glyph of CODE in `BDF' font file BDFNAME.
+CODE is an encoding number of glyph in the file.
+The value is a list (DWIDTH BBX BITMAP-STRING).
 DWIDTH is a pixel width of a glyph.
 BBX is a bounding box of the glyph.
 BITMAP-STRING is a string representing bits by hexadecimal digits."
-  (let* ((font-info (bdf-find-font-info bdfname))
-	 (absolute-path (bdf-info-absolute-path font-info))
-	 ;;(font-bounding-box (bdf-info-font-bounding-box font-info))
-	 (maxlen (bdf-info-maxlen font-info))
-	 (code-range (bdf-info-code-range font-info))
-	 (offset-vector (bdf-info-offset-vector font-info)))
-    (mapcar '(lambda (x)
-	       (cons x (bdf-read-bitmap
-			absolute-path
-			(aref offset-vector (bdf-compact-code x code-range))
-			maxlen)))
-	    codes)))
+  (let* ((info (bdf-get-font-info bdfname))
+	 (maxlen (bdf-info-maxlen info))
+	 (code-range (bdf-info-code-range info))
+	 (offset-vector (bdf-info-offset-vector info)))
+    (bdf-read-bitmap bdfname
+		     (aref offset-vector (bdf-compact-code code code-range))
+		     maxlen (bdf-info-relative-compose info))))
 
-;;; Interface to ps-print.el
+;;; Interface to ps-mule.el
 
 ;; Called from ps-mule-init-external-library.
 (defun bdf-generate-prologue ()
@@ -434,29 +416,38 @@ BITMAP-STRING is a string representing bits by hexadecimal digits."
       (bdf-initialize))
   (ps-mule-generate-bitmap-prologue))
 
-;; Called from ps-mule-generate-font.
-(defun bdf-generate-font (charset font-spec)
-  (let* ((font-name (ps-mule-font-spec-name font-spec))
-	 (font-info (bdf-find-font-info font-name))
-	 (font-name (if (consp font-name) (car font-name) font-name)))
-    (ps-mule-generate-bitmap-font font-name
-				  (ps-mule-font-spec-bytes font-spec)
-				  (charset-width charset)
-				  (bdf-info-size font-info)
-				  (bdf-info-relative-compose font-info)
-				  (bdf-info-baseline-offset font-info)
-				  (bdf-info-font-bounding-box font-info))))
+;; Called from ps-mule-check-font.
+(defun bdf-check-font (font-spec)
+  (let ((font-name-list (ps-mule-font-spec-name font-spec)))
+    (ps-mule-font-spec-set-name
+     font-spec
+     (if (stringp font-name-list)
+	 (bdf-expand-file-name font-name-list)
+       (catch 'tag
+	 (dolist (font-name font-name-list)
+	   (setq font-name (bdf-expand-file-name font-name))
+	   (if font-name
+	       (throw 'tag font-name))))))))
 
-;; Called from ps-mule-generate-glyphs.
-(defun bdf-generate-glyphs (font-spec code-list bytes)
-  (let ((font-name (ps-mule-font-spec-name font-spec)))
-    (mapcar '(lambda (x)
-	       (apply 'ps-mule-generate-bitmap-glyph
-		      (if (consp font-name) (car font-name) font-name)
-		      x))
-	    (bdf-get-bitmaps font-name code-list))))
+;; Called from ps-mule-generate-font.
+(defun bdf-generate-font (font-spec)
+  (let ((info (bdf-get-font-info (ps-mule-font-spec-name font-spec))))
+    (ps-mule-font-spec-set-extra
+     font-spec (bdf-info-absolute-path info))
+    (ps-mule-generate-bitmap-font font-spec
+				  (bdf-info-size info)
+				  (bdf-info-relative-compose info)
+				  (bdf-info-baseline-offset info)
+				  (bdf-info-font-bounding-box info))))
+
+;; Called from ps-mule-generate-glyph.
+(defun bdf-generate-glyph (font-spec char)
+  (let ((font-name (ps-mule-font-spec-extra font-spec))
+	(code (ps-mule-encode-char char font-spec)))
+    (ps-mule-generate-bitmap-glyph font-spec char code
+				   (bdf-get-bitmap font-name code))))
 
 (provide 'ps-bdf)
 
-;;; arch-tag: 9b875ba8-565a-4ecf-acaa-30cee732c898
+;; arch-tag: 9b875ba8-565a-4ecf-acaa-30cee732c898
 ;;; ps-bdf.el ends here

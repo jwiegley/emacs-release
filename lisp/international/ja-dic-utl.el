@@ -1,7 +1,7 @@
 ;;; ja-dic-utl.el --- utilities for handling Japanese dictionary (SKK-JISYO.L)
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008
+;;   2005, 2006, 2007, 2008, 2009
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -90,7 +88,9 @@
       (setq heads (cdr heads)))
     l))
 
-(defconst skkdic-jisx0208-hiragana-block (nth 1 (split-char ?あ)))
+(defconst skkdic-jisx0208-hiragana-block
+  (cons (decode-char 'japanese-jisx0208 #x2421)
+	(decode-char 'japanese-jisx0208 #x247E)))
 
 (defun skkdic-lookup-key (seq len &optional postfix prefer-noun)
   "Return a list of conversion string for sequence SEQ of length LEN.
@@ -130,14 +130,17 @@ LEIM is available from the same ftp directory as Emacs."))
     ;;   else VEC[N] is 128.
     (while (< i len)
       (let ((ch (aref seq i))
-	    elts)
-	(if (= ch ?ー)
-	    (aset vec i 0)
-	  (setq elts (split-char ch))
-	  (if (and (eq (car elts) 'japanese-jisx0208)
-		   (= (nth 1 elts) skkdic-jisx0208-hiragana-block))
-	      (aset vec i (- (nth 2 elts) 32))
-	    (aset vec i 128))))
+	    code)
+	(cond ((= ch ?ー)
+	       (aset vec i 0))
+	      ((and (>= ch (car skkdic-jisx0208-hiragana-block))
+		    (<= ch (cdr skkdic-jisx0208-hiragana-block)))
+	       (setq code (encode-char ch 'japanese-jisx0208))
+	       (if code
+		   (aset vec i (- (logand code #xFF) 32))
+		 (aset vec i 128)))
+	      (t
+	       (aset vec i 128))))
       (setq i (1+ i)))
 
     ;; Search OKURI-NASI entries.
@@ -219,5 +222,5 @@ LEIM is available from the same ftp directory as Emacs."))
 ;; coding: iso-2022-7bit
 ;; End:
 
-;;; arch-tag: df2218fa-469c-40f6-bace-7f89a053f9c0
+;; arch-tag: df2218fa-469c-40f6-bace-7f89a053f9c0
 ;;; ja-dic-utl.el ends here

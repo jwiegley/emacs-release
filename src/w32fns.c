@@ -1,14 +1,14 @@
 /* Graphical user interface functions for the Microsoft W32 API.
    Copyright (C) 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* Added by Kevin Gallo */
 
@@ -31,22 +29,23 @@ Boston, MA 02110-1301, USA.  */
 #include <math.h>
 
 #include "lisp.h"
-#include "charset.h"
-#include "dispextern.h"
 #include "w32term.h"
-#include "keyboard.h"
 #include "frame.h"
 #include "window.h"
 #include "buffer.h"
-#include "fontset.h"
 #include "intervals.h"
+#include "dispextern.h"
+#include "keyboard.h"
 #include "blockinput.h"
 #include "epaths.h"
-#include "w32heap.h"
-#include "termhooks.h"
+#include "character.h"
+#include "charset.h"
 #include "coding.h"
 #include "ccl.h"
+#include "fontset.h"
 #include "systime.h"
+#include "termhooks.h"
+#include "w32heap.h"
 
 #include "bitmaps/gray.xbm"
 
@@ -58,7 +57,15 @@ Boston, MA 02110-1301, USA.  */
 #include <objbase.h>
 
 #include <dlgs.h>
+#include <imm.h>
 #define FILE_NAME_TEXT_FIELD edt1
+
+#include "font.h"
+#include "w32font.h"
+
+#ifndef FOF_NO_CONNECTED_ELEMENTS
+#define FOF_NO_CONNECTED_ELEMENTS 0x2000
+#endif
 
 void syms_of_w32fns ();
 void globals_of_w32fns ();
@@ -68,7 +75,7 @@ extern double atof ();
 extern int w32_console_toggle_lock_key P_ ((int, Lisp_Object));
 extern void w32_menu_display_help P_ ((HWND, HMENU, UINT, UINT));
 extern void w32_free_menu_strings P_ ((HWND));
-extern XCharStruct *w32_per_char_metric P_ ((XFontStruct *, wchar_t *, int));
+extern const char *map_w32_filename P_ ((const char *, const char **));
 
 extern int quit_char;
 
@@ -136,31 +143,35 @@ int w32_mouse_button_tolerance;
 int w32_mouse_move_interval;
 
 /* Flag to indicate if XBUTTON events should be passed on to Windows.  */
-int w32_pass_extra_mouse_buttons_to_system;
+static int w32_pass_extra_mouse_buttons_to_system;
+
+/* Flag to indicate if media keys should be passed on to Windows.  */
+static int w32_pass_multimedia_buttons_to_system;
 
 /* Non nil if no window manager is in use.  */
 Lisp_Object Vx_no_window_manager;
 
-/* Non-zero means we're allowed to display a hourglass pointer.  */
+/* If non-zero, a w32 timer that, when it expires, displays an
+   hourglass cursor on all frames.  */
+static unsigned hourglass_timer = 0;
+static HWND hourglass_hwnd = NULL;
 
-int display_hourglass_p;
-
+#if 0 /* TODO: Mouse cursor customization.  */
 /* The background and shape of the mouse pointer, and shape when not
    over text or in the modeline.  */
-
 Lisp_Object Vx_pointer_shape, Vx_nontext_pointer_shape, Vx_mode_pointer_shape;
 Lisp_Object Vx_hourglass_pointer_shape, Vx_window_horizontal_drag_shape;
 
 /* The shape when over mouse-sensitive text.  */
 
 Lisp_Object Vx_sensitive_text_pointer_shape;
+#endif
 
 #ifndef IDC_HAND
 #define IDC_HAND MAKEINTRESOURCE(32649)
 #endif
 
 /* Color of chars displayed in cursor box.  */
-
 Lisp_Object Vx_cursor_fore_pixel;
 
 /* Nonzero if using Windows.  */
@@ -175,24 +186,17 @@ Lisp_Object Vx_pixel_size_width_font_regexp;
 Lisp_Object Vw32_bdf_filename_alist;
 
 /* A flag to control whether fonts are matched strictly or not.  */
-int w32_strict_fontnames;
+static int w32_strict_fontnames;
 
 /* A flag to control whether we should only repaint if GetUpdateRect
    indicates there is an update region.  */
-int w32_strict_painting;
-
-/* Associative list linking character set strings to Windows codepages. */
-Lisp_Object Vw32_charset_info_alist;
-
-/* VIETNAMESE_CHARSET is not defined in some versions of MSVC.  */
-#ifndef VIETNAMESE_CHARSET
-#define VIETNAMESE_CHARSET 163
-#endif
+static int w32_strict_painting;
 
 Lisp_Object Qnone;
 Lisp_Object Qsuppress_icon;
 Lisp_Object Qundefined_color;
 Lisp_Object Qcancel_timer;
+Lisp_Object Qfont_param;
 Lisp_Object Qhyper;
 Lisp_Object Qsuper;
 Lisp_Object Qmeta;
@@ -201,35 +205,6 @@ Lisp_Object Qctrl;
 Lisp_Object Qcontrol;
 Lisp_Object Qshift;
 
-Lisp_Object Qw32_charset_ansi;
-Lisp_Object Qw32_charset_default;
-Lisp_Object Qw32_charset_symbol;
-Lisp_Object Qw32_charset_shiftjis;
-Lisp_Object Qw32_charset_hangeul;
-Lisp_Object Qw32_charset_gb2312;
-Lisp_Object Qw32_charset_chinesebig5;
-Lisp_Object Qw32_charset_oem;
-
-#ifndef JOHAB_CHARSET
-#define JOHAB_CHARSET 130
-#endif
-#ifdef JOHAB_CHARSET
-Lisp_Object Qw32_charset_easteurope;
-Lisp_Object Qw32_charset_turkish;
-Lisp_Object Qw32_charset_baltic;
-Lisp_Object Qw32_charset_russian;
-Lisp_Object Qw32_charset_arabic;
-Lisp_Object Qw32_charset_greek;
-Lisp_Object Qw32_charset_hebrew;
-Lisp_Object Qw32_charset_vietnamese;
-Lisp_Object Qw32_charset_thai;
-Lisp_Object Qw32_charset_johab;
-Lisp_Object Qw32_charset_mac;
-#endif
-
-#ifdef UNICODE_CHARSET
-Lisp_Object Qw32_charset_unicode;
-#endif
 
 /* The ANSI codepage.  */
 int w32_ansi_code_page;
@@ -252,12 +227,46 @@ static unsigned mouse_move_timer = 0;
 /* Window that is tracking the mouse.  */
 static HWND track_mouse_window;
 
+/* Multi-monitor API definitions that are not pulled from the headers
+   since we are compiling for NT 4.  */
+#ifndef MONITOR_DEFAULT_TO_NEAREST
+#define MONITOR_DEFAULT_TO_NEAREST 2
+#endif
+/* MinGW headers define MONITORINFO unconditionally, but MSVC ones don't.
+   To avoid a compile error on one or the other, redefine with a new name.  */
+struct MONITOR_INFO
+{
+    DWORD   cbSize;
+    RECT    rcMonitor;
+    RECT    rcWork;
+    DWORD   dwFlags;
+};
+
+/* Reportedly, VS 6 does not have this in its headers.  */
+#if defined(_MSC_VER) && _MSC_VER < 1300
+DECLARE_HANDLE(HMONITOR);
+#endif
+
 typedef BOOL (WINAPI * TrackMouseEvent_Proc)
   (IN OUT LPTRACKMOUSEEVENT lpEventTrack);
+typedef LONG (WINAPI * ImmGetCompositionString_Proc)
+  (IN HIMC context, IN DWORD index, OUT LPVOID buffer, IN DWORD bufLen);
+typedef HIMC (WINAPI * ImmGetContext_Proc) (IN HWND window);
+typedef HMONITOR (WINAPI * MonitorFromPoint_Proc) (IN POINT pt, IN DWORD flags);
+typedef BOOL (WINAPI * GetMonitorInfo_Proc)
+  (IN HMONITOR monitor, OUT struct MONITOR_INFO* info);
 
 TrackMouseEvent_Proc track_mouse_event_fn = NULL;
 ClipboardSequence_Proc clipboard_sequence_fn = NULL;
+ImmGetCompositionString_Proc get_composition_string_fn = NULL;
+ImmGetContext_Proc get_ime_context_fn = NULL;
+MonitorFromPoint_Proc monitor_from_point_fn = NULL;
+GetMonitorInfo_Proc get_monitor_info_fn = NULL;
+
 extern AppendMenuW_Proc unicode_append_menu;
+
+/* Flag to selectively ignore WM_IME_CHAR messages.  */
+static int ignore_ime_char = 0;
 
 /* W95 mousewheel handler */
 unsigned int msh_mousewheel = 0;
@@ -266,6 +275,7 @@ unsigned int msh_mousewheel = 0;
 #define MOUSE_BUTTON_ID	1
 #define MOUSE_MOVE_ID	2
 #define MENU_FREE_ID 3
+#define HOURGLASS_ID 4
 /* The delay (milliseconds) before a menu is freed after WM_EXITMENULOOP
    is received.  */
 #define MENU_FREE_DELAY 1000
@@ -296,6 +306,15 @@ static HWND w32_visible_system_caret_hwnd;
 /* From w32menu.c  */
 extern HMENU current_popup_menu;
 static int menubar_in_use = 0;
+
+/* From w32uniscribe.c  */
+extern void syms_of_w32uniscribe ();
+extern int uniscribe_available;
+
+/* Function prototypes for hourglass support.  */
+static void w32_show_hourglass P_ ((struct frame *));
+static void w32_hide_hourglass P_ ((void));
+
 
 
 /* Error if we are not connected to MS-Windows.  */
@@ -377,16 +396,14 @@ x_window_to_frame (dpyinfo, wdesc)
   Lisp_Object tail, frame;
   struct frame *f;
 
-  for (tail = Vframe_list; GC_CONSP (tail); tail = XCDR (tail))
+  for (tail = Vframe_list; CONSP (tail); tail = XCDR (tail))
     {
       frame = XCAR (tail);
-      if (!GC_FRAMEP (frame))
+      if (!FRAMEP (frame))
         continue;
       f = XFRAME (frame);
       if (!FRAME_W32_P (f) || FRAME_W32_DISPLAY_INFO (f) != dpyinfo)
 	continue;
-      if (f->output_data.w32->hourglass_window == wdesc)
-        return f;
 
       if (FRAME_W32_WINDOW (f) == wdesc)
         return f;
@@ -488,53 +505,6 @@ if the entry is new.  */)
   UNBLOCK_INPUT;
 
   return (oldrgb);
-}
-
-DEFUN ("w32-load-color-file", Fw32_load_color_file,
-       Sw32_load_color_file, 1, 1, 0,
-       doc: /* Create an alist of color entries from an external file.
-Assign this value to `w32-color-map' to replace the existing color map.
-
-The file should define one named RGB color per line like so:
-  R G B   name
-where R,G,B are numbers between 0 and 255 and name is an arbitrary string.  */)
-    (filename)
-    Lisp_Object filename;
-{
-  FILE *fp;
-  Lisp_Object cmap = Qnil;
-  Lisp_Object abspath;
-
-  CHECK_STRING (filename);
-  abspath = Fexpand_file_name (filename, Qnil);
-
-  fp = fopen (SDATA (filename), "rt");
-  if (fp)
-    {
-      char buf[512];
-      int red, green, blue;
-      int num;
-
-      BLOCK_INPUT;
-
-      while (fgets (buf, sizeof (buf), fp) != NULL) {
-	if (sscanf (buf, "%u %u %u %n", &red, &green, &blue, &num) == 3)
-	  {
-	    char *name = buf + num;
-	    num = strlen (name) - 1;
-	    if (name[num] == '\n')
-	      name[num] = 0;
-	    cmap = Fcons (Fcons (build_string (name),
-				 make_number (RGB (red, green, blue))),
-			  cmap);
-	  }
-      }
-      fclose (fp);
-
-      UNBLOCK_INPUT;
-    }
-
-  return cmap;
 }
 
 /* The default colors for the w32 color map */
@@ -811,7 +781,7 @@ DEFUN ("w32-default-color-map", Fw32_default_color_map, Sw32_default_color_map,
   return (cmap);
 }
 
-Lisp_Object
+static Lisp_Object
 w32_to_x_color (rgb)
      Lisp_Object rgb;
 {
@@ -839,11 +809,11 @@ w32_color_map_lookup (colorname)
 
   BLOCK_INPUT;
 
-  for (tail = Vw32_color_map; !NILP (tail); tail = Fcdr (tail))
+  for (tail = Vw32_color_map; CONSP (tail); tail = XCDR (tail))
     {
       register Lisp_Object elt, tem;
 
-      elt = Fcar (tail);
+      elt = XCAR (tail);
       if (!CONSP (elt)) continue;
 
       tem = Fcar (elt);
@@ -1419,7 +1389,7 @@ x_set_mouse_color (f, arg, oldval)
 	&& mask_color == FRAME_BACKGROUND_PIXEL (f))
     f->output_data.w32->mouse_pixel = FRAME_FOREGROUND_PIXEL (f);
 
-#if 0 /* TODO : cursor changes */
+#if 0 /* TODO : Mouse cursor customization.  */
   BLOCK_INPUT;
 
   /* It's not okay to crash if the user selects a screwy cursor.  */
@@ -1812,10 +1782,8 @@ x_set_tool_bar_lines (f, value, oldval)
      below the menu bar.  */
   if (FRAME_W32_WINDOW (f) && FRAME_TOOL_BAR_LINES (f) == 0)
     {
-      updating_frame = f;
-      clear_frame ();
+      clear_frame (f);
       clear_current_matrices (f);
-      updating_frame = NULL;
     }
 
   /* If the tool bar gets smaller, the internal border below it
@@ -1971,32 +1939,8 @@ void x_set_scroll_bar_default_width (f)
 }
 
 
-/* Subroutines of creating a frame.  */
+/* Subroutines for creating a frame.  */
 
-
-/* Return the value of parameter PARAM.
-
-   First search ALIST, then Vdefault_frame_alist, then the X defaults
-   database, using ATTRIBUTE as the attribute name and CLASS as its class.
-
-   Convert the resource to the type specified by desired_type.
-
-   If no default is specified, return Qunbound.  If you call
-   w32_get_arg, make sure you deal with Qunbound in a reasonable way,
-   and don't let it get stored in any Lisp-visible variables!  */
-
-static Lisp_Object
-w32_get_arg (alist, param, attribute, class, type)
-     Lisp_Object alist, param;
-     char *attribute;
-     char *class;
-     enum resource_types type;
-{
-  return x_get_arg (check_x_display_info (Qnil),
-		    alist, param, attribute, class, type);
-}
-
-
 Cursor
 w32_load_cursor (LPCTSTR name)
 {
@@ -2015,7 +1959,7 @@ w32_load_cursor (LPCTSTR name)
 
 extern LRESULT CALLBACK w32_wnd_proc ();
 
-BOOL
+static BOOL
 w32_init_class (hinst)
      HINSTANCE hinst;
 {
@@ -2035,7 +1979,7 @@ w32_init_class (hinst)
   return (RegisterClass (&wc));
 }
 
-HWND
+static HWND
 w32_createscrollbar (f, bar)
      struct frame *f;
      struct scroll_bar * bar;
@@ -2052,7 +1996,7 @@ w32_createscrollbar (f, bar)
 			NULL));
 }
 
-void
+static void
 w32_createwindow (f)
      struct frame *f;
 {
@@ -2060,6 +2004,7 @@ w32_createwindow (f)
   RECT rect;
   Lisp_Object top = Qunbound;
   Lisp_Object left = Qunbound;
+  struct w32_display_info *dpyinfo = &one_w32_display_info;
 
   rect.left = rect.top = 0;
   rect.right = FRAME_PIXEL_WIDTH (f);
@@ -2084,8 +2029,8 @@ w32_createwindow (f)
     {
       /* When called with RES_TYPE_NUMBER, w32_get_arg will return zero
 	 for anything that is not a number and is not Qunbound.  */
-      left = w32_get_arg (Qnil, Qleft, "left", "Left", RES_TYPE_NUMBER);
-      top = w32_get_arg (Qnil, Qtop, "top", "Top", RES_TYPE_NUMBER);
+      left = x_get_arg (dpyinfo, Qnil, Qleft, "left", "Left", RES_TYPE_NUMBER);
+      top = x_get_arg (dpyinfo, Qnil, Qtop, "top", "Top", RES_TYPE_NUMBER);
     }
 
   FRAME_W32_WINDOW (f) = hwnd
@@ -2122,7 +2067,7 @@ w32_createwindow (f)
     }
 }
 
-void
+static void
 my_post_msg (wmsg, hwnd, msg, wParam, lParam)
      W32Msg * wmsg;
      HWND hwnd;
@@ -2354,7 +2299,7 @@ w32_key_to_modifier (int key)
   return 0;
 }
 
-unsigned int
+static unsigned int
 w32_get_modifiers ()
 {
   return ((modifier_set (VK_SHIFT)   ? shift_modifier : 0) |
@@ -2428,7 +2373,7 @@ map_keypad_keys (unsigned int virt_key, unsigned int extended)
    but Emacs should grab instead.  Not directly visible to lisp, to
    simplify synchronization.  Each item is an integer encoding a virtual
    key code and modifier combination to capture.  */
-Lisp_Object w32_grabbed_keys;
+static Lisp_Object w32_grabbed_keys;
 
 #define HOTKEY(vk, mods)      make_number (((vk) & 255) | ((mods) << 8))
 #define HOTKEY_ID(k)          (XFASTINT (k) & 0xbfff)
@@ -2449,8 +2394,8 @@ register_hot_keys (hwnd)
 {
   Lisp_Object keylist;
 
-  /* Use GC_CONSP, since we are called asynchronously.  */
-  for (keylist = w32_grabbed_keys; GC_CONSP (keylist); keylist = XCDR (keylist))
+  /* Use CONSP, since we are called asynchronously.  */
+  for (keylist = w32_grabbed_keys; CONSP (keylist); keylist = XCDR (keylist))
     {
       Lisp_Object key = XCAR (keylist);
 
@@ -2469,8 +2414,7 @@ unregister_hot_keys (hwnd)
 {
   Lisp_Object keylist;
 
-  /* Use GC_CONSP, since we are called asynchronously.  */
-  for (keylist = w32_grabbed_keys; GC_CONSP (keylist); keylist = XCDR (keylist))
+  for (keylist = w32_grabbed_keys; CONSP (keylist); keylist = XCDR (keylist))
     {
       Lisp_Object key = XCAR (keylist);
 
@@ -2577,8 +2521,12 @@ w32_msg_pump (deferred_msg * msg_buf)
 		  abort ();
 	      }
 	      break;
+#ifdef MSG_DEBUG
+              /* Broadcast messages make it here, so you need to be looking
+                 for something in particular for this to be useful.  */
 	    default:
 	      DebPrint (("msg %x not expected by w32_msg_pump\n", msg.message));
+#endif
 	    }
 	}
       else
@@ -2667,7 +2615,7 @@ complete_deferred_msg (HWND hwnd, UINT msg, LRESULT result)
   PostThreadMessage (dwWindowsThreadId, WM_NULL, 0, 0);
 }
 
-void
+static void
 cancel_all_deferred_msgs ()
 {
   deferred_msg * item;
@@ -2705,7 +2653,7 @@ w32_msg_worker (void *arg)
   dummy_buf.w32msg.msg.hwnd = NULL;
   dummy_buf.w32msg.msg.message = WM_NULL;
 
-  /* This is the inital message loop which should only exit when the
+  /* This is the initial message loop which should only exit when the
      application quits.  */
   w32_msg_pump (&dummy_buf);
 
@@ -2893,7 +2841,12 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
             EndPaint (hwnd, &paintStruct);
             leave_crit ();
 
-            my_post_msg (&wmsg, hwnd, msg, wParam, lParam);
+	    /* Change the message type to prevent Windows from
+	       combining WM_PAINT messages in the Lisp thread's queue,
+	       since Windows assumes that each message queue is
+	       dedicated to one frame and does not bother checking
+	       that hwnd matches before combining them.  */
+            my_post_msg (&wmsg, hwnd, WM_EMACS_PAINT, wParam, lParam);
 
             return 0;
           }
@@ -3150,7 +3103,6 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       if (windows_translate)
 	{
 	  MSG windows_msg = { hwnd, msg, wParam, lParam, 0, {0,0} };
-
 	  windows_msg.time = GetMessageTime ();
 	  TranslateMessage (&windows_msg);
 	  goto dflt;
@@ -3163,6 +3115,67 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       post_character_message (hwnd, msg, wParam, lParam,
 			      w32_get_key_modifiers (wParam, lParam));
       break;
+
+    case WM_UNICHAR:
+      /* WM_UNICHAR looks promising from the docs, but the exact
+         circumstances in which TranslateMessage sends it is one of those
+         Microsoft secret API things that EU and US courts are supposed
+         to have put a stop to already. Spy++ shows it being sent to Notepad
+         and other MS apps, but never to Emacs.
+
+         Some third party IMEs send it in accordance with the official
+         documentation though, so handle it here.
+
+         UNICODE_NOCHAR is used to test for support for this message.
+         TRUE indicates that the message is supported.  */
+      if (wParam == UNICODE_NOCHAR)
+        return TRUE;
+
+      {
+        W32Msg wmsg;
+        wmsg.dwModifiers = w32_get_key_modifiers (wParam, lParam);
+        signal_user_input ();
+        my_post_msg (&wmsg, hwnd, msg, wParam, lParam);
+      }
+      break;
+
+    case WM_IME_CHAR:
+      /* If we can't get the IME result as unicode, use default processing,
+         which will at least allow characters decodable in the system locale
+         get through.  */
+      if (!get_composition_string_fn)
+        goto dflt;
+
+      else if (!ignore_ime_char)
+        {
+          wchar_t * buffer;
+          int size, i;
+          W32Msg wmsg;
+          HIMC context = get_ime_context_fn (hwnd);
+          wmsg.dwModifiers = w32_get_key_modifiers (wParam, lParam);
+          /* Get buffer size.  */
+          size = get_composition_string_fn (context, GCS_RESULTSTR, buffer, 0);
+          buffer = alloca(size);
+          size = get_composition_string_fn (context, GCS_RESULTSTR,
+                                            buffer, size);
+          signal_user_input ();
+          for (i = 0; i < size / sizeof (wchar_t); i++)
+            {
+              my_post_msg (&wmsg, hwnd, WM_UNICHAR, (WPARAM) buffer[i],
+                           lParam);
+            }
+          /* Ignore the messages for the rest of the
+	     characters in the string that was output above.  */
+          ignore_ime_char = (size / sizeof (wchar_t)) - 1;
+        }
+      else
+	ignore_ime_char--;
+
+      break;
+
+    case WM_IME_ENDCOMPOSITION:
+      ignore_ime_char = 0;
+      goto dflt;
 
       /* Simulate middle mouse button events when left and right buttons
 	 are used together, but only if user has two button mouse. */
@@ -3372,16 +3385,24 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       return 0;
 
     case WM_MOUSEWHEEL:
-      wmsg.dwModifiers = w32_get_modifiers ();
-      my_post_msg (&wmsg, hwnd, msg, wParam, lParam);
-      signal_user_input ();
-      return 0;
-
     case WM_DROPFILES:
       wmsg.dwModifiers = w32_get_modifiers ();
       my_post_msg (&wmsg, hwnd, msg, wParam, lParam);
       signal_user_input ();
       return 0;
+
+    case WM_APPCOMMAND:
+      if (w32_pass_multimedia_buttons_to_system)
+        goto dflt;
+      /* Otherwise, pass to lisp, the same way we do with mousehwheel.  */
+    case WM_MOUSEHWHEEL:
+      wmsg.dwModifiers = w32_get_modifiers ();
+      my_post_msg (&wmsg, hwnd, msg, wParam, lParam);
+      signal_user_input ();
+      /* Non-zero must be returned when WM_MOUSEHWHEEL messages are
+         handled, to prevent the system trying to handle it by faking
+         scroll bar events.  */
+      return 1;
 
     case WM_TIMER:
       /* Flush out saved messages if necessary. */
@@ -3420,6 +3441,12 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
 	      f->output_data.w32->menubar_active = 0;
               menubar_in_use = 0;
 	    }
+	}
+      else if (wParam == hourglass_timer)
+	{
+	  KillTimer (hwnd, hourglass_timer);
+	  hourglass_timer = 0;
+	  w32_show_hourglass (x_window_to_frame (dpyinfo, hwnd));
 	}
       return 0;
 
@@ -3486,6 +3513,11 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       */
       if (f && menubar_in_use && current_popup_menu == NULL)
 	menu_free_timer = SetTimer (hwnd, MENU_FREE_ID, MENU_FREE_DELAY, NULL);
+
+      /* If hourglass cursor should be displayed, display it now.  */
+      if (f && f->output_data.w32->hourglass_p)
+	SetCursor (f->output_data.w32->hourglass_cursor);
+
       goto dflt;
 
     case WM_MENUSELECT:
@@ -3754,15 +3786,27 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
 
     case WM_SETCURSOR:
       if (LOWORD (lParam) == HTCLIENT)
-	return 0;
-
+	{
+	  f = x_window_to_frame (dpyinfo, hwnd);
+	  if (f->output_data.w32->hourglass_p && !menubar_in_use
+	      && !current_popup_menu)
+	    SetCursor (f->output_data.w32->hourglass_cursor);
+	  else
+	    SetCursor (f->output_data.w32->current_cursor);
+	  return 0;
+	}
       goto dflt;
 
     case WM_EMACS_SETCURSOR:
       {
 	Cursor cursor = (Cursor) wParam;
-	if (cursor)
-	  SetCursor (cursor);
+	f = x_window_to_frame (dpyinfo, hwnd);
+	if (f && cursor)
+	  {
+	    f->output_data.w32->current_cursor = cursor;
+	    if (!f->output_data.w32->hourglass_p)
+	      SetCursor (cursor);
+	  }
 	return 0;
       }
 
@@ -4035,11 +4079,12 @@ x_icon (f, parms)
      Lisp_Object parms;
 {
   Lisp_Object icon_x, icon_y;
+  struct w32_display_info *dpyinfo = &one_w32_display_info;
 
   /* Set the position of the icon.  Note that Windows 95 groups all
      icons in the tray.  */
-  icon_x = w32_get_arg (parms, Qicon_left, 0, 0, RES_TYPE_NUMBER);
-  icon_y = w32_get_arg (parms, Qicon_top, 0, 0, RES_TYPE_NUMBER);
+  icon_x = x_get_arg (dpyinfo, parms, Qicon_left, 0, 0, RES_TYPE_NUMBER);
+  icon_y = x_get_arg (dpyinfo, parms, Qicon_top, 0, 0, RES_TYPE_NUMBER);
   if (!EQ (icon_x, Qunbound) && !EQ (icon_y, Qunbound))
     {
       CHECK_NUMBER (icon_x);
@@ -4056,7 +4101,7 @@ x_icon (f, parms)
 #if 0 /* TODO */
   /* Start up iconic or window? */
   x_wm_set_window_state
-    (f, (EQ (w32_get_arg (parms, Qvisibility, 0, 0, RES_TYPE_SYMBOL), Qicon)
+    (f, (EQ (x_get_arg (dpyinfo, parms, Qvisibility, 0, 0, RES_TYPE_SYMBOL), Qicon)
 	 ? IconicState
 	 : NormalState));
 
@@ -4118,16 +4163,58 @@ unwind_create_frame (frame)
 
       x_free_frame_resources (f);
 
+#if GLYPH_DEBUG
       /* Check that reference counts are indeed correct.  */
       xassert (dpyinfo->reference_count == dpyinfo_refcount);
       xassert (dpyinfo->image_cache->refcount == image_cache_refcount);
-
+#endif
       return Qt;
     }
 
   return Qnil;
 }
 
+static void
+x_default_font_parameter (f, parms)
+     struct frame *f;
+     Lisp_Object parms;
+{
+  struct w32_display_info *dpyinfo = FRAME_W32_DISPLAY_INFO (f);
+  Lisp_Object font_param = x_get_arg (dpyinfo, parms, Qfont, NULL, NULL,
+				RES_TYPE_STRING);
+  Lisp_Object font;
+  if (EQ (font_param, Qunbound))
+    font_param = Qnil;
+  font = !NILP (font_param) ? font_param
+    : x_get_arg (dpyinfo, parms, Qfont, "font", "Font", RES_TYPE_STRING);
+
+  if (!STRINGP (font))
+    {
+      int i;
+      static char *names[]
+        = { "Courier New-10",
+            "-*-Courier-normal-r-*-*-13-*-*-*-c-*-iso8859-1",
+            "-*-Fixedsys-normal-r-*-*-12-*-*-*-c-*-iso8859-1",
+            "Fixedsys",
+            NULL };
+
+      for (i = 0; names[i]; i++)
+        {
+          font = font_open_by_name (f, names[i]);
+          if (! NILP (font))
+            break;
+        }
+      if (NILP (font))
+        error ("No suitable font was found");
+    }
+  else if (!NILP (font_param))
+    {
+      /* Remember the explicit font parameter, so we can re-apply it after
+	 we've applied the `default' face settings.  */
+      x_set_frame_parameters (f, Fcons (Fcons (Qfont_param, font_param), Qnil));
+    }
+  x_default_parameter (f, parms, Qfont, font, "font", "Font", RES_TYPE_STRING);
+}
 
 DEFUN ("x-create-frame", Fx_create_frame, Sx_create_frame,
        1, 1, 0,
@@ -4156,23 +4243,26 @@ This function is an internal primitive--use `make-frame' instead.  */)
   Lisp_Object parent;
   struct kboard *kb;
 
-  check_w32 ();
+  /* Make copy of frame parameters because the original is in pure
+     storage now. */
+  parameters = Fcopy_alist (parameters);
 
   /* Use this general default value to start with
      until we know if this frame has a specified name.  */
   Vx_resource_name = Vinvocation_name;
 
-  display = w32_get_arg (parameters, Qdisplay, 0, 0, RES_TYPE_STRING);
+  display = x_get_arg (dpyinfo, parameters, Qterminal, 0, 0, RES_TYPE_NUMBER);
+  if (EQ (display, Qunbound))
+    display = x_get_arg (dpyinfo, parameters, Qdisplay, 0, 0, RES_TYPE_STRING);
   if (EQ (display, Qunbound))
     display = Qnil;
   dpyinfo = check_x_display_info (display);
-#ifdef MULTI_KBOARD
-  kb = dpyinfo->kboard;
-#else
-  kb = &the_only_kboard;
-#endif
+  kb = dpyinfo->terminal->kboard;
 
-  name = w32_get_arg (parameters, Qname, "name", "Name", RES_TYPE_STRING);
+  if (!dpyinfo->terminal->name)
+    error ("Terminal is not live, can't create new frames on it");
+
+  name = x_get_arg (dpyinfo, parameters, Qname, "name", "Name", RES_TYPE_STRING);
   if (!STRINGP (name)
       && ! EQ (name, Qunbound)
       && ! NILP (name))
@@ -4182,7 +4272,7 @@ This function is an internal primitive--use `make-frame' instead.  */)
     Vx_resource_name = name;
 
   /* See if parent window is specified.  */
-  parent = w32_get_arg (parameters, Qparent_id, NULL, NULL, RES_TYPE_NUMBER);
+  parent = x_get_arg (dpyinfo, parameters, Qparent_id, NULL, NULL, RES_TYPE_NUMBER);
   if (EQ (parent, Qunbound))
     parent = Qnil;
   if (! NILP (parent))
@@ -4193,7 +4283,7 @@ This function is an internal primitive--use `make-frame' instead.  */)
      it to make_frame_without_minibuffer.  */
   frame = Qnil;
   GCPRO4 (parameters, parent, name, frame);
-  tem = w32_get_arg (parameters, Qminibuffer, "minibuffer", "Minibuffer",
+  tem = x_get_arg (dpyinfo, parameters, Qminibuffer, "minibuffer", "Minibuffer",
                      RES_TYPE_SYMBOL);
   if (EQ (tem, Qnone) || NILP (tem))
     f = make_frame_without_minibuffer (Qnil, kb, display);
@@ -4215,22 +4305,29 @@ This function is an internal primitive--use `make-frame' instead.  */)
   /* By default, make scrollbars the system standard width. */
   FRAME_CONFIG_SCROLL_BAR_WIDTH (f) = GetSystemMetrics (SM_CXVSCROLL);
 
+  f->terminal = dpyinfo->terminal;
+  f->terminal->reference_count++;
+
   f->output_method = output_w32;
   f->output_data.w32 =
     (struct w32_output *) xmalloc (sizeof (struct w32_output));
   bzero (f->output_data.w32, sizeof (struct w32_output));
   FRAME_FONTSET (f) = -1;
-  record_unwind_protect (unwind_create_frame, frame);
 
   f->icon_name
-    = w32_get_arg (parameters, Qicon_name, "iconName", "Title", RES_TYPE_STRING);
+    = x_get_arg (dpyinfo, parameters, Qicon_name, "iconName", "Title",
+                   RES_TYPE_STRING);
   if (! STRINGP (f->icon_name))
     f->icon_name = Qnil;
 
 /*  FRAME_W32_DISPLAY_INFO (f) = dpyinfo; */
-#ifdef MULTI_KBOARD
-  FRAME_KBOARD (f) = kb;
-#endif
+
+  /* With FRAME_X_DISPLAY_INFO set up, this unwind-protect is safe.  */
+  record_unwind_protect (unwind_create_frame, frame);
+#if GLYPH_DEBUG
+  image_cache_refcount = FRAME_IMAGE_CACHE (f)->refcount;
+  dpyinfo_refcount = dpyinfo->reference_count;
+#endif /* GLYPH_DEBUG */
 
   /* Specify the parent under which to make this window.  */
 
@@ -4260,49 +4357,28 @@ This function is an internal primitive--use `make-frame' instead.  */)
       specbind (Qx_resource_name, name);
     }
 
+  f->resx = dpyinfo->resx;
+  f->resy = dpyinfo->resy;
+
+  if (uniscribe_available)
+    register_font_driver (&uniscribe_font_driver, f);
+  register_font_driver (&w32font_driver, f);
+
+  x_default_parameter (f, parameters, Qfont_backend, Qnil,
+		       "fontBackend", "FontBackend", RES_TYPE_STRING);
   /* Extract the window parameters from the supplied values
      that are needed to determine window geometry.  */
-  {
-    Lisp_Object font;
-
-    font = w32_get_arg (parameters, Qfont, "font", "Font", RES_TYPE_STRING);
-
-    BLOCK_INPUT;
-    /* First, try whatever font the caller has specified.  */
-    if (STRINGP (font))
-      {
-        tem = Fquery_fontset (font, Qnil);
-        if (STRINGP (tem))
-          font = x_new_fontset (f, SDATA (tem));
-        else
-          font = x_new_font (f, SDATA (font));
-      }
-    /* Try out a font which we hope has bold and italic variations.  */
-    if (!STRINGP (font))
-      font = x_new_font (f, "-*-Courier New-normal-r-*-*-*-100-*-*-c-*-iso8859-1");
-    if (! STRINGP (font))
-      font = x_new_font (f, "-*-Courier-normal-r-*-*-13-*-*-*-c-*-iso8859-1");
-    /* If those didn't work, look for something which will at least work.  */
-    if (! STRINGP (font))
-      font = x_new_font (f, "-*-Fixedsys-normal-r-*-*-12-*-*-*-c-*-iso8859-1");
-    UNBLOCK_INPUT;
-    if (! STRINGP (font))
-      font = build_string ("Fixedsys");
-
-    x_default_parameter (f, parameters, Qfont, font,
-			 "font", "Font", RES_TYPE_STRING);
-  }
-
+  x_default_font_parameter (f, parameters);
   x_default_parameter (f, parameters, Qborder_width, make_number (2),
 		       "borderWidth", "BorderWidth", RES_TYPE_NUMBER);
-  /* This defaults to 2 in order to match xterm.  We recognize either
-     internalBorderWidth or internalBorder (which is what xterm calls
-     it).  */
+
+  /* We recognize either internalBorderWidth or internalBorder
+     (which is what xterm calls it).  */
   if (NILP (Fassq (Qinternal_border_width, parameters)))
     {
       Lisp_Object value;
 
-      value = w32_get_arg (parameters, Qinternal_border_width,
+      value = x_get_arg (dpyinfo, parameters, Qinternal_border_width,
                            "internalBorder", "InternalBorder", RES_TYPE_NUMBER);
       if (! EQ (value, Qunbound))
 	parameters = Fcons (Fcons (Qinternal_border_width, value),
@@ -4365,9 +4441,11 @@ This function is an internal primitive--use `make-frame' instead.  */)
   f->output_data.w32->hourglass_cursor = w32_load_cursor (IDC_WAIT);
   f->output_data.w32->horizontal_drag_cursor = w32_load_cursor (IDC_SIZEWE);
 
+  f->output_data.w32->current_cursor = f->output_data.w32->nontext_cursor;
+
   window_prompting = x_figure_window_size (f, parameters, 1);
 
-  tem = w32_get_arg (parameters, Qunsplittable, 0, 0, RES_TYPE_BOOLEAN);
+  tem = x_get_arg (dpyinfo, parameters, Qunsplittable, 0, 0, RES_TYPE_BOOLEAN);
   f->no_split = minibuffer_only || EQ (tem, Qt);
 
   w32_window (f, window_prompting, minibuffer_only);
@@ -4392,6 +4470,8 @@ This function is an internal primitive--use `make-frame' instead.  */)
 		       "cursorType", "CursorType", RES_TYPE_SYMBOL);
   x_default_parameter (f, parameters, Qscroll_bar_width, Qnil,
 		       "scrollBarWidth", "ScrollBarWidth", RES_TYPE_NUMBER);
+  x_default_parameter (f, parameters, Qalpha, Qnil,
+                       "alpha", "Alpha", RES_TYPE_NUMBER);
 
   /* Dimensions, especially FRAME_LINES (f), must be done via change_frame_size.
      Change will not be effected unless different from the current
@@ -4417,7 +4497,7 @@ This function is an internal primitive--use `make-frame' instead.  */)
     {
       Lisp_Object visibility;
 
-      visibility = w32_get_arg (parameters, Qvisibility, 0, 0, RES_TYPE_SYMBOL);
+      visibility = x_get_arg (dpyinfo, parameters, Qvisibility, 0, 0, RES_TYPE_SYMBOL);
       if (EQ (visibility, Qunbound))
 	visibility = Qt;
 
@@ -4429,6 +4509,20 @@ This function is an internal primitive--use `make-frame' instead.  */)
 	/* Must have been Qnil.  */
 	;
     }
+
+  /* Initialize `default-minibuffer-frame' in case this is the first
+     frame on this terminal.  */
+  if (FRAME_HAS_MINIBUF_P (f)
+      && (!FRAMEP (kb->Vdefault_minibuffer_frame)
+          || !FRAME_LIVE_P (XFRAME (kb->Vdefault_minibuffer_frame))))
+    kb->Vdefault_minibuffer_frame = frame;
+
+  /* All remaining specified parameters, which have not been "used"
+     by x_get_arg and friends, now go in the misc. alist of the frame.  */
+  for (tem = parameters; CONSP (tem); tem = XCDR (tem))
+    if (CONSP (XCAR (tem)) && !NILP (XCAR (XCAR (tem))))
+      f->param_alist = Fcons (XCAR (tem), f->param_alist);
+
   UNGCPRO;
 
   /* Make sure windows on this frame appear in calls to next-window
@@ -4454,1882 +4548,13 @@ x_get_focus_frame (frame)
   return xfocus;
 }
 
-DEFUN ("w32-focus-frame", Fw32_focus_frame, Sw32_focus_frame, 1, 1, 0,
+DEFUN ("x-focus-frame", Fx_focus_frame, Sx_focus_frame, 1, 1, 0,
        doc: /* Give FRAME input focus, raising to foreground if necessary.  */)
   (frame)
      Lisp_Object frame;
 {
   x_focus_on_frame (check_x_frame (frame));
   return Qnil;
-}
-
-
-/* Return the charset portion of a font name.  */
-char *
-xlfd_charset_of_font (char * fontname)
-{
-  char *charset, *encoding;
-
-  encoding = strrchr (fontname, '-');
-  if (!encoding || encoding == fontname)
-    return NULL;
-
-  for (charset = encoding - 1; charset >= fontname; charset--)
-    if (*charset == '-')
-      break;
-
-  if (charset == fontname || strcmp (charset, "-*-*") == 0)
-    return NULL;
-
-  return charset + 1;
-}
-
-struct font_info *w32_load_bdf_font (struct frame *f, char *fontname,
-                                     int size, char* filename);
-static Lisp_Object w32_list_bdf_fonts (Lisp_Object pattern, int max_names);
-static BOOL w32_to_x_font (LOGFONT * lplf, char * lpxstr, int len,
-			   char * charset);
-static BOOL x_to_w32_font (char *lpxstr, LOGFONT *lplogfont);
-
-static struct font_info *
-w32_load_system_font (f, fontname, size)
-     struct frame *f;
-     char * fontname;
-     int size;
-{
-  struct w32_display_info *dpyinfo = FRAME_W32_DISPLAY_INFO (f);
-  Lisp_Object font_names;
-
-  /* Get a list of all the fonts that match this name.  Once we
-     have a list of matching fonts, we compare them against the fonts
-     we already have loaded by comparing names.  */
-  font_names = w32_list_fonts (f, build_string (fontname), size, 100);
-
-  if (!NILP (font_names))
-  {
-      Lisp_Object tail;
-      int i;
-
-      /* First check if any are already loaded, as that is cheaper
-         than loading another one. */
-      for (i = 0; i < dpyinfo->n_fonts; i++)
-	for (tail = font_names; CONSP (tail); tail = XCDR (tail))
-	  if (dpyinfo->font_table[i].name
-              && (!strcmp (dpyinfo->font_table[i].name,
-                           SDATA (XCAR (tail)))
-                  || !strcmp (dpyinfo->font_table[i].full_name,
-                              SDATA (XCAR (tail)))))
-	    return (dpyinfo->font_table + i);
-
-      fontname = (char *) SDATA (XCAR (font_names));
-    }
-  else if (w32_strict_fontnames)
-    {
-      /* If EnumFontFamiliesEx was available, we got a full list of
-         fonts back so stop now to avoid the possibility of loading a
-         random font.  If we had to fall back to EnumFontFamilies, the
-         list is incomplete, so continue whether the font we want was
-         listed or not. */
-      HMODULE gdi32 = GetModuleHandle ("gdi32.dll");
-      FARPROC enum_font_families_ex
-        = GetProcAddress (gdi32, "EnumFontFamiliesExA");
-      if (enum_font_families_ex)
-        return NULL;
-    }
-
-  /* Load the font and add it to the table. */
-  {
-    char *full_name, *encoding, *charset;
-    XFontStruct *font;
-    struct font_info *fontp;
-    LOGFONT lf;
-    BOOL ok;
-    int codepage;
-    int i;
-
-    if (!fontname || !x_to_w32_font (fontname, &lf))
-      return (NULL);
-
-    if (!*lf.lfFaceName)
-        /* If no name was specified for the font, we get a random font
-           from CreateFontIndirect - this is not particularly
-           desirable, especially since CreateFontIndirect does not
-           fill out the missing name in lf, so we never know what we
-           ended up with. */
-      return NULL;
-
-    lf.lfQuality = DEFAULT_QUALITY;
-
-    font = (XFontStruct *) xmalloc (sizeof (XFontStruct));
-    bzero (font, sizeof (*font));
-
-    /* Set bdf to NULL to indicate that this is a Windows font.  */
-    font->bdf = NULL;
-
-    BLOCK_INPUT;
-
-    font->hfont = CreateFontIndirect (&lf);
-
-    if (font->hfont == NULL)
-      {
-	ok = FALSE;
-      }
-    else
-      {
-	HDC hdc;
-	HANDLE oldobj;
-
-        codepage = w32_codepage_for_font (fontname);
-
-	hdc = GetDC (dpyinfo->root_window);
-	oldobj = SelectObject (hdc, font->hfont);
-
-	ok = GetTextMetrics (hdc, &font->tm);
-        if (codepage == CP_UNICODE)
-          font->double_byte_p = 1;
-        else
-	  {
-	    /* Unfortunately, some fonts (eg. MingLiU, a big5 ttf font)
-               don't report themselves as double byte fonts, when
-               patently they are.  So instead of trusting
-               GetFontLanguageInfo, we check the properties of the
-               codepage directly, since that is ultimately what we are
-               working from anyway.  */
-	    /* font->double_byte_p = GetFontLanguageInfo (hdc) & GCP_DBCS; */
-	    CPINFO cpi = {0};
-	    GetCPInfo (codepage, &cpi);
-	    font->double_byte_p = cpi.MaxCharSize > 1;
-	  }
-
-	SelectObject (hdc, oldobj);
-	ReleaseDC (dpyinfo->root_window, hdc);
-        /* Fill out details in lf according to the font that was
-           actually loaded.  */
-        lf.lfHeight = font->tm.tmInternalLeading - font->tm.tmHeight;
-        lf.lfWidth = font->tm.tmMaxCharWidth;
-        lf.lfWeight = font->tm.tmWeight;
-        lf.lfItalic = font->tm.tmItalic;
-        lf.lfCharSet = font->tm.tmCharSet;
-        lf.lfPitchAndFamily = ((font->tm.tmPitchAndFamily & TMPF_FIXED_PITCH)
-                               ? VARIABLE_PITCH : FIXED_PITCH);
-        lf.lfOutPrecision = ((font->tm.tmPitchAndFamily & TMPF_VECTOR)
-                             ? OUT_STROKE_PRECIS : OUT_STRING_PRECIS);
-
-	w32_cache_char_metrics (font);
-      }
-
-    UNBLOCK_INPUT;
-
-    if (!ok)
-      {
-	w32_unload_font (dpyinfo, font);
-	return (NULL);
-      }
-
-    /* Find a free slot in the font table.  */
-    for (i = 0; i < dpyinfo->n_fonts; ++i)
-      if (dpyinfo->font_table[i].name == NULL)
-	break;
-
-    /* If no free slot found, maybe enlarge the font table.  */
-    if (i == dpyinfo->n_fonts
-	&& dpyinfo->n_fonts == dpyinfo->font_table_size)
-      {
-	int sz;
-	dpyinfo->font_table_size = max (16, 2 * dpyinfo->font_table_size);
-	sz = dpyinfo->font_table_size * sizeof *dpyinfo->font_table;
-	dpyinfo->font_table
-	  = (struct font_info *) xrealloc (dpyinfo->font_table, sz);
-      }
-
-    fontp = dpyinfo->font_table + i;
-    if (i == dpyinfo->n_fonts)
-      ++dpyinfo->n_fonts;
-
-    /* Now fill in the slots of *FONTP.  */
-    BLOCK_INPUT;
-    bzero (fontp, sizeof (*fontp));
-    fontp->font = font;
-    fontp->font_idx = i;
-    fontp->name = (char *) xmalloc (strlen (fontname) + 1);
-    bcopy (fontname, fontp->name, strlen (fontname) + 1);
-
-    if (lf.lfPitchAndFamily == FIXED_PITCH)
-      {
-	/* Fixed width font.  */
-	fontp->average_width = fontp->space_width = FONT_WIDTH (font);
-      }
-    else
-      {
-	wchar_t space = 32;
-	XCharStruct* pcm;
-	pcm = w32_per_char_metric (font, &space, ANSI_FONT);
-	if (pcm)
-	  fontp->space_width = pcm->width;
-	else
-	  fontp->space_width = FONT_WIDTH (font);
-
-	fontp->average_width = font->tm.tmAveCharWidth;
-      }
-
-    charset = xlfd_charset_of_font (fontname);
-
-  /* Cache the W32 codepage for a font.  This makes w32_encode_char
-     (called for every glyph during redisplay) much faster.  */
-    fontp->codepage = codepage;
-
-    /* Work out the font's full name.  */
-    full_name = (char *)xmalloc (100);
-    if (full_name && w32_to_x_font (&lf, full_name, 100, charset))
-        fontp->full_name = full_name;
-    else
-      {
-        /* If all else fails - just use the name we used to load it.  */
-        xfree (full_name);
-        fontp->full_name = fontp->name;
-      }
-
-    fontp->size = FONT_WIDTH (font);
-    fontp->height = FONT_HEIGHT (font);
-
-    /* The slot `encoding' specifies how to map a character
-       code-points (0x20..0x7F or 0x2020..0x7F7F) of each charset to
-       the font code-points (0:0x20..0x7F, 1:0xA0..0xFF), or
-       (0:0x20..0x7F, 1:0xA0..0xFF,
-       (0:0x2020..0x7F7F, 1:0xA0A0..0xFFFF, 3:0x20A0..0x7FFF,
-       2:0xA020..0xFF7F).  For the moment, we don't know which charset
-       uses this font.  So, we set information in fontp->encoding[1]
-       which is never used by any charset.  If mapping can't be
-       decided, set FONT_ENCODING_NOT_DECIDED.  */
-
-    /* SJIS fonts need to be set to type 4, all others seem to work as
-       type FONT_ENCODING_NOT_DECIDED.  */
-    encoding = strrchr (fontp->name, '-');
-    if (encoding && strnicmp (encoding+1, "sjis", 4) == 0)
-      fontp->encoding[1] = 4;
-    else
-      fontp->encoding[1] = FONT_ENCODING_NOT_DECIDED;
-
-    /* The following three values are set to 0 under W32, which is
-       what they get set to if XGetFontProperty fails under X.  */
-    fontp->baseline_offset = 0;
-    fontp->relative_compose = 0;
-    fontp->default_ascent = 0;
-
-    /* Set global flag fonts_changed_p to non-zero if the font loaded
-       has a character with a smaller width than any other character
-       before, or if the font loaded has a smaller height than any
-       other font loaded before.  If this happens, it will make a
-       glyph matrix reallocation necessary.  */
-    fonts_changed_p |= x_compute_min_glyph_bounds (f);
-    UNBLOCK_INPUT;
-    return fontp;
-  }
-}
-
-/* Load font named FONTNAME of size SIZE for frame F, and return a
-   pointer to the structure font_info while allocating it dynamically.
-   If loading fails, return NULL. */
-struct font_info *
-w32_load_font (f, fontname, size)
-     struct frame *f;
-     char * fontname;
-     int size;
-{
-  Lisp_Object bdf_fonts;
-  struct font_info *retval = NULL;
-  struct w32_display_info *dpyinfo = FRAME_W32_DISPLAY_INFO (f);
-
-  bdf_fonts = w32_list_bdf_fonts (build_string (fontname), 1);
-
-  while (!retval && CONSP (bdf_fonts))
-    {
-      char *bdf_name, *bdf_file;
-      Lisp_Object bdf_pair;
-      int i;
-
-      bdf_name = SDATA (XCAR (bdf_fonts));
-      bdf_pair = Fassoc (XCAR (bdf_fonts), Vw32_bdf_filename_alist);
-      bdf_file = SDATA (XCDR (bdf_pair));
-
-      // If the font is already loaded, do not load it again.
-      for (i = 0; i < dpyinfo->n_fonts; i++)
-	{
-	  if ((dpyinfo->font_table[i].name
-	       && !strcmp (dpyinfo->font_table[i].name, bdf_name))
-	      || (dpyinfo->font_table[i].full_name
-		  && !strcmp (dpyinfo->font_table[i].full_name, bdf_name)))
-	    return dpyinfo->font_table + i;
-	}
-
-      retval = w32_load_bdf_font (f, bdf_name, size, bdf_file);
-
-      bdf_fonts = XCDR (bdf_fonts);
-    }
-
-  if (retval)
-    return retval;
-
-  return w32_load_system_font (f, fontname, size);
-}
-
-
-void
-w32_unload_font (dpyinfo, font)
-     struct w32_display_info *dpyinfo;
-     XFontStruct * font;
-{
-  if (font)
-    {
-      if (font->per_char) xfree (font->per_char);
-      if (font->bdf) w32_free_bdf_font (font->bdf);
-
-      if (font->hfont) DeleteObject (font->hfont);
-      xfree (font);
-    }
-}
-
-/* The font conversion stuff between x and w32 */
-
-/* X font string is as follows (from faces.el)
- * (let ((- 		"[-?]")
- *      (foundry	"[^-]+")
- *      (family 	"[^-]+")
- *      (weight		"\\(bold\\|demibold\\|medium\\)")		; 1
- *      (weight\?	"\\([^-]*\\)")					; 1
- *      (slant		"\\([ior]\\)")					; 2
- *      (slant\?	"\\([^-]?\\)")					; 2
- *      (swidth		"\\([^-]*\\)")					; 3
- *      (adstyle	"[^-]*")					; 4
- *      (pixelsize	"[0-9]+")
- *      (pointsize	"[0-9][0-9]+")
- *      (resx		"[0-9][0-9]+")
- *      (resy		"[0-9][0-9]+")
- *      (spacing	"[cmp?*]")
- *      (avgwidth	"[0-9]+")
- *      (registry	"[^-]+")
- *      (encoding	"[^-]+")
- *      )
- */
-
-static LONG
-x_to_w32_weight (lpw)
-     char * lpw;
-{
-  if (!lpw) return (FW_DONTCARE);
-
-  if (stricmp (lpw, "heavy") == 0)             return FW_HEAVY;
-  else if (stricmp (lpw, "extrabold") == 0)    return FW_EXTRABOLD;
-  else if (stricmp (lpw, "bold") == 0)         return FW_BOLD;
-  else if (stricmp (lpw, "demibold") == 0)     return FW_SEMIBOLD;
-  else if (stricmp (lpw, "semibold") == 0)     return FW_SEMIBOLD;
-  else if (stricmp (lpw, "medium") == 0)       return FW_MEDIUM;
-  else if (stricmp (lpw, "normal") == 0)       return FW_NORMAL;
-  else if (stricmp (lpw, "light") == 0)        return FW_LIGHT;
-  else if (stricmp (lpw, "extralight") == 0)   return FW_EXTRALIGHT;
-  else if (stricmp (lpw, "thin") == 0)         return FW_THIN;
-  else
-    return FW_DONTCARE;
-}
-
-
-static char *
-w32_to_x_weight (fnweight)
-     int fnweight;
-{
-  if (fnweight >= FW_HEAVY)      return "heavy";
-  if (fnweight >= FW_EXTRABOLD)  return "extrabold";
-  if (fnweight >= FW_BOLD)       return "bold";
-  if (fnweight >= FW_SEMIBOLD)   return "demibold";
-  if (fnweight >= FW_MEDIUM)     return "medium";
-  if (fnweight >= FW_NORMAL)     return "normal";
-  if (fnweight >= FW_LIGHT)      return "light";
-  if (fnweight >= FW_EXTRALIGHT) return "extralight";
-  if (fnweight >= FW_THIN)       return "thin";
-  else
-    return "*";
-}
-
-static LONG
-x_to_w32_charset (lpcs)
-    char * lpcs;
-{
-  Lisp_Object this_entry, w32_charset;
-  char *charset;
-  int len = strlen (lpcs);
-
-  /* Support "*-#nnn" format for unknown charsets.  */
-  if (strncmp (lpcs, "*-#", 3) == 0)
-    return atoi (lpcs + 3);
-
-  /* Handle wildcards by ignoring them; eg. treat "big5*-*" as "big5".  */
-  charset = alloca (len + 1);
-  strcpy (charset, lpcs);
-  lpcs = strchr (charset, '*');
-  if (lpcs)
-    *lpcs = 0;
-
-  /* Look through w32-charset-info-alist for the character set.
-     Format of each entry is
-       (CHARSET_NAME . (WINDOWS_CHARSET . CODEPAGE)).
-  */
-  this_entry = Fassoc (build_string (charset), Vw32_charset_info_alist);
-
-  if (NILP (this_entry))
-    {
-      /* At startup, we want iso8859-1 fonts to come up properly. */
-      if (stricmp (charset, "iso8859-1") == 0)
-        return ANSI_CHARSET;
-      else
-        return DEFAULT_CHARSET;
-    }
-
-  w32_charset = Fcar (Fcdr (this_entry));
-
-  /* Translate Lisp symbol to number.  */
-  if (EQ (w32_charset, Qw32_charset_ansi))
-    return ANSI_CHARSET;
-  if (EQ (w32_charset, Qw32_charset_symbol))
-    return SYMBOL_CHARSET;
-  if (EQ (w32_charset, Qw32_charset_shiftjis))
-    return SHIFTJIS_CHARSET;
-  if (EQ (w32_charset, Qw32_charset_hangeul))
-    return HANGEUL_CHARSET;
-  if (EQ (w32_charset, Qw32_charset_chinesebig5))
-    return CHINESEBIG5_CHARSET;
-  if (EQ (w32_charset, Qw32_charset_gb2312))
-    return GB2312_CHARSET;
-  if (EQ (w32_charset, Qw32_charset_oem))
-    return OEM_CHARSET;
-#ifdef JOHAB_CHARSET
-  if (EQ (w32_charset, Qw32_charset_johab))
-    return JOHAB_CHARSET;
-  if (EQ (w32_charset, Qw32_charset_easteurope))
-    return EASTEUROPE_CHARSET;
-  if (EQ (w32_charset, Qw32_charset_turkish))
-    return TURKISH_CHARSET;
-  if (EQ (w32_charset, Qw32_charset_baltic))
-    return BALTIC_CHARSET;
-  if (EQ (w32_charset, Qw32_charset_russian))
-    return RUSSIAN_CHARSET;
-  if (EQ (w32_charset, Qw32_charset_arabic))
-    return ARABIC_CHARSET;
-  if (EQ (w32_charset, Qw32_charset_greek))
-    return GREEK_CHARSET;
-  if (EQ (w32_charset, Qw32_charset_hebrew))
-    return HEBREW_CHARSET;
-  if (EQ (w32_charset, Qw32_charset_vietnamese))
-    return VIETNAMESE_CHARSET;
-  if (EQ (w32_charset, Qw32_charset_thai))
-    return THAI_CHARSET;
-  if (EQ (w32_charset, Qw32_charset_mac))
-    return MAC_CHARSET;
-#endif /* JOHAB_CHARSET */
-#ifdef UNICODE_CHARSET
-  if (EQ (w32_charset, Qw32_charset_unicode))
-    return UNICODE_CHARSET;
-#endif
-
-  return DEFAULT_CHARSET;
-}
-
-
-static char *
-w32_to_x_charset (fncharset)
-    int fncharset;
-{
-  static char buf[32];
-  Lisp_Object charset_type;
-
-  switch (fncharset)
-    {
-    case ANSI_CHARSET:
-      /* Handle startup case of w32-charset-info-alist not
-         being set up yet. */
-      if (NILP (Vw32_charset_info_alist))
-        return "iso8859-1";
-      charset_type = Qw32_charset_ansi;
-      break;
-    case DEFAULT_CHARSET:
-      charset_type = Qw32_charset_default;
-      break;
-    case SYMBOL_CHARSET:
-      charset_type = Qw32_charset_symbol;
-      break;
-    case SHIFTJIS_CHARSET:
-      charset_type = Qw32_charset_shiftjis;
-      break;
-    case HANGEUL_CHARSET:
-      charset_type = Qw32_charset_hangeul;
-      break;
-    case GB2312_CHARSET:
-      charset_type = Qw32_charset_gb2312;
-      break;
-    case CHINESEBIG5_CHARSET:
-      charset_type = Qw32_charset_chinesebig5;
-      break;
-    case OEM_CHARSET:
-      charset_type = Qw32_charset_oem;
-      break;
-
-      /* More recent versions of Windows (95 and NT4.0) define more
-         character sets.  */
-#ifdef EASTEUROPE_CHARSET
-    case EASTEUROPE_CHARSET:
-      charset_type = Qw32_charset_easteurope;
-      break;
-    case TURKISH_CHARSET:
-      charset_type = Qw32_charset_turkish;
-      break;
-    case BALTIC_CHARSET:
-      charset_type = Qw32_charset_baltic;
-      break;
-    case RUSSIAN_CHARSET:
-      charset_type = Qw32_charset_russian;
-      break;
-    case ARABIC_CHARSET:
-      charset_type = Qw32_charset_arabic;
-      break;
-    case GREEK_CHARSET:
-      charset_type = Qw32_charset_greek;
-      break;
-    case HEBREW_CHARSET:
-      charset_type = Qw32_charset_hebrew;
-      break;
-    case VIETNAMESE_CHARSET:
-      charset_type = Qw32_charset_vietnamese;
-      break;
-    case THAI_CHARSET:
-      charset_type = Qw32_charset_thai;
-      break;
-    case MAC_CHARSET:
-      charset_type = Qw32_charset_mac;
-      break;
-    case JOHAB_CHARSET:
-      charset_type = Qw32_charset_johab;
-      break;
-#endif
-
-#ifdef UNICODE_CHARSET
-    case UNICODE_CHARSET:
-      charset_type = Qw32_charset_unicode;
-      break;
-#endif
-    default:
-      /* Encode numerical value of unknown charset.  */
-      sprintf (buf, "*-#%u", fncharset);
-      return buf;
-    }
-
-  {
-    Lisp_Object rest;
-    char * best_match = NULL;
-
-    /* Look through w32-charset-info-alist for the character set.
-       Prefer ISO codepages, and prefer lower numbers in the ISO
-       range. Only return charsets for codepages which are installed.
-
-       Format of each entry is
-         (CHARSET_NAME . (WINDOWS_CHARSET . CODEPAGE)).
-    */
-    for (rest = Vw32_charset_info_alist; CONSP (rest); rest = XCDR (rest))
-      {
-        char * x_charset;
-        Lisp_Object w32_charset;
-        Lisp_Object codepage;
-
-        Lisp_Object this_entry = XCAR (rest);
-
-        /* Skip invalid entries in alist. */
-        if (!CONSP (this_entry) || !STRINGP (XCAR (this_entry))
-            || !CONSP (XCDR (this_entry))
-            || !SYMBOLP (XCAR (XCDR (this_entry))))
-          continue;
-
-        x_charset = SDATA (XCAR (this_entry));
-        w32_charset = XCAR (XCDR (this_entry));
-        codepage = XCDR (XCDR (this_entry));
-
-        /* Look for Same charset and a valid codepage (or non-int
-           which means ignore).  */
-        if (EQ (w32_charset, charset_type)
-            && (!INTEGERP (codepage) || XINT (codepage) == CP_DEFAULT
-                || IsValidCodePage (XINT (codepage))))
-          {
-            /* If we don't have a match already, then this is the
-               best.  */
-            if (!best_match)
-              best_match = x_charset;
-            /* If this is an ISO codepage, and the best so far isn't,
-               then this is better.  */
-            else if (strnicmp (best_match, "iso", 3) != 0
-                     && strnicmp (x_charset, "iso", 3) == 0)
-              best_match = x_charset;
-            /* If both are ISO8859 codepages, choose the one with the
-               lowest number in the encoding field.  */
-            else if (strnicmp (best_match, "iso8859-", 8) == 0
-                     && strnicmp (x_charset, "iso8859-", 8) == 0)
-              {
-                int best_enc = atoi (best_match + 8);
-                int this_enc = atoi (x_charset + 8);
-                if (this_enc > 0 && this_enc < best_enc)
-                  best_match = x_charset;
-              }
-          }
-      }
-
-    /* If no match, encode the numeric value. */
-    if (!best_match)
-      {
-        sprintf (buf, "*-#%u", fncharset);
-        return buf;
-      }
-
-    strncpy (buf, best_match, 31);
-    buf[31] = '\0';
-    return buf;
-  }
-}
-
-
-/* Return all the X charsets that map to a font.  */
-static Lisp_Object
-w32_to_all_x_charsets (fncharset)
-    int fncharset;
-{
-  static char buf[32];
-  Lisp_Object charset_type;
-  Lisp_Object retval = Qnil;
-
-  switch (fncharset)
-    {
-    case ANSI_CHARSET:
-      /* Handle startup case of w32-charset-info-alist not
-         being set up yet. */
-      if (NILP (Vw32_charset_info_alist))
-        return Fcons (build_string ("iso8859-1"), Qnil);
-
-      charset_type = Qw32_charset_ansi;
-      break;
-    case DEFAULT_CHARSET:
-      charset_type = Qw32_charset_default;
-      break;
-    case SYMBOL_CHARSET:
-      charset_type = Qw32_charset_symbol;
-      break;
-    case SHIFTJIS_CHARSET:
-      charset_type = Qw32_charset_shiftjis;
-      break;
-    case HANGEUL_CHARSET:
-      charset_type = Qw32_charset_hangeul;
-      break;
-    case GB2312_CHARSET:
-      charset_type = Qw32_charset_gb2312;
-      break;
-    case CHINESEBIG5_CHARSET:
-      charset_type = Qw32_charset_chinesebig5;
-      break;
-    case OEM_CHARSET:
-      charset_type = Qw32_charset_oem;
-      break;
-
-      /* More recent versions of Windows (95 and NT4.0) define more
-         character sets.  */
-#ifdef EASTEUROPE_CHARSET
-    case EASTEUROPE_CHARSET:
-      charset_type = Qw32_charset_easteurope;
-      break;
-    case TURKISH_CHARSET:
-      charset_type = Qw32_charset_turkish;
-      break;
-    case BALTIC_CHARSET:
-      charset_type = Qw32_charset_baltic;
-      break;
-    case RUSSIAN_CHARSET:
-      charset_type = Qw32_charset_russian;
-      break;
-    case ARABIC_CHARSET:
-      charset_type = Qw32_charset_arabic;
-      break;
-    case GREEK_CHARSET:
-      charset_type = Qw32_charset_greek;
-      break;
-    case HEBREW_CHARSET:
-      charset_type = Qw32_charset_hebrew;
-      break;
-    case VIETNAMESE_CHARSET:
-      charset_type = Qw32_charset_vietnamese;
-      break;
-    case THAI_CHARSET:
-      charset_type = Qw32_charset_thai;
-      break;
-    case MAC_CHARSET:
-      charset_type = Qw32_charset_mac;
-      break;
-    case JOHAB_CHARSET:
-      charset_type = Qw32_charset_johab;
-      break;
-#endif
-
-#ifdef UNICODE_CHARSET
-    case UNICODE_CHARSET:
-      charset_type = Qw32_charset_unicode;
-      break;
-#endif
-    default:
-      /* Encode numerical value of unknown charset.  */
-      sprintf (buf, "*-#%u", fncharset);
-      return Fcons (build_string (buf), Qnil);
-    }
-
-  {
-    Lisp_Object rest;
-    /* Look through w32-charset-info-alist for the character set.
-       Only return charsets for codepages which are installed.
-
-       Format of each entry in Vw32_charset_info_alist is
-         (CHARSET_NAME . (WINDOWS_CHARSET . CODEPAGE)).
-    */
-    for (rest = Vw32_charset_info_alist; CONSP (rest); rest = XCDR (rest))
-      {
-        Lisp_Object x_charset;
-        Lisp_Object w32_charset;
-        Lisp_Object codepage;
-
-        Lisp_Object this_entry = XCAR (rest);
-
-        /* Skip invalid entries in alist. */
-        if (!CONSP (this_entry) || !STRINGP (XCAR (this_entry))
-            || !CONSP (XCDR (this_entry))
-            || !SYMBOLP (XCAR (XCDR (this_entry))))
-          continue;
-
-        x_charset = XCAR (this_entry);
-        w32_charset = XCAR (XCDR (this_entry));
-        codepage = XCDR (XCDR (this_entry));
-
-        /* Look for Same charset and a valid codepage (or non-int
-           which means ignore).  */
-        if (EQ (w32_charset, charset_type)
-            && (!INTEGERP (codepage) || XINT (codepage) == CP_DEFAULT
-                || IsValidCodePage (XINT (codepage))))
-          {
-	    retval = Fcons (x_charset, retval);
-          }
-      }
-
-    /* If no match, encode the numeric value. */
-    if (NILP (retval))
-      {
-        sprintf (buf, "*-#%u", fncharset);
-        return Fcons (build_string (buf), Qnil);
-      }
-
-    return retval;
-  }
-}
-
-/* Get the Windows codepage corresponding to the specified font.  The
-   charset info in the font name is used to look up
-   w32-charset-to-codepage-alist.  */
-int
-w32_codepage_for_font (char *fontname)
-{
-  Lisp_Object codepage, entry;
-  char *charset_str, *charset, *end;
-
-  if (NILP (Vw32_charset_info_alist))
-    return CP_DEFAULT;
-
-  /* Extract charset part of font string.  */
-  charset = xlfd_charset_of_font (fontname);
-
-  if (!charset)
-    return CP_UNKNOWN;
-
-  charset_str = (char *) alloca (strlen (charset) + 1);
-  strcpy (charset_str, charset);
-
-#if 0
-  /* Remove leading "*-".  */
-  if (strncmp ("*-", charset_str, 2) == 0)
-    charset = charset_str + 2;
-  else
-#endif
-    charset = charset_str;
-
-  /* Stop match at wildcard (including preceding '-'). */
-  if (end = strchr (charset, '*'))
-      {
-        if (end > charset && *(end-1) == '-')
-          end--;
-        *end = '\0';
-      }
-
-  entry = Fassoc (build_string (charset), Vw32_charset_info_alist);
-  if (NILP (entry))
-    return CP_UNKNOWN;
-
-  codepage = Fcdr (Fcdr (entry));
-
-  if (NILP (codepage))
-    return CP_8BIT;
-  else if (XFASTINT (codepage) == XFASTINT (Qt))
-    return CP_UNICODE;
-  else if (INTEGERP (codepage))
-    return XINT (codepage);
-  else
-    return CP_UNKNOWN;
-}
-
-
-static BOOL
-w32_to_x_font (lplogfont, lpxstr, len, specific_charset)
-     LOGFONT * lplogfont;
-     char * lpxstr;
-     int len;
-     char * specific_charset;
-{
-  char* fonttype;
-  char *fontname;
-  char height_pixels[8];
-  char height_dpi[8];
-  char width_pixels[8];
-  char *fontname_dash;
-  int display_resy = (int) one_w32_display_info.resy;
-  int display_resx = (int) one_w32_display_info.resx;
-  int bufsz;
-  struct coding_system coding;
-
-  if (!lpxstr) abort ();
-
-  if (!lplogfont)
-    return FALSE;
-
-  if (lplogfont->lfOutPrecision == OUT_STRING_PRECIS)
-    fonttype = "raster";
-  else if (lplogfont->lfOutPrecision == OUT_STROKE_PRECIS)
-    fonttype = "outline";
-  else
-    fonttype = "unknown";
-
-  setup_coding_system (Fcheck_coding_system (Vlocale_coding_system),
-                       &coding);
-  coding.src_multibyte = 0;
-  coding.dst_multibyte = 1;
-  coding.mode |= CODING_MODE_LAST_BLOCK;
-  /* We explicitely disable composition handling because selection
-     data should not contain any composition sequence.  */
-  coding.composing = COMPOSITION_DISABLED;
-  bufsz = decoding_buffer_size (&coding, LF_FACESIZE);
-
-  fontname = alloca (sizeof (*fontname) * bufsz);
-  decode_coding (&coding, lplogfont->lfFaceName, fontname,
-                 strlen (lplogfont->lfFaceName), bufsz - 1);
-  *(fontname + coding.produced) = '\0';
-
-  /* Replace dashes with underscores so the dashes are not
-     misinterpreted.  */
-  fontname_dash = fontname;
-  while (fontname_dash = strchr (fontname_dash, '-'))
-      *fontname_dash = '_';
-
-  if (lplogfont->lfHeight)
-    {
-      sprintf (height_pixels, "%u", abs (lplogfont->lfHeight));
-      sprintf (height_dpi, "%u",
-	       abs (lplogfont->lfHeight) * 720 / display_resy);
-    }
-  else
-    {
-      strcpy (height_pixels, "*");
-      strcpy (height_dpi, "*");
-    }
-
-#if 0 /* Never put the width in the xfld. It fails on fonts with
-	 double-width characters.  */
-  if (lplogfont->lfWidth)
-    sprintf (width_pixels, "%u", lplogfont->lfWidth * 10);
-  else
-#endif
-    strcpy (width_pixels, "*");
-
-  _snprintf (lpxstr, len - 1,
-	     "-%s-%s-%s-%c-normal-normal-%s-%s-%d-%d-%c-%s-%s",
-             fonttype,                               /* foundry */
-	     fontname,                               /* family */
-	     w32_to_x_weight (lplogfont->lfWeight),  /* weight */
-	     lplogfont->lfItalic?'i':'r',            /* slant */
-                                                     /* setwidth name */
-                                                     /* add style name */
-	     height_pixels,                          /* pixel size */
-	     height_dpi,                             /* point size */
-             display_resx,                           /* resx */
-             display_resy,                           /* resy */
-	     ((lplogfont->lfPitchAndFamily & 0x3) == VARIABLE_PITCH)
-             ? 'p' : 'c',                            /* spacing */
-	     width_pixels,                           /* avg width */
-	     specific_charset ? specific_charset
-             : w32_to_x_charset (lplogfont->lfCharSet)
-             /* charset registry and encoding */
-	     );
-
-  lpxstr[len - 1] = 0;		/* just to be sure */
-  return (TRUE);
-}
-
-static BOOL
-x_to_w32_font (lpxstr, lplogfont)
-     char * lpxstr;
-     LOGFONT * lplogfont;
-{
-  struct coding_system coding;
-
-  if (!lplogfont) return (FALSE);
-
-  memset (lplogfont, 0, sizeof (*lplogfont));
-
-  /* Set default value for each field.  */
-#if 1
-  lplogfont->lfOutPrecision = OUT_DEFAULT_PRECIS;
-  lplogfont->lfClipPrecision = CLIP_DEFAULT_PRECIS;
-  lplogfont->lfQuality = DEFAULT_QUALITY;
-#else
-  /* go for maximum quality */
-  lplogfont->lfOutPrecision = OUT_STROKE_PRECIS;
-  lplogfont->lfClipPrecision = CLIP_STROKE_PRECIS;
-  lplogfont->lfQuality = PROOF_QUALITY;
-#endif
-
-  lplogfont->lfCharSet = DEFAULT_CHARSET;
-  lplogfont->lfWeight = FW_DONTCARE;
-  lplogfont->lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-
-  if (!lpxstr)
-    return FALSE;
-
-  /* Provide a simple escape mechanism for specifying Windows font names
-   * directly -- if font spec does not beginning with '-', assume this
-   * format:
-   *   "<font name>[:height in pixels[:width in pixels[:weight]]]"
-   */
-
-  if (*lpxstr == '-')
-    {
-      int fields, tem;
-      char name[50], weight[20], slant, pitch, pixels[10], height[10],
-        width[10], resy[10], remainder[50];
-      char * encoding;
-      int dpi = (int) one_w32_display_info.resy;
-
-      fields = sscanf (lpxstr,
-		       "-%*[^-]-%49[^-]-%19[^-]-%c-%*[^-]-%*[^-]-%9[^-]-%9[^-]-%*[^-]-%9[^-]-%c-%9[^-]-%49s",
-		       name, weight, &slant, pixels, height, resy, &pitch, width, remainder);
-      if (fields == EOF)
-	return (FALSE);
-
-      /* In the general case when wildcards cover more than one field,
-	 we don't know which field is which, so don't fill any in.
-	 However, we need to cope with this particular form, which is
-	 generated by font_list_1 (invoked by try_font_list):
-	     "-raster-6x10-*-gb2312*-*"
-	 and make sure to correctly parse the charset field.  */
-      if (fields == 3)
-	{
-	  fields = sscanf (lpxstr,
-			   "-%*[^-]-%49[^-]-*-%49s",
-			   name, remainder);
-	}
-      else if (fields < 9)
-	{
-	  fields = 0;
-	  remainder[0] = 0;
-	}
-
-      if (fields > 0 && name[0] != '*')
-        {
-	  int bufsize;
-	  unsigned char *buf;
-
-          setup_coding_system
-            (Fcheck_coding_system (Vlocale_coding_system), &coding);
-	  coding.src_multibyte = 1;
-	  coding.dst_multibyte = 0;
-	  /* Need to set COMPOSITION_DISABLED, otherwise Emacs crashes in
-	     encode_coding_iso2022 trying to dereference a null pointer.  */
-	  coding.composing = COMPOSITION_DISABLED;
-	  if (coding.type == coding_type_iso2022)
-	    coding.flags |= CODING_FLAG_ISO_SAFE;
-	  bufsize = encoding_buffer_size (&coding, strlen (name));
-	  buf = (unsigned char *) alloca (bufsize);
-          coding.mode |= CODING_MODE_LAST_BLOCK;
-          encode_coding (&coding, name, buf, strlen (name), bufsize);
-	  if (coding.produced >= LF_FACESIZE)
-	    coding.produced = LF_FACESIZE - 1;
-	  buf[coding.produced] = 0;
-	  strcpy (lplogfont->lfFaceName, buf);
-	}
-      else
-        {
-	  lplogfont->lfFaceName[0] = '\0';
-	}
-
-      fields--;
-
-      lplogfont->lfWeight = x_to_w32_weight ((fields > 0 ? weight : ""));
-
-      fields--;
-
-      lplogfont->lfItalic = (fields > 0 && slant == 'i');
-
-      fields--;
-
-      if (fields > 0 && pixels[0] != '*')
-	lplogfont->lfHeight = atoi (pixels);
-
-      fields--;
-      fields--;
-      if (fields > 0 && resy[0] != '*')
-        {
-          tem = atoi (resy);
-          if (tem > 0) dpi = tem;
-        }
-
-      if (fields > -1 && lplogfont->lfHeight == 0 && height[0] != '*')
-	lplogfont->lfHeight = atoi (height) * dpi / 720;
-
-      if (fields > 0)
-      lplogfont->lfPitchAndFamily =
-	(fields > 0 && pitch == 'p') ? VARIABLE_PITCH : FIXED_PITCH;
-
-      fields--;
-
-      if (fields > 0 && width[0] != '*')
-	lplogfont->lfWidth = atoi (width) / 10;
-
-      fields--;
-
-      /* Strip the trailing '-' if present. (it shouldn't be, as it
-         fails the test against xlfd-tight-regexp in fontset.el).  */
-      {
-	int len = strlen (remainder);
-	if (len > 0 && remainder[len-1] == '-')
-	  remainder[len-1] = 0;
-      }
-      encoding = remainder;
-#if 0
-      if (strncmp (encoding, "*-", 2) == 0)
-	encoding += 2;
-#endif
-      lplogfont->lfCharSet = x_to_w32_charset (encoding);
-    }
-  else
-    {
-      int fields;
-      char name[100], height[10], width[10], weight[20];
-
-      fields = sscanf (lpxstr,
-		       "%99[^:]:%9[^:]:%9[^:]:%19s",
-		       name, height, width, weight);
-
-      if (fields == EOF) return (FALSE);
-
-      if (fields > 0)
-        {
-	  strncpy (lplogfont->lfFaceName, name, LF_FACESIZE);
-	  lplogfont->lfFaceName[LF_FACESIZE-1] = 0;
-	}
-      else
-        {
-	  lplogfont->lfFaceName[0] = 0;
-	}
-
-      fields--;
-
-      if (fields > 0)
-	lplogfont->lfHeight = atoi (height);
-
-      fields--;
-
-      if (fields > 0)
-	lplogfont->lfWidth = atoi (width);
-
-      fields--;
-
-      lplogfont->lfWeight = x_to_w32_weight ((fields > 0 ? weight : ""));
-    }
-
-  /* This makes TrueType fonts work better. */
-  lplogfont->lfHeight = - abs (lplogfont->lfHeight);
-
-  return (TRUE);
-}
-
-/* Strip the pixel height and point height from the given xlfd, and
-   return the pixel height. If no pixel height is specified, calculate
-   one from the point height, or if that isn't defined either, return
-   0 (which usually signifies a scalable font).
-*/
-static int
-xlfd_strip_height (char *fontname)
-{
-  int pixel_height, field_number;
-  char *read_from, *write_to;
-
-  xassert (fontname);
-
-  pixel_height = field_number = 0;
-  write_to = NULL;
-
-  /* Look for height fields.  */
-  for (read_from = fontname; *read_from; read_from++)
-    {
-      if (*read_from == '-')
-        {
-          field_number++;
-          if (field_number == 7) /* Pixel height.  */
-            {
-              read_from++;
-              write_to = read_from;
-
-              /* Find end of field.  */
-              for (;*read_from && *read_from != '-'; read_from++)
-                ;
-
-              /* Split the fontname at end of field.  */
-              if (*read_from)
-                {
-                  *read_from = '\0';
-                  read_from++;
-                }
-              pixel_height = atoi (write_to);
-              /* Blank out field. */
-              if (read_from > write_to)
-                {
-                  *write_to = '-';
-                  write_to++;
-                }
-              /* If the pixel height field is at the end (partial xlfd),
-                 return now.  */
-              else
-                return pixel_height;
-
-              /* If we got a pixel height, the point height can be
-                 ignored. Just blank it out and break now.  */
-              if (pixel_height)
-                {
-                  /* Find end of point size field.  */
-                  for (; *read_from && *read_from != '-'; read_from++)
-                    ;
-
-                  if (*read_from)
-                    read_from++;
-
-                  /* Blank out the point size field.  */
-                  if (read_from > write_to)
-                    {
-                      *write_to = '-';
-                      write_to++;
-                    }
-                  else
-                    return pixel_height;
-
-                  break;
-                }
-              /* If the point height is already blank, break now.  */
-              if (*read_from == '-')
-                {
-                  read_from++;
-                  break;
-                }
-            }
-          else if (field_number == 8)
-            {
-              /* If we didn't get a pixel height, try to get the point
-                 height and convert that.  */
-              int point_size;
-              char *point_size_start = read_from++;
-
-              /* Find end of field.  */
-              for (; *read_from && *read_from != '-'; read_from++)
-                ;
-
-              if (*read_from)
-                {
-                  *read_from = '\0';
-                  read_from++;
-                }
-
-              point_size = atoi (point_size_start);
-
-              /* Convert to pixel height. */
-              pixel_height = point_size
-                           * one_w32_display_info.height_in / 720;
-
-              /* Blank out this field and break.  */
-              *write_to = '-';
-              write_to++;
-              break;
-            }
-        }
-    }
-
-  /* Shift the rest of the font spec into place.  */
-  if (write_to && read_from > write_to)
-    {
-      for (; *read_from; read_from++, write_to++)
-        *write_to = *read_from;
-      *write_to = '\0';
-    }
-
-  return pixel_height;
-}
-
-/* Assume parameter 1 is fully qualified, no wildcards. */
-static BOOL
-w32_font_match (fontname, pattern)
-    char * fontname;
-    char * pattern;
-{
-  char *ptr;
-  char *font_name_copy;
-  char *regex = alloca (strlen (pattern) * 2 + 3);
-
-  font_name_copy = alloca (strlen (fontname) + 1);
-  strcpy (font_name_copy, fontname);
-
-  ptr = regex;
-  *ptr++ = '^';
-
-  /* Turn pattern into a regexp and do a regexp match.  */
-  for (; *pattern; pattern++)
-    {
-      if (*pattern == '?')
-        *ptr++ = '.';
-      else if (*pattern == '*')
-        {
-          *ptr++ = '.';
-          *ptr++ = '*';
-        }
-      else
-        *ptr++ = *pattern;
-    }
-  *ptr = '$';
-  *(ptr + 1) = '\0';
-
-  /* Strip out font heights and compare them seperately, since
-     rounding error can cause mismatches. This also allows a
-     comparison between a font that declares only a pixel height and a
-     pattern that declares the point height.
-  */
-  {
-    int font_height, pattern_height;
-
-    font_height = xlfd_strip_height (font_name_copy);
-    pattern_height = xlfd_strip_height (regex);
-
-    /* Compare now, and don't bother doing expensive regexp matching
-       if the heights differ.  */
-    if (font_height && pattern_height && (font_height != pattern_height))
-      return FALSE;
-  }
-
-  return (fast_string_match_ignore_case (build_string (regex),
-                                         build_string (font_name_copy)) >= 0);
-}
-
-/* Callback functions, and a structure holding info they need, for
-   listing system fonts on W32. We need one set of functions to do the
-   job properly, but these don't work on NT 3.51 and earlier, so we
-   have a second set which don't handle character sets properly to
-   fall back on.
-
-   In both cases, there are two passes made. The first pass gets one
-   font from each family, the second pass lists all the fonts from
-   each family.  */
-
-typedef struct enumfont_t
-{
-  HDC hdc;
-  int numFonts;
-  LOGFONT logfont;
-  XFontStruct *size_ref;
-  Lisp_Object pattern;
-  Lisp_Object list;
-} enumfont_t;
-
-
-static void
-enum_font_maybe_add_to_list (enumfont_t *, LOGFONT *, char *, Lisp_Object);
-
-
-static int CALLBACK
-enum_font_cb2 (lplf, lptm, FontType, lpef)
-    ENUMLOGFONT * lplf;
-    NEWTEXTMETRIC * lptm;
-    int FontType;
-    enumfont_t * lpef;
-{
-  /* Ignore struck out and underlined versions of fonts.  */
-  if (lplf->elfLogFont.lfStrikeOut || lplf->elfLogFont.lfUnderline)
-    return 1;
-
-  /* Only return fonts with names starting with @ if they were
-     explicitly specified, since Microsoft uses an initial @ to
-     denote fonts for vertical writing, without providing a more
-     convenient way of identifying them.  */
-  if (lplf->elfLogFont.lfFaceName[0] == '@'
-      && lpef->logfont.lfFaceName[0] != '@')
-    return 1;
-
-  /* Check that the character set matches if it was specified */
-  if (lpef->logfont.lfCharSet != DEFAULT_CHARSET &&
-      lplf->elfLogFont.lfCharSet != lpef->logfont.lfCharSet)
-    return 1;
-
-  if (FontType == RASTER_FONTTYPE)
-    {
-      /* DBCS raster fonts have problems displaying, so skip them.  */
-      int charset = lplf->elfLogFont.lfCharSet;
-      if (charset == SHIFTJIS_CHARSET
-	  || charset == HANGEUL_CHARSET
-	  || charset == CHINESEBIG5_CHARSET
-	  || charset == GB2312_CHARSET
-#ifdef JOHAB_CHARSET
-	  || charset == JOHAB_CHARSET
-#endif
-	  )
-	return 1;
-    }
-
-  {
-    char buf[100];
-    Lisp_Object width = Qnil;
-    Lisp_Object charset_list = Qnil;
-    char *charset = NULL;
-
-    /* Truetype fonts do not report their true metrics until loaded */
-    if (FontType != RASTER_FONTTYPE)
-      {
-	if (!NILP (lpef->pattern))
-	  {
-	    /* Scalable fonts are as big as you want them to be.  */
-	    lplf->elfLogFont.lfHeight = lpef->logfont.lfHeight;
-	    lplf->elfLogFont.lfWidth = lpef->logfont.lfWidth;
-	    width = make_number (lpef->logfont.lfWidth);
-	  }
-	else
-	  {
-	    lplf->elfLogFont.lfHeight = 0;
-	    lplf->elfLogFont.lfWidth = 0;
-	  }
-      }
-
-    /* Make sure the height used here is the same as everywhere
-       else (ie character height, not cell height).  */
-    if (lplf->elfLogFont.lfHeight > 0)
-      {
-        /* lptm can be trusted for RASTER fonts, but not scalable ones. */
-        if (FontType == RASTER_FONTTYPE)
-          lplf->elfLogFont.lfHeight = lptm->tmInternalLeading - lptm->tmHeight;
-        else
-          lplf->elfLogFont.lfHeight = -lplf->elfLogFont.lfHeight;
-      }
-
-    if (!NILP (lpef->pattern))
-      {
-        charset = xlfd_charset_of_font (SDATA (lpef->pattern));
-
-	/* We already checked charsets above, but DEFAULT_CHARSET
-           slipped through.  So only allow exact matches for DEFAULT_CHARSET.  */
-	if (charset
-	    && strncmp (charset, "*-*", 3) != 0
-	    && lpef->logfont.lfCharSet == DEFAULT_CHARSET
-	    && strcmp (charset, w32_to_x_charset (DEFAULT_CHARSET)) != 0)
-	  return 1;
-
-        /* Reject raster fonts if we are looking for a unicode font.  */
-        if (charset
-            && FontType == RASTER_FONTTYPE
-            && strncmp (charset, "iso10646", 8) == 0)
-          return 1;
-      }
-
-    if (charset)
-      charset_list = Fcons (build_string (charset), Qnil);
-    else
-      charset_list = w32_to_all_x_charsets (lplf->elfLogFont.lfCharSet);
-
-    /* Loop through the charsets.  */
-    for ( ; CONSP (charset_list); charset_list = Fcdr (charset_list))
-      {
-	Lisp_Object this_charset = Fcar (charset_list);
-	charset = SDATA (this_charset);
-
-        /* Don't list  raster fonts as unicode.  */
-        if (charset
-            && FontType == RASTER_FONTTYPE
-            && strncmp (charset, "iso10646", 8) == 0)
-          continue;
-
-	/* List bold and italic variations if w32-enable-synthesized-fonts
-	   is non-nil and this is a plain font.  */
-	if (w32_enable_synthesized_fonts
-	    && lplf->elfLogFont.lfWeight == FW_NORMAL
-	    && lplf->elfLogFont.lfItalic == FALSE)
-	  {
-	    enum_font_maybe_add_to_list (lpef, &(lplf->elfLogFont),
-					 charset, width);
-	    /* bold.  */
-	    lplf->elfLogFont.lfWeight = FW_BOLD;
-	    enum_font_maybe_add_to_list (lpef, &(lplf->elfLogFont),
-					 charset, width);
-	    /* bold italic.  */
-	    lplf->elfLogFont.lfItalic = TRUE;
-	    enum_font_maybe_add_to_list (lpef, &(lplf->elfLogFont),
-					 charset, width);
-	    /* italic.  */
-	    lplf->elfLogFont.lfWeight = FW_NORMAL;
-	    enum_font_maybe_add_to_list (lpef, &(lplf->elfLogFont),
-					 charset, width);
-	  }
-	else
-	  enum_font_maybe_add_to_list (lpef, &(lplf->elfLogFont),
-				       charset, width);
-      }
-  }
-
-  return 1;
-}
-
-static void
-enum_font_maybe_add_to_list (lpef, logfont, match_charset, width)
-     enumfont_t * lpef;
-     LOGFONT * logfont;
-     char * match_charset;
-     Lisp_Object width;
-{
-  char buf[100];
-
-  if (!w32_to_x_font (logfont, buf, 100, match_charset))
-    return;
-
-  if (NILP (lpef->pattern)
-      || w32_font_match (buf, SDATA (lpef->pattern)))
-    {
-      /* Check if we already listed this font.  This may happen if
-         w32_enable_synthesized_fonts is non-nil, and there are real
-         bold and italic versions of the font.  */
-      Lisp_Object font_name = build_string (buf);
-      if (NILP (Fmember (font_name, lpef->list)))
-	{
-	  Lisp_Object entry = Fcons (font_name, width);
-	  lpef->list = Fcons (entry, lpef->list);
-	  lpef->numFonts++;
-	}
-    }
-}
-
-
-static int CALLBACK
-enum_font_cb1 (lplf, lptm, FontType, lpef)
-     ENUMLOGFONT * lplf;
-     NEWTEXTMETRIC * lptm;
-     int FontType;
-     enumfont_t * lpef;
-{
-  return EnumFontFamilies (lpef->hdc,
-			   lplf->elfLogFont.lfFaceName,
-			   (FONTENUMPROC) enum_font_cb2,
-			   (LPARAM) lpef);
-}
-
-
-static int CALLBACK
-enum_fontex_cb2 (lplf, lptm, font_type, lpef)
-     ENUMLOGFONTEX * lplf;
-     NEWTEXTMETRICEX * lptm;
-     int font_type;
-     enumfont_t * lpef;
-{
-  /* We are not interested in the extra info we get back from the 'Ex
-     version - only the fact that we get character set variations
-     enumerated seperately.  */
-  return enum_font_cb2 ((ENUMLOGFONT *) lplf, (NEWTEXTMETRIC *) lptm,
-                        font_type, lpef);
-}
-
-static int CALLBACK
-enum_fontex_cb1 (lplf, lptm, font_type, lpef)
-     ENUMLOGFONTEX * lplf;
-     NEWTEXTMETRICEX * lptm;
-     int font_type;
-     enumfont_t * lpef;
-{
-  HMODULE gdi32 = GetModuleHandle ("gdi32.dll");
-  FARPROC enum_font_families_ex
-    = GetProcAddress ( gdi32, "EnumFontFamiliesExA");
-  /* We don't really expect EnumFontFamiliesEx to disappear once we
-     get here, so don't bother handling it gracefully.  */
-  if (enum_font_families_ex == NULL)
-    error ("gdi32.dll has disappeared!");
-  return enum_font_families_ex (lpef->hdc,
-                                &lplf->elfLogFont,
-                                (FONTENUMPROC) enum_fontex_cb2,
-                                (LPARAM) lpef, 0);
-}
-
-/* Interface to fontset handler. (adapted from mw32font.c in Meadow
-   and xterm.c in Emacs 20.3) */
-
-static Lisp_Object
-w32_list_bdf_fonts (Lisp_Object pattern, int max_names)
-{
-  char *fontname, *ptnstr;
-  Lisp_Object list, tem, newlist = Qnil;
-  int n_fonts = 0;
-
-  list = Vw32_bdf_filename_alist;
-  ptnstr = SDATA (pattern);
-
-  for ( ; CONSP (list); list = XCDR (list))
-    {
-      tem = XCAR (list);
-      if (CONSP (tem))
-        fontname = SDATA (XCAR (tem));
-      else if (STRINGP (tem))
-        fontname = SDATA (tem);
-      else
-        continue;
-
-      if (w32_font_match (fontname, ptnstr))
-        {
-          newlist = Fcons (XCAR (tem), newlist);
-          n_fonts++;
-          if (max_names >= 0 && n_fonts >= max_names)
-            break;
-        }
-    }
-
-  return newlist;
-}
-
-
-/* Return a list of names of available fonts matching PATTERN on frame
-   F.  If SIZE is not 0, it is the size (maximum bound width) of fonts
-   to be listed.  Frame F NULL means we have not yet created any
-   frame, which means we can't get proper size info, as we don't have
-   a device context to use for GetTextMetrics.
-   MAXNAMES sets a limit on how many fonts to match.  If MAXNAMES is
-   negative, then all matching fonts are returned.  */
-
-Lisp_Object
-w32_list_fonts (f, pattern, size, maxnames)
-     struct frame *f;
-     Lisp_Object pattern;
-     int size;
-     int maxnames;
-{
-  Lisp_Object patterns, key = Qnil, tem, tpat;
-  Lisp_Object list = Qnil, newlist = Qnil, second_best = Qnil;
-  struct w32_display_info *dpyinfo = &one_w32_display_info;
-  int n_fonts = 0;
-
-  patterns = Fassoc (pattern, Valternate_fontname_alist);
-  if (NILP (patterns))
-    patterns = Fcons (pattern, Qnil);
-
-  for (; CONSP (patterns); patterns = XCDR (patterns))
-    {
-      enumfont_t ef;
-      int codepage;
-
-      tpat = XCAR (patterns);
-
-      if (!STRINGP (tpat))
-        continue;
-
-      /* Avoid expensive EnumFontFamilies functions if we are not
-         going to be able to output one of these anyway. */
-      codepage = w32_codepage_for_font (SDATA (tpat));
-      if (codepage != CP_8BIT && codepage != CP_UNICODE
-          && codepage != CP_DEFAULT && codepage != CP_UNKNOWN
-	  && !IsValidCodePage (codepage))
-        continue;
-
-      /* See if we cached the result for this particular query.
-         The cache is an alist of the form:
-           ((PATTERN (FONTNAME . WIDTH) ...) ...)
-      */
-      if (tem = XCDR (dpyinfo->name_list_element),
-          !NILP (list = Fassoc (tpat, tem)))
-        {
-          list = Fcdr_safe (list);
-          /* We have a cached list. Don't have to get the list again.  */
-          goto label_cached;
-        }
-
-      BLOCK_INPUT;
-      /* At first, put PATTERN in the cache.  */
-      ef.pattern = tpat;
-      ef.list = Qnil;
-      ef.numFonts = 0;
-
-      /* Use EnumFontFamiliesEx where it is available, as it knows
-         about character sets.  Fall back to EnumFontFamilies for
-         older versions of NT that don't support the 'Ex function.  */
-      x_to_w32_font (SDATA (tpat), &ef.logfont);
-      {
-        LOGFONT font_match_pattern;
-        HMODULE gdi32 = GetModuleHandle ("gdi32.dll");
-        FARPROC enum_font_families_ex
-          = GetProcAddress ( gdi32, "EnumFontFamiliesExA");
-
-        /* We do our own pattern matching so we can handle wildcards.  */
-        font_match_pattern.lfFaceName[0] = 0;
-        font_match_pattern.lfPitchAndFamily = 0;
-        /* We can use the charset, because if it is a wildcard it will
-           be DEFAULT_CHARSET anyway.  */
-        font_match_pattern.lfCharSet = ef.logfont.lfCharSet;
-
-        ef.hdc = GetDC (dpyinfo->root_window);
-
-        if (enum_font_families_ex)
-          enum_font_families_ex (ef.hdc,
-                                 &font_match_pattern,
-                                 (FONTENUMPROC) enum_fontex_cb1,
-                                 (LPARAM) &ef, 0);
-        else
-          EnumFontFamilies (ef.hdc, NULL, (FONTENUMPROC) enum_font_cb1,
-                            (LPARAM)&ef);
-
-        ReleaseDC (dpyinfo->root_window, ef.hdc);
-      }
-
-      UNBLOCK_INPUT;
-      list = ef.list;
-
-      /* Make a list of the fonts we got back.
-         Store that in the font cache for the display. */
-      XSETCDR (dpyinfo->name_list_element,
-	       Fcons (Fcons (tpat, list),
-		      XCDR (dpyinfo->name_list_element)));
-
-    label_cached:
-      if (NILP (list)) continue; /* Try the remaining alternatives.  */
-
-      newlist = second_best = Qnil;
-
-      /* Make a list of the fonts that have the right width.  */
-      for (; CONSP (list); list = XCDR (list))
-        {
-          int found_size;
-          tem = XCAR (list);
-
-          if (!CONSP (tem))
-            continue;
-          if (NILP (XCAR (tem)))
-            continue;
-          if (!size)
-            {
-              newlist = Fcons (XCAR (tem), newlist);
-              n_fonts++;
-              if (maxnames >= 0 && n_fonts >= maxnames)
-                break;
-              else
-                continue;
-            }
-          if (!INTEGERP (XCDR (tem)))
-            {
-              /* Since we don't yet know the size of the font, we must
-                 load it and try GetTextMetrics.  */
-              W32FontStruct thisinfo;
-              LOGFONT lf;
-              HDC hdc;
-              HANDLE oldobj;
-
-              if (!x_to_w32_font (SDATA (XCAR (tem)), &lf))
-                continue;
-
-              BLOCK_INPUT;
-              thisinfo.bdf = NULL;
-              thisinfo.hfont = CreateFontIndirect (&lf);
-              if (thisinfo.hfont == NULL)
-                continue;
-
-              hdc = GetDC (dpyinfo->root_window);
-              oldobj = SelectObject (hdc, thisinfo.hfont);
-              if (GetTextMetrics (hdc, &thisinfo.tm))
-                XSETCDR (tem, make_number (FONT_WIDTH (&thisinfo)));
-              else
-                XSETCDR (tem, make_number (0));
-              SelectObject (hdc, oldobj);
-              ReleaseDC (dpyinfo->root_window, hdc);
-              DeleteObject (thisinfo.hfont);
-              UNBLOCK_INPUT;
-            }
-          found_size = XINT (XCDR (tem));
-          if (found_size == size)
-            {
-              newlist = Fcons (XCAR (tem), newlist);
-              n_fonts++;
-              if (maxnames >= 0 && n_fonts >= maxnames)
-                break;
-            }
-          /* keep track of the closest matching size in case
-             no exact match is found.  */
-          else if (found_size > 0)
-            {
-              if (NILP (second_best))
-                second_best = tem;
-
-              else if (found_size < size)
-                {
-                  if (XINT (XCDR (second_best)) > size
-                      || XINT (XCDR (second_best)) < found_size)
-                    second_best = tem;
-                }
-              else
-                {
-                  if (XINT (XCDR (second_best)) > size
-                      && XINT (XCDR (second_best)) >
-                      found_size)
-                    second_best = tem;
-                }
-            }
-        }
-
-      if (!NILP (newlist))
-        break;
-      else if (!NILP (second_best))
-        {
-          newlist = Fcons (XCAR (second_best), Qnil);
-          break;
-        }
-    }
-
-  /* Include any bdf fonts.  */
-  if (n_fonts < maxnames || maxnames < 0)
-  {
-    Lisp_Object combined[2];
-    combined[0] = w32_list_bdf_fonts (pattern, maxnames - n_fonts);
-    combined[1] = newlist;
-    newlist = Fnconc (2, combined);
-  }
-
-  return newlist;
-}
-
-
-/* Return a pointer to struct font_info of font FONT_IDX of frame F.  */
-struct font_info *
-w32_get_font_info (f, font_idx)
-     FRAME_PTR f;
-     int font_idx;
-{
-  return (FRAME_W32_FONT_TABLE (f) + font_idx);
-}
-
-
-struct font_info*
-w32_query_font (struct frame *f, char *fontname)
-{
-  int i;
-  struct font_info *pfi;
-
-  pfi = FRAME_W32_FONT_TABLE (f);
-
-  for (i = 0; i < one_w32_display_info.n_fonts ;i++, pfi++)
-    {
-      if (stricmp (pfi->name, fontname) == 0) return pfi;
-    }
-
-  return NULL;
-}
-
-/* Find a CCL program for a font specified by FONTP, and set the member
- `encoder' of the structure.  */
-
-void
-w32_find_ccl_program (fontp)
-     struct font_info *fontp;
-{
-  Lisp_Object list, elt;
-
-  for (list = Vfont_ccl_encoder_alist; CONSP (list); list = XCDR (list))
-    {
-      elt = XCAR (list);
-      if (CONSP (elt)
-	  && STRINGP (XCAR (elt))
-	  && (fast_c_string_match_ignore_case (XCAR (elt), fontp->name)
-	      >= 0))
-	break;
-    }
-  if (! NILP (list))
-    {
-      struct ccl_program *ccl
-	= (struct ccl_program *) xmalloc (sizeof (struct ccl_program));
-
-      if (setup_ccl_program (ccl, XCDR (elt)) < 0)
-	xfree (ccl);
-      else
-	fontp->font_encoder = ccl;
-    }
-}
-
-/* directory-files from dired.c.  */
-Lisp_Object Fdirectory_files P_ ((Lisp_Object, Lisp_Object, Lisp_Object, Lisp_Object));
-
-
-/* Find BDF files in a specified directory.  (use GCPRO when calling,
-   as this calls lisp to get a directory listing).  */
-static Lisp_Object
-w32_find_bdf_fonts_in_dir (Lisp_Object directory)
-{
-  Lisp_Object filelist, list = Qnil;
-  char fontname[100];
-
-  if (!STRINGP (directory))
-    return Qnil;
-
-  filelist = Fdirectory_files (directory, Qt,
-			       build_string (".*\\.[bB][dD][fF]"), Qt);
-
-  for ( ; CONSP (filelist); filelist = XCDR (filelist))
-    {
-      Lisp_Object filename = XCAR (filelist);
-      if (w32_BDF_to_x_font (SDATA (filename), fontname, 100))
-          store_in_alist (&list, build_string (fontname), filename);
-    }
-  return list;
-}
-
-DEFUN ("w32-find-bdf-fonts", Fw32_find_bdf_fonts, Sw32_find_bdf_fonts,
-       1, 1, 0,
-       doc: /* Return a list of BDF fonts in DIRECTORY.
-The list is suitable for appending to `w32-bdf-filename-alist'.
-Fonts which do not contain an xlfd description will not be included
-in the list.  DIRECTORY may be a list of directories.  */)
-     (directory)
-     Lisp_Object directory;
-{
-  Lisp_Object list = Qnil;
-  struct gcpro gcpro1, gcpro2;
-
-  if (!CONSP (directory))
-    return w32_find_bdf_fonts_in_dir (directory);
-
-  for ( ; CONSP (directory); directory = XCDR (directory))
-    {
-      Lisp_Object pair[2];
-      pair[0] = list;
-      pair[1] = Qnil;
-      GCPRO2 (directory, list);
-      pair[1] = w32_find_bdf_fonts_in_dir ( XCAR (directory) );
-      list = Fnconc ( 2, pair );
-      UNGCPRO;
-    }
-  return list;
 }
 
 
@@ -6412,7 +4637,7 @@ If omitted or nil, that stands for the selected frame's display.  */)
 {
   struct w32_display_info *dpyinfo = check_x_display_info (display);
 
-  return make_number (dpyinfo->width);
+  return make_number (x_display_pixel_width (dpyinfo));
 }
 
 DEFUN ("x-display-pixel-height", Fx_display_pixel_height,
@@ -6426,7 +4651,7 @@ If omitted or nil, that stands for the selected frame's display.  */)
 {
   struct w32_display_info *dpyinfo = check_x_display_info (display);
 
-  return make_number (dpyinfo->height);
+  return make_number (x_display_pixel_height (dpyinfo));
 }
 
 DEFUN ("x-display-planes", Fx_display_planes, Sx_display_planes,
@@ -6691,7 +4916,7 @@ x_display_info_for_name (name)
     error ("Cannot connect to server %s", SDATA (name));
 
   w32_in_use = 1;
-  XSETFASTINT (Vwindow_system_version, 3);
+  XSETFASTINT (Vwindow_system_version, w32_major_version);
 
   return dpyinfo;
 }
@@ -6717,8 +4942,10 @@ terminate Emacs if we can't open the connection.  */)
   if (! NILP (xrm_string))
     CHECK_STRING (xrm_string);
 
+#if 0
   if (! EQ (Vwindow_system, intern ("w32")))
     error ("Not using Microsoft Windows");
+#endif
 
   /* Allow color mapping to be defined externally; first look in user's
      HOME directory, then in Emacs etc dir for a file called rgb.txt. */
@@ -6735,7 +4962,7 @@ terminate Emacs if we can't open the connection.  */)
 	Fexpand_file_name (build_string ("rgb.txt"),
 			   Fsymbol_value (intern ("data-directory")));
 
-    Vw32_color_map = Fw32_load_color_file (color_file);
+    Vw32_color_map = Fx_load_color_file (color_file);
 
     UNGCPRO;
   }
@@ -6780,7 +5007,7 @@ terminate Emacs if we can't open the connection.  */)
 
   w32_in_use = 1;
 
-  XSETFASTINT (Vwindow_system_version, 3);
+  XSETFASTINT (Vwindow_system_version, w32_major_version);
   return Qnil;
 }
 
@@ -6799,15 +5026,6 @@ If DISPLAY is nil, that stands for the selected frame's display.  */)
     error ("Display still has frames on it");
 
   BLOCK_INPUT;
-  /* Free the fonts in the font table.  */
-  for (i = 0; i < dpyinfo->n_fonts; i++)
-    if (dpyinfo->font_table[i].name)
-      {
-        if (dpyinfo->font_table[i].name != dpyinfo->font_table[i].full_name)
-          xfree (dpyinfo->font_table[i].full_name);
-        xfree (dpyinfo->font_table[i].name);
-        w32_unload_font (dpyinfo, dpyinfo->font_table[i].font);
-      }
   x_destroy_all_bitmaps (dpyinfo);
 
   x_delete_display (dpyinfo);
@@ -6823,7 +5041,7 @@ DEFUN ("x-display-list", Fx_display_list, Sx_display_list, 0, 0, 0,
   Lisp_Object tail, result;
 
   result = Qnil;
-  for (tail = w32_display_name_list; ! NILP (tail); tail = XCDR (tail))
+  for (tail = w32_display_name_list; CONSP (tail); tail = XCDR (tail))
     result = Fcons (XCAR (XCAR (tail)), result);
 
   return result;
@@ -6973,38 +5191,34 @@ value.  */)
 				Busy cursor
  ***********************************************************************/
 
-/* If non-null, an asynchronous timer that, when it expires, displays
-   an hourglass cursor on all frames.  */
-
-static struct atimer *hourglass_atimer;
-
-/* Non-zero means an hourglass cursor is currently shown.  */
-
-static int hourglass_shown_p;
-
-/* Number of seconds to wait before displaying an hourglass cursor.  */
-
-static Lisp_Object Vhourglass_delay;
-
 /* Default number of seconds to wait before displaying an hourglass
-   cursor.  */
-
+   cursor.  Duplicated from xdisp.c, but cannot use the version there
+   due to lack of atimers on w32.  */
 #define DEFAULT_HOURGLASS_DELAY 1
+extern Lisp_Object Vhourglass_delay;
 
-/* Function prototypes.  */
+/* Return non-zero if houglass timer has been started or hourglass is shown.  */
+/* PENDING: if W32 can use atimers (atimer.[hc]) then the common impl in
+   	    xdisp.c could be used. */
 
-static void show_hourglass P_ ((struct atimer *));
-static void hide_hourglass P_ ((void));
-
+int
+hourglass_started ()
+{
+  return hourglass_shown_p || hourglass_timer;
+}
 
 /* Cancel a currently active hourglass timer, and start a new one.  */
 
 void
 start_hourglass ()
 {
-#if 0 /* TODO: cursor shape changes.  */
-  EMACS_TIME delay;
-  int secs, usecs = 0;
+  DWORD delay;
+  int secs, msecs = 0;
+  struct frame * f = SELECTED_FRAME ();
+
+  /* No cursors on non GUI frames.  */
+  if (!FRAME_W32_P (f))
+    return;
 
   cancel_hourglass ();
 
@@ -7017,15 +5231,14 @@ start_hourglass ()
       Lisp_Object tem;
       tem = Ftruncate (Vhourglass_delay, Qnil);
       secs = XFASTINT (tem);
-      usecs = (XFLOAT_DATA (Vhourglass_delay) - secs) * 1000000;
+      msecs = (XFLOAT_DATA (Vhourglass_delay) - secs) * 1000;
     }
   else
     secs = DEFAULT_HOURGLASS_DELAY;
 
-  EMACS_SET_SECS_USECS (delay, secs, usecs);
-  hourglass_atimer = start_atimer (ATIMER_RELATIVE, delay,
-				   show_hourglass, NULL);
-#endif
+  delay = secs * 1000 + msecs;
+  hourglass_hwnd = FRAME_W32_WINDOW (f);
+  hourglass_timer = SetTimer (hourglass_hwnd, HOURGLASS_ID, delay, NULL);
 }
 
 
@@ -7035,108 +5248,59 @@ start_hourglass ()
 void
 cancel_hourglass ()
 {
-  if (hourglass_atimer)
+  if (hourglass_timer)
     {
-      cancel_atimer (hourglass_atimer);
-      hourglass_atimer = NULL;
+      KillTimer (hourglass_hwnd, hourglass_timer);
+      hourglass_timer = 0;
     }
 
   if (hourglass_shown_p)
-    hide_hourglass ();
+    w32_hide_hourglass ();
 }
 
 
-/* Timer function of hourglass_atimer.  TIMER is equal to
-   hourglass_atimer.
+/* Timer function of hourglass_timer.
 
-   Display an hourglass cursor on all frames by mapping the frames'
-   hourglass_window.  Set the hourglass_p flag in the frames'
-   output_data.x structure to indicate that an hourglass cursor is
-   shown on the frames.  */
+   Display an hourglass cursor.  Set the hourglass_p flag in display info
+   to indicate that an hourglass cursor is shown.  */
 
 static void
-show_hourglass (timer)
-     struct atimer *timer;
+w32_show_hourglass (f)
+     struct frame *f;
 {
-#if 0  /* TODO: cursor shape changes.  */
-  /* The timer implementation will cancel this timer automatically
-     after this function has run.  Set hourglass_atimer to null
-     so that we know the timer doesn't have to be canceled.  */
-  hourglass_atimer = NULL;
-
   if (!hourglass_shown_p)
     {
-      Lisp_Object rest, frame;
-
-      BLOCK_INPUT;
-
-      FOR_EACH_FRAME (rest, frame)
-	if (FRAME_W32_P (XFRAME (frame)))
-	  {
-	    struct frame *f = XFRAME (frame);
-
-	    f->output_data.w32->hourglass_p = 1;
-
-	    if (!f->output_data.w32->hourglass_window)
-	      {
-		unsigned long mask = CWCursor;
-		XSetWindowAttributes attrs;
-
-		attrs.cursor = f->output_data.w32->hourglass_cursor;
-
-		f->output_data.w32->hourglass_window
-		  = XCreateWindow (FRAME_X_DISPLAY (f),
-				   FRAME_OUTER_WINDOW (f),
-				   0, 0, 32000, 32000, 0, 0,
-				   InputOnly,
-				   CopyFromParent,
-				   mask, &attrs);
-	      }
-
-	    XMapRaised (FRAME_X_DISPLAY (f),
-			f->output_data.w32->hourglass_window);
-	    XFlush (FRAME_X_DISPLAY (f));
-	  }
-
+      f->output_data.w32->hourglass_p = 1;
+      if (!menubar_in_use && !current_popup_menu)
+	SetCursor (f->output_data.w32->hourglass_cursor);
       hourglass_shown_p = 1;
-      UNBLOCK_INPUT;
     }
-#endif
 }
 
 
 /* Hide the hourglass cursor on all frames, if it is currently shown.  */
 
 static void
-hide_hourglass ()
+w32_hide_hourglass ()
 {
-#if 0 /* TODO: cursor shape changes.  */
   if (hourglass_shown_p)
     {
-      Lisp_Object rest, frame;
+      struct frame *f = x_window_to_frame (&one_w32_display_info,
+					   hourglass_hwnd);
+      if (f)
+	f->output_data.w32->hourglass_p = 0;
+      else
+	/* If frame was deleted, restore to selected frame's cursor.  */
+	f = SELECTED_FRAME ();
 
-      BLOCK_INPUT;
-      FOR_EACH_FRAME (rest, frame)
-	{
-	  struct frame *f = XFRAME (frame);
-
-	  if (FRAME_W32_P (f)
-	      /* Watch out for newly created frames.  */
-	      && f->output_data.x->hourglass_window)
-	    {
-	      XUnmapWindow (FRAME_X_DISPLAY (f),
-			    f->output_data.x->hourglass_window);
-	      /* Sync here because XTread_socket looks at the
-		 hourglass_p flag that is reset to zero below.  */
-	      XSync (FRAME_X_DISPLAY (f), False);
-	      f->output_data.x->hourglass_p = 0;
-	    }
-	}
+      if (FRAME_W32_P (f))
+	SetCursor (f->output_data.w32->current_cursor);
+      else
+	/* No cursors on non GUI frames - restore to stock arrow cursor.  */
+	SetCursor (w32_load_cursor (IDC_ARROW));
 
       hourglass_shown_p = 0;
-      UNBLOCK_INPUT;
     }
-#endif
 }
 
 
@@ -7219,14 +5383,10 @@ x_create_tip_frame (dpyinfo, parms, text)
      this frame has a specified name.  */
   Vx_resource_name = Vinvocation_name;
 
-#ifdef MULTI_KBOARD
-  kb = dpyinfo->kboard;
-#else
-  kb = &the_only_kboard;
-#endif
+  kb = dpyinfo->terminal->kboard;
 
   /* Get the name of the frame to use for resource lookup.  */
-  name = w32_get_arg (parms, Qname, "name", "Name", RES_TYPE_STRING);
+  name = x_get_arg (dpyinfo, parms, Qname, "name", "Name", RES_TYPE_STRING);
   if (!STRINGP (name)
       && !EQ (name, Qunbound)
       && !NILP (name))
@@ -7258,6 +5418,8 @@ x_create_tip_frame (dpyinfo, parms, text)
      the frame is live, as per FRAME_LIVE_P.  If we get a signal
      from this point on, x_destroy_window might screw up reference
      counts etc.  */
+  f->terminal = dpyinfo->terminal;
+  f->terminal->reference_count++;
   f->output_method = output_w32;
   f->output_data.w32 =
     (struct w32_output *) xmalloc (sizeof (struct w32_output));
@@ -7266,13 +5428,11 @@ x_create_tip_frame (dpyinfo, parms, text)
   FRAME_FONTSET (f)  = -1;
   f->icon_name = Qnil;
 
-#if 0 /* GLYPH_DEBUG TODO: image support.  */
-  image_cache_refcount = FRAME_X_IMAGE_CACHE (f)->refcount;
+#if GLYPH_DEBUG
+  image_cache_refcount = FRAME_IMAGE_CACHE (f)->refcount;
   dpyinfo_refcount = dpyinfo->reference_count;
 #endif /* GLYPH_DEBUG */
-#ifdef MULTI_KBOARD
   FRAME_KBOARD (f) = kb;
-#endif
   f->output_data.w32->parent_desc = FRAME_W32_DISPLAY_INFO (f)->root_window;
   f->output_data.w32->explicit_parent = 0;
 
@@ -7291,39 +5451,19 @@ x_create_tip_frame (dpyinfo, parms, text)
       specbind (Qx_resource_name, name);
     }
 
+  f->resx = dpyinfo->resx;
+  f->resy = dpyinfo->resy;
+
+  if (uniscribe_available)
+    register_font_driver (&uniscribe_font_driver, f);
+  register_font_driver (&w32font_driver, f);
+
+  x_default_parameter (f, parms, Qfont_backend, Qnil,
+		       "fontBackend", "FontBackend", RES_TYPE_STRING);
+
   /* Extract the window parameters from the supplied values
      that are needed to determine window geometry.  */
-  {
-    Lisp_Object font;
-
-    font = w32_get_arg (parms, Qfont, "font", "Font", RES_TYPE_STRING);
-
-    BLOCK_INPUT;
-    /* First, try whatever font the caller has specified.  */
-    if (STRINGP (font))
-      {
-	tem = Fquery_fontset (font, Qnil);
-	if (STRINGP (tem))
-	  font = x_new_fontset (f, SDATA (tem));
-	else
-	  font = x_new_font (f, SDATA (font));
-      }
-
-    /* Try out a font which we hope has bold and italic variations.  */
-    if (!STRINGP (font))
-      font = x_new_font (f, "-*-Courier New-normal-r-*-*-*-100-*-*-c-*-iso8859-1");
-    if (! STRINGP (font))
-      font = x_new_font (f, "-*-Courier-normal-r-*-*-13-*-*-*-c-*-iso8859-1");
-    /* If those didn't work, look for something which will at least work.  */
-    if (! STRINGP (font))
-      font = x_new_font (f, "-*-Fixedsys-normal-r-*-*-12-*-*-*-c-*-iso8859-1");
-    UNBLOCK_INPUT;
-    if (! STRINGP (font))
-      font = build_string ("Fixedsys");
-
-    x_default_parameter (f, parms, Qfont, font,
-			 "font", "Font", RES_TYPE_STRING);
-  }
+  x_default_font_parameter (f, parms);
 
   x_default_parameter (f, parms, Qborder_width, make_number (2),
 		       "borderWidth", "BorderWidth", RES_TYPE_NUMBER);
@@ -7334,7 +5474,7 @@ x_create_tip_frame (dpyinfo, parms, text)
     {
       Lisp_Object value;
 
-      value = w32_get_arg (parms, Qinternal_border_width,
+      value = x_get_arg (dpyinfo, parms, Qinternal_border_width,
 			 "internalBorder", "internalBorder", RES_TYPE_NUMBER);
       if (! EQ (value, Qunbound))
 	parms = Fcons (Fcons (Qinternal_border_width, value),
@@ -7411,14 +5551,20 @@ x_create_tip_frame (dpyinfo, parms, text)
      of the tooltip frame appear in pink.  Prevent this.  */
   {
     Lisp_Object bg = Fframe_parameter (frame, Qbackground_color);
+    Lisp_Object fg = Fframe_parameter (frame, Qforeground_color);
+    Lisp_Object colors = Qnil;
 
     /* Set tip_frame here, so that */
     tip_frame = frame;
-    call1 (Qface_set_after_frame_default, frame);
+    call2 (Qface_set_after_frame_default, frame, Qnil);
 
     if (!EQ (bg, Fframe_parameter (frame, Qbackground_color)))
-      Fmodify_frame_parameters (frame, Fcons (Fcons (Qbackground_color, bg),
-					      Qnil));
+      colors = Fcons (Fcons (Qbackground_color, bg), colors);
+    if (!EQ (fg, Fframe_parameter (frame, Qforeground_color)))
+      colors = Fcons (Fcons (Qforeground_color, fg), colors);
+
+    if (!NILP (colors))
+      Fmodify_frame_parameters (frame, colors);
   }
 
   f->no_split = 1;
@@ -7460,6 +5606,7 @@ compute_tip_xy (f, parms, dx, dy, width, height, root_x, root_y)
      int *root_x, *root_y;
 {
   Lisp_Object left, top;
+  int min_x, min_y, max_x, max_y;
 
   /* User-specified position?  */
   left = Fcdr (Fassq (Qleft, parms));
@@ -7471,40 +5618,68 @@ compute_tip_xy (f, parms, dx, dy, width, height, root_x, root_y)
     {
       POINT pt;
 
+      /* Default min and max values.  */
+      min_x = 0;
+      min_y = 0;
+      max_x = x_display_pixel_width (FRAME_W32_DISPLAY_INFO (f));
+      max_y = x_display_pixel_height (FRAME_W32_DISPLAY_INFO (f));
+
       BLOCK_INPUT;
       GetCursorPos (&pt);
       *root_x = pt.x;
       *root_y = pt.y;
       UNBLOCK_INPUT;
+
+      /* If multiple monitor support is available, constrain the tip onto
+	 the current monitor. This improves the above by allowing negative
+	 co-ordinates if monitor positions are such that they are valid, and
+	 snaps a tooltip onto a single monitor if we are close to the edge
+	 where it would otherwise flow onto the other monitor (or into
+	 nothingness if there is a gap in the overlap).  */
+      if (monitor_from_point_fn && get_monitor_info_fn)
+	{
+	  struct MONITOR_INFO info;
+	  HMONITOR monitor
+	    = monitor_from_point_fn (pt, MONITOR_DEFAULT_TO_NEAREST);
+	  info.cbSize = sizeof (info);
+
+	  if (get_monitor_info_fn (monitor, &info))
+	    {
+	      min_x = info.rcWork.left;
+	      min_y = info.rcWork.top;
+	      max_x = info.rcWork.right;
+	      max_y = info.rcWork.bottom;
+	    }
+	}
     }
 
   if (INTEGERP (top))
     *root_y = XINT (top);
-  else if (*root_y + XINT (dy) <= 0)
-    *root_y = 0; /* Can happen for negative dy */
-  else if (*root_y + XINT (dy) + height <= FRAME_W32_DISPLAY_INFO (f)->height)
+  else if (*root_y + XINT (dy) <= min_y)
+    *root_y = min_y; /* Can happen for negative dy */
+  else if (*root_y + XINT (dy) + height <= max_y)
     /* It fits below the pointer */
       *root_y += XINT (dy);
-  else if (height + XINT (dy) <= *root_y)
+  else if (height + XINT (dy) + min_y <= *root_y)
     /* It fits above the pointer.  */
     *root_y -= height + XINT (dy);
   else
     /* Put it on the top.  */
-    *root_y = 0;
+    *root_y = min_y;
 
   if (INTEGERP (left))
     *root_x = XINT (left);
-  else if (*root_x + XINT (dx) <= 0)
+  else if (*root_x + XINT (dx) <= min_x)
     *root_x = 0; /* Can happen for negative dx */
-  else if (*root_x + XINT (dx) + width <= FRAME_W32_DISPLAY_INFO (f)->width)
+  else if (*root_x + XINT (dx) + width <= max_x)
     /* It fits to the right of the pointer.  */
     *root_x += XINT (dx);
-  else if (width + XINT (dx) <= *root_x)
+  else if (width + XINT (dx) + min_x <= *root_x)
     /* It fits to the left of the pointer.  */
     *root_x -= width + XINT (dx);
   else
     /* Put it left justified on the screen -- it ought to fit that way.  */
-    *root_x = 0;
+    *root_x = min_x;
 }
 
 
@@ -7786,7 +5961,7 @@ Value is t if tooltip was open, nil otherwise.  */)
 
   if (FRAMEP (frame))
     {
-      Fdelete_frame (frame, Qnil);
+      delete_frame (frame, Qnil);
       deleted = Qt;
     }
 
@@ -7801,7 +5976,7 @@ Value is t if tooltip was open, nil otherwise.  */)
  ***********************************************************************/
 extern Lisp_Object Qfile_name_history;
 
-/* Callback for altering the behaviour of the Open File dialog.
+/* Callback for altering the behavior of the Open File dialog.
    Makes the Filename text field contain "Current Directory" and be
    read-only when "Directories" is selected in the filter.  This
    allows us to work around the fact that the standard Open File
@@ -7986,66 +6161,64 @@ If ONLY-DIR-P is non-nil, the user can only select directories.  */)
 }
 
 
+/* Moving files to the system recycle bin.
+   Used by `move-file-to-trash' instead of the default moving to ~/.Trash  */
+DEFUN ("system-move-file-to-trash", Fsystem_move_file_to_trash,
+       Ssystem_move_file_to_trash, 1, 1, 0,
+       doc: /* Move file or directory named FILENAME to the recycle bin.  */)
+     (filename)
+     Lisp_Object filename;
+{
+  Lisp_Object handler;
+  Lisp_Object encoded_file;
+  Lisp_Object operation;
+
+  operation = Qdelete_file;
+  if (!NILP (Ffile_directory_p (filename))
+      && NILP (Ffile_symlink_p (filename)))
+    {
+      operation = Qdelete_directory;
+      filename = Fdirectory_file_name (filename);
+    }
+  filename = Fexpand_file_name (filename, Qnil);
+
+  handler = Ffind_file_name_handler (filename, operation);
+  if (!NILP (handler))
+    return call2 (handler, operation, filename);
+
+  encoded_file = ENCODE_FILE (filename);
+
+  {
+    const char * path;
+    SHFILEOPSTRUCT file_op;
+    char tmp_path[MAX_PATH + 1];
+
+    path = map_w32_filename (SDATA (encoded_file), NULL);
+
+    /* On Windows, write permission is required to delete/move files.  */
+    _chmod (path, 0666);
+
+    bzero (tmp_path, sizeof (tmp_path));
+    strcpy (tmp_path, path);
+
+    bzero (&file_op, sizeof (file_op));
+    file_op.hwnd = HWND_DESKTOP;
+    file_op.wFunc = FO_DELETE;
+    file_op.pFrom = tmp_path;
+    file_op.fFlags = FOF_SILENT | FOF_NOCONFIRMATION | FOF_ALLOWUNDO
+      | FOF_NOERRORUI | FOF_NO_CONNECTED_ELEMENTS;
+    file_op.fAnyOperationsAborted = FALSE;
+
+    if (SHFileOperation (&file_op) != 0)
+      report_file_error ("Removing old name", list1 (filename));
+  }
+  return Qnil;
+}
+
 
 /***********************************************************************
                          w32 specialized functions
  ***********************************************************************/
-
-DEFUN ("w32-select-font", Fw32_select_font, Sw32_select_font, 0, 2, 0,
-       doc: /* Select a font for the named FRAME using the W32 font dialog.
-Return an X-style font string corresponding to the selection.
-
-If FRAME is omitted or nil, it defaults to the selected frame.
-If INCLUDE-PROPORTIONAL is non-nil, include proportional fonts
-in the font selection dialog. */)
-  (frame, include_proportional)
-     Lisp_Object frame, include_proportional;
-{
-  FRAME_PTR f = check_x_frame (frame);
-  CHOOSEFONT cf;
-  LOGFONT lf;
-  TEXTMETRIC tm;
-  HDC hdc;
-  HANDLE oldobj;
-  char buf[100];
-
-  bzero (&cf, sizeof (cf));
-  bzero (&lf, sizeof (lf));
-
-  cf.lStructSize = sizeof (cf);
-  cf.hwndOwner = FRAME_W32_WINDOW (f);
-  cf.Flags = CF_FORCEFONTEXIST | CF_SCREENFONTS | CF_NOVERTFONTS;
-
-  /* Unless include_proportional is non-nil, limit the selection to
-     monospaced fonts.  */
-  if (NILP (include_proportional))
-    cf.Flags |= CF_FIXEDPITCHONLY;
-
-  cf.lpLogFont = &lf;
-
-  /* Initialize as much of the font details as we can from the current
-     default font.  */
-  hdc = GetDC (FRAME_W32_WINDOW (f));
-  oldobj = SelectObject (hdc, FRAME_FONT (f)->hfont);
-  GetTextFace (hdc, LF_FACESIZE, lf.lfFaceName);
-  if (GetTextMetrics (hdc, &tm))
-    {
-      lf.lfHeight = tm.tmInternalLeading - tm.tmHeight;
-      lf.lfWeight = tm.tmWeight;
-      lf.lfItalic = tm.tmItalic;
-      lf.lfUnderline = tm.tmUnderlined;
-      lf.lfStrikeOut = tm.tmStruckOut;
-      lf.lfCharSet = tm.tmCharSet;
-      cf.Flags |= CF_INITTOLOGFONTSTRUCT;
-    }
-  SelectObject (hdc, oldobj);
-  ReleaseDC (FRAME_W32_WINDOW (f), hdc);
-
-  if (!ChooseFont (&cf) || !w32_to_x_font (&lf, buf, 100, NULL))
-      return Qnil;
-
-  return build_string (buf);
-}
 
 DEFUN ("w32-send-sys-command", Fw32_send_sys_command,
        Sw32_send_sys_command, 1, 2, 0,
@@ -8402,6 +6575,115 @@ Lisp_Object class, name;
   return Qt;
 }
 
+DEFUN ("w32-battery-status", Fw32_battery_status, Sw32_battery_status, 0, 0, 0,
+       doc: /* Get power status information from Windows system.
+
+The following %-sequences are provided:
+%L AC line status (verbose)
+%B Battery status (verbose)
+%b Battery status, empty means high, `-' means low,
+   `!' means critical, and `+' means charging
+%p Battery load percentage
+%s Remaining time (to charge or discharge) in seconds
+%m Remaining time (to charge or discharge) in minutes
+%h Remaining time (to charge or discharge) in hours
+%t Remaining time (to charge or discharge) in the form `h:min'  */)
+  ()
+{
+  Lisp_Object status = Qnil;
+
+  SYSTEM_POWER_STATUS system_status;
+  if (GetSystemPowerStatus (&system_status))
+    {
+      Lisp_Object line_status, battery_status, battery_status_symbol;
+      Lisp_Object load_percentage, seconds, minutes, hours, remain;
+      Lisp_Object sequences[8];
+
+      long seconds_left = (long) system_status.BatteryLifeTime;
+
+      if (system_status.ACLineStatus == 0)
+	line_status = build_string ("off-line");
+      else if (system_status.ACLineStatus == 1)
+	line_status = build_string ("on-line");
+      else
+	line_status = build_string ("N/A");
+
+      if (system_status.BatteryFlag & 128)
+	{
+	  battery_status = build_string ("N/A");
+	  battery_status_symbol = empty_unibyte_string;
+	}
+      else if (system_status.BatteryFlag & 8)
+	{
+	  battery_status = build_string ("charging");
+	  battery_status_symbol = build_string ("+");
+	  if (system_status.BatteryFullLifeTime != -1L)
+	    seconds_left = system_status.BatteryFullLifeTime - seconds_left;
+	}
+      else if (system_status.BatteryFlag & 4)
+	{
+	  battery_status = build_string ("critical");
+	  battery_status_symbol = build_string ("!");
+	}
+      else if (system_status.BatteryFlag & 2)
+	{
+	  battery_status = build_string ("low");
+	  battery_status_symbol = build_string ("-");
+	}
+      else if (system_status.BatteryFlag & 1)
+	{
+	  battery_status = build_string ("high");
+	  battery_status_symbol = empty_unibyte_string;
+	}
+      else
+	{
+	  battery_status = build_string ("medium");
+	  battery_status_symbol = empty_unibyte_string;
+	}
+
+      if (system_status.BatteryLifePercent > 100)
+	load_percentage = build_string ("N/A");
+      else
+	{
+	  char buffer[16];
+	  _snprintf (buffer, 16, "%d", system_status.BatteryLifePercent);
+	  load_percentage = build_string (buffer);
+	}
+
+      if (seconds_left < 0)
+	seconds = minutes = hours = remain = build_string ("N/A");
+      else
+	{
+	  long m;
+	  float h;
+	  char buffer[16];
+	  _snprintf (buffer, 16, "%ld", seconds_left);
+	  seconds = build_string (buffer);
+
+	  m = seconds_left / 60;
+	  _snprintf (buffer, 16, "%ld", m);
+	  minutes = build_string (buffer);
+
+	  h = seconds_left / 3600.0;
+	  _snprintf (buffer, 16, "%3.1f", h);
+	  hours = build_string (buffer);
+
+	  _snprintf (buffer, 16, "%ld:%02ld", m / 60, m % 60);
+	  remain = build_string (buffer);
+	}
+      sequences[0] = Fcons (make_number ('L'), line_status);
+      sequences[1] = Fcons (make_number ('B'), battery_status);
+      sequences[2] = Fcons (make_number ('b'), battery_status_symbol);
+      sequences[3] = Fcons (make_number ('p'), load_percentage);
+      sequences[4] = Fcons (make_number ('s'), seconds);
+      sequences[5] = Fcons (make_number ('m'), minutes);
+      sequences[6] = Fcons (make_number ('h'), hours);
+      sequences[7] = Fcons (make_number ('t'), remain);
+
+      status = Flist (8, sequences);
+    }
+  return status;
+}
 
 
 DEFUN ("file-system-info", Ffile_system_info, Sfile_system_info, 1, 1, 0,
@@ -8609,6 +6891,8 @@ frame_parm_handler w32_frame_parm_handlers[] =
   x_set_fringe_width,
   0, /* x_set_wait_for_wm, */
   x_set_fullscreen,
+  x_set_font_backend,
+  x_set_alpha
 };
 
 void
@@ -8621,29 +6905,18 @@ syms_of_w32fns ()
 
   w32_visible_system_caret_hwnd = NULL;
 
-  Qnone = intern ("none");
-  staticpro (&Qnone);
-  Qsuppress_icon = intern ("suppress-icon");
-  staticpro (&Qsuppress_icon);
-  Qundefined_color = intern ("undefined-color");
-  staticpro (&Qundefined_color);
-  Qcancel_timer = intern ("cancel-timer");
-  staticpro (&Qcancel_timer);
-
-  Qhyper = intern ("hyper");
-  staticpro (&Qhyper);
-  Qsuper = intern ("super");
-  staticpro (&Qsuper);
-  Qmeta = intern ("meta");
-  staticpro (&Qmeta);
-  Qalt = intern ("alt");
-  staticpro (&Qalt);
-  Qctrl = intern ("ctrl");
-  staticpro (&Qctrl);
-  Qcontrol = intern ("control");
-  staticpro (&Qcontrol);
-  Qshift = intern ("shift");
-  staticpro (&Qshift);
+  DEFSYM (Qnone, "none");
+  DEFSYM (Qsuppress_icon, "suppress-icon");
+  DEFSYM (Qundefined_color, "undefined-color");
+  DEFSYM (Qcancel_timer, "cancel-timer");
+  DEFSYM (Qhyper, "hyper");
+  DEFSYM (Qsuper, "super");
+  DEFSYM (Qmeta, "meta");
+  DEFSYM (Qalt, "alt");
+  DEFSYM (Qctrl, "ctrl");
+  DEFSYM (Qcontrol, "control");
+  DEFSYM (Qshift, "shift");
+  DEFSYM (Qfont_param, "font-parameter");
   /* This is the end of symbol initialization.  */
 
   /* Text property `display' should be nonsticky by default.  */
@@ -8800,6 +7073,30 @@ If this variable is non-nil, Emacs will pass them on, allowing the
 system to handle them.  */);
   w32_pass_extra_mouse_buttons_to_system = 0;
 
+  DEFVAR_BOOL ("w32-pass-multimedia-buttons-to-system",
+               &w32_pass_multimedia_buttons_to_system,
+               doc: /* If non-nil, media buttons are passed to Windows.
+Some modern keyboards contain buttons for controlling media players, web
+browsers and other applications.  Generally these buttons are handled on a
+system wide basis, but by setting this to nil they are made available
+to Emacs for binding.  Depending on your keyboard, additional keys that
+may be available are:
+
+browser-back, browser-forward, browser-refresh, browser-stop,
+browser-search, browser-favorites, browser-home,
+mail, mail-reply, mail-forward, mail-send,
+app-1, app-2,
+help, find, new, open, close, save, print, undo, redo, copy, cut, paste,
+spell-check, correction-list, toggle-dictate-command,
+media-next, media-previous, media-stop, media-play-pause, media-select,
+media-play, media-pause, media-record, media-fast-forward, media-rewind,
+media-channel-up, media-channel-down,
+volume-mute, volume-up, volume-down,
+mic-volume-mute, mic-volume-down, mic-volume-up, mic-toggle,
+bass-down, bass-boost, bass-up, treble-down, treble-up  */);
+  w32_pass_multimedia_buttons_to_system = 1;
+
+#if 0 /* TODO: Mouse cursor customization.  */
   DEFVAR_LISP ("x-pointer-shape", &Vx_pointer_shape,
 	       doc: /* The shape of the pointer when over text.
 Changing the value does not affect existing frames
@@ -8816,15 +7113,6 @@ This variable takes effect when you create a new frame
 or when you set the mouse color.  */);
   Vx_hourglass_pointer_shape = Qnil;
 
-  DEFVAR_BOOL ("display-hourglass", &display_hourglass_p,
-	       doc: /* Non-zero means Emacs displays an hourglass pointer on window systems.  */);
-  display_hourglass_p = 1;
-
-  DEFVAR_LISP ("hourglass-delay", &Vhourglass_delay,
-	       doc: /* *Seconds to wait before displaying an hourglass pointer.
-Value must be an integer or float.  */);
-  Vhourglass_delay = make_number (DEFAULT_HOURGLASS_DELAY);
-
   DEFVAR_LISP ("x-sensitive-text-pointer-shape",
 	       &Vx_sensitive_text_pointer_shape,
 	       doc: /* The shape of the pointer when over mouse-sensitive text.
@@ -8838,6 +7126,7 @@ or when you set the mouse color.  */);
 This variable takes effect when you create a new frame
 or when you set the mouse color.  */);
   Vx_window_horizontal_drag_shape = Qnil;
+#endif
 
   DEFVAR_LISP ("x-cursor-fore-pixel", &Vx_cursor_fore_pixel,
 	       doc: /* A string indicating the foreground color of the cursor box.  */);
@@ -8888,90 +7177,6 @@ Set this to nil to get the old behavior for repainting; this should
 only be necessary if the default setting causes problems.  */);
   w32_strict_painting = 1;
 
-  DEFVAR_LISP ("w32-charset-info-alist",
-               &Vw32_charset_info_alist,
-               doc: /* Alist linking Emacs character sets to Windows fonts and codepages.
-Each entry should be of the form:
-
-   (CHARSET_NAME . (WINDOWS_CHARSET . CODEPAGE))
-
-where CHARSET_NAME is a string used in font names to identify the charset,
-WINDOWS_CHARSET is a symbol that can be one of:
-w32-charset-ansi, w32-charset-default, w32-charset-symbol,
-w32-charset-shiftjis, w32-charset-hangeul, w32-charset-gb2312,
-w32-charset-chinesebig5,
-w32-charset-johab, w32-charset-hebrew,
-w32-charset-arabic, w32-charset-greek, w32-charset-turkish,
-w32-charset-vietnamese, w32-charset-thai, w32-charset-easteurope,
-w32-charset-russian, w32-charset-mac, w32-charset-baltic,
-w32-charset-unicode,
-or w32-charset-oem.
-CODEPAGE should be an integer specifying the codepage that should be used
-to display the character set, t to do no translation and output as Unicode,
-or nil to do no translation and output as 8 bit (or multibyte on far-east
-versions of Windows) characters.  */);
-    Vw32_charset_info_alist = Qnil;
-
-  staticpro (&Qw32_charset_ansi);
-  Qw32_charset_ansi = intern ("w32-charset-ansi");
-  staticpro (&Qw32_charset_symbol);
-  Qw32_charset_default = intern ("w32-charset-default");
-  staticpro (&Qw32_charset_default);
-  Qw32_charset_symbol = intern ("w32-charset-symbol");
-  staticpro (&Qw32_charset_shiftjis);
-  Qw32_charset_shiftjis = intern ("w32-charset-shiftjis");
-  staticpro (&Qw32_charset_hangeul);
-  Qw32_charset_hangeul = intern ("w32-charset-hangeul");
-  staticpro (&Qw32_charset_chinesebig5);
-  Qw32_charset_chinesebig5 = intern ("w32-charset-chinesebig5");
-  staticpro (&Qw32_charset_gb2312);
-  Qw32_charset_gb2312 = intern ("w32-charset-gb2312");
-  staticpro (&Qw32_charset_oem);
-  Qw32_charset_oem = intern ("w32-charset-oem");
-
-#ifdef JOHAB_CHARSET
-  {
-    static int w32_extra_charsets_defined = 1;
-    DEFVAR_BOOL ("w32-extra-charsets-defined", &w32_extra_charsets_defined,
-		 doc: /* Internal variable.  */);
-
-    staticpro (&Qw32_charset_johab);
-    Qw32_charset_johab = intern ("w32-charset-johab");
-    staticpro (&Qw32_charset_easteurope);
-    Qw32_charset_easteurope = intern ("w32-charset-easteurope");
-    staticpro (&Qw32_charset_turkish);
-    Qw32_charset_turkish = intern ("w32-charset-turkish");
-    staticpro (&Qw32_charset_baltic);
-    Qw32_charset_baltic = intern ("w32-charset-baltic");
-    staticpro (&Qw32_charset_russian);
-    Qw32_charset_russian = intern ("w32-charset-russian");
-    staticpro (&Qw32_charset_arabic);
-    Qw32_charset_arabic = intern ("w32-charset-arabic");
-    staticpro (&Qw32_charset_greek);
-    Qw32_charset_greek = intern ("w32-charset-greek");
-    staticpro (&Qw32_charset_hebrew);
-    Qw32_charset_hebrew = intern ("w32-charset-hebrew");
-    staticpro (&Qw32_charset_vietnamese);
-    Qw32_charset_vietnamese = intern ("w32-charset-vietnamese");
-    staticpro (&Qw32_charset_thai);
-    Qw32_charset_thai = intern ("w32-charset-thai");
-    staticpro (&Qw32_charset_mac);
-    Qw32_charset_mac = intern ("w32-charset-mac");
-  }
-#endif
-
-#ifdef UNICODE_CHARSET
-  {
-    static int w32_unicode_charset_defined = 1;
-    DEFVAR_BOOL ("w32-unicode-charset-defined",
-                 &w32_unicode_charset_defined,
-		 doc: /* Internal variable.  */);
-
-    staticpro (&Qw32_charset_unicode);
-    Qw32_charset_unicode = intern ("w32-charset-unicode");
-  }
-#endif
-
 #if 0 /* TODO: Port to W32 */
   defsubr (&Sx_change_window_property);
   defsubr (&Sx_delete_window_property);
@@ -8999,14 +7204,12 @@ versions of Windows) characters.  */);
   defsubr (&Sx_close_connection);
   defsubr (&Sx_display_list);
   defsubr (&Sx_synchronize);
+  defsubr (&Sx_focus_frame);
 
   /* W32 specific functions */
 
-  defsubr (&Sw32_focus_frame);
-  defsubr (&Sw32_select_font);
   defsubr (&Sw32_define_rgb_color);
   defsubr (&Sw32_default_color_map);
-  defsubr (&Sw32_load_color_file);
   defsubr (&Sw32_send_sys_command);
   defsubr (&Sw32_shell_execute);
   defsubr (&Sw32_register_hot_key);
@@ -9015,28 +7218,17 @@ versions of Windows) characters.  */);
   defsubr (&Sw32_reconstruct_hot_key);
   defsubr (&Sw32_toggle_lock_key);
   defsubr (&Sw32_window_exists_p);
-  defsubr (&Sw32_find_bdf_fonts);
+  defsubr (&Sw32_battery_status);
 
   defsubr (&Sfile_system_info);
   defsubr (&Sdefault_printer_name);
 
-  /* Setting callback functions for fontset handler.  */
-  get_font_info_func = w32_get_font_info;
-
-#if 0 /* This function pointer doesn't seem to be used anywhere.
-	 And the pointer assigned has the wrong type, anyway.  */
-  list_fonts_func = w32_list_fonts;
-#endif
-
-  load_font_func = w32_load_font;
-  find_ccl_program_func = w32_find_ccl_program;
-  query_font_func = w32_query_font;
-  set_frame_fontset_func = x_set_font;
   check_window_system_func = check_w32;
 
 
-  hourglass_atimer = NULL;
-  hourglass_shown_p = 0;
+  hourglass_timer = 0;
+  hourglass_hwnd = NULL;
+
   defsubr (&Sx_show_tip);
   defsubr (&Sx_hide_tip);
   tip_timer = Qnil;
@@ -9048,6 +7240,7 @@ versions of Windows) characters.  */);
   staticpro (&last_show_tip_args);
 
   defsubr (&Sx_file_dialog);
+  defsubr (&Ssystem_move_file_to_trash);
 }
 
 
@@ -9073,6 +7266,18 @@ globals_of_w32fns ()
   clipboard_sequence_fn = (ClipboardSequence_Proc)
     GetProcAddress (user32_lib, "GetClipboardSequenceNumber");
 
+  monitor_from_point_fn = (MonitorFromPoint_Proc)
+    GetProcAddress (user32_lib, "MonitorFromPoint");
+  get_monitor_info_fn = (GetMonitorInfo_Proc)
+    GetProcAddress (user32_lib, "GetMonitorInfoA");
+
+  {
+    HMODULE imm32_lib = GetModuleHandle ("imm32.dll");
+    get_composition_string_fn = (ImmGetCompositionString_Proc)
+      GetProcAddress (imm32_lib, "ImmGetCompositionStringW");
+    get_ime_context_fn = (ImmGetContext_Proc)
+      GetProcAddress (imm32_lib, "ImmGetContext");
+  }
   DEFVAR_INT ("w32-ansi-code-page",
 	      &w32_ansi_code_page,
 	      doc: /* The ANSI code page used by the system.  */);
@@ -9080,11 +7285,11 @@ globals_of_w32fns ()
 
   /* MessageBox does not work without this when linked to comctl32.dll 6.0.  */
   InitCommonControls ();
+
+  syms_of_w32uniscribe ();
 }
 
 #undef abort
-
-void w32_abort (void) NO_RETURN;
 
 void
 w32_abort ()

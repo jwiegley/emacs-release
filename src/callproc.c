@@ -1,14 +1,14 @@
 /* Synchronous subprocess invocation for GNU Emacs.
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 1994, 1995, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 #include <config.h>
@@ -76,7 +74,7 @@ extern int errno;
 #include "lisp.h"
 #include "commands.h"
 #include "buffer.h"
-#include "charset.h"
+#include "character.h"
 #include "ccl.h"
 #include "coding.h"
 #include "composite.h"
@@ -85,17 +83,15 @@ extern int errno;
 #include "syssignal.h"
 #include "systty.h"
 #include "blockinput.h"
+#include "frame.h"
+#include "termhooks.h"
 
 #ifdef MSDOS
 #include "msdos.h"
 #endif
 
-#ifdef VMS
-extern noshare char **environ;
-#else
 #ifndef USE_CRT_DLL
 extern char **environ;
-#endif
 #endif
 
 #ifdef HAVE_SETPGID
@@ -108,11 +104,15 @@ extern char **environ;
 Lisp_Object Vexec_path, Vexec_directory, Vexec_suffixes;
 Lisp_Object Vdata_directory, Vdoc_directory;
 Lisp_Object Vconfigure_info_directory, Vshared_game_score_directory;
-Lisp_Object Vtemp_file_name_pattern;
+
+/* Pattern used by call-process-region to make temp files.  */
+static Lisp_Object Vtemp_file_name_pattern;
+
+extern Lisp_Object Vtemporary_file_directory;
 
 Lisp_Object Vshell_file_name;
 
-Lisp_Object Vprocess_environment;
+Lisp_Object Vprocess_environment, Vinitial_environment;
 
 #ifdef DOS_NT
 Lisp_Object Qbuffer_file_type;
@@ -131,6 +131,7 @@ int synch_process_termsig;
 /* If synch_process_death is zero,
    this is exit code of synchronous subprocess.  */
 int synch_process_retcode;
+
 
 /* Clean up when exiting Fcall_process.
    On MSDOS, delete the temporary file on any kind of termination.
@@ -139,7 +140,7 @@ int synch_process_retcode;
 /* Nonzero if this is termination due to exit.  */
 static int call_process_exited;
 
-#ifndef VMS  /* VMS version is in vmsproc.c.  */
+EXFUN (Fgetenv_internal, 2);
 
 static Lisp_Object
 call_process_kill (fdpid)
@@ -152,18 +153,26 @@ call_process_kill (fdpid)
 }
 
 Lisp_Object
-call_process_cleanup (fdpid)
-     Lisp_Object fdpid;
+call_process_cleanup (arg)
+     Lisp_Object arg;
 {
-#if defined (MSDOS) || defined (MAC_OS8)
+  Lisp_Object fdpid = Fcdr (arg);
+#if defined (MSDOS)
+  Lisp_Object file;
+#else
+  int pid;
+#endif
+
+  Fset_buffer (Fcar (arg));
+
+#if defined (MSDOS)
   /* for MSDOS fdpid is really (fd . tempfile)  */
-  register Lisp_Object file;
   file = Fcdr (fdpid);
   emacs_close (XFASTINT (Fcar (fdpid)));
   if (strcmp (SDATA (file), NULL_DEVICE) != 0)
     unlink (SDATA (file));
-#else /* not MSDOS and not MAC_OS8 */
-  register int pid = XFASTINT (Fcdr (fdpid));
+#else /* not MSDOS */
+  pid = XFASTINT (Fcdr (fdpid));
 
   if (call_process_exited)
     {
@@ -229,22 +238,13 @@ usage: (call-process PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)  */)
   int bufsize = CALLPROC_BUFFER_SIZE_MIN;
   int count = SPECPDL_INDEX ();
 
-  register const unsigned char **new_argv
-    = (const unsigned char **) alloca ((max (2, nargs - 2)) * sizeof (char *));
-  struct buffer *old = current_buffer;
+  register const unsigned char **new_argv;
   /* File to use for stderr in the child.
      t means use same as standard output.  */
   Lisp_Object error_file;
 #ifdef MSDOS	/* Demacs 1.1.1 91/10/16 HIRANO Satoshi */
   char *outf, *tempfile;
   int outfilefd;
-#endif
-#ifdef MAC_OS8
-  char *tempfile;
-  int outfilefd;
-#endif
-#if 0
-  int mask;
 #endif
   struct coding_system process_coding; /* coding-system of process output */
   struct coding_system argument_coding;	/* coding-system of arguments */
@@ -274,6 +274,7 @@ usage: (call-process PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)  */)
     if (nargs >= 5)
       {
 	int must_encode = 0;
+	Lisp_Object coding_attrs;
 
 	for (i = 4; i < nargs; i++)
 	  CHECK_STRING (args[i]);
@@ -299,11 +300,15 @@ usage: (call-process PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)  */)
 	    else
 	      val = Qnil;
 	  }
+	val = coding_inherit_eol_type (val, Qnil);
 	setup_coding_system (Fcheck_coding_system (val), &argument_coding);
-	if (argument_coding.common_flags & CODING_ASCII_INCOMPATIBLE_MASK)
-	  setup_coding_system (Qraw_text, &argument_coding);
-	if (argument_coding.eol_type == CODING_EOL_UNDECIDED)
-	  argument_coding.eol_type = system_eol_type;
+	coding_attrs = CODING_ID_ATTRS (argument_coding.id);
+	if (NILP (CODING_ATTR_ASCII_COMPAT (coding_attrs)))
+	  {
+	    /* We should not use an ASCII incompatible coding system.  */
+	    val = raw_text_coding_system (val);
+	    setup_coding_system (val, &argument_coding);
+	  }
       }
   }
 
@@ -370,9 +375,14 @@ usage: (call-process PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)  */)
 
     GCPRO4 (infile, buffer, current_dir, error_file);
 
-    current_dir
-      = expand_and_dir_to_file (Funhandled_file_name_directory (current_dir),
-				Qnil);
+    current_dir = Funhandled_file_name_directory (current_dir);
+    if (NILP (current_dir))
+      /* If the file name handler says that current_dir is unreachable, use
+	 a sensible default. */
+      current_dir = build_string ("~/");
+    current_dir = expand_and_dir_to_file (current_dir, Qnil);
+    current_dir = Ffile_name_as_directory (current_dir);
+
     if (NILP (Ffile_accessible_directory_p (current_dir)))
       report_file_error ("Setting current directory",
 			 Fcons (current_buffer->directory, Qnil));
@@ -396,9 +406,9 @@ usage: (call-process PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)  */)
     }
   /* Search for program; barf if not found.  */
   {
-    struct gcpro gcpro1;
+    struct gcpro gcpro1, gcpro2, gcpro3, gcpro4;
 
-    GCPRO1 (current_dir);
+    GCPRO4 (infile, buffer, current_dir, error_file);
     openp (Vexec_path, args[0], Vexec_suffixes, &path, make_number (X_OK));
     UNGCPRO;
   }
@@ -414,31 +424,30 @@ usage: (call-process PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)  */)
       && SREF (path, 1) == ':')
     path = Fsubstring (path, make_number (2), Qnil);
 
-  new_argv[0] = SDATA (path);
+  new_argv = (const unsigned char **)
+    alloca (max (2, nargs - 2) * sizeof (char *));
   if (nargs > 4)
     {
       register int i;
-      struct gcpro gcpro1, gcpro2, gcpro3;
+      struct gcpro gcpro1, gcpro2, gcpro3, gcpro4, gcpro5;
 
-      GCPRO3 (infile, buffer, current_dir);
+      GCPRO5 (infile, buffer, current_dir, path, error_file);
       argument_coding.dst_multibyte = 0;
       for (i = 4; i < nargs; i++)
 	{
 	  argument_coding.src_multibyte = STRING_MULTIBYTE (args[i]);
 	  if (CODING_REQUIRE_ENCODING (&argument_coding))
-	    {
-	      /* We must encode this argument.  */
-	      args[i] = encode_coding_string (args[i], &argument_coding, 1);
-	      if (argument_coding.type == coding_type_ccl)
-		setup_ccl_program (&(argument_coding.spec.ccl.encoder), Qnil);
-	    }
-	  new_argv[i - 3] = SDATA (args[i]);
+	    /* We must encode this argument.  */
+	    args[i] = encode_coding_string (&argument_coding, args[i], 1);
 	}
       UNGCPRO;
-      new_argv[nargs - 3] = 0;
+      for (i = 4; i < nargs; i++)
+	new_argv[i - 3] = SDATA (args[i]);
+      new_argv[i - 3] = 0;
     }
   else
     new_argv[1] = 0;
+  new_argv[0] = SDATA (path);
 
 #ifdef MSDOS /* MW, July 1993 */
   if ((outf = egetenv ("TMPDIR")))
@@ -465,43 +474,17 @@ usage: (call-process PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)  */)
   fd[1] = outfilefd;
 #endif /* MSDOS */
 
-#ifdef MAC_OS8
-  /* Since we don't have pipes on the Mac, create a temporary file to
-     hold the output of the subprocess.  */
-  tempfile = (char *) alloca (SBYTES (Vtemp_file_name_pattern) + 1);
-  bcopy (SDATA (Vtemp_file_name_pattern), tempfile,
-	 SBYTES (Vtemp_file_name_pattern) + 1);
-
-  mktemp (tempfile);
-
-  outfilefd = creat (tempfile, S_IREAD | S_IWRITE);
-  if (outfilefd < 0)
-    {
-      close (filefd);
-      report_file_error ("Opening process output file",
-			 Fcons (build_string (tempfile), Qnil));
-    }
-  fd[0] = filefd;
-  fd[1] = outfilefd;
-#endif /* MAC_OS8 */
-
   if (INTEGERP (buffer))
     fd[1] = emacs_open (NULL_DEVICE, O_WRONLY, 0), fd[0] = -1;
   else
     {
 #ifndef MSDOS
-#ifndef MAC_OS8
       errno = 0;
       if (pipe (fd) == -1)
 	{
 	  emacs_close (filefd);
 	  report_file_error ("Creating process pipe", Qnil);
 	}
-#endif
-#endif
-#if 0
-      /* Replaced by close_process_descs */
-      set_exclusive_use (fd[0]);
 #endif
     }
 
@@ -556,52 +539,6 @@ usage: (call-process PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)  */)
 	report_file_error ("Cannot redirect stderr", Fcons (error_file, Qnil));
       }
 
-#ifdef MAC_OS8
-    {
-      /* Call run_mac_command in sysdep.c here directly instead of doing
-         a child_setup as for MSDOS and other platforms.  Note that this
-         code does not handle passing the environment to the synchronous
-         Mac subprocess.  */
-      char *infn, *outfn, *errfn, *currdn;
-
-      /* close these files so subprocess can write to them */
-      close (outfilefd);
-      if (fd_error != outfilefd)
-        close (fd_error);
-      fd1 = -1; /* No harm in closing that one! */
-
-      infn = SDATA (infile);
-      outfn = tempfile;
-      if (NILP (error_file))
-        errfn = NULL_DEVICE;
-      else if (EQ (Qt, error_file))
-        errfn = outfn;
-      else
-        errfn = SDATA (error_file);
-      currdn = SDATA (current_dir);
-      pid = run_mac_command (new_argv, currdn, infn, outfn, errfn);
-
-      /* Record that the synchronous process exited and note its
-         termination status.  */
-      synch_process_alive = 0;
-      synch_process_retcode = pid;
-      if (synch_process_retcode < 0)  /* means it couldn't be exec'ed */
-	{
-	  synchronize_system_messages_locale ();
-	  synch_process_death = strerror (errno);
-	}
-
-      /* Since CRLF is converted to LF within `decode_coding', we can
-         always open a file with binary mode.  */
-      fd[0] = open (tempfile, O_BINARY);
-      if (fd[0] < 0)
-	{
-	  unlink (tempfile);
-	  close (filefd);
-	  report_file_error ("Cannot re-open temporary file", Qnil);
-	}
-    }
-#else /* not MAC_OS8 */
 #ifdef MSDOS /* MW, July 1993 */
     /* Note that on MSDOS `child_setup' actually returns the child process
        exit status, not its PID, so we assign it to `synch_process_retcode'
@@ -664,7 +601,6 @@ usage: (call-process PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)  */)
     if (fd_error >= 0)
       emacs_close (fd_error);
 #endif /* not MSDOS */
-#endif /* not MAC_OS8 */
 
     environ = save_environ;
 
@@ -698,14 +634,17 @@ usage: (call-process PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)  */)
   /* Enable sending signal if user quits below.  */
   call_process_exited = 0;
 
-#if defined(MSDOS) || defined(MAC_OS8)
+#if defined(MSDOS)
   /* MSDOS needs different cleanup information.  */
   record_unwind_protect (call_process_cleanup,
-			 Fcons (make_number (fd[0]), build_string (tempfile)));
+			 Fcons (Fcurrent_buffer (),
+				Fcons (make_number (fd[0]),
+				       build_string (tempfile))));
 #else
   record_unwind_protect (call_process_cleanup,
-			 Fcons (make_number (fd[0]), make_number (pid)));
-#endif /* not MSDOS and not MAC_OS8 */
+			 Fcons (Fcurrent_buffer (),
+				Fcons (make_number (fd[0]), make_number (pid))));
+#endif /* not MSDOS */
 
 
   if (BUFFERP (buffer))
@@ -743,19 +682,15 @@ usage: (call-process PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)  */)
 	  else
 	    val = Qnil;
 	}
-      setup_coding_system (Fcheck_coding_system (val), &process_coding);
+      Fcheck_coding_system (val);
       /* In unibyte mode, character code conversion should not take
 	 place but EOL conversion should.  So, setup raw-text or one
 	 of the subsidiary according to the information just setup.  */
       if (NILP (current_buffer->enable_multibyte_characters)
 	  && !NILP (val))
-	setup_raw_text_coding_system (&process_coding);
+	val = raw_text_coding_system (val);
+      setup_coding_system (val, &process_coding);
     }
-  process_coding.src_multibyte = 0;
-  process_coding.dst_multibyte
-    = (BUFFERP (buffer)
-       ? ! NILP (XBUFFER (buffer)->enable_multibyte_characters)
-       : ! NILP (current_buffer->enable_multibyte_characters));
 
   immediate_quit = 1;
   QUIT;
@@ -767,12 +702,8 @@ usage: (call-process PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)  */)
     int carryover = 0;
     int display_on_the_fly = display_p;
     struct coding_system saved_coding;
-    int pt_orig = PT, pt_byte_orig = PT_BYTE;
-    int inserted;
 
     saved_coding = process_coding;
-    if (process_coding.composing != COMPOSITION_DISABLED)
-      coding_allocate_composition_data (&process_coding, PT);
     while (1)
       {
 	/* Repeatedly read until we've filled as much as possible
@@ -805,133 +736,57 @@ usage: (call-process PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)  */)
 
 	if (!NILP (buffer))
 	  {
-	    if (! CODING_MAY_REQUIRE_DECODING (&process_coding))
+	    if (NILP (current_buffer->enable_multibyte_characters)
+		&& ! CODING_MAY_REQUIRE_DECODING (&process_coding))
 	      insert_1_both (buf, nread, nread, 0, 1, 0);
 	    else
 	      {			/* We have to decode the input.  */
-		int size;
-		char *decoding_buf;
+		Lisp_Object curbuf;
+		int count1 = SPECPDL_INDEX ();
 
-	      repeat_decoding:
-		size = decoding_buffer_size (&process_coding, nread);
-		decoding_buf = (char *) xmalloc (size);
-
-		/* We can't use the macro CODING_REQUIRE_DETECTION
-		   because it always returns nonzero if the coding
-		   system requires EOL detection.  Here, we have to
-		   check only whether or not the coding system
-		   requires text-encoding detection.  */
-		if (process_coding.type == coding_type_undecided)
-		  {
-		    detect_coding (&process_coding, buf, nread);
-		    if (process_coding.composing != COMPOSITION_DISABLED)
-		      /* We have not yet allocated the composition
-			 data because the coding type was undecided.  */
-		      coding_allocate_composition_data (&process_coding, PT);
-		  }
-		if (process_coding.cmp_data)
-		  process_coding.cmp_data->char_offset = PT;
-
-		decode_coding (&process_coding, buf, decoding_buf,
-			       nread, size);
-
+		XSETBUFFER (curbuf, current_buffer);
+		/* We cannot allow after-change-functions be run
+		   during decoding, because that might modify the
+		   buffer, while we rely on process_coding.produced to
+		   faithfully reflect inserted text until we
+		   TEMP_SET_PT_BOTH below.  */
+		specbind (Qinhibit_modification_hooks, Qt);
+		decode_coding_c_string (&process_coding, buf, nread,
+					curbuf);
+		unbind_to (count1, Qnil);
 		if (display_on_the_fly
-		    && saved_coding.type == coding_type_undecided
-		    && process_coding.type != coding_type_undecided)
+		    && CODING_REQUIRE_DETECTION (&saved_coding)
+		    && ! CODING_REQUIRE_DETECTION (&process_coding))
 		  {
 		    /* We have detected some coding system.  But,
 		       there's a possibility that the detection was
-		       done by insufficient data.  So, we try the code
-		       detection again with more data.  */
-		    xfree (decoding_buf);
+		       done by insufficient data.  So, we give up
+		       displaying on the fly.  */
+		    if (process_coding.produced > 0)
+		      del_range_2 (process_coding.dst_pos,
+				   process_coding.dst_pos_byte,
+				   process_coding.dst_pos
+				   + process_coding.produced_char,
+				   process_coding.dst_pos_byte
+				   + process_coding.produced, 0);
 		    display_on_the_fly = 0;
 		    process_coding = saved_coding;
 		    carryover = nread;
 		    /* This is to make the above condition always
 		       fails in the future.  */
-		    saved_coding.type = coding_type_no_conversion;
+		    saved_coding.common_flags
+		      &= ~CODING_REQUIRE_DETECTION_MASK;
 		    continue;
 		  }
 
-		if (process_coding.produced > 0)
-		  insert_1_both (decoding_buf, process_coding.produced_char,
-				 process_coding.produced, 0, 1, 0);
-		xfree (decoding_buf);
-
-		if (process_coding.result == CODING_FINISH_INCONSISTENT_EOL)
-		  {
-		    Lisp_Object eol_type, coding;
-
-		    if (process_coding.eol_type == CODING_EOL_CR)
-		      {
-			/* CRs have been replaced with LFs.  Undo
-			   that in the text inserted above.  */
-			unsigned char *p;
-
-			move_gap_both (PT, PT_BYTE);
-
-			p = BYTE_POS_ADDR (pt_byte_orig);
-			for (; p < GPT_ADDR; ++p)
-			  if (*p == '\n')
-			    *p = '\r';
-		      }
-		    else if (process_coding.eol_type == CODING_EOL_CRLF)
-		      {
-			/* CR LFs have been replaced with LFs.  Undo
-			   that by inserting CRs in front of LFs in
-			   the text inserted above.  */
-			EMACS_INT bytepos, old_pt, old_pt_byte, nCR;
-
-			old_pt = PT;
-			old_pt_byte = PT_BYTE;
-			nCR = 0;
-
-			for (bytepos = PT_BYTE - 1;
-			     bytepos >= pt_byte_orig;
-			     --bytepos)
-			  if (FETCH_BYTE (bytepos) == '\n')
-			    {
-			      EMACS_INT charpos = BYTE_TO_CHAR (bytepos);
-			      TEMP_SET_PT_BOTH (charpos, bytepos);
-			      insert_1_both ("\r", 1, 1, 0, 1, 0);
-			      ++nCR;
-			    }
-
-			TEMP_SET_PT_BOTH (old_pt + nCR, old_pt_byte + nCR);
-		      }
-
-		    /* Set the coding system symbol to that for
-		       Unix-like EOL.  */
-		    eol_type = Fget (saved_coding.symbol, Qeol_type);
-		    if (VECTORP (eol_type)
-			&& ASIZE (eol_type) == 3
-			&& SYMBOLP (AREF (eol_type, CODING_EOL_LF)))
-		      coding = AREF (eol_type, CODING_EOL_LF);
-		    else
-		      coding = saved_coding.symbol;
-
-		    process_coding.symbol = coding;
-		    process_coding.eol_type = CODING_EOL_LF;
-		    process_coding.mode
-		      &= ~CODING_MODE_INHIBIT_INCONSISTENT_EOL;
-		  }
-
-		nread -= process_coding.consumed;
-		carryover = nread;
+		TEMP_SET_PT_BOTH (PT + process_coding.produced_char,
+				  PT_BYTE + process_coding.produced);
+		carryover = process_coding.carryover_bytes;
 		if (carryover > 0)
 		  /* As CARRYOVER should not be that large, we had
 		     better avoid overhead of bcopy.  */
-		  BCOPY_SHORT (buf + process_coding.consumed, buf,
-			       carryover);
-		if (process_coding.result == CODING_FINISH_INSUFFICIENT_CMP)
-		  {
-		    /* The decoding ended because of insufficient data
-		       area to record information about composition.
-		       We must try decoding with additional data area
-		       before reading more output for the process.  */
-		    coding_allocate_composition_data (&process_coding, PT);
-		    goto repeat_decoding;
-		  }
+		  BCOPY_SHORT (process_coding.carryover, buf,
+			       process_coding.carryover_bytes);
 	      }
 	  }
 
@@ -962,41 +817,18 @@ usage: (call-process PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)  */)
       }
   give_up: ;
 
-    if (!NILP (buffer)
-	&& process_coding.cmp_data)
-      {
-	coding_restore_composition (&process_coding, Fcurrent_buffer ());
-	coding_free_composition_data (&process_coding);
-      }
-
-    {
-      int post_read_count = SPECPDL_INDEX ();
-
-      record_unwind_protect (save_excursion_restore, save_excursion_save ());
-      inserted = PT - pt_orig;
-      TEMP_SET_PT_BOTH (pt_orig, pt_byte_orig);
-      if (SYMBOLP (process_coding.post_read_conversion)
-	  && !NILP (Ffboundp (process_coding.post_read_conversion)))
-	call1 (process_coding.post_read_conversion, make_number (inserted));
-
-      Vlast_coding_system_used = process_coding.symbol;
-
-      /* If the caller required, let the buffer inherit the
-	 coding-system used to decode the process output.  */
-      if (inherit_process_coding_system)
-	call1 (intern ("after-insert-file-set-buffer-file-coding-system"),
-	       make_number (total_read));
-
-      unbind_to (post_read_count, Qnil);
-    }
+    Vlast_coding_system_used = CODING_ID_NAME (process_coding.id);
+    /* If the caller required, let the buffer inherit the
+       coding-system used to decode the process output.  */
+    if (inherit_process_coding_system)
+      call1 (intern ("after-insert-file-set-buffer-file-coding-system"),
+	     make_number (total_read));
   }
 
   /* Wait for it to terminate, unless it already has.  */
   wait_for_termination (pid);
 
   immediate_quit = 0;
-
-  set_buffer_internal (old);
 
   /* Don't kill any children that the subprocess may have left behind
      when exiting.  */
@@ -1022,7 +854,6 @@ usage: (call-process PROGRAM &optional INFILE BUFFER DISPLAY &rest ARGS)  */)
 					 Vlocale_coding_system, 0);
   return make_number (synch_process_retcode);
 }
-#endif
 
 static Lisp_Object
 delete_temp_file (name)
@@ -1071,36 +902,32 @@ usage: (call-process-region START END PROGRAM &optional DELETE BUFFER DISPLAY &r
   Lisp_Object coding_systems;
   Lisp_Object val, *args2;
   int i;
-#ifdef DOS_NT
   char *tempfile;
-  char *outf = '\0';
+  Lisp_Object tmpdir, pattern;
 
-  if ((outf = egetenv ("TMPDIR"))
-      || (outf = egetenv ("TMP"))
-      || (outf = egetenv ("TEMP")))
-    strcpy (tempfile = alloca (strlen (outf) + 20), outf);
+  if (STRINGP (Vtemporary_file_directory))
+    tmpdir = Vtemporary_file_directory;
   else
     {
-      tempfile = alloca (20);
-      *tempfile = '\0';
-    }
-  if (!IS_DIRECTORY_SEP (tempfile[strlen (tempfile) - 1]))
-    strcat (tempfile, "/");
-  if ('/' == DIRECTORY_SEP)
-    dostounix_filename (tempfile);
-  else
-    unixtodos_filename (tempfile);
-#ifdef WINDOWSNT
-  strcat (tempfile, "emXXXXXX");
-#else
-  strcat (tempfile, "detmp.XXX");
+#ifndef DOS_NT
+      if (getenv ("TMPDIR"))
+	tmpdir = build_string (getenv ("TMPDIR"));
+      else
+	tmpdir = build_string ("/tmp/");
+#else /* DOS_NT */
+      char *outf;
+      if ((outf = egetenv ("TMPDIR"))
+	  || (outf = egetenv ("TMP"))
+	  || (outf = egetenv ("TEMP")))
+	tmpdir = build_string (outf);
+      else
+	tmpdir = Ffile_name_as_directory (build_string ("c:/temp"));
 #endif
-#else /* not DOS_NT */
-  char *tempfile = (char *) alloca (SBYTES (Vtemp_file_name_pattern) + 1);
-  bcopy (SDATA (Vtemp_file_name_pattern), tempfile,
-	 SBYTES (Vtemp_file_name_pattern) + 1);
-#endif /* not DOS_NT */
+    }
 
+  pattern = Fexpand_file_name (Vtemp_file_name_pattern, tmpdir);
+  tempfile = (char *) alloca (SBYTES (pattern) + 1);
+  bcopy (SDATA (pattern), tempfile, SBYTES (pattern) + 1);
   coding_systems = Qt;
 
 #ifdef HAVE_MKSTEMP
@@ -1178,9 +1005,41 @@ usage: (call-process-region START END PROGRAM &optional DELETE BUFFER DISPLAY &r
   RETURN_UNGCPRO (unbind_to (count, Fcall_process (nargs, args)));
 }
 
-#ifndef VMS /* VMS version is in vmsproc.c.  */
-
 static int relocate_fd ();
+
+static char **
+add_env (char **env, char **new_env, char *string)
+{
+  char **ep;
+  int ok = 1;
+  if (string == NULL)
+    return new_env;
+
+  /* See if this string duplicates any string already in the env.
+     If so, don't put it in.
+     When an env var has multiple definitions,
+     we keep the definition that comes first in process-environment.  */
+  for (ep = env; ok && ep != new_env; ep++)
+    {
+      char *p = *ep, *q = string;
+      while (ok)
+        {
+          if (*q != *p)
+            break;
+          if (*q == 0)
+            /* The string is a lone variable name; keep it for now, we
+               will remove it later.  It is a placeholder for a
+               variable that is not to be included in the environment.  */
+            break;
+          if (*q == '=')
+            ok = 0;
+          p++, q++;
+        }
+    }
+  if (ok)
+    *new_env++ = string;
+  return new_env;
+}
 
 /* This is the last thing run in a newly forked inferior
    either synchronous or asynchronous.
@@ -1237,9 +1096,10 @@ child_setup (in, out, err, new_argv, set_pgrp, current_dir)
 
   /* Note that use of alloca is always safe here.  It's obvious for systems
      that do not have true vfork or that have true (stack) alloca.
-     If using vfork and C_ALLOCA it is safe because that changes
-     the superior's static variables as if the superior had done alloca
-     and will be cleaned up in the usual way.  */
+     If using vfork and C_ALLOCA (when Emacs used to include
+     src/alloca.c) it is safe because that changes the superior's
+     static variables as if the superior had done alloca and will be
+     cleaned up in the usual way. */
   {
     register char *temp;
     register int i;
@@ -1283,57 +1143,80 @@ child_setup (in, out, err, new_argv, set_pgrp, current_dir)
       temp[--i] = 0;
   }
 
-  /* Set `env' to a vector of the strings in Vprocess_environment.  */
+  /* Set `env' to a vector of the strings in the environment.  */
   {
     register Lisp_Object tem;
     register char **new_env;
+    char **p, **q;
     register int new_length;
-
+    Lisp_Object display = Qnil;
+    
     new_length = 0;
+
     for (tem = Vprocess_environment;
-	 CONSP (tem) && STRINGP (XCAR (tem));
-	 tem = XCDR (tem))
-      new_length++;
+         CONSP (tem) && STRINGP (XCAR (tem));
+         tem = XCDR (tem))
+      {
+	if (strncmp (SDATA (XCAR (tem)), "DISPLAY", 7) == 0
+	    && (SDATA (XCAR (tem)) [7] == '\0'
+		|| SDATA (XCAR (tem)) [7] == '='))
+	  /* DISPLAY is specified in process-environment.  */
+	  display = Qt;
+	new_length++;
+      }
+
+    /* If not provided yet, use the frame's DISPLAY.  */
+    if (NILP (display))
+      {
+	Lisp_Object tmp = Fframe_parameter (selected_frame, Qdisplay);
+	if (!STRINGP (tmp) && CONSP (Vinitial_environment))
+	  /* If still not found, Look for DISPLAY in Vinitial_environment.  */
+	  tmp = Fgetenv_internal (build_string ("DISPLAY"),
+				  Vinitial_environment);
+	if (STRINGP (tmp))
+	  {
+	    display = tmp;
+	    new_length++;
+	  }
+      }
 
     /* new_length + 2 to include PWD and terminating 0.  */
     env = new_env = (char **) alloca ((new_length + 2) * sizeof (char *));
-
     /* If we have a PWD envvar, pass one down,
        but with corrected value.  */
-    if (getenv ("PWD"))
+    if (egetenv ("PWD"))
       *new_env++ = pwd_var;
+ 
+    if (STRINGP (display))
+      {
+	int vlen = strlen ("DISPLAY=") + strlen (SDATA (display)) + 1;
+	char *vdata = (char *) alloca (vlen);
+	strcpy (vdata, "DISPLAY=");
+	strcat (vdata, SDATA (display));
+	new_env = add_env (env, new_env, vdata);
+      }
 
-    /* Copy the Vprocess_environment strings into new_env.  */
+    /* Overrides.  */
     for (tem = Vprocess_environment;
 	 CONSP (tem) && STRINGP (XCAR (tem));
 	 tem = XCDR (tem))
-      {
-	char **ep = env;
-	char *string = (char *) SDATA (XCAR (tem));
-	/* See if this string duplicates any string already in the env.
-	   If so, don't put it in.
-	   When an env var has multiple definitions,
-	   we keep the definition that comes first in process-environment.  */
-	for (; ep != new_env; ep++)
-	  {
-	    char *p = *ep, *q = string;
-	    while (1)
-	      {
-		if (*q == 0)
-		  /* The string is malformed; might as well drop it.  */
-		  goto duplicate;
-		if (*q != *p)
-		  break;
-		if (*q == '=')
-		  goto duplicate;
-		p++, q++;
-	      }
-	  }
-	*new_env++ = string;
-      duplicate: ;
-      }
+      new_env = add_env (env, new_env, SDATA (XCAR (tem)));
+
     *new_env = 0;
+
+    /* Remove variable names without values.  */
+    p = q = env;
+    while (*p != 0)
+      {
+        while (*q != 0 && strchr (*q, '=') == NULL)
+          q++;
+        *p = *q++;
+        if (*p != 0)
+          p++;
+      }
   }
+
+  
 #ifdef WINDOWSNT
   prepare_standard_handles (in, out, err, handles);
   set_process_dir (SDATA (current_dir));
@@ -1447,22 +1330,18 @@ relocate_fd (fd, minfd)
 }
 
 static int
-getenv_internal (var, varlen, value, valuelen)
+getenv_internal_1 (var, varlen, value, valuelen, env)
      char *var;
      int varlen;
      char **value;
      int *valuelen;
+     Lisp_Object env;
 {
-  Lisp_Object scan;
-
-  for (scan = Vprocess_environment; CONSP (scan); scan = XCDR (scan))
+  for (; CONSP (env); env = XCDR (env))
     {
-      Lisp_Object entry;
-
-      entry = XCAR (scan);
+      Lisp_Object entry = XCAR (env);
       if (STRINGP (entry)
-	  && SBYTES (entry) > varlen
-	  && SREF (entry, varlen) == '='
+	  && SBYTES (entry) >= varlen
 #ifdef WINDOWSNT
 	  /* NT environment variables are case insensitive.  */
 	  && ! strnicmp (SDATA (entry), var, varlen)
@@ -1471,35 +1350,91 @@ getenv_internal (var, varlen, value, valuelen)
 #endif /* not WINDOWSNT */
 	  )
 	{
-	  *value    = (char *) SDATA (entry) + (varlen + 1);
-	  *valuelen = SBYTES (entry) - (varlen + 1);
+	  if (SBYTES (entry) > varlen && SREF (entry, varlen) == '=')
+	    {
+	      *value = (char *) SDATA (entry) + (varlen + 1);
+	      *valuelen = SBYTES (entry) - (varlen + 1);
+	      return 1;
+	    }
+	  else if (SBYTES (entry) == varlen)
+	    {
+	      /* Lone variable names in Vprocess_environment mean that
+		 variable should be removed from the environment. */
+	      *value = NULL;
+	      return 1;
+	    }
+	}
+    }
+  return 0;
+}
+
+static int
+getenv_internal (var, varlen, value, valuelen, frame)
+     char *var;
+     int varlen;
+     char **value;
+     int *valuelen;
+     Lisp_Object frame;
+{
+  /* Try to find VAR in Vprocess_environment first.  */
+  if (getenv_internal_1 (var, varlen, value, valuelen,
+			 Vprocess_environment))
+    return *value ? 1 : 0;
+
+  /* For DISPLAY try to get the values from the frame or the initial env.  */
+  if (strcmp (var, "DISPLAY") == 0)
+    {
+      Lisp_Object display
+	= Fframe_parameter (NILP (frame) ? selected_frame : frame, Qdisplay);
+      if (STRINGP (display))
+	{
+	  *value    = (char *) SDATA (display);
+	  *valuelen = SBYTES (display);
 	  return 1;
 	}
+      /* If still not found, Look for DISPLAY in Vinitial_environment.  */
+      if (getenv_internal_1 (var, varlen, value, valuelen,
+			     Vinitial_environment))
+	return *value ? 1 : 0;
     }
 
   return 0;
 }
 
-DEFUN ("getenv-internal", Fgetenv_internal, Sgetenv_internal, 1, 1, 0,
-       doc: /* Return the value of environment variable VAR, as a string.
-VAR should be a string.  Value is nil if VAR is undefined in the environment.
-This function consults the variable `process-environment' for its value.  */)
-     (var)
-     Lisp_Object var;
+DEFUN ("getenv-internal", Fgetenv_internal, Sgetenv_internal, 1, 2, 0,
+       doc: /* Get the value of environment variable VARIABLE.
+VARIABLE should be a string.  Value is nil if VARIABLE is undefined in
+the environment.  Otherwise, value is a string.
+
+This function searches `process-environment' for VARIABLE.
+
+If optional parameter ENV is a list, then search this list instead of
+`process-environment', and return t when encountering a negative entry
+\(an entry for a variable with no value).  */)
+     (variable, env)
+     Lisp_Object variable, env;
 {
   char *value;
   int valuelen;
 
-  CHECK_STRING (var);
-  if (getenv_internal (SDATA (var), SBYTES (var),
-		       &value, &valuelen))
+  CHECK_STRING (variable);
+  if (CONSP (env))
+    {
+      if (getenv_internal_1 (SDATA (variable), SBYTES (variable),
+			     &value, &valuelen, env))
+	return value ? make_string (value, valuelen) : Qt;
+      else
+	return Qnil;
+    }
+  else if (getenv_internal (SDATA (variable), SBYTES (variable),
+			    &value, &valuelen, env))
     return make_string (value, valuelen);
   else
     return Qnil;
 }
 
-/* A version of getenv that consults process_environment, easily
-   callable from C.  */
+/* A version of getenv that consults the Lisp environment lists,
+   easily callable from C.  */
 char *
 egetenv (var)
      char *var;
@@ -1507,13 +1442,12 @@ egetenv (var)
   char *value;
   int valuelen;
 
-  if (getenv_internal (var, strlen (var), &value, &valuelen))
+  if (getenv_internal (var, strlen (var), &value, &valuelen, Qnil))
     return value;
   else
     return 0;
 }
 
-#endif /* not VMS */
 
 /* This is run before init_cmdargs.  */
 
@@ -1616,26 +1550,8 @@ init_callproc ()
     dir_warning ("Warning: arch-independent data dir (%s) does not exist.\n",
 		 Vdata_directory);
 
-#ifdef VMS
-  Vshell_file_name = build_string ("*dcl*");
-#else
   sh = (char *) getenv ("SHELL");
   Vshell_file_name = build_string (sh ? sh : "/bin/sh");
-#endif
-
-#ifdef VMS
-  Vtemp_file_name_pattern = build_string ("tmp:emacsXXXXXX.");
-#else
-  if (getenv ("TMPDIR"))
-    {
-      char *dir = getenv ("TMPDIR");
-      Vtemp_file_name_pattern
-	= Fexpand_file_name (build_string ("emacsXXXXXX"),
-			     build_string (dir));
-    }
-  else
-    Vtemp_file_name_pattern = build_string ("/tmp/emacsXXXXXX");
-#endif
 
 #ifdef DOS_NT
   Vshared_game_score_directory = Qnil;
@@ -1647,17 +1563,23 @@ init_callproc ()
 }
 
 void
-set_process_environment ()
+set_initial_environment ()
 {
   register char **envp;
-
-  Vprocess_environment = Qnil;
 #ifndef CANNOT_DUMP
   if (initialized)
+    {
+#else
+    {
+      Vprocess_environment = Qnil;
 #endif
-    for (envp = environ; *envp; envp++)
-      Vprocess_environment = Fcons (build_string (*envp),
-				    Vprocess_environment);
+      for (envp = environ; *envp; envp++)
+	Vprocess_environment = Fcons (build_string (*envp),
+				      Vprocess_environment);
+      /* Ideally, the `copy' shouldn't be necessary, but it seems it's frequent
+	 to use `delete' and friends on process-environment.  */
+      Vinitial_environment = Fcopy_sequence (Vprocess_environment);
+    }
 }
 
 void
@@ -1667,6 +1589,15 @@ syms_of_callproc ()
   Qbuffer_file_type = intern ("buffer-file-type");
   staticpro (&Qbuffer_file_type);
 #endif /* DOS_NT */
+
+#ifndef DOS_NT
+  Vtemp_file_name_pattern = build_string ("emacsXXXXXX");
+#elif defined (WINDOWSNT)
+  Vtemp_file_name_pattern = build_string ("emXXXXXX");
+#else
+  Vtemp_file_name_pattern = build_string ("detmp.XXX");
+#endif
+  staticpro (&Vtemp_file_name_pattern);
 
   DEFVAR_LISP ("shell-file-name", &Vshell_file_name,
 	       doc: /* *File name to load inferior shells from.
@@ -1711,26 +1642,37 @@ If this variable is nil, then Emacs is unable to use a shared directory.  */);
   Vshared_game_score_directory = build_string (PATH_GAME);
 #endif
 
-  DEFVAR_LISP ("temp-file-name-pattern", &Vtemp_file_name_pattern,
-	       doc: /* Pattern for making names for temporary files.
-This is used by `call-process-region'.  */);
-  /* This variable is initialized in init_callproc.  */
+  DEFVAR_LISP ("initial-environment", &Vinitial_environment,
+	       doc: /* List of environment variables inherited from the parent process.
+Each element should be a string of the form ENVVARNAME=VALUE.
+The elements must normally be decoded (using `locale-coding-system') for use.  */);
+  Vinitial_environment = Qnil;
 
   DEFVAR_LISP ("process-environment", &Vprocess_environment,
-	       doc: /* List of environment variables for subprocesses to inherit.
+	       doc: /* List of overridden environment variables for subprocesses to inherit.
 Each element should be a string of the form ENVVARNAME=VALUE.
+
+Entries in this list take precedence to those in the frame-local
+environments.  Therefore, let-binding `process-environment' is an easy
+way to temporarily change the value of an environment variable,
+irrespective of where it comes from.  To use `process-environment' to
+remove an environment variable, include only its name in the list,
+without "=VALUE".
+
+This variable is set to nil when Emacs starts.
+
 If multiple entries define the same variable, the first one always
 takes precedence.
-The environment which Emacs inherits is placed in this variable
-when Emacs starts.
-Non-ASCII characters are encoded according to the initial value of
-`locale-coding-system', i.e. the elements must normally be decoded for use.
-See `setenv' and `getenv'.  */);
 
-#ifndef VMS
+Non-ASCII characters are encoded according to the initial value of
+`locale-coding-system', i.e. the elements must normally be decoded for
+use.
+
+See `setenv' and `getenv'.  */);
+  Vprocess_environment = Qnil;
+
   defsubr (&Scall_process);
   defsubr (&Sgetenv_internal);
-#endif
   defsubr (&Scall_process_region);
 }
 

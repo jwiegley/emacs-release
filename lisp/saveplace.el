@@ -1,7 +1,7 @@
 ;;; saveplace.el --- automatically save place in files
 
 ;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Karl Fogel <kfogel@red-bean.com>
 ;; Maintainer: FSF
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -39,7 +37,7 @@
 ;;; Code:
 
 ;; this is what I was using during testing:
-;; (define-key ctl-x-map "p" 'toggle-save-place)
+;; (define-key ctl-x-map "p" 'toggle-save-place-globally)
 
 (defgroup save-place nil
   "Automatically save place in files."
@@ -54,7 +52,7 @@ rather than the beginning of the buffer.
 This alist is saved between Emacs sessions.")
 
 (defcustom save-place nil
-  "*Non-nil means automatically save place in each file.
+  "Non-nil means automatically save place in each file.
 This means when you visit a file, point goes to the last place
 where it was when you previously visited the same file.
 This variable is automatically buffer-local.
@@ -73,12 +71,12 @@ or else use the Custom facility to set this option."
 (make-variable-buffer-local 'save-place)
 
 (defcustom save-place-file (convert-standard-filename "~/.emacs-places")
-  "*Name of the file that records `save-place-alist' value."
+  "Name of the file that records `save-place-alist' value."
   :type 'file
   :group 'save-place)
 
 (defcustom save-place-version-control nil
-  "*Controls whether to make numbered backups of master save-place file.
+  "Controls whether to make numbered backups of master save-place file.
 It can have four values: t, nil, `never', and `nospecial'.  The first
 three have the same meaning that they do for the variable
 `version-control', and the final value `nospecial' means just use the
@@ -206,9 +204,8 @@ may have changed\) back to `save-place-alist'."
 
 (defun save-place-alist-to-file ()
   (let ((file (expand-file-name save-place-file))
-        (coding-system-for-write 'emacs-mule))
+        (coding-system-for-write 'utf-8))
     (save-excursion
-      (message "Saving places to %s..." file)
       (set-buffer (get-buffer-create " *Saved Places*"))
       (delete-region (point-min) (point-max))
       (when save-place-forget-unreadable-files
@@ -228,9 +225,8 @@ may have changed\) back to `save-place-alist'."
 	(condition-case nil
 	    ;; Don't use write-file; we don't want this buffer to visit it.
             (write-region (point-min) (point-max) file)
-	  (file-error (message "Can't write %s" file)))
-        (kill-buffer (current-buffer))
-        (message "Saving places to %s...done" file)))))
+	  (file-error (message "Saving places: can't write %s" file)))
+        (kill-buffer (current-buffer))))))
 
 (defun load-save-place-alist-from-file ()
   (if (not save-place-loaded)
@@ -241,7 +237,6 @@ may have changed\) back to `save-place-alist'."
           ;; load it if it exists:
           (if (file-readable-p file)
               (save-excursion
-                (message "Loading places from %s..." file)
                 ;; don't want to use find-file because we have been
                 ;; adding hooks to it.
                 (set-buffer (get-buffer-create " *Saved Places*"))
@@ -269,8 +264,7 @@ may have changed\) back to `save-place-alist'."
                             (setq count (1+ count)))
                           (setq s (cdr s))))))
 
-                (kill-buffer (current-buffer))
-                (message "Loading places from %s...done" file)))
+                (kill-buffer (current-buffer))))
           nil))))
 
 (defun save-places-to-alist ()
@@ -314,5 +308,5 @@ may have changed\) back to `save-place-alist'."
 
 (provide 'saveplace) ; why not...
 
-;;; arch-tag: 3c2ef47b-0a22-4558-b116-118c9ef454a0
+;; arch-tag: 3c2ef47b-0a22-4558-b116-118c9ef454a0
 ;;; saveplace.el ends here

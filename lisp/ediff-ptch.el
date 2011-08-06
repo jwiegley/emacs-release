@@ -1,16 +1,16 @@
 ;;; ediff-ptch.el --- Ediff's  patch support
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,14 +18,14 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
 
+
+(provide 'ediff-ptch)
 
 (defgroup ediff-ptch nil
   "Ediff patch support."
@@ -34,32 +34,19 @@
   :group 'ediff)
 
 ;; compiler pacifier
-(defvar ediff-window-A)
-(defvar ediff-window-B)
-(defvar ediff-window-C)
-(defvar ediff-use-last-dir)
-(defvar ediff-shell)
-
 (eval-when-compile
-  (let ((load-path (cons (expand-file-name ".") load-path)))
-    (or (featurep 'ediff-init)
-	(load "ediff-init.el" nil nil 'nosuffix))
-    (or (featurep 'ediff-mult)
-	(load "ediff-mult.el" nil nil 'nosuffix))
-    (or (featurep 'ediff)
-	(load "ediff.el" nil nil 'nosuffix))
-    ))
+  (require 'ediff))
 ;; end pacifier
 
 (require 'ediff-init)
 
 (defcustom ediff-patch-program  "patch"
-  "*Name of the program that applies patches.
+  "Name of the program that applies patches.
 It is recommended to use GNU-compatible versions."
   :type 'string
   :group 'ediff-ptch)
 (defcustom ediff-patch-options "-f"
-  "*Options to pass to ediff-patch-program.
+  "Options to pass to ediff-patch-program.
 
 Note: the `-b' option should be specified in `ediff-backup-specs'.
 
@@ -74,7 +61,7 @@ case the default value for this variable should be changed."
 
 ;; the default backup extension
 (defconst ediff-default-backup-extension
-  (if (memq system-type '(vax-vms axp-vms emx ms-dos))
+  (if (memq system-type '(emx ms-dos))
       "_orig" ".orig"))
 
 
@@ -106,7 +93,7 @@ See also `ediff-backup-specs'."
 	  (t
 	   ;; traditional `patch'
 	   (format "-b %s" ediff-backup-extension))))
-  "*Backup directives to pass to the patch program.
+  "Backup directives to pass to the patch program.
 Ediff requires that the old version of the file \(before applying the patch\)
 be saved in a file named `the-patch-file.extension'.  Usually `extension' is
 `.orig', but this can be changed by the user and may depend on the system.
@@ -130,17 +117,19 @@ patch.  So, don't change these variables, unless the default doesn't work."
 
 
 (defcustom ediff-patch-default-directory nil
-  "*Default directory to look for patches."
+  "Default directory to look for patches."
   :type '(choice (const nil) string)
   :group 'ediff-ptch)
 
+;; This context diff does not recognize spaces inside files, but removing ' '
+;; from [^ \t] breaks normal patches for some reason
 (defcustom ediff-context-diff-label-regexp
   (concat "\\(" 	; context diff 2-liner
-	  "^\\*\\*\\* \\([^ \t]+\\)[^*]+[\t ]*\n--- \\([^ \t]+\\)"
+	  "^\\*\\*\\* +\\([^ \t]+\\)[^*]+[\t ]*\n--- +\\([^ \t]+\\)"
 	  "\\|" 	; GNU unified format diff 2-liner
-	  "^--- \\([^ \t]+\\)[\t ]+.*\n\\+\\+\\+ \\([^ \t]+\\)"
+	  "^--- +\\([^ \t]+\\)[\t ]+.*\n\\+\\+\\+ +\\([^ \t]+\\)"
 	  "\\)")
-  "*Regexp matching filename 2-liners at the start of each context diff.
+  "Regexp matching filename 2-liners at the start of each context diff.
 You probably don't want to change that, unless you are using an obscure patch
 program."
   :type 'regexp
@@ -231,7 +220,7 @@ program."
 	    ;; possible-file-names is holding the new file names until we
 	    ;; insert the old file name in the patch map
 	    ;; It is a pair
-	    ;;     (filename-from-1st-header-line . fn from 2nd line)
+	    ;;     (filename-from-1st-header-line . filename-from-2nd-line)
 	    (setq possible-file-names
 		  (cons (if (and beg1 end1)
 			    (buffer-substring beg1 end1)
@@ -290,42 +279,43 @@ program."
 	)
 
     ;; chop off base-dirs
-    (mapcar (lambda (session-info)
-	      (let* ((proposed-file-names
-		      ;; Filename-spec is objA; it is represented as
-		      ;; (file1 . file2). Get it using ediff-get-session-objA.
-		      (ediff-get-session-objA-name session-info))
-		     ;; base-dir1 is  the dir part of the 1st file in the patch
-		     (base-dir1
-		      (or (file-name-directory (car proposed-file-names))
-			  ""))
-		     ;; directory part of the 2nd file in the patch
-		     (base-dir2
-		      (or (file-name-directory (cdr proposed-file-names))
-			  ""))
-		     )
-		;; If both base-dir1 and base-dir2 are relative and exist,
-		;; assume that
-		;; these dirs lead to the actual files starting at the present
-		;; directory. So, we don't strip these relative dirs from the
-		;; file names. This is a heuristic intended to improve guessing
+    (mapc (lambda (session-info)
+	    (let* ((proposed-file-names
+		    ;; Filename-spec is objA; it is represented as
+		    ;; (file1 . file2). Get it using ediff-get-session-objA.
+		    (ediff-get-session-objA-name session-info))
+		   ;; base-dir1 is  the dir part of the 1st file in the patch
+		   (base-dir1
+		    (or (file-name-directory (car proposed-file-names))
+			""))
+		   ;; directory part of the 2nd file in the patch
+		   (base-dir2
+		    (or (file-name-directory (cdr proposed-file-names))
+			""))
+		   )
+	      ;; If both base-dir1 and base-dir2 are relative and exist,
+	      ;; assume that
+	      ;; these dirs lead to the actual files starting at the present
+	      ;; directory. So, we don't strip these relative dirs from the
+	      ;; file names. This is a heuristic intended to improve guessing
+	      (let ((default-directory (file-name-directory filename)))
 		(unless (or (file-name-absolute-p base-dir1)
 			    (file-name-absolute-p base-dir2)
 			    (not (file-exists-p base-dir1))
 			    (not (file-exists-p base-dir2)))
 		  (setq base-dir1 ""
-			base-dir2 ""))
-		(or (string= (car proposed-file-names) "/dev/null")
-		    (setcar proposed-file-names
-			    (ediff-file-name-sans-prefix
-			     (car proposed-file-names) base-dir1)))
-		(or (string=
-		     (cdr proposed-file-names) "/dev/null")
-		    (setcdr proposed-file-names
-			    (ediff-file-name-sans-prefix
-			     (cdr proposed-file-names) base-dir2)))
-		))
-	    ediff-patch-map)
+			base-dir2 "")))
+	      (or (string= (car proposed-file-names) "/dev/null")
+		  (setcar proposed-file-names
+			  (ediff-file-name-sans-prefix
+			   (car proposed-file-names) base-dir1)))
+	      (or (string=
+		   (cdr proposed-file-names) "/dev/null")
+		  (setcdr proposed-file-names
+			  (ediff-file-name-sans-prefix
+			   (cdr proposed-file-names) base-dir2)))
+	      ))
+	  ediff-patch-map)
 
     ;; take the given file name into account
     (or (file-directory-p filename)
@@ -335,19 +325,19 @@ program."
 		      (file-name-nondirectory filename))))
 
     ;; prepend actual-dir
-    (mapcar (lambda (session-info)
-	      (let ((proposed-file-names
-		     (ediff-get-session-objA-name session-info)))
-		(if (and (string-match "^/null/" (car proposed-file-names))
-			 (string-match "^/null/" (cdr proposed-file-names)))
-		    ;; couldn't intuit the file name to patch, so
-		    ;; something is amiss
-		    (progn
-		      (with-output-to-temp-buffer ediff-msg-buffer
-			(ediff-with-current-buffer standard-output
-			  (fundamental-mode))
-			(princ
-			 (format "
+    (mapc (lambda (session-info)
+	    (let ((proposed-file-names
+		   (ediff-get-session-objA-name session-info)))
+	      (if (and (string-match "^/null/" (car proposed-file-names))
+		       (string-match "^/null/" (cdr proposed-file-names)))
+		  ;; couldn't intuit the file name to patch, so
+		  ;; something is amiss
+		  (progn
+		    (with-output-to-temp-buffer ediff-msg-buffer
+		      (ediff-with-current-buffer standard-output
+			(fundamental-mode))
+		      (princ
+		       (format "
 The patch file contains a context diff for
 	%s
 	%s
@@ -358,31 +348,31 @@ please enter it now.
 If you don't know and still would like to apply patches to
 other files, enter /dev/null
 "
-				 (substring (car proposed-file-names) 6)
-				 (substring (cdr proposed-file-names) 6))))
-		      (let ((directory t)
-			    user-file)
-			(while directory
-			  (setq user-file
-				(read-file-name
-				 "Please enter file name: "
-				 actual-dir actual-dir t))
-			  (if (not (file-directory-p user-file))
-			      (setq directory nil)
-			    (setq directory t)
-			    (beep)
-			    (message "%s is a directory" user-file)
-			    (sit-for 2)))
-			(setcar (ediff-get-session-objA session-info)
-				(cons user-file user-file))))
-		  (setcar proposed-file-names
-			  (expand-file-name
-			   (concat actual-dir (car proposed-file-names))))
-		  (setcdr proposed-file-names
-			  (expand-file-name
-			   (concat actual-dir (cdr proposed-file-names)))))
-		))
-	    ediff-patch-map)
+			       (substring (car proposed-file-names) 6)
+			       (substring (cdr proposed-file-names) 6))))
+		    (let ((directory t)
+			  user-file)
+		      (while directory
+			(setq user-file
+			      (read-file-name
+			       "Please enter file name: "
+			       actual-dir actual-dir t))
+			(if (not (file-directory-p user-file))
+			    (setq directory nil)
+			  (setq directory t)
+			  (beep)
+			  (message "%s is a directory" user-file)
+			  (sit-for 2)))
+		      (setcar (ediff-get-session-objA session-info)
+			      (cons user-file user-file))))
+		(setcar proposed-file-names
+			(expand-file-name
+			 (concat actual-dir (car proposed-file-names))))
+		(setcdr proposed-file-names
+			(expand-file-name
+			 (concat actual-dir (cdr proposed-file-names)))))
+	      ))
+	  ediff-patch-map)
     ;; Check for the existing files in each pair and discard the nonexisting
     ;; ones. If both exist, ask the user.
     (mapcar (lambda (session-info)
@@ -843,14 +833,12 @@ you can still examine the changes via M-x ediff-files"
 
 
 
-(provide 'ediff-ptch)
 
+;; Local Variables:
+;; eval: (put 'ediff-defvar-local 'lisp-indent-hook 'defun)
+;; eval: (put 'ediff-with-current-buffer 'lisp-indent-hook 1)
+;; eval: (put 'ediff-with-current-buffer 'edebug-form-spec '(form body))
+;; End:
 
-;;; Local Variables:
-;;; eval: (put 'ediff-defvar-local 'lisp-indent-hook 'defun)
-;;; eval: (put 'ediff-with-current-buffer 'lisp-indent-hook 1)
-;;; eval: (put 'ediff-with-current-buffer 'edebug-form-spec '(form body))
-;;; End:
-
-;;; arch-tag: 2fe2161e-e116-469b-90fa-5cbb44c1bd1b
+;; arch-tag: 2fe2161e-e116-469b-90fa-5cbb44c1bd1b
 ;;; ediff-ptch.el ends here

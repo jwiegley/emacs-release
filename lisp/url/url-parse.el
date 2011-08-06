@@ -1,90 +1,48 @@
 ;;; url-parse.el --- Uniform Resource Locator parser
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes
 
 ;; This file is part of GNU Emacs.
 ;;
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-;;
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-;;
+
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
 
 (require 'url-vars)
+(eval-when-compile (require 'cl))
 
 (autoload 'url-scheme-get-property "url-methods")
 
-(defun url-type (urlobj)
-  (aref urlobj 0))
+(defstruct (url
+            (:constructor nil)
+            (:constructor url-parse-make-urlobj
+                          (&optional type user password host portspec filename
+                                     target attributes fullness))
+            (:copier nil))
+  type user password host portspec filename target attributes fullness)
 
-(defun url-user (urlobj)
-  (aref urlobj 1))
-
-(defun url-password (urlobj)
-  (aref urlobj 2))
-
-(defun url-host (urlobj)
-  (aref urlobj 3))
-
-(defun url-port (urlobj)
-  (or (aref urlobj 4)
+(defsubst url-port (urlobj)
+  (or (url-portspec urlobj)
       (if (url-fullness urlobj)
-	  (url-scheme-get-property (url-type urlobj) 'default-port))))
+          (url-scheme-get-property (url-type urlobj) 'default-port))))
 
-(defun url-filename (urlobj)
-  (aref urlobj 5))
-
-(defun url-target (urlobj)
-  (aref urlobj 6))
-
-(defun url-attributes (urlobj)
-  (aref urlobj 7))
-
-(defun url-fullness (urlobj)
-  (aref urlobj 8))
-
-(defun url-set-type (urlobj type)
-  (aset urlobj 0 type))
-
-(defun url-set-user (urlobj user)
-  (aset urlobj 1 user))
-
-(defun url-set-password (urlobj pass)
-  (aset urlobj 2 pass))
-
-(defun url-set-host (urlobj host)
-  (aset urlobj 3 host))
-
-(defun url-set-port (urlobj port)
-  (aset urlobj 4 port))
-
-(defun url-set-filename (urlobj file)
-  (aset urlobj 5 file))
-
-(defun url-set-target (urlobj targ)
-  (aset urlobj 6 targ))
-
-(defun url-set-attributes (urlobj targ)
-  (aset urlobj 7 targ))
-
-(defun url-set-full (urlobj val)
-  (aset urlobj 8 val))
+(defsetf url-port (urlobj) (port) `(setf (url-portspec ,urlobj) ,port))
 
 ;;;###autoload
 (defun url-recreate-url (urlobj)
@@ -117,23 +75,20 @@
 
 ;;;###autoload
 (defun url-generic-parse-url (url)
-  "Return a vector of the parts of URL.
-Format is:
-\[TYPE USER PASSWORD HOST PORT FILE TARGET ATTRIBUTES FULL\]"
+  "Return an URL-struct of the parts of URL.
+The CL-style struct contains the following fields:
+TYPE USER PASSWORD HOST PORTSPEC FILENAME TARGET ATTRIBUTES FULLNESS."
   ;; See RFC 3986.
   (cond
    ((null url)
-    (make-vector 9 nil))
+    (url-parse-make-urlobj))
    ((or (not (string-match url-nonrelative-link url))
 	(= ?/ (string-to-char url)))
     ;; This isn't correct, as a relative URL can be a fragment link
     ;; (e.g. "#foo") and many other things (see section 4.2).
     ;; However, let's not fix something that isn't broken, especially
     ;; when close to a release.
-    (let ((retval (make-vector 9 nil)))
-      (url-set-filename retval url)
-      (url-set-full retval nil)
-      retval))
+    (url-parse-make-urlobj nil nil nil nil nil url))
    (t
     (with-temp-buffer
       (set-syntax-table url-parse-syntax-table)
@@ -214,7 +169,8 @@ Format is:
 	(setq file (buffer-substring save-pos (point)))
 	(if (and host (string-match "%[0-9][0-9]" host))
 	    (setq host (url-unhex-string host)))
-	(vector prot user pass host port file refs attr full))))))
+	(url-parse-make-urlobj
+         prot user pass host port file refs attr full))))))
 
 (provide 'url-parse)
 

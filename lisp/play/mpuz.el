@@ -1,7 +1,7 @@
 ;;; mpuz.el --- multiplication puzzle for GNU Emacs
 
-;; Copyright (C) 1990, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1990, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+;;   2009  Free Software Foundation, Inc.
 
 ;; Author: Philippe Schnoebelen <phs@lsv.ens-cachan.fr>
 ;; Overhauled: Daniel Pfeiffer <occitan@esperanto.org>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -426,7 +424,7 @@ You may abort a game by typing \\<mpuz-mode-map>\\[mpuz-offer-abort]."
   (interactive)
   (if mpuz-in-progress
       (let (letter-char digit digit-char message)
-	(setq letter-char (upcase last-command-char)
+	(setq letter-char (upcase last-command-event)
 	      digit (mpuz-to-digit (- letter-char ?A)))
 	(cond ((mpuz-digit-solved-p digit)
 	       (message "%c already solved." letter-char)
@@ -489,7 +487,7 @@ You may abort a game by typing \\<mpuz-mode-map>\\[mpuz-offer-abort]."
 			       ((< mpuz-nb-errors 10)	"bad!")
 			       ((< mpuz-nb-errors 15)	"awful.")
 			       (t			"not serious.")))))
-    (message message)
+    (message "%s" message)
     (sit-for 4)
     (if (y-or-n-p (concat message "  Start a new game? "))
 	(mpuz-start-new-game)
@@ -518,5 +516,5 @@ You may abort a game by typing \\<mpuz-mode-map>\\[mpuz-offer-abort]."
 
 (provide 'mpuz)
 
-;;; arch-tag: 2781d6ba-89e7-43b5-85c7-5d3a2e73feb1
+;; arch-tag: 2781d6ba-89e7-43b5-85c7-5d3a2e73feb1
 ;;; mpuz.el ends here

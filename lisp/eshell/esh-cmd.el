@@ -1,16 +1,16 @@
 ;;; esh-cmd.el --- command invocation
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,21 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-(provide 'esh-cmd)
-
-(eval-when-compile (require 'esh-maint))
-
-(defgroup eshell-cmd nil
-  "Executing an Eshell command is as simple as typing it in and
-pressing <RET>.  There are several different kinds of commands,
-however."
-  :tag "Command invocation"
-  ;; :link '(info-link "(eshell)Command invocation")
-  :group 'eshell)
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -63,11 +49,6 @@ however."
 ;; function of the same name.  To change this behavior so that Lisp
 ;; functions always take precedence, set
 ;; `eshell-prefer-lisp-functions' to t.
-
-(defcustom eshell-prefer-lisp-functions nil
-  "*If non-nil, prefer Lisp functions to external commands."
-  :type 'boolean
-  :group 'eshell-cmd)
 
 ;;;_* Alias functions
 ;;
@@ -112,16 +93,44 @@ however."
 ;;
 ;; Lisp arguments are identified using the following regexp:
 
+;;;_* Command hooks
+;;
+;; There are several hooks involved with command execution, which can
+;; be used either to change or augment Eshell's behavior.
+
+
+;;; Code:
+
+(require 'esh-util)
+(unless (featurep 'xemacs)
+  (require 'eldoc))
+(require 'esh-arg)
+(require 'esh-proc)
+(require 'esh-ext)
+
+(eval-when-compile
+  (require 'cl)
+  (require 'pcomplete))
+
+
+(defgroup eshell-cmd nil
+  "Executing an Eshell command is as simple as typing it in and
+pressing <RET>.  There are several different kinds of commands,
+however."
+  :tag "Command invocation"
+  ;; :link '(info-link "(eshell)Command invocation")
+  :group 'eshell)
+
+(defcustom eshell-prefer-lisp-functions nil
+  "*If non-nil, prefer Lisp functions to external commands."
+  :type 'boolean
+  :group 'eshell-cmd)
+
 (defcustom eshell-lisp-regexp "\\([(`]\\|#'\\)"
   "*A regexp which, if matched at beginning of an argument, means Lisp.
 Such arguments will be passed to `read', and then evaluated."
   :type 'regexp
   :group 'eshell-cmd)
-
-;;;_* Command hooks
-;;
-;; There are several hooks involved with command execution, which can
-;; be used either to change or augment Eshell's behavior.
 
 (defcustom eshell-pre-command-hook nil
   "*A hook run before each interactive command is invoked."
@@ -219,15 +228,6 @@ return non-nil if the command is complex."
 			 (function :tag "Predicate")))
   :group 'eshell-cmd)
 
-;;; Code:
-
-(require 'esh-util)
-(unless (eshell-under-xemacs-p)
-  (require 'eldoc))
-(require 'esh-arg)
-(require 'esh-proc)
-(require 'esh-ext)
-
 ;;; User Variables:
 
 (defcustom eshell-cmd-load-hook '(eshell-cmd-initialize)
@@ -274,7 +274,10 @@ command line.")
 (defvar eshell-current-command nil)
 (defvar eshell-command-name nil)
 (defvar eshell-command-arguments nil)
-(defvar eshell-in-pipeline-p nil)
+(defvar eshell-in-pipeline-p nil
+  "Internal Eshell variable, non-nil inside a pipeline.
+Has the value 'first, 'last for the first/last commands in the pipeline,
+otherwise t.")
 (defvar eshell-in-subcommand-p nil)
 (defvar eshell-last-arguments nil)
 (defvar eshell-last-command-name nil)
@@ -394,6 +397,17 @@ hooks should be run before and after the command."
 	(list 'eshell-commands commands)
       commands)))
 
+(defun eshell-debug-command (tag subform)
+  "Output a debugging message to '*eshell last cmd*'."
+  (let ((buf (get-buffer-create "*eshell last cmd*"))
+	(text (eshell-stringify eshell-current-command)))
+    (with-current-buffer buf
+      (if (not tag)
+	  (erase-buffer)
+	(insert "\n\C-l\n" tag "\n\n" text
+		(if subform
+		    (concat "\n\n" (eshell-stringify subform)) ""))))))
+
 (defun eshell-debug-show-parsed-args (terms)
   "Display parsed arguments in the debug buffer."
   (ignore
@@ -466,9 +480,8 @@ hooks should be run before and after the command."
   "Execute named command"
   (eshell-command-result-p "+ 1 2" "3\n"))
 
-(eval-when-compile
-  (defvar eshell-command-body)
-  (defvar eshell-test-body))
+(defvar eshell-command-body)
+(defvar eshell-test-body)
 
 (defsubst eshell-invokify-arg (arg &optional share-output silent)
   "Change ARG so it can be invoked from a structured command.
@@ -806,8 +819,9 @@ this grossness will be made to disappear by using `call/cc'..."
      (eshell-protect-handles eshell-current-handles)
      ,object))
 
-(defmacro eshell-do-pipelines (pipeline)
-  "Execute the commands in PIPELINE, connecting each to one another."
+(defmacro eshell-do-pipelines (pipeline &optional notfirst)
+  "Execute the commands in PIPELINE, connecting each to one another.
+This macro calls itself recursively, with NOTFIRST non-nil."
   (when (setq pipeline (cadr pipeline))
     `(eshell-copy-handles
       (progn
@@ -815,7 +829,7 @@ this grossness will be made to disappear by using `call/cc'..."
 	   `(let (nextproc)
 	      (progn
 		(set 'nextproc
-		     (eshell-do-pipelines (quote ,(cdr pipeline))))
+		     (eshell-do-pipelines (quote ,(cdr pipeline)) t))
 		(eshell-set-output-handle ,eshell-output-handle
 					  'append nextproc)
 		(eshell-set-output-handle ,eshell-error-handle
@@ -829,7 +843,14 @@ this grossness will be made to disappear by using `call/cc'..."
 	      (setcar head
 		      (intern-soft
 		       (concat (symbol-name (car head)) "*"))))))
-	,(car pipeline)))))
+	;; First and last elements in a pipeline may need special treatment.
+	;; (Currently only eshell-ls-files uses 'last.)
+	;; Affects process-connection-type in eshell-gather-process-output.
+	(let ((eshell-in-pipeline-p
+	       ,(cond ((not notfirst) (quote 'first))
+		      ((cdr pipeline) t)
+		      (t (quote 'last)))))
+	  ,(car pipeline))))))
 
 (defmacro eshell-do-pipelines-synchronously (pipeline)
   "Execute the commands in PIPELINE in sequence synchronously.
@@ -956,18 +977,6 @@ at the moment are:
   "Completion for the `debug' command."
   (while (pcomplete-here '("errors" "commands"))))
 
-(defun eshell-debug-command (tag subform)
-  "Output a debugging message to '*eshell last cmd*'."
-  (let ((buf (get-buffer-create "*eshell last cmd*"))
-	(text (eshell-stringify eshell-current-command)))
-    (save-excursion
-      (set-buffer buf)
-      (if (not tag)
-	  (erase-buffer)
-	(insert "\n\C-l\n" tag "\n\n" text
-		(if subform
-		    (concat "\n\n" (eshell-stringify subform)) ""))))))
-
 (defun eshell-invoke-directly (command input)
   (let ((base (cadr (nth 2 (nth 2 (cadr command))))) name)
     (if (and (eq (car base) 'eshell-trap-errors)
@@ -999,11 +1008,9 @@ at the moment are:
 			  (list 'eshell-do-eval
 				(list 'quote command)))))
     (and eshell-debug-command
-	 (save-excursion
-	   (let ((buf (get-buffer-create "*eshell last cmd*")))
-	     (set-buffer buf)
-	     (erase-buffer)
-	     (insert "command: \"" input "\"\n"))))
+         (with-current-buffer (get-buffer-create "*eshell last cmd*")
+           (erase-buffer)
+           (insert "command: \"" input "\"\n")))
     (setq eshell-current-command command)
     (let ((delim (catch 'eshell-incomplete
 		   (eshell-resume-eval))))
@@ -1043,7 +1050,9 @@ at the moment are:
 
 (defmacro eshell-manipulate (tag &rest commands)
   "Manipulate a COMMAND form, with TAG as a debug identifier."
-  (if (not eshell-debug-command)
+  ;; Check `bound'ness since at compile time the code until here has not
+  ;; executed yet.
+  (if (not (and (boundp 'eshell-debug-command) eshell-debug-command))
       `(progn ,@commands)
     `(progn
        (eshell-debug-command ,(eval tag) form)
@@ -1255,9 +1264,12 @@ be finished later after the completion of an asynchronous subprocess."
 			      (prog1
 				  (describe-function sym)
 				(message nil))))))
-		(setq desc (substring desc 0
-				      (1- (or (string-match "\n" desc)
-					      (length desc)))))
+		(setq desc (if desc (substring desc 0
+					       (1- (or (string-match "\n" desc)
+						       (length desc))))
+			     ;; This should not happen.
+			     (format "%s is defined, \
+but no documentation was found" name)))
 		(if (buffer-live-p (get-buffer "*Help*"))
 		    (kill-buffer "*Help*"))
 		(setq program (or desc name))))))
@@ -1418,5 +1430,7 @@ messages, and errors."
 
 (defalias 'eshell-lisp-command* 'eshell-lisp-command)
 
-;;; arch-tag: 8e4f3867-a0c5-441f-96ba-ddd142d94366
+(provide 'esh-cmd)
+
+;; arch-tag: 8e4f3867-a0c5-441f-96ba-ddd142d94366
 ;;; esh-cmd.el ends here

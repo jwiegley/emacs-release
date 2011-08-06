@@ -1,13 +1,16 @@
-/* machine description file For the alpha chip.
-   Copyright (C) 1994, 1997, 1999, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+/* Machine description file for the alpha chip.
+   Copyright (C) 1994, 1997, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
+                 2007, 2008, 2009  Free Software Foundation, Inc.
+
+Author: Rainer Schoepf
+(according to authors.el)
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +18,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 /* The following line tells the configuration script what sort of
@@ -46,22 +47,16 @@ NOTE-END
 #define NO_ARG_ARRAY
 
 /* Now define a symbol for the cpu type, if your compiler
-   does not define it automatically:
-   Ones defined so far include vax, m68000, ns16000, pyramid,
-   orion, tahoe, APOLLO and many others */
+   does not define it automatically.  */
 
 /* __alpha defined automatically */
 
-
-/* Use type EMACS_INT rather than a union, to represent Lisp_Object */
-/* This is desirable for most machines.  */
-#define NO_UNION_TYPE
 
 /* Define EXPLICIT_SIGN_EXTEND if XINT must explicitly sign-extend
    the 24-bit bit field into an int.  In other words, if bit fields
    are always unsigned.
 
-   If you use NO_UNION_TYPE, this flag does not matter.  */
+   This flag only matters if you use USE_LISP_UNION_TYPE.  */
 
 #define EXPLICIT_SIGN_EXTEND
 
@@ -97,21 +92,18 @@ NOTE-END
 # else
 #  error What gives?  Fix me if DEC Unix supports ELF now.
 # endif
-#endif
 
-#if defined(__OpenBSD__)
-#define ORDINARY_LINK
-#endif
-
-#ifdef __ELF__
 #undef UNEXEC
 #define UNEXEC unexelf.o
-#ifndef LINUX
+#ifndef GNU_LINUX
 #define DATA_START    0x140000000
 #endif
+
+#if (defined (__NetBSD__) || defined (__OpenBSD__))
+#define HAVE_TEXT_START
 #endif
 
-#ifndef __ELF__
+#else  /* not __ELF__ */
 
 /* Describe layout of the address space in an executing process.  */
 
@@ -122,9 +114,9 @@ NOTE-END
 
 #define UNEXEC unexalpha.o
 
-#endif /* notdef __ELF__ */
+#endif /* __ELF__ */
 
-#if defined (LINUX) && __GNU_LIBRARY__ - 0 < 6
+#if defined (GNU_LINUX) && __GNU_LIBRARY__ - 0 < 6
 /* This controls a conditional in main.  */
 #define LINUX_SBRK_BUG
 #endif
@@ -133,16 +125,10 @@ NOTE-END
    termio and struct termios are mutually incompatible.  */
 #define NO_TERMIO
 
-#if defined (LINUX) || defined (__NetBSD__) || defined (__OpenBSD__)
-# define TEXT_END ({ extern int _etext; &_etext; })
+#if defined (GNU_LINUX) || defined (__NetBSD__) || defined (__OpenBSD__)
 # ifndef __ELF__
 #  define COFF
-#  define DATA_END ({ extern int _EDATA; &_EDATA; })
 # endif /* notdef __ELF__ */
-#endif
-
-#if (defined (__NetBSD__) || defined (__OpenBSD__)) && defined (__ELF__)
-#define HAVE_TEXT_START
 #endif
 
 /* Many Alpha implementations (e.g. gas 2.8) can't handle DBL_MIN:

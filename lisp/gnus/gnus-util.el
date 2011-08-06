@@ -1,27 +1,25 @@
 ;;; gnus-util.el --- utility functions for Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -31,43 +29,42 @@
 ;; Gnus first.
 
 ;; [Unfortunately, it does depend on other parts of Gnus, e.g. the
-;; autoloads below...]
+;; autoloads and defvars below...]
 
 ;;; Code:
 
-(require 'custom)
+;; For Emacs < 22.2.
+(eval-and-compile
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest r))))
 (eval-when-compile
-  (require 'cl)
-  ;; Fixme: this should be a gnus variable, not nnmail-.
-  (defvar nnmail-pathname-coding-system)
-  (defvar nnmail-active-file-coding-system)
+  (require 'cl))
+;; Fixme: this should be a gnus variable, not nnmail-.
+(defvar nnmail-pathname-coding-system)
+(defvar nnmail-active-file-coding-system)
 
-  ;; Inappropriate references to other parts of Gnus.
-  (defvar gnus-emphasize-whitespace-regexp)
-  (defvar gnus-original-article-buffer)
-  (defvar gnus-user-agent)
-  )
+;; Inappropriate references to other parts of Gnus.
+(defvar gnus-emphasize-whitespace-regexp)
+(defvar gnus-original-article-buffer)
+(defvar gnus-user-agent)
+
 (require 'time-date)
 (require 'netrc)
 
-(eval-and-compile
-  (autoload 'message-fetch-field "message")
-  (autoload 'gnus-get-buffer-window "gnus-win")
-  (autoload 'rmail-insert-rmail-file-header "rmail")
-  (autoload 'rmail-count-new-messages "rmail")
-  (autoload 'rmail-show-message "rmail")
-  (autoload 'nnheader-narrow-to-headers "nnheader")
-  (autoload 'nnheader-replace-chars-in-string "nnheader"))
+(autoload 'message-fetch-field "message")
+(autoload 'gnus-get-buffer-window "gnus-win")
+(autoload 'nnheader-narrow-to-headers "nnheader")
+(autoload 'nnheader-replace-chars-in-string "nnheader")
+(autoload 'mail-header-remove-comments "mail-parse")
 
 (eval-and-compile
   (cond
    ;; Prefer `replace-regexp-in-string' (present in Emacs, XEmacs 21.5,
-   ;; SXEmacs 22.1.4) over `replace-in-string'.  The later leads to inf-loops
+   ;; SXEmacs 22.1.4) over `replace-in-string'.  The latter leads to inf-loops
    ;; on empty matches:
    ;;   (replace-in-string "foo" "/*$" "/")
    ;;   (replace-in-string "xe" "\\(x\\)?" "")
    ((fboundp 'replace-regexp-in-string)
-    (defun gnus-replace-in-string (string regexp newtext &optional literal)
+    (defun gnus-replace-in-string  (string regexp newtext &optional literal)
       "Replace all matches for REGEXP with NEWTEXT in STRING.
 If LITERAL is non-nil, insert NEWTEXT literally.  Return a new
 string containing the replacements.
@@ -75,25 +72,7 @@ string containing the replacements.
 This is a compatibility function for different Emacsen."
       (replace-regexp-in-string regexp newtext string nil literal)))
    ((fboundp 'replace-in-string)
-    (defalias 'gnus-replace-in-string 'replace-in-string))
-   (t
-    (defun gnus-replace-in-string (string regexp newtext &optional literal)
-      "Replace all matches for REGEXP with NEWTEXT in STRING.
-If LITERAL is non-nil, insert NEWTEXT literally.  Return a new
-string containing the replacements.
-
-This is a compatibility function for different Emacsen."
-      (let ((start 0) tail)
-	(while (string-match regexp string start)
-	  (setq tail (- (length string) (match-end 0)))
-	  (setq string (replace-match newtext nil literal string))
-	  (setq start (- (length string) tail))))
-      string))))
-
-;;; bring in the netrc functions as aliases
-(defalias 'gnus-netrc-get 'netrc-get)
-(defalias 'gnus-netrc-machine 'netrc-machine)
-(defalias 'gnus-parse-netrc 'netrc-parse)
+    (defalias 'gnus-replace-in-string 'replace-in-string))))
 
 (defun gnus-boundp (variable)
   "Return non-nil if VARIABLE is bound and non-nil."
@@ -128,15 +107,6 @@ This is a compatibility function for different Emacsen."
 	 (set symbol nil))
      symbol))
 
-;; Added by Geoffrey T. Dairiki <dairiki@u.washington.edu>.  A safe way
-;; to limit the length of a string.  This function is necessary since
-;; `(substr "abc" 0 30)' pukes with "Args out of range".
-;; Fixme: Why not `truncate-string-to-width'?
-(defsubst gnus-limit-string (str width)
-  (if (> (length str) width)
-      (substring str 0 width)
-    str))
-
 (defsubst gnus-goto-char (point)
   (and point (goto-char point)))
 
@@ -145,16 +115,6 @@ This is a compatibility function for different Emacsen."
      (when buffer
        (funcall (if (stringp buffer) 'get-buffer 'buffer-name)
 		buffer))))
-
-(defalias 'gnus-point-at-bol
-  (if (fboundp 'point-at-bol)
-      'point-at-bol
-    'line-beginning-position))
-
-(defalias 'gnus-point-at-eol
-  (if (fboundp 'point-at-eol)
-      'point-at-eol
-    'line-end-position))
 
 ;; The LOCAL arg to `add-hook' is interpreted differently in Emacs and
 ;; XEmacs.  In Emacs we don't need to call `make-local-hook' first.
@@ -180,7 +140,7 @@ This is a compatibility function for different Emacsen."
 
 ;; Delete the current line (and the next N lines).
 (defmacro gnus-delete-line (&optional n)
-  `(delete-region (gnus-point-at-bol)
+  `(delete-region (point-at-bol)
 		  (progn (forward-line ,(or n 1)) (point))))
 
 (defun gnus-byte-code (func)
@@ -230,13 +190,21 @@ is slower."
 				   (match-end 0)))))
     (list (if (string= name "") nil name) (or address from))))
 
+(defun gnus-extract-address-component-name (from)
+  "Extract name from a From header.
+Uses `gnus-extract-address-components'."
+  (nth 0 (gnus-extract-address-components from)))
+
+(defun gnus-extract-address-component-email (from)
+  "Extract e-mail address from a From header.
+Uses `gnus-extract-address-components'."
+  (nth 1 (gnus-extract-address-components from)))
 
 (defun gnus-fetch-field (field)
   "Return the value of the header FIELD of current article."
   (save-excursion
     (save-restriction
-      (let ((case-fold-search t)
-	    (inhibit-point-motion-hooks t))
+      (let ((inhibit-point-motion-hooks t))
 	(nnheader-narrow-to-headers)
 	(message-fetch-field field)))))
 
@@ -248,10 +216,17 @@ is slower."
 
 (defun gnus-goto-colon ()
   (beginning-of-line)
-  (let ((eol (gnus-point-at-eol)))
+  (let ((eol (point-at-eol)))
     (goto-char (or (text-property-any (point) eol 'gnus-position t)
 		   (search-forward ":" eol t)
 		   (point)))))
+
+(declare-function gnus-find-method-for-group "gnus" (group &optional info))
+(autoload 'gnus-group-name-decode "gnus-group")
+(declare-function gnus-group-name-charset "gnus-group" (method group))
+;; gnus-group requires gnus-int which requires message.
+(declare-function message-tokenize-header "message"
+                  (header &optional separator))
 
 (defun gnus-decode-newsgroups (newsgroups group &optional method)
   (let ((method (or method (gnus-find-method-for-group group))))
@@ -263,12 +238,15 @@ is slower."
 
 (defun gnus-remove-text-with-property (prop)
   "Delete all text in the current buffer with text property PROP."
-  (save-excursion
-    (goto-char (point-min))
-    (while (not (eobp))
-      (while (get-text-property (point) prop)
-	(delete-char 1))
-      (goto-char (next-single-property-change (point) prop nil (point-max))))))
+  (let ((start (point-min))
+	end)
+    (unless (get-text-property start prop)
+      (setq start (next-single-property-change start prop)))
+    (while start
+      (setq end (text-property-any start (point-max) prop nil))
+      (delete-region start (or end (point-max)))
+      (setq start (when end
+		    (next-single-property-change start prop))))))
 
 (defun gnus-newsgroup-directory-form (newsgroup)
   "Make hierarchical directory name from NEWSGROUP name."
@@ -363,15 +341,55 @@ Symbols are also allowed; their print names are used instead."
 
 ;; Two silly functions to ensure that all `y-or-n-p' questions clear
 ;; the echo area.
-(defun gnus-y-or-n-p (prompt)
-  (prog1
-      (y-or-n-p prompt)
-    (message "")))
+;;
+;; Do we really need these functions?  Workarounds for bugs in the corresponding
+;; Emacs functions?  Maybe these bugs are no longer present in any supported
+;; (X)Emacs version?  Alias them to the original functions and see if anyone
+;; reports a problem.  If not, replace with original functions.  --rsteib,
+;; 2007-12-14
+;;
+;; All supported Emacsen clear the echo area after `yes-or-no-p', so we can
+;; remove `yes-or-no-p'.  RMS says that not clearing after `y-or-n-p' is
+;; intentional (see below), so we could remove `gnus-y-or-n-p' too.
+;; Objections?  --rsteib, 2008-02-16
+;;
+;; ,----[ http://thread.gmane.org/gmane.emacs.gnus.general/65099/focus=66070 ]
+;; | From: Richard Stallman
+;; | Subject: Re: Do we need gnus-yes-or-no-p and gnus-y-or-n-p?
+;; | To: Katsumi Yamaoka [...]
+;; | Cc: emacs-devel@[...], xemacs-beta@[...], ding@[...]
+;; | Date: Mon, 07 Jan 2008 12:16:05 -0500
+;; | Message-ID: <E1JBva1-000528-VY@fencepost.gnu.org>
+;; |
+;; |     The behavior of `y-or-n-p' that it doesn't clear the question
+;; |     and the answer is not serious of course, but I feel it is not
+;; |     cool.
+;; |
+;; | It is intentional.
+;; |
+;; |     Currently, it is commented out in the trunk by Reiner Steib.  He
+;; |     also wrote the benefit of leaving the question and the answer in
+;; |     the echo area as follows:
+;; |
+;; |     (http://article.gmane.org/gmane.emacs.gnus.general/66061)
+;; |     > In contrast to yes-or-no-p it is much easier to type y, n,
+;; |     > SPC, DEL, etc accidentally, so it might be useful for the user
+;; |     > to see what he has typed.
+;; |
+;; | Yes, that is the reason.
+;; `----
 
-(defun gnus-yes-or-no-p (prompt)
-  (prog1
-      (yes-or-no-p prompt)
-    (message "")))
+;; (defun gnus-y-or-n-p (prompt)
+;;   (prog1
+;;       (y-or-n-p prompt)
+;;     (message "")))
+;; (defun gnus-yes-or-no-p (prompt)
+;;   (prog1
+;;       (yes-or-no-p prompt)
+;;     (message "")))
+
+(defalias 'gnus-y-or-n-p 'y-or-n-p)
+(defalias 'gnus-yes-or-no-p 'yes-or-no-p)
 
 ;; By Frank Schmitt <ich@Frank-Schmitt.net>. Allows to have
 ;; age-depending date representations. (e.g. just the time if it's
@@ -501,6 +519,79 @@ jabbering all the time."
   :group 'gnus-start
   :type 'integer)
 
+(defcustom gnus-add-timestamp-to-message nil
+  "Non-nil means add timestamps to messages that Gnus issues.
+If it is `log', add timestamps to only the messages that go into the
+\"*Messages*\" buffer (in XEmacs, it is the \" *Message-Log*\" buffer).
+If it is neither nil nor `log', add timestamps not only to log messages
+but also to the ones displayed in the echo area."
+  :version "23.1" ;; No Gnus
+  :group  'gnus-various
+  :type '(choice :format "%{%t%}:\n %[Value Menu%] %v"
+		 (const :tag "Logged messages only" log)
+		 (sexp :tag "All messages"
+		       :match (lambda (widget value) value)
+		       :value t)
+		 (const :tag "No timestamp" nil)))
+
+(eval-when-compile
+  (defmacro gnus-message-with-timestamp-1 (format-string args)
+    (let ((timestamp '((format-time-string "%Y%m%dT%H%M%S" time)
+		       "." (format "%03d" (/ (nth 2 time) 1000)) "> ")))
+      (if (featurep 'xemacs)
+	  `(let (str time)
+	     (if (or (and (null ,format-string) (null ,args))
+		     (progn
+		       (setq str (apply 'format ,format-string ,args))
+		       (zerop (length str))))
+		 (prog1
+		     (and ,format-string str)
+		   (clear-message nil))
+	       (cond ((eq gnus-add-timestamp-to-message 'log)
+		      (setq time (current-time))
+		      (display-message 'no-log str)
+		      (log-message 'message (concat ,@timestamp str)))
+		     (gnus-add-timestamp-to-message
+		      (setq time (current-time))
+		      (display-message 'message (concat ,@timestamp str)))
+		     (t
+		      (display-message 'message str))))
+	     str)
+	`(let (str time)
+	   (cond ((eq gnus-add-timestamp-to-message 'log)
+		  (setq str (let (message-log-max)
+			      (apply 'message ,format-string ,args)))
+		  (when (and message-log-max
+			     (> message-log-max 0)
+			     (/= (length str) 0))
+		    (setq time (current-time))
+		    (with-current-buffer (get-buffer-create "*Messages*")
+		      (goto-char (point-max))
+		      (insert ,@timestamp str "\n")
+		      (forward-line (- message-log-max))
+		      (delete-region (point-min) (point))
+		      (goto-char (point-max))))
+		  str)
+		 (gnus-add-timestamp-to-message
+		  (if (or (and (null ,format-string) (null ,args))
+			  (progn
+			    (setq str (apply 'format ,format-string ,args))
+			    (zerop (length str))))
+		      (prog1
+			  (and ,format-string str)
+			(message nil))
+		    (setq time (current-time))
+		    (message "%s" (concat ,@timestamp str))
+		    str))
+		 (t
+		  (apply 'message ,format-string ,args))))))))
+
+(defun gnus-message-with-timestamp (format-string &rest args)
+  "Display message with timestamp.  Arguments are the same as `message'.
+The `gnus-add-timestamp-to-message' variable controls how to add
+timestamp to message."
+  (gnus-message-with-timestamp-1 format-string args))
+
 (defun gnus-message (level &rest args)
   "If LEVEL is lower than `gnus-verbose' print ARGS using `message'.
 
@@ -509,7 +600,9 @@ Guideline for numbers:
 that take a long time, 7 - not very important messages on stuff, 9 - messages
 inside loops."
   (if (<= level gnus-verbose)
-      (apply 'message args)
+      (if gnus-add-timestamp-to-message
+	  (apply 'gnus-message-with-timestamp args)
+	(apply 'message args))
     ;; We have to do this format thingy here even if the result isn't
     ;; shown - the return value has to be the same as the return value
     ;; from `message'.
@@ -530,11 +623,22 @@ ARGS are passed to `message'."
 (defun gnus-split-references (references)
   "Return a list of Message-IDs in REFERENCES."
   (let ((beg 0)
+	(references (mail-header-remove-comments (or references "")))
 	ids)
     (while (string-match "<[^<]+[^< \t]" references beg)
       (push (substring references (match-beginning 0) (setq beg (match-end 0)))
 	    ids))
     (nreverse ids)))
+
+(defun gnus-extract-references (references)
+  "Return a list of Message-IDs in REFERENCES (in In-Reply-To
+  format), trimmed to only contain the Message-IDs."
+  (let ((ids (gnus-split-references references))
+	refs)
+    (dolist (id ids)
+      (when (string-match "<[^<>]+>" id)
+	(push (match-string 0 id) refs)))
+    refs))
 
 (defsubst gnus-parent-id (references &optional n)
   "Return the last Message-ID in REFERENCES.
@@ -546,8 +650,9 @@ If N, return the Nth ancestor instead."
 	  (while (nthcdr n ids)
 	    (setq ids (cdr ids)))
 	  (car ids))
-      (when (string-match "\\(<[^<]+>\\)[ \t]*\\'" references)
-	(match-string 1 references)))))
+      (let ((references (mail-header-remove-comments references)))
+	(when (string-match "\\(<[^<]+>\\)[ \t]*\\'" references)
+	  (match-string 1 references))))))
 
 (defun gnus-buffer-live-p (buffer)
   "Say whether BUFFER is alive or not."
@@ -603,6 +708,10 @@ If N, return the Nth ancestor instead."
   (copy-file file to))
 
 (defvar gnus-work-buffer " *gnus work*")
+
+(declare-function gnus-get-buffer-create "gnus" (name))
+;; gnus.el requires mm-util.
+(declare-function mm-enable-multibyte "mm-util")
 
 (defun gnus-set-work-buffer ()
   "Put point in the empty Gnus work buffer."
@@ -709,11 +818,11 @@ Bind `print-quoted' and `print-readably' to t, and `print-length' and
 `print-level' to nil.  See also `gnus-bind-print-variables'."
   (gnus-bind-print-variables (prin1-to-string form)))
 
-(defun gnus-pp (form)
+(defun gnus-pp (form &optional stream)
   "Use `pp' on FORM in the current buffer.
 Bind `print-quoted' and `print-readably' to t, and `print-length' and
 `print-level' to nil.  See also `gnus-bind-print-variables'."
-  (gnus-bind-print-variables (pp form (current-buffer))))
+  (gnus-bind-print-variables (pp form (or stream (current-buffer)))))
 
 (defun gnus-pp-to-string (form)
   "The same as `pp-to-string'.
@@ -732,9 +841,9 @@ Bind `print-quoted' and `print-readably' to t, and `print-length' and
 
 (defun gnus-write-buffer (file)
   "Write the current buffer's contents to FILE."
-  ;; Make sure the directory exists.
-  (gnus-make-directory (file-name-directory file))
   (let ((file-name-coding-system nnmail-pathname-coding-system))
+    ;; Make sure the directory exists.
+    (gnus-make-directory (file-name-directory file))
     ;; Write the buffer.
     (write-region (point-min) (point-max) file nil 'quietly)))
 
@@ -788,6 +897,9 @@ If there's no subdirectory, delete DIRECTORY as well."
     (setq string (replace-match "" t t string)))
   string)
 
+(declare-function gnus-put-text-property "gnus"
+                  (start end property value &optional object))
+
 (defsubst gnus-put-text-property-excluding-newlines (beg end prop val)
   "The same as `put-text-property', but don't put this prop on any newlines in the region."
   (save-match-data
@@ -798,6 +910,10 @@ If there's no subdirectory, delete DIRECTORY as well."
 	  (gnus-put-text-property beg (match-beginning 0) prop val)
 	  (setq beg (point)))
 	(gnus-put-text-property beg (point) prop val)))))
+
+(declare-function gnus-overlay-put  "gnus" (overlay prop value))
+(declare-function gnus-make-overlay "gnus"
+                  (beg end &optional buffer front-advance rear-advance))
 
 (defsubst gnus-put-overlay-excluding-newlines (beg end prop val)
   "The same as `put-text-property', but don't put this prop on any newlines in the region."
@@ -839,10 +955,10 @@ If there's no subdirectory, delete DIRECTORY as well."
 			(overlays-at pos)))))))
 
 ;;; Protected and atomic operations.  dmoore@ucsd.edu 21.11.1996
-;;; The primary idea here is to try to protect internal datastructures
-;;; from becoming corrupted when the user hits C-g, or if a hook or
-;;; similar blows up.  Often in Gnus multiple tables/lists need to be
-;;; updated at the same time, or information can be lost.
+;; The primary idea here is to try to protect internal datastructures
+;; from becoming corrupted when the user hits C-g, or if a hook or
+;; similar blows up.  Often in Gnus multiple tables/lists need to be
+;; updated at the same time, or information can be lost.
 
 (defvar gnus-atomic-be-safe t
   "If t, certain operations will be protected from interruption by C-g.")
@@ -861,7 +977,7 @@ variables and then do only the assignment atomically."
 (put 'gnus-atomic-progn 'lisp-indent-function 0)
 
 (defmacro gnus-atomic-progn-assign (protect &rest forms)
-  "Evaluate FORMS, but insure that the variables listed in PROTECT
+  "Evaluate FORMS, but ensure that the variables listed in PROTECT
 are not changed if anything in FORMS signals an error or otherwise
 non-locally exits.  The variables listed in PROTECT are updated atomically.
 It is safe to use gnus-atomic-progn-assign with long computations.
@@ -932,29 +1048,47 @@ with potentially long computations."
      ;; version fails halfway, however it provides the rmail-select-summary
      ;; macro which uses the following functions:
      (autoload 'rmail-summary-displayed "rmail")
-     (autoload 'rmail-maybe-display-summary "rmail")))
-  (defvar rmail-default-rmail-file)
-  (defvar mm-text-coding-system))
+     (autoload 'rmail-maybe-display-summary "rmail"))))
+
+(defvar mm-text-coding-system)
+
+(declare-function mm-append-to-file "mm-util"
+                  (start end filename &optional codesys inhibit))
 
 (defun gnus-output-to-rmail (filename &optional ask)
-  "Append the current article to an Rmail file named FILENAME."
+  "Append the current article to an Rmail file named FILENAME.
+In Emacs 22 this writes Babyl format; in Emacs 23 it writes mbox unless
+FILENAME exists and is Babyl format."
   (require 'rmail)
   (require 'mm-util)
-  ;; Most of these codes are borrowed from rmailout.el.
+  ;; Some of this codes is borrowed from rmailout.el.
   (setq filename (expand-file-name filename))
-  (setq rmail-default-rmail-file filename)
+  ;; FIXME should we really be messing with this defcustom?
+  ;; It is not needed for the operation of this function.
+  (if (boundp 'rmail-default-rmail-file)
+      (setq rmail-default-rmail-file filename) ; 22
+    (setq rmail-default-file filename))        ; 23
   (let ((artbuf (current-buffer))
-	(tmpbuf (get-buffer-create " *Gnus-output*")))
+	(tmpbuf (get-buffer-create " *Gnus-output*"))
+        ;; Babyl rmail.el defines this, mbox does not.
+        (babyl (fboundp 'rmail-insert-rmail-file-header)))
     (save-excursion
-      (or (get-file-buffer filename)
-	  (file-exists-p filename)
+      ;; Note that we ignore the possibility of visiting a Babyl
+      ;; format buffer in Emacs 23, since Rmail no longer supports that.
+     (or (get-file-buffer filename)
+         (progn
+           ;; In case someone wants to write to a Babyl file from Emacs 23.
+           (when (file-exists-p filename)
+             (setq babyl (mail-file-babyl-p filename))
+             t))
 	  (if (or (not ask)
 		  (gnus-yes-or-no-p
 		   (concat "\"" filename "\" does not exist, create it? ")))
 	      (let ((file-buffer (create-file-buffer filename)))
 		(save-excursion
 		  (set-buffer file-buffer)
-		  (rmail-insert-rmail-file-header)
+                  (if (fboundp 'rmail-insert-rmail-file-header)
+                      (rmail-insert-rmail-file-header))
 		  (let ((require-final-newline nil)
 			(coding-system-for-write mm-text-coding-system))
 		    (gnus-write-buffer filename)))
@@ -963,32 +1097,56 @@ with potentially long computations."
       (set-buffer tmpbuf)
       (erase-buffer)
       (insert-buffer-substring artbuf)
-      (gnus-convert-article-to-rmail)
+      (if babyl
+          (gnus-convert-article-to-rmail)
+        ;; Non-Babyl case copied from gnus-output-to-mail.
+        (goto-char (point-min))
+        (if (looking-at "From ")
+            (forward-line 1)
+          (insert "From nobody " (current-time-string) "\n"))
+        (let (case-fold-search)
+          (while (re-search-forward "^From " nil t)
+            (beginning-of-line)
+            (insert ">"))))
       ;; Decide whether to append to a file or to an Emacs buffer.
       (let ((outbuf (get-file-buffer filename)))
 	(if (not outbuf)
-	    (let ((file-name-coding-system nnmail-pathname-coding-system))
-	      (mm-append-to-file (point-min) (point-max) filename))
+            (progn
+              (unless babyl             ; from gnus-output-to-mail
+                (let ((buffer-read-only nil))
+                  (goto-char (point-max))
+                  (forward-char -2)
+                  (unless (looking-at "\n\n")
+                    (goto-char (point-max))
+                    (unless (bolp)
+                      (insert "\n"))
+                    (insert "\n"))))
+              (let ((file-name-coding-system nnmail-pathname-coding-system))
+                (mm-append-to-file (point-min) (point-max) filename)))
 	  ;; File has been visited, in buffer OUTBUF.
 	  (set-buffer outbuf)
 	  (let ((buffer-read-only nil)
 		(msg (and (boundp 'rmail-current-message)
 			  (symbol-value 'rmail-current-message))))
 	    ;; If MSG is non-nil, buffer is in RMAIL mode.
+            ;; Compare this with rmail-output-to-rmail-buffer in Emacs 23.
 	    (when msg
-	      (widen)
-	      (narrow-to-region (point-max) (point-max)))
+              (unless babyl
+                (rmail-swap-buffers-maybe)
+                (rmail-maybe-set-message-counters))
+              (widen)
+              (narrow-to-region (point-max) (point-max)))
 	    (insert-buffer-substring tmpbuf)
 	    (when msg
-	      (goto-char (point-min))
-	      (widen)
-	      (search-backward "\n\^_")
-	      (narrow-to-region (point) (point-max))
+              (when babyl
+                (goto-char (point-min))
+                (widen)
+                (search-backward "\n\^_")
+                (narrow-to-region (point) (point-max)))
 	      (rmail-count-new-messages t)
 	      (when (rmail-summary-exists)
 		(rmail-select-summary
 		 (rmail-update-summary)))
-	      (rmail-count-new-messages t)
 	      (rmail-show-message msg))
 	    (save-buffer)))))
     (kill-buffer tmpbuf)))
@@ -1148,9 +1306,16 @@ Return the modified alist."
 	(throw 'found nil)))
     t))
 
+;; gnus.el requires mm-util.
+(declare-function mm-disable-multibyte "mm-util")
+
 (defun gnus-write-active-file (file hashtb &optional full-names)
+  ;; `coding-system-for-write' should be `raw-text' or equivalent.
   (let ((coding-system-for-write nnmail-active-file-coding-system))
     (with-temp-file file
+      ;; The buffer should be in the unibyte mode because group names
+      ;; are ASCII text or encoded non-ASCII text (i.e., unibyte).
+      (mm-disable-multibyte)
       (mapatoms
        (lambda (sym)
 	 (when (and sym
@@ -1211,6 +1376,9 @@ Return the modified alist."
 	     (pop l2))
 	   l1))))
 
+(declare-function gnus-add-text-properties "gnus"
+                  (start end properties &optional object))
+
 (defun gnus-add-text-properties-when
   (property value start end properties &optional object)
   "Like `gnus-add-text-properties', only applied on where PROPERTY is VALUE."
@@ -1235,6 +1403,13 @@ Return the modified alist."
     (if start
 	(remove-text-properties start end properties object))
     t))
+
+(defun gnus-string-remove-all-properties (string)
+  (condition-case ()
+      (let ((s string))
+	(set-text-properties 0 (length string) nil string)
+	s)
+    (error string)))
 
 ;; This might use `compare-strings' to reduce consing in the
 ;; case-insensitive case, but it has to cope with null args.
@@ -1350,32 +1525,12 @@ SPEC is a predicate specifier that contains stuff like `or', `and',
 	`(,(car spec) ,@(mapcar 'gnus-make-predicate-1 (cdr spec)))
       (error "Invalid predicate specifier: %s" spec)))))
 
-(defun gnus-local-map-property (map)
-  "Return a list suitable for a text property list specifying keymap MAP."
-  (cond
-   ((featurep 'xemacs)
-    (list 'keymap map))
-   ((>= emacs-major-version 21)
-    (list 'keymap map))
-   (t
-    (list 'local-map map))))
-
-(defmacro gnus-completing-read-maybe-default (prompt table &optional predicate
-					      require-match initial-contents
-					      history default)
-  "Like `completing-read', allowing for non-existent 7th arg in older XEmacsen."
-  `(completing-read ,prompt ,table ,predicate ,require-match
-                    ,initial-contents ,history
-                    ,@(if (and (featurep 'xemacs) (< emacs-minor-version 2))
-                          ()
-                        (list default))))
-
 (defun gnus-completing-read (prompt table &optional predicate require-match
 				    history)
   (when (and history
 	     (not (boundp history)))
     (set history nil))
-  (gnus-completing-read-maybe-default
+  (completing-read
    (if (symbol-value history)
        (concat prompt " (" (car (symbol-value history)) "): ")
      (concat prompt ": "))
@@ -1473,6 +1628,9 @@ CHOICE is a list of the choice char and help message at IDX."
 	(kill-buffer buf))
     tchar))
 
+(declare-function x-focus-frame "xfns.c" (frame))
+(declare-function w32-focus-frame "../term/w32-win" (frame))
+
 (defun gnus-select-frame-set-input-focus (frame)
   "Select FRAME, raise it, and set input focus, if possible."
   (cond ((featurep 'xemacs)
@@ -1488,7 +1646,7 @@ CHOICE is a list of the choice char and help message at IDX."
 	(t
 	 (raise-frame frame)
 	 (select-frame frame)
-	 (cond ((memq window-system '(x mac))
+	 (cond ((memq window-system '(x ns mac))
 		(x-focus-frame frame))
 	       ((eq window-system 'w32)
 		(w32-focus-frame frame)))
@@ -1510,8 +1668,7 @@ Return nil otherwise."
 				 display))
 	      display)))))
 
-(eval-when-compile
-  (defvar tool-bar-mode))
+(defvar tool-bar-mode)
 
 (defun gnus-tool-bar-update (&rest ignore)
   "Update the tool bar."
@@ -1580,10 +1737,9 @@ predicate on the elements."
 	  (push (pop list1) res)))
       (nconc (nreverse res) list1 list2))))
 
-(eval-when-compile
-  (defvar xemacs-codename)
-  (defvar sxemacs-codename)
-  (defvar emacs-program-version))
+(defvar xemacs-codename)
+(defvar sxemacs-codename)
+(defvar emacs-program-version)
 
 (defun gnus-emacs-version ()
   "Stringified Emacs version."
@@ -1616,13 +1772,16 @@ predicate on the elements."
      ((or (featurep 'sxemacs) (featurep 'xemacs))
       ;; XEmacs or SXEmacs:
       (concat emacsname "/" emacs-program-version
-	      " ("
-	      (when (and (memq 'codename lst)
-			 codename)
-		(concat codename
-			(when system-v ", ")))
-	      (when system-v system-v)
-	      ")"))
+	      (let (plst)
+		(when (memq 'codename lst)
+		  (push codename plst))
+		(when system-v
+		  (push system-v plst))
+		(unless (featurep 'mule)
+		  (push "no MULE" plst))
+		(when (> (length plst) 0)
+		  (concat
+		   " (" (mapconcat 'identity (reverse plst) ", ") ")")))))
      (t emacs-version))))
 
 (defun gnus-rename-file (old-path new-path &optional trim)
@@ -1645,6 +1804,11 @@ empty directories from OLD-PATH."
 	  (setq old-dir (file-name-as-directory
 			 (file-truename
 			  (concat old-dir "..")))))))))
+
+(defun gnus-set-file-modes (filename mode)
+  "Wrapper for set-file-modes."
+  (ignore-errors
+    (set-file-modes filename mode)))
 
 (if (fboundp 'set-process-query-on-exit-flag)
     (defalias 'gnus-set-process-query-on-exit-flag
@@ -1671,6 +1835,9 @@ is allowed once again.  (Immediately, if `inhibit-quit' is nil.)"
 	     ;; that intends to handle the quit signal next time.
 	     (eval '(ignore nil))))))
 
+(defalias 'gnus-read-shell-command
+  (if (fboundp 'read-shell-command) 'read-shell-command 'read-string))
+
 (defmacro gnus-put-display-table (range value display-table)
   "Set the value for char RANGE to VALUE in DISPLAY-TABLE.  "
   (if (featurep 'xemacs)
@@ -1694,5 +1861,5 @@ is allowed once again.  (Immediately, if `inhibit-quit' is nil.)"
 
 (provide 'gnus-util)
 
-;;; arch-tag: f94991af-d32b-4c97-8c26-ca12a934de49
+;; arch-tag: f94991af-d32b-4c97-8c26-ca12a934de49
 ;;; gnus-util.el ends here

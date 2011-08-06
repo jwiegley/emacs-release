@@ -1,16 +1,16 @@
 ;;; em-cmpl.el --- completion using the TAB key
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,21 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-(provide 'em-cmpl)
-
-(eval-when-compile (require 'esh-maint))
-(require 'esh-util)
-
-(defgroup eshell-cmpl nil
-  "This module provides a programmable completion function bound to
-the TAB key, which allows for completing command names, file names,
-variable names, arguments, etc."
-  :tag "Argument completion"
-  :group 'eshell-module)
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -81,6 +67,21 @@ variable names, arguments, etc."
 ;; Finally, context-related help can be accessed by pressing <C-c i>.
 ;; This only works well if the completion function has provided Eshell
 ;; with sufficient pointers to locate the relevant help text.
+
+;;; Code:
+
+(eval-when-compile
+  (require 'cl)
+  (require 'eshell))
+(require 'esh-util)
+
+;;;###autoload
+(eshell-defgroup eshell-cmpl nil
+  "This module provides a programmable completion function bound to
+the TAB key, which allows for completing command names, file names,
+variable names, arguments, etc."
+  :tag "Argument completion"
+  :group 'eshell-module)
 
 ;;; User Variables:
 
@@ -296,7 +297,7 @@ to writing a completion function."
   (define-key eshell-mode-map [tab] 'pcomplete)
   (define-key eshell-mode-map [(control ?i)] 'pcomplete)
   ;; jww (1999-10-19): Will this work on anything but X?
-  (if (eshell-under-xemacs-p)
+  (if (featurep 'xemacs)
       (define-key eshell-mode-map [iso-left-tab] 'pcomplete-reverse)
     (define-key eshell-mode-map [(shift iso-lefttab)] 'pcomplete-reverse)
     (define-key eshell-mode-map [(shift control ?i)] 'pcomplete-reverse))
@@ -448,7 +449,11 @@ to writing a completion function."
 			(all-completions filename obarray 'functionp))
 		   completions)))))))
 
-;;; Code:
+(provide 'em-cmpl)
 
-;;; arch-tag: 0e914699-673a-45f8-8cbf-82e1dbc571bc
+;; Local Variables:
+;; generated-autoload-file: "esh-groups.el"
+;; End:
+
+;; arch-tag: 0e914699-673a-45f8-8cbf-82e1dbc571bc
 ;;; em-cmpl.el ends here

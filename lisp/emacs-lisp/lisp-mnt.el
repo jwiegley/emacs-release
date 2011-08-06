@@ -1,7 +1,7 @@
 ;;; lisp-mnt.el --- utility functions for Emacs Lisp maintainers
 
 ;; Copyright (C) 1992, 1994, 1997, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Eric S. Raymond <esr@snark.thyrsus.com>
 ;; Maintainer: FSF
@@ -11,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation,  Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -37,7 +35,8 @@
 ;; Another entry point automatically addresses bug mail to a package's
 ;; maintainer or author.
 
-;; This file can be loaded by your lisp-mode-hook.  Have it (require 'lisp-mnt)
+;; This file can be loaded by your emacs-lisp-mode-hook.  Have it
+;; (require 'lisp-mnt)
 
 ;; This file is an example of the header conventions.  Note the following
 ;; features:
@@ -76,8 +75,7 @@
 ;;
 ;;    * Maintainer line --- should be a single name/address as in the Author
 ;; line, or an address only, or the string "FSF".  If there is no maintainer
-;; line, the person(s) in the Author field are presumed to be it.  The example
-;; in this file is mildly bogus because the maintainer line is redundant.
+;; line, the person(s) in the Author field are presumed to be it.
 ;;    The idea behind these two fields is to be able to write a Lisp function
 ;; that does "send mail to the author" without having to mine the name out by
 ;; hand.  Please be careful about surrounding the network address with <> if
@@ -95,8 +93,8 @@
 ;; package for the distribution.  (This file doesn't have one because the
 ;; author *is* one of the maintainers.)
 ;;
-;;    * Keywords line --- used by the finder code (now under construction)
-;; for finding Emacs Lisp code related to a topic.
+;;    * Keywords line --- used by the finder code for finding Emacs
+;; Lisp code related to a topic.
 ;;
 ;;    * X-Bogus-Bureaucratic-Cruft line --- this is a joke and an example
 ;; of a comment header.  Headers starting with `X-' should never be used
@@ -305,12 +303,12 @@ If FILE is nil, execute BODY in the current buffer."
        (if ,filesym
 	   (with-temp-buffer
 	     (insert-file-contents ,filesym)
-	     (lisp-mode)
+	     (emacs-lisp-mode)
 	     ,@body)
 	 (save-excursion
 	   ;; Switching major modes is too drastic, so just switch
-	   ;; temporarily to the Lisp mode syntax table.
-	   (with-syntax-table lisp-mode-syntax-table
+	   ;; temporarily to the Emacs Lisp mode syntax table.
+	   (with-syntax-table emacs-lisp-mode-syntax-table
 	     ,@body))))))
 
 (put 'lm-with-file 'lisp-indent-function 1)
@@ -511,18 +509,17 @@ copyright notice is allowed."
     (if (and file (file-directory-p file))
 	(setq ret
 	      (with-temp-buffer
-		(mapcar
-		 (lambda (f)
-		   (if (string-match ".*\\.el\\'" f)
-		       (let ((status (lm-verify f)))
-			 (insert f ":")
-			 (if status
-			     (lm-insert-at-column lm-comment-column status
-						  "\n")
-			   (if showok
-			       (lm-insert-at-column lm-comment-column
-						    "OK\n"))))))
-		 (directory-files file))))
+		(dolist (f (directory-files file nil "\\.el\\'")
+			   (buffer-string))
+		  (when (file-regular-p f)
+		    (let ((status (lm-verify f)))
+		      (insert f ":")
+		      (if status
+			  (lm-insert-at-column lm-comment-column status
+					       "\n")
+			(if showok
+			    (lm-insert-at-column lm-comment-column
+						 "OK\n"))))))))
       (lm-with-file file
 	(setq name (lm-get-package-name))
 	(setq ret
@@ -562,7 +559,7 @@ copyright notice is allowed."
 	       (t
 		ret)))))
     (if verbose
-	(message ret))
+	(message "%s" ret))
     ret))
 
 (defun lm-synopsis (&optional file showall)
@@ -591,7 +588,7 @@ which do not include a recognizable synopsis."
               (lm-summary))
           (when must-kill (kill-buffer (current-buffer))))))))
 
-(eval-when-compile (defvar report-emacs-bug-address))
+(defvar report-emacs-bug-address)
 
 (defun lm-report-bug (topic)
   "Report a bug in the package currently being visited to its maintainer.
@@ -615,5 +612,5 @@ Prompts for bug subject TOPIC.  Leaves you in a mail buffer."
 
 (provide 'lisp-mnt)
 
-;;; arch-tag: fa3c5ab4-a37b-4e46-b7cf-b6d78b90e69e
+;; arch-tag: fa3c5ab4-a37b-4e46-b7cf-b6d78b90e69e
 ;;; lisp-mnt.el ends here

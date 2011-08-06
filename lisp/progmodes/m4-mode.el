@@ -1,6 +1,6 @@
 ;;; m4-mode.el --- m4 code editing commands for Emacs
 
-;; Copyright (C) 1996, 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 1996, 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;; Free Software Foundation, Inc.
 
 ;; Author: Andrew Csillag <drew_csillag@geocities.com>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -103,10 +101,21 @@
 (modify-syntax-entry ?\"  "w" m4-mode-syntax-table)
 
 (defvar m4-mode-map
-  (let ((map (make-sparse-keymap)))
+  (let ((map (make-sparse-keymap))
+	(menu-map (make-sparse-keymap)))
     (define-key map "\C-c\C-b" 'm4-m4-buffer)
     (define-key map "\C-c\C-r" 'm4-m4-region)
     (define-key map "\C-c\C-c" 'comment-region)
+    (define-key map [menu-bar m4-mode] (cons "M4" menu-map))
+    (define-key menu-map [m4c]
+      '(menu-item "Comment Region" comment-region
+		  :help "Comment Region"))
+    (define-key menu-map [m4b]
+      '(menu-item "M4 Buffer" m4-m4-buffer
+		  :help "Send contents of the current buffer to m4"))
+    (define-key menu-map [m4r]
+      '(menu-item "M4 Region" m4-m4-region
+		  :help "Send contents of the current region to m4"))
     map))
 
 (defvar m4-mode-abbrev-table nil
@@ -178,5 +187,5 @@
 ;;;		  "m4_syscmd" "m4_sysval" "m4_traceoff" "m4_traceon" "m4_translit"
 ;;;		  "m4_m4_undefine" "m4_undivert"))
 
-;;; arch-tag: 87811d86-94c1-474b-9666-587f6da74af1
+;; arch-tag: 87811d86-94c1-474b-9666-587f6da74af1
 ;;; m4-mode.el ends here

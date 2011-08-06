@@ -1,7 +1,7 @@
 /* A general interface to the widgets of different toolkits.
 Copyright (C) 1992, 1993 Lucid, Inc.
 Copyright (C) 1994, 1995, 1996, 1999, 2000, 2001, 2002, 2003, 2004,
-  2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+  2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of the Lucid Widget Library.
 
@@ -19,10 +19,6 @@ You should have received a copy of the GNU General Public License
 along with GNU Emacs; see the file COPYING.  If not, write to
 the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 Boston, MA 02110-1301, USA.  */
-
-#ifdef NeXT
-#undef __STRICT_BSD__ /* ick */
-#endif
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -48,7 +44,11 @@ Boston, MA 02110-1301, USA.  */
 #endif /* not USE_MOTIF && USE_LUCID */
 #endif
 #if defined (USE_XAW)
+#ifdef HAVE_XAW3D
+#include <X11/Xaw3d/Paned.h>
+#else /* !HAVE_XAW3D */
 #include <X11/Xaw/Paned.h>
+#endif /* HAVE_XAW3D */
 #include "lwlib-Xaw.h"
 #endif
 
@@ -166,7 +166,7 @@ static void
 safe_free_str (s)
      char *s;
 {
-  if (s) free (s);
+  free (s);
 }
 
 static widget_value *widget_value_free_list = 0;
@@ -222,9 +222,9 @@ free_widget_value_tree (wv)
   if (!wv)
     return;
 
-  if (wv->name) free (wv->name);
-  if (wv->value) free (wv->value);
-  if (wv->key) free (wv->key);
+  free (wv->name);
+  free (wv->value);
+  free (wv->key);
 
   wv->name = wv->value = wv->key = (char *) 0xDEADBEEF;
 

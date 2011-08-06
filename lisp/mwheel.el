@@ -1,16 +1,16 @@
 ;;; mwheel.el --- Wheel mouse support
 
-;; Copyright (C) 1998, 2000, 2001, 2002, 2002, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1998, 2000, 2001, 2002, 2002, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 ;; Maintainer: William M. Perry <wmperry@gnu.org>
 ;; Keywords: mouse
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -56,10 +54,11 @@
 
 (defvar mouse-wheel-down-button 4)
 (make-obsolete-variable 'mouse-wheel-down-button
-                        'mouse-wheel-down-event)
+                        'mouse-wheel-down-event
+			"22.1")
 (defcustom mouse-wheel-down-event
   ;; In the latest versions of XEmacs, we could just use mouse-%s as well.
-  (if (memq window-system '(w32 mac))
+  (if (memq window-system '(w32 ns))
       'wheel-up
     (intern (format (if (featurep 'xemacs) "button%s" "mouse-%s")
 		    mouse-wheel-down-button)))
@@ -70,10 +69,11 @@
 
 (defvar mouse-wheel-up-button 5)
 (make-obsolete-variable 'mouse-wheel-up-button
-                        'mouse-wheel-up-event)
+                        'mouse-wheel-up-event
+			"22.1")
 (defcustom mouse-wheel-up-event
   ;; In the latest versions of XEmacs, we could just use mouse-%s as well.
-  (if (memq window-system '(w32 mac))
+  (if (memq window-system '(w32 ns))
       'wheel-down
     (intern (format (if (featurep 'xemacs) "button%s" "mouse-%s")
 		    mouse-wheel-up-button)))
@@ -84,7 +84,8 @@
 
 (defvar mouse-wheel-click-button 2)
 (make-obsolete-variable 'mouse-wheel-click-button
-                        'mouse-wheel-click-event)
+                        'mouse-wheel-click-event
+			"22.1")
 (defcustom mouse-wheel-click-event
   ;; In the latest versions of XEmacs, we could just use mouse-%s as well.
   (intern (format (if (featurep 'xemacs) "button%s" "mouse-%s")
@@ -152,7 +153,9 @@ This can be slightly disconcerting, but some people prefer it."
   :group 'mouse
   :type 'boolean)
 
-(if (not (fboundp 'event-button))
+(eval-and-compile
+  (if (fboundp 'event-button)
+      (fset 'mwheel-event-button 'event-button)
     (defun mwheel-event-button (event)
       (let ((x (event-basic-type event)))
 	;; Map mouse-wheel events to appropriate buttons
@@ -161,13 +164,12 @@ This can be slightly disconcerting, but some people prefer it."
 	      (if (< amount 0)
 		  mouse-wheel-up-event
 		mouse-wheel-down-event))
-	  x)))
-  (fset 'mwheel-event-button 'event-button))
+	  x))))
 
-(if (not (fboundp 'event-window))
+  (if (fboundp 'event-window)
+      (fset 'mwheel-event-window 'event-window)
     (defun mwheel-event-window (event)
-      (posn-window (event-start event)))
-  (fset 'mwheel-event-window 'event-window))
+      (posn-window (event-start event)))))
 
 (defvar mwheel-inhibit-click-event-timer nil
   "Timer running while mouse wheel click event is inhibited.")
@@ -190,6 +192,10 @@ This should only be bound to mouse buttons 4 and 5."
                      (prog1
                          (selected-window)
                        (select-window (mwheel-event-window event)))))
+	 (buffer (window-buffer curwin))
+	 (opoint (with-current-buffer buffer
+		   (when (eq (car-safe transient-mark-mode) 'only)
+		     (point))))
          (mods
 	  (delq 'click (delq 'double (delq 'triple (event-modifiers event)))))
          (amt (assoc mods mouse-wheel-scroll-amount)))
@@ -214,7 +220,7 @@ This should only be bound to mouse buttons 4 and 5."
                       ;; If the first scroll succeeded, then some scrolling
                       ;; is possible: keep scrolling til the beginning but
                       ;; do not signal an error.  For some reason, we have
-                      ;; to do it even if the first scroll signalled an
+                      ;; to do it even if the first scroll signaled an
                       ;; error, because otherwise the window is recentered
                       ;; for a reason that escapes me.  This problem seems
                       ;; to only affect scroll-down.  --Stef
@@ -224,7 +230,13 @@ This should only be bound to mouse buttons 4 and 5."
                    ;; Make sure we do indeed scroll to the end of the buffer.
                    (end-of-buffer (while t (scroll-up)))))
 		(t (error "Bad binding in mwheel-scroll"))))
-      (if curwin (select-window curwin))))
+      (if curwin (select-window curwin)))
+    ;; If there is a temporarily active region, deactivate it iff
+    ;; scrolling moves point.
+    (when opoint
+      (with-current-buffer buffer
+	(when (/= opoint (point))
+	  (deactivate-mark)))))
   (when (and mouse-wheel-click-event mouse-wheel-inhibit-click-time)
     (if mwheel-inhibit-click-event-timer
 	(cancel-timer mwheel-inhibit-click-event-timer)

@@ -1,16 +1,16 @@
 ;;; em-basic.el --- basic shell builtin commands
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,22 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-(provide 'em-basic)
-
-(eval-when-compile (require 'esh-maint))
-
-(defgroup eshell-basic nil
-  "The \"basic\" code provides a set of convenience functions which
-are traditionally considered shell builtins.  Since all of the
-functionality provided by them is accessible through Lisp, they are
-not really builtins at all, but offer a command-oriented way to do the
-same thing."
-  :tag "Basic shell commands"
-  :group 'eshell-module)
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -48,14 +33,6 @@ same thing."
 ;; echo as an argument), or whether it should try to act like a normal
 ;; shell echo, and always result in a flat string being returned.
 
-(defcustom eshell-plain-echo-behavior nil
-  "*If non-nil, `echo' tries to behave like an ordinary shell echo.
-This comes at some detriment to Lisp functionality.  However, the Lisp
-equivalent of `echo' can always be achieved by using `identity'."
-  :type 'boolean
-  :group 'eshell-basic)
-
-;;;
 ;; An example of the difference is the following:
 ;;
 ;;   echo Hello world
@@ -83,7 +60,28 @@ equivalent of `echo' can always be achieved by using `identity'."
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'esh-util))
+
+(require 'eshell)
 (require 'esh-opt)
+
+;;;###autoload
+(eshell-defgroup eshell-basic nil
+  "The \"basic\" code provides a set of convenience functions which
+are traditionally considered shell builtins.  Since all of the
+functionality provided by them is accessible through Lisp, they are
+not really builtins at all, but offer a command-oriented way to do the
+same thing."
+  :tag "Basic shell commands"
+  :group 'eshell-module)
+
+(defcustom eshell-plain-echo-behavior nil
+  "*If non-nil, `echo' tries to behave like an ordinary shell echo.
+This comes at some detriment to Lisp functionality.  However, the Lisp
+equivalent of `echo' can always be achieved by using `identity'."
+  :type 'boolean
+  :group 'eshell-basic)
 
 ;;; Functions:
 
@@ -180,8 +178,11 @@ or `eshell-printn' for display."
       "Warning: umask changed for all new files created by Emacs.\n"))
    nil))
 
-(eval-when-compile
-  (defvar print-func))
+(provide 'em-basic)
 
-;;; arch-tag: 385a31b1-cb95-46f0-9829-9d352ee77db8
+;; Local Variables:
+;; generated-autoload-file: "esh-groups.el"
+;; End:
+
+;; arch-tag: 385a31b1-cb95-46f0-9829-9d352ee77db8
 ;;; em-basic.el ends here

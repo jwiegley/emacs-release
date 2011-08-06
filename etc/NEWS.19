@@ -1,6 +1,6 @@
 GNU Emacs NEWS -- history of user-visible changes.  1992.
 
-Copyright (C) 1993, 1994, 1995, 2001, 2006, 2007, 2008
+Copyright (C) 1993, 1994, 1995, 2001, 2006, 2007, 2008, 2009
   Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
@@ -558,7 +558,7 @@ normal hooks.
 The new command simula-indent-exp is bound to C-M-q.
 
 ** etags can now handle programs written in Erlang.  Files are
-recognised by the extensions .erl and .hrl.  The tagged lines are
+recognized by the extensions .erl and .hrl.  The tagged lines are
 those that begin a function, record, or macro.
 
 ** MSDOS Changes
@@ -1288,12 +1288,12 @@ the disp-table library).
 ** The new command-line option --eval specifies an expression to evaluate
 from the command line.
 
-** etags has now the ability to tag Perl files.  They are recognised
+** etags has now the ability to tag Perl files.  They are recognized
 either by the .pm and .pl suffixes or by a first line which starts
 with `#!' and specifies a Perl interpreter.  The tagged lines are
 those beginning with the `sub' keyword.
 
-New suffixes recognised are .hpp for C++; .f90 for Fortran; .bib,
+New suffixes recognized are .hpp for C++; .f90 for Fortran; .bib,
 .ltx, .TeX for TeX (.bbl, .dtx removed); .ml for Lisp; .prolog for
 prolog (.pl is now Perl).
 
@@ -1920,7 +1920,7 @@ RELATIVE_REPOS.
 *** Completion works with file names containing quoted characters.
 
 File names containing special characters (such as " ", "!", etc.) that are
-quoted with a "\" character are recognised during completion.  Special
+quoted with a "\" character are recognized during completion.  Special
 characters are quoted when they are inserted during completion.
 
 *** You can use M-x comint-truncate-buffer to truncate the buffer.
@@ -1953,7 +1953,7 @@ A new user option Man-fontify-manpage-flag disables fontification
 window system is used.  Two new user options Man-overstrike-face
 (default 'bold) and Man-underline-face (default 'underline) can be set
 to the preferred faces to be used for the words that man overstrikes
-and underlines.  Useful for those who like coloured man pages.
+and underlines.  Useful for those who like colored man pages.
 
 Two new interactive functions are provided: Man-cleanup-manpage and
 Man-fontify-manpage.  Both can be used on a buffer that contains the
@@ -6523,10 +6523,10 @@ the tar file.
 ----------------------------------------------------------------------
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -6534,9 +6534,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to the
-Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 
 Local variables:

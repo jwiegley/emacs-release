@@ -1,13 +1,14 @@
 ;;; cc-engine.el --- core syntax guessing engine for CC mode
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    2001- Alan Mackenzie
 ;;             1998- Martin Stjernholm
 ;;             1992-1999 Barry A. Warsaw
-;;             1987 Dave Detlefs and Stewart Clamen
+;;             1987 Dave Detlefs
+;;             1987 Stewart Clamen
 ;;             1985 Richard M. Stallman
 ;; Maintainer: bug-cc-mode@gnu.org
 ;; Created:    22-Apr-1997 (split from cc-mode.el)
@@ -16,10 +17,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,9 +28,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -531,6 +530,10 @@ the previous one if already at the beginning of one.  Only
 statements/declarations on the same level are considered, i.e. don't
 move into or out of sexps (not even normal expression parentheses).
 
+If point is already at the earliest statment within braces or parens,
+this function doesn't move back into any whitespace preceding it; it
+returns 'same in this case.
+
 Stop at statement continuation tokens like \"else\", \"catch\",
 \"finally\" and the \"while\" in \"do ... while\" if the start point
 is within the continuation.  If starting at such a token, move to the
@@ -550,12 +553,16 @@ of the content in the macro, i.e. the expression of an \"#if\" or the
 start of the definition in a \"#define\".  Also stop at start of
 macros before leaving them.
 
-Return 'label if stopped at a label, 'same if stopped at the beginning
-of the current statement, 'up if stepped to a containing statement,
-'previous if stepped to a preceding statement, 'beginning if stepped
-from a statement continuation clause to its start clause, or 'macro if
-stepped to a macro start.  Note that 'same and not 'label is returned
-if stopped at the same label without crossing the colon character.
+Return:
+'label          if stopped at a label or \"case...:\" or \"default:\";
+'same           if stopped at the beginning of the current statement;
+'up             if stepped to a containing statement;
+'previous       if stepped to a preceding statement;
+'beginning      if stepped from a statement continuation clause to
+                its start clause; or
+'macro          if stepped to a macro start.
+Note that 'same and not 'label is returned if stopped at the same
+label without crossing the colon character.
 
 LIM may be given to limit the search.  If the search hits the limit,
 point will be left at the closest following token, or at the start
@@ -658,7 +665,7 @@ comment at the start of cc-engine.el for more info."
 	(c-stmt-delim-chars (if comma-delim
 				c-stmt-delim-chars-with-comma
 			      c-stmt-delim-chars))
-	c-in-literal-cache c-maybe-labelp saved
+	c-in-literal-cache c-maybe-labelp after-case:-pos saved
 	;; Current position.
 	pos
 	;; Position of last stmt boundary character (e.g. ;).
@@ -972,7 +979,7 @@ comment at the start of cc-engine.el for more info."
 			    ;; Like a C "continue".  Analyze the next sexp.
 			    (throw 'loop t)))
 
-			sexp-loop-continue-pos)	; End of "go back a sexp" loop.
+			sexp-loop-continue-pos)	; End of "go back a sexp" loop condition.
 		    (goto-char sexp-loop-continue-pos)
 		    (setq sexp-loop-end-pos sexp-loop-continue-pos
 			  sexp-loop-continue-pos nil))))
@@ -990,19 +997,16 @@ comment at the start of cc-engine.el for more info."
 		  ;; `c-crosses-statement-barrier-p' has found a colon, so we
 		  ;; might be in a label now.  Have we got a real label
 		  ;; (including a case label) or something like C++'s "public:"?
-		  (if (or (not (looking-at c-nonlabel-token-key)) ; proper label
-			  (save-excursion ; e.g. "case 'a':" ?
-			    (and (c-safe (c-backward-sexp) t)
-				 (looking-at "\\<case\\>")))) ; FIXME!!! this is
-					; wrong for AWK.  2006/1/14.
-		      (progn
-			(if after-labels-pos ; Have we already encountered a label?
-			    (if (not last-label-pos)
-				(setq last-label-pos (or tok start)))
-			  (setq after-labels-pos (or tok start)))
-			(setq c-maybe-labelp t
-			      label-good-pos nil))
-		    (setq c-maybe-labelp nil))) ; bogus "label"
+		  ;; A case label might use an expression rather than a token.
+		  (setq after-case:-pos (or tok start))
+		  (if (looking-at c-nonlabel-token-key) ; e.g. "while" or "'a'"
+		      (setq c-maybe-labelp nil)
+		    (if after-labels-pos ; Have we already encountered a label?
+			(if (not last-label-pos)
+			    (setq last-label-pos (or tok start)))
+		      (setq after-labels-pos (or tok start)))
+		    (setq c-maybe-labelp t
+			  label-good-pos nil))) ; bogus "label"
 
 		(when (and (not label-good-pos)	; i.e. no invalid "label"'s yet
 						; been found.
@@ -1057,8 +1061,16 @@ comment at the start of cc-engine.el for more info."
 		;; Might have jumped over several labels.  Go to the last one.
 		(setq pos last-label-pos)))))
 
-      ;; Skip over the unary operators that can start the statement.
+      ;; Have we got "case <expression>:"?
       (goto-char pos)
+      (when (and after-case:-pos
+		 (not (eq ret 'beginning))
+		 (looking-at c-case-kwds-regexp))
+	(if (< after-case:-pos start)
+	    (setq pos after-case:-pos)
+	  (setq ret 'label)))
+
+      ;; Skip over the unary operators that can start the statement.
       (while (progn
 	       (c-backward-syntactic-ws)
 	       ;; protect AWK post-inc/decrement operators, etc.
@@ -2511,7 +2523,7 @@ comment at the start of cc-engine.el for more info."
   ;; Move to the beginning of the current token.  Do not move if not
   ;; in the middle of one.  BACK-LIMIT may be used to bound the
   ;; backward search; if given it's assumed to be at the boundary
-  ;; between two tokens.  Return non-nil if the point is move, nil
+  ;; between two tokens.  Return non-nil if the point is moved, nil
   ;; otherwise.
   ;;
   ;; This function might do hidden buffer changes.
@@ -3321,7 +3333,7 @@ literal next to point is returned.  \"Next to\" means there's only
 spaces and tabs between point and the literal.  The search for such a
 literal is done first in forward direction.  If NOT-IN-DELIMITER is
 non-nil, the case when point is inside a starting delimiter won't be
-recognized.  This only has effect for comments, which have starting
+recognized.  This only has effect for comments which have starting
 delimiters with more than one character.
 
 Note that this function might do hidden buffer changes.  See the
@@ -3431,9 +3443,10 @@ comment at the start of cc-engine.el for more info."
 
 (defun c-literal-type (range)
   "Convenience function that given the result of `c-literal-limits',
-returns nil or the type of literal that the range surrounds.  It's
-much faster than using `c-in-literal' and is intended to be used when
-you need both the type of a literal and its limits.
+returns nil or the type of literal that the range surrounds, one
+of the symbols 'c, 'c++ or 'string.  It's much faster than using
+`c-in-literal' and is intended to be used when you need both the
+type of a literal and its limits.
 
 Note that this function might do hidden buffer changes.  See the
 comment at the start of cc-engine.el for more info."
@@ -3583,8 +3596,17 @@ comment at the start of cc-engine.el for more info."
 
 (defun c-find-decl-spots (cfd-limit cfd-decl-re cfd-face-checklist cfd-fun)
   ;; Call CFD-FUN for each possible spot for a declaration, cast or
-  ;; label from the point to CFD-LIMIT.  Such a spot is:
+  ;; label from the point to CFD-LIMIT.
   ;;
+  ;; CFD-FUN is called with point at the start of the spot.  It's
+  ;; passed two arguments: The first is the end position of the token
+  ;; preceding the spot, or 0 for the implicit match at bob.  The
+  ;; second is a flag that is t when the match is inside a macro.  If
+  ;; CFD-FUN adds `c-decl-end' properties somewhere below the current
+  ;; spot, it should return non-nil to ensure that the next search
+  ;; will find them.
+  ;;
+  ;; Such a spot is:
   ;; o  The first token after bob.
   ;; o  The first token after the end of submatch 1 in
   ;;    `c-decl-prefix-or-start-re' when that submatch matches.
@@ -3603,14 +3625,6 @@ comment at the start of cc-engine.el for more info."
   ;; without matching something that begins inside a macro and ends
   ;; outside it.  It's to avoid this work that the CFD-DECL-RE and
   ;; CFD-FACE-CHECKLIST checks exist.
-  ;;
-  ;; CFD-FUN is called with point at the start of the spot.  It's
-  ;; passed two arguments: The first is the end position of the token
-  ;; preceding the spot, or 0 for the implicit match at bob.  The
-  ;; second is a flag that is t when the match is inside a macro.  If
-  ;; CFD-FUN adds `c-decl-end' properties somewhere below the current
-  ;; spot, it should return non-nil to ensure that the next search
-  ;; will find them.
   ;;
   ;; The spots are visited approximately in order from top to bottom.
   ;; It's however the positions where `c-decl-prefix-or-start-re'
@@ -4035,6 +4049,9 @@ comment at the start of cc-engine.el for more info."
 				      type-list)))
 	      c-found-types)
     (sort type-list 'string-lessp)))
+
+;; Shut up the byte compiler.
+(defvar c-maybe-stale-found-type)
 
 (defun c-trim-found-types (beg end old-len)
   ;; An after change function which, in conjunction with the info in
@@ -5138,7 +5155,8 @@ comment at the start of cc-engine.el for more info."
   ;;           inside a function declaration arglist).
   ;; '<>       In an angle bracket arglist.
   ;; 'arglist  Some other type of arglist.
-  ;; nil       Some other context or unknown context.
+  ;; nil       Some other context or unknown context.  Includes
+  ;;           within the parens of an if, for, ... construct.
   ;;
   ;; LAST-CAST-END is the first token after the closing paren of a
   ;; preceding cast, or nil if none is known.  If
@@ -5486,6 +5504,7 @@ comment at the start of cc-engine.el for more info."
        at-decl-or-cast
        (catch 'at-decl-or-cast
 
+	 ;; CASE 1
 	(when (> paren-depth 0)
 	  ;; Encountered something inside parens that isn't matched by
 	  ;; the `c-type-decl-*' regexps, so it's not a type decl
@@ -5509,6 +5528,7 @@ comment at the start of cc-engine.el for more info."
 	(if got-identifier
 	    (progn
 
+	      ;; CASE 2
 	      (when (and (or at-type maybe-typeless)
 			 (not (or got-prefix got-parens)))
 		;; Got another identifier directly after the type, so it's a
@@ -5535,6 +5555,7 @@ comment at the start of cc-engine.el for more info."
 	  (if backup-at-type
 	      (progn
 
+		;; CASE 3
 		(when (= (point) start)
 		  ;; Got a plain list of identifiers.  If a colon follows it's
 		  ;; a valid label.  Otherwise the last one probably is the
@@ -5547,6 +5568,7 @@ comment at the start of cc-engine.el for more info."
 		    (setq backup-if-not-cast t)
 		    (throw 'at-decl-or-cast t)))
 
+		;; CASE 4
 		(when (and got-suffix
 			   (not got-prefix)
 			   (not got-parens))
@@ -5557,6 +5579,7 @@ comment at the start of cc-engine.el for more info."
 		  (setq backup-if-not-cast t)
 		  (throw 'at-decl-or-cast t)))
 
+	    ;; CASE 5
 	    (when (eq at-type t)
 	      ;; If the type is known we know that there can't be any
 	      ;; identifier somewhere else, and it's only in declarations in
@@ -5566,6 +5589,7 @@ comment at the start of cc-engine.el for more info."
 
 	    (when (= (point) start)
 	      ;; Only got a single identifier (parsed as a type so far).
+	      ;; CASE 6
 	      (if (and
 		   ;; Check that the identifier isn't at the start of an
 		   ;; expression.
@@ -5586,6 +5610,7 @@ comment at the start of cc-engine.el for more info."
 		     ;; constants in C++.
 		     (memq at-type '(known found)))))
 		  (throw 'at-decl-or-cast t)
+		;; CASE 7
 		;; Can't be a valid declaration or cast, but if we've found a
 		;; specifier it can't be anything else either, so treat it as
 		;; an invalid/unfinished declaration or cast.
@@ -5619,7 +5644,7 @@ comment at the start of cc-engine.el for more info."
 	      (c-fdoc-shift-type-backward)
 
 	    ;; Still no identifier.
-
+	    ;; CASE 8
 	    (when (and got-prefix (or got-parens got-suffix))
 	      ;; Require `got-prefix' together with either `got-parens' or
 	      ;; `got-suffix' to recognize it as an abstract declarator:
@@ -5632,6 +5657,7 @@ comment at the start of cc-engine.el for more info."
 	      ;; the point when the fontification was invoked.
 	      (throw 'at-decl-or-cast t))
 
+	    ;; CASE 9
 	    (when (and at-type
 		       (not got-prefix)
 		       (not got-parens)
@@ -5642,11 +5668,13 @@ comment at the start of cc-engine.el for more info."
 	      ;; instantiation expression).
 	      (throw 'at-decl-or-cast nil))))
 
+	;; CASE 10
 	(when at-decl-or-cast
 	  ;; By now we've located the type in the declaration that we know
 	  ;; we're in.
 	  (throw 'at-decl-or-cast t))
 
+	;; CASE 11
 	(when (and got-identifier
 		   (not context)
 		   (looking-at c-after-suffixed-type-decl-key)
@@ -5665,6 +5693,7 @@ comment at the start of cc-engine.el for more info."
 	  ;; A declaration according to `c-after-suffixed-type-decl-key'.
 	  (throw 'at-decl-or-cast t))
 
+	;; CASE 12
 	(when (and (or got-prefix (not got-parens))
 		   (memq at-type '(t known)))
 	  ;; It's a declaration if a known type precedes it and it can't be a
@@ -5695,11 +5724,13 @@ comment at the start of cc-engine.el for more info."
 	;; Below are tests that only should be applied when we're certain to
 	;; not have parsed halfway through an expression.
 
+	;; CASE 14
 	(when (memq at-type '(t known))
 	  ;; The expression starts with a known type so treat it as a
 	  ;; declaration.
 	  (throw 'at-decl-or-cast t))
 
+	;; CASE 15
 	(when (and (c-major-mode-is 'c++-mode)
 		   ;; In C++ we check if the identifier is a known type, since
 		   ;; (con|de)structors use the class name as identifier.
@@ -5733,6 +5764,7 @@ comment at the start of cc-engine.el for more info."
 
 	(if got-identifier
 	    (progn
+	      ;; CASE 16
 	      (when (and got-prefix-before-parens
 			 at-type
 			 (or at-decl-end (looking-at "=[^=]"))
@@ -5745,6 +5777,7 @@ comment at the start of cc-engine.el for more info."
 		;; be a function call.
 		(throw 'at-decl-or-cast t))
 
+	      ;; CASE 17
 	      (when (and (or got-suffix-after-parens
 			     (looking-at "=[^=]"))
 			 (eq at-type 'found)
@@ -5755,6 +5788,7 @@ comment at the start of cc-engine.el for more info."
 		;; somewhere else (if it's a known type we won't get here).
 		(throw 'at-decl-or-cast t)))
 
+	  ;; CASE 18
 	  (when (and context
 		     (or got-prefix
 			 (and (eq context 'decl)
@@ -5926,7 +5960,8 @@ comment at the start of cc-engine.el for more info."
 	label-end
 	qt-symbol-idx
 	macro-start			; if we're in one.
-	label-type)
+	label-type
+	kwd)
     (cond
      ;; "case" or "default" (Doesn't apply to AWK).
      ((looking-at c-label-kwds-regexp)
@@ -6079,12 +6114,13 @@ comment at the start of cc-engine.el for more info."
 		((looking-at ":\\([^:]\\|\\'\\)") ; A single colon.
 		 (forward-char)
 		 (setq label-type
-		       (if (string= "signals" ; Special QT macro
-				    (buffer-substring-no-properties start label-end))
+		       (if (or (string= "signals" ; Special QT macro
+					(setq kwd (buffer-substring-no-properties start label-end)))
+			       (string= "Q_SIGNALS" kwd))
 			   'qt-1kwd-colon
 			 'goto-target)))
 		((and qt-symbol-idx
-		      (search-forward-regexp "\\=slots\\>" limit t)
+		      (search-forward-regexp "\\=\\(slots\\|Q_SLOTS\\)\\>" limit t)
 		      (progn (c-forward-syntactic-ws limit)
 			     (looking-at ":\\([^:]\\|\\'\\)"))) ; A single colon
 		 (forward-char)
@@ -6244,10 +6280,14 @@ comment at the start of cc-engine.el for more info."
 	 (looking-at c-opt-asm-stmt-key))))
 
 (defun c-at-toplevel-p ()
-  "Return a determination as to whether point is at the `top-level'.
-Being at the top-level means that point is either outside any
-enclosing block (such function definition), or only inside a class,
-namespace or other block that contains another declaration level.
+  "Return a determination as to whether point is \"at the top level\".
+Informally, \"at the top level\" is anywhere where you can write
+a function.
+
+More precisely, being at the top-level means that point is either
+outside any enclosing block (such as a function definition), or
+directly inside a class, namespace or other block that contains
+another declaration level.
 
 If point is not at the top-level (e.g. it is inside a method
 definition), then nil is returned.  Otherwise, if point is at a
@@ -8177,7 +8217,7 @@ comment at the start of cc-engine.el for more info."
 	   ;; member init list continuation, or a template argument
 	   ;; list continuation.
 	   ((save-excursion
-	      ;; Note: We use the fact that lim always is after any
+	      ;; Note: We use the fact that lim is always after any
 	      ;; preceding brace sexp.
 	      (if c-recognize-<>-arglists
 		  (while (and
@@ -9217,5 +9257,5 @@ Cannot combine absolute offsets %S and %S in `add' method"
 
 (cc-provide 'cc-engine)
 
-;;; arch-tag: 149add18-4673-4da5-ac47-6805e4eae089
+;; arch-tag: 149add18-4673-4da5-ac47-6805e4eae089
 ;;; cc-engine.el ends here

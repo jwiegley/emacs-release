@@ -1,7 +1,7 @@
 ;;; checkdoc.el --- check documentation strings for style requirements
 
 ;; Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Version: 0.6.2
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -175,21 +173,6 @@
 (defvar checkdoc-version "0.6.1"
   "Release version of checkdoc you are currently running.")
 
-;; From custom web page for compatibility between versions of custom:
-(eval-and-compile
- (condition-case ()
-     (require 'custom)
-   (error nil))
- (if (and (featurep 'custom) (fboundp 'custom-declare-variable))
-     nil ;; We've got what we needed
-     ;; We have the old custom-library, hack around it!
-     (defmacro defgroup (&rest args)
-       nil)
-     (defmacro custom-add-option (&rest args)
-       nil)
-     (defmacro defcustom (var value doc &rest args)
-       `(defvar ,var ,value ,doc))))
-
 (defvar compilation-error-regexp-alist)
 (defvar compilation-mode-font-lock-keywords)
 
@@ -198,6 +181,12 @@
   :prefix "checkdoc"
   :group 'lisp
   :version "20.3")
+
+(defcustom checkdoc-minor-mode-string " CDoc"
+  "*String to display in mode line when Checkdoc mode is enabled; nil for none."
+  :type '(choice string (const :tag "None" nil))
+  :group 'checkdoc
+  :version "23.1")
 
 (defcustom checkdoc-autofix-flag 'semiautomatic
   "Non-nil means attempt auto-fixing of doc strings.
@@ -227,7 +216,7 @@ and that it's good but not required practice to make non user visible items
 have doc strings."
   :group 'checkdoc
   :type 'boolean)
-(put 'checkdoc-force-docstrings-flag 'safe-local-variable 'booleanp)
+;;;###autoload(put 'checkdoc-force-docstrings-flag 'safe-local-variable 'booleanp)
 
 (defcustom checkdoc-force-history-flag t
   "Non-nil means that files should have a History section or ChangeLog file.
@@ -243,7 +232,7 @@ should be used when the first part could stand alone as a sentence, but
 it indicates that a modifying clause follows."
   :group 'checkdoc
   :type 'boolean)
-(put 'checkdoc-permit-comma-termination-flag 'safe-local-variable 'booleanp)
+;;;###autoload(put 'checkdoc-permit-comma-termination-flag 'safe-local-variable 'booleanp)
 
 (defcustom checkdoc-spellcheck-documentation-flag nil
   "Non-nil means run Ispell on text based on value.
@@ -972,7 +961,7 @@ Optional argument INTERACT permits more interactive fixing."
     (if (not (interactive-p))
 	e
       (if e
-	  (message (checkdoc-error-text e))
+	  (message "%s" (checkdoc-error-text e))
 	(checkdoc-show-diagnostics)
 	(message "Space Check: done.")))))
 
@@ -1032,15 +1021,15 @@ space at the end of each line."
 	     (end (save-excursion (end-of-defun) (point)))
 	     (msg (checkdoc-this-string-valid)))
 	(if msg (if no-error
-		    (message (checkdoc-error-text msg))
+		    (message "%s" (checkdoc-error-text msg))
 		  (error "%s" (checkdoc-error-text msg)))
 	  (setq msg (checkdoc-message-text-search beg end))
 	  (if msg (if no-error
-		      (message (checkdoc-error-text msg))
+		      (message "%s" (checkdoc-error-text msg))
 		    (error "%s" (checkdoc-error-text msg)))
 	    (setq msg (checkdoc-rogue-space-check-engine beg end))
 	    (if msg (if no-error
-			(message (checkdoc-error-text msg))
+			(message "%s" (checkdoc-error-text msg))
 		      (error "%s" (checkdoc-error-text msg))))))
 	(if (interactive-p) (message "Checkdoc: done."))))))
 
@@ -1176,7 +1165,7 @@ generating a buffered list of errors."
     ;; Override some bindings
     (define-key map "\C-\M-x" 'checkdoc-eval-defun)
     (define-key map "\C-x`" 'checkdoc-continue)
-    (if (not (string-match "XEmacs" emacs-version))
+    (if (not (featurep 'xemacs))
 	(define-key map [menu-bar emacs-lisp eval-buffer]
 	  'checkdoc-eval-current-buffer))
     ;; Add some new bindings under C-c ?
@@ -1202,9 +1191,8 @@ generating a buffered list of errors."
     map)
   "Keymap used to override evaluation key-bindings for documentation checking.")
 
-(defvaralias 'checkdoc-minor-keymap 'checkdoc-minor-mode-map)
-(make-obsolete-variable 'checkdoc-minor-keymap
-                        'checkdoc-minor-mode-map)
+(define-obsolete-variable-alias 'checkdoc-minor-keymap
+    'checkdoc-minor-mode-map "21.1")
 
 ;; Add in a menubar with easy-menu
 
@@ -1251,7 +1239,7 @@ bound to \\<checkdoc-minor-mode-map>\\[checkdoc-eval-defun] and `checkdoc-eval-c
 checking of documentation strings.
 
 \\{checkdoc-minor-mode-map}"
-  nil " CDoc" nil
+  nil checkdoc-minor-mode-string nil
   :group 'checkdoc)
 
 ;;; Subst utils
@@ -1648,25 +1636,28 @@ function,command,variable,option or symbol." ms1))))))
 		 (checkdoc-create-error
 		  "Flag variable doc strings should usually start: Non-nil means"
 		  s (marker-position e) t))
+             ;; Don't rename variable to "foo-flag".  This is unnecessary
+             ;; and such names often end up inconvenient when the variable
+             ;; is later expanded to non-boolean values. --Stef
 	     ;; If the doc string starts with "Non-nil means"
-	     (if (and (looking-at "\"\\*?Non-nil\\s-+means\\s-+")
-		      (not (string-match "-flag$" (car fp))))
-		 (let ((newname
-			(if (string-match "-p$" (car fp))
-			    (concat (substring (car fp) 0 -2) "-flag")
-			  (concat (car fp) "-flag"))))
-		   (if (checkdoc-y-or-n-p
-			(format
-			 "Rename to %s and Query-Replace all occurrences? "
-			 newname))
-		       (progn
-			 (beginning-of-defun)
-			 (query-replace-regexp
-			  (concat "\\<" (regexp-quote (car fp)) "\\>")
-			  newname))
-		     (checkdoc-create-error
-		      "Flag variable names should normally end in `-flag'" s
-		      (marker-position e)))))
+	     ;; (if (and (looking-at "\"\\*?Non-nil\\s-+means\\s-+")
+	     ;;          (not (string-match "-flag$" (car fp))))
+	     ;;     (let ((newname
+	     ;;    	(if (string-match "-p$" (car fp))
+	     ;;    	    (concat (substring (car fp) 0 -2) "-flag")
+	     ;;    	  (concat (car fp) "-flag"))))
+	     ;;       (if (checkdoc-y-or-n-p
+	     ;;    	(format
+	     ;;    	 "Rename to %s and Query-Replace all occurrences? "
+	     ;;    	 newname))
+	     ;;           (progn
+	     ;;    	 (beginning-of-defun)
+	     ;;    	 (query-replace-regexp
+	     ;;    	  (concat "\\<" (regexp-quote (car fp)) "\\>")
+	     ;;    	  newname))
+	     ;;         (checkdoc-create-error
+	     ;;          "Flag variable names should normally end in `-flag'" s
+	     ;;          (marker-position e)))))
 	     ;; Done with variables
 	     ))
 	   (t
@@ -1783,10 +1774,9 @@ function,command,variable,option or symbol." ms1))))))
 					checkdoc-common-verbs-wrong-voice))
 			(if (not rs) (error "Verb voice alist corrupted"))
 			(setq replace (let ((case-fold-search nil))
-					(save-match-data
-					  (if (string-match "^[A-Z]" original)
-					      (capitalize (cdr rs))
-					    (cdr rs)))))
+					(if (string-match-p "^[A-Z]" original)
+					    (capitalize (cdr rs))
+					  (cdr rs))))
 			(if (checkdoc-autofix-ask-replace
 			     (match-beginning 1) (match-end 1)
 			     (format "Use the imperative for \"%s\".  \
@@ -1814,11 +1804,10 @@ Replace with \"%s\"? " original replace)
 		      "[^-([`':a-zA-Z]\\(\\w+[:-]\\(\\w\\|\\s_\\)+\\)[^]']"
 		      e t))
 	   (setq ms (match-string 1))
-	   (save-match-data
-	     ;; A . is a \s_ char, so we must remove periods from
-	     ;; sentences more carefully.
-	     (if (string-match "\\.$" ms)
-		 (setq ms (substring ms 0 (1- (length ms))))))
+	   ;; A . is a \s_ char, so we must remove periods from
+	   ;; sentences more carefully.
+	   (when (string-match-p "\\.$" ms)
+	     (setq ms (substring ms 0 (1- (length ms)))))
 	   (if (and (not (checkdoc-in-sample-code-p start e))
 		    (not (checkdoc-in-example-string-p start e))
 		    (not (member ms checkdoc-symbol-words))
@@ -2616,7 +2605,9 @@ function called to create the messages."
       (checkdoc-output-mode)
       (setq default-directory dir)
       (goto-char (point-max))
-      (insert "\n\n\C-l\n*** " label ": " check-type " V " checkdoc-version))))
+      (let ((inhibit-read-only t))
+        (insert "\n\n\C-l\n*** " label ": "
+                check-type " V " checkdoc-version)))))
 
 (defun checkdoc-error (point msg)
   "Store POINT and MSG as errors in the checkdoc diagnostic buffer."
@@ -2627,7 +2618,8 @@ function called to create the messages."
 		    ": " msg)))
     (with-current-buffer (get-buffer checkdoc-diagnostic-buffer)
       (goto-char (point-max))
-      (apply 'insert text))))
+      (let ((inhibit-read-only t))
+        (apply 'insert text)))))
 
 (defun checkdoc-show-diagnostics ()
   "Display the checkdoc diagnostic buffer in a temporary window."

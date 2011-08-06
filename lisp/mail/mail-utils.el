@@ -1,17 +1,17 @@
 ;;; mail-utils.el --- utility functions used both by rmail and rnews
 
-;; Copyright (C) 1985, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+;;   2009  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: mail, news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -35,8 +33,8 @@
 (require 'lisp-mode)
 
 ;;;###autoload
-(defcustom mail-use-rfc822 nil "\
-*If non-nil, use a full, hairy RFC822 parser on mail addresses.
+(defcustom mail-use-rfc822 nil
+  "If non-nil, use a full, hairy RFC822 parser on mail addresses.
 Otherwise, (the default) use a smaller, somewhat faster, and
 often correct parser."
   :type 'boolean
@@ -45,13 +43,10 @@ often correct parser."
 ;; Returns t if file FILE is an Rmail file.
 ;;;###autoload
 (defun mail-file-babyl-p (file)
-  (let ((buf (generate-new-buffer " *rmail-file-p*")))
-    (unwind-protect
-	(save-excursion
-	  (set-buffer buf)
-	  (insert-file-contents file nil 0 100)
-	  (looking-at "BABYL OPTIONS:"))
-      (kill-buffer buf))))
+  "Return non-nil if FILE is a Babyl file."
+  (with-temp-buffer
+    (insert-file-contents file nil 0 100)
+    (looking-at "BABYL OPTIONS:")))
 
 (defun mail-string-delete (string start end)
   "Returns a string containing all of STRING except the part
@@ -78,6 +73,26 @@ we add the wrapper characters =?ISO-8859-1?Q?....?=."
 		  result (substring string i)
 		  "?=")
 	(concat result (substring string i))))))
+
+;;;###autoload
+(defun mail-quote-printable-region (beg end &optional wrapper)
+  "Convert the region to the \"quoted printable\" Q encoding.
+If the optional argument WRAPPER is non-nil,
+we add the wrapper characters =?ISO-8859-1?Q?....?=."
+  (interactive "r\nP")
+  (save-match-data
+    (save-excursion
+      (goto-char beg)
+      (save-restriction
+	(narrow-to-region beg end)
+	(while (re-search-forward "[?=\"\200-\377]" nil t)
+	  (replace-match (upcase (format "=%02x" (preceding-char)))
+			 t t))
+	(when wrapper
+	  (goto-char beg)
+	  (insert "=?ISO-8859-1?Q?")
+	  (goto-char end)
+	  (insert "?="))))))
 
 (defun mail-unquote-printable-hexdigit (char)
   (setq char (upcase char))
@@ -143,8 +158,9 @@ as Rmail does."
 		     (if unibyte
 			 (progn
 			   (replace-match "")
-			   ;; insert-char will insert this as unibyte,
-			   (insert-char char 1))
+			   ;; insert-byte will insert this as a
+			   ;; corresponding eight-bit character.
+			   (insert-byte char 1))
 		       (replace-match (make-string 1 char) t t))))
 		  (noerror
 		   (setq failed t))
@@ -283,10 +299,11 @@ the comma-separated list.  The pruned list is returned."
 ;;;###autoload
 (defun mail-fetch-field (field-name &optional last all list)
   "Return the value of the header field whose type is FIELD-NAME.
-The buffer is expected to be narrowed to just the header of the message.
 If second arg LAST is non-nil, use the last field of type FIELD-NAME.
 If third arg ALL is non-nil, concatenate all such fields with commas between.
-If 4th arg LIST is non-nil, return a list of all such fields."
+If 4th arg LIST is non-nil, return a list of all such fields.
+The buffer should be narrowed to just the header, else false
+matches may be returned from the message body."
   (save-excursion
     (goto-char (point-min))
     (let ((case-fold-search t)
@@ -369,7 +386,21 @@ If 4th arg LIST is non-nil, return a list of all such fields."
 	    (substring s (match-beginning 3) (match-end 3)) " "
 	    (mail-rfc822-time-zone time))))
 
+(defun mail-mbox-from ()
+  "Return an mbox \"From \" line for the current message.
+The buffer should be narrowed to just the header."
+  (let ((from (or (mail-fetch-field "from")
+		  (mail-fetch-field "really-from")
+		  (mail-fetch-field "sender")
+		  "unknown"))
+	(date (mail-fetch-field "date")))
+    (format "From %s %s\n" (mail-strip-quoted-names from)
+	    (or (and date
+		     (ignore-errors
+		      (current-time-string (date-to-time date))))
+		(current-time-string)))))
+
 (provide 'mail-utils)
 
-;;; arch-tag: b24aec2f-fd65-4ceb-9e39-3cc2827036fd
+;; arch-tag: b24aec2f-fd65-4ceb-9e39-3cc2827036fd
 ;;; mail-utils.el ends here

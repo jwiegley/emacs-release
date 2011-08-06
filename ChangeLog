@@ -1,6 +1,307 @@
-2008-09-05  Chong Yidong  <cyd@stupidchicken.com>
+2009-07-29  Chong Yidong  <cyd@stupidchicken.com>
 
-	* Version 22.3 released.
+	* Version 23.1 released.
+
+2009-06-27  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in: Restore netbsd on mips, mipsel, mipseb.
+
+2009-06-24  Glenn Morris  <rgm@gnu.org>
+
+	* make-dist
+	(nextstep/Cocoa/Emacs.base/Contents/Resources/preferences.nib)
+	(nextstep/GNUstep/Emacs.base/Resources/preferences.gorm):
+	No longer make links.
+
+2009-06-24  Yavor Doganov  <yavor@gnu.org>
+
+	* make-dist (tempdir): Don't create directories preferences.gorm
+	and preferences.nib, they are no longer required.
+
+2009-06-12  Chong Yidong  <cyd@stupidchicken.com>
+
+	* configure.in: Delete mac-fix-env target, which has been
+	removed (Bug#3531).
+
+2009-05-06  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* configure.in: Don't define CANNOT_DUMP for GNUStep any more.
+
+2009-05-05  Per Starbäck  <per@starback.se>  (tiny change)
+
+	* BUGS: Use new binding of view-emacs-problems.
+
+2009-05-04   Simon Leinen  <simon.leinen@switch.ch>  (tiny change)
+
+	* Makefile.in (install-arch-dep): Avoid using $$(..) construct,
+	for Solaris compatibility.
+
+2009-04-25  Chong Yidong  <cyd@stupidchicken.com>
+
+	* configure: Regenerate.
+
+	* configure.in: Disable use of FreeType without libXft.
+
+2009-04-19  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* configure.in (HAVE_GTK_FILE_SELECTION, HAVE_GTK_FILE_CHOOSER):
+	Check if it is declared in gtk.h.
+
+2009-04-12  Andreas Schwab  <schwab@linux-m68k.org>
+
+	* Makefile.in (install-arch-indep): Remove .gitignore files.
+
+2009-04-03  Kenichi Handa  <handa@m17n.org>
+
+	* INSTALL: Make the section "Complex Text Layout support
+	libraries" the first of "ADDITIONAL DISTRIBUTION FILES".
+
+2009-03-06  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in (rs6000-ibm-aix6*): Fix typo.
+
+2009-03-04  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (INFO_FILES): Add auth.
+
+2009-03-03  Glenn Morris  <rgm@gnu.org>
+
+	* info/dir: Add Auth-source.
+
+2009-02-28  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* Makefile.in (src): Fix last change so the first `cd' doesn't affect
+	the second.
+
+2009-02-28  Eli Zaretskii  <eliz@gnu.org>
+
+	* config.bat: Copy .dbxinit to _dbxinit.
+
+	* make-dist (Making links to `info'): Remove .gitignore.
+
+2009-02-28  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* Makefile.in (lib-src, lisp): Use simpler rule.
+	(src): Be more specific to avoid recompiling all the .elc files just
+	because the bootstrap-emacs is missing.
+
+2009-02-26  Chong Yidong  <cyd@stupidchicken.com>
+
+	* configure.in: Require librsvg >= 2.11.
+
+2009-02-23  Adrian Robert  <Adrian.B.Robert@gmail.com>
+
+	* configure.in (HAVE_XFT, HAVE_FREETYPE, HAVE_LIBOTF)
+	(HAVE_M17N_FLT): Don't check for these unless HAVE_X11.
+
+2009-02-04  Adrian Robert  <Adrian.B.Robert@gmail.com>
+
+	* configure.in (COCOA_EXPERIMENTAL_CTRL_G): Drop.
+
+2009-02-03  Glenn Morris  <rgm@gnu.org>
+
+	* make-dist: Add some missing files, remove some that are no longer
+	present.
+
+2009-02-02  Glenn Morris  <rgm@gnu.org>
+
+	* make-dist: Add some missing nextstep/ files.
+
+2009-01-22  Yavor Doganov  <yavor@gnu.org>  (tiny change)
+
+	* configure.in (HAVE_RSVG): Use librsvg under HAVE_NS also.  (Bug#616)
+
+2009-01-22  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in: Add support for m68k-*-netbsd.
+
+2009-01-14  Juri Linkov  <juri@jurta.org>
+
+	* .dir-locals.el (change-log-mode): Remove bug-reference-mode.
+
+	* .dir-locals.el (change-log-mode): Add bug-reference-url-format
+	and bug-reference-mode.
+
+2009-01-11  Juri Linkov  <juri@jurta.org>
+
+	* INSTALL.CVS: Move configuration explicitly to the first step.
+
+2009-01-09  Glenn Morris  <rgm@gnu.org>
+
+	* .dir-locals.el: Don't set indent-tabs-mode.
+
+2008-12-30  Kenichi Handa  <handa@m17n.org>
+
+	* configure.in: Define HAVE_OTF_GET_VARIATION_GLYPHS if libotf has
+	the function OTF_get_variation_glyphs.
+
+2008-12-30  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* Makefile.in (install-arch-dep): Remove old directories in
+	ns_app* before moving new directories there.
+
+2008-12-27  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* .dir-locals.el: Remove non-working entry for pmail.
+	(fill-column): Fix typo.
+	(change-log-mode): Add fill column.
+
+2008-12-26  Eli Zaretskii  <eliz@gnu.org>
+
+	* config.bat: Produce _dir-locals.el from .dir-locals.el.
+
+2008-12-23  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* make-dist (tempdir): Distribute .dir-locals.el.
+
+	* .dir-locals.el: New file.
+
+2008-12-19  Eli Zaretskii  <eliz@gnu.org>
+
+	* config.bat (--with-system-malloc): New option; see msdos/INSTALL
+	for rationale.
+
+2008-12-13  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (install-arch-indep): Add new man-pages.
+	(manext): Remove variable.
+	(MAN_PAGES): New variable.
+	(install-arch-indep, uninstall): Use MAN_PAGES for list of files to add
+	and remove.
+	(uninstall): Remove desktop file and icons, game scores if empty.
+
+2008-12-11  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* config.guess, config.sub: Updated from master source.
+
+2008-12-10  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* Makefile.in (install-arch-indep): Install ebrowse.1.
+
+2008-12-09  Ali Bahrami  <ali_gnu@emvision.com>  (tiny change)
+
+	* configure.in: Add Solaris on x86_64.
+
+2008-12-09  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* config.guess, config.sub: Updated from master source.
+
+2008-12-08  Eli Zaretskii  <eliz@gnu.org>
+
+	* info/dir: Fix last change.
+
+2008-12-07  Eli Zaretskii  <eliz@gnu.org>
+
+	* info/dir: Untabify.
+
+2008-11-28  Ulrich Mueller  <ulm@gentoo.org>
+
+	* configure.in: Fix last change.
+
+2008-11-28  Richard M Stallman  <rms@gnu.org>
+
+	* configure.in (mips64-*-linux-gnu*, mips64el-*-linux-gnu*):
+	New configurations.
+
+2008-11-20  Josh Elsasser  <josh@elsasser.org>  (tiny change)
+
+	* configure.in: Add hppa-*-openbsd* with machine hp800; mistakenly
+	removed while misclassified as now unsupported hp9000s300.  (Bug#1365)
+
+2008-11-15  Eli Zaretskii  <eliz@gnu.org>
+
+	* Makefile.in (INFO_FILES): Remove ns-emacs.
+
+	* info/dir (NS-Emacs): Remove entry.
+
+2008-11-08  Eli Zaretskii  <eliz@gnu.org>
+
+	* INSTALL: Move MS-DOS specific instructions to msdos/INSTALL.
+
+2008-11-07  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in (HAVE_LIB64_DIR): Check for crtn.o.  (Bug#1287)
+
+2008-10-31  Eli Zaretskii  <eliz@gnu.org>
+
+	* config.bat: Tell user to expect one "File not found" message
+	while the `doc' directory is being configured.
+
+2008-10-30  Chong Yidong  <cyd@stupidchicken.com>
+
+	* update-subdirs: Put obsolete directory last.
+
+2008-10-30  Emanuele Giaquinta  <emanuele.giaquinta@gmail.com>
+
+	* configure.in: Check fontconfig always.
+
+2008-10-30  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure (*-solaris2.[7-9]*): Fix typo.
+
+2008-10-24  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in (--without-sync-input, --with-pkg-config-prog):
+	Help strings start with lower case.
+	(--with-gnustep-conf): New option.
+	(GNUSTEP_CONFIG_FILE): Use, instead of fixed /etc/GNUstep/GNUstep.conf.
+
+2008-10-24  Yavor Doganov  <yavor@gnu.org>  (tiny change)
+
+	* configure.in: Use `.' instead of `source' to source GNUstep.conf.
+	Exit with an error if `--with-ns' was specified but <AppKit/AppKit.h>
+	is not found.  (Bug#1230)
+
+2008-10-23  Ali Bahrami  <ali_gnu@emvision.com>  (tiny change)
+
+	* configure (*-sunos5*, *-solaris*): Use the new file sol2-10.h.
+	Use sol2-6.h for Solaris 7-9.
+
+2008-10-18  Ulrich Mueller  <ulm@gentoo.org>
+
+	* configure.in: Add support for GNU/Linux on SuperH.
+
+2008-10-12  Andreas Schwab  <schwab@suse.de>
+
+	* configure.in: Only check for m17n-flt if HAVE_LIBOTF.
+
+2008-08-28  Adrian Robert  <Adrian.B.Robert@gmail.com>
+
+	* configure.in: Report USE_TOOLKIT_SCROLLBARS as such (not mentioning
+	"X") to avoid confusion.
+
+	* configure: Regenerate.
+
+2008-09-07  Romain Francoise  <romain@orebokech.com>
+
+	* make-dist: Distribute doc/man/ChangeLog.
+
+2008-08-28  Chong Yidong  <cyd@stupidchicken.com>
+
+	* configure.in: Disable XFT and Freetype when without X.
+
+	* configure: Regenerate.
+
+2008-08-24  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in (NS_IMPL_GNUSTEP): Increase pure size.
+
+2008-08-21  Christian Faulhammer  <opfer@gentoo.org>  (tiny change)
+
+	* configure.in (GNUSTEP_SYSTEM_HEADERS): Define
+	GNUSTEP_SYSTEM_HEADERS and GNUSTEP_SYSTEM_LIBRARIES.
+
+	* configure: Regenerate.
+
+2008-08-20  Eli Zaretskii  <eliz@gnu.org>
+
+	* configure.in: Move "#define subprocesses" before
+	config_opsysfile is included.
+
+2008-08-19  Kenichi Handa  <handa@m17n.org>
+
+	* INSTALL (Extra fonts): Mention local fonts, don't mention
+	mule-unicode.
 
 2008-08-16  Chong Yidong  <cyd@stupidchicken.com>
 
@@ -10,18 +311,82 @@
 
 	* make-dist (tempdir/nt): Link emacsclient.rc.
 
-2008-08-10  Glenn Morris  <rgm@gnu.org>
+2008-08-07  Dan Nicolaescu  <dann@ics.uci.edu>
 
-	* configure.in (cpp_undefs): Rename from `undefs', update uses.
-	Use $srcdir rather than $top_srcdir.  Set before calling AC_OUTPUT,
-	and explicitly export there.  (Bug#507.)  (Sync of trunk 2008-07-01).
+	* configure.in (LIB_SRC_EXTRA_INSTALLABLES): New variable.
+	AC_SUBST it.
+	(GNU_OBJC_CFLAGS): Define as a shell variable instead of #define.
+	AC_SUBST it.
+	(OTHER_FILES): Always define for HAVE_NS.
+	(C_SWITCH_X_SYSTEM): Don't define as empty for NS_IMPL_COCOA.
+	* configure: Regenerate.
+
+2008-08-07  Andreas Schwab  <schwab@suse.de>
+
+	* configure.in: Correctly handle
+	--enable-cocoa-experimental-ctrl-g=no and
+	--enable-ns-self-contained=yes.
+
+2008-08-06  Adrian Robert  <Adrian.B.Robert@gmail.com>
+
+	* configure.in (NS_HAVE_INTEGER): Rename to NS_HAVE_NSINTEGER.
+	(C_SWITCH_X_SYSTEM): Drop -MMD -MP under NS_IMPL_GNUstep.  Don't
+	bother undef'ing since won't have desired effect.
+
+2008-08-06  Andreas Schwab  <schwab@suse.de>
+
+	* configure.in: Fix quoting.
+
+2008-08-06  Chong Yidong  <cyd@stupidchicken.com>
+
+	* configure.in (COCOA_EXPERIMENTAL_CTRL_G): Fix 2008-08-04 change.
 
 2008-08-05  Ulrich Mueller  <ulm@gentoo.org>
 
 	* configure.in: Add checks for krb5_error.text and
 	krb5_error.e_text struct members.
 
+2008-08-04  Chong Yidong  <cyd@stupidchicken.com>
+
+	* configure.in: Test for existence of NSInteger.
+	Suggested by Yavor Doganov.
+
+2008-08-02  Romain Francoise  <romain@orebokech.com>
+
+	* Makefile.in (INFO_FILES): Add mairix-el.
+
+2008-07-31  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* make-dist:
+	* README: Remove VMS support.
+	* vms: Remove directory.
+
+2008-07-31  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in (MULTI_KBOARD): Remove.
+
+2008-07-30  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in (DO_BLOCK_INPUT): Remove, unused.
+
+2008-07-29  Chong Yidong  <cyd@stupidchicken.com>
+
+	* info/dir (File): Add mairix-el.
+
+2008-07-27  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	Remove support for Mac Carbon.
+	* mac: Remove directory.
+	* make-dist:
+	* configure.in:
+	* README:
+	* Makefile.in:
+	* INSTALL: Remove code for Carbon.
 	* configure: Regenerate.
+
+2008-07-26  Adrian Robert  <Adrian.B.Robert@gmail.com>
+
+	* Makefile.in (install-arch-dep): Fix typo in NS installation commands.
 
 2008-07-25  Chong Yidong  <cyd@stupidchicken.com>
 
@@ -29,57 +394,700 @@
 
 	* configure: Regenerate.
 
-2008-05-02  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+2008-07-23  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in (LD_SWITCH_SITE): Remove, set the values directly
+	in src/Makefile.in.
+	(static): Remove, autoconf would always comment it out anyway.
+	(subprocesses): Define unconditionally.
+
+2008-07-19  Yavor Doganov  <yavor@gnu.org>  (tiny change)
+
+	* configure.in: Fix typo in GNUSTEP_MAKEFILES setting for HAVE_NS
+	compilation under GNUstep.
+
+2008-07-18  Kenichi Handa  <handa@m17n.org>
+
+	* INSTALL (Complex Text Layout support libraries): Delete the
+	paragraph about --enable-font-backend.
+
+2008-07-17  Adrian Robert  <Adrian.B.Robert@gmail.com>
+
+	* configure.in: Print out some info to user for NeXTstep builds.
+	(ns-app): Remove enable option.
+	(ns-self-contained): Add enable option.
+	(ns_appbindir, ns_appresdir, ns_appsrc): Set them based on Cocoa or
+	GNUstep, use to set install prefixes, and substitute in Makefiles.
+	* configure: Regenerate.
+	* Makefile.in (install-arch-dep): Perform post-install cleanup inside
+	NS app bundle.
+
+2008-07-17  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* configure.in: Extract and substitute GNUSTEP_MAKEFILES.
+
+2008-07-16  Adrian Robert  <Adrian.B.Robert@gmail.com>
+
+	* configure.in: Change GNUSTEP to NS_IMPL_GNUSTEP, COCOA to
+	NS_IMPL_COCOA.
+
+2008-07-16  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in (with_kerberos, with_kerberos5, with_hesiod):
+	Fix tests for OPTION_DEFAULT_OFF (variables never unset).
+	(with_carbon, with_ns): Remove dead code, since OPTION_DEFAULT_OFF means
+	never unset.
+
+	* make-dist: Add nextstep/ directories.
+	(src, lib-src): Add .m files.
+
+2008-07-16  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in (freebsd, kfreebsd): Undo part of previous change.
+	(USER_FULL_NAME): Remove, not used anymore.
+	* configure: Regenerate.
+
+2008-07-15  Adrian Robert  <Adrian.B.Robert@gmail.com>
+
+	Changes and additions for NeXTstep windowing system (Cocoa and
+	GNUstep) support.
+
+	* configure.in: Add support for NS window system: --with-ns (default
+	off), --enable-ns-app, --enable-cocoa-experimental-ctrl-g; improve add
+	sparc detection for FreeBSD variants, checks for Cocoa and GNUstep,
+	disable font backend if window system is "none", not if !HAVE_X11.
+	* Makefile.in: Add ns-emacs to INFO_FILES, add ns_appdir variable.
+	(install-arch-dep): Add commands to assemble NS .app package.
+
+2008-07-10  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in: Use macppc for Darwin.  Remove references to
+	desupported systems.
+	* configure: Regenerate.
+
+2008-07-05  Glenn Morris  <rgm@gnu.org>
+
+	* make-dist (EMACS): Doc fix.
+	(lisp): There are no *.dat or image files here any more.
+	(src): There are no *.s files here any more.
+	(etc/images, etc/images/*): Link to most regular files.
+
+2008-07-04  Emanuele Giaquinta  <emanuele.giaquinta@gmail.com>  (tiny change)
+
+	* configure.in: Remove reference to deleted $USE_FONT_BACKEND.
+
+2008-07-01  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in (cpp_undefs): Rename from `undefs', update uses.
+	Use $srcdir rather than $top_srcdir.  Set before calling AC_OUTPUT,
+	and explicitly export there.  (Bug#507.)
+
+2008-06-26  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in:
+	* configure: Remove references to obsolete systems.
+
+2008-06-25  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* Makefile.in (Makefile): Use it for its timestamp value as well, and
+	make it depend on all other */.in files.
+	(src/Makefile, src/config.stamp, lib-src/Makefile)
+	(doc/emacs/Makefile, doc/misc/Makefile, doc/lispref/Makefile)
+	(doc/lispintro/Makefile, oldXMenu/Makefile, lwlib/Makefile)
+	(leim/Makefile, lisp/Makefile): Remove those overlapping targets.
+	(leim, ${SUBDIR}, blessmail): Only depend on Makefile now.
+
+	* configure.in: Don't create src/config.stamp any more.
+
+2008-06-22  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* Makefile.in (${SUBDIR}): Pass additional BOOTSTRAPEMACS argument.
+
+2008-06-22  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (top_bootclean): Remove obsolete references to lock/.
+
+2008-06-21  Romain Francoise  <romain@orebokech.com>
+
+	* Makefile.in (INFO_FILES): Add sasl.
+
+2008-06-21  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* Makefile.in (maybe_bootstrap, src/bootstrap-emacs${EXEEXT})
+	(bootstrap-build): Remove.
+	(top_bootclean): New var.
+	(top_distclean, bootstrap-clean): Use it.
+	(bootstrap): Don't recheck config.  Make normally.
+
+2008-06-20  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* Makefile.in (SUBDIR): Include `lisp'.
+	(lisp): Depend on `src'.
+	(top_distclean): Don't remove config.status.
+	(bootstrap-clean): New target.
+	(maintainer-clean): Use it.
+	(bootstrap): Use bootstrap-clean.  Re-run config.status.
+	(src/bootstrap-emacs${EXEEXT}): New target.
+	(bootstrap-build): Use it.  Don't use bootstrap-prepare because
+	src/Makefile now takes care of it.
+	(bootfast, bootstrap-clean-before, bootstrap-clean-before-fast): Remove.
+
+2008-06-15  Glenn Morris  <rgm@gnu.org>
+
+	* info/dir: Add sasl.
+
+2008-06-09  Alan Mackenzie  <acm@muc.de>
+
+	* INSTALL.CVS: Clarify why `make bootstrap' sometimes fails.
+
+2008-06-08  Eric S. Raymond  <esr@snark.thyrsus.com>
+
+	* INSTALL.CVS: Indicate when "cvs update -d" may be needed.
+
+2008-06-07  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (bootstrap-build): Remove mostlyclean, since it seems to
+	serve no purpose.
+
+2008-06-01  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in (USE_LUCID, USE_MOTIF): Don't use "==".
+	* configure: Regenerate.
+
+2008-05-28  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* update-subdirs: Don't touch subdirs.el if it is unchanged.
+
+2008-05-14  Kenichi Handa  <handa@m17n.org>
+
+	* configure: Regenerate.
+
+	* configure.in: Don't handle --disable-font-backend.  Don't print
+	a message about a font backend.
+
+2008-05-09  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in: Make absence of makeinfo a fatal error only if the info
+	files don't exist.
+	* Makefile.in (install-arch-indep, info): Handle MAKEINFO == off.
+
+2008-05-07  Eli Zaretskii  <eliz@gnu.org>
+
+	* config.bat: Fix last change: don't use < and > in "rem" lines,
+	they are interpreted as redirection by DOS shells.
+
+2008-05-04  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
 
 	* configure.in: Check availability of AvailabilityMacros.h
 	if HAVE_CARBON.
 
 	* configure: Regenerate.
 
-2008-04-11  Dan Nicolaescu  <dann@ics.uci.edu>
+2008-05-03  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in (x_libraries): Remove standard 64-bit directories -
+	experimental workaround for minor autoconf bug.
+
+	* configure.in (--without-makeinfo): New option.  If set,
+	absence of suitable makeinfo is not a fatal error.
+	* Makefile.in (MAKEINFO): New, set by configure.
+	(install-arch-indep): Without makeinfo, ignore any missing manuals.
+	(info-real): New target.
+	(info): Without makeinfo, do nothing, else call `info-real'.
+
+2008-04-23  Dan Nicolaescu  <dann@ics.uci.edu>
 
 	* configure.in: Remove hpux10.20 from the desupported list.
 
-2008-03-26  Chong Yidong  <cyd@stupidchicken.com>
+2008-04-18  Stefan Monnier  <monnier@iro.umontreal.ca>
 
-	* Version 22.2 released.
+	* configure.in: Define USE_LUCID/USE_MOTIF in config.h.
+
+2008-04-16  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* configure.in (SYNC_INPUT): Use OPTION_DEFAULT_ON and AC_DEFINE
+	rather than change CPPFLAGS.
+	(HAVE_GTK): Rename to USE_GTK.
+
+2008-04-16  Yavor Doganov  <yavor@gnu.org>  (tiny change)
+
+	* configure.in: Replace the obsolete macros AC_AIX and
+	AC_GNU_SOURCE with AC_USE_SYSTEM_EXTENSIONS.
+
+2008-04-05  Andreas Schwab  <schwab@suse.de>
+
+	* configure.in: No longer create admin/unidata/Makefile.
+
+2008-03-28  Andreas Schwab  <schwab@suse.de>
+
+	* Makefile.in (SUBDIR_MAKEFILES): Add lisp/Makefile.
+	(lisp/Makefile): New rule.
+
+2008-03-13  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in (AC_INIT): Fix version number.
+	(sync-input): Reword the option, since it's on by default.
+
+2008-03-11  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* configure.in: Add --enable-sync-input, default yes.
+
+2008-03-11  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (install-etc, mkdir): Handle directory
+	etc/images/icons/hicolor/*/mimetypes/.
+
+	* make-dist: Handle icons/hicolor/scalable directory.
+
+2008-03-05  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in: Enable font-backend by default.
+	(USE_FONT_BACKEND): Set to "no" in absence of X.
+	(PKG_CONFIG): Don't set multiple times, once is enough.
+	(HAVE_FREETYPE, HAVE_LIBOTF, HAVE_M17N_FLT): Tweak config.in text.
+
+2008-03-03  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (iconsrcdir): New variable.
+	(install-etc, mkdir): Use $iconsrcdir.  Handle the `scalable' icon
+	directory.
+
+2008-02-29  Glenn Morris  <rgm@gnu.org>
+
+	* test/: New directory.
+
+2008-02-27  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* configure.in (HAVE_GTK): Print a warning if gtk version is < 2.10.
 
 2008-02-25  Dan Nicolaescu  <dann@ics.uci.edu>
 
-	* configure.in: Print an error for systems that we think are
-	obsolete and are proposed to be removed.
+	* configure.in: Print an error for systems that we think are obsolete
+	and are proposed to be removed.  Remove some more unused systems.
+	Add support for powerpc-ibm-aix6*.
 
-	* configure: Regenerate.
+2008-02-24  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in: Remove references to obsolete variables and systems.
+
+2008-02-21  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (set_installuser): New.
+	(install-arch-indep): Use set_installuser to avoid duplicate code.
+
+	* README.unicode: Split into admin/notes/unicode,font-backend and
+	remove.
 
 2008-02-10  Matthew Luckie  <mjl@luckie.org.nz>  (tiny change)
 
-	* configure.in (arm*-*-freebsd*): Added.
+	* configure.in (arm*-*-freebsd*): Add.
 
-2008-01-23  Dan Nicolaescu  <dann@ics.uci.edu>
+2008-02-09  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in (LIBX11_MACHINE, HAVE_XFREE386): Remove code
+	dealing with obsolete variables.
+
+2008-02-08  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (check-info-dir): New target.
+
+2008-02-08  Michael Olson  <mwolson@gnu.org>
+
+	* Makefile.in (INFO_FILES): Add epa.
+
+	* info/dir: Add EasyPG Assistant manual to the "Emacs misc
+	features" section.
+
+2008-02-06  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in (--with-gcc): Give an error saying this option has
+	been removed.
+	(--with-gtk): Remove this option.
+
+2008-02-06  Tom Tromey  <tromey@redhat.com>
+
+	* configure.in (--with-gcc): Remove.
+	* INSTALL (DETAILED BUILDING AND INSTALLATION): Remove --with-gcc.
+
+2008-02-05  Ulrich Mueller  <ulm@gentoo.org>
+
+	* INSTALL: Recommend giflib, not libungif.
+
+2008-02-05  Tom Tromey  <tromey@redhat.com>
+
+	* configure.in (--with-dbus): Default to enabled.
+
+2008-02-05  Kenichi Handa  <handa@ni.aist.go.jp>
+
+	* INSTALL (Complex Text Layout support libraries): New section.
+
+2008-02-04  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* make-dist: Remove references to files in mac/ that have been
+	deleted.
+
+2008-02-02  Thien-Thi Nguyen  <ttn@gnuvola.org>
+
+	* configure.in: For libotf and m17n-flt checks, set shell vars
+	HAVE_LIBOTF and HAVE_M17N_FLT instead of pkg_check_libotf and
+	pkg_check_m17n_flt, respectively, for the sake of the summary output.
+	Reported by Ulrich Mueller.
+
+2008-02-02  Eli Zaretskii  <eliz@gnu.org>
+
+	* configure.in: If admin/unidata/UnicodeData.txt is present, copy
+	admin/unidata/Makefile.in to Makefile.
+
+2008-02-02  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in (HAVE_XFT): Ensure it is either "yes" or "no".
+	(USE_FONT_BACKEND, HAVE_FREETYPE, HAVE_M17N_FLT, HAVE_LIBOTF)
+	(HAVE_XFT): Add "Does Emacs use..." messages at end.
+
+2008-02-01  Miles Bader  <miles@gnu.org>
+
+	* configure.in: Use OPTION_DEFAULT_ON for [freetype], [xft],
+	[libotf], and [m17n-flt] options.
+
+2008-02-01  Kenichi Handa  <handa@ni.aist.go.jp>
+
+	* configure.in: Add EMACS_ARG_N([libotf]...), and
+	EMACS_ARG_N([m17n-flt].  Set back OLD_CPPFLAGS to CPPFLAGS (not
+	CFLAGS) in XFT checking part.  Don't alter C_SWITCH_X_SITE,
+	CFLAGS, and LIBS in checking of m17n-flt.
+
+2008-02-01  Kenichi Handa  <handa@ni.aist.go.jp>
+
+	* configure.in: Check the availability of m17n-flt library.
+
+2008-02-01  Kenichi Handa  <handa@m17n.org>
+
+	* configure.in: Don't define HAVE_LIBOTF if OTF_get_features is
+	not available.
+
+2008-02-01  Kenichi Handa  <handa@m17n.org>
+
+	* configure.in: New args --enable-font-backend, --with-xft,
+	--with-freetyp.  New AC_DEFINEs USE_FONT_BACKEND, HAVE_XFT,
+	HAVE_FREETYPE, HAVE_LIBOTF.  New AC_SUBSTs XFT_LIBS,
+	FREETYPE_CFLAGS, FREETYPE_LIBS, FONTCONFIG_CFLAGS,
+	FONTCONFIG_LIBS, LIBOTF_CFLAGS, LIBOTF_LIBS.
+
+2008-02-01  Kenichi Handa  <handa@m17n.org>
+
+	* make-dist: Include etc/charsets in tarball.
+
+2008-02-01  Kenichi Handa  <handa@m17n.org>
+
+	* configure.in: While running cpp on junk.c, include
+	-DHAVE_UNIDATA in CPPFLAGS if admin/unidata/UnicodeData.txt
+	exists.
+
+2008-01-29  Dan Nicolaescu  <dann@ics.uci.edu>
 
 	* configure.in (xtensa): Match more configurations.
 
-	* configure: Regenerate.
+2008-01-27  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in: Update comment.
+
+2008-01-26  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in (--without-gcc): By default, neither off nor on.
+	(--with-carbon): Tone down rhetoric in help text.
+
+2008-01-25  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in: Correct usage of OPTION_DEFAULT_ON,
+	OPTION_DEFAULT_OFF so that the defaults are as they used to be.
+	Default `Carbon' to off (it's unsupported).
+
+2008-01-24  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in: Standardize dbus-related messages.
+
+2008-01-23  Michael Olson  <mwolson@gnu.org>
+
+	* configure.in (pkg-config-prog): Remove initial whitespace.
+
+2008-01-23  Tom Tromey  <tromey@redhat.com>
+
+	* configure.in (OPTION_DEFAULT_ON, OPTION_DEFAULT_OFF): New macros.
+	(EMACS_ARG_Y, EMACS_ARG_N): Remove.
+	Update all users.
 
 2008-01-21  Dan Nicolaescu  <dann@ics.uci.edu>
 
 	* config.guess, config.sub: Updated from master source.
 
+2008-01-17  Andreas Schwab  <schwab@suse.de>
+
+	* configure.in (HAVE_LIB64_DIR): Rename from HAVE_X86_64_LIB64_DIR.
+
 2008-01-17  Glenn Morris  <rgm@gnu.org>
 
 	* configure.in (HAVE_X86_64_LIB64_DIR): Also set on s390x systems.
+
+2008-01-16  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in: Remove more references to unsupported systems.
+
+2008-01-16  Sven Joachim  <svenjoac@gmx.de>
+
+	* make-dist: Add --lzma.
+
+2008-01-16  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (maybe_bootstrap): Remove texinfo message, since
+	configure checks for this.
+
+2008-01-13  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in: Remove more references to unsupported systems.
+
+2008-01-06  Romain Francoise  <romain@orebokech.com>
+
+	* configure.in: Delete extra semicolons.
+
+2008-01-06  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in: Remove references to unsupported systems.
+
+2008-01-05  Romain Francoise  <romain@orebokech.com>
+
+	* make-dist: Add --bzip2.  Update copyright.
+
+2008-01-05  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* configure.in: Remove support for Masscomp.
+
+2008-01-05  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (desktopdir, icondir): New variables.
+	(install-arch-indep): Also depend on `install-etc'.
+	(install-etc): New target.
+	(mkdir): Also create the `applications' and `icons' directories.
+
+2008-01-04  Glenn Morris  <rgm@gnu.org>
+
+	* make-dist: Update for new etc/images/icons/hicolor directory.
+
+2007-12-09  Andreas Schwab  <schwab@suse.de>
+
+	* configure.in: D-Bus is not enabled by default.
+
+2007-12-06  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* configure.in: Add AC_CONFIG_SRCDIR which was lost in the previous
+	change.
+
+2007-12-04  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* configure.in: Give package name and version to AC_INIT.
+
+2007-12-03  Magnus Henoch  <mange@freemail.hu>
+
+	* configure.in: Use PKG_CHECK_MODULES to check for D-Bus.
+
+2007-12-03  Michael Albinus  <michael.albinus@gmx.de>
+
+	* configure.in: No need for DBUS_INFO anymore.
+
+	* Makefile.in (INFO_FILES): Use dbus unconditionally.
+
+2007-12-02  Michael Albinus  <michael.albinus@gmx.de>
+
+	* configure.in: Add D-Bus checks.  D-Bus is disabled by default.
+
+	* Makefile.in (INFO_FILES): Add dbus.
+
+2007-12-02  Romain Francoise  <romain@orebokech.com>
+
+	* make-dist: Fix last change.
 
 2007-11-28  Petr Salinger  <Petr.Salinger@seznam.cz>  (tiny change)
 
 	* configure.in: Add support for gnu-kfreebsd.
 
+2007-11-28  Glenn Morris  <rgm@gnu.org>
+
+	* make-dist: Add etc/nxml.
+
+2007-11-24  Romain Francoise  <romain@orebokech.com>
+
+	* Makefile.in (INFO_FILES): Add nxml-mode.
+
+2007-11-23  Romain Francoise  <romain@orebokech.com>
+
+	* make-dist: Include nXML.  Don't try to copy FTP, it was removed on
+	2007/10/17.  Don't special-case alloca.c which is no longer in CVS.
+
+2007-11-20  Andreas Schwab  <schwab@suse.de>
+
+	* configure.in: Always include <resolv.h> when checking for res_init.
+
+2007-11-17  Andreas Schwab  <schwab@suse.de>
+
+	* update-subdirs: Atomically update subdirs.el.
+
+2007-11-17  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (check-declare): New target.
+
+2007-11-07  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in: Deprecate Mac Carbon port.
+
+2007-11-01  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* configure.in: Remove HAVE_X11R5 check.
+
+2007-10-31  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (install-arch-indep): Fallback to $USER and `id -un'
+	when changing ownership of installed files.
+
+2007-10-30  Glenn Morris  <rgm@gnu.org>
+
+	* make-dist: Add new directory etc/gnus.
+
+2007-10-30  Michael Olson  <mwolson@gnu.org>
+
+	* Makefile.in (INFO_FILES): Alphabetize.  Add remember.
+
+2007-10-29  Glenn Morris  <rgm@gnu.org>
+
+	* make-dist: Add new directories etc/images/smilies/grayscale,medium.
+
+2007-10-23  Glenn Morris  <rgm@gnu.org>
+
+	* MAINTAINERS: Move to admin/.
+
+2007-10-17  Chong Yidong  <cyd@stupidchicken.com>
+
+	* configure.in (HAVE_RES_INIT): Define if res_init() exists.
+	(HAVE_LIBRESOLV): Also define if we are using res_init().
+
+2007-10-17  Glenn Morris  <rgm@gnu.org>
+
+	* FTP: Remove file, since it's just a duplicate of one in etc/.
+
+2007-10-05  Eli Zaretskii  <eliz@gnu.org>
+
+	* config.bat: Fix configuring `doc' due to changes in the
+	directory structure.
+
 2007-09-16  Peter O'Gorman  <bug-gnu-emacs@mlists.thewrittenword.com>  (tiny change)
 
 	* configure.in: Don't use -lpthread on HP-UX.
 
-2007-09-02  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2007-09-16  Glenn Morris  <rgm@gnu.org>
+
+	* make-dist: File gfdl.1 has been removed.
+
+2007-09-15  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in: Fix makeinfo version regexp.
+
+2007-09-12  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in (AC_FUNC_ALLOCA): Throw an error if a system
+	implementation of alloca is not found.
+
+	* Makefile.in (SOURCES, unlock, relock): Delete.
+	(install-arch-indep): Do not exclude the etc/ Makefiles.
+
+2007-09-09  Juri Linkov  <juri@jurta.org>
+
+	* make-dist: Remove AUTHORS and CONTRIBUTE (moved to etc).
+
+	* README: Add doc/ to documentation directories.
+
+2007-09-08  Michael Olson  <mwolson@gnu.org>
+
+	* MAINTAINERS: Add myself for ERC and tq.el.
+	Update for new doc/ directory layout.
+
+2007-09-06  Romain Francoise  <romain@orebokech.com>
+
+	* make-dist: Update for new doc/ directory layout.
+
+2007-09-06  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (mansrcdir): New variable.
+	(SUBDIR_MAKEFILES): Update for new doc/ directory layout.
+	(man/Makefile, lispref/Makefile, lispintro/Makefile): Rename and
+	update these targets for new doc/ directory layout.
+	(doc/misc/Makefile): New target.
+	(install-arch-indep): Use mansrcdir for new location of manpages.
+	(mostlyclean, clean, distclean, maintainer-clean, unlock)
+	(relock, info, dvi): Update targets for new doc/ directory layout.
+
+	* configure.in (AC_OUTPUT): Update names of generated Makefiles
+	for new doc/ directory layout.
+
+2007-09-02  Andreas Schwab  <schwab@suse.de>
+
+	* configure.in: Use AS_HELP_STRING throughout.
+	* configure: Regenerate.
+
+2007-09-02  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in: Require Gtk/Glib 2.6.
+
+2007-09-02  Thien-Thi Nguyen  <ttn@gnuvola.org>
+
+	* configure.in (EMACS_ARG_Y, EMACS_ARG_N): New AC_DEFUNs.
+	Use them throughout in place of AC_ARG_WITH calls.
+	* configure: Regenerate.
+
+2007-09-01  Andreas Schwab  <schwab@suse.de>
+
+	* configure.in: Put quotes around nested macro calls.
+
+2007-08-31  Ulrich Mueller  <ulm@gentoo.org>  (tiny change)
+
+	* configure.in: Fix typo.
+	* configure: Regenerate.
+
+2007-08-30  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in (AH_BOTTOM): Copy some manual changes made to
+	src/config.in here so they are not lost when it regenerates.
+
+	* README.multi-tty: Move to admin/notes/multi-tty, with some edits.
+
+2007-08-29  Károly Lőrentey  <karoly@lorentey.hu>
+
+	* README.multi-tty: New file.
+
+2007-08-29  Glenn Morris  <rgm@gnu.org>
+
+	* README: Increase version to 23.0.50.
+
+2007-08-29  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* configure.in: New option: --without-xaw3d.
+
+2007-08-24  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in: Check for a suitably recent makeinfo.
+
+2007-08-23  Johannes Weiner  <hannes@saeurebad.de>  (tiny change)
+
+	* configure.in (Check for required libraries): Typo.
+
+2007-08-23  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* configure.in: Check librsvg2 also for Mac Carbon.
+
+2007-08-22  Romain Francoise  <romain@orebokech.com>
+
+	* make-dist: Follow reorganization of files in etc/.
+
+2007-08-22  Paul Pogonyshev  <pogonyshev@gmx.net>
+
+	* configure.in: Add support for SVG images through librsvg2.
 
 2007-07-28  Eli Zaretskii  <eliz@gnu.org>
 
@@ -92,13 +1100,90 @@
 
 	* COPYING, info/COPYING: Switch to GPLv3.
 
+2007-06-20  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* configure.in: Complain if X seems to be installed but no
+	development files were found.
+
+2007-06-20  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in: Prefer libgif over libungif.
+
+2007-06-14  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* configure.in: Check for all image libraries before exiting.
+
+2007-06-13  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* configure.in: Exit with error if image libraries aren't found.
+
+2007-06-13  Chong Yidong  <cyd@stupidchicken.com>
+
+	* configure.in: Merge xaw3d and libXaw checks.  Check xaw3d even
+	when compiling without scrollbars.
+
+2007-06-12  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in (HAVE_GIF): If -lungif fails, try -lgif.
+
+2007-06-11  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* configure.in: Change wording about yes/gtk and lucid/athena
+	being synonyms.
+
+2007-06-08  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in: Make gtk the default toolkit.
+
+2007-06-07  Glenn Morris  <rgm@gnu.org>
+
+	* configure.in (NON_GNU_CPP): On Solaris, set using a proper check
+	for a Sun C compiler.
+
+	* Makefile.in (install-arch-indep): Install only the DOC- file
+	specific to the build, if possible, rather than DOC-*.
+
 2007-06-02  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 22.1 released.
 
+2007-05-25  Chong Yidong  <cyd@stupidchicken.com>
+
+	* mkinstalldirs: Sync to version in automake CVS.
+
+2007-05-22  Andreas Schwab  <schwab@suse.de>
+
+	* configure.in: Prefer build_alias over host when host_alias is not set.
+	* configure: Regenerate.
+
+2007-05-20  Andreas Schwab  <schwab@suse.de>
+
+	* configure.in: Remove empty AC_SUBST.
+	* configure: Regenerate.
+
+2007-05-20  Nick Roberts  <nickrob@snap.net.nz>
+
+	* configure.in: Use HAVE_GPM instead of HAVE_GPM_H and implement
+	it like others.
+	* configure: Regenerate.
+
+2007-05-20  Nick Roberts  <nickrob@snap.net.nz>
+
+	* configure.in (AC_CHECK_HEADERS): Add gpm.h.
+	(AC_CHECK_LIB): Add -lgpm.
+	* configure: Regenerate.
+
 2007-05-03  Glenn Morris  <rgm@gnu.org>
 
 	* configure: Tweak message about the absence of shell functions.
+
+2007-04-27  Andreas Schwab  <schwab@suse.de>
+
+	* Makefile.in (config.status): Depend on ${srcdir}/lisp/version.el.
+
+2007-04-26  Glenn Morris  <rgm@gnu.org>
+
+	* README: Increase version to 22.1.50.
 
 2007-04-24  Juanma Barranquero  <lekktu@gmail.com>
 
@@ -153,7 +1238,7 @@
 
 	* configure: Regenerate.
 
-2007-03-18  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2007-03-18  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in: Warning for Gtk+ and Cygwin added.
 	(HAVE_XFT): OLD_CFLAGS changed to OLD_CPPFLAGS.
@@ -189,7 +1274,7 @@
 
 	* configure: Regenerate.
 
-2007-01-26  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2007-01-26  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in: Add check for libXft.
 
@@ -222,12 +1307,12 @@
 
 	* configure: Regenerate with autoconf 2.61.
 
-2006-12-20  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2006-12-20  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in: Detect alsa/asoundlib.h also.
 	* configure: Regenerate.
 
-2006-12-19  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2006-12-19  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in: Check if GTK+ compiles at all.
 
@@ -240,7 +1325,7 @@
 
 	* configure.in: Add support for Solaris 10 on x86-64.
 
-2006-12-08  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2006-12-08  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* INSTALL (DETAILED BUILDING AND INSTALLATION): Document usage
 	of PKG_CONFIG_PATH.
@@ -273,7 +1358,7 @@
 2006-11-08  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
 
 	* configure.in: Prefer X11 to Carbon only when some X-specific
-	option is specified (Thanks to Jan Dj,Ad(Brv and Andreas Schwab).
+	option is specified (Thanks to Jan Djärv and Andreas Schwab).
 
 2006-11-04  Romain Francoise  <romain@orebokech.com>
 
@@ -382,7 +1467,7 @@
 
 	* INSTALL: Mention www.nongnu.org pages that list free Unicode fonts.
 
-2006-05-18  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2006-05-18  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in: Add check for ALSA.
 
@@ -394,7 +1479,7 @@
 
 2006-04-20  Ramprasad B  <ramprasad_i82@yahoo.com>
 
-	* Copyright (sources/emacs): Update copyright year(s).
+	Update copyright year(s) in many files.
 
 2006-04-01  Emanuele Giaquinta  <emanuele.giaquinta@gmail.com>  (tiny change)
 
@@ -423,7 +1508,7 @@
 
 	* configure.in (s390x-*-linux-gnu*): New configuration.
 
-2006-01-31  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2006-01-31  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in: Require GTK 2.4 or newer.
 
@@ -563,7 +1648,7 @@
 
 	Update FSF's address in GPL notices.
 
-2005-06-19  J,Ai(Br,At(Bme Marant  <jerome@marant.org>
+2005-06-19  Jérôme Marant  <jerome@marant.org>
 
 	* Makefile.in (epaths-force): Protect both lisppath and
 	buildlisppath from whitespace.
@@ -572,11 +1657,11 @@
 
 	* configure.in: Support Darwin/MacOSX on Intel
 
-2005-06-06  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2005-06-06  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in (HAVE_CANCELMENUTRACKING): New test.
 
-2005-05-11  J,Ai(Br,At(Bme Marant  <jmarant@marant.org>
+2005-05-11  Jérôme Marant  <jmarant@marant.org>
 
 	* configure.in: Add --enable-locallisppath.
 
@@ -586,7 +1671,7 @@
 	Check HAVE_CARBON before USE_TOOLKIT_SCROLL_BARS.  Define
 	USE_TOOLKIT_SCROLL_BARS by default if HAVE_CARBON is set to yes.
 
-2005-05-07  J,Ai(Br,At(Bme Marant  <jerome@marant.org>
+2005-05-07  Jérôme Marant  <jerome@marant.org>
 
 	* make-dist: Remove references to makefile.nt and makefile.def.
 	Include widgets and images subdirectories of etc.  Do not exclude
@@ -616,11 +1701,11 @@
 	* configure.in <Motif>: Don't let a special LessTif/Motif1.2 install
 	shadow the main Lesstif/Motif-2.1 libs and includes.
 
-2005-03-10  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2005-03-10  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in: Only add XASSERTS to cppflags.
 
-2005-03-04  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2005-03-04  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in: Added --enable-asserts.
 
@@ -648,7 +1733,7 @@
 	* configure.in (INLINE, RE_TRANSLATE_P): Move patches mistakenly
 	committed to src/config.in.
 
-2004-12-07  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2004-12-07  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in: If $HAVE_GTK_FILE_CHOOSER = yes, check for
 	pthreads and define HAVE_GTK_AND_PTHREAD.
@@ -686,14 +1771,14 @@
 
 	* configure.in: Add check for getrusage.
 
-2004-11-02  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2004-11-02  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in (HAVE_GTK_FILE_CHOOSER, $HAVE_GTK_FILE_SELECTION):
 	New tests for new and old GTK file dialogs.
 	(HAVE_GTK): Only set with_toolkit_scroll_bars if not explicitly set
 	to no.
 
-2004-10-20  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2004-10-20  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in (HAVE_PERSONALITY_LINUX32): New test if PER_LINUX32
 	can be set.  Remove SETARCH test.
@@ -702,12 +1787,12 @@
 
 	* configure.in (HAVE_MALLOC_MALLOC_H): Test for malloc/malloc.h
 
-2004-10-06  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2004-10-06  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in (HAVE_RANDOM_HEAPSTART): Change AC_MSG_ERROR to
 	AC_MSG_WARN.  Move output of warning message to end of configure run.
 
-2004-10-05  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2004-10-05  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in (HAVE_RANDOM_HEAPSTART): Rename HAVE_EXECSHIELD.
 	Run test to see if heap start address is random.
@@ -717,11 +1802,11 @@
 	* configure.in (HAVE_EXECSHIELD): Test correct env variable to see
 	if setarch is present.
 
-2004-09-25  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2004-09-25  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in (HAVE_EXECSHIELD): Only define on x86.
 
-2004-09-24  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2004-09-24  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in: Check for exec-shield.
 
@@ -827,7 +1912,7 @@
 
 	* configure.in <darwin>: Use fink packages if available.
 
-2004-01-25  J,Ai(Br,At(Bme Marant  <jmarant@free.fr>  (tiny change)
+2004-01-25  Jérôme Marant  <jmarant@free.fr>  (tiny change)
 
 	* make-dist (lispref): Do include lispref/index.texi.
 
@@ -849,7 +1934,7 @@
 	* configure.in: Check for <sys/socket.h>.  Include it before
 	including <net/if.h>.  Move check for <net/if.h> before its use.
 
-2003-12-24  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2003-12-24  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* Makefile.in (install-arch-dep): Don't let cd output go into
 	pipe for carbon_appdir.
@@ -863,7 +1948,7 @@
 	* configure.in (powerpc-apple-darwin*): Use ${CC-cc} instead of
 	hardcoding gcc.
 
-2003-11-16  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2003-11-16  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in (HAVE_GTK_MULTIDISPLAY): Check if GTK can handle
 	multiple displays.
@@ -977,7 +2062,7 @@
 
 	* configure.in: Handle system types sysv5uw* and sysv5OpenUNIX*.
 
-2003-04-28  Francesco Potort,Al(B  <pot@gnu.org>
+2003-04-28  Francesco Potortì  <pot@gnu.org>
 
 	* configure.in: Undo last (RMS') change, as it is useless, per
 	Dave Love.
@@ -986,7 +2071,7 @@
 
 	* configure.in: Put #include of jpeglib.h at start of line.
 
-2003-04-30  Kai Gro,A_(Bjohann  <kai.grossjohann@gmx.net>
+2003-04-30  Kai Großjohann  <kai.grossjohann@gmx.net>
 
 	* INSTALL (* GNU/Linux development packages): Mention Debian and
 	RedHat package names.
@@ -995,12 +2080,12 @@
 
 	* configure.in: Handle system types sysv5uw* and sysv5OpenUNIX*.
 
-2003-04-30  Kai Gro,A_(Bjohann  <kai.grossjohann@gmx.net>
+2003-04-30  Kai Großjohann  <kai.grossjohann@gmx.net>
 
 	* INSTALL (* GNU/Linux development packages): Tell people to
 	install additional packages for compiling Emacs.
 
-2003-04-06  Francesco Potort,Al(B  <pot@gnu.org>
+2003-04-06  Francesco Potortì  <pot@gnu.org>
 
 	* configure.in: Use the same configuration for all aix5, not just
 	aix5.1.
@@ -1049,17 +2134,17 @@
 
 	* Makefile.in (bootstrap): Make bootstrap-after.
 
-2003-01-20  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2003-01-20  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in: Fix --with-gtk.
 
-2003-01-19  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2003-01-19  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in: Add --with-gtk, --with-x-toolkit=gtk
 
 	* INSTALL (DETAILED BUILDING AND INSTALLATION): Add text about GTK.
 
-2003-01-14  Francesco Potort,Al(B  <pot@gnu.org>
+2003-01-14  Francesco Potortì  <pot@gnu.org>
 
 	* configure.in (m68k-motorola-sysv): Remove (obsolete).
 
@@ -1125,7 +2210,7 @@
 
 	* configure.in (*-sunos5*, *-solaris*): Use sol2-8.
 
-2002-11-14  Francesco Potort,Al(B  <pot@gnu.org>
+2002-11-14  Francesco Potortì  <pot@gnu.org>
 
 	* configure.in (*-sunos5.8*, *-solaris2.8*): New configurations.
 
@@ -1187,7 +2272,7 @@
 	(*-sunos5.6*, *-solaris2.6*): New alternative.
 	(*-sunos5*): Use version 2.6 as default.
 
-2002-09-06  Kai Gro,A_(Bjohann  <Kai.Grossjohann@CS.Uni-Dortmund.DE>
+2002-09-06  Kai Großjohann  <Kai.Grossjohann@CS.Uni-Dortmund.DE>
 
 	* configure.in: Fix typo.
 
@@ -1222,15 +2307,15 @@
 	* configure.in (gamedir): Handle it like lispdir.
 	(--with-game-dir option): Delete.
 
-2002-06-21  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2002-06-21  Pavel Janík  <Pavel@Janik.cz>
 
 	* configure.in: Add support for mipseb-*-netbsd* machines.
 
-2002-06-18  Kai Gro,A_(Bjohann  <Kai.Grossjohann@CS.Uni-Dortmund.DE>
+2002-06-18  Kai Großjohann  <Kai.Grossjohann@CS.Uni-Dortmund.DE>
 
 	* Makefile.in (install-arch-indep, uninstall): Add Tramp.
 
-2002-06-17  Kai Gro,A_(Bjohann  <Kai.Grossjohann@CS.Uni-Dortmund.DE>
+2002-06-17  Kai Großjohann  <Kai.Grossjohann@CS.Uni-Dortmund.DE>
 
 	* info/dir (File): Add an entry for Tramp.
 
@@ -1254,7 +2339,7 @@
 
 	* configure.in (emacs_cv_speed_t): Add square brackets for clarity.
 
-2002-05-04  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2002-05-04  Pavel Janík  <Pavel@Janik.cz>
 
 	* make-dist: Do not distribute lock/ directory.
 
@@ -1268,7 +2353,7 @@
 
 	* configure.in: Delete configure check for access to the game user.
 
-2002-04-29  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2002-04-29  Pavel Janík  <Pavel@Janik.cz>
 
 	* make-dist: lwlib/Imakefile is removed.
 
@@ -1279,7 +2364,7 @@
 
 	* make-dist: Create directories in mac/Emacs.app.
 
-2002-04-25  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2002-04-25  Pavel Janík  <Pavel@Janik.cz>
 
 	* make-dist: lwlib-Xol* are removed.
 
@@ -1306,7 +2391,7 @@
 	* configure.in: Add --game-dir, --game-user.  Test to see if we
 	can use them.
 
-2002-04-08  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2002-04-08  Pavel Janík  <Pavel@Janik.cz>
 
 	* configure.in: Add --with-sound.
 
@@ -1319,7 +2404,7 @@
 
 	* configure.in: Support AIX 5.1.
 
-2002-03-10  Jan Dj,Ad(Brv  <jan.h.d@swipnet.se>
+2002-03-10  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* configure.in: Added test for X Session Management (HAVE_X_SM).
 
@@ -1394,7 +2479,7 @@
 
 	* configure.in (hppa*-*-linux-gnu*): New alternative.
 
-2001-12-08  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2001-12-08  Pavel Janík  <Pavel@Janik.cz>
 
 	* make-dist: Copy COPYING to leim/, lwlib/, mac/ and nt/ when
 	creating distribution.
@@ -1407,12 +2492,12 @@
 	(HAVE_DES_H, HAVE_KRB5_H): Properly quote args of AC_CHECK_HEADERS;
 	this is required by recent Autoconf versions.
 
-2001-12-02  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2001-12-02  Pavel Janík  <Pavel@Janik.cz>
 
 	* make-dist: Do not try to link removed files (aclocal.m4, _emacs,
 	TODO, vms-pp.trans and others).
 
-2001-11-29  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2001-11-29  Pavel Janík  <Pavel@Janik.cz>
 
 	* make-dist: Use COPYING from the top-level directory.
 
@@ -1420,7 +2505,7 @@
 
 	* configure.in: Add support for FreeBSD/Alpha.
 
-2001-11-29  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2001-11-29  Pavel Janík  <Pavel@Janik.cz>
 
 	* make-dist: Add COPYING to the top-level directory of the
 	distribution.  Simplify the logic behind copying.
@@ -1465,7 +2550,7 @@
 2001-11-22  Colin Walters  <walters@debian.org>
 
 	* Makefile.in (install-arch-indep): Install the calc .info files.
-	(uninstall): Handle deletion of calc .info files (thanks Pavel Jan,Am(Bk).
+	(uninstall): Handle deletion of calc .info files (thanks Pavel Janík).
 
 2001-11-17  Eli Zaretskii  <eliz@is.elta.co.il>
 
@@ -1476,14 +2561,14 @@
 
 	* configure.in: Add coff.h to the list in AC_CHECK_HEADERS.
 
-2001-11-15  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2001-11-15  Pavel Janík  <Pavel@Janik.cz>
 
 	* Makefile.in (uninstall): Fix previous change.
 
 	* configure.in, Makefile.in: Add support for --program-prefix,
 	--program-suffix and --program-transform-name options.
 
-2001-11-13  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2001-11-13  Pavel Janík  <Pavel@Janik.cz>
 
 	* Makefile.in (install-arch-indep): Use `${manext}' instead of `.1'.
 	(install-arch-indep): Install emacsclient manual page.
@@ -1492,9 +2577,9 @@
 2001-11-12  Eli Zaretskii  <eliz@is.elta.co.il>
 
 	* make-dist: Add lispref/index.*perm files to the distribution.
-	From Pavel Jan,Am(Bk <Pavel@Janik.cz>.
+	From Pavel Janík <Pavel@Janik.cz>.
 
-2001-11-12  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2001-11-12  Pavel Janík  <Pavel@Janik.cz>
 
 	* Makefile.in (uninstall): Remove gfdl.1 when uninstalling.
 
@@ -1531,10 +2616,10 @@
 
 	* configure.in: Added a check for <nlist.h>.
 
-2001-11-01  Pavel Jan,Am(Bk  <Pavel@Janik.cz>
+2001-11-01  Pavel Janík  <Pavel@Janik.cz>
 
 	* configure.in: Reindent --help output.
-	From Per Starback (starback@ling.uu.se).
+	From Per Starbäck (starback@ling.uu.se).
 
 2001-10-31  Eli Zaretskii  <eliz@is.elta.co.il>
 
@@ -1828,7 +2913,7 @@
 	them into a single category.  Add menu items for RefTeX and
 	Widget.
 
-2000-10-29  Kai Gro,A_(Bjohann  <Kai.Grossjohann@CS.Uni-Dortmund.DE>
+2000-10-29  Kai Großjohann  <Kai.Grossjohann@CS.Uni-Dortmund.DE>
 
 	* Makefile.in (install-arch-indep): Use --info-dir instead of
 	--dir-file, and a simple argument instead of --info-file, so that
@@ -1853,8 +2938,7 @@
 
 2000-10-01  Andreas Schwab  <schwab@suse.de>
 
-	* Makefile.in (install-arch-indep): Update list of installed info
-	files.
+	* Makefile.in (install-arch-indep): Update list of installed info files.
 
 2000-09-30  Gerd Moellmann  <gerd@gnu.org>
 
@@ -2389,7 +3473,7 @@
 
 1999-02-26  Richard Stallman  <rms@gnu.org>
 
-	* configure.in: Use epaths.h and epaths-force instead of paths....
+	* configure.in: Use epaths.h and epaths-force instead of paths...
 
 	* Makefile.in (epaths-force): Renamed from paths-force;
 	operate on epaths.in and produce epaths.h.
@@ -2540,8 +3624,7 @@
 1998-04-16  Eli Zaretskii  <eliz@delysid.gnu.org>
 
 	* config.bat: Make sure the environment is large enough to support
-	all the "set foo=bar" commands.  Update pointers to DJGPP FTP
-	sites.
+	all the "set foo=bar" commands.  Update pointers to DJGPP FTP sites.
 
 1998-04-10  Karl Heuer  <kwzh@gnu.org>
 
@@ -2566,8 +3649,7 @@
 
 1998-03-23  Kenichi Handa  <handa@etl.go.jp>
 
-	* Makefile.in (top_distclean): Check the existence of `lock'
-	subdir.
+	* Makefile.in (top_distclean): Check the existence of `lock' subdir.
 
 1998-03-22  Richard Stallman  <rms@gnu.org>
 
@@ -2743,7 +3825,7 @@
 
 1997-08-22  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
-	* configure.in (HAVE_MOTIF_2_1): Test for Motif 2.1,
+	* configure.in (HAVE_MOTIF_2_1): Test for Motif 2.1.
 
 1997-08-22  Jonathan I. Kamens  <jik@kamens.brookline.ma.us>
 
@@ -3088,7 +4170,7 @@
 
 	* Version 19.33 released.
 
-1996-08-10  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
+1996-08-10  Marcus G. Daniels  <marcus@sayre.sysc.pdx.edu>
 
 	* configure.in (i[3456]86-sequent-ptx4*, i[3456]86-sequent-sysv4*):
 	Fix previous change.
@@ -3664,7 +4746,7 @@
 1995-06-22  Paul Eggert  <eggert@twinsun.com>
 
 	* configure.in: Treat SunOS 4.1.4 like SunOS 4.1.3.  (Likewise for
-	SunOS 4.1.5 thorugh 4.1.9, should they ever exist.)
+	SunOS 4.1.5 through 4.1.9, should they ever exist.)
 
 1995-06-22  Paul Eggert  <eggert@twinsun.com>
 
@@ -3775,7 +4857,7 @@
 	Use bsd4-3.  Don't set NON_GNU_CPP.
 
 	* make-dist: Don't copy in src/s/*.inp.  Don't copy nt/src.
-	In nt. copy various different things, but not *.cmd.
+	In nt, copy various different things, but not *.cmd.
 	Fix the ln commands for the subdirs of nt.
 
 1995-04-29  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
@@ -3787,7 +4869,7 @@
 	* configure.in (*-sun-sunos4.1.3*): Use shared libraries,
 	since that's what the header file expects.
 
-1995-04-24  Francesco Potort,Al(B  (pot@cnuce.cnr.it)
+1995-04-24  Francesco Potortì  (pot@cnuce.cnr.it)
 
 	* configure.in (m68k-motorola-sysv*): Distinguish between 68030
 	and 68040 based machines when choosing options for gnucc.
@@ -4362,7 +5444,7 @@
 1994-05-03  Morten Welinder  (terra@diku.dk)
 
 	* config.bat: Added possibility for different file name
-	transscriptions in lib-src.
+	transcriptions in lib-src.
 
 1994-05-03  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
@@ -4832,7 +5914,7 @@
 	before moving it.
 	* Makefile.in (VPATH): Define to @srcdir@.
 
-1993-09-28  Brian Fox  (bfox@cubit)
+1993-09-28  Brian J. Fox  (bfox@cubit)
 
 	* configure.in: Don't copy ${srcdir}/src/Makefile.in; that file
 	doesn't exist.  Just copy src/Makefile.in instead.  Touch
@@ -4841,7 +5923,7 @@
 	* INSTALL: Update documentation to match new configuration
 	mechanism.
 
-1993-09-27  Brian Fox  (bfox@ai.mit.edu)
+1993-09-27  Brian J. Fox  (bfox@ai.mit.edu)
 
 	* configure.in: Allow any of the path or directory Makefile
 	variables to be set with flags to configure.  Create all Makefiles
@@ -4852,14 +5934,14 @@
 	  If these files are out of date, simply have config.status
 	  rebuild them; don't rebuild them explicitly.
 
-1993-09-25  Brian Fox  (bfox@ai.mit.edu)
+1993-09-25  Brian J. Fox  (bfox@ai.mit.edu)
 
 	* build-install.in: Change src/xemacs to src/emacs.  We no longer
 	create src/xemacs, so the file wouldn't be found.
 
 	* make-dist: Remove `src/ymakefile', add `src/Makefile.in.in'.
 
-1993-09-24  Brian Fox  (bfox@albert.gnu.ai.mit.edu)
+1993-09-24  Brian J. Fox  (bfox@albert.gnu.ai.mit.edu)
 
 	* configure.in: Avoid forcing the search of /usr/include before
 	fixed include files by resetting C_SWITCH_X_SITE if it is
@@ -4876,19 +5958,19 @@
 	Use AC_QUOTE_SQUOTE twice to properly quote vpath_sed value.
 	Remove ${extra_output} from AC_OUTPUT call.
 
-1993-09-17  Brian Fox  (bfox@inferno)
+1993-09-17  Brian J. Fox  (bfox@inferno)
 
 	* make-dist: Quote backquotes found in strings to be echoed.
 
 	* configure.in: Use "sh -c pwd" when we want to avoid having the
 	shell fix up the value of $PWD.
 
-1993-09-13  Brian Fox  (bfox@inferno)
+1993-09-13  Brian J. Fox  (bfox@inferno)
 
 	* Makefile.in (do-install): Don't abort if ln or chmod at the end
 	of the installation fail.  Suggested by Karl Berry.
 
-1993-08-30  Brian Fox  (bfox@inferno)
+1993-08-30  Brian J. Fox  (bfox@inferno)
 
 	* Makefile.in (*clean): Use "$(MAKE) $(MAKEFLAGS)" wherever "make"
 	was used.  Set MAKEFLAGS from MFLAGS.
@@ -4997,7 +6079,7 @@
 	and #define HAVE_AIX_SMT_EXP if we do.  This is present in some
 	versions of AIX, and needs to be passed to the loader.
 
-	* configure.in: Test for the availablility of the
+	* configure.in: Test for the availability of the
 	XScreenResourceString function.
 
 1993-07-30  David J. MacKenzie  (djm@frob.eng.umd.edu)
@@ -5270,7 +6352,7 @@
 
 	* Makefile.in (src:, lib-src:, FRC:): force the src and lib-src
 	targets to be executed even if make remembers that it has already
-	stisfied FRC.
+	satisfied FRC.
 
 1993-05-29  Richard Stallman  (rms@mole.gnu.ai.mit.edu)
 
@@ -6168,7 +7250,7 @@
 
 1992-08-14  Eric S. Raymond  (eric@mole.gnu.ai.mit.edu)
 
-	* make-dist: taught it about vcdiff and rcs2log, added --newer
+	* make-dist: Taught it about vcdiff and rcs2log, added --newer
 	option for generating incremental distributions.  Stopped it from
 	generating a TAGS file into the distribution; that sucker is
 	*big*, and easily enough generated with the toplevel makefile.
@@ -6297,7 +7379,7 @@
 
 	* make-dist: Check the flag called "make_tar", not "make_dir"; the
 	latter, being a typo, is always false, resulting in a program
-	whose default behaviour is to painstakingly build a copy of the
+	whose default behavior is to painstakingly build a copy of the
 	source tree, and then delete it.  Rah.
 
 	* Makefile.in: Add dist target, and comment for it.
@@ -6324,7 +7406,7 @@
 	* Makefile.in: Use 'buildlisppath' instead of 'dumplisppath',
 	since the former is recognizable even if you don't know what
 	'dumping' is.
-	* configure: Accomodate that change.
+	* configure: Accommodate that change.
 
 	* configure: Accept options for all of the directories you can
 	change in the Makefile.
@@ -6564,19 +7646,19 @@
 	to match build-install and paths.h.
 
 ;; Local Variables:
-;; coding: iso-2022-7bit
+;; coding: utf-8
 ;; add-log-time-zone-rule: t
 ;; End:
 
     Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2001, 2002,
-	2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+	2003, 2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
-  GNU Emacs is free software; you can redistribute it and/or modify
+  GNU Emacs is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 3, or (at your option)
-  any later version.
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -6584,8 +7666,6 @@
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with GNU Emacs; see the file COPYING.  If not, write to the
-  Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-  Boston, MA 02110-1301, USA.
+  along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; arch-tag: ac61a779-1480-4884-b292-d0c39c127a73

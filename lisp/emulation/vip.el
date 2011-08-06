@@ -1,17 +1,17 @@
 ;;; vip.el --- a VI Package for GNU Emacs
 
 ;; Copyright (C) 1986, 1987, 1988, 1992, 1993, 1998, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Masahiko Sato <ms@sail.stanford.edu>
 ;; Keywords: emulations
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -608,7 +606,7 @@ obtained so far, and COM is the command part obtained so far."
 (defun vip-digit-argument (arg)
   "Begin numeric argument for the next command."
   (interactive "P")
-  (vip-prefix-arg-value last-command-char nil
+  (vip-prefix-arg-value last-command-event nil
 			(if (consp arg) (cdr arg) nil)))
 
 (defun vip-command-argument (arg)
@@ -616,7 +614,7 @@ obtained so far, and COM is the command part obtained so far."
   (interactive "P")
   (condition-case conditions
       (vip-prefix-arg-com
-       last-command-char
+       last-command-event
        (cond ((null arg) nil)
 	     ((consp arg) (car arg))
 	     ((numberp arg) arg)
@@ -836,7 +834,7 @@ is the name of the register for COM."
 	((= char ?q)
 	 (set-mark vip-com-point)
 	 (vip-quote-region))
-	((= char ?s) (spell-region vip-com-point (point)))))
+	((= char ?s) (ispell-region vip-com-point (point)))))
 
 
 ;; undoing
@@ -874,7 +872,7 @@ is the name of the register for COM."
     (set-mark beg))
   (beginning-of-line)
   (exchange-point-and-mark)
-  (if (or (not (eobp)) (not (bolp))) (next-line 1))
+  (if (or (not (eobp)) (not (bolp))) (with-no-warnings (next-line 1)))
   (beginning-of-line)
   (if (> beg end) (exchange-point-and-mark)))
 
@@ -1050,7 +1048,7 @@ command was invoked with argument > 1."
 (defun vip-line (arg)
   (let ((val (car arg)) (com (cdr arg)))
     (move-marker vip-com-point (point))
-    (next-line (1- val))
+    (with-no-warnings (next-line (1- val)))
     (vip-execute-com 'vip-line val com)))
 
 (defun vip-yank-line (arg)
@@ -1263,7 +1261,7 @@ beginning of buffer, stop and signal error."
   (interactive "P")
   (let ((val (vip-p-val arg)) (com (vip-getCom arg)))
     (if com (move-marker vip-com-point (point)))
-    (next-line val)
+    (with-no-warnings (next-line val))
     (back-to-indentation)
     (if com (vip-execute-com 'vip-next-line-at-bol val com))))
 
@@ -1272,7 +1270,7 @@ beginning of buffer, stop and signal error."
   (interactive "P")
   (let ((val (vip-p-val arg)) (com (vip-getCom arg)))
     (if com (move-marker vip-com-point (point)))
-    (next-line (- val))
+    (with-no-warnings (next-line (- val)))
     (setq this-command 'previous-line)
     (if com (vip-execute-com 'vip-previous-line val com))))
 
@@ -1281,7 +1279,7 @@ beginning of buffer, stop and signal error."
   (interactive "P")
   (let ((val (vip-p-val arg)) (com (vip-getCom arg)))
     (if com (move-marker vip-com-point (point)))
-    (next-line (- val))
+    (with-no-warnings (next-line (- val)))
     (back-to-indentation)
     (if com (vip-execute-com 'vip-previous-line val com))))
 
@@ -1323,7 +1321,7 @@ after search."
 	     ;; forward search begins here
 	     (if (eolp) (error "") (point))
 	     ;; forward search ends here
-	     (progn (next-line 1) (beginning-of-line) (point)))
+	     (progn (with-no-warnings (next-line 1)) (beginning-of-line) (point)))
 	  (narrow-to-region
 	   ;; backward search begins from here
 	   (if (bolp) (error "") (point))
@@ -1803,7 +1801,7 @@ STRING.  Search will be forward if FORWARD, otherwise backward."
     (setq vip-use-register nil)
     (if (vip-end-with-a-newline-p text)
 	(progn
-	  (next-line 1)
+	  (with-no-warnings (next-line 1))
 	  (beginning-of-line))
       (if (and (not (eolp)) (not (eobp))) (forward-char)))
     (setq vip-d-com (list 'vip-put-back val nil vip-use-register))
@@ -2883,7 +2881,7 @@ a token has type \(command, address, end-mark\) and value."
   (let ((point (if (null ex-addresses) (point) (car ex-addresses)))
 	(variant nil) command file)
     (goto-char point)
-    (if (not (= point 0)) (next-line 1))
+    (if (not (= point 0)) (with-no-warnings (next-line 1)))
     (beginning-of-line)
     (save-window-excursion
       (set-buffer " *ex-working-space*")
@@ -3075,5 +3073,5 @@ vip-s-string"
 
 (provide 'vip)
 
-;;; arch-tag: bff623ef-48f7-41d4-9aa3-2e840c9ab415
+;; arch-tag: bff623ef-48f7-41d4-9aa3-2e840c9ab415
 ;;; vip.el ends here

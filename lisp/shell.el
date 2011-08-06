@@ -1,19 +1,19 @@
 ;;; shell.el --- specialized comint.el for running the shell
 
 ;; Copyright (C) 1988, 1993, 1994, 1995, 1996, 1997, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Olin Shivers <shivers@cs.cmu.edu>
 ;;	Simon Marshall <simon@gnu.org>
-;; Maintainer: FSF
+;; Maintainer: FSF <emacs-devel@gnu.org>
 ;; Keywords: processes
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,16 +21,9 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-
-;; Please send me bug reports, bug fixes, and extensions, so that I can
-;; merge them into the master source.
-;;     - Olin Shivers (shivers@cs.cmu.edu)
-;;     - Simon Marshall (simon@gnu.org)
 
 ;; This file defines a shell-in-a-buffer package (shell mode) built on
 ;; top of comint mode.  This is actually cmushell with things renamed
@@ -179,7 +172,7 @@ This is a fine thing to set in your `.emacs' file.")
 (defvar shell-file-name-quote-list
   (if (memq system-type '(ms-dos windows-nt))
       nil
-    (append shell-delimiter-argument-list '(?\s ?\* ?\! ?\" ?\' ?\` ?\# ?\\)))
+    (append shell-delimiter-argument-list '(?\s ?$ ?\* ?\! ?\" ?\' ?\` ?\# ?\\)))
   "List of characters to quote when in a file name.
 This variable is used to initialize `comint-file-name-quote-list' in the
 shell buffer.  The value may depend on the operating system or shell.
@@ -362,7 +355,7 @@ Thus, this does not include the shell's current directory.")
 	 'complete-expand)))
 
 (defcustom shell-mode-hook '()
-  "*Hook for customising Shell mode."
+  "Hook for customising Shell mode."
   :type 'hook
   :group 'shell)
 
@@ -403,7 +396,7 @@ by \\[list-buffers] or \\[mouse-buffer-menu] in the `File' field.
     directory stack is.
 \\[shell-dirtrack-mode] turns directory tracking on and off.
 \(The `dirtrack' package provides an alternative implementation of this
-feature.)
+feature - see the function `dirtrack-mode'.)
 
 \\{shell-mode-map}
 Customization: Entry to this mode runs the hooks on `comint-mode-hook' and
@@ -521,6 +514,9 @@ Sentinels will always get the two parameters PROCESS and EVENT."
 (defun shell (&optional buffer)
   "Run an inferior shell, with I/O through BUFFER (which defaults to `*shell*').
 Interactively, a prefix arg means to prompt for BUFFER.
+If `default-directory' is a remote file name, it is also prompted
+to change if called with a prefix arg.
+
 If BUFFER exists but shell process is not running, make new shell.
 If BUFFER exists and shell process is running, just switch to BUFFER.
 Program used comes from variable `explicit-shell-file-name',
@@ -549,8 +545,16 @@ Otherwise, one argument `-i' is passed to the shell.
   (interactive
    (list
     (and current-prefix-arg
-	 (read-buffer "Shell buffer: "
-		      (generate-new-buffer-name "*shell*")))))
+	 (prog1
+	     (read-buffer "Shell buffer: "
+			  (generate-new-buffer-name "*shell*"))
+	   (if (file-remote-p default-directory)
+	       ;; It must be possible to declare a local default-directory.
+	       (setq default-directory
+		     (expand-file-name
+		      (read-file-name
+		       "Default directory: " default-directory default-directory
+		       t nil 'file-directory-p))))))))
   (setq buffer (get-buffer-create (or buffer "*shell*")))
   ;; Pop to buffer, so that the buffer's window will be correctly set
   ;; when we call comint (so that comint sets the COLUMNS env var properly).
@@ -562,7 +566,7 @@ Otherwise, one argument `-i' is passed to the shell.
 	   (startfile (concat "~/.emacs_" name))
 	   (xargs-name (intern-soft (concat "explicit-" name "-args"))))
       (unless (file-exists-p startfile)
-	(setq startfile (concat "~/.emacs.d/init_" name ".sh")))
+	(setq startfile (concat user-emacs-directory "init_" name ".sh")))
       (apply 'make-comint-in-buffer "shell" buffer prog
 	     (if (file-exists-p startfile) startfile)
 	     (if (and xargs-name (boundp xargs-name))
@@ -788,8 +792,8 @@ feature - see the function `dirtrack-mode'."
       (add-hook 'comint-input-filter-functions 'shell-directory-tracker nil t)
     (remove-hook 'comint-input-filter-functions 'shell-directory-tracker t)))
 
-;; For your typing convenience:
-(defalias 'shell-dirtrack-toggle 'shell-dirtrack-mode) ;??Convenience??
+(define-obsolete-function-alias 'shell-dirtrack-toggle 'shell-dirtrack-mode
+  "23.1")
 
 (defun shell-cd (dir)
   "Do normal `cd' to DIR, and set `list-buffers-directory'."
@@ -960,7 +964,8 @@ Returns t if successful."
 	     (save-match-data (not (string-match "[~/]" filename)))
 	     (eq (match-beginning 0)
 		 (save-excursion (shell-backward-command 1) (point))))
-	(prog2 (message "Completing command name...")
+	(prog2 (unless (window-minibuffer-p (selected-window))
+		 (message "Completing command name..."))
 	    (shell-dynamic-complete-as-command)))))
 
 
@@ -1030,7 +1035,6 @@ filename argument."
 	(re-search-forward "\\$?{?[A-Za-z0-9_]*}?" limit)
 	(buffer-substring (match-beginning 0) (match-end 0))))))
 
-
 (defun shell-dynamic-complete-environment-variable ()
   "Dynamically complete the environment variable at point.
 Completes if after a variable, i.e., if it starts with a \"$\".
@@ -1048,7 +1052,8 @@ Returns non-nil if successful."
   (interactive)
   (let ((variable (shell-match-partial-variable)))
     (if (and variable (string-match "^\\$" variable))
-	(prog2 (message "Completing variable name...")
+	(prog2 (unless (window-minibuffer-p (selected-window))
+		 (message "Completing variable name..."))
 	    (shell-dynamic-complete-as-environment-variable)))))
 
 

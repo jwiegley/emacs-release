@@ -4,28 +4,27 @@ dnl 	autoconf
 dnl in the directory containing this script.
 dnl
 dnl  Copyright (C) 1994, 1995, 1996, 1999, 2000, 2001, 2002, 2003,
-dnl    2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+dnl    2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 dnl
 dnl  This file is part of GNU Emacs.
 dnl
-dnl  GNU Emacs is free software; you can redistribute it and/or modify
+dnl  GNU Emacs is free software: you can redistribute it and/or modify
 dnl  it under the terms of the GNU General Public License as published by
-dnl  the Free Software Foundation; either version 3, or (at your option)
-dnl  any later version.
-dnl
+dnl  the Free Software Foundation, either version 3 of the License, or
+dnl  (at your option) any later version.
+dnl  
 dnl  GNU Emacs is distributed in the hope that it will be useful,
 dnl  but WITHOUT ANY WARRANTY; without even the implied warranty of
 dnl  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 dnl  GNU General Public License for more details.
-dnl
+dnl  
 dnl  You should have received a copy of the GNU General Public License
-dnl  along with GNU Emacs; see the file COPYING.  If not, write to the
-dnl  Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-dnl  Boston, MA 02110-1301, USA.
+dnl  along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
-AC_PREREQ(2.61)dnl
-AC_INIT(src/lisp.h)
+AC_PREREQ(2.61)
+AC_INIT(emacs, 23.1)
 AC_CONFIG_HEADER(src/config.h:src/config.in)
+AC_CONFIG_SRCDIR(src/lisp.h)
 
 dnl Support for --program-prefix, --program-suffix and
 dnl --program-transform-name options
@@ -42,101 +41,155 @@ gamedir='${localstatedir}/games/emacs'
 
 gameuser=games
 
-AC_ARG_WITH(gcc,
-[  --without-gcc           don't use GCC to compile Emacs if GCC is found])
-AC_ARG_WITH(pop,
-[  --without-pop           don't support POP mail retrieval with movemail],
-[if test "$withval" = yes; then
+dnl OPTION_DEFAULT_OFF(NAME, HELP-STRING)
+dnl Create a new --with option that defaults to being disabled.
+dnl NAME is the base name of the option.  The shell variable with_NAME
+dnl   will be set to either the user's value (if the option is
+dnl   specified; 'yes' for a plain --with-NAME) or to 'no' (if the
+dnl   option is not specified).  Note that the shell variable name is
+dnl   constructed as autoconf does, by replacing non-alphanumeric
+dnl   characters with "_".
+dnl HELP-STRING is the help text for the option.
+AC_DEFUN([OPTION_DEFAULT_OFF], [dnl
+  AC_ARG_WITH([$1],[AS_HELP_STRING([--with-$1],[$2])],[],[dnl
+    m4_bpatsubst([with_$1], [[^0-9a-z]], [_])=no])dnl
+])dnl
+
+dnl OPTION_DEFAULT_ON(NAME, HELP-STRING)
+dnl Create a new --with option that defaults to being enabled.  NAME
+dnl   is the base name of the option.  The shell variable with_NAME
+dnl   will be set either to 'no' (for a plain --without-NAME) or to
+dnl   'yes' (if the option is not specified).  Note that the shell
+dnl   variable name is constructed as autoconf does, by replacing
+dnl   non-alphanumeric characters with "_".
+dnl HELP-STRING is the help text for the option.
+AC_DEFUN([OPTION_DEFAULT_ON], [dnl
+  AC_ARG_WITH([$1],[AS_HELP_STRING([--without-$1],[$2])],[],[dnl
+   m4_bpatsubst([with_$1], [[^0-9a-z]], [_])=yes])dnl
+])dnl
+
+OPTION_DEFAULT_ON([pop],[don't support POP mail retrieval with movemail])
+if test "$with_pop" = yes; then
    AC_DEFINE(MAIL_USE_POP)
-else :
-fi],
-AC_DEFINE(MAIL_USE_POP))
+fi
 AH_TEMPLATE(MAIL_USE_POP, [Define to support POP mail retrieval.])dnl
-AC_ARG_WITH(kerberos,
-[  --with-kerberos         support Kerberos-authenticated POP],
-[if test "$withval" = yes; then
+
+OPTION_DEFAULT_OFF([kerberos],[support Kerberos-authenticated POP])
+if test "$with_kerberos" != no; then
    AC_DEFINE(KERBEROS)
-fi])
+fi
 AH_TEMPLATE(KERBEROS,
 	    [Define to support Kerberos-authenticated POP mail retrieval.])dnl
-AC_ARG_WITH(kerberos5,
-[  --with-kerberos5        support Kerberos version 5 authenticated POP],
-[if test "${with_kerberos5+set}" = set; then
-  if test "${with_kerberos+set}" != set; then
+
+OPTION_DEFAULT_OFF([kerberos5],[support Kerberos version 5 authenticated POP])
+if test "${with_kerberos5}" != no; then
+  if test "${with_kerberos}" = no; then
     with_kerberos=yes
     AC_DEFINE(KERBEROS)
   fi
   AC_DEFINE(KERBEROS5, 1, [Define to use Kerberos 5 instead of Kerberos 4.])
-fi])
-AC_ARG_WITH(hesiod,
-[  --with-hesiod           support Hesiod to get the POP server host],
-[if test "$withval" = yes; then
+fi
+
+OPTION_DEFAULT_OFF([hesiod],[support Hesiod to get the POP server host])
+if test "$with_hesiod" != no; then
   AC_DEFINE(HESIOD, 1, [Define to support using a Hesiod database to find the POP server.])
-fi])
+fi
 
-AC_ARG_WITH(sound,
-[  --without-sound         don't compile with sound support])
+OPTION_DEFAULT_ON([sound],[don't compile with sound support])
 
+OPTION_DEFAULT_ON([sync-input],[process async input synchronously])
+if test "$with_sync_input" = yes; then
+   AC_DEFINE(SYNC_INPUT, 1, [Process async input synchronously.])
+fi
+
+dnl FIXME currently it is not the last.
 dnl This should be the last --with option, because --with-x is
 dnl added later on when we find the path of X, and it's best to
 dnl keep them together visually.
-AC_ARG_WITH(x-toolkit,
-[  --with-x-toolkit=KIT    use an X toolkit
-                              (KIT = yes/lucid/athena/motif/gtk/no)],
+AC_ARG_WITH([x-toolkit],[AS_HELP_STRING([--with-x-toolkit=KIT],
+ [use an X toolkit (KIT one of: yes, lucid, athena, motif, gtk, no)])],
 [	  case "${withval}" in
-	    y | ye | yes )	val=athena ;;
+	    y | ye | yes )	val=gtk ;;
 	    n | no )		val=no  ;;
 	    l | lu | luc | luci | lucid )	val=lucid ;;
 	    a | at | ath | athe | athen | athena )	val=athena ;;
 	    m | mo | mot | moti | motif )	val=motif ;;
 	    g | gt | gtk  )	val=gtk ;;
-dnl These don't currently work.
-dnl	    o | op | ope | open | open- | open-l | open-lo \
-dnl		| open-loo | open-look )	val=open-look ;;
 	    * )
-dnl AC_MSG_ERROR([the `--with-x-toolkit' option is supposed to have a value
-dnl which is `yes', `no', `lucid', `athena', `motif' or `open-look'.])
-AC_MSG_ERROR([`--with-x-toolkit=$withval' is invalid\;
+AC_MSG_ERROR([`--with-x-toolkit=$withval' is invalid;
 this option's value should be `yes', `no', `lucid', `athena', `motif' or `gtk'.
-Currently, `yes', `athena' and `lucid' are synonyms.])
+`yes' and `gtk' are synonyms. `athena' and `lucid' are synonyms.])
 	    ;;
 	  esac
 	  with_x_toolkit=$val
 ])
-AC_ARG_WITH(xpm,
-[  --with-xpm              use -lXpm for displaying XPM images])
-AC_ARG_WITH(jpeg,
-[  --with-jpeg             use -ljpeg for displaying JPEG images])
-AC_ARG_WITH(tiff,
-[  --with-tiff             use -ltiff for displaying TIFF images])
-AC_ARG_WITH(gif,
-[  --with-gif              use -lungif for displaying GIF images])
-AC_ARG_WITH(png,
-[  --with-png              use -lpng for displaying PNG images])
-AC_ARG_WITH(gtk,
-[  --with-gtk              use GTK (same as --with-x-toolkit=gtk)])
-AC_ARG_WITH(pkg-config-prog,
-[  --with-pkg-config-prog  Path to pkg-config to use for finding GTK])
-AC_ARG_WITH(toolkit-scroll-bars,
-[  --without-toolkit-scroll-bars
-                          don't use Motif or Xaw3d scroll bars])
-AC_ARG_WITH(xim,
-[  --without-xim           don't use X11 XIM])
-AC_ARG_WITH(carbon,
-[  --without-carbon        don't use Carbon GUI on Mac OS X])
-AC_ARG_ENABLE(carbon-app,
-[[  --enable-carbon-app[=DIR]  [DIR=/Application]
-                          specify install directory for Emacs.app on Mac OS X]],
-[ carbon_appdir_x=${enableval}])
+
+dnl _ON results in a '--without' option in the --help output, so
+dnl the help text should refer to "don't compile", etc.
+OPTION_DEFAULT_ON([xpm],[don't compile with XPM image support])
+OPTION_DEFAULT_ON([jpeg],[don't compile with JPEG image support])
+OPTION_DEFAULT_ON([tiff],[don't compile with TIFF image support])
+OPTION_DEFAULT_ON([gif],[don't compile with GIF image support])
+OPTION_DEFAULT_ON([png],[don't compile with PNG image support])
+OPTION_DEFAULT_ON([rsvg],[don't compile with SVG image support])
+
+OPTION_DEFAULT_ON([xft],[don't use XFT for anti aliased fonts])
+OPTION_DEFAULT_ON([libotf],[don't use libotf for OpenType font support])
+OPTION_DEFAULT_ON([m17n-flt],[don't use m17n-flt for text shaping])
+
+OPTION_DEFAULT_ON([toolkit-scroll-bars],[don't use Motif or Xaw3d scroll bars])
+OPTION_DEFAULT_ON([xaw3d],[don't use Xaw3d])
+OPTION_DEFAULT_ON([xim],[don't use X11 XIM])
+OPTION_DEFAULT_OFF([ns],[use nextstep (Cocoa or GNUstep) windowing system])
+
+OPTION_DEFAULT_ON([gpm],[don't use -lgpm for mouse support on a GNU/Linux console])
+OPTION_DEFAULT_ON([dbus],[don't compile with D-Bus support])
+
+## For the times when you want to build Emacs but don't have
+## a suitable makeinfo, and can live without the manuals.
+dnl http://lists.gnu.org/archive/html/emacs-devel/2008-04/msg01844.html
+OPTION_DEFAULT_ON([makeinfo],[don't require makeinfo for building manuals])
+
+dnl Can remove these in Emacs 24.
+AC_ARG_WITH([gtk],,
+  [AC_MSG_ERROR([--with-gtk has been removed.  Use --with-x-toolkit to
+specify a toolkit.])],,)
+
+AC_ARG_WITH([gcc],,
+  [AC_MSG_ERROR([--with-gcc has been removed.  Set the `CC' environment
+variable to specify a compiler.])],,)
+
+AC_ARG_WITH([pkg-config-prog],dnl
+[AS_HELP_STRING([--with-pkg-config-prog=PATH],
+                  [path to pkg-config for finding GTK and librsvg])])
+if test "X${with_pkg_config_prog}" != X; then
+   if test "${with_pkg_config_prog}" != yes; then
+      PKG_CONFIG="${with_pkg_config_prog}"
+   fi
+fi
+
+AC_ARG_WITH([gnustep-conf],dnl
+[AS_HELP_STRING([--with-gnustep-conf=PATH],[path to GNUstep.conf; default $GNUSTEP_CONFIG_FILE, or /etc/GNUstep/GNUstep.conf])])
+test "X${with_gnustep_conf}" != X && test "${with_gnustep_conf}" != yes && \
+  GNUSTEP_CONFIG_FILE="${with_gnustep_conf}"
+test "X$GNUSTEP_CONFIG_FILE" = "X" && \
+     GNUSTEP_CONFIG_FILE=/etc/GNUstep/GNUstep.conf
+
+AC_ARG_ENABLE(ns-self-contained,
+[AS_HELP_STRING([--disable-ns-self-contained],
+                [disable self contained build under NeXTstep])],
+   EN_NS_SELF_CONTAINED=$enableval,
+   EN_NS_SELF_CONTAINED=yes)
 
 AC_ARG_ENABLE(asserts,
-[  --enable-asserts        compile code with asserts enabled],
+[AS_HELP_STRING([--enable-asserts], [compile code with asserts enabled])],
       USE_XASSERTS=$enableval,
       USE_XASSERTS=no)
 
 AC_ARG_ENABLE(maintainer-mode,
-[  --enable-maintainer-mode enable make rules and dependencies not useful
-                          (and sometimes confusing) to the casual installer],
+[AS_HELP_STRING([--enable-maintainer-mode],
+                [enable make rules and dependencies not useful (and sometimes
+		 confusing) to the casual installer])],
       USE_MAINTAINER_MODE=$enableval,
       USE_MAINTAINER_MODE=no)
 if test $USE_MAINTAINER_MODE = yes; then
@@ -147,9 +200,9 @@ fi
 AC_SUBST(MAINT)
 
 AC_ARG_ENABLE(locallisppath,
-[  --enable-locallisppath=PATH
-                          directories Emacs should search for lisp files
-                          specific to this site],
+[AS_HELP_STRING([--enable-locallisppath=PATH],
+                [directories Emacs should search for lisp files specific
+		 to this site])],
 if test "${enableval}" = "no"; then
   locallisppath=
 elif test "${enableval}" != "yes"; then
@@ -198,7 +251,7 @@ fi
 
 AC_CANONICAL_HOST
 canonical=$host
-configuration=${host_alias-$host}
+configuration=${host_alias-${build_alias-$host}}
 
 dnl This used to use changequote, but, apart from `changequote is evil'
 dnl per the autoconf manual, we can speed up autoconf somewhat by quoting
@@ -218,9 +271,8 @@ dnl quotation begins
 ### based on the machine portion of the configuration name, and an s-
 ### file based on the operating system portion.  However, it turns out
 ### that each m/*.h file is pretty manufacturer-specific - for
-### example, apollo.h, hp9000s300.h, mega68k, news.h, and tad68k are
-### all 68000 machines; mips.h, pmax.h, and news-risc are all MIPS
-### machines.  So we basically have to have a special case for each
+### example mips.h is MIPS
+### So we basically have to have a special case for each
 ### configuration name.
 ###
 ### As far as handling version numbers on operating systems is
@@ -243,6 +295,7 @@ case "${canonical}" in
       alpha*-*-freebsd*)	machine=alpha ;;
       arm*-*-freebsd*)          machine=arm ;;
       ia64-*-freebsd*)		machine=ia64 ;;
+      sparc-*-freebsd*)         machine=sparc ;;
       sparc64-*-freebsd*)	machine=sparc ;;
       powerpc-*-freebsd*)	machine=macppc ;;
       i[3456]86-*-freebsd*)	machine=intel386 ;;
@@ -256,6 +309,7 @@ case "${canonical}" in
     case "${canonical}" in
       alpha*-*-kfreebsd*)	machine=alpha ;;
       ia64-*-kfreebsd*)		machine=ia64 ;;
+      sparc-*-kfreebsd*)	machine=sparc ;;
       sparc64-*-kfreebsd*)	machine=sparc ;;
       powerpc-*-kfreebsd*)	machine=macppc ;;
       i[3456]86-*-kfreebsd*)	machine=intel386 ;;
@@ -275,20 +329,16 @@ dnl see the `changequote' comment above.
     case "${canonical}" in
       alpha*-*-netbsd*)	machine=alpha ;;
       i[3456]86-*-netbsd*) machine=intel386 ;;
-      m68k-*-netbsd*)
-			# This is somewhat bogus.
-			machine=hp9000s300 ;;
       mips-*-netbsd*)	machine=pmax ;;
       mipsel-*-netbsd*)	machine=pmax ;;
       mipseb-*-netbsd*)	machine=pmax ;;
-      ns32k-*-netbsd*)	machine=ns32000 ;;
       powerpc-*-netbsd*) machine=macppc ;;
       sparc*-*-netbsd*)	machine=sparc ;;
       vax-*-netbsd*)	machine=vax ;;
       arm-*-netbsd*)	machine=arm ;;
       x86_64-*-netbsd*)	machine=amdx86-64 ;;
       hppa-*-netbsd*)	machine=hp800 ;;
-      shle-*-netbsd*)	machine=sh3el ;;
+      m68k-*-netbsd*)	machine=m68k ;;
     esac
   ;;
 
@@ -298,16 +348,12 @@ dnl see the `changequote' comment above.
     case "${canonical}" in
       alpha*-*-openbsd*)	machine=alpha ;;
       arm-*-openbsd*)          machine=arm ;;
-      hppa-*-openbsd*)         machine=hp9000s300 ;;
       i386-*-openbsd*)         machine=intel386 ;;
-      m68k-*-openbsd*)         machine=hp9000s300 ;;
-      m88k-*-openbsd*)         machine=aviion ;;
-      mips64-*-openbsd*)       machine=mips64 ;;
       powerpc-*-openbsd*)      machine=macppc ;;
-      sh-*-openbsd*)           machine=sh3el ;;
       sparc*-*-openbsd*)       machine=sparc ;;
       vax-*-openbsd*)          machine=vax ;;
       x86_64-*-openbsd*)       machine=amdx86-64 ;;
+      hppa-*-openbsd*)         machine=hp800 ;;
     esac
   ;;
 
@@ -320,63 +366,6 @@ dnl see the `changequote' comment above.
     esac
   ;;
 
-  ## Acorn RISCiX:
-  arm-acorn-riscix1.1* )
-    machine=acorn opsys=riscix1-1
-  ;;
-  arm-acorn-riscix1.2* | arm-acorn-riscix )
-    ## This name is riscix12 instead of riscix1.2
-    ## to avoid a file name conflict on MSDOS.
-    machine=acorn opsys=riscix12
-  ;;
-
-  ## BSDI ports
-  *-*-bsdi* )
-    opsys=bsdi
-    case "${canonical}" in
-      i[345]86-*-bsdi*) machine=intel386 ;;
-      sparc-*-bsdi*)  machine=sparc ;;
-      powerpc-*-bsdi*)  machine=macppc ;;
-    esac
-    case "${canonical}" in
-      *-*-bsd386* | *-*-bsdi1* )	opsys=bsd386 ;;
-      *-*-bsdi2.0* )		opsys=bsdos2 ;;
-      *-*-bsdi2* )		opsys=bsdos2-1 ;;
-      *-*-bsdi3* )		opsys=bsdos3 ;;
-      *-*-bsdi[45]* )		opsys=bsdos4 ;;
-    esac
-  ;;
-
-  ## Alliant machines
-  ## Strictly speaking, we need the version of the alliant operating
-  ## system to choose the right machine file, but currently the
-  ## configuration name doesn't tell us enough to choose the right
-  ## one; we need to give alliants their own operating system name to
-  ## do this right.  When someone cares, they can help us.
-  fx80-alliant-* )
-    machine=alliant4 opsys=bsd4-2
-  ;;
-  i860-alliant-* )
-    machine=alliant-2800 opsys=bsd4-3
-  ;;
-
-  ## Alpha (DEC) machines.
-  alpha*-dec-osf* )
-    machine=alpha opsys=osf1
-    # This is needed to find X11R6.1 libraries for certain tests.
-    NON_GCC_LINK_TEST_OPTIONS=-Wl,-rpath,/usr/X11R6/lib
-    GCC_LINK_TEST_OPTIONS=-Wl,-rpath,/usr/X11R6/lib
-    # NON_GNU_CPP is necessary on 5.0 to avoid mangling src/Makefile
-    # due to non-traditional preprocessing with the current compiler
-    # defaults.  OSF 4 can also have that compiler version, and there
-    # seems always to have been a usable /usr/bin/cpp.
-    NON_GNU_CPP=/usr/bin/cpp
-    case "${canonical}" in
-    alpha*-dec-osf[5-9]*)
-      opsys=osf5-0 ;;
-    esac
-  ;;
-
   alpha*-*-linux-gnu* )
     machine=alpha opsys=gnu-linux
   ;;
@@ -385,26 +374,11 @@ dnl see the `changequote' comment above.
     machine=arm opsys=gnu-linux
   ;;
 
-  ## Altos 3068
-  m68*-altos-sysv* )
-    machine=altos opsys=usg5-2
-  ;;
-
-  ## Amdahl UTS
-  580-amdahl-sysv* )
-    machine=amdahl opsys=usg5-2-2
-  ;;
-
-  ## Apollo, Domain/OS
-  m68*-apollo-* )
-    machine=apollo opsys=bsd4-3
-  ;;
-
   ## Apple Darwin / Mac OS X
   *-apple-darwin* )
     case "${canonical}" in
       i[3456]86-* )  machine=intel386 ;;
-      powerpc-* )    machine=powermac ;;
+      powerpc-* )    machine=macppc ;;
       * )            unported=yes ;;
     esac
     opsys=darwin
@@ -418,242 +392,9 @@ dnl see the `changequote' comment above.
     fi
   ;;
 
-  ## AT&T 3b2, 3b5, 3b15, 3b20
-  we32k-att-sysv* )
-    machine=att3b opsys=usg5-2-2
-  ;;
-
-  ## AT&T 3b1 - The Mighty Unix PC!
-  m68*-att-sysv* )
-    machine=7300 opsys=usg5-2-2
-  ;;
-
-  ## Bull dpx20
-  rs6000-bull-bosx* )
-    machine=ibmrs6000 opsys=aix3-2
-  ;;
-
-  ## Bull dpx2
-  m68*-bull-sysv3* )
-    machine=dpx2 opsys=usg5-3
-  ;;
-
-  ## Bull sps7
-  m68*-bull-sysv2* )
-    machine=sps7 opsys=usg5-2
-  ;;
-
-  ## CCI 5/32, 6/32 -- see "Tahoe".
-
-  ## Celerity
-  ## I don't know what configuration name to use for this; config.sub
-  ## doesn't seem to know anything about it.  Hey, Celerity users, get
-  ## in touch with us!
-  celerity-celerity-bsd* )
-    machine=celerity opsys=bsd4-2
-  ;;
-
-  ## Clipper
-  ## What operating systems does this chip run that Emacs has been
-  ## tested on?
-  clipper-* )
-    machine=clipper
-    ## We'll use the catch-all code at the bottom to guess the
-    ## operating system.
-  ;;
-
-  ## Compaq Nonstop
-  mips-compaq-nonstopux* )
-    machine=nonstopux opsys=nonstopux
-    ;;
-
-  ## Convex
-  *-convex-bsd* | *-convex-convexos* )
-    machine=convex opsys=bsd4-3
-    ## Prevents spurious white space in makefiles - d.m.cooke@larc.nasa.gov
-    NON_GNU_CPP="cc -E -P"
-  ;;
-
-  ## Cubix QBx/386
-  i[3456]86-cubix-sysv* )
-    machine=intel386 opsys=usg5-3
-  ;;
-
-  ## Cydra 5
-  cydra*-cydrome-sysv* )
-    machine=cydra5 opsys=usg5-3
-  ;;
-
-  ## Data General AViiON Machines
-  ## DG changed naming conventions with the release of 5.4.4.10, they
-  ## dropped the initial 5.4 but left the intervening R.  Because of the
-  ## R this shouldn't conflict with older versions of the OS (which I
-  ## think were named like dgux4.*). In addition, DG new AViiONs series
-  ## uses either Motorola M88k or Intel Pentium CPUs.
-  m88k-dg-dguxR4.* | m88k-dg-dgux4* )
-    machine=aviion opsys=dgux4
-  ;;
-  m88k-dg-dgux5.4R3* | m88k-dg-dgux5.4.3* )
-    ## This name is dgux5-4-3 instead of dgux5-4r3
-    ## to avoid a file name conflict on MSDOS.
-    machine=aviion opsys=dgux5-4-3
-  ;;
-  m88k-dg-dgux5.4R2* | m88k-dg-dgux5.4.2* )
-    machine=aviion opsys=dgux5-4r2
-  ;;
-  m88k-dg-dgux* )
-    machine=aviion opsys=dgux
-  ;;
-
-  ## Data General AViiON Intel (x86) Machines
-  ## Exists from 5.4.3 (current i586-dg-dguxR4.11)
-  ## Ehud Karni, 1998-may-30, ehud@unix.simonwiesel.co.il
-  i[345]86-dg-dguxR4* )
-    machine=aviion-intel opsys=dgux4
-  ;;
-
-  ## DECstations
-  mips-dec-ultrix[0-3].* | mips-dec-ultrix4.0* | mips-dec-bsd4.2* )
-    machine=pmax opsys=bsd4-2
-  ;;
-  mips-dec-ultrix4.[12]* | mips-dec-bsd* )
-    machine=pmax opsys=bsd4-3
-  ;;
-  mips-dec-ultrix* )
-    machine=pmax opsys=ultrix4-3
-  ;;
-  mips-dec-osf* )
-    machine=pmax opsys=osf1
-  ;;
-  mips-dec-mach_bsd4.3* )
-    machine=pmax opsys=mach-bsd4-3
-  ;;
-
-  ## Motorola Delta machines
-  m68k-motorola-sysv* | m68000-motorola-sysv* )
-    machine=delta opsys=usg5-3
-    if test -z "`type gnucc | grep 'not found'`"
-    then
-      if test -s /etc/167config
-      then CC="gnucc -m68040"
-      else CC="gnucc -m68881"
-      fi
-    else
-      if test -z "`type gcc | grep 'not found'`"
-      then CC=gcc
-      else CC=cc
-      fi
-    fi
-  ;;
-  m88k-motorola-sysv4* )
-    # jbotte@bnr.ca says that UNIX_System_V <hostName> 4.0 R40V4.3 m88k mc88110
-    # needs POSIX_SIGNALS and therefore needs usg5-4-2.
-    # I hope there are not other 4.0 versions for this machine
-    # which really need usg5-4 instead.
-    machine=delta88k opsys=usg5-4-2
-  ;;
-  m88k-motorola-sysv* | m88k-motorola-m88kbcs* )
-    machine=delta88k opsys=usg5-3
-  ;;
-
-  ## Dual machines
-  m68*-dual-sysv* )
-    machine=dual opsys=usg5-2
-  ;;
-  m68*-dual-uniplus* )
-    machine=dual opsys=unipl5-2
-  ;;
-
-  ## Elxsi 6400
-  elxsi-elxsi-sysv* )
-    machine=elxsi opsys=usg5-2
-  ;;
-
-  ## Encore machines
-  ns16k-encore-bsd* )
-    machine=ns16000 opsys=umax
-  ;;
-
-  ## The GEC 63 - apparently, this port isn't really finished yet.
-  #  I'm sure we finished off the last of the machines, though.  -- fx
-
-  ## Gould Power Node and NP1
-  pn-gould-bsd4.2* )
-    machine=gould opsys=bsd4-2
-  ;;
-  pn-gould-bsd4.3* )
-    machine=gould opsys=bsd4-3
-  ;;
-  np1-gould-bsd* )
-    machine=gould-np1 opsys=bsd4-3
-  ;;
-
-  ## Harris Night Hawk machines running CX/UX (a 5000 looks just like a 4000
-  ## as far as Emacs is concerned).
-  m88k-harris-cxux* )
-    # Build needs to be different on 7.0 and later releases
-    case "`uname -r`" in
-       [56].[0-9] ) machine=nh4000 opsys=cxux ;;
-       [7].[0-9] ) machine=nh4000 opsys=cxux7 ;;
-    esac
-    NON_GNU_CPP="/lib/cpp"
-  ;;
-  ## Harris ecx or gcx running CX/UX (Series 1200, Series 3000)
-  m68k-harris-cxux* )
-    machine=nh3000 opsys=cxux
-  ;;
-  ## Harris power pc NightHawk running Power UNIX (Series 6000)
-  powerpc-harris-powerunix )
-    machine=nh6000 opsys=powerunix
-    NON_GNU_CPP="cc -Xo -E -P"
-  ;;
-  ## SR2001/SR2201 running HI-UX/MPP
-  hppa1.1-hitachi-hiuxmpp* )
-    machine=sr2k opsys=hiuxmpp
-  ;;
-  hppa1.1-hitachi-hiuxwe2* )
-    machine=sr2k opsys=hiuxwe2
-  ;;
-  ## Honeywell XPS100
-  xps*-honeywell-sysv* )
-    machine=xps100 opsys=usg5-2
-  ;;
-
-  ## HP 9000 series 200 or 300
-  m68*-hp-bsd* )
-    machine=hp9000s300 opsys=bsd4-3
-  ;;
-  ## HP/UX 7, 8, 9, and 10 are supported on these machines.
-  m68*-hp-hpux* )
-    case "`uname -r`" in
-      ## Someone's system reports A.B8.05 for this.
-      ## I wonder what other possibilities there are.
-      *.B8.* ) machine=hp9000s300 opsys=hpux8 ;;
-      *.08.* ) machine=hp9000s300 opsys=hpux8 ;;
-      *.09.* ) machine=hp9000s300 opsys=hpux9 ;;
-      *.1[0-9].* ) machine=hp9000s300 opsys=hpux9shr ;;
-      *) machine=hp9000s300 opsys=hpux ;;
-    esac
-  ;;
-
   ## HP 9000 series 700 and 800, running HP/UX
-  hppa*-hp-hpux7* )
-    machine=hp800 opsys=hpux
-  ;;
-  hppa*-hp-hpux8* )
-    machine=hp800 opsys=hpux8
-  ;;
-  hppa*-hp-hpux9shr* )
-    machine=hp800 opsys=hpux9shr
-  ;;
-  hppa*-hp-hpux9* )
-    machine=hp800 opsys=hpux9
-  ;;
   hppa*-hp-hpux10.2* )
     machine=hp800 opsys=hpux10-20
-  ;;
-  hppa*-hp-hpux10* )
-    machine=hp800 opsys=hpux10
   ;;
   hppa*-hp-hpux1[1-9]* )
     machine=hp800 opsys=hpux11
@@ -664,54 +405,12 @@ dnl see the `changequote' comment above.
     machine=hp800 opsys=gnu-linux
   ;;
 
-  ## HP 9000 series 700 and 800, running HP/UX
-  hppa*-hp-hpux* )
-    ## Cross-compilation?  Nah!
-    case "`uname -r`" in
-      ## Someone's system reports A.B8.05 for this.
-      ## I wonder what other possibilities there are.
-      *.B8.* ) machine=hp800 opsys=hpux8 ;;
-      *.08.* ) machine=hp800 opsys=hpux8 ;;
-      *.09.* ) machine=hp800 opsys=hpux9 ;;
-      *) machine=hp800 opsys=hpux10 ;;
-    esac
-  ;;
-  hppa*-*-nextstep* )
-    machine=hp800 opsys=nextstep
-  ;;
-
-  ## Orion machines
-  orion-orion-bsd* )
-    machine=orion opsys=bsd4-2
-  ;;
-  clipper-orion-bsd* )
-    machine=orion105 opsys=bsd4-2
-  ;;
-
   ## IBM machines
-  i[3456]86-ibm-aix1.1* )
-    machine=ibmps2-aix opsys=usg5-2-2
-  ;;
-  i[3456]86-ibm-aix1.[23]* | i[3456]86-ibm-aix* )
-    machine=ibmps2-aix opsys=usg5-3
-  ;;
-  i370-ibm-aix*)
-    machine=ibm370aix opsys=usg5-3
-  ;;
   s390-*-linux-gnu* )
     machine=ibms390 opsys=gnu-linux
   ;;
   s390x-*-linux-gnu* )
     machine=ibms390x opsys=gnu-linux
-  ;;
-  rs6000-ibm-aix3.1* | powerpc-ibm-aix3.1*  )
-    machine=ibmrs6000 opsys=aix3-1
-  ;;
-  rs6000-ibm-aix3.2.5 | powerpc-ibm-aix3.2.5 )
-    machine=ibmrs6000 opsys=aix3-2-5
-  ;;
-  rs6000-ibm-aix4.1* | powerpc-ibm-aix4.1*  )
-    machine=ibmrs6000 opsys=aix4-1
   ;;
   rs6000-ibm-aix4.2* | powerpc-ibm-aix4.2*  )
     machine=ibmrs6000 opsys=aix4-2
@@ -722,94 +421,8 @@ dnl see the `changequote' comment above.
   rs6000-ibm-aix5* | powerpc-ibm-aix5*  )
     machine=ibmrs6000 opsys=aix4-2
   ;;
-  rs6000-ibm-aix4.0* | powerpc-ibm-aix4.0*  )
-    machine=ibmrs6000 opsys=aix4
-  ;;
-  rs6000-ibm-aix4* | powerpc-ibm-aix4*  )
-    machine=ibmrs6000 opsys=aix4-1
-  ;;
-  rs6000-ibm-aix* | powerpc-ibm-aix* )
-    machine=ibmrs6000 opsys=aix3-2
-  ;;
-  romp-ibm-bsd4.3* )
-    machine=ibmrt opsys=bsd4-3
-  ;;
-  romp-ibm-bsd4.2* )
-    machine=ibmrt opsys=bsd4-2
-  ;;
-  romp-ibm-aos4.3* )
-    machine=ibmrt opsys=bsd4-3
-  ;;
-  romp-ibm-aos4.2* )
-    machine=ibmrt opsys=bsd4-2
-  ;;
-  romp-ibm-aos* )
-    machine=ibmrt opsys=bsd4-3
-  ;;
-  romp-ibm-bsd* )
-    machine=ibmrt opsys=bsd4-3
-  ;;
-  romp-ibm-aix* )
-    machine=ibmrt-aix opsys=usg5-2-2
-  ;;
-
-  ## Integrated Solutions `Optimum V'
-  m68*-isi-bsd4.2* )
-    machine=isi-ov opsys=bsd4-2
-  ;;
-  m68*-isi-bsd4.3* )
-    machine=isi-ov opsys=bsd4-3
-  ;;
-
-  ## Intel 386 machines where we do care about the manufacturer
-  i[3456]86-intsys-sysv* )
-    machine=is386 opsys=usg5-2-2
-  ;;
-
-  ## Prime EXL
-  i[3456]86-prime-sysv* )
-    machine=i386 opsys=usg5-3
-  ;;
-
-  ## Sequent Symmetry running Dynix
-  i[3456]86-sequent-bsd* )
-    machine=symmetry opsys=bsd4-3
-  ;;
-
-  ## Sequent Symmetry running ptx 4, which is a modified SVR4.
-  i[3456]86-sequent-ptx4* | i[3456]86-sequent-sysv4* )
-    machine=sequent-ptx opsys=ptx4
-    NON_GNU_CPP=/lib/cpp
-  ;;
-
-  ## Sequent Symmetry running DYNIX/ptx
-  ## Use the old cpp rather than the newer ANSI one.
-  i[3456]86-sequent-ptx* )
-    machine=sequent-ptx opsys=ptx
-    NON_GNU_CPP="/lib/cpp"
-  ;;
-
-  ## ncr machine running svr4.3.
-  i[3456]86-ncr-sysv4.3 )
-    machine=ncr386 opsys=usg5-4-3
-  ;;
-
-  ## Unspecified sysv on an ncr machine defaults to svr4.2.
-  ## (Plain usg5-4 doesn't turn on POSIX signals, which we need.)
-  i[3456]86-ncr-sysv* )
-    machine=ncr386 opsys=usg5-4-2
-  ;;
-
-  ## Intel Paragon OSF/1
-  i860-intel-osf1* )
-    machine=paragon opsys=osf1 NON_GNU_CPP=/usr/mach/lib/cpp
-  ;;
-
-  ## Intel 860
-  i860-*-sysv4* )
-    machine=i860 opsys=usg5-4
-    NON_GNU_CC="/bin/cc" # Ie, not the one in /usr/ucb/cc.
-    NON_GNU_CPP="/usr/ccs/lib/cpp" # cc -E tokenizes macro expansion.
+  rs6000-ibm-aix6* | powerpc-ibm-aix6*  )
+    machine=ibmrs6000 opsys=aix4-2
   ;;
 
   ## Macintosh PowerPC
@@ -817,123 +430,8 @@ dnl see the `changequote' comment above.
     machine=macppc opsys=gnu-linux
   ;;
 
-  ## Masscomp machines
-  m68*-masscomp-rtu* )
-    machine=masscomp opsys=rtu
-  ;;
-
-  ## Megatest machines
-  m68*-megatest-bsd* )
-    machine=mega68 opsys=bsd4-2
-  ;;
-
-  ## Workstations sold by MIPS
-  ## This is not necessarily all workstations using the MIPS processor -
-  ## Irises are produced by SGI, and DECstations by DEC.
-
-  ## etc/MACHINES lists mips.h and mips4.h as possible machine files,
-  ## and usg5-2-2 and bsd4-3 as possible OS files.  The only guidance
-  ## it gives for choosing between the alternatives seems to be "Use
-  ## -machine=mips4 for RISCOS version 4; use -opsystem=bsd4-3 with
-  ## the BSD world."  I'll assume that these are instructions for
-  ## handling two odd situations, and that every other situation
-  ## should use mips.h and usg5-2-2, they being listed first.
-  mips-mips-usg* )
-    machine=mips4
-    ## Fall through to the general code at the bottom to decide on the OS.
-  ;;
-  mips-mips-riscos4* )
-    machine=mips4 opsys=bsd4-3
-    NON_GNU_CC="cc -systype bsd43"
-    NON_GNU_CPP="cc -systype bsd43 -E"
-  ;;
-  mips-mips-riscos5* )
-    machine=mips4 opsys=riscos5
-    NON_GNU_CC="cc -systype bsd43"
-    NON_GNU_CPP="cc -systype bsd43 -E"
-  ;;
-  mips-mips-bsd* )
-    machine=mips opsys=bsd4-3
-  ;;
-  mips-mips-* )
-    machine=mips opsys=usg5-2-2
-  ;;
-
-  ## NeXT
-  m68*-next-* | m68k-*-nextstep* )
-    machine=m68k opsys=nextstep
-  ;;
-
-  ## The complete machine from National Semiconductor
-  ns32k-ns-genix* )
-    machine=ns32000 opsys=usg5-2
-  ;;
-
-  ## NCR machines
-  m68*-ncr-sysv2* | m68*-ncr-sysvr2* )
-    machine=tower32 opsys=usg5-2-2
-  ;;
-  m68*-ncr-sysv3* | m68*-ncr-sysvr3* )
-    machine=tower32v3 opsys=usg5-3
-  ;;
-
-  ## NEC EWS4800
-  mips-nec-sysv4*)
-  machine=ews4800 opsys=ux4800
-  ;;
-
-  ## Nixdorf Targon 31
-  m68*-nixdorf-sysv* )
-    machine=targon31 opsys=usg5-2-2
-  ;;
-
-  ## Nu (TI or LMI)
-  m68*-nu-sysv* )
-    machine=nu opsys=usg5-2
-  ;;
-
-  ## Plexus
-  m68*-plexus-sysv* )
-    machine=plexus opsys=usg5-2
-  ;;
-
-  ## Pyramid machines
-  ## I don't really have any idea what sort of processor the Pyramid has,
-  ## so I'm assuming it is its own architecture.
-  pyramid-pyramid-bsd* )
-    machine=pyramid opsys=bsd4-2
-  ;;
-
-  ## Sequent Balance
-  ns32k-sequent-bsd4.2* )
-    machine=sequent opsys=bsd4-2
-  ;;
-  ns32k-sequent-bsd4.3* )
-    machine=sequent opsys=bsd4-3
-  ;;
-
-  ## Siemens Nixdorf
-  mips-siemens-sysv* | mips-sni-sysv*)
-    machine=mips-siemens opsys=usg5-4
-    NON_GNU_CC=/usr/ccs/bin/cc
-    NON_GNU_CPP=/usr/ccs/lib/cpp
-  ;;
-
   ## Silicon Graphics machines
-  ## Iris 2500 and Iris 2500 Turbo (aka the Iris 3030)
-  m68*-sgi-iris3.5* )
-    machine=irist opsys=iris3-5
-  ;;
-  m68*-sgi-iris3.6* | m68*-sgi-iris*)
-    machine=irist opsys=iris3-6
-  ;;
   ## Iris 4D
-  mips-sgi-irix3* )
-    machine=iris4d opsys=irix3-3
-  ;;
-  mips-sgi-irix4* )
-    machine=iris4d opsys=irix4-0
-  ;;
   mips-sgi-irix6.5 )
     machine=iris4d opsys=irix6-5
     # Without defining _LANGUAGE_C, things get masked out in the headers
@@ -942,87 +440,24 @@ dnl see the `changequote' comment above.
     NON_GNU_CPP="/lib/cpp -D_LANGUAGE_C"
     NON_GCC_TEST_OPTIONS="-D_LANGUAGE_C"
   ;;
-  mips-sgi-irix6* )
-    machine=iris4d opsys=irix6-0
-    # It's not clear whether -D_LANGUAGE_C is necessary as it is for 6.5,
-    # but presumably it does no harm.
-    NON_GNU_CPP="/lib/cpp -D_LANGUAGE_C"
-    # -32 probably isn't necessary in later v.6s -- anyone know which?
-    NON_GCC_TEST_OPTIONS=-32
-  ;;
-  mips-sgi-irix5.[01]* )
-    machine=iris4d opsys=irix5-0
-  ;;
-  mips-sgi-irix5* | mips-sgi-irix* )
-    machine=iris4d opsys=irix5-2
-  ;;
-
-  ## SONY machines
-  m68*-sony-bsd4.2* )
-    machine=news opsys=bsd4-2
-  ;;
-  m68*-sony-bsd4.3* )
-    machine=news opsys=bsd4-3
-  ;;
-  m68*-sony-newsos3* | m68*-sony-news3*)
-    machine=news opsys=bsd4-3
-  ;;
-  mips-sony-bsd* | mips-sony-newsos4* | mips-sony-news4*)
-    machine=news-risc opsys=bsd4-3
-  ;;
-  mips-sony-newsos6* )
-    machine=news-r6 opsys=newsos6
-  ;;
-  mips-sony-news* )
-    machine=news-risc opsys=newsos5
-  ;;
-
-  ## Stride
-  m68*-stride-sysv* )
-    machine=stride opsys=usg5-2
-  ;;
 
   ## Suns
   sparc-*-linux-gnu* | sparc64-*-linux-gnu* )
     machine=sparc opsys=gnu-linux
   ;;
 
-  *-auspex-sunos* | *-sun-sunos* | *-sun-bsd* | *-sun-solaris* \
-    | i[3456]86-*-solaris2* | i[3456]86-*-sunos5* | powerpc*-*-solaris2* \
-    | rs6000-*-solaris2*)
+  *-sun-solaris* \
+    | i[3456]86-*-solaris2* | i[3456]86-*-sunos5* \
+    | x86_64-*-solaris2*    | x86_64-*-sunos5*    \
+    | powerpc*-*-solaris2*  | rs6000-*-solaris2*)
     case "${canonical}" in
-      m68*-sunos1* )	machine=sun1 ;;
-      m68*-sunos2* )	machine=sun2 ;;
-      m68* )		machine=sun3 ;;
-      i[3456]86-sun-sunos[34]* )	machine=sun386 ;;
       i[3456]86-*-* )     machine=intel386 ;;
       amd64-*-*|x86_64-*-*)	machine=amdx86-64 ;;
-      powerpcle* )      machine=powerpcle ;;
       powerpc* | rs6000* )  machine=ibmrs6000 ;;
       sparc* )		machine=sparc ;;
       * )		unported=yes ;;
     esac
     case "${canonical}" in
-      ## The Sun386 didn't get past 4.0.
-      i[3456]86-*-sunos4	  ) opsys=sunos4-0 ;;
-      *-sunos4.0*	  ) opsys=sunos4-0 ;;
-      *-sunos4.1.[3-9]*noshare )
-		## This name is sunos413 instead of sunos4-1-3
-		## to avoid a file name conflict on MSDOS.
-		opsys=sunos413
-		NON_GNU_CPP=/usr/lib/cpp
-		NON_GCC_TEST_OPTIONS=-Bstatic
-		GCC_TEST_OPTIONS=-static
-		;;
-      *-sunos4.1.[3-9]* | *-sunos4shr*)
-		opsys=sunos4shr
-		NON_GNU_CPP=/usr/lib/cpp
-		;;
-      *-sunos4* | *-sunos )
-		opsys=sunos4-1
-		NON_GCC_TEST_OPTIONS=-Bstatic
-		GCC_TEST_OPTIONS=-static
-		;;
       *-sunos5.3* | *-solaris2.3* )
 		opsys=sol2-3
 		NON_GNU_CPP=/usr/ccs/lib/cpp
@@ -1042,18 +477,16 @@ dnl see the `changequote' comment above.
 		NON_GNU_CPP=/usr/ccs/lib/cpp
 		RANLIB="ar -ts"
 		;;
-      *-sunos5* | *-solaris* )
+      *-sunos5.[7-9]* | *-solaris2.[7-9]* )
 		opsys=sol2-6
-## FIXME: make this into a proper fix that checks the compiler type,
-## rather than relying on path. Or is /usr/ccs/lib/cpp a bad default now?
-		if [ "x$CC" = x/opt/SUNWspro/bin/cc ]; then
-		  ## -Xs prevents spurious whitespace.
-		  NON_GNU_CPP="/opt/SUNWspro/bin/cc -E -Xs"
-		else
-		  NON_GNU_CPP=/usr/ccs/lib/cpp
-		fi
+		emacs_check_sunpro_c=yes
+		NON_GNU_CPP=/usr/ccs/lib/cpp
 		;;
-      *			  ) opsys=bsd4-2   ;;
+      *-sunos5* | *-solaris* )
+		opsys=sol2-10
+		emacs_check_sunpro_c=yes
+		NON_GNU_CPP=/usr/ccs/lib/cpp
+		;;
     esac
     ## Watch out for a compiler that we know will not work.
     case "${canonical}" in
@@ -1067,78 +500,14 @@ dnl see the `changequote' comment above.
       *) ;;
     esac
   ;;
-  sparc-*-nextstep* )
-    machine=sparc opsys=nextstep
-  ;;
-
-  ## Tadpole 68k
-  m68*-tadpole-sysv* )
-    machine=tad68k opsys=usg5-3
-  ;;
-
-  ## Tahoe machines
-  tahoe-tahoe-bsd4.2* )
-    machine=tahoe opsys=bsd4-2
-  ;;
-  tahoe-tahoe-bsd4.3* )
-    machine=tahoe opsys=bsd4-3
-  ;;
-
-  ## Tandem Integrity S2
-  mips-tandem-sysv* )
-    machine=tandem-s2 opsys=usg5-3
-  ;;
-
-  ## Tektronix XD88
-  m88k-tektronix-sysv3* )
-  machine=tekxd88 opsys=usg5-3
-  ;;
-
-  ## Tektronix 16000 box (6130?)
-  ns16k-tektronix-bsd* )
-    machine=ns16000 opsys=bsd4-2
-  ;;
-  ## Tektronix 4300
-  ## src/m/tek4300.h hints that this is a m68k machine.
-  m68*-tektronix-bsd* )
-    machine=tek4300 opsys=bsd4-3
-  ;;
-
-  ## Titan P2 or P3
-  ## We seem to have lost the machine-description file titan.h!
-  titan-titan-sysv* )
-    machine=titan opsys=usg5-3
-  ;;
-
-  ## Ustation E30 (SS5E)
-  m68*-unisys-uniplus* )
-    machine=ustation opsystem=unipl5-2
-  ;;
 
   ## Vaxen.
   vax-dec-* )
     machine=vax
     case "${canonical}" in
-      *-bsd4.1* ) 					opsys=bsd4-1 ;;
-      *-bsd4.2* | *-ultrix[0-3].* | *-ultrix4.0* )	opsys=bsd4-2 ;;
-      *-bsd4.3* | *-ultrix* ) 				opsys=bsd4-3 ;;
-      *-sysv[01]* | *-sysvr[01]* ) 			opsys=usg5-0 ;;
-      *-sysv2* | *-sysvr2* )				opsys=usg5-2 ;;
       *-vms* ) 						opsys=vms ;;
       * ) 						unported=yes
     esac
-  ;;
-
-  ## Whitechapel MG1
-  ns16k-whitechapel-* )
-    machine=mg1
-    ## We don't know what sort of OS runs on these; we'll let the
-    ## operating system guessing code below try.
-  ;;
-
-  ## Wicat
-  m68*-wicat-sysv* )
-    machine=wicat opsys=usg5-2
   ;;
 
   ## IA-64
@@ -1154,30 +523,10 @@ dnl see the `changequote' comment above.
       *-darwin* )               opsys=darwin
                                 CPP="${CC-cc} -E -no-cpp-precomp"
  				;;
-      *-isc1.* | *-isc2.[01]* )	opsys=386-ix ;;
-      *-isc2.2* )		opsys=isc2-2 ;;
-      *-isc4.0* )		opsys=isc4-0 ;;
-      *-isc4.* )		opsys=isc4-1
-				GCC_TEST_OPTIONS=-posix
-				NON_GCC_TEST_OPTIONS=-Xp
-				;;
-      *-isc* )			opsys=isc3-0 ;;
-      *-esix5* )		opsys=esix5r4; NON_GNU_CPP=/usr/lib/cpp ;;
-      *-esix* )			opsys=esix ;;
-      *-xenix* )		opsys=xenix ;;
       *-linux-gnu* )		opsys=gnu-linux ;;
-      *-sco3.2v4* )		opsys=sco4 ; NON_GNU_CPP=/lib/cpp  ;;
-      *-sco3.2v5* )		opsys=sco5
-				NON_GNU_CPP=/lib/cpp
-				# Prevent -belf from being passed to $CPP.
-				# /lib/cpp does not accept it.
-				OVERRIDE_CPPFLAGS=" "
-				;;
       *-sysv4.2uw* )	  	opsys=unixware; NON_GNU_CPP=/lib/cpp ;;
       *-sysv5uw* )	  	opsys=unixware; NON_GNU_CPP=/lib/cpp ;;
       *-sysv5OpenUNIX* )  	opsys=unixware; NON_GNU_CPP=/lib/cpp ;;
-      *-386bsd* )	        opsys=386bsd ;;
-      *-nextstep* )             opsys=nextstep ;;
       ## Otherwise, we'll fall through to the generic opsys code at the bottom.
     esac
   ;;
@@ -1188,20 +537,9 @@ dnl see the `changequote' comment above.
   ;;
 
   ## Mips Linux-based GNU system
-  mips-*-linux-gnu* | mipsel-*-linux-gnu* )
+  mips-*-linux-gnu* | mipsel-*-linux-gnu* \
+    | mips64-*-linux-gnu* | mips64el-*-linux-gnu* )
     machine=mips opsys=gnu-linux
-  ;;
-
-  ## UXP/DS
-  sparc-fujitsu-sysv4* )
-    machine=sparc opsys=uxpds
-    NON_GNU_CPP=/usr/ccs/lib/cpp
-    RANLIB="ar -ts"
-  ;;
-
-  ## UXP/V
-  f301-fujitsu-uxpv4.1)
-    machine=f301 opsys=uxpv
   ;;
 
   ## AMD x86-64 Linux-based GNU system
@@ -1209,10 +547,15 @@ dnl see the `changequote' comment above.
     machine=amdx86-64 opsys=gnu-linux
   ;;
 
-  ## Tensilica Xtensa Linux-based GNU system    
-  xtensa*-*-linux-* )
+  ## Tensilica Xtensa Linux-based GNU system
+  xtensa*-*-linux-gnu* )
     machine=xtensa opsys=gnu-linux
     ;;
+
+  ## SuperH Linux-based GNU system
+  sh[34]*-*-linux-gnu* )
+    machine=sh3 opsys=gnu-linux
+  ;;
 
   * )
     unported=yes
@@ -1228,13 +571,6 @@ esac
 if test x"${opsys}" = x; then
   case "${canonical}" in
     *-gnu* )				opsys=gnu ;;
-    *-bsd4.[01] )			opsys=bsd4-1 ;;
-    *-bsd4.2 )				opsys=bsd4-2 ;;
-    *-bsd4.3 )				opsys=bsd4-3 ;;
-    *-sysv0 | *-sysvr0 )		opsys=usg5-0 ;;
-    *-sysv2 | *-sysvr2 )		opsys=usg5-2 ;;
-    *-sysv2.2 | *-sysvr2.2 )		opsys=usg5-2-2 ;;
-    *-sysv3* | *-sysvr3* )		opsys=usg5-3 ;;
     *-sysv4.2uw* )			opsys=unixware ;;
     *-sysv5uw* )			opsys=unixware ;;
     *-sysv5OpenUNIX* )			opsys=unixware ;;
@@ -1257,30 +593,6 @@ if test x"${opsys}" = x; then
   esac
 fi
 
-### Tests for sytems that we beleive are obsolete and should be desupported.
-
-case "${machine}" in
-     pmax | hp9000s300 | ibm370aix | ncr386 | ews4800 | mips-siemens | powerpcle | tandem-s2 )
-     	  echo "The system that you are configuring on: ${canonical} is considered to be obsolete"
-	  echo "and it is planned to be desupported in the next version of Emacs"
-	  echo "Please email emacs-devel@gnu.org as soon as possible if this system is still in use."
-	  echo "The code is still functional, but you need to edit the 'configure' script and remove the"
-	  echo "exit 33 line.  After that you can run configure again and 'complete' the build."
-	  exit 33
-	  ;;
-esac
-
-case "${opsys}" in
-     bsd386 | bsdos2-1 |  bsdos2 | bsdos3 | bsdos4 | bsd4-1 | bsd4-2 | bsd4-3 | usg5-0 | usg5-2-2 | usg5-2 | usg5-3 | ultrix4-3 | 386bsd | hpux | hpux8 | hpux9 | hpux9shr | hpux10 | aix3-1 | aix3-2-5 | aix3-2 | aix4-1 | nextstep | ux4800 | uxpds | uxpv )
-     	  echo "The system that you are configuring on: ${canonical} is considered to be obsolete"
-	  echo "and it is planned to be desupported in the next version of Emacs"
-	  echo "Please email emacs-devel@gnu.org as soon as possible if this system is still in use."
-	  echo "The code is still functional, but you need to edit the 'configure' script and remove the"
-	  echo "'exit 44' line.  After that you can run 'configure' again and complete the build."
-	  exit 44
-	  ;;
-esac
-
 ]
 dnl quotation ends
 
@@ -1299,16 +611,30 @@ test -n "$CC" && cc_specified=yes
 # Save the value of CFLAGS that the user specified.
 SPECIFIED_CFLAGS="$CFLAGS"
 
-case ${with_gcc} in
-  "yes" ) CC="gcc" GCC=yes ;;
-  "no"  ) : ${CC=cc} ;;
-  * )
-esac
+dnl Sets GCC=yes if using gcc.
 AC_PROG_CC
 
 # On Suns, sometimes $CPP names a directory.
 if test -n "$CPP" && test -d "$CPP"; then
   CPP=
+fi
+
+## If not using gcc, and on Solaris, and no CPP specified, see if
+## using a Sun compiler, which needs -Xs to prevent whitespace.
+if test x"$GCC" != xyes && test x"$emacs_check_sunpro_c" = xyes && \
+ test x"$CPP" = x; then
+  AC_MSG_CHECKING([whether we are using a Sun C compiler])
+  AC_CACHE_VAL(emacs_cv_sunpro_c,
+  [AC_TRY_LINK([],
+[#ifndef __SUNPRO_C
+fail;
+#endif
+], emacs_cv_sunpro_c=yes, emacs_cv_sunpro_c=no)])
+  AC_MSG_RESULT($emacs_cv_sunpro_c)
+
+  if test x"$emacs_cv_sunpro_c" = xyes; then
+    NON_GNU_CPP="$CC -E -Xs"
+  fi
 fi
 
 #### Some systems specify a CPP to use unless we are using GCC.
@@ -1339,8 +665,7 @@ then
 fi
 
 dnl checks for Unix variants
-AC_AIX
-AC_GNU_SOURCE
+AC_USE_SYSTEM_EXTENSIONS
 
 ### Use -Wno-pointer-sign if the compiler supports it
 AC_MSG_CHECKING([whether gcc understands -Wno-pointer-sign])
@@ -1369,6 +694,36 @@ AC_PATH_PROG(INSTALL_INFO, install-info,, /usr/sbin)
 AC_PATH_PROG(INSTALL_INFO, install-info,:, /sbin)
 dnl Don't use GZIP, which is used by gzip for additional parameters.
 AC_PATH_PROG(GZIP_PROG, gzip)
+
+
+## Need makeinfo >= 4.6 (?) to build the manuals.
+AC_PATH_PROG(MAKEINFO, makeinfo, no)
+dnl By this stage, configure has already checked for egrep and set EGREP,
+dnl or exited with an error if no egrep was found.
+if test "$MAKEINFO" != "no" && \
+  test x"`$MAKEINFO --version 2> /dev/null | $EGREP 'texinfo[[^0-9]]*([[1-4]][[0-9]]+|[[5-9]]|4\.[[6-9]]|4\.[[1-5]][[0-9]]+)'`" = x; then
+   MAKEINFO=no
+fi
+
+## Makeinfo is unusual.  For a released Emacs, the manuals are
+## pre-built, and not deleted by the normal clean rules.  makeinfo is
+## therefore in the category of "special tools" not normally required, which
+## configure does not have to check for (eg autoconf itself).
+## In a CVS checkout on the other hand, the manuals are not included.
+## So makeinfo is a requirement to build from CVS, and configure
+## should test for it as it does for any other build requirement.
+## We use the presence of $srcdir/info/emacs to distinguish a release,
+## with pre-built manuals, from a CVS checkout.
+if test "$MAKEINFO" = "no"; then
+  if test "x${with_makeinfo}" = "xno"; then
+    MAKEINFO=off
+  elif ! test -e $srcdir/info/emacs; then
+    AC_MSG_ERROR( [You do not seem to have makeinfo >= 4.6, and your
+source tree does not seem to have pre-built manuals in the `info' directory.
+Either install a suitable version of makeinfo, or re-run configure
+with the `--without-makeinfo' option to build without the manuals.] )
+  fi
+fi
 
 dnl Add our options to ac_link now, after it is set up.
 
@@ -1445,14 +800,10 @@ configure___ c_switch_machine=C_SWITCH_MACHINE
 #define LIB_X11_LIB -lX11
 #endif
 
-#ifndef LIBX11_MACHINE
-#define LIBX11_MACHINE
-#endif
-
 #ifndef LIBX11_SYSTEM
 #define LIBX11_SYSTEM
 #endif
-configure___ LIBX=LIB_X11_LIB LIBX11_MACHINE LIBX11_SYSTEM
+configure___ LIBX=LIB_X11_LIB LIBX11_SYSTEM
 
 #ifdef UNEXEC
 configure___ unexec=UNEXEC
@@ -1554,13 +905,15 @@ dnl Do this early because it can frob feature test macros for Unix-98 &c.
 AC_SYS_LARGEFILE
 
 
-### The standard library on x86-64 GNU/Linux distributions can 
+### The standard library on x86-64 and s390x GNU/Linux distributions can
 ### be located in either /usr/lib64 or /usr/lib.
+### In some rare cases, /usr/lib64 exists but does not contain the
+### relevant files (bug#1287).  Hence test for crtn.o.
 case "${canonical}" in
   x86_64-*-linux-gnu* | s390x-*-linux-gnu* )
-    if test -d /usr/lib64; then
-      AC_DEFINE(HAVE_X86_64_LIB64_DIR, 1,
-        [Define to 1 if the file /usr/lib64 exists.])
+    if test -e /usr/lib64/crtn.o; then
+      AC_DEFINE(HAVE_LIB64_DIR, 1,
+        [Define to 1 if the directory /usr/lib64 exists.])
 fi
 esac
 
@@ -1571,9 +924,7 @@ dnl also defines GSTUFF_PKG_ERRORS on error
 AC_DEFUN([PKG_CHECK_MODULES], [
   succeeded=no
 
-  if test -z "$PKG_CONFIG"; then
-    AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
-  fi
+  AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
 
   if test "$PKG_CONFIG" = "no" ; then
      ifelse([$4], , [AC_MSG_ERROR([
@@ -1629,10 +980,6 @@ if test "${with_sound}" != "no"; then
 
   ALSA_REQUIRED=1.0.0
   ALSA_MODULES="alsa >= $ALSA_REQUIRED"
-  dnl Check if --with-pkg-config-prog has been given.
-  if test "X${with_pkg_config_prog}" != X; then
-    PKG_CONFIG="${with_pkg_config_prog}"
-  fi
   PKG_CHECK_MODULES(ALSA, $ALSA_MODULES, HAVE_ALSA=yes, HAVE_ALSA=no)
   if test $HAVE_ALSA = yes; then
     SAVE_CFLAGS="$CFLAGS"
@@ -1823,6 +1170,16 @@ else
   window_system=x11
 fi
 
+## Workaround for bug in autoconf <= 2.62.
+## http://lists.gnu.org/archive/html/emacs-devel/2008-04/msg01551.html
+## No need to do anything special for these standard directories.
+## This is an experiment, take it out if it causes problems.
+if test -n "${x_libraries}" && test x"${x_libraries}" != xNONE; then
+   
+   x_libraries=`echo :${x_libraries}: | sed -e 's|:/usr/lib64:|:|g' -e 's|:/lib64:|:|g' -e 's|^:||' -e 's|:$||'`
+
+fi
+
 if test "${x_libraries}" != NONE; then
   if test -n "${x_libraries}"; then
     LD_SWITCH_X_SITE=-L`echo ${x_libraries} | sed -e "s/:/ -L/g"`
@@ -1871,25 +1228,59 @@ else
   fi
 fi
 
-HAVE_CARBON=no
-if test "${with_carbon}" != no; then
-  AC_CHECK_HEADER(Carbon/Carbon.h, HAVE_CARBON=yes)
-fi
-if test "${window_system}" = x11 && test "${HAVE_CARBON}" = yes; then
-  if test "${with_carbon+set}" != set \
-     && test "${carbon_appdir_x+set}" != set; then
-    for var in with_x with_x_toolkit with_gtk with_xim \
-               with_xpm with_jpeg with_tiff with_gif with_png; do
-      if eval test \"\${$var+set}\" = set; then
-        HAVE_CARBON=no
-        break
-      fi
-    done
+HAVE_NS=no
+NS_IMPL_COCOA=no
+NS_IMPL_GNUSTEP=no
+tmp_CPPFLAGS="$CPPFLAGS"
+tmp_CFLAGS="$CFLAGS"
+CPPFLAGS="$CPPFLAGS -x objective-c"
+CFLAGS="$CFLAGS -x objective-c"
+if test "${with_ns}" != no; then
+  if test "${opsys}" = darwin; then
+     NS_IMPL_COCOA=yes
+     ns_appdir=`pwd`/nextstep/Emacs.app
+     ns_appbindir=`pwd`/nextstep/Emacs.app/Contents/MacOS
+     ns_appresdir=`pwd`/nextstep/Emacs.app/Contents/Resources
+     ns_appsrc=${srcdir}/nextstep/Cocoa/Emacs.base
+  elif test -f $GNUSTEP_CONFIG_FILE; then
+     NS_IMPL_GNUSTEP=yes
+     ns_appdir=`pwd`/nextstep/Emacs.app
+     ns_appbindir=`pwd`/nextstep/Emacs.app
+     ns_appresdir=`pwd`/nextstep/Emacs.app/Resources
+     ns_appsrc=${srcdir}/nextstep/GNUstep/Emacs.base
+     dnl FIXME sourcing this 3 times in subshells seems inefficient.
+     GNUSTEP_MAKEFILES="$(. $GNUSTEP_CONFIG_FILE; echo $GNUSTEP_MAKEFILES)"
+     GNUSTEP_SYSTEM_HEADERS="$(. $GNUSTEP_CONFIG_FILE; echo $GNUSTEP_SYSTEM_HEADERS)"
+     GNUSTEP_SYSTEM_LIBRARIES="$(. $GNUSTEP_CONFIG_FILE; echo $GNUSTEP_SYSTEM_LIBRARIES)"
+     CPPFLAGS="$CPPFLAGS -I${GNUSTEP_SYSTEM_HEADERS}"
+     CFLAGS="$CFLAGS -I${GNUSTEP_SYSTEM_HEADERS}"
+     REAL_CFLAGS="$REAL_CFLAGS -I${GNUSTEP_SYSTEM_HEADERS}"
+     LDFLAGS="$LDFLAGS -L${GNUSTEP_SYSTEM_LIBRARIES}"
+  fi
+  AC_CHECK_HEADER([AppKit/AppKit.h], [HAVE_NS=yes],
+  		  [AC_MSG_ERROR([`--with-ns' was specified, but the include
+  files are missing or cannot be compiled.])])
+  NS_HAVE_NSINTEGER=yes
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <Foundation/NSObjCRuntime.h>],
+                                     [NSInteger i;])],
+		    ns_have_nsinteger=yes,
+		    ns_have_nsinteger=no)
+  if test $ns_have_nsinteger = no; then
+    NS_HAVE_NSINTEGER=no
   fi
 fi
-if test "${HAVE_CARBON}" = yes; then
-  window_system=mac
+if test "${HAVE_NS}" = yes; then
+  window_system=nextstep
+  with_xft=no
+  # set up packaging dirs
+  exec_prefix=${ns_appbindir}
+  libexecdir=${ns_appbindir}/libexec
+  if test "${EN_NS_SELF_CONTAINED}" = yes; then
+     prefix=${ns_appresdir}
+  fi
 fi
+CFLAGS="$tmp_CFLAGS"
+CPPFLAGS="$tmp_CPPFLAGS"
 
 case "${window_system}" in
   x11 )
@@ -1898,48 +1289,44 @@ case "${window_system}" in
     case "${with_x_toolkit}" in
       athena | lucid ) USE_X_TOOLKIT=LUCID ;;
       motif ) USE_X_TOOLKIT=MOTIF ;;
-dnl      open-look ) USE_X_TOOLKIT=OPEN_LOOK ;;
       gtk ) with_gtk=yes
 dnl Dont set this for GTK.  A lot of tests below assumes Xt when
 dnl USE_X_TOOLKIT is set.
             USE_X_TOOLKIT=none ;;
       no ) USE_X_TOOLKIT=none ;;
-dnl If user did not say whether to use a toolkit,
-dnl make this decision later: use the toolkit if we have X11R5 or newer.
+dnl If user did not say whether to use a toolkit, make this decision later:
+dnl use the toolkit if we have gtk, or X11R5 or newer.
       * ) USE_X_TOOLKIT=maybe ;;
     esac
   ;;
-  mac | none )
+  nextstep | none )
     HAVE_X_WINDOWS=no
     HAVE_X11=no
     USE_X_TOOLKIT=none
   ;;
 esac
 
+if test "$window_system" = none && test "X$with_x" != "Xno"; then
+   AC_CHECK_PROG(HAVE_XSERVER, X, true, false)
+   if test "$HAVE_XSERVER" = true ||
+      test -n "$DISPLAY" ||
+      test "`echo /usr/lib/libX11.*`" != "/usr/lib/libX11.*"; then
+        AC_MSG_ERROR([You seem to be running X, but no X development libraries
+were found.  You should install the relevant development files for X
+and for the toolkit you want, such as Gtk+, Lesstif or Motif.  Also make
+sure you have development files for image handling, i.e.
+tiff, gif, jpeg, png and xpm.
+If you are sure you want Emacs compiled without X window support, pass
+  --without-x
+to configure.])
+   fi
+fi
+
 ### If we're using X11, we should use the X menu package.
 HAVE_MENUS=no
 case ${HAVE_X11} in
   yes ) HAVE_MENUS=yes ;;
 esac
-
-if test "${opsys}" = "hpux9"; then
-  case "${x_libraries}" in
-    *X11R4* )
-      opsysfile="s/hpux9-x11r4.h"
-      ;;
-  esac
-fi
-
-if test "${opsys}" = "hpux9shr"; then
-  case "${x_libraries}" in
-    *X11R4* )
-      opsysfile="s/hpux9shxr4.h"
-      ;;
-  esac
-fi
-
-### Compute the unexec source name from the object name.
-UNEXEC_SRC="`echo ${unexec} | sed 's/\.o/.c/'`"
 
 # Do the opsystem or machine files prohibit the use of the GNU malloc?
 # Assume not, until told otherwise.
@@ -1995,15 +1382,6 @@ dnl FIXME replace main with a function we actually want from this library.
 AC_CHECK_LIB(Xbsd, main, LD_SWITCH_X_SITE="$LD_SWITCH_X_SITE -lXbsd")
 
 AC_CHECK_LIB(pthreads, cma_open)
-
-AC_MSG_CHECKING(for XFree86 in /usr/X386)
-if test -d /usr/X386/include; then
-  HAVE_XFREE386=yes
-  : ${C_SWITCH_X_SITE="-I/usr/X386/include"}
-else
-  HAVE_XFREE386=no
-fi
-AC_MSG_RESULT($HAVE_XFREE386)
 
 dnl Check for need for bigtoc support on IBM AIX
 
@@ -2111,43 +1489,44 @@ fail;
   fi
 fi
 
-if test "${window_system}" = "x11"; then
-  AC_MSG_CHECKING(X11 version 5)
-  AC_CACHE_VAL(emacs_cv_x11_version_5,
-  [AC_TRY_LINK([#include <X11/Xlib.h>],
-[#if XlibSpecificationRelease < 5
-fail;
-#endif
-], emacs_cv_x11_version_5=yes, emacs_cv_x11_version_5=no)])
-  if test $emacs_cv_x11_version_5 = yes; then
-    AC_MSG_RESULT(5 or newer)
-    HAVE_X11R5=yes
-    AC_DEFINE(HAVE_X11R5, 1,
-	      [Define to 1 if you have the X11R5 or newer version of Xlib.])
-  else
-    HAVE_X11R5=no
-    AC_MSG_RESULT(before 5)
+
+### Use -lrsvg-2 if available, unless `--with-rsvg=no' is specified.
+HAVE_RSVG=no
+if test "${HAVE_X11}" = "yes" || test "${HAVE_NS}" = "yes"; then
+  if test "${with_rsvg}" != "no"; then
+    RSVG_REQUIRED=2.11.0
+    RSVG_MODULE="librsvg-2.0 >= $RSVG_REQUIRED"
+
+    PKG_CHECK_MODULES(RSVG, $RSVG_MODULE, :, :)
+    AC_SUBST(RSVG_CFLAGS)
+    AC_SUBST(RSVG_LIBS)
+
+    if test ".${RSVG_CFLAGS}" != "."; then
+      HAVE_RSVG=yes
+      AC_DEFINE(HAVE_RSVG, 1, [Define to 1 if using librsvg.])
+      CFLAGS="$CFLAGS $RSVG_CFLAGS"
+      LIBS="$RSVG_LIBS $LIBS"
+    fi
   fi
 fi
 
+
 HAVE_GTK=no
-if test "${with_gtk}" = "yes" && test "$USE_X_TOOLKIT" = "gtk"; then
-  USE_X_TOOLKIT=none
-fi
-if test "${with_gtk}" = "yes" || test "$USE_X_TOOLKIT" = "gtk"; then
-  if test "$USE_X_TOOLKIT" != "none" && test "$USE_X_TOOLKIT" != "maybe"; then
-    AC_MSG_ERROR([Conflicting options, --with-gtk is incompatible with --with-x-toolkit=${with_x_toolkit}]);
-  fi
+if test "${with_gtk}" = "yes" || test "$USE_X_TOOLKIT" = "maybe"; then
   GLIB_REQUIRED=2.6
   GTK_REQUIRED=2.6
   GTK_MODULES="gtk+-2.0 >= $GTK_REQUIRED glib-2.0 >= $GLIB_REQUIRED"
 
-  dnl Check if --with-pkg-config-prog has been given.
-  if test "X${with_pkg_config_prog}" != X; then
-    PKG_CONFIG="${with_pkg_config_prog}"
-  fi
   dnl Checks for libraries.
-  PKG_CHECK_MODULES(GTK, $GTK_MODULES)
+  PKG_CHECK_MODULES(GTK, $GTK_MODULES, pkg_check_gtk=yes, pkg_check_gtk=no)
+  if test "$pkg_check_gtk" = "no" && test "$USE_X_TOOLKIT" != "maybe"; then
+     AC_MSG_ERROR($GTK_PKG_ERRORS)
+  fi
+fi
+
+
+if test x"$pkg_check_gtk" = xyes; then
+
   AC_SUBST(GTK_CFLAGS)
   AC_SUBST(GTK_LIBS)
   C_SWITCH_X_SITE="$C_SWITCH_X_SITE $GTK_CFLAGS"
@@ -2157,12 +1536,28 @@ if test "${with_gtk}" = "yes" || test "$USE_X_TOOLKIT" = "gtk"; then
   GTK_COMPILES=no
   AC_CHECK_FUNCS(gtk_main, GTK_COMPILES=yes)
   if test "${GTK_COMPILES}" != "yes"; then
-    AC_MSG_ERROR([Gtk+ wanted, but it does not compile, see config.log.  Maybe some x11-devel files missing?]);
+    if test "$USE_X_TOOLKIT" != "maybe"; then
+      AC_MSG_ERROR([Gtk+ wanted, but it does not compile, see config.log.  Maybe some x11-devel files missing?]);
+    fi
+  else
+    HAVE_GTK=yes
+    AC_DEFINE(USE_GTK, 1, [Define to 1 if using GTK.])
+    USE_X_TOOLKIT=none
+    if $PKG_CONFIG --atleast-version=2.10 gtk+-2.0; then
+      :
+    else
+      AC_MSG_WARN([[Your version of Gtk+ will have problems with
+       closing open displays.  This is no problem if you just use
+       one display, but if you use more than one and close one of them
+       Emacs may crash.]])
+      sleep 3
+    fi
   fi
-  
-  HAVE_GTK=yes
-  AC_DEFINE(HAVE_GTK, 1, [Define to 1 if using GTK.])
-  USE_X_TOOLKIT=none
+
+fi
+
+
+if test "${HAVE_GTK}" = "yes"; then
 
   dnl  GTK scrollbars resemble toolkit scrollbars a lot, so to avoid
   dnl  a lot if #ifdef:s, say we have toolkit scrollbars.
@@ -2178,15 +1573,29 @@ if test "${with_gtk}" = "yes" || test "$USE_X_TOOLKIT" = "gtk"; then
     AC_DEFINE(HAVE_GTK_MULTIDISPLAY, 1,
               [Define to 1 if GTK can handle more than one display.])
   fi
-  dnl  Check if we have the old file selection dialog.
-  dnl  If gdk_display_open exists, assume all others are there also.
+
+  dnl  Check if we have the old file selection dialog declared and
+  dnl  in the link library.  In 2.x it may be in the library,
+  dnl  but not declared if deprecated featured has been selected out.
+  dnl  AC_CHECK_DECL checks for a macro, so check for GTK_TYPE_FILE_SELECTION.
   HAVE_GTK_FILE_SELECTION=no
-  AC_CHECK_FUNCS(gtk_file_selection_new, HAVE_GTK_FILE_SELECTION=yes)
+  AC_CHECK_DECL(GTK_TYPE_FILE_SELECTION, HAVE_GTK_FILE_SELECTION=yes,
+                   HAVE_GTK_FILE_SELECTION=no, [AC_INCLUDES_DEFAULT
+#include <gtk/gtk.h>])
+  if test "$HAVE_GTK_FILE_SELECTION" = yes; then
+    AC_CHECK_FUNCS(gtk_file_selection_new, HAVE_GTK_FILE_SELECTION=yes,
+                   HAVE_GTK_FILE_SELECTION=no)
+  fi
 
   dnl  Check if we have the new file chooser dialog
-  dnl  If gdk_display_open exists, assume all others are there also.
   HAVE_GTK_FILE_CHOOSER=no
-  AC_CHECK_FUNCS(gtk_file_chooser_dialog_new, HAVE_GTK_FILE_CHOOSER=yes)
+  AC_CHECK_DECL(GTK_TYPE_FILE_CHOOSER, HAVE_GTK_FILE_CHOOSER=yes,
+                HAVE_GTK_FILE_CHOOSER=no, [AC_INCLUDES_DEFAULT
+#include <gtk/gtk.h>])
+  if test "$HAVE_GTK_FILE_CHOOSER" = yes; then
+    AC_CHECK_FUNCS(gtk_file_chooser_dialog_new, HAVE_GTK_FILE_CHOOSER=yes,
+                   HAVE_GTK_FILE_CHOOSER=no)
+  fi
 
   if test "$HAVE_GTK_FILE_SELECTION" = yes \
      && test "$HAVE_GTK_FILE_CHOOSER" = yes;  then
@@ -2213,62 +1622,58 @@ if test "${with_gtk}" = "yes" || test "$USE_X_TOOLKIT" = "gtk"; then
   fi
 fi
 
-### Link with -lXft if available to work around a bug.
-HAVE_XFT=maybe
-if test "${HAVE_GTK}" = "yes"; then
-  dnl Check if --with-pkg-config-prog has been given.
-  if test "X${with_pkg_config_prog}" != X; then
-    PKG_CONFIG="${with_pkg_config_prog}"
-  fi
-
-  PKG_CHECK_MODULES(XFT, xft >= 0.13.0, , HAVE_XFT=no)
-  if test "$HAVE_XFT" != no; then
-    OLD_CFLAGS="$CPPFLAGS"
-    OLD_CPPFLAGS="$CFLAGS"
-    OLD_LIBS="$LIBS"
-    CPPFLAGS="$CPPFLAGS $XFT_CFLAGS"
-    CFLAGS="$CFLAGS $XFT_CFLAGS"
-    LIBS="$XFT_LIBS $LIBS"
-    AC_CHECK_HEADER(X11/Xft/Xft.h,
-      AC_CHECK_LIB(Xft, XftFontOpen, HAVE_XFT=yes, , $XFT_LIBS))
-
-    if test "${HAVE_XFT}" = "yes"; then
-      AC_DEFINE(HAVE_XFT, 1, [Define to 1 if you have the Xft library.])
-      AC_SUBST(XFT_LIBS)
-      C_SWITCH_X_SITE="$C_SWITCH_X_SITE $XFT_CFLAGS"
-    else
-      CFLAGS="$OLD_CPPFLAGS"
-      CFLAGS="$OLD_CFLAGS"
-      LIBS="$OLD_LIBS"
-    fi
-  fi
+dnl D-Bus has been tested under GNU/Linux only.  Must be adapted for
+dnl other platforms.  Support for higher D-Bus versions than 1.0 is
+dnl also not configured.
+HAVE_DBUS=no
+if test "${with_dbus}" = "yes"; then
+   PKG_CHECK_MODULES(DBUS, dbus-1 >= 1.0, HAVE_DBUS=yes, HAVE_DBUS=no)
+   if test "$HAVE_DBUS" = yes; then
+      AC_DEFINE(HAVE_DBUS, 1, [Define to 1 if using D-Bus.])
+   fi
 fi
 
 dnl Do not put whitespace before the #include statements below.
 dnl Older compilers (eg sunos4 cc) choke on it.
+HAVE_XAW3D=no
 if test x"${USE_X_TOOLKIT}" = xmaybe || test x"${USE_X_TOOLKIT}" = xLUCID; then
-  if test x"${HAVE_X11R5}" = xyes; then
-    AC_MSG_CHECKING(X11 version 5 with Xaw)
-    AC_CACHE_VAL(emacs_cv_x11_version_5_with_xaw,
+  if test "$with_xaw3d" != no; then
+    AC_MSG_CHECKING(for xaw3d)
+    AC_CACHE_VAL(emacs_cv_xaw3d,
+    [AC_TRY_LINK([
+#include <X11/Intrinsic.h>
+#include <X11/Xaw3d/Simple.h>],
+      [],
+      emacs_cv_xaw3d=yes,
+      emacs_cv_xaw3d=no)])
+  else
+    emacs_cv_xaw3d=no
+  fi
+  if test $emacs_cv_xaw3d = yes; then
+    AC_MSG_RESULT([yes; using Lucid toolkit])
+    USE_X_TOOLKIT=LUCID
+    HAVE_XAW3D=yes
+    AC_DEFINE(HAVE_XAW3D, 1,
+              [Define to 1 if you have the Xaw3d library (-lXaw3d).])
+  else
+    AC_MSG_RESULT(no)
+    AC_MSG_CHECKING(for libXaw)
+    AC_CACHE_VAL(emacs_cv_xaw,
     [AC_TRY_LINK([
 #include <X11/Intrinsic.h>
 #include <X11/Xaw/Simple.h>],
       [],
-      emacs_cv_x11_version_5_with_xaw=yes,
-      emacs_cv_x11_version_5_with_xaw=no)])
-    if test $emacs_cv_x11_version_5_with_xaw = yes; then
-      AC_MSG_RESULT([5 or newer, with Xaw; use toolkit by default])
+      emacs_cv_xaw=yes,
+      emacs_cv_xaw=no)])
+    if test $emacs_cv_xaw = yes; then
+      AC_MSG_RESULT([yes; using Lucid toolkit])
       USE_X_TOOLKIT=LUCID
+    elif test x"${USE_X_TOOLKIT}" = xLUCID; then
+      AC_MSG_ERROR([Lucid toolkit requires X11/Xaw include files])
     else
-      if test x"${USE_X_TOOLKIT}" = xLUCID; then
-        AC_MSG_ERROR([Lucid toolkit requires X11/Xaw include files])
-      else
-        AC_MSG_RESULT(before 5 or no Xaw; do not use toolkit by default)
-        USE_X_TOOLKIT=none
-      fi
+      AC_MSG_RESULT([no; do not use toolkit by default])
+      USE_X_TOOLKIT=none
     fi
-  else
-    USE_X_TOOLKIT=none
   fi
 fi
 
@@ -2356,21 +1761,6 @@ Motif version prior to 2.1.
   fi
 fi
 
-### Is -lXaw3d available?
-HAVE_XAW3D=no
-if test "${HAVE_X11}" = "yes"; then
-  if test "${USE_X_TOOLKIT}" != "none" && test "${with_toolkit_scroll_bars}" != "no"; then
-    dnl Fixme: determine what Scrollbar.h needs to avoid compilation
-    dnl errors from the test without the `-'.
-    AC_CHECK_HEADER(X11/Xaw3d/Scrollbar.h,
-	[AC_CHECK_LIB(Xaw3d, XawScrollbarSetThumb, HAVE_XAW3D=yes)], , -)
-    if test "${HAVE_XAW3D}" = "yes"; then
-	AC_DEFINE(HAVE_XAW3D, 1,
-		  [Define to 1 if you have the Xaw3d library (-lXaw3d).])
-    fi
-  fi
-fi
-
 dnl Use toolkit scroll bars if configured for GTK or X toolkit and either
 dnl using Motif or Xaw3d is available, and unless
 dnl --with-toolkit-scroll-bars=no was specified.
@@ -2391,7 +1781,7 @@ if test "${with_toolkit_scroll_bars}" != "no"; then
   elif test "${HAVE_GTK}" = "yes"; then
     AC_DEFINE(USE_TOOLKIT_SCROLL_BARS)
     USE_TOOLKIT_SCROLL_BARS=yes
-  elif test "${HAVE_CARBON}" = "yes"; then
+  elif test "${HAVE_NS}" = "yes"; then
     AC_DEFINE(USE_TOOLKIT_SCROLL_BARS)
     USE_TOOLKIT_SCROLL_BARS=yes
   fi
@@ -2402,8 +1792,8 @@ AC_TRY_COMPILE([
 	  #include <X11/Xlib.h>
 	  #include <X11/Xresource.h>],
 	 [XIMProc  callback;],
-	 HAVE_XIM=yes
-	 AC_DEFINE(HAVE_XIM, 1, [Define to 1 if XIM is available]),
+	 [HAVE_XIM=yes
+	 AC_DEFINE(HAVE_XIM, 1, [Define to 1 if XIM is available])],
 	 HAVE_XIM=no)
 
 dnl `--with-xim' now controls only the initial value of use_xim at run time.
@@ -2448,12 +1838,115 @@ either XPointer or XPointer*.])dnl
   CFLAGS=$late_CFLAGS
 fi
 
+### Start of font-backend (under any platform) section.
+# (nothing here yet -- this is a placeholder)
+### End of font-backend (under any platform) section.
+
+### Start of font-backend (under X11) section.
+if test "${HAVE_X11}" = "yes"; then
+   PKG_CHECK_MODULES(FONTCONFIG, fontconfig >= 2.2.0, HAVE_FC=yes, HAVE_FC=no)
+
+   ## Use -lXft if available, unless `--with-xft=no'.
+   HAVE_XFT=maybe
+    if test "${HAVE_FC}" = "no" || test "x${with_x}" = "xno"; then
+      with_xft="no";
+    fi
+    if test "x${with_xft}" != "xno"; then
+
+      PKG_CHECK_MODULES(XFT, xft >= 0.13.0, , HAVE_XFT=no)
+      if test "$HAVE_XFT" != no; then
+	OLD_CPPFLAGS="$CPPFLAGS"
+	OLD_CFLAGS="$CFLAGS"
+	OLD_LIBS="$LIBS"
+	CPPFLAGS="$CPPFLAGS $XFT_CFLAGS"
+	CFLAGS="$CFLAGS $XFT_CFLAGS"
+	LIBS="$XFT_LIBS $LIBS"
+	AC_CHECK_HEADER(X11/Xft/Xft.h,
+	  AC_CHECK_LIB(Xft, XftFontOpen, HAVE_XFT=yes, , $XFT_LIBS))
+
+	if test "${HAVE_XFT}" = "yes"; then
+	  AC_DEFINE(HAVE_XFT, 1, [Define to 1 if you have the Xft library.])
+	    AC_SUBST(XFT_LIBS)
+	  C_SWITCH_X_SITE="$C_SWITCH_X_SITE $XFT_CFLAGS"
+	else
+	  CPPFLAGS="$OLD_CPPFLAGS"
+	  CFLAGS="$OLD_CFLAGS"
+	  LIBS="$OLD_LIBS"
+	fi                        # "${HAVE_XFT}" = "yes"
+      fi                          # "$HAVE_XFT" != no
+    fi                            # "x${with_xft}" != "xno"
+
+    dnl For the "Does Emacs use" message at the end.
+    if test "$HAVE_XFT" != "yes"; then
+       HAVE_XFT=no
+    fi
+
+
+    HAVE_FREETYPE=no
+    ## We used to allow building with FreeType and without Xft.
+    ## However, the ftx font backend driver is not in good shape.
+    if test "${HAVE_XFT}" = "yes"; then
+      dnl As we use Xft, we anyway use freetype.
+      dnl There's no need for additional CFLAGS and LIBS.
+      HAVE_FREETYPE=yes
+      FONTCONFIG_CFLAGS=
+      FONTCONFIG_LIBS=
+    fi
+
+    HAVE_LIBOTF=no
+    if test "${HAVE_FREETYPE}" = "yes"; then
+      AC_DEFINE(HAVE_FREETYPE, 1,
+		[Define to 1 if using the freetype and fontconfig libraries.])
+      if test "${with_libotf}" != "no"; then
+	PKG_CHECK_MODULES(LIBOTF, libotf, HAVE_LIBOTF=yes, 
+			  HAVE_LIBOTF=no)
+	if test "$HAVE_LIBOTF" = "yes"; then
+	  AC_DEFINE(HAVE_LIBOTF, 1, [Define to 1 if using libotf.])
+	  AC_CHECK_LIB(otf, OTF_get_variation_glyphs,
+		       HAVE_OTF_GET_VARIATION_GLYPHS=yes,
+		       HAVE_OTF_GET_VARIATION_GLYPHS=no)
+	  if test "${HAVE_OTF_GET_VARIATION_GLYPHS}" = "yes"; then
+	    AC_DEFINE(HAVE_OTF_GET_VARIATION_GLYPHS, 1,
+		      [Define to 1 if libotf has OTF_get_variation_glyphs.])
+	  fi
+	fi
+      fi
+    dnl FIXME should there be an error if HAVE_FREETYPE != yes?
+    dnl Does the new font backend require it, or can it work without it?
+    fi
+
+    HAVE_M17N_FLT=no
+    if test "${HAVE_LIBOTF}" = yes; then
+      if test "${with_m17n_flt}" != "no"; then
+	PKG_CHECK_MODULES(M17N_FLT, m17n-flt, HAVE_M17N_FLT=yes, HAVE_M17N_FLT=no)
+	if test "$HAVE_M17N_FLT" = "yes"; then
+	  AC_DEFINE(HAVE_M17N_FLT, 1, [Define to 1 if using libm17n-flt.])
+	fi
+      fi
+    fi
+else
+    HAVE_XFT=no
+    HAVE_FREETYPE=no
+    HAVE_LIBOTF=no
+    HAVE_M17N_FLT=no
+fi
+### End of font-backend (under X11) section.
+
+AC_SUBST(FREETYPE_CFLAGS)
+AC_SUBST(FREETYPE_LIBS)
+AC_SUBST(FONTCONFIG_CFLAGS)
+AC_SUBST(FONTCONFIG_LIBS)
+AC_SUBST(LIBOTF_CFLAGS)
+AC_SUBST(LIBOTF_LIBS)
+AC_SUBST(M17N_FLT_CFLAGS)
+AC_SUBST(M17N_FLT_LIBS)
+
 ### Use -lXpm if available, unless `--with-xpm=no'.
 HAVE_XPM=no
 if test "${HAVE_X11}" = "yes"; then
   if test "${with_xpm}" != "no"; then
     AC_CHECK_HEADER(X11/xpm.h,
-      AC_CHECK_LIB(Xpm, XpmReadFileToPixmap, HAVE_XPM=yes, , -lX11))
+      [AC_CHECK_LIB(Xpm, XpmReadFileToPixmap, HAVE_XPM=yes, , -lX11)])
     if test "${HAVE_XPM}" = "yes"; then
       AC_MSG_CHECKING(for XpmReturnAllocPixels preprocessor define)
       AC_EGREP_CPP(no_return_alloc_pixels,
@@ -2483,7 +1976,7 @@ if test "${HAVE_X11}" = "yes"; then
     dnl Checking for jpeglib.h can lose because of a redefinition of
     dnl  HAVE_STDLIB_H.
     AC_CHECK_HEADER(jerror.h,
-      AC_CHECK_LIB(jpeg, jpeg_destroy_compress, HAVE_JPEG=yes))
+      [AC_CHECK_LIB(jpeg, jpeg_destroy_compress, HAVE_JPEG=yes)])
   fi
 
   AH_TEMPLATE(HAVE_JPEG, [Define to 1 if you have the jpeg library (-ljpeg).])dnl
@@ -2493,7 +1986,7 @@ if test "${HAVE_X11}" = "yes"; then
         [#include <jpeglib.h>
 	 version=JPEG_LIB_VERSION
 ],
-        AC_DEFINE(HAVE_JPEG),
+        [AC_DEFINE(HAVE_JPEG)],
         [AC_MSG_WARN([libjpeg found, but not version 6b or later])
         HAVE_JPEG=no])
   fi
@@ -2521,10 +2014,10 @@ HAVE_TIFF=no
 if test "${HAVE_X11}" = "yes"; then
   if test "${with_tiff}" != "no"; then
     AC_CHECK_HEADER(tiffio.h,
-      tifflibs="-lz -lm"
+      [tifflibs="-lz -lm"
       # At least one tiff package requires the jpeg library.
       if test "${HAVE_JPEG}" = yes; then tifflibs="-ljpeg $tifflibs"; fi
-      AC_CHECK_LIB(tiff, TIFFGetVersion, HAVE_TIFF=yes, , $tifflibs))
+      AC_CHECK_LIB(tiff, TIFFGetVersion, HAVE_TIFF=yes, , $tifflibs)])
   fi
 
   if test "${HAVE_TIFF}" = "yes"; then
@@ -2532,45 +2025,96 @@ if test "${HAVE_X11}" = "yes"; then
   fi
 fi
 
-### Use -lgif if available, unless `--with-gif=no'.
+### Use -lgif or -lungif if available, unless `--with-gif=no'.
 HAVE_GIF=no
-if test "${HAVE_X11}" = "yes"; then
-  if test "${with_gif}" != "no"; then
-    AC_CHECK_HEADER(gif_lib.h,
+if test "${HAVE_X11}" = "yes" && test "${with_gif}" != "no"; then
+  AC_CHECK_HEADER(gif_lib.h,
 # EGifPutExtensionLast only exists from version libungif-4.1.0b1.
 # Earlier versions can crash Emacs.
-      AC_CHECK_LIB(ungif, EGifPutExtensionLast, HAVE_GIF=yes))
+    [AC_CHECK_LIB(gif, EGifPutExtensionLast, HAVE_GIF=yes, try_libungif=yes)])
+
+  if test "$HAVE_GIF" = yes; then
+      ac_gif_lib_name="-lgif"
+  fi
+
+# If gif_lib.h but no libgif, try libungif.
+  if test x"$try_libungif" = xyes; then
+    AC_CHECK_LIB(ungif, EGifPutExtensionLast, HAVE_GIF=yes)
+
+    if test "$HAVE_GIF" = yes; then
+      AC_DEFINE(LIBGIF, -lungif, [Compiler option to link with the gif library (if not -lgif).])
+      ac_gif_lib_name="-lungif"
+    fi
   fi
 
   if test "${HAVE_GIF}" = "yes"; then
-    AC_DEFINE(HAVE_GIF, 1, [Define to 1 if you have the ungif library (-lungif).])
+    AC_DEFINE(HAVE_GIF, 1, [Define to 1 if you have a gif library (default -lgif; otherwise specify with LIBGIF).])
   fi
 fi
 
-dnl Check for malloc/malloc.h on darwin
-AC_CHECK_HEADER(malloc/malloc.h, AC_DEFINE(HAVE_MALLOC_MALLOC_H, 1, [Define to 1 if you have the <malloc/malloc.h> header file.]))
+dnl Check for required libraries.
+if test "${HAVE_X11}" = "yes"; then
+  MISSING=""
+  WITH_NO=""
+  test "${with_xpm}" != "no" && test "${HAVE_XPM}" != "yes" &&
+    MISSING="libXpm" && WITH_NO="--with-xpm=no"
+  test "${with_jpeg}" != "no" && test "${HAVE_JPEG}" != "yes" &&
+    MISSING="$MISSING libjpeg" && WITH_NO="$WITH_NO --with-jpeg=no"
+  test "${with_png}" != "no" && test "${HAVE_PNG}" != "yes" &&
+    MISSING="$MISSING libpng" && WITH_NO="$WITH_NO --with-png=no"
+  test "${with_gif}" != "no" && test "${HAVE_GIF}" != "yes" &&
+    MISSING="$MISSING libgif/libungif" && WITH_NO="$WITH_NO --with-gif=no"
+  test "${with_tiff}" != "no" && test "${HAVE_TIFF}" != "yes" &&
+    MISSING="$MISSING libtiff" && WITH_NO="$WITH_NO --with-tiff=no"
 
-### Use Mac OS X Carbon API to implement GUI.
-if test "${HAVE_CARBON}" = "yes"; then
-  AC_DEFINE(HAVE_CARBON, 1, [Define to 1 if you are using the Carbon API on Mac OS X.])
-  AC_CHECK_HEADERS(AvailabilityMacros.h)
-  ## Specify the install directory
-  carbon_appdir=
-  if test "${carbon_appdir_x}" != ""; then
-    case ${carbon_appdir_x} in
-      y | ye | yes)  carbon_appdir=/Applications ;;
-      * ) carbon_appdir=${carbon_appdir_x} ;;
-    esac
+  if test "X${MISSING}" != X; then
+    AC_MSG_ERROR([The following required libraries were not found:
+    $MISSING
+Maybe some development libraries/packages are missing?
+If you don't want to link with them give
+    $WITH_NO
+as options to configure])
+  fi
+fi
+
+### Use -lgpm if available, unless `--with-gpm=no'.
+HAVE_GPM=no
+if test "${with_gpm}" != "no"; then
+  AC_CHECK_HEADER(gpm.h,
+    [AC_CHECK_LIB(gpm, Gpm_Open, HAVE_GPM=yes)])
+fi
+
+if test "${HAVE_GPM}" = "yes"; then
+  AC_DEFINE(HAVE_GPM, 1, [Define to 1 if you have the gpm library (-lgpm).])
+fi
+
+dnl Check for malloc/malloc.h on darwin
+AC_CHECK_HEADER(malloc/malloc.h, [AC_DEFINE(HAVE_MALLOC_MALLOC_H, 1, [Define to 1 if you have the <malloc/malloc.h> header file.])])
+
+### Use NeXTstep API to implement GUI.
+if test "${HAVE_NS}" = "yes"; then
+  AC_DEFINE(HAVE_NS, 1, [Define to 1 if you are using the NeXTstep API, either GNUstep or Cocoa on Mac OS X.])
+  if test "${NS_IMPL_COCOA}" = "yes"; then
+    AC_DEFINE(NS_IMPL_COCOA, 1, [Define to 1 if you are using NS windowing under MacOS X.])
+    GNU_OBJC_CFLAGS=
+  fi
+  if test "${NS_IMPL_GNUSTEP}" = "yes"; then
+    AC_DEFINE(NS_IMPL_GNUSTEP, 1, [Define to 1 if you are using NS windowing under GNUstep.])
+    GNU_OBJC_CFLAGS="-fgnu-runtime -Wno-import -fconstant-string-class=NSConstantString -DGNUSTEP_BASE_LIBRARY=1 -DGNU_GUI_LIBRARY=1 -DGNU_RUNTIME=1 -DGSWARN -DGSDIAGNOSE"
+  fi
+  if test "${NS_HAVE_NSINTEGER}" = "yes"; then
+    AC_DEFINE(NS_HAVE_NSINTEGER, 1, [Define to 1 if `NSInteger' is defined.])
   fi
   # We also have mouse menus.
   HAVE_MENUS=yes
 fi
 
+
 ### Use session management (-lSM -lICE) if available
 HAVE_X_SM=no
 if test "${HAVE_X11}" = "yes"; then
   AC_CHECK_HEADER(X11/SM/SMlib.h,
-    AC_CHECK_LIB(SM, SmcOpenConnection, HAVE_X_SM=yes, , -lICE))
+    [AC_CHECK_LIB(SM, SmcOpenConnection, HAVE_X_SM=yes, , -lICE)])
 
   if test "${HAVE_X_SM}" = "yes"; then
     AC_DEFINE(HAVE_X_SM, 1, [Define to 1 if you have the SM library (-lSM).])
@@ -2592,6 +2136,13 @@ if test $emacs_cv_netdb_declares_h_errno = yes; then
 fi
 
 AC_FUNC_ALLOCA
+
+dnl src/alloca.c has been removed.  Could also check if $ALLOCA is set?
+dnl FIXME is there an autoconf test that does the right thing, without
+dnl needing to call A_M_E afterwards?
+if test x"$ac_cv_func_alloca_works" != xyes; then
+   AC_MSG_ERROR( [a system implementation of alloca is required] )
+fi
 
 # fmod, logb, and frexp are found in -lm on most systems.
 # On HPUX 9.01, -lm does not contain logb, so check for sqrt.
@@ -2622,13 +2173,14 @@ AC_CHECK_HEADERS(maillock.h)
 
 AC_CHECK_FUNCS(gethostname getdomainname dup2 \
 rename closedir mkdir rmdir sysinfo getrusage get_current_dir_name \
-random lrand48 bcopy bcmp logb frexp fmod rint cbrt ftime res_init setsid \
+random lrand48 bcopy bcmp logb frexp fmod rint cbrt ftime setsid \
 strerror fpathconf select mktime euidaccess getpagesize tzset setlocale \
 utimes getrlimit setrlimit setpgid getcwd getwd shutdown getaddrinfo \
 __fpending mblen mbrlen mbsinit strsignal setitimer ualarm index rindex \
 sendto recvfrom getsockopt setsockopt getsockname getpeername \
 gai_strerror mkstemp getline getdelim mremap memmove fsync sync bzero \
-memset memcmp difftime memcpy mempcpy mblen mbrlen posix_memalign)
+memset memcmp difftime memcpy mempcpy mblen mbrlen posix_memalign \
+cfmakeraw cfsetspeed)
 
 AC_CHECK_HEADERS(sys/un.h)
 
@@ -2666,43 +2218,74 @@ AC_CHECK_FUNCS(getpt)
 # than to expect to find it in ncurses.
 AC_CHECK_LIB(ncurses, tparm)
 
+# Do we have res_init, for detecting changes in /etc/resolv.conf?
+
+resolv=no
+AC_TRY_LINK([#include <netinet/in.h>
+#include <arpa/nameser.h>
+#include <resolv.h>],
+    [return res_init();],
+    have_res_init=yes, have_res_init=no)
+if test "$have_res_init" = no; then
+  OLIBS="$LIBS"
+  LIBS="$LIBS -lresolv"
+  AC_MSG_CHECKING(for res_init with -lresolv)
+  AC_TRY_LINK([#include <netinet/in.h>
+#include <arpa/nameser.h>
+#include <resolv.h>],
+    [return res_init();],
+    have_res_init=yes, have_res_init=no)
+  AC_MSG_RESULT($have_res_init)
+  if test "$have_res_init" = yes ; then
+    resolv=yes
+  fi
+  LIBS="$OLIBS"
+fi
+
+if test "$have_res_init" = yes; then
+  AC_DEFINE(HAVE_RES_INIT, 1, [Define to 1 if res_init is available.])
+fi
+
 # Do we need the Hesiod library to provide the support routines?
-if test "$with_hesiod" = yes ; then
+if test "$with_hesiod" != no ; then
   # Don't set $LIBS here -- see comments above.
-  resolv=no
   AC_CHECK_FUNC(res_send, , [AC_CHECK_FUNC(__res_send, ,
      [AC_CHECK_LIB(resolv, res_send, resolv=yes,
 		  [AC_CHECK_LIB(resolv, __res_send, resolv=yes)])])])
   if test "$resolv" = yes ; then
     RESOLVLIB=-lresolv
-    AC_DEFINE(HAVE_LIBRESOLV, 1,
-	      [Define to 1 if you have the resolv library (-lresolv).])
   else
     RESOLVLIB=
   fi
   AC_CHECK_FUNC(hes_getmailhost, , [AC_CHECK_LIB(hesiod, hes_getmailhost,
-	AC_DEFINE(HAVE_LIBHESIOD, 1,
-		  [Define to 1 if you have the hesiod library (-lhesiod).]),
+	[AC_DEFINE(HAVE_LIBHESIOD, 1,
+		  [Define to 1 if you have the hesiod library (-lhesiod).])],
 	:, $RESOLVLIB)])
 fi
 
+# Do we need libresolv (due to res_init or Hesiod)?
+if test "$resolv" = yes ; then
+  AC_DEFINE(HAVE_LIBRESOLV, 1,
+            [Define to 1 if you have the resolv library (-lresolv).])
+fi
+
 # These tell us which Kerberos-related libraries to use.
-if test "${with_kerberos+set}" = set; then
+if test "${with_kerberos}" != no; then
   AC_CHECK_LIB(com_err, com_err)
   AC_CHECK_LIB(k5crypto, mit_des_cbc_encrypt)
   AC_CHECK_LIB(crypto, mit_des_cbc_encrypt)
   AC_CHECK_LIB(krb5, krb5_init_context)
-  if test "${with_kerberos5+set}" != set; then
+  if test "${with_kerberos5}" = no; then
     AC_CHECK_LIB(des425, des_cbc_encrypt,,
-		 AC_CHECK_LIB(des, des_cbc_encrypt))
+		 [AC_CHECK_LIB(des, des_cbc_encrypt)])
     AC_CHECK_LIB(krb4, krb_get_cred,,
-		 AC_CHECK_LIB(krb, krb_get_cred))
+		 [AC_CHECK_LIB(krb, krb_get_cred)])
   fi
 
-  if test "${with_kerberos5+set}" = set; then
+  if test "${with_kerberos5}" != no; then
     AC_CHECK_HEADERS(krb5.h,
-      AC_CHECK_MEMBERS([krb5_error.text, krb5_error.e_text],,,
-		       [#include <krb5.h>]))
+      [AC_CHECK_MEMBERS([krb5_error.text, krb5_error.e_text],,,
+		        [#include <krb5.h>])])
   else
     AC_CHECK_HEADERS(des.h,,
 		     [AC_CHECK_HEADERS(kerberosIV/des.h,,
@@ -2922,7 +2505,15 @@ AC_SUBST(X_TOOLKIT_TYPE)
 AC_SUBST(machfile)
 AC_SUBST(opsysfile)
 AC_SUBST(GETLOADAVG_LIBS)
-AC_SUBST(carbon_appdir)
+AC_SUBST(ns_appdir)
+AC_SUBST(ns_appbindir)
+AC_SUBST(ns_appresdir)
+AC_SUBST(ns_appsrc)
+AC_SUBST(GNUSTEP_MAKEFILES)
+AC_SUBST(GNUSTEP_SYSTEM_HEADERS)
+AC_SUBST(GNUSTEP_SYSTEM_LIBRARIES)
+AC_SUBST(GNU_OBJC_CFLAGS)
+AC_SUBST(LIB_SRC_EXTRA_INSTALLABLES)
 
 AC_DEFINE_UNQUOTED(EMACS_CONFIGURATION,  "${canonical}",
 		   [Define to the canonical Emacs configuration name.])
@@ -2956,14 +2547,16 @@ if test "${HAVE_X_WINDOWS}" = "yes" ; then
 fi
 if test "${USE_X_TOOLKIT}" != "none" ; then
   AC_DEFINE(USE_X_TOOLKIT, 1, [Define to 1 if using an X toolkit.])
+  if test "${USE_X_TOOLKIT}" = "LUCID"; then
+    AC_DEFINE(USE_LUCID, 1, [Define to 1 if using the Lucid X toolkit.])
+  elif test "${USE_X_TOOLKIT}" = "MOTIF"; then
+    AC_DEFINE(USE_MOTIF, 1, [Define to 1 if using the Motif X toolkit.])
+  fi
 fi
 if test "${HAVE_X11}" = "yes" ; then
   AC_DEFINE(HAVE_X11, 1,
 	    [Define to 1 if you want to use version 11 of X windows.
 	     Otherwise, Emacs expects to use version 10.])
-fi
-if test "${HAVE_XFREE386}" = "yes" ; then
-  AC_DEFINE(HAVE_XFREE386, 1, [Define to 1 if you're using XFree386.])
 fi
 if test "${HAVE_MENUS}" = "yes" ; then
   AC_DEFINE(HAVE_MENUS, 1,
@@ -2981,16 +2574,17 @@ if test "${REL_ALLOC}" = "yes" ; then
 	     buffer space.])
 fi
 
+
 AH_TOP([/* GNU Emacs site configuration template file.
    Copyright (C) 1988, 1993, 1994, 1999, 2000, 2001, 2002, 2004, 2005,
-     2006, 2007, 2008  Free Software Foundation, Inc.
+     2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -2998,9 +2592,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to the
-Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 /* No code in Emacs #includes config.h twice, but some bits of code
@@ -3011,38 +2603,16 @@ Boston, MA 02110-1301, USA.  */
 ])dnl
 
 AH_BOTTOM([
-/* If we're using any sort of window system, define some consequences.  */
-#ifdef HAVE_X_WINDOWS
-#define HAVE_WINDOW_SYSTEM
-#define MULTI_KBOARD
-#define HAVE_MOUSE
-#endif
-
-/* If we're using the Carbon API on Mac OS X, define a few more
-   variables as well.  */
-#ifdef HAVE_CARBON
+/* If we're using X11/Carbon/GNUstep, define some consequences.  */
+#if defined(HAVE_X_WINDOWS) || defined(HAVE_NS)
 #define HAVE_WINDOW_SYSTEM
 #define HAVE_MOUSE
 #endif
-
-/* Define USER_FULL_NAME to return a string
-   that is the user's full name.
-   It can assume that the variable `pw'
-   points to the password file entry for this user.
-
-   At some sites, the pw_gecos field contains
-   the user's full name.  If neither this nor any other
-   field contains the right thing, use pw_name,
-   giving the user's login name, since that is better than nothing.  */
-#define USER_FULL_NAME pw->pw_gecos
 
 /* Define AMPERSAND_FULL_NAME if you use the convention
    that & in the full name stands for the login id.  */
 /* Turned on June 1996 supposing nobody will mind it.  */
 #define AMPERSAND_FULL_NAME
-
-/* We have blockinput.h.  */
-#define DO_BLOCK_INPUT
 
 /* Define HAVE_SOUND if we have sound support.  We know it works
    and compiles only on the specified platforms.   For others,
@@ -3073,38 +2643,33 @@ AH_BOTTOM([
 #define INLINE
 #endif
 
+/* `subprocesses' should be defined if you want to
+   have code for asynchronous subprocesses
+   (as used in M-x compile and M-x shell).
+   Only MSDOS does not support this (it overrides
+   this in its config_opsysfile below).  */
+
+#define subprocesses
+
 /* Include the os and machine dependent files.  */
 #include config_opsysfile
 #include config_machfile
 
-/* Load in the conversion definitions if this system
-   needs them and the source file being compiled has not
-   said to inhibit this.  There should be no need for you
-   to alter these lines.  */
-
-#ifdef SHORTNAMES
-#ifndef NO_SHORTNAMES
-#include "../shortnames/remap.h"
-#endif /* not NO_SHORTNAMES */
-#endif /* SHORTNAMES */
-
-/* If no remapping takes place, static variables cannot be dumped as
-   pure, so don't worry about the `static' keyword. */
-#ifdef NO_REMAP
-#undef static
-#endif
-
-/* Define `subprocesses' should be defined if you want to
-   have code for asynchronous subprocesses
-   (as used in M-x compile and M-x shell).
-   These do not work for some USG systems yet;
-   for the ones where they work, the s/SYSTEM.h file defines this flag.  */
-
-#ifndef VMS
-#ifndef USG
-/* #define subprocesses */
-#endif
-#endif
+/* Set up some defines, C and LD flags for NeXTstep interface on GNUstep.
+  (There is probably a better place to do this, but right now the Cocoa
+   side does this in s/darwin.h and we cannot
+   parallel this exactly since GNUstep is multi-OS. */
+#ifdef HAVE_NS
+#define OTHER_FILES ns-app
+# ifdef NS_IMPL_GNUSTEP
+/* See also .m.o rule in Makefile.in */
+/* FIXME: are all these flags really needed?  Document here why.  */
+#  define C_SWITCH_X_SYSTEM -D_REENTRANT -fPIC -fno-strict-aliasing
+/* GNUstep needs a bit more pure memory.  Of the existing knobs,
+SYSTEM_PURESIZE_EXTRA seems like the least likely to cause problems.  */
+#  define SYSTEM_PURESIZE_EXTRA 30000
+# endif /* NS_IMPL_GNUSTEP */
+#endif /* HAVE_NS */
 
 /* SIGTYPE is the macro we actually use.  */
 #ifndef SIGTYPE
@@ -3217,7 +2782,7 @@ typedef unsigned size_t;
 
 #ifdef HAVE_X11R6
 #define HAVE_X_I18N
-#elif defined HAVE_X11R5 && !defined X11R5_INHIBIT_I18N
+#elif !defined X11R5_INHIBIT_I18N
 #define HAVE_X_I18N
 #endif
 
@@ -3243,9 +2808,9 @@ typedef unsigned size_t;
 #  ifndef GC_SETJMP_WORKS
   /* GC_SETJMP_WORKS is nearly always appropriate for GCC --
      see NON_SAVING_SETJMP in the target descriptions.  */
-  /* Exceptions (see NON_SAVING_SETJMP in target description) are ns32k,
+  /* Exceptions (see NON_SAVING_SETJMP in target description) are
      SCO5 non-ELF (but Emacs specifies ELF) and SVR3 on x86.
-     Fixme: Deal with ns32k, SVR3.  */
+     Fixme: Deal with SVR3.  */
 #    define GC_SETJMP_WORKS 1
 #  endif
 #  ifndef GC_LISP_OBJECT_ALIGNMENT
@@ -3308,16 +2873,26 @@ echo "  Does Emacs use -lXaw3d?                                 ${HAVE_XAW3D}"
 echo "  Does Emacs use -lXpm?                                   ${HAVE_XPM}"
 echo "  Does Emacs use -ljpeg?                                  ${HAVE_JPEG}"
 echo "  Does Emacs use -ltiff?                                  ${HAVE_TIFF}"
-echo "  Does Emacs use -lungif?                                 ${HAVE_GIF}"
+echo "  Does Emacs use a gif library?                           ${HAVE_GIF} $ac_gif_lib_name"
 echo "  Does Emacs use -lpng?                                   ${HAVE_PNG}"
-echo "  Does Emacs use X toolkit scroll bars?                   ${USE_TOOLKIT_SCROLL_BARS}"
+echo "  Does Emacs use -lrsvg-2?                                ${HAVE_RSVG}"
+echo "  Does Emacs use -lgpm?                                   ${HAVE_GPM}"
+echo "  Does Emacs use -ldbus?                                  ${HAVE_DBUS}"
+
+echo "  Does Emacs use -lfreetype?                              ${HAVE_FREETYPE}"
+echo "  Does Emacs use -lm17n-flt?                              ${HAVE_M17N_FLT}"
+echo "  Does Emacs use -lotf?                                   ${HAVE_LIBOTF}"
+echo "  Does Emacs use -lxft?                                   ${HAVE_XFT}"
+
+echo "  Does Emacs use toolkit scroll bars?                     ${USE_TOOLKIT_SCROLL_BARS}"
 echo
 
 if test $USE_XASSERTS = yes; then
    echo "  Compiling with asserts turned on."
    CPPFLAGS="$CPPFLAGS -DXASSERTS=1"
-   echo
 fi
+
+echo
 
 if test "$USE_X_TOOLKIT" = GTK; then
   case "$canonical" in
@@ -3329,6 +2904,25 @@ if test "$USE_X_TOOLKIT" = GTK; then
   esac
 fi
 
+if test "$HAVE_NS" = "yes"; then
+   echo
+   echo "You must run \"make install\" in order to test the built application.
+The installed application will go to nextstep/Emacs.app and can be
+run or moved from there."
+   if test "$EN_NS_SELF_CONTAINED" = "yes"; then
+      echo "The application will be fully self-contained."
+    else
+      echo "The lisp resources for the application will be installed under ${prefix}.
+You may need to run \"make install\" with sudo.  The application will fail
+to run if these resources are not installed."
+   fi
+   echo
+fi
+
+if test "$HAVE_DBUS" = yes && test "${opsys}" != "gnu-linux"; then
+  echo "D-Bus integration has been tested for GNU/Linux only."
+  echo
+fi
 
 
 # Remove any trailing slashes in these variables.
@@ -3358,8 +2952,9 @@ AC_EGREP_CPP(yes..yes,
 	CPP_NEED_TRADITIONAL=yes)
 
 AC_OUTPUT(Makefile lib-src/Makefile.c:lib-src/Makefile.in oldXMenu/Makefile \
-	man/Makefile lwlib/Makefile src/Makefile.c:src/Makefile.in \
-	lisp/Makefile lispref/Makefile lispintro/Makefile leim/Makefile, [
+	doc/emacs/Makefile doc/misc/Makefile doc/lispintro/Makefile \
+	doc/lispref/Makefile src/Makefile.c:src/Makefile.in \
+	lwlib/Makefile lisp/Makefile leim/Makefile, [
 
 ### Make the necessary directories, if they don't exist.
 for dir in etc lisp ; do
@@ -3416,9 +3011,6 @@ if test ! -f src/.gdbinit && test -f $srcdir/src/.gdbinit; then
   echo creating src/.gdbinit
   echo source $srcdir/src/.gdbinit > src/.gdbinit
 fi
-
-# This is how we know whether to re-run configure in certain cases.
-touch src/config.stamp
 
 ], [GCC="$GCC" NON_GNU_CPP="$NON_GNU_CPP" CPP="$CPP" CPP_NEED_TRADITIONAL="$CPP_NEED_TRADITIONAL" CPPFLAGS="$CPPFLAGS" cpp_undefs="$cpp_undefs"])
 

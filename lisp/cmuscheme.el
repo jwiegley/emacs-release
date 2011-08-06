@@ -1,7 +1,7 @@
 ;;; cmuscheme.el --- Scheme process in a buffer. Adapted from tea.el
 
 ;; Copyright (C) 1988, 1994, 1997, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Olin Shivers <olin.shivers@cs.cmu.edu>
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -67,30 +65,30 @@
 ;; invited to port xscheme functionality on top of comint mode...
 
 ;;; CHANGE LOG
-;;; ===========================================================================
-;;; 8/88 Olin
-;;; Created.
-;;;
-;;; 2/15/89 Olin
-;;; Removed -emacs flag from process invocation. It's only useful for
-;;; cscheme, and makes cscheme assume it's running under xscheme.el,
-;;; which messes things up royally. A bug.
-;;;
-;;; 5/22/90 Olin
-;;; - Upgraded to use comint-send-string and comint-send-region.
-;;; - run-scheme now offers to let you edit the command line if
-;;;   you invoke it with a prefix-arg. M-x scheme is redundant, and
-;;;   has been removed.
-;;; - Explicit references to process "scheme" have been replaced with
-;;;   (scheme-proc). This allows better handling of multiple process bufs.
-;;; - Added scheme-send-last-sexp, bound to C-x C-e. A gnu convention.
-;;; - Have not added process query facility a la cmulisp.el's lisp-show-arglist
-;;;   and friends, but interested hackers might find a useful application
-;;;   of this facility.
-;;;
-;;; 3/12/90 Olin
-;;; - scheme-load-file and scheme-compile-file no longer switch-to-scheme.
-;;;   Tale suggested this.
+;; ===========================================================================
+;; 8/88 Olin
+;; Created.
+;;
+;; 2/15/89 Olin
+;; Removed -emacs flag from process invocation. It's only useful for
+;; cscheme, and makes cscheme assume it's running under xscheme.el,
+;; which messes things up royally. A bug.
+;;
+;; 5/22/90 Olin
+;; - Upgraded to use comint-send-string and comint-send-region.
+;; - run-scheme now offers to let you edit the command line if
+;;   you invoke it with a prefix-arg. M-x scheme is redundant, and
+;;   has been removed.
+;; - Explicit references to process "scheme" have been replaced with
+;;   (scheme-proc). This allows better handling of multiple process bufs.
+;; - Added scheme-send-last-sexp, bound to C-x C-e. A gnu convention.
+;; - Have not added process query facility a la cmulisp.el's lisp-show-arglist
+;;   and friends, but interested hackers might find a useful application
+;;   of this facility.
+;;
+;; 3/12/90 Olin
+;; - scheme-load-file and scheme-compile-file no longer switch-to-scheme.
+;;   Tale suggested this.
 
 ;;; Code:
 
@@ -106,7 +104,7 @@
 ;;;============================================================================
 
 (defcustom inferior-scheme-mode-hook nil
-  "*Hook for customizing inferior-scheme mode."
+  "Hook for customizing inferior-scheme mode."
   :type 'hook
   :group 'cmuscheme)
 
@@ -209,7 +207,7 @@ to continue it."
   (setq comint-get-old-input (function scheme-get-old-input)))
 
 (defcustom inferior-scheme-filter-regexp "\\`\\s *\\S ?\\S ?\\s *\\'"
-  "*Input matching this regexp are not saved on the history list.
+  "Input matching this regexp are not saved on the history list.
 Defaults to a regexp ignoring all inputs of 0, 1, or 2 letters."
   :type 'regexp
   :group 'cmuscheme)
@@ -224,19 +222,6 @@ Defaults to a regexp ignoring all inputs of 0, 1, or 2 letters."
     (let ((end (point)))
       (backward-sexp)
       (buffer-substring (point) end))))
-
-(defun scheme-args-to-list (string)
-  (let ((where (string-match "[ \t]" string)))
-    (cond ((null where) (list string))
-	  ((not (= where 0))
-	   (cons (substring string 0 where)
-		 (scheme-args-to-list (substring string (+ 1 where)
-						 (length string)))))
-	  (t (let ((pos (string-match "[^ \t]" string)))
-	       (if (null pos)
-		   nil
-		 (scheme-args-to-list (substring string pos
-						 (length string)))))))))
 
 ;;;###autoload
 (defun run-scheme (cmd)
@@ -256,7 +241,7 @@ is run).
 			 (read-string "Run Scheme: " scheme-program-name)
 			 scheme-program-name)))
   (if (not (comint-check-proc "*scheme*"))
-      (let ((cmdlist (scheme-args-to-list cmd)))
+      (let ((cmdlist (split-string-and-unquote cmd)))
 	(set-buffer (apply 'make-comint "scheme" (car cmdlist)
 			   (scheme-start-file (car cmdlist)) (cdr cmdlist)))
 	(inferior-scheme-mode)))
@@ -271,7 +256,7 @@ Search in the directories \"~\" and \"~/.emacs.d\", in this
 order.  Return nil if no start file found."
   (let* ((progname (file-name-nondirectory prog))
 	 (start-file (concat "~/.emacs_" progname))
-	 (alt-start-file (concat "~/.emacs.d/init_" progname ".scm")))
+	 (alt-start-file (concat user-emacs-directory "init_" progname ".scm")))
     (if (file-exists-p start-file)
         start-file
       (and (file-exists-p alt-start-file) alt-start-file))))
@@ -297,7 +282,7 @@ order.  Return nil if no start file found."
   (scheme-send-region (save-excursion (backward-sexp) (point)) (point)))
 
 (defcustom scheme-compile-exp-command "(compile '%s)"
-  "*Template for issuing commands to compile arbitrary Scheme expressions."
+  "Template for issuing commands to compile arbitrary Scheme expressions."
   :type 'string
   :group 'cmuscheme)
 
@@ -320,7 +305,7 @@ order.  Return nil if no start file found."
      (scheme-compile-region (point) end))))
 
 (defcustom scheme-trace-command "(trace %s)"
-  "*Template for issuing commands to trace a Scheme procedure.
+  "Template for issuing commands to trace a Scheme procedure.
 Some Scheme implementations might require more elaborate commands here.
 For PLT-Scheme, e.g., one should use
 
@@ -331,7 +316,7 @@ For Scheme 48 and Scsh use \",trace %s\"."
   :group 'cmuscheme)
 
 (defcustom scheme-untrace-command "(untrace %s)"
-  "*Template for switching off tracing of a Scheme procedure.
+  "Template for switching off tracing of a Scheme procedure.
 Scheme 48 and Scsh users should set this variable to \",untrace %s\"."
 
   :type 'string
@@ -356,7 +341,7 @@ With a prefix argument switch off tracing of procedure PROC."
   (comint-send-string (scheme-proc) "\n"))
 
 (defcustom scheme-macro-expand-command "(expand %s)"
-  "*Template for macro-expanding a Scheme form.
+  "Template for macro-expanding a Scheme form.
 For Scheme 48 and Scsh use \",expand %s\"."
   :type 'string
   :group 'cmuscheme)
@@ -423,7 +408,7 @@ Then switch to the process buffer."
   (switch-to-scheme t))
 
 (defcustom scheme-source-modes '(scheme-mode)
-  "*Used to determine if a buffer contains Scheme source code.
+  "Used to determine if a buffer contains Scheme source code.
 If it's loaded into a buffer that is in one of these major modes, it's
 considered a scheme source file by `scheme-load-file' and `scheme-compile-file'.
 Used by these commands to determine defaults."

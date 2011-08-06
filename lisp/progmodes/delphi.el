@@ -1,27 +1,27 @@
 ;;; delphi.el --- major mode for editing Delphi source (Object Pascal) in Emacs
 
-;; Copyright (C) 1998, 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-;; Free Software Foundation, Inc.
+;; Copyright (C) 1998, 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
-;; Author: Ray Blaak <blaak@infomatch.com>
-;; Maintainer: FSF  (Blaak's email addr bounces, Aug 2005)
+;; Authors: Ray Blaak <blaak@infomatch.com>,
+;;          Simon South <ssouth@member.fsf.org>
+;; Maintainer: Simon South <ssouth@member.fsf.org>
 ;; Keywords: languages
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify it under
-;; the terms of the GNU General Public License as published by the Free
-;; Software Foundation; either version 3, or (at your option) any later
-;; version.
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; GNU Emacs is distributed in the hope that it will be useful, but WITHOUT ANY
-;; WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-;; FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-;; details.
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
-;; You should have received a copy of the GNU General Public License along with
-;; GNU Emacs; see the file COPYING.  If not, write to the Free Software
-;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -65,29 +65,6 @@
 ;;; Code:
 
 (provide 'delphi)
-
-(eval-and-compile
-  ;; Allow execution on pre Emacs 20 versions.
-  (or (fboundp 'when)
-      (defmacro when (test &rest body)
-        `(if ,test (progn ,@body))))
-  (or (fboundp 'unless)
-      (defmacro unless (test &rest body)
-        `(if (not ,test) (progn ,@body))))
-  (or (fboundp 'defgroup)
-      (defmacro defgroup (group val docs &rest group-attributes)
-        `(defvar ,group ,val ,docs)))
-  (or (fboundp 'defcustom)
-      (defmacro defcustom (val-name val docs &rest custom-attributes)
-        `(defvar ,val-name ,val ,docs)))
-  (or (fboundp 'cadr)
-      (defmacro cadr (list) `(car (cdr ,list))))
-  (or (fboundp 'cddr)
-      (defmacro cddr (list) `(cdr (cdr ,list))))
-  (or (fboundp 'with-current-buffer)
-      (defmacro with-current-buffer (buf &rest forms)
-        `(save-excursion (set-buffer ,buf) ,@forms)))
-  )
 
 (defgroup delphi nil
   "Major mode for editing Delphi source in Emacs."
@@ -262,10 +239,14 @@ are followed by an expression.")
 (defconst delphi-decl-sections '(type const var label resourcestring)
   "Denotes the start of a declaration section.")
 
+(defconst delphi-interface-types '(dispinterface interface)
+  "Interface types.")
+
 (defconst delphi-class-types '(class object)
   "Class types.")
 
-(defconst delphi-composite-types `(,@delphi-class-types record)
+(defconst delphi-composite-types
+  `(,@delphi-class-types ,@delphi-interface-types record)
   "Types that contain declarations within them.")
 
 (defconst delphi-unit-sections
@@ -859,8 +840,9 @@ non-delphi buffer. Set to nil in a delphi buffer.  To override, just do:
       (delphi-stmt-line-indent-of token delphi-indent-level))))
 
 (defun delphi-composite-type-start (token last-token)
-  ;; Returns true (actually the last-token) if the pair equals (= class) or (=
-  ;; record), and nil otherwise.
+  ;; Returns true (actually the last-token) if the pair equals (= class), (=
+  ;; dispinterface), (= interface), (= object), or (= record), and nil
+  ;; otherwise.
   (if (and (eq 'equals (delphi-token-kind token))
            (delphi-is (delphi-token-kind last-token) delphi-composite-types))
       last-token))
@@ -1351,7 +1333,29 @@ non-delphi buffer. Set to nil in a delphi buffer.  To override, just do:
                                          delphi-indent-level)))
 
          ;; In unit sections we indent right to the left.
-         ((delphi-is token-kind delphi-unit-sections) (throw 'done 0))
+         ((delphi-is token-kind delphi-unit-sections)
+          (throw 'done
+                 ;; Handle specially the case of "interface", which can be used
+                 ;; to start either a unit section or an interface definition.
+                 (if (delphi-is token-kind delphi-interface-types)
+                     (progn
+                       ;; Find the previous non-whitespace token.
+                       (while (progn
+                                (setq last-token token
+                                      token (delphi-previous-token token)
+                                      token-kind (delphi-token-kind token))
+                                (and token
+                                     (delphi-is token-kind
+                                                delphi-whitespace))))
+                       ;; If this token is an equals sign, "interface" is being
+                       ;; used to start an interface definition and we should
+                       ;; treat it as a composite type; otherwise, we should
+                       ;; consider it the start of a unit section.
+                       (if (and token (eq token-kind 'equals))
+                           (delphi-line-indent-of last-token
+                                                  delphi-indent-level)
+                         0))
+                   0)))
 
          ;; A previous terminator means we can stop.
          ((delphi-is token-kind delphi-previous-terminators)
@@ -1642,7 +1646,7 @@ before the indent, the point is moved to the indent."
   (when delphi-newline-always-indents
     ;; Indent both the (now) previous and current line first.
     (save-excursion
-      (previous-line 1)
+      (forward-line -1)
       (delphi-indent-line))
     (delphi-indent-line)))
 
@@ -1677,21 +1681,21 @@ before the indent, the point is moved to the indent."
           (unit-file (downcase unit)))
       (catch 'done
         ;; Search for the file.
-        (mapcar #'(lambda (file)
-                    (let ((path (concat dir "/" file)))
-                      (if (and (string= unit-file (downcase file))
-                               (delphi-is-file path))
-                          (throw 'done path))))
-                files)
+        (mapc #'(lambda (file)
+		  (let ((path (concat dir "/" file)))
+		    (if (and (string= unit-file (downcase file))
+			     (delphi-is-file path))
+			(throw 'done path))))
+	      files)
 
         ;; Not found. Search subdirectories.
         (when recurse
-          (mapcar #'(lambda (subdir)
-                      (unless (member subdir '("." ".."))
-                        (let ((path (delphi-search-directory
-                                     unit (concat dir "/" subdir) recurse)))
-                          (if path (throw 'done path)))))
-                  files))
+          (mapc #'(lambda (subdir)
+		    (unless (member subdir '("." ".."))
+		      (let ((path (delphi-search-directory
+				   unit (concat dir "/" subdir) recurse)))
+			(if path (throw 'done path)))))
+		files))
 
         ;; Not found.
         nil))))
@@ -1721,7 +1725,7 @@ before the indent, the point is moved to the indent."
           ((stringp delphi-search-path)
            (delphi-find-unit-in-directory unit delphi-search-path))
 
-          ((mapcar
+          ((mapc
               #'(lambda (dir)
                   (let ((file (delphi-find-unit-in-directory unit dir)))
                     (if file (throw 'done file))))
@@ -1888,39 +1892,39 @@ comment block. If not in a // comment, just does a normal newline."
 
 (defvar delphi-debug-mode-map
   (let ((kmap (make-sparse-keymap)))
-    (mapcar #'(lambda (binding) (define-key kmap (car binding) (cadr binding)))
-            '(("n" delphi-debug-goto-next-token)
-              ("p" delphi-debug-goto-previous-token)
-              ("t" delphi-debug-show-current-token)
-              ("T" delphi-debug-tokenize-buffer)
-              ("W" delphi-debug-tokenize-window)
-              ("g" delphi-debug-goto-point)
-              ("s" delphi-debug-show-current-string)
-              ("a" delphi-debug-parse-buffer)
-              ("w" delphi-debug-parse-window)
-              ("f" delphi-debug-fontify-window)
-              ("F" delphi-debug-fontify-buffer)
-              ("r" delphi-debug-parse-region)
-              ("c" delphi-debug-unparse-buffer)
-              ("x" delphi-debug-show-is-stable)
-              ))
+    (mapc #'(lambda (binding) (define-key kmap (car binding) (cadr binding)))
+	  '(("n" delphi-debug-goto-next-token)
+	    ("p" delphi-debug-goto-previous-token)
+	    ("t" delphi-debug-show-current-token)
+	    ("T" delphi-debug-tokenize-buffer)
+	    ("W" delphi-debug-tokenize-window)
+	    ("g" delphi-debug-goto-point)
+	    ("s" delphi-debug-show-current-string)
+	    ("a" delphi-debug-parse-buffer)
+	    ("w" delphi-debug-parse-window)
+	    ("f" delphi-debug-fontify-window)
+	    ("F" delphi-debug-fontify-buffer)
+	    ("r" delphi-debug-parse-region)
+	    ("c" delphi-debug-unparse-buffer)
+	    ("x" delphi-debug-show-is-stable)
+	    ))
     kmap)
   "Keystrokes for delphi-mode debug commands.")
 
 (defvar delphi-mode-map
   (let ((kmap (make-sparse-keymap)))
-    (mapcar #'(lambda (binding) (define-key kmap (car binding) (cadr binding)))
-            (list '("\r" delphi-newline)
-                  '("\t" delphi-tab)
-                  '("\177" backward-delete-char-untabify)
-;;                '("\C-cd" delphi-find-current-def)
-;;                '("\C-cx" delphi-find-current-xdef)
-;;                '("\C-cb" delphi-find-current-body)
-                  '("\C-cu" delphi-find-unit)
-                  '("\M-q" delphi-fill-comment)
-                  '("\M-j" delphi-new-comment-line)
-                  ;; Debug bindings:
-                  (list "\C-c\C-d" delphi-debug-mode-map)))
+    (mapc #'(lambda (binding) (define-key kmap (car binding) (cadr binding)))
+	  (list '("\r" delphi-newline)
+		'("\t" delphi-tab)
+		'("\177" backward-delete-char-untabify)
+;;              '("\C-cd" delphi-find-current-def)
+;;              '("\C-cx" delphi-find-current-xdef)
+;;              '("\C-cb" delphi-find-current-body)
+		'("\C-cu" delphi-find-unit)
+		'("\M-q" delphi-fill-comment)
+		'("\M-j" delphi-new-comment-line)
+		;; Debug bindings:
+		(list "\C-c\C-d" delphi-debug-mode-map)))
     kmap)
   "Keymap used in Delphi mode.")
 
@@ -1981,17 +1985,17 @@ no args, if that value is non-nil."
   (set-syntax-table delphi-mode-syntax-table)
 
   ;; Buffer locals:
-  (mapcar #'(lambda (var)
-              (let ((var-symb (car var))
-                    (var-val (cadr var)))
-                (make-local-variable var-symb)
-                (set var-symb var-val)))
-          (list '(indent-line-function delphi-indent-line)
-                '(comment-indent-function delphi-indent-line)
-                '(case-fold-search t)
-                '(delphi-progress-last-reported-point nil)
-                '(delphi-ignore-changes nil)
-                (list 'font-lock-defaults delphi-font-lock-defaults)))
+  (mapc #'(lambda (var)
+	    (let ((var-symb (car var))
+		  (var-val (cadr var)))
+	      (make-local-variable var-symb)
+	      (set var-symb var-val)))
+	(list '(indent-line-function delphi-indent-line)
+	      '(comment-indent-function delphi-indent-line)
+	      '(case-fold-search t)
+	      '(delphi-progress-last-reported-point nil)
+	      '(delphi-ignore-changes nil)
+	      (list 'font-lock-defaults delphi-font-lock-defaults)))
 
   ;; We need to keep track of changes to the buffer to determine if we need
   ;; to retokenize changed text.
@@ -2007,5 +2011,5 @@ no args, if that value is non-nil."
 
   (run-mode-hooks 'delphi-mode-hook))
 
-;;; arch-tag: 410e192d-e9b5-4397-ad62-12340fc3fa41
+;; arch-tag: 410e192d-e9b5-4397-ad62-12340fc3fa41
 ;;; delphi.el ends here

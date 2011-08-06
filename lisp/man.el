@@ -1,7 +1,7 @@
 ;;; man.el --- browse UNIX manual pages -*- coding: iso-8859-1 -*-
 
 ;; Copyright (C) 1993, 1994, 1996, 1997, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Barry A. Warsaw <bwarsaw@cen.com>
 ;; Maintainer: FSF
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -76,7 +74,7 @@
 
 ;; ============= TODO ===========
 ;; - Add a command for printing.
-;; - The awk script deletes multiple blank lines.  This behaviour does
+;; - The awk script deletes multiple blank lines.  This behavior does
 ;;   not allow to understand if there was indeed a blank line at the
 ;;   end or beginning of a page (after the header, or before the
 ;;   footer).  A different algorithm should be used.  It is easy to
@@ -110,7 +108,7 @@
 
 (defvar Man-notify)
 (defcustom Man-filter-list nil
-  "*Manpage cleaning filter command phrases.
+  "Manpage cleaning filter command phrases.
 This variable contains a list of the following form:
 
 '((command-string phrase-string*)*)
@@ -427,9 +425,9 @@ Otherwise, the value is whatever the function
   'func nil
   'action #'Man-xref-button-action)
 
-(defun Man-xref-button-action (button) 
+(defun Man-xref-button-action (button)
   (let ((target (button-get button 'Man-target-string)))
-    (funcall 
+    (funcall
      (button-get button 'func)
      (cond ((null target)
 	    (button-label button))
@@ -437,7 +435,7 @@ Otherwise, the value is whatever the function
 	    (funcall target (button-start button)))
 	   (t target)))))
 
-(define-button-type 'Man-xref-man-page 
+(define-button-type 'Man-xref-man-page
   :supertype 'Man-abstract-xref-man-page
   'func 'man-follow)
 
@@ -488,36 +486,51 @@ This is necessary if one wants to dump man.el with Emacs."
 	(apply 'list
 	 (cons
 	  Man-sed-command
-	  (list
-	   (if Man-sed-script
-	       (concat "-e '" Man-sed-script "'")
-	     "")
-	   "-e '/^[\001-\032][\001-\032]*$/d'"
-	   "-e '/\e[789]/s///g'"
-	   "-e '/Reformatting page.  Wait/d'"
-	   "-e '/Reformatting entry.  Wait/d'"
-	   "-e '/^[ \t]*Hewlett-Packard[ \t]Company[ \t]*-[ \t][0-9]*[ \t]-/d'"
-	   "-e '/^[ \t]*Hewlett-Packard[ \t]*-[ \t][0-9]*[ \t]-.*$/d'"
-	   "-e '/^[ \t][ \t]*-[ \t][0-9]*[ \t]-[ \t]*Formatted:.*[0-9]$/d'"
-	   "-e '/^[ \t]*Page[ \t][0-9]*.*(printed[ \t][0-9\\/]*)$/d'"
-	   "-e '/^Printed[ \t][0-9].*[0-9]$/d'"
-	   "-e '/^[ \t]*X[ \t]Version[ \t]1[01].*Release[ \t][0-9]/d'"
-	   "-e '/^[A-Za-z].*Last[ \t]change:/d'"
-	   "-e '/^Sun[ \t]Release[ \t][0-9].*[0-9]$/d'"
-	   "-e '/[ \t]*Copyright [0-9]* UNIX System Laboratories, Inc.$/d'"
-	   "-e '/^[ \t]*Rev\\..*Page [0-9][0-9]*$/d'"
-	   ))
-	 (cons
-	  Man-awk-command
-	  (list
-	   "'\n"
-	   "BEGIN { blankline=0; anonblank=0; }\n"
-	   "/^$/ { if (anonblank==0) next; }\n"
-	   "{ anonblank=1; }\n"
-	   "/^$/ { blankline++; next; }\n"
-	   "{ if (blankline>0) { print \"\"; blankline=0; } print $0; }\n"
-	   "'"
-	   ))
+	  (if (eq system-type 'windows-nt)
+	      ;; Windows needs ".." quoting, not '..'.
+	      (list
+	       "-e \"/Reformatting page.  Wait/d\""
+	       "-e \"/Reformatting entry.  Wait/d\""
+	       "-e \"/^[ \t][ \t]*-[ \t][0-9]*[ \t]-[ \t]*Formatted:.*[0-9]$/d\""
+	       "-e \"/^[ \t]*Page[ \t][0-9]*.*(printed[ \t][0-9\\/]*)$/d\""
+	       "-e \"/^Printed[ \t][0-9].*[0-9]$/d\""
+	       "-e \"/^[ \t]*X[ \t]Version[ \t]1[01].*Release[ \t][0-9]/d\""
+	       "-e \"/^[A-Za-z].*Last[ \t]change:/d\""
+	       "-e \"/[ \t]*Copyright [0-9]* UNIX System Laboratories, Inc.$/d\""
+	       "-e \"/^[ \t]*Rev\\..*Page [0-9][0-9]*$/d\"")
+	    (list
+	     (if Man-sed-script
+		 (concat "-e '" Man-sed-script "'")
+	       "")
+	     "-e '/^[\001-\032][\001-\032]*$/d'"
+	     "-e '/\e[789]/s///g'"
+	     "-e '/Reformatting page.  Wait/d'"
+	     "-e '/Reformatting entry.  Wait/d'"
+	     "-e '/^[ \t]*Hewlett-Packard[ \t]Company[ \t]*-[ \t][0-9]*[ \t]-/d'"
+	     "-e '/^[ \t]*Hewlett-Packard[ \t]*-[ \t][0-9]*[ \t]-.*$/d'"
+	     "-e '/^[ \t][ \t]*-[ \t][0-9]*[ \t]-[ \t]*Formatted:.*[0-9]$/d'"
+	     "-e '/^[ \t]*Page[ \t][0-9]*.*(printed[ \t][0-9\\/]*)$/d'"
+	     "-e '/^Printed[ \t][0-9].*[0-9]$/d'"
+	     "-e '/^[ \t]*X[ \t]Version[ \t]1[01].*Release[ \t][0-9]/d'"
+	     "-e '/^[A-Za-z].*Last[ \t]change:/d'"
+	     "-e '/^Sun[ \t]Release[ \t][0-9].*[0-9]$/d'"
+	     "-e '/[ \t]*Copyright [0-9]* UNIX System Laboratories, Inc.$/d'"
+	     "-e '/^[ \t]*Rev\\..*Page [0-9][0-9]*$/d'"
+	     )))
+	 ;; Windows doesn't support multi-line commands, so don't
+	 ;; invoke Awk there.
+	 (unless (eq system-type 'windows-nt)
+	   (cons
+	    Man-awk-command
+	    (list
+	     "'\n"
+	     "BEGIN { blankline=0; anonblank=0; }\n"
+	     "/^$/ { if (anonblank==0) next; }\n"
+	     "{ anonblank=1; }\n"
+	     "/^$/ { blankline++; next; }\n"
+	     "{ if (blankline>0) { print \"\"; blankline=0; } print $0; }\n"
+	     "'"
+	     )))
 	 (if (not Man-uses-untabify-flag)
 	     ;; The outer list will be stripped off by apply.
 	     (list (cons
@@ -642,37 +655,91 @@ a new value."
 
 
 ;; ======================================================================
-;; default man entry: get word under point
+;; default man entry: get word near point
 
-(defsubst Man-default-man-entry (&optional pos)
-  "Make a guess at a default manual entry based on the text at POS.
-If POS is nil, the current point is used."
-  (let (word)
+(defun Man-default-man-entry (&optional pos)
+  "Guess default manual entry based on the text near position POS.
+POS defaults to `point'."
+  (let (word start pos column distance)
     (save-excursion
-      (if pos (goto-char pos))
-      ;; Default man entry title is any word the cursor is on, or if
-      ;; cursor not on a word, then nearest preceding word.
-      (skip-chars-backward "-a-zA-Z0-9._+:")
-      (let ((start (point)))
-	(skip-chars-forward "-a-zA-Z0-9._+:")
-	;; If there is a continuation at the end of line, check the
-	;; following line too, eg:
-	;;     see this-
-	;;     command-here(1)
-	(setq word (buffer-substring-no-properties start (point)))
-	(if (looking-at "[ \t\r\n]+\\([-a-zA-Z0-9._+:]+\\)([0-9])")
-	    (setq word (concat word (match-string 1)))))
-      (if (string-match "[._]+$" word)
-	  (setq word (substring word 0 (match-beginning 0))))
-      ;; If looking at something like *strcat(... , remove the '*'
-      (if (string-match "^*" word)
-	  (setq word (substring word 1)))
-      ;; If looking at something like ioctl(2) or brc(1M), include the
-      ;; section number in the returned value.  Remove text properties.
-      (concat word
-	      (if (looking-at
-		   (concat "[ \t]*([ \t]*\\(" Man-section-regexp "\\)[ \t]*)"))
-		  (format "(%s)" (match-string-no-properties 1)))))))
+      (when pos (goto-char pos))
+      (setq pos (point))
+      ;; The default title is the nearest entry-like object before or
+      ;; after POS.
+      (if (and (skip-chars-backward " \ta-zA-Z0-9+")
+	       (not (zerop (skip-chars-backward "(")))
+	       ;; Try to handle the special case where POS is on a
+	       ;; section number.
+	       (looking-at
+		(concat "([ \t]*\\(" Man-section-regexp "\\)[ \t]*)"))
+	       ;; We skipped a valid section number backwards, look at
+	       ;; preceding text.
+	       (or (and (skip-chars-backward ",; \t")
+			(not (zerop (skip-chars-backward "-a-zA-Z0-9._+:"))))
+		   ;; Not a valid entry, move POS after closing paren.
+		   (not (setq pos (match-end 0)))))
+	  ;; We have a candidate, make `start' record its starting
+	  ;; position.
+	  (setq start (point))
+	;; Otherwise look at char before POS.
+	(goto-char pos)
+	(if (not (zerop (skip-chars-backward "-a-zA-Z0-9._+:")))
+	    ;; Our candidate is just before or around POS.
+	    (setq start (point))
+	  ;; Otherwise record the current column and look backwards.
+	  (setq column (current-column))
+	  (skip-chars-backward ",; \t")
+	  ;; Record the distance travelled.
+	  (setq distance (- column (current-column)))
+	  (when (looking-back
+		 (concat "([ \t]*\\(?:" Man-section-regexp "\\)[ \t]*)"))
+	    ;; Skip section number backwards.
+	    (goto-char (match-beginning 0))
+	    (skip-chars-backward " \t"))
+	  (if (not (zerop (skip-chars-backward "-a-zA-Z0-9._+:")))
+	      (progn
+		;; We have a candidate before POS ...
+		(setq start (point))
+		(goto-char pos)
+		(if (and (skip-chars-forward ",; \t")
+			 (< (- (current-column) column) distance)
+			 (looking-at "[-a-zA-Z0-9._+:]"))
+		    ;; ... but the one after POS is better.
+		    (setq start (point))
+		  ;; ... and anything after POS is worse.
+		  (goto-char start)))
+	    ;; No candidate before POS.
+	    (goto-char pos)
+	    (skip-chars-forward ",; \t")
+	    (setq start (point)))))
+      ;; We have found a suitable starting point, try to skip at least
+      ;; one character.
+      (skip-chars-forward "-a-zA-Z0-9._+:")
+      (setq word (buffer-substring-no-properties start (point)))
+      ;; If there is a continuation at the end of line, check the
+      ;; following line too, eg:
+      ;;     see this-
+      ;;     command-here(1)
+      ;; Note: This code gets executed iff our entry is after POS.
+      (when (looking-at "[ \t\r\n]+\\([-a-zA-Z0-9._+:]+\\)([0-9])")
+	(setq word (concat word (match-string-no-properties 1)))
+	;; Make sure the section number gets included by the code below.
+	(goto-char (match-end 1)))
+      (when (string-match "[._]+$" word)
+	(setq word (substring word 0 (match-beginning 0))))
+      ;; The following was commented out since the preceding code
+      ;; should not produce a leading "*" in the first place.
+;;;       ;; If looking at something like *strcat(... , remove the '*'
+;;;       (when (string-match "^*" word)
+;;; 	(setq word (substring word 1)))
+	(concat
+	 word
+	 (and (not (string-equal word ""))
+	      ;; If looking at something like ioctl(2) or brc(1M),
+	      ;; include the section number in the returned value.
+	      (looking-at
+	       (concat "[ \t]*([ \t]*\\(" Man-section-regexp "\\)[ \t]*)"))
+	      (format "(%s)" (match-string-no-properties 1)))))))
 
 
 ;; ======================================================================
@@ -766,18 +833,21 @@ all sections related to a subject, put something appropriate into the
 	;;               minal (using an ioctl(2) if available, the value of
 	;;               $COLUMNS,  or falling back to 80 characters if nei-
 	;;               ther is available).
-	(if window-system
-	    (unless (or (getenv "MANWIDTH") (getenv "COLUMNS"))
-	      ;; This isn't strictly correct, since we don't know how
-	      ;; the page will actually be displayed, but it seems
-	      ;; reasonable.
-	      (setenv "COLUMNS" (number-to-string
-				 (cond
-				  ((and (integerp Man-width) (> Man-width 0))
-				   Man-width)
-				  (Man-width (frame-width))
-				  ((window-width)))))))
+	(unless (or (getenv "MANWIDTH") (getenv "COLUMNS"))
+	  ;; This isn't strictly correct, since we don't know how
+	  ;; the page will actually be displayed, but it seems
+	  ;; reasonable.
+	  (setenv "COLUMNS" (number-to-string
+			     (cond
+			      ((and (integerp Man-width) (> Man-width 0))
+			       Man-width)
+			      (Man-width (frame-width))
+			      ((window-width))))))
 	(setenv "GROFF_NO_SGR" "1")
+	;; Since man-db 2.4.3-1, man writes plain text with no escape
+	;; sequences when stdout is not a tty.	In 2.5.0, the following
+	;; env-var was added to allow control of this (see Debian Bug#340673).
+	(setenv "MAN_KEEP_FORMATTING" "1")
 	(if (fboundp 'start-process)
 	    (set-process-sentinel
 	     (start-process manual-program buffer
@@ -956,7 +1026,7 @@ default type, `Man-xref-man-page' is used for the buttons."
 	(Man-highlight-references0 nil Man-apropos-regexp 1
 				   'Man-default-man-entry
 				   (or xref-man-type 'Man-xref-man-page)))
-    (Man-highlight-references0 Man-see-also-regexp Man-reference-regexp 1 
+    (Man-highlight-references0 Man-see-also-regexp Man-reference-regexp 1
 			       'Man-default-man-entry
 			       (or xref-man-type 'Man-xref-man-page))
     (Man-highlight-references0 Man-synopsis-regexp Man-header-regexp 0 2
@@ -983,7 +1053,7 @@ default type, `Man-xref-man-page' is used for the buttons."
 	 (match-end button-pos)
 	 'type type
 	 'Man-target-string (cond
-			     ((numberp target) 
+			     ((numberp target)
 			      (match-string target))
 			     ((functionp target)
 			      target)
@@ -1078,7 +1148,7 @@ manpage command."
 	    (Man-notify-when-ready Man-buffer))
 
 	(if err-mess
-	    (error err-mess))
+	    (error "%s" err-mess))
 	))))
 
 
@@ -1339,7 +1409,7 @@ Returns t if section is found, nil otherwise."
 Actually the section moved to is described by `Man-see-also-regexp'."
   (interactive)
   (if (not (Man-find-section Man-see-also-regexp))
-      (error (concat "No " Man-see-also-regexp
+      (error "%s" (concat "No " Man-see-also-regexp
 		     " section found in the current manpage"))))
 
 (defun Man-possibly-hyphenated-word ()
@@ -1368,25 +1438,32 @@ Specify which REFERENCE to use; default is based on word at point."
   (interactive
    (if (not Man-refpages-alist)
        (error "There are no references in the current man page")
-     (list (let* ((default (or
-			    (car (all-completions
-				  (let ((word
-					 (or (Man-possibly-hyphenated-word)
-					     "")))
-				    ;; strip a trailing '-':
-				    (if (string-match "-$" word)
-					(substring word 0
-						   (match-beginning 0))
-				      word))
-				  Man-refpages-alist))
-			    (aheadsym Man-refpages-alist)))
-		   chosen
-		   (prompt (concat "Refer to (default " default "): ")))
-	      (setq chosen (completing-read prompt Man-refpages-alist))
-	      (if (or (not chosen)
-		      (string= chosen ""))
-		  default
-		chosen)))))
+     (list
+      (let* ((default (or
+		       (car (all-completions
+			     (let ((word
+				    (or (Man-possibly-hyphenated-word)
+					"")))
+			       ;; strip a trailing '-':
+			       (if (string-match "-$" word)
+				   (substring word 0
+					      (match-beginning 0))
+				 word))
+			     Man-refpages-alist))
+		       (aheadsym Man-refpages-alist)))
+	     (defaults
+	       (mapcar 'substring-no-properties
+		       (delete-dups
+			(delq nil (cons default
+					(mapcar 'car Man-refpages-alist))))))
+	     chosen
+	     (prompt (concat "Refer to (default " default "): ")))
+	(setq chosen (completing-read prompt Man-refpages-alist
+				      nil nil nil nil defaults))
+	(if (or (not chosen)
+		(string= chosen ""))
+	    default
+	  chosen)))))
   (if (not Man-refpages-alist)
       (error "Can't find any references in the current manpage")
     (aput 'Man-refpages-alist reference)

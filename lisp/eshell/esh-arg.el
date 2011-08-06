@@ -1,16 +1,16 @@
 ;;; esh-arg.el --- argument processing
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,13 +18,17 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; Parsing of arguments can be extended by adding functions to the
+;; hook `eshell-parse-argument-hook'.  For a good example of this, see
+;; `eshell-parse-drive-letter', defined in eshell-dirs.el.
 
 (provide 'esh-arg)
 
-(eval-when-compile (require 'esh-maint))
+(eval-when-compile (require 'eshell))
 
 (defgroup eshell-arg nil
   "Argument parsing involves transforming the arguments passed on the
@@ -32,12 +36,6 @@ command line into equivalent Lisp forms that, when evaluated, will
 yield the values intended."
   :tag "Argument parsing"
   :group 'eshell)
-
-;;; Commentary:
-
-;; Parsing of arguments can be extended by adding functions to the
-;; hook `eshell-parse-argument-hook'.  For a good example of this, see
-;; `eshell-parse-drive-letter', defined in eshell-dirs.el.
 
 (defcustom eshell-parse-argument-hook
   (list
@@ -103,7 +101,7 @@ yield the values intended."
 
    ;; argument delimiter
    'eshell-parse-delimiter)
-  "*Define how to process Eshell command line arguments.
+  "Define how to process Eshell command line arguments.
 When each function on this hook is called, point will be at the
 current position within the argument list.  The function should either
 return nil, meaning that it did no argument parsing, or it should
@@ -121,7 +119,7 @@ treated as a literal character."
 ;;; User Variables:
 
 (defcustom eshell-arg-load-hook '(eshell-arg-initialize)
-  "*A hook that gets run when `eshell-arg' is loaded."
+  "A hook that gets run when `eshell-arg' is loaded."
   :type 'hook
   :group 'eshell-arg)
 
@@ -131,13 +129,13 @@ treated as a literal character."
   :group 'eshell-arg)
 
 (defcustom eshell-special-chars-inside-quoting '(?\\ ?\")
-  "*Characters which are still special inside double quotes."
+  "Characters which are still special inside double quotes."
   :type '(repeat character)
   :group 'eshell-arg)
 
 (defcustom eshell-special-chars-outside-quoting
   (append eshell-delimiter-argument-list '(?# ?! ?\\ ?\" ?\'))
-  "*Characters that require escaping outside of double quotes.
+  "Characters that require escaping outside of double quotes.
 Without escaping them, they will introduce a change in the argument."
   :type '(repeat character)
   :group 'eshell-arg)
@@ -284,7 +282,13 @@ Point is left at the end of the arguments."
   "Intelligently backslash the character occurring in STRING at INDEX.
 If the character is itself a backslash, it needs no escaping."
   (let ((char (aref string index)))
-    (if (eq char ?\\)
+    (if (and (eq char ?\\)
+	     ;; In Emacs directory-sep-char is always ?/, so this does nothing.
+	     (not (and (featurep 'xemacs)
+		       (featurep 'mswindows)
+		       (eq directory-sep-char ?\\)
+		       (eq (1- (string-width string))
+			   index))))
 	(char-to-string char)
       (if (memq char eshell-special-chars-outside-quoting)
 	  (string ?\\ char)))))
@@ -388,5 +392,5 @@ special character that is not itself a backslash."
 		   (char-to-string (char-after)))))
 	 (goto-char end)))))))
 
-;;; arch-tag: 7f593a2b-8fc1-4def-8f84-8f51ed0198d6
+;; arch-tag: 7f593a2b-8fc1-4def-8f84-8f51ed0198d6
 ;;; esh-arg.el ends here

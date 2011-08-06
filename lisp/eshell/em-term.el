@@ -1,16 +1,16 @@
 ;;; em-term.el --- running visual commands
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,22 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-(provide 'em-term)
-
-(eval-when-compile (require 'esh-maint))
-
-(defgroup eshell-term nil
-  "This module causes visual commands (e.g., 'vi') to be executed by
-the `term' package, which comes with Emacs.  This package handles most
-of the ANSI control codes, allowing curses-based applications to run
-within an Emacs window.  The variable `eshell-visual-commands' defines
-which commands are considered visual in nature."
-  :tag "Running visual commands"
-  :group 'eshell-module)
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -45,7 +30,20 @@ which commands are considered visual in nature."
 ;; buffer, giving the illusion that Eshell itself is allowing these
 ;; visual processes to execute.
 
+;;; Code:
+
+(eval-when-compile (require 'eshell))
 (require 'term)
+
+;;;###autoload
+(eshell-defgroup eshell-term nil
+  "This module causes visual commands (e.g., 'vi') to be executed by
+the `term' package, which comes with Emacs.  This package handles most
+of the ANSI control codes, allowing curses-based applications to run
+within an Emacs window.  The variable `eshell-visual-commands' defines
+which commands are considered visual in nature."
+  :tag "Running visual commands"
+  :group 'eshell-module)
 
 ;;; User Variables:
 
@@ -161,27 +159,27 @@ allowed."
 ; without any interpretation."
 ;   (interactive)
 ;   ;; Convert `return' to C-m, etc.
-;   (if (and (symbolp last-input-char)
-;	   (get last-input-char 'ascii-character))
-;       (setq last-input-char (get last-input-char 'ascii-character)))
-;   (eshell-term-send-raw-string (make-string 1 last-input-char)))
+;   (if (and (symbolp last-input-event)
+;	   (get last-input-event 'ascii-character))
+;       (setq last-input-event (get last-input-event 'ascii-character)))
+;   (eshell-term-send-raw-string (make-string 1 last-input-event)))
 
 ; (defun eshell-term-send-raw-meta ()
 ;   (interactive)
-;   (if (symbolp last-input-char)
+;   (if (symbolp last-input-event)
 ;       ;; Convert `return' to C-m, etc.
-;       (let ((tmp (get last-input-char 'event-symbol-elements)))
+;       (let ((tmp (get last-input-event 'event-symbol-elements)))
 ;	(if tmp
-;	    (setq last-input-char (car tmp)))
-;	(if (symbolp last-input-char)
+;	    (setq last-input-event (car tmp)))
+;	(if (symbolp last-input-event)
 ;	    (progn
-;	      (setq tmp (get last-input-char 'ascii-character))
-;	      (if tmp (setq last-input-char tmp))))))
-;   (eshell-term-send-raw-string (if (and (numberp last-input-char)
-;					(> last-input-char 127)
-;					(< last-input-char 256))
-;				   (make-string 1 last-input-char)
-;				 (format "\e%c" last-input-char))))
+;	      (setq tmp (get last-input-event 'ascii-character))
+;	      (if tmp (setq last-input-event tmp))))))
+;   (eshell-term-send-raw-string (if (and (numberp last-input-event)
+;					(> last-input-event 127)
+;					(< last-input-event 256))
+;				   (make-string 1 last-input-event)
+;				 (format "\e%c" last-input-event))))
 
 ; (defun eshell-term-mouse-paste (click arg)
 ;   "Insert the last stretch of killed text at the position clicked on."
@@ -264,7 +262,11 @@ allowed."
 ;   "Switch to line (\"cooked\") sub-mode of eshell-term mode."
 ;  (use-local-map term-old-mode-map))
 
-;;; Code:
+(provide 'em-term)
 
-;;; arch-tag: ab7c8fe4-3101-4257-925b-1354c6b2fe9d
+;; Local Variables:
+;; generated-autoload-file: "esh-groups.el"
+;; End:
+
+;; arch-tag: ab7c8fe4-3101-4257-925b-1354c6b2fe9d
 ;;; em-term.el ends here

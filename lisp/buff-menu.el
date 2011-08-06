@@ -1,17 +1,17 @@
 ;;; buff-menu.el --- buffer menu main function and support functions -*- coding:utf-8 -*-
 
 ;; Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: convenience
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -70,7 +68,7 @@
   :group 'convenience)
 
 (defcustom Buffer-menu-use-header-line t
-  "*Non-nil means to use an immovable header-line."
+  "Non-nil means to use an immovable header-line."
   :type 'boolean
   :group 'Buffer-menu)
 
@@ -81,12 +79,12 @@
 (put 'Buffer-menu-buffer 'face-alias 'buffer-menu-buffer)
 
 (defcustom Buffer-menu-buffer+size-width 26
-  "*How wide to jointly make the buffer name and size columns."
+  "How wide to jointly make the buffer name and size columns."
   :type 'number
   :group 'Buffer-menu)
 
 (defcustom Buffer-menu-mode-width 16
-  "*How wide to make the mode name column."
+  "How wide to make the mode name column."
   :type 'number
   :group 'Buffer-menu)
 
@@ -104,12 +102,9 @@ as it is by default."
 (defvar Buffer-menu-sort-column nil
   "Which column to sort the menu on.
 Use 2 to sort by buffer names, or 5 to sort by file names.
-nil means sort by visited order (the default).")
+A nil value means sort by visited order (the default).")
 
 (defconst Buffer-menu-buffer-column 4)
-
-(defvar Buffer-menu-mode-map nil
-  "Local keymap for `Buffer-menu-mode' buffers.")
 
 (defvar Buffer-menu-files-only nil
   "Non-nil if the current buffer-menu lists only file buffers.
@@ -117,52 +112,115 @@ This variable determines whether reverting the buffer lists only
 file buffers.  It affects both manual reverting and reverting by
 Auto Revert Mode.")
 
+(make-variable-buffer-local 'Buffer-menu-files-only)
+
 (defvar Info-current-file) ;; from info.el
 (defvar Info-current-node) ;; from info.el
 
-(make-variable-buffer-local 'Buffer-menu-files-only)
+(defvar Buffer-menu-mode-map
+  (let ((map (make-keymap))
+	(menu-map (make-sparse-keymap)))
+    (suppress-keymap map t)
+    (define-key map "v" 'Buffer-menu-select)
+    (define-key map "2" 'Buffer-menu-2-window)
+    (define-key map "1" 'Buffer-menu-1-window)
+    (define-key map "f" 'Buffer-menu-this-window)
+    (define-key map "e" 'Buffer-menu-this-window)
+    (define-key map "\C-m" 'Buffer-menu-this-window)
+    (define-key map "o" 'Buffer-menu-other-window)
+    (define-key map "\C-o" 'Buffer-menu-switch-other-window)
+    (define-key map "s" 'Buffer-menu-save)
+    (define-key map "d" 'Buffer-menu-delete)
+    (define-key map "k" 'Buffer-menu-delete)
+    (define-key map "\C-d" 'Buffer-menu-delete-backwards)
+    (define-key map "\C-k" 'Buffer-menu-delete)
+    (define-key map "x" 'Buffer-menu-execute)
+    (define-key map " " 'next-line)
+    (define-key map "n" 'next-line)
+    (define-key map "p" 'previous-line)
+    (define-key map "\177" 'Buffer-menu-backup-unmark)
+    (define-key map "~" 'Buffer-menu-not-modified)
+    (define-key map "u" 'Buffer-menu-unmark)
+    (define-key map "m" 'Buffer-menu-mark)
+    (define-key map "t" 'Buffer-menu-visit-tags-table)
+    (define-key map "%" 'Buffer-menu-toggle-read-only)
+    (define-key map "b" 'Buffer-menu-bury)
+    (define-key map "V" 'Buffer-menu-view)
+    (define-key map "T" 'Buffer-menu-toggle-files-only)
+    (define-key map [mouse-2] 'Buffer-menu-mouse-select)
+    (define-key map [follow-link] 'mouse-face)
+    (define-key map (kbd "M-s a C-s")   'Buffer-menu-isearch-buffers)
+    (define-key map (kbd "M-s a M-C-s") 'Buffer-menu-isearch-buffers-regexp)
+    (define-key map [menu-bar Buffer-menu-mode] (cons "Buffer Menu" menu-map))
+    (define-key menu-map [quit]
+      '(menu-item "Quit" quit-window
+		 :help "Mark buffer on this line to be deleted by x command"))
+    (define-key menu-map [rev]
+      '(menu-item "Refresh" revert-buffer
+		 :help "Refresh the *Buffer List* buffer contents"))
+    (define-key menu-map [s0] '("--"))
+    (define-key menu-map [tf]
+      '(menu-item "Show only file buffers" Buffer-menu-toggle-files-only
+		  :button (:toggle . Buffer-menu-files-only)
+		  :help "Toggle whether the current buffer-menu displays only file buffers"))
+    (define-key menu-map [s1] '("--"))
+    ;; FIXME: The "Select" entries could use better names...
+    (define-key menu-map [sel]
+      '(menu-item "Select marked" Buffer-menu-select
+		 :help "Select this line's buffer; also display buffers marked with `>'"))
+    (define-key menu-map [bm2]
+      '(menu-item "Select two" Buffer-menu-2-window
+		 :help "Select this line's buffer, with previous buffer in second window"))
+    (define-key menu-map [bm1]
+      '(menu-item "Select current" Buffer-menu-1-window
+		 :help "Select this line's buffer, alone, in full frame"))
+    (define-key menu-map [ow]
+      '(menu-item "Select in other window" Buffer-menu-other-window
+		 :help "Select this line's buffer in other window, leaving buffer menu visible"))
+    (define-key menu-map [tw]
+      '(menu-item "Select in current window" Buffer-menu-this-window
+		 :help "Select this line's buffer in this window"))
+    (define-key menu-map [s2] '("--"))
+    (define-key menu-map [is]
+      '(menu-item "Regexp Isearch marked buffers" Buffer-menu-isearch-buffers-regexp
+		 :help "Search for a regexp through all marked buffers using Isearch"))
+    (define-key menu-map [ir]
+      '(menu-item "Isearch marked buffers" Buffer-menu-isearch-buffers
+		 :help "Search for a string through all marked buffers using Isearch"))
+    (define-key menu-map [s3] '("--"))
+    (define-key menu-map [by]
+      '(menu-item "Bury" Buffer-menu-bury
+		 :help "Bury the buffer listed on this line"))
+    (define-key menu-map [vt]
+      '(menu-item "Set unmodified" Buffer-menu-not-modified
+		 :help "Mark buffer on this line as unmodified (no changes to save)"))
+    (define-key menu-map [ex]
+      '(menu-item "Execute" Buffer-menu-execute
+		 :help "Save and/or delete buffers marked with s or k commands"))
+    (define-key menu-map [s4] '("--"))
+    (define-key menu-map [delb]
+      '(menu-item "Mark for delete and move backwards" Buffer-menu-delete-backwards
+		 :help "Mark buffer on this line to be deleted by x command and move up one line"))
+    (define-key menu-map [del]
+      '(menu-item "Mark for delete" Buffer-menu-delete
+		 :help "Mark buffer on this line to be deleted by x command"))
 
-(if Buffer-menu-mode-map
-    ()
-  (setq Buffer-menu-mode-map (make-keymap))
-  (suppress-keymap Buffer-menu-mode-map t)
-  (define-key Buffer-menu-mode-map "q" 'quit-window)
-  (define-key Buffer-menu-mode-map "v" 'Buffer-menu-select)
-  (define-key Buffer-menu-mode-map "2" 'Buffer-menu-2-window)
-  (define-key Buffer-menu-mode-map "1" 'Buffer-menu-1-window)
-  (define-key Buffer-menu-mode-map "f" 'Buffer-menu-this-window)
-  (define-key Buffer-menu-mode-map "e" 'Buffer-menu-this-window)
-  (define-key Buffer-menu-mode-map "\C-m" 'Buffer-menu-this-window)
-  (define-key Buffer-menu-mode-map "o" 'Buffer-menu-other-window)
-  (define-key Buffer-menu-mode-map "\C-o" 'Buffer-menu-switch-other-window)
-  (define-key Buffer-menu-mode-map "s" 'Buffer-menu-save)
-  (define-key Buffer-menu-mode-map "d" 'Buffer-menu-delete)
-  (define-key Buffer-menu-mode-map "k" 'Buffer-menu-delete)
-  (define-key Buffer-menu-mode-map "\C-d" 'Buffer-menu-delete-backwards)
-  (define-key Buffer-menu-mode-map "\C-k" 'Buffer-menu-delete)
-  (define-key Buffer-menu-mode-map "x" 'Buffer-menu-execute)
-  (define-key Buffer-menu-mode-map " " 'next-line)
-  (define-key Buffer-menu-mode-map "n" 'next-line)
-  (define-key Buffer-menu-mode-map "p" 'previous-line)
-  (define-key Buffer-menu-mode-map "\177" 'Buffer-menu-backup-unmark)
-  (define-key Buffer-menu-mode-map "~" 'Buffer-menu-not-modified)
-  (define-key Buffer-menu-mode-map "?" 'describe-mode)
-  (define-key Buffer-menu-mode-map "u" 'Buffer-menu-unmark)
-  (define-key Buffer-menu-mode-map "m" 'Buffer-menu-mark)
-  (define-key Buffer-menu-mode-map "t" 'Buffer-menu-visit-tags-table)
-  (define-key Buffer-menu-mode-map "%" 'Buffer-menu-toggle-read-only)
-  (define-key Buffer-menu-mode-map "b" 'Buffer-menu-bury)
-  (define-key Buffer-menu-mode-map "g" 'Buffer-menu-revert)
-  (define-key Buffer-menu-mode-map "V" 'Buffer-menu-view)
-  (define-key Buffer-menu-mode-map "T" 'Buffer-menu-toggle-files-only)
-  (define-key Buffer-menu-mode-map [mouse-2] 'Buffer-menu-mouse-select)
-  (define-key Buffer-menu-mode-map [follow-link] 'mouse-face)
-)
+    (define-key menu-map [sv]
+      '(menu-item "Mark for save" Buffer-menu-save
+		 :help "Mark buffer on this line to be saved by x command"))
+    (define-key menu-map [umk]
+      '(menu-item "Unmark" Buffer-menu-unmark
+		 :help "Cancel all requested operations on buffer on this line and move down"))
+    (define-key menu-map [mk]
+      '(menu-item "Mark" Buffer-menu-mark
+		 :help "Mark buffer on this line for being displayed by v command"))
+    map)
+  "Local keymap for `Buffer-menu-mode' buffers.")
 
 ;; Buffer Menu mode is suitable only for specially formatted data.
 (put 'Buffer-menu-mode 'mode-class 'special)
 
-(defun Buffer-menu-mode ()
+(define-derived-mode Buffer-menu-mode special-mode "Buffer Menu"
   "Major mode for editing a list of buffers.
 Each line describes one of the buffers in Emacs.
 Letters do not insert themselves; instead, they are commands.
@@ -181,6 +239,8 @@ Letters do not insert themselves; instead, they are commands.
 \\[Buffer-menu-1-window] -- select that buffer in full-frame window.
 \\[Buffer-menu-2-window] -- select that buffer in one window,
   together with buffer selected before this one in another window.
+\\[Buffer-menu-isearch-buffers] -- Do incremental search in the marked buffers.
+\\[Buffer-menu-isearch-buffers-regexp] -- Isearch for regexp in the marked buffers.
 \\[Buffer-menu-visit-tags-table] -- visit-tags-table this buffer.
 \\[Buffer-menu-not-modified] -- clear modified-flag on that buffer.
 \\[Buffer-menu-save] -- mark that buffer to be saved, and move down.
@@ -191,27 +251,18 @@ Letters do not insert themselves; instead, they are commands.
   With prefix argument, also move up one line.
 \\[Buffer-menu-backup-unmark] -- back up a line and remove marks.
 \\[Buffer-menu-toggle-read-only] -- toggle read-only status of buffer on this line.
-\\[Buffer-menu-revert] -- update the list of buffers.
+\\[revert-buffer] -- update the list of buffers.
 \\[Buffer-menu-toggle-files-only] -- toggle whether the menu displays only file buffers.
 \\[Buffer-menu-bury] -- bury the buffer listed on this line."
-  (kill-all-local-variables)
-  (use-local-map Buffer-menu-mode-map)
-  (setq major-mode 'Buffer-menu-mode)
-  (setq mode-name "Buffer Menu")
   (set (make-local-variable 'revert-buffer-function)
        'Buffer-menu-revert-function)
   (set (make-local-variable 'buffer-stale-function)
        #'(lambda (&optional noconfirm) 'fast))
   (setq truncate-lines t)
-  (setq buffer-read-only t)
-  (run-mode-hooks 'buffer-menu-mode-hook))
+  (setq buffer-read-only t))
 
-;; This function exists so we can make the doc string of Buffer-menu-mode
-;; look nice.
-(defun Buffer-menu-revert ()
-  "Update the list of buffers."
-  (interactive)
-  (revert-buffer))
+(define-obsolete-variable-alias 'buffer-menu-mode-hook
+  'Buffer-menu-mode-hook "23.1")
 
 (defun Buffer-menu-revert-function (ignore1 ignore2)
   (or (eq buffer-undo-list t)
@@ -315,7 +366,7 @@ For more information, see the function `buffer-menu'."
   "Mark buffer on this line for being displayed by \\<Buffer-menu-mode-map>\\[Buffer-menu-select] command."
   (interactive)
   (when (Buffer-menu-no-header)
-    (let ((buffer-read-only nil))
+    (let ((inhibit-read-only t))
       (delete-char 1)
       (insert ?>)
       (forward-line 1))))
@@ -327,8 +378,8 @@ Optional prefix arg means move up."
   (when (Buffer-menu-no-header)
     (let* ((buf (Buffer-menu-buffer t))
 	   (mod (buffer-modified-p buf))
-	   (readonly (save-excursion (set-buffer buf) buffer-read-only))
-	   (buffer-read-only nil))
+	   (readonly (with-current-buffer buf buffer-read-only))
+	   (inhibit-read-only t))
       (delete-char 3)
       (insert (if readonly (if mod " %*" " % ") (if mod "  *" "   ")))))
   (forward-line (if backup -1 1)))
@@ -346,7 +397,7 @@ Prefix arg is how many buffers to delete.
 Negative arg means delete backwards."
   (interactive "p")
   (when (Buffer-menu-no-header)
-    (let ((buffer-read-only nil))
+    (let ((inhibit-read-only t))
       (if (or (null arg) (= arg 0))
 	  (setq arg 1))
       (while (> arg 0)
@@ -371,7 +422,7 @@ and then move up one line.  Prefix arg means move that many lines."
   "Mark buffer on this line to be saved by \\<Buffer-menu-mode-map>\\[Buffer-menu-execute] command."
   (interactive)
   (when (Buffer-menu-no-header)
-    (let ((buffer-read-only nil))
+    (let ((inhibit-read-only t))
       (forward-char 2)
       (delete-char 1)
       (insert ?S)
@@ -380,14 +431,13 @@ and then move up one line.  Prefix arg means move that many lines."
 (defun Buffer-menu-not-modified (&optional arg)
   "Mark buffer on this line as unmodified (no changes to save)."
   (interactive "P")
-  (save-excursion
-    (set-buffer (Buffer-menu-buffer t))
+  (with-current-buffer (Buffer-menu-buffer t)
     (set-buffer-modified-p arg))
   (save-excursion
    (beginning-of-line)
    (forward-char 2)
    (if (= (char-after) (if arg ?\s ?*))
-       (let ((buffer-read-only nil))
+       (let ((inhibit-read-only t))
 	 (delete-char 1)
 	 (insert (if arg ?* ?\s))))))
 
@@ -403,17 +453,16 @@ and then move up one line.  Prefix arg means move that many lines."
     (Buffer-menu-beginning)
     (while (re-search-forward "^..S" nil t)
       (let ((modp nil))
-	(save-excursion
-	  (set-buffer (Buffer-menu-buffer t))
+	(with-current-buffer (Buffer-menu-buffer t)
 	  (save-buffer)
 	  (setq modp (buffer-modified-p)))
-	(let ((buffer-read-only nil))
+	(let ((inhibit-read-only t))
 	  (delete-char -1)
 	  (insert (if modp ?* ?\s))))))
   (save-excursion
     (Buffer-menu-beginning)
     (let ((buff-menu-buffer (current-buffer))
-	  (buffer-read-only nil))
+	  (inhibit-read-only t))
       (while (re-search-forward "^D" nil t)
 	(forward-char -1)
 	(let ((buf (Buffer-menu-buffer nil)))
@@ -440,7 +489,7 @@ in the selected frame."
     (Buffer-menu-beginning)
     (while (re-search-forward "^>" nil t)
       (setq tem (Buffer-menu-buffer t))
-      (let ((buffer-read-only nil))
+      (let ((inhibit-read-only t))
 	(delete-char -1)
 	(insert ?\s))
       (or (eq tem buff) (memq tem others) (setq others (cons tem others))))
@@ -467,6 +516,23 @@ in the selected frame."
       (other-window 1)  			;back to the beginning!
 )))
 
+(defun Buffer-menu-marked-buffers ()
+  "Return a list of buffers marked with the \\<Buffer-menu-mode-map>\\[Buffer-menu-mark] command."
+  (let (buffers)
+    (Buffer-menu-beginning)
+    (while (re-search-forward "^>" nil t)
+      (setq buffers (cons (Buffer-menu-buffer t) buffers)))
+    (nreverse buffers)))
+
+(defun Buffer-menu-isearch-buffers ()
+  "Search for a string through all marked buffers using Isearch."
+  (interactive)
+  (multi-isearch-buffers (Buffer-menu-marked-buffers)))
+
+(defun Buffer-menu-isearch-buffers-regexp ()
+  "Search for a regexp through all marked buffers using Isearch."
+  (interactive)
+  (multi-isearch-buffers-regexp (Buffer-menu-marked-buffers)))
 
 
 (defun Buffer-menu-visit-tags-table ()
@@ -488,8 +554,7 @@ in the selected frame."
   "Select the buffer whose line you click on."
   (interactive "e")
   (let (buffer)
-    (save-excursion
-      (set-buffer (window-buffer (posn-window (event-end event))))
+    (with-current-buffer (window-buffer (posn-window (event-end event)))
       (save-excursion
 	(goto-char (posn-point (event-end event)))
 	(setq buffer (Buffer-menu-buffer t))))
@@ -535,15 +600,14 @@ The current window remains selected."
   "Toggle read-only status of buffer on this line, perhaps via version control."
   (interactive)
   (let (char)
-    (save-excursion
-      (set-buffer (Buffer-menu-buffer t))
-      (vc-toggle-read-only)
+    (with-current-buffer (Buffer-menu-buffer t)
+      (toggle-read-only)
       (setq char (if buffer-read-only ?% ?\s)))
     (save-excursion
       (beginning-of-line)
       (forward-char 1)
       (if (/= (following-char) char)
-          (let (buffer-read-only)
+          (let ((inhibit-read-only t))
             (delete-char 1)
             (insert char))))))
 
@@ -555,7 +619,7 @@ The current window remains selected."
       (beginning-of-line)
       (bury-buffer (Buffer-menu-buffer t))
       (let ((line (buffer-substring (point) (progn (forward-line 1) (point))))
-            (buffer-read-only nil))
+            (inhibit-read-only t))
         (delete-region (point) (progn (forward-line -1) (point)))
         (goto-char (point-max))
         (insert line))
@@ -586,31 +650,36 @@ For more information, see the function `buffer-menu'."
   (interactive "P")
   (display-buffer (list-buffers-noselect files-only)))
 
+(defconst Buffer-menu-short-ellipsis
+  ;; This file is preloaded, so we can't use char-displayable-p here
+  ;; because we don't know yet what display we're going to connect to.
+  ":" ;; (if (char-displayable-p ?…) "…" ":")
+  )
+
 (defun Buffer-menu-buffer+size (name size &optional name-props size-props)
-  (if (> (+ (length name) (length size) 2) Buffer-menu-buffer+size-width)
+  (if (> (+ (string-width name) (string-width size) 2)
+         Buffer-menu-buffer+size-width)
       (setq name
-	    (if (string-match "<[0-9]+>$" name)
-		(concat (substring name 0
-				   (- Buffer-menu-buffer+size-width
-				      (max (length size) 3)
-				      (match-end 0)
-				      (- (match-beginning 0))
-				      2))
-			":"		; narrow ellipsis
-			(match-string 0 name))
-	      (concat (substring name 0
-				 (- Buffer-menu-buffer+size-width
-				    (max (length size) 3)
-				    2))
-		      ":")))		; narrow ellipsis
+            (let ((tail
+                   (if (string-match "<[0-9]+>$" name)
+                       (match-string 0 name)
+                     "")))
+              (concat (truncate-string-to-width
+                       name
+                       (- Buffer-menu-buffer+size-width
+                          (max (string-width size) 3)
+                          (string-width tail)
+                          2))
+                      Buffer-menu-short-ellipsis
+                      tail)))
     ;; Don't put properties on (buffer-name).
     (setq name (copy-sequence name)))
   (add-text-properties 0 (length name) name-props name)
   (add-text-properties 0 (length size) size-props size)
   (concat name
 	  (make-string (- Buffer-menu-buffer+size-width
-			  (length name)
-			  (length size))
+			  (string-width name)
+			  (string-width size))
 		       ?\s)
 	  size))
 
@@ -622,7 +691,7 @@ For more information, see the function `buffer-menu'."
     (if (< column 2) (setq column 2))
     (if (> column 5) (setq column 5)))
   (setq Buffer-menu-sort-column column)
-  (let (buffer-read-only l buf m1 m2)
+  (let ((inhibit-read-only t) l buf m1 m2)
     (save-excursion
       (Buffer-menu-beginning)
       (while (not (eobp))
@@ -634,8 +703,7 @@ For more information, see the function `buffer-menu'."
 	  (if (or m1 m2)
 	      (push (list buf m1 m2) l)))
 	(forward-line)))
-    (Buffer-menu-revert)
-    (setq buffer-read-only)
+    (revert-buffer)
     (save-excursion
       (Buffer-menu-beginning)
       (while (not (eobp))
@@ -793,7 +861,7 @@ For more information, see the function `buffer-menu'."
 			  (t
 			   (setq file (concat "("
 					      (file-name-nondirectory file)
-					      ")"
+					      ") "
 					      Info-current-node)))))))
 		(push (list buffer bits name (buffer-size) mode file)
 		      list))))))
@@ -817,16 +885,24 @@ For more information, see the function `buffer-menu'."
 		;; Put the buffer name into a text property
 		;; so we don't have to extract it from the text.
 		;; This way we avoid problems with unusual buffer names.
-		(Buffer-menu-buffer+size (nth 2 buffer)
-					 (int-to-string (nth 3 buffer))
-					 `(buffer-name ,(nth 2 buffer)
-					   buffer ,(car buffer)
-					   font-lock-face buffer-menu-buffer
-					   mouse-face highlight
-					   help-echo "mouse-2: select this buffer"))
+		(let ((name (nth 2 buffer))
+		      (size (int-to-string (nth 3 buffer))))
+		      (Buffer-menu-buffer+size name size
+		         `(buffer-name ,name
+				       buffer ,(car buffer)
+				       font-lock-face buffer-menu-buffer
+				       mouse-face highlight
+				       help-echo
+				       ,(if (>= (length name)
+						(- Buffer-menu-buffer+size-width
+						   (max (length size) 3)
+						   2))
+					    name
+					  "mouse-2: select this buffer"))))
 		"  "
-		(if (> (length (nth 4 buffer)) Buffer-menu-mode-width)
-		    (substring (nth 4 buffer) 0 Buffer-menu-mode-width)
+		(if (> (string-width (nth 4 buffer)) Buffer-menu-mode-width)
+		    (truncate-string-to-width (nth 4 buffer)
+					      Buffer-menu-mode-width)
 		  (nth 4 buffer)))
 	(when (nth 5 buffer)
 	  (indent-to (+ Buffer-menu-buffer-column Buffer-menu-buffer+size-width

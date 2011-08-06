@@ -404,7 +404,7 @@
 	* unexec.c (make_hdr for celerity):
 	Copy their own header field a_scovfrl from ohdr.
 
-	* unexec.c for COFF:
+	* unexec.c [COFF]:
 	Round positions of text and and data sections in output file
 	to page boundaries.
 
@@ -497,7 +497,7 @@
 
 	* xdisp.c (try_window_id):
 	Use adjusted hpos of bp in computation of ep.
-	Adjustde hpos can be negative after a continuation.
+	Adjusted hpos can be negative after a continuation.
 
 	* fileio.c (Finsert_file_contents):
 	Was failing to update n as chars were read.
@@ -660,7 +660,7 @@
 	* keyboard.c (fake_suspend):
 	Use execlp, not execl.
 
-	* sysdep.c (random, srqndom):
+	* sysdep.c (random, srandom):
 	Add dummy for srandom => srand.  Enable both for 4.1 and USG.
 	* fns.c (Frandom):
 	Remove conditional; let those dummies serve.
@@ -856,7 +856,7 @@
 	Don't consider spaces at beginning as special if line is
 	highlighted.
 	Avoids losing the inverse-video on leading spaces in mode lines
-	on terminals where erasing does not turn on highlightig (vt100?).
+	on terminals where erasing does not turn on highlighting (vt100?).
 
 	* process.c (pty):
 	On UNIPLUS, don't try opening other side.
@@ -1238,7 +1238,7 @@
 	Suppress "Loading %s... done" if noninteractive.
 
 	* alloc.c (Fgarbage_collect):
-	Suppress "garbage collecing..." message if noninteractive.
+	Suppress "garbage collecting..." message if noninteractive.
 
 	* regex.c (re_compile_pattern):
 	Fix error message (double "\"'s for c compiler).
@@ -3041,7 +3041,7 @@
 	(Kernel bug).
 
 	* keyboard.c (kbd_buffer_get_char):
-	If wait_reading_process_input returns and kbd_count stil 0,
+	If wait_reading_process_input returns and kbd_count still 0,
 	gobble the buffered input.
 
 1985-06-01  Richard M. Stallman  (rms@mit-prep)
@@ -3167,7 +3167,7 @@
 	(enable_recursive_minibuffers) so that Real Men may confuse
 	themselves.  (Some commands such as c-h f can also use it) (This
 	is not quite the right thing for commands to bind to read their
-	arguments since it enables arbitrary recursiveness, not just one
+	arguments since it enables arbitrary recursion, not just one
 	level to read args.)
 
 	* buffer.c
@@ -3431,11 +3431,11 @@
 
 	* fileio.c: Added optional third arg ok-if-exists to
 	rename-file, make-symbolic-link, add-name-to-file and copy-file.
-	If the destrination filename exists, then if ok-if-exists
+	If the destination filename exists, then if ok-if-exists
 	is non-nil it is silently bashed; else if the function was
 	called interactively the user is queried as to whether s/he
 	wants to bash the file; otherwise (ok-if-exists nil, non-interactive)
-	a  file-already-exists  error is signalled.
+	a  file-already-exists  error is signaled.
 
 	* window.c: Made get-window-buffer return nil if get-buffer of
 	its arg returns nil, rather than erring.
@@ -3522,14 +3522,14 @@
 	while minibuffer is selected.
 
     Copyright (C) 1985, 1986, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-	2008 Free Software Foundation, Inc.
+	2008, 2009 Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
-  GNU Emacs is free software; you can redistribute it and/or modify
+  GNU Emacs is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 3, or (at your option)
-  any later version.
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -3537,8 +3537,6 @@
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with GNU Emacs; see the file COPYING.  If not, write to the
-  Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-  Boston, MA 02110-1301, USA.
+  along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; arch-tag: 2d2c1086-b0a5-437c-bc58-fb38ce2e0f9b

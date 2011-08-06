@@ -1,7 +1,7 @@
 ;;; ruler-mode.el --- display a ruler in the header line
 
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Ponce <david@dponce.com>
 ;; Maintainer: David Ponce <david@dponce.com>
@@ -11,20 +11,18 @@
 
 ;; This file is part of GNU Emacs.
 
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 3, or (at
-;; your option) any later version.
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; This program is distributed in the hope that it will be useful, but
-;; WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -121,7 +119,7 @@
   :group 'convenience)
 
 (defcustom ruler-mode-show-tab-stops nil
-  "*If non-nil the ruler shows tab stop positions.
+  "If non-nil the ruler shows tab stop positions.
 Also allowing to visually change `tab-stop-list' setting using
 <C-down-mouse-1> and <C-down-mouse-3> on the ruler to respectively add
 or remove a tab stop.  \\[ruler-mode-toggle-show-tab-stops] or
@@ -135,8 +133,7 @@ or remove a tab stop.  \\[ruler-mode-toggle-show-tab-stops] or
   "Ensure WIDGET value is a valid character value."
   (save-excursion
     (let ((value (widget-value widget)))
-      (if (char-valid-p value)
-          nil
+      (unless (characterp value)
         (widget-put widget :error
                     (format "Invalid character value: %S" value))
         widget))))
@@ -144,7 +141,7 @@ or remove a tab stop.  \\[ruler-mode-toggle-show-tab-stops] or
 (defcustom ruler-mode-fill-column-char (if (char-displayable-p ?¶)
                                            ?\¶
                                          ?\|)
-  "*Character used at the `fill-column' location."
+  "Character used at the `fill-column' location."
   :group 'ruler-mode
   :type '(choice
           (character :tag "Character")
@@ -152,7 +149,7 @@ or remove a tab stop.  \\[ruler-mode-toggle-show-tab-stops] or
                    :validate ruler-mode-character-validate)))
 
 (defcustom ruler-mode-comment-column-char ?\#
-  "*Character used at the `comment-column' location."
+  "Character used at the `comment-column' location."
   :group 'ruler-mode
   :type '(choice
           (character :tag "Character")
@@ -160,7 +157,7 @@ or remove a tab stop.  \\[ruler-mode-toggle-show-tab-stops] or
                    :validate ruler-mode-character-validate)))
 
 (defcustom ruler-mode-goal-column-char ?G
-  "*Character used at the `goal-column' location."
+  "Character used at the `goal-column' location."
   :group 'ruler-mode
   :type '(choice
           (character :tag "Character")
@@ -170,7 +167,7 @@ or remove a tab stop.  \\[ruler-mode-toggle-show-tab-stops] or
 (defcustom ruler-mode-current-column-char (if (char-displayable-p ?¦)
                                               ?\¦
                                             ?\@)
-  "*Character used at the `current-column' location."
+  "Character used at the `current-column' location."
   :group 'ruler-mode
   :type '(choice
           (character :tag "Character")
@@ -178,7 +175,7 @@ or remove a tab stop.  \\[ruler-mode-toggle-show-tab-stops] or
                    :validate ruler-mode-character-validate)))
 
 (defcustom ruler-mode-tab-stop-char ?\T
-  "*Character used at `tab-stop-list' locations."
+  "Character used at `tab-stop-list' locations."
   :group 'ruler-mode
   :type '(choice
           (character :tag "Character")
@@ -186,7 +183,7 @@ or remove a tab stop.  \\[ruler-mode-toggle-show-tab-stops] or
                    :validate ruler-mode-character-validate)))
 
 (defcustom ruler-mode-basic-graduation-char ?\.
-  "*Character used for basic graduations."
+  "Character used for basic graduations."
   :group 'ruler-mode
   :type '(choice
           (character :tag "Character")
@@ -194,7 +191,7 @@ or remove a tab stop.  \\[ruler-mode-toggle-show-tab-stops] or
                    :validate ruler-mode-character-validate)))
 
 (defcustom ruler-mode-inter-graduation-char ?\!
-  "*Character used for intermediate graduations."
+  "Character used for intermediate graduations."
   :group 'ruler-mode
   :type '(choice
           (character :tag "Character")
@@ -202,7 +199,7 @@ or remove a tab stop.  \\[ruler-mode-toggle-show-tab-stops] or
                    :validate ruler-mode-character-validate)))
 
 (defcustom ruler-mode-set-goal-column-ding-flag t
-  "*Non-nil means do `ding' when `goal-column' is set."
+  "Non-nil means do `ding' when `goal-column' is set."
   :group 'ruler-mode
   :type 'boolean)
 
@@ -667,7 +664,8 @@ Optional argument PROPS specifies other text properties to apply."
          ;; Create an "clean" ruler.
          (ruler
           (propertize
-           (make-string w ruler-mode-basic-graduation-char)
+           (string-to-multibyte
+	    (make-string w ruler-mode-basic-graduation-char))
            'face 'ruler-mode-default
            'local-map ruler-mode-map
            'help-echo (cond
@@ -763,5 +761,5 @@ Optional argument PROPS specifies other text properties to apply."
 ;; coding: iso-latin-1
 ;; End:
 
-;;; arch-tag: b2f24546-5605-44c4-b67b-c9a4eeba3ee8
+;; arch-tag: b2f24546-5605-44c4-b67b-c9a4eeba3ee8
 ;;; ruler-mode.el ends here

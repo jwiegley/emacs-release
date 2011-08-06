@@ -1,7 +1,7 @@
 ;;; autorevert.el --- revert buffers when files on disk change
 
 ;; Copyright (C) 1997, 1998, 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Anders Lindgren <andersl@andersl.com>
 ;; Keywords: convenience
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -209,10 +207,13 @@ would only waste precious space."
 When non-nil, both file buffers and buffers with a custom
 `revert-buffer-function' and a `buffer-stale-function' are
 reverted by Global Auto-Revert mode.  These include the Buffer
-List buffer, and Dired buffers showing complete local
-directories.  Dired buffers do not auto-revert as a result of
-changes in subdirectories or in the contents, size, modes, etc.,
-of files.  You may still sometimes want to revert them manually.
+List buffer displayed by `buffer-menu', and Dired buffers showing
+complete local directories.  The Buffer List buffer reverts every
+`auto-revert-interval' seconds; Dired buffers when the file list of
+the main directory changes.  Dired buffers do not auto-revert as
+a result of changes in subdirectories, or in the contents, size,
+modes, etc., of files.  You may still sometimes want to revert
+them manually.
 
 Use this option with care since it could lead to excessive auto-reverts.
 For more information, see Info node `(emacs)Autorevert'."
@@ -276,9 +277,9 @@ the list of old buffers.")
   "Position of last known end of file.")
 
 (add-hook 'find-file-hook
-	  (lambda ()
-	    (set (make-local-variable 'auto-revert-tail-pos)
-		 (nth 7 (file-attributes buffer-file-name)))))
+ 	  (lambda ()
+ 	    (set (make-local-variable 'auto-revert-tail-pos)
+ 		 (nth 7 (file-attributes buffer-file-name)))))
 
 ;; Functions:
 
@@ -334,7 +335,7 @@ Use `auto-revert-mode' for changes other than appends!"
       (auto-revert-tail-mode 0)
       (error "This buffer is not visiting a file"))
     (if (and (buffer-modified-p)
-	     (not auto-revert-tail-pos) ; library was loaded only after finding file
+	     (zerop auto-revert-tail-pos) ; library was loaded only after finding file
 	     (not (y-or-n-p "Buffer is modified, so tail offset may be wrong.  Proceed? ")))
 	(auto-revert-tail-mode 0)
       ;; a-r-tail-pos stores the size of the file at the time of the
@@ -348,11 +349,11 @@ Use `auto-revert-mode' for changes other than appends!"
       ;; revert, then you might miss some output then happened
       ;; between visiting the file and activating a-r-t-mode.
       (and (zerop auto-revert-tail-pos)
-	   (not (verify-visited-file-modtime (current-buffer)))
-	   (y-or-n-p "File changed on disk, content may be missing.  \
+           (not (verify-visited-file-modtime (current-buffer)))
+           (y-or-n-p "File changed on disk, content may be missing.  \
 Perform a full revert? ")
-	   ;; Use this (not just revert-buffer) for point-preservation.
-	   (auto-revert-handler))
+           ;; Use this (not just revert-buffer) for point-preservation.
+           (auto-revert-handler))
       ;; else we might reappend our own end when we save
       (add-hook 'before-save-hook (lambda () (auto-revert-tail-mode 0)) nil t)
       (or (local-variable-p 'auto-revert-tail-pos) ; don't lose prior position
@@ -376,11 +377,23 @@ This function is designed to be added to hooks, for example:
 
 ;;;###autoload
 (define-minor-mode global-auto-revert-mode
-  "Revert any buffer when file on disk changes.
+  "Toggle Global Auto Revert mode.
+With optional prefix argument ARG, enable Global Auto Revert Mode
+if ARG > 0, else disable it.
 
-With arg, turn Auto Revert mode on globally if and only if arg is positive.
-This is a minor mode that affects all buffers.
-Use `auto-revert-mode' to revert a particular buffer."
+This is a global minor mode that reverts any buffer associated
+with a file when the file changes on disk.  Use `auto-revert-mode'
+to revert a particular buffer.
+
+If `global-auto-revert-non-file-buffers' is non-nil, this mode
+may also revert some non-file buffers, as described in the
+documentation of that variable.  It ignores buffers with modes
+matching `global-auto-revert-ignore-modes', and buffers with a
+non-nil vale of `global-auto-revert-ignore-buffer'.
+
+This function calls the hook `global-auto-revert-mode-hook'.
+It displays the text that `global-auto-revert-mode-text'
+specifies in the mode line."
   :global t :group 'auto-revert :lighter global-auto-revert-mode-text
   (auto-revert-set-timer)
   (when global-auto-revert-mode
@@ -416,12 +429,16 @@ will use an up-to-date value of `auto-revert-interval'"
   "Revert current buffer, if appropriate.
 This is an internal function used by Auto-Revert Mode."
   (when (or auto-revert-tail-mode (not (buffer-modified-p)))
-    (let* ((buffer (current-buffer))
+    (let* ((buffer (current-buffer)) size
 	   (revert
 	    (or (and buffer-file-name
 		     (not (file-remote-p buffer-file-name))
 		     (file-readable-p buffer-file-name)
-		     (not (verify-visited-file-modtime buffer)))
+		     (if auto-revert-tail-mode
+			 (/= auto-revert-tail-pos
+			    (setq size
+				  (nth 7 (file-attributes buffer-file-name))))
+		       (not (verify-visited-file-modtime buffer))))
 		(and (or auto-revert-mode
 			 global-auto-revert-non-file-buffers)
 		     revert-buffer-function
@@ -445,7 +462,7 @@ This is an internal function used by Auto-Revert Mode."
 		    (push window eoblist)))
 	   'no-mini t))
 	(if auto-revert-tail-mode
-	    (auto-revert-tail-handler)
+	    (auto-revert-tail-handler size)
 	  ;; Bind buffer-read-only in case user has done C-x C-q,
 	  ;; so as not to forget that.  This gives undesirable results
 	  ;; when the file's mode changes, but that is less common.
@@ -460,23 +477,26 @@ This is an internal function used by Auto-Revert Mode."
       (when (or revert auto-revert-check-vc-info)
 	(vc-find-file-hook)))))
 
-(defun auto-revert-tail-handler ()
-  (let ((size (nth 7 (file-attributes buffer-file-name)))
-	(modified (buffer-modified-p))
-	buffer-read-only		; ignore
+(defun auto-revert-tail-handler (size)  
+  (let ((modified (buffer-modified-p))
+	(inhibit-read-only t)		; Ignore.
 	(file buffer-file-name)
-	buffer-file-name)		; ignore that file has changed
-    (when (> size auto-revert-tail-pos)
+	(buffer-file-name nil))		; Ignore that file has changed.
+    (when (/= auto-revert-tail-pos size)
+      (run-hooks 'before-revert-hook)
       (undo-boundary)
       (save-restriction
 	(widen)
 	(save-excursion
 	  (goto-char (point-max))
-	  (insert-file-contents file nil auto-revert-tail-pos size)))
-      (run-mode-hooks 'after-revert-hook)
+	  (insert-file-contents file nil
+				(and (< auto-revert-tail-pos size)
+				     auto-revert-tail-pos)
+				size)))
+      (run-hooks 'after-revert-hook)
       (undo-boundary)
       (setq auto-revert-tail-pos size)
-      (set-buffer-modified-p modified)))
+      (restore-buffer-modified-p modified)))
   (set-visited-file-modtime))
 
 (defun auto-revert-buffers ()
@@ -523,7 +543,7 @@ the timer when no buffers need to be checked."
 		  (not (and auto-revert-stop-on-user-input
 			    (input-pending-p))))
 	(let ((buf (car bufs)))
-	  (if (buffer-name buf)		; Buffer still alive?
+          (if (buffer-live-p buf)
 	      (with-current-buffer buf
 		;; Test if someone has turned off Auto-Revert Mode in a
 		;; non-standard way, for example by changing major mode.
@@ -550,5 +570,5 @@ the timer when no buffers need to be checked."
 
 (run-hooks 'auto-revert-load-hook)
 
-;;; arch-tag: f6bcb07b-4841-477e-9e44-b18678e58876
+;; arch-tag: f6bcb07b-4841-477e-9e44-b18678e58876
 ;;; autorevert.el ends here

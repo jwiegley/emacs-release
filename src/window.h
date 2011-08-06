@@ -1,14 +1,14 @@
 /* Window definitions for GNU Emacs.
    Copyright (C) 1985, 1986, 1993, 1995, 1997, 1998, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #ifndef WINDOW_H_INCLUDED
 #define WINDOW_H_INCLUDED
@@ -93,7 +91,7 @@ struct window
   {
     /* The first two fields are really the header of a vector */
     /* The window code does not refer to them.  */
-    EMACS_INT size;
+    EMACS_UINT size;
     struct Lisp_Vector *vec_next;
     /* The frame this window is on.  */
     Lisp_Object frame;
@@ -222,12 +220,15 @@ struct window
     /* If redisplay in this window goes beyond this buffer position,
        must run the redisplay-end-trigger-hook.  */
     Lisp_Object redisplay_end_trigger;
-    /* Non-nil means don't delete this window for becoming "too small".  */
-    Lisp_Object too_small_ok;
+    /* Non-nil means resizing windows will attempt to resize this window
+       proportionally.  */
+    Lisp_Object resize_proportionally;
 
-    /* Original window height and top before mini-window was
-       enlarged. */
+    /* Original window height and top before mini-window was enlarged. */
     Lisp_Object orig_total_lines, orig_top_line;
+
+    /* An alist with parameteres.  */
+    Lisp_Object window_parameters;
 
     /* No Lisp data may follow below this point without changing
        mark_object in alloc.c.  The member current_matrix must be the
@@ -279,6 +280,11 @@ struct window
        Currently only used for menu bar windows of frames.  */
     unsigned pseudo_window_p : 1;
 
+    /* 1 means the window start of this window is frozen and may not
+       be changed during redisplay.  If point is not in the window,
+       accept that.  */
+    unsigned frozen_window_start_p : 1;
+
     /* Amount by which lines of this window are scrolled in
        y-direction (smooth scrolling).  */
     int vscroll;
@@ -286,11 +292,6 @@ struct window
     /* Z_BYTE - the buffer position of the last glyph in the current matrix
        of W.  Only valid if WINDOW_END_VALID is not nil.  */
     int window_end_bytepos;
-
-    /* 1 means the window start of this window is frozen and may not
-       be changed during redisplay.  If point is not in the window,
-       accept that.  */
-    unsigned frozen_window_start_p : 1;
 };
 
 /* 1 if W is a minibuffer window.  */
@@ -337,19 +338,17 @@ struct window
 #define WINDOW_FRAME_LINE_HEIGHT(W) \
   (FRAME_LINE_HEIGHT (WINDOW_XFRAME ((W))))
 
-
-/* Return the frame width in canonical column units.
+/* Return the width of window W in canonical column units.
    This includes scroll bars and fringes.  */
 
 #define WINDOW_TOTAL_COLS(W) \
   (XFASTINT ((W)->total_cols))
 
-/* Return the frame height in canonical line units.
+/* Return the height of window W in canonical line units.
    This includes header and mode lines, if any.  */
 
 #define WINDOW_TOTAL_LINES(W) \
   (XFASTINT ((W)->total_lines))
-
 
 /* Return the total pixel width of window W.  */
 
@@ -745,7 +744,7 @@ extern Lisp_Object Vminibuf_scroll_window;
 /* Nil or a symbol naming the window system under which emacs is
    running ('x is the only current possibility) */
 
-extern Lisp_Object Vwindow_system;
+extern Lisp_Object Vinitial_window_system;
 
 /* Version number of X windows: 10, 11 or nil.  */
 
@@ -761,7 +760,6 @@ extern Lisp_Object Vmouse_event;
 
 EXFUN (Fnext_window, 3);
 EXFUN (Fselect_window, 2);
-EXFUN (Fdisplay_buffer, 3);
 EXFUN (Fset_window_buffer, 3);
 EXFUN (Fset_window_hscroll, 2);
 EXFUN (Fwindow_hscroll, 1);
@@ -790,6 +788,7 @@ extern void foreach_window P_ ((struct frame *,
 extern void grow_mini_window P_ ((struct window *, int));
 extern void shrink_mini_window P_ ((struct window *));
 
+void run_window_configuration_change_hook (struct frame *f);
 
 /* Make WINDOW display BUFFER as its contents.  RUN_HOOKS_P non-zero
    means it's allowed to run hooks.  See make_frame for a case where

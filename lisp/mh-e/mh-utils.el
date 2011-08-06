@@ -1,7 +1,8 @@
 ;;; mh-utils.el --- MH-E general utilities
 
 ;; Copyright (C) 1993, 1995, 1997,
-;;  2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -10,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -67,7 +66,7 @@ used in lieu of `search' in the CL package."
 ;;;###mh-autoload
 (defun mh-colors-available-p ()
   "Check if colors are available in the Emacs being used."
-  (or mh-xemacs-flag
+  (or (featurep 'xemacs)
       (let ((color-cells (mh-display-color-cells)))
         (and (numberp color-cells) (>= color-cells 8)))))
 
@@ -186,9 +185,8 @@ MH-E."
                (getenv "MH")))
     (if (null (mh-variants))
         (error "Install MH and run install-mh before running MH-E"))
-    (let ((profile "~/.mh_profile"))
-      (if (not (file-readable-p profile))
-          (error "Run install-mh before running MH-E")))
+    (if (not (or (getenv "MH") (file-readable-p "~/.mh_profile")))
+        (error "Run install-mh before running MH-E"))
     ;; Read MH profile.
     (setq mh-user-path (mh-profile-component "Path"))
     (if (not mh-user-path)
@@ -862,7 +860,8 @@ Returns t if found, nil if not."
 ;;;###mh-autoload
 (defun mh-goto-header-end (arg)
   "Move the cursor ARG lines after the header."
-  (if (re-search-forward "^-*$" nil nil)
+  (if (re-search-forward (concat "^\\(" (regexp-quote mh-mail-header-separator)
+                                 "\\)?$") nil nil)
       (forward-line arg)))
 
 ;;;###mh-autoload

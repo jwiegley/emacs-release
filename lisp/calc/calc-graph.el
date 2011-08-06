@@ -1,17 +1,17 @@
 ;;; calc-graph.el --- graph output functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -218,7 +216,8 @@
          0)
      (or (and (Math-num-integerp pstyle) (math-trunc pstyle))
          (if (eq (car-safe (calc-var-value (nth 2 ydata))) 'vec)
-             0 -1)))))
+             0 -1))
+     (math-contains-sdev-p (eval (nth 2 ydata))))))
 
 (defun calc-graph-lookup (thing)
   (if (and (eq (car-safe thing) 'var)
@@ -792,6 +791,10 @@
 	  calc-graph-numsteps (1- (* calc-graph-numsteps (1+ calc-graph-numsteps3))))))
 
 (defun calc-graph-format-data ()
+  (if (math-contains-sdev-p calc-graph-yp)
+      (let ((yp calc-graph-yp))
+        (setq calc-graph-yp (cons 'vec (mapcar 'math-get-value (cdr yp))))
+        (setq calc-graph-zp (cons 'vec (mapcar 'math-get-sdev (cdr yp))))))
   (while (<= (setq calc-graph-stepcount (1+ calc-graph-stepcount)) calc-graph-numsteps)
     (if calc-graph-xvec
 	(setq calc-graph-xp (cdr calc-graph-xp)
@@ -1059,7 +1062,7 @@ This \"dumb\" driver will be present in Gnuplot 3.0."
   (interactive "P")
   (calc-graph-set-styles t (and style (prefix-numeric-value style))))
 
-(defun calc-graph-set-styles (lines points)
+(defun calc-graph-set-styles (lines points &optional yerr)
   (calc-graph-init)
   (save-excursion
     (set-buffer calc-gnuplot-input)
@@ -1067,7 +1070,7 @@ This \"dumb\" driver will be present in Gnuplot 3.0."
 	(error "No data points have been set!"))
     (let ((base (point))
 	  (mode nil) (lstyle nil) (pstyle nil)
-	  start end lenbl penbl)
+	  start end lenbl penbl errform)
       (re-search-forward "[,\n]")
       (forward-char -1)
       (setq end (point) start end)
@@ -1087,29 +1090,48 @@ This \"dumb\" driver will be present in Gnuplot 3.0."
 		(setq pstyle (string-to-number
 			      (buffer-substring (match-beginning 1)
 						(match-end 1)))))))
-      (setq lenbl (or (equal mode "lines") (equal mode "linespoints"))
-	    penbl (or (equal mode "points") (equal mode "linespoints")))
-      (if lines
-	  (or (eq lines t)
-	      (setq lstyle lines
-		    lenbl (>= lines 0)))
-	(setq lenbl (not lenbl)))
-      (if points
-	  (or (eq points t)
-	      (setq pstyle points
-		    penbl (>= points 0)))
-	(setq penbl (not penbl)))
-      (delete-region start end)
+      (unless yerr
+        (setq lenbl (or (equal mode "lines") 
+                        (equal mode "linespoints"))
+              penbl (or (equal mode "points") 
+                        (equal mode "linespoints")))
+        (if lines
+            (or (eq lines t)
+                (setq lstyle lines
+                      lenbl (>= lines 0)))
+          (setq lenbl (not lenbl)))
+        (if points
+            (or (eq points t)
+                (setq pstyle points
+                      penbl (>= points 0)))
+          (setq penbl (not penbl))))
+        (delete-region start end)
       (goto-char start)
-      (insert " with "
-	      (if lenbl
-		  (if penbl "linespoints" "lines")
-		(if penbl "points" "dots")))
-      (if (and pstyle (> pstyle 0))
-	  (insert " " (if (and lstyle (> lstyle 0)) (int-to-string lstyle) "1")
-		  " " (int-to-string pstyle))
-	(if (and lstyle (> lstyle 0))
-	    (insert " " (int-to-string lstyle))))))
+      (setq errform
+            (condition-case nil
+                (math-contains-sdev-p
+                 (eval (intern 
+                        (concat "var-"
+                                (save-excursion
+                                  (re-search-backward ":\\(.*\\)\\}")
+                                  (match-string 1))))))
+              (error nil)))
+      (if yerr
+          (insert " with yerrorbars")
+        (insert " with "
+                (if (and errform
+                         (equal mode "dots")
+                         (eq lines t))
+                    "yerrorbars"
+                  (if lenbl
+                      (if penbl "linespoints" "lines")
+                    (if penbl "points" "dots"))))
+        (if (and pstyle (> pstyle 0))
+            (insert " " 
+                    (if (and lstyle (> lstyle 0)) (int-to-string lstyle) "1")
+                    " " (int-to-string pstyle))
+          (if (and lstyle (> lstyle 0))
+              (insert " " (int-to-string lstyle)))))))
   (calc-graph-view-commands))
 
 (defun calc-graph-zero-x (flag)
@@ -1475,5 +1497,5 @@ This \"dumb\" driver will be present in Gnuplot 3.0."
 
 (provide 'calc-graph)
 
-;;; arch-tag: e4b06a52-c386-4d54-a2bb-7c0a0ef533c2
+;; arch-tag: e4b06a52-c386-4d54-a2bb-7c0a0ef533c2
 ;;; calc-graph.el ends here

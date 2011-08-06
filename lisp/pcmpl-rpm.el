@@ -1,14 +1,14 @@
 ;;; pcmpl-rpm.el --- functions for dealing with rpm completions
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,13 +16,11 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
-;; These functions provide completion rules for RedHat's `rpm' tool.
+;; These functions provide completion rules for the `rpm' command.
 
 ;;; Code:
 
@@ -31,7 +29,7 @@
 (require 'pcomplete)
 
 (defgroup pcmpl-rpm nil
-  "Functions for dealing with CVS completions."
+  "Functions for dealing with rpm completions."
   :group 'pcomplete)
 
 ;; Functions:
@@ -55,11 +53,8 @@
 
 ;;;###autoload
 (defun pcomplete/rpm ()
-  "Completion for RedHat's `rpm' command.
-These rules were taken from the output of `rpm --help' on a RedHat 6.1
-system.  They follow my interpretation of what followed, but since I'm
-not a major rpm user/builder, please send me any corrections you find.
-You can use \\[eshell-report-bug] to do so."
+  "Completion for the `rpm' command."
+  ;; Originally taken from the output of `rpm --help' on a Red Hat 6.1 system.
   (let (mode)
     (while (<= pcomplete-index pcomplete-last)
       (unless mode
@@ -137,7 +132,9 @@ You can use \\[eshell-report-bug] to do so."
 		 (pcmpl-rpm-all-query "--requires")))))
 	  (if (pcomplete-match "^-" 0)
 	      (pcomplete-opt "af.p(pcmpl-rpm-files)ilsdcvR")
-	    (pcomplete-here (pcmpl-rpm-packages)))))
+	    (if (pcomplete-test "-[^-]*p" 'first 1)
+		(pcomplete-here (pcmpl-rpm-files))
+	      (pcomplete-here (pcmpl-rpm-packages))))))
        ((pcomplete-test "--pipe")
 	(pcomplete-here* (funcall pcomplete-command-completion-function)))
        ((pcomplete-test "--rmsource")
@@ -327,5 +324,5 @@ You can use \\[eshell-report-bug] to do so."
        (t
 	(error "You must select a mode: -q, -i, -U, --verify, etc"))))))
 
-;;; arch-tag: 4e64b490-fecf-430e-b2b9-70a8ad64b8c1
+;; arch-tag: 4e64b490-fecf-430e-b2b9-70a8ad64b8c1
 ;;; pcmpl-rpm.el ends here

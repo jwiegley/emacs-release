@@ -1,6 +1,6 @@
 ;;; flymake.el -- a universal on-the-fly syntax checker
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
 ;; Author:  Pavel Kobyakov <pk_at_work@yahoo.com>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -81,7 +79,7 @@
       'float-time
     (if (featurep 'xemacs)
 	(lambda ()
-	  (multiple-value-bind (s0 s1 s2) (current-time)
+	  (multiple-value-bind (s0 s1 s2) (values-list (current-time))
 	    (+ (* (float (ash 1 16)) s0) (float s1) (* 0.0000001 s2)))))))
 
 (defalias 'flymake-replace-regexp-in-string
@@ -265,13 +263,19 @@ are the string substitutions (see `format')."
 
 (make-variable-buffer-local 'flymake-output-residual)
 
+(defgroup flymake nil
+  "A universal on-the-fly syntax checker."
+  :version "23.1"
+  :group 'tools)
+
 (defcustom flymake-allowed-file-name-masks
   '(("\\.c\\'" flymake-simple-make-init)
     ("\\.cpp\\'" flymake-simple-make-init)
     ("\\.xml\\'" flymake-xml-init)
     ("\\.html?\\'" flymake-xml-init)
     ("\\.cs\\'" flymake-simple-make-init)
-    ("\\.pl\\'" flymake-perl-init)
+    ("\\.p[ml]\\'" flymake-perl-init)
+    ("\\.php[345]?\\'" flymake-php-init)
     ("\\.h\\'" flymake-master-make-header-init flymake-master-cleanup)
     ("\\.java\\'" flymake-simple-make-java-init flymake-simple-java-cleanup)
     ("[0-9]+\\.tex\\'" flymake-master-tex-init flymake-master-cleanup)
@@ -325,11 +329,6 @@ Return nil if we cannot, non-nil if we can."
   (or (nth 2 (flymake-get-file-name-mode-and-masks file-name))
       'flymake-get-real-file-name))
 
-(defcustom flymake-buildfile-dirs '("." ".." "../.." "../../.." "../../../.." "../../../../.." "../../../../../.." "../../../../../../.." "../../../../../../../.." "../../../../../../../../.." "../../../../../../../../../.." "../../../../../../../../../../..")
-  "Dirs to look for buildfile."
-  :group 'flymake
-  :type '(repeat (string)))
-
 (defvar flymake-find-buildfile-cache (flymake-makehash 'equal))
 
 (defun flymake-get-buildfile-from-cache (dir-name)
@@ -346,19 +345,12 @@ Return nil if we cannot, non-nil if we can."
 Buildfile includes Makefile, build.xml etc.
 Return its file name if found, or nil if not found."
   (or (flymake-get-buildfile-from-cache source-dir-name)
-      (let* ((dirs flymake-buildfile-dirs)
-             (buildfile-dir          nil)
-             (found                  nil))
-        (while (and (not found) dirs)
-          (setq buildfile-dir (concat source-dir-name (car dirs)))
-          (when (file-exists-p (expand-file-name buildfile-name buildfile-dir))
-            (setq found t))
-          (setq dirs (cdr dirs)))
-        (if found
+      (let* ((file (locate-dominating-file source-dir-name buildfile-name)))
+        (if file
             (progn
-              (flymake-log 3 "found buildfile at %s/%s" buildfile-dir buildfile-name)
-              (flymake-add-buildfile-to-cache source-dir-name buildfile-dir)
-              buildfile-dir)
+              (flymake-log 3 "found buildfile at %s" file)
+              (flymake-add-buildfile-to-cache source-dir-name file)
+              file)
           (progn
             (flymake-log 3 "buildfile for %s not found" source-dir-name)
             nil)))))
@@ -572,10 +564,8 @@ Find master file, patch and save it."
 	nil))))
 
 (defun flymake-save-buffer-in-file (file-name)
-  (save-restriction
-    (widen)
-    (make-directory (file-name-directory file-name) 1)
-    (write-region (point-min) (point-max) file-name nil 566))
+  (make-directory (file-name-directory file-name) 1)
+  (write-region nil nil file-name nil 566)
   (flymake-log 3 "saved buffer %s in file %s" (buffer-name) file-name))
 
 (defun flymake-save-string-to-file (file-name data)
@@ -595,7 +585,7 @@ It's flymake process filter."
 
     (flymake-log 3 "received %d byte(s) of output from process %d"
                  (length output) (process-id process))
-    (when source-buffer
+    (when (buffer-live-p source-buffer)
       (with-current-buffer source-buffer
         (flymake-parse-output-and-residual output)))))
 
@@ -866,11 +856,9 @@ Perhaps use text from LINE-ERR-INFO-LIST to enhance highlighting."
                                       (flymake-ler-file line-err-info)))
 	(setq line-err-info (flymake-ler-set-full-file line-err-info real-file-name))
 
-	(if (flymake-same-files real-file-name source-file-name)
-	    (setq line-err-info (flymake-ler-set-file line-err-info nil))
-	  (setq line-err-info (flymake-ler-set-file line-err-info (file-name-nondirectory real-file-name))))
-
-	(setq err-info-list (flymake-add-err-info err-info-list line-err-info)))
+	(when (flymake-same-files real-file-name source-file-name)
+	  (setq line-err-info (flymake-ler-set-file line-err-info nil))
+	  (setq err-info-list (flymake-add-err-info err-info-list line-err-info))))
       (flymake-log 3 "parsed '%s', %s line-err-info" (nth idx lines) (if line-err-info "got" "no"))
       (setq idx (1+ idx)))
     err-info-list))
@@ -925,6 +913,8 @@ Convert it to flymake internal format."
       1 3 nil 4)
      ;; perl
      ("\\(.*\\) at \\([^ \n]+\\) line \\([0-9]+\\)[,.\n]" 2 3 nil 1)
+     ;; PHP
+     ("\\(?:Parse\\|Fatal\\) error: \\(.*\\) in \\(.*\\) on line \\([0-9]+\\)" 2 3 nil 1)
      ;; LaTeX warnings (fileless) ("\\(LaTeX \\(Warning\\|Error\\): .*\\) on input line \\([0-9]+\\)" 20 3 nil 1)
      ;; ant/javac
      (" *\\(\\[javac\\] *\\)?\\(\\([a-zA-Z]:\\)?[^:(\t\n]+\\)\:\\([0-9]+\\)\:[ \t\n]*\\(.+\\)"
@@ -1277,10 +1267,9 @@ For the format of LINE-ERR-INFO, see `flymake-ler-make-ler'."
 (defun flymake-goto-file-and-line (file line)
   "Try to get buffer for FILE and goto line LINE in it."
   (if (not (file-exists-p file))
-      (flymake-log 1 "file %s does not exists" file)
-    (progn
-      (find-file file)
-      (goto-line line))))
+      (flymake-log 1 "File %s does not exist" file)
+    (find-file file)
+    (goto-line line)))
 
 ;; flymake minor mode declarations
 (defvar flymake-mode-line nil)
@@ -1734,6 +1723,15 @@ Use CREATE-TEMP-F for creating temp copy."
                        temp-file
                        (file-name-directory buffer-file-name))))
     (list "perl" (list "-wc " local-file))))
+
+;;;; php-specific init-cleanup routines
+(defun flymake-php-init ()
+  (let* ((temp-file   (flymake-init-create-temp-buffer-copy
+                       'flymake-create-temp-inplace))
+	 (local-file  (file-relative-name
+                       temp-file
+                       (file-name-directory buffer-file-name))))
+    (list "php" (list "-f" local-file "-l"))))
 
 ;;;; tex-specific init-cleanup routines
 (defun flymake-get-tex-args (file-name)

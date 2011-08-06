@@ -1,17 +1,17 @@
 ;;; image.el --- image API
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: multimedia
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -34,16 +32,26 @@
 
 
 (defconst image-type-header-regexps
-  '(("\\`/[\t\n\r ]*\\*.*XPM.\\*/" . xpm)
+  `(("\\`/[\t\n\r ]*\\*.*XPM.\\*/" . xpm)
     ("\\`P[1-6][[:space:]]+\\(?:#.*[[:space:]]+\\)*[0-9]+[[:space:]]+[0-9]+" . pbm)
     ("\\`GIF8[79]a" . gif)
     ("\\`\x89PNG\r\n\x1a\n" . png)
-    ("\\`[\t\n\r ]*#define \\([a-z0-9]+\\)_width [0-9]+\n\
-#define \\1_height [0-9]+\n\
-static char \\1_bits" . xbm)
+    ("\\`[\t\n\r ]*#define \\([a-z0-9_]+\\)_width [0-9]+\n\
+#define \\1_height [0-9]+\n\\(\
+#define \\1_x_hot [0-9]+\n\
+#define \\1_y_hot [0-9]+\n\\)?\
+static \\(unsigned \\)?char \\1_bits" . xbm)
     ("\\`\\(?:MM\0\\*\\|II\\*\0\\)" . tiff)
     ("\\`[\t\n\r ]*%!PS" . postscript)
-    ("\\`\xff\xd8" . (image-jpeg-p . jpeg)))
+    ("\\`\xff\xd8" . (image-jpeg-p . jpeg))
+    (,(let* ((incomment-re "\\(?:[^-]\\|-[^-]\\)")
+	     (comment-re (concat "\\(?:!--" incomment-re "*-->[ \t\r\n]*<\\)")))
+	(concat "\\(?:<\\?xml[ \t\r\n]+[^>]*>\\)?[ \t\r\n]*<"
+		comment-re "*"
+		"\\(?:!DOCTYPE[ \t\r\n]+[^>]*>[ \t\r\n]*<[ \t\r\n]*" comment-re "*\\)?"
+		"[Ss][Vv][Gg]"))
+     . svg)
+    )
   "Alist of (REGEXP . IMAGE-TYPE) pairs used to auto-detect image types.
 When the first bytes of an image file match REGEXP, it is assumed to
 be of image type IMAGE-TYPE if IMAGE-TYPE is a symbol.  If not a symbol,
@@ -60,7 +68,9 @@ a non-nil value, TYPE is the image's type.")
     ("\\.pbm\\'" . pbm)
     ("\\.xbm\\'" . xbm)
     ("\\.ps\\'" . postscript)
-    ("\\.tiff?\\'" . tiff))
+    ("\\.tiff?\\'" . tiff)
+    ("\\.svgz?\\'" . svg)
+    )
   "Alist of (REGEXP . IMAGE-TYPE) pairs used to identify image files.
 When the name of an image file match REGEXP, it is assumed to
 be of image type IMAGE-TYPE.")
@@ -77,6 +87,7 @@ be of image type IMAGE-TYPE.")
     (xpm . nil)
     (jpeg . maybe)
     (tiff . maybe)
+    (svg . maybe)
     (postscript . nil))
   "Alist of (IMAGE-TYPE . AUTODETECT) pairs used to auto-detect image files.
 \(See `image-type-auto-detected-p').
@@ -112,11 +123,11 @@ in \"`data-directory'/images\".
 
 Then this function returns a list of directories which contains
 first the directory in which IMAGE was found, followed by the
-value of `load-path'. If PATH is given, it is used instead of
+value of `load-path'.  If PATH is given, it is used instead of
 `load-path'.
 
 If NO-ERROR is non-nil and a suitable path can't be found, don't
-signal an error. Instead, return a list of directories as before,
+signal an error.  Instead, return a list of directories as before,
 except that nil appears in place of the image directory.
 
 Here is an example that uses a common idiom to provide
@@ -199,7 +210,8 @@ compatibility with versions of Emacs that lack the variable
 (defun image-jpeg-p (data)
   "Value is non-nil if DATA, a string, consists of JFIF image data.
 We accept the tag Exif because that is the same format."
-  (when (string-match "\\`\xff\xd8" data)
+  (setq data (ignore-errors (string-to-unibyte data)))
+  (when (and data (string-match-p "\\`\xff\xd8" data))
     (catch 'jfif
       (let ((len (length data)) (i 2))
 	(while (< i len)
@@ -214,8 +226,8 @@ We accept the tag Exif because that is the same format."
 	    (when (and (>= code #xe0) (<= code #xef))
 	      ;; APP0 LEN1 LEN2 "JFIF\0"
 	      (throw 'jfif
-		     (string-match "JFIF\\|Exif"
-				   (substring data i (min (+ i nbytes) len)))))
+		     (string-match-p "JFIF\\|Exif"
+				     (substring data i (min (+ i nbytes) len)))))
 	    (setq i (+ i 1 nbytes))))))))
 
 
@@ -230,7 +242,7 @@ be determined."
       (let ((regexp (car (car types)))
 	    (image-type (cdr (car types))))
 	(if (or (and (symbolp image-type)
-		     (string-match regexp data))
+		     (string-match-p regexp data))
 		(and (consp image-type)
 		     (funcall (car image-type) data)
 		     (setq image-type (cdr image-type))))
@@ -254,7 +266,7 @@ be determined."
 	    (image-type (cdr (car types)))
 	    data)
 	(if (or (and (symbolp image-type)
-		     (looking-at regexp))
+		     (looking-at-p regexp))
 		(and (consp image-type)
 		     (funcall (car image-type)
 			      (or data
@@ -292,37 +304,32 @@ be determined."
   "Determine the type of image file FILE from its name.
 Value is a symbol specifying the image type, or nil if type cannot
 be determined."
-  (let ((types image-type-file-name-regexps)
-	type)
-    (while types
-      (if (string-match (car (car types)) file)
-	  (setq type (cdr (car types))
-		types nil)
-	(setq types (cdr types))))
-    type))
+  (assoc-default file image-type-file-name-regexps 'string-match-p))
 
 
 ;;;###autoload
-(defun image-type (file-or-data &optional type data-p)
+(defun image-type (source &optional type data-p)
   "Determine and return image type.
-FILE-OR-DATA is an image file name or image data.
+SOURCE is an image file name or image data.
 Optional TYPE is a symbol describing the image type.  If TYPE is omitted
 or nil, try to determine the image type from its first few bytes
-of image data.  If that doesn't work, and FILE-OR-DATA is a file name,
+of image data.  If that doesn't work, and SOURCE is a file name,
 use its file extension as image type.
-Optional DATA-P non-nil means FILE-OR-DATA is a string containing image data."
-  (when (and (not data-p) (not (stringp file-or-data)))
-    (error "Invalid image file name `%s'" file-or-data))
+Optional DATA-P non-nil means SOURCE is a string containing image data."
+  (when (and (not data-p) (not (stringp source)))
+    (error "Invalid image file name `%s'" source))
   (unless type
-    (setq type (if data-p 
-                   (image-type-from-data file-or-data)
-                 (or (image-type-from-file-header file-or-data)
-                     (image-type-from-file-name file-or-data))))
-    (or type(error "Cannot determine image type")))
+    (setq type (if data-p
+		   (image-type-from-data source)
+		 (or (image-type-from-file-header source)
+		     (image-type-from-file-name source))))
+    (or type (error "Cannot determine image type")))
   (or (memq type (and (boundp 'image-types) image-types))
       (error "Invalid image type `%s'" type))
   type)
 
+
+(defvar image-library-alist)
 
 ;;;###autoload
 (defun image-type-available-p (type)
@@ -339,7 +346,9 @@ This function is intended to be used from `magic-fallback-mode-alist'.
 
 The buffer is considered to contain an auto-detectable image if
 its beginning matches an image type in `image-type-header-regexps',
-and that image type is present in `image-type-auto-detectable'."
+and that image type is present in `image-type-auto-detectable' with a
+non-nil value.  If that value is non-nil, but not t, then the image type
+must be available."
   (let* ((type (image-type-from-buffer))
 	 (auto (and type (cdr (assq type image-type-auto-detectable)))))
     (and auto
@@ -359,7 +368,12 @@ Optional PROPS are additional image attributes to assign to the image,
 like, e.g. `:mask MASK'.
 Value is the image created, or nil if images of type TYPE are not supported.
 
-Images should not be larger than specified by `max-image-size'."
+Images should not be larger than specified by `max-image-size'.
+
+Image file names that are not absolute are searched for in the
+\"images\" sub-directory of `data-directory' and
+`x-bitmap-file-path' (in that order)."
+  ;; It is x_find_image_file in image.c that sets the search path.
   (setq type (image-type file-or-data type data-p))
   (when (image-type-available-p type)
     (append (list 'image :type type (if data-p :data :file) file-or-data)
@@ -441,7 +455,7 @@ AREA is where to display the image.  AREA nil or omitted means
 display it in the text area, a value of `left-margin' means
 display it in the left marginal area, a value of `right-margin'
 means display it in the right marginal area.
-The image is automatically split into ROW x COLS slices."
+The image is automatically split into ROWS x COLS slices."
   (unless string (setq string " "))
   (unless (eq (car-safe image) 'image)
     (error "Not an image: %s" image))

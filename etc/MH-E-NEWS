@@ -1,9 +1,121 @@
 * COPYRIGHT
 
-Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
   Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
+
+* Changes in MH-E 8.2
+
+Version 8.2 of MH-E will appear in GNU Emacs 23.1. This is a small
+release that includes internal changes from the Emacs team. A new
+hook, `mh-pack-folder-hook', has been added.
+
+There is a known bug where you can't attach attachments in Emacs 21.
+This will be fixed in 8.2.1.
+
+** New Variables in MH-E 8.2
+
+*** mh-pack-folder-hook
+
+The `mh-pack-folder-hook' is run by `F p' (`mh-pack-folder') after
+renumbering the messages. Hook functions can access the current folder
+name with `mh-current-folder'.
+
+** Bug Fixes in MH-E 8.2
+
+*** New version of mh-mm-save-part
+
+Several functions have been updated with code from Gnus 5.11 (closes
+SF #2235022).
+
+
+
+* Changes in MH-E 8.1
+
+Version 8.1 fixes some issues with forwarding messages, respects the
+MH environment variable, adds the abilities to use aliases with GPG
+and show HTML even though it is discouraged. A new hook,
+`mh-annotate-msg-hook', has been added.
+
+** New Features in MH-E 8.1
+
+*** Showing HTML When Text Is the Preferred Alternative
+
+The `:' (`mh-show-preferred-alternative') function displays the
+message with the default preferred alternative. This is as if
+`mm-discouraged-alternatives' was set to nil (closes SF #1777321).
+
+** New Variables in MH-E 8.1
+
+*** mh-annotate-msg-hook
+
+The `mh-annotate-msg-hook' hook is run whenever a message is sent and
+after the scan lines and message are annotated. Hook functions can
+access the current folder name with `mh-current-folder' and obtain the
+message numbers of the annotated messages with `mh-annotate-list'
+(closes SF #2032269).
+
+** Bug Fixes in MH-E 8.1
+
+*** Can't Use Aliases with GPG
+
+GPG requires e-mail addresses, not aliases. So resolve aliases before
+passing addresses to GPG/PGP (closes SF #649226).
+
+*** mh-mml-forward-message: Disposition Should Be Inline
+
+The `f' (`mh-forward') function now forwards messages as inline
+attachments (closes SF #1378993).
+
+*** Illegal Filename Characters on Windows Filesystems
+
+The X-Image-URL cache created filenames with invalid characters on
+Windows. This has been fixed with assistance from Darel Henman (closes
+SF #1396499).
+
+*** Make Many Header Fields Invisible
+
+A vast landscape of header fields are now invisible. You may wish to
+browse `mh-invisible-header-fields-default' and clean up your
+`mh-invisible-header-fields' option. A permanent bug (SF #1916032) has
+been created where you can submit header fields that should be
+rendered invisible (closes SF #1701231).
+
+*** mh-forward Includes Messages in Reverse Order
+
+The `f' (`mh-forward') function now includes messages in ascending
+order (closes SF #1730393).
+
+*** Compile Fails on XEmacs 21.5 beta 28
+
+This has been fixed with help from Henrique Martins (closes SF
+#1749774).
+
+*** Rename Variant mu-mh to gnu-mh
+
+The GNU mailutils MH variant was named inconsistently. The variant has
+been renamed to gnu-mh throughout. Thanks to Darel Henman (closes SF
+#1768928).
+
+*** Respect MH environment Variable
+
+Even if the MH environment variable was set, an error was generated if
+"~/.mh_profile" was missing. This has been fixed thanks to Xavier
+Maillard (closes SF #1946861).
+
+*** Enhance mh-mairix-regexp-builder
+
+Additional items have been added to the Mairix search string in order
+to support org-mode. Thanks to Nick Dokos (closes SF #1965704).
+
+*** mh-mh-to-mime and mh-mh-to-mime-undo Reset Modes
+
+The functions `mh-mh-to-mime' and `mh-mh-to-mime-undo' would reset the
+buffer to fundamental mode. This has been fixed thanks to Sergey
+Poznyakoff (closes SF #1966722).
+
+
 
 * Changes in MH-E 8.0.3
 
@@ -55,6 +167,8 @@ Sergey Poznyakoff <gray@Mirddin.farlep.net> (closes SF #1513140).
 The fix for SF #1499712 broke `F n' (`mh-index-new-messages') on
 XEmacs since a regular expression that XEmacs could not handle was
 added. This regexp has been fixed (closes SF #1514424).
+
+
 
 * Changes in MH-E 8.0.1
 
@@ -3120,10 +3234,10 @@ doesn't find `in-reply-to:'.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -3131,9 +3245,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to the
-Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 
 Local variables:

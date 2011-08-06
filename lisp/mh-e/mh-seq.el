@@ -1,7 +1,8 @@
 ;;; mh-seq.el --- MH-E sequences support
 
 ;; Copyright (C) 1993, 1995,
-;;  2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -10,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -203,6 +202,7 @@ MESSAGE appears."
 
 ;; Shush compiler.
 (defvar tool-bar-mode)                  ; XEmacs
+(defvar tool-bar-map)
 
 ;;;###mh-autoload
 (defun mh-narrow-to-seq (sequence)
@@ -746,9 +746,10 @@ completion is over."
                   "-norecurse" folder "-sequence" (symbol-name mh-unseen-seq))
     (goto-char (point-min))
     (multiple-value-bind (folder unseen total)
-        (mh-parse-flist-output-line
-         (buffer-substring (point) (mh-line-end-position)))
-      (values total unseen folder))))
+        (values-list
+         (mh-parse-flist-output-line
+          (buffer-substring (point) (mh-line-end-position))))
+      (list total unseen folder))))
 
 (defun mh-folder-size-folder (folder)
   "Find size of FOLDER using \"folder\"."
@@ -759,8 +760,8 @@ completion is over."
                     "-norecurse" folder)
       (goto-char (point-min))
       (if (re-search-forward " has \\([0-9]+\\) " nil t)
-          (values (string-to-number (match-string 1)) u folder)
-        (values 0 u folder)))))
+          (list (string-to-number (match-string 1)) u folder)
+        (list 0 u folder)))))
 
 ;;;###mh-autoload
 (defun mh-parse-flist-output-line (line &optional current-folder)
@@ -788,7 +789,7 @@ folders whose names end with a '+' character."
             (when (and (equal (aref folder (1- (length folder))) ?+)
                        (equal current-folder folder))
               (setq folder (substring folder 0 (1- (length folder)))))
-            (values (format "+%s" folder) unseen total)))))))
+            (list (format "+%s" folder) unseen total)))))))
 
 ;;;###mh-autoload
 (defun mh-read-folder-sequences (folder save-refiles)

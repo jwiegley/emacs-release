@@ -1,17 +1,17 @@
 ;;; echistory.el --- Electric Command History Mode
 
 ;; Copyright (C) 1985, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: K. Shane Hartman
 ;; Maintainer: FSF
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -43,48 +41,48 @@ With prefix arg NOCONFIRM, execute current line as-is without editing."
       (if (boundp 'electric-history-in-progress)
 	  (if todo (throw 'electric-history-quit (list noconfirm todo)))))))
 
-(defvar electric-history-map ())
-(if electric-history-map
-    ()
-  (setq electric-history-map (make-sparse-keymap))
-  (define-key electric-history-map [t] 'Electric-history-undefined)
-  (define-key electric-history-map "\e" (make-sparse-keymap))
-  (define-key electric-history-map [?\e t] 'Electric-history-undefined)
-  (define-key electric-history-map "\C-u" 'universal-argument)
-  (define-key electric-history-map " " 'Electric-command-history-redo-expression)
-  (define-key electric-history-map "!" 'Electric-command-history-redo-expression)
-  (define-key electric-history-map "\e\C-x" 'eval-sexp)
-  (define-key electric-history-map "\e\C-d" 'down-list)
-  (define-key electric-history-map "\e\C-u" 'backward-up-list)
-  (define-key electric-history-map "\e\C-b" 'backward-sexp)
-  (define-key electric-history-map "\e\C-f" 'forward-sexp)
-  (define-key electric-history-map "\e\C-a" 'beginning-of-defun)
-  (define-key electric-history-map "\e\C-e" 'end-of-defun)
-  (define-key electric-history-map "\e\C-n" 'forward-list)
-  (define-key electric-history-map "\e\C-p" 'backward-list)
-  (define-key electric-history-map "q" 'Electric-history-quit)
-  (define-key electric-history-map "\C-c" nil)
-  (define-key electric-history-map "\C-c\C-c" 'Electric-history-quit)
-  (define-key electric-history-map "\C-]" 'Electric-history-quit)
-  (define-key electric-history-map "\C-z" 'suspend-emacs)
-  (define-key electric-history-map (char-to-string help-char) 'Helper-help)
-  (define-key electric-history-map "?" 'Helper-describe-bindings)
-  (define-key electric-history-map "\e>" 'end-of-buffer)
-  (define-key electric-history-map "\e<" 'beginning-of-buffer)
-  (define-key electric-history-map "\n" 'next-line)
-  (define-key electric-history-map "\r" 'next-line)
-  (define-key electric-history-map "\177" 'previous-line)
-  (define-key electric-history-map "\C-n" 'next-line)
-  (define-key electric-history-map "\C-p" 'previous-line)
-  (define-key electric-history-map "\ev" 'scroll-down)
-  (define-key electric-history-map "\C-v" 'scroll-up)
-  (define-key electric-history-map [home] 'beginning-of-buffer)
-  (define-key electric-history-map [down] 'next-line)
-  (define-key electric-history-map [up] 'previous-line)
-  (define-key electric-history-map [prior] 'scroll-down)
-  (define-key electric-history-map [next] 'scroll-up)
-  (define-key electric-history-map "\C-l" 'recenter)
-  (define-key electric-history-map "\e\C-v" 'scroll-other-window))
+(defvar electric-history-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [t] 'Electric-history-undefined)
+    (define-key map "\e" (make-sparse-keymap))
+    (define-key map [?\e t] 'Electric-history-undefined)
+    (define-key map "\C-u" 'universal-argument)
+    (define-key map " " 'Electric-command-history-redo-expression)
+    (define-key map "!" 'Electric-command-history-redo-expression)
+    (define-key map "\e\C-x" 'eval-sexp)
+    (define-key map "\e\C-d" 'down-list)
+    (define-key map "\e\C-u" 'backward-up-list)
+    (define-key map "\e\C-b" 'backward-sexp)
+    (define-key map "\e\C-f" 'forward-sexp)
+    (define-key map "\e\C-a" 'beginning-of-defun)
+    (define-key map "\e\C-e" 'end-of-defun)
+    (define-key map "\e\C-n" 'forward-list)
+    (define-key map "\e\C-p" 'backward-list)
+    (define-key map "q" 'Electric-history-quit)
+    (define-key map "\C-c" nil)
+    (define-key map "\C-c\C-c" 'Electric-history-quit)
+    (define-key map "\C-]" 'Electric-history-quit)
+    (define-key map "\C-z" 'suspend-frame)
+    (define-key map (char-to-string help-char) 'Helper-help)
+    (define-key map "?" 'Helper-describe-bindings)
+    (define-key map "\e>" 'end-of-buffer)
+    (define-key map "\e<" 'beginning-of-buffer)
+    (define-key map "\n" 'next-line)
+    (define-key map "\r" 'next-line)
+    (define-key map "\177" 'previous-line)
+    (define-key map "\C-n" 'next-line)
+    (define-key map "\C-p" 'previous-line)
+    (define-key map "\ev" 'scroll-down)
+    (define-key map "\C-v" 'scroll-up)
+    (define-key map [home] 'beginning-of-buffer)
+    (define-key map [down] 'next-line)
+    (define-key map [up] 'previous-line)
+    (define-key map [prior] 'scroll-down)
+    (define-key map [next] 'scroll-up)
+    (define-key map "\C-l" 'recenter)
+    (define-key map "\e\C-v" 'scroll-other-window)
+    map)
+  "Keymap for Electric Command History mode.")
 
 (defvar electric-command-history-hook nil
   "If non-nil, its value is called by `electric-command-history'.")
@@ -153,5 +151,5 @@ The Command History listing is recomputed each time this mode is invoked."
 
 (provide 'echistory)
 
-;;; arch-tag: 1e5018fe-190f-44a7-9109-a895dcac4c50
+;; arch-tag: 1e5018fe-190f-44a7-9109-a895dcac4c50
 ;;; echistory.el ends here

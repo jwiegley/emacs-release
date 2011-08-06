@@ -1,17 +1,17 @@
 ;;; macros.el --- non-primitive commands for keyboard macros
 
 ;; Copyright (C) 1985, 1986, 1987, 1992, 1994, 1995, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: abbrev
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -133,41 +131,9 @@ use this command, and then save the file."
 	      (insert (if (zerop i) ?\[ ?\s))
 	      (setq char (aref definition i)
 		    i (1+ i))
-	      (cond ((not (numberp char))
-		     (prin1 char (current-buffer)))
-		    (t
-		     (insert "?")
-		     (setq mods (event-modifiers char)
-			   char (event-basic-type char))
-		     (while mods
-		       (cond ((eq (car mods) 'control)
-			      (insert "\\C-"))
-			     ((eq (car mods) 'meta)
-			      (insert "\\M-"))
-			     ((eq (car mods) 'hyper)
-			      (insert "\\H-"))
-			     ((eq (car mods) 'super)
-			      (insert "\\s-"))
-			     ((eq (car mods) 'alt)
-			      (insert "\\A-"))
-			     ((and (eq (car mods) 'shift)
-				   (>= char ?a)
-				   (<= char ?z))
-			      (setq char (upcase char)))
-			     ((eq (car mods) 'shift)
-			      (insert "\\S-")))
-		       (setq mods (cdr mods)))
-		     (cond ((= char ?\\)
-			    (insert "\\\\"))
-                           ((= char ?\")
-                            (insert "\\\""))
-			   ((= char ?\;)
-			    (insert "\\;"))
-			   ((= char 127)
-			    (insert "\\C-?"))
-			   ((< char 127)
-			    (insert char))
-			   (t (insert "\\" (format "%o" char)))))))
+	      (if (not (numberp char))
+                  (prin1 char (current-buffer))
+                (princ (prin1-char char) (current-buffer))))
 	    (insert ?\]))
 	(prin1 definition (current-buffer))))
     (insert ")\n")
@@ -316,5 +282,5 @@ and then select the region of un-tablified names and use
 
 (provide 'macros)
 
-;;; arch-tag: 346ed1a5-1220-4bc8-b533-961ee704361f
+;; arch-tag: 346ed1a5-1220-4bc8-b533-961ee704361f
 ;;; macros.el ends here

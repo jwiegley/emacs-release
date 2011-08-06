@@ -1,17 +1,17 @@
 ;;; cus-start.el --- define customization properties of builtins
 ;;
 ;; Copyright (C) 1997, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 ;;
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Keywords: internal
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -35,10 +33,7 @@
 
 ;;; Code:
 
-(let ((all '(;; abbrev.c
-	     (abbrev-all-caps abbrev-mode boolean)
-	     (pre-abbrev-expand-hook abbrev-mode hook)
-	     ;; alloc.c
+(let ((all '(;; alloc.c
 	     (gc-cons-threshold alloc integer)
 	     (garbage-collection-messages alloc boolean)
 	     ;; buffer.c
@@ -51,6 +46,7 @@
 	     (tab-width editing-basics integer)
 	     (ctl-arrow display boolean)
 	     (truncate-lines display boolean)
+	     (word-wrap display boolean)
 	     (selective-display-ellipses display boolean)
 	     (indicate-empty-lines fringe boolean)
 	     (indicate-buffer-boundaries
@@ -107,6 +103,9 @@ Leaving \"Default\" unchecked is equivalent with specifying a default of
 	     (exec-path execute
 			(repeat (choice (const :tag "default directory" nil)
 					(directory :format "%v"))))
+	     ;; charset.c
+	     (charset-map-path installation
+			       (repeat (directory :format "%v")))
 	     ;; coding.c
 	     (inhibit-eol-conversion mule boolean)
 	     (eol-mnemonic-undecided mule string)
@@ -129,7 +128,6 @@ Leaving \"Default\" unchecked is equivalent with specifying a default of
 			     :match (lambda (widget value)
 				      (and value (not (functionp value)))))
 			    (function :value ignore))))
-	     (selection-coding-system mule coding-system "22.1")
 	     ;; dired.c
 	     (completion-ignored-extensions dired
 					    (repeat (string :format "%v")))
@@ -143,6 +141,9 @@ Leaving \"Default\" unchecked is equivalent with specifying a default of
 	     ;; eval.c
 	     (max-specpdl-size limits integer)
 	     (max-lisp-eval-depth limits integer)
+	     (max-mini-window-height limits
+				     (choice (const :tag "quarter screen" nil)
+					     number) "23.1")
 	     (stack-trace-on-error debug
 				   (choice (const :tag "off")
 					   (repeat :menu-tag "When"
@@ -162,10 +163,9 @@ Leaving \"Default\" unchecked is equivalent with specifying a default of
 					    :value (nil)
 					    (symbol :format "%v"))
 				    (const :tag "always" t)))
-	     ;; fileio.c
-	     (insert-default-directory minibuffer boolean)
+             ;; fileio.c
+             (delete-by-moving-to-trash auto-save boolean "23.1")
 	     (auto-save-visited-file-name auto-save boolean)
-	     (read-file-name-completion-ignore-case minibuffer boolean "22.1")
 	     ;; fns.c
 	     (use-dialog-box menu boolean "21.1")
 	     (use-file-dialog menu boolean "22.1")
@@ -200,42 +200,6 @@ Leaving \"Default\" unchecked is equivalent with specifying a default of
 	     (suggest-key-bindings keyboard (choice (const :tag "off" nil)
 						    (integer :tag "time" 2)
 						    (other :tag "on")))
-	     ;; macselect.c
-	     (mac-dnd-known-types mac (repeat string) "22.1")
-	     ;; macterm.c
-	     (mac-control-modifier mac (choice (const :tag "No modifier" nil)
-					       (const control) (const meta)
-					       (const alt) (const hyper)
-					       (const super)) "22.1")
-	     (mac-command-modifier mac (choice (const :tag "No modifier" nil)
-					       (const control) (const meta)
-					       (const alt) (const hyper)
-					       (const super)) "22.1")
-	     (mac-option-modifier mac (choice (const :tag "No modifier (work as option)" nil)
-					      (const control) (const meta)
-					      (const alt) (const hyper)
-					      (const super)) "22.1")
-	     (mac-function-modifier mac
-				    (choice (const :tag "No modifier (work as function)" nil)
-					    (const control) (const meta)
-					    (const alt) (const hyper)
-					    (const super)) "22.1")
-	     (mac-emulate-three-button-mouse mac
-					     (choice (const :tag "No emulation" nil)
-						     (const :tag "Option->2, Command->3" t)
-						     (const :tag "Command->2, Option->3" reverse))
-				    "22.1")
-	     (mac-wheel-button-is-mouse-2 mac boolean "22.1")
-	     (mac-pass-command-to-system mac boolean "22.1")
-	     (mac-pass-control-to-system mac boolean "22.1")
-	     (mac-allow-anti-aliasing mac boolean "22.1")
-	     (mac-ts-script-language-on-focus mac
-					      (choice (const :tag "System default behavior" nil)
-						      (const :tag "Restore to script/language used in the last focus frame" t)
-						      (cons :tag "Specify script/language"
-							    (integer :tag "Script code")
-							    (integer :tag "Language code")))
-					      "22.1")
 
 ;; This is not good news because it will use the wrong
 ;; version-specific directories when you upgrade.  We need
@@ -247,12 +211,13 @@ Leaving \"Default\" unchecked is equivalent with specifying a default of
 ;;; 					(const :tag " current dir" nil)
 ;;;					(directory :format "%v"))))
 	     ;; minibuf.c
-	     (completion-auto-help minibuffer boolean)
 	     (enable-recursive-minibuffers minibuffer boolean)
 	     (history-length minibuffer
 			     (choice (const :tag "Infinite" t) integer)
 			     "22.1")
 	     (history-delete-duplicates minibuffer boolean "22.1")
+	     (read-buffer-completion-ignore-case minibuffer boolean "23.1")
+
 	     (minibuffer-prompt-properties
 	      minibuffer
 	      (list
@@ -282,6 +247,33 @@ Leaving \"Default\" unchecked is equivalent with specifying a default of
 					   function))
 	     ;; msdos.c
 	     (dos-unsupported-char-glyph display integer)
+	     ;; nsterm.m
+	     (ns-control-modifier
+	      ns
+	      (choice (const :tag "No modifier" nil)
+		      (const control) (const meta)
+		      (const alt) (const hyper)
+		      (const super)) "23.1")
+	     (ns-command-modifier
+	      ns
+	      (choice (const :tag "No modifier" nil)
+		      (const control) (const meta)
+		      (const alt) (const hyper)
+		      (const super)) "23.1")
+	     (ns-alternate-modifier
+	      ns
+	      (choice (const :tag "No modifier (work as alternate/option)" none)
+		      (const control) (const meta)
+		      (const alt) (const hyper)
+		      (const super)) "23.1")
+	     (ns-function-modifier
+	      ns
+	      (choice (const :tag "No modifier (work as function)" none)
+		      (const control) (const meta)
+		      (const alt) (const hyper)
+		      (const super)) "23.1")
+	     (ns-antialias-text ns boolean "23.1")
+	     (ns-use-qd-smoothing ns boolean "23.1")
 	     ;; process.c
 	     (delete-exited-processes processes-basics boolean)
 	     ;; syntax.c
@@ -307,42 +299,7 @@ since it could result in memory overflow and make Emacs crash."
 			       "22.1")
 	     ;; window.c
 	     (temp-buffer-show-function windows (choice (const nil) function))
-	     (display-buffer-function windows (choice (const nil) function))
-	     (pop-up-frames frames boolean)
-	     (pop-up-frame-function frames function)
-	     (special-display-buffer-names
-	      frames
-	      (repeat (choice :tag "Buffer"
-			      :value ""
-			      (string :format "%v")
-			      (cons :tag "With attributes"
-				    :format "%v"
-				    :value ("" . nil)
-				    (string :format "%v")
-				    (repeat :tag "Attributes"
-					    (cons :format "%v"
-						  (symbol :tag "Parameter")
-						  (sexp :tag "Value")))))))
-	     (special-display-regexps
-	      frames
-	      (repeat (choice :tag "Buffer"
-			      :value ""
-			      (regexp :format "%v")
-			      (cons :tag "With attributes"
-				    :format "%v"
-				    :value ("" . nil)
-				    (regexp :format "%v")
-				    (repeat :tag "Attributes"
-					    (cons :format "%v"
-						  (symbol :tag "Parameter")
-						  (sexp :tag "Value")))))))
-	     (special-display-function frames function)
-	     (same-window-buffer-names windows (repeat (string :format "%v")))
-	     (same-window-regexps windows (repeat (regexp :format "%v")))
-	     (pop-up-windows windows boolean)
-	     (even-window-heights windows boolean)
 	     (next-screen-context-lines windows integer)
-	     (split-height-threshold windows integer)
 	     (window-min-height windows integer)
 	     (window-min-width windows integer)
  	     (scroll-preserve-screen-position
@@ -350,14 +307,13 @@ since it could result in memory overflow and make Emacs crash."
  		       (const :tag "Off (nil)" :value nil)
  		       (const :tag "Full screen (t)" :value t)
  		       (other :tag "Always" 1)) "22.1")
-	     (display-buffer-reuse-frames windows boolean "21.1")
 	     ;; xdisp.c
 	     (scroll-step windows integer)
 	     (scroll-conservatively windows integer)
 	     (scroll-margin windows integer)
 	     (hscroll-margin windows integer "22.1")
 	     (hscroll-step windows number "22.1")
-	     (truncate-partial-width-windows display boolean)
+	     (truncate-partial-width-windows display boolean "23.1")
 	     (mode-line-inverse-video mode-line boolean)
 	     (mode-line-in-non-selected-windows mode-line boolean "22.1")
 	     (line-number-display-limit display
@@ -372,6 +328,7 @@ since it could result in memory overflow and make Emacs crash."
 	     (unibyte-display-via-language-environment mule boolean)
 	     (blink-cursor-alist cursor alist "22.1")
 	     (overline-margin display integer "22.1")
+	     (underline-minimum-offset display integer "23.1")
              (mouse-autoselect-window
 	      display (choice
 		       (const :tag "Off (nil)" :value nil)
@@ -423,14 +380,10 @@ since it could result in memory overflow and make Emacs crash."
 		       (eq system-type 'ms-dos))
 		      ((string-match "\\`w32-" (symbol-name symbol))
 		       (eq system-type 'windows-nt))
-		      ((string-match "\\`mac-" (symbol-name symbol))
-		       (eq window-system 'mac))
+		      ((string-match "\\`ns-" (symbol-name symbol))
+		       (featurep 'ns))
 		      ((string-match "\\`x-.*gtk" (symbol-name symbol))
-		       (or (boundp 'gtk)
-			   (and window-system
-				(not (eq window-system 'pc))
-				(not (eq window-system 'mac))
-				(not (eq system-type 'windows-nt)))))
+		       (featurep 'gtk))
 		      ((string-match "\\`x-" (symbol-name symbol))
 		       (fboundp 'x-create-frame))
 		      ((string-match "selection" (symbol-name symbol))
@@ -457,10 +410,6 @@ since it could result in memory overflow and make Emacs crash."
 (custom-add-to-group 'iswitchb 'read-buffer-function 'custom-variable)
 (custom-add-to-group 'font-lock 'open-paren-in-column-0-is-defun-start
 		     'custom-variable)
-(put 'selection-coding-system 'custom-set
-     (lambda (symbol value)
-       (set-selection-coding-system value)
-       (set symbol value)))
 
 ;; Record cus-start as loaded
 ;; if we have set up all the info that we can set up.

@@ -5,7 +5,7 @@
 	* xfns.c (Fx_display_grayscale_p): Return t or nil.
 	Return t for color displays.
 
-	* s/msdos.h (SYSTEM_PURESIZE_EXTRA): Increased to 68000.
+	* s/msdos.h (SYSTEM_PURESIZE_EXTRA): Increase to 68000.
 
 	* xdisp.c (decode_mode_spec) [!MULTI_FRAME]: Handle %F properly.
 
@@ -55,7 +55,7 @@
 	(Fdefine_key): Put new definition onto Vdefine_key_rebound_commands.
 
 	* xmenu.c (menu_item_equiv_key): Do reconsider a command that had
- 	no equivalent before, if it is in Vdefine_key_rebound_commands.
+	no equivalent before, if it is in Vdefine_key_rebound_commands.
 
 	* data.c (Flocal_variable_if_set_p): New function.
 	(syms_of_data): Call defsubr.
@@ -70,7 +70,7 @@
 	(do_switch_frame): No longer static.
 	* window.c (Fset_window_configuration): Use do_switch_frame directly.
 	* keyboard.c (quit_throw_to_read_char): Use do_switch_frame directly.
-	* lisp.h (do_switch_frame): Declared.
+	* lisp.h (do_switch_frame): Declare.
 
 1995-06-16  Karl Heuer  <kwzh@nutrimat.gnu.ai.mit.edu>
 
@@ -730,7 +730,7 @@
 	* keyboard.c (syms_of_keyboard): Always define track-mouse.
 	(do_mouse_tracking): Always declare this var.
 
-1995-05-15  Marcus Daniels  <marcus@ee.pdx.edu>
+1995-05-15  Marcus G. Daniels  <marcus@ee.pdx.edu>
 
 	* s/linux.h: Test _STDIO_USES_IOSTREAM as well as _IO_STDIO_H.
 	[__ELF__] (START_FILES, LIB_STANDARD, LIB_GCC, UNEXEC): Define these.
@@ -811,7 +811,7 @@
 
 	* emacs.c (Fdump_emacs): Don't use & before my_edata.
 
-1995-05-08  Francesco Potorti`  (pot@cnuce.cnr.it)
+1995-05-08  Francesco Potortì  (pot@cnuce.cnr.it)
 
 	* m/delta.h (C_SWITCH_MACHINE): Let configure decide if this is
 	a 68040 or 68030.  Don't condition on __STDC__.
@@ -1586,7 +1586,7 @@
 	Use XMISCTYPE instead of that.
 
 	* alloc.c (Fmake_marker, mark_object): Use XMISCTYPE.
-	(clear_marks, gc_sweep): Use u_marker union elt to extrat misc type.
+	(clear_marks, gc_sweep): Use u_marker union elt to extract misc type.
 
 	* lread.c (defvar_int, defvar_bool, defvar_lisp_nopro, defvar_kboard)
 	(defvar_per_buffer): Use XMISCTYPE.
@@ -1789,7 +1789,7 @@
 
 	* textprop.c (Fnext_property_change): Fix previous change.
 
-1995-03-23  Kevin Rodgers  <kevinr@ihs.com> (tiny change)
+1995-03-23  Kevin Rodgers  <kevinr@ihs.com>  (tiny change)
 
 	* print.c (temp_output_buffer_setup): (Re)set the default
 	directory of the temp buffer to that of the current buffer.
@@ -1900,39 +1900,39 @@
 	* lisp.h (struct KBOARD, MULTI_KBOARD, current_kboard, all_kboards):
 	(Lisp_Misc_Kboard_Objfwd, Lisp_Kboard_Objfwd, XKBOARD_OBJFWD):
 	(KBOARD_OBJFWDP, GC_KBOARD_OBJFWDP, kboard_locked, the_only_kboard):
-	(DEFVAR_KBOARD): Renamed from PERDISPLAY, MULTI_PERDISPLAY,
+	(DEFVAR_KBOARD): Rename from PERDISPLAY, MULTI_PERDISPLAY,
 	current_perdisplay, all_perdisplays, Lisp_Misc_Display_Objfwd,
 	Lisp_Display_Objfwd, XDISPLAY_OBJFWD, DISPLAY_OBJFWDP,
 	GC_DISPLAY_OBJFWDP, display_locked, the_only_perdisplay,
 	DEFVAR_DISPLAY.  All uses changed.
 	(struct KBOARD): New member reference_count.
 	(initial_kboard): Declare this var.
-	* .gdbinit (xkbobjfwd): Renamed from xdispobjfwd.
+	* .gdbinit (xkbobjfwd): Rename from xdispobjfwd.
 	* frame.h (struct frame): New member kboard.
 	(FRAME_KBOARD): Accessor macro for that member, replacing
 	get_perdisplay.
-	* xterm.h (struct x_display_info): member kboard (formerly
+	* xterm.h (struct x_display_info): Member kboard (formerly
 	perdisplay) is now a pointer, not an actual struct.
-	(get_perdisplay, get_perdisplay_macro): Deleted.
-	* xfns.c (Fx_create_frame): set the frame's kboard member.
-	* xterm.c (get_perdisplay): Deleted.
+	(get_perdisplay, get_perdisplay_macro): Delete.
+	* xfns.c (Fx_create_frame): Set the frame's kboard member.
+	* xterm.c (get_perdisplay): Delete.
 	(same_x_server): New function.
 	(x_term_init): If this display shares a keyboard with one we've
 	already opened, then share the structure.
 	(x_delete_display): Don't delete the kboard until the reference
 	count becomes zero.
-	* lread.c (defvar_kboard): Renamed from defvar_display.
-	* alloc.c (mark_kboards): Renamed from mark_perdisplays.
+	* lread.c (defvar_kboard): Rename from defvar_display.
+	* alloc.c (mark_kboards): Rename from mark_perdisplays.
 	* frame.c (make_frame): Initialize kboard member.
 	(make_terminal_frame): Create initial_kboard if not already set.
-	* keyboard.c (unlock_kboard): Renamed from unlock_display.
-	(wrong_kboard_jmpbuf): Renamed from wrong_display_jmpbuf.
-	(event_to_kboard): Renamed from event_to_perdisplay.
+	* keyboard.c (unlock_kboard): Rename from unlock_display.
+	(wrong_kboard_jmpbuf): Rename from wrong_display_jmpbuf.
+	(event_to_kboard): Rename from event_to_perdisplay.
 	(kbd_buffer_get_event): If no associated kboard, store
 	current_kboard rather than the first kboard in the global list.
-	(init_kboard): Renamed from init_perdisplay.  Initialize reference
+	(init_kboard): Rename from init_perdisplay.  Initialize reference
 	count.
-	(wipe_kboard): Renamed from wipe_perdisplay.
+	(wipe_kboard): Rename from wipe_perdisplay.
 	* data.c (find_symbol_value): current_perdisplay now is never null.
 	(store_symval_forwarding, do_symval_forwarding): Likewise.
 
@@ -2816,7 +2816,7 @@
 
 	* lisp.h (SWITCH_ENUM_CAST): New macro.
 	* alloc.c, data.c, keyboard.c, syntax.c, xdisp.c: Change all
-	occurences of SWITCH_ENUM_BUG to use SWITCH_ENUM_CAST instead.
+	occurrences of SWITCH_ENUM_BUG to use SWITCH_ENUM_CAST instead.
 
 1995-01-18  Richard Stallman  <rms@mole.gnu.ai.mit.edu>
 
@@ -3416,7 +3416,7 @@
 
 	* search.c (search_regs_saved): Don't initialize; it dumps as pure.
 
-1994-11-24  Francesco Potorti`  <pot@cnuce.cnr.it>
+1994-11-24  Francesco Potortì  <pot@cnuce.cnr.it>
 
 	* m/delta.h (C_SWITCH_MACHINE): -inline-functions removed,
 	because the compiler shipped with R3V7 is not stable.
@@ -3446,7 +3446,7 @@
 	* s/aix3-1.h (AIXHFT): Define.
 	* m/ibmrs6000.h (OBJECTS_MACHINE): Define only if AIXHFT.
 
-	* sysdep.c (init_sys_modes): Tes AIXHFT, not AIX.
+	* sysdep.c (init_sys_modes): Test AIXHFT, not AIX.
 	(reset_sys_modes): Test AIXHFT.
 	(hft_init, hft_reset): Test AIXHFT, not AIX.
 
@@ -3459,7 +3459,7 @@
 	* config.h.in: Add #undefs for --with-pop, --with-kerberos, and
 	--with-hesiod.
 
-1994-11-19  Francesco Potorti`  <pot@cnuce.cnr.it>
+1994-11-19  Francesco Potortì  <pot@cnuce.cnr.it>
 
 	* lisp.h: (running_asynch_code): New global flag.
 	* emacs.c (running_asynch_code): New global flag.
@@ -3550,7 +3550,7 @@
         pass its buffer.
 	(display_text_line): Likewise.
 
-1994-11-16  Francesco Potorti`  (pot@cnuce.cnr.it)
+1994-11-16  Francesco Potortì  (pot@cnuce.cnr.it)
 
 	* Makefile.in.in (TAGS): The new etags allows tagging DEFVARs.
 
@@ -3830,7 +3830,7 @@
 	(display_mode_line): Unset the var.
 	(decode_mode_spec): Set the var if %c was seen.
 
-1994-10-30  voelker  <voelker@cs.washington.edu>
+1994-10-30  Geoff Voelker  <voelker@cs.washington.edu>
 
 	* makefile.nt: New file.
 	* nt.c, nt.h: New files.
@@ -3919,7 +3919,7 @@
 	(Finsert_file_types): Test DOS_NT instead of MSDOS.
 	Rename local var try to trytry.
 
-	* fileio.c (Fadd_name_to_file): Wlways fail.
+	* fileio.c (Fadd_name_to_file): Always fail.
 	(Frename_file) [WINDOWSNT]: Use MoveFile, not link and unlink,
 	and check for both ERROR_FILE_EXISTS and ERROR_ALREADY_EXISTS.
 	(Fmake_directory_internal) [WINDOWSNT]: Invoke mkdir without the mask.
@@ -3955,7 +3955,7 @@
 	Use the return value of child_setup to get the child's pid;
 	don't call vfork etc. explicitly.
 
-	* callproc.c [WINDOWSNT]: Add includes.	 Defone NOMINMAX, _P_NOWAIT.
+	* callproc.c [WINDOWSNT]: Add includes.	 Define NOMINMAX, _P_NOWAIT.
 	(Vbinary_process_input, Vbinary_process_output)
 	(Qbuffer_file_type): Test DOS_NT, not MSDOS.
 	(syms_of_callproc): Test DOS_NT, not MSDOS.
@@ -4314,7 +4314,7 @@
 
 	* buffer.c (list_buffers_1): Always mark current_buffer read-only.
 
-1994-10-20  Fred Pierresteguy  <F.Pierresteguy@frcl.bull.fr>
+1994-10-20  Frederic Pierresteguy  <F.Pierresteguy@frcl.bull.fr>
 
 	* m/dpx2.h (LD_SWITCH_MACHINE): Defined.
 
@@ -4406,7 +4406,7 @@
 
 	* xterm.h (XDISPLAY): Macro deleted.
 	(XFlushQueue): Macro deleted.  All callers changed.
-	(DISPLAY_SCREEN_ARG): Maco deleted.
+	(DISPLAY_SCREEN_ARG): Macro deleted.
 	(DISPLAY_CELLS): Macro deleted.
 	(WINDOWINFO_TYPE): Macro deleted.
 
@@ -4587,7 +4587,7 @@
 	(Fframep #2) [MSDOS]: Return 'pc for when termcap is not used.
 	(Fmouse_position #2) [HAVE_MOUSE]: Return useful information.
 	(Fframe_parameters #2): Show "font" as "default".
-	(Fframe_parameters #2) [MSDOS]: Show fore- and background colours.
+	(Fframe_parameters #2) [MSDOS]: Show fore- and background colors.
 	(Fmodify_frame_parameters #2) [MSDOS]: Call IT_set_frame_parameters.
 	(Fframe_list #2): New stub function.
 	(syms_of_frame #2): defsubr frame_list.
@@ -4671,7 +4671,7 @@
 	* sysdep.c (init_sys_modes): Make sure that internal_terminal_init
 	is only called once.
 	(init_sys_modes, reset_sys_modes) [HAVE_X_WINDOWS]: Add conditional.
-	(reset_sys_modes) [MSDOS]: Change to MSDOG's default colours.
+	(reset_sys_modes) [MSDOS]: Change to MSDOG's default colors.
 	(kbd_input_ast): Use just XSETFRAME.
 
 	* window.c (init_window_once) [!MULTI_FRAME]: Set selected_frame and
@@ -4691,7 +4691,7 @@
 	stubs.
 	(load_color) [MSDOS && !HAVE_X_WINDOWS]: Special version.
 	(Fset_face_attribute_internal) [MSDOS && !HAVE_X_WINDOWS]: Stubify
-	font setting, mask away 0x08 (the blink bit) from background colour.
+	font setting, mask away 0x08 (the blink bit) from background color.
 	(syms_of_xfaces) [!HAVE_X_WINDOWS]: Don't defsubr Spixmap_spec_p.
 	(Fmake_face_internal): Use FOR_EACH_FRAME.
 	(init_frame_faces): Guard multi-frame stuff with MULTI_FRAME.
@@ -5279,7 +5279,7 @@
 
 	* window.c (syms_of_window): Doc fix.
 
-1994-09-26  Fred Pierresteguy  <F.Pierresteguy@frcl.bull.fr>
+1994-09-26  Frederic Pierresteguy  <F.Pierresteguy@frcl.bull.fr>
 
 	* m/dpx2.h (POSIX_SIGNALS): Define it.
 	(sigsetmask): Add #undef.
@@ -6837,7 +6837,7 @@
 
 	* s/sol2.h (GETTIMEOFDAY_ONE_ARGUMENT): Undo previous change.
 
-1994-06-18  Francesco Potorti`  (pot@fly.cnuce.cnr.it)
+1994-06-18  Francesco Potortì  (pot@fly.cnuce.cnr.it)
 
 	* m/delta.h (memmove): switch the first two args.
 
@@ -7144,15 +7144,19 @@
 
 See ChangeLog.4 for earlier changes.
 
-    Copyright (C) 1994, 1995, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Local Variables:
+;; coding: utf-8
+;; End:
+
+    Copyright (C) 1994, 1995, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 	Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
-  GNU Emacs is free software; you can redistribute it and/or modify
+  GNU Emacs is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 3, or (at your option)
-  any later version.
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -7160,8 +7164,6 @@ See ChangeLog.4 for earlier changes.
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with GNU Emacs; see the file COPYING.  If not, write to the
-  Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-  Boston, MA 02110-1301, USA.
+  along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; arch-tag: aea244d6-d513-4b51-8dba-5ecdf1aa5875

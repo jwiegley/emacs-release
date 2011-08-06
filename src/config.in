@@ -2,14 +2,14 @@
 
 /* GNU Emacs site configuration template file.
    Copyright (C) 1988, 1993, 1994, 1999, 2000, 2001, 2002, 2004, 2005,
-     2006, 2007, 2008  Free Software Foundation, Inc.
+     2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,9 +17,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to the
-Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 /* No code in Emacs #includes config.h twice, but some bits of code
@@ -90,9 +88,6 @@ Boston, MA 02110-1301, USA.  */
 /* Define to 1 if ALSA is available. */
 #undef HAVE_ALSA
 
-/* Define to 1 if you have the <AvailabilityMacros.h> header file. */
-#undef HAVE_AVAILABILITYMACROS_H
-
 /* Define to 1 if you have the `bcmp' function. */
 #undef HAVE_BCMP
 
@@ -102,11 +97,14 @@ Boston, MA 02110-1301, USA.  */
 /* Define to 1 if you have the `bzero' function. */
 #undef HAVE_BZERO
 
-/* Define to 1 if you are using the Carbon API on Mac OS X. */
-#undef HAVE_CARBON
-
 /* Define to 1 if you have the `cbrt' function. */
 #undef HAVE_CBRT
+
+/* Define to 1 if you have the `cfmakeraw' function. */
+#undef HAVE_CFMAKERAW
+
+/* Define to 1 if you have the `cfsetspeed' function. */
+#undef HAVE_CFSETSPEED
 
 /* Define to 1 if you have the `closedir' function. */
 #undef HAVE_CLOSEDIR
@@ -119,6 +117,9 @@ Boston, MA 02110-1301, USA.  */
 
 /* Define to 1 if you have /usr/lib/crti.o. */
 #undef HAVE_CRTIN
+
+/* Define to 1 if using D-Bus. */
+#undef HAVE_DBUS
 
 /* Define to 1 if you have the declaration of `sys_siglist', and to 0 if you
    don't. */
@@ -158,6 +159,9 @@ Boston, MA 02110-1301, USA.  */
 
 /* Define to 1 if you have the `fpathconf' function. */
 #undef HAVE_FPATHCONF
+
+/* Define to 1 if using the freetype and fontconfig libraries. */
+#undef HAVE_FREETYPE
 
 /* Define to 1 if you have the `frexp' function. */
 #undef HAVE_FREXP
@@ -213,6 +217,9 @@ Boston, MA 02110-1301, USA.  */
 /* Define to 1 if you have the `getpt' function. */
 #undef HAVE_GETPT
 
+/* Define to 1 if you have the `getrlimit' function. */
+#undef HAVE_GETRLIMIT
+
 /* Define to 1 if you have the `getrusage' function. */
 #undef HAVE_GETRUSAGE
 
@@ -231,14 +238,15 @@ Boston, MA 02110-1301, USA.  */
 /* Define to 1 if you have the `get_current_dir_name' function. */
 #undef HAVE_GET_CURRENT_DIR_NAME
 
-/* Define to 1 if you have the ungif library (-lungif). */
+/* Define to 1 if you have a gif library (default -lgif; otherwise specify
+   with LIBGIF). */
 #undef HAVE_GIF
+
+/* Define to 1 if you have the gpm library (-lgpm). */
+#undef HAVE_GPM
 
 /* Define to 1 if you have the `grantpt' function. */
 #undef HAVE_GRANTPT
-
-/* Define to 1 if using GTK. */
-#undef HAVE_GTK
 
 /* Define to 1 if you have GTK and pthread (-lpthread). */
 #undef HAVE_GTK_AND_PTHREAD
@@ -285,6 +293,12 @@ Boston, MA 02110-1301, USA.  */
 /* Define to 1 if you have the <kerberos/krb.h> header file. */
 #undef HAVE_KERBEROS_KRB_H
 
+/* Define to 1 if `e_text' is member of `krb5_error'. */
+#undef HAVE_KRB5_ERROR_E_TEXT
+
+/* Define to 1 if `text' is member of `krb5_error'. */
+#undef HAVE_KRB5_ERROR_TEXT
+
 /* Define to 1 if you have the <krb5.h> header file. */
 #undef HAVE_KRB5_H
 
@@ -293,6 +307,9 @@ Boston, MA 02110-1301, USA.  */
 
 /* Define if you have <langinfo.h> and nl_langinfo(CODESET). */
 #undef HAVE_LANGINFO_CODESET
+
+/* Define to 1 if the directory /usr/lib64 exists. */
+#undef HAVE_LIB64_DIR
 
 /* Define to 1 if you have the `com_err' library (-lcom_err). */
 #undef HAVE_LIBCOM_ERR
@@ -345,6 +362,9 @@ Boston, MA 02110-1301, USA.  */
 /* Define to 1 if you have the `ncurses' library (-lncurses). */
 #undef HAVE_LIBNCURSES
 
+/* Define to 1 if using libotf. */
+#undef HAVE_LIBOTF
+
 /* Define to 1 if you have the <libpng/png.h> header file. */
 #undef HAVE_LIBPNG_PNG_H
 
@@ -380,6 +400,9 @@ Boston, MA 02110-1301, USA.  */
 
 /* Define to 1 if you have the `lrand48' function. */
 #undef HAVE_LRAND48
+
+/* Define to 1 if using libm17n-flt. */
+#undef HAVE_M17N_FLT
 
 /* Define to 1 if you have the <machine/soundcard.h> header file. */
 #undef HAVE_MACHINE_SOUNDCARD_H
@@ -452,6 +475,13 @@ Boston, MA 02110-1301, USA.  */
 /* Define to 1 if you have the <nlist.h> header file. */
 #undef HAVE_NLIST_H
 
+/* Define to 1 if you are using the NeXTstep API, either GNUstep or Cocoa on
+   Mac OS X. */
+#undef HAVE_NS
+
+/* Define to 1 if libotf has OTF_get_variation_glyphs. */
+#undef HAVE_OTF_GET_VARIATION_GLYPHS
+
 /* Define to 1 if personality LINUX32 can be set. */
 #undef HAVE_PERSONALITY_LINUX32
 
@@ -485,7 +515,7 @@ Boston, MA 02110-1301, USA.  */
 /* Define to 1 if you have the `rename' function. */
 #undef HAVE_RENAME
 
-/* Define to 1 if you have the `res_init' function. */
+/* Define to 1 if res_init is available. */
 #undef HAVE_RES_INIT
 
 /* Define to 1 if you have the `rindex' function. */
@@ -496,6 +526,9 @@ Boston, MA 02110-1301, USA.  */
 
 /* Define to 1 if you have the `rmdir' function. */
 #undef HAVE_RMDIR
+
+/* Define to 1 if using librsvg. */
+#undef HAVE_RSVG
 
 /* Define to 1 if you have the `select' function. */
 #undef HAVE_SELECT
@@ -698,23 +731,14 @@ Boston, MA 02110-1301, USA.  */
    expects to use version 10. */
 #undef HAVE_X11
 
-/* Define to 1 if you have the X11R5 or newer version of Xlib. */
-#undef HAVE_X11R5
-
 /* Define to 1 if you have the X11R6 or newer version of Xlib. */
 #undef HAVE_X11R6
 
 /* Define to 1 if you have the X11R6 or newer version of Xt. */
 #undef HAVE_X11XTR6
 
-/* Define to 1 if the file /usr/lib64 exists. */
-#undef HAVE_X86_64_LIB64_DIR
-
 /* Define to 1 if you have the Xaw3d library (-lXaw3d). */
 #undef HAVE_XAW3D
-
-/* Define to 1 if you're using XFree386. */
-#undef HAVE_XFREE386
 
 /* Define to 1 if you have the Xft library. */
 #undef HAVE_XFT
@@ -768,6 +792,9 @@ Boston, MA 02110-1301, USA.  */
    Solaris, for example). */
 #undef LD_SWITCH_X_SITE_AUX
 
+/* Compiler option to link with the gif library (if not -lgif). */
+#undef LIBGIF
+
 /* Define to 1 if localtime caches TZ. */
 #undef LOCALTIME_CACHE
 
@@ -780,6 +807,15 @@ Boston, MA 02110-1301, USA.  */
 
 /* Define to 1 if you don't have struct exception in math.h. */
 #undef NO_MATHERR
+
+/* Define to 1 if `NSInteger' is defined. */
+#undef NS_HAVE_NSINTEGER
+
+/* Define to 1 if you are using NS windowing under MacOS X. */
+#undef NS_IMPL_COCOA
+
+/* Define to 1 if you are using NS windowing under GNUstep. */
+#undef NS_IMPL_GNUSTEP
 
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
@@ -824,6 +860,9 @@ Boston, MA 02110-1301, USA.  */
 /* Define to 1 on System V Release 4. */
 #undef SVR4
 
+/* Process async input synchronously. */
+#undef SYNC_INPUT
+
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #undef TIME_WITH_SYS_TIME
 
@@ -839,6 +878,15 @@ Boston, MA 02110-1301, USA.  */
 
 /* Define to the unexec source file name. */
 #undef UNEXEC_SRC
+
+/* Define to 1 if using GTK. */
+#undef USE_GTK
+
+/* Define to 1 if using the Lucid X toolkit. */
+#undef USE_LUCID
+
+/* Define to 1 if using the Motif X toolkit. */
+#undef USE_MOTIF
 
 /* Define to 1 if we should use toolkit scroll bars. */
 #undef USE_TOOLKIT_SCROLL_BARS
@@ -873,6 +921,27 @@ Boston, MA 02110-1301, USA.  */
 
 /* Define for large files, on AIX-style hosts. */
 #undef _LARGE_FILES
+
+/* Define to 1 if on MINIX. */
+#undef _MINIX
+
+/* Define to 2 if the system does not provide POSIX.1 features except with
+   this defined. */
+#undef _POSIX_1_SOURCE
+
+/* Define to 1 if you need to in order for `stat' and other things to work. */
+#undef _POSIX_SOURCE
+
+/* Enable extensions on Solaris.  */
+#ifndef __EXTENSIONS__
+# undef __EXTENSIONS__
+#endif
+#ifndef _POSIX_PTHREAD_SEMANTICS
+# undef _POSIX_PTHREAD_SEMANTICS
+#endif
+#ifndef _TANDEM_SOURCE
+# undef _TANDEM_SOURCE
+#endif
 
 /* Define to rpl_ if the getopt replacement functions and variables should be
    used. */
@@ -915,38 +984,16 @@ Boston, MA 02110-1301, USA.  */
 #undef volatile
 
 
-/* If we're using any sort of window system, define some consequences.  */
-#ifdef HAVE_X_WINDOWS
-#define HAVE_WINDOW_SYSTEM
-#define MULTI_KBOARD
-#define HAVE_MOUSE
-#endif
-
-/* If we're using the Carbon API on Mac OS X, define a few more
-   variables as well.  */
-#ifdef HAVE_CARBON
+/* If we're using X11/Carbon/GNUstep, define some consequences.  */
+#if defined(HAVE_X_WINDOWS) || defined(HAVE_NS)
 #define HAVE_WINDOW_SYSTEM
 #define HAVE_MOUSE
 #endif
-
-/* Define USER_FULL_NAME to return a string
-   that is the user's full name.
-   It can assume that the variable `pw'
-   points to the password file entry for this user.
-
-   At some sites, the pw_gecos field contains
-   the user's full name.  If neither this nor any other
-   field contains the right thing, use pw_name,
-   giving the user's login name, since that is better than nothing.  */
-#define USER_FULL_NAME pw->pw_gecos
 
 /* Define AMPERSAND_FULL_NAME if you use the convention
    that & in the full name stands for the login id.  */
 /* Turned on June 1996 supposing nobody will mind it.  */
 #define AMPERSAND_FULL_NAME
-
-/* We have blockinput.h.  */
-#define DO_BLOCK_INPUT
 
 /* Define HAVE_SOUND if we have sound support.  We know it works
    and compiles only on the specified platforms.   For others,
@@ -977,38 +1024,33 @@ Boston, MA 02110-1301, USA.  */
 #define INLINE
 #endif
 
+/* `subprocesses' should be defined if you want to
+   have code for asynchronous subprocesses
+   (as used in M-x compile and M-x shell).
+   Only MSDOS does not support this (it overrides
+   this in its config_opsysfile below).  */
+
+#define subprocesses
+
 /* Include the os and machine dependent files.  */
 #include config_opsysfile
 #include config_machfile
 
-/* Load in the conversion definitions if this system
-   needs them and the source file being compiled has not
-   said to inhibit this.  There should be no need for you
-   to alter these lines.  */
-
-#ifdef SHORTNAMES
-#ifndef NO_SHORTNAMES
-#include "../shortnames/remap.h"
-#endif /* not NO_SHORTNAMES */
-#endif /* SHORTNAMES */
-
-/* If no remapping takes place, static variables cannot be dumped as
-   pure, so don't worry about the `static' keyword. */
-#ifdef NO_REMAP
-#undef static
-#endif
-
-/* Define `subprocesses' should be defined if you want to
-   have code for asynchronous subprocesses
-   (as used in M-x compile and M-x shell).
-   These do not work for some USG systems yet;
-   for the ones where they work, the s/SYSTEM.h file defines this flag.  */
-
-#ifndef VMS
-#ifndef USG
-/* #define subprocesses */
-#endif
-#endif
+/* Set up some defines, C and LD flags for NeXTstep interface on GNUstep.
+  (There is probably a better place to do this, but right now the Cocoa
+   side does this in s/darwin.h and we cannot
+   parallel this exactly since GNUstep is multi-OS. */
+#ifdef HAVE_NS
+#define OTHER_FILES ns-app
+# ifdef NS_IMPL_GNUSTEP
+/* See also .m.o rule in Makefile.in */
+/* FIXME: are all these flags really needed?  Document here why.  */
+#  define C_SWITCH_X_SYSTEM -D_REENTRANT -fPIC -fno-strict-aliasing
+/* GNUstep needs a bit more pure memory.  Of the existing knobs,
+SYSTEM_PURESIZE_EXTRA seems like the least likely to cause problems.  */
+#  define SYSTEM_PURESIZE_EXTRA 30000
+# endif /* NS_IMPL_GNUSTEP */
+#endif /* HAVE_NS */
 
 /* SIGTYPE is the macro we actually use.  */
 #ifndef SIGTYPE
@@ -1121,7 +1163,7 @@ typedef unsigned size_t;
 
 #ifdef HAVE_X11R6
 #define HAVE_X_I18N
-#elif defined HAVE_X11R5 && !defined X11R5_INHIBIT_I18N
+#elif !defined X11R5_INHIBIT_I18N
 #define HAVE_X_I18N
 #endif
 
@@ -1147,9 +1189,9 @@ typedef unsigned size_t;
 #  ifndef GC_SETJMP_WORKS
   /* GC_SETJMP_WORKS is nearly always appropriate for GCC --
      see NON_SAVING_SETJMP in the target descriptions.  */
-  /* Exceptions (see NON_SAVING_SETJMP in target description) are ns32k,
+  /* Exceptions (see NON_SAVING_SETJMP in target description) are
      SCO5 non-ELF (but Emacs specifies ELF) and SVR3 on x86.
-     Fixme: Deal with ns32k, SVR3.  */
+     Fixme: Deal with SVR3.  */
 #    define GC_SETJMP_WORKS 1
 #  endif
 #  ifndef GC_LISP_OBJECT_ALIGNMENT

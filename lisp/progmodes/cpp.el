@@ -1,6 +1,6 @@
 ;;; cpp.el --- highlight or hide text according to cpp conditionals
 
-;; Copyright (C) 1994, 1995, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 1994, 1995, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;; Free Software Foundation
 
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
@@ -8,10 +8,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -103,8 +101,8 @@ Each entry is a list with the following elements:
 		       (cpp-face :tag "True")
 		       (cpp-face :tag "False")
 		       (choice (const :tag "True branch writable" t)
-			       (const :tag "False branch writeable" nil)
-			       (const :tag "Both branches writeable" both))))
+			       (const :tag "False branch writable" nil)
+			       (const :tag "Both branches writable" both))))
   :group 'cpp)
 
 (defvar cpp-overlay-list nil)
@@ -833,5 +831,5 @@ BRANCH should be either nil (false branch), t (true branch) or 'both."
 
 (provide 'cpp)
 
-;;; arch-tag: fb7d433d-745d-495a-96f0-86908ab63f74
+;; arch-tag: fb7d433d-745d-495a-96f0-86908ab63f74
 ;;; cpp.el ends here

@@ -1,26 +1,25 @@
 ;;; url-http.el --- HTTP retrieval routines
 
-;; Copyright (C) 1999, 2001, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2001, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Bill Perry <wmperry@gnu.org>
 ;; Keywords: comm, data, processes
 
 ;; This file is part of GNU Emacs.
 ;;
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-;;
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-;;
+
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -155,7 +154,7 @@ request.")
 
 (defun url-http-create-request (&optional ref-url)
   "Create an HTTP request for `url-http-target-url', referred to by REF-URL."
-  (declare (special proxy-info 
+  (declare (special proxy-info
 		    url-http-method url-http-data
 		    url-http-extra-headers))
   (let* ((extra-headers)
@@ -325,10 +324,10 @@ This allows us to use `mail-fetch-field', etc."
 
     ;; find strongest supported auth
     (dolist (this-auth auths)
-      (setq this-auth (url-eat-trailing-space 
-		       (url-strip-leading-spaces 
+      (setq this-auth (url-eat-trailing-space
+		       (url-strip-leading-spaces
 			this-auth)))
-      (let* ((this-type 
+      (let* ((this-type
 	      (if (string-match "[ \t]" this-auth)
 		  (downcase (substring this-auth 0 (match-beginning 0)))
 		(downcase this-auth)))
@@ -420,7 +419,7 @@ should be shown to the user."
     ;; "Connection: keep-alive" header.
     ;; In HTTP 1.1 (and greater), keep the connection unless there is a
     ;; "Connection: close" header
-    (cond 
+    (cond
      ((string= url-http-response-version "1.0")
       (unless (and connection
 		   (string= (downcase connection) "keep-alive"))
@@ -802,7 +801,7 @@ should be shown to the user."
 
 ;; These unfortunately cannot be macros... please ignore them!
 (defun url-http-idle-sentinel (proc why)
-  "Remove this (now defunct) process PROC from the list of open connections."
+  "Remove (now defunct) process PROC from the list of open connections."
   (maphash (lambda (key val)
 		(if (memq proc val)
 		    (puthash key (delq proc val) url-http-open-connections)))
@@ -1273,6 +1272,8 @@ CBARGS as the arguments."
            nil nil nil)          ;whether gid would change ; inode ; device.
         (kill-buffer buffer)))))
 
+(declare-function url-dav-file-attributes (url &optional id-format))
+
 ;;;###autoload
 (defun url-http-file-attributes (url &optional id-format)
   (if (url-dav-supported-p url)
@@ -1361,6 +1362,11 @@ p3p
 (defconst url-https-default-port 443 "Default HTTPS port.")
 ;;;###autoload
 (defconst url-https-asynchronous-p t "HTTPS retrievals are asynchronous.")
+
+;; FIXME what is the point of this alias being an autoload?
+;; Trying to use it will not cause url-http to be loaded,
+;; since the full alias just gets dumped into loaddefs.el.
+
 ;;;###autoload (autoload 'url-default-expander "url-expand")
 ;;;###autoload
 (defalias 'url-https-expand-file-name 'url-default-expander)

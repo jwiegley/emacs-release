@@ -1,17 +1,18 @@
 ;;; version.el --- record version number of Emacs -*- no-byte-compile: t -*-
 
 ;; Copyright (C) 1985, 1992, 1994, 1995, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,18 +20,16 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
 
-(defconst emacs-copyright "Copyright (C) 2008 Free Software Foundation, Inc."
+(defconst emacs-copyright "Copyright (C) 2009 Free Software Foundation, Inc."
   "Short copyright string for this version of Emacs.")
 
-(defconst emacs-version "22.3" "\
+(defconst emacs-version "23.1" "\
 Version numbers of this version of Emacs.")
 
 (defconst emacs-major-version
@@ -67,8 +66,8 @@ to the system configuration; look at `system-configuration' instead."
 		       ((featurep 'gtk)
 			(concat ", GTK+ Version " gtk-version-string))
 		       ((featurep 'x-toolkit) ", X toolkit")
-		       ((boundp 'mac-carbon-version-string)
-			(concat ", Carbon Version " mac-carbon-version-string))
+		       ((featurep 'ns)
+			(format ", NS %s" ns-version-string))
 		       (t ""))
 		 (if (and (boundp 'x-toolkit-scroll-bars)
 			  (memq x-toolkit-scroll-bars '(xaw xaw3d)))
@@ -87,7 +86,7 @@ to the system configuration; look at `system-configuration' instead."
 (defalias 'version 'emacs-version)
 
 ;; We put version info into the executable in the form that `ident' uses.
-(or (memq system-type '(vax-vms windows-nt))
+(or (eq system-type 'windows-nt)
     (purecopy (concat "\n$Id: " (subst-char-in-string ?\n ?\s (emacs-version))
 		      " $\n")))
 

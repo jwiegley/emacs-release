@@ -1,7 +1,7 @@
 ;;; trace.el --- tracing facility for Emacs Lisp functions
 
 ;; Copyright (C) 1993, 1998, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Hans Chalupsky <hans@cs.buffalo.edu>
 ;; Maintainer: FSF
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; LCD Archive Entry:
 ;; trace|Hans Chalupsky|hans@cs.buffalo.edu|
@@ -187,15 +185,16 @@
 	  (if (> level 1) " " "")
 	  level
 	  function
-	  (mapconcat (lambda (binding)
-		       (concat
-			(symbol-name (ad-arg-binding-field binding 'name))
-			"="
-			;; do this so we'll see strings:
-			(prin1-to-string
-			 (ad-arg-binding-field binding 'value))))
-		     argument-bindings
-		     " ")))
+          (let ((print-circle t))
+            (mapconcat (lambda (binding)
+                         (concat
+                          (symbol-name (ad-arg-binding-field binding 'name))
+                          "="
+                          ;; do this so we'll see strings:
+                          (prin1-to-string
+                           (ad-arg-binding-field binding 'value))))
+                       argument-bindings
+                       " "))))
 
 (defun trace-exit-message (function level value)
   ;; Generates a string that describes that FUNCTION has been exited at
@@ -206,7 +205,7 @@
 	  level
 	  function
 	  ;; do this so we'll see strings:
-	  (prin1-to-string value)))
+	  (let ((print-circle t)) (prin1-to-string value))))
 
 (defun trace-make-advice (function buffer background)
   ;; Builds the piece of advice to be added to FUNCTION's advice info
@@ -220,7 +219,8 @@
 	   (trace-buffer (get-buffer-create ,buffer)))
        (unless inhibit-trace
 	 (with-current-buffer trace-buffer
-	   ,(unless background '(pop-to-buffer trace-buffer))
+	   (set (make-local-variable 'window-point-insertion-type) t)
+           ,(unless background '(display-buffer trace-buffer))
 	   (goto-char (point-max))
 	   ;; Insert a separator from previous trace output:
 	   (if (= trace-level 1) (insert trace-separator))
@@ -230,7 +230,7 @@
        ad-do-it
        (unless inhibit-trace
 	 (with-current-buffer trace-buffer
-	   ,(unless background '(pop-to-buffer trace-buffer))
+	   ,(unless background '(display-buffer trace-buffer))
 	   (goto-char (point-max))
 	   (insert
 	    (trace-exit-message

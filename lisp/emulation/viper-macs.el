@@ -1,16 +1,16 @@
 ;;; viper-macs.el --- functions implementing keyboard macros for Viper
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -38,16 +36,8 @@
 ;; in order to spare non-viperized emacs from being viperized
 (if noninteractive
     (eval-when-compile
-      (let ((load-path (cons (expand-file-name ".") load-path)))
-	(or (featurep 'viper-util)
-	    (load "viper-util.el" nil nil 'nosuffix))
-	(or (featurep 'viper-keym)
-	    (load "viper-keym.el" nil nil 'nosuffix))
-	(or (featurep 'viper-mous)
-	    (load "viper-mous.el" nil nil 'nosuffix))
-	(or (featurep 'viper-cmd)
-	    (load "viper-cmd.el" nil nil 'nosuffix))
-	)))
+      (require 'viper-cmd)
+      ))
 ;; end pacifier
 
 (require 'viper-util)
@@ -466,7 +456,7 @@ If SCOPE is nil, the user is asked to specify the scope."
 				   (viper-array-to-string macro-name)))
 	    (setq lis2 (cons (car lis) lis2))
 	    (setq lis (cdr lis)))
-	  
+
 	  (setq lis2 (reverse lis2))
 	  (set macro-alist-var (append lis2 (cons new-elt lis)))
 	  (setq old-elt new-elt)))
@@ -658,9 +648,9 @@ name from there."
   (interactive)
   (with-output-to-temp-buffer " *viper-info*"
     (princ "Macros in Vi state:\n===================\n")
-    (mapcar 'viper-describe-one-macro viper-vi-kbd-macro-alist)
+    (mapc 'viper-describe-one-macro viper-vi-kbd-macro-alist)
     (princ "\n\nMacros in Insert and Replace states:\n====================================\n")
-    (mapcar 'viper-describe-one-macro viper-insert-kbd-macro-alist)
+    (mapc 'viper-describe-one-macro viper-insert-kbd-macro-alist)
     (princ "\n\nMacros in Emacs state:\n======================\n")
     (mapcar 'viper-describe-one-macro viper-emacs-kbd-macro-alist)
     ))
@@ -670,11 +660,11 @@ name from there."
 		 (viper-display-macro (car macro))))
   (princ "   ** Buffer-specific:")
   (if (viper-kbd-buf-alist macro)
-      (mapcar 'viper-describe-one-macro-elt (viper-kbd-buf-alist macro))
+      (mapc 'viper-describe-one-macro-elt (viper-kbd-buf-alist macro))
     (princ "  none\n"))
   (princ "\n   ** Mode-specific:")
   (if (viper-kbd-mode-alist macro)
-      (mapcar 'viper-describe-one-macro-elt (viper-kbd-mode-alist macro))
+      (mapc 'viper-describe-one-macro-elt (viper-kbd-mode-alist macro))
     (princ "  none\n"))
   (princ "\n   ** Global:")
   (if (viper-kbd-global-definition macro)
@@ -826,7 +816,7 @@ name from there."
 (defun viper-char-array-to-macro (array)
   (let ((vec (vconcat array))
 	macro)
-    (if viper-xemacs-p
+    (if (featurep 'xemacs)
 	(setq macro (mapcar 'character-to-event vec))
       (setq macro vec))
     (vconcat (mapcar 'viper-event-key macro))))
@@ -879,9 +869,13 @@ name from there."
   (let ((lis (vector event))
 	next-event)
     (while (and (viper-fast-keysequence-p)
-		(viper-keyseq-is-a-possible-macro lis macro-alist))
-      (setq next-event (viper-read-key))
-      ;;(setq next-event (viper-read-event))
+           (viper-keyseq-is-a-possible-macro lis macro-alist))
+      ;; Seems that viper-read-event is more robust here. We need to be able to
+      ;; place these events on unread-command-events list. If we use
+      ;; viper-read-key then events will be converted to keys, and sometimes
+      ;; (e.g., (control \[)) those keys differ from the corresponding events.
+      ;; So, do not use (setq next-event (viper-read-key))
+      (setq next-event (viper-read-event))
       (or (viper-mouse-event-p next-event)
 	  (setq lis (vconcat lis (vector next-event)))))
     lis))
@@ -937,5 +931,5 @@ name from there."
     (call-last-kbd-macro)))
 
 
-;;; arch-tag: ecd3cc5c-8cd0-4bbe-b2ec-7e75a4b7d0aa
+;; arch-tag: ecd3cc5c-8cd0-4bbe-b2ec-7e75a4b7d0aa
 ;;; viper-macs.el ends here

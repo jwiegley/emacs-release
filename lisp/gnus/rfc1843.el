@@ -1,27 +1,25 @@
 ;;; rfc1843.el --- HZ (rfc1843) decoding
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Shenghuo Zhu <zsh@cs.rochester.edu>
 ;; Keywords: news HZ HZ+ mail i18n
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published
-;; by the Free Software Foundation; either version 3, or (at your
-;; option) any later version.
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; GNU Emacs is distributed in the hope that it will be useful, but
-;; WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -33,6 +31,10 @@
 ;; (rfc1843-decode-string  "~{<:Ky2;S{#,NpJ)l6HK!#~}")
 
 ;;; Code:
+
+;; For Emacs < 22.2.
+(eval-and-compile
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest r))))
 
 (eval-when-compile (require 'cl))
 (require 'mm-util)
@@ -139,6 +141,10 @@ ftp://ftp.math.psu.edu/pub/simpson/chinese/hzp/hzp.doc"
 	  (aset s (incf i) (+ v (if (< v 63) 64 98))))))
     s))
 
+(autoload 'mail-header-parse-content-type "mail-parse")
+(autoload 'message-narrow-to-head "message")
+(declare-function message-fetch-field "message" (header &optional not-all))
+
 (defun rfc1843-decode-article-body ()
   "Decode HZ encoded text in the article body."
   (if (string-match (concat "\\<\\(" rfc1843-newsgroups-regexp "\\)\\>")
@@ -186,5 +192,5 @@ ftp://ftp.math.psu.edu/pub/simpson/chinese/hzp/hzp.doc"
 
 (provide 'rfc1843)
 
-;;; arch-tag: 5149c301-a6ca-4731-9c9d-ba616e2cb687
+;; arch-tag: 5149c301-a6ca-4731-9c9d-ba616e2cb687
 ;;; rfc1843.el ends here

@@ -1,7 +1,7 @@
 ;;; gamegrid.el --- library for implementing grid-based games on Emacs
 
-;; Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Glynn Clements <glynn@sensei.co.uk>
 ;; Version: 1.02
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -64,9 +62,10 @@
 (defvar gamegrid-buffer-start 1)
 
 (defvar gamegrid-score-file-length 50
-  "Number of high scores to keep")
+  "Number of high scores to keep.")
 
-(defvar gamegrid-user-score-file-directory "~/.emacs.d/games"
+(defvar gamegrid-user-score-file-directory
+  (locate-user-emacs-file "games/")
   "A directory for game scores which can't be shared.
 If Emacs was built without support for shared game scores, then this
 directory will be used.")
@@ -305,6 +304,8 @@ static unsigned char gamegrid_bits[] = {
 			     'remove-locale)
     (setq buffer-display-table gamegrid-display-table)))
 
+(declare-function image-size "image.c" (spec &optional pixels frame))
+
 (defun gamegrid-setup-default-font ()
   (setq gamegrid-face
 	(copy-face 'default
@@ -319,7 +320,14 @@ static unsigned char gamegrid_bits[] = {
 			  (< max-height height))
 		      (setq max-height height))))))
       (when (and max-height (< max-height 1))
-	(set-face-attribute gamegrid-face nil :height max-height)))))
+	(let ((default-font-height (face-attribute 'default :height))
+	      (resy (/ (display-pixel-height) (/ (display-mm-height) 25.4)))
+	      point-size pixel-size)
+	  (setq point-size (/ (* (float default-font-height) max-height) 10)
+		pixel-size (floor (* resy (/ point-size 72.27)))
+		point-size (* (/ pixel-size resy) 72.27))
+	  (face-spec-set gamegrid-face
+			 `((t :height ,(floor (* point-size 10))))))))))
 
 (defun gamegrid-initialize-display ()
   (setq gamegrid-display-mode (gamegrid-display-type))
@@ -385,6 +393,7 @@ static unsigned char gamegrid_bits[] = {
 (defun gamegrid-init (options)
   (setq buffer-read-only t
 	truncate-lines t
+	line-spacing 0
 	gamegrid-display-options options)
   (buffer-disable-undo (current-buffer))
   (gamegrid-initialize-display))
@@ -393,7 +402,7 @@ static unsigned char gamegrid_bits[] = {
 
 (defun gamegrid-start-timer (period func)
   (setq gamegrid-timer
-	(if (featurep 'itimer)
+	(if (featurep 'xemacs)
 	    (start-itimer "Gamegrid"
 			  func
 			  period
@@ -418,7 +427,7 @@ static unsigned char gamegrid_bits[] = {
 
 (defun gamegrid-kill-timer ()
   (if gamegrid-timer
-      (if (featurep 'itimer)
+      (if (featurep 'xemacs)
           (delete-itimer gamegrid-timer)
         (cancel-timer gamegrid-timer)))
   (setq gamegrid-timer nil))
@@ -429,19 +438,19 @@ static unsigned char gamegrid_bits[] = {
   "Add the current score to the high score file.
 
 On POSIX systems there may be a shared game directory for all users in
-which the scorefiles are kept. On such systems Emacs doesn't create
-the score file FILE in this directory, if it doesn't already exist. In
-this case Emacs searches for FILE in the directory specified by
+which the scorefiles are kept.  On such systems Emacs doesn't create
+the score file FILE in this directory, if it doesn't already exist.
+In this case Emacs searches for FILE in the directory specified by
 `gamegrid-user-score-file-directory' and creates it there, if
 necessary.
 
 To add the score file for a game to the system wide shared game
 directory, create the file with the shell command \"touch\" in this
 directory and make sure that it is owned by the correct user and
-group. You probably need special user privileges to do this.
+group.  You probably need special user privileges to do this.
 
 On non-POSIX systems Emacs searches for FILE in the directory
-specified by the variable `temporary-file-directory'. If necessary,
+specified by the variable `temporary-file-directory'.  If necessary,
 FILE is created there."
   (case system-type
     ((ms-dos windows-nt)
@@ -587,5 +596,5 @@ FILE is created there."
 
 (provide 'gamegrid)
 
-;;; arch-tag: a96c2ff4-1c12-427e-bd3d-faeaf174cd46
+;; arch-tag: a96c2ff4-1c12-427e-bd3d-faeaf174cd46
 ;;; gamegrid.el ends here

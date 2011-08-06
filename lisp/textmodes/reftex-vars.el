@@ -1,7 +1,7 @@
 ;;; reftex-vars.el --- configuration variables for RefTeX
 
 ;; Copyright (C) 1997, 1998, 1999, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <dominik@science.uva.nl>
 ;; Maintainer: auctex-devel@gnu.org
@@ -9,25 +9,23 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE   See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
-(eval-when-compile (defvar reftex-tables-dirty))
+(defvar reftex-tables-dirty)
 (eval-when-compile (require 'cl))
 (eval-and-compile
   (defun reftex-set-dirty (symbol value)
@@ -1849,7 +1847,16 @@ symbol indicating in what context the hook is called."
 
 (defcustom reftex-extra-bindings nil
   "Non-nil means, make additional key bindings on startup.
-These extra bindings are located in the users `C-c letter' map."
+These extra bindings are located in the
+`reftex-extra-bindings-map' map, bound to
+`reftex-extra-bindings-prefix'."
+  :group 'reftex-miscellaneous-configurations
+  :type 'boolean)
+
+;; below, default is C-c C-y because it is free in LaTeX mode.
+(defcustom reftex-extra-bindings-prefix "\C-c\C-y"
+  "When `reftex-extra-bindings' is set to non-nil, use extra
+bindings with this prefix bound to `reftex-extra-bindings-map'."
   :group 'reftex-miscellaneous-configurations
   :type 'boolean)
 
@@ -1909,5 +1916,5 @@ construct:  \\bbb [xxx] {aaa}."
 
 (provide 'reftex-vars)
 
-;;; arch-tag: 9591ea34-ef39-4431-90b7-c115eaf5e16f
+;; arch-tag: 9591ea34-ef39-4431-90b7-c115eaf5e16f
 ;;; reftex-vars.el ends here

@@ -1,7 +1,7 @@
 ;;; pcvs.el --- a front-end to CVS
 
 ;; Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: (The PCL-CVS Trust) pcl-cvs@cyclic.com
 ;;	(Per Cederqvist) ceder@lysator.liu.se
@@ -17,10 +17,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -28,9 +28,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -227,7 +225,7 @@
     (list* '("BASE") '("HEAD")
 	   (when marked
 	     (with-temp-buffer
-	       (call-process cvs-program
+	       (process-file cvs-program
 			     nil	;no input
 			     t		;output to current-buffer
 			     nil	;don't update display while running
@@ -564,7 +562,7 @@ If non-nil, NEW means to create a new buffer no matter what."
 	       (process
 		;; the process will be run in the selected dir
 		(let ((default-directory (cvs-expand-dir-name dir)))
-		  (apply 'start-process "cvs" procbuf cvs-program args))))
+		  (apply 'start-file-process "cvs" procbuf cvs-program args))))
 	  ;; setup the process.
 	  (process-put process 'cvs-buffer cvs-buffer)
 	  (with-current-buffer cvs-buffer (cvs-update-header msg 'add))
@@ -635,6 +633,9 @@ If non-nil, NEW means to create a new buffer no matter what."
           (if (not (string-match "." str)) (setq str "\n"))
           (setq str (concat "-- Running " cmd " ...\n" str)))
       (if (not (string-match
+                ;; FIXME:  If `cmd' is large, this will bump into the
+                ;; compiled-regexp size limit.  We could drop the "^" anchor
+                ;; and use search-forward to circumvent the problem.
 		(concat "^-- Running " (regexp-quote cmd) " \\.\\.\\.\n") str))
 	  (error "Internal PCL-CVS error while removing message")
 	(setq str (replace-match "" t t str))
@@ -756,7 +757,8 @@ clear what alternative to use.
 - NOARGS will get all the arguments from the *cvs* buffer and will
   always behave as if called interactively.
 - DOUBLE is the generic case."
-  (declare (debug (&define sexp lambda-list stringp ("interactive" interactive) def-body)))
+  (declare (debug (&define sexp lambda-list stringp ("interactive" interactive) def-body))
+	   (doc-string 3))
   (let ((style (cvs-cdr fun))
 	(fun (cvs-car fun)))
     (cond
@@ -1454,7 +1456,9 @@ The POSTPROC specified there (typically `log-edit') is then called,
   (let ((buf (cvs-temp-buffer "message" 'normal 'nosetup))
 	(setupfun (or (nth 2 (cdr (assoc "message" cvs-buffer-name-alist)))
 		      'log-edit)))
-    (funcall setupfun 'cvs-do-commit setup 'cvs-commit-filelist buf)
+    (funcall setupfun 'cvs-do-commit setup 
+	     '((log-edit-listfun . cvs-commit-filelist)
+	       (log-edit-diff-function . cvs-mode-diff)) buf)
     (set (make-local-variable 'cvs-minor-wrap-function) 'cvs-commit-minor-wrap)
     (run-hooks 'cvs-mode-commit-hook)))
 
@@ -1517,7 +1521,10 @@ This is best called from a `log-view-mode' buffer."
       ;; Set the filename before, so log-edit can correctly setup its
       ;; log-edit-initial-files variable.
       (set (make-local-variable 'cvs-edit-log-files) (list file)))
-    (funcall setupfun 'cvs-do-edit-log nil 'cvs-edit-log-filelist buf)
+    (funcall setupfun 'cvs-do-edit-log nil 
+	     '((log-edit-listfun . cvs-edit-log-filelist)
+	       (log-edit-diff-function . cvs-mode-diff))
+	     buf)
     (when text (erase-buffer) (insert text))
     (set (make-local-variable 'cvs-edit-log-revision) rev)
     (set (make-local-variable 'cvs-minor-wrap-function)
@@ -1733,7 +1740,7 @@ Signal an error if there is no backup file."
 	  ;; problem when stdout and stderr are the same.
 	  (let ((res
                  (let ((coding-system-for-read 'binary))
-                   (apply 'call-process cvs-program nil '(t nil) nil
+                   (apply 'process-file cvs-program nil '(t nil) nil
                           "-q" "update" "-p"
                           ;; If `rev' is HEAD, don't pass it at all:
                           ;; the default behavior is to get the head
@@ -1957,6 +1964,8 @@ This command ignores files that are not flagged as `Unknown'."
     (setf (cvs-fileinfo->type fi) 'DEAD))
   (cvs-cleanup-collection cvs-cookies nil nil nil))
 
+(declare-function vc-editable-p "vc" (file))
+(declare-function vc-checkout "vc" (file &optional writable rev))
 
 (defun cvs-append-to-ignore (dir str &optional old-dir)
   "Add STR to the .cvsignore file in DIR.
@@ -2003,7 +2012,7 @@ to hear about anymore."
 
 (defun cvs-find-modif (fi)
   (with-temp-buffer
-    (call-process cvs-program nil (current-buffer) nil
+    (process-file cvs-program nil (current-buffer) nil
 		  "-f" "diff" (cvs-fileinfo->file fi))
     (goto-char (point-min))
     (if (re-search-forward "^\\([0-9]+\\)" nil t)
@@ -2265,7 +2274,7 @@ With prefix argument, prompt for cvs flags."
 			program (split-string-and-unquote args)))
 
 	;; FIXME: return the exit status?
-	(apply 'call-process program nil t t args)
+	(apply 'process-file program nil t t args)
 	(goto-char (point-max))))))
 
 ;; FIXME: make this run in the background ala cvs-run-process...
@@ -2288,7 +2297,7 @@ this file, or a list of arguments to send to the program."
 	   (buffer (find-buffer-visiting file)))
       ;; For a revert to happen the user must be editing the file...
       (unless (or (null buffer)
-		  (eq (cvs-fileinfo->type fileinfo) 'MESSAGE)
+		  (memq (cvs-fileinfo->type fileinfo) '(MESSAGE UNKNOWN))
 		  ;; FIXME: check whether revert is really needed.
 		  ;; `(verify-visited-file-modtime buffer)' doesn't cut it
 		  ;; because it only looks at the time stamp (it ignores
@@ -2301,7 +2310,7 @@ this file, or a list of arguments to send to the program."
 	    ;; do want to reset the mode for VC, so we do it explicitly.
 	    (vc-find-file-hook)
 	    (when (eq (cvs-fileinfo->type fileinfo) 'CONFLICT)
-	      (smerge-mode 1))))))))
+	      (smerge-start-session))))))))
 
 
 (defun cvs-change-cvsroot (newroot)
@@ -2315,9 +2324,6 @@ this file, or a list of arguments to send to the program."
 ;;;;
 ;;;; useful global settings
 ;;;;
-
-;;;###autoload
-(add-to-list 'completion-ignored-extensions "CVS/")
 
 ;;
 ;; Hook to allow calling PCL-CVS by visiting the /CVS subdirectory
@@ -2363,7 +2369,7 @@ The exact behavior is determined also by `cvs-dired-use-hook'."
 
 (add-hook 'vc-post-command-functions 'cvs-vc-command-advice)
 
-(defun cvs-vc-command-advice (command file flags)
+(defun cvs-vc-command-advice (command files flags)
   (when (and (equal command "cvs")
 	     (progn
 	       (while (and (stringp (car flags))
@@ -2392,9 +2398,10 @@ The exact behavior is determined also by `cvs-dired-use-hook'."
 	      (when (and (equal (car flags) "add")
 			 (goto-char (point-min))
 			 (looking-at ".*to add this file permanently\n\\'"))
-		(insert "cvs add: scheduling file `"
-			(file-name-nondirectory file)
-			"' for addition\n"))
+                (dolist (file (if (listp files) files (list files)))
+                  (insert "cvs add: scheduling file `"
+                          (file-name-nondirectory file)
+                          "' for addition\n")))
 	      ;; VC never (?) does `cvs -n update' so dcd=nil
 	      ;; should probably always be the right choice.
 	      (cvs-parse-process nil subdir))))))))
@@ -2407,7 +2414,7 @@ The exact behavior is determined also by `cvs-dired-use-hook'."
   (let* ((file (expand-file-name buffer-file-name))
 	 (version (and (fboundp 'vc-backend)
 		       (eq (vc-backend file) 'CVS)
-		       (vc-workfile-version file))))
+		       (vc-working-revision file))))
     (when version
       (save-excursion
 	(dolist (cvs-buf (buffer-list))

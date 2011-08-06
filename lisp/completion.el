@@ -1,7 +1,7 @@
 ;;; completion.el --- dynamic word-completion code
 
 ;; Copyright (C) 1990, 1993, 1995, 1997, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: abbrev convenience
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -298,13 +296,7 @@ See also `save-completions-retention-time'."
   :group 'completion)
 
 (defcustom save-completions-file-name
-  (let ((olddef (convert-standard-filename "~/.completions")))
-    (cond
-     ((file-readable-p olddef) olddef)
-     ((file-directory-p (convert-standard-filename "~/.emacs.d/"))
-      (convert-standard-filename
-       (expand-file-name "completions" "~/.emacs.d/")))
-     (t olddef)))
+  (locate-user-emacs-file "completions" ".completions")
   "The filename to save completions to."
   :type 'file
   :group 'completion)
@@ -568,7 +560,8 @@ But only if it is longer than `completion-min-length'."
                      (- cmpl-symbol-end cmpl-symbol-start))
                  (<= (- cmpl-symbol-end cmpl-symbol-start)
                      completion-max-length))
-            (buffer-substring cmpl-symbol-start cmpl-symbol-end))))))
+            (buffer-substring-no-properties
+             cmpl-symbol-start cmpl-symbol-end))))))
 
 ;; tests for symbol-under-point
 ;;  `^' indicates cursor pos. where value is returned
@@ -601,7 +594,8 @@ Returns nil if there isn't one longer than `completion-min-length'."
            ;; Return value if long enough.
            (if (>= cmpl-symbol-end
                    (+ cmpl-symbol-start completion-min-length))
-               (buffer-substring cmpl-symbol-start cmpl-symbol-end)))
+               (buffer-substring-no-properties
+                cmpl-symbol-start cmpl-symbol-end)))
           ((= cmpl-preceding-syntax ?w)
            ;; chars to ignore at end
            (let ((saved-point (point)))
@@ -621,7 +615,8 @@ Returns nil if there isn't one longer than `completion-min-length'."
                           (- cmpl-symbol-end cmpl-symbol-start))
                       (<= (- cmpl-symbol-end cmpl-symbol-start)
                           completion-max-length))
-                 (buffer-substring cmpl-symbol-start cmpl-symbol-end)))))))
+                 (buffer-substring-no-properties
+                  cmpl-symbol-start cmpl-symbol-end)))))))
 
 ;; tests for symbol-before-point
 ;;  `^' indicates cursor pos. where value is returned
@@ -670,7 +665,8 @@ Returns nil if there isn't one longer than `completion-min-length'."
                         (- cmpl-symbol-end cmpl-symbol-start))
                     (<= (- cmpl-symbol-end cmpl-symbol-start)
                         completion-max-length))
-               (buffer-substring cmpl-symbol-start cmpl-symbol-end))))))
+               (buffer-substring-no-properties
+                cmpl-symbol-start cmpl-symbol-end))))))
 
 ;; tests for symbol-before-point-for-complete
 ;;  `^' indicates cursor pos. where value is returned
@@ -1167,7 +1163,7 @@ Returns the completion entry."
 (defun add-completion-to-head (completion-string)
   "If COMPLETION-STRING is not in the database, add it to prefix list.
 We add COMPLETION-STRING to the head of the appropriate prefix list,
-or it to the head of the list.
+or to the head of the list.
 COMPLETION-STRING must be longer than `completion-prefix-min-length'.
 Updates the saved string with the supplied string.
 This must be very fast.
@@ -1311,8 +1307,8 @@ String must be longer than `completion-prefix-min-length'."
 
 (defun add-completion (string &optional num-uses last-use-time)
   "Add STRING to completion list, or move it to head of list.
-The completion is altered appropriately if num-uses and/or last-use-time is
-specified."
+The completion is altered appropriately if NUM-USES and/or LAST-USE-TIME
+are specified."
   (interactive (interactive-completion-string-reader "Completion to add"))
   (check-completion-length string)
   (let* ((current-completion-source (if (interactive-p)
@@ -1461,7 +1457,7 @@ STRING must be longer than `completion-prefix-min-length'."
 (defun completion-search-next (index)
   "Return the next completion entry.
 If INDEX is out of sequence, reset and start from the top.
-If there are no more entries, try cdabbrev and returns only a string."
+If there are no more entries, try cdabbrev and return only a string."
   (cond
     ((= index (setq cmpl-last-index (1+ cmpl-last-index)))
      (completion-search-peek t))
@@ -1697,7 +1693,7 @@ Prefix args ::
 
 ;; User interface
 (defun add-completions-from-file (file)
-  "Parse possible completions from a FILE and add them to data base."
+  "Parse possible completions from a FILE and add them to database."
   (interactive "fFile: ")
   (setq file (expand-file-name file))
   (let* ((buffer (get-file-buffer file))
@@ -2227,15 +2223,19 @@ Patched to remove the most recent completion."
 
 (defun completion-separator-self-insert-command (arg)
   (interactive "p")
-  (use-completion-before-separator)
-  (self-insert-command arg))
+  (if (command-remapping 'self-insert-command)
+      (funcall (command-remapping 'self-insert-command) arg)
+    (use-completion-before-separator)
+    (self-insert-command arg)))
 
 (defun completion-separator-self-insert-autofilling (arg)
   (interactive "p")
-  (use-completion-before-separator)
-  (self-insert-command arg)
-  (and auto-fill-function
-       (funcall auto-fill-function)))
+  (if (command-remapping 'self-insert-command)
+      (funcall (command-remapping 'self-insert-command) arg)
+    (use-completion-before-separator)
+    (self-insert-command arg)
+    (and auto-fill-function
+	 (funcall auto-fill-function))))
 
 ;;-----------------------------------------------
 ;; Wrapping Macro

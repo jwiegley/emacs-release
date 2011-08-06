@@ -1,17 +1,19 @@
 ;;; diff.el --- run `diff' in compilation-mode
 
-;; Copyright (C) 1992, 1994, 1996, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1992, 1994, 1996, 2001, 2002, 2003, 2004, 2005, 2006,
+;;   2007, 2008, 2009 Free Software Foundation, Inc.
 
+;; Author: Frank Bresz
+;; (according to authors.el)
 ;; Maintainer: FSF
 ;; Keywords: unix, tools
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -37,13 +37,13 @@
 
 ;;;###autoload
 (defcustom diff-switches "-c"
-  "*A string or list of strings specifying switches to be passed to diff."
+  "A string or list of strings specifying switches to be passed to diff."
   :type '(choice string (repeat string))
   :group 'diff)
 
 ;;;###autoload
 (defcustom diff-command "diff"
-  "*The command to use to run diff."
+  "The command to use to run diff."
   :type 'string
   :group 'diff)
 
@@ -70,16 +70,26 @@ were found."
     (goto-char (point-max))
     (let ((inhibit-read-only t))
       (insert (format "\nDiff finished%s.  %s\n"
-		      (if (equal 0 code) " (no differences)" "")
+		      (cond ((equal 0 code) " (no differences)")
+			    ((equal 2 code) " (diff error)")
+			    (t ""))
 		      (current-time-string))))))
+
+(defvar diff-old-file nil)
+(defvar diff-new-file nil)
+(defvar diff-extra-args nil)
 
 ;;;###autoload
 (defun diff (old new &optional switches no-async)
   "Find and display the differences between OLD and NEW files.
-Interactively the current buffer's file name is the default for NEW
-and a backup file for NEW is the default for OLD.
+When called interactively, read OLD and NEW using the minibuffer;
+the default for NEW is the current buffer's file name, and the
+default for OLD is a backup file for NEW, if one exists.
 If NO-ASYNC is non-nil, call diff synchronously.
-With prefix arg, prompt for diff switches."
+
+When called interactively with a prefix argument, prompt
+interactively for diff switches.  Otherwise, the switches
+specified in `diff-switches' are passed to the diff command."
   (interactive
    (let (oldf newf)
      (setq newf (buffer-file-name)
@@ -125,9 +135,13 @@ With prefix arg, prompt for diff switches."
 	(erase-buffer))
       (buffer-enable-undo (current-buffer))
       (diff-mode)
+      ;; Use below 2 vars for backward-compatibility.
+      (set (make-local-variable 'diff-old-file) old)
+      (set (make-local-variable 'diff-new-file) new)
+      (set (make-local-variable 'diff-extra-args) (list switches no-async))
       (set (make-local-variable 'revert-buffer-function)
-	   `(lambda (ignore-auto noconfirm)
-	      (diff ',old ',new ',switches ',no-async)))
+	   (lambda (ignore-auto noconfirm)
+             (apply 'diff diff-old-file diff-new-file diff-extra-args)))
       (set (make-local-variable 'diff-old-temp-file) old-alt)
       (set (make-local-variable 'diff-new-temp-file) new-alt)
       (setq default-directory thisdir)
@@ -187,5 +201,5 @@ With prefix arg, prompt for diff switches."
 
 (provide 'diff)
 
-;;; arch-tag: 7de2c29b-7ea5-4b85-9b9d-72dd860de2bd
+;; arch-tag: 7de2c29b-7ea5-4b85-9b9d-72dd860de2bd
 ;;; diff.el ends here

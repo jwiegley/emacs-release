@@ -1,7 +1,7 @@
 ;;; recentf.el --- setup a menu of recently opened files
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Ponce <david@dponce.com>
 ;; Created: July 19 1999
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published
-;; by the Free Software Foundation; either version 3, or (at your
-;; option) any later version.
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -63,14 +61,14 @@ You should define the options of your own filters in this group."
   :group 'recentf)
 
 (defcustom recentf-max-saved-items 20
-  "*Maximum number of items of the recent list that will be saved.
+  "Maximum number of items of the recent list that will be saved.
 A nil value means to save the whole list.
 See the command `recentf-save-list'."
   :group 'recentf
   :type 'integer)
 
-(defcustom recentf-save-file "~/.recentf"
-  "*File to save the recent list into."
+(defcustom recentf-save-file (convert-standard-filename "~/.recentf")
+  "File to save the recent list into."
   :group 'recentf
   :type 'file
   :initialize 'custom-initialize-default
@@ -89,9 +87,9 @@ file.  See also the function `set-file-modes'."
   :group 'recentf
   :type '(choice (const :tag "Don't change" nil)
           integer))
-  
+
 (defcustom recentf-exclude nil
-  "*List of regexps and predicates for filenames excluded from the recent list.
+  "List of regexps and predicates for filenames excluded from the recent list.
 When a filename matches any of the regexps or satisfies any of the
 predicates it is excluded from the recent list.
 A predicate is a function that is passed a filename to check and that
@@ -99,19 +97,27 @@ must return non-nil to exclude it."
   :group 'recentf
   :type '(repeat (choice regexp function)))
 
+(defun recentf-keep-default-predicate (file)
+  "Return non-nil if FILE should be kept in the recent list.
+It handles the case of remote files as well."
+  (cond
+   ((file-remote-p file nil t) (file-readable-p file))
+   ((file-remote-p file))
+   ((file-readable-p file))))
+
 (defcustom recentf-keep
-  '(file-readable-p)
-  "*List of regexps and predicates for filenames kept in the recent list.
+  '(recentf-keep-default-predicate)
+  "List of regexps and predicates for filenames kept in the recent list.
 Regexps and predicates are tried in the specified order.
 When nil all filenames are kept in the recent list.
 When a filename matches any of the regexps or satisfies any of the
 predicates it is kept in the recent list.
-The default is to keep readable files.
+The default is to keep readable files.  Remote files are checked
+for readability only in case a connection is established to that
+remote system, otherwise they are kept in the recent list without
+checking their readability.
 A predicate is a function that is passed a filename to check and that
-must return non-nil to keep it.  For example, you can add the
-`file-remote-p' predicate in front of this list to keep remote file
-names in the recent list without checking their readability through a
-remote access."
+must return non-nil to keep it."
   :group 'recentf
   :type '(repeat (choice regexp function)))
 
@@ -127,13 +133,13 @@ Set VARIABLE with VALUE, and force a rebuild of the recentf menu."
     (set-default variable value)))
 
 (defcustom recentf-menu-title "Open Recent"
-  "*Name of the recentf menu."
+  "Name of the recentf menu."
   :group 'recentf
   :type 'string
   :set 'recentf-menu-customization-changed)
 
 (defcustom recentf-menu-path '("File")
-  "*Path where to add the recentf menu.
+  "Path where to add the recentf menu.
 If nil add it at top level (see also `easy-menu-add-item')."
   :group 'recentf
   :type '(choice (const :tag "Top Level" nil)
@@ -141,7 +147,7 @@ If nil add it at top level (see also `easy-menu-add-item')."
   :set 'recentf-menu-customization-changed)
 
 (defcustom recentf-menu-before "Open File..."
-  "*Name of the menu before which the recentf menu will be added.
+  "Name of the menu before which the recentf menu will be added.
 If nil add it at end of menu (see also `easy-menu-add-item')."
   :group 'recentf
   :type '(choice (string :tag "Name")
@@ -149,18 +155,18 @@ If nil add it at end of menu (see also `easy-menu-add-item')."
   :set 'recentf-menu-customization-changed)
 
 (defcustom recentf-menu-action 'find-file
-  "*Function to invoke with a filename item of the recentf menu.
+  "Function to invoke with a filename item of the recentf menu.
 The default is to call `find-file' to edit the selected file."
   :group 'recentf
   :type 'function)
 
 (defcustom recentf-max-menu-items 10
-  "*Maximum number of items in the recentf menu."
+  "Maximum number of items in the recentf menu."
   :group 'recentf
   :type 'integer)
 
 (defcustom recentf-menu-filter nil
-  "*Function used to filter files displayed in the recentf menu.
+  "Function used to filter files displayed in the recentf menu.
 A nil value means no filter.  The following functions are predefined:
 
 - `recentf-sort-ascending'
@@ -214,13 +220,8 @@ elements (see `recentf-make-menu-element' for menu element form)."
                 function))
 
 (defcustom recentf-menu-open-all-flag nil
-  "*Non-nil means to show an \"All...\" item in the menu.
+  "Non-nil means to show an \"All...\" item in the menu.
 This item will replace the \"More...\" item."
-  :group 'recentf
-  :type 'boolean)
-
-(defcustom recentf-menu-append-commands-flag t
-  "*Non-nil means to append command items to the menu."
   :group 'recentf
   :type 'boolean)
 
@@ -228,8 +229,13 @@ This item will replace the \"More...\" item."
                                 'recentf-menu-append-commands-flag
                                 "22.1")
 
+(defcustom recentf-menu-append-commands-flag t
+  "Non-nil means to append command items to the menu."
+  :group 'recentf
+  :type 'boolean)
+
 (defcustom recentf-auto-cleanup 'mode
-  "*Define when to automatically cleanup the recent list.
+  "Define when to automatically cleanup the recent list.
 The following values can be set:
 
 - `mode'
@@ -262,13 +268,13 @@ cleanup the list."
            (recentf-auto-cleanup))))
 
 (defcustom recentf-initialize-file-name-history t
-  "*Non-nil means to initialize `file-name-history' with the recent list.
+  "Non-nil means to initialize `file-name-history' with the recent list.
 If `file-name-history' is not empty, do nothing."
   :group 'recentf
   :type  'boolean)
 
 (defcustom recentf-load-hook nil
-   "*Normal hook run at end of loading the `recentf' package."
+   "Normal hook run at end of loading the `recentf' package."
   :group 'recentf
   :type 'hook)
 
@@ -294,7 +300,7 @@ used as shortcuts to open the Nth file."
 ;;; Utilities
 ;;
 (defconst recentf-case-fold-search
-  (memq system-type '(vax-vms windows-nt cygwin))
+  (memq system-type '(windows-nt cygwin))
   "Non-nil if recentf searches and matches should ignore case.")
 
 (defsubst recentf-string-equal (s1 s2)
@@ -769,7 +775,7 @@ Filenames are relative to the `default-directory'."
     ("Java files (%d)"  ".\\.java\\'")
     ("C/C++ files (%d)" "c\\(pp\\)?\\'")
     )
-  "*List of rules used by `recentf-arrange-by-rule' to build sub-menus.
+  "List of rules used by `recentf-arrange-by-rule' to build sub-menus.
 A rule is a pair (SUB-MENU-TITLE . MATCHER).  SUB-MENU-TITLE is the
 displayed title of the sub-menu where a '%d' `format' pattern is
 replaced by the number of items in the sub-menu.  MATCHER is a regexp
@@ -785,7 +791,7 @@ may have been modified to match another rule."
                        (repeat regexp))))
 
 (defcustom recentf-arrange-by-rule-others "Other files (%d)"
-  "*Title of the `recentf-arrange-by-rule' sub-menu.
+  "Title of the `recentf-arrange-by-rule' sub-menu.
 This is for the menu where items that don't match any
 `recentf-arrange-rules' are displayed.  If nil these items are
 displayed in the main recent files menu.  A '%d' `format' pattern in
@@ -795,7 +801,7 @@ the title is replaced by the number of items in the sub-menu."
                  (string :tag "Title")))
 
 (defcustom recentf-arrange-by-rules-min-items 0
-  "*Minimum number of items in a `recentf-arrange-by-rule' sub-menu.
+  "Minimum number of items in a `recentf-arrange-by-rule' sub-menu.
 If the number of items in a sub-menu is less than this value the
 corresponding sub-menu items are displayed in the main recent files
 menu or in the `recentf-arrange-by-rule-others' sub-menu if
@@ -804,7 +810,7 @@ defined."
   :type 'number)
 
 (defcustom recentf-arrange-by-rule-subfilter nil
-  "*Function called by a rule based filter to filter sub-menu elements.
+  "Function called by a rule based filter to filter sub-menu elements.
 A nil value means no filter.  See also `recentf-menu-filter'.
 You can't use another rule based filter here."
   :group 'recentf-filters
@@ -958,7 +964,7 @@ duplicates.  It is used by `recentf-arrange-by-dir' as its
     (recentf-arrange-by-dir  . "Grouped by Directory")
     (recentf-arrange-by-rule . "Grouped by Custom Rules")
     )
-  "*List of filters managed by `recentf-filter-changer'.
+  "List of filters managed by `recentf-filter-changer'.
 Each filter is defined by a pair (FUNCTION . LABEL), where FUNCTION is
 the filter function, and LABEL is the menu item displayed to select
 that filter."
@@ -1272,9 +1278,9 @@ Write data into the file specified by `recentf-save-file'."
         (insert (format recentf-save-file-header (current-time-string)))
         (recentf-dump-variable 'recentf-list recentf-max-saved-items)
         (recentf-dump-variable 'recentf-filter-changer-current)
-        (insert "\n\n;;; Local Variables:\n"
-                (format ";;; coding: %s\n" recentf-save-file-coding-system)
-                ";;; End:\n")
+        (insert "\n\n;; Local Variables:\n"
+                (format ";; coding: %s\n" recentf-save-file-coding-system)
+                ";; End:\n")
         (write-file (expand-file-name recentf-save-file))
         (when recentf-save-file-modes
           (set-file-modes recentf-save-file recentf-save-file-modes))

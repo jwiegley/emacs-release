@@ -1,14 +1,16 @@
-/* Unexec for DEC alpha.  schoepf@sc.ZIB-Berlin.DE (Rainer Schoepf).
+/* Unexec for DEC alpha.
 
    Copyright (C) 1994, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+
+Author: Rainer Schoepf <schoepf@sc.ZIB-Berlin.DE>
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +18,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 #include <config.h>
@@ -136,13 +136,6 @@ struct headers {
     struct scnhdr section[_MIPS_NSCNS_MAX];
 };
 
-
-
-/* Define name of label for entry point for the dumped executable.  */
-
-#ifndef DEFAULT_ENTRY_ADDRESS
-#define DEFAULT_ENTRY_ADDRESS __start
-#endif
 
 void
 unexec (new_name, a_name, data_start, bss_start, entry_address)
@@ -273,8 +266,8 @@ unexec (new_name, a_name, data_start, bss_start, entry_address)
   nhdr.aout.bsize = 0;
   if (entry_address == 0)
     {
-      extern DEFAULT_ENTRY_ADDRESS ();
-      nhdr.aout.entry = (unsigned long)DEFAULT_ENTRY_ADDRESS;
+      extern __start ();
+      nhdr.aout.entry = (unsigned long)__start;
     }
   else
     nhdr.aout.entry = entry_address;

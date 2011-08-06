@@ -6,7 +6,7 @@
 	etc/images/mail so added "mail/" prefix.
 	(mh-reply): Ditto. Also renamed reply2.* to reply.*.
 	(mh-rescan-folder): Ditto. Renamed image file to refresh.* since
-	it can be used in the general sense. Does not have "mail/" 
+	it can be used in the general sense. Does not have "mail/"
 	prefix.
 
 2005-09-29  Bill Wohler  <wohler@newt.com>
@@ -157,13 +157,13 @@
 
 2005-07-12  Jeffrey C Honig  <jch@honig.net>
 
-	* mh-customize.el (mh-invisible-header-fields-internal) 
+	* mh-customize.el (mh-invisible-header-fields-internal)
 	(mh-invisible-header-fields-internal): Add Received-SPF header and
 	X-Gmail- prefixes seen from Gmail.
 
 2005-06-08  Peter S Galbraith  <psg@debian.org>
 
-	* mh-comp.el (mh-insert-auto-fields): Inset identity regardless of
+	* mh-comp.el (mh-insert-auto-fields): Insert identity regardless of
 	whether one was already set, since if one used a default identity
 	it would never be overridden (closes SF #1204506).
 
@@ -885,7 +885,7 @@
 	4. Run xbmtopbm < file.xbm > file.pbm.
 	Thanks to jan.h.d@swipnet.se for the help.
 
-2004-07-07  Stephen Gildea
+2004-07-07  Stephen Gildea  <gildea@stop.mail-abuse.org>
 
 	* mh-customize.el (mh-invisible-header-fields-internal):
 	Add X-Greylist, X-Source*, and X-WebTV-Signature.
@@ -1879,7 +1879,7 @@
 	info about it for `mh-variants'.
 
 	* mh-e.el (mh-regenerate-headers): mu-mh has different error
-	message for a invalid mesage list.
+	message for a invalid message list.
 
 2003-08-18  Peter S Galbraith  <psg@debian.org>
 
@@ -3491,7 +3491,7 @@
 	* mh-e.el (mh-undefine-sequence): Since mh-coalesce-msg-list
 	returns a list, apply is needed.
 
-2003-05-09  Noel Cragg  <noel@red-bean.com> (tiny change)
+2003-05-09  Noel Cragg  <noel@red-bean.com>  (tiny change)
 
 	* mh-junk.el (mh-spamassassin-blacklist): Separate "--local" and
 	"--no-rebuild" arguments to call-process.
@@ -4464,7 +4464,7 @@
 	lines. So it is OK for mh-get-msg-num to fail once in a while.
 
 	* mh-index.el (mh-index-update-maps): Make the parsing of messages
-	that need to annotated with the X-MHE-Checksum header more robust.
+	that need to be annotated with the X-MHE-Checksum header more robust.
 	If the search yielded no results then an error was being produced.
 	(mh-index-search): Enable automatic threading of index folders if
 	mh-show-threads-flag is non-nil (closes SF #709667).
@@ -6383,7 +6383,7 @@
 	New interactive functions which jumps to search results of next
 	and previous folders respectively.
 
-	* mh-loadddefs.el: Regenerated.
+	* mh-loaddefs.el: Regenerated.
 
 	* mh-index.el (mh-index-delete-folder-headers): Arrange for
 	mh-goto-cur-msg to just go to the current message.
@@ -6986,7 +6986,7 @@
 	Moved all defgroups, defcustoms, and deffaces to mh-customize.el
 	(closes SF #643722) .
 
-	* mh-identity.el (mh-comp-loaded): New variable in a desparate
+	* mh-identity.el (mh-comp-loaded): New variable in a desperate
 	attempt to prevent an infinite loop.
 	(eval-when-compile): Was able to remove these defvars as they are
 	now predefined in mh-loaddefs and mh-customize.
@@ -8034,7 +8034,7 @@
 	XEmacs too. Sanitize so that it will work using least-common
 	denominator versions of 'make'. Tested using GNU make, Solaris make,
 	and Berkely make.
-	(all): Use recursive invokation based on the emacs or xemacs
+	(all): Use recursive invocation based on the emacs or xemacs
 	executable passed on the 'make EMACS=xemacs' command line.
 	(XEMACS_OPTIONS): The incantation to be passed to an xemacs editor
 	to compile things properly.
@@ -8118,7 +8118,7 @@
 	for which a Mail-Followup-To field is inserted.
 	(mh-re-search-to-cc): New function. Search for REGEXP in To: and
 	Cc: fields.
-	(mh-insert-mail-followup-to): New function. Insert
+	(mh-insert-mail-followup-to): New function. Insert
 	Mail-Followup-To: if To or Cc match `mh-insert-mail-followup-to-list'.
 	(mh-compose-and-send-mail): Call mh-insert-mail-followup-to if
 	mh-insert-mail-followup-to-flag is true.
@@ -9325,7 +9325,7 @@
 2002-08-19  Peter S Galbraith  <psg@debian.org>
 
 	* reply-to.xpm, reply-to.pbm, reply-from.xpm, reply-from.pbm,
-	* reply-all.xpm, reply-all.bpm:  New icons for various reply methods.
+	* reply-all.xpm, reply-all.pbm:  New icons for various reply methods.
 	* mh-e.el (mh-folder-tool-bar-map): Split reply button into three
 	that won't prompt for "from", "to" and "all".
 	* mh-comp.el (mh-reply): Put variable reply-to in the interactive
@@ -9919,10 +9919,9 @@
 
 2002-05-25  Satyaki Das  <satyaki@theforce.stanford.edu>
 
-	* compilation: Reduce use of eval-when-compile so that load-path
-	is not changed if lisp files are loaded without compilation. Small
-	changes were made to Makefile, mh-comp.el mh-e.el, mh-funcs.el,
-	mh-seq.el, mh-utils.el
+	* Makefile, mh-comp.el, mh-e.el, mh-funcs.el, mh-seq.el, mh-utils.el:
+	Reduce use of eval-when-compile so that load-path is
+	not changed if lisp files are loaded without compilation.
 
 	* mh-e.el (mh-next-button, mh-folder-mode-map): New interactive
 	function to advance point to next MIME button. It is bound to TAB.
@@ -10062,7 +10061,7 @@
 	(mh-filter-out-non-text): New function to filter out attachments
 	from message being yanked.
 
-2002-05-20  Bill Wohler <Bill.Wohler@openwave.com>
+2002-05-20  Bill Wohler  <Bill.Wohler@openwave.com>
 
 	* mh-utils.el (mh-invisible-headers-show-xface): First sentence of
 	docstring was not entirely on first line so was truncated in
@@ -10443,8 +10442,8 @@
 2001-12-04  Peter S Galbraith  <psg@debian.org>
 
 	* mh-e.el (mh-folder-subject-face et al.): Yet another attempt at
-	colours for folder-mode.  Still themed, but fewer and darker
-	colours (Blame Eric this time!).  I'll get to underlining tomorrow
+	colors for folder-mode.  Still themed, but fewer and darker
+	colors (Blame Eric this time!).  I'll get to underlining tomorrow
 	night.
 
 	* mh-e.el (mh-folder-tool-bar-map): Renamed all icons so they
@@ -10630,7 +10629,7 @@
 2001-12-01  Jeffrey C Honig  <jch@honig.net>
 
 	* mh-e.el: Update the documentation for the regexps used by
-	`mh-folder-font-lock-keywords' to specify how many parethesized
+	`mh-folder-font-lock-keywords' to specify how many parenthesized
 	expressions they are expected to have and what those expressions
 	are expected to match.
 
@@ -10822,7 +10821,7 @@
 	(mh-toggle-subject-thread): New command to toggle between a new
 	'subject sequence or the wide view of a folder.
 	(mh-delete-subject-thread): New command to delete all following
-	messages with similar subject lines (leaving preceeding ones
+	messages with similar subject lines (leaving preceding ones
 	untouched).
 	(mh-next-unseen-subject-thread): New command to create and move to
 	a new subject thread created from the next unseen message as a
@@ -10908,7 +10907,7 @@
 2001-11-25  Peter S Galbraith  <psg@debian.org>
 
 	* mh-utils.el (mh-highlight-citation-p): New variable to determine
-	whether to hightlight citations in message body with gnus,
+	whether to highlight citations in message body with gnus,
 	font-lock or not at all.
 	(mh-show-font-lock-keywords): removed citations from keywords.
 	(mh-show-font-lock-keywords-with-cite): New variable, equivalent
@@ -11061,7 +11060,7 @@
 	(mh-folder-font-lock-keywords): New font-lock for folder-mode that
 	uses the above regexps.
 
-2001-11-19  chad  <y@mit.edu>
+2001-11-19  chad brown  <y@mit.edu>
 
 	* mh-comp.el (mh-letter-tool-bar-map): made both references to
 	mh-letter-tool-bar-map conditional on tool-bar-mode, instead of
@@ -11253,7 +11252,7 @@
 	resulting message is still fully MIME.
 	* mh-utils.el (mh-decode-quoted-printable): New function to run
 	mimedecode on the current buffer.
-	* mh-utils.el (mh-display-msg): Conditionnaly call
+	* mh-utils.el (mh-display-msg): Conditionally call
 	mh-decode-quoted-printable function if mh-decode-quoted-printable
 	variable is set, to view messages containing quoted-printable
 	characters into 8-bit.
@@ -11407,14 +11406,14 @@
 	(dist): Leave release in current directory.
 
 
-  Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+  Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
-  GNU Emacs is free software; you can redistribute it and/or modify
+  GNU Emacs is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 3, or (at your option)
-  any later version.
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11422,8 +11421,6 @@
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with GNU Emacs; see the file COPYING.  If not, write to the
-  Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-  Boston, MA 02110-1301, USA.
+  along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; arch-tag: 2577172b-b1bf-4d87-acfb-c9d8780e8851

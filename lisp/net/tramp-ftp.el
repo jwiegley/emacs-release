@@ -1,17 +1,17 @@
 ;;; tramp-ftp.el --- Tramp convenience functions for Ange-FTP
 
 ;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008 Free Software Foundation, Inc.
+;;   2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Michael Albinus <michael.albinus@gmx.de>
 ;; Keywords: comm, processes
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -31,8 +29,13 @@
 ;;; Code:
 
 (require 'tramp)
+(autoload 'tramp-set-connection-property "tramp-cache")
 
-(eval-when-compile (require 'custom))
+(eval-when-compile
+
+  ;; Pacify byte-compiler.
+  (require 'cl)
+  (require 'custom))
 
 ;; Disable Ange-FTP from file-name-handler-alist.
 ;; To handle EFS, the following functions need to be dealt with:
@@ -110,10 +113,20 @@ present for backward compatibility."
 	     (list "" "\\`\\(anonymous\\|ftp\\)\\'" tramp-ftp-method))
 
 ;; Add completion function for FTP method.
-(unless (memq system-type '(windows-nt))
-  (tramp-set-completion-function
-   tramp-ftp-method
-   '((tramp-parse-netrc "~/.netrc"))))
+(tramp-set-completion-function
+ tramp-ftp-method
+ '((tramp-parse-netrc "~/.netrc")))
+
+;; If there is URL syntax, `substitute-in-file-name' needs special
+;; handling.
+(put 'substitute-in-file-name 'ange-ftp 'tramp-handle-substitute-in-file-name)
+(add-hook 'tramp-ftp-unload-hook
+	  '(lambda ()
+	     (setplist 'substitute-in-file-name
+		       (delete 'ange-ftp
+			       (delete 'tramp-handle-substitute-in-file-name
+				       (symbol-plist
+					'substitute-in-file-name))))))
 
 (defun tramp-ftp-file-name-handler (operation &rest args)
   "Invoke the Ange-FTP handler for OPERATION.
@@ -135,30 +148,60 @@ pass to the OPERATION."
 	  (ange-ftp-ftp-name-arg "")
 	  (ange-ftp-ftp-name-res nil))
       (cond
-       ;; If argument is a symlink, `file-directory-p' and `file-exists-p'
-       ;; call the traversed file recursively. So we cannot disable the
-       ;; file-name-handler this case.
+       ;; If argument is a symlink, `file-directory-p' and
+       ;; `file-exists-p' call the traversed file recursively. So we
+       ;; cannot disable the file-name-handler this case.  We set the
+       ;; connection property "started" in order to put the remote
+       ;; location into the cache, which is helpful for further
+       ;; completion.  We don't use `with-parsed-tramp-file-name',
+       ;; because this returns another user but the one declared in
+       ;; "~/.netrc".
        ((memq operation '(file-directory-p file-exists-p))
-	(apply 'ange-ftp-hook-function operation args))
-	;; Normally, the handlers must be discarded
-	(t (let* ((inhibit-file-name-handlers
-		   (list 'tramp-file-name-handler
-			 'tramp-completion-file-name-handler
-			 (and (eq inhibit-file-name-operation operation)
-			      inhibit-file-name-handlers)))
-		  (inhibit-file-name-operation operation))
-	     (apply 'ange-ftp-hook-function operation args)))))))
+	(if (apply 'ange-ftp-hook-function operation args)
+	    (let ((v (tramp-dissect-file-name (car args) t)))
+	      (aset v 0 tramp-ftp-method)
+	      (tramp-set-connection-property v "started" t))
+	  nil))
+
+       ;; If the second argument of `copy-file' or `rename-file' is a
+       ;; remote file name but via FTP, ange-ftp doesn't check this.
+       ;; We must copy it locally first, because there is no place in
+       ;; ange-ftp for correct handling.
+       ((and (memq operation '(copy-file rename-file))
+	     (file-remote-p (cadr args))
+	     (not (tramp-ftp-file-name-p (cadr args))))
+	(let* ((filename (car args))
+	       (newname (cadr args))
+	       (tmpfile (tramp-compat-make-temp-file filename))
+	       (args (cddr args)))
+	  ;; We must set `ok-if-already-exists' to t in the first
+	  ;; step, because the temp file has been created already.
+	  (if (eq operation 'copy-file)
+	      (apply operation filename tmpfile t (cdr args))
+	    (apply operation filename tmpfile t))
+	  (unwind-protect
+	      (rename-file tmpfile newname (car args))
+	    ;; Cleanup.
+	    (ignore-errors (delete-file tmpfile)))))
+
+       ;; Normally, the handlers must be discarded.
+       ;; `inhibit-file-name-handlers' isn't sufficient, because the
+       ;; local file name could be in Tramp syntax as well (for
+       ;; example, returning VMS file names like "/DISK$CAM:/AAA").
+       ;; That's why we set also `tramp-mode' to nil.
+       (t (let* (;(tramp-mode nil)
+		 (inhibit-file-name-handlers
+		  (list 'tramp-file-name-handler
+			'tramp-completion-file-name-handler
+			(and (eq inhibit-file-name-operation operation)
+			     inhibit-file-name-handlers)))
+		 (inhibit-file-name-operation operation))
+	    (apply 'ange-ftp-hook-function operation args)))))))
 
 (defun tramp-ftp-file-name-p (filename)
   "Check if it's a filename that should be forwarded to Ange-FTP."
   (let ((v (tramp-dissect-file-name filename)))
-    (string=
-     (tramp-find-method
-      (tramp-file-name-multi-method v)
-      (tramp-file-name-method v)
-      (tramp-file-name-user v)
-      (tramp-file-name-host v))
-     tramp-ftp-method)))
+    (string= (tramp-file-name-method v) tramp-ftp-method)))
 
 (add-to-list 'tramp-foreign-file-name-handler-alist
 	     (cons 'tramp-ftp-file-name-p 'tramp-ftp-file-name-handler))
@@ -172,8 +215,6 @@ pass to the OPERATION."
 ;;   pretended in `tramp-file-name-handler' otherwise.
 ;;   Furthermore, there are no backup files on FTP hosts.
 ;;   Worth further investigations.
-;; * Map /multi:ssh:out@gate:ftp:kai@real.host:/path/to.file
-;;   on Ange-FTP gateways.
 
-;;; arch-tag: 759fb338-5c63-4b99-bd36-b4d59db91cff
+;; arch-tag: 759fb338-5c63-4b99-bd36-b4d59db91cff
 ;;; tramp-ftp.el ends here

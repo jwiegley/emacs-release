@@ -5,14 +5,14 @@
 ;; Keywords: unix, tools
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 2000, 2001, 2002, 2003,
-;;  2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;  2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,14 +20,12 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
-;; The ancestral gdb.el was by W. Schelter <wfs@rascal.ics.utexas.edu> It was
-;; later rewritten by rms.  Some ideas were due to Masanobu.  Grand
+;; The ancestral gdb.el was by W. Schelter <wfs@rascal.ics.utexas.edu>.
+;; It was later rewritten by rms.  Some ideas were due to Masanobu.  Grand
 ;; Unification (sdb/dbx support) by Eric S. Raymond <esr@thyrsus.com> Barry
 ;; Warsaw <bwarsaw@cen.com> hacked the mode to use comint.el.  Shane Hartman
 ;; <shane@spr.com> added support for xdb (HPUX debugger).  Rick Sladkey
@@ -49,9 +47,14 @@
 (defvar gdb-macro-info)
 (defvar gdb-server-prefix)
 (defvar gdb-show-changed-values)
+(defvar gdb-source-window)
 (defvar gdb-var-list)
 (defvar gdb-speedbar-auto-raise)
+(defvar gud-tooltip-mode)
+(defvar hl-line-mode)
+(defvar hl-line-sticky-flag)
 (defvar tool-bar-map)
+
 
 ;; ======================================================================
 ;; GUD commands must be visible in C buffers visited by GUD
@@ -59,7 +62,7 @@
 (defgroup gud nil
   "Grand Unified Debugger mode for gdb and other debuggers under Emacs.
 Supported debuggers include gdb, sdb, dbx, xdb, perldb, pdb (Python) and jdb."
-  :group 'unix
+  :group 'processes
   :group 'tools)
 
 
@@ -104,7 +107,8 @@ If SOFT is non-nil, returns nil if the symbol doesn't already exist."
   "Non-nil if debugged program is running.
 Used to grey out relevant toolbar icons.")
 
-(defvar gdb-ready nil)
+(defvar gud-target-name "--unknown--"
+  "The apparent name of the program being debugged in a gud buffer.")
 
 ;; Use existing Info buffer, if possible.
 (defun gud-goto-info ()
@@ -135,10 +139,12 @@ Used to grey out relevant toolbar icons.")
   (with-current-buffer gud-comint-buffer
     (if (string-equal gud-target-name "emacs")
 	(comint-stop-subjob)
-      (comint-interrupt-subjob))))
+      (if (eq gud-minor-mode 'jdb)
+	  (gud-call "suspend")
+	(comint-interrupt-subjob)))))
 
 (easy-mmode-defmap gud-menu-map
-  '(([help]     "Info" . gud-goto-info)
+  '(([help]     "Info (debugger)" . gud-goto-info)
     ([tooltips] menu-item "Show GUD tooltips" gud-tooltip-mode
                   :enable (and (not emacs-basic-display)
 			       (display-graphic-p)
@@ -245,8 +251,8 @@ Used to grey out relevant toolbar icons.")
 		      (eq gud-minor-mode 'gdba)))
        ([menu-bar stop] menu-item
 	,(propertize "stop" 'face 'font-lock-doc-face) gud-stop-subjob
-	:visible (or gud-running
-		     (not (eq gud-minor-mode 'gdba))))
+	:visible (and gud-running
+		     (eq gud-minor-mode 'gdba)))
        ([menu-bar print]
 	. (,(propertize "print" 'face 'font-lock-doc-face) . gud-print))
        ([menu-bar tools] . undefined)
@@ -266,34 +272,38 @@ Used to grey out relevant toolbar icons.")
   "`gud-mode' keymap.")
 
 (defvar gud-tool-bar-map
-  (if (display-graphic-p)
-      (let ((map (make-sparse-keymap)))
-	(dolist (x '((gud-break . "gud/break")
-		     (gud-remove . "gud/remove")
-		     (gud-print . "gud/print")
-		     (gud-pstar . "gud/pstar")
-		     (gud-pp . "gud/pp")
-		     (gud-watch . "gud/watch")
-		     (gud-run . "gud/run")
-		     (gud-go . "gud/go")
-		     (gud-stop-subjob . "gud/stop")
-		     (gud-cont . "gud/cont")
-		     (gud-until . "gud/until")
-		     (gud-next . "gud/next")
-		     (gud-step . "gud/step")
-		     (gud-finish . "gud/finish")
-		     (gud-nexti . "gud/nexti")
-		     (gud-stepi . "gud/stepi")
-		     (gud-up . "gud/up")
-		     (gud-down . "gud/down")
-		     (gud-goto-info . "info"))
-		   map)
-	  (tool-bar-local-item-from-menu
-	   (car x) (cdr x) map gud-minor-mode-map)))))
+  (let ((map (make-sparse-keymap)))
+    (dolist (x '((gud-break . "gud/break")
+		 (gud-remove . "gud/remove")
+		 (gud-print . "gud/print")
+		 (gud-pstar . "gud/pstar")
+		 (gud-pp . "gud/pp")
+		 (gud-watch . "gud/watch")
+		 (gud-run . "gud/run")
+		 (gud-go . "gud/go")
+		 (gud-stop-subjob . "gud/stop")
+		 (gud-cont . "gud/cont")
+		 (gud-until . "gud/until")
+		 (gud-next . "gud/next")
+		 (gud-step . "gud/step")
+		 (gud-finish . "gud/finish")
+		 (gud-nexti . "gud/nexti")
+		 (gud-stepi . "gud/stepi")
+		 (gud-up . "gud/up")
+		 (gud-down . "gud/down")
+		 (gud-goto-info . "info"))
+	       map)
+      (tool-bar-local-item-from-menu
+       (car x) (cdr x) map gud-minor-mode-map))))
 
 (defun gud-file-name (f)
   "Transform a relative file name to an absolute file name.
 Uses `gud-<MINOR-MODE>-directories' to find the source files."
+  ;; When `default-directory' is a remote file name, prepend its
+  ;; remote part to f, which is the local file name.  Fortunately,
+  ;; `file-remote-p' returns exactly this remote file name part (or
+  ;; nil otherwise).
+  (setq f (concat (or (file-remote-p default-directory) "") f))
   (if (file-exists-p f) (expand-file-name f)
     (let ((directories (gud-val 'directories))
 	  (result nil))
@@ -304,6 +314,8 @@ Uses `gud-<MINOR-MODE>-directories' to find the source files."
 		    directories nil)))
 	(setq directories (cdr directories)))
       result)))
+
+(declare-function gdb-create-define-alist "gdb-ui" ())
 
 (defun gud-find-file (file)
   ;; Don't get confused by double slashes in the name that comes from GDB.
@@ -494,8 +506,6 @@ required by the caller."
        ((memq minor-mode '(gdbmi gdba))
 	(erase-buffer)
 	(insert "Watch Expressions:\n")
-	(if gdb-speedbar-auto-raise
-	    (raise-frame speedbar-frame))
 	(let ((var-list gdb-var-list) parent)
 	  (while var-list
 	    (let* (char (depth 0) (start 0) (var (car var-list))
@@ -703,6 +713,9 @@ The option \"--fullname\" must be included in this value."
 (defvar gud-filter-pending-text nil
   "Non-nil means this is text that has been saved for later in `gud-filter'.")
 
+;; If in gdba mode, gdb-ui is loaded.
+(declare-function gdb-restore-windows "gdb-ui" ())
+
 ;; The old gdb command (text command mode).  The new one is in gdb-ui.el.
 ;;;###autoload
 (defun gud-gdb (command-line)
@@ -753,7 +766,6 @@ directory and source-file directory for your debugger."
   (setq paragraph-start comint-prompt-regexp)
   (setq gdb-first-prompt t)
   (setq gud-running nil)
-  (setq gdb-ready nil)
   (setq gud-filter-pending-text nil)
   (run-hooks 'gud-gdb-mode-hook))
 
@@ -878,7 +890,7 @@ It is passed through FILTER before we look at it."
 		    (string-match "^#\\([0-9]+\\) +[0-9a-fx]+ in \\([:0-9a-zA-Z_]+\\) (" e)
 		    (string-match "^#\\([0-9]+\\) +\\([:0-9a-zA-Z_]+\\) (" e)))
 	      (if (not (string-match
-			"at \\([-0-9a-zA-Z_.]+\\):\\([0-9]+\\)$" e))
+			"at \\([-0-9a-zA-Z_/.]+\\):\\([0-9]+\\)$" e))
 		  nil
 		(setcar newlst
 			(list (nth 0 (car newlst))
@@ -890,7 +902,7 @@ It is passed through FILTER before we look at it."
 	    (setq newlst
 		  (cons
 		   (if (string-match
-			"at \\([-0-9a-zA-Z_.]+\\):\\([0-9]+\\)$" e)
+			"at \\([-0-9a-zA-Z_/.]+\\):\\([0-9]+\\)$" e)
 		       (list name num (match-string 1 e)
 			     (match-string 2 e))
 		     (list name num))
@@ -1222,10 +1234,6 @@ whereby $stopformat=1 produces an output format compatible with
 	  (setq result (substring result 0 (match-beginning 0))))))
     (or result "")))
 
-(defvar gud-dgux-p (string-match "-dgux" system-configuration)
-  "Non-nil means to assume the interface approriate for DG/UX dbx.
-This was tested using R4.11.")
-
 ;; There are a couple of differences between DG's dbx output and normal
 ;; dbx output which make it nontrivial to integrate this into the
 ;; standard dbx-marker-filter (mainly, there are a different number of
@@ -1284,9 +1292,6 @@ and source-file directory for your debugger."
    (gud-irix-p
     (gud-common-init command-line 'gud-dbx-massage-args
 		     'gud-irixdbx-marker-filter))
-   (gud-dgux-p
-    (gud-common-init command-line 'gud-dbx-massage-args
-		     'gud-dguxdbx-marker-filter))
    (t
     (gud-common-init command-line 'gud-dbx-massage-args
 		     'gud-dbx-marker-filter)))
@@ -2296,7 +2301,6 @@ gud, see `gud-mode'."
   (gud-def gud-run    "run"           nil    "Run the program.") ;if VM start using jdb
   (gud-def gud-print  "print %e"  "\C-p" "Evaluate Java expression at point.")
 
-
   (setq comint-prompt-regexp "^> \\|^[^ ]+\\[[0-9]+\\] ")
   (setq paragraph-start comint-prompt-regexp)
   (run-hooks 'jdb-mode-hook)
@@ -2442,8 +2446,8 @@ comint mode, which see."
   :group 'gud
   :type 'boolean)
 
-(defvar gud-target-name "--unknown--"
-  "The apparent name of the program being debugged in a gud buffer.")
+(declare-function tramp-file-name-localname "tramp" (vec))
+(declare-function tramp-dissect-file-name "tramp" (name &optional nodefault))
 
 ;; Perform initializations common to all debuggers.
 ;; The first arg is the specified command line,
@@ -2500,7 +2504,12 @@ comint mode, which see."
       (while (and w (not (eq (car w) t)))
 	(setq w (cdr w)))
       (if w
-	  (setcar w file)))
+ 	  (setcar w
+ 		  (if (file-remote-p default-directory)
+		      ;; Tramp has already been loaded if we are here.
+		      (setq file (tramp-file-name-localname
+				  (tramp-dissect-file-name file)))
+ 		    file))))
     (apply 'make-comint (concat "gud" filepart) program nil
 	   (if massage-args (funcall massage-args file args) args))
     ;; Since comint clobbered the mode, we don't set it until now.
@@ -2591,6 +2600,8 @@ It is saved for when this flag is not set.")
 (defvar gud-overlay-arrow-position nil)
 (add-to-list 'overlay-arrow-variable-list 'gud-overlay-arrow-position)
 
+(declare-function gdb-reset "gdb-ui" ())
+
 (defun gud-sentinel (proc msg)
   (cond ((null (buffer-name (process-buffer proc)))
 	 ;; buffer killed
@@ -2660,6 +2671,11 @@ Obeying it means displaying in another window the specified file and line."
     (setq gud-last-last-frame gud-last-frame
 	  gud-last-frame nil)))
 
+(declare-function global-hl-line-highlight  "hl-line" ())
+(declare-function hl-line-highlight         "hl-line" ())
+(declare-function gdb-display-source-buffer "gdb-ui"  (buffer))
+(declare-function gdb-display-buffer "gdb-ui" (buf dedicated &optional size))
+
 ;; Make sure the file named TRUE-FILE is in a buffer that appears on the screen
 ;; and that its line LINE is visible.
 ;; Put the overlay-arrow on the line LINE in that buffer.
@@ -2675,10 +2691,10 @@ Obeying it means displaying in another window the specified file and line."
 	 (window (and buffer
 		      (or (get-buffer-window buffer)
 			  (if (memq gud-minor-mode '(gdbmi gdba))
-			      (or (if (get-buffer-window buffer 0)
-				      (display-buffer buffer nil 0))
+			      (or (if (get-buffer-window buffer 'visible)
+				      (display-buffer buffer nil 'visible))
 				  (unless (gdb-display-source-buffer buffer)
-				    (gdb-display-buffer buffer nil))))
+				    (gdb-display-buffer buffer nil 'visible))))
 			  (display-buffer buffer))))
 	 (pos))
     (if buffer
@@ -2849,7 +2865,7 @@ Obeying it means displaying in another window the specified file and line."
 	    (set-marker-insertion-type gud-delete-prompt-marker t))
 	  (unless (eq (buffer-local-value 'gud-minor-mode gud-comint-buffer)
 		      'jdb)
-	      (insert (concat  expr " = "))))))
+	    (insert (concat  expr " = "))))))
     expr))
 
 ;; The next eight functions are hacked from gdbsrc.el by
@@ -2991,6 +3007,12 @@ Link exprs of the form:
       ((= span-end ?[) t)
        (t nil)))
      (t nil))))
+
+
+(declare-function c-langelem-sym "cc-defs" (langelem))
+(declare-function c-langelem-pos "cc-defs" (langelem))
+(declare-function syntax-symbol  "gud"     (x))
+(declare-function syntax-point   "gud"     (x))
 
 (defun gud-find-class (f line)
   "Find fully qualified class in file F at line LINE.
@@ -3217,6 +3239,7 @@ Treats actions as defuns."
 
 ;;; Customizable settings
 
+;;;###autoload
 (define-minor-mode gud-tooltip-mode
   "Toggle the display of GUD tooltips."
   :global t
@@ -3227,11 +3250,11 @@ Treats actions as defuns."
       (progn
 	(add-hook 'change-major-mode-hook 'gud-tooltip-change-major-mode)
 	(add-hook 'pre-command-hook 'tooltip-hide)
-	(add-hook 'tooltip-hook 'gud-tooltip-tips)
+	(add-hook 'tooltip-functions 'gud-tooltip-tips)
 	(define-key global-map [mouse-movement] 'gud-tooltip-mouse-motion))
     (unless tooltip-mode (remove-hook 'pre-command-hook 'tooltip-hide)
     (remove-hook 'change-major-mode-hook 'gud-tooltip-change-major-mode)
-    (remove-hook 'tooltip-hook 'gud-tooltip-tips)
+    (remove-hook 'tooltip-functions 'gud-tooltip-tips)
     (define-key global-map [mouse-movement] 'ignore)))
   (gud-tooltip-activate-mouse-motions-if-enabled)
   (if (and gud-comint-buffer
@@ -3253,12 +3276,18 @@ Treats actions as defuns."
 	(kill-local-variable 'gdb-define-alist)
 	(remove-hook 'after-save-hook 'gdb-create-define-alist t))))
 
+(define-obsolete-variable-alias 'tooltip-gud-modes
+                                'gud-tooltip-modes "22.1")
+
 (defcustom gud-tooltip-modes '(gud-mode c-mode c++-mode fortran-mode
 					python-mode)
   "List of modes for which to enable GUD tooltips."
   :type 'sexp
   :group 'gud
   :group 'tooltip)
+
+(define-obsolete-variable-alias 'tooltip-gud-display
+                                'gud-tooltip-display "22.1")
 
 (defcustom gud-tooltip-display
   '((eq (tooltip-event-buffer gud-tooltip-event)
@@ -3276,11 +3305,6 @@ only tooltips in the buffer containing the overlay arrow."
   :type 'boolean
   :group 'gud
   :group 'tooltip)
-
-(define-obsolete-variable-alias 'tooltip-gud-modes
-                                'gud-tooltip-modes "22.1")
-(define-obsolete-variable-alias 'tooltip-gud-display
-                                'gud-tooltip-display "22.1")
 
 ;;; Reacting on mouse movements
 
@@ -3322,6 +3346,10 @@ ACTIVATEP non-nil means activate mouse motion events."
       (kill-local-variable 'gud-tooltip-mouse-motions-active)
       (kill-local-variable 'track-mouse))))
 
+(defvar tooltip-last-mouse-motion-event)
+(declare-function tooltip-hide "tooltip" (&optional ignored-arg))
+(declare-function tooltip-start-delayed-tip "tooltip" ())
+
 (defun gud-tooltip-mouse-motion (event)
   "Command handler for mouse movement events in `global-map'."
   (interactive "e")
@@ -3356,6 +3384,9 @@ With arg, dereference expr if ARG is positive, otherwise do not derereference."
 
 (define-obsolete-function-alias 'tooltip-gud-toggle-dereference
                                 'gud-tooltip-dereference "22.1")
+(defvar tooltip-use-echo-area)
+(declare-function tooltip-show "tooltip" (text &optional use-echo-area))
+(declare-function tooltip-strip-prompt "tooltip" (process output))
 
 ; This will only display data that comes in one chunk.
 ; Larger arrays (say 400 elements) are displayed in
@@ -3376,6 +3407,10 @@ With arg, dereference expr if ARG is positive, otherwise do not derereference."
 	((dbx gdbmi) (concat "print " expr))
 	((xdb pdb) (concat "p " expr))
 	(sdb (concat expr "/"))))
+
+(declare-function gdb-enqueue-input "gdb-ui" (item))
+(declare-function tooltip-expr-to-print "tooltip" (event))
+(declare-function tooltip-event-buffer "tooltip" (event))
 
 (defun gud-tooltip-tips (event)
   "Show tip for identifier or selection under the mouse.
@@ -3432,5 +3467,5 @@ so they have been disabled."))
 
 (provide 'gud)
 
-;;; arch-tag: 6d990948-df65-461a-be39-1c7fb83ac4c4
+;; arch-tag: 6d990948-df65-461a-be39-1c7fb83ac4c4
 ;;; gud.el ends here

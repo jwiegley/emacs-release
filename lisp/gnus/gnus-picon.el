@@ -1,27 +1,25 @@
 ;;; gnus-picon.el --- displaying pretty icons in Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news xpm annotation glyph faces
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -39,6 +37,10 @@
 ;; Original implementation by Wes Hardaker <hardaker@ece.ucdavis.edu>.
 ;;
 ;;; Code:
+
+;; For Emacs < 22.2.
+(eval-and-compile
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest r))))
 
 (eval-when-compile (require 'cl))
 
@@ -72,6 +74,15 @@ Some people may want to add \"unknown\" to this list."
     types)
   "*List of suffixes on picon file names to try."
   :type '(repeat string)
+  :group 'gnus-picon)
+
+(defcustom gnus-picon-style 'inline
+  "How should picons be displayed.
+If `inline', the textual representation is replaced.  If `right', picons are
+added right to the textual representation."
+  ;; FIXME: `right' needs improvement for XEmacs.
+  :type '(choice (const inline)
+		 (const right))
   :group 'gnus-picon)
 
 (defface gnus-picon-xbm '((t (:foreground "black" :background "white")))
@@ -139,14 +150,17 @@ List of pairs (KEY . GLYPH) where KEY is either a filename or an URL.")
 	file
       nil)))
 
-(defun gnus-picon-insert-glyph (glyph category)
+(defun gnus-picon-insert-glyph (glyph category &optional nostring)
   "Insert GLYPH into the buffer.
-GLYPH can be either a glyph or a string."
+GLYPH can be either a glyph or a string.  When NOSTRING, no textual
+replacement is added."
+  ;; Using NOSTRING prevents wrong BBDB entries with `gnus-picon-style' set to
+  ;; 'right.
   (if (stringp glyph)
       (insert glyph)
     (gnus-add-wash-type category)
     (gnus-add-image category (car glyph))
-    (gnus-put-image (car glyph) (cdr glyph) category)))
+    (gnus-put-image (car glyph) (unless nostring (cdr glyph)) category)))
 
 (defun gnus-picon-create-glyph (file)
   (or (cdr (assoc file gnus-picon-glyph-alist))
@@ -155,89 +169,111 @@ GLYPH can be either a glyph or a string."
 
 ;;; Functions that does picon transformations:
 
+(declare-function image-size "image.c" (spec &optional pixels frame))
+
 (defun gnus-picon-transform-address (header category)
   (gnus-with-article-headers
-    (let ((addresses
-	   (mail-header-parse-addresses
-	    ;; mail-header-parse-addresses does not work (reliably) on
-	    ;; decoded headers.
-	    (or
-	     (ignore-errors
-	       (mail-encode-encoded-word-string
-		(or (mail-fetch-field header) "")))
-	     (mail-fetch-field header))))
-	  spec file point cache)
-      (dolist (address addresses)
-	(setq address (car address))
-	(when (and (stringp address)
-		   (setq spec (gnus-picon-split-address address)))
-	  (if (setq cache (cdr (assoc address gnus-picon-cache)))
-	      (setq spec cache)
-	    (when (setq file (or (gnus-picon-find-face
-				  address gnus-picon-user-directories)
-				 (gnus-picon-find-face
-				  (concat "unknown@"
-					  (mapconcat
-					   'identity (cdr spec) "."))
-				  gnus-picon-user-directories)))
-	      (setcar spec (cons (gnus-picon-create-glyph file)
-				 (car spec))))
+   (let ((addresses
+	  (mail-header-parse-addresses
+	   ;; mail-header-parse-addresses does not work (reliably) on
+	   ;; decoded headers.
+	   (or
+	    (ignore-errors
+	     (mail-encode-encoded-word-string
+	      (or (mail-fetch-field header) "")))
+	    (mail-fetch-field header))))
+	 spec file point cache len)
+     (dolist (address addresses)
+       (setq address (car address))
+       (when (and (stringp address)
+		  (setq spec (gnus-picon-split-address address)))
+	 (if (setq cache (cdr (assoc address gnus-picon-cache)))
+	     (setq spec cache)
+	   (when (setq file (or (gnus-picon-find-face
+				 address gnus-picon-user-directories)
+				(gnus-picon-find-face
+				 (concat "unknown@"
+					 (mapconcat
+					  'identity (cdr spec) "."))
+				 gnus-picon-user-directories)))
+	     (setcar spec (cons (gnus-picon-create-glyph file)
+				(car spec))))
 
-	    (dotimes (i (1- (length spec)))
-	      (when (setq file (gnus-picon-find-face
-				(concat "unknown@"
-					(mapconcat
-					 'identity (nthcdr (1+ i) spec) "."))
-				gnus-picon-domain-directories t))
-		(setcar (nthcdr (1+ i) spec)
-			(cons (gnus-picon-create-glyph file)
-			      (nth (1+ i) spec)))))
-	    (setq spec (nreverse spec))
-	    (push (cons address spec) gnus-picon-cache))
+	   (dotimes (i (1- (length spec)))
+	     (when (setq file (gnus-picon-find-face
+			       (concat "unknown@"
+				       (mapconcat
+					'identity (nthcdr (1+ i) spec) "."))
+			       gnus-picon-domain-directories t))
+	       (setcar (nthcdr (1+ i) spec)
+		       (cons (gnus-picon-create-glyph file)
+			     (nth (1+ i) spec)))))
+	   (setq spec (nreverse spec))
+	   (push (cons address spec) gnus-picon-cache))
 
-	  (gnus-article-goto-header header)
-	  (mail-header-narrow-to-field)
-	  (when (search-forward address nil t)
-	    (delete-region (match-beginning 0) (match-end 0))
-	    (setq point (point))
-	    (while spec
-	      (goto-char point)
-	      (if (> (length spec) 2)
-		  (insert ".")
-		(if (= (length spec) 2)
-		  (insert "@")))
-	      (gnus-picon-insert-glyph (pop spec) category))))))))
+	 (gnus-article-goto-header header)
+	 (mail-header-narrow-to-field)
+	 (case gnus-picon-style
+	       (right
+		(when (= (length addresses) 1)
+		  (setq len (apply '+ (mapcar (lambda (x)
+						(condition-case nil
+						    (car (image-size (car x)))
+						  (error 0))) spec)))
+		  (when (> len 0)
+		    (goto-char (point-at-eol))
+		    (insert (propertize
+			     " " 'display
+			     (cons 'space
+				   (list :align-to (- (window-width) 1 len))))))
+		  (goto-char (point-at-eol))
+		  (setq point (point-at-eol))
+		  (dolist (image spec)
+		    (unless (stringp image)
+		      (goto-char point)
+		      (gnus-picon-insert-glyph image category 'nostring)))))
+	       (inline
+		 (when (search-forward address nil t)
+		   (delete-region (match-beginning 0) (match-end 0))
+		   (setq point (point))
+		   (while spec
+		     (goto-char point)
+		     (if (> (length spec) 2)
+			 (insert ".")
+		       (if (= (length spec) 2)
+			   (insert "@")))
+		     (gnus-picon-insert-glyph (pop spec) category))))))))))
 
 (defun gnus-picon-transform-newsgroups (header)
   (interactive)
   (gnus-with-article-headers
-    (gnus-article-goto-header header)
-    (mail-header-narrow-to-field)
-    (let ((groups (message-tokenize-header (mail-fetch-field header)))
-	  spec file point)
-      (dolist (group groups)
-	(unless (setq spec (cdr (assoc group gnus-picon-cache)))
-	  (setq spec (nreverse (split-string group "[.]")))
-	  (dotimes (i (length spec))
-	    (when (setq file (gnus-picon-find-face
-			      (concat "unknown@"
-				      (mapconcat
-				       'identity (nthcdr i spec) "."))
-			      gnus-picon-news-directories t))
-	      (setcar (nthcdr i spec)
-		      (cons (gnus-picon-create-glyph file)
-			    (nth i spec)))))
-	    (push (cons group spec) gnus-picon-cache))
-	(when (search-forward group nil t)
-	  (delete-region (match-beginning 0) (match-end 0))
-	  (save-restriction
-	    (narrow-to-region (point) (point))
-	    (while spec
-	      (goto-char (point-min))
-	      (if (> (length spec) 1)
-		  (insert "."))
-	      (gnus-picon-insert-glyph (pop spec) 'newsgroups-picon))
-	    (goto-char (point-max))))))))
+   (gnus-article-goto-header header)
+   (mail-header-narrow-to-field)
+   (let ((groups (message-tokenize-header (mail-fetch-field header)))
+	 spec file point)
+     (dolist (group groups)
+       (unless (setq spec (cdr (assoc group gnus-picon-cache)))
+	 (setq spec (nreverse (split-string group "[.]")))
+	 (dotimes (i (length spec))
+	   (when (setq file (gnus-picon-find-face
+			     (concat "unknown@"
+				     (mapconcat
+				      'identity (nthcdr i spec) "."))
+			     gnus-picon-news-directories t))
+	     (setcar (nthcdr i spec)
+		     (cons (gnus-picon-create-glyph file)
+			   (nth i spec)))))
+	 (push (cons group spec) gnus-picon-cache))
+       (when (search-forward group nil t)
+	 (delete-region (match-beginning 0) (match-end 0))
+	 (save-restriction
+	   (narrow-to-region (point) (point))
+	   (while spec
+	     (goto-char (point-min))
+	     (if (> (length spec) 1)
+		 (insert "."))
+	     (gnus-picon-insert-glyph (pop spec) 'newsgroups-picon))
+	   (goto-char (point-max))))))))
 
 ;;; Commands:
 
@@ -251,10 +287,9 @@ If picons are already displayed, remove them."
   (interactive)
   (let ((wash-picon-p buffer-read-only))
     (gnus-with-article-buffer
-      (if (and wash-picon-p (memq 'from-picon gnus-article-wash-types))
-	  (gnus-delete-images 'from-picon)
-	(gnus-picon-transform-address "from" 'from-picon)))
-    ))
+     (if (and wash-picon-p (memq 'from-picon gnus-article-wash-types))
+	 (gnus-delete-images 'from-picon)
+       (gnus-picon-transform-address "from" 'from-picon)))))
 
 ;;;###autoload
 (defun gnus-treat-mail-picon ()
@@ -263,11 +298,10 @@ If picons are already displayed, remove them."
   (interactive)
   (let ((wash-picon-p buffer-read-only))
     (gnus-with-article-buffer
-      (if (and wash-picon-p (memq 'mail-picon gnus-article-wash-types))
-	  (gnus-delete-images 'mail-picon)
-	(gnus-picon-transform-address "cc" 'mail-picon)
-	(gnus-picon-transform-address "to" 'mail-picon)))
-    ))
+     (if (and wash-picon-p (memq 'mail-picon gnus-article-wash-types))
+	 (gnus-delete-images 'mail-picon)
+       (gnus-picon-transform-address "cc" 'mail-picon)
+       (gnus-picon-transform-address "to" 'mail-picon)))))
 
 ;;;###autoload
 (defun gnus-treat-newsgroups-picon ()
@@ -276,13 +310,12 @@ If picons are already displayed, remove them."
   (interactive)
   (let ((wash-picon-p buffer-read-only))
     (gnus-with-article-buffer
-      (if (and wash-picon-p (memq 'newsgroups-picon gnus-article-wash-types))
-	  (gnus-delete-images 'newsgroups-picon)
-	(gnus-picon-transform-newsgroups "newsgroups")
-	(gnus-picon-transform-newsgroups "followup-to")))
-    ))
+     (if (and wash-picon-p (memq 'newsgroups-picon gnus-article-wash-types))
+	 (gnus-delete-images 'newsgroups-picon)
+       (gnus-picon-transform-newsgroups "newsgroups")
+       (gnus-picon-transform-newsgroups "followup-to")))))
 
 (provide 'gnus-picon)
 
-;;; arch-tag: fe9aede0-1b1b-463a-b4ab-807f98bcb31f
+;; arch-tag: fe9aede0-1b1b-463a-b4ab-807f98bcb31f
 ;;; gnus-picon.el ends here

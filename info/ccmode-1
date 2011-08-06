@@ -1,30 +1,22 @@
-This is ../info/ccmode, produced by makeinfo version 4.11 from
+This is ../../info/ccmode, produced by makeinfo version 4.11 from
 cc-mode.texi.
 
 This manual is for CC Mode in Emacs.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
-     Version 1.2 or any later version published by the Free Software
-     Foundation; with the Invariant Sections being "The GNU Manifesto",
-     "Distribution" and "GNU GENERAL PUBLIC LICENSE", with the
-     Front-Cover texts being "A GNU Manual", and with the Back-Cover
-     Texts as in (a) below.  A copy of the license is included in the
-     section entitled "GNU Free Documentation License" in the Emacs
-     manual.
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, with the Front-Cover texts
+     being "A GNU Manual", and with the Back-Cover Texts as in (a)
+     below.  A copy of the license is included in the section entitled
+     "GNU Free Documentation License".
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
-
-     This document is part of a collection distributed under the GNU
-     Free Documentation License.  If you want to distribute this
-     document separately from the collection, you can do so by adding a
-     copy of the license to the document, as described in section 6 of
-     the license.
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
+     developing GNU and promoting software freedom."
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -44,6 +36,23 @@ AWK code.  It provides syntax-based indentation, font locking, and has
 several handy commands and some minor modes to make the editing easier.
 It does not provide tools to look up and navigate between functions,
 classes etc - there are other packages for that.
+
+   This manual is for CC Mode in Emacs.
+
+   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
+2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, with the Front-Cover texts
+     being "A GNU Manual", and with the Back-Cover Texts as in (a)
+     below.  A copy of the license is included in the section entitled
+     "GNU Free Documentation License".
+
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
+     developing GNU and promoting software freedom."
 
 * Menu:
 
@@ -1943,7 +1952,7 @@ Java and AWK modes where it's `java' and `awk'.
 
    Remember that if you set a style variable with the Customization
 interface or at the top level of your `.emacs' file before the style
-system is initialised (*note Config Basics::), this setting will
+system is initialized (*note Config Basics::), this setting will
 override the one that the style system would have given the variable.
 
    To set a buffer's style interactively, use the command `C-c .'
@@ -2132,7 +2141,7 @@ prefix.
      instead.
 
      When a comment line gets divided by `M-j' or the like, CC Mode
-     inserts the comment line prefix from a neighbouring line at the
+     inserts the comment line prefix from a neighboring line at the
      start of the new line.  The default value of
      c-comment-prefix-regexp is `//+\\|\\**', which matches C++ style
      line comments like
@@ -4682,7 +4691,7 @@ line.
      Only continuation lines like this are touched, `nil' is returned on
      lines which are the start of an argument.
 
-     Within a gcc `asm' block, `:' is recognised as an argument
+     Within a gcc `asm' block, `:' is recognized as an argument
      separator, but of course only between operand specifications, not
      in the expressions for the operands.
 
@@ -5402,6 +5411,13 @@ File: ccmode,  Node: Limitations and Known Bugs,  Next: FAQ,  Prev: Performance 
      a workaround is to refontify the expression after typing the
      closing `>'.
 
+   * In a "k&r region" (the part of an old-fashioned C function
+     declaration which specifies the types of its parameters, coming
+     between the parameter list and the opening brace), there should be
+     at most 20 top-level parenthesis and bracket pairs.  This limit
+     has been imposed for performance reasons.  If it is violated, the
+     source file might be incorrectly indented or fontified.
+
    * On loading CC Mode, sometimes this error message appears:
 
           File mode specification error: (void-variable c-font-lock-keywords-3)
@@ -5545,14 +5561,13 @@ File: ccmode,  Node: GNU Free Documentation License,  Next: Command and Function
 Appendix D GNU Free Documentation License
 *****************************************
 
-                      Version 1.2, November 2002
+                     Version 1.3, 3 November 2008
 
-     Copyright (C) 2000,2001,2002  Free Software Foundation, Inc.
-     51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
      of this license document, but changing it is not allowed.
-
 
   0. PREAMBLE
 
@@ -5564,7 +5579,7 @@ Appendix D GNU Free Documentation License
      author and publisher a way to get credit for their work, while not
      being considered responsible for modifications made by others.
 
-     This License is a kind of "copyleft," which means that derivative
+     This License is a kind of "copyleft", which means that derivative
      works of the document must themselves be free in the same sense.
      It complements the GNU General Public License, which is a copyleft
      license designed for free software.
@@ -5578,7 +5593,6 @@ Appendix D GNU Free Documentation License
      We recommend this License principally for works whose purpose is
      instruction or reference.
 
-
   1. APPLICABILITY AND DEFINITIONS
 
      This License applies to any manual or other work, in any medium,
@@ -5586,8 +5600,8 @@ Appendix D GNU Free Documentation License
      can be distributed under the terms of this License.  Such a notice
      grants a world-wide, royalty-free license, unlimited in duration,
      to use that work under the conditions stated herein.  The
-     "Document," below, refers to any such manual or work.  Any member
-     of the public is a licensee, and is addressed as "you."  You
+     "Document", below, refers to any such manual or work.  Any member
+     of the public is a licensee, and is addressed as "you".  You
      accept the license if you copy, modify or distribute the work in a
      way requiring permission under copyright law.
 
@@ -5595,16 +5609,16 @@ Appendix D GNU Free Documentation License
      Document or a portion of it, either copied verbatim, or with
      modifications and/or translated into another language.
 
-     A "Secondary Section" is a named appendix or a front-matter
-     section of the Document that deals exclusively with the
-     relationship of the publishers or authors of the Document to the
-     Document's overall subject (or to related matters) and contains
-     nothing that could fall directly within that overall subject.
-     (Thus, if the Document is in part a textbook of mathematics, a
-     Secondary Section may not explain any mathematics.)  The
-     relationship could be a matter of historical connection with the
-     subject or with related matters, or of legal, commercial,
-     philosophical, ethical or political position regarding them.
+     A "Secondary Section" is a named appendix or a front-matter section
+     of the Document that deals exclusively with the relationship of the
+     publishers or authors of the Document to the Document's overall
+     subject (or to related matters) and contains nothing that could
+     fall directly within that overall subject.  (Thus, if the Document
+     is in part a textbook of mathematics, a Secondary Section may not
+     explain any mathematics.)  The relationship could be a matter of
+     historical connection with the subject or with related matters, or
+     of legal, commercial, philosophical, ethical or political position
+     regarding them.
 
      The "Invariant Sections" are certain Secondary Sections whose
      titles are designated, as being those of Invariant Sections, in
@@ -5632,7 +5646,7 @@ Appendix D GNU Free Documentation License
      markup, has been arranged to thwart or discourage subsequent
      modification by readers is not Transparent.  An image format is
      not Transparent if used for any substantial amount of text.  A
-     copy that is not "Transparent" is called "Opaque."
+     copy that is not "Transparent" is called "Opaque".
 
      Examples of suitable formats for Transparent copies include plain
      ASCII without markup, Texinfo input format, LaTeX input format,
@@ -5640,8 +5654,8 @@ Appendix D GNU Free Documentation License
      standard-conforming simple HTML, PostScript or PDF designed for
      human modification.  Examples of transparent image formats include
      PNG, XCF and JPG.  Opaque formats include proprietary formats that
-     can be read and edited only by proprietary word processors, SGML
-     or XML for which the DTD and/or processing tools are not generally
+     can be read and edited only by proprietary word processors, SGML or
+     XML for which the DTD and/or processing tools are not generally
      available, and the machine-generated HTML, PostScript or PDF
      produced by some word processors for output purposes only.
 
@@ -5652,11 +5666,14 @@ Appendix D GNU Free Documentation License
      Page" means the text near the most prominent appearance of the
      work's title, preceding the beginning of the body of the text.
 
+     The "publisher" means any person or entity that distributes copies
+     of the Document to the public.
+
      A section "Entitled XYZ" means a named subunit of the Document
      whose title either is precisely XYZ or contains XYZ in parentheses
      following text that translates XYZ in another language.  (Here XYZ
      stands for a specific section name mentioned below, such as
-     "Acknowledgements," "Dedications," "Endorsements," or "History.")
+     "Acknowledgements", "Dedications", "Endorsements", or "History".)
      To "Preserve the Title" of such a section when you modify the
      Document means that it remains a section "Entitled XYZ" according
      to this definition.
@@ -5734,59 +5751,75 @@ Appendix D GNU Free Documentation License
      whoever possesses a copy of it.  In addition, you must do these
      things in the Modified Version:
 
-     A. Use in the Title Page (and on the covers, if any) a title
-     distinct    from that of the Document, and from those of previous
-     versions    (which should, if there were any, be listed in the
-     History section    of the Document).  You may use the same title
-     as a previous version    if the original publisher of that version
-     gives permission.
-     B. List on the Title Page, as authors, one or more persons or
-     entities    responsible for authorship of the modifications in the
-     Modified    Version, together with at least five of the principal
-     authors of the    Document (all of its principal authors, if it
-     has fewer than five),    unless they release you from this
-     requirement.
-     C. State on the Title page the name of the publisher of the
-     Modified Version, as the publisher.
-     D. Preserve all the copyright notices of the Document.
-     E. Add an appropriate copyright notice for your modifications
-     adjacent to the other copyright notices.
-     F. Include, immediately after the copyright notices, a license
-     notice    giving the public permission to use the Modified Version
-     under the    terms of this License, in the form shown in the
-     Addendum below.
-     G. Preserve in that license notice the full lists of Invariant
-     Sections    and required Cover Texts given in the Document's
-     license notice.
-     H. Include an unaltered copy of this License.
-     I. Preserve the section Entitled "History," Preserve its Title,
-     and add    to it an item stating at least the title, year, new
-     authors, and    publisher of the Modified Version as given on the
-     Title Page.  If    there is no section Entitled "History" in the
-     Document, create one    stating the title, year, authors, and
-     publisher of the Document as    given on its Title Page, then add
-     an item describing the Modified    Version as stated in the
-     previous sentence.
-     J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and likewise
-       the network locations given in the Document for previous versions
-       it was based on.  These may be placed in the "History" section.
-       You may omit a network location for a work that was published at
-       least four years before the Document itself, or if the original
-      publisher of the version it refers to gives permission.
-     K. For any section Entitled "Acknowledgements" or "Dedications,"
-     Preserve the Title of the section, and preserve in the section all
-       the substance and tone of each of the contributor
-     acknowledgements    and/or dedications given therein.
-     L. Preserve all the Invariant Sections of the Document,
-     unaltered in their text and in their titles.  Section numbers
-     or the equivalent are not considered part of the section titles.
-     M. Delete any section Entitled "Endorsements."  Such a section
-     may not be included in the Modified Version.
-     N. Do not retitle any existing section to be Entitled
-     "Endorsements"    or to conflict in title with any Invariant
-     Section.
-     O. Preserve any Warranty Disclaimers.
+       A. Use in the Title Page (and on the covers, if any) a title
+          distinct from that of the Document, and from those of
+          previous versions (which should, if there were any, be listed
+          in the History section of the Document).  You may use the
+          same title as a previous version if the original publisher of
+          that version gives permission.
+
+       B. List on the Title Page, as authors, one or more persons or
+          entities responsible for authorship of the modifications in
+          the Modified Version, together with at least five of the
+          principal authors of the Document (all of its principal
+          authors, if it has fewer than five), unless they release you
+          from this requirement.
+
+       C. State on the Title page the name of the publisher of the
+          Modified Version, as the publisher.
+
+       D. Preserve all the copyright notices of the Document.
+
+       E. Add an appropriate copyright notice for your modifications
+          adjacent to the other copyright notices.
+
+       F. Include, immediately after the copyright notices, a license
+          notice giving the public permission to use the Modified
+          Version under the terms of this License, in the form shown in
+          the Addendum below.
+
+       G. Preserve in that license notice the full lists of Invariant
+          Sections and required Cover Texts given in the Document's
+          license notice.
+
+       H. Include an unaltered copy of this License.
+
+       I. Preserve the section Entitled "History", Preserve its Title,
+          and add to it an item stating at least the title, year, new
+          authors, and publisher of the Modified Version as given on
+          the Title Page.  If there is no section Entitled "History" in
+          the Document, create one stating the title, year, authors,
+          and publisher of the Document as given on its Title Page,
+          then add an item describing the Modified Version as stated in
+          the previous sentence.
+
+       J. Preserve the network location, if any, given in the Document
+          for public access to a Transparent copy of the Document, and
+          likewise the network locations given in the Document for
+          previous versions it was based on.  These may be placed in
+          the "History" section.  You may omit a network location for a
+          work that was published at least four years before the
+          Document itself, or if the original publisher of the version
+          it refers to gives permission.
+
+       K. For any section Entitled "Acknowledgements" or "Dedications",
+          Preserve the Title of the section, and preserve in the
+          section all the substance and tone of each of the contributor
+          acknowledgements and/or dedications given therein.
+
+       L. Preserve all the Invariant Sections of the Document,
+          unaltered in their text and in their titles.  Section numbers
+          or the equivalent are not considered part of the section
+          titles.
+
+       M. Delete any section Entitled "Endorsements".  Such a section
+          may not be included in the Modified Version.
+
+       N. Do not retitle any existing section to be Entitled
+          "Endorsements" or to conflict in title with any Invariant
+          Section.
+
+       O. Preserve any Warranty Disclaimers.
 
      If the Modified Version includes new front-matter sections or
      appendices that qualify as Secondary Sections and contain no
@@ -5796,11 +5829,11 @@ Appendix D GNU Free Documentation License
      Version's license notice.  These titles must be distinct from any
      other section titles.
 
-     You may add a section Entitled "Endorsements," provided it contains
+     You may add a section Entitled "Endorsements", provided it contains
      nothing but endorsements of your Modified Version by various
-     parties-for example, statements of peer review or that the text has
-     been approved by an organization as the authoritative definition
-     of a standard.
+     parties--for example, statements of peer review or that the text
+     has been approved by an organization as the authoritative
+     definition of a standard.
 
      You may add a passage of up to five words as a Front-Cover Text,
      and a passage of up to 25 words as a Back-Cover Text, to the end
@@ -5840,7 +5873,7 @@ Appendix D GNU Free Documentation License
      In the combination, you must combine any sections Entitled
      "History" in the various original documents, forming one section
      Entitled "History"; likewise combine any sections Entitled
-     "Acknowledgements," and any sections Entitled "Dedications."  You
+     "Acknowledgements", and any sections Entitled "Dedications".  You
      must delete all sections Entitled "Endorsements."
 
   6. COLLECTIONS OF DOCUMENTS
@@ -5893,20 +5926,37 @@ Appendix D GNU Free Documentation License
      this License or a notice or disclaimer, the original version will
      prevail.
 
-     If a section in the Document is Entitled "Acknowledgements,"
-     "Dedications," or "History," the requirement (section 4) to
+     If a section in the Document is Entitled "Acknowledgements",
+     "Dedications", or "History", the requirement (section 4) to
      Preserve its Title (section 1) will typically require changing the
      actual title.
 
   9. TERMINATION
 
      You may not copy, modify, sublicense, or distribute the Document
-     except as expressly provided for under this License.  Any other
-     attempt to copy, modify, sublicense or distribute the Document is
-     void, and will automatically terminate your rights under this
-     License.  However, parties who have received copies, or rights,
-     from you under this License will not have their licenses
-     terminated so long as such parties remain in full compliance.
+     except as expressly provided under this License.  Any attempt
+     otherwise to copy, modify, sublicense, or distribute it is void,
+     and will automatically terminate your rights under this License.
+
+     However, if you cease all violation of this License, then your
+     license from a particular copyright holder is reinstated (a)
+     provisionally, unless and until the copyright holder explicitly
+     and finally terminates your license, and (b) permanently, if the
+     copyright holder fails to notify you of the violation by some
+     reasonable means prior to 60 days after the cessation.
+
+     Moreover, your license from a particular copyright holder is
+     reinstated permanently if the copyright holder notifies you of the
+     violation by some reasonable means, this is the first time you have
+     received notice of violation of this License (for any work) from
+     that copyright holder, and you cure the violation prior to 30 days
+     after your receipt of the notice.
+
+     Termination of your rights under this section does not terminate
+     the licenses of parties who have received copies or rights from
+     you under this License.  If your rights have been terminated and
+     not permanently reinstated, receipt of a copy of some or all of
+     the same material does not give you any rights to use it.
 
  10. FUTURE REVISIONS OF THIS LICENSE
 
@@ -5914,7 +5964,7 @@ Appendix D GNU Free Documentation License
      the GNU Free Documentation License from time to time.  Such new
      versions will be similar in spirit to the present version, but may
      differ in detail to address new problems or concerns.  See
-     http://www.gnu.org/copyleft/.
+     `http://www.gnu.org/copyleft/'.
 
      Each version of the License is given a distinguishing version
      number.  If the Document specifies that a particular numbered
@@ -5924,7 +5974,40 @@ Appendix D GNU Free Documentation License
      published (not as a draft) by the Free Software Foundation.  If
      the Document does not specify a version number of this License,
      you may choose any version ever published (not as a draft) by the
-     Free Software Foundation.
+     Free Software Foundation.  If the Document specifies that a proxy
+     can decide which future versions of this License can be used, that
+     proxy's public statement of acceptance of a version permanently
+     authorizes you to choose that version for the Document.
+
+ 11. RELICENSING
+
+     "Massive Multiauthor Collaboration Site" (or "MMC Site") means any
+     World Wide Web server that publishes copyrightable works and also
+     provides prominent facilities for anybody to edit those works.  A
+     public wiki that anybody can edit is an example of such a server.
+     A "Massive Multiauthor Collaboration" (or "MMC") contained in the
+     site means any set of copyrightable works thus published on the MMC
+     site.
+
+     "CC-BY-SA" means the Creative Commons Attribution-Share Alike 3.0
+     license published by Creative Commons Corporation, a not-for-profit
+     corporation with a principal place of business in San Francisco,
+     California, as well as future copyleft versions of that license
+     published by that same organization.
+
+     "Incorporate" means to publish or republish a Document, in whole or
+     in part, as part of another Document.
+
+     An MMC is "eligible for relicensing" if it is licensed under this
+     License, and if all works that were first published under this
+     License somewhere other than this MMC, and subsequently
+     incorporated in whole or in part into the MMC, (1) had no cover
+     texts or invariant sections, and (2) were thus incorporated prior
+     to November 1, 2008.
+
+     The operator of an MMC Site may republish an MMC contained in the
+     site under CC-BY-SA on the same site at any time before August 1,
+     2009, provided the MMC is eligible for relicensing.
 
 
 ADDENDUM: How to use this License for your documents
@@ -5934,20 +6017,20 @@ To use this License in a document you have written, include a copy of
 the License in the document and put the following copyright and license
 notices just after the title page:
 
-     Copyright (C)  YEAR  YOUR NAME.
-     Permission is granted to copy, distribute and/or modify this document
-     under the terms of the GNU Free Documentation License, Version 1.2
-     or any later version published by the Free Software Foundation;
-     with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
-     A copy of the license is included in the section entitled ``GNU
-     Free Documentation License.''
+       Copyright (C)  YEAR  YOUR NAME.
+       Permission is granted to copy, distribute and/or modify this document
+       under the terms of the GNU Free Documentation License, Version 1.3
+       or any later version published by the Free Software Foundation;
+       with no Invariant Sections, no Front-Cover Texts, and no Back-Cover
+       Texts.  A copy of the license is included in the section entitled ``GNU
+       Free Documentation License''.
 
    If you have Invariant Sections, Front-Cover Texts and Back-Cover
 Texts, replace the "with...Texts." line with this:
 
-     with the Invariant Sections being LIST THEIR TITLES, with the
-     Front-Cover Texts being LIST, and with the Back-Cover Texts being
-     LIST.
+         with the Invariant Sections being LIST THEIR TITLES, with
+         the Front-Cover Texts being LIST, and with the Back-Cover Texts
+         being LIST.
 
    If you have Invariant Sections without Cover Texts, or some other
 combination of the three, merge those two alternatives to suit the
@@ -6426,335 +6509,4 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * syntactic-indentation-in-macros (c-):  Custom Macros.       (line  11)
 * tab-always-indent (c-):                Indentation Commands.
                                                               (line  63)
-
-
-File: ccmode,  Node: Concept and Key Index,  Prev: Variable Index,  Up: Top
-
-Concept and Key Index
-*********************
-
- [index ]
-* Menu:
-
-* #:                                     Electric Keys.       (line  24)
-* (:                                     Electric Keys.       (line  63)
-* ):                                     Electric Keys.       (line  64)
-* *:                                     Electric Keys.       (line  37)
-* ,:                                     Electric Keys.       (line  98)
-* -block-intro symbols:                  Syntactic Symbols.   (line  18)
-* -close symbols:                        Syntactic Symbols.   (line  18)
-* -cont symbols:                         Syntactic Symbols.   (line  24)
-* -intro symbols:                        Syntactic Symbols.   (line  24)
-* -open symbols:                         Syntactic Symbols.   (line  18)
-* /:                                     Electric Keys.       (line  38)
-* ::                                     Electric Keys.       (line  85)
-* ;:                                     Electric Keys.       (line  97)
-* <:                                     Electric Keys.       (line  54)
-* <backspace>:                           Hungry WS Deletion.  (line  79)
-* <delete>:                              Hungry WS Deletion.  (line  79)
-* >:                                     Electric Keys.       (line  55)
-* Abbrev mode:                           Electric Keys.       (line 126)
-* access-label:                          Class Symbols.       (line  40)
-* action functions:                      Custom Braces.       (line   6)
-* Adaptive Fill mode:                    Custom Filling and Breaking.
-                                                              (line  58)
-* anchor position <1>:                   Syntactic Analysis.  (line  22)
-* anchor position:                       Indentation Engine Basics.
-                                                              (line  15)
-* announcement mailing list:             Mailing Lists and Bug Reports.
-                                                              (line  27)
-* arglist-close:                         Paren List Symbols.  (line  29)
-* arglist-cont:                          Paren List Symbols.  (line  34)
-* arglist-cont-nonempty:                 Paren List Symbols.  (line  34)
-* arglist-intro:                         Paren List Symbols.  (line  29)
-* Auto Fill mode:                        Filling and Breaking.
-                                                              (line  19)
-* auto-newline:                          Auto-newlines.       (line   6)
-* AWK style:                             Built-in Styles.     (line  42)
-* awk-mode.el:                           Introduction.        (line   6)
-* block-close:                           Conditional Construct Symbols.
-                                                              (line  28)
-* block-open:                            Literal Symbols.     (line  50)
-* BOCM:                                  Introduction.        (line   6)
-* brace lists:                           Brace List Symbols.  (line   6)
-* brace-entry-open:                      Brace List Symbols.  (line  25)
-* brace-list-close:                      Brace List Symbols.  (line  19)
-* brace-list-entry:                      Brace List Symbols.  (line  19)
-* brace-list-intro:                      Brace List Symbols.  (line  19)
-* brace-list-open:                       Brace List Symbols.  (line  19)
-* BSD style:                             Built-in Styles.     (line  17)
-* bug report mailing list:               Mailing Lists and Bug Reports.
-                                                              (line  22)
-* bugs:                                  Limitations and Known Bugs.
-                                                              (line   6)
-* c:                                     Literal Symbols.     (line  38)
-* c++-mode.el:                           Introduction.        (line   6)
-* C-c .:                                 Other Commands.      (line   9)
-* C-c ::                                 Other Commands.      (line  26)
-* C-c <backspace>:                       Hungry WS Deletion.  (line  67)
-* C-c <DELETE>:                          Hungry WS Deletion.  (line  74)
-* C-c C-<backspace>:                     Hungry WS Deletion.  (line  67)
-* C-c C-<DELETE>:                        Hungry WS Deletion.  (line  74)
-* C-c C-\:                               Other Commands.      (line  31)
-* C-c C-a:                               Minor Modes.         (line  62)
-* C-c C-b:                               Mailing Lists and Bug Reports.
-                                                              (line   6)
-* C-c C-c:                               Comment Commands.    (line   7)
-* C-c C-d:                               Hungry WS Deletion.  (line  74)
-* C-c C-DEL:                             Hungry WS Deletion.  (line  67)
-* C-c C-e:                               Other Commands.      (line  57)
-* C-c C-l:                               Minor Modes.         (line  58)
-* C-c C-n:                               Movement Commands.   (line  89)
-* C-c C-o <1>:                           Interactive Customization.
-                                                              (line  73)
-* C-c C-o:                               c-offsets-alist.     (line  41)
-* C-c C-p:                               Movement Commands.   (line  89)
-* C-c C-q:                               Indentation Commands.
-                                                              (line 107)
-* C-c C-s:                               Syntactic Analysis.  (line  42)
-* C-c C-u:                               Movement Commands.   (line  59)
-* C-c C-w:                               Minor Modes.         (line  72)
-* C-c DEL:                               Hungry WS Deletion.  (line  67)
-* C-d:                                   Hungry WS Deletion.  (line  48)
-* C-j <1>:                               FAQ.                 (line  10)
-* C-j:                                   Indentation Commands.
-                                                              (line  98)
-* C-M-\ <1>:                             FAQ.                 (line  27)
-* C-M-\:                                 Indentation Commands.
-                                                              (line 115)
-* C-M-a (AWK Mode):                      Movement Commands.   (line  30)
-* C-M-e (AWK Mode):                      Movement Commands.   (line  30)
-* C-M-h:                                 Indentation Commands.
-                                                              (line 121)
-* C-M-q <1>:                             FAQ.                 (line  32)
-* C-M-q:                                 Indentation Commands.
-                                                              (line 102)
-* C-M-u:                                 FAQ.                 (line  32)
-* c-mode.el:                             Introduction.        (line   6)
-* C-x h:                                 FAQ.                 (line  27)
-* case-label:                            Switch Statement Symbols.
-                                                              (line  26)
-* catch-clause:                          Conditional Construct Symbols.
-                                                              (line  44)
-* class-close:                           Class Symbols.       (line  27)
-* class-open:                            Class Symbols.       (line  27)
-* clean-ups:                             Clean-ups.           (line   6)
-* comment handling:                      Filling and Breaking.
-                                                              (line   6)
-* comment line prefix:                   Custom Filling and Breaking.
-                                                              (line  11)
-* comment-intro:                         Literal Symbols.     (line  33)
-* comment-only line:                     Syntactic Analysis.  (line  80)
-* comments (insertion of):               Comment Commands.    (line   6)
-* composition-close:                     External Scope Symbols.
-                                                              (line  38)
-* composition-open:                      External Scope Symbols.
-                                                              (line  38)
-* Configuration:                         Config Basics.       (line   6)
-* cpp-define-intro:                      Multiline Macro Symbols.
-                                                              (line   6)
-* cpp-macro:                             Literal Symbols.     (line  55)
-* cpp-macro-cont:                        Multiline Macro Symbols.
-                                                              (line   6)
-* customization, brace hanging:          Custom Braces.       (line  14)
-* customization, colon hanging:          Hanging Colons.      (line   6)
-* customization, comma newlines:         Hanging Semicolons and Commas.
-                                                              (line   6)
-* customization, indentation:            Customizing Indentation.
-                                                              (line   6)
-* customization, indentation functions:  Custom Line-Up.      (line   6)
-* customization, interactive:            Interactive Customization.
-                                                              (line   6)
-* customization, semicolon newlines:     Hanging Semicolons and Commas.
-                                                              (line   6)
-* defun-block-intro:                     Function Symbols.    (line  18)
-* defun-close:                           Function Symbols.    (line  18)
-* defun-open:                            Function Symbols.    (line  18)
-* DEL:                                   Hungry WS Deletion.  (line  30)
-* do-while-closure:                      Conditional Construct Symbols.
-                                                              (line  50)
-* documentation comments:                Doc Comments.        (line   6)
-* electric characters:                   Electric Keys.       (line   6)
-* Ellemtel style:                        Built-in Styles.     (line  27)
-* else-clause:                           Conditional Construct Symbols.
-                                                              (line  44)
-* Emacs Initialization File:             Config Basics.       (line   6)
-* extern-lang-close:                     External Scope Symbols.
-                                                              (line  15)
-* extern-lang-open:                      External Scope Symbols.
-                                                              (line  15)
-* faces:                                 Faces.               (line   6)
-* file local variables:                  File Styles.         (line   6)
-* Filladapt mode:                        Custom Filling and Breaking.
-                                                              (line  73)
-* Font Lock mode:                        Font Locking.        (line   6)
-* font locking:                          Font Locking.        (line   6)
-* friend:                                Class Symbols.       (line  93)
-* func-decl-cont:                        Literal Symbols.     (line  31)
-* GNU indent program:                    Indentation Commands.
-                                                              (line  12)
-* GNU style:                             Built-in Styles.     (line  10)
-* GtkDoc markup:                         Doc Comments.        (line  50)
-* hanging braces:                        Hanging Braces.      (line   6)
-* hanging colons:                        Hanging Colons.      (line   6)
-* hanging commas:                        Hanging Semicolons and Commas.
-                                                              (line   6)
-* hanging semicolons:                    Hanging Semicolons and Commas.
-                                                              (line   6)
-* history:                               Introduction.        (line   6)
-* hungry-deletion:                       Hungry WS Deletion.  (line   6)
-* in-class inline methods:               Class Symbols.       (line  59)
-* inclass <1>:                           External Scope Symbols.
-                                                              (line  15)
-* inclass:                               Class Symbols.       (line  40)
-* incomposition:                         External Scope Symbols.
-                                                              (line  38)
-* indentation <1>:                       Customizing Indentation.
-                                                              (line   6)
-* indentation <2>:                       Indentation Calculation.
-                                                              (line   6)
-* indentation:                           Indentation Commands.
-                                                              (line   6)
-* indentation function:                  Line-Up Functions.   (line   6)
-* indentation offset specifications:     Indentation Engine Basics.
-                                                              (line  22)
-* inexpr-class:                          Anonymous Class Symbol.
-                                                              (line  17)
-* inexpr-statement:                      Statement Block Symbols.
-                                                              (line  16)
-* inextern-lang:                         External Scope Symbols.
-                                                              (line  15)
-* inher-cont:                            Class Symbols.       (line  36)
-* inher-intro:                           Class Symbols.       (line  36)
-* inlambda:                              Statement Block Symbols.
-                                                              (line  38)
-* inline-close:                          Class Symbols.       (line  59)
-* inline-open:                           Class Symbols.       (line  59)
-* inmodule:                              External Scope Symbols.
-                                                              (line  35)
-* innamespace:                           External Scope Symbols.
-                                                              (line  32)
-* interactive customization:             Interactive Customization.
-                                                              (line   6)
-* Java style:                            Built-in Styles.     (line  38)
-* Javadoc markup <1>:                    Doc Comments.        (line  44)
-* Javadoc markup:                        Filling and Breaking.
-                                                              (line  26)
-* Just-in-time Lock mode:                Font Locking Preliminaries.
-                                                              (line  49)
-* K&R style:                             Built-in Styles.     (line  14)
-* knr-argdecl:                           K&R Symbols.         (line   6)
-* knr-argdecl-intro:                     K&R Symbols.         (line   6)
-* label:                                 Literal Symbols.     (line  48)
-* lambda-intro-cont:                     Statement Block Symbols.
-                                                              (line  38)
-* Lazy Lock mode:                        Font Locking Preliminaries.
-                                                              (line  49)
-* limitations:                           Limitations and Known Bugs.
-                                                              (line   6)
-* line breaking:                         Filling and Breaking.
-                                                              (line   6)
-* line-up function:                      Line-Up Functions.   (line   6)
-* Linux style:                           Built-in Styles.     (line  32)
-* literal <1>:                           Clean-ups.           (line  26)
-* literal <2>:                           Auto-newlines.       (line  23)
-* literal:                               Indentation Commands.
-                                                              (line  63)
-* M-;:                                   Comment Commands.    (line  15)
-* M-a:                                   Movement Commands.   (line  42)
-* M-e:                                   Movement Commands.   (line  42)
-* M-j:                                   Filling and Breaking.
-                                                              (line  42)
-* M-q:                                   Filling and Breaking.
-                                                              (line  26)
-* macros:                                Custom Macros.       (line   6)
-* member-init-cont:                      Class Symbols.       (line  53)
-* member-init-intro:                     Class Symbols.       (line  53)
-* Minor Modes:                           Minor Modes.         (line   6)
-* mode hooks:                            CC Hooks.            (line   6)
-* module-close:                          External Scope Symbols.
-                                                              (line  35)
-* module-open:                           External Scope Symbols.
-                                                              (line  35)
-* movement:                              Movement Commands.   (line   6)
-* multiline macros:                      Multiline Macro Symbols.
-                                                              (line   6)
-* namespace-close:                       External Scope Symbols.
-                                                              (line  32)
-* namespace-open:                        External Scope Symbols.
-                                                              (line  32)
-* nomenclature:                          Subword Movement.    (line   6)
-* objc-method-args-cont:                 Objective-C Method Symbols.
-                                                              (line  18)
-* objc-method-call-cont:                 Objective-C Method Symbols.
-                                                              (line  18)
-* objc-method-intro:                     Objective-C Method Symbols.
-                                                              (line  18)
-* offset specification:                  c-offsets-alist.     (line  59)
-* offsets:                               Indentation Engine Basics.
-                                                              (line  22)
-* open paren in column zero:             FAQ.                 (line  51)
-* paragraph filling:                     Filling and Breaking.
-                                                              (line  19)
-* performance:                           Performance Issues.  (line   6)
-* Pike autodoc markup <1>:               Doc Comments.        (line  47)
-* Pike autodoc markup:                   Filling and Breaking.
-                                                              (line  26)
-* preprocessor directives:               Custom Macros.       (line   6)
-* Python style:                          Built-in Styles.     (line  35)
-* RET:                                   FAQ.                 (line  10)
-* statement:                             Function Symbols.    (line  28)
-* statement-block-intro:                 Conditional Construct Symbols.
-                                                              (line  28)
-* statement-case-intro:                  Switch Statement Symbols.
-                                                              (line  26)
-* statement-case-open:                   Switch Statement Symbols.
-                                                              (line  26)
-* statement-cont:                        Function Symbols.    (line  28)
-* stream-op:                             Literal Symbols.     (line  64)
-* string:                                Literal Symbols.     (line  46)
-* Stroustrup style:                      Built-in Styles.     (line  24)
-* style definition:                      Adding Styles.       (line  13)
-* style variables:                       Style Variables.     (line   6)
-* styles <1>:                            Styles.              (line   6)
-* styles:                                Style Variables.     (line   6)
-* styles, built-in:                      Built-in Styles.     (line   6)
-* styles, file local:                    File Styles.         (line   6)
-* substatement <1>:                      Conditional Construct Symbols.
-                                                              (line  35)
-* substatement:                          Syntactic Analysis.  (line  77)
-* substatement block:                    Syntactic Analysis.  (line  77)
-* substatement-label:                    Conditional Construct Symbols.
-                                                              (line  39)
-* substatement-open:                     Conditional Construct Symbols.
-                                                              (line  28)
-* subword:                               Subword Movement.    (line   6)
-* syntactic analysis:                    Syntactic Analysis.  (line   6)
-* syntactic context:                     Syntactic Analysis.  (line   6)
-* syntactic element:                     Syntactic Analysis.  (line   6)
-* syntactic symbol <1>:                  Syntactic Analysis.  (line  14)
-* syntactic symbol:                      Indentation Engine Basics.
-                                                              (line  15)
-* syntactic symbols, brief list:         Syntactic Symbols.   (line   6)
-* syntactic whitespace <1>:              Multiline Macro Symbols.
-                                                              (line   6)
-* syntactic whitespace <2>:              Literal Symbols.     (line  40)
-* syntactic whitespace:                  Auto-newlines.       (line  23)
-* TAB:                                   Indentation Commands.
-                                                              (line  38)
-* template-args-cont:                    Class Symbols.       (line 103)
-* text filling:                          Filling and Breaking.
-                                                              (line   6)
-* topmost-intro:                         Function Symbols.    (line  18)
-* topmost-intro-cont:                    Function Symbols.    (line  18)
-* types, user defined:                   Font Locking Preliminaries.
-                                                              (line  55)
-* user defined types:                    Font Locking Preliminaries.
-                                                              (line  55)
-* User style:                            Built-in Styles.     (line  46)
-* web site:                              Updating CC Mode.    (line   9)
-* Whitesmith style:                      Built-in Styles.     (line  20)
-* {:                                     Electric Keys.       (line  76)
-* }:                                     Electric Keys.       (line  77)
-
 

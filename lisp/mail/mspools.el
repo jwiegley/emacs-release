@@ -1,7 +1,7 @@
 ;;; mspools.el --- show mail spools waiting to be read
 
 ;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Stephen Eglen <stephen@gnu.org>
 ;; Maintainer: Stephen Eglen <stephen@gnu.org>
@@ -11,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -105,7 +103,7 @@
 ;; Rather than showing size in bytes, could we see the number of msgs
 ;; waiting?  (Could be more time demanding / system dependent).
 ;; Maybe just call a perl script to do all the hard work, and
-;; visualise the results in the buffer.
+;; visualize the results in the buffer.
 
 ;; Shrink wrap the buffer to remove excess white-space?
 
@@ -246,6 +244,11 @@ Buffer is not displayed if SHOW is non-nil."
   (mspools-mode)
   )
 
+(declare-function rmail-get-new-mail "rmail" (&optional file-name))
+
+;; External.
+(declare-function vm-visit-folder "ext:vm-startup" (folder &optional read-only))
+
 (defun mspools-visit-spool ()
   "Visit the folder on the current line of the *spools* buffer."
   (interactive)
@@ -272,9 +275,9 @@ Buffer is not displayed if SHOW is non-nil."
 			     (end-of-line)
 			     (point)))
 	      mspools-files-len)
-	  (next-line (- 1 mspools-files-len)) ;back to top of list
+	  (forward-line (- 1 mspools-files-len)) ;back to top of list
 	;; else just on to next line
-	(next-line 1))
+	(forward-line 1))
 
       ;; Choose whether to use VM or RMAIL for reading folder.
       (if mspools-using-vm
@@ -413,5 +416,5 @@ nil."
 
 (provide 'mspools)
 
-;;; arch-tag: 8990b3ee-68c8-4892-98f1-51a735c8bac6
+;; arch-tag: 8990b3ee-68c8-4892-98f1-51a735c8bac6
 ;;; mspools.el ends here

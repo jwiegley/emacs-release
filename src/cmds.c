@@ -1,14 +1,14 @@
 /* Simple built-in editing commands.
    Copyright (C) 1985, 1993, 1994, 1995, 1996, 1997, 1998, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007, 2008
+                 2003, 2004, 2005, 2006, 2007, 2008, 2009
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,16 +16,14 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 #include <config.h>
 #include "lisp.h"
 #include "commands.h"
 #include "buffer.h"
-#include "charset.h"
+#include "character.h"
 #include "syntax.h"
 #include "window.h"
 #include "keyboard.h"
@@ -56,7 +54,7 @@ DEFUN ("forward-point", Fforward_point, Sforward_point, 1, 1, 0,
   return make_number (PT + XINT (n));
 }
 
-DEFUN ("forward-char", Fforward_char, Sforward_char, 0, 1, "p",
+DEFUN ("forward-char", Fforward_char, Sforward_char, 0, 1, "^p",
        doc: /* Move point right N characters (left if N is negative).
 On reaching end of buffer, stop and signal error.  */)
      (n)
@@ -92,7 +90,7 @@ On reaching end of buffer, stop and signal error.  */)
   return Qnil;
 }
 
-DEFUN ("backward-char", Fbackward_char, Sbackward_char, 0, 1, "p",
+DEFUN ("backward-char", Fbackward_char, Sbackward_char, 0, 1, "^p",
        doc: /* Move point left N characters (right if N is negative).
 On attempt to pass beginning or end of buffer, stop and signal error.  */)
      (n)
@@ -107,7 +105,7 @@ On attempt to pass beginning or end of buffer, stop and signal error.  */)
   return Fforward_char (n);
 }
 
-DEFUN ("forward-line", Fforward_line, Sforward_line, 0, 1, "p",
+DEFUN ("forward-line", Fforward_line, Sforward_line, 0, 1, "^p",
        doc: /* Move N lines forward (backward if N is negative).
 Precisely, if point is on line I, move to the start of line I + N.
 If there isn't room, go as far as possible (no error).
@@ -153,7 +151,7 @@ With positive N, a non-empty line at the end counts as one line
   return make_number (count <= 0 ? - shortage : shortage);
 }
 
-DEFUN ("beginning-of-line", Fbeginning_of_line, Sbeginning_of_line, 0, 1, "p",
+DEFUN ("beginning-of-line", Fbeginning_of_line, Sbeginning_of_line, 0, 1, "^p",
        doc: /* Move point to beginning of current line.
 With argument N not nil or 1, move forward N - 1 lines first.
 If point reaches the beginning or end of buffer, it stops there.
@@ -178,7 +176,7 @@ instead.  For instance, `(forward-line 0)' does the same thing as
   return Qnil;
 }
 
-DEFUN ("end-of-line", Fend_of_line, Send_of_line, 0, 1, "p",
+DEFUN ("end-of-line", Fend_of_line, Send_of_line, 0, 1, "^p",
        doc: /* Move point to end of current line.
 With argument N not nil or 1, move forward N - 1 lines first.
 If point reaches the beginning or end of buffer, it stops there.
@@ -328,11 +326,11 @@ Whichever character you type to run this command is inserted.  */)
   CHECK_NUMBER (n);
 
   /* Barf if the key that invoked this was not a character.  */
-  if (!INTEGERP (last_command_char))
+  if (!CHARACTERP (last_command_event))
     bitch_at_user ();
   {
     int character = translate_char (Vtranslation_table_for_input,
-				    XINT (last_command_char), 0, 0, 0);
+				    XINT (last_command_event));
     if (XINT (n) >= 2 && NILP (current_buffer->overwrite_mode))
       {
 	int modified_char = character;
@@ -396,7 +394,6 @@ internal_self_insert (c, noautofill)
   /* At first, get multi-byte form of C in STR.  */
   if (!NILP (current_buffer->enable_multibyte_characters))
     {
-      c = unibyte_char_to_multibyte (c);
       len = CHAR_STRING (c, str);
       if (len == 1)
 	/* If C has modifier bits, this makes C an appropriate
@@ -473,10 +470,19 @@ internal_self_insert (c, noautofill)
 	}
       hairy = 2;
     }
+
+  if (NILP (current_buffer->enable_multibyte_characters))
+    MAKE_CHAR_MULTIBYTE (c);
+  synt = SYNTAX (c);
+
   if (!NILP (current_buffer->abbrev_mode)
-      && SYNTAX (c) != Sword
+      && synt != Sword
       && NILP (current_buffer->read_only)
-      && PT > BEGV && SYNTAX (XFASTINT (Fprevious_char ())) == Sword)
+      && PT > BEGV
+      && (!NILP (current_buffer->enable_multibyte_characters)
+	  ? SYNTAX (XFASTINT (Fprevious_char ())) == Sword
+	  : (SYNTAX (unibyte_char_to_multibyte (XFASTINT (Fprevious_char ())))
+	     == Sword)))
     {
       int modiff = MODIFF;
       Lisp_Object sym;
@@ -486,7 +492,7 @@ internal_self_insert (c, noautofill)
       /* If we expanded an abbrev which has a hook,
 	 and the hook has a non-nil `no-self-insert' property,
 	 return right away--don't really self-insert.  */
-      if (! NILP (sym) && ! NILP (XSYMBOL (sym)->function)
+      if (SYMBOLP (sym) && ! NILP (sym) && ! NILP (XSYMBOL (sym)->function)
 	  && SYMBOLP (XSYMBOL (sym)->function))
 	{
 	  Lisp_Object prop;
@@ -545,7 +551,6 @@ internal_self_insert (c, noautofill)
       Vself_insert_face = Qnil;
     }
 
-  synt = SYNTAX (c);
   if ((synt == Sclose || synt == Smath)
       && !NILP (Vblink_paren_function) && INTERACTIVE
       && !noautofill)

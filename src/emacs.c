@@ -1,14 +1,14 @@
 /* Fully extensible Emacs, running on Unix, intended for GNU.
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 1998, 1999,
-                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 #include <config.h>
@@ -28,10 +26,6 @@ Boston, MA 02110-1301, USA.  */
 
 #include <sys/types.h>
 #include <sys/file.h>
-
-#ifdef VMS
-#include <ssdef.h>
-#endif
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -48,6 +42,11 @@ Boston, MA 02110-1301, USA.  */
 #include "w32heap.h" /* for prototype of sbrk */
 #endif
 
+#ifdef NS_IMPL_GNUSTEP
+/* At least under Debian, GSConfig is in a subdirectory.  --Stef  */
+#include <GNUstepBase/GSConfig.h>
+#endif
+
 #include "lisp.h"
 #include "commands.h"
 #include "intervals.h"
@@ -58,6 +57,7 @@ Boston, MA 02110-1301, USA.  */
 #include "blockinput.h"
 #include "syssignal.h"
 #include "process.h"
+#include "frame.h"
 #include "termhooks.h"
 #include "keyboard.h"
 #include "keymap.h"
@@ -99,14 +99,14 @@ int gdb_use_lsb = 1;
 #else
 int gdb_use_lsb = 0;
 #endif
-#ifdef NO_UNION_TYPE
+#ifndef USE_LISP_UNION_TYPE
 int gdb_use_union = 0;
 #else
 int gdb_use_union = 1;
 #endif
 EMACS_INT gdb_valbits = VALBITS;
 EMACS_INT gdb_gctypebits = GCTYPEBITS;
-#ifdef DATA_SEG_BITS
+#if defined (DATA_SEG_BITS) && ! defined (USE_LSB_TAG)
 EMACS_INT gdb_data_seg_bits = DATA_SEG_BITS;
 #else
 EMACS_INT gdb_data_seg_bits = 0;
@@ -131,11 +131,14 @@ Lisp_Object Vinvocation_directory;
    nil means get them only from PATH_LOADSEARCH.  */
 Lisp_Object Vinstallation_directory;
 
+/* The values of `current-time' before and after Emacs initialization.  */
+Lisp_Object Vbefore_init_time, Vafter_init_time;
+
 /* Hook run by `kill-emacs' before it does really anything.  */
 Lisp_Object Vkill_emacs_hook;
 
-/* An empty lisp string.  To avoid having to build any other.  */
-Lisp_Object empty_string;
+/* Empty lisp strings.  To avoid having to build any others.  */
+Lisp_Object empty_unibyte_string, empty_multibyte_string;
 
 /* Search path separator.  */
 Lisp_Object Vpath_separator;
@@ -194,9 +197,13 @@ int running_asynch_code;
 extern int inherited_pgroup;
 #endif
 
-#ifdef HAVE_X_WINDOWS
+#if defined(HAVE_X_WINDOWS) || defined(HAVE_NS)
 /* If non-zero, -d was specified, meaning we're using some window system.  */
 int display_arg;
+#endif
+
+#ifdef HAVE_NS
+extern char ns_no_defaults;
 #endif
 
 /* An address near the bottom of the stack.
@@ -209,25 +216,18 @@ static void *my_heap_start;
 /* The gap between BSS end and heap start as far as we can tell.  */
 static unsigned long heap_bss_diff;
 
-/* If the gap between BSS end and heap start is larger than this we try to
-   work around it, and if that fails, output a warning in dump-emacs.  */
+/* If the gap between BSS end and heap start is larger than this
+   output a warning in dump-emacs.  */
 #define MAX_HEAP_BSS_DIFF (1024*1024)
 
 
 #ifdef HAVE_WINDOW_SYSTEM
-extern Lisp_Object Vwindow_system;
+extern Lisp_Object Vinitial_window_system;
 #endif /* HAVE_WINDOW_SYSTEM */
 
 extern Lisp_Object Vauto_save_list_file_name;
 
 extern Lisp_Object Vinhibit_redisplay;
-
-#ifdef USG_SHARED_LIBRARIES
-/* If nonzero, this is the place to put the end of the writable segment
-   at startup.  */
-
-unsigned int bss_end = 0;
-#endif
 
 /* Nonzero means running Emacs without interactive terminal.  */
 
@@ -238,6 +238,13 @@ int noninteractive;
    but nothing terrible happens if user sets this one.  */
 
 int noninteractive1;
+
+/* Name for the server started by the daemon.*/
+static char *daemon_name;
+
+/* Pipe used to send exit notification to the daemon parent at
+   startup.  */
+int daemon_pipe[2];
 
 /* Save argv and argc.  */
 char **initial_argv;
@@ -261,6 +268,7 @@ read the main documentation for these command-line arguments.\n\
 Initialization options:\n\
 \n\
 --batch                     do not do interactive display; implies -q\n\
+--daemon                    start a server in the background\n\
 --debug-init                enable Emacs Lisp debugger for init file\n\
 --display, -d DISPLAY       use X server DISPLAY\n\
 --multibyte, --no-unibyte   inhibit the effect of EMACS_UNIBYTE\n\
@@ -281,9 +289,8 @@ Initialization options:\n\
 Action options:\n\
 \n\
 FILE                    visit FILE using find-file\n\
-+LINE FILE              visit FILE using find-file, then go to line LINE\n\
-+LINE:COLUMN FILE       visit FILE using find-file, then go to line LINE,\n\
-                          column COLUMN\n\
++LINE                   go to line LINE in next FILE\n\
++LINE:COLUMN            go to line LINE, column COLUMN, in next FILE\n\
 --directory, -L DIR     add DIR to variable load-path\n\
 --eval EXPR             evaluate Emacs Lisp expression EXPR\n\
 --execute EXPR          evaluate Emacs Lisp expression EXPR\n\
@@ -326,6 +333,7 @@ Display options:\n\
 --title, -T TITLE               title for initial Emacs frame\n\
 --vertical-scroll-bars, -vb     enable vertical scroll bars\n\
 --xrm XRESOURCES                set additional X resources\n\
+--parent-id XID                 set parent window\n\
 --help                          display this help and exit\n\
 --version                       output version information and exit\n\
 \n"
@@ -354,8 +362,8 @@ int fatal_error_in_progress;
 void (*fatal_error_signal_hook) P_ ((void));
 
 #ifdef FORWARD_SIGNAL_TO_MAIN_THREAD
-/* When compiled with GTK and running under Gnome, or Carbon under Mac
-   OS X, multiple threads may be created.  Keep track of our main
+/* When compiled with GTK and running under Gnome,
+   multiple threads may be created.  Keep track of our main
    thread to make sure signals are delivered to it (see syssignal.h).  */
 
 pthread_t main_thread;
@@ -381,9 +389,6 @@ fatal_error_signal (sig)
       shut_down_emacs (sig, 0, Qnil);
     }
 
-#ifdef VMS
-  LIB$STOP (SS$_ABORT);
-#else
   /* Signal the same code; this time it will really be fatal.
      Remember that since we're in a signal handler, the signal we're
      going to send is probably blocked, so we have to unblock it if we
@@ -396,7 +401,6 @@ fatal_error_signal (sig)
     fatal_error_signal_hook ();
 
   kill (getpid (), fatal_error_code);
-#endif /* not VMS */
 }
 
 #ifdef SIGDANGER
@@ -422,11 +426,7 @@ memory_warning_signal (sig)
 
 #if ! defined (DOS_NT) && ! defined (NO_ABORT)
 
-#ifndef ABORT_RETURN_TYPE
-#define ABORT_RETURN_TYPE void
-#endif
-
-ABORT_RETURN_TYPE
+void
 abort ()
 {
   kill (getpid (), SIGABRT);
@@ -598,14 +598,6 @@ DEFUN ("invocation-directory", Finvocation_directory, Sinvocation_directory,
 }
 
 
-#ifdef VMS
-#ifdef LINK_CRTL_SHARE
-#ifdef SHARABLE_LIB_BUG
-extern noshare char **environ;
-#endif /* SHARABLE_LIB_BUG */
-#endif /* LINK_CRTL_SHARE */
-#endif /* VMS */
-
 #ifdef HAVE_TZSET
 /* A valid but unlikely value for the TZ environment value.
    It is OK (though a bit slower) if the user actually chooses this value.  */
@@ -792,16 +784,7 @@ bug_reporting_address ()
 
 /* ARGSUSED */
 int
-main (argc, argv
-#ifdef VMS
-, envp
-#endif
-)
-     int argc;
-     char **argv;
-#ifdef VMS
-     char **envp;
-#endif
+main (int argc, char **argv)
 {
 #if GC_MARK_STACK
   Lisp_Object dummy;
@@ -817,6 +800,10 @@ main (argc, argv
 #endif
   int no_loadup = 0;
   char *junk = 0;
+  char *dname_arg = 0;
+#ifdef NS_IMPL_COCOA
+  char dname_arg2[80];
+#endif
 
 #if GC_MARK_STACK
   extern Lisp_Object *stack_base;
@@ -835,6 +822,7 @@ main (argc, argv
     }
 
 #ifdef LINUX_SBRK_BUG
+  /* This is only used GNU/LINUX running on alpha when using libc5 */
   __sbrk (1);
 #endif
 
@@ -843,7 +831,8 @@ main (argc, argv
     run_time_remap (argv[0]);
 #endif
 
-#ifdef MAC_OSX
+/* If using unexmacosx.c (set by s/darwin.h), we must do this. */
+#ifdef DARWIN_OS
   if (!initialized)
     unexec_init_emacs_zone ();
 #endif
@@ -857,17 +846,23 @@ main (argc, argv
          So ignore --version otherwise.  */
       && initialized)
     {
-      Lisp_Object tem;
+      Lisp_Object tem, tem2;
       tem = Fsymbol_value (intern ("emacs-version"));
+      tem2 = Fsymbol_value (intern ("emacs-copyright"));
       if (!STRINGP (tem))
 	{
 	  fprintf (stderr, "Invalid value of `emacs-version'\n");
 	  exit (1);
 	}
+      if (!STRINGP (tem2))
+	{
+	  fprintf (stderr, "Invalid value of `emacs-copyright'\n");
+	  exit (1);
+	}
       else
 	{
 	  printf ("GNU Emacs %s\n", SDATA (tem));
-	  printf ("Copyright (C) 2008 Free Software Foundation, Inc.\n");
+	  printf ("%s\n", SDATA(tem2));
 	  printf ("GNU Emacs comes with ABSOLUTELY NO WARRANTY.\n");
 	  printf ("You may redistribute copies of Emacs\n");
 	  printf ("under the terms of the GNU General Public License.\n");
@@ -878,29 +873,24 @@ main (argc, argv
     }
 
 #ifdef HAVE_PERSONALITY_LINUX32
-  /* See if there is a gap between the end of BSS and the heap.
-     In that case, set personality and exec ourself again.  */
   if (!initialized
       && (strcmp (argv[argc-1], "dump") == 0
           || strcmp (argv[argc-1], "bootstrap") == 0)
-      && heap_bss_diff > MAX_HEAP_BSS_DIFF)
+      && ! getenv ("EMACS_HEAP_EXEC"))
     {
-      if (! getenv ("EMACS_HEAP_EXEC"))
-        {
-          /* Set this so we only do this once.  */
-          putenv("EMACS_HEAP_EXEC=true");
+      /* Set this so we only do this once.  */
+      putenv("EMACS_HEAP_EXEC=true");
 
-	  /* A flag to turn off address randomization which is introduced
-	   in linux kernel shipped with fedora core 4 */
+      /* A flag to turn off address randomization which is introduced
+         in linux kernel shipped with fedora core 4 */
 #define ADD_NO_RANDOMIZE 0x0040000
-	  personality (PER_LINUX32 | ADD_NO_RANDOMIZE);
+      personality (PER_LINUX32 | ADD_NO_RANDOMIZE);
 #undef  ADD_NO_RANDOMIZE
 
-          execvp (argv[0], argv);
+      execvp (argv[0], argv);
 
-          /* If the exec fails, try to dump anyway.  */
-          perror ("execvp");
-        }
+      /* If the exec fails, try to dump anyway.  */
+      perror ("execvp");
     }
 #endif /* HAVE_PERSONALITY_LINUX32 */
 
@@ -920,52 +910,6 @@ main (argc, argv
       skip_args = 0;
     }
 #endif
-
-#ifdef NeXT
-  {
-    extern int malloc_cookie;
-    /* This helps out unexnext.c.  */
-    if (initialized)
-      if (malloc_jumpstart (malloc_cookie) != 0)
-	printf ("malloc jumpstart failed!\n");
-  }
-#endif /* NeXT */
-
-#ifdef MAC_OSX
-  /* Skip process serial number passed in the form -psn_x_y as
-     command-line argument.  The WindowServer adds this option when
-     Emacs is invoked from the Finder or by the `open' command.  In
-     these cases, the working directory becomes `/', so we change it
-     to the user's home directory.  */
-  if (argc > skip_args + 1 && strncmp (argv[skip_args+1], "-psn_", 5) == 0)
-    {
-      chdir (getenv ("HOME"));
-      skip_args++;
-    }
-#endif /* MAC_OSX */
-
-#ifdef VMS
-  /* If -map specified, map the data file in.  */
-  {
-    char *file;
-    if (argmatch (argv, argc, "-map", "--map-data", 3, &file, &skip_args))
-      mapin_data (file);
-  }
-
-#ifdef LINK_CRTL_SHARE
-#ifdef SHARABLE_LIB_BUG
-  /* Bletcherous shared libraries!  */
-  if (!stdin)
-    stdin = fdopen (0, "r");
-  if (!stdout)
-    stdout = fdopen (1, "w");
-  if (!stderr)
-    stderr = fdopen (2, "w");
-  if (!environ)
-    environ = envp;
-#endif /* SHARABLE_LIB_BUG */
-#endif /* LINK_CRTL_SHARE */
-#endif /* VMS */
 
 #if defined (HAVE_SETRLIMIT) && defined (RLIMIT_STACK)
   /* Extend the stack space available.
@@ -1009,11 +953,6 @@ main (argc, argv
 
   /* Record (approximately) where the stack begins.  */
   stack_bottom = &stack_bottom_variable;
-
-#ifdef USG_SHARED_LIBRARIES
-  if (bss_end)
-    brk ((void *)bss_end);
-#endif
 
   clearerr (stdin);
 
@@ -1077,10 +1016,6 @@ main (argc, argv
   if (do_initial_setlocale)
     setlocale (LC_ALL, "");
 
-#ifdef EXTRA_INITIALIZE
-  EXTRA_INITIALIZE;
-#endif
-
   inhibit_window_system = 0;
 
   /* Handle the -t switch, which specifies filename to use as terminal.  */
@@ -1130,8 +1065,9 @@ main (argc, argv
   if (argmatch (argv, argc, "-script", "--script", 3, &junk, &skip_args))
     {
       noninteractive = 1;	/* Set batch mode.  */
-      /* Convert --script to --scriptload, un-skip it, and sort again
+      /* Convert --script to -scriptload, un-skip it, and sort again
 	 so that it will be handled in proper sequence.  */
+      /* FIXME broken for --script=FILE - is that supposed to work?  */
       argv[skip_args - 1] = "-scriptload";
       skip_args -= 2;
       sort_args (argc, argv);
@@ -1144,6 +1080,141 @@ main (argc, argv
       printf (USAGE3);
       printf (USAGE4, bug_reporting_address ());
       exit (0);
+    }
+
+  if (argmatch (argv, argc, "-daemon", "--daemon", 5, NULL, &skip_args)
+      || argmatch (argv, argc, "-daemon", "--daemon", 5, &dname_arg, &skip_args))
+    {
+#ifndef DOS_NT
+      pid_t f;
+
+      /* Start as a daemon: fork a new child process which will run the
+	 rest of the initialization code, then exit.
+
+	 Detaching a daemon requires the following steps:
+	 - fork
+	 - setsid
+	 - exit the parent
+	 - close the tty file-descriptors
+
+	 We only want to do the last 2 steps once the daemon is ready to
+	 serve requests, i.e. after loading .emacs (initialization).
+	 OTOH initialization may start subprocesses (e.g. ispell) and these
+	 should be run from the proper process (the one that will end up
+	 running as daemon) and with the proper "session id" in order for
+	 them to keep working after detaching, so fork and setsid need to be
+	 performed before initialization.
+
+	 We want to avoid exiting before the server socket is ready, so
+	 use a pipe for synchronization.  The parent waits for the child
+	 to close its end of the pipe (using `daemon-initialized')
+	 before exiting.  */
+      if (pipe (daemon_pipe) == -1)
+	{
+	  fprintf (stderr, "Cannot pipe!\n");
+	  exit (1);
+	}
+
+#ifndef NS_IMPL_COCOA
+      f = fork ();
+#else /* NS_IMPL_COCOA */
+      /* Under Cocoa we must do fork+exec as CoreFoundation lib fails in
+         forked process: http://developer.apple.com/ReleaseNotes/
+                                  CoreFoundation/CoreFoundation.html)
+         We mark being in the exec'd process by a daemon name argument of
+         form "--daemon=\nFD0,FD1\nNAME" where FD are the pipe file descriptors,
+         NAME is the original daemon name, if any. */
+      if (!dname_arg || !strchr (dname_arg, '\n'))
+	  f = fork ();  /* in orig */
+      else
+	  f = 0;  /* in exec'd */
+#endif /* NS_IMPL_COCOA */
+      if (f > 0)
+	{
+	  int retval;
+	  char buf[1];
+
+	  /* Close unused writing end of the pipe.  */
+	  close (daemon_pipe[1]);
+
+	  /* Just wait for the child to close its end of the pipe.  */
+	  do
+	    {
+	      retval = read (daemon_pipe[0], &buf, 1);
+	    }
+	  while (retval == -1 && errno == EINTR);
+
+	  if (retval < 0)
+	    {
+	      fprintf (stderr, "Error reading status from child\n");
+	      exit (1);
+	    }
+	  else if (retval == 0)
+	    {
+	      fprintf (stderr, "Error: server did not start correctly\n");
+	      exit (1);
+	    }
+
+	  close (daemon_pipe[0]);
+	  exit (0);
+	}
+      if (f < 0)
+	{
+	  fprintf (stderr, "Cannot fork!\n");
+	  exit (1);
+	}
+
+#ifdef NS_IMPL_COCOA
+      {
+        /* In orig process, forked as child, OR in exec'd. */
+        if (!dname_arg || !strchr (dname_arg, '\n'))
+          {  /* In orig, child: now exec w/special daemon name. */
+            char fdStr[80];
+
+            if (dname_arg && strlen (dname_arg) > 70)
+              {
+                fprintf (stderr, "daemon: child name too long\n");
+                exit (1);
+              }
+
+            sprintf (fdStr, "--daemon=\n%d,%d\n%s", daemon_pipe[0],
+                     daemon_pipe[1], dname_arg ? dname_arg : "");
+            argv[skip_args] = fdStr;
+
+            execv (argv[0], argv);
+            fprintf (stderr, "emacs daemon: exec failed: %d\t%d\n", errno);
+            exit (1);
+          }
+
+        /* In exec'd: parse special dname into pipe and name info. */
+        if (!dname_arg || !strchr (dname_arg, '\n')
+            || strlen (dname_arg) < 1 || strlen (dname_arg) > 70)
+          {
+            fprintf (stderr, "emacs daemon: daemon name absent or too long\n");
+            exit(1);
+          }
+        dname_arg2[0] = '\0';
+        sscanf (dname_arg, "\n%d,%d\n%s", &(daemon_pipe[0]), &(daemon_pipe[1]),
+                dname_arg2);
+        dname_arg = strlen (dname_arg2) ? dname_arg2 : NULL;
+      }
+#endif /* NS_IMPL_COCOA */
+
+      if (dname_arg)
+       	daemon_name = xstrdup (dname_arg);
+      /* Close unused reading end of the pipe.  */
+      close (daemon_pipe[0]);
+      /* Make sure that the used end of the pipe is closed on exec, so
+	 that it is not accessible to programs started from .emacs.  */
+      fcntl (daemon_pipe[1], F_SETFD, FD_CLOEXEC);
+
+#ifdef HAVE_SETSID
+      setsid();
+#endif
+#else /* DOS_NT */
+      fprintf (stderr, "This platform does not support the -daemon flag.\n");
+      exit (1);
+#endif /* DOS_NT */
     }
 
   if (! noninteractive)
@@ -1277,6 +1348,7 @@ main (argc, argv
       init_alloc_once ();
       init_obarray ();
       init_eval_once ();
+      init_character_once ();
       init_charset_once ();
       init_coding_once ();
       init_syntax_once ();	/* Create standard syntax table.  */
@@ -1292,34 +1364,25 @@ main (argc, argv
 	 faces, and the face implementation uses some symbols as
 	 face names.  */
       syms_of_xfaces ();
+      /* XXX syms_of_keyboard uses some symbols in keymap.c.  It would
+         be better to arrange things not to have this dependency.  */
+      syms_of_keymap ();
       /* Call syms_of_keyboard before init_window_once because
 	 keyboard sets up symbols that include some face names that
 	 the X support will want to use.  This can happen when
 	 CANNOT_DUMP is defined.  */
       syms_of_keyboard ();
 
-#ifdef MAC_OS8
-      /* init_window_once calls make_terminal_frame which on Mac OS
-         creates a full-fledge output_mac type frame.  This does not
-         work correctly before syms_of_textprop, syms_of_macfns,
-         syms_of_ccl, syms_of_fontset, syms_of_xterm, syms_of_search,
-         syms_of_frame, mac_term_init, and init_keyboard have already
-         been called.  */
-      syms_of_textprop ();
-      syms_of_macfns ();
-      syms_of_ccl ();
-      syms_of_fontset ();
-      syms_of_macterm ();
-      syms_of_macmenu ();
-      syms_of_macselect ();
+      /* Called before syms_of_fileio, because it sets up Qerror_condition.  */
       syms_of_data ();
-      syms_of_search ();
-      syms_of_frame ();
-
-      init_atimer ();
-      mac_term_init (build_string ("Mac"), NULL, NULL);
-      init_keyboard ();
-#endif
+      syms_of_fileio ();
+      /* Before syms_of_coding to initialize Vgc_cons_threshold.  */
+      syms_of_alloc ();
+      /* Before syms_of_coding because it initializes Qcharsetp.  */
+      syms_of_charset ();
+      /* Before init_window_once, because it sets up the
+	 Vcoding_system_hash_table.  */
+      syms_of_coding ();	/* This should be after syms_of_fileio.  */
 
       init_window_once ();	/* Init the window system.  */
       init_fileio_once ();	/* Must precede any path manipulation.  */
@@ -1342,9 +1405,7 @@ main (argc, argv
 #ifdef CLASH_DETECTION
   init_filelock ();
 #endif
-#ifndef MAC_OS8
   init_atimer ();
-#endif
   running_asynch_code = 0;
 
   /* Handle --unibyte and the EMACS_UNIBYTE envvar,
@@ -1395,12 +1456,15 @@ main (argc, argv
 	      Lisp_Object buffer;
 
 	      buffer = Fcdr (XCAR (tail));
-	      /* Verify that all buffers are empty now, as they
-		 ought to be.  */
-	      if (BUF_Z (XBUFFER (buffer)) > BUF_BEG (XBUFFER (buffer)))
-		abort ();
-	      /* It is safe to do this crudely in an empty buffer.  */
-	      XBUFFER (buffer)->enable_multibyte_characters = Qnil;
+	      /* Make a multibyte buffer unibyte.  */
+	      if (BUF_Z_BYTE (XBUFFER (buffer)) > BUF_Z (XBUFFER (buffer)))
+		{
+		  struct buffer *current = current_buffer;
+
+		  set_buffer_temp (XBUFFER (buffer));
+		  Fset_buffer_multibyte (Qnil);
+		  set_buffer_temp (current);
+		}
 	    }
 	}
     }
@@ -1408,6 +1472,48 @@ main (argc, argv
   no_loadup
     = argmatch (argv, argc, "-nl", "--no-loadup", 6, NULL, &skip_args);
 
+#ifdef HAVE_NS
+  ns_alloc_autorelease_pool();
+  if (!noninteractive)
+    {
+      char *tmp;
+      display_arg = 4;
+      if (argmatch (argv, argc, "-q", "--no-init-file", 6, NULL, &skip_args))
+        {
+          ns_no_defaults = 1;
+          skip_args--;
+        }
+      if (argmatch (argv, argc, "-Q", "--quick", 5, NULL, &skip_args))
+        {
+          ns_no_defaults = 1;
+          skip_args--;
+        }
+#ifdef NS_IMPL_COCOA
+      if (skip_args < argc)
+        {
+          if (!strncmp(argv[skip_args], "-psn", 4))
+            {
+              skip_args += 1;
+              chdir (getenv ("HOME"));
+            }
+          else if (skip_args+1 < argc && !strncmp(argv[skip_args+1], "-psn", 4))
+            {
+              skip_args += 2;
+              chdir (getenv ("HOME"));
+            }
+        }
+#endif
+      /* This used for remote operation.. not fully implemented yet. */
+      if (argmatch (argv, argc, "-_NSMachLaunch", 0, 3, &tmp, &skip_args))
+          display_arg = 4;
+      else if (argmatch (argv, argc, "-MachLaunch", 0, 3, &tmp, &skip_args))
+          display_arg = 4;
+      else if (argmatch (argv, argc, "-macosx", 0, 2, NULL, &skip_args))
+          display_arg = 4;
+      else if (argmatch (argv, argc, "-NSHost", 0, 3, &tmp, &skip_args))
+          display_arg = 4;
+    }
+#endif /* HAVE_NS */
 
 #ifdef HAVE_X_WINDOWS
   /* Stupid kludge to catch command-line display spec.  We can't
@@ -1481,20 +1587,22 @@ main (argc, argv
   init_ntproc ();	/* must precede init_editfns.  */
 #endif
 
-#if defined (MAC_OSX) && defined (HAVE_CARBON)
+#ifdef HAVE_NS
+#ifndef CANNOT_DUMP
   if (initialized)
-    init_mac_osx_environment ();
+#endif
+    ns_init_paths ();
 #endif
 
   /* egetenv is a pretty low-level facility, which may get called in
      many circumstances; it seems flimsy to put off initializing it
      until calling init_callproc.  */
-  set_process_environment ();
+  set_initial_environment ();
   /* AIX crashes are reported in system versions 3.2.3 and 3.2.4
-     if this is not done.  Do it after set_process_environment so that we
-     don't pollute Vprocess_environment.  */
+     if this is not done.  Do it after set_global_environment so that we
+     don't pollute Vglobal_environment.  */
   /* Setting LANG here will defeat the startup locale processing...  */
-#ifdef AIX3_2
+#ifdef AIX
   putenv ("LANG=C");
 #endif
 
@@ -1524,18 +1632,14 @@ main (argc, argv
       /* The basic levels of Lisp must come first.  */
       /* And data must come first of all
 	 for the sake of symbols like error-message.  */
-#ifndef MAC_OS8
-      /* Called before init_window_once for Mac OS Classic.  */
       syms_of_data ();
-#endif
-      syms_of_alloc ();
+      syms_of_chartab ();
       syms_of_lread ();
       syms_of_print ();
       syms_of_eval ();
       syms_of_fns ();
       syms_of_floatfns ();
 
-      syms_of_abbrev ();
       syms_of_buffer ();
       syms_of_bytecode ();
       syms_of_callint ();
@@ -1543,11 +1647,8 @@ main (argc, argv
       syms_of_casetab ();
       syms_of_callproc ();
       syms_of_category ();
-#ifndef MAC_OS8
-      /* Called before init_window_once for Mac OS Classic.  */
       syms_of_ccl ();
-#endif
-      syms_of_charset ();
+      syms_of_character ();
       syms_of_cmds ();
 #ifndef NO_DIR_LIBRARY
       syms_of_dired ();
@@ -1556,42 +1657,33 @@ main (argc, argv
       syms_of_doc ();
       syms_of_editfns ();
       syms_of_emacs ();
-      syms_of_fileio ();
-      syms_of_coding ();	/* This should be after syms_of_fileio.  */
 #ifdef CLASH_DETECTION
       syms_of_filelock ();
 #endif /* CLASH_DETECTION */
       syms_of_indent ();
       syms_of_insdel ();
-      syms_of_keymap ();
+      /* syms_of_keymap (); */
       syms_of_macros ();
       syms_of_marker ();
       syms_of_minibuf ();
       syms_of_process ();
-#ifndef MAC_OS8
-      /* Called before init_window_once for Mac OS Classic.  */
       syms_of_search ();
       syms_of_frame ();
-#endif
       syms_of_syntax ();
+      syms_of_terminal ();
       syms_of_term ();
       syms_of_undo ();
 #ifdef HAVE_SOUND
       syms_of_sound ();
 #endif
-#ifndef MAC_OS8
-      /* Called before init_window_once for Mac OS Classic.  */
       syms_of_textprop ();
-#endif
       syms_of_composite ();
-#ifdef VMS
-      syms_of_vmsproc ();
-#endif /* VMS */
 #ifdef WINDOWSNT
       syms_of_ntproc ();
 #endif /* WINDOWSNT */
       syms_of_window ();
       syms_of_xdisp ();
+      syms_of_font ();
 #ifdef HAVE_WINDOW_SYSTEM
       syms_of_fringe ();
       syms_of_image ();
@@ -1599,6 +1691,7 @@ main (argc, argv
 #ifdef HAVE_X_WINDOWS
       syms_of_xterm ();
       syms_of_xfns ();
+      syms_of_xmenu ();
       syms_of_fontset ();
 #ifdef HAVE_X_SM
       syms_of_xsmfns ();
@@ -1608,12 +1701,7 @@ main (argc, argv
 #endif
 #endif /* HAVE_X_WINDOWS */
 
-#ifndef HAVE_NTGUI
-#ifndef MAC_OS
-      /* Called before init_window_once for Mac OS Classic.  */
-      syms_of_xmenu ();
-#endif
-#endif
+      syms_of_menu ();
 
 #ifdef HAVE_NTGUI
       syms_of_w32term ();
@@ -1623,13 +1711,21 @@ main (argc, argv
       syms_of_fontset ();
 #endif /* HAVE_NTGUI */
 
-#if defined (MAC_OSX) && defined (HAVE_CARBON)
-      syms_of_macterm ();
-      syms_of_macfns ();
-      syms_of_macmenu ();
-      syms_of_macselect ();
+#ifdef MSDOS
+      syms_of_xmenu ();
+#endif	/* MSDOS */
+
+#ifdef HAVE_NS
+      syms_of_nsterm ();
+      syms_of_nsfns ();
+      syms_of_nsmenu ();
+      syms_of_nsselect ();
       syms_of_fontset ();
-#endif /* MAC_OSX && HAVE_CARBON */
+#endif /* HAVE_NS */
+
+#ifdef HAVE_DBUS
+      syms_of_dbusbind ();
+#endif /* HAVE_DBUS */
 
 #ifdef SYMS_SYSTEM
       SYMS_SYSTEM;
@@ -1644,7 +1740,6 @@ main (argc, argv
       keys_of_buffer ();
       keys_of_keyboard ();
       keys_of_keymap ();
-      keys_of_minibuf ();
       keys_of_window ();
     }
   else
@@ -1658,21 +1753,13 @@ main (argc, argv
 #endif  /* HAVE_NTGUI */
     }
 
-  if (!noninteractive)
-    {
-#ifdef VMS
-      init_vms_input ();/* init_display calls get_frame_size, that needs this.  */
-#endif /* VMS */
-      init_display ();	/* Determine terminal type.  init_sys_modes uses results.  */
-    }
-#ifndef MAC_OS8
-  /* Called before init_window_once for Mac OS Classic.  */
+  init_charset ();
+
+  init_editfns (); /* init_process uses Voperating_system_release. */
+  init_process (); /* init_display uses add_keyboard_wait_descriptor. */
   init_keyboard ();	/* This too must precede init_sys_modes.  */
-#endif
-#ifdef VMS
-  init_vmsproc ();	/* And this too.  */
-#endif /* VMS */
-  init_sys_modes ();	/* Init system terminal modes (RAW or CBREAK, etc.).  */
+  if (!noninteractive)
+    init_display ();	/* Determine terminal type.  Calls init_sys_modes.  */
   init_fns ();
   init_xdisp ();
 #ifdef HAVE_WINDOW_SYSTEM
@@ -1680,12 +1767,7 @@ main (argc, argv
   init_image ();
 #endif /* HAVE_WINDOW_SYSTEM */
   init_macros ();
-  init_editfns ();
   init_floatfns ();
-#ifdef VMS
-  init_vmsfns ();
-#endif /* VMS */
-  init_process ();
 #ifdef HAVE_SOUND
   init_sound ();
 #endif
@@ -1791,14 +1873,12 @@ struct standard_args standard_args[] =
 #ifdef HAVE_SHM
   { "-nl", "--no-shared-memory", 140, 0 },
 #endif
-#ifdef VMS
-  { "-map", "--map-data", 130, 0 },
-#endif
   { "-t", "--terminal", 120, 1 },
   { "-nw", "--no-window-system", 110, 0 },
   { "-nw", "--no-windows", 110, 0 },
   { "-batch", "--batch", 100, 0 },
   { "-script", "--script", 100, 1 },
+  { "-daemon", "--daemon", 99, 0 },
   { "-help", "--help", 90, 0 },
   { "-no-unibyte", "--no-unibyte", 83, 0 },
   { "-multibyte", "--multibyte", 82, 0 },
@@ -1842,6 +1922,7 @@ struct standard_args standard_args[] =
   { "-title", 0, 10, 1 },
   { "-name", "--name", 10, 1 },
   { "-xrm", "--xrm", 10, 1 },
+  { "-parent-id", "--parent-id", 10, 1 },
   { "-r", "--reverse-video", 5, 0 },
   { "-rv", 0, 5, 0 },
   { "-reverse", 0, 5, 0 },
@@ -1850,13 +1931,26 @@ struct standard_args standard_args[] =
   { "-color", "--color", 5, 0},
   { "-no-splash", "--no-splash", 3, 0 },
   { "-no-desktop", "--no-desktop", 3, 0 },
+#ifdef HAVE_NS
+  { "-NSAutoLaunch", 0, 5, 1 },
+  { "-NXAutoLaunch", 0, 5, 1 },
+  { "-disable-font-backend", "--disable-font-backend", 65, 0 },
+  { "-_NSMachLaunch", 0, 85, 1 },
+  { "-MachLaunch", 0, 85, 1 },
+  { "-macosx", 0, 85, 0 },
+  { "-NSHost", 0, 85, 1 },
+#endif
   /* These have the same priority as ordinary file name args,
      so they are not reordered with respect to those.  */
   { "-L", "--directory", 0, 1 },
   { "-directory", 0, 0, 1 },
   { "-l", "--load", 0, 1 },
   { "-load", 0, 0, 1 },
-  { "-scriptload", "--scriptload", 0, 1 },
+  /* This has no longname, because using --scriptload confuses sort_args,
+     because then the --script long option seems to match twice; ie
+     you can't have a long option which is a prefix of another long
+     option.  In any case, this is entirely an internal option.  */
+  { "-scriptload", NULL, 0, 1 },
   { "-f", "--funcall", 0, 1 },
   { "-funcall", 0, 0, 1 },
   { "-eval", "--eval", 0, 1 },
@@ -1865,6 +1959,13 @@ struct standard_args standard_args[] =
   { "-visit", "--visit", 0, 1 },
   { "-file", "--file", 0, 1 },
   { "-insert", "--insert", 0, 1 },
+#ifdef HAVE_NS
+  { "-NXOpen", 0, 0, 1 },
+  { "-NXOpenTemp", 0, 0, 1 },
+  { "-NSOpen", 0, 0, 1 },
+  { "-NSOpenTemp", 0, 0, 1 },
+  { "-GSFilePath", 0, 0, 1 },
+#endif
   /* This should be processed after ordinary file name args and the like.  */
   { "-kill", "--kill", -10, 0 },
 };
@@ -1967,6 +2068,9 @@ sort_args (argc, argv)
 		    fatal ("Option `%s' requires an argument\n", argv[from]);
 		  from += options[from];
 		}
+	      /* FIXME When match < 0, shouldn't there be some error,
+		 or at least indication to the user that there was a
+		 problem?  */
 	    }
 	done: ;
 	}
@@ -2048,12 +2152,6 @@ all of which are called before Emacs is actually killed.  */)
 
   UNGCPRO;
 
-/* Is it really necessary to do this deassign
-   when we are going to exit anyway?  */
-/* #ifdef VMS
-  stop_vms_input ();
- #endif  */
-
   shut_down_emacs (0, 0, STRINGP (arg) ? arg : Qnil);
 
   /* If we have an auto-save list file,
@@ -2099,15 +2197,14 @@ shut_down_emacs (sig, no_x, stuff)
     if (EMACS_GET_TTY_PGRP (0, &tpgrp) != -1
 	&& tpgrp == pgrp)
       {
-	fflush (stdout);
-	reset_sys_modes ();
+	reset_all_sys_modes ();
 	if (sig && sig != SIGTERM)
 	  fprintf (stderr, "Fatal error (%d)", sig);
       }
   }
 #else
   fflush (stdout);
-  reset_sys_modes ();
+  reset_all_sys_modes ();
 #endif
 
   stuff_buffered_input (stuff);
@@ -2122,16 +2219,12 @@ shut_down_emacs (sig, no_x, stuff)
   unlock_all_files ();
 #endif
 
-#ifdef VMS
-  kill_vms_processes ();
-#endif
-
 #if 0 /* This triggers a bug in XCloseDisplay and is not needed.  */
 #ifdef HAVE_X_WINDOWS
   /* It's not safe to call intern here.  Maybe we are crashing.  */
-  if (!noninteractive && SYMBOLP (Vwindow_system)
-      && SCHARS (SYMBOL_NAME (Vwindow_system)) == 1
-      && SREF (SYMBOL_NAME (Vwindow_system), 0) == 'x'
+  if (!noninteractive && SYMBOLP (Vinitial_window_system)
+      && SCHARS (SYMBOL_NAME (Vinitial_window_system)) == 1
+      && SREF (SYMBOL_NAME (Vinitial_window_system), 0) == 'x'
       && ! no_x)
     Fx_close_current_connection ();
 #endif /* HAVE_X_WINDOWS */
@@ -2158,6 +2251,10 @@ shut_down_emacs (sig, no_x, stuff)
 
 #ifdef MSDOS
   dos_cleanup ();
+#endif
+
+#ifdef HAVE_NS
+  ns_term_shutdown (sig);
 #endif
 }
 
@@ -2222,10 +2319,10 @@ You must run Emacs in batch mode in order to dump it.  */)
     {
       fprintf (stderr, "**************************************************\n");
       fprintf (stderr, "Warning: Your system has a gap between BSS and the\n");
-      fprintf (stderr, "heap (%lu byte).  This usually means that exec-shield\n",
+      fprintf (stderr, "heap (%lu bytes).  This usually means that exec-shield\n",
                heap_bss_diff);
       fprintf (stderr, "or something similar is in effect.  The dump may\n");
-      fprintf (stderr, "fail because of this.  See the section about \n");
+      fprintf (stderr, "fail because of this.  See the section about\n");
       fprintf (stderr, "exec-shield in etc/PROBLEMS for more information.\n");
       fprintf (stderr, "**************************************************\n");
     }
@@ -2258,9 +2355,6 @@ You must run Emacs in batch mode in order to dump it.  */)
 #endif
 
   fflush (stdout);
-#ifdef VMS
-  mapout_data (SDATA (filename));
-#else
   /* Tell malloc where start of impure now is.  */
   /* Also arrange for warnings when nearly out of space.  */
 #ifndef SYSTEM_MALLOC
@@ -2291,7 +2385,6 @@ You must run Emacs in batch mode in order to dump it.  */)
 #ifdef DOUG_LEA_MALLOC
   free (malloc_state_ptr);
 #endif
-#endif /* not VMS */
 
   Vpurify_flag = tem;
 
@@ -2417,6 +2510,58 @@ decode_env_path (evarname, defalt)
   return Fnreverse (lpath);
 }
 
+DEFUN ("daemonp", Fdaemonp, Sdaemonp, 0, 0, 0,
+       doc: /* Return non-nil if the current emacs process is a daemon.
+If the daemon was given a name argument, return that name. */)
+  ()
+{
+  if (IS_DAEMON)
+    if (daemon_name)
+      return build_string (daemon_name);
+    else
+      return Qt;
+  else
+    return Qnil;
+}
+
+DEFUN ("daemon-initialized", Fdaemon_initialized, Sdaemon_initialized, 0, 0, 0,
+       doc: /* Mark the Emacs daemon as being initialized.
+This finishes the daemonization process by doing the other half of detaching
+from the parent process and its tty file descriptors.  */)
+  ()
+{
+  int nfd;
+
+  if (!IS_DAEMON)
+    error ("This function can only be called if emacs is run as a daemon");
+
+  if (daemon_pipe[1] < 0)
+    error ("The daemon has already been initialized");
+
+  if (NILP (Vafter_init_time))
+    error ("This function can only be called after loading the init files");
+
+  /* Get rid of stdin, stdout and stderr.  */
+  nfd = open ("/dev/null", O_RDWR);
+  dup2 (nfd, 0);
+  dup2 (nfd, 1);
+  dup2 (nfd, 2);
+  close (nfd);
+
+  /* Closing the pipe will notify the parent that it can exit.
+     FIXME: In case some other process inherited the pipe, closing it here
+     won't notify the parent because it's still open elsewhere, so we
+     additionally send a byte, just to make sure the parent really exits.
+     Instead, we should probably close the pipe in start-process and
+     call-process to make sure the pipe is never inherited by
+     subprocesses.  */
+  write (daemon_pipe[1], "\n", 1);
+  close (daemon_pipe[1]);
+  /* Set it to an invalid value so we know we've already run this function.  */
+  daemon_pipe[1] = -1;
+  return Qt;
+}
+
 void
 syms_of_emacs ()
 {
@@ -2435,6 +2580,8 @@ syms_of_emacs ()
 
   defsubr (&Sinvocation_name);
   defsubr (&Sinvocation_directory);
+  defsubr (&Sdaemonp);
+  defsubr (&Sdaemon_initialized);
 
   DEFVAR_LISP ("command-line-args", &Vcommand_line_args,
 	       doc: /* Args passed by shell to Emacs, as a list of strings.
@@ -2443,14 +2590,12 @@ Many arguments are deleted from the list as they are processed.  */);
   DEFVAR_LISP ("system-type", &Vsystem_type,
 	       doc: /* Value is symbol indicating type of operating system you are using.
 Special values:
+  `gnu'         compiled for a GNU Hurd system.
   `gnu/linux'   compiled for a GNU/Linux system.
   `darwin'      compiled for Darwin (GNU-Darwin, Mac OS X, ...).
-  `macos'       compiled for Mac OS 9.
   `ms-dos'      compiled as an MS-DOS application.
   `windows-nt'  compiled as a native W32 application.
   `cygwin'      compiled using the Cygwin library.
-  `vax-vms' or
-  `axp-vms'     compiled for a (Open)VMS system.
 Anything else indicates some sort of Unix system.  */);
   Vsystem_type = intern (SYSTEM_TYPE);
 
@@ -2476,9 +2621,6 @@ see `kill-emacs-query-functions' instead.
 
 The hook is not run in batch mode, i.e., if `noninteractive' is non-nil.  */);
   Vkill_emacs_hook = Qnil;
-
-  empty_string = build_string ("");
-  staticpro (&empty_string);
 
   DEFVAR_INT ("emacs-priority", &emacs_priority,
 	      doc: /* Priority for Emacs to run at.
@@ -2528,6 +2670,18 @@ was found.  */);
   DEFVAR_LISP ("previous-system-time-locale", &Vprevious_system_time_locale,
 	       doc: /* Most recently used system locale for time.  */);
   Vprevious_system_time_locale = Qnil;
+
+  DEFVAR_LISP ("before-init-time", &Vbefore_init_time,
+	       doc: /* Value of `current-time' before Emacs begins initialization.  */);
+  Vbefore_init_time = Qnil;
+
+  DEFVAR_LISP ("after-init-time", &Vafter_init_time,
+	       doc: /* Value of `current-time' after loading the init files.
+This is nil during initialization.  */);
+  Vafter_init_time = Qnil;
+
+  /* Make sure IS_DAEMON starts up as false.  */
+  daemon_pipe[1] = 0;
 }
 
 /* arch-tag: 7bfd356a-c720-4612-8ab6-aa4222931c2e

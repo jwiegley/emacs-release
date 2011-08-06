@@ -1,7 +1,7 @@
 ;;; hl-line.el --- highlight the current line
 
 ;; Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author:  Dave Love <fx@gnu.org>
 ;; Maintainer: FSF
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -40,7 +38,7 @@
 ;; local mode behave like the global mode.
 
 ;; You probably don't really want to use the global mode; if the
-;; cursor is difficult to spot, try changing its colour, relying on
+;; cursor is difficult to spot, try changing its color, relying on
 ;; `blink-cursor-mode' or both.  The hookery used might affect
 ;; response noticeably on a slow machine.  The local mode may be
 ;; useful in non-editing buffers such as Gnus or PCL-CVS though.
@@ -96,7 +94,7 @@
 	   (overlay-put global-hl-line-overlay 'face hl-line-face))))
 
 (defcustom hl-line-sticky-flag t
-  "*Non-nil means highlight the current line in all windows.
+  "Non-nil means highlight the current line in all windows.
 Otherwise Hl-Line mode will highlight only in the selected
 window.  Setting this variable takes effect the next time you use
 the command `hl-line-mode' to turn Hl-Line mode on."
@@ -157,8 +155,8 @@ addition to `hl-line-highlight' on `post-command-hook'."
 
 (defun hl-line-unhighlight ()
   "Deactivate the Hl-Line overlay on the current line."
-  (if hl-line-overlay
-      (delete-overlay hl-line-overlay)))
+  (when hl-line-overlay
+    (delete-overlay hl-line-overlay)))
 
 ;;;###autoload
 (define-minor-mode global-hl-line-mode
@@ -189,8 +187,8 @@ Global-Hl-Line mode uses the functions `global-hl-line-unhighlight' and
 
 (defun global-hl-line-unhighlight ()
   "Deactivate the Global-Hl-Line overlay on the current line."
-  (if global-hl-line-overlay
-      (delete-overlay global-hl-line-overlay)))
+  (when global-hl-line-overlay
+    (delete-overlay global-hl-line-overlay)))
 
 (defun hl-line-move (overlay)
   "Move the Hl-Line overlay.
@@ -209,7 +207,17 @@ the line including the point by OVERLAY."
 	(move-overlay overlay b e)
       (move-overlay overlay 1 1))))
 
+(defun hl-line-unload-function ()
+  "Unload the Hl-Line library."
+  (global-hl-line-mode -1)
+  (save-current-buffer
+    (dolist (buffer (buffer-list))
+      (set-buffer buffer)
+      (when hl-line-mode (hl-line-mode -1))))
+  ;; continue standard unloading
+  nil)
+
 (provide 'hl-line)
 
-;;; arch-tag: ac806940-0876-4959-8c89-947563ee2833
+;; arch-tag: ac806940-0876-4959-8c89-947563ee2833
 ;;; hl-line.el ends here

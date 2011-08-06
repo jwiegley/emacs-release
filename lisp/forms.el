@@ -1,16 +1,16 @@
 ;;; forms.el --- Forms mode: edit a file as a form to fill in
 
 ;; Copyright (C) 1991, 1994, 1995, 1996, 1997, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Johan Vromans <jvromans@squirrel.nl>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,13 +18,11 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
-;; Visit a file using a form.
+;; Visit a file using a form.  See forms-d2.el for examples.
 ;;
 ;; === Naming conventions
 ;;
@@ -321,7 +319,7 @@
 ;;; Optional variables with default values.
 
 (defcustom forms-check-number-of-fields t
-  "*If non-nil, warn about records with wrong number of fields."
+  "If non-nil, warn about records with wrong number of fields."
   :group 'forms
   :type 'boolean)
 
@@ -336,13 +334,13 @@ This is set automatically if the file permissions don't let you write it.")
 If not nil: use this character to separate multi-line fields (default C-k).")
 
 (defcustom forms-forms-scroll nil
-  "*Non-nil means replace scroll-up/down commands in Forms mode.
+  "Non-nil means replace scroll-up/down commands in Forms mode.
 The replacement commands performs forms-next/prev-record."
   :group 'forms
   :type 'boolean)
 
 (defcustom forms-forms-jump nil
-  "*Non-nil means redefine beginning/end-of-buffer in Forms mode.
+  "Non-nil means redefine beginning/end-of-buffer in Forms mode.
 The replacement commands performs forms-first/last-record."
   :group 'forms
   :type 'boolean)
@@ -368,13 +366,13 @@ This variable is for use by the filter routines only.
 The contents may NOT be modified.")
 
 (defcustom forms-use-text-properties t
-  "*Non-nil means: use text properties.
+  "Non-nil means: use text properties.
 Defaults to t if this Emacs is capable of handling text properties."
   :group 'forms
   :type 'boolean)
 
 (defcustom forms-insert-after nil
-  "*Non-nil means: inserts of new records go after current record.
+  "Non-nil means: inserts of new records go after current record.
 Also, initial position is at last record."
   :group 'forms
   :type 'boolean)
@@ -2055,5 +2053,5 @@ Usage: (setq forms-number-of-fields
 	  (goto-char (point-max))
 	  (insert ret)))))
 
-;;; arch-tag: 4a6695c7-d47a-4a21-809b-5cec7f8ec7a1
+;; arch-tag: 4a6695c7-d47a-4a21-809b-5cec7f8ec7a1
 ;;; forms.el ends here

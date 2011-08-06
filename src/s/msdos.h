@@ -1,14 +1,14 @@
 /* System description file for MS-DOS
 
-   Copyright (C) 1993, 1996, 1997, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+   Copyright (C) 1993, 1996, 1997, 2001, 2002, 2003, 2004, 2005, 2006,
+                 2007, 2008, 2009 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* Note: lots of stuff here was taken from s-msdos.h in demacs. */
 
@@ -28,16 +26,6 @@ Boston, MA 02110-1301, USA.  */
  *	Define all the symbols that apply correctly.
  */
 
-/* #define UNIPLUS */
-/* #define USG5 */
-/* #define USG */
-/* #define HPUX */
-/* #define UMAX */
-/* #define BSD4_1 */
-/* #define BSD4_2 */
-/* #define BSD4_3 */
-/* #define BSD_SYSTEM */
-/* #define VMS */
 #ifndef MSDOS
 #define MSDOS
 #endif
@@ -52,7 +40,6 @@ You lose; /* Emacs for DOS must be compiled with DJGPP */
 
 #define DOS_NT	/* MSDOS or WINDOWSNT */
 #undef BSD_SYSTEM
-#undef VMS
 
 /* SYSTEM_TYPE should indicate the kind of system you are using.
  It sets the Lisp variable system-type.  */
@@ -67,44 +54,6 @@ You lose; /* Emacs for DOS must be compiled with DJGPP */
 
 #define NOMULTIPLEJOBS
 
-/* Emacs can read input using SIGIO and buffering characters itself,
-   or using CBREAK mode and making C-g cause SIGINT.
-   The choice is controlled by the variable interrupt_input.
-   Define INTERRUPT_INPUT to make interrupt_input = 1 the default (use SIGIO)
-
-   SIGIO can be used only on systems that implement it (4.2 and 4.3).
-   CBREAK mode has two disadvantages
-     1) At least in 4.2, it is impossible to handle the Meta key properly.
-        I hear that in system V this problem does not exist.
-     2) Control-G causes output to be discarded.
-        I do not know whether this can be fixed in system V.
-
-   Another method of doing input is planned but not implemented.
-   It would have Emacs fork off a separate process
-   to read the input and send it to the true Emacs process
-   through a pipe.
-*/
-
-/* #define INTERRUPT_INPUT */
-
-/* Letter to use in finding device name of first pty,
-  if system supports pty's.  'a' means it is /dev/ptya0  */
-
-/* #define FIRST_PTY_LETTER 'a' */
-
-/*
- *	Define HAVE_PTYS if the system supports pty devices.
- */
-
-/* #define HAVE_PTYS */
-
-/*
- *	Define NONSYSTEM_DIR_LIBRARY to make Emacs emulate
- *      The 4.2 opendir, etc., library functions.
- */
-
-/* #define NONSYSTEM_DIR_LIBRARY */
-
 #define SYSV_SYSTEM_DIR
 
 /* Define this symbol if your system has the functions bcopy, etc. */
@@ -118,8 +67,7 @@ You lose; /* Emacs for DOS must be compiled with DJGPP */
 /* subprocesses should be defined if you want to
    have code for asynchronous subprocesses
    (as used in M-x compile and M-x shell).
-   This is generally OS dependent, and not supported
-   under most USG systems. */
+   This is the only system that needs this.  */
 
 #undef subprocesses
 
@@ -127,19 +75,6 @@ You lose; /* Emacs for DOS must be compiled with DJGPP */
    preprocessor symbol "COFF". */
 
 #define COFF
-
-/* define MAIL_USE_FLOCK if the mailer uses flock
-   to interlock access to /usr/spool/mail/$USER.
-   The alternative is that a lock file named
-   /usr/spool/mail/$USER.lock.  */
-
-/* #define MAIL_USE_FLOCK */
-
-/* Define CLASH_DETECTION if you want lock files to be written
-   so that Emacs can tell instantly when you try to modify
-   a file that someone else has modified in his Emacs.  */
-
-/* #define CLASH_DETECTION */
 
 /* Here, on a separate page, add any special hacks needed
    to make Emacs work on this system.  For example,
@@ -152,6 +87,10 @@ You lose; /* Emacs for DOS must be compiled with DJGPP */
    in how to declare valloc.  */
 #define GMALLOC_INHIBIT_VALLOC
 
+/* This overrides the default value on editfns.c, since DJGPP
+   does not have pw->pw_gecos.  */
+#define USER_FULL_NAME (getenv ("NAME"))
+
 /* setjmp and longjmp can safely replace _setjmp and _longjmp,
    but they will run slower.  */
 
@@ -159,8 +98,6 @@ You lose; /* Emacs for DOS must be compiled with DJGPP */
 #define _longjmp longjmp
 
 #if __DJGPP__ < 2
-
-#define NO_MODE_T
 
 /* New chdir () routine.
    DJGPP v2.0 and later doesn't need it because its chdir() does
@@ -178,7 +115,6 @@ You lose; /* Emacs for DOS must be compiled with DJGPP */
 
 #define DATA_START  (&etext + 1)
 #define TEXT_START  &start
-#define TEXT_END    &etext
 
 #define _NAIVE_DOS_REGS
 
@@ -193,7 +129,6 @@ You lose; /* Emacs for DOS must be compiled with DJGPP */
 
 /* command.com does not understand `...` so we define this.  */
 #define LIB_GCC -Lgcc
-#define DONT_NEED_ENVIRON
 #define SEPCHAR ';'
 
 #define NULL_DEVICE "nul"
@@ -215,7 +150,7 @@ You lose; /* Emacs for DOS must be compiled with DJGPP */
 #define FLOAT_CHECK_DOMAIN
 
 /* When $TERM is "internal" then this is substituted:  */
-#define INTERNAL_TERMINAL "pc|bios|IBM PC with colour display:\
+#define INTERNAL_TERMINAL "pc|bios|IBM PC with color display:\
 :co#80:li#25:Co#16:pa#256:km:ms:cm=<CM>:cl=<CL>:ce=<CE>:\
 :se=</SO>:so=<SO>:us=<UL>:ue=</UL>:md=<BD>:mh=<DIM>:mb=<BL>:mr=<RV>:me=<NV>:\
 :AB=<BG %d>:AF=<FG %d>:op=<DefC>:"
@@ -256,18 +191,16 @@ You lose; /* Emacs for DOS must be compiled with DJGPP */
 /* We canuse mouse menus.  */
 #define HAVE_MENUS
 
-/* We have support for faces.  */
-#define HAVE_FACES
-
 /* Define one of these for easier conditionals.  */
 #ifdef HAVE_X_WINDOWS
-/* We need a little extra space, see ../../lisp/loadup.el */
+/* We need a little extra space, see ../../lisp/loadup.el.  */
 #define SYSTEM_PURESIZE_EXTRA 15000
-#define HAVE_X11R5
 #define LIBX11_SYSTEM -lxext -lsys
 #else
-/* We need a little extra space, see ../../lisp/loadup.el */
-#define SYSTEM_PURESIZE_EXTRA 50000
+/* We may need a little extra space, see ../../lisp/loadup.el.  As of
+   20081010, 1193600 bytes are used at dump time, which is even less
+   than BASE_PURESIZE.  So the extra below is just paranoia.  */
+#define SYSTEM_PURESIZE_EXTRA 10000
 #endif
 
 /* Tell the garbage collector that setjmp is known to save all

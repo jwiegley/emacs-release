@@ -1,13 +1,13 @@
 /* Definitions and headers for communication with X protocol.
    Copyright (C) 1989, 1993, 1994, 1998, 1999, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
@@ -59,43 +57,6 @@ typedef GtkWidget *xt_or_gtk_widget;
 
 /* Bookkeeping to distinguish X versions.  */
 
-/* HAVE_X11R4 is defined if we have the features of X11R4.  It should
-   be defined when we're using X11R5, since X11R5 has the features of
-   X11R4.  If, in the future, we find we need more of these flags
-   (HAVE_X11R5, for example), code should always be written to test
-   the most recent flag first:
-
-      #ifdef HAVE_X11R5
-        ...
-      #elif HAVE_X11R4
-        ...
-      #elif HAVE_X11
-        ...
-      #endif
-
-   If you ever find yourself writing a "#ifdef HAVE_FOO" clause that
-   looks a lot like another one, consider moving the text into a macro
-   whose definition is configuration-dependent, but whose usage is
-   universal - like the stuff in systime.h.
-
-   It turns out that we can auto-detect whether we're being compiled
-   with X11R3 or X11R4 by looking for the flag macros for R4 structure
-   members that R3 doesn't have.  */
-#ifdef PBaseSize
-/* AIX 3.1's X is somewhere between X11R3 and X11R4.  It has
-   PBaseSize, but not XWithdrawWindow, XSetWMName, XSetWMNormalHints,
-   XSetWMIconName.
-   AIX 3.2 is at least X11R4.  */
-#if (!defined AIX) || (defined AIX3_2)
-#define HAVE_X11R4
-#endif
-#endif
-
-#ifdef HAVE_X11R5
-/* In case someone has X11R5 on AIX 3.1,
-   make sure HAVE_X11R4 is defined as well as HAVE_X11R5.  */
-#define HAVE_X11R4
-#endif
 
 #ifdef HAVE_X_I18N
 #include <X11/Xlocale.h>
@@ -106,7 +67,7 @@ typedef GtkWidget *xt_or_gtk_widget;
 #define WHITE_PIX_DEFAULT(f) WhitePixel (FRAME_X_DISPLAY (f), \
 					 XScreenNumberOfScreen (FRAME_X_SCREEN (f)))
 
-#define FONT_WIDTH(f)	((f)->max_bounds.width)
+#define FONT_WIDTH(f)	((f)->max_width)
 #define FONT_HEIGHT(f)	((f)->ascent + (f)->descent)
 #define FONT_BASE(f)    ((f)->ascent)
 #define FONT_DESCENT(f) ((f)->descent)
@@ -126,6 +87,15 @@ typedef GtkWidget *xt_or_gtk_widget;
    | LeaveWindowMask		\
    | EnterWindowMask		\
    | VisibilityChangeMask)
+
+#ifdef HAVE_X11R6_XIM
+/* Data structure passed to xim_instantiate_callback.  */
+struct xim_inst_t
+{
+  struct x_display_info *dpyinfo;
+  char *resource_name;
+};
+#endif /* HAVE_X11R6_XIM */
 
 /* Structure recording X pixmap and reference count.
    If REFCOUNT is 0 then this record is free to be reused.  */
@@ -148,6 +118,9 @@ struct x_display_info
 {
   /* Chain of all x_display_info structures.  */
   struct x_display_info *next;
+
+  /* The generic display parameters corresponding to this X display. */
+  struct terminal *terminal;
 
   /* Connection number (normally a file descriptor number).  */
   int connection;
@@ -177,9 +150,6 @@ struct x_display_info
   /* Number of planes on this screen.  */
   int n_planes;
 
-  /* Dimensions of this screen.  */
-  int height, width;
-
   /* Mask of things that cause the mouse to be grabbed.  */
   int grabbed;
 
@@ -203,12 +173,6 @@ struct x_display_info
 
   /* X Resource data base */
   XrmDatabase xrdb;
-
-  /* A table of all the fonts we have already loaded.  */
-  struct font_info *font_table;
-
-  /* The current capacity of x_font_table.  */
-  int font_table_size;
 
   /* Minimum width over all characters in all fonts in font_table.  */
   int smallest_char_width;
@@ -252,9 +216,7 @@ struct x_display_info
 
   char *x_id_name;
 
-  /* The number of fonts actually stored in x_font_table.
-     font_table[n] is used and valid if 0 <= n < n_fonts.  0 <=
-     n_fonts <= font_table_size and font_table[i].name != 0.  */
+  /* The number of fonts opened for this display.  */
   int n_fonts;
 
   /* Pointer to bitmap records.  */
@@ -327,9 +289,9 @@ struct x_display_info
   /* Atom used in toolkit scroll bar client messages.  */
   Atom Xatom_Scrollbar;
 
-#ifdef MULTI_KBOARD
-  struct kboard *kboard;
-#endif
+  /* Atom used in XEmbed client messages.  */
+  Atom Xatom_XEMBED;
+ 
   int cut_buffers_initialized; /* Whether we're sure they all exist */
 
   /* The frame (if any) which has the X window that has keyboard focus.
@@ -352,20 +314,14 @@ struct x_display_info
      minibuffer.  */
   struct frame *x_highlight_frame;
 
-  /* The null pixel used for filling a character background with
-     background color of a gc.  */
-  Pixmap null_pixel;
-
   /* The gray pixmap.  */
   Pixmap gray;
-
-  /* Cache of images.  */
-  struct image_cache *image_cache;
 
 #ifdef HAVE_X_I18N
   /* XIM (X Input method).  */
   XIM xim;
   XIMStyles *xim_styles;
+  struct xim_inst_t *xim_callback_data;
 #endif
 
   /* If non-null, a cache of the colors in the color map.  Don't
@@ -400,6 +356,10 @@ struct x_display_info
   Atom *net_supported_atoms;
   int nr_net_supported_atoms;
   Window net_supported_window;
+
+  /* Atoms dealing with maximization and fullscreen */
+  Atom Xatom_net_wm_state, Xatom_net_wm_state_fullscreen_atom,
+    Xatom_net_wm_state_maximized_horz, Xatom_net_wm_state_maximized_vert;
 };
 
 #ifdef HAVE_X_I18N
@@ -432,17 +392,16 @@ extern Lisp_Object Vx_pixel_size_width_font_regexp;
 
 extern struct x_display_info *x_display_info_for_display P_ ((Display *));
 extern struct x_display_info *x_display_info_for_name P_ ((Lisp_Object));
+extern void x_set_frame_alpha P_ ((struct frame *));
 
 extern struct x_display_info *x_term_init P_ ((Lisp_Object, char *, char *));
 extern int x_display_ok  P_ ((const char *));
 
-extern Lisp_Object x_list_fonts P_ ((struct frame *, Lisp_Object, int, int));
 extern void select_visual P_ ((struct x_display_info *));
-extern struct font_info *x_get_font_info P_ ((struct frame *f, int));
-extern struct font_info *x_load_font P_ ((struct frame *, char *, int));
-extern struct font_info *x_query_font P_ ((struct frame *, char *));
-extern void x_find_ccl_program P_ ((struct font_info *));
+
 
+struct font;
+
 /* Each X frame object points to its own struct x_output object
    in the output_data.x field.  The x_output structure contains
    the information that is specific to X windows.  */
@@ -521,7 +480,7 @@ struct x_output
   int icon_bitmap;
 
   /* Default ASCII font of this frame.  */
-  XFontStruct *font;
+  struct font *font;
 
   /* The baseline offset of the default ASCII font.  */
   int baseline_offset;
@@ -532,8 +491,10 @@ struct x_output
 
   /* Pixel values used for various purposes.
      border_pixel may be -1 meaning use a gray tile.  */
+#if 0 /* These are also defined in struct frame.  Use that instead.  */
   unsigned long background_pixel;
   unsigned long foreground_pixel;
+#endif
   unsigned long cursor_pixel;
   unsigned long border_pixel;
   unsigned long mouse_pixel;
@@ -753,11 +714,6 @@ enum
 
 #define FRAME_SMALLEST_FONT_HEIGHT(F) \
      FRAME_X_DISPLAY_INFO(F)->smallest_font_height
-
-/* Return a pointer to the image cache of frame F.  */
-
-#define FRAME_X_IMAGE_CACHE(F) FRAME_X_DISPLAY_INFO ((F))->image_cache
-
 
 /* X-specific scroll bar stuff.  */
 
@@ -781,13 +737,14 @@ struct scroll_bar
   /* The next and previous in the chain of scroll bars in this frame.  */
   Lisp_Object next, prev;
 
-  /* The X window representing this scroll bar.  Since this is a full
-     32-bit quantity, we store it split into two 32-bit values.  */
-  Lisp_Object x_window_low, x_window_high;
+  /* Fields from `x_window' down will not be traced by the GC.  */
+
+  /* The X window representing this scroll bar.  */
+  Window x_window;
 
   /* The position and size of the scroll bar in pixels, relative to the
      frame.  */
-  Lisp_Object top, left, width, height;
+  int top, left, width, height;
 
   /* The starting and ending positions of the handle, relative to the
      handle area (i.e. zero is the top position, not
@@ -800,13 +757,17 @@ struct scroll_bar
      drawing handle bottoms VERTICAL_SCROLL_BAR_MIN_HANDLE pixels below
      where they would be normally; the bottom and top are in a
      different co-ordinate system.  */
-  Lisp_Object start, end;
+  int start, end;
 
   /* If the scroll bar handle is currently being dragged by the user,
      this is the number of pixels from the top of the handle to the
      place where the user grabbed it.  If the handle isn't currently
      being dragged, this is Qnil.  */
   Lisp_Object dragging;
+
+  /* 1 if the background of the fringe that is adjacent to a scroll
+     bar is extended to the gap between the fringe and the bar.  */
+  unsigned int fringe_extended_p : 1;
 };
 
 /* The number of elements a vector holding a struct scroll_bar needs.  */
@@ -819,36 +780,19 @@ struct scroll_bar
 #define XSCROLL_BAR(vec) ((struct scroll_bar *) XVECTOR (vec))
 
 
-/* Building a 32-bit C integer from two 16-bit lisp integers.  */
-#define SCROLL_BAR_PACK(low, high) (XINT (high) << 16 | XINT (low))
-
-/* Setting two lisp integers to the low and high words of a 32-bit C int.  */
-#define SCROLL_BAR_UNPACK(low, high, int32) \
-  (XSETINT ((low),   (int32)        & 0xffff), \
-   XSETINT ((high), ((int32) >> 16) & 0xffff))
-
-
-/* Extract the X window id of the scroll bar from a struct scroll_bar.  */
-#define SCROLL_BAR_X_WINDOW(ptr) \
-  ((Window) SCROLL_BAR_PACK ((ptr)->x_window_low, (ptr)->x_window_high))
-
-/* Store a window id in a struct scroll_bar.  */
-#define SET_SCROLL_BAR_X_WINDOW(ptr, id) \
-  (SCROLL_BAR_UNPACK ((ptr)->x_window_low, (ptr)->x_window_high, (int) id))
-
 /* Extract the X widget of the scroll bar from a struct scroll_bar.
    XtWindowToWidget should be fast enough since Xt uses a hash table
    to map windows to widgets.  */
 
 #define SCROLL_BAR_X_WIDGET(dpy, ptr) \
-  XtWindowToWidget (dpy, SCROLL_BAR_X_WINDOW (ptr))
+  XtWindowToWidget (dpy, ptr->x_window)
 
 /* Store a widget id in a struct scroll_bar.  */
 
 #define SET_SCROLL_BAR_X_WIDGET(ptr, w)		\
   do {						\
     Window window = XtWindow (w);		\
-    SET_SCROLL_BAR_X_WINDOW (ptr, window);	\
+    ptr->x_window = window;			\
 } while (0)
 
 
@@ -984,10 +928,10 @@ extern int x_had_errors_p P_ ((Display *));
 extern int x_catching_errors P_ ((void));
 extern void x_uncatch_errors P_ ((void));
 extern void x_clear_errors P_ ((Display *));
-extern void x_fully_uncatch_errors P_ ((void));
 extern void x_set_window_size P_ ((struct frame *, int, int, int));
 extern void x_set_mouse_position P_ ((struct frame *, int, int));
 extern void x_set_mouse_pixel_position P_ ((struct frame *, int, int));
+extern void x_ewmh_activate_frame P_ ((struct frame *));
 extern void x_raise_frame P_ ((struct frame *));
 extern void x_lower_frame P_ ((struct frame *));
 extern void x_make_frame_visible P_ ((struct frame *));
@@ -999,6 +943,7 @@ extern void x_wm_set_size_hint P_ ((struct frame *, long, int));
 extern void x_wm_set_window_state P_ ((struct frame *, int));
 extern void x_wm_set_icon_pixmap P_ ((struct frame *, int));
 extern void x_delete_display P_ ((struct x_display_info *));
+extern void x_delete_terminal P_ ((struct terminal *terminal));
 extern void x_initialize P_ ((void));
 extern unsigned long x_copy_color P_ ((struct frame *, unsigned long));
 #ifdef USE_X_TOOLKIT
@@ -1016,6 +961,8 @@ extern void set_vertical_scroll_bar P_ ((struct window *));
 extern int x_dispatch_event P_ ((XEvent *, Display *));
 extern unsigned int x_x_to_emacs_modifiers P_ ((struct x_display_info *,
 						unsigned));
+extern int x_display_pixel_height P_ ((struct x_display_info *));
+extern int x_display_pixel_width P_ ((struct x_display_info *));
 
 /* Defined in xselect.c */
 
@@ -1042,7 +989,6 @@ extern Lisp_Object x_property_data_to_lisp P_ ((struct frame *,
 /* Defined in xfns.c */
 
 extern struct x_display_info * check_x_display_info P_ ((Lisp_Object frame));
-extern int have_menus_p P_ ((void));
 
 #ifdef USE_GTK
 extern int xg_set_icon P_ ((struct frame *, Lisp_Object));
@@ -1099,7 +1045,68 @@ extern void widget_store_internal_border P_ ((Widget));
 extern void x_session_initialize P_ ((struct x_display_info *dpyinfo));
 extern int x_session_check_input P_ ((struct input_event *bufp));
 extern int x_session_have_connection P_ ((void));
+extern void x_session_close P_ ((void));
 #endif
+
+/* XEmbed implementation.  */
+
+#define XEMBED_VERSION 0
+
+enum xembed_info
+  {
+    XEMBED_MAPPED = 1 << 0
+  };
+
+enum xembed_message
+  {
+    XEMBED_EMBEDDED_NOTIFY        = 0,
+    XEMBED_WINDOW_ACTIVATE        = 1,
+    XEMBED_WINDOW_DEACTIVATE      = 2,
+    XEMBED_REQUEST_FOCUS          = 3,
+    XEMBED_FOCUS_IN               = 4,
+    XEMBED_FOCUS_OUT              = 5,
+    XEMBED_FOCUS_NEXT             = 6,
+    XEMBED_FOCUS_PREV             = 7,
+
+    XEMBED_MODALITY_ON            = 10,
+    XEMBED_MODALITY_OFF           = 11,
+    XEMBED_REGISTER_ACCELERATOR   = 12,
+    XEMBED_UNREGISTER_ACCELERATOR = 13,
+    XEMBED_ACTIVATE_ACCELERATOR   = 14
+  };
+
+enum xembed_focus
+  {
+    XEMBED_FOCUS_CURRENT = 0,
+    XEMBED_FOCUS_FIRST   = 1,
+    XEMBED_FOCUS_LAST    = 2
+  };
+
+enum xembed_modifier
+  {
+    XEMBED_MODIFIER_SHIFT   = 1 << 0,
+    XEMBED_MODIFIER_CONTROL = 1 << 1,
+    XEMBED_MODIFIER_ALT     = 1 << 2,
+    XEMBED_MODIFIER_SUPER   = 1 << 3,
+    XEMBED_MODIFIER_HYPER   = 1 << 4
+  };
+
+enum xembed_accelerator
+  {
+    XEMBED_ACCELERATOR_OVERLOADED = 1 << 0
+  };
+
+/* Defined in xterm.c */
+
+extern void xembed_set_info P_ ((struct frame *f, enum xembed_info flags));
+extern void xembed_send_message P_ ((struct frame *f, Time time,
+				     enum xembed_message message,
+				     long detail, long data1, long data2));
+
+/* Is the frame embedded into another application? */
+
+#define FRAME_X_EMBEDDED_P(f) (FRAME_X_OUTPUT(f)->explicit_parent != 0)
+
 
 #define FONT_TYPE_FOR_UNIBYTE(font, ch) 0
 #define FONT_TYPE_FOR_MULTIBYTE(font, ch) 0

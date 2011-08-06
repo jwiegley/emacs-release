@@ -1,14 +1,14 @@
 /* Indentation functions.
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 1994, 1995, 1998, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,15 +16,16 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <config.h>
+#include <stdio.h>
+
 #include "lisp.h"
 #include "buffer.h"
-#include "charset.h"
+#include "character.h"
 #include "category.h"
+#include "composite.h"
 #include "indent.h"
 #include "keyboard.h"
 #include "frame.h"
@@ -33,12 +34,13 @@ Boston, MA 02110-1301, USA.  */
 #include "termopts.h"
 #include "disptab.h"
 #include "intervals.h"
+#include "dispextern.h"
 #include "region-cache.h"
 
 /* Indentation can insert tabs if this is non-zero;
    otherwise always uses spaces.  */
 
-int indent_tabs_mode;
+static int indent_tabs_mode;
 
 #define CR 015
 
@@ -48,15 +50,15 @@ int indent_tabs_mode;
    Some things in set last_known_column_point to -1
    to mark the memorized value as invalid.  */
 
-double last_known_column;
+static double last_known_column;
 
 /* Value of point when current_column was called.  */
 
-int last_known_column_point;
+EMACS_INT last_known_column_point;
 
 /* Value of MODIFF when current_column was called.  */
 
-int last_known_column_modified;
+static int last_known_column_modified;
 
 static double current_column_1 P_ ((void));
 static double position_indentation P_ ((int));
@@ -64,7 +66,7 @@ static double position_indentation P_ ((int));
 /* Cache of beginning of line found by the last call of
    current_column. */
 
-int current_column_bol_cache;
+static EMACS_INT current_column_bol_cache;
 
 /* Get the display table to use for the current buffer.  */
 
@@ -213,16 +215,17 @@ width_run_cache_on_off ()
    characters immediately following, then *NEXT_BOUNDARY_P
    will equal the return value.  */
 
-int
+EMACS_INT
 skip_invisible (pos, next_boundary_p, to, window)
-     int pos;
-     int *next_boundary_p;
-     int to;
+     EMACS_INT pos;
+     EMACS_INT *next_boundary_p;
+     EMACS_INT to;
      Lisp_Object window;
 {
   Lisp_Object prop, position, overlay_limit, proplimit;
   Lisp_Object buffer, tmp;
-  int end, inv_p;
+  EMACS_INT end;
+  int inv_p;
 
   XSETFASTINT (position, pos);
   XSETBUFFER (buffer, current_buffer);
@@ -279,32 +282,6 @@ skip_invisible (pos, next_boundary_p, to, window)
   return pos;
 }
 
-/* If a composition starts at POS/POS_BYTE and it doesn't stride over
-   POINT, set *LEN / *LEN_BYTE to the character and byte lengths, *WIDTH
-   to the width, and return 1.  Otherwise, return 0.  */
-
-static int
-check_composition (pos, pos_byte, point, len, len_byte, width)
-     int pos, pos_byte, point;
-     int *len, *len_byte, *width;
-{
-  Lisp_Object prop;
-  int start, end;
-  int id;
-
-  if (! find_composition (pos, -1, &start, &end, &prop, Qnil)
-      || pos != start || point < end
-      || !COMPOSITION_VALID_P (start, end, prop))
-    return 0;
-  if ((id = get_composition_id (pos, pos_byte, end - pos, prop, Qnil)) < 0)
-    return 0;
-
-  *len = COMPOSITION_LENGTH (prop);
-  *len_byte = CHAR_TO_BYTE (end) - pos_byte;
-  *width = composition_table[id]->width;
-  return 1;
-}
-
 /* Set variables WIDTH and BYTES for a multibyte sequence starting at P.
 
    DP is a display table or NULL.
@@ -325,7 +302,7 @@ check_composition (pos, pos_byte, point, len, len_byte, width)
 	if (dp != 0 && VECTORP (DISP_CHAR_VECTOR (dp, c)))		\
 	  width = XVECTOR (DISP_CHAR_VECTOR (dp, c))->size;		\
 	else								\
-	  width = WIDTH_BY_CHAR_HEAD (*p);				\
+	  width = CHAR_WIDTH (c);					\
 	if (width > 1)							\
 	  wide_column = width;						\
       }									\
@@ -444,9 +421,9 @@ current_column ()
 		 next_element_from_display_vector does it.  */
 	      Lisp_Object entry = AREF (charvec, i);
 
-	      if (INTEGERP (entry)
-		  && GLYPH_CHAR_VALID_P (XFASTINT (entry)))
-		c = FAST_GLYPH_CHAR (XFASTINT (entry));
+	      if (GLYPH_CODE_P (entry)
+		  && GLYPH_CODE_CHAR_VALID_P (entry))
+		c = GLYPH_CODE_CHAR (entry);
 	      else
 		c = ' ';
 	    }
@@ -501,67 +478,153 @@ current_column ()
   return col;
 }
 
-/* Return the column number of position POS
-   by scanning forward from the beginning of the line.
-   This function handles characters that are invisible
-   due to text properties or overlays.  */
+extern Lisp_Object Qspace, QCwidth, QCalign_to;
 
-static double
-current_column_1 ()
+/* Check the presence of a display property and compute its width.
+   If a property was found and its width was found as well, return
+   its width (>= 0) and set the position of the end of the property
+   in ENDPOS.
+   Otherwise just return -1.  */
+static int
+check_display_width (EMACS_INT pos, EMACS_INT col, EMACS_INT *endpos)
 {
-  register int tab_width = XINT (current_buffer->tab_width);
+  Lisp_Object val, overlay;
+
+  if (CONSP (val = get_char_property_and_overlay
+	     (make_number (pos), Qdisplay, Qnil, &overlay))
+      && EQ (Qspace, XCAR (val)))
+    { /* FIXME: Use calc_pixel_width_or_height, as in term.c.  */
+      Lisp_Object plist = XCDR (val), prop;
+      int width = -1;
+
+      if ((prop = Fplist_get (plist, QCwidth), NATNUMP (prop)))
+	width = XINT (prop);
+      else if (FLOATP (prop))
+	width = (int)(XFLOAT_DATA (prop) + 0.5);
+      else if ((prop = Fplist_get (plist, QCalign_to), NATNUMP (prop)))
+	width = XINT (prop) - col;
+      else if (FLOATP (prop))
+	width = (int)(XFLOAT_DATA (prop) + 0.5) - col;
+	    
+      if (width >= 0)
+	{
+	  EMACS_INT start;
+	  if (OVERLAYP (overlay))
+	    *endpos = OVERLAY_POSITION (OVERLAY_END (overlay));
+	  else
+	    get_property_and_range (pos, Qdisplay, &val, &start, endpos, Qnil);
+	  return width;
+	}
+    }
+  return -1;
+}
+
+/* Scanning from the beginning of the current line, stop at the buffer
+   position ENDPOS or at the column GOALCOL or at the end of line, whichever
+   comes first.
+   Return the resulting buffer position and column in ENDPOS and GOALCOL.
+   PREVCOL gets set to the column of the previous position (it's always
+   strictly smaller than the goal column).  */
+static void
+scan_for_column (EMACS_INT *endpos, EMACS_INT *goalcol, EMACS_INT *prevcol)
+{
+  register EMACS_INT tab_width = XINT (current_buffer->tab_width);
   register int ctl_arrow = !NILP (current_buffer->ctl_arrow);
   register struct Lisp_Char_Table *dp = buffer_display_table ();
   int multibyte = !NILP (current_buffer->enable_multibyte_characters);
+  struct composition_it cmp_it;
+  Lisp_Object window;
+  struct window *w;
 
   /* Start the scan at the beginning of this line with column number 0.  */
-  register int col = 0;
-  int scan, scan_byte;
-  int next_boundary;
-  int opoint = PT, opoint_byte = PT_BYTE;
-
+  register EMACS_INT col = 0, prev_col = 0;
+  EMACS_INT goal = goalcol ? *goalcol : MOST_POSITIVE_FIXNUM;
+  EMACS_INT end = endpos ? *endpos : PT;
+  EMACS_INT scan, scan_byte;
+  EMACS_INT next_boundary;
+  {
+  EMACS_INT opoint = PT, opoint_byte = PT_BYTE;
   scan_newline (PT, PT_BYTE, BEGV, BEGV_BYTE, -1, 1);
   current_column_bol_cache = PT;
   scan = PT, scan_byte = PT_BYTE;
   SET_PT_BOTH (opoint, opoint_byte);
   next_boundary = scan;
+  }
+
+  window = Fget_buffer_window (Fcurrent_buffer (), Qnil);
+  w = ! NILP (window) ? XWINDOW (window) : NULL;
 
   if (tab_width <= 0 || tab_width > 1000) tab_width = 8;
+  bzero (&cmp_it, sizeof cmp_it);
+  cmp_it.id = -1;
+  composition_compute_stop_pos (&cmp_it, scan, scan_byte, end, Qnil);
 
   /* Scan forward to the target position.  */
-  while (scan < opoint)
+  while (scan < end)
     {
       int c;
 
       /* Occasionally we may need to skip invisible text.  */
       while (scan == next_boundary)
 	{
-	  int old_scan = scan;
+	  EMACS_INT old_scan = scan;
 	  /* This updates NEXT_BOUNDARY to the next place
 	     where we might need to skip more invisible text.  */
-	  scan = skip_invisible (scan, &next_boundary, opoint, Qnil);
-	  if (scan >= opoint)
-	    goto endloop;
+	  scan = skip_invisible (scan, &next_boundary, end, Qnil);
 	  if (scan != old_scan)
 	    scan_byte = CHAR_TO_BYTE (scan);
+	  if (scan >= end)
+	    goto endloop;
 	}
 
-      /* Check composition sequence.  */
-      {
-	int len, len_byte, width;
+      /* Test reaching the goal column.  We do this after skipping
+	 invisible characters, so that we put point before the
+	 character on which the cursor will appear.  */
+      if (col >= goal)
+	break;
+      prev_col = col;
 
-	if (check_composition (scan, scan_byte, opoint,
-			       &len, &len_byte, &width))
+      { /* Check display property.  */
+	EMACS_INT end;
+	int width = check_display_width (scan, col, &end);
+	if (width >= 0)
 	  {
-	    scan += len;
-	    scan_byte += len_byte;
-	    if (scan <= opoint)
-	      col += width;
-	    continue;
+	    col += width;
+	    if (end > scan) /* Avoid infinite loops with 0-width overlays.  */
+	      {
+		scan = end; scan_byte = charpos_to_bytepos (scan);
+		continue;
+	      }
 	  }
       }
 
+      /* Check composition sequence.  */
+      if (cmp_it.id >= 0
+	  || (scan == cmp_it.stop_pos
+	      && composition_reseat_it (&cmp_it, scan, scan_byte, end,
+					w, NULL, Qnil)))
+	composition_update_it (&cmp_it, scan, scan_byte, Qnil);
+      if (cmp_it.id >= 0)
+	{
+	  scan += cmp_it.nchars;
+	  scan_byte += cmp_it.nbytes;
+	  if (scan <= end)
+	    col += cmp_it.width;
+	  if (cmp_it.to == cmp_it.nglyphs)
+	    {
+	      cmp_it.id = -1;
+	      composition_compute_stop_pos (&cmp_it, scan, scan_byte, end,
+					    Qnil);
+	    }
+	  else
+	    cmp_it.from = cmp_it.to;
+	  continue;
+	}
+
       c = FETCH_BYTE (scan_byte);
+
+      /* See if there is a display table and it relates
+	 to this character.  */
 
       if (dp != 0
 	  && ! (multibyte && BASE_LEADING_CODE_P (c))
@@ -571,7 +634,7 @@ current_column_1 ()
 	  EMACS_INT i, n;
 
 	  /* This character is displayed using a vector of glyphs.
-	     Update the column based on those glyphs.  */
+	     Update the column/position based on those glyphs.  */
 
 	  charvec = DISP_CHAR_VECTOR (dp, c);
 	  n = ASIZE (charvec);
@@ -580,12 +643,11 @@ current_column_1 ()
 	    {
 	      /* This should be handled the same as
 		 next_element_from_display_vector does it.  */
-	      Lisp_Object entry;
-	      entry = AREF (charvec, i);
+	      Lisp_Object entry = AREF (charvec, i);
 
-	      if (INTEGERP (entry)
-		  && GLYPH_CHAR_VALID_P (XFASTINT (entry)))
-		c = FAST_GLYPH_CHAR (XFASTINT (entry));
+	      if (GLYPH_CODE_P (entry)
+		  && GLYPH_CODE_CHAR_VALID_P (entry))
+		c = GLYPH_CODE_CHAR (entry);
 	      else
 		c = ' ';
 
@@ -604,8 +666,8 @@ current_column_1 ()
 	}
       else
 	{
-	  /* The display table says nothing for this character.
-	     Display it as itself.  */
+	  /* The display table doesn't affect this character;
+	     it displays as itself.  */
 
 	  if (c == '\n')
 	    goto endloop;
@@ -618,15 +680,15 @@ current_column_1 ()
 	    }
 	  else if (multibyte && BASE_LEADING_CODE_P (c))
 	    {
+	      /* Start of multi-byte form.  */
 	      unsigned char *ptr;
 	      int bytes, width, wide_column;
 
 	      ptr = BYTE_POS_ADDR (scan_byte);
 	      MULTIBYTE_BYTES_WIDTH (ptr, dp);
-	      scan_byte += bytes;
 	      /* Subtract one to compensate for the increment
 		 that is going to happen below.  */
-	      scan_byte--;
+	      scan_byte += bytes - 1;
 	      col += width;
 	    }
 	  else if (ctl_arrow && (c < 040 || c == 0177))
@@ -646,6 +708,26 @@ current_column_1 ()
   last_known_column_point = PT;
   last_known_column_modified = MODIFF;
 
+  if (goalcol)
+    *goalcol = col;
+  if (endpos)
+    *endpos = scan;
+  if (prevcol)
+    *prevcol = prev_col;
+}
+
+/* Return the column number of position POS
+   by scanning forward from the beginning of the line.
+   This function handles characters that are invisible
+   due to text properties or overlays.  */
+
+static double
+current_column_1 ()
+{
+  EMACS_INT col = MOST_POSITIVE_FIXNUM;
+  EMACS_INT opoint = PT;
+
+  scan_for_column (&opoint, &col, NULL);
   return col;
 }
 
@@ -807,13 +889,13 @@ static double
 position_indentation (pos_byte)
      register int pos_byte;
 {
-  register int column = 0;
-  register int tab_width = XINT (current_buffer->tab_width);
+  register EMACS_INT column = 0;
+  register EMACS_INT tab_width = XINT (current_buffer->tab_width);
   register unsigned char *p;
   register unsigned char *stop;
   unsigned char *start;
-  int next_boundary_byte = pos_byte;
-  int ceiling = next_boundary_byte;
+  EMACS_INT next_boundary_byte = pos_byte;
+  EMACS_INT ceiling = next_boundary_byte;
 
   if (tab_width <= 0 || tab_width > 1000) tab_width = 8;
 
@@ -828,7 +910,7 @@ position_indentation (pos_byte)
     {
       while (p == stop)
 	{
-	  int stop_pos_byte;
+	  EMACS_INT stop_pos_byte;
 
 	  /* If we have updated P, set POS_BYTE to match.
 	     The first time we enter the loop, POS_BYTE is already right.  */
@@ -839,8 +921,8 @@ position_indentation (pos_byte)
 	    return column;
 	  if (pos_byte == next_boundary_byte)
 	    {
-	      int next_boundary;
-	      int pos = BYTE_TO_CHAR (pos_byte);
+	      EMACS_INT next_boundary;
+	      EMACS_INT pos = BYTE_TO_CHAR (pos_byte);
 	      pos = skip_invisible (pos, &next_boundary, ZV, Qnil);
 	      pos_byte = CHAR_TO_BYTE (pos);
 	      next_boundary_byte = CHAR_TO_BYTE (next_boundary);
@@ -931,181 +1013,48 @@ The return value is the current column.  */)
      (column, force)
      Lisp_Object column, force;
 {
-  register int pos;
-  register int col = current_column ();
-  register int goal;
-  register int end;
-  register int tab_width = XINT (current_buffer->tab_width);
-  register int ctl_arrow = !NILP (current_buffer->ctl_arrow);
-  register struct Lisp_Char_Table *dp = buffer_display_table ();
-  register int multibyte = !NILP (current_buffer->enable_multibyte_characters);
+  EMACS_INT pos;
+  EMACS_INT col, prev_col;
+  EMACS_INT goal;
 
-  Lisp_Object val;
-  int prev_col = 0;
-  int c = 0;
-  int next_boundary, pos_byte;
-
-  if (tab_width <= 0 || tab_width > 1000) tab_width = 8;
   CHECK_NATNUM (column);
   goal = XINT (column);
 
-  pos = PT;
-  pos_byte = PT_BYTE;
-  end = ZV;
+  col = goal;
+  pos = ZV;
+  scan_for_column (&pos, &col, &prev_col);
 
-  /* If we're starting past the desired column,
-     back up to beginning of line and scan from there.  */
-  if (col > goal)
-    {
-      end = pos;
-      pos = current_column_bol_cache;
-      pos_byte = CHAR_TO_BYTE (pos);
-      col = 0;
-    }
-
-  next_boundary = pos;
-
-  while (pos < end)
-    {
-      while (pos == next_boundary)
-	{
-	  int prev = pos;
-	  pos = skip_invisible (pos, &next_boundary, end, Qnil);
-	  if (pos != prev)
-	    pos_byte = CHAR_TO_BYTE (pos);
-	  if (pos >= end)
-	    goto endloop;
-	}
-
-      /* Test reaching the goal column.  We do this after skipping
-	 invisible characters, so that we put point before the
-	 character on which the cursor will appear.  */
-      if (col >= goal)
-	break;
-
-      /* Check composition sequence.  */
-      {
-	int len, len_byte, width;
-
-	if (check_composition (pos, pos_byte, Z, &len, &len_byte, &width))
-	  {
-	    pos += len;
-	    pos_byte += len_byte;
-	    col += width;
-	    continue;
-	  }
-      }
-
-      c = FETCH_BYTE (pos_byte);
-
-      /* See if there is a display table and it relates
-	 to this character.  */
-
-      if (dp != 0
-	  && ! (multibyte && BASE_LEADING_CODE_P (c))
-	  && VECTORP (DISP_CHAR_VECTOR (dp, c)))
-	{
-	  Lisp_Object charvec;
-	  EMACS_INT i, n;
-
-	  /* This character is displayed using a vector of glyphs.
-	     Update the position based on those glyphs.  */
-
-	  charvec = DISP_CHAR_VECTOR (dp, c);
-	  n = ASIZE (charvec);
-
-	  for (i = 0; i < n; i++)
-	    {
-	      /* This should be handled the same as
-		 next_element_from_display_vector does it.  */
-
-	      Lisp_Object entry;
-	      entry = AREF (charvec, i);
-
-	      if (INTEGERP (entry)
-		  && GLYPH_CHAR_VALID_P (XFASTINT (entry)))
-		c = FAST_GLYPH_CHAR (XFASTINT (entry));
-	      else
-		c = ' ';
-
-	      if (c == '\n')
-		goto endloop;
-	      if (c == '\r' && EQ (current_buffer->selective_display, Qt))
-		goto endloop;
-	      if (c == '\t')
-		{
-		  prev_col = col;
-		  col += tab_width;
-		  col = col / tab_width * tab_width;
-		}
-	      else
-		++col;
-	    }
-	}
-      else
-	{
-	  /* The display table doesn't affect this character;
-	     it displays as itself.  */
-
-	  if (c == '\n')
-	    goto endloop;
-	  if (c == '\r' && EQ (current_buffer->selective_display, Qt))
-	    goto endloop;
-	  if (c == '\t')
-	    {
-	      prev_col = col;
-	      col += tab_width;
-	      col = col / tab_width * tab_width;
-	    }
-	  else if (ctl_arrow && (c < 040 || c == 0177))
-	    col += 2;
-	  else if (c < 040 || c == 0177)
-	    col += 4;
-	  else if (c < 0177)
-	    col++;
-	  else if (multibyte && BASE_LEADING_CODE_P (c))
-	    {
-	      /* Start of multi-byte form.  */
-	      unsigned char *ptr;
-	      int bytes, width, wide_column;
-
-	      ptr = BYTE_POS_ADDR (pos_byte);
-	      MULTIBYTE_BYTES_WIDTH (ptr, dp);
-	      pos_byte += bytes - 1;
-	      col += width;
-	    }
-	  else
-	    col += 4;
-	}
-
-      pos++;
-      pos_byte++;
-    }
- endloop:
-
-  SET_PT_BOTH (pos, pos_byte);
+  SET_PT (pos);
 
   /* If a tab char made us overshoot, change it to spaces
      and scan through it again.  */
-  if (!NILP (force) && col > goal && c == '\t' && prev_col < goal)
+  if (!NILP (force) && col > goal)
     {
-      int goal_pt, goal_pt_byte;
+      int c;
+      EMACS_INT pos_byte = PT_BYTE;
 
-      /* Insert spaces in front of the tab to reach GOAL.  Do this
-	 first so that a marker at the end of the tab gets
-	 adjusted.  */
-      SET_PT_BOTH (PT - 1, PT_BYTE - 1);
-      Finsert_char (make_number (' '), make_number (goal - prev_col), Qt);
+      DEC_POS (pos_byte);
+      c = FETCH_CHAR (pos_byte);
+      if (c == '\t' && prev_col < goal)
+	{
+	  EMACS_INT goal_pt, goal_pt_byte;
 
-      /* Now delete the tab, and indent to COL.  */
-      del_range (PT, PT + 1);
-      goal_pt = PT;
-      goal_pt_byte = PT_BYTE;
-      Findent_to (make_number (col), Qnil);
-      SET_PT_BOTH (goal_pt, goal_pt_byte);
+	  /* Insert spaces in front of the tab to reach GOAL.  Do this
+	     first so that a marker at the end of the tab gets
+	     adjusted.  */
+	  SET_PT_BOTH (PT - 1, PT_BYTE - 1);
+	  Finsert_char (make_number (' '), make_number (goal - prev_col), Qt);
 
-      /* Set the last_known... vars consistently.  */
-      col = goal;
+	  /* Now delete the tab, and indent to COL.  */
+	  del_range (PT, PT + 1);
+	  goal_pt = PT;
+	  goal_pt_byte = PT_BYTE;
+	  Findent_to (make_number (col), Qnil);
+	  SET_PT_BOTH (goal_pt, goal_pt_byte);
+
+	  /* Set the last_known... vars consistently.  */
+	  col = goal;
+	}
     }
 
   /* If line ends prematurely, add space to the end.  */
@@ -1116,8 +1065,7 @@ The return value is the current column.  */)
   last_known_column_point = PT;
   last_known_column_modified = MODIFF;
 
-  XSETFASTINT (val, col);
-  return val;
+  return make_number (col);
 }
 
 /* compute_motion: compute buffer posn given screen posn and vice versa */
@@ -1189,19 +1137,19 @@ struct position val_compute_motion;
 
 struct position *
 compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width, hscroll, tab_offset, win)
-     int from, fromvpos, fromhpos, to, tovpos, tohpos;
+     EMACS_INT from, fromvpos, fromhpos, to, tovpos, tohpos;
      int did_motion;
-     register int width;
-     int hscroll, tab_offset;
+     EMACS_INT width;
+     EMACS_INT hscroll, tab_offset;
      struct window *win;
 {
-  register int hpos = fromhpos;
-  register int vpos = fromvpos;
+  register EMACS_INT hpos = fromhpos;
+  register EMACS_INT vpos = fromvpos;
 
-  register int pos;
-  int pos_byte;
+  register EMACS_INT pos;
+  EMACS_INT pos_byte;
   register int c = 0;
-  register int tab_width = XFASTINT (current_buffer->tab_width);
+  register EMACS_INT tab_width = XFASTINT (current_buffer->tab_width);
   register int ctl_arrow = !NILP (current_buffer->ctl_arrow);
   register struct Lisp_Char_Table *dp = window_display_table (win);
   int selective
@@ -1213,33 +1161,35 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
        ? XVECTOR (DISP_INVIS_VECTOR (dp))->size : 0);
   /* The next location where the `invisible' property changes, or an
      overlay starts or ends.  */
-  int next_boundary = from;
+  EMACS_INT next_boundary = from;
 
   /* For computing runs of characters with similar widths.
      Invariant: width_run_width is zero, or all the characters
      from width_run_start to width_run_end have a fixed width of
      width_run_width.  */
-  int width_run_start = from;
-  int width_run_end   = from;
-  int width_run_width = 0;
+  EMACS_INT width_run_start = from;
+  EMACS_INT width_run_end   = from;
+  EMACS_INT width_run_width = 0;
   Lisp_Object *width_table;
   Lisp_Object buffer;
 
   /* The next buffer pos where we should consult the width run cache. */
-  int next_width_run = from;
+  EMACS_INT next_width_run = from;
   Lisp_Object window;
 
   int multibyte = !NILP (current_buffer->enable_multibyte_characters);
   /* If previous char scanned was a wide character,
      this is the column where it ended.  Otherwise, this is 0.  */
-  int wide_column_end_hpos = 0;
-  int prev_pos;			/* Previous buffer position.  */
-  int prev_pos_byte;		/* Previous buffer position.  */
-  int prev_hpos = 0;
-  int prev_vpos = 0;
-  int contin_hpos;		/* HPOS of last column of continued line.  */
-  int prev_tab_offset;		/* Previous tab offset.  */
-  int continuation_glyph_width;
+  EMACS_INT wide_column_end_hpos = 0;
+  EMACS_INT prev_pos;		/* Previous buffer position.  */
+  EMACS_INT prev_pos_byte;	/* Previous buffer position.  */
+  EMACS_INT prev_hpos = 0;
+  EMACS_INT prev_vpos = 0;
+  EMACS_INT contin_hpos;	/* HPOS of last column of continued line.  */
+  EMACS_INT prev_tab_offset;	/* Previous tab offset.  */
+  EMACS_INT continuation_glyph_width;
+
+  struct composition_it cmp_it;
 
   XSETBUFFER (buffer, current_buffer);
   XSETWINDOW (window, win);
@@ -1281,12 +1231,16 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
   pos_byte = prev_pos_byte = CHAR_TO_BYTE (from);
   contin_hpos = 0;
   prev_tab_offset = tab_offset;
+  bzero (&cmp_it, sizeof cmp_it);
+  cmp_it.id = -1;
+  composition_compute_stop_pos (&cmp_it, pos, pos_byte, to, Qnil);
+
   while (1)
     {
       while (pos == next_boundary)
 	{
-	  int pos_here = pos;
-	  int newpos;
+	  EMACS_INT pos_here = pos;
+	  EMACS_INT newpos;
 
 	  /* Don't skip invisible if we are already at the margin.  */
 	  if (vpos > tovpos || (vpos == tovpos && hpos >= tohpos))
@@ -1395,10 +1349,20 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
 
       if (hpos > width)
 	{
-	  if (hscroll
-	      || (truncate_partial_width_windows
-		  && ((width + continuation_glyph_width)
-		      < FRAME_COLS (XFRAME (WINDOW_FRAME (win)))))
+	  int total_width = width + continuation_glyph_width;
+	  int truncate = 0;
+
+	  if (!NILP (Vtruncate_partial_width_windows)
+	      && (total_width < FRAME_COLS (XFRAME (WINDOW_FRAME (win)))))
+	    {
+	      if (INTEGERP (Vtruncate_partial_width_windows))
+		truncate
+		  = total_width < XFASTINT (Vtruncate_partial_width_windows);
+	      else
+		truncate = 1;
+	    }
+
+	  if (hscroll || truncate
 	      || !NILP (current_buffer->truncate_lines))
 	    {
 	      /* Truncating: skip to newline, unless we are already past
@@ -1558,21 +1522,29 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
 	  EMACS_INT i, n;
 	  Lisp_Object charvec;
 
-	  c = FETCH_BYTE (pos_byte);
-
 	  /* Check composition sequence.  */
-	  {
-	    int len, len_byte, width;
+	  if (cmp_it.id >= 0
+	      || (pos == cmp_it.stop_pos
+		  && composition_reseat_it (&cmp_it, pos, pos_byte, to, win,
+					    NULL, Qnil)))
+	    composition_update_it (&cmp_it, pos, pos_byte, Qnil);
+	  if (cmp_it.id >= 0)
+	    {
+	      pos += cmp_it.nchars;
+	      pos_byte += cmp_it.nbytes;
+	      hpos += cmp_it.width;
+	      if (cmp_it.to == cmp_it.nglyphs)
+		{
+		  cmp_it.id = -1;
+		  composition_compute_stop_pos (&cmp_it, pos, pos_byte, to,
+						Qnil);
+		}
+	      else
+		cmp_it.from = cmp_it.to;
+	      continue;
+	    }
 
-	    if (check_composition (pos, pos_byte, to, &len, &len_byte, &width))
-	      {
-		pos += len;
-		pos_byte += len_byte;
-		hpos += width;
-		continue;
-	      }
-	  }
-
+	  c = FETCH_BYTE (pos_byte);
 	  pos++, pos_byte++;
 
 	  /* Perhaps add some info to the width_run_cache.  */
@@ -1624,9 +1596,9 @@ compute_motion (from, fromvpos, fromhpos, did_motion, to, tovpos, tohpos, width,
 		     next_element_from_display_vector does it.  */
 		  Lisp_Object entry = AREF (charvec, i);
 
-		  if (INTEGERP (entry)
-		      && GLYPH_CHAR_VALID_P (XFASTINT (entry)))
-		    c = FAST_GLYPH_CHAR (XFASTINT (entry));
+		  if (GLYPH_CODE_P (entry)
+		      && GLYPH_CODE_CHAR_VALID_P (entry))
+		    c = GLYPH_CODE_CHAR (entry);
 		  else
 		    c = ' ';
 		}
@@ -1884,23 +1856,23 @@ struct position val_vmotion;
 
 struct position *
 vmotion (from, vtarget, w)
-     register int from, vtarget;
+     register EMACS_INT from, vtarget;
      struct window *w;
 {
-  int hscroll = XINT (w->hscroll);
+  EMACS_INT hscroll = XINT (w->hscroll);
   struct position pos;
   /* vpos is cumulative vertical position, changed as from is changed */
   register int vpos = 0;
-  int prevline;
-  register int first;
-  int from_byte;
-  int lmargin = hscroll > 0 ? 1 - hscroll : 0;
+  EMACS_INT prevline;
+  register EMACS_INT first;
+  EMACS_INT from_byte;
+  EMACS_INT lmargin = hscroll > 0 ? 1 - hscroll : 0;
   int selective
     = (INTEGERP (current_buffer->selective_display)
        ? XINT (current_buffer->selective_display)
        : !NILP (current_buffer->selective_display) ? -1 : 0);
   Lisp_Object window;
-  int start_hpos = 0;
+  EMACS_INT start_hpos = 0;
   int did_motion;
   /* This is the object we use for fetching character properties.  */
   Lisp_Object text_prop_object;
@@ -2039,6 +2011,10 @@ The optional second argument WINDOW specifies the window to use for
 parameters such as width, horizontal scrolling, and so on.
 The default is to use the selected window's parameters.
 
+LINES can optionally take the form (COLS . LINES), in which case
+the motion will not stop at the start of a screen line but on
+its column COLS (if such exists on that line, that is).
+
 `vertical-motion' always uses the current buffer,
 regardless of which buffer is displayed in WINDOW.
 This is consistent with other cursor motion functions
@@ -2052,6 +2028,16 @@ whether or not it is currently displayed in some window.  */)
   struct window *w;
   Lisp_Object old_buffer;
   struct gcpro gcpro1;
+  Lisp_Object lcols = Qnil;
+  double cols;
+
+  /* Allow LINES to be of the form (HPOS . VPOS) aka (COLUMNS . LINES).  */
+  if (CONSP (lines) && (NUMBERP (XCAR (lines))))
+    {
+      lcols = XCAR (lines);
+      cols = INTEGERP (lcols) ? (double) XINT (lcols) : XFLOAT_DATA (lcols);
+      lines = XCDR (lines);
+    }
 
   CHECK_NUMBER (lines);
   if (! NILP (window))
@@ -2077,68 +2063,110 @@ whether or not it is currently displayed in some window.  */)
     }
   else
     {
-      int it_start;
-      int oselective;
-      int it_overshoot_expected;
+      int it_start, first_x, it_overshoot_expected;
 
       SET_TEXT_POS (pt, PT, PT_BYTE);
       start_display (&it, w, pt);
+      first_x = it.first_visible_x;
+      it_start = IT_CHARPOS (it);
+
+      /* See comments below for why we calculate this.  */
+      if (XINT (lines) > 0)
+	{
+	  if (it.cmp_it.id >= 0)
+	    it_overshoot_expected = 1;
+	  else if (it.method == GET_FROM_STRING)
+	    {
+	      const char *s = SDATA (it.string);
+	      const char *e = s + SBYTES (it.string);
+	      while (s < e && *s != '\n')
+		++s;
+	      it_overshoot_expected = (s == e) ? -1 : 0;
+	    }
+	  else
+	    it_overshoot_expected = (it.method == GET_FROM_IMAGE
+				     || it.method == GET_FROM_STRETCH);
+	}
 
       /* Scan from the start of the line containing PT.  If we don't
 	 do this, we start moving with IT->current_x == 0, while PT is
-	 really at some x > 0.  The effect is, in continuation lines, that
-	 we end up with the iterator placed at where it thinks X is 0,
-	 while the end position is really at some X > 0, the same X that
-	 PT had.  */
-      it_start = IT_CHARPOS (it);
-
-      /* We expect the call to move_it_to, further down, to overshoot
-	 if the starting point is on an image, stretch glyph,
-	 composition, or Lisp string.  We won't need to backtrack in
-	 this situation, except for one corner case: when the Lisp
-	 string contains a newline.  */
-      if (it.method == GET_FROM_STRING)
-	{
-	  const char *s = SDATA (it.string);
-	  const char *e = s + SBYTES (it.string);
-
-	  while (s < e && *s != '\n')
-	    ++s;
-
-	  /* If there is no newline in the string, we need to check
-	     whether there is a newline immediately after the string
-	     in move_it_to below.  This may happen if there is an
-	     overlay with an after-string just before the newline.  */
-	  it_overshoot_expected = (s == e) ? -1 : 0;
-	}
-      else
-	it_overshoot_expected = (it.method == GET_FROM_IMAGE
-				 || it.method == GET_FROM_STRETCH
-				 || it.method == GET_FROM_COMPOSITION);
-
+	 really at some x > 0.  */
       reseat_at_previous_visible_line_start (&it);
       it.current_x = it.hpos = 0;
-      /* Temporarily disable selective display so we don't move too far */
-      oselective = it.selective;
-      it.selective = 0;
-      move_it_to (&it, PT, -1, -1, -1, MOVE_TO_POS);
-      it.selective = oselective;
+      if (IT_CHARPOS (it) != PT)
+	/* We used to temporarily disable selective display here; the
+	   comment said this is "so we don't move too far" (2005-01-19
+	   checkin by kfs).  But this does nothing useful that I can
+	   tell, and it causes Bug#2694 .  -- cyd */
+	move_it_to (&it, PT, -1, -1, -1, MOVE_TO_POS);
 
-      /* Move back if we got too far.  This may happen if
-	 truncate-lines is on and PT is beyond right margin.
-	 Don't go back if the overshoot is expected (see above).  */
-      if (IT_CHARPOS (it) > it_start && XINT (lines) > 0
-	  && (!it_overshoot_expected
-	      || (it_overshoot_expected < 0
-		  && it.method == GET_FROM_BUFFER
-		  && it.c == '\n')))
-	move_it_by_lines (&it, -1, 0);
+      if (XINT (lines) <= 0)
+	{
+	  it.vpos = 0;
+	  /* Do this even if LINES is 0, so that we move back to the
+	     beginning of the current line as we ought.  */
+	  if (XINT (lines) == 0 || IT_CHARPOS (it) > 0)
+	    move_it_by_lines (&it, XINT (lines), 0);
+	}
+      else
+	{
+	  if (IT_CHARPOS (it) > it_start)
+	    {
+	      /* IT may move too far if truncate-lines is on and PT
+		 lies beyond the right margin.  In that case,
+		 backtrack unless the starting point is on an image,
+		 stretch glyph, composition, or Lisp string.  */
+	      if (!it_overshoot_expected
+		  /* Also, backtrack if the Lisp string contains no
+		     newline, but there is a newline right after it.
+		     In this case, IT overshoots if there is an
+		     after-string just before the newline.  */
+		  || (it_overshoot_expected < 0
+		      && it.method == GET_FROM_BUFFER
+		      && it.c == '\n'))
+		move_it_by_lines (&it, -1, 0);
+	      it.vpos = 0;
+	      move_it_by_lines (&it, XINT (lines), 0);
+	    }
+	  else
+	    {
+	      /* Otherwise, we are at the first row occupied by PT,
+		 which might span multiple screen lines (e.g., if it's
+		 on a multi-line display string).  We want to start
+		 from the last line that it occupies.  */
+	      if (it_start < ZV)
+		{
+		  while (IT_CHARPOS (it) <= it_start)
+		    {
+		      it.vpos = 0;
+		      move_it_by_lines (&it, 1, 0);
+		    }
+		  if (XINT (lines) > 1)
+		    move_it_by_lines (&it, XINT (lines) - 1, 0);
+		}
+	      else
+		{
+		  it.vpos = 0;
+		  move_it_by_lines (&it, XINT (lines), 0);
+		}
+	    }
+	}
 
-      it.vpos = 0;
-      /* Do this even if LINES is 0, so that we move back
-	 to the beginning of the current line as we ought.  */
-      if (XINT (lines) >= 0 || IT_CHARPOS (it) > 0)
-	move_it_by_lines (&it, XINT (lines), 0);
+      /* Move to the goal column, if one was specified.  */
+      if (!NILP (lcols))
+	{
+	  /* If the window was originally hscrolled, move forward by
+	     the hscrolled amount first.  */
+	  if (first_x > 0)
+	    {
+	      move_it_in_display_line (&it, ZV, first_x, MOVE_TO_X);
+	      it.current_x = 0;
+	    }
+	  move_it_in_display_line
+	    (&it, ZV,
+	     (int)(cols * FRAME_COLUMN_WIDTH (XFRAME (w->frame)) + 0.5),
+	     MOVE_TO_X);
+	}
 
       SET_PT_BOTH (IT_CHARPOS (it), IT_BYTEPOS (it));
     }
@@ -2157,8 +2185,7 @@ void
 syms_of_indent ()
 {
   DEFVAR_BOOL ("indent-tabs-mode", &indent_tabs_mode,
-	       doc: /* *Indentation can insert tabs if this is non-nil.
-Setting this variable automatically makes it local to the current buffer.  */);
+	       doc: /* *Indentation can insert tabs if this is non-nil.  */);
   indent_tabs_mode = 1;
 
   defsubr (&Scurrent_indentation);

@@ -29,15 +29,15 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 Copyright (C) 1984, 1987, 1988, 1989, 1993, 1994, 1995, 1998, 1999,
-  2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+  2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
   Free Software Foundation, Inc.
 
 This file is not considered part of GNU Emacs.
 
-This program is free software; you can redistribute it and/or modify
+This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -45,9 +45,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program; see the file COPYING.  If not, write to the
-Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA. */
+along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 /* NB To comply with the above BSD license, copyright information is
@@ -61,14 +59,14 @@ University of California, as described above. */
 
 /*
  * Authors:
- * 1983	Ctags originally by Ken Arnold.
- * 1984	Fortran added by Jim Kleckner.
- * 1984	Ed Pelegri-Llopart added C typedefs.
- * 1985	Emacs TAGS format by Richard Stallman.
- * 1989	Sam Kendall added C++.
+ * 1983 Ctags originally by Ken Arnold.
+ * 1984 Fortran added by Jim Kleckner.
+ * 1984 Ed Pelegri-Llopart added C typedefs.
+ * 1985 Emacs TAGS format by Richard Stallman.
+ * 1989 Sam Kendall added C++.
  * 1992 Joseph B. Wells improved C and C++ parsing.
- * 1993	Francesco Potortì reorganised C and C++.
- * 1994	Line-by-line regexp tags by Tom Tromey.
+ * 1993 Francesco Potortì reorganized C and C++.
+ * 1994 Line-by-line regexp tags by Tom Tromey.
  * 2001 Nested classes by Francesco Potortì (concept by Mykola Dzyuba).
  * 2002 #line directives by Francesco Potortì.
  *
@@ -77,11 +75,11 @@ University of California, as described above. */
 
 /*
  * If you want to add support for a new language, start by looking at the LUA
- * language, which is the simplest.  Alternatively, consider shipping a
- * configuration file containing regexp definitions for etags.
+ * language, which is the simplest.  Alternatively, consider distributing etags
+ * together with a configuration file containing regexp definitions for etags.
  */
 
-char pot_etags_version[] = "@(#) pot revision number is 17.26";
+char pot_etags_version[] = "@(#) pot revision number is 17.38.1.4";
 
 #define	TRUE	1
 #define	FALSE	0
@@ -160,14 +158,22 @@ char pot_etags_version[] = "@(#) pot revision number is 17.26";
 #  include <stdlib.h>
 #  include <string.h>
 # else /* no standard C headers */
-    extern char *getenv ();
-#  ifdef VMS
-#   define EXIT_SUCCESS	1
-#   define EXIT_FAILURE	0
-#  else /* no VMS */
-#   define EXIT_SUCCESS	0
-#   define EXIT_FAILURE	1
-#  endif
+   extern char *getenv __P((const char *));
+   extern char *strcpy __P((char *, const char *));
+   extern char *strncpy __P((char *, const char *, unsigned long));
+   extern char *strcat __P((char *, const char *));
+   extern char *strncat __P((char *, const char *, unsigned long));
+   extern int strcmp __P((const char *, const char *));
+   extern int strncmp __P((const char *, const char *, unsigned long));
+   extern int system __P((const char *));
+   extern unsigned long strlen __P((const char *));
+   extern void *malloc __P((unsigned long));
+   extern void *realloc __P((void *, unsigned long));
+   extern void exit __P((int));
+   extern void free __P((void *));
+   extern void *memmove __P((void *, const void *, unsigned long));
+#  define EXIT_SUCCESS	0
+#  define EXIT_FAILURE	1
 # endif
 #endif /* !WINDOWSNT */
 
@@ -484,7 +490,7 @@ static char
   *midtk = "ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz$0123456789";
 
 static bool append_to_tagfile;	/* -a: append to tags */
-/* The next four default to TRUE for etags, but to FALSE for ctags.  */
+/* The next five default to TRUE in C and derived languages.  */
 static bool typedefs;		/* -t: create tags for C and Ada typedefs */
 static bool typedefs_or_cplusplus; /* -T: create tags for C typedefs, level */
 				/* 0 struct/enum/union decls, and C++ */
@@ -626,10 +632,11 @@ static char default_C_help [] =
 definitions of `struct', `union' and `enum'.  `#define' macro\n\
 definitions and `enum' constants are tags unless you specify\n\
 `--no-defines'.  Global variables are tags unless you specify\n\
-`--no-globals'.  Use of `--no-globals' and `--no-defines'\n\
-can make the tags table file much smaller.\n\
+`--no-globals' and so are struct members unless you specify\n\
+`--no-members'.  Use of `--no-globals', `--no-defines' and\n\
+`--no-members' can make the tags table file much smaller.\n\
 You can tag function declarations and external variables by\n\
-using `--declarations', and struct members by using `--members'.";
+using `--declarations'.";
 #endif	/* C help for Ctags and Etags */
 
 static char *Cplusplus_suffixes [] =
@@ -641,7 +648,7 @@ static char Cplusplus_help [] =
 "In C++ code, all the tag constructs of C code are tagged.  (Use\n\
 --help --lang=c --lang=c++ for full help.)\n\
 In addition to C tags, member functions are also recognized.  Member\n\
-variables are also recognized if you use the `--members' option.\n\
+variables are recognized unless you use the `--no-members' option.\n\
 Tags for variables and functions in classes are named `CLASS::VARIABLE'\n\
 and `CLASS::FUNCTION'.  `operator' definitions have tag names like\n\
 `operator+'.";
@@ -736,8 +743,8 @@ defined in the default package is `main::SUB'.";
 static char *PHP_suffixes [] =
   { "php", "php3", "php4", NULL };
 static char PHP_help [] =
-"In PHP code, tags are functions, classes and defines.  When using\n\
-the `--members' option, vars are tags too.";
+"In PHP code, tags are functions, classes and defines.  Unless you use\n\
+the `--no-members' option, vars are tags too.";
 
 static char *plain_C_suffixes [] =
   { "pc",			/* Pro*C file */
@@ -885,17 +892,24 @@ etags --help --lang=ada.");
 # define EMACS_NAME "standalone"
 #endif
 #ifndef VERSION
-# define VERSION "17.26"
+# define VERSION "17.38.1.4"
 #endif
 static void
 print_version ()
 {
+  /* Makes it easier to update automatically. */
+  char emacs_copyright[] = "Copyright (C) 2009 Free Software Foundation, Inc.";
+
   printf ("%s (%s %s)\n", (CTAGS) ? "ctags" : "etags", EMACS_NAME, VERSION);
-  puts ("Copyright (C) 2008 Free Software Foundation, Inc.");
+  puts (emacs_copyright);
   puts ("This program is distributed under the terms in ETAGS.README");
 
   exit (EXIT_SUCCESS);
 }
+
+#ifndef PRINT_UNDOCUMENTED_OPTIONS_HELP
+# define PRINT_UNDOCUMENTED_OPTIONS_HELP FALSE
+#endif
 
 static void
 print_help (argbuffer)
@@ -979,8 +993,18 @@ Relative ones are stored relative to the output file's directory.\n");
     puts ("--no-globals\n\
 	Do not create tag entries for global variables in some\n\
 	languages.  This makes the tags file smaller.");
-  puts ("--members\n\
+
+  if (PRINT_UNDOCUMENTED_OPTIONS_HELP)
+    puts ("--no-line-directive\n\
+        Ignore #line preprocessor directives in C and derived languages.");
+
+  if (CTAGS)
+    puts ("--members\n\
 	Create tag entries for members of structures in some languages.");
+  else
+    puts ("--no-members\n\
+	Do not create tag entries for members of structures\n\
+	in some languages.");
 
   puts ("-r REGEXP, --regex=REGEXP or --regex=@regexfile\n\
         Make a tag for each line matching a regular expression pattern\n\
@@ -994,13 +1018,17 @@ Relative ones are stored relative to the output file's directory.\n");
 	MODS are optional one-letter modifiers: `i' means to ignore case,\n\
 	`m' means to allow multi-line matches, `s' implies `m' and\n\
 	causes dot to match any character, including newline.");
+
   puts ("-R, --no-regex\n\
         Don't create tags from regexps for the following files.");
+
   puts ("-I, --ignore-indentation\n\
         In C and C++ do not assume that a closing brace in the first\n\
         column is the final brace of a function or structure definition.");
+
   puts ("-o FILE, --output=FILE\n\
         Write the tags to FILE.");
+
   puts ("--parse-stdin=NAME\n\
         Read from standard input and record tags as belonging to file NAME.");
 
@@ -1028,13 +1056,16 @@ Relative ones are stored relative to the output file's directory.\n");
         Print on the standard output an index of items intended for\n\
         human consumption, similar to the output of vgrind.  The index\n\
         is sorted, and gives the page number of each item.");
-# if PRINT_UNDOCUMENTED_OPTIONS_HELP
-      puts ("-w, --no-duplicates\n\
+
+      if (PRINT_UNDOCUMENTED_OPTIONS_HELP)
+	puts ("-w, --no-duplicates\n\
         Do not create duplicate tag entries, for compatibility with\n\
 	traditional ctags.");
-      puts ("-w, --no-warn\n\
+
+      if (PRINT_UNDOCUMENTED_OPTIONS_HELP)
+	puts ("-w, --no-warn\n\
         Suppress warning messages about duplicate tag entries.");
-# endif /* PRINT_UNDOCUMENTED_OPTIONS_HELP */
+
       puts ("-x, --cxref\n\
         Like --vgrind, but in the style of cxref, rather than vgrind.\n\
         The output uses line numbers instead of page numbers, but\n\
@@ -1058,131 +1089,6 @@ Relative ones are stored relative to the output file's directory.\n");
 }
 
 
-#ifdef VMS			/* VMS specific functions */
-
-#define	EOS	'\0'
-
-/* This is a BUG!  ANY arbitrary limit is a BUG!
-   Won't someone please fix this?  */
-#define	MAX_FILE_SPEC_LEN	255
-typedef struct	{
-  short   curlen;
-  char    body[MAX_FILE_SPEC_LEN + 1];
-} vspec;
-
-/*
- v1.05 nmm 26-Jun-86 fn_exp - expand specification of list of file names
- returning in each successive call the next file name matching the input
- spec. The function expects that each in_spec passed
- to it will be processed to completion; in particular, up to and
- including the call following that in which the last matching name
- is returned, the function ignores the value of in_spec, and will
- only start processing a new spec with the following call.
- If an error occurs, on return out_spec contains the value
- of in_spec when the error occurred.
-
- With each successive file name returned in out_spec, the
- function's return value is one. When there are no more matching
- names the function returns zero. If on the first call no file
- matches in_spec, or there is any other error, -1 is returned.
-*/
-
-#include	<rmsdef.h>
-#include	<descrip.h>
-#define		OUTSIZE	MAX_FILE_SPEC_LEN
-static short
-fn_exp (out, in)
-     vspec *out;
-     char *in;
-{
-  static long context = 0;
-  static struct dsc$descriptor_s o;
-  static struct dsc$descriptor_s i;
-  static bool pass1 = TRUE;
-  long status;
-  short retval;
-
-  if (pass1)
-    {
-      pass1 = FALSE;
-      o.dsc$a_pointer = (char *) out;
-      o.dsc$w_length = (short)OUTSIZE;
-      i.dsc$a_pointer = in;
-      i.dsc$w_length = (short)strlen(in);
-      i.dsc$b_dtype = DSC$K_DTYPE_T;
-      i.dsc$b_class = DSC$K_CLASS_S;
-      o.dsc$b_dtype = DSC$K_DTYPE_VT;
-      o.dsc$b_class = DSC$K_CLASS_VS;
-    }
-  if ((status = lib$find_file(&i, &o, &context, 0, 0)) == RMS$_NORMAL)
-    {
-      out->body[out->curlen] = EOS;
-      return 1;
-    }
-  else if (status == RMS$_NMF)
-    retval = 0;
-  else
-    {
-      strcpy(out->body, in);
-      retval = -1;
-    }
-  lib$find_file_end(&context);
-  pass1 = TRUE;
-  return retval;
-}
-
-/*
-  v1.01 nmm 19-Aug-85 gfnames - return in successive calls the
-  name of each file specified by the provided arg expanding wildcards.
-*/
-static char *
-gfnames (arg, p_error)
-     char *arg;
-     bool *p_error;
-{
-  static vspec filename = {MAX_FILE_SPEC_LEN, "\0"};
-
-  switch (fn_exp (&filename, arg))
-    {
-    case 1:
-      *p_error = FALSE;
-      return filename.body;
-    case 0:
-      *p_error = FALSE;
-      return NULL;
-    default:
-      *p_error = TRUE;
-      return filename.body;
-    }
-}
-
-#ifndef OLD  /* Newer versions of VMS do provide `system'.  */
-system (cmd)
-     char *cmd;
-{
-  error ("%s", "system() function not implemented under VMS");
-}
-#endif
-
-#define	VERSION_DELIM	';'
-char *massage_name (s)
-     char *s;
-{
-  char *start = s;
-
-  for ( ; *s; s++)
-    if (*s == VERSION_DELIM)
-      {
-	*s = EOS;
-	break;
-      }
-    else
-      *s = lowcase (*s);
-  return start;
-}
-#endif /* VMS */
-
-
 int
 main (argc, argv)
      int argc;
@@ -1195,9 +1101,6 @@ main (argc, argv)
   int current_arg, file_count;
   linebuffer filename_lb;
   bool help_asked = FALSE;
-#ifdef VMS
-  bool got_err;
-#endif
  char *optstring;
  int opt;
 
@@ -1217,15 +1120,12 @@ main (argc, argv)
   argbuffer = xnew (argc, argument);
 
   /*
-   * If etags, always find typedefs and structure tags.  Why not?
-   * Also default to find macro constants, enum constants and
-   * global variables.
+   * Always find typedefs and structure tags.
+   * Also default to find macro constants, enum constants, struct
+   * members and global variables.  Do it for both etags and ctags.
    */
-  if (!CTAGS)
-    {
-      typedefs = typedefs_or_cplusplus = constantypedefs = TRUE;
-      globals = TRUE;
-    }
+  typedefs = typedefs_or_cplusplus = constantypedefs = TRUE;
+  globals = members = TRUE;
 
   /* When the optstring begins with a '-' getopt_long does not rearrange the
      non-options arguments to be at the end, but leaves them alone. */
@@ -1351,7 +1251,7 @@ main (argc, argv)
     }
 
   if (tagfile == NULL)
-    tagfile = CTAGS ? "tags" : "TAGS";
+    tagfile = savestr (CTAGS ? "tags" : "TAGS");
   cwd = etags_getcwd ();	/* the current working directory */
   if (cwd[strlen (cwd) - 1] != '/')
     {
@@ -1359,12 +1259,16 @@ main (argc, argv)
       cwd = concat (oldcwd, "/", "");
       free (oldcwd);
     }
-  /* Relative file names are made relative to the current directory. */
+
+  /* Compute base directory for relative file names. */
   if (streq (tagfile, "-")
       || strneq (tagfile, "/dev/", 5))
-    tagfiledir = cwd;
+    tagfiledir = cwd;		 /* relative file names are relative to cwd */
   else
-    tagfiledir = absolute_dirname (tagfile, cwd);
+    {
+      canonicalize_filename (tagfile);
+      tagfiledir = absolute_dirname (tagfile, cwd);
+    }
 
   init ();			/* set up boolean "functions" */
 
@@ -1408,21 +1312,7 @@ main (argc, argv)
 	  analyse_regex (argbuffer[i].what);
 	  break;
 	case at_filename:
-#ifdef VMS
-	  while ((this_file = gfnames (argbuffer[i].what, &got_err)) != NULL)
-	    {
-	      if (got_err)
-		{
-		  error ("can't find file %s\n", this_file);
-		  argc--, argv++;
-		}
-	      else
-		{
-		  this_file = massage_name (this_file);
-		}
-#else
 	      this_file = argbuffer[i].what;
-#endif
 	      /* Input file named "-" means read file names from stdin
 		 (one per line) and use them. */
 	      if (streq (this_file, "-"))
@@ -1435,9 +1325,6 @@ main (argc, argv)
 		}
 	      else
 		process_file_name (this_file, lang);
-#ifdef VMS
-	    }
-#endif
 	  break;
         case at_stdin:
           this_file = argbuffer[i].what;
@@ -1537,7 +1424,7 @@ get_compressor_from_suffix (file, extptr)
   compressor *compr;
   char *slash, *suffix;
 
-  /* This relies on FN to be after canonicalize_filename,
+  /* File has been processed by canonicalize_filename,
      so we don't need to consider backslashes on DOS_NT.  */
   slash = etags_strrchr (file, '/');
   suffix = etags_strrchr (file, '.');
@@ -1766,8 +1653,8 @@ process_file_name (file, lang)
     pfatal (file);
 
  cleanup:
-  if (compressed_name) free (compressed_name);
-  if (uncompressed_name) free (uncompressed_name);
+  free (compressed_name);
+  free (uncompressed_name);
   last_node = NULL;
   curfdp = NULL;
   return;
@@ -2146,8 +2033,7 @@ free_tree (np)
     {
       register node *node_right = np->right;
       free_tree (np->left);
-      if (np->name != NULL)
-	free (np->name);
+      free (np->name);
       free (np->regex);
       free (np);
       np = node_right;
@@ -2162,11 +2048,11 @@ static void
 free_fdesc (fdp)
      register fdesc *fdp;
 {
-  if (fdp->infname != NULL) free (fdp->infname);
-  if (fdp->infabsname != NULL) free (fdp->infabsname);
-  if (fdp->infabsdir != NULL) free (fdp->infabsdir);
-  if (fdp->taggedfname != NULL) free (fdp->taggedfname);
-  if (fdp->prop != NULL) free (fdp->prop);
+  free (fdp->infname);
+  free (fdp->infabsname);
+  free (fdp->infabsdir);
+  free (fdp->taggedfname);
+  free (fdp->prop);
   free (fdp);
 }
 
@@ -2465,6 +2351,7 @@ while,		0,			st_C_ignore
 switch,		0,			st_C_ignore
 return,		0,			st_C_ignore
 __attribute__,	0,			st_C_attribute
+GTY,            0,                      st_C_attribute
 @interface,	0,			st_C_objprot
 @protocol,	0,			st_C_objprot
 @implementation,0,			st_C_objimpl
@@ -2528,9 +2415,9 @@ hash (str, len)
       35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
       35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
       35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
-      35, 35, 35, 35, 35, 35, 35, 35, 35, 15,
-      14, 35, 35, 35, 35, 35, 35, 35, 14, 35,
-      35, 35, 35, 12, 13, 35, 35, 35, 35, 12,
+      35, 35, 35, 35, 35, 35, 35, 35, 35,  3,
+      26, 35, 35, 35, 35, 35, 35, 35, 27, 35,
+      35, 35, 35, 24,  0, 35, 35, 35, 35,  0,
       35, 35, 35, 35, 35,  1, 35, 16, 35,  6,
       23,  0,  0, 35, 22,  0, 35, 35,  5,  0,
        0, 15,  1, 35,  6, 35,  8, 19, 35, 16,
@@ -2570,7 +2457,7 @@ in_word_set (str, len)
 {
   enum
     {
-      TOTAL_KEYWORDS = 32,
+      TOTAL_KEYWORDS = 33,
       MIN_WORD_LENGTH = 2,
       MAX_WORD_LENGTH = 15,
       MIN_HASH_VALUE = 2,
@@ -2581,7 +2468,7 @@ in_word_set (str, len)
     {
       {""}, {""},
       {"if",		0,			st_C_ignore},
-      {""},
+      {"GTY",           0,                      st_C_attribute},
       {"@end",		0,			st_C_objend},
       {"union",		0,			st_C_struct},
       {"define",		0,			st_C_define},
@@ -2810,8 +2697,7 @@ popclass_above (bracelev)
        nl >= 0 && cstack.bracelev[nl] >= bracelev;
        nl--)
     {
-      if (cstack.cname[nl] != NULL)
-	free (cstack.cname[nl]);
+      free (cstack.cname[nl]);
       cstack.nl = nl;
     }
 }
@@ -3220,16 +3106,16 @@ make_C_tag (isfun)
 {
   /* This function is never called when token.valid is FALSE, but
      we must protect against invalid input or internal errors. */
-  if (!DEBUG && !token.valid)
-    return;
-
   if (token.valid)
     make_tag (token_name.buffer, token_name.len, isfun, token.line,
 	      token.offset+token.length+1, token.lineno, token.linepos);
-  else				/* this case is optimised away if !DEBUG */
-    make_tag (concat ("INVALID TOKEN:-->", token_name.buffer, ""),
-	      token_name.len + 17, isfun, token.line,
-	      token.offset+token.length+1, token.lineno, token.linepos);
+  else if (DEBUG)
+    {				  /* this branch is optimised away if !DEBUG */
+      make_tag (concat ("INVALID TOKEN:-->", token_name.buffer, ""),
+		token_name.len + 17, isfun, token.line,
+		token.offset+token.length+1, token.lineno, token.linepos);
+      error ("INVALID TOKEN", NULL);
+    }
 
   token.valid = FALSE;
 }
@@ -3976,7 +3862,7 @@ C_entries (c_ext, inf)
 	    }
 	  else if (bracelev < 0)
 	    {
-	    token.valid = FALSE; /* something gone amiss, token unreliable */
+	      token.valid = FALSE; /* something gone amiss, token unreliable */
 	      bracelev = 0;
 	    }
 	  if (bracelev == 0 && fvdef == vignore)
@@ -5487,8 +5373,7 @@ Prolog_functions (inf)
 	  last[len] = '\0';
 	}
     }
-  if (last != NULL)
-    free (last);
+  free (last);
 }
 
 
@@ -5666,8 +5551,7 @@ Erlang_functions (inf)
 	  last[len] = '\0';
 	}
     }
-  if (last != NULL)
-    free (last);
+  free (last);
 }
 
 
@@ -5997,7 +5881,7 @@ add_regex (regexp_pattern, lang)
   else
     re_set_syntax (RE_SYNTAX_EMACS);
 
-  err = re_compile_pattern (pat, strlen (regexp_pattern), patbuf);
+  err = re_compile_pattern (pat, strlen (pat), patbuf);
   if (multi_line)
     free (pat);
   if (err != NULL)
@@ -6341,7 +6225,7 @@ readline (lbp, stream)
 		  discard_until_line_directive = FALSE; /* found it */
 		  name = lbp->buffer + start;
 		  *endp = '\0';
-		  canonicalize_filename (name); /* for DOS */
+		  canonicalize_filename (name);
 		  taggedabsname = absolute_filename (name, tagfiledir);
 		  if (filename_is_absolute (name)
 		      || filename_is_absolute (curfdp->infname))
@@ -6844,7 +6728,6 @@ absolute_dirname (file, dir)
   char *slashp, *res;
   char save;
 
-  canonicalize_filename (file);
   slashp = etags_strrchr (file, '/');
   if (slashp == NULL)
     return savestr (dir);
@@ -6869,27 +6752,38 @@ filename_is_absolute (fn)
 	  );
 }
 
-/* Translate backslashes into slashes.  Works in place. */
+/* Upcase DOS drive letter and collapse separators into single slashes.
+   Works in place. */
 static void
 canonicalize_filename (fn)
      register char *fn;
 {
+  register char* cp;
+  char sep = '/';
+
 #ifdef DOS_NT
   /* Canonicalize drive letter case.  */
   if (fn[0] != '\0' && fn[1] == ':' && ISLOWER (fn[0]))
     fn[0] = upcase (fn[0]);
-  /* Convert backslashes to slashes.  */
-  for (; *fn != '\0'; fn++)
-    if (*fn == '\\')
-      *fn = '/';
-#else
-  /* No action. */
-  fn = NULL;			/* shut up the compiler */
+
+  sep = '\\';
 #endif
+
+  /* Collapse multiple separators into a single slash. */
+  for (cp = fn; *cp != '\0'; cp++, fn++)
+    if (*cp == sep)
+      {
+	*fn = '/';
+	while (cp[1] == sep)
+	  cp++;
+      }
+    else
+      *fn = *cp;
+  *fn = '\0';
 }
 
 
-/* Initialize a linebuffer for use */
+/* Initialize a linebuffer for use. */
 static void
 linebuffer_init (lbp)
      linebuffer *lbp;

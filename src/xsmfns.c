@@ -1,14 +1,14 @@
 /* Session management module for systems which understand the X Session
    management protocol.
-   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008
+   Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
      Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 
@@ -28,19 +26,8 @@ Boston, MA 02110-1301, USA.  */
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-#ifdef HAVE_STRING_H
-#include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
-
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
 #endif
 
 #include <sys/param.h>
@@ -49,6 +36,7 @@ Boston, MA 02110-1301, USA.  */
 #include "lisp.h"
 #include "systime.h"
 #include "sysselect.h"
+#include "frame.h"
 #include "termhooks.h"
 #include "termopts.h"
 #include "xterm.h"
@@ -274,8 +262,7 @@ smc_save_yourself_CB (smcConn,
 
   xfree (smid_opt);
 
-  if (cwd)
-    free (cwd);
+  free (cwd);
 
   /* See if we maybe shall interact with the user.  */
   if (interactStyle != SmInteractStyleAny
@@ -388,16 +375,9 @@ ice_conn_watch_CB (iceConn, clientData, opening, watchData)
     }
 
   ice_fd = IceConnectionNumber (iceConn);
-#ifndef F_SETOWN_BUG
 #ifdef F_SETOWN
-#ifdef F_SETOWN_SOCK_NEG
-  /* stdin is a socket here */
-  fcntl (ice_fd, F_SETOWN, -getpid ());
-#else /* ! defined (F_SETOWN_SOCK_NEG) */
   fcntl (ice_fd, F_SETOWN, getpid ());
-#endif /* ! defined (F_SETOWN_SOCK_NEG) */
 #endif /* ! defined (F_SETOWN) */
-#endif /* F_SETOWN_BUG */
 
 #ifdef SIGIO
   if (interrupt_input)
@@ -509,6 +489,14 @@ x_session_initialize (dpyinfo)
       create_client_leader_window (dpyinfo, client_id);
 #endif
     }
+}
+
+/* Ensure that the session manager is not contacted again. */
+
+void
+x_session_close ()
+{
+  ice_fd = -1;
 }
 
 

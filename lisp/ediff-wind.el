@@ -1,16 +1,16 @@
 ;;; ediff-wind.el --- window manipulation utilities
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -39,30 +37,21 @@
 (defvar top-gutter)
 (defvar frame-icon-title-format)
 (defvar ediff-diff-status)
-(defvar ediff-emacs-p)
+
+;; declare-function does not exist in XEmacs
+(eval-and-compile
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest  r))))
 
 (eval-when-compile
-  (let ((load-path (cons (expand-file-name ".") load-path)))
-    (or (featurep 'ediff-init)
-	(load "ediff-init.el" nil nil 'nosuffix))
-    (or (featurep 'ediff-util)
-	(load "ediff-util.el" nil nil 'nosuffix))
-    (or (featurep 'ediff-help)
-	(load "ediff-help.el" nil nil 'nosuffix))
-    (or (featurep 'ediff-tbar)
-	ediff-emacs-p
-	(load "ediff-tbar.el" 'noerror nil 'nosuffix))
-    ))
+  (require 'ediff-util)
+  (require 'ediff-help))
 ;; end pacifier
 
 (require 'ediff-init)
 
 ;; be careful with ediff-tbar
-(if ediff-xemacs-p
-    (condition-case nil
-	(require 'ediff-tbar)
-      (error
-       (defun ediff-compute-toolbar-width () 0)))
+(if (featurep 'xemacs)
+    (require 'ediff-tbar)
   (defun ediff-compute-toolbar-width () 0))
 
 (defgroup ediff-window nil
@@ -72,17 +61,24 @@
   :group 'frames)
 
 
-(defcustom ediff-window-setup-function (if (ediff-window-display-p)
-					'ediff-setup-windows-multiframe
-				      'ediff-setup-windows-plain)
-  "*Function called to set up windows.
-Ediff provides a choice of two functions: `ediff-setup-windows-plain', for
-doing everything in one frame, and `ediff-setup-windows-multiframe',
-which sets the control panel in a separate frame.  Also, if the latter
-function detects that one of the buffers A/B is seen in some other frame,
-it will try to keep that buffer in that frame.
+;; Determine which window setup function to use based on current window system.
+(defun ediff-choose-window-setup-function-automatically ()
+  (if (ediff-window-display-p)
+      'ediff-setup-windows-multiframe
+    'ediff-setup-windows-plain))
 
-If you don't like the two functions provided---write your own one.
+(defcustom ediff-window-setup-function (ediff-choose-window-setup-function-automatically)
+  "Function called to set up windows.
+Ediff provides a choice of two functions: `ediff-setup-windows-plain', for
+doing everything in one frame and `ediff-setup-windows-multiframe', which sets
+the control panel in a separate frame. By default, the appropriate function is
+chosen automatically depending on the current window system.
+However, `ediff-toggle-multiframe' can be used to toggle between the multiframe
+display and the single frame display.
+If the multiframe function detects that one of the buffers A/B is seen in some
+other frame, it will try to keep that buffer in that frame.
+
+If you don't like any of the two provided functions, write your own one.
 The basic guidelines:
     1. It should leave the control buffer current and the control window
        selected.
@@ -128,24 +124,34 @@ provided functions are written."
 
 
 (defcustom ediff-split-window-function 'split-window-vertically
-  "*The function used to split the main window between buffer-A and buffer-B.
+  "The function used to split the main window between buffer-A and buffer-B.
 You can set it to a horizontal split instead of the default vertical split
 by setting this variable to `split-window-horizontally'.
 You can also have your own function to do fancy splits.
 This variable has no effect when buffer-A/B are shown in different frames.
 In this case, Ediff will use those frames to display these buffers."
-  :type 'function
+  :type '(choice
+	  (const :tag "Split vertically" split-window-vertically)
+	  (const :tag "Split horizontally" split-window-horizontally)
+	  function)
   :group 'ediff-window)
 
 (defcustom ediff-merge-split-window-function 'split-window-horizontally
-  "*The function used to split the main window between buffer-A and buffer-B.
+  "The function used to split the main window between buffer-A and buffer-B.
 You can set it to a vertical split instead of the default horizontal split
 by setting this variable to `split-window-vertically'.
 You can also have your own function to do fancy splits.
 This variable has no effect when buffer-A/B/C are shown in different frames.
 In this case, Ediff will use those frames to display these buffers."
-  :type 'function
+  :type '(choice
+	  (const :tag "Split vertically" split-window-vertically)
+	  (const :tag "Split horizontally" split-window-horizontally)
+	  function)
   :group 'ediff-window)
+
+;; Definitions hidden from the compiler by compat wrappers.
+(declare-function ediff-display-pixel-width "ediff-init")
+(declare-function ediff-display-pixel-height "ediff-init")
 
 (defconst ediff-control-frame-parameters
   (list
@@ -188,7 +194,7 @@ Used internally---not a user option.")
   "If the user moves mouse more than this many pixels, Ediff won't warp mouse into control window.")
 
 (defcustom ediff-grab-mouse t
-  "*If t, Ediff will always grab the mouse and put it in the control frame.
+  "If t, Ediff will always grab the mouse and put it in the control frame.
 If 'maybe, Ediff will do it sometimes, but not after operations that require
 relatively long time.  If nil, the mouse will be entirely user's
 responsibility."
@@ -204,7 +210,7 @@ of the form \(\(top . <position>\) \(left . <position>\)\)"
   :group 'ediff-window)
 
 (defcustom ediff-control-frame-upward-shift 42
-  "*The upward shift of control frame from the top of buffer A's frame.
+  "The upward shift of control frame from the top of buffer A's frame.
 Measured in pixels.
 This is used by the default control frame positioning function,
 `ediff-make-frame-position'.  This variable is provided for easy
@@ -212,8 +218,8 @@ customization of the default control frame positioning."
   :type 'integer
   :group 'ediff-window)
 
-(defcustom ediff-narrow-control-frame-leftward-shift (if ediff-xemacs-p 7 3)
-  "*The leftward shift of control frame from the right edge of buf A's frame.
+(defcustom ediff-narrow-control-frame-leftward-shift (if (featurep 'xemacs) 7 3)
+  "The leftward shift of control frame from the right edge of buf A's frame.
 Measured in characters.
 This is used by the default control frame positioning function,
 `ediff-make-frame-position' to adjust the position of the control frame
@@ -223,7 +229,7 @@ customization of the default."
   :group 'ediff-window)
 
 (defcustom ediff-wide-control-frame-rightward-shift 7
-  "*The rightward shift of control frame from the left edge of buf A's frame.
+  "The rightward shift of control frame from the left edge of buf A's frame.
 Measured in characters.
 This is used by the default control frame positioning function,
 `ediff-make-frame-position' to adjust the position of the control frame
@@ -255,7 +261,7 @@ the frame used for the wide display.")
 (ediff-defvar-local ediff-control-frame nil "")
 
 (defcustom ediff-prefer-iconified-control-frame nil
-  "*If t, keep control panel iconified when help message is off.
+  "If t, keep control panel iconified when help message is off.
 This has effect only on a windowing system.
 If t, hitting `?' to toggle control panel off iconifies it.
 
@@ -277,39 +283,31 @@ into icons, regardless of the window manager."
 	  (beep 1))
       (message "Please click on Window %d " wind-number))
     (ediff-read-event) ; discard event
-    (setq wind (ediff-cond-compile-for-xemacs-or-emacs
-		(event-window event) ; xemacs
-		(posn-window (event-start event)) ; emacs
-		)
-	  )
-    ))
+    (setq wind (if (featurep 'xemacs)
+		   (event-window event)
+		 (posn-window (event-start event))))))
 
 
 ;; Select the lowest window on the frame.
 (defun ediff-select-lowest-window ()
-  (ediff-cond-compile-for-xemacs-or-emacs
-   (select-window (frame-lowest-window)) ; xemacs
-   ;; emacs
-   (let* ((lowest-window (selected-window))
-	  (bottom-edge (car (cdr (cdr (cdr (window-edges))))))
-	  (last-window (save-excursion
-			 (other-window -1) (selected-window)))
-	  (window-search t))
-     (while window-search
-       (let* ((this-window (next-window))
-	      (next-bottom-edge
-	       (car (cdr (cdr (cdr (window-edges this-window)))))))
-	 (if (< bottom-edge next-bottom-edge)
-	     (progn
-	       (setq bottom-edge next-bottom-edge)
-	       (setq lowest-window this-window)))
-
-	 (select-window this-window)
-	 (if (eq last-window this-window)
-	     (progn
-	       (select-window lowest-window)
-	       (setq window-search nil))))))
-   ))
+  (if (featurep 'xemacs)
+      (select-window (frame-lowest-window))
+    (let* ((lowest-window (selected-window))
+	   (bottom-edge (car (cdr (cdr (cdr (window-edges))))))
+	   (last-window (save-excursion
+			  (other-window -1) (selected-window)))
+	   (window-search t))
+      (while window-search
+	(let* ((this-window (next-window))
+	       (next-bottom-edge
+		(car (cdr (cdr (cdr (window-edges this-window)))))))
+	  (if (< bottom-edge next-bottom-edge)
+	      (setq bottom-edge next-bottom-edge
+		    lowest-window this-window))
+	  (select-window this-window)
+	  (when (eq last-window this-window)
+	    (select-window lowest-window)
+	    (setq window-search nil)))))))
 
 
 ;;; Common window setup routines
@@ -359,6 +357,7 @@ into icons, regardless of the window manager."
 	    ;; this lets us have local versions of ediff-split-window-function
 	    split-window-function ediff-split-window-function))
     (delete-other-windows)
+    (set-window-dedicated-p (selected-window) nil)
     (split-window-vertically)
     (ediff-select-lowest-window)
     (ediff-setup-control-buffer control-buffer)
@@ -373,7 +372,7 @@ into icons, regardless of the window manager."
     ;; XEmacs used to have a lot of trouble with display
     ;; It did't set things right unless we tell it to sit still
     ;; 19.12 seems ok.
-    ;;(if ediff-xemacs-p (sit-for 0))
+    ;;(if (featurep 'xemacs) (sit-for 0))
 
     (split-window-vertically (max 2 (- (window-height) merge-window-lines)))
     (if (eq (selected-window) wind-A)
@@ -417,7 +416,12 @@ into icons, regardless of the window manager."
 	    ;; this lets us have local versions of ediff-split-window-function
 	    split-window-function ediff-split-window-function
 	    three-way-comparison ediff-3way-comparison-job))
+    ;; if in minibuffer go somewhere else
+    (if (save-match-data
+	  (string-match "\*Minibuf-" (buffer-name (window-buffer))))
+	(select-window (next-window nil 'ignore-minibuf)))
     (delete-other-windows)
+    (set-window-dedicated-p (selected-window) nil)
     (split-window-vertically)
     (ediff-select-lowest-window)
     (ediff-setup-control-buffer control-buffer)
@@ -436,7 +440,7 @@ into icons, regardless of the window manager."
     ;; XEmacs used to have a lot of trouble with display
     ;; It did't set things right unless we told it to sit still
     ;; 19.12 seems ok.
-    ;;(if ediff-xemacs-p (sit-for 0))
+    ;;(if (featurep 'xemacs) (sit-for 0))
 
     (funcall split-window-function wind-width-or-height)
 
@@ -887,7 +891,7 @@ into icons, regardless of the window manager."
    (or
     ;; only one window
     (eq wind (next-window wind 'ignore-minibuffer (window-frame wind)))
-    ;; none is dedicated
+    ;; none is dedicated (in multiframe setup)
     (not (ediff-frame-has-dedicated-windows (window-frame wind)))
     )))
 
@@ -900,10 +904,8 @@ into icons, regardless of the window manager."
 	fheight fwidth adjusted-parameters)
 
     (ediff-with-current-buffer ctl-buffer
-      (ediff-cond-compile-for-xemacs-or-emacs
-       (when (featurep 'menubar) (set-buffer-menubar nil)) ; xemacs
-       nil ; emacs
-       )
+      (if (and (featurep 'xemacs) (featurep 'menubar))
+	  (set-buffer-menubar nil))
       ;;(setq user-grabbed-mouse (ediff-user-grabbed-mouse))
       (run-hooks 'ediff-before-setup-control-frame-hook))
 
@@ -915,13 +917,9 @@ into icons, regardless of the window manager."
 	    ediff-control-frame ctl-frame)
       ;; protect against undefined face-attribute
       (condition-case nil
-	  (ediff-cond-compile-for-xemacs-or-emacs
-	   nil ; xemacs
-	   (when (face-attribute 'mode-line :box)
-	     (set-face-attribute 'mode-line ctl-frame :box nil))
-	   )
-	(error))
-      )
+	  (if (and (featurep 'emacs) (face-attribute 'mode-line :box))
+	      (set-face-attribute 'mode-line ctl-frame :box nil))
+	(error)))
 
     (setq ctl-frame-iconified-p (ediff-frame-iconified-p ctl-frame))
     (select-frame ctl-frame)
@@ -970,19 +968,14 @@ into icons, regardless of the window manager."
     ;; In XEmacs, buffer menubar needs to be killed before frame parameters
     ;; are changed.
     (if (ediff-has-toolbar-support-p)
-	(ediff-cond-compile-for-xemacs-or-emacs
-	 (progn ; xemacs
-	   (if (ediff-has-gutter-support-p)
-	       (set-specifier top-gutter (list ctl-frame nil)))
-	   (sit-for 0)
-	   (set-specifier top-toolbar-height (list ctl-frame 0))
-	   ;;(set-specifier bottom-toolbar-height (list ctl-frame 0))
-	   (set-specifier left-toolbar-width (list ctl-frame 0))
-	   (set-specifier right-toolbar-width (list ctl-frame 0))
-	   )
-	 nil ; emacs
-	 )
-      )
+	(when (featurep 'xemacs)
+	  (if (ediff-has-gutter-support-p)
+	      (set-specifier top-gutter (list ctl-frame nil)))
+	  (sit-for 0)
+	  (set-specifier top-toolbar-height (list ctl-frame 0))
+	  ;;(set-specifier bottom-toolbar-height (list ctl-frame 0))
+	  (set-specifier left-toolbar-width (list ctl-frame 0))
+	  (set-specifier right-toolbar-width (list ctl-frame 0))))
 
     ;; Under OS/2 (emx) we have to call modify frame parameters twice, in order
     ;; to make sure that at least once we do it for non-iconified frame.  If
@@ -1036,34 +1029,26 @@ into icons, regardless of the window manager."
 			   (or (eq this-command 'ediff-quit)
 			       (not (eq ediff-grab-mouse t)))))
 
-    (if ediff-xemacs-p
-	(ediff-with-current-buffer ctl-buffer
-	  (ediff-cond-compile-for-xemacs-or-emacs
-	   (make-local-hook 'select-frame-hook) ; xemacs
-	   nil     ; emacs
-	   )
-	  (add-hook
-	   'select-frame-hook 'ediff-xemacs-select-frame-hook nil 'local)
-	  ))
+    (when (featurep 'xemacs)
+      (ediff-with-current-buffer ctl-buffer
+	(make-local-hook 'select-frame-hook)
+	(add-hook 'select-frame-hook
+		  'ediff-xemacs-select-frame-hook nil 'local)))
 
     (ediff-with-current-buffer ctl-buffer
-      (run-hooks 'ediff-after-setup-control-frame-hook))
-    ))
+      (run-hooks 'ediff-after-setup-control-frame-hook))))
 
 
 (defun ediff-destroy-control-frame (ctl-buffer)
   (ediff-with-current-buffer ctl-buffer
     (if (and (ediff-window-display-p) (frame-live-p ediff-control-frame))
 	(let ((ctl-frame ediff-control-frame))
-	  (ediff-cond-compile-for-xemacs-or-emacs
-	   (when (featurep 'menubar)
-	     (set-buffer-menubar default-menubar)) ; xemacs
-	   nil ; emacs
-	   )
+	  (if (and (featurep 'xemacs) (featurep 'menubar))
+	      (set-buffer-menubar default-menubar))
 	  (setq ediff-control-frame nil)
-	  (delete-frame ctl-frame)
-	  )))
-  (ediff-skip-unsuitable-frames)
+	  (delete-frame ctl-frame))))
+  (if ediff-multiframe
+      (ediff-skip-unsuitable-frames))
   ;;(ediff-reset-mouse nil)
   )
 
@@ -1138,7 +1123,7 @@ It assumes that it is called from within the control buffer."
 		(cons 'width (cdr (assoc 'width frame-A-params))))
 	  ediff-wide-display-frame frame-A)
     (modify-frame-parameters
-     frame-A `((left . ,cw) (width . ,wd) (user-position t)))))
+     frame-A `((left . ,cw) (width . ,wd) (user-position . t)))))
 
 
 ;; Revise the mode line to display which difference we have selected
@@ -1231,7 +1216,7 @@ It assumes that it is called from within the control buffer."
 
 
 (defun ediff-refresh-control-frame ()
-  (if ediff-emacs-p
+  (if (featurep 'emacs)
       ;; set frame/icon titles for Emacs
       (modify-frame-parameters
        ediff-control-frame
@@ -1281,7 +1266,7 @@ It assumes that it is called from within the control buffer."
 ;; If buff is not live, return nil
 (defun ediff-get-visible-buffer-window (buff)
   (if (ediff-buffer-live-p buff)
-      (if ediff-xemacs-p
+      (if (featurep 'xemacs)
 	  (get-buffer-window buff t)
 	(get-buffer-window buff 'visible))))
 
@@ -1318,11 +1303,11 @@ It assumes that it is called from within the control buffer."
 (provide 'ediff-wind)
 
 
-;;; Local Variables:
-;;; eval: (put 'ediff-defvar-local 'lisp-indent-hook 'defun)
-;;; eval: (put 'ediff-with-current-buffer 'lisp-indent-hook 1)
-;;; eval: (put 'ediff-with-current-buffer 'edebug-form-spec '(form body))
-;;; End:
+;; Local Variables:
+;; eval: (put 'ediff-defvar-local 'lisp-indent-hook 'defun)
+;; eval: (put 'ediff-with-current-buffer 'lisp-indent-hook 1)
+;; eval: (put 'ediff-with-current-buffer 'edebug-form-spec '(form body))
+;; End:
 
-;;; arch-tag: 73d9a5d7-eed7-4d9c-8b4b-21d5d78eb597
+;; arch-tag: 73d9a5d7-eed7-4d9c-8b4b-21d5d78eb597
 ;;; ediff-wind.el ends here

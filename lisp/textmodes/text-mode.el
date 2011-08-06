@@ -1,17 +1,17 @@
 ;;; text-mode.el --- text mode, and its idiosyncratic commands
 
 ;; Copyright (C) 1985, 1992, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: wp
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -52,8 +50,6 @@ Use (derived-mode-p 'text-mode) instead.")
 (defvar text-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\e\t" 'ispell-complete-word)
-    (define-key map "\es" 'center-line)
-    (define-key map "\eS" 'center-paragraph)
     map)
   "Keymap for `text-mode'.
 Many other modes, such as `mail-mode', `outline-mode' and `indented-text-mode',
@@ -125,6 +121,9 @@ both existing buffers and buffers that you subsequently create."
     (message "Auto Fill %s in Text modes"
 	     (if enable-mode "enabled" "disabled"))))
 
+
+(define-key facemenu-keymap "\eS" 'center-paragraph)
+
 (defun center-paragraph ()
   "Center each nonblank line in the paragraph at or after point.
 See `center-line' for more info."
@@ -151,6 +150,8 @@ See `center-line' for more info."
 	(or (save-excursion (skip-chars-forward " \t") (eolp))
 	    (center-line))
 	(forward-line 1)))))
+
+(define-key facemenu-keymap "\es" 'center-line)
 
 (defun center-line (&optional nlines)
   "Center the line point is on, within the width specified by `fill-column'.
@@ -180,5 +181,5 @@ The argument NLINES says how many lines to center."
 	   (setq nlines (1+ nlines))
 	   (forward-line -1)))))
 
-;;; arch-tag: a07ccaad-da13-4d7b-9c61-cd04f5926aab
+;; arch-tag: a07ccaad-da13-4d7b-9c61-cd04f5926aab
 ;;; text-mode.el ends here

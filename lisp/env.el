@@ -1,17 +1,17 @@
 ;;; env.el --- functions to manipulate environment variables
 
 ;; Copyright (C) 1991, 1994, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: processes, unix
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -36,6 +34,8 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl))
+
 ;; History list for environment variable names.
 (defvar read-envvar-name-history nil)
 
@@ -45,14 +45,15 @@ Optional second arg MUSTMATCH, if non-nil, means require existing envvar name.
 If it is also not t, RET does not exit if it does non-null completion."
   (completing-read prompt
 		   (mapcar (lambda (enventry)
-			     (list (if enable-multibyte-characters
-				       (decode-coding-string
-					(substring enventry 0
-						   (string-match "=" enventry))
-					locale-coding-system t)
-				     (substring enventry 0
-						(string-match "=" enventry)))))
-			   process-environment)
+                             (let ((str (substring enventry 0
+                                             (string-match "=" enventry))))
+                               (if (multibyte-string-p str)
+                                   (decode-coding-string
+                                    str locale-coding-system t)
+                                 str)))
+			   (append process-environment
+				   ;;(frame-environment)
+				   ))
 		   nil mustmatch nil 'read-envvar-name-history))
 
 ;; History list for VALUE argument to setenv.
@@ -88,17 +89,52 @@ Use `$$' to insert a single dollar sign."
 		   start (+ (match-beginning 0) 1)))))
     string))
 
-;; Fixme: Should `process-environment' be recoded if LC_CTYPE &c is set?
+
+(defun setenv-internal (env variable value keep-empty)
+  "Set VARIABLE to VALUE in ENV, adding empty entries if KEEP-EMPTY.
+Changes ENV by side-effect, and returns its new value."
+  (let ((pattern (concat "\\`" (regexp-quote variable) "\\(=\\|\\'\\)"))
+	(case-fold-search nil)
+	(scan env)
+	prev found)
+    ;; Handle deletions from the beginning of the list specially.
+    (if (and (null value)
+	     (not keep-empty)
+	     env
+	     (stringp (car env))
+	     (string-match pattern (car env)))
+	(cdr env)
+      ;; Try to find existing entry for VARIABLE in ENV.
+      (while (and scan (stringp (car scan)))
+	(when (string-match pattern (car scan))
+	  (if value
+	      (setcar scan (concat variable "=" value))
+	    (if keep-empty
+		(setcar scan variable)
+	      (setcdr prev (cdr scan))))
+	  (setq found t
+		scan nil))
+	(setq prev scan
+	      scan (cdr scan)))
+      (if (and (not found) (or value keep-empty))
+	  (cons (if value
+		    (concat variable "=" value)
+		  variable)
+		env)
+	env))))
+
+;; Fixme: Should the environment be recoded if LC_CTYPE &c is set?
 
 (defun setenv (variable &optional value substitute-env-vars)
   "Set the value of the environment variable named VARIABLE to VALUE.
 VARIABLE should be a string.  VALUE is optional; if not provided or
 nil, the environment variable VARIABLE will be removed.
 
-Interactively, a prefix argument means to unset the variable.
-Interactively, the current value (if any) of the variable
-appears at the front of the history list when you type in the new value.
-Interactively, always replace environment variables in the new value.
+Interactively, a prefix argument means to unset the variable, and
+otherwise the current value (if any) of the variable appears at
+the front of the history list when you type in the new value.
+This function always replaces environment variables in the new
+value when called interactively.
 
 SUBSTITUTE-ENV-VARS, if non-nil, means to substitute environment
 variables in VALUE with `substitute-env-vars', which see.
@@ -138,41 +174,33 @@ a side-effect."
   (if (and value (multibyte-string-p value))
       (setq value (encode-coding-string value locale-coding-system)))
   (if (string-match "=" variable)
-      (error "Environment variable name `%s' contains `='" variable)
-    (let ((pattern (concat "\\`" (regexp-quote (concat variable "="))))
-	  (case-fold-search nil)
-	  (scan process-environment)
-	  found)
-      (if (string-equal "TZ" variable)
-	  (set-time-zone-rule value))
-      (while scan
-	(cond ((string-match pattern (car scan))
-	       (setq found t)
-	       (if (eq nil value)
-		   (setq process-environment (delq (car scan)
-						   process-environment))
-		 (setcar scan (concat variable "=" value)))
-	       (setq scan nil)))
-	(setq scan (cdr scan)))
-      (or found
-	  (if value
-	      (setq process-environment
-		    (cons (concat variable "=" value)
-			  process-environment))))))
+      (error "Environment variable name `%s' contains `='" variable))
+  (if (string-equal "TZ" variable)
+      (set-time-zone-rule value))
+  (setq process-environment (setenv-internal process-environment
+                                             variable value t))
   value)
 
-(defun getenv (variable)
+(defun getenv (variable &optional frame)
   "Get the value of environment variable VARIABLE.
 VARIABLE should be a string.  Value is nil if VARIABLE is undefined in
 the environment.  Otherwise, value is a string.
 
-This function consults the variable `process-environment'
-for its value."
+If optional parameter FRAME is non-nil, then it should be a
+frame.  This function will look up VARIABLE in its 'environment
+parameter.
+
+Otherwise, this function searches `process-environment' for
+VARIABLE.  If it is not found there, then it continues the search
+in the environment list of the selected frame."
   (interactive (list (read-envvar-name "Get environment variable: " t)))
   (let ((value (getenv-internal (if (multibyte-string-p variable)
 				    (encode-coding-string
 				     variable locale-coding-system)
-				  variable))))
+				  variable)
+				(and frame
+				     (assq 'environment
+					   (frame-parameters frame))))))
     (if (and enable-multibyte-characters value)
 	(setq value (decode-coding-string value locale-coding-system)))
     (when (interactive-p)
@@ -181,5 +209,5 @@ for its value."
 
 (provide 'env)
 
-;;; arch-tag: b7d6a8f7-bc81-46db-8e39-8d721d4ed0b8
+;; arch-tag: b7d6a8f7-bc81-46db-8e39-8d721d4ed0b8
 ;;; env.el ends here

@@ -1,33 +1,32 @@
 ;;; url-util.el --- Miscellaneous helper routines for URL library
 
-;; Copyright (C) 1996, 1997, 1998, 1999, 2001, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1996, 1997, 1998, 1999, 2001, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Bill Perry <wmperry@gnu.org>
 ;; Keywords: comm, data, processes
 
 ;; This file is part of GNU Emacs.
 ;;
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-;;
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-;;
+
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
 
 (require 'url-parse)
+(eval-when-compile (require 'cl))
 (autoload 'timezone-parse-date "timezone")
 (autoload 'timezone-make-date-arpa-standard "timezone")
 (autoload 'mail-header-extract "mailheader")
@@ -168,7 +167,9 @@ Strips out default port numbers, etc."
 	  type (url-type data))
     (if (member type '("www" "about" "mailto" "info"))
 	(setq retval url)
-      (url-set-target data nil)
+      ;; FIXME all this does, and all this function seems to do in
+      ;; most cases, is remove any trailing "#anchor" part of a url.
+      (setf (url-target data) nil)
       (setq retval (url-recreate-url data)))
     retval))
 
@@ -234,6 +235,9 @@ Will not do anything if `url-show-status' is nil."
   (if (fboundp 'float)
       (round (* 100 (/ x (float y))))
     (/ (* x 100) y)))
+
+;;;###autoload
+(defalias 'url-basepath 'url-file-directory)
 
 ;;;###autoload
 (defun url-file-directory (file)
@@ -302,7 +306,7 @@ Will not do anything if `url-show-status' is nil."
 
 ;;;###autoload
 (defun url-unhex-string (str &optional allow-newlines)
-  "Remove %XX embedded spaces, etc in a url.
+  "Remove %XX embedded spaces, etc in a URL.
 If optional second argument ALLOW-NEWLINES is non-nil, then allow the
 decoding of carriage returns and line feeds in the string, which is normally
 forbidden in URL encoding."
@@ -343,7 +347,7 @@ character in the utf-8 string, those found in `url-unreserved-chars'
 are left as-is, all others are represented as a three-character
 string: \"%\" followed by two lowercase hex digits."
   ;; To go faster and avoid a lot of consing, we could do:
-  ;; 
+  ;;
   ;; (defconst url-hexify-table
   ;;   (let ((map (make-vector 256 nil)))
   ;;     (dotimes (byte 256) (aset map byte
@@ -365,8 +369,8 @@ string: \"%\" followed by two lowercase hex digits."
 ;;;###autoload
 (defun url-file-extension (fname &optional x)
   "Return the filename extension of FNAME.
-If optional variable X is t,
-then return the basename of the file with the extension stripped off."
+If optional argument X is t, then return the basename
+of the file with the extension stripped off."
   (if (and fname
 	   (setq fname (url-file-nondirectory fname))
 	   (string-match "\\.[^./]+$" fname))
@@ -383,7 +387,7 @@ then return the basename of the file with the extension stripped off."
 
 ;;;###autoload
 (defun url-truncate-url-for-viewing (url &optional width)
-  "Return a shortened version of URL that is WIDTH characters or less wide.
+  "Return a shortened version of URL that is WIDTH characters wide or less.
 WIDTH defaults to the current frame width."
   (let* ((fr-width (or width (frame-width)))
 	 (str-width (length url))
@@ -404,13 +408,13 @@ WIDTH defaults to the current frame width."
 		  (string-match "/" fname))
 	(setq fname (substring fname (match-end 0) nil)
 	      modified (1+ modified))
-	(url-set-filename urlobj fname)
+	(setf (url-filename urlobj) fname)
 	(setq url (url-recreate-url urlobj)
 	      str-width (length url)))
       (if (> modified 1)
 	  (setq fname (concat "/.../" fname))
 	(setq fname (concat "/" fname)))
-      (url-set-filename urlobj fname)
+      (setf (url-filename urlobj) fname)
       (setq url (url-recreate-url urlobj)))
     url))
 
@@ -430,7 +434,7 @@ This uses `url-current-object', set locally to the buffer."
 
 (eval-and-compile
   (defvar url-get-url-filename-chars "-%.?@a-zA-Z0-9()_/:~=&"
-    "Valid characters in a URL")
+    "Valid characters in a URL.")
   )
 
 (defun url-get-url-at-point (&optional pt)
@@ -472,25 +476,28 @@ Has a preference for looking backward when not directly on a symbol."
 
 (defun url-generate-unique-filename (&optional fmt)
   "Generate a unique filename in `url-temporary-directory'."
-  (if (not fmt)
-      (let ((base (format "url-tmp.%d" (user-real-uid)))
+  ;; This variable is obsolete, but so is this function.
+  (let ((tempdir (with-no-warnings url-temporary-directory)))
+    (if (not fmt)
+	(let ((base (format "url-tmp.%d" (user-real-uid)))
+	      (fname "")
+	      (x 0))
+	  (setq fname (format "%s%d" base x))
+	  (while (file-exists-p
+		  (expand-file-name fname tempdir))
+	    (setq x (1+ x)
+		  fname (concat base (int-to-string x))))
+	  (expand-file-name fname tempdir))
+      (let ((base (concat "url" (int-to-string (user-real-uid))))
 	    (fname "")
 	    (x 0))
-	(setq fname (format "%s%d" base x))
+	(setq fname (format fmt (concat base (int-to-string x))))
 	(while (file-exists-p
-		(expand-file-name fname url-temporary-directory))
+		(expand-file-name fname tempdir))
 	  (setq x (1+ x)
-		fname (concat base (int-to-string x))))
-	(expand-file-name fname url-temporary-directory))
-    (let ((base (concat "url" (int-to-string (user-real-uid))))
-	  (fname "")
-	  (x 0))
-      (setq fname (format fmt (concat base (int-to-string x))))
-      (while (file-exists-p
-	      (expand-file-name fname url-temporary-directory))
-	(setq x (1+ x)
-	      fname (format fmt (concat base (int-to-string x)))))
-      (expand-file-name fname url-temporary-directory))))
+		fname (format fmt (concat base (int-to-string x)))))
+	(expand-file-name fname tempdir)))))
+(make-obsolete 'url-generate-unique-filename 'make-temp-file "23.1")
 
 (defun url-extract-mime-headers ()
   "Set `url-current-mime-headers' in current buffer."

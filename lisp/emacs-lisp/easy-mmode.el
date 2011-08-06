@@ -1,7 +1,7 @@
 ;;; easy-mmode.el --- easy definition for major and minor modes
 
 ;; Copyright (C) 1997, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Georges Brun-Cottan <Georges.Brun-Cottan@inria.fr>
 ;; Maintainer: Stefan Monnier <monnier@gnu.org>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -390,17 +388,18 @@ See `%s' for more information on %s."
 ;;; easy-mmode-defmap
 ;;;
 
-(if (fboundp 'set-keymap-parents)
-    (defalias 'easy-mmode-set-keymap-parents 'set-keymap-parents)
-  (defun easy-mmode-set-keymap-parents (m parents)
-    (set-keymap-parent
-     m
-     (cond
-      ((not (consp parents)) parents)
-      ((not (cdr parents)) (car parents))
-      (t (let ((m (copy-keymap (pop parents))))
-	   (easy-mmode-set-keymap-parents m parents)
-	   m))))))
+(eval-and-compile
+  (if (fboundp 'set-keymap-parents)
+      (defalias 'easy-mmode-set-keymap-parents 'set-keymap-parents)
+    (defun easy-mmode-set-keymap-parents (m parents)
+      (set-keymap-parent
+       m
+       (cond
+        ((not (consp parents)) parents)
+        ((not (cdr parents)) (car parents))
+        (t (let ((m (copy-keymap (pop parents))))
+             (easy-mmode-set-keymap-parents m parents)
+             m)))))))
 
 ;;;###autoload
 (defun easy-mmode-define-keymap (bs &optional name m args)
@@ -409,8 +408,17 @@ BS must be a list of (KEY . BINDING) where
 KEY and BINDINGS are suitable for `define-key'.
 Optional NAME is passed to `make-sparse-keymap'.
 Optional map M can be used to modify an existing map.
-ARGS is a list of additional keyword arguments."
-  (let (inherit dense)
+ARGS is a list of additional keyword arguments.
+
+Valid keywords and arguments are:
+
+  :name      Name of the keymap; overrides NAME argument.
+  :dense     Non-nil for a dense keymap.
+  :inherit   Parent keymap.
+  :group     Ignored.
+  :suppress  Non-nil to call `suppress-keymap' on keymap,
+             'nodigits to suppress digits as prefix arguments."
+  (let (inherit dense suppress)
     (while args
       (let ((key (pop args))
 	    (val (pop args)))
@@ -418,11 +426,14 @@ ARGS is a list of additional keyword arguments."
 	 (:name (setq name val))
 	 (:dense (setq dense val))
 	 (:inherit (setq inherit val))
+	 (:suppress (setq suppress val))
 	 (:group)
 	 (t (message "Unknown argument %s in defmap" key)))))
     (unless (keymapp m)
       (setq bs (append m bs))
       (setq m (if dense (make-keymap name) (make-sparse-keymap name))))
+    (when suppress
+      (suppress-keymap m (eq suppress 'nodigits)))
     (dolist (b bs)
       (let ((keys (car b))
 	    (binding (cdr b)))
@@ -458,7 +469,7 @@ ARGS is a list of additional keyword arguments."
       (let ((char (car cs))
 	    (syntax (cdr cs)))
 	(if (sequencep char)
-	    (mapcar (lambda (c) (modify-syntax-entry c syntax st)) char)
+	    (mapc (lambda (c) (modify-syntax-entry c syntax st)) char)
 	  (modify-syntax-entry char syntax st))))
     (if parent (set-char-table-parent
 		st (if (symbolp parent) (symbol-value parent) parent)))
@@ -478,7 +489,8 @@ CSS contains a list of syntax specifications of the form (CHAR . SYNTAX)."
 ;;; easy-mmode-define-navigation
 ;;;
 
-(defmacro easy-mmode-define-navigation (base re &optional name endfun narrowfun)
+(defmacro easy-mmode-define-navigation (base re &optional name endfun narrowfun
+                                             &rest body)
   "Define BASE-next and BASE-prev to navigate in the buffer.
 RE determines the places the commands should move point to.
 NAME should describe the entities matched by RE.  It is used to build
@@ -488,17 +500,20 @@ BASE-next also tries to make sure that the whole entry is visible by
   the next entry) and recentering if necessary.
 ENDFUN should return the end position (with or without moving point).
 NARROWFUN non-nil means to check for narrowing before moving, and if
-found, do `widen' first and then call NARROWFUN with no args after moving."
+found, do `widen' first and then call NARROWFUN with no args after moving.
+BODY is executed after moving to the destination location."
+  (declare (indent 5) (debug (exp exp exp def-form def-form &rest def-body)))
   (let* ((base-name (symbol-name base))
 	 (prev-sym (intern (concat base-name "-prev")))
 	 (next-sym (intern (concat base-name "-next")))
-         (check-narrow-maybe
-	  (when narrowfun
-	    '(setq was-narrowed
-		   (prog1 (or (< (- (point-max) (point-min)) (buffer-size)))
-		     (widen)))))
-         (re-narrow-maybe (when narrowfun
-                            `(when was-narrowed (,narrowfun)))))
+         (when-narrowed
+          (lambda (body)
+            (if (null narrowfun) body
+              `(let ((was-narrowed
+                      (prog1 (or (< (- (point-max) (point-min)) (buffer-size)))
+                        (widen))))
+                 ,body
+                 (when was-narrowed (,narrowfun)))))))
     (unless name (setq name base-name))
     `(progn
        (add-to-list 'debug-ignored-errors
@@ -509,33 +524,31 @@ found, do `widen' first and then call NARROWFUN with no args after moving."
 	 (unless count (setq count 1))
 	 (if (< count 0) (,prev-sym (- count))
 	   (if (looking-at ,re) (setq count (1+ count)))
-           (let (was-narrowed)
-             ,check-narrow-maybe
-             (if (not (re-search-forward ,re nil t count))
-                 (if (looking-at ,re)
-                     (goto-char (or ,(if endfun `(,endfun)) (point-max)))
-                   (error "No next %s" ,name))
-               (goto-char (match-beginning 0))
-               (when (and (eq (current-buffer) (window-buffer (selected-window)))
-                          (interactive-p))
-                 (let ((endpt (or (save-excursion
-                                    ,(if endfun `(,endfun)
-                                       `(re-search-forward ,re nil t 2)))
-                                  (point-max))))
-                   (unless (pos-visible-in-window-p endpt nil t)
-                     (recenter '(0))))))
-             ,re-narrow-maybe)))
+           ,(funcall when-narrowed
+             `(if (not (re-search-forward ,re nil t count))
+                  (if (looking-at ,re)
+                      (goto-char (or ,(if endfun `(,endfun)) (point-max)))
+                    (error "No next %s" ,name))
+                (goto-char (match-beginning 0))
+                (when (and (eq (current-buffer) (window-buffer (selected-window)))
+                           (interactive-p))
+                  (let ((endpt (or (save-excursion
+                                     ,(if endfun `(,endfun)
+                                        `(re-search-forward ,re nil t 2)))
+                                   (point-max))))
+                    (unless (pos-visible-in-window-p endpt nil t)
+                      (recenter '(0)))))))
+           ,@body))
        (put ',next-sym 'definition-name ',base)
        (defun ,prev-sym (&optional count)
 	 ,(format "Go to the previous COUNT'th %s" (or name base-name))
 	 (interactive "p")
 	 (unless count (setq count 1))
 	 (if (< count 0) (,next-sym (- count))
-           (let (was-narrowed)
-             ,check-narrow-maybe
-             (unless (re-search-backward ,re nil t count)
-               (error "No previous %s" ,name))
-             ,re-narrow-maybe)))
+           ,(funcall when-narrowed
+             `(unless (re-search-backward ,re nil t count)
+                (error "No previous %s" ,name)))
+           ,@body))
        (put ',prev-sym 'definition-name ',base))))
 
 

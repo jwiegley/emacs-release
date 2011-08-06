@@ -1,17 +1,17 @@
 ;;; calc-math.el --- mathematical functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -31,6 +29,90 @@
 
 (require 'calc-ext)
 (require 'calc-macs)
+
+
+;;; Find out how many 9s in 9.9999... will give distinct Emacs floats,
+;;; then back off by one.
+
+(defvar math-emacs-precision
+  (let* ((n 1)
+         (x 9)
+         (xx (+ x (* 9 (expt 10 (- n))))))
+    (while (/= x xx)
+      (progn
+        (setq n (1+ n))
+        (setq x xx)
+        (setq xx (+ x (* 9 (expt 10 (- n)))))))
+    (1- n))
+  "The number of digits in an Emacs float.")
+
+;;; Find the largest power of 10 which is an Emacs float, 
+;;; then back off by one so that any float d.dddd...eN 
+;;; is an Emacs float, for acceptable d.dddd....
+
+(defvar math-largest-emacs-expt
+  (let ((x 1)
+        (pow 1e2))
+    ;; The following loop is for efficiency; it should stop when 
+    ;; 10^(2x) is too large.  This could be indicated by a range 
+    ;; error when computing 10^(2x) or an infinite value for 10^(2x).
+    (while (and
+            pow
+            (< pow 1.0e+INF))
+      (setq x (* 2 x))
+      (setq pow (condition-case nil
+                    (expt 10.0 (* 2 x))
+                  (error nil))))
+    ;; The following loop should stop when 10^(x+1) is too large.
+    (setq pow (condition-case nil
+                    (expt 10.0 (1+ x))
+                  (error nil)))
+    (while (and
+            pow
+            (< pow 1.0e+INF))
+      (setq x (1+ x))
+      (setq pow (condition-case nil
+                    (expt 10.0 (1+ x))
+                  (error nil))))
+    (1- x))
+  "The largest exponent which Calc will convert to an Emacs float.")
+
+(defvar math-smallest-emacs-expt
+  (let ((x -1))
+    (while (condition-case nil
+               (> (expt 10.0 x) 0.0)
+             (error nil))
+      (setq x (* 2 x)))
+    (setq x (/ x 2))
+    (while (condition-case nil
+               (> (expt 10.0 x) 0.0)
+             (error nil))
+      (setq x (1- x)))
+    (+ x 2))
+    "The smallest exponent which Calc will convert to an Emacs float.")
+
+(defun math-use-emacs-fn (fn x)
+  "Use the native Emacs function FN to evaluate the Calc number X.
+If this can't be done, return NIL."
+  (and
+   (<= calc-internal-prec math-emacs-precision)
+   (math-realp x)
+   (let* ((fx (math-float x))
+          (xpon (+ (nth 2 x) (1- (math-numdigs (nth 1 x))))))
+     (and (<= math-smallest-emacs-expt xpon)
+          (<= xpon math-largest-emacs-expt)
+          (condition-case nil
+              (math-read-number
+               (number-to-string
+                (funcall fn 
+			 (string-to-number 
+			  (let 
+                              ((calc-number-radix 10)
+                               (calc-float-format (list 'float calc-internal-prec))
+                               (calc-group-digits nil)
+                               (calc-point-char "."))
+			    (math-format-number (math-float x)))))))
+            (error nil))))))
 
 (defun calc-sqrt (arg)
   (interactive "P")
@@ -310,15 +392,15 @@
 	(let* ((top (nthcdr (- len 2) a)))
 	  (math-isqrt-bignum-iter
 	   a
-	   (math-scale-bignum-3
+	   (math-scale-bignum-digit-size
 	    (math-bignum-big
 	     (1+ (math-isqrt-small
-		  (+ (* (nth 1 top) 1000) (car top)))))
+		  (+ (* (nth 1 top) math-bignum-digit-size) (car top)))))
 	    (1- (/ len 2)))))
       (let* ((top (nth (1- len) a)))
 	(math-isqrt-bignum-iter
 	 a
-	 (math-scale-bignum-3
+	 (math-scale-bignum-digit-size
 	  (list (1+ (math-isqrt-small top)))
 	  (/ len 2)))))))
 
@@ -341,14 +423,15 @@
 	 (while (eq (car (setq a (cdr a))) 0))
 	 (null a))))
 
-(defun math-scale-bignum-3 (a n)   ; [L L S]
+(defun math-scale-bignum-digit-size (a n)   ; [L L S]
   (while (> n 0)
     (setq a (cons 0 a)
 	  n (1- n)))
   a)
 
 (defun math-isqrt-small (a)   ; A > 0.  [S S]
-  (let ((g (cond ((>= a 10000) 1000)
+  (let ((g (cond ((>= a 1000000) 10000)
+                 ((>= a 10000) 1000)
 		 ((>= a 100) 100)
 		 (t 10)))
 	g2)
@@ -463,13 +546,16 @@
 (defun math-sqrt-raw (a &optional guess)   ; [F F F]
   (if (not (Math-posp a))
       (math-sqrt a)
-    (if (null guess)
-	(let ((ldiff (- (math-numdigs (nth 1 a)) 6)))
-	  (or (= (% (+ (nth 2 a) ldiff) 2) 0) (setq ldiff (1+ ldiff)))
-	  (setq guess (math-make-float (math-isqrt-small
-					(math-scale-int (nth 1 a) (- ldiff)))
-				       (/ (+ (nth 2 a) ldiff) 2)))))
-    (math-sqrt-float-iter a guess)))
+    (cond
+     ((math-use-emacs-fn 'sqrt a))
+     (t
+      (if (null guess)
+          (let ((ldiff (- (math-numdigs (nth 1 a)) 6)))
+            (or (= (% (+ (nth 2 a) ldiff) 2) 0) (setq ldiff (1+ ldiff)))
+            (setq guess (math-make-float (math-isqrt-small
+                                          (math-scale-int (nth 1 a) (- ldiff)))
+                                         (/ (+ (nth 2 a) ldiff) 2)))))
+      (math-sqrt-float-iter a guess)))))
 
 (defun math-sqrt-float-iter (a guess)   ; [F F F]
   (math-working "sqrt" guess)
@@ -992,7 +1078,7 @@
 	(t (calc-record-why 'scalarp x)
 	   (list 'calcFunc-cot x))))
 
-(defun math-sin-raw (x)   ; [N N]
+(defun math-sin-raw (x &optional orgx)   ; [N N]
   (cond ((eq (car x) 'cplx)
 	 (let* ((expx (math-exp-raw (nth 2 x)))
 		(expmx (math-div-float '(float 1 0) expx))
@@ -1007,15 +1093,15 @@
 	((eq (car x) 'polar)
 	 (math-polar (math-sin-raw (math-complex x))))
 	((Math-integer-negp (nth 1 x))
-	 (math-neg-float (math-sin-raw (math-neg-float x))))
+	 (math-neg-float (math-sin-raw (math-neg-float x) (if orgx orgx x))))
 	((math-lessp-float '(float 7 0) x)  ; avoid inf loops due to roundoff
-	 (math-sin-raw (math-mod x (math-two-pi))))
-	(t (math-sin-raw-2 x x))))
+	 (math-sin-raw (math-mod x (math-two-pi)) (if orgx orgx x)))
+	(t (math-sin-raw-2 x (if orgx orgx x)))))
 
 (defun math-cos-raw (x)   ; [N N]
   (if (eq (car-safe x) 'polar)
       (math-polar (math-cos-raw (math-complex x)))
-    (math-sin-raw (math-sub (math-pi-over-2) x))))
+    (math-sin-raw (math-sub (math-pi-over-2) x) x)))
 
 (defun math-sec-raw (x)   ; [N N]
   (cond ((eq (car x) 'cplx)
@@ -1134,12 +1220,16 @@
 	   (math-cos-raw-2 xmpo2 orgx))
 	  ((math-lessp-float x (math-neg (math-pi-over-4)))
 	   (math-neg (math-cos-raw-2 (math-add (math-pi-over-2) x) orgx)))
-	  ((math-nearly-zerop-float x orgx) '(float 0 0))
+	  ((math-with-extra-prec -1 (math-nearly-zerop-float x orgx)) 
+           '(float 0 0))
+          ((math-use-emacs-fn 'sin x))
 	  (calc-symbolic-mode (signal 'inexact-result nil))
 	  (t (math-sin-series x 6 4 x (math-neg-float (math-sqr-float x)))))))
 
 (defun math-cos-raw-2 (x orgx)   ; [F F]
-  (cond ((math-nearly-zerop-float x orgx) '(float 1 0))
+  (cond ((math-with-extra-prec -1 (math-nearly-zerop-float x orgx))
+         '(float 1 0))
+        ((math-use-emacs-fn 'cos x))
 	(calc-symbolic-mode (signal 'inexact-result nil))
 	(t (let ((xnegsqr (math-neg-float (math-sqr-float x))))
 	     (math-sin-series
@@ -1253,6 +1343,7 @@
 	((Math-integer-negp (nth 1 x))
 	 (math-neg-float (math-arctan-raw (math-neg-float x))))
 	((math-zerop x) x)
+        ((math-use-emacs-fn 'atan x))
 	(calc-symbolic-mode (signal 'inexact-result nil))
 	((math-equal-int x 1) (math-pi-over-4))
 	((math-equal-int x -1) (math-neg (math-pi-over-4)))
@@ -1402,6 +1493,7 @@
 	   (list 'polar
 		 (math-exp-raw (nth 1 xc))
 		 (math-from-radians (nth 2 xc)))))
+        ((math-use-emacs-fn 'exp x))
 	((or (math-lessp-float '(float 5 -1) x)
 	     (math-lessp-float x '(float -5 -1)))
 	 (if (math-lessp-float '(float 921035 1) x)
@@ -1670,10 +1762,13 @@
 	 '(float 0 0))
 	(calc-symbolic-mode (signal 'inexact-result nil))
 	((math-posp (nth 1 x))    ; positive and real
-	 (let ((xdigs (1- (math-numdigs (nth 1 x)))))
-	   (math-add-float (math-ln-raw-2 (list 'float (nth 1 x) (- xdigs)))
-			   (math-mul-float (math-float (+ (nth 2 x) xdigs))
-					   (math-ln-10)))))
+         (cond 
+          ((math-use-emacs-fn 'log x))
+          (t
+           (let ((xdigs (1- (math-numdigs (nth 1 x)))))
+             (math-add-float (math-ln-raw-2 (list 'float (nth 1 x) (- xdigs)))
+                             (math-mul-float (math-float (+ (nth 2 x) xdigs))
+                                             (math-ln-10)))))))
 	((math-zerop x)
 	 (math-reject-arg x "*Logarithm of zero"))
 	((eq calc-complex-mode 'polar)    ; negative and real
@@ -1717,10 +1812,18 @@
 	sum
       (math-lnp1-series nextsum (1+ n) nextx x))))
 
-(math-defcache math-ln-10 (float (bigpos 018 684 045 994 092 585 302 2) -21)
+(defconst math-approx-ln-10
+  (math-read-number-simple "2.302585092994045684018")
+  "An approximation for ln(10).")
+     
+(math-defcache math-ln-10 math-approx-ln-10
   (math-ln-raw-2 '(float 1 1)))
 
-(math-defcache math-ln-2 (float (bigpos 417 309 945 559 180 147 693) -21)
+(defconst math-approx-ln-2
+  (math-read-number-simple "0.693147180559945309417")
+  "An approximation for ln(2).")
+
+(math-defcache math-ln-2 math-approx-ln-2
   (math-ln-raw-3 (math-float '(frac 1 3))))
 
 
@@ -2061,5 +2164,5 @@
 
 (provide 'calc-math)
 
-;;; arch-tag: c7367e8e-d0b8-4f70-8577-2fb3f31dbb4c
+;; arch-tag: c7367e8e-d0b8-4f70-8577-2fb3f31dbb4c
 ;;; calc-math.el ends here

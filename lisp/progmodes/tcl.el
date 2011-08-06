@@ -1,7 +1,7 @@
 ;;; tcl.el --- Tcl code editing commands for Emacs
 
-;; Copyright (C) 1994, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-;;           Free Software Foundation, Inc.
+;; Copyright (C) 1994, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
+;;   2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Author: Tom Tromey <tromey@redhat.com>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; BEFORE USE:
 ;;
@@ -636,7 +634,7 @@ Commands:
   ;; Indent line first; this looks better if parens blink.
   (tcl-indent-line)
   (self-insert-command arg)
-  (if (and tcl-auto-newline (= last-command-char ?\;))
+  (if (and tcl-auto-newline (= last-command-event ?\;))
       (progn
 	(newline)
 	(tcl-indent-line))))
@@ -660,7 +658,7 @@ Commands:
 	;; In auto-newline case, must insert a newline after each
 	;; brace.  So an explicit loop is needed.
 	(while (> arg 0)
-	  (insert last-command-char)
+	  (insert last-command-event)
 	  (tcl-indent-line)
 	  (newline)
 	  (setq arg (1- arg))))
@@ -1031,14 +1029,12 @@ Returns nil if line starts inside a string, t if in a comment."
 (defvar inferior-tcl-delete-prompt-marker nil)
 
 (defun tcl-filter (proc string)
-  (let ((inhibit-quit t))
+  (let ((inhibit-quit t))               ;FIXME: Isn't that redundant?
     (with-current-buffer (process-buffer proc)
-      (goto-char (process-mark proc))
       ;; Delete prompt if requested.
-      (if (marker-buffer inferior-tcl-delete-prompt-marker)
-	  (progn
-	    (delete-region (point) inferior-tcl-delete-prompt-marker)
-	    (set-marker inferior-tcl-delete-prompt-marker nil)))))
+      (when (marker-buffer inferior-tcl-delete-prompt-marker)
+        (delete-region (process-mark proc) inferior-tcl-delete-prompt-marker)
+        (set-marker inferior-tcl-delete-prompt-marker nil))))
   (comint-output-filter proc string))
 
 (defun tcl-send-string (proc string)

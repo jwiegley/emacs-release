@@ -1,7 +1,7 @@
 ;;; ja-dic-cnv.el --- convert a Japanese dictionary (SKK-JISYO.L) to Emacs Lisp
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008
+;;   2005, 2006, 2007, 2008, 2009
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -48,12 +46,13 @@
 (defvar ja-dic-filename "ja-dic.el")
 
 ;; To make a generated ja-dic.el smaller.
-(make-coding-system
- 'iso-2022-7bit-short
- 2 ?J
+(define-coding-system 'iso-2022-7bit-short
  "Like `iso-2022-7bit' but no ASCII designation before SPC."
- '(ascii nil nil nil t t nil t)
- '((safe-charsets . t)))
+  :coding-type 'iso-2022
+  :mnemonic ?J
+  :charset-list 'iso-2022
+  :designation [(ascii t) nil nil nil]
+  :flags '(short 7-bit designation))
 
 (defun skkdic-convert-okuri-ari (skkbuf buf)
   (message "Processing OKURI-ARI entries ...")
@@ -478,7 +477,7 @@ To get complete usage, invoke:
 		(- ch)			;  represented by a negative code.
 	      (if (= ch ?ー)		; `ー' is represented by 0.
 		  0
-		(- (nth 2 (split-char ch)) 32))))
+		(- (logand (encode-char ch 'japanese-jisx0208) #xFF) 32))))
       (setq i (1+ i)))
     vec))
 
@@ -558,7 +557,7 @@ To get complete usage, invoke:
 	 (while l
 	   (setq count (1+ count))
 	   (if (= (% count 10000) 0)
-	       (message (format "%d entries" count)))
+	       (message "%d entries" count))
 	   (setq entry (skkdic-extract-conversion-data (car l)))
 	   (set-nested-alist (car entry) (cdr entry) map)
 	   (setq l (cdr l)))
@@ -570,5 +569,5 @@ To get complete usage, invoke:
 ;; coding: iso-2022-7bit
 ;; End:
 
-;;; arch-tag: dec06fb0-8118-45b1-80d7-dc360b6fd3b2
+;; arch-tag: dec06fb0-8118-45b1-80d7-dc360b6fd3b2
 ;;; ja-dic-cnv.el ends here

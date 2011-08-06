@@ -1,16 +1,16 @@
 ;;; ediff-merg.el --- merging utilities
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -35,32 +33,27 @@
 (defvar ediff-window-config-saved)
 
 (eval-when-compile
-  (let ((load-path (cons (expand-file-name ".") load-path)))
-    (or (featurep 'ediff-init)
-	(load "ediff-init.el" nil nil 'nosuffix))
-    (or (featurep 'ediff-util)
-	(load "ediff-util.el" nil nil 'nosuffix))
-    ))
+  (require 'ediff-util))
 ;; end pacifier
 
 (require 'ediff-init)
 
 (defcustom ediff-quit-merge-hook 'ediff-maybe-save-and-delete-merge
-  "*Hooks to run before quitting a merge job.
+  "Hooks to run before quitting a merge job.
 The most common use is to save and delete the merge buffer."
   :type 'hook
   :group 'ediff-merge)
 
 
 (defcustom ediff-default-variant 'combined
-  "*The variant to be used as a default for buffer C in merging.
+  "The variant to be used as a default for buffer C in merging.
 Valid values are the symbols `default-A', `default-B', and `combined'."
   :type '(radio (const default-A) (const default-B) (const combined))
   :group 'ediff-merge)
 
 (defcustom ediff-combination-pattern
   '("<<<<<<< variant A" A ">>>>>>> variant B" B  "####### Ancestor" Ancestor "======= end")
-  "*Pattern to be used for combining difference regions in buffers A and B.
+  "Pattern to be used for combining difference regions in buffers A and B.
 The value must be a list of the form
 \(STRING1 bufspec1  STRING2 bufspec2 STRING3 bufspec3 STRING4)
 where bufspec is the symbol A, B, or Ancestor. For instance, if the value is
@@ -80,7 +73,7 @@ STRING4
   :group 'ediff-merge)
 
 (defcustom ediff-show-clashes-only nil
-  "*If t, show only those diff regions where both buffers disagree with the ancestor.
+  "If t, show only those diff regions where both buffers disagree with the ancestor.
 This means that regions that have status prefer-A or prefer-B will be
 skipped over.  A value of nil means show all regions."
   :type 'boolean
@@ -89,7 +82,7 @@ skipped over.  A value of nil means show all regions."
 (make-variable-buffer-local 'ediff-show-clashes-only)
 
 (defcustom ediff-skip-merge-regions-that-differ-from-default nil
-  "*If t, show only the regions that have not been changed by the user.
+  "If t, show only the regions that have not been changed by the user.
 A region is considered to have been changed if it is different from the current
 default (`default-A', `default-B', `combined') and it hasn't been marked as
 `prefer-A' or `prefer-B'.
@@ -359,7 +352,7 @@ Combining is done according to the specifications in variable
 	(reverse delim-regs-list)
 	)))
 
-(eval-when-compile (defvar state-of-merge)) ; dynamic var
+(defvar state-of-merge)			; dynamic var
 
 ;; Check if the non-preferred merge has been modified since originally set.
 ;; This affects only the regions that are marked as default-A/B or combined.
@@ -392,11 +385,11 @@ Combining is done according to the specifications in variable
 (provide 'ediff-merg)
 
 
-;;; Local Variables:
-;;; eval: (put 'ediff-defvar-local 'lisp-indent-hook 'defun)
-;;; eval: (put 'ediff-with-current-buffer 'lisp-indent-hook 1)
-;;; eval: (put 'ediff-with-current-buffer 'edebug-form-spec '(form body))
-;;; End:
+;; Local Variables:
+;; eval: (put 'ediff-defvar-local 'lisp-indent-hook 'defun)
+;; eval: (put 'ediff-with-current-buffer 'lisp-indent-hook 1)
+;; eval: (put 'ediff-with-current-buffer 'edebug-form-spec '(form body))
+;; End:
 
-;;; arch-tag: 9b798cf9-02ba-487f-a62e-b63aa823dbfb
+;; arch-tag: 9b798cf9-02ba-487f-a62e-b63aa823dbfb
 ;;; ediff-merg.el ends here

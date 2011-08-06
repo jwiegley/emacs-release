@@ -1,9 +1,9 @@
 ;;; kkc.el --- Kana Kanji converter    -*- coding: iso-2022-7bit; -*-
 
 ;; Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008  Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008
+;;   2005, 2006, 2007, 2008, 2009
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
@@ -11,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -43,7 +41,7 @@
   "String denoting KKC input method.
 This string is shown at mode line when users are in KKC mode.")
 
-(defvar kkc-init-file-name "~/.kkcrc"
+(defvar kkc-init-file-name (convert-standard-filename "~/.kkcrc")
   "Name of a file which contains user's initial setup code for KKC.")
 
 ;; A flag to control a file specified by `kkc-init-file-name'.
@@ -660,5 +658,5 @@ and change the current conversion to the last one in the group."
 ;;
 (provide 'kkc)
 
-;;; arch-tag: 3cbfd56e-74e6-4f60-bb46-ba7c2d366fbf
+;; arch-tag: 3cbfd56e-74e6-4f60-bb46-ba7c2d366fbf
 ;;; kkc.el ends here

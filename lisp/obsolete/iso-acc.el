@@ -1,7 +1,7 @@
 ;;; iso-acc.el --- minor mode providing electric accent keys
 
 ;; Copyright (C) 1993, 1994, 1996, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Johan Vromans
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,11 +20,11 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
+
+;; This file has been obsolete since Emacs 22.1.
 
 ;; Function `iso-accents-mode' activates a minor mode in which
 ;; typewriter "dead keys" are emulated.  The purpose of this emulation
@@ -287,9 +287,9 @@ the language you choose)."
   "Modify the following character by adding an accent to it."
   ;; Pick up the accent character.
   (if (and iso-accents-mode
-	   (memq last-input-char iso-accents-enable))
+	   (memq last-input-event iso-accents-enable))
       (iso-accents-compose prompt)
-    (vector last-input-char)))
+    (vector last-input-event)))
 
 
 ;; The iso-accents-compose function is called deep inside Emacs' read
@@ -302,7 +302,7 @@ the language you choose)."
 ;; window's display matrix.
 
 (defun iso-accents-compose (prompt)
-  (let* ((first-char last-input-char)
+  (let* ((first-char last-input-event)
 	 (list (assq first-char iso-accents-list))
 	 ;; Wait for the second key and look up the combination.
 	 (second-char (if (or prompt

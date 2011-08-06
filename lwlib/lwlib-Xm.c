@@ -1,6 +1,6 @@
 /* The lwlib interface to Motif widgets.
    Copyright (C) 1994, 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
    Copyright (C) 1992 Lucid, Inc.
 
 This file is part of the Lucid Widget Library.
@@ -956,15 +956,13 @@ xm_update_one_value (instance, widget, val)
     }
   else if (class == xmTextWidgetClass)
     {
-      if (val->value)
-	free (val->value);
+      free (val->value);
       val->value = XmTextGetString (widget);
       val->edited = True;
     }
   else if (class == xmTextFieldWidgetClass)
     {
-      if (val->value)
-	free (val->value);
+      free (val->value);
       val->value = XmTextFieldGetString (widget);
       val->edited = True;
     }
@@ -989,8 +987,7 @@ xm_update_one_value (instance, widget, val)
 	      XtVaGetValues (toggle, XmNset, &set, NULL);
 	      if (set)
 		{
-		  if (val->value)
-		    free (val->value);
+		  free (val->value);
 		  val->value = safe_strdup (XtName (toggle));
 		}
 	    }

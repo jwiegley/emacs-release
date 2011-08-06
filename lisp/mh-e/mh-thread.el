@@ -1,6 +1,7 @@
 ;;; mh-thread.el --- MH-E threading support
 
-;; Copyright (C) 2002, 2003, 2004, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Satyaki Das <satyaki@theforce.stanford.edu>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -9,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -494,8 +493,8 @@ not put into a single thread."
       (setq subject-pruned-flag t)
       (setq subject (substring subject 0 (match-beginning 0))))
     ;; Canonicalize subject only if it is non-empty
-    (cond ((equal subject "") (values subject subject-pruned-flag))
-          (t (values
+    (cond ((equal subject "") (list subject subject-pruned-flag))
+          (t (list
               (or (gethash subject mh-thread-subject-hash)
                   (setf (gethash subject mh-thread-subject-hash) subject))
               subject-pruned-flag)))))
@@ -619,7 +618,7 @@ Only information about messages in MSG-LIST are added to the tree."
                 (return-from process-message))
               (unless (integerp index) (return)) ;Error message here
               (multiple-value-setq (subject subject-re-p)
-                (mh-thread-prune-subject subject))
+                (values-list (mh-thread-prune-subject subject)))
               (setq in-reply-to (mh-thread-process-in-reply-to in-reply-to))
               (setq refs (loop for x in (append (split-string refs) in-reply-to)
                                when (string-match mh-message-id-regexp x)

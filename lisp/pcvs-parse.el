@@ -1,17 +1,17 @@
 ;;; pcvs-parse.el --- the CVS output parser
 
 ;; Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Keywords: pcl-cvs
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -45,7 +43,7 @@
 ;; parse vars
 
 (defcustom cvs-update-prog-output-skip-regexp "$"
-  "*A regexp that matches the end of the output from all cvs update programs.
+  "A regexp that matches the end of the output from all cvs update programs.
 That is, output from any programs that are run by CVS (by the flag -u
 in the `modules' file - see cvs(5)) when `cvs update' is performed should
 terminate with a line that this regexp matches.  It is enough that
@@ -58,7 +56,7 @@ The default (a single $) fits programs without output."
 (defcustom cvs-parse-ignored-messages
   '("Executing ssh-askpass to query the password.*$"
     ".*Remote host denied X11 forwarding.*$")
-  "*A list of regexps matching messages that should be ignored by the parser.
+  "A list of regexps matching messages that should be ignored by the parser.
 Each regexp should match a whole set of lines and should hence be terminated
 by `$'."
   :group 'pcl-cvs
@@ -302,7 +300,7 @@ The remaining KEYS are passed directly to `cvs-create-fileinfo'."
 
        ;; [add] this will also show up as a `U <file>'
        (and
-	(cvs-match "\\(.*\\), version \\(.*\\), resurrected$"
+	(cvs-match "`?\\(.*?\\)'?, version \\(.*\\), resurrected$"
 		   (path 1) (base-rev 2))
 	;; FIXME: resurrection only brings back the original version,
 	;; not the latest on the branch, so `up-to-date' is not always

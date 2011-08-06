@@ -1,7 +1,7 @@
 ;;; eudc-hotlist.el --- hotlist management for EUDC
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Oscar Figueiredo <oscar@cpe.fr>
 ;; Maintainer: Pavel Janík <Pavel@Janik.cz>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -69,10 +67,10 @@ These are the special commands of this mode:
     (switch-to-buffer (get-buffer-create "*EUDC Servers*"))
     (setq buffer-read-only nil)
     (erase-buffer)
-    (mapcar (function
-	     (lambda (entry)
-	       (setq proto-col (max (length (car entry)) proto-col))))
-	    eudc-server-hotlist)
+    (mapc (function
+	   (lambda (entry)
+	     (setq proto-col (max (length (car entry)) proto-col))))
+	  eudc-server-hotlist)
     (setq proto-col (+ 3 proto-col))
     (setq gap (make-string (- proto-col 6) ?\ ))
     (insert "              EUDC Servers\n"
@@ -82,7 +80,7 @@ These are the special commands of this mode:
 	    "------" gap "--------\n"
 	    "\n")
     (setq eudc-hotlist-list-beginning (point))
-    (mapcar '(lambda (entry)
+    (mapc '(lambda (entry)
 	     (insert (car entry))
 	     (indent-to proto-col)
 	     (insert (symbol-name (cdr entry)) "\n"))
@@ -190,11 +188,11 @@ These are the special commands of this mode:
     ["Save and Quit" eudc-hotlist-quit-edit t]
     ["Exit without Saving" kill-this-buffer t]))
 
-(if eudc-emacs-p
-    (easy-menu-define eudc-hotlist-emacs-menu
-		      eudc-hotlist-mode-map
-		      ""
-		      eudc-hotlist-menu))
+(when (not (featurep 'xemacs))
+  (easy-menu-define eudc-hotlist-emacs-menu
+    eudc-hotlist-mode-map
+    ""
+    eudc-hotlist-menu))
 
-;;; arch-tag: 9b633ab3-6a6e-4b46-b12e-d96739a7e0e8
+;; arch-tag: 9b633ab3-6a6e-4b46-b12e-d96739a7e0e8
 ;;; eudc-hotlist.el ends here

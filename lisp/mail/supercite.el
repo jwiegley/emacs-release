@@ -1,22 +1,19 @@
 ;;; supercite.el --- minor mode for citing mail and news replies
 
-;; Copyright (C) 1993, 1997, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: 1993 Barry A. Warsaw <bwarsaw@python.org>
 ;; Maintainer:    Glenn Morris <rgm@gnu.org>
 ;; Created:       February 1993
-;; Last Modified: 1993/09/22 18:58:46
 ;; Keywords: mail, news
-
-;; supercite.el revision: 3.54
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -24,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; LCD Archive Entry
 ;; supercite|Barry A. Warsaw|supercite-help@python.org
@@ -71,35 +66,35 @@
   :group 'supercite)
 
 (defcustom sc-auto-fill-region-p t
-  "*If non-nil, automatically fill each paragraph after it has been cited."
+  "If non-nil, automatically fill each paragraph after it has been cited."
   :type 'boolean
   :group 'supercite)
 
 (defcustom sc-blank-lines-after-headers 1
-  "*Number of blank lines to leave after mail headers have been nuked.
+  "Number of blank lines to leave after mail headers have been nuked.
 Set to nil, to use whatever blank lines happen to occur naturally."
   :type '(choice (const :tag "leave" nil)
 		 integer)
   :group 'supercite)
 
 (defcustom sc-citation-leader "    "
-  "*String comprising first part of a citation."
+  "String comprising first part of a citation."
   :type 'string
   :group 'supercite-cite)
 
 (defcustom sc-citation-delimiter ">"
-  "*String comprising third part of a citation.
+  "String comprising third part of a citation.
 This string is used in both nested and non-nested citations."
   :type 'string
   :group 'supercite-cite)
 
 (defcustom sc-citation-separator " "
-  "*String comprising fourth and last part of a citation."
+  "String comprising fourth and last part of a citation."
   :type 'string
   :group 'supercite-cite)
 
 (defcustom sc-citation-leader-regexp "[ \t]*"
-  "*Regexp describing citation leader for a cited line.
+  "Regexp describing citation leader for a cited line.
 This should NOT have a leading `^' character."
   :type 'regexp
   :group 'supercite-cite)
@@ -107,14 +102,14 @@ This should NOT have a leading `^' character."
 ;; Nemacs and Mule users note: please see the texinfo manual for
 ;; suggestions on setting these variables.
 (defcustom sc-citation-root-regexp "[-._[:alnum:]]*"
-  "*Regexp describing variable root part of a citation for a cited line.
+  "Regexp describing variable root part of a citation for a cited line.
 This should NOT have a leading `^' character.  See also
 `sc-citation-nonnested-root-regexp'."
   :type 'regexp
   :group 'supercite-cite)
 
 (defcustom sc-citation-nonnested-root-regexp "[-._[:alnum:]]+"
-  "*Regexp describing the variable root part of a nested citation.
+  "Regexp describing the variable root part of a nested citation.
 This should NOT have a leading `^' character.  This variable is
 related to `sc-citation-root-regexp' but whereas that variable
 describes both nested and non-nested citation roots, this variable
@@ -123,24 +118,24 @@ describes only nested citation roots."
   :group 'supercite-cite)
 
 (defcustom sc-citation-delimiter-regexp "[>]+"
-  "*Regexp describing citation delimiter for a cited line.
+  "Regexp describing citation delimiter for a cited line.
 This should NOT have a leading `^' character."
   :type 'regexp
   :group 'supercite-cite)
 
 (defcustom sc-citation-separator-regexp "[ \t]*"
-  "*Regexp describing citation separator for a cited line.
+  "Regexp describing citation separator for a cited line.
 This should NOT have a leading `^' character."
   :type 'regexp
   :group 'supercite-cite)
 
 (defcustom sc-cite-blank-lines-p nil
-  "*If non-nil, put a citation on blank lines."
+  "If non-nil, put a citation on blank lines."
   :type 'boolean
   :group 'supercite-cite)
 
 (defcustom sc-cite-frame-alist '()
-  "*Alist for frame selection during citing.
+  "Alist for frame selection during citing.
 Each element of this list has the following form:
    (INFOKEY ((REGEXP . FRAME)
              (REGEXP . FRAME)
@@ -157,7 +152,7 @@ a variable whose value is a citation frame."
 (put 'sc-cite-frame-alist 'risky-local-variable t)
 
 (defcustom sc-uncite-frame-alist '()
-  "*Alist for frame selection during unciting.
+  "Alist for frame selection during unciting.
 See the variable `sc-cite-frame-alist' for details."
   :type '(repeat (list symbol (repeat (cons regexp
 					    (choice (repeat (repeat sexp))
@@ -166,7 +161,7 @@ See the variable `sc-cite-frame-alist' for details."
 (put 'sc-uncite-frame-alist 'risky-local-variable t)
 
 (defcustom sc-recite-frame-alist '()
-  "*Alist for frame selection during reciting.
+  "Alist for frame selection during reciting.
 See the variable `sc-cite-frame-alist' for details."
   :type '(repeat (list symbol (repeat (cons regexp
 					    (choice (repeat (repeat sexp))
@@ -185,8 +180,8 @@ See the variable `sc-cite-frame-alist' for details."
 		   (concat "\\("
 			   (sc-cite-regexp "")
 			   "\\)"
-			   (sc-cite-regexp sc-citation-nonnested-root-regexp))
-		   )))
+			   (sc-cite-regexp
+			    sc-citation-nonnested-root-regexp)))))
     ;; blank lines mean paragraph separators, so fill the last cited
     ;; paragraph, unless sc-cite-blank-lines-p is non-nil, in which
     ;; case we treat blank lines just like any other line.
@@ -213,9 +208,8 @@ See the variable `sc-cite-frame-alist' for details."
     ;; citations, so cite it with a non-nested citation
     (t                          (sc-cite-line))
     ;; be sure when we're done that we fill the last cited paragraph.
-    (end                        (sc-fill-if-different ""))
-    )
-  "*Default REGI frame for citing a region."
+    (end                        (sc-fill-if-different "")))
+  "Default REGI frame for citing a region."
   :type '(repeat (repeat sexp))
   :group 'supercite-frames)
 (put 'sc-default-cite-frame 'risky-local-variable t)
@@ -224,9 +218,8 @@ See the variable `sc-cite-frame-alist' for details."
   '(;; do nothing on a blank line
     ("^[ \t]*$"       nil)
     ;; if the line is cited, uncite it
-    ((sc-cite-regexp) (sc-uncite-line))
-    )
-  "*Default REGI frame for unciting a region."
+    ((sc-cite-regexp) (sc-uncite-line)))
+  "Default REGI frame for unciting a region."
   :type '(repeat (repeat sexp))
   :group 'supercite-frames)
 (put 'sc-default-uncite-frame 'risky-local-variable t)
@@ -241,15 +234,14 @@ See the variable `sc-cite-frame-alist' for details."
     ;; otherwise, the line is uncited, so just cite it
     (t                (sc-cite-line))
     ;; be sure when we're done that we fill the last cited paragraph.
-    (end              (sc-fill-if-different ""))
-    )
-  "*Default REGI frame for reciting a region."
+    (end              (sc-fill-if-different "")))
+  "Default REGI frame for reciting a region."
   :type '(repeat (repeat sexp))
   :group 'supercite-frames)
 (put 'sc-default-recite-frame 'risky-local-variable t)
 
 (defcustom sc-cite-region-limit t
-  "*This variable controls automatic citation of yanked text.
+  "This variable controls automatic citation of yanked text.
 Valid values are:
 
 non-nil   -- cite the entire region, regardless of its size
@@ -270,61 +262,61 @@ during the initial citing via `sc-cite-original'."
   :group 'supercite-cite)
 
 (defcustom sc-confirm-always-p t
-  "*If non-nil, always confirm attribution string before citing text body."
+  "If non-nil, always confirm attribution string before citing text body."
   :type 'boolean
   :group 'supercite-attr)
 
 (defcustom sc-default-attribution "Anon"
-  "*String used when author's attribution cannot be determined."
+  "String used when author's attribution cannot be determined."
   :type 'string
   :group 'supercite-attr)
 (defcustom sc-default-author-name "Anonymous"
-  "*String used when author's name cannot be determined."
+  "String used when author's name cannot be determined."
   :type 'string
   :group 'supercite-attr)
 (defcustom sc-downcase-p nil
-  "*Non-nil means downcase the attribution and citation strings."
+  "Non-nil means downcase the attribution and citation strings."
   :type 'boolean
   :group 'supercite-attr
   :group 'supercite-cite)
 (defcustom sc-electric-circular-p t
-  "*If non-nil, treat electric references as circular."
+  "If non-nil, treat electric references as circular."
   :type 'boolean
   :group 'supercite-attr)
 
 (defcustom sc-electric-mode-hook nil
-  "*Hook for `sc-electric-mode' electric references mode."
+  "Hook for `sc-electric-mode' electric references mode."
   :type 'hook
   :group 'supercite-hooks)
 (defcustom sc-electric-references-p nil
-  "*Use electric references if non-nil."
+  "Use electric references if non-nil."
   :type 'boolean
   :group 'supercite)
 
 (defcustom sc-fixup-whitespace-p nil
-  "*If non-nil, delete all leading white space before citing."
+  "If non-nil, delete all leading white space before citing."
   :type 'boolean
   :group 'supercite)
 
 (defcustom sc-load-hook nil
-  "*Hook which gets run once after Supercite loads."
+  "Hook which gets run once after Supercite loads."
   :type 'hook
   :group 'supercite-hooks)
 (defcustom sc-pre-hook nil
-  "*Hook which gets run before each invocation of `sc-cite-original'."
+  "Hook which gets run before each invocation of `sc-cite-original'."
   :type 'hook
   :group 'supercite-hooks)
 (defcustom sc-post-hook nil
-  "*Hook which gets run after each invocation of `sc-cite-original'."
+  "Hook which gets run after each invocation of `sc-cite-original'."
   :type 'hook
   :group 'supercite-hooks)
 
 (defcustom sc-mail-warn-if-non-rfc822-p t
-  "*Warn if mail headers don't conform to RFC822."
+  "Warn if mail headers don't conform to RFC822."
   :type 'boolean
   :group 'supercite-attr)
 (defcustom sc-mumble ""
-  "*Value returned by `sc-mail-field' if field isn't in mail headers."
+  "Value returned by `sc-mail-field' if field isn't in mail headers."
   :type 'string
   :group 'supercite-attr)
 
@@ -333,7 +325,7 @@ during the initial citing via `sc-cite-original'."
     ("^\\(Jr\\|Sr\\)[.]?$" . last)
     ("^ASTS$" . 0)
     ("^[I]+$" . last))
-  "*Name list components which are filtered out as noise.
+  "Name list components which are filtered out as noise.
 This variable contains an association list where each element is of
 the form:  (REGEXP . POSITION).
 
@@ -347,13 +339,13 @@ list and `any' to match all elements."
   :group 'supercite-attr)
 
 (defcustom sc-nested-citation-p nil
-  "*Controls whether to use nested or non-nested citation style.
+  "Controls whether to use nested or non-nested citation style.
 Non-nil uses nested citations, nil uses non-nested citations."
   :type 'boolean
   :group 'supercite)
 
 (defcustom sc-nuke-mail-headers 'all
-  "*Controls mail header nuking.
+  "Controls mail header nuking.
 Used in conjunction with `sc-nuke-mail-header-list'.  Valid values are:
 
 `all'       -- nuke all mail headers
@@ -365,7 +357,7 @@ Used in conjunction with `sc-nuke-mail-header-list'.  Valid values are:
   :group 'supercite)
 
 (defcustom sc-nuke-mail-header-list nil
-  "*List of mail header regexps to remove or keep in body of reply.
+  "List of mail header regexps to remove or keep in body of reply.
 This list contains regular expressions describing the mail headers to
 keep or nuke, depending on the value of `sc-nuke-mail-headers'."
   :type '(repeat regexp)
@@ -373,7 +365,7 @@ keep or nuke, depending on the value of `sc-nuke-mail-headers'."
 
 (defcustom sc-preferred-attribution-list
   '("sc-lastchoice" "x-attribution" "firstname" "initials" "lastname")
-  "*Specifies what to use as the attribution string.
+  "Specifies what to use as the attribution string.
 Supercite creates a list of possible attributions when it scans the
 mail headers from the original message.  Each attribution choice is
 associated with a key in an attribution alist.  Supercite tries to
@@ -414,7 +406,7 @@ associated with the key \"middlenames\"."
   :group 'supercite-attr)
 
 (defcustom sc-attrib-selection-list nil
-  "*An alist for selecting preferred attribution based on mail headers.
+  "An alist for selecting preferred attribution based on mail headers.
 Each element of this list has the following form:
 
    (INFOKEY ((REGEXP . ATTRIBUTION)
@@ -437,40 +429,40 @@ to be consulted during attribution selection."
 (put 'sc-attrib-selection-list 'risky-local-variable t)
 
 (defcustom sc-attribs-preselect-hook nil
-  "*Hook to run before selecting an attribution."
+  "Hook to run before selecting an attribution."
   :type 'hook
   :group 'supercite-attr
   :group 'supercite-hooks)
 (defcustom sc-attribs-postselect-hook nil
-  "*Hook to run after selecting an attribution, but before confirmation."
+  "Hook to run after selecting an attribution, but before confirmation."
   :type 'hook
   :group 'supercite-attr
   :group 'supercite-hooks)
 
 (defcustom sc-pre-cite-hook nil
-  "*Hook to run before citing a region of text."
+  "Hook to run before citing a region of text."
   :type 'hook
   :group 'supercite-cite
   :group 'supercite-hooks)
 (defcustom sc-pre-uncite-hook nil
-  "*Hook to run before unciting a region of text."
+  "Hook to run before unciting a region of text."
   :type 'hook
   :group 'supercite-cite
   :group 'supercite-hooks)
 (defcustom sc-pre-recite-hook nil
-  "*Hook to run before reciting a region of text."
+  "Hook to run before reciting a region of text."
   :type 'hook
   :group 'supercite-cite
   :group 'supercite-hooks)
 
 (defcustom sc-preferred-header-style 4
-  "*Index into `sc-rewrite-header-list' specifying preferred header style.
+  "Index into `sc-rewrite-header-list' specifying preferred header style.
 Index zero accesses the first function in the list."
   :type 'integer
   :group 'supercite)
 
 (defcustom sc-reference-tag-string ">>>>> "
-  "*String used at the beginning of built-in reference headers."
+  "String used at the beginning of built-in reference headers."
   :type 'string
   :group 'supercite)
 
@@ -482,9 +474,8 @@ Index zero accesses the first function in the list."
     (sc-header-attributed-writes)
     (sc-header-author-writes)
     (sc-header-verbose)
-    (sc-no-blank-line-or-header)
-    )
-  "*List of reference header rewrite functions.
+    (sc-no-blank-line-or-header))
+  "List of reference header rewrite functions.
 The variable `sc-preferred-header-style' controls which function in
 this list is chosen for automatic reference header insertions.
 Electric reference mode will cycle through this list of functions."
@@ -493,27 +484,29 @@ Electric reference mode will cycle through this list of functions."
 (put 'sc-rewrite-header-list 'risky-local-variable t)
 
 (defcustom sc-titlecue-regexp "\\s +-+\\s +"
-  "*Regular expression describing the separator between names and titles.
+  "Regular expression describing the separator between names and titles.
 Set to nil to treat entire field as a name."
   :type '(choice (const :tag "entire field as name" nil)
 		 regexp)
   :group 'supercite-attr)
 
 (defcustom sc-use-only-preference-p nil
-  "*Controls what happens when the preferred attribution cannot be found.
+  "Controls what happens when the preferred attribution cannot be found.
 If non-nil, then `sc-default-attribution' will be used.  If nil, then
 some secondary scheme will be employed to find a suitable attribution
 string."
   :type 'boolean
   :group 'supercite-attr)
 
+(defcustom sc-mode-map-prefix "\C-c\C-p"
+  "Key binding to install Supercite keymap."
+  :type 'string
+  :group 'supercite)
+
 ;; ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;; end user configuration variables
 
-(defconst sc-version "3.1"
-  "Supercite version number.")
-(defconst sc-help-address "bug-supercite@gnu.org"
-  "Address accepting submissions of bug reports.")
+(define-obsolete-variable-alias 'sc-version 'emacs-version "23.1")
 
 (defvar sc-mail-info nil
   "Alist of mail header information gleaned from reply buffer.")
@@ -533,10 +526,6 @@ string."
 
 ;; ======================================================================
 ;; supercite keymaps
-
-(defvar sc-mode-map-prefix "\C-c\C-p"
-  "*Key binding to install Supercite keymap.
-If this is nil, Supercite keymap is not installed.")
 
 (defvar sc-T-keymap
   (let ((map (make-sparse-keymap)))
@@ -624,11 +613,10 @@ selected letter is returned, or nil if the question was not answered.
 Note that WORD is a string and LETTER is a character.  All LETTERs in
 the list should be unique."
   (let* ((prompt (concat
-		  (mapconcat (function (lambda (elt) (car elt))) alist ", ")
+		  (mapconcat (lambda (elt) (car elt)) alist ", ")
 		  "? ("
 		  (mapconcat
-		   (function
-		    (lambda (elt) (char-to-string (cdr elt)))) alist "/")
+		   (lambda (elt) (char-to-string (cdr elt))) alist "/")
 		  ") "))
 	 (p prompt)
 	 (event
@@ -682,7 +670,7 @@ the list should be unique."
       (let* ((elem    (car alist))
 	     (infokey (car elem))
 	     (infoval (sc-mail-field infokey))
-	     (mlist   (car (cdr elem))))
+	     (mlist   (cadr elem)))
 	(while mlist
 	  (let* ((ml-elem (car mlist))
 		 (regexp  (car ml-elem))
@@ -693,10 +681,8 @@ the list should be unique."
 		      mlist nil
 		      alist nil)
 	      ;; else we didn't find a match
-	      (setq mlist (cdr mlist))
-	      )))			;end of mlist loop
-	(setq alist (cdr alist))
-	))				;end of alist loop
+	      (setq mlist (cdr mlist))))) ;end of mlist loop
+	(setq alist (cdr alist))))	  ;end of alist loop
     rtnvalue))
 
 
@@ -714,6 +700,7 @@ the list should be unique."
   "For minibuffer completion on mail field modifications.")
 (defvar sc-mail-glom-frame
   '((begin                        (setq sc-mail-headers-start (point)))
+    ("^From "                     (sc-mail-check-from) nil nil)
     ("^x-attribution:[ \t]+.*$"   (sc-mail-fetch-field t) nil t)
     ("^\\S +:.*$"                 (sc-mail-fetch-field) nil t)
     ("^$"                         (list 'abort '(step . 0)))
@@ -726,6 +713,17 @@ the list should be unique."
 (defvar curline)			; dynamic bondage
 
 ;; regi functions
+
+;; http://lists.gnu.org/archive/html/emacs-devel/2009-02/msg00691.html
+;; When rmail replies to a message with full headers visible, the "From "
+;; line can be included.
+(defun sc-mail-check-from ()
+  "Deal with a \"From \" line in the header.
+Such a line should only occur at the very start of the headers."
+  (and sc-mail-warn-if-non-rfc822-p
+       (/= (point) sc-mail-headers-start)
+       (sc-mail-error-in-mail-field)))
+
 (defun sc-mail-fetch-field (&optional attribs-p)
   "Insert a key and value into `sc-mail-info' alist.
 If optional ATTRIBS-P is non-nil, the key/value pair is placed in
@@ -807,8 +805,7 @@ The number of lines left is specified by `sc-blank-lines-after-headers'."
      ;; we never get far enough to interpret a frame if s-n-m-h == 'none
      ((eq sc-nuke-mail-headers 'none))
      (t (error "Invalid value for sc-nuke-mail-headers: %s"
-	       sc-nuke-mail-headers))
-     )					; end-cond
+	       sc-nuke-mail-headers)))	; end-cond
     (append
      (and entry-func
 	  (regi-mapcar sc-nuke-mail-header-list entry-func nil t))
@@ -817,8 +814,7 @@ The number of lines left is specified by `sc-blank-lines-after-headers'."
 	  '(("^[ \t]+" (sc-mail-nuke-continuation-line))))
      '((begin     (setq sc-mail-last-header-zapped-p nil)))
      '((end       (sc-mail-cleanup-blank-lines)))
-     (and every-func (list (list 'every every-func)))
-     )))
+     (and every-func (list (list 'every every-func))))))
 
 ;; mail processing and zapping. this is the top level entry defun to
 ;; all header processing.
@@ -839,8 +835,7 @@ error occurs."
 	  (setq sc-mail-info info
 		sc-attributions attribs))
       (regi-interpret (sc-mail-build-nuke-frame)
-		      sc-mail-headers-start sc-mail-headers-end)
-      )))
+		      sc-mail-headers-start sc-mail-headers-end))))
 
 
 ;; let the user change mail field information
@@ -882,8 +877,7 @@ Action can be one of: View, Modify, Add, or Delete."
 			  (concat key ": ") (cdr keyval)
 			  'sc-mail-field-modification-history))))
        ((eq action ?a)
-	(push (cons key (read-string (concat key ": "))) sc-mail-info))
-       ))))
+	(push (cons key (read-string (concat key ": "))) sc-mail-info))))))
 
 
 ;; ======================================================================
@@ -913,8 +907,7 @@ Match addresses of the style ``[stuff]![stuff]...!name[stuff].''"
 			      from 0))
 	(mend (match-end 0)))
     (and mstart
-	 (substring from (1+ mstart) (- mend (if (= mend eos) 0 1)))
-	 )))
+	 (substring from (1+ mstart) (- mend (if (= mend eos) 0 1))))))
 
 (defun sc-attribs-<>-addresses (from)
   "Extract the author's email terminus from email address FROM.
@@ -935,8 +928,7 @@ AUTHOR is the author's name (which is removed from the address)."
 	    address))
       (if (string-match "[-[:alnum:]!@%._]+" from 0)
 	  (match-string 0 from)
-	"")
-      )))
+	""))))
 
 (defun sc-attribs-emailname (from)
   "Get the email terminus name from FROM."
@@ -956,8 +948,7 @@ substring."
        (let ((sos (+ start extend))
 	     (eos (- end extend)))
 	 (substring string sos
-		    (or (string-match sc-titlecue-regexp string sos) eos)
-		    ))))
+		    (or (string-match sc-titlecue-regexp string sos) eos)))))
 
 (defun sc-attribs-extract-namestring (from)
   "Extract the name string from FROM.
@@ -1002,16 +993,14 @@ example: (sc-attribs-chop-namestring \"John Xavier Doe\")
          => (\"John\" \"Xavier\" \"Doe\")"
   (if (string-match "\\([ \t]*\\)\\([^ \t._]+\\)\\([ \t]*\\)" namestring)
       (cons (match-string 2 namestring)
-	    (sc-attribs-chop-namestring (substring namestring (match-end 3)))
-	    )))
+	    (sc-attribs-chop-namestring (substring namestring (match-end 3))))))
 
 (defun sc-attribs-strip-initials (namelist)
   "Extract the author's initials from the NAMELIST."
   (mapconcat
-   (function
-    (lambda (name)
-      (if (< 0 (length name))
-	  (substring name 0 1))))
+   (lambda (name)
+     (if (< 0 (length name))
+	 (substring name 0 1)))
    namelist ""))
 
 (defun sc-guess-attribution (&optional string)
@@ -1038,34 +1027,29 @@ supplied, is used instead of the line point is on in the current buffer."
   (let ((elements (length namelist))
 	(position -1)
 	keepers filtered-list)
-    (mapcar
-     (function
-      (lambda (name)
-	(setq position (1+ position))
-	(let ((keep-p t))
-	  (mapcar
-	   (function
-	    (lambda (filter)
-	      (let ((regexp (car filter))
-		    (pos (cdr filter)))
-		(if (and (string-match regexp name)
-			 (or (and (numberp pos)
-				  (= pos position))
-			     (and (eq pos 'last)
-				  (= position (1- elements)))
-			     (eq pos 'any)))
-		    (setq keep-p nil))
-		)))
-	   sc-name-filter-alist)
-	  (if keep-p
-	      (setq keepers (cons position keepers)))
-	  )))
+    (mapc
+     (lambda (name)
+       (setq position (1+ position))
+       (let ((keep-p t))
+	 (mapc
+	  (function
+	   (lambda (filter)
+	     (let ((regexp (car filter))
+		   (pos (cdr filter)))
+	       (if (and (string-match regexp name)
+			(or (and (numberp pos)
+				 (= pos position))
+			    (and (eq pos 'last)
+				 (= position (1- elements)))
+			    (eq pos 'any)))
+		   (setq keep-p nil)))))
+	  sc-name-filter-alist)
+	 (if keep-p
+	     (setq keepers (cons position keepers)))))
      namelist)
-    (mapcar
-     (function
-      (lambda (position)
-	(setq filtered-list (cons (nth position namelist) filtered-list))
-	))
+    (mapc
+     (lambda (position)
+       (setq filtered-list (cons (nth position namelist) filtered-list)))
      keepers)
     filtered-list))
 
@@ -1091,14 +1075,13 @@ This populates the `sc-attributions' with the list of possible attributions."
 	(setq
 	 ;; put middle names and build sc-author entry
 	 middlenames (mapconcat
-		      (function
-		       (lambda (midname)
-			 (let ((key-attribs (format "middlename-%d" n))
-			       (key-mail    (format "sc-middlename-%d" n)))
-			   (push (cons key-attribs midname) sc-attributions)
-			   (push (cons key-mail midname) sc-mail-info)
-			   (setq n (1+ n))
-			   midname)))
+		      (lambda (midname)
+			(let ((key-attribs (format "middlename-%d" n))
+			      (key-mail    (format "sc-middlename-%d" n)))
+			  (push (cons key-attribs midname) sc-attributions)
+			  (push (cons key-mail midname) sc-mail-info)
+			  (setq n (1+ n))
+			  midname))
 		      midnames " ")
 
 	 author (concat firstname " " middlenames (and midnames " ") lastname)
@@ -1126,10 +1109,8 @@ This populates the `sc-attributions' with the list of possible attributions."
 						  namestring))
 			(cons "sc-sender-address" (sc-get-address
 						   (sc-mail-field "sender")
-						   namestring))
-			)
-		       sc-mail-info)
-	 ))
+						   namestring)))
+		       sc-mail-info)))
     ;; from string is empty
     (push (cons "sc-author" sc-default-author-name) sc-mail-info)))
 
@@ -1190,13 +1171,11 @@ to the auto-selected attribution string."
                 (setq attribution nil
                       attriblist (cdr attriblist))))
 	     (t (error "%s did not evaluate to a string or list!"
-		       "sc-attrib-selection-list"))
-	     )))
+		       "sc-attrib-selection-list")))))
 	 ((setq attribution (cdr (assoc preferred sc-attributions)))
 	  (setq attriblist nil))
 	 (t
-	  (setq attriblist (cdr attriblist)))
-	 )))
+	  (setq attriblist (cdr attriblist))))))
 
     ;; if preference was not found, we may use a secondary method to
     ;; find a valid attribution
@@ -1231,8 +1210,7 @@ to the auto-selected attribution string."
 
     ;; query for confirmation
     (if query-p
-	(let* ((query-alist (mapcar (function (lambda (entry)
-						(list (cdr entry))))
+	(let* ((query-alist (mapcar (lambda (entry) (list (cdr entry)))
 				    sc-attributions))
 	       (minibuffer-local-completion-map
 		sc-minibuffer-local-completion-map)
@@ -1254,8 +1232,7 @@ to the auto-selected attribution string."
 			   "Complete attribution name: "
 			   query-alist nil nil
 			   (cons initial 0)
-			   'sc-attribution-confirmation-history)
-			  ))
+			   'sc-attribution-confirmation-history)))
 		  nil)))
 	  (if sc-attrib-or-cite
 	      ;; since the citation was chosen, we have to guess at
@@ -1265,8 +1242,7 @@ to the auto-selected attribution string."
 				    citation))
 
 	    (setq citation (sc-make-citation choice)
-		  attribution choice))
-	  ))
+		  attribution choice))))
 
     ;; its possible that the user wants to downcase the citation and
     ;; attribution
@@ -1291,8 +1267,7 @@ to the auto-selected attribution string."
 	   (lastchoice (assoc lkey sc-attributions)))
       (if lastchoice
 	  (setcdr lastchoice attribution)
-	(push (cons lkey attribution) sc-attributions)))
-    ))
+	(push (cons lkey attribution) sc-attributions)))))
 
 
 ;; ======================================================================
@@ -1353,8 +1328,7 @@ not supplied, initialize fill variables.  This is useful for a regi
 	  (if (not (string= fill-prefix ""))
 	      (fill-region sc-fill-begin (line-beginning-position)))
 	  (setq sc-fill-line-prefix prefix
-		sc-fill-begin (line-beginning-position))))
-    )
+		sc-fill-begin (line-beginning-position)))))
   nil)
 
 (defun sc-cite-coerce-cited-line ()
@@ -1603,8 +1577,7 @@ Treats these fields in a similar manner to `sc-header-on-said'."
 			(sc-mail-field "subject") "\n")
 		(sc-hdr (concat tag "(see ")
 			(sc-mail-field "references")
-			" for more details)\n")
-		))))
+			" for more details)\n")))))
 
 
 ;; ======================================================================
@@ -1640,10 +1613,8 @@ error occurs."
       (void-function
        (progn (message
 	       "Symbol's function definition is void: %s (Header %d)"
-	       (car (cdr err)) sc-eref-style)
-	      (beep)
-	      ))
-      )))
+	       (cadr err) sc-eref-style)
+	      (beep))))))
 
 (defun sc-electric-mode (&optional arg)
   "
@@ -1676,13 +1647,11 @@ header style to use, unless not supplied or invalid, in which case
 	  (use-local-map sc-electric-mode-map)
 	  (sc-eref-show sc-eref-style)
 	  (run-mode-hooks 'sc-electric-mode-hook)
-	  (recursive-edit)
-	  )))
+	  (recursive-edit))))
 
     (and sc-eref-style
 	 (sc-eref-insert-selected))
-    (kill-buffer sc-electric-bufname)
-    ))
+    (kill-buffer sc-electric-bufname)))
 
 ;; functions for electric reference mode
 (defun sc-eref-show (index)
@@ -1699,8 +1668,7 @@ header style to use, unless not supplied or invalid, in which case
 	   ((>= index last)
 	    (if sc-electric-circular-p
 		0
-	      (progn (error msg "follow") (1- last))))
-	   ))
+	      (progn (error msg "follow") (1- last))))))
     (save-excursion
      (set-buffer sc-electric-bufname)
      (let ((buffer-read-only nil))
@@ -1716,9 +1684,8 @@ header style to use, unless not supplied or invalid, in which case
 		 ;; we have to enlarge the window
 		 (enlarge-window (- hdrlines winlines))
 	       ;; we have to shrink the window
-	       (shrink-window (- winlines (max hdrlines window-min-height)))
-	       )))
-       ))))
+	       (shrink-window (- winlines (max hdrlines
+					       window-min-height))))))))))
 
 (defun sc-eref-next ()
   "Display next reference in other buffer."
@@ -1744,8 +1711,7 @@ nil."
   (if (sc-valid-index-p refnum)
       (sc-eref-show refnum)
     (error "Invalid reference: %d. (Range: [%d .. %d])"
-	   refnum 0 (1- (length sc-rewrite-header-list)))
-    ))
+	   refnum 0 (1- (length sc-rewrite-header-list)))))
 
 (defun sc-eref-jump ()
   "Set reference header to preferred header."
@@ -1781,8 +1747,7 @@ entered, regardless of the value of `sc-electric-references-p'.  See
 			  0)))
       (if sc-electric-references-p
 	  (sc-electric-mode preference)
-	(sc-eref-insert-selected t)
-	))))
+	(sc-eref-insert-selected t)))))
 
 
 ;; ======================================================================
@@ -1910,9 +1875,9 @@ original message but it does require a few things:
 
      5) Mark is at the end of the body of text to be cited.
 
-For Emacs 19's, the region need not be active (and typically isn't
-when this function is called.  Also, the hook `sc-pre-hook' is run
-before, and `sc-post-hook' is run after the guts of this function."
+The region need not be active (and typically isn't when this
+function is called).  Also, the hook `sc-pre-hook' is run before,
+and `sc-post-hook' is run after the guts of this function."
   (run-hooks 'sc-pre-hook)
 
   (sc-minor-mode 1)
@@ -1965,8 +1930,7 @@ before, and `sc-post-hook' is run after the guts of this function."
 
     ;; finally, free the point-marker
     (set-marker point nil)
-    (set-marker mark nil)
-    )
+    (set-marker mark nil))
   (run-hooks 'sc-post-hook))
 
 
@@ -1989,8 +1953,7 @@ With numeric ARG, inserts that many new lines."
       (while (< 0 arg)
 	(insert prefix)
 	(forward-line 1)
-	(setq arg (1- arg))
-	))))
+	(setq arg (1- arg))))))
 
 (defun sc-insert-citation (arg)
   "Insert citation string at beginning of current line if not already cited.
@@ -2005,66 +1968,28 @@ cited."
 	(insert (sc-mail-field "sc-citation"))
       (error "Line is already cited"))))
 
+;; The argument logic here is crazy.
 (defun sc-version (message)
-  "Echo the current version of Supercite in the minibuffer.
+  "Return the current Supercite version.
 If MESSAGE is non-nil (interactively, with no prefix argument),
-inserts the version string in the current buffer instead."
-  (interactive (not current-prefix-arg))
-  (let ((verstr (format "Using Supercite.el %s" sc-version)))
+echoes the version in the minibuffer.  Otherwise, inserts the
+version at point."
+  (interactive (list (not current-prefix-arg)))
+  (let ((verstr (format "Using Supercite.el %s" emacs-version)))
     (if message
 	(message verstr)
       (insert "`sc-version' says: " verstr))))
 
-(defun sc-describe ()
-  "
-Supercite is a package which provides a flexible mechanism for citing
-email and news replies.  Please see the associated texinfo file for
-more information.  Info node `(SC)Top'."
-  (interactive)
-  (describe-function 'sc-describe))
+(make-obsolete 'sc-version 'emacs-version "23.1")
 
-(defun sc-submit-bug-report ()
-  "Submit a bug report on Supercite via mail."
+(defun sc-describe ()
+  "Read the Supercite info node."
   (interactive)
-  (require 'reporter)
-  (and
-   (y-or-n-p "Do you want to submit a report on Supercite? ")
-   (reporter-submit-bug-report
-    sc-help-address
-    (concat "Supercite version " sc-version)
-    (list
-     'sc-attrib-selection-list
-     'sc-auto-fill-region-p
-     'sc-blank-lines-after-headers
-     'sc-citation-leader
-     'sc-citation-delimiter
-     'sc-citation-separator
-     'sc-citation-leader-regexp
-     'sc-citation-root-regexp
-     'sc-citation-nonnested-root-regexp
-     'sc-citation-delimiter-regexp
-     'sc-citation-separator-regexp
-     'sc-cite-region-limit
-     'sc-confirm-always-p
-     'sc-default-attribution
-     'sc-default-author-name
-     'sc-downcase-p
-     'sc-electric-circular-p
-     'sc-electric-references-p
-     'sc-fixup-whitespace-p
-     'sc-mail-warn-if-non-rfc822-p
-     'sc-mumble
-     'sc-name-filter-alist
-     'sc-nested-citation-p
-     'sc-nuke-mail-headers
-     'sc-nuke-mail-header-list
-     'sc-preferred-attribution-list
-     'sc-preferred-header-style
-     'sc-reference-tag-string
-     'sc-rewrite-header-list
-     'sc-titlecue-regexp
-     'sc-use-only-preference-p
-     ))))
+  (info "(SC)top"))
+
+(make-obsolete 'sc-describe "read the SC manual using `info'." "23.1")
+
+(define-obsolete-function-alias 'sc-submit-bug-report 'report-emacs-bug "23.1")
 
 
 ;; useful stuff

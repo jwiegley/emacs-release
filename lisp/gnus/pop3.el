@@ -1,7 +1,7 @@
 ;;; pop3.el --- Post Office Protocol (RFC 1460) interface
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Richard L. Pieri <ratinox@peorth.gweep.net>
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -36,6 +34,7 @@
 ;;; Code:
 
 (require 'mail-utils)
+(defvar parse-time-months)
 
 (defgroup pop3 nil
   "Post Office Protocol."
@@ -106,31 +105,28 @@ Used for APOP authentication.")
 (defvar pop3-read-point nil)
 (defvar pop3-debug nil)
 
-;; Borrowed from nnheader-accept-process-output in nnheader.el.
-(defvar pop3-read-timeout
-  (if (string-match "windows-nt\\|os/2\\|emx\\|cygwin"
-		    (symbol-name system-type))
-      ;; http://thread.gmane.org/v9655t3pjo.fsf@marauder.physik.uni-ulm.de
-      ;;
-      ;; IIRC, values lower than 1.0 didn't/don't work on Windows/DOS.
-      ;;
-      ;; There should probably be a runtime test to determine the timing
-      ;; resolution, or a primitive to report it.  I don't know off-hand
-      ;; what's possible.  Perhaps better, maybe the Windows/DOS primitive
-      ;; could round up non-zero timeouts to a minimum of 1.0?
-      1.0
-    0.1)
-  "How long pop3 should wait between checking for the end of output.
-Shorter values mean quicker response, but are more CPU intensive.")
+;; Borrowed from nnheader-accept-process-output in nnheader.el.  See the
+;; comments there for explanations about the values.
 
-;; Borrowed from nnheader-accept-process-output in nnheader.el.
-(defun pop3-accept-process-output (process)
-  (accept-process-output
-   process
-   (truncate pop3-read-timeout)
-   (truncate (* (- pop3-read-timeout
-		   (truncate pop3-read-timeout))
-		1000))))
+(eval-and-compile
+  (if (and (fboundp 'nnheader-accept-process-output)
+	   (boundp 'nnheader-read-timeout))
+      (defalias 'pop3-accept-process-output 'nnheader-accept-process-output)
+    ;; Borrowed from `nnheader.el':
+    (defvar pop3-read-timeout
+      (if (string-match "windows-nt\\|os/2\\|emx\\|cygwin"
+			(symbol-name system-type))
+	  1.0
+	0.01)
+      "How long pop3 should wait between checking for the end of output.
+Shorter values mean quicker response, but are more CPU intensive.")
+    (defun pop3-accept-process-output (process)
+      (accept-process-output
+       process
+       (truncate pop3-read-timeout)
+       (truncate (* (- pop3-read-timeout
+		       (truncate pop3-read-timeout))
+		    1000))))))
 
 (defun pop3-movemail (&optional crashbox)
   "Transfer contents of a maildrop to the specified CRASHBOX."
@@ -170,7 +166,7 @@ Shorter values mean quicker response, but are more CPU intensive.")
           (unless pop3-leave-mail-on-server
             (pop3-dele process n))
 	  (setq n (+ 1 n))
-	  (if pop3-debug (sit-for 1) (sit-for 0.1))) ; why?
+	  (pop3-accept-process-output process))
       (when (and pop3-leave-mail-on-server
 		 (> n 1))
 	(message "pop3.el doesn't support UIDL.  Setting `pop3-leave-mail-on-server'
@@ -201,6 +197,23 @@ to %s might not give the result you'd expect." pop3-leave-mail-on-server)
     (pop3-quit process)
     message-count))
 
+(autoload 'open-tls-stream "tls")
+(autoload 'starttls-open-stream "starttls")
+(autoload 'starttls-negotiate "starttls") ; avoid warning
+
+(defcustom pop3-stream-type nil
+  "*Transport security type for POP3 connexions.
+This may be either nil (plain connexion), `ssl' (use an
+SSL/TSL-secured stream) or `starttls' (use the starttls mechanism
+to turn on TLS security after opening the stream).  However, if
+this is nil, `ssl' is assumed for connexions to port
+995 (pop3s)."
+  :version "23.1" ;; No Gnus
+  :group 'pop3
+  :type '(choice (const :tag "Plain" nil)
+		 (const :tag "SSL/TLS" ssl)
+		 (const starttls)))
+
 (defun pop3-open-server (mailhost port)
   "Open TCP connection to MAILHOST on PORT.
 Returns the process associated with the connection."
@@ -212,7 +225,51 @@ Returns the process associated with the connection."
 					     mailhost)))
       (erase-buffer)
       (setq pop3-read-point (point-min))
-      (setq process (open-network-stream "POP" (current-buffer) mailhost port))
+      (setq process
+	    (cond
+	     ((or (eq pop3-stream-type 'ssl)
+		  (and (not pop3-stream-type) (member port '(995 "pop3s"))))
+	      ;; gnutls-cli, openssl don't accept service names
+	      (if (or (equal port "pop3s")
+		      (null port))
+		  (setq port 995))
+	      (let ((process (open-tls-stream "POP" (current-buffer)
+					      mailhost port)))
+		(when process
+		  ;; There's a load of info printed that needs deleting.
+		  (let ((again 't))
+		    ;; repeat until
+		    ;; - either we received the +OK line
+		    ;; - or accept-process-output timed out without getting
+		    ;;   anything
+		    (while (and again
+				(setq again (memq (process-status process)
+						  '(open run))))
+		      (setq again (pop3-accept-process-output process))
+		      (goto-char (point-max))
+		      (forward-line -1)
+		      (cond ((looking-at "\\+OK")
+			     (setq again nil)
+			     (delete-region (point-min) (point)))
+			    ((not again)
+			     (pop3-quit process)
+			     (error "POP SSL connexion failed")))))
+		  process)))
+	     ((eq pop3-stream-type 'starttls)
+	      ;; gnutls-cli, openssl don't accept service names
+	      (if (equal port "pop3")
+		  (setq port 110))
+	      (let ((process (starttls-open-stream "POP" (current-buffer)
+						   mailhost (or port 110))))
+		(pop3-send-command process "STLS")
+		(let ((response (pop3-read-response process t)))
+		  (if (and response (string-match "+OK" response))
+		      (starttls-negotiate process)
+		    (pop3-quit process)
+		    (error "POP server doesn't support starttls")))
+		process))
+	     (t 
+	      (open-network-stream "POP" (current-buffer) mailhost port))))
       (let ((response (pop3-read-response process t)))
 	(setq pop3-timestamp
 	      (substring response (or (string-match "<" response) 0)
@@ -252,7 +309,7 @@ Return the response string if optional second argument is non-nil."
       (setq match-end (point))
       (goto-char pop3-read-point)
       (if (looking-at "-ERR")
-	  (error (buffer-substring (point) (- match-end 2)))
+	  (error "%s" (buffer-substring (point) (- match-end 2)))
 	(if (not (looking-at "+OK"))
 	    (progn (setq pop3-read-point match-end) nil)
 	  (setq pop3-read-point match-end)
@@ -272,8 +329,6 @@ Return the response string if optional second argument is non-nil."
       (replace-match "" t t)
       (forward-char)))
   (set-marker end nil))
-
-(eval-when-compile (defvar parse-time-months))
 
 ;; Copied from message-make-date.
 (defun pop3-make-date (&optional now)
@@ -357,37 +412,6 @@ If NOW, use that time instead."
 
 ;; AUTHORIZATION STATE
 
-(eval-when-compile
-  (if (not (fboundp 'md5)) ;; Emacs 20
-      (defalias 'md5 'ignore)))
-
-(eval-and-compile
-  (if (and (fboundp 'md5)
-	   ;; There might be an incompatible implementation.
-	   (condition-case nil
-	       (md5 "Check whether the 4th argument is allowed"
-		    nil nil 'binary)
-	     (error nil)))
-      (defun pop3-md5 (string)
-	(md5 string nil nil 'binary))
-    (defvar pop3-md5-program "md5"
-      "*Program to encode its input in MD5.
-\"openssl\" is a popular alternative; set `pop3-md5-program-args' to
-'(\"md5\") if you use it.")
-    (defvar pop3-md5-program-args nil
-      "*List of arguments passed to `pop3-md5-program'.")
-    (defun pop3-md5 (string)
-      (let ((default-enable-multibyte-characters t)
-	    (coding-system-for-write 'binary))
-	(with-temp-buffer
-	  (insert string)
-	  (apply 'call-process-region (point-min) (point-max)
-		 pop3-md5-program t (current-buffer) nil
-		 pop3-md5-program-args)
-	  ;; The meaningful output is the first 32 characters.
-	  ;; Don't return the newline that follows them!
-	  (buffer-substring (point-min) (+ 32 (point-min))))))))
-
 (defun pop3-user (process user)
   "Send USER information to POP3 server."
   (pop3-send-command process (format "USER %s" user))
@@ -409,7 +433,7 @@ If NOW, use that time instead."
 	(setq pass
 	      (read-passwd (format "Password for %s: " pop3-maildrop))))
     (if pass
-	(let ((hash (pop3-md5 (concat pop3-timestamp pass))))
+	(let ((hash (md5 (concat pop3-timestamp pass) nil nil 'binary)))
 	  (pop3-send-command process (format "APOP %s %s" user hash))
 	  (let ((response (pop3-read-response process t)))
 	    (if (not (and response (string-match "+OK" response)))
@@ -520,6 +544,13 @@ and close the connection."
 ;;  -ERR [invalid password]
 ;;  -ERR [unable to lock maildrop]
 
+;; STLS      (RFC 2595)
+;; Arguments: none
+;; Restrictions: Only permitted in AUTHORIZATION state.
+;; Possible responses:
+;;  +OK
+;;  -ERR
+
 ;;; TRANSACTION STATE
 
 ;; STAT
@@ -577,5 +608,5 @@ and close the connection."
 
 (provide 'pop3)
 
-;;; arch-tag: 2facc142-1d74-498e-82af-4659b64cac12
+;; arch-tag: 2facc142-1d74-498e-82af-4659b64cac12
 ;;; pop3.el ends here

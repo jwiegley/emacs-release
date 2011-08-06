@@ -5,14 +5,14 @@
 ;; Keywords: convenience
 ;;
 ;; Copyright (C) 1996, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -159,7 +157,7 @@
 (defcustom file-cache-filter-regexps
   (list "~$" "\\.o$" "\\.exe$" "\\.a$" "\\.elc$" ",v$" "\\.output$"
 	"\\.$" "#$" "\\.class$")
-  "*List of regular expressions used as filters by the file cache.
+  "List of regular expressions used as filters by the file cache.
 File names which match these expressions will not be added to the cache.
 Note that the functions `file-cache-add-file' and `file-cache-add-file-list'
 do not use this variable."
@@ -167,12 +165,12 @@ do not use this variable."
   :group 'file-cache)
 
 (defcustom file-cache-find-command "find"
-  "*External program used by `file-cache-add-directory-using-find'."
+  "External program used by `file-cache-add-directory-using-find'."
   :type 'string
   :group 'file-cache)
 
 (defcustom file-cache-find-command-posix-flag 'not-defined
-  "*Set to t, if `file-cache-find-command' handles wildcards POSIX style.
+  "Set to t, if `file-cache-find-command' handles wildcards POSIX style.
 This variable is automatically set to nil or non-nil
 if it has the initial value `not-defined' whenever you first
 call the `file-cache-add-directory-using-find'.
@@ -185,7 +183,7 @@ should be t."
   :group 'file-cache)
 
 (defcustom file-cache-locate-command "locate"
-  "*External program used by `file-cache-add-directory-using-locate'."
+  "External program used by `file-cache-add-directory-using-locate'."
   :type 'string
   :group 'file-cache)
 
@@ -259,7 +257,12 @@ Defaults to nil on DOS and Windows, and t on other systems."
 (defvar file-cache-alist nil
   "Internal data structure to hold cache of file names.")
 
-(defvar file-cache-completions-keymap nil
+(defvar file-cache-completions-keymap
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map completion-list-mode-map)
+    (define-key map [mouse-2] 'file-cache-mouse-choose-completion)
+    (define-key map "\C-m" 'file-cache-choose-completion)
+    map)
   "Keymap for file cache completions buffer.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -280,11 +283,11 @@ be added to the cache."
 	   (dir-files (directory-files dir t regexp))
 	   )
       ;; Filter out files we don't want to see
-      (mapcar
+      (mapc
        '(lambda (file)
           (if (file-directory-p file)
               (setq dir-files (delq file dir-files))
-	    (mapcar
+	    (mapc
 	     '(lambda (regexp)
 		(if (string-match regexp file)
 		    (setq dir-files (delq file dir-files))))
@@ -386,7 +389,7 @@ in each directory, not to the directory list itself."
     (lambda(file)
       (or (file-directory-p file)
 	  (let (filtered)
-	    (mapcar
+	    (mapc
 	     (function
 	      (lambda(regexp)
 		(and (string-match regexp file)
@@ -402,7 +405,7 @@ in each directory, not to the directory list itself."
 Each entry matches the regular expression `file-cache-buffer-default-regexp'
 or the optional REGEXP argument."
   (set-buffer file-cache-buffer)
-  (mapcar
+  (mapc
    (function (lambda (elt)
 	       (goto-char (point-min))
 	       (delete-matching-lines elt)))
@@ -443,10 +446,10 @@ or the optional REGEXP argument."
   "Delete files matching REGEXP from the file cache."
   (interactive "sRegexp: ")
   (let ((delete-list))
-    (mapcar '(lambda (elt)
-	       (and (string-match regexp (car elt))
-		    (setq delete-list (cons (car elt) delete-list))))
-	    file-cache-alist)
+    (mapc '(lambda (elt)
+	     (and (string-match regexp (car elt))
+		  (setq delete-list (cons (car elt) delete-list))))
+	  file-cache-alist)
     (file-cache-delete-file-list delete-list)
     (message "Filecache: deleted %d files from file cache"
              (length delete-list))))
@@ -456,7 +459,7 @@ or the optional REGEXP argument."
   (interactive "DDelete directory from file cache: ")
   (let ((dir (expand-file-name directory))
 	(result 0))
-    (mapcar
+    (mapc
      '(lambda (entry)
 	(if (file-cache-do-delete-directory dir entry)
 	    (setq result (1+ result))))
@@ -609,14 +612,10 @@ the name is considered already unique; only the second substitution
 	       (substring completion-string (length string)))
 	      ;; Add our own setup function to the Completions Buffer
 	      (let ((completion-setup-hook
-		   (reverse
-		    (append (list 'file-cache-completion-setup-function)
-			    completion-setup-hook)))
-		    )
+                     (append completion-setup-hook
+                             (list 'file-cache-completion-setup-function))))
 		(with-output-to-temp-buffer file-cache-completions-buffer
-		  (display-completion-list completion-list string))
-		)
-	      )
+		  (display-completion-list completion-list string))))
 	  (setq file-cache-string (file-cache-file-name completion-string))
 	  (if (string= file-cache-string (minibuffer-contents))
 	      (file-cache-temp-minibuffer-message
@@ -653,19 +652,8 @@ the name is considered already unique; only the second substitution
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun file-cache-completion-setup-function  ()
-  (set-buffer file-cache-completions-buffer)
-
-  (if file-cache-completions-keymap
-      nil
-    (setq file-cache-completions-keymap
-	  (copy-keymap completion-list-mode-map))
-    (define-key file-cache-completions-keymap [mouse-2]
-      'file-cache-mouse-choose-completion)
-    (define-key file-cache-completions-keymap "\C-m"
-      'file-cache-choose-completion))
-
-    (use-local-map file-cache-completions-keymap)
-    )
+  (with-current-buffer standard-output ;; i.e. file-cache-completions-buffer
+    (use-local-map file-cache-completions-keymap)))
 
 (defun file-cache-choose-completion  ()
   "Choose a completion in the `*Completions*' buffer."
@@ -719,7 +707,7 @@ the name is considered already unique; only the second substitution
   "Output a list of files whose names (not including directories)
 match REGEXP."
   (let ((results))
-    (mapcar
+    (mapc
      (function
       (lambda(cache-element)
 	(and (string-match regexp
@@ -768,11 +756,11 @@ match REGEXP."
     (with-current-buffer
 	(get-buffer-create buf)
       (erase-buffer)
-      (mapcar
+      (mapc
        (function
-      (lambda(item)
-	(insert (nth 1 item) (nth 0 item) "\n")))
-    file-cache-alist)
+	(lambda(item)
+	 (insert (nth 1 item) (nth 0 item) "\n")))
+       file-cache-alist)
       (pop-to-buffer buf)
     )))
 
@@ -782,5 +770,5 @@ match REGEXP."
 
 (provide 'filecache)
 
-;;; arch-tag: 433d3ca4-4af2-47ce-b2cf-1f727460f538
+;; arch-tag: 433d3ca4-4af2-47ce-b2cf-1f727460f538
 ;;; filecache.el ends here

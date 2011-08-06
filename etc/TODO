@@ -1,6 +1,6 @@
 Emacs TODO List                                                   -*-outline-*-
 
-Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
   Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
@@ -12,35 +12,63 @@ it best.  Since Emacs is an FSF-copyrighted package, please be
 prepared to sign legal papers to transfer the copyright on your work
 to the FSF.
 
+* Simple tasks. These don't require much emacs knowledge, they are
+suitable for anyone from beginners to experts.
+
+** Convert modes that use view-mode to be derived from special-mode instead.
+
+** make emacsclient accept -nw as a synonym to -t.
+
+** Replace some uses of the preprocessor code in Makefile.in with the equivalent autoconf.
+
+** Major modes should have a menu entry.  Examples of modes that do
+not have one at the moment and probably should: text-mode, inferior-lisp-mode.
+
+** Check if all items on the mode-line have a suitable tooltip for all modes.
+
+** edebug and debugger-mode should have a toolbar.
+It can use the same icons as gud.
+
+** Check what minor modes don't use define-minor-mode and convert them
+to use it.
+
+** Convert all defvars with leading `*' in the doc-strings into defcustoms
+of appropriate :type and :group.
+
+** Remove any leading `*'s from defcustom doc-strings.
+
+** Remove unnecessary autoload cookies from defcustoms.
+This needs a bit of care, since often people have become used to
+expecting such variables to always be defined, eg when they modify
+things in their .emacs.
+
 * Small but important fixes needed in existing features:
 
-** Fix compilation when Xaw3d libraries are present but libxaw is not.
-In new X11 versions, xaw3dg-dev does not depend on libxaw-dev, so the
-latter need not be installed.  As a result, all the source files that
-look for include files in X11/Xaw should look in X11/Xaw3d if we are
-using Xaw3d.
+** Flymake's customization mechanism needs to be both simpler (fewer
+levels of indirection) and better documented, so it is easier to
+understand.  I find it quite hard to figure out what compilation
+command it will use.
+
+I suggest totally rewriting that part of Flymake, using the simplest
+mechanism that sufficies for the specific needs.  That will be easy
+for users to customize.
+
+** Make "emacs --daemon" start emacs without showing any frame. 
+Use emacsclient later to open frames.
+
+** Make it possible to reliably turn on minor modes using "mode:" in the local 
+variables section.
 
 ** Compute the list of active keymaps *after* reading the first event.
-
-** mouse-autoselect-window should wait to select the window until
-the mouse is put to rest or after a delay or both, so that moving over
-a window doesn't select it.
-
-** In C-x d, the default if you type RET should be the directory name,
-but if you type M-n you should get the visited file name of the
-current buffer.
-
-** describe-face should show an example of text in the face.
 
 ** Distribute a bar cursor of width > 1 evenly between the two glyphs
    on each side of the bar (what to do at the edges?).
 
-** Make vc-checkin avoid reverting the buffer if has not changed after
-   the checkin. Comparing (md5 BUFFER) to (md5 FILE) should be enough.
-
 ** buffer-offer-save should be a permanent local.
 
 ** revert-buffer should eliminate overlays and the mark.
+   For related problems consult the thread starting with
+   http://lists.gnu.org/archive/html/emacs-devel/2005-11/msg01346.html
 
 ** erase-buffer should perhaps disregard read-only properties of text.
 
@@ -98,16 +126,61 @@ current buffer.
 
 ** make back_comment use syntax-ppss or equivalent.
 
-** Improve configure's treatment of NON_GNU_CPP on Solaris.
-(patch available for after Emacs 22)
-
 ** Consider improving src/sysdep.c's search for a fqdn.
 http://lists.gnu.org/archive/html/emacs-devel/2007-04/msg00782.html
 
 ** Find a proper fix for rcirc multiline nick adding.
 http://lists.gnu.org/archive/html/emacs-devel/2007-04/msg00684.html
 
+** Implement `network-interface-list' and `network-interface-info'
+on MS-Windows.  Hint: the information is present in the Registry,
+under the keys
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Linkage\
+and
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\<device>\
+where <device> is the network device found under the first key.
+
+** Check for any included packages that define obsolete bug-reporting commands.
+Change them to use report-emacs-bug.
+
+** Allow fringe indicators to display a tooltip (provide a help-echo property?)
+
+** Add a defcustom that supplies a function to name numeric backup files,
+like make-backup-file-name-function for non-numeric backup files.
+
+** `dired-mode' should specify the semantics of `buffer-modified-p' for
+dired buffers and DTRT WRT `auto-revert-mode'. 
+
+** Check uses of prin1 for error-handling.
+http://lists.gnu.org/archive/html/emacs-devel/2008-08/msg00456.html
+
 * Important features:
+
+** Having tabs above a window to switch buffers in it.
+
+** "Perspectives" are named persistent window configurations.  We have
+had the window configuration mechanism in GNU Emacs since the
+beginning but we have never developed a good user interface to take
+advantage of them.  Eclipse's user interface seems to be good.
+
+Perspectives work well even if you do the equivalent of C-x 4 C-f
+because of the distinction between view windows vs file windows.  In
+Emacs this is more or less the "dedicated window" feature, but we have
+never really made it work for this.
+
+Perspectives also need to interact with the tabs.
+
+** Imenu could be extended into a file-structure browsing mechanism
+using code like that of customize-groups.
+
+** Display something in the margin on lines that have compilation
+errors.
+
+** Compilation error navigation bar, parallel to the scroll bar,
+indicating where in the buffer there are compilation errors.
+Perhaps we could arrange to display these error indications on top
+of the scroll bar itself.  That depends on to what extent toolkit
+scroll bars are extensible.
 
 ** Provide user-friendly ways to list all available font families,
    list fonts, display a font as a sample, etc.  [fx is looking at
@@ -122,9 +195,6 @@ http://lists.gnu.org/archive/html/emacs-devel/2007-04/msg00684.html
   http://latex2rtf.sourceforge.net/.]  This task seems to be addressed
   by http://savannah.nongnu.org/projects/emacs-rtf/, which is still in
   very early stages.
-
-** Implement something better than the current Refill mode.  This
-  probably needs some primitive support.
 
 ** Add a command to make a "Local Variables" section in the current buffer
   and/or add a variable to the list.
@@ -179,8 +249,11 @@ specified filters, specified timers, and specified hooks.
    of character position, so that variable-width fonts can be handled
    properly.
 
+** Allow frames(terminals) created by emacsclient to inherit their environment
+from the emacsclient process.
 ** Remove the default toggling behavior of minor modes when called from elisp
 rather than interactively.  This a trivial one-liner in easy-mode.el.
+
 ** Create a category of errors called `user-error' for errors which are
 typically due to pilot errors and should thus be in debug-ignored-errors.
 
@@ -276,7 +349,7 @@ typically due to pilot errors and should thus be in debug-ignored-errors.
   Bison input files, for instance, or other kinds of text
   where one language is embedded in another language.  See
   http://www.loveshack.ukfsn.org/emacs/multi-mode.el and also
-  mmm-mode, as reference for approaches took by others.
+  mmm-mode, as reference for approaches taken by others.
 
 ** Arrange a way for an input method to return the first character
   immediately, then replace it later.  So that C-s a with
@@ -297,12 +370,6 @@ typically due to pilot errors and should thus be in debug-ignored-errors.
 
 ** Add a cpio mode, more or less like tar mode.
 
-** Implement a variant of uncompress.el or jka-compr.el that works with
-  GNU Privacy Guard for encryption.  [Code exists but isn't assigned.
-  See the Gnus development sources for assigned code concerning GPG
-  use with mail, which is probably a good start.]  See also
-  http://www.loveshack.ukfsn.org/emacs/auto-crypt.tgz.
-
 ** Save undo information in special temporary files, and reload it
   when needed for undoing.  This could extend undo capacity.
 
@@ -317,8 +384,18 @@ typically due to pilot errors and should thus be in debug-ignored-errors.
   the whole menu bar.  In the mean time, it should process other messages.
 
 ** Get some major packages installed: W3 (development version needs
-  significant work), PSGML.  Check the assignments file for other
-  packages which might go in and have been missed.
+  significant work), PSGML, _possibly_ Cedet and ECB.
+  http://lists.gnu.org/archive/html/emacs-devel/2007-05/msg01493.html
+  Check the assignments file for other packages which might go in and
+  have been missed.
+
+** Possibly install python-mode in place of python.el, or combine the two.
+Someone needs to do the work of figuring out who all the non-trivial
+python-mode.el contributors are and getting assignments.
+http://lists.gnu.org/archive/html/emacs-devel/2008-02/msg02156.html
+http://lists.gnu.org/archive/html/emacs-devel/2008-02/msg02201.html
+http://lists.gnu.org/archive/html/emacs-devel/2008-02/msg02489.html
+http://lists.gnu.org/archive/html/emacs-devel/2008-02/msg02234.html
 
 ** Make keymaps a first-class Lisp object (this means a rewrite of
   keymap.c).  What should it do apart from being opaque ?
@@ -337,9 +414,6 @@ typically due to pilot errors and should thus be in debug-ignored-errors.
 
 ** Highlight rectangles (`mouse-track-rectangle-p' in XEmacs).  Already in CUA,
   but it's a valuable feature worth making more general.
-
-** Support simultaneous tty and X frames.  [See the multi-tty branch of Emacs
-  at http://lorentey.hu/project/emacs.]
 
 ** Provide MIME support for Rmail using the Gnus MIME library.  [Maybe
   not now feasible, given Gnus maintenance decisions.  fx looked at
@@ -363,6 +437,7 @@ typically due to pilot errors and should thus be in debug-ignored-errors.
 ** Add a --pristine startup flag which does -q --no-site-file plus
   ignoring X resources (Doze equivalents?) and most of the
   environment.  What should not be ignored needs consideration.
+  [Do the existing -Q and -D cover this, or is more needed?]
 
 ** Improve the GC (generational, incremental).  (We may be able to use
   the Boehm collector.)  [See the Boehm-GC branch in CVS for work on
@@ -377,20 +452,9 @@ typically due to pilot errors and should thus be in debug-ignored-errors.
 ** Provide an optional feature which computes a scroll bar slider's
   size and its position from lines instead of characters.
 
-** Add support for SVG (Scalable Vector Graphics) rendering to
-  Emacs.
-
 ** Allow unknown image types to be rendered via an external program
-  converting them to, say, PBM (in the same way as PostScript?).
-
-** Display images with alpha channels, such as png, with the current
-background color of whatever frame it is displayed in.  Currently, we
-use the default background color if specified in the png file, or, if
-that is unspecified, the background color of the frame in which the
-image was first created.  Ideally, the image should display the
-background color of whichever frame it is being displayed in.  The
-main complication is that this will require the loading of a new image
-object for each different background color.
+  converting them to, say, PBM (in the same way as PostScript?). [does
+  doc-view.el do this, or could it be extended to do this?]
 
 ** Allow displaying an X window from an external program in a buffer,
   e.g. to render graphics from Java applets.  [gerd and/or wmperry
@@ -406,7 +470,7 @@ object for each different background color.
   (with ASCIIfied fallback via latin1-disp).  Examples include
   box-drawing graphics in Custom buffers, W3 rules and tables, and
   tree displays generally, mode-line mail indicator.  [See work done
-  already for Emacs 22 and consult fx.]
+  already for Emacs 23 and consult fx.]
 
 ** Do something to make rms happy with fx's dynamic loading, and use it
   to implement things like auto-loaded buffer parsers and database
@@ -418,22 +482,17 @@ object for each different background color.
 ** Provide portable undumping using mmap (per gerd design).
 
 ** Make byte-compile avoid binding an expanded defsubst's args
-when the body only calls primitives.
+  when the body only calls primitives.
 
 ** Use the XIE X extension, if available, for image display.
 
 ** Make monochrome images display using the foreground and background
   colors of the applicable faces.
 
-** Face remapping.
-
 ** Make `format-time-string' preserve text properties like `format'.
 
 ** Optionally make the cursor a little thinner at the end of a line
   or the end of the buffer.
-
-** Add support for rendering antialiased text, probably using
-  XRender/Freetype.
 
 ** Port the conservative stack marking code of Emacs' garbage collector
   to more systems, so that we can completely get rid of GCPROs.  Note
@@ -467,8 +526,8 @@ when the body only calls primitives.
   probably in separate manual.
 
 ** Convert the XPM bitmaps to PPM, replace the PBMs with them and scrap
-  the XPMs so that the colour versions work generally.  (Requires care
-  with the colour used for the transparent regions.)
+  the XPMs so that the color versions work generally.  (Requires care
+  with the color used for the transparent regions.)
 
 ** Convenient access to the `values' variable.  It would be nice to have an
   interface that would show you the printed reps of the elements of the
@@ -485,13 +544,6 @@ when the body only calls primitives.
   If value 'integer is used nowhere, remove the parameter ID-FORMAT from
   the definition of `file-attributes' and `directory-files-and-attributes'
   and from the calls.
-
-** Modify the emulation of `stat' for MS-Windows to support large files.
-  The current version uses the stock Windows definition of `struct
-  stat', where the file's size is returned as a 32-bit integer.  That
-  overflows for files larger than 4GB.  To fix, modify `stat' to use
-  64-bit size, and use a declaration of `struct stat' that supports
-  such sizes.
 
 ** Make language-info-alist customizable.  Currently a user can customize
   only the variable `current-language-environment'.
@@ -518,12 +570,6 @@ when the body only calls primitives.
 
 ** In ps-print, provide an user friendly interface to specify fonts.
 
-** OpenType font support for various complex scripts (e.g. Devanagari).
-  As X protocal doesn't provide a way to access OpenType Layout Tables
-  in a OpenType font of a server side, we need a way to utilize local
-  fonts (perhaps by directly using the Freetype library or indirectly
-  via Xft library).
-
 ** Enhance word boundary detection for such a script that doesn't use
   space at word boundary (e.g. Thai).
 
@@ -533,13 +579,11 @@ when the body only calls primitives.
   packages (e.g. tamago, anthy) or an input method via XIM.
 
 ** Let LEIM handle the Mode_switch key like XIM does (i.e. a toggle like C-\
-but which can also be used as a modifier).
+   but which can also be used as a modifier).
 
 ** Improve Help buffers: Change the face of previously visited links (like
-   Info, but also with regard to namespace), add a forward button to make the
-   Help buffer more browser like and gives the value of lisp expressions
-   e.g auto-mode-alist, the right face. [nickrob@snap.net.nz has a patch
-   for this for inclusion after 22.1].
+   Info, but also with regard to namespace), and give the value of
+   lisp expressions, e.g auto-mode-alist, the right face.
 
 ** Possibly make `list-holidays' eval items in the calendar-holidays variable.
    See thread
@@ -550,10 +594,19 @@ but which can also be used as a modifier).
    See thread
    <http://lists.gnu.org/archive/html/emacs-pretest-bug/2006-11/msg00060.html>
 
+** Possibly add a "close" button to the modeline.
+   The idea is to add an "X" of some kind, that when clicked deletes
+   the window associated with that modeline.
+   http://lists.gnu.org/archive/html/emacs-devel/2007-09/msg02416.html
+
 * Internal changes
 
 ** Cleanup all the GC_ mark bit stuff -- there is no longer any distinction
    since the mark bit is no longer stored in the Lisp_Object itself.
+
+** Refine the `predicate' arg to read-file-name.
+   Currently, it mixes up the predicate to apply when doing completion and the
+   one to use when terminating the selection.
 
 ** Merge ibuffer.el and buff-menu.el.
    More specifically do what's needed to make ibuffer.el the default,
@@ -568,7 +621,7 @@ but which can also be used as a modifier).
    a derived mode of sendmail.el.  Or arrange for messages.el to be split
    into a small core and "the rest" so that we use less resources as long as
    we stick to the features provided in sendmail.el.
- 
+
 ** Replace gmalloc.c with the modified Doug Lea code from the current
    GNU libc so that the special mmapping of buffers can be removed --
    that apparently loses under Solaris, at least. [fx has mostly done
@@ -582,7 +635,7 @@ but which can also be used as a modifier).
    For use by sml-mode, python-mode, tex-mode, scheme-mode, lisp-mode,
    haskell-mode, tuareg-mode, ...
 
-** Make SYNC_INPUT the default.
+** Make SYNC_INPUT the default. [true since 2008-03-11]
    All loops using immediate_quit need to be checked to ensure that
    C-g can interrupt them, in case of an infinite loop.  Once we
    switch to using SYNC_INPUT, we can remove the BLOCK_INPUTs in the
@@ -596,6 +649,8 @@ but which can also be used as a modifier).
 
 * Other known bugs:
 
+** `make-frame' forgets unhandled parameters, at least for X11 frames.
+
 ** a two-char comment-starter whose two chars are symbol constituents will
 not be noticed if it appears within a word.
 
@@ -605,10 +660,10 @@ not be noticed if it appears within a word.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -616,8 +671,6 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to the
-Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; arch-tag: b0a3e40b-726a-457d-9999-ba848321b036

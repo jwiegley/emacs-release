@@ -1,6 +1,6 @@
 ;;; ps-mode.el --- PostScript mode for GNU Emacs
 
-;; Copyright (C) 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;; Free Software Foundation, Inc.
 
 ;; Author:     Peter Kleiweg <p.c.j.kleiweg@rug.nl>
@@ -9,12 +9,19 @@
 ;; Version:    1.1h, 16 Jun 2005
 ;; Keywords:   PostScript, languages
 
+;; Yoni Rabkin <yoni@rabkins.net> contacted the maintainer of this
+;; file on 18/3/2008, and the maintainer agreed that when a bug is
+;; filed in the Emacs bug reporting system against this file, a copy
+;; of the bug report be sent to the maintainer's email address, but
+;; only if: "... those e-mails have a link to the bug report system,
+;; where I can cancel these e-mails if I want to.".
+
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,9 +29,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -109,7 +114,7 @@ When the figure is finished these values should be replaced."
 (defcustom ps-mode-print-function
   (lambda ()
      (let ((lpr-switches nil)
-	   (lpr-command (if (memq system-type '(usg-unix-v dgux hpux irix))
+	   (lpr-command (if (memq system-type '(usg-unix-v hpux irix))
 			    "lp" "lpr")))
        (lpr-buffer)))
   "*Lisp function to print current buffer as PostScript."
@@ -176,12 +181,7 @@ You won't need to set this option for Ghostscript."
 
 (defcustom ps-run-tmp-dir nil
   "*Name of directory to place temporary file.
-
-If nil, the following are tried in turn, until success:
-  1. \"$TEMP\"
-  2. \"$TMP\"
-  3. \"$HOME/tmp\"
-  4. \"/tmp\""
+If nil, use `temporary-file-directory'."
   :group 'PostScript-interaction
   :type '(choice (const nil) directory))
 
@@ -418,7 +418,7 @@ If nil, the following are tried in turn, until success:
   (define-key ps-mode-map "\C-c\C-o" 'ps-mode-comment-out-region)
   (define-key ps-mode-map "\C-c\C-k" 'ps-run-kill)
   (define-key ps-mode-map "\C-c\C-j" 'ps-mode-other-newline)
-  (define-key ps-mode-map "\C-c\C-c" 'ps-run-clear)
+  (define-key ps-mode-map "\C-c\C-l" 'ps-run-clear)
   (define-key ps-mode-map "\C-c\C-b" 'ps-run-buffer)
   (define-key ps-mode-map ">" 'ps-mode-r-gt)
   (define-key ps-mode-map "]" 'ps-mode-r-angle)
@@ -480,6 +480,9 @@ If nil, the following are tried in turn, until success:
       (setq i (1+ i)))))
 
 
+
+(declare-function doc-view-minor-mode "doc-view")
+
 ;; PostScript mode.
 
 ;;;###autoload
@@ -529,7 +532,10 @@ Typing \\<ps-run-mode-map>\\[ps-run-goto-error] when the cursor is at the number
 	 t))
   (set (make-local-variable 'comment-start) "%")
   ;; NOTE: `\' has a special meaning in strings only
-  (set (make-local-variable 'comment-start-skip) "%+[ \t]*"))
+  (set (make-local-variable 'comment-start-skip) "%+[ \t]*")
+  ;; enable doc-view-minor-mode => C-c C-c starts viewing the current ps file
+  ;; with doc-view-mode.
+  (doc-view-minor-mode 1))
 
 (defun ps-mode-show-version ()
   "Show current version of PostScript mode."
@@ -1113,24 +1119,10 @@ grestore
 
 (defun ps-run-make-tmp-filename ()
   (unless ps-mode-tmp-file
-    (cond (ps-run-tmp-dir)
-	  ((setq ps-run-tmp-dir (getenv "TEMP")))
-	  ((setq ps-run-tmp-dir (getenv "TMP")))
-	  ((setq ps-run-tmp-dir (getenv "HOME"))
-	   (setq
-	    ps-run-tmp-dir
-	    (concat (file-name-as-directory ps-run-tmp-dir) "tmp"))
-	   (unless (file-directory-p ps-run-tmp-dir)
-	     (setq ps-run-tmp-dir nil))))
-    (unless ps-run-tmp-dir
-      (setq ps-run-tmp-dir "/tmp"))
     (setq ps-mode-tmp-file
-	  (make-temp-file
-	   (concat
-	    (if ps-run-tmp-dir
-		(file-name-as-directory ps-run-tmp-dir)
-	      "")
-	    "ps-run-"))))
+	  (let ((temporary-file-directory (or ps-run-tmp-dir
+					      temporary-file-directory)))
+	    (make-temp-file "ps-run-"))))
   ps-mode-tmp-file)
 
 ;; Remove temporary file
@@ -1191,5 +1183,5 @@ Use line numbers if `ps-run-error-line-numbers' is not nil"
 
 (provide 'ps-mode)
 
-;;; arch-tag: dce13d2d-69fb-4ec4-9d5d-6dd29c3f0e6e
+;; arch-tag: dce13d2d-69fb-4ec4-9d5d-6dd29c3f0e6e
 ;;; ps-mode.el ends here

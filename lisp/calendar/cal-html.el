@@ -1,6 +1,7 @@
 ;;; cal-html.el --- functions for printing HTML calendars
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Anna M. Bigatti <bigatti@dima.unige.it>
 ;; Keywords: calendar
@@ -9,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -181,7 +180,7 @@ the link points to a different year and so has a directory part."
 
 
 (defun cal-html-insert-link-yearpage (month year)
-  "Insert a link to index page for four-digit YEAR, tagged using MONTH name."
+  "Insert a link tagged with MONTH name, to index page for four-digit YEAR."
   (insert (cal-html-h1
            (format "%s %s"
                    (calendar-month-name month)
@@ -206,15 +205,15 @@ Contains links to previous and next month and year, and current minical."
   (insert (cal-html-b-table "class=header"))
   (insert cal-html-b-tablerow-string)
   (insert cal-html-b-tabledata-string)          ; month links
-  (increment-calendar-month month year -1)      ; previous month
+  (calendar-increment-month month year -1)      ; previous month
   (cal-html-insert-link-monthpage month year t) ; t --> change-dir
-  (increment-calendar-month month year 1)       ; current month
+  (calendar-increment-month month year 1)       ; current month
   (cal-html-insert-link-yearpage month year)
-  (increment-calendar-month month year 1)       ; next month
+  (calendar-increment-month month year 1)       ; next month
   (cal-html-insert-link-monthpage month year t) ; t --> change-dir
   (insert cal-html-e-tabledata-string)
   (insert cal-html-b-tabledata-string)  ; minical
-  (increment-calendar-month month year -1)
+  (calendar-increment-month month year -1)
   (cal-html-insert-minical month year)
   (insert cal-html-e-tabledata-string)
   (insert cal-html-e-tablerow-string)   ; end
@@ -313,11 +312,11 @@ Characters are replaced according to `cal-html-html-subst-list'."
   "Convert a diary entry ENTRY to html with the appropriate class specifier."
   (let ((start
          (cond
-          ((string-match "block" (car (cddr entry))) "BLOCK")
-          ((string-match "anniversary" (car (cddr entry))) "ANN")
+          ((string-match "block" (nth 2 entry)) "BLOCK")
+          ((string-match "anniversary" (nth 2 entry)) "ANN")
           ((not (string-match
-                 (number-to-string (car (cddr (car entry))))
-                 (car (cddr entry))))
+                 (number-to-string (nth 2 (car entry)))
+                 (nth 2 entry)))
            "NO-YEAR")
           (t "NORMAL"))))
     (format "<span class=%s>%s</span>" start
@@ -325,7 +324,7 @@ Characters are replaced according to `cal-html-html-subst-list'."
 
 
 (defun cal-html-htmlify-list (date-list date)
-  "Return a string of concatenated, HTMLified diary entries.
+  "Return a string of concatenated, HTML-ified diary entries.
 DATE-LIST is a list of diary entries.  Return only those matching DATE."
   (mapconcat (lambda (x) (cal-html-htmlify-entry x))
              (let (result)
@@ -340,14 +339,12 @@ DATE-LIST is a list of diary entries.  Return only those matching DATE."
 ;;  Monthly calendar
 ;;------------------------------------------------------------
 
-(autoload 'diary-list-entries "diary-lib" nil t)
+(autoload 'diary-list-entries "diary-lib")
 
 (defun cal-html-list-diary-entries (d1 d2)
   "Generate a list of all diary-entries from absolute date D1 to D2."
-  (let (diary-display-hook)
-    (diary-list-entries
-     (calendar-gregorian-from-absolute d1)
-     (1+ (- d2 d1)))))
+  (diary-list-entries (calendar-gregorian-from-absolute d1)
+                      (1+ (- d2 d1)) t))
 
 
 (defun cal-html-insert-agenda-days (month year diary-list)
@@ -410,26 +407,31 @@ four-digit YEAR.  Diary entries in DIARY-LIST are included."
 
 ;;; User commands.
 
-(defun cal-html-cursor-month (month year dir)
+;;;###cal-autoload
+(defun cal-html-cursor-month (month year dir &optional event)
   "Write an HTML calendar file for numeric MONTH of four-digit YEAR.
 The output directory DIR is created if necessary.  Interactively,
-MONTH and YEAR are taken from the calendar cursor position.  Note
-that any existing output files are overwritten."
-  (interactive (let* ((date (calendar-cursor-to-date t))
-                      (month (extract-calendar-month date))
-                      (year (extract-calendar-year date)))
-                 (list month year (cal-html-year-dir-ask-user year))))
+MONTH and YEAR are taken from the calendar cursor position, or from
+the position specified by EVENT.  Note that any existing output files
+are overwritten."
+  (interactive (let* ((event last-nonmenu-event)
+                      (date (calendar-cursor-to-date t event))
+                      (month (calendar-extract-month date))
+                      (year (calendar-extract-year date)))
+                 (list month year (cal-html-year-dir-ask-user year) event)))
   (make-directory dir t)
   (cal-html-one-month month year dir))
 
-(defun cal-html-cursor-year (year dir)
+;;;###cal-autoload
+(defun cal-html-cursor-year (year dir &optional event)
   "Write HTML calendar files (index and monthly pages) for four-digit YEAR.
 The output directory DIR is created if necessary.  Interactively,
-YEAR is taken from the calendar cursor position.  Note that any
-existing output files are overwritten."
-  (interactive (let ((year (extract-calendar-year
-                            (calendar-cursor-to-date t))))
-                 (list year (cal-html-year-dir-ask-user year))))
+YEAR is taken from the calendar cursor position, or from the position
+specified by EVENT.  Note that any existing output files are overwritten."
+  (interactive (let* ((event last-nonmenu-event)
+                      (year (calendar-extract-year
+                             (calendar-cursor-to-date t event))))
+                 (list year (cal-html-year-dir-ask-user year) event)))
   (make-directory dir t)
   (with-temp-buffer
     (cal-html-insert-year-minicals year cal-html-year-index-cols)
@@ -439,7 +441,6 @@ existing output files are overwritten."
 
 
 (provide 'cal-html)
-
 
 ;; arch-tag: 4e73377d-d2c1-46ea-a103-02c111da5f57
 ;;; cal-html.el ends here

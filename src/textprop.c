@@ -1,13 +1,13 @@
 /* Interface code for dealing with text properties.
    Copyright (C) 1993, 1994, 1995, 1997, 1999, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 #include "lisp.h"
@@ -59,6 +57,7 @@ Lisp_Object Qlocal_map;
 /* Visual properties text (including strings) may have.  */
 Lisp_Object Qforeground, Qbackground, Qfont, Qunderline, Qstipple;
 Lisp_Object Qinvisible, Qread_only, Qintangible, Qmouse_face;
+Lisp_Object Qminibuffer_prompt;
 
 /* Sticky properties */
 Lisp_Object Qfront_sticky, Qrear_nonsticky;
@@ -201,9 +200,9 @@ validate_plist (list)
     {
       register int i;
       register Lisp_Object tail;
-      for (i = 0, tail = list; !NILP (tail); i++)
+      for (i = 0, tail = list; CONSP (tail); i++)
 	{
-	  tail = Fcdr (tail);
+	  tail = XCDR (tail);
 	  QUIT;
 	}
       if (i & 1)
@@ -226,18 +225,18 @@ interval_has_all_properties (plist, i)
   register int found;
 
   /* Go through each element of PLIST.  */
-  for (tail1 = plist; ! NILP (tail1); tail1 = Fcdr (Fcdr (tail1)))
+  for (tail1 = plist; CONSP (tail1); tail1 = Fcdr (XCDR (tail1)))
     {
-      sym1 = Fcar (tail1);
+      sym1 = XCAR (tail1);
       found = 0;
 
       /* Go through I's plist, looking for sym1 */
-      for (tail2 = i->plist; ! NILP (tail2); tail2 = Fcdr (Fcdr (tail2)))
-	if (EQ (sym1, Fcar (tail2)))
+      for (tail2 = i->plist; CONSP (tail2); tail2 = Fcdr (XCDR (tail2)))
+	if (EQ (sym1, XCAR (tail2)))
 	  {
 	    /* Found the same property on both lists.  If the
 	       values are unequal, return zero.  */
-	    if (! EQ (Fcar (Fcdr (tail1)), Fcar (Fcdr (tail2))))
+	    if (! EQ (Fcar (XCDR (tail1)), Fcar (XCDR (tail2))))
 	      return 0;
 
 	    /* Property has same value on both lists;  go to next one.  */
@@ -263,13 +262,13 @@ interval_has_some_properties (plist, i)
   register Lisp_Object tail1, tail2, sym;
 
   /* Go through each element of PLIST.  */
-  for (tail1 = plist; ! NILP (tail1); tail1 = Fcdr (Fcdr (tail1)))
+  for (tail1 = plist; CONSP (tail1); tail1 = Fcdr (XCDR (tail1)))
     {
-      sym = Fcar (tail1);
+      sym = XCAR (tail1);
 
       /* Go through i's plist, looking for tail1 */
-      for (tail2 = i->plist; ! NILP (tail2); tail2 = Fcdr (Fcdr (tail2)))
-	if (EQ (sym, Fcar (tail2)))
+      for (tail2 = i->plist; CONSP (tail2); tail2 = Fcdr (XCDR (tail2)))
+	if (EQ (sym, XCAR (tail2)))
 	  return 1;
     }
 
@@ -287,12 +286,12 @@ interval_has_some_properties_list (list, i)
   register Lisp_Object tail1, tail2, sym;
 
   /* Go through each element of LIST.  */
-  for (tail1 = list; ! NILP (tail1); tail1 = XCDR (tail1))
+  for (tail1 = list; CONSP (tail1); tail1 = XCDR (tail1))
     {
       sym = Fcar (tail1);
 
       /* Go through i's plist, looking for tail1 */
-      for (tail2 = i->plist; ! NILP (tail2); tail2 = XCDR (XCDR (tail2)))
+      for (tail2 = i->plist; CONSP (tail2); tail2 = XCDR (XCDR (tail2)))
 	if (EQ (sym, XCAR (tail2)))
 	  return 1;
     }
@@ -391,21 +390,21 @@ add_properties (plist, i, object)
   GCPRO3 (tail1, sym1, val1);
 
   /* Go through each element of PLIST.  */
-  for (tail1 = plist; ! NILP (tail1); tail1 = Fcdr (Fcdr (tail1)))
+  for (tail1 = plist; CONSP (tail1); tail1 = Fcdr (XCDR (tail1)))
     {
-      sym1 = Fcar (tail1);
-      val1 = Fcar (Fcdr (tail1));
+      sym1 = XCAR (tail1);
+      val1 = Fcar (XCDR (tail1));
       found = 0;
 
       /* Go through I's plist, looking for sym1 */
-      for (tail2 = i->plist; ! NILP (tail2); tail2 = Fcdr (Fcdr (tail2)))
-	if (EQ (sym1, Fcar (tail2)))
+      for (tail2 = i->plist; CONSP (tail2); tail2 = Fcdr (XCDR (tail2)))
+	if (EQ (sym1, XCAR (tail2)))
 	  {
 	    /* No need to gcpro, because tail2 protects this
 	       and it must be a cons cell (we get an error otherwise).  */
 	    register Lisp_Object this_cdr;
 
-	    this_cdr = Fcdr (tail2);
+	    this_cdr = XCDR (tail2);
 	    /* Found the property.  Now check its value.  */
 	    found = 1;
 
@@ -646,6 +645,10 @@ get_char_property_and_overlay (position, prop, object, overlay)
       Lisp_Object *overlay_vec;
       struct buffer *obuf = current_buffer;
 
+      if (XINT (position) < BUF_BEGV (XBUFFER (object))
+	  || XINT (position) > BUF_ZV (XBUFFER (object)))
+	xsignal1 (Qargs_out_of_range, position);
+
       set_buffer_temp (XBUFFER (object));
 
       GET_OVERLAYS_AT (XINT (position), overlay_vec, noverlays, NULL, 0);
@@ -881,7 +884,7 @@ back past position LIMIT; return LIMIT if nothing is found before LIMIT.  */)
       if (NILP (position))
 	{
 	  if (NILP (limit))
-	    position = make_number (SCHARS (object));
+	    position = make_number (0);
 	  else
 	    {
 	      CHECK_NUMBER (limit);
@@ -1965,10 +1968,10 @@ text_property_list (object, start, end, prop)
 	  plist = i->plist;
 
 	  if (!NILP (prop))
-	    for (; !NILP (plist); plist = Fcdr (Fcdr (plist)))
-	      if (EQ (Fcar (plist), prop))
+	    for (; CONSP (plist); plist = Fcdr (XCDR (plist)))
+	      if (EQ (XCAR (plist), prop))
 		{
-		  plist = Fcons (prop, Fcons (Fcar (Fcdr (plist)), Qnil));
+		  plist = Fcons (prop, Fcons (Fcar (XCDR (plist)), Qnil));
 		  break;
 		}
 
@@ -2332,6 +2335,8 @@ inherits it if NONSTICKINESS is nil.  The `front-sticky' and
   Qrear_nonsticky = intern ("rear-nonsticky");
   staticpro (&Qmouse_face);
   Qmouse_face = intern ("mouse-face");
+  staticpro (&Qminibuffer_prompt);
+  Qminibuffer_prompt = intern ("minibuffer-prompt");
 
   /* Properties that text might use to specify certain actions */
 

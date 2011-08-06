@@ -1,7 +1,7 @@
 ;;; eudcb-bbdb.el --- Emacs Unified Directory Client - BBDB Backend
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Oscar Figueiredo <oscar@cpe.fr>
 ;; Maintainer: Pavel Janík <Pavel@Janik.cz>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;    This library provides an interface to use BBDB as a backend of
@@ -75,7 +73,7 @@
   "Return RECORD if it matches `eudc-bbdb-current-query', nil otherwise."
   (catch 'unmatch
     (progn
-      (mapcar
+      (mapc
        (function
 	(lambda (condition)
 	  (let ((attr (car condition))
@@ -103,6 +101,19 @@
        eudc-bbdb-current-query)
       record)))
 
+;; External.
+(declare-function bbdb-phone-location   "ext:bbdb" t) ; via bbdb-defstruct
+(declare-function bbdb-phone-string     "ext:bbdb" (phone))
+(declare-function bbdb-record-phones    "ext:bbdb" t) ; via bbdb-defstruct
+(declare-function bbdb-address-streets  "ext:bbdb" t) ; via bbdb-defstruct
+(declare-function bbdb-address-city     "ext:bbdb" t) ; via bbdb-defstruct
+(declare-function bbdb-address-state    "ext:bbdb" t) ; via bbdb-defstruct
+(declare-function bbdb-address-zip      "ext:bbdb" t) ; via bbdb-defstruct
+(declare-function bbdb-address-location "ext:bbdb" t) ; via bbdb-defstruct
+(declare-function bbdb-record-addresses "ext:bbdb" t) ; via bbdb-defstruct
+(declare-function bbdb-records          "ext:bbdb"
+                  (&optional dont-check-disk already-in-db-buffer))
+
 (defun eudc-bbdb-extract-phones (record)
   (mapcar (function
 	   (lambda (phone)
@@ -116,25 +127,24 @@
 
 (defun eudc-bbdb-extract-addresses (record)
   (let (s c val)
-    (mapcar (function
-	     (lambda (address)
-	       (setq val (concat (unless (= 0 (length (setq s (bbdb-address-street1 address))))
-				   (concat s "\n"))
-				 (unless (= 0 (length (setq s (bbdb-address-street2 address))))
-				   (concat s "\n"))
-				 (unless (= 0 (length (setq s (bbdb-address-street3 address))))
-				   (concat s "\n"))
-				 (progn
-				   (setq c (bbdb-address-city address))
-				   (setq s (bbdb-address-state address))
-				   (if (and (> (length c) 0) (> (length s) 0))
-				       (concat c ", " s " ")
-				     (concat c " ")))
-				 (bbdb-address-zip-string address)))
-	       (if eudc-bbdb-use-locations-as-attribute-names
-		   (cons (intern (bbdb-address-location address)) val)
-		 (cons 'addresses (concat (bbdb-address-location address) "\n" val)))))
-	    (bbdb-record-addresses record))))
+    (mapcar (lambda (address)
+              (setq c (bbdb-address-streets address))
+              (dotimes (n 3)
+                (unless (zerop (length (setq s (nth n c))))
+                  (setq val (concat val s "\n"))))
+              (setq c (bbdb-address-city address)
+                    s (bbdb-address-state address))
+              (setq val (concat val
+                                (if (and (> (length c) 0) (> (length s) 0))
+                                    (concat c ", " s)
+                                  c)
+                                " "
+                                (bbdb-address-zip address)))
+              (if eudc-bbdb-use-locations-as-attribute-names
+                  (cons (intern (bbdb-address-location address)) val)
+                (cons 'addresses (concat (bbdb-address-location address)
+                                         "\n" val))))
+            (bbdb-record-addresses record))))
 
 (defun eudc-bbdb-format-record-as-result (record)
   "Format the BBDB RECORD as a EUDC query result record.
@@ -197,22 +207,22 @@ RETURN-ATTRS is a list of attributes to return, defaulting to
       (if (car query-attrs)
 	  (setq records (eval `(bbdb-search ,(quote records) ,@bbdb-attrs))))
       (setq query-attrs (cdr query-attrs)))
-    (mapcar (function
-	     (lambda (record)
-	       (setq filtered (eudc-filter-duplicate-attributes record))
-	       ;; If there were duplicate attributes reverse the order of the
-	       ;; record so the unique attributes appear first
-	       (if (> (length filtered) 1)
-		   (setq filtered (mapcar (function
-					   (lambda (rec)
-					     (reverse rec)))
-					  filtered)))
-	       (setq result (append result filtered))))
-	    (delq nil
-		  (mapcar 'eudc-bbdb-format-record-as-result
-			  (delq nil
-				(mapcar 'eudc-bbdb-filter-non-matching-record
-					records)))))
+    (mapc (function
+	   (lambda (record)
+	     (setq filtered (eudc-filter-duplicate-attributes record))
+	     ;; If there were duplicate attributes reverse the order of the
+	     ;; record so the unique attributes appear first
+	     (if (> (length filtered) 1)
+		 (setq filtered (mapcar (function
+					 (lambda (rec)
+					   (reverse rec)))
+					filtered)))
+	     (setq result (append result filtered))))
+	  (delq nil
+		(mapcar 'eudc-bbdb-format-record-as-result
+			(delq nil
+			      (mapcar 'eudc-bbdb-filter-non-matching-record
+				      records)))))
     result))
 
 ;;}}}
@@ -232,5 +242,5 @@ RETURN-ATTRS is a list of attributes to return, defaulting to
 
 (provide 'eudcb-bbdb)
 
-;;; arch-tag: 38276208-75de-4dbc-ba6f-8db684c32e0a
+;; arch-tag: 38276208-75de-4dbc-ba6f-8db684c32e0a
 ;;; eudcb-bbdb.el ends here

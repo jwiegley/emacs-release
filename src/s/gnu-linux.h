@@ -1,13 +1,13 @@
 /* This file is the configuration file for Linux-based GNU systems
    Copyright (C) 1985, 1986, 1992, 1994, 1996, 1999, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* This file was put together by Michael K. Johnson and Rik Faith.  */
 
@@ -27,11 +25,7 @@ Boston, MA 02110-1301, USA.  */
  *	Define all the symbols that apply correctly.
  */
 
-/* #define UNIPLUS */
-/* #define USG5 */
 #define USG
-/* #define BSD_SYSTEM */
-#define LINUX
 #define GNU_LINUX
 
 /* SYSTEM_TYPE should indicate the kind of system you are using.
@@ -39,21 +33,14 @@ Boston, MA 02110-1301, USA.  */
 
 #define SYSTEM_TYPE "gnu/linux"		/* All the best software is free. */
 
-/* Check the version number of Linux--if it is at least 1.2.0,
-   it is safe to use SIGIO.  */
 #ifndef NOT_C_CODE
 #ifdef emacs
 #ifdef HAVE_LINUX_VERSION_H
 #include <linux/version.h>
 
-#if LINUX_VERSION_CODE > 0x10200
-#define LINUX_SIGIO_DOES_WORK
-#endif /* LINUX_VERSION_CODE > 0x10200 */
-#if LINUX_VERSION_CODE >= 0x20000
-#define LINUX_MAP_SHARED_DOES_WORK
-#endif /* LINUX_VERSION_CODE >= 0x20000 */
 #if LINUX_VERSION_CODE >= 0x20400
-#define LINUX_SIGNALS_VIA_CHARACTERS_DOES_WORK
+/* 21 Jun 06: Eric Hanchrow <offby1@blarg.net> says this works.  */
+#define SIGNALS_VIA_CHARACTERS
 #endif /* LINUX_VERSION_CODE >= 0x20400 */
 #endif /* HAVE_LINUX_VERSION_H */
 #endif /* emacs */
@@ -101,7 +88,7 @@ Boston, MA 02110-1301, USA.  */
 
 #define FIRST_PTY_LETTER 'p'
 
-#endif  /* not HAVE_GRANDPT */
+#endif  /* not HAVE_GRANTPT */
 
 /*  Define HAVE_TERMIOS if the system provides POSIX-style
     functions and macros for terminal control.  */
@@ -118,13 +105,8 @@ Boston, MA 02110-1301, USA.  */
 
 #define BSTRING
 
-/* subprocesses should be defined if you want to
-   have code for asynchronous subprocesses
-   (as used in M-x compile and M-x shell).
-   This is generally OS dependent, and not supported
-   under most USG systems. */
-
-#define subprocesses
+/* This is used in list_system_processes.  */
+#define HAVE_PROCFS 1
 
 /* define MAIL_USE_FLOCK if the mailer uses flock
    to interlock access to /usr/spool/mail/$USER.
@@ -164,12 +146,6 @@ Boston, MA 02110-1301, USA.  */
    your system and must be used only through an encapsulation
    (Which you should place, by convention, in sysdep.c).  */
 
-/* If you mount the proc file system somewhere other than /proc
-   you will have to uncomment the following and make the proper
-   changes */
-
-/* #define LINUX_LDAV_FILE "/proc/loadavg" */
-
 /* This is needed for dispnew.c:update_frame */
 
 #ifdef emacs
@@ -178,24 +154,22 @@ Boston, MA 02110-1301, USA.  */
 /* new C libio names */
 #define GNU_LIBRARY_PENDING_OUTPUT_COUNT(FILE) \
   ((FILE)->_IO_write_ptr - (FILE)->_IO_write_base)
-#else /* !_IO_STDIO_H */
+#elif defined (__UCLIBC__)
+/* using the uClibc library */
+#define GNU_LIBRARY_PENDING_OUTPUT_COUNT(FILE) \
+  ((FILE)->__bufpos - (FILE)->__bufstart)
+#else /* !_IO_STDIO_H && ! __UCLIBC__ */
 /* old C++ iostream names */
 #define GNU_LIBRARY_PENDING_OUTPUT_COUNT(FILE) \
   ((FILE)->_pptr - (FILE)->_pbase)
-#endif /* !_IO_STDIO_H */
+#endif /* !_IO_STDIO_H && ! __UCLIBC__ */
 #endif /* emacs */
 
 /* Ask GCC where to find libgcc.a.  */
 #define LIB_GCC `$(CC) $(C_SWITCH_X_SITE) -print-libgcc-file-name`
 
-#ifndef __ELF__
-/* GNU/Linux usually has crt0.o in a non-standard place */
-#define START_FILES pre-crt0.o /usr/lib/crt0.o
-#else
 #define START_FILES pre-crt0.o /usr/lib/crt1.o /usr/lib/crti.o
-#endif
 
-#ifdef __ELF__
 /* Here is how to find X Windows.  LD_SWITCH_X_SITE_AUX gives an -R option
    says where to find X windows at run time.  */
 
@@ -210,27 +184,10 @@ Boston, MA 02110-1301, USA.  */
    switches, so this also works with older versions that don't implement
    -z combreloc.  */
 #define LD_SWITCH_SYSTEM_TEMACS -z nocombreloc
-#endif /* __ELF__ */
 
-/* As of version 1.1.51, Linux did not actually implement SIGIO.
-   But it works in newer versions.  */
 #ifdef emacs
-#ifdef LINUX_SIGIO_DOES_WORK
 #define INTERRUPT_INPUT
-#else
-#define BROKEN_SIGIO
-/* Some versions of Linux define SIGURG and SIGPOLL as aliases for SIGIO.
-   This prevents lossage in process.c.  */
-#define BROKEN_SIGURG
-#define BROKEN_SIGPOLL
 #endif
-#endif
-
-/* This is needed for sysdep.c */
-
-#define NO_SIOCTL_H           /* don't have sioctl.h */
-
-#define HAVE_WAIT_HEADER
 
 #define SYSV_SYSTEM_DIR       /* use dirent.h */
 
@@ -239,13 +196,9 @@ Boston, MA 02110-1301, USA.  */
 
 /* Best not to include -lg, unless it is last on the command line */
 #define LIBS_DEBUG
-#ifndef __ELF__
-#define LIB_STANDARD -lc /* avoid -lPW */
-#else
 #undef LIB_GCC
 #define LIB_GCC
 #define LIB_STANDARD -lgcc -lc -lgcc /usr/lib/crtn.o
-#endif
 
 /* Don't use -g in test compiles in configure.
    This is so we will use the same shared libs for that linking
@@ -254,19 +207,6 @@ Boston, MA 02110-1301, USA.  */
 #define C_DEBUG_SWITCH
 #endif
 
-/* 21 Jun 06: Eric Hanchrow <offby1@blarg.net> says this works.  */
-#ifdef LINUX_SIGNALS_VIA_CHARACTERS_DOES_WORK
-#define SIGNALS_VIA_CHARACTERS
-#endif
-
-/* Rob Malouf <malouf@csli.stanford.edu> says:
-   SYSV IPC is standard a standard part of Linux since version 0.99pl10,
-   and is a very common addition to previous versions.  */
-
-#ifdef TERM
-#define LIBS_SYSTEM -lclient
-#define C_SWITCH_SYSTEM -D_BSD_SOURCE -I/usr/src/term
-#else
 /* alane@wozzle.linet.org says that -lipc is not a separate library,
    since libc-4.4.1.  So -lipc was deleted.  */
 #define LIBS_SYSTEM
@@ -274,7 +214,6 @@ Boston, MA 02110-1301, USA.  */
    _GNU_SOURCE.  Left in in case it's relevant to libc5 systems and
    anyone's still using Emacs on those.  --fx 2002-12-14  */
 #define C_SWITCH_SYSTEM -D_BSD_SOURCE
-#endif
 
 /* Paul Abrahams <abrahams@equinox.shaysnet.com> says this is needed.  */
 #define LIB_MOTIF -lXm -lXpm
@@ -284,47 +223,7 @@ Boston, MA 02110-1301, USA.  */
 #define LIBS_TERMCAP -lncurses
 #endif
 
-#define HAVE_SYSVIPC
-
-#ifdef __ELF__
 #define UNEXEC unexelf.o
-#ifndef LINUX_MAP_SHARED_DOES_WORK
-#define UNEXEC_USE_MAP_PRIVATE
-#endif
-#endif
-
-#ifdef LINUX_QMAGIC
-
-#define HAVE_TEXT_START
-#define UNEXEC unexsunos4.o
-#define N_PAGSIZ(x) PAGE_SIZE
-
-#else /* not LINUX_QMAGIC */
-
-#define A_TEXT_OFFSET(hdr) (N_MAGIC(hdr) == QMAGIC ? sizeof (struct exec) : 0)
-#define A_TEXT_SEEK(hdr) (N_TXTOFF(hdr) + A_TEXT_OFFSET(hdr))
-#define ADJUST_EXEC_HEADER \
-  unexec_text_start = N_TXTADDR(ohdr) + A_TEXT_OFFSET(ohdr)
-
-#endif /* not LINUX_QMAGIC */
-
-#if 0
-/* In 19.23 and 19.24, configure sometimes fails to define these.
-   It has to do with the fact that configure uses CFLAGS when linking
-   while Makefile.in.in (erroneously) fails to do so when linking temacs.  */
-#ifndef HAVE_GETTIMEOFDAY
-#define HAVE_GETTIMEOFDAY
-#endif
-#ifndef HAVE_MKDIR
-#define HAVE_MKDIR
-#endif
-#ifndef HAVE_RMDIR
-#define HAVE_RMDIR
-#endif
-#ifndef HAVE_XSCREENNUMBEROFSCREEN
-#define HAVE_XSCREENNUMBEROFSCREEN
-#endif
-#endif /* 0 */
 
 /* This is to work around mysterious gcc failures in some system versions.
    It is unlikely that Emacs changes will work around this problem;
@@ -333,15 +232,9 @@ Boston, MA 02110-1301, USA.  */
 #define HAVE_XRMSETDATABASE
 #endif
 
-/* The regex.o routines are a part of the GNU C-library used with Linux.  */
-/* However, sometimes they disagree with the src/regex.h that comes with Emacs,
-   and that can make trouble in etags.c because it gets the regex.h from Emacs
-   and the function definitions in libc.  So turn this off.  */
-/* #define REGEXP_IN_LIBC */
-
 /* Use BSD process groups, but use setpgid() instead of setpgrp() to
    actually set a process group. */
-
+/* Interesting: only GNU/Linux defines this,  but the BSDs do not... */
 #define BSD_PGRPS
 
 #define NARROWPROTO 1
@@ -365,7 +258,7 @@ Boston, MA 02110-1301, USA.  */
 #if defined __i386__ || defined __sparc__ || defined __mc68000__ \
     || defined __alpha__ || defined __mips__ || defined __s390__ \
     || defined __arm__ || defined __powerpc__ || defined __amd64__ \
-    || defined __ia64__
+    || defined __ia64__ || defined __sh__
 #define GC_SETJMP_WORKS 1
 #define GC_MARK_STACK GC_MAKE_GCPROS_NOOPS
 #ifdef __mc68000__

@@ -1,7 +1,7 @@
 ;;; uniquify.el --- unique buffer names dependent on file name
 
 ;; Copyright (C) 1989, 1995, 1996, 1997, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Dick King <king@reasoning.com>
 ;; Maintainer: FSF
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -95,7 +93,7 @@
 
 
 (defcustom uniquify-buffer-name-style nil
-  "*If non-nil, buffer names are uniquified with parts of directory name.
+  "If non-nil, buffer names are uniquified with parts of directory name.
 The value determines the buffer name style and is one of `forward',
 `reverse', `post-forward', or `post-forward-angle-brackets'.
 For example, files `/foo/bar/mumble/name' and `/baz/quux/mumble/name'
@@ -104,7 +102,9 @@ would have the following buffer names in the various styles:
   reverse        name\\mumble\\bar  name\\mumble\\quux
   post-forward   name|bar/mumble  name|quux/mumble
   post-forward-angle-brackets   name<bar/mumble>  name<quux/mumble>
-  nil            name  name<2>"
+  nil            name  name<2>
+Of course, the \"mumble\" part may be stripped as well, depending on the setting
+of `uniquify-strip-common-suffix'."
   :type '(radio (const forward)
 		(const reverse)
 		(const post-forward)
@@ -119,7 +119,7 @@ would have the following buffer names in the various styles:
   :group 'uniquify)
 
 (defcustom uniquify-ask-about-buffer-names-p nil
-  "*If non-nil, permit user to choose names for buffers with same base file.
+  "If non-nil, permit user to choose names for buffers with same base file.
 If the user chooses to name a buffer, uniquification is preempted and no
 other buffer names are changed."
   :type 'boolean
@@ -127,7 +127,7 @@ other buffer names are changed."
 
 ;; The default value matches certain Gnus buffers.
 (defcustom uniquify-ignore-buffers-re nil
-  "*Regular expression matching buffer names that should not be uniquified.
+  "Regular expression matching buffer names that should not be uniquified.
 For instance, set this to \"^draft-[0-9]+$\" to avoid having uniquify rename
 draft buffers even if `uniquify-after-kill-buffer-p' is non-nil and the
 visited file name isn't the same as that of the buffer."
@@ -135,12 +135,12 @@ visited file name isn't the same as that of the buffer."
   :group 'uniquify)
 
 (defcustom uniquify-min-dir-content 0
-  "*Minimum number of directory name components included in buffer name."
+  "Minimum number of directory name components included in buffer name."
   :type 'integer
   :group 'uniquify)
 
 (defcustom uniquify-separator nil
-  "*String separator for buffer name components.
+  "String separator for buffer name components.
 When `uniquify-buffer-name-style' is `post-forward', separates
 base file name from directory part in buffer names (default \"|\").
 When `uniquify-buffer-name-style' is `reverse', separates all
@@ -149,7 +149,7 @@ file name components (default \"\\\")."
   :group 'uniquify)
 
 (defcustom uniquify-trailing-separator-p nil
-  "*If non-nil, add a file name separator to dired buffer names.
+  "If non-nil, add a file name separator to dired buffer names.
 If `uniquify-buffer-name-style' is `forward', add the separator at the end;
 if it is `reverse', add the separator at the beginning; otherwise, this
 variable is ignored."
@@ -166,7 +166,7 @@ This can be handy when you have deep parallel hierarchies."
   :type 'boolean
   :group 'uniquify)
 
-(defvar uniquify-list-buffers-directory-modes '(dired-mode cvs-mode)
+(defvar uniquify-list-buffers-directory-modes '(dired-mode cvs-mode vc-dir-mode)
   "List of modes for which uniquify should obey `list-buffers-directory'.
 That means that when `buffer-file-name' is set to nil, `list-buffers-directory'
 contains the name of the directory which the buffer is visiting.")
@@ -270,7 +270,7 @@ in `uniquify-list-buffers-directory-modes', otherwise returns nil."
 	   (directory-file-name filename))))))))
 
 (defun uniquify-rerationalize-w/o-cb (fix-list)
-  "Re-rationalize the buffers in FIX-LIST, but ignoring current-buffer."
+  "Re-rationalize the buffers in FIX-LIST, but ignoring `current-buffer'."
   (let ((new-fix-list nil))
     (dolist (item fix-list)
       (let ((buf (uniquify-item-buffer item)))
@@ -327,7 +327,7 @@ in `uniquify-list-buffers-directory-modes', otherwise returns nil."
 	proposed)
     ;; Divide fix-list into items with same proposed names and pass them
     ;; to uniquify-rationalize-conflicting-sublist.
-    (dolist (item (sort fix-list 'uniquify-item-greaterp))
+    (dolist (item (sort (copy-sequence fix-list) 'uniquify-item-greaterp))
       (setq proposed (uniquify-item-proposed item))
       (unless (equal proposed old-proposed)
 	(uniquify-rationalize-conflicting-sublist conflicting-sublist
@@ -427,22 +427,27 @@ in `uniquify-list-buffers-directory-modes', otherwise returns nil."
 
 ;;; Hooks from the rest of Emacs
 
+(defun uniquify-maybe-rerationalize-w/o-cb ()
+  "Re-rationalize buffer names, ignoring current buffer."
+  (and (cdr uniquify-managed)
+       uniquify-buffer-name-style
+       (uniquify-rerationalize-w/o-cb uniquify-managed)))
+
 ;; Buffer deletion
 ;; Rerationalize after a buffer is killed, to reduce coinciding buffer names.
 ;; This mechanism uses `kill-buffer-hook', which runs *before* deletion, so
 ;; it calls `uniquify-rerationalize-w/o-cb' to rerationalize the buffer list
 ;; ignoring the current buffer (which is going to be deleted anyway).
-(defun uniquify-maybe-rerationalize-w/o-cb ()
+(defun uniquify-kill-buffer-function ()
   "Re-rationalize buffer names, ignoring current buffer.
 For use on `kill-buffer-hook'."
-  (if (and (cdr uniquify-managed)
-	   uniquify-buffer-name-style
-	   uniquify-after-kill-buffer-p)
-      (uniquify-rerationalize-w/o-cb uniquify-managed)))
+  (and uniquify-after-kill-buffer-p
+       (uniquify-maybe-rerationalize-w/o-cb)))
 
 ;; Ideally we'd like to add it buffer-locally, but that doesn't work
 ;; because kill-buffer-hook is not permanent-local :-(
-(add-hook 'kill-buffer-hook 'uniquify-maybe-rerationalize-w/o-cb)
+;; FIXME kill-buffer-hook _is_ permanent-local in 22+.
+(add-hook 'kill-buffer-hook 'uniquify-kill-buffer-function)
 
 ;; The logical place to put all this code is in generate-new-buffer-name.
 ;; It's written in C, so we would add a generate-new-buffer-name-function

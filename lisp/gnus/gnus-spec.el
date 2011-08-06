@@ -1,32 +1,33 @@
 ;;; gnus-spec.el --- format spec functions for Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
 
+;; For Emacs < 22.2.
+(eval-and-compile
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest r))))
 (eval-when-compile (require 'cl))
 (defvar gnus-newsrc-file-version)
 
@@ -40,7 +41,7 @@
 
 (defcustom gnus-make-format-preserve-properties (featurep 'xemacs)
   "*If non-nil, use a replacement `format' function which preserves
-text properties. This is only needed on XEmacs, as FSF Emacs does this anyway."
+text properties. This is only needed on XEmacs, as Emacs does this anyway."
   :version "22.1"
   :group 'gnus-format
   :type 'boolean)
@@ -86,6 +87,9 @@ text properties. This is only needed on XEmacs, as FSF Emacs does this anyway."
 (defvar gnus-mouse-face-prop)
 (defvar gnus-tmp-header)
 (defvar gnus-tmp-from)
+
+(declare-function gnus-summary-from-or-to-or-newsgroups "gnus-sum"
+                  (header gnus-tmp-from))
 
 (defun gnus-summary-line-format-spec ()
   (insert gnus-tmp-unread gnus-tmp-replied
@@ -140,7 +144,7 @@ text properties. This is only needed on XEmacs, as FSF Emacs does this anyway."
 (defvar gnus-format-specs
   `((version . ,emacs-version)
     (gnus-version . ,(gnus-continuum-version))
-    (group "%M\%S\%p\%P\%5y: %(%g%)%l\n" ,gnus-group-line-format-spec)
+    (group "%M\%S\%p\%P\%5y: %(%g%)\n" ,gnus-group-line-format-spec)
     (summary-dummy "*  %(:                          :%) %S\n"
 		   ,gnus-summary-dummy-line-format-spec)
     (summary "%U%R%z%I%(%[%4L: %-23,23f%]%) %s\n"
@@ -198,12 +202,13 @@ Return a list of updated types."
 	    (not (equal emacs-version
 			(cdr (assq 'version gnus-format-specs)))))
     (setq gnus-format-specs nil))
-  ;; Flush the group format spec cache if it doesn't support decoded
-  ;; group names.
+  ;; Flush the group format spec cache if there's the grouplens stuff
+  ;; or it doesn't support decoded group names.
   (when (memq 'group types)
-    (let ((spec (assq 'group gnus-format-specs)))
-      (unless (string-match " gnus-tmp-decoded-group[ )]"
-			    (gnus-prin1-to-string (nth 2 spec)))
+    (let* ((spec (assq 'group gnus-format-specs))
+	   (sspec (gnus-prin1-to-string (nth 2 spec))))
+      (when (or (string-match " gnus-tmp-grouplens[ )]" sspec)
+		(not (string-match " gnus-tmp-decoded-group[ )]" sspec)))
 	(setq gnus-format-specs (delq spec gnus-format-specs)))))
 
   ;; Go through all the formats and see whether they need updating.
@@ -296,9 +301,7 @@ Return a list of updated types."
 
 (defun gnus-correct-length (string)
   "Return the correct width of STRING."
-  (let ((length 0))
-    (mapcar (lambda (char) (incf length (gnus-char-width char))) string)
-    length))
+  (apply #'+ (mapcar #'char-width string)))
 
 (defun gnus-correct-substring (string start &optional end)
   (let ((wstart 0)
@@ -310,14 +313,14 @@ Return a list of updated types."
     ;; Find the start position.
     (while (and (< seek length)
 		(< wseek start))
-      (incf wseek (gnus-char-width (aref string seek)))
+      (incf wseek (char-width (aref string seek)))
       (incf seek))
     (setq wstart seek)
     ;; Find the end position.
     (while (and (<= seek length)
 		(or (not end)
 		    (<= wseek end)))
-      (incf wseek (gnus-char-width (aref string seek)))
+      (incf wseek (char-width (aref string seek)))
       (incf seek))
     (setq wend seek)
     (substring string wstart (1- wend))))
@@ -622,6 +625,9 @@ are supported for %s."
 		   ?s)))
 	   ;; Find the specification from `spec-alist'.
 	   ((setq elem (cdr (assq (or extended-spec spec) spec-alist))))
+	   ;; We used to use "%l" for displaying the grouplens score.
+	   ((eq spec ?l)
+	    (setq elem '("" ?s)))
 	   (t
 	    (setq elem '("*" ?s))))
 	  (setq elem-type (cadr elem))
@@ -672,7 +678,7 @@ are supported for %s."
        (list (car flist)))
       ;; A single number.
       ((string= fstring "%d")
-       (setq dontinsert)
+       (setq dontinsert t)
        (if insert
 	   (list `(princ ,(car flist)))
 	 (list `(int-to-string ,(car flist)))))
@@ -761,5 +767,5 @@ If PROPS, insert the result."
 ;; coding: iso-8859-1
 ;; End:
 
-;;; arch-tag: a4328fa1-1f84-4b09-97ad-4b5767cfd50f
+;; arch-tag: a4328fa1-1f84-4b09-97ad-4b5767cfd50f
 ;;; gnus-spec.el ends here

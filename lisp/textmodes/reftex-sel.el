@@ -1,7 +1,7 @@
 ;;; reftex-sel.el --- the selection modes for RefTeX
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <dominik@science.uva.nl>
 ;; Maintainer: auctex-devel@gnu.org
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -418,11 +416,11 @@ During a selection process, these are the local bindings.
           (set-buffer selection-buffer)
           (use-local-map nil)
           (remove-hook 'pre-command-hook 'reftex-select-pre-command-hook t)
-          (remove-hook 'post-command-hook 
+          (remove-hook 'post-command-hook
                        'reftex-select-post-command-hook t))
         ;; Kill the mark overlays
-        (mapcar (lambda (c) (reftex-delete-overlay (nth 1 c)))
-                reftex-select-marked)))))
+        (mapc (lambda (c) (reftex-delete-overlay (nth 1 c)))
+              reftex-select-marked)))))
 
     (set (make-local-variable 'reftex-last-line)
          (+ (count-lines (point-min) (point)) (if (bolp) 1 0)))
@@ -643,12 +641,12 @@ Useful for large TOC's."
     (and ovl (reftex-delete-overlay ovl))
     (setq reftex-select-marked (delq cell reftex-select-marked))
     (setq cnt (1+ (length reftex-select-marked)))
-    (mapcar (lambda (c)
-              (setq sep (nth 2 c))
-              (reftex-overlay-put (nth 1 c) 'before-string
-                                  (if sep
-                                      (format "*%c%d* " sep (decf cnt))
-                                    (format "*%d*  " (decf cnt)))))
+    (mapc (lambda (c)
+            (setq sep (nth 2 c))
+            (reftex-overlay-put (nth 1 c) 'before-string
+                                (if sep
+                                    (format "*%c%d* " sep (decf cnt))
+                                  (format "*%d*  " (decf cnt)))))
             reftex-select-marked)
     (message "Entry no longer marked")))
 
@@ -739,5 +737,5 @@ Useful for large TOC's."
       do (define-key reftex-select-bib-map (car x) (cdr x)))
   
 
-;;; arch-tag: 842078ff-0586-4e0b-957e-536e08218464
+;; arch-tag: 842078ff-0586-4e0b-957e-536e08218464
 ;;; reftex-sel.el ends here

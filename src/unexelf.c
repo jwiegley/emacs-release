@@ -1,13 +1,13 @@
 /* Copyright (C) 1985, 1986, 1987, 1988, 1990, 1992, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,10 +15,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
+/*
 In other words, you are welcome to use, share and improve this program.
 You are forbidden to forbid anyone else to use, share and improve
 what you give them.   Help stamp out software-hoarding!  */
@@ -28,8 +27,8 @@ what you give them.   Help stamp out software-hoarding!  */
  * unexec.c - Convert a running program into an a.out file.
  *
  * Author:	Spencer W. Thomas
- * 		Computer Science Dept.
- * 		University of Utah
+ *		Computer Science Dept.
+ *		University of Utah
  * Date:	Tue Mar  2 1982
  * Modified heavily since then.
  *
@@ -427,16 +426,13 @@ extern void fatal (const char *msgid, ...);
 #include <elf.h>
 #endif
 #include <sys/mman.h>
-#if defined (__sony_news) && defined (_SYSTYPE_SYSV)
+#if defined (_SYSTYPE_SYSV)
 #include <sys/elf_mips.h>
 #include <sym.h>
-#endif /* __sony_news && _SYSTYPE_SYSV */
+#endif /* _SYSTYPE_SYSV */
 #if __sgi
 #include <syms.h> /* for HDRR declaration */
 #endif /* __sgi */
-#ifdef BROKEN_NOCOMBRELOC
-#include <assert.h>
-#endif
 
 #ifndef MAP_ANON
 #ifdef MAP_ANONYMOUS
@@ -684,6 +680,8 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
   ElfW(Word) old_bss_size, new_data2_size;
   ElfW(Off)  new_data2_offset;
   ElfW(Addr) new_data2_addr;
+  ElfW(Off)  old_bss_offset;
+  ElfW(Word) new_data2_incr;
 
   int n, nn;
   int old_bss_index, old_sbss_index, old_plt_index;
@@ -691,9 +689,6 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
   int old_mdebug_index;
   struct stat stat_buf;
   int old_file_size;
-#ifdef BROKEN_NOCOMBRELOC
-  int unreloc_sections[10], n_unreloc_sections;
-#endif
 
   /* Open the old file, allocate a buffer of the right size, and read
      in the file contents.  */
@@ -761,6 +756,7 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
     {
       old_bss_addr = OLD_SECTION_H (old_bss_index).sh_addr;
       old_bss_size = OLD_SECTION_H (old_bss_index).sh_size;
+      old_bss_offset = OLD_SECTION_H (old_bss_index).sh_offset;
       new_data2_index = old_bss_index;
     }
   else if (old_plt_index != -1
@@ -773,6 +769,7 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 	+ OLD_SECTION_H (old_plt_index).sh_size;
       if (old_sbss_index != -1)
 	old_bss_size += OLD_SECTION_H (old_sbss_index).sh_size;
+      old_bss_offset = OLD_SECTION_H (old_plt_index).sh_offset;
       new_data2_index = old_plt_index;
     }
   else
@@ -780,6 +777,7 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
       old_bss_addr = OLD_SECTION_H (old_sbss_index).sh_addr;
       old_bss_size = OLD_SECTION_H (old_bss_index).sh_size
 	+ OLD_SECTION_H (old_sbss_index).sh_size;
+      old_bss_offset = OLD_SECTION_H (old_sbss_index).sh_offset;
       new_data2_index = old_sbss_index;
     }
 
@@ -796,17 +794,24 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 #endif
   new_data2_addr = old_bss_addr;
   new_data2_size = new_bss_addr - old_bss_addr;
-  new_data2_offset  = OLD_SECTION_H (old_data_index).sh_offset +
-    (new_data2_addr - OLD_SECTION_H (old_data_index).sh_addr);
+  new_data2_offset = OLD_SECTION_H (old_data_index).sh_offset
+    + (new_data2_addr - OLD_SECTION_H (old_data_index).sh_addr);
+  /* This is the amount by which the sections following the bss sections
+     must be shifted in the image.  It can differ from new_data2_size if
+     the end of the old .data section (and thus the offset of the .bss
+     section) was unaligned.  */
+  new_data2_incr = new_data2_size + (new_data2_offset - old_bss_offset);
 
 #ifdef DEBUG
   fprintf (stderr, "old_bss_index %d\n", old_bss_index);
   fprintf (stderr, "old_bss_addr %x\n", old_bss_addr);
   fprintf (stderr, "old_bss_size %x\n", old_bss_size);
+  fprintf (stderr, "old_bss_offset %x\n", old_bss_offset);
   fprintf (stderr, "new_bss_addr %x\n", new_bss_addr);
   fprintf (stderr, "new_data2_addr %x\n", new_data2_addr);
   fprintf (stderr, "new_data2_size %x\n", new_data2_size);
   fprintf (stderr, "new_data2_offset %x\n", new_data2_offset);
+  fprintf (stderr, "new_data2_incr %x\n", new_data2_incr);
 #endif
 
   if ((unsigned) new_bss_addr < (unsigned) old_bss_addr + old_bss_size)
@@ -820,7 +825,7 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
   if (new_file < 0)
     fatal ("Can't creat (%s): errno %d\n", new_name, errno);
 
-  new_file_size = stat_buf.st_size + old_file_h->e_shentsize + new_data2_size;
+  new_file_size = stat_buf.st_size + old_file_h->e_shentsize + new_data2_incr;
 
   if (ftruncate (new_file, new_file_size))
     fatal ("Can't ftruncate (%s): errno %d\n", new_name, errno);
@@ -833,7 +838,7 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
   new_file_h = (ElfW(Ehdr) *) new_base;
   new_program_h = (ElfW(Phdr) *) ((byte *) new_base + old_file_h->e_phoff);
   new_section_h = (ElfW(Shdr) *)
-    ((byte *) new_base + old_file_h->e_shoff + new_data2_size);
+    ((byte *) new_base + old_file_h->e_shoff + new_data2_incr);
 
   /* Make our new file, program and section headers as copies of the
      originals.  */
@@ -848,7 +853,7 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
   /* Fix up file header.  We'll add one section.  Section header is
      further away now.  */
 
-  new_file_h->e_shoff += new_data2_size;
+  new_file_h->e_shoff += new_data2_incr;
   new_file_h->e_shnum += 1;
 
 #ifdef DEBUG
@@ -908,7 +913,7 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 	NEW_PROGRAM_H (n).p_vaddr += new_data2_size - old_bss_size;
 
       if (NEW_PROGRAM_H (n).p_offset >= new_data2_offset)
-	NEW_PROGRAM_H (n).p_offset += new_data2_size;
+	NEW_PROGRAM_H (n).p_offset += new_data2_incr;
     }
 #endif
 
@@ -964,10 +969,8 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 	  )
 	{
 	  /* NN should be `old_s?bss_index + 1' at this point. */
-	  NEW_SECTION_H (nn).sh_offset =
-	    NEW_SECTION_H (new_data2_index).sh_offset + new_data2_size;
-	  NEW_SECTION_H (nn).sh_addr =
-	    NEW_SECTION_H (new_data2_index).sh_addr + new_data2_size;
+	  NEW_SECTION_H (nn).sh_offset = new_data2_offset + new_data2_size;
+	  NEW_SECTION_H (nn).sh_addr = new_data2_addr + new_data2_size;
 	  /* Let the new bss section address alignment be the same as the
 	     section address alignment followed the old bss section, so
 	     this section will be placed in exactly the same place. */
@@ -977,29 +980,36 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
       else
 	{
 	  /* Any section that was originally placed after the .bss
-	     section should now be off by NEW_DATA2_SIZE.  If a
+	     section should now be off by NEW_DATA2_INCR.  If a
 	     section overlaps the .bss section, consider it to be
 	     placed after the .bss section.  Overlap can occur if the
 	     section just before .bss has less-strict alignment; this
 	     was observed between .symtab and .bss on Solaris 2.5.1
-	     (sparc) with GCC snapshot 960602.  */
-#ifdef SOLARIS_POWERPC
-	  /* On PPC Reference Platform running Solaris 2.5.1
-	     the plt section is also of type NOBI like the bss section.
-	     (not really stored) and therefore sections after the bss
-	     section start at the plt offset. The plt section is always
-	     the one just before the bss section.
-	     It would be better to put the new data section before
-	     the .plt section, or use libelf instead.
-	     Erik Deumens, deumens@qtp.ufl.edu.  */
-	  if (NEW_SECTION_H (nn).sh_offset
-	      >= OLD_SECTION_H (old_bss_index-1).sh_offset)
-	    NEW_SECTION_H (nn).sh_offset += new_data2_size;
-#else
-	  if (NEW_SECTION_H (nn).sh_offset + NEW_SECTION_H (nn).sh_size
-	      > new_data2_offset)
-	    NEW_SECTION_H (nn).sh_offset += new_data2_size;
-#endif
+	     (sparc) with GCC snapshot 960602.
+
+> dump -h temacs
+
+temacs:
+
+	   **** SECTION HEADER TABLE ****
+[No]	Type	Flags	Addr         Offset       Size        	Name
+	Link	Info	Adralgn      Entsize
+
+[22]	1	3	0x335150     0x315150     0x4          	.data.rel.local
+	0	0	0x4          0            
+
+[23]	8	3	0x335158     0x315158     0x42720      	.bss
+	0	0	0x8          0            
+
+[24]	2	0	0            0x315154     0x1c9d0      	.symtab
+	25	1709	0x4          0x10         
+	  */
+
+	  if (NEW_SECTION_H (nn).sh_offset >= old_bss_offset
+	      || (NEW_SECTION_H (nn).sh_offset + NEW_SECTION_H (nn).sh_size
+		  > new_data2_offset))
+	    NEW_SECTION_H (nn).sh_offset += new_data2_incr;
+
 	  /* Any section that was originally placed after the section
 	     header table should now be off by the size of one section
 	     header table entry.  */
@@ -1100,10 +1110,10 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 	}
 #endif /* __alpha__ */
 
-#if defined (__sony_news) && defined (_SYSTYPE_SYSV)
+#if defined (_SYSTYPE_SYSV)
       if (NEW_SECTION_H (nn).sh_type == SHT_MIPS_DEBUG
 	  && old_mdebug_index != -1)
-        {
+	{
 	  int diff = NEW_SECTION_H(nn).sh_offset
 		- OLD_SECTION_H(old_mdebug_index).sh_offset;
 	  HDRR *phdr = (HDRR *)(NEW_SECTION_H (nn).sh_offset + new_base);
@@ -1123,7 +1133,7 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 	      phdr->cbExtOffset  += diff;
 	    }
 	}
-#endif /* __sony_news && _SYSTYPE_SYSV */
+#endif /* _SYSTYPE_SYSV */
 
 #if __sgi
       /* Adjust  the HDRR offsets in .mdebug and copy the
@@ -1216,16 +1226,45 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
       symendp = (ElfW(Sym) *) ((byte *)symp + NEW_SECTION_H (n).sh_size);
 
       for (; symp < symendp; symp ++)
-	if (strcmp ((char *) (symnames + symp->st_name), "_end") == 0
-	    || strcmp ((char *) (symnames + symp->st_name), "end") == 0
-	    || strcmp ((char *) (symnames + symp->st_name), "_edata") == 0
-	    || strcmp ((char *) (symnames + symp->st_name), "edata") == 0)
-	  memcpy (&symp->st_value, &new_bss_addr, sizeof (new_bss_addr));
+	{
+	  if (strcmp ((char *) (symnames + symp->st_name), "_end") == 0
+	      || strcmp ((char *) (symnames + symp->st_name), "end") == 0
+	      || strcmp ((char *) (symnames + symp->st_name), "_edata") == 0
+	      || strcmp ((char *) (symnames + symp->st_name), "edata") == 0)
+	    memcpy (&symp->st_value, &new_bss_addr, sizeof (new_bss_addr));
+
+	  /* Strictly speaking, #ifdef below is not necessary.  But we
+	     keep it to indicate that this kind of change may also be
+	     necessary for other unexecs to support GNUstep.  */
+#ifdef NS_IMPL_GNUSTEP
+	  /* ObjC runtime modifies the values of some data structures
+	     such as classes and selectors in the .data section after
+	     loading.  As the dump process copies the .data section
+	     from the current process, that causes problems when the
+	     modified classes are reinitialized in the dumped
+	     executable.  We copy such data from the old file, not
+	     from the current process.  */
+	  if (strncmp ((char *) (symnames + symp->st_name),
+		       "_OBJC_", sizeof ("_OBJC_") - 1) == 0)
+	    {
+	      caddr_t old, new;
+
+	      new = ((symp->st_value - NEW_SECTION_H (symp->st_shndx).sh_addr)
+		     + NEW_SECTION_H (symp->st_shndx).sh_offset + new_base);
+	      /* "Unpatch" index.  */
+	      nn = symp->st_shndx;
+	      if (nn > old_bss_index)
+		nn--;
+	      old = ((symp->st_value - NEW_SECTION_H (symp->st_shndx).sh_addr)
+		     + OLD_SECTION_H (nn).sh_offset + old_base);
+	      memcpy (new, old, symp->st_size);
+	    }
+#endif
+	}
     }
 
   /* This loop seeks out relocation sections for the data section, so
      that it can undo relocations performed by the runtime linker.  */
-#ifndef BROKEN_NOCOMBRELOC
   for (n = new_file_h->e_shnum - 1; n; n--)
     {
       ElfW(Shdr) section = NEW_SECTION_H (n);
@@ -1280,81 +1319,6 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 	  break;
 	}
     }
-#else /* BROKEN_NOCOMBRELOC */
-  for (n = 1, n_unreloc_sections = 0; n < new_file_h->e_shnum; n++)
-    if (!strcmp (old_section_names + NEW_SECTION_H (n).sh_name, ".data")
-	|| !strcmp (old_section_names + NEW_SECTION_H (n).sh_name, ".sdata")
-	|| !strcmp (old_section_names + NEW_SECTION_H (n).sh_name, ".lit4")
-	|| !strcmp (old_section_names + NEW_SECTION_H (n).sh_name, ".lit8")
-#ifdef IRIX6_5			/* see above */
-	|| !strcmp (old_section_names + NEW_SECTION_H (n).sh_name, ".got")
-#endif
-	|| !strcmp (old_section_names + NEW_SECTION_H (n).sh_name, ".sdata1")
-	|| !strcmp (old_section_names + NEW_SECTION_H (n).sh_name, ".data1"))
-      {
-	assert (n_unreloc_sections
-		< (sizeof (unreloc_sections) / sizeof (unreloc_sections[0])));
-	unreloc_sections[n_unreloc_sections++] = n;
-#ifdef DEBUG
-	fprintf (stderr, "section %d: %s\n", n,
-		 old_section_names + NEW_SECTION_H (n).sh_name);
-#endif
-      }
-
-  for (n = new_file_h->e_shnum - 1; n; n--)
-    {
-      ElfW(Shdr) section = NEW_SECTION_H (n);
-      caddr_t reloc, end;
-      ElfW(Addr) addr, offset;
-      int target;
-
-      switch (section.sh_type)
-	{
-	default:
-	  break;
-	case SHT_REL:
-	case SHT_RELA:
-	  /* This code handles two different size structs, but there should
-	     be no harm in that provided that r_offset is always the first
-	     member.  */
-	  for (reloc = old_base + section.sh_offset,
-		 end = reloc + section.sh_size;
-	       reloc < end;
-	       reloc += section.sh_entsize)
-	    {
-	      addr = ((ElfW(Rel) *) reloc)->r_offset;
-#ifdef __alpha__
-	      /* The Alpha ELF binutils currently have a bug that
-		 sometimes results in relocs that contain all
-		 zeroes.  Work around this for now...  */
-	      if (addr == 0)
-		continue;
-#endif
-	      for (nn = 0; nn < n_unreloc_sections; nn++)
-		{
-		  target = unreloc_sections[nn];
-		  if (NEW_SECTION_H (target).sh_addr <= addr
-		      && addr < (NEW_SECTION_H (target).sh_addr +
-				 NEW_SECTION_H (target).sh_size))
-		    {
-		      offset = (NEW_SECTION_H (target).sh_addr -
-				NEW_SECTION_H (target).sh_offset);
-		      memcpy (new_base + addr - offset,
-			      old_base + addr - offset,
-			      sizeof (ElfW(Addr)));
-#ifdef DEBUG
-		      fprintf (stderr, "unrelocate: [%08lx] <= %08lx\n",
-			       (long) addr,
-			       (long) *((long *) (new_base + addr - offset)));
-#endif
-		      break;
-		    }
-		}
-	    }
-	  break;
-	}
-    }
-#endif	/* BROKEN_NOCOMBRELOC */
 
   /* Write out new_file, and free the buffers.  */
 
@@ -1364,7 +1328,7 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 	   new_file_size, errno);
 #else
     fatal ("Didn't write %d bytes to %s: errno %d\n",
-	   new_file_size, new_base, errno);
+	   new_file_size, new_name, errno);
 #endif
   munmap (old_base, old_file_size);
   munmap (new_base, new_file_size);

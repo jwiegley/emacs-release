@@ -150,6 +150,7 @@ Start after n steps, where BITS is a big-endian list of the bits of n.
 BITS must be of length nrings.  Start at START-TIME."
   (switch-to-buffer "*Hanoi*")
   (buffer-disable-undo (current-buffer))
+  (setq show-trailing-whitespace nil)
   (unwind-protect
       (let*
 	  (;; These lines can cause Emacs to crash if you ask for too
@@ -446,5 +447,5 @@ BITS must be of length nrings.  Start at START-TIME."
 
 (provide 'hanoi)
 
-;;; arch-tag: 7a901659-4346-495c-8883-14cbf540610c
+;; arch-tag: 7a901659-4346-495c-8883-14cbf540610c
 ;;; hanoi.el ends here

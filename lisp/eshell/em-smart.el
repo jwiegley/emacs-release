@@ -1,16 +1,16 @@
 ;;; em-smart.el --- smart display of output
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,24 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-(provide 'em-smart)
-
-(eval-when-compile (require 'esh-maint))
-
-(defgroup eshell-smart nil
-  "This module combines the facility of normal, modern shells with
-some of the edit/review concepts inherent in the design of Plan 9's
-9term.  See the docs for more details.
-
-Most likely you will have to turn this option on and play around with
-it to get a real sense of how it works."
-  :tag "Smart display of output"
-  ;; :link '(info-link "(eshell)Smart display of output")
-  :group 'eshell-module)
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -83,6 +66,22 @@ it to get a real sense of how it works."
 ;; memory consumption by a factor of two or more.  With small commands
 ;; (such as pwd), where the screen is mostly full, consumption can
 ;; increase by orders of magnitude.
+
+;;; Code:
+
+(eval-when-compile (require 'eshell))
+
+;;;###autoload
+(eshell-defgroup eshell-smart nil
+  "This module combines the facility of normal, modern shells with
+some of the edit/review concepts inherent in the design of Plan 9's
+9term.  See the docs for more details.
+
+Most likely you will have to turn this option on and play around with
+it to get a real sense of how it works."
+  :tag "Smart display of output"
+  ;; :link '(info-link "(eshell)Smart display of output")
+  :group 'eshell-module)
 
 ;;; User Variables:
 
@@ -292,7 +291,7 @@ and the end of the buffer are still visible."
 	(setq clear t)
       (cond
        ((eq this-command 'self-insert-command)
-	(if (eq last-command-char ? )
+	(if (eq last-command-event ? )
 	    (if (and eshell-smart-space-goes-to-end
 		     eshell-current-command)
 		(if (not (pos-visible-in-window-p (point-max)))
@@ -322,7 +321,11 @@ and the end of the buffer are still visible."
     (if clear
 	(remove-hook 'pre-command-hook 'eshell-smart-display-move t))))
 
-;;; Code:
+(provide 'em-smart)
 
-;;; arch-tag: 8c0112c7-379c-4d54-9a1c-204d68786a4b
+;; Local Variables:
+;; generated-autoload-file: "esh-groups.el"
+;; End:
+
+;; arch-tag: 8c0112c7-379c-4d54-9a1c-204d68786a4b
 ;;; em-smart.el ends here

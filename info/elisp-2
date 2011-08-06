@@ -1,30 +1,89 @@
-This is ../info/elisp, produced by makeinfo version 4.11 from
+This is ../../info/elisp, produced by makeinfo version 4.11 from
 elisp.texi.
 
-INFO-DIR-SECTION Emacs
-START-INFO-DIR-ENTRY
-* Elisp: (elisp).       The Emacs Lisp Reference Manual.
-END-INFO-DIR-ENTRY
-
-   This is edition 2.9 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 22.3.
+This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
+corresponding to Emacs version 23.1.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software
-Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009  Free
+Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
-     Version 1.2 or any later version published by the Free Software
+     Version 1.3 or any later version published by the Free Software
      Foundation; with the Invariant Sections being "GNU General Public
      License," with the Front-Cover texts being "A GNU Manual," and
      with the Back-Cover Texts as in (a) below.  A copy of the license
      is included in the section entitled "GNU Free Documentation
      License."
 
-     (a) The FSF's Back-Cover Text is: "You are free to copy and modify
-     this GNU Manual. Buying copies from GNU Press supports the FSF in
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
      developing GNU and promoting software freedom."
+
+INFO-DIR-SECTION Emacs
+START-INFO-DIR-ENTRY
+* Elisp: (elisp).       The Emacs Lisp Reference Manual.
+END-INFO-DIR-ENTRY
+
+
+File: elisp,  Node: Arrays,  Next: Array Functions,  Prev: Sequence Functions,  Up: Sequences Arrays Vectors
+
+6.2 Arrays
+==========
+
+An "array" object has slots that hold a number of other Lisp objects,
+called the elements of the array.  Any element of an array may be
+accessed in constant time.  In contrast, the time to access an element
+of a list is proportional to the position of that element in the list.
+
+   Emacs defines four types of array, all one-dimensional: "strings"
+(*note String Type::), "vectors" (*note Vector Type::), "bool-vectors"
+(*note Bool-Vector Type::), and "char-tables" (*note Char-Table
+Type::).  Vectors and char-tables can hold elements of any type, but
+strings can only hold characters, and bool-vectors can only hold `t'
+and `nil'.
+
+   All four kinds of array share these characteristics:
+
+   * The first element of an array has index zero, the second element
+     has index 1, and so on.  This is called "zero-origin" indexing.
+     For example, an array of four elements has indices 0, 1, 2, and 3.
+
+   * The length of the array is fixed once you create it; you cannot
+     change the length of an existing array.
+
+   * For purposes of evaluation, the array is a constant--in other
+     words, it evaluates to itself.
+
+   * The elements of an array may be referenced or changed with the
+     functions `aref' and `aset', respectively (*note Array
+     Functions::).
+
+   When you create an array, other than a char-table, you must specify
+its length.  You cannot specify the length of a char-table, because that
+is determined by the range of character codes.
+
+   In principle, if you want an array of text characters, you could use
+either a string or a vector.  In practice, we always choose strings for
+such applications, for four reasons:
+
+   * They occupy one-fourth the space of a vector of the same elements.
+
+   * Strings are printed in a way that shows the contents more clearly
+     as text.
+
+   * Strings can hold text properties.  *Note Text Properties::.
+
+   * Many of the specialized editing and I/O facilities of Emacs accept
+     only strings.  For example, you cannot insert a vector of
+     characters into a buffer the way you can insert a string.  *Note
+     Strings and Characters::.
+
+   By contrast, for an array of keyboard input characters (such as a key
+sequence), a vector may be necessary, because many keyboard input
+characters are outside the range that will fit in a string.  *Note Key
+Sequence Input::.
 
 
 File: elisp,  Node: Array Functions,  Next: Vectors,  Prev: Arrays,  Up: Sequences Arrays Vectors
@@ -109,14 +168,13 @@ File: elisp,  Node: Vectors,  Next: Vector Functions,  Prev: Array Functions,  U
 6.4 Vectors
 ===========
 
-Arrays in Lisp, like arrays in most languages, are blocks of memory
-whose elements can be accessed in constant time.  A "vector" is a
-general-purpose array of specified length; its elements can be any Lisp
-objects.  (By contrast, a string can hold only characters as elements.)
-Vectors in Emacs are used for obarrays (vectors of symbols), and as part
-of keymaps (vectors of commands).  They are also used internally as part
-of the representation of a byte-compiled function; if you print such a
-function, you will see a vector in it.
+A "vector" is a general-purpose array whose elements can be any Lisp
+objects.  (By contrast, the elements of a string can only be
+characters.  *Note Strings and Characters::.)  Vectors are used in
+Emacs for many purposes: as key sequences (*note Key Sequences::), as
+symbol-lookup tables (*note Creating Symbols::), as part of the
+representation of a byte-compiled function (*note Byte Compilation::),
+and more.
 
    In Emacs Lisp, the indices of the elements of a vector start from
 zero and count up from there.
@@ -174,9 +232,9 @@ Here are some functions that relate to vectors:
 
  -- Function: vconcat &rest sequences
      This function returns a new vector containing all the elements of
-     the SEQUENCES.  The arguments SEQUENCES may be true lists,
-     vectors, strings or bool-vectors.  If no SEQUENCES are given, an
-     empty vector is returned.
+     SEQUENCES.  The arguments SEQUENCES may be true lists, vectors,
+     strings or bool-vectors.  If no SEQUENCES are given, an empty
+     vector is returned.
 
      The value is a newly constructed vector that is not `eq' to any
      existing vector.
@@ -194,13 +252,6 @@ Here are some functions that relate to vectors:
      arguments.  This is a special feature to make it easy to access
      the entire contents of a byte-code function object.  *Note
      Byte-Code Objects::.
-
-     In Emacs versions before 21, the `vconcat' function allowed
-     integers as arguments, converting them to strings of digits, but
-     that feature has been eliminated.  The proper way to convert an
-     integer to a decimal number in this way is with `format' (*note
-     Formatting Strings::) or `number-to-string' (*note String
-     Conversion::).
 
      For other concatenation functions, see `mapconcat' in *note
      Mapping Functions::, `concat' in *note Creating Strings::, and
@@ -225,17 +276,23 @@ character codes.  Any valid character code, without modifiers, can be
 used as an index in a char-table.  You can access a char-table's
 elements with `aref' and `aset', as with any array.  In addition, a
 char-table can have "extra slots" to hold additional data not
-associated with particular character codes.  Char-tables are constants
-when evaluated.
+associated with particular character codes.  Like vectors, char-tables
+are constants when evaluated, and can hold elements of any type.
 
-   Each char-table has a "subtype" which is a symbol.  The subtype has
-two purposes: to distinguish char-tables meant for different uses, and
-to control the number of extra slots.  For example, display tables are
-char-tables with `display-table' as the subtype, and syntax tables are
-char-tables with `syntax-table' as the subtype.  A valid subtype must
-have a `char-table-extra-slots' property which is an integer between 0
-and 10.  This integer specifies the number of "extra slots" in the
-char-table.
+   Each char-table has a "subtype", a symbol, which serves two purposes:
+
+   * The subtype provides an easy way to tell what the char-table is
+     for.  For instance, display tables are char-tables with
+     `display-table' as the subtype, and syntax tables are char-tables
+     with `syntax-table' as the subtype.  The subtype can be queried
+     using the function `char-table-subtype', described below.
+
+   * The subtype controls the number of "extra slots" in the
+     char-table.  This number is specified by the subtype's
+     `char-table-extra-slots' symbol property, which should be an
+     integer between 0 and 10.  If the subtype has no such symbol
+     property, the char-table has no extra slots.  *Note Property
+     Lists::, for information about symbol properties.
 
    A char-table can have a "parent", which is another char-table.  If
 it does, then whenever the char-table specifies `nil' for a particular
@@ -248,28 +305,31 @@ CHAR-TABLE C)' returns the default value whenever the char-table does
 not specify any other non-`nil' value.
 
  -- Function: make-char-table subtype &optional init
-     Return a newly created char-table, with subtype SUBTYPE.  Each
-     element is initialized to INIT, which defaults to `nil'.  You
-     cannot alter the subtype of a char-table after the char-table is
-     created.
+     Return a newly-created char-table, with subtype SUBTYPE (a
+     symbol).  Each element is initialized to INIT, which defaults to
+     `nil'.  You cannot alter the subtype of a char-table after the
+     char-table is created.
 
      There is no argument to specify the length of the char-table,
      because all char-tables have room for any valid character code as
      an index.
 
+     If SUBTYPE has the `char-table-extra-slots' symbol property, that
+     specifies the number of extra slots in the char-table.  This
+     should be an integer between 0 and 10; otherwise,
+     `make-char-table' raises an error.  If SUBTYPE has no
+     `char-table-extra-slots' symbol property (*note Property Lists::),
+     the char-table has no extra slots.
+
  -- Function: char-table-p object
-     This function returns `t' if OBJECT is a char-table, otherwise
-     `nil'.
+     This function returns `t' if OBJECT is a char-table, and `nil'
+     otherwise.
 
  -- Function: char-table-subtype char-table
      This function returns the subtype symbol of CHAR-TABLE.
 
- -- Function: set-char-table-default char-table char new-default
-     This function sets the default value of generic character CHAR in
-     CHAR-TABLE to NEW-DEFAULT.
-
-     There is no special function to access default values in a
-     char-table.  To do that, use `char-table-range' (see below).
+   There is no special function to access default values in a
+char-table.  To do that, use `char-table-range' (see below).
 
  -- Function: char-table-parent char-table
      This function returns the parent of CHAR-TABLE.  The parent is
@@ -300,16 +360,9 @@ code; it can also specify a value for an entire character set.
           Refers to the element for character CHAR (supposing CHAR is a
           valid character code).
 
-    CHARSET
-          Refers to the value specified for the whole character set
-          CHARSET (*note Character Sets::).
-
-    GENERIC-CHAR
-          A generic character stands for a character set, or a row of a
-          character set; specifying the generic character as argument is
-          equivalent to specifying the character set name.  *Note
-          Splitting Characters::, for a description of generic
-          characters.
+    `(FROM . TO)'
+          A cons cell refers to all the characters in the inclusive
+          range `[FROM..TO]'.
 
  -- Function: set-char-table-range char-table range value
      This function sets the value in CHAR-TABLE for a range of
@@ -325,40 +378,42 @@ code; it can also specify a value for an entire character set.
           Refers to the element for character CHAR (supposing CHAR is a
           valid character code).
 
-    CHARSET
-          Refers to the value specified for the whole character set
-          CHARSET (*note Character Sets::).
-
-    GENERIC-CHAR
-          A generic character stands for a character set; specifying
-          the generic character as argument is equivalent to specifying
-          the character set name.  *Note Splitting Characters::, for a
-          description of generic characters.
+    `(FROM . TO)'
+          A cons cell refers to all the characters in the inclusive
+          range `[FROM..TO]'.
 
  -- Function: map-char-table function char-table
-     This function calls FUNCTION for each element of CHAR-TABLE.
-     FUNCTION is called with two arguments, a key and a value.  The key
-     is a possible RANGE argument for `char-table-range'--either a
-     valid character or a generic character--and the value is
-     `(char-table-range CHAR-TABLE KEY)'.
+     This function calls its argument FUNCTION for each element of
+     CHAR-TABLE that has a non-`nil' value.  The call to FUNCTION is
+     with two arguments, a key and a value.  The key is a possible
+     RANGE argument for `char-table-range'--either a valid character or
+     a cons cell `(FROM . TO)', specifying a range of characters that
+     share the same value.  The value is what `(char-table-range
+     CHAR-TABLE KEY)' returns.
 
      Overall, the key-value pairs passed to FUNCTION describe all the
      values stored in CHAR-TABLE.
 
-     The return value is always `nil'; to make this function useful,
-     FUNCTION should have side effects.  For example, here is how to
-     examine each element of the syntax table:
+     The return value is always `nil'; to make calls to
+     `map-char-table' useful, FUNCTION should have side effects.  For
+     example, here is how to examine the elements of the syntax table:
 
           (let (accumulator)
-            (map-char-table
-             #'(lambda (key value)
-                 (setq accumulator
-                       (cons (list key value) accumulator)))
-             (syntax-table))
-            accumulator)
+             (map-char-table
+              #'(lambda (key value)
+          	(setq accumulator
+          	      (cons (list
+          		     (if (consp key)
+          			 (list (car key) (cdr key))
+          		       key)
+          		     value)
+          		    accumulator)))
+              (syntax-table))
+             accumulator)
           =>
-          ((475008 nil) (474880 nil) (474752 nil) (474624 nil)
-           ... (5 (3)) (4 (3)) (3 (3)) (2 (3)) (1 (3)) (0 (3)))
+          (((2597602 4194303) (2)) ((2597523 2597601) (3))
+           ... (65379 (5 . 65378)) (65378 (4 . 65379)) (65377 (1))
+           ... (12 (0)) (11 (3)) (10 (12)) (9 (0)) ((0 8) (3)))
 
 
 File: elisp,  Node: Bool-Vectors,  Prev: Char-Tables,  Up: Sequences Arrays Vectors
@@ -440,7 +495,7 @@ Creating Symbols::).
 
 * Creating Hash::       Functions to create hash tables.
 * Hash Access::         Reading and writing the hash table contents.
-* Defining Hash::       Defining new comparison methods
+* Defining Hash::       Defining new comparison methods.
 * Other Hash::          Miscellaneous.
 
 
@@ -1061,16 +1116,18 @@ File: elisp,  Node: Property Lists,  Prev: Creating Symbols,  Up: Symbols
 8.4 Property Lists
 ==================
 
-A "property list" ("plist" for short) is a list of paired elements
-stored in the property list cell of a symbol.  Each of the pairs
-associates a property name (usually a symbol) with a property or value.
-Property lists are generally used to record information about a symbol,
-such as its documentation as a variable, the name of the file where it
-was defined, or perhaps even the grammatical class of the symbol
-(representing a word) in a language-understanding system.
+A "property list" ("plist" for short) is a list of paired elements.
+Each of the pairs associates a property name (usually a symbol) with a
+property or value.
 
-   Character positions in a string or buffer can also have property
-lists.  *Note Text Properties::.
+   Every symbol has a cell that stores a property list (*note Symbol
+Components::).  This property list is used to record information about
+the symbol, such as its variable documentation and the name of the file
+where it was defined.
+
+   Property lists can also be used in other contexts.  For instance,
+you can assign property lists to character positions in a string or
+buffer.  *Note Text Properties::.
 
    The property names and values in a property list can be any Lisp
 objects, but the names are usually symbols.  Property list functions
@@ -1183,7 +1240,8 @@ stored in places other than symbols:
 
  -- Function: plist-get plist property
      This returns the value of the PROPERTY property stored in the
-     property list PLIST.  For example,
+     property list PLIST.  It accepts a malformed PLIST argument.  If
+     PROPERTY is not found in the PLIST, it returns `nil'.  For example,
 
           (plist-get '(foo 4) 'foo)
                => 4
@@ -1191,10 +1249,6 @@ stored in places other than symbols:
                => 4
           (plist-get '(foo 4 bad) 'bad)
                => `nil'
-
-     It accepts a malformed PLIST argument and always returns `nil' if
-     PROPERTY is not found in the PLIST.  For example,
-
           (plist-get '(foo 4 bad) 'bar)
                => nil
 
@@ -1259,67 +1313,60 @@ File: elisp,  Node: Intro Eval,  Next: Forms,  Up: Evaluation
 9.1 Introduction to Evaluation
 ==============================
 
-The Lisp interpreter, or evaluator, is the program that computes the
-value of an expression that is given to it.  When a function written in
-Lisp is called, the evaluator computes the value of the function by
-evaluating the expressions in the function body.  Thus, running any
-Lisp program really means running the Lisp interpreter.
-
-   How the evaluator handles an object depends primarily on the data
-type of the object.
+The Lisp interpreter, or evaluator, is the part of Emacs that computes
+the value of an expression that is given to it.  When a function
+written in Lisp is called, the evaluator computes the value of the
+function by evaluating the expressions in the function body.  Thus,
+running any Lisp program really means running the Lisp interpreter.
 
    A Lisp object that is intended for evaluation is called an
-"expression" or a "form".  The fact that expressions are data objects
-and not merely text is one of the fundamental differences between
-Lisp-like languages and typical programming languages.  Any object can
-be evaluated, but in practice only numbers, symbols, lists and strings
-are evaluated very often.
+"expression" or a "form".  The fact that forms are data objects and not
+merely text is one of the fundamental differences between Lisp-like
+languages and typical programming languages.  Any object can be
+evaluated, but in practice only numbers, symbols, lists and strings are
+evaluated very often.
 
-   It is very common to read a Lisp expression and then evaluate the
-expression, but reading and evaluation are separate activities, and
-either can be performed alone.  Reading per se does not evaluate
-anything; it converts the printed representation of a Lisp object to the
-object itself.  It is up to the caller of `read' whether this object is
-a form to be evaluated, or serves some entirely different purpose.
-*Note Input Functions::.
+   In subsequent sections, we will describe the details of what
+evaluation means for each kind of form.
+
+   It is very common to read a Lisp form and then evaluate the form,
+but reading and evaluation are separate activities, and either can be
+performed alone.  Reading per se does not evaluate anything; it
+converts the printed representation of a Lisp object to the object
+itself.  It is up to the caller of `read' to specify whether this
+object is a form to be evaluated, or serves some entirely different
+purpose.  *Note Input Functions::.
+
+   Evaluation is a recursive process, and evaluating a form often
+involves evaluating parts within that form.  For instance, when you
+evaluate a "function call" form such as `(car x)', Emacs first
+evaluates the argument (the subform `x').  After evaluating the
+argument, Emacs "executes" the function (`car'), and if the function is
+written in Lisp, execution works by evaluating the "body" of the
+function.  (In this example, however, `car' is not a Lisp function; it
+is a primitive function implemented in C.)  *Note Functions::, for more
+information about functions and function calls.
+
+   Evaluation takes place in a context called the "environment", which
+consists of the current values and bindings of all Lisp variables
+(*note Variables::).(1)  Whenever a form refers to a variable without
+creating a new binding for it, the variable evaluates to the value
+given by the current environment.  Evaluating a form may create a new
+environment for recursive evaluation, by binding variables (*note Local
+Variables::).  Such environments are temporary, and vanish when the
+evaluation of the form is complete.
+
+   Evaluating a form may also make changes that persist; these changes
+are called "side effects".  An example of a form that produces a side
+effect is `(setq foo 1)'.
 
    Do not confuse evaluation with command key interpretation.  The
 editor command loop translates keyboard input into a command (an
 interactively callable function) using the active keymaps, and then
-uses `call-interactively' to invoke the command.  The execution of the
-command itself involves evaluation if the command is written in Lisp,
-but that is not a part of command key interpretation itself.  *Note
-Command Loop::.
-
-   Evaluation is a recursive process.  That is, evaluation of a form may
-call `eval' to evaluate parts of the form.  For example, evaluation of
-a function call first evaluates each argument of the function call, and
-then evaluates each form in the function body.  Consider evaluation of
-the form `(car x)': the subform `x' must first be evaluated
-recursively, so that its value can be passed as an argument to the
-function `car'.
-
-   Evaluation of a function call ultimately calls the function specified
-in it.  *Note Functions::.  The execution of the function may itself
-work by evaluating the function definition; or the function may be a
-Lisp primitive implemented in C, or it may be a byte-compiled function
-(*note Byte Compilation::).
-
-   The evaluation of forms takes place in a context called the
-"environment", which consists of the current values and bindings of all
-Lisp variables.(1)  Whenever a form refers to a variable without
-creating a new binding for it, the value of the variable's binding in
-the current environment is used.  *Note Variables::.
-
-   Evaluation of a form may create new environments for recursive
-evaluation by binding variables (*note Local Variables::).  These
-environments are temporary and vanish by the time evaluation of the form
-is complete.  The form may also make changes that persist; these changes
-are called "side effects".  An example of a form that produces side
-effects is `(setq foo 1)'.
-
-   The details of what evaluation means for each kind of form are
-described below (*note Forms::).
+uses `call-interactively' to execute that command.  Executing the
+command usually involves evaluation, if the command is written in Lisp;
+however, this step is not considered a part of command key
+interpretation.  *Note Command Loop::.
 
    ---------- Footnotes ----------
 
@@ -1361,10 +1408,10 @@ File: elisp,  Node: Self-Evaluating Forms,  Next: Symbol Forms,  Up: Forms
 
 A "self-evaluating form" is any form that is not a list or symbol.
 Self-evaluating forms evaluate to themselves: the result of evaluation
-is the same object that was evaluated.  Thus, the number 25 evaluates to
-25, and the string `"foo"' evaluates to the string `"foo"'.  Likewise,
-evaluation of a vector does not cause evaluation of the elements of the
-vector--it returns the same vector with its contents unchanged.
+is the same object that was evaluated.  Thus, the number 25 evaluates
+to 25, and the string `"foo"' evaluates to the string `"foo"'.
+Likewise, evaluating a vector does not cause evaluation of the elements
+of the vector--it returns the same vector with its contents unchanged.
 
      '123               ; A number, shown without evaluation.
           => 123
@@ -1446,9 +1493,8 @@ If the first element of the list is a symbol then evaluation examines
 the symbol's function cell, and uses its contents instead of the
 original symbol.  If the contents are another symbol, this process,
 called "symbol function indirection", is repeated until it obtains a
-non-symbol.  *Note Function Names::, for more information about using a
-symbol as a name for a function stored in the function cell of the
-symbol.
+non-symbol.  *Note Function Names::, for more information about symbol
+function indirection.
 
    One possible consequence of this process is an infinite loop, in the
 event that a symbol's function cell refers to the same symbol.  Or a
@@ -1458,10 +1504,10 @@ these things happens, we eventually obtain a non-symbol, which ought to
 be a function or other suitable object.
 
    More precisely, we should now have a Lisp function (a lambda
-expression), a byte-code function, a primitive function, a Lisp macro, a
-special form, or an autoload object.  Each of these types is a case
-described in one of the following sections.  If the object is not one of
-these types, the error `invalid-function' is signaled.
+expression), a byte-code function, a primitive function, a Lisp macro,
+a special form, or an autoload object.  Each of these types is a case
+described in one of the following sections.  If the object is not one
+of these types, Emacs signals an `invalid-function' error.
 
    The following example illustrates the symbol indirection process.  We
 use `fset' to set the function cell of a symbol and `symbol-function'
@@ -1823,7 +1869,7 @@ provides the ability to pass information to them as arguments.
 
      `eval-current-buffer' is an alias for this command.
 
- -- Variable: max-lisp-eval-depth
+ -- User Option: max-lisp-eval-depth
      This variable defines the maximum depth allowed in calls to `eval',
      `apply', and `funcall' before an error is signaled (with error
      message `"Lisp nesting exceeds max-lisp-eval-depth"').
@@ -1838,7 +1884,7 @@ provides the ability to pass information to them as arguments.
      expressions, and recursive evaluation of function call arguments
      and function body forms, as well as explicit calls in Lisp code.
 
-     The default value of this variable is 300.  If you set it to a
+     The default value of this variable is 400.  If you set it to a
      value less than 100, Lisp will reset it to 100 if the given value
      is reached.  Entry to the Lisp debugger increases the value, if
      there is little room left, to make sure the debugger itself has
@@ -2545,10 +2591,10 @@ not end with any sort of punctuation.
      `file-error' are handled specially.
 
      The number and significance of the objects in DATA depends on
-     ERROR-SYMBOL.  For example, with a `wrong-type-arg' error, there
-     should be two objects in the list: a predicate that describes the
-     type that was expected, and the object that failed to fit that
-     type.
+     ERROR-SYMBOL.  For example, with a `wrong-type-argument' error,
+     there should be two objects in the list: a predicate that
+     describes the type that was expected, and the object that failed
+     to fit that type.
 
      Both ERROR-SYMBOL and DATA are available to any error handlers
      that handle the error: `condition-case' binds a local variable to
@@ -2621,7 +2667,13 @@ A simple example looks like this:
        (error nil))
 
 This deletes the file named FILENAME, catching any error and returning
-`nil' if an error occurs.
+`nil' if an error occurs(1).
+
+   The `condition-case' construct is often used to trap errors that are
+predictable, such as failure to open a file in a call to
+`insert-file-contents'.  It is also used to trap errors that are
+totally unpredictable, such as when the program evaluates an expression
+read from the user.
 
    The second argument of `condition-case' is called the "protected
 form".  (In the example above, the protected form is a call to
@@ -2649,28 +2701,34 @@ of the two gets to handle it.
 
    If an error is handled by some `condition-case' form, this
 ordinarily prevents the debugger from being run, even if
-`debug-on-error' says this error should invoke the debugger.  *Note
-Error Debugging::.  If you want to be able to debug errors that are
-caught by a `condition-case', set the variable `debug-on-signal' to a
-non-`nil' value.
+`debug-on-error' says this error should invoke the debugger.
 
-   When an error is handled, control returns to the handler.  Before
-this happens, Emacs unbinds all variable bindings made by binding
-constructs that are being exited and executes the cleanups of all
-`unwind-protect' forms that are exited.  Once control arrives at the
-handler, the body of the handler is executed.
+   If you want to be able to debug errors that are caught by a
+`condition-case', set the variable `debug-on-signal' to a non-`nil'
+value.  You can also specify that a particular handler should let the
+debugger run first, by writing `debug' among the conditions, like this:
+
+     (condition-case nil
+         (delete-file filename)
+       ((debug error) nil))
+
+The effect of `debug' here is only to prevent `condition-case' from
+suppressing the call to the debugger.  Any given error will invoke the
+debugger only if `debug-on-error' and the other usual filtering
+mechanisms say it should.  *Note Error Debugging::.
+
+   Once Emacs decides that a certain handler handles the error, it
+returns control to that handler.  To do so, Emacs unbinds all variable
+bindings made by binding constructs that are being exited, and executes
+the cleanups of all `unwind-protect' forms that are being exited.  Once
+control arrives at the handler, the body of the handler executes
+normally.
 
    After execution of the handler body, execution returns from the
 `condition-case' form.  Because the protected form is exited completely
 before execution of the handler, the handler cannot resume execution at
 the point of the error, nor can it examine variable bindings that were
 made within the protected form.  All it can do is clean up and proceed.
-
-   The `condition-case' construct is often used to trap errors that are
-predictable, such as failure to open a file in a call to
-`insert-file-contents'.  It is also used to trap errors that are
-totally unpredictable, such as when the program evaluates an expression
-read from the user.
 
    Error signaling and handling have some resemblance to `throw' and
 `catch' (*note Catch and Throw::), but they are entirely separate
@@ -2688,9 +2746,10 @@ is no suitable `catch' signals an error that can be handled).
 
      Each of the HANDLERS is a list of the form `(CONDITIONS BODY...)'.
      Here CONDITIONS is an error condition name to be handled, or a
-     list of condition names; BODY is one or more Lisp expressions to
-     be executed when this handler handles an error.  Here are examples
-     of handlers:
+     list of condition names (which can include `debug' to allow the
+     debugger to run before the handler); BODY is one or more Lisp
+     expressions to be executed when this handler handles an error.
+     Here are examples of handlers:
 
           (error nil)
 
@@ -2772,6 +2831,23 @@ including those signaled with `error':
               2))
      -| The error was: (error "Rats!  The variable baz was 34, not 35")
      => 2
+
+ -- Macro: ignore-errors body...
+     This construct executes BODY, ignoring any errors that occur
+     during its execution.  If the execution is without error,
+     `ignore-errors' returns the value of the last form in BODY;
+     otherwise, it returns `nil'.
+
+     Here's the example at the beginning of this subsection rewritten
+     using `ignore-errors':
+
+            (ignore-errors
+             (delete-file filename))
+
+   ---------- Footnotes ----------
+
+   (1) Actually, you should use `ignore-errors' in such a simple case;
+see below.
 
 
 File: elisp,  Node: Error Symbols,  Prev: Handling Errors,  Up: Errors
@@ -2953,11 +3029,10 @@ name, and the variable's value is stored in the value cell of the
 symbol.  The use of a symbol as a variable is independent of its use as
 a function name.  *Note Symbol Components::.
 
-   The Lisp objects that constitute a Lisp program determine the textual
-form of the program--it is simply the read syntax for those Lisp
-objects.  This is why, for example, a variable in a textual Lisp program
-is written using the read syntax for the symbol that represents the
-variable.
+   The textual form of a Lisp program is given by the read syntax of
+the Lisp objects that constitute the program.  Hence, a variable in a
+textual Lisp program is written using the read syntax for the symbol
+representing the variable.
 
 * Menu:
 
@@ -2973,8 +3048,9 @@ variable.
 * Setting Variables::     Storing new values in variables.
 * Variable Scoping::      How Lisp chooses among local and global values.
 * Buffer-Local Variables::  Variable values in effect only in one buffer.
-* Future Local Variables::  New kinds of local values we might add some day.
 * File Local Variables::  Handling local variable lists in files.
+* Directory Local Variables:: Local variables common to all files in a directory.
+* Frame-Local Variables:: Frame-local bindings for variables.
 * Variable Aliases::      Variables that are aliases for other variables.
 * Variables with Restricted Values::  Non-constant variables whose value can
                                         _not_ be an arbitrary Lisp object.
@@ -2995,12 +3071,13 @@ one, no trace of the old value remains in the variable.
 
      (setq x '(a b))
 
-gives the variable `x' the value `(a b)'.  Note that `setq' does not
-evaluate its first argument, the name of the variable, but it does
-evaluate the second argument, the new value.
+gives the variable `x' the value `(a b)'.  Note that `setq' is a
+special form (*note Special Forms::); it does not evaluate its first
+argument, the name of the variable, but it does evaluate the second
+argument, the new value.
 
    Once the variable has a value, you can refer to it by using the
-symbol by itself as an expression.  Thus,
+symbol itself as an expression.  Thus,
 
      x => (a b)
 
@@ -3056,11 +3133,11 @@ receive new local values that last until the function exits.  The `let'
 special form explicitly establishes new local values for specified
 variables; these last until exit from the `let' form.
 
-   Establishing a local value saves away the previous value (or lack of
-one) of the variable.  When the life span of the local value is over,
-the previous value is restored.  In the mean time, we say that the
-previous value is "shadowed" and "not visible".  Both global and local
-values may be shadowed (*note Scope::).
+   Establishing a local value saves away the variable's previous value
+(or lack of one).  We say that the previous value is "shadowed" and
+"not visible".  Both global and local values may be shadowed (*note
+Scope::).  After the life span of the local value is over, the previous
+value (or lack of one) is restored.
 
    If you set a variable (such as with `setq') while it is local, this
 replaces the local value; it does not alter the global value, or
@@ -3068,12 +3145,12 @@ previous local values, that are shadowed.  To model this behavior, we
 speak of a "local binding" of the variable as well as a local value.
 
    The local binding is a conceptual place that holds a local value.
-Entry to a function, or a special form such as `let', creates the local
-binding; exit from the function or from the `let' removes the local
-binding.  As long as the local binding lasts, the variable's value is
-stored within it.  Use of `setq' or `set' while there is a local
-binding stores a different value into the local binding; it does not
-create a new binding.
+Entering a function, or a special form such as `let', creates the local
+binding; exiting the function or the `let' removes the local binding.
+While the local binding lasts, the variable's value is stored within
+it.  Using `setq' or `set' while there is a local binding stores a
+different value into the local binding; it does not create a new
+binding.
 
    We also speak of the "global binding", which is where (conceptually)
 the global value is kept.
@@ -3138,16 +3215,16 @@ bindings:
 
    Variables can also have buffer-local bindings (*note Buffer-Local
 Variables::); a few variables have terminal-local bindings (*note
-Multiple Displays::).  These kinds of bindings work somewhat like
+Multiple Terminals::).  These kinds of bindings work somewhat like
 ordinary local bindings, but they are localized depending on "where"
 you are in Emacs, rather than localized in time.
 
- -- Variable: max-specpdl-size
+ -- User Option: max-specpdl-size
      This variable defines the limit on the total number of local
-     variable bindings and `unwind-protect' cleanups (*note Cleaning Up
-     from Nonlocal Exits: Cleanups.) that are allowed before signaling
-     an error (with data `"Variable binding depth exceeds
-     max-specpdl-size"').
+     variable bindings and `unwind-protect' cleanups (see *note
+     Cleaning Up from Nonlocal Exits: Cleanups.) that are allowed
+     before Emacs signals an error (with data `"Variable binding depth
+     exceeds max-specpdl-size"').
 
      This limit, with the associated error when it is exceeded, is one
      way that Lisp avoids infinite recursion on an ill-defined function.
@@ -3301,13 +3378,13 @@ void.
      property.  The Emacs help functions (*note Documentation::) look
      for this property.
 
-     If the variable is a user option that users would want to set
-     interactively, you should use `*' as the first character of
-     DOC-STRING.  This lets users set the variable conveniently using
-     the `set-variable' command.  Note that you should nearly always
-     use `defcustom' instead of `defvar' to define these variables, so
-     that users can use `M-x customize' and related commands to set
-     them.  *Note Customization::.
+     If the documentation string begins with the character `*', Emacs
+     allows users to set it interactively using the `set-variable'
+     command.  However, you should nearly always use `defcustom'
+     instead of `defvar' to define such variables, so that users can
+     use `M-x customize' and related commands to set them.  In that
+     case, it is not necessary to begin the documentation string with
+     `*'.  *Note Customization::.
 
      Here are some examples.  This form defines `foo' but does not
      initialize it:
@@ -3439,6 +3516,8 @@ complete list:
 
 `...-flag'
      The value is significant only as to whether it is `nil' or not.
+     Since such variables often end up acquiring more values over time,
+     this convention is not strongly recommended.
 
 `...-program'
      The value is a program name.
@@ -3450,7 +3529,7 @@ complete list:
      The value specifies options for a command.
 
    When you define a variable, always consider whether you should mark
-it as "risky"; see *note File Local Variables::.
+it as "safe" or "risky"; see *note File Local Variables::.
 
    When defining and initializing a variable that holds a complicated
 value (such as a keymap with bindings in it), it's best to put the
@@ -3828,7 +3907,7 @@ Choose the variable's name to avoid name conflicts--don't use short
 names like `x'.
 
 
-File: elisp,  Node: Buffer-Local Variables,  Next: Future Local Variables,  Prev: Variable Scoping,  Up: Variables
+File: elisp,  Node: Buffer-Local Variables,  Next: File Local Variables,  Prev: Variable Scoping,  Up: Variables
 
 11.10 Buffer-Local Variables
 ============================
@@ -3838,8 +3917,9 @@ languages in one form or another.  Emacs, however, also supports
 additional, unusual kinds of variable binding, such as "buffer-local"
 bindings, which apply only in one buffer.  Having different values for
 a variable in different buffers is an important customization method.
-(A few variables have bindings that are local to each terminal; see
-*note Multiple Displays::.)
+(Variables can also have bindings that are local to each terminal, or
+to each frame.  *Note Multiple Terminals::, and *Note Frame-Local
+Variables::.)
 
 * Menu:
 
@@ -3930,6 +4010,9 @@ binding of buffer `b'.
 buffer-local values when you visit the file.  *Note File Variables:
 (emacs)File Variables.
 
+   A buffer-local variable cannot be made frame-local (*note
+Frame-Local Variables::) or terminal-local (*note Multiple Terminals::).
+
 
 File: elisp,  Node: Creating Buffer-Local,  Next: Default Value,  Prev: Intro to Buffer-Local,  Up: Buffer-Local Variables
 
@@ -3968,9 +4051,10 @@ File: elisp,  Node: Creating Buffer-Local,  Next: Default Value,  Prev: Intro to
      This is because `let' does not distinguish between different kinds
      of bindings; it knows only which variable the binding was made for.
 
-     If the variable is terminal-local, this function signals an error.
-     Such variables cannot have buffer-local bindings as well.  *Note
-     Multiple Displays::.
+     If the variable is terminal-local (*note Multiple Terminals::), or
+     frame-local (*note Frame-Local Variables::), this function signals
+     an error.  Such variables cannot have buffer-local bindings as
+     well.
 
      *Warning:* do not use `make-local-variable' for a hook variable.
      The hook variables are automatically made buffer-local as needed
@@ -4070,8 +4154,10 @@ File: elisp,  Node: Creating Buffer-Local,  Next: Default Value,  Prev: Intro to
 
  -- Function: kill-all-local-variables
      This function eliminates all the buffer-local variable bindings of
-     the current buffer except for variables marked as "permanent."  As
-     a result, the buffer will see the default values of most variables.
+     the current buffer except for variables marked as "permanent" and
+     local hook functions that have a non-`nil' `permanent-local-hook'
+     property (*note Setting Hooks::).  As a result, the buffer will see
+     the default values of most variables.
 
      This function also resets certain other information pertaining to
      the buffer: it sets the local keymap to `nil', the syntax table to
@@ -4192,41 +4278,31 @@ buffer-local value for this variable.
                => 23
 
 
-File: elisp,  Node: Future Local Variables,  Next: File Local Variables,  Prev: Buffer-Local Variables,  Up: Variables
+File: elisp,  Node: File Local Variables,  Next: Directory Local Variables,  Prev: Buffer-Local Variables,  Up: Variables
 
-11.11 Possible Future Local Variables
-=====================================
-
-We have considered the idea of bindings that are local to a category of
-frames--for example, all color frames, or all frames with dark
-backgrounds.  We have not implemented them because it is not clear that
-this feature is really useful.  You can get more or less the same
-results by adding a function to `after-make-frame-functions', set up to
-define a particular frame parameter according to the appropriate
-conditions for each frame.
-
-   It would also be possible to implement window-local bindings.  We
-don't know of many situations where they would be useful, and it seems
-that indirect buffers (*note Indirect Buffers::) with buffer-local
-bindings offer a way to handle these situations more robustly.
-
-   If sufficient application is found for either of these two kinds of
-local bindings, we will provide it in a subsequent Emacs version.
-
-
-File: elisp,  Node: File Local Variables,  Next: Variable Aliases,  Prev: Future Local Variables,  Up: Variables
-
-11.12 File Local Variables
+11.11 File Local Variables
 ==========================
 
 A file can specify local variable values; Emacs uses these to create
 buffer-local bindings for those variables in the buffer visiting that
 file.  *Note Local Variables in Files: (emacs)File variables, for basic
-information about file local variables.  This section describes the
-functions and variables that affect processing of file local variables.
+information about file-local variables.  This section describes the
+functions and variables that affect how file-local variables are
+processed.
+
+   If a file-local variable could specify an arbitrary function or Lisp
+expression that would be called later, visiting a file could take over
+your Emacs.  Emacs protects against this by automatically setting only
+those file-local variables whose specified values are known to be safe.
+Other file-local variables are set only if the user agrees.
+
+   For additional safety, `read-circle' is temporarily bound to `nil'
+when Emacs reads file-local variables (*note Input Functions::).  This
+prevents the Lisp reader from recognizing circular and shared Lisp
+structures (*note Circular Objects::).
 
  -- User Option: enable-local-variables
-     This variable controls whether to process file local variables.
+     This variable controls whether to process file-local variables.
      The possible values are:
 
     `t' (the default)
@@ -4253,21 +4329,38 @@ functions and variables that affect processing of file local variables.
      variable in the `-*-' line.  `set-auto-mode' does that, also taking
      `enable-local-variables' into account (*note Auto Major Mode::).
 
+     This function works by walking the alist stored in
+     `file-local-variables-alist' and applying each local variable in
+     turn.  It calls `before-hack-local-variables-hook' and
+     `hack-local-variables-hook' before and after applying the
+     variables, respectively.
+
      If the optional argument MODE-ONLY is non-`nil', then all this
      function does is return `t' if the `-*-' line or the local
      variables list specifies a mode and `nil' otherwise.  It does not
-     set the mode nor any other file local variable.
+     set the mode nor any other file-local variable.
 
-   If a file local variable could specify a function that would be
-called later, or an expression that would be executed later, simply
-visiting a file could take over your Emacs.  Emacs takes several
-measures to prevent this.
+ -- Variable: file-local-variables-alist
+     This buffer-local variable holds the alist of file-local variable
+     settings.  Each element of the alist is of the form
+     `(VAR . VALUE)', where VAR is a symbol of the local variable and
+     VALUE is its value.  When Emacs visits a file, it first collects
+     all the file-local variables into this alist, and then the
+     `hack-local-variables' function applies them one by one.
+
+ -- Variable: before-hack-local-variables-hook
+     Emacs calls this hook immediately before applying file-local
+     variables stored in `file-local-variables-alist'.
+
+ -- Variable: hack-local-variables-hook
+     Emacs calls this hook immediately after it finishes applying
+     file-local variables stored in `file-local-variables-alist'.
 
    You can specify safe values for a variable with a
 `safe-local-variable' property.  The property has to be a function of
 one argument; any value is safe if the function returns non-`nil' given
-that value.  Many commonly encountered file variables standardly have
-`safe-local-variable' properties, including `fill-column',
+that value.  Many commonly-encountered file variables have
+`safe-local-variable' properties; these include `fill-column',
 `fill-prefix', and `indent-tabs-mode'.  For boolean-valued variables
 that are safe, use `booleanp' as the property value.  Lambda
 expressions should be quoted so that `describe-variable' can display
@@ -4278,7 +4371,7 @@ the predicate.
      safe.  It is a list of cons cells `(VAR . VAL)', where VAR is a
      variable name and VAL is a value which is safe for that variable.
 
-     When Emacs asks the user whether or not to obey a set of file local
+     When Emacs asks the user whether or not to obey a set of file-local
      variable specifications, the user can choose to mark them as safe.
      Doing so adds those variable/value pairs to
      `safe-local-variable-values', and saves it to the user's custom
@@ -4336,12 +4429,115 @@ arguments are constant).
 
    Text properties are also potential loopholes, since their values
 could include functions to call.  So Emacs discards all text properties
-from string values specified for file local variables.
+from string values specified for file-local variables.
 
 
-File: elisp,  Node: Variable Aliases,  Next: Variables with Restricted Values,  Prev: File Local Variables,  Up: Variables
+File: elisp,  Node: Directory Local Variables,  Next: Frame-Local Variables,  Prev: File Local Variables,  Up: Variables
 
-11.13 Variable Aliases
+11.12 Directory Local Variables
+===============================
+
+A directory can specify local variable values common to all files in
+that directory; Emacs uses these to create buffer-local bindings for
+those variables in buffers visiting any file in that directory.  This
+is useful when the files in the directory belong to some "project" and
+therefore share the same local variables.
+
+   There are two different methods for specifying directory local
+variables: by putting them in a special file, or by defining a "project
+class" for that directory.
+
+ -- Constant: dir-locals-file
+     This constant is the name of the file where Emacs expects to find
+     the directory-local variables.  The name of the file is
+     `.dir-locals.el'(1).  A file by that name in a directory causes
+     Emacs to apply its settings to any file in that directory or any
+     of its subdirectories.  If some of the subdirectories have their
+     own `.dir-locals.el' files, Emacs uses the settings from the
+     deepest file it finds starting from the file's directory and
+     moving up the directory tree.  The file specifies local variables
+     as a specially formatted list; see *note Per-directory Local
+     Variables: (emacs)Directory Variables, for more details.
+
+ -- Function: hack-dir-local-variables
+     This function reads the `.dir-locals.el' file and stores the
+     directory-local variables in `file-local-variables-alist' that is
+     local to the buffer visiting any file in the directory, without
+     applying them.  It also stores the directory-local settings in
+     `dir-locals-class-alist', where it defines a special class for the
+     directory in which `.dir-locals.el' file was found.  This function
+     works by calling `dir-locals-set-class-variables' and
+     `dir-locals-set-directory-class', described below.
+
+ -- Function: dir-locals-set-class-variables class variables
+     This function defines a set of variable settings for the named
+     CLASS, which is a symbol.  You can later assign the class to one
+     or more directories, and Emacs will apply those variable settings
+     to all files in those directories.  The list in VARIABLES can be of
+     one of the two forms: `(MAJOR-MODE . ALIST)' or `(DIRECTORY .
+     LIST)'.  With the first form, if the file's buffer turns on a mode
+     that is derived from MAJOR-MODE, then the all the variables in the
+     associated ALIST are applied; ALIST should be of the form `(NAME .
+     VALUE)'.  A special value `nil' for MAJOR-MODE means the settings
+     are applicable to any mode.
+
+     With the second form of VARIABLES, if DIRECTORY is the initial
+     substring of the file's directory, then LIST is applied
+     recursively by following the above rules; LIST should be of one of
+     the two forms accepted by this function in VARIABLES.
+
+ -- Function: dir-locals-set-directory-class directory class
+     This function assigns CLASS to all the files in `directory' and
+     its subdirectories.  Thereafter, all the variable settings
+     specified for CLASS will be applied to any visited file in
+     DIRECTORY and its children.  CLASS must have been already defined
+     by `dir-locals-set-class-variables'
+
+ -- Variable: dir-locals-class-alist
+     This alist holds the class symbols and the associated variable
+     settings.  It is updated by `dir-locals-set-class-variables'.
+
+ -- Variable: dir-locals-directory-cache
+     This alist holds directory names, their assigned class names, and
+     modification times of the associated directory local variables
+     file.  It is updated by `dir-locals-set-directory-class'.
+
+   ---------- Footnotes ----------
+
+   (1) The MS-DOS version of Emacs uses `_dir-locals.el' instead, due to
+limitations of the DOS filesystems.
+
+
+File: elisp,  Node: Frame-Local Variables,  Next: Variable Aliases,  Prev: Directory Local Variables,  Up: Variables
+
+11.13 Frame-Local Values for Variables
+======================================
+
+In addition to buffer-local variable bindings (*note Buffer-Local
+Variables::), Emacs supports "frame-local" bindings.  A frame-local
+binding for a variable is in effect in a frame for which it was defined.
+
+   In practice, frame-local variables have not proven very useful.
+Ordinary frame parameters are generally used instead (*note Frame
+Parameters::).  The function `make-variable-frame-local', which was
+used to define frame-local variables, has been deprecated since Emacs
+22.2.  However, you can still define a frame-specific binding for a
+variable VAR in frame FRAME, by setting the VAR frame parameter for
+that frame:
+
+       (modify-frame-parameters FRAME '((VAR . VALUE)))
+
+This causes the variable VAR to be bound to the specified VALUE in the
+named FRAME.  To check the frame-specific values of such variables, use
+`frame-parameter'.  *Note Parameter Access::.
+
+   Note that you cannot have a frame-local binding for a variable that
+has a buffer-local binding.
+
+
+File: elisp,  Node: Variable Aliases,  Next: Variables with Restricted Values,  Prev: Frame-Local Variables,  Up: Variables
+
+11.14 Variable Aliases
 ======================
 
 It is sometimes useful to make two variables synonyms, so that both
@@ -4375,7 +4571,7 @@ in the future.
 
  -- Function: make-obsolete-variable obsolete-name current-name
           &optional when
-     This function makes the byte-compiler warn that the variable
+     This function makes the byte compiler warn that the variable
      OBSOLETE-NAME is obsolete.  If CURRENT-NAME is a symbol, it is the
      variable's new name; then the warning message says to use
      CURRENT-NAME instead of OBSOLETE-NAME.  If CURRENT-NAME is a
@@ -4423,7 +4619,7 @@ same time using the macro `define-obsolete-variable-alias'.
 
 File: elisp,  Node: Variables with Restricted Values,  Prev: Variable Aliases,  Up: Variables
 
-11.14 Variables with Restricted Values
+11.15 Variables with Restricted Values
 ======================================
 
 Ordinary Lisp variables can be assigned any value that is a valid Lisp
@@ -4474,6 +4670,7 @@ define them.
                             of a symbol.
 * Obsolete Functions::    Declaring functions obsolete.
 * Inline Functions::	  Defining functions that the compiler will open code.
+* Declaring Functions::   Telling the compiler that a function is defined.
 * Function Safety::       Determining whether a function is safe to call.
 * Related Topics::        Cross-references to specific Lisp primitives
                             that have a special bearing on how functions work.
@@ -4558,9 +4755,9 @@ function-like objects.
      byte compiler.  *Note Byte-Code Type::.
 
  -- Function: functionp object
-     This function returns `t' if OBJECT is any kind of function, or a
-     special form, or, recursively, a symbol whose function definition
-     is a function or special form.  (This does not include macros.)
+     This function returns `t' if OBJECT is any kind of function, i.e.
+     can be passed to `funcall'.  Note that `functionp' returns `nil'
+     for special forms (*note Special Forms::).
 
    Unlike `functionp', the next three functions do _not_ treat a symbol
 as its function definition.
@@ -5066,6 +5263,31 @@ how many arguments to pass, use `apply'.
      For an interesting example of using `apply', see *note Definition
      of mapcar::.
 
+   Sometimes it is useful to fix some of the function's arguments at
+certain values, and leave the rest of arguments for when the function
+is actually called.  The act of fixing some of the function's arguments
+is called "partial application" of the function(1).  The result is a
+new function that accepts the rest of arguments and calls the original
+function with all the arguments combined.
+
+   Here's how to do partial application in Emacs Lisp:
+
+ -- Function: apply-partially func &rest args
+     This function returns a new function which, when called, will call
+     FUNC with the list of arguments composed from ARGS and additional
+     arguments specified at the time of the call.  If FUNC accepts N
+     arguments, then a call to `apply-partially' with `M < N' arguments
+     will produce a new function of `N - M' arguments.
+
+     Here's how we could define the built-in function `1+', if it
+     didn't exist, using `apply-partially' and `+', another built-in
+     function:
+
+          (defalias '1+ (apply-partially '+ 1)
+            "Increment argument by one.")
+          (1+ 10)
+               => 11
+
    It is common for Lisp functions to accept functions as arguments or
 find them in data structures (especially in hook variables and property
 lists) and call them using `funcall' or `apply'.  Functions that accept
@@ -5080,6 +5302,13 @@ function:
 
  -- Function: ignore &rest args
      This function ignores any arguments and returns `nil'.
+
+   ---------- Footnotes ----------
+
+   (1) This is related to, but different from "currying", which
+transforms a function that takes multiple arguments in such a way that
+it can be called as a chain of functions, each one with a single
+argument.
 
 
 File: elisp,  Node: Mapping Functions,  Next: Anonymous Functions,  Prev: Calling Functions,  Up: Functions
@@ -5418,7 +5647,7 @@ same time using the macro `define-obsolete-function-alias'.
           (make-obsolete OBSOLETE-NAME CURRENT-NAME WHEN)
 
 
-File: elisp,  Node: Inline Functions,  Next: Function Safety,  Prev: Obsolete Functions,  Up: Functions
+File: elisp,  Node: Inline Functions,  Next: Declaring Functions,  Prev: Obsolete Functions,  Up: Functions
 
 12.10 Inline Functions
 ======================
@@ -5459,9 +5688,85 @@ macros.  (*Note Argument Evaluation::.)
 file, following the definition, just like macros.
 
 
-File: elisp,  Node: Function Safety,  Next: Related Topics,  Prev: Inline Functions,  Up: Functions
+File: elisp,  Node: Declaring Functions,  Next: Function Safety,  Prev: Inline Functions,  Up: Functions
 
-12.11 Determining whether a Function is Safe to Call
+12.11 Telling the Compiler that a Function is Defined
+=====================================================
+
+Byte-compiling a file often produces warnings about functions that the
+compiler doesn't know about (*note Compiler Errors::).  Sometimes this
+indicates a real problem, but usually the functions in question are
+defined in other files which would be loaded if that code is run.  For
+example, byte-compiling `fortran.el' used to warn:
+
+     In end of data:
+     fortran.el:2152:1:Warning: the function `gud-find-c-expr' is not known
+         to be defined.
+
+   In fact, `gud-find-c-expr' is only used in the function that Fortran
+mode uses for the local value of `gud-find-expr-function', which is a
+callback from GUD; if it is called, the GUD functions will be loaded.
+When you know that such a warning does not indicate a real problem, it
+is good to suppress the warning.  That makes new warnings which might
+mean real problems more visible.  You do that with `declare-function'.
+
+   All you need to do is add a `declare-function' statement before the
+first use of the function in question:
+
+     (declare-function gud-find-c-expr "gud.el" nil)
+
+   This says that `gud-find-c-expr' is defined in `gud.el' (the `.el'
+can be omitted).  The compiler takes for granted that that file really
+defines the function, and does not check.
+
+   The optional third argument specifies the argument list of
+`gud-find-c-expr'.  In this case, it takes no arguments (`nil' is
+different from not specifying a value).  In other cases, this might be
+something like `(file &optional overwrite)'.  You don't have to specify
+the argument list, but if you do the byte compiler can check that the
+calls match the declaration.
+
+ -- Macro: declare-function function file &optional arglist fileonly
+     Tell the byte compiler to assume that FUNCTION is defined, with
+     arguments ARGLIST, and that the definition should come from the
+     file FILE.  FILEONLY non-`nil' means only check that FILE exists,
+     not that it actually defines FUNCTION.
+
+   To verify that these functions really are declared where
+`declare-function' says they are, use `check-declare-file' to check all
+`declare-function' calls in one source file, or use
+`check-declare-directory' check all the files in and under a certain
+directory.
+
+   These commands find the file that ought to contain a function's
+definition using `locate-library'; if that finds no file, they expand
+the definition file name relative to the directory of the file that
+contains the `declare-function' call.
+
+   You can also say that a function is defined by C code by specifying
+a file name ending in `.c'.  `check-declare-file' looks for these files
+in the C source code directory.  This is useful only when you call a
+function that is defined only on certain systems.  Most of the
+primitive functions of Emacs are always defined so they will never give
+you a warning.
+
+   Sometimes a file will optionally use functions from an external
+package.  If you prefix the filename in the `declare-function'
+statement with `ext:', then it will be checked if it is found,
+otherwise skipped without error.
+
+   There are some function definitions that `check-declare' does not
+understand (e.g. `defstruct' and some other macros).  In such cases,
+you can pass a non-`nil' FILEONLY argument to `declare-function',
+meaning to only check that the file exists, not that it actually
+defines the function.  Note that to do this without having to specify
+an argument list, you should set the ARGLIST argument to `t' (because
+`nil' means an empty argument list, as opposed to an unspecified one).
+
+
+File: elisp,  Node: Function Safety,  Next: Related Topics,  Prev: Declaring Functions,  Up: Functions
+
+12.12 Determining whether a Function is Safe to Call
 ====================================================
 
 Some major modes such as SES call functions that are stored in user
@@ -5491,7 +5796,7 @@ strings calculated by user code before inserting them into buffers.
 
 File: elisp,  Node: Related Topics,  Prev: Function Safety,  Up: Functions
 
-12.12 Other Topics Related to Functions
+12.13 Other Topics Related to Functions
 =======================================
 
 Here is a table of several functions that do things related to function
@@ -5711,18 +6016,14 @@ itself--they would be computed at compile time, which is not useful.
 already be defined in Lisp when the calls to them are compiled.  The
 compiler has a special feature to help you do this: if a file being
 compiled contains a `defmacro' form, the macro is defined temporarily
-for the rest of the compilation of that file.  To make this feature
-work, you must put the `defmacro' in the same file where it is used,
-and before its first use.
+for the rest of the compilation of that file.
 
-   Byte-compiling a file executes any `require' calls at top-level in
-the file.  This is in case the file needs the required packages for
-proper compilation.  One way to ensure that necessary macro definitions
-are available during compilation is to require the files that define
-them (*note Named Features::).  To avoid loading the macro definition
-files when someone _runs_ the compiled program, write
-`eval-when-compile' around the `require' calls (*note Eval During
-Compile::).
+   Byte-compiling a file also executes any `require' calls at top-level
+in the file, so you can ensure that necessary macro definitions are
+available during compilation by requiring the files that define them
+(*note Named Features::).  To avoid loading the macro definition files
+when someone _runs_ the compiled program, write `eval-when-compile'
+around the `require' calls (*note Eval During Compile::).
 
 
 File: elisp,  Node: Defining Macros,  Next: Backquote,  Prev: Compiling Macros,  Up: Macros
@@ -5848,16 +6149,6 @@ some examples:
           => (use the words foo bar as elements)
      `(use the words ,@(cdr list) as elements)
           => (use the words foo bar as elements)
-
-   In old Emacs versions, before version 19.29, ``' used a different
-syntax which required an extra level of parentheses around the entire
-backquote construct.  Likewise, each `,' or `,@' substitution required
-an extra level of parentheses surrounding both the `,' or `,@' and the
-following expression.  The old syntax required whitespace between the
-``', `,' or `,@' and the following expression.
-
-   This syntax is still accepted, for compatibility with old Emacs
-versions, but support for it will soon disappear.
 
 
 File: elisp,  Node: Problems with Macros,  Next: Indenting Macros,  Prev: Backquote,  Up: Macros
@@ -6072,10 +6363,10 @@ an example:
 `x', because `a' conflicts with the macro argument variable `a'.
 
    Another problem with calling `eval' in a macro definition is that it
-probably won't do what you intend in a compiled program.  The
-byte-compiler runs macro definitions while compiling the program, when
-the program's own computations (which you might have wished to access
-with `eval') don't occur and its local variable bindings don't exist.
+probably won't do what you intend in a compiled program.  The byte
+compiler runs macro definitions while compiling the program, when the
+program's own computations (which you might have wished to access with
+`eval') don't occur and its local variable bindings don't exist.
 
    To avoid these problems, *don't evaluate an argument expression
 while computing the macro expansion*.  Instead, substitute the
@@ -6228,12 +6519,7 @@ one name.
      Use LABEL, a string, instead of the item's name, to label the item
      in customization menus and buffers.  *Don't use a tag which is
      substantially different from the item's real name; that would
-     cause confusion.*  One legitimate case for use of `:tag' is to
-     specify a dash where normally a hyphen would be converted to a
-     space:
-
-          (defcustom cursor-in-non-selected-windows ...
-            :tag "Cursor In Non-selected Windows"
+     cause confusion.*
 
 `:group GROUP'
      Put this customization item in group GROUP.  When you use `:group'
@@ -6440,11 +6726,13 @@ File: elisp,  Node: Variable Definitions,  Next: Customization Types,  Prev: Gro
 Use `defcustom' to declare user-customizable variables.
 
  -- Macro: defcustom option standard doc [keyword value]...
-     This construct declares OPTION as a customizable user option
-     variable.  You should not quote OPTION.  The argument DOC
-     specifies the documentation string for the variable.  There is no
-     need to start it with a `*', because `defcustom' automatically
-     marks OPTION as a "user option" (*note Defining Variables::).
+     This macro declares OPTION as a customizable "user option".  You
+     should not quote OPTION.
+
+     This causes the function `user-variable-p' to return `t' when
+     given OPTION as an argument.  *Note Defining Variables::.  The
+     argument DOC specifies the documentation string for the variable.
+     (Note that there is no need to start DOC with a `*'.)
 
      The argument STANDARD is an expression that specifies the standard
      value for OPTION.  Evaluating the `defcustom' form evaluates
@@ -6474,6 +6762,12 @@ Use `defcustom' to declare user-customizable variables.
      set the variable unconditionally, without testing whether its
      value is void.  (The same feature applies to `defvar'.)  *Note
      Defining Variables::.
+
+     If you put a `defcustom' in a file that is preloaded at dump time
+     (*note Building Emacs::), and the standard value installed for the
+     variable at that time might not be correct, use
+     `custom-reevaluate-setting', described below, to re-evaluate the
+     standard value during or after Emacs startup.
 
    `defcustom' accepts the following additional keywords:
 
@@ -6560,6 +6854,14 @@ Use `defcustom' to declare user-customizable variables.
           necessary variables and functions will be defined, so there
           will not be an error.
 
+`:risky VALUE'
+     Set the variable's `risky-local-variable' property to VALUE (*note
+     File Local Variables::).
+
+`:safe FUNCTION'
+     Set the variable's `safe-local-variable' property to FUNCTION
+     (*note File Local Variables::).
+
 `:set-after VARIABLES'
      When setting variables according to saved customizations, make
      sure to set the variables VARIABLES before this one; in other
@@ -6568,10 +6870,9 @@ Use `defcustom' to declare user-customizable variables.
      work properly unless those other variables already have their
      intended values.
 
-   The `:require' keyword is useful for an option that turns on the
-operation of a certain feature.  Assuming that the package is coded to
-check the value of the option, you still need to arrange for the package
-to be loaded.  You can do that with `:require'.  *Note Common
+   It is useful to specify the `:require' keyword for an option that
+"turns on" a certain feature.  This causes Emacs to load the feature,
+if it is not already loaded, whenever the option is set.  *Note Common
 Keywords::.  Here is an example, from the library `saveplace.el':
 
      (defcustom save-place nil
@@ -6600,10 +6901,27 @@ definition.  You can do it thus:
      type of SYMBOL.
 
    Internally, `defcustom' uses the symbol property `standard-value' to
-record the expression for the standard value, and `saved-value' to
-record the value saved by the user with the customization buffer.  Both
-properties are actually lists whose car is an expression which
-evaluates to the value.
+record the expression for the standard value, `saved-value' to record
+the value saved by the user with the customization buffer, and
+`customized-value' to record the value set by the user with the
+customization buffer, but not saved.  *Note Property Lists::.  These
+properties are lists, the car of which is an expression that evaluates
+to the value.
+
+ -- Function: custom-reevaluate-setting symbol
+     This function re-evaluates the standard value of SYMBOL, which
+     should be a user option declared via `defcustom'.  (If the
+     variable was customized, this function re-evaluates the saved value
+     instead.)  This is useful for customizable options that are defined
+     before their value could be computed correctly, such as variables
+     defined in packages that are loaded at dump time, but depend on the
+     run-time information.  For example, the value could be a file whose
+     precise name depends on the hierarchy of files when Emacs runs, or
+     a name of a program that needs to be searched at run time.
+
+     A good place to put calls to this function is in the function
+     `command-line' that is run during startup (*note Startup Summary::)
+     or in the various hooks it calls.
 
 
 File: elisp,  Node: Customization Types,  Prev: Variable Definitions,  Up: Customization
@@ -6632,22 +6950,22 @@ sections.  After this symbol come a number of arguments, depending on
 the symbol.  Between the type symbol and its arguments, you can
 optionally write keyword-value pairs (*note Type Keywords::).
 
-   Some of the type symbols do not use any arguments; those are called
-"simple types".  For a simple type, if you do not use any keyword-value
-pairs, you can omit the parentheses around the type symbol.  For
-example just `string' as a customization type is equivalent to
-`(string)'.
-
-* Menu:
-
-* Simple Types::
-* Composite Types::
-* Splicing into Lists::
-* Type Keywords::
-* Defining New Types::
+   Some type symbols do not use any arguments; those are called "simple
+types".  For a simple type, if you do not use any keyword-value pairs,
+you can omit the parentheses around the type symbol.  For example just
+`string' as a customization type is equivalent to `(string)'.
 
    All customization types are implemented as widgets; see *note
 Introduction: (widget)Top, for details.
+
+* Menu:
+
+* Simple Types::            Simple customization types: sexp, integer, number,
+                              string, file, directory, alist.
+* Composite Types::         Build new types from other types or data.
+* Splicing into Lists::     Splice elements into list with `:inline'.
+* Type Keywords::           Keyword-argument pairs in a customization type.
+* Defining New Types::      Give your type a name.
 
 
 File: elisp,  Node: Simple Types,  Next: Composite Types,  Up: Customization Types
@@ -6840,380 +7158,4 @@ This section describes all the simple customization types.
 `color'
      The value must be a valid color name, and you can do completion
      with `M-<TAB>'.  A sample is provided.
-
-
-File: elisp,  Node: Composite Types,  Next: Splicing into Lists,  Prev: Simple Types,  Up: Customization Types
-
-14.4.2 Composite Types
-----------------------
-
-When none of the simple types is appropriate, you can use composite
-types, which build new types from other types or from specified data.
-The specified types or data are called the "arguments" of the composite
-type.  The composite type normally looks like this:
-
-     (CONSTRUCTOR ARGUMENTS...)
-
-but you can also add keyword-value pairs before the arguments, like
-this:
-
-     (CONSTRUCTOR {KEYWORD VALUE}... ARGUMENTS...)
-
-   Here is a table of constructors and how to use them to write
-composite types:
-
-`(cons CAR-TYPE CDR-TYPE)'
-     The value must be a cons cell, its CAR must fit CAR-TYPE, and its
-     CDR must fit CDR-TYPE.  For example, `(cons string symbol)' is a
-     customization type which matches values such as `("foo" . foo)'.
-
-     In the customization buffer, the CAR and the CDR are displayed and
-     edited separately, each according to the type that you specify for
-     it.
-
-`(list ELEMENT-TYPES...)'
-     The value must be a list with exactly as many elements as the
-     ELEMENT-TYPES given; and each element must fit the corresponding
-     ELEMENT-TYPE.
-
-     For example, `(list integer string function)' describes a list of
-     three elements; the first element must be an integer, the second a
-     string, and the third a function.
-
-     In the customization buffer, each element is displayed and edited
-     separately, according to the type specified for it.
-
-`(group ELEMENT-TYPES...)'
-     This works like `list' except for the formatting of text in the
-     Custom buffer.  `list' labels each element value with its tag;
-     `group' does not.
-
-`(vector ELEMENT-TYPES...)'
-     Like `list' except that the value must be a vector instead of a
-     list.  The elements work the same as in `list'.
-
-`(choice ALTERNATIVE-TYPES...)'
-     The value must fit at least one of ALTERNATIVE-TYPES.  For
-     example, `(choice integer string)' allows either an integer or a
-     string.
-
-     In the customization buffer, the user selects an alternative using
-     a menu, and can then edit the value in the usual way for that
-     alternative.
-
-     Normally the strings in this menu are determined automatically
-     from the choices; however, you can specify different strings for
-     the menu by including the `:tag' keyword in the alternatives.  For
-     example, if an integer stands for a number of spaces, while a
-     string is text to use verbatim, you might write the customization
-     type this way,
-
-          (choice (integer :tag "Number of spaces")
-                  (string :tag "Literal text"))
-
-     so that the menu offers `Number of spaces' and `Literal text'.
-
-     In any alternative for which `nil' is not a valid value, other than
-     a `const', you should specify a valid default for that alternative
-     using the `:value' keyword.  *Note Type Keywords::.
-
-     If some values are covered by more than one of the alternatives,
-     customize will choose the first alternative that the value fits.
-     This means you should always list the most specific types first,
-     and the most general last.  Here's an example of proper usage:
-
-          (choice (const :tag "Off" nil)
-                  symbol (sexp :tag "Other"))
-
-     This way, the special value `nil' is not treated like other
-     symbols, and symbols are not treated like other Lisp expressions.
-
-`(radio ELEMENT-TYPES...)'
-     This is similar to `choice', except that the choices are displayed
-     using `radio buttons' rather than a menu.  This has the advantage
-     of displaying documentation for the choices when applicable and so
-     is often a good choice for a choice between constant functions
-     (`function-item' customization types).
-
-`(const VALUE)'
-     The value must be VALUE--nothing else is allowed.
-
-     The main use of `const' is inside of `choice'.  For example,
-     `(choice integer (const nil))' allows either an integer or `nil'.
-
-     `:tag' is often used with `const', inside of `choice'.  For
-     example,
-
-          (choice (const :tag "Yes" t)
-                  (const :tag "No" nil)
-                  (const :tag "Ask" foo))
-
-     describes a variable for which `t' means yes, `nil' means no, and
-     `foo' means "ask."
-
-`(other VALUE)'
-     This alternative can match any Lisp value, but if the user chooses
-     this alternative, that selects the value VALUE.
-
-     The main use of `other' is as the last element of `choice'.  For
-     example,
-
-          (choice (const :tag "Yes" t)
-                  (const :tag "No" nil)
-                  (other :tag "Ask" foo))
-
-     describes a variable for which `t' means yes, `nil' means no, and
-     anything else means "ask."  If the user chooses `Ask' from the
-     menu of alternatives, that specifies the value `foo'; but any
-     other value (not `t', `nil' or `foo') displays as `Ask', just like
-     `foo'.
-
-`(function-item FUNCTION)'
-     Like `const', but used for values which are functions.  This
-     displays the documentation string as well as the function name.
-     The documentation string is either the one you specify with
-     `:doc', or FUNCTION's own documentation string.
-
-`(variable-item VARIABLE)'
-     Like `const', but used for values which are variable names.  This
-     displays the documentation string as well as the variable name.
-     The documentation string is either the one you specify with
-     `:doc', or VARIABLE's own documentation string.
-
-`(set TYPES...)'
-     The value must be a list, and each element of the list must match
-     one of the TYPES specified.
-
-     This appears in the customization buffer as a checklist, so that
-     each of TYPES may have either one corresponding element or none.
-     It is not possible to specify two different elements that match
-     the same one of TYPES.  For example, `(set integer symbol)' allows
-     one integer and/or one symbol in the list; it does not allow
-     multiple integers or multiple symbols.  As a result, it is rare to
-     use nonspecific types such as `integer' in a `set'.
-
-     Most often, the TYPES in a `set' are `const' types, as shown here:
-
-          (set (const :bold) (const :italic))
-
-     Sometimes they describe possible elements in an alist:
-
-          (set (cons :tag "Height" (const height) integer)
-               (cons :tag "Width" (const width) integer))
-
-     That lets the user specify a height value optionally and a width
-     value optionally.
-
-`(repeat ELEMENT-TYPE)'
-     The value must be a list and each element of the list must fit the
-     type ELEMENT-TYPE.  This appears in the customization buffer as a
-     list of elements, with `[INS]' and `[DEL]' buttons for adding more
-     elements or removing elements.
-
-`(restricted-sexp :match-alternatives CRITERIA)'
-     This is the most general composite type construct.  The value may
-     be any Lisp object that satisfies one of CRITERIA.  CRITERIA
-     should be a list, and each element should be one of these
-     possibilities:
-
-        * A predicate--that is, a function of one argument that has no
-          side effects, and returns either `nil' or non-`nil' according
-          to the argument.  Using a predicate in the list says that
-          objects for which the predicate returns non-`nil' are
-          acceptable.
-
-        * A quoted constant--that is, `'OBJECT'.  This sort of element
-          in the list says that OBJECT itself is an acceptable value.
-
-     For example,
-
-          (restricted-sexp :match-alternatives
-                           (integerp 't 'nil))
-
-     allows integers, `t' and `nil' as legitimate values.
-
-     The customization buffer shows all legitimate values using their
-     read syntax, and the user edits them textually.
-
-   Here is a table of the keywords you can use in keyword-value pairs
-in a composite type:
-
-`:tag TAG'
-     Use TAG as the name of this alternative, for user communication
-     purposes.  This is useful for a type that appears inside of a
-     `choice'.
-
-`:match-alternatives CRITERIA'
-     Use CRITERIA to match possible values.  This is used only in
-     `restricted-sexp'.
-
-`:args ARGUMENT-LIST'
-     Use the elements of ARGUMENT-LIST as the arguments of the type
-     construct.  For instance, `(const :args (foo))' is equivalent to
-     `(const foo)'.  You rarely need to write `:args' explicitly,
-     because normally the arguments are recognized automatically as
-     whatever follows the last keyword-value pair.
-
-
-File: elisp,  Node: Splicing into Lists,  Next: Type Keywords,  Prev: Composite Types,  Up: Customization Types
-
-14.4.3 Splicing into Lists
---------------------------
-
-The `:inline' feature lets you splice a variable number of elements
-into the middle of a list or vector.  You use it in a `set', `choice'
-or `repeat' type which appears among the element-types of a `list' or
-`vector'.
-
-   Normally, each of the element-types in a `list' or `vector'
-describes one and only one element of the list or vector.  Thus, if an
-element-type is a `repeat', that specifies a list of unspecified length
-which appears as one element.
-
-   But when the element-type uses `:inline', the value it matches is
-merged directly into the containing sequence.  For example, if it
-matches a list with three elements, those become three elements of the
-overall sequence.  This is analogous to using `,@' in the backquote
-construct.
-
-   For example, to specify a list whose first element must be `baz' and
-whose remaining arguments should be zero or more of `foo' and `bar',
-use this customization type:
-
-     (list (const baz) (set :inline t (const foo) (const bar)))
-
-This matches values such as `(baz)', `(baz foo)', `(baz bar)' and `(baz
-foo bar)'.
-
-   When the element-type is a `choice', you use `:inline' not in the
-`choice' itself, but in (some of) the alternatives of the `choice'.
-For example, to match a list which must start with a file name,
-followed either by the symbol `t' or two strings, use this
-customization type:
-
-     (list file
-           (choice (const t)
-                   (list :inline t string string)))
-
-If the user chooses the first alternative in the choice, then the
-overall list has two elements and the second element is `t'.  If the
-user chooses the second alternative, then the overall list has three
-elements and the second and third must be strings.
-
-
-File: elisp,  Node: Type Keywords,  Next: Defining New Types,  Prev: Splicing into Lists,  Up: Customization Types
-
-14.4.4 Type Keywords
---------------------
-
-You can specify keyword-argument pairs in a customization type after the
-type name symbol.  Here are the keywords you can use, and their
-meanings:
-
-`:value DEFAULT'
-     This is used for a type that appears as an alternative inside of
-     `choice'; it specifies the default value to use, at first, if and
-     when the user selects this alternative with the menu in the
-     customization buffer.
-
-     Of course, if the actual value of the option fits this
-     alternative, it will appear showing the actual value, not DEFAULT.
-
-     If `nil' is not a valid value for the alternative, then it is
-     essential to specify a valid default with `:value'.
-
-`:format FORMAT-STRING'
-     This string will be inserted in the buffer to represent the value
-     corresponding to the type.  The following `%' escapes are available
-     for use in FORMAT-STRING:
-
-    `%[BUTTON%]'
-          Display the text BUTTON marked as a button.  The `:action'
-          attribute specifies what the button will do if the user
-          invokes it; its value is a function which takes two
-          arguments--the widget which the button appears in, and the
-          event.
-
-          There is no way to specify two different buttons with
-          different actions.
-
-    `%{SAMPLE%}'
-          Show SAMPLE in a special face specified by `:sample-face'.
-
-    `%v'
-          Substitute the item's value.  How the value is represented
-          depends on the kind of item, and (for variables) on the
-          customization type.
-
-    `%d'
-          Substitute the item's documentation string.
-
-    `%h'
-          Like `%d', but if the documentation string is more than one
-          line, add an active field to control whether to show all of
-          it or just the first line.
-
-    `%t'
-          Substitute the tag here.  You specify the tag with the `:tag'
-          keyword.
-
-    `%%'
-          Display a literal `%'.
-
-`:action ACTION'
-     Perform ACTION if the user clicks on a button.
-
-`:button-face FACE'
-     Use the face FACE (a face name or a list of face names) for button
-     text displayed with `%[...%]'.
-
-`:button-prefix PREFIX'
-`:button-suffix SUFFIX'
-     These specify the text to display before and after a button.  Each
-     can be:
-
-    `nil'
-          No text is inserted.
-
-    a string
-          The string is inserted literally.
-
-    a symbol
-          The symbol's value is used.
-
-`:tag TAG'
-     Use TAG (a string) as the tag for the value (or part of the value)
-     that corresponds to this type.
-
-`:doc DOC'
-     Use DOC as the documentation string for this value (or part of the
-     value) that corresponds to this type.  In order for this to work,
-     you must specify a value for `:format', and use `%d' or `%h' in
-     that value.
-
-     The usual reason to specify a documentation string for a type is to
-     provide more information about the meanings of alternatives inside
-     a `:choice' type or the parts of some other composite type.
-
-`:help-echo MOTION-DOC'
-     When you move to this item with `widget-forward' or
-     `widget-backward', it will display the string MOTION-DOC in the
-     echo area.  In addition, MOTION-DOC is used as the mouse
-     `help-echo' string and may actually be a function or form evaluated
-     to yield a help string.  If it is a function, it is called with one
-     argument, the widget.
-
-`:match FUNCTION'
-     Specify how to decide whether a value matches the type.  The
-     corresponding value, FUNCTION, should be a function that accepts
-     two arguments, a widget and a value; it should return non-`nil' if
-     the value is acceptable.
-
-`:validate FUNCTION'
-     Specify a validation function for input.  FUNCTION takes a widget
-     as an argument, and should return `nil' if the widget's current
-     value is valid for the widget.  Otherwise, it should return the
-     widget containing the invalid data, and set that widget's `:error'
-     property to a string explaining the error.
-
 

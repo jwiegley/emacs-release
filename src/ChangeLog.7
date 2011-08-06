@@ -22,7 +22,7 @@
 
 1998-08-18  Kenichi Handa  <handa@etl.go.jp>
 
-	* ccl.c (CCL_READ_CHAR): If eof is encounterd while processing the
+	* ccl.c (CCL_READ_CHAR): If eof is encountered while processing the
 	last block, don't just finish but processes eol block of the
 	current CCL program.
 	(ccl_driver): Add a new jump label ccl_repeat for the above change.
@@ -124,7 +124,7 @@
 
 1998-08-13  Andrew Innes  <andrewi@harlequin.co.uk>
 
-	* w32.c (stat): Fall-back to default behaviour when we cannot get
+	* w32.c (stat): Fall-back to default behavior when we cannot get
 	accurate information on file attributes.
 
 1998-08-12  Richard Stallman  <rms@psilocin.ai.mit.edu>
@@ -312,7 +312,7 @@
 	(coding_category_name): Include "coding-category-ccl".
 	(detect_coding_ccl): New function.
 	(setup_coding_system): Setup coding->spec.ccl.valid_codes from the
-	coding system priority `valid-codes' for CCL based coding systesm.
+	coding system priority `valid-codes' for CCL based coding systems.
 	(detect_coding_mask): Check also a CCL based coding system.
 	(Fupdate_coding_systems_internal): Renamed from
 	Fupdate_iso_coding_systems.
@@ -372,7 +372,7 @@
 	* fileio.c (Finsert_file_contents): Call Vset_auto_coding_function
 	with two arguments.
 	(Fwrite_region): If buffer-file-coding-system is set locally, use
-	the coding system whithout checking file-coding-system-alist.
+	the coding system without checking file-coding-system-alist.
 	(syms_of_fileio): Docstring of set-auto-coding-function adjusted
 	for the change of argument number.
 
@@ -485,7 +485,7 @@
 	* ccl.c: Typo in comments fixed.
 
 	* coding.c (DECODE_ISO_CHARACTER): While decoding two-byte code,
-	if the sencond byte is invalid, produce the first byte as is.
+	if the second byte is invalid, produce the first byte as is.
 
 	* fontset.c (fs_load_font): Typo in comments fixed.
 
@@ -707,7 +707,7 @@
 
 	* xterm.c (x_list_fonts): Keep alloca usage simple.
 
-1998-06-20  Per Starback  <starback@strindberg.ling.uu.se>
+1998-06-20  Per Starbäck  <starback@strindberg.ling.uu.se>
 
 	* xdisp.c, charset.h, coding.c, emacs.c: Doc fixes.
 
@@ -723,7 +723,7 @@
 	* process.c (read_process_output): Handle carryover correctly.
 
 	* xterm.c (dumpglyphs): Check the case that FACE_FONT (face) is
-	NULL.  While displaing cursor with non-default face, if the
+	NULL.  While displaying cursor with non-default face, if the
 	variable `font' is NULL, don't set GCFont.
 
 1998-06-19  Richard Stallman  <rms@gnu.org>
@@ -808,7 +808,7 @@
 1998-06-12  Ken'ichi Handa  <handa@melange.gnu.org>
 
 	* fileio.c (Finsert_file_contents): Undo the previous change for
-	handling set-ault-coding.
+	handling set-auto-coding.
 
 1998-06-11  Richard Stallman  <rms@psilocin.ai.mit.edu>
 
@@ -911,10 +911,9 @@
 	(scan_lists): Likewise.
 	(prev_char_comstart_first): New function.
 
-	* syntax.c
 1998-06-05  Andrew Innes  <andrewi@harlequin.co.uk>
 
-	* w32.c: #include sys/file.h
+	* w32.c: #include sys/file.h.
 	(sys_access): Provide our own implementation which recognizes D_OK.
 	(is_exec): New function.
 	(stat): Use it.
@@ -948,7 +947,7 @@
 	in a string's intervals start from zero.
 	(validate_interval_range, interval_of, Fnext_property_change)
 	(property_change_between_p, Fnext_single_property_change)
-	(Fprevious_property_change, Fprevious_single_property_change):
+	(Fprevious_property_change, Fprevious_single_property_change)
 	(Ftext_property_any, Ftext_property_not_all): Implement that.
 
 	* textprop.c: Undo previous change.
@@ -1241,7 +1240,7 @@
 	* coding.h: Change terms unify/unification to
 	translate/translation respectively throughout the file.
 
-	* fns.c (concat): Fix bug in concatinating a list of multibyte and
+	* fns.c (concat): Fix bug in concatenating a list of multibyte and
 	unibyte characters.
 
 	* lisp.h (Vnonascii_translation_table): Name changed from
@@ -1481,7 +1480,7 @@
 1998-05-07  Eli Zaretskii  <eliz@mescaline.gnu.org>
 
 	* process.c (init_process, syms_of_process) [not subprocesses]:
-	Make definition consistent with prototypes on lisp.h
+	Make definition consistent with prototypes on lisp.h.
 
 1998-05-07  Kenichi Handa  <handa@etl.go.jp>
 
@@ -1777,7 +1776,7 @@
 
 	* emacs.c (standard_args): Apply --unibyte/multibyte after --nw.
 
-	* lisp.h: Include initial_obarray from lread.c
+	* lisp.h: Include initial_obarray from lread.c.
 
 	* data.c (set_internal): Test keywordness only in initial obarray.
 
@@ -1939,7 +1938,7 @@
 	Insist on MAX_LENGTH_OF_MULTI_BYTE_FORM bytes when checking
 	for read_buffer full; this way need not check specially for multibyte.
 
-	* emacs.c: Include buffer.h
+	* emacs.c: Include buffer.h.
 	(main): When handling --unibyte, mark all existing
 	buffers as unibyte; but don't handle it when dumping.
 
@@ -2168,7 +2167,6 @@
 	CCL_ReadMultibyteCharacter.
 	(CCL_WriteMultibyteChar2): Macro name changed from
 	CCL_WriteMultibyteChar2.
-	(CCL_
 	(MAX_TABLE_SET_LEVEL): New macro.
 	(tr_stack): New type.
 	(translate_stack, translate_stack_pointer): New variables.
@@ -2176,10 +2174,10 @@
 	(ccl_driver): Adjusted for the above changes.
 	(resolve_symbol_ccl_program): New function.
 	(Fccl_execute): The arg CCL-PROGRAM can be a symbol of CCL
-	program.  If CCL-PRGRAM is a vector, convert symbols in it to ID
+	program.  If CCL-PROGRAM is a vector, convert symbols in it to ID
 	numbers by resolve_symbol_ccl_program.
 	(Fccl_execute_on_string): Likewise.
-	(Fregister_ccl_program): If the arg CCL-PRGRAM is a vector,
+	(Fregister_ccl_program): If the arg CCL-PROGRAM is a vector,
 	convert symbols in it to ID numbers by resolve_symbol_ccl_program.
 
 	* ccl.h (Vccl_program_table, Qccl_program_idx): Extern them.
@@ -2217,7 +2215,7 @@
 	* window.c (Fset_window_configuration): Fix mixing of Lisp_Object
 	and int.
 
-	* sysdep.c (init_sys_modes): Fix mixing of Lisp_Object and int
+	* sysdep.c (init_sys_modes): Fix mixing of Lisp_Object and int.
 
 	* search.c (compile_pattern, compile_pattern_1): Fix mixing of
 	Lisp_Object and int.
@@ -2246,7 +2244,7 @@
 	* fileio.c (Fwrite_region): Fix mixing of Lisp_Object and int.
 
 	* editfns.c (Fchar_after, Fchar_before): Fix mixing of Lisp_Object
-	and int
+	and int.
 
 	* coding.c (code_convert_region): Fix mixing of Lisp_Object and
 	int.
@@ -2624,7 +2622,7 @@
 1998-03-21  Richard Stallman  <rms@delysid.gnu.org>
 
 	* dired.c (Fdirectory_files):
-	In FULL case, compute number of characters
+	In FULL case, compute number of characters.
 
 	* fns.c (substring_both, Fsubstring): Use make_specified_string.
 	(concat): Make string result unibyte or multibyte as appropriate.
@@ -2776,8 +2774,8 @@
 
 	* cmds.c (internal_self_insert): Pass new arg to replace_range.
 
-	* insdel.c (insert_1_both, insert_from_string_1, insert_from_buffer_1):
-	(adjust_before_replace, adjust_after_replace, replace_range):
+	* insdel.c (insert_1_both, insert_from_string_1, insert_from_buffer_1)
+	(adjust_before_replace, adjust_after_replace, replace_range)
 	(del_range_2): Call record_delete the new way.
 	Use make_buffer_string_both to make the string to pass.
 
@@ -2805,7 +2803,7 @@
 	(menu_bar_one_keymap): Moved some code to menu_bar_item.
 	(menu_bar_item): Rewritten to use parse_menu_item.
 	(menu_bar_item_1): Function deleted.
-	(QCenable, QCvisible, QChelp, QCfilter, QCbutton, QCtoggle, QCradio):
+	(QCenable, QCvisible, QChelp, QCfilter, QCbutton, QCtoggle, QCradio)
 	(Qmenu_alias): New variables.
 	(syms_of_keyboard): Initialize them, and item_properties.
 
@@ -3077,7 +3075,7 @@
 1998-03-04  Kenichi HANDA  <handa@etl.go.jp>
 
 	* buffer.c (Fset_buffer_multibyte): Fix arg for chars_in_text.
-	Be sure not to have a multibyte sequence striding over the GAP
+	Be sure not to have a multibyte sequence striding over the GAP.
 
 	* charset.c (strwidth): Make it work for invalid bytes sequence.
 	(Fstring_width): Give byte length of STR to strwidth.
@@ -3311,17 +3309,17 @@
 
 1998-02-19  Kenichi Handa  <handa@etl.go.jp>
 
-	* buffer.c (advance_to_char_boundary): Make the behaviour
+	* buffer.c (advance_to_char_boundary): Make the behavior
 	consistent with INC_POS.
 
 	* ccl.c (Fccl_execute_on_string): Add new arg UNIBYTE-P.
 
 	* charset.h (INC_POS): Use macro BASE_LEADING_CODE_P.
-	(DEC_POS): Make the behaviour consistent with INC_POS.
+	(DEC_POS): Make the behavior consistent with INC_POS.
 	(BUF_INC_POS, BUF_DEC_POS): Likewise.
 
 	* charset.c (invalid_character): New function.
-	(chars_in_text): Make the behaviour consistent with INC_POS.
+	(chars_in_text): Make the behavior consistent with INC_POS.
 	(multibyte_chars_in_text): Likewise.
 	(str_cmpchar_id): Likewise.
 	(non_ascii_char_to_string): Call invalid_character.
@@ -3370,7 +3368,7 @@
 	* search.c (search_buffer): Update POS_BYTE for regexp search.
 
 	* xdisp.c (display_text_line): Handling of a wide-column character
-	fixed.  Make the behaviour consistent with INC_POS.
+	fixed.  Make the behavior consistent with INC_POS.
 
 1998-02-18  Richard Stallman  <rms@gnu.org>
 
@@ -3682,7 +3680,7 @@
 	New macros.
 	(Qraw_text): Extern it.
 
-	* coding.c (DECODE_CHARACTER_ASCII): Update coding->produced_char;
+	* coding.c (DECODE_CHARACTER_ASCII): Update coding->produced_char.
 	(DECODE_CHARACTER_DIMENSION1): Likewise.
 	(Qraw_text, Qcoding_category): New variables.
 	(syms_of_coding): Intern and staticpro them.
@@ -3704,7 +3702,7 @@
 	Update coding->heading_ascii.
 	(detect_eol_type): New arg SKIP.
 	(detect_eol): Adjusted for the change of detect_eol_type.
-	(ccl_codign_driver): New function.
+	(ccl_coding_driver): New function.
 	(decode_coding): Arg CONSUMED deleted, and the meaning of return
 	value changed.  Update members produced, produced_char, consumed,
 	consumed_char of the struct *coding.
@@ -3726,7 +3724,7 @@
 	string.
 
 	* fileio.c (Finsert_file_contents): Adjusted for the change of
-	struct coding_system and function decode_coding.  For normail file
+	struct coding_system and function decode_coding.  For normal file
 	reading, use code_convert_region.
 	(Fwrite_region): Adjusted for the change of struct coding_system.
 	(e_write): Adjusted for the change of encode_coding.
@@ -3826,7 +3824,7 @@
 	(CCL_IterateMultipleMap, CCL_TranslateMultipleMap):
 	New macros for CCL Commands.
 	(EXCMD): New macro.
-	(ccl_driver): New case lable `CCL_Extention'.
+	(ccl_driver): New case label `CCL_Extention'.
 	(setup_ccl_program): Initialize the member `private_state' of CCL.
 	(Fregister_ccl_program): Delete unused variable IDX.
 	(Fregister_ccl_translation_table): New function.
@@ -4166,7 +4164,7 @@
 	insert_from_string.  Scan string by bytes and chars.
 	(Ftry_completion): Use size_byte while comparing.
 	(Fall_completions): Use size_byte while comparing.
-	(test_completion):
+	(test_completion): Pass both kinds of size to oblookup.
 
 	* editfns.c (syms_of_editfns): Delete defsubr for sref.
 
@@ -4216,8 +4214,8 @@
 	* keyboard.c (read_char): Use Faref on Vkeyboard_translate_table
 	if it is a string.
 	(apply_modifiers_uncached): New arg base_len_byte.  Calls changed.
-	(read_char_minibuf_menu_prompt):
-	(read_key_sequence): Access buffer's downcase_table with XCHAR_TABLE.
+	(read_char_minibuf_menu_prompt, read_key_sequence): Access buffer's
+	downcase_table with XCHAR_TABLE.
 	(Fexecute_extended_command): Use Faref to access FUNCTION.
 	Use size_byte of BINDING.
 	(stuff_buffered_input): Use size_byte of STUFFSTRING.
@@ -4272,9 +4270,8 @@
 	(Fmessage, Fmessage_box): Update message_text based on size_byte.
 
 	* insdel.c (insert_from_string): New args POS_BYTE, LENGTH.
-	(insert_from_string_before_markers):
-	(insert_from_string_1): New arg POS_BYTE.  Swap args NCHARS, NBYTES.
-	Don't fail to use POS_BYTE!
+	(insert_from_string_before_markers, insert_from_string_1): New arg
+	POS_BYTE.  Swap args NCHARS, NBYTES. Don't fail to use POS_BYTE!
 	(insert_from_buffer_1): Get both inschars and insbytes from NEW.
 
 	* alloc.c (make_uninit_multibyte_string): New function.
@@ -4358,7 +4355,6 @@
 	(insert_1, indented_beyond_p): Decls changed.
 	(move_gap_both, del_range_byte, del_range_both, del_range_2)
 	(scan_newline, Ffile_locked_p): New decls.
-	(struct Lisp_Marker):
 
 	* search.c (scan_newline): Always restore prev value of immediate_quit.
 
@@ -4803,11 +4799,11 @@
 
 	* keymap.c (describe_map): Fix decl of arg ELT_DESCRIBER.
 
-	* process.c (create_process, deactivate_process, close_process_descs):
+	* process.c (create_process, deactivate_process, close_process_descs)
 	(kill_buffer_processes, status_notify): Return void.
 	(Fstart_process): Cast arg to create_process.
 
-	* undo.c (record_insert, record_delete, record_marker_adjustment):
+	* undo.c (record_insert, record_delete, record_marker_adjustment)
 	(record_change, record_first_change, record_property_change):
 	Return void.
 
@@ -4953,7 +4949,7 @@
 	* buffer.h: Add more prototypes and function declarations.
 
 	* print.c (printchar): Declare `work' as unsigned char.
-	(internal_with_output_to_temp_buffer): Protoype parameter
+	(internal_with_output_to_temp_buffer): Prototype parameter
 	FUNCTION.
 	(Ferror_message_string): Remove extra argument of
 	print_error_message.
@@ -5143,7 +5139,7 @@
 	* charset.h (CHAR_VALID_P): Renamed from VALID_CHAR_P, new
 	argument GENERICP.  Call char_valid_p for a non-ASCII character.
 
-	* charset.c (char_valid_p): New function
+	* charset.c (char_valid_p): New function.
 	(Fchar_valid_p): New function.
 	(syms_of_charset): Declare it as a Lisp function.
 
@@ -5200,7 +5196,7 @@
 
 1997-10-21  Kenichi Handa  <handa@etl.go.jp>
 
-	* Makefile.in (xselect.o): Depend on buffer.h
+	* Makefile.in (xselect.o): Depend on buffer.h.
 
 	* coding.c (Qcoding_system_spec): Deleted.
 	(Vcoding_system_list, Vcoding_system_alist): New variables.
@@ -5292,7 +5288,7 @@
 
 	* emacs.c (shut_down_emacs): Call `dos_cleanup'.
 
-	* msdos.c (mouse_get_pos): Remove reduntant call to `int86'.
+	* msdos.c (mouse_get_pos): Remove redundant call to `int86'.
 	Clear the mouse-moved flag for all frames.  Update last mouse
 	position.
 	(IT_set_menu_bar_lines): Remove.
@@ -5306,9 +5302,9 @@
 	* dosfns.c (__tb): Define.
 	(restore_parent_vm_title): New function.
 	(ms_windows_version): New function.
-	(w95_set_virtual_machine_title): New function
+	(w95_set_virtual_machine_title): New function.
 	(x_set_title): New function.
-	(dos_cleanup): New function
+	(dos_cleanup): New function.
 	(syms_of_dosfns): Define `dos-windows-version' Lisp variable.
 	(init_dosfns): Compute MS-Windows version and save the original
 	title of our DOS box.
@@ -5757,7 +5753,7 @@
 	Pass in new parameter to w32_kbd_mods_to_emacs.
 	Handle WM_DISPLAYCHANGE, WINDOWPOSCHANGED, ACTIVATE, SHOWWINDOW,
 	INITMENU, and ACTIVATEAPP messages.
-	Explicitly check for visibile and obscured frames, and to see if
+	Explicitly check for visible and obscured frames, and to see if
 	any event should cause a redisplay.
 
 	(x_display_bar_cursor): Don't check whether frame is updating here.
@@ -5844,7 +5840,7 @@
 	placed in the main popup instead of a blank-named submenu.  This
 	seems to be an undocumented feature of x-popup-menu.
 	(list_of_items): New argument HMENU.
-	Use 1 and 0 instead of Qt and Qnil for enable in add_menu_item
+	Use 1 and 0 instead of Qt and Qnil for enable in add_menu_item.
 
 1997-09-02  Geoff Voelker  <voelker@cs.washington.edu>
 
@@ -6011,7 +6007,7 @@
 	detect it as no-conversion.
 	(decode_coding): Handle coding_type_raw_text.
 	(encode_coding): Likewise.
-	(Fdetect_coding_region): Ajusted for the above changes.
+	(Fdetect_coding_region): Adjusted for the above changes.
 	(shrink_conversion_area): Handle coding_type_raw_text.
 
 	* coding.h (coding_type): New member coding_type_raw_text.
@@ -6066,7 +6062,7 @@
 	(Fread_string): New argument INHERIT_INPUT_METHOD.
 	(Fread_no_blanks_input): Likewise.
 	(Fread_command): Call Fcompleting_read with INHERIT_INPUT_METHOD nil.
-	(Fread_function, Fread_variable, Fread_buffer): Likewise
+	(Fread_function, Fread_variable, Fread_buffer): Likewise.
 	(Fcompleting_read): New argument INHERIT_INPUT_METHOD.
 
 	* lisp.h (DEFUN_ARGS_8): New macro.
@@ -6437,7 +6433,7 @@
 	* callproc.c (Fcall_process_region): Use cdr part (not car part)
 	of Vdefault_process_coding_system for writing out text.
 
-	* coding.c (detect_coding_iso2022): Do not exclude posibility of
+	* coding.c (detect_coding_iso2022): Do not exclude possibility of
 	7-bit encoding when designation to G1 occurs.  If CSI, SS2, or SS3
 	is found, return CODING_CATEGORY_MASK_ISO_8_ELSE.
 	(Fdetect_coding_region): Doc-string modified.
@@ -6495,7 +6491,7 @@
 1997-07-31  Ken'ichi Handa  <handa@psilocin.gnu.ai.mit.edu>
 
 	* coding.c (encode_coding_iso2022): When source data ends not at
-	character boundardy, set data in coding->carryover correctly, and
+	character boundary, set data in coding->carryover correctly, and
 	set SRC to SRC_END.
 	(encode_coding_sjis_big5): Likewise.
 	(encode_coding): Don't set coding->carryover_size to 0.
@@ -6606,8 +6602,7 @@
 
 1997-07-25  Ken'ichi Handa  <handa@psilocin.gnu.ai.mit.edu>
 
-	* fontset.c (syms_of_fontset): Set Vhighlight_wrong_size_font to
-	Qnil.
+	* fontset.c (syms_of_fontset): Set Vhighlight_wrong_size_font to Qnil.
 
 	* coding.h (CODING_REQUIRE_TEXT_CONVERSION)
 	(CODING_REQUIRE_EOL_CONVERSION, CODING_REQUIRE_CONVERSION): Deleted.
@@ -6615,12 +6610,11 @@
 	(CODING_MAY_REQUIRE_NO_CONVERSION): New macro.
 
 	* fileio.c (Finsert_file_contents): Use new macros
-	CODING_MAY_REQUIRE_NO_CONVERSION and
-	CODING_MAY_REQUIRE_NO_CONVERSION.
+	CODING_MAY_REQUIRE_NO_CONVERSION and CODING_REQUIRE_NO_CONVERSION.
 	(Fwrite_region): Correct the logic for deciding coding system.
 
 	* process.c (read_process_output): Use new macro
-	CODING_REQUIRE_NO_CONVERSION
+	CODING_REQUIRE_NO_CONVERSION.
 	(send_process): Use new macro CODING_MAY_REQUIRE_NO_CONVERSION.
 
 	* xterm.c (dumpglyphs): Check the member `encoding' of *FONTP while
@@ -6778,9 +6772,9 @@
 
 1997-07-15  Kenichi HANDA  <handa@etl.go.jp>
 
-	* coding.h (CODING_CATEGORY_IDX_ISO_7_ELSE): This macro is deleted
+	* coding.h (CODING_CATEGORY_IDX_ISO_7_ELSE): This macro is deleted.
 	(CODING_CATEGORY_IDX_ISO_7_ELSE): New macro.
-	(CODING_CATEGORY_IDX_ISO_8_ELSE): New macro
+	(CODING_CATEGORY_IDX_ISO_8_ELSE): New macro.
 	(CODING_CATEGORY_MASK_ISO_ELSE): This macro is deleted.
 	(CODING_CATEGORY_MASK_ISO_7_ELSE): New macro.
 	(CODING_CATEGORY_MASK_ISO_8_ELSE): New macro.
@@ -6993,7 +6987,7 @@
 	* syntax.h (struct gl_state_s): New field `offset'.
 	(SETUP_SYNTAX_TABLE_FOR_OBJECT): Set offset field.
 	(SETUP_SYNTAX_TABLE): Clear offset field.
-	(UPDATE_SYNTAX_TABLE, UPDATE_SYNTAX_TABLE_FORWARD):
+	(UPDATE_SYNTAX_TABLE, UPDATE_SYNTAX_TABLE_FORWARD)
 	(UPDATE_SYNTAX_TABLE_BACKWARD): Use the offset field.
 
 	* s/sol2.h (LIBS_SYSTEM): Add -lkvm and -lelf.
@@ -7012,7 +7006,7 @@
 
 	* window.c: Include blockinput.h.
 	(Fset_window_configuration): Block input around frobbing the frame.
-	Preseve point in the current buffer if we do not switch
+	Preserve point in the current buffer if we do not switch
 	to a different one.
 
 1997-07-06  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
@@ -7127,7 +7121,7 @@
 
 1997-07-02  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
-	* process.c (send_process): Make buf and temp_buf  `unsigned char *'.
+	* process.c (send_process): Make buf and temp_buf `unsigned char *'.
 
 	* buffer.c (overlay_strings): Use unsigned char for things
 	that relate to overlay_str_buf.
@@ -7373,7 +7367,7 @@
 	* fontset.h (font_idx_temp): Extern it.
 	(FS_LOAD_FONT): New macro.
 
-	* fontset.c (font_idx_temp): New temprary variable used in
+	* fontset.c (font_idx_temp): New temporary variable used in
 	FS_LOAD_FONT.
 
 	* xfaces.c (Fset_face_attribute_internal): Use FS_LOAD_FONT
@@ -7383,7 +7377,7 @@
 	(x_new_fontset): If frame F has already using FONTSET, avoid the
 	duplicated work.  Use FS_LOAD_FONT.
 	(x_list_fonts): Call Fassoc to search Valternate_charset_table.
-	(x_load_font): Get around a buf of XListFonts
+	(x_load_font): Get around a buf of XListFonts.
 
 1997-06-20  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
@@ -7530,7 +7524,7 @@
 	name to iso-latin-1.
 	(lisp_data_to_selection_data): Likewise.
 
-	* xterm.c (dumpglyph): Shift baseline for such a font that is
+	* xterm.c (dumpglyphs): Shift baseline for such a font that is
 	shorter but ascent or descent exceed the line height.
 	For a larger font, draw a small hook at right-bottom edge instead
 	of a rectangle.
@@ -7619,7 +7613,7 @@
 	* Makefile.in (XOBJ, MSDOS_OBJ, SOME_MACHINE_OBJECTS): Delete xfaces.o.
 	(obj): Add xfaces.o.
 	(FACE_SUPPORT, SOME_MACHINE_LISP): Delete faces.elc.
-	(shortlisp, lisp): Add faces.elc
+	(shortlisp, lisp): Add faces.elc.
 
 	* emacs.c (main): Call syms_of_xfaces whenever ! HAVE_NTGUI.
 
@@ -7641,7 +7635,7 @@
 
 	* xterm.c (process_expose_from_menu, XTread_socket):
 	Set has_been_visible field.
-	(x_make_frame_visible): Don't do XMoveWindow unles has_been_visible.
+	(x_make_frame_visible): Don't do XMoveWindow unless has_been_visible.
 
 	* xterm.h (struct x_output): New field has_been_visible.
 
@@ -7869,7 +7863,7 @@
 1997-05-18  Erik Naggum  <erik@naggum.no>
 
 	* lisp.h (Vtty_erase_char): Declared.
-	* keyboard.c (Vtty_erase_char): Variable defined
+	* keyboard.c (Vtty_erase_char): Variable defined.
 	(syms_of_keyboard): Set up Lisp variable.
 	Also set up `num-nonmacro-input-chars' to report actual keystrokes.
 	* sysdep.c (init_sys_modes): Initialize Vtty_erase_char if
@@ -7907,7 +7901,7 @@
 	(r_alloc_init) [DOUG_LEA_MALLOC]: Call mallopt,
 	instead of setting __malloc_extra_blocks.
 
-Thu May 15 22:21:18 1997  Ken'ichi Handa  <handa@diazepam.gnu.ai.mit.edu>
+1997-05-15  Ken'ichi Handa  <handa@diazepam.gnu.ai.mit.edu>
 
 	* Makefile.in (charset.o): Add disptab.h in dependency list.
 
@@ -7924,7 +7918,7 @@ Thu May 15 22:21:18 1997  Ken'ichi Handa  <handa@diazepam.gnu.ai.mit.edu>
 	* fontset.c (fontset_pattern_regexp): Cast to (char *) before
 	assigning to P0.
 
-	* ccl.c (struct ccl_prog_stack): Declear the member ccl_prog as
+	* ccl.c (struct ccl_prog_stack): Declare the member ccl_prog as
 	Lisp_Object *.
 
 	* editfns.c: Declare Fuser_full_name as Lisp_Object in advance to
@@ -8104,7 +8098,7 @@ Thu May 15 22:21:18 1997  Ken'ichi Handa  <handa@diazepam.gnu.ai.mit.edu>
 
 	* fontset.c (Vfontset_alias_alist): New variable.
 	(fontset_pattern_regexp): Delete code for handling nickname of a
-	fonset.  It is now handled in Fquery_fontset by consulting
+	fontset.  It is now handled in Fquery_fontset by consulting
 	Vfontset_alias_alist.
 	(Fquery_fontset): Handle Vfontset_alias_alist.
 	(syms_of_fontset): Terminate each line by `\n\' in doc-string of
@@ -8113,7 +8107,7 @@ Thu May 15 22:21:18 1997  Ken'ichi Handa  <handa@diazepam.gnu.ai.mit.edu>
 	and clip-large-size-font modified.
 
 	* xfns.c (Fx_create_frame): Delete code for handling the X
-	resouce "Fontset".
+	resource "Fontset".
 
 	* xselect.c (selection_data_to_lisp_data): If TYPE is `STRING'
 	and DATA contains 8-bit codes, decode them as Latin-1 characters.
@@ -8375,7 +8369,7 @@ Thu May 15 22:21:18 1997  Ken'ichi Handa  <handa@diazepam.gnu.ai.mit.edu>
 	(char_quoted): Move earlier, update gl_state when needed.
 	(find_defun_start): Update gl_state when needed.
 	(back_comment): New function.
-	(Scomment_fence, Sstring_fence): New delimeter char classes
+	(Scomment_fence, Sstring_fence): New delimiter char classes
 	denoted by `!' and `|'.
 	(Fchar_syntax, Fmatching_paren): Update gl_state to whole-buffer state.
 	(scan_words): Update gl_state when needed.
@@ -8578,12 +8572,11 @@ Thu May 15 22:21:18 1997  Ken'ichi Handa  <handa@diazepam.gnu.ai.mit.edu>
 	* xterm.c (dumpglyphs): Clip and highlight glyphs displayed with
 	fonts of wrong size.
 
-Sun Apr  6 10:26:53 1997  Eli Zaretskii  <eliz@wombat.gnu.ai.mit.edu>
+1997-04-06  Eli Zaretskii  <eliz@wombat.gnu.ai.mit.edu>
 
 	* emacs.c (init_cmdargs) [MSDOS]: Make the change that sets
 	`installation-directory' if `info' is found as its subdirectory or
 	sibling, be conditioned on MSDOS (it makes trouble on Unix).
-
 
 1997-04-05  Richard Stallman  <rms@psilocin.gnu.ai.mit.edu>
 
@@ -8818,7 +8811,7 @@ Sun Apr  6 10:26:53 1997  Eli Zaretskii  <eliz@wombat.gnu.ai.mit.edu>
 	* coding.c (setup_coding_system): Now, flags of ISO2022 coding
 	systems contains charsets instead of charset IDs.  Correct setting
 	coding->symbol and coding->eol_type.  The performance improved.
-	(encode_coding) : Fix typo ("=" -> "==").
+	(encode_coding): Fix typo ("=" -> "==").
 	(detect_coding_iso2022, decode_coding_iso2022): Make the code
 	robust against invalid SI and SO.
 	(ENCODE_RESET_PLANE_AND_REGISTER): Argument `eol' is deleted.
@@ -8914,7 +8907,7 @@ Sun Apr  6 10:26:53 1997  Eli Zaretskii  <eliz@wombat.gnu.ai.mit.edu>
 
 1997-02-22  Tsugutomo ENAMI  <enami@ba2.so-net.or.jp>
 
-	* regex.c: Include charset.h and category.h
+	* regex.c: Include charset.h and category.h.
 
 	[!emacs] (BASE_LEADING_CODE_P, WORD_BOUNDARY_P, CHAR_HEAD_P)
 	(SINGLE_BYTE_CHAR_P, SAME_CHARSET_P, MULTIBYTE_FORM_LENGTH)
@@ -9231,7 +9224,7 @@ Sun Apr  6 10:26:53 1997  Eli Zaretskii  <eliz@wombat.gnu.ai.mit.edu>
 	* lread.c: Include charset.h.
 	(Vload_source_file_function): New variable.
 	(Fload): Call Vload_source_file_function if defined while loading
-	an Emacs Lisp source file.  */
+	an Emacs Lisp source file.
 	(read_multibyte): New function.
 	(read_escape): Handle multibyte characters.
 	(read1): Correct the value of size_in_chars of a bool vector.
@@ -9407,7 +9400,7 @@ Sun Apr  6 10:26:53 1997  Eli Zaretskii  <eliz@wombat.gnu.ai.mit.edu>
 
 	* emacs.c (main): Don't extend stack limit too far.
 
-Sun Feb  2 10:36:26 1997  Eli Zaretskii  <eliz@wombat.gnu.ai.mit.edu>
+1997-02-02  Eli Zaretskii  <eliz@wombat.gnu.ai.mit.edu>
 
 	* msdos.c (dos_rawgetc): When international keyboard doesn't have
 	to be supported, recognize Alt-key combinations even if the Alt
@@ -9892,7 +9885,7 @@ Sun Feb  2 10:36:26 1997  Eli Zaretskii  <eliz@wombat.gnu.ai.mit.edu>
 	* editfns.c (Fline_beginning_position, Fline_end_position): New fns.
 	* cmds.c (Fend_of_line, Fbeginning_of_line):
 	Use Fline_beginning_position, Fline_end_position.
-	* lisp.h  (Fend_of_line, Fbeginning_of_line): Declared.
+	* lisp.h (Fend_of_line, Fbeginning_of_line): Declared.
 
 1996-11-23  Richard Stallman  <rms@whiz-bang.gnu.ai.mit.edu>
 
@@ -10177,7 +10170,7 @@ Sun Feb  2 10:36:26 1997  Eli Zaretskii  <eliz@wombat.gnu.ai.mit.edu>
 
 	* frame.h (struct frame): New field phys_cursor_on.
 
-1996-10-08  David K�gedal  <davidk@lysator.liu.se>
+1996-10-08  David Kågedal  <davidk@lysator.liu.se>
 
 	* xmenu.c (Fx_popup_menu): Give the menu a title when the menu is
 	a single keymap.
@@ -10252,7 +10245,7 @@ Sun Feb  2 10:36:26 1997  Eli Zaretskii  <eliz@wombat.gnu.ai.mit.edu>
 	(find_handler_clause): If Vdebug_force, call debugger
 	even if there are handlers.
 
-1996-09-26  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
+1996-09-26  Marcus G. Daniels  <marcus@sayre.sysc.pdx.edu>
 
 	* xfns.c (x_set_scroll_bar_width): Move cursor to the
 	left margin, past a scroll bar, if any.
@@ -10276,7 +10269,7 @@ Sun Feb  2 10:36:26 1997  Eli Zaretskii  <eliz@wombat.gnu.ai.mit.edu>
 
 	* window.c (syms_of_window): Doc fixes.
 
-1996-09-25  Marcus Daniels  <marcus@sysc.pdx.edu>
+1996-09-25  Marcus G. Daniels  <marcus@sysc.pdx.edu>
 
 	* s/irix5-0.h (sigsetmask, _longjmp, _setjmp): #undef them.
 	(_BSD_SIGNALS): Definition deleted.
@@ -10369,7 +10362,7 @@ Sun Feb  2 10:36:26 1997  Eli Zaretskii  <eliz@wombat.gnu.ai.mit.edu>
 
 1996-09-20  Richard Stallman  <rms@ethanol.gnu.ai.mit.edu>
 
-	* xterm.c (x_scroll_bar_create, x_scroll_bar_move):
+	* xterm.c (x_scroll_bar_create, x_scroll_bar_move)
 	(x_scroll_bar_expose): Use VERTICAL_SCROLL_BAR_WIDTH_TRIM.
 
 	* xterm.h (VERTICAL_SCROLL_BAR_WIDTH_TRIM): Renamed from
@@ -10403,7 +10396,7 @@ Sun Feb  2 10:36:26 1997  Eli Zaretskii  <eliz@wombat.gnu.ai.mit.edu>
 
 	* xfns.c (Fx_create_frame): Default Qvertical_scroll_bars to `left'.
 
-Fri Sep 20 02:37:37 1996  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
+1996-09-20  Marcus G. Daniels  <marcus@sayre.sysc.pdx.edu>
 
 	* xterm.c (XTclear_end_of_line): Shift end-of-line when there is a
 	left-side scroll bar by FRAME_LEFT_SCROLL_BAR_WIDTH.
@@ -10416,7 +10409,7 @@ Fri Sep 20 02:37:37 1996  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
 	(x_scroll_bar_expose): Narrow the box slightly for a left-side
 	scroll bar.
 
-	* xfns.c:  Add the symbol `right'; this symbol is used to indicate
+	* xfns.c: Add the symbol `right'; this symbol is used to indicate
 	that a right-side scroll bar is wanted.
 	(x_set_vertical_scroll_bars): Check for left<->right<->none
 	scroll bar changes, and modify the vertical scroll bar type
@@ -10474,7 +10467,7 @@ Fri Sep 20 02:37:37 1996  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
 
 	* keyboard.c (make_lispy_event): When converting from pixel to
 	glyph coordinates, offset by WINDOW_LEFT_MARGIN instead of XINT
-	(XWINDOW (window)->left; this is necessary when there are
+	(XWINDOW (window)->left); this is necessary when there are
 	left-side scrollbars.
 
 	* frame.c (make_frame): Switch from boolean
@@ -10684,7 +10677,7 @@ Fri Sep 20 02:37:37 1996  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
 	before read0 call.
 	(read1): New variable `uninterned_symbol', which controls how to
 	make symbols.  Support #:, #n=object and #n#.
-	(make_symbol): New function, used in read1 to make uninterned symbols
+	(make_symbol): New function, used in read1 to make uninterned symbols.
 	(Fintern): Set `obarray' field of interned symbols.
 	(init_obarray): Explicit set `obarray' field of symbol `nil'.
 	(syms_of_lread): staticpro read_objects, the list of read objects.
@@ -10710,13 +10703,13 @@ Fri Sep 20 02:37:37 1996  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
 	(XMARKBIT): Test BITS_PER_EMACS_INT to conditionalize fast definition.
 	* m/alpha.h (BITS_PER_EMACS_INT): New definition.
 
-	* s/sol2.h (LIBS_SYSTEM): Use -lkstat instead of -lelf -lkvm
+	* s/sol2.h (LIBS_SYSTEM): Use -lkstat instead of -lelf -lkvm.
 
 	* process.c (create_process): Test HAVE_SETPGID for using setpgid.
 
 	* config.in (HAVE_SETPGID): Add #undef.
 
-	* keymap.c (syms_of_keymap): staticpro current_global_map;
+	* keymap.c (syms_of_keymap): staticpro current_global_map.
 
 	* intervals.c (get_local_map): Call indirect-function.
 
@@ -11029,7 +11022,7 @@ Fri Sep 20 02:37:37 1996  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
 	(print): Print certain expressions more compactly when set.
 	Also use XCAR and XCDR directly -- we know we have conses.
 
-1996-08-23  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
+1996-08-23  Marcus G. Daniels  <marcus@sayre.sysc.pdx.edu>
 
 	* xterm.c (x_term_init): If the default Xt font does not exist on
 	the X server, add a resource so that dialog boxes use a common font.
@@ -11095,15 +11088,19 @@ Fri Sep 20 02:37:37 1996  Marcus Daniels  <marcus@sayre.sysc.pdx.edu>
 
 See ChangeLog.6 for earlier changes.
 
-    Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Local Variables:
+;; coding: utf-8
+;; End:
+
+    Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 	Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
-  GNU Emacs is free software; you can redistribute it and/or modify
+  GNU Emacs is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 3, or (at your option)
-  any later version.
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -11111,8 +11108,6 @@ See ChangeLog.6 for earlier changes.
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with GNU Emacs; see the file COPYING.  If not, write to the
-  Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-  Boston, MA 02110-1301, USA.
+  along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; arch-tag: 3b03e091-1123-4031-b67d-41683932cc48

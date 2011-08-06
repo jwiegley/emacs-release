@@ -1,7 +1,7 @@
 ;;; cust-print.el --- handles print-level and print-circle
 
 ;; Copyright (C) 1992, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Daniel LaLiberte <liberte@holonexus.org>
 ;; Adapted-By: ESR
@@ -13,10 +13,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -24,9 +24,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -244,14 +242,14 @@ Any pair that has the same PREDICATE is first removed."
 
 ;; Save emacs routines.
 (if (not (fboundp 'cust-print-original-prin1))
-    (mapcar 'cust-print-set-function-cell
-	    '((cust-print-original-prin1 prin1)
-	      (cust-print-original-princ princ)
-	      (cust-print-original-print print)
-	      (cust-print-original-prin1-to-string prin1-to-string)
-	      (cust-print-original-format format)
-	      (cust-print-original-message message)
-	      (cust-print-original-error error))))
+    (mapc 'cust-print-set-function-cell
+	  '((cust-print-original-prin1 prin1)
+	    (cust-print-original-princ princ)
+	    (cust-print-original-print print)
+	    (cust-print-original-prin1-to-string prin1-to-string)
+	    (cust-print-original-format format)
+	    (cust-print-original-message message)
+	    (cust-print-original-error error))))
 
 
 (defun custom-print-install ()
@@ -259,29 +257,29 @@ Any pair that has the same PREDICATE is first removed."
 The Emacs subroutines are saved away, and you can reinstall them
 by running `custom-print-uninstall'."
   (interactive)
-  (mapcar 'cust-print-set-function-cell
-	  '((prin1 custom-prin1)
-	    (princ custom-princ)
-	    (print custom-print)
-	    (prin1-to-string custom-prin1-to-string)
-	    (format custom-format)
-	    (message custom-message)
-	    (error custom-error)
-	    ))
+  (mapc 'cust-print-set-function-cell
+	'((prin1 custom-prin1)
+	  (princ custom-princ)
+	  (print custom-print)
+	  (prin1-to-string custom-prin1-to-string)
+	  (format custom-format)
+	  (message custom-message)
+	  (error custom-error)
+	  ))
   t)
 
 (defun custom-print-uninstall ()
   "Reset print functions to their Emacs subroutines."
   (interactive)
-  (mapcar 'cust-print-set-function-cell
-	  '((prin1 cust-print-original-prin1)
-	    (princ cust-print-original-princ)
-	    (print cust-print-original-print)
-	    (prin1-to-string cust-print-original-prin1-to-string)
-	    (format cust-print-original-format)
-	    (message cust-print-original-message)
-	    (error cust-print-original-error)
-	    ))
+  (mapc 'cust-print-set-function-cell
+	'((prin1 cust-print-original-prin1)
+	  (princ cust-print-original-princ)
+	  (print cust-print-original-print)
+	  (prin1-to-string cust-print-original-prin1-to-string)
+	  (format cust-print-original-format)
+	  (message cust-print-original-message)
+	  (error cust-print-original-error)
+	  ))
   t)
 
 (defalias 'custom-print-funcs-installed-p 'custom-print-installed-p)
@@ -689,5 +687,5 @@ See `custom-format' for the details."
 
 (provide 'cust-print)
 
-;;; arch-tag: 3a5a8650-622c-48c4-87d8-e01bf72ec580
+;; arch-tag: 3a5a8650-622c-48c4-87d8-e01bf72ec580
 ;;; cust-print.el ends here

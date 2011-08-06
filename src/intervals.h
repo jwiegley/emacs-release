@@ -1,13 +1,13 @@
 /* Definitions and global variables for intervals.
    Copyright (C) 1993, 1994, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "dispextern.h"
 
@@ -269,10 +267,6 @@ extern void delete_interval P_ ((INTERVAL));
 extern INLINE void offset_intervals P_ ((struct buffer *, int, int));
 extern void graft_intervals_into_buffer P_ ((INTERVAL, int, int,
 					     struct buffer *, int));
-extern void set_point P_ ((struct buffer *, int));
-extern INLINE void temp_set_point P_ ((struct buffer *, int));
-extern void set_point_both P_ ((struct buffer *, int, int));
-extern INLINE void temp_set_point_both P_ ((struct buffer *, int, int));
 extern void verify_interval_modification P_ ((struct buffer *, int, int));
 extern INTERVAL balance_intervals P_ ((INTERVAL));
 extern INLINE void copy_intervals_to_string P_ ((Lisp_Object, struct buffer *,
@@ -283,7 +277,7 @@ extern Lisp_Object textget P_ ((Lisp_Object, Lisp_Object));
 extern Lisp_Object lookup_char_property P_ ((Lisp_Object, Lisp_Object, int));
 extern void move_if_not_intangible P_ ((int));
 extern int get_property_and_range P_ ((int, Lisp_Object, Lisp_Object *,
-				       int *, int *, Lisp_Object));
+				       EMACS_INT *, EMACS_INT *, Lisp_Object));
 extern Lisp_Object get_local_map P_ ((int, struct buffer *, Lisp_Object));
 extern INTERVAL update_interval P_ ((INTERVAL, int));
 extern void set_intervals_multibyte P_ ((int));

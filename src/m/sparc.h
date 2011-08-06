@@ -1,13 +1,13 @@
 /* machine description file for Sun 4 SPARC.
-   Copyright (C) 1987, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008  Free Software Foundation, Inc.
+   Copyright (C) 1987, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+                 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* The following line tells the configuration script what sort of
    operating system this machine is likely to run.
@@ -38,17 +36,10 @@ NOTE-END  */
 
 #define NO_ARG_ARRAY
 
-/* Say this machine is a sparc.  Probably already defined.  */
+/* __sparc__ is defined by the compiler by default.  */
 
-#ifndef __sparc__
-#define __sparc__
-#endif
-
-/* Use type int rather than a union, to represent Lisp_Object */
-
-#define NO_UNION_TYPE
-
-/* XINT must explicitly sign-extend */
+/* XINT must explicitly sign-extend
+   This flag only matters if you use USE_LISP_UNION_TYPE.  */
 
 #define EXPLICIT_SIGN_EXTEND
 
@@ -64,33 +55,6 @@ NOTE-END  */
 
 #define SEGMENT_MASK (SEGSIZ - 1)
 
-/* Arrange to link with sun windows, if requested.  */
-/* For details on emacstool and sunfns, see etc/SUN-SUPPORT */
-/* These programs require Sun UNIX 4.2 Release 3.2 or greater */
-
-#ifdef HAVE_SUN_WINDOWS
-#define OTHER_FILES  ${etcdir}emacstool
-#define LIBS_MACHINE -lsuntool -lsunwindow -lpixrect
-#define OBJECTS_MACHINE sunfns.o
-#define SYMS_MACHINE syms_of_sunfns ()
-#define PURESIZE 130000
-#endif
-
-#if !defined (__NetBSD__) && !defined (__linux__) && !defined (__OpenBSD__)
-/* This really belongs in s/sun.h.  */
-
-/* Say that the text segment of a.out includes the header;
-   the header actually occupies the first few bytes of the text segment
-   and is counted in hdr.a_text.  */
-
-#define A_TEXT_OFFSET(HDR) sizeof (HDR)
-
-/* This is the offset of the executable's text, from the start of the file.  */
-
-#define A_TEXT_SEEK(HDR) (N_TXTOFF (hdr) + sizeof (hdr))
-
-#endif /* not __NetBSD__ and not __linux__ and not __OpenBSD__ */
-
 #ifdef __arch64__		/* GCC, 64-bit ABI.  */
 #define BITS_PER_LONG 64
 #ifdef __linux__
@@ -105,6 +69,7 @@ NOTE-END  */
 #undef LIB_STANDARD
 #define LIB_STANDARD -lgcc -lc -lgcc /usr/lib64/crtn.o
 #endif
+
 #ifndef _LP64
 #define _LP64			/* Done on Alpha -- not sure if it
 				   should be here.  -- fx */

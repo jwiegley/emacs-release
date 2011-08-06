@@ -1,7 +1,7 @@
 ;;; blackbox.el --- blackbox game in Emacs Lisp
 
 ;; Copyright (C) 1985, 1986, 1987, 1992, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: F. Thomas May <uw-nsr!uw-warp!tom@beaver.cs.washington.edu>
 ;; Adapted-By: ESR
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -106,7 +104,9 @@
     (blackbox-redefine-key map 'move-end-of-line 'bb-eol)
     (blackbox-redefine-key map 'move-beginning-of-line 'bb-bol)
     (define-key map " " 'bb-romp)
+    (define-key map "q" 'bury-buffer)
     (define-key map [insert] 'bb-romp)
+    (define-key map [return] 'bb-done)
     (blackbox-redefine-key map 'newline 'bb-done)
     map))
 
@@ -296,14 +296,14 @@ a reflection."
 (defun bb-up (count)
   (interactive "p")
   (while (and (> count 0) (> bb-y -1))
-    (previous-line 1)
+    (with-no-warnings (previous-line))
     (setq bb-y (1- bb-y))
     (setq count (1- count))))
 
 (defun bb-down (count)
   (interactive "p")
   (while (and (> count 0) (< bb-y 8))
-    (next-line 1)
+    (with-no-warnings (next-line))
     (setq bb-y (1+ bb-y))
     (setq count (1- count))))
 

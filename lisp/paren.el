@@ -1,7 +1,7 @@
 ;;; paren.el --- highlight matching paren
 
 ;; Copyright (C) 1993, 1996, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: rms@gnu.org
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -46,7 +44,7 @@
 (defvar show-paren-overlay-1 nil)
 
 (defcustom show-paren-style 'parenthesis
-  "*Style used when showing a matching paren.
+  "Style used when showing a matching paren.
 Valid styles are `parenthesis' (meaning show the matching paren),
 `expression' (meaning show the entire expression enclosed by the paren) and
 `mixed' (meaning show the matching paren if it is visible, and the expression
@@ -56,18 +54,18 @@ otherwise)."
 
 (defcustom show-paren-delay
   (if (featurep 'lisp-float-type) (/ (float 1) (float 8)) 1)
-  "*Time in seconds to delay before showing a matching paren."
+  "Time in seconds to delay before showing a matching paren."
   :type '(number :tag "seconds")
   :group 'paren-showing)
 
 (defcustom show-paren-priority 1000
-  "*Priority of paren highlighting overlays."
+  "Priority of paren highlighting overlays."
   :type 'integer
   :group 'paren-showing
   :version "21.1")
 
 (defcustom show-paren-ring-bell-on-mismatch nil
-  "*If non-nil, beep if mismatched paren is detected."
+  "If non-nil, beep if mismatched paren is detected."
   :type 'boolean
   :group 'paren-showing
   :version "20.3")
@@ -214,9 +212,9 @@ in `show-paren-style' after `show-paren-delay' seconds of Emacs idle time."
 		(delete-overlay show-paren-overlay-1))
 	    (let ((from (if (= dir 1)
 			    (point)
-			  (forward-point -1)))
+			  (- (point) 1)))
 		  (to (if (= dir 1)
-			  (forward-point 1)
+			  (+ (point) 1)
 			(point))))
 	      (if show-paren-overlay-1
 		  (move-overlay show-paren-overlay-1 from to (current-buffer))
@@ -240,7 +238,7 @@ in `show-paren-style' after `show-paren-delay' seconds of Emacs idle time."
 			  pos
 			(save-excursion
 			  (goto-char pos)
-			  (forward-point (- dir))))))
+			  (- (point) dir)))))
 	    (if show-paren-overlay
 		(move-overlay show-paren-overlay from to (current-buffer))
 	      (setq show-paren-overlay (make-overlay from to nil t))))

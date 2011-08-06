@@ -1,13 +1,13 @@
 /* How much read-only Lisp storage a dumped Emacs needs.
    Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* Define PURESIZE, the number of bytes of pure Lisp code to leave space for.
 
@@ -43,7 +41,7 @@ Boston, MA 02110-1301, USA.  */
 #endif
 
 #ifndef BASE_PURESIZE
-#define BASE_PURESIZE (1140000 + SYSTEM_PURESIZE_EXTRA + SITELOAD_PURESIZE_EXTRA)
+#define BASE_PURESIZE (1260000 + SYSTEM_PURESIZE_EXTRA + SITELOAD_PURESIZE_EXTRA)
 #endif
 
 /* Increase BASE_PURESIZE by a ratio depending on the machine's word size.  */
@@ -55,9 +53,18 @@ Boston, MA 02110-1301, USA.  */
 #endif
 #endif
 
+#ifdef ENABLE_CHECKING
+/* ENABLE_CHECKING somehow increases the purespace used, probably because
+   it tends to cause some macro arguments to be evaluated twice.  This is
+   a bug, but it's difficult to track it down.  */
+#define PURESIZE_CHECKING_RATIO 12/10	/* Don't surround with `()'. */
+#else
+#define PURESIZE_CHECKING_RATIO 1
+#endif
+
 /* This is the actual size in bytes to allocate.  */
 #ifndef PURESIZE
-#define PURESIZE  (BASE_PURESIZE * PURESIZE_RATIO)
+#define PURESIZE  (BASE_PURESIZE * PURESIZE_RATIO * PURESIZE_CHECKING_RATIO)
 #endif
 
 /* Signal an error if OBJ is pure.  */
@@ -69,8 +76,8 @@ extern void pure_write_error P_ ((void)) NO_RETURN;
 
 /* Define PURE_P.  */
 
-#if defined(VIRT_ADDR_VARIES) || defined(CYGWIN)
-/* For machines like APOLLO where text and data can go anywhere
+#ifdef VIRT_ADDR_VARIES
+/* For machines where text and data can go anywhere
    in virtual memory.  */
 
 extern EMACS_INT pure[];

@@ -1,13 +1,14 @@
 ;;; cc-vars.el --- user customization variables for CC Mode
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    2002- Alan Mackenzie
 ;;             1998- Martin Stjernholm
 ;;             1992-1999 Barry A. Warsaw
-;;             1987 Dave Detlefs and Stewart Clamen
+;;             1987 Dave Detlefs
+;;             1987 Stewart Clamen
 ;;             1985 Richard M. Stallman
 ;; Maintainer: bug-cc-mode@gnu.org
 ;; Created:    22-Apr-1997 (split from cc-mode.el)
@@ -16,10 +17,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,9 +28,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -76,21 +75,21 @@ Useful as last item in a `choice' widget."
 ;; The next defun will supersede c-const-symbol.
 (eval-and-compile
   (defun c-constant-symbol (sym len)
-    "Create an uneditable symbol for customization buffers.
+  "Create an uneditable symbol for customization buffers.
 SYM is the name of the symbol, LEN the length of the field (in
 characters) the symbol will be displayed in.  LEN must be big
 enough.
 
 This returns a (const ....) structure, suitable for embedding
 within a customization type."
-    (or (symbolp sym) (error "c-constant-symbol: %s is not a symbol" sym))
-    (let* ((name (symbol-name sym))
-	   (l (length name))
-	   (disp (concat name ":" (make-string (- len l 1) ?\ ))))
-      `(const
-	:size ,len
-	:format ,disp
-	:value ,sym))))
+  (or (symbolp sym) (error "c-constant-symbol: %s is not a symbol" sym))
+  (let* ((name (symbol-name sym))
+	 (l (length name))
+	 (disp (concat name ":" (make-string (- len l 1) ?\ ))))
+    `(const
+      :size ,len
+      :format ,disp
+      :value ,sym))))
 
 (define-widget 'c-const-symbol 'item
   "An uneditable lisp symbol.  This is obsolete -
@@ -176,34 +175,44 @@ use c-constant-symbol instead."
   (setq c-fallback-style (cons (cons name val) c-fallback-style)))
 
 (defmacro defcustom-c-stylevar (name val doc &rest args)
-  "Defines a style variable."
-  `(let ((-value- ,val))
-     (c-set-stylevar-fallback ',name -value-)
-     (custom-declare-variable
-      ',name ''set-from-style
-      ,(concat doc "
+  "Define a style variable NAME with VAL and DOC.
+More precisely, convert the given `:type FOO', mined out of ARGS,
+to an aggregate `:type (radio STYLE (PREAMBLE FOO))', append some
+some boilerplate documentation to DOC, arrange for the fallback
+value of NAME to be VAL, and call `custom-declare-variable' to
+do the rest of the work.
+
+STYLE stands for the choice where the value is taken from some
+style setting.  PREAMBLE is optionally prepended to FOO; that is,
+if FOO contains :tag or :value, the respective two-element list
+component is ignored."
+  (declare (debug (symbolp form stringp &rest)))
+  (let* ((expanded-doc (concat doc "
 
 This is a style variable.  Apart from the valid values described
-above, it can be set to the symbol `set-from-style'.  In that case, it
-takes its value from the style system (see `c-default-style' and
+above, it can be set to the symbol `set-from-style'.  In that case,
+it takes its value from the style system (see `c-default-style' and
 `c-style-alist') when a CC Mode buffer is initialized.  Otherwise,
 the value set here overrides the style system (there is a variable
-`c-old-style-variable-behavior' that changes this, though).")
-      ,@(plist-put
-	 args ':type
-	 `(` (radio
-	      (const :tag "Use style settings"
-		     set-from-style)
-	      ,(, (let ((type (eval (plist-get args ':type))))
-		    (unless (consp type)
-		      (setq type (list type)))
-		    (unless (c-safe (plist-get (cdr type) ':value))
-		      (setcdr type (append '(:value (, -value-))
-					   (cdr type))))
-		    (unless (c-safe (plist-get (cdr type) ':tag))
-		      (setcdr type (append '(:tag "Override style settings")
-					   (cdr type))))
-		    (bq-process type)))))))))
+`c-old-style-variable-behavior' that changes this, though)."))
+         (typ (eval (plist-get args :type)))
+         (type (if (consp typ) typ (list typ)))
+         (head (car type))
+         (tail (cdr type))
+         (newt (append (unless (plist-get tail :tag)
+                         '(:tag "Override style settings"))
+                       (unless (plist-get tail :value)
+                         `(:value ,(eval val)))
+                       tail))
+         (aggregate `'(radio
+                       (const :tag "Use style settings" set-from-style)
+                       ,(cons head newt))))
+    `(progn
+       (c-set-stylevar-fallback ',name ,val)
+       (custom-declare-variable
+        ',name ''set-from-style
+        ,expanded-doc
+        ,@(plist-put args :type aggregate)))))
 
 (defun c-valid-offset (offset)
   "Return non-nil if OFFSET is a valid offset for a syntactic symbol.
@@ -276,18 +285,13 @@ nil."
   "*Controls the operation of the TAB key.
 If t, hitting TAB always just indents the current line.  If nil, hitting
 TAB indents the current line if point is at the left margin or in the
-line's indentation, otherwise it inserts a `real' tab character \(see
-note\).  If some other value (not nil or t), then tab is inserted only
-within literals \(comments and strings), but the line is always
-reindented.
+line's indentation, otherwise it calls `c-insert-tab-function' to
+insert a `real' tab character.  If some other value (neither nil nor t),
+then inserts a tab only within literals (comments and strings), but
+always reindents the line.
 
-Note: The value of `indent-tabs-mode' will determine whether a real
-tab character will be inserted, or the equivalent number of spaces.
-When inserting a tab, actually the function stored in the variable
-`c-insert-tab-function' is called.
-
-Note: indentation of lines containing only comments is also controlled
-by the `c-comment-only-line-offset' variable."
+Note: the variable `c-comment-only-line-offset' also controls the
+indentation of lines containing only comments."
   :type '(radio
 	  (const :tag "TAB key always indents, never inserts TAB" t)
 	  (const :tag "TAB key indents in left margin, otherwise inserts TAB" nil)
@@ -297,7 +301,9 @@ by the `c-comment-only-line-offset' variable."
 (defcustom c-insert-tab-function 'insert-tab
   "*Function used when inserting a tab for \\[c-indent-command].
 Only used when `c-tab-always-indent' indicates a `real' tab character
-should be inserted.  Value must be a function taking no arguments."
+should be inserted.  Value must be a function taking no arguments.
+The default, `insert-tab', inserts either a tab or the equivalent
+number of spaces depending on the value of `indent-tabs-mode'."
   :type 'function
   :group 'c)
 
@@ -450,12 +456,13 @@ comment-only lines."
 ;; Although c-comment-continuation-stars is obsolete, we look at it in
 ;; some places in CC Mode anyway, so make the compiler ignore it
 ;; during our compilation.
-(cc-bytecomp-obsolete-var c-comment-continuation-stars)
-(cc-bytecomp-defvar c-comment-continuation-stars)
+;; [This is unclean; better to use `symbol-value'. --ttn]
+;;(cc-bytecomp-obsolete-var c-comment-continuation-stars)
+;;(cc-bytecomp-defvar c-comment-continuation-stars)
 
 (defcustom-c-stylevar c-block-comment-prefix
   (if (boundp 'c-comment-continuation-stars)
-      c-comment-continuation-stars
+      (symbol-value 'c-comment-continuation-stars)
     "* ")
   "*Specifies the line prefix of continued C-style block comments.
 You should set this variable to the literal string that gets inserted
@@ -929,6 +936,45 @@ this variable to nil."
   :type 'integer
   :group 'c)
 
+(defcustom c-objc-method-arg-min-delta-to-bracket 2
+  "*Minimum number of chars to the opening bracket.
+
+Consider this ObjC snippet:
+
+	[foo blahBlah: fred
+	|<-x->|barBaz: barney
+
+If `x' is less than this number then `c-lineup-ObjC-method-call-colons'
+will defer the indentation decision to the next function.  By default
+this is `c-lineup-ObjC-method-call', which would align it like:
+
+	[foo blahBlahBlah: fred
+	     thisIsTooDamnLong: barney
+
+This behaviour can be overridden by customizing the indentation of
+`objc-method-call-cont' in the \"objc\" style."
+  :type 'integer
+  :group 'c)
+
+(defcustom c-objc-method-arg-unfinished-offset 4
+  "*Offset relative to bracket if first selector is on a new line.
+
+    [aaaaaaaaa
+    |<-x->|bbbbbbb:  cccccc
+             ddddd: eeee];"
+  :type 'integer
+  :group 'c)
+
+(defcustom c-objc-method-parameter-offset 4
+  "*Offset for selector parameter on a new line (relative to first selector.
+
+    [aaaaaaa bbbbbbbbbb:
+	     |<-x->|cccccccc
+                    ddd: eeee
+                   ffff: ggg];"
+  :type 'integer
+  :group 'c)
+
 (defcustom c-default-style '((java-mode . "java") (awk-mode . "awk")
 			     (other . "gnu"))
   "*Style which gets installed by default when a file is visited.
@@ -1114,7 +1160,8 @@ can always override the use of `c-default-style' by making calls to
        ;; Anchor pos: Boi.
        (objc-method-args-cont . c-lineup-ObjC-method-args)
        ;; Anchor pos: At the method start (always at boi).
-       (objc-method-call-cont . c-lineup-ObjC-method-call)
+       (objc-method-call-cont . (c-lineup-ObjC-method-call-colons
+			        c-lineup-ObjC-method-call +))
        ;; Anchor pos: At the open bracket.
        (extern-lang-open      . 0)
        (namespace-open        . 0)
@@ -1359,6 +1406,7 @@ The list of variables to buffer localize are:
     c-special-indent-hook
     c-indentation-style"
   :type 'boolean
+  :safe 'booleanp
   :group 'c)
 
 (defcustom c-mode-hook nil
@@ -1656,5 +1704,5 @@ It treats escaped EOLs as whitespace.")
 
 (cc-provide 'cc-vars)
 
-;;; arch-tag: d62e9a55-c9fe-409b-b5b6-050b6aa202c9
+;; arch-tag: d62e9a55-c9fe-409b-b5b6-050b6aa202c9
 ;;; cc-vars.el ends here

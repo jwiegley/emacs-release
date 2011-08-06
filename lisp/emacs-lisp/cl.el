@@ -1,7 +1,7 @@
-;;; cl.el --- Common Lisp extensions for Emacs -*-byte-compile-dynamic: t;-*-
+;;; cl.el --- Common Lisp extensions for Emacs
 
 ;; Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Dave Gillespie <daveg@synaptics.com>
 ;; Version: 2.02
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -109,12 +107,15 @@ printer proceeds to the next function on the list.
 This variable is not used at present, but it is defined in hopes that
 a future Emacs interpreter will be able to use it.")
 
-(add-hook 'cl-unload-hook 'cl-cannot-unload)
-(defun cl-cannot-unload ()
-  (error "Cannot unload the feature `cl'"))
+(defun cl-unload-function ()
+  "Stop unloading of the Common Lisp extensions."
+  (message "Cannot unload the feature `cl'")
+  ;; stop standard unloading!
+  t)
 
-;;; Generalized variables.  These macros are defined here so that they
-;;; can safely be used in .emacs files.
+;;; Generalized variables.
+;; These macros are defined here so that they
+;; can safely be used in .emacs files.
 
 (defmacro incf (place &optional x)
   "Increment PLACE by X (1 by default).
@@ -131,6 +132,9 @@ The return value is the decremented value of PLACE."
   (if (symbolp place)
       (list 'setq place (if x (list '- place x) (list '1- place)))
     (list 'callf '- place (or x 1))))
+
+;; Autoloaded, but we haven't loaded cl-loaddefs yet.
+(declare-function cl-do-pop "cl-macs" (place))
 
 (defmacro pop (place)
   "Remove and return the head of the list stored in PLACE.
@@ -165,7 +169,7 @@ an element already on the list.
 (defun cl-set-elt (seq n val)
   (if (listp seq) (setcar (nthcdr n seq) val) (aset seq n val)))
 
-(defun cl-set-nthcdr (n list x)
+(defsubst cl-set-nthcdr (n list x)
   (if (<= n 0) x (setcdr (nthcdr (1- n) list) x) list))
 
 (defun cl-set-buffer-substring (start end val)
@@ -185,8 +189,8 @@ an element already on the list.
 
 ;;; Control structures.
 
-;;; These macros are so simple and so often-used that it's better to have
-;;; them all the time than to load them from cl-macs.el.
+;; These macros are so simple and so often-used that it's better to have
+;; them all the time than to load them from cl-macs.el.
 
 (defun cl-map-extents (&rest cl-args)
   (apply 'cl-map-overlays cl-args))
@@ -198,9 +202,10 @@ an element already on the list.
 (defalias 'cl-block-throw 'throw)
 
 
-;;; Multiple values.  True multiple values are not supported, or even
-;;; simulated.  Instead, multiple-value-bind and friends simply expect
-;;; the target form to return the values as a list.
+;;; Multiple values.
+;; True multiple values are not supported, or even
+;; simulated.  Instead, multiple-value-bind and friends simply expect
+;; the target form to return the values as a list.
 
 (defsubst values (&rest values)
   "Return multiple values, Common Lisp style.
@@ -321,7 +326,7 @@ always returns nil."
 
 (defvar *random-state* (vector 'cl-random-state-tag -1 30 (cl-random-time)))
 
-;;; The following are actually set by cl-float-limits.
+;; The following are actually set by cl-float-limits.
 (defconst most-positive-float nil)
 (defconst most-negative-float nil)
 (defconst least-positive-float nil)
@@ -335,6 +340,8 @@ always returns nil."
 ;;; Sequence functions.
 
 (defalias 'copy-seq 'copy-sequence)
+
+(declare-function cl-mapcar-many "cl-extra" (cl-func cl-seqs))
 
 (defun mapcar* (cl-func cl-x &rest cl-rest)
   "Apply FUNCTION to each element of SEQ, and make a list of the results.
@@ -534,6 +541,14 @@ The elements of LIST are not copied, just the list structure itself."
   list)
 
 (defalias 'cl-member 'memq)   ; for compatibility with old CL package
+
+;; Autoloaded, but we have not loaded cl-loaddefs yet.
+(declare-function floor* "cl-extra" (x &optional y))
+(declare-function ceiling* "cl-extra" (x &optional y))
+(declare-function truncate* "cl-extra" (x &optional y))
+(declare-function round* "cl-extra" (x &optional y))
+(declare-function mod* "cl-extra" (x y))
+
 (defalias 'cl-floor 'floor*)
 (defalias 'cl-ceiling 'ceiling*)
 (defalias 'cl-truncate 'truncate*)
@@ -585,126 +600,81 @@ If ALIST is non-nil, the new pairs are prepended to it."
 
 ;;; Miscellaneous.
 
-(defvar cl-fake-autoloads nil
-  "Non-nil means don't make CL functions autoload.")
+;; Define data for indentation and edebug.
+(dolist (entry
+         '(((defun* defmacro*) 2)
+           ((function*) nil
+            (&or symbolp ([&optional 'macro] 'lambda (&rest sexp) &rest form)))
+           ((eval-when) 1 (sexp &rest form))
+           ((declare) nil (&rest sexp))
+           ((the) 1 (sexp &rest form))
+           ((case ecase typecase etypecase) 1 (form &rest (sexp &rest form)))
+           ((block return-from) 1 (sexp &rest form))
+           ((return) nil (&optional form))
+           ((do do*) 2 ((&rest &or symbolp (symbolp &optional form form))
+                        (form &rest form)
+                        &rest form))
+           ((do-symbols) 1 ((symbolp form &optional form form) &rest form))
+           ((do-all-symbols) 1 ((symbolp form &optional form) &rest form))
+           ((psetq setf psetf) nil edebug-setq-form)
+           ((progv) 2 (&rest form))
+           ((flet labels macrolet) 1
+            ((&rest (sexp sexp &rest form)) &rest form))
+           ((symbol-macrolet lexical-let lexical-let*) 1
+            ((&rest &or symbolp (symbolp form)) &rest form))
+           ((multiple-value-bind) 2 ((&rest symbolp) &rest form))
+           ((multiple-value-setq) 1 ((&rest symbolp) &rest form))
+           ((incf decf remf pushnew shiftf rotatef) nil (&rest form))
+           ((letf letf*) 1 ((&rest (&rest form)) &rest form))
+           ((callf destructuring-bind) 2 (sexp form &rest form))
+           ((callf2) 3 (sexp form form &rest form))
+           ((loop) nil (&rest &or symbolp form))
+           ((ignore-errors) 0 (&rest form))))
+  (dolist (func (car entry))
+    (put func 'lisp-indent-function (nth 1 entry))
+    (put func 'lisp-indent-hook (nth 1 entry))
+    (or (get func 'edebug-form-spec)
+        (put func 'edebug-form-spec (nth 2 entry)))))
 
-;;; Autoload the other portions of the package.
+;; Autoload the other portions of the package.
 ;; We want to replace the basic versions of dolist, dotimes, declare below.
 (fmakunbound 'dolist)
 (fmakunbound 'dotimes)
 (fmakunbound 'declare)
-(mapcar (function
-	 (lambda (set)
-	   (let ((file (if cl-fake-autoloads "<none>" (car set))))
-	     (mapcar (function
-		      (lambda (func)
-			(autoload func (car set) nil nil (nth 1 set))))
-		     (cddr set)))))
-	'(("cl-extra" nil
-	   coerce equalp cl-map-keymap maplist mapc mapl mapcan mapcon
-	   cl-map-keymap cl-map-keymap-recursively cl-map-intervals
-	   cl-map-overlays cl-set-frame-visible-p cl-float-limits
-	   gcd lcm isqrt floor* ceiling* truncate* round*
-	   mod* rem* signum random* make-random-state random-state-p
-	   subseq concatenate cl-mapcar-many map some every notany
-	   notevery revappend nreconc list-length tailp copy-tree get* getf
-	   cl-set-getf cl-do-remf remprop cl-make-hash-table cl-hash-lookup
-	   cl-gethash cl-puthash cl-remhash cl-clrhash cl-maphash cl-hash-table-p
-	   cl-hash-table-count cl-progv-before cl-prettyexpand
-	   cl-macroexpand-all)
-	  ("cl-seq" nil
-	   reduce fill replace remove* remove-if remove-if-not
-	   delete* delete-if delete-if-not remove-duplicates
-	   delete-duplicates substitute substitute-if substitute-if-not
-	   nsubstitute nsubstitute-if nsubstitute-if-not find find-if
-	   find-if-not position position-if position-if-not count count-if
-	   count-if-not mismatch search sort* stable-sort merge member*
-	   member-if member-if-not cl-adjoin assoc* assoc-if assoc-if-not
-	   rassoc* rassoc-if rassoc-if-not union nunion intersection
-	   nintersection set-difference nset-difference set-exclusive-or
-	   nset-exclusive-or subsetp subst-if subst-if-not nsubst nsubst-if
-	   nsubst-if-not sublis nsublis tree-equal)
-	  ("cl-macs" nil
-	   gensym gentemp typep cl-do-pop get-setf-method
-	   cl-struct-setf-expander compiler-macroexpand cl-compile-time-init)
-	  ("cl-macs" t
-	   defun* defmacro* function* destructuring-bind eval-when
-	   load-time-value case ecase typecase etypecase
-	   block return return-from loop do do* dolist dotimes do-symbols
-	   do-all-symbols psetq progv flet labels macrolet symbol-macrolet
-	   lexical-let lexical-let* multiple-value-bind multiple-value-setq
-	   locally the declare define-setf-method defsetf define-modify-macro
-	   setf psetf remf shiftf rotatef letf letf* callf callf2 defstruct
-	   check-type assert ignore-errors define-compiler-macro)))
+(load "cl-loaddefs" nil 'quiet)
 
-;;; Define data for indentation and edebug.
-(mapcar (function
-	 (lambda (entry)
-	   (mapcar (function
-		    (lambda (func)
-		      (put func 'lisp-indent-function (nth 1 entry))
-		      (put func 'lisp-indent-hook (nth 1 entry))
-		      (or (get func 'edebug-form-spec)
-			  (put func 'edebug-form-spec (nth 2 entry)))))
-		   (car entry))))
-	'(((defun* defmacro*) 2)
-	  ((function*) nil
-	   (&or symbolp ([&optional 'macro] 'lambda (&rest sexp) &rest form)))
-	  ((eval-when) 1 (sexp &rest form))
-	  ((declare) nil (&rest sexp))
-	  ((the) 1 (sexp &rest form))
-	  ((case ecase typecase etypecase) 1 (form &rest (sexp &rest form)))
-	  ((block return-from) 1 (sexp &rest form))
-	  ((return) nil (&optional form))
-	  ((do do*) 2 ((&rest &or symbolp (symbolp &optional form form))
-		       (form &rest form)
-		       &rest form))
-	  ((do-symbols) 1 ((symbolp form &optional form form) &rest form))
-	  ((do-all-symbols) 1 ((symbolp form &optional form) &rest form))
-	  ((psetq setf psetf) nil edebug-setq-form)
-	  ((progv) 2 (&rest form))
-	  ((flet labels macrolet) 1
-	   ((&rest (sexp sexp &rest form)) &rest form))
-	  ((symbol-macrolet lexical-let lexical-let*) 1
-	   ((&rest &or symbolp (symbolp form)) &rest form))
-	  ((multiple-value-bind) 2 ((&rest symbolp) &rest form))
-	  ((multiple-value-setq) 1 ((&rest symbolp) &rest form))
-	  ((incf decf remf pushnew shiftf rotatef) nil (&rest form))
-	  ((letf letf*) 1 ((&rest (&rest form)) &rest form))
-	  ((callf destructuring-bind) 2 (sexp form &rest form))
-	  ((callf2) 3 (sexp form form &rest form))
-	  ((loop) nil (&rest &or symbolp form))
-	  ((ignore-errors) 0 (&rest form))))
-
-
-;;; This goes here so that cl-macs can find it if it loads right now.
+;; This goes here so that cl-macs can find it if it loads right now.
 (provide 'cl-19)     ; usage: (require 'cl-19 "cl")
+(provide 'cl)
 
-
-;;; Things to do after byte-compiler is loaded.
-;;; As a side effect, we cause cl-macs to be loaded when compiling, so
-;;; that the compiler-macros defined there will be present.
+;; Things to do after byte-compiler is loaded.
 
 (defvar cl-hacked-flag nil)
 (defun cl-hack-byte-compiler ()
-  (if (and (not cl-hacked-flag) (fboundp 'byte-compile-file-form))
-      (progn
-	(setq cl-hacked-flag t)		; Do it first, to prevent recursion.
-	(cl-compile-time-init))))	; In cl-macs.el.
+  (and (not cl-hacked-flag) (fboundp 'byte-compile-file-form)
+       (progn
+         (setq cl-hacked-flag t)  ; Do it first, to prevent recursion.
+         (load "cl-macs" nil t)
+         (run-hooks 'cl-hack-bytecomp-hook))))
 
-;;; Try it now in case the compiler has already been loaded.
+;; Try it now in case the compiler has already been loaded.
 (cl-hack-byte-compiler)
 
-;;; Also make a hook in case compiler is loaded after this file.
+;; Also make a hook in case compiler is loaded after this file.
 (add-hook 'bytecomp-load-hook 'cl-hack-byte-compiler)
 
 
-;;; The following ensures that packages which expect the old-style cl.el
-;;; will be happy with this one.
+;; The following ensures that packages which expect the old-style cl.el
+;; will be happy with this one.
 
 (provide 'cl)
 
 (run-hooks 'cl-load-hook)
+
+;; Local variables:
+;; byte-compile-dynamic: t
+;; byte-compile-warnings: (not cl-functions)
+;; End:
 
 ;; arch-tag: 5f07fa74-f153-4524-9303-21f5be125851
 ;;; cl.el ends here

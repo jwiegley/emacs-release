@@ -1,7 +1,7 @@
 ;;; hippie-exp.el --- expand text trying various ways to find its expansion
 
 ;; Copyright (C) 1992, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Anders Holst <aho@sans.kth.se>
 ;; Last change: 3 March 1998
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -169,7 +167,7 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'comint))
+(require 'comint)
 
 (defgroup hippie-expand nil
   "Expand text trying various ways to find its expansion."
@@ -222,31 +220,31 @@ or insert functions in this list."
 
 ;;;###autoload
 (defcustom hippie-expand-verbose t
-  "*Non-nil makes `hippie-expand' output which function it is trying."
+  "Non-nil makes `hippie-expand' output which function it is trying."
   :type 'boolean
   :group 'hippie-expand)
 
 ;;;###autoload
 (defcustom hippie-expand-dabbrev-skip-space nil
-  "*Non-nil means tolerate trailing spaces in the abbreviation to expand."
+  "Non-nil means tolerate trailing spaces in the abbreviation to expand."
   :group 'hippie-expand
   :type 'boolean)
 
 ;;;###autoload
 (defcustom hippie-expand-dabbrev-as-symbol t
-  "*Non-nil means expand as symbols, i.e. syntax `_' is considered a letter."
+  "Non-nil means expand as symbols, i.e. syntax `_' is considered a letter."
   :group 'hippie-expand
   :type 'boolean)
 
 ;;;###autoload
 (defcustom hippie-expand-no-restriction t
-  "*Non-nil means that narrowed buffers are widened during search."
+  "Non-nil means that narrowed buffers are widened during search."
   :group 'hippie-expand
   :type 'boolean)
 
 ;;;###autoload
 (defcustom hippie-expand-max-buffers ()
-  "*The maximum number of buffers (apart from the current) searched.
+  "The maximum number of buffers (apart from the current) searched.
 If nil, all buffers are searched."
   :type '(choice (const :tag "All" nil)
 		 integer)
@@ -254,7 +252,7 @@ If nil, all buffers are searched."
 
 ;;;###autoload
 (defcustom hippie-expand-ignore-buffers '("^ \\*.*\\*$" dired-mode)
-  "*A list specifying which buffers not to search (if not current).
+  "A list specifying which buffers not to search (if not current).
 Can contain both regexps matching buffer names (as strings) and major modes
 \(as atoms)"
   :type '(repeat (choice regexp (symbol :tag "Major Mode")))
@@ -262,7 +260,7 @@ Can contain both regexps matching buffer names (as strings) and major modes
 
 ;;;###autoload
 (defcustom hippie-expand-only-buffers ()
-  "*A list specifying the only buffers to search (in addition to current).
+  "A list specifying the only buffers to search (in addition to current).
 Can contain both regexps matching buffer names (as strings) and major modes
 \(as atoms).  If non-nil, this variable overrides the variable
 `hippie-expand-ignore-buffers'."
@@ -441,13 +439,13 @@ string).  It returns t if a new completion is found, nil otherwise."
   (if (not old)
       (progn
 	(he-init-string (he-file-name-beg) (point))
-	(let ((name-part (he-file-name-nondirectory he-search-string))
-	      (dir-part (expand-file-name (or (he-file-name-directory
+	(let ((name-part (file-name-nondirectory he-search-string))
+	      (dir-part (expand-file-name (or (file-name-directory
 					       he-search-string) ""))))
 	  (if (not (he-string-member name-part he-tried-table))
 	      (setq he-tried-table (cons name-part he-tried-table)))
 	  (if (and (not (equal he-search-string ""))
-		   (he-file-directory-p dir-part))
+		   (file-directory-p dir-part))
 	      (setq he-expand-list (sort (file-name-all-completions
 					  name-part
 					  dir-part)
@@ -462,7 +460,7 @@ string).  It returns t if a new completion is found, nil otherwise."
 	(if old (he-reset-string))
 	())
       (let ((filename (he-concat-directory-file-name
-		       (he-file-name-directory he-search-string)
+		       (file-name-directory he-search-string)
 		       (car he-expand-list))))
 	(he-substitute-string filename)
 	(setq he-tried-table (cons (car he-expand-list) (cdr he-tried-table)))
@@ -478,11 +476,11 @@ otherwise."
     (if (not old)
 	(progn
 	  (he-init-string (he-file-name-beg) (point))
-	  (let ((name-part (he-file-name-nondirectory he-search-string))
-		(dir-part (expand-file-name (or (he-file-name-directory
+	  (let ((name-part (file-name-nondirectory he-search-string))
+		(dir-part (expand-file-name (or (file-name-directory
 						 he-search-string) ""))))
 	    (if (and (not (equal he-search-string ""))
-		     (he-file-directory-p dir-part))
+		     (file-directory-p dir-part))
 		(setq expansion (file-name-completion name-part
 						      dir-part)))
 	    (if (or (eq expansion t)
@@ -495,16 +493,14 @@ otherwise."
 	  (if old (he-reset-string))
 	  ())
 	(let ((filename (he-concat-directory-file-name
-			 (he-file-name-directory he-search-string)
+			 (file-name-directory he-search-string)
 			 expansion)))
 	  (he-substitute-string filename)
 	  (setq he-tried-table (cons expansion (cdr he-tried-table)))
 	  t))))
 
 (defvar he-file-name-chars
-  (cond ((memq system-type '(vax-vms axp-vms))
-	 "-a-zA-Z0-9_/.,~^#$+=:\\[\\]")
-	((memq system-type '(ms-dos windows-nt cygwin))
+  (cond ((memq system-type '(ms-dos windows-nt cygwin))
 	 "-a-zA-Z0-9_/.,~^#$+=:\\\\")
 	(t			    ;; More strange file formats ?
 	 "-a-zA-Z0-9_/.,~^#$+="))
@@ -518,43 +514,11 @@ otherwise."
 	  op
 	(point)))))
 
-;; Thanks go to Richard Levitte <levitte@e.kth.se> who helped to make these
-;; work under VMS, and to David Hughes <ukchugd@ukpmr.cs.philips.nl> who
+;; Thanks go to David Hughes <ukchugd@ukpmr.cs.philips.nl> who
 ;; helped to make it work on PC.
-(defun he-file-name-nondirectory (file)
-  "Fix to make `file-name-nondirectory' work for hippie-expand under VMS."
-  (if (memq system-type '(axp-vms vax-vms))
-      (let ((n (file-name-nondirectory file)))
-	(if (string-match "^\\(\\[.*\\)\\.\\([^\\.]*\\)$" n)
-	    (concat "[." (substring n (match-beginning 2) (match-end 2)))
-	  n))
-    (file-name-nondirectory file)))
-
-(defun he-file-name-directory (file)
-  "Fix to make `file-name-directory' work for hippie-expand under VMS."
-  (if (memq system-type '(axp-vms vax-vms))
-      (let ((n (file-name-nondirectory file))
-	    (d (file-name-directory file)))
-	(if (string-match "^\\(\\[.*\\)\\.\\([^\\.]*\\)$" n)
-	    (concat d (substring n (match-beginning 1) (match-end 1)) "]")
-	  d))
-    (file-name-directory file)))
-
-(defun he-file-directory-p (file)
-  "Fix to make `file-directory-p' work for hippie-expand under VMS."
-  (if (memq system-type '(vax-vms axp-vms))
-      (or (file-directory-p file)
-	  (file-directory-p (concat file "[000000]")))
-    (file-directory-p file)))
-
 (defun he-concat-directory-file-name (dir-part name-part)
   "Try to slam together two parts of a file specification, system dependently."
   (cond ((null dir-part) name-part)
-	((memq system-type '(axp-vms vax-vms))
-	 (if (and (string= (substring dir-part -1) "]")
-		  (string= (substring name-part 0 2) "[."))
-	     (concat (substring dir-part 0 -1) (substring name-part 1))
-	   (concat dir-part name-part)))
 	((memq system-type '(ms-dos w32))
 	 (if (and (string-match "\\\\" dir-part)
 		  (not (string-match "/" dir-part))
@@ -1223,5 +1187,5 @@ string).  It returns t if a new completion is found, nil otherwise."
 
 (provide 'hippie-exp)
 
-;;; arch-tag: 5e6e00bf-b061-4a7a-9b46-de0ae105ab99
+;; arch-tag: 5e6e00bf-b061-4a7a-9b46-de0ae105ab99
 ;;; hippie-exp.el ends here

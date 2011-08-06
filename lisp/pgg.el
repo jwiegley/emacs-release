@@ -1,7 +1,7 @@
 ;;; pgg.el --- glue for the various PGP implementations.
 
 ;; Copyright (C) 1999, 2000, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Daiki Ueno <ueno@unixuser.org>
 ;; Symmetric encryption added by: Sascha Wilde <wilde@sha-bang.de>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,11 +21,12 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
+
+;; This file is on its way to obsolescence, waiting for allout.el to
+;; switch to EPG.
 
 ;;; Code:
 
@@ -35,10 +36,91 @@
 
 ;; Don't merge these two `eval-when-compile's.
 (eval-when-compile
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest r)))
   (require 'cl))
 
 ;;; @ utility functions
 ;;;
+
+(eval-when-compile
+  ;; Define it as a null macro for Emacs in order to suppress a byte
+  ;; compile warning that Emacs 21 issues.
+  (defmacro pgg-run-at-time-1 (time repeat function args)
+    (when (featurep 'xemacs)
+      (if (condition-case nil
+	      (let ((delete-itimer 'delete-itimer)
+		    (itimer-driver-start 'itimer-driver-start)
+		    (itimer-value 'itimer-value)
+		    (start-itimer 'start-itimer))
+		(unless (or (symbol-value 'itimer-process)
+			    (symbol-value 'itimer-timer))
+		  (funcall itimer-driver-start))
+		;; Check whether there is a bug to which the difference of
+		;; the present time and the time when the itimer driver was
+		;; woken up is subtracted from the initial itimer value.
+		(let* ((inhibit-quit t)
+		       (ctime (current-time))
+		       (itimer-timer-last-wakeup
+			(prog1
+			    ctime
+			  (setcar ctime (1- (car ctime)))))
+		       (itimer-list nil)
+		       (itimer (funcall start-itimer "pgg-run-at-time"
+					'ignore 5)))
+		  (sleep-for 0.1) ;; Accept the timeout interrupt.
+		  (prog1
+		      (> (funcall itimer-value itimer) 0)
+		    (funcall delete-itimer itimer))))
+	    (error nil))
+	  `(let ((time ,time))
+	     (apply #'start-itimer "pgg-run-at-time"
+		    ,function (if time (max time 1e-9) 1e-9)
+		    ,repeat nil t ,args)))
+      `(let ((time ,time)
+	     (itimers (list nil)))
+	 (setcar
+	  itimers
+	  (apply #'start-itimer "pgg-run-at-time"
+		 (lambda (itimers repeat function &rest args)
+		   (let ((itimer (car itimers)))
+		     (if repeat
+			 (progn
+			   (set-itimer-function
+			    itimer
+			    (lambda (itimer repeat function &rest args)
+			      (set-itimer-restart itimer repeat)
+			      (set-itimer-function itimer function)
+			      (set-itimer-function-arguments itimer args)
+			      (apply function args)))
+			   (set-itimer-function-arguments
+			    itimer
+			    (append (list itimer repeat function) args)))
+		       (set-itimer-function
+			itimer
+			(lambda (itimer function &rest args)
+			  (delete-itimer itimer)
+			  (apply function args)))
+		       (set-itimer-function-arguments
+			itimer
+			(append (list itimer function) args)))))
+		 1e-9 (if time (max time 1e-9) 1e-9)
+		 nil t itimers ,repeat ,function ,args))))))
+
+(eval-and-compile
+  (if (featurep 'xemacs)
+      (progn
+	(defun pgg-run-at-time (time repeat function &rest args)
+	  "Emulating function run as `run-at-time'.
+TIME should be nil meaning now, or a number of seconds from now.
+Return an itimer object which can be used in either `delete-itimer'
+or `cancel-timer'."
+	  (pgg-run-at-time-1 time repeat function args))
+	(defun pgg-cancel-timer (timer)
+	  "Emulate cancel-timer for xemacs."
+	  (let ((delete-itimer 'delete-itimer))
+	    (funcall delete-itimer timer))))
+    (defalias 'pgg-run-at-time 'run-at-time)
+    (defalias 'pgg-cancel-timer 'cancel-timer)))
 
 (defun pgg-invoke (func scheme &rest args)
   (progn
@@ -153,6 +235,8 @@ regulate cache behavior."
   (defun pgg-clear-string (string)
     (fillarray string ?_)))
 
+(declare-function pgg-clear-string "pgg" (string))
+
 (defun pgg-remove-passphrase-from-cache (key &optional notruncate)
   "Omit passphrase associated with KEY in time-limited passphrase cache.
 
@@ -176,85 +260,6 @@ regulate cache behavior."
     (when old-timer
       (pgg-cancel-timer old-timer)
       (unintern interned-timer-key pgg-pending-timers))))
-
-(eval-when-compile
-  (defmacro pgg-run-at-time-1 (time repeat function args)
-    (when (featurep 'xemacs)
-      (if (condition-case nil
-	      (let ((delete-itimer 'delete-itimer)
-		    (itimer-driver-start 'itimer-driver-start)
-		    (itimer-value 'itimer-value)
-		    (start-itimer 'start-itimer))
-		(unless (or (symbol-value 'itimer-process)
-			    (symbol-value 'itimer-timer))
-		  (funcall itimer-driver-start))
-		;; Check whether there is a bug to which the difference of
-		;; the present time and the time when the itimer driver was
-		;; woken up is subtracted from the initial itimer value.
-		(let* ((inhibit-quit t)
-		       (ctime (current-time))
-		       (itimer-timer-last-wakeup
-			(prog1
-			    ctime
-			  (setcar ctime (1- (car ctime)))))
-		       (itimer-list nil)
-		       (itimer (funcall start-itimer "pgg-run-at-time"
-					'ignore 5)))
-		  (sleep-for 0.1) ;; Accept the timeout interrupt.
-		  (prog1
-		      (> (funcall itimer-value itimer) 0)
-		    (funcall delete-itimer itimer))))
-	    (error nil))
-	  `(let ((time ,time))
-	     (apply #'start-itimer "pgg-run-at-time"
-		    ,function (if time (max time 1e-9) 1e-9)
-		    ,repeat nil t ,args)))
-      `(let ((time ,time)
-	     (itimers (list nil)))
-	 (setcar
-	  itimers
-	  (apply #'start-itimer "pgg-run-at-time"
-		 (lambda (itimers repeat function &rest args)
-		   (let ((itimer (car itimers)))
-		     (if repeat
-			 (progn
-			   (set-itimer-function
-			    itimer
-			    (lambda (itimer repeat function &rest args)
-			      (set-itimer-restart itimer repeat)
-			      (set-itimer-function itimer function)
-			      (set-itimer-function-arguments itimer args)
-			      (apply function args)))
-			   (set-itimer-function-arguments
-			    itimer
-			    (append (list itimer repeat function) args)))
-		       (set-itimer-function
-			itimer
-			(lambda (itimer function &rest args)
-			  (delete-itimer itimer)
-			  (apply function args)))
-		       (set-itimer-function-arguments
-			itimer
-			(append (list itimer function) args)))))
-		 1e-9 (if time (max time 1e-9) 1e-9)
-		 nil t itimers ,repeat ,function ,args))))))
-
-(eval-and-compile
-  (if (featurep 'xemacs)
-      (progn
-        (defun pgg-run-at-time (time repeat function &rest args)
-          "Emulating function run as `run-at-time'.
-TIME should be nil meaning now, or a number of seconds from now.
-Return an itimer object which can be used in either `delete-itimer'
-or `cancel-timer'."
-          (pgg-run-at-time-1 time repeat function args))
-        (defun pgg-cancel-timer (timer)
-          "Emulate cancel-timer for xemacs."
-          (let ((delete-itimer 'delete-itimer))
-            (funcall delete-itimer timer)))
-        )
-    (defalias 'pgg-run-at-time 'run-at-time)
-    (defalias 'pgg-cancel-timer 'cancel-timer)))
 
 (defmacro pgg-convert-lbt-region (start end lbt)
   `(let ((pgg-conversion-end (set-marker (make-marker) ,end)))
@@ -595,5 +600,5 @@ within the region."
 
 (provide 'pgg)
 
-;;; arch-tag: 9cc705dd-1e6a-4c90-8dce-c3561f9a2cf4
+;; arch-tag: 9cc705dd-1e6a-4c90-8dce-c3561f9a2cf4
 ;;; pgg.el ends here

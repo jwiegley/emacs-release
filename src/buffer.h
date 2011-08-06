@@ -1,14 +1,14 @@
 /* Header file for the buffer manipulation primitives.
    Copyright (C) 1985, 1986, 1993, 1994, 1995, 1997, 1998, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 /* Accessing the parameters of the current buffer.  */
@@ -208,24 +206,22 @@ Boston, MA 02110-1301, USA.  */
 
 /* Macros to set PT in the current buffer, or another buffer.  */
 
-#define SET_PT(position) (set_point (current_buffer, (position)))
+#define SET_PT(position) (set_point (position))
 #define TEMP_SET_PT(position) (temp_set_point (current_buffer, (position)))
 
-#define SET_PT_BOTH(position, byte) \
-  (set_point_both (current_buffer, (position), (byte)))
+#define SET_PT_BOTH(position, byte) (set_point_both (position, byte))
 #define TEMP_SET_PT_BOTH(position, byte) \
   (temp_set_point_both (current_buffer, (position), (byte)))
 
-#define BUF_SET_PT(buffer, position) \
-  (set_point ((buffer), (position)))
 #define BUF_TEMP_SET_PT(buffer, position) \
   (temp_set_point ((buffer), (position)))
 
-extern void set_point P_ ((struct buffer *, int));
-extern INLINE void temp_set_point P_ ((struct buffer *, int));
-extern void set_point_both P_ ((struct buffer *, int, int));
-extern INLINE void temp_set_point_both P_ ((struct buffer *, int, int));
-extern void enlarge_buffer_text P_ ((struct buffer *, int));
+extern void set_point P_ ((EMACS_INT));
+extern INLINE void temp_set_point P_ ((struct buffer *, EMACS_INT));
+extern void set_point_both P_ ((EMACS_INT, EMACS_INT));
+extern INLINE void temp_set_point_both P_ ((struct buffer *,
+					    EMACS_INT, EMACS_INT));
+extern void enlarge_buffer_text P_ ((struct buffer *, EMACS_INT));
 
 
 /* Macros for setting the BEGV, ZV or PT of a given buffer.
@@ -266,7 +262,7 @@ extern void enlarge_buffer_text P_ ((struct buffer *, int));
    and store the charpos in CHARPOS and the bytepos in BYTEPOS.  */
 
 #define DECODE_POSITION(charpos, bytepos, pos)			\
-if (1)								\
+do								\
   {								\
     Lisp_Object __pos = (pos);					\
     if (NUMBERP (__pos))					\
@@ -282,7 +278,7 @@ if (1)								\
     else							\
       wrong_type_argument (Qinteger_or_marker_p, __pos);	\
   }								\
-else
+while (0)
 
 /* Return the address of byte position N in current buffer.  */
 
@@ -326,7 +322,6 @@ else
 
 /* Variables used locally in FETCH_MULTIBYTE_CHAR.  */
 extern unsigned char *_fetch_multibyte_char_p;
-extern int _fetch_multibyte_char_len;
 
 /* Return character code of multi-byte form at position POS.  If POS
    doesn't point the head of valid multi-byte form, only the byte at
@@ -334,10 +329,18 @@ extern int _fetch_multibyte_char_len;
 
 #define FETCH_MULTIBYTE_CHAR(pos)				 	\
   (_fetch_multibyte_char_p = (((pos) >= GPT_BYTE ? GAP_SIZE : 0) 	\
-			       + (pos) + BEG_ADDR - BEG_BYTE),		 	\
-   _fetch_multibyte_char_len						\
-      = ((pos) >= GPT_BYTE ? ZV_BYTE : GPT_BYTE) - (pos),		\
-   STRING_CHAR (_fetch_multibyte_char_p, _fetch_multibyte_char_len))
+			       + (pos) + BEG_ADDR - BEG_BYTE),	 	\
+   STRING_CHAR (_fetch_multibyte_char_p, 0))
+
+/* Return character at position POS.  If the current buffer is unibyte
+   and the character is not ASCII, make the returning character
+   multibyte.  */
+
+#define FETCH_CHAR_AS_MULTIBYTE(pos)			\
+  (!NILP (current_buffer->enable_multibyte_characters)	\
+   ? FETCH_MULTIBYTE_CHAR ((pos))			\
+   : unibyte_to_multibyte_table[(FETCH_BYTE ((pos)))])
+
 
 /* Macros for accessing a character or byte,
    or converting between byte positions and addresses,
@@ -386,10 +389,7 @@ extern int _fetch_multibyte_char_len;
   (_fetch_multibyte_char_p						\
      = (((pos) >= BUF_GPT_BYTE (buf) ? BUF_GAP_SIZE (buf) : 0)		\
         + (pos) + BUF_BEG_ADDR (buf) - BEG_BYTE),			\
-   _fetch_multibyte_char_len						\
-     = (((pos) >= BUF_GPT_BYTE (buf) ? BUF_ZV_BYTE (buf) : BUF_GPT_BYTE (buf)) \
-        - (pos)),							\
-   STRING_CHAR (_fetch_multibyte_char_p, _fetch_multibyte_char_len))
+   STRING_CHAR (_fetch_multibyte_char_p, 0))
 
 /* Define the actual buffer data structures.  */
 
@@ -445,6 +445,11 @@ struct buffer_text
        successive elements in its marker `chain'
        are the other markers referring to this buffer.  */
     struct Lisp_Marker *markers;
+
+    /* Usually 0.  Temporarily set to 1 in decode_coding_gap to
+       prevent Fgarbage_collect from shrinking the gap and loosing
+       not-yet-decoded bytes.  */
+    int inhibit_shrinking;
   };
 
 /* This is the structure that the buffer Lisp object points to.  */
@@ -456,7 +461,7 @@ struct buffer
 
      Check out mark_buffer (alloc.c) to see why.  */
 
-  EMACS_INT size;
+  EMACS_UINT size;
 
   /* Next buffer, in chain of all buffers including killed buffers.
      This chain is used only for garbage collection, in order to
@@ -554,6 +559,17 @@ struct buffer
   EMACS_INT overlay_center;
 
   /* Everything from here down must be a Lisp_Object.  */
+  /* buffer-local Lisp variables start at `undo_list',
+     tho only the ones from `name' on are GC'd normally.  */
+
+  /* Changes in the buffer are recorded here for undo.
+     t means don't record anything.
+     This information belongs to the base buffer of an indirect buffer,
+     But we can't store it in the  struct buffer_text
+     because local variables have to be right in the  struct buffer.
+     So we copy it around in set_buffer_internal.
+     This comes before `name' because it is marked in a special way.  */
+  Lisp_Object undo_list;
 
   /* The name of this buffer.  */
   Lisp_Object name;
@@ -592,15 +608,6 @@ struct buffer
   Lisp_Object mode_name;
   /* Mode line element that controls format of mode line.  */
   Lisp_Object mode_line_format;
-
-  /* Changes in the buffer are recorded here for undo.
-     t means don't record anything.
-     This information belongs to the base buffer of an indirect buffer,
-     But we can't store it in the  struct buffer_text
-     because local variables have to be right in the  struct buffer.
-     So we copy it around in set_buffer_internal.
-     This comes before `name' because it is marked in a special way.  */
-  Lisp_Object undo_list;
 
   /* Analogous to mode_line_format for the line displayed at the top
      of windows.  Nil means don't display that line.  */
@@ -643,6 +650,8 @@ struct buffer
 
   /* Non-nil means do not display continuation lines.  */
   Lisp_Object truncate_lines;
+  /* Non-nil means to use word wrapping when displaying continuation lines.  */
+  Lisp_Object word_wrap;
   /* Non-nil means display ctl chars with uparrow.  */
   Lisp_Object ctl_arrow;
   /* Non-nil means display text from right to left.  */
@@ -819,23 +828,13 @@ extern struct buffer buffer_local_flags;
    that don't have such names.  */
 
 extern struct buffer buffer_local_symbols;
-
-/* This structure holds the required types for the values in the
-   buffer-local slots.  If a slot contains Qnil, then the
-   corresponding buffer slot may contain a value of any type.  If a
-   slot contains an integer, then prospective values' tags must be
-   equal to that integer (except nil is always allowed).
-   When a tag does not match, the function
-   buffer_slot_type_mismatch will signal an error.
-
-   If a slot here contains -1, the corresponding variable is read-only.  */
-
-extern struct buffer buffer_local_types;
 
 extern void delete_all_overlays P_ ((struct buffer *));
 extern void reset_buffer P_ ((struct buffer *));
 extern void evaporate_overlays P_ ((EMACS_INT));
-extern int overlays_at P_ ((EMACS_INT, int, Lisp_Object **, int *, int *, int *, int));
+extern int overlays_at P_ ((EMACS_INT pos, int extend, Lisp_Object **vec_ptr,
+			    int *len_ptr, EMACS_INT *next_ptr,
+			    EMACS_INT *prev_ptr, int change_req));
 extern int sort_overlays P_ ((Lisp_Object *, int, struct window *));
 extern void recenter_overlay_lists P_ ((struct buffer *, EMACS_INT));
 extern int overlay_strings P_ ((EMACS_INT, struct window *, unsigned char **));
@@ -844,7 +843,7 @@ extern void set_buffer_internal P_ ((struct buffer *));
 extern void set_buffer_internal_1 P_ ((struct buffer *));
 extern void set_buffer_temp P_ ((struct buffer *));
 extern void record_buffer P_ ((Lisp_Object));
-extern void buffer_slot_type_mismatch P_ ((int)) NO_RETURN;
+extern void buffer_slot_type_mismatch P_ ((Lisp_Object, int)) NO_RETURN;
 extern void fix_overlays_before P_ ((struct buffer *, EMACS_INT, EMACS_INT));
 extern void mmap_set_vars P_ ((int));
 
@@ -867,6 +866,8 @@ extern void mmap_set_vars P_ ((int));
       }									\
   } while (0)
 
+EXFUN (Fbuffer_list, 1);
+EXFUN (Fbuffer_live_p, 1);
 EXFUN (Fbuffer_name, 1);
 EXFUN (Fget_file_buffer, 1);
 EXFUN (Fnext_overlay_change, 1);
@@ -910,7 +911,7 @@ extern Lisp_Object Vtransient_mark_mode;
    We assume you know which buffer it's pointing into.  */
 
 #define OVERLAY_POSITION(P) \
- (GC_MARKERP (P) ? marker_position (P) : (abort (), 0))
+ (MARKERP (P) ? marker_position (P) : (abort (), 0))
 
 
 /***********************************************************************
@@ -995,12 +996,6 @@ extern int last_per_buffer_idx;
 
 #define PER_BUFFER_SYMBOL(OFFSET) \
       (*(Lisp_Object *)((OFFSET) + (char *) &buffer_local_symbols))
-
-/* Return the type of the per-buffer variable at offset OFFSET in the
-   buffer structure.  */
-
-#define PER_BUFFER_TYPE(OFFSET) \
-      (*(Lisp_Object *)((OFFSET) + (char *) &buffer_local_types))
 
 /* arch-tag: 679305dd-d41c-4a50-b170-3caf5c97b2d1
    (do not change this comment) */

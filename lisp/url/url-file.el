@@ -1,26 +1,24 @@
 ;;; url-file.el --- File retrieval code
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes
 
 ;; This file is part of GNU Emacs.
 ;;
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-;;
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-;;
+
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -41,7 +39,7 @@
 This tries the common compression extensions, because things like
 ange-ftp and efs are not quite smart enough to realize when a server
 can do automatic decompression for them, and won't find 'foo' if
-'foo.gz' exists, even though the ftp server would happily serve it up
+'foo.gz' exists, even though the FTP server would happily serve it up
 to them."
   (let ((scratch nil)
 	(compressed-extensions '("" ".gz" ".z" ".Z" ".bz2"))
@@ -86,6 +84,11 @@ to them."
 	    (error nil)))
       (apply func args))))
 
+(declare-function ange-ftp-set-passwd "ange-ftp" (host user passwd))
+(declare-function ange-ftp-copy-file-internal "ange-ftp"
+		  (filename newname ok-if-already-exists
+			    keep-date &optional msg cont nowait))
+
 (defun url-file-build-filename (url)
   (if (not (vectorp url))
       (setq url (url-generic-parse-url url)))
@@ -113,8 +116,9 @@ to them."
 	 (cond
 	  ((featurep 'ange-ftp)
 	   (ange-ftp-set-passwd host user pass))
-	  ((or (featurep 'efs) (featurep 'efs-auto))
-	   (efs-set-passwd host user pass))
+	  ((when (featurep 'xemacs)
+             (or (featurep 'efs) (featurep 'efs-auto)
+                 (efs-set-passwd host user pass))))
 	  (t
 	   nil)))
 
@@ -127,10 +131,11 @@ to them."
     ;; straighten it out for us?
     ;; (if (and (file-directory-p filename)
     ;;          (not (string-match (format "%c$" directory-sep-char) filename)))
-    ;;     (url-set-filename url (format "%s%c" filename directory-sep-char)))
+    ;;     (setf (url-filename url)
+    ;;           (format "%s%c" filename directory-sep-char)))
     (if (and (file-directory-p filename)
 	     (not (string-match "/\\'" filename)))
-	(url-set-filename url (format "%s/" filename)))
+	(setf (url-filename url) (format "%s/" filename)))
 
 
     ;; If it is a directory, look for an index file first.
@@ -196,10 +201,8 @@ to them."
 					(current-buffer)
 					callback cbargs))
 	  ;; FTP handling
-	  (let* ((extension (url-file-extension filename))
-		 (new (url-generate-unique-filename
-		       (and (> (length extension) 0)
-			    (concat "%s." extension)))))
+	  (let ((new (make-temp-file
+		      (format "url-tmp.%d" (user-real-uid)))))
 	    (if (featurep 'ange-ftp)
 		(ange-ftp-copy-file-internal filename (expand-file-name new) t
 					     nil t
@@ -207,14 +210,15 @@ to them."
 						   new (current-buffer)
 						   callback cbargs)
 					     t)
-	      (autoload 'efs-copy-file-internal "efs")
-	      (efs-copy-file-internal filename (efs-ftp-path filename)
-				      new (efs-ftp-path new)
-				      t nil 0
-				      (list 'url-file-asynch-callback
-					    new (current-buffer)
-					    callback cbargs)
-				      0 nil))))))
+              (when (featurep 'xemacs)
+                (autoload 'efs-copy-file-internal "efs")
+                (efs-copy-file-internal filename (efs-ftp-path filename)
+                                        new (efs-ftp-path new)
+                                        t nil 0
+                                        (list 'url-file-asynch-callback
+                                              new (current-buffer)
+                                              callback cbargs)
+                                        0 nil)))))))
     buffer))
 
 (defmacro url-file-create-wrapper (method args)

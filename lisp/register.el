@@ -1,17 +1,17 @@
 ;;; register.el --- register commands for Emacs
 
 ;; Copyright (C) 1985, 1993, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -30,27 +28,44 @@
 ;; pieces of buffer state to named variables.  The entry points are
 ;; documented in the Emacs user's manual.
 
+;;; Global key bindings
+
+;;;###autoload (define-key ctl-x-r-map "\C-@" 'point-to-register)
+;;;###autoload (define-key ctl-x-r-map [?\C-\ ] 'point-to-register)
+;;;###autoload (define-key ctl-x-r-map " " 'point-to-register)
+;;;###autoload (define-key ctl-x-r-map "j" 'jump-to-register)
+;;;###autoload (define-key ctl-x-r-map "s" 'copy-to-register)
+;;;###autoload (define-key ctl-x-r-map "x" 'copy-to-register)
+;;;###autoload (define-key ctl-x-r-map "i" 'insert-register)
+;;;###autoload (define-key ctl-x-r-map "g" 'insert-register)
+;;;###autoload (define-key ctl-x-r-map "r" 'copy-rectangle-to-register)
+;;;###autoload (define-key ctl-x-r-map "n" 'number-to-register)
+;;;###autoload (define-key ctl-x-r-map "+" 'increment-register)
+;;;###autoload (define-key ctl-x-r-map "w" 'window-configuration-to-register)
+;;;###autoload (define-key ctl-x-r-map "f" 'frame-configuration-to-register)
+
 ;;; Code:
 
 (defvar register-alist nil
   "Alist of elements (NAME . CONTENTS), one for each Emacs register.
 NAME is a character (a number).  CONTENTS is a string, number, marker or list.
 A list of strings represents a rectangle.
-A list of the form (file . NAME) represents the file named NAME.
-A list of the form (file-query NAME POSITION) represents position POSITION
- in the file named NAME, but query before visiting it.
+A list of the form (file . FILE-NAME) represents the file named FILE-NAME.
+A list of the form (file-query FILE-NAME POSITION) represents
+ position POSITION in the file named FILE-NAME, but query before
+ visiting it.
 A list of the form (WINDOW-CONFIGURATION POSITION)
  represents a saved window configuration plus a saved value of point.
 A list of the form (FRAME-CONFIGURATION POSITION)
  represents a saved frame configuration plus a saved value of point.")
 
-(defun get-register (reg)
-  "Return contents of Emacs register named REG, or nil if none."
-  (cdr (assq reg register-alist)))
+(defun get-register (register)
+  "Return contents of Emacs register named REGISTER, or nil if none."
+  (cdr (assq register register-alist)))
 
 (defun set-register (register value)
   "Set contents of Emacs register named REGISTER to VALUE.  Returns VALUE.
-See the documentation of the variable `register-alist' for possible VALUE."
+See the documentation of the variable `register-alist' for possible VALUEs."
   (let ((aelt (assq register register-alist)))
     (if aelt
 	(setcdr aelt value)
@@ -91,7 +106,7 @@ Argument is a character, naming the register."
 (defun jump-to-register (register &optional delete)
   "Move point to location stored in a register.
 If the register contains a file name, find that file.
- \(To put a file name in a register, you must use `set-register'.)
+\(To put a file name in a register, you must use `set-register'.)
 If the register contains a window configuration (one frame) or a frame
 configuration (all frames), restore that frame or all frames accordingly.
 First argument is a character, naming the register.
@@ -274,7 +289,8 @@ Interactively, second arg is non-nil if prefix arg is supplied."
   (if (not arg) (exchange-point-and-mark)))
 
 (defun copy-to-register (register start end &optional delete-flag)
-  "Copy region into register REGISTER.  With prefix arg, delete as well.
+  "Copy region into register REGISTER.
+With prefix arg, delete as well.
 Called from program, takes four args: REGISTER, START, END and DELETE-FLAG.
 START and END are buffer positions indicating what to copy."
   (interactive "cCopy to register: \nr\nP")
@@ -287,10 +303,12 @@ With prefix arg, delete as well.
 Called from program, takes four args: REGISTER, START, END and DELETE-FLAG.
 START and END are buffer positions indicating what to append."
   (interactive "cAppend to register: \nr\nP")
-  (or (stringp (get-register register))
-      (error "Register does not contain text"))
-  (set-register register (concat (get-register register)
-			    (filter-buffer-substring start end)))
+  (let ((reg (get-register register))
+        (text (filter-buffer-substring start end)))
+    (set-register
+     register (cond ((not reg) text)
+                    ((stringp reg) (concat reg text))
+                    (t (error "Register does not contain text")))))
   (if delete-flag (delete-region start end)))
 
 (defun prepend-to-register (register start end &optional delete-flag)
@@ -299,16 +317,18 @@ With prefix arg, delete as well.
 Called from program, takes four args: REGISTER, START, END and DELETE-FLAG.
 START and END are buffer positions indicating what to prepend."
   (interactive "cPrepend to register: \nr\nP")
-  (or (stringp (get-register register))
-      (error "Register does not contain text"))
-  (set-register register (concat (filter-buffer-substring start end)
-			    (get-register register)))
+  (let ((reg (get-register register))
+        (text (filter-buffer-substring start end)))
+    (set-register
+     register (cond ((not reg) text)
+                    ((stringp reg) (concat text reg))
+                    (t (error "Register does not contain text")))))
   (if delete-flag (delete-region start end)))
 
 (defun copy-rectangle-to-register (register start end &optional delete-flag)
   "Copy rectangular region into register REGISTER.
-With prefix arg, delete as well.  To insert this register
-in the buffer, use \\[insert-register].
+With prefix arg, delete as well.
+To insert this register in the buffer, use \\[insert-register].
 
 Called from a program, takes four args: REGISTER, START, END and DELETE-FLAG.
 START and END are buffer positions giving two corners of rectangle."
@@ -319,5 +339,5 @@ START and END are buffer positions giving two corners of rectangle."
 		  (extract-rectangle start end))))
 
 (provide 'register)
-;;; arch-tag: ce14dd68-8265-475f-9341-5d4ec5a53035
+;; arch-tag: ce14dd68-8265-475f-9341-5d4ec5a53035
 ;;; register.el ends here

@@ -1,7 +1,7 @@
 ;;; advice.el --- an overloading mechanism for Emacs Lisp functions
 
 ;; Copyright (C) 1993, 1994, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Hans Chalupsky <hans@cs.buffalo.edu>
 ;; Maintainer: FSF
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; LCD Archive Entry:
 ;; advice|Hans Chalupsky|hans@cs.buffalo.edu|
@@ -2470,27 +2468,11 @@ will clear the cache."
   "Take a macro function DEFINITION and make a lambda out of it."
   `(cdr ,definition))
 
-;; There is no way to determine whether some subr is a special form or not,
-;; hence we need this list (which is probably out of date):
-(defvar ad-special-forms
-  (let ((tem '(and catch cond condition-case defconst defmacro
-		   defun defvar function if interactive let let*
-		   or prog1 prog2 progn quote save-current-buffer
-		   save-excursion save-restriction save-window-excursion
-		   setq setq-default unwind-protect while
-		   with-output-to-temp-buffer)))
-    ;; track-mouse could be void in some configurations.
-    (if (fboundp 'track-mouse)
-	(push 'track-mouse tem))
-    (mapcar 'symbol-function tem)))
-
-(defmacro ad-special-form-p (definition)
-  ;;"non-nil if DEFINITION is a special form."
-  (list 'memq definition 'ad-special-forms))
-
-(defmacro ad-interactive-p (definition)
-  ;;"non-nil if DEFINITION can be called interactively."
-  (list 'commandp definition))
+(defun ad-special-form-p (definition)
+  "Non-nil if and only if DEFINITION is a special form."
+  (if (and (symbolp definition) (fboundp definition))
+      (setq definition (indirect-function definition)))
+  (and (subrp definition) (eq (cdr (subr-arity definition)) 'unevalled)))
 
 (defmacro ad-subr-p (definition)
   ;;"non-nil if DEFINITION is a subr."
@@ -2606,13 +2588,12 @@ that property, or otherwise use `(&rest ad-subr-args)'."
 	docstring)))
 
 (defun ad-interactive-form (definition)
-  "Return the interactive form of DEFINITION."
-  (cond ((ad-compiled-p definition)
-	 (and (commandp definition)
-	      (list 'interactive (aref (ad-compiled-code definition) 5))))
-	((or (ad-advice-p definition)
-	     (ad-lambda-p definition))
-	 (commandp (ad-lambda-expression definition)))))
+  "Return the interactive form of DEFINITION.
+Like `interactive-form', but also works on pieces of advice."
+  (interactive-form
+   (if (ad-advice-p definition)
+       (ad-lambda-expression definition)
+     definition)))
 
 (defun ad-body-forms (definition)
   "Return the list of body forms of DEFINITION."
@@ -2623,17 +2604,13 @@ that property, or otherwise use `(&rest ad-subr-args)'."
 		    (if (ad-interactive-form definition) 1 0))
 		 (cdr (cdr (ad-lambda-expression definition)))))))
 
-;; Matches the docstring of an advised definition.
-;; The first group of the regexp matches the function name:
-(defvar ad-advised-definition-docstring-regexp "^\\$ad-doc: \\(.+\\)\\$$")
-
 (defun ad-make-advised-definition-docstring (function)
   "Make an identifying docstring for the advised definition of FUNCTION.
 Put function name into the documentation string so we can infer
 the name of the advised function from the docstring.  This is needed
 to generate a proper advised docstring even if we are just given a
-definition (also see the defadvice for `documentation')."
-  (format "$ad-doc: %s$" (prin1-to-string function)))
+definition (see the code for `documentation')."
+  (propertize "Advice doc string" 'ad-advice-info function))
 
 (defun ad-advised-definition-p (definition)
   "Return non-nil if DEFINITION was generated from advice information."
@@ -2642,8 +2619,7 @@ definition (also see the defadvice for `documentation')."
 	  (ad-compiled-p definition))
       (let ((docstring (ad-docstring definition)))
 	(and (stringp docstring)
-	     (string-match
-	      ad-advised-definition-docstring-regexp docstring)))))
+	     (get-text-property 0 'ad-advice-info docstring)))))
 
 (defun ad-definition-type (definition)
   "Return symbol that describes the type of DEFINITION."
@@ -2697,12 +2673,9 @@ For that it has to be fbound with a non-autoload definition."
       (ad-with-auto-activation-disabled
        (require 'bytecomp)
        (let ((symbol (make-symbol "advice-compilation"))
-	     (byte-compile-warnings
-	      (if (listp byte-compile-warnings) byte-compile-warnings
-		byte-compile-warning-types)))
+	     (byte-compile-warnings byte-compile-warnings))
 	 (if (featurep 'cl)
-	     (setq byte-compile-warnings
-		   (remq 'cl-functions byte-compile-warnings)))
+	     (byte-compile-disable-warning 'cl-functions))
 	 (fset symbol (symbol-function function))
 	 (byte-compile symbol)
 	 (fset function (symbol-function symbol))))))
@@ -3016,7 +2989,9 @@ in any of these classes."
     (setq usage (if (null usage) t (setq origdoc (cdr usage)) (car usage)))
     (if origdoc (setq paragraphs (list origdoc)))
     (unless (eq style 'plain)
-      (push (concat "This " origtype " is advised.") paragraphs))
+      (push (propertize (concat "This " origtype " is advised.")
+			'face 'font-lock-warning-face)
+	    paragraphs))
     (ad-dolist (class ad-advice-classes)
       (ad-dolist (advice (ad-get-enabled-advices function class))
 	(setq advice-docstring
@@ -3024,8 +2999,10 @@ in any of these classes."
 	(if advice-docstring
 	    (push advice-docstring paragraphs))))
     (setq origdoc (if paragraphs
-		      ;; separate paragraphs with blank lines:
-		      (mapconcat 'identity (nreverse paragraphs) "\n\n")))
+		      (propertize
+		       ;; separate paragraphs with blank lines:
+		       (mapconcat 'identity (nreverse paragraphs) "\n\n")
+		       'ad-advice-info function)))
     (help-add-fundoc-usage origdoc usage)))
 
 (defun ad-make-plain-docstring (function)
@@ -3066,7 +3043,7 @@ in any of these classes."
 	   (ad-has-redefining-advice function))
       (let* ((origdef (ad-real-orig-definition function))
 	     (origname (ad-get-advice-info-field function 'origname))
-	     (orig-interactive-p (ad-interactive-p origdef))
+	     (orig-interactive-p (commandp origdef))
 	     (orig-subr-p (ad-subr-p origdef))
 	     (orig-special-form-p (ad-special-form-p origdef))
 	     (orig-macro-p (ad-macro-p origdef))
@@ -3078,15 +3055,11 @@ in any of these classes."
 	     (interactive-form
 	      (cond (orig-macro-p nil)
 		    (advised-interactive-form)
-		    ((ad-interactive-form origdef)
-		     (if (and (symbolp function) (get function 'elp-info))
-			 (interactive-form (aref (get function 'elp-info) 2))
-		       (ad-interactive-form origdef)))
-		    ;; Otherwise we must have a subr: make it interactive if
-		    ;; we have to and initialize required arguments in case
-		    ;; it is called interactively:
-		    (orig-interactive-p
-		     (interactive-form origdef))))
+		    ((interactive-form origdef)
+		     (interactive-form
+                      (if (and (symbolp function) (get function 'elp-info))
+                          (aref (get function 'elp-info) 2)
+                        origdef)))))
 	     (orig-form
 	      (cond ((or orig-special-form-p orig-macro-p)
 		     ;; Special forms and macros will be advised into macros.
@@ -3309,8 +3282,8 @@ advised definition from scratch."
 	      t
 	    (ad-arglist original-definition function))
 	  (if (eq (ad-definition-type original-definition) 'function)
-	      (equal (ad-interactive-form original-definition)
-		     (ad-interactive-form cached-definition))))))
+	      (equal (interactive-form original-definition)
+		     (interactive-form cached-definition))))))
 
 (defun ad-get-cache-class-id (function class)
   "Return the part of FUNCTION's cache id that identifies CLASS."
@@ -3357,8 +3330,8 @@ advised definition from scratch."
 		       (ad-arglist cached-definition))
 		(setq code 'interactive-form-mismatch)
 		(or (null (nth 5 cache-id))
-		    (equal (ad-interactive-form original-definition)
-			   (ad-interactive-form cached-definition)))
+		    (equal (interactive-form original-definition)
+			   (interactive-form cached-definition)))
 		(setq code 'verified))))
     code))
 
@@ -3942,24 +3915,6 @@ undone on exit of this macro."
 ;; during bootstrapping.
 (ad-define-subr-args 'documentation '(function &optional raw))
 
-(defadvice documentation (after ad-advised-docstring first disable preact)
-  "Builds an advised docstring if FUNCTION is advised."
-  ;; Because we get the function name from the advised docstring
-  ;; this will work for function names as well as for definitions:
-  (if (and (stringp ad-return-value)
-	   (string-match
-	    ad-advised-definition-docstring-regexp ad-return-value))
-      (let ((function
-	     (car (read-from-string
-		   ad-return-value (match-beginning 1) (match-end 1)))))
-	(cond ((ad-is-advised function)
-	       (setq ad-return-value (ad-make-advised-docstring function))
-	       ;; Handle optional `raw' argument:
-	       (if (not (ad-get-arg 1))
-		   (setq ad-return-value
-			 (substitute-command-keys ad-return-value))))))))
-
-
 ;; @@ Starting, stopping and recovering from the advice package magic:
 ;; ===================================================================
 
@@ -3968,9 +3923,7 @@ undone on exit of this macro."
   (interactive)
   ;; Advising `ad-activate-internal' means death!!
   (ad-set-advice-info 'ad-activate-internal nil)
-  (ad-safe-fset 'ad-activate-internal 'ad-activate)
-  (ad-enable-advice 'documentation 'after 'ad-advised-docstring)
-  (ad-activate 'documentation 'compile))
+  (ad-safe-fset 'ad-activate-internal 'ad-activate))
 
 (defun ad-stop-advice ()
   "Stop the automatic advice handling magic.
@@ -3978,8 +3931,6 @@ You should only need this in case of Advice-related emergencies."
   (interactive)
   ;; Advising `ad-activate-internal' means death!!
   (ad-set-advice-info 'ad-activate-internal nil)
-  (ad-disable-advice 'documentation 'after 'ad-advised-docstring)
-  (ad-update 'documentation)
   (ad-safe-fset 'ad-activate-internal 'ad-activate-internal-off))
 
 (defun ad-recover-normality ()

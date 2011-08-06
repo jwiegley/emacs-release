@@ -1,13 +1,13 @@
 /* Definitions and headers for GTK widgets.
-   Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008
+   Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009
      Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #ifndef GTKUTIL_H
 #define GTKUTIL_H
@@ -139,6 +137,8 @@ extern char *xg_get_file_name P_ ((FRAME_PTR f,
                                    int mustmatch_p,
                                    int only_dir_p));
 
+extern char *xg_get_font_name P_ ((FRAME_PTR f, char *));
+
 extern GtkWidget *xg_create_widget P_ ((char *type,
                                         char *name,
                                         FRAME_PTR f,
@@ -184,9 +184,9 @@ extern void xg_set_toolkit_scroll_bar_thumb P_ ((struct scroll_bar *bar,
 extern void update_frame_tool_bar P_ ((FRAME_PTR f));
 extern void free_frame_tool_bar P_ ((FRAME_PTR f));
 
-extern void xg_resize_widgets P_ ((FRAME_PTR f,
-                                   int pixelwidth,
-                                   int pixelheight));
+extern void xg_frame_resized P_ ((FRAME_PTR f,
+                                  int pixelwidth,
+                                  int pixelheight));
 extern void xg_frame_set_char_size P_ ((FRAME_PTR f, int cols, int rows));
 extern GtkWidget * xg_win_to_widget P_ ((Display *dpy, Window wdesc));
 

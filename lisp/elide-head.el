@@ -1,17 +1,17 @@
 ;;; elide-head.el --- hide headers in files
 
-;; Copyright (C) 1999, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Dave Love <fx@gnu.org>
 ;; Keywords: outlines tools
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -53,8 +51,9 @@
   :group 'tools)
 
 (defcustom elide-head-headers-to-hide
-  '(("is free software; you can redistribute it" . ; GNU boilerplate
-     "Boston, MA 0211\\(1-1307\\|0-1301\\), USA\\.")
+  '(("is free software[:;] you can redistribute it" . ; GNU boilerplate
+     "\\(Boston, MA 0211\\(1-1307\\|0-1301\\), USA\\|\
+If not, see <http://www\\.gnu\\.org/licenses/>\\)\\.")
     ("The Regents of the University of California\\.  All rights reserved\\." .
      "SUCH DAMAGE\\.")				      ; BSD
     ("Permission is hereby granted, free of charge" . ; X11
@@ -120,5 +119,5 @@ This is suitable as an entry on `find-file-hook' or appropriate mode hooks."
 
 (provide 'elide-head)
 
-;;; arch-tag: a00e6b5b-6aeb-45b1-b734-63e23df80928
+;; arch-tag: a00e6b5b-6aeb-45b1-b734-63e23df80928
 ;;; elide-head.el ends here

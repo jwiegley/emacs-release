@@ -1,16 +1,16 @@
 ;;; format.el --- read and save files in multiple formats
 
 ;; Copyright (C) 1994, 1995, 1997, 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Boris Goldowsky <boris@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -73,15 +71,6 @@
 	   ;; Plain only exists so that there is an obvious neutral choice in
 	   ;; the completion list.
 	   nil nil nil nil nil)
-    (ibm   "IBM Code Page 850 (DOS)"
-	   nil				; The original "1\\(^\\)" is obscure.
-	   "recode -f ibm-pc:latin1" "recode -f latin1:ibm-pc" t nil)
-    (mac   "Apple Macintosh"
-	   nil
-	   "recode -f mac:latin1" "recode -f latin1:mac" t nil)
-    (hp    "HP Roman8"
-	   nil
-	   "recode -f roman8:latin1" "recode -f latin1:roman8" t nil)
     (TeX   "TeX (encoding)"
 	   nil
 	   iso-tex2iso iso-iso2tex t nil)
@@ -107,7 +96,8 @@
 	   nil
 	   iso-spanish iso-cvt-read-only t nil))
   "List of information about understood file formats.
-Elements are of the form \(NAME DOC-STR REGEXP FROM-FN TO-FN MODIFY MODE-FN).
+Elements are of the form
+\(NAME DOC-STR REGEXP FROM-FN TO-FN MODIFY MODE-FN PRESERVE).
 
 NAME    is a symbol, which is stored in `buffer-file-format'.
 
@@ -145,7 +135,7 @@ MODE-FN, if specified, is called when visiting a file with that format.
          that this would turn on some minor mode.
 
 PRESERVE, if non-nil, means that `format-write-file' should not remove
-          this format from `buffer-file-formats'.")
+          this format from `buffer-file-format'.")
 
 ;;; Basic Functions (called from Lisp)
 
@@ -228,6 +218,9 @@ For most purposes, consider using `format-encode-region' instead."
 		  (multibyte enable-multibyte-characters)
 		  (coding-system buffer-file-coding-system))
 	      (with-current-buffer copy-buf
+		(set (make-local-variable
+		      'write-region-post-annotation-function)
+		     'kill-buffer)
 		(setq selective-display sel-disp)
 		(set-buffer-multibyte multibyte)
 		(setq buffer-file-coding-system coding-system))
@@ -369,13 +362,19 @@ one of the formats defined in `format-alist', or a list of such symbols."
 	  (setq format (cdr format)))))))
 
 (defun format-write-file (filename format &optional confirm)
-  "Write current buffer into file FILENAME using some FORMAT.
-Make buffer visit that file and set the format as the default for future
-saves.  If the buffer is already visiting a file, you can specify a directory
-name as FILENAME, to write a file of the same old name in that directory.
+  "Write current buffer into FILENAME, using a format based on FORMAT.
+Constructs the actual format starting from FORMAT, then appending
+any elements from the value of `buffer-file-format' with a non-nil
+`preserve' flag (see the documentation of `format-alist'), if they
+are not already present in FORMAT.  It then updates `buffer-file-format'
+with this format, making it the default for future saves.
 
-If optional third arg CONFIRM is non-nil, ask for confirmation before
-overwriting an existing file.  Interactively, confirmation is required
+If the buffer is already visiting a file, you can specify a
+directory name as FILENAME, to write a file of the same old name
+in that directory.
+
+If optional third arg CONFIRM is non-nil, asks for confirmation before
+overwriting an existing file.  Interactively, requires confirmation
 unless you supply a prefix argument."
   (interactive
    ;; Same interactive spec as write-file, plus format question.
@@ -429,13 +428,34 @@ a list (ABSOLUTE-FILE-NAME SIZE)."
 	  (fmt (format-read (format "Read file `%s' in format: "
 				    (file-name-nondirectory file)))))
      (list file fmt)))
-  (let (value size)
-    (let ((format-alist nil))
-      (setq value (insert-file-contents filename nil beg end))
-      (setq size (nth 1 value)))
-    (if format
-	(setq size (format-decode format size)
-	      value (list (car value) size)))
+  (let (value size old-undo)
+    ;; Record only one undo entry for the insertion.  Inhibit point-motion and
+    ;; modification hooks as with `insert-file-contents'.
+    (let ((inhibit-point-motion-hooks t)
+	  (inhibit-modification-hooks t))
+      ;; Don't bind `buffer-undo-list' to t here to assert that
+      ;; `insert-file-contents' may record whether the buffer was unmodified
+      ;; before.
+      (let ((format-alist nil))
+	(setq value (insert-file-contents filename nil beg end))
+	(setq size (nth 1 value)))
+      (when (consp buffer-undo-list)
+	(let ((head (car buffer-undo-list)))
+	  (when (and (consp head)
+		     (equal (car head) (point))
+		     (equal (cdr head) (+ (point) size)))
+	    ;; Remove first entry from `buffer-undo-list', we shall insert
+	    ;; another one below.
+	    (setq old-undo (cdr buffer-undo-list)))))
+      (when format
+	(let ((buffer-undo-list t))
+	  (setq size (format-decode format size)
+		value (list (car value) size)))
+	(unless (eq buffer-undo-list t)
+	  (setq buffer-undo-list
+		(cons (cons (point) (+ (point) size)) old-undo)))))
+    (unless inhibit-modification-hooks
+      (run-hook-with-args 'after-change-functions (point) (+ (point) size) 0))
     value))
 
 (defun format-read (&optional prompt)
@@ -1057,5 +1077,5 @@ OLD and NEW are the values."
 
 (provide 'format)
 
-;;; arch-tag: c387e9c7-a93d-47bf-89bc-8ca67e96755a
+;; arch-tag: c387e9c7-a93d-47bf-89bc-8ca67e96755a
 ;;; format.el ends here

@@ -1,16 +1,16 @@
 ;;; ediff-help.el --- Code related to the contents of Ediff help buffers
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -29,12 +27,6 @@
 
 ;; Compiler pacifier start
 (defvar ediff-multiframe)
-
-(eval-when-compile
-  (let ((load-path (cons (expand-file-name ".") load-path)))
-    (or (featurep 'ediff-init)
-	(load "ediff-init.el" nil nil 'nosuffix))
-    ))
 ;; end pacifier
 
 (require 'ediff-init)
@@ -89,7 +81,7 @@ p,DEL -previous diff |     | -vert/horiz split   |a/b -copy A/B's region to B/A
 n,SPC -next diff     |     h -hilighting         | rx -restore buf X's old diff
     j -jump to diff  |     @ -auto-refinement    |  * -refine current region
    gx -goto X's point|    ## -ignore whitespace  |  ! -update diff regions
-  C-l -recenter      |    #c -ignore case        |  % -narrow/widen buffs 
+  C-l -recenter      |    #c -ignore case        |  % -narrow/widen buffs
   v/V -scroll up/dn  | #f/#h -focus/hide regions | wx -save buf X
   </> -scroll lt/rt  |     X -read-only in buf X | wd -save diff output
     ~ -swap variants |     m -wide display       |
@@ -147,7 +139,7 @@ produce the brief help message.  This function must return a string.")
 See `ediff-brief-help-message-function' for more.")
 
 (defcustom ediff-use-long-help-message nil
-  "*If t, Ediff displays a long help message.  Short help message otherwise."
+  "If t, Ediff displays a long help message.  Short help message otherwise."
   :type 'boolean
   :group 'ediff-window)
 
@@ -165,7 +157,7 @@ the value of this variable and the variables `ediff-help-message-*' in
 
 (define-key
   ediff-help-region-map
-  (if ediff-emacs-p [mouse-2] [button2])
+  (if (featurep 'emacs) [mouse-2] [button2])
   'ediff-help-for-quick-help)
 
 ;; runs in the control buffer
@@ -177,7 +169,7 @@ the value of this variable and the variables `ediff-help-message-*' in
 	    end (match-end 0)
 	    cmd (buffer-substring (match-beginning 1) (match-end 1)))
       (setq overl (ediff-make-overlay beg end))
-      (if ediff-emacs-p
+      (if (featurep 'emacs)
 	  (ediff-overlay-put overl 'mouse-face 'highlight)
 	(ediff-overlay-put overl 'highlight t))
       (ediff-overlay-put overl 'ediff-help-info cmd))))
@@ -190,15 +182,12 @@ the value of this variable and the variables `ediff-help-message-*' in
   (let ((pos (ediff-event-point last-command-event))
 	overl cmd)
 
-    (ediff-cond-compile-for-xemacs-or-emacs
-     ;; xemacs
-     (setq overl (extent-at pos (current-buffer) 'ediff-help-info)
-	   cmd   (ediff-overlay-get overl 'ediff-help-info))
-     ;; emacs
-     (setq cmd (car (mapcar (lambda (elt)
-			      (overlay-get elt 'ediff-help-info))
-			    (overlays-at pos))))
-     )
+    (if (featurep 'xemacs)
+	(setq overl (extent-at pos (current-buffer) 'ediff-help-info)
+	      cmd   (ediff-overlay-get overl 'ediff-help-info))
+      (setq cmd (car (mapcar (lambda (elt)
+			       (overlay-get elt 'ediff-help-info))
+			     (overlays-at pos)))))
 
     (if (not (stringp cmd))
 	(error "Hmm...  I don't see an Ediff command around here..."))
@@ -258,7 +247,7 @@ the value of this variable and the variables `ediff-help-message-*' in
   (save-excursion
     (goto-char (point-min))
     (if ediff-use-long-help-message
-	(next-line 1))
+	(forward-line 1))
     (end-of-line)
     (current-column)))
 
@@ -328,5 +317,5 @@ the value of this variable and the variables `ediff-help-message-*' in
 (provide 'ediff-help)
 
 
-;;; arch-tag: 05659813-7fcf-4274-964f-d2f577431a9d
+;; arch-tag: 05659813-7fcf-4274-964f-d2f577431a9d
 ;;; ediff-help.el ends here

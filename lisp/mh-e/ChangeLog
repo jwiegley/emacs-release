@@ -1,6 +1,260 @@
-2008-09-05  Chong Yidong  <cyd@stupidchicken.com>
+2009-07-29  Chong Yidong  <cyd@stupidchicken.com>
 
-	* Version 22.3 released.
+	* Version 23.1 released.
+
+2009-06-13  Bill Wohler  <wohler@newt.com>
+
+	Release MH-E version 8.2.
+
+	* mh-e.el (Version, mh-version): Update for release 8.2.
+
+	* mh-seq.el (mh-folder-size-flist)
+	* mh-speed.el (mh-speed-parse-flists-output)
+	* mh-xface.el (mh-face-display-function): Remove trailing space.
+
+2009-03-13  D. Goel  <deego3@gmail.com>
+
+	* mh-seq.el (mh-folder-size-flist): Use (values-list) in m-v call
+	to list.
+
+	* mh-speed.el (mh-speed-parse-flists-output): Ditto.
+	* mh-xface.el (mh-face-display-function): Ditto.
+	* mh-search.el (mh-index-parse-search-regexp): Ditto.
+
+	* mh-thread.el (mh-thread-generate): Ditto.
+
+	* mh-seq.el (mh-parse-flist-output-line): Return list rather than values.
+	We want to avoid emacs using m-v facilities.
+	(mh-folder-size-folder):  Ditto.
+	(mh-parse-flist-output-line): Ditto.
+	* mh-thread.el (mh-thread-prune-subject): Ditto.
+	* mh-xface.el (mh-picon-get-image): Ditto.
+	(mh-picon-file-contents): Ditto.
+	* mh-search.el (mh-index-evaluate): Ditto.
+
+2009-01-27  Bill Wohler  <wohler@newt.com>
+
+	* mh-funcs.el (mh-pack-folder): Fix docstring.
+
+	* mh-e.el (mh-pack-folder-hook): Bump package-version to 8.2.
+
+	* mh-gnus.el (mh-mm-merge-handles)
+	(mh-mm-set-handle-multipart-parameter, mh-mm-inline-text-vcard)
+	(mh-mml-minibuffer-read-disposition, mh-mm-save-part): Update with
+	code from Gnus 5.11 (closes SF #2235022).
+
+2009-01-26  Stephen Gildea  <gildea@stop.mail-abuse.org>
+
+	* mh-e.el (mh-pack-folder-hook): New variable.
+	* mh-funcs.el (mh-pack-folder): Call new mh-pack-folder-hook.
+
+2009-01-26  Bill Wohler  <wohler@newt.com>
+
+	* mh-utils.el (mh-goto-header-end): Use mh-mail-header-separator
+	instead of -* in regexp.
+
+	* mh-folder.el (mh-folder-mode-help-messages): Add e and t to K's
+	help.
+
+2009-01-09  Glenn Morris  <rgm@gnu.org>
+
+	* mh-letter.el: Replace last-input-char with last-input-event.
+
+2008-08-18  Bill Wohler  <wohler@newt.com>
+
+	Release MH-E version 8.1.
+
+	* mh-e.el (Version, mh-version): Update for release 8.1.
+
+2008-08-11  Bill Wohler  <wohler@newt.com>
+
+	* mh-e.el (mh-variant-mh-info, mh-variant-nmh-info)
+	(mh-variant-set-variant, mh-variant-p, mh-profile-component)
+	(mh-variant-set, mh-variant, mh-scan-format-file): Fix typo in
+	docstring.
+
+	* mh-comp.el (mh-reply)
+	* mh-e.el (mh-sys-path, mh-variant-info,mh-variant-mu-mh-info)
+	(mh-variant-p, mh-profile-component, mh-variant-set, mh-variant)
+	(mh-scan-format-file)
+	* mh-folder.el (mh-regenerate-headers)
+	* mh-scan.el (mh-scan-format)
+	* mh-search.el (mh-pick-regexp-builder): Rename variant mu-mh to
+	gnu-mh and be explicit about GNU mailutils MH in docstrings (with
+	thanks to Darel Henman) (closes SF #1768928).
+
+2008-08-01  Bill Wohler  <wohler@newt.com>
+
+	* mh-show.el (mh-show-preferred-alternative)
+	* mh-e.el (mh-annotate-msg-hook): Sync docstring with manual.
+
+	* mh-comp.el (mh-send-letter, mh-redistribute): Mention
+	mh-annotate-msg-hook in docstring.
+
+2008-06-29  Jeffrey C Honig  <jch@honig.net>
+
+	* mh-e.el (mh-invisible-header-fields-internal): Add invisible
+	header fields for X-Hz (mail from Hertz), X-Proofpoint (Proofpoint
+	antivirus/anti-spam) and X-RIM (Research In Motion).
+
+2008-06-20  Stephen Eglen  <stephen@gnu.org>
+
+	* mh-show.el (mh-defun-show-buffer): Use `...' rather than than
+	"..." in generated docstrings.
+
+2008-06-12  Glenn Morris  <rgm@gnu.org>
+
+	* mh-seq.el (tool-bar-map): Define for compiler.
+
+	* mh-folder.el (mh-folder-mode):
+	* mh-letter.el (mh-letter-mode):
+	* mh-show.el (mh-show-mode): Check tool-bar-map is bound.
+
+2008-06-08  John Paul Wallington  <jpw@pobox.com>
+
+	* mh-acros.el (toplevel): Put `doc-string-elt' properties on
+	`defun-mh' and `defmacro-mh'.
+
+	* mh-alias.el (mh-alias-read-address-map): Define within defvar.
+
+	* mh-comp.el (mh-letter-mode-syntax-table): Define within defvar.
+
+	* mh-letter.el (mh-complete-word): Doc fix.
+
+2008-06-02  John Paul Wallington  <jpw@pobox.com>
+
+	* mh-e.el (mh-exec-cmd-env-daemon): Doc fix.
+
+2008-06-01  John Paul Wallington  <jpw@pobox.com>
+
+	* mh-e.el (mh-path, mh-variant): Use dotted syntax for
+	`package-version' info.
+
+2008-05-26  Jeffrey C Honig  <jch@honig.net>
+
+	* mh-e.el (mh-invisible-header-fields-internal): Remove Newsgroups
+	from the list.  Add Bytes, X-Campaignid, X-Country-Chain,
+	X-Declude-, X-fmx-, X-Identity, X-Mailer_, X-pair-, X-SPF-,
+	X-Usenet-Provider.
+
+2008-05-23  Bill Wohler  <wohler@newt.com>
+
+	* mh-e.el (mh-invisible-header-fields-internal): Remove
+	DKIM-Signature as it is covered by DKIM-. Fully qualify X-EID.
+
+2008-05-19  Sergey Poznyakoff  <gray@gnu.org.ua>
+
+	* mh-mime.el (mh-mh-to-mime, mh-mh-to-mime-undo): Preserve modes
+	when converting to or from MIME (closes SF #1966722).
+
+2008-05-19  Bill Wohler  <wohler@newt.com>
+
+	* mh-e.el (mh-invisible-header-fields-internal): Sort list in a
+	case-insensitive way and add comment about it. Add many header
+	fields (closes SF #1916032).
+
+2008-05-19  Xavier Maillard  <xma@gnu.org>  (tiny change)
+
+	* mh-utils.el (mh-find-path): Don't throw error if MH environment
+	variable is being used (closes SF #1946861).
+
+2008-05-19  Nick Dokos  <nicholas.dokos@hp.com>  (tiny change)
+
+	* mh-search.el (mh-mairix-regexp-builder): Add additional items to
+	search string to support org-mode (closes SF #1965704).
+
+2008-03-18  Bill Wohler  <wohler@newt.com>
+
+	* mh-e.el (mh-invisible-header-fields-internal): Add Accreditor,
+	Seal-Send-Time.
+	(mh-invisible-header-fields, mh-invisible-header-fields-default):
+	Update URL to bug report for users to report ignored fields.
+
+2008-03-12  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* mh-xface.el (mh-uncompface, mh-picon-file-contents):
+	Use set-buffer-multibyte...
+	(mh-face-display-function, mh-x-image-display): ...rather than bind
+	default-enable-multibyte-characters.
+
+2008-02-24  Bill Wohler  <wohler@newt.com>
+
+	* mh-comp.el (mh-send-letter): Call split-string on mh-send-args
+	when sending synchronously too.
+
+2008-02-19  Bill Wohler  <wohler@newt.com>
+
+	* mh-comp.el (mh-annotate-msg):
+	* mh-e.el (mh-invisible-header-fields-internal): Remove trailing
+	whitespace.
+
+2008-01-30  Bill Wohler  <wohler@newt.com>
+
+	* mh-mime.el (mh-mml-to-mime): Don't look up sender if From
+	absent. Fixes "Wrong type argument: stringp, nil" error.
+
+2007-12-02  Glenn Morris  <rgm@gnu.org>
+
+	* mh-mime.el (mail-strip-quoted-names): Autoload it.
+
+2007-11-17  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* mh-e.el (mh-xemacs-flag): Remove.
+	(mh-min-colors-defined-flag):
+	* mh-xface.el (mh-show-xface-function):
+	* mh-utils.el (mh-colors-available-p):
+	* mh-show.el (mh-show-mode):
+	* mh-gnus.el (mh-gnus-local-map-property):
+	* mh-folder.el (mh-folder-mode-map)
+	(mh-remove-xemacs-horizontal-scrollbar, mh-folder-mode):
+	* mh-comp.el (mh-insert-x-mailer): Replace uses of mh-xemacs-flag
+	with (featurep 'xemacs).
+
+2007-09-11  Bill Wohler  <wohler@newt.com>
+
+	* mh-e.el (Version, mh-version): Add +cvs to version.
+
+2007-08-25  Stephen Gildea  <gildea@stop.mail-abuse.org>
+
+	* mh-e.el (mh-annotate-msg-hook): New variable.
+
+	* mh-comp.el (mh-annotate-msg): Call new mh-annotate-msg-hook.
+	(mh-annotate-list): New variable, for mh-annotate-msg-hook.
+
+2007-08-21  Jeffrey C Honig  <jch@honig.net>
+
+	* mh-folder.el (mh-folder-message-menu, mh-folder-mode-map): Add
+	folder mode support for mh-show-preferred-alternative (closes SF
+	#1777321).
+
+	* mh-show.el (mh-show-preferred-alternative)
+	(mh-show-write-message-to-file, mh-show-message-menu)
+	(mh-show-mode-map): Add mh-show-preferred-alternative (bound to
+	":") which will show the message's preferred alternative
+	overriding the users configured preference. Useful for showing
+	HTML when text content is lacking (closes SF #1777321).
+
+	* mh-e.el:
+	(mh-invisible-header-fields-internal): Exclude Fax and Phone. Put
+	known exclusions as comments before the list and move parens to
+	separate lines to aid in sorting (closes SF #1701231).
+
+	* mh-mime.el (mm-decode-body): Remove explicit autoload of
+	mh-alias-expand.
+
+	* mh-alias.el (mh-alias-expand): Set up automatic autoload of
+	mh-alias-expand.
+
+2007-08-20  Jeffrey C Honig  <jch@honig.net>
+
+	* mh-mime.el (message-options-set): Add missing autoloads from my
+	last change.
+
+	* mh-comp.el (mh-forward): When forwarding with mml, messages are
+	no longer included in reverse order (closes SF #1730393).
+
+	* mh-mime.el (mh-mml-forward-message): Forward messages as inline
+	attachments (closes SF #1378993).
 
 2008-02-06  Richard Stallman  <rms@gnu.org>
 
@@ -11,12 +265,27 @@
 	(mh-iterate-on-messages-in-region, mh-iterate-on-range):
 	(mh-do-at-event-location): Add debug decls.
 	(mh-seq-msgs): Use defsubst.
-	
+
 2008-02-05  Juanma Barranquero  <lekktu@gmail.com>
 
 	* mh-e.el (mh-scan-format-file-check, mh-adaptive-cmd-note-flag-check):
 	* mh-xface.el (mh-x-image-url-cache-canonicalize):
 	Replace `legal' with `valid'.
+
+2007-08-19  Jeffrey C Honig  <jch@honig.net>
+
+	* mh-e.el (mh-invisible-header-fields-internal): We want to show
+	Comments: and hide Comment:, not the other way around.
+
+	* mh-mime.el (mh-mml-to-mime): GPG requires e-mail addresses, not
+	aliases.  So resolve aliases before passing addresses to GPG/PGP
+	(closes SF #649226).
+
+	* mh-e.el (mh-invisible-header-fields-internal): Update with all
+	the entries from
+	http://people.dsv.su.se/~jpalme/ietf/mail-headers, plus some of my
+	own. I added attributions to entries we already had that did not
+	list an RFC.
 
 2007-08-08  Glenn Morris  <rgm@gnu.org>
 
@@ -26,6 +295,11 @@
 2007-07-25  Glenn Morris  <rgm@gnu.org>
 
 	* Relicense all FSF files to GPLv3 or later.
+
+2007-07-11  Bill Wohler  <wohler@newt.com>
+
+	* mh-compat.el (mh-display-color-cells): Fix on XEmacs 21.5b28.
+	Thanks to Henrique Martins for the help (closes SF #1749774).
 
 2007-06-06  Juanma Barranquero  <lekktu@gmail.com>
 
@@ -133,7 +407,7 @@
 
 	* mh-search.el (mh-index-new-folder): Use -2 suffix instead of <2>
 	suffix for folder names, as <> are illegal filename characters on
-	Windows	(closes SF #1507002).
+	Windows (closes SF #1507002).
 
 2006-06-05  Jacob Morzinski  <morzinski@MIT.EDU>  (tiny change)
 
@@ -868,7 +1142,7 @@
 2006-02-03  Mark D. Baushke  <mdb@gnu.org>
 
 	* mh-tool-bar.el: Add conditional require of 'tool-bar or 'toolbar
-	for gnu-emacs or xemacs to avoid void-variable tool-bar-map lisp
+	for GNU Emacs or XEmacs to avoid void-variable tool-bar-map lisp
 	errors if describe-bindings is called before tool-bar-mode is used.
 
 2006-02-03  Peter S Galbraith  <psg@debian.org>
@@ -1574,7 +1848,7 @@
 	* mh-seq.el (mh-translate-range, mh-narrow-to-header-field)
 	(mh-thread-generate): Ditto.
 
-2006-01-16  Katsumi Yamaoka <yamaoka@jpl.org>
+2006-01-16  Katsumi Yamaoka  <yamaoka@jpl.org>
 
 	* mh-mime.el (mh-mime-display, mh-mm-inline-message): Fix use of
 	mm- functions for proper text=flowed handling (addresses SF
@@ -2901,14 +3175,14 @@
 	* ChangeLog.1: New file.  Contains old ChangeLog.
 
 
-  Copyright (C) 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+  Copyright (C) 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
-  GNU Emacs is free software; you can redistribute it and/or modify
+  GNU Emacs is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 3, or (at your option)
-  any later version.
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -2916,11 +3190,10 @@
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with GNU Emacs; see the file COPYING.  If not, write to the
-  Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-  Boston, MA 02110-1301, USA.
+  along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; Local Variables:
+;; coding: utf-8
 ;; sentence-end-double-space: nil
 ;; add-log-time-zone-rule: t
 ;; End:

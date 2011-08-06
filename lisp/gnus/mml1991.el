@@ -1,7 +1,7 @@
 ;;; mml1991.el --- Old PGP message format (RFC 1991) support for MML
 
-;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
+;;   2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Sascha Lüdecke <sascha@meta-x.de>,
 ;;	Simon Josefsson <simon@josefsson.org> (Mailcrypt interface, Gnus glue)
@@ -9,33 +9,42 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
 
+;; For Emacs < 22.2.
+(eval-and-compile
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest r))))
+
 (eval-when-compile
   (require 'cl)
   (require 'mm-util))
+
+(require 'mml-sec)
 
 (defvar mc-pgp-always-sign)
 
 (autoload 'quoted-printable-decode-region "qp")
 (autoload 'quoted-printable-encode-region "qp")
+
+(autoload 'mm-decode-content-transfer-encoding "mm-bodies")
+(autoload 'mm-encode-content-transfer-encoding "mm-bodies")
+(autoload 'message-options-get "message")
+(autoload 'message-options-set "message")
 
 (defvar mml1991-use mml2015-use
   "The package used for PGP.")
@@ -46,13 +55,31 @@
     (gpg mml1991-gpg-sign
 	 mml1991-gpg-encrypt)
     (pgg mml1991-pgg-sign
-	 mml1991-pgg-encrypt))
+	 mml1991-pgg-encrypt)
+    (epg mml1991-epg-sign
+	 mml1991-epg-encrypt))
   "Alist of PGP functions.")
+
+(defvar mml1991-verbose mml-secure-verbose
+  "If non-nil, ask the user about the current operation more verbosely.")
+
+(defvar mml1991-cache-passphrase mml-secure-cache-passphrase
+  "If t, cache passphrase.")
+
+(defvar mml1991-passphrase-cache-expiry mml-secure-passphrase-cache-expiry
+  "How many seconds the passphrase is cached.
+Whether the passphrase is cached at all is controlled by
+`mml1991-cache-passphrase'.")
+
+(defvar mml1991-signers nil
+  "A list of your own key ID which will be used to sign a message.")
+
+(defvar mml1991-encrypt-to-self nil
+  "If t, add your own key ID to recipient list when encryption.")
 
 ;;; mailcrypt wrapper
 
-(eval-and-compile
-  (autoload 'mc-sign-generic "mc-toplev"))
+(autoload 'mc-sign-generic "mc-toplev")
 
 (defvar mml1991-decrypt-function 'mailcrypt-decrypt)
 (defvar mml1991-verify-function 'mailcrypt-verify)
@@ -90,6 +117,9 @@
       (insert-buffer-substring signature)
       (goto-char (point-max)))))
 
+(declare-function mc-encrypt-generic "ext:mc-toplev"
+                  (&optional recipients scheme start end from sign))
+
 (defun mml1991-mailcrypt-encrypt (cont &optional sign)
   (let ((text (current-buffer))
 	(mc-pgp-always-sign
@@ -103,7 +133,7 @@
 	     'never))
 	cipher
 	(result-buffer (get-buffer-create "*GPG Result*")))
-    ;; Strip MIME Content[^ ]: headers since it will be ASCII ARMOURED
+    ;; Strip MIME Content[^ ]: headers since it will be ASCII ARMORED
     (goto-char (point-min))
     (while (looking-at "^Content[^ ]+:") (forward-line))
     (unless (bobp)
@@ -137,8 +167,14 @@
 
 ;;; gpg wrapper
 
-(eval-and-compile
-  (autoload 'gpg-sign-cleartext "gpg"))
+(autoload 'gpg-sign-cleartext "gpg")
+
+(declare-function gpg-sign-encrypt "ext:gpg"
+                  (plaintext ciphertext result recipients &optional
+                             passphrase sign-with-key armor textmode))
+(declare-function gpg-encrypt "ext:gpg"
+                  (plaintext ciphertext result recipients &optional
+                             passphrase armor textmode))
 
 (defun mml1991-gpg-sign (cont)
   (let ((text (current-buffer))
@@ -177,7 +213,7 @@
   (let ((text (current-buffer))
 	cipher
 	(result-buffer (get-buffer-create "*GPG Result*")))
-    ;; Strip MIME Content[^ ]: headers since it will be ASCII ARMOURED
+    ;; Strip MIME Content[^ ]: headers since it will be ASCII ARMORED
     (goto-char (point-min))
     (while (looking-at "^Content[^ ]+:") (forward-line))
     (unless (bobp)
@@ -223,10 +259,9 @@
 
 ;; pgg wrapper
 
-(eval-when-compile
-  (defvar pgg-default-user-id)
-  (defvar pgg-errors-buffer)
-  (defvar pgg-output-buffer))
+(defvar pgg-default-user-id)
+(defvar pgg-errors-buffer)
+(defvar pgg-output-buffer)
 
 (defun mml1991-pgg-sign (cont)
   (let ((pgg-text-mode t)
@@ -268,7 +303,7 @@
     (let ((cte (save-restriction
 		 (narrow-to-region (point-min) (point))
 		 (mail-fetch-field "content-transfer-encoding"))))
-      ;; Strip MIME headers since it will be ASCII armoured.
+      ;; Strip MIME headers since it will be ASCII armored.
       (forward-line 1)
       (delete-region (point-min) (point))
       (when cte
@@ -288,6 +323,176 @@
   (delete-region (point-min) (point-max))
   (insert "\n")
   (insert-buffer-substring pgg-output-buffer)
+  t)
+
+;; epg wrapper
+
+(defvar epg-user-id-alist)
+(defvar password-cache-expiry)
+
+(autoload 'epg-make-context "epg")
+(autoload 'epg-passphrase-callback-function "epg")
+(autoload 'epa-select-keys "epa")
+(autoload 'epg-list-keys "epg")
+(autoload 'epg-context-set-armor "epg")
+(autoload 'epg-context-set-textmode "epg")
+(autoload 'epg-context-set-signers "epg")
+(autoload 'epg-context-set-passphrase-callback "epg")
+(autoload 'epg-sign-string "epg")
+(autoload 'epg-encrypt-string "epg")
+(autoload 'epg-configuration "epg-config")
+(autoload 'epg-expand-group "epg-config")
+
+(defvar mml1991-epg-secret-key-id-list nil)
+
+(defun mml1991-epg-passphrase-callback (context key-id ignore)
+  (if (eq key-id 'SYM)
+      (epg-passphrase-callback-function context key-id nil)
+    (let* ((entry (assoc key-id epg-user-id-alist))
+	   (passphrase
+	    (password-read
+	     (format "GnuPG passphrase for %s: "
+		     (if entry
+			 (cdr entry)
+		       key-id))
+	     (if (eq key-id 'PIN)
+		 "PIN"
+	       key-id))))
+      (when passphrase
+	(let ((password-cache-expiry mml1991-passphrase-cache-expiry))
+	  (password-cache-add key-id passphrase))
+	(setq mml1991-epg-secret-key-id-list
+	      (cons key-id mml1991-epg-secret-key-id-list))
+	(copy-sequence passphrase)))))
+
+(defun mml1991-epg-sign (cont)
+  (let ((context (epg-make-context))
+	headers cte signers signature)
+    (if mml1991-verbose
+	(setq signers (epa-select-keys context "Select keys for signing.
+If no one is selected, default secret key is used.  "
+				       mml1991-signers t))
+      (if mml1991-signers
+	  (setq signers (mapcar (lambda (name)
+				  (car (epg-list-keys context name t)))
+				mml1991-signers))))
+    (epg-context-set-armor context t)
+    (epg-context-set-textmode context t)
+    (epg-context-set-signers context signers)
+    (if mml1991-cache-passphrase
+	(epg-context-set-passphrase-callback
+	 context
+	 #'mml1991-epg-passphrase-callback))
+    ;; Don't sign headers.
+    (goto-char (point-min))
+    (when (re-search-forward "^$" nil t)
+      (setq headers (buffer-substring (point-min) (point)))
+      (save-restriction
+	(narrow-to-region (point-min) (point))
+	(setq cte (mail-fetch-field "content-transfer-encoding")))
+      (forward-line 1)
+      (delete-region (point-min) (point))
+      (when cte
+	(setq cte (intern (downcase cte)))
+	(mm-decode-content-transfer-encoding cte)))
+    (condition-case error
+	(setq signature (epg-sign-string context (buffer-string) 'clear)
+	      mml1991-epg-secret-key-id-list nil)
+      (error
+       (while mml1991-epg-secret-key-id-list
+	 (password-cache-remove (car mml1991-epg-secret-key-id-list))
+	 (setq mml1991-epg-secret-key-id-list
+	       (cdr mml1991-epg-secret-key-id-list)))
+       (signal (car error) (cdr error))))
+    (delete-region (point-min) (point-max))
+    (mm-with-unibyte-current-buffer
+      (insert signature)
+      (goto-char (point-min))
+      (while (re-search-forward "\r+$" nil t)
+	(replace-match "" t t))
+      (when cte
+	(mm-encode-content-transfer-encoding cte))
+      (goto-char (point-min))
+      (when headers
+	(insert headers))
+      (insert "\n"))
+    t))
+
+(defun mml1991-epg-encrypt (cont &optional sign)
+  (goto-char (point-min))
+  (when (re-search-forward "^$" nil t)
+    (let ((cte (save-restriction
+		 (narrow-to-region (point-min) (point))
+		 (mail-fetch-field "content-transfer-encoding"))))
+      ;; Strip MIME headers since it will be ASCII armored.
+      (forward-line 1)
+      (delete-region (point-min) (point))
+      (when cte
+	(mm-decode-content-transfer-encoding (intern (downcase cte))))))
+  (let ((context (epg-make-context))
+	(recipients
+	 (if (message-options-get 'message-recipients)
+	     (split-string
+	      (message-options-get 'message-recipients)
+	      "[ \f\t\n\r\v,]+")))
+	cipher signers config)
+    ;; We should remove this check if epg-0.0.6 is released.
+    (if (and (condition-case nil
+		 (require 'epg-config)
+	       (error))
+	     (functionp #'epg-expand-group))
+	(setq config (epg-configuration)
+	      recipients
+	      (apply #'nconc
+		     (mapcar (lambda (recipient)
+			       (or (epg-expand-group config recipient)
+				   (list recipient)))
+			     recipients))))
+    (if mml1991-verbose
+	(setq recipients
+	      (epa-select-keys context "Select recipients for encryption.
+If no one is selected, symmetric encryption will be performed.  "
+			       recipients))
+      (setq recipients
+	    (delq nil (mapcar (lambda (name)
+				(car (epg-list-keys context name)))
+			      recipients))))
+    (if mml1991-encrypt-to-self
+	(if mml1991-signers
+	    (setq recipients
+		  (nconc recipients
+			 (mapcar (lambda (name)
+				   (car (epg-list-keys context name)))
+				 mml1991-signers)))
+	  (error "mml1991-signers not set")))
+    (when sign
+      (if mml1991-verbose
+	  (setq signers (epa-select-keys context "Select keys for signing.
+If no one is selected, default secret key is used.  "
+					 mml1991-signers t))
+	(if mml1991-signers
+	    (setq signers (mapcar (lambda (name)
+				    (car (epg-list-keys context name t)))
+				  mml1991-signers))))
+      (epg-context-set-signers context signers))
+    (epg-context-set-armor context t)
+    (epg-context-set-textmode context t)
+    (if mml1991-cache-passphrase
+	(epg-context-set-passphrase-callback
+	 context
+	 #'mml1991-epg-passphrase-callback))
+    (condition-case error
+	(setq cipher
+	      (epg-encrypt-string context (buffer-string) recipients sign)
+	      mml1991-epg-secret-key-id-list nil)
+      (error
+       (while mml1991-epg-secret-key-id-list
+	 (password-cache-remove (car mml1991-epg-secret-key-id-list))
+	 (setq mml1991-epg-secret-key-id-list
+	       (cdr mml1991-epg-secret-key-id-list)))
+       (signal (car error) (cdr error))))
+    (delete-region (point-min) (point-max))
+    (insert "\n" cipher))
   t)
 
 ;;;###autoload
@@ -310,5 +515,5 @@
 ;; coding: iso-8859-1
 ;; End:
 
-;;; arch-tag: e542be18-ab28-4393-9b33-97fe9cf30706
+;; arch-tag: e542be18-ab28-4393-9b33-97fe9cf30706
 ;;; mml1991.el ends here

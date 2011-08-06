@@ -1,16 +1,19 @@
 /* Header for composite sequence handler.
    Copyright (C) 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008 Free Software Foundation, Inc.
-   Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
+   Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
+   Copyright (C) 2003, 2006
+     National Institute of Advanced Industrial Science and Technology (AIST)
+     Registration Number H13PRO009
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,29 +21,25 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #ifndef EMACS_COMPOSITE_H
 #define EMACS_COMPOSITE_H
 
-/* Methods to display a sequence of components a composition.  */
+/* Methods to display a sequence of components of a composition.  */
 enum composition_method {
-  /* The first two are actually not methods, but used in code
-     conversion to specify the current composing status.  */
-  COMPOSITION_DISABLED,		/* Never handle composition data */
-  COMPOSITION_NO,		/* Not processing composition data */
   /* Compose relatively without alternate characters.  */
   COMPOSITION_RELATIVE,
-  /* Compose by specified composition rule.  This is not used in Emacs
-     21 but we need it to decode files saved in the older versions of
-     Emacs.  */
+  /* Compose by specified composition rules.  This is not used in
+     Emacs 21 but we need it to decode files saved in the older
+     versions of Emacs.  */
   COMPOSITION_WITH_RULE,
   /* Compose relatively with alternate characters.  */
   COMPOSITION_WITH_ALTCHARS,
-  /* Compose by specified composition rule with alternate characters.  */
-  COMPOSITION_WITH_RULE_ALTCHARS
+  /* Compose by specified composition rules with alternate characters.  */
+  COMPOSITION_WITH_RULE_ALTCHARS,
+  /* This is not a method.  */
+  COMPOSITION_NO
 };
 
 /* Maximum number of compoments a single composition can have.  */
@@ -87,9 +86,9 @@ extern Lisp_Object composition_temp;
    : (composition_temp = XCDR (XCAR (prop)),				\
       (NILP (composition_temp)						\
        ? COMPOSITION_RELATIVE						\
-       : ((INTEGERP (composition_temp) || STRINGP (composition_temp))	\
-	  ? COMPOSITION_WITH_ALTCHARS					\
-	  : COMPOSITION_WITH_RULE_ALTCHARS))))
+       : (INTEGERP (composition_temp) || STRINGP (composition_temp))	\
+       ? COMPOSITION_WITH_ALTCHARS					\
+       : COMPOSITION_WITH_RULE_ALTCHARS)))
 
 /* Return 1 if the composition is valid.  It is valid if length of
    the composition equals to (END - START).  */
@@ -128,13 +127,19 @@ extern Lisp_Object composition_temp;
 	->contents[(n) * 2 - 1])
 
 /* Decode encoded composition rule RULE_CODE into GREF (global
-   reference point code) and NREF (new reference point code).  Don't
-   check RULE_CODE, always set GREF and NREF to valid values.  */
-#define COMPOSITION_DECODE_RULE(rule_code, gref, nref)	\
-  do {							\
-    gref = (rule_code) / 12;				\
-    if (gref > 12) gref = 11;				\
-    nref = (rule_code) % 12;				\
+   reference point code), NREF (new reference point code), XOFF
+   (horizontal offset) YOFF (vertical offset).  Don't check RULE_CODE,
+   always set GREF and NREF to valid values.  By side effect,
+   RULE_CODE is modified.  */
+
+#define COMPOSITION_DECODE_RULE(rule_code, gref, nref, xoff, yoff)	\
+  do {									\
+    xoff = (rule_code) >> 16;						\
+    yoff = ((rule_code) >> 8) & 0xFF;					\
+    rule_code &= 0xFF;							\
+    gref = (rule_code) / 12;						\
+    if (gref > 12) gref = 11;						\
+    nref = (rule_code) % 12;						\
   } while (0)
 
 /* Return encoded composition rule for the pair of global reference
@@ -160,6 +165,8 @@ struct composition {
 
   /* Width, ascent, and descent pixels of the composition.  */
   short pixel_width, ascent, descent;
+
+  short lbearing, rbearing;
 
   /* How many columns the overall glyphs occupy on the screen.  This
      gives an approximate value for column calculation in
@@ -200,17 +207,123 @@ extern int n_compositions;
 
 extern Lisp_Object Qcomposition;
 extern Lisp_Object composition_hash_table;
+extern Lisp_Object Qauto_composed;
+extern Lisp_Object Vauto_composition_function;
+extern Lisp_Object Qauto_composition_function;
+extern Lisp_Object Vcomposition_function_table;
 
 extern int get_composition_id P_ ((int, int, int, Lisp_Object, Lisp_Object));
-extern int find_composition P_ ((int, int, int *, int *, Lisp_Object *,
+extern int find_composition P_ ((int, int, EMACS_INT *, EMACS_INT *, Lisp_Object *,
 				 Lisp_Object));
-extern void update_compositions P_ ((int, int, int));
+extern void update_compositions P_ ((EMACS_INT, EMACS_INT, int));
 extern void make_composition_value_copy P_ ((Lisp_Object));
 extern void compose_region P_ ((int, int, Lisp_Object, Lisp_Object,
 				Lisp_Object));
 extern void syms_of_composite P_ ((void));
 extern void compose_text P_ ((int, int, Lisp_Object, Lisp_Object,
 			      Lisp_Object));
+
+/* Macros for lispy glyph-string.  This is completely different from
+   struct glyph_string.  */
+
+#define LGSTRING_HEADER(lgs) AREF (lgs, 0)
+#define LGSTRING_SET_HEADER(lgs, header) ASET (lgs, 0, header)
+
+#define LGSTRING_FONT(lgs) AREF (LGSTRING_HEADER (lgs), 0)
+#define LGSTRING_CHAR(lgs, i) AREF (LGSTRING_HEADER (lgs), (i) + 1)
+#define LGSTRING_CHAR_LEN(lgs) (ASIZE (LGSTRING_HEADER (lgs)) - 1)
+
+#define LGSTRING_SET_FONT(lgs, val) ASET (LGSTRING_HEADER (lgs), 0, (val))
+#define LGSTRING_SET_CHAR(lgs, i, c) ASET (LGSTRING_HEADER (lgs), (i) + 1, (c))
+
+#define LGSTRING_ID(lgs) AREF (lgs, 1)
+#define LGSTRING_SET_ID(lgs, id) ASET (lgs, 1, id)
+
+#define LGSTRING_GLYPH_LEN(lgs) (ASIZE ((lgs)) - 2)
+#define LGSTRING_GLYPH(lgs, idx) AREF ((lgs), (idx) + 2)
+#define LGSTRING_SET_GLYPH(lgs, idx, val) ASET ((lgs), (idx) + 2, (val))
+
+/* Vector size of Lispy glyph.  */
+enum lglyph_indices
+  {
+    LGLYPH_IX_FROM, LGLYPH_IX_TO,  LGLYPH_IX_CHAR, LGLYPH_IX_CODE,
+    LGLYPH_IX_WIDTH, LGLYPH_IX_LBEARING, LGLYPH_IX_RBEARING,
+    LGLYPH_IX_ASCENT, LGLYPH_IX_DESCENT, LGLYPH_IX_ADJUSTMENT,
+    /* Not an index.  */
+    LGLYPH_SIZE
+  };
+
+#define LGLYPH_NEW() Fmake_vector (make_number (LGLYPH_SIZE), Qnil)
+#define LGLYPH_FROM(g) XINT (AREF ((g), LGLYPH_IX_FROM))
+#define LGLYPH_TO(g) XINT (AREF ((g), LGLYPH_IX_TO))
+#define LGLYPH_CHAR(g) XINT (AREF ((g), LGLYPH_IX_CHAR))
+#define LGLYPH_CODE(g)						\
+  (NILP (AREF ((g), LGLYPH_IX_CODE))				\
+   ? FONT_INVALID_CODE						\
+   : CONSP (AREF ((g), LGLYPH_IX_CODE))				\
+   ? ((XFASTINT (XCAR (AREF ((g), LGLYPH_IX_CODE))) << 16)	\
+      | (XFASTINT (XCDR (AREF ((g), LGLYPH_IX_CODE)))))		\
+   : XFASTINT (AREF ((g), LGLYPH_IX_CODE)))
+#define LGLYPH_WIDTH(g) XINT (AREF ((g), LGLYPH_IX_WIDTH))
+#define LGLYPH_LBEARING(g) XINT (AREF ((g), LGLYPH_IX_LBEARING))
+#define LGLYPH_RBEARING(g) XINT (AREF ((g), LGLYPH_IX_RBEARING))
+#define LGLYPH_ASCENT(g) XINT (AREF ((g), LGLYPH_IX_ASCENT))
+#define LGLYPH_DESCENT(g) XINT (AREF ((g), LGLYPH_IX_DESCENT))
+#define LGLYPH_ADJUSTMENT(g) AREF ((g), LGLYPH_IX_ADJUSTMENT)
+#define LGLYPH_SET_FROM(g, val) ASET ((g), LGLYPH_IX_FROM, make_number (val))
+#define LGLYPH_SET_TO(g, val) ASET ((g), LGLYPH_IX_TO, make_number (val))
+#define LGLYPH_SET_CHAR(g, val) ASET ((g), LGLYPH_IX_CHAR, make_number (val))
+/* Callers must assure that VAL is not negative!  */
+#define LGLYPH_SET_CODE(g, val)						\
+  do {									\
+    if (val == FONT_INVALID_CODE)					\
+      ASET ((g), LGLYPH_IX_CODE, Qnil);					\
+    else if ((EMACS_INT)val > MOST_POSITIVE_FIXNUM)			\
+      ASET ((g), LGLYPH_IX_CODE, Fcons (make_number ((val) >> 16),	\
+					make_number ((val) & 0xFFFF)));	\
+    else								\
+      ASET ((g), LGLYPH_IX_CODE, make_number (val));			\
+  } while (0)
+      
+#define LGLYPH_SET_WIDTH(g, val) ASET ((g), LGLYPH_IX_WIDTH, make_number (val))
+#define LGLYPH_SET_LBEARING(g, val) ASET ((g), LGLYPH_IX_LBEARING, make_number (val))
+#define LGLYPH_SET_RBEARING(g, val) ASET ((g), LGLYPH_IX_RBEARING, make_number (val))
+#define LGLYPH_SET_ASCENT(g, val) ASET ((g), LGLYPH_IX_ASCENT, make_number (val))
+#define LGLYPH_SET_DESCENT(g, val) ASET ((g), LGLYPH_IX_DESCENT, make_number (val))
+#define LGLYPH_SET_ADJUSTMENT(g, val) ASET ((g), LGLYPH_IX_ADJUSTMENT, (val))
+
+#define LGLYPH_XOFF(g) (VECTORP (LGLYPH_ADJUSTMENT (g)) \
+			? XINT (AREF (LGLYPH_ADJUSTMENT (g), 0)) : 0)
+#define LGLYPH_YOFF(g) (VECTORP (LGLYPH_ADJUSTMENT (g)) \
+			? XINT (AREF (LGLYPH_ADJUSTMENT (g), 1)) : 0)
+#define LGLYPH_WADJUST(g) (VECTORP (LGLYPH_ADJUSTMENT (g)) \
+			   ? XINT (AREF (LGLYPH_ADJUSTMENT (g), 2)) : 0)
+
+struct composition_it;
+struct face;
+struct font_metrics;
+
+extern Lisp_Object composition_gstring_put_cache P_ ((Lisp_Object, int));
+extern Lisp_Object composition_gstring_from_id P_ ((int));
+extern int composition_gstring_p P_ ((Lisp_Object));
+extern int composition_gstring_width P_ ((Lisp_Object, int, int,
+					  struct font_metrics *));
+
+extern void composition_compute_stop_pos P_ ((struct composition_it *,
+					      EMACS_INT, EMACS_INT, EMACS_INT,
+					      Lisp_Object));
+extern int composition_reseat_it P_ ((struct composition_it *,
+				      EMACS_INT, EMACS_INT, EMACS_INT,
+				      struct window *, struct face *,
+				      Lisp_Object));
+extern int composition_update_it P_ ((struct composition_it *,
+				      EMACS_INT, EMACS_INT, Lisp_Object));
+
+extern int composition_adjust_point P_ ((EMACS_INT));
+
+EXFUN (Fcompose_region_internal, 4);
+EXFUN (Fcompose_string_internal, 5);
+EXFUN (Fcomposition_get_gstring, 4);
 
 #endif /* not EMACS_COMPOSITE_H */
 

@@ -1,27 +1,25 @@
 ;;; gnus-int.el --- backend interface functions for Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -36,6 +34,7 @@
 (autoload 'gnus-agent-expire "gnus-agent")
 (autoload 'gnus-agent-regenerate-group "gnus-agent")
 (autoload 'gnus-agent-read-servers-validate-native "gnus-agent")
+(autoload 'gnus-agent-possibly-synchronize-flags-server "gnus-agent")
 
 (defcustom gnus-open-server-hook nil
   "Hook called just before opening connection to the news server."
@@ -57,6 +56,27 @@ server denied."
 (defvar gnus-internal-registry-spool-current-method nil
   "The current method, for the registry.")
 
+
+(defun gnus-server-opened (gnus-command-method)
+  "Check whether a connection to GNUS-COMMAND-METHOD has been opened."
+  (unless (eq (gnus-server-status gnus-command-method)
+	      'denied)
+    (when (stringp gnus-command-method)
+      (setq gnus-command-method (gnus-server-to-method gnus-command-method)))
+    (funcall (inline (gnus-get-function gnus-command-method 'server-opened))
+	     (nth 1 gnus-command-method))))
+
+(defun gnus-status-message (gnus-command-method)
+  "Return the status message from GNUS-COMMAND-METHOD.
+If GNUS-COMMAND-METHOD is a string, it is interpreted as a group
+name.  The method this group uses will be queried."
+  (let ((gnus-command-method
+	 (if (stringp gnus-command-method)
+	     (gnus-find-method-for-group gnus-command-method)
+	   gnus-command-method)))
+    (funcall (gnus-get-function gnus-command-method 'status-message)
+	     (nth 1 gnus-command-method))))
+
 ;;;
 ;;; Server Communication
 ;;;
@@ -75,7 +95,7 @@ If CONFIRM is non-nil, the user will be asked for an NNTP server."
 	;; Read server name with completion.
 	(setq gnus-nntp-server
 	      (completing-read "NNTP server: "
-			       (mapcar (lambda (server) (list server))
+			       (mapcar 'list
 				       (cons (list gnus-nntp-server)
 					     gnus-secondary-servers))
 			       nil nil gnus-nntp-server)))
@@ -209,11 +229,12 @@ If it is down, start it up (again)."
   "Open a connection to GNUS-COMMAND-METHOD."
   (when (stringp gnus-command-method)
     (setq gnus-command-method (gnus-server-to-method gnus-command-method)))
-  (let ((elem (assoc gnus-command-method gnus-opened-servers)))
+  (let ((elem (assoc gnus-command-method gnus-opened-servers))
+	(server (gnus-method-to-server-name gnus-command-method)))
     ;; If this method was previously denied, we just return nil.
     (if (eq (nth 1 elem) 'denied)
 	(progn
-	  (gnus-message 1 "Denied server")
+	  (gnus-message 1 "Denied server %s" server)
 	  nil)
       ;; Open the server.
       (let* ((open-server-function (gnus-get-function gnus-command-method 'open-server))
@@ -224,11 +245,11 @@ If it is down, start it up (again)."
                           (nthcdr 2 gnus-command-method))
                (error
                 (gnus-message 1 (format
-                                 "Unable to open server due to: %s"
-                                 (error-message-string err)))
+                                 "Unable to open server %s due to: %s"
+                                 server (error-message-string err)))
                 nil)
                (quit
-                (gnus-message 1 "Quit trying to open server")
+                (gnus-message 1 "Quit trying to open server %s" server)
                 nil)))
             open-offline)
 	;; If this hasn't been opened before, we add it to the list.
@@ -253,9 +274,9 @@ If it is down, start it up (again)."
                              ((and
 			       (not gnus-batch-mode)
 			       (gnus-y-or-n-p
-				(format "Unable to open %s:%s, go offline? "
-					(car gnus-command-method)
-					(cadr gnus-command-method))))
+				(format
+				 "Unable to open server %s, go offline? "
+				 server)))
                               (setq open-offline t)
                               'offline)
                              (t
@@ -277,6 +298,11 @@ If it is down, start it up (again)."
               ;; prompting with "go offline?".  This is only a concern
               ;; when the agent's backend fails to open the server.
               (gnus-open-server gnus-command-method))
+	  (when (and (eq (cadr elem) 'ok) gnus-agent
+		     (gnus-agent-method-p gnus-command-method))
+	    (save-excursion
+	      (gnus-agent-possibly-synchronize-flags-server
+	       gnus-command-method)))
           result)))))
 
 (defun gnus-close-server (gnus-command-method)
@@ -308,31 +334,28 @@ If it is down, start it up (again)."
     (when func
       (funcall func date (nth 1 gnus-command-method)))))
 
-(defun gnus-server-opened (gnus-command-method)
-  "Check whether a connection to GNUS-COMMAND-METHOD has been opened."
-  (unless (eq (gnus-server-status gnus-command-method)
-	      'denied)
-    (when (stringp gnus-command-method)
-      (setq gnus-command-method (gnus-server-to-method gnus-command-method)))
-    (funcall (inline (gnus-get-function gnus-command-method 'server-opened))
-	     (nth 1 gnus-command-method))))
-
-(defun gnus-status-message (gnus-command-method)
-  "Return the status message from GNUS-COMMAND-METHOD.
-If GNUS-COMMAND-METHOD is a string, it is interpreted as a group
-name.  The method this group uses will be queried."
-  (let ((gnus-command-method
-	 (if (stringp gnus-command-method)
-	     (gnus-find-method-for-group gnus-command-method)
-	   gnus-command-method)))
-    (funcall (gnus-get-function gnus-command-method 'status-message)
-	     (nth 1 gnus-command-method))))
-
 (defun gnus-request-regenerate (gnus-command-method)
   "Request a data generation from GNUS-COMMAND-METHOD."
   (when (stringp gnus-command-method)
     (setq gnus-command-method (gnus-server-to-method gnus-command-method)))
   (funcall (gnus-get-function gnus-command-method 'request-regenerate)
+	   (nth 1 gnus-command-method)))
+
+(defun gnus-request-compact-group (group)
+  (let* ((method (gnus-find-method-for-group group))
+	 (gnus-command-method method)
+	 (result
+	  (funcall (gnus-get-function gnus-command-method
+				      'request-compact-group)
+		   (gnus-group-real-name group)
+		   (nth 1 gnus-command-method) t)))
+    result))
+
+(defun gnus-request-compact (gnus-command-method)
+  "Request groups compaction  from GNUS-COMMAND-METHOD."
+  (when (stringp gnus-command-method)
+    (setq gnus-command-method (gnus-server-to-method gnus-command-method)))
+  (funcall (gnus-get-function gnus-command-method 'request-compact)
 	   (nth 1 gnus-command-method)))
 
 (defun gnus-request-group (group &optional dont-check gnus-command-method)
@@ -342,7 +365,7 @@ name.  The method this group uses will be queried."
     (when (stringp gnus-command-method)
       (setq gnus-command-method
 	    (inline (gnus-server-to-method gnus-command-method))))
-    (funcall (inline (gnus-get-function gnus-command-method 'request-group))
+	 (funcall (inline (gnus-get-function gnus-command-method 'request-group))
 	     (gnus-group-real-name group) (nth 1 gnus-command-method)
 	     dont-check)))
 
@@ -521,12 +544,11 @@ If GROUP is nil, all groups on GNUS-COMMAND-METHOD are scanned."
 	 (if group (gnus-find-method-for-group group) gnus-command-method))
 	(gnus-inhibit-demon t)
 	(mail-source-plugged gnus-plugged))
-    (if (or gnus-plugged (not (gnus-agent-method-p gnus-command-method)))
-	(progn
-	  (setq gnus-internal-registry-spool-current-method gnus-command-method)
-	  (funcall (gnus-get-function gnus-command-method 'request-scan)
-		   (and group (gnus-group-real-name group))
-		   (nth 1 gnus-command-method))))))
+    (when (or gnus-plugged (not (gnus-agent-method-p gnus-command-method)))
+      (setq gnus-internal-registry-spool-current-method gnus-command-method)
+      (funcall (gnus-get-function gnus-command-method 'request-scan)
+	       (and group (gnus-group-real-name group))
+	       (nth 1 gnus-command-method)))))
 
 (defsubst gnus-request-update-info (info gnus-command-method)
   "Request that GNUS-COMMAND-METHOD update INFO."
@@ -566,12 +588,12 @@ If GROUP is nil, all groups on GNUS-COMMAND-METHOD are scanned."
     not-deleted))
 
 (defun gnus-request-move-article (article group server accept-function
-					  &optional last)
+					  &optional last move-is-internal)
   (let* ((gnus-command-method (gnus-find-method-for-group group))
 	 (result (funcall (gnus-get-function gnus-command-method
 					     'request-move-article)
 			  article (gnus-group-real-name group)
-			  (nth 1 gnus-command-method) accept-function last)))
+			  (nth 1 gnus-command-method) accept-function last move-is-internal)))
     (when (and result gnus-agent
 	       (gnus-agent-method-p gnus-command-method))
       (gnus-agent-unfetch-articles group (list article)))
@@ -597,7 +619,7 @@ If GROUP is nil, all groups on GNUS-COMMAND-METHOD are scanned."
 	(let ((mail-parse-charset message-default-charset))
 	  (mail-encode-encoded-word-buffer)))
       (message-encode-message-body)))
-(let ((gnus-command-method (or gnus-command-method
+  (let ((gnus-command-method (or gnus-command-method
 				 (gnus-find-method-for-group group)))
 	(result
 	 (funcall
@@ -694,5 +716,5 @@ If GROUP is nil, all groups on GNUS-COMMAND-METHOD are scanned."
 
 (provide 'gnus-int)
 
-;;; arch-tag: bbc90087-9b7f-4017-a92c-3abf180ac86d
+;; arch-tag: bbc90087-9b7f-4017-a92c-3abf180ac86d
 ;;; gnus-int.el ends here

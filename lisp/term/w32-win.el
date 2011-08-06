@@ -1,17 +1,17 @@
 ;;; w32-win.el --- parse switches controlling interface with W32 window system
 
 ;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Kevin Gallo
 ;; Keywords: terminals
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -68,8 +66,8 @@
 ;; An alist of X options and the function which handles them.  See
 ;; ../startup.el.
 
-(if (not (eq window-system 'w32))
-    (error "%s: Loading w32-win.el but not compiled for w32" (invocation-name)))
+;; (if (not (eq window-system 'w32))
+;;     (error "%s: Loading w32-win.el but not compiled for w32" (invocation-name)))
 
 (require 'frame)
 (require 'mouse)
@@ -78,9 +76,19 @@
 (require 'select)
 (require 'menu-bar)
 (require 'dnd)
-(require 'code-pages)
+(require 'w32-vars)
 
-(defvar xlfd-regexp-registry-subnum)
+;; Keep an obsolete alias for w32-focus-frame and w32-select-font in case
+;; they are used by code outside Emacs.
+(define-obsolete-function-alias 'w32-focus-frame 'x-focus-frame "23.1")
+(declare-function x-select-font "w32font.c"
+                  (&optional frame exclude-proportional))
+(define-obsolete-function-alias 'w32-select-font 'x-select-font "23.1")
+
+(defvar w32-color-map) ;; defined in w32fns.c
+
+(declare-function w32-send-sys-command "w32fns.c")
+(declare-function set-message-beep "w32console.c")
 
 ;; Conditional on new-fontset so bootstrapping works on non-GUI compiles
 (if (fboundp 'new-fontset)
@@ -89,13 +97,10 @@
 ;; The following definition is used for debugging scroll bar events.
 ;(defun w32-handle-scroll-bar-event (event) (interactive "e") (princ event))
 
-;; Handle mouse-wheel events with mwheel.
-(mouse-wheel-mode 1)
-
-(defun w32-drag-n-drop-debug (event)
-  "Print the drag-n-drop EVENT in a readable form."
-  (interactive "e")
-  (princ event))
+;; (defun w32-drag-n-drop-debug (event)
+;;   "Print the drag-n-drop EVENT in a readable form."
+;;   (interactive "e")
+;;   (princ event))
 
 (defun w32-drag-n-drop (event)
   "Edit the files listed in the drag-n-drop EVENT.
@@ -111,7 +116,7 @@ Switch to a buffer editing the last file dropped."
 	   (y (cdr coords)))
       (if (and (> x 0) (> y 0))
 	  (set-frame-selected-window nil window))
-      (mapcar (lambda (file-name)
+      (mapc (lambda (file-name)
 		(let ((f (subst-char-in-string ?\\ ?/ file-name))
 		      (coding (or file-name-coding-system
 				  default-file-name-coding-system)))
@@ -142,955 +147,39 @@ the last file dropped is selected."
 ;; new layout/language selected by the user.
 (global-set-key [language-change] 'ignore)
 
-(defvar x-invocation-args)
+(defvar x-resource-name)
+(defvar x-colors)
 
-(defvar x-command-line-resources nil)
-
-(defun x-handle-switch (switch)
-  "Handle SWITCH of the form \"-switch value\" or \"-switch\"."
-  (let ((aelt (assoc switch command-line-x-option-alist)))
-    (if aelt
-	(push (cons (nth 3 aelt) (or (nth 4 aelt) (pop x-invocation-args)))
-	      default-frame-alist))))
-
-(defun x-handle-numeric-switch (switch)
-  "Handle SWITCH of the form \"-switch n\"."
-  (let ((aelt (assoc switch command-line-x-option-alist)))
-    (if aelt
-	(push (cons (nth 3 aelt) (string-to-number (pop x-invocation-args)))
-	      default-frame-alist))))
-
-;; Handle options that apply to initial frame only
-(defun x-handle-initial-switch (switch)
-  (let ((aelt (assoc switch command-line-x-option-alist)))
-    (if aelt
-	(push (cons (nth 3 aelt) (or (nth 4 aelt) (pop x-invocation-args)))
-	      initial-frame-alist))))
-
-(defun x-handle-iconic (switch)
-  "Make \"-iconic\" SWITCH apply only to the initial frame."
-  (push '(visibility . icon) initial-frame-alist))
-
-(defun x-handle-xrm-switch (switch)
-  "Handle the \"-xrm\" SWITCH."
-  (or (consp x-invocation-args)
-      (error "%s: missing argument to `%s' option" (invocation-name) switch))
-  (setq x-command-line-resources
-	(if (null x-command-line-resources)
-	    (car x-invocation-args)
-	  (concat x-command-line-resources "\n" (car x-invocation-args))))
-  (setq x-invocation-args (cdr x-invocation-args)))
-
-(defun x-handle-geometry (switch)
-  "Handle the \"-geometry\" SWITCH."
-  (let* ((geo (x-parse-geometry (car x-invocation-args)))
-	 (left (assq 'left geo))
-	 (top (assq 'top geo))
-	 (height (assq 'height geo))
-	 (width (assq 'width geo)))
-    (if (or height width)
-	(setq default-frame-alist
-	      (append default-frame-alist
-		      '((user-size . t))
-		      (if height (list height))
-		      (if width (list width)))
-	      initial-frame-alist
-	      (append initial-frame-alist
-		      '((user-size . t))
-		      (if height (list height))
-		      (if width (list width)))))
-    (if (or left top)
-	(setq initial-frame-alist
-	      (append initial-frame-alist
-		      '((user-position . t))
-		      (if left (list left))
-		      (if top (list top)))))
-    (setq x-invocation-args (cdr x-invocation-args))))
-
-(defun x-handle-name-switch (switch)
-  "Handle the \"-name\" SWITCH."
-;; Handle the -name option.  Set the variable x-resource-name
-;; to the option's operand; set the name of the initial frame, too.
-  (or (consp x-invocation-args)
-      (error "%s: missing argument to `%s' option" (invocation-name) switch))
-  (setq x-resource-name (pop x-invocation-args))
-  (push (cons 'name x-resource-name) initial-frame-alist))
-
-(defvar x-display-name nil
-  "The display name specifying server and frame.")
-
-(defun x-handle-display (switch)
-  "Handle the \"-display\" SWITCH."
-  (setq x-display-name (pop x-invocation-args)))
-
-(defun x-handle-args (args)
-  "Process the X-related command line options in ARGS.
-This is done before the user's startup file is loaded.  They are copied to
-`x-invocation args' from which the X-related things are extracted, first
-the switch (e.g., \"-fg\") in the following code, and possible values
-\(e.g., \"black\") in the option handler code (e.g., x-handle-switch).
-This returns ARGS with the arguments that have been processed removed."
-  ;; We use ARGS to accumulate the args that we don't handle here, to return.
-  (setq x-invocation-args args
-	args nil)
-  (while (and x-invocation-args
-	      (not (equal (car x-invocation-args) "--")))
-    (let* ((this-switch (car x-invocation-args))
-	   (orig-this-switch this-switch)
-	   completion argval aelt handler)
-      (setq x-invocation-args (cdr x-invocation-args))
-      ;; Check for long options with attached arguments
-      ;; and separate out the attached option argument into argval.
-      (if (string-match "^--[^=]*=" this-switch)
-	  (setq argval (substring this-switch (match-end 0))
-		this-switch (substring this-switch 0 (1- (match-end 0)))))
-      ;; Complete names of long options.
-      (if (string-match "^--" this-switch)
-	  (progn
-	    (setq completion (try-completion this-switch command-line-x-option-alist))
-	    (if (eq completion t)
-		;; Exact match for long option.
-		nil
-	      (if (stringp completion)
-		  (let ((elt (assoc completion command-line-x-option-alist)))
-		    ;; Check for abbreviated long option.
-		    (or elt
-			(error "Option `%s' is ambiguous" this-switch))
-		    (setq this-switch completion))))))
-      (setq aelt (assoc this-switch command-line-x-option-alist))
-      (if aelt (setq handler (nth 2 aelt)))
-      (if handler
-	  (if argval
-	      (let ((x-invocation-args
-		     (cons argval x-invocation-args)))
-		(funcall handler this-switch))
-	    (funcall handler this-switch))
-	(push orig-this-switch args))))
-  (nconc (nreverse args) x-invocation-args))
 
-;;
-;; Available colors
-;;
-
-(defvar x-colors '("LightGreen"
-		   "light green"
-		   "DarkRed"
-		   "dark red"
-		   "DarkMagenta"
-		   "dark magenta"
-		   "DarkCyan"
-		   "dark cyan"
-		   "DarkBlue"
-		   "dark blue"
-		   "DarkGray"
-		   "dark gray"
-		   "DarkGrey"
-		   "dark grey"
-		   "grey100"
-		   "gray100"
-		   "grey99"
-		   "gray99"
-		   "grey98"
-		   "gray98"
-		   "grey97"
-		   "gray97"
-		   "grey96"
-		   "gray96"
-		   "grey95"
-		   "gray95"
-		   "grey94"
-		   "gray94"
-		   "grey93"
-		   "gray93"
-		   "grey92"
-		   "gray92"
-		   "grey91"
-		   "gray91"
-		   "grey90"
-		   "gray90"
-		   "grey89"
-		   "gray89"
-		   "grey88"
-		   "gray88"
-		   "grey87"
-		   "gray87"
-		   "grey86"
-		   "gray86"
-		   "grey85"
-		   "gray85"
-		   "grey84"
-		   "gray84"
-		   "grey83"
-		   "gray83"
-		   "grey82"
-		   "gray82"
-		   "grey81"
-		   "gray81"
-		   "grey80"
-		   "gray80"
-		   "grey79"
-		   "gray79"
-		   "grey78"
-		   "gray78"
-		   "grey77"
-		   "gray77"
-		   "grey76"
-		   "gray76"
-		   "grey75"
-		   "gray75"
-		   "grey74"
-		   "gray74"
-		   "grey73"
-		   "gray73"
-		   "grey72"
-		   "gray72"
-		   "grey71"
-		   "gray71"
-		   "grey70"
-		   "gray70"
-		   "grey69"
-		   "gray69"
-		   "grey68"
-		   "gray68"
-		   "grey67"
-		   "gray67"
-		   "grey66"
-		   "gray66"
-		   "grey65"
-		   "gray65"
-		   "grey64"
-		   "gray64"
-		   "grey63"
-		   "gray63"
-		   "grey62"
-		   "gray62"
-		   "grey61"
-		   "gray61"
-		   "grey60"
-		   "gray60"
-		   "grey59"
-		   "gray59"
-		   "grey58"
-		   "gray58"
-		   "grey57"
-		   "gray57"
-		   "grey56"
-		   "gray56"
-		   "grey55"
-		   "gray55"
-		   "grey54"
-		   "gray54"
-		   "grey53"
-		   "gray53"
-		   "grey52"
-		   "gray52"
-		   "grey51"
-		   "gray51"
-		   "grey50"
-		   "gray50"
-		   "grey49"
-		   "gray49"
-		   "grey48"
-		   "gray48"
-		   "grey47"
-		   "gray47"
-		   "grey46"
-		   "gray46"
-		   "grey45"
-		   "gray45"
-		   "grey44"
-		   "gray44"
-		   "grey43"
-		   "gray43"
-		   "grey42"
-		   "gray42"
-		   "grey41"
-		   "gray41"
-		   "grey40"
-		   "gray40"
-		   "grey39"
-		   "gray39"
-		   "grey38"
-		   "gray38"
-		   "grey37"
-		   "gray37"
-		   "grey36"
-		   "gray36"
-		   "grey35"
-		   "gray35"
-		   "grey34"
-		   "gray34"
-		   "grey33"
-		   "gray33"
-		   "grey32"
-		   "gray32"
-		   "grey31"
-		   "gray31"
-		   "grey30"
-		   "gray30"
-		   "grey29"
-		   "gray29"
-		   "grey28"
-		   "gray28"
-		   "grey27"
-		   "gray27"
-		   "grey26"
-		   "gray26"
-		   "grey25"
-		   "gray25"
-		   "grey24"
-		   "gray24"
-		   "grey23"
-		   "gray23"
-		   "grey22"
-		   "gray22"
-		   "grey21"
-		   "gray21"
-		   "grey20"
-		   "gray20"
-		   "grey19"
-		   "gray19"
-		   "grey18"
-		   "gray18"
-		   "grey17"
-		   "gray17"
-		   "grey16"
-		   "gray16"
-		   "grey15"
-		   "gray15"
-		   "grey14"
-		   "gray14"
-		   "grey13"
-		   "gray13"
-		   "grey12"
-		   "gray12"
-		   "grey11"
-		   "gray11"
-		   "grey10"
-		   "gray10"
-		   "grey9"
-		   "gray9"
-		   "grey8"
-		   "gray8"
-		   "grey7"
-		   "gray7"
-		   "grey6"
-		   "gray6"
-		   "grey5"
-		   "gray5"
-		   "grey4"
-		   "gray4"
-		   "grey3"
-		   "gray3"
-		   "grey2"
-		   "gray2"
-		   "grey1"
-		   "gray1"
-		   "grey0"
-		   "gray0"
-		   "thistle4"
-		   "thistle3"
-		   "thistle2"
-		   "thistle1"
-		   "MediumPurple4"
-		   "MediumPurple3"
-		   "MediumPurple2"
-		   "MediumPurple1"
-		   "purple4"
-		   "purple3"
-		   "purple2"
-		   "purple1"
-		   "DarkOrchid4"
-		   "DarkOrchid3"
-		   "DarkOrchid2"
-		   "DarkOrchid1"
-		   "MediumOrchid4"
-		   "MediumOrchid3"
-		   "MediumOrchid2"
-		   "MediumOrchid1"
-		   "plum4"
-		   "plum3"
-		   "plum2"
-		   "plum1"
-		   "orchid4"
-		   "orchid3"
-		   "orchid2"
-		   "orchid1"
-		   "magenta4"
-		   "magenta3"
-		   "magenta2"
-		   "magenta1"
-		   "VioletRed4"
-		   "VioletRed3"
-		   "VioletRed2"
-		   "VioletRed1"
-		   "maroon4"
-		   "maroon3"
-		   "maroon2"
-		   "maroon1"
-		   "PaleVioletRed4"
-		   "PaleVioletRed3"
-		   "PaleVioletRed2"
-		   "PaleVioletRed1"
-		   "LightPink4"
-		   "LightPink3"
-		   "LightPink2"
-		   "LightPink1"
-		   "pink4"
-		   "pink3"
-		   "pink2"
-		   "pink1"
-		   "HotPink4"
-		   "HotPink3"
-		   "HotPink2"
-		   "HotPink1"
-		   "DeepPink4"
-		   "DeepPink3"
-		   "DeepPink2"
-		   "DeepPink1"
-		   "red4"
-		   "red3"
-		   "red2"
-		   "red1"
-		   "OrangeRed4"
-		   "OrangeRed3"
-		   "OrangeRed2"
-		   "OrangeRed1"
-		   "tomato4"
-		   "tomato3"
-		   "tomato2"
-		   "tomato1"
-		   "coral4"
-		   "coral3"
-		   "coral2"
-		   "coral1"
-		   "DarkOrange4"
-		   "DarkOrange3"
-		   "DarkOrange2"
-		   "DarkOrange1"
-		   "orange4"
-		   "orange3"
-		   "orange2"
-		   "orange1"
-		   "LightSalmon4"
-		   "LightSalmon3"
-		   "LightSalmon2"
-		   "LightSalmon1"
-		   "salmon4"
-		   "salmon3"
-		   "salmon2"
-		   "salmon1"
-		   "brown4"
-		   "brown3"
-		   "brown2"
-		   "brown1"
-		   "firebrick4"
-		   "firebrick3"
-		   "firebrick2"
-		   "firebrick1"
-		   "chocolate4"
-		   "chocolate3"
-		   "chocolate2"
-		   "chocolate1"
-		   "tan4"
-		   "tan3"
-		   "tan2"
-		   "tan1"
-		   "wheat4"
-		   "wheat3"
-		   "wheat2"
-		   "wheat1"
-		   "burlywood4"
-		   "burlywood3"
-		   "burlywood2"
-		   "burlywood1"
-		   "sienna4"
-		   "sienna3"
-		   "sienna2"
-		   "sienna1"
-		   "IndianRed4"
-		   "IndianRed3"
-		   "IndianRed2"
-		   "IndianRed1"
-		   "RosyBrown4"
-		   "RosyBrown3"
-		   "RosyBrown2"
-		   "RosyBrown1"
-		   "DarkGoldenrod4"
-		   "DarkGoldenrod3"
-		   "DarkGoldenrod2"
-		   "DarkGoldenrod1"
-		   "goldenrod4"
-		   "goldenrod3"
-		   "goldenrod2"
-		   "goldenrod1"
-		   "gold4"
-		   "gold3"
-		   "gold2"
-		   "gold1"
-		   "yellow4"
-		   "yellow3"
-		   "yellow2"
-		   "yellow1"
-		   "LightYellow4"
-		   "LightYellow3"
-		   "LightYellow2"
-		   "LightYellow1"
-		   "LightGoldenrod4"
-		   "LightGoldenrod3"
-		   "LightGoldenrod2"
-		   "LightGoldenrod1"
-		   "khaki4"
-		   "khaki3"
-		   "khaki2"
-		   "khaki1"
-		   "DarkOliveGreen4"
-		   "DarkOliveGreen3"
-		   "DarkOliveGreen2"
-		   "DarkOliveGreen1"
-		   "OliveDrab4"
-		   "OliveDrab3"
-		   "OliveDrab2"
-		   "OliveDrab1"
-		   "chartreuse4"
-		   "chartreuse3"
-		   "chartreuse2"
-		   "chartreuse1"
-		   "green4"
-		   "green3"
-		   "green2"
-		   "green1"
-		   "SpringGreen4"
-		   "SpringGreen3"
-		   "SpringGreen2"
-		   "SpringGreen1"
-		   "PaleGreen4"
-		   "PaleGreen3"
-		   "PaleGreen2"
-		   "PaleGreen1"
-		   "SeaGreen4"
-		   "SeaGreen3"
-		   "SeaGreen2"
-		   "SeaGreen1"
-		   "DarkSeaGreen4"
-		   "DarkSeaGreen3"
-		   "DarkSeaGreen2"
-		   "DarkSeaGreen1"
-		   "aquamarine4"
-		   "aquamarine3"
-		   "aquamarine2"
-		   "aquamarine1"
-		   "DarkSlateGray4"
-		   "DarkSlateGray3"
-		   "DarkSlateGray2"
-		   "DarkSlateGray1"
-		   "cyan4"
-		   "cyan3"
-		   "cyan2"
-		   "cyan1"
-		   "turquoise4"
-		   "turquoise3"
-		   "turquoise2"
-		   "turquoise1"
-		   "CadetBlue4"
-		   "CadetBlue3"
-		   "CadetBlue2"
-		   "CadetBlue1"
-		   "PaleTurquoise4"
-		   "PaleTurquoise3"
-		   "PaleTurquoise2"
-		   "PaleTurquoise1"
-		   "LightCyan4"
-		   "LightCyan3"
-		   "LightCyan2"
-		   "LightCyan1"
-		   "LightBlue4"
-		   "LightBlue3"
-		   "LightBlue2"
-		   "LightBlue1"
-		   "LightSteelBlue4"
-		   "LightSteelBlue3"
-		   "LightSteelBlue2"
-		   "LightSteelBlue1"
-		   "SlateGray4"
-		   "SlateGray3"
-		   "SlateGray2"
-		   "SlateGray1"
-		   "LightSkyBlue4"
-		   "LightSkyBlue3"
-		   "LightSkyBlue2"
-		   "LightSkyBlue1"
-		   "SkyBlue4"
-		   "SkyBlue3"
-		   "SkyBlue2"
-		   "SkyBlue1"
-		   "DeepSkyBlue4"
-		   "DeepSkyBlue3"
-		   "DeepSkyBlue2"
-		   "DeepSkyBlue1"
-		   "SteelBlue4"
-		   "SteelBlue3"
-		   "SteelBlue2"
-		   "SteelBlue1"
-		   "DodgerBlue4"
-		   "DodgerBlue3"
-		   "DodgerBlue2"
-		   "DodgerBlue1"
-		   "blue4"
-		   "blue3"
-		   "blue2"
-		   "blue1"
-		   "RoyalBlue4"
-		   "RoyalBlue3"
-		   "RoyalBlue2"
-		   "RoyalBlue1"
-		   "SlateBlue4"
-		   "SlateBlue3"
-		   "SlateBlue2"
-		   "SlateBlue1"
-		   "azure4"
-		   "azure3"
-		   "azure2"
-		   "azure1"
-		   "MistyRose4"
-		   "MistyRose3"
-		   "MistyRose2"
-		   "MistyRose1"
-		   "LavenderBlush4"
-		   "LavenderBlush3"
-		   "LavenderBlush2"
-		   "LavenderBlush1"
-		   "honeydew4"
-		   "honeydew3"
-		   "honeydew2"
-		   "honeydew1"
-		   "ivory4"
-		   "ivory3"
-		   "ivory2"
-		   "ivory1"
-		   "cornsilk4"
-		   "cornsilk3"
-		   "cornsilk2"
-		   "cornsilk1"
-		   "LemonChiffon4"
-		   "LemonChiffon3"
-		   "LemonChiffon2"
-		   "LemonChiffon1"
-		   "NavajoWhite4"
-		   "NavajoWhite3"
-		   "NavajoWhite2"
-		   "NavajoWhite1"
-		   "PeachPuff4"
-		   "PeachPuff3"
-		   "PeachPuff2"
-		   "PeachPuff1"
-		   "bisque4"
-		   "bisque3"
-		   "bisque2"
-		   "bisque1"
-		   "AntiqueWhite4"
-		   "AntiqueWhite3"
-		   "AntiqueWhite2"
-		   "AntiqueWhite1"
-		   "seashell4"
-		   "seashell3"
-		   "seashell2"
-		   "seashell1"
-		   "snow4"
-		   "snow3"
-		   "snow2"
-		   "snow1"
-		   "thistle"
-		   "MediumPurple"
-		   "medium purple"
-		   "purple"
-		   "BlueViolet"
-		   "blue violet"
-		   "DarkViolet"
-		   "dark violet"
-		   "DarkOrchid"
-		   "dark orchid"
-		   "MediumOrchid"
-		   "medium orchid"
-		   "orchid"
-		   "plum"
-		   "violet"
-		   "magenta"
-		   "VioletRed"
-		   "violet red"
-		   "MediumVioletRed"
-		   "medium violet red"
-		   "maroon"
-		   "PaleVioletRed"
-		   "pale violet red"
-		   "LightPink"
-		   "light pink"
-		   "pink"
-		   "DeepPink"
-		   "deep pink"
-		   "HotPink"
-		   "hot pink"
-		   "red"
-		   "OrangeRed"
-		   "orange red"
-		   "tomato"
-		   "LightCoral"
-		   "light coral"
-		   "coral"
-		   "DarkOrange"
-		   "dark orange"
-		   "orange"
-		   "LightSalmon"
-		   "light salmon"
-		   "salmon"
-		   "DarkSalmon"
-		   "dark salmon"
-		   "brown"
-		   "firebrick"
-		   "chocolate"
-		   "tan"
-		   "SandyBrown"
-		   "sandy brown"
-		   "wheat"
-		   "beige"
-		   "burlywood"
-		   "peru"
-		   "sienna"
-		   "SaddleBrown"
-		   "saddle brown"
-		   "IndianRed"
-		   "indian red"
-		   "RosyBrown"
-		   "rosy brown"
-		   "DarkGoldenrod"
-		   "dark goldenrod"
-		   "goldenrod"
-		   "LightGoldenrod"
-		   "light goldenrod"
-		   "gold"
-		   "yellow"
-		   "LightYellow"
-		   "light yellow"
-		   "LightGoldenrodYellow"
-		   "light goldenrod yellow"
-		   "PaleGoldenrod"
-		   "pale goldenrod"
-		   "khaki"
-		   "DarkKhaki"
-		   "dark khaki"
-		   "OliveDrab"
-		   "olive drab"
-		   "ForestGreen"
-		   "forest green"
-		   "YellowGreen"
-		   "yellow green"
-		   "LimeGreen"
-		   "lime green"
-		   "GreenYellow"
-		   "green yellow"
-		   "MediumSpringGreen"
-		   "medium spring green"
-		   "chartreuse"
-		   "green"
-		   "LawnGreen"
-		   "lawn green"
-		   "SpringGreen"
-		   "spring green"
-		   "PaleGreen"
-		   "pale green"
-		   "LightSeaGreen"
-		   "light sea green"
-		   "MediumSeaGreen"
-		   "medium sea green"
-		   "SeaGreen"
-		   "sea green"
-		   "DarkSeaGreen"
-		   "dark sea green"
-		   "DarkOliveGreen"
-		   "dark olive green"
-		   "DarkGreen"
-		   "dark green"
-		   "aquamarine"
-		   "MediumAquamarine"
-		   "medium aquamarine"
-		   "CadetBlue"
-		   "cadet blue"
-		   "LightCyan"
-		   "light cyan"
-		   "cyan"
-		   "turquoise"
-		   "MediumTurquoise"
-		   "medium turquoise"
-		   "DarkTurquoise"
-		   "dark turquoise"
-		   "PaleTurquoise"
-		   "pale turquoise"
-		   "PowderBlue"
-		   "powder blue"
-		   "LightBlue"
-		   "light blue"
-		   "LightSteelBlue"
-		   "light steel blue"
-		   "SteelBlue"
-		   "steel blue"
-		   "LightSkyBlue"
-		   "light sky blue"
-		   "SkyBlue"
-		   "sky blue"
-		   "DeepSkyBlue"
-		   "deep sky blue"
-		   "DodgerBlue"
-		   "dodger blue"
-		   "blue"
-		   "RoyalBlue"
-		   "royal blue"
-		   "MediumBlue"
-		   "medium blue"
-		   "LightSlateBlue"
-		   "light slate blue"
-		   "MediumSlateBlue"
-		   "medium slate blue"
-		   "SlateBlue"
-		   "slate blue"
-		   "DarkSlateBlue"
-		   "dark slate blue"
-		   "CornflowerBlue"
-		   "cornflower blue"
-		   "NavyBlue"
-		   "navy blue"
-		   "navy"
-		   "MidnightBlue"
-		   "midnight blue"
-		   "LightGray"
-		   "light gray"
-		   "LightGrey"
-		   "light grey"
-		   "grey"
-		   "gray"
-		   "LightSlateGrey"
-		   "light slate grey"
-		   "LightSlateGray"
-		   "light slate gray"
-		   "SlateGrey"
-		   "slate grey"
-		   "SlateGray"
-		   "slate gray"
-		   "DimGrey"
-		   "dim grey"
-		   "DimGray"
-		   "dim gray"
-		   "DarkSlateGrey"
-		   "dark slate grey"
-		   "DarkSlateGray"
-		   "dark slate gray"
-		   "black"
-		   "white"
-		   "MistyRose"
-		   "misty rose"
-		   "LavenderBlush"
-		   "lavender blush"
-		   "lavender"
-		   "AliceBlue"
-		   "alice blue"
-		   "azure"
-		   "MintCream"
-		   "mint cream"
-		   "honeydew"
-		   "seashell"
-		   "LemonChiffon"
-		   "lemon chiffon"
-		   "ivory"
-		   "cornsilk"
-		   "moccasin"
-		   "NavajoWhite"
-		   "navajo white"
-		   "PeachPuff"
-		   "peach puff"
-		   "bisque"
-		   "BlanchedAlmond"
-		   "blanched almond"
-		   "PapayaWhip"
-		   "papaya whip"
-		   "AntiqueWhite"
-		   "antique white"
-		   "linen"
-		   "OldLace"
-		   "old lace"
-		   "FloralWhite"
-		   "floral white"
-		   "gainsboro"
-		   "WhiteSmoke"
-		   "white smoke"
-		   "GhostWhite"
-		   "ghost white"
-		   "snow")
-  "The list of X colors from the `rgb.txt' file.
-XConsortium: rgb.txt,v 10.41 94/02/20 18:39:36 rws Exp")
-
 (defun xw-defined-colors (&optional frame)
   "Internal function called by `defined-colors', which see."
   (or frame (setq frame (selected-frame)))
   (let ((defined-colors nil))
     (dolist (this-color (or (mapcar 'car w32-color-map) x-colors))
       (and (color-supported-p this-color frame t)
-	   (push this-color defined-colors)))
+	   (setq defined-colors (cons this-color defined-colors))))
     defined-colors))
-
 
 ;;;; Function keys
 
-;;; make f10 activate the real menubar rather than the mini-buffer menu
-;;; navigation feature.
-(defun menu-bar-open (&optional frame)
-  "Start key navigation of the menu bar in FRAME.
-
+ ;;; make f10 activate the real menubar rather than the mini-buffer menu
+ ;;; navigation feature.
+ (defun w32-menu-bar-open (&optional frame)
+   "Start key navigation of the menu bar in FRAME.
+ 
 This initially activates the first menu-bar item, and you can then navigate
 with the arrow keys, select a menu entry with the Return key or cancel with
 the Escape key.  If FRAME has no menu bar, this function does nothing.
-
-If FRAME is nil or not given, use the selected frame."
-  (interactive "i")
-  (w32-send-sys-command ?\xf100 frame))
-;
-(global-set-key [f10] 'menu-bar-open)
-
-(substitute-key-definition 'suspend-emacs 'iconify-or-deiconify-frame
-			   global-map)
-
-(define-key function-key-map [S-tab] [backtab])
-
+ 
+If FRAME is nil or not given, use the selected frame.
+If FRAME does not have the menu bar enabled, display a text menu using
+`tmm-menubar'."
+   (interactive "i")
+   (if menu-bar-mode
+       (w32-send-sys-command ?\xf100 frame)
+     (with-selected-frame (or frame (selected-frame))
+       (tmm-menubar))))
 
-;;; Do the actual Windows setup here; the above code just defines
-;;; functions and variables that we use now.
-
-(setq command-line-args (x-handle-args command-line-args))
-
-;;; Make sure we have a valid resource name.
-(or (stringp x-resource-name)
-    (setq x-resource-name
-	  ;; Change any . or * characters in x-resource-name to hyphens,
-	  ;; so as not to choke when we use it in X resource queries.
-	  (replace-regexp-in-string "[.*]" "-" (invocation-name))))
-
-;; For the benefit of older Emacses (19.27 and earlier) that are sharing
-;; the same lisp directory, don't pass the third argument unless we seem
-;; to have the multi-display support.
-(if (fboundp 'x-close-connection)
-    (x-open-connection ""
-		       x-command-line-resources
-		       ;; Exit Emacs with fatal error if this fails.
-		       t)
-  (x-open-connection ""
-		     x-command-line-resources))
-
-(setq frame-creation-function 'x-create-frame-with-faces)
-
-(setq x-cut-buffer-max (min (- (/ (x-server-max-request-size) 2) 100)
-			    x-cut-buffer-max))
-
-;; W32 expects the menu bar cut and paste commands to use the clipboard.
-;; This has ,? to match both on Sunos and on Solaris.
-(menu-bar-enable-clipboard)
 
 ;; W32 systems have different fonts than commonly found on X, so
 ;; we define our own standard fontset here.
@@ -1103,153 +192,11 @@ European languages which are distributed with Windows as
 
 See the documentation of `create-fontset-from-fontset-spec' for the format.")
 
-;; Conditional on new-fontset so bootstrapping works on non-GUI compiles
-(if (fboundp 'new-fontset)
-    (progn
-      ;; Setup the default fontset.
-      (setup-default-fontset)
-      ;; Enable Japanese fonts on Windows to be used by default.
-      (set-fontset-font nil (make-char 'katakana-jisx0201)
-                        '("*" . "JISX0208-SJIS"))
-      (set-fontset-font nil (make-char 'latin-jisx0201)
-                        '("*" . "JISX0208-SJIS"))
-      (set-fontset-font nil (make-char 'japanese-jisx0208)
-                        '("*" . "JISX0208-SJIS"))
-      (set-fontset-font nil (make-char 'japanese-jisx0208-1978)
-                        '("*" . "JISX0208-SJIS"))
-      ;; Create the standard fontset.
-      (create-fontset-from-fontset-spec w32-standard-fontset-spec t)
-      ;; Create fontset specified in X resources "Fontset-N" (N is 0, 1,...).
-      (create-fontset-from-x-resource)
-      ;; Try to create a fontset from a font specification which comes
-      ;; from initial-frame-alist, default-frame-alist, or X resource.
-      ;; A font specification in command line argument (i.e. -fn XXXX)
-      ;; should be already in default-frame-alist as a `font'
-      ;; parameter.  However, any font specifications in site-start
-      ;; library, user's init file (.emacs), and default.el are not
-      ;; yet handled here.
-
-      (let ((font (or (cdr (assq 'font initial-frame-alist))
-                      (cdr (assq 'font default-frame-alist))
-                      (x-get-resource "font" "Font")))
-            xlfd-fields resolved-name)
-        (if (and font
-                 (not (query-fontset font))
-                 (setq resolved-name (x-resolve-font-name font))
-                 (setq xlfd-fields (x-decompose-font-name font)))
-            (if (string= "fontset"
-                         (aref xlfd-fields xlfd-regexp-registry-subnum))
-                (new-fontset font
-                             (x-complement-fontset-spec xlfd-fields nil))
-              ;; Create a fontset from FONT.  The fontset name is
-              ;; generated from FONT.
-              (create-fontset-from-ascii-font font
-					      resolved-name "startup"))))))
-
-;; Apply a geometry resource to the initial frame.  Put it at the end
-;; of the alist, so that anything specified on the command line takes
-;; precedence.
-(let* ((res-geometry (x-get-resource "geometry" "Geometry"))
-       parsed)
-  (if res-geometry
-      (progn
-	(setq parsed (x-parse-geometry res-geometry))
-	;; If the resource specifies a position,
-	;; call the position and size "user-specified".
-	(if (or (assq 'top parsed) (assq 'left parsed))
-	    (setq parsed (cons '(user-position . t)
-			       (cons '(user-size . t) parsed))))
-	;; All geometry parms apply to the initial frame.
-	(setq initial-frame-alist (append initial-frame-alist parsed))
-	;; The size parms apply to all frames.
-	(if (assq 'height parsed)
-	    (push (cons 'height (cdr (assq 'height parsed)))
-		  default-frame-alist))
-	(if (assq 'width parsed)
-	    (push (cons 'width (cdr (assq 'width parsed)))
-		  default-frame-alist)))))
-
-;; Check the reverseVideo resource.
-(let ((case-fold-search t))
-  (let ((rv (x-get-resource "reverseVideo" "ReverseVideo")))
-    (if (and rv (string-match "^\\(true\\|yes\\|on\\)$" rv))
-	(push '(reverse . t) default-frame-alist))))
-
 (defun x-win-suspend-error ()
   "Report an error when a suspend is attempted."
   (error "Suspending an Emacs running under W32 makes no sense"))
-(add-hook 'suspend-hook 'x-win-suspend-error)
 
-;;; Turn off window-splitting optimization; w32 is usually fast enough
-;;; that this is only annoying.
-(setq split-window-keep-point t)
-
-;; Don't show the frame name; that's redundant.
-(setq-default mode-line-frame-identification "  ")
-
-;;; Set to a system sound if you want a fancy bell.
-(set-message-beep 'ok)
-
-;; Remap some functions to call w32 common dialogs
-
-(defun internal-face-interactive (what &optional bool)
-  (let* ((fn (intern (concat "face-" what)))
-	 (prompt (concat "Set " what " of face "))
-	 (face (read-face-name prompt))
-	 (default (if (fboundp fn)
-		      (or (funcall fn face (selected-frame))
-			  (funcall fn 'default (selected-frame)))))
-	 (fn-win (intern (concat (symbol-name window-system) "-select-" what)))
-	 value)
-    (setq value
-	  (cond ((fboundp fn-win)
-		 (funcall fn-win))
-		((eq bool 'color)
-		 (completing-read (concat prompt " " (symbol-name face) " to: ")
-				  (mapcar (function (lambda (color)
-						      (cons color color)))
-					  x-colors)
-				  nil nil nil nil default))
-		(bool
-		 (y-or-n-p (concat "Should face " (symbol-name face)
-				   " be " bool "? ")))
-		(t
-		 (read-string (concat prompt " " (symbol-name face) " to: ")
-			      nil nil default))))
-    (list face (if (equal value "") nil value))))
-
-(defun mouse-set-font (&rest fonts)
-  "Select an Emacs font from a list of known good fonts and fontsets.
-
-If `w32-use-w32-font-dialog' is non-nil (the default), use the Windows
-font dialog to display the list of possible fonts.  Otherwise use a
-pop-up menu (like Emacs does on other platforms) initialized with
-the fonts in `w32-fixed-font-alist'.
-If `w32-list-proportional-fonts' is non-nil, add proportional fonts
-to the list in the font selection dialog (the fonts listed by the
-pop-up menu are unaffected by `w32-list-proportional-fonts')."
-  (interactive
-   (if w32-use-w32-font-dialog
-       (let ((chosen-font (w32-select-font (selected-frame)
-					   w32-list-proportional-fonts)))
-	 (and chosen-font (list chosen-font)))
-     (x-popup-menu
-      last-nonmenu-event
-      ;; Append list of fontsets currently defined.
-      ;; Conditional on new-fontset so bootstrapping works on non-GUI compiles
-      (if (fboundp 'new-fontset)
-      (append w32-fixed-font-alist (list (generate-fontset-menu)))))))
-  (if fonts
-      (let (font)
-	(while fonts
-	  (condition-case nil
-	      (progn
-                (setq font (car fonts))
-		(set-default-font font)
-                (setq fonts nil))
-	    (error (setq fonts (cdr fonts)))))
-	(if (null font)
-	    (error "Font not found")))))
+(defvar image-library-alist)
 
 ;;; Set default known names for image libraries
 (setq image-library-alist
@@ -1259,7 +206,123 @@ pop-up menu are unaffected by `w32-list-proportional-fonts')."
 	 "libpng13d.dll" "libpng13.dll")
         (jpeg "jpeg62.dll" "libjpeg.dll" "jpeg-62.dll" "jpeg.dll")
         (tiff "libtiff3.dll" "libtiff.dll")
-        (gif "giflib4.dll" "libungif4.dll" "libungif.dll")))
+        (gif "giflib4.dll" "libungif4.dll" "libungif.dll")
+        (svg "librsvg-2-2.dll")
+        (gdk-pixbuf "libgdk_pixbuf-2.0-0.dll")
+        (glib "libglib-2.0-0.dll")
+	(gobject "libgobject-2.0-0.dll")))
+
+;;; multi-tty support
+(defvar w32-initialized nil
+  "Non-nil if the w32 window system has been initialized.")
+
+(declare-function x-open-connection "w32fns.c"
+                  (display &optional xrm-string must-succeed))
+
+(declare-function setup-default-fontset "fontset" ())
+(declare-function set-fontset-font "fontset.c"
+                  (name target font-spec &optional frame add))
+(declare-function setup-default-fontset "fontset" ())
+(declare-function create-fontset-from-fontset-spec "fontset"
+                  (fontset-spec &optional style-variant noerror))
+(declare-function create-fontset-from-x-resource "fontset" ())
+(declare-function x-get-resource "frame.c"
+                  (attribute class &optional component subclass))
+(declare-function x-handle-args "common-win" (args))
+(declare-function x-parse-geometry "frame.c" (string))
+(defvar x-command-line-resources)
+
+(defun w32-initialize-window-system ()
+  "Initialize Emacs for W32 GUI frames."
+
+  ;; Do the actual Windows setup here; the above code just defines
+  ;; functions and variables that we use now.
+
+  (setq command-line-args (x-handle-args command-line-args))
+
+  ;; Make sure we have a valid resource name.
+  (or (stringp x-resource-name)
+      (setq x-resource-name
+            ;; Change any . or * characters in x-resource-name to hyphens,
+            ;; so as not to choke when we use it in X resource queries.
+            (replace-regexp-in-string "[.*]" "-" (invocation-name))))
+
+  (x-open-connection "" x-command-line-resources
+                     ;; Exit with a fatal error if this fails and we
+                     ;; are the initial display
+                     (eq initial-window-system 'w32))
+
+  ;; Create the default fontset.
+  (create-default-fontset)
+  ;; Create the standard fontset.
+  (condition-case err
+      (create-fontset-from-fontset-spec w32-standard-fontset-spec t)
+    (error (display-warning 
+	    'initialization
+	    (format "Creation of the standard fontset failed: %s" err)
+	    :error)))
+  ;; Create fontset specified in X resources "Fontset-N" (N is 0, 1,...).
+  (create-fontset-from-x-resource)
+
+  ;; Apply a geometry resource to the initial frame.  Put it at the end
+  ;; of the alist, so that anything specified on the command line takes
+  ;; precedence.
+  (let* ((res-geometry (x-get-resource "geometry" "Geometry"))
+         parsed)
+    (if res-geometry
+        (progn
+          (setq parsed (x-parse-geometry res-geometry))
+          ;; If the resource specifies a position,
+          ;; call the position and size "user-specified".
+          (if (or (assq 'top parsed) (assq 'left parsed))
+              (setq parsed (cons '(user-position . t)
+                                 (cons '(user-size . t) parsed))))
+          ;; All geometry parms apply to the initial frame.
+          (setq initial-frame-alist (append initial-frame-alist parsed))
+          ;; The size parms apply to all frames.
+          (if (and (assq 'height parsed)
+                   (not (assq 'height default-frame-alist)))
+              (setq default-frame-alist
+                    (cons (cons 'height (cdr (assq 'height parsed)))
+                          default-frame-alist))
+          (if (and (assq 'width parsed)
+                   (not (assq 'width default-frame-alist)))
+              (setq default-frame-alist
+                    (cons (cons 'width (cdr (assq 'width parsed)))
+                          default-frame-alist)))))))
+
+  ;; Check the reverseVideo resource.
+  (let ((case-fold-search t))
+    (let ((rv (x-get-resource "reverseVideo" "ReverseVideo")))
+      (if (and rv (string-match "^\\(true\\|yes\\|on\\)$" rv))
+          (setq default-frame-alist
+                (cons '(reverse . t) default-frame-alist)))))
+
+  ;; Don't let Emacs suspend under w32 gui
+  (add-hook 'suspend-hook 'x-win-suspend-error)
+
+  ;; Turn off window-splitting optimization; w32 is usually fast enough
+  ;; that this is only annoying.
+  (setq split-window-keep-point t)
+
+  ;; Turn on support for mouse wheels
+  (mouse-wheel-mode 1)
+
+  ;; W32 expects the menu bar cut and paste commands to use the clipboard.
+  (menu-bar-enable-clipboard)
+
+  ;; Don't show the frame name; that's redundant.
+  (setq-default mode-line-frame-identification "  ")
+
+  ;; Set to a system sound if you want a fancy bell.
+  (set-message-beep 'ok)
+  (setq w32-initialized t))
+
+(add-to-list 'handle-args-function-alist '(w32 . x-handle-args))
+(add-to-list 'frame-creation-function-alist '(w32 . x-create-frame-with-faces))
+(add-to-list 'window-system-initialization-alist '(w32 . w32-initialize-window-system))
+
+(provide 'w32-win)
 
 ;; arch-tag: 69fb1701-28c2-4890-b351-3d1fe4b4f166
 ;;; w32-win.el ends here

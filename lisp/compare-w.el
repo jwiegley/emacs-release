@@ -1,17 +1,17 @@
 ;;; compare-w.el --- compare text between windows for Emacs
 
 ;; Copyright (C) 1986, 1989, 1993, 1997, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: convenience files
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -38,7 +36,7 @@
   :group 'tools)
 
 (defcustom compare-windows-whitespace "\\(\\s-\\|\n\\)+"
-  "*Regexp or function that defines whitespace sequences for `compare-windows'.
+  "Regexp or function that defines whitespace sequences for `compare-windows'.
 That command optionally ignores changes in whitespace.
 
 The value of `compare-windows-whitespace' is normally a regexp, but it
@@ -55,18 +53,18 @@ whitespace is considered to match, and is skipped."
   :group 'compare-windows)
 
 (defcustom compare-ignore-whitespace nil
-  "*Non-nil means `compare-windows' ignores whitespace."
+  "Non-nil means `compare-windows' ignores whitespace."
   :type 'boolean
   :group 'compare-windows
   :version "22.1")
 
 (defcustom compare-ignore-case nil
-  "*Non-nil means `compare-windows' ignores case differences."
+  "Non-nil means `compare-windows' ignores case differences."
   :type 'boolean
   :group 'compare-windows)
 
 (defcustom compare-windows-sync 'compare-windows-sync-default-function
-  "*Function or regexp that is used to synchronize points in two
+  "Function or regexp that is used to synchronize points in two
 windows if before calling `compare-windows' points are located
 on mismatched positions.
 
@@ -95,7 +93,7 @@ to beep or flash the screen when points are mismatched."
   :version "22.1")
 
 (defcustom compare-windows-sync-string-size 32
-  "*Size of string from one window that is searched in second window.
+  "Size of string from one window that is searched in second window.
 
 Small number makes difference regions more fine-grained, but it
 may fail by finding the wrong match.  The bigger number makes
@@ -107,7 +105,7 @@ The default value 32 is good for the most cases."
   :version "22.1")
 
 (defcustom compare-windows-recenter nil
-  "*List of two values, each of which is used as argument of
+  "List of two values, each of which is used as argument of
 function `recenter' called in each of two windows to place
 matching points side-by-side.
 
@@ -118,7 +116,7 @@ and the value `((4) (4))' for horizontally split windows."
   :version "22.1")
 
 (defcustom compare-windows-highlight t
-  "*Non-nil means compare-windows highlights the differences.
+  "Non-nil means compare-windows highlights the differences.
 The value t removes highlighting immediately after invoking a command
 other than `compare-windows'.
 The value `persistent' leaves all highlighted differences.  You can clear
@@ -391,5 +389,5 @@ on third call it again advances points to the next difference and so on."
 
 (provide 'compare-w)
 
-;;; arch-tag: 4177aab1-48e6-4a98-b7a1-000ee285de46
+;; arch-tag: 4177aab1-48e6-4a98-b7a1-000ee285de46
 ;;; compare-w.el ends here

@@ -1,17 +1,17 @@
 ;;; metamail.el --- Metamail interface for GNU Emacs
 
 ;; Copyright (C) 1993, 1996, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Masanobu UMEDA <umerin@mse.kyutech.ac.jp>
 ;; Keywords: mail, news, mime, multimedia
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -123,11 +121,21 @@ Its header part is not interpreted at all."
 	     (append metamail-switches
 		     (list "-b" "-c" contype "-E" encoding))))
 	(metamail-region end (point-max) viewmode nil nodisplay))
-      ;; Mode specific hack.
-      (cond ((eq major-mode 'rmail-mode)
-	     ;; Adjust the marker of this message if in Rmail mode buffer.
-	     (set-marker (aref rmail-message-vector (1+ rmail-current-message))
-			 (point-max))))
+      ;; This mode specific hack is no longer appropriate in mbox Rmail.
+      ;; Pre-mbox, we have just modified the actual folder, so we
+      ;; update the message-vector with the new end position of the
+      ;; current message.  In mbox Rmail, all we have done is modify a
+      ;; display copy of the message.  Note also that point-max is a
+      ;; marker in the wrong buffer: the message-vector contains
+      ;; markers in rmail-view-buffer (which is not in rmail-mode).
+      ;; So this hack actually breaks the message-vector.
+      ;; If you're calling this on the actual rmail-view-buffer (or a
+      ;; non-swapped rmail-buffer), you would still need this hack.
+      ;; But you're not going to do that.
+;;;      (cond ((eq major-mode 'rmail-mode)
+;;;	     ;; Adjust the marker of this message if in Rmail mode buffer.
+;;;	     (set-marker (aref rmail-message-vector (1+ rmail-current-message))
+;;;			 (point-max))))
       )))
 
 ;;;###autoload
@@ -193,5 +201,5 @@ redisplayed as output is inserted."
 
 (provide 'metamail)
 
-;;; arch-tag: 52c0cb6f-d800-4776-9789-f0275cb5490e
+;; arch-tag: 52c0cb6f-d800-4776-9789-f0275cb5490e
 ;;; metamail.el ends here

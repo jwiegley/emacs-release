@@ -1,7 +1,7 @@
 ;;; mailcap.el --- MIME media types configuration
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: William M. Perry <wmperry@aventail.com>
 ;;	Lars Magne Ingebrigtsen <larsi@gnus.org>
@@ -9,20 +9,18 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -33,8 +31,27 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
-(require 'mail-parse)
-(require 'mm-util)
+(autoload 'mail-header-parse-content-type "mail-parse")
+
+;; `mm-delete-duplicates' is an alias for `delete-dups' in Emacs 22.
+(defalias 'mailcap-delete-duplicates
+  (if (fboundp 'delete-dups)
+      'delete-dups
+    (autoload 'mm-delete-duplicates "mm-util")
+    'mm-delete-duplicates))
+
+;; `mailcap-replace-in-string' is an alias like `gnus-replace-in-string'.
+(eval-and-compile
+  (cond
+   ((fboundp 'replace-regexp-in-string)
+    (defun mailcap-replace-in-string  (string regexp newtext &optional literal)
+      "Replace all matches for REGEXP with NEWTEXT in STRING.
+If LITERAL is non-nil, insert NEWTEXT literally.  Return a new
+string containing the replacements.
+This is a compatibility function for different Emacsen."
+      (replace-regexp-in-string regexp newtext string nil literal)))
+   ((fboundp 'replace-in-string)
+    (defalias 'mailcap-replace-in-string 'replace-in-string))))
 
 (defgroup mailcap nil
   "Definition of viewers for MIME types."
@@ -254,7 +271,11 @@
      ("html"
       (viewer . mm-w3-prepare-buffer)
       (test   . (fboundp 'w3-prepare-buffer))
-      (type   . "text/html")))
+      (type   . "text/html"))
+     ("dns"
+      (viewer . dns-mode)
+      (test   . (fboundp 'dns-mode))
+      (type   . "text/dns")))
     ("video"
      ("mpeg"
       (viewer . "mpeg_play %s")
@@ -718,7 +739,7 @@ If TEST is not given, it defaults to t."
       t)
      (t nil))))
 
-(defun mailcap-mime-info (string &optional request)
+(defun mailcap-mime-info (string &optional request no-decode)
   "Get the MIME viewer command for STRING, return nil if none found.
 Expects a complete content-type header line as its argument.
 
@@ -728,7 +749,11 @@ entry) will be returned.  If it is a string, then the mailcap field
 corresponding to that string will be returned (print, description,
 whatever).  If a number, then all the information for this specific
 viewer is returned.  If `all', then all possible viewers for
-this type is returned."
+this type is returned.
+
+If NO-DECODE is non-nil, don't decode STRING."
+  ;; NO-DECODE avoids calling `mail-header-parse-content-type' from
+  ;; `mail-parse.el'
   (let (
 	major				; Major encoding (text, etc)
 	minor				; Minor encoding (html, etc)
@@ -742,7 +767,10 @@ this type is returned."
 	viewer				; The one and only viewer
 	ctl)
     (save-excursion
-      (setq ctl (mail-header-parse-content-type (or string "text/plain")))
+      (setq ctl
+	    (if no-decode
+		(list (or string "text/plain"))
+	      (mail-header-parse-content-type (or string "text/plain"))))
       (setq major (split-string (car ctl) "/"))
       (setq minor (cadr major)
 	    major (car major))
@@ -762,7 +790,7 @@ this type is returned."
 	(setq viewer (car passed)))
       (cond
        ((and (null viewer) (not (equal major "default")) request)
-	(mailcap-mime-info "default" request))
+	(mailcap-mime-info "default" request no-decode))
        ((or (null request) (equal request ""))
 	(mailcap-unescape-mime-test (cdr (assq 'viewer viewer)) info))
        ((stringp request)
@@ -852,6 +880,7 @@ this type is returned."
     (".sit"   . "application/x-stuffit")
     (".siv"   . "application/sieve")
     (".snd"   . "audio/basic")
+    (".soa"   . "text/dns")
     (".src"   . "application/x-wais-source")
     (".tar"   . "archive/tar")
     (".tcl"   . "application/x-tcl")
@@ -971,7 +1000,7 @@ If FORCE, re-parse even if already parsed."
 (defun mailcap-mime-types ()
   "Return a list of MIME media types."
   (mailcap-parse-mimetypes)
-  (mm-delete-duplicates
+  (mailcap-delete-duplicates
    (nconc
     (mapcar 'cdr mailcap-mime-extensions)
     (apply
@@ -989,7 +1018,56 @@ If FORCE, re-parse even if already parsed."
 	       (cdr l))))
       mailcap-mime-data)))))
 
+;;;
+;;; Useful supplementary functions
+;;;
+
+(defun mailcap-file-default-commands (files)
+  "Return a list of default commands for FILES."
+  (mailcap-parse-mailcaps)
+  (mailcap-parse-mimetypes)
+  (let* ((all-mime-type
+	  ;; All unique MIME types from file extensions
+	  (mailcap-delete-duplicates
+	   (mapcar (lambda (file)
+		     (mailcap-extension-to-mime
+		      (file-name-extension file t)))
+		   files)))
+	 (all-mime-info
+	  ;; All MIME info lists
+	  (mailcap-delete-duplicates
+	   (mapcar (lambda (mime-type)
+		     (mailcap-mime-info mime-type 'all))
+		   all-mime-type)))
+	 (common-mime-info
+	  ;; Intersection of mime-infos from different mime-types;
+	  ;; or just the first MIME info for a single MIME type
+	  (if (cdr all-mime-info)
+	      (delq nil (mapcar (lambda (mi1)
+				  (unless (memq nil (mapcar
+						     (lambda (mi2)
+						       (member mi1 mi2))
+						     (cdr all-mime-info)))
+				    mi1))
+				(car all-mime-info)))
+	    (car all-mime-info)))
+	 (commands
+	  ;; Command strings from `viewer' field of the MIME info
+	  (mailcap-delete-duplicates
+	   (delq nil (mapcar (lambda (mime-info)
+			       (let ((command (cdr (assoc 'viewer mime-info))))
+				 (if (stringp command)
+				     (mailcap-replace-in-string
+				      ;; Replace mailcap's `%s' placeholder
+				      ;; with dired's `?' placeholder
+				      (mailcap-replace-in-string
+				       ;; Remove the final filename placeholder
+				       command "[ \t\n]*\\('\\)?%s\\1?[ \t\n]*\\'" "" t)
+				      "%s" "?" t))))
+			     common-mime-info)))))
+    commands))
+
 (provide 'mailcap)
 
-;;; arch-tag: 1fd4f9c9-c305-4d2e-9747-3a4d45baa0bd
+;; arch-tag: 1fd4f9c9-c305-4d2e-9747-3a4d45baa0bd
 ;;; mailcap.el ends here

@@ -1,9 +1,9 @@
 ;;; cyrillic.el --- Quail package for inputting Cyrillic characters
 
-;; Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008
+;;   2006, 2007, 2008, 2009
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
@@ -12,10 +12,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,9 +23,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -176,7 +174,7 @@
  ",L9FC:5=(B Russian computer layout"
  nil t t t t nil nil nil nil nil t)
 
-;;  1! 2" 3,Lp(B 4; 5% 6: 7? 8* 9( 0) -_ =+ ,Lq!(B
+;;  1! 2" 3,Lp(B 4; 5% 6: 7? 8* 9( 0) -_ =+ \/ ,Lq!(B
 ;;   ,L9(B  ,LF(B  ,LC(B  ,L:(B  ,L5(B  ,L=(B  ,L3(B  ,LH(B  ,LI(B  ,L7(B  ,LE(B  ,LJ(B
 ;;    ,LD(B  ,LK(B  ,L2(B  ,L0(B  ,L?(B  ,L@(B  ,L>(B  ,L;(B  ,L4(B  ,L6(B  ,LM(B
 ;;     ,LO(B  ,LG(B  ,LA(B  ,L<(B  ,L8(B  ,LB(B  ,LL(B  ,L1(B  ,LN(B  .,
@@ -194,6 +192,7 @@
  ("0" ?0)
  ("-" ?-)
  ("=" ?=)
+ ("|" ?/)
  ("`" ?,Lq(B)
  ("q" ?,LY(B)
  ("w" ?,Lf(B)
@@ -283,7 +282,7 @@
 ;; least the top row is different.
 (quail-define-package
  "cyrillic-macedonian" "Cyrillic" ",L6(BM" nil
- ",L)*5@B7(B-,L#,(B keyboard layout based on JUS.I.K1.004 (ISO 8859-5 encoding)"
+ ",L)*5@B7(B-,L#,(B keyboard layout based on JUS.I.K1.004"
  nil t t t t nil nil nil nil nil t)
 
 ;;  1! 2" 3# 4$ 5% 6& 7' 8( 9) 0= /? +* <>
@@ -392,7 +391,7 @@
 
 (quail-define-package
  "cyrillic-serbian" "Cyrillic" ",L6(BS" nil
- ",L)*5@B7(B-,L"+(B keyboard layout based on JUS.I.K1.005 (ISO 8859-5 encoding)"
+ ",L)*5@B7(B-,L"+(B keyboard layout based on JUS.I.K1.005"
  nil t t t t nil nil nil nil nil t)
 
 ;;  1! 2" 3# 4$ 5% 6& 7' 8( 9) 0= /? +* <>
@@ -618,7 +617,7 @@
 ;; Fixme: add GHE_WITH_UPTURN.
 (quail-define-package
  "cyrillic-ukrainian" "Ukrainian" ",L6(BU" nil
- ",L$'5@B7(B-,L&.(B UKRAINIAN (ISO 8859-5 encoding)
+ ",L$'5@B7(B-,L&.(B UKRAINIAN
 
 Sorry, but 'ghe with upturn' is not included in ISO 8859-5."
  nil t t t t nil nil nil nil nil t)
@@ -838,7 +837,7 @@ Sorry, but 'ghe with upturn' is not included in ISO 8859-5."
 ;; (mostly Russian) from time to time.
 (quail-define-package
  "cyrillic-yawerty" "Cyrillic" ",L6O(B" nil
- ",LO25@BK(B Roman transcription (ISO 8859-5 encoding)
+ ",LO25@BK(B Roman transcription
 
 This layout is based on Roman transcription by phonemic resemblance.
 When preceded by a '/', the second and the third rows (number key row) change
@@ -1006,17 +1005,18 @@ Most convenient for entering Russian, but all Cyrillic characters
 are included.  Should handle most cases.  However:
   for ,Lf(B (TSE) use \"c\", never \"ts\"
   ,Li(B (SHCHA = Bulgarian SHT) = \"shch\", \"sj\", \"/sht\" or \"/t\",
-  ,Lm(B (REVERSE ROUNDED E) = \"e'\" or \"e`\"
+  ,Lm(B (REVERSE ROUNDED E) = \"e\\\"
   ,Le(B (KHA) when after ,La(B (S) = \"x\" or \"kh\"
   ,Lj(B (HARD SIGN) = \"~\", ,LJ(B (CAPITAL HARD SIGN) = \"~~\",
   ,Ll(B (SOFT SIGN) = \"'\", ,LL(B (CAPITAL SOFT SIGN) = \"''\",
   ,Lo(B (YA) = \"ya\", \"ja\" or \"q\".
 
 Russian alphabet: a b v=w g d e yo=jo zh z i j=j' k l m n o p r s t
-u f h=kh=x c ch sh shch=sj=/s=/sht ~ y ' e' yu=ju ya=ja=q
+u f h=kh=x c ch sh shch=sj=/s=/sht ~ y ' e\\ yu=ju ya=ja=q
 
-Also included are Ukrainian ,Lt(B (YE) = \"/e\" and ,Lw(B (YI) = \"yi\",
-Belarusian ,L~(B (SHORT U) = \"u'\",
+Also included are Ukrainian ,Lt(B (YE) = \"/e\", ,Lw(B (YI) = \"yi\",
+$,1)Q(B (GHE WITH UPTURN) = \"g'\",
+Belarusian ,L~(B (SHORT U) = \"u~\",
 Serbo-Croatian ,Lr(B (DJE) = \"/d\", ,L{(B (CHJE)= \"/ch\",
 Macedonian ,Ls(B (GJE) = \"/g\", ,Lu(B (DZE) = \"/s\", ,L|(B (KJE) = \"/k\",
 cyrillic ,Lv(B (I DECIMAL) = \"/i\", ,Lx(B (JE) = \"/j\",
@@ -1024,7 +1024,7 @@ cyrillic ,Lv(B (I DECIMAL) = \"/i\", ,Lx(B (JE) = \"/j\",
  nil t t t t nil nil nil nil nil t)
 
 (quail-define-rules
- ("a" ?,LP(B)("b" ?,LQ(B) ("v" ?,LR(B) ("w" ?,LR(B) ("g" ?,LS(B) ("d" ?,LT(B)
+ ("a" ?,LP(B) ("b" ?,LQ(B) ("v" ?,LR(B) ("w" ?,LR(B) ("g" ?,LS(B) ("d" ?,LT(B)
  ("e" ?,LU(B) ("je" ?,LU(B)
  ("yo" ?,Lq(B) ("jo" ?,Lq(B)
  ("zh" ?,LV(B) ("z" ?,LW(B) ("i" ?,LX(B)
@@ -1036,7 +1036,7 @@ cyrillic ,Lv(B (I DECIMAL) = \"/i\", ,Lx(B (JE) = \"/j\",
  ("shch" ?,Li(B) ("sj" ?,Li(B)
  ("/sht" ?,Li(B) ("/t" ?,Li(B)
  ("~" ?,Lj(B) ("y" ?,Lk(B) ("'" ?,Ll(B) ("`" ?,Ll(B)
- ("e'" ?,Lm(B) ("e`" ?,Lm(B) ("@" ?,Lm(B)
+ ("e\\" ?,Lm(B) ("e'" ?,Lm(B) ("e`" ?,Lm(B) ("@" ?,Lm(B)
  ("yu" ?,Ln(B) ("ju" ?,Ln(B)
  ("ya" ?,Lo(B) ("ja" ?,Lo(B) ("q" ?,Lo(B)
 
@@ -1051,18 +1051,98 @@ cyrillic ,Lv(B (I DECIMAL) = \"/i\", ,Lx(B (JE) = \"/j\",
  ("Sh" ?,LH(B) ("SH" ?,LH(B)
  ("Shch" ?,LI(B) ("SHCH" ?,LI(B) ("Sj" ?,LI(B) ("SJ" ?,LI(B)
  ("/Sht" ?,LI(B) ("/SHT" ?,LI(B) ("/T" ?,LI(B)
- ("~~" ",LJ(B") ("Y" ?,LK(B) ("''" ",LL(B") ("E'" ?,LM(B) ("E`" ?,LM(B)
+ ("~~" ?,LJ(B) ("Y" ?,LK(B) ("''" ?,LL(B)
+ ("E\\" ?,LM(B) ("E'" ?,LM(B) ("E`" ?,LM(B) ("@@" ?,LM(B)
  ("Yu" ?,LN(B) ("YU" ?,LN(B) ("Ju" ?,LN(B) ("JU" ?,LN(B)
  ("Ya" ?,LO(B) ("YA" ?,LO(B) ("Ja" ?,LO(B) ("JA" ?,LO(B) ("Q" ?,LO(B)
 
- ("/e" ?,Lt(B) ("yi" ?,Lw(B) ("u'" ?,L~(B)
+ ("/e" ?,Lt(B) ("yi" ?,Lw(B) ("u'" ?,L~(B) ("u~" ?,L~(B)
+ ("g'" ?$,1)Q(B)
  ("/d" ?,Lr(B) ("/ch" ?,L{(B)
  ("/g" ?,Ls(B) ("/s" ?,Lu(B) ("/k" ?,L|(B)
  ("/i" ?,Lv(B) ("/j" ?,Lx(B) ("/l" ?,Ly(B) ("/n" ?,Lz(B) ("/z" ?,L(B)
- ("/E" ?,L$(B) ("YE" ?,L$(B) ("Yi" ?,L'(B) ("YI" ?,L'(B) ("U'" ?,L.(B)
+ ("/E" ?,L$(B) ("YE" ?,L$(B) ("Yi" ?,L'(B) ("YI" ?,L'(B) ("U'" ?,L.(B) ("U~" ?,L.(B)
+ ("G'" ?$,1)P(B)
  ("/D" ?,L"(B) ("/Ch" ?,L+(B) ("/CH" ?,L+(B)
  ("/G" ?,L#(B) ("/S" ?,L%(B) ("/K" ?,L,(B)
  ("/I" ?,L&(B) ("/J" ?,L((B) ("/L" ?,L)(B) ("/N" ?,L*(B) ("/Z" ?,L/(B)
+
+ ;; Combining accents as a separate character
+ ("//'" ?$(O+Z(B) ("//`" ?$(O+\(B)
+
+ ;; In the following two rules the accent is not a separate character
+ ("i`" ?$,1(}(B) ("I`" ?$,1(-(B)
+
+ ("/-"  ?$(G!9(B)  ;; EN DASH
+ ("/--" ?$(G!7(B)  ;; EM DASH
+ ("/*" ?$(O#@(B)   ;; BULLET
+ ("/." ?$,1s$(B)   ;; ONE DOT LEADER
+ ("/.." ?$(G!-(B)  ;; TWO DOT LEADER
+ ("/..." ?$A!-(B) ;; HORIZONTAL ELLIPSIS
+ ("/,," ?,Y%(B)  ;; DOUBLE LOW-9 QUOTATION MARK
+ ("/," ?$,1rz(B)   ;; SINGLE LOW-9 QUOTATION MARK
+ ("/''" ?,Y!(B)  ;; RIGHT DOUBLE QUOTATION MARK
+ ("/'" ?,F"(B)   ;; RIGHT SINGLE QUOTATION MARK
+ ("/``" ?,Y4(B)  ;; LEFT DOUBLE QUOTATION MARK
+ ("/`" ?,F!(B)   ;; LEFT SINGLE QUOTATION MARK
+ ("/<<" ?,A+(B)  ;; LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
+ ("/>>" ?,A;(B)  ;; RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
+
+ ("/&" ?,A'(B)
+ ("/ab" ?,A'(B)                             ; _,LPQ(B_,LWPf(B
+ ("/pa" ?,A'(B)                             ; _pa_ragraph
+ ("/#" ?,Lp(B)
+ ("/no" ?,Lp(B)                             ; _,L]^(B_,L\U`(B
+
+ ("/c" ?,A)(B)
+ ("/tm" ?$(D"o(B)
+ ("/reg" ?,A.(B)
+ ("/eu"  ?,b$(B)
+ ("/ce"  ?,A"(B)
+
+ ;; fractions
+ ("/78" ?$(C(~(B)
+ ("/58" ?$(C(}(B)
+ ("/38" ?$(C(|(B)
+ ("/18" ?$(C({(B)
+ ("/56" ?$,1v:(B)
+ ("/16" ?$,1v9(B)
+ ("/45" ?$,1v8(B)
+ ("/35" ?$,1v7(B)
+ ("/25" ?$,1v6(B)
+ ("/15" ?$(O'z(B)
+ ("/23" ?$(O'y(B)
+ ("/13" ?$(O'x(B)
+ ("/34" ?,A>(B)
+ ("/12" ?,A=(B)
+ ("/14" ?,A<(B)
+
+ ;; Roman numerals, commonly used for months and section/subsection numbers
+ ("/RI" ?$A"q(B)
+ ("/RII" ?$A"r(B)
+ ("/RIII" ?$A"s(B)
+ ("/RIV" ?$A"t(B)
+ ("/RV" ?$A"u(B)
+ ("/RVI" ?$A"v(B)
+ ("/RVII" ?$A"w(B)
+ ("/RVIII" ?$A"x(B)
+ ("/RIX" ?$A"y(B)
+ ("/RX" ?$A"z(B)
+ ("/RXI" ?$A"{(B)
+ ("/RXII" ?$A"|(B)
+
+ ("/ri" ?$(G&5(B)
+ ("/rii" ?$(G&6(B)
+ ("/riii" ?$(G&7(B)
+ ("/riv" ?$(G&8(B)
+ ("/rv" ?$(G&9(B)
+ ("/rvi" ?$(G&:(B)
+ ("/rvii" ?$(G&;(B)
+ ("/rviii" ?$(G&<(B)
+ ("/rix" ?$(G&=(B)
+ ("/rx" ?$(G&>(B)
+ ("/rxi" ?$(O,?(B)
+ ("/rxii" ?$(O,@(B)
 )
 
 ;; Originally from Yudit's `Belarusian input table according to
@@ -1325,5 +1405,5 @@ keys as being transformed into ( and ) respectively.  For ( and ), use
 ;; coding: iso-2022-7bit
 ;; End:
 
-;;; arch-tag: e6d34b16-8710-4181-a17e-819a1df0334f
+;; arch-tag: e6d34b16-8710-4181-a17e-819a1df0334f
 ;;; cyrillic.el ends here

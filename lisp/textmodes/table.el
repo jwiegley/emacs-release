@@ -1,19 +1,19 @@
 ;;; table.el --- create and edit WYSIWYG text based embedded tables
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 ;; Keywords: wp, convenience
 ;; Author: Takaaki Ota <Takaaki.Ota@am.sony.com>
 ;; Created: Sat Jul 08 2000 13:28:45 (PST)
-;; Revised: Wed Jan 03 2007 13:23:46 (PST)
+;; Revised: Thu Jan 08 2009 20:17:04 (PST)
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -395,7 +393,8 @@
 ;; lines.  A valid character of a cell's vertical border is either
 ;; table-cell-vertical-char `|' or table-cell-intersection-char `+'.
 ;; A valid character of a cell's horizontal border is either
-;; table-cell-horizontal-char `-' or table-cell-intersection-char `+'.
+;; one of table-cell-horizontal-chars (`-' or `=')
+;; or table-cell-intersection-char `+'.
 ;; A valid character of the four corners of a cell must be
 ;; table-cell-intersection-char `+'.  A cell must contain at least one
 ;; character space inside.  There is no restriction about the contents
@@ -1376,7 +1375,7 @@ the last cache point coordinate."
 ;;
 
 ;; Point Motion Only Group
-(mapcar
+(mapc
  (lambda (command)
    (let ((func-symbol (intern (format "*table--cell-%s" command)))
 	 (doc-string (format "Table remapped function for `%s'." command)))
@@ -1409,7 +1408,7 @@ the last cache point coordinate."
    backward-paragraph))
 
 ;; Extraction Group
-(mapcar
+(mapc
  (lambda (command)
    (let ((func-symbol (intern (format "*table--cell-%s" command)))
 	 (doc-string (format "Table remapped function for `%s'." command)))
@@ -1443,7 +1442,7 @@ the last cache point coordinate."
    backward-kill-sexp))
 
 ;; Pasting Group
-(mapcar
+(mapc
  (lambda (command)
    (let ((func-symbol (intern (format "*table--cell-%s" command)))
 	 (doc-string (format "Table remapped function for `%s'." command)))
@@ -1469,7 +1468,7 @@ the last cache point coordinate."
    insert))
 
 ;; Formatting Group
-(mapcar
+(mapc
  (lambda (command)
    (let ((func-symbol (intern (format "*table--cell-%s" command)))
 	 (doc-string (format "Table remapped function for `%s'." command)))
@@ -1641,20 +1640,20 @@ Inside a table cell has a special keymap.
   (if (numberp cell-width) (setq cell-width (cons cell-width nil)))
   (if (numberp cell-height) (setq cell-height (cons cell-height nil)))
   ;; test validity of the arguments.
-  (mapcar (lambda (arg)
-	    (let* ((value (symbol-value arg))
-		   (error-handler
-		    (function (lambda ()
-				(error "%s must be a positive integer%s" arg
-				       (if (listp value) " or a list of positive integers" ""))))))
-	      (if (null value) (funcall error-handler))
-	      (mapcar (function (lambda (arg1)
-				  (if (or (not (integerp arg1))
-					  (< arg1 1))
-				      (funcall error-handler))))
-		      (if (listp value) value
-			(cons value nil)))))
-	  '(columns rows cell-width cell-height))
+  (mapc (lambda (arg)
+	  (let* ((value (symbol-value arg))
+		 (error-handler
+		  (function (lambda ()
+		    (error "%s must be a positive integer%s" arg
+			   (if (listp value) " or a list of positive integers" ""))))))
+	    (if (null value) (funcall error-handler))
+	    (mapcar (function (lambda (arg1)
+		      (if (or (not (integerp arg1))
+			      (< arg1 1))
+			  (funcall error-handler))))
+		    (if (listp value) value
+		      (cons value nil)))))
+	'(columns rows cell-width cell-height))
   (let ((orig-coord (table--get-coordinate))
 	(coord (table--get-coordinate))
 	r i cw ch cell-str border-str)
@@ -3141,7 +3140,7 @@ CALS (DocBook DTD):
       (set-marker-insertion-type (table-get-source-info 'colspec-marker) t) ;; insert before
       (save-excursion
 	(goto-char (table-get-source-info 'colspec-marker))
-	(mapcar
+	(mapc
 	 (lambda (col)
 	   (insert (format "    <colspec colnum=\"%d\" colname=\"c%d\"/>\n" col col)))
 	 (sort (table-get-source-info 'colnum-list) '<)))
@@ -3223,11 +3222,11 @@ CALS (DocBook DTD):
 	      (if (> colspan 1)
 		  (let ((scol (table-get-source-info 'current-column))
 			(ecol (+ (table-get-source-info 'current-column) colspan -1)))
-		    (mapcar (lambda (col)
-			      (unless (memq col (table-get-source-info 'colnum-list))
-				(table-put-source-info 'colnum-list
-						       (cons col (table-get-source-info 'colnum-list)))))
-			    (list scol ecol))
+		    (mapc (lambda (col)
+			    (unless (memq col (table-get-source-info 'colnum-list))
+			      (table-put-source-info 'colnum-list
+						     (cons col (table-get-source-info 'colnum-list)))))
+			  (list scol ecol))
 		    (insert (format " namest=\"c%d\" nameend=\"c%d\"" scol ecol))))
 	      (if (> rowspan 1) (insert (format " morerows=\"%d\"" (1- rowspan))))
 	      (if (and alignment
@@ -3739,7 +3738,7 @@ companion command to `table-capture' this way.
 	(table--read-from-minibuffer '("Minimum cell width" . table-capture-min-cell-width-history)))
       (if (and (not (string= col-delim-regexp "")) (string= row-delim-regexp ""))
 	  (string-to-number
-	   (table--read-from-minibuffer '("Number of columns" . 'table-capture-columns-history)))
+	   (table--read-from-minibuffer '("Number of columns" . table-capture-columns-history)))
 	nil)
       )))
   (if (> beg end) (let ((tmp beg)) (setq beg end) (setq end tmp)))
@@ -3910,19 +3909,19 @@ converts a table into plain text without frames.  It is a companion to
 	  (remap-alist table-command-remap-alist))
       ;; table-command-prefix mode specific bindings
       (if (vectorp table-command-prefix)
-	  (mapcar (lambda (binding)
-		    (let ((seq (copy-sequence (car binding))))
-		      (and (vectorp seq)
-			   (listp (aref seq 0))
-			   (eq (car (aref seq 0)) 'control)
-			   (progn
-			     (aset seq 0 (cadr (aref seq 0)))
-			     (define-key map (vconcat table-command-prefix seq) (cdr binding))))))
-		  table-cell-bindings))
+	  (mapc (lambda (binding)
+		  (let ((seq (copy-sequence (car binding))))
+		    (and (vectorp seq)
+			 (listp (aref seq 0))
+			 (eq (car (aref seq 0)) 'control)
+			 (progn
+			   (aset seq 0 (cadr (aref seq 0)))
+			   (define-key map (vconcat table-command-prefix seq) (cdr binding))))))
+		table-cell-bindings))
       ;; shorthand control bindings
-      (mapcar (lambda (binding)
-		(define-key map (car binding) (cdr binding)))
-	      table-cell-bindings)
+      (mapc (lambda (binding)
+	      (define-key map (car binding) (cdr binding)))
+	    table-cell-bindings)
       ;; remap normal commands to table specific version
       (while remap-alist
 	(define-key map (vector 'remap (caar remap-alist)) (cdar remap-alist))
@@ -3944,7 +3943,7 @@ converts a table into plain text without frames.  It is a companion to
 (defun *table--cell-self-insert-command ()
   "Table cell version of `self-insert-command'."
   (interactive "*")
-  (let ((char (table--unibyte-char-to-multibyte last-command-char)))
+  (let ((char last-command-event))
     (if (eq buffer-undo-list t) nil
       (if (not (eq last-command this-command))
 	  (setq table-cell-self-insert-command-count 0)
@@ -4049,7 +4048,7 @@ converts a table into plain text without frames.  It is a companion to
 (defun *table--cell-quoted-insert (arg)
   "Table cell version of `quoted-insert'."
   (interactive "*p")
-  (let ((char (table--unibyte-char-to-multibyte (read-quoted-char))))
+  (let ((char (read-quoted-char)))
     (while (> arg 0)
       (table--cell-insert-char char nil)
       (setq arg (1- arg)))))
@@ -4061,7 +4060,7 @@ converts a table into plain text without frames.  It is a companion to
       (call-interactively 'describe-mode)
     (with-output-to-temp-buffer "*Help*"
       (princ "Table mode: (in ")
-      (princ mode-name)
+      (princ (format-mode-line mode-name nil nil (current-buffer)))
       (princ " mode)
 
 Table is not a mode technically.  You can regard it as a pseudo mode
@@ -4092,11 +4091,11 @@ key             binding
 ---             -------
 
 ")
-      (mapcar (lambda (binding)
-		(princ (format "%-16s%s\n"
-			       (key-description (car binding))
-			       (cdr binding))))
-	      table-cell-bindings)
+      (mapc (lambda (binding)
+	      (princ (format "%-16s%s\n"
+			     (key-description (car binding))
+			     (cdr binding))))
+	    table-cell-bindings)
       (print-help-return-message))))
 
 (defun *table--cell-dabbrev-expand (arg)
@@ -4349,19 +4348,6 @@ cdr is the history symbol."
        (set (cdr prompt-history)
 	    (cdr (symbol-value (cdr prompt-history)))))
   (car (symbol-value (cdr prompt-history))))
-
-(defun table--unibyte-char-to-multibyte (char)
-  "Convert CHAR by `unibyte-char-to-multibyte' when possible and necessary."
-  ;; This part is take from `quoted-insert'.
-  ;; Assume character codes 0240 - 0377 stand for characters in some
-  ;; single-byte character set, and convert them to Emacs
-  ;; characters.
-  (if (and enable-multibyte-characters
-	   (fboundp 'unibyte-char-to-multibyte)
-	   (>= char ?\240)
-	   (<= char ?\377))
-      (unibyte-char-to-multibyte char)
-    char))
 
 (defun table--buffer-substring-and-trim (beg end)
   "Extract buffer substring and remove blanks from front and the rear of it."

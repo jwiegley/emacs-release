@@ -1,27 +1,25 @@
 ;;; smiley.el --- displaying smiley faces
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Dave Love <fx@gnu.org>
 ;; Keywords: news mail multimedia
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -58,24 +56,65 @@
   "Turn :-)'s into real images."
   :group 'gnus-visual)
 
-;; Maybe this should go.
-(defcustom smiley-data-directory
-  (nnheader-find-etc-directory "images/smilies")
-  "Location of the smiley faces files."
+(defvar smiley-data-directory)
+
+(defcustom smiley-style
+  (if (or (and (fboundp 'face-attribute)
+	       (>= (face-attribute 'default :height) 160))
+	  (and (fboundp 'face-height)
+	       (>= (face-height 'default) 14)))
+      'medium
+    'low-color)
+  "Smiley style."
+  :type '(choice (const :tag "small, 3 colors" low-color) ;; 13x14
+		 (const :tag "medium, ~10 colors" medium) ;; 16x16
+		 (const :tag "dull, grayscale" grayscale));; 14x14
+  :set (lambda (symbol value)
+	 (set-default symbol value)
+	 (setq smiley-data-directory (smiley-directory))
+	 (smiley-update-cache))
+  :initialize 'custom-initialize-default
+  :version "23.1" ;; No Gnus
+  :group 'smiley)
+
+;; For compatibility, honor the variable `smiley-data-directory' if the user
+;; has set it.
+
+(defun smiley-directory (&optional style)
+  "Return a the location of the smiley faces files.
+STYLE specifies which style to use, see `smiley-style'.  If STYLE
+is nil, use `smiley-style'."
+  (unless style (setq style smiley-style))
+  (nnheader-find-etc-directory
+   (concat "images/smilies"
+	   (cond ((eq smiley-style 'low-color) "")
+		 ((eq smiley-style 'medium) "/medium")
+		 ((eq smiley-style 'grayscale) "/grayscale")))))
+
+(defcustom smiley-data-directory (smiley-directory)
+  "*Location of the smiley faces files."
+  :set (lambda (symbol value)
+	 (set-default symbol value)
+	 (smiley-update-cache))
+  :initialize 'custom-initialize-default
   :type 'directory
   :group 'smiley)
 
 ;; The XEmacs version has a baroque, if not rococo, set of these.
 (defcustom smiley-regexp-alist
-  '(("\\(:-?)\\)\\W" 1 "smile")
-    ("\\(;-?)\\)\\W" 1 "blink")
+  '(("\\(;-?)\\)\\W" 1 "blink")
     ("\\(:-]\\)\\W" 1 "forced")
     ("\\(8-)\\)\\W" 1 "braindamaged")
     ("\\(:-|\\)\\W" 1 "indifferent")
     ("\\(:-[/\\]\\)\\W" 1 "wry")
     ("\\(:-(\\)\\W" 1 "sad")
     ("\\(X-)\\)\\W" 1 "dead")
-    ("\\(:-{\\)\\W" 1 "frown"))
+    ("\\(:-{\\)\\W" 1 "frown")
+    ("\\(>:-)\\)\\W" 1 "evil")
+    ("\\(;-(\\)\\W" 1 "cry")
+    ("\\(:-D\\)\\W" 1 "grin")
+    ;; "smile" must be come after "evil"
+    ("\\(\\^?:-?)\\)\\W" 1 "smile"))
   "*A list of regexps to map smilies to images.
 The elements are (REGEXP MATCH IMAGE), where MATCH is the submatch in
 regexp to replace with IMAGE.  IMAGE is the name of an image file in
@@ -187,5 +226,5 @@ With arg, turn displaying on if and only if arg is positive."
 
 (provide 'smiley)
 
-;;; arch-tag: 5beb161b-4321-40af-8ac9-876afb8ee818
+;; arch-tag: 5beb161b-4321-40af-8ac9-876afb8ee818
 ;;; smiley.el ends here

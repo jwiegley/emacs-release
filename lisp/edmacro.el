@@ -1,7 +1,7 @@
 ;;; edmacro.el --- keyboard macro editor
 
 ;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Dave Gillespie <daveg@synaptics.com>
 ;; Maintainer: Dave Gillespie <daveg@synaptics.com>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -39,7 +37,7 @@
 ;;  * `M-x' followed by a command name, to edit a named command
 ;;    whose definition is a keyboard macro.
 ;;
-;;  * `C-h l' (view-lossage), to edit the 100 most recent keystrokes
+;;  * `C-h l' (view-lossage), to edit the 300 most recent keystrokes
 ;;    and install them as the "current" macro.
 ;;
 ;;  * any key sequence whose definition is a keyboard macro.
@@ -80,7 +78,7 @@
 
 ;;;###autoload
 (defvar edmacro-eight-bits nil
-  "*Non-nil if edit-kbd-macro should leave 8-bit characters intact.
+  "*Non-nil if `edit-kbd-macro' should leave 8-bit characters intact.
 Default nil means to write characters above \\177 in octal notation.")
 
 (defvar edmacro-mode-map nil)
@@ -98,7 +96,7 @@ Default nil means to write characters above \\177 in octal notation.")
   "Edit a keyboard macro.
 At the prompt, type any key sequence which is bound to a keyboard macro.
 Or, type `C-x e' or RET to edit the last keyboard macro, `C-h l' to edit
-the last 100 keystrokes as a keyboard macro, or `M-x' to edit a macro by
+the last 300 keystrokes as a keyboard macro, or `M-x' to edit a macro by
 its command name.
 With a prefix argument, format the macro in a more concise way."
   (interactive "kKeyboard macro to edit (C-x e, M-x, C-h l, or keys): \nP")
@@ -351,7 +349,7 @@ or nil, use a compact 80-column format."
     (insert (edmacro-format-keys key) " ")))
 
 (defun edmacro-mode ()
-  "\\<edmacro-mode-map>Keyboard Macro Editing mode.  Press
+  "\\<edmacro-mode-map>Keyboard Macro Editing mode.  Press \
 \\[edmacro-finish-edit] to save and exit.
 To abort the edit, just kill this buffer with \\[kill-buffer] RET.
 
@@ -430,10 +428,7 @@ doubt, use whitespace."
 
 (defun edmacro-format-keys (macro &optional verbose)
   (setq macro (edmacro-fix-menu-commands macro))
-  (let* ((maps (append (current-minor-mode-maps)
-		       (if (current-local-map)
-			   (list (current-local-map)))
-		       (list (current-global-map))))
+  (let* ((maps (current-active-maps))
 	 (pkeys '(end-macro ?0 ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?- ?\C-u
 		  ?\M-- ?\M-0 ?\M-1 ?\M-2 ?\M-3 ?\M-4 ?\M-5 ?\M-6
 		  ?\M-7 ?\M-8 ?\M-9))
@@ -489,9 +484,9 @@ doubt, use whitespace."
 	     (fkey nil) tlen tkey
 	     (bind (or (loop for map in maps for b = (lookup-key map key)
 			     thereis (and (not (integerp b)) b))
-		       (and (setq fkey (lookup-key function-key-map rest-mac))
+		       (and (setq fkey (lookup-key local-function-key-map rest-mac))
 			    (setq tlen fkey tkey (edmacro-subseq rest-mac 0 tlen)
-				  fkey (lookup-key function-key-map tkey))
+				  fkey (lookup-key local-function-key-map tkey))
 			    (loop for map in maps
 				  for b = (lookup-key map fkey)
 				  when (and (not (integerp b)) b)
@@ -602,7 +597,8 @@ doubt, use whitespace."
 (defun edmacro-mismatch (cl-seq1 cl-seq2 cl-start1 cl-end1 cl-start2 cl-end2)
   "Compare SEQ1 with SEQ2, return index of first mismatching element.
 Return nil if the sequences match.  If one sequence is a prefix of the
-other, the return value indicates the end of the shorted sequence."
+other, the return value indicates the end of the shorted sequence.
+\n(fn SEQ1 SEQ2 START1 END1 START2 END2)"
   (let (cl-test cl-test-not cl-key cl-from-end)
     (or cl-end1 (setq cl-end1 (length cl-seq1)))
     (or cl-end2 (setq cl-end2 (length cl-seq2)))
@@ -652,7 +648,7 @@ If START or END is negative, it counts from the end."
 	       res))))))
 
 (defun edmacro-sanitize-for-string (seq)
-  "Convert a key sequence vector into a string.
+  "Convert a key sequence vector SEQ into a string.
 The string represents the same events; Meta is indicated by bit 7.
 This function assumes that the events can be stored in a string."
   (setq seq (copy-sequence seq))
@@ -691,14 +687,22 @@ This function assumes that the events can be stored in a string."
 
 (defun edmacro-parse-keys (string &optional need-vector)
   (let ((case-fold-search nil)
+	(len (length string)) ; We won't alter string in the loop below.
 	(pos 0)
 	(res []))
-    (while (and (< pos (length string))
+    (while (and (< pos len)
 		(string-match "[^ \t\n\f]+" string pos))
-      (let ((word (substring string (match-beginning 0) (match-end 0)))
-	    (key nil)
-	    (times 1))
-	(setq pos (match-end 0))
+      (let* ((word-beg (match-beginning 0))
+	     (word-end (match-end 0))
+	     (word (substring string word-beg len))
+	     (times 1)
+	     key)
+	;; Try to catch events of the form "<as df>".
+	(if (string-match "\\`<[^ <>\t\n\f][^>\t\n\f]*>" word)
+	    (setq word (match-string 0 word)
+		  pos (+ word-beg (match-end 0)))
+	  (setq word (substring string word-beg word-end)
+		pos word-end))
 	(when (string-match "\\([0-9]+\\)\\*." word)
 	  (setq times (string-to-number (substring word 0 (match-end 1))))
 	  (setq word (substring word (1+ (match-end 1)))))
@@ -771,7 +775,7 @@ This function assumes that the events can be stored in a string."
       (setq res (edmacro-subseq res 2 -2)))
     (if (and (not need-vector)
 	     (loop for ch across res
-		   always (and (char-valid-p ch)
+		   always (and (characterp ch)
 			       (let ((ch2 (logand ch (lognot ?\M-\^@))))
 				 (and (>= ch2 0) (<= ch2 127))))))
 	(concat (loop for ch across res
@@ -781,5 +785,5 @@ This function assumes that the events can be stored in a string."
 
 (provide 'edmacro)
 
-;;; arch-tag: 726807b4-3ae6-49de-b0ae-b9590973e0d7
+;; arch-tag: 726807b4-3ae6-49de-b0ae-b9590973e0d7
 ;;; edmacro.el ends here

@@ -1,16 +1,16 @@
 ;;; esh-mode.el --- user interface
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,18 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-(provide 'esh-mode)
-
-(eval-when-compile (require 'esh-maint))
-
-(defgroup eshell-mode nil
-  "This module contains code for handling input from the user."
-  :tag "User interface"
-  :group 'eshell)
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -68,10 +57,20 @@
 ;;
 ;; @ <C-c C-b> will move backward a complete shell argument.
 
+;;; Code:
+
+(provide 'esh-mode)
+
+(eval-when-compile (require 'esh-util))
 (require 'esh-module)
 (require 'esh-cmd)
 (require 'esh-io)
 (require 'esh-var)
+
+(defgroup eshell-mode nil
+  "This module contains code for handling input from the user."
+  :tag "User interface"
+  :group 'eshell)
 
 ;;; User Variables:
 
@@ -167,6 +166,7 @@ number, if the function `eshell-truncate-buffer' is on
 (defcustom eshell-output-filter-functions
   '(eshell-postoutput-scroll-to-bottom
     eshell-handle-control-codes
+    eshell-handle-ansi-color
     eshell-watch-for-password-prompt)
   "*Functions to call before output is displayed.
 These functions are only called for output that is displayed
@@ -222,11 +222,6 @@ This is used by `eshell-watch-for-password-prompt'."
 
 (define-abbrev-table 'eshell-mode-abbrev-table ())
 
-(eval-when-compile
-  (unless (eshell-under-xemacs-p)
-    (defalias 'characterp 'ignore)
-    (defalias 'char-int 'ignore)))
-
 (if (not eshell-mode-syntax-table)
     (let ((i 0))
       (setq eshell-mode-syntax-table (make-syntax-table))
@@ -269,7 +264,7 @@ This is used by `eshell-watch-for-password-prompt'."
       (modify-syntax-entry ?\[ "(]  " eshell-mode-syntax-table)
       (modify-syntax-entry ?\] ")[  " eshell-mode-syntax-table)
       ;; All non-word multibyte characters should be `symbol'.
-      (if (eshell-under-xemacs-p)
+      (if (featurep 'xemacs)
 	  (map-char-table
 	   (function
 	    (lambda (key val)
@@ -282,8 +277,11 @@ This is used by `eshell-watch-for-password-prompt'."
 	(map-char-table
 	 (function
 	  (lambda (key val)
-	    (and (>= key 256)
-		 (/= (char-syntax key) ?w)
+	    (and (if (consp key)
+		     (and (>= (car key) 128)
+			  (/= (char-syntax (car key)) ?w))
+		   (and (>= key 256)
+			(/= (char-syntax key) ?w)))
 		 (modify-syntax-entry key "_   "
 				      eshell-mode-syntax-table))))
 	 (standard-syntax-table)))))
@@ -320,6 +318,7 @@ This is used by `eshell-watch-for-password-prompt'."
   (define-key eshell-mode-map [(meta return)] 'eshell-queue-input)
   (define-key eshell-mode-map [(meta control ?m)] 'eshell-queue-input)
   (define-key eshell-mode-map [(meta control ?l)] 'eshell-show-output)
+  (define-key eshell-mode-map [(control ?a)] 'eshell-bol)
 
   (set (make-local-variable 'eshell-command-prefix)
        (make-symbol "eshell-command-prefix"))
@@ -467,7 +466,7 @@ This is used by `eshell-watch-for-password-prompt'."
 
 (eshell-deftest mode command-running-p
   "Modeline shows no command running"
-  (or (eshell-under-xemacs-p)
+  (or (featurep 'xemacs)
       (not eshell-status-in-modeline)
       (and (memq 'eshell-command-running-string mode-line-format)
 	   (equal eshell-command-running-string "--"))))
@@ -489,9 +488,9 @@ This is used by `eshell-watch-for-password-prompt'."
   (interactive "i")
   (process-send-string
    (eshell-interactive-process)
-   (char-to-string (if (symbolp last-command-char)
-		       (get last-command-char 'ascii-character)
-		     last-command-char))))
+   (char-to-string (if (symbolp last-command-event)
+		       (get last-command-event 'ascii-character)
+		     last-command-event))))
 
 (defun eshell-intercept-commands ()
   (when (and (eshell-interactive-process)
@@ -1076,14 +1075,12 @@ This function could be in the list `eshell-output-filter-functions'."
 
 (defun eshell-handle-ansi-color ()
   "Handle ANSI color codes."
-  (require 'ansi-color)
+  (eval-and-compile (require 'ansi-color))
   (ansi-color-apply-on-region eshell-last-output-start
                               eshell-last-output-end))
 
 (custom-add-option 'eshell-output-filter-functions
 		   'eshell-handle-ansi-color)
 
-;;; Code:
-
-;;; arch-tag: ec65bc2b-da14-4547-81d3-a32af3a4dc57
+;; arch-tag: ec65bc2b-da14-4547-81d3-a32af3a4dc57
 ;;; esh-mode.el ends here

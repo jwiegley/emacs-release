@@ -1,7 +1,7 @@
 ;;; strokes.el --- control Emacs through mouse strokes
 
 ;; Copyright (C) 1997, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Bakhash <cadet@alum.mit.edu>
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -216,18 +214,18 @@ static char * stroke_xpm[] = {
   :group 'mouse)
 
 (defcustom strokes-modeline-string " Strokes"
-  "*Modeline identification when Strokes mode is on \(default is \" Strokes\"\)."
+  "Modeline identification when Strokes mode is on \(default is \" Strokes\"\)."
   :type 'string
   :group 'strokes)
 
 (defcustom strokes-character ?@
-  "*Character used when drawing strokes in the strokes buffer.
+  "Character used when drawing strokes in the strokes buffer.
 \(The default is `@', which works well.\)"
   :type 'character
   :group 'strokes)
 
 (defcustom strokes-minimum-match-score 1000
-  "*Minimum score for a stroke to be considered a possible match.
+  "Minimum score for a stroke to be considered a possible match.
 Setting this variable to 0 would require a perfectly precise match.
 The default value is 1000, but it's mostly dependent on how precisely
 you manage to replicate your user-defined strokes.  It also depends on
@@ -244,7 +242,7 @@ ones, then strokes should NOT pick the one that came closest."
   :group 'strokes)
 
 (defcustom strokes-grid-resolution 9
-  "*Integer defining dimensions of the stroke grid.
+  "Integer defining dimensions of the stroke grid.
 The grid is a square grid, where `strokes-grid-resolution' defaults to
 `9', making a 9x9 grid whose coordinates go from (0 . 0) on the top
 left to ((strokes-grid-resolution - 1) . (strokes-grid-resolution - 1))
@@ -261,7 +259,7 @@ WARNING: Changing the value of this variable will gravely affect the
   :group 'strokes)
 
 (defcustom strokes-file (convert-standard-filename "~/.strokes")
-  "*File containing saved strokes for Strokes mode (default is ~/.strokes)."
+  "File containing saved strokes for Strokes mode (default is ~/.strokes)."
   :type 'file
   :group 'strokes)
 
@@ -269,7 +267,7 @@ WARNING: Changing the value of this variable will gravely affect the
   "The name of the buffer that the strokes take place in.")
 
 (defcustom strokes-use-strokes-buffer t
-  "*If non-nil, the strokes buffer is used and strokes are displayed.
+  "If non-nil, the strokes buffer is used and strokes are displayed.
 If nil, strokes will be read the same, however the user will not be
 able to see the strokes.  This be helpful for people who don't like
 the delay in switching to the strokes buffer."
@@ -1313,7 +1311,7 @@ the stroke as a character in some language."
 ;;;;;###autoload
 ;;(defalias 'edit-strokes 'strokes-edit-strokes)
 
-(eval-when-compile (defvar view-mode-map))
+(defvar view-mode-map)
 
 ;;;###autoload
 (defun strokes-list-strokes (&optional chronological strokes-map)
@@ -1745,14 +1743,14 @@ Store XPM in buffer BUFNAME if supplied \(default is ` *strokes-xpm*'\)"
     ;; strokes-decode-buffer does a save-excursion.
     (forward-char)))
 
-(defun strokes-unload-hook ()
+(defun strokes-unload-function ()
+  "Unload the Strokes library."
   (strokes-mode -1)
-  (remove-hook 'kill-emacs-query-functions 'strokes-prompt-user-save-strokes))
-
-(add-hook 'strokes-unload-hook 'strokes-unload-hook)
+  ;; continue standard unloading
+  nil)
 
 (run-hooks 'strokes-load-hook)
 (provide 'strokes)
 
-;;; arch-tag: 8377f60e-43fb-467a-bbcd-2774f91f833e
+;; arch-tag: 8377f60e-43fb-467a-bbcd-2774f91f833e
 ;;; strokes.el ends here

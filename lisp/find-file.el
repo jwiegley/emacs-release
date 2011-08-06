@@ -5,14 +5,14 @@
 ;; Keywords: c, matching, tools
 
 ;; Copyright (C) 1994, 1995, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -132,54 +130,54 @@
   :group 'find-file)
 
 (defcustom ff-pre-find-hook nil
-  "*List of functions to be called before the search for the file starts."
+  "List of functions to be called before the search for the file starts."
   :type 'hook
   :group 'ff)
 
 (defcustom ff-pre-load-hook nil
-  "*List of functions to be called before the other file is loaded."
+  "List of functions to be called before the other file is loaded."
   :type 'hook
   :group 'ff)
 
 (defcustom ff-post-load-hook nil
-  "*List of functions to be called after the other file is loaded."
+  "List of functions to be called after the other file is loaded."
   :type 'hook
   :group 'ff)
 
 (defcustom ff-not-found-hook nil
-  "*List of functions to be called if the other file could not be found."
+  "List of functions to be called if the other file could not be found."
   :type 'hook
   :group 'ff)
 
 (defcustom ff-file-created-hook nil
-  "*List of functions to be called if the other file needs to be created."
+  "List of functions to be called if the other file needs to be created."
   :type 'hook
   :group 'ff)
 
 (defcustom ff-case-fold-search nil
-  "*Non-nil means ignore cases in matches (see `case-fold-search').
+  "Non-nil means ignore cases in matches (see `case-fold-search').
 If you have extensions in different cases, you will want this to be nil."
   :type 'boolean
   :group 'ff)
 
 (defcustom ff-always-in-other-window nil
-  "*If non-nil, find the corresponding file in another window by default.
+  "If non-nil, find the corresponding file in another window by default.
 To override this, give an argument to `ff-find-other-file'."
   :type 'boolean
   :group 'ff)
 
 (defcustom ff-ignore-include nil
-  "*If non-nil, ignore `#include' lines."
+  "If non-nil, ignore `#include' lines."
   :type 'boolean
   :group 'ff)
 
 (defcustom ff-always-try-to-create t
-  "*If non-nil, always attempt to create the other file if it was not found."
+  "If non-nil, always attempt to create the other file if it was not found."
   :type 'boolean
   :group 'ff)
 
 (defcustom ff-quiet-mode nil
-  "*If non-nil, trace which directories are being searched."
+  "If non-nil, trace which directories are being searched."
   :type 'boolean
   :group 'ff)
 
@@ -202,7 +200,7 @@ filename that EXTRACT returned.")
 
 (defvaralias 'ff-related-file-alist 'ff-other-file-alist)
 (defcustom ff-other-file-alist 'cc-other-file-alist
-  "*Alist of extensions to find given the current file's extension.
+  "Alist of extensions to find given the current file's extension.
 
 This list should contain the most used extensions before the others,
 since the search algorithm searches sequentially through each
@@ -214,7 +212,7 @@ This alist should be set by the major mode."
   :group 'ff)
 
 (defcustom ff-search-directories 'cc-search-directories
-  "*List of directories to search for a specific file.
+  "List of directories to search for a specific file.
 
 Set by default to `cc-search-directories', expanded at run-time.
 
@@ -228,7 +226,7 @@ A typical format is
     '(\".\" \"/usr/include\" \"$PROJECT/*/include\")
 
 Environment variables can be inserted between slashes (`/').
-They will be replaced by their definition. If a variable does
+They will be replaced by their definition.  If a variable does
 not exist, it is replaced (silently) with an empty string.
 
 The stars are *not* wildcards: they are searched for together with
@@ -239,7 +237,7 @@ the preceding slash.  The star represents all the subdirectories except
 
 (defcustom cc-search-directories
   '("." "/usr/include" "/usr/local/include/*")
-  "*See the description of the `ff-search-directories' variable."
+  "See the description of the `ff-search-directories' variable."
   :type '(repeat directory)
   :group 'ff)
 
@@ -264,7 +262,7 @@ the preceding slash.  The star represents all the subdirectories except
 
     ("\\.cxx\\'" (".hxx" ".hh" ".h"))
     ("\\.hxx\\'" (".cxx")))
-  "*Alist of extensions to find given the current file's extension.
+  "Alist of extensions to find given the current file's extension.
 
 This list should contain the most used extensions before the others,
 since the search algorithm searches sequentially through each directory
@@ -278,7 +276,7 @@ is created with the first matching extension (`.cc' yields `.hh')."
     ("\\.mi$" (".md")) ;; Modula-2 module definition
     ("\\.md$" (".mi")) ;; and implementation.
     )
-  "*See the description for the `ff-search-directories' variable."
+  "See the description for the `ff-search-directories' variable."
   :type '(repeat (list regexp (choice (repeat string) function)))
   :group 'ff)
 
@@ -613,8 +611,8 @@ the `ff-ignore-include' variable."
 
 (defun ff-get-file (search-dirs filename &optional suffix-list other-window)
   "Find a file in the SEARCH-DIRS with the given FILENAME (or filename stub).
-If (optional) SUFFIX-LIST is nil, search for fname, otherwise search
-for fname with each of the given suffixes.  Get the file or the buffer
+If (optional) SUFFIX-LIST is nil, search for FILENAME, otherwise search
+for FILENAME with each of the given suffixes.  Get the file or the buffer
 corresponding to the name of the first file found, or nil."
   (let ((filename (ff-get-file-name search-dirs filename suffix-list)))
 
@@ -638,16 +636,16 @@ corresponding to the name of the first file found, or nil."
 If (optional) SUFFIX-LIST is nil, search for FNAME-STUB, otherwise
 search for FNAME-STUB with each of the given suffixes.  Return the
 name of the first file found."
-  (let* (dirs         ;; working copy of dirs to search
-         dir          ;; the current dir considered
-         file         ;; filename being looked for
-         rest         ;; pathname after first /*
-         this-suffix  ;; the suffix we are currently considering
-         suffixes     ;; working copy of suffix-list
-         filename     ;; built filename
-         blist        ;; list of live buffers
-         buf          ;; current buffer in blist
-         found)       ;; whether we have found anything
+  (let (dirs         ;; working copy of dirs to search
+	dir          ;; the current dir considered
+	file         ;; filename being looked for
+	rest         ;; pathname after first /*
+	this-suffix  ;; the suffix we are currently considering
+	suffixes     ;; working copy of suffix-list
+	filename     ;; built filename
+	blist        ;; list of live buffers
+	buf          ;; current buffer in blist
+	found)       ;; whether we have found anything
 
     (setq suffixes suffix-list)
 

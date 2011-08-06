@@ -1,7 +1,7 @@
 ;;; follow.el --- synchronize windows showing the same buffer
 
 ;; Copyright (C) 1995, 1996, 1997, 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Anders Lindgren <andersl@andersl.com>
 ;; Maintainer: FSF (Anders' email bounces, Sep 2005)
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -254,6 +252,8 @@
 ;; Should someone come up with a better solution, please let me
 ;; know.
 
+(require 'easymenu)
+
 (eval-when-compile
   (if (or (featurep 'bytecomp)
 	  (featurep 'byte-compile))
@@ -335,122 +335,44 @@ After that, changing the prefix key requires manipulating keymaps."
     ;; the look and feel of Follow mode.)
     (define-key mainmap [remap end-of-buffer] 'follow-end-of-buffer)
 
-    ;;
-    ;; The menu.
-    ;;
-
-    (if (not (featurep 'xemacs))
-
-	;;
-	;; Emacs
-	;;
-	(let ((menumap (funcall (symbol-function 'make-sparse-keymap)
-                                "Follow"))
-	      (count 0)
-	      id)
-	  (mapcar
-	   (function
-	    (lambda (item)
-	      (setq id
-		    (or (cdr item)
-			(progn
-			  (setq count (+ count 1))
-			  (intern (format "separator-%d" count)))))
-	      (define-key menumap (vector id) item)
-	      (or (eq id 'follow-mode)
-		  (put id 'menu-enable 'follow-mode))))
-	   ;; In reverse order:
-	   '(("Toggle Follow mode" . follow-mode)
-	     ("--")
-	     ("Recenter"           . follow-recenter)
-	     ("--")
-	     ("Previous Window"    . follow-previous-window)
-	     ("Next Windows"       . follow-next-window)
-	     ("Last Window"        . follow-last-window)
-	     ("First Window"       . follow-first-window)
-	     ("--")
-	     ("Switch To Buffer (all windows)"
-              . follow-switch-to-buffer-all)
-	     ("Switch To Buffer"   . follow-switch-to-buffer)
-	     ("--")
-	     ("Delete Other Windows and Split"
-              . follow-delete-other-windows-and-split)
-	     ("--")
-	     ("Scroll Down"        . follow-scroll-down)
-	     ("Scroll Up"          . follow-scroll-up)))
-
-	  ;; If there is a `tools' menu, we use it.  However, we can't add a
-	  ;; minor-mode specific item to it (it's broken), so we make the
-	  ;; contents ghosted when not in use, and add ourselves to the
-	  ;; global map.  If no `tools' menu is present, just make a
-	  ;; top-level menu visible when the mode is activated.
-
-	  (let ((tools-map (lookup-key (current-global-map) [menu-bar tools]))
-		(last nil))
-	    (if (sequencep tools-map)
-		(progn
-		  ;; Find the last entry in the menu and store it in `last'.
-		  (mapcar (function
-			   (lambda (x)
-			     (setq last (or (cdr-safe
-					     (cdr-safe
-					      (cdr-safe x)))
-					    last))))
-			  tools-map)
-		  (if last
-		      (progn
-			(funcall (symbol-function 'define-key-after)
-                                 tools-map [separator-follow] '("--") last)
-			(funcall (symbol-function 'define-key-after)
-				 tools-map [follow] (cons "Follow" menumap)
-				 'separator-follow))
-		    ;; Didn't find the last item, adding to the top of
-		    ;; tools.  (This will probably never happen...)
-		    (define-key (current-global-map) [menu-bar tools follow]
-		      (cons "Follow" menumap))))
-	      ;; No tools menu, add "Follow" to the menubar.
-	      (define-key mainmap [menu-bar follow]
-		(cons "Follow" menumap)))))
-
-      ;;
-      ;; XEmacs.
-      ;;
-
-      ;; place the menu in the `Tools' menu.
-      (let ((menu '("Follow"
-		    :filter follow-menu-filter
-		    ["Scroll Up" follow-scroll-up t]
-		    ["Scroll Down" follow-scroll-down t]
-		    ["Delete Other Windows and Split"
-		     follow-delete-other-windows-and-split t]
-		    ["Switch To Buffer" follow-switch-to-buffer t]
-		    ["Switch To Buffer (all windows)"
-		     follow-switch-to-buffer-all t]
-		    ["First Window" follow-first-window t]
-		    ["Last Window" follow-last-window t]
-		    ["Next Windows" follow-next-window t]
-		    ["Previous Window" follow-previous-window t]
-		    ["Recenter" follow-recenter t]
-		    ["Deactivate" follow-mode t])))
-
-	;; Why not just `(set-buffer-menubar current-menubar)'?  The
-	;; question is a very good question.  The reason is that under
-	;; Emacs, neither `set-buffer-menubar' nor
-	;; `current-menubar' is defined, hence the byte-compiler will
-	;; warn.
-	(funcall (symbol-function 'set-buffer-menubar)
-		 (symbol-value 'current-menubar))
-	(funcall (symbol-function 'add-submenu) '("Tools") menu))
-
-      ;; When the mode is not activated, only one item is visible:
-      ;; "Activate".
-      (defun follow-menu-filter (menu)
-	(if follow-mode
-	    menu
-	  '(["Activate          " follow-mode t]))))
-
     mainmap)
   "Minor mode keymap for Follow mode.")
+
+;; When the mode is not activated, only one item is visible to activate
+;; the mode.
+(defun follow-menu-filter (menu)
+  (if (bound-and-true-p follow-mode)
+      menu
+    '(["Follow mode"	follow-mode
+       :style toggle :selected follow-mode])))
+
+;; If there is a `tools' menu, we use it.  However, we can't add a
+;; minor-mode specific item to it (it's broken), so we make the
+;; contents ghosted when not in use, and add ourselves to the
+;; global map.
+(easy-menu-add-item nil '("Tools")
+  '("Follow"
+    ;; The Emacs code used to just grey out operations when follow-mode was
+    ;; not enabled, whereas the XEmacs code used to remove it altogether.
+    ;; Not sure which is preferable, but clearly the preference should not
+    ;; depend on the flavor.
+    :filter follow-menu-filter
+    ["Scroll Up"	follow-scroll-up	follow-mode]
+    ["Scroll Down"	follow-scroll-down	follow-mode]
+    "--"
+    ["Delete Other Windows and Split" follow-delete-other-windows-and-split follow-mode]
+    "--"
+    ["Switch To Buffer"	follow-switch-to-buffer	follow-mode]
+    ["Switch To Buffer (all windows)" follow-switch-to-buffer-all follow-mode]
+    "--"
+    ["First Window"	follow-first-window	follow-mode]
+    ["Last Window"	follow-last-window	follow-mode]
+    ["Next Window"	follow-next-window	follow-mode]
+    ["Previous Window"	follow-previous-window	follow-mode]
+    "--"
+    ["Recenter"		follow-recenter		follow-mode]
+    "--"
+    ["Follow mode"	follow-mode :style toggle :selected follow-mode]))
 
 ;;}}}
 
@@ -552,14 +474,12 @@ Used by `follow-window-size-change'.")
 ;;;###autoload
 (defun turn-on-follow-mode ()
   "Turn on Follow mode.  Please see the function `follow-mode'."
-  (interactive)
   (follow-mode 1))
 
 
 ;;;###autoload
 (defun turn-off-follow-mode ()
   "Turn off Follow mode.  Please see the function `follow-mode'."
-  (interactive)
   (follow-mode -1))
 
 (put 'follow-mode 'permanent-local t)
@@ -704,7 +624,7 @@ Works like `scroll-up' when not in Follow mode."
 	     (select-window win)
 	     (goto-char start)
 	     (vertical-motion (- (- (window-height win)
-				    1
+				    (if header-line-format 2 1)
 				    next-screen-context-lines)))
 	     (set-window-start win (point))
 	     (goto-char start)
@@ -908,7 +828,7 @@ of the way from the true end."
   "Return all windows displaying the same buffer as the TESTWIN.
 The list contains only windows displayed in the same frame as TESTWIN.
 If TESTWIN is nil the selected window is used."
-  (or (and testwin (window-live-p testwin))
+  (or (window-live-p testwin)
       (setq testwin (selected-window)))
   (let* ((top (frame-first-window (window-frame testwin)))
 	 (win top)
@@ -960,26 +880,23 @@ Returns (end-pos end-of-buffer-p)"
     ;; This code works on both XEmacs and Emacs, but now
     ;; that XEmacs has got custom-written code, this could
     ;; be optimized for Emacs.
-    (let ((orig-win (and win (selected-window)))
-	  height
-	  buffer-end-p)
-      (if win (select-window win))
-      (prog1
-	  (save-excursion
-	    (goto-char (window-start))
-	    (setq height (- (window-height) 1))
-	    (setq buffer-end-p
-		  (if (bolp)
-		      (not (= height (vertical-motion height)))
-		    (save-restriction
-		      ;; Fix a mis-feature in `vertical-motion':
-		      ;; The start of the window is assumed to
-		      ;; coinside with the start of a line.
-		      (narrow-to-region (point) (point-max))
-		      (not (= height (vertical-motion height))))))
-	    (list (point) buffer-end-p))
-	(if orig-win
-	    (select-window orig-win))))))
+    (let (height buffer-end-p)
+      (with-selected-window (or win (selected-window))
+	(save-excursion
+	  (goto-char (window-start))
+	  (setq height
+		(- (window-height)
+		   (if header-line-format 2 1)))
+	  (setq buffer-end-p
+		(if (bolp)
+		    (not (= height (vertical-motion height)))
+		  (save-restriction
+		    ;; Fix a mis-feature in `vertical-motion':
+		    ;; The start of the window is assumed to
+		    ;; coinside with the start of a line.
+		    (narrow-to-region (point) (point-max))
+		    (not (= height (vertical-motion height))))))
+	  (list (point) buffer-end-p))))))
 
 
 ;; Can't use `save-window-excursion' since it triggers a redraw.
@@ -991,7 +908,7 @@ If WIN is nil the point below all windows is returned."
     (while (and windows (not (eq (car windows) win)))
       (setq start (window-start (car windows)))
       (set-window-start (car windows) pos 'noforce)
-      (setq pos (car (inline (follow-calc-win-end (car windows)))))
+      (setq pos (car (follow-calc-win-end (car windows))))
       (set-window-start (car windows) start 'noforce)
       (setq windows (cdr windows)))
     pos))
@@ -1033,30 +950,25 @@ Note that this handles the case when the cache has been set to nil."
   "Builds a list of (WIN START END BUFFER-END-P) for every window in WINDOWS."
   (if (follow-cache-valid-p windows)
       follow-windows-start-end-cache
-    (let ((win-start-end '())
-	  (orig-win (selected-window)))
-      (while windows
-	(select-window (car windows))
-	(setq win-start-end
-	      (cons (cons (car windows)
-			  (cons (window-start)
-				(follow-calc-win-end)))
-		    win-start-end))
-	(setq windows (cdr windows)))
+    (let ((orig-win (selected-window))
+	  win-start-end)
+      (dolist (w windows)
+	(select-window w)
+	(push (cons w (cons (window-start) (follow-calc-win-end)))
+	      win-start-end))
       (select-window orig-win)
-      (setq follow-windows-start-end-cache (nreverse win-start-end))
-      follow-windows-start-end-cache)))
+      (setq follow-windows-start-end-cache (nreverse win-start-end)))))
 
 
 (defsubst follow-pos-visible (pos win win-start-end)
   "Non-nil when POS is visible in WIN."
   (let ((wstart-wend-bend (cdr (assq win win-start-end))))
     (and (>= pos (car wstart-wend-bend))
-	 (or (< pos (car (cdr wstart-wend-bend)))
+	 (or (< pos (cadr wstart-wend-bend))
 	     (nth 2 wstart-wend-bend)))))
 
 
-;; By `aligned' we mean that for all adjecent windows, the end of the
+;; By `aligned' we mean that for all adjacent windows, the end of the
 ;; first is equal with the start of the successor.  The first window
 ;; should start at a full screen line.
 
@@ -1064,11 +976,10 @@ Note that this handles the case when the cache has been set to nil."
   "Non-nil if the follower windows are aligned."
   (let ((res t))
     (save-excursion
-       (goto-char (window-start (car (car win-start-end))))
-       (if (bolp)
-	   nil
-	 (vertical-motion 0 (car (car win-start-end)))
-	 (setq res (eq (point) (window-start (car (car win-start-end)))))))
+      (goto-char (window-start (caar win-start-end)))
+      (unless (bolp)
+	(vertical-motion 0 (caar win-start-end))
+	(setq res (eq (point) (window-start (caar win-start-end))))))
     (while (and res (cdr win-start-end))
       ;; At least two followers left
       (setq res (eq (car (cdr (cdr (car win-start-end))))
@@ -1105,11 +1016,9 @@ Note that this handles the case when the cache has been set to nil."
   "Make sure that the start of WIN starts at a full screen line."
   (save-excursion
     (goto-char (window-start win))
-    (if (bolp)
-	nil
+    (unless (bolp)
       (vertical-motion 0 win)
-      (if (eq (point) (window-start win))
-	  nil
+      (unless (eq (point) (window-start win))
 	(vertical-motion 1 win)
 	(set-window-start win (point) 'noforce)))))
 
@@ -1124,16 +1033,29 @@ Note that this handles the case when the cache has been set to nil."
 (defun follow-select-if-visible (dest win-start-end)
   "Select and return a window, if DEST is visible in it.
 Return the selected window."
-  (let ((win nil))
+  (let (win win-end)
     (while (and (not win) win-start-end)
       ;; Don't select a window that was just moved. This makes it
       ;; possible to later select the last window after a `end-of-buffer'
       ;; command.
-      (if (follow-pos-visible dest (car (car win-start-end)) win-start-end)
-	  (progn
-	    (setq win (car (car win-start-end)))
-	    (select-window win)))
+      (when (follow-pos-visible dest (caar win-start-end) win-start-end)
+	(setq win (caar win-start-end)
+	      win-end (car (cddr (car win-start-end))))
+	(select-window win))
       (setq win-start-end (cdr win-start-end)))
+    ;; The last line of the window may be partially visible; if so,
+    ;; and if point is visible in the next window, select the next
+    ;; window instead.
+    (and win
+	 (/= dest (point-max))
+    	 win-start-end
+    	 (follow-pos-visible dest (caar win-start-end) win-start-end)
+	 (save-excursion
+	   (goto-char dest)
+	   (vertical-motion 1 win)
+	   (>= (point) win-end))
+    	 (setq win (caar win-start-end))
+    	 (select-window win))
     win))
 
 
@@ -1171,31 +1093,34 @@ Return the selected window."
 ;; as the point is not visible in any window.
 
 (defun follow-select-if-visible-from-first (dest windows)
-  "Select and return a window with DEST, if WINDOWS are redrawn from top."
-  (let ((win nil)
-	end-pos-end-p)
+  "Try to select one of WINDOWS without repositioning the topmost window.
+If one of the windows in WINDOWS contains DEST, select it, call
+`follow-redisplay', move point to DEST, and return that window.
+Otherwise, return nil."
+  (let (win end-pos-end-p)
     (save-excursion
       (goto-char (window-start (car windows)))
       ;; Make sure the line start in the beginning of a real screen
       ;; line.
       (vertical-motion 0 (car windows))
-      (if (< dest (point))
-	  ;; Above the start, not visible.
-	  nil
+      (when (>= dest (point))
 	;; At or below the start. Check the windows.
 	(save-window-excursion
-	  (while (and (not win) windows)
-	    (set-window-start (car windows) (point) 'noforce)
-	    (setq end-pos-end-p (follow-calc-win-end (car windows)))
-	    (goto-char (car end-pos-end-p))
-	    ;; Visible, if dest above end, or if eob is visible inside
-	    ;; the window.
-	    (if (or (car (cdr end-pos-end-p))
-		    (< dest (point)))
+	  (let ((windows windows))
+	    (while (and (not win) windows)
+	      (set-window-start (car windows) (point) 'noforce)
+	      (setq end-pos-end-p (follow-calc-win-end (car windows)))
+	      (goto-char (car end-pos-end-p))
+	      ;; Visible, if dest above end, or if eob is visible inside
+	      ;; the window.
+	      (if (or (car (cdr end-pos-end-p))
+		      (< dest (point)))
 		  (setq win (car windows))
-		(setq windows (cdr windows)))))))
-    (if win
-	(select-window win))
+		(setq windows (cdr windows))))))))
+    (when win
+      (select-window win)
+      (follow-redisplay windows (car windows))
+      (goto-char dest))
     win))
 
 
@@ -1204,106 +1129,55 @@ Return the selected window."
 
 ;; Redraw all the windows on the screen, starting with the top window.
 ;; The window used as as marker is WIN, or the selcted window if WIN
-;; is nil.
+;; is nil.  Start every window directly after the end of the previous
+;; window, to make sure long lines are displayed correctly.
 
-(defun follow-redisplay (&optional windows win)
+(defun follow-redisplay (&optional windows win preserve-win)
   "Reposition the WINDOWS around WIN.
 Should the point be too close to the roof we redisplay everything
 from the top.  WINDOWS should contain a list of windows to
 redisplay, it is assumed that WIN is a member of the list.
 Should WINDOWS be nil, the windows displaying the
 same buffer as WIN, in the current frame, are used.
-Should WIN be nil, the selected window is used."
-  (or win
-      (setq win (selected-window)))
-  (or windows
-      (setq windows (follow-all-followers win)))
-  (follow-downward windows (follow-calculate-first-window-start windows win)))
+Should WIN be nil, the selected window is used.
+If PRESERVE-WIN is non-nil, keep WIN itself unchanged while
+repositioning the other windows."
+  (or win (setq win (selected-window)))
+  (or windows (setq windows (follow-all-followers win)))
+  ;; Calculate the start of the first window.
+  (let* ((old-win-start (window-start win))
+	 (try-first-start (follow-estimate-first-window-start
+			   windows win old-win-start))
+	 (try-win-start (follow-calc-win-start
+			 windows try-first-start win))
+	 (start (cond ((= try-win-start old-win-start)
+		       (follow-debug-message "exact")
+		       try-first-start)
+		      ((< try-win-start old-win-start)
+		       (follow-debug-message "above")
+		       (follow-calculate-first-window-start-from-above
+			windows try-first-start win old-win-start))
+		      (t
+		       (follow-debug-message "below")
+		       (follow-calculate-first-window-start-from-below
+			windows try-first-start win old-win-start)))))
+    (dolist (w windows)
+      (unless (and preserve-win (eq w win))
+	(set-window-start w start))
+      (setq start (car (follow-calc-win-end w))))))
 
 
-;; Redisplay a chain of windows. Start every window directly after the
-;; end of the previous window, to make sure long lines are displayed
-;; correctly.
-
-(defun follow-downward (windows pos)
-  "Redisplay all WINDOWS starting at POS."
-  (while windows
-    (set-window-start (car windows) pos)
-    (setq pos (car (follow-calc-win-end (car windows))))
-    (setq windows (cdr windows))))
-
-
-;;(defun follow-downward (windows pos)
-;;  "Redisplay all WINDOWS starting at POS."
-;;  (let (p)
-;;    (while windows
-;;      (setq p (window-point (car windows)))
-;;      (set-window-start (car windows) pos)
-;;      (set-window-point (car windows) (max p pos))
-;;      (setq pos (car (follow-calc-win-end (car windows))))
-;;      (setq windows (cdr windows)))))
-
-
-;; Return the start of the first window.
-;;
-;; First, estimate the position. It the value is not perfect (i.e. we
-;; have somewhere splited a line between windows) we try to enhance
-;; the value.
-;;
-;; The guess is always perfect if no long lines is split between
-;; windows.
-;;
-;; The worst case peformace of probably very bad, but it is very
-;; unlikely that we ever will miss the correct start by more than one
-;; or two lines.
-
-(defun follow-calculate-first-window-start (windows &optional win start)
-  "Calculate the start of the first window.
-
-WINDOWS is a chain of windows to work with.  WIN is the window
-to recenter around.  It is assumed that WIN starts at position
-START."
-  (or win
-      (setq win (selected-window)))
-  (or start
-      (setq start (window-start win)))
-  (let ((guess (follow-estimate-first-window-start windows win start)))
-    (if (car guess)
-	(cdr guess)
-      ;; The guess wasn't exact, try to enhance it.
-      (let ((win-start (follow-calc-win-start windows (cdr guess) win)))
-	(cond ((= win-start start)
-	       (follow-debug-message "exact")
-	       (cdr guess))
-	      ((< win-start start)
-	       (follow-debug-message "above")
-	       (follow-calculate-first-window-start-from-above
-		windows (cdr guess) win start))
-	      (t
-	       (follow-debug-message "below")
-	       (follow-calculate-first-window-start-from-below
-		windows (cdr guess) win start)))))))
-
-
-;; `exact' is disabled due to XEmacs and fonts of variable
-;; height.
 (defun follow-estimate-first-window-start (windows win start)
   "Estimate the position of the first window.
-
-Returns (EXACT . POS).  If EXACT is non-nil, POS is the starting
-position of the first window.  Otherwise it is a good guess."
-  (let ((pred (car (follow-split-followers windows win)))
-	(exact nil))
+The estimate is computed by assuming that the window WIN, which
+should be a member of WINDOWS, starts at position START."
+  (let ((windows-before (car (follow-split-followers windows win))))
     (save-excursion
       (goto-char start)
-      ;(setq exact (bolp))
       (vertical-motion 0 win)
-      (while pred
-	(vertical-motion (- 1 (window-height (car pred))) (car pred))
-	(if (not (bolp))
-	  (setq exact nil))
-	(setq pred (cdr pred)))
-      (cons exact (point)))))
+      (dolist (w windows-before)
+	(vertical-motion (- 1 (window-text-height w)) w))
+      (point))))
 
 
 ;; Find the starting point, start at GUESS and search downward.
@@ -1325,9 +1199,7 @@ position of the first window.  Otherwise it is a good guess."
 	      (setq res (point-max)))
 	  (setq win-start (follow-calc-win-start windows (point) win))
 	  (if (>= win-start start)
-	      (progn
-		(setq done t)
-		(setq res (point))))))
+	      (setq done t res (point)))))
       res)))
 
 
@@ -1342,24 +1214,25 @@ position of the first window.  Otherwise it is a good guess."
   (setq win (or win (selected-window)))
   (setq start (or start (window-start win)))
   (save-excursion
-    (let ((done nil)
-	  win-start
-	  res)
-      ;; Always calculate what happend when no line is displayed in the first
+    (let (done win-start res opoint)
+      ;; Always calculate what happens when no line is displayed in the first
       ;; window. (The `previous' res is needed below!)
       (goto-char guess)
       (vertical-motion 0 (car windows))
       (setq res (point))
       (while (not done)
+	(setq opoint (point))
 	(if (not (= (vertical-motion -1 (car windows)) -1))
 	    ;; Hit roof!
-	    (progn
-	      (setq done t)
-	      (setq res (point-min)))
+	    (setq done t res (point-min))
 	  (setq win-start (follow-calc-win-start windows (point) win))
-	  (cond ((= win-start start)	; Perfect match, use this value
-		 (setq done t)
-		 (setq res (point)))
+	  (cond ((>= (point) opoint)
+		 ;; In some pathological cases, vertical-motion may
+		 ;; return -1 even though point has not decreased.  In
+		 ;; that case, avoid looping forever.
+		 (setq done t res (point)))
+		((= win-start start)	; Perfect match, use this value
+		 (setq done t res (point)))
 		((< win-start start)	; Walked to far, use preious result
 		 (setq done t))
 		(t			; Store result for next iteration
@@ -1433,193 +1306,158 @@ non-first windows in Follow mode."
 ;; the screen if it should be unaligned.
 ;;
 ;; We divide the check into two parts; whether we are at the end or not.
-;; This is due to the fact that the end can actaually be visible
+;; This is due to the fact that the end can actually be visible
 ;; in several window even though they are aligned.
 
 (defun follow-post-command-hook ()
   "Ensure that the windows in Follow mode are adjacent after each command."
-  (setq follow-inside-post-command-hook t)
-  (if (or (not (input-pending-p))
-	  ;; Sometimes, in XEmacs, mouse events are not handled
-	  ;; properly by `input-pending-p'.  A typical example is
-	  ;; when clicking on a node in `info'.
-	  (and (boundp 'current-mouse-event)
-	       (symbol-value 'current-mouse-event)
-	       (fboundp 'button-event-p)
-	       (funcall (symbol-function 'button-event-p)
-			(symbol-value 'current-mouse-event))))
+  (unless (input-pending-p)
+    (let ((follow-inside-post-command-hook t)
+	  (win (selected-window)))
       ;; Work in the selected window, not in the current buffer.
-      (let ((orig-buffer (current-buffer))
-	    (win (selected-window)))
-	(set-buffer (window-buffer win))
-	(or (and (symbolp this-command)
-		 (get this-command 'follow-mode-use-cache))
-	    (follow-invalidate-cache))
-	(if (and (boundp 'follow-mode) follow-mode
-		 (not (window-minibuffer-p win)))
-	    ;; The buffer shown in the selected window is in follow
-	    ;; mode, lets find the current state of the display and
-	    ;; cache the result for speed (i.e. `aligned' and `visible'.)
-	    (let* ((windows (inline (follow-all-followers win)))
-		   (dest (point))
-		   (win-start-end (inline
-				    (follow-update-window-start (car windows))
-				    (follow-windows-start-end windows)))
-		   (aligned (follow-windows-aligned-p win-start-end))
-		   (visible (follow-pos-visible dest win win-start-end)))
-	      (if (not (and aligned visible))
-		  (follow-invalidate-cache))
-	      (inline (follow-avoid-tail-recenter))
-	      ;; Select a window to display the point.
-	      (or follow-internal-force-redisplay
-		  (progn
-		    (if (eq dest (point-max))
-			;; We're at the end, we have to be careful since
-			;; the display can be aligned while `dest' can
-			;; be visible in several windows.
-			(cond
-			 ;; Select the current window, but only when
-			 ;; the display is correct. (When inserting
-			 ;; character in a tail window, the display is
-			 ;; not correct, as they are shown twice.)
-			 ;;
-			 ;; Never stick to the current window after a
-			 ;; deletion.  The reason is cosmetic, when
-			 ;; typing `DEL' in a window showing only the
-			 ;; end of the file, character are removed
-			 ;; from the window above, which is very
-			 ;; unintuitive.
-			 ((and visible
-			       aligned
-			       (not (memq this-command
-					  '(backward-delete-char
-					    delete-backward-char
-					    backward-delete-char-untabify
-					    kill-region))))
-			  (follow-debug-message "Max: same"))
-			 ;; If the end is visible, and the window
-			 ;; doesn't seems like it just has been moved,
-			 ;; select it.
-			 ((follow-select-if-end-visible win-start-end)
-			  (follow-debug-message "Max: end visible")
-			  (setq visible t)
-			  (setq aligned nil)
-			  (goto-char dest))
-			 ;; Just show the end...
-			 (t
-			  (follow-debug-message "Max: default")
-			  (select-window (car (reverse windows)))
-			  (goto-char dest)
-			  (setq visible nil)
-			  (setq aligned nil)))
+      (with-current-buffer (window-buffer win)
+	(unless (and (symbolp this-command)
+		     (get this-command 'follow-mode-use-cache))
+	  (follow-invalidate-cache))
+	(when (and follow-mode
+		   (not (window-minibuffer-p win)))
+	  ;; The buffer shown in the selected window is in follow
+	  ;; mode.  Find the current state of the display.
+	  (let* ((windows (follow-all-followers win))
+		 (dest (point))
+		 (win-start-end (progn
+				  (follow-update-window-start (car windows))
+				  (follow-windows-start-end windows)))
+		 (aligned (follow-windows-aligned-p win-start-end))
+		 (visible (follow-pos-visible dest win win-start-end))
+		 selected-window-up-to-date)
+	    (unless (and aligned visible)
+	      (follow-invalidate-cache))
+	    (follow-avoid-tail-recenter)
+	    ;; Select a window to display point.
+	    (unless follow-internal-force-redisplay
+	      (if (eq dest (point-max))
+		  ;; At point-max, we have to be careful since the
+		  ;; display can be aligned while `dest' can be
+		  ;; visible in several windows.
+		  (cond
+		   ;; Select the current window, but only when the
+		   ;; display is correct. (When inserting characters
+		   ;; in a tail window, the display is not correct, as
+		   ;; they are shown twice.)
+		   ;;
+		   ;; Never stick to the current window after a
+		   ;; deletion.  The reason is cosmetic: when typing
+		   ;; `DEL' in a window showing only the end of the
+		   ;; file, a character would be removed from the
+		   ;; window above, which is very unintuitive.
+		   ((and visible
+			 aligned
+			 (not (memq this-command
+				    '(backward-delete-char
+				      delete-backward-char
+				      backward-delete-char-untabify
+				      kill-region))))
+		    (follow-debug-message "Max: same"))
+		   ;; If the end is visible, and the window doesn't
+		   ;; seems like it just has been moved, select it.
+		   ((follow-select-if-end-visible win-start-end)
+		    (follow-debug-message "Max: end visible")
+		    (setq visible t aligned nil)
+		    (goto-char dest))
+		   ;; Just show the end...
+		   (t
+		    (follow-debug-message "Max: default")
+		    (select-window (car (reverse windows)))
+		    (goto-char dest)
+		    (setq visible nil aligned nil)))
 
-		      ;; We're not at the end, here life is much simpler.
-		      (cond
-		       ;; This is the normal case!
-		       ;; It should be optimized for speed.
-		       ((and visible aligned)
-			(follow-debug-message "same"))
-		       ;; Pick a position in any window.  If the
-		       ;; display is ok, this will pick the `correct'
-		       ;; window.  If the display is wierd do this
-		       ;; anyway, this will be the case after a delete
-		       ;; at the beginning of the window.
-		       ((follow-select-if-visible dest win-start-end)
-			(follow-debug-message "visible")
-			(setq visible t)
-			(goto-char dest))
-		       ;; Not visible anywhere else, lets pick this one.
-		       ;; (Is this case used?)
-		       (visible
-			(follow-debug-message "visible in selected."))
-		       ;; Far out!
-		       ((eq dest (point-min))
-			(follow-debug-message "min")
-			(select-window (car windows))
-			(goto-char dest)
-			(set-window-start (selected-window) (point-min))
-			(setq win-start-end (follow-windows-start-end windows))
-			(follow-invalidate-cache)
-			(setq visible t)
-			(setq aligned nil))
-		       ;; If we can position the cursor without moving the first
-		       ;; window, do it. This is the case that catches `RET'
-		       ;; at the bottom of a window.
-		       ((follow-select-if-visible-from-first dest windows)
-			(follow-debug-message "Below first")
-			(setq visible t)
-			(setq aligned t)
-			(follow-redisplay windows (car windows))
-			(goto-char dest))
-		       ;; None of the above. For simplicity, we stick to the
-		       ;; selected window.
-		       (t
-			(follow-debug-message "None")
-			(setq visible nil)
-			(setq aligned nil))))
-		    ;; If a new window has been selected, make sure that the
-		    ;; old is not scrolled when the point is outside the
-		    ;; window.
-		    (or (eq win (selected-window))
-			(let ((p (window-point win)))
-			  (set-window-start win (window-start win) nil)
-			  (set-window-point win p)))))
-	      ;; Make sure the point is visible in the selected window.
-	      ;; (This could lead to a scroll.)
-	      (if (or visible
-		      (follow-pos-visible dest win win-start-end))
-		  nil
-		(sit-for 0)
-		(follow-avoid-tail-recenter)
-		(setq win-start-end (follow-windows-start-end windows))
-		(follow-invalidate-cache)
-		(setq aligned nil))
-	      ;; Redraw the windows whenever needed.
-	      (if (or follow-internal-force-redisplay
-		      (not (or aligned
-			       (follow-windows-aligned-p win-start-end)))
-		      (not (inline (follow-point-visible-all-windows-p
-				    win-start-end))))
-		  (progn
-		    (setq follow-internal-force-redisplay nil)
-		    (follow-redisplay windows (selected-window))
-		    (setq win-start-end (follow-windows-start-end windows))
-		    (follow-invalidate-cache)
-		    ;; When the point ends up in another window. This
-		    ;; happends when dest is in the beginning of the
-		    ;; file and the selected window is not the first.
-		    ;; It can also, in rare situations happend when
-		    ;; long lines are used and there is a big
-		    ;; difference between the width of the windows.
-		    ;; (When scrolling one line in a wide window which
-		    ;; will cause a move larger that an entire small
-		    ;; window.)
-		    (if (follow-pos-visible dest win win-start-end)
-			nil
-		      (follow-select-if-visible dest win-start-end)
-		      (goto-char dest))))
+		;; We're not at the end, here life is much simpler.
+		(cond
+		 ;; This is the normal case!
+		 ;; It should be optimized for speed.
+		 ((and visible aligned)
+		  (follow-debug-message "same"))
+		 ;; Pick a position in any window.  If the display is
+		 ;; ok, this will pick the `correct' window.
+		 ((follow-select-if-visible dest win-start-end)
+		  (follow-debug-message "visible")
+		  (goto-char dest)
+		  ;; We have to perform redisplay, since scrolling is
+		  ;; needed in case the line is partially visible.
+		  (setq visible nil))
+		 ;; Not visible anywhere else, lets pick this one.
+		 ;; (Is this case used?)
+		 (visible
+		  (follow-debug-message "visible in selected."))
+		 ;; Far out!
+		 ((eq dest (point-min))
+		  (follow-debug-message "min")
+		  (select-window (car windows))
+		  (goto-char dest)
+		  (set-window-start (selected-window) (point-min))
+		  (setq win-start-end (follow-windows-start-end windows))
+		  (follow-invalidate-cache)
+		  (setq visible t aligned nil))
+		 ;; If we can position the cursor without moving the first
+		 ;; window, do it. This is the case that catches `RET'
+		 ;; at the bottom of a window.
+		 ((follow-select-if-visible-from-first dest windows)
+		  (follow-debug-message "Below first")
+		  (setq visible t aligned t))
+		 ;; None of the above. For simplicity, we stick to the
+		 ;; selected window.
+		 (t
+		  (follow-debug-message "None")
+		  (setq visible nil aligned nil))))
+	      ;; If a new window has been selected, make sure that the
+	      ;; old is not scrolled when the point is outside the
+	      ;; window.
+	      (unless (eq win (selected-window))
+		(let ((p (window-point win)))
+		  (set-window-start win (window-start win) nil)
+		  (set-window-point win p))))
+	    (unless visible
+	      ;; If point may not be visible in the selected window,
+	      ;; perform a redisplay; this ensures scrolling.
+	      (redisplay)
+	      (setq selected-window-up-to-date t)
+	      (follow-avoid-tail-recenter)
+	      (setq win-start-end (follow-windows-start-end windows))
+	      (follow-invalidate-cache)
+	      (setq aligned nil))
+	    ;; Now redraw the windows around the selected window.
+	    (unless (and (not follow-internal-force-redisplay)
+			 (or aligned
+			     (follow-windows-aligned-p win-start-end))
+			 (follow-point-visible-all-windows-p
+			  win-start-end))
+	      (setq follow-internal-force-redisplay nil)
+	      (follow-redisplay windows (selected-window)
+				selected-window-up-to-date)
+	      (setq win-start-end (follow-windows-start-end windows))
+	      (follow-invalidate-cache)
+	      ;; When the point ends up in another window. This
+	      ;; happens when dest is in the beginning of the file and
+	      ;; the selected window is not the first.  It can also,
+	      ;; in rare situations happen when long lines are used
+	      ;; and there is a big difference between the width of
+	      ;; the windows.  (When scrolling one line in a wide
+	      ;; window which will cause a move larger that an entire
+	      ;; small window.)
+	      (unless (follow-pos-visible dest win win-start-end)
+		(follow-select-if-visible dest win-start-end)
+		(goto-char dest)))
 
-	      ;; If the region is visible, make it look good when spanning
-	      ;; multiple windows.
-	      (if (or (and (boundp 'mark-active) (symbol-value 'mark-active))
-		      (and (fboundp 'region-active-p)
-			   (funcall (symbol-function 'region-active-p))))
-		  (follow-maximize-region
-		   (selected-window) windows win-start-end))
-
-	      (inline (follow-avoid-tail-recenter))
-	      ;; DEBUG
-	      ;;(if (not (follow-windows-aligned-p
-	      ;;           (follow-windows-start-end windows)))
-	      ;;    (message "follow-mode: windows still unaligend!"))
-	      ;; END OF DEBUG
-	      )				; Matches (let*
-	  ;; Buffer not in follow mode:
-	  ;; We still must update the windows displaying the tail so that
-	  ;; Emacs won't recenter them.
-	  (follow-avoid-tail-recenter))
-	(set-buffer orig-buffer)))
-  (setq follow-inside-post-command-hook nil))
+	    ;; If the region is visible, make it look good when spanning
+	    ;; multiple windows.
+	    (when (region-active-p)
+	      (follow-maximize-region
+	       (selected-window) windows win-start-end))))
+	;; Whether or not the buffer was in follow mode, we must
+	;; update the windows displaying the tail so that Emacs won't
+	;; recenter them.
+	(follow-avoid-tail-recenter)))))
 
 ;;}}}
 ;;{{{ The region
@@ -1898,17 +1736,14 @@ would interfere with some other package.  If this happens, please
 report this using the `report-emacs-bug' function."
   (interactive)
   (follow-tidy-process-filter-alist)
-  (let ((list (process-list)))
-    (while list
-      (if (eq (follow-call-process-filter (car list)) 'follow-generic-filter)
-	  (progn
-	    (follow-call-set-process-filter
-	     (car list)
-	     (cdr-safe (assq (car list) follow-process-filter-alist)))
-	    (setq follow-process-filter-alist
-		  (delq (assq (car list) follow-process-filter-alist)
-			follow-process-filter-alist))))
-      (setq list (cdr list))))
+  (dolist (process (process-list))
+    (when (eq (follow-call-process-filter process) 'follow-generic-filter)
+      (follow-call-set-process-filter
+       process
+       (cdr-safe (assq process follow-process-filter-alist)))
+      (setq follow-process-filter-alist
+	    (delq (assq process follow-process-filter-alist)
+		  follow-process-filter-alist))))
   (setq follow-intercept-processes nil))
 
 ;;}}}
@@ -1964,7 +1799,7 @@ report this using the `report-emacs-bug' function."
     ;; If we're in follow mode, do our stuff.  Select a new window and
     ;; redisplay.  (Actually, it is redundant to check `buf', but I
     ;; feel it's more correct.)
-    (if (and buf win (window-live-p win))
+    (if (and buf (window-live-p win))
 	(progn
 	  (set-buffer buf)
 	  (if (and (boundp 'follow-mode) follow-mode)
@@ -2009,8 +1844,6 @@ report this using the `report-emacs-bug' function."
 		   ((follow-select-if-visible-from-first
 		     new-window-point windows)
 		    (follow-debug-message "filter: Seen from first")
-		    (follow-redisplay windows (car windows))
-		    (goto-char new-window-point)
 		    (setq win-start-end
 			  (follow-windows-start-end windows)))
 		   ;; None of the above. We stick to the current window.
@@ -2105,12 +1938,12 @@ report this using the `report-emacs-bug' function."
 		      (setq windows (follow-all-followers win))
 		      (if (memq orig-window windows)
 			  (progn
-			    ;; Make sure we're redrawing around the
-			    ;; selected window.
-			    ;;
-			    ;; We must be really careful not to do this
-			    ;; when we are (indirectly) called by
-			    ;; `post-command-hook'.
+                            ;; Make sure we're redrawing around the
+                            ;; selected window.
+                            ;;
+                            ;; We must be really careful not to do this
+                            ;; when we are (indirectly) called by
+                            ;; `post-command-hook'.
 			    (select-window orig-window)
 			    (follow-post-command-hook)
 			    (setq orig-window (selected-window)))
@@ -2220,8 +2053,6 @@ This prevents `mouse-drag-region' from messing things up."
 	follow-all-followers
 	follow-split-followers
 	follow-redisplay
-	follow-downward
-	follow-calculate-first-window-start
 	follow-estimate-first-window-start
 	follow-calculate-first-window-start-from-above
 	follow-calculate-first-window-start-from-below
@@ -2245,6 +2076,7 @@ This prevents `mouse-drag-region' from messing things up."
 
 (defun follow-unload-function ()
   "Unload Follow mode library."
+  (easy-menu-remove-item nil '("Tools") "Follow")
   (follow-stop-intercept-process-output)
   (dolist (group '((before
 		    ;; XEmacs

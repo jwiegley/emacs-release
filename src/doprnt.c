@@ -2,14 +2,14 @@
    Also takes args differently: pass one pointer to an array of strings
    in addition to the format string which is separate.
    Copyright (C) 1985, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,9 +17,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 #include <config.h>
@@ -47,7 +45,7 @@ Boston, MA 02110-1301, USA.  */
 /* Since we use the macro CHAR_HEAD_P, we have to include this, but
    don't have to include others because CHAR_HEAD_P does not contains
    another macro.  */
-#include "charset.h"
+#include "character.h"
 
 static int doprnt1 ();
 
@@ -119,7 +117,7 @@ doprnt1 (lispstrings, buffer, bufsize, format, format_end, nargs, args)
   char fixed_buffer[20];	/* Default buffer for small formatting. */
   char *fmtcpy;
   int minlen;
-  unsigned char charbuf[5];	/* Used for %c.  */
+  unsigned char charbuf[MAX_MULTIBYTE_LENGTH + 1];	/* Used for %c.  */
 
   if (format_end == 0)
     format_end = format + strlen (format);
@@ -328,8 +326,7 @@ doprnt1 (lispstrings, buffer, bufsize, format, format_end, nargs, args)
     };
 
   /* If we had to malloc something, free it.  */
-  if (big_buffer)
-    xfree (big_buffer);
+  xfree (big_buffer);
 
   *bufptr = 0;		/* Make sure our string end with a '\0' */
   return bufptr - buffer;

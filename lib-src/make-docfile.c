@@ -1,14 +1,14 @@
 /* Generate doc-string file for GNU Emacs from source files.
    Copyright (C) 1985, 1986, 1992, 1993, 1994, 1997, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
+
 
 /* The arguments given to this program are all the C and Lisp source files
  of GNU Emacs.  .elc and .el and .c files are allowed.
@@ -35,7 +34,6 @@ Boston, MA 02110-1301, USA.  */
  Then comes the documentation for that function or variable.
  */
 
-#define NO_SHORTNAMES   /* Tell config not to load remap.h */
 #include <config.h>
 
 /* defined to be emacs_main, sys_fopen, etc. in config.h */
@@ -62,11 +60,7 @@ Boston, MA 02110-1301, USA.  */
 #endif /* not DOS_NT */
 
 #ifndef DIRECTORY_SEP
-#ifdef MAC_OS8
-#define DIRECTORY_SEP ':'
-#else  /* not MAC_OS8 */
 #define DIRECTORY_SEP '/'
-#endif	/* not MAC_OS8 */
 #endif
 
 #ifndef IS_DIRECTORY_SEP
@@ -539,7 +533,7 @@ write_c_args (out, func, buf, minargs, maxargs)
 }
 
 /* Read through a c file.  If a .o file is named,
-   the corresponding .c file is read instead.
+   the corresponding .c or .m file is read instead.
    Looks for DEFUN constructs such as are defined in ../src/lisp.h.
    Accepts any word starting DEF... so it finds DEFSIMPLE and DEFPRED.  */
 
@@ -560,6 +554,15 @@ scan_c_file (filename, mode)
     filename[strlen (filename) - 1] = 'c';
 
   infile = fopen (filename, mode);
+
+  if (infile == NULL && extension == 'o')
+    {
+      /* try .m */
+      filename[strlen (filename) - 1] = 'm';
+      infile = fopen (filename, mode);
+      if (infile == NULL)
+        filename[strlen (filename) - 1] = 'c'; /* don't confuse people */
+    }
 
   /* No error if non-ex input file */
   if (infile == NULL)
@@ -906,7 +909,7 @@ scan_lisp_file (filename, mode)
 	      /* Read in the contents.  */
 	      if (saved_string != 0)
 		free (saved_string);
-	      saved_string = (char *) malloc (length);
+	      saved_string = (char *) xmalloc (length);
 	      for (i = 0; i < length; i++)
 		saved_string[i] = getc (infile);
 	      /* The last character is a ^_.
@@ -1188,7 +1191,7 @@ scan_lisp_file (filename, mode)
       else
 	{
 #ifdef DEBUG
-	  fprintf (stderr, "## unrecognised top-level form, %s (%s)\n",
+	  fprintf (stderr, "## unrecognized top-level form, %s (%s)\n",
 		   buffer, filename);
 #endif
 	  continue;

@@ -1,13 +1,13 @@
 /* Dump an executable image.
    Copyright (C) 1985, 1986, 1987, 1988, 1999, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,10 +15,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
+/*
 In other words, you are welcome to use, share and improve this program.
 You are forbidden to forbid anyone else to use, share and improve
 what you give them.   Help stamp out software-hoarding!  */
@@ -103,14 +102,6 @@ static int unrelocate_symbols (int, int, char *, char *);
 static int adjust_lnnoptrs (int, int, char *);
 
 static int pagemask;
-
-/* Correct an int which is the bit pattern of a pointer to a byte
-   into an int which is the number of a byte.
-   This is a no-op on ordinary machines, but not on all.  */
-
-#ifndef ADDR_CORRECT   /* Let m-*.h files override this definition */
-#define ADDR_CORRECT(x) ((char *)(x) - (char*)0)
-#endif
 
 #ifdef emacs
 #include "lisp.h"

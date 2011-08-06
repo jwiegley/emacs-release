@@ -1,20 +1,23 @@
 ;;; mule-util.el --- utility functions for mulitilingual environment (mule)
 
 ;; Copyright (C) 1997, 1998, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008
+;;   2005, 2006, 2007, 2008, 2009
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
+;; Copyright (C) 2003
+;;   National Institute of Advanced Industrial Science and Technology (AIST)
+;;   Registration Number H13PRO009
 
 ;; Keywords: mule, multilingual
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,9 +25,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -185,18 +186,18 @@ defaults to \"...\"."
 ;; 		(("foobarbaz" 6 nil nil "...") . "foo...")
 ;; 		(("foobarbaz" 7 2 nil "...") . "ob...")
 ;; 		(("foobarbaz" 9 3 nil "...") . "barbaz")
-;; 		(("$B$3(Bh$B$s(Be$B$K(Bl$B$A(Bl$B$O(Bo" 15 1 ?  t) . " h$B$s(Be$B$K(Bl$B$A(Bl$B$O(Bo")
-;; 		(("$B$3(Bh$B$s(Be$B$K(Bl$B$A(Bl$B$O(Bo" 14 1 ?  t) . " h$B$s(Be$B$K(Bl$B$A(B...")
-;; 		(("x" 3 nil nil "$(0GnM$(B") . "x")
-;; 		(("$AVP(B" 2 nil nil "$(0GnM$(B") . "$AVP(B")
-;; 		(("$AVP(B" 1 nil ?x "$(0GnM$(B") . "x") ;; XEmacs error
-;; 		(("$AVPND(B" 3 nil ?  "$(0GnM$(B") . "$AVP(B ") ;; XEmacs error
-;; 		(("foobarbaz" 4 nil nil  "$(0GnM$(B") . "$(0GnM$(B")
-;; 		(("foobarbaz" 5 nil nil  "$(0GnM$(B") . "f$(0GnM$(B")
-;; 		(("foobarbaz" 6 nil nil  "$(0GnM$(B") . "fo$(0GnM$(B")
-;; 		(("foobarbaz" 8 3 nil "$(0GnM$(B") . "b$(0GnM$(B")
-;; 		(("$B$3(Bh$B$s(Be$B$K(Bl$B$A(Bl$B$O(Bo" 14 4 ?x "$BF|K\8l(B") . "xe$B$KF|K\8l(B")
-;; 		(("$B$3(Bh$B$s(Be$B$K(Bl$B$A(Bl$B$O(Bo" 13 4 ?x "$BF|K\8l(B") . "xex$BF|K\8l(B")
+;; 		(("$A$3(Bh$A$s(Be$A$K(Bl$A$A(Bl$A$O(Bo" 15 1 ?  t) . " h$A$s(Be$A$K(Bl$A$A(Bl$A$O(Bo")
+;; 		(("$A$3(Bh$A$s(Be$A$K(Bl$A$A(Bl$A$O(Bo" 14 1 ?  t) . " h$A$s(Be$A$K(Bl$A$A(B...")
+;; 		(("x" 3 nil nil "$(Gemk#(B") . "x")
+;; 		(("$AVP(B" 2 nil nil "$(Gemk#(B") . "$AVP(B")
+;; 		(("$AVP(B" 1 nil ?x "$(Gemk#(B") . "x") ;; XEmacs error
+;; 		(("$AVPND(B" 3 nil ?  "$(Gemk#(B") . "$AVP(B ") ;; XEmacs error
+;; 		(("foobarbaz" 4 nil nil  "$(Gemk#(B") . "$(Gemk#(B")
+;; 		(("foobarbaz" 5 nil nil  "$(Gemk#(B") . "f$(Gemk#(B")
+;; 		(("foobarbaz" 6 nil nil  "$(Gemk#(B") . "fo$(Gemk#(B")
+;; 		(("foobarbaz" 8 3 nil "$(Gemk#(B") . "b$(Gemk#(B")
+;; 		(("$A$3(Bh$A$s(Be$A$K(Bl$A$A(Bl$A$O(Bo" 14 4 ?x "$AHU1>$(Gk#(B") . "xe$A$KHU1>$(Gk#(B")
+;; 		(("$A$3(Bh$A$s(Be$A$K(Bl$A$A(Bl$A$O(Bo" 13 4 ?x "$AHU1>$(Gk#(B") . "xex$AHU1>$(Gk#(B")
 ;; 		))
 ;;   (let (ret)
 ;;     (condition-case e
@@ -232,8 +233,8 @@ can be a string, a vector, or a list."
 (defun set-nested-alist (keyseq entry alist &optional len branches)
   "Set ENTRY for KEYSEQ in a nested alist ALIST.
 Optional 4th arg LEN non-nil means the first LEN elements in KEYSEQ
- is considered.
-Optional argument BRANCHES if non-nil is branches for a keyseq
+ are considered.
+Optional 5th argument BRANCHES if non-nil is branches for a keyseq
 longer than KEYSEQ.
 See the documentation of `nested-alist-p' for more detail."
   (or (nested-alist-p alist)
@@ -247,10 +248,9 @@ See the documentation of `nested-alist-p' for more detail."
 	  (error "Keyseq %s is too long for this nested alist" keyseq))
       (setq key-elt (if islist (nth i keyseq) (aref keyseq i)))
       (setq slot (assoc key-elt (cdr alist)))
-      (if (null slot)
-	  (progn
-	    (setq slot (cons key-elt (list t)))
-	    (setcdr alist (cons slot (cdr alist)))))
+      (unless slot
+	(setq slot (cons key-elt (list t)))
+	(setcdr alist (cons slot (cdr alist))))
       (setq alist (cdr slot))
       (setq i (1+ i)))
     (setcar alist entry)
@@ -260,14 +260,14 @@ See the documentation of `nested-alist-p' for more detail."
 ;;;###autoload
 (defun lookup-nested-alist (keyseq alist &optional len start nil-for-too-long)
   "Look up key sequence KEYSEQ in nested alist ALIST.  Return the definition.
-Optional 1st argument LEN specifies the length of KEYSEQ.
-Optional 2nd argument START specifies index of the starting key.
+Optional 3rd argument LEN specifies the length of KEYSEQ.
+Optional 4th argument START specifies index of the starting key.
 The returned value is normally a nested alist of which
 car part is the entry for KEYSEQ.
 If ALIST is not deep enough for KEYSEQ, return number which is
  how many key elements at the front of KEYSEQ it takes
  to reach a leaf in ALIST.
-Optional 3rd argument NIL-FOR-TOO-LONG non-nil means return nil
+Optional 5th argument NIL-FOR-TOO-LONG non-nil means return nil
  even if ALIST is not deep enough."
   (or (nested-alist-p alist)
       (error "Invalid argument %s" alist))
@@ -294,66 +294,69 @@ Optional 3rd argument NIL-FOR-TOO-LONG non-nil means return nil
 ;;;###autoload
 (defun coding-system-post-read-conversion (coding-system)
   "Return the value of CODING-SYSTEM's `post-read-conversion' property."
-  (coding-system-get coding-system 'post-read-conversion))
+  (coding-system-get coding-system :post-read-conversion))
 
 ;;;###autoload
 (defun coding-system-pre-write-conversion (coding-system)
   "Return the value of CODING-SYSTEM's `pre-write-conversion' property."
-  (coding-system-get coding-system 'pre-write-conversion))
+  (coding-system-get coding-system :pre-write-conversion))
 
 ;;;###autoload
 (defun coding-system-translation-table-for-decode (coding-system)
-  "Return the value of CODING-SYSTEM's `translation-table-for-decode' property."
-  (coding-system-get coding-system 'translation-table-for-decode))
+  "Return the value of CODING-SYSTEM's `decode-translation-table' property."
+  (coding-system-get coding-system :decode-translation-table))
 
 ;;;###autoload
 (defun coding-system-translation-table-for-encode (coding-system)
-  "Return the value of CODING-SYSTEM's `translation-table-for-encode' property."
-  (coding-system-get coding-system 'translation-table-for-encode))
+  "Return the value of CODING-SYSTEM's `encode-translation-table' property."
+  (coding-system-get coding-system :encode-translation-table))
+
+;;;###autoload
+(defmacro with-coding-priority (coding-systems &rest body)
+  "Execute BODY like `progn' with CODING-SYSTEMS at the front of priority list.
+CODING-SYSTEMS is a list of coding systems.  See `set-coding-priority'.
+This affects the implicit sorting of lists of coding sysems returned by
+operations such as `find-coding-systems-region'."
+  (let ((current (make-symbol "current")))
+  `(let ((,current (coding-system-priority-list)))
+     (apply #'set-coding-system-priority ,coding-systems)
+     (unwind-protect
+	 (progn ,@body)
+       (apply #'set-coding-system-priority ,current)))))
+(put 'with-coding-priority 'lisp-indent-function 1)
+(put 'with-coding-priority 'edebug-form-spec t)
 
 ;;;###autoload
 (defmacro detect-coding-with-priority (from to priority-list)
   "Detect a coding system of the text between FROM and TO with PRIORITY-LIST.
 PRIORITY-LIST is an alist of coding categories vs the corresponding
 coding systems ordered by priority."
-  `(unwind-protect
-       (let* ((prio-list ,priority-list)
-	      (coding-category-list coding-category-list)
-	      ,@(mapcar (function (lambda (x) (list x x)))
-			coding-category-list))
-	 (mapc (function (lambda (x) (set (car x) (cdr x))))
-	       prio-list)
-	 (set-coding-priority (mapcar #'car prio-list))
-	 ;; Changing the binding of a coding category requires this call.
-	 (update-coding-systems-internal)
-	 (detect-coding-region ,from ,to))
-     ;; We must restore the internal database.
-     (set-coding-priority coding-category-list)
-     (update-coding-systems-internal)))
+  `(with-coding-priority (mapcar #'cdr ,priority-list)
+     (detect-coding-region ,from ,to)))
+(make-obsolete 'detect-coding-with-priority
+	       "use `with-coding-priority' and `detect-coding-region'." "23.1")
 
 ;;;###autoload
 (defun detect-coding-with-language-environment (from to lang-env)
-  "Detect a coding system of the text between FROM and TO with LANG-ENV.
+  "Detect a coding system for the text between FROM and TO with LANG-ENV.
 The detection takes into account the coding system priorities for the
 language environment LANG-ENV."
   (let ((coding-priority (get-language-info lang-env 'coding-priority)))
     (if coding-priority
-	(detect-coding-with-priority
-	 from to
-	 (mapcar (function (lambda (x)
-			     (cons (coding-system-get x 'coding-category) x)))
-		 coding-priority))
-      (detect-coding-region from to))))
+	(with-coding-priority coding-priority
+          (detect-coding-region from to)))))
+
+(declare-function internal-char-font "fontset.c" (position &optional ch))
 
 ;;;###autoload
 (defun char-displayable-p (char)
   "Return non-nil if we should be able to display CHAR.
 On a multi-font display, the test is only whether there is an
-appropriate font from the selected frame's fontset to display CHAR's
-charset in general.  Since fonts may be specified on a per-character
-basis, this may not be accurate."
-  (cond ((< char 256)
-	 ;; Single byte characters are always displayable.
+appropriate font from the selected frame's fontset to display
+CHAR's charset in general.  Since fonts may be specified on a
+per-character basis, this may not be accurate."
+  (cond ((< char 128)
+	 ;; ASCII characters are always displayable.
 	 t)
 	((not enable-multibyte-characters)
 	 ;; Maybe there's a font for it, but we can't put it in the buffer.
@@ -364,14 +367,37 @@ basis, this may not be accurate."
 	 ;; currently selected frame.
 	 (car (internal-char-font nil char)))
 	(t
+	 ;; On a terminal, a character is displayable if the coding
+	 ;; system for the terminal can encode it.
 	 (let ((coding (terminal-coding-system)))
-	   (if coding
-	       (let ((safe-chars (coding-system-get coding 'safe-chars))
-		     (safe-charsets (coding-system-get coding 'safe-charsets)))
-		 (or (and safe-chars
-			  (aref safe-chars char))
-		     (and safe-charsets
-			  (memq (char-charset char) safe-charsets)))))))))
+	   (when coding
+	     (let ((cs-list (coding-system-get coding :charset-list)))
+	       (cond
+		 ((listp cs-list)
+		  (catch 'tag
+		    (mapc #'(lambda (charset)
+			      (if (encode-char char charset)
+				  (throw 'tag charset)))
+			  cs-list)
+		    nil))
+		 ((eq cs-list 'iso-2022)
+		  (catch 'tag2
+		    (mapc #'(lambda (charset)
+			      (if (and (plist-get (charset-plist charset)
+						  :iso-final-char)
+				       (encode-char char charset))
+				  (throw 'tag2 charset)))
+			  charset-list)
+		    nil))
+		 ((eq cs-list 'emacs-mule)
+		  (catch 'tag3
+		    (mapc #'(lambda (charset)
+			      (if (and (plist-get (charset-plist charset)
+						  :emacs-mule-id)
+				       (encode-char char charset))
+				  (throw 'tag3 charset)))
+			  charset-list)
+		    nil)))))))))
 
 (provide 'mule-util)
 

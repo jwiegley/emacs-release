@@ -2,7 +2,7 @@
 ;; An older version of this was known as libc.el.
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Ralph Schleicher <rs@nunatak.allgaeu.org>
 ;;         (did not show signs of life (Nov 2001)  -stef)
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -328,23 +326,32 @@ If optional argument QUERY is non-nil, query for the help mode."
                     (error "Not documented as a %s: %s" topic (or item ""))))
          (modes (info-lookup->all-modes topic mode))
          (window (selected-window))
+	 (new-Info-history
+	  ;; Avoid clobbering Info-history with nodes searched during
+	  ;; lookup.  If lookup succeeds set `Info-history' to
+	  ;; `new-Info-history'.
+	  (when (get-buffer "*info*")
+	    (with-current-buffer "*info*"
+	      (cons (list Info-current-file Info-current-node (point))
+		    Info-history))))
          found doc-spec node prefix suffix doc-found)
-    (if (not (eq major-mode 'Info-mode))
-	(if (not info-lookup-other-window-flag)
-	    (info)
-	  (progn
-	    (save-window-excursion (info))
-	    ;; Determine whether or not the Info buffer is visible in
-	    ;; another frame on the same display.  If it is, simply raise
-	    ;; that frame.  Otherwise, display it in another window.
-	    (let* ((window (get-buffer-window "*info*" t))
-		   (info-frame (and window (window-frame window))))
-	      (if (and info-frame
-		       (display-multi-frame-p)
-		       (memq info-frame (frames-on-display-list))
-		       (not (eq info-frame (selected-frame))))
-		  (select-frame info-frame)
-		(switch-to-buffer-other-window "*info*"))))))
+    (unless (eq major-mode 'Info-mode)
+      (if (not info-lookup-other-window-flag)
+	  (info)
+	(save-window-excursion (info))
+	(let* ((info-window (get-buffer-window "*info*" t))
+	       (info-frame (and info-window (window-frame info-window))))
+	  (if (and info-frame
+		   (not (eq info-frame (selected-frame)))
+		   (display-multi-frame-p)
+		   (memq info-frame (frames-on-display-list)))
+	      ;; *info* is visible in another frame on same display.
+	      ;; Raise that frame and select the window.
+	      (progn
+		(select-window info-window)
+		(raise-frame info-frame))
+	    ;; In any other case, switch to *info* in another window.
+	    (switch-to-buffer-other-window "*info*")))))
     (while (and (not found) modes)
       (setq doc-spec (info-lookup->doc-spec topic (car modes)))
       (while (and (not found) doc-spec)
@@ -355,7 +362,8 @@ If optional argument QUERY is non-nil, query for the help mode."
 		  (progn
 		    ;; Don't need Index menu fontifications here, and
 		    ;; they slow down the lookup.
-		    (let (Info-fontify-maximum-menu-size)
+		    (let (Info-fontify-maximum-menu-size
+			  Info-history-list)
 		      (Info-goto-node node)
 		      (setq doc-found t)))
 		(error
@@ -400,6 +408,8 @@ If optional argument QUERY is non-nil, query for the help mode."
     (unless (or ignore-case
                 (string-equal item (car entry)))
       (message "Found in different case: %s" (car entry)))
+    (when found
+      (setq Info-history new-Info-history))
     (or doc-found
 	(error "Info documentation for lookup was not found"))
     ;; Don't leave the Info buffer if the help item couldn't be looked up.
@@ -409,7 +419,8 @@ If optional argument QUERY is non-nil, query for the help mode."
 (defun info-lookup-setup-mode (topic mode)
   "Initialize the internal data structure."
   (or (info-lookup->initialized topic mode)
-      (let (cell data (initialized 0) completions refer-modes)
+      (let ((initialized 0)
+	    cell data completions refer-modes Info-history-list)
 	(if (not (info-lookup->mode-value topic mode))
 	    (message "No %s help available for `%s'" topic mode)
 	  ;; Recursively setup cross references.
@@ -444,7 +455,7 @@ If optional argument QUERY is non-nil, query for the help mode."
   (let ((doc-spec (info-lookup->doc-spec topic mode))
 	(regexp (concat "^\\(" (info-lookup->regexp topic mode)
 			"\\)\\([ \t].*\\)?$"))
-	Info-fontify-maximum-menu-size
+	Info-history-list Info-fontify-maximum-menu-size
 	node trans entry item prefix result doc-found
 	(buffer (get-buffer-create " temp-info-look")))
     (with-current-buffer buffer
@@ -745,12 +756,15 @@ Return nil if there is nothing appropriate in the buffer near point."
              ;; M4 Macro Index entries are without "AS_" prefixes, and
              ;; mostly without "m4_" prefixes.  "dnl" is an exception, not
              ;; wanting any prefix.  So AS_ is added back to upper-case
-             ;; names, m4_ to others which don't already an m4_.
+             ;; names (if needed), m4_ to others which don't already an m4_.
              ("(autoconf)M4 Macro Index"
               (lambda (item)
                 (let ((case-fold-search nil))
                   (cond ((or (string-equal item "dnl")
-                             (string-match "^m4_" item))
+                             (string-match "^m4_" item)
+                             ;; Autoconf 2.62 index includes some macros
+                             ;; (e.g., AS_HELP_STRING), so avoid prefixing.
+                             (string-match "^AS_" item))
                          item)
                         ((string-match "^[A-Z0-9_]+$" item)
                          (concat "AS_" item))
@@ -869,10 +883,11 @@ Return nil if there is nothing appropriate in the buffer near point."
 
 (info-lookup-maybe-add-help
  :mode 'octave-mode
- :regexp "[_a-zA-Z0-9]+"
+ :regexp "[_a-zA-Z0-9]+\\|\\s.+\\|[-!=^|*/.\\,><~&+]\\{1,3\\}\\|[][();,\"']"
  :doc-spec '(("(octave)Function Index" nil
 	      "^ -+ [^:]+:[ ]+\\(\\[[^=]*=[ ]+\\)?" nil)
 	     ("(octave)Variable Index" nil "^ -+ [^:]+:[ ]+" nil)
+             ("(octave)Operator Index" nil nil nil)
 	     ;; Catch lines of the form "xyz statement"
 	     ("(octave)Concept Index"
 	      (lambda (item)
@@ -958,7 +973,7 @@ Return nil if there is nothing appropriate in the buffer near point."
 	      "`" "(")))
 
 (info-lookup-maybe-add-help
- :mode 'custom-mode
+ :mode 'Custom-mode
  :ignore-case t
  :regexp "[^][()`',:\" \t\n]+"
  :parse-rule 'info-lookup-guess-custom-symbol
@@ -971,5 +986,5 @@ Return nil if there is nothing appropriate in the buffer near point."
 
 (provide 'info-look)
 
-;;; arch-tag: 0f1e3ea3-32a2-4461-bbab-3cff93539a74
+;; arch-tag: 0f1e3ea3-32a2-4461-bbab-3cff93539a74
 ;;; info-look.el ends here

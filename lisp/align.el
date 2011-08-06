@@ -1,18 +1,18 @@
 ;;; align.el --- align text to a specific column, by regexp
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
-;; Author: John Wiegley <johnw@gnu.org> 
+;; Author: John Wiegley <johnw@gnu.org>
 ;; Maintainer: FSF
 ;; Keywords: convenience languages lisp
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -129,17 +127,17 @@
 ;;; User Variables:
 
 (defcustom align-load-hook nil
-  "*Hook that gets run after the aligner has been loaded."
+  "Hook that gets run after the aligner has been loaded."
   :type 'hook
   :group 'align)
 
 (defcustom align-indent-before-aligning nil
-  "*If non-nil, indent the marked region before aligning it."
+  "If non-nil, indent the marked region before aligning it."
   :type 'boolean
   :group 'align)
 
 (defcustom align-default-spacing 1
-  "*An integer that represents the default amount of padding to use.
+  "An integer that represents the default amount of padding to use.
 If `align-to-tab-stop' is non-nil, this will represent the number of
 tab stops to use for alignment, rather than the number of spaces.
 Each alignment rule can optionally override both this variable.  See
@@ -148,13 +146,13 @@ Each alignment rule can optionally override both this variable.  See
   :group 'align)
 
 (defcustom align-to-tab-stop 'indent-tabs-mode
-  "*If non-nil, alignments will always fall on a tab boundary.
+  "If non-nil, alignments will always fall on a tab boundary.
 It may also be a symbol, whose value will be taken."
   :type '(choice (const nil) symbol)
   :group 'align)
 
 (defcustom align-region-heuristic 500
-  "*If non-nil, used as a heuristic by `align-current'.
+  "If non-nil, used as a heuristic by `align-current'.
 Since each alignment rule can possibly have its own set of alignment
 sections (whenever `align-region-separate' is non-nil, and not a
 string), this heuristic is used to determine how far before and after
@@ -165,72 +163,72 @@ may cause unexpected behavior at times."
   :group 'align)
 
 (defcustom align-highlight-change-face 'highlight
-  "*The face to highlight with if changes are necessary."
+  "The face to highlight with if changes are necessary."
   :type 'face
   :group 'align)
 
 (defcustom align-highlight-nochange-face 'secondary-selection
-  "*The face to highlight with if no changes are necessary."
+  "The face to highlight with if no changes are necessary."
   :type 'face
   :group 'align)
 
 (defcustom align-large-region 10000
-  "*If an integer, defines what constitutes a \"large\" region.
-If nil,then no messages will ever be printed to the minibuffer."
+  "If an integer, defines what constitutes a \"large\" region.
+If nil, then no messages will ever be printed to the minibuffer."
   :type 'integer
   :group 'align)
 
 (defcustom align-c++-modes '(c++-mode c-mode java-mode)
-  "*A list of modes whose syntax resembles C/C++."
+  "A list of modes whose syntax resembles C/C++."
   :type '(repeat symbol)
   :group 'align)
 
 (defcustom align-perl-modes '(perl-mode cperl-mode)
-  "*A list of modes where perl syntax is to be seen."
+  "A list of modes where Perl syntax is to be seen."
   :type '(repeat symbol)
   :group 'align)
 
 (defcustom align-lisp-modes
   '(emacs-lisp-mode lisp-interaction-mode lisp-mode scheme-mode)
-  "*A list of modes whose syntax resembles Lisp."
+  "A list of modes whose syntax resembles Lisp."
   :type '(repeat symbol)
   :group 'align)
 
 (defcustom align-tex-modes
   '(tex-mode plain-tex-mode latex-mode slitex-mode)
-  "*A list of modes whose syntax resembles TeX (and family)."
+  "A list of modes whose syntax resembles TeX (and family)."
   :type '(repeat symbol)
   :group 'align)
 
 (defcustom align-text-modes '(text-mode outline-mode)
-  "*A list of modes whose content is plain text."
+  "A list of modes whose content is plain text."
   :type '(repeat symbol)
   :group 'align)
 
 (defcustom align-dq-string-modes
   (append align-lisp-modes align-c++-modes align-perl-modes
 	  '(python-mode))
-  "*A list of modes where double quoted strings should be excluded."
+  "A list of modes where double quoted strings should be excluded."
   :type '(repeat symbol)
   :group 'align)
 
 (defcustom align-sq-string-modes
   (append align-perl-modes '(python-mode))
-  "*A list of modes where single quoted strings should be excluded."
+  "A list of modes where single quoted strings should be excluded."
   :type '(repeat symbol)
   :group 'align)
 
 (defcustom align-open-comment-modes
   (append align-lisp-modes align-c++-modes align-perl-modes
 	  '(python-mode makefile-mode))
-  "*A list of modes with a single-line comment syntax.
-These are comments as in Lisp, which have a beginning but, end with
+  "A list of modes with a single-line comment syntax.
+These are comments as in Lisp, which have a beginning, but end with
 the line (i.e., `comment-end' is an empty string)."
   :type '(repeat symbol)
   :group 'align)
 
 (defcustom align-region-separate "^\\s-*[{}]?\\s-*$"
-  "*Select the method by which alignment sections will be separated.
+  "Select the method by which alignment sections will be separated.
 If this is a symbol, that symbol's value will be used.
 
 For the sake of clarification, consider the following example, which
@@ -261,8 +259,8 @@ The possible settings for `align-region-separate' are:
 
  `group'   Each contiguous set of lines where a specific alignment
 	   occurs is considered a section for that alignment rule.
-	   Note that each rule will may have any entirely different
-	   set of section divisions than another.
+	   Note that each rule may have any entirely different set
+           of section divisions than another.
 
 	     int    alpha = 1; /* one */
 	     double beta  = 2.0;
@@ -294,7 +292,7 @@ The possible settings for `align-region-separate' are:
 	   between sections, the behavior will be very similar to
 	   `largest', and faster.  But if the mode does not use clear
 	   separators (for example, if you collapse your braces onto
-	   the preceding statement in C or perl), `largest' is
+	   the preceding statement in C or Perl), `largest' is
 	   probably the better alternative.
 
  function  A function that will be passed the beginning and ending
@@ -303,8 +301,8 @@ The possible settings for `align-region-separate' are:
 	   both of these parameters will be nil, in which case the
 	   function should return non-nil if it wants each rule to
 	   define its own section, or nil if it wants the largest
-	   section found to be used as the common section for all rules
-	   that occur there.
+	   section found to be used as the common section for all
+	   rules that occur there.
 
  list      A list of markers within the buffer that represent where
 	   the section dividers lie.  Be certain to use markers!  For
@@ -583,7 +581,7 @@ The possible settings for `align-region-separate' are:
      (regexp . "^\\s-*\\w+:\\(\\s-*\\).*;")
      (group . (1))
      (modes . '(css-mode html-mode))))
-  "*A list describing all of the available alignment rules.
+  "A list describing all of the available alignment rules.
 The format is:
 
    ((TITLE
@@ -625,8 +623,8 @@ The following attributes are meaningful:
 	    the purposes of alignment.  The \"alignment character\" is
 	    always the first character immediately following this
 	    parenthesis group.  This attribute may also be a list of
-	    integer, in which case multiple alignment characters will
-	    be aligned, with the list of integer identifying the
+	    integers, in which case multiple alignment characters will
+	    be aligned, with the list of integers identifying the
 	    whitespace groups which precede them.  The default for
 	    this attribute is 1.
 
@@ -638,7 +636,7 @@ The following attributes are meaningful:
 `case-fold' If `regexp' is an ordinary regular expression string
 	    containing alphabetic character, sometimes you may want
 	    the search to proceed case-insensitively (for languages
-	    that ignore case, such as pascal for example).  In that
+	    that ignore case, such as Pascal for example).  In that
 	    case, set `case-fold' to a non-nil value, and the regular
 	    expression search will ignore case.  If `regexp' is set to
 	    a function, that function must handle the job of ignoring
@@ -781,7 +779,7 @@ The following attributes are meaningful:
      (regexp . "^\\s-*#\\s-*\\(if\\w*\\|endif\\)\\(.*\\)$")
      (group  . 2)
      (modes  . align-c++-modes)))
-  "*A list describing text that should be excluded from alignment.
+  "A list describing text that should be excluded from alignment.
 See the documentation for `align-rules-list' for more info."
   :type align-exclude-rules-list-type
   :group 'align)
@@ -839,7 +837,7 @@ See the variable `align-exclude-rules-list' for more details.")
 
     (use-entity
      (regexp   . "\\(\\s-+\\)use\\s-+entity")))
-  "*Alignment rules for `vhdl-mode'.  See `align-rules-list' for more info."
+  "Alignment rules for `vhdl-mode'.  See `align-rules-list' for more info."
   :type align-rules-list-type
   :group 'align)
 
@@ -1309,6 +1307,7 @@ aligner would have dealt with are."
 		 (rulesep (assq 'separate rule))
 		 (thissep (if rulesep (cdr rulesep) separate))
 		 same (eol 0)
+		 search-start
 		 group group-c
 		 spacing spacing-c
 		 tab-stop tab-stop-c
@@ -1414,6 +1413,7 @@ aligner would have dealt with are."
 		      ;; while we can find the rule in the alignment
 		      ;; region..
 		      (while (and (< (point) end-mark)
+				  (setq search-start (point))
 				  (if regfunc
 				      (funcall regfunc end-mark nil)
 				    (re-search-forward regexp
@@ -1438,7 +1438,7 @@ aligner would have dealt with are."
 			;; if the search ended us on the beginning of
 			;; the next line, move back to the end of the
 			;; previous line.
-			(if (bolp)
+			(if (and (bolp) (> (point) search-start))
 			    (forward-char -1))
 
 			;; lookup the `group' attribute the first time
@@ -1578,7 +1578,12 @@ aligner would have dealt with are."
 			    ;; the next line; don't bother searching
 			    ;; anymore on this one
 			    (if (and (not repeat) (not (bolp)))
-				(forward-line)))))
+				(forward-line))
+
+			    ;; if the search did not change point,
+			    ;; move forward to avoid an infinite loop
+			    (if (= (point) search-start)
+				(forward-char)))))
 
 		      ;; when they are no more matches for this rule,
 		      ;; align whatever was left over
@@ -1598,5 +1603,5 @@ aligner would have dealt with are."
 
 (run-hooks 'align-load-hook)
 
-;;; arch-tag: ef79cccf-1db8-4888-a8a1-d7ce2d1532f7
+;; arch-tag: ef79cccf-1db8-4888-a8a1-d7ce2d1532f7
 ;;; align.el ends here

@@ -1,27 +1,25 @@
 ;;; gnus-eform.el --- a mode for editing forms for Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -86,13 +84,14 @@ It is a slightly enhanced emacs-lisp-mode.
   (make-local-variable 'gnus-prev-winconf)
   (gnus-run-mode-hooks 'gnus-edit-form-mode-hook))
 
-(defun gnus-edit-form (form documentation exit-func)
+(defun gnus-edit-form (form documentation exit-func &optional layout)
   "Edit FORM in a new buffer.
 Call EXIT-FUNC on exit.  Display DOCUMENTATION in the beginning
-of the buffer."
+of the buffer.
+The optional LAYOUT overrides the `edit-form' window layout."
   (let ((winconf (current-window-configuration)))
     (set-buffer (gnus-get-buffer-create gnus-edit-form-buffer))
-    (gnus-configure-windows 'edit-form)
+    (gnus-configure-windows (or layout 'edit-form))
     (gnus-edit-form-mode)
     (setq gnus-prev-winconf winconf)
     (setq gnus-edit-form-done-function exit-func)
@@ -131,5 +130,5 @@ of the buffer."
 
 (provide 'gnus-eform)
 
-;;; arch-tag: ef50678c-2c28-49ef-affc-e53b3b2c0bf6
+;; arch-tag: ef50678c-2c28-49ef-affc-e53b3b2c0bf6
 ;;; gnus-eform.el ends here

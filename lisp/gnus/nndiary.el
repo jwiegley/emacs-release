@@ -1,7 +1,7 @@
 ;;; nndiary.el --- A diary back end for Gnus
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author:        Didier Verna <didier@xemacs.org>
 ;; Maintainer:    Didier Verna <didier@xemacs.org>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 
 ;;; Commentary:
@@ -606,7 +604,7 @@ all.  This may very well take some time.")
     (nconc rest articles)))
 
 (deffoo nndiary-request-move-article
-    (article group server accept-form &optional last)
+    (article group server accept-form &optional last move-is-internal)
   (let ((buf (get-buffer-create " *nndiary move*"))
 	result)
     (nndiary-possibly-change-directory group server)
@@ -875,7 +873,7 @@ all.  This may very well take some time.")
 		  (search-forward id nil t)) ; We find the ID.
 	;; And the id is in the fourth field.
 	(if (not (and (search-backward "\t" nil t 4)
-		      (not (search-backward"\t" (gnus-point-at-bol) t))))
+		      (not (search-backward"\t" (point-at-bol) t))))
 	    (forward-line 1)
 	  (beginning-of-line)
 	  (setq found t)
@@ -1085,7 +1083,7 @@ all.  This may very well take some time.")
 	(unless no-active
 	  (nnmail-save-active nndiary-group-alist nndiary-active-file))))))
 
-(eval-when-compile (defvar files))
+(defvar files)
 (defun nndiary-generate-active-info (dir)
   ;; Update the active info for this group.
   (let* ((group (nnheader-file-to-group
@@ -1096,9 +1094,7 @@ all.  This may very well take some time.")
     (push (list group
 		(cons (or (caar files) (1+ last))
 		      (max last
-			   (or (let ((f files))
-				 (while (cdr f) (setq f (cdr f)))
-				 (caar f))
+			   (or (caar (last files))
 			       0))))
 	  nndiary-group-alist)))
 
@@ -1577,13 +1573,11 @@ all.  This may very well take some time.")
 
 ;; The end... ===============================================================
 
-(mapcar
- (lambda (elt)
-   (let ((header (intern (format "X-Diary-%s" (car elt)))))
-     ;; Required for building NOV databases and some other stuff
-     (add-to-list 'gnus-extra-headers header)
-     (add-to-list 'nnmail-extra-headers header)))
- nndiary-headers)
+(dolist (header nndiary-headers)
+  (setq header (intern (format "X-Diary-%s" (car header))))
+  ;; Required for building NOV databases and some other stuff.
+  (add-to-list 'gnus-extra-headers header)
+  (add-to-list 'nnmail-extra-headers header))
 
 (unless (assoc "nndiary" gnus-valid-select-methods)
   (gnus-declare-backend "nndiary" 'post-mail 'respool 'address))
@@ -1591,5 +1585,5 @@ all.  This may very well take some time.")
 (provide 'nndiary)
 
 
-;;; arch-tag: 9c542b95-92e7-4ace-a038-330ab296e203
+;; arch-tag: 9c542b95-92e7-4ace-a038-330ab296e203
 ;;; nndiary.el ends here

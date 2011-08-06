@@ -1,17 +1,17 @@
 ;;; jit-lock.el --- just-in-time fontification
 
 ;; Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Gerd Moellmann <gerd@gnu.org>
 ;; Keywords: faces files
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -47,15 +45,17 @@
     "Execute BODY in current buffer, overriding several variables.
 Preserves the `buffer-modified-p' state of the current buffer."
     (declare (debug t))
-    `(with-buffer-unmodified
-      (let ((buffer-undo-list t)
-	    (inhibit-read-only t)
-	    (inhibit-point-motion-hooks t)
-	    (inhibit-modification-hooks t)
-	    deactivate-mark
-	    buffer-file-name
-	    buffer-file-truename)
-	,@body))))
+    `(let ((buffer-undo-list t)
+           (inhibit-read-only t)
+           (inhibit-point-motion-hooks t)
+           (inhibit-modification-hooks t)
+           deactivate-mark
+           buffer-file-name
+           buffer-file-truename)
+       ;; Do reset the modification status from within the let, since
+       ;; otherwise set-buffer-modified-p may try to unlock the file.
+       (with-buffer-unmodified
+           ,@body))))
 
 
 
@@ -67,7 +67,7 @@ Preserves the `buffer-modified-p' state of the current buffer."
   :group 'font-lock)
 
 (defcustom jit-lock-chunk-size 500
-  "*Jit-lock fontifies chunks of at most this many characters at a time.
+  "Jit-lock fontifies chunks of at most this many characters at a time.
 
 This variable controls both display-time and stealth fontification."
   :type 'integer
@@ -75,7 +75,7 @@ This variable controls both display-time and stealth fontification."
 
 
 (defcustom jit-lock-stealth-time nil
-  "*Time in seconds to wait before beginning stealth fontification.
+  "Time in seconds to wait before beginning stealth fontification.
 Stealth fontification occurs if there is no input within this time.
 If nil, stealth fontification is never performed.
 
@@ -86,7 +86,7 @@ The value of this variable is used when JIT Lock mode is turned on."
 
 
 (defcustom jit-lock-stealth-nice 0.5
-  "*Time in seconds to pause between chunks of stealth fontification.
+  "Time in seconds to pause between chunks of stealth fontification.
 Each iteration of stealth fontification is separated by this amount of time,
 thus reducing the demand that stealth fontification makes on the system.
 If nil, means stealth fontification is never paused.
@@ -100,7 +100,7 @@ See also `jit-lock-stealth-load'."
 
 (defcustom jit-lock-stealth-load
   (if (condition-case nil (load-average) (error)) 200)
-  "*Load in percentage above which stealth fontification is suspended.
+  "Load in percentage above which stealth fontification is suspended.
 Stealth fontification pauses when the system short-term load average (as
 returned by the function `load-average' if supported) goes above this level,
 thus reducing the demand that stealth fontification makes on the system.
@@ -116,14 +116,14 @@ See also `jit-lock-stealth-nice'."
 
 
 (defcustom jit-lock-stealth-verbose nil
-  "*If non-nil, means stealth fontification should show status messages."
+  "If non-nil, means stealth fontification should show status messages."
   :type 'boolean
   :group 'jit-lock)
 
 
 (defvaralias 'jit-lock-defer-contextually 'jit-lock-contextually)
 (defcustom jit-lock-contextually 'syntax-driven
-  "*If non-nil, means fontification should be syntactically true.
+  "If non-nil, means fontification should be syntactically true.
 If nil, means fontification occurs only on those lines modified.  This
 means where modification on a line causes syntactic change on subsequent lines,
 those subsequent lines are not refontified to reflect their new context.
@@ -416,7 +416,7 @@ Defaults to the whole buffer.  END can be out of bounds."
 ;;; Stealth fontification.
 
 (defsubst jit-lock-stealth-chunk-start (around)
-  "Return the start of the next chunk to fontify around position AROUND..
+  "Return the start of the next chunk to fontify around position AROUND.
 Value is nil if there is nothing more to fontify."
   (if (zerop (buffer-size))
       nil

@@ -1,22 +1,23 @@
-This is ../info/calc, produced by makeinfo version 4.11 from calc.texi.
+This is ../../info/calc, produced by makeinfo version 4.11 from
+calc.texi.
 
 This file documents Calc, the GNU Emacs calculator.
 
-   Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008 Free Software Foundation, Inc.
+Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+2008, 2009 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
-     Version 1.2 or any later version published by the Free Software
+     Version 1.3 or any later version published by the Free Software
      Foundation; with the Invariant Sections being just "GNU GENERAL
      PUBLIC LICENSE", with the Front-Cover texts being "A GNU Manual,"
      and with the Back-Cover Texts as in (a) below.  A copy of the
      license is included in the section entitled "GNU Free
      Documentation License."
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
+     developing GNU and promoting software freedom."
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -29,22 +30,41 @@ File: calc,  Node: Top,  Next: Getting Started,  Prev: (dir),  Up: (dir)
 1 The GNU Emacs Calculator
 **************************
 
-"Calc" is an advanced desk calculator and mathematical tool that runs
-as part of the GNU Emacs environment.
+"Calc" is an advanced desk calculator and mathematical tool written by
+Dave Gillespie that runs as part of the GNU Emacs environment.
 
-   This manual is divided into three major parts: "Getting Started,"
-the "Calc Tutorial," and the "Calc Reference."  The Tutorial introduces
-all the major aspects of Calculator use in an easy, hands-on way.  The
-remainder of the manual is a complete reference to the features of the
-Calculator.
+   This manual, also written (mostly) by Dave Gillespie, is divided into
+three major parts: "Getting Started," the "Calc Tutorial," and the
+"Calc Reference."  The Tutorial introduces all the major aspects of
+Calculator use in an easy, hands-on way.  The remainder of the manual is
+a complete reference to the features of the Calculator.
 
    For help in the Emacs Info system (which you are using to read this
 file), type `?'.  (You can also type `h' to run through a longer Info
 tutorial.)
 
+   This file documents Calc, the GNU Emacs calculator.
+
+   Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+2008, 2009 Free Software Foundation, Inc.
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with the Invariant Sections being just "GNU GENERAL
+     PUBLIC LICENSE", with the Front-Cover texts being "A GNU Manual,"
+     and with the Back-Cover Texts as in (a) below.  A copy of the
+     license is included in the section entitled "GNU Free
+     Documentation License."
+
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
+     developing GNU and promoting software freedom."
+
 * Menu:
 
 * Getting Started::       General description and overview.
+
 * Interactive Tutorial::
 * Tutorial::              A step-by-step introduction for beginners.
 
@@ -156,15 +176,15 @@ File: calc,  Node: About This Manual,  Next: Notations Used in This Manual,  Pre
 =====================
 
 This document serves as a complete description of the GNU Emacs
-Calculator.  It works both as an introduction for novices, and as a
+Calculator.  It works both as an introduction for novices and as a
 reference for experienced users.  While it helps to have some
 experience with GNU Emacs in order to get the most out of Calc, this
 manual ought to be readable even if you don't know or use Emacs
 regularly.
 
-   The manual is divided into three major parts: the "Getting Started"
-chapter you are reading now, the Calc tutorial (chapter 2), and the
-Calc reference manual (the remaining chapters and appendices).
+   This manual is divided into three major parts: the "Getting Started"
+chapter you are reading now, the Calc tutorial, and the Calc reference
+manual.
 
    If you are in a hurry to use Calc, there is a brief "demonstration"
 below which illustrates the major features of Calc in just a couple of
@@ -188,18 +208,17 @@ know.
 
    Every Calc keyboard command is listed in the Calc Summary, and also
 in the Key Index.  Algebraic functions, `M-x' commands, and variables
-also have their own indices.  In the printed manual, each paragraph
-that is referenced in the Key or Function Index is marked in the margin
-with its index entry.
+also have their own indices.
 
    You can access this manual on-line at any time within Calc by
 pressing the `h i' key sequence.  Outside of the Calc window, you can
-press `C-x * i' to read the manual on-line.  Also, you can jump
-directly to the Tutorial by pressing `h t' or `C-x * t', or to the
-Summary by pressing `h s' or `C-x * s'.  Within Calc, you can also go
-to the part of the manual describing any Calc key, function, or
-variable using `h k', `h f', or `h v', respectively.  *Note Help
-Commands::.
+press `C-x * i' to read the manual on-line.  From within Calc the
+command `h t' will jump directly to the Tutorial; from outside of Calc
+the command `C-x * t' will jump to the Tutorial and start Calc if
+necessary.  Pressing `h s' or `C-x * s' will take you directly to the
+Calc Summary.  Within Calc, you can also go to the part of the manual
+describing any Calc key, function, or variable using `h k', `h f', or
+`h v', respectively.  *Note Help Commands::.
 
    The Calc manual can be printed, but because the manual is so large,
 you should only make a printed copy if you really need it.  To print the
@@ -362,7 +381,7 @@ since then.
    *Algebra.*  Algebraic entries can also include formulas or equations
 involving variables.  Type `' [x + y = a, x y = 1] <RET>' to enter a
 pair of equations involving three variables.  (Note the leading
-apostrophe in this example; also, note that the space between `x y' is
+apostrophe in this example; also, note that the space in `x y' is
 required.)  Type `a S x,y <RET>' to solve these equations for the
 variables `x' and `y'.
 
@@ -373,7 +392,7 @@ for the LaTeX typesetting system.  Type `d N' to return to normal
 notation.
 
 Type `7.5', then `s l a <RET>' to let `a = 7.5' in these formulas.
-(That's a letter `l', not a numeral `1'.)
+(That's the letter `l', not the numeral `1'.)
 
    *Help functions.*  You can read about any command in the on-line
 manual.  Remember to type the letter `l', then `C-x * c', to return
@@ -458,7 +477,7 @@ file you were editing on top and Calc on the bottom.
                                                      |  * 8
                                                      |  ->-5
                                                      |
-     --%%-Calc: 12 Deg       (Calculator)----All----- --%%-Emacs: *Calc Trail*
+     --%*-Calc: 12 Deg       (Calculator)----All----- --%*- *Calc Trail*
 
    In this figure, the mode-line for `myfile' has moved up and the
 "Calculator" window has appeared below it.  As you can see, Calc
@@ -517,9 +536,11 @@ forth between "big" full-screen mode and the normal partial-screen mode.
 
    Finally, `C-x * o' (`calc-other-window') is like `C-x * c' except
 that the Calc window is not selected.  The buffer you were editing
-before remains selected instead.  `C-x * o' is a handy way to switch
-out of Calc momentarily to edit your file; type `C-x * c' to switch
-back into Calc when you are done.
+before remains selected instead.  If you are in a Calc window, then
+`C-x * o' will switch you out of it, being careful not to switch you to
+the Calc Trail window.  So `C-x * o' is a handy way to switch out of
+Calc momentarily to edit your file; you can then type `C-x * c' to
+switch back into Calc when you are done.
 
 
 File: calc,  Node: Quick Mode Overview,  Next: Keypad Mode Overview,  Prev: The Standard Interface,  Up: Using Calc
@@ -565,8 +586,8 @@ lower window is a picture of a typical calculator keypad.
      |2:  17.3
      |1:  -5
      |    .
-     |--%%-Calc: 12 Deg       (Calcul
-     |----+-----Calc 2.1------+----1
+     |--%*-Calc: 12 Deg       (Calcul
+     |----+----+--Calc---+----+----1
      |FLR |CEIL|RND |TRNC|CLN2|FLT |
      |----+----+----+----+----+----|
      | LN |EXP |    |ABS |IDIV|MOD |
@@ -652,7 +673,7 @@ this:
 and you wish to have Calc compute and format the derivative for you and
 store this derivative in the buffer automatically.  To do this with
 Embedded mode, first copy the formula down to where you want the result
-to be:
+to be, leaving a blank line before and after the formula:
 
      The derivative of
 
@@ -664,13 +685,15 @@ to be:
 
    Now, move the cursor onto this new formula and press `C-x * e'.
 Calc will read the formula (using the surrounding blank lines to tell
-how much text to read), then push this formula (invisibly) onto the
-Calc stack.  The cursor will stay on the formula in the editing buffer,
-but the buffer's mode line will change to look like the Calc mode line
-(with mode indicators like `12 Deg' and so on).  Even though you are
-still in your editing buffer, the keyboard now acts like the Calc
-keyboard, and any new result you get is copied from the stack back into
-the buffer.  To take the derivative, you would type `a d x <RET>'.
+how much text to read), then push this formula (invisibly) onto the Calc
+stack.  The cursor will stay on the formula in the editing buffer, but
+the line with the formula will now appear as it would on the Calc stack
+(in this case, it will be left-aligned) and the buffer's mode line will
+change to look like the Calc mode line (with mode indicators like `12
+Deg' and so on).  Even though you are still in your editing buffer, the
+keyboard now acts like the Calc keyboard, and any new result you get is
+copied from the stack back into the buffer.  To take the derivative,
+you would type `a d x <RET>'.
 
      The derivative of
 
@@ -679,6 +702,9 @@ the buffer.  To take the derivative, you would type `a d x <RET>'.
      is
 
      1 / ln(x) x
+
+   (Note that by default, Calc gives division lower precedence than
+multiplication, so that `1 / ln(x) x' is equivalent to `1 / (ln(x) x)'.)
 
    To make this look nicer, you might want to press `d =' to center the
 formula, and even `d B' to use Big display mode.
@@ -717,9 +743,9 @@ righthand label:  Type `d } (1) <RET>'.
 keyboard will revert to the way they were before.
 
    The related command `C-x * w' operates on a single word, which
-generally means a single number, inside text.  It uses any non-numeric
-characters rather than blank lines to delimit the formula it reads.
-Here's an example of its use:
+generally means a single number, inside text.  It searches for an
+expression which "looks" like a number containing the point.  Here's an
+example of its use:
 
      A slope of one-third corresponds to an angle of 1 degrees.
 
@@ -903,7 +929,7 @@ calculating turned out to be more open-ended than one might have
 expected.
 
    Emacs Lisp didn't have built-in floating point math (now it does), so
-this had to be simulated in software.  In fact, Emacs integers will
+this had to be simulated in software.  In fact, Emacs integers would
 only comfortably fit six decimal digits or so--not enough for a decent
 calculator.  So I had to write my own high-precision integer code as
 well, and once I had this I figured that arbitrary-size integers were
@@ -950,10 +976,10 @@ whose eagle eyes discovered many typographical and factual errors in
 the Calc manual; Tim Kay, who drove the development of Embedded mode;
 Ove Ewerlid, who made many suggestions relating to the algebra commands
 and contributed some code for polynomial operations; Randal Schwartz,
-who suggested the `calc-eval' function; Robert J. Chassell, who
-suggested the Calc Tutorial and exercises; and Juha Sarlin, who first
-worked out how to split Calc into quickly-loading parts.  Bob Weiner
-helped immensely with the Lucid Emacs port.
+who suggested the `calc-eval' function; Juha Sarlin, who first worked
+out how to split Calc into quickly-loading parts; Bob Weiner, who
+helped immensely with the Lucid Emacs port; and Robert J. Chassell, who
+suggested the Calc Tutorial and exercises as well as many other things.
 
    Among the books used in the development of Calc were Knuth's _Art of
 Computer Programming_ (especially volume II, _Seminumerical
@@ -996,7 +1022,7 @@ where you were before.
 
    You can press `?' at any time for a brief summary of Info commands.
 
-   Press `1' now to enter the first section of the Tutorial.
+   Press the number `1' now to enter the first section of the Tutorial.
 
 * Menu:
 
@@ -1019,11 +1045,13 @@ The Quick mode and Keypad mode interfaces are fairly self-explanatory.
 *Note Embedded Mode::, for a description of the Embedded mode interface.
 
    The easiest way to read this tutorial on-line is to have two windows
-on your Emacs screen, one with Calc and one with the Info system.  (If
-you have a printed copy of the manual you can use that instead.)  Press
-`C-x * c' to turn Calc on or to switch into the Calc window, and press
-`C-x * i' to start the Info system or to switch into its window.  Or,
-you may prefer to use the tutorial in printed form.
+on your Emacs screen, one with Calc and one with the Info system.  Press
+`C-x * t' to set this up; the on-line tutorial will be opened in the
+current window and Calc will be started in another window.  From the
+Info window, the command `C-x * c' can be used to switch to the Calc
+window and `C-x * o' can be used to switch back to the Info window.
+(If you have a printed copy of the manual you can use that instead; in
+that case you only need to press `C-x * c' to start Calc.)
 
    This tutorial is designed to be done in sequence.  But the rest of
 this manual does not assume you have gone through the tutorial.  The
@@ -1374,8 +1402,9 @@ Calculator in Algebraic mode, which is closer to the way non-RPN
 calculators work.  In Algebraic mode, you enter formulas in traditional
 `2+3' notation.
 
-   *Warning:* Note that `/' has lower precedence than `*', so that
-`a/b*c' is interpreted as `a/(b*c)'.  See below for details.
+   *Notice:* Calc gives `/' lower precedence than `*', so that `a/b*c'
+is interpreted as `a/(b*c)'; this is not standard across all computer
+languages.  See below for details.
 
    You don't really need any special "mode" to enter algebraic formulas.
 You can enter a formula at any time by pressing the apostrophe (`'')
@@ -1732,7 +1761,7 @@ the most common ones here.
    Perhaps the most fundamental mode in Calc is the current "precision".
 Notice the `12' on the Calc window's mode line:
 
-     --%%-Calc: 12 Deg       (Calculator)----All------
+     --%*-Calc: 12 Deg       (Calculator)----All------
 
 Most of the symbols there are Emacs things you don't need to worry
 about, but the `12' and the `Deg' are mode indicators.  The `12' means
@@ -2337,9 +2366,9 @@ coefficient 30-choose-20, then determine its prime factorization.
 
       30 <RET> 20         k c            k f
 
-You can verify these prime factors by using `v u' to "unpack" this
-vector into 8 separate stack entries, then `M-8 *' to multiply them
-back together.  The result is the original number, 30045015.
+You can verify these prime factors by using `V R *' to multiply
+together the elements of this vector.  The result is the original
+number, 30045015.
 
    Suppose a program you are writing needs a hash table with at least
 10000 entries.  It's best to use a prime number as the actual size of a
@@ -7199,28 +7228,4 @@ Stirling numbers in a convenient variable:
    As in the case of the `fib' rules, it would be useful to put these
 rules in `EvalRules' and to add a `:: remember' condition to the last
 rule.
-
-
-File: calc,  Node: Introduction,  Next: Data Types,  Prev: Tutorial,  Up: Top
-
-5 Introduction
-**************
-
-This chapter is the beginning of the Calc reference manual.  It covers
-basic concepts such as the stack, algebraic and numeric entry, undo,
-numeric prefix arguments, etc.
-
-* Menu:
-
-* Basic Commands::
-* Help Commands::
-* Stack Basics::
-* Numeric Entry::
-* Algebraic Entry::
-* Quick Calculator::
-* Prefix Arguments::
-* Undo::
-* Error Messages::
-* Multiple Calculators::
-* Troubleshooting Commands::
 

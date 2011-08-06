@@ -1,6 +1,6 @@
 ;;; mixal-mode.el --- Major mode for the mix asm language.
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Pieter E.J. Pareit <pieter.pareit@gmail.com>
@@ -11,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;; Major mode for the mix asm language.
@@ -79,10 +77,10 @@
 ;;; Key map
 (defvar mixal-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-cc" 'compile)
-    (define-key map "\C-cr" 'mixal-run)
-    (define-key map "\C-cd" 'mixal-debug)
-    (define-key map "\C-ho" 'mixal-describe-operation-code)
+    (define-key map "\C-c\C-c" 'compile)
+    (define-key map "\C-c\C-r" 'mixal-run)
+    (define-key map "\C-c\C-d" 'mixal-debug)
+    (define-key map "\C-h\C-o" 'mixal-describe-operation-code)
     map)
   "Keymap for `mixal-mode'.")
 ;; (makunbound 'mixal-mode-map)
@@ -1091,15 +1089,19 @@ EXECUTION-TIME holds info about the time it takes, number or string.")
 (defun mixal-run ()
   "Run mixal file in current buffer, assumes that file has been compiled."
   (interactive)
-  (mixvm (concat "mixvm -r -t -d "
-		 (file-name-sans-extension (buffer-file-name)))))
+  (if (fboundp 'mixvm)
+      (mixvm (concat "mixvm -r -t -d "
+		     (file-name-sans-extension (buffer-file-name))))
+    (error "mixvm.el needs to be loaded to run `mixvm'")))
 
 (defun mixal-debug ()
   "Start mixvm for debugging.
 Assumes that file has been compiled with debugging support."
   (interactive)
-  (mixvm (concat "mixvm "
-		 (file-name-sans-extension (buffer-file-name)))))
+  (if (fboundp 'mixvm)
+      (mixvm (concat "mixvm "
+		     (file-name-sans-extension (buffer-file-name))))
+    (error "mixvm.el needs to be loaded to run `mixvm'")))
 
 ;;;###autoload
 (define-derived-mode mixal-mode fundamental-mode "mixal"

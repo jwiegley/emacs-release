@@ -1,16 +1,16 @@
 ;;; viper-keym.el --- Viper keymaps
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,15 +18,11 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
-
-(provide 'viper-keym)
 
 ;; compiler pacifier
 (defvar viper-always)
@@ -36,18 +32,15 @@
 (defvar viper-ex-style-editing)
 (defvar viper-ex-style-motion)
 
-;; loading happens only in non-interactive compilation
-;; in order to spare non-viperized emacs from being viperized
-(if noninteractive
-    (eval-when-compile
-      (let ((load-path (cons (expand-file-name ".") load-path)))
-	(or (featurep 'viper-util)
-	    (load "viper-util.el" nil nil 'nosuffix))
-	)))
+(eval-and-compile
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest  r))))
 ;; end pacifier
 
 (require 'viper-util)
 
+(declare-function viper-ex "viper-ex" (arg &optional string))
+(declare-function viper-normalize-minor-mode-map-alist "viper-cmd" ())
+(declare-function viper-set-mode-vars-for "viper-cmd" (state))
 
 ;;; Variables
 
@@ -170,7 +163,7 @@ Enter as a sexp.  Examples: \"\\C-z\", [(control ?z)]."
 	 (let ((old-value (if (boundp 'viper-toggle-key)
 			      viper-toggle-key
 			    [(control ?z)])))
-	   (mapcar
+	   (mapc
 	    (lambda (buf)
 	      (save-excursion
 		(set-buffer buf)
@@ -200,36 +193,8 @@ Enter as a sexp.  Examples: \"\\C-z\", [(control ?z)]."
   :type 'string
   :group 'viper)
 
-(defcustom viper-ESC-key (if (viper-window-display-p) [(escape)] "\e")
-  "Key used to ESC.
-Enter as a sexp. Examples: \"\\e\", [(escape)].
-If running in a terminal, [(escape)] is not understood, so must use \"\\e\"."
-  :type 'sexp
-  :group 'viper
-  :set (lambda (symbol value)
-	 (let ((old-value (if (boundp 'viper-ESC-key)
-			      viper-ESC-key
-			    [(escape)])))
-	   (mapcar
-	    (lambda (buf)
-	      (save-excursion
-		(set-buffer buf)
-		(when (and (boundp 'viper-insert-intercept-map)
-			   (keymapp viper-insert-intercept-map))
-		  (when old-value
-		    (define-key viper-insert-intercept-map old-value nil))
-		  (define-key
-		    viper-insert-intercept-map value 'viper-intercept-ESC-key))
-		(when (and (boundp 'viper-vi-intercept-map)
-			   (keymapp viper-vi-intercept-map))
-		  (when old-value
-		    (define-key viper-vi-intercept-map old-value nil))
-		  (define-key
-		    viper-vi-intercept-map value 'viper-intercept-ESC-key))
-		))
-	    (buffer-list))
-	   (set-default symbol value)
-           )))
+(defvar viper-ESC-key (kbd "ESC")
+  "Key used to ESC.")
 
 
 ;;; Variables used by minor modes
@@ -339,8 +304,8 @@ If running in a terminal, [(escape)] is not understood, so must use \"\\e\"."
 (define-key viper-vi-basic-map "\C-m" 'viper-next-line-at-bol)
 (define-key viper-vi-basic-map "\C-u" 'viper-scroll-down)
 (define-key viper-vi-basic-map "\C-y" 'viper-scroll-down-one)
-(define-key viper-vi-basic-map "\C-s" 'viper-isearch-forward)
-(define-key viper-vi-basic-map "\C-r" 'viper-isearch-backward)
+;;(define-key viper-vi-basic-map "\C-s" 'viper-isearch-forward)
+;;(define-key viper-vi-basic-map "\C-r" 'viper-isearch-backward)
 (define-key viper-vi-basic-map "\C-c/" 'viper-toggle-search-style)
 (define-key viper-vi-basic-map "\C-c\C-g" 'viper-info-on-file)
 
@@ -686,14 +651,12 @@ Arguments: (major-mode viper-state keymap)"
 
 (defun viper-add-keymap (mapsrc mapdst)
   "Add contents of mapsrc to mapdst.  It is assumed that mapsrc is sparse."
-  (viper-cond-compile-for-xemacs-or-emacs
-   ;; xemacs
-   (map-keymap (lambda (key binding) (define-key mapdst key binding))
-	       mapsrc)
-   ;; emacs
-   (mapcar (lambda (p) (define-key mapdst (vector (car p)) (cdr p)))
-	   (cdr mapsrc))
-   ))
+  (if (featurep 'xemacs)
+      ;; Emacs 22 has map-keymap.
+      (map-keymap (lambda (key binding) (define-key mapdst key binding))
+		  mapsrc)
+    (mapc (lambda (p) (define-key mapdst (vector (car p)) (cdr p)))
+	  (cdr mapsrc))))
 
 (defun viper-modify-keymap (map alist)
    "Modifies MAP with bindings specified in the ALIST.  The alist has the
@@ -702,10 +665,13 @@ form ((key . function) (key . function) ... )."
 	   alist))
 
 
-;;; Local Variables:
-;;; eval: (put 'viper-deflocalvar 'lisp-indent-hook 'defun)
-;;; End:
+(provide 'viper-keym)
 
 
-;;; arch-tag: 43af4b2f-0bea-400b-889e-221ebc00acb1
+;; Local Variables:
+;; eval: (put 'viper-deflocalvar 'lisp-indent-hook 'defun)
+;; End:
+
+
+;; arch-tag: 43af4b2f-0bea-400b-889e-221ebc00acb1
 ;;; viper-keym.el ends here

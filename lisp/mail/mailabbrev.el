@@ -1,19 +1,20 @@
 ;;; mailabbrev.el --- abbrev-expansion of mail aliases
 
 ;; Copyright (C) 1985, 1986, 1987, 1992, 1993, 1996, 1997, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
-;; Author: Jamie Zawinski <jwz@lucid.com>, now <jwz@jwz.org>
+;; Author: Jamie Zawinski <jwz@lucid.com; now jwz@jwz.org>
 ;; Maintainer: FSF
 ;; Created: 19 Oct 90
 ;; Keywords: mail
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -117,7 +116,7 @@
 ;; If you want multiple addresses separated by a string other than ", " then
 ;; you can set the variable mail-alias-separator-string to it.  This has to
 ;; be a comma bracketed by whitespace if you want any kind of reasonable
-;; behaviour.
+;; behavior.
 ;;
 ;; Thanks to Harald Hanche-Olsen, Michael Ernst, David Loeffler, and
 ;; Noah Friedman for suggestions and bug reports.
@@ -133,19 +132,16 @@
   "Expand mail aliases as abbrevs, in certain mail headers."
   :group 'abbrev-mode)
 
-(defcustom mail-abbrevs-mode nil
-  "*Non-nil means expand mail aliases as abbrevs, in certain message headers."
-  :type 'boolean
+;;;###autoload
+(define-minor-mode mail-abbrevs-mode
+  "Non-nil means expand mail aliases as abbrevs, in certain message headers."
+  :global t
   :group 'mail-abbrev
-  :require 'mailabbrev
-  :set (lambda (symbol value)
-	 (setq mail-abbrevs-mode value)
-	 (if value (mail-abbrevs-enable) (mail-abbrevs-disable)))
-  :initialize 'custom-initialize-default
-  :version "20.3")
+  :version "20.3"
+  (if mail-abbrevs-mode (mail-abbrevs-enable) (mail-abbrevs-disable)))
 
 (defcustom mail-abbrevs-only nil
-  "*Non-nil means only mail abbrevs should expand automatically.
+  "Non-nil means only mail abbrevs should expand automatically.
 Other abbrevs expand only when you explicitly use `expand-abbrev'."
   :type 'boolean
   :group 'mail-abbrev)
@@ -179,8 +175,7 @@ no aliases, which is represented by this being a table with no entries.)")
 	      (nth 5 (file-attributes mail-personal-alias-file)))
 	(build-mail-abbrevs)))
   (mail-abbrevs-sync-aliases)
-  (add-hook 'pre-abbrev-expand-hook 'sendmail-pre-abbrev-expand-hook
-	    nil t)
+  (add-hook 'abbrev-expand-functions 'mail-abbrev-expand-wrapper nil t)
   (abbrev-mode 1))
 
 (defun mail-abbrevs-enable ()
@@ -201,64 +196,56 @@ By default this is the file specified by `mail-personal-alias-file'."
     (setq mail-abbrevs nil)
     (define-abbrev-table 'mail-abbrevs '()))
   (message "Parsing %s..." file)
-  (let ((buffer nil)
-	(obuf (current-buffer)))
-    (unwind-protect
-	(progn
-	  (setq buffer (generate-new-buffer " mailrc"))
-	  (buffer-disable-undo buffer)
-	  (set-buffer buffer)
-	  (cond ((get-file-buffer file)
-		 (insert (save-excursion
-			   (set-buffer (get-file-buffer file))
-			   (buffer-substring (point-min) (point-max)))))
-		((not (file-exists-p file)))
-		(t (insert-file-contents file)))
-	  ;; Don't lose if no final newline.
-	  (goto-char (point-max))
-	  (or (eq (preceding-char) ?\n) (newline))
-	  (goto-char (point-min))
-	  ;; Delete comments from the file
-	  (while (search-forward "# " nil t)
-	    (let ((p (- (point) 2)))
-	      (end-of-line)
-	      (delete-region p (point))))
-	  (goto-char (point-min))
-	  ;; handle "\\\n" continuation lines
-	  (while (not (eobp))
-	    (end-of-line)
-	    (if (= (preceding-char) ?\\)
-		(progn (delete-char -1) (delete-char 1) (insert ?\ ))
-	        (forward-char 1)))
-	  (goto-char (point-min))
-	  (while (re-search-forward
-		  "^\\(a\\(lias\\)?\\|g\\(roup\\)?\\|source\\)[ \t]+" nil t)
-	    (beginning-of-line)
-	    (if (looking-at "source[ \t]+\\([^ \t\n]+\\)")
-		(progn
-		  (end-of-line)
-		  (build-mail-abbrevs
-		   (substitute-in-file-name
-		    (buffer-substring (match-beginning 1) (match-end 1)))
-		   t))
-	      (re-search-forward "[ \t]+\\([^ \t\n]+\\)")
-	      (let* ((name (buffer-substring
-			    (match-beginning 1) (match-end 1)))
-		     (start (progn (skip-chars-forward " \t") (point))))
-		(end-of-line)
-;		(message "** %s \"%s\"" name (buffer-substring start (point)))(sit-for 1)
-		(define-mail-abbrev
-		    name
-		    (buffer-substring start (point))
-		    t))))
-	  ;; Resolve forward references in .mailrc file.
-	  ;; This would happen automatically before the first abbrev was
-	  ;; expanded, but why not do it now.
-	  (or recursivep (mail-resolve-all-aliases))
-	  mail-abbrevs)
-      (if buffer (kill-buffer buffer))
-      (set-buffer obuf)))
-    (message "Parsing %s... done" file))
+  (with-temp-buffer
+    (buffer-disable-undo)
+    (cond ((get-file-buffer file)
+           (insert (with-current-buffer (get-file-buffer file)
+                     (buffer-substring (point-min) (point-max)))))
+          ((not (file-exists-p file)))
+          (t (insert-file-contents file)))
+    ;; Don't lose if no final newline.
+    (goto-char (point-max))
+    (or (eq (preceding-char) ?\n) (newline))
+    (goto-char (point-min))
+    ;; Delete comments from the file
+    (while (search-forward "# " nil t)
+      (let ((p (- (point) 2)))
+        (end-of-line)
+        (delete-region p (point))))
+    (goto-char (point-min))
+    ;; handle "\\\n" continuation lines
+    (while (not (eobp))
+      (end-of-line)
+      (if (= (preceding-char) ?\\)
+          (progn (delete-char -1) (delete-char 1) (insert ?\ ))
+        (forward-char 1)))
+    (goto-char (point-min))
+    (while (re-search-forward
+            "^\\(a\\(lias\\)?\\|g\\(roup\\)?\\|source\\)[ \t]+" nil t)
+      (beginning-of-line)
+      (if (looking-at "source[ \t]+\\([^ \t\n]+\\)")
+          (progn
+            (end-of-line)
+            (build-mail-abbrevs
+             (substitute-in-file-name
+              (buffer-substring (match-beginning 1) (match-end 1)))
+             t))
+        (re-search-forward "[ \t]+\\([^ \t\n]+\\)")
+        (let* ((name (buffer-substring
+                      (match-beginning 1) (match-end 1)))
+               (start (progn (skip-chars-forward " \t") (point))))
+          (end-of-line)
+          ;; (message "** %s \"%s\"" name (buffer-substring start (point)))(sit-for 1)
+          (define-mail-abbrev
+            name
+            (buffer-substring start (point))
+            t))))
+    ;; Resolve forward references in .mailrc file.
+    ;; This would happen automatically before the first abbrev was
+    ;; expanded, but why not do it now.
+    (or recursivep (mail-resolve-all-aliases))
+    mail-abbrevs)
+  (message "Parsing %s... done" file))
 
 (defvar mail-alias-separator-string ", "
   "*A string inserted between addresses in multi-address mail aliases.
@@ -275,49 +262,78 @@ also want something like \",\\n    \" to get each address on its own line.")
 ;;;###autoload
 (defun define-mail-abbrev (name definition &optional from-mailrc-file)
   "Define NAME as a mail alias abbrev that translates to DEFINITION.
-If DEFINITION contains multiple addresses, separate them with commas."
+If DEFINITION contains multiple addresses, separate them with commas.
+
+Optional argument FROM-MAILRC-FILE means that DEFINITION comes
+from a mailrc file.  In that case, addresses are separated with
+spaces and addresses with embedded spaces are surrounded by
+double-quotes."
   ;; When this is called from build-mail-abbrevs, the third argument is
   ;; true, and we do some evil space->comma hacking like /bin/mail does.
   (interactive "sDefine mail alias: \nsDefine %s as mail alias for: ")
   ;; Read the defaults first, if we have not done so.
-  (if (vectorp mail-abbrevs)
-      nil
-    (setq mail-abbrevs nil)
-    (define-abbrev-table 'mail-abbrevs '())
-    (if (file-exists-p mail-personal-alias-file)
-	(build-mail-abbrevs)))
+  (unless (vectorp mail-abbrevs) (build-mail-abbrevs))
   ;; strip garbage from front and end
   (if (string-match "\\`[ \t\n,]+" definition)
       (setq definition (substring definition (match-end 0))))
   (if (string-match "[ \t\n,]+\\'" definition)
       (setq definition (substring definition 0 (match-beginning 0))))
-  (let* ((result '())
-	 (L (length definition))
+  (let* ((L (length definition))
 	 (start (if (> L 0) 0))
-	 end)
+	 end this-entry result)
     (while start
-      ;; If we're reading from the mailrc file, then addresses are delimited
-      ;; by spaces, and addresses with embedded spaces must be surrounded by
-      ;; double-quotes.  Otherwise, addresses are separated by commas.
-      (if from-mailrc-file
-	  (if (eq ?\" (aref definition start))
-	      (setq start (1+ start)
-		    end (string-match "\"[ \t,]*" definition start))
-	    (setq end (string-match "[ \t,]+" definition start)))
-	(setq end (string-match "[ \t\n,]*,[ \t\n,]*" definition start)))
-      (let ((tem (substring definition start end)))
-	;; Advance the loop past this address.
-	(setq start (and end
-			 (/= (match-end 0) L)
-			 (match-end 0)))
+      (cond
+       (from-mailrc-file
+	;; If we're reading from the mailrc file, addresses are
+	;; delimited by spaces, and addresses with embedded spaces are
+	;; surrounded by non-escaped double-quotes.
+	(if (eq ?\" (aref definition start))
+	    (setq start (1+ start)
+		  end (and (string-match
+			    "[^\\]\\(\\([\\][\\]\\)*\\)\"[ \t,]*"
+			    definition start)
+			   (match-end 1)))
+	  (setq end (string-match "[ \t,]+" definition start)))
+	;; Extract the address and advance the loop past it.
+	(setq this-entry (substring definition start end)
+	      start (and end (/= (match-end 0) L) (match-end 0)))
 	;; If the full name contains a problem character, quote it.
-	(when (string-match "\\(.+?\\)[ \t]*\\(<.*>\\)" tem)
-	  (if (string-match "[^- !#$%&'*+/0-9=?A-Za-z^_`{|}~]"
-			    (match-string 1 tem))
-	      (setq tem (replace-regexp-in-string
-			 "\\(.+?\\)[ \t]*\\(<.*>\\)" "\"\\1\" \\2"
-			 tem))))
-	(push tem result)))
+	(and (string-match "\\(.+?\\)[ \t]*\\(<.*>\\)" this-entry)
+	     (string-match "[^- !#$%&'*+/0-9=?A-Za-z^_`{|}~]"
+			   (match-string 1 this-entry))
+	     (setq this-entry (replace-regexp-in-string
+			       "\\(.+?\\)[ \t]*\\(<.*>\\)"
+			       "\"\\1\" \\2"
+			       this-entry)))
+	(push this-entry result))
+       ;; When we are not reading from .mailrc, addresses are
+       ;; separated by commas.  Try to accept a rfc822-like syntax.
+       ;; (Todo: extend rfc822.el to do the work for us.)
+       ((equal (string-match
+		"[ \t,]*\\(\"\\(?:[^\"]\\|[^\\]\\(?:[\\][\\]\\)*\"\\)*\"[ \t]*\
+<[-.!#$%&'*+/0-9=?A-Za-z^_`{|}~@]+>\\)[ \t,]*"
+		definition start)
+	       start)
+	;; If an entry has a valid [ "foo bar" <foo@example.com> ]
+	;; form, use it literally .  This also allows commas in the
+	;; quoted string, e.g.  [ "foo bar, jr" <foo@example.com> ]
+	(push (match-string 1 definition) result)
+	(setq start (and (/= (match-end 0) L) (match-end 0))))
+       (t
+	;; Otherwise, read the next address by looking for a comma.
+	(setq end (string-match "[ \t\n,]*,[ \t\n]*" definition start))
+	(setq this-entry (substring definition start end))
+	;; Advance the loop past this address.
+	(setq start (and end (/= (match-end 0) L) (match-end 0)))
+	;; If the full name contains a problem character, quote it.
+	(and (string-match "\\(.+?\\)[ \t]*\\(<.*>\\)" this-entry)
+	     (string-match "[^- !#$%&'*+/0-9=?A-Za-z^_`{|}~]"
+			   (match-string 1 this-entry))
+	     (setq this-entry (replace-regexp-in-string
+			       "\\(.+?\\)[ \t]*\\(<.*>\\)" "\"\\1\" \\2"
+			       this-entry)))
+	(push this-entry result))))
+
     (setq definition (mapconcat (function identity)
 				(nreverse result)
 				mail-alias-separator-string)))
@@ -454,72 +470,58 @@ of a mail alias.  The value is set up, buffer-local, when first needed.")
 	    (rfc822-goto-eoh)
 	    (point)))))))
 
-(defun sendmail-pre-abbrev-expand-hook ()
-  (and (and mail-abbrevs (not (eq mail-abbrevs t)))
-       (if (mail-abbrev-in-expansion-header-p)
+(defun mail-abbrev-expand-wrapper (expand)
+  (if (and mail-abbrevs (not (eq mail-abbrevs t)))
+      (if (mail-abbrev-in-expansion-header-p)
 
-	   ;; We are in a To: (or CC:, or whatever) header, and
-	   ;; should use word-abbrevs to expand mail aliases.
-	   (let ((local-abbrev-table mail-abbrevs)
-		 (old-syntax-table (syntax-table)))
+          ;; We are in a To: (or CC:, or whatever) header, and
+          ;; should use word-abbrevs to expand mail aliases.
+          (let ((local-abbrev-table mail-abbrevs))
 
-	     ;; Before anything else, resolve aliases if they need it.
-	     (and mail-abbrev-aliases-need-to-be-resolved
-		  (mail-resolve-all-aliases))
+            ;; Before anything else, resolve aliases if they need it.
+            (and mail-abbrev-aliases-need-to-be-resolved
+                 (mail-resolve-all-aliases))
 
-	     ;; Now proceed with the abbrev section.
-	     ;;   -  We already installed mail-abbrevs as the abbrev table.
-	     ;;   -  Then install the mail-abbrev-syntax-table, which
-	     ;;      temporarily marks all of the
-	     ;;      non-alphanumeric-atom-characters (the "_"
-	     ;;      syntax ones) as being normal word-syntax.  We do this
-	     ;;      because the C code for expand-abbrev only works on words,
-	     ;;      and we want these characters to be considered words for
-	     ;;      the purpose of abbrev expansion.
-	     ;;   -  Then we call expand-abbrev again, recursively, to do
-	     ;;      the abbrev expansion with the above syntax table.
-	     ;;   -  Restore the previous syntax table.
-	     ;;   -  Then we do a trick which tells the expand-abbrev frame
-	     ;;      which invoked us to not continue (and thus not
-	     ;;      expand twice.) This means that any abbrev expansion
-	     ;;      will happen as a result of this function's call to
-	     ;;      expand-abbrev, and not as a result of the call to
-	     ;;      expand-abbrev which invoked *us*.
+            ;; Now proceed with the abbrev section.
+            ;;   -  We already installed mail-abbrevs as the abbrev table.
+            ;;   -  Then install the mail-abbrev-syntax-table, which
+            ;;      temporarily marks all of the
+            ;;      non-alphanumeric-atom-characters (the "_"
+            ;;      syntax ones) as being normal word-syntax.  We do this
+            ;;      because the C code for expand-abbrev only works on words,
+            ;;      and we want these characters to be considered words for
+            ;;      the purpose of abbrev expansion.
+            ;;   -  Then we call the expand function, to do
+            ;;      the abbrev expansion with the above syntax table.
 
-	     (mail-abbrev-make-syntax-table)
+            (mail-abbrev-make-syntax-table)
 
-	     ;; If the character just typed was non-alpha-symbol-syntax,
-	     ;; then don't expand the abbrev now (that is, don't expand
-	     ;; when the user types -.)  Check the character's syntax in
-	     ;; the usual syntax table.
+            ;; If the character just typed was non-alpha-symbol-syntax,
+            ;; then don't expand the abbrev now (that is, don't expand
+            ;; when the user types -.)  Check the character's syntax in
+            ;; the usual syntax table.
 
-	     (or (and (integerp last-command-char)
-		      ;; Some commands such as M-> may want to expand first.
-		      (equal this-command 'self-insert-command)
-		      (or (eq (char-syntax last-command-char) ?_)
-			  ;; Don't expand on @.
-			  (memq last-command-char '(?@ ?. ?% ?! ?_ ?-))))
-		 (let ((pre-abbrev-expand-hook nil)) ; That's us; don't loop.
-		   ;; Use this table so that abbrevs can have hyphens in them.
-		   (set-syntax-table mail-abbrev-syntax-table)
-		   (unwind-protect
-		       (expand-abbrev)
-		     ;; Now set it back to what it was before.
-		     (set-syntax-table old-syntax-table))))
-	     (setq abbrev-start-location (point-max) ; This is the trick.
-		   abbrev-start-location-buffer (current-buffer)))
+            (or (and (integerp last-command-event)
+                     ;; Some commands such as M-> may want to expand first.
+                     (equal this-command 'self-insert-command)
+                     (or (eq (char-syntax last-command-event) ?_)
+                         ;; Don't expand on @.
+                         (memq last-command-event '(?@ ?. ?% ?! ?_ ?-))))
+                ;; Use this table so that abbrevs can have hyphens in them.
+                (with-syntax-table mail-abbrev-syntax-table
+                  (funcall expand))))
 
-	 (if (or (not mail-abbrevs-only)
-		 (eq this-command 'expand-abbrev))
-	     ;; We're not in a mail header where mail aliases should
-	     ;; be expanded, then use the normal mail-mode abbrev table
-	     ;; (if any) and the normal mail-mode syntax table.
-	     nil
-	   ;; This is not a mail abbrev, and we should not expand it.
-	   ;; This kludge stops expand-abbrev from doing anything.
-	   (setq abbrev-start-location (point-max)
-		 abbrev-start-location-buffer (current-buffer))))
-       ))
+        (if (or (not mail-abbrevs-only)
+                (eq this-command 'expand-abbrev))
+            ;; We're not in a mail header where mail aliases should
+            ;; be expanded, then use the normal mail-mode abbrev table
+            ;; (if any) and the normal mail-mode syntax table.
+            (funcall expand)
+          ;; This is not a mail abbrev, and we should not expand it.
+          ;; Don't expand anything.
+          nil))
+    ;; No mail-abbrevs at all, do the normal thing.
+    (funcall expand)))
 
 ;;; utilities
 
@@ -568,14 +570,11 @@ of a mail alias.  The value is set up, buffer-local, when first needed.")
   (interactive)
   (mail-abbrev-make-syntax-table)
   (let* ((end (point))
-	 (syntax-table (syntax-table))
-	 (beg (unwind-protect
-		  (save-excursion
-		    (set-syntax-table mail-abbrev-syntax-table)
-		    (backward-word 1)
-		    (point))
-		(set-syntax-table syntax-table)))
-	 (alias (buffer-substring beg end))
+	 (beg (with-syntax-table mail-abbrev-syntax-table
+                (save-excursion
+                  (backward-word 1)
+                  (point))))
+         (alias (buffer-substring beg end))
 	 (completion (try-completion alias mail-abbrevs)))
     (cond ((eq completion t)
 	   (message "%s" alias))	; confirm
@@ -593,39 +592,26 @@ of a mail alias.  The value is set up, buffer-local, when first needed.")
 		alias))))))
 
 (defun mail-abbrev-next-line (&optional arg)
-  "Expand any mail abbrev, then move cursor vertically down ARG lines.
-If there is no character in the target line exactly under the current column,
-the cursor is positioned after the character in that line which spans this
-column, or at the end of the line if it is not long enough.
-If there is no line in the buffer after this one,
-a newline character is inserted to create a line
-and the cursor moves to that line.
+  "Expand a mail abbrev before point, then move vertically down ARG lines.
+This only expands an abbrev (if one is present) if called with
+point at the end of a line, or on whitespace before the end of a line.
 
-The command \\[set-goal-column] can be used to create
-a semipermanent goal column to which this command always moves.
-Then it does not try to move vertically.  This goal column is stored
-in `goal-column', which is nil when there is none.
-
-If you are thinking of using this in a Lisp program, consider
-using `forward-line' instead.  It is usually easier to use
-and more reliable (no dependence on goal column, etc.)."
+In terms of line motion, this behaves like `next-line', which see."
   (interactive "p")
   (if (looking-at "[ \t]*\n") (expand-abbrev))
   (setq this-command 'next-line)
-  (next-line arg))
+  (with-no-warnings (next-line arg)))
 
 (defun mail-abbrev-end-of-buffer (&optional arg)
-  "Expand any mail abbrev, then move point to end of buffer.
-Leave mark at previous position.
-With arg N, put point N/10 of the way from the true end.
+  "Expand a mail abbrev before point, then move to the end of the buffer.
+This only expands an abbrev (if one is present) if called with
+point at the end of a line, or on whitespace before the end of a line.
 
-Don't use this command in Lisp programs!
-\(goto-char (point-max)) is faster and avoids clobbering the mark."
+In other respects, this behaves like `end-of-buffer', which see."
   (interactive "P")
   (if (looking-at "[ \t]*\n") (expand-abbrev))
   (setq this-command 'end-of-buffer)
-  (with-no-warnings
-   (end-of-buffer arg)))
+  (with-no-warnings (end-of-buffer arg)))
 
 (eval-after-load "sendmail"
   '(progn
@@ -638,8 +624,5 @@ Don't use this command in Lisp programs!
 
 (provide 'mailabbrev)
 
-(if mail-abbrevs-mode
-    (mail-abbrevs-enable))
-
-;;; arch-tag: 5aa2d901-73f8-4ad7-b73c-4802282ad2ff
+;; arch-tag: 5aa2d901-73f8-4ad7-b73c-4802282ad2ff
 ;;; mailabbrev.el ends here

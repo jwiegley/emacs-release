@@ -1,4 +1,4 @@
-Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
   Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
@@ -7,7 +7,7 @@ This directory contains Calc, an advanced desk calculator for GNU
 Emacs.
 
 "Calc"  Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004, 
-   2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+   2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 Written by:
 	Dave Gillespie
@@ -72,6 +72,29 @@ opinions.
 Summary of changes to "Calc"
 ------- -- ------- --  ----
 
+Emacs 23.1:
+
+* Gave `j *' (cal-sel-mult-both-sides) an option to expand the
+  denominator.
+
+* Use `calc-embedded-word-regexp' for finding words in
+  `calc-embedded-word' in place of delimiters.
+
+* Remove version numbering; use Emacs version for reference.
+
+* Added support for using registers.
+
+* Added support for Yacas, Maxima and Giac languages.
+
+* Added a menu.
+
+* Added logistic non-linear curves to curve-fitting.
+
+* Added option of plotting data points and curve when curve-fitting.
+
+* Made unit conversions exact when possible.
+
+* Lowered the precedence of negation.
 
 Version 2.1:
 
@@ -231,10 +254,10 @@ Version 2.00:
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -242,6 +265,4 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to the
-Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.

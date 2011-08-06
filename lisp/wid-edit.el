@@ -1,7 +1,7 @@
 ;;; wid-edit.el --- Functions for creating and using widgets -*-byte-compile-dynamic: t;-*-
 ;;
-;; Copyright (C) 1996, 1997, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1996, 1997, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
+;;   2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 ;;
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Wishlist items (from widget.texi):
 
@@ -200,7 +198,7 @@ For a larger number of items, the minibuffer is used."
   :type 'integer)
 
 (defcustom widget-menu-minibuffer-flag nil
-  "*Control how to ask for a choice from the keyboard.
+  "Control how to ask for a choice from the keyboard.
 Non-nil means use the minibuffer;
 nil means read a single character."
   :group 'widgets
@@ -601,7 +599,7 @@ respectively."
 ;;; Images.
 
 (defcustom widget-image-directory (file-name-as-directory
-				   (expand-file-name "custom" data-directory))
+				   (expand-file-name "images/custom" data-directory))
   "Where widget button images are located.
 If this variable is nil, widget will try to locate the directory
 automatically."
@@ -664,11 +662,7 @@ button is pressed or inactive, respectively.  These are currently ignored."
   (if (and (display-graphic-p)
 	   (setq image (widget-image-find image)))
       (progn (widget-put widget :suppress-face t)
-	     (insert-image image
-			   (propertize
-                            ;; Use a `list' so it's unique and won't get
-                            ;; accidentally merged with neighbouring images.
-			    tag 'mouse-face (list widget-button-pressed-face))))
+	     (insert-image image tag))
     (insert tag)))
 
 (defun widget-move-and-invoke (event)
@@ -862,7 +856,9 @@ button end points."
 
 ;;; Keymap and Commands.
 
-;;;###autoload
+;; This alias exists only so that one can choose in doc-strings (e.g.
+;; Custom-mode) which key-binding of widget-keymap one wants to refer to.
+;; http://lists.gnu.org/archive/html/emacs-devel/2008-11/msg00480.html
 (defalias 'advertised-widget-backward 'widget-backward)
 
 ;;;###autoload
@@ -874,7 +870,9 @@ button end points."
     (define-key map [backtab] 'widget-backward)
     (define-key map [down-mouse-2] 'widget-button-click)
     (define-key map [down-mouse-1] 'widget-button-click)
-    (define-key map "\C-m" 'widget-button-press)
+    ;; The following definition needs to avoid using escape sequences that
+    ;; might get converted to ^M when building loaddefs.el
+    (define-key map [(control ?m)] 'widget-button-press)
     map)
   "Keymap containing useful binding for buffers containing widgets.
 Recommended as a parent keymap for modes using widgets.")
@@ -1450,7 +1448,7 @@ The value of the :type attribute should be an unconverted widget type."
 
 (defun widget-default-complete (widget)
   "Call the value of the :complete-function property of WIDGET.
-If that does not exists, call the value of `widget-complete-field'."
+If that does not exist, call the value of `widget-complete-field'."
   (call-interactively (or (widget-get widget :complete-function)
 			  widget-complete-field)))
 
@@ -1503,6 +1501,8 @@ If that does not exists, call the value of `widget-complete-field'."
 		      (delete-backward-char 1))
 		    (insert ?\n)
 		    (setq doc-end (point)))))
+	       ((eq escape ?h)
+		(widget-add-documentation-string-button widget))
 	       ((eq escape ?v)
 		(if (and button-begin (not button-end))
 		    (widget-apply widget :value-create)
@@ -1528,44 +1528,7 @@ If that does not exists, call the value of `widget-complete-field'."
   (widget-clear-undo))
 
 (defun widget-default-format-handler (widget escape)
-  ;; We recognize the %h escape by default.
-  (let* ((buttons (widget-get widget :buttons)))
-    (cond ((eq escape ?h)
-	   (let* ((doc-property (widget-get widget :documentation-property))
-		  (doc-try (cond ((widget-get widget :doc))
-				 ((functionp doc-property)
-				  (funcall doc-property
-					   (widget-get widget :value)))
-				 ((symbolp doc-property)
-				  (documentation-property
-				   (widget-get widget :value)
-				   doc-property))))
-		  (doc-text (and (stringp doc-try)
-				 (> (length doc-try) 1)
-				 doc-try))
-		  (doc-indent (widget-get widget :documentation-indent)))
-	     (when doc-text
-	       (and (eq (preceding-char) ?\n)
-		    (widget-get widget :indent)
-		    (insert-char ?\s (widget-get widget :indent)))
-	       ;; The `*' in the beginning is redundant.
-	       (when (eq (aref doc-text  0) ?*)
-		 (setq doc-text (substring doc-text 1)))
-	       ;; Get rid of trailing newlines.
-	       (when (string-match "\n+\\'" doc-text)
-		 (setq doc-text (substring doc-text 0 (match-beginning 0))))
-	       (push (widget-create-child-and-convert
-		      widget 'documentation-string
-		      :indent (cond ((numberp doc-indent )
-				     doc-indent)
-				    ((null doc-indent)
-				     nil)
-				    (t 0))
-		      doc-text)
-		     buttons))))
-	  (t
-	   (error "Unknown escape `%c'" escape)))
-    (widget-put widget :buttons buttons)))
+  (error "Unknown escape `%c'" escape))
 
 (defun widget-default-button-face-get (widget)
   ;; Use :button-face or widget-button-face
@@ -1677,12 +1640,31 @@ If that does not exists, call the value of `widget-complete-field'."
   (widget-default-action widget event))
 
 (defun widget-default-prompt-value (widget prompt value unbound)
-  "Read an arbitrary value.  Stolen from `set-variable'."
-;; (let ((initial (if unbound
-;; nil
-;; It would be nice if we could do a `(cons val 1)' here.
-;; (prin1-to-string (custom-quote value))))))
+  "Read an arbitrary value."
   (eval-minibuffer prompt))
+
+(defun widget-docstring (widget)
+  "Return the documentation string specificied by WIDGET, or nil if none.
+If WIDGET has a `:doc' property, that specifies the documentation string.
+Otherwise, try the `:documentation-property' property.  If this
+is a function, call it with the widget's value as an argument; if
+it is a symbol, use this symbol together with the widget's value
+as the argument to `documentation-property'."
+  (let ((doc (or (widget-get widget :doc)
+		 (let ((doc-prop (widget-get widget :documentation-property))
+		       (value (widget-get widget :value)))
+		   (cond ((functionp doc-prop)
+			  (funcall doc-prop value))
+			 ((symbolp doc-prop)
+			  (documentation-property value doc-prop)))))))
+    (when (and (stringp doc) (> (length doc) 0))
+      ;; Remove any redundant `*' in the beginning.
+      (when (eq (aref doc 0) ?*)
+	(setq doc (substring doc 1)))
+      ;; Remove trailing newlines.
+      (when (string-match "\n+\\'" doc)
+	(setq doc (substring doc 0 (match-beginning 0))))
+      doc)))
 
 ;;; The `item' Widget.
 
@@ -1787,7 +1769,7 @@ If END is omitted, it defaults to the length of LIST."
   "An embedded link."
   :button-prefix 'widget-link-prefix
   :button-suffix 'widget-link-suffix
-  :follow-link "\C-m"
+  :follow-link 'mouse-face
   :help-echo "Follow the link."
   :format "%[%t%]")
 
@@ -2925,7 +2907,8 @@ link for that string."
   "A documentation string."
   :format "%v"
   :action 'widget-documentation-string-action
-  :value-create 'widget-documentation-string-value-create)
+  :value-create 'widget-documentation-string-value-create
+  :visibility-widget 'visibility)
 
 (defun widget-documentation-string-value-create (widget)
   ;; Insert documentation string.
@@ -2937,11 +2920,13 @@ link for that string."
 	(let ((before (substring doc 0 (match-beginning 0)))
 	      (after (substring doc (match-beginning 0)))
 	      button)
+	  (when (and indent (not (zerop indent)))
+	    (insert-char ?\s indent))
 	  (insert before ?\s)
 	  (widget-documentation-link-add widget start (point))
 	  (setq button
 		(widget-create-child-and-convert
-		 widget 'visibility
+		 widget (widget-get widget :visibility-widget)
 		 :help-echo "Show or hide rest of the documentation."
 		 :on "Hide Rest"
 		 :off "More"
@@ -2955,6 +2940,8 @@ link for that string."
 	    (insert after)
 	    (widget-documentation-link-add widget start (point)))
 	  (widget-put widget :buttons (list button)))
+      (when (and indent (not (zerop indent)))
+	(insert-char ?\s indent))
       (insert doc)
       (widget-documentation-link-add widget start (point))))
   (insert ?\n))
@@ -2966,6 +2953,29 @@ link for that string."
 		(not (widget-get parent :documentation-shown))))
   ;; Redraw.
   (widget-value-set widget (widget-value widget)))
+
+(defun widget-add-documentation-string-button (widget &rest args)
+  "Insert a new `documentation-string' widget based on WIDGET.
+The new widget becomes a child of WIDGET, and is also added to
+its `:buttons' list.  The documentation string is found from
+WIDGET using the function `widget-docstring'.
+Optional ARGS specifies additional keyword arguments for the
+`documentation-string' widget."
+  (let ((doc (widget-docstring widget))
+	(indent (widget-get widget :indent))
+	(doc-indent (widget-get widget :documentation-indent)))
+    (when doc
+      (and (eq (preceding-char) ?\n)
+	   indent
+	   (insert-char ?\s indent))
+      (unless (or (numberp doc-indent) (null doc-indent))
+	(setq doc-indent 0))
+      (widget-put widget :buttons
+		  (cons (apply 'widget-create-child-and-convert
+			       widget 'documentation-string
+			       :indent doc-indent
+			       (nconc args (list doc)))
+			(widget-get widget :buttons))))))
 
 ;;; The Sexp Widgets.
 
@@ -3011,6 +3021,43 @@ as the value."
   :format "%{%t%}: %v"
   :complete-function 'ispell-complete-word
   :prompt-history 'widget-string-prompt-value-history)
+
+(defvar widget)
+
+(defun widget-string-complete ()
+  "Complete contents of string field.
+Completions are taken from the :completion-alist property of the
+widget.  If that isn't a list, it's evalled and expected to yield a list."
+  (interactive)
+  (let* ((prefix (buffer-substring-no-properties (widget-field-start widget)
+						 (point)))
+	 (completion-ignore-case (widget-get widget :completion-ignore-case))
+	 (alist (widget-get widget :completion-alist))
+	 (_ (unless (listp alist)
+	      (setq alist (eval alist))))
+	 (completion (try-completion prefix alist)))
+    (cond ((eq completion t)
+	   (when completion-ignore-case
+	     ;; Replace field with completion in case its case is different.
+	     (delete-region (widget-field-start widget)
+			    (widget-field-end widget))
+	     (insert-and-inherit (car (assoc-string prefix alist t))))
+	   (message "Only match"))
+	  ((null completion)
+	   (error "No match"))
+	  ((not (eq t (compare-strings prefix nil nil completion nil nil
+				       completion-ignore-case)))
+	   (when completion-ignore-case
+	     ;; Replace field with completion in case its case is different.
+	     (delete-region (widget-field-start widget)
+			    (widget-field-end widget))
+	     (insert-and-inherit completion)))
+	  (t
+	   (message "Making completion list...")
+	   (with-output-to-temp-buffer "*Completions*"
+	     (display-completion-list
+	      (all-completions prefix alist nil)))
+	   (message "Making completion list...done")))))
 
 (define-widget 'regexp 'string
   "A regular expression."
@@ -3168,16 +3215,13 @@ It reads a directory name from an editable text field."
 		       (interactive)
 		       (lisp-complete-symbol 'boundp))
   :tag "Variable")
-
-(defvar widget-coding-system-prompt-value-history nil
-  "History of input to `widget-coding-system-prompt-value'.")
 
 (define-widget 'coding-system 'symbol
   "A MULE coding-system."
   :format "%{%t%}: %v"
   :tag "Coding system"
   :base-only nil
-  :prompt-history 'widget-coding-system-prompt-value-history
+  :prompt-history 'coding-system-value-history
   :prompt-value 'widget-coding-system-prompt-value
   :action 'widget-coding-system-action
   :complete-function (lambda ()
@@ -3256,7 +3300,7 @@ It reads a directory name from an editable text field."
       (setq unread-command-events (cons ev unread-command-events)
 	    ev (read-quoted-char (format "Enter code (radix %d)" read-quoted-char-radix))
 	    tr nil)
-      (if (and (integerp ev) (not (char-valid-p ev)))
+      (if (and (integerp ev) (not (characterp ev)))
 	  (insert (char-to-string ev))))  ;; throw invalid char error
     (setq ev (key-description (list ev)))
     (when (arrayp tr)
@@ -3417,7 +3461,7 @@ To use this type, you must define :match or :match-alternatives."
 			   (aref value 0)
 			 value))
   :match (lambda (widget value)
-	   (char-valid-p value)))
+	   (characterp value)))
 
 (define-widget 'list 'group
   "A Lisp list."
@@ -3696,7 +3740,8 @@ example:
   (require 'facemenu)			; for facemenu-color-alist
   (let* ((prefix (buffer-substring-no-properties (widget-field-start widget)
 						 (point)))
-	 (list (or facemenu-color-alist (defined-colors)))
+	 (list (or facemenu-color-alist
+		   (sort (defined-colors) 'string-lessp)))
 	 (completion (try-completion prefix list)))
     (cond ((eq completion t)
 	   (message "Exact match."))
@@ -3751,5 +3796,5 @@ example:
 
 (provide 'wid-edit)
 
-;;; arch-tag: a076e75e-18a1-4b46-8be5-3f317bcbc707
+;; arch-tag: a076e75e-18a1-4b46-8be5-3f317bcbc707
 ;;; wid-edit.el ends here

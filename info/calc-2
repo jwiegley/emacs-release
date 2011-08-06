@@ -1,27 +1,52 @@
-This is ../info/calc, produced by makeinfo version 4.11 from calc.texi.
+This is ../../info/calc, produced by makeinfo version 4.11 from
+calc.texi.
 
 This file documents Calc, the GNU Emacs calculator.
 
-   Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008 Free Software Foundation, Inc.
+Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+2008, 2009 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
-     Version 1.2 or any later version published by the Free Software
+     Version 1.3 or any later version published by the Free Software
      Foundation; with the Invariant Sections being just "GNU GENERAL
      PUBLIC LICENSE", with the Front-Cover texts being "A GNU Manual,"
      and with the Back-Cover Texts as in (a) below.  A copy of the
      license is included in the section entitled "GNU Free
      Documentation License."
 
-     (a) The FSF's Back-Cover Text is: "You have freedom to copy and
-     modify this GNU Manual, like GNU software.  Copies published by
-     the Free Software Foundation raise funds for GNU development."
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual.  Buying copies from the FSF supports it in
+     developing GNU and promoting software freedom."
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Calc: (calc).         Advanced desk calculator and mathematical tool.
 END-INFO-DIR-ENTRY
+
+
+File: calc,  Node: Introduction,  Next: Data Types,  Prev: Tutorial,  Up: Top
+
+5 Introduction
+**************
+
+This chapter is the beginning of the Calc reference manual.  It covers
+basic concepts such as the stack, algebraic and numeric entry, undo,
+numeric prefix arguments, etc.
+
+* Menu:
+
+* Basic Commands::
+* Help Commands::
+* Stack Basics::
+* Numeric Entry::
+* Algebraic Entry::
+* Quick Calculator::
+* Prefix Arguments::
+* Undo::
+* Error Messages::
+* Multiple Calculators::
+* Troubleshooting Commands::
 
 
 File: calc,  Node: Basic Commands,  Next: Help Commands,  Prev: Introduction,  Up: Introduction
@@ -52,6 +77,11 @@ for some commands this is the only form.  As a convenience, the `x' key
 (`calc-execute-extended-command') is like `M-x' except that it enters
 the initial string `calc-' for you.  For example, the following key
 sequences are equivalent: `S', `M-x calc-sin <RET>', `x sin <RET>'.
+
+   Although Calc is designed to be used from the keyboard, some of
+Calc's more common commands are available from a menu.  In the menu, the
+arguments to the functions are given by referring to their stack level
+numbers.
 
    The Calculator exists in many parts.  When you type `C-x * c', the
 Emacs "auto-load" mechanism will bring in only the first part, which
@@ -134,11 +164,6 @@ positive prefix argument, `C-x * 0' preserves the contents of the stack
 but resets everything else to its initial state; with a negative prefix
 argument, `C-x * 0' preserves the contents of the stack but resets
 everything else to its default state.
-
-   The `M-x calc-version' command displays the current version number
-of Calc and the name of the person who installed it on your system.
-(This information is also present in the `*Calc Trail*' buffer, and in
-the output of the `h h' command.)
 
 
 File: calc,  Node: Help Commands,  Next: Stack Basics,  Prev: Basic Commands,  Up: Introduction
@@ -310,19 +335,22 @@ File: calc,  Node: Algebraic Entry,  Next: Quick Calculator,  Prev: Numeric Entr
 5.5 Algebraic Entry
 ===================
 
-Calculations can also be entered in algebraic form.  This is
-accomplished by typing the apostrophe key, `'', followed by the
-expression in standard format:  `<'> 2+3*4 <RET>' computes `2+(3*4) =
-14' and pushes that on the stack.  If you wish you can ignore the RPN
-aspect of Calc altogether and simply enter algebraic expressions in
-this way.  You may want to use <DEL> every so often to clear previous
-results off the stack.
+The `'' (`calc-algebraic-entry') command can be used to enter
+calculations in algebraic form.  This is accomplished by typing the
+apostrophe key, ', followed by the expression in standard format:
+
+     ' 2+3*4 <RET>.
+
+This will compute `2+(3*4) = 14' and push it on the stack.  If you wish
+you can ignore the RPN aspect of Calc altogether and simply enter
+algebraic expressions in this way.  You may want to use <DEL> every so
+often to clear previous results off the stack.
 
    You can press the apostrophe key during normal numeric entry to
 switch the half-entered number into Algebraic entry mode.  One reason
-to do this would be to use the full Emacs cursor motion and editing
-keys, which are available during algebraic entry but not during numeric
-entry.
+to do this would be to fix a typo, as the full Emacs cursor motion and
+editing keys are available during algebraic entry but not during
+numeric entry.
 
    In the same vein, during either numeric or algebraic entry you can
 press ``' (backquote) to switch to `calc-edit' mode, where you complete
@@ -448,9 +476,9 @@ the evaluation is stored in that Calc variable.  *Note Store and
 Recall::.
 
    If the result is an integer and the current display radix is decimal,
-the number will also be displayed in hex and octal formats.  If the
-integer is in the range from 1 to 126, it will also be displayed as an
-ASCII character.
+the number will also be displayed in hex, octal and binary formats.  If
+the integer is in the range from 1 to 126, it will also be displayed as
+an ASCII character.
 
    For example, the quoted character `"x"' produces the vector result
 `[120]' (because 120 is the ASCII code of the lower-case `x'; *note
@@ -1211,14 +1239,41 @@ been invented.  Thus the claim that day number -10000 is called "August
 Calc's internal numbering scheme.
 
    Another day counting system in common use is, confusingly, also
-called "Julian."  It was invented in 1583 by Joseph Justus Scaliger,
-who named it in honor of his father Julius Caesar Scaliger.  For
-obscure reasons he chose to start his day numbering on Jan 1, 4713 BC
-at noon, which in Calc's scheme is -1721423.5 (recall that Calc starts
-at midnight instead of noon).  Thus to convert a Calc date code
-obtained by unpacking a date form into a Julian day number, simply add
-1721423.5.  The Julian code for `6:00am Jan 9, 1991' is 2448265.75.
-The built-in `t J' command performs this conversion for you.
+called "Julian."  The Julian day number is the numbers of days since
+12:00 noon (GMT) on Jan 1, 4713 BC, which in Calc's scheme (in GMT) is
+-1721423.5 (recall that Calc starts at midnight instead of noon).  Thus
+to convert a Calc date code obtained by unpacking a date form into a
+Julian day number, simply add 1721423.5 after compensating for the time
+zone difference.  The built-in `t J' command performs this conversion
+for you.
+
+   The Julian day number is based on the Julian cycle, which was
+invented in 1583 by Joseph Justus Scaliger.  Scaliger named it the
+Julian cycle since it is involves the Julian calendar, but some have
+suggested that Scaliger named it in honor of his father, Julius Caesar
+Scaliger.  The Julian cycle is based it on three other cycles: the
+indiction cycle, the Metonic cycle, and the solar cycle.  The indiction
+cycle is a 15 year cycle originally used by the Romans for tax purposes
+but later used to date medieval documents.  The Metonic cycle is a 19
+year cycle; 19 years is close to being a common multiple of a solar year
+and a lunar month, and so every 19 years the phases of the moon will
+occur on the same days of the year.  The solar cycle is a 28 year
+cycle; the Julian calendar repeats itself every 28 years.  The smallest
+time period which contains multiples of all three cycles is the least
+common multiple of 15 years, 19 years and 28 years, which (since
+they're pairwise relatively prime) is 15*19*28 = 7980 years.  This is
+the length of a Julian cycle.  Working backwards, the previous year in
+which all three cycles began was 4713 BC, and so Scalinger chose that
+year as the beginning of a Julian cycle.  Since at the time there were
+no historical records from before 4713 BC, using this year as a
+starting point had the advantage of avoiding negative year numbers.  In
+1849, the astronomer John Herschel (son of William Herschel) suggested
+using the number of days since the beginning of the Julian cycle as an
+astronomical dating system; this idea was taken up by other
+astronomers.  (At the time, noon was the start of the astronomical day.
+Herschel originally suggested counting the days since Jan 1, 4713 BC at
+noon Alexandria time; this was later amended to noon GMT.)  Julian day
+numbering is largely used in astronomy.
 
    The Unix operating system measures time as an integer number of
 seconds since midnight, Jan 1, 1970.  To convert a Calc date value into
@@ -1562,8 +1617,7 @@ to lowest precedence, and with their equivalent function names, are:
 
    postfix `%' [`percent'] (as in `25% = 0.25');
 
-   prefix `+' and `-' [`neg'] (as in `-x') and prefix `!' [`lnot']
-(logical "not," as in `!x');
+   prefix `!' [`lnot'] (logical "not," as in `!x');
 
    `+/-' [`sdev'] (the standard deviation symbol) and `mod' [`makemod']
 (the symbol for modulo forms);
@@ -1572,6 +1626,8 @@ to lowest precedence, and with their equivalent function names, are:
 [`dfact'] (double factorial);
 
    `^' [`pow'] (raised-to-the-power-of);
+
+   prefix `+' and `-' [`neg'] (as in `-x');
 
    `*' [`mul'];
 
@@ -1780,11 +1836,12 @@ File: calc,  Node: Editing Stack Entries,  Next: Trail Commands,  Prev: Stack Ma
 7.2 Editing Stack Entries
 =========================
 
-The backquote, ``' (`calc-edit') command creates a temporary buffer
-(`*Calc Edit*') for editing the top-of-stack value using regular Emacs
-commands.  With a numeric prefix argument, it edits the specified
-number of stack entries at once.  (An argument of zero edits the entire
-stack; a negative argument edits one specific stack entry.)
+The ``' (`calc-edit') command creates a temporary buffer (`*Calc
+Edit*') for editing the top-of-stack value using regular Emacs
+commands.  Note that ``' is a backquote, not a quote. With a numeric
+prefix argument, it edits the specified number of stack entries at
+once.  (An argument of zero edits the entire stack; a negative argument
+edits one specific stack entry.)
 
    When you are done editing, press `C-c C-c' to finish and return to
 Calc.  The <RET> and <LFD> keys also work to finish most sorts of
@@ -3572,6 +3629,9 @@ shifted letter key.
 * C FORTRAN Pascal::
 * TeX and LaTeX Language Modes::
 * Eqn Language Mode::
+* Yacas Language Mode::
+* Maxima Language Mode::
+* Giac Language Mode::
 * Mathematica Language Mode::
 * Maple Language Mode::
 * Compositions::
@@ -3701,14 +3761,14 @@ equivalents.  Vectors are written as `/1, 2, 3/', and may be entered
 this way or using square brackets.  Since FORTRAN uses round
 parentheses for both function calls and array subscripts, Calc displays
 both in the same way; `a(i)' is interpreted as a function call upon
-reading, and subscripts must be entered as `subscr(a, i)'.  Also, if
-the variable `a' has been declared to have type `vector' or `matrix'
-then `a(i)' will be parsed as a subscript.  (*Note Declarations::.)
-Usually it doesn't matter, though; if you enter the subscript
-expression `a(i)' and Calc interprets it as a function call, you'll
-never know the difference unless you switch to another language mode or
-replace `a' with an actual vector (or unless `a' happens to be the name
-of a built-in function!).
+reading, and subscripts must be entered as `subscr(a, i)'.  If the
+variable `a' has been declared to have type `vector' or `matrix',
+however,  then `a(i)' will be parsed as a subscript.  (*Note
+Declarations::.)  Usually it doesn't matter, though; if you enter the
+subscript expression `a(i)' and Calc interprets it as a function call,
+you'll never know the difference unless you switch to another language
+mode or replace `a' with an actual vector (or unless `a' happens to be
+the name of a built-in function!).
 
    Underscores are allowed in variable and function names in all of
 these language modes.  The underscore here is equivalent to the `#' in
@@ -3735,12 +3795,12 @@ engine.  Calc's LaTeX language mode can read any formula that the TeX
 language mode can, although LaTeX mode may display it differently.
 
    Formulas are entered and displayed in the appropriate notation;
-`sin(a/b)' will appear as `\sin\left( a \over b \right)' in TeX mode and
-`\sin\left(\frac{a}{b}\right)' in LaTeX mode.  Math formulas are often
-enclosed by `$ $' signs in TeX and LaTeX; these should be omitted when
-interfacing with Calc.  To Calc, the `$' sign has the same meaning it
-always does in algebraic formulas (a reference to an existing entry on
-the stack).
+`sin(a/b)' will appear as `\sin\left( {a \over b} \right)' in TeX mode
+and `\sin\left(\frac{a}{b}\right)' in LaTeX mode.  Math formulas are
+often enclosed by `$ $' signs in TeX and LaTeX; these should be omitted
+when interfacing with Calc.  To Calc, the `$' sign has the same meaning
+it always does in algebraic formulas (a reference to an existing entry
+on the stack).
 
    Complex numbers are displayed as in `3 + 4i'.  Fractions and
 quotients are written using `\over' in TeX mode (as in `{a \over b}')
@@ -3880,7 +3940,7 @@ as `*'.
 end of this section.
 
 
-File: calc,  Node: Eqn Language Mode,  Next: Mathematica Language Mode,  Prev: TeX and LaTeX Language Modes,  Up: Language Modes
+File: calc,  Node: Eqn Language Mode,  Next: Yacas Language Mode,  Prev: TeX and LaTeX Language Modes,  Up: Language Modes
 
 8.8.4 Eqn Language Mode
 -----------------------
@@ -3951,9 +4011,80 @@ generated instead of `ccol' if the matrix justification mode so
 specifies.
 
 
-File: calc,  Node: Mathematica Language Mode,  Next: Maple Language Mode,  Prev: Eqn Language Mode,  Up: Language Modes
+File: calc,  Node: Yacas Language Mode,  Next: Maxima Language Mode,  Prev: Eqn Language Mode,  Up: Language Modes
 
-8.8.5 Mathematica Language Mode
+8.8.5 Yacas Language Mode
+-------------------------
+
+The `d Y' (`calc-yacas-language') command selects the conventions of
+Yacas, a free computer algebra system.  While the operators and
+functions in Yacas are similar to those of Calc, the names of built-in
+functions in Yacas are capitalized.  The Calc formula `sin(2 x)', for
+example, is entered and displayed `Sin(2 x)' in Yacas mode,  and
+``arcsin(x^2)' is `ArcSin(x^2)' in Yacas mode.  Complex numbers are
+written  are written `3 + 4 I'.  The standard special constants are
+written `Pi', `E', `I', `GoldenRatio' and `Gamma'.  `Infinity'
+represents both `inf' and `uinf', and `Undefined' represents `nan'.
+
+   Certain operators on functions, such as `D' for differentiation and
+`Integrate' for integration, take a prefix form in Yacas.  For example,
+the derivative of `e^x sin(x)' can be computed with
+`D(x) Exp(x)*Sin(x)'.
+
+   Other notable differences between Yacas and standard Calc expressions
+are that vectors and matrices use curly braces in Yacas, and subscripts
+use square brackets.  If, for example, `A' represents the list
+`{a,2,c,4}', then `A[3]' would equal `c'.
+
+
+File: calc,  Node: Maxima Language Mode,  Next: Giac Language Mode,  Prev: Yacas Language Mode,  Up: Language Modes
+
+8.8.6 Maxima Language Mode
+--------------------------
+
+The `d X' (`calc-maxima-language') command selects the conventions of
+Maxima, another free computer algebra system.  The function names in
+Maxima are similar, but not always identical, to Calc.  For example,
+instead of `arcsin(x)', Maxima will use `asin(x)'.  Complex numbers are
+written `3 + 4 %i'.  The standard special constants are written `%pi',
+`%e', `%i', `%phi' and `%gamma'.  In Maxima,  `inf' means the same as
+in Calc, but `infinity' represents Calc's `uinf'.
+
+   Underscores as well as percent signs are allowed in function and
+variable names in Maxima mode.  The underscore again is equivalent to
+the `#' in Normal mode, and the percent sign is equivalent to `o'o'.
+
+   Maxima uses square brackets for lists and vectors, and matrices are
+written as calls to the function `matrix', given the row vectors of the
+matrix as arguments.  Square brackets are also used as subscripts.
+
+
+File: calc,  Node: Giac Language Mode,  Next: Mathematica Language Mode,  Prev: Maxima Language Mode,  Up: Language Modes
+
+8.8.7 Giac Language Mode
+------------------------
+
+The `d A' (`calc-giac-language') command selects the conventions of
+Giac, another free computer algebra system.  The function names in Giac
+are similar to Maxima.  Complex numbers are written `3 + 4 i'.  The
+standard special constants in Giac are the same as in Calc, except that
+`infinity' represents both Calc's `inf' and `uinf'.
+
+   Underscores are allowed in function and variable names in Giac mode.
+Brackets are used for subscripts.  In Giac, indexing of lists begins at
+0, instead of 1 as in Calc.  So if  `A' represents the list
+`[a,2,c,4]', then `A[2]' would equal `c'.  In general, `A[n]' in Giac
+mode corresponds to `A_(n+1)' in Normal mode.
+
+   The Giac interval notation `2 .. 3' has no surrounding brackets;
+Calc reads `2 .. 3' as the closed interval `[2 .. 3]' and writes any
+kind of interval as `2 .. 3'.  This means you cannot see the difference
+between an open and a closed interval while in Giac mode.
+
+
+File: calc,  Node: Mathematica Language Mode,  Next: Maple Language Mode,  Prev: Giac Language Mode,  Up: Language Modes
+
+8.8.8 Mathematica Language Mode
 -------------------------------
 
 The `d M' (`calc-mathematica-language') command selects the conventions
@@ -3973,7 +4104,7 @@ use double square brackets: `a[[i]]'.
 
 File: calc,  Node: Maple Language Mode,  Next: Compositions,  Prev: Mathematica Language Mode,  Up: Language Modes
 
-8.8.6 Maple Language Mode
+8.8.9 Maple Language Mode
 -------------------------
 
 The `d W' (`calc-maple-language') command selects the conventions of
@@ -3990,10 +4121,8 @@ pass through Calc.  As a special case, matrices are written as calls to
 the function `matrix', given a list of lists as the argument, and can
 be read in this form or with all-capitals `MATRIX'.
 
-   The Maple interval notation `2 .. 3' has no surrounding brackets;
-Calc reads `2 .. 3' as the closed interval `[2 .. 3]', and writes any
-kind of interval as `2 .. 3'.  This means you cannot see the difference
-between an open and a closed interval while in Maple display mode.
+   The Maple interval notation `2 .. 3' is like Giac's interval
+notation, and is handled the same by Calc.
 
    Maple writes complex numbers as `3 + 4*I'.  Its special constants
 are `Pi', `E', `I', and `infinity' (all three of `inf', `uinf', and
@@ -4007,8 +4136,8 @@ various quote symbols, procedures and functional operators, and inert
 
 File: calc,  Node: Compositions,  Next: Syntax Tables,  Prev: Maple Language Mode,  Up: Language Modes
 
-8.8.7 Compositions
-------------------
+8.8.10 Compositions
+-------------------
 
 There are several "composition functions" which allow you to get
 displays in a variety of formats similar to those in Big language mode.
@@ -4044,8 +4173,8 @@ language modes.
 
 File: calc,  Node: Composition Basics,  Next: Horizontal Compositions,  Prev: Compositions,  Up: Compositions
 
-8.8.7.1 Composition Basics
-..........................
+8.8.10.1 Composition Basics
+...........................
 
 Compositions are generally formed by stacking formulas together
 horizontally or vertically in various ways.  Those formulas are
@@ -4073,15 +4202,15 @@ that `(a * b) + c' will be formatted without the parentheses, but `a *
    The operator table used by normal and Big language modes has the
 following precedences:
 
-     _     1200   (subscripts)
-     %     1100   (as in n%)
-     -     1000   (as in -n)
-     !     1000   (as in !n)
+     _     1200    (subscripts)
+     %     1100    (as in n%)
+     !     1000    (as in !n)
      mod    400
      +/-    300
      !!     210    (as in n!!)
      !      210    (as in n!)
      ^      200
+     -      197    (as in -n)
      *      195    (or implicit multiplication)
      / % \  190
      + -    180    (as in a+b)
@@ -4160,8 +4289,8 @@ surrounding object.
 
 File: calc,  Node: Horizontal Compositions,  Next: Vertical Compositions,  Prev: Composition Basics,  Up: Compositions
 
-8.8.7.2 Horizontal Compositions
-...............................
+8.8.10.2 Horizontal Compositions
+................................
 
 The `choriz' function takes a vector of objects and composes them
 horizontally.  For example, `choriz([17, a b/c, d])' formats as
@@ -4195,8 +4324,8 @@ baselines of the component compositions, which are all aligned.
 
 File: calc,  Node: Vertical Compositions,  Next: Other Compositions,  Prev: Horizontal Compositions,  Up: Compositions
 
-8.8.7.3 Vertical Compositions
-.............................
+8.8.10.3 Vertical Compositions
+..............................
 
 The `cvert' function makes a vertical composition.  Each component of
 the vector is centered in a column.  The baseline of the result is by
@@ -4266,8 +4395,8 @@ Vertical compositions do not support separator strings.
 
 File: calc,  Node: Other Compositions,  Next: Information about Compositions,  Prev: Vertical Compositions,  Up: Compositions
 
-8.8.7.4 Other Compositions
-..........................
+8.8.10.4 Other Compositions
+...........................
 
 The `csup' function builds a superscripted expression.  For example,
 `csup(a, b)' looks the same as `a^b' does in Big language mode.  This
@@ -4322,8 +4451,8 @@ a/b) + ctspace(2, a/b) + cbspace(2, a/b)' displays as:
 
 File: calc,  Node: Information about Compositions,  Next: User-Defined Compositions,  Prev: Other Compositions,  Up: Compositions
 
-8.8.7.5 Information about Compositions
-......................................
+8.8.10.5 Information about Compositions
+.......................................
 
 The functions in this section are actual functions; they compose their
 arguments according to the current language and other display modes,
@@ -4349,8 +4478,8 @@ return zero is `cvspace(0)' or equivalents.
 
 File: calc,  Node: User-Defined Compositions,  Prev: Information about Compositions,  Up: Compositions
 
-8.8.7.6 User-Defined Compositions
-.................................
+8.8.10.6 User-Defined Compositions
+..................................
 
 The `Z C' (`calc-user-define-composition') command lets you define the
 display format for any algebraic function.  You provide a formula
@@ -4456,8 +4585,8 @@ command (*note Creating User Keys::).
 
 File: calc,  Node: Syntax Tables,  Prev: Compositions,  Up: Language Modes
 
-8.8.8 Syntax Tables
--------------------
+8.8.11 Syntax Tables
+--------------------
 
 Syntax tables do for input what compositions do for output:  They allow
 you to teach custom notations to Calc's formula parser.  Calc keeps a
@@ -4483,8 +4612,8 @@ settings; *note General Mode Commands::.
 
 File: calc,  Node: Syntax Table Basics,  Next: Precedence in Syntax Tables,  Prev: Syntax Tables,  Up: Syntax Tables
 
-8.8.8.1 Syntax Table Basics
-...........................
+8.8.11.1 Syntax Table Basics
+............................
 
 "Parsing" is the process of converting a raw string of characters, such
 as you would type in during algebraic entry, into a Calc formula.
@@ -4611,8 +4740,8 @@ rest of the line to be ignored as a comment.
 
 File: calc,  Node: Precedence in Syntax Tables,  Next: Advanced Syntax Patterns,  Prev: Syntax Table Basics,  Up: Syntax Tables
 
-8.8.8.2 Precedence
-..................
+8.8.11.2 Precedence
+...................
 
 Different operators are generally assigned different "precedences".  By
 default, an operator defined by a rule like
@@ -4640,8 +4769,8 @@ language modes, look in the Calc source file `calc-lang.el'.
 
 File: calc,  Node: Advanced Syntax Patterns,  Next: Conditional Syntax Rules,  Prev: Precedence in Syntax Tables,  Up: Syntax Tables
 
-8.8.8.3 Advanced Syntax Patterns
-................................
+8.8.11.3 Advanced Syntax Patterns
+.................................
 
 To match a function with a variable number of arguments, you could write
 
@@ -4737,8 +4866,8 @@ matched before finalizing the choice.
 
 File: calc,  Node: Conditional Syntax Rules,  Prev: Advanced Syntax Patterns,  Up: Syntax Tables
 
-8.8.8.4 Conditional Syntax Rules
-................................
+8.8.11.4 Conditional Syntax Rules
+.................................
 
 It is possible to attach a "condition" to a syntax rule.  For example,
 the rules
@@ -4891,11 +5020,11 @@ mode line, the highlighted bar that appears under the Calc stack window
 
    The basic mode line format is:
 
-     --%%-Calc: 12 Deg OTHER MODES       (Calculator)
+     --%*-Calc: 12 Deg OTHER MODES       (Calculator)
 
-   The `%%' is the Emacs symbol for "read-only"; it shows that regular
-Emacs commands are not allowed to edit the stack buffer as if it were
-text.
+   The `%*' indicates that the buffer is "read-only"; it shows that
+regular Emacs commands are not allowed to edit the stack buffer as if
+it were text.
 
    The word `Calc:' changes to `CalcEmbed:' if Embedded mode is
 enabled.  The words after this describe the various Calc modes that are
@@ -5219,9 +5348,24 @@ intervals are multiplied they are considered to be statistically
 independent; thus, `[-2 .. 3] * [-2 .. 3]' is `[-6 .. 9]', whereas
 `[-2 .. 3] ^ 2' is `[0 .. 9]'.
 
-   The `/' (`calc-divide') command divides two numbers.  Note that when
-using algebraic entry, `/' has lower precedence than `*', so that
-`a/b*c' is interpreted as `a/(b*c)'.
+   The `/' (`calc-divide') command divides two numbers.
+
+   When combining multiplication and division in an algebraic formula,
+it is good style to use parentheses to distinguish between possible
+interpretations; the expression `a/b*c' should be written `(a/b)*c' or
+`a/(b*c)', as appropriate.  Without the parentheses, Calc will
+interpret `a/b*c' as `a/(b*c)', since in algebraic entry Calc gives
+division a lower precedence than multiplication. (This is not standard
+across all computer languages, and Calc may change the precedence
+depending on the language mode being used.  *Note Language Modes::.)
+This default ordering can be changed by setting the customizable
+variable `calc-multiplication-has-precedence' to `nil' (*note
+Customizing Calc::); this will give multiplication and division equal
+precedences.  Note that Calc's default choice of precedence allows `a b
+/ c d' to be used as a shortcut for
+     a b
+     ---.
+     c d
 
    When dividing a scalar `B' by a square matrix `A', the computation
 performed is `B' times the inverse of `A'.  This also occurs if `B' is
@@ -5671,8 +5815,8 @@ number in the range `[0 .. 60)'.  The last two arguments default to
 zero if omitted.
 
    The `t J' (`calc-julian') [`julian'] command converts a date form
-into a Julian day count, which is the number of days since noon on Jan
-1, 4713 BC.  A pure date is converted to an integer Julian count
+into a Julian day count, which is the number of days since noon (GMT)
+on Jan 1, 4713 BC.  A pure date is converted to an integer Julian count
 representing noon of that day.  A date/time form is converted to an
 exact floating-point Julian count, adjusted to interpret the date form
 in the current time zone but the Julian day count in Greenwich Mean
@@ -6017,63 +6161,38 @@ this:
        ( "PDT" 8 -1 )   ; adjustment, then daylight saving adjustment.
        ( "PGT" 8 "PST" "PDT" ) )   ; Generalized time zone.
 
-   With no arguments, `calc-time-zone' or `tzone()' obtains an argument
-from the Calc variable `TimeZone' if a value has been stored for that
-variable.  If not, Calc runs the Unix `date' command and looks for one
-of the above time zone names in the output; if this does not succeed,
-`tzone()' leaves itself unevaluated.  The time zone name in the `date'
-output may be followed by a signed adjustment, e.g., `GMT+5' or
-`GMT+0500' which specifies a number of hours and minutes to be added to
-the base time zone.  Calc stores the time zone it finds into `TimeZone'
-to speed later calls to `tzone()'.
-
-   The special time zone name `local' is equivalent to no argument,
-i.e., it uses the local time zone as obtained from the `date' command.
-
-   If the time zone name found is one of the standard or daylight
-saving zone names from the above table, and Calc's internal daylight
-saving algorithm says that time and zone are consistent (e.g., `PDT'
-accompanies a date that Calc's algorithm would also consider to be
-daylight saving, or `PST' accompanies a date that Calc would consider
-to be standard time), then Calc substitutes the corresponding
-generalized time zone (like `PGT').
-
-   If your system does not have a suitable `date' command, you may wish
-to put a `(setq var-TimeZone ...)' in your Emacs initialization file to
-set the time zone.  (Since you are interacting with the variable
-`TimeZone' directly from Emacs Lisp, the `var-' prefix needs to be
-present.)  The easiest way to do this is to edit the `TimeZone'
-variable using Calc's `s T' command, then use the `s p'
+   With no arguments, `calc-time-zone' or `tzone()' will by default get
+the time zone and daylight saving information from the calendar (*note
+Calendar/Diary: (emacs)Daylight Saving.).  To use a different time
+zone, or if the calendar does not give the desired result, you can set
+the Calc variable `TimeZone' (which is by default `nil') to an
+appropriate time zone name.  (The easiest way to do this is to edit the
+`TimeZone' variable using Calc's `s T' command, then use the `s p'
 (`calc-permanent-variable') command to save the value of `TimeZone'
-permanently.
-
-   The `t J' and `t U' commands with no numeric prefix arguments do the
-same thing as `tzone()'.  If the current time zone is a generalized
+permanently.)  If the time zone given by `TimeZone' is a generalized
 time zone, e.g., `EGT', Calc examines the date being converted to tell
 whether to use standard or daylight saving time.  But if the current
 time zone is explicit, e.g., `EST' or `EDT', then that adjustment is
 used exactly and Calc's daylight saving algorithm is not consulted.
+The special time zone name `local' is equivalent to no argument; i.e.,
+it uses the information obtained from the calendar.
 
-   Some places don't follow the usual rules for daylight saving time.
-The state of Arizona, for example, does not observe daylight saving
-time.  If you run Calc during the winter season in Arizona, the Unix
-`date' command will report `MST' time zone, which Calc will change to
-`MGT'.  If you then convert a time that lies in the summer months, Calc
-will apply an incorrect daylight saving time adjustment.  To avoid
-this, set your `TimeZone' variable explicitly to `MST' to force the use
-of standard, non-daylight-saving time.
+   The `t J' and `t U' commands with no numeric prefix arguments do the
+same thing as `tzone()'; namely, use the information from the calendar
+if `TimeZone' is `nil', otherwise use the time zone given by `TimeZone'.
 
-   By default Calc always considers daylight saving time to begin at 2
-a.m. on the second Sunday of March (for years from 2007 on) or on the
-last Sunday in April (for years before 2007), and to end at 2 a.m.  on
-the first Sunday of November. (for years from 2007 on) or the last
-Sunday in October (for years before 2007).  These are the rules that
-have been in effect in much of North America since 1966 and takes into
-account the rule change that began in 2007.  If you are in a country
-that uses different rules for computing daylight saving time, you have
-two choices:  Write your own daylight saving hook, or control time
-zones explicitly by setting the `TimeZone' variable and/or always
-giving a time-zone argument for the conversion functions.
+   When Calc computes the daylight saving information itself (i.e., when
+the `TimeZone' variable is set), it will by default consider daylight
+saving time to begin at 2 a.m. on the second Sunday of March (for years
+from 2007 on) or on the last Sunday in April (for years before 2007),
+and to end at 2 a.m. on the first Sunday of November. (for years from
+2007 on) or the last Sunday in October (for years before 2007).  These
+are the rules that have been in effect in much of North America since
+1966 and take into account the rule change that began in 2007.  If you
+are in a country that uses different rules for computing daylight
+saving time, you have two choices: Write your own daylight saving hook,
+or control time zones explicitly by setting the `TimeZone' variable
+and/or always giving a time-zone argument for the conversion functions.
 
    The Lisp variable `math-daylight-savings-hook' holds the name of a
 function that is used to compute the daylight saving adjustment for a
@@ -6154,10 +6273,6 @@ explicitly in or not in daylight saving time (e.g., `PDT' or `PST') the
 DATE is ignored.  If ZONE is a generalized time zone, the algorithms
 described above are used.  If ZONE is omitted, the computation is done
 for the current time zone.
-
-   *Note Reporting Bugs::, for the address of Calc's author, if you
-should wish to contribute your improved versions of `math-tzone-names'
-and `math-daylight-savings-hook' to the Calc distribution.
 
 
 File: calc,  Node: Financial Functions,  Next: Binary Functions,  Prev: Date Arithmetic,  Up: Arithmetic
@@ -6361,119 +6476,4 @@ command says how many payment values or vectors to take from the stack.
 
    The `I b N' [`npvb'] command computes the net present value where
 payments occur at the beginning of each interval rather than at the end.
-
-
-File: calc,  Node: Related Financial Functions,  Next: Depreciation Functions,  Prev: Present Value,  Up: Financial Functions
-
-9.6.4 Related Financial Functions
----------------------------------
-
-The functions in this section are basically inverses of the present
-value functions with respect to the various arguments.
-
-   The `b M' (`calc-fin-pmt') [`pmt'] command computes the amount of
-periodic payment necessary to amortize a loan.  Thus `pmt(RATE, N,
-AMOUNT)' equals the value of PAYMENT such that `pv(RATE, N, PAYMENT) =
-AMOUNT'.
-
-   The `I b M' [`pmtb'] command does the same computation but using
-`pvb' instead of `pv'.  Like `pv' and `pvb', these functions can also
-take a fourth argument which represents an initial lump-sum investment.
-
-   The `H b M' key just invokes the `fvl' function, which is the
-inverse of `pvl'.  There is no explicit `pmtl' function.
-
-   The `b #' (`calc-fin-nper') [`nper'] command computes the number of
-regular payments necessary to amortize a loan.  Thus `nper(RATE,
-PAYMENT, AMOUNT)' equals the value of N such that `pv(RATE, N, PAYMENT)
-= AMOUNT'.  If PAYMENT is too small ever to amortize a loan for AMOUNT
-at interest rate RATE, the `nper' function is left in symbolic form.
-
-   The `I b #' [`nperb'] command does the same computation but using
-`pvb' instead of `pv'.  You can give a fourth lump-sum argument to
-these functions, but the computation will be rather slow in the
-four-argument case.
-
-   The `H b #' [`nperl'] command does the same computation using `pvl'.
-By exchanging PAYMENT and AMOUNT you can also get the solution for
-`fvl'.  For example, `nperl(8%, 2000, 1000) = 9.006', so if you place
-$1000 in a bank account earning 8%, it will take nine years to grow to
-$2000.
-
-   The `b T' (`calc-fin-rate') [`rate'] command computes the rate of
-return on an investment.  This is also an inverse of `pv': `rate(N,
-PAYMENT, AMOUNT)' computes the value of RATE such that `pv(RATE, N,
-PAYMENT) = AMOUNT'.  The result is expressed as a formula like `6.3%'.
-
-   The `I b T' [`rateb'] and `H b T' [`ratel'] commands solve the
-analogous equations with `pvb' or `pvl' in place of `pv'.  Also, `rate'
-and `rateb' can accept an optional fourth argument just like `pv' and
-`pvb'.  To redo the above example from a different perspective,
-`ratel(9, 2000, 1000) = 8.00597%', which says you will need an interest
-rate of 8% in order to double your account in nine years.
-
-   The `b I' (`calc-fin-irr') [`irr'] command is the analogous function
-to `rate' but for net present value.  Its argument is a vector of
-payments.  Thus `irr(PAYMENTS)' computes the RATE such that `npv(RATE,
-PAYMENTS) = 0'; this rate is known as the "internal rate of return".
-
-   The `I b I' [`irrb'] command computes the internal rate of return
-assuming payments occur at the beginning of each period.
-
-
-File: calc,  Node: Depreciation Functions,  Next: Definitions of Financial Functions,  Prev: Related Financial Functions,  Up: Financial Functions
-
-9.6.5 Depreciation Functions
-----------------------------
-
-The functions in this section calculate "depreciation", which is the
-amount of value that a possession loses over time.  These functions are
-characterized by three parameters:  COST, the original cost of the
-asset; SALVAGE, the value the asset will have at the end of its
-expected "useful life"; and LIFE, the number of years (or other
-periods) of the expected useful life.
-
-   There are several methods for calculating depreciation that differ in
-the way they spread the depreciation over the lifetime of the asset.
-
-   The `b S' (`calc-fin-sln') [`sln'] command computes the
-"straight-line" depreciation.  In this method, the asset depreciates by
-the same amount every year (or period).  For example, `sln(12000, 2000,
-5)' returns 2000.  The asset costs $12000 initially and will be worth
-$2000 after five years; it loses $2000 per year.
-
-   The `b Y' (`calc-fin-syd') [`syd'] command computes the accelerated
-"sum-of-years'-digits" depreciation.  Here the depreciation is higher
-during the early years of the asset's life.  Since the depreciation is
-different each year, `b Y' takes a fourth PERIOD parameter which
-specifies which year is requested, from 1 to LIFE.  If PERIOD is
-outside this range, the `syd' function will return zero.
-
-   The `b D' (`calc-fin-ddb') [`ddb'] command computes an accelerated
-depreciation using the double-declining balance method.  It also takes
-a fourth PERIOD parameter.
-
-   For symmetry, the `sln' function will accept a PERIOD parameter as
-well, although it will ignore its value except that the return value
-will as usual be zero if PERIOD is out of range.
-
-   For example, pushing the vector `[1,2,3,4,5]' (perhaps with `v x 5')
-and then mapping `V M ' [sln(12000,2000,5,$), syd(12000,2000,5,$),
-ddb(12000,2000,5,$)] <RET>' produces a matrix that allows us to compare
-the three depreciation methods:
-
-     [ [ 2000, 3333, 4800 ]
-       [ 2000, 2667, 2880 ]
-       [ 2000, 2000, 1728 ]
-       [ 2000, 1333,  592 ]
-       [ 2000,  667,   0  ] ]
-
-(Values have been rounded to nearest integers in this figure.)  We see
-that `sln' depreciates by the same amount each year, `syd' depreciates
-more at the beginning and less at the end, and `ddb' weights the
-depreciation even more toward the beginning.
-
-   Summing columns with `V R : +' yields `[10000, 10000, 10000]'; the
-total depreciation in any method is (by definition) the difference
-between the cost and the salvage value.
 

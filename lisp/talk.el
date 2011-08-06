@@ -1,17 +1,17 @@
 ;;; talk.el --- allow several users to talk to each other through Emacs
 
 ;; Copyright (C) 1995, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: comm, frames
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -46,16 +44,36 @@ Each element has the form (DISPLAY FRAME BUFFER).")
   ;; Add the new buffers to all talk frames.
   (talk-update-buffers))
 
+;;;###autoload
+(defun talk ()
+  "Connect to the Emacs talk group from the current X display or tty frame."
+  (interactive)
+  (let ((type (frame-live-p (selected-frame)))
+	(display (frame-terminal (selected-frame))))
+    (if (or (eq type t) (eq type 'x))
+	(talk-add-display 
+	 (terminal-name (frame-terminal (selected-frame))))
+      (error "Unknown frame type")))
+  (talk-update-buffers))
+
 (defun talk-add-display (display)
   (let* ((elt (assoc display talk-display-alist))
 	 (name (concat "*talk-" display "*"))
-	 buffer frame)
-    (if (not (and elt (frame-live-p (setq frame (nth 1 elt)))))
-	(setq frame (make-frame-on-display display (list (cons 'name name)))))
+	 frame buffer)
+    (if (and elt (frame-live-p (nth 1 elt)))
+	(setq frame (nth 1 elt))
+      (setq frame (make-frame-on-display display (list (cons 'name name)))))
     (if (not (and elt (buffer-name (get-buffer (setq buffer (nth 2 elt))))))
 	(setq buffer (get-buffer-create name)))
+    (add-to-list 'delete-frame-functions 'talk-handle-delete-frame)
     (setq talk-display-alist
 	  (cons (list display frame buffer) (delq elt talk-display-alist)))))
+
+(defun talk-handle-delete-frame (frame)
+  (dolist (d talk-display-alist)
+    (when (eq (nth 1 d) frame)
+      (setq talk-display-alist (delq d talk-display-alist))
+      (talk-update-buffers))))
 
 (defun talk-disconnect ()
   "Disconnect this display from the Emacs talk group."
@@ -102,5 +120,5 @@ Select the first of these windows, displaying the first of the buffers."
 
 (provide 'talk)
 
-;;; arch-tag: 7ab0ad88-1788-4886-a44c-ae685e6f8a1a
+;; arch-tag: 7ab0ad88-1788-4886-a44c-ae685e6f8a1a
 ;;; talk.el ends here

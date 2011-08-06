@@ -1,18 +1,17 @@
 ;;; quail/croatian.el -- Quail package for inputing Croatian  -*-coding: iso-8859-2;-*-
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
-;; Author: Hrvoje Nik¹iæ <hniksic@xemacs.org>,
-;;         modeled after czech.el by Milan Zamazal.
+;; Author: Hrvoje Nik¹iæ <hniksic@xemacs.org>
 ;; Keywords: i18n
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +19,11 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; Modeled after czech.el by Milan Zamazal.
 
 ;;; Code:
 
@@ -196,4 +197,5 @@ dd -> ð"
  ("DD" ?Ð)
  ("Dd" ?Ð))
 
-;;; arch-tag: 8cb44078-9c51-4e81-9ef8-7d5b89f62e31
+;; arch-tag: 8cb44078-9c51-4e81-9ef8-7d5b89f62e31
+;;; croatian.el ends here

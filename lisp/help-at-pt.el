@@ -1,16 +1,16 @@
 ;;; help-at-pt.el --- local help through the keyboard
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Luc Teirlinck <teirllm@auburn.edu>
 ;; Keywords: help
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -75,8 +73,8 @@ can also be t, if that is the value of the `kbd-help' property."
 (defun help-at-pt-kbd-string ()
   "Return the keyboard help string at point.
 If the `kbd-help' text or overlay property at point produces a
-string, return it.  Otherwise, use the `help-echo' property.  If
-this produces no string either, return nil."
+string, return it.  Otherwise, use the `help-echo' property.
+If this produces no string either, return nil."
   (let ((kbd (help-at-pt-string t))
 	(echo (help-at-pt-string)))
     (if (and kbd (not (eq kbd t))) kbd echo)))
@@ -106,7 +104,7 @@ internally to enable `help-at-pt-display-when-idle'.  Do not set it
 yourself.")
 
 (defcustom help-at-pt-timer-delay 1
-  "*Delay before displaying local help.
+  "Delay before displaying local help.
 This is used if `help-at-pt-display-when-idle' is enabled.
 The value may be an integer or floating point number.
 
@@ -148,7 +146,7 @@ This is done by setting a timer, if none is currently active."
 
 ;;;###autoload
 (defcustom help-at-pt-display-when-idle 'never
-  "*Automatically show local help on point-over.
+  "Automatically show local help on point-over.
 If the value is t, the string obtained from any `kbd-help' or
 `help-echo' property at point is automatically printed in the
 echo area, if nothing else is already displayed there, or after a
@@ -346,13 +344,11 @@ rarely happens in practice."
 Print the help found there using `display-local-help'.  Adjacent
 areas with different non-nil help-echo properties are considered
 different regions.  With numeric argument ARG, behaves like
-`scan-buf-next-region' with argument -ARG.."
+`scan-buf-next-region' with argument -ARG."
   (interactive "p")
   (scan-buf-move-to-region 'help-echo (- arg) 'scan-buf-move-hook))
 
-(add-hook 'help-at-pt-unload-hook 'help-at-pt-cancel-timer)
-
 (provide 'help-at-pt)
 
-;;; arch-tag: d0b8b86d-d23f-45d0-a82d-208d6205a583
+;; arch-tag: d0b8b86d-d23f-45d0-a82d-208d6205a583
 ;;; help-at-pt.el ends here

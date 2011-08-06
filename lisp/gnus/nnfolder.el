@@ -1,7 +1,7 @@
 ;;; nnfolder.el --- mail folder access for Gnus
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Simon Josefsson <simon@josefsson.org> (adding MARKS)
 ;;      ShengHuo Zhu <zsh@cs.rochester.edu> (adding NOV)
@@ -12,10 +12,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,13 +23,15 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
+
+;; For Emacs < 22.2.
+(eval-and-compile
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest r))))
 
 (require 'nnheader)
 (require 'message)
@@ -40,9 +42,8 @@
 (require 'gnus-util)
 (require 'gnus-range)
 
-(eval-and-compile
-  (autoload 'gnus-article-unpropagatable-p "gnus-sum")
-  (autoload 'gnus-intersection "gnus-range"))
+;; FIXME not explicitly used in this file.
+(autoload 'gnus-article-unpropagatable-p "gnus-sum")
 
 (nnoo-declare nnfolder)
 
@@ -203,7 +204,7 @@ the group.  Then the marks file will be regenerated properly by Gnus.")
 			(goto-char (match-end 0))
 			(setq num (string-to-number
 				   (buffer-substring
-				    (point) (gnus-point-at-eol))))
+				    (point) (point-at-eol))))
 			(goto-char start)
 			(< num article)))
 		      ;; Check that we are before an article with a
@@ -213,7 +214,7 @@ the group.  Then the marks file will be regenerated properly by Gnus.")
 		      (progn
 			(setq num (string-to-number
 				   (buffer-substring
-				    (point) (gnus-point-at-eol))))
+				    (point) (point-at-eol))))
 			(> num article))
 		      ;; Discard any article numbers before the one we're
 		      ;; now looking at.
@@ -287,31 +288,36 @@ the group.  Then the marks file will be regenerated properly by Gnus.")
 		  (if (search-forward (concat "\n" nnfolder-article-marker)
 				      nil t)
 		      (string-to-number (buffer-substring
-				      (point) (gnus-point-at-eol)))
+				      (point) (point-at-eol)))
 		    -1))))))))
 
 (deffoo nnfolder-request-group (group &optional server dont-check)
   (nnfolder-possibly-change-group group server t)
   (save-excursion
-    (if (not (assoc group nnfolder-group-alist))
-	(nnheader-report 'nnfolder "No such group: %s" group)
-      (if dont-check
-	  (progn
-	    (nnheader-report 'nnfolder "Selected group %s" group)
-	    t)
-	(let* ((active (assoc group nnfolder-group-alist))
-	       (group (car active))
-	       (range (cadr active)))
-	  (cond
-	   ((null active)
-	    (nnheader-report 'nnfolder "No such group: %s" group))
-	   ((null nnfolder-current-group)
-	    (nnheader-report 'nnfolder "Empty group: %s" group))
-	   (t
-	    (nnheader-report 'nnfolder "Selected group %s" group)
-	    (nnheader-insert "211 %d %d %d %s\n"
-			     (1+ (- (cdr range) (car range)))
-			     (car range) (cdr range) group))))))))
+    (cond ((not (assoc group nnfolder-group-alist))
+	   (nnheader-report 'nnfolder "No such group: %s" group))
+	  ((file-directory-p (nnfolder-group-pathname group))
+	   (nnheader-report 'nnfolder "%s is a directory"
+			    (file-name-as-directory
+			     (let ((nnmail-pathname-coding-system nil))
+			       (nnfolder-group-pathname group)))))
+	  (dont-check
+	   (nnheader-report 'nnfolder "Selected group %s" group)
+	   t)
+	  (t
+	   (let* ((active (assoc group nnfolder-group-alist))
+		  (group (car active))
+		  (range (cadr active)))
+	     (cond
+	      ((null active)
+	       (nnheader-report 'nnfolder "No such group: %s" group))
+	      ((null nnfolder-current-group)
+	       (nnheader-report 'nnfolder "Empty group: %s" group))
+	      (t
+	       (nnheader-report 'nnfolder "Selected group %s" group)
+	       (nnheader-insert "211 %d %d %d %s\n"
+				(1+ (- (cdr range) (car range)))
+				(car range) (cdr range) group))))))))
 
 (deffoo nnfolder-request-scan (&optional group server)
   (nnfolder-possibly-change-group nil server)
@@ -371,13 +377,21 @@ the group.  Then the marks file will be regenerated properly by Gnus.")
 (deffoo nnfolder-request-create-group (group &optional server args)
   (nnfolder-possibly-change-group nil server)
   (nnmail-activate 'nnfolder)
-  (when (and group
-	     (not (assoc group nnfolder-group-alist)))
-    (push (list group (cons 1 0)) nnfolder-group-alist)
-    (nnfolder-save-active nnfolder-group-alist nnfolder-active-file)
-    (save-current-buffer
-      (nnfolder-read-folder group)))
-  t)
+  (cond ((zerop (length group))
+	 (nnheader-report 'nnfolder "Invalid (empty) group name"))
+	((file-directory-p (nnfolder-group-pathname group))
+	 (nnheader-report 'nnfolder "%s is a directory"
+			  (file-name-as-directory
+			   (let ((nnmail-pathname-coding-system nil))
+			     (nnfolder-group-pathname group)))))
+	((assoc group nnfolder-group-alist)
+	 t)
+	(t
+	 (push (list group (cons 1 0)) nnfolder-group-alist)
+	 (nnfolder-save-active nnfolder-group-alist nnfolder-active-file)
+	 (save-current-buffer
+	   (nnfolder-read-folder group))
+	 t)))
 
 (deffoo nnfolder-request-list (&optional server)
   (nnfolder-possibly-change-group nil server)
@@ -416,16 +430,21 @@ the group.  Then the marks file will be regenerated properly by Gnus.")
       ;; The article numbers are increasing, so this result is sorted.
 	(nreverse numbers)))))
 
-(deffoo nnfolder-request-expire-articles
-    (articles newsgroup &optional server force)
+(autoload 'gnus-request-group "gnus-int")
+(declare-function gnus-request-create-group "gnus-int"
+                  (group &optional gnus-command-method args))
+
+(deffoo nnfolder-request-expire-articles (articles newsgroup
+						   &optional server force)
   (nnfolder-possibly-change-group newsgroup server)
-  (let* ((is-old t)
-	 ;; The articles we have deleted so far.
-	 (deleted-articles nil)
-	 ;; The articles that really exist and will
-	 ;; be expired if they are old enough.
-	 (maybe-expirable
-	  (gnus-sorted-intersection articles (nnfolder-existing-articles))))
+  (let ((is-old t)
+	;; The articles we have deleted so far.
+	(deleted-articles nil)
+	;; The articles that really exist and will
+	;; be expired if they are old enough.
+	(maybe-expirable
+	 (gnus-sorted-intersection articles (nnfolder-existing-articles)))
+	target)
     (nnmail-activate 'nnfolder)
 
     (save-excursion
@@ -445,21 +464,28 @@ the group.  Then the marks file will be regenerated properly by Gnus.")
 		       (buffer-substring
 			(point) (progn (end-of-line) (point)))
 		       force nnfolder-inhibit-expiry))
-	    (unless (eq nnmail-expiry-target 'delete)
+	    (setq target nnmail-expiry-target)
+	    (unless (eq target 'delete)
 	      (with-temp-buffer
 		(nnfolder-request-article (car maybe-expirable)
 					  newsgroup server (current-buffer))
 		(let ((nnfolder-current-directory nil))
-		  (nnmail-expiry-target-group
-		   nnmail-expiry-target newsgroup)))
+		  (when (functionp target)
+		    (setq target (funcall target newsgroup)))
+		  (when (and target (not (eq target 'delete)))
+		    (if (or (gnus-request-group target)
+			    (gnus-request-create-group target))
+			(nnmail-expiry-target-group target newsgroup)
+		      (setq target nil)))))
 	      (nnfolder-possibly-change-group newsgroup server))
-	    (nnheader-message 5 "Deleting article %d in %s..."
-			      (car maybe-expirable) newsgroup)
-	    (nnfolder-delete-mail)
-	    (unless (or gnus-nov-is-evil nnfolder-nov-is-evil)
-	      (nnfolder-nov-delete-article newsgroup (car maybe-expirable)))
-	    ;; Must remember which articles were actually deleted
-	    (push (car maybe-expirable) deleted-articles)))
+	    (when target
+	      (nnheader-message 5 "Deleting article %d in %s..."
+				(car maybe-expirable) newsgroup)
+	      (nnfolder-delete-mail)
+	      (unless (or gnus-nov-is-evil nnfolder-nov-is-evil)
+		(nnfolder-nov-delete-article newsgroup (car maybe-expirable)))
+	      ;; Must remember which articles were actually deleted
+	      (push (car maybe-expirable) deleted-articles))))
 	(setq maybe-expirable (cdr maybe-expirable)))
       (unless nnfolder-inhibit-expiry
 	(nnheader-message 5 "Deleting articles...done"))
@@ -468,8 +494,8 @@ the group.  Then the marks file will be regenerated properly by Gnus.")
       (nnfolder-save-active nnfolder-group-alist nnfolder-active-file)
       (gnus-sorted-difference articles (nreverse deleted-articles)))))
 
-(deffoo nnfolder-request-move-article (article group server
-					       accept-form &optional last)
+(deffoo nnfolder-request-move-article (article group server accept-form 
+					       &optional last move-is-internal)
   (save-excursion
     (let ((buf (get-buffer-create " *nnfolder move*"))
 	  result)
@@ -899,7 +925,9 @@ deleted.  Point is left where the deleted region was."
 	      (active (or (cadr (assoc group nnfolder-group-alist))
 			  (cons 1 0)))
 	      (scantime (assoc group nnfolder-scantime-alist))
-	      (minid (lsh -1 -1))
+	      (minid (or (and (boundp 'most-positive-fixnum)
+			      most-positive-fixnum)
+			 (lsh -1 -1)))
 	      maxid start end newscantime
 	      novbuf articles newnum
 	      buffer-read-only)
@@ -1029,9 +1057,7 @@ This command does not work if you use short group names."
       (when (not (message-mail-file-mbox-p file))
 	(ignore-errors
 	  (delete-file file)))))
-  (let ((files (directory-files nnfolder-directory))
-	file)
-    (while (setq file (pop files))
+    (dolist (file (directory-files nnfolder-directory))
       (when (and (not (backup-file-name-p file))
 		 (message-mail-file-mbox-p
 		  (nnheader-concat nnfolder-directory file)))
@@ -1046,7 +1072,7 @@ This command does not work if you use short group names."
 	  (nnfolder-possibly-change-folder file)
 	  (nnfolder-possibly-change-group file)
 	  (nnfolder-close-group file))))
-    (nnheader-message 5 "")))
+    (nnheader-message 5 ""))
 
 (defun nnfolder-group-pathname (group)
   "Make file name for GROUP."
@@ -1073,7 +1099,8 @@ This command does not work if you use short group names."
     (gnus-make-directory (file-name-directory (buffer-file-name)))
     (let ((coding-system-for-write
 	   (or nnfolder-file-coding-system-for-write
-	       nnfolder-file-coding-system)))
+	       nnfolder-file-coding-system))
+	  (copyright-update nil))
       (save-buffer)))
   (unless (or gnus-nov-is-evil nnfolder-nov-is-evil)
     (nnfolder-save-nov)))
@@ -1197,16 +1224,16 @@ This command does not work if you use short group names."
     (nnheader-message 8 "Updating marks for %s..." group)
     (nnfolder-open-marks group server)
     ;; Update info using `nnfolder-marks'.
-    (mapcar (lambda (pred)
-	      (unless (memq (cdr pred) gnus-article-unpropagated-mark-lists)
-		(gnus-info-set-marks
-		 info
-		 (gnus-update-alist-soft
-		  (cdr pred)
-		  (cdr (assq (cdr pred) nnfolder-marks))
-		  (gnus-info-marks info))
-		 t)))
-	    gnus-article-mark-lists)
+    (mapc (lambda (pred)
+	    (unless (memq (cdr pred) gnus-article-unpropagated-mark-lists)
+	      (gnus-info-set-marks
+	       info
+	       (gnus-update-alist-soft
+		(cdr pred)
+		(cdr (assq (cdr pred) nnfolder-marks))
+		(gnus-info-marks info))
+	       t)))
+	  gnus-article-mark-lists)
     (let ((seen (cdr (assq 'read nnfolder-marks))))
       (gnus-info-set-read info
 			  (if (and (integerp (car seen))
@@ -1274,5 +1301,5 @@ This command does not work if you use short group names."
 
 (provide 'nnfolder)
 
-;;; arch-tag: a040d0f4-4f4e-445f-8972-839575c5f7e6
+;; arch-tag: a040d0f4-4f4e-445f-8972-839575c5f7e6
 ;;; nnfolder.el ends here

@@ -1,17 +1,17 @@
 ;;; pcomplete.el --- programmable completion
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 ;; Keywords: processes abbrev
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -130,33 +128,33 @@
 ;;; User Variables:
 
 (defcustom pcomplete-file-ignore nil
-  "*A regexp of filenames to be disregarded during file completion."
+  "A regexp of filenames to be disregarded during file completion."
   :type '(choice regexp (const :tag "None" nil))
   :group 'pcomplete)
 
 (defcustom pcomplete-dir-ignore nil
-  "*A regexp of names to be disregarded during directory completion."
+  "A regexp of names to be disregarded during directory completion."
   :type '(choice regexp (const :tag "None" nil))
   :group 'pcomplete)
 
 (defcustom pcomplete-ignore-case (memq system-type '(ms-dos windows-nt cygwin))
-  "*If non-nil, ignore case when doing filename completion."
+  "If non-nil, ignore case when doing filename completion."
   :type 'boolean
   :group 'pcomplete)
 
 (defcustom pcomplete-autolist nil
-  "*If non-nil, automatically list possibilities on partial completion.
+  "If non-nil, automatically list possibilities on partial completion.
 This mirrors the optional behavior of tcsh."
   :type 'boolean
   :group 'pcomplete)
 
 (defcustom pcomplete-suffix-list (list ?/ ?:)
-  "*A list of characters which constitute a proper suffix."
+  "A list of characters which constitute a proper suffix."
   :type '(repeat character)
   :group 'pcomplete)
 
 (defcustom pcomplete-recexact nil
-  "*If non-nil, use shortest completion if characters cannot be added.
+  "If non-nil, use shortest completion if characters cannot be added.
 This mirrors the optional behavior of tcsh.
 
 A non-nil value is useful if `pcomplete-autolist' is non-nil too."
@@ -164,13 +162,13 @@ A non-nil value is useful if `pcomplete-autolist' is non-nil too."
   :group 'pcomplete)
 
 (defcustom pcomplete-arg-quote-list nil
-  "*List of characters to quote when completing an argument."
+  "List of characters to quote when completing an argument."
   :type '(choice (repeat character)
 		 (const :tag "Don't quote" nil))
   :group 'pcomplete)
 
 (defcustom pcomplete-quote-arg-hook nil
-  "*A hook which is run to quote a character within a filename.
+  "A hook which is run to quote a character within a filename.
 Each function is passed both the filename to be quoted, and the index
 to be considered.  If the function wishes to provide an alternate
 quoted form, it need only return the replacement string.  If no
@@ -181,13 +179,13 @@ using a backslash to quote any character which is a member of
   :group 'pcomplete)
 
 (defcustom pcomplete-man-function 'man
-  "*A function to that will be called to display a manual page.
+  "A function to that will be called to display a manual page.
 It will be passed the name of the command to document."
   :type 'function
   :group 'pcomplete)
 
 (defcustom pcomplete-compare-entry-function 'string-lessp
-  "*This function is used to order file entries for completion.
+  "This function is used to order file entries for completion.
 The behavior of most all shells is to sort alphabetically."
   :type '(radio (function-item string-lessp)
 		(function-item file-newer-than-file-p)
@@ -195,7 +193,7 @@ The behavior of most all shells is to sort alphabetically."
   :group 'pcomplete)
 
 (defcustom pcomplete-help nil
-  "*A string or function (or nil) used for context-sensitive help.
+  "A string or function (or nil) used for context-sensitive help.
 If a string, it should name an Info node that will be jumped to.
 If non-nil, it must a sexp that will be evaluated, and whose
 result will be shown in the minibuffer.
@@ -205,7 +203,7 @@ current command argument."
   :group 'pcomplete)
 
 (defcustom pcomplete-expand-before-complete nil
-  "*If non-nil, expand the current argument before completing it.
+  "If non-nil, expand the current argument before completing it.
 This means that typing something such as '$HOME/bi' followed by
 \\[pcomplete-argument] will cause the variable reference to be
 resolved first, and the resultant value that will be completed against
@@ -217,7 +215,7 @@ and how is entirely up to the behavior of the
 
 (defcustom pcomplete-parse-arguments-function
   'pcomplete-parse-buffer-arguments
-  "*A function to call to parse the current line's arguments.
+  "A function to call to parse the current line's arguments.
 It should be called with no parameters, and with point at the position
 of the argument that is to be completed.
 
@@ -235,7 +233,7 @@ the textual representation of the argument."
   :group 'pcomplete)
 
 (defcustom pcomplete-cycle-completions t
-  "*If non-nil, hitting the TAB key cycles through the completion list.
+  "If non-nil, hitting the TAB key cycles through the completion list.
 Typical Emacs behavior is to complete as much as possible, then pause
 waiting for further input.  Then if TAB is hit again, show a list of
 possible completions.  When `pcomplete-cycle-completions' is non-nil,
@@ -247,7 +245,7 @@ the list of possible completions."
   :group 'pcomplete)
 
 (defcustom pcomplete-cycle-cutoff-length 5
-  "*If the number of completions is greater than this, don't cycle.
+  "If the number of completions is greater than this, don't cycle.
 This variable is a compromise between the traditional Emacs style of
 completion, and the \"cycling\" style.  Basically, if there are more
 than this number of completions possible, don't automatically pick the
@@ -263,7 +261,7 @@ cycling to always be enabled."
   :group 'pcomplete)
 
 (defcustom pcomplete-restore-window-delay 1
-  "*The number of seconds to wait before restoring completion windows.
+  "The number of seconds to wait before restoring completion windows.
 Once the completion window has been displayed, if the user then goes
 on to type something else, that completion window will be removed from
 the display (actually, the original window configuration before it was
@@ -275,22 +273,26 @@ after the user enters a key other than TAB."
   :group 'pcomplete)
 
 (defcustom pcomplete-try-first-hook nil
-  "*A list of functions which are called before completing an argument.
+  "A list of functions which are called before completing an argument.
 This can be used, for example, for completing things which might apply
 to all arguments, such as variable names after a $."
   :type 'hook
   :group 'pcomplete)
 
+(defsubst pcomplete-executables (&optional regexp)
+  "Complete amongst a list of directories and executables."
+  (pcomplete-entries regexp 'file-executable-p))
+
 (defcustom pcomplete-command-completion-function
   (function
    (lambda ()
      (pcomplete-here (pcomplete-executables))))
-  "*Function called for completing the initial command argument."
+  "Function called for completing the initial command argument."
   :type 'function
   :group 'pcomplete)
 
 (defcustom pcomplete-command-name-function 'pcomplete-command-name
-  "*Function called for determining the current command name."
+  "Function called for determining the current command name."
   :type 'function
   :group 'pcomplete)
 
@@ -298,13 +300,13 @@ to all arguments, such as variable names after a $."
   (function
    (lambda ()
      (while (pcomplete-here (pcomplete-entries)))))
-  "*Function called when no completion rule can be found.
+  "Function called when no completion rule can be found.
 This function is used to generate completions for every argument."
   :type 'function
   :group 'pcomplete)
 
 (defcustom pcomplete-use-paring t
-  "*If t, pare alternatives that have already been used.
+  "If t, pare alternatives that have already been used.
 If nil, you will always see the completion set of possible options, no
 matter which of those options have already been used in previous
 command arguments."
@@ -312,7 +314,7 @@ command arguments."
   :group 'pcomplete)
 
 (defcustom pcomplete-termination-string " "
-  "*A string that is inserted after any completion or expansion.
+  "A string that is inserted after any completion or expansion.
 This is usually a space character, useful when completing lists of
 words separated by spaces.  However, if your list uses a different
 separator character, or if the completion occurs in a word that is
@@ -588,8 +590,9 @@ this is `comint-dynamic-complete-functions'."
   (set (make-local-variable 'pcomplete-parse-arguments-function)
        'pcomplete-parse-comint-arguments)
   (make-local-variable completef-sym)
-  (let ((elem (memq 'comint-dynamic-complete-filename
-		    (symbol-value completef-sym))))
+  (let* ((funs (symbol-value completef-sym))
+	 (elem (or (memq 'comint-dynamic-complete-filename funs)
+		   (memq 'shell-dynamic-complete-filename funs))))
     (if elem
 	(setcar elem 'pcomplete)
       (add-to-list completef-sym 'pcomplete))))
@@ -598,6 +601,8 @@ this is `comint-dynamic-complete-functions'."
 (defun pcomplete-shell-setup ()
   "Setup shell-mode to use pcomplete."
   (pcomplete-comint-setup 'shell-dynamic-complete-functions))
+
+(declare-function comint-bol "comint" (&optional arg))
 
 (defun pcomplete-parse-comint-arguments ()
   "Parse whitespace separated arguments in the current region."
@@ -711,6 +716,7 @@ If PREDICATE is non-nil, it will also be used to refine the match
 If no directory information can be extracted from the completed
 component, `default-directory' is used as the basis for completion."
   (let* ((name (substitute-env-vars pcomplete-stub))
+         (completion-ignore-case pcomplete-ignore-case)
 	 (default-directory (expand-file-name
 			     (or (file-name-directory name)
 				 default-directory)))
@@ -778,10 +784,6 @@ component, `default-directory' is used as the basis for completion."
 (defsubst pcomplete-dirs (&optional regexp)
   "Complete amongst a list of directories."
   (pcomplete-entries regexp 'file-directory-p))
-
-(defsubst pcomplete-executables (&optional regexp)
-  "Complete amongst a list of directories and executables."
-  (pcomplete-entries regexp 'file-executable-p))
 
 ;; generation of completion lists
 
@@ -934,7 +936,7 @@ generate the completions list.  This means that the hook
   (if pcomplete-last-window-config
       (let* ((cbuf (get-buffer "*Completions*"))
 	     (cwin (and cbuf (get-buffer-window cbuf))))
-	(when (and cwin (window-live-p cwin))
+	(when (window-live-p cwin)
 	  (bury-buffer cbuf)
 	  (set-window-configuration pcomplete-last-window-config))))
   (setq pcomplete-last-window-config nil
@@ -943,16 +945,15 @@ generate the completions list.  This means that the hook
 ;; Abstractions so that the code below will work for both Emacs 20 and
 ;; XEmacs 21
 
-(unless (fboundp 'event-matches-key-specifier-p)
-  (defalias 'event-matches-key-specifier-p 'eq))
+(defalias 'pcomplete-event-matches-key-specifier-p
+  (if (featurep 'xemacs)
+      'event-matches-key-specifier-p
+  'eq))
 
 (defun pcomplete-read-event (&optional prompt)
   (if (fboundp 'read-event)
       (read-event prompt)
     (aref (read-key-sequence prompt) 0)))
-
-(unless (fboundp 'event-basic-type)
-  (defalias 'event-basic-type 'event-key))
 
 (defun pcomplete-show-completions (completions)
   "List in help buffer sorted COMPLETIONS.
@@ -972,13 +973,13 @@ Typing SPC flushes the help buffer."
 	    (while (with-current-buffer (get-buffer "*Completions*")
 		     (setq event (pcomplete-read-event)))
 	      (cond
-	       ((event-matches-key-specifier-p event ?\s)
+	       ((pcomplete-event-matches-key-specifier-p event ?\s)
 		(set-window-configuration pcomplete-last-window-config)
 		(setq pcomplete-last-window-config nil)
 		(throw 'done nil))
-	       ((or (event-matches-key-specifier-p event 'tab)
+	       ((or (pcomplete-event-matches-key-specifier-p event 'tab)
                     ;; Needed on a terminal
-                    (event-matches-key-specifier-p event 9))
+                    (pcomplete-event-matches-key-specifier-p event 9))
                 (let ((win (or (get-buffer-window "*Completions*" 0)
                                (display-buffer "*Completions*"
                                                'not-this-window))))
@@ -1202,5 +1203,5 @@ Returns the resultant list."
 ; (defalias 'pc-match-beginning 'pcomplete-match-beginning)
 ; (defalias 'pc-match-end 'pcomplete-match-end)
 
-;;; arch-tag: ae32ef2d-dbed-4244-8b0f-cf5a2a3b07a4
+;; arch-tag: ae32ef2d-dbed-4244-8b0f-cf5a2a3b07a4
 ;;; pcomplete.el ends here

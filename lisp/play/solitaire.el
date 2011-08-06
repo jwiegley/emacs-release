@@ -1,7 +1,7 @@
 ;;; solitaire.el --- game of solitaire in Emacs Lisp
 
-;; Copyright (C) 1994, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: Jan Schormann <Jan.Schormann@rechen-gilde.de>
 ;; Created: Fri afternoon, Jun  3,  1994
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -39,74 +37,67 @@
   :prefix "solitaire-"
   :group 'games)
 
-(defvar solitaire-mode-map nil
-  "Keymap for playing Solitaire.")
-
 (defcustom solitaire-mode-hook nil
   "Hook to run upon entry to Solitaire."
   :type 'hook
   :group 'solitaire)
 
-(if solitaire-mode-map
-    ()
-  (setq solitaire-mode-map (make-sparse-keymap))
-  (suppress-keymap solitaire-mode-map t)
-  (define-key solitaire-mode-map "\C-f" 'solitaire-right)
-  (define-key solitaire-mode-map "\C-b" 'solitaire-left)
-  (define-key solitaire-mode-map "\C-p" 'solitaire-up)
-  (define-key solitaire-mode-map "\C-n" 'solitaire-down)
-  (define-key solitaire-mode-map [return] 'solitaire-move)
-  (define-key solitaire-mode-map [remap undo] 'solitaire-undo)
-  (define-key solitaire-mode-map " " 'solitaire-do-check)
-  (define-key solitaire-mode-map "q" 'quit-window)
+(defvar solitaire-mode-map
+  (let ((map (make-sparse-keymap)))
+    (suppress-keymap map t)
 
-  (define-key solitaire-mode-map [right] 'solitaire-right)
-  (define-key solitaire-mode-map [left] 'solitaire-left)
-  (define-key solitaire-mode-map [up] 'solitaire-up)
-  (define-key solitaire-mode-map [down] 'solitaire-down)
+    (define-key map "\C-f" 'solitaire-right)
+    (define-key map "\C-b" 'solitaire-left)
+    (define-key map "\C-p" 'solitaire-up)
+    (define-key map "\C-n" 'solitaire-down)
+    (define-key map "\r" 'solitaire-move)
+    (define-key map [remap undo] 'solitaire-undo)
+    (define-key map " " 'solitaire-do-check)
+    (define-key map "q" 'quit-window)
 
-  (define-key solitaire-mode-map [S-right] 'solitaire-move-right)
-  (define-key solitaire-mode-map [S-left]  'solitaire-move-left)
-  (define-key solitaire-mode-map [S-up]    'solitaire-move-up)
-  (define-key solitaire-mode-map [S-down]  'solitaire-move-down)
+    (define-key map [right] 'solitaire-right)
+    (define-key map [left] 'solitaire-left)
+    (define-key map [up] 'solitaire-up)
+    (define-key map [down] 'solitaire-down)
 
-  (define-key solitaire-mode-map [kp-6] 'solitaire-right)
-  (define-key solitaire-mode-map [kp-4] 'solitaire-left)
-  (define-key solitaire-mode-map [kp-8] 'solitaire-up)
-  (define-key solitaire-mode-map [kp-2] 'solitaire-down)
-  (define-key solitaire-mode-map [kp-5] 'solitaire-center-point)
+    (define-key map [S-right] 'solitaire-move-right)
+    (define-key map [S-left]  'solitaire-move-left)
+    (define-key map [S-up]    'solitaire-move-up)
+    (define-key map [S-down]  'solitaire-move-down)
 
-  (define-key solitaire-mode-map [S-kp-6] 'solitaire-move-right)
-  (define-key solitaire-mode-map [S-kp-4] 'solitaire-move-left)
-  (define-key solitaire-mode-map [S-kp-8] 'solitaire-move-up)
-  (define-key solitaire-mode-map [S-kp-2] 'solitaire-move-down)
+    (define-key map [kp-6] 'solitaire-right)
+    (define-key map [kp-4] 'solitaire-left)
+    (define-key map [kp-8] 'solitaire-up)
+    (define-key map [kp-2] 'solitaire-down)
+    (define-key map [kp-5] 'solitaire-center-point)
 
-  (define-key solitaire-mode-map [kp-enter] 'solitaire-move)
-  (define-key solitaire-mode-map [kp-0] 'solitaire-undo)
+    (define-key map [S-kp-6] 'solitaire-move-right)
+    (define-key map [S-kp-4] 'solitaire-move-left)
+    (define-key map [S-kp-8] 'solitaire-move-up)
+    (define-key map [S-kp-2] 'solitaire-move-down)
 
-  ;; spoil it with s ;)
-  (define-key solitaire-mode-map [?s] 'solitaire-solve)
+    (define-key map [kp-enter] 'solitaire-move)
+    (define-key map [kp-0] 'solitaire-undo)
 
-  ;;  (define-key solitaire-mode-map [kp-0] 'solitaire-hint) - Not yet provided ;)
-  )
+    ;; spoil it with s ;)
+    (define-key map [?s] 'solitaire-solve)
+
+    ;;  (define-key map [kp-0] 'solitaire-hint) - Not yet provided ;)
+    map)
+  "Keymap for playing Solitaire.")
 
 ;; Solitaire mode is suitable only for specially formatted data.
 (put 'solitaire-mode 'mode-class 'special)
 
-(defun solitaire-mode ()
+(define-derived-mode solitaire-mode nil "Solitaire"
   "Major mode for playing Solitaire.
 To learn how to play Solitaire, see the documentation for function
 `solitaire'.
 \\<solitaire-mode-map>
 The usual mnemonic keys move the cursor around the board; in addition,
 \\[solitaire-move] is a prefix character for actually moving a stone on the board."
-  (interactive)
-  (kill-all-local-variables)
-  (use-local-map solitaire-mode-map)
   (setq truncate-lines t)
-  (setq major-mode 'solitaire-mode)
-  (setq mode-name "Solitaire")
-  (run-mode-hooks 'solitaire-mode-hook))
+  (setq show-trailing-whitespace nil))
 
 (defvar solitaire-stones 0
   "Counter for the stones that are still there.")
@@ -236,14 +227,13 @@ Pick your favourite shortcuts:
 		     (t "")))
 	 (vsep (cond ((> h 17) "\n\n")
 		     (t "\n")))
-	 (indent (make-string (/ (- w 7 (* 6 (length hsep))) 2) ?\ )))
+	 (indent (make-string (/ (- w 7 (* 6 (length hsep))) 2) ?\s)))
     (erase-buffer)
     (insert (make-string (/ (- h 7 (if (> h 12) 3 0)
 			       (* 6 (1- (length vsep)))) 2) ?\n))
-    (if (or (string= vsep "\n\n") (> h 12))
-	(progn
-	  (insert (format "%sLe Solitaire\n" indent))
-	  (insert (format "%s============\n\n" indent))))
+    (when (or (string= vsep "\n\n") (> h 12))
+      (insert (format "%sLe Solitaire\n" indent))
+      (insert (format "%s============\n\n" indent)))
     (insert indent)
     (setq solitaire-start (point))
     (setq solitaire-start-x (current-column))
@@ -259,30 +249,29 @@ Pick your favourite shortcuts:
     (insert (format "%s %s %so%so%so%s %s " indent hsep hsep hsep hsep hsep hsep))
     (setq solitaire-end (point))
     (setq solitaire-end-x (current-column))
-    (setq solitaire-end-y (solitaire-current-line))
-    ))
+    (setq solitaire-end-y (solitaire-current-line))))
 
 (defun solitaire-right ()
   (interactive)
   (let ((start (point)))
     (forward-char)
-    (while (= ?\  (following-char))
+    (while (= ?\s (following-char))
       (forward-char))
-    (if (or  (= 0 (following-char))
-	     (= ?\  (following-char))
-	    (= ?\n (following-char)))
-	(goto-char start))))
+    (when (or (= 0 (following-char))
+	      (= ?\s (following-char))
+	      (= ?\n (following-char)))
+      (goto-char start))))
 
 (defun solitaire-left ()
   (interactive)
   (let ((start (point)))
     (backward-char)
-    (while (= ?\  (following-char))
+    (while (= ?\s (following-char))
       (backward-char))
-    (if (or  (= 0 (preceding-char))
-	     (= ?\  (following-char))
-	    (= ?\n (following-char)))
-	(goto-char start))))
+    (when (or (= 0 (preceding-char))
+	      (= ?\s (following-char))
+	      (= ?\n (following-char)))
+      (goto-char start))))
 
 (defun solitaire-up ()
   (interactive)
@@ -294,12 +283,11 @@ Pick your favourite shortcuts:
 		(forward-line -1)
 		(move-to-column c)
 		(not (bolp))))
-    (if (or (= 0 (preceding-char))
-	    (= ?\  (following-char))
-	    (= ?\= (following-char))
-	    (= ?\n (following-char)))
-	(goto-char start)
-	)))
+    (when (or (= 0 (preceding-char))
+	      (= ?\s (following-char))
+	      (= ?\= (following-char))
+	      (= ?\n (following-char)))
+      (goto-char start))))
 
 (defun solitaire-down ()
   (interactive)
@@ -311,10 +299,10 @@ Pick your favourite shortcuts:
 		(forward-line 1)
 		(move-to-column c)
 		(not (eolp))))
-    (if (or (= 0 (following-char))
-	    (= ?\  (following-char))
-	    (= ?\n (following-char)))
-	(goto-char start))))
+    (when (or (= 0 (following-char))
+	      (= ?\s (following-char))
+	      (= ?\n (following-char)))
+      (goto-char start))))
 
 (defun solitaire-center-point ()
   (interactive)
@@ -387,7 +375,7 @@ which a stone will be taken away) and target."
 		   (setq count (1+ count))))
 	    count)))
   (solitaire-build-modeline)
-  (if solitaire-auto-eval (solitaire-do-check)))
+  (when solitaire-auto-eval (solitaire-do-check)))
 
 (defun solitaire-check ()
   (save-excursion
@@ -400,10 +388,10 @@ which a stone will be taken away) and target."
 	       (<= (current-column) solitaire-end-x)
 	       (>= (solitaire-current-line) solitaire-start-y)
 	       (<= (solitaire-current-line) solitaire-end-y)
-	       (mapcar
+	       (mapc
 		(lambda (movesymbol)
-		  (if (listp (solitaire-possible-move movesymbol))
-		      (setq count (1+ count))))
+		  (when (listp (solitaire-possible-move movesymbol))
+		    (setq count (1+ count))))
 		solitaire-valid-directions)))
 	count))))
 
@@ -448,16 +436,16 @@ Seen in info on text lines."
 	;; right S-left
 	(solitaire-auto-eval nil))
     (solitaire-center-point)
-    (mapcar (lambda (op)
-	      (if (memq op '(S-left S-right S-up S-down))
-		  (sit-for 0.2))
-	      (execute-kbd-macro (vector op))
-	      (if (memq op '(S-left S-right S-up S-down))
-		  (sit-for 0.4)))
-	    allmoves))
+    (mapc (lambda (op)
+	    (when (memq op '(S-left S-right S-up S-down))
+	      (sit-for 0.2))
+	    (execute-kbd-macro (vector op))
+	    (when (memq op '(S-left S-right S-up S-down))
+	      (sit-for 0.4)))
+	  allmoves))
   (solitaire-do-check))
 
 (provide 'solitaire)
 
-;;; arch-tag: 1b18ee1c-1e79-4a5b-8658-9560b82e63dd
+;; arch-tag: 1b18ee1c-1e79-4a5b-8658-9560b82e63dd
 ;;; solitaire.el ends here

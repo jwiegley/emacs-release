@@ -1,42 +1,40 @@
 ;;; mm-bodies.el --- Functions for decoding MIME things
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;;	MORIOKA Tomohiko <morioka@jaist.ac.jp>
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
 
+;; For Emacs < 22.2.
 (eval-and-compile
-  (or (fboundp  'base64-decode-region)
-      (require 'base64)))
-
-(eval-when-compile
-  (defvar mm-uu-decode-function)
-  (defvar mm-uu-binhex-decode-function))
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest r))))
 
 (require 'mm-util)
 (require 'rfc2047)
 (require 'mm-encode)
+
+(defvar mm-uu-yenc-decode-function)
+(defvar mm-uu-decode-function)
+(defvar mm-uu-binhex-decode-function)
 
 ;; 8bit treatment gets any char except: 0x32 - 0x7f, LF, TAB, BEL,
 ;; BS, vertical TAB, form feed, and ^_
@@ -70,6 +68,9 @@ Valid encodings are `7bit', `8bit', `quoted-printable' and `base64'."
 			       (const quoted-printable)
 			       (const base64))))
   :group 'mime)
+
+(autoload 'message-options-get "message")
+(declare-function message-options-set "message" (symbol value))
 
 (defun mm-encode-body (&optional charset)
   "Encode a body.
@@ -175,8 +176,6 @@ If no encoding was done, nil is returned."
 ;;; Functions for decoding
 ;;;
 
-(eval-when-compile (defvar mm-uu-yenc-decode-function))
-
 (defun mm-decode-content-transfer-encoding (encoding &optional type)
   "Decodes buffer encoded with ENCODING, returning success status.
 If TYPE is `text/plain' CRLF->LF translation may occur."
@@ -202,10 +201,7 @@ If TYPE is `text/plain' CRLF->LF translation may occur."
 	       (when (re-search-backward "^[A-Za-z0-9+/]+=*[\t ]*$" nil t)
 		 (forward-line))
 	       (point))))
-	   ((memq encoding '(7bit 8bit binary))
-	    ;; Do nothing.
-	    t)
-	   ((null encoding)
+	   ((memq encoding '(nil 7bit 8bit binary))
 	    ;; Do nothing.
 	    t)
 	   ((memq encoding '(x-uuencode x-uue))
@@ -306,5 +302,5 @@ decoding.  If it is nil, default to `mail-parse-charset'."
 
 (provide 'mm-bodies)
 
-;;; arch-tag: 41104bb6-4443-4ca9-8d5c-ff87ecf27d8d
+;; arch-tag: 41104bb6-4443-4ca9-8d5c-ff87ecf27d8d
 ;;; mm-bodies.el ends here

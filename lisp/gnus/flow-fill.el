@@ -1,17 +1,17 @@
 ;;; flow-fill.el --- interpret RFC2646 "flowed" text
 
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Simon Josefsson <jas@pdc.kth.se>
 ;; Keywords: mail
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -75,17 +73,6 @@ RFC 2646 suggests 66 characters for readability."
 		 (sexp)
 		 (integer)))
 
-(eval-and-compile
-  (defalias 'fill-flowed-point-at-bol
-	(if (fboundp 'point-at-bol)
-	    'point-at-bol
-	  'line-beginning-position))
-
-   (defalias 'fill-flowed-point-at-eol
-	(if (fboundp 'point-at-eol)
-	    'point-at-eol
-	  'line-end-position)))
-
 ;;;###autoload
 (defun fill-flowed-encode (&optional buffer)
   (with-current-buffer (or buffer (current-buffer))
@@ -109,7 +96,7 @@ RFC 2646 suggests 66 characters for readability."
       t)))
 
 ;;;###autoload
-(defun fill-flowed (&optional buffer)
+(defun fill-flowed (&optional buffer delete-space)
   (save-excursion
     (set-buffer (or (current-buffer) buffer))
     (goto-char (point-min))
@@ -119,6 +106,8 @@ RFC 2646 suggests 66 characters for readability."
       (forward-line 1))
     (goto-char (point-min))
     (while (re-search-forward " $" nil t)
+      (when delete-space
+	(delete-char -1))
       (when (save-excursion
 	      (beginning-of-line)
 	      (looking-at "^\\(>*\\)\\( ?\\)"))
@@ -153,8 +142,8 @@ RFC 2646 suggests 66 characters for readability."
 		      (fill-column (eval fill-flowed-display-column))
 		      filladapt-mode
 		      adaptive-fill-mode)
-		  (fill-region (fill-flowed-point-at-bol)
-			       (min (1+ (fill-flowed-point-at-eol))
+		  (fill-region (point-at-bol)
+			       (min (1+ (point-at-eol))
 				    (point-max))
 			       'left 'nosqueeze))
 	      (error
@@ -163,8 +152,7 @@ RFC 2646 suggests 66 characters for readability."
 
 ;; Test vectors.
 
-(eval-when-compile
-  (defvar show-trailing-whitespace))
+(defvar show-trailing-whitespace)
 
 (defvar fill-flowed-encode-tests
   `(
@@ -233,5 +221,5 @@ RFC 2646 suggests 66 characters for readability."
 
 (provide 'flow-fill)
 
-;;; arch-tag: addc0040-bc53-4f17-b4bc-1eb44eed6f0b
+;; arch-tag: addc0040-bc53-4f17-b4bc-1eb44eed6f0b
 ;;; flow-fill.el ends here

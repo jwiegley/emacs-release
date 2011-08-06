@@ -1,7 +1,7 @@
 ;;; handwrite.el --- turns your emacs buffer into a handwritten document -*- coding: iso-latin-1; -*-
 
 ;; Copyright (C) 1996, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Danny Roozendaal (was: <danny@tvs.kun.nl>)
 ;; Created: October 21 1996
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -226,7 +224,7 @@ Variables: handwrite-linespace     (default 12)
 	(forward-line 1)
 	))
     (switch-to-buffer ps-buf-name)
-    (next-line 1)
+    (forward-line 1)
     (insert "showpage exec Hwsave restore\n\n")
     (insert "%%Pages " (number-to-string ipage) " 0\n")
     (insert "%%EOF\n")
@@ -1325,5 +1323,5 @@ end
 (provide 'handwrite)
 
 
-;;; arch-tag: f2285ae9-e41b-4c96-8343-87dce41e44b7
+;; arch-tag: f2285ae9-e41b-4c96-8343-87dce41e44b7
 ;;; handwrite.el ends here

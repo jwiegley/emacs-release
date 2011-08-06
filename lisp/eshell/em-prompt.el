@@ -1,16 +1,16 @@
 ;;; em-prompt.el --- command prompts
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,24 +18,23 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-(provide 'em-prompt)
-
-(eval-when-compile (require 'esh-maint))
-
-(defgroup eshell-prompt nil
-  "This module provides command prompts, and navigation between them,
-as is common with most shells."
-  :tag "Command prompts"
-  :group 'eshell-module)
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;; Most of the prompt navigation commands of `comint-mode' are
 ;; supported, such as C-c C-n, C-c C-p, etc.
+
+;;; Code:
+
+(eval-when-compile (require 'eshell))
+
+;;;###autoload
+(eshell-defgroup eshell-prompt nil
+  "This module provides command prompts, and navigation between them,
+as is common with most shells."
+  :tag "Command prompts"
+  :group 'eshell-module)
 
 ;;; User Variables:
 
@@ -173,7 +172,11 @@ If this takes us past the end of the current line, don't skip at all."
 	     (<= (match-end 0) eol))
 	(goto-char (match-end 0)))))
 
-;;; Code:
+(provide 'em-prompt)
 
-;;; arch-tag: 01c1574b-ce70-4e89-bc38-e6619f61e208
+;; Local Variables:
+;; generated-autoload-file: "esh-groups.el"
+;; End:
+
+;; arch-tag: 01c1574b-ce70-4e89-bc38-e6619f61e208
 ;;; em-prompt.el ends here

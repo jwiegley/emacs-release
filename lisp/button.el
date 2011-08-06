@@ -1,27 +1,25 @@
 ;;; button.el --- clickable buttons
 ;;
 ;; Copyright (C) 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 ;;
 ;; Author: Miles Bader <miles@gnu.org>
 ;; Keywords: extensions
 ;;
 ;; This file is part of GNU Emacs.
 ;;
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-;;
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-;;
+
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -61,15 +59,15 @@
   "Default face used for buttons."
   :group 'basic-faces)
 
-;;;###autoload
 (defvar button-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\r" 'push-button)
+    ;; The following definition needs to avoid using escape sequences that
+    ;; might get converted to ^M when building loaddefs.el
+    (define-key map [(control ?m)] 'push-button)
     (define-key map [mouse-2] 'push-button)
     map)
   "Keymap used by buttons.")
 
-;;;###autoload
 (defvar button-buffer-map
   (let ((map (make-sparse-keymap)))
     (define-key map [?\t] 'forward-button)
@@ -114,9 +112,8 @@ Buttons inherit them by setting their `category' property to that symbol."
   (or (get type 'button-category-symbol)
       (error "Unknown button type `%s'" type)))
 
-;;;###autoload
 (defun define-button-type (name &rest properties)
-  "Define a `button type' called NAME.
+  "Define a `button type' called NAME (a symbol).
 The remaining arguments form a sequence of PROPERTY VALUE pairs,
 specifying properties to use as defaults for buttons with this type
 \(a button's type may be set by giving it a `type' property when
@@ -245,7 +242,6 @@ the normal action is used instead."
 
 ;; Creating overlay buttons
 
-;;;###autoload
 (defun make-button (beg end &rest properties)
   "Make a button from BEG to END in the current buffer.
 The remaining arguments form a sequence of PROPERTY VALUE pairs,
@@ -267,7 +263,6 @@ Also see `make-text-button', `insert-button'."
     ;; OVERLAY is the button, so return it
     overlay))
 
-;;;###autoload
 (defun insert-button (label &rest properties)
   "Insert a button with the label LABEL.
 The remaining arguments form a sequence of PROPERTY VALUE pairs,
@@ -285,7 +280,6 @@ Also see `insert-text-button', `make-button'."
 
 ;; Creating text-property buttons
 
-;;;###autoload
 (defun make-text-button (beg end &rest properties)
   "Make a button from BEG to END in the current buffer.
 The remaining arguments form a sequence of PROPERTY VALUE pairs,
@@ -299,10 +293,15 @@ part of the text instead of being a property of the buffer.  Creating
 large numbers of buttons can also be somewhat faster using
 `make-text-button'.
 
+BEG can also be a string, in which case it is made into a button.
+
 Also see `insert-text-button'."
-  (let ((type-entry
+  (let ((object nil)
+        (type-entry
 	 (or (plist-member properties 'type)
 	     (plist-member properties :type))))
+    (when (stringp beg)
+      (setq object beg beg 0 end (length object)))
     ;; Disallow setting the `category' property directly.
     (when (plist-get properties 'category)
       (error "Button `category' property may not be set directly"))
@@ -314,17 +313,17 @@ Also see `insert-text-button'."
       ;; text-properties for inheritance.
       (setcar type-entry 'category)
       (setcar (cdr type-entry)
-	      (button-category-symbol (car (cdr type-entry))))))
-  ;; Now add all the text properties at once
-  (add-text-properties beg end
-                       ;; Each button should have a non-eq `button'
-                       ;; property so that next-single-property-change can
-                       ;; detect boundaries reliably.
-                       (cons 'button (cons (list t) properties)))
-  ;; Return something that can be used to get at the button.
-  beg)
+	      (button-category-symbol (car (cdr type-entry)))))
+    ;; Now add all the text properties at once
+    (add-text-properties beg end
+                         ;; Each button should have a non-eq `button'
+                         ;; property so that next-single-property-change can
+                         ;; detect boundaries reliably.
+                         (cons 'button (cons (list t) properties))
+                         object)
+    ;; Return something that can be used to get at the button.
+    beg))
 
-;;;###autoload
 (defun insert-text-button (label &rest properties)
   "Insert a button with the label LABEL.
 The remaining arguments form a sequence of PROPERTY VALUE pairs,
@@ -438,15 +437,22 @@ Returns the button found."
 	    (goto-char (button-start button)))
       ;; Move to Nth next button
       (let ((iterator (if (> n 0) #'next-button #'previous-button))
-	    (wrap-start (if (> n 0) (point-min) (point-max))))
+	    (wrap-start (if (> n 0) (point-min) (point-max)))
+	    opoint fail)
 	(setq n (abs n))
 	(setq button t)			; just to start the loop
-	(while (and (> n 0) button)
+	(while (and (null fail) (> n 0) button)
 	  (setq button (funcall iterator (point)))
 	  (when (and (not button) wrap)
 	    (setq button (funcall iterator wrap-start t)))
 	  (when button
 	    (goto-char (button-start button))
+	    ;; Avoid looping forever (e.g., if all the buttons have
+	    ;; the `skip' property).
+	    (cond ((null opoint)
+		   (setq opoint (point)))
+		  ((= opoint (point))
+		   (setq fail t)))
 	    (unless (button-get button 'skip)
 	      (setq n (1- n)))))))
     (if (null button)
@@ -470,5 +476,5 @@ Returns the button found."
 
 (provide 'button)
 
-;;; arch-tag: 5f2c7627-413b-4097-b282-630f89d9c5e9
+;; arch-tag: 5f2c7627-413b-4097-b282-630f89d9c5e9
 ;;; button.el ends here

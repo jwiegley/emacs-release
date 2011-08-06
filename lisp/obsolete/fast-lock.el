@@ -1,7 +1,7 @@
 ;;; fast-lock.el --- automagic text properties caching for fast Font Lock mode
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Simon Marshall <simon@gnu.org>
 ;; Maintainer: FSF
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,11 +21,11 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
+
+;; This file has been obsolete since Emacs 22.1.
 
 ;; Fast Lock mode is a Font Lock support mode.
 ;; It makes visiting a file in Font Lock mode faster by restoring its face text
@@ -183,6 +183,8 @@
 
 (require 'font-lock)
 
+(declare-function msdos-long-file-names "msdos.c")
+
 ;; Make sure fast-lock.el is supported.
 (if (and (eq system-type 'ms-dos) (not (msdos-long-file-names)))
     (error "`fast-lock' was written for long file name systems"))
@@ -216,25 +218,7 @@
          (let ((faces ,face))
            (while (unless (memq (car faces) fast-lock-save-faces)
                     (setq faces (cdr faces))))
-           faces))))
- ;;
- ;; We use this for compatibility with a future Emacs.
- (or (fboundp 'with-temp-message)
-     (defmacro with-temp-message (message &rest body)
-       `(let ((temp-message ,message) current-message)
-         (unwind-protect
-              (progn
-                (when temp-message
-                  (setq current-message (current-message))
-                  (message "%s" temp-message))
-                ,@body)
-           (when temp-message
-             (message "%s" current-message))))))
- ;;
- ;; We use this for compatibility with a future Emacs.
- (or (fboundp 'defcustom)
-     (defmacro defcustom (symbol value doc &rest args)
-       `(defvar ,symbol ,value ,doc))))
+           faces)))))
 
 ;;(defun fast-lock-submit-bug-report ()
 ;;  "Submit via mail a bug report on fast-lock.el."
@@ -340,7 +324,7 @@ If a number, only buffers greater than this size have processing messages."
   :group 'fast-lock)
 
 (defvar fast-lock-save-faces
-  (when (save-match-data (string-match "XEmacs" (emacs-version)))
+  (when (featurep 'xemacs)
     ;; XEmacs uses extents for everything, so we have to pick the right ones.
     font-lock-face-list)
   "Faces that will be saved in a Font Lock cache file.
@@ -771,7 +755,7 @@ See `fast-lock-get-face-properties'."
 
 ;; Functions for XEmacs:
 
-(when (save-match-data (string-match "XEmacs" (emacs-version)))
+(when (featurep 'xemacs)
   ;;
   ;; It would be better to use XEmacs' `map-extents' over extents with a
   ;; `font-lock' property, but `face' properties are on different extents.

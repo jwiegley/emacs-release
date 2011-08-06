@@ -1,16 +1,16 @@
 ;;; viper-mous.el --- mouse support for Viper
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -41,12 +39,8 @@
 ;; in order to spare non-viperized emacs from being viperized
 (if noninteractive
     (eval-when-compile
-      (let ((load-path (cons (expand-file-name ".") load-path)))
-	(or (featurep 'viper-util)
-	    (load "viper-util.el" nil nil 'nosuffix))
-	(or (featurep 'viper-cmd)
-	    (load "viper-cmd.el" nil nil 'nosuffix))
-	)))
+      (require 'viper-cmd)
+      ))
 ;; end pacifier
 
 (require 'viper-util)
@@ -79,7 +73,7 @@ or a tripple-click."
 ;; time interval in millisecond within which successive clicks are
 ;; considered related
 (defcustom viper-multiclick-timeout (if (viper-window-display-p)
-				      (if viper-xemacs-p
+				      (if (featurep 'xemacs)
 					  mouse-track-multi-click-time
 					double-click-time)
 				    500)
@@ -122,10 +116,8 @@ considered related."
 
 ;; Returns window where click occurs
 (defun viper-mouse-click-window (click)
-  (let ((win (viper-cond-compile-for-xemacs-or-emacs
-	      (event-window click) ; xemacs
-	      (posn-window (event-start click)) ; emacs
-	      )))
+  (let ((win (if (featurep 'xemacs) (event-window click)
+	       (posn-window (event-start click)))))
     (if (window-live-p win)
 	win
       (error "Click was not over a live window"))))
@@ -144,10 +136,8 @@ considered related."
 
 ;; Returns position of a click
 (defsubst viper-mouse-click-posn (click)
-  (viper-cond-compile-for-xemacs-or-emacs
-   (event-point click) ; xemacs
-   (posn-point (event-start click)) ; emacs
-   ))
+  (if (featurep 'xemacs) (event-point click)
+    (posn-point (event-start click))))
 
 
 (defun viper-surrounding-word (count click-count)
@@ -227,7 +217,7 @@ is ignored."
        ) ; if
      ;; XEmacs doesn't have set-text-properties, but there buffer-substring
      ;; doesn't return properties together with the string, so it's not needed.
-     (if viper-emacs-p
+     (if (featurep 'emacs)
 	 (set-text-properties 0 (length result) nil result))
      result
      ))
@@ -273,7 +263,7 @@ See `viper-surrounding-word' for the definition of a word in this case."
 		     'viper-mouse-catch-frame-switch))
 	    (not (eq (key-binding viper-mouse-up-insert-key-parsed)
 		     'viper-mouse-click-insert-word))
-	    (and viper-xemacs-p (not (event-over-text-area-p click)))))
+	    (and (featurep 'xemacs) (not (event-over-text-area-p click)))))
       () ; do nothing, if binding isn't right or not over text
     ;; turn arg into a number
     (cond ((integerp arg) nil)
@@ -320,33 +310,30 @@ See `viper-surrounding-word' for the definition of a word in this case."
 ;; XEmacs has no double-click events.  So, we must simulate.
 ;; So, we have to simulate event-click-count.
 (defun viper-event-click-count (click)
-  (viper-cond-compile-for-xemacs-or-emacs
-   (viper-event-click-count-xemacs click) ; xemacs
-   (event-click-count click) ; emacs
-   ))
+  (if (featurep 'xemacs) (viper-event-click-count-xemacs click)
+    (event-click-count click)))
 
-;; kind of semaphore for updating viper-current-click-count
-(defvar viper-counting-clicks-p nil)
-(viper-cond-compile-for-xemacs-or-emacs
- (defun viper-event-click-count-xemacs (click)
-   (let ((time-delta (- (event-timestamp click)
-			viper-last-click-event-timestamp))
-	 inhibit-quit)
-     (while viper-counting-clicks-p
-       (ignore))
-     (setq viper-counting-clicks-p t)
-     (if (> time-delta viper-multiclick-timeout)
-	 (setq viper-current-click-count 0))
-     (discard-input)
-     (setq viper-current-click-count (1+ viper-current-click-count)
-	   viper-last-click-event-timestamp (event-timestamp click))
-     (setq viper-counting-clicks-p nil)
-     (if (viper-sit-for-short viper-multiclick-timeout t)
-	 viper-current-click-count
-       0)
-     ))
-  nil ; emacs
- )
+(when (featurep 'xemacs)
+
+  ;; kind of semaphore for updating viper-current-click-count
+  (defvar viper-counting-clicks-p nil)
+
+  (defun viper-event-click-count-xemacs (click)
+    (let ((time-delta (- (event-timestamp click)
+			 viper-last-click-event-timestamp))
+	  inhibit-quit)
+      (while viper-counting-clicks-p
+	(ignore))
+      (setq viper-counting-clicks-p t)
+      (if (> time-delta viper-multiclick-timeout)
+	  (setq viper-current-click-count 0))
+      (discard-input)
+      (setq viper-current-click-count (1+ viper-current-click-count)
+	    viper-last-click-event-timestamp (event-timestamp click))
+      (setq viper-counting-clicks-p nil)
+      (if (viper-sit-for-short viper-multiclick-timeout t)
+	  viper-current-click-count
+	0))))
 
 
 (defun viper-mouse-click-search-word (click arg)
@@ -364,7 +351,7 @@ this command."
 		     'viper-mouse-catch-frame-switch))
 	    (not (eq (key-binding viper-mouse-up-search-key-parsed)
 		     'viper-mouse-click-search-word))
-	    (and viper-xemacs-p (not (event-over-text-area-p click)))))
+	    (and (featurep 'xemacs) (not (event-over-text-area-p click)))))
       () ; do nothing, if binding isn't right or not over text
     (let ((previous-search-string viper-s-string)
 	  click-word click-count)
@@ -507,19 +494,19 @@ bindings in the Viper manual."
 	()
       (setq button-spec
 	    (cond ((memq 1 key)
-		   (if viper-emacs-p
+		   (if (featurep 'emacs)
 		       (if (eq 'up event-type)
 			   "mouse-1" "down-mouse-1")
 		     (if (eq 'up event-type)
 			 'button1up 'button1)))
 		  ((memq 2 key)
-		   (if viper-emacs-p
+		   (if (featurep 'emacs)
 		       (if (eq 'up event-type)
 			   "mouse-2" "down-mouse-2")
 		     (if (eq 'up event-type)
 			 'button2up 'button2)))
 		  ((memq 3 key)
-		   (if viper-emacs-p
+		   (if (featurep 'emacs)
 		       (if (eq 'up event-type)
 			   "mouse-3" "down-mouse-3")
 		     (if (eq 'up event-type)
@@ -528,18 +515,18 @@ bindings in the Viper manual."
 		      "%S: invalid button number, %S" key-var key)))
 	    meta-spec
 	    (if (memq 'meta key)
-		(if viper-emacs-p "M-" 'meta)
-	      (if viper-emacs-p "" nil))
+		(if (featurep 'emacs) "M-" 'meta)
+	      (if (featurep 'emacs) "" nil))
 	    shift-spec
 	    (if (memq 'shift key)
-		(if viper-emacs-p "S-" 'shift)
-	      (if viper-emacs-p "" nil))
+		(if (featurep 'emacs) "S-" 'shift)
+	      (if (featurep 'emacs) "" nil))
 	    control-spec
 	    (if (memq 'control key)
-		(if viper-emacs-p "C-" 'control)
-	      (if viper-emacs-p "" nil)))
+		(if (featurep 'emacs) "C-" 'control)
+	      (if (featurep 'emacs) "" nil)))
 
-      (setq key-spec (if viper-emacs-p
+      (setq key-spec (if (featurep 'emacs)
 			 (vector
 			  (intern
 			   (concat
@@ -670,10 +657,10 @@ This buffer may be different from the one where the click occurred."
 
 
 
-;;; Local Variables:
-;;; eval: (put 'viper-deflocalvar 'lisp-indent-hook 'defun)
-;;; End:
+;; Local Variables:
+;; eval: (put 'viper-deflocalvar 'lisp-indent-hook 'defun)
+;; End:
 
 
-;;; arch-tag: e56b2390-06c4-4dd1-96f5-c7876e2d8c2f
+;; arch-tag: e56b2390-06c4-4dd1-96f5-c7876e2d8c2f
 ;;; viper-mous.el ends here

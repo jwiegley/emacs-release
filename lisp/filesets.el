@@ -1,26 +1,28 @@
 ;;; filesets.el --- handle group of files
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
-;; Author: Thomas Link <t.link@gmx.at>
+;; Author: Thomas Link <sanobast-emacs@yahoo.de>
 ;; Maintainer: FSF
 ;; Keywords: filesets convenience
 
 ;; This file is part of GNU Emacs.
 
-;; This program is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; This program is distributed in the hope that it will be useful,
+;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
-;; A copy of the GNU General Public License can be obtained from this
-;; program's author or from the Free Software Foundation, Inc.,
-;; 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Code:
 
 (defvar filesets-version "1.8.4")
 (defvar filesets-homepage
@@ -50,7 +52,7 @@
 ;; programs.  See `filesets-external-viewers'.
 
 ;; BTW, if you close a fileset, files, which have been changed, will
-;; be silently saved.  Change this behaviour by setting
+;; be silently saved.  Change this behavior by setting
 ;; `filesets-save-buffer-fn'.
 
 ;;; Supported modes for inclusion groups (`filesets-ingroup-patterns'):
@@ -92,9 +94,6 @@
 
 
 ;;; Some variables
-(eval-and-compile
-  (defvar filesets-running-xemacs (string-match "XEmacs\\|Lucid" emacs-version)
-    "Non-nil means we are running XEmacs."))
 
 (defvar filesets-menu-cache nil
   "The whole filesets menu.")
@@ -115,12 +114,11 @@
 (defvar filesets-updated-buffers nil
   "A list of buffers with updated menu bars.")
 (defvar filesets-menu-use-cached-flag nil
-  "Use cached data. See `filesets-menu-ensure-use-cached' for details.")
+  "Use cached data.  See `filesets-menu-ensure-use-cached' for details.")
 (defvar filesets-update-cache-file-flag nil
   "Non-nil means the cache needs updating.")
 (defvar filesets-ignore-next-set-default nil
-  "A list of custom variables for which the next `set-default' will be
-ignored.")
+  "List of custom variables for which the next `set-default' will be ignored.")
 
 (defvar filesets-output-buffer-flag nil
   "Non-nil means the current buffer is an output buffer created by filesets.
@@ -131,7 +129,7 @@ Is buffer local variable.")
 0 means no messages at all.")
 
 (defvar filesets-menu-ensure-use-cached
-  (and filesets-running-xemacs
+  (and (featurep 'xemacs)
        (if (fboundp 'emacs-version>=)
 	   (not (emacs-version>= 21 5))))
   "Make sure (X)Emacs uses filesets' cache.
@@ -146,8 +144,8 @@ file -- before loading filesets.el.
 
 So, when should you think about setting this value to t? If filesets.el
 is loaded before user customizations.  Thus, if (require 'filesets)
-precedes the custom-set-variables command or, for XEmacs, if init.el is
-loaded before custom.el, set this variable to t.")
+precedes the `custom-set-variables' command or, for XEmacs, if init.el
+is loaded before custom.el, set this variable to t.")
 
 
 ;;; utils
@@ -184,7 +182,7 @@ Like `some', return the first value of FSS-PRED that is non-nil."
 
 (defun filesets-member (fsm-item fsm-lst &rest fsm-keys)
   "Find the first occurrence of FSM-ITEM in FSM-LST.
-It is supposed to work like cl's `member*'. At the moment only the :test
+It is supposed to work like cl's `member*'.  At the moment only the :test
 key is supported."
   (let ((fsm-test (or (plist-get fsm-keys ':test)
 		      (function equal))))
@@ -214,11 +212,11 @@ key is supported."
       (file-name-nondirectory (substring this 0 (- (length this) 1))))))
 
 (defun filesets-which-command (cmd)
-  "Calls \"which CMD\"."
+  "Call \"which CMD\"."
   (shell-command-to-string (format "which %s" cmd)))
 
 (defun filesets-which-command-p (cmd)
-  "Calls \"which CMD\" and returns non-nil if the command was found."
+  "Call \"which CMD\" and return non-nil if the command was found."
   (when (string-match (format "\\(/[^/]+\\)?/%s" cmd)
 		      (filesets-which-command cmd))
     cmd))
@@ -252,7 +250,7 @@ key is supported."
 ;  (filesets-build-menu))
 
 ;; It seems this is a workaround for the XEmacs issue described in the
-;; doc-string of filesets-menu-ensure-use-cached. Under Emacs this is
+;; doc-string of filesets-menu-ensure-use-cached.  Under Emacs this is
 ;; essentially just `set-default'.
 (defun filesets-set-default (sym val &optional init-flag)
   "Set-default wrapper function used in conjunction with `defcustom'.
@@ -307,55 +305,57 @@ SYM to VAL and return t.  If INIT-FLAG is non-nil, set with
   :version "22.1")
 
 (defcustom filesets-menu-name "Filesets"
-  "*Filesets' menu name."
+  "Filesets' menu name."
   :set (function filesets-set-default)
-  :type 'sexp
+  :type 'string
   :group 'filesets)
 
-(defcustom filesets-menu-path nil
-  "*The menu under which the filesets menu should be inserted.
+(defcustom filesets-menu-path '("File")	; cf recentf-menu-path
+  "The menu under which the filesets menu should be inserted.
 See `add-submenu' for documentation."
   :set (function filesets-set-default)
-  :type 'sexp
+  :type '(choice (const :tag "Top Level" nil)
+		 (sexp :tag "Menu Path"))
+  :version "23.1"			; was nil
   :group 'filesets)
 
-(defcustom filesets-menu-before "File"
-  "*The name of a menu before which this menu should be added.
+(defcustom filesets-menu-before "Open File..." ; cf recentf-menu-before
+  "The name of a menu before which this menu should be added.
 See `add-submenu' for documentation."
   :set (function filesets-set-default)
-  :type 'sexp
+  :type '(choice (string :tag "Name")
+                 (const :tag "Last" nil))
+  :version "23.1"			; was "File"
   :group 'filesets)
 
 (defcustom filesets-menu-in-menu nil
-  "*Use that instead of `current-menubar' as the menu to change.
+  "Use that instead of `current-menubar' as the menu to change.
 See `add-submenu' for documentation."
   :set (function filesets-set-default)
   :type 'sexp
   :group 'filesets)
 
 (defcustom filesets-menu-shortcuts-flag t
-  "*Non-nil means to prepend menus with hopefully unique shortcuts."
+  "Non-nil means to prepend menus with hopefully unique shortcuts."
   :set (function filesets-set-default!)
   :type 'boolean
   :group 'filesets)
 
 (defcustom filesets-menu-shortcuts-marker "%_"
-  "*String for marking menu shortcuts."
+  "String for marking menu shortcuts."
   :set (function filesets-set-default!)
   :type 'string
   :group 'filesets)
 
-;(defcustom filesets-menu-cnvfp-flag nil
-;  "*Non-nil means show \"Convert :pattern to :files\" entry for :pattern menus."
-;  :set (function filesets-set-default!)
-;  :type 'boolean
-;  :group 'filesets)
+;;(defcustom filesets-menu-cnvfp-flag nil
+;;  "*Non-nil means show \"Convert :pattern to :files\" entry for :pattern menus."
+;;  :set (function filesets-set-default!)
+;;  :type 'boolean
+;;  :group 'filesets)
 
 (defcustom filesets-menu-cache-file
-  (if filesets-running-xemacs
-      "~/.xemacs/filesets-cache.el"
-      "~/.emacs.d/filesets-cache.el")
-  "*File to be used for saving the filesets menu between sessions.
+  (locate-user-emacs-file "filesets-cache.el")
+  "File to be used for saving the filesets menu between sessions.
 Set this to \"\", to disable caching of menus.
 Don't forget to check out `filesets-menu-ensure-use-cached'."
   :set (function filesets-set-default)
@@ -368,16 +368,16 @@ Don't forget to check out `filesets-menu-ensure-use-cached'."
     filesets-submenus
     filesets-menu-cache
     filesets-ingroup-cache)
-  "*Stuff we want to save in `filesets-menu-cache-file'.
+  "Stuff we want to save in `filesets-menu-cache-file'.
 
 Possible uses: don't save configuration data in the main startup files
 but in filesets's own cache.  In this case add `filesets-data' to this
 list.
 
-There is a second reason for putting `filesets-data' on this list. If
+There is a second reason for putting `filesets-data' on this list.  If
 you frequently add and remove buffers on the fly to :files filesets, you
 don't need to save your customizations if `filesets-data' is being
-mirrored in the cache file. In this case the version in the cache file
+mirrored in the cache file.  In this case the version in the cache file
 is the current one, and the version in your startup file will be
 silently updated later on.
 
@@ -407,7 +407,7 @@ Don't forget to check out `filesets-menu-ensure-use-cached'."
   :group 'filesets)
 
 (defcustom filesets-cache-fill-content-hooks nil
-  "*Hooks to run when writing the contents of filesets' cache file.
+  "Hooks to run when writing the contents of filesets' cache file.
 
 The hook is called with the cache file as current buffer and the cursor
 at the last position.  I.e. each hook has to make sure that the cursor is
@@ -429,7 +429,7 @@ Don't forget to check out `filesets-menu-ensure-use-cached'."
   :group 'filesets)
 
 (defcustom filesets-cache-hostname-flag nil
-  "*Non-nil means cache the hostname.
+  "Non-nil means cache the hostname.
 If the current name differs from the cached one,
 rebuild the menu and create a new cache file."
   :set (function filesets-set-default)
@@ -437,16 +437,16 @@ rebuild the menu and create a new cache file."
   :group 'filesets)
 
 (defcustom filesets-cache-save-often-flag nil
-  "*Non-nil means save buffer on every change of the filesets menu.
+  "Non-nil means save buffer on every change of the filesets menu.
 If this variable is set to nil and if Emacs crashes, the cache and
-filesets-data could get out of sync. Set this to t if this happens from
+filesets-data could get out of sync.  Set this to t if this happens from
 time to time or if the fileset cache causes troubles."
   :set (function filesets-set-default)
   :type 'boolean
   :group 'filesets)
 
 (defcustom filesets-max-submenu-length 25
-  "*Maximum length of submenus.
+  "Maximum length of submenus.
 Set this value to 0 to turn menu splitting off.  BTW, parts of submenus
 will not be rewrapped if their length exceeds this value."
   :set (function filesets-set-default)
@@ -454,13 +454,13 @@ will not be rewrapped if their length exceeds this value."
   :group 'filesets)
 
 (defcustom filesets-max-entry-length 50
-  "*Truncate names of splitted submenus to this length."
+  "Truncate names of splitted submenus to this length."
   :set (function filesets-set-default)
   :type 'integer
   :group 'filesets)
 
 (defcustom filesets-browse-dir-function 'dired
-  "*A function or command used for browsing directories.
+  "A function or command used for browsing directories.
 When using an external command, \"%s\" will be replaced with the
 directory's name.
 
@@ -478,7 +478,7 @@ Note: You have to manually rebuild the menu if you change this value."
   :group 'filesets)
 
 (defcustom filesets-open-file-function 'filesets-find-or-display-file
-  "*The function used for opening files.
+  "The function used for opening files.
 
 `filesets-find-or-display-file' ... Filesets' default function for
 visiting files.  This function checks if an external viewer is defined
@@ -486,7 +486,7 @@ for a specific file type.  Either this viewer, if defined, or
 `find-file' will be used to visit a file.
 
 `filesets-find-file' ... An alternative function that always uses
-`find-file'. If `filesets-be-docile-flag' is true, a file, which isn't
+`find-file'.  If `filesets-be-docile-flag' is true, a file, which isn't
 readable, will not be opened.
 
 Caveat: Changes will take effect only after rebuilding the menu."
@@ -501,7 +501,7 @@ Caveat: Changes will take effect only after rebuilding the menu."
   :group 'filesets)
 
 (defcustom filesets-save-buffer-function 'save-buffer
-  "*The function used to save a buffer.
+  "The function used to save a buffer.
 Caveat: Changes will take effect after rebuilding the menu."
   :set (function filesets-set-default)
   :type '(choice :tag "Function:"
@@ -512,10 +512,10 @@ Caveat: Changes will take effect after rebuilding the menu."
   :group 'filesets)
 
 (defcustom filesets-find-file-delay
-  (if (and filesets-running-xemacs gutter-buffers-tab-visible-p)
+  (if (and (featurep 'xemacs) gutter-buffers-tab-visible-p)
       0.5
     0)
-  "*Delay before calling find-file.
+  "Delay before calling `find-file'.
 This is for calls via `filesets-find-or-display-file'
 or `filesets-find-file'.
 
@@ -525,7 +525,7 @@ Set this to 0, if you don't use XEmacs' buffer tabs."
   :group 'filesets)
 
 (defcustom filesets-be-docile-flag nil
-  "*Non-nil means don't complain if a file or a directory doesn't exist.
+  "Non-nil means don't complain if a file or a directory doesn't exist.
 This is useful if you want to use the same startup files in different
 computer environments."
   :set (function filesets-set-default)
@@ -533,19 +533,19 @@ computer environments."
   :group 'filesets)
 
 (defcustom filesets-sort-menu-flag t
-  "*Non-nil means sort the filesets menu alphabetically."
+  "Non-nil means sort the filesets menu alphabetically."
   :set (function filesets-set-default)
   :type 'boolean
   :group 'filesets)
 
 (defcustom filesets-sort-case-sensitive-flag t
-  "*Non-nil means sorting of the filesets menu is case sensitive."
+  "Non-nil means sorting of the filesets menu is case sensitive."
   :set (function filesets-set-default)
   :type 'boolean
   :group 'filesets)
 
 (defcustom filesets-tree-max-level 3
-  "*Maximum scan depth for directory trees.
+  "Maximum scan depth for directory trees.
 A :tree fileset is defined by a base directory the contents of which
 will be recursively added to the menu.  `filesets-tree-max-level' tells up
 to which level the directory structure should be scanned/listed,
@@ -567,19 +567,25 @@ including directory trees to the menu can take a lot of memory."
   :group 'filesets)
 
 (defcustom filesets-commands
-  `(("Query Replace"
-     query-replace
+  `(("Isearch"
+     multi-isearch-files
+     (filesets-cmd-isearch-getargs))
+    ("Isearch (regexp)"
+     multi-isearch-files-regexp
+     (filesets-cmd-isearch-getargs))
+    ("Query Replace"
+     perform-replace
      (filesets-cmd-query-replace-getargs))
     ("Query Replace (regexp)"
-     query-replace-regexp
-     (filesets-cmd-query-replace-getargs))
+     perform-replace
+     (filesets-cmd-query-replace-regexp-getargs))
     ("Grep <<selection>>"
      "grep"
      ("-n " filesets-get-quoted-selection " " "<<file-name>>"))
     ("Run Shell Command"
      filesets-cmd-shell-command
      (filesets-cmd-shell-command-getargs)))
-  "*Commands to run on filesets.
+  "Commands to run on filesets.
 An association list of names, functions, and an argument list (or a
 function that returns one) to be run on a filesets' files.
 
@@ -607,16 +613,16 @@ the filename."
 
 (defcustom filesets-external-viewers
   (let
-;      ((ps-cmd  (or (and (boundp 'my-ps-viewer) my-ps-viewer)
-;		    (filesets-select-command "ggv gv")))
-;       (pdf-cmd (or (and (boundp 'my-ps-viewer) my-pdf-viewer)
-;		    (filesets-select-command "xpdf acroread")))
-;       (dvi-cmd (or (and (boundp 'my-ps-viewer) my-dvi-viewer)
-;		    (filesets-select-command "xdvi tkdvi")))
-;       (doc-cmd (or (and (boundp 'my-ps-viewer) my-doc-viewer)
-;		    (filesets-select-command "antiword")))
-;       (pic-cmd (or (and (boundp 'my-ps-viewer) my-pic-viewer)
-;		    (filesets-select-command "gqview ee display"))))
+      ;; ((ps-cmd  (or (and (boundp 'my-ps-viewer) my-ps-viewer)
+      ;;    	    (filesets-select-command "ggv gv")))
+      ;;  (pdf-cmd (or (and (boundp 'my-ps-viewer) my-pdf-viewer)
+      ;;    	    (filesets-select-command "xpdf acroread")))
+      ;;  (dvi-cmd (or (and (boundp 'my-ps-viewer) my-dvi-viewer)
+      ;;    	    (filesets-select-command "xdvi tkdvi")))
+      ;;  (doc-cmd (or (and (boundp 'my-ps-viewer) my-doc-viewer)
+      ;;    	    (filesets-select-command "antiword")))
+      ;;  (pic-cmd (or (and (boundp 'my-ps-viewer) my-pic-viewer)
+      ;;    	    (filesets-select-command "gqview ee display"))))
       ((ps-cmd  "ggv")
        (pdf-cmd "xpdf")
        (dvi-cmd "xdvi")
@@ -644,7 +650,7 @@ the filename."
        ((:ignore-on-open-all t)
 	(:ignore-on-read-text t)
 	(:constraint-flag ,pic-cmd)))))
-  "*Association list of file patterns and external viewers for use with
+  "Association list of file patterns and external viewers for use with
 `filesets-find-or-display-file'.
 
 Has the form ((FILE-PATTERN VIEWER PROPERTIES) ...), VIEWER being either a
@@ -674,21 +680,20 @@ variables my-ps-viewer, my-pdf-viewer, my-dvi-viewer, my-pic-viewer.
 In order to view pdf or rtf files in an Emacs buffer, you could use these:
 
 
-      \(\"^.+\\.pdf$\" \"pdftotext\"
+      \(\"^.+\\\\.pdf\\\\'\" \"pdftotext\"
        \((:capture-output t)
 	\(:args (\"%S - | fmt -w \" window-width))
 	\(:ignore-on-read-text t)
 	\(:constraintp (lambda ()
 			\(and \(filesets-which-command-p \"pdftotext\")
 			     \(filesets-which-command-p \"fmt\"))))))
-      \(\"^.+\\.rtf$\" \"rtf2htm\"
+      \(\"^.+\\\\.rtf\\\\'\" \"rtf2htm\"
        \((:capture-output t)
 	\(:args (\"%S 2> /dev/null | w3m -dump -T text/html\"))
 	\(:ignore-on-read-text t)
 	\(:constraintp (lambda ()
 			\(and (filesets-which-command-p \"rtf2htm\")
-			     \(filesets-which-command-p \"w3m\"))))))
-"
+			     \(filesets-which-command-p \"w3m\"))))))"
   :set (function filesets-set-default)
   :type '(repeat :tag "Viewer"
 		 (list :tag "Definition"
@@ -814,7 +819,7 @@ In order to view pdf or rtf files in an Emacs buffer, you could use these:
 			      emacs-wiki-directories
 			    nil))))))))
 
-  "*Inclusion group definitions.
+  "Inclusion group definitions.
 
 Define how to find included file according to a file's mode (being
 defined by a file pattern).
@@ -844,10 +849,10 @@ subfile can't be found.
 in the pattern holding the subfile's name.  0 refers the whole
 match, 1 to the first group.
 
-:stubp FUNCTION ... if (FUNCTION MASTER INCLUDED-FILE) returns non-nil,
+:stubp FUNCTION ... If (FUNCTION MASTER INCLUDED-FILE) returns non-nil,
 INCLUDED-FILE is a stub -- see below.
 
-:stub-flag ... files of this type are stubs -- see below.
+:stub-flag ... Files of this type are stubs -- see below.
 
 :scan-depth INTEGER (default: 0) ... Whether included files should be
 rescanned.  Set this to 0 to disable re-scanning of included file.
@@ -865,8 +870,8 @@ Stubs:
 
 First, a stub is a file that shows up in the menu but will not be
 included in an ingroup's file listing -- i.e. filesets will never
-operate on this file automatically. Secondly, in opposition to normal
-files stubs are not scanned for new inclusion groups. This is useful if
+operate on this file automatically.  Secondly, in opposition to normal
+files stubs are not scanned for new inclusion groups.  This is useful if
 you want to have quick access to library headers.
 
 In the menu, an asterisk is appended to the stub's name.
@@ -937,9 +942,8 @@ With duplicates removed, it would be:
   :group 'filesets)
 (put 'filesets-ingroup-patterns 'risky-local-variable t)
 
-(defcustom filesets-data
-  nil
-  "*Fileset definitions.
+(defcustom filesets-data nil
+  "Fileset definitions.
 
 A fileset is either a list of files, a file pattern, a base directory
 and a search pattern (for files), or a base file.  Changes to this
@@ -970,9 +974,11 @@ being an association list with the fields:
 
 :tree ROOT-DIR PATTERN ... a base directory and a file pattern
 
-:pattern DIR PATTERN ... PATTERN is a regular expression comprising path
-and file pattern -- e.g. 'PATH/^REGEXP$'.  Note the `^' at the beginning
-of the file name pattern.
+:pattern DIR PATTERN ... a base directory and a regexp matching
+                         files in that directory.  Usually,
+                         PATTERN has the form '^REGEXP$'.  Unlike
+                         :tree, this form does not descend
+                         recursively into subdirectories.
 
 :filter-dirs-flag BOOLEAN ... is only used in conjunction with :tree.
 
@@ -1065,27 +1071,27 @@ defined in `filesets-ingroup-patterns'."
 
 
 (defcustom filesets-query-user-limit 15
-  "*Query the user before opening a fileset with that many files."
+  "Query the user before opening a fileset with that many files."
   :set (function filesets-set-default)
   :type 'integer
   :group 'filesets)
 
 ;;; Emacs compatibility
 (eval-and-compile
-  (if filesets-running-xemacs
+  (if (featurep 'xemacs)
       (fset 'filesets-error 'error)
 
     (require 'easymenu)
 
     (defun filesets-error (class &rest args)
       "`error' wrapper."
-      (error (mapconcat 'identity args " ")))
+      (error "%s" (mapconcat 'identity args " ")))
 
     ))
 
 (defun filesets-filter-dir-names (lst &optional negative)
-  "Remove non-directory names from a list of strings. If NEGATIVE is
-non-nil, remove all directory names."
+  "Remove non-directory names from a list of strings.
+If NEGATIVE is non-nil, remove all directory names."
   (filesets-filter-list lst
 			(lambda (x)
 			  (and (not (string-match "^\\.+/$" x))
@@ -1093,13 +1099,11 @@ non-nil, remove all directory names."
 				   (not (string-match "[:/\\]$" x))
 				 (string-match "[:/\\]$" x))))))
 
-(defun filesets-conditional-sort (lst &optional access-fn simply-do-it)
+(defun filesets-conditional-sort (lst &optional access-fn)
   "Return a sorted copy of LST, LST being a list of strings.
 If `filesets-sort-menu-flag' is nil, return LST itself.
-ACCESS-FN ... function to get the string value of LST's elements.
 
-If SIMPLY-DO-IT is non-nil, the list is sorted regardless of
-`filesets-sort-menu-flag'."
+ACCESS-FN ... function to get the string value of LST's elements."
   (if filesets-sort-menu-flag
       (let* ((fni (or access-fn
 		      (function identity)))
@@ -1115,10 +1119,11 @@ If SIMPLY-DO-IT is non-nil, the list is sorted regardless of
 
 (defun filesets-directory-files (dir &optional
 				     pattern what full-flag match-dirs-flag)
-  "Get WHAT (:files or :dirs) in DIR. If PATTERN is provided return only
-those entries matching this regular expression. If MATCH-DIRS-FLAG is
-non-nil, also match directory entries. Return full path if FULL-FLAG is
-non-nil."
+  "Get WHAT (:files or :dirs) in DIR.
+If PATTERN is provided return only those entries matching this
+regular expression.
+If MATCH-DIRS-FLAG is non-nil, also match directory entries.
+Return full path if FULL-FLAG is non-nil."
   (filesets-message 2 "Filesets: scanning %S" dir)
   (cond
    ((file-exists-p dir)
@@ -1261,7 +1266,7 @@ non-nil."
      filesets-external-viewers)))
 
 (defun filesets-filetype-property (filename event &optional entry)
-  "Returns non-nil if a file of a specific type has special flags/tags.
+  "Return non-nil if a file of a specific type has special flags/tags.
 
 Events (corresponding tag):
 
@@ -1273,11 +1278,11 @@ the \"Grep <<selection>>\" command
 
 on-capture-output (:capture-output) ... Capture output of an external viewer
 
-on-ls ... not used
+on-ls ... Not used
 
-on-cmd ... not used
+on-cmd ... Not used
 
-on-close-all ... not used"
+on-close-all ... Not used"
   (let ((def (filesets-eviewer-get-props
 	      (or entry
 		  (filesets-get-external-viewer filename)))))
@@ -1290,7 +1295,7 @@ on-close-all ... not used"
 			nil t)))
 
 (defun filesets-filetype-get-prop (property filename &optional entry)
-  "Returns PROPERTY for filename -- use ENTRY if provided."
+  "Return PROPERTY for filename -- use ENTRY if provided."
   (let ((def (filesets-eviewer-get-props
 	      (or entry
 		  (filesets-get-external-viewer filename)))))
@@ -1410,7 +1415,7 @@ not be opened."
 		       name args)))))
 
 (defun filesets-get-fileset-name (something)
-  "Get SOMETHING's name. (Don't ask.)"
+  "Get SOMETHING's name (Don't ask)."
   (cond
    ((listp something)
     (car something))
@@ -1533,8 +1538,8 @@ Use FILESET-ENTRY for finding the save function, if provided."
   (filesets-data-get entry ':ingroup nil t))
 
 (defun filesets-file-open (open-function file-name &optional fileset-name)
-  "Open FILE-NAME using OPEN-FUNCTION. If OPEN-FUNCTION is nil, its
-value will be deduced from FILESET-NAME."
+  "Open FILE-NAME using OPEN-FUNCTION.
+If OPEN-FUNCTION is nil, its value will be deduced from FILESET-NAME."
   (let ((open-function (or open-function
 			   (filesets-entry-get-open-fn fileset-name))))
     (if (file-readable-p file-name)
@@ -1596,7 +1601,7 @@ SAVE-FUNCTION takes no argument, but works on the current buffer."
   (newline))
 
 (defun filesets-run-cmd--repl-fn (arg &optional format-fn)
-  "Helper function for `filesets-run-cmd'. Apply FORMAT-FN to arg.
+  "Helper function for `filesets-run-cmd'.  Apply FORMAT-FN to arg.
 Replace <file-name> or <<file-name>> with filename."
   (funcall format-fn (cond
 		      ((equal arg "<file-name>")
@@ -1628,38 +1633,40 @@ Replace <file-name> or <<file-name>> with filename."
 	(when files
 	  (let ((fn   (filesets-cmd-get-fn cmd-name))
 		(args (filesets-cmd-get-args cmd-name)))
-	    (dolist (this files nil)
-	      (save-excursion
-		(save-restriction
-		  (let ((buffer (filesets-find-file this)))
-		    (when buffer
-		      (goto-char (point-min))
-		      (let ()
-			(cond
-			 ((stringp fn)
-			  (let* ((args
-				  (let ((txt ""))
-				    (dolist (this args txt)
-				      (setq txt
-					    (concat txt
-						    (filesets-run-cmd--repl-fn
-						     this
-						     (lambda (this)
-						       (if (equal txt "") "" " ")
-						       (format "%s" this))))))))
-				 (cmd (concat fn " " args)))
-			    (filesets-cmd-show-result
-			     cmd (shell-command-to-string cmd))))
-			 ((symbolp fn)
-			  (let ((args
-				 (let ((argl nil))
-				   (dolist (this args argl)
-				     (setq argl
-					   (append argl
-						   (filesets-run-cmd--repl-fn
-						    this
-						    'list)))))))
-			    (apply fn args))))))))))))))))
+	    (if (memq fn '(multi-isearch-files multi-isearch-files-regexp))
+		(apply fn args)
+	      (dolist (this files nil)
+		(save-excursion
+		  (save-restriction
+		    (let ((buffer (filesets-find-file this)))
+		      (when buffer
+			(goto-char (point-min))
+			(let ()
+			  (cond
+			   ((stringp fn)
+			    (let* ((args
+				    (let ((txt ""))
+				      (dolist (this args txt)
+					(setq txt
+					      (concat txt
+						      (filesets-run-cmd--repl-fn
+						       this
+						       (lambda (this)
+							 (if (equal txt "") "" " ")
+							 (format "%s" this))))))))
+				   (cmd (concat fn " " args)))
+			      (filesets-cmd-show-result
+			       cmd (shell-command-to-string cmd))))
+			   ((symbolp fn)
+			    (let ((args
+				   (let ((argl nil))
+				     (dolist (this args argl)
+				       (setq argl
+					     (append argl
+						     (filesets-run-cmd--repl-fn
+						      this
+						      'list)))))))
+			      (apply fn args)))))))))))))))))
 
 (defun filesets-get-cmd-menu ()
   "Create filesets command menu."
@@ -1673,16 +1680,19 @@ Replace <file-name> or <<file-name>> with filename."
 ;;; sample commands
 (defun filesets-cmd-query-replace-getargs ()
   "Get arguments for `query-replace' and `query-replace-regexp'."
-  (let* ((from-string (read-string "Filesets query replace: "
-				   ""
-				   'query-replace-history))
-	 (to-string  (read-string
-		      (format "Filesets query replace %s with: " from-string)
-		      ""
-		      'query-replace-history))
-	 (delimited  (y-or-n-p
-		      "Filesets query replace: respect word boundaries? ")))
-    (list from-string to-string delimited)))
+  (let ((common (query-replace-read-args "Filesets query replace" nil t)))
+    (list (nth 0 common) (nth 1 common) t nil (nth 2 common) nil
+	  multi-query-replace-map)))
+
+(defun filesets-cmd-query-replace-regexp-getargs ()
+  "Get arguments for `query-replace' and `query-replace-regexp'."
+  (let ((common (query-replace-read-args "Filesets query replace" t t)))
+    (list (nth 0 common) (nth 1 common) t t (nth 2 common) nil
+	  multi-query-replace-map)))
+
+(defun filesets-cmd-isearch-getargs ()
+  "Get arguments for `multi-isearch-files' and `multi-isearch-files-regexp'."
+  (and (boundp 'files) (list files)))
 
 (defun filesets-cmd-shell-command-getargs ()
   "Get arguments for `filesets-cmd-shell-command'."
@@ -1786,7 +1796,7 @@ Use LOOKUP-NAME for deducing the save-function, if provided."
       (filesets-error 'error "Filesets: Unknown fileset: " name))))
 
 (defun filesets-add-buffer (&optional name buffer)
-  "Add BUFFER (or current-buffer) to the fileset called NAME.
+  "Add BUFFER (or current buffer) to the fileset called NAME.
 User will be queried, if no fileset name is provided."
   (interactive)
   (let* ((buffer (or buffer
@@ -1821,7 +1831,7 @@ User will be queried, if no fileset name is provided."
 	    (message "Filesets: Can't add '%s' to fileset '%s'" this name)))))))
 
 (defun filesets-remove-buffer (&optional name buffer)
-  "Remove BUFFER (or current-buffer) to fileset NAME.
+  "Remove BUFFER (or current buffer) to fileset NAME.
 User will be queried, if no fileset name is provided."
   (interactive)
   (let* ((buffer (or buffer
@@ -2013,11 +2023,11 @@ LOOKUP-NAME is used as lookup name for retrieving fileset specific settings."
   "Access to `filesets-ingroup-patterns'.  Extract remove-duplicates-flag."
   (filesets-ingroup-get-data master 1))
 
-(defun filesets-ingroup-collect-finder (patt case-sencitivep)
+(defun filesets-ingroup-collect-finder (patt case-sensitivep)
   "Helper function for `filesets-ingroup-collect'.  Find pattern PATT."
   (let ((cfs case-fold-search)
 	(rv  (progn
-	       (setq case-fold-search (not case-sencitivep))
+	       (setq case-fold-search (not case-sensitivep))
 	       (re-search-forward patt nil t))))
     (setq case-fold-search cfs)
     rv))
@@ -2106,8 +2116,8 @@ LOOKUP-NAME is used as lookup name for retrieving fileset specific settings."
 	(filesets-message 2 "Filesets: no patterns defined for %S" master)))))
 
 (defun filesets-ingroup-collect-build-menu (fs flist &optional other-count)
-  "Helper function for `filesets-ingroup-collect'. Build the menu.
-FS is a fileset's name. FLIST is a list returned by
+  "Helper function for `filesets-ingroup-collect'.  Build the menu.
+FS is a fileset's name.  FLIST is a list returned by
 `filesets-ingroup-collect-files'."
   (if (null flist)
       nil
@@ -2149,7 +2159,7 @@ FS is a fileset's name. FLIST is a list returned by
 			       ,@(filesets-get-menu-epilog master ':ingroup fsn)))
 			  `([,nm (filesets-file-open nil ',master ',fsn)])))))))))
 
-(defun filesets-ingroup-collect (fs remdupl-flag master &optional depth)
+(defun filesets-ingroup-collect (fs remdupl-flag master)
   "Collect names of included files and build submenu."
   (filesets-ingroup-cache-put master nil)
   (filesets-message 2 "Filesets: parsing %S" master)
@@ -2305,7 +2315,7 @@ Construct a shortcut from COUNT."
 						lookup-name t)))))))))))
 
 (defun filesets-remove-from-ubl (&optional buffer)
-  "BUFFER or current-buffer require update of the filesets menu."
+  "BUFFER or current buffer require update of the filesets menu."
   (let ((b (or buffer
 	       (current-buffer))))
     (if (member b filesets-updated-buffers)
@@ -2469,7 +2479,7 @@ We apologize for the inconvenience."))
 	(find-file-other-window cf))
       (filesets-error 'error msg))))
 
-(defun filesets-update (version cached-version)
+(defun filesets-update (cached-version)
   "Do some cleanup after updating filesets.el."
   (cond
    ((or (not cached-version)
@@ -2491,7 +2501,7 @@ We apologize for the inconvenience."))
 	(progn
 	  (setq filesets-update-cache-file-flag nil)
 	  t)
-      (filesets-update filesets-version filesets-cache-version)))
+      (filesets-update filesets-cache-version)))
    (t
     (setq filesets-update-cache-file-flag t)
     nil)))
@@ -2503,7 +2513,7 @@ We apologize for the inconvenience."))
 (defun filesets-init ()
   "Filesets initialization.
 Set up hooks, load the cache file -- if existing -- and build the menu."
-  (add-hook (if filesets-running-xemacs 'activate-menubar-hook 'menu-bar-update-hook)
+  (add-hook (if (featurep 'xemacs) 'activate-menubar-hook 'menu-bar-update-hook)
 	    (function filesets-build-menu-maybe))
   (add-hook 'kill-buffer-hook (function filesets-remove-from-ubl))
   (add-hook 'first-change-hook (function filesets-reset-filename-on-change))
@@ -2521,9 +2531,9 @@ Set up hooks, load the cache file -- if existing -- and build the menu."
 
 (provide 'filesets)
 
-;;; Local Variables:
-;;; sentence-end-double-space:t
-;;; End:
+;; Local Variables:
+;; sentence-end-double-space:t
+;; End:
 
-;;; arch-tag: 2c03f85f-c3df-4cec-b0a3-b46fd5592d70
+;; arch-tag: 2c03f85f-c3df-4cec-b0a3-b46fd5592d70
 ;;; filesets.el ends here

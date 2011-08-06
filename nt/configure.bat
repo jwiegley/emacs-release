@@ -2,14 +2,14 @@
 rem   ----------------------------------------------------------------------
 rem   Configuration script for MS Windows 95/98/Me and NT/2000/XP
 rem   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-rem      2006, 2007, 2008 Free Software Foundation, Inc.
+rem      2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 rem   This file is part of GNU Emacs.
 
-rem   GNU Emacs is free software; you can redistribute it and/or modify
+rem   GNU Emacs is free software: you can redistribute it and/or modify
 rem   it under the terms of the GNU General Public License as published by
-rem   the Free Software Foundation; either version 3, or (at your option)
-rem   any later version.
+rem   the Free Software Foundation, either version 3 of the License, or
+rem   (at your option) any later version.
 
 rem   GNU Emacs is distributed in the hope that it will be useful,
 rem   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,18 +17,17 @@ rem   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 rem   GNU General Public License for more details.
 
 rem   You should have received a copy of the GNU General Public License
-rem   along with GNU Emacs; see the file COPYING.  If not, write to the
-rem   Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-rem   Boston, MA 02110-1301, USA.
+rem   along with GNU Emacs.  If not, see http://www.gnu.org/licenses/.
+
 rem   ----------------------------------------------------------------------
 rem   YOU'LL NEED THE FOLLOWING UTILITIES TO MAKE EMACS:
 rem
 rem   + MS Windows 95/98/Me or NT/2000/XP
-rem   + either MSVC 2.x or later, or gcc-2.95 or later (with gmake 3.75
+rem   + either MSVC 2.x or later, or gcc-2.95 or later (with GNU make 3.75
 rem     or later) and the Mingw32 and W32 API headers and libraries.
 rem   + Visual Studio 2005 is not supported at this time.
 rem
-rem For reference, here is a list of which builds of gmake are known to
+rem For reference, here is a list of which builds of GNU make are known to
 rem work or not, and whether they work in the presence and/or absence of
 rem sh.exe.
 rem
@@ -81,6 +80,7 @@ rem   Default settings.
 set prefix=
 set nodebug=N
 set noopt=N
+set profile=N
 set nocygwin=N
 set COMPILER=
 set usercflags=
@@ -100,6 +100,7 @@ if "%1" == "--with-gcc" goto withgcc
 if "%1" == "--with-msvc" goto withmsvc
 if "%1" == "--no-debug" goto nodebug
 if "%1" == "--no-opt" goto noopt
+if "%1" == "--profile" goto profile
 if "%1" == "--no-cygwin" goto nocygwin
 if "%1" == "--cflags" goto usercflags
 if "%1" == "--ldflags" goto userldflags
@@ -108,6 +109,7 @@ if "%1" == "--without-jpeg" goto withoutjpeg
 if "%1" == "--without-gif" goto withoutgif
 if "%1" == "--without-tiff" goto withouttiff
 if "%1" == "--without-xpm" goto withoutxpm
+if "%1" == "--with-svg" goto withsvg
 if "%1" == "" goto checkutils
 :usage
 echo Usage: configure [options]
@@ -117,6 +119,7 @@ echo.   --with-gcc              use GCC to compile Emacs
 echo.   --with-msvc             use MSVC to compile Emacs
 echo.   --no-debug              exclude debug info from executables
 echo.   --no-opt                disable optimization
+echo.   --profile               enable profiling
 echo.   --no-cygwin             use -mno-cygwin option with GCC
 echo.   --cflags FLAG           pass FLAG to compiler
 echo.   --ldflags FLAG          pass FLAG to compiler when linking
@@ -125,6 +128,7 @@ echo.   --without-jpeg          do not use JPEG library even if it is installed
 echo.   --without-gif           do not use GIF library even if it is installed
 echo.   --without-tiff          do not use TIFF library even if it is installed
 echo.   --without-xpm           do not use XPM library even if it is installed
+echo.   --with-svg              use the RSVG library (experimental)
 goto end
 rem ----------------------------------------------------------------------
 :setprefix
@@ -150,6 +154,11 @@ goto again
 rem ----------------------------------------------------------------------
 :noopt
 set noopt=Y
+shift
+goto again
+rem ----------------------------------------------------------------------
+:profile
+set profile=Y
 shift
 goto again
 rem ----------------------------------------------------------------------
@@ -211,6 +220,11 @@ set HAVE_XPM=
 shift
 goto again
 
+:withsvg
+shift
+set svgsupport=Y
+goto again
+
 rem ----------------------------------------------------------------------
 rem    Check that necessary utilities (cp and rm) are present.
 :checkutils
@@ -235,22 +249,23 @@ rem   Auto-detect compiler if not specified, and validate GCC if chosen.
 if (%COMPILER%)==(cl) goto compilercheckdone
 if (%COMPILER%)==(gcc) goto checkgcc
 
-echo Checking whether 'cl' is available...
+echo Checking whether 'gcc' is available...
 echo main(){} >junk.c
+gcc -c junk.c
+if exist junk.o goto checkgcc
+
+echo Checking whether 'cl' is available...
 cl -nologo -c junk.c
 if exist junk.obj goto clOK
-
-echo Checking whether 'gcc' is available...
-gcc -c junk.c
-if not exist junk.o goto nocompiler
-del junk.o
+goto nocompiler
 
 :checkgcc
+if exist junk.o del junk.o
 Rem WARNING -- COMMAND.COM on some systems only looks at the first
 Rem            8 characters of a label.  So do NOT be tempted to change
 Rem            chkapi* into something fancier like checkw32api
 Rem You HAVE been warned!
-if (%nocygwin%) == (Y) goto chkapi
+if (%nocygwin%) == (Y) goto chkapiN
 echo Checking whether gcc requires '-mno-cygwin'...
 echo #include "cygwin/version.h" >junk.c
 echo main(){} >>junk.c
@@ -260,11 +275,12 @@ if not exist junk.o goto chkapi
 echo gcc -mno-cygwin -c junk.c >>config.log
 gcc -mno-cygwin -c junk.c >>config.log 2>&1
 if exist junk.o set nocygwin=Y
-rm -f junk.c junk.o
 
 :chkapi
 echo The failed program was: >>config.log
 type junk.c >>config.log
+:chkapiN
+rm -f junk.c junk.o
 rem ----------------------------------------------------------------------
 rem   Older versions of the Windows API headers either don't have any of
 rem   the IMAGE_xxx definitions (the headers that come with Cygwin b20.1
@@ -272,9 +288,11 @@ rem   are like this), or have a typo in the definition of
 rem   IMAGE_FIRST_SECTION (the headers with gcc/mingw32 2.95 have this
 rem   problem).  The gcc/mingw32 2.95.2 headers are okay, as are distros
 rem   of w32api-xxx.zip from Anders Norlander since 1999-11-18 at least.
+rem   Beginning with Emacs 23, we need usp10.h.
 rem
 echo Checking whether W32 API headers are too old...
 echo #include "windows.h" >junk.c
+echo #include "usp10.h" >>junk.c
 echo test(PIMAGE_NT_HEADERS pHeader) >>junk.c
 echo {PIMAGE_SECTION_HEADER pSection = IMAGE_FIRST_SECTION(pHeader);} >>junk.c
 if (%nocygwin%) == (Y) goto chkapi1
@@ -316,10 +334,25 @@ echo The failed program was: >>config.log
 type junk.c >>config.log
 set mf=-mcpu=i686
 rm -f junk.c junk.o
-goto compilercheckdone
+goto gccdebug
 :gccMtuneOk
 echo GCC supports -mtune=pentium4 >>config.log
 set mf=-mtune=pentium4
+rm -f junk.c junk.o
+:gccdebug
+rem Check for DWARF-2 debug info support, else default to stabs
+echo main(){} >junk.c
+echo gcc -c -gdwarf-2 -g3 junk.c >>config.log
+gcc -c -gdwarf-2 -g3 junk.c >>config.log 2>&1
+if not errorlevel 1 goto gccdwarf
+echo The failed program was: >>config.log
+type junk.c >>config.log
+set dbginfo=-gstabs+
+rm -f junk.c junk.o
+goto compilercheckdone
+:gccdwarf
+echo GCC supports DWARF-2 >>config.log
+set dbginfo=-gdwarf-2 -g3
 rm -f junk.c junk.o
 goto compilercheckdone
 
@@ -456,6 +489,28 @@ echo ...XPM header available, building with XPM support.
 set HAVE_XPM=1
 
 :xpmDone
+rm -f junk.c junk.obj
+
+if not (%svgsupport%) == (Y) goto :svgDone
+echo Checking for librsvg...
+echo #include "librsvg/rsvg.h" >junk.c
+echo main (){} >>junk.c
+rem   -o option is ignored with cl, but allows result to be consistent.
+echo %COMPILER% %usercflags% %mingwflag% -c junk.c -o junk.obj >>config.log
+%COMPILER% %usercflags% %mingwflag% -c junk.c -o junk.obj >junk.out 2>>config.log
+if exist junk.obj goto haveSvg
+
+echo ...librsvg/rsvg.h or dependencies not found, building without SVG support.
+echo The failed program was: >>config.log
+type junk.c >>config.log
+set HAVE_RSVG=
+goto :svgDone
+
+:haveSvg
+echo ...librsvg header available, building with SVG support (EXPERIMENTAL).
+set HAVE_RSVG=1
+
+:svgDone
 rm -f junk.c junk.obj junk.err junk.out
 
 rem ----------------------------------------------------------------------
@@ -471,8 +526,10 @@ rem
 echo # Start of settings from configure.bat >config.settings
 echo COMPILER=%COMPILER%>>config.settings
 if not "(%mf%)" == "()" echo MCPU_FLAG=%mf%>>config.settings
+if not "(%dbginfo%)" == "()" echo DEBUG_INFO=%dbginfo%>>config.settings
 if (%nodebug%) == (Y) echo NODEBUG=1 >>config.settings
 if (%noopt%) == (Y) echo NOOPT=1 >>config.settings
+if (%profile%) == (Y) echo PROFILE=1 >>config.settings
 if (%nocygwin%) == (Y) echo NOCYGWIN=1 >>config.settings
 if not "(%prefix%)" == "()" echo INSTALL_DIR=%prefix%>>config.settings
 rem We go thru docflags because usercflags could be "-DFOO=bar" -something
@@ -494,6 +551,8 @@ if not "(%HAVE_JPEG%)" == "()" echo #define HAVE_JPEG 1 >>config.tmp
 if not "(%HAVE_GIF%)" == "()" echo #define HAVE_GIF 1 >>config.tmp
 if not "(%HAVE_TIFF%)" == "()" echo #define HAVE_TIFF 1 >>config.tmp
 if not "(%HAVE_XPM%)" == "()" echo #define HAVE_XPM 1 >>config.tmp
+if "(%HAVE_RSVG%)" == "(1)" echo #define HAVE_RSVG 1 >>config.tmp
+
 echo /* End of settings from configure.bat.  */ >>config.tmp
 
 Rem See if fc.exe returns a meaningful exit status.  If it does, we
@@ -513,11 +572,13 @@ copy paths.h ..\src\epaths.h
 :dontCopy
 if exist config.tmp del config.tmp
 copy /b config.settings+%MAKECMD%.defs+..\nt\makefile.w32-in ..\nt\makefile
+if exist ..\admin\unidata copy /b config.settings+%MAKECMD%.defs+..\admin\unidata\makefile.w32-in ..\admin\unidata\makefile
 copy /b config.settings+%MAKECMD%.defs+..\lib-src\makefile.w32-in ..\lib-src\makefile
 copy /b config.settings+%MAKECMD%.defs+..\src\makefile.w32-in ..\src\makefile
-copy /b config.settings+%MAKECMD%.defs+..\man\makefile.w32-in ..\man\makefile
-copy /b config.settings+%MAKECMD%.defs+..\lispref\makefile.w32-in ..\lispref\makefile
-copy /b config.settings+%MAKECMD%.defs+..\lispintro\makefile.w32-in ..\lispintro\makefile
+copy /b config.settings+%MAKECMD%.defs+..\doc\emacs\makefile.w32-in ..\doc\emacs\makefile
+copy /b config.settings+%MAKECMD%.defs+..\doc\misc\makefile.w32-in ..\doc\misc\makefile
+copy /b config.settings+%MAKECMD%.defs+..\doc\lispref\makefile.w32-in ..\doc\lispref\makefile
+copy /b config.settings+%MAKECMD%.defs+..\doc\lispintro\makefile.w32-in ..\doc\lispintro\makefile
 if exist ..\lisp\makefile rm -f ../lisp/[Mm]akefile
 copy /b config.settings+%MAKECMD%.defs+..\lisp\makefile.w32-in ..\lisp\makefile
 rem   Use the default (no-op) Makefile.in if the nt version is not present.
@@ -539,8 +600,54 @@ copy subdirs.el ..\site-lisp\subdirs.el
 
 :dontUpdateSubdirs
 echo.
+
+rem check that we have all the libraries we need.
+set libsOK=1
+
+if not "(%HAVE_XPM%)" == "()" goto checkpng
+if (%xpmsupport%) == (N) goto checkpng
+ set libsOK=0
+ echo XPM support is missing. It is required for color icons in the toolbar.
+ echo   Install libXpm development files or use --without-xpm
+
+:checkpng
+if not "(%HAVE_PNG%)" == "()" goto checkjpeg
+if (%pngsupport%) == (N) goto checkjpeg
+ set libsOK=0
+ echo PNG support is missing.
+ echo   Install libpng development files or use --without-png
+
+:checkjpeg
+if not "(%HAVE_JPEG%)" == "()" goto checktiff
+if (%jpegsupport%) == (N) goto checktiff
+ set libsOK=0
+ echo JPEG support is missing.
+ echo   Install jpeg development files or use --without-jpeg
+
+:checktiff
+if not "(%HAVE_TIFF%)" == "()" goto checkgif
+if (%tiffsupport%) == (N) goto checkgif
+ set libsOK=0
+ echo TIFF support is missing.
+ echo   Install libtiff development files or use --without-tiff
+
+:checkgif
+if not "(%HAVE_GIF%)" == "()" goto donelibchecks
+if (%gifsupport%) == (N) goto donelibchecks
+ set libsOK=0
+ echo GIF support is missing.
+ echo   Install giflib or libungif development files or use --without-gif
+
+:donelibchecks
+if (%libsOK%) == (1) goto success
+echo.
+echo Important libraries are missing. Fix these issues before running make.
+goto end
+
+:success
 echo Emacs successfully configured.
 echo Emacs successfully configured. >>config.log
+if (%MAKECMD%) == (gmake) set MAKECMD=make
 echo Run `%MAKECMD%' to build, then run `%MAKECMD% install' to install.
 goto end
 
@@ -552,11 +659,14 @@ set $foo$=
 set prefix=
 set nodebug=
 set noopt=
+set profile=
 set nocygwin=
 set COMPILER=
 set MAKECMD=
 set usercflags=
+set docflags=
 set userldflags=
+set doldflags=
 set mingwflag=
 set mf=
 

@@ -2,15 +2,18 @@
    This file describes the parameters that system description files
    should define or not.
    Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007, 2008
+                 2003, 2004, 2005, 2006, 2007, 2008, 2009
                  Free Software Foundation, Inc.
+
+Author: Shawn M. Carey
+(according to authors.el)
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +21,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* Get the correct __FreeBSD_version, even if this is before that was
    defined. */
@@ -42,19 +43,8 @@ Boston, MA 02110-1301, USA.  */
 #define NO_SHARED_LIBS
 #endif
 
-
-#if 0 /* This much, alone, seemed sufficient as of 19.23.
-	 But it seems better to be independent of netbsd.h.  */
-#include "netbsd.h"
-
-#undef LIB_GCC
-#define LIB_GCC -lgcc
-#undef NEED_ERRNO
-#endif /* 0 */
-
-
-/* Get most of the stuff from bsd4.3 */
-#include "bsd4-3.h"
+/* Get most of the stuff from bsd-common */
+#include "bsd-common.h"
 
 /* For mem-limits.h. */
 #define BSD4_2
@@ -78,11 +68,14 @@ Boston, MA 02110-1301, USA.  */
 
 /* freebsd has POSIX-style pgrp behavior. */
 #undef BSD_PGRPS
-#define GETPGRP_NO_ARG
 
 #ifdef __ELF__
 
-#define LD_SWITCH_SYSTEM_1
+/* Let `ld' find image libs and similar things in /usr/local/lib.  The
+   system compiler, GCC, has apparently been modified to not look
+   there, contrary to what a stock GCC would do.  */
+
+#define LD_SWITCH_SYSTEM  -L/usr/local/lib
 #define START_FILES pre-crt0.o /usr/lib/crt1.o /usr/lib/crti.o /usr/lib/crtbegin.o
 #define UNEXEC unexelf.o
 #define LIB_STANDARD -lgcc -lc -lgcc /usr/lib/crtend.o /usr/lib/crtn.o
@@ -92,7 +85,7 @@ Boston, MA 02110-1301, USA.  */
 #else /* not __ELF__ */
 
 #ifndef NO_SHARED_LIBS
-#define LD_SWITCH_SYSTEM_1 -e start -dc -L/usr/local/lib
+#define LD_SWITCH_SYSTEM -e start -dc -L/usr/local/lib
 #define HAVE_TEXT_START		/* No need to define `start_of_text'. */
 #if __FreeBSD_version >= 300002
 #define START_FILES pre-crt0.o /usr/lib/aout/crt0.o
@@ -103,33 +96,16 @@ Boston, MA 02110-1301, USA.  */
 #define RUN_TIME_REMAP
 #define LIB_GCC -lgcc
 
-#ifndef N_TRELOFF
-#define N_PAGSIZ(x) __LDPGSZ
-#define N_BSSADDR(x) (N_ALIGN(x, N_DATADDR(x)+x.a_data))
-#define N_TRELOFF(x) N_RELOFF(x)
-#endif
 #else /* NO_SHARED_LIBS */
 #ifdef __FreeBSD__  /* shared libs are available, but the user prefers
                      not to use them.  */
-#define LD_SWITCH_SYSTEM_1 -Bstatic -L/usr/local/lib
-#define A_TEXT_OFFSET(x) (sizeof (struct exec))
-#define A_TEXT_SEEK(hdr) (N_TXTOFF(hdr) + A_TEXT_OFFSET(hdr))
+#define LD_SWITCH_SYSTEM -Bstatic -L/usr/local/lib
 #endif /* __FreeBSD__ */
 #endif /* NO_SHARED_LIBS */
 
 #endif /* not __ELF__ */
 
-/* Let `ld' find image libs and similar things in /usr/local/lib.  The
-   system compiler, GCC, has apparently been modified to not look
-   there, contrary to what a stock GCC would do.  */
-
-#define LD_SWITCH_SYSTEM LD_SWITCH_SYSTEM_1 -L/usr/local/lib
-
-#define HAVE_WAIT_HEADER
 #define HAVE_GETLOADAVG 1
-#if 0
-#define HAVE_GETPAGESIZE  /* configure now puts this in config.h */
-#endif
 #define HAVE_TERMIOS
 #define NO_TERMIO
 #define DECLARE_GETPWUID_WITH_UID_T
@@ -148,26 +124,10 @@ Boston, MA 02110-1301, USA.  */
 #define BSD_SYSTEM 199506
 #endif
 
-#if 0  /* Shouldn't be necessary and produces warnings with the
-          experimental Autoconf test.  */
-#define WAITTYPE int
-/* get this since it won't be included if WAITTYPE is defined */
-#ifdef emacs
-#include <sys/wait.h>
-#endif
-#define WRETCODE(w) (_W_INT(w) >> 8)
-#endif
-
 /* Don't close pty in process.c to make it as controlling terminal.
    It is already a controlling terminal of subprocess, because we did
    ioctl TIOCSCTTY.  */
 #define DONT_REOPEN_PTY
-
-/* CLASH_DETECTION is defined in bsd4-3.h.
-   In FreeBSD 2.1.5 (and other 2.1.x), this results useless symbolic links
-   remaining in /tmp or other directories with +t bit.
-   To avoid this problem, you could #undef it to use no file lock. */
-/* #undef CLASH_DETECTION */
 
 /* If the system's imake configuration file defines `NeedWidePrototypes'
    as `NO', we must define NARROWPROTO manually.  Such a define is

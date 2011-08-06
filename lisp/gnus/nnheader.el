@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1987, 1988, 1989, 1990, 1993, 1994,
 ;;   1995, 1996, 1997, 1998, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Masanobu UMEDA <umerin@flab.flab.fujitsu.junet>
 ;;	Lars Magne Ingebrigtsen <larsi@gnus.org>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -32,6 +30,9 @@
 (eval-when-compile (require 'cl))
 
 (defvar nnmail-extra-headers)
+(defvar gnus-newsgroup-name)
+(defvar nnheader-file-coding-system)
+(defvar jka-compr-compression-info-list)
 
 ;; Requiring `gnus-util' at compile time creates a circular
 ;; dependency between nnheader.el and gnus-util.el.
@@ -40,11 +41,11 @@
 (require 'mail-utils)
 (require 'mm-util)
 (require 'gnus-util)
-(eval-and-compile
-  (autoload 'gnus-sorted-intersection "gnus-range")
-  (autoload 'gnus-intersection "gnus-range")
-  (autoload 'gnus-sorted-complement "gnus-range")
-  (autoload 'gnus-sorted-difference "gnus-range"))
+;; FIXME none of these are used explicitly in this file.
+(autoload 'gnus-sorted-intersection "gnus-range")
+(autoload 'gnus-intersection "gnus-range")
+(autoload 'gnus-sorted-complement "gnus-range")
+(autoload 'gnus-sorted-difference "gnus-range")
 
 (defcustom gnus-verbose-backends 7
   "Integer that says how verbose the Gnus backends should be.
@@ -85,7 +86,14 @@ Integer values will in effect be rounded up to the nearest multiple of
       ;; what's possible.  Perhaps better, maybe the Windows/DOS primitive
       ;; could round up non-zero timeouts to a minimum of 1.0?
       1.0
-    0.1)
+    ;; 2008-05-19 change by Larsi:
+    ;; Change the default timeout from 0.1 seconds to 0.01 seconds.  This will
+    ;; make nntp and pop3 article retrieval faster in some cases, but might
+    ;; make CPU usage larger.  If this has any bad side effects, we might
+    ;; revert this change.
+    0.01)
+  ;; When changing this variable, consider changing `pop3-read-timeout' as
+  ;; well.
   "How long nntp should wait between checking for the end of output.
 Shorter values mean quicker response, but are more CPU intensive.")
 
@@ -111,12 +119,10 @@ on your system, you could say something like:
   (string-to-char (substring (file-name-as-directory ".") -1))
   "*A character used to a directory separator.")
 
-(eval-and-compile
-  (autoload 'nnmail-message-id "nnmail")
-  (autoload 'mail-position-on-field "sendmail")
-  (autoload 'message-remove-header "message")
-  (autoload 'gnus-point-at-eol "gnus-util")
-  (autoload 'gnus-buffer-live-p "gnus-util"))
+(autoload 'nnmail-message-id "nnmail")
+(autoload 'mail-position-on-field "sendmail")
+(autoload 'message-remove-header "message")
+(autoload 'gnus-buffer-live-p "gnus-util")
 
 ;;; Header access macros.
 
@@ -209,9 +215,9 @@ on your system, you could say something like:
   "Return the extra headers in HEADER."
   `(aref ,header 9))
 
-(defmacro mail-header-set-extra (header extra)
+(defun mail-header-set-extra (header extra)
   "Set the extra headers in HEADER to EXTRA."
-  `(aset ,header 9 ',extra))
+  (aset header 9 extra))
 
 (defsubst make-mail-header (&optional init)
   "Create a new mail header structure initialized with INIT."
@@ -227,12 +233,16 @@ on your system, you could say something like:
 
 (defvar nnheader-fake-message-id 1)
 
-(defsubst nnheader-generate-fake-message-id ()
-  (concat "fake+none+" (int-to-string (incf nnheader-fake-message-id))))
+(defsubst nnheader-generate-fake-message-id (&optional number)
+  (if (numberp number)
+      (format "fake+none+%s+%d" gnus-newsgroup-name number)
+    (format "fake+none+%s+%s"
+	    gnus-newsgroup-name
+	    (int-to-string (incf nnheader-fake-message-id)))))
 
 (defsubst nnheader-fake-message-id-p (id)
   (save-match-data		       ; regular message-id's are <.*>
-    (string-match "\\`fake\\+none\\+[0-9]+\\'" id)))
+    (string-match "\\`fake\\+none\\+.*\\+[0-9]+\\'" id)))
 
 ;; Parsing headers and NOV lines.
 
@@ -243,7 +253,9 @@ on your system, you could say something like:
 
 (defsubst nnheader-header-value ()
   (skip-chars-forward " \t")
-  (buffer-substring (point) (gnus-point-at-eol)))
+  (buffer-substring (point) (point-at-eol)))
+
+(autoload 'ietf-drums-unfold-fws "ietf-drums")
 
 (defun nnheader-parse-naked-head (&optional number)
   ;; This function unfolds continuation lines in this buffer
@@ -289,12 +301,12 @@ on your system, you could say something like:
 	   (goto-char p)
 	   (if (search-forward "\nmessage-id:" nil t)
 	       (buffer-substring
-		(1- (or (search-forward "<" (gnus-point-at-eol) t)
+		(1- (or (search-forward "<" (point-at-eol) t)
 			(point)))
-		(or (search-forward ">" (gnus-point-at-eol) t) (point)))
+		(or (search-forward ">" (point-at-eol) t) (point)))
 	     ;; If there was no message-id, we just fake one to make
 	     ;; subsequent routines simpler.
-	     (nnheader-generate-fake-message-id)))
+	     (nnheader-generate-fake-message-id number)))
 	 ;; References.
 	 (progn
 	   (goto-char p)
@@ -392,20 +404,29 @@ on your system, you could say something like:
 	       out)))
      out))
 
-(defmacro nnheader-nov-read-message-id ()
-  '(let ((id (nnheader-nov-field)))
+(eval-and-compile
+  (defvar nnheader-uniquify-message-id nil))
+
+(defmacro nnheader-nov-read-message-id (&optional number)
+  `(let ((id (nnheader-nov-field)))
      (if (string-match "^<[^>]+>$" id)
-	 id
-       (nnheader-generate-fake-message-id))))
+	 ,(if nnheader-uniquify-message-id
+	      `(if (string-match "__[^@]+@" id)
+		   (concat (substring id 0 (match-beginning 0))
+			   (substring id (1- (match-end 0))))
+		 id)
+	    'id)
+       (nnheader-generate-fake-message-id ,number))))
 
 (defun nnheader-parse-nov ()
-  (let ((eol (gnus-point-at-eol)))
+  (let ((eol (point-at-eol))
+	(number (nnheader-nov-read-integer)))
     (vector
-     (nnheader-nov-read-integer)	; number
+     number				; number
      (nnheader-nov-field)		; subject
      (nnheader-nov-field)		; from
      (nnheader-nov-field)		; date
-     (nnheader-nov-read-message-id)	; id
+     (nnheader-nov-read-message-id number) ; id
      (nnheader-nov-field)		; refs
      (nnheader-nov-read-integer)	; chars
      (nnheader-nov-read-integer)	; lines
@@ -555,12 +576,11 @@ the line could be found."
 
 (defun nnheader-init-server-buffer ()
   "Initialize the Gnus-backend communication buffer."
-  (save-excursion
-    (unless (gnus-buffer-live-p nntp-server-buffer)
-      (setq nntp-server-buffer (get-buffer-create " *nntpd*")))
-    (set-buffer nntp-server-buffer)
-    (mm-enable-multibyte)
+  (unless (gnus-buffer-live-p nntp-server-buffer)
+    (setq nntp-server-buffer (get-buffer-create " *nntpd*")))
+  (with-current-buffer nntp-server-buffer
     (erase-buffer)
+    (mm-enable-multibyte)
     (kill-all-local-variables)
     (setq case-fold-search t)		;Should ignore case.
     (set (make-local-variable 'nntp-process-response) nil)
@@ -628,7 +648,7 @@ the line could be found."
       ;; This is invalid, but not all articles have Message-IDs.
       ()
     (mail-position-on-field "References")
-    (let ((begin (gnus-point-at-bol))
+    (let ((begin (point-at-bol))
 	  (fill-column 78)
 	  (fill-prefix "\t"))
       (when references
@@ -662,6 +682,14 @@ the line could be found."
      (point-max)))
   (goto-char (point-min)))
 
+(defun nnheader-get-lines-and-char ()
+  "Return the number of lines and chars in the article body."
+  (goto-char (point-min))
+  (if (not (re-search-forward "\n\r?\n" nil t))
+      (list 0 0)
+    (list (count-lines (point) (point-max))
+	  (- (point-max) (point)))))
+
 (defun nnheader-remove-body ()
   "Remove the body from an article in this current buffer."
   (goto-char (point-min))
@@ -676,7 +704,6 @@ the line could be found."
     (erase-buffer))
   (current-buffer))
 
-(eval-when-compile (defvar jka-compr-compression-info-list))
 (defvar nnheader-numerical-files
   (if (boundp 'jka-compr-compression-info-list)
       (concat "\\([0-9]+\\)\\("
@@ -701,8 +728,7 @@ the line could be found."
 
 (defvar nnheader-directory-files-is-safe
   (or (eq system-type 'windows-nt)
-      (and (not (featurep 'xemacs))
-	   (> emacs-major-version 20)))
+      (not (featurep 'xemacs)))
   "If non-nil, Gnus believes `directory-files' is safe.
 It has been reported numerous times that `directory-files' fails with
 an alarming frequency on NFS mounted file systems. If it is nil,
@@ -848,7 +874,9 @@ without formatting."
   "Message if the Gnus backends are talkative."
   (if (or (not (numberp gnus-verbose-backends))
 	  (<= level gnus-verbose-backends))
-      (apply 'message args)
+      (if gnus-add-timestamp-to-message
+	  (apply 'gnus-message-with-timestamp args)
+	(apply 'message args))
     (apply 'format args)))
 
 (defun nnheader-be-verbose (level)
@@ -918,9 +946,8 @@ first.  Otherwise, find the newest one, though it may take a time."
 	(car results)
       (car (sort results 'file-newer-than-file-p)))))
 
-(eval-when-compile
-  (defvar ange-ftp-path-format)
-  (defvar efs-path-regexp))
+(defvar ange-ftp-path-format)
+(defvar efs-path-regexp)
 (defun nnheader-re-read-dir (path)
   "Re-read directory PATH if PATH is on a remote system."
   (if (and (fboundp 'efs-re-read-dir) (boundp 'efs-path-regexp))
@@ -972,6 +999,7 @@ See `find-file-noselect' for the arguments."
 	 (after-insert-file-functions nil)
 	 (enable-local-eval nil)
 	 (coding-system-for-read nnheader-file-coding-system)
+	 (version-control 'never)
 	 (ffh (if (boundp 'find-file-hook)
 		  'find-file-hook
 		'find-file-hooks))
@@ -1033,11 +1061,11 @@ See `find-file-noselect' for the arguments."
   "Strip all \r's from the current buffer."
   (nnheader-skeleton-replace "\r"))
 
-(defalias 'nnheader-run-at-time 'run-at-time)
 (defalias 'nnheader-cancel-timer 'cancel-timer)
 (defalias 'nnheader-cancel-function-timers 'cancel-function-timers)
-(defalias 'nnheader-string-as-multibyte 'string-as-multibyte)
 
+;; When changing this function, consider changing `pop3-accept-process-output'
+;; as well.
 (defun nnheader-accept-process-output (process)
   (accept-process-output
    process
@@ -1053,5 +1081,5 @@ See `find-file-noselect' for the arguments."
 
 (provide 'nnheader)
 
-;;; arch-tag: a9c4b7d9-52ae-4ec9-b196-dfd93124d202
+;; arch-tag: a9c4b7d9-52ae-4ec9-b196-dfd93124d202
 ;;; nnheader.el ends here

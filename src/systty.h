@@ -1,13 +1,13 @@
 /* systty.h - System-dependent definitions for terminals.
    Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #ifdef HAVE_TERMIOS
 #define HAVE_TCATTR
@@ -26,9 +24,6 @@ Boston, MA 02110-1301, USA.  */
 
 /* Include the proper files.  */
 #ifdef HAVE_TERMIO
-#ifdef __DGUX
-#include <sys/ioctl.h>
-#endif
 #ifndef NO_TERMIO
 #include <termio.h>
 #endif /* not NO_TERMIO */
@@ -38,58 +33,16 @@ Boston, MA 02110-1301, USA.  */
 #endif
 #else /* not HAVE_TERMIO */
 #ifdef HAVE_TERMIOS
-#if defined(_AIX) && defined(_I386)
-#include <termios.h>		/* termios.h needs to be before termio.h */
-#include <termio.h>
-#else /* not (_AIX && _I386) */
 #ifndef NO_TERMIO
 #include <termio.h>
 #endif
 #include <termios.h>
-#endif /* not (_AIX && _I386) */
 #define INCLUDED_FCNTL
 #include <fcntl.h>
 #else /* neither HAVE_TERMIO nor HAVE_TERMIOS */
-#ifndef VMS
 #ifndef DOS_NT
 #include <sgtty.h>
 #endif /* not DOS_NT */
-#else /* VMS */
-#include <descrip.h>
-static struct iosb
-{
-  short status;
-  short offset;
-  short termlen;
-  short term;
-} input_iosb;
-
-extern int waiting_for_ast;
-extern int stop_input;
-extern int input_ef;
-extern int timer_ef;
-extern int process_ef;
-extern int input_eflist;
-extern int timer_eflist;
-
-static $DESCRIPTOR (input_dsc, "TT");
-static int terminator_mask[2] = { 0, 0 };
-
-static struct sensemode {
-  short status;
-  unsigned char xmit_baud;
-  unsigned char rcv_baud;
-  unsigned char crfill;
-  unsigned char lffill;
-  unsigned char parity;
-  unsigned char unused;
-  char class;
-  char type;
-  short scr_wid;
-  unsigned long tt_char : 24, scr_len : 8;
-  unsigned long tt2_char;
-} sensemode_iosb;
-#endif /* VMS */
 #endif /* not HAVE_TERMIOS */
 #endif /* not HAVE_TERMIO */
 
@@ -97,19 +50,6 @@ static struct sensemode {
 #include <sys/ioctl.h>
 #include <termios.h>
 #endif
-
-#ifdef AIXHFT
-/* Get files for keyboard remapping */
-#define HFNKEYS 2
-#include <sys/hft.h>
-#include <sys/devinfo.h>
-#endif
-
-/* Get rid of LLITOUT in 4.1, since it is said to stimulate kernel bugs.  */
-#ifdef BSD4_1
-#undef LLITOUT
-#define LLITOUT 0
-#endif /* 4.1 */
 
 #ifdef NEED_BSDTTY
 #include <sys/bsdtty.h>
@@ -127,44 +67,8 @@ static struct sensemode {
 #include <unistd.h>
 #endif
 
-#ifdef SYSV_PTYS
-#include <sys/types.h>
-#include <sys/tty.h>
-#ifdef titan
-#include <sys/ttyhw.h>
-#include <sys/stream.h>
-#endif
-#ifndef NO_PTY_H
-#include <sys/pty.h>
-#endif
-#endif
-
-/* saka@pfu.fujitsu.co.JP writes:
-   FASYNC defined in this file. But, FASYNC don't working.
-   so no problem, because unrequest_sigio only need. */
-#if defined (pfa)
-#include <sys/file.h>
-#endif
-
 
 /* Special cases - inhibiting the use of certain features.  */
-
-#ifdef APOLLO
-#undef TIOCSTART
-#endif
-
-#ifdef XENIX
-#undef TIOCGETC  /* Avoid confusing some conditionals that test this.  */
-#endif
-
-#ifdef BROKEN_TIOCGETC
-#undef TIOCGETC  /* Avoid confusing some conditionals that test this.  */
-#endif
-
-/* UNIPLUS systems may have FIONREAD.  */
-#ifdef UNIPLUS
-#include <sys.ioctl.h>
-#endif
 
 /* Allow m- file to inhibit use of FIONREAD.  */
 #ifdef BROKEN_FIONREAD
@@ -233,48 +137,47 @@ static struct sensemode {
    EMACS_SET_TTY_PGRP(int FD, int *PGID) sets the terminal FD's
    current process group to *PGID.  Return -1 if there is an error.  */
 
-#ifdef HPUX
 /* HPUX tty process group stuff doesn't work, says the anonymous voice
    from the past.  */
-#else
+#ifndef HPUX
 #ifdef TIOCGPGRP
 #define EMACS_HAVE_TTY_PGRP
 #else
 #ifdef HAVE_TERMIOS
 #define EMACS_HAVE_TTY_PGRP
-#endif
-#endif
-#endif
+#endif /* HAVE_TERMIOS */
+#endif /* TIOCGPGRP */
+#endif /* not HPUX */
 
 #ifdef EMACS_HAVE_TTY_PGRP
 
-#if defined (HAVE_TERMIOS) && ! defined (BSD_TERMIOS)
+#if defined (HAVE_TERMIOS)
 
 #define EMACS_GET_TTY_PGRP(fd, pgid) (*(pgid) = tcgetpgrp ((fd)))
 #define EMACS_SET_TTY_PGRP(fd, pgid) (tcsetpgrp ((fd), *(pgid)))
 
-#else
+#else /* not HAVE_TERMIOS */
 #ifdef TIOCSPGRP
 
 #define EMACS_GET_TTY_PGRP(fd, pgid) (ioctl ((fd), TIOCGPGRP, (pgid)))
 #define EMACS_SET_TTY_PGRP(fd, pgid) (ioctl ((fd), TIOCSPGRP, (pgid)))
 
-#endif
-#endif
+#endif /* TIOCSPGRP */
+#endif /* HAVE_TERMIOS */
 
-#else
+#else /* not EMACS_SET_TTY_PGRP */
 
 /* Just ignore this for now and hope for the best */
 #define EMACS_GET_TTY_PGRP(fd, pgid) 0
 #define EMACS_SET_TTY_PGRP(fd, pgif) 0
 
-#endif
+#endif /* not EMACS_SET_TTY_PGRP */
 
 /* EMACS_GETPGRP (arg) returns the process group of the process.  */
 
 #if defined (GETPGRP_VOID)
 #  define EMACS_GETPGRP(x) getpgrp()
-#else
+#else /* !GETPGRP_VOID */
 #  define EMACS_GETPGRP(x) getpgrp(x)
 #endif /* !GETPGRP_VOID */
 
@@ -313,34 +216,30 @@ struct emacs_tty {
    for dummy get and set definitions.  */
 #ifdef HAVE_TCATTR
   struct termios main;
-#else
+#else /* not HAVE_TCATTR */
 #ifdef HAVE_TERMIO
   struct termio main;
-#else
-#ifdef VMS
-  struct sensemode main;
-#else
+#else /* not HAVE_TERMIO */
 #ifdef DOS_NT
   int main;
 #else  /* not DOS_NT */
   struct sgttyb main;
 #endif /* not DOS_NT */
-#endif
-#endif
-#endif
+#endif /* not HAVE_TERMIO */
+#endif /* not HAVE_TCATTR */
 
 /* If we have TERMIOS, we don't need to do this - they're taken care of
    by the tc*attr calls.  */
 #ifndef HAVE_TERMIOS
 #ifdef HAVE_LTCHARS
   struct ltchars ltchars;
-#endif
+#endif /* HAVE_LTCHARS */
 
 #ifdef HAVE_TCHARS
   struct tchars tchars;
   int lmode;
-#endif
-#endif
+#endif /* HAVE_TCHARS */
+#endif /* not defined HAVE_TERMIOS */
 };
 
 /* Define EMACS_GET_TTY and EMACS_SET_TTY,
@@ -363,9 +262,9 @@ extern int emacs_set_tty P_ ((int, struct emacs_tty *, int));
 
 #ifdef TABDLY
 #define EMACS_TTY_TABS_OK(p) (((p)->main.c_oflag & TABDLY) != TAB3)
-#else
+#else /* not TABDLY */
 #define EMACS_TTY_TABS_OK(p) 1
-#endif
+#endif /* not TABDLY */
 
 #else /* not def HAVE_TERMIOS */
 #ifdef HAVE_TERMIO
@@ -373,11 +272,6 @@ extern int emacs_set_tty P_ ((int, struct emacs_tty *, int));
 #define EMACS_TTY_TABS_OK(p) (((p)->main.c_oflag & TABDLY) != TAB3)
 
 #else /* neither HAVE_TERMIO nor HAVE_TERMIOS */
-#ifdef VMS
-
-#define EMACS_TTY_TABS_OK(p) (((p)->main.tt_char & TT$M_MECHTAB) != 0)
-
-#else
 
 #ifdef DOS_NT
 #define EMACS_TTY_TABS_OK(p) 0
@@ -385,7 +279,6 @@ extern int emacs_set_tty P_ ((int, struct emacs_tty *, int));
 #define EMACS_TTY_TABS_OK(p) (((p)->main.sg_flags & XTABS) != XTABS)
 #endif /* not DOS_NT */
 
-#endif /* not def VMS */
 #endif /* not def HAVE_TERMIO */
 #endif /* not def HAVE_TERMIOS */
 

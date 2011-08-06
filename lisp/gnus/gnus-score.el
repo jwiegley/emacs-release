@@ -1,7 +1,7 @@
 ;;; gnus-score.el --- scoring code for Gnus
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Per Abrahamsen <amanda@iesd.auc.dk>
 ;;	Lars Magne Ingebrigtsen <larsi@gnus.org>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -36,8 +34,6 @@
 (require 'gnus-win)
 (require 'message)
 (require 'score-mode)
-
-(autoload 'ffap-string-at-point "ffap")
 
 (defcustom gnus-global-score-files nil
   "List of global score files and directories.
@@ -149,9 +145,15 @@ will be expired along with non-matching score entries."
   :type 'boolean)
 
 (defcustom gnus-decay-scores nil
-  "*If non-nil, decay non-permanent scores."
+  "*If non-nil, decay non-permanent scores.
+
+If it is a regexp, only decay score files matching regexp."
   :group 'gnus-score-decay
-  :type 'boolean)
+  :type `(choice (const :tag "never" nil)
+		 (const :tag "always" t)
+		 (const :tag "adaptive score files"
+			,(concat "\\." gnus-adaptive-file-suffix "\\'"))
+		 (regexp)))
 
 (defcustom gnus-decay-score-function 'gnus-decay-score
   "*Function called to decay a score.
@@ -318,6 +320,13 @@ If this variable is nil, exact matching will always be used."
   :group 'gnus-score-files
   :type 'regexp)
 
+(defcustom gnus-adaptive-pretty-print nil
+  "If non-nil, adaptive score files fill are pretty printed."
+  :group 'gnus-score-files
+  :group 'gnus-score-adapt
+  :version "23.1" ;; No Gnus
+  :type 'boolean)
+
 (defcustom gnus-score-default-header nil
   "Default header when entering new scores.
 
@@ -410,6 +419,18 @@ If nil, the user will be asked for a duration."
   "If non-nil, subjects will simplified as in threading."
   :group 'gnus-score-various
   :type 'boolean)
+
+(defcustom gnus-inhibit-slow-scoring nil
+  "Inhibit slow scoring, e.g. scoring on headers or body.
+
+If a regexp, scoring on headers or body is inhibited if the group
+matches the regexp.  If it is t, scoring on headers or body is
+inhibited for all groups."
+  :group 'gnus-score-various
+  :version "23.1" ;; No Gnus
+  :type '(choice (const :tag "All" nil)
+		 (const :tag "None" t)
+		 regexp))
 
 
 
@@ -753,7 +774,7 @@ file for the command instead of the current score file."
 	(setq i (1+ i))))
     (goto-char (point-min))
     ;; display ourselves in a small window at the bottom
-    (gnus-appt-select-lowest-window)
+    (gnus-select-lowest-window)
     (if (< (/ (window-height) 2) window-min-height)
 	(switch-to-buffer "*Score Help*")
       (split-window)
@@ -1099,6 +1120,16 @@ EXTRA is the possible non-standard header."
      4 (substitute-command-keys
 	"\\<gnus-score-mode-map>\\[gnus-score-edit-exit] to save edits"))))
 
+(defun gnus-score-edit-all-score ()
+  "Edit the all.SCORE file."
+  (interactive)
+  (find-file (gnus-score-file-name "all"))
+  (gnus-score-mode)
+  (setq gnus-score-edit-exit-function 'gnus-score-edit-done)
+  (gnus-message
+   4 (substitute-command-keys
+      "\\<gnus-score-mode-map>\\[gnus-score-edit-exit] to save edits")))
+
 (defun gnus-score-edit-file (file)
   "Edit a score file."
   (interactive
@@ -1128,9 +1159,9 @@ If FORMAT, also format the current score file."
 	 (reg " -> +")
 	 (file (save-excursion
 		 (end-of-line)
-		 (if (and (re-search-backward reg (gnus-point-at-bol) t)
-			  (re-search-forward  reg (gnus-point-at-eol) t))
-		     (buffer-substring (point) (gnus-point-at-eol))
+		 (if (and (re-search-backward reg (point-at-bol) t)
+			  (re-search-forward  reg (point-at-eol) t))
+		     (buffer-substring (point) (point-at-eol))
 		   nil))))
     (if (or (not file)
 	    (string-match "\\<\\(non-file rule\\|A file\\)\\>" file)
@@ -1209,7 +1240,9 @@ If FORMAT, also format the current score file."
 	  (decay (car (gnus-score-get 'decay alist)))
 	  (eval (car (gnus-score-get 'eval alist))))
       ;; Perform possible decays.
-      (when (and gnus-decay-scores
+      (when (and (if (stringp gnus-decay-scores)
+		     (string-match gnus-decay-scores file)
+		   gnus-decay-scores)
 		 (or cached (file-exists-p file))
 		 (or (not decay)
 		     (gnus-decay-scores alist decay)))
@@ -1219,8 +1252,7 @@ If FORMAT, also format the current score file."
       ;; files.
       (when (and files (not global))
 	(setq lists (apply 'append lists
-			   (mapcar (lambda (file)
-				     (gnus-score-load-file file))
+			   (mapcar 'gnus-score-load-file
 				   (if adapt-file (cons adapt-file files)
 				     files)))))
       (when (and eval (not global))
@@ -1412,12 +1444,13 @@ If FORMAT, also format the current score file."
 	  (setq score (setcdr entry (gnus-delete-alist 'touched score)))
 	  (erase-buffer)
 	  (let (emacs-lisp-mode-hook)
-	    (if (string-match
-		 (concat (regexp-quote gnus-adaptive-file-suffix) "$")
-		 file)
-		;; This is an adaptive score file, so we do not run
-		;; it through `pp'.  These files can get huge, and
-		;; are not meant to be edited by human hands.
+	    (if (and (not gnus-adaptive-pretty-print)
+		     (string-match
+		      (concat (regexp-quote gnus-adaptive-file-suffix) "$")
+		      file))
+		;; This is an adaptive score file, so we do not run it through
+		;; `pp' unless requested.  These files can get huge, and are
+		;; not meant to be edited by human hands.
 		(gnus-prin1 score)
 	      ;; This is a normal score file, so we print it very
 	      ;; prettily.
@@ -1517,9 +1550,22 @@ If FORMAT, also format the current score file."
 				      (lambda (score)
 					(length (gnus-score-get header score)))
 				      scores)))
-		;; Call the scoring function for this type of "header".
-		(when (setq new (funcall (nth 2 entry) scores header
-					 now expire trace))
+		(when (if (and gnus-inhibit-slow-scoring
+			       (or (eq gnus-inhibit-slow-scoring t)
+				   (and (stringp gnus-inhibit-slow-scoring)
+					;; Always true here?
+					;; (stringp gnus-newsgroup-name)
+					(string-match
+					 gnus-inhibit-slow-scoring
+					 gnus-newsgroup-name)))
+			       (> 0 (nth 1 (assoc header gnus-header-index))))
+			  (progn
+			    (gnus-message
+			     7 "Scoring on headers or body skipped.")
+			    nil)
+			;; Call the scoring function for this type of "header".
+			(setq new (funcall (nth 2 entry) scores header
+					   now expire trace)))
 		  (push new news))))
 	    (when (gnus-buffer-live-p gnus-summary-buffer)
 	      (let ((scored gnus-newsgroup-scored))
@@ -1860,7 +1906,7 @@ score in `gnus-newsgroup-scored' by SCORE."
 	    (goto-char (point-min))
 	    (if (= dmt ?e)
 		(while (funcall search-func match nil t)
-		  (and (= (gnus-point-at-bol)
+		  (and (= (point-at-bol)
 			  (match-beginning 0))
 		       (= (progn (end-of-line) (point))
 			  (match-end 0))
@@ -2030,7 +2076,7 @@ score in `gnus-newsgroup-scored' by SCORE."
 			(funcall search-func match nil t))
 	      ;; Is it really exact?
 	      (and (eolp)
-		   (= (gnus-point-at-bol) (match-beginning 0))
+		   (= (point-at-bol) (match-beginning 0))
 		   ;; Yup.
 		   (progn
 		     (setq found (setq arts (get-text-property
@@ -2120,7 +2166,7 @@ score in `gnus-newsgroup-scored' by SCORE."
 	  (goto-char (point-min))
 	  (while (and (not (eobp))
 		      (search-forward match nil t))
-	    (when (and (= (gnus-point-at-bol) (match-beginning 0))
+	    (when (and (= (point-at-bol) (match-beginning 0))
 		       (eolp))
 	      (setq found (setq arts (get-text-property (point) 'articles)))
 	      (if trace
@@ -2194,23 +2240,19 @@ score in `gnus-newsgroup-scored' by SCORE."
 (defun gnus-enter-score-words-into-hashtb (hashtb)
   ;; Find all the words in the buffer and enter them into
   ;; the hashtable.
-  (let ((syntab (syntax-table))
-	word val)
+  (let (word val)
     (goto-char (point-min))
-    (unwind-protect
-	(progn
-	  (set-syntax-table gnus-adaptive-word-syntax-table)
-	  (while (re-search-forward "\\b\\w+\\b" nil t)
-	    (setq val
-		  (gnus-gethash
-		   (setq word (downcase (buffer-substring
-					 (match-beginning 0) (match-end 0))))
-		   hashtb))
-	    (gnus-sethash
-	     word
-	     (append (get-text-property (gnus-point-at-eol) 'articles) val)
-	     hashtb)))
-      (set-syntax-table syntab))
+    (with-syntax-table gnus-adaptive-word-syntax-table
+      (while (re-search-forward "\\b\\w+\\b" nil t)
+	(setq val
+	      (gnus-gethash
+	       (setq word (downcase (buffer-substring
+				     (match-beginning 0) (match-end 0))))
+	       hashtb))
+	(gnus-sethash
+	 word
+	 (append (get-text-property (point-at-eol) 'articles) val)
+	 hashtb)))
     ;; Make all the ignorable words ignored.
     (let ((ignored (append gnus-ignored-adaptive-words
 			   (if gnus-adaptive-word-no-group-words
@@ -2313,39 +2355,35 @@ score in `gnus-newsgroup-scored' by SCORE."
 	(let* ((hashtb (gnus-make-hashtable 1000))
 	       (date (date-to-day (current-time-string)))
 	       (data gnus-newsgroup-data)
-	       (syntab (syntax-table))
 	       word d score val)
-	  (unwind-protect
-	      (progn
-		(set-syntax-table gnus-adaptive-word-syntax-table)
-		;; Go through all articles.
-		(while (setq d (pop data))
-		  (when (and
-			 (not (gnus-data-pseudo-p d))
-			 (setq score
-			       (cdr (assq
-				     (gnus-data-mark d)
-				     gnus-adaptive-word-score-alist))))
-		    ;; This article has a mark that should lead to
-		    ;; adaptive word rules, so we insert the subject
-		    ;; and find all words in that string.
-		    (insert (mail-header-subject (gnus-data-header d)))
-		    (downcase-region (point-min) (point-max))
-		    (goto-char (point-min))
-		    (while (re-search-forward "\\b\\w+\\b" nil t)
-		      ;; Put the word and score into the hashtb.
-		      (setq val (gnus-gethash (setq word (match-string 0))
-					      hashtb))
-		      (when (or (not gnus-adaptive-word-length-limit)
-				(> (length word)
-				   gnus-adaptive-word-length-limit))
-			(setq val (+ score (or val 0)))
-			(if (and gnus-adaptive-word-minimum
-				 (< val gnus-adaptive-word-minimum))
-			    (setq val gnus-adaptive-word-minimum))
-			(gnus-sethash word val hashtb)))
-		    (erase-buffer))))
-	    (set-syntax-table syntab))
+	  (with-syntax-table gnus-adaptive-word-syntax-table
+	    ;; Go through all articles.
+	    (while (setq d (pop data))
+	      (when (and
+		     (not (gnus-data-pseudo-p d))
+		     (setq score
+			   (cdr (assq
+				 (gnus-data-mark d)
+				 gnus-adaptive-word-score-alist))))
+		;; This article has a mark that should lead to
+		;; adaptive word rules, so we insert the subject
+		;; and find all words in that string.
+		(insert (mail-header-subject (gnus-data-header d)))
+		(downcase-region (point-min) (point-max))
+		(goto-char (point-min))
+		(while (re-search-forward "\\b\\w+\\b" nil t)
+		  ;; Put the word and score into the hashtb.
+		  (setq val (gnus-gethash (setq word (match-string 0))
+					  hashtb))
+		  (when (or (not gnus-adaptive-word-length-limit)
+			    (> (length word)
+			       gnus-adaptive-word-length-limit))
+		    (setq val (+ score (or val 0)))
+		    (if (and gnus-adaptive-word-minimum
+			     (< val gnus-adaptive-word-minimum))
+			(setq val gnus-adaptive-word-minimum))
+		    (gnus-sethash word val hashtb)))
+		(erase-buffer))))
 	  ;; Make all the ignorable words ignored.
 	  (let ((ignored (append gnus-ignored-adaptive-words
 				 (if gnus-adaptive-word-no-group-words
@@ -2373,7 +2411,8 @@ score in `gnus-newsgroup-scored' by SCORE."
     (when winconf
       (set-window-configuration winconf))
     (gnus-score-remove-from-cache bufnam)
-    (gnus-score-load-file bufnam)))
+    (gnus-score-load-file bufnam)
+    (run-hooks 'gnus-score-edit-done-hook)))
 
 (defun gnus-score-find-trace ()
   "Find all score rules that applies to the current article."
@@ -2401,6 +2440,11 @@ score in `gnus-newsgroup-scored' by SCORE."
 			 (interactive)
 			 (bury-buffer nil)
 			 (gnus-summary-expand-window)))
+	(local-set-key "k"
+		       (lambda ()
+			 (interactive)
+			 (kill-buffer (current-buffer))
+			 (gnus-summary-expand-window)))
 	(local-set-key "e" (lambda ()
 			     "Run `gnus-score-edit-file-at-point'."
 			     (interactive)
@@ -2424,12 +2468,19 @@ score in `gnus-newsgroup-scored' by SCORE."
 		   (file-name-nondirectory file)
 		   (abbreviate-file-name file))))
 	(insert
+	 (format "\nTotal score: %d"
+		 (apply '+ (mapcar
+			    (lambda (s)
+			      (or (caddr s)
+				  gnus-score-interactive-default-score))
+			    trace))))
+	(insert
 	 "\n\nQuick help:
 
 Type `e' to edit score file corresponding to the score rule on current line,
 `f' to format (pretty print) the score file and edit it,
 `t' toggle to truncate long lines in this buffer,
-`q' to quit.
+`q' to quit, `k' to kill score trace buffer.
 
 The first sexp on each line is the score rule, followed by the file name of
 the score file and its full name, including the directory.")
@@ -2775,9 +2826,7 @@ Destroys the current buffer."
 	    (lambda (file)
 	      (cons (inline (gnus-score-file-rank file)) file))
 	    files)))
-      (mapcar
-       (lambda (f) (cdr f))
-       (sort alist 'car-less-than-car)))))
+      (mapcar 'cdr (sort alist 'car-less-than-car)))))
 
 (defun gnus-score-find-alist (group)
   "Return list of score files for GROUP.
@@ -3070,5 +3119,5 @@ See Info node `(gnus)Scoring Tips' for examples of good regular expressions."
 
 (provide 'gnus-score)
 
-;;; arch-tag: d3922589-764d-46ae-9954-9330fd192634
+;; arch-tag: d3922589-764d-46ae-9954-9330fd192634
 ;;; gnus-score.el ends here

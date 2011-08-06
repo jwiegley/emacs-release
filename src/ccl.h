@@ -1,15 +1,18 @@
 /* Header for CCL (Code Conversion Language) interpreter.
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-     2005, 2006, 2007, 2008
+     2005, 2006, 2007, 2008, 2009
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
+   Copyright (C) 2003
+     National Institute of Advanced Industrial Science and Technology (AIST)
+     Registration Number H13PRO009
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,9 +20,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
+
 
 #ifndef EMACS_CCL_H
 #define EMACS_CCL_H
@@ -59,16 +61,14 @@ struct ccl_program {
 				   many times bigger the output buffer
 				   should be than the input buffer.  */
   int stack_idx;		/* How deep the call of CCL_Call is nested.  */
-  int eol_type;			/* When the CCL program is used for
-				   encoding by a coding system, set to
-				   the eol_type of the coding system.
-				   In other cases, always
-				   CODING_EOL_LF.  */
-  int multibyte;		/* 1 if the source text is multibyte.  */
+  int src_multibyte;		/* 1 if the input buffer is multibyte.  */
+  int dst_multibyte;		/* 1 if the output buffer is multibyte.  */
   int cr_consumed;		/* Flag for encoding DOS-like EOL
 				   format when the CCL program is used
 				   for encoding by a coding
 				   system.  */
+  int consumed;
+  int produced;
   int suppress_error;		/* If nonzero, don't insert error
 				   message in the output.  */
   int eight_bit_control;	/* If nonzero, ccl_driver counts all
@@ -85,12 +85,12 @@ struct ccl_program {
    coding_system.  */
 
 struct ccl_spec {
-  struct ccl_program decoder;
-  struct ccl_program encoder;
-  unsigned char valid_codes[256];
+  struct ccl_program ccl;
   int cr_carryover;		/* CR carryover flag.  */
   unsigned char eight_bit_carryover[MAX_MULTIBYTE_LENGTH];
 };
+
+#define CODING_SPEC_CCL_PROGRAM(coding) ((coding)->spec.ccl.ccl)
 
 /* Alist of fontname patterns vs corresponding CCL program.  */
 extern Lisp_Object Vfont_ccl_encoder_alist;
@@ -102,8 +102,8 @@ extern int setup_ccl_program P_ ((struct ccl_program *, Lisp_Object));
 /* Check if CCL is updated or not.  If not, re-setup members of CCL.  */
 extern int check_ccl_update P_ ((struct ccl_program *));
 
-extern int ccl_driver P_ ((struct ccl_program *, unsigned char *,
-			   unsigned char *, int, int, int *));
+extern void ccl_driver P_ ((struct ccl_program *, int *, int *, int, int,
+			    Lisp_Object));
 
 /* Vector of CCL program names vs corresponding program data.  */
 extern Lisp_Object Vccl_program_table;
@@ -111,6 +111,16 @@ extern Lisp_Object Vccl_program_table;
 /* Symbols of ccl program have this property, a value of the property
    is an index for Vccl_protram_table. */
 extern Lisp_Object Qccl_program_idx;
+
+extern Lisp_Object Qccl, Qcclp;
+
+EXFUN (Fccl_program_p, 1);
+
+#define CHECK_CCL_PROGRAM(x)			\
+  do {						\
+    if (NILP (Fccl_program_p (x)))		\
+      wrong_type_argument (Qcclp, (x));	\
+  } while (0);
 
 #endif /* EMACS_CCL_H */
 

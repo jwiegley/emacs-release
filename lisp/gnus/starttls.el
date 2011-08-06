@@ -1,7 +1,7 @@
 ;;; starttls.el --- STARTTLS functions
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Daiki Ueno <ueno@unixuser.org>
 ;; Author: Simon Josefsson <simon@josefsson.org>
@@ -10,20 +10,18 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -243,7 +241,7 @@ handshake, or nil on failure."
       'process-kill-without-query)))
 
 (defun starttls-open-stream-gnutls (name buffer host port)
-  (message "Opening STARTTLS connection to `%s'..." host)
+  (message "Opening STARTTLS connection to `%s:%s'..." host port)
   (let* (done
 	 (old-max (with-current-buffer buffer (point-max)))
 	 (process-connection-type starttls-process-connection-type)
@@ -268,8 +266,8 @@ handshake, or nil on failure."
 	  (delete-region old-max done))
       (delete-process process)
       (setq process nil))
-    (message "Opening STARTTLS connection to `%s'...%s"
-	     host (if done "done" "failed"))
+    (message "Opening STARTTLS connection to `%s:%s'...%s"
+	     host port (if done "done" "failed"))
     process))
 
 (defun starttls-open-stream (name buffer host port)
@@ -289,6 +287,7 @@ If `starttls-use-gnutls' is nil, this may also be a service name, but
 GNUTLS requires a port number."
   (if starttls-use-gnutls
       (starttls-open-stream-gnutls name buffer host port)
+    (message "Opening STARTTLS connection to `%s:%s'" host (format "%s" port))
     (let* ((process-connection-type starttls-process-connection-type)
 	   (process (apply #'start-process
 			   name buffer starttls-program
@@ -297,7 +296,20 @@ GNUTLS requires a port number."
       (starttls-set-process-query-on-exit-flag process nil)
       process)))
 
+(defun starttls-any-program-available ()
+  (let ((program (if starttls-use-gnutls
+		     starttls-gnutls-program
+		   starttls-program)))
+    (condition-case ()
+	(progn
+	  (call-process program)
+	  program)
+      (error (progn
+	       (message "No STARTTLS program was available (tried '%s')"
+			program)
+	       nil)))))
+
 (provide 'starttls)
 
-;;; arch-tag: 648b3bd8-63bd-47f5-904c-7c819aea2297
+;; arch-tag: 648b3bd8-63bd-47f5-904c-7c819aea2297
 ;;; starttls.el ends here

@@ -1,17 +1,17 @@
 ;;; easymenu.el --- support the easymenu interface for defining a menu
 
 ;; Copyright (C) 1994, 1996, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Keywords: emulations
 ;; Author: Richard Stallman <rms@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -31,16 +29,15 @@
 
 ;;; Code:
 
-(defcustom easy-menu-precalculate-equivalent-keybindings t
+(defvar easy-menu-precalculate-equivalent-keybindings nil
   "Determine when equivalent key bindings are computed for easy-menu menus.
 It can take some time to calculate the equivalent key bindings that are shown
 in a menu.  If the variable is on, then this calculation gives a (maybe
 noticeable) delay when a mode is first entered.  If the variable is off, then
 this delay will come when a menu is displayed the first time.  If you never use
-menus, turn this variable off, otherwise it is probably better to keep it on."
-  :type 'boolean
-  :group 'menu
-  :version "20.3")
+menus, turn this variable off, otherwise it is probably better to keep it on.")
+(make-obsolete-variable
+ 'easy-menu-precalculate-equivalent-keybindings nil "23.1")
 
 (defsubst easy-menu-intern (s)
   (if (stringp s) (intern s) s))
@@ -116,10 +113,15 @@ whenever this expression's value is non-nil.
 INCLUDE is an expression; this item is only visible if this
 expression has a non-nil value.  `:included' is an alias for `:visible'.
 
+   :label FORM
+
+FORM is an expression that will be dynamically evaluated and whose
+value will be used for the menu entry's text label (the default is NAME).
+
    :suffix FORM
 
 FORM is an expression that will be dynamically evaluated and whose
-value will be concatenated to the menu entry's NAME.
+value will be concatenated to the menu entry's label.
 
    :style STYLE
 
@@ -152,6 +154,21 @@ A menu item can be a list with the same format as MENU.  This is a submenu."
      ,(if symbol `(defvar ,symbol nil ,doc))
      (easy-menu-do-define (quote ,symbol) ,maps ,doc ,menu)))
 
+(defun easy-menu-binding (menu &optional item-name)
+  "Return a binding suitable to pass to `define-key'.
+This is expected to be bound to a mouse event."
+  ;; Under Emacs this is almost trivial, whereas under XEmacs this may
+  ;; involve defining a function that calls popup-menu.
+  (let ((props (if (symbolp menu)
+                   (prog1 (get menu 'menu-prop)
+                     (setq menu (symbol-function menu))))))
+    (cons 'menu-item
+          (cons (or item-name
+                    (if (keymapp menu)
+                        (keymap-prompt menu))
+                    "")
+                (cons menu props)))))
+
 ;;;###autoload
 (defun easy-menu-do-define (symbol maps doc menu)
   ;; We can't do anything that might differ between Emacs dialects in
@@ -173,15 +190,10 @@ A menu item can be a list with the same format as MENU.  This is a submenu."
 				       'identity)
 				   (symbol-function ,symbol)))
 			     ,symbol)))))
-    (mapcar (lambda (map)
-	      (define-key map (vector 'menu-bar (easy-menu-intern (car menu)))
-		(cons 'menu-item
-		      (cons (car menu)
-			    (if (not (symbolp keymap))
-				(list keymap)
-			      (cons (symbol-function keymap)
-				    (get keymap 'menu-prop)))))))
-	    (if (keymapp maps) (list maps) maps))))
+    (dolist (map (if (keymapp maps) (list maps) maps))
+      (define-key map
+        (vector 'menu-bar (easy-menu-intern (car menu)))
+        (easy-menu-binding keymap (car menu))))))
 
 (defun easy-menu-filter-return (menu &optional name)
  "Convert MENU to the right thing to return from a menu filter.
@@ -201,12 +213,18 @@ If NAME is provided, it is used for the keymap."
    (setq menu (cdr (easy-menu-convert-item menu)))))
  menu)
 
+(defvar easy-menu-avoid-duplicate-keys t
+  "Dynamically scoped var to register already used keys in a menu.
+If it holds a list, this is expected to be a list of keys already seen in the
+menu we're processing.  Else it means we're not processing a menu.")
+
 ;;;###autoload
 (defun easy-menu-create-menu (menu-name menu-items)
   "Create a menu called MENU-NAME with items described in MENU-ITEMS.
 MENU-NAME is a string, the name of the menu.  MENU-ITEMS is a list of items
 possibly preceded by keyword pairs as described in `easy-menu-define'."
   (let ((menu (make-sparse-keymap menu-name))
+        (easy-menu-avoid-duplicate-keys nil)
 	prop keyword arg label enable filter visible help)
     ;; Look for keywords.
     (while (and menu-items
@@ -249,10 +267,6 @@ possibly preceded by keyword pairs as described in `easy-menu-define'."
 (defvar easy-menu-button-prefix
   '((radio . :radio) (toggle . :toggle)))
 
-(defun easy-menu-do-add-item (menu item &optional before)
-  (setq item (easy-menu-convert-item item))
-  (easy-menu-define-key menu (easy-menu-intern (car item)) (cdr item) before))
-
 (defvar easy-menu-converted-items-table (make-hash-table :test 'equal))
 
 (defun easy-menu-convert-item (item)
@@ -262,14 +276,30 @@ conversion is done from within a filter.
 This also helps when the NAME of the entry is recreated each time:
 since the menu is built and traversed separately, the lookup
 would always fail because the key is `equal' but not `eq'."
-  (or (gethash item easy-menu-converted-items-table)
-      (puthash item (easy-menu-convert-item-1 item)
-	       easy-menu-converted-items-table)))
+  (let* ((cache (gethash item easy-menu-converted-items-table))
+	 (result (or cache (easy-menu-convert-item-1 item)))
+	 (key (car-safe result)))
+    (when (and (listp easy-menu-avoid-duplicate-keys) (symbolp key))
+      ;; Merging multiple entries with the same name is sometimes what we
+      ;; want, but not when the entries are actually different (e.g. same
+      ;; name but different :suffix as seen in cal-menu.el) and appear in
+      ;; the same menu.  So we try to detect and resolve conflicts.
+      (while (memq key easy-menu-avoid-duplicate-keys)
+	;; We need to use some distinct object, ideally a symbol, ideally
+	;; related to the `name'.  Uninterned symbols do not work (they
+	;; are apparently turned into strings and re-interned later on).
+	(setq key (intern (format "%s-%d" (symbol-name key)
+				  (length easy-menu-avoid-duplicate-keys))))
+	(setq result (cons key (cdr result))))
+      (push key easy-menu-avoid-duplicate-keys))
+
+    (unless cache (puthash item result easy-menu-converted-items-table))
+    result))
 
 (defun easy-menu-convert-item-1 (item)
   "Parse an item description and convert it to a menu keymap element.
 ITEM defines an item as in `easy-menu-define'."
-  (let (name command label prop remove help)
+  (let (name command label prop remove)
     (cond
      ((stringp item)			; An item or separator.
       (setq label item))
@@ -330,22 +360,22 @@ ITEM defines an item as in `easy-menu-define'."
 		(setq prop (cons :button
 				 (cons (cons (cdr style) selected) prop)))))
 	      (when (stringp keys)
-		 (if (string-match "^[^\\]*\\(\\\\\\[\\([^]]+\\)]\\)[^\\]*$"
-				   keys)
-		     (let ((prefix
-			    (if (< (match-beginning 0) (match-beginning 1))
-				(substring keys 0 (match-beginning 1))))
-			   (postfix
-			    (if (< (match-end 1) (match-end 0))
-				(substring keys (match-end 1))))
-			   (cmd (intern (match-string 2 keys))))
-		       (setq keys (and (or prefix postfix)
-				       (cons prefix postfix)))
-		       (setq keys
-			     (and (or keys (not (eq command cmd)))
-				  (cons cmd keys))))
-		   (setq cache-specified nil))
-		 (if keys (setq prop (cons :keys (cons keys prop)))))
+                (if (string-match "^[^\\]*\\(\\\\\\[\\([^]]+\\)]\\)[^\\]*$"
+                                  keys)
+                    (let ((prefix
+                           (if (< (match-beginning 0) (match-beginning 1))
+                               (substring keys 0 (match-beginning 1))))
+                          (postfix
+                           (if (< (match-end 1) (match-end 0))
+                               (substring keys (match-end 1))))
+                          (cmd (intern (match-string 2 keys))))
+                      (setq keys (and (or prefix postfix)
+                                      (cons prefix postfix)))
+                      (setq keys
+                            (and (or keys (not (eq command cmd)))
+                                 (cons cmd keys))))
+                  (setq cache-specified nil))
+                (if keys (setq prop (cons :keys (cons keys prop)))))
 	      (if (and visible (not (easy-menu-always-true-p visible)))
 		  (if (equal visible ''nil)
 		      ;; Invisible menu item. Don't insert into keymap.
@@ -360,12 +390,13 @@ ITEM defines an item as in `easy-menu-define'."
     ;; `intern' the name so as to merge multiple entries with the same name.
     ;; It also makes it easier/possible to lookup/change menu bindings
     ;; via keymap functions.
-    (cons (easy-menu-intern name)
-	  (and (not remove)
-	       (cons 'menu-item
-		     (cons label
-			   (and name
-				(cons command prop))))))))
+    (let ((key (easy-menu-intern name)))
+      (cons key
+            (and (not remove)
+                 (cons 'menu-item
+                       (cons label
+                             (and name
+                                  (cons command prop)))))))))
 
 (defun easy-menu-define-key (menu key item &optional before)
   "Add binding in MENU for KEY => ITEM.  Similar to `define-key-after'.
@@ -438,7 +469,10 @@ When non-nil, NOEXP indicates that CALLBACK cannot be an expression
 	 (make-symbol (format "menu-function-%d" easy-menu-item-count))))
     (setq easy-menu-item-count (1+ easy-menu-item-count))
     (fset command
-	  (if (or (keymapp callback) (functionp callback) noexp) callback
+	  (if (or (keymapp callback) (commandp callback)
+                  ;; `functionp' is probably not needed.
+                  (functionp callback) noexp)
+              callback
 	    `(lambda () (interactive) ,callback)))
     command))
 
@@ -464,9 +498,7 @@ To implement dynamic menus, either call this from
 
 ;; XEmacs needs the following two functions to add and remove menus.
 ;; In Emacs this is done automatically when switching keymaps, so
-;; here easy-menu-remove is a noop and easy-menu-add only precalculates
-;; equivalent keybindings (if easy-menu-precalculate-equivalent-keybindings
-;; is on).
+;; here easy-menu-remove is a noop.
 (defalias 'easy-menu-remove 'ignore
   "Remove MENU from the current menu bar.
 Contrary to XEmacs, this is a nop on Emacs since menus are automatically
@@ -480,17 +512,9 @@ On Emacs, menus are already automatically activated when the
 corresponding keymap is activated.  On XEmacs this is needed to
 actually add the menu to the current menubar.
 
-This also precalculates equivalent key bindings when
-`easy-menu-precalculate-equivalent-keybindings' is on.
-
 You should call this once the menu and keybindings are set up
 completely and menu filter functions can be expected to work."
-  (when easy-menu-precalculate-equivalent-keybindings
-    (if (and (symbolp menu) (not (keymapp menu)) (boundp menu))
-	(setq menu (symbol-value menu)))
-    (and (keymapp menu) (fboundp 'x-popup-menu)
-	 (x-popup-menu nil menu))
-    ))
+  )
 
 (defun add-submenu (menu-path submenu &optional before in-menu)
   "Add submenu SUBMENU in the menu at MENU-PATH.
@@ -536,7 +560,8 @@ earlier by `easy-menu-define' or `easy-menu-create-menu'."
 		 (setq item (symbol-value item))))
 	;; Item is a keymap, find the prompt string and use as item name.
 	(setq item (cons (keymap-prompt item) item)))
-    (easy-menu-do-add-item map item before)))
+    (setq item (easy-menu-convert-item item))
+    (easy-menu-define-key map (easy-menu-intern (car item)) (cdr item) before)))
 
 (defun easy-menu-item-present-p (map path name)
   "In submenu of MAP with path PATH, return non-nil if item NAME is present.
@@ -615,7 +640,8 @@ In some cases we use that to select between the local and global maps."
 	(catch 'found
 	  (if (and map (symbolp map) (not (keymapp map)))
 	      (setq map (symbol-value map)))
-	  (let ((maps (if map (list map) (current-active-maps))))
+	  (let ((maps (if map (if (keymapp map) (list map) map)
+			(current-active-maps))))
 	    ;; Look for PATH in each map.
 	    (unless map (push 'menu-bar path))
 	    (dolist (name path)

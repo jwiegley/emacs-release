@@ -1,20 +1,22 @@
 ;;; tibet-util.el --- utilities for Tibetan   -*- coding: iso-2022-7bit; -*-
 
-;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008
+;;   2005, 2006, 2007, 2008, 2009
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
 
+;; Author: Toru TOMABECHI <Toru.Tomabechi@orient.unil.ch>
 ;; Keywords: multilingual, Tibetan
+;; Created: Feb. 17. 1997
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,13 +24,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-;; Author: Toru TOMABECHI, <Toru.Tomabechi@orient.unil.ch>
-
-;; Created: Feb. 17. 1997
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; History:
 ;; 1997.03.13 Modification in treatment of text properties;
@@ -40,13 +36,13 @@
 ;;; Code:
 
 (defconst tibetan-obsolete-glyphs
-  `(("$(7!=(B" . "$(8!=(B")			; 2 col <-> 1 col
-    ("$(7!?(B" . "$(8!?(B")
-    ("$(7!@(B" . "$(8!@(B")
-    ("$(7!A(B" . "$(8!A(B")
-    ("$(7"`(B" . "$(8"`(B")
-    ("$(7!;(B" . "$(8!;(B")
-    ("$(7!D(B" . "$(8!D(B")
+  `(("$(7!=(B" . "$(7!=(B")			; 2 col <-> 1 col
+    ("$(7!?(B" . "$(7!?(B")
+    ("$(7!@(B" . "$(7!@(B")
+    ("$(7!A(B" . "$(7!A(B")
+    ("$(7"`(B" . "$(7"`(B")
+    ("$(7!;(B" . "$(7!;(B")
+    ("$(7!D(B" . "$(7!D(B")
     ;; Yes these are dirty. But ...
     ("$(7!>(B $(7!>(B" . ,(compose-string "$(7!>(B $(7!>(B" 0 3 [?$(7!>(B (Br . Bl) ?  (Br . Bl) ?$(7!>(B]))
     ("$(7!4!5!5(B" . ,(compose-string
@@ -141,7 +137,7 @@ The returned string has no composition information."
 ;;;
 ;;; Here are examples of the words "bsgrubs" and "hfauM"
 ;;;
-;;;            4$(7"70"714%qx!"U0"G###C"U14"70"714"G0"G1(B            4$(7"Hx!"Rx!"Ur'"_0"H"R"U"_1(B
+;;;            $(7"7"G###C"U"7"G(B            $(7"H"R"U"_(B
 ;;;
 ;;;                             M
 ;;;             b s b s         h
@@ -167,7 +163,7 @@ The returned string has no composition information."
     ;; If 'a follows a consonant, turn it into the subjoined form.
     ;; * Disabled by Tomabechi 2000/06/09 *
     ;; Because in Unicode, $(7"A(B may follow directly a consonant without
-    ;; any intervening vowel, as in 4$(7"90"914""0"""Q14"A0"A1!;(B=4$(7"90"91(B 4$(7""0""1(B 4$(7"A0"A1(B not 4$(7"90"91(B 4$(7""0""1(B $(7"Q(B 4$(7"A0"A1(B
+    ;; any intervening vowel, as in $(7"9"""Q"A!;(B=$(7"9(B $(7""(B $(7"A(B not $(7"9(B $(7""(B $(7"Q(B $(7"A(B
     ;;(if (and (= char ?$(7"A(B)
     ;;	     (aref (char-category-set (car last)) ?0))
     ;;	(setq char ?$(7"R(B)) ;; modified for new font by Tomabechi 1999/12/10
@@ -189,7 +185,8 @@ The returned string has no composition information."
 
      ;; Compose lower vowel sign vertically under.
      ((aref (char-category-set char) ?3)
-      (if (eq char ?$(7"Q(B)		;; `$(7"Q(B' should not visible when composed.
+      (if (or (eq char ?$(7"Q(B) ;; `$(7"Q(B' and `$,1FP(B' should not visible when composed.
+	      (eq char #xF70))
 	  (setq rule nil)
 	(setq rule stack-under)))
      ;; Transform ra-mgo (superscribed r) if followed by a subjoined
@@ -314,13 +311,6 @@ are decomposed into normal Tibetan character sequences."
 	    idx (1+ idx)))
     new))
 
-;;;###autoload
-(defun tibetan-composition-function (from to pattern &optional string)
-  (if string
-      (tibetan-compose-string string)
-    (tibetan-compose-region from to))
-  (- to from))
-
 ;;;
 ;;; This variable is used to avoid repeated decomposition.
 ;;;
@@ -431,5 +421,5 @@ before writing buffer in Unicode.  See also
 
 (provide 'tibet-util)
 
-;;; arch-tag: 7a7333e8-1584-446c-b39c-a02b9def265d
+;; arch-tag: 7a7333e8-1584-446c-b39c-a02b9def265d
 ;;; tibet-util.el ends here

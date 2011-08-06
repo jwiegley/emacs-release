@@ -1,13 +1,13 @@
 /* Add entries to the GNU Emacs Program Manager folder.
-   Copyright (C) 1995, 2001, 2002, 2003, 2004, 2005,
-      2006, 2007, 2008  Free Software Foundation, Inc.
+   Copyright (C) 1995, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+     2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /****************************************************************************
  *
@@ -25,10 +23,24 @@ Boston, MA 02110-1301, USA.  */
  *
  * Usage:
  *   	argv[1] = install path for emacs
- *	argv[2] = full path to icon for emacs (optional)
+ *
+ * argv[2] used to be an optional argument for setting the icon.
+ * But now Emacs has a professional looking icon of its own.
+ * If users really want to change it, they can go into the settings of
+ * the shortcut that is created and do it there.
  */
 
+/* Use parts of shell API that were introduced by the merge of IE4
+   into the desktop shell.  If Windows 95 or NT4 users do not have IE4
+   installed, then the DDE fallback for creating icons the Windows 3.1
+   progman way will be used instead, but that is prone to lockups
+   caused by other applications not servicing their message queues.  */
+#define _WIN32_IE 0x400
+/* Request C Object macros for COM interfaces.  */
+#define COBJMACROS 1
+
 #include <windows.h>
+#include <shlobj.h>
 #include <ddeml.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -43,7 +55,7 @@ DdeCallback (UINT uType, UINT uFmt, HCONV hconv,
 }
 
 #define DdeCommand(str) 	\
-	DdeClientTransaction (str, strlen (str)+1, HConversation, (HSZ)NULL, \
+	DdeClientTransaction (str, strlen (str)+1, conversation, (HSZ)NULL, \
 		              CF_TEXT, XTYP_EXECUTE, 30000, NULL)
 
 #define REG_ROOT "SOFTWARE\\GNU\\Emacs"
@@ -88,7 +100,7 @@ add_registry (path)
      affect the general operation of other installations of Emacs, and we
      are blindly overwriting the Start Menu entries already.
   */
-  if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, REG_APP_PATH, 0, "", 
+  if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, REG_APP_PATH, 0, "",
                       REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL,
                       &hrootkey, NULL) == ERROR_SUCCESS)
     {
@@ -167,24 +179,18 @@ main (argc, argv)
      int argc;
      char *argv[];
 {
-  DWORD idDde = 0;
-  HCONV HConversation;
-  HSZ ProgMan;
+  char start_folder[MAX_PATH + 1];
+  int shortcuts_created = 0;
+  int com_available = 1;
   char modname[MAX_PATH];
-  char additem[MAX_PATH*2 + 100];
   char *prog_name;
   char *emacs_path;
   char *p;
   int quiet = 0;
+  HRESULT result;
+  IShellLinkA *shortcut;
 
   /* If no args specified, use our location to set emacs_path.  */
-#if 0
-  if (argc < 2 || argc > 3)
-    {
-      fprintf (stderr, "usage: addpm [-q] [emacs_path [icon_path]]\n");
-      exit (1);
-    }
-#endif
 
   if (argc > 1
       && (argv[1][0] == '/' || argv[1][0] == '-')
@@ -215,7 +221,7 @@ main (argc, argv)
 	}
       else
 	{
-	  fprintf (stderr, "usage: addpm emacs_path [icon_path]\n");
+	  fprintf (stderr, "usage: addpm emacs_path\n");
 	  exit (1);
 	}
 
@@ -239,31 +245,115 @@ main (argc, argv)
   add_registry (emacs_path);
   prog_name =  "runemacs.exe";
 
-  DdeInitialize (&idDde, (PFNCALLBACK)DdeCallback, APPCMD_CLIENTONLY, 0);
+  /* Try to install globally.  */
 
-  ProgMan = DdeCreateStringHandle (idDde, "PROGMAN", CP_WINANSI);
-
-  HConversation = DdeConnect (idDde, ProgMan, ProgMan, NULL);
-  if (HConversation != 0)
+  if (!SUCCEEDED (CoInitialize (NULL))
+      || !SUCCEEDED (CoCreateInstance (&CLSID_ShellLink, NULL,
+					CLSCTX_INPROC_SERVER, &IID_IShellLinkA,
+					(void **) &shortcut)))
     {
-      DdeCommand ("[CreateGroup (\"Gnu Emacs\")]");
-      DdeCommand ("[ReplaceItem (Emacs)]");
-      if (argc > 2)
-	sprintf (additem, "[AddItem (\"%s\\bin\\%s\", Emacs, \"%s\")]",
-		 emacs_path, prog_name, argv[2]);
-      else
-	sprintf (additem, "[AddItem (\"%s\\bin\\%s\", Emacs)]",
-		 emacs_path, prog_name);
-      DdeCommand (additem);
-
-      DdeDisconnect (HConversation);
+      com_available = 0;
     }
 
-  DdeFreeStringHandle (idDde, ProgMan);
+  if (com_available
+      && SHGetSpecialFolderPath (NULL, start_folder, CSIDL_COMMON_PROGRAMS, 0))
+    {
+      if (strlen (start_folder) < (MAX_PATH - 20))
+	{
+	  BOOL retval;
 
-  DdeUninitialize (idDde);
+	  strcat (start_folder, "\\Gnu Emacs");
+	  if (CreateDirectory (start_folder, NULL)
+	      || GetLastError () == ERROR_ALREADY_EXISTS)
+	    {
+	      char full_emacs_path[MAX_PATH + 1];
+	      IPersistFile *lnk;
+	      strcat (start_folder, "\\Emacs.lnk");
+	      sprintf (full_emacs_path, "%s\\bin\\%s", emacs_path, prog_name);
+	      IShellLinkA_SetPath (shortcut, full_emacs_path);
+	      IShellLinkA_SetDescription (shortcut, "GNU Emacs");
+	      result = IShellLinkA_QueryInterface (shortcut, &IID_IPersistFile,
+						   (void **) &lnk);
+	      if (SUCCEEDED (result))
+		{
+		  wchar_t unicode_path[MAX_PATH];
+		  MultiByteToWideChar (CP_ACP, 0, start_folder, -1,
+				       unicode_path, MAX_PATH);
+		  if (SUCCEEDED (IPersistFile_Save (lnk, unicode_path, TRUE)))
+		    shortcuts_created = 1;
+		  IPersistFile_Release (lnk);
+		}
+	    }
+	}
+    }
 
-  return (0);
+  if (!shortcuts_created && com_available
+      && SHGetSpecialFolderPath (NULL, start_folder, CSIDL_PROGRAMS, 0))
+    {
+      /* Ensure there is enough room for "...\GNU Emacs\Emacs.lnk".  */
+      if (strlen (start_folder) < (MAX_PATH - 20))
+	{
+	  BOOL retval;
+
+	  strcat (start_folder, "\\Gnu Emacs");
+	  if (CreateDirectory (start_folder, NULL)
+	      || GetLastError () == ERROR_ALREADY_EXISTS)
+	    {
+	      char full_emacs_path[MAX_PATH + 1];
+	      IPersistFile *lnk;
+	      strcat (start_folder, "\\Emacs.lnk");
+	      sprintf (full_emacs_path, "%s\\bin\\%s", emacs_path, prog_name);
+	      IShellLinkA_SetPath (shortcut, full_emacs_path);
+	      IShellLinkA_SetDescription (shortcut, "GNU Emacs");
+	      result = IShellLinkA_QueryInterface (shortcut, &IID_IPersistFile,
+						   (void **) &lnk);
+	      if (SUCCEEDED (result))
+		{
+		  wchar_t unicode_path[MAX_PATH];
+		  MultiByteToWideChar (CP_ACP, 0, start_folder, -1,
+				       unicode_path, MAX_PATH);
+		  if (SUCCEEDED (IPersistFile_Save (lnk, unicode_path, TRUE)))
+		    shortcuts_created = 1;
+		  IPersistFile_Release (lnk);
+		  
+		}
+	    }
+	}      
+    }
+
+  if (com_available)
+    IShellLinkA_Release (shortcut);
+
+  /* Need to call uninitialize, even if ComInitialize failed.  */
+  CoUninitialize ();
+
+  /* Fallback on old DDE method if the above failed.  */
+  if (!shortcuts_created)
+    {
+      DWORD dde = 0;
+      HCONV conversation;
+      HSZ progman;
+      char add_item[MAX_PATH*2 + 100];
+
+      DdeInitialize (&dde, (PFNCALLBACK) DdeCallback, APPCMD_CLIENTONLY, 0);
+      progman = DdeCreateStringHandle (dde, "PROGMAN", CP_WINANSI);
+      conversation = DdeConnect (dde, progman, progman, NULL);
+      if (conversation)
+	{
+	  DdeCommand ("[CreateGroup (\"Gnu Emacs\")]");
+	  DdeCommand ("[ReplaceItem (Emacs)]");
+	  sprintf (add_item, "[AddItem (\"%s\\bin\\%s\", Emacs)]",
+		   emacs_path, prog_name);
+	  DdeCommand (add_item);
+
+	  DdeDisconnect (conversation);
+	}
+
+      DdeFreeStringHandle (dde, progman);
+      DdeUninitialize (dde);
+   }
+
+  return 0;
 }
 
 /* arch-tag: f923609d-b781-4ef4-abce-ca0da29cbbf0

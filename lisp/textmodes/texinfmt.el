@@ -2,17 +2,17 @@
 
 ;; Copyright (C) 1985, 1986, 1988, 1990, 1991, 1992, 1993,
 ;;   1994, 1995, 1996, 1997, 1998, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: Robert J. Chassell <bug-texinfo@gnu.org>
 ;; Keywords: maint, tex, docs
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,22 +20,13 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;;; Code:
 
 ;;; Emacs lisp functions to convert Texinfo files to Info files.
-
-(or (fboundp 'defgroup)
-    (defmacro defgroup (&rest ignore) nil))
-
-(or (fboundp 'defcustom)
-    (defmacro defcustom (var value doc &rest ignore)
-      `(defvar ,var ,value ,doc)))
 
 (defvar texinfmt-version "2.42 of  7 Jul 2006")
 
@@ -56,8 +47,6 @@ If optional argument HERE is non-nil, insert info at point."
 
 (require 'texinfo)          ; So `texinfo-footnote-style' is defined.
 (require 'texnfo-upd)       ; So `texinfo-section-types-regexp' is defined.
-
-(defvar texinfo-format-syntax-table nil)
 
 (defvar texinfo-vindex)
 (defvar texinfo-findex)
@@ -81,27 +70,80 @@ If optional argument HERE is non-nil, insert info at point."
 (defvar texinfo-short-index-format-cmds-alist)
 (defvar texinfo-format-filename)
 (defvar texinfo-footnote-number)
-(defvar texinfo-start-of-header)
-(defvar texinfo-end-of-header)
-(defvar texinfo-raisesections-alist)
-(defvar texinfo-lowersections-alist)
+
+(defvar texinfo-raisesections-alist
+  '((@chapter . @chapter)             ; Cannot go higher
+    (@unnumbered . @unnumbered)
+    (@centerchap . @unnumbered)
+
+    (@majorheading . @majorheading)
+    (@chapheading . @chapheading)
+    (@appendix . @appendix)
+
+    (@section . @chapter)
+    (@unnumberedsec . @unnumbered)
+    (@heading . @chapheading)
+    (@appendixsec . @appendix)
+
+    (@subsection . @section)
+    (@unnumberedsubsec . @unnumberedsec)
+    (@subheading . @heading)
+    (@appendixsubsec . @appendixsec)
+
+    (@subsubsection . @subsection)
+    (@unnumberedsubsubsec . @unnumberedsubsec)
+    (@subsubheading . @subheading)
+    (@appendixsubsubsec . @appendixsubsec))
+  "*An alist of next higher levels for chapters, sections, etc...
+For example, section to chapter, subsection to section.
+Used by `texinfo-raise-lower-sections'.
+The keys specify types of section; the values correspond to the next
+higher types.")
+
+(defvar texinfo-lowersections-alist
+  '((@chapter . @section)
+    (@unnumbered . @unnumberedsec)
+    (@centerchap . @unnumberedsec)
+    (@majorheading . @heading)
+    (@chapheading . @heading)
+    (@appendix . @appendixsec)
+
+    (@section . @subsection)
+    (@unnumberedsec . @unnumberedsubsec)
+    (@heading . @subheading)
+    (@appendixsec . @appendixsubsec)
+
+    (@subsection . @subsubsection)
+    (@unnumberedsubsec . @unnumberedsubsubsec)
+    (@subheading . @subsubheading)
+    (@appendixsubsec . @appendixsubsubsec)
+
+    (@subsubsection . @subsubsection) ; Cannot go lower.
+    (@unnumberedsubsubsec . @unnumberedsubsubsec)
+    (@subsubheading . @subsubheading)
+    (@appendixsubsubsec . @appendixsubsubsec))
+  "*An alist of next lower levels for chapters, sections, etc...
+For example, chapter to section, section to subsection.
+Used by `texinfo-raise-lower-sections'.
+The keys specify types of section; the values correspond to the next
+lower types.")
 
 ;;; Syntax table
 
-(if texinfo-format-syntax-table
-    nil
-  (setq texinfo-format-syntax-table (make-syntax-table))
-  (modify-syntax-entry ?\" " " texinfo-format-syntax-table)
-  (modify-syntax-entry ?\\ " " texinfo-format-syntax-table)
-  (modify-syntax-entry ?@ "\\" texinfo-format-syntax-table)
-  (modify-syntax-entry ?\^q "\\" texinfo-format-syntax-table)
-  (modify-syntax-entry ?\[ "." texinfo-format-syntax-table)
-  (modify-syntax-entry ?\] "." texinfo-format-syntax-table)
-  (modify-syntax-entry ?\( "." texinfo-format-syntax-table)
-  (modify-syntax-entry ?\) "." texinfo-format-syntax-table)
-  (modify-syntax-entry ?{ "(}" texinfo-format-syntax-table)
-  (modify-syntax-entry ?} "){" texinfo-format-syntax-table)
-  (modify-syntax-entry ?\' "." texinfo-format-syntax-table))
+(defvar texinfo-format-syntax-table
+  (let ((st (make-syntax-table)))
+    (modify-syntax-entry ?\" " " st)
+    (modify-syntax-entry ?\\ " " st)
+    (modify-syntax-entry ?@ "\\" st)
+    (modify-syntax-entry ?\^q "\\" st)
+    (modify-syntax-entry ?\[ "." st)
+    (modify-syntax-entry ?\] "." st)
+    (modify-syntax-entry ?\( "." st)
+    (modify-syntax-entry ?\) "." st)
+    (modify-syntax-entry ?{ "(}" st)
+    (modify-syntax-entry ?} "){" st)
+    (modify-syntax-entry ?\' "." st)
+    st))
 
 
 ;;; Top level buffer and region formatting functions
@@ -113,8 +155,8 @@ The Info file output is generated in a buffer visiting the Info file
 name specified in the @setfilename command.
 
 Non-nil argument (prefix, if interactive) means don't make tag table
-and don't split the file if large.  You can use Info-tagify and
-Info-split to do these manually."
+and don't split the file if large.  You can use `Info-tagify' and
+`Info-split' to do these manually."
   (interactive "P")
   (let ((lastmessage "Formatting Info file...")
 	(coding-system-for-write buffer-file-coding-system))
@@ -124,7 +166,7 @@ Info-split to do these manually."
     (Info-tagify)
     (if nosplit
         nil
-      (if (> (buffer-size) 100000)
+      (if (> (buffer-size) (+ 50000 Info-split-threshold))
           (progn
             (message (setq lastmessage "Splitting Info file..."))
             (Info-split))))
@@ -329,7 +371,7 @@ is automatically removed when the Info file is created.  The original
 Texinfo source buffer is not changed.
 
 Non-nil argument (prefix, if interactive) means don't split the file
-if large.  You can use Info-split to do this manually."
+if large.  You can use `Info-split' to do this manually."
   (interactive "P")
   (let ((temp-buffer (concat  "*--" (buffer-name) "--temporary-buffer*" )))
     (message "First updating nodes and menus, then creating Info file.")
@@ -764,64 +806,6 @@ commands."
               (setq count (1+ count)))
             (kill-word 1)
             (insert (symbol-name new-level))))))))))
-
-(defvar texinfo-raisesections-alist
-  '((@chapter . @chapter)             ; Cannot go higher
-    (@unnumbered . @unnumbered)
-    (@centerchap . @unnumbered)
-
-    (@majorheading . @majorheading)
-    (@chapheading . @chapheading)
-    (@appendix . @appendix)
-
-    (@section . @chapter)
-    (@unnumberedsec . @unnumbered)
-    (@heading . @chapheading)
-    (@appendixsec . @appendix)
-
-    (@subsection . @section)
-    (@unnumberedsubsec . @unnumberedsec)
-    (@subheading . @heading)
-    (@appendixsubsec . @appendixsec)
-
-    (@subsubsection . @subsection)
-    (@unnumberedsubsubsec . @unnumberedsubsec)
-    (@subsubheading . @subheading)
-    (@appendixsubsubsec . @appendixsubsec))
-  "*An alist of next higher levels for chapters, sections. etc.
-For example, section to chapter, subsection to section.
-Used by `texinfo-raise-lower-sections'.
-The keys specify types of section; the values correspond to the next
-higher types.")
-
-(defvar texinfo-lowersections-alist
-  '((@chapter . @section)
-    (@unnumbered . @unnumberedsec)
-    (@centerchap . @unnumberedsec)
-    (@majorheading . @heading)
-    (@chapheading . @heading)
-    (@appendix . @appendixsec)
-
-    (@section . @subsection)
-    (@unnumberedsec . @unnumberedsubsec)
-    (@heading . @subheading)
-    (@appendixsec . @appendixsubsec)
-
-    (@subsection . @subsubsection)
-    (@unnumberedsubsec . @unnumberedsubsubsec)
-    (@subheading . @subsubheading)
-    (@appendixsubsec . @appendixsubsubsec)
-
-    (@subsubsection . @subsubsection) ; Cannot go lower.
-    (@unnumberedsubsubsec . @unnumberedsubsubsec)
-    (@subsubheading . @subsubheading)
-    (@appendixsubsubsec . @appendixsubsubsec))
-  "*An alist of next lower levels for chapters, sections. etc.
-For example, chapter to section, section to subsection.
-Used by `texinfo-raise-lower-sections'.
-The keys specify types of section; the values correspond to the next
-lower types.")
-
 
 ;;; Perform those texinfo-to-info conversions that apply to the whole input
 ;;; uniformly.
@@ -1077,8 +1061,8 @@ Leave point after argument."
       (forward-char -1)
       (skip-chars-backward " ")
       (setq end (point))
-      (setq args (cons (if (> end beg) (buffer-substring-no-properties beg end))
-                       args))
+      (push (if (> end beg) (buffer-substring-no-properties beg end))
+            args)
       (goto-char next)
       (skip-chars-forward " "))
     (if (eolp) (forward-char 1))
@@ -1110,8 +1094,8 @@ Leave point after argument."
              (goto-char beg)
              (while (search-forward "\n" end t)
                (replace-match " "))))
-      (setq args (cons (if (> end beg) (buffer-substring-no-properties beg end))
-                       args))
+      (push (if (> end beg) (buffer-substring-no-properties beg end))
+            args)
       (goto-char next))
     ;;(if (eolp) (forward-char 1))
     (setq texinfo-command-end (point))
@@ -1140,7 +1124,7 @@ Leave point after argument."
                (re-search-forward "[\n ]")
                (forward-char -1)
                (setq end (point))))
-        (setq args (cons (buffer-substring-no-properties beg end) args))
+        (push (buffer-substring-no-properties beg end) args)
         (skip-chars-forward " "))
       (forward-char 1)
       (nreverse args))))
@@ -1184,7 +1168,7 @@ Leave point after argument."
     (let ((tem (if texinfo-fold-nodename-case (downcase name) name)))
       (if (assoc tem texinfo-node-names)
           (error "Duplicate node name: %s" name)
-        (setq texinfo-node-names (cons (list tem) texinfo-node-names))))
+        (push (list tem) texinfo-node-names)))
     (setq texinfo-footnote-number 0)
     ;; insert "\n\^_" unconditionally since this is what info is looking for
     (insert "\n\^_\nFile: " texinfo-format-filename
@@ -1494,8 +1478,6 @@ If used within a line, follow `@br' with braces."
 Argument is either end or separate."
   (setq texinfo-footnote-style (texinfo-parse-arg-discard)))
 
-(defvar texinfo-footnote-number)
-
 (put 'footnote 'texinfo-format 'texinfo-format-footnote)
 (defun texinfo-format-footnote ()
   "Format a footnote in either end of node or separate node style.
@@ -1601,9 +1583,8 @@ Used by @refill indenting command to avoid indenting within lists, etc.")
 
 (defun texinfo-push-stack (check arg)
   (setq texinfo-stack-depth (1+ texinfo-stack-depth))
-  (setq texinfo-stack
-        (cons (list check arg texinfo-command-start)
-              texinfo-stack)))
+  (push (list check arg texinfo-command-start)
+        texinfo-stack))
 
 (defun texinfo-pop-stack (check)
   (setq texinfo-stack-depth (1- texinfo-stack-depth))
@@ -1974,7 +1955,7 @@ Or else:
     @end multitable
 
 where the fractions specify the width of each column as a percent
-of the current width of the text (i.e., of the fill-column).
+of the current width of the text (i.e., of the `fill-column').
 
 Long lines of text are filled within columns.
 
@@ -2028,12 +2009,10 @@ commands that are defined in texinfo.tex for printed output.
      ((looking-at "@columnfractions")
       (forward-word 1)
       (while (not (eolp))
-        (setq texinfo-multitable-width-list
-              (cons
-               (truncate
-                (1-
-                 (* fill-column (read (get-buffer (current-buffer))))))
-               texinfo-multitable-width-list))))
+        (push (truncate
+               (1-
+                (* fill-column (read (get-buffer (current-buffer))))))
+              texinfo-multitable-width-list)))
      ;;
      ;; Case 2: {Column 1 template} {Column 2} {Column 3 example}
      ((looking-at "{")
@@ -2044,9 +2023,8 @@ commands that are defined in texinfo.tex for printed output.
                  (end-of-template
                  ;; forward-sexp works with braces in Texinfo mode
                   (progn (forward-sexp 1) (1- (point)))))
-            (setq texinfo-multitable-width-list
-                  (cons (- end-of-template start-of-template)
-                        texinfo-multitable-width-list))
+            (push (- end-of-template start-of-template)
+                  texinfo-multitable-width-list)
             ;; Remove carriage return from within a template, if any.
             ;; This helps those those who want to use more than
             ;; one line's worth of words in @multitable line.
@@ -2074,9 +2052,8 @@ commands that are defined in texinfo.tex for printed output.
             (apply '+ texinfo-multitable-width-list))))
       (if (> desired-columns fill-column)
           (error
-           (format
-            "Multi-column table width, %d chars, is greater than page width, %d chars."
-            desired-columns fill-column))))
+           "Multi-column table width, %d chars, is greater than page width, %d chars."
+            desired-columns fill-column)))
     texinfo-multitable-width-list))
 
 ;; @item  A1  @tab  A2  @tab  A3
@@ -2417,13 +2394,11 @@ Use only the FILENAME arg; for Info, ignore the other arguments to @image."
          (beginning-delimiter (or (nth 1 args) ""))
          (end-delimiter (or (nth 2 args) "")))
     (texinfo-discard-command)
-    (setq texinfo-enclosure-list
-        (cons
-         (list command-name
-               (list
-                beginning-delimiter
-                end-delimiter))
-         texinfo-enclosure-list))))
+    (push (list command-name
+                (list
+                 beginning-delimiter
+                 end-delimiter))
+          texinfo-enclosure-list)))
 
 
 ;;; @alias
@@ -2436,12 +2411,10 @@ Use only the FILENAME arg; for Info, ignore the other arguments to @image."
     (save-excursion (end-of-line) (setq texinfo-command-end (point)))
     (if (not (looking-at "\\([^=]+\\)=\\(.*\\)"))
 	(error "Invalid alias command")
-      (setq texinfo-alias-list
-	    (cons
-	     (cons
-	      (match-string-no-properties 1)
-	      (match-string-no-properties 2))
-	     texinfo-alias-list))
+      (push (cons
+             (match-string-no-properties 1)
+             (match-string-no-properties 2))
+            texinfo-alias-list)
       (texinfo-discard-command))
     )
   )
@@ -2570,8 +2543,7 @@ If used within a line, follow `@bullet' with braces."
    "lisp\\|"
    "smalllisp"
    "\\)")
-  "Regexp specifying environments in which @kbd does not put `...'
-  around argument.")
+  "Regexp matching environments in which @kbd does not put `...' around arg.")
 
 (defvar texinfo-format-kbd-end-regexp
   (concat
@@ -2584,7 +2556,7 @@ If used within a line, follow `@bullet' with braces."
    "smalllisp"
    "\\)")
   "Regexp specifying end of environments in which @kbd does not put `...'
-  around argument. (See `texinfo-format-kbd-regexp')")
+around argument. (See `texinfo-format-kbd-regexp')")
 
 (put 'kbd 'texinfo-format 'texinfo-format-kbd)
 (defun texinfo-format-kbd ()
@@ -2793,8 +2765,8 @@ If used within a line, follow `@minus' with braces."
 
 ;;; Refilling and indenting:  @refill, @paragraphindent, @noindent
 
-;;; Indent only those paragraphs that are refilled as a result of an
-;;; @refill command.
+;; Indent only those paragraphs that are refilled as a result of an
+;; @refill command.
 
 ;;    * If the value is `asis', do not change the existing indentation at
 ;;      the starts of paragraphs.
@@ -2804,8 +2776,8 @@ If used within a line, follow `@minus' with braces."
 ;;    * If the value is greater than zero, indent each paragraph by that
 ;;      number of spaces.
 
-;;; But do not refill paragraphs with an @refill command that are
-;;; preceded by @noindent or are part of a table, list, or deffn.
+;; But do not refill paragraphs with an @refill command that are
+;; preceded by @noindent or are part of a table, list, or deffn.
 
 (defvar texinfo-paragraph-indent "asis"
   "Number of spaces for @refill to indent a paragraph; else to leave as is.")
@@ -2822,7 +2794,7 @@ Default is to leave the number of spaces as is."
 
 (put 'refill 'texinfo-format 'texinfo-format-refill)
 (defun texinfo-format-refill ()
-  "Refill paragraph. Also, indent first line as set by @paragraphindent.
+  "Refill paragraph.  Also, indent first line as set by @paragraphindent.
 Default is to leave paragraph indentation as is."
   (texinfo-discard-command)
   (let ((position (point-marker)))
@@ -2941,11 +2913,9 @@ Default is to leave paragraph indentation as is."
 
     ;; eg: "aa" . texinfo-aaindex
     (or (assoc index-name texinfo-indexvar-alist)
-        (setq texinfo-indexvar-alist
-              (cons
-               (cons index-name
-                     index-alist-name)
-               texinfo-indexvar-alist)))
+        (push (cons index-name
+                    index-alist-name)
+              texinfo-indexvar-alist))
 
     (fset index-formatting-command
           (list 'lambda 'nil
@@ -2993,45 +2963,23 @@ Default is to leave paragraph indentation as is."
     ("ky" . texinfo-format-kindex)))
 
 
-;;; Sort and index (for VMS)
-
-;; Sort an index which is in the current buffer between START and END.
-;; Used on VMS, where the `sort' utility is not available.
-(defun texinfo-sort-region (start end)
-  (require 'sort)
-  (save-restriction
-    (narrow-to-region start end)
-    (goto-char (point-min))
-    (sort-subr nil 'forward-line 'end-of-line 'texinfo-sort-startkeyfun)))
-
-;; Subroutine for sorting an index.
-;; At start of a line, return a string to sort the line under.
-(defun texinfo-sort-startkeyfun ()
-  (let ((line (buffer-substring-no-properties (point) (line-end-position))))
-    ;; Canonicalize whitespace and eliminate funny chars.
-    (while (string-match "[ \t][ \t]+\\|[^a-z0-9 ]+" line)
-      (setq line (concat (substring line 0 (match-beginning 0))
-                         " "
-                         (substring line (match-end 0)))))
-    line))
-
-
 ;;; @printindex
 
 (put 'printindex 'texinfo-format 'texinfo-format-printindex)
 
 (defun texinfo-format-printindex ()
-  (let ((indexelts (symbol-value
-                    (cdr (assoc (texinfo-parse-arg-discard)
-                                texinfo-indexvar-alist))))
-        opoint)
+  (let* ((arg (texinfo-parse-arg-discard))
+         (fmt (cdr (assoc arg texinfo-short-index-format-cmds-alist)))
+         (index-list (delq nil (mapcar (lambda (e)
+                                         (and (eq fmt (get (cdr e) 'texinfo-format))
+                                              (cdr (assoc (car e) texinfo-indexvar-alist))))
+                                       texinfo-short-index-cmds-alist)))
+         (indexelts (apply #'append nil (mapcar #'symbol-value index-list)))
+         opoint)
     (insert "\n* Menu:\n\n")
     (setq opoint (point))
     (texinfo-print-index nil indexelts)
-
-    (if (memq system-type '(vax-vms windows-nt ms-dos))
-        (texinfo-sort-region opoint (point))
-      (shell-command-on-region opoint (point) "sort -fd" 1))))
+    (shell-command-on-region opoint (point) "sort -fd" 1)))
 
 (defun texinfo-print-index (file indexelts)
   (while indexelts
@@ -4024,7 +3972,7 @@ The command  `@value{foo}'  expands to the value."
 (put 'ifset 'texinfo-end 'texinfo-discard-command)
 (put 'ifset 'texinfo-format 'texinfo-if-set)
 (defun texinfo-if-set ()
-  "If set, continue formatting; else do not format region up to @end ifset"
+  "If set, continue formatting; else do not format region up to @end ifset."
   (let ((arg (texinfo-parse-arg-discard)))
     (cond
      ((eq (get (car (read-from-string arg)) 'texinfo-whether-setp)
@@ -4045,7 +3993,7 @@ The command  `@value{foo}'  expands to the value."
 (put 'ifclear 'texinfo-end 'texinfo-discard-command)
 (put 'ifclear 'texinfo-format 'texinfo-if-clear)
 (defun texinfo-if-clear ()
-  "If clear, continue formatting; if set, do not format up to @end ifset"
+  "If clear, continue formatting; if set, do not format up to @end ifset."
   (let ((arg (texinfo-parse-arg-discard)))
     (cond
      ((eq (get (car (read-from-string arg)) 'texinfo-whether-setp)
@@ -4291,7 +4239,7 @@ the @ifeq command."
 ;;; Batch formatting
 
 (defun batch-texinfo-format ()
-  "Runs  texinfo-format-buffer  on the files remaining on the command line.
+  "Run `texinfo-format-buffer' on the files remaining on the command line.
 Must be used only with -batch, and kills Emacs on completion.
 Each file will be processed even if an error occurred previously.
 For example, invoke
@@ -4317,8 +4265,8 @@ For example, invoke
                      (nconc (directory-files file)
                             (cdr command-line-args-left))))
               (t
-               (setq files (cons file files)
-                     command-line-args-left (cdr command-line-args-left)))))
+               (push file files)
+               (setq command-line-args-left (cdr command-line-args-left)))))
       (while files
         (setq file (car files)
               files (cdr files))
@@ -4354,5 +4302,5 @@ For example, invoke
 ;;; Place `provide' at end of file.
 (provide 'texinfmt)
 
-;;; arch-tag: 1e8d9a2d-bca0-40a0-ac6c-dab01bc6f725
+;; arch-tag: 1e8d9a2d-bca0-40a0-ac6c-dab01bc6f725
 ;;; texinfmt.el ends here

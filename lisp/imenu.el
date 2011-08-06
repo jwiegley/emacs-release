@@ -1,7 +1,7 @@
 ;;; imenu.el --- framework for mode-specific buffer indexes
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Ake Stenhoff <etxaksf@aom.ericsson.se>
 ;;         Lars Lindberg <lli@sypro.cap.se>
@@ -11,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -78,7 +76,7 @@
   :link '(custom-manual "(elisp)Imenu"))
 
 (defcustom imenu-use-markers t
-  "*Non-nil means use markers instead of integers for Imenu buffer positions.
+  "Non-nil means use markers instead of integers for Imenu buffer positions.
 
 Setting this to nil makes Imenu work a little faster but editing the
 buffer will make the generated index positions wrong.
@@ -89,18 +87,18 @@ This might not yet be honored by all index-building functions."
 
 
 (defcustom imenu-max-item-length 60
-  "*If a number, truncate Imenu entries to that length."
+  "If a number, truncate Imenu entries to that length."
   :type '(choice integer
 		 (const :tag "Unlimited"))
   :group 'imenu)
 
 (defcustom imenu-auto-rescan nil
-  "*Non-nil means Imenu should always rescan the buffers."
+  "Non-nil means Imenu should always rescan the buffers."
   :type 'boolean
   :group 'imenu)
 
 (defcustom imenu-auto-rescan-maxout 60000
-  "*Imenu auto-rescan is disabled in buffers larger than this size (in bytes).
+  "Imenu auto-rescan is disabled in buffers larger than this size (in bytes).
 This variable is buffer-local."
   :type 'integer
   :group 'imenu)
@@ -130,7 +128,7 @@ If `on-mouse' use a popup menu when `imenu' was invoked with the mouse."
   :version "22.1")
 
 (defcustom imenu-after-jump-hook nil
-  "*Hooks called after jumping to a place in the buffer.
+  "Hooks called after jumping to a place in the buffer.
 
 Useful things to use here include `reposition-window', `recenter', and
 \(lambda () (recenter 0)) to show at top of screen."
@@ -139,7 +137,7 @@ Useful things to use here include `reposition-window', `recenter', and
 
 ;;;###autoload
 (defcustom imenu-sort-function nil
-  "*The function to use for sorting the index mouse-menu.
+  "The function to use for sorting the index mouse-menu.
 
 Affects only the mouse index menu.
 
@@ -158,7 +156,7 @@ element should come before the second.  The arguments are cons cells;
   :group 'imenu)
 
 (defcustom imenu-max-items 25
-  "*Maximum number of elements in a mouse menu for Imenu."
+  "Maximum number of elements in a mouse menu for Imenu."
   :type 'integer
   :group 'imenu)
 
@@ -175,14 +173,14 @@ element should come before the second.  The arguments are cons cells;
 ;;   :group 'imenu)
 
 (defcustom imenu-space-replacement "."
-  "*The replacement string for spaces in index names.
+  "The replacement string for spaces in index names.
 Used when presenting the index in a completion buffer to make the
 names work as tokens."
   :type '(choice string (const nil))
   :group 'imenu)
 
 (defcustom imenu-level-separator ":"
-  "*The separator between index names of different levels.
+  "The separator between index names of different levels.
 Used for making mouse-menu titles and for flattening nested indexes
 with name concatenation."
   :type 'string
@@ -485,6 +483,8 @@ element recalculates the buffer's index alist.")
 
 ;; Split LIST into sublists of max length N.
 ;; Example (imenu--split '(1 2 3 4 5 6 7 8) 3)-> '((1 2 3) (4 5 6) (7 8))
+;;
+;; The returned list DOES NOT share structure with LIST.
 (defun imenu--split (list n)
   (let ((remain list)
 	(result '())
@@ -506,10 +506,15 @@ element recalculates the buffer's index alist.")
 
 ;;; Split the alist MENULIST into a nested alist, if it is long enough.
 ;;; In any case, add TITLE to the front of the alist.
+;;; If IMENU--RESCAN-ITEM is present in MENULIST, it is moved to the
+;;; beginning of the returned alist.
+;;;
+;;; The returned alist DOES NOT share structure with MENULIST.
 (defun imenu--split-menu (menulist title)
-  (let (keep-at-top tail)
+  (let ((menulist (copy-sequence menulist))
+        keep-at-top tail)
     (if (memq imenu--rescan-item menulist)
-	(setq keep-at-top (cons imenu--rescan-item nil)
+	(setq keep-at-top (list imenu--rescan-item)
 	      menulist (delq imenu--rescan-item menulist)))
     (setq tail menulist)
     (dolist (item tail)
@@ -517,7 +522,7 @@ element recalculates the buffer's index alist.")
 	(push item keep-at-top)
 	(setq menulist (delq item menulist))))
     (if imenu-sort-function
-	(setq menulist (sort (copy-sequence menulist) imenu-sort-function)))
+	(setq menulist (sort menulist imenu-sort-function)))
     (if (> (length menulist) imenu-max-items)
 	(setq menulist
 	      (mapcar
@@ -529,6 +534,9 @@ element recalculates the buffer's index alist.")
 
 ;;; Split up each long alist that are nested within ALIST
 ;;; into nested alists.
+;;;
+;;; Return a split and sorted copy of ALIST. The returned alist DOES
+;;; NOT share structure with ALIST.
 (defun imenu--split-submenus (alist)
   (mapcar (function
 	   (lambda (elt)
@@ -657,7 +665,7 @@ and speed-up matching.")
 (make-variable-buffer-local 'imenu-syntax-alist)
 
 (defun imenu-default-create-index-function ()
-  "*Default function to create an index alist of the current buffer.
+  "Default function to create an index alist of the current buffer.
 
 The most general method is to move point to end of buffer, then repeatedly call
 `imenu-prev-index-position-function' and `imenu-extract-index-name-function'.
@@ -954,7 +962,8 @@ See the command `imenu' for more information."
 	  `(menu-item ,name ,(make-sparse-keymap "Imenu")))
 	(use-local-map newmap)
 	(add-hook 'menu-bar-update-hook 'imenu-update-menubar))
-    (error "The mode `%s' does not support Imenu" mode-name)))
+    (error "The mode `%s' does not support Imenu"
+           (format-mode-line mode-name))))
 
 ;;;###autoload
 (defun imenu-add-menubar-index ()

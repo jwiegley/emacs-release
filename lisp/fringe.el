@@ -1,6 +1,7 @@
-;;; fringe.el --- fringe setup and control
+;;; fringe.el --- fringe setup and control  -*- coding: utf-8 -*-
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+;;   2009 Free Software Foundation, Inc.
 
 ;; Author: Simon Josefsson <simon@josefsson.org>
 ;; Maintainer: FSF
@@ -8,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -93,6 +92,10 @@
 
 (defvar fringe-mode)
 
+(defvar fringe-mode-explicit nil
+  "Non-nil means `set-fringe-mode' should really do something.
+This is nil while loading `fringe.el', and t afterward.")
+
 (defun set-fringe-mode-1 (ignore value)
   "Call `set-fringe-mode' with VALUE.
 See `fringe-mode' for valid values and their effect.
@@ -104,40 +107,14 @@ This is usually invoked when setting `fringe-mode' via customize."
 See `fringe-mode' for possible values and their effect."
   (setq fringe-mode value)
 
-  ;; Apply it to default-frame-alist.
-  (let ((parameter (assq 'left-fringe default-frame-alist)))
-    (if (consp parameter)
-	(setcdr parameter (if (consp fringe-mode)
-			      (car fringe-mode)
-			    fringe-mode))
-      (setq default-frame-alist
-	    (cons (cons 'left-fringe (if (consp fringe-mode)
-					 (car fringe-mode)
-				       fringe-mode))
-		  default-frame-alist))))
-  (let ((parameter (assq 'right-fringe default-frame-alist)))
-    (if (consp parameter)
-	(setcdr parameter (if (consp fringe-mode)
-			      (cdr fringe-mode)
-			    fringe-mode))
-      (setq default-frame-alist
-	    (cons (cons 'right-fringe (if (consp fringe-mode)
-					  (cdr fringe-mode)
-					fringe-mode))
-		  default-frame-alist))))
-
-  ;; Apply it to existing frames.
-  (let ((frames (frame-list)))
-    (while frames
-      (modify-frame-parameters
-       (car frames)
-       (list (cons 'left-fringe (if (consp fringe-mode)
-				    (car fringe-mode)
-				  fringe-mode))
-	     (cons 'right-fringe (if (consp fringe-mode)
-				     (cdr fringe-mode)
-				   fringe-mode))))
-      (setq frames (cdr frames)))))
+  (when fringe-mode-explicit
+    (modify-all-frames-parameters
+     (list (cons 'left-fringe (if (consp fringe-mode)
+				  (car fringe-mode)
+				fringe-mode))
+	   (cons 'right-fringe (if (consp fringe-mode)
+				   (cdr fringe-mode)
+				 fringe-mode))))))
 
 ;; For initialization of fringe-mode, take account of changes
 ;; made explicitly to default-frame-alist.
@@ -159,7 +136,7 @@ See `fringe-mode' for possible values and their effect."
       (custom-initialize-reset symbol value))))
 
 (defcustom fringe-mode nil
-  "*Specify appearance of fringes on all frames.
+  "Specify appearance of fringes on all frames.
 This variable can be nil (the default) meaning the fringes should have
 the default width (8 pixels), it can be an integer value specifying
 the width of both left and right fringe (where 0 means no fringe), or
@@ -185,6 +162,10 @@ you can use the interactive function `set-fringe-style'."
   :require 'fringe
   :initialize 'fringe-mode-initialize
   :set 'set-fringe-mode-1)
+
+;; We just set fringe-mode, but that was the default.
+;; If it is set again, that is for real.
+(setq fringe-mode-explicit t)
 
 (defun fringe-query-style (&optional all-frames)
   "Query user for fringe style.
@@ -280,5 +261,5 @@ SIDE must be the symbol `left' or `right'."
 
 (provide 'fringe)
 
-;;; arch-tag: 6611ef60-0869-47ed-8b93-587ee7d3ff5d
+;; arch-tag: 6611ef60-0869-47ed-8b93-587ee7d3ff5d
 ;;; fringe.el ends here

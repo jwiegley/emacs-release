@@ -1,7 +1,7 @@
 ;;; delim-col.el --- prettify all columns in a region or rectangle
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Vinicius Jose Latorre <viniciusjl@ig.com.br>
 ;; Maintainer: Vinicius Jose Latorre <viniciusjl@ig.com.br>
@@ -11,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -131,37 +129,37 @@
   :group 'internal)
 
 (defcustom delimit-columns-str-before ""
-  "*Specify a string to be inserted before all columns."
+  "Specify a string to be inserted before all columns."
   :type '(string :tag "Before All Columns")
   :group 'columns)
 
 (defcustom delimit-columns-str-separator ", "
-  "*Specify a string to be inserted between each column."
+  "Specify a string to be inserted between each column."
   :type '(string :tag "Between Each Column")
   :group 'columns)
 
 (defcustom delimit-columns-str-after ""
-  "*Specify a string to be inserted after all columns."
+  "Specify a string to be inserted after all columns."
   :type '(string :tag "After All Columns")
   :group 'columns)
 
 (defcustom delimit-columns-before ""
-  "*Specify a string to be inserted before each column."
+  "Specify a string to be inserted before each column."
   :type '(string :tag "Before Each Column")
   :group 'columns)
 
 (defcustom delimit-columns-after ""
-  "*Specify a string to be inserted after each column."
+  "Specify a string to be inserted after each column."
   :type '(string :tag "After Each Column")
   :group 'columns)
 
 (defcustom delimit-columns-separator "\t"
-  "*Specify a regexp which separates each column."
+  "Specify a regexp which separates each column."
   :type '(regexp :tag "Column Separator")
   :group 'columns)
 
 (defcustom delimit-columns-format t
-  "*Specify how to format columns.
+  "Specify how to format columns.
 
 For examples below, consider:
 
@@ -202,14 +200,14 @@ Any other value is treated as t."
   :group 'columns)
 
 (defcustom delimit-columns-extra t
-  "*Non-nil means that lines will have the same number of columns.
+  "Non-nil means that lines will have the same number of columns.
 
 This has effect only when there are lines with different number of columns."
   :type '(boolean :tag "Lines With Same Number Of Column")
   :group 'columns)
 
 (defcustom delimit-columns-start 0
-  "*Specify column number to start prettifing.
+  "Specify column number to start prettifing.
 
 See also `delimit-columns-end' for documentation.
 
@@ -224,7 +222,7 @@ column (column 0) is located at left corner."
   :group 'columns)
 
 (defcustom delimit-columns-end 1000000
-  "*Specify column number to end prettifing.
+  "Specify column number to end prettifing.
 
 See also `delimit-columns-start' for documentation.
 
@@ -479,5 +477,5 @@ START and END delimits the corners of text rectangle."
 (provide 'delim-col)
 
 
-;;; arch-tag: 1cc0c5c5-1b2a-43e4-9ba5-bf9441cfd1a9
+;; arch-tag: 1cc0c5c5-1b2a-43e4-9ba5-bf9441cfd1a9
 ;;; delim-col.el ends here

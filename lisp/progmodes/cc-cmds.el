@@ -1,13 +1,14 @@
 ;;; cc-cmds.el --- user level commands for CC Mode
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    2003- Alan Mackenzie
 ;;             1998- Martin Stjernholm
 ;;             1992-1999 Barry A. Warsaw
-;;             1987 Dave Detlefs and Stewart Clamen
+;;             1987 Dave Detlefs
+;;             1987 Stewart Clamen
 ;;             1985 Richard M. Stallman
 ;; Maintainer: bug-cc-mode@gnu.org
 ;; Created:    22-Apr-1997 (split from cc-mode.el)
@@ -16,10 +17,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,9 +28,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -478,7 +477,7 @@ inside a literal or a macro, nothing special happens."
 	  (bolp (bolp)))
       (beginning-of-line)
       (delete-horizontal-space)
-      (insert last-command-char)
+      (insert last-command-event)
       (and (not bolp)
 	   (goto-char (- (point-max) pos)))
       )))
@@ -524,7 +523,7 @@ inside a literal or a macro, nothing special happens."
 	;; This is the list of brace syntactic symbols that can hang.
 	;; If any new ones are added to c-offsets-alist, they should be
 	;; added here as well.
-	;; 
+	;;
 	;; The order of this list is important; if SYNTAX has several
 	;; elements, the element that "wins" is the earliest in SYMS.
 	'(arglist-cont-nonempty		; e.g. an array literal.
@@ -737,7 +736,7 @@ settings of `c-cleanup-list' are done."
 	      ;; `}': clean up empty defun braces
 	      (when (c-save-buffer-state ()
 		      (and (memq 'empty-defun-braces c-cleanup-list)
-			   (eq last-command-char ?\})
+			   (eq last-command-event ?\})
 			   (c-intersect-lists '(defun-close class-close inline-close)
 					      syntax)
 			   (progn
@@ -753,14 +752,14 @@ settings of `c-cleanup-list' are done."
 	      ;; `}': compact to a one-liner defun?
 	      (save-match-data
 		(when
-		    (and (eq last-command-char ?\})
+		    (and (eq last-command-event ?\})
 			 (memq 'one-liner-defun c-cleanup-list)
 			 (c-intersect-lists '(defun-close) syntax)
 			 (c-try-one-liner))
 		  (setq here (- (point-max) pos))))
 
 	      ;; `{': clean up brace-else-brace and brace-elseif-brace
-	      (when (eq last-command-char ?\{)
+	      (when (eq last-command-event ?\{)
 		(cond
 		 ((and (memq 'brace-else-brace c-cleanup-list)
 		       (re-search-backward
@@ -814,7 +813,7 @@ settings of `c-cleanup-list' are done."
 	    ))))
 
     ;; blink the paren
-    (and (eq last-command-char ?\})
+    (and (eq last-command-event ?\})
 	 (not executing-kbd-macro)
 	 old-blink-paren
 	 (save-excursion
@@ -851,7 +850,7 @@ is inhibited."
     (when (and (not arg)
 	       (eq literal 'c)
 	       (memq 'comment-close-slash c-cleanup-list)
-	       (eq last-command-char ?/)
+	       (eq last-command-event ?/)
 	       (looking-at (concat "[ \t]*\\("
 				   (regexp-quote comment-end) "\\)?$"))
 	; (eq c-block-comment-ender "*/") ; C-style comments ALWAYS end in */
@@ -867,7 +866,7 @@ is inhibited."
     (setq indentp (and (not arg)
 		       c-syntactic-indentation
 		       c-electric-flag
-		       (eq last-command-char ?/)
+		       (eq last-command-event ?/)
 		       (eq (char-before) (if literal ?* ?/))))
     (self-insert-command (prefix-numeric-value arg))
     (if indentp
@@ -941,10 +940,10 @@ settings of `c-cleanup-list'."
 	  (let ((pos (- (point-max) (point))))
 	    (if (c-save-buffer-state ()
 		  (and (or (and
-			    (eq last-command-char ?,)
+			    (eq last-command-event ?,)
 			    (memq 'list-close-comma c-cleanup-list))
 			   (and
-			    (eq last-command-char ?\;)
+			    (eq last-command-event ?\;)
 			    (memq 'defun-close-semi c-cleanup-list)))
 		       (progn
 			 (forward-char -1)
@@ -1099,7 +1098,7 @@ numeric argument is supplied, or the point is inside a literal."
 			  <-pos)
 
       (when c-recognize-<>-arglists
-	(if (eq last-command-char ?<)
+	(if (eq last-command-event ?<)
 	    (when (and (progn
 			 (backward-char)
 			 (= (point)
@@ -1222,7 +1221,7 @@ newline cleanups are done if appropriate; see the variable `c-cleanup-list'."
 	    ;; clean up brace-elseif-brace
 	    (when
 		(and (memq 'brace-elseif-brace c-cleanup-list)
-		     (eq last-command-char ?\()
+		     (eq last-command-event ?\()
 		     (re-search-backward
 		      (concat "}"
 			      "\\([ \t\n]\\|\\\\\n\\)*"
@@ -1240,7 +1239,7 @@ newline cleanups are done if appropriate; see the variable `c-cleanup-list'."
 	    ;; clean up brace-catch-brace
 	    (when
 		(and (memq 'brace-catch-brace c-cleanup-list)
-		     (eq last-command-char ?\()
+		     (eq last-command-event ?\()
 		     (re-search-backward
 		      (concat "}"
 			      "\\([ \t\n]\\|\\\\\n\\)*"
@@ -1261,7 +1260,7 @@ newline cleanups are done if appropriate; see the variable `c-cleanup-list'."
 
 	     ;; space-before-funcall clean-up?
 	     ((and (memq 'space-before-funcall c-cleanup-list)
-		   (eq last-command-char ?\()
+		   (eq last-command-event ?\()
 		   (save-excursion
 		     (backward-char)
 		     (skip-chars-backward " \t")
@@ -1279,7 +1278,7 @@ newline cleanups are done if appropriate; see the variable `c-cleanup-list'."
 	     ;; compact-empty-funcall clean-up?
 		  ((c-save-buffer-state ()
 		     (and (memq 'compact-empty-funcall c-cleanup-list)
-			  (eq last-command-char ?\))
+			  (eq last-command-event ?\))
 			  (save-excursion
 			    (c-safe (backward-char 2))
 			    (when (looking-at "()")
@@ -1308,7 +1307,7 @@ keyword on the line, the keyword is not inserted inside a literal, and
     (when (c-save-buffer-state ()
 	    (and c-electric-flag
 		 c-syntactic-indentation
-		 (not (eq last-command-char ?_))
+		 (not (eq last-command-event ?_))
 		 (= (save-excursion
 		      (skip-syntax-backward "w")
 		      (point))
@@ -1687,63 +1686,71 @@ with a brace block."
   (c-save-buffer-state
       (beginning-of-defun-function end-of-defun-function
        where pos name-end)
- 
-    (save-excursion
-      ;; Move back out of any macro/comment/string we happen to be in.
-      (c-beginning-of-macro)
-      (setq pos (c-literal-limits))
-      (if pos (goto-char (car pos)))
 
-      (setq where (c-where-wrt-brace-construct))
+    (save-restriction
+      (widen)
+      (save-excursion
+	;; Move back out of any macro/comment/string we happen to be in.
+	(c-beginning-of-macro)
+	(setq pos (c-literal-limits))
+	(if pos (goto-char (car pos)))
 
-      ;; Move to the beginning of the current defun, if any, if we're not
-      ;; already there.
-      (if (eq where 'outwith-function)
-	  nil
-	(unless (eq where 'at-header)
-	  (c-backward-to-nth-BOF-{ 1 where)
-	  (c-beginning-of-decl-1))
+	(setq where (c-where-wrt-brace-construct))
 
-	;; Pick out the defun name, according to the type of defun.
-	(cond
-	 ((and (looking-at c-type-prefix-key)
-	       (progn (c-forward-token-2 2) ; over "struct foo "
-		      (eq (char-after) ?\{)))
-	  ;; struct, union, enum, or similar:
-	  (c-backward-syntactic-ws)
-	  (setq name-end (point))
-	  (buffer-substring-no-properties
-	   (progn
-	     (c-backward-token-2 2)
-	     (point))
-	   name-end))
+	;; Move to the beginning of the current defun, if any, if we're not
+	;; already there.
+	(if (eq where 'outwith-function)
+	    nil
+	  (unless (eq where 'at-header)
+	    (c-backward-to-nth-BOF-{ 1 where)
+	    (c-beginning-of-decl-1))
 
-	 ((looking-at "DEFUN\\_>")
-	  ;; DEFUN ("file-name-directory", Ffile_name_directory, Sfile_name_directory, ...) ==> Ffile_name_directory
-	  ;; DEFUN(POSIX::STREAM-LOCK, stream lockp &key BLOCK SHARED START LENGTH) ==> POSIX::STREAM-LOCK	  
-	  (down-list 1)
-	  (c-forward-syntactic-ws)
-	  (when (eq (char-after) ?\")
-	    (forward-sexp 1)
-	    (c-forward-token-2))	; over the comma and following WS.
-	  (buffer-substring-no-properties
-	   (point)
-	   (progn
-	     (c-forward-token-2)
-	     (c-backward-syntactic-ws)
-	     (point))))
-		
-	 (t
-	 ;; Normal function or initializer.
-	  (when (c-syntactic-re-search-forward "[{(]" nil t)
-	    (backward-char)
-	    (c-backward-syntactic-ws)
-	    (when (eq (char-before) ?\=) ; struct foo bar = {0, 0} ;
+	  ;; Pick out the defun name, according to the type of defun.
+	  (cond
+	   ;; struct, union, enum, or similar:
+	   ((and (looking-at c-type-prefix-key)
+		 (progn (c-forward-token-2 2) ; over "struct foo "
+			(or (eq (char-after) ?\{)
+			    (looking-at c-symbol-key)))) ; "struct foo bar ..."
+	    (save-match-data (c-forward-token-2))
+	    (when (eq (char-after) ?\{)
 	      (c-backward-token-2)
-	      (c-backward-syntactic-ws))
-	    (setq name-end (point))
-	    (c-backward-token-2)
-	    (buffer-substring-no-properties (point) name-end))))))))
+	      (looking-at c-symbol-key))
+	    (match-string-no-properties 0))
+
+	   ((looking-at "DEFUN\\_>")
+	    ;; DEFUN ("file-name-directory", Ffile_name_directory, Sfile_name_directory, ...) ==> Ffile_name_directory
+	    ;; DEFUN(POSIX::STREAM-LOCK, stream lockp &key BLOCK SHARED START LENGTH) ==> POSIX::STREAM-LOCK
+	    (down-list 1)
+	    (c-forward-syntactic-ws)
+	    (when (eq (char-after) ?\")
+	      (forward-sexp 1)
+	      (c-forward-token-2))	; over the comma and following WS.
+	    (buffer-substring-no-properties
+	     (point)
+	     (progn
+	       (c-forward-token-2)
+	       (when (looking-at ":")  ; CLISP: DEFUN(PACKAGE:LISP-SYMBOL,...)
+		 (skip-chars-forward "^,"))
+	       (c-backward-syntactic-ws)
+	       (point))))
+
+	   ((looking-at "DEF[a-zA-Z0-9_]* *( *\\([^, ]*\\) *,")
+	    ;; DEFCHECKER(sysconf_arg,prefix=_SC,default=, ...) ==> sysconf_arg
+	    ;; DEFFLAGSET(syslog_opt_flags,LOG_PID ...) ==> syslog_opt_flags
+	    (match-string-no-properties 1))
+
+	   (t
+	    ;; Normal function or initializer.
+	    (when (c-syntactic-re-search-forward "[{(]" nil t)
+	      (backward-char)
+	      (c-backward-syntactic-ws)
+	      (when (eq (char-before) ?\=) ; struct foo bar = {0, 0} ;
+		(c-backward-token-2)
+		(c-backward-syntactic-ws))
+	      (setq name-end (point))
+	      (c-backward-token-2)
+	      (buffer-substring-no-properties (point) name-end)))))))))
 
 (defun c-declaration-limits (near)
   ;; Return a cons of the beginning and end positions of the current
@@ -2674,7 +2681,7 @@ sentence motion in or near comments and multiline strings."
 ;; set up electric character functions to work with pending-del,
 ;; (a.k.a. delsel) mode.  All symbols get the t value except
 ;; the functions which delete, which gets 'supersede.
-(mapcar
+(mapc
  (function
   (lambda (sym)
     (put sym 'delete-selection t)	; for delsel (Emacs)
@@ -3098,46 +3105,46 @@ non-nil."
 		    (c-parsing-error nil)
 		    ;; shut up any echo msgs on indiv lines
 		    (c-echo-syntactic-information-p nil)
-		    (in-macro (and c-auto-align-backslashes
-				   (c-save-buffer-state ()
-				     (save-excursion (c-beginning-of-macro)))
-				   start))
+		    (ml-macro-start	; Start pos of multi-line macro.
+		     (and (c-save-buffer-state ()
+			    (save-excursion (c-beginning-of-macro)))
+			  (eq (char-before (c-point 'eol)) ?\\)
+			  start))
 		    (c-fix-backslashes nil)
 		    syntax)
 		(unwind-protect
 		    (progn
 		      (c-progress-init start end 'c-indent-region)
-		      (while (and (bolp)
+
+		      (while (and (bolp) ;; One line each time round the loop.
 				  (not (eobp))
 				  (< (point) endmark))
 			;; update progress
 			(c-progress-update)
 			;; skip empty lines
-			(skip-chars-forward " \t\n")
-			(beginning-of-line)
-			;; Get syntax and indent.
-			(c-save-buffer-state nil
-			  (setq syntax (c-guess-basic-syntax)))
-			(if (and c-auto-align-backslashes
-				 (assq 'cpp-macro syntax))
-			    ;; Record macro start.
-			    (setq in-macro (point)))
-			(if in-macro
-			    (if (looking-at "\\s *\\\\$")
-				(forward-line)
-			      (c-indent-line syntax t t)
-			      (if (progn (end-of-line)
-					 (not (eq (char-before) ?\\)))
-				  (progn
-				    ;; Fixup macro backslashes.
-				    (forward-line)
-				    (c-backslash-region in-macro (point) nil)
-				    (setq in-macro nil))
-				(forward-line)))
-			  (c-indent-line syntax t t)
-			  (forward-line)))
-		      (if in-macro
-			  (c-backslash-region in-macro (c-point 'bopl) nil t)))
+			(unless (or (looking-at "\\s *$")
+				    (and ml-macro-start (looking-at "\\s *\\\\$")))
+			  ;; Get syntax and indent.
+			  (c-save-buffer-state nil
+			    (setq syntax (c-guess-basic-syntax)))
+			  (c-indent-line syntax t t))
+
+			(if ml-macro-start
+			    ;; End of current multi-line macro?
+			    (when (and c-auto-align-backslashes
+				       (not (eq (char-before (c-point 'eol)) ?\\)))
+			      ;; Fixup macro backslashes.
+			      (c-backslash-region ml-macro-start (c-point 'bonl) nil)
+			      (setq ml-macro-start nil))
+			  ;; New multi-line macro?
+			  (if (and (assq 'cpp-macro syntax)
+				   (eq (char-before (c-point 'eol)) ?\\))
+			    (setq ml-macro-start (point))))
+
+			(forward-line))
+
+		      (if (and ml-macro-start c-auto-align-backslashes)
+			  (c-backslash-region ml-macro-start (c-point 'bopl) nil t)))
 		  (set-marker endmark nil)
 		  (c-progress-fini 'c-indent-region))
 		(c-echo-parsing-error quiet))
@@ -3148,15 +3155,17 @@ non-nil."
   ;; compiled, e.g. in the menus.
   (c-region-is-active-p))
 
-(defun c-indent-line-or-region ()
-  "When the region is active, indent it syntactically.  Otherwise
-indent the current line syntactically."
-  ;; Emacs has a variable called mark-active, XEmacs uses region-active-p
-  (interactive)
-  (if (c-region-is-active-p)
+(defun c-indent-line-or-region (&optional arg region)
+  "Indent active region, current line, or block starting on this line.
+In Transient Mark mode, when the region is active, reindent the region.
+Otherwise, with a prefix argument, rigidly reindent the expression
+starting on the current line.
+Otherwise reindent just the current line."
+  (interactive
+   (list current-prefix-arg (use-region-p)))
+  (if region
       (c-indent-region (region-beginning) (region-end))
-    (c-indent-line)))
-
+    (c-indent-command arg)))
 
 ;; for progress reporting
 (defvar c-progress-info nil)
@@ -3942,7 +3951,12 @@ command to conveniently insert and align the necessary backslashes."
 		  (save-excursion
 		    (goto-char (cdr c-lit-limits))
 		    (beginning-of-line)
-		    (and (search-forward-regexp
+		    ;; The following conjunct was added to avoid an
+		    ;; "Invalid search bound (wrong side of point)"
+		    ;; error in the subsequent re-search.  Maybe
+		    ;; another fix would be needed (2007-12-08).
+		    (and (> (- (cdr c-lit-limits) 2) (point))
+			 (search-forward-regexp
 			  (concat "\\=[ \t]*\\(" c-current-comment-prefix "\\)")
 			  (- (cdr c-lit-limits) 2) t)
 			 (not (search-forward-regexp
@@ -4188,8 +4202,7 @@ Warning: Regexp from `c-comment-prefix-regexp' doesn't match the comment prefix 
 	  (forward-char (- hang-ender-stuck))
 	  (if (or fill-paragraph (not auto-fill-spaces))
 	      (insert-char ?\  hang-ender-stuck t)
-	    (insert auto-fill-spaces)
-	    (setq here (- here (- hang-ender-stuck (length auto-fill-spaces)))))
+	    (insert auto-fill-spaces))
 	  (delete-char hang-ender-stuck)
 	  (goto-char here))
 	(set-marker tmp-post nil))
@@ -4524,5 +4537,5 @@ normally bound to C-o.  See `c-context-line-break' for the details."
 
 (cc-provide 'cc-cmds)
 
-;;; arch-tag: bf0611dc-d1f4-449e-9e45-4ec7c6936677
+;; arch-tag: bf0611dc-d1f4-449e-9e45-4ec7c6936677
 ;;; cc-cmds.el ends here

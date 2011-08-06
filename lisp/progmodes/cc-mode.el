@@ -1,13 +1,14 @@
 ;;; cc-mode.el --- major mode for editing C and similar languages
 
 ;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
 ;; Authors:    2003- Alan Mackenzie
 ;;             1998- Martin Stjernholm
 ;;             1992-1999 Barry A. Warsaw
-;;             1987 Dave Detlefs and Stewart Clamen
+;;             1987 Dave Detlefs
+;;             1987 Stewart Clamen
 ;;             1985 Richard M. Stallman
 ;; Maintainer: bug-cc-mode@gnu.org
 ;; Created:    a long, long, time ago. adapted from the original c-mode.el
@@ -15,10 +16,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,9 +27,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -75,6 +74,10 @@
 ;;    http://lists.sourceforge.net/mailman/listinfo/cc-mode-announce
 
 ;;; Code:
+
+;; For Emacs < 22.2.
+(eval-and-compile
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest r))))
 
 (eval-when-compile
   (let ((load-path
@@ -190,7 +193,8 @@ control).  See \"cc-mode.el\" for more info."
 	    (run-hooks 'c-initialization-hook)
 	    ;; Fix obsolete variables.
 	    (if (boundp 'c-comment-continuation-stars)
-		(setq c-block-comment-prefix c-comment-continuation-stars))
+		(setq c-block-comment-prefix
+		      (symbol-value 'c-comment-continuation-stars)))
 	    (add-hook 'change-major-mode-hook 'c-leave-cc-mode-mode)
 	    (setq c-initialization-ok t))
 	;; Will try initialization hooks again if they failed.
@@ -211,12 +215,12 @@ control).  See \"cc-mode.el\" for more info."
     ;; function is called from top-level forms that are evaluated
     ;; while cc-bytecomp is active when one does M-x eval-buffer.
     (cond
-     ;; XEmacs
-     ((cc-bytecomp-fboundp 'set-keymap-parents)
-      (set-keymap-parents map c-mode-base-map))
      ;; Emacs
      ((cc-bytecomp-fboundp 'set-keymap-parent)
       (set-keymap-parent map c-mode-base-map))
+     ;; XEmacs
+     ((cc-bytecomp-fboundp 'set-keymap-parents)
+      (set-keymap-parents map c-mode-base-map))
      ;; incompatible
      (t (error "CC Mode is incompatible with this version of Emacs")))
     map))
@@ -269,7 +273,9 @@ control).  See \"cc-mode.el\" for more info."
 			     'c-indent-new-comment-line
 			     c-mode-base-map global-map)
   (substitute-key-definition 'indent-for-tab-command
-			     'c-indent-command
+			     ;; XXX Is this the right thing to do
+			     ;; here?
+			     'c-indent-line-or-region
 			     c-mode-base-map global-map)
   (when (fboundp 'comment-indent-new-line)
     ;; indent-new-comment-line has changed name to
@@ -280,8 +286,9 @@ control).  See \"cc-mode.el\" for more info."
 
   ;; RMS says don't make these the default.
   ;; (April 2006): RMS has now approved these commands as defaults.
-  (define-key c-mode-base-map "\e\C-a"    'c-beginning-of-defun)
-  (define-key c-mode-base-map "\e\C-e"    'c-end-of-defun)
+  (unless (memq 'argumentative-bod-function c-emacs-features)
+    (define-key c-mode-base-map "\e\C-a"    'c-beginning-of-defun)
+    (define-key c-mode-base-map "\e\C-e"    'c-end-of-defun))
 
   (define-key c-mode-base-map "\C-c\C-n"  'c-forward-conditional)
   (define-key c-mode-base-map "\C-c\C-p"  'c-backward-conditional)
@@ -599,7 +606,8 @@ that requires a literal mode spec at compile time."
   (make-local-hook 'after-change-functions)
   (add-hook 'after-change-functions 'c-after-change nil t)
   (set (make-local-variable 'font-lock-extend-after-change-region-function)
- 	'c-extend-after-change-region))	; Currently (2008-04), only used by AWK.
+ 	'c-extend-after-change-region))	; Currently (2009-05) used by all
+			; lanaguages with #define (C, C++,; ObjC), and by AWK.
 
 (defun c-setup-doc-comment-style ()
   "Initialize the variables that depend on the value of `c-doc-comment-style'."
@@ -650,6 +658,26 @@ compatible with old code; callers should always specify it."
       (make-local-variable 'require-final-newline)
       (and (cdr rfn)
 	   (setq require-final-newline mode-require-final-newline)))))
+
+(defun c-before-hack-hook ()
+  "Set the CC Mode style and \"offsets\" when in the buffer's local variables.
+They are set only when, respectively, the pseudo variables
+`c-file-style' and `c-file-offsets' are present in the list.
+
+This function is called from the hook `before-hack-local-variables-hook'."
+  (when c-buffer-is-cc-mode
+    (let ((stile (cdr (assq 'c-file-style file-local-variables-alist)))
+	  (offsets (cdr (assq 'c-file-offsets file-local-variables-alist))))
+      (when stile
+	(or (stringp stile) (error "c-file-style is not a string"))
+	(c-set-style stile))
+      (when offsets
+	(mapc
+	 (lambda (langentry)
+	   (let ((langelem (car langentry))
+		 (offset (cdr langentry)))
+	     (c-set-offset langelem offset)))
+	 offsets)))))
 
 (defun c-remove-any-local-eval-or-mode-variables ()
   ;; If the buffer specifies `mode' or `eval' in its File Local Variable list
@@ -716,7 +744,7 @@ Note that the style variables are always made local to the buffer."
       (c-set-style c-file-style))
 
     (and c-file-offsets
-	 (mapcar
+	 (mapc
 	  (lambda (langentry)
 	    (let ((langelem (car langentry))
 		  (offset (cdr langentry)))
@@ -742,7 +770,9 @@ Note that the style variables are always made local to the buffer."
 	    (hack-local-variables))
 	  nil))))
 
-(add-hook 'hack-local-variables-hook 'c-postprocess-file-styles)
+(if (boundp 'before-hack-local-variables-hook)
+    (add-hook 'before-hack-local-variables-hook 'c-before-hack-hook)
+  (add-hook 'hack-local-variables-hook 'c-postprocess-file-styles))
 
 (defmacro c-run-mode-hooks (&rest hooks)
   ;; Emacs 21.1 has introduced a system with delayed mode hooks that
@@ -817,11 +847,15 @@ Note that the style variables are always made local to the buffer."
 	      t)
 	     (t nil)))))))
 
-(defun c-neutralize-syntax-in-CPP (begg endd old-len)
-  ;; "Neutralize" every preprocessor line wholly or partially in the changed
-  ;; region.  "Restore" lines which were CPP lines before the change and are
-  ;; no longer so; these can be located from the Buffer local variables
-  ;; c-old-[EB]OM.
+(defun c-extend-and-neutralize-syntax-in-CPP (begg endd old-len)
+  ;; (i) Extend the font lock region to cover all changed preprocessor
+  ;; regions; it does this by setting the variables `c-new-BEG' and
+  ;; `c-new-END' to the new boundaries.
+  ;; 
+  ;; (ii) "Neutralize" every preprocessor line wholly or partially in the
+  ;; extended changed region.  "Restore" lines which were CPP lines before the
+  ;; change and are no longer so; these can be located from the Buffer local
+  ;; variables `c-old-BOM' and `c-old-EOM'.
   ;; 
   ;; That is, set syntax-table properties on characters that would otherwise
   ;; interact syntactically with those outside the CPP line(s).
@@ -838,11 +872,12 @@ Note that the style variables are always made local to the buffer."
   ;; Note: SPEED _MATTERS_ IN THIS FUNCTION!!!
   ;; 
   ;; This function might make hidden buffer changes.
-  (c-save-buffer-state (limits mbeg+1 beg end)
-    ;; First determine the region, (beg end), which may need "neutralizing".
-    ;; This may not start inside a string, comment, or macro.
+  (c-save-buffer-state (limits mbeg+1)
+    ;; First determine the region, (c-new-BEG c-new-END), which will get font
+    ;; locked.  It might need "neutralizing".  This region may not start
+    ;; inside a string, comment, or macro.
     (goto-char c-old-BOM)	  ; already set to old start of macro or begg.
-    (setq beg
+    (setq c-new-BEG
 	  (if (setq limits (c-literal-limits))
 	      (cdr limits)	    ; go forward out of any string or comment.
 	    (point)))
@@ -852,16 +887,17 @@ Note that the style variables are always made local to the buffer."
 	(goto-char (car limits)))  ; go backward out of any string or comment.
     (if (c-beginning-of-macro)
 	(c-end-of-macro))
-    (setq end (max (+ (- c-old-EOM old-len) (- endd begg))
+    (setq c-new-END (max (+ (- c-old-EOM old-len) (- endd begg))
 		   (point)))
 
-    ;; Clear all old punctuation properties
-    (c-clear-char-property-with-value beg end 'syntax-table '(1))
+    ;; Clear any existing punctuation properties.
+    (c-clear-char-property-with-value c-new-BEG c-new-END 'syntax-table '(1))
 
-    (goto-char beg)
-    (let ((pps-position beg)  pps-state)
-      (while (and (< (point) end)
-		  (search-forward-regexp c-anchored-cpp-prefix end t))
+    ;; Add needed properties to each CPP construct in the region.
+    (goto-char c-new-BEG)
+    (let ((pps-position c-new-BEG)  pps-state)
+      (while (and (< (point) c-new-END)
+		  (search-forward-regexp c-anchored-cpp-prefix c-new-END t))
 	;; If we've found a "#" inside a string/comment, ignore it.
 	(setq pps-state
 	      (parse-partial-sexp pps-position (point) nil nil pps-state)
@@ -949,6 +985,8 @@ Note that the style variables are always made local to the buffer."
 			    (buffer-substring-no-properties type-pos term-pos)
 			    (buffer-substring-no-properties beg end)))))))
 
+	;; (c-new-BEG c-new-END) will be the region to fontify.  It may become
+	;; larger than (beg end).
 	(setq c-new-BEG beg
 	      c-new-END end)
 	(if c-get-state-before-change-function
@@ -1019,7 +1057,6 @@ This does not load the font-lock package.  Use after
 	  nil nil
 	  ,c-identifier-syntax-modifications
 	  c-beginning-of-syntax
-	  (font-lock-lines-before . 1)
 	  (font-lock-mark-block-function
 	   . c-mark-function)))
 
@@ -1034,8 +1071,9 @@ This does not load the font-lock package.  Use after
   ;; font-lock-extend-after-change-region-function, is forced to use advice
   ;; instead.
   ;;
-  ;; Of the seven CC Mode languages, currently (2008-04) only AWK Mode makes
-  ;; non-null use of this function.
+  ;; Of the seven CC Mode languages, currently (2009-05) only C, C++, Objc
+  ;; (the languages with #define) and AWK Mode make non-null use of this
+  ;; function.
   (cons c-new-BEG c-new-END))
 
 
@@ -1072,8 +1110,8 @@ This does not load the font-lock package.  Use after
 ;; which could cause it to clobber user settings.  Later emacsen have
 ;; an append option, but it's not safe to use.
 
-;; The the extension ".C" is associated to C++ while the lowercase
-;; variant goes to C.  On case insensitive file systems, this means
+;; The extension ".C" is associated with C++ while the lowercase
+;; variant goes with C.  On case insensitive file systems, this means
 ;; that ".c" files also might open C++ mode if the C++ entry comes
 ;; first on `auto-mode-alist'.  Thus we try to ensure that ".C" comes
 ;; after ".c", and since `add-to-list' adds the entry first we have to
@@ -1089,6 +1127,11 @@ This does not load the font-lock package.  Use after
 ;; currently no better mode for them, and besides this is legacy.
 ;;;###autoload (add-to-list 'auto-mode-alist '("\\.y\\(acc\\)?\\'" . c-mode))
 ;;;###autoload (add-to-list 'auto-mode-alist '("\\.lex\\'" . c-mode))
+
+;; Preprocessed files generated by C and C++ compilers.
+;;;###autoload (add-to-list 'auto-mode-alist '("\\.i\\'" . c-mode))
+;;;###autoload (add-to-list 'auto-mode-alist '("\\.ii\\'" . c++-mode))
+
 
 ;;;###autoload
 (defun c-mode ()
@@ -1474,6 +1517,10 @@ Key bindings:
 (easy-menu-define c-awk-menu awk-mode-map "AWK Mode Commands"
 		  (cons "AWK" (c-lang-const c-mode-menu awk)))
 
+;; (require 'cc-awk) brings these in.
+(defvar awk-mode-syntax-table)
+(declare-function c-awk-unstick-NL-prop "cc-awk" ())
+
 (defun awk-mode ()
   "Major mode for editing AWK code.
 To submit a problem report, enter `\\[c-submit-bug-report]' from an
@@ -1578,15 +1625,15 @@ Key bindings:
 		     adaptive-fill-mode
 		     adaptive-fill-regexp)
 		   nil)))
-	(mapcar (lambda (var) (unless (boundp var)
-				(setq vars (delq var vars))))
-		'(signal-error-on-buffer-boundary
-		  filladapt-mode
-		  defun-prompt-regexp
-		  font-lock-mode
-		  font-lock-maximum-decoration
-		  parse-sexp-lookup-properties
-		  lookup-syntax-properties))
+	(mapc (lambda (var) (unless (boundp var)
+			      (setq vars (delq var vars))))
+	      '(signal-error-on-buffer-boundary
+		filladapt-mode
+		defun-prompt-regexp
+		font-lock-mode
+		font-lock-maximum-decoration
+		parse-sexp-lookup-properties
+		lookup-syntax-properties))
 	vars)
       (lambda ()
 	(run-hooks 'c-prepare-bug-report-hooks)
@@ -1596,5 +1643,5 @@ Key bindings:
 
 (cc-provide 'cc-mode)
 
-;;; arch-tag: 7825e5c4-fd09-439f-a04d-4c13208ba3d7
+;; arch-tag: 7825e5c4-fd09-439f-a04d-4c13208ba3d7
 ;;; cc-mode.el ends here

@@ -1,17 +1,17 @@
 ;;; nndraft.el --- draft article access for Gnus
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -41,6 +39,11 @@
 (defvoo nndraft-directory (nnheader-concat gnus-directory "drafts/")
   "Where nndraft will store its files."
   nnmh-directory)
+
+(defvar nndraft-required-headers '(Date)
+  "*Headers to be generated when saving a draft message.
+The headers in this variable and the ones in `message-required-headers'
+are generated if and only if they are also in `message-draft-headers'.")
 
 
 
@@ -156,7 +159,7 @@
   (save-excursion
     (message-generate-headers
      (message-headers-to-generate
-      message-required-headers message-draft-headers nil))))
+      nndraft-required-headers message-draft-headers nil))))
 
 (deffoo nndraft-request-associate-buffer (group)
   "Associate the current buffer with some article in the draft group."
@@ -199,8 +202,8 @@
 			'nnmh-request-group
 			(list group server dont-check)))
 
-(deffoo nndraft-request-move-article (article group server
-					      accept-form &optional last)
+(deffoo nndraft-request-move-article (article group server accept-form 
+				      &optional last move-is-internal)
   (nndraft-possibly-change-group group)
   (let ((buf (get-buffer-create " *nndraft move*"))
 	result)
@@ -310,5 +313,5 @@
 
 (provide 'nndraft)
 
-;;; arch-tag: 3ce26ca0-41cb-48b1-8703-4dad35e188aa
+;; arch-tag: 3ce26ca0-41cb-48b1-8703-4dad35e188aa
 ;;; nndraft.el ends here

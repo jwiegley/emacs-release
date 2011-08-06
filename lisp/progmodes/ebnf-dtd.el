@@ -1,19 +1,19 @@
 ;;; ebnf-dtd.el --- parser for DTD (Data Type Description for XML)
 
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Vinicius Jose Latorre <viniciusjl@ig.com.br>
 ;; Maintainer: Vinicius Jose Latorre <viniciusjl@ig.com.br>
 ;; Keywords: wp, ebnf, PostScript
-;; Version: 1.0
+;; Version: 1.1
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -1306,6 +1304,12 @@ See documentation for variable `ebnf-dtd-lex'."
    ;; close EPS file
    ((and ebnf-eps-executing (= (following-char) ?\]))
     (ebnf-eps-remove-context (ebnf-dtd-eps-filename)))
+   ;; EPS header
+   ((and ebnf-eps-executing (= (following-char) ?H))
+    (ebnf-eps-header-comment (ebnf-dtd-eps-filename)))
+   ;; EPS footer
+   ((and ebnf-eps-executing (= (following-char) ?F))
+    (ebnf-eps-footer-comment (ebnf-dtd-eps-filename)))
    ;; any other action in comment
    (t
     (setq ebnf-action (aref ebnf-comment-table (following-char))))
@@ -1345,5 +1349,5 @@ See documentation for variable `ebnf-dtd-lex'."
 
 (provide 'ebnf-dtd)
 
-;;; arch-tag: c21bb640-135f-4afa-8712-fa11d86301c4
+;; arch-tag: c21bb640-135f-4afa-8712-fa11d86301c4
 ;;; ebnf-dtd.el ends here

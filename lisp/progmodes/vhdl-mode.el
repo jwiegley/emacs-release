@@ -1,13 +1,19 @@
 ;;; vhdl-mode.el --- major mode for editing VHDL code
 
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Authors:     Reto Zimmermann <reto@gnu.org>
 ;;              Rodney J. Whitby <software.vhdl-mode@rwhitby.net>
 ;; Maintainer:  Reto Zimmermann <reto@gnu.org>
 ;; Keywords:    languages vhdl
 ;; WWW:         http://www.iis.ee.ethz.ch/~zimmi/emacs/vhdl-mode.html
+
+;; Yoni Rabkin <yoni@rabkins.net> contacted the maintainer of this
+;; file on 18/3/2008, and the maintainer agreed that when a bug is
+;; filed in the Emacs bug reporting system against this file, a copy
+;; of the bug report be sent to the maintainer's email address.
 
 (defconst vhdl-version "3.33.6"
   "VHDL Mode version number.")
@@ -17,10 +23,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -28,9 +34,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Commentary:
@@ -125,13 +129,10 @@
 
 ;;; Code:
 
-;; XEmacs handling
-(defconst vhdl-xemacs (string-match "XEmacs" emacs-version)
-  "Non-nil if XEmacs is used.")
 ;; Emacs 21+ handling
-(defconst vhdl-emacs-21 (and (<= 21 emacs-major-version) (not vhdl-xemacs))
+(defconst vhdl-emacs-21 (and (<= 21 emacs-major-version) (not (featurep 'xemacs)))
   "Non-nil if GNU Emacs 21, 22, ... is used.")
-(defconst vhdl-emacs-22 (and (<= 22 emacs-major-version) (not vhdl-xemacs))
+(defconst vhdl-emacs-22 (and (<= 22 emacs-major-version) (not (featurep 'xemacs)))
   "Non-nil if GNU Emacs 22, ... is used.")
 
 (defvar compilation-file-regexp-alist)
@@ -932,7 +933,7 @@ if the header needs to be version controlled.
 The following keywords for template generation are supported:
   <filename>    : replaced by the name of the buffer
   <author>      : replaced by the user name and email address
-                  \(`user-full-name',`mail-host-address', `user-mail-address')
+                  \(`user-full-name', `mail-host-address', `user-mail-address')
   <login>       : replaced by user login name (`user-login-name')
   <company>     : replaced by contents of option `vhdl-company-name'
   <date>        : replaced by the current date
@@ -1844,13 +1845,13 @@ NOTE: Activate the new setting in a VHDL buffer by using the menu entry
 
 ;; add related general customizations
 (custom-add-to-group 'vhdl-related 'hideshow 'custom-group)
-(if vhdl-xemacs
+(if (featurep 'xemacs)
     (custom-add-to-group 'vhdl-related 'paren-mode 'custom-variable)
   (custom-add-to-group 'vhdl-related 'paren-showing 'custom-group))
 (custom-add-to-group 'vhdl-related 'ps-print 'custom-group)
 (custom-add-to-group 'vhdl-related 'speedbar 'custom-group)
 (custom-add-to-group 'vhdl-related 'line-number-mode 'custom-variable)
-(unless vhdl-xemacs
+(unless (featurep 'xemacs)
   (custom-add-to-group 'vhdl-related 'transient-mark-mode 'custom-variable))
 (custom-add-to-group 'vhdl-related 'user-full-name 'custom-variable)
 (custom-add-to-group 'vhdl-related 'mail-host-address 'custom-variable)
@@ -2050,7 +2051,7 @@ your style, only those that are different from the default.")
 (defun vhdl-keep-region-active ()
   "Do whatever is necessary to keep the region active in XEmacs.
 Ignore byte-compiler warnings you might see."
-  (and (boundp 'zmacs-region-stays)
+  (and (featurep 'xemacs)
        (setq zmacs-region-stays t)))
 
 ;; `wildcard-to-regexp' is included only in XEmacs 21
@@ -2093,7 +2094,7 @@ Ignore byte-compiler warnings you might see."
       newstr)))
 
 ;; `itimer.el': idle timer bug fix in version 1.09 (XEmacs 21.1.9)
-(when (and vhdl-xemacs (string< itimer-version "1.09")
+(when (and (featurep 'xemacs) (string< itimer-version "1.09")
 	   (not noninteractive))
   (load "itimer")
   (when (string< itimer-version "1.09")
@@ -2327,42 +2328,19 @@ current buffer if no project is defined."
   "Enable case insensitive search and switch to syntax table that includes '_',
 then execute BODY, and finally restore the old environment.  Used for
 consistent searching."
-  `(let ((case-fold-search t)		; case insensitive search
-	 (current-syntax-table (syntax-table))
-	 result
-	 (restore-prog			; program to restore enviroment
-	  '(progn
-	     ;; restore syntax table
-	     (set-syntax-table current-syntax-table))))
+  `(let ((case-fold-search t))		; case insensitive search
      ;; use extended syntax table
-     (set-syntax-table vhdl-mode-ext-syntax-table)
-     ;; execute BODY safely
-     (setq result
-	   (condition-case info
-	       (progn ,@body)
-	     (error (eval restore-prog)	; restore environment on error
-		    (error (cadr info))))) ; pass error up
-     ;; restore environment
-     (eval restore-prog)
-     result))
+     (with-syntax-table vhdl-mode-ext-syntax-table
+       ,@body)))
 
 (defmacro vhdl-prepare-search-2 (&rest body)
   "Enable case insensitive search, switch to syntax table that includes '_',
 and remove `intangible' overlays, then execute BODY, and finally restore the
 old environment.  Used for consistent searching."
+  ;; FIXME: Why not just let-bind `inhibit-point-motion-hooks'?  --Stef
   `(let ((case-fold-search t)		; case insensitive search
 	 (current-syntax-table (syntax-table))
-	 result overlay-all-list overlay-intangible-list overlay
-	 (restore-prog			; program to restore enviroment
-	  '(progn
-	     ;; restore syntax table
-	     (set-syntax-table current-syntax-table)
-	     ;; restore `intangible' overlays
-	     (when (fboundp 'overlay-lists)
-	       (while overlay-intangible-list
-		 (overlay-put (car overlay-intangible-list) 'intangible t)
-		 (setq overlay-intangible-list
-		       (cdr overlay-intangible-list)))))))
+	 overlay-all-list overlay-intangible-list overlay)
      ;; use extended syntax table
      (set-syntax-table vhdl-mode-ext-syntax-table)
      ;; remove `intangible' overlays
@@ -2378,14 +2356,16 @@ old environment.  Used for consistent searching."
 	   (overlay-put overlay 'intangible nil))
 	 (setq overlay-all-list (cdr overlay-all-list))))
      ;; execute BODY safely
-     (setq result
-	   (condition-case info
-	       (progn ,@body)
-	     (error (eval restore-prog)	; restore environment on error
-		    (error (cadr info))))) ; pass error up
-     ;; restore environment
-     (eval restore-prog)
-     result))
+     (unwind-protect
+         (progn ,@body)
+       ;; restore syntax table
+       (set-syntax-table current-syntax-table)
+       ;; restore `intangible' overlays
+       (when (fboundp 'overlay-lists)
+         (while overlay-intangible-list
+           (overlay-put (car overlay-intangible-list) 'intangible t)
+           (setq overlay-intangible-list
+                 (cdr overlay-intangible-list)))))))
 
 (defmacro vhdl-visit-file (file-name issue-error &rest body)
   "Visit file FILE-NAME and execute BODY."
@@ -2486,7 +2466,7 @@ conversion."
 (defun vhdl-show-messages ()
   "Get *Messages* buffer to show recent messages."
   (interactive)
-  (display-buffer (if vhdl-xemacs " *Message-Log*" "*Messages*")))
+  (display-buffer (if (featurep 'xemacs) " *Message-Log*" "*Messages*")))
 
 (defun vhdl-use-direct-instantiation ()
   "Return whether direct instantiation is used."
@@ -2686,7 +2666,7 @@ STRING are replaced by `-' and substrings are converted to lower case."
   (define-key vhdl-mode-map "\M-\C-u"	   'vhdl-backward-up-list)
   (define-key vhdl-mode-map "\M-\C-a"	   'vhdl-backward-same-indent)
   (define-key vhdl-mode-map "\M-\C-e"	   'vhdl-forward-same-indent)
-  (unless vhdl-xemacs ; would override `M-backspace' in XEmacs
+  (unless (featurep 'xemacs) ; would override `M-backspace' in XEmacs
     (define-key vhdl-mode-map "\M-\C-h"	   'vhdl-mark-defun))
   (define-key vhdl-mode-map "\M-\C-q"	   'vhdl-indent-sexp)
   (define-key vhdl-mode-map "\M-^"	   'vhdl-delete-indentation)
@@ -2713,7 +2693,7 @@ STRING are replaced by `-' and substrings are converted to lower case."
   (define-key vhdl-mode-map "\C-c\C-p\C-i" 'vhdl-port-paste-instance)
   (define-key vhdl-mode-map "\C-c\C-p\C-s" 'vhdl-port-paste-signals)
   (define-key vhdl-mode-map "\C-c\C-p\M-c" 'vhdl-port-paste-constants)
-  (if vhdl-xemacs ; `... C-g' not allowed in XEmacs
+  (if (featurep 'xemacs) ; `... C-g' not allowed in XEmacs
       (define-key vhdl-mode-map "\C-c\C-p\M-g" 'vhdl-port-paste-generic-map)
     (define-key vhdl-mode-map "\C-c\C-p\C-g" 'vhdl-port-paste-generic-map))
   (define-key vhdl-mode-map "\C-c\C-p\C-z" 'vhdl-port-paste-initializations)
@@ -2726,12 +2706,12 @@ STRING are replaced by `-' and substrings are converted to lower case."
   (define-key vhdl-mode-map "\C-c\C-s\C-b" 'vhdl-subprog-paste-body)
   (define-key vhdl-mode-map "\C-c\C-s\C-c" 'vhdl-subprog-paste-call)
   (define-key vhdl-mode-map "\C-c\C-s\C-f" 'vhdl-subprog-flatten)
-  (define-key vhdl-mode-map "\C-c\C-c\C-n" 'vhdl-compose-new-component)
-  (define-key vhdl-mode-map "\C-c\C-c\C-p" 'vhdl-compose-place-component)
-  (define-key vhdl-mode-map "\C-c\C-c\C-w" 'vhdl-compose-wire-components)
-  (define-key vhdl-mode-map "\C-c\C-c\C-f" 'vhdl-compose-configuration)
-  (define-key vhdl-mode-map "\C-c\C-c\C-k" 'vhdl-compose-components-package)
-  (define-key vhdl-mode-map "\C-cc"	   'vhdl-comment-uncomment-region)
+  (define-key vhdl-mode-map "\C-c\C-m\C-n" 'vhdl-compose-new-component)
+  (define-key vhdl-mode-map "\C-c\C-m\C-p" 'vhdl-compose-place-component)
+  (define-key vhdl-mode-map "\C-c\C-m\C-w" 'vhdl-compose-wire-components)
+  (define-key vhdl-mode-map "\C-c\C-m\C-f" 'vhdl-compose-configuration)
+  (define-key vhdl-mode-map "\C-c\C-m\C-k" 'vhdl-compose-components-package)
+  (define-key vhdl-mode-map "\C-c\C-c"	   'vhdl-comment-uncomment-region)
   (define-key vhdl-mode-map "\C-c-"	   'vhdl-comment-append-inline)
   (define-key vhdl-mode-map "\C-c\M--"	   'vhdl-comment-display-line)
   (define-key vhdl-mode-map "\C-c\C-i\C-l" 'indent-according-to-mode)
@@ -2770,8 +2750,8 @@ STRING are replaced by `-' and substrings are converted to lower case."
   (define-key vhdl-mode-map "\C-c\C-b"	   'vhdl-beautify-buffer)
   (define-key vhdl-mode-map "\C-c\C-u\C-s" 'vhdl-update-sensitivity-list-process)
   (define-key vhdl-mode-map "\C-c\C-u\M-s" 'vhdl-update-sensitivity-list-buffer)
-  (define-key vhdl-mode-map "\C-cf"	   'vhdl-fontify-buffer)
-  (define-key vhdl-mode-map "\C-cs"	   'vhdl-statistics-buffer)
+  (define-key vhdl-mode-map "\C-c\C-i\C-f" 'vhdl-fontify-buffer)
+  (define-key vhdl-mode-map "\C-c\C-i\C-s" 'vhdl-statistics-buffer)
   (define-key vhdl-mode-map "\C-c\M-m"	   'vhdl-show-messages)
   (define-key vhdl-mode-map "\C-c\C-h"	   'vhdl-doc-mode)
   (define-key vhdl-mode-map "\C-c\C-v"	   'vhdl-version)
@@ -2811,7 +2791,7 @@ STRING are replaced by `-' and substrings are converted to lower case."
 
 ;; set up electric character functions to work with
 ;; `delete-selection-mode' (Emacs) and `pending-delete-mode' (XEmacs)
-(mapcar
+(mapc
  (function
   (lambda (sym)
     (put sym 'delete-selection t)	; for `delete-selection-mode' (Emacs)
@@ -2897,149 +2877,148 @@ STRING are replaced by `-' and substrings are converted to lower case."
     (append
      (when (memq 'vhdl vhdl-electric-keywords)
        ;; VHDL'93 keywords
-       '(
-	 ("--"		  "" vhdl-template-display-comment-hook 0)
-	 ("abs"		  "" vhdl-template-default-hook 0)
-	 ("access"	  "" vhdl-template-default-hook 0)
-	 ("after"	  "" vhdl-template-default-hook 0)
-	 ("alias"	  "" vhdl-template-alias-hook 0)
-	 ("all"		  "" vhdl-template-default-hook 0)
-	 ("and"		  "" vhdl-template-default-hook 0)
-	 ("arch"	  "" vhdl-template-architecture-hook 0)
-	 ("architecture"  "" vhdl-template-architecture-hook 0)
-	 ("array"	  "" vhdl-template-default-hook 0)
-	 ("assert"	  "" vhdl-template-assert-hook 0)
-	 ("attr"	  "" vhdl-template-attribute-hook 0)
-	 ("attribute"	  "" vhdl-template-attribute-hook 0)
-	 ("begin"	  "" vhdl-template-default-indent-hook 0)
-	 ("block"	  "" vhdl-template-block-hook 0)
-	 ("body"	  "" vhdl-template-default-hook 0)
-	 ("buffer"	  "" vhdl-template-default-hook 0)
-	 ("bus"		  "" vhdl-template-default-hook 0)
-	 ("case"	  "" vhdl-template-case-hook 0)
-	 ("comp"	  "" vhdl-template-component-hook 0)
-	 ("component"	  "" vhdl-template-component-hook 0)
-	 ("cond"	  "" vhdl-template-conditional-signal-asst-hook 0)
-	 ("conditional"	  "" vhdl-template-conditional-signal-asst-hook 0)
-	 ("conf"	  "" vhdl-template-configuration-hook 0)
-	 ("configuration" "" vhdl-template-configuration-hook 0)
-	 ("cons"	  "" vhdl-template-constant-hook 0)
-	 ("constant"	  "" vhdl-template-constant-hook 0)
-	 ("disconnect"	  "" vhdl-template-disconnect-hook 0)
-	 ("downto"	  "" vhdl-template-default-hook 0)
-	 ("else"	  "" vhdl-template-else-hook 0)
-	 ("elseif"	  "" vhdl-template-elsif-hook 0)
-	 ("elsif"	  "" vhdl-template-elsif-hook 0)
-	 ("end"		  "" vhdl-template-default-indent-hook 0)
-	 ("entity"	  "" vhdl-template-entity-hook 0)
-	 ("exit"	  "" vhdl-template-exit-hook 0)
-	 ("file"	  "" vhdl-template-file-hook 0)
-	 ("for"		  "" vhdl-template-for-hook 0)
-	 ("func"	  "" vhdl-template-function-hook 0)
-	 ("function"	  "" vhdl-template-function-hook 0)
-	 ("generic"	  "" vhdl-template-generic-hook 0)
-	 ("group"	  "" vhdl-template-group-hook 0)
-	 ("guarded"	  "" vhdl-template-default-hook 0)
-	 ("if"		  "" vhdl-template-if-hook 0)
-	 ("impure"	  "" vhdl-template-default-hook 0)
-	 ("in"		  "" vhdl-template-default-hook 0)
-	 ("inertial"	  "" vhdl-template-default-hook 0)
-	 ("inout"	  "" vhdl-template-default-hook 0)
-	 ("inst"	  "" vhdl-template-instance-hook 0)
-	 ("instance"	  "" vhdl-template-instance-hook 0)
-	 ("is"		  "" vhdl-template-default-hook 0)
-	 ("label"	  "" vhdl-template-default-hook 0)
-	 ("library"	  "" vhdl-template-library-hook 0)
-	 ("linkage"	  "" vhdl-template-default-hook 0)
-	 ("literal"	  "" vhdl-template-default-hook 0)
-	 ("loop"	  "" vhdl-template-bare-loop-hook 0)
-	 ("map"		  "" vhdl-template-map-hook 0)
-	 ("mod"		  "" vhdl-template-default-hook 0)
-	 ("nand"	  "" vhdl-template-default-hook 0)
-	 ("new"		  "" vhdl-template-default-hook 0)
-	 ("next"	  "" vhdl-template-next-hook 0)
-	 ("nor"		  "" vhdl-template-default-hook 0)
-	 ("not"		  "" vhdl-template-default-hook 0)
-	 ("null"	  "" vhdl-template-default-hook 0)
-	 ("of"		  "" vhdl-template-default-hook 0)
-	 ("on"		  "" vhdl-template-default-hook 0)
-	 ("open"	  "" vhdl-template-default-hook 0)
-	 ("or"		  "" vhdl-template-default-hook 0)
-	 ("others"	  "" vhdl-template-others-hook 0)
-	 ("out"		  "" vhdl-template-default-hook 0)
-	 ("pack"	  "" vhdl-template-package-hook 0)
-	 ("package"	  "" vhdl-template-package-hook 0)
-	 ("port"	  "" vhdl-template-port-hook 0)
-	 ("postponed"	  "" vhdl-template-default-hook 0)
-	 ("procedure"	  "" vhdl-template-procedure-hook 0)
-	 ("process"	  "" vhdl-template-process-hook 0)
-	 ("pure"	  "" vhdl-template-default-hook 0)
-	 ("range"	  "" vhdl-template-default-hook 0)
-	 ("record"	  "" vhdl-template-default-hook 0)
-	 ("register"	  "" vhdl-template-default-hook 0)
-	 ("reject"	  "" vhdl-template-default-hook 0)
-	 ("rem"		  "" vhdl-template-default-hook 0)
-	 ("report"	  "" vhdl-template-report-hook 0)
-	 ("return"	  "" vhdl-template-return-hook 0)
-	 ("rol"		  "" vhdl-template-default-hook 0)
-	 ("ror"		  "" vhdl-template-default-hook 0)
-	 ("select"	  "" vhdl-template-selected-signal-asst-hook 0)
-	 ("severity"	  "" vhdl-template-default-hook 0)
-	 ("shared"	  "" vhdl-template-default-hook 0)
-	 ("sig"		  "" vhdl-template-signal-hook 0)
-	 ("signal"	  "" vhdl-template-signal-hook 0)
-	 ("sla"		  "" vhdl-template-default-hook 0)
-	 ("sll"		  "" vhdl-template-default-hook 0)
-	 ("sra"		  "" vhdl-template-default-hook 0)
-	 ("srl"		  "" vhdl-template-default-hook 0)
-	 ("subtype"	  "" vhdl-template-subtype-hook 0)
-	 ("then"	  "" vhdl-template-default-hook 0)
-	 ("to"		  "" vhdl-template-default-hook 0)
-	 ("transport"	  "" vhdl-template-default-hook 0)
-	 ("type"	  "" vhdl-template-type-hook 0)
-	 ("unaffected"	  "" vhdl-template-default-hook 0)
-	 ("units"	  "" vhdl-template-default-hook 0)
-	 ("until"	  "" vhdl-template-default-hook 0)
-	 ("use"		  "" vhdl-template-use-hook 0)
-	 ("var"		  "" vhdl-template-variable-hook 0)
-	 ("variable"	  "" vhdl-template-variable-hook 0)
-	 ("wait"	  "" vhdl-template-wait-hook 0)
-	 ("when"	  "" vhdl-template-when-hook 0)
-	 ("while"	  "" vhdl-template-while-loop-hook 0)
-	 ("with"	  "" vhdl-template-with-hook 0)
-	 ("xnor"	  "" vhdl-template-default-hook 0)
-	 ("xor"		  "" vhdl-template-default-hook 0)
-	 ))
+       (mapcar (lambda (x) (list (car x) "" (cdr x) 0 'system))
+               '(
+                 ("--"		  . vhdl-template-display-comment-hook)
+                 ("abs"		  . vhdl-template-default-hook)
+                 ("access"	  . vhdl-template-default-hook)
+                 ("after"	  . vhdl-template-default-hook)
+                 ("alias"	  . vhdl-template-alias-hook)
+                 ("all"		  . vhdl-template-default-hook)
+                 ("and"		  . vhdl-template-default-hook)
+                 ("arch"	  . vhdl-template-architecture-hook)
+                 ("architecture"  . vhdl-template-architecture-hook)
+                 ("array"	  . vhdl-template-default-hook)
+                 ("assert"	  . vhdl-template-assert-hook)
+                 ("attr"	  . vhdl-template-attribute-hook)
+                 ("attribute"	  . vhdl-template-attribute-hook)
+                 ("begin"	  . vhdl-template-default-indent-hook)
+                 ("block"	  . vhdl-template-block-hook)
+                 ("body"	  . vhdl-template-default-hook)
+                 ("buffer"	  . vhdl-template-default-hook)
+                 ("bus"		  . vhdl-template-default-hook)
+                 ("case"	  . vhdl-template-case-hook)
+                 ("comp"	  . vhdl-template-component-hook)
+                 ("component"	  . vhdl-template-component-hook)
+                 ("cond"	  . vhdl-template-conditional-signal-asst-hook)
+                 ("conditional"	  . vhdl-template-conditional-signal-asst-hook)
+                 ("conf"	  . vhdl-template-configuration-hook)
+                 ("configuration" . vhdl-template-configuration-hook)
+                 ("cons"	  . vhdl-template-constant-hook)
+                 ("constant"	  . vhdl-template-constant-hook)
+                 ("disconnect"	  . vhdl-template-disconnect-hook)
+                 ("downto"	  . vhdl-template-default-hook)
+                 ("else"	  . vhdl-template-else-hook)
+                 ("elseif"	  . vhdl-template-elsif-hook)
+                 ("elsif"	  . vhdl-template-elsif-hook)
+                 ("end"		  . vhdl-template-default-indent-hook)
+                 ("entity"	  . vhdl-template-entity-hook)
+                 ("exit"	  . vhdl-template-exit-hook)
+                 ("file"	  . vhdl-template-file-hook)
+                 ("for"		  . vhdl-template-for-hook)
+                 ("func"	  . vhdl-template-function-hook)
+                 ("function"	  . vhdl-template-function-hook)
+                 ("generic"	  . vhdl-template-generic-hook)
+                 ("group"	  . vhdl-template-group-hook)
+                 ("guarded"	  . vhdl-template-default-hook)
+                 ("if"		  . vhdl-template-if-hook)
+                 ("impure"	  . vhdl-template-default-hook)
+                 ("in"		  . vhdl-template-default-hook)
+                 ("inertial"	  . vhdl-template-default-hook)
+                 ("inout"	  . vhdl-template-default-hook)
+                 ("inst"	  . vhdl-template-instance-hook)
+                 ("instance"	  . vhdl-template-instance-hook)
+                 ("is"		  . vhdl-template-default-hook)
+                 ("label"	  . vhdl-template-default-hook)
+                 ("library"	  . vhdl-template-library-hook)
+                 ("linkage"	  . vhdl-template-default-hook)
+                 ("literal"	  . vhdl-template-default-hook)
+                 ("loop"	  . vhdl-template-bare-loop-hook)
+                 ("map"		  . vhdl-template-map-hook)
+                 ("mod"		  . vhdl-template-default-hook)
+                 ("nand"	  . vhdl-template-default-hook)
+                 ("new"		  . vhdl-template-default-hook)
+                 ("next"	  . vhdl-template-next-hook)
+                 ("nor"		  . vhdl-template-default-hook)
+                 ("not"		  . vhdl-template-default-hook)
+                 ("null"	  . vhdl-template-default-hook)
+                 ("of"		  . vhdl-template-default-hook)
+                 ("on"		  . vhdl-template-default-hook)
+                 ("open"	  . vhdl-template-default-hook)
+                 ("or"		  . vhdl-template-default-hook)
+                 ("others"	  . vhdl-template-others-hook)
+                 ("out"		  . vhdl-template-default-hook)
+                 ("pack"	  . vhdl-template-package-hook)
+                 ("package"	  . vhdl-template-package-hook)
+                 ("port"	  . vhdl-template-port-hook)
+                 ("postponed"	  . vhdl-template-default-hook)
+                 ("procedure"	  . vhdl-template-procedure-hook)
+                 ("process"	  . vhdl-template-process-hook)
+                 ("pure"	  . vhdl-template-default-hook)
+                 ("range"	  . vhdl-template-default-hook)
+                 ("record"	  . vhdl-template-default-hook)
+                 ("register"	  . vhdl-template-default-hook)
+                 ("reject"	  . vhdl-template-default-hook)
+                 ("rem"		  . vhdl-template-default-hook)
+                 ("report"	  . vhdl-template-report-hook)
+                 ("return"	  . vhdl-template-return-hook)
+                 ("rol"		  . vhdl-template-default-hook)
+                 ("ror"		  . vhdl-template-default-hook)
+                 ("select"	  . vhdl-template-selected-signal-asst-hook)
+                 ("severity"	  . vhdl-template-default-hook)
+                 ("shared"	  . vhdl-template-default-hook)
+                 ("sig"		  . vhdl-template-signal-hook)
+                 ("signal"	  . vhdl-template-signal-hook)
+                 ("sla"		  . vhdl-template-default-hook)
+                 ("sll"		  . vhdl-template-default-hook)
+                 ("sra"		  . vhdl-template-default-hook)
+                 ("srl"		  . vhdl-template-default-hook)
+                 ("subtype"	  . vhdl-template-subtype-hook)
+                 ("then"	  . vhdl-template-default-hook)
+                 ("to"		  . vhdl-template-default-hook)
+                 ("transport"	  . vhdl-template-default-hook)
+                 ("type"	  . vhdl-template-type-hook)
+                 ("unaffected"	  . vhdl-template-default-hook)
+                 ("units"	  . vhdl-template-default-hook)
+                 ("until"	  . vhdl-template-default-hook)
+                 ("use"		  . vhdl-template-use-hook)
+                 ("var"		  . vhdl-template-variable-hook)
+                 ("variable"	  . vhdl-template-variable-hook)
+                 ("wait"	  . vhdl-template-wait-hook)
+                 ("when"	  . vhdl-template-when-hook)
+                 ("while"	  . vhdl-template-while-loop-hook)
+                 ("with"	  . vhdl-template-with-hook)
+                 ("xnor"	  . vhdl-template-default-hook)
+                 ("xor"		  . vhdl-template-default-hook)
+                 )))
      ;; VHDL-AMS keywords
      (when (and (memq 'vhdl vhdl-electric-keywords) (vhdl-standard-p 'ams))
-       '(
-	 ("across"     "" vhdl-template-default-hook 0)
-	 ("break"      "" vhdl-template-break-hook 0)
-	 ("limit"      "" vhdl-template-limit-hook 0)
-	 ("nature"     "" vhdl-template-nature-hook 0)
-	 ("noise"      "" vhdl-template-default-hook 0)
-	 ("procedural" "" vhdl-template-procedural-hook 0)
-	 ("quantity"   "" vhdl-template-quantity-hook 0)
-	 ("reference"  "" vhdl-template-default-hook 0)
-	 ("spectrum"   "" vhdl-template-default-hook 0)
-	 ("subnature"  "" vhdl-template-subnature-hook 0)
-	 ("terminal"   "" vhdl-template-terminal-hook 0)
-	 ("through"    "" vhdl-template-default-hook 0)
-	 ("tolerance"  "" vhdl-template-default-hook 0)
-	 ))
+       (mapcar (lambda (x) (list (car x) "" (cdr x) 0 'system))
+               '(
+                 ("across"     . vhdl-template-default-hook)
+                 ("break"      . vhdl-template-break-hook)
+                 ("limit"      . vhdl-template-limit-hook)
+                 ("nature"     . vhdl-template-nature-hook)
+                 ("noise"      . vhdl-template-default-hook)
+                 ("procedural" . vhdl-template-procedural-hook)
+                 ("quantity"   . vhdl-template-quantity-hook)
+                 ("reference"  . vhdl-template-default-hook)
+                 ("spectrum"   . vhdl-template-default-hook)
+                 ("subnature"  . vhdl-template-subnature-hook)
+                 ("terminal"   . vhdl-template-terminal-hook)
+                 ("through"    . vhdl-template-default-hook)
+                 ("tolerance"  . vhdl-template-default-hook)
+                 )))
      ;; user model keywords
      (when (memq 'user vhdl-electric-keywords)
-       (let ((alist vhdl-model-alist)
-	     abbrev-list keyword)
-	 (while alist
-	   (setq keyword (nth 3 (car alist)))
+       (let (abbrev-list keyword)
+         (dolist (elem vhdl-model-alist)
+	   (setq keyword (nth 3 elem))
 	   (unless (equal keyword "")
-	     (setq abbrev-list
-		   (cons (list keyword ""
-			       (vhdl-function-name
-				"vhdl-model" (nth 0 (car alist)) "hook") 0)
-			 abbrev-list)))
-	   (setq alist (cdr alist)))
+             (push (list keyword ""
+                         (vhdl-function-name
+                          "vhdl-model" (nth 0 elem) "hook") 0 'system)
+                   abbrev-list)))
 	 abbrev-list)))))
 
 ;; initialize abbrev table for VHDL Mode
@@ -5296,7 +5275,7 @@ argument.  The styles are chosen from the `vhdl-style-alist' variable."
     (or vars
 	(error "ERROR:  Invalid VHDL indentation style `%s'" style))
     ;; set all the variables
-    (mapcar
+    (mapc
      (function
       (lambda (varentry)
 	(let ((var (car varentry))
@@ -5395,7 +5374,7 @@ negative, skip forward otherwise."
       (skip-chars-forward " \t\n"))))
 
 ;; XEmacs hack: work around buggy `forward-comment' in XEmacs 21.4+
-(unless (and vhdl-xemacs (string< "21.2" emacs-version))
+(unless (and (featurep 'xemacs) (string< "21.2" emacs-version))
   (defalias 'vhdl-forward-comment 'forward-comment))
 
 ;; This is the best we can do in Win-Emacs.
@@ -7003,6 +6982,9 @@ else indent `correctly'."
   (interactive "*P")
   (vhdl-prepare-search-2
    (cond
+    ;; indent region if region is active
+    ((and (not (featurep 'xemacs)) (use-region-p))
+     (vhdl-indent-region (region-beginning) (region-end) nil))
     ;; expand word
     ((= (char-syntax (preceding-char)) ?w)
      (let ((case-fold-search (not vhdl-word-completion-case-sensitive))
@@ -7148,7 +7130,7 @@ ENDPOS is encountered."
 	(actual (vhdl-get-syntactic-context))
 	(expurgated))
     ;; remove the library unit symbols
-    (mapcar
+    (mapc
      (function
       (lambda (elt)
 	(if (memq (car elt) '(entity configuration package
@@ -8154,7 +8136,7 @@ Turn on if ARG positive, turn off if ARG negative, toggle if ARG zero or nil."
 (defun vhdl-electric-quote (count) "'' --> \""
   (interactive "p")
   (if (and vhdl-stutter-mode (= count 1) (not (vhdl-in-literal)))
-      (if (= (preceding-char) last-input-char)
+      (if (= (preceding-char) last-input-event)
 	  (progn (delete-backward-char 1) (insert-char ?\" 1))
 	(insert-char ?\' 1))
     (self-insert-command count)))
@@ -8162,7 +8144,7 @@ Turn on if ARG positive, turn off if ARG negative, toggle if ARG zero or nil."
 (defun vhdl-electric-semicolon (count) "';;' --> ' : ', ': ;' --> ' := '"
   (interactive "p")
   (if (and vhdl-stutter-mode (= count 1) (not (vhdl-in-literal)))
-      (cond ((= (preceding-char) last-input-char)
+      (cond ((= (preceding-char) last-input-event)
 	     (progn (delete-char -1)
 		    (unless (eq (preceding-char) ? ) (insert " "))
 		    (insert ": ")
@@ -8176,7 +8158,7 @@ Turn on if ARG positive, turn off if ARG negative, toggle if ARG zero or nil."
 (defun vhdl-electric-comma (count) "',,' --> ' <= '"
   (interactive "p")
   (if (and vhdl-stutter-mode (= count 1) (not (vhdl-in-literal)))
-      (cond ((= (preceding-char) last-input-char)
+      (cond ((= (preceding-char) last-input-event)
 	     (progn (delete-char -1)
 		    (unless (eq (preceding-char) ? ) (insert " "))
 		    (insert "<= ")))
@@ -8186,7 +8168,7 @@ Turn on if ARG positive, turn off if ARG negative, toggle if ARG zero or nil."
 (defun vhdl-electric-period (count) "'..' --> ' => '"
   (interactive "p")
   (if (and vhdl-stutter-mode (= count 1) (not (vhdl-in-literal)))
-      (cond ((= (preceding-char) last-input-char)
+      (cond ((= (preceding-char) last-input-event)
 	     (progn (delete-char -1)
 		    (unless (eq (preceding-char) ? ) (insert " "))
 		    (insert "=> ")))
@@ -8196,7 +8178,7 @@ Turn on if ARG positive, turn off if ARG negative, toggle if ARG zero or nil."
 (defun vhdl-electric-equal (count) "'==' --> ' == '"
   (interactive "p")
   (if (and vhdl-stutter-mode (= count 1) (not (vhdl-in-literal)))
-      (cond ((= (preceding-char) last-input-char)
+      (cond ((= (preceding-char) last-input-event)
 	     (progn (delete-char -1)
 		    (unless (eq (preceding-char) ? ) (insert " "))
 		    (insert "== ")))
@@ -9098,8 +9080,9 @@ otherwise."
 	 (progn (delete-region (point) (progn (end-of-line) (point)))
 		(vhdl-template-insert-date))
        (unless noerror
-	 (error (concat "ERROR:  Modification date prefix string \""
-			vhdl-modify-date-prefix-string "\" not found")))))))
+	 (error "ERROR:  Modification date prefix string \"%s\" not found"
+			vhdl-modify-date-prefix-string))))))
+
 
 (defun vhdl-template-modify-noerror ()
   "Call `vhdl-template-modify' with NOERROR non-nil."
@@ -10435,7 +10418,7 @@ with double-quotes is to be inserted.  DEFAULT specifies a default string."
   "Query a decision from the user."
   (let ((start (point)))
     (when string (vhdl-insert-keyword (concat string " ")))
-    (message prompt)
+    (message "%s" (or prompt ""))
     (let ((char (read-char)))
       (delete-region start (point))
       (if (and optional (eq char ?\r))
@@ -10607,7 +10590,7 @@ but not if inside a comment or quote."
 	  (backward-word 1)
 	  (vhdl-case-word 1)
 	  (delete-char 1))
-      (let ((invoke-char last-command-char)
+      (let ((invoke-char last-command-event)
 	    (abbrev-mode -1)
 	    (vhdl-template-invoked-by-hook t))
 	(let ((caught (catch 'abort
@@ -12159,7 +12142,7 @@ options vhdl-upper-case-{keywords,types,attributes,enum-values}."
     (widen)
     (save-excursion
       (beginning-of-line)
-      (1+ (count-lines 1 (point))))))
+      (1+ (count-lines (point-min) (point))))))
 
 (defun vhdl-line-kill-entire (&optional arg)
   "Delete entire line."
@@ -13013,7 +12996,7 @@ This does background highlighting of translate-off regions.")
 
 (defun vhdl-ps-print-init ()
   "Initialize postscript printing."
-  (if vhdl-xemacs
+  (if (featurep 'xemacs)
       (when (boundp 'ps-print-color-p)
 	(vhdl-ps-print-settings))
     (make-local-variable 'ps-print-hook)
@@ -14064,10 +14047,10 @@ if required."
 	  (save-excursion (beginning-of-line) (looking-at "[0-9]+:"))]
 	 ["Rescan Directory" vhdl-speedbar-rescan-hierarchy
 	  :active (save-excursion (beginning-of-line) (looking-at "[0-9]+:"))
-	  ,(if vhdl-xemacs :active :visible) (not vhdl-speedbar-show-projects)]
+	  ,(if (featurep 'xemacs) :active :visible) (not vhdl-speedbar-show-projects)]
 	 ["Rescan Project" vhdl-speedbar-rescan-hierarchy
 	  :active (save-excursion (beginning-of-line) (looking-at "[0-9]+:"))
-	  ,(if vhdl-xemacs :active :visible) vhdl-speedbar-show-projects]
+	  ,(if (featurep 'xemacs) :active :visible) vhdl-speedbar-show-projects]
 	 ["Save Caches" vhdl-save-caches vhdl-updated-project-list])))
     ;; hook-ups
     (speedbar-add-expansion-list
@@ -15172,7 +15155,7 @@ is already shown in a buffer."
 	(goto-line (cdr token))
 	(recenter))
       (vhdl-speedbar-update-current-unit t t)
-      (speedbar-set-timer speedbar-update-speed)
+      (speedbar-set-timer dframe-update-speed)
       (speedbar-maybee-jump-to-attached-frame))))
 
 (defun vhdl-speedbar-port-copy ()
@@ -16189,7 +16172,7 @@ no project is defined."
 		    (assoc (car sublist) regexp-alist))
 	  (setq regexp-alist (cons (list (nth 0 sublist)
 					 (if (= 0 (nth 1 sublist))
-					     (if vhdl-xemacs 9 nil)
+					     (if (featurep 'xemacs) 9 nil)
 					   (nth 1 sublist))
 					 (nth 2 sublist) (nth 3 sublist))
 				   regexp-alist)))
@@ -16989,7 +16972,7 @@ to visually support naming conventions.")
 (defun vhdl-doc-variable (variable)
   "Display VARIABLE's documentation in *Help* buffer."
   (interactive)
-  (unless vhdl-xemacs
+  (unless (featurep 'xemacs)
     (help-setup-xref (list #'vhdl-doc-variable variable) (interactive-p)))
   (with-output-to-temp-buffer
       (if (fboundp 'help-buffer) (help-buffer) "*Help*")
@@ -17001,7 +16984,7 @@ to visually support naming conventions.")
 (defun vhdl-doc-mode ()
   "Display VHDL Mode documentation in *Help* buffer."
   (interactive)
-  (unless vhdl-xemacs
+  (unless (featurep 'xemacs)
     (help-setup-xref (list #'vhdl-doc-mode) (interactive-p)))
   (with-output-to-temp-buffer
       (if (fboundp 'help-buffer) (help-buffer) "*Help*")

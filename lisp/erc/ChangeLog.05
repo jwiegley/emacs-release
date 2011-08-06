@@ -698,7 +698,7 @@
 	(erc-with-all-buffers-of-server, with-erc-channel-buffer): Add
 	edebug-form-spec.
 
-	* erc-compat (erc-define-minor-mode): Ditto.
+	* erc-compat.el (erc-define-minor-mode): Ditto.
 
 2005-03-29  Jorgen Schaefer  <forcer@forcix.cx>
 
@@ -831,7 +831,7 @@
 	`require-final-newline'.
 
 	* erc-viper.el: New file. This is where all ERC/Viper
-	compatiibilty code should live. When and if ERC is bundled with
+	compatibility code should live. When and if ERC is bundled with
 	Emacs, some of the hacks in this file should be merged into Viper
 	itself.
 
@@ -1050,7 +1050,7 @@
 	XEmacs). The new function `erc-modified-channels-object' is used
 	to generate updated values for the same-named variable.
 
-2005-01-08  Diane Murray <disumu@x3y2z1.net>
+2005-01-08  Diane Murray  <disumu@x3y2z1.net>
 
 	* ChangeLog.2002: Changed instances of my sourceforge username and
 	email address to real name and email.
@@ -1124,7 +1124,7 @@
 	* NEWS: Use 3rd level heading instead of bullets for lists that
 	contain descriptions.
 
-2005-01-07  Diane Murray <disumu@x3y2z1.net>
+2005-01-07  Diane Murray  <disumu@x3y2z1.net>
 
 	* erc-list.el: Require 'sort.
 	(erc-chanlist): Disable undo in the channel list buffer.
@@ -1180,7 +1180,7 @@
 	policy toward ChangeLog entries, which is that they should be
 	manually updated whenever a change is committed.
 
-2005-01-04  Diane Murray <disumu@x3y2z1.net>
+2005-01-04  Diane Murray  <disumu@x3y2z1.net>
 
 	* erc.el (erc-connection-established, erc-login): Update the
 	mode-line.
@@ -1189,11 +1189,11 @@
 	`mode-line-process' to ":connecting" while the connection is being
 	established.
 
-2005-01-04  Lawrence Mitchell <wence@gmx.li>
+2005-01-04  Lawrence Mitchell  <wence@gmx.li>
 
 	* AUTHORS: Update list of authors.
 
-2005-01-02  Diane Murray <disumu@x3y2z1.net>
+2005-01-02  Diane Murray  <disumu@x3y2z1.net>
 
 	* erc-goodies.el (erc-control-characters): New customization
 	group.
@@ -1217,14 +1217,14 @@
 
 See ChangeLog.04 for earlier changes.
 
-    Copyright (C) 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+    Copyright (C) 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
-  GNU Emacs is free software; you can redistribute it and/or modify
+  GNU Emacs is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 3, or (at your option)
-  any later version.
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
   GNU Emacs is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -1232,9 +1232,7 @@ See ChangeLog.04 for earlier changes.
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with GNU Emacs; see the file COPYING.  If not, write to the
-  Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-  Boston, MA 02110-1301, USA.
+  along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; Local Variables:
 ;; coding: utf-8

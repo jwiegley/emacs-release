@@ -1,17 +1,17 @@
 ;;; calc-store.el --- value storage functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -127,7 +125,7 @@
           (cond
            ((and (memq var '(var-e var-i var-pi var-phi var-gamma))
                  (eq (car-safe old) 'special-const))
-            (setq msg (format " (Note: Built-in definition of %s has been lost)" 
+            (setq msg (format " (Note: Built-in definition of %s has been lost)"
                               (calc-var-name var))))
            ((and (memq var '(var-inf var-uinf var-nan))
                  (null old))
@@ -172,31 +170,36 @@
     ()
   (setq calc-var-name-map (copy-keymap minibuffer-local-completion-map))
   (define-key calc-var-name-map " " 'self-insert-command)
-  (mapcar (function
-	   (lambda (x)
-	     (define-key calc-var-name-map (char-to-string x)
-	       'calcVar-digit)))
-	  "0123456789")
-  (mapcar (function
-	   (lambda (x)
-	     (define-key calc-var-name-map (char-to-string x)
-	       'calcVar-oper)))
-	  "+-*/^|"))
+  (mapc (function
+	 (lambda (x)
+	  (define-key calc-var-name-map (char-to-string x)
+	    'calcVar-digit)))
+	"0123456789")
+  (mapc (function
+	 (lambda (x)
+	  (define-key calc-var-name-map (char-to-string x)
+	    'calcVar-oper)))
+	"+-*/^|"))
 
 (defvar calc-store-opers)
+
+(defvar calc-read-var-name-history nil
+  "History for reading variable names.")
 
 (defun calc-read-var-name (prompt &optional calc-store-opers)
   (setq calc-given-value nil
 	calc-aborted-prefix nil)
-  (let ((var (concat 
+  (let ((var (concat
               "var-"
               (let ((minibuffer-completion-table
-                     (mapcar (lambda (x) (substring x 4)) 
+                     (mapcar (lambda (x) (substring x 4))
                              (all-completions "var-" obarray)))
-                    (minibuffer-completion-predicate 
+                    (minibuffer-completion-predicate
                      (lambda (x) (boundp (intern (concat "var-" x)))))
                     (minibuffer-completion-confirm t))
-                (read-from-minibuffer prompt nil calc-var-name-map nil)))))
+                (read-from-minibuffer 
+                 prompt nil calc-var-name-map nil 
+                 'calc-read-var-name-history)))))
     (setq calc-aborted-prefix "")
     (and (not (equal var "var-"))
 	 (if (string-match "\\`\\([-a-zA-Z0-9]+\\) *:?=" var)
@@ -378,15 +381,15 @@
 
 (defun calc-store-quick ()
   (interactive)
-  (calc-store (intern (format "var-q%c" last-command-char))))
+  (calc-store (intern (format "var-q%c" last-command-event))))
 
 (defun calc-store-into-quick ()
   (interactive)
-  (calc-store-into (intern (format "var-q%c" last-command-char))))
+  (calc-store-into (intern (format "var-q%c" last-command-event))))
 
 (defun calc-recall-quick ()
   (interactive)
-  (calc-recall (intern (format "var-q%c" last-command-char))))
+  (calc-recall (intern (format "var-q%c" last-command-event))))
 
 (defun calc-copy-special-constant (&optional sconst var)
   (interactive)
@@ -401,7 +404,7 @@
    (unless (string= sconst "")
      (let ((value (cdr (assoc sconst sc))))
        (or var (setq var (calc-read-var-name
-                            (format "Copy special constant %s, to: " 
+                            (format "Copy special constant %s, to: "
                                     sconst))))
        (if var
            (let ((msg (calc-store-value var value "")))
@@ -417,7 +420,7 @@
 	 (or value
 	     (error "No such variable: \"%s\"" (calc-var-name var1)))
 	 (or var2 (setq var2 (calc-read-var-name
-			      (format "Copy variable: %s, to: " 
+			      (format "Copy variable: %s, to: "
                                       (calc-var-name var1)))))
 	 (if var2
 	     (let ((msg (calc-store-value var2 value "")))
@@ -675,5 +678,5 @@
 
 (provide 'calc-store)
 
-;;; arch-tag: 2fbfec82-a521-42ca-bcd8-4f254ae6313e
+;; arch-tag: 2fbfec82-a521-42ca-bcd8-4f254ae6313e
 ;;; calc-store.el ends here

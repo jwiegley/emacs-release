@@ -1,6 +1,6 @@
 ;;; reftex-toc.el --- RefTeX's table of contents mode
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <dominik@science.uva.nl>
 ;; Maintainer: auctex-devel@gnu.org
@@ -8,10 +8,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -36,7 +34,6 @@
   "Keymap used for *toc* buffer.")
 
 (defvar reftex-toc-menu)
-(eval-when-compile (defvar zmacs-regions))
 (defvar reftex-last-window-height nil)
 (defvar reftex-last-window-width nil)
 (defvar reftex-toc-include-labels-indicator nil)
@@ -57,7 +54,8 @@ Here are all local bindings.
         mode-name "TOC")
   (use-local-map reftex-toc-map)
   (set (make-local-variable 'transient-mark-mode) t)
-  (set (make-local-variable 'zmacs-regions) t)
+  (when (featurep 'xemacs)
+    (set (make-local-variable 'zmacs-regions) t))
   (set (make-local-variable 'revert-buffer-function) 'reftex-toc-revert)
   (set (make-local-variable 'reftex-toc-include-labels-indicator) "")
   (set (make-local-variable 'reftex-toc-max-level-indicator)
@@ -326,7 +324,7 @@ SPC=view TAB=goto RET=goto+hide [q]uit [r]escan [l]abels [f]ollow [x]r [?]Help
 (defun reftex-toc-next (&optional arg)
   "Move to next selectable item."
   (interactive "p")
-  (if (boundp 'zmacs-region-stays) (setq zmacs-region-stays t))
+  (when (featurep 'xemacs) (setq zmacs-region-stays t))
   (setq reftex-callback-fwd t)
   (or (eobp) (forward-char 1))
   (goto-char (or (next-single-property-change (point) :data) 
@@ -334,21 +332,21 @@ SPC=view TAB=goto RET=goto+hide [q]uit [r]escan [l]abels [f]ollow [x]r [?]Help
 (defun reftex-toc-previous (&optional arg)
   "Move to previous selectable item."
   (interactive "p")
-  (if (boundp 'zmacs-region-stays) (setq zmacs-region-stays t))
+  (when (featurep 'xemacs) (setq zmacs-region-stays t))
   (setq reftex-callback-fwd nil)
   (goto-char (or (previous-single-property-change (point) :data)
                  (point))))
 (defun reftex-toc-next-heading (&optional arg)
   "Move to next table of contentes line."
   (interactive "p")
-  (if (boundp 'zmacs-region-stays) (setq zmacs-region-stays t))
+  (when (featurep 'xemacs) (setq zmacs-region-stays t))
   (end-of-line)
   (re-search-forward "^ " nil t arg)
   (beginning-of-line))
 (defun reftex-toc-previous-heading (&optional arg)
   "Move to previous table of contentes line."
   (interactive "p")
-  (if (boundp 'zmacs-region-stays) (setq zmacs-region-stays t))
+  (when (featurep 'xemacs) (setq zmacs-region-stays t))
   (re-search-backward "^ " nil t arg))
 (defun reftex-toc-toggle-follow ()
   "Toggle follow (other window follows with context)."
@@ -618,7 +616,7 @@ point."
                 nil              ; we have permission, do nothing
               (error "Abort"))   ; abort, we don't have permission
             ;; Do the changes
-            (mapcar 'reftex-toc-promote-action entries)
+            (mapc 'reftex-toc-promote-action entries)
             ;; Rescan the document and rebuilt the toc buffer
             (save-window-excursion
               (reftex-toc-Rescan))
@@ -626,7 +624,7 @@ point."
             (message "%d section%s %smoted" 
                      nsec (if (= 1 nsec) "" "s") pro-or-de)
             nil))
-    (if msg (progn (ding) (message msg)))))
+    (if msg (progn (ding) (message "%s" msg)))))
 
 
 (defun reftex-toc-restore-region (point-line &optional mark-line)
@@ -637,7 +635,7 @@ point."
   (if mark-line
       (progn
         (set-mark mpos)
-        (if (fboundp 'zmacs-activate-region)
+        (if (featurep 'xemacs)
             (zmacs-activate-region)
           (setq mark-active t
                 deactivate-mark nil)))))
@@ -833,7 +831,7 @@ label prefix determines the wording of a reference."
                     (switch-to-buffer-other-window 
                      (reftex-get-file-buffer-force file nil))
                     (goto-char (if (eq where 'bof) (point-min) (point-max))))
-                (message reftex-no-follow-message) nil))))
+                (message "%s" reftex-no-follow-message) nil))))
 
      ((stringp (car toc))
       ;; a label
@@ -900,7 +898,7 @@ label prefix determines the wording of a reference."
                        (reftex-make-regexp-allow-for-ctrl-m literal) len)
                       (reftex-nearest-match
                        (reftex-make-desperate-section-regexp literal) len)))))
-           (t (message reftex-no-follow-message) nil))))
+           (t (message "%s" reftex-no-follow-message) nil))))
     (when match
       (goto-char (match-beginning 0))
       (if (not (= (point) (point-max))) (recenter 1))
@@ -995,8 +993,11 @@ always show the current section in connection with the option
       (select-frame current-toc-frame)
       (switch-to-buffer "*toc*")
       (select-frame current-frame)
-      (if (fboundp 'focus-frame) (focus-frame current-frame)
-        (if (fboundp 'x-focus-frame) (x-focus-frame current-frame)))
+      (cond ((fboundp 'x-focus-frame)
+             (x-focus-frame current-frame))
+            ((and (featurep 'xemacs) ; `focus-frame' is a nop in Emacs.
+                  (fboundp 'focus-frame))
+             (focus-frame current-frame)))
       (select-window current-window)
       (when (eq reftex-auto-recenter-toc 'frame)
         (unless reftex-toc-auto-recenter-timer
@@ -1097,5 +1098,5 @@ always show the current section in connection with the option
    ["Help" reftex-toc-show-help t]))
 
 
-;;; arch-tag: 92400ce2-0b86-4c89-a606-4ed71acea17e
+;; arch-tag: 92400ce2-0b86-4c89-a606-4ed71acea17e
 ;;; reftex-toc.el ends here

@@ -1,20 +1,25 @@
 ;;; tibetan.el --- support for Tibetan language -*- coding: iso-2022-7bit; -*-
 
-;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+;;   2009  Free Software Foundation, Inc.
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008
+;;   2006, 2007, 2008, 2009
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
+;; Copyright (C) 2003
+;;   National Institute of Advanced Industrial Science and Technology (AIST)
+;;   Registration Number H13PRO009
 
-;; Keywords: multilingual, Tibetan
+;; Author: Toru TOMABECHI <Toru.Tomabechi@orient.unil.ch>
+;; Created: Feb. 17. 1997
+;; Keywords: multilingual, Tibetan, i18n
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,15 +27,10 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
-;; Author: Toru TOMABECHI, <Toru.Tomabechi@orient.unil.ch>
+;;; History:
 
-;; Created: Feb. 17. 1997
-
-;; History:
 ;; 1997.03.13 Modification for special signs and punctuations.
 
 ;;; Commentary:
@@ -86,14 +86,12 @@
 ;;;
 
 
-(make-coding-system
- 'tibetan-iso-8bit 2 ?Q
- "8-bit encoding for ASCII (MSB=0) and TIBETAN (MSB=1)."
- '(ascii tibetan nil nil
-   nil nil)
- '((safe-charsets ascii tibetan)
-   (post-read-conversion . tibetan-post-read-conversion)
-   (pre-write-conversion . tibetan-pre-write-conversion)))
+(define-coding-system 'tibetan-iso-8bit
+  "8-bit encoding for ASCII (MSB=0) and TIBETAN (MSB=1)."
+  :coding-type 'iso-2022
+  :mnemonic ?Q
+  :designation [ascii tibetan nil nil]
+  :charset-list '(ascii tibetan))
 
 (define-coding-system-alias 'tibetan 'tibetan-iso-8bit)
 
@@ -104,11 +102,7 @@
 	     (input-method . "tibetan-wylie")
 	     (features tibet-util)
 	     (documentation . t)
-	     (sample-text
-	      . (tibetan-compose-string
-		 (copy-sequence
-"Tibetan (4$(7"7r'"]0"7"]14"20"21!;4%P0"G#!"Q14"20"21!;(B) $(7!4!5!5!>4"70"714$P0"!#C"Q1!;4"Er'"S0"E"S14"G0"G1!;4"70"714"2r'"[0"2"[1!;4"Dr'"[0"D"[14"#0"#14"G0"G1!>4"Ir'"]r'"_0"I"]"_1!;4"90"9"Q1!;4"/r'"S0"/"S1!;4"50"5"Q14#2x!#9r'"[0"2#9"[1!;4"Hx!"Rx!"Ur'"c0"H"A"U"c1!>(B")))))
-
+	     (sample-text "Tibetan ($(7"7"]"2!;"G#!"Q"2!;(B) $(7!4!5!5!>"7"!#C"Q!;"E"S"G!;"7"2"[!;"D"["#"G!>"I"]"_!;"9"Q!;"/"S!;"5"Q"2#9"[!;"H"A"U"c!>(B")))
 
 ;; `$(7"A(B' is included in the pattern for subjoined consonants because we
 ;; treat it specially in tibetan-add-components.
@@ -119,12 +113,8 @@
 ;; $(7"A(B is removed from the class of subjoined. Tomabechi 2000/06/08
 ;; (for Unicode support)
 (defconst tibetan-composable-pattern
-  "[$(7"!(B-$(7"J"K(B][$(7#!(B-$(7#J#K#L#M(B]*[$(7"Q"R"S(B-$(7"^"a"b"e(B]*[$(7"_"c"d"g(B-$(7"l!I!e!g(B]*"
+  "[$(7"!(B-$(7"J"K(B][$(7#!(B-$(7#J#K#L#M(B]*[$,1FP$(7"Q"R"S(B-$(7"^"a"b"e(B]*[$(7"_"c"d"g(B-$(7"l!I!e!g(B]*"
   "Regexp matching a composable sequence of Tibetan characters.")
-
-;; Register a function to compose Tibetan characters.
-(aset composition-function-table (make-char 'tibetan)
-      (list (cons tibetan-composable-pattern 'tibetan-composition-function)))
 
 ;;;
 ;;; Definitions of conversion data.
@@ -612,7 +602,12 @@ This also matches some punctuation characters which need conversion.")
 (defvar tibetan-decomposed nil)
 (defvar tibetan-decomposed-temp nil)
 
+;; For automatic composition.
+(set-char-table-range 
+ composition-function-table '(#xF00 . #xFD1)
+ (list (vector tibetan-composable-pattern 0 'font-shape-gstring)))
+
 (provide 'tibetan)
 
-;;; arch-tag: 8d37c8d7-f95d-450f-9ec2-819e61fc79a7
+;; arch-tag: 8d37c8d7-f95d-450f-9ec2-819e61fc79a7
 ;;; tibetan.el ends here

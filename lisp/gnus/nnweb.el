@@ -1,17 +1,17 @@
 ;;; nnweb.el --- retrieving articles via web search engines
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -294,12 +292,12 @@ Valid types include `google', `dejanews', and `gmane'.")
   "Initialize buffers and such."
   (unless (gnus-buffer-live-p nnweb-buffer)
     (setq nnweb-buffer
-	  (save-excursion
-	    (mm-with-unibyte
-	      (nnheader-set-temp-buffer
-	       (format " *nnweb %s %s %s*"
-		       nnweb-type nnweb-search server))
-	      (current-buffer))))))
+	  (save-current-buffer
+            (nnheader-set-temp-buffer
+             (format " *nnweb %s %s %s*"
+                     nnweb-type nnweb-search server))
+            (mm-disable-multibyte)
+            (current-buffer)))))
 
 ;;;
 ;;; groups.google.com
@@ -523,7 +521,9 @@ Valid types include `google', `dejanews', and `gmane'.")
     "?"
     (mm-url-encode-www-form-urlencoded
      `(("query" . ,search)
-       ("HITSPERPAGE" . ,(number-to-string nnweb-max-hits))))))
+       ("HITSPERPAGE" . ,(number-to-string nnweb-max-hits))
+       ;;("TOPDOC" . "1000")
+       ))))
   (setq buffer-file-name nil)
   (set-buffer-multibyte t)
   (mm-decode-coding-region (point-min) (point-max) 'utf-8)
@@ -542,7 +542,11 @@ Valid types include `google', `dejanews', and `gmane'.")
 (defun nnweb-insert-html (parse)
   "Insert HTML based on a w3 parse tree."
   (if (stringp parse)
-      (insert (nnheader-string-as-multibyte parse))
+      ;; We used to call nnheader-string-as-multibyte here, but it cannot
+      ;; be right, so I removed it.  If a bug shows up because of this change,
+      ;; please do not blindly revert the change, but help me find the real
+      ;; cause of the bug instead.  --Stef
+      (insert parse)
     (insert "<" (symbol-name (car parse)) " ")
     (insert (mapconcat
 	     (lambda (param)
@@ -554,7 +558,7 @@ Valid types include `google', `dejanews', and `gmane'.")
 	     (nth 1 parse)
 	     " "))
     (insert ">\n")
-    (mapcar 'nnweb-insert-html (nth 2 parse))
+    (mapc 'nnweb-insert-html (nth 2 parse))
     (insert "</" (symbol-name (car parse)) ">\n")))
 
 (defun nnweb-parse-find (type parse &optional maxdepth)
@@ -608,5 +612,5 @@ Valid types include `google', `dejanews', and `gmane'.")
 
 (provide 'nnweb)
 
-;;; arch-tag: f59307eb-c90f-479f-b7d2-dbd8bf51b697
+;; arch-tag: f59307eb-c90f-479f-b7d2-dbd8bf51b697
 ;;; nnweb.el ends here

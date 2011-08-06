@@ -1,7 +1,7 @@
 ;;; net-utils.el --- network functions
 
 ;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author:  Peter Breton <pbreton@cs.umb.edu>
 ;; Created: Sun Mar 16 1997
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -46,8 +44,6 @@
 
 
 ;;; Code:
-(eval-when-compile
-  (require 'comint))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Customization Variables
@@ -93,6 +89,8 @@ These options can be used to limit how many ICMP packets are emitted."
   :group 'net-utils
   :type  '(repeat string))
 
+(define-obsolete-variable-alias 'ipconfig-program 'ifconfig-program "22.2")
+
 (defcustom ifconfig-program
   (if (eq system-type 'windows-nt)
       "ipconfig"
@@ -100,8 +98,6 @@ These options can be used to limit how many ICMP packets are emitted."
   "Program to print network configuration information."
   :group 'net-utils
   :type  'string)
-
-(define-obsolete-variable-alias 'ipconfig-program 'ifconfig-program "22.2")
 
 (defcustom ifconfig-program-options
   (list
@@ -111,8 +107,20 @@ These options can be used to limit how many ICMP packets are emitted."
   :group 'net-utils
   :type  '(repeat string))
 
+(defcustom iwconfig-program "iwconfig"
+  "Program to print wireless network configuration information."
+  :group 'net-utils
+  :type 'string
+  :version "23.1")
+
 (define-obsolete-variable-alias 'ipconfig-program-options
   'ifconfig-program-options "22.2")
+
+(defcustom iwconfig-program-options nil
+ "Options for the iwconfig program."
+ :group 'net-utils
+ :type '(repeat string)
+ :version "23.1")
 
 (defcustom netstat-program "netstat"
   "Program to print network statistics."
@@ -230,30 +238,25 @@ This variable is only used if the variable
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defconst nslookup-font-lock-keywords
-  (progn
-    (defvar font-lock-type-face)
-    (defvar font-lock-keyword-face)
-    (defvar font-lock-variable-name-face)
-    (require 'font-lock)
-    (list
-     (list "^[A-Za-z0-9 _]+:"     0 font-lock-type-face)
-     (list "\\<\\(SOA\\|NS\\|MX\\|A\\|CNAME\\)\\>"
-	   1 font-lock-keyword-face)
-     ;; Dotted quads
-     (list
-      (mapconcat 'identity
-		 (make-list 4 "[0-9]+")
-		 "\\.")
-      0 font-lock-variable-name-face)
-     ;; Host names
-     (list
-      (let ((host-expression "[-A-Za-z0-9]+"))
-	(concat
-	 (mapconcat 'identity
-		    (make-list 2 host-expression)
-		    "\\.")
-	 "\\(\\." host-expression "\\)*"))
-      0 font-lock-variable-name-face)))
+  (list
+   (list "^[A-Za-z0-9 _]+:" 0 'font-lock-type-face)
+   (list "\\<\\(SOA\\|NS\\|MX\\|A\\|CNAME\\)\\>"
+         1 'font-lock-keyword-face)
+   ;; Dotted quads
+   (list
+    (mapconcat 'identity
+               (make-list 4 "[0-9]+")
+               "\\.")
+    0 'font-lock-variable-name-face)
+   ;; Host names
+   (list
+    (let ((host-expression "[-A-Za-z0-9]+"))
+      (concat
+       (mapconcat 'identity
+                  (make-list 2 host-expression)
+                  "\\.")
+       "\\(\\." host-expression "\\)*"))
+    0 'font-lock-variable-name-face))
   "Expressions to font-lock for nslookup.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -307,17 +310,17 @@ This variable is only used if the variable
 	  (if moving (goto-char (process-mark process))))
       (set-buffer old-buffer))))
 
-(defmacro net-utils-run-program (name header program &rest args)
+(defun net-utils-run-program (name header program args)
   "Run a network information program."
-  ` (let ((buf (get-buffer-create (concat "*" ,name "*"))))
-      (set-buffer buf)
-      (erase-buffer)
-      (insert ,header "\n")
-      (set-process-filter
-       (apply 'start-process ,name buf ,program ,@args)
-       'net-utils-remove-ctrl-m-filter)
-      (display-buffer buf)
-      buf))
+  (let ((buf (get-buffer-create (concat "*" name "*"))))
+    (set-buffer buf)
+    (erase-buffer)
+    (insert header "\n")
+    (set-process-filter
+     (apply 'start-process name buf program args)
+     'net-utils-remove-ctrl-m-filter)
+    (display-buffer buf)
+    buf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Wrappers for external network programs
@@ -367,6 +370,16 @@ If your system's ping continues until interrupted, you can try setting
 ;; Windows uses this name.
 ;;;###autoload
 (defalias 'ipconfig 'ifconfig)
+
+;;;###autoload
+(defun iwconfig ()
+  "Run iwconfig program."
+  (interactive)
+  (net-utils-run-program
+   "Iwconfig"
+   (concat "** Iwconfig ** " iwconfig-program " ** ")
+   iwconfig-program
+   iwconfig-program-options))
 
 ;;;###autoload
 (defun netstat ()
@@ -429,9 +442,13 @@ If your system's ping continues until interrupted, you can try setting
 (defun nslookup ()
   "Run nslookup program."
   (interactive)
-  (require 'comint)
   (comint-run nslookup-program)
   (nslookup-mode))
+
+(defvar comint-prompt-regexp)
+(defvar comint-input-autoexpand)
+
+(autoload 'comint-mode "comint" nil t)
 
 ;; Using a derived mode gives us keymaps, hooks, etc.
 (define-derived-mode nslookup-mode comint-mode "Nslookup"
@@ -462,17 +479,15 @@ If your system's ping continues until interrupted, you can try setting
      dns-lookup-program
      options)))
 
+(autoload 'ffap-string-at-point "ffap")
+
 ;;;###autoload
 (defun run-dig (host)
   "Run dig program."
   (interactive
    (list
-    (progn
-      (require 'ffap)
-      (read-from-minibuffer
-       "Lookup host: "
-       (with-no-warnings
-	 (or (ffap-string-at-point 'machine) ""))))))
+    (read-from-minibuffer "Lookup host: "
+                          (or (ffap-string-at-point 'machine) ""))))
   (net-utils-run-program
    "Dig"
    (concat "** "
@@ -482,6 +497,8 @@ If your system's ping continues until interrupted, you can try setting
    dig-program
    (list host)))
 
+(autoload 'comint-exec "comint")
+
 ;; This is a lot less than ange-ftp, but much simpler.
 ;;;###autoload
 (defun ftp (host)
@@ -490,7 +507,6 @@ If your system's ping continues until interrupted, you can try setting
    (list
     (read-from-minibuffer
      "Ftp to Host: " (net-utils-machine-at-point))))
-  (require 'comint)
   (let ((buf (get-buffer-create (concat "*ftp [" host "]*"))))
     (set-buffer buf)
     (ftp-mode)
@@ -525,7 +541,6 @@ If your system's ping continues until interrupted, you can try setting
     (read-from-minibuffer
      "Connect to Host: " (net-utils-machine-at-point))
     (read-from-minibuffer "SMB Service: ")))
-  (require 'comint)
   (let* ((name (format "smbclient [%s\\%s]" host service))
 	 (buf (get-buffer-create (concat "*" name "*")))
 	 (service-name (concat "\\\\" host "\\" service)))
@@ -599,27 +614,22 @@ If your system's ping continues until interrupted, you can try setting
   "Alist of services and associated TCP port numbers.
 This list is not complete.")
 
-;; Workhorse macro
-(defmacro run-network-program (process-name host port
-					    &optional initial-string)
-  `(let ((tcp-connection)
-	 (buf))
-    (setq buf (get-buffer-create (concat "*" ,process-name "*")))
+;; Workhorse routine
+(defun run-network-program (process-name host port &optional initial-string)
+  (let ((tcp-connection)
+	(buf))
+    (setq buf (get-buffer-create (concat "*" process-name "*")))
     (set-buffer buf)
     (or
      (setq tcp-connection
-	   (open-network-stream
-	    ,process-name
-	    buf
-	    ,host
-	    ,port))
-     (error "Could not open connection to %s" ,host))
+	   (open-network-stream process-name buf host port))
+     (error "Could not open connection to %s" host))
     (erase-buffer)
     (set-marker (process-mark tcp-connection) (point-min))
     (set-process-filter tcp-connection 'net-utils-remove-ctrl-m-filter)
-    (and ,initial-string
+    (and initial-string
 	 (process-send-string tcp-connection
-			      (concat ,initial-string "\r\n")))
+			      (concat initial-string "\r\n")))
     (display-buffer buf)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -802,7 +812,6 @@ from SEARCH-STRING.  With argument, prompt for whois server."
 
 (defun network-service-connection (host service)
   "Open a network connection to SERVICE on HOST."
-  (require 'comint)
   (let* ((process-name (concat "Network Connection [" host " " service "]"))
 	 (portnum (string-to-number service))
 	 (buf (get-buffer-create (concat "*" process-name "*"))))
@@ -814,6 +823,8 @@ from SEARCH-STRING.  With argument, prompt for whois server."
     (network-connection-mode)
     (network-connection-mode-setup host service)
     (pop-to-buffer buf)))
+
+(defvar comint-input-ring)
 
 (defun network-connection-reconnect  ()
   "Reconnect a network connection, preserving the old input ring."
@@ -836,5 +847,5 @@ from SEARCH-STRING.  With argument, prompt for whois server."
 
 (provide 'net-utils)
 
-;;; arch-tag: 97119e91-9edb-4376-838b-bf7058fa1314
+;; arch-tag: 97119e91-9edb-4376-838b-bf7058fa1314
 ;;; net-utils.el ends here

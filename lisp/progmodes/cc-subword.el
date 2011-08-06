@@ -1,23 +1,23 @@
 ;;; cc-subword.el --- Handling capitalized subwords in a nomenclature
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Masatake YAMATO
 
-;; This program is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; This file is part of GNU Emacs.
 
-;; This program is distributed in the hope that it will be useful,
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -88,43 +88,27 @@
 (cc-require 'cc-defs)
 (cc-require 'cc-cmds)
 
-;; Don't complain about the `define-minor-mode' form if it isn't defined.
-(cc-bytecomp-defvar c-subword-mode)
+(defvar c-subword-mode-map
+  (let ((map (make-sparse-keymap)))
+    (dolist (cmd '(forward-word backward-word mark-word
+                                kill-word backward-kill-word
+                                transpose-words
+                                capitalize-word upcase-word downcase-word))
+      (let ((othercmd (let ((name (symbol-name cmd)))
+                        (string-match "\\(.*-\\)\\(word.*\\)" name)
+                        (intern (concat "c-"
+                                        (match-string 1 name)
+                                        "sub"
+                                        (match-string 2 name))))))
+        (if (fboundp 'command-remapping)
+            (define-key map (vector 'remap cmd) othercmd)
+          (substitute-key-definition cmd othercmd map global-map))))
+    map)
+  "Keymap used in command `c-subword-mode' minor mode.")
 
-;; Autoload directives must be on the top level, so we construct an
-;; autoload form instead.
-;;;###autoload (autoload 'c-subword-mode "cc-subword" "Mode enabling subword movement and editing keys." t)
-
-(if (not (fboundp 'define-minor-mode))
-    (defun c-subword-mode ()
-      "(Missing) mode enabling subword movement and editing keys.
-This mode is not (yet) available in this version of (X)Emacs.  Sorry!  If
-you really want it, please send a request to <bug-gnu-emacs@gnu.org>,
-telling us which (X)Emacs version you're using."
-      (interactive)
-      (error
-       "c-subword-mode is not (yet) available in this version of (X)Emacs.  Sorry!"))
-
-  (defvar c-subword-mode-map
-    (let ((map (make-sparse-keymap)))
-      (dolist (cmd '(forward-word backward-word mark-word
-                     kill-word backward-kill-word
-                     transpose-words
-                     capitalize-word upcase-word downcase-word))
-        (let ((othercmd (let ((name (symbol-name cmd)))
-                          (string-match "\\(.*-\\)\\(word.*\\)" name)
-                          (intern (concat "c-"
-                                          (match-string 1 name)
-                                          "sub"
-                                          (match-string 2 name))))))
-          (if (fboundp 'command-remapping)
-              (define-key map (vector 'remap cmd) othercmd)
-            (substitute-key-definition cmd othercmd map global-map))))
-      map)
-    "Keymap used in command `c-subword-mode' minor mode.")
-
-  (define-minor-mode c-subword-mode
-    "Mode enabling subword movement and editing keys.
+;;;###autoload
+(define-minor-mode c-subword-mode
+  "Mode enabling subword movement and editing keys.
 In spite of GNU Coding Standards, it is popular to name a symbol by
 mixing uppercase and lowercase letters, e.g. \"GtkWidget\",
 \"EmacsFrameClass\", \"NSGraphicsContext\", etc.  Here we call these
@@ -147,8 +131,6 @@ as words.
     nil
     c-subword-mode-map
     (c-update-modeline))
-
-  )
 
 (defun c-forward-subword (&optional arg)
   "Do the same as `forward-word' but on subwords.

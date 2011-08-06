@@ -1,13 +1,13 @@
 /* GNU Emacs case conversion functions.
    Copyright (C) 1985, 1994, 1997, 1998, 1999, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,15 +15,13 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 #include <config.h>
 #include "lisp.h"
 #include "buffer.h"
-#include "charset.h"
+#include "character.h"
 #include "commands.h"
 #include "syntax.h"
 #include "composite.h"
@@ -38,7 +36,7 @@ casify_object (flag, obj)
      enum case_action flag;
      Lisp_Object obj;
 {
-  register int i, c, len;
+  register int c, c1;
   register int inword = flag == CASE_DOWN;
 
   /* If the case table is flagged as modified, rescan it.  */
@@ -50,6 +48,7 @@ casify_object (flag, obj)
       int flagbits = (CHAR_ALT | CHAR_SUPER | CHAR_HYPER
 		      | CHAR_SHIFT | CHAR_CTL | CHAR_META);
       int flags = XINT (obj) & flagbits;
+      int multibyte = ! NILP (current_buffer->enable_multibyte_characters);
 
       /* If the character has higher bits set
 	 above the flags, return it unchanged.
@@ -57,61 +56,97 @@ casify_object (flag, obj)
       if ((unsigned) XFASTINT (obj) > (unsigned) flagbits)
 	return obj;
 
-      c = DOWNCASE (XFASTINT (obj) & ~flagbits);
+      c1 = XFASTINT (obj) & ~flagbits;
+      /* FIXME: Even if enable-multibyte-characters is nil, we may
+	 manipulate multibyte chars.  This means we have a bug for latin-1
+	 chars since when we receive an int 128-255 we can't tell whether
+	 it's an eight-bit byte or a latin-1 char.  */
+      if (c1 >= 256)
+	multibyte = 1;
+      if (! multibyte)
+	MAKE_CHAR_MULTIBYTE (c1);
+      c = DOWNCASE (c1);
       if (inword)
 	XSETFASTINT (obj, c | flags);
       else if (c == (XFASTINT (obj) & ~flagbits))
 	{
-	  c = UPCASE1 ((XFASTINT (obj) & ~flagbits));
+	  if (! inword)
+	    c = UPCASE1 (c1);
+	  if (! multibyte)
+	    MAKE_CHAR_UNIBYTE (c);
 	  XSETFASTINT (obj, c | flags);
 	}
       return obj;
     }
 
-  if (STRINGP (obj))
+  if (!STRINGP (obj))
+    wrong_type_argument (Qchar_or_string_p, obj);
+  else if (!STRING_MULTIBYTE (obj))
     {
-      int multibyte = STRING_MULTIBYTE (obj);
-      int n;
+      EMACS_INT i;
+      EMACS_INT size = SCHARS (obj);
 
       obj = Fcopy_sequence (obj);
-      len = SBYTES (obj);
-
-      /* I counts bytes, and N counts chars.  */
-      for (i = n = 0; i < len; n++)
+      for (i = 0; i < size; i++)
 	{
-	  int from_len = 1, to_len = 1;
-
 	  c = SREF (obj, i);
+	      MAKE_CHAR_MULTIBYTE (c);
+	  c1 = c;
+	  if (inword && flag != CASE_CAPITALIZE_UP)
+	    c = DOWNCASE (c);
+	  else if (!UPPERCASEP (c)
+		   && (!inword || flag != CASE_CAPITALIZE_UP))
+	    c = UPCASE1 (c1);
+	  if ((int) flag >= (int) CASE_CAPITALIZE)
+	    inword = (SYNTAX (c) == Sword);
+	  if (c != c1)
+	    {
+		  MAKE_CHAR_UNIBYTE (c);
+	      /* If the char can't be converted to a valid byte, just don't
+		 change it.  */
+	      if (c >= 0 && c < 256)
+		SSET (obj, i, c);
+	    }
+	}
+      return obj;
+    }
+  else
+    {
+      EMACS_INT i, i_byte, size = SCHARS (obj);
+      int len;
+      USE_SAFE_ALLOCA;
+      unsigned char *dst, *o;
+      /* Over-allocate by 12%: this is a minor overhead, but should be
+	 sufficient in 99.999% of the cases to avoid a reallocation.  */
+      EMACS_INT o_size = SBYTES (obj) + SBYTES (obj) / 8 + MAX_MULTIBYTE_LENGTH;
+      SAFE_ALLOCA (dst, void *, o_size);
+      o = dst;
 
-	  if (multibyte && c >= 0x80)
-	    c = STRING_CHAR_AND_LENGTH (SDATA (obj) + i, len -i, from_len);
+      for (i = i_byte = 0; i < size; i++, i_byte += len)
+	{
+	  if ((o - dst) + MAX_MULTIBYTE_LENGTH > o_size)
+	    { /* Not enough space for the next char: grow the destination.  */
+	      unsigned char *old_dst = dst;
+	      o_size += o_size;	/* Probably overkill, but extremely rare.  */
+	      SAFE_ALLOCA (dst, void *, o_size);
+	      bcopy (old_dst, dst, o - old_dst);
+	      o = dst + (o - old_dst);
+	    }
+	  c = STRING_CHAR_AND_LENGTH (SDATA (obj) + i_byte, 0, len);
 	  if (inword && flag != CASE_CAPITALIZE_UP)
 	    c = DOWNCASE (c);
 	  else if (!UPPERCASEP (c)
 		   && (!inword || flag != CASE_CAPITALIZE_UP))
 	    c = UPCASE1 (c);
-	  if ((ASCII_BYTE_P (c) && from_len == 1)
-	      || (! multibyte && SINGLE_BYTE_CHAR_P (c)))
-	    SSET (obj, i, c);
-	  else
-	    {
-	      to_len = CHAR_BYTES (c);
-	      if (from_len == to_len)
-		CHAR_STRING (c, SDATA (obj) + i);
-	      else
-		{
-		  Faset (obj, make_number (n), make_number (c));
-		  len += to_len - from_len;
-		}
-	    }
 	  if ((int) flag >= (int) CASE_CAPITALIZE)
-	    inword = SYNTAX (c) == Sword;
-	  i += to_len;
+	    inword = (SYNTAX (c) == Sword);
+	  o += CHAR_STRING (c, o);
 	}
+      eassert (o - dst <= o_size);
+      obj = make_multibyte_string (dst, size, o - dst);
+      SAFE_FREE ();
       return obj;
     }
-
-  wrong_type_argument (Qchar_or_string_p, obj);
 }
 
 DEFUN ("upcase", Fupcase, Supcase, 1, 1, 0,
@@ -168,13 +203,14 @@ casify_region (flag, b, e)
      enum case_action flag;
      Lisp_Object b, e;
 {
-  register int i;
   register int c;
   register int inword = flag == CASE_DOWN;
   register int multibyte = !NILP (current_buffer->enable_multibyte_characters);
-  int start, end;
-  int start_byte, end_byte;
-  int changed = 0;
+  EMACS_INT start, end;
+  EMACS_INT start_byte, end_byte;
+  EMACS_INT first = -1, last;	/* Position of first and last changes.  */
+  EMACS_INT opoint = PT;
+  EMACS_INT opoint_byte = PT_BYTE;
 
   if (EQ (b, e))
     /* Not modifying because nothing marked */
@@ -192,87 +228,78 @@ casify_region (flag, b, e)
   start_byte = CHAR_TO_BYTE (start);
   end_byte = CHAR_TO_BYTE (end);
 
-  for (i = start_byte; i < end_byte; i++, start++)
+  while (start < end)
     {
-      int c2;
-      c = c2 = FETCH_BYTE (i);
-      if (multibyte && c >= 0x80)
-	/* A multibyte character can't be handled in this simple loop.  */
-	break;
+      int c2, len;
+
+      if (multibyte)
+	{
+	  c = FETCH_MULTIBYTE_CHAR (start_byte);
+	  len = CHAR_BYTES (c);
+	}
+      else
+	{
+	  c = FETCH_BYTE (start_byte);
+	  MAKE_CHAR_MULTIBYTE (c);
+	  len = 1;
+	}
+      c2 = c;
       if (inword && flag != CASE_CAPITALIZE_UP)
 	c = DOWNCASE (c);
       else if (!UPPERCASEP (c)
 	       && (!inword || flag != CASE_CAPITALIZE_UP))
 	c = UPCASE1 (c);
-      if (multibyte && c >= 0x80)
-	/* A multibyte result character can't be handled in this
-	   simple loop.  */
-	break;
-      FETCH_BYTE (i) = c;
-      if (c != c2)
-	changed = 1;
       if ((int) flag >= (int) CASE_CAPITALIZE)
-	inword = SYNTAX (c) == Sword && (inword || !SYNTAX_PREFIX (c));
-    }
-  if (i < end_byte)
-    {
-      /* The work is not yet finished because of a multibyte character
-	 just encountered.  */
-      int opoint = PT;
-      int opoint_byte = PT_BYTE;
-      int c2;
-
-      while (start < end)
+	inword = ((SYNTAX (c) == Sword) && (inword || !SYNTAX_PREFIX (c)));
+      if (c != c2)
 	{
-	  if ((c = FETCH_BYTE (i)) >= 0x80)
-	    c = FETCH_MULTIBYTE_CHAR (i);
-	  c2 = c;
-	  if (inword && flag != CASE_CAPITALIZE_UP)
-	    c2 = DOWNCASE (c);
-	  else if (!UPPERCASEP (c)
-		   && (!inword || flag != CASE_CAPITALIZE_UP))
-	    c2 = UPCASE1 (c);
-	  if (c != c2)
+	  last = start;
+	  if (first < 0)
+	    first = start;
+
+	  if (! multibyte)
 	    {
-	      int fromlen, tolen, j;
+	      MAKE_CHAR_UNIBYTE (c);
+	      FETCH_BYTE (start_byte) = c;
+	    }
+	  else if (ASCII_CHAR_P (c2) && ASCII_CHAR_P (c))
+	    FETCH_BYTE (start_byte) = c;
+	  else
+	    {
+	      int tolen = CHAR_BYTES (c);
+	      int j;
 	      unsigned char str[MAX_MULTIBYTE_LENGTH];
 
-	      changed = 1;
-	      /* Handle the most likely case */
-	      if (c < 0400 && c2 < 0400)
-		FETCH_BYTE (i) = c2;
-	      else if (fromlen = CHAR_STRING (c, str),
-		       tolen = CHAR_STRING (c2, str),
-		       fromlen == tolen)
+	      CHAR_STRING (c, str);
+	      if (len == tolen)
 		{
 		  /* Length is unchanged.  */
-		  for (j = 0; j < tolen; ++j)
-		    FETCH_BYTE (i + j) = str[j];
+		  for (j = 0; j < len; ++j)
+		    FETCH_BYTE (start_byte + j) = str[j];
 		}
 	      else
 		{
 		  /* Replace one character with the other,
 		     keeping text properties the same.  */
-		  replace_range_2 (start, i,
-				   start + 1, i + fromlen,
+		  replace_range_2 (start, start_byte,
+				   start + 1, start_byte + len,
 				   str, 1, tolen,
-				   1);
-		  if (opoint > start)
-		    opoint_byte += tolen - fromlen;
+				   0);
+		  len = tolen;
 		}
 	    }
-	  if ((int) flag >= (int) CASE_CAPITALIZE)
-	    inword = SYNTAX (c2) == Sword;
-	  INC_BOTH (start, i);
 	}
-      TEMP_SET_PT_BOTH (opoint, opoint_byte);
+      start++;
+      start_byte += len;
     }
 
-  start = XFASTINT (b);
-  if (changed)
+  if (PT != opoint)
+    TEMP_SET_PT_BOTH (opoint, opoint_byte);
+
+  if (first >= 0)
     {
-      signal_after_change (start, end - start, end - start);
-      update_compositions (start, end, CHECK_ALL);
+      signal_after_change (first, last + 1 - first, last + 1 - first);
+      update_compositions (first, last + 1, CHECK_ALL);
     }
 }
 
@@ -329,10 +356,10 @@ character positions to operate on.  */)
   return Qnil;
 }
 
-Lisp_Object
+static Lisp_Object
 operate_on_word (arg, newpoint)
      Lisp_Object arg;
-     int *newpoint;
+     EMACS_INT *newpoint;
 {
   Lisp_Object val;
   int farend;
@@ -358,7 +385,7 @@ See also `capitalize-word'.  */)
      Lisp_Object arg;
 {
   Lisp_Object beg, end;
-  int newpoint;
+  EMACS_INT newpoint;
   XSETFASTINT (beg, PT);
   end = operate_on_word (arg, &newpoint);
   casify_region (CASE_UP, beg, end);
@@ -373,7 +400,7 @@ With negative argument, convert previous words but do not move.  */)
      Lisp_Object arg;
 {
   Lisp_Object beg, end;
-  int newpoint;
+  EMACS_INT newpoint;
   XSETFASTINT (beg, PT);
   end = operate_on_word (arg, &newpoint);
   casify_region (CASE_DOWN, beg, end);
@@ -390,7 +417,7 @@ With negative argument, capitalize previous words but do not move.  */)
      Lisp_Object arg;
 {
   Lisp_Object beg, end;
-  int newpoint;
+  EMACS_INT newpoint;
   XSETFASTINT (beg, PT);
   end = operate_on_word (arg, &newpoint);
   casify_region (CASE_CAPITALIZE, beg, end);

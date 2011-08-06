@@ -1,26 +1,24 @@
 ;;; url-methods.el --- Load URL schemes as needed
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes, hypermedia
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-;;
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-;;
+
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -89,19 +87,19 @@
      ;; First check if its something like hostname:port
      ((string-match "^\\([^:]+\\):\\([0-9]+\\)$" env-proxy)
       (setq urlobj (url-generic-parse-url nil)) ; Get a blank object
-      (url-set-type urlobj "http")
-      (url-set-host urlobj (match-string 1 env-proxy))
-      (url-set-port urlobj (string-to-number (match-string 2 env-proxy))))
+      (setf (url-type urlobj) "http")
+      (setf (url-host urlobj) (match-string 1 env-proxy))
+      (setf (url-port urlobj) (string-to-number (match-string 2 env-proxy))))
      ;; Then check if its a fully specified URL
      ((string-match url-nonrelative-link env-proxy)
       (setq urlobj (url-generic-parse-url env-proxy))
-      (url-set-type urlobj "http")
-      (url-set-target urlobj nil))
+      (setf (url-type urlobj) "http")
+      (setf (url-target urlobj) nil))
      ;; Finally, fall back on the assumption that its just a hostname
      (t
       (setq urlobj (url-generic-parse-url nil)) ; Get a blank object
-      (url-set-type urlobj "http")
-      (url-set-host urlobj env-proxy)))
+      (setf (url-type urlobj) "http")
+      (setf (url-host urlobj) env-proxy)))
 
      (if (and (not cur-proxy) urlobj)
 	 (progn
@@ -112,7 +110,7 @@
 	   (message "Using a proxy for %s..." scheme)))))
 
 (defun url-scheme-get-property (scheme property)
-  "Get property of a URL SCHEME.
+  "Get PROPERTY of a URL SCHEME.
 Will automatically try to load a backend from url-SCHEME.el if
 it has not already been loaded."
   (setq scheme (downcase scheme))

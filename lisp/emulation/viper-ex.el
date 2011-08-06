@@ -1,16 +1,16 @@
 ;;; viper-ex.el --- functions implementing the Ex commands for Viper
 
 ;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -46,14 +44,9 @@
 ;; in order to spare non-viperized emacs from being viperized
 (if noninteractive
     (eval-when-compile
-      (let ((load-path (cons (expand-file-name ".") load-path)))
-	(or (featurep 'viper-util)
-	    (load "viper-util.el" nil nil 'nosuffix))
-	(or (featurep 'viper-keym)
-	    (load "viper-keym.el" nil nil 'nosuffix))
-	(or (featurep 'viper-cmd)
-	    (load "viper-cmd.el" nil nil 'nosuffix))
-	)))
+      (if (not (featurep 'viper-cmd))
+	  (require 'viper-cmd))
+      ))
 ;; end pacifier
 
 (require 'viper-util)
@@ -338,12 +331,11 @@ Don't put `-c' here, as it is added automatically."
   (cond (ex-unix-type-shell 'viper-glob-unix-files)
 	((eq system-type 'emx) 'viper-glob-mswindows-files) ; OS/2
 	(viper-ms-style-os-p 'viper-glob-mswindows-files) ; Microsoft OS
-	(viper-vms-os-p 'viper-glob-unix-files) ; VMS
 	(t  'viper-glob-unix-files) ; presumably UNIX
 	)
   "Expand the file spec containing wildcard symbols.
 The default tries to set this variable to work with Unix, Windows,
-OS/2, and VMS.
+and OS/2.
 
 However, if it doesn't work right for some types of Unix shells or some OS,
 the user should supply the appropriate function and set this variable to the
@@ -651,17 +643,19 @@ reversed."
 	(setq initial-str (format "%d,%d" reg-beg-line reg-end-line)))
 
     (setq com-str
-	  (or string (viper-read-string-with-history
-		      ":"
-		      initial-str
-		      'viper-ex-history
-		      ;; no default when working on region
-		      (if initial-str
-			  nil
-			(car viper-ex-history))
-		      map
-		      (if initial-str
-			  " [Type command to execute on current region]"))))
+	  (if string
+	      (concat initial-str string)
+	    (viper-read-string-with-history
+	     ":"
+	     initial-str
+	     'viper-ex-history
+	     ;; no default when working on region
+	     (if initial-str
+		 nil
+	       (car viper-ex-history))
+	     map
+	     (if initial-str
+		 " [Type command to execute on current region]"))))
     (save-window-excursion
       ;; just a precaution
       (setq viper-ex-work-buf (get-buffer-create viper-ex-work-buf-name))
@@ -1101,7 +1095,7 @@ reversed."
 	 beg end cont val)
 
     (viper-add-keymap ex-read-filename-map
-		    (if viper-emacs-p
+		    (if (featurep 'emacs)
 			minibuffer-local-completion-map
 		      read-file-name-map))
 
@@ -1236,7 +1230,7 @@ reversed."
 		(read-string "[Hit return to confirm] ")
 	      (quit
 	       (save-excursion (kill-buffer " *delete text*"))
-	       (error "")))
+	       (error "Viper bell")))
 	    (save-excursion (kill-buffer " *delete text*")))
 	(if ex-buffer
 	    (cond ((viper-valid-register ex-buffer '(Letter))
@@ -1556,7 +1550,7 @@ reversed."
       ;; setup buffer
       (if (setq wind (viper-get-visible-buffer-window buf))
 	  ()
-	(setq wind (get-lru-window (if viper-xemacs-p nil 'visible)))
+	(setq wind (get-lru-window (if (featurep 'xemacs) nil 'visible)))
 	(set-window-buffer wind buf))
 
       (if (viper-window-display-p)
@@ -1745,10 +1739,10 @@ reversed."
 	   (setq var "blink-matching-paren"
 		 val "nil"))
 	  ((member var '("ws" "wrapscan"))
-	   (setq var "viper-search-wrap-around-t"
+	   (setq var "viper-search-wrap-around"
 		 val "t"))
 	  ((member var '("nows" "nowrapscan"))
-	   (setq var "viper-search-wrap-around-t"
+	   (setq var "viper-search-wrap-around"
 		 val "nil")))
     (if (and set-cmd (eq val 0)) ; value must be set by the user
 	(let ((cursor-in-echo-area t))
@@ -1876,7 +1870,7 @@ reversed."
   (condition-case nil
       (progn
 	(pop-to-buffer (get-buffer-create "*info*"))
-	(info (if viper-xemacs-p "viper.info" "viper"))
+	(info (if (featurep 'xemacs) "viper.info" "viper"))
 	(message "Type `i' to search for a specific topic"))
     (error (beep 1)
 	   (with-output-to-temp-buffer " *viper-info*"
@@ -1885,7 +1879,7 @@ The Info file for Viper does not seem to be installed.
 
 This file is part of the standard distribution of %sEmacs.
 Please contact your system administrator. "
-			    (if viper-xemacs-p "X" "")
+			    (if (featurep 'xemacs) "X" "")
 			    ))))))
 
 ;; Ex source command.  Loads the file specified as argument or `~/.viper'
@@ -2079,10 +2073,9 @@ Please contact your system administrator. "
 	      ;; create temp buffer for the region
 	      (setq temp-buf (get-buffer-create " *ex-write*"))
 	      (set-buffer temp-buf)
-	      (viper-cond-compile-for-xemacs-or-emacs
-	       (set-visited-file-name ex-file) ; xemacs
-	       (set-visited-file-name ex-file 'noquerry) ; emacs
-	       )
+	      (if (featurep 'xemacs)
+		  (set-visited-file-name ex-file)
+		(set-visited-file-name ex-file 'noquery))
 	      (erase-buffer)
 	      (if (and file-exists ex-append)
 		  (insert-file-contents ex-file))
@@ -2218,9 +2211,11 @@ Type 'mak ' (including the space) to run make with no args."
 	(pos2 (viper-line-pos 'end))
 	lines file info)
     (setq lines (count-lines (point-min) (viper-line-pos 'end))
-	  file (if (buffer-file-name)
-		   (concat (viper-abbreviate-file-name (buffer-file-name)) ":")
-		 (concat (buffer-name) " [Not visiting any file]:"))
+	  file (cond ((buffer-file-name)
+		      (concat (viper-abbreviate-file-name (buffer-file-name)) ":"))
+		     ((buffer-file-name (buffer-base-buffer))
+		      (concat (viper-abbreviate-file-name (buffer-file-name (buffer-base-buffer))) " (indirect buffer):"))
+		     (t (concat (buffer-name) " [Not visiting any file]:")))
 	  info (format "line=%d/%d pos=%d/%d col=%d %s"
 		       (if (= pos1 pos2)
 			   (1+ lines)
@@ -2270,7 +2265,7 @@ Type 'mak ' (including the space) to run make with no args."
     (princ (if viper-re-search "magic\n" "nomagic\n"))
     (princ (if buffer-read-only "readonly\n" "noreadonly\n"))
     (princ (if blink-matching-paren "showmatch\n" "noshowmatch\n"))
-    (princ (if viper-search-wrap-around-t "wrapscan\n" "nowrapscan\n"))
+    (princ (if viper-search-wrap-around "wrapscan\n" "nowrapscan\n"))
     (princ (format "shiftwidth \t\t= %S\n" viper-shift-width))
     (princ (format "tabstop (local) \t= %S\n" tab-width))
     (princ (format "tabstop (global) \t= %S\n" (default-value 'tab-width)))
@@ -2320,5 +2315,5 @@ Type 'mak ' (including the space) to run make with no args."
 
 
 
-;;; arch-tag: 56b80d36-f880-4d10-bd66-85ad91a295db
+;; arch-tag: 56b80d36-f880-4d10-bd66-85ad91a295db
 ;;; viper-ex.el ends here

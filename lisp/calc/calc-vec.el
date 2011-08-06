@@ -1,17 +1,17 @@
 ;;; calc-vec.el --- vector functions for Calc
 
 ;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -31,6 +29,10 @@
 
 (require 'calc-ext)
 (require 'calc-macs)
+
+;; Declare functions which are defined elsewhere.
+(declare-function math-read-expr-level "calc-aent" (exp-prec &optional exp-term))
+
 
 (defun calc-display-strings (n)
   (interactive "P")
@@ -474,6 +476,11 @@
   (interactive "P")
   (calc-wrapper
    (calc-binary-op "cros" 'calcFunc-cross arg)))
+
+(defun calc-kron (arg)
+  (interactive "P")
+  (calc-wrapper
+   (calc-binary-op "kron" 'calcFunc-kron arg)))
 
 (defun calc-remove-duplicates (arg)
   (interactive "P")
@@ -1287,18 +1294,24 @@
 (defun calcFunc-venum (a)
   (setq a (calcFunc-vfloor a t))
   (or (math-constp a) (math-reject-arg a "*Set must be finite"))
-  (let ((p a) next)
-    (while (cdr p)
-      (setq next (cdr p))
-      (if (eq (car-safe (nth 1 p)) 'intv)
-	  (setcdr p (nconc (cdr (calcFunc-index (math-add
-						 (math-sub (nth 3 (nth 1 p))
-							   (nth 2 (nth 1 p)))
-						 1)
-						(nth 2 (nth 1 p))))
-			   (cdr (cdr p)))))
-      (setq p next))
-    a))
+  (let* ((prev a) (this (cdr prev)) this-val next this-last)
+    (while this
+      (setq next (cdr this)
+			this-val (car this))
+      (if (eq (car-safe this-val) 'intv)
+		  (progn
+			(setq this (cdr (calcFunc-index (math-add
+											 (math-sub (nth 3 this-val)
+													   (nth 2 this-val))
+											 1)
+											(nth 2 this-val))))
+			(setq this-last (last this))
+			(setcdr this-last next)
+			(setcdr prev this)
+			(setq prev this-last))
+		(setq prev this))
+	  (setq this next)))
+  a)
 
 (defun calcFunc-vpack (a)
   (setq a (calcFunc-vfloor a t))
@@ -1462,6 +1475,41 @@
     (math-reject-arg a "*Three-vector expected")))
 
 
+;;; Compute a Kronecker product
+(defun calcFunc-kron (x y &optional nocheck)
+  "The Kronecker product of objects X and Y.
+The objects X and Y may be scalars, vectors or matrices.
+The type of the result depends on the types of the operands;
+the product of two scalars is a scalar,
+of one scalar and a vector is a vector,
+of two vectors is a vector.
+of one vector and a matrix is a matrix,
+of two matrices is a matrix."
+  (unless nocheck
+    (cond ((or (math-matrixp x)
+               (math-matrixp y))
+           (unless (math-matrixp x)
+             (setq x (if (math-vectorp x)
+                         (list 'vec x)
+                       (list 'vec (list 'vec x)))))
+           (unless (math-matrixp y)
+             (setq y (if (math-vectorp y)
+                         (list 'vec y)
+                       (list 'vec (list 'vec y))))))
+          ((or (math-vectorp x)
+               (math-vectorp y))
+           (unless (math-vectorp x)
+             (setq x (list 'vec x)))
+           (unless (math-vectorp y)
+             (setq y (list 'vec y))))))
+  (if (math-vectorp x)
+      (let (ret)
+        (dolist (v (cdr x))
+          (dolist (w (cdr y))
+            (setq ret (cons (calcFunc-kron v w t) ret))))
+        (cons 'vec (nreverse ret)))
+    (math-mul x y)))
+
 
 ;; The variable math-rb-close is local to math-read-brackets, but
 ;; is used by math-read-vector, which is called (directly and
@@ -1593,5 +1641,5 @@
 
 (provide 'calc-vec)
 
-;;; arch-tag: 7902a7af-ec69-440a-8635-ebb4db263402
+;; arch-tag: 7902a7af-ec69-440a-8635-ebb4db263402
 ;;; calc-vec.el ends here

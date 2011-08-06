@@ -1,13 +1,13 @@
 /* Process support for GNU Emacs on the Microsoft W32 API.
-   Copyright (C) 1992, 1995, 1999, 2000, 2001, 2002, 2003, 2004,
-		 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+   Copyright (C) 1992, 1995, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
+		 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,10 +15,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
+/*
    Drew Bliss                   Oct 14, 1993
      Adapted from alarm.c by Tim Fleehart
 */
@@ -55,6 +54,7 @@ extern BOOL WINAPI IsValidLocale(LCID, DWORD);
 #endif
 
 #include "lisp.h"
+#include "character.h"
 #include "w32.h"
 #include "w32heap.h"
 #include "systime.h"
@@ -62,6 +62,8 @@ extern BOOL WINAPI IsValidLocale(LCID, DWORD);
 #include "process.h"
 #include "syssignal.h"
 #include "w32term.h"
+#include "dispextern.h"		/* for xstrcasecmp */
+#include "coding.h"
 
 #define RVA_TO_PTR(var,section,filedata) \
   ((void *)((section)->PointerToRawData					\
@@ -70,7 +72,7 @@ extern BOOL WINAPI IsValidLocale(LCID, DWORD);
 
 /* Control whether spawnve quotes arguments as necessary to ensure
    correct parsing by child process.  Because not all uses of spawnve
-   are careful about constructing argv arrays, we make this behaviour
+   are careful about constructing argv arrays, we make this behavior
    conditional (off by default). */
 Lisp_Object Vw32_quote_process_args;
 
@@ -273,7 +275,7 @@ find_child_pid (DWORD pid)
 
 /* Thread proc for child process and socket reader threads. Each thread
    is normally blocked until woken by select() to check for input by
-   reading one char.  When the read completes, char_avail is signalled
+   reading one char.  When the read completes, char_avail is signaled
    to wake up the select emulator and the thread blocks itself again. */
 DWORD WINAPI
 reader_thread (void *arg)
@@ -621,10 +623,10 @@ w32_executable_type (char * filename, int * is_dos_app, int * is_cygnus_app, int
   p = strrchr (filename, '.');
 
   /* We can only identify DOS .com programs from the extension. */
-  if (p && stricmp (p, ".com") == 0)
+  if (p && xstrcasecmp (p, ".com") == 0)
     *is_dos_app = TRUE;
-  else if (p && (stricmp (p, ".bat") == 0
-		 || stricmp (p, ".cmd") == 0))
+  else if (p && (xstrcasecmp (p, ".bat") == 0
+		 || xstrcasecmp (p, ".cmd") == 0))
     {
       /* A DOS shell script - it appears that CreateProcess is happy to
 	 accept this (somewhat surprisingly); presumably it looks at
@@ -701,7 +703,7 @@ w32_executable_type (char * filename, int * is_dos_app, int * is_cygnus_app, int
                 {
                   char * dllname = RVA_TO_PTR (imports->Name, section,
                                                executable);
-                  
+
                   /* The exact name of the cygwin dll has changed with
                      various releases, but hopefully this will be reasonably
                      future proof.  */
@@ -972,7 +974,7 @@ sys_spawnve (int mode, char *cmdname, char **argv, char **envp)
 #if 0
 	  /* This version does not escape quotes if they occur at the
 	     beginning or end of the arg - this could lead to incorrect
-	     behaviour when the arg itself represents a command line
+	     behavior when the arg itself represents a command line
 	     containing quoted args.  I believe this was originally done
 	     as a hack to make some things work, before
 	     `w32-quote-process-args' was added.  */
@@ -1087,7 +1089,7 @@ sys_spawnve (int mode, char *cmdname, char **argv, char **envp)
 
    To reduce the number of places in which Emacs can be hung such that
    C-g is not able to interrupt it, we always wait on interrupt_handle
-   (which is signalled by the input thread when C-g is detected).  If we
+   (which is signaled by the input thread when C-g is detected).  If we
    detect that we were woken up by C-g, we return -1 with errno set to
    EINTR as on Unix.  */
 
@@ -1184,7 +1186,7 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
 		current_status = cp->status;
 		if (WaitForSingleObject (cp->char_avail, 0) == WAIT_OBJECT_0)
 		  {
-		    /* char_avail has been signalled, so status (which may
+		    /* char_avail has been signaled, so status (which may
 		       have changed) should indicate read has completed
 		       but has not been acknowledged. */
 		    current_status = cp->status;
@@ -1195,9 +1197,9 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
 		  }
 		else
 		  {
-		    /* char_avail has not been signalled, so status should
+		    /* char_avail has not been signaled, so status should
 		       indicate that read is in progress; small possibility
-		       that read has completed but event wasn't yet signalled
+		       that read has completed but event wasn't yet signaled
 		       when we tested it (because a context switch occurred
 		       or if running on separate CPUs). */
 		    if (current_status != STATUS_READ_READY
@@ -1263,7 +1265,7 @@ count_children:
 
   start_time = GetTickCount ();
 
-  /* Wait for input or child death to be signalled.  If user input is
+  /* Wait for input or child death to be signaled.  If user input is
      allowed, then also accept window messages.  */
   if (FD_ISSET (0, &orfds))
     active = MsgWaitForMultipleObjects (nh + nc, wait_hnd, FALSE, timeout_ms,
@@ -1300,7 +1302,7 @@ count_children:
     abort ();
 
   /* Loop over all handles after active (now officially documented as
-     being the first signalled handle in the array).  We do this to
+     being the first signaled handle in the array).  We do this to
      ensure fairness, so that all channels with data available will be
      processed - otherwise higher numbered channels could be starved. */
   do
@@ -1780,7 +1782,7 @@ All path elements in FILENAME are converted to their short names.  */)
   filename = Fexpand_file_name (filename, Qnil);
 
   /* luckily, this returns the short version of each element in the path.  */
-  if (GetShortPathName (SDATA (filename), shortname, MAX_PATH) == 0)
+  if (GetShortPathName (SDATA (ENCODE_FILE (filename)), shortname, MAX_PATH) == 0)
     return Qnil;
 
   CORRECT_DIR_SEPS (shortname);
@@ -1798,18 +1800,29 @@ All path elements in FILENAME are converted to their long names.  */)
      Lisp_Object filename;
 {
   char longname[ MAX_PATH ];
+  int drive_only = 0;
 
   CHECK_STRING (filename);
+
+  if (SBYTES (filename) == 2
+      && *(SDATA (filename) + 1) == ':')
+    drive_only = 1;
 
   /* first expand it.  */
   filename = Fexpand_file_name (filename, Qnil);
 
-  if (!w32_get_long_filename (SDATA (filename), longname, MAX_PATH))
+  if (!w32_get_long_filename (SDATA (ENCODE_FILE (filename)), longname, MAX_PATH))
     return Qnil;
 
   CORRECT_DIR_SEPS (longname);
 
-  return build_string (longname);
+  /* If we were passed only a drive, make sure that a slash is not appended
+     for consistency with directories.  Allow for drive mapping via SUBST
+     in case expand-file-name is ever changed to expand those.  */
+  if (drive_only && longname[1] == ':' && longname[2] == '/' && !longname[3])
+    longname[2] = '\0';
+
+  return DECODE_FILE (build_string (longname));
 }
 
 DEFUN ("w32-set-process-priority", Fw32_set_process_priority,
@@ -1933,7 +1946,7 @@ DEFUN ("w32-get-locale-info", Fw32_get_locale_info,
        Sw32_get_locale_info, 1, 2, 0,
        doc: /* Return information about the Windows locale LCID.
 By default, return a three letter locale code which encodes the default
-language as the first two characters, and the country or regionial variant
+language as the first two characters, and the country or regional variant
 as the third letter.  For example, ENU refers to `English (United States)',
 while ENC means `English (Canadian)'.
 
@@ -1970,7 +1983,7 @@ If LCID (a 16-bit number) is not a valid locale, the result is nil.  */)
 				LOCALE_SLANGUAGE | LOCALE_USE_CP_ACP,
 				full_name, sizeof (full_name));
       if (got_full)
-	return build_string (full_name);
+	return DECODE_SYSTEM (build_string (full_name));
     }
   else if (NUMBERP (longform))
     {
@@ -2259,10 +2272,8 @@ If successful, the new layout id is returned, otherwise nil.  */)
 
 syms_of_ntproc ()
 {
-  Qhigh = intern ("high");
-  Qlow = intern ("low");
-  staticpro (&Qhigh);
-  staticpro (&Qlow);
+  DEFSYM (Qhigh, "high");
+  DEFSYM (Qlow, "low");
 
 #ifdef HAVE_SOCKETS
   defsubr (&Sw32_has_winsock);
@@ -2354,12 +2365,18 @@ the truename of a file can be slow.  */);
 #endif
 
   DEFVAR_LISP ("w32-get-true-file-attributes", &Vw32_get_true_file_attributes,
-	       doc: /* If non-nil, determine accurate link count and file type in `file-attributes'.
-This option is mostly useful for files on NTFS volumes, where
-hard links are supported.  The default value `local' means only do
-this for files on local fixed drives.  Any other non-nil value means do
-this even on remote and removable drives where the performance impact
-may be noticeable even on modern hardware.  */);
+	       doc: /* Non-nil means determine accurate file attributes in `file-attributes'.
+This option controls whether to issue additional system calls to determine
+accurate link counts, file type, and ownership information.  It is more
+useful for files on NTFS volumes, where hard links and file security are
+supported, than on volumes of the FAT family.
+
+Without these system calls, link count will always be reported as 1 and file
+ownership will be attributed to the current user.
+The default value `local' means only issue these system calls for files
+on local fixed drives.  A value of nil means never issue them.
+Any other non-nil value means do this even on remote and removable drives
+where the performance impact may be noticeable even on modern hardware.  */);
   Vw32_get_true_file_attributes = Qlocal;
 
   staticpro (&Vw32_valid_locale_ids);

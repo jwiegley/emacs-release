@@ -1,7 +1,7 @@
 ;;; nnmh.el --- mhspool access for Gnus
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;;	Masanobu UMEDA <umerin@flab.flab.fujitsu.junet>
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -77,8 +75,7 @@ as unread by Gnus.")
 (nnoo-define-basics nnmh)
 
 (deffoo nnmh-retrieve-headers (articles &optional newsgroup server fetch-old)
-  (save-excursion
-    (set-buffer nntp-server-buffer)
+  (with-current-buffer nntp-server-buffer
     (erase-buffer)
     (let* ((file nil)
 	   (number (length articles))
@@ -176,7 +173,7 @@ as unread by Gnus.")
 	(nnheader-re-read-dir pathname)
 	(setq dir
 	      (sort
-	       (mapcar (lambda (name) (string-to-number name))
+	       (mapcar 'string-to-number
 		       (directory-files pathname nil "^[0-9]+$" t))
 	       '<))
 	(cond
@@ -211,7 +208,6 @@ as unread by Gnus.")
   (setq dir (expand-file-name dir))
   ;; Recurse down all directories.
   (let ((dirs (and (file-readable-p dir)
-		   (> (nth 1 (file-attributes (file-chase-links dir))) 2)
 		   (nnheader-directory-files dir t nil t)))
 	rdir)
     ;; Recurse down directories.
@@ -223,12 +219,10 @@ as unread by Gnus.")
 	(nnmh-request-list-1 rdir))))
   ;; For each directory, generate an active file line.
   (unless (string= (expand-file-name nnmh-toplev) dir)
-    (let ((files (mapcar
-		  (lambda (name) (string-to-number name))
-		  (directory-files dir nil "^[0-9]+$" t))))
+    (let ((files (mapcar 'string-to-number
+			 (directory-files dir nil "^[0-9]+$" t))))
       (when files
-	(save-excursion
-	  (set-buffer nntp-server-buffer)
+	(with-current-buffer nntp-server-buffer
 	  (goto-char (point-max))
 	  (insert
 	   (format
@@ -239,7 +233,7 @@ as unread by Gnus.")
 		(file-truename (file-name-as-directory
 				(expand-file-name nnmh-toplev))))
 	       dir)
-	      (mm-string-as-multibyte
+	      (mm-string-to-multibyte   ;Why?  Isn't it multibyte already?
 	       (mm-encode-coding-string
 		(nnheader-replace-chars-in-string
 		 (substring dir (match-end 0))
@@ -293,15 +287,14 @@ as unread by Gnus.")
 (deffoo nnmh-close-group (group &optional server)
   t)
 
-(deffoo nnmh-request-move-article (article group server
-					   accept-form &optional last)
+(deffoo nnmh-request-move-article (article group server accept-form 
+					   &optional last move-is-internal)
   (let ((buf (get-buffer-create " *nnmh move*"))
 	result)
     (and
      (nnmh-deletable-article-p group article)
      (nnmh-request-article article group server)
-     (save-excursion
-       (set-buffer buf)
+     (with-current-buffer buf
        (erase-buffer)
        (insert-buffer-substring nntp-server-buffer)
        (setq result (eval accept-form))
@@ -341,8 +334,7 @@ as unread by Gnus.")
 
 (deffoo nnmh-request-replace-article (article group buffer)
   (nnmh-possibly-change-directory group)
-  (save-excursion
-    (set-buffer buffer)
+  (with-current-buffer buffer
     (nnmh-possibly-create-directory group)
     (ignore-errors
       (nnmail-write-region
@@ -359,11 +351,9 @@ as unread by Gnus.")
 	    nnmh-group-alist)
       (nnmh-possibly-create-directory group)
       (nnmh-possibly-change-directory group server)
-      (let ((articles (mapcar
-		       (lambda (file)
-			 (string-to-number file))
-		       (directory-files
-			nnmh-current-directory nil "^[0-9]+$"))))
+      (let ((articles (mapcar 'string-to-number
+			      (directory-files
+			       nnmh-current-directory nil "^[0-9]+$"))))
 	(when articles
 	  (setcar active (apply 'min articles))
 	  (setcdr active (apply 'max articles))))))
@@ -487,10 +477,8 @@ as unread by Gnus.")
 	(gnus-make-directory dir))
       ;; Find the highest number in the group.
       (let ((files (sort
-		    (mapcar
-		     (lambda (f)
-		       (string-to-number f))
-		     (directory-files dir nil "^[0-9]+$"))
+		    (mapcar 'string-to-number
+			    (directory-files dir nil "^[0-9]+$"))
 		    '>)))
 	(when files
 	  (setcdr active (car files)))))
@@ -512,7 +500,7 @@ as unread by Gnus.")
   ;; articles in this folder.  The articles that are "new" will be
   ;; marked as unread by Gnus.
   (let* ((dir nnmh-current-directory)
-	 (files (sort (mapcar (function (lambda (name) (string-to-number name)))
+	 (files (sort (mapcar 'string-to-number
 			      (directory-files nnmh-current-directory
 					       nil "^[0-9]+$" t))
 		      '<))
@@ -586,5 +574,5 @@ as unread by Gnus.")
 
 (provide 'nnmh)
 
-;;; arch-tag: 36c12a98-3bad-44b3-9953-628078ef0e04
+;; arch-tag: 36c12a98-3bad-44b3-9953-628078ef0e04
 ;;; nnmh.el ends here

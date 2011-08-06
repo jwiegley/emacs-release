@@ -1,6 +1,6 @@
 ;;; x-dnd.el --- drag and drop support for X.
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Jan Dj,Ad(Brv <jan.h.d@swipnet.se>
 ;; Maintainer: FSF
@@ -8,10 +8,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -35,12 +33,12 @@
 ;;; Customizable variables
 (defcustom x-dnd-test-function 'x-dnd-default-test-function
   "The function drag and drop uses to determine if to accept or reject a drop.
-The function takes three arguments, WINDOW ACTION and TYPES.
+The function takes three arguments, WINDOW, ACTION and TYPES.
 WINDOW is where the mouse is when the function is called.  WINDOW may be a
 frame if the mouse isn't over a real window (i.e. menu bar, tool bar or
 scroll bar).  ACTION is the suggested action from the drag and drop source,
-one of the symbols move, copy link or ask.  TYPES is a list of available types
-for the drop.
+one of the symbols move, copy, link or ask.  TYPES is a list of available
+types for the drop.
 
 The function shall return nil to reject the drop or a cons with two values,
 the wanted action as car and the wanted type as cdr.  The wanted action
@@ -73,8 +71,8 @@ the drop is rejected.  The function takes three arguments, WINDOW, ACTION
 and DATA.  WINDOW is where the drop occurred, ACTION is the action for
 this drop (copy, move, link, private or ask) as determined by a previous
 call to `x-dnd-test-function'.  DATA is the drop data.
-The function shall return the action used (copy, move, link or private) if drop
-is successful, nil if not."
+The function shall return the action used (copy, move, link or private)
+if drop is successful, nil if not."
   :version "22.1"
   :type 'alist
   :group 'x)
@@ -117,21 +115,22 @@ any protocol specific data.")
 
 (defvar x-dnd-empty-state [nil nil nil nil nil nil nil])
 
-
+(declare-function x-register-dnd-atom "xselect.c")
 
 (defun x-dnd-init-frame (&optional frame)
   "Setup drag and drop for FRAME (i.e. create appropriate properties)."
-  (x-register-dnd-atom "DndProtocol" frame)
-  (x-register-dnd-atom "_MOTIF_DRAG_AND_DROP_MESSAGE" frame)
-  (x-register-dnd-atom "XdndEnter" frame)
-  (x-register-dnd-atom "XdndPosition" frame)
-  (x-register-dnd-atom "XdndLeave" frame)
-  (x-register-dnd-atom "XdndDrop" frame)
-  (x-dnd-init-xdnd-for-frame frame)
-  (x-dnd-init-motif-for-frame frame))
+  (when (eq 'x (window-system frame))
+    (x-register-dnd-atom "DndProtocol" frame)
+    (x-register-dnd-atom "_MOTIF_DRAG_AND_DROP_MESSAGE" frame)
+    (x-register-dnd-atom "XdndEnter" frame)
+    (x-register-dnd-atom "XdndPosition" frame)
+    (x-register-dnd-atom "XdndLeave" frame)
+    (x-register-dnd-atom "XdndDrop" frame)
+    (x-dnd-init-xdnd-for-frame frame)
+    (x-dnd-init-motif-for-frame frame)))
 
 (defun x-dnd-get-state-cons-for-frame (frame-or-window)
-  "Return the entry in x-dnd-current-state for a frame or window."
+  "Return the entry in `x-dnd-current-state' for a frame or window."
   (let* ((frame (if (framep frame-or-window) frame-or-window
 		  (window-frame frame-or-window)))
 	 (display (frame-parameter frame 'display)))
@@ -141,13 +140,13 @@ any protocol specific data.")
     (assoc display x-dnd-current-state)))
 
 (defun x-dnd-get-state-for-frame (frame-or-window)
-  "Return the state in x-dnd-current-state for a frame or window."
+  "Return the state in `x-dnd-current-state' for a frame or window."
   (cdr (x-dnd-get-state-cons-for-frame frame-or-window)))
 
 (defun x-dnd-default-test-function (window action types)
   "The default test function for drag and drop.
-WINDOW is where the mouse is when this function is called.  It may be a frame
-if the mouse is over the menu bar, scroll bar or tool bar.
+WINDOW is where the mouse is when this function is called.  It may be
+a frame if the mouse is over the menu bar, scroll bar or tool bar.
 ACTION is the suggested action from the source, and TYPES are the
 types the drop data can have.  This function only accepts drops with
 types in `x-dnd-known-types'.  It always returns the action private."
@@ -171,7 +170,7 @@ FRAME-OR-WINDOW is the frame or window that the mouse is over."
 WINDOW is the window the mouse is over.  ACTION is the suggested
 action from the source.  If nothing has changed, return the last
 action and type we got from `x-dnd-test-function'."
-  (let ((buffer (when (and (windowp window) (window-live-p window))
+  (let ((buffer (when (window-live-p window)
 		  (window-buffer window)))
 	(current-state (x-dnd-get-state-for-frame window)))
     (when (or (not (equal buffer (aref current-state 0)))
@@ -206,16 +205,14 @@ EXTRA-DATA is data needed for a specific protocol."
     (when types (aset current-state 2 types))
     (when extra-data (aset current-state 6 extra-data))
     (aset current-state 1 window)
-    (aset current-state 0 (if (and (windowp window)
-				   (window-live-p window))
-			      (window-buffer window) nil))
+    (aset current-state 0 (and (window-live-p window) (window-buffer window)))
     (setcdr (x-dnd-get-state-cons-for-frame window) current-state)))
 
 
 (defun x-dnd-handle-moz-url (window action data)
   "Handle one item of type text/x-moz-url.
 WINDOW is the window where the drop happened.  ACTION is ignored.
-DATA is the moz-url, which is formatted as two strings separated by \r\n.
+DATA is the moz-url, which is formatted as two strings separated by \\r\\n.
 The first string is the URL, the second string is the title of that URL.
 DATA is encoded in utf-16.  Decode the URL and call `x-dnd-handle-uri-list'."
   ;; Mozilla and applications based on it (Galeon for example) uses
@@ -252,11 +249,11 @@ TEXT is the text as a string, WINDOW is the window where the drop happened."
 (defun x-dnd-handle-uri-list (window action string)
   "Split an uri-list into separate URIs and call `dnd-handle-one-url'.
 WINDOW is the window where the drop happened.
-STRING is the uri-list as a string.  The URIs are separated by \r\n."
+STRING is the uri-list as a string.  The URIs are separated by \\r\\n."
   (let ((uri-list (split-string string "[\0\r\n]" t))
 	retval)
     (dolist (bf uri-list)
-      ;; If one URL is handeled, treat as if the whole drop succeeded.
+      ;; If one URL is handled, treat as if the whole drop succeeded.
       (let ((did-action (dnd-handle-one-url window action bf)))
 	(when did-action (setq retval did-action))))
     retval))
@@ -271,7 +268,7 @@ STRING is the file names as a string, separated by nulls."
 			 default-file-name-coding-system)))
 	retval)
     (dolist (bf uri-list)
-      ;; If one URL is handeled, treat as if the whole drop succeeded.
+      ;; If one URL is handled, treat as if the whole drop succeeded.
       (if coding (setq bf (encode-coding-string bf coding)))
       (let* ((file-uri (concat "file://"
 			       (mapconcat 'url-hexify-string
@@ -285,7 +282,7 @@ STRING is the file names as a string, separated by nulls."
   "Choose which type we want to receive for the drop.
 TYPES are the types the source of the drop offers, a vector of type names
 as strings or symbols.  Select among the types in `x-dnd-known-types' or
-KNOWN-TYPES if given,  and return that type name.
+KNOWN-TYPES if given, and return that type name.
 If no suitable type is found, return nil."
   (let* ((known-list (or known-types x-dnd-known-types))
 	 (first-known-type (car known-list))
@@ -306,10 +303,10 @@ If no suitable type is found, return nil."
 
 (defun x-dnd-drop-data (event frame window data type)
   "Drop one data item onto a frame.
-EVENT is the client message for the drop, FRAME is the frame the drop occurred
-on.  WINDOW is the window of FRAME where the drop happened.  DATA is the data
-received from the source, and type is the type for DATA, see
-`x-dnd-types-alist').
+EVENT is the client message for the drop, FRAME is the frame the drop
+occurred on.  WINDOW is the window of FRAME where the drop happened.
+DATA is the data received from the source, and type is the type for DATA,
+see `x-dnd-types-alist').
 
 Returns the action used (move, copy, link, private) if drop was successful,
 nil if not."
@@ -319,7 +316,7 @@ nil if not."
 	 (action (aref state 5))
 	 (w (posn-window (event-start event))))
     (when handler
-      (if (and (windowp w) (window-live-p w)
+      (if (and (window-live-p w)
 	       (not (window-minibuffer-p w))
 	       (not (window-dedicated-p w)))
 	  ;; If dropping in an ordinary window which we could use,
@@ -359,6 +356,9 @@ Currently XDND, Motif and old KDE 1.x protocols are recognized."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;  Old KDE protocol.  Only dropping of files.
 
+(declare-function x-window-property "xfns.c"
+		  (prop &optional frame type source delete-p vector-ret-p))
+
 (defun x-dnd-handle-old-kde (event frame window message format data)
   "Open the files in a KDE 1.x drop."
   (let ((values (x-window-property "DndSelection" frame nil 0 t)))
@@ -379,6 +379,9 @@ Currently XDND, Motif and old KDE 1.x protocols are recognized."
     ("XdndActionAsk" . ask))
   "Mapping from XDND action types to lisp symbols.")
 
+(declare-function x-change-window-property "xfns.c"
+		  (prop value &optional frame type format outer-P))
+
 (defun x-dnd-init-xdnd-for-frame (frame)
   "Set the XdndAware property for FRAME to indicate that we do XDND."
   (x-change-window-property "XdndAware"
@@ -386,10 +389,10 @@ Currently XDND, Motif and old KDE 1.x protocols are recognized."
 			    frame "ATOM" 32 t))
 
 (defun x-dnd-get-drop-width-height (frame w accept)
-  "Return the widht/height to be sent in a XDndStatus message.
+  "Return the width/height to be sent in a XDndStatus message.
 FRAME is the frame and W is the window where the drop happened.
 If ACCEPT is nil return 0 (empty rectangle),
-otherwise if W is a window, return its widht/height,
+otherwise if W is a window, return its width/height,
 otherwise return the frame width/height."
   (if accept
       (if (windowp w)   ;; w is not a window if dropping on the menu bar,
@@ -422,6 +425,12 @@ otherwise return the frame coordinates."
 	   (+ frame-real-left (nth 0 edges))
 	   (+ frame-real-top (nth 1 edges))))
       (cons frame-real-left frame-real-top))))
+
+(declare-function x-get-atom-name "xselect.c" (value &optional frame))
+(declare-function x-send-client-message "xselect.c"
+		  (display dest from message-type format values))
+(declare-function x-get-selection-internal "xselect.c"
+		  (selection-symbol target-type &optional time-stamp))
 
 (defun x-dnd-handle-xdnd (event frame window message format data)
   "Receive one XDND event (client message) and send the appropriate reply.
@@ -511,7 +520,7 @@ FORMAT is 32 (not used).  MESSAGE is the data part of an XClientMessageEvent."
 ;;;  Motif protocol.
 
 (defun x-dnd-init-motif-for-frame (frame)
-  "Set _MOTIF_DRAG_RECEIVER_INFO  for FRAME to indicate that we do Motif DND."
+  "Set _MOTIF_DRAG_RECEIVER_INFO for FRAME to indicate that we do Motif DND."
   (x-change-window-property "_MOTIF_DRAG_RECEIVER_INFO"
 			    (list
 			     (byteorder)
@@ -754,5 +763,5 @@ FORMAT is 32 (not used).  MESSAGE is the data part of an XClientMessageEvent."
 
 (provide 'x-dnd)
 
-;;; arch-tag: b621fb7e-50da-4323-850b-5fc71ae64621
+;; arch-tag: b621fb7e-50da-4323-850b-5fc71ae64621
 ;;; x-dnd.el ends here

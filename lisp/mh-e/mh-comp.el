@@ -1,7 +1,8 @@
 ;;; mh-comp.el --- MH-E functions for composing and sending messages
 
 ;; Copyright (C) 1993, 1995, 1997,
-;;  2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -10,10 +11,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +22,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -118,14 +117,11 @@ user's MH directory, then in the system MH lib directory.")
   "Regexp of header lines to remove before offering a message as a new draft\\<mh-folder-mode-map>.
 Used by the \\[mh-edit-again] and \\[mh-extract-rejected-mail] commands.")
 
-(defvar mh-letter-mode-syntax-table nil
+(defvar mh-letter-mode-syntax-table
+  (let ((syntax-table (make-syntax-table text-mode-syntax-table)))
+    (modify-syntax-entry ?% "." syntax-table)
+    syntax-table)
   "Syntax table used by MH-E while in MH-Letter mode.")
-
-(if mh-letter-mode-syntax-table
-    ()
-  (setq mh-letter-mode-syntax-table
-        (make-syntax-table text-mode-syntax-table))
-  (modify-syntax-entry ?% "." mh-letter-mode-syntax-table))
 
 (defvar mh-send-args ""
   "Extra args to pass to \"send\" command.")
@@ -135,6 +131,10 @@ Used by the \\[mh-edit-again] and \\[mh-extract-rejected-mail] commands.")
 
 (defvar mh-annotate-field nil
   "Field name for message annotation.")
+
+(defvar mh-annotate-list nil
+  "Messages annotated, either a sequence name or a list of message numbers.
+This variable can be used by `mh-annotate-msg-hook'.")
 
 (defvar mh-insert-auto-fields-done-local nil
   "Buffer-local variable set when `mh-insert-auto-fields' called successfully.")
@@ -247,7 +247,10 @@ message is actually sent. You can do away with this confirmation
 by turning off the option `mh-auto-fields-prompt-flag'.
 
 In case the MH \"send\" program is installed under a different name,
-use `mh-send-prog' to tell MH-E the name."
+use `mh-send-prog' to tell MH-E the name.
+
+The hook `mh-annotate-msg-hook' is run after annotating the
+message and scan line."
   (interactive "P")
   (run-hooks 'mh-before-send-letter-hook)
   (if (and (mh-insert-auto-fields t)
@@ -291,13 +294,15 @@ use `mh-send-prog' to tell MH-E the name."
     (cond (arg
            (pop-to-buffer mh-mail-delivery-buffer)
            (erase-buffer)
-           (mh-exec-cmd-output mh-send-prog t "-watch" "-nopush"
-                               "-nodraftfolder" mh-send-args file-name)
+           (mh-exec-cmd-output mh-send-prog t
+                               "-nodraftfolder" "-watch" "-nopush"
+                               (split-string mh-send-args) file-name)
            (goto-char (point-max))      ; show the interesting part
            (recenter -1)
            (set-buffer draft-buffer))   ; for annotation below
           (t
-           (mh-exec-cmd-daemon mh-send-prog nil "-nodraftfolder" "-noverbose"
+           (mh-exec-cmd-daemon mh-send-prog nil
+                               "-nodraftfolder" "-noverbose"
                                (split-string mh-send-args) file-name)))
     (if mh-annotate-char
         (mh-annotate-msg mh-sent-from-msg
@@ -497,7 +502,9 @@ See also `mh-compose-forward-as-mime-flag',
                   (dolist (msg msgs)
                     (setq i (1+ i))
                     (mh-mml-forward-message (format description i)
-                                            folder msg))))))
+                                            folder msg)
+                    ;; Was inserted before us, move to end of file to preserve order
+                    (goto-char (point-max)))))))
         ;; Postition just before forwarded message
         (if (re-search-forward "^------- Forwarded Message" nil t)
             (forward-line -1)
@@ -540,7 +547,10 @@ default MESSAGE is the current message.
 Also investigate the command \\[mh-edit-again] for another way to
 redistribute messages.
 
-See also `mh-redist-full-contents-flag'."
+See also `mh-redist-full-contents-flag'.
+
+The hook `mh-annotate-msg-hook' is run after annotating the
+message and scan line."
   (interactive (list (mh-read-address "Redist-To: ")
                      (mh-read-address "Redist-Cc: ")
                      (mh-get-msg-num t)))
@@ -646,7 +656,7 @@ See also `mh-reply-show-message-flag',
          (show-buffer mh-show-buffer)
          (config (current-window-configuration))
          (group-reply (or (equal reply-to "cc") (equal reply-to "all")))
-         (form-file (cond ((and (mh-variant-p 'nmh 'mu-mh) group-reply
+         (form-file (cond ((and (mh-variant-p 'nmh 'gnu-mh) group-reply
                                 (stringp mh-repl-group-formfile))
                            mh-repl-group-formfile)
                           ((stringp mh-repl-formfile) mh-repl-formfile)
@@ -660,7 +670,7 @@ See also `mh-reply-show-message-flag',
                         '("-nocc" "all"))
                        ((equal reply-to "to")
                         '("-cc" "to"))
-                       (group-reply (if (mh-variant-p 'nmh 'mu-mh)
+                       (group-reply (if (mh-variant-p 'nmh 'gnu-mh)
                                         '("-group" "-nocc" "me")
                                       '("-cc" "all" "-nocc" "me"))))
                  (cond ((or (eq mh-yank-behavior 'autosupercite)
@@ -922,8 +932,8 @@ The versions of MH-E, Emacs, and MH are shown."
     (setq mh-x-mailer-string
           (format "MH-E %s; %s; %sEmacs %s"
                   mh-version mh-variant-in-use
-                  (if mh-xemacs-flag "X" "GNU ")
-                  (cond ((not mh-xemacs-flag)
+                  (if (featurep 'xemacs) "X" "GNU ")
+                  (cond ((not (featurep 'xemacs))
                          (string-match "[0-9]+\\.[0-9]+\\(\\.[0-9]+\\)?"
                                        emacs-version)
                          (match-string 0 emacs-version))
@@ -973,18 +983,23 @@ This should be the last function called when composing the draft."
     (goto-char (point-max))
     (mh-letter-next-header-field)))
 
-(defun mh-annotate-msg (msg buffer note &rest args)
-  "Mark MSG in BUFFER with character NOTE and annotate message with ARGS.
-MSG can be a message number, a list of message numbers, or a
-sequence."
-  (apply 'mh-exec-cmd "anno" buffer
+(defun mh-annotate-msg (msg folder note &rest args)
+  "Mark MSG in FOLDER with character NOTE and annotate message with ARGS.
+MSG can be a message number, a list of message numbers, or a sequence.
+The hook `mh-annotate-msg-hook' is run after annotating; see its
+documentation for variables it can use."
+  (apply 'mh-exec-cmd "anno" folder
          (if (listp msg) (append msg args) (cons msg args)))
   (save-excursion
-    (cond ((get-buffer buffer)          ; Buffer may be deleted
-           (set-buffer buffer)
+    (cond ((get-buffer folder)          ; Buffer may be deleted
+           (set-buffer folder)
            (mh-iterate-on-range nil msg
              (mh-notate nil note
-                        (+ mh-cmd-note mh-scan-field-destination-offset)))))))
+                        (+ mh-cmd-note mh-scan-field-destination-offset))))))
+  (let ((mh-current-folder folder)
+        ;; mh-annotate-list is a sequence name or a list of message numbers
+        (mh-annotate-list (if (numberp msg) (list msg) msg)))
+    (run-hooks 'mh-annotate-msg-hook)))
 
 (defun mh-insert-header-separator ()
   "Insert `mh-mail-header-separator', if absent."

@@ -1,20 +1,16 @@
 ;;; mh-loaddefs.el --- automatically extracted autoloads
-
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
-;; Author: Bill Wohler <wohler@newt.com>
-;; Keywords: mail
-;;; Commentary:
-;;; Change Log:
+;;
 ;;; Code:
+
 
 ;;;### (autoloads (mh-iterate-on-range mh-iterate-on-messages-in-region
 ;;;;;;  mh-do-at-event-location mh-in-show-buffer with-mh-folder-updating
 ;;;;;;  mh-defstruct mh-mark-active-p mh-make-local-hook defmacro-mh
 ;;;;;;  defun-mh mh-funcall-if-exists mh-do-in-xemacs mh-do-in-gnu-emacs
-;;;;;;  mh-require-cl) "mh-acros" "mh-acros.el" (18345 62202))
+;;;;;;  mh-require-cl) "mh-acros" "mh-acros.el" (19005 47398))
 ;;; Generated autoloads from mh-acros.el
 
-(autoload (quote mh-require-cl) "mh-acros" "\
+(autoload 'mh-require-cl "mh-acros" "\
 Macro to load \"cl\" if needed.
 
 Emacs coding conventions require that the \"cl\" package not be
@@ -26,50 +22,50 @@ loads \"cl\" appropriately.
 
 \(fn)" nil (quote macro))
 
-(autoload (quote mh-do-in-gnu-emacs) "mh-acros" "\
+(autoload 'mh-do-in-gnu-emacs "mh-acros" "\
 Execute BODY if in GNU Emacs.
 
 \(fn &rest BODY)" nil (quote macro))
 
-(autoload (quote mh-do-in-xemacs) "mh-acros" "\
+(autoload 'mh-do-in-xemacs "mh-acros" "\
 Execute BODY if in XEmacs.
 
 \(fn &rest BODY)" nil (quote macro))
 
-(autoload (quote mh-funcall-if-exists) "mh-acros" "\
+(autoload 'mh-funcall-if-exists "mh-acros" "\
 Call FUNCTION with ARGS as parameters if it exists.
 
 \(fn FUNCTION &rest ARGS)" nil (quote macro))
 
-(autoload (quote defun-mh) "mh-acros" "\
+(autoload 'defun-mh "mh-acros" "\
 Create function NAME.
 If FUNCTION exists, then NAME becomes an alias for FUNCTION.
 Otherwise, create function NAME with ARG-LIST and BODY.
 
 \(fn NAME FUNCTION ARG-LIST &rest BODY)" nil (quote macro))
 
-(autoload (quote defmacro-mh) "mh-acros" "\
+(autoload 'defmacro-mh "mh-acros" "\
 Create macro NAME.
 If MACRO exists, then NAME becomes an alias for MACRO.
 Otherwise, create macro NAME with ARG-LIST and BODY.
 
 \(fn NAME MACRO ARG-LIST &rest BODY)" nil (quote macro))
 
-(autoload (quote mh-make-local-hook) "mh-acros" "\
+(autoload 'mh-make-local-hook "mh-acros" "\
 Make HOOK local if needed.
 XEmacs and versions of GNU Emacs before 21.1 require
 `make-local-hook' to be called.
 
 \(fn HOOK)" nil (quote macro))
 
-(autoload (quote mh-mark-active-p) "mh-acros" "\
+(autoload 'mh-mark-active-p "mh-acros" "\
 A macro that expands into appropriate code in XEmacs and nil in GNU Emacs.
 In GNU Emacs if CHECK-TRANSIENT-MARK-MODE-FLAG is non-nil then
 check if variable `transient-mark-mode' is active.
 
 \(fn CHECK-TRANSIENT-MARK-MODE-FLAG)" nil (quote macro))
 
-(autoload (quote mh-defstruct) "mh-acros" "\
+(autoload 'mh-defstruct "mh-acros" "\
 Replacement for `defstruct' from the \"cl\" package.
 The `defstruct' in the \"cl\" library produces compiler warnings,
 and generates code that uses functions present in \"cl\" at
@@ -82,7 +78,7 @@ more details.
 
 \(fn NAME-SPEC &rest FIELDS)" nil (quote macro))
 
-(autoload (quote with-mh-folder-updating) "mh-acros" "\
+(autoload 'with-mh-folder-updating "mh-acros" "\
 Format is (with-mh-folder-updating (SAVE-MODIFICATION-FLAG) &body BODY).
 Execute BODY, which can modify the folder buffer without having to
 worry about file locking or the read-only flag, and return its result.
@@ -91,14 +87,14 @@ is unchanged, otherwise it is cleared.
 
 \(fn SAVE-MODIFICATION-FLAG &rest BODY)" nil (quote macro))
 
-(autoload (quote mh-in-show-buffer) "mh-acros" "\
+(autoload 'mh-in-show-buffer "mh-acros" "\
 Format is (mh-in-show-buffer (SHOW-BUFFER) &body BODY).
 Display buffer SHOW-BUFFER in other window and execute BODY in it.
 Stronger than `save-excursion', weaker than `save-window-excursion'.
 
 \(fn SHOW-BUFFER &rest BODY)" nil (quote macro))
 
-(autoload (quote mh-do-at-event-location) "mh-acros" "\
+(autoload 'mh-do-at-event-location "mh-acros" "\
 Switch to the location of EVENT and execute BODY.
 After BODY has been executed return to original window. The
 modification flag of the buffer in the event window is
@@ -109,7 +105,7 @@ preserved.
 (defsubst mh-seq-msgs (sequence) "\
 Extract messages from the given SEQUENCE." (cdr sequence))
 
-(autoload (quote mh-iterate-on-messages-in-region) "mh-acros" "\
+(autoload 'mh-iterate-on-messages-in-region "mh-acros" "\
 Iterate over region.
 
 VAR is bound to the message on the current line as we loop
@@ -119,7 +115,7 @@ If VAR is nil then the loop is executed without any binding.
 
 \(fn VAR BEGIN END &rest BODY)" nil (quote macro))
 
-(autoload (quote mh-iterate-on-range) "mh-acros" "\
+(autoload 'mh-iterate-on-range "mh-acros" "\
 Iterate an operation over a region or sequence.
 
 VAR is bound to each message in turn in a loop over RANGE, which
@@ -137,41 +133,47 @@ MH-E functions.
 
 ;;;### (autoloads (mh-alias-grab-from-field mh-alias-for-from-p mh-alias-address-to-alias
 ;;;;;;  mh-alias-letter-expand-alias mh-alias-minibuffer-confirm-address
-;;;;;;  mh-read-address mh-alias-reload-maybe) "mh-alias" "mh-alias.el"
-;;;;;;  (18305 34284))
+;;;;;;  mh-read-address mh-alias-expand mh-alias-reload-maybe) "mh-alias"
+;;;;;;  "mh-alias.el" (19005 47398))
 ;;; Generated autoloads from mh-alias.el
 
-(autoload (quote mh-alias-reload-maybe) "mh-alias" "\
+(autoload 'mh-alias-reload-maybe "mh-alias" "\
 Load new MH aliases.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-read-address) "mh-alias" "\
+(autoload 'mh-alias-expand "mh-alias" "\
+Return expansion for ALIAS.
+Blind aliases or users from /etc/passwd are not expanded.
+
+\(fn ALIAS)" nil nil)
+
+(autoload 'mh-read-address "mh-alias" "\
 Read an address from the minibuffer with PROMPT.
 
 \(fn PROMPT)" nil nil)
 
-(autoload (quote mh-alias-minibuffer-confirm-address) "mh-alias" "\
+(autoload 'mh-alias-minibuffer-confirm-address "mh-alias" "\
 Display the alias expansion if `mh-alias-flash-on-comma' is non-nil.
 
 \(fn)" t nil)
 
-(autoload (quote mh-alias-letter-expand-alias) "mh-alias" "\
+(autoload 'mh-alias-letter-expand-alias "mh-alias" "\
 Expand mail alias before point.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-alias-address-to-alias) "mh-alias" "\
+(autoload 'mh-alias-address-to-alias "mh-alias" "\
 Return the ADDRESS alias if defined, or nil.
 
 \(fn ADDRESS)" nil nil)
 
-(autoload (quote mh-alias-for-from-p) "mh-alias" "\
+(autoload 'mh-alias-for-from-p "mh-alias" "\
 Return t if sender's address has a corresponding alias.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-alias-grab-from-field) "mh-alias" "\
+(autoload 'mh-alias-grab-from-field "mh-alias" "\
 Add alias for the sender of the current message.
 
 \(fn)" t nil)
@@ -180,10 +182,10 @@ Add alias for the sender of the current message.
 
 ;;;### (autoloads (mh-insert-auto-fields mh-show-buffer-message-number
 ;;;;;;  mh-send mh-reply mh-redistribute mh-forward mh-extract-rejected-mail
-;;;;;;  mh-edit-again) "mh-comp" "mh-comp.el" (18305 34284))
+;;;;;;  mh-edit-again) "mh-comp" "mh-comp.el" (19005 47398))
 ;;; Generated autoloads from mh-comp.el
 
-(autoload (quote mh-edit-again) "mh-comp" "\
+(autoload 'mh-edit-again "mh-comp" "\
 Edit a MESSAGE to send it again.
 
 If you don't complete a draft for one reason or another, and if
@@ -208,7 +210,7 @@ See also `mh-send'.
 
 \(fn MESSAGE)" t nil)
 
-(autoload (quote mh-extract-rejected-mail) "mh-comp" "\
+(autoload 'mh-extract-rejected-mail "mh-comp" "\
 Edit a MESSAGE that was returned by the mail system.
 
 This command prepares the message for editing by removing the
@@ -222,7 +224,7 @@ See also `mh-send'.
 
 \(fn MESSAGE)" t nil)
 
-(autoload (quote mh-forward) "mh-comp" "\
+(autoload 'mh-forward "mh-comp" "\
 Forward message.
 
 You are prompted for the TO and CC recipients. You are given a
@@ -241,7 +243,7 @@ See also `mh-compose-forward-as-mime-flag',
 
 \(fn TO CC &optional RANGE)" t nil)
 
-(autoload (quote mh-redistribute) "mh-comp" "\
+(autoload 'mh-redistribute "mh-comp" "\
 Redistribute a message.
 
 This command is similar in function to forwarding mail, but it
@@ -256,9 +258,12 @@ redistribute messages.
 
 See also `mh-redist-full-contents-flag'.
 
+The hook `mh-annotate-msg-hook' is run after annotating the
+message and scan line.
+
 \(fn TO CC &optional MESSAGE)" t nil)
 
-(autoload (quote mh-reply) "mh-comp" "\
+(autoload 'mh-reply "mh-comp" "\
 Reply to a MESSAGE.
 
 When you reply to a message, you are first prompted with \"Reply
@@ -311,7 +316,7 @@ See also `mh-reply-show-message-flag',
 
 \(fn MESSAGE &optional REPLY-TO INCLUDEP)" t nil)
 
-(autoload (quote mh-send) "mh-comp" "\
+(autoload 'mh-send "mh-comp" "\
 Compose a message.
 
 Your letter appears in an Emacs buffer whose mode is
@@ -330,7 +335,7 @@ message.
 
 \(fn TO CC SUBJECT)" t nil)
 
-(autoload (quote mh-show-buffer-message-number) "mh-comp" "\
+(autoload 'mh-show-buffer-message-number "mh-comp" "\
 Message number of displayed message in corresponding show buffer.
 
 Return nil if show buffer not displayed.
@@ -341,7 +346,7 @@ Optional argument BUFFER can be used to specify the buffer.
 
 \(fn &optional BUFFER)" nil nil)
 
-(autoload (quote mh-insert-auto-fields) "mh-comp" "\
+(autoload 'mh-insert-auto-fields "mh-comp" "\
 Insert custom fields if recipient is found in `mh-auto-fields-list'.
 
 Once the header contains one or more recipients, you may run this
@@ -370,10 +375,10 @@ added; otherwise return nil.
 ;;;;;;  mh-prev-button mh-page-msg mh-next-unread-msg mh-next-undeleted-msg
 ;;;;;;  mh-next-button mh-modify mh-last-msg mh-inc-folder mh-goto-msg
 ;;;;;;  mh-first-msg mh-execute-commands mh-delete-msg-no-motion
-;;;;;;  mh-delete-msg) "mh-folder" "mh-folder.el" (18305 34283))
+;;;;;;  mh-delete-msg) "mh-folder" "mh-folder.el" (19005 47398))
 ;;; Generated autoloads from mh-folder.el
 
-(autoload (quote mh-delete-msg) "mh-folder" "\
+(autoload 'mh-delete-msg "mh-folder" "\
 Delete RANGE\\<mh-folder-mode-map>.
 
 To mark a message for deletion, use this command. A \"D\" is
@@ -394,7 +399,7 @@ RANGE is read in interactive use.
 
 \(fn RANGE)" t nil)
 
-(autoload (quote mh-delete-msg-no-motion) "mh-folder" "\
+(autoload 'mh-delete-msg-no-motion "mh-folder" "\
 Delete RANGE, don't move to next message.
 
 This command marks the RANGE for deletion but leaves the cursor
@@ -406,7 +411,7 @@ RANGE is read in interactive use.
 
 \(fn RANGE)" t nil)
 
-(autoload (quote mh-execute-commands) "mh-folder" "\
+(autoload 'mh-execute-commands "mh-folder" "\
 Process outstanding delete and refile requests\\<mh-folder-mode-map>.
 
 If you've marked messages to be deleted or refiled and you want
@@ -423,12 +428,12 @@ after the commands are processed.
 
 \(fn)" t nil)
 
-(autoload (quote mh-first-msg) "mh-folder" "\
+(autoload 'mh-first-msg "mh-folder" "\
 Display first message.
 
 \(fn)" t nil)
 
-(autoload (quote mh-goto-msg) "mh-folder" "\
+(autoload 'mh-goto-msg "mh-folder" "\
 Go to a message\\<mh-folder-mode-map>.
 
 You can enter the message NUMBER either before or after typing
@@ -442,7 +447,7 @@ the message.
 
 \(fn NUMBER &optional NO-ERROR-IF-NO-MESSAGE DONT-SHOW)" t nil)
 
-(autoload (quote mh-inc-folder) "mh-folder" "\
+(autoload 'mh-inc-folder "mh-folder" "\
 Incorporate new mail into a folder.
 
 You can incorporate mail from any file into the current folder by
@@ -457,12 +462,12 @@ instead.
 
 \(fn &optional FILE FOLDER)" t nil)
 
-(autoload (quote mh-last-msg) "mh-folder" "\
+(autoload 'mh-last-msg "mh-folder" "\
 Display last message.
 
 \(fn)" t nil)
 
-(autoload (quote mh-modify) "mh-folder" "\
+(autoload 'mh-modify "mh-folder" "\
 Edit message.
 
 There are times when you need to edit a message. For example, you
@@ -475,7 +480,7 @@ From a program, edit MESSAGE; nil means edit current message.
 
 \(fn &optional MESSAGE)" t nil)
 
-(autoload (quote mh-next-button) "mh-folder" "\
+(autoload 'mh-next-button "mh-folder" "\
 Go to the next button.
 
 If the end of the buffer is reached then the search wraps over to
@@ -486,7 +491,7 @@ will move to the previous button.
 
 \(fn &optional BACKWARD-FLAG)" t nil)
 
-(autoload (quote mh-next-undeleted-msg) "mh-folder" "\
+(autoload 'mh-next-undeleted-msg "mh-folder" "\
 Display next message.
 
 This command can be given a prefix argument COUNT to specify how
@@ -498,7 +503,7 @@ WAIT-AFTER-COMPLAINING-FLAG is non-nil.
 
 \(fn &optional COUNT WAIT-AFTER-COMPLAINING-FLAG)" t nil)
 
-(autoload (quote mh-next-unread-msg) "mh-folder" "\
+(autoload 'mh-next-unread-msg "mh-folder" "\
 Display next unread message.
 
 This command can be given a prefix argument COUNT to specify how
@@ -506,7 +511,7 @@ many unread messages to skip.
 
 \(fn &optional COUNT)" t nil)
 
-(autoload (quote mh-page-msg) "mh-folder" "\
+(autoload 'mh-page-msg "mh-folder" "\
 Display next page in message.
 
 You can give this command a prefix argument that specifies the
@@ -515,7 +520,7 @@ undeleted message if it is used at the bottom of a message.
 
 \(fn &optional LINES)" t nil)
 
-(autoload (quote mh-prev-button) "mh-folder" "\
+(autoload 'mh-prev-button "mh-folder" "\
 Go to the previous button.
 
 If the beginning of the buffer is reached then the search wraps
@@ -523,7 +528,7 @@ over to the end of the buffer.
 
 \(fn)" t nil)
 
-(autoload (quote mh-previous-page) "mh-folder" "\
+(autoload 'mh-previous-page "mh-folder" "\
 Display next page in message.
 
 You can give this command a prefix argument that specifies the
@@ -531,7 +536,7 @@ number of LINES to scroll.
 
 \(fn &optional LINES)" t nil)
 
-(autoload (quote mh-previous-undeleted-msg) "mh-folder" "\
+(autoload 'mh-previous-undeleted-msg "mh-folder" "\
 Display previous message.
 
 This command can be given a prefix argument COUNT to specify how
@@ -543,7 +548,7 @@ WAIT-AFTER-COMPLAINING-FLAG is non-nil.
 
 \(fn &optional COUNT WAIT-AFTER-COMPLAINING-FLAG)" t nil)
 
-(autoload (quote mh-previous-unread-msg) "mh-folder" "\
+(autoload 'mh-previous-unread-msg "mh-folder" "\
 Display previous unread message.
 
 This command can be given a prefix argument COUNT to specify how
@@ -551,7 +556,7 @@ many unread messages to skip.
 
 \(fn &optional COUNT)" t nil)
 
-(autoload (quote mh-quit) "mh-folder" "\
+(autoload 'mh-quit "mh-folder" "\
 Quit the current MH-E folder.
 
 When you want to quit using MH-E and go back to editing, you can use
@@ -571,7 +576,7 @@ modify the window setup.
 
 \(fn)" t nil)
 
-(autoload (quote mh-refile-msg) "mh-folder" "\
+(autoload 'mh-refile-msg "mh-folder" "\
 Refile (output) RANGE into FOLDER.
 
 You are prompted for the folder name. Note that this command can also
@@ -590,7 +595,7 @@ DONT-UPDATE-LAST-DESTINATION-FLAG is non-nil.
 
 \(fn RANGE FOLDER &optional DONT-UPDATE-LAST-DESTINATION-FLAG)" t nil)
 
-(autoload (quote mh-refile-or-write-again) "mh-folder" "\
+(autoload 'mh-refile-or-write-again "mh-folder" "\
 Repeat last output command.
 
 If you are refiling several messages into the same folder, you
@@ -606,7 +611,7 @@ called interactively.
 
 \(fn RANGE &optional INTERACTIVE-FLAG)" t nil)
 
-(autoload (quote mh-rescan-folder) "mh-folder" "\
+(autoload 'mh-rescan-folder "mh-folder" "\
 Rescan folder\\<mh-folder-mode-map>.
 
 This command is useful to grab all messages in your \"+inbox\" after
@@ -624,7 +629,7 @@ if DONT-EXEC-PENDING is non-nil.
 
 \(fn &optional RANGE DONT-EXEC-PENDING)" t nil)
 
-(autoload (quote mh-toggle-showing) "mh-folder" "\
+(autoload 'mh-toggle-showing "mh-folder" "\
 Toggle between MH-Folder and MH-Folder Show modes.
 
 This command switches between MH-Folder mode and MH-Folder Show
@@ -636,7 +641,7 @@ examination.
 
 \(fn)" t nil)
 
-(autoload (quote mh-undo) "mh-folder" "\
+(autoload 'mh-undo "mh-folder" "\
 Undo pending deletes or refiles in RANGE.
 
 If you've deleted a message or refiled it, but changed your mind,
@@ -650,7 +655,7 @@ RANGE is read in interactive use.
 
 \(fn RANGE)" t nil)
 
-(autoload (quote mh-visit-folder) "mh-folder" "\
+(autoload 'mh-visit-folder "mh-folder" "\
 Visit FOLDER.
 
 When you want to read the messages that you have refiled into folders,
@@ -681,7 +686,7 @@ structures.
 
 \(fn FOLDER &optional RANGE INDEX-DATA)" t nil)
 
-(autoload (quote mh-write-msg-to-file) "mh-folder" "\
+(autoload 'mh-write-msg-to-file "mh-folder" "\
 Append MESSAGE to end of FILE\\<mh-folder-mode-map>.
 
 You are prompted for the filename. If the file already exists,
@@ -692,7 +697,7 @@ the command \\[mh-refile-or-write-again].
 
 \(fn MESSAGE FILE NO-HEADER)" t nil)
 
-(autoload (quote mh-update-sequences) "mh-folder" "\
+(autoload 'mh-update-sequences "mh-folder" "\
 Flush MH-E's state out to MH.
 
 This function updates the sequence specified by your
@@ -702,14 +707,14 @@ The message at the cursor is used for \"cur\".
 
 \(fn)" t nil)
 
-(autoload (quote mh-goto-cur-msg) "mh-folder" "\
+(autoload 'mh-goto-cur-msg "mh-folder" "\
 Position the cursor at the current message.
 When optional argument MINIMAL-CHANGES-FLAG is non-nil, the
 function doesn't recenter the folder buffer.
 
 \(fn &optional MINIMAL-CHANGES-FLAG)" nil nil)
 
-(autoload (quote mh-recenter) "mh-folder" "\
+(autoload 'mh-recenter "mh-folder" "\
 Like recenter but with three improvements:
 
 - At the end of the buffer it tries to show fewer empty lines.
@@ -721,17 +726,17 @@ Like recenter but with three improvements:
 
 \(fn ARG)" nil nil)
 
-(autoload (quote mh-outstanding-commands-p) "mh-folder" "\
+(autoload 'mh-outstanding-commands-p "mh-folder" "\
 Return non-nil if there are outstanding deletes or refiles.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-set-folder-modified-p) "mh-folder" "\
+(autoload 'mh-set-folder-modified-p "mh-folder" "\
 Mark current folder as modified or unmodified according to FLAG.
 
 \(fn FLAG)" nil nil)
 
-(autoload (quote mh-make-folder-mode-line) "mh-folder" "\
+(autoload 'mh-make-folder-mode-line "mh-folder" "\
 Set the fields of the mode line for a folder buffer.
 The optional argument is now obsolete and IGNORED. It used to be
 used to pass in what is now stored in the buffer-local variable
@@ -739,7 +744,7 @@ used to pass in what is now stored in the buffer-local variable
 
 \(fn &optional IGNORED)" nil nil)
 
-(autoload (quote mh-scan-folder) "mh-folder" "\
+(autoload 'mh-scan-folder "mh-folder" "\
 Scan FOLDER over RANGE.
 
 After the scan is performed, switch to the buffer associated with
@@ -753,26 +758,26 @@ DONT-EXEC-PENDING is non-nil.
 
 \(fn FOLDER RANGE &optional DONT-EXEC-PENDING)" nil nil)
 
-(autoload (quote mh-process-or-undo-commands) "mh-folder" "\
+(autoload 'mh-process-or-undo-commands "mh-folder" "\
 If FOLDER has outstanding commands, then either process or discard them.
 Called by functions like `mh-sort-folder', so also invalidate
 show buffer.
 
 \(fn FOLDER)" nil nil)
 
-(autoload (quote mh-regenerate-headers) "mh-folder" "\
+(autoload 'mh-regenerate-headers "mh-folder" "\
 Scan folder over RANGE.
 If UPDATE, append the scan lines, otherwise replace.
 
 \(fn RANGE &optional UPDATE)" nil nil)
 
-(autoload (quote mh-reset-threads-and-narrowing) "mh-folder" "\
+(autoload 'mh-reset-threads-and-narrowing "mh-folder" "\
 Reset all variables pertaining to threads and narrowing.
 Also removes all content from the folder buffer.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-next-msg) "mh-folder" "\
+(autoload 'mh-next-msg "mh-folder" "\
 Move backward or forward to the next undeleted message in the buffer.
 If optional argument WAIT-AFTER-COMPLAINING-FLAG is non-nil and
 we are at the last message, then wait for a second after telling
@@ -780,7 +785,7 @@ the user that there aren't any more unread messages.
 
 \(fn &optional WAIT-AFTER-COMPLAINING-FLAG)" nil nil)
 
-(autoload (quote mh-prompt-for-refile-folder) "mh-folder" "\
+(autoload 'mh-prompt-for-refile-folder "mh-folder" "\
 Prompt the user for a folder in which the message should be filed.
 The folder is returned as a string.
 
@@ -790,7 +795,7 @@ The default folder name is generated by the option
 
 \(fn)" nil nil)
 
-(autoload (quote mh-folder-from-address) "mh-folder" "\
+(autoload 'mh-folder-from-address "mh-folder" "\
 Derive folder name from sender.
 
 The name of the folder is derived as follows:
@@ -811,7 +816,7 @@ exist.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-delete-a-msg) "mh-folder" "\
+(autoload 'mh-delete-a-msg "mh-folder" "\
 Delete MESSAGE.
 If MESSAGE is nil then the message at point is deleted.
 The hook `mh-delete-msg-hook' is called after you mark a message
@@ -820,7 +825,7 @@ once when he kept statistics on his mail usage.
 
 \(fn MESSAGE)" nil nil)
 
-(autoload (quote mh-refile-a-msg) "mh-folder" "\
+(autoload 'mh-refile-a-msg "mh-folder" "\
 Refile MESSAGE in FOLDER.
 If MESSAGE is nil then the message at point is refiled.
 Folder is a symbol, not a string.
@@ -829,7 +834,7 @@ be refiled.
 
 \(fn MESSAGE FOLDER)" nil nil)
 
-(autoload (quote mh-msg-filename) "mh-folder" "\
+(autoload 'mh-msg-filename "mh-folder" "\
 Return the file name of MSG in FOLDER (default current folder).
 
 \(fn MSG &optional FOLDER)" nil nil)
@@ -839,10 +844,10 @@ Return the file name of MSG in FOLDER (default current folder).
 ;;;### (autoloads (mh-undo-folder mh-store-msg mh-sort-folder mh-pipe-msg
 ;;;;;;  mh-page-digest-backwards mh-page-digest mh-pack-folder mh-list-folders
 ;;;;;;  mh-kill-folder mh-copy-msg mh-burst-digest) "mh-funcs" "mh-funcs.el"
-;;;;;;  (18305 34283))
+;;;;;;  (19005 47398))
 ;;; Generated autoloads from mh-funcs.el
 
-(autoload (quote mh-burst-digest) "mh-funcs" "\
+(autoload 'mh-burst-digest "mh-funcs" "\
 Break up digest into separate messages\\<mh-folder-mode-map>.
 
 This command uses the MH command \"burst\" to break out each
@@ -861,7 +866,7 @@ correct the \"To:\" field yourself.
 
 \(fn)" t nil)
 
-(autoload (quote mh-copy-msg) "mh-funcs" "\
+(autoload 'mh-copy-msg "mh-funcs" "\
 Copy RANGE to FOLDER\\<mh-folder-mode-map>.
 
 If you wish to copy a message to another folder, you can use this
@@ -876,7 +881,7 @@ RANGE is read in interactive use.
 
 \(fn RANGE FOLDER)" t nil)
 
-(autoload (quote mh-kill-folder) "mh-funcs" "\
+(autoload 'mh-kill-folder "mh-funcs" "\
 Remove folder.
 
 Remove all of the messages (files) within the current folder, and
@@ -889,12 +894,12 @@ folder. This is useful for folders that are easily regenerated.
 
 \(fn)" t nil)
 
-(autoload (quote mh-list-folders) "mh-funcs" "\
+(autoload 'mh-list-folders "mh-funcs" "\
 List mail folders.
 
 \(fn)" t nil)
 
-(autoload (quote mh-pack-folder) "mh-funcs" "\
+(autoload 'mh-pack-folder "mh-funcs" "\
 Pack folder\\<mh-folder-mode-map>.
 
 This command packs the folder, removing gaps from the numbering
@@ -907,19 +912,22 @@ This command will ask if you want to process refiles or deletes
 first and then either run \\[mh-execute-commands] for you or undo
 the pending refiles and deletes.
 
+The hook `mh-pack-folder-hook' is run after the folder is packed;
+see its documentation for variables it can use.
+
 \(fn RANGE)" t nil)
 
-(autoload (quote mh-page-digest) "mh-funcs" "\
+(autoload 'mh-page-digest "mh-funcs" "\
 Display next message in digest.
 
 \(fn)" t nil)
 
-(autoload (quote mh-page-digest-backwards) "mh-funcs" "\
+(autoload 'mh-page-digest-backwards "mh-funcs" "\
 Display previous message in digest.
 
 \(fn)" t nil)
 
-(autoload (quote mh-pipe-msg) "mh-funcs" "\
+(autoload 'mh-pipe-msg "mh-funcs" "\
 Pipe message through shell command COMMAND.
 
 You are prompted for the Unix command through which you wish to
@@ -929,7 +937,7 @@ to the command.
 
 \(fn COMMAND INCLUDE-HEADER)" t nil)
 
-(autoload (quote mh-sort-folder) "mh-funcs" "\
+(autoload 'mh-sort-folder "mh-funcs" "\
 Sort folder.
 
 By default, messages are sorted by date. The option
@@ -938,7 +946,7 @@ By default, messages are sorted by date. The option
 
 \(fn &optional EXTRA-ARGS)" t nil)
 
-(autoload (quote mh-store-msg) "mh-funcs" "\
+(autoload 'mh-store-msg "mh-funcs" "\
 Unpack message created with \"uudecode\" or \"shar\".
 
 The default DIRECTORY for extraction is the current directory;
@@ -952,7 +960,7 @@ storing the content of these messages.
 
 \(fn DIRECTORY)" t nil)
 
-(autoload (quote mh-undo-folder) "mh-funcs" "\
+(autoload 'mh-undo-folder "mh-funcs" "\
 Undo all refiles and deletes in the current folder.
 
 \(fn)" t nil)
@@ -963,10 +971,10 @@ Undo all refiles and deletes in the current folder.
 ;;;;;;  mh-identity-insert-attribution-verb mh-identity-handler-attribution-verb
 ;;;;;;  mh-identity-handler-signature mh-identity-handler-gpg-identity
 ;;;;;;  mh-insert-identity mh-identity-add-menu mh-identity-make-menu)
-;;;;;;  "mh-identity" "mh-identity.el" (18305 34282))
+;;;;;;  "mh-identity" "mh-identity.el" (19005 47398))
 ;;; Generated autoloads from mh-identity.el
 
-(autoload (quote mh-identity-make-menu) "mh-identity" "\
+(autoload 'mh-identity-make-menu "mh-identity" "\
 Build the Identity menu.
 This should be called any time `mh-identity-list' or
 `mh-auto-fields-list' change.
@@ -974,13 +982,13 @@ See `mh-identity-add-menu'.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-identity-add-menu) "mh-identity" "\
+(autoload 'mh-identity-add-menu "mh-identity" "\
 Add the current Identity menu.
 See `mh-identity-make-menu'.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-insert-identity) "mh-identity" "\
+(autoload 'mh-insert-identity "mh-identity" "\
 Insert fields specified by given IDENTITY.
 
 In a program, do not insert fields if MAYBE-INSERT is non-nil,
@@ -991,7 +999,7 @@ See `mh-identity-list'.
 
 \(fn IDENTITY &optional MAYBE-INSERT)" t nil)
 
-(autoload (quote mh-identity-handler-gpg-identity) "mh-identity" "\
+(autoload 'mh-identity-handler-gpg-identity "mh-identity" "\
 Process header FIELD \":pgg-default-user-id\".
 The ACTION is one of 'remove or 'add. If 'add, the VALUE is added.
 The buffer-local variable `mh-identity-pgg-default-user-id' is set to
@@ -999,27 +1007,27 @@ VALUE when action 'add is selected.
 
 \(fn FIELD ACTION &optional VALUE)" nil nil)
 
-(autoload (quote mh-identity-handler-signature) "mh-identity" "\
+(autoload 'mh-identity-handler-signature "mh-identity" "\
 Process header FIELD \":signature\".
 The ACTION is one of 'remove or 'add. If 'add, the VALUE is
 added.
 
 \(fn FIELD ACTION &optional VALUE)" nil nil)
 
-(autoload (quote mh-identity-handler-attribution-verb) "mh-identity" "\
+(autoload 'mh-identity-handler-attribution-verb "mh-identity" "\
 Process header FIELD \":attribution-verb\".
 The ACTION is one of 'remove or 'add. If 'add, the VALUE is
 added.
 
 \(fn FIELD ACTION &optional VALUE)" nil nil)
 
-(autoload (quote mh-identity-insert-attribution-verb) "mh-identity" "\
+(autoload 'mh-identity-insert-attribution-verb "mh-identity" "\
 Insert VALUE as attribution verb, setting up delimiting markers.
 If VALUE is nil, use `mh-extract-from-attribution-verb'.
 
 \(fn VALUE)" nil nil)
 
-(autoload (quote mh-identity-handler-top) "mh-identity" "\
+(autoload 'mh-identity-handler-top "mh-identity" "\
 Process header FIELD.
 The ACTION is one of 'remove or 'add. If 'add, the VALUE is
 added. If the field wasn't present, it is added to the top of the
@@ -1027,7 +1035,7 @@ header.
 
 \(fn FIELD ACTION &optional VALUE)" nil nil)
 
-(autoload (quote mh-identity-handler-bottom) "mh-identity" "\
+(autoload 'mh-identity-handler-bottom "mh-identity" "\
 Process header FIELD.
 The ACTION is one of 'remove or 'add. If 'add, the VALUE is
 added. If the field wasn't present, it is added to the bottom of
@@ -1037,11 +1045,11 @@ the header.
 
 ;;;***
 
-;;;### (autoloads (mh-inc-spool-make) "mh-inc" "mh-inc.el" (18305
-;;;;;;  34282))
+;;;### (autoloads (mh-inc-spool-make) "mh-inc" "mh-inc.el" (19005
+;;;;;;  47398))
 ;;; Generated autoloads from mh-inc.el
 
-(autoload (quote mh-inc-spool-make) "mh-inc" "\
+(autoload 'mh-inc-spool-make "mh-inc" "\
 Make all commands and defines keys for contents of `mh-inc-spool-list'.
 
 \(fn)" nil nil)
@@ -1051,10 +1059,10 @@ Make all commands and defines keys for contents of `mh-inc-spool-list'.
 ;;;### (autoloads (mh-spamprobe-whitelist mh-spamprobe-blacklist
 ;;;;;;  mh-bogofilter-whitelist mh-bogofilter-blacklist mh-spamassassin-identify-spammers
 ;;;;;;  mh-spamassassin-whitelist mh-spamassassin-blacklist mh-junk-whitelist
-;;;;;;  mh-junk-blacklist) "mh-junk" "mh-junk.el" (18305 34282))
+;;;;;;  mh-junk-blacklist) "mh-junk" "mh-junk.el" (19005 47398))
 ;;; Generated autoloads from mh-junk.el
 
-(autoload (quote mh-junk-blacklist) "mh-junk" "\
+(autoload 'mh-junk-blacklist "mh-junk" "\
 Blacklist RANGE as spam.
 
 This command trains the spam program in use (see the option
@@ -1073,7 +1081,7 @@ program, see:
 
 \(fn RANGE)" t nil)
 
-(autoload (quote mh-junk-whitelist) "mh-junk" "\
+(autoload 'mh-junk-whitelist "mh-junk" "\
 Whitelist RANGE as ham.
 
 This command reclassifies the RANGE as ham if it were incorrectly
@@ -1085,7 +1093,7 @@ RANGE is read in interactive use.
 
 \(fn RANGE)" t nil)
 
-(autoload (quote mh-spamassassin-blacklist) "mh-junk" "\
+(autoload 'mh-spamassassin-blacklist "mh-junk" "\
 Blacklist MSG with SpamAssassin.
 
 SpamAssassin is one of the more popular spam filtering programs.
@@ -1171,7 +1179,7 @@ done by adding the following to your crontab:
 
 \(fn MSG)" nil nil)
 
-(autoload (quote mh-spamassassin-whitelist) "mh-junk" "\
+(autoload 'mh-spamassassin-whitelist "mh-junk" "\
 Whitelist MSG with SpamAssassin.
 
 The \\[mh-junk-whitelist] command adds a \"whitelist_from\" rule to
@@ -1182,7 +1190,7 @@ See `mh-spamassassin-blacklist' for more information.
 
 \(fn MSG)" nil nil)
 
-(autoload (quote mh-spamassassin-identify-spammers) "mh-junk" "\
+(autoload 'mh-spamassassin-identify-spammers "mh-junk" "\
 Identify spammers who are repeat offenders.
 
 This function displays a frequency count of the hosts and domains
@@ -1195,7 +1203,7 @@ information can be used so that you can replace multiple
 
 \(fn)" t nil)
 
-(autoload (quote mh-bogofilter-blacklist) "mh-junk" "\
+(autoload 'mh-bogofilter-blacklist "mh-junk" "\
 Blacklist MSG with bogofilter.
 
 Bogofilter is a Bayesian spam filtering program. Get it from your
@@ -1246,14 +1254,14 @@ The \"Bogofilter tuning HOWTO\" describes how you can fine-tune Bogofilter.
 
 \(fn MSG)" nil nil)
 
-(autoload (quote mh-bogofilter-whitelist) "mh-junk" "\
+(autoload 'mh-bogofilter-whitelist "mh-junk" "\
 Whitelist MSG with bogofilter.
 
 See `mh-bogofilter-blacklist' for more information.
 
 \(fn MSG)" nil nil)
 
-(autoload (quote mh-spamprobe-blacklist) "mh-junk" "\
+(autoload 'mh-spamprobe-blacklist "mh-junk" "\
 Blacklist MSG with SpamProbe.
 
 SpamProbe is a Bayesian spam filtering program. Get it from your local
@@ -1281,7 +1289,7 @@ update SpamProbe's training.
 
 \(fn MSG)" nil nil)
 
-(autoload (quote mh-spamprobe-whitelist) "mh-junk" "\
+(autoload 'mh-spamprobe-whitelist "mh-junk" "\
 Whitelist MSG with SpamProbe.
 
 See `mh-spamprobe-blacklist' for more information.
@@ -1293,10 +1301,10 @@ See `mh-spamprobe-blacklist' for more information.
 ;;;### (autoloads (mh-letter-toggle-header-field-display-button mh-complete-word
 ;;;;;;  mh-position-on-field mh-letter-next-header-field mh-yank-cur-msg
 ;;;;;;  mh-insert-signature mh-letter-mode) "mh-letter" "mh-letter.el"
-;;;;;;  (18305 34282))
+;;;;;;  (19005 47398))
 ;;; Generated autoloads from mh-letter.el
 
-(autoload (quote mh-letter-mode) "mh-letter" "\
+(autoload 'mh-letter-mode "mh-letter" "\
 Mode for composing letters in MH-E\\<mh-letter-mode-map>.
 
 When you have finished composing, type \\[mh-send-letter] to send
@@ -1319,7 +1327,7 @@ order).
 
 \(fn)" t nil)
 
-(autoload (quote mh-insert-signature) "mh-letter" "\
+(autoload 'mh-insert-signature "mh-letter" "\
 Insert signature in message.
 
 This command inserts your signature at the current cursor location.
@@ -1342,7 +1350,7 @@ In a program, you can pass in a signature FILE.
 
 \(fn &optional FILE)" t nil)
 
-(autoload (quote mh-yank-cur-msg) "mh-letter" "\
+(autoload 'mh-yank-cur-msg "mh-letter" "\
 Insert the current message into the draft buffer.
 
 It is often useful to insert a snippet of text from a letter that
@@ -1377,14 +1385,14 @@ and `mh-ins-buf-prefix' is not inserted.
 
 \(fn)" t nil)
 
-(autoload (quote mh-letter-next-header-field) "mh-letter" "\
+(autoload 'mh-letter-next-header-field "mh-letter" "\
 Cycle to the next header field.
 If we are at the last header field go to the start of the message
 body.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-position-on-field) "mh-letter" "\
+(autoload 'mh-position-on-field "mh-letter" "\
 Move to the end of the FIELD in the header.
 Move to end of entire header if FIELD not found.
 Returns non-nil if FIELD was found.
@@ -1393,13 +1401,13 @@ IGNORED.
 
 \(fn FIELD &optional IGNORED)" nil nil)
 
-(autoload (quote mh-complete-word) "mh-letter" "\
-Complete WORD at from CHOICES.
+(autoload 'mh-complete-word "mh-letter" "\
+Complete WORD from CHOICES.
 Any match found replaces the text from BEGIN to END.
 
 \(fn WORD CHOICES BEGIN END)" nil nil)
 
-(autoload (quote mh-letter-toggle-header-field-display-button) "mh-letter" "\
+(autoload 'mh-letter-toggle-header-field-display-button "mh-letter" "\
 Toggle header field display at location of EVENT.
 This function does the same thing as
 `mh-letter-toggle-header-field-display' except that it is
@@ -1411,10 +1419,10 @@ callable from a mouse button.
 
 ;;;### (autoloads (mh-narrow-to-to mh-narrow-to-subject mh-narrow-to-range
 ;;;;;;  mh-narrow-to-from mh-narrow-to-cc mh-delete-subject-or-thread
-;;;;;;  mh-delete-subject) "mh-limit" "mh-limit.el" (18305 34282))
+;;;;;;  mh-delete-subject) "mh-limit" "mh-limit.el" (19005 47398))
 ;;; Generated autoloads from mh-limit.el
 
-(autoload (quote mh-delete-subject) "mh-limit" "\
+(autoload 'mh-delete-subject "mh-limit" "\
 Delete messages with same subject\\<mh-folder-mode-map>.
 
 To delete messages faster, you can use this command to delete all
@@ -1425,7 +1433,7 @@ and then specifying the \"subject\" sequence.
 
 \(fn)" t nil)
 
-(autoload (quote mh-delete-subject-or-thread) "mh-limit" "\
+(autoload 'mh-delete-subject-or-thread "mh-limit" "\
 Delete messages with same subject or thread\\<mh-folder-mode-map>.
 
 To delete messages faster, you can use this command to delete all
@@ -1439,7 +1447,7 @@ folder then this command behaves like \\[mh-thread-delete].
 
 \(fn)" t nil)
 
-(autoload (quote mh-narrow-to-cc) "mh-limit" "\
+(autoload 'mh-narrow-to-cc "mh-limit" "\
 Limit to messages with the same \"Cc:\" field.
 With a prefix argument, edit PICK-EXPR.
 
@@ -1447,7 +1455,7 @@ Use \\<mh-folder-mode-map>\\[mh-widen] to undo this command.
 
 \(fn &optional PICK-EXPR)" t nil)
 
-(autoload (quote mh-narrow-to-from) "mh-limit" "\
+(autoload 'mh-narrow-to-from "mh-limit" "\
 Limit to messages with the same \"From:\" field.
 With a prefix argument, edit PICK-EXPR.
 
@@ -1455,7 +1463,7 @@ Use \\<mh-folder-mode-map>\\[mh-widen] to undo this command.
 
 \(fn &optional PICK-EXPR)" t nil)
 
-(autoload (quote mh-narrow-to-range) "mh-limit" "\
+(autoload 'mh-narrow-to-range "mh-limit" "\
 Limit to RANGE.
 
 Check the documentation of `mh-interactive-range' to see how
@@ -1465,7 +1473,7 @@ Use \\<mh-folder-mode-map>\\[mh-widen] to undo this command.
 
 \(fn RANGE)" t nil)
 
-(autoload (quote mh-narrow-to-subject) "mh-limit" "\
+(autoload 'mh-narrow-to-subject "mh-limit" "\
 Limit to messages with same subject.
 With a prefix argument, edit PICK-EXPR.
 The string Re: is removed from the search.
@@ -1474,7 +1482,7 @@ Use \\<mh-folder-mode-map>\\[mh-widen] to undo this command.
 
 \(fn &optional PICK-EXPR)" t nil)
 
-(autoload (quote mh-narrow-to-to) "mh-limit" "\
+(autoload 'mh-narrow-to-to "mh-limit" "\
 Limit to messages with the same \"To:\" field.
 With a prefix argument, edit PICK-EXPR.
 
@@ -1496,15 +1504,15 @@ Use \\<mh-folder-mode-map>\\[mh-widen] to undo this command.
 ;;;;;;  mh-toggle-mime-buttons mh-toggle-mh-decode-mime-flag mh-mime-save-parts
 ;;;;;;  mh-folder-toggle-mime-part mh-folder-save-mime-part mh-folder-inline-mime-part
 ;;;;;;  mh-display-with-external-viewer mh-buffer-data) "mh-mime"
-;;;;;;  "mh-mime.el" (18305 34282))
+;;;;;;  "mh-mime.el" (19005 47398))
 ;;; Generated autoloads from mh-mime.el
 
-(autoload (quote mh-buffer-data) "mh-mime" "\
+(autoload 'mh-buffer-data "mh-mime" "\
 Convenience macro to get the MIME data structures of the current buffer.
 
 \(fn)" nil (quote macro))
 
-(autoload (quote mh-display-with-external-viewer) "mh-mime" "\
+(autoload 'mh-display-with-external-viewer "mh-mime" "\
 View attachment externally.
 
 If Emacs does not know how to view an attachment, you could save
@@ -1528,7 +1536,7 @@ usually reads the file \"/etc/mailcap\".
 
 \(fn PART-INDEX)" t nil)
 
-(autoload (quote mh-folder-inline-mime-part) "mh-mime" "\
+(autoload 'mh-folder-inline-mime-part "mh-mime" "\
 Show attachment verbatim.
 
 You can view the raw contents of an attachment with this command.
@@ -1543,7 +1551,7 @@ the attachment labeled with that number.
 
 \(fn PART-INDEX)" t nil)
 
-(autoload (quote mh-folder-save-mime-part) "mh-mime" "\
+(autoload 'mh-folder-save-mime-part "mh-mime" "\
 Save (output) attachment.
 
 This command saves the attachment associated with the button under the
@@ -1559,7 +1567,7 @@ if it is available.
 
 \(fn PART-INDEX)" t nil)
 
-(autoload (quote mh-folder-toggle-mime-part) "mh-mime" "\
+(autoload 'mh-folder-toggle-mime-part "mh-mime" "\
 View attachment.
 
 This command displays (or hides) the attachment associated with
@@ -1576,7 +1584,7 @@ attachment in a file.
 
 \(fn PART-INDEX)" t nil)
 
-(autoload (quote mh-mime-save-parts) "mh-mime" "\
+(autoload 'mh-mime-save-parts "mh-mime" "\
 Save attachments.
 
 You can save all of the attachments at once with this command.
@@ -1589,22 +1597,22 @@ do the work.
 
 \(fn PROMPT)" t nil)
 
-(autoload (quote mh-toggle-mh-decode-mime-flag) "mh-mime" "\
+(autoload 'mh-toggle-mh-decode-mime-flag "mh-mime" "\
 Toggle the value of `mh-decode-mime-flag'.
 
 \(fn)" t nil)
 
-(autoload (quote mh-toggle-mime-buttons) "mh-mime" "\
+(autoload 'mh-toggle-mime-buttons "mh-mime" "\
 Toggle option `mh-display-buttons-for-inline-parts-flag'.
 
 \(fn)" t nil)
 
-(autoload (quote mh-decode-message-header) "mh-mime" "\
+(autoload 'mh-decode-message-header "mh-mime" "\
 Decode RFC2047 encoded message header fields.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-mime-display) "mh-mime" "\
+(autoload 'mh-mime-display "mh-mime" "\
 Display (and possibly decode) MIME handles.
 Optional argument, PRE-DISSECTED-HANDLES is a list of MIME
 handles. If present they are displayed otherwise the buffer is
@@ -1612,7 +1620,7 @@ parsed and then displayed.
 
 \(fn &optional PRE-DISSECTED-HANDLES)" nil nil)
 
-(autoload (quote mh-goto-next-button) "mh-mime" "\
+(autoload 'mh-goto-next-button "mh-mime" "\
 Search for next button satisfying criterion.
 
 If BACKWARD-FLAG is non-nil search backward in the buffer for a mime
@@ -1622,24 +1630,24 @@ then that function must return non-nil at the button we stop.
 
 \(fn BACKWARD-FLAG &optional CRITERION)" nil nil)
 
-(autoload (quote mh-add-missing-mime-version-header) "mh-mime" "\
+(autoload 'mh-add-missing-mime-version-header "mh-mime" "\
 Some mail programs don't put a MIME-Version header.
 I have seen this only in spam, so maybe we shouldn't fix
 this ;-)
 
 \(fn)" nil nil)
 
-(autoload (quote mh-display-smileys) "mh-mime" "\
+(autoload 'mh-display-smileys "mh-mime" "\
 Display smileys.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-display-emphasis) "mh-mime" "\
+(autoload 'mh-display-emphasis "mh-mime" "\
 Display graphical emphasis.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-compose-forward) "mh-mime" "\
+(autoload 'mh-compose-forward "mh-mime" "\
 Add tag to forward a message.
 
 You are prompted for a content DESCRIPTION, the name of the
@@ -1652,7 +1660,7 @@ The option `mh-compose-insertion' controls what type of tags are inserted.
 
 \(fn &optional DESCRIPTION FOLDER RANGE)" t nil)
 
-(autoload (quote mh-mml-forward-message) "mh-mime" "\
+(autoload 'mh-mml-forward-message "mh-mime" "\
 Forward a message as attachment.
 
 The function will prompt the user for a DESCRIPTION, a FOLDER and
@@ -1660,7 +1668,7 @@ MESSAGE number.
 
 \(fn DESCRIPTION FOLDER MESSAGE)" nil nil)
 
-(autoload (quote mh-compose-insertion) "mh-mime" "\
+(autoload 'mh-compose-insertion "mh-mime" "\
 Add tag to include a file such as an image or sound.
 
 You are prompted for the filename containing the object, the
@@ -1674,7 +1682,7 @@ attachment.
 
 \(fn &optional INLINE)" t nil)
 
-(autoload (quote mh-mh-compose-anon-ftp) "mh-mime" "\
+(autoload 'mh-mh-compose-anon-ftp "mh-mime" "\
 Add tag to include anonymous ftp reference to a file.
 
 You can have your message initiate an \"ftp\" transfer when the
@@ -1685,7 +1693,7 @@ See also \\[mh-mh-to-mime].
 
 \(fn HOST FILENAME TYPE DESCRIPTION)" t nil)
 
-(autoload (quote mh-mh-compose-external-compressed-tar) "mh-mime" "\
+(autoload 'mh-mh-compose-external-compressed-tar "mh-mime" "\
 Add tag to include anonymous ftp reference to a compressed tar file.
 
 In addition to retrieving the file via anonymous \"ftp\" as per
@@ -1697,7 +1705,7 @@ See also \\[mh-mh-to-mime].
 
 \(fn HOST FILENAME DESCRIPTION)" t nil)
 
-(autoload (quote mh-mh-compose-external-type) "mh-mime" "\
+(autoload 'mh-mh-compose-external-type "mh-mime" "\
 Add tag to refer to a remote file.
 
 This command is a general utility for referencing external files.
@@ -1711,7 +1719,7 @@ See also \\[mh-mh-to-mime].
 
 \(fn ACCESS-TYPE HOST FILENAME TYPE &optional DESCRIPTION ATTRIBUTES PARAMETERS COMMENT)" t nil)
 
-(autoload (quote mh-mh-to-mime) "mh-mime" "\
+(autoload 'mh-mh-to-mime "mh-mime" "\
 Compose MIME message from MH-style directives.
 
 Typically, you send a message with attachments just like any other
@@ -1735,7 +1743,7 @@ The effects of this command can be undone by running
 
 \(fn &optional EXTRA-ARGS)" t nil)
 
-(autoload (quote mh-mh-to-mime-undo) "mh-mime" "\
+(autoload 'mh-mh-to-mime-undo "mh-mime" "\
 Undo effects of \\[mh-mh-to-mime].
 
 It does this by reverting to a backup file. You are prompted to
@@ -1744,7 +1752,7 @@ a prefix argument NOCONFIRM.
 
 \(fn NOCONFIRM)" t nil)
 
-(autoload (quote mh-mml-secure-message-encrypt) "mh-mime" "\
+(autoload 'mh-mml-secure-message-encrypt "mh-mime" "\
 Add tag to encrypt the message.
 
 A proper multipart message is created for you when you send the
@@ -1754,7 +1762,7 @@ the possible security methods (see `mh-mml-method-default').
 
 \(fn METHOD)" t nil)
 
-(autoload (quote mh-mml-secure-message-sign) "mh-mime" "\
+(autoload 'mh-mml-secure-message-sign "mh-mime" "\
 Add tag to sign the message.
 
 A proper multipart message is created for you when you send the
@@ -1764,7 +1772,7 @@ the possible security methods (see `mh-mml-method-default').
 
 \(fn METHOD)" t nil)
 
-(autoload (quote mh-mml-secure-message-signencrypt) "mh-mime" "\
+(autoload 'mh-mml-secure-message-signencrypt "mh-mime" "\
 Add tag to encrypt and sign the message.
 
 A proper multipart message is created for you when you send the
@@ -1774,7 +1782,7 @@ the possible security methods (see `mh-mml-method-default').
 
 \(fn METHOD)" t nil)
 
-(autoload (quote mh-mml-to-mime) "mh-mime" "\
+(autoload 'mh-mml-to-mime "mh-mime" "\
 Compose MIME message from MML tags.
 
 Typically, you send a message with attachments just like any
@@ -1785,41 +1793,41 @@ This action can be undone by running \\[undo].
 
 \(fn)" t nil)
 
-(autoload (quote mh-mml-unsecure-message) "mh-mime" "\
+(autoload 'mh-mml-unsecure-message "mh-mime" "\
 Remove any secure message tags.
 
 \(fn)" t nil)
 
-(autoload (quote mh-mml-tag-present-p) "mh-mime" "\
+(autoload 'mh-mml-tag-present-p "mh-mime" "\
 Check if the current buffer has text which may be a MML tag.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-mh-directive-present-p) "mh-mime" "\
+(autoload 'mh-mh-directive-present-p "mh-mime" "\
 Check if the text between BEGIN and END might be a MH-style directive.
 The optional argument BEGIN defaults to the beginning of the
 buffer, while END defaults to the end of the buffer.
 
 \(fn &optional BEGIN END)" nil nil)
 
-(autoload (quote mh-file-mime-type) "mh-mime" "\
+(autoload 'mh-file-mime-type "mh-mime" "\
 Return MIME type of FILENAME from file command.
 Returns nil if file command not on system.
 
 \(fn FILENAME)" nil nil)
 
-(autoload (quote mh-have-file-command) "mh-mime" "\
+(autoload 'mh-have-file-command "mh-mime" "\
 Return t if 'file' command is on the system.
 'file -i' is used to get MIME type of composition insertion.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-mime-cleanup) "mh-mime" "\
+(autoload 'mh-mime-cleanup "mh-mime" "\
 Free the decoded MIME parts.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-destroy-postponed-handles) "mh-mime" "\
+(autoload 'mh-destroy-postponed-handles "mh-mime" "\
 Free MIME data for externally displayed MIME parts.
 
 \(fn)" nil nil)
@@ -1828,10 +1836,10 @@ Free MIME data for externally displayed MIME parts.
 
 ;;;### (autoloads (mh-print-msg mh-ps-print-toggle-color mh-ps-print-toggle-faces
 ;;;;;;  mh-ps-print-msg-file mh-ps-print-msg) "mh-print" "mh-print.el"
-;;;;;;  (18305 34282))
+;;;;;;  (19005 47398))
 ;;; Generated autoloads from mh-print.el
 
-(autoload (quote mh-ps-print-msg) "mh-print" "\
+(autoload 'mh-ps-print-msg "mh-print" "\
 Print RANGE\\<mh-folder-mode-map>.
 
 Check the documentation of `mh-interactive-range' to see how RANGE is
@@ -1853,7 +1861,7 @@ commands \\[mh-ps-print-toggle-color] and
 
 \(fn RANGE)" t nil)
 
-(autoload (quote mh-ps-print-msg-file) "mh-print" "\
+(autoload 'mh-ps-print-msg-file "mh-print" "\
 Print RANGE to FILE\\<mh-folder-mode-map>.
 
 Check the documentation of `mh-interactive-range' to see how RANGE is
@@ -1875,7 +1883,7 @@ commands \\[mh-ps-print-toggle-color] and
 
 \(fn RANGE FILE)" t nil)
 
-(autoload (quote mh-ps-print-toggle-faces) "mh-print" "\
+(autoload 'mh-ps-print-toggle-faces "mh-print" "\
 Toggle whether printing is done with faces or not.
 
 When faces are enabled, the printed message will look very
@@ -1883,7 +1891,7 @@ similar to the message in the MH-Show buffer.
 
 \(fn)" t nil)
 
-(autoload (quote mh-ps-print-toggle-color) "mh-print" "\
+(autoload 'mh-ps-print-toggle-color "mh-print" "\
 Toggle whether color is used in printing messages.
 
 Colors are emulated on black-and-white printers with shades of
@@ -1896,7 +1904,7 @@ change this setting permanently by customizing the option
 
 \(fn)" t nil)
 
-(autoload (quote mh-print-msg) "mh-print" "\
+(autoload 'mh-print-msg "mh-print" "\
 Print RANGE the old fashioned way\\<mh-folder-mode-map>.
 
 The message is formatted with \"mhl\" (see option
@@ -1914,36 +1922,36 @@ Consider using \\[mh-ps-print-msg] instead.
 
 ;;;### (autoloads (mh-msg-num-width-to-column mh-msg-num-width mh-scan-format
 ;;;;;;  mh-set-cmd-note mh-scan-msg-search-regexp mh-scan-msg-number-regexp)
-;;;;;;  "mh-scan" "mh-scan.el" (18305 34281))
+;;;;;;  "mh-scan" "mh-scan.el" (19005 47398))
 ;;; Generated autoloads from mh-scan.el
 
-(autoload (quote mh-scan-msg-number-regexp) "mh-scan" "\
+(autoload 'mh-scan-msg-number-regexp "mh-scan" "\
 Return value of variable `mh-scan-msg-number-regexp'.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-scan-msg-search-regexp) "mh-scan" "\
+(autoload 'mh-scan-msg-search-regexp "mh-scan" "\
 Return value of variable `mh-scan-msg-search-regexp'.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-set-cmd-note) "mh-scan" "\
+(autoload 'mh-set-cmd-note "mh-scan" "\
 Set `mh-cmd-note' to COLUMN.
 Note that columns in Emacs start with 0.
 
 \(fn COLUMN)" nil nil)
 
-(autoload (quote mh-scan-format) "mh-scan" "\
+(autoload 'mh-scan-format "mh-scan" "\
 Return the output format argument for the scan program.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-msg-num-width) "mh-scan" "\
+(autoload 'mh-msg-num-width "mh-scan" "\
 Return the width of the largest message number in this FOLDER.
 
 \(fn FOLDER)" nil nil)
 
-(autoload (quote mh-msg-num-width-to-column) "mh-scan" "\
+(autoload 'mh-msg-num-width-to-column "mh-scan" "\
 Return the column for notations given message number WIDTH.
 Note that columns in Emacs start with 0.
 
@@ -1965,10 +1973,10 @@ comes after that.
 ;;;;;;  mh-index-group-by-folder mh-index-visit-folder mh-index-previous-folder
 ;;;;;;  mh-index-next-folder mh-index-sequenced-messages mh-index-ticked-messages
 ;;;;;;  mh-index-new-messages mh-search) "mh-search" "mh-search.el"
-;;;;;;  (18305 34281))
+;;;;;;  (19005 47398))
 ;;; Generated autoloads from mh-search.el
 
-(autoload (quote mh-search) "mh-search" "\
+(autoload 'mh-search "mh-search" "\
 Search your MH mail.
 
 This command helps you find messages in your entire corpus of
@@ -2097,7 +2105,7 @@ folder containing the index search results.
 
 \(fn FOLDER SEARCH-REGEXP &optional REDO-SEARCH-FLAG WINDOW-CONFIG)" t nil)
 
-(autoload (quote mh-index-new-messages) "mh-search" "\
+(autoload 'mh-index-new-messages "mh-search" "\
 Display unseen messages.
 
 If you use a program such as \"procmail\" to use \"rcvstore\" to file
@@ -2111,7 +2119,7 @@ or nothing to search all folders.
 
 \(fn FOLDERS)" t nil)
 
-(autoload (quote mh-index-ticked-messages) "mh-search" "\
+(autoload 'mh-index-ticked-messages "mh-search" "\
 Display ticked messages.
 
 All messages in `mh-tick-seq' from the folders in
@@ -2122,7 +2130,7 @@ or nothing to search all folders.
 
 \(fn FOLDERS)" t nil)
 
-(autoload (quote mh-index-sequenced-messages) "mh-search" "\
+(autoload 'mh-index-sequenced-messages "mh-search" "\
 Display messages in any sequence.
 
 All messages from the FOLDERS in `mh-new-messages-folders' in the
@@ -2132,7 +2140,7 @@ search all folders.
 
 \(fn FOLDERS SEQUENCE)" t nil)
 
-(autoload (quote mh-index-next-folder) "mh-search" "\
+(autoload 'mh-index-next-folder "mh-search" "\
 Jump to the next folder marker.
 
 With non-nil optional argument BACKWARD-FLAG, jump to the previous
@@ -2140,44 +2148,44 @@ group of results.
 
 \(fn &optional BACKWARD-FLAG)" t nil)
 
-(autoload (quote mh-index-previous-folder) "mh-search" "\
+(autoload 'mh-index-previous-folder "mh-search" "\
 Jump to the previous folder marker.
 
 \(fn)" t nil)
 
-(autoload (quote mh-index-visit-folder) "mh-search" "\
+(autoload 'mh-index-visit-folder "mh-search" "\
 Visit original folder from where the message at point was found.
 
 \(fn)" t nil)
 
-(autoload (quote mh-index-group-by-folder) "mh-search" "\
+(autoload 'mh-index-group-by-folder "mh-search" "\
 Partition the messages based on source folder.
 Returns an alist with the folder names in the car and the cdr
 being the list of messages originally from that folder.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-index-insert-folder-headers) "mh-search" "\
+(autoload 'mh-index-insert-folder-headers "mh-search" "\
 Annotate the search results with original folder names.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-index-delete-folder-headers) "mh-search" "\
+(autoload 'mh-index-delete-folder-headers "mh-search" "\
 Delete the folder headers.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-index-create-imenu-index) "mh-search" "\
+(autoload 'mh-index-create-imenu-index "mh-search" "\
 Create alist of folder names and positions in index folder buffers.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-search-p) "mh-search" "\
+(autoload 'mh-search-p "mh-search" "\
 Non-nil means that this folder was generated by searching.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-index-execute-commands) "mh-search" "\
+(autoload 'mh-index-execute-commands "mh-search" "\
 Delete/refile the actual messages.
 The copies in the searched folder are then deleted/refiled to get
 the desired result. Before deleting the messages we make sure
@@ -2186,38 +2194,38 @@ user has marked in the index buffer.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-index-create-sequences) "mh-search" "\
+(autoload 'mh-index-create-sequences "mh-search" "\
 Mirror sequences present in source folders in index folder.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-create-sequence-map) "mh-search" "\
+(autoload 'mh-create-sequence-map "mh-search" "\
 Return a map from msg number to list of sequences in which it is present.
 SEQ-LIST is an assoc list whose keys are sequence names and whose
 cdr is the list of messages in that sequence.
 
 \(fn SEQ-LIST)" nil nil)
 
-(autoload (quote mh-index-add-to-sequence) "mh-search" "\
+(autoload 'mh-index-add-to-sequence "mh-search" "\
 Add to SEQ the messages in the list MSGS.
 This function updates the source folder sequences. Also makes an
 attempt to update the source folder buffer if we have it open.
 
 \(fn SEQ MSGS)" nil nil)
 
-(autoload (quote mh-index-delete-from-sequence) "mh-search" "\
+(autoload 'mh-index-delete-from-sequence "mh-search" "\
 Delete from SEQ the messages in MSGS.
 This function updates the source folder sequences. Also makes an
 attempt to update the source folder buffer if present.
 
 \(fn SEQ MSGS)" nil nil)
 
-(autoload (quote mh-index-read-data) "mh-search" "\
+(autoload 'mh-index-read-data "mh-search" "\
 Read index data from file.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-index-update-maps) "mh-search" "\
+(autoload 'mh-index-update-maps "mh-search" "\
 Annotate all as yet unannotated messages in FOLDER with their MD5 hash.
 As a side effect msg -> checksum map is updated. Optional
 argument ORIGIN-MAP is a hashtable which maps each message in the
@@ -2238,10 +2246,10 @@ origin-index) map is updated too.
 ;;;;;;  mh-read-seq-default mh-widen mh-toggle-tick mh-put-msg-in-seq
 ;;;;;;  mh-narrow-to-tick mh-narrow-to-seq mh-msg-is-in-seq mh-list-sequences
 ;;;;;;  mh-delete-seq mh-delete-msg-from-seq mh-catchup) "mh-seq"
-;;;;;;  "mh-seq.el" (18345 62269))
+;;;;;;  "mh-seq.el" (19005 47398))
 ;;; Generated autoloads from mh-seq.el
 
-(autoload (quote mh-catchup) "mh-seq" "\
+(autoload 'mh-catchup "mh-seq" "\
 Delete RANGE from the \"unseen\" sequence.
 
 Check the documentation of `mh-interactive-range' to see how
@@ -2249,7 +2257,7 @@ RANGE is read in interactive use.
 
 \(fn RANGE)" t nil)
 
-(autoload (quote mh-delete-msg-from-seq) "mh-seq" "\
+(autoload 'mh-delete-msg-from-seq "mh-seq" "\
 Delete RANGE from SEQUENCE.
 
 Check the documentation of `mh-interactive-range' to see how
@@ -2260,7 +2268,7 @@ change.
 
 \(fn RANGE SEQUENCE &optional INTERNAL-FLAG)" t nil)
 
-(autoload (quote mh-delete-seq) "mh-seq" "\
+(autoload 'mh-delete-seq "mh-seq" "\
 Delete SEQUENCE.
 
 You are prompted for the sequence to delete. Note that this
@@ -2270,14 +2278,14 @@ you want to delete the messages, use \"\\[universal-argument]
 
 \(fn SEQUENCE)" t nil)
 
-(autoload (quote mh-list-sequences) "mh-seq" "\
+(autoload 'mh-list-sequences "mh-seq" "\
 List all sequences in folder.
 
 The list appears in a buffer named \"*MH-E Sequences*\".
 
 \(fn)" t nil)
 
-(autoload (quote mh-msg-is-in-seq) "mh-seq" "\
+(autoload 'mh-msg-is-in-seq "mh-seq" "\
 Display the sequences in which the current message appears.
 
 Use a prefix argument to display the sequences in which another
@@ -2285,7 +2293,7 @@ MESSAGE appears.
 
 \(fn MESSAGE)" t nil)
 
-(autoload (quote mh-narrow-to-seq) "mh-seq" "\
+(autoload 'mh-narrow-to-seq "mh-seq" "\
 Restrict display to messages in SEQUENCE.
 
 You are prompted for the name of the sequence. What this command
@@ -2298,7 +2306,7 @@ When you want to widen the view to all your messages again, use
 
 \(fn SEQUENCE)" t nil)
 
-(autoload (quote mh-narrow-to-tick) "mh-seq" "\
+(autoload 'mh-narrow-to-tick "mh-seq" "\
 Limit to ticked messages.
 
 What this command does is show only those messages that are in
@@ -2310,7 +2318,7 @@ want to widen the view to all your messages again, use
 
 \(fn)" t nil)
 
-(autoload (quote mh-put-msg-in-seq) "mh-seq" "\
+(autoload 'mh-put-msg-in-seq "mh-seq" "\
 Add RANGE to SEQUENCE\\<mh-folder-mode-map>.
 
 Give this command a RANGE and you can add all the messages in a
@@ -2322,7 +2330,7 @@ use.
 
 \(fn RANGE SEQUENCE)" t nil)
 
-(autoload (quote mh-toggle-tick) "mh-seq" "\
+(autoload 'mh-toggle-tick "mh-seq" "\
 Toggle tick mark of RANGE.
 
 This command adds messages to the \"tick\" sequence (which you can customize
@@ -2334,7 +2342,7 @@ interactive use.
 
 \(fn RANGE)" t nil)
 
-(autoload (quote mh-widen) "mh-seq" "\
+(autoload 'mh-widen "mh-seq" "\
 Remove last restriction.
 
 Each limit or sequence restriction can be undone in turn with
@@ -2343,41 +2351,41 @@ remove all limits and sequence restrictions.
 
 \(fn &optional ALL-FLAG)" t nil)
 
-(autoload (quote mh-read-seq-default) "mh-seq" "\
+(autoload 'mh-read-seq-default "mh-seq" "\
 Read and return sequence name with default narrowed or previous sequence.
 PROMPT is the prompt to use when reading. If NOT-EMPTY is non-nil
 then a non-empty sequence is read.
 
 \(fn PROMPT NOT-EMPTY)" nil nil)
 
-(autoload (quote mh-valid-seq-p) "mh-seq" "\
+(autoload 'mh-valid-seq-p "mh-seq" "\
 Return non-nil if NAME is a valid MH sequence name.
 
 \(fn NAME)" nil nil)
 
-(autoload (quote mh-find-seq) "mh-seq" "\
+(autoload 'mh-find-seq "mh-seq" "\
 Return sequence NAME.
 
 \(fn NAME)" nil nil)
 
-(autoload (quote mh-seq-to-msgs) "mh-seq" "\
+(autoload 'mh-seq-to-msgs "mh-seq" "\
 Return a list of the messages in SEQ.
 
 \(fn SEQ)" nil nil)
 
-(autoload (quote mh-define-sequence) "mh-seq" "\
+(autoload 'mh-define-sequence "mh-seq" "\
 Define the SEQ to contain the list of MSGS.
 Do not mark pseudo-sequences or empty sequences.
 Signals an error if SEQ is an invalid name.
 
 \(fn SEQ MSGS)" nil nil)
 
-(autoload (quote mh-undefine-sequence) "mh-seq" "\
+(autoload 'mh-undefine-sequence "mh-seq" "\
 Remove from the SEQ the list of MSGS.
 
 \(fn SEQ MSGS)" nil nil)
 
-(autoload (quote mh-add-msgs-to-seq) "mh-seq" "\
+(autoload 'mh-add-msgs-to-seq "mh-seq" "\
 Add MSGS to SEQ.
 
 Remove duplicates and keep sequence sorted. If optional
@@ -2389,13 +2397,13 @@ folder buffer are not updated.
 
 \(fn MSGS SEQ &optional INTERNAL-FLAG DONT-ANNOTATE-FLAG)" nil nil)
 
-(autoload (quote mh-valid-view-change-operation-p) "mh-seq" "\
+(autoload 'mh-valid-view-change-operation-p "mh-seq" "\
 Check if the view change operation can be performed.
 OP is one of 'widen and 'unthread.
 
 \(fn OP)" nil nil)
 
-(autoload (quote mh-interactive-range) "mh-seq" "\
+(autoload 'mh-interactive-range "mh-seq" "\
 Return interactive specification for message, sequence, range or region.
 By convention, the name of this argument is RANGE.
 
@@ -2417,7 +2425,7 @@ provide a uniform interface to MH-E functions.
 
 \(fn RANGE-PROMPT &optional DEFAULT)" nil nil)
 
-(autoload (quote mh-read-range) "mh-seq" "\
+(autoload 'mh-read-range "mh-seq" "\
 Read a message range with PROMPT.
 
 If FOLDER is non-nil then a range is read from that folder, otherwise
@@ -2459,7 +2467,7 @@ should be replaced with:
 
 \(fn PROMPT &optional FOLDER DEFAULT EXPAND-FLAG ASK-FLAG NUMBER-AS-RANGE-FLAG)" nil nil)
 
-(autoload (quote mh-range-to-msg-list) "mh-seq" "\
+(autoload 'mh-range-to-msg-list "mh-seq" "\
 Return a list of messages for RANGE.
 
 Check the documentation of `mh-interactive-range' to see how
@@ -2467,12 +2475,12 @@ RANGE is read in interactive use.
 
 \(fn RANGE)" nil nil)
 
-(autoload (quote mh-translate-range) "mh-seq" "\
+(autoload 'mh-translate-range "mh-seq" "\
 In FOLDER, translate the string EXPR to a list of messages numbers.
 
 \(fn FOLDER EXPR)" nil nil)
 
-(autoload (quote mh-parse-flist-output-line) "mh-seq" "\
+(autoload 'mh-parse-flist-output-line "mh-seq" "\
 Parse LINE to generate folder name, unseen messages and total messages.
 If CURRENT-FOLDER is non-nil then it contains the current folder
 name and it is used to avoid problems in corner cases involving
@@ -2480,21 +2488,21 @@ folders whose names end with a '+' character.
 
 \(fn LINE &optional CURRENT-FOLDER)" nil nil)
 
-(autoload (quote mh-read-folder-sequences) "mh-seq" "\
+(autoload 'mh-read-folder-sequences "mh-seq" "\
 Read and return the predefined sequences for a FOLDER.
 If SAVE-REFILES is non-nil, then keep the sequences
 that note messages to be refiled.
 
 \(fn FOLDER SAVE-REFILES)" nil nil)
 
-(autoload (quote mh-notate) "mh-seq" "\
+(autoload 'mh-notate "mh-seq" "\
 Mark MSG with the character NOTATION at position OFFSET.
 Null MSG means the message at cursor.
 If NOTATION is nil then no change in the buffer occurs.
 
 \(fn MSG NOTATION OFFSET)" nil nil)
 
-(autoload (quote mh-notate-cur) "mh-seq" "\
+(autoload 'mh-notate-cur "mh-seq" "\
 Mark the MH sequence cur.
 In addition to notating the current message with `mh-note-cur'
 the function uses `overlay-arrow-position' to put a marker in the
@@ -2502,19 +2510,19 @@ fringe.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-remove-cur-notation) "mh-seq" "\
+(autoload 'mh-remove-cur-notation "mh-seq" "\
 Remove old cur notation.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-notate-deleted-and-refiled) "mh-seq" "\
+(autoload 'mh-notate-deleted-and-refiled "mh-seq" "\
 Notate messages marked for deletion or refiling.
 Messages to be deleted are given by `mh-delete-list' while
 messages to be refiled are present in `mh-refile-list'.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-notate-user-sequences) "mh-seq" "\
+(autoload 'mh-notate-user-sequences "mh-seq" "\
 Mark user-defined sequences in RANGE.
 
 Check the documentation of `mh-interactive-range' to see how
@@ -2523,7 +2531,7 @@ notated.
 
 \(fn &optional RANGE)" nil nil)
 
-(autoload (quote mh-remove-all-notation) "mh-seq" "\
+(autoload 'mh-remove-all-notation "mh-seq" "\
 Remove all notations on all scan lines that MH-E introduces.
 
 \(fn)" nil nil)
@@ -2534,11 +2542,11 @@ Remove all notations on all scan lines that MH-E introduces.
 ;;;;;;  mh-show-mode mh-show-font-lock-keywords-with-cite mh-show-font-lock-keywords
 ;;;;;;  mh-invalidate-show-buffer mh-clean-msg-header mh-display-msg
 ;;;;;;  mh-start-of-uncleaned-message mh-showing-mode mh-maybe-show
-;;;;;;  mh-header-display mh-show) "mh-show" "mh-show.el" (18305
-;;;;;;  34281))
+;;;;;;  mh-show-preferred-alternative mh-header-display mh-show)
+;;;;;;  "mh-show" "mh-show.el" (19005 47398))
 ;;; Generated autoloads from mh-show.el
 
-(autoload (quote mh-show) "mh-show" "\
+(autoload 'mh-show "mh-show" "\
 Display message\\<mh-folder-mode-map>.
 
 If the message under the cursor is already displayed, this command
@@ -2564,38 +2572,46 @@ control what displayed messages look like.
 
 \(fn &optional MESSAGE REDISPLAY-FLAG)" t nil)
 
-(autoload (quote mh-header-display) "mh-show" "\
+(autoload 'mh-header-display "mh-show" "\
 Display message with all header fields\\<mh-folder-mode-map>.
 
 Use the command \\[mh-show] to show the message normally again.
 
 \(fn)" t nil)
 
-(autoload (quote mh-maybe-show) "mh-show" "\
+(autoload 'mh-show-preferred-alternative "mh-show" "\
+Display message with the default preferred alternative.
+This is as if `mm-discouraged-alternatives' is set to nil.
+
+Use the command \\[mh-show] to show the message normally again.
+
+\(fn)" t nil)
+
+(autoload 'mh-maybe-show "mh-show" "\
 Display message at cursor, but only if in show mode.
 If optional arg MSG is non-nil, display that message instead.
 
 \(fn &optional MSG)" nil nil)
 
-(autoload (quote mh-showing-mode) "mh-show" "\
+(autoload 'mh-showing-mode "mh-show" "\
 Change whether messages should be displayed.
 
 With ARG, display messages if ARG is positive, otherwise don't display them.
 
 \(fn &optional ARG)" nil nil)
 
-(autoload (quote mh-start-of-uncleaned-message) "mh-show" "\
+(autoload 'mh-start-of-uncleaned-message "mh-show" "\
 Position uninteresting headers off the top of the window.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-display-msg) "mh-show" "\
+(autoload 'mh-display-msg "mh-show" "\
 Display MSG-NUM of FOLDER-NAME.
 Sets the current buffer to the show buffer.
 
 \(fn MSG-NUM FOLDER-NAME)" nil nil)
 
-(autoload (quote mh-clean-msg-header) "mh-show" "\
+(autoload 'mh-clean-msg-header "mh-show" "\
 Flush extraneous lines in message header.
 
 Header is cleaned from START to the end of the message header.
@@ -2606,22 +2622,22 @@ ignored if VISIBLE-HEADERS is non-nil.
 
 \(fn START INVISIBLE-HEADERS VISIBLE-HEADERS)" nil nil)
 
-(autoload (quote mh-invalidate-show-buffer) "mh-show" "\
+(autoload 'mh-invalidate-show-buffer "mh-show" "\
 Invalidate the show buffer so we must update it to use it.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-show-font-lock-keywords) "mh-show" "\
+(autoload 'mh-show-font-lock-keywords "mh-show" "\
 Return variable `mh-show-font-lock-keywords'.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-show-font-lock-keywords-with-cite) "mh-show" "\
+(autoload 'mh-show-font-lock-keywords-with-cite "mh-show" "\
 Return variable `mh-show-font-lock-keywords-with-cite'.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-show-mode) "mh-show" "\
+(autoload 'mh-show-mode "mh-show" "\
 Major mode for showing messages in MH-E.\\<mh-show-mode-map>
 
 Email addresses and URLs in the message are highlighted if the
@@ -2639,12 +2655,12 @@ See also `mh-folder-mode'.
 
 \(fn)" t nil)
 
-(autoload (quote mh-show-addr) "mh-show" "\
+(autoload 'mh-show-addr "mh-show" "\
 Use `goto-address'.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-gnus-article-highlight-citation) "mh-show" "\
+(autoload 'mh-gnus-article-highlight-citation "mh-show" "\
 Highlight cited text in current buffer using Gnus.
 
 \(fn)" t nil)
@@ -2652,22 +2668,22 @@ Highlight cited text in current buffer using Gnus.
 ;;;***
 
 ;;;### (autoloads (mh-speed-add-folder mh-speed-invalidate-map mh-speed-flists
-;;;;;;  mh-folder-speedbar-buttons) "mh-speed" "mh-speed.el" (18305
-;;;;;;  34281))
+;;;;;;  mh-folder-speedbar-buttons) "mh-speed" "mh-speed.el" (19005
+;;;;;;  47398))
 ;;; Generated autoloads from mh-speed.el
 
-(autoload (quote mh-folder-speedbar-buttons) "mh-speed" "\
+(autoload 'mh-folder-speedbar-buttons "mh-speed" "\
 Interface function to create MH-E speedbar buffer.
 BUFFER is the MH-E buffer for which the speedbar buffer is to be
 created.
 
 \(fn BUFFER)" nil nil)
 
-(defalias (quote mh-show-speedbar-buttons) (quote mh-folder-speedbar-buttons))
+(defalias 'mh-show-speedbar-buttons 'mh-folder-speedbar-buttons)
 
-(defalias (quote mh-letter-speedbar-buttons) (quote mh-folder-speedbar-buttons))
+(defalias 'mh-letter-speedbar-buttons 'mh-folder-speedbar-buttons)
 
-(autoload (quote mh-speed-flists) "mh-speed" "\
+(autoload 'mh-speed-flists "mh-speed" "\
 Execute flists -recurse and update message counts.
 If FORCE is non-nil the timer is reset.
 
@@ -2676,12 +2692,12 @@ flists is run only for that one folder.
 
 \(fn FORCE &rest FOLDERS)" t nil)
 
-(autoload (quote mh-speed-invalidate-map) "mh-speed" "\
+(autoload 'mh-speed-invalidate-map "mh-speed" "\
 Remove FOLDER from various optimization caches.
 
 \(fn FOLDER)" t nil)
 
-(autoload (quote mh-speed-add-folder) "mh-speed" "\
+(autoload 'mh-speed-add-folder "mh-speed" "\
 Add FOLDER since it is being created.
 The function invalidates the latest ancestor that is present.
 
@@ -2694,10 +2710,10 @@ The function invalidates the latest ancestor that is present.
 ;;;;;;  mh-thread-print-scan-lines mh-thread-generate mh-thread-parse-scan-line
 ;;;;;;  mh-thread-inc mh-toggle-threads mh-thread-refile mh-thread-previous-sibling
 ;;;;;;  mh-thread-next-sibling mh-thread-delete mh-thread-ancestor)
-;;;;;;  "mh-thread" "mh-thread.el" (18305 34281))
+;;;;;;  "mh-thread" "mh-thread.el" (19005 47398))
 ;;; Generated autoloads from mh-thread.el
 
-(autoload (quote mh-thread-ancestor) "mh-thread" "\
+(autoload 'mh-thread-ancestor "mh-thread" "\
 Display ancestor of current message.
 
 If you do not care for the way a particular thread has turned,
@@ -2707,12 +2723,12 @@ to the message that started everything.
 
 \(fn &optional THREAD-ROOT-FLAG)" t nil)
 
-(autoload (quote mh-thread-delete) "mh-thread" "\
+(autoload 'mh-thread-delete "mh-thread" "\
 Delete thread.
 
 \(fn)" t nil)
 
-(autoload (quote mh-thread-next-sibling) "mh-thread" "\
+(autoload 'mh-thread-next-sibling "mh-thread" "\
 Display next sibling.
 
 With non-nil optional argument PREVIOUS-FLAG jump to the previous
@@ -2720,28 +2736,28 @@ sibling.
 
 \(fn &optional PREVIOUS-FLAG)" t nil)
 
-(autoload (quote mh-thread-previous-sibling) "mh-thread" "\
+(autoload 'mh-thread-previous-sibling "mh-thread" "\
 Display previous sibling.
 
 \(fn)" t nil)
 
-(autoload (quote mh-thread-refile) "mh-thread" "\
+(autoload 'mh-thread-refile "mh-thread" "\
 Refile (output) thread into FOLDER.
 
 \(fn FOLDER)" t nil)
 
-(autoload (quote mh-toggle-threads) "mh-thread" "\
+(autoload 'mh-toggle-threads "mh-thread" "\
 Toggle threaded view of folder.
 
 \(fn)" t nil)
 
-(autoload (quote mh-thread-inc) "mh-thread" "\
+(autoload 'mh-thread-inc "mh-thread" "\
 Update thread tree for FOLDER.
 All messages after START-POINT are added to the thread tree.
 
 \(fn FOLDER START-POINT)" nil nil)
 
-(autoload (quote mh-thread-parse-scan-line) "mh-thread" "\
+(autoload 'mh-thread-parse-scan-line "mh-thread" "\
 Parse a scan line.
 If optional argument STRING is given then that is assumed to be
 the scan line. Otherwise uses the line at point as the scan line
@@ -2749,35 +2765,35 @@ to parse.
 
 \(fn &optional STRING)" nil nil)
 
-(autoload (quote mh-thread-generate) "mh-thread" "\
+(autoload 'mh-thread-generate "mh-thread" "\
 Scan FOLDER to get info for threading.
 Only information about messages in MSG-LIST are added to the tree.
 
 \(fn FOLDER MSG-LIST)" nil nil)
 
-(autoload (quote mh-thread-print-scan-lines) "mh-thread" "\
+(autoload 'mh-thread-print-scan-lines "mh-thread" "\
 Print scan lines in THREAD-TREE in threaded mode.
 
 \(fn THREAD-TREE)" nil nil)
 
-(autoload (quote mh-thread-update-scan-line-map) "mh-thread" "\
+(autoload 'mh-thread-update-scan-line-map "mh-thread" "\
 In threaded view update `mh-thread-scan-line-map'.
 MSG is the message being notated with NOTATION at OFFSET.
 
 \(fn MSG NOTATION OFFSET)" nil nil)
 
-(autoload (quote mh-thread-find-msg-subject) "mh-thread" "\
+(autoload 'mh-thread-find-msg-subject "mh-thread" "\
 Find canonicalized subject of MSG.
 This function can only be used the folder is threaded.
 
 \(fn MSG)" nil nil)
 
-(autoload (quote mh-thread-add-spaces) "mh-thread" "\
+(autoload 'mh-thread-add-spaces "mh-thread" "\
 Add COUNT spaces to each scan line in `mh-thread-scan-line-map'.
 
 \(fn COUNT)" nil nil)
 
-(autoload (quote mh-thread-forget-message) "mh-thread" "\
+(autoload 'mh-thread-forget-message "mh-thread" "\
 Forget the message INDEX from the threading tables.
 
 \(fn INDEX)" nil nil)
@@ -2796,64 +2812,64 @@ Forget the message INDEX from the threading tables.
 ;;;;;;  mh-help mh-set-help mh-ephem-message mh-find-path mh-logo-display
 ;;;;;;  mh-replace-string mh-quote-pick-expr mh-mapc mh-make-local-vars
 ;;;;;;  mh-delete-line mh-colors-in-use-p mh-colors-available-p mh-beginning-of-word
-;;;;;;  mh-search-from-end) "mh-utils" "mh-utils.el" (18305 34280))
+;;;;;;  mh-search-from-end) "mh-utils" "mh-utils.el" (19005 47398))
 ;;; Generated autoloads from mh-utils.el
 
-(autoload (quote mh-search-from-end) "mh-utils" "\
+(autoload 'mh-search-from-end "mh-utils" "\
 Return the position of last occurrence of CHAR in STRING.
 If CHAR is not present in STRING then return nil. The function is
 used in lieu of `search' in the CL package.
 
 \(fn CHAR STRING)" nil nil)
 
-(autoload (quote mh-beginning-of-word) "mh-utils" "\
+(autoload 'mh-beginning-of-word "mh-utils" "\
 Return position of the N th word backwards.
 
 \(fn &optional N)" nil nil)
 
-(autoload (quote mh-colors-available-p) "mh-utils" "\
+(autoload 'mh-colors-available-p "mh-utils" "\
 Check if colors are available in the Emacs being used.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-colors-in-use-p) "mh-utils" "\
+(autoload 'mh-colors-in-use-p "mh-utils" "\
 Check if colors are being used in the folder buffer.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-delete-line) "mh-utils" "\
+(autoload 'mh-delete-line "mh-utils" "\
 Delete the next LINES lines.
 
 \(fn LINES)" nil nil)
 
-(autoload (quote mh-make-local-vars) "mh-utils" "\
+(autoload 'mh-make-local-vars "mh-utils" "\
 Initialize local variables according to the variable-value PAIRS.
 
 \(fn &rest PAIRS)" nil nil)
 
-(autoload (quote mh-mapc) "mh-utils" "\
+(autoload 'mh-mapc "mh-utils" "\
 Apply FUNCTION to each element of LIST for side effects only.
 
 \(fn FUNCTION LIST)" nil nil)
 
-(autoload (quote mh-quote-pick-expr) "mh-utils" "\
+(autoload 'mh-quote-pick-expr "mh-utils" "\
 Quote `mh-pick-regexp-chars' in PICK-EXPR.
 PICK-EXPR is a list of strings. Return nil if PICK-EXPR is nil.
 
 \(fn PICK-EXPR)" nil nil)
 
-(autoload (quote mh-replace-string) "mh-utils" "\
+(autoload 'mh-replace-string "mh-utils" "\
 Replace all occurrences of OLD with NEW in the current buffer.
 Ignores case when searching for OLD.
 
 \(fn OLD NEW)" nil nil)
 
-(autoload (quote mh-logo-display) "mh-utils" "\
+(autoload 'mh-logo-display "mh-utils" "\
 Modify mode line to display MH-E logo.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-find-path) "mh-utils" "\
+(autoload 'mh-find-path "mh-utils" "\
 Set variables from user's MH profile.
 
 This function sets `mh-user-path' from your \"Path:\" MH profile
@@ -2870,12 +2886,12 @@ MH-E.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-ephem-message) "mh-utils" "\
+(autoload 'mh-ephem-message "mh-utils" "\
 Display STRING in the minibuffer momentarily.
 
 \(fn STRING)" nil nil)
 
-(autoload (quote mh-set-help) "mh-utils" "\
+(autoload 'mh-set-help "mh-utils" "\
 Set help messages.
 
 The MESSAGES are assumed to be an associative array. It is used
@@ -2893,7 +2909,7 @@ be used if help is asked for an unknown mode.
 
 \(fn MESSAGES &optional DEFAULT)" nil nil)
 
-(autoload (quote mh-help) "mh-utils" "\
+(autoload 'mh-help "mh-utils" "\
 Display cheat sheet for the MH-E commands.
 See `mh-set-help' for setting the help messages.
 HELP-MESSAGES are used instead if given.
@@ -2902,12 +2918,12 @@ and displayed in a help buffer.
 
 \(fn &optional HELP-MESSAGES)" t nil)
 
-(autoload (quote mh-prefix-help) "mh-utils" "\
+(autoload 'mh-prefix-help "mh-utils" "\
 Display cheat sheet for the commands of the current prefix in minibuffer.
 
 \(fn)" t nil)
 
-(autoload (quote mh-coalesce-msg-list) "mh-utils" "\
+(autoload 'mh-coalesce-msg-list "mh-utils" "\
 Given a list of MESSAGES, return a list of message number ranges.
 This is the inverse of `mh-read-msg-list', which expands ranges.
 Message lists passed to MH programs should be processed by this
@@ -2915,26 +2931,26 @@ function to avoid exceeding system command line argument limits.
 
 \(fn MESSAGES)" nil nil)
 
-(autoload (quote mh-lessp) "mh-utils" "\
+(autoload 'mh-lessp "mh-utils" "\
 Return the lesser of two message indicators MSG1 and MSG2.
 Strings are \"smaller\" than numbers.
 Valid values are things like \"cur\", \"last\", 1, and 1820.
 
 \(fn MSG1 MSG2)" nil nil)
 
-(autoload (quote mh-get-msg-num) "mh-utils" "\
+(autoload 'mh-get-msg-num "mh-utils" "\
 Return the message number of the displayed message.
 If the argument ERROR-IF-NO-MESSAGE is non-nil, then complain if
 the cursor is not pointing to a message.
 
 \(fn ERROR-IF-NO-MESSAGE)" nil nil)
 
-(autoload (quote mh-clear-sub-folders-cache) "mh-utils" "\
+(autoload 'mh-clear-sub-folders-cache "mh-utils" "\
 Clear `mh-sub-folders-cache'.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-folder-list) "mh-utils" "\
+(autoload 'mh-folder-list "mh-utils" "\
 Return FOLDER and its descendents.
 FOLDER may have a + prefix. Returns a list of strings without the
 + prefix. If FOLDER is nil, then all folders are considered. For
@@ -2952,7 +2968,7 @@ they will not be returned.
 
 \(fn FOLDER)" nil nil)
 
-(autoload (quote mh-sub-folders) "mh-utils" "\
+(autoload 'mh-sub-folders "mh-utils" "\
 Find the subfolders of FOLDER.
 The function avoids running folders unnecessarily by caching the
 results of the actual folders call.
@@ -2963,7 +2979,7 @@ nested folders within them.
 
 \(fn FOLDER &optional ADD-TRAILING-SLASH-FLAG)" nil nil)
 
-(autoload (quote mh-remove-from-sub-folders-cache) "mh-utils" "\
+(autoload 'mh-remove-from-sub-folders-cache "mh-utils" "\
 Remove FOLDER and its parent from `mh-sub-folders-cache'.
 FOLDER should be unconditionally removed from the cache. Also the
 last ancestor of FOLDER present in the cache must be removed as
@@ -2977,26 +2993,26 @@ otherwise completion on +foo won't tell us about the option
 
 \(fn FOLDER)" nil nil)
 
-(autoload (quote mh-folder-name-p) "mh-utils" "\
+(autoload 'mh-folder-name-p "mh-utils" "\
 Return non-nil if NAME is the name of a folder.
 A name (a string or symbol) can be a folder name if it begins
 with \"+\".
 
 \(fn NAME)" nil nil)
 
-(autoload (quote mh-expand-file-name) "mh-utils" "\
+(autoload 'mh-expand-file-name "mh-utils" "\
 Expand FILENAME like `expand-file-name', but also handle MH folder names.
 Any filename that starts with '+' is treated as a folder name.
 See `expand-file-name' for description of DEFAULT.
 
 \(fn FILENAME &optional DEFAULT)" nil nil)
 
-(autoload (quote mh-speed-flists-active-p) "mh-utils" "\
+(autoload 'mh-speed-flists-active-p "mh-utils" "\
 Check if speedbar is running with message counts enabled.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-folder-completion-function) "mh-utils" "\
+(autoload 'mh-folder-completion-function "mh-utils" "\
 Programmable completion for folder names.
 NAME is the partial folder name that has been input. PREDICATE if
 non-nil is a function that is used to filter the possible
@@ -3006,7 +3022,7 @@ See Info node `(elisp) Programmed Completion' for details.
 
 \(fn NAME PREDICATE FLAG)" nil nil)
 
-(autoload (quote mh-prompt-for-folder) "mh-utils" "\
+(autoload 'mh-prompt-for-folder "mh-utils" "\
 Prompt for a folder name with PROMPT.
 Returns the folder's name as a string. DEFAULT is used if the
 folder exists and the user types return. If the CAN-CREATE flag
@@ -3018,36 +3034,36 @@ used in searching.
 
 \(fn PROMPT DEFAULT CAN-CREATE &optional DEFAULT-STRING ALLOW-ROOT-FOLDER-FLAG)" nil nil)
 
-(autoload (quote mh-in-header-p) "mh-utils" "\
+(autoload 'mh-in-header-p "mh-utils" "\
 Return non-nil if the point is in the header of a draft message.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-extract-from-header-value) "mh-utils" "\
+(autoload 'mh-extract-from-header-value "mh-utils" "\
 Extract From: string from header.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-get-header-field) "mh-utils" "\
+(autoload 'mh-get-header-field "mh-utils" "\
 Find and return the body of FIELD in the mail header.
 Returns the empty string if the field is not in the header of the
 current buffer.
 
 \(fn FIELD)" nil nil)
 
-(autoload (quote mh-goto-header-field) "mh-utils" "\
+(autoload 'mh-goto-header-field "mh-utils" "\
 Move to FIELD in the message header.
 Move to the end of the FIELD name, which should end in a colon.
 Returns t if found, nil if not.
 
 \(fn FIELD)" nil nil)
 
-(autoload (quote mh-goto-header-end) "mh-utils" "\
+(autoload 'mh-goto-header-end "mh-utils" "\
 Move the cursor ARG lines after the header.
 
 \(fn ARG)" nil nil)
 
-(autoload (quote mh-mail-header-end) "mh-utils" "\
+(autoload 'mh-mail-header-end "mh-utils" "\
 Substitute for `mail-header-end' that doesn't widen the buffer.
 
 In MH-E we frequently need to find the end of headers in nested
@@ -3056,29 +3072,29 @@ in this situation.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-header-field-beginning) "mh-utils" "\
+(autoload 'mh-header-field-beginning "mh-utils" "\
 Move to the beginning of the current header field.
 Handles RFC 822 continuation lines.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-header-field-end) "mh-utils" "\
+(autoload 'mh-header-field-end "mh-utils" "\
 Move to the end of the current header field.
 Handles RFC 822 continuation lines.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-letter-hide-all-skipped-fields) "mh-utils" "\
+(autoload 'mh-letter-hide-all-skipped-fields "mh-utils" "\
 Hide all skipped fields.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-letter-skipped-header-field-p) "mh-utils" "\
+(autoload 'mh-letter-skipped-header-field-p "mh-utils" "\
 Check if FIELD is to be skipped.
 
 \(fn FIELD)" nil nil)
 
-(autoload (quote mh-letter-toggle-header-field-display) "mh-utils" "\
+(autoload 'mh-letter-toggle-header-field-display "mh-utils" "\
 Toggle display of header field at point.
 
 Use this command to display truncated header fields. This command
@@ -3088,14 +3104,14 @@ is hidden, if positive then the field is displayed.
 
 \(fn ARG)" t nil)
 
-(autoload (quote mh-letter-skip-leading-whitespace-in-header-field) "mh-utils" "\
+(autoload 'mh-letter-skip-leading-whitespace-in-header-field "mh-utils" "\
 Skip leading whitespace in a header field.
 If the header field doesn't have at least one space after the
 colon then a space character is added.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-signature-separator-p) "mh-utils" "\
+(autoload 'mh-signature-separator-p "mh-utils" "\
 Return non-nil if buffer includes \"^-- $\".
 
 \(fn)" nil nil)
@@ -3103,15 +3119,15 @@ Return non-nil if buffer includes \"^-- $\".
 ;;;***
 
 ;;;### (autoloads (mh-set-x-image-cache-directory mh-show-xface)
-;;;;;;  "mh-xface" "mh-xface.el" (18344 28424))
+;;;;;;  "mh-xface" "mh-xface.el" (19005 47398))
 ;;; Generated autoloads from mh-xface.el
 
-(autoload (quote mh-show-xface) "mh-xface" "\
+(autoload 'mh-show-xface "mh-xface" "\
 Display X-Face.
 
 \(fn)" nil nil)
 
-(autoload (quote mh-set-x-image-cache-directory) "mh-xface" "\
+(autoload 'mh-set-x-image-cache-directory "mh-xface" "\
 Set the DIRECTORY where X-Image-URL images are cached.
 This is only done if `mh-x-image-cache-directory' is nil.
 
@@ -3120,7 +3136,7 @@ This is only done if `mh-x-image-cache-directory' is nil.
 ;;;***
 
 ;;;### (autoloads nil nil ("mh-buffers.el" "mh-compat.el" "mh-e.el"
-;;;;;;  "mh-gnus.el" "mh-tool-bar.el") (18625 23307 35037))
+;;;;;;  "mh-gnus.el" "mh-tool-bar.el") (19056 26497 754103))
 
 ;;;***
 
@@ -3129,5 +3145,6 @@ This is only done if `mh-x-image-cache-directory' is nil.
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; mh-loaddefs.el ends here

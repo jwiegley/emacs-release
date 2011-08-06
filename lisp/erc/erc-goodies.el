@@ -1,6 +1,6 @@
 ;; erc-goodies.el --- Collection of ERC modules
 
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Jorgen Schaefer <forcer@forcix.cx>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -33,10 +31,14 @@
 
 (require 'erc)
 
-;; Imenu Autoload
-(add-hook 'erc-mode-hook
-          (lambda ()
-            (setq imenu-create-index-function 'erc-create-imenu-index)))
+;;; Imenu support
+
+(defun erc-imenu-setup ()
+  "Setup Imenu support in an ERC buffer."
+  (set (make-local-variable 'imenu-create-index-function)
+       'erc-create-imenu-index))
+
+(add-hook 'erc-mode-hook 'erc-imenu-setup)
 (autoload 'erc-create-imenu-index "erc-imenu" "Imenu index creation function")
 
 ;;; Automatically scroll to bottom
@@ -51,11 +53,15 @@ argument to `recenter'."
   :type '(choice integer (const nil)))
 
 (define-erc-module scrolltobottom nil
-  "This mode causes the prompt to stay at the end of the window.
-You have to activate or deactivate it in already created windows
-separately."
-  ((add-hook 'erc-mode-hook 'erc-add-scroll-to-bottom))
-  ((remove-hook 'erc-mode-hook 'erc-add-scroll-to-bottom)))
+  "This mode causes the prompt to stay at the end of the window."
+  ((add-hook 'erc-mode-hook 'erc-add-scroll-to-bottom)
+   (dolist (buffer (erc-buffer-list))
+     (with-current-buffer buffer
+       (erc-add-scroll-to-bottom))))
+  ((remove-hook 'erc-mode-hook 'erc-add-scroll-to-bottom)
+   (dolist (buffer (erc-buffer-list))
+     (with-current-buffer buffer
+       (remove-hook 'window-scroll-functions 'erc-scroll-to-bottom t)))))
 
 (defun erc-add-scroll-to-bottom ()
   "A hook function for `erc-mode-hook' to recenter output at bottom of window.
@@ -77,15 +83,14 @@ You can control which line is recentered to by customizing the
 variable `erc-input-line-position'.
 
 DISPLAY-START is ignored."
-  (if (and window (window-live-p window))
+  (if (window-live-p window)
       ;; Temporarily bind resize-mini-windows to nil so that users who have it
       ;; set to a non-nil value will not suffer from premature minibuffer
       ;; shrinkage due to the below recenter call.  I have no idea why this
       ;; works, but it solves the problem, and has no negative side effects.
       ;; (Fran Litterio, 2003/01/07)
       (let ((resize-mini-windows nil))
-        (save-selected-window
-          (select-window window)
+        (erc-with-selected-window window
           (save-restriction
             (widen)
             (when (and erc-insert-marker
@@ -111,20 +116,59 @@ Put this function on `erc-insert-post-hook' and/or `erc-send-post-hook'."
   (put-text-property (point-min) (point-max) 'front-sticky t)
   (put-text-property (point-min) (point-max) 'rear-nonsticky t))
 
-;; Distinguish non-commands
+;;; Move to prompt when typing text
+(define-erc-module move-to-prompt nil
+  "This mode causes the point to be moved to the prompt when typing text."
+  ((add-hook 'erc-mode-hook 'erc-move-to-prompt-setup)
+   (dolist (buffer (erc-buffer-list))
+     (with-current-buffer buffer
+       (erc-move-to-prompt-setup))))
+  ((remove-hook 'erc-mode-hook 'erc-move-to-prompt-setup)
+   (dolist (buffer (erc-buffer-list))
+     (with-current-buffer buffer
+       (remove-hook 'pre-command-hook 'erc-move-to-prompt t)))))
+
+(defun erc-move-to-prompt ()
+  "Move the point to the ERC prompt if this is a self-inserting command."
+  (when (and erc-input-marker (< (point) erc-input-marker)
+             (eq 'self-insert-command this-command))
+    (deactivate-mark)
+    (push-mark)
+    (goto-char (point-max))))
+
+(defun erc-move-to-prompt-setup ()
+  "Initialize the move-to-prompt module for XEmacs."
+  (add-hook 'pre-command-hook 'erc-move-to-prompt nil t))
+
+;;; Keep place in unvisited channels
+(define-erc-module keep-place nil
+  "Leave point above un-viewed text in other channels."
+  ((add-hook 'erc-insert-pre-hook  'erc-keep-place))
+  ((remove-hook 'erc-insert-pre-hook  'erc-keep-place)))
+
+(defun erc-keep-place (ignored)
+  "Move point away from the last line in a non-selected ERC buffer."
+  (when (and (not (eq (window-buffer (selected-window))
+                      (current-buffer)))
+             (>= (point) erc-insert-marker))
+    (deactivate-mark)
+    (goto-char (erc-beg-of-input-line))
+    (forward-line -1)))
+
+;;; Distinguish non-commands
 (defvar erc-noncommands-list '(erc-cmd-ME
                                erc-cmd-COUNTRY
                                erc-cmd-SV
                                erc-cmd-SM
                                erc-cmd-SMV
                                erc-cmd-LASTLOG)
-  "List of commands that are aliases for CTCP ACTION or for erc messages.
+  "List of commands that are aliases for CTCP ACTION or for ERC messages.
 
 If a command's function symbol is in this list, the typed command
 does not appear in the ERC buffer after the user presses ENTER.")
 
 (define-erc-module noncommands nil
-  "This mode distinguishies non-commands.
+  "This mode distinguishes non-commands.
 Commands listed in `erc-insert-this' know how to display
 themselves."
   ((add-hook 'erc-send-pre-hook 'erc-send-distinguish-noncommands))
@@ -142,11 +186,11 @@ themselves."
 
 ;;; IRC control character processing.
 (defgroup erc-control-characters nil
-  "Dealing with control characters"
+  "Dealing with control characters."
   :group 'erc)
 
 (defcustom erc-interpret-controls-p t
-  "*If non-nil, display IRC colours and other highlighting effects.
+  "*If non-nil, display IRC colors and other highlighting effects.
 
 If this is set to the symbol `remove', ERC removes all IRC colors and
 highlighting effects.  When this variable is non-nil, it can cause Emacs to run
@@ -159,7 +203,7 @@ emergency (message flood) it can be turned off to save processing time.  See
                  (const :tag "Display raw control characters" nil)))
 
 (defcustom erc-interpret-mirc-color nil
-  "*If non-nil, erc will interpret mIRC color codes."
+  "*If non-nil, ERC will interpret mIRC color codes."
   :group 'erc-control-characters
   :type 'boolean)
 
@@ -282,10 +326,8 @@ The value `erc-interpret-controls-p' must also be t for this to work."
   "Fetches the right face for background color N (0-15)."
   (if (stringp n) (setq n (string-to-number n)))
   (if (not (numberp n))
-      (progn
-        (message "erc-get-bg-color-face: n is NaN: %S" n)
-        (beep)
-        'default)
+      (prog1 'default
+        (erc-error "erc-get-bg-color-face: n is NaN: %S" n))
     (when (> n 16)
       (erc-log (format "   Wrong color: %s" n))
       (setq n (mod n 16)))
@@ -298,10 +340,8 @@ The value `erc-interpret-controls-p' must also be t for this to work."
   "Fetches the right face for foreground color N (0-15)."
   (if (stringp n) (setq n (string-to-number n)))
   (if (not (numberp n))
-      (progn
-        (message "erc-get-fg-color-face: n is NaN: %S" n)
-        (beep)
-        'default)
+      (prog1 'default
+        (erc-error "erc-get-fg-color-face: n is NaN: %S" n))
     (when (> n 16)
       (erc-log (format "   Wrong color: %s" n))
       (setq n (mod n 16)))
@@ -386,9 +426,8 @@ See `erc-interpret-controls-p' and `erc-interpret-mirc-color' for options."
 
 (defun erc-controls-highlight ()
   "Highlight IRC control chars in the buffer.
-This is useful for `erc-insert-modify-hook' and
-`erc-send-modify-hook'. Also see `erc-interpret-controls-p' and
-`erc-interpret-mirc-color'."
+This is useful for `erc-insert-modify-hook' and `erc-send-modify-hook'.
+Also see `erc-interpret-controls-p' and `erc-interpret-mirc-color'."
   (goto-char (point-min))
   (cond ((eq erc-interpret-controls-p 'remove)
          (while (re-search-forward erc-controls-remove-regexp nil t)
@@ -501,8 +540,19 @@ channel that has weird people talking in morse to each other.
 
 See also `unmorse-region'."
   (goto-char (point-min))
-  (when (re-search-forward "[.-]+\\([.-]+[/ ]\\)+[.-]+" nil t)
-    (unmorse-region (match-beginning 0) (match-end 0))))
+  (when (re-search-forward "[.-]+\\([.-]*/? *\\)+[.-]+/?" nil t)
+    (save-restriction
+      (narrow-to-region (match-beginning 0) (match-end 0))
+      ;; Turn " / " into "  "
+      (goto-char (point-min))
+      (while (re-search-forward " / " nil t)
+        (replace-match "  "))
+      ;; Turn "/ " into "/"
+      (goto-char (point-min))
+      (while (re-search-forward "/ " nil t)
+        (replace-match "/"))
+      ;; Unmorse region
+      (unmorse-region (point-min) (point-max)))))
 
 ;;; erc-occur
 (defun erc-occur (string &optional proc)

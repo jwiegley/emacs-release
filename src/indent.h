@@ -1,13 +1,13 @@
 /* Definitions for interface to indent.c
    Copyright (C) 1985, 1986, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* We introduce new member `tab_offset'.  We need it because of the
    existence of wide-column characters.  There is a case that the
@@ -39,25 +37,31 @@ Boston, MA 02110-1301, USA.  */
 
 struct position
   {
-    int bufpos;
-    int bytepos;
-    int hpos;
-    int vpos;
-    int prevhpos;
-    int contin;
+    EMACS_INT bufpos;
+    EMACS_INT bytepos;
+    EMACS_INT hpos;
+    EMACS_INT vpos;
+    EMACS_INT prevhpos;
+    EMACS_INT contin;
     /* Number of characters we have already handled
        from the before and after strings at this position.  */
-    int ovstring_chars_done;
-    int tab_offset;
+    EMACS_INT ovstring_chars_done;
+    EMACS_INT tab_offset;
   };
 
-struct position *compute_motion P_ ((int, int, int, int, int, int, int,
-				     int, int, int, struct window *));
-struct position *vmotion P_ ((int, int, struct window *));
-int skip_invisible P_ ((int, int *, int, Lisp_Object));
+struct position *compute_motion P_ ((EMACS_INT from, EMACS_INT fromvpos,
+				     EMACS_INT fromhpos, int did_motion,
+				     EMACS_INT to, EMACS_INT tovpos,
+				     EMACS_INT tohpos,
+				     EMACS_INT width, EMACS_INT hscroll,
+				     EMACS_INT tab_offset, struct window *));
+struct position *vmotion P_ ((EMACS_INT from, EMACS_INT vtarget,
+			      struct window *));
+EMACS_INT skip_invisible P_ ((EMACS_INT pos, EMACS_INT *next_boundary_p,
+			      EMACS_INT to, Lisp_Object window));
 
 /* Value of point when current_column was called */
-extern int last_known_column_point;
+extern EMACS_INT last_known_column_point;
 
 /* Functions for dealing with the column cache.  */
 

@@ -1,7 +1,7 @@
 ;;; erc-track.el --- Track modified channel buffers
 
 ;; Copyright (C) 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008 Free Software Foundation, Inc.
+;;   2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Mario Lang <mlang@delysid.org>
 ;; Keywords: comm, faces
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -95,9 +93,19 @@ Activity means that there was no user input in the last 10 seconds."
   :group 'erc-track
   :type '(repeat string))
 
-(defcustom erc-track-exclude-types '("NICK")
+(defcustom erc-track-remove-disconnected-buffers nil
+  "*If true, remove buffers associated with a server that is
+disconnected from `erc-modified-channels-alist'."
+  :group 'erc-track
+  :type 'boolean)
+
+(defcustom erc-track-exclude-types '("NICK" "333" "353")
   "*List of message types to be ignored.
-This list could look like '(\"JOIN\" \"PART\")."
+This list could look like '(\"JOIN\" \"PART\").
+
+By default, exclude changes of nicknames (NICK), display of who
+set the channel topic (333), and listing of users on the current
+channel (353)."
   :group 'erc-track
   :type 'erc-message-type)
 
@@ -151,6 +159,16 @@ If nil instead of a function, shortening is disabled."
   :type '(choice (const :tag "Disabled")
 		 function))
 
+(defcustom erc-track-list-changed-hook nil
+  "Hook that is run whenever the contents of
+`erc-modified-channels-alist' changes.
+
+This is useful for people that don't use the default mode-line
+notification but instead use a separate mechanism to provide
+notification of channel activity."
+  :group 'erc-track
+  :type 'hook)
+
 (defcustom erc-track-use-faces t
   "*Use faces in the mode-line.
 The faces used are the same as used for text in the buffers.
@@ -159,15 +177,32 @@ The faces used are the same as used for text in the buffers.
   :type 'boolean)
 
 (defcustom erc-track-faces-priority-list
-  '(erc-error-face erc-current-nick-face erc-keyword-face erc-pal-face
-    erc-nick-msg-face erc-direct-msg-face erc-button erc-dangerous-host-face
-    erc-default-face erc-action-face erc-nick-default-face erc-fool-face
-    erc-notice-face erc-input-face erc-prompt-face)
+  '(erc-error-face
+    (erc-nick-default-face erc-current-nick-face)
+    erc-current-nick-face
+    erc-keyword-face
+    (erc-nick-default-face erc-pal-face)
+    erc-pal-face
+    erc-nick-msg-face
+    erc-direct-msg-face
+    (erc-button erc-default-face)
+    (erc-nick-default-face erc-dangerous-host-face)
+    erc-dangerous-host-face
+    erc-nick-default-face
+    (erc-nick-default-face erc-default-face)
+    erc-default-face
+    erc-action-face
+    (erc-nick-default-face erc-fool-face)
+    erc-fool-face
+    erc-notice-face
+    erc-input-face
+    erc-prompt-face)
   "A list of faces used to highlight active buffer names in the modeline.
 If a message contains one of the faces in this list, the buffer name will
 be highlighted using that face.  The first matching face is used."
   :group 'erc-track
-  :type '(repeat face))
+  :type '(repeat (choice face
+			 (repeat :tag "Combination" face))))
 
 (defcustom erc-track-priority-faces-only nil
   "Only track text highlighted with a priority face.
@@ -177,6 +212,7 @@ this variable.  You can set a list of channel name strings, so those
 will be ignored while all other channels will be tracked as normal.
 Other options are 'all, to apply this to all channels or nil, to disable
 this feature.
+
 Note: If you have a lot of faces listed in `erc-track-faces-priority-list',
 setting this variable might not be very useful."
   :group 'erc-track
@@ -184,20 +220,43 @@ setting this variable might not be very useful."
 		 (repeat string)
 		 (const all)))
 
+(defcustom erc-track-faces-normal-list
+  '((erc-button erc-default-face)
+    (erc-nick-default-face erc-dangerous-host-face)
+    erc-dangerous-host-face
+    erc-nick-default-face
+    (erc-nick-default-face erc-default-face)
+    erc-default-face
+    erc-action-face)
+  "A list of faces considered to be part of normal conversations.
+This list is used to highlight active buffer names in the modeline.
+
+If a message contains one of the faces in this list, and the
+previous modeline face for this buffer is also in this list, then
+the buffer name will be highlighted using the face from the
+message.  This gives a rough indication that active conversations
+are occurring in these channels.
+
+The effect may be disabled by setting this variable to nil."
+  :group 'erc-track
+  :type '(repeat (choice face
+			 (repeat :tag "Combination" face))))
+
 (defcustom erc-track-position-in-mode-line 'before-modes
   "Where to show modified channel information in the mode-line.
 
 Setting this variable only has effects in GNU Emacs versions above 21.3.
 
 Choices are:
-'before-modes - add to the beginning of `mode-line-modes'
-'after-modes  - add to the end of `mode-line-modes'
-
-Any other value means add to the end of `global-mode-string'."
+'before-modes - add to the beginning of `mode-line-modes',
+'after-modes  - add to the end of `mode-line-modes',
+t             - add to the end of `global-mode-string',
+nil           - don't add to mode line."
   :group 'erc-track
   :type '(choice (const :tag "Just before mode information" before-modes)
 		 (const :tag "Just after mode information" after-modes)
-		 (const :tag "After all other information" nil))
+		 (const :tag "After all other information" t)
+		 (const :tag "Don't display in mode line" nil))
   :set (lambda (sym val)
 	 (set sym val)
 	 (when (and (boundp 'erc-track-mode)
@@ -263,12 +322,18 @@ when there are no more active channels."
 (defcustom erc-track-switch-direction 'oldest
   "Direction `erc-track-switch-buffer' should switch.
 
+  importance  -  find buffer with the most important message
   oldest      -  find oldest active buffer
   newest      -  find newest active buffer
   leastactive -  find buffer with least unseen messages
-  mostactive  -  find buffer with most unseen messages."
+  mostactive  -  find buffer with most unseen messages.
+
+If set to 'importance, the importance is determined by position
+in `erc-track-faces-priority-list', where first is most
+important."
   :group 'erc-track
-  :type '(choice (const oldest)
+  :type '(choice (const importance)
+		 (const oldest)
 		 (const newest)
 		 (const leastactive)
 		 (const mostactive)))
@@ -296,7 +361,7 @@ See `erc-track-position-in-mode-line' for possible values."
 	      (boundp 'mode-line-modes))
 	 (add-to-list 'mode-line-modes
 		      '(t erc-modified-channels-object) t))
-	(t
+	((eq position t)
 	 (when (not global-mode-string)
 	   (setq global-mode-string '(""))) ; Padding for mode-line wart
 	 (add-to-list 'global-mode-string
@@ -419,7 +484,7 @@ START is the minimum length of the name used."
 
 ;;; Test:
 
-(erc-assert
+(assert
  (and
   ;; verify examples from the doc strings
   (equal (let ((erc-track-shorten-aggressively nil))
@@ -536,13 +601,15 @@ module, otherwise the keybindings will not do anything useful."
   :global t
   :group 'erc-track)
 
-(defun erc-track-minor-mode-maybe ()
+(defun erc-track-minor-mode-maybe (&optional buffer)
   "Enable `erc-track-minor-mode', depending on `erc-track-enable-keybindings'."
-  (unless (or erc-track-minor-mode
-	      ;; don't start the minor mode until we have an ERC
-	      ;; process running, because we don't want to prompt the
-	      ;; user while starting Emacs
-	      (null (erc-buffer-list)))
+  (when (and (not erc-track-minor-mode)
+	     ;; don't start the minor mode until we have an ERC
+	     ;; process running, because we don't want to prompt the
+	     ;; user while starting Emacs
+	     (or (and (buffer-live-p buffer)
+		      (with-current-buffer buffer (eq major-mode 'erc-mode)))
+		 (erc-buffer-list)))
     (cond ((eq erc-track-enable-keybindings 'ask)
 	   (let ((key (or (and (key-binding (kbd "C-c C-SPC")) "C-SPC")
 			  (and (key-binding (kbd "C-c C-@")) "C-@"))))
@@ -592,6 +659,7 @@ module, otherwise the keybindings will not do anything useful."
        (add-hook 'erc-insert-post-hook 'erc-track-modified-channels)
        (add-hook 'erc-disconnected-hook 'erc-modified-channels-update))
      ;; enable the tracking keybindings
+     (add-hook 'erc-connect-pre-hook 'erc-track-minor-mode-maybe)
      (erc-track-minor-mode-maybe)))
   ;; Disable:
   ((when (boundp 'erc-track-when-inactive)
@@ -613,6 +681,7 @@ module, otherwise the keybindings will not do anything useful."
        (remove-hook 'erc-disconnected-hook 'erc-modified-channels-update)
        (remove-hook 'erc-insert-post-hook 'erc-track-modified-channels))
      ;; disable the tracking keybindings
+     (remove-hook 'erc-connect-pre-hook 'erc-track-minor-mode-maybe)
      (when erc-track-minor-mode
        (erc-track-minor-mode -1)))))
 
@@ -641,17 +710,25 @@ only consider active buffers visible.")
 
 (defun erc-user-is-active (&rest ignore)
   "Set `erc-buffer-activity'."
-  (setq erc-buffer-activity (erc-current-time))
-  (erc-track-modified-channels))
+  (when erc-server-connected
+    (setq erc-buffer-activity (erc-current-time))
+    (erc-track-modified-channels)))
+
+(defun erc-track-get-buffer-window (buffer frame-param)
+  (if (eq frame-param 'selected-visible)
+      (if (eq (frame-visible-p (selected-frame)) t)
+	  (get-buffer-window buffer nil)
+	nil)
+    (get-buffer-window buffer frame-param)))
 
 (defun erc-buffer-visible (buffer)
   "Return non-nil when the buffer is visible."
   (if erc-track-when-inactive
       (when erc-buffer-activity; could be nil
-	(and (get-buffer-window buffer erc-track-visibility)
+	(and (erc-track-get-buffer-window buffer erc-track-visibility)
 	     (<= (erc-time-diff erc-buffer-activity (erc-current-time))
 		 erc-buffer-activity-timeout)))
-    (get-buffer-window buffer erc-track-visibility)))
+    (erc-track-get-buffer-window buffer erc-track-visibility)))
 
 ;;; Tracking the channel modifications
 
@@ -668,18 +745,22 @@ called via `window-configuration-change-hook'.
 ARGS are ignored."
   (interactive)
   (unless erc-modified-channels-update-inside
-    (let ((erc-modified-channels-update-inside t))
-      (mapcar (lambda (elt)
-		(let ((buffer (car elt)))
-		  (when (or (not (bufferp buffer))
-			    (not (buffer-live-p buffer))
-			    (erc-buffer-visible buffer)
-			    (not (with-current-buffer buffer
-				   erc-server-connected)))
-		    (erc-modified-channels-remove-buffer buffer))))
-	      erc-modified-channels-alist)
+    (let ((erc-modified-channels-update-inside t)
+	  (removed-channel nil))
+      (mapc (lambda (elt)
+	      (let ((buffer (car elt)))
+		(when (or (not (bufferp buffer))
+			  (not (buffer-live-p buffer))
+			  (erc-buffer-visible buffer)
+			  (and erc-track-remove-disconnected-buffers
+			       (not (with-current-buffer buffer
+				      erc-server-connected))))
+		  (setq removed-channel t)
+		  (erc-modified-channels-remove-buffer buffer))))
+	    erc-modified-channels-alist)
+      (when removed-channel
       (erc-modified-channels-display)
-      (force-mode-line-update t))))
+	(force-mode-line-update t)))))
 
 (defvar erc-track-mouse-face (if (featurep 'xemacs)
 				 'modeline-mousable
@@ -729,10 +810,13 @@ If FACES are provided, color STRING with them."
   "Set `erc-modified-channels-object'
 according to `erc-modified-channels-alist'.
 Use `erc-make-mode-line-buffer-name' to create buttons."
-  (if (or
-	(eq 'mostactive erc-track-switch-direction)
-	(eq 'leastactive erc-track-switch-direction))
-      (erc-track-sort-by-activest))
+  (cond ((or (eq 'mostactive erc-track-switch-direction)
+	     (eq 'leastactive erc-track-switch-direction))
+	 (erc-track-sort-by-activest))
+	((eq 'importance erc-track-switch-direction)
+	 (erc-track-sort-by-importance)))
+  (run-hooks 'erc-track-list-changed-hook)
+  (unless (eq erc-track-position-in-mode-line nil)
   (if (null erc-modified-channels-alist)
       (setq erc-modified-channels-object (erc-modified-channels-object nil))
     ;; erc-modified-channels-alist contains all the data we need.  To
@@ -768,7 +852,7 @@ Use `erc-make-mode-line-buffer-name' to create buttons."
       (when (featurep 'xemacs)
 	(erc-modified-channels-object nil))
       (setq erc-modified-channels-object
-	    (erc-modified-channels-object strings)))))
+	    (erc-modified-channels-object strings))))))
 
 (defun erc-modified-channels-remove-buffer (buffer)
   "Remove BUFFER from `erc-modified-channels-alist'."
@@ -781,16 +865,36 @@ Use `erc-make-mode-line-buffer-name' to create buttons."
 
 (defun erc-track-find-face (faces)
   "Return the face to use in the modeline from the faces in FACES.
-If `erc-track-faces-priority-list' is set, the one from FACES who is
-first in that list will be used."
-  (let ((candidates erc-track-faces-priority-list)
-	candidate face)
-    (while (and candidates (not face))
-      (setq candidate (car candidates)
-	    candidates (cdr candidates))
-      (when (memq candidate faces)
-	(setq face candidate)))
-    face))
+If `erc-track-faces-priority-list' is set, the one from FACES who
+is first in that list will be used.  If nothing matches or if
+`erc-track-faces-priority-list' is not set, the default mode-line
+faces will be used.
+
+If `erc-track-faces-normal-list' is non-nil, use it to produce a
+blinking effect that indicates channel activity when the first
+element in FACES and the highest-ranking face among the rest of
+FACES are both members of `erc-track-faces-normal-list'.
+
+If one of the faces is a list, then it will be ranked according
+to its highest-tanking face member.  A list of faces including
+that member will take priority over just the single member
+element."
+  (let ((choice (catch 'face
+		  (dolist (candidate erc-track-faces-priority-list)
+		    (when (member candidate faces)
+		      (throw 'face candidate)))))
+	(no-first (and erc-track-faces-normal-list
+		       (catch 'face
+			 (dolist (candidate erc-track-faces-priority-list)
+			   (when (member candidate (cdr faces))
+			     (throw 'face candidate)))))))
+    (cond ((null choice)
+	   nil)
+	  ((and (member choice erc-track-faces-normal-list)
+		(member no-first erc-track-faces-normal-list))
+	   no-first)
+	  (t
+	   choice))))
 
 (defun erc-track-modified-channels ()
   "Hook function for `erc-insert-post-hook' to check if the current
@@ -802,8 +906,7 @@ is in `erc-mode'."
     (if (and (not (erc-buffer-visible (current-buffer)))
 	     (not (member this-channel erc-track-exclude))
 	     (not (and erc-track-exclude-server-buffer
-		       (string= this-channel
-				(buffer-name (erc-server-buffer)))))
+		       (erc-server-buffer-p)))
 	     (not (erc-message-type-member
 		   (or (erc-find-parsed-property)
 		       (point-min))
@@ -847,10 +950,10 @@ is in `erc-mode'."
 	    (erc-modified-channels-display)))
       ;; Else if the active buffer is the current buffer, remove it
       ;; from our list.
-      (when (or (erc-buffer-visible (current-buffer))
+      (when (and (or (erc-buffer-visible (current-buffer))
 		(and this-channel
-		     (assq (current-buffer) erc-modified-channels-alist)
 		     (member this-channel erc-track-exclude)))
+		 (assq (current-buffer) erc-modified-channels-alist))
 	;; Remove it from mode-line if buffer is visible or
 	;; channel was added to erc-track-exclude recently.
 	(erc-modified-channels-remove-buffer (current-buffer))
@@ -860,14 +963,15 @@ is in `erc-mode'."
   "Return a list of all faces used in STR."
   (let ((i 0)
 	(m (length str))
-	(faces (erc-list (get-text-property 0 'face str))))
+	(faces (erc-list (get-text-property 0 'face str)))
+	cur)
     (while (and (setq i (next-single-property-change i 'face str m))
 		(not (= i m)))
-      (dolist (face (erc-list (get-text-property i 'face str)))
-	(add-to-list 'faces face)))
+      (when (setq cur (get-text-property i 'face str))
+	(add-to-list 'faces cur)))
     faces))
 
-(erc-assert
+(assert
  (let ((str "is bold"))
    (put-text-property 3 (length str)
 		      'face '(bold erc-current-nick-face)
@@ -887,6 +991,29 @@ That means the number of unseen messages in a channel."
 	(sort erc-modified-channels-alist
 	      (lambda (a b) (> (nth 1 a) (nth 1 b))))))
 
+(defun erc-track-face-priority (face)
+  "Return a number indicating the priority of FACE in
+`erc-track-faces-priority-list'.  Lower number means higher
+priority.
+
+If face is not in `erc-track-faces-priority-list', it will have a
+higher number than any other face in that list."
+  (let ((count 0))
+    (catch 'done
+      (dolist (item erc-track-faces-priority-list)
+	(if (equal item face)
+	    (throw 'done t)
+	  (setq count (1+ count)))))
+    count))
+
+(defun erc-track-sort-by-importance ()
+  "Sort erc-modified-channels-alist by importance.
+That means the position of the face in `erc-track-faces-priority-list'."
+  (setq erc-modified-channels-alist
+	(sort erc-modified-channels-alist
+	      (lambda (a b) (< (erc-track-face-priority (cddr a))
+			       (erc-track-face-priority (cddr b)))))))
+
 (defun erc-track-get-active-buffer (arg)
   "Return the buffer name of ARG in `erc-modified-channels-alist'.
 Negative arguments index in the opposite direction.  This direction is
@@ -898,7 +1025,8 @@ relative to `erc-track-switch-direction'"
 		  (oldest      'newest)
 		  (newest      'oldest)
 		  (mostactive  'leastactive)
-		  (leastactive 'mostactive)))
+		  (leastactive 'mostactive)
+		  (importance  'oldest)))
       (setq arg (- arg)))
     (setq offset (case dir
 		   ((oldest leastactive)

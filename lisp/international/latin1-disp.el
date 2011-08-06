@@ -1,6 +1,6 @@
 ;;; latin1-disp.el --- display tables for other ISO 8859 on Latin-1 terminals -*-coding: iso-2022-7bit;-*-
 
-;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Dave Love <fx@gnu.org>
@@ -8,10 +8,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -101,24 +99,11 @@ use either \\[customize] or the function `latin1-display'."
 See option `latin1-display' for the method.  The members of the list
 must be in `latin1-display-sets'.  With no arguments, reset the
 display for all of `latin1-display-sets'. See also
-`latin1-display-setup'.  As well as iso-8859 characters, this treats
-some characters in the `mule-unicode-...' charsets if you don't have
-a Unicode font with which to display them."
+`latin1-display-setup'."
   (if sets
       (progn
 	(mapc #'latin1-display-setup sets)
-	(unless (char-displayable-p
-		 (make-char 'mule-unicode-0100-24ff 32 33))
-	  ;; It doesn't look as though we have a Unicode font.
-	  (map-char-table
-	   (lambda (c uc)
-	     (when (and (char-valid-p c)
-			(char-valid-p uc)
-			(not (aref standard-display-table uc)))
-	       (aset standard-display-table uc
-		     (or (aref standard-display-table c)
-			 (vector c)))))
-	   ucs-mule-8859-to-mule-unicode)
+	(unless (char-displayable-p #x101) ; a with macron
 	  ;; Extra stuff for windows-1252, in particular.
 	  (mapc
 	   (lambda (l)
@@ -138,12 +123,8 @@ a Unicode font with which to display them."
 	     )))
 	  (setq latin1-display t))
     (mapc #'latin1-display-reset latin1-display-sets)
-    (aset standard-display-table
-	  (make-char 'mule-unicode-0100-24ff) nil)
-    (aset standard-display-table
-	  (make-char 'mule-unicode-2500-33ff) nil)
-    (aset standard-display-table
-	  (make-char 'mule-unicode-e000-ffff) nil)
+    (set-char-table-range standard-display-table '(#x0100 . #x33FF) nil)
+    (set-char-table-range standard-display-table '(#xE000 . #xFFFF) nil)
     (setq latin1-display nil)
     (redraw-display)))
 
@@ -188,12 +169,12 @@ CHARSET is a symbol which is the nickname of a language environment
 using an ISO8859 character set."
   (if (eq charset 'cyrillic)
       (setq charset 'cyrillic-iso))
-  (let ((i 32)
+  (let ((i 128)
 	(set (car (remq 'ascii (get-language-info charset 'charset)))))
-    (while (<= i 127)
-      (aset standard-display-table
-	    (make-char set i)
-	    (vector (make-char 'latin-iso8859-1 i)))
+    (while (<= i 255)
+      (let ((ch (decode-char set i)))
+	(if ch
+	    (aset standard-display-table ch (vector i))))
       (setq i (1+ i)))))
 
 (defun latin1-display-reset (language)
@@ -206,8 +187,9 @@ character set."
 		     'arabic-iso8859-6
 		   (car (remq 'ascii (get-language-info language
 							'charset))))))
-    (standard-display-default (make-char charset 32)
-			      (make-char charset 127)))
+    (map-charset-chars #'(lambda (range arg)
+			   (standard-display-default (car range) (cdr range)))
+		       charset))
   (sit-for 0))
 
 (defun latin1-display-check-font (language)
@@ -217,7 +199,7 @@ character set: `latin-2', `hebrew' etc."
   (if (eq language 'cyrillic)
       (setq language 'cyrillic-iso))
   (let* ((info (get-language-info language 'charset))
-	 (char (and info (make-char (car (remq 'ascii info)) ?\ ))))
+	 (char (and info (decode-char (car (remq 'ascii info)) ?\ ))))
     (and char (char-displayable-p char))))
 
 ;; Backwards compatibility.
@@ -547,9 +529,10 @@ is.  If FORCE is non-nil, set up the display regardless."
     ;; missing some glyphs.)
     (let ((i 34))
       (while (<= i 62)
-	(aset standard-display-table
-	      (make-char 'hebrew-iso8859-8 i)
-	      (vector (make-char 'latin-iso8859-1 i)))
+	(let ((ch (decode-char 'hebrew-iso8859-8 i)))
+	  (if ch
+	      (aset standard-display-table ch
+		    (vector (decode-char 'latin-iso8859-1 i)))))
 	(setq i (1+ i))))
     (mapc
      (lambda (l)
@@ -782,8 +765,7 @@ turn it off and display Unicode characters literally.  The display
 isn't changed if the display can render Unicode characters."
   (interactive "p")
   (if (> arg 0)
-      (unless (char-displayable-p
- 	       (make-char 'mule-unicode-0100-24ff 32 33))
+      (unless (char-displayable-p #x101) ; a with macron
 	;; It doesn't look as though we have a Unicode font.
 	(let ((latin1-display-format "%s"))
 	  (mapc
@@ -3214,5 +3196,5 @@ isn't changed if the display can render Unicode characters."
 
 (provide 'latin1-disp)
 
-;;; arch-tag: 68b2872e-d667-4f48-8e2f-ec2ba2d29406
+;; arch-tag: 68b2872e-d667-4f48-8e2f-ec2ba2d29406
 ;;; latin1-disp.el ends here

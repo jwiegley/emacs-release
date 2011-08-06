@@ -1,17 +1,17 @@
 ;;; image-file.el --- support for visiting image files
 ;;
 ;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 ;;
 ;; Author: Miles Bader <miles@gnu.org>
 ;; Keywords: multimedia
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -39,8 +37,8 @@
 
 ;;;###autoload
 (defcustom image-file-name-extensions
-  '("png" "jpeg" "jpg" "gif" "tiff" "tif" "xbm" "xpm" "pbm" "pgm" "ppm" "pnm")
-  "*A list of image-file filename extensions.
+  '("png" "jpeg" "jpg" "gif" "tiff" "tif" "xbm" "xpm" "pbm" "pgm" "ppm" "pnm" "svg")
+  "A list of image-file filename extensions.
 Filenames having one of these extensions are considered image files,
 in addition to those matching `image-file-name-regexps'.
 
@@ -59,7 +57,7 @@ the variable is set using \\[customize]."
 
 ;;;###autoload
 (defcustom image-file-name-regexps nil
-  "*List of regexps matching image-file filenames.
+  "List of regexps matching image-file filenames.
 Filenames matching one of these regexps are considered image files,
 in addition to those with an extension in `image-file-name-extensions'.
 
@@ -204,5 +202,5 @@ Image files are those whose name has an extension in
 
 (provide 'image-file)
 
-;;; arch-tag: 04cafe36-f7ba-4c80-9f47-4cb656520ce1
+;; arch-tag: 04cafe36-f7ba-4c80-9f47-4cb656520ce1
 ;;; image-file.el ends here

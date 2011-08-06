@@ -1,7 +1,7 @@
 ;;; reftex-global.el --- operations on entire documents with RefTeX
 
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <dominik@science.uva.nl>
 ;; Maintainer: auctex-devel@gnu.org
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -102,9 +100,8 @@ No active TAGS table is required."
     (tags-query-replace from to (or delimited current-prefix-arg)
                         (list 'reftex-all-document-files))))
 
-(eval-when-compile
-  (defvar TeX-master)
-  (defvar isearch-next-buffer-function))
+(defvar TeX-master)
+(defvar isearch-next-buffer-function)
 
 (defun reftex-find-duplicate-labels ()
   "Produce a list of all duplicate labels in the document."
@@ -346,6 +343,14 @@ Also checks if buffers visiting the files are in read-only mode."
                               (buffer-name buf)))
             (error "Abort"))))))
 
+;;; Multi-file RefTeX Isearch
+
+;;; `reftex-isearch-wrap-function', `reftex-isearch-push-state-function',
+;;; `reftex-isearch-pop-state-function', `reftex-isearch-isearch-search'
+;;; functions remain here only for backward-compatibility with Emacs 22
+;;; and are obsolete since Emacs 23 that supports a single function
+;;; variable `multi-isearch-next-buffer-function'.
+
 (defun reftex-isearch-wrap-function ()
   (if (not isearch-word)
       (switch-to-buffer 
@@ -407,21 +412,19 @@ Also checks if buffers visiting the files are in read-only mode."
 ;;; beginning/end of the file list, depending of the search direction.
 (defun reftex-isearch-switch-to-next-file (crt-buf &optional wrapp)
   (reftex-access-scan-info)
-  (let* ((cb (buffer-file-name crt-buf))
-	 (flist (reftex-all-document-files))
-	 (orig-flist flist))
+  (let ((cb (buffer-file-name crt-buf))
+	(flist (reftex-all-document-files)))
     (when flist
       (if wrapp
 	  (unless isearch-forward
 	      (setq flist (last flist)))
 	(unless isearch-forward
-	  (setq flist (nreverse (copy-list flist)))
-	  (setq orig-flist flist))
+	  (setq flist (reverse flist)))
 	(while (not (string= (car flist) cb))
 	  (setq flist (cdr flist)))
 	(setq flist (cdr flist)))
       (when flist
-	(find-file  (car flist))))))
+	(find-file-noselect (car flist))))))
 
 ;;;###autoload
 (defun reftex-isearch-minor-mode (&optional arg)
@@ -443,23 +446,28 @@ With no argument, this command toggles
 	    (dolist (crt-buf (buffer-list))
 	      (with-current-buffer crt-buf
 		(when reftex-mode
-		  (set (make-local-variable 'isearch-wrap-function)
-		       'reftex-isearch-wrap-function)
-		  (set (make-local-variable 'isearch-search-fun-function)
-		       (lambda () 'reftex-isearch-isearch-search))
-		  (set (make-local-variable 'isearch-push-state-function)
-		       'reftex-isearch-push-state-function)
-		  (set (make-local-variable 'isearch-next-buffer-function)
-		       'reftex-isearch-switch-to-next-file)
+		  (if (boundp 'multi-isearch-next-buffer-function)
+		      (set (make-local-variable 'multi-isearch-next-buffer-function)
+			   'reftex-isearch-switch-to-next-file)
+		    (set (make-local-variable 'isearch-wrap-function)
+			 'reftex-isearch-wrap-function)
+		    (set (make-local-variable 'isearch-search-fun-function)
+			 (lambda () 'reftex-isearch-isearch-search))
+		    (set (make-local-variable 'isearch-push-state-function)
+			 'reftex-isearch-push-state-function)
+		    (set (make-local-variable 'isearch-next-buffer-function)
+			 'reftex-isearch-switch-to-next-file))
 		  (setq reftex-isearch-minor-mode t))))
 	    (add-hook 'reftex-mode-hook 'reftex-isearch-minor-mode))
 	(dolist (crt-buf (buffer-list))
 	  (with-current-buffer crt-buf
 	    (when reftex-mode
-	      (kill-local-variable 'isearch-wrap-function)
-	      (kill-local-variable 'isearch-search-fun-function)
-	      (kill-local-variable 'isearch-push-state-function)
-	      (kill-local-variable 'isearch-next-buffer-function)
+	      (if (boundp 'multi-isearch-next-buffer-function)
+		  (kill-local-variable 'multi-isearch-next-buffer-function)
+		(kill-local-variable 'isearch-wrap-function)
+		(kill-local-variable 'isearch-search-fun-function)
+		(kill-local-variable 'isearch-push-state-function)
+		(kill-local-variable 'isearch-next-buffer-function))
 	      (setq reftex-isearch-minor-mode nil))))
 	(remove-hook 'reftex-mode-hook 'reftex-isearch-minor-mode)))
     ;; Force modeline redisplay.
@@ -468,5 +476,5 @@ With no argument, this command toggles
 (add-minor-mode 'reftex-isearch-minor-mode "/I" nil nil 
 		'reftex-isearch-minor-mode)
 
-;;; arch-tag: 2dbf7633-92c8-4340-8656-7aa019d0f80d
+;; arch-tag: 2dbf7633-92c8-4340-8656-7aa019d0f80d
 ;;; reftex-global.el ends here

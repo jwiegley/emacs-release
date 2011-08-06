@@ -1,6 +1,6 @@
 ;;; idlw-toolbar.el --- a debugging toolbar for IDLWAVE
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <dominik@astro.uva.nl>
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -916,21 +914,21 @@ static char * file[] = {
 		    (idlwave-toolbar-add))
 		  (buffer-list)))
       ;; For Emacs, add the key definitions to the mode maps
-      (mapcar (lambda (x)
-		(let* ((icon (aref x 0))
-		       (func (aref x 1))
-		       (show (aref x 2))
-		       (help (aref x 3))
-		       (key (vector 'tool-bar func))
-		       (def (list 'menu-item
-				  "a"
-				  func
-				  :image (symbol-value icon)
-				  :visible show
-				  :help help)))
-		  (define-key idlwave-mode-map key def)
-		  (define-key idlwave-shell-mode-map key def)))
-	      (reverse idlwave-toolbar)))
+      (mapc (lambda (x)
+	      (let* ((icon (aref x 0))
+		     (func (aref x 1))
+		     (show (aref x 2))
+		     (help (aref x 3))
+		     (key (vector 'tool-bar func))
+		     (def (list 'menu-item
+				"a"
+				func
+				:image (symbol-value icon)
+				:visible show
+				:help help)))
+		(define-key idlwave-mode-map key def)
+		(define-key idlwave-shell-mode-map key def)))
+	    (reverse idlwave-toolbar)))
     (setq idlwave-toolbar-visible t)))
 
 (defun idlwave-toolbar-remove-everywhere ()
@@ -947,15 +945,15 @@ static char * file[] = {
 		    (idlwave-toolbar-remove))
 		  (buffer-list)))
       ;; For Emacs, remove the key definitions from the mode maps
-      (mapcar (lambda (x)
-		(let* (;;(icon (aref x 0))
-		       (func (aref x 1))
-		       ;;(show (aref x 2))
-		       ;;(help (aref x 3))
-		       (key (vector 'tool-bar func)))
-		  (define-key idlwave-mode-map key nil)
-		  (define-key idlwave-shell-mode-map key nil)))
-	      idlwave-toolbar))
+      (mapc (lambda (x)
+	      (let* (;;(icon (aref x 0))
+		     (func (aref x 1))
+		     ;;(show (aref x 2))
+		     ;;(help (aref x 3))
+		     (key (vector 'tool-bar func)))
+		(define-key idlwave-mode-map key nil)
+		(define-key idlwave-shell-mode-map key nil)))
+	    idlwave-toolbar))
     (setq idlwave-toolbar-visible nil)))
 
 (defun idlwave-toolbar-toggle (&optional force-on)

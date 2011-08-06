@@ -1,16 +1,17 @@
 ;;; vc-arch.el --- VC backend for the Arch version-control system
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author:      FSF (see vc.el for full credits)
 ;; Maintainer:  Stefan Monnier <monnier@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -50,22 +49,45 @@
 ;; - C-x v u does not work.
 ;; - C-x v s does not work.
 ;; - C-x v r does not work.
-;; - VC-dired does not work.
+;; - VC directory listings do not work.
 ;; - And more...
 
 ;;; Code:
 
 (eval-when-compile (require 'vc) (require 'cl))
 
+;;; Properties of the backend
+
+(defun vc-arch-revision-granularity () 'repository)
+(defun vc-arch-checkout-model (files) 'implicit)
+
 ;;;
 ;;; Customization options
 ;;;
 
-(defvar vc-arch-command
-  (let ((candidates '("tla")))
+;; It seems Arch diff does not accept many options, so this is not
+;; very useful.  It exists mainly so that the VC backends are all
+;; consistent with regards to their treatment of diff switches.
+(defcustom vc-arch-diff-switches t
+  "String or list of strings specifying switches for Arch diff under VC.
+If nil, use the value of `vc-diff-switches'.  If t, use no switches."
+  :type '(choice (const :tag "Unspecified" nil)
+		 (const :tag "None" t)
+		 (string :tag "Argument String")
+		 (repeat :tag "Argument List" :value ("") string))
+  :version "23.1"
+  :group 'vc)
+
+(define-obsolete-variable-alias 'vc-arch-command 'vc-arch-program "23.1")
+
+(defcustom vc-arch-program
+  (let ((candidates '("tla" "baz")))
     (while (and candidates (not (executable-find (car candidates))))
       (setq candidates (cdr candidates)))
-    (or (car candidates) "tla")))
+    (or (car candidates) "tla"))
+  "Name of the Arch executable."
+  :type 'string
+  :group 'vc)
 
 ;; Clear up the cache to force vc-call to check again and discover
 ;; new functions when we reload this file.
@@ -83,7 +105,10 @@
   (comment-normalize-vars)
   (goto-char (point-max))
   (forward-comment -1)
-  (unless (bolp) (insert "\n"))
+  (skip-chars-forward " \t\n")
+  (cond
+   ((not (bolp)) (insert "\n\n"))
+   ((not (eq ?\n (char-before (1- (point))))) (insert "\n")))
   (let ((beg (point))
 	(idfile (and buffer-file-name
 		     (expand-file-name
@@ -190,21 +215,24 @@ Only the value `maybe' can be trusted :-(."
 (defun vc-arch-root (file)
   "Return the root directory of a Arch project, if any."
   (or (vc-file-getprop file 'arch-root)
-      (vc-file-setprop
-       ;; Check the =tagging-method, in case someone naively manually
-       ;; creates a {arch} directory somewhere.
-       file 'arch-root (vc-find-root file "{arch}/=tagging-method"))))
+      ;; Check the =tagging-method, in case someone naively manually
+      ;; creates a {arch} directory somewhere.
+      (let ((root (vc-find-root file "{arch}/=tagging-method")))
+	(when root
+	  (vc-file-setprop
+	   file 'arch-root root)))))
 
-(defun vc-arch-register (file &optional rev comment)
+(defun vc-arch-register (files &optional rev comment)
   (if rev (error "Explicit initial revision not supported for Arch"))
-  (let ((tagmet (vc-arch-tagging-method file)))
-    (if (and (memq tagmet '(tagline implicit)) comment-start)
-	(with-current-buffer (find-file-noselect file)
-	  (if (buffer-modified-p)
-	      (error "Save %s first" (buffer-name)))
-	  (vc-arch-add-tagline)
-	  (save-buffer))
-      (vc-arch-command nil 0 file "add"))))
+  (dolist (file files)
+    (let ((tagmet (vc-arch-tagging-method file)))
+      (if (and (memq tagmet '(tagline implicit)) comment-start)
+	  (with-current-buffer (find-file-noselect file)
+	    (if (buffer-modified-p)
+		(error "Save %s first" (buffer-name)))
+	    (vc-arch-add-tagline)
+	    (save-buffer)))))
+  (vc-arch-command nil 0 files "add"))
 
 (defun vc-arch-registered (file)
   ;; Don't seriously check whether it's source or not.  Checking would
@@ -261,7 +289,7 @@ Return non-nil if FILE is unchanged."
 	      ;; ID not found.
 	      (if (equal (file-name-nondirectory sigfile)
 			 (subst-char-in-string
-			  ?/ ?% (vc-arch-workfile-version file)))
+			  ?/ ?% (vc-arch-working-revision file)))
 		  'added
 		;; Might be `added' or `up-to-date' as well.
 		;; FIXME: Check in the patch logs to find out.
@@ -279,7 +307,44 @@ Return non-nil if FILE is unchanged."
 		    'up-to-date
 		  'edited)))))))))
 
-(defun vc-arch-workfile-version (file)
+(defun vc-arch-dir-status (dir callback)
+  "Run 'tla inventory' for DIR and pass results to CALLBACK.
+CALLBACK expects (ENTRIES &optional MORE-TO-COME); see
+`vc-dir-refresh'."
+  (let ((default-directory dir))
+    (vc-arch-command t 'async nil "changes"))
+  ;; The updating could be done asynchronously.
+  (vc-exec-after
+   `(vc-arch-after-dir-status ',callback)))
+
+(defun vc-arch-after-dir-status (callback)
+  (let* ((state-map '(("M " . edited)
+		      ("Mb" . edited)	;binary
+		      ("D " . removed)
+		      ("D/" . removed)	;directory
+		      ("A " . added)
+		      ("A/" . added)	;directory
+		      ("=>" . renamed)
+		      ("/>" . renamed)	;directory
+		      ("lf" . symlink-to-file)
+		      ("fl" . file-to-symlink)
+		      ("--" . permissions-changed)
+		      ("-/" . permissions-changed) ;directory
+		      ))
+	 (state-map-regexp (regexp-opt (mapcar 'car state-map) t))
+	 (entry-regexp (concat "^" state-map-regexp " \\(.*\\)$"))
+	 result)
+    (goto-char (point-min))
+    ;;(message "Got %s" (buffer-string))
+    (while (re-search-forward entry-regexp nil t)
+      (let* ((state-string (match-string 1))
+	     (state (cdr (assoc state-string state-map)))
+	     (filename (match-string 2)))
+	(push (list filename state) result)))
+
+    (funcall callback result nil)))
+
+(defun vc-arch-working-revision (file)
   (let* ((root (expand-file-name "{arch}" (vc-arch-root file)))
 	 (defbranch (vc-arch-default-version file)))
     (when (and defbranch (string-match "\\`\\(.+@[^/\n]+\\)/\\(\\(\\(.*?\\)\\(?:--.*\\)?\\)--.*\\)\\'" defbranch))
@@ -317,13 +382,13 @@ Return non-nil if FILE is unchanged."
 
 (defun vc-arch-mode-line-string (file)
   "Return string for placement in modeline by `vc-mode-line' for FILE."
-  (let ((rev (vc-workfile-version file)))
+  (let ((rev (vc-working-revision file)))
     (dolist (rule vc-arch-mode-line-rewrite)
       (if (string-match (car rule) rev)
 	  (setq rev (replace-match (cdr rule) t nil rev))))
     (format "Arch%c%s"
 	    (case (vc-state file)
-	      ((up-to-date needs-patch) ?-)
+	      ((up-to-date needs-update) ?-)
 	      (added ?@)
 	      (t ?:))
 	    rev)))
@@ -363,49 +428,48 @@ Return non-nil if FILE is unchanged."
 	(message "There are unresolved conflicts in %s"
 		 (file-name-nondirectory rej))))))
 
-(defun vc-arch-find-file-not-found-hook ()
-  ;; Do nothing.  We are not sure whether the file is `source' or not,
-  ;; so we shouldn't ask the user whether she wants to check it out.
-  )
-
-(defun vc-arch-checkout-model (file) 'implicit)
-
-(defun vc-arch-checkin (file rev comment)
+(defun vc-arch-checkin (files rev comment)
   (if rev (error "Committing to a specific revision is unsupported"))
-  (let ((summary (file-relative-name file (vc-arch-root file))))
+  ;; FIXME: This implementation probably only works for singleton filesets
+  (let ((summary (file-relative-name (car files) (vc-arch-root (car files)))))
     ;; Extract a summary from the comment.
     (when (or (string-match "\\`Summary:[ \t]*\\(.*[^ \t\n]\\)\\([ \t]*\n\\)*" comment)
 	      (string-match "\\`[ \t]*\\(.*[^ \t\n]\\)[ \t]*\\(\n?\\'\\|\n\\([ \t]*\n\\)+\\)" comment))
       (setq summary (match-string 1 comment))
       (setq comment (substring comment (match-end 0))))
-    (vc-arch-command nil 0 file "commit" "-s" summary "-L" comment "--"
+    (vc-arch-command nil 0 files "commit" "-s" summary "-L" comment "--"
 		     (vc-switches 'Arch 'checkin))))
 
-(defun vc-arch-diff (file &optional oldvers newvers buffer)
-  "Get a difference report using Arch between two versions of FILE."
-  (if (and newvers
-	   (vc-up-to-date-p file)
-	   (equal newvers (vc-workfile-version file)))
-      ;; Newvers is the base revision and the current file is unchanged,
-      ;; so we can diff with the current file.
-      (setq newvers nil))
-  (if newvers
-      (error "Diffing specific revisions not implemented")
-    (let* ((async (and (not vc-disable-async-diff) (fboundp 'start-process)))
-	   ;; Run the command from the root dir.
-	   (default-directory (vc-arch-root file))
-	   (status
-	    (vc-arch-command
-	     (or buffer "*vc-diff*")
-	     (if async 'async 1)
-	     nil "file-diffs"
-	     ;; Arch does not support the typical flags.
-	     ;; (vc-switches 'Arch 'diff)
-	     (file-relative-name file)
-	     (if (equal oldvers (vc-workfile-version file))
-		 nil
-	       oldvers))))
-      (if async 1 status))))	       ; async diff, pessimistic assumption.
+(defun vc-arch-diff (files &optional oldvers newvers buffer)
+  "Get a difference report using Arch between two versions of FILES."
+  ;; FIXME: This implementation only works for singleton filesets.  To make
+  ;; it work for more cases, we have to either call `file-diffs' manually on
+  ;; each and every `file' in the fileset, or use `changes --diffs' (and
+  ;; variants) and maybe filter the output with `filterdiff' to only include
+  ;; the files in which we're interested.
+  (let ((file (car files)))
+    (if (and newvers
+             (vc-up-to-date-p file)
+             (equal newvers (vc-working-revision file)))
+        ;; Newvers is the base revision and the current file is unchanged,
+        ;; so we can diff with the current file.
+        (setq newvers nil))
+    (if newvers
+        (error "Diffing specific revisions not implemented")
+      (let* ((async (not vc-disable-async-diff))
+             ;; Run the command from the root dir.
+             (default-directory (vc-arch-root file))
+             (status
+              (vc-arch-command
+               (or buffer "*vc-diff*")
+               (if async 'async 1)
+               nil "file-diffs"
+               (vc-switches 'Arch 'diff)
+               (file-relative-name file)
+               (if (equal oldvers (vc-working-revision file))
+                   nil
+                 oldvers))))
+        (if async 1 status)))))	       ; async diff, pessimistic assumption.
 
 (defun vc-arch-delete-file (file)
   (vc-arch-command nil 0 file "rm"))
@@ -417,9 +481,9 @@ Return non-nil if FILE is unchanged."
 
 (defun vc-arch-command (buffer okstatus file &rest flags)
   "A wrapper around `vc-do-command' for use in vc-arch.el."
-  (apply 'vc-do-command buffer okstatus vc-arch-command file flags))
+  (apply 'vc-do-command (or buffer "*vc*") okstatus vc-arch-program file flags))
 
-(defun vc-arch-init-version () nil)
+(defun vc-arch-init-revision () nil)
 
 ;;; Completion of versions and revisions.
 
@@ -438,13 +502,115 @@ Return non-nil if FILE is unchanged."
 		      (concat "*/" string))
 		    "*"))))))
 
-(defun vc-arch-revision-completion-table (file)
-  (lexical-let ((file file))
+(defun vc-arch-revision-completion-table (files)
+  (lexical-let ((files files))
     (lambda (string pred action)
       ;; FIXME: complete revision patches as well.
-      (let* ((root (expand-file-name "{arch}" (vc-arch-root file)))
+      (let* ((root (expand-file-name "{arch}" (vc-arch-root (car files))))
              (table (vc-arch--version-completion-table root string)))
 	(complete-with-action action table string pred)))))
+
+;;; Trimming revision libraries.
+
+;; This code is not directly related to VC and there are many variants of
+;; this functionality available as scripts, but I like this version better,
+;; so maybe others will like it too.
+
+(defun vc-arch-trim-find-least-useful-rev (revs)
+  (let* ((first (pop revs))
+         (second (pop revs))
+         (third (pop revs))
+         ;; We try to give more importance to recent revisions.  The idea is
+         ;; that it's OK if checking out a revision 1000-patch-old is ten
+         ;; times slower than checking out a revision 100-patch-old.  But at
+         ;; the same time a 2-patch-old rev isn't really ten times more
+         ;; important than a 20-patch-old, so we use an arbitrary constant
+         ;; "100" to reduce this effect for recent revisions.  Making this
+         ;; constant a float has the side effect of causing the subsequent
+         ;; computations to be done as floats as well.
+         (max (+ 100.0 (car (or (car (last revs)) third))))
+         (cost (lambda () (/ (- (car third) (car first)) (- max (car second)))))
+         (minrev second)
+         (mincost (funcall cost)))
+    (while revs
+      (setq first second)
+      (setq second third)
+      (setq third (pop revs))
+      (when (< (funcall cost) mincost)
+        (setq minrev second)
+        (setq mincost (funcall cost))))
+    minrev))
+
+(defun vc-arch-trim-make-sentinel (revs)
+  (if (null revs) (lambda (proc msg) (message "VC-Arch trimming ... done"))
+    (lexical-let ((revs revs))
+      (lambda (proc msg)
+        (message "VC-Arch trimming %s..." (file-name-nondirectory (car revs)))
+        (rename-file (car revs) (concat (car revs) "*rm*"))
+       (setq proc (start-process "vc-arch-trim" nil
+                                  "rm" "-rf" (concat (car revs) "*rm*")))
+        (set-process-sentinel proc (vc-arch-trim-make-sentinel (cdr revs)))))))
+
+(defun vc-arch-trim-one-revlib (dir)
+  "Delete half of the revisions in the revision library."
+  (interactive "Ddirectory: ")
+  (let ((garbage (directory-files dir 'full "\\`,," 'nosort)))
+    (when garbage
+      (funcall (vc-arch-trim-make-sentinel garbage) nil nil)))
+  (let ((revs
+         (sort (delq nil
+                     (mapcar
+                      (lambda (f)
+                        (when (string-match "-\\([0-9]+\\)\\'" f)
+                          (cons (string-to-number (match-string 1 f)) f)))
+                      (directory-files dir nil nil 'nosort)))
+               'car-less-than-car))
+        (subdirs nil))
+    (when (cddr revs)
+      (dotimes (i (/ (length revs) 2))
+        (let ((minrev (vc-arch-trim-find-least-useful-rev revs)))
+          (setq revs (delq minrev revs))
+          (push minrev subdirs)))
+      (funcall (vc-arch-trim-make-sentinel
+                (mapcar (lambda (x) (expand-file-name (cdr x) dir)) subdirs))
+               nil nil))))
+
+(defun vc-arch-trim-revlib ()
+  "Delete half of the revisions in the revision library."
+  (interactive)
+  (let ((rl-dir (with-output-to-string
+                  (call-process vc-arch-program nil standard-output nil
+                                "my-revision-library"))))
+    (while (string-match "\\(.*\\)\n" rl-dir)
+      (let ((dir (match-string 1 rl-dir)))
+        (setq rl-dir
+              (if (and (file-directory-p dir) (file-writable-p dir))
+                  dir
+                (substring rl-dir (match-end 0))))))
+    (unless (file-writable-p rl-dir)
+      (error "No writable revlib directory found"))
+    (message "Revlib at %s" rl-dir)
+    (let* ((archives (directory-files rl-dir 'full "[^.]\\|..."))
+           (categories
+            (apply 'append
+                   (mapcar (lambda (dir)
+                             (when (file-directory-p dir)
+                               (directory-files dir 'full "[^.]\\|...")))
+                           archives)))
+           (branches
+            (apply 'append
+                   (mapcar (lambda (dir)
+                             (when (file-directory-p dir)
+                               (directory-files dir 'full "[^.]\\|...")))
+                           categories)))
+           (versions
+            (apply 'append
+                   (mapcar (lambda (dir)
+                             (when (file-directory-p dir)
+                               (directory-files dir 'full "--.*--")))
+                           branches))))
+      (mapc 'vc-arch-trim-one-revlib versions))
+    ))
 
 (defvar vc-arch-extra-menu-map
   (let ((map (make-sparse-keymap)))
@@ -453,11 +619,11 @@ Return non-nil if FILE is unchanged."
     map))
 
 (defun vc-arch-extra-menu () vc-arch-extra-menu-map)
-  
+
 
 ;;; Less obvious implementations.
 
-(defun vc-arch-find-version (file rev buffer)
+(defun vc-arch-find-revision (file rev buffer)
   (let ((out (make-temp-file "vc-out")))
     (unwind-protect
         (progn

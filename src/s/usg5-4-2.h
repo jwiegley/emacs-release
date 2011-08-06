@@ -1,14 +1,14 @@
 /* s/ file for System V release 4.2.
 
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-                 2007, 2008  Free Software Foundation, Inc.
+   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+                 2008, 2009  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,19 +16,13 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 #include "usg5-4.h"
 
 /* fnf@cygnus.com says these exist.  */
 #define HAVE_TCATTR
-#if 0 /* autoconf should take care of this.  */
-#define HAVE_GETHOSTNAME
-#define HAVE_RANDOM
-#endif
 /* #define HAVE_GETWD  (appears to be buggy on SVR4.2) */
 #undef HAVE_GETWD
 
@@ -40,7 +34,6 @@ Boston, MA 02110-1301, USA.  */
 #undef HAVE_SYSV_SIGPAUSE
 
 /* Motif needs -lgen.  */
-#undef LIBS_SYSTEM
 #define LIBS_SYSTEM -lsocket -lnsl -lelf -lgen
 
 /* This is the same definition as in usg5-4.h, but with sigblock/sigunblock

@@ -1,13 +1,13 @@
 /* sound.c -- sound support.
    Copyright (C) 1998, 1999, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,9 +15,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* Written by Gerd Moellmann <gerd@gnu.org>.  Tested with Luigi's
    driver on FreeBSD 2.2.7 with a SoundBlaster 16.  */
@@ -97,7 +95,6 @@ Boston, MA 02110-1301, USA.  */
 #endif /* WINDOWSNT */
 
 /* BEGIN: Common Definitions */
-#define abs(X)    ((X) < 0 ? -(X) : (X))
 
 /* Symbols.  */
 
@@ -1069,12 +1066,6 @@ alsa_configure (sd)
   if (err < 0)
     alsa_sound_perror ("Unable to set avail min for playback", err);
 
-  /* Align all transfers to 1 period */
-  err = snd_pcm_sw_params_set_xfer_align (p->handle, p->swparams,
-                                          p->period_size);
-  if (err < 0)
-    alsa_sound_perror ("Unable to set transfer align for playback", err);
-
   err = snd_pcm_sw_params (p->handle, p->swparams);
   if (err < 0)
     alsa_sound_perror ("Unable to set sw params for playback\n", err);
@@ -1106,9 +1097,9 @@ alsa_configure (sd)
               {
                 if (snd_mixer_selem_has_playback_volume (e))
                   {
-                    long pmin, pmax;
+                    long pmin, pmax, vol;
                     snd_mixer_selem_get_playback_volume_range (e, &pmin, &pmax);
-                    long vol = pmin + (sd->volume * (pmax - pmin)) / 100;
+                    vol = pmin + (sd->volume * (pmax - pmin)) / 100;
 
                     for (chn = 0; chn <= SND_MIXER_SCHN_LAST; chn++)
                       snd_mixer_selem_set_playback_volume (e, chn, vol);
@@ -1218,7 +1209,7 @@ alsa_write (sd, buffer, nbytes)
     {
       snd_pcm_uframes_t frames = (nbytes - nwritten)/fact;
       if (frames == 0) break;
-      
+
       err = snd_pcm_writei (p->handle, buffer + nwritten, frames);
       if (err < 0)
         {
@@ -1304,6 +1295,16 @@ alsa_init (sd)
 
 /* BEGIN: Windows specific functions */
 
+#define SOUND_WARNING(fun, error, text)            \
+  {                                                \
+    char buf[1024];                                \
+    char err_string[MAXERRORLENGTH];               \
+    fun (error, err_string, sizeof (err_string));  \
+    _snprintf (buf, sizeof (buf), "%s\nError: %s", \
+	       text, err_string);		   \
+    sound_warning (buf);                           \
+  }
+
 static int
 do_play_sound (psz_file, ui_volume)
      const char *psz_file;
@@ -1317,16 +1318,17 @@ do_play_sound (psz_file, ui_volume)
   unsigned long ui_volume_org = 0;
   BOOL b_reset_volume = FALSE;
 
-  memset (sz_cmd_buf, 0, sizeof(sz_cmd_buf));
-  memset (sz_ret_buf, 0, sizeof(sz_ret_buf));
+  memset (sz_cmd_buf, 0, sizeof (sz_cmd_buf));
+  memset (sz_ret_buf, 0, sizeof (sz_ret_buf));
   sprintf (sz_cmd_buf,
            "open \"%s\" alias GNUEmacs_PlaySound_Device wait",
            psz_file);
-  mci_error = mciSendString (sz_cmd_buf, sz_ret_buf, 520, NULL);
+  mci_error = mciSendString (sz_cmd_buf, sz_ret_buf, sizeof (sz_ret_buf), NULL);
   if (mci_error != 0)
     {
-      sound_warning ("The open mciSendString command failed to open\n"
-                     "the specified sound file");
+      SOUND_WARNING (mciGetErrorString, mci_error,
+		     "The open mciSendString command failed to open "
+		     "the specified sound file.");
       i_result = (int) mci_error;
       return i_result;
     }
@@ -1337,42 +1339,46 @@ do_play_sound (psz_file, ui_volume)
         {
           b_reset_volume = TRUE;
           mm_result = waveOutSetVolume ((HWAVEOUT) WAVE_MAPPER, ui_volume);
-          if ( mm_result != MMSYSERR_NOERROR)
+          if (mm_result != MMSYSERR_NOERROR)
             {
-              sound_warning ("waveOutSetVolume failed to set the volume level\n"
-                             "of the WAVE_MAPPER device.\n"
-                             "As a result, the user selected volume level will\n"
-                             "not be used.");
+	      SOUND_WARNING (waveOutGetErrorText, mm_result,
+			     "waveOutSetVolume failed to set the volume level "
+			     "of the WAVE_MAPPER device.\n"
+			     "As a result, the user selected volume level will "
+			     "not be used.");
             }
         }
       else
         {
-          sound_warning ("waveOutGetVolume failed to obtain the original\n"
+          SOUND_WARNING (waveOutGetErrorText, mm_result,
+			 "waveOutGetVolume failed to obtain the original "
                          "volume level of the WAVE_MAPPER device.\n"
-                         "As a result, the user selected volume level will\n"
+                         "As a result, the user selected volume level will "
                          "not be used.");
         }
     }
-  memset (sz_cmd_buf, 0, sizeof(sz_cmd_buf));
-  memset (sz_ret_buf, 0, sizeof(sz_ret_buf));
+  memset (sz_cmd_buf, 0, sizeof (sz_cmd_buf));
+  memset (sz_ret_buf, 0, sizeof (sz_ret_buf));
   strcpy (sz_cmd_buf, "play GNUEmacs_PlaySound_Device wait");
-  mci_error = mciSendString (sz_cmd_buf, sz_ret_buf, 520, NULL);
+  mci_error = mciSendString (sz_cmd_buf, sz_ret_buf, sizeof (sz_ret_buf), NULL);
   if (mci_error != 0)
     {
-      sound_warning ("The play mciSendString command failed to play the\n"
-                     "opened sound file.");
+      SOUND_WARNING (mciGetErrorString, mci_error,
+		     "The play mciSendString command failed to play the "
+		     "opened sound file.");
       i_result = (int) mci_error;
     }
-  memset (sz_cmd_buf, 0, sizeof(sz_cmd_buf));
-  memset (sz_ret_buf, 0, sizeof(sz_ret_buf));
+  memset (sz_cmd_buf, 0, sizeof (sz_cmd_buf));
+  memset (sz_ret_buf, 0, sizeof (sz_ret_buf));
   strcpy (sz_cmd_buf, "close GNUEmacs_PlaySound_Device wait");
-  mci_error = mciSendString (sz_cmd_buf, sz_ret_buf, 520, NULL);
+  mci_error = mciSendString (sz_cmd_buf, sz_ret_buf, sizeof (sz_ret_buf), NULL);
   if (b_reset_volume == TRUE)
     {
-      mm_result=waveOutSetVolume ((HWAVEOUT) WAVE_MAPPER, ui_volume_org);
+      mm_result = waveOutSetVolume ((HWAVEOUT) WAVE_MAPPER, ui_volume_org);
       if (mm_result != MMSYSERR_NOERROR)
         {
-          sound_warning ("waveOutSetVolume failed to reset the original volume\n"
+          SOUND_WARNING (waveOutGetErrorText, mm_result,
+			 "waveOutSetVolume failed to reset the original volume "
                          "level of the WAVE_MAPPER device.");
         }
     }

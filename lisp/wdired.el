@@ -1,6 +1,7 @@
 ;;; wdired.el --- Rename files editing their names in dired buffers
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Filename: wdired.el
 ;; Author: Juan León Lahoz García <juanleon1@gmail.com>
@@ -9,20 +10,18 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 3, or (at
-;; your option) any later version.
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; This program is distributed in the hope that it will be useful, but
-;; WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -106,7 +105,6 @@
 (eval-when-compile (require 'cl))
 (require 'dired)
 (autoload 'dired-do-create-files-regexp "dired-aux")
-(autoload 'dired-call-process "dired-aux")
 
 (defgroup wdired nil
   "Mode to rename files by editing their names in dired buffers."
@@ -131,8 +129,8 @@ is not nil."
   "If t, the \"up\" and \"down\" movement works as in Dired mode.
 That is, always move the point to the beginning of the filename at line.
 
-If `sometimes, only move to the beginning of filename if the point is
-before it, and `track-eol' is honored.  This behavior is very handy
+If `sometimes', only move to the beginning of filename if the point is
+before it, and `track-eol' is non-nil.  This behavior is very handy
 when editing several filenames.
 
 If nil, \"up\" and \"down\" movement is done as in any other buffer."
@@ -158,7 +156,7 @@ changed.  Anyway, the point is advanced one position, so, for example,
 you can keep the <x> key pressed to give execution permissions to
 everybody to that file.
 
-If `advanced, the bits are freely editable.  You can use
+If `advanced', the bits are freely editable.  You can use
 `string-rectangle', `query-replace', etc.  You can put any value (even
 newlines), but if you want your changes to be useful, you better put a
 intelligible value.
@@ -176,6 +174,7 @@ program `dired-chmod-program', which must exist."
     (define-key map "\C-c\C-c" 'wdired-finish-edit)
     (define-key map "\C-c\C-k" 'wdired-abort-changes)
     (define-key map "\C-c\C-[" 'wdired-abort-changes)
+    (define-key map "\C-x\C-q" 'wdired-exit)
     (define-key map "\C-m"     'ignore)
     (define-key map "\C-j"     'ignore)
     (define-key map "\C-o"     'ignore)
@@ -273,7 +272,7 @@ or \\[wdired-abort-changes] to abort changes")))
 ;; Protect the buffer so only the filenames can be changed, and put
 ;; properties so filenames (old and new) can be easily found.
 (defun wdired-preprocess-files ()
-  (put-text-property 1 2 'front-sticky t)
+  (put-text-property (point-min) (1+ (point-min))'front-sticky t)
   (save-excursion
     (goto-char (point-min))
     (let ((b-protection (point))
@@ -370,11 +369,12 @@ non-nil means return old filename."
   "Actually rename files based on your editing in the Dired buffer."
   (interactive)
   (wdired-change-to-dired-mode)
-  (let ((overwrite (or (not wdired-confirm-overwrite) 1))
-	(changes nil)
-	(files-deleted nil)
+  (let ((changes nil)
 	(errors 0)
-	file-ori file-new tmp-value)
+	files-deleted
+	files-renamed
+	some-file-names-unchanged
+	file-old file-new tmp-value)
     (save-excursion
       (when (and wdired-allow-to-redirect-links
 		 (fboundp 'make-symbolic-link))
@@ -388,33 +388,32 @@ non-nil means return old filename."
 	(setq changes (or changes (car tmp-value))))
       (goto-char (point-max))
       (while (not (bobp))
-	(setq file-ori (wdired-get-filename nil t))
-	(when file-ori
-	  (setq file-new (wdired-get-filename)))
-	(when (and file-ori (not (equal file-new file-ori)))
-	  (setq changes t)
-	  (if (not file-new)		;empty filename!
-	      (setq files-deleted (cons file-ori files-deleted))
-	    (setq file-new (substitute-in-file-name file-new))
-	    (if wdired-use-interactive-rename
-		(wdired-search-and-rename file-ori file-new)
-	      ;; If dired-rename-file autoloads dired-aux while
-	      ;; dired-backup-overwrite is locally bound,
-	      ;; dired-backup-overwrite won't be initialized.
-	      ;; So we must ensure dired-aux is loaded.
-	      (require 'dired-aux)
-	      (condition-case err
-		  (let ((dired-backup-overwrite nil))
-		    (dired-rename-file file-ori file-new
-				       overwrite))
-		(error
-		 (setq errors (1+ errors))
-		 (dired-log (concat "Rename `" file-ori "' to `"
-				    file-new "' failed:\n%s\n")
-			    err))))))
+	(setq file-old (wdired-get-filename nil t))
+	(when file-old
+	  (setq file-new (wdired-get-filename))
+          (if (equal file-new file-old)
+	      (setq some-file-names-unchanged t)
+            (setq changes t)
+            (if (not file-new)		;empty filename!
+                (push file-old files-deleted)
+              (push (cons file-old (substitute-in-file-name file-new))
+                    files-renamed))))
 	(forward-line -1)))
+    (when files-renamed
+      (setq errors (+ errors (wdired-do-renames files-renamed))))
     (if changes
-        (revert-buffer) ;The "revert" is necessary to re-sort the buffer
+	(progn
+	  ;; If we are displaying a single file (rather than the
+	  ;; contents of a directory), change dired-directory if that
+	  ;; file was renamed.  (This ought to be generalized to
+	  ;; handle the multiple files case, but that's less trivial).
+	  (when (and (stringp dired-directory)
+		     (not (file-directory-p dired-directory))
+		     (null some-file-names-unchanged)
+		     (= (length files-renamed) 1))
+	    (setq dired-directory (cdr (car files-renamed))))
+	  ;; Re-sort the buffer.
+	  (revert-buffer))
       (let ((inhibit-read-only t))
 	(remove-text-properties (point-min) (point-max)
 				'(old-name nil end-name nil old-link nil
@@ -428,6 +427,83 @@ non-nil means return old filename."
   (set-buffer-modified-p nil)
   (setq buffer-undo-list nil))
 
+(defun wdired-do-renames (renames)
+  "Perform RENAMES in parallel."
+  (let ((residue ())
+        (progress nil)
+        (errors 0)
+        (overwrite (or (not wdired-confirm-overwrite) 1)))
+    (while (or renames
+               ;; We've done one round through the renames, we have found
+               ;; some residue, but we also made some progress, so maybe
+               ;; some of the residue were resolved: try again.
+               (prog1 (setq renames residue)
+                 (setq progress nil)
+                 (setq residue nil)))
+      (let* ((rename (pop renames))
+             (file-new (cdr rename)))
+        (cond
+         ((rassoc file-new renames)
+          (error "Trying to rename 2 files to the same name"))
+         ((assoc file-new renames)
+          ;; Renaming to a file name that already exists but will itself be
+          ;; renamed as well.  Let's wait until that one gets renamed.
+          (push rename residue))
+         ((and (assoc file-new residue)
+               ;; Make sure the file really exists: if it doesn't it's
+               ;; not really a conflict.  It might be a temp-file generated
+               ;; specifically to break a circular renaming.
+               (file-exists-p file-new))
+          ;; Renaming to a file name that already exists, needed to be renamed,
+          ;; but whose renaming could not be performed right away.
+          (if (or progress renames)
+              ;; There's still a chance the conflict will be resolved.
+              (push rename residue)
+            ;; We have not made any progress and we've reached the end of
+            ;; the renames, so we really have a circular conflict, and we
+            ;; have to forcefully break the cycle.
+            (message "Circular renaming: using temporary file name")
+            (let ((tmp (make-temp-name file-new)))
+              (push (cons (car rename) tmp) renames)
+              (push (cons tmp file-new) residue))))
+         (t
+          (setq progress t)
+          (let ((file-ori (car rename)))
+            (if wdired-use-interactive-rename
+                (wdired-search-and-rename file-ori file-new)
+              ;; If dired-rename-file autoloads dired-aux while
+              ;; dired-backup-overwrite is locally bound,
+              ;; dired-backup-overwrite won't be initialized.
+              ;; So we must ensure dired-aux is loaded.
+              (require 'dired-aux)
+              (condition-case err
+                  (let ((dired-backup-overwrite nil))
+                    (dired-rename-file file-ori file-new
+                                       overwrite))
+                (error
+                 (setq errors (1+ errors))
+                 (dired-log (concat "Rename `" file-ori "' to `"
+                                    file-new "' failed:\n%s\n")
+                            err)))))))))
+    errors))
+      
+
+(defun wdired-exit ()
+  "Exit wdired and return to dired mode.
+Just return to dired mode if there are no changes.  Otherwise,
+ask a yes-or-no question whether to save or cancel changes,
+and proceed depending on the answer."
+  (interactive)
+  (if (buffer-modified-p)
+      (if (y-or-n-p (format "Buffer %s modified; save changes? "
+			    (current-buffer)))
+	  (wdired-finish-edit)
+	(wdired-abort-changes))
+    (wdired-change-to-dired-mode)
+    (set-buffer-modified-p nil)
+    (setq buffer-undo-list nil)
+    (message "(No changes need to be saved)")))
+
 ;; Rename a file, searching it in a modified dired buffer, in order
 ;; to be able to use `dired-do-create-files-regexp' and get its
 ;; "benefits".
@@ -435,14 +511,13 @@ non-nil means return old filename."
   (save-excursion
     (goto-char (point-max))
     (forward-line -1)
-    (let ((exit-while nil)
+    (let ((done nil)
 	  curr-filename)
-      (while (not exit-while)
-        (setq curr-filename (wdired-get-filename))
-        (if (and curr-filename
-                 (equal (substitute-in-file-name curr-filename) filename-new))
+      (while (and (not done) (not (bobp)))
+        (setq curr-filename (wdired-get-filename nil t))
+        (if (equal curr-filename filename-ori)
             (progn
-              (setq exit-while t)
+              (setq done t)
               (let ((inhibit-read-only t))
                 (dired-move-to-filename)
                 (search-forward (wdired-get-filename t) nil t)
@@ -450,9 +525,7 @@ non-nil means return old filename."
               (dired-do-create-files-regexp
                (function dired-rename-file)
                "Move" 1 ".*" filename-new nil t))
-	  (forward-line -1)
-	  (beginning-of-line)
-	  (setq exit-while (bobp)))))))
+	  (forward-line -1))))))
 
 ;; marks a list of files for deletion
 (defun wdired-flag-for-deletion (filenames-ori)
@@ -480,14 +553,14 @@ Optional arguments are ignored."
   (if (and
        (buffer-modified-p)
        (not (y-or-n-p "Buffer changed. Discard changes and kill buffer? ")))
-      (error nil)))
+      (error "Error.")))
 
 (defun wdired-next-line (arg)
   "Move down lines then position at filename or the current column.
 See `wdired-use-dired-vertical-movement'.  Optional prefix ARG
 says how many lines to move; default is one line."
   (interactive "p")
-  (next-line arg)
+  (with-no-warnings (next-line arg))
   (if (or (eq wdired-use-dired-vertical-movement t)
 	  (and wdired-use-dired-vertical-movement
 	       (< (current-column)
@@ -500,7 +573,7 @@ says how many lines to move; default is one line."
 See `wdired-use-dired-vertical-movement'.  Optional prefix ARG
 says how many lines to move; default is one line."
   (interactive "p")
-  (previous-line arg)
+  (with-no-warnings (previous-line arg))
   (if (or (eq wdired-use-dired-vertical-movement t)
 	  (and wdired-use-dired-vertical-movement
 	       (< (current-column)
@@ -544,6 +617,7 @@ If OLD, return the old target.  If MOVE, move point before it."
 	  (if move (goto-char (1- beg)))))
     (and target (wdired-normalize-filename target))))
 
+(declare-function make-symbolic-link "fileio.c")
 
 ;; Perform the changes in the target of the changed links.
 (defun wdired-do-symlink-changes ()
@@ -668,9 +742,9 @@ Like original function but it skips read-only words."
 (defun wdired-set-bit ()
   "Set a permission bit character."
   (interactive)
-  (if (wdired-perm-allowed-in-pos last-command-char
+  (if (wdired-perm-allowed-in-pos last-command-event
                                   (- (current-column) wdired-col-perm))
-      (let ((new-bit (char-to-string last-command-char))
+      (let ((new-bit (char-to-string last-command-event))
             (inhibit-read-only t)
 	    (pos-prop (- (point) (- (current-column) wdired-col-perm))))
         (put-text-property 0 1 'keymap wdired-perm-mode-map new-bit)
@@ -688,7 +762,7 @@ Like original function but it skips read-only words."
 	(new-bit "-")
 	(pos-prop (- (point) (- (current-column) wdired-col-perm))))
     (if (eq (char-after (point)) ?-)
-	(setq new-bit	
+	(setq new-bit
 	      (if (= (% (- (current-column) wdired-col-perm) 3) 0) "r"
 		(if (= (% (- (current-column) wdired-col-perm) 3) 1) "w"
 		  "x"))))
@@ -748,8 +822,8 @@ Like original function but it skips read-only words."
             (progn
               (setq perm-tmp
                     (int-to-string (wdired-perms-to-number perms-new)))
-              (unless (equal 0 (dired-call-process dired-chmod-program
-                                                   t perm-tmp filename))
+              (unless (equal 0 (process-file dired-chmod-program
+					     nil nil nil perm-tmp filename))
                 (setq errors (1+ errors))
                 (dired-log (concat dired-chmod-program " " perm-tmp
                                    " `" filename "' failed\n\n"))))

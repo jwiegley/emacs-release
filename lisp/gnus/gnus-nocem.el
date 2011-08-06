@@ -1,17 +1,17 @@
 ;;; gnus-nocem.el --- NoCeM pseudo-cancellation treatment
 
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -40,18 +38,21 @@
   :group 'gnus-score)
 
 (defcustom gnus-nocem-groups
-  '("news.lists.filters" "news.admin.net-abuse.bulletins"
-    "alt.nocem.misc" "news.admin.net-abuse.announce")
+  '("news.lists.filters" "alt.nocem.misc")
   "*List of groups that will be searched for NoCeM messages."
   :group 'gnus-nocem
+  :version "23.1"
   :type '(repeat (string :tag "Group")))
 
 (defcustom gnus-nocem-issuers
-  '("AutoMoose-1"			; CancelMoose[tm]
-    "clewis@ferret.ocunix"		; Chris Lewis
-    "cosmo.roadkill"
-    "SpamHippo"
-    "hweede@snafu.de")
+  '("Adri Verhoef"
+    "alba-nocem@albasani.net"
+    "bleachbot@httrack.com"
+    "news@arcor-online.net"
+    "news@uni-berlin.de"
+    "nocem@arcor.de"
+    "pgpmoose@killfile.org"
+    "xjsppl@gmx.de")
   "*List of NoCeM issuers to pay attention to.
 
 This can also be a list of `(ISSUER CONDITION ...)' elements.
@@ -60,7 +61,34 @@ See <URL:http://www.xs4all.nl/~rosalind/nocemreg/nocemreg.html> for an
 issuer registry."
   :group 'gnus-nocem
   :link '(url-link "http://www.xs4all.nl/~rosalind/nocemreg/nocemreg.html")
-  :type '(repeat (choice string sexp)))
+  :version "23.1"
+  :type '(repeat (cons :format "%v" (string :tag "Issuer")
+		       (repeat :tag "Condition"
+			       (group (checklist :inline t (const not))
+				      (regexp :tag "Type" :value ".*")))))
+  :get (lambda (symbol)
+	 (mapcar (lambda (elem)
+		   (if (consp elem)
+		       (cons (car elem)
+			     (mapcar (lambda (elt)
+				       (if (consp elt) elt (list elt)))
+				     (cdr elem)))
+		     (list elem)))
+		 (default-value symbol)))
+  :set (lambda (symbol value)
+	 (custom-set-default
+	  symbol
+	  (mapcar (lambda (elem)
+		    (if (consp elem)
+			(if (cdr elem)
+			    (mapcar (lambda (elt)
+				      (if (consp elt)
+					  (if (cdr elt) elt (car elt))
+					elt))
+				    elem)
+			  (car elem))
+		      elem))
+		  value))))
 
 (defcustom gnus-nocem-directory
   (nnheader-concat gnus-article-save-directory "NoCeM/")
@@ -73,14 +101,24 @@ issuer registry."
   :group 'gnus-nocem
   :type 'integer)
 
-(defcustom gnus-nocem-verifyer 'pgg-verify
+(defcustom gnus-nocem-verifyer (if (locate-library "epg")
+				   'gnus-nocem-epg-verify
+				 'pgg-verify)
   "*Function called to verify that the NoCeM message is valid.
-One likely value is `pgg-verify'.  If the function in this variable
-isn't bound, the message will be used unconditionally."
+If the function in this variable isn't bound, the message will be used
+unconditionally."
   :group 'gnus-nocem
-  :type '(radio (function-item pgg-verify)
+  :version "23.1"
+  :type '(radio (function-item gnus-nocem-epg-verify)
+		(function-item pgg-verify)
 		(function-item mc-verify)
-		(function :tag "other")))
+		(function :tag "other"))
+  :set (lambda (symbol value)
+	 (custom-set-default symbol
+			     (if (and (eq value 'gnus-nocem-epg-verify)
+				      (not (locate-library "epg")))
+				 'pgg-verify
+			       value))))
 
 (defcustom gnus-nocem-liberal-fetch nil
   "*If t try to fetch all messages which have @@NCM in the subject.
@@ -129,11 +167,12 @@ valid issuer, which is much faster if you are selective about the issuers."
 
 (defun gnus-fill-real-hashtb ()
   "Fill up a hash table with the real-name mappings from the user's active file."
-  (setq gnus-nocem-real-group-hashtb (gnus-make-hashtable
-				      (length gnus-newsrc-alist)))
+  (if (hash-table-p gnus-nocem-real-group-hashtb)
+      (clrhash gnus-nocem-real-group-hashtb)
+    (setq gnus-nocem-real-group-hashtb (make-hash-table :test 'equal)))
   (mapcar (lambda (group)
 	    (setq group (gnus-group-real-name (car group)))
-	    (gnus-sethash group t gnus-nocem-real-group-hashtb))
+	    (puthash group t gnus-nocem-real-group-hashtb))
 	  gnus-newsrc-alist))
 
 ;;;###autoload
@@ -191,7 +230,7 @@ valid issuer, which is much faster if you are selective about the issuers."
 		       (and gnus-nocem-check-from
 			    (let ((case-fold-search t))
 			      (catch 'ok
-				(mapcar
+				(mapc
 				 (lambda (author)
 				   (if (consp author)
 				       (setq author (car author)))
@@ -237,11 +276,11 @@ valid issuer, which is much faster if you are selective about the issuers."
       (gnus-request-article-this-buffer (mail-header-number header) group)
       (goto-char (point-min))
       (when (re-search-forward
-	     "-----BEGIN PGP\\( SIGNED\\)? MESSAGE-----"
+	     "-----BEGIN PGP\\(?: SIGNED\\)? MESSAGE-----"
 	     nil t)
 	(delete-region (point-min) (match-beginning 0)))
       (when (re-search-forward
-	     "-----END PGP \\(MESSAGE\\|SIGNATURE\\)-----\n?"
+	     "-----END PGP \\(?:MESSAGE\\|SIGNATURE\\)-----\n?"
 	     nil t)
 	(delete-region (match-end 0) (point-max)))
       (goto-char (point-min))
@@ -304,34 +343,26 @@ valid issuer, which is much faster if you are selective about the issuers."
       (while (search-forward "\t" nil t)
 	(cond
 	 ((not (ignore-errors
-		 (setq group (let ((obarray gnus-nocem-real-group-hashtb))
-			       (read buf)))))
+		 (setq group (gnus-group-real-name (symbol-name (read buf))))
+		 (gethash group gnus-nocem-real-group-hashtb)))
 	  ;; An error.
 	  )
-	 ((not (symbolp group))
-	  ;; Ignore invalid entries.
-	  )
-	 ((not (boundp group))
-	  ;; Make sure all entries in the hashtb are bound.
-	  (set group nil))
 	 (t
-	  (when (gnus-gethash (gnus-group-real-name (symbol-name group))
-			      gnus-nocem-real-group-hashtb)
-	    ;; Valid group.
-	    (beginning-of-line)
-	    (while (eq (char-after) ?\t)
-	      (forward-line -1))
-	    (setq id (buffer-substring (point) (1- (search-forward "\t"))))
-	    (unless (if gnus-nocem-hashtb
-			(gnus-gethash id gnus-nocem-hashtb)
-		      (setq gnus-nocem-hashtb (gnus-make-hashtable))
-		      nil)
-	      ;; only store if not already present
-	      (gnus-sethash id t gnus-nocem-hashtb)
-	      (push id ncm))
-	    (forward-line 1)
-	    (while (eq (char-after) ?\t)
-	      (forward-line 1))))))
+	  ;; Valid group.
+	  (beginning-of-line)
+	  (while (eq (char-after) ?\t)
+	    (forward-line -1))
+	  (setq id (buffer-substring (point) (1- (search-forward "\t"))))
+	  (unless (if (hash-table-p gnus-nocem-hashtb)
+		      (gethash id gnus-nocem-hashtb)
+		    (setq gnus-nocem-hashtb (make-hash-table :test 'equal))
+		    nil)
+	    ;; only store if not already present
+	    (puthash id t gnus-nocem-hashtb)
+	    (push id ncm))
+	  (forward-line 1)
+	  (while (eq (char-after) ?\t)
+	    (forward-line 1)))))
       (when ncm
 	(setq gnus-nocem-touched-alist t)
 	(push (cons (let ((time (current-time))) (setcdr (cdr time) nil) time)
@@ -370,7 +401,9 @@ valid issuer, which is much faster if you are selective about the issuers."
 	 (prev pprev)
 	 (expiry (days-to-time gnus-nocem-expiry-wait))
 	 entry)
-    (setq gnus-nocem-hashtb (gnus-make-hashtable (* (length alist) 51)))
+    (if (hash-table-p gnus-nocem-hashtb)
+	(clrhash gnus-nocem-hashtb)
+      (setq gnus-nocem-hashtb (make-hash-table :test 'equal)))
     (while (setq entry (car alist))
       (if (not (time-less-p (time-since (car entry)) expiry))
 	  ;; This entry has expired, so we remove it.
@@ -379,7 +412,7 @@ valid issuer, which is much faster if you are selective about the issuers."
 	;; This is ok, so we enter it into the hashtable.
 	(setq entry (cdr entry))
 	(while entry
-	  (gnus-sethash (car entry) t gnus-nocem-hashtb)
+	  (puthash (car entry) t gnus-nocem-hashtb)
 	  (setq entry (cdr entry))))
       (setq alist (cdr alist)))))
 
@@ -397,9 +430,24 @@ valid issuer, which is much faster if you are selective about the issuers."
 (defun gnus-nocem-unwanted-article-p (id)
   "Say whether article ID in the current group is wanted."
   (and gnus-nocem-hashtb
-       (gnus-gethash id gnus-nocem-hashtb)))
+       (gethash id gnus-nocem-hashtb)))
+
+(autoload 'epg-make-context "epg")
+(eval-when-compile
+  (autoload 'epg-verify-string "epg")
+  (autoload 'epg-context-result-for "epg")
+  (autoload 'epg-signature-status "epg"))
+
+(defun gnus-nocem-epg-verify ()
+  "Return t if EasyPG verifies a signed message in the current buffer."
+  (let ((context (epg-make-context 'OpenPGP))
+	result)
+    (epg-verify-string context (buffer-string))
+    (and (setq result (epg-context-result-for context 'verify))
+	 (not (cdr result))
+	 (eq (epg-signature-status (car result)) 'good))))
 
 (provide 'gnus-nocem)
 
-;;; arch-tag: 0e0c74ea-2f8e-4f3e-8fff-09f767c1adef
+;; arch-tag: 0e0c74ea-2f8e-4f3e-8fff-09f767c1adef
 ;;; gnus-nocem.el ends here

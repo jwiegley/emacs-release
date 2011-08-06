@@ -1,15 +1,16 @@
 ;;;; testcover-ses.el -- Example use of `testcover' to test "SES"
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Jonathan Yavner <jyavner@engineer.com>
 ;; Maintainer: Jonathan Yavner <jyavner@engineer.com>
 ;; Keywords: spreadsheet lisp utility
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,14 +18,23 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 (require 'testcover)
 
 (defvar ses-initial-global-parameters)
 (defvar ses-mode-map)
+
+(declare-function ses-set-curcell "ses")
+(declare-function ses-update-cells "ses")
+(declare-function ses-load "ses")
+(declare-function ses-vector-delete "ses")
+(declare-function ses-create-header-string "ses")
+(declare-function ses-read-cell "ses")
+(declare-function ses-read-symbol "ses")
+(declare-function ses-command-hook "ses")
+(declare-function ses-jump "ses")
+
 
 ;;;Here are some macros that exercise SES.  Set `pause' to t if you want the
 ;;;macros to pause after each step.
@@ -711,5 +721,5 @@ spreadsheet files with invalid formatting."
   ;;Could do this here: (testcover-end "ses.el")
   (message "Done"))
 
-;;; arch-tag: 87052ba4-5cf8-46cf-9375-fe245f3360b8
+;; arch-tag: 87052ba4-5cf8-46cf-9375-fe245f3360b8
 ;; testcover-ses.el ends here.

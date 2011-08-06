@@ -1,16 +1,16 @@
 ;;; em-glob.el --- extended file name globbing
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,22 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-;;; Code:
-
-(provide 'em-glob)
-
-(eval-when-compile (require 'esh-maint))
-(require 'esh-util)
-
-(defgroup eshell-glob nil
-  "This module provides extended globbing syntax, similar what is used
-by zsh for filename generation."
-  :tag "Extended filename globbing"
-  :group 'eshell-module)
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -62,6 +47,18 @@ by zsh for filename generation."
 ;; The glob above matches all of the files beneath '/tmp' that are
 ;; owned by the user 'johnw'.  See [Value modifiers and predicates],
 ;; for more information about argument predication.
+
+;;; Code:
+
+(eval-when-compile (require 'eshell))
+(require 'esh-util)
+
+;;;###autoload
+(eshell-defgroup eshell-glob nil
+  "This module provides extended globbing syntax, similar what is used
+by zsh for filename generation."
+  :tag "Extended filename globbing"
+  :group 'eshell-module)
 
 ;;; User Variables:
 
@@ -258,15 +255,15 @@ the form:
 	  (eshell-glob-entries (file-name-as-directory ".") paths))
       (if message-shown
 	  (message nil)))
-    (or (and matches (nreverse matches))
+    (or (and matches (sort matches #'string<))
 	(if eshell-error-if-no-glob
 	    (error "No matches found: %s" glob)
 	  glob))))
 
-(eval-when-compile
-  (defvar matches)
-  (defvar message-shown))
+(defvar matches)
+(defvar message-shown)
 
+;; FIXME does this really need to abuse matches, message-shown?
 (defun eshell-glob-entries (path globs &optional recurse-p)
   "Glob the entries in PATHS, possibly recursing if RECURSE-P is non-nil."
   (let* ((entries (ignore-errors
@@ -355,5 +352,11 @@ the form:
       (eshell-glob-entries (car rdirs) globs recurse-p)
       (setq rdirs (cdr rdirs)))))
 
-;;; arch-tag: d0548f54-fb7c-4978-a88e-f7c26f7f68ca
+(provide 'em-glob)
+
+;; Local Variables:
+;; generated-autoload-file: "esh-groups.el"
+;; End:
+
+;; arch-tag: d0548f54-fb7c-4978-a88e-f7c26f7f68ca
 ;;; em-glob.el ends here

@@ -1,7 +1,7 @@
 ;;; ebuff-menu.el --- electric-buffer-list mode
 
 ;; Copyright (C) 1985, 1986, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Richard Mlynarik <mly@ai.mit.edu>
 ;; Maintainer: FSF
@@ -9,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -175,7 +173,7 @@ Entry to this mode via command `electric-buffer-list' calls the value of
   (let ((map (make-keymap)))
     (fillarray (car (cdr map)) 'Electric-buffer-menu-undefined)
     (define-key map "\e" nil)
-    (define-key map "\C-z" 'suspend-emacs)
+    (define-key map "\C-z" 'suspend-frame)
     (define-key map "v" 'Electric-buffer-menu-mode-view-buffer)
     (define-key map (char-to-string help-char) 'Helper-help)
     (define-key map "?" 'Helper-describe-bindings)
@@ -290,5 +288,5 @@ Return to Electric Buffer Menu when done."
 
 (provide 'ebuff-menu)
 
-;;; arch-tag: 1d4509b3-eece-4d4f-95ea-77c83eaf0275
+;; arch-tag: 1d4509b3-eece-4d4f-95ea-77c83eaf0275
 ;;; ebuff-menu.el ends here

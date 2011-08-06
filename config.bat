@@ -2,14 +2,14 @@
 rem   ----------------------------------------------------------------------
 rem   Configuration script for MSDOS
 rem   Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2001, 2002, 2003
-rem   2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+rem   2004, 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 
 rem   This file is part of GNU Emacs.
 
-rem   GNU Emacs is free software; you can redistribute it and/or modify
+rem   GNU Emacs is free software: you can redistribute it and/or modify
 rem   it under the terms of the GNU General Public License as published by
-rem   the Free Software Foundation; either version 3, or (at your option)
-rem   any later version.
+rem   the Free Software Foundation, either version 3 of the License, or
+rem   (at your option) any later version.
 
 rem   GNU Emacs is distributed in the hope that it will be useful,
 rem   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,9 +17,8 @@ rem   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 rem   GNU General Public License for more details.
 
 rem   You should have received a copy of the GNU General Public License
-rem   along with GNU Emacs; see the file COPYING.  If not, write to the
-rem   Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-rem   Boston, MA 02110-1301, USA.
+rem   along with GNU Emacs.  If not, see http://www.gnu.org/licenses/.
+
 rem   ----------------------------------------------------------------------
 rem   YOU'LL NEED THE FOLLOWING UTILITIES TO MAKE EMACS:
 rem
@@ -27,8 +26,9 @@ rem   + msdos version 3 or better.
 rem   + DJGPP version 1.12maint1 or later (version 2.03 or later recommended).
 rem   + make utility that allows breaking of the 128 chars limit on
 rem     command lines.  ndmake (as of version 4.5) won't work due to a
-rem     line length limit.  The make that comes with DJGPP does work.
-rem   + rm and mv (from GNU file utilities).
+rem     line length limit.  The make that comes with DJGPP does work (and is
+rem     recommended).
+rem   + rm, mv, and cp (from GNU file utilities).
 rem   + sed (you can use the port that comes with DJGPP).
 rem
 rem   You should be able to get all the above utilities from the DJGPP FTP
@@ -37,6 +37,7 @@ rem   ----------------------------------------------------------------------
 set X11=
 set nodebug=
 set djgpp_ver=
+set sys_malloc=
 if "%1" == "" goto usage
 rem   ----------------------------------------------------------------------
 rem   See if their environment is large enough.  We need 28 bytes.
@@ -48,8 +49,9 @@ if "%1" == "" goto usage
 if "%1" == "--with-x" goto withx
 if "%1" == "--no-debug" goto nodebug
 if "%1" == "msdos" goto msdos
+if "%1" == "--with-system-malloc" goto sysmalloc
 :usage
-echo Usage: config [--with-x] [--no-debug] msdos
+echo Usage: config [--no-debug] [--with-system-malloc] [--with-x] msdos
 echo [Read the script before you run it.]
 goto end
 rem   ----------------------------------------------------------------------
@@ -60,6 +62,11 @@ goto again
 rem   ----------------------------------------------------------------------
 :nodebug
 set nodebug=Y
+shift
+goto again
+rem   ----------------------------------------------------------------------
+:sysmalloc
+set sys_malloc=Y
 shift
 goto again
 rem   ----------------------------------------------------------------------
@@ -174,6 +181,13 @@ rem The following line disables DECL_ALIGN which in turn disables USE_LSB_TAG
 rem For details see lisp.h where it defines USE_LSB_TAG
 echo #define NO_DECL_ALIGN >>config.h2
 :alignOk
+Rem See if they requested a SYSTEM_MALLOC build
+if "%sys_malloc%" == "" Goto cfgDone
+rm -f config.tmp
+ren config.h2 config.tmp
+sed -f ../msdos/sedalloc.inp <config.tmp >config.h2
+
+:cfgDone
 rm -f junk.c junk junk.exe
 update config.h2 config.h >nul
 rm -f config.tmp config.h2
@@ -235,22 +249,11 @@ mv -f makefile.tmp Makefile
 cd ..
 :oldx1
 rem   ----------------------------------------------------------------------
-Echo Configuring the manual directory...
-cd man
-sed -f ../msdos/sed6.inp < Makefile.in > Makefile
-cd ..
-rem   ----------------------------------------------------------------------
-Echo Configuring the ELisp manual directory...
-cd lispref
-sed -f ../msdos/sed6.inp < Makefile.in > Makefile
-cd ..
-rem   ----------------------------------------------------------------------
-Echo Configuring the ELisp Introduction manual directory...
-Rem The two variants for the line below is for when the shell
+Echo Configuring the doc directory, expect one "File not found" message...
+cd doc
+Rem The two variants for lispintro below is for when the shell
 Rem supports long file names but DJGPP does not
-if exist lispintro\Makefile.in cd lispintro
-if exist lispintr\Makefile.in cd lispintr
-sed -f ../msdos/sed6.inp < Makefile.in > Makefile
+for %%d in (emacs lispref lispintro lispintr misc) do sed -f ../msdos/sed6.inp < %%d\Makefile.in > %%d\Makefile
 cd ..
 rem   ----------------------------------------------------------------------
 Echo Configuring the lisp directory...
@@ -266,6 +269,8 @@ cd ..
 rem   ----------------------------------------------------------------------
 :maindir
 Echo Configuring the main directory...
+If Exist .dir-locals.el update .dir-locals.el _dir-locals.el
+If Exist src\.dbxinit update src/.dbxinit src/_dbxinit
 If "%DJGPP_VER%" == "1" goto mainv1
 Echo Looking for the GDB init file...
 If Exist src\.gdbinit update src/.gdbinit src/_gdbinit
@@ -293,6 +298,7 @@ set $foo$=
 set X11=
 set nodebug=
 set djgpp_ver=
+set sys_malloc=
 
 goto skipArchTag
    arch-tag: 2d2fed23-4dc6-4006-a2e4-49daf0031f33

@@ -110,10 +110,6 @@ extern "C"
 #define	NULL	0
 #endif
 
-#ifndef FREE_RETURN_TYPE
-#define FREE_RETURN_TYPE void
-#endif
-
 
 /* Allocate SIZE bytes of memory.  */
 extern __ptr_t malloc PP ((__malloc_size_t __size));
@@ -123,7 +119,7 @@ extern __ptr_t realloc PP ((__ptr_t __ptr, __malloc_size_t __size));
 /* Allocate NMEMB elements of SIZE bytes each, all initialized to 0.  */
 extern __ptr_t calloc PP ((__malloc_size_t __nmemb, __malloc_size_t __size));
 /* Free a block allocated by `malloc', `realloc' or `calloc'.  */
-extern FREE_RETURN_TYPE free PP ((__ptr_t __ptr));
+extern void free PP ((__ptr_t __ptr));
 
 /* Allocate SIZE bytes allocated to ALIGNMENT bytes.  */
 #if ! (defined (_MALLOC_INTERNAL) && __DJGPP__ - 0 == 1) /* Avoid conflict.  */
@@ -816,11 +812,6 @@ _malloc_internal_nolock (size)
   if (size < sizeof (struct list))
     size = sizeof (struct list);
 
-#ifdef SUNOS_LOCALTIME_BUG
-  if (size < 16)
-    size = 16;
-#endif
-
   /* Determine the allocation policy based on the request size.  */
   if (size <= BLOCKSIZE / 2)
     {
@@ -920,7 +911,7 @@ _malloc_internal_nolock (size)
 		 final free block; if so we don't need to get as much.  */
 	      if (_heaplimit != 0 && block + lastblocks == _heaplimit &&
 		  /* We can't do this if we will have to make the heap info
-                     table bigger to accomodate the new space.  */
+                     table bigger to accommodate the new space.  */
 		  block + wantblocks <= heapsize &&
 		  get_contiguous_space ((wantblocks - lastblocks) * BLOCKSIZE,
 					ADDRESS (block + lastblocks)))
@@ -1087,8 +1078,7 @@ Fifth Floor, Boston, MA 02110-1301, USA.
 
 /* Cope with systems lacking `memmove'.    */
 #ifndef memmove
-#if  (defined (MEMMOVE_MISSING) || \
-      !defined(_LIBC) && !defined(STDC_HEADERS) && !defined(USG))
+#if  (!defined(_LIBC) && !defined(STDC_HEADERS) && !defined(USG))
 #ifdef emacs
 #undef	__malloc_safe_bcopy
 #define __malloc_safe_bcopy safe_bcopy
@@ -1368,7 +1358,7 @@ _free_internal (ptr)
 
 /* Return memory to the heap.  */
 
-FREE_RETURN_TYPE
+void
 free (ptr)
      __ptr_t ptr;
 {
@@ -1421,8 +1411,7 @@ Fifth Floor, Boston, MA 02110-1301, USA.
 
 
 /* Cope with systems lacking `memmove'.    */
-#if  (defined (MEMMOVE_MISSING) || \
-      !defined(_LIBC) && !defined(STDC_HEADERS) && !defined(USG))
+#if  (!defined(_LIBC) && !defined(STDC_HEADERS) && !defined(USG))
 
 #ifdef emacs
 #undef	__malloc_safe_bcopy
@@ -1717,17 +1706,17 @@ MA 02110-1301, USA.  */
 #include <malloc.h>
 #endif
 
-#ifndef	__GNU_LIBRARY__
+/* uClibc defines __GNU_LIBRARY__, but it is not completely
+   compatible.  */
+#if !defined(__GNU_LIBRARY__) || defined(__UCLIBC__)
 #define	__sbrk	sbrk
-#endif
-
-#ifdef __GNU_LIBRARY__
+#else /* __GNU_LIBRARY__ && ! defined (__UCLIBC__) */
 /* It is best not to declare this and cast its result on foreign operating
    systems with potentially hostile include files.  */
 
 #include <stddef.h>
 extern __ptr_t __sbrk PP ((ptrdiff_t increment));
-#endif
+#endif /* __GNU_LIBRARY__ && ! defined (__UCLIBC__) */
 
 #ifndef NULL
 #define NULL 0

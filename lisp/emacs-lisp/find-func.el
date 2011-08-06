@@ -1,7 +1,7 @@
 ;;; find-func.el --- find the definition of the Emacs Lisp function near point
 
 ;; Copyright (C) 1997, 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Jens Petersen <petersen@kurims.kyoto-u.ac.jp>
 ;; Maintainer: petersen@kurims.kyoto-u.ac.jp
@@ -10,10 +10,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,9 +21,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -45,8 +43,6 @@
 ;; "fff.el").
 
 ;;; Code:
-
-(require 'loadhist)
 
 ;;; User variables:
 
@@ -147,15 +143,20 @@ See the functions `find-function' and `find-variable'."
       (unless (string-match "elc" suffix) (push suffix suffixes)))))
 
 (defun find-library-name (library)
-  "Return the absolute file name of the Lisp source of LIBRARY."
+  "Return the absolute file name of the Emacs Lisp source of LIBRARY.
+LIBRARY should be a string (the name of the library)."
   ;; If the library is byte-compiled, try to find a source library by
   ;; the same name.
   (if (string-match "\\.el\\(c\\(\\..*\\)?\\)\\'" library)
       (setq library (replace-match "" t t library)))
-  (or (locate-file library
-		   (or find-function-source-path load-path)
-		   (append (find-library-suffixes) load-file-rep-suffixes))
-      (error "Can't find library %s" library)))
+  (or 
+   (locate-file library
+		(or find-function-source-path load-path)
+		(find-library-suffixes))
+   (locate-file library
+		(or find-function-source-path load-path)
+		load-file-rep-suffixes)
+   (error "Can't find library %s" library)))
 
 (defvar find-function-C-source-directory
   (let ((dir (expand-file-name "src" source-directory)))
@@ -164,6 +165,17 @@ See the functions `find-function' and `find-variable'."
   "Directory where the C source files of Emacs can be found.
 If nil, do not try to find the source code of functions and variables
 defined in C.")
+
+(declare-function ad-get-advice-info "advice" (function))
+
+(defun find-function-advised-original (func)
+  "Return the original function symbol of an advised function FUNC.
+If FUNC is not the symbol of an advised function, just returns FUNC."
+  (or (and (symbolp func)
+	   (featurep 'advice)
+	   (let ((ofunc (cdr (assq 'origname (ad-get-advice-info func)))))
+	     (and (fboundp ofunc) ofunc)))
+      func))
 
 (defun find-function-C-source (fun-or-var file type)
   "Find the source location where FUN-OR-VAR is defined in FILE.
@@ -176,7 +188,10 @@ TYPE should be nil to find a function, or `defvar' to find a variable."
     (error "The C source file %s is not available"
 	   (file-name-nondirectory file)))
   (unless type
-    (setq fun-or-var (indirect-function fun-or-var)))
+    ;; Either or both an alias and its target might be advised.
+    (setq fun-or-var (find-function-advised-original
+		      (indirect-function
+		       (find-function-advised-original fun-or-var)))))
   (with-current-buffer (find-file-noselect file)
     (goto-char (point-min))
     (unless (re-search-forward
@@ -193,10 +208,11 @@ TYPE should be nil to find a function, or `defvar' to find a variable."
 
 ;;;###autoload
 (defun find-library (library)
-  "Find the elisp source of LIBRARY."
+  "Find the Emacs Lisp source of LIBRARY.
+LIBRARY should be a string (the name of the library)."
   (interactive
-   (let* ((path (cons (or find-function-source-path load-path)
-		      (find-library-suffixes)))
+   (let* ((dirs (or find-function-source-path load-path))
+          (suffixes (find-library-suffixes))
 	  (def (if (eq (function-called-at-point) 'require)
 		   ;; `function-called-at-point' may return 'require
 		   ;; with `point' anywhere on this line.  So wrap the
@@ -211,11 +227,15 @@ TYPE should be nil to find a function, or `defvar' to find a variable."
 		     (error nil))
 		 (thing-at-point 'symbol))))
      (when def
-       (setq def (and (locate-file-completion def path 'test) def)))
+       (setq def (and (locate-file-completion-table
+                       dirs suffixes def nil 'lambda)
+                      def)))
      (list
       (completing-read (if def (format "Library name (default %s): " def)
 			 "Library name: ")
-		       'locate-file-completion path nil nil nil def))))
+		       (apply-partially 'locate-file-completion-table
+                                        dirs suffixes)
+                       nil nil nil nil def))))
   (let ((buf (find-file-noselect (find-library-name library))))
     (condition-case nil (switch-to-buffer buf) (error (pop-to-buffer buf)))))
 
@@ -235,7 +255,7 @@ The search is done in the source for library LIBRARY."
   ;; that defines something else.
   (while (and (symbolp symbol) (get symbol 'definition-name))
     (setq symbol (get symbol 'definition-name)))
-  (if (string-match "\\`src/\\(.*\\.c\\)\\'" library)
+  (if (string-match "\\`src/\\(.*\\.\\(c\\|m\\)\\)\\'" library)
       (find-function-C-source symbol (match-string 1 library) type)
     (when (string-match "\\.el\\(c\\)\\'" library)
       (setq library (substring library 0 (match-beginning 1))))
@@ -288,19 +308,21 @@ If the file where FUNCTION is defined is not known, then it is
 searched for in `find-function-source-path' if non-nil, otherwise
 in `load-path'."
   (if (not function)
-      (error "You didn't specify a function"))
-  (let ((def (symbol-function function))
+    (error "You didn't specify a function"))
+  (let ((def (symbol-function (find-function-advised-original function)))
 	aliases)
+    ;; FIXME for completeness, it might be nice to print something like:
+    ;; foo (which is advised), which is an alias for bar (which is advised).
     (while (symbolp def)
       (or (eq def function)
 	  (if aliases
 	      (setq aliases (concat aliases
 				    (format ", which is an alias for `%s'"
 					    (symbol-name def))))
-	    (setq aliases (format "`%s' an alias for `%s'"
+	    (setq aliases (format "`%s' is an alias for `%s'"
 				  function (symbol-name def)))))
-      (setq function (symbol-function function)
-	    def (symbol-function function)))
+      (setq function (symbol-function (find-function-advised-original function))
+	    def (symbol-function (find-function-advised-original function))))
     (if aliases
 	(message "%s" aliases))
     (let ((library

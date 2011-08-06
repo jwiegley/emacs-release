@@ -1,7 +1,7 @@
 ;;; perl-mode.el --- Perl code editing commands for GNU Emacs
 
-;; Copyright (C) 1990, 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
-;; Free Software Foundation, Inc.
+;; Copyright (C) 1990, 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+;;   2008, 2009  Free Software Foundation, Inc.
 
 ;; Author: William F. Mann
 ;; Maintainer: FSF
@@ -13,10 +13,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -24,9 +24,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -254,7 +252,7 @@ The expansion is entirely correct because it uses the C preprocessor."
 ;; <file*glob>
 (defvar perl-font-lock-syntactic-keywords
   ;; TODO: here-documents ("<<\\(\\sw\\|['\"]\\)")
-  '(;; Turn POD into b-style comments
+  `(;; Turn POD into b-style comments
     ("^\\(=\\)\\sw" (1 "< b"))
     ("^=cut[ \t]*\\(\n\\)" (1 "> b"))
     ;; Catch ${ so that ${var} doesn't screw up indentation.
@@ -265,16 +263,31 @@ The expansion is entirely correct because it uses the C preprocessor."
     ("\\$ ?{?^?[_a-zA-Z][_a-zA-Z0-9]*\\('\\)[_a-zA-Z]" (1 "_"))
     ;; format statements
     ("^[ \t]*format.*=[ \t]*\\(\n\\)" (1 '(7)))
-    ;; Funny things in sub arg specifications like `sub myfunc ($$)'
+    ;; Funny things in `sub' arg-specs like `sub myfun ($)' or `sub ($)'.
     ;; Be careful not to match "sub { (...) ... }".
-    ("\\<sub[[:space:]]+[^{}[:punct:][:space:]]+[[:space:]]*(\\([^)]+\\))"
+    ("\\<sub\\(?:[[:space:]]+[^{}[:punct:][:space:]]+\\)?[[:space:]]*(\\([^)]+\\))"
      1 '(1))
-    ;; Regexp and funny quotes.
-    ("\\(?:[?:.,;=!~({[]\\|\\(^\\)\\)[ \t\n]*\\(/\\)"
+    ;; Regexp and funny quotes.  Distinguishing a / that starts a regexp
+    ;; match from the division operator is ...interesting.
+    ;; Basically, / is a regexp match if it's preceded by an infix operator
+    ;; (or some similar separator), or by one of the special keywords
+    ;; corresponding to builtin functions that can take their first arg
+    ;; without parentheses.  Of course, that presume we're looking at the
+    ;; *opening* slash.  We can mis-match the closing ones, because they are
+    ;; treated separately later in
+    ;; perl-font-lock-special-syntactic-constructs.
+    (,(concat "\\(?:\\(?:\\(?:^\\|[^$@&%[:word:]]\\)"
+              (regexp-opt '("split" "if" "unless" "until" "while" "split"
+                            "grep" "map" "not" "or" "and"))
+              "\\)\\|[?:.,;=!~({[]\\|\\(^\\)\\)[ \t\n]*\\(/\\)")
      (2 (if (and (match-end 1)
                  (save-excursion
                    (goto-char (match-end 1))
-                   (skip-chars-backward " \t\n")
+                   ;; Not 100% correct since we haven't finished setting up
+                   ;; the syntax-table before point, but better than nothing.
+                   (forward-comment (- (point-max)))
+                   (put-text-property (point) (match-end 2)
+                                      'jit-lock-multiline t)
                    (not (memq (char-before)
                               '(?? ?: ?. ?, ?\; ?= ?! ?~ ?\( ?\[)))))
             nil ;; A division sign instead of a regexp-match.
@@ -322,7 +335,7 @@ The expansion is entirely correct because it uses the C preprocessor."
     (while (< (point) limit)
       (cond
        ((or (null (setq char (nth 3 state)))
-            (and (char-valid-p char) (eq (char-syntax (nth 3 state)) ?\")))
+            (and (characterp char) (eq (char-syntax (nth 3 state)) ?\")))
         ;; Normal text, or comment, or docstring, or normal string.
         nil)
        ((eq (nth 3 state) ?\n)
@@ -593,14 +606,14 @@ If at end-of-line, and not in a comment or a quote, correct the's indentation."
 	   (and (not			; eliminate comments quickly
 		 (and comment-start-skip
 		      (re-search-forward comment-start-skip insertpos t)) )
-		(or (/= last-command-char ?:)
+		(or (/= last-command-event ?:)
 		    ;; Colon is special only after a label ....
 		    (looking-at "\\s-*\\(\\w\\|\\s_\\)+$"))
 		(let ((pps (parse-partial-sexp
 			    (perl-beginning-of-function) insertpos)))
 		  (not (or (nth 3 pps) (nth 4 pps) (nth 5 pps))))))
 	 (progn				; must insert, indent, delete
-	   (insert-char last-command-char 1)
+	   (insert-char last-command-event 1)
 	   (perl-indent-line)
 	   (delete-char -1))))
   (self-insert-command (prefix-numeric-value arg)))
@@ -617,18 +630,20 @@ If at end-of-line, and not in a comment or a quote, correct the's indentation."
 ;;    (error nil)))
 
 (defun perl-indent-command (&optional arg)
-  "Indent current line as Perl code, or optionally, insert a tab character.
+  "Indent Perl code in the active region or current line.
+In Transient Mark mode, when the region is active, reindent the region.
+Otherwise, with a prefix argument, reindent the current line
+unconditionally.
 
-With an argument, indent the current line, regardless of other options.
+Otherwise, if `perl-tab-always-indent' is nil and point is not in
+the indentation area at the beginning of the line, insert a tab.
 
-If `perl-tab-always-indent' is nil and point is not in the indentation
-area at the beginning of the line, simply insert a tab.
-
-Otherwise, indent the current line.  If point was within the indentation
-area it is moved to the end of the indentation area.  If the line was
-already indented properly and point was not within the indentation area,
-and if `perl-tab-to-comment' is non-nil (the default), then do the first
-possible action from the following list:
+Otherwise, indent the current line.  If point was within the
+indentation area, it is moved to the end of the indentation area.
+If the line was already indented properly and point was not
+within the indentation area, and if `perl-tab-to-comment' is
+non-nil (the default), then do the first possible action from the
+following list:
 
   1) delete an empty comment
   2) move forward to start of comment, indenting if necessary
@@ -636,50 +651,55 @@ possible action from the following list:
   4) create an empty comment
   5) move backward to start of comment, indenting if necessary."
   (interactive "P")
-  (if arg				; If arg, just indent this line
-      (perl-indent-line "\f")
-    (if (and (not perl-tab-always-indent)
-	     (> (current-column) (current-indentation)))
-	(insert-tab)
-      (let* ((oldpnt (point))
-	     (lsexp (progn (beginning-of-line) (point)))
-	     (bof (perl-beginning-of-function))
-	     (delta (progn
-		      (goto-char oldpnt)
-		      (perl-indent-line "\f\\|;?#" bof))))
-	(and perl-tab-to-comment
-	     (= oldpnt (point))		; done if point moved
-	     (if (listp delta)		; if line starts in a quoted string
-		 (setq lsexp (or (nth 2 delta) bof))
-	       (= delta 0))		; done if indenting occurred
-	     (let ((eol (progn (end-of-line) (point)))
-		   state)
-	       (if (= (char-after bof) ?=)
-		   (if (= oldpnt eol)
-		       (message "In a format statement"))
-		 (setq state (parse-partial-sexp lsexp eol))
-		 (if (nth 3 state)
-		     (if (= oldpnt eol)	; already at eol in a string
-			 (message "In a string which starts with a %c."
-				  (nth 3 state)))
-		   (if (not (nth 4 state))
-		       (if (= oldpnt eol) ; no comment, create one?
-			   (indent-for-comment))
-		     (beginning-of-line)
-		     (if (and comment-start-skip
-			      (re-search-forward comment-start-skip eol 'move))
+  (cond ((use-region-p)            ; indent the active region
+	 (indent-region (region-beginning) (region-end)))
+	(arg
+	 (perl-indent-line "\f"))  ; just indent this line
+	((and (not perl-tab-always-indent)
+	      (> (current-column) (current-indentation)))
+	 (insert-tab))
+	(t
+	 (let* ((oldpnt (point))
+		(lsexp (progn (beginning-of-line) (point)))
+		(bof (perl-beginning-of-function))
+		(delta (progn
+			 (goto-char oldpnt)
+			 (perl-indent-line "\f\\|;?#" bof))))
+	   (and perl-tab-to-comment
+		(= oldpnt (point))   ; done if point moved
+		(if (listp delta)    ; if line starts in a quoted string
+		    (setq lsexp (or (nth 2 delta) bof))
+		  (= delta 0))	     ; done if indenting occurred
+		(let ((eol (progn (end-of-line) (point)))
+		      state)
+		  (cond ((= (char-after bof) ?=)
+			 (if (= oldpnt eol)
+			     (message "In a format statement")))
+			((progn (setq state (parse-partial-sexp lsexp eol))
+				(nth 3 state))
+			 (if (= oldpnt eol) ; already at eol in a string
+			     (message "In a string which starts with a %c."
+				      (nth 3 state))))
+			((not (nth 4 state))
+			 (if (= oldpnt eol) ; no comment, create one?
+			     (indent-for-comment)))
+			((progn (beginning-of-line)
+				(and comment-start-skip
+				     (re-search-forward
+				      comment-start-skip eol 'move)))
 			 (if (eolp)
-			     (progn	; delete existing comment
+			     (progn	    ; delete existing comment
 			       (goto-char (match-beginning 0))
 			       (skip-chars-backward " \t")
 			       (delete-region (point) eol))
 			   (if (or (< oldpnt (point)) (= oldpnt eol))
 			       (indent-for-comment) ; indent existing comment
-			     (end-of-line)))
-		       (if (/= oldpnt eol)
-			   (end-of-line)
+			     (end-of-line))))
+			((/= oldpnt eol)
+			 (end-of-line))
+			(t
 			 (message "Use backslash to quote # characters.")
-			 (ding t))))))))))))
+			 (ding t)))))))))
 
 (defun perl-indent-line (&optional nochange parse-start)
   "Indent current line as Perl code.

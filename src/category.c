@@ -1,17 +1,20 @@
 /* GNU Emacs routines to deal with category tables.
-   Copyright (C) 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
+   Copyright (C) 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
      Free Software Foundation, Inc.
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-     2005, 2006, 2007, 2008
+     2005, 2006, 2007, 2008, 2009
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
+   Copyright (C) 2003
+     National Institute of Advanced Industrial Science and Technology (AIST)
+     Registration Number H13PRO009
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +22,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 /* Here we handle three objects: category, category set, and category
@@ -31,6 +32,7 @@ Boston, MA 02110-1301, USA.  */
 #include <ctype.h>
 #include "lisp.h"
 #include "buffer.h"
+#include "character.h"
 #include "charset.h"
 #include "category.h"
 #include "keymap.h"
@@ -55,6 +57,32 @@ Lisp_Object _temp_category_set;
 
 
 /* Category set staff.  */
+
+static Lisp_Object hash_get_category_set P_ ((Lisp_Object, Lisp_Object));
+
+static Lisp_Object
+hash_get_category_set (table, category_set)
+     Lisp_Object table, category_set;
+{
+  Lisp_Object val;
+  struct Lisp_Hash_Table *h;
+  int i;
+  unsigned hash;
+
+  if (NILP (XCHAR_TABLE (table)->extras[1]))
+    XCHAR_TABLE (table)->extras[1]
+      = make_hash_table (Qequal, make_number (DEFAULT_HASH_SIZE),
+			 make_float (DEFAULT_REHASH_SIZE),
+			 make_float (DEFAULT_REHASH_THRESHOLD),
+			 Qnil, Qnil, Qnil);
+  h = XHASH_TABLE (XCHAR_TABLE (table)->extras[1]);
+  i = hash_lookup (h, category_set, &hash);
+  if (i >= 0)
+    return HASH_KEY (h, i);
+  hash_put (h, category_set, Qnil, hash);
+  return category_set;
+}
+
 
 DEFUN ("make-category-set", Fmake_category_set, Smake_category_set, 1, 1, 0,
        doc: /* Return a newly created category-set which contains CATEGORIES.
@@ -93,7 +121,9 @@ Lisp_Object check_category_table ();
 DEFUN ("define-category", Fdefine_category, Sdefine_category, 2, 3, 0,
        doc: /* Define CATEGORY as a category which is described by DOCSTRING.
 CATEGORY should be an ASCII printing character in the range ` ' to `~'.
-DOCSTRING is the documentation string of the category.
+DOCSTRING is the documentation string of the category.  The first line
+should be a terse text (preferably less than 16 characters),
+and the rest lines should be the full description.
 The category is defined only in category table TABLE, which defaults to
 the current buffer's category table.  */)
      (category, docstring, table)
@@ -189,6 +219,18 @@ This is the one used for new buffers.  */)
   return Vstandard_category_table;
 }
 
+
+static void
+copy_category_entry (table, c, val)
+     Lisp_Object table, c, val;
+{
+  val = Fcopy_sequence (val);
+  if (CONSP (c))
+    char_table_set_range (table, XINT (XCAR (c)), XINT (XCDR (c)), val);
+  else
+    char_table_set (table, XINT (c), val);
+}
+
 /* Return a copy of category table TABLE.  We can't simply use the
    function copy-sequence because no contents should be shared between
    the original and the copy.  This function is called recursively by
@@ -198,44 +240,14 @@ Lisp_Object
 copy_category_table (table)
      Lisp_Object table;
 {
-  Lisp_Object tmp;
-  int i, to;
+  table = copy_char_table (table);
 
-  if (!NILP (XCHAR_TABLE (table)->top))
-    {
-      /* TABLE is a top level char table.
-	 At first, make a copy of tree structure of the table.  */
-      table = Fcopy_sequence (table);
-
-      /* Then, copy elements for single byte characters one by one.  */
-      for (i = 0; i < CHAR_TABLE_SINGLE_BYTE_SLOTS; i++)
-	if (!NILP (tmp = XCHAR_TABLE (table)->contents[i]))
-	  XCHAR_TABLE (table)->contents[i] = Fcopy_sequence (tmp);
-      to = CHAR_TABLE_ORDINARY_SLOTS;
-
-      /* Also copy the first (and sole) extra slot.  It is a vector
-         containing docstring of each category.  */
-      Fset_char_table_extra_slot
-	(table, make_number (0),
-	 Fcopy_sequence (Fchar_table_extra_slot (table, make_number (0))));
-    }
-  else
-    {
-      i  = 32;
-      to = SUB_CHAR_TABLE_ORDINARY_SLOTS;
-    }
-
-  /* If the table has non-nil default value, copy it.  */
-  if (!NILP (tmp = XCHAR_TABLE (table)->defalt))
-    XCHAR_TABLE (table)->defalt = Fcopy_sequence (tmp);
-
-  /* At last, copy the remaining elements while paying attention to a
-     sub char table.  */
-  for (; i < to; i++)
-    if (!NILP (tmp = XCHAR_TABLE (table)->contents[i]))
-      XCHAR_TABLE (table)->contents[i]
-	= (SUB_CHAR_TABLE_P (tmp)
-	   ? copy_category_table (tmp) : Fcopy_sequence (tmp));
+  if (! NILP (XCHAR_TABLE (table)->defalt))
+    XCHAR_TABLE (table)->defalt
+      = Fcopy_sequence (XCHAR_TABLE (table)->defalt);
+  XCHAR_TABLE (table)->extras[0]
+    = Fcopy_sequence (XCHAR_TABLE (table)->extras[0]);
+  map_char_table (copy_category_entry, Qnil, table, table);
 
   return table;
 }
@@ -261,9 +273,12 @@ DEFUN ("make-category-table", Fmake_category_table, Smake_category_table,
      ()
 {
   Lisp_Object val;
+  int i;
 
   val = Fmake_char_table (Qcategory_table, Qnil);
   XCHAR_TABLE (val)->defalt = MAKE_CATEGORY_SET;
+  for (i = 0; i < (1 << CHARTAB_SIZE_BITS_0); i++)
+    XCHAR_TABLE (val)->contents[i] = MAKE_CATEGORY_SET;
   Fset_char_table_extra_slot (val, make_number (0),
 			      Fmake_vector (make_number (95), Qnil));
   return val;
@@ -285,6 +300,13 @@ Return TABLE.  */)
 }
 
 
+Lisp_Object
+char_category_set (c)
+     int c;
+{
+  return CHAR_TABLE_REF (current_buffer->category_table, c);
+}
+
 DEFUN ("char-category-set", Fchar_category_set, Schar_category_set, 1, 1, 0,
        doc: /* Return the category set of CHAR.
 usage: (char-category-set CHAR)  */)
@@ -318,34 +340,6 @@ The return value is a string containing those same categories.  */)
   return build_string (str);
 }
 
-/* Modify all category sets stored under sub char-table TABLE so that
-   they contain (SET_VALUE is t) or don't contain (SET_VALUE is nil)
-   CATEGORY.  */
-
-void
-modify_lower_category_set (table, category, set_value)
-     Lisp_Object table, category, set_value;
-{
-  Lisp_Object val;
-  int i;
-
-  val = XCHAR_TABLE (table)->defalt;
-  if (!CATEGORY_SET_P (val))
-    val = MAKE_CATEGORY_SET;
-  SET_CATEGORY_SET (val, category, set_value);
-  XCHAR_TABLE (table)->defalt = val;
-
-  for (i = 32; i < SUB_CHAR_TABLE_ORDINARY_SLOTS; i++)
-    {
-      val = XCHAR_TABLE (table)->contents[i];
-
-      if (CATEGORY_SET_P (val))
-	SET_CATEGORY_SET (val, category, set_value);
-      else if (SUB_CHAR_TABLE_P (val))
-	modify_lower_category_set (val, category, set_value);
-    }
-}
-
 void
 set_category_set (category_set, category, val)
      Lisp_Object category_set, category, val;
@@ -365,18 +359,33 @@ DEFUN ("modify-category-entry", Fmodify_category_entry,
        Smodify_category_entry, 2, 4, 0,
        doc: /* Modify the category set of CHARACTER by adding CATEGORY to it.
 The category is changed only for table TABLE, which defaults to
- the current buffer's category table.
+the current buffer's category table.
+CHARACTER can be either a single character or a cons representing the
+lower and upper ends of an inclusive character range to modify.
 If optional fourth argument RESET is non-nil,
 then delete CATEGORY from the category set instead of adding it.  */)
      (character, category, table, reset)
      Lisp_Object character, category, table, reset;
 {
-  int c, charset, c1, c2;
   Lisp_Object set_value;	/* Actual value to be set in category sets.  */
-  Lisp_Object val, category_set;
+  Lisp_Object category_set;
+  int start, end;
+  int from, to;
 
-  CHECK_NUMBER (character);
-  c = XINT (character);
+  if (INTEGERP (character))
+    {
+      CHECK_CHARACTER (character);
+      start = end = XFASTINT (character);
+    }
+  else
+    {
+      CHECK_CONS (character);
+      CHECK_CHARACTER_CAR (character);
+      CHECK_CHARACTER_CDR (character);
+      start = XFASTINT (XCAR (character));
+      end = XFASTINT (XCDR (character));
+    }
+
   CHECK_CATEGORY (category);
   table = check_category_table (table);
 
@@ -385,93 +394,19 @@ then delete CATEGORY from the category set instead of adding it.  */)
 
   set_value = NILP (reset) ? Qt : Qnil;
 
-  if (c < CHAR_TABLE_SINGLE_BYTE_SLOTS)
+  while (start <= end)
     {
-      val = XCHAR_TABLE (table)->contents[c];
-      if (!CATEGORY_SET_P (val))
-	XCHAR_TABLE (table)->contents[c] = (val = MAKE_CATEGORY_SET);
-      SET_CATEGORY_SET (val, category, set_value);
-      return Qnil;
+      from = start, to = end;
+      category_set = char_table_ref_and_range (table, start, &from, &to);
+      if (CATEGORY_MEMBER (XFASTINT (category), category_set) != NILP (reset))
+	{
+	  category_set = Fcopy_sequence (category_set);
+	  SET_CATEGORY_SET (category_set, category, set_value);
+	  category_set = hash_get_category_set (table, category_set);
+	  char_table_set_range (table, start, to, category_set);
+	}
+      start = to + 1;
     }
-
-  SPLIT_CHAR (c, charset, c1, c2);
-
-  /* The top level table.  */
-  val = XCHAR_TABLE (table)->contents[charset + 128];
-  if (CATEGORY_SET_P (val))
-    category_set = val;
-  else if (!SUB_CHAR_TABLE_P (val))
-    {
-      category_set = val = MAKE_CATEGORY_SET;
-      XCHAR_TABLE (table)->contents[charset + 128] = category_set;
-    }
-
-  if (c1 <= 0)
-    {
-      /* Only a charset is specified.  */
-      if (SUB_CHAR_TABLE_P (val))
-	/* All characters in CHARSET should be the same as for having
-           CATEGORY or not.  */
-	modify_lower_category_set (val, category, set_value);
-      else
-	SET_CATEGORY_SET (category_set, category, set_value);
-      return Qnil;
-    }
-
-  /* The second level table.  */
-  if (!SUB_CHAR_TABLE_P (val))
-    {
-      val = make_sub_char_table (Qnil);
-      XCHAR_TABLE (table)->contents[charset + 128] = val;
-      /* We must set default category set of CHARSET in `defalt' slot.  */
-      XCHAR_TABLE (val)->defalt = category_set;
-    }
-  table = val;
-
-  val = XCHAR_TABLE (table)->contents[c1];
-  if (CATEGORY_SET_P (val))
-    category_set = val;
-  else if (!SUB_CHAR_TABLE_P (val))
-    {
-      category_set = val = Fcopy_sequence (XCHAR_TABLE (table)->defalt);
-      XCHAR_TABLE (table)->contents[c1] = category_set;
-    }
-
-  if (c2 <= 0)
-    {
-      if (SUB_CHAR_TABLE_P (val))
-	/* All characters in C1 group of CHARSET should be the same as
-           for CATEGORY.  */
-	modify_lower_category_set (val, category, set_value);
-      else
-	SET_CATEGORY_SET (category_set, category, set_value);
-      return Qnil;
-    }
-
-  /* The third (bottom) level table.  */
-  if (!SUB_CHAR_TABLE_P (val))
-    {
-      val = make_sub_char_table (Qnil);
-      XCHAR_TABLE (table)->contents[c1] = val;
-      /* We must set default category set of CHARSET and C1 in
-         `defalt' slot.  */
-      XCHAR_TABLE (val)->defalt = category_set;
-    }
-  table = val;
-
-  val = XCHAR_TABLE (table)->contents[c2];
-  if (CATEGORY_SET_P (val))
-    category_set = val;
-  else if (!SUB_CHAR_TABLE_P (val))
-    {
-      category_set = Fcopy_sequence (XCHAR_TABLE (table)->defalt);
-      XCHAR_TABLE (table)->contents[c2] = category_set;
-    }
-  else
-    /* This should never happen.  */
-    error ("Invalid category table");
-
-  SET_CATEGORY_SET (category_set, category, set_value);
 
   return Qnil;
 }
@@ -489,7 +424,8 @@ word_boundary_p (c1, c2)
   Lisp_Object tail;
   int default_result;
 
-  if (CHAR_CHARSET (c1) == CHAR_CHARSET (c2))
+  if (EQ (CHAR_TABLE_REF (Vchar_script_table, c1),
+	  CHAR_TABLE_REF (Vchar_script_table, c2)))
     {
       tail = Vword_separating_categories;
       default_result = 0;
@@ -512,10 +448,12 @@ word_boundary_p (c1, c2)
       Lisp_Object elt = XCAR (tail);
 
       if (CONSP (elt)
-	  && CATEGORYP (XCAR (elt))
-	  && CATEGORYP (XCDR (elt))
-	  && CATEGORY_MEMBER (XFASTINT (XCAR (elt)), category_set1)
-	  && CATEGORY_MEMBER (XFASTINT (XCDR (elt)), category_set2))
+	  && (NILP (XCAR (elt))
+	      || (CATEGORYP (XCAR (elt))
+		  && CATEGORY_MEMBER (XFASTINT (XCAR (elt)), category_set1)))
+	  && (NILP (XCDR (elt))
+	      || (CATEGORYP (XCDR (elt))
+		  && CATEGORY_MEMBER (XFASTINT (XCDR (elt)), category_set2))))
 	return !default_result;
     }
   return default_result;
@@ -560,35 +498,35 @@ syms_of_category ()
 
 Emacs treats a sequence of word constituent characters as a single
 word (i.e. finds no word boundary between them) only if they belong to
-the same charset.  But, exceptions are allowed in the following cases.
+the same script.  But, exceptions are allowed in the following cases.
 
-\(1) The case that characters are in different charsets is controlled
+\(1) The case that characters are in different scripts is controlled
 by the variable `word-combining-categories'.
 
-Emacs finds no word boundary between characters of different charsets
+Emacs finds no word boundary between characters of different scripts
 if they have categories matching some element of this list.
 
 More precisely, if an element of this list is a cons of category CAT1
 and CAT2, and a multibyte character C1 which has CAT1 is followed by
 C2 which has CAT2, there's no word boundary between C1 and C2.
 
-For instance, to tell that ASCII characters and Latin-1 characters can
-form a single word, the element `(?l . ?l)' should be in this list
-because both characters have the category `l' (Latin characters).
+For instance, to tell that Han characters followed by Hiragana
+characters can form a single word, the element `(?C . ?H)' should be
+in this list.
 
-\(2) The case that character are in the same charset is controlled by
+\(2) The case that character are in the same script is controlled by
 the variable `word-separating-categories'.
 
-Emacs find a word boundary between characters of the same charset
+Emacs finds a word boundary between characters of the same script
 if they have categories matching some element of this list.
 
 More precisely, if an element of this list is a cons of category CAT1
 and CAT2, and a multibyte character C1 which has CAT1 is followed by
 C2 which has CAT2, there's a word boundary between C1 and C2.
 
-For instance, to tell that there's a word boundary between Japanese
-Hiragana and Japanese Kanji (both are in the same charset), the
-element `(?H . ?C) should be in this list.  */);
+For instance, to tell that there's a word boundary between Hiragana
+and Katakana (both are in the same script `kana'),
+the element `(?H . ?K) should be in this list.  */);
 
   Vword_combining_categories = Qnil;
 

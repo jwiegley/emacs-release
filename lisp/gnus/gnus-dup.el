@@ -1,27 +1,25 @@
 ;;; gnus-dup.el --- suppression of duplicate articles in Gnus
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -85,10 +83,8 @@ seen in the same session."
     (setq gnus-dup-list nil))
   (setq gnus-dup-hashtb (gnus-make-hashtable gnus-duplicate-list-length))
   ;; Enter all Message-IDs into the hash table.
-  (let ((list gnus-dup-list)
-	(obarray gnus-dup-hashtb))
-    (while list
-      (intern (pop list)))))
+  (let ((obarray gnus-dup-hashtb))
+    (mapc 'intern gnus-dup-list)))
 
 (defun gnus-dup-read ()
   "Read the duplicate suppression list."
@@ -113,11 +109,10 @@ seen in the same session."
   (unless gnus-dup-list
     (gnus-dup-open))
   (setq gnus-dup-list-dirty t)		; mark list for saving
-  (let ((data gnus-newsgroup-data)
-	datum msgid)
+  (let (msgid)
     ;; Enter the Message-IDs of all read articles into the list
     ;; and hash table.
-    (while (setq datum (pop data))
+    (dolist (datum gnus-newsgroup-data)
       (when (and (not (gnus-data-pseudo-p datum))
 		 (> (gnus-data-number datum) 0)
 		 (not (memq (gnus-data-number datum) gnus-newsgroup-unreads))
@@ -130,6 +125,7 @@ seen in the same session."
   ;; Chop off excess Message-IDs from the list.
   (let ((end (nthcdr gnus-duplicate-list-length gnus-dup-list)))
     (when end
+      (mapc (lambda (id) (unintern id gnus-dup-hashtb)) (cdr end))
       (setcdr end nil))))
 
 (defun gnus-dup-suppress-articles ()
@@ -137,11 +133,10 @@ seen in the same session."
   (unless gnus-dup-list
     (gnus-dup-open))
   (gnus-message 6 "Suppressing duplicates...")
-  (let ((headers gnus-newsgroup-headers)
-	(auto (and gnus-newsgroup-auto-expire
+  (let ((auto (and gnus-newsgroup-auto-expire
 		   (memq gnus-duplicate-mark gnus-auto-expirable-marks)))
-	number header)
-    (while (setq header (pop headers))
+	number)
+    (dolist (header gnus-newsgroup-headers)
       (when (and (intern-soft (mail-header-id header) gnus-dup-hashtb)
 		 (gnus-summary-article-unread-p (mail-header-number header)))
 	(setq gnus-newsgroup-unreads
@@ -155,7 +150,8 @@ seen in the same session."
 
 (defun gnus-dup-unsuppress-article (article)
   "Stop suppression of ARTICLE."
-  (let ((id (mail-header-id (gnus-data-header (gnus-data-find article)))))
+  (let* ((header (gnus-data-header (gnus-data-find article)))
+	 (id     (when header (mail-header-id header))))
     (when id
       (setq gnus-dup-list-dirty t)
       (setq gnus-dup-list (delete id gnus-dup-list))
@@ -163,5 +159,5 @@ seen in the same session."
 
 (provide 'gnus-dup)
 
-;;; arch-tag: 903e94db-7b00-4d19-83ee-cf34a81fa5fb
+;; arch-tag: 903e94db-7b00-4d19-83ee-cf34a81fa5fb
 ;;; gnus-dup.el ends here

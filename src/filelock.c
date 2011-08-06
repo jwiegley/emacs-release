@@ -1,14 +1,14 @@
 /* Lock files for editing.
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1996, 1998, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
-GNU Emacs is free software; you can redistribute it and/or modify
+GNU Emacs is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
 GNU Emacs is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +16,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with GNU Emacs; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 #include <config.h>
@@ -54,7 +52,7 @@ extern int errno;
 
 #include "lisp.h"
 #include "buffer.h"
-#include "charset.h"
+#include "character.h"
 #include "coding.h"
 #include "systime.h"
 
@@ -130,7 +128,7 @@ static void get_boot_time_1 P_ ((char *, int));
 static time_t
 get_boot_time ()
 {
-#if defined (BOOT_TIME) && ! defined (NO_WTMP_FILE)
+#if defined (BOOT_TIME)
   int counter;
 #endif
 
@@ -166,7 +164,7 @@ get_boot_time ()
 	}
     }
 
-#if defined (BOOT_TIME) && ! defined (NO_WTMP_FILE)
+#if defined (BOOT_TIME)
 #ifndef CANNOT_DUMP
   /* The utmp routines maintain static state.
      Don't touch that state unless we are initialized,
@@ -667,7 +665,7 @@ unlock_all_files ()
   register Lisp_Object tail;
   register struct buffer *b;
 
-  for (tail = Vbuffer_alist; GC_CONSP (tail); tail = XCDR (tail))
+  for (tail = Vbuffer_alist; CONSP (tail); tail = XCDR (tail))
     {
       b = XBUFFER (XCDR (XCAR (tail)));
       if (STRINGP (b->file_truename) && BUF_SAVE_MODIFF (b) < BUF_MODIFF (b))

@@ -1,17 +1,17 @@
 ;;; assoc.el --- insert/delete/sort functions on association lists
 
 ;; Copyright (C) 1996, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Author: Barry A. Warsaw <bwarsaw@cen.com>
 ;; Keywords: extensions
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -32,7 +30,7 @@
 
 (defun asort (alist-symbol key)
   "Move a specified key-value pair to the head of an alist.
-The alist is referenced by ALIST-SYMBOL. Key-value pair to move to
+The alist is referenced by ALIST-SYMBOL.  Key-value pair to move to
 head is one matching KEY.  Returns the sorted list and doesn't affect
 the order of any other key-value pair.  Side effect sets alist to new
 sorted list."
@@ -42,7 +40,7 @@ sorted list."
 
 
 (defun aelement (key value)
-  "Makes a list of a cons cell containing car of KEY and cdr of VALUE.
+  "Make a list of a cons cell containing car of KEY and cdr of VALUE.
 The returned list is suitable as an element of an alist."
   (list (cons key value)))
 
@@ -63,14 +61,14 @@ pair is not at the head of alist.  ALIST is not altered."
 
 (defun aput (alist-symbol key &optional value)
   "Inserts a key-value pair into an alist.
-The alist is referenced by ALIST-SYMBOL. The key-value pair is made
-from KEY and optionally, VALUE. Returns the altered alist or nil if
+The alist is referenced by ALIST-SYMBOL.  The key-value pair is made
+from KEY and optionally, VALUE.  Returns the altered alist or nil if
 ALIST is nil.
 
 If the key-value pair referenced by KEY can be found in the alist, and
 VALUE is supplied non-nil, then the value of KEY will be set to VALUE.
 If VALUE is not supplied, or is nil, the key-value pair will not be
-modified, but will be moved to the head of the alist. If the key-value
+modified, but will be moved to the head of the alist.  If the key-value
 pair cannot be found in the alist, it will be inserted into the head
 of the alist (with value nil if VALUE is nil or not supplied)."
   (let ((elem (aelement key value))
@@ -95,14 +93,14 @@ is pair matching KEY.  Returns the altered alist."
 
 
 (defun aget (alist key &optional keynil-p)
-  "Returns the value in ALIST that is associated with KEY.
+  "Return the value in ALIST that is associated with KEY.
 Optional KEYNIL-P describes what to do if the value associated with
 KEY is nil.  If KEYNIL-P is not supplied or is nil, and the value is
 nil, then KEY is returned.  If KEYNIL-P is non-nil, then nil would be
 returned.
 
 If no key-value pair matching KEY could be found in ALIST, or ALIST is
-nil then nil is returned. ALIST is not altered."
+nil then nil is returned.  ALIST is not altered."
   (let ((copy (copy-alist alist)))
     (cond ((null alist) nil)
 	  ((progn (asort 'copy key)
@@ -116,8 +114,8 @@ nil then nil is returned. ALIST is not altered."
 (defun amake (alist-symbol keylist &optional valuelist)
   "Make an association list.
 The association list is attached to the alist referenced by
-ALIST-SYMBOL. Each element in the KEYLIST becomes a key and is
-associated with the value in VALUELIST with the same index. If
+ALIST-SYMBOL.  Each element in the KEYLIST becomes a key and is
+associated with the value in VALUELIST with the same index.  If
 VALUELIST is not supplied or is nil, then each key in KEYLIST is
 associated with nil.
 
@@ -138,5 +136,5 @@ extra values are ignored.  Returns the created alist."
 
 (provide 'assoc)
 
-;;; arch-tag: 3e58bd89-d912-4b74-a0dc-6ed9735922bc
+;; arch-tag: 3e58bd89-d912-4b74-a0dc-6ed9735922bc
 ;;; assoc.el ends here

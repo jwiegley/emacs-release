@@ -1,16 +1,16 @@
 ;;; url-vars.el --- Variables for Uniform Resource Locator tool
 
 ;; Copyright (C) 1996, 1997, 1998, 1999, 2001, 2004,
-;;   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes, hypermedia
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,9 +18,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Code:
 
@@ -57,25 +55,24 @@
 
 
 (defvar url-current-object nil
-  "A parsed representation of the current url.")
+  "A parsed representation of the current URL.")
 
 (defvar url-current-mime-headers nil
-  "A parsed representation of the MIME headers for the current url.")
+  "A parsed representation of the MIME headers for the current URL.")
 
-(mapcar 'make-variable-buffer-local
-	'(
-	  url-current-object
-	  url-current-referer
-	  url-current-mime-headers
-	  ))
+(mapc 'make-variable-buffer-local
+      '(
+	url-current-object
+	url-current-referer
+	url-current-mime-headers
+	))
 
 (defcustom url-honor-refresh-requests t
   "*Whether to do automatic page reloads.
 These are done at the request of the document author or the server via
 the `Refresh' header in an HTTP response.  If nil, no refresh
 requests will be honored.  If t, all refresh requests will be honored.
-If non-nil and not t, the user will be asked for each refresh
-request."
+If non-nil and not t, the user will be asked for each refresh request."
   :type '(choice (const :tag "off" nil)
 		 (const :tag "on" t)
 		 (const :tag "ask" 'ask))
@@ -120,17 +117,17 @@ This variable controls how much of this information is sent.
 
 This should a symbol or a list.
 Valid values if a symbol are:
-none     -- Send all information
-low      -- Don't send the last location
-high     -- Don't send the email address or last location
-paranoid -- Don't send anything
+none     -- send all information
+low      -- don't send the last location
+high     -- don't send the email address or last location
+paranoid -- don't send anything
 
 If a list, this should be a list of symbols of what NOT to send.
 Valid symbols are:
 email    -- the email address
 os       -- the operating system info
 lastloc  -- the last location
-agent    -- Do not send the User-Agent string
+agent    -- do not send the User-Agent string
 cookie   -- never accept HTTP cookies
 
 Samples:
@@ -176,7 +173,7 @@ variable."
   :group 'url-mime)
 
 (defcustom url-mail-command 'compose-mail
-  "*This function will be called whenever url needs to send mail.
+  "*This function will be called whenever URL needs to send mail.
 It should enter a mail-mode-like buffer in the current window.
 The commands `mail-to' and `mail-subject' should still work in this
 buffer, and it should use `mail-header-separator' if possible."
@@ -261,7 +258,7 @@ given priority 1 and the rest are given priority 0.5.")
   "*String to send in the Accept-language: field in HTTP requests.
 
 Specifies the preferred language when servers can serve documents in
-several languages.  Use RFC 1766 abbreviations, e.g.@: `en' for
+several languages.  Use RFC 1766 abbreviations, e.g.: `en' for
 English, `de' for German.  A comma-separated specifies descending
 order of preference.  The ordering can be made explicit using `q'
 factors defined by HTTP, e.g. `de,en-gb;q=0.8,en;q=0.7'.  `*' means
@@ -296,6 +293,8 @@ Applies when a protected document is denied by the server."
   "*Where temporary files go."
   :type 'directory
   :group 'url-file)
+(make-obsolete-variable 'url-temporary-directory
+			'temporary-file-directory "23.1")
 
 (defcustom url-show-status t
   "*Whether to show a running total of bytes transferred.
@@ -306,7 +305,7 @@ a terminal with a slow modem."
 
 (defvar url-using-proxy nil
   "Either nil or the fully qualified proxy URL in use, e.g.
-http://www.domain.com/")
+http://www.example.com/")
 
 (defcustom url-news-server nil
   "*The default news server from which to get newsgroups/articles.
@@ -385,7 +384,7 @@ Currently supported methods:
 (modify-syntax-entry ?/ " " url-parse-syntax-table)
 
 (defvar url-load-hook nil
-  "*Hooks to be run after initalizing the URL library.")
+  "*Hooks to be run after initializing the URL library.")
 
 ;;; Make OS/2 happy - yeeks
 ;; (defvar	tcp-binary-process-input-services nil
@@ -398,12 +397,7 @@ Currently supported methods:
 This should be set, e.g. by mail user agents rendering HTML to avoid
 `bugs' which call home.")
 
-(defun url-vars-unload-hook ()
-  (remove-hook 'set-language-environment-hook 'url-set-mime-charset-string))
-
-(add-hook 'url-vars-unload-hook 'url-vars-unload-hook)
-
 (provide 'url-vars)
 
-;;; arch-tag: 29205e5f-c5ce-433c-8d5d-38cbaed64b49
+;; arch-tag: 29205e5f-c5ce-433c-8d5d-38cbaed64b49
 ;;; url-vars.el ends here

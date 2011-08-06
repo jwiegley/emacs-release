@@ -1,17 +1,17 @@
 ;;; nroff-mode.el --- GNU Emacs major mode for editing nroff source
 
 ;; Copyright (C) 1985, 1986, 1994, 1995, 1997, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;;   2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: wp
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -49,13 +47,32 @@
   :type 'boolean)
 
 (defvar nroff-mode-map
-  (let ((map (make-sparse-keymap)))
+  (let ((map (make-sparse-keymap))
+	(menu-map (make-sparse-keymap)))
     (define-key map "\t"  'tab-to-tab-stop)
     (define-key map "\es" 'center-line)
     (define-key map "\e?" 'nroff-count-text-lines)
     (define-key map "\n"  'nroff-electric-newline)
     (define-key map "\en" 'nroff-forward-text-line)
     (define-key map "\ep" 'nroff-backward-text-line)
+    (define-key map [menu-bar nroff-mode] (cons "Nroff" menu-map))
+    (define-key menu-map [nn]
+      '(menu-item "Newline" nroff-electric-newline
+		  :help "Insert newline for nroff mode; special if nroff-electric mode"))
+    (define-key menu-map [nc]
+      '(menu-item "Count text lines" nroff-count-text-lines
+		  :help "Count lines in region, except for nroff request lines."))
+    (define-key menu-map [nf]
+      '(menu-item "Forward text line" nroff-forward-text-line
+		  :help "Go forward one nroff text line, skipping lines of nroff requests"))
+    (define-key menu-map [nb]
+      '(menu-item "Backward text line" nroff-backward-text-line
+		  :help "Go backward one nroff text line, skipping lines of nroff requests"))
+    (define-key menu-map [ne]
+      '(menu-item "Electric newline mode"
+		  nroff-electric-mode
+		  :help "Auto insert closing requests if necessary"
+		  :button (:toggle . nroff-electric-mode)))
     map)
   "Major mode keymap for `nroff-mode'.")
 
@@ -66,6 +83,8 @@
     ;; ' used otherwise).
     (modify-syntax-entry ?\" "\"  2" st)
     ;; Comments are delimited by \" and newline.
+    ;; And in groff also \# to newline.
+    (modify-syntax-entry ?# ".  2"  st)
     (modify-syntax-entry ?\\ "\\  1" st)
     (modify-syntax-entry ?\n ">" st)
     st)
@@ -92,7 +111,7 @@
 	 (mapconcat 'identity
 		    '("[f*n]*\\[.+?]" ; some groff extensions
 		      "(.."	      ; two chars after (
-		      "[^(\"]"	      ; single char escape
+		      "[^(\"#]"	      ; single char escape
 		      ) "\\|")
 	 "\\)")
    )
@@ -125,12 +144,21 @@ closing requests for requests that are used in matched pairs."
        (concat "[.']\\|" paragraph-start))
   (set (make-local-variable 'paragraph-separate)
        (concat "[.']\\|" paragraph-separate))
+  ;; Don't auto-fill directive lines starting . or ' since they normally
+  ;; have to be one line.  But do auto-fill comments .\" .\# and '''.
+  ;; Comment directives (those starting . or ') are [.'][ \t]*\\[#"]
+  ;; or ''', and this regexp is everything except those.  So [.']
+  ;; followed by not backslash and not ' or followed by backslash but
+  ;; then not # or "
+  (set (make-local-variable 'auto-fill-inhibit-regexp)
+       "[.'][ \t]*\\([^ \t\\']\\|\\\\[^#\"]\\)")
   ;; comment syntax added by mit-erl!gildea 18 Apr 86
   (set (make-local-variable 'comment-start) "\\\" ")
-  (set (make-local-variable 'comment-start-skip) "\\\\\"[ \t]*")
+  (set (make-local-variable 'comment-start-skip) "\\\\[\"#][ \t]*")
   (set (make-local-variable 'comment-column) 24)
   (set (make-local-variable 'comment-indent-function) 'nroff-comment-indent)
-  (set (make-local-variable 'indent-line-function) 'nroff-indent-line-function)
+  (set (make-local-variable 'comment-insert-comment-function)
+       'nroff-insert-comment-function)
   (set (make-local-variable 'imenu-generic-expression) nroff-imenu-expression))
 
 (defun nroff-outline-level ()
@@ -150,6 +178,7 @@ Puts a full-stop before comments on a line by themselves."
 	  (skip-chars-backward " \t")
 	  (if (bolp)
 	      (progn
+		;; FIXME delete-horizontal-space?
 		(setq pt (1+ pt))
 		(insert ?.)
 		1)
@@ -162,18 +191,11 @@ Puts a full-stop before comments on a line by themselves."
 			      9) 8)))))) ; add 9 to ensure at least two blanks
       (goto-char pt))))
 
-;; All this does is insert a "." at the start of comment-lines,
-;; for the sake of comment-dwim adding a new comment on an empty line.
-;; Hack! The right fix probably involves ;; comment-insert-comment-function,
-;; but comment-dwim does not call that for the empty line case.
 ;; http://lists.gnu.org/archive/html/emacs-devel/2007-10/msg01869.html
-(defun nroff-indent-line-function ()
-  "Function for `indent-line-function' in `nroff-mode'."
-  (save-excursion
-    (forward-line 0)
-    (when (looking-at "[ \t]*\\\\\"[ \t]*") ; \# does not need this
-      (delete-horizontal-space)
-      (insert ?.))))
+(defun nroff-insert-comment-function ()
+  "Function for `comment-insert-comment-function' in `nroff-mode'."
+  (indent-to (nroff-comment-indent))
+  (insert comment-start))
 
 (defun nroff-count-text-lines (start end &optional print)
   "Count lines in region, except for nroff request lines.
@@ -250,8 +272,8 @@ An argument is a repeat count; negative means move forward."
     (".de" . "..")))
 
 (defun nroff-electric-newline (arg)
-  "Insert newline for nroff mode; special if electric-nroff mode.
-In `electric-nroff-mode', if ending a line containing an nroff opening request,
+  "Insert newline for nroff mode; special if nroff-electric mode.
+In `nroff-electric-mode', if ending a line containing an nroff opening request,
 automatically inserts the matching closing request after point."
   (interactive "P")
   (let ((completion (save-excursion

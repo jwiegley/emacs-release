@@ -1,15 +1,16 @@
 ;;; url-expand.el --- expand-file-name for URLs
 
-;; Copyright (C) 1999, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,15 +18,14 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Code:
 
 (require 'url-methods)
 (require 'url-util)
 (require 'url-parse)
+(eval-when-compile (require 'cl))
 
 (defun url-expander-remove-relative-links (name)
   ;; Strip . and .. from pathnames
@@ -106,24 +106,24 @@ path components followed by `..' are removed, along with the `..' itself."
       (url-recreate-url urlobj)))))
 
 (defun url-identity-expander (urlobj defobj)
-  (url-set-type urlobj (or (url-type urlobj) (url-type defobj))))
+  (setf (url-type urlobj) (or (url-type urlobj) (url-type defobj))))
 
 (defun url-default-expander (urlobj defobj)
   ;; The default expansion routine - urlobj is modified by side effect!
   (if (url-type urlobj)
       ;; Well, they told us the scheme, let's just go with it.
       nil
-    (url-set-type urlobj (or (url-type urlobj) (url-type defobj)))
-    (url-set-port urlobj (or (url-port urlobj)
-			     (and (string= (url-type urlobj)
-					   (url-type defobj))
-				  (url-port defobj))))
+    (setf (url-type urlobj) (or (url-type urlobj) (url-type defobj)))
+    (setf (url-port urlobj) (or (url-port urlobj)
+                                (and (string= (url-type urlobj)
+                                              (url-type defobj))
+                                     (url-port defobj))))
     (if (not (string= "file" (url-type urlobj)))
-	(url-set-host urlobj (or (url-host urlobj) (url-host defobj))))
+	(setf (url-host urlobj) (or (url-host urlobj) (url-host defobj))))
     (if (string= "ftp"  (url-type urlobj))
-	(url-set-user urlobj (or (url-user urlobj) (url-user defobj))))
+	(setf (url-user urlobj) (or (url-user urlobj) (url-user defobj))))
     (if (string= (url-filename urlobj) "")
-	(url-set-filename urlobj "/"))
+	(setf (url-filename urlobj) "/"))
     (if (string-match "^/" (url-filename urlobj))
 	nil
       (let ((query nil)
@@ -134,12 +134,15 @@ path components followed by `..' are removed, along with the `..' itself."
 		  file (substring (url-filename urlobj) 0 (match-beginning 0))
 		  sepchar (substring (url-filename urlobj) (match-beginning 0) (match-end 0)))
 	  (setq file (url-filename urlobj)))
+	;; We use concat rather than expand-file-name to combine
+	;; directory and file name, since urls do not follow the same
+	;; rules as local files on all platforms.
 	(setq file (url-expander-remove-relative-links
-		    (expand-file-name file
-				      (url-file-directory (url-filename defobj)))))
-	(url-set-filename urlobj (if query (concat file sepchar query) file))))))
+		    (concat (url-file-directory (url-filename defobj)) file)))
+	(setf (url-filename urlobj)
+              (if query (concat file sepchar query) file))))))
 
 (provide 'url-expand)
 
-;;; arch-tag: 7b5f744b-b721-49da-be47-484631680a5a
+;; arch-tag: 7b5f744b-b721-49da-be47-484631680a5a
 ;;; url-expand.el ends here

@@ -1,6 +1,7 @@
 ;;; ses.el -- Simple Emacs Spreadsheet  -*- coding: utf-8 -*-
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
+;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
+;;   Free Software Foundation, Inc.
 
 ;; Author: Jonathan Yavner <jyavner@member.fsf.org>
 ;; Maintainer: Jonathan Yavner <jyavner@member.fsf.org>
@@ -8,10 +9,10 @@
 
 ;; This file is part of GNU Emacs.
 
-;; GNU Emacs is free software; you can redistribute it and/or modify
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
 ;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,9 +20,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -172,8 +171,10 @@ Each function is called with ARG=1."
 		"\""      ses-read-cell
 		"'"       ses-read-symbol
 		"="	  ses-edit-cell
+		"c"	  ses-recalculate-cell
 		"j"	  ses-jump
 		"p"	  ses-read-cell-printer
+		"t"	  ses-truncate-cell
 		"w"	  ses-set-column-width
 		"x"	  ses-export-keymap
 		"\M-p"	  ses-read-column-printer))
@@ -270,6 +271,9 @@ default printer and then modify its output.")
   (dolist (x ses-localvars)
     (make-local-variable x)
     (set x nil)))
+
+;;;This variable is documented as being permitted in file-locals:
+(put 'ses--symbolic-formulas 'safe-local-variable 'consp)
 
 (defconst ses-paramlines-plist
   '(ses--col-widths  -5 ses--col-printers -4 ses--default-printer -3
@@ -507,10 +511,12 @@ for this spreadsheet."
 		 (list (symbol-name (cadr formula))))))
 
 (defun ses-column-letter (col)
-  "Converts a column number to A..Z or AA..ZZ"
-  (if (< col 26)
-      (char-to-string (+ ?A col))
-    (string (+ ?@ (/ col 26)) (+ ?A (% col 26)))))
+  "Return the alphabetic name of column number COL.
+0-25 become A-Z; 26-701 become AA-ZZ, and so on."
+  (let ((units (char-to-string (+ ?A (% col 26)))))
+    (if (< col 26)
+        units
+      (concat (ses-column-letter (1- (/ col 26))) units))))
 
 (defun ses-create-cell-symbol (row col)
   "Produce a symbol that names the cell (ROW,COL).  (0,0) => 'A1."
@@ -721,11 +727,18 @@ if the cell's value is unchanged and FORCE is nil."
 ;;ses-goto-print is called during a recursive ses-print-cell).
 (defun ses-goto-print (row col)
   "Move point to print area for cell (ROW,COL)."
-  (let ((inhibit-point-motion-hooks t))
+  (let ((inhibit-point-motion-hooks t)
+	(n 0))
     (goto-char (point-min))
     (forward-line row)
+    ;; calculate column position
     (dotimes (c col)
-      (forward-char (1+ (ses-col-width c))))))
+      (setq n (+ n (ses-col-width c) 1)))
+    ;; move to the position
+    (and (> n (move-to-column n))
+	 (eolp)
+	 ;; move point to the bol of next line (for TAB at the last cell)
+	 (forward-char))))
 
 (defun ses-set-curcell ()
   "Sets `ses--curcell' to the current cell symbol, or a cons (BEG,END) for a
@@ -738,6 +751,9 @@ region, or nil if cursor is not at a cell."
     ;;Range
     (let ((bcell (get-text-property (region-beginning) 'intangible))
 	  (ecell (get-text-property (1- (region-end))  'intangible)))
+      (when (= (region-end) ses--data-marker)
+	;;Correct for overflow
+	(setq ecell (get-text-property (- (region-end) 2)  'intangible)))
       (setq ses--curcell (if (and bcell ecell)
 			     (cons bcell ecell)
 			   nil))))
@@ -798,7 +814,7 @@ preceding cell has spilled over."
 	    (setq sig ses-call-printer-return))))
       ;;Adjust print width to match column width
       (let ((width (ses-col-width col))
-	    (len   (length text)))
+	    (len   (string-width text)))
 	(cond
 	 ((< len width)
 	  ;;Fill field to length with spaces
@@ -826,7 +842,7 @@ preceding cell has spilled over."
 	      (setq sig `(error "Too wide" ,text))
 	      (cond
 	       ((stringp value)
-		(setq text (substring text 0 maxwidth)))
+		(setq text (truncate-string-to-width text maxwidth 0 ?\s)))
 	       ((and (numberp value)
 		     (string-match "\\.[0-9]+" text)
 		     (>= 0 (setq width
@@ -847,7 +863,11 @@ preceding cell has spilled over."
       ;;Install the printed result.  This is not interruptible.
       (let ((inhibit-read-only t)
 	    (inhibit-quit      t))
-	(delete-char (1+ (length text)))
+	(let ((inhibit-point-motion-hooks t))
+	  (delete-region (point) (progn
+				   (move-to-column (+ (current-column)
+						      (string-width text)))
+				   (1+ (point)))))
 	;;We use concat instead of inserting separate strings in order to
 	;;reduce the number of cells in the undo list.
 	(setq x (concat text (if (< maxcol ses--numcols) " " "\n")))
@@ -1435,6 +1455,7 @@ Narrows the buffer to show only the print area.  Gives it `read-only' and
   (interactive)
   (let ((end (point-min))
 	(inhibit-read-only t)
+	(inhibit-point-motion-hooks t)
 	(was-modified (buffer-modified-p))
 	pos sym)
     (ses-goto-data 0 0) ;;Include marker between print-area and data-area
@@ -1458,7 +1479,14 @@ Narrows the buffer to show only the print area.  Gives it `read-only' and
 		    (eq (ses-cell-value row (1+ col)) '*skip*))
 	  (setq end (+ end (ses-col-width col) 1)
 		col (1+ col)))
-	(setq end (+ end (ses-col-width col) 1))
+	(setq end (save-excursion
+		    (goto-char pos)
+		    (move-to-column (+ (current-column) (- end pos)
+				       (ses-col-width col)))
+		    (if (eolp)
+			(+ end (ses-col-width col) 1)
+		      (forward-char)
+		      (point))))
 	(put-text-property pos end 'intangible sym)))
     ;;Adding these properties did not actually alter the text
     (unless was-modified
@@ -1511,7 +1539,10 @@ These are active only in the minibuffer, when entering or editing a formula:
 	  ;;SES deliberately puts lots of trailing whitespace in its buffer
 	  show-trailing-whitespace nil
 	  ;;Cell ranges do not work reasonably without this
-	  transient-mark-mode    t)
+	  transient-mark-mode    t
+	  ;;not to use tab characters for safe
+	  ;;(tabs may do bad for column calculation)
+	  indent-tabs-mode	 nil)
     (1value (add-hook 'change-major-mode-hook 'ses-cleanup nil t))
     (1value (add-hook 'before-revert-hook 'ses-cleanup nil t))
     (setq ses--curcell         nil
@@ -2328,6 +2359,9 @@ hard to override how mouse-1 works."
 (defun ses-copy-region (beg end)
   "Treat the region as rectangular.  Convert the intangible attributes to
 SES attributes recording the contents of the cell as of the time of copying."
+  (when (= end ses--data-marker)
+    ;;Avoid overflow situation
+    (setq end (1- ses--data-marker)))
   (let* ((inhibit-point-motion-hooks t)
 	 (x (mapconcat 'ses-copy-region-helper
 		       (extract-rectangle beg (1- end)) "\n")))
@@ -2927,7 +2961,8 @@ columns to include in width (default = 0)."
     (setq value (ses-call-printer printer value))
     (dotimes (x span)
       (setq width (+ width 1 (ses-col-width (+ col span (- x))))))
-    (setq width (- width (length value)))
+    ;; set column width
+    (setq width (- width (string-width value)))
     (if (<= width 0)
 	value ;Too large for field, anyway
       (setq half (make-string (/ width 2) fill))
