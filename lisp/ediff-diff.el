@@ -1083,8 +1083,12 @@ one optional arguments, diff-number to refine.")
     (setq args (append (split-string options) files))
     (setq args (delete "" (delq nil args))) ; delete nil and "" from arguments
     (unwind-protect
-	(let ((directory default-directory)
-	      proc)
+	(let* ((directory default-directory)
+	       (job-name (symbol-name ediff-job-name))
+	       (buf-job (string-match "buffer" job-name))
+	       (coding-system-for-read
+		(if buf-job 'no-conversion coding-system-for-read))
+	       proc)
 	  (save-excursion
 	    (set-buffer buffer)
 	    (erase-buffer)
@@ -1100,7 +1104,15 @@ one optional arguments, diff-number to refine.")
 		;; Similarly for Windows-*
 		;; In DOS, must synchronize because DOS doesn't have
 		;; asynchronous processes.
-		(apply 'call-process program nil buffer nil args)
+		(progn
+		  (if (and buf-job
+			   (memq system-type '(ms-dos windows-nt windows-95))
+			   ;; FIXME: diff3 doesn't accept --binary, so 3-way
+			   ;; comparisons on DOS/Windows might fail for
+			   ;; buffers with non-ASCII text.
+			   (not (string-match "buffers3" job-name)))
+		      (setq args (append args '("--binary"))))
+		  (apply 'call-process program nil buffer nil args))
 	      ;; On other systems, do it asynchronously.
 	      (setq proc (get-buffer-process buffer))
 	      (if proc (kill-process proc))

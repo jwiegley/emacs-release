@@ -3175,6 +3175,34 @@ base64_decode_1 (from, to, length)
       *e++ = (unsigned char) (0xff & value);
     }
 }
+
+
+/* Return a Lisp vector which has the same contents as VEC but has
+   size NEW_SIZE, NEW_SIZE >= VEC->size.  Entries in the resulting
+   vector that are not copied from VEC are set to INIT.  */
+
+Lisp_Object
+larger_vector (vec, new_size, init)
+     Lisp_Object vec;
+     int new_size;
+     Lisp_Object init;
+{
+  struct Lisp_Vector *v;
+  int i, old_size;
+
+  old_size = XVECTOR (vec)->size;
+  v = allocate_vectorlike (new_size);
+  v->size = new_size;
+  bcopy (XVECTOR (vec)->contents, v->contents,
+	 old_size * sizeof *v->contents);
+  for (i = old_size; i < new_size; ++i)
+    v->contents[i] = init;
+  XSETVECTOR (vec, v);
+  return vec;
+}
+
+
+
 
 void
 syms_of_fns ()

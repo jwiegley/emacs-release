@@ -1,3 +1,12 @@
+2000-06-13  Gerd Moellmann  <gerd@gnu.org>
+
+	* Version 20.7 released.
+	
+2000-05-30  Gerd Moellmann  <gerd@gnu.org>
+
+	* info.texi: Clarify description of Info-directory-list,
+	add description of Info-additional-directory-list.
+
 2000-02-26  Gerd Moellmann  <gerd@gnu.org>
 
 	* Version 20.6 released.

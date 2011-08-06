@@ -1650,17 +1650,18 @@ selected window if it is displayed there.")
     }
 
   /* Move buffer to the end of the buffer list.  */
-  {
-    register Lisp_Object aelt, link;
+  if (!NILP (XBUFFER (buffer)->name))
+    {
+      Lisp_Object aelt, link;
 
-    aelt = Frassq (buffer, Vbuffer_alist);
-    link = Fmemq (aelt, Vbuffer_alist);
-    Vbuffer_alist = Fdelq (aelt, Vbuffer_alist);
-    XCONS (link)->cdr = Qnil;
-    Vbuffer_alist = nconc2 (Vbuffer_alist, link);
-  }
+      aelt = Frassq (buffer, Vbuffer_alist);
+      link = Fmemq (aelt, Vbuffer_alist);
+      Vbuffer_alist = Fdelq (aelt, Vbuffer_alist);
+      XCONS (link)->cdr = Qnil;
+      Vbuffer_alist = nconc2 (Vbuffer_alist, link);
 
-  frames_bury_buffer (buffer);
+      frames_bury_buffer (buffer);
+    }
 
   return Qnil;
 }

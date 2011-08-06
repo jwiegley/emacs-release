@@ -303,7 +303,7 @@ reader_thread (void *arg)
 static char * process_dir;
 
 static BOOL 
-create_child (char *exe, char *cmdline, char *env,
+create_child (char *exe, char *cmdline, char *env, int is_gui_app,
 	      int * pPid, child_process *cp)
 {
   STARTUPINFO start;
@@ -318,7 +318,7 @@ create_child (char *exe, char *cmdline, char *env,
   start.cb = sizeof (start);
   
 #ifdef HAVE_NTGUI
-  if (NILP (Vw32_start_process_show_window))
+  if (NILP (Vw32_start_process_show_window) && !is_gui_app)
     start.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
   else
     start.dwFlags = STARTF_USESTDHANDLES;
@@ -568,7 +568,7 @@ get_result:
 }
 
 void
-w32_executable_type (char * filename, int * is_dos_app, int * is_cygnus_app)
+w32_executable_type (char * filename, int * is_dos_app, int * is_cygnus_app, int * is_gui_app)
 {
   file_data executable;
   char * p;
@@ -576,6 +576,7 @@ w32_executable_type (char * filename, int * is_dos_app, int * is_cygnus_app)
   /* Default values in case we can't tell for sure.  */
   *is_dos_app = FALSE;
   *is_cygnus_app = FALSE;
+  *is_gui_app = FALSE;
 
   if (!open_input_file (&executable, filename))
     return;
@@ -596,7 +597,7 @@ w32_executable_type (char * filename, int * is_dos_app, int * is_cygnus_app)
 	 extension, which is defined in the registry.  */
       p = egetenv ("COMSPEC");
       if (p)
-	w32_executable_type (p, is_dos_app, is_cygnus_app);
+	w32_executable_type (p, is_dos_app, is_cygnus_app, is_gui_app);
     }
   else
     {
@@ -648,6 +649,11 @@ w32_executable_type (char * filename, int * is_dos_app, int * is_cygnus_app)
 		  break;
 		}
   	    }
+
+	  /* Check whether app is marked as a console or windowed (aka
+             GUI) app.  Accept Posix and OS2 subsytem apps as console
+             apps.  */
+	  *is_gui_app = (nt_header->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI);
   	}
     }
   
@@ -709,7 +715,7 @@ sys_spawnve (int mode, char *cmdname, char **argv, char **envp)
   int arglen, numenv;
   int pid;
   child_process *cp;
-  int is_dos_app, is_cygnus_app;
+  int is_dos_app, is_cygnus_app, is_gui_app;
   int do_quoting = 0;
   char escape_char;
   /* We pass our process ID to our children by setting up an environment
@@ -751,8 +757,11 @@ sys_spawnve (int mode, char *cmdname, char **argv, char **envp)
      executable that is implicitly linked to the Cygnus dll (implying it
      was compiled with the Cygnus GNU toolchain and hence relies on
      cygwin.dll to parse the command line - we use this to decide how to
-     escape quote chars in command line args that must be quoted). */
-  w32_executable_type (cmdname, &is_dos_app, &is_cygnus_app);
+     escape quote chars in command line args that must be quoted).
+
+     Also determine whether it is a GUI app, so that we don't hide its
+     initial window unless specifically requested.  */
+  w32_executable_type (cmdname, &is_dos_app, &is_cygnus_app, &is_gui_app);
 
   /* On Windows 95, if cmdname is a DOS app, we invoke a helper
      application to start it by specifying the helper app as cmdname,
@@ -977,7 +986,7 @@ sys_spawnve (int mode, char *cmdname, char **argv, char **envp)
     }
   
   /* Now create the process.  */
-  if (!create_child (cmdname, cmdline, env, &pid, cp))
+  if (!create_child (cmdname, cmdline, env, is_gui_app, &pid, cp))
     {
       delete_child (cp);
       errno = ENOEXEC;
@@ -2139,7 +2148,8 @@ will be chosen based on the type of the program.");
   DEFVAR_LISP ("w32-start-process-show-window",
 	       &Vw32_start_process_show_window,
     "When nil, new child processes hide their windows.\n\
-When non-nil, they show their window in the method of their choice.");
+When non-nil, they show their window in the method of their choice.\n\
+This variable doesn't affect GUI applications, which will never be hidden.");
   Vw32_start_process_show_window = Qnil;
 
   DEFVAR_LISP ("w32-start-process-share-console",

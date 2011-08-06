@@ -296,7 +296,9 @@ If the charset has no such property, do nothing."
 	nil
       (if (eq charset 'composition)
 	  (setq charset (char-charset (composite-char-component ch 0)))))
-  (setq func (get-charset-property charset 'fill-find-break-point-function))
+    (if (charsetp charset)
+	(setq func
+	      (get-charset-property charset 'fill-find-break-point-function)))
   (if (and func (fboundp func))
       (funcall func limit))))
 

@@ -81,6 +81,12 @@ extern int h_errno;
 #include <unistd.h>
 #endif
 
+#ifdef HAVE_SETPGID
+#if !defined (USG) || defined (BSD_PGRPS)
+#define setpgrp setpgid
+#endif
+#endif
+
 /* Get SI_SRPC_DOMAIN, if it is available.  */
 #ifdef HAVE_SYS_SYSTEMINFO_H
 #include <sys/systeminfo.h>
@@ -245,6 +251,7 @@ extern short ospeed;
 int input_fd;
 
 void croak P_ ((char *));
+void read_input_waiting P_ ((void));
 
 #ifdef AIXHFT
 void hft_init ();
@@ -1843,7 +1850,7 @@ setup_pty (fd)
      Since the latter lossage is more benign, we may as well
      lose that way.  -- cph */
 #ifdef FIONBIO
-#ifdef SYSV_PTYS
+#if defined(SYSV_PTYS) || defined(UNIX98_PTYS)
   {
     int on = 1;
     ioctl (fd, FIONBIO, &on);
@@ -2603,7 +2610,7 @@ read_input_waiting ()
 
       read_alarm_should_throw = 0;
       if (! setjmp (read_alarm_throw))
-	nread = (*read_socket_hook) (0, buf, 256, 1, 0);
+	nread = (*read_socket_hook) (0, buf, 256, 1);
       else
 	nread = -1;
 

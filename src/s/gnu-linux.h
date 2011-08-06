@@ -54,23 +54,57 @@ Boston, MA 02111-1307, USA.  */
 #endif /* emacs */
 #endif /* NOT_C_CODE */
 
+/* Define HAVE_TERMIOS if the system provides POSIX-style
+   functions and macros for terminal control.  */
+
+#define HAVE_TERMIOS
+
+/* Define HAVE_PTYS if the system supports pty devices.  */
+
+#define HAVE_PTYS
+
+#if defined HAVE_GRANTPT
+#define UNIX98_PTYS
+
+/* Run only once.  We need a `for'-loop because the code uses
+   `continue'.  */
+
+#define PTY_ITERATION	for (i = 0; i < 1; i++)
+
+#ifdef HAVE_GETPT
+#define PTY_NAME_SPRINTF
+#define PTY_OPEN fd = getpt ()
+#else /* not HAVE_GETPT */
+#define PTY_NAME_SPRINTF strcpy (pty_name, "/dev/ptmx");
+#endif /* not HAVE_GETPT */
+
+/* Note that grantpt and unlockpt may fork.  We must block SIGCHLD to
+   prevent sigchld_handler from intercepting the child's death.  */
+
+#define PTY_TTY_NAME_SPRINTF				\
+  {							\
+    char *ptyname;					\
+							\
+    sigblock (sigmask (SIGCHLD));			\
+    if (grantpt (fd) == -1 || unlockpt (fd) == -1	\
+        || !(ptyname = ptsname(fd)))			\
+      {							\
+	sigunblock (sigmask (SIGCHLD));			\
+	close (fd);					\
+	return -1;					\
+      }							\
+    strncpy (pty_name, ptyname, sizeof (pty_name));	\
+    pty_name[sizeof (pty_name) - 1] = 0;		\
+    sigunblock (sigmask (SIGCHLD));			\
+  }
+
+#else /* not HAVE_GRANDPT */
+
 /* Letter to use in finding device name of first pty,
   if system supports pty's.  'p' means it is /dev/ptyp0  */
 
 #define FIRST_PTY_LETTER 'p'
-
-/*
- *	Define HAVE_TERMIOS if the system provides POSIX-style
- *	functions and macros for terminal control.
- */
-
-#define HAVE_TERMIOS
-
-/*
- *	Define HAVE_PTYS if the system supports pty devices.
- */
-
-#define HAVE_PTYS
+#endif  /* not HAVE_GRANDPT */
 
 /* Uncomment this later when other problems are dealt with -mkj */
 
@@ -231,7 +265,7 @@ Boston, MA 02111-1307, USA.  */
 /* alane@wozzle.linet.org says that -lipc is not a separate library,
    since libc-4.4.1.  So -lipc was deleted.  */
 #define LIBS_SYSTEM
-#define C_SWITCH_SYSTEM -D_BSD_SOURCE
+#define C_SWITCH_SYSTEM -D_BSD_SOURCE -D_XOPEN_SOURCE
 #endif
 
 /* Paul Abrahams <abrahams@equinox.shaysnet.com> says this is needed.  */
@@ -297,11 +331,9 @@ Boston, MA 02111-1307, USA.  */
    and the function definitions in libc.  So turn this off.  */
 /* #define REGEXP_IN_LIBC */
 
-/* Use BSD process groups, but use setpgid() instead of setpgrp() to
-   actually set a process group. */
+/* Use BSD process groups.  */
 
 #define BSD_PGRPS
-#define setpgrp(pid,pgid) setpgid(pid,pgid)
 
 /* Use mmap directly for allocating larger buffers.  */
 #ifdef DOUG_LEA_MALLOC

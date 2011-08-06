@@ -43,7 +43,9 @@
 
 #define LIBS_DEBUG
 #define LIBS_SYSTEM -lutil
+#if __FreeBSD_version < 400000
 #define LIBS_TERMCAP -ltermcap
+#endif
 
 #define SYSV_SYSTEM_DIR
 

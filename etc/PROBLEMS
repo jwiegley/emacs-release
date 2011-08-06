@@ -1,6 +1,11 @@
 This file describes various problems that have been encountered
 in compiling, installing and running GNU Emacs.
 
+* Segfauls on startup on AIX 4.
+
+When Emacs segfaults on startup, and you've built it with the IBM xlc
+compiler or GCC, please try to compile it with `cc' instead.
+
 * Error "conflicting types for `initstate'" compiling with GCC on Irix 6.
 
 Install GCC 2.95 or a newer version, and this problem should go away.

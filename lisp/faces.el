@@ -1213,11 +1213,11 @@ selected frame."
 			       &optional defaultval)
   (while (and plist (not (eq (car plist) property)))
     (setq plist (cdr (cdr plist))))
-  (eq (funcall function face frame)
-      (if plist
-	  (nth 1 plist)
-	(or defaultval
-	    (funcall function 'default frame)))))
+  (equal (funcall function face frame)
+	 (if plist
+	     (nth 1 plist)
+	   (or defaultval
+	       (funcall function 'default frame)))))
 
 (defun face-spec-match-p (face spec &optional frame)
   "Return t if FACE, on FRAME, matches what SPEC says it should look like."

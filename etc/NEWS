@@ -1,9 +1,28 @@
-GNU Emacs NEWS -- history of user-visible changes.  23 Jan 1999
-Copyright (C) 1996, 1997, 1998, 1999 Free Software Foundation, Inc.
+GNU Emacs NEWS -- history of user-visible changes.  25 May 2000
+Copyright (C) 1996, 1997, 1998, 1999, 2000 Free Software Foundation, Inc.
 See the end for copying conditions.
 
 Please send Emacs bug reports to bug-gnu-emacs@gnu.org.
 For older news, see the file ONEWS.
+
+* Emacs 20.7 is a bug-fix release with few user-visible changes
+
+** It is now possible to use CCL-based coding systems for keyboard
+input.
+
+** ange-ftp now handles FTP security extensions, like Kerberos.
+
+** Rmail has been extended to recognize more forms of digest messages.
+
+** Now, most coding systems set in keyboard coding system work not
+only for character input, but also in incremental search.  The
+exceptions are such coding systems that handle 2-byte character sets
+(e.g euc-kr, euc-jp) and that use ISO's escape sequence
+(e.g. iso-2022-jp).  They are ignored in incremental search.
+
+** Support for Macintosh PowerPC-based machines running GNU/Linux has
+been added.
+
 
 * Emacs 20.6 is a bug-fix release with one user-visible change
 

@@ -1,3 +1,158 @@
+2000-06-13  Gerd Moellmann  <gerd@gnu.org>
+
+	* Version 20.7 released.
+	
+2000-06-01  Andrew Innes  <andrewi@gnu.org>
+
+	* w32proc.c (w32_executable_type): Determine whether program is a
+	GUI app.
+	(sys_spawnve): Tell create_child whether app is a GUI app.
+	(create_child): Don't hide window for GUI apps.
+	(syms_of_ntproc): Update docstring for w32-start-process-show-window.
+
+2000-05-30  Andrew Innes  <andrewi@gnu.org>
+
+	* w32.c (sys_socket): Revert the previous fix, and use a better
+	approach for detecting when a socket cannot be made
+	non-inheritable by duplicating the handle.
+
+2000-05-30  Dave Love  <fx@gnu.org>
+
+	* s/irix5-0.h (LD_SWITCH_SYSTEM): Don't define to `-G 0'.
+	(C_SWITCH_SYSTEM) [__GNUC__]: Put in #if 0.
+
+2000-05-24  Gerd Moellmann  <gerd@gnu.org>
+
+	* m/iris5d.h (UNEXEC): Use unexsgi.
+
+2000-05-23  Kenichi Handa  <handa@etl.go.jp>
+
+	* xdisp.c (redisplay_window): Set startp_byte (not startp) to
+	ZV_BYTE.
+
+2000-05-23  Andrew Innes  <andrewi@gnu.org>
+
+	* w32.c (sys_socket): To work around a problem with MS Proxy
+	winsock, don't attempt to make sockets non-inheritable if the
+	proxy winsock appears to be present.
+
+2000-05-23  Gerd Moellmann  <gerd@gnu.org>
+
+	* s/gnu-linux.h (setpgrp): Don't define it here because this
+	prevents compilation on GNU/Linux systems with glib 2.2.
+
+	* callproc.c, emacs.c, sysdep.c (setpgrp) [HAVE_SETPGID]: Define
+	as setpgid.
+	
+2000-05-20  NIIBE Yutaka  <gniibe@mri.co.jp>
+	
+	* s/gnu-linux.h (UNIX98_PTYS) [HAVE_GRANTPT]: Define.
+	(PTY_ITERATION, PTY_NAME_SPRINTF, PTY_OPEN, PTY_TTY_NAME_SPRINTF)
+	[HAVE_GRANTPT]: Define.
+	(C_SWITCH_SYSTEM): Add -D_XOPEN_SOURCE.
+
+	* sysdep.c (setup_pty): Treat case that UNIX98_PTYS is defined
+	like SYSV_PTYS.
+
+	* config.in (HAVE_GRANDPT, HAVE_GETPT): New defines.
+
+	* process.c (toplevel) [UNIX98_PTYS]: Include stdlib.h.
+
+2000-05-20  Gerd Moellmann  <gerd@gnu.org>
+
+	* buffer.c (Fbury_buffer): Avoid trouble from burying a killed
+	buffer.
+
+	* keyboard.c (lispy_mouse_names): Variable removed.
+	(Vlispy_mouse_stem): New variable.
+	(syms_of_keyboard): Initialize Vlispy_mouse_stem.
+	(make_lispy_event) <mouse_click, scroll_bar_click>: Don't abort
+	for any mouse button number.  Increase size of mouse_syms and
+	button_down_location as needed.  Call modify_event_symbol with
+	different arguments.
+	(make_lispy_event) <scroll_bar_click> [USE_TOOLKIT_SCROLL_BARS]:
+	Call modify_event_symbol with different arguments.
+	(make_lispy_event) <w32_scroll_bar_click> [WINDOWSNT]: Don't abort
+	for any button number.  Call modify_event_symbol with different
+	arguments.
+	(modify_event_symbol): Rename NAME_ALIST to NAME_ALIST_OR_STEM.
+	Accept a string for NAME_ALIST_OR_STEM.
+
+	* fns.c (larger_vector): New function.
+
+	* keyboard.c (Fclear_this_command_keys): Clear recent_keys
+	vector, too.
+
+2000-05-16  Gerd Moellmann  <gerd@gnu.org>
+
+	* frame.c (frames_bury_buffer): Don't add a buffer to the frame's
+	buffer list that wasn't selected in that frame.
+
+	* filelock.c (get_boot_time): To obtain an 8 char file name, use a
+	2 char prefix, and call make_temp_name with second arg non-zero.
+
+	* fileio.c (make_temp_name): New function, extracted from
+	Fmake_temp_name.
+	(Fmake_temp_name): Use it.
+
+2000-05-15  Gerd Moellmann  <gerd@gnu.org>
+
+	* unexelf.c, m/iris4d.h, m/iris5d.h: Use most current development 
+	versions.
+
+2000-05-12  Jason Rumney  <jasonr@gnu.org>
+
+	* w32bdf.c (w32_BDF_TextOut): Change bytelen arg to char_len
+	as used by callers.
+
+	* w32term.c (dumpglyphs): Fill background if character goes
+        higher or lower than normal. W32_TEXTOUT outputs chars not
+        bytes. Handle bdf fonts when getting width of composite chars
+        component. Allow for multibyte first glyph in composite char.
+
+2000-05-11  Jason Rumney  <jasonr@gnu.org>
+
+	* w32menu.c (w32_menu_show): Call ENCODE_SYSTEM for item_name
+	and descrip.
+
+2000-05-11  Andrew Innes  <andrewi@gnu.org>
+
+	* w32.c (sys_socket): Check return value of DuplicateHandle,
+        try to use original socket if it fails.
+
+2000-05-11  Kenichi Handa  <handa@etl.go.jp>
+
+	* coding.c (code_convert_string): GCPRO str before calling
+	temp_output_buffer_setup.
+
+2000-05-05  Gerd Moellmann  <gerd@gnu.org>
+	
+	* insdel.c (insert_from_buffer_1): Adjust FROM position by number
+	of inserted characters when BUF equals the current buffer, and PT
+	is in front of or equal to FROM.
+	
+2000-05-04  Andrew Innes  <andrewi@gnu.org>
+
+	* w32fns.c (w32_wnd_proc) <WM_GETMINMAXINFO>: Reduce the maximum
+	tracking limits to fit within the Windows 9x 16-bit limit.
+
+2000-05-02  Gerd Moellmann  <gerd@gnu.org>
+
+	* eval.c (Fsignal): If lisp_eval_depth or spepdl_size are near
+	to the limits, increase the limits.
+
+	* s/openbsd.h (LIBS_TERMCAP): Undefine.
+
+	* process.c (send_process): Remove local variable `procname' that
+	might become invalid when a GC happens.  Instead, access the
+	process name slot directly.
+	
+	* s/freebsd.h (LIBS_TERMCAP): Define only for __FreeBSD_version
+	<= 400000.
+
+	* sysdep.c (read_intput_waiting): Add prototype.
+	(read_input_waiting): Call read_socket_hook with 4 arguments.
+
 2000-02-26  Gerd Moellmann  <gerd@gnu.org>
 
 	* Version 20.6 released.
@@ -49,7 +204,7 @@
 	* msdos.c (IT_write_glyphs): Allocate a screen_buf buffer as
 	large as CODING_MODE_LAST_BLOCK requires.
 
-xxxxr2000-02-20  Dave Love  <fx@gnu.org>
+2000-02-20  Dave Love  <fx@gnu.org>
 
 	* gmalloc.c: Don't define away `const'; config.h does that.
 

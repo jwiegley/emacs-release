@@ -533,7 +533,7 @@ get_bitmap_with_cache(bdffont *fontp, int index)
 
 int
 w32_BDF_TextOut(bdffont *fontp, HDC hdc, int left,
-		 int top, unsigned char *text, int dim, int bytelen,
+		 int top, unsigned char *text, int dim, int char_len,
 		 int fixed_pitch_size)
 {
   int index, btop;
@@ -545,6 +545,7 @@ w32_BDF_TextOut(bdffont *fontp, HDC hdc, int left,
   HANDLE horgobj = 0;
   UINT textalign;
   int flag = 0;
+  int bytelen = char_len * dim;
 
   hCompatDC = CreateCompatibleDC(hdc);
 

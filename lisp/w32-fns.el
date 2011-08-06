@@ -39,6 +39,9 @@
 (define-key function-key-map [M-backspace] [?\M-\177])
 (define-key function-key-map [C-M-backspace] [\C-\M-delete])
 
+;; Ignore language-change events in isearch.
+(define-key isearch-mode-map [language-change] nil)
+
 ;; Ignore case on file-name completion
 (setq completion-ignore-case t)
 

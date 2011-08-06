@@ -420,11 +420,12 @@
 	(setq buf-B-file-name (file-name-nondirectory buf-B-file-name)))
     (if (stringp buf-C-file-name)
 	(setq buf-C-file-name (file-name-nondirectory buf-C-file-name)))
-	
-    (setq file-A (ediff-make-temp-file buf-A buf-A-file-name)
-	  file-B (ediff-make-temp-file buf-B buf-B-file-name))
-    (if buf-C-is-alive
-	(setq file-C (ediff-make-temp-file buf-C buf-C-file-name)))
+
+    (let ((ediff-job-name job-name))
+      (setq file-A (ediff-make-temp-file buf-A buf-A-file-name)
+	    file-B (ediff-make-temp-file buf-B buf-B-file-name))
+      (if buf-C-is-alive
+	  (setq file-C (ediff-make-temp-file buf-C buf-C-file-name))))
 	  
     (ediff-setup (get-buffer buf-A) file-A
 		 (get-buffer buf-B) file-B

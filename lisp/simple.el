@@ -1746,7 +1746,9 @@ to make one entry in the kill ring."
   (interactive "r")
   (condition-case nil
       ;; Don't let the undo list be truncated before we can even access it.
-      (let ((undo-strong-limit (+ (- (max beg end) (min beg end)) 100))
+      (let ((undo-strong-limit (+ (- (max beg end) (min beg end))
+				  100 undo-strong-limit))
+	    (undo-limit (+ (- (max beg end) (min beg end)) 100 undo-limit))
 	    (old-list buffer-undo-list)
 	    tail
 	    ;; If we can't rely on finding the killed text

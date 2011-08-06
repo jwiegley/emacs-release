@@ -1,5 +1,4 @@
-This is Info file ../info/info, produced by Makeinfo version 1.68 from
-the input file info.texi.
+This is ../info/info, produced by makeinfo version 4.0 from info.texi.
 
 START-INFO-DIR-ENTRY
 * Info: (info).		Documentation browsing system.
@@ -174,7 +173,7 @@ Another `n' command now would take you to the next node, `Help-^L'.
    you to the `Previous' node.  When you get there, you can do an
    n again to return here.
 
-   This all probably seems insultingly simple so far, but *do not* be
+   This all probably seems insultingly simple so far, but _do not_ be
 led into skimming.  Things will get more complicated soon.  Also, do
 not try a new command until you are told it is time to.  Otherwise, you
 may make Info skip past an important warning that was coming up.
@@ -206,7 +205,7 @@ not anything above the top until you have typed some spaces).
 
    When you type the space, the two lines that were at the bottom of
 the screen appear at the top, followed by more lines.  Delete takes the
-two lines from the top and moves them to the bottom, *usually*, but if
+two lines from the top and moves them to the bottom, _usually_, but if
 there are not a full screen's worth of lines above them they may not
 make it all the way to the bottom.
 
@@ -305,8 +304,8 @@ both `Foo'.
    by looking at it, then the node does not have a menu and the
    m command is not available.
 
-   The command to go to one of the subnodes is `m'--but *do not do it
-yet!*  Before you use `m', you must understand the difference between
+   The command to go to one of the subnodes is `m'--but _do not do it
+yet!_  Before you use `m', you must understand the difference between
 commands and arguments.  So far, you have learned several commands that
 do not need arguments.  When you type one, Info processes it and is
 instantly ready for another command.  The `m' command is different: it
@@ -395,7 +394,7 @@ Menus move Down in the tree, and `Up' moves Up.  `Previous', on the
 other hand, is usually used to "stay on the same level but go backwards"
 
    You can go back to the node `Help-M' by typing the command `u' for
-"Up".  That puts you at the *front* of the node--to get back to where
+"Up".  That puts you at the _front_ of the node--to get back to where
 you were reading you have to type some <SPC>s.
 
 >> Now type u to move back up to `Help-M'.
@@ -425,7 +424,7 @@ back to `Help-M'.
 
    Then follow directions again and you will end up back here.
 
-   Note the difference between `l' and `p': `l' moves to where *you*
+   Note the difference between `l' and `p': `l' moves to where _you_
 last were, whereas `p' always moves to the node which the header says
 is the `Previous' node (from this node, to `Help-M').
 
@@ -435,7 +434,7 @@ which leads (directly, or indirectly through other menus), to all the
 nodes that exist.
 
 >> Try doing a `d', then do an l to return here (yes,
-   *do* return).
+   _do_ return).
 
    Sometimes, in Info documentation, you will see a cross reference.
 Cross references look like this: *Note Cross: Help-Cross.  That is a
@@ -508,7 +507,7 @@ Info for Experts
 
    This chapter describes various advanced Info commands, and how to
 write an Info as distinct from a Texinfo file.  (However, in most
-cases, writing a Texinfo file is better, since you can use it *both* to
+cases, writing a Texinfo file is better, since you can use it _both_ to
 generate an Info file and to make a printed manual.  *Note Overview of
 Texinfo: (texinfo)Top.)
 
@@ -602,8 +601,8 @@ one.  It must have a <^_> character before it (invisible to the user;
 this node has one but you cannot see it), and it ends with either a
 <^_>, a <^L>, or the end of file.  Note: If you put in a <^L> to end a
 new node, be sure that there is a <^_> after it to start the next one,
-since <^L> cannot *start* a node.  Also, a nicer way to make a node
-boundary be a page boundary as well is to put a <^L> *right after* the
+since <^L> cannot _start_ a node.  Also, a nicer way to make a node
+boundary be a page boundary as well is to put a <^L> _right after_ the
 <^_>.
 
    The <^_> starting a node must be followed by a newline or a <^L>
@@ -687,13 +686,13 @@ to see them all need not keep revisiting the Menu.
 
    The Info Directory is simply the menu of the node `(dir)Top'--that
 is, node `Top' in file `.../info/dir'.  You can put new entries in that
-menu just like any other menu.  The Info Directory is *not* the same as
+menu just like any other menu.  The Info Directory is _not_ the same as
 the file directory called `info'.  It happens that many of Info's files
 live on that file directory, but they do not have to; and files on that
 directory are not automatically listed in the Info Directory node.
 
    Also, although the Info node graph is claimed to be a "hierarchy",
-in fact it can be *any* directed graph.  Shared structures and pointer
+in fact it can be _any_ directed graph.  Shared structures and pointer
 cycles are perfectly possible, and can be used if they are appropriate
 to the meaning to be expressed.  There is no need for all the nodes in
 a file to form a connected structure.  In fact, this file has two
@@ -712,7 +711,7 @@ Creating Cross References
    A cross reference can be placed anywhere in the text, unlike a menu
 item which must go at the front of a line.  A cross reference looks
 like a menu item except that it has `*note' instead of `*'.  It
-*cannot* be terminated by a `)', because `)''s are so often part of
+_cannot_ be terminated by a `)', because `)''s are so often part of
 node names.  If you wish to enclose a cross reference in parentheses,
 terminate it with a period first.  Here are two examples of cross
 references pointers:
@@ -800,7 +799,15 @@ Setting Variables: (emacs)Examining.
 
 `Info-directory-list'
      The list of directories to search for Info files.  Each element is
-     a string (directory name) or `nil' (try default directory).
+     a string (directory name) or `nil' (try default directory).  If not
+     initialized Info uses the environment variable `INFOPATH' to
+     initialize it, or `Info-default-directory-list' if there is no
+     `INFOPATH' variable in the environment.
+
+`Info-additional-directory-list'
+     A list of additional directories to search for Info documentation
+     files.  These directories are not searched for merging the `dir'
+     file.
 
 `Info-directory'
      The standard directory for Info documentation files.  Only used
@@ -961,7 +968,7 @@ supply them.  With a numeric argument, the motion commands are simply
 executed that many times; for example, a numeric argument of 4 given to
 `next-line' causes the cursor to move down 4 lines.  With a negative
 numeric argument, the motion is reversed; an argument of -4 given to
-the `next-line' command would cause the cursor to move *up* 4 lines.
+the `next-line' command would cause the cursor to move _up_ 4 lines.
 
 `C-n' (`next-line')
      Moves the cursor down to the next line.
@@ -1284,7 +1291,7 @@ items.
      Within an Info window, pressing a single digit, (such as `1'),
      selects that menu item, and places its node in the current window.
      For convenience, there is one exception; pressing `0' selects the
-     *last* item in the node's menu.
+     _last_ item in the node's menu.
 
 `0' (`last-menu-item')
      Select the last item in the current node's menu.
@@ -1388,7 +1395,7 @@ Window Commands
 
   It can be convenient to view more than one node at a time.  To allow
 this, Info can display more than one "window".  Each window has its own
-mode line (*note The Mode Line::.) and history of nodes viewed in that
+mode line (*note The Mode Line::) and history of nodes viewed in that
 window (*note `history-node': Node Commands.).
 
 `C-x o' (`next-window')
@@ -1678,7 +1685,7 @@ environment and info file reading manner.
      area and then sets the variable to that value.  Completion is
      available when reading the variable name; often, completion is
      available when reading the value to give to the variable, but that
-     depends on the variable itself.  If a variable does *not* supply
+     depends on the variable itself.  If a variable does _not_ supply
      multiple choices to complete over, it expects a numeric value.
 
 `M-x describe-variable'
@@ -1707,7 +1714,7 @@ environment and info file reading manner.
      automatically, keeping an equal number of lines visible in each
      window.  There are exceptions to the automatic tiling;
      specifically, the windows `*Completions*' and `*Footnotes*' are
-     *not* resized through automatic tiling; they remain their original
+     _not_ resized through automatic tiling; they remain their original
      size.
 
 `visible-bell'
@@ -1790,41 +1797,43 @@ environment and info file reading manner.
 
 
 Tag Table:
-Node: Top1013
-Node: Getting Started1718
-Node: Help-Small-Screen2529
-Node: Help4265
-Node: Help-P5382
-Node: Help-^L6229
-Node: Help-M9305
-Node: Help-FOO15110
-Node: Help-Adv15838
-Node: Help-Cross18488
-Node: Help-Q19124
-Node: Advanced Info19743
-Node: Expert20715
-Node: Add23363
-Node: Menus26717
-Node: Cross-refs29586
-Node: Tags30283
-Node: Checking31590
-Node: Emacs Info Variables32538
-Node: Create an Info File33522
-Node: Using Stand-alone Info34056
-Node: Options35333
-Node: Cursor Commands38523
-Node: Scrolling Commands41188
-Node: Node Commands43673
-Node: Searching Commands47681
-Node: Xref Commands49296
-Node: Parts of an Xref49899
-Node: Selecting Xrefs51829
-Node: Window Commands53412
-Node: The Mode Line54318
-Node: Basic Windows55955
-Node: The Echo Area58469
-Node: Printing Nodes62648
-Node: Miscellaneous Commands63302
-Node: Variables66520
+Node: Top987
+Node: Getting Started1692
+Node: Help-Small-Screen2503
+Node: Help4239
+Node: Help-P5356
+Node: Help-^L6203
+Node: Help-M9279
+Node: Help-FOO15084
+Node: Help-Adv15812
+Node: Help-Cross18462
+Node: Help-Q19098
+Node: Advanced Info19717
+Node: Expert20689
+Node: Add23337
+Node: Menus26691
+Node: Cross-refs29560
+Node: Tags30257
+Node: Checking31564
+Node: Emacs Info Variables32512
+Node: Create an Info File33869
+Node: Using Stand-alone Info34403
+Node: Options35680
+Ref: Options-Footnote-138679
+Node: Cursor Commands38870
+Ref: Cursor Commands-Footnote-141384
+Node: Scrolling Commands41535
+Node: Node Commands44020
+Node: Searching Commands48028
+Node: Xref Commands49643
+Node: Parts of an Xref50246
+Node: Selecting Xrefs52176
+Node: Window Commands53759
+Node: The Mode Line54665
+Node: Basic Windows56302
+Node: The Echo Area58815
+Node: Printing Nodes62994
+Node: Miscellaneous Commands63648
+Node: Variables66866
 
 End Tag Table

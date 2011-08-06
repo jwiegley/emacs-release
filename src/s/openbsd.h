@@ -5,3 +5,5 @@
 
 /* Get the rest of the stuff from that less-POSIX-conformant system */
 #include "netbsd.h"
+
+#undef LIBS_TERMCAP

@@ -426,6 +426,8 @@ The following non-printing keys are bound in `isearch-mode-map'.
 
 Type \\[isearch-delete-char] to cancel characters from end of search string.
 Type \\[isearch-exit] to exit, leaving point at location found.
+  If you have not yet typed any characters, \\[isearch-exit] will start
+  nonincremental search.
 Type LFD (C-j) to match end of line.
 Type \\[isearch-repeat-forward] to search again forward,\
  \\[isearch-repeat-backward] to search again backward.
@@ -1224,7 +1226,13 @@ Obsolete."
     (if (and enable-multibyte-characters
 	     (>= char ?\200)
 	     (<= char ?\377))
-	(isearch-process-search-char (unibyte-char-to-multibyte char))
+	(let ((coding (keyboard-coding-system)))
+	  (if coding
+	      (setq char (aref (decode-coding-string (char-to-string char)
+						     coding)
+			       0))
+	    (setq char (unibyte-char-to-multibyte char)))
+	  (isearch-process-search-char char))
       (if current-input-method
 	  (isearch-process-search-multibyte-characters char)
 	(isearch-process-search-char char)))))

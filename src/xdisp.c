@@ -1991,7 +1991,7 @@ redisplay_window (window, just_this_one, preserve_echo_area)
       XSETFASTINT (w->last_modified, 0);
       XSETFASTINT (w->last_overlay_modified, 0);
       if (startp < BEGV) startp = BEGV, startp_byte = BEGV_BYTE;
-      if (startp > ZV)   startp = ZV, startp = ZV_BYTE;
+      if (startp > ZV)   startp = ZV, startp_byte = ZV_BYTE;
       try_window (window, startp);
       if (cursor_vpos < 0)
 	{

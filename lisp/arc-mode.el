@@ -209,7 +209,7 @@ Archive and member name will be added."
 ;; ------------------------------
 ;; Zip archive configuration
 
-(defcustom archive-zip-use-pkzip (memq system-type '(ms-dos windows-nt))
+(defcustom archive-zip-use-pkzip (eq system-type 'ms-dos)
   "*If non-nil then pkzip option are used instead of zip options.
 Only set to true for msdog systems!"
   :type 'boolean

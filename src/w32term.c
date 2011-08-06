@@ -938,7 +938,9 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
 
         else if (!font
                  || font->bdf
-                 || FONT_HEIGHT (font) < line_height
+                 || FONT_BASE (font) < baseline
+                 || (FONT_HEIGHT (font) - FONT_BASE (font)
+                     < line_height - baseline)
                  || FONT_WIDTH (font) < glyph_width
                  || FONT_MAX_WIDTH (font) != FONT_WIDTH (font)
 		 || font->tm.tmItalic
@@ -1045,7 +1047,7 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
                 else
                   {
                     i = 0;
-                    W32_TEXTOUT (i, n_chars);
+                    W32_TEXTOUT (i, len);
                   }
               }
             else
@@ -1057,6 +1059,7 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
                 ABC char_placement;
                 int char_width = 0;
 
+                i = 0;
                 if (require_clipping)
 		  {
                     /* Set up a clipping rectangle for ExtTextOut */
@@ -1075,7 +1078,6 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
 		       written, LOWEST the lowest position.  */
 		    int xoffset = 0;
                     int yoffset = baseline;
-                    int start = 0;
 
 		    if (default_ascent
 			&& CHAR_TABLE_P (Vuse_default_ascent)
@@ -1086,6 +1088,7 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
 		      }
                     /* TODO: per char metrics for Truetype and BDF
                        fonts.  */
+                    else
 		      {
                         highest = FONT_BASE (font) + 1;
                         lowest = - (FONT_HEIGHT (font) - FONT_BASE (font));
@@ -1095,20 +1098,22 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
 		      xoffset = (int)(cmpcharp->col_offset[0]
 				  * FONT_WIDTH (FRAME_FONT (f)));
 
-                    i = 1;
-
                     /* Truetype fonts often contain underhangs to
                        handle composition characters. This works
                        against our attempts to position the characters
                        manually, so we need to compensate for this.
                     */
-                    if (print_via_unicode ?
-                        GetCharABCWidthsW (hdc, *x_2byte_buffer,
-                                           *x_2byte_buffer,
-                                           &char_placement)
-                        : GetCharABCWidths (hdc, *x_1byte_buffer,
-                                            *x_1byte_buffer,
-                                            &char_placement))
+                    if (font->bdf)
+                      {
+                        char_width = FONT_WIDTH(font);
+                      }
+                    else if (print_via_unicode ?
+                             GetCharABCWidthsW (hdc, *x_2byte_buffer,
+                                                *x_2byte_buffer,
+                                                &char_placement)
+                             : GetCharABCWidths (hdc, *x_1byte_buffer,
+                                                 *x_1byte_buffer,
+                                                 &char_placement))
                       {
                         char_width = char_placement.abcA
                           + char_placement.abcB + char_placement.abcC;
@@ -1124,11 +1129,9 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
 
 		    /* Draw the first character at the normal
                        position.  */
-                    W32_TEXTOUT (start, 1);
+                    W32_TEXTOUT (i, 1);
                     gidx++;
                   }
-                else
-                  i = 0;
 
                 for (; i < n_chars; gidx++)
 		  {
@@ -1205,13 +1208,17 @@ dumpglyphs (f, left, top, gp, n, hl, just_foreground, cmpcharp)
                        against our attempts to position the characters
                        manually, so we need to compensate for this.
                     */
-                    if (print_via_unicode ?
-                        GetCharABCWidthsW (hdc, *(x_2byte_buffer + i),
-                                           *(x_2byte_buffer + i),
-                                           &char_placement)
-                        : GetCharABCWidths (hdc, *(x_1byte_buffer + i),
-                                            *(x_1byte_buffer + i),
-                                            &char_placement))
+                    if (font->bdf)
+                      {
+                        char_width = FONT_WIDTH (font);
+                      }
+                    else if (print_via_unicode ?
+                             GetCharABCWidthsW (hdc, *(x_2byte_buffer + i),
+                                                *(x_2byte_buffer + i),
+                                                &char_placement)
+                             : GetCharABCWidths (hdc, *(x_1byte_buffer + i),
+                                                 *(x_1byte_buffer + i),
+                                                 &char_placement))
                       {
                         char_width = char_placement.abcA
                           + char_placement.abcB + char_placement.abcC;

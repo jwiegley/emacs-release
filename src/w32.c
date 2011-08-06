@@ -2579,35 +2579,51 @@ sys_socket(int af, int type, int protocol)
 	  _set_osfhnd (fd, s);
 	  /* setmode (fd, _O_BINARY); */
 #else
-	  /* Make a non-inheritable copy of the socket handle. */
+	  /* Make a non-inheritable copy of the socket handle.  Note
+             that it is possible that sockets aren't actually kernel
+             handles, which appears to be the case on Windows 9x when
+             the MS Proxy winsock client is installed.  */
 	  {
-	    HANDLE parent;
-	    HANDLE new_s = INVALID_HANDLE_VALUE;
-
-	    parent = GetCurrentProcess ();
-
 	    /* Apparently there is a bug in NT 3.51 with some service
 	       packs, which prevents using DuplicateHandle to make a
 	       socket handle non-inheritable (causes WSACleanup to
 	       hang).  The work-around is to use SetHandleInformation
 	       instead if it is available and implemented. */
-	    if (!pfn_SetHandleInformation
-		|| !pfn_SetHandleInformation ((HANDLE) s,
-					      HANDLE_FLAG_INHERIT,
-					      0))
+	    if (pfn_SetHandleInformation)
 	      {
-		DuplicateHandle (parent,
-				 (HANDLE) s,
-				 parent,
-				 &new_s,
-				 0,
-				 FALSE,
-				 DUPLICATE_SAME_ACCESS);
-		pfn_closesocket (s);
-		s = (SOCKET) new_s;
+		pfn_SetHandleInformation ((HANDLE) s, HANDLE_FLAG_INHERIT, 0);
 	      }
-	    fd_info[fd].hnd = (HANDLE) s;
+	    else
+	      {
+		HANDLE parent = GetCurrentProcess ();
+		HANDLE new_s = INVALID_HANDLE_VALUE;
+
+		if (DuplicateHandle (parent,
+				     (HANDLE) s,
+				     parent,
+				     &new_s,
+				     0,
+				     FALSE,
+				     DUPLICATE_SAME_ACCESS))
+		  {
+		    /* It is possible that DuplicateHandle succeeds even
+                       though the socket wasn't really a kernel handle,
+                       because a real handle has the same value.  So
+                       test whether the new handle really is a socket.  */
+		    long nonblocking = 0;
+		    if (pfn_ioctlsocket ((SOCKET) new_s, FIONBIO, &nonblocking) == 0)
+		      {
+			pfn_closesocket (s);
+			s = (SOCKET) new_s;
+		      }
+		    else
+		      {
+			CloseHandle (new_s);
+		      }
+		  } 
+	      }
 	  }
+	  fd_info[fd].hnd = (HANDLE) s;
 #endif
 
 	  /* set our own internal flags */

@@ -2933,13 +2933,17 @@ Hit \\[ediff-recenter] to reset the windows afterward."
     
     ;; create the file
     (ediff-with-current-buffer buff
-      (write-region (if start start (point-min))
-		    (if end end (point-max))
-		    f
-		    nil          ; don't append---erase
-		    'no-message) 
-      (set-file-modes f ediff-temp-file-mode)
-      (expand-file-name f))))
+      (let ((coding-system-for-write
+	     (if (string-match "buffer" (symbol-name ediff-job-name))
+		 'no-conversion
+	       coding-system-for-write)))
+	(write-region (if start start (point-min))
+		      (if end end (point-max))
+		      f
+		      nil          ; don't append---erase
+		      'no-message) 
+	(set-file-modes f ediff-temp-file-mode)
+	(expand-file-name f)))))
 
 ;; Quote metacharacters (using \) when executing diff in Unix, but not in
 ;; EMX OS/2

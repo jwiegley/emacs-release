@@ -88,6 +88,12 @@ extern noshare char **environ;
 extern char **environ;
 #endif
 
+#ifdef HAVE_SETPGID
+#if !defined (USG) || defined (BSD_PGRPS)
+#define setpgrp setpgid
+#endif
+#endif
+
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
 Lisp_Object Vexec_path, Vexec_directory, Vdata_directory, Vdoc_directory;

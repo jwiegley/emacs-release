@@ -1,3 +1,15 @@
+2000-06-13  Gerd Moellmann  <gerd@gnu.org>
+
+	* Version 20.7 released.
+	
+2000-06-05  Gerd Moellmann  <gerd@gnu.org>
+
+	* configure.in: Add powerpc*-*-linux-gnu*.
+
+2000-05-20  NIIBE Yutaka  <gniibe@mri.co.jp>
+
+	* configure.in: Check for grandpt and getpt.
+
 2000-02-26  Gerd Moellmann  <gerd@gnu.org>
 
 	* Version 20.6 released.

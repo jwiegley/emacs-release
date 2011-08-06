@@ -1727,6 +1727,13 @@ w32_menu_show (f, x, y, for_click, keymaps, title, error)
 	    = XVECTOR (menu_items)->contents[i + MENU_ITEMS_ITEM_EQUIV_KEY];
 	  def = XVECTOR (menu_items)->contents[i + MENU_ITEMS_ITEM_DEFINITION];
 
+#ifndef HAVE_MULTILINGUAL_MENU
+	  if (STRING_MULTIBYTE (item_name))
+	    item_name = ENCODE_SYSTEM (item_name);
+	  if (STRINGP (descrip) && STRING_MULTIBYTE (descrip))
+	    descrip = ENCODE_SYSTEM (descrip);
+#endif
+
 	  wv = xmalloc_widget_value ();
 	  if (prev_wv) 
 	    prev_wv->next = wv;

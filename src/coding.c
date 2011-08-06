@@ -4691,7 +4691,9 @@ code_convert_string (str, coding, encodep, nocopy)
       struct buffer *prev = current_buffer;
 
       record_unwind_protect (Fset_buffer, Fcurrent_buffer ());
+      GCPRO1 (str);
       temp_output_buffer_setup (" *code-converting-work*");
+      UNGCPRO;
       set_buffer_internal (XBUFFER (Vstandard_output));
       if (encodep)
 	insert_from_string (str, 0, 0, to, to_byte, 0);

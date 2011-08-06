@@ -82,8 +82,17 @@ Leaves original message, deleted, before the undigestified messages."
 					      (regexp-quote "*********") "*"
 					      "\\(\n------*\\)*"))
 			  (setq found t)))
-		    (if (not found)
-			(error "Message is not a digest--no end line"))))
+		    (unless found
+		      ;; Maybe it doesn't have the word "Digest".
+		      (goto-char (point-max))
+		      (skip-chars-backward " \t\n")
+		      (while (and (> (point) start) (not found))
+			(forward-line -1)
+			(if (looking-at (concat "End of.*\n"
+						(regexp-quote "*") "*"))
+			    (setq found t))))
+		    (unless found
+		      (error "Message is not a digest--no end line"))))
 		(re-search-forward (concat "^" (make-string 55 ?-) "-*\n*"))
 		(replace-match "\^_\^L\n0, unseen,,\n*** EOOH ***\n")
 		(save-restriction

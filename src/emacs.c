@@ -53,6 +53,12 @@ Boston, MA 02111-1307, USA.  */
 #include <sys/resource.h>
 #endif
 
+#ifdef HAVE_SETPGID
+#if !defined (USG) || defined (BSD_PGRPS)
+#define setpgrp setpgid
+#endif
+#endif
+
 #ifndef O_RDWR
 #define O_RDWR 2
 #endif

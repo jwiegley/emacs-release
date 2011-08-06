@@ -1,3 +1,129 @@
+2000-06-13  Gerd Moellmann  <gerd@gnu.org>
+
+	* Version 20.7 released.
+	
+2000-06-07  Kenichi Handa  <handa@etl.go.jp>
+
+	* textmodes/fill.el (fill-find-break-point): Check the validity of
+	charset.
+
+2000-06-05  Andrew Innes  <andrewi@gnu.org>
+
+	* browse-url.el (browse-url-filename-alist) [windows-nt, ms-dos]:
+	Conditionalize last change for DOS/Windows only.
+
+	* browse-url.el (browse-url-of-buffer): Add comment for last change.
+
+2000-06-02  Andrew Innes  <andrewi@gnu.org>
+
+	* browse-url.el (browse-url-of-buffer): Ensure that file-name ends
+	with .htm or .html, otherwise browse-url-of-file fails on Windows.
+
+2000-06-01  Andrew Innes  <andrewi@gnu.org>
+
+	* browse-url.el (browse-url-filename-alist): Support Windows-style
+	filenames with drive specifiers.
+
+	* arc-mode.el (archive-zip-use-pkzip) [windows-nt]: Don't use
+	pkzip on Windows by default, as InfoZIP works better.
+
+2000-05-31  Kenichi Handa  <handa@etl.go.jp>
+
+	* isearch.el (isearch-printing-char): Don't test for `cpXXX'.
+
+2000-05-30  Andrew Innes  <andrewi@gnu.org>
+
+	* w32-fns.el (isearch-mode-map): Ignore language-change events in
+	isearch.
+
+2000-05-30  Kenichi Handa  <handa@etl.go.jp>
+
+	* isearch.el (isearch-forward): Extend doc string.
+
+2000-05-30  Gerd Moellmann  <gerd@gnu.org>
+
+	* tmm.el (tmm-prompt): Recognize menu item definitions of the for
+	`(menu-item ...)' when looking for the position of DEFAULT-ITEM.
+
+	* paths.el (Info-default-directory-list): Doc fix.
+
+2000-05-29  Gerd Moellmann  <gerd@gnu.org>
+
+	* dabbrev.el (dabbrev-expand): Don't display messages in the
+	echo area if the minibuffer window is active.
+
+2000-05-29  Kenichi Handa  <handa@etl.go.jp>
+
+	* isearch.el (isearch-printing-char): If in Encoded Kbd mode,
+	decode the character by the current keyboard coding system.
+
+2000-05-24  Gerd Moellmann  <gerd@gnu.org>
+
+	* mail/rmail.el (rmail-retry-failure): Always unprune the header
+	after calling rmail-beginning-of-message.
+
+2000-05-23  Gerd Moellmann  <gerd@gnu.org>
+
+	* progmodes/sh-script.el (sh-ancestor-alist): Add `bash2'.
+
+	* files.el (interpreter-mode-alist): Add `bash2'.
+
+2000-05-20  Kenichi Handa  <handa@etl.go.jp>
+
+	* international/ccl.el (ccl-compile-write-string): Make STR
+	unibyte.
+	(ccl-compile-write-repeat): If ARG is string, make it unibyte.
+
+2000-05-18  Espen Skoglund  <esk@ira.uka.de>
+
+	* pascal.el (pascal-indent-alist) (pascal-indent-comment): Changed
+ 	the indent-comment function to just return the appropriate indent.
+
+2000-05-16  Kenichi Handa  <handa@etl.go.jp>
+
+	* international/encoded-kb.el: Be sure to update minor-mode-alist
+	and minor-mode-map-alist.
+	(encoded-kbd-self-insert-iso2022-8bit): Handle ISO's single shift
+	codes SS2 and SS3 correctly.
+	(encoded-kbd-self-insert-ccl): New function.
+	(encoded-kbd-setup-keymap): New function.
+	(encoded-kbd-mode): Handle CCL based coding system.  Setup keymap
+	by calling encoded-kbd-setup-keymap.
+
+2000-05-12  Gerd Moellmann  <gerd@gnu.org>
+
+	* ange-ftp.el (ange-ftp-skip-msgs): Include 500 code.for
+	handling FTP security extensions.
+
+2000-05-05  Gerd Moellmann  <gerd@gnu.org>
+
+	* mail/undigest.el (undigestify-rmail-message): Recognize end
+	of digest differently.
+
+2000-05-02  Gerd Moellmann  <gerd@gnu.org>
+
+	* simple.el (kill-region): Bind both undo-strong-limit and
+	undo-limit.  Add in the values of the global bindings.
+
+	* language/european.el (iso-latin-4): Fix typo.
+	
+	* textmodes/texinfmt.el (texinfo-format-xref): Don't try to insert
+	nil.
+	
+2000-05-02  Eli Zaretskii  <eliz@is.elta.co.il>
+
+	* ediff.el (ediff-buffers-internal): Bind ediff-job-name to the
+	job-name argument when writing buffers to temporary files.
+
+	* ediff-util.el (ediff-make-temp-file): Bind
+	coding-system-for-write to no-conversion if we are comparing
+	buffers (as opposed to files).
+
+	* ediff-diff.el (ediff-exec-process): If we are comparing buffers,
+	bind coding-system-for-read to no-conversion.  On DOS and Windows,
+	when comparing 2 buffers, add --binary to the switches passed to
+	Diff.
+
 2000-02-26  Gerd Moellmann  <gerd@gnu.org>
 
 	* Version 20.6 released.

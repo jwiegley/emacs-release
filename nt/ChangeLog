@@ -1,3 +1,13 @@
+2000-06-13  Gerd Moellmann  <gerd@gnu.org>
+
+	* Version 20.7 released.
+	
+2000-05-12  Jason Rumney  <jasonr@gnu.org>
+	
+	* INSTALL: Remove point 5 and other references to emacs.bat.
+	Renumber following points. Add note in point 1 about emacs.bat
+	and debug.bat being removed.
+
 2000-02-20  Andrew Innes  <andrewi@gnu.org>
 
 	* makefile.nt: Remove all references to emacs.bat and debug.bat.

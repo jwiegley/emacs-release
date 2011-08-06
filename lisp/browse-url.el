@@ -317,12 +317,15 @@ commands reverses the effect of this variable.  Requires Netscape version
   :group 'browse-url)
 
 (defcustom browse-url-filename-alist
-  '(("^/\\(ftp@\\|anonymous@\\)?\\([^:]+\\):/*" . "ftp://\\2/")
+    `(("^/\\(ftp@\\|anonymous@\\)?\\([^:]+\\):/*" . "ftp://\\2/")
     ;; The above loses the username to avoid the browser prompting for
     ;; it in anonymous cases.  If it's not anonymous the next regexp
     ;; applies.
     ("^/\\([^:@]+@\\)?\\([^:]+\\):/*" . "ftp://\\1\\2/")
-    ("^/+" . "file:/"))
+    ;; Support DOS/Windows filenames on those platforms.
+    ,@(if (memq system-type '(windows-nt ms-dos))
+	  '(("^\\([a-zA-Z]:\\)[\\/]" . "file:\\1/")))
+    ("^/" . "file:/"))
   "An alist of (REGEXP . STRING) pairs used by `browse-url-of-file'.
 Any substring of a filename matching one of the REGEXPs is replaced by
 the corresponding STRING using `replace-match', not treating STRING
@@ -554,13 +557,18 @@ narrowed."
 	   (and (= (- (point-max) (point-min)) (buffer-size))
 		(or buffer-file-name
 		    (and (boundp 'dired-directory) dired-directory)))))
-      (or file-name
+      ;; On Windows, files will only be displayed if the name ends with
+      ;; .htm or .html.  So go through a suitably named temp file if
+      ;; necessary to ensure this.
+      (or (and file-name (string-match "\.[hH][tT][mM][lL]?$" file-name))
 	  (progn
 	    (or browse-url-temp-file-name
 		(setq browse-url-temp-file-name
 		      (convert-standard-filename
-		       (make-temp-name
-			(expand-file-name "burl" browse-url-temp-dir)))))
+		       (concat
+			(make-temp-name
+			 (expand-file-name "burl" browse-url-temp-dir))
+			".html"))))
 	    (setq file-name browse-url-temp-file-name)
 	    (write-region (point-min) (point-max) file-name nil 'no-message)))
       (browse-url-of-file file-name))))
