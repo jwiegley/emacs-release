@@ -3,7 +3,7 @@
 ;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998 Free Software Foundation, Inc.
 
 ;; Author:     Eric S. Raymond <esr@snark.thyrsus.com>
-;; Maintainer: Andre Spiegel <spiegel@inf.fu-berlin.de>
+;; Maintainer: Andre Spiegel <spiegel@gnu.org>
 
 ;; $Id: vc-hooks.el,v 1.114 1999/06/30 07:10:20 spiegel Exp $
 
@@ -194,7 +194,7 @@ similarly for other version control systems."
   ;; number of the subexpression that should be returned. If there's
   ;; a third element (also the number of a subexpression), that 
   ;; subexpression is assumed to be a date field and we want the most
-  ;; recent entry matching the template.
+  ;; recent entry matching the template; this works for RCS format dates only.
   ;; If FILE and PROPERTIES are given, the latter must be a list of
   ;; properties of the same length as PATTERNS; each property is assigned 
   ;; the corresponding value.
@@ -213,6 +213,13 @@ similarly for other version control systems."
 	      (let ((latest-date "") (latest-val))
 		(while (re-search-forward (car p) nil t)
 		  (let ((date (vc-match-substring (elt p 2))))
+		    ;; Most (but not all) versions of RCS use two-digit years
+		    ;; to represent dates in the range 1900 through 1999.
+		    ;; The two-digit and four-digit notations can both appear
+		    ;; in the same file.  Normalize the two-digit versions.
+		    (save-match-data
+		      (if (string-match "\\`[0-9][0-9]\\." date)
+                          (setq date (concat "19" date))))
 		    (if (string< latest-date date)
 			(progn
 			  (setq latest-date date)

@@ -1,7 +1,7 @@
 This is ../info/emacs, produced by makeinfo version 4.0 from emacs.texi.
 
    This is the thirteenth edition of the `GNU Emacs Manual', updated
-for Emacs version 20.5.
+for Emacs version 20.6.
 
 INFO-DIR-SECTION Editors
 START-INFO-DIR-ENTRY
@@ -40,7 +40,7 @@ The Emacs Editor
 
    Emacs is the extensible, customizable, self-documenting real-time
 display editor.  This Info file describes how to edit with Emacs and
-some of how to customize it; it corresponds to GNU Emacs version 20.5.
+some of how to customize it; it corresponds to GNU Emacs version 20.6.
 For information on extending Emacs, see *Note Emacs Lisp: (elisp).
 
 * Menu:

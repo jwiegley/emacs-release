@@ -44,8 +44,6 @@ Cambridge, MA 02139, USA.
 #else /* Not C++ or ANSI C.  */
 #undef	PP
 #define	PP(args)	()
-#undef	const
-#define	const
 #undef	__ptr_t
 #define	__ptr_t		char *
 #endif /* C++ or ANSI C.  */

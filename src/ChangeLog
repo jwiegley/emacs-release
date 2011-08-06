@@ -1,3 +1,140 @@
+2000-02-26  Gerd Moellmann  <gerd@gnu.org>
+
+	* Version 20.6 released.
+	
+2000-02-25  Miyashita Hisashi  <himi@bird.scphys.kyoto-u.ac.jp>
+
+	* ccl.c (ccl_driver) [CCL_MapMultiple]: When the mapped value is
+	`lambda', set reg[RRR] to the map index.
+	(ccl_driver) [CCL_MapSingle]: When the mapped value is found, set
+	reg[RRR] to 0.  Otherwise, set it to -1.
+
+2000-02-25  Andrew Innes  <andrewi@gnu.org>
+
+	* w32fns.c (w32_wnd_proc) <WM_GETMINMAXINFO>: Allow resizing
+	the Emacs frame above the screen size.
+
+2000-02-23  Andrew Innes  <andrewi@gnu.org>
+
+	* w32select.c (Fw32_get_clipboard_data): Force data to be decoded
+	even if it doesn't contain non-ascii characters, as if it were
+	compound text.
+
+	* w32menu.c: Include charset.h and coding.h.
+	(single_submenu, w32_menu_show) [!HAVE_MULTILINGUAL_MENU]: Encode
+	mulitbyte strings with w32-system-coding-system before using in
+	menus.
+
+	* w32fns.c (x_set_name): Encode multibyte name with
+	w32-system-coding-system before using as frame title.
+	(x_set_title): Ditto.
+
+	* coding.h (ENCODE_SYSTEM) [WINDOWSNT]: New macro.
+	(DECODE_SYSTEM) [WINDOWSNT]: New macro.
+	[WINDOWSNT]: Add extern for Vw32_system_coding_system.
+
+	* fileio.c (Ffile_writable_p) [WINDOWSNT]: If a file (or
+	directory) doesn't exist, assume it can be created regardless of
+	whether the parent directory is writable.  This is the correct
+	thing to do, if we are not going to check the ACLs.
+
+	* w32.c (init_environment): Provide default values for all
+	required environment variables, and always set emacs_dir based on
+	the location of emacs.exe if it appears to be in a standard
+	location.
+	(init_user_info): Abort if HOME or SHELL isn't set.
+
+2000-02-23  Eli Zaretskii  <eliz@is.elta.co.il>
+
+	* msdos.c (IT_write_glyphs): Allocate a screen_buf buffer as
+	large as CODING_MODE_LAST_BLOCK requires.
+
+xxxxr2000-02-20  Dave Love  <fx@gnu.org>
+
+	* gmalloc.c: Don't define away `const'; config.h does that.
+
+2000-02-17  Kenichi Handa  <handa@etl.go.jp>
+
+	* xdisp.c (decode_mode_spec_coding): Delete superfluous code to
+	avoid infinite error signalling.
+
+2000-02-16  Gerd Moellmann  <gerd@gnu.org>
+
+	* .gdbinit (xbacktrace, xprintsym, xreload): New commands.
+
+2000-02-15  Andrew Innes  <andrewi@gnu.org>
+
+	* w32proc.c (sys_kill): Fake Ctrl-C keystroke to simulate SIGINT,
+	and Ctrl-Break to simulate SIGQUIT (known as SIGBREAK in MSVC).
+
+2000-02-15  Gerd Moellmann  <gerd@gnu.org>
+
+	* m/arm.h: New file.
+	
+	* s/freebsd.h (BROKEN_PTY_READ_AFTER_EAGAIN): Define.
+
+	* process.c (send_process) [BROKEN_PTY_READ_AFTER_EAGAIN]:
+	Workaround for FreeBSD bug.  Clear output queue after EAGAIN in
+	write(2).
+
+2000-02-12  Gerd Moellmann  <gerd@gnu.org>
+
+	* s/hpux10.h (HAVE_XRMSETDATABASE): Define if not already defined.
+
+2000-02-09  Kenichi Handa  <handa@etl.go.jp>
+
+	* ccl.c (CCL_MAKE_CHAR): New macro.
+	(ccl_driver) <CCL_TranslateCharacter>: Check the validity of
+	registers by CCL_MAKE_CHAR before calling translate_char.
+	<CCL_TranslateCharacterConstTbl> Likewise.
+	
+2000-02-05  Gerd Moellmann  <gerd@gnu.org>
+
+	* s/irix6-5.h: Undo previous change.
+
+	* s/irix5-0.h (LD_SWITCH_SYSTEM): Define only for GCC < 2.95.
+
+2000-02-03  Gerd Moellmann  <gerd@gnu.org>
+
+	* m/alpha.h: Revert to version from 20.5.
+
+2000-02-02  Kenichi Handa  <handa@etl.go.jp>
+
+	* ccl.c (ccl_driver) <CCL_WriteExprRegister>: Set jump_address
+	instead of incrementing ic directly.
+	<CCL_WriteExprConst> Likewise.
+	<ccl_set_expr>: Set ic to jump_address.
+
+2000-01-26  Gerd Moellmann  <gerd@gnu.org>
+
+	* s/irix6-5.h [__GNUC__ && __GNUC_MINOR__ >= 95]: Undef
+	LD_SWITCH_SYSTEM inherited from irix5-0.h.
+
+2000-01-17  Gerd Moellmann  <gerd@gnu.org>
+
+	* m/news-risc.h (LD_SWITCH_MACHINE): Define differently for GCC.
+	
+2000-01-03  Gerd Moellmann  <gerd@gnu.org>
+
+	* s/hpux9.h (NO_EDITRES): Define even if HAVE_LIBXMU.
+
+1999-12-02  Gerd Moellmann  <gerd@gnu.org>
+
+	* s/usg5-4.h (LIBS_SYSTEM): Add -lgen because that's needed
+	for building with Motif.
+	
+1999-11-22  Paul Eggert  <eggert@twinsun.com>
+
+	* m/alpha.h (malloc, realloc, calloc): Remove decls;
+	stdlib.h now does this.
+
+1999-08-21  Dave Love  <fx@gnu.org>
+
+	* aix3-2-5.h (C_DEBUG_SWITCH): Use -g -O.
+	* aix4-1.h: Likewise.
+
+	* irix6-5.h (C_DEBUG_SWITCH): Set for debug and optimize.
+	
 1999-12-04  Gerd Moellmann  <gerd@gnu.org>
 
 	* Version 20.5 released.

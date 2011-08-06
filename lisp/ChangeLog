@@ -1,3 +1,53 @@
+2000-02-26  Gerd Moellmann  <gerd@gnu.org>
+
+	* Version 20.6 released.
+	
+2000-02-25  Gerd Moellmann  <gerd@gnu.org>
+
+	* emacs-lisp/helper.el (Helper-describe-mode): Make buffer
+	writable.
+
+2000-02-20  Andrew Innes  <andrewi@gnu.org>
+
+	* dos-w32.el (file-name-buffer-file-type-alist): Add missing $ to
+	the end of one of the regexps.
+
+2000-02-17  Gerd Moellmann  <gerd@gnu.org>
+	
+	* progmodes/pascal.el (pascal-mode-syntax-table): Change syntax
+	of `*' to handle `(* ... *)' comments.
+	
+2000-02-03  Francesco Potorti`  <F.Potorti@cnuce.cnr.it>
+
+	* mail/rmail.el (rmail-retry-failure): Use
+	rmail-beginning-of-message before rmail-toggle-header, because the
+	former toggles headers.
+
+2000-02-02  Gerd Moellmann  <gerd@gnu.org>
+
+	* ange-ftp.el (ange-ftp-write-region): Handle case that
+	succeeding process operation sets a different coding system.
+
+2000-01-29  Dave Love  <fx@gnu.org>
+
+	* timezone.el (timezone-fix-time): Window against 69 for two-digit
+	years.  Deal with three-digit years.
+	
+2000-01-25  Andre Spiegel  <spiegel@gnu.org>
+
+	* vc.el (vc-version-diff): Make sure file name is
+	expanded.
+
+2000-01-07  Gerd Moellmann  <gerd@gnu.org>
+
+	* vc-hooks.el (vc-parse-buffer): Handle mixtures of dates
+	before and after the year 2000.
+
+2000-01-05  Dave Love  <fx@gnu.org>
+
+	* browse-url.el (browse-url): Fix case of
+	browse-url-browser-function being an alist.
+	
 1999-12-04  Gerd Moellmann  <gerd@gnu.org>
 
 	* Version 20.5 released.

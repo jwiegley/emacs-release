@@ -1,3 +1,11 @@
+2000-02-20  Andrew Innes  <andrewi@gnu.org>
+
+	* makefile.nt: Remove all references to emacs.bat and debug.bat.
+
+	* emacs.bat.in: Remove obsolete file.
+
+	* debug.bat.in: Remove obsolete file.
+
 1999-11-22  Andrew Innes  <andrewi@gnu.org>
 
 	* install.bat: Pass on command line arguments to make.

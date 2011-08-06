@@ -102,7 +102,7 @@ char *_getpty();
 /* Because unexsgi.c cannot handle a ".sbss" section yet, we must
    tell the linker to avoid making one.  SGI's cc does this by
    default, but GCC (at least 2.5.8 and 2.6.0) doesn't. */
-#ifdef __GNUC__
+#if __GNUC__ == 2 && __GNUC_MINOR__ < 8
 #define LD_SWITCH_SYSTEM -G 0
 #endif
 

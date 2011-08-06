@@ -267,6 +267,13 @@ DEFUN ("w32-get-clipboard-data", Fw32_get_clipboard_data, Sw32_get_clipboard_dat
 #endif
 	)
       {
+#if 1
+	/* We have to assume clipboard might contain "compound" text (to
+           use the X terminology), since Emacs itself will default to
+           using iso-2022 encoding which doesn't contain non-ascii
+           characters.  */
+	require_decoding = 1;
+#else
 	/* If the clipboard data contains any non-ascii code, we
 	   need to decode it.  */
 	int i;
@@ -279,6 +286,7 @@ DEFUN ("w32-get-clipboard-data", Fw32_get_clipboard_data, Sw32_get_clipboard_dat
 		break;
 	      }
 	  }
+#endif
       }
     
     if (require_decoding)

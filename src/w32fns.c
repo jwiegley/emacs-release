@@ -2342,7 +2342,7 @@ x_set_name (f, name, explicit)
   if (FRAME_W32_WINDOW (f))
     {
       if (STRING_MULTIBYTE (name))
-	name = string_make_unibyte (name);
+	name = ENCODE_SYSTEM (name);
       BLOCK_INPUT;
       SetWindowText(FRAME_W32_WINDOW (f), XSTRING (name)->data);
       UNBLOCK_INPUT;
@@ -2401,7 +2401,7 @@ x_set_title (f, name)
   if (FRAME_W32_WINDOW (f))
     {
       if (STRING_MULTIBYTE (name))
-	name = string_make_unibyte (name);
+	name = ENCODE_SYSTEM (name);
       BLOCK_INPUT;
       SetWindowText(FRAME_W32_WINDOW (f), XSTRING (name)->data);
       UNBLOCK_INPUT;
@@ -4481,6 +4481,9 @@ w32_wnd_proc (hwnd, msg, wParam, lParam)
       /* Hack to correct bug that allows Emacs frames to be resized
 	 below the Minimum Tracking Size.  */
       ((LPMINMAXINFO) lParam)->ptMinTrackSize.y++;
+      /* Hack to allow resizing the Emacs frame above the screen size */
+      ((LPMINMAXINFO) lParam)->ptMaxTrackSize.x = LONG_MAX;
+      ((LPMINMAXINFO) lParam)->ptMaxTrackSize.y = LONG_MAX;
       return 0;
 
     case WM_EMACS_CREATESCROLLBAR:

@@ -1367,18 +1367,19 @@ sys_kill (int pid, int sig)
       EnumWindows (find_child_console, (LPARAM) cp);
     }
   
-  if (sig == SIGINT)
+  if (sig == SIGINT || sig == SIGQUIT)
     {
       if (NILP (Vw32_start_process_share_console) && cp && cp->hwnd)
 	{
 	  BYTE control_scan_code = (BYTE) MapVirtualKey (VK_CONTROL, 0);
-	  BYTE vk_break_code = VK_CANCEL;
+	  /* Fake Ctrl-C for SIGINT, and Ctrl-Break for SIGQUIT.  */
+	  BYTE vk_break_code = (sig == SIGINT) ? 'C' : VK_CANCEL;
 	  BYTE break_scan_code = (BYTE) MapVirtualKey (vk_break_code, 0);
 	  HWND foreground_window;
 
 	  if (break_scan_code == 0)
 	    {
-	      /* Fake Ctrl-C if we can't manage Ctrl-Break. */
+	      /* Fake Ctrl-C for SIGQUIT if we can't manage Ctrl-Break. */
 	      vk_break_code = 'C';
 	      break_scan_code = (BYTE) MapVirtualKey (vk_break_code, 0);
 	    }

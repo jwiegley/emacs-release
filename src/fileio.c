@@ -2929,6 +2929,12 @@ DEFUN ("file-writable-p", Ffile_writable_p, Sfile_writable_p, 1, 1, 0,
     return (check_writable (XSTRING (encoded)->data)
 	    ? Qt : Qnil);
 
+#ifdef WINDOWSNT
+  /* The read-only attribute of the parent directory doesn't affect
+     whether a file or directory can be created within it.  Some day we
+     should check ACLs though, which do affect this.  */
+  return Qt;
+#else
   dir = Ffile_name_directory (absname);
 #ifdef VMS
   if (!NILP (dir))
@@ -2942,6 +2948,7 @@ DEFUN ("file-writable-p", Ffile_writable_p, Sfile_writable_p, 1, 1, 0,
   dir = ENCODE_FILE (dir);
   return (check_writable (!NILP (dir) ? (char *) XSTRING (dir)->data : "")
 	  ? Qt : Qnil);
+#endif
 }
 
 DEFUN ("access-file", Faccess_file, Saccess_file, 2, 2, 0,

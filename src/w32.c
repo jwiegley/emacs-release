@@ -288,9 +288,9 @@ init_user_info ()
 
   /* Ensure HOME and SHELL are defined. */
   if (getenv ("HOME") == NULL)
-    putenv ("HOME=c:/");
+    abort ();
   if (getenv ("SHELL") == NULL)
-    putenv (os_subtype == OS_WIN95 ? "SHELL=command" : "SHELL=cmd");
+    abort ();
 
   /* Set dir and shell from environment variables. */
   strcpy (the_passwd.pw_dir, getenv ("HOME"));
@@ -679,52 +679,96 @@ init_environment (char ** argv)
 		     Qnil)),
        "While setting TMPDIR: ");
 
-  /* Check for environment variables and use registry if they don't exist */
+  /* Check for environment variables and use registry settings if they
+     don't exist.  Fallback on default values where applicable.  */
   {
     int i;
     LPBYTE lpval;
     DWORD dwType;
 
-    static char * env_vars[] = 
+    static struct env_entry
     {
-      "HOME",
-      "PRELOAD_WINSOCK",
-      "emacs_dir",
-      "EMACSLOADPATH",
-      "SHELL",
-      "CMDPROXY",
-      "EMACSDATA",
-      "EMACSPATH",
-      "EMACSLOCKDIR",
+      char * name;
+      char * def_value;
+    } env_vars[] = 
+    {
+      {"HOME", "C:/"},
+      {"PRELOAD_WINSOCK", NULL},
+      {"emacs_dir", "C:/emacs"},
+      {"EMACSLOADPATH", "%emacs_dir%/site-lisp;%emacs_dir%/lisp;%emacs_dir%/leim"},
+      {"SHELL", "%emacs_dir%/bin/cmdproxy.exe"},
+      {"EMACSDATA", "%emacs_dir%/etc"},
+      {"EMACSPATH", "%emacs_dir%/bin"},
+      {"EMACSLOCKDIR", "%emacs_dir%/lock"},
       /* We no longer set INFOPATH because Info-default-directory-list
-	 is then ignored.  We use a hook in winnt.el instead.  */
-      /*      "INFOPATH", */
-      "EMACSDOC",
-      "TERM",
+	 is then ignored.  */
+      /*  {"INFOPATH", "%emacs_dir%/info"},  */
+      {"EMACSDOC", "%emacs_dir%/etc"},
+      {"TERM", "cmd"}
     };
+
+#define SET_ENV_BUF_SIZE (4 * MAX_PATH)	/* to cover EMACSLOADPATH */
+
+    /* Treat emacs_dir specially: set it unconditionally based on our
+       location, if it appears that we are running from the bin subdir
+       of a standard installation.  */
+    {
+      char *p;
+      char modname[MAX_PATH];
+
+      if (!GetModuleFileName (NULL, modname, MAX_PATH))
+	abort ();
+      if ((p = strrchr (modname, '\\')) == NULL)
+	abort ();
+      *p = 0;
+
+      if ((p = strrchr (modname, '\\')) && stricmp (p, "\\bin") == 0)
+	{
+	  char buf[SET_ENV_BUF_SIZE];
+
+	  *p = 0;
+	  for (p = modname; *p; p++)
+	    if (*p == '\\') *p = '/';
+		  
+	  _snprintf (buf, sizeof(buf)-1, "emacs_dir=%s", modname);
+	  putenv (strdup (buf));
+	}
+    }
 
     for (i = 0; i < (sizeof (env_vars) / sizeof (env_vars[0])); i++) 
       {
-	if (!getenv (env_vars[i])
-	    && (lpval = w32_get_resource (env_vars[i], &dwType)) != NULL)
+	if (!getenv (env_vars[i].name))
 	  {
-	    if (dwType == REG_EXPAND_SZ)
-	      {
-		char buf1[500], buf2[500];
+	    int dont_free = 0;
 
-		ExpandEnvironmentStrings ((LPSTR) lpval, buf1, 500);
-		_snprintf (buf2, 499, "%s=%s", env_vars[i], buf1);
-		putenv (strdup (buf2));
-	      }
-	    else if (dwType == REG_SZ)
+	    if ((lpval = w32_get_resource (env_vars[i].name, &dwType)) == NULL)
 	      {
-		char buf[500];
+		lpval = env_vars[i].def_value;
+		dwType = REG_EXPAND_SZ;
+		dont_free = 1;
+	      }
+
+	    if (lpval)
+	      {
+		if (dwType == REG_EXPAND_SZ)
+		  {
+		    char buf1[SET_ENV_BUF_SIZE], buf2[SET_ENV_BUF_SIZE];
+
+		    ExpandEnvironmentStrings ((LPSTR) lpval, buf1, sizeof(buf1));
+		    _snprintf (buf2, sizeof(buf2)-1, "%s=%s", env_vars[i].name, buf1);
+		    putenv (strdup (buf2));
+		  }
+		else if (dwType == REG_SZ)
+		  {
+		    char buf[SET_ENV_BUF_SIZE];
 		  
-		_snprintf (buf, 499, "%s=%s", env_vars[i], lpval);
-		putenv (strdup (buf));
-	      }
+		    _snprintf (buf, sizeof(buf)-1, "%s=%s", env_vars[i].name, lpval);
+		    putenv (strdup (buf));
+		  }
 
-	    xfree (lpval);
+		if (!dont_free)
+		  xfree (lpval);
+	      }
 	  }
       }
   }

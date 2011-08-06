@@ -29,6 +29,8 @@ Boston, MA 02111-1307, USA.  */
 #include "keyboard.h"
 #include "blockinput.h"
 #include "buffer.h"
+#include "charset.h"
+#include "coding.h"
 
 /* This may include sys/types.h, and that somehow loses
    if this is not done before the other system files.  */
@@ -1235,7 +1237,7 @@ single_submenu (item_key, item_name, maps)
 	  prefix = XVECTOR (menu_items)->contents[i + MENU_ITEMS_PANE_PREFIX];
 #ifndef HAVE_MULTILINGUAL_MENU
 	  if (STRINGP (pane_name) && STRING_MULTIBYTE (pane_name))
-	    pane_name = string_make_unibyte (pane_name);
+	    pane_name = ENCODE_SYSTEM (pane_name);
 #endif
 	  pane_string = (NILP (pane_name)
 			 ? "" : (char *) XSTRING (pane_name)->data);
@@ -1277,9 +1279,9 @@ single_submenu (item_key, item_name, maps)
 	  def = XVECTOR (menu_items)->contents[i + MENU_ITEMS_ITEM_DEFINITION];
 #ifndef HAVE_MULTILINGUAL_MENU
 	  if (STRING_MULTIBYTE (item_name))
-	    item_name = string_make_unibyte (item_name);
+	    item_name = ENCODE_SYSTEM (item_name);
 	  if (STRINGP (descrip) && STRING_MULTIBYTE (descrip))
-	    descrip = string_make_unibyte (descrip);
+	    descrip = ENCODE_SYSTEM (descrip);
 #endif
 	  wv = xmalloc_widget_value ();
 	  if (prev_wv) 
@@ -1680,7 +1682,7 @@ w32_menu_show (f, x, y, for_click, keymaps, title, error)
 	  prefix = XVECTOR (menu_items)->contents[i + MENU_ITEMS_PANE_PREFIX];
 #ifndef HAVE_MULTILINGUAL_MENU
 	  if (!NILP (pane_name) && STRING_MULTIBYTE (pane_name))
-	    pane_name = string_make_unibyte (pane_name);
+	    pane_name = ENCODE_SYSTEM (pane_name);
 #endif
 	  pane_string = (NILP (pane_name)
 			 ? "" : (char *) XSTRING (pane_name)->data);
@@ -1757,7 +1759,7 @@ w32_menu_show (f, x, y, for_click, keymaps, title, error)
 
 #ifndef HAVE_MULTILINGUAL_MENU
       if (STRING_MULTIBYTE (title))
-	title = string_make_unibyte (title);
+	title = ENCODE_SYSTEM (title);
 #endif
       wv_title->name = (char *) XSTRING (title)->data;
       /* Handle title specially, so it looks better.  */

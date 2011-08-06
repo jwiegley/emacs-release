@@ -1,3 +1,15 @@
+2000-02-26  Gerd Moellmann  <gerd@gnu.org>
+
+	* Version 20.6 released.
+	
+2000-02-18  Dave Love  <fx@gnu.org>
+
+	* configure.in: Define NON_GNU_CPP on alpha-dec-osf5+.
+
+2000-02-15  Gerd Moellmann  <gerd@gnu.org>
+
+	* configure.in: Add support for arm*-g*-linux-gnu* systems.
+
 1999-12-04  Gerd Moellmann  <gerd@gnu.org>
 
 	* Version 20.5 released.

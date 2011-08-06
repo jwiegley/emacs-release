@@ -3,7 +3,7 @@
 ;; Copyright (C) 1992, 93, 94, 95, 96, 97, 1998 Free Software Foundation, Inc.
 
 ;; Author:     Eric S. Raymond <esr@snark.thyrsus.com>
-;; Maintainer: Andre Spiegel <spiegel@inf.fu-berlin.de>
+;; Maintainer: Andre Spiegel <spiegel@gnu.org>
 
 ;; Id: vc.el,v 1.256 1999/10/02 10:53:18 *** with changes
 
@@ -1404,10 +1404,11 @@ and two version designators specifying which versions to compare."
 If FILE is a directory, generate diffs between versions for all registered
 files in or below it."
   (interactive 
-   (let ((file (read-file-name (if buffer-file-name
-				   "File or dir to diff: (default visited file) "
-				 "File or dir to diff: ")
-                                default-directory buffer-file-name t))
+   (let ((file (expand-file-name
+                (read-file-name (if buffer-file-name
+                                    "File or dir to diff: (default visited file) "
+                                  "File or dir to diff: ")
+                                default-directory buffer-file-name t)))
          (rel1-default nil) (rel2-default nil))
      ;; compute default versions based on the file state
      (cond
