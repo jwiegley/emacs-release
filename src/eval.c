@@ -2249,8 +2249,8 @@ DEFUN ("eval", Feval, Seval, 1, 1, 0,
 	error ("Lisp nesting exceeds `max-lisp-eval-depth'");
     }
 
-  original_fun = Fcar (form);
-  original_args = Fcdr (form);
+  original_fun = XCAR (form);
+  original_args = XCDR (form);
 
   backtrace.next = backtrace_list;
   backtrace_list = &backtrace;

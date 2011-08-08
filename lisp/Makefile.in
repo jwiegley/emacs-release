@@ -1329,6 +1329,7 @@ ELCFILES = \
 	$(lisp)/term.elc \
 	$(lisp)/term/common-win.elc \
 	$(lisp)/term/internal.elc \
+	$(lisp)/term/mac-win.elc \
 	$(lisp)/term/ns-win.elc \
 	$(lisp)/term/pc-win.elc \
 	$(lisp)/term/rxvt.elc \

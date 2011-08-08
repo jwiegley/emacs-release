@@ -238,6 +238,12 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #define GCGraphicsExposures 0
 #endif /* WINDOWSNT */
 
+#ifdef HAVE_MACGUI
+#include "macterm.h"
+#define x_display_info mac_display_info
+#define check_x check_mac
+#endif /* HAVE_MACGUI */
+
 #ifdef HAVE_NS
 #include "nsterm.h"
 #undef FRAME_X_DISPLAY_INFO
@@ -790,6 +796,35 @@ x_free_gc (f, gc)
 }
 #endif  /* HAVE_NS */
 
+#ifdef HAVE_MACGUI
+/* Mac OS emulation of GCs */
+
+static INLINE GC
+x_create_gc (f, mask, xgcv)
+     struct frame *f;
+     unsigned long mask;
+     XGCValues *xgcv;
+{
+  GC gc;
+  BLOCK_INPUT;
+  gc = XCreateGC (FRAME_MAC_DISPLAY (f), FRAME_MAC_WINDOW (f), mask, xgcv);
+  UNBLOCK_INPUT;
+  IF_DEBUG (++ngcs);
+  return gc;
+}
+
+static INLINE void
+x_free_gc (f, gc)
+     struct frame *f;
+     GC gc;
+{
+  eassert (interrupt_input_blocked);
+  IF_DEBUG (xassert (--ngcs >= 0));
+  XFreeGC (FRAME_MAC_DISPLAY (f), gc);
+}
+
+#endif  /* HAVE_MACGUI */
+
 /* Like strcasecmp/stricmp.  Used to compare parts of font names which
    are in ISO8859-1.  */
 
@@ -865,6 +900,9 @@ init_frame_faces (f)
 #endif
 #ifdef WINDOWSNT
   if (!FRAME_WINDOW_P (f) || FRAME_W32_WINDOW (f))
+#endif
+#ifdef HAVE_MACGUI
+  if (!FRAME_MAC_P (f) || FRAME_MAC_WINDOW (f))
 #endif
 #ifdef HAVE_NS
   if (!FRAME_NS_P (f) || FRAME_NS_WINDOW (f))
@@ -1261,6 +1299,10 @@ defined_color (f, color_name, color_def, alloc)
 #ifdef WINDOWSNT
   else if (FRAME_W32_P (f))
     return w32_defined_color (f, color_name, color_def, alloc);
+#endif
+#ifdef HAVE_MACGUI
+  else if (FRAME_MAC_P (f))
+    return mac_defined_color (f, color_name, color_def, alloc);
 #endif
 #ifdef HAVE_NS
   else if (FRAME_NS_P (f))
@@ -2319,7 +2361,13 @@ lface_fully_specified_p (attrs)
 
   for (i = 1; i < LFACE_VECTOR_SIZE; ++i)
     if (i != LFACE_FONT_INDEX && i != LFACE_INHERIT_INDEX)
-      if ((UNSPECIFIEDP (attrs[i]) || IGNORE_DEFFACE_P (attrs[i])))
+      if ((UNSPECIFIEDP (attrs[i]) || IGNORE_DEFFACE_P (attrs[i]))
+#ifdef HAVE_MACGUI
+        /* MAC_TODO: No stipple support on Mac OS yet, this index is
+           always unspecified.  */
+          && i != LFACE_STIPPLE_INDEX
+#endif
+          )
         break;
 
   return i == LFACE_VECTOR_SIZE;

@@ -151,6 +151,16 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 /* Define HAVE_SOCKETS if system supports 4.2-compatible sockets.  */
 #define HAVE_SOCKETS
 
+#ifdef HAVE_MACGUI
+/* In Mac GUI, asynchronous I/O (using SIGIO) can't be used for window
+   events because they don't come from sockets, even though it works
+   fine on tty's.  */
+#define NO_SOCK_SIGIO
+
+/* Extra initialization calls in main for Mac OS X system type.  */
+#define SYMS_SYSTEM syms_of_mac()
+#endif	/* HAVE_MACGUI */
+
 /* Definitions for how to dump.  Copied from nextstep.h.  */
 
 #define UNEXEC unexmacosx.o
@@ -163,12 +173,52 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 /* Definitions for how to compile & link.  */
 
 #ifdef HAVE_NS
-#define LIBS_NSGUI -framework AppKit
+#define LIBS_MACGUI -framework AppKit
 #define SYSTEM_PURESIZE_EXTRA 200000
 #define HEADERPAD_EXTRA 6C8
 #else /* !HAVE_NS */
-#define LIBS_NSGUI
 #define HEADERPAD_EXTRA 690
+
+#ifdef HAVE_MACGUI
+
+#define C_SWITCH_SYSTEM -fconstant-cfstrings
+
+/* We need a little extra space, see ../../lisp/loadup.el. */
+#define SYSTEM_PURESIZE_EXTRA 30000
+
+#ifdef HAVE_AVAILABILITYMACROS_H
+#include <AvailabilityMacros.h>
+#endif
+
+/* Whether to use the Image I/O framework for reading images.  */
+#ifndef USE_MAC_IMAGE_IO
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040 && (MAC_OS_X_VERSION_MIN_REQUIRED >= 1040 || MAC_OS_X_VERSION_MIN_REQUIRED < 1020)
+#define USE_MAC_IMAGE_IO 1
+#endif
+#endif
+
+/* If the Image I/O framework is not used, fall back on QuickTime.  */
+#if USE_MAC_IMAGE_IO
+#define LIBS_IMAGE -framework WebKit
+#else
+#define LIBS_IMAGE -framework QuickTime
+#endif
+
+#define LIBS_GUI -framework Cocoa
+
+#define LIBS_MACGUI -framework Carbon LIBS_IMAGE LIBS_GUI
+
+/* Reroute calls to SELECT to the version defined in mac.c to fix the
+   problem of Emacs requiring an extra return to be typed to start
+   working when started from the command line.  */
+#if defined (emacs) || defined (temacs)
+#define select sys_select
+#endif
+
+#else  /* !HAVE_MACGUI */
+#define LIBS_MACGUI
+#endif	/* !HAVE_MACGUI */
+
 #endif /* !HAVE_NS */
 
 /* On Darwin, res_init appears not to be useful: see bug#562 and
@@ -181,7 +231,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
    end of the header for adding load commands.  Needed for dumping.
    0x690 is the total size of 30 segment load commands (at 56
    each); under Cocoa 31 commands are required.  */
-#define LD_SWITCH_SYSTEM_TEMACS -prebind LIBS_NSGUI -Xlinker -headerpad -Xlinker HEADERPAD_EXTRA
+#define LD_SWITCH_SYSTEM_TEMACS -fno-pie -prebind LIBS_MACGUI -Xlinker -headerpad -Xlinker HEADERPAD_EXTRA
 
 #define C_SWITCH_SYSTEM_TEMACS -Dtemacs
 
@@ -192,13 +242,22 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 /* Don't use posix_memalign because it is not compatible with
    unexmacosx.c.  */
 #undef HAVE_POSIX_MEMALIGN
+/* Name of the segment whose VM protection is the default (read/write)
+   for temacs but read-only for the dumped executable.  */
+#define EMACS_READ_ONLY_SEGMENT "EMACS_READ_ONLY"
+/* Name of the section to place the pure space.  */
+//#define PURE_SECTION EMACS_READ_ONLY_SEGMENT ",pure"
 #endif
 
 /* The ncurses library has been moved out of the System framework in
    Mac OS X 10.2.  So if ./configure detects it, set the command-line
    option to use it.  */
 #ifdef HAVE_LIBNCURSES
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040 && MAC_OS_X_VERSION_MIN_REQUIRED >= 1020
+#define LIBS_TERMCAP -lncurses.5
+#else
 #define LIBS_TERMCAP -lncurses
+#endif
 /* This prevents crashes when running Emacs in Terminal.app under
    10.2.  */
 #define TERMINFO

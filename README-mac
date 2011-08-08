@@ -1,0 +1,257 @@
+1. What's this?
+
+This is "Mac port" addition to GNU Emacs 23.  This provides a native
+GUI support for Mac OS X 10.2 - 10.7.  Note that Emacs 23 already
+contains the official GUI support via the NS (Cocoa) port for Mac OS X
+10.4 and later.  So if it is good enough for you, then you don't need
+to try this.
+
+  *** IMPORTANT NOTE ***
+
+  This version should be regarded as experimental/hackers-only.
+  Documentations are completely missing, no extra files such as the
+  package creation convenience script `make-package', and things are
+  subject to change/removal in an incompatible way.  Please refrain
+  from distributing this in any different form, including for (binary)
+  distribution basis, until the version gets to 2.0.
+
+  Also, if you find a bug, then please try to reproduce it with some
+  official builds such as X11 or NS (Cocoa).  If it turns out to be
+  specific to the Mac port, then please report it to
+  "mituharu+bug-gnu-emacs-mac@math.s.chiba-u.ac.jp".  Otherwise (i.e.,
+  it is also reproducible with official ones), report it using M-x
+  report-emacs-bug *USING THE OFFICIAL BUILD* as such.
+
+The Mac port is a descendant of the following ports for Mac OS X.
+
+  * Carbon port for Emacs 22 (aka "Carbon Emacs", don't confuse it
+    with "Carbon Emacs Package"): this is a part of the official GNU
+    Emacs 22 distribution and provides native GUI support for Mac OS.
+    It has been used in almost all the Emacs distributions/packages
+    for Mac OS X with its native GUI.
+
+    The Carbon port was initiated by Andrew Choi, using his Mac OS 8/9
+    port as a basis.  He had been the maintainer of Mac OS port of GNU
+    Emacs and participated in the development until late 2003.
+
+    The Mac port inherits mostly the same features with the Carbon
+    port including the following, all of which were added after 2004:
+
+    - C-g handling
+      You can quit (while t) and (shell-command "sleep 100").
+      No bogus menu bar activation while these evaluations.
+
+    - Emulation of `select' without periodic polling
+      It doesn't use CPU time while the Lisp interpreter is idle and
+      waiting for some events to come, even with subprocesses or
+      network connections.
+
+    - Graceful termination
+      If you try logout/shutdown/reboot while leaving a file-visiting
+      buffer modified and unsaved, a popup window appears for
+      confirmation.  If you cancel the termination of Emacs (including
+      C-g or ESC), the whole logout/shutdown/reboot process is also
+      canceled immediately (i.e., you will see a "canceled" dialog
+      immediately rather than a "timed out" one afterward).  If you
+      don't have unsaved buffers, shell buffers, etc., you won't see
+      unnecessary confirmation.
+
+    - Apple event handling
+      One can define Apple event handlers at the Lisp level.
+      Actually, graceful termination above is an instance of
+      Lisp-level Apple event handling.  Another example is "Get URL"
+      handler that enables us to invoke the mailer you customized with
+      `mail-user-agent', e.g.,
+
+	$ osascript -e 'tell application "Emacs"
+			to open location "mailto:foo@example.com"'
+
+      If you set Emacs as the default mailer via Mail.app preference,
+      the Emacs mailer will set up a draft buffer when you click a
+      mailto: link in a Web browser.
+
+    - DictionaryService support (10.4 and later)
+      You can look up a word under the mouse pointer in the selected
+      window by typing Command-Control-D (or double-tapping a trackpad
+      with three fingers on Mac OS X 10.7).
+
+  * Carbon+AppKit port for Emacs 22.3: this is a port of the Carbon
+    port above.  The two ports differ in the GUI implementation basis:
+    the Carbon port uses Carbon HIToolbox, but the Carbon+AppKit port
+    uses the Cocoa Application Kit framework (AppKit).  The
+    Carbon+AppKit port inherits the code of the non-GUI part of the
+    Carbon port, such as drawing, font and image handling.  So in this
+    sense, the Carbon+AppKit port can be regarded as a variant of the
+    Carbon port.  Obviously, this is not a backport of the
+    Cocoa/GNUstep port (aka "Emacs.app" or the NS port).
+
+    The Mac port also inherits the features of the Carbon+AppKit port
+    including the following:
+
+    - Resolution independence (10.4 - 10.6, 10.5 recommended)
+      Scaling works in Framework-Scaled Mode as opposed to (blurry)
+      Magnified Mode for the Carbon port.
+      Note: this type of resolution independence is deprecated on Mac
+      OS X 10.7.
+
+    - 64-bit (10.5 and later)
+      You can build and run a 64-bit binary with GUI support by
+      specifying CC='gcc -arch x86_64' or CC='gcc -arch ppc64' on
+      configure.
+
+    - Some minor visual enhancements
+      * Aligned key bindings in menus
+      * Progress indicator (corresponding to hourglass) in the title bar
+      * Unusable items in the font panel are hidden
+	Try Options -> Show/Hide -> Font Panel from the menu bar or
+	M-x mac-font-panel-mode RET.
+      * Update display while the resize control (or the slider in the
+	font panel) is being dragged
+
+Being a port of Emacs 23.3, the Mac port also supports the following
+features besides those inherited from the above ancestors:
+
+  * The `fullscreen' frame parameter, with all values supported:
+    `fullboth', `fullwidth', `fullheight', and `maximized'.  The
+    fullboth frames, which don't have the title bar, still allow us to
+    access the menu bar, the Dock (Mac OS X 10.3 and later), and the
+    tool bars.  The menu bar can also be activated via
+    `menu-bar-open', `Control-F2' (if full keyboard access enabled),
+    or `Command-Shift-/' (on Mac OS X 10.5 and later) even for
+    fullboth frames where the menu bar is usually hidden.  Changing
+    fonts or internal-border-width in fullscreen frames does not
+    clutter display.  On multiple monitor environments, one can move
+    fullscreen frames to another monitor by setting the `left' and
+    `top' frame parameters accordingly.  Attaching/detaching external
+    monitors should work even with fullscreen frames.
+  * The `sticky' frame parameter, which allows us to keep particular
+    frames visible for all Spaces on Mac OS X 10.5 and later.
+  * The function `system-move-file-to-trash', which can be specified
+    as a value of `delete-by-moving-to-trash'.
+  * SVG image display.  This can be done via the WebKit framework on
+    Mac OS X 10.4 and later, so you don't need librsvg.
+  * Multi-page TIFF images.
+  * The function `x-select-font' that provides modal font selection
+    dialog in a compatible way with GTK+ and W32 ones.  Note that a
+    nonmodal counterpart has been available since Emacs 22 Carbon port
+    via `mac-font-panel-mode'.
+  * Unicode character display including non-BMP ones.
+  * Complex text layout (left-to-right only) and text shaping.  They
+    are implemented using the Core Text or NS Text layout engine, so
+    you don't need libotf.
+  * Glyph selection with variation selectors.  Most of Adobe-Japan1
+    ideographic glyphs are accessible via IVSes (Ideographic Variation
+    Sequences) even for the OS-bundled Hiragino fonts, which do not
+    contain the UVS subtable in their cmap table as of Mac OS X 10.6.
+
+In addition to the standard Emacs 23.3 features, the Mac port includes
+the following Mac-specific ones:
+
+  * Pixel-based mouse wheel smooth scroll for newer mice/trackpads.
+  * Gesture event handling for newer trackpads.  By default, pinch
+    out/in are bound to text size scaling.  With the shift key, they
+    turn on/off fullscreen status of the frame.
+  * Apple event sending with (a)synchronous reply handling.  ODB
+    Editor Suite support is added as an example.  (Only tested with
+    QuickCursor.  Add "<string>org.gnu.Emacs</string>" to the elements
+    of QCEditInChoices in QuickCursor.app/Contents/Info.plist.  On
+    QuickCursor 2.0, you need to kill the buffer after saving it in
+    order to reflect the changes to the original text area.)
+  * "Click in the scroll bar to: Jump to the spot that's clicked"
+    setting in the System Preferences is supported.
+  * Change of text smoothing threshold setting in the Appearance pane
+    of the System Preferences is reflected immediately.
+  * Several keyboard shortcuts (notably those for Keyboard Navigation)
+    listed in System Preferences just work like other applications.
+  * When the clipboard has both textual and image data, yank inserts
+    the former and push both into the kill ring so the latter can be
+    inserted with yank-pop afterwards.
+  * Use non-integral x positions for displaying antialiased
+    proportional fonts.  You can see the difference by putting the box
+    cursor over Helvetica 12pt `I', whose ideal width is 3.33398 but
+    displayed with the rounded width 3, for example.
+  * Emacs info nodes are accessible via search field in the Help menu
+    on Mac OS X 10.6 and later.
+  * Menu item "Open Selected File in Emacs" is shown in Services or
+    context menu of other applications by default on Mac OS X 10.6
+    and later when absolute pathname-like text is selected.
+  * Reverse conversion in Kotoeri works even without selection.
+    Hitting Eisu/Kana key on JIS keyboard (or Control-Shift-;/J/K on
+    US keyboard) twice also works.
+  * New function `mac-file-alias-p', which is parallel to
+    `file-symlink-p'.
+  * Experimental support for accessibility with respect to the custom
+    view for Emacs frames.  Still there are several glitches.
+
+As Quickdraw-style font rendering is considered obsolete as of Mac OS
+X 10.5, the variable `mac-allow-anti-aliasing', which was supported in
+the preceding ports (under a somewhat inappropriate name), is no
+longer supported in the Mac port.  If you want to control
+anti-aliasing, then you can set it with either from the Appearance
+pane of the System Preferences, or the `AppleAntiAliasingThreshold'
+property that can be set with the `defaults' command.  Alternatively,
+you can specify nil or t for the `:antialias' property of a font-spec
+to control anti-aliasing per font.
+
+The Mac port doesn't support multi-tty with GUI.  I have no idea how I
+can detach Emacs as a GUI application from Window Server or Dock
+without separating a GUI process (not thread) from the main Emacs
+(Lisp evaluator) process.
+
+
+2. Build instructions
+
+  NOTE: Some older versions of Xcode for Mac OS X 10.4 are known to be
+  incompatible with newer versions of WebKit.  At least, Xcode 2.4.1
+  works, but Xcode 2.1 has some problems.
+
+  a. Get the official GNU Emacs 23.X distribution tarball from some
+     GNU mirror site if this file is part of
+     emacs-23.X-mac-V.W.tar.gz.  Or get the GNU Emacs 23.X.9Y pretest
+     tarball from ftp://alpha.gnu.org/gnu/emacs/pretest/ if this is
+     part of emacs-23.X.9Y-mac-V.W.tar.gz.
+     Untar the tarball.  Let EMACS_SOURCE_TOP be the top directory of
+     the source tree.
+
+  b. Apply the patch `patch-mac' to the source tree.
+
+  c. Copy the subdirectory `mac' to `EMACS_SOURCE_TOP'.
+
+  d. [Optional, Mac OS X 10.3 and later]
+     If you want to use the icon bundled with Emacs 23, which is not
+     compatible with Mac OS X 10.2, then copy
+     `EMACS_SOURCE_TOP/nextstep/Cocoa/Emacs.base/Contents/Resources/Emacs.icns'
+     to `EMACS_SOURCE_TOP/mac/Emacs.app/Contents/Resources/Emacs.icns'
+     by overriding the latter.
+
+  e. Copy all the files in the `src' subdirectory to
+     `EMACS_SOURCE_TOP/src'.
+
+  f. Copy `lisp/term/mac-win.el' to
+     `EMACS_SOURCE_TOP/lisp/term/mac-win.el'.
+
+  g. Run configure with the "--with-mac" option.  You may also want to
+     additionally specify "--enable-mac-app" to install the
+     application bundle `Emacs.app' to /Applications.  If you want it
+     to install in a different location, specify
+     --enable-mac-app=MACAPPDIR.  Data files including Lisp files and
+     helper executables are installed into /usr/local by default.  If
+     you want to change the destination, give --prefix=PREFIXDIR.  See
+     also `EMACS_SOURCE_TOP/INSTALL'.
+
+     On Mac OS X 10.3 with a recent QuickTime update, you may also
+     have to specify
+     LDFLAGS="-Wl,-F/Developer/SDKs/MacOSX10.3.0.sdk/System/Library/Frameworks"
+     so as to avoid link-time error.  This issue was also mentioned in
+     etc/PROBLEMS in Emacs 22.
+
+  h. make && make install.
+
+  i. open /Applications/Emacs.app (or MACAPPDIR/Emacs.app) if
+     `--enable-mac-app' was specified.  Otherwise, open
+     EMACS_SOURCE_TOP/mac/Emacs.app.
+
+Enjoy,
+
+				     YAMAMOTO Mitsuharu
+				mituharu@math.s.chiba-u.ac.jp

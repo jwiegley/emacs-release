@@ -6425,6 +6425,7 @@ call `normal-erase-is-backspace-mode' (which see) instead."
        (if (if (eq normal-erase-is-backspace 'maybe)
                (and (not noninteractive)
                     (or (memq system-type '(ms-dos windows-nt))
+                        (eq window-system 'mac)
                         (and (memq window-system '(x))
                              (fboundp 'x-backspace-delete-keys-p)
                              (x-backspace-delete-keys-p))
@@ -6474,7 +6475,7 @@ See also `normal-erase-is-backspace'."
     (set-terminal-parameter nil 'normal-erase-is-backspace
 			    (if enabled 1 0))
 
-    (cond ((or (memq window-system '(x w32 ns pc))
+    (cond ((or (memq window-system '(x w32 mac ns pc))
 	       (memq system-type '(ms-dos windows-nt)))
 	   (let* ((bindings
 		   `(([M-delete] [M-backspace])

@@ -1999,7 +1999,6 @@ create_process (process, new_argv, current_dir)
 
   XPROCESS (process)->pty_flag = pty_flag;
   XPROCESS (process)->status = Qrun;
-  setup_process_coding_systems (process);
 
   /* Delay interrupts until we have a chance to store
      the new fork's pid in its process structure */
@@ -2045,6 +2044,10 @@ create_process (process, new_argv, current_dir)
      it might cause call-process to hang and subsequent asynchronous
      processes to get their return values scrambled.  */
   XPROCESS (process)->pid = -1;
+
+  /* This must be called after the above line because it may signal an
+     error. */
+  setup_process_coding_systems (process);
 
   BLOCK_INPUT;
 
@@ -3460,7 +3463,10 @@ usage: (make-network-process &rest ARGS)  */)
       /* SERVICE can either be a string or int.
 	 Convert to a C string for later use by getaddrinfo.  */
       if (EQ (service, Qt))
-	portstring = "0";
+	/* We pass NULL for unspecified port, because some versions of
+	   Darwin return EAI_NONAME for getaddrinfo ("localhost", "0",
+	   ...).  */
+	portstring = NULL;
       else if (INTEGERP (service))
 	{
 	  sprintf (portbuf, "%ld", (long) XINT (service));
@@ -3486,11 +3492,19 @@ usage: (make-network-process &rest ARGS)  */)
 
       ret = getaddrinfo (SDATA (host), portstring, &hints, &res);
       if (ret)
+	{
 #ifdef HAVE_GAI_STRERROR
-	error ("%s/%s %s", SDATA (host), portstring, gai_strerror(ret));
+	  if (portstring)
+	    error ("%s/%s %s", SDATA (host), portstring, gai_strerror(ret));
+	  else
+	    error ("%s %s", SDATA (host), gai_strerror(ret));
 #else
-	error ("%s/%s getaddrinfo error %d", SDATA (host), portstring, ret);
+	  if (portstring)
+	    error ("%s/%s getaddrinfo error %d", SDATA (host), portstring, ret);
+	  else
+	    error ("%s getaddrinfo error %d", SDATA (host), ret);
 #endif
+	}
       immediate_quit = 0;
 
       goto open_socket;
@@ -7402,44 +7416,6 @@ init_process ()
   bzero (datagram_address, sizeof datagram_address);
 #endif
 
-#ifdef HAVE_SOCKETS
- {
-   Lisp_Object subfeatures = Qnil;
-   const struct socket_options *sopt;
-
-#define ADD_SUBFEATURE(key, val) \
-  subfeatures = pure_cons (pure_cons (key, pure_cons (val, Qnil)), subfeatures)
-
-#ifdef NON_BLOCKING_CONNECT
-   ADD_SUBFEATURE (QCnowait, Qt);
-#endif
-#ifdef DATAGRAM_SOCKETS
-   ADD_SUBFEATURE (QCtype, Qdatagram);
-#endif
-#ifdef HAVE_SEQPACKET
-   ADD_SUBFEATURE (QCtype, Qseqpacket);
-#endif
-#ifdef HAVE_LOCAL_SOCKETS
-   ADD_SUBFEATURE (QCfamily, Qlocal);
-#endif
-   ADD_SUBFEATURE (QCfamily, Qipv4);
-#ifdef AF_INET6
-   ADD_SUBFEATURE (QCfamily, Qipv6);
-#endif
-#ifdef HAVE_GETSOCKNAME
-   ADD_SUBFEATURE (QCservice, Qt);
-#endif
-#if defined(O_NONBLOCK) || defined(O_NDELAY)
-   ADD_SUBFEATURE (QCserver, Qt);
-#endif
-
-   for (sopt = socket_options; sopt->name; sopt++)
-     subfeatures = pure_cons (intern_c_string (sopt->name), subfeatures);
-
-   Fprovide (intern_c_string ("make-network-process"), subfeatures);
- }
-#endif /* HAVE_SOCKETS */
-
 #if defined (DARWIN_OS)
   /* PTYs are broken on Darwin < 6, but are sometimes useful for interactive
      processes.  As such, we only change the default value.  */
@@ -7728,6 +7704,44 @@ The variable takes effect when `start-process' is called.  */);
   defsubr (&Sprocess_filter_multibyte_p);
   defsubr (&Slist_system_processes);
   defsubr (&Sprocess_attributes);
+
+#ifdef HAVE_SOCKETS
+ {
+   Lisp_Object subfeatures = Qnil;
+   const struct socket_options *sopt;
+
+#define ADD_SUBFEATURE(key, val) \
+  subfeatures = pure_cons (pure_cons (key, pure_cons (val, Qnil)), subfeatures)
+
+#ifdef NON_BLOCKING_CONNECT
+   ADD_SUBFEATURE (QCnowait, Qt);
+#endif
+#ifdef DATAGRAM_SOCKETS
+   ADD_SUBFEATURE (QCtype, Qdatagram);
+#endif
+#ifdef HAVE_SEQPACKET
+   ADD_SUBFEATURE (QCtype, Qseqpacket);
+#endif
+#ifdef HAVE_LOCAL_SOCKETS
+   ADD_SUBFEATURE (QCfamily, Qlocal);
+#endif
+   ADD_SUBFEATURE (QCfamily, Qipv4);
+#ifdef AF_INET6
+   ADD_SUBFEATURE (QCfamily, Qipv6);
+#endif
+#ifdef HAVE_GETSOCKNAME
+   ADD_SUBFEATURE (QCservice, Qt);
+#endif
+#if defined(O_NONBLOCK) || defined(O_NDELAY)
+   ADD_SUBFEATURE (QCserver, Qt);
+#endif
+
+   for (sopt = socket_options; sopt->name; sopt++)
+     subfeatures = pure_cons (intern_c_string (sopt->name), subfeatures);
+
+   Fprovide (intern_c_string ("make-network-process"), subfeatures);
+ }
+#endif /* HAVE_SOCKETS */
 }
 
 

@@ -4202,11 +4202,15 @@ init_lread ()
     }
 #endif
 
-#if (!(defined (WINDOWSNT) || (defined (HAVE_NS))))
+#if (!(defined (WINDOWSNT) || (defined (HAVE_MACGUI)) || (defined (HAVE_NS))))
   /* When Emacs is invoked over network shares on NT, PATH_LOADSEARCH is
      almost never correct, thereby causing a warning to be printed out that
      confuses users.  Since PATH_LOADSEARCH is always overridden by the
-     EMACSLOADPATH environment variable below, disable the warning on NT.  */
+     EMACSLOADPATH environment variable below, disable the warning on NT.
+     Also, when using the "self-contained" option for the Mac port,
+     the "standard" paths may not exist and would be overridden by
+     EMACSLOADPATH as on NT.  Since this depends on how the executable
+     was build and packaged, turn off the warnings in general */
 
   /* Warn if dirs in the *standard* path don't exist.  */
   if (!turn_off_warning)
@@ -4228,7 +4232,7 @@ init_lread ()
 	    }
 	}
     }
-#endif /* !(WINDOWSNT || HAVE_NS) */
+#endif /* !(WINDOWSNT || HAVE_MACGUI || HAVE_NS) */
 
   /* If the EMACSLOADPATH environment variable is set, use its value.
      This doesn't apply if we're dumping.  */

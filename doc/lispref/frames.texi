@@ -58,6 +58,8 @@ The frame is displayed in an X window.
 A terminal frame on a character display.
 @item w32
 The frame is displayed on MS-Windows 9X/NT.
+@item mac
+The frame is displayed on Mac OS X.
 @item ns
 The frame is displayed on a GNUstep or Macintosh Cocoa display.
 @item pc
@@ -185,7 +187,7 @@ The terminal and keyboard coding systems used on the terminal.
 @item
 The kind of display associated with the terminal.  This is the symbol
 returned by the function @code{terminal-live-p} (i.e., @code{x},
-@code{t}, @code{w32}, @code{ns}, or @code{pc}).  @xref{Frames}.
+@code{t}, @code{w32}, @code{mac}, @code{ns}, or @code{pc}).  @xref{Frames}.
 
 @item
 A list of terminal parameters.  @xref{Terminal Parameters}.
@@ -1958,12 +1960,35 @@ and @code{x-set-selection} on MS-Windows support the text data type
 only; if the clipboard holds other types of data, Emacs treats the
 clipboard as empty.
 
+@cindex pasteboard support (for Mac OS X)
+On Mac OS X, selection-like data transfer between applications is
+performed through a mechanism called @dfn{pasteboards}.  The clipboard
+is a particular pasteboard named @code{Apple CFPasteboard general}.
+Types of pasteboard data are called @dfn{pasteboard data types}, which
+are identified by strings such as @code{NSStringPboardType}.  The Mac
+port of Emacs associates a selection with a pasteboard, and a
+selection type with a pasteboard data type via
+@code{mac-pasteboard-name} and @code{mac-pasteboard-data-type}
+properties, respectively.
+  
+@example
+(get 'CLIPBOARD 'mac-pasteboard-name)
+     @result{} "Apple CFPasteboard general"
+(get 'NSStringPboardType 'mac-pasteboard-data-type)
+     @result{} "NSStringPboardType"
+@end example
+  
+Conventionally, selection types for pasteboard data types on Mac OS X
+are named according to the identifiers defined in the NSPasteboard
+class, (e.g., @code{NSStringPboardType}, @code{NSTIFFPboardType}, and
+@code{NSFilenamesPboardType}).
+  
 @defopt x-select-enable-clipboard
 If this is non-@code{nil}, the Emacs yank functions consult the
 clipboard before the primary selection, and the kill functions store in
 the clipboard as well as the primary selection.  Otherwise they do not
 access the clipboard at all.  The default is @code{nil} on most systems,
-but @code{t} on MS-Windows.
+but @code{t} on MS-Windows and the Mac port.
 @end defopt
 
 @node Drag and Drop

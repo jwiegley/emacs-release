@@ -57,7 +57,7 @@
                         'mouse-wheel-down-event
 			"22.1")
 (defcustom mouse-wheel-down-event
-  (if (or (featurep 'w32-win) (featurep 'ns-win))
+  (if (or (featurep 'w32-win) (featurep 'mac-win) (featurep 'ns-win))
       'wheel-up
     (intern (format "mouse-%s" mouse-wheel-down-button)))
   "Event used for scrolling down."
@@ -70,7 +70,7 @@
                         'mouse-wheel-up-event
 			"22.1")
 (defcustom mouse-wheel-up-event
-  (if (or (featurep 'w32-win) (featurep 'ns-win))
+  (if (or (featurep 'w32-win) (featurep 'mac-win) (featurep 'ns-win))
       'wheel-down
     (intern (format "mouse-%s" mouse-wheel-up-button)))
   "Event used for scrolling up."

@@ -48,6 +48,11 @@
   :type 'string
   :version "23.2")                ; emacs-pretest-bug -> bug-gnu-emacs
 
+(defcustom report-emacs-bug-mac-address "mituharu+bug-gnu-emacs-mac@math.s.chiba-u.ac.jp"
+  "Address for reporting GNU Emacs Mac port specific bugs."
+  :group 'emacsbug
+  :type 'string)
+
 (defcustom report-emacs-bug-no-confirmation nil
   "If non-nil, suppress the confirmations asked for the sake of novice users."
   :group 'emacsbug
@@ -95,10 +100,13 @@ Prompts for bug subject.  Leaves you in a mail buffer."
 				      "\\..*\\."
 				    "\\..*\\..*\\.")
 				  emacs-version))
+	 (mac-port-p (featurep 'mac))
 	 (from-buffer (current-buffer))
-	 (reporting-address (if pretest-p
-				report-emacs-bug-pretest-address
-			      report-emacs-bug-address))
+	 (reporting-address (if mac-port-p
+				report-emacs-bug-mac-address
+			      (if pretest-p
+				  report-emacs-bug-pretest-address
+				report-emacs-bug-address)))
 	 ;; Put these properties on semantically-void text.
 	 ;; report-emacs-bug-hook deletes these regions before sending.
 	 (prompt-properties '(field emacsbug-prompt
@@ -134,11 +142,21 @@ Prompts for bug subject.  Leaves you in a mail buffer."
         (overlay-put (make-overlay pos (point)) 'face 'highlight))
       (insert " if possible, because the Emacs maintainers
 usually do not have translators to read other languages for them.\n\n")
-      (insert (format "Your report will be posted to the %s mailing list"
-		      reporting-address))
-      ;; Nowadays all bug reports end up there.
+      (if mac-port-p
+	  (progn
+	    (insert (format "Your bug report will be sent to %s\n"
+			    reporting-address))
+	    (insert "Please make sure that the bug is ")
+	    (let ((pos (point)))
+	      (insert "specific to the Mac port")
+	    (put-text-property pos (point) 'face 'highlight))
+	    (insert ".\nOther bugs should be sent to the place you are guided with\n"
+		    "M-x report-emacs-bug on some official ports such as X11 or NS.\n\n"))
+	(insert (format "Your report will be posted to the %s mailing list"
+			reporting-address))
+	;; Nowadays all bug reports end up there.
 ;;;      (if pretest-p (insert ".\n\n")
-	(insert "\nand the gnu.emacs.bug news group, and at http://debbugs.gnu.org.\n\n"))
+	(insert "\nand the gnu.emacs.bug news group, and at http://debbugs.gnu.org.\n\n")))
 
     (insert "Please describe exactly what actions triggered the bug\n"
 	    "and the precise symptoms of the bug.  If you can, give\n"

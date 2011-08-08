@@ -65,6 +65,8 @@ to the system configuration; look at `system-configuration' instead."
 		       ((featurep 'gtk)
 			(concat ", GTK+ Version " gtk-version-string))
 		       ((featurep 'x-toolkit) ", X toolkit")
+		       ((boundp 'mac-carbon-version-string)
+			(concat ", Carbon Version " mac-carbon-version-string))
 		       ((featurep 'ns)
 			(format ", NS %s" ns-version-string))
 		       (t ""))

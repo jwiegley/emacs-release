@@ -590,6 +590,16 @@ print_load_command_name (int lc)
       printf ("LC_DYLD_INFO_ONLY");
       break;
 #endif
+#ifdef LC_VERSION_MIN_MACOSX
+    case LC_VERSION_MIN_MACOSX:
+      printf ("LC_VERSION_MIN_MACOSX");
+      break;
+#endif
+#ifdef LC_FUNCTION_STARTS
+    case LC_FUNCTION_STARTS:
+      printf ("LC_FUNCTION_STARTS");
+      break;
+#endif
     default:
       printf ("unknown          ");
     }
@@ -822,6 +832,7 @@ copy_data_segment (struct load_command *lc)
 	}
       else if (strncmp (sectp->sectname, "__la_symbol_ptr", 16) == 0
 	       || strncmp (sectp->sectname, "__nl_symbol_ptr", 16) == 0
+	       || strncmp (sectp->sectname, "__got", 16) == 0
 	       || strncmp (sectp->sectname, "__la_sym_ptr2", 16) == 0
 	       || strncmp (sectp->sectname, "__dyld", 16) == 0
 	       || strncmp (sectp->sectname, "__const", 16) == 0
@@ -885,6 +896,46 @@ copy_data_segment (struct load_command *lc)
       curr_header_offset += sc.cmdsize;
       mh.ncmds++;
     }
+}
+
+/* Copy a LC_SEGMENT load command for the EMACS_READ_ONLY segment from
+   the input file to the output file, adjusting the file offset of the
+   segment and the file offsets of sections contained in it.  The VM
+   protection is changed to read-only, and the sections are dumped
+   from memory.  */
+static void
+copy_emacs_read_only_segment (struct load_command *lc)
+{
+  struct segment_command *scp = (struct segment_command *) lc;
+  unsigned long old_fileoff = scp->fileoff;
+  struct section *sectp;
+  int j;
+
+  scp->fileoff = curr_file_offset;
+  scp->maxprot = scp->initprot = VM_PROT_READ;
+
+  printf ("Writing segment %-16.16s @ %#8lx (%#8lx/%#8lx @ %#10lx)\n",
+	  scp->segname, (long) (scp->fileoff), (long) (scp->filesize),
+	  (long) (scp->vmsize), (long) (scp->vmaddr));
+
+  sectp = (struct section *) (scp + 1);
+  for (j = 0; j < scp->nsects; j++)
+    {
+      sectp->offset += curr_file_offset - old_fileoff;
+      if (!unexec_write (sectp->offset, (void *) sectp->addr, sectp->size))
+	unexec_error ("cannot write section %.16s", sectp->sectname);
+      printf ("        section %-16.16s at %#8lx - %#8lx (sz: %#8lx)\n",
+	      sectp->sectname, (long) (sectp->offset),
+	      (long) (sectp->offset + sectp->size), (long) (sectp->size));
+      sectp++;
+    }
+
+  curr_file_offset += ROUNDUP_TO_PAGE_BOUNDARY (scp->filesize);
+
+  if (!unexec_write (curr_header_offset, lc, lc->cmdsize))
+    unexec_error ("cannot write load command to header");
+
+  curr_header_offset += lc->cmdsize;
 }
 
 /* Copy a LC_SYMTAB load command from the input file to the output
@@ -1125,6 +1176,28 @@ copy_dyld_info (struct load_command *lc, long delta)
 }
 #endif
 
+#ifdef LC_FUNCTION_STARTS
+/* Copy a LC_FUNCTION_STARTS load command from the input file to the
+   output file, adjusting the data offset field.  */
+static void
+copy_linkedit_data (struct load_command *lc, long delta)
+{
+  struct linkedit_data_command *ldp = (struct linkedit_data_command *) lc;
+
+  if (ldp->dataoff > 0)
+    ldp->dataoff += delta;
+
+  printf ("Writing ");
+  print_load_command_name (lc->cmd);
+  printf (" command\n");
+
+  if (!unexec_write (curr_header_offset, lc, lc->cmdsize))
+    unexec_error ("cannot write linkedit data command to header");
+
+  curr_header_offset += lc->cmdsize;
+}
+#endif
+
 /* Copy other kinds of load commands from the input file to the output
    file, ones that do not require adjustments of file offsets.  */
 static void
@@ -1168,6 +1241,10 @@ dump_it ()
 
 	      copy_data_segment (lca[i]);
 	    }
+	  else if (strncmp (scp->segname, EMACS_READ_ONLY_SEGMENT, 16) == 0)
+	    {
+	      copy_emacs_read_only_segment (lca[i]);
+	    }
 	  else
 	    {
 	      if (strncmp (scp->segname, SEG_LINKEDIT, 16) == 0)
@@ -1195,6 +1272,11 @@ dump_it ()
       case LC_DYLD_INFO:
       case LC_DYLD_INFO_ONLY:
 	copy_dyld_info (lca[i], linkedit_delta);
+	break;
+#endif
+#ifdef LC_FUNCTION_STARTS
+      case LC_FUNCTION_STARTS:
+	copy_linkedit_data (lca[i], linkedit_delta);
 	break;
 #endif
       default:

@@ -36,7 +36,7 @@
 (defvar dos-codepage)
 (autoload 'widget-value "wid-edit")
 
-(defvar mac-system-coding-system)
+(defvar mac-system-locale)
 
 ;;; MULE related key bindings and menus.
 
@@ -95,7 +95,7 @@
         :help ,(purecopy "How to decode keyboard input")))
     (define-key-after map [set-terminal-coding-system]
       `(menu-item ,(purecopy "For Terminal") set-terminal-coding-system
-        :enable (null (memq initial-window-system '(x w32 ns)))
+        :enable (null (memq initial-window-system '(x w32 mac ns)))
         :help ,(purecopy "How to encode terminal output")))
     (define-key-after map [separator-3] menu-bar-separator)
 
@@ -2548,6 +2548,18 @@ See also `locale-charset-language-names', `locale-language-names',
 	(while (and vars
 		    (= 0 (length locale))) ; nil or empty string
 	  (setq locale (getenv (pop vars) frame)))))
+
+    (unless locale
+      ;; The two tests are kept separate so the byte-compiler sees
+      ;; that mac-get-preference is only called after checking its existence.
+      (when (fboundp 'mac-get-preference)
+        (setq locale (mac-get-preference "AppleLocale"))
+        (unless locale
+          (let ((languages (mac-get-preference "AppleLanguages")))
+            (unless (= (length languages) 0) ; nil or empty vector
+              (setq locale (aref languages 0)))))))
+    (unless (or locale (not (boundp 'mac-system-locale)))
+      (setq locale mac-system-locale))
 
     (when locale
       (setq locale (locale-translate locale))

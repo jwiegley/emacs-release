@@ -361,7 +361,7 @@ int fatal_error_in_progress;
 void (*fatal_error_signal_hook) P_ ((void));
 
 #ifdef FORWARD_SIGNAL_TO_MAIN_THREAD
-/* When compiled with GTK and running under Gnome,
+/* When compiled with GTK and running under Gnome, or Mac GUI,
    multiple threads may be created.  Keep track of our main
    thread to make sure signals are delivered to it (see syssignal.h).  */
 
@@ -800,7 +800,7 @@ main (int argc, char **argv)
   int no_loadup = 0;
   char *junk = 0;
   char *dname_arg = 0;
-#ifdef NS_IMPL_COCOA
+#if defined (NS_IMPL_COCOA) || defined (HAVE_MACGUI)
   char dname_arg2[80];
 #endif
 
@@ -914,6 +914,16 @@ main (int argc, char **argv)
       skip_args = 0;
     }
 #endif
+
+#ifdef HAVE_MACGUI
+  /* Skip process serial number passed in the form -psn_x_y as
+     command-line argument.  The WindowServer adds this option when
+     Emacs is invoked from the Finder or by the `open' command.  In
+     these cases, the working directory becomes `/', so we change it
+     to the user's home directory.  */
+  if (argc > skip_args + 1 && strncmp (argv[skip_args+1], "-psn_", 5) == 0)
+    chdir (getenv ("HOME"));
+#endif /* HAVE_MACGUI */
 
 #if defined (HAVE_SETRLIMIT) && defined (RLIMIT_STACK)
   /* Extend the stack space available.
@@ -1119,9 +1129,9 @@ main (int argc, char **argv)
 	  exit (1);
 	}
 
-#ifndef NS_IMPL_COCOA
+#if !defined (NS_IMPL_COCOA) && !defined (HAVE_MACGUI)
       f = fork ();
-#else /* NS_IMPL_COCOA */
+#else /* NS_IMPL_COCOA || HAVE_MACGUI */
       /* Under Cocoa we must do fork+exec as CoreFoundation lib fails in
          forked process: http://developer.apple.com/ReleaseNotes/
                                   CoreFoundation/CoreFoundation.html)
@@ -1132,7 +1142,7 @@ main (int argc, char **argv)
 	  f = fork ();  /* in orig */
       else
 	  f = 0;  /* in exec'd */
-#endif /* NS_IMPL_COCOA */
+#endif /* NS_IMPL_COCOA || HAVE_MACGUI */
       if (f > 0)
 	{
 	  int retval;
@@ -1168,7 +1178,7 @@ main (int argc, char **argv)
 	  exit (1);
 	}
 
-#ifdef NS_IMPL_COCOA
+#if defined (NS_IMPL_COCOA) || defined (HAVE_MACGUI)
       {
         /* In orig process, forked as child, OR in exec'd. */
         if (!dname_arg || !strchr (dname_arg, '\n'))
@@ -1185,7 +1195,7 @@ main (int argc, char **argv)
                      daemon_pipe[1], dname_arg ? dname_arg : "");
             argv[skip_args] = fdStr;
 
-            execv (argv[0], argv);
+            execvp (argv[0], argv);
             fprintf (stderr, "emacs daemon: exec failed: %d\n", errno);
             exit (1);
           }
@@ -1202,7 +1212,7 @@ main (int argc, char **argv)
                 dname_arg2);
         dname_arg = strlen (dname_arg2) ? dname_arg2 : NULL;
       }
-#endif /* NS_IMPL_COCOA */
+#endif /* NS_IMPL_COCOA || HAVE_MACGUI */
 
       if (dname_arg)
        	daemon_name = xstrdup (dname_arg);
@@ -1570,6 +1580,11 @@ main (int argc, char **argv)
   init_ntproc ();	/* must precede init_editfns.  */
 #endif
 
+#ifdef HAVE_MACGUI
+  if (initialized)
+    init_mac_osx_environment ();
+#endif
+
 #ifdef HAVE_NS
 #ifndef CANNOT_DUMP
   if (initialized)
@@ -1692,6 +1707,14 @@ main (int argc, char **argv)
       syms_of_w32menu ();
       syms_of_fontset ();
 #endif /* HAVE_NTGUI */
+
+#ifdef HAVE_MACGUI
+      syms_of_macterm ();
+      syms_of_macfns ();
+      syms_of_macmenu ();
+      syms_of_macselect ();
+      syms_of_fontset ();
+#endif /* HAVE_MACGUI */
 
 #ifdef MSDOS
       syms_of_xmenu ();

@@ -605,6 +605,7 @@ ns_appsrc
 ns_appresdir
 ns_appbindir
 ns_appdir
+mac_appdir
 opsysfile
 machfile
 X_TOOLKIT_TYPE
@@ -748,6 +749,7 @@ with_m17n_flt
 with_toolkit_scroll_bars
 with_xaw3d
 with_xim
+with_mac
 with_ns
 with_gpm
 with_dbus
@@ -757,6 +759,7 @@ with_gtk
 with_gcc
 with_pkg_config_prog
 with_crt_dir
+enable_mac_app
 with_gnustep_conf
 enable_ns_self_contained
 enable_asserts
@@ -1402,6 +1405,8 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --enable-mac-app[=DIR]  specify install directory for Emacs.app on Mac OS X
+                          [DIR=/Application]
   --disable-ns-self-contained
                           disable self contained build under NeXTstep
   --enable-asserts        compile code with asserts enabled
@@ -1447,6 +1452,8 @@ Optional Packages:
                           don't use Motif or Xaw3d scroll bars
   --without-xaw3d         don't use Xaw3d
   --without-xim           don't use X11 XIM
+  --with-mac              use GUI on Mac OS X. This is
+                          experimental/hackers-only!
   --with-ns               use nextstep (Cocoa or GNUstep) windowing system
   --without-gpm           don't use -lgpm for mouse support on a GNU/Linux
                           console
@@ -2674,6 +2681,14 @@ else
 fi
 
 
+# Check whether --with-mac was given.
+if test "${with_mac+set}" = set; then :
+  withval=$with_mac;
+else
+      with_mac=no
+fi
+
+
 # Check whether --with-ns was given.
 if test "${with_ns+set}" = set; then :
   withval=$with_ns;
@@ -2754,6 +2769,12 @@ if test "${with_crt_dir+set}" = set; then :
 fi
 
 CRT_DIR="${with_crt_dir}"
+
+# Check whether --enable-mac-app was given.
+if test "${enable_mac_app+set}" = set; then :
+  enableval=$enable_mac_app;  mac_appdir_x=${enableval}
+fi
+
 
 
 # Check whether --with-gnustep-conf was given.
@@ -7186,6 +7207,17 @@ else
   fi
 fi
 
+HAVE_MACGUI=no
+if test "${with_mac}" != no; then
+  ac_fn_c_check_header_mongrel "$LINENO" "Carbon/Carbon.h" "ac_cv_header_Carbon_Carbon_h" "$ac_includes_default"
+if test "x$ac_cv_header_Carbon_Carbon_h" = x""yes; then :
+  HAVE_MACGUI=yes
+fi
+
+
+  test "${HAVE_MACGUI}" = yes && window_system=mac
+fi
+
 HAVE_NS=no
 NS_IMPL_COCOA=no
 NS_IMPL_GNUSTEP=no
@@ -7246,6 +7278,7 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
   fi
 fi
 if test "${HAVE_NS}" = yes; then
+  test "${window_system}" = mac && HAVE_MACGUI=no
   window_system=nextstep
   with_xft=no
   # set up packaging dirs
@@ -7271,7 +7304,7 @@ case "${window_system}" in
       * ) USE_X_TOOLKIT=maybe ;;
     esac
   ;;
-  nextstep | none )
+  mac | nextstep | none )
     HAVE_X_WINDOWS=no
     HAVE_X11=no
     USE_X_TOOLKIT=none
@@ -7957,7 +7990,7 @@ fi
 
 ### Use -lrsvg-2 if available, unless `--with-rsvg=no' is specified.
 HAVE_RSVG=no
-if test "${HAVE_X11}" = "yes" || test "${NS_IMPL_GNUSTEP}" = "yes"; then
+if test "${HAVE_X11}" = "yes" || test "${HAVE_MACGUI}" = "yes" || test "${NS_IMPL_GNUSTEP}" = "yes"; then
   if test "${with_rsvg}" != "no"; then
     RSVG_REQUIRED=2.11.0
     RSVG_MODULE="librsvg-2.0 >= $RSVG_REQUIRED"
@@ -9022,6 +9055,10 @@ if test "${with_toolkit_scroll_bars}" != "no"; then
       USE_TOOLKIT_SCROLL_BARS=yes
     fi
   elif test "${HAVE_GTK}" = "yes"; then
+    $as_echo "#define USE_TOOLKIT_SCROLL_BARS 1" >>confdefs.h
+
+    USE_TOOLKIT_SCROLL_BARS=yes
+  elif test "${HAVE_MACGUI}" = "yes"; then
     $as_echo "#define USE_TOOLKIT_SCROLL_BARS 1" >>confdefs.h
 
     USE_TOOLKIT_SCROLL_BARS=yes
@@ -10206,6 +10243,37 @@ fi
 
 
 
+### Use Mac OS X GUI.
+if test "${HAVE_MACGUI}" = "yes"; then
+
+$as_echo "#define HAVE_MACGUI 1" >>confdefs.h
+
+  for ac_header in AvailabilityMacros.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "AvailabilityMacros.h" "ac_cv_header_AvailabilityMacros_h" "$ac_includes_default"
+if test "x$ac_cv_header_AvailabilityMacros_h" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_AVAILABILITYMACROS_H 1
+_ACEOF
+
+fi
+
+done
+
+  ## Specify the install directory
+  mac_appdir=
+  if test "${mac_appdir_x}" != ""; then
+    case ${mac_appdir_x} in
+      y | ye | yes)  mac_appdir=/Applications ;;
+      * ) mac_appdir=${mac_appdir_x} ;;
+    esac
+  fi
+  # We also have mouse menus.
+  HAVE_MENUS=yes
+  # Tell src/Makefile.in to create files in the Mac OS X application
+  # bundle mac/Emacs.app.
+  OTHER_FILES=macosx-app
+fi
 ### Use NeXTstep API to implement GUI.
 if test "${HAVE_NS}" = "yes"; then
 
@@ -13355,6 +13423,7 @@ fi
 
 
 
+
 cat >>confdefs.h <<_ACEOF
 #define EMACS_CONFIGURATION "${canonical}"
 _ACEOF
@@ -13495,6 +13564,14 @@ if test $USE_XASSERTS = yes; then
 fi
 
 echo
+
+if test "$HAVE_MACGUI" = "yes"; then
+   echo
+   echo "Warning: The Mac port is currently experimental/hackers-only.
+It is not recommended for casual use
+or as a basis of (binary) distributions."
+   echo
+fi
 
 if test "$HAVE_NS" = "yes"; then
    echo

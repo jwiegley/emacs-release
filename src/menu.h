@@ -27,7 +27,7 @@ extern void discard_menu_items P_ ((void));
 extern void save_menu_items P_ ((void));
 extern int parse_single_submenu P_ ((Lisp_Object, Lisp_Object, Lisp_Object));
 extern void list_of_panes P_ ((Lisp_Object));
-#if defined (USE_X_TOOLKIT) || defined (USE_GTK) || defined (HAVE_NTGUI)
+#if defined (USE_X_TOOLKIT) || defined (USE_GTK) || defined (HAVE_NTGUI) || defined (HAVE_MACGUI)
 extern void free_menubar_widget_value_tree P_ ((widget_value *));
 extern void update_submenu_strings P_ ((widget_value *));
 extern void find_and_call_menu_selection P_ ((FRAME_PTR, int,
@@ -39,6 +39,8 @@ extern void mouse_position_for_popup (FRAME_PTR f, int *x, int *y);
 #endif
 
 extern Lisp_Object w32_menu_show (FRAME_PTR, int, int, int, int,
+				  Lisp_Object, char **);
+extern Lisp_Object mac_menu_show (FRAME_PTR, int, int, int, int,
 				  Lisp_Object, char **);
 extern Lisp_Object ns_menu_show (FRAME_PTR, int, int, int, int,
 				 Lisp_Object, char **);

@@ -169,6 +169,9 @@ VPATH=@srcdir@
 # Where to find the application default.
 x_default_search_path=@x_default_search_path@
 
+# Location to install Emacs.app on Mac OS X
+mac_appdir=@mac_appdir@
+
 # Location to install Emacs.app under NeXT/Open/GNUstep / Cocoa
 ns_appdir=@ns_appdir@
 ns_appbindir=@ns_appbindir@
@@ -424,6 +427,12 @@ install-arch-dep: mkdir
 	    ${INSTALL_DATA} lib-src/$$f $(DESTDIR)${archlibdir}/$$f; \
 	  else true; fi ; \
 	done
+	if test "${mac_appdir}" != ""; then \
+	  umask 022; mkdir -p $(DESTDIR)${mac_appdir}/Emacs.app; \
+	  (cd mac/Emacs.app; (tar -chf - . | \
+		(cd $(DESTDIR)${mac_appdir}/Emacs.app; umask 022; tar -xvf - \
+			&& cat > /dev/null))) || exit 1; \
+	fi
 	if test "${ns_appdir}" != ""; then \
 	  ( cd ${ns_appresdir} ; \
 	    if test -d share/emacs ; then dir=share/emacs/*/*; $(MV_DIRS); fi;\

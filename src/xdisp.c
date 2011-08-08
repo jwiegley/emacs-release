@@ -200,6 +200,9 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #ifdef WINDOWSNT
 #include "w32term.h"
 #endif
+#ifdef HAVE_MACGUI
+#include "macterm.h"
+#endif
 #ifdef HAVE_NS
 #include "nsterm.h"
 #endif
@@ -215,7 +218,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #define INFINITY 10000000
 
-#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) \
+#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) || defined (HAVE_MACGUI) \
     || defined(HAVE_NS) || defined (USE_GTK)
 extern void set_frame_menubar P_ ((struct frame *f, int, int));
 extern int pending_menu_activation;
@@ -1763,7 +1766,9 @@ glyph_to_pixel_coords (w, hpos, vpos, frame_x, frame_y)
    text, or we can't tell because W's current matrix is not up to
    date.  */
 
+#ifndef HAVE_MACGUI
 static
+#endif
 struct glyph *
 x_y_to_hpos_vpos (w, x, y, hpos, vpos, dx, dy, area)
      struct window *w;
@@ -4641,6 +4646,11 @@ handle_composition_prop (it)
       && COMPOSITION_VALID_P (start, end, prop)
       && (STRINGP (it->string) || (PT <= start || PT >= end)))
     {
+      if (start < pos)
+	/* As we can't handle this situation (perhaps, font-lock added
+	   a new composition), we just return here hoping that next
+	   redisplay will detect this composition much earlier.  */
+	return HANDLED_NORMALLY;
       if (start != pos)
 	{
 	  if (STRINGP (it->string))
@@ -5922,9 +5932,21 @@ get_next_display_element (it)
 	  int pos = (it->s ? -1
 		     : STRINGP (it->string) ? IT_STRING_CHARPOS (*it)
 		     : IT_CHARPOS (*it));
+	  int c;
 
-	  it->face_id = FACE_FOR_CHAR (it->f, face, it->char_to_display, pos,
-				       it->string);
+	  if (it->what == IT_CHARACTER)
+	    c = it->char_to_display;
+	  else
+	    {
+	      struct composition *cmp = composition_table[it->cmp_it.id];
+	      int i;
+
+	      c = ' ';
+	      for (i = 0; i < cmp->glyph_len; i++)
+		if ((c = COMPOSITION_GLYPH (cmp, i)) != '\t')
+		  break;
+	    }
+	  it->face_id = FACE_FOR_CHAR (it->f, face, c, pos, it->string);
 	}
     }
 #endif
@@ -9542,6 +9564,9 @@ prepare_menu_bars ()
 	  menu_bar_hooks_run = update_menu_bar (f, 0, menu_bar_hooks_run);
 #ifdef HAVE_WINDOW_SYSTEM
 	  update_tool_bar (f, 0);
+#ifdef HAVE_MACGUI
+	  mac_update_title_bar (f, 0);
+#endif
 #endif
 #ifdef HAVE_NS
           if (windows_or_buffers_changed
@@ -9560,6 +9585,9 @@ prepare_menu_bars ()
       update_menu_bar (sf, 1, 0);
 #ifdef HAVE_WINDOW_SYSTEM
       update_tool_bar (sf, 1);
+#ifdef HAVE_MACGUI
+      mac_update_title_bar (sf, 1);
+#endif
 #endif
     }
 
@@ -9602,7 +9630,7 @@ update_menu_bar (f, save_match_data, hooks_run)
 
   if (FRAME_WINDOW_P (f)
       ?
-#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) \
+#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) || defined (HAVE_MACGUI) \
     || defined (HAVE_NS) || defined (USE_GTK)
       FRAME_EXTERNAL_MENU_BAR (f)
 #else
@@ -9661,11 +9689,11 @@ update_menu_bar (f, save_match_data, hooks_run)
 	  FRAME_MENU_BAR_ITEMS (f) = menu_bar_items (FRAME_MENU_BAR_ITEMS (f));
 
 	  /* Redisplay the menu bar in case we changed it.  */
-#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) \
+#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) || defined (HAVE_MACGUI) \
     || defined (HAVE_NS) || defined (USE_GTK)
 	  if (FRAME_WINDOW_P (f))
             {
-#if defined (HAVE_NS)
+#if defined (HAVE_MACGUI) || defined (HAVE_NS)
               /* All frames on Mac OS share the same menubar.  So only
                  the selected frame should be allowed to set it.  */
               if (f == SELECTED_FRAME ())
@@ -9676,11 +9704,11 @@ update_menu_bar (f, save_match_data, hooks_run)
 	    /* On a terminal screen, the menu bar is an ordinary screen
 	       line, and this makes it get updated.  */
 	    w->update_mode_line = Qt;
-#else /* ! (USE_X_TOOLKIT || HAVE_NTGUI || HAVE_NS || USE_GTK) */
+#else /* ! (USE_X_TOOLKIT || HAVE_NTGUI || HAVE_MACGUI || HAVE_NS || USE_GTK) */
 	  /* In the non-toolkit version, the menu bar is an ordinary screen
 	     line, and this makes it get updated.  */
 	  w->update_mode_line = Qt;
-#endif /* ! (USE_X_TOOLKIT || HAVE_NTGUI || HAVE_NS || USE_GTK) */
+#endif /* ! (USE_X_TOOLKIT || HAVE_NTGUI || HAVE_MACGUI || HAVE_NS || USE_GTK) */
 
 	  unbind_to (count, Qnil);
 	  set_buffer_internal_1 (prev);
@@ -9780,6 +9808,13 @@ FRAME_PTR last_mouse_frame;
 
 int last_tool_bar_item;
 
+#if defined (USE_GTK) || defined (HAVE_NS)
+#define FRAME_TOOLKIT_TOOL_BAR_P(f)	1
+#elif defined (HAVE_MACGUI)
+#define FRAME_TOOLKIT_TOOL_BAR_P(f)	(!(FRAME_MAC_P (f) && FRAME_NATIVE_TOOL_BAR_P (f)))
+#else
+#define FRAME_TOOLKIT_TOOL_BAR_P(f)	0
+#endif
 
 static Lisp_Object
 update_tool_bar_unwind (frame)
@@ -9799,12 +9834,13 @@ update_tool_bar (f, save_match_data)
      struct frame *f;
      int save_match_data;
 {
-#if defined (USE_GTK) || defined (HAVE_NS)
-  int do_update = FRAME_EXTERNAL_TOOL_BAR (f);
-#else
-  int do_update = WINDOWP (f->tool_bar_window)
-    && WINDOW_TOTAL_LINES (XWINDOW (f->tool_bar_window)) > 0;
-#endif
+  int do_update;
+
+  if (FRAME_TOOLKIT_TOOL_BAR_P (f))
+    do_update = FRAME_EXTERNAL_TOOL_BAR (f);
+  else
+    do_update = WINDOWP (f->tool_bar_window)
+      && WINDOW_TOTAL_LINES (XWINDOW (f->tool_bar_window)) > 0;
 
   if (do_update)
     {
@@ -10273,11 +10309,12 @@ redisplay_tool_bar (f)
   struct it it;
   struct glyph_row *row;
 
-#if defined (USE_GTK) || defined (HAVE_NS)
-  if (FRAME_EXTERNAL_TOOL_BAR (f))
-    update_frame_tool_bar (f);
-  return 0;
-#endif
+  if (FRAME_TOOLKIT_TOOL_BAR_P (f))
+    {
+      if (FRAME_EXTERNAL_TOOL_BAR (f))
+	update_frame_tool_bar (f);
+      return 0;
+    }
 
   /* If frame hasn't a tool-bar window or if it is zero-height, don't
      do anything.  This means you must start with tool-bar-lines
@@ -11304,7 +11341,7 @@ redisplay_internal (preserve_echo_area)
 	return;
     }
 
-#if defined (USE_X_TOOLKIT) || defined (USE_GTK) || defined (HAVE_NS)
+#if defined (USE_X_TOOLKIT) || defined (USE_GTK) || defined (HAVE_MACGUI) || defined (HAVE_NS)
   if (popup_activated ())
     return;
 #endif
@@ -13399,10 +13436,16 @@ redisplay_window (window, just_this_one_p)
   if (!NILP (w->force_start)
       || w->frozen_window_start_p)
     {
+#ifdef HAVE_MACGUI
+      extern int mac_redisplay_dont_reset_vscroll;
+#endif
       /* We set this later on if we have to adjust point.  */
       int new_vpos = -1;
 
       w->force_start = Qnil;
+#ifdef HAVE_MACGUI
+      if (!mac_redisplay_dont_reset_vscroll)
+#endif
       w->vscroll = 0;
       w->window_end_valid = Qnil;
 
@@ -13864,7 +13907,7 @@ redisplay_window (window, just_this_one_p)
 
       if (FRAME_WINDOW_P (f))
 	{
-#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) \
+#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) || defined (HAVE_MACGUI) \
     || defined (HAVE_NS) || defined (USE_GTK)
 	  redisplay_menu_p = FRAME_EXTERNAL_MENU_BAR (f);
 #else
@@ -13880,13 +13923,12 @@ redisplay_window (window, just_this_one_p)
 #ifdef HAVE_WINDOW_SYSTEM
       if (FRAME_WINDOW_P (f))
         {
-#if defined (USE_GTK) || defined (HAVE_NS)
-          redisplay_tool_bar_p = FRAME_EXTERNAL_TOOL_BAR (f);
-#else
-          redisplay_tool_bar_p = WINDOWP (f->tool_bar_window)
-            && (FRAME_TOOL_BAR_LINES (f) > 0
-                || !NILP (Vauto_resize_tool_bars));
-#endif
+	  if (FRAME_TOOLKIT_TOOL_BAR_P (f))
+	    redisplay_tool_bar_p = FRAME_EXTERNAL_TOOL_BAR (f);
+	  else
+	    redisplay_tool_bar_p = WINDOWP (f->tool_bar_window)
+	      && (FRAME_TOOL_BAR_LINES (f) > 0
+		  || !NILP (Vauto_resize_tool_bars));
 
           if (redisplay_tool_bar_p && redisplay_tool_bar (f))
 	    {
@@ -14243,7 +14285,8 @@ try_window_reusing_current_matrix (w)
 		row->visible_height -= min_y - row->y;
 	      if (row->y + row->height > max_y)
 		row->visible_height -= row->y + row->height - max_y;
-	      row->redraw_fringe_bitmaps_p = 1;
+	      if (row->fringe_bitmap_periodic_p)
+		row->redraw_fringe_bitmaps_p = 1;
 
 	      it.current_y += row->height;
 
@@ -14405,7 +14448,8 @@ try_window_reusing_current_matrix (w)
 	    row->visible_height -= min_y - row->y;
 	  if (row->y + row->height > max_y)
 	    row->visible_height -= row->y + row->height - max_y;
-	  row->redraw_fringe_bitmaps_p = 1;
+	  if (row->fringe_bitmap_periodic_p)
+	    row->redraw_fringe_bitmaps_p = 1;
 	}
 
       /* Scroll the current matrix.  */
@@ -17037,6 +17081,10 @@ display_menu_bar (w)
   if (FRAME_X_P (f))
     return;
 #endif
+#ifdef HAVE_MACGUI
+  if (FRAME_MAC_P (f))
+    return;
+#endif
 
 #ifdef HAVE_NS
   if (FRAME_NS_P (f))
@@ -19490,7 +19538,7 @@ get_char_face_and_encoding (f, c, face_id, char2b, multibyte_p, display_p)
     }
 
   /* Make sure X resources of the face are allocated.  */
-#ifdef HAVE_X_WINDOWS
+#if defined (HAVE_X_WINDOWS) || defined (HAVE_MACGUI)
   if (display_p)
 #endif
     {
@@ -23473,7 +23521,7 @@ note_mouse_highlight (f, x, y)
   struct buffer *b;
 
   /* When a menu is active, don't highlight because this looks odd.  */
-#if defined (USE_X_TOOLKIT) || defined (USE_GTK) || defined (HAVE_NS)
+#if defined (USE_X_TOOLKIT) || defined (USE_GTK) || defined (HAVE_MACGUI) || defined (HAVE_NS)
   if (popup_activated ())
     return;
 #endif

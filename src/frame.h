@@ -80,6 +80,9 @@ enum fullscreen_type
   FULLSCREEN_HEIGHT    = 0x002,
   FULLSCREEN_BOTH      = 0x003,
   FULLSCREEN_MAXIMIZED = 0x013,
+#ifdef HAVE_MACGUI
+  FULLSCREEN_DEDICATED_DESKTOP = 0x023,
+#endif
   FULLSCREEN_WAIT      = 0x100
 };
 
@@ -240,7 +243,7 @@ struct frame
      auto-resize-tool-bar is set to grow-only.  */
   unsigned minimize_tool_bar_window_p : 1;
 
-#if defined (USE_GTK) || defined (HAVE_NS)
+#if defined (USE_GTK) || defined (HAVE_MACGUI) || defined (HAVE_NS)
   /* Nonzero means using a tool bar that comes from the toolkit.  */
   int external_tool_bar;
 #endif
@@ -329,6 +332,7 @@ struct frame
     struct tty_output *tty;     /* termchar.h */
     struct x_output *x;         /* xterm.h */
     struct w32_output *w32;     /* w32term.h */
+    struct mac_output *mac;     /* macterm.h */
     struct ns_output *ns;       /* nsterm.h */
     EMACS_INT nothing;
   }
@@ -356,7 +360,7 @@ struct frame
   /* Number of lines of menu bar.  */
   int menu_bar_lines;
 
-#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) \
+#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) || defined (HAVE_MACGUI) \
     || defined (HAVE_NS) || defined (USE_GTK)
   /* Nonzero means using a menu bar that comes from the X toolkit.  */
   unsigned int external_menu_bar : 1;
@@ -509,7 +513,8 @@ struct frame
 
 typedef struct frame *FRAME_PTR;
 
-#define XFRAME(p) (eassert (FRAMEP(p)),(struct frame *) XPNTR (p))
+#define XFRAME(p) (eassert (FRAMEP(p)), \
+		   (struct frame *) XUNTAG(p, Lisp_Vectorlike))
 #define XSETFRAME(a, b) (XSETPSEUDOVECTOR (a, b, PVEC_FRAME))
 
 /* Given a window, return its frame as a Lisp_Object.  */
@@ -532,6 +537,9 @@ typedef struct frame *FRAME_PTR;
 #endif
 #ifdef HAVE_NTGUI
 #define FRAME_WINDOW_P(f) FRAME_W32_P (f)
+#endif
+#ifdef HAVE_MACGUI
+#define FRAME_WINDOW_P(f) FRAME_MAC_P (f)
 #endif
 #ifdef HAVE_NS
 #define FRAME_WINDOW_P(f) FRAME_NS_P(f)
@@ -574,7 +582,7 @@ typedef struct frame *FRAME_PTR;
 
 /* Nonzero if this frame should display a tool bar
    in a way that does not use any text lines.  */
-#if defined (USE_GTK) || defined (HAVE_NS)
+#if defined (USE_GTK) || defined (HAVE_MACGUI) || defined (HAVE_NS)
 #define FRAME_EXTERNAL_TOOL_BAR(f) (f)->external_tool_bar
 #else
 #define FRAME_EXTERNAL_TOOL_BAR(f) 0
@@ -597,7 +605,7 @@ typedef struct frame *FRAME_PTR;
 
 /* Nonzero if this frame should display a menu bar
    in a way that does not use any text lines.  */
-#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) \
+#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) || defined (HAVE_MACGUI) \
      || defined (HAVE_NS) || defined (USE_GTK)
 #define FRAME_EXTERNAL_MENU_BAR(f) (f)->external_menu_bar
 #else

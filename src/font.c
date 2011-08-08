@@ -44,6 +44,10 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "w32term.h"
 #endif /* HAVE_NTGUI */
 
+#ifdef HAVE_MACGUI
+#include "macterm.h"
+#endif /* HAVE_MACGUI */
+
 #ifdef HAVE_NS
 #include "nsterm.h"
 #endif /* HAVE_NS */
@@ -1525,8 +1529,16 @@ font_parse_fcname (name, font)
         {
           struct font_driver_list *driver_list = font_driver_list;
           for ( ; driver_list; driver_list = driver_list->next)
-            if (driver_list->driver->filter_properties)
-              (*driver_list->driver->filter_properties) (font, extra_props);
+	    {
+#ifdef HAVE_MACGUI
+	      extern Lisp_Object macfont_driver_type;
+
+	      if (!EQ (macfont_driver_type, driver_list->driver->type))
+		continue;
+#endif
+	      if (driver_list->driver->filter_properties)
+		(*driver_list->driver->filter_properties) (font, extra_props);
+	    }
         }
 
     }
@@ -3905,8 +3917,8 @@ void
 font_filter_properties (font, alist, boolean_properties, non_boolean_properties)
      Lisp_Object font;
      Lisp_Object alist;
-     const char *boolean_properties[];
-     const char *non_boolean_properties[];
+     const char *const boolean_properties[];
+     const char *const non_boolean_properties[];
 {
   Lisp_Object it;
   int i;
@@ -5338,7 +5350,7 @@ extern void syms_of_xftfont P_ (());
 extern void syms_of_ftxfont P_ (());
 extern void syms_of_bdffont P_ (());
 extern void syms_of_w32font P_ (());
-extern void syms_of_atmfont P_ (());
+extern void syms_of_macfont P_ (());
 extern void syms_of_nsfont P_ (());
 
 void
@@ -5514,6 +5526,9 @@ EMACS_FONT_LOG is set.  Otherwise, it is set to t.  */);
 #ifdef WINDOWSNT
   syms_of_w32font ();
 #endif	/* WINDOWSNT */
+#ifdef HAVE_MACGUI
+  syms_of_macfont ();
+#endif	/* HAVE_MACGUI */
 #ifdef HAVE_NS
   syms_of_nsfont ();
 #endif	/* HAVE_NS */

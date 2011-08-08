@@ -465,11 +465,12 @@ struct font_bitmap
   } while (0)
 
 #define XFONT_SPEC(p)	\
-  (eassert (FONT_SPEC_P(p)), (struct font_spec *) XPNTR (p))
+  (eassert (FONT_SPEC_P(p)), (struct font_spec *) XUNTAG (p, Lisp_Vectorlike))
 #define XFONT_ENTITY(p)	\
-  (eassert (FONT_ENTITY_P(p)), (struct font_entity *) XPNTR (p))
+  (eassert (FONT_ENTITY_P(p)), \
+   (struct font_entity *) XUNTAG (p, Lisp_Vectorlike))
 #define XFONT_OBJECT(p)	\
-  (eassert (FONT_OBJECT_P(p)), (struct font *) XPNTR (p))
+  (eassert (FONT_OBJECT_P(p)), (struct font *) XUNTAG (p, Lisp_Vectorlike))
 #define XSETFONT(a, b) (XSETPSEUDOVECTOR (a, b, PVEC_FONT))
 
 /* Number of pt per inch (from the TeXbook).  */
@@ -816,8 +817,8 @@ extern void *font_get_frame_data P_ ((FRAME_PTR f,
 
 extern void font_filter_properties (Lisp_Object font,
 				    Lisp_Object alist,
-				    const char *boolean_properties[],
-				    const char *non_boolean_properties[]);
+				    const char *const boolean_properties[],
+				    const char *const non_boolean_properties[]);
 
 #ifdef HAVE_FREETYPE
 extern struct font_driver ftfont_driver;
@@ -833,6 +834,9 @@ extern struct font_driver xftfont_driver;
 extern struct font_driver w32font_driver;
 extern struct font_driver uniscribe_font_driver;
 #endif	/* WINDOWSNT */
+#ifdef HAVE_MACGUI
+extern struct font_driver macfont_driver;
+#endif	/* HAVE_MACGUI */
 #ifdef HAVE_NS
 extern struct font_driver nsfont_driver;
 #endif	/* HAVE_NS */

@@ -61,6 +61,14 @@ typedef XImage *XImagePtr;
 typedef HDC XImagePtr_or_DC;
 #endif
 
+#ifdef HAVE_MACGUI
+#include "macgui.h"
+typedef struct mac_display_info Display_Info;
+/* Mac equivalent of XImage.  */
+typedef Pixmap XImagePtr;
+typedef XImagePtr XImagePtr_or_DC;
+#endif
+
 #ifdef HAVE_NS
 #include "nsgui.h"
 /* following typedef needed to accomodate the MSDOS port, believe it or not */
@@ -786,6 +794,10 @@ struct glyph_row
   /* Vertical offset of the right fringe bitmap.  */
   signed right_fringe_offset : FRINGE_HEIGHT_BITS;
 
+  /* 1 means that at least one of the left and right fringe bitmaps is
+     periodic and thus depends on the y-position of the row.  */
+  unsigned fringe_bitmap_periodic_p : 1;
+
   /* 1 means that we must draw the bitmaps of this row.  */
   unsigned redraw_fringe_bitmaps_p : 1;
 
@@ -1230,7 +1242,7 @@ struct glyph_string
   unsigned padding_p : 1;
 
   /* The GC to use for drawing this glyph string.  */
-#if defined(HAVE_X_WINDOWS)
+#if defined(HAVE_X_WINDOWS) || defined(HAVE_MACGUI)
   GC gc;
 #endif
 #if defined(HAVE_NTGUI)
@@ -2864,6 +2876,10 @@ void compute_fringe_widths P_ ((struct frame *, int));
 void w32_init_fringe P_ ((struct redisplay_interface *));
 void w32_reset_fringes P_ ((void));
 #endif
+#ifdef HAVE_MACGUI
+void mac_init_fringe P_ ((struct redisplay_interface *));
+#endif
+
 /* Defined in image.c */
 
 #ifdef HAVE_WINDOW_SYSTEM
@@ -2968,6 +2984,9 @@ void gamma_correct P_ ((struct frame *, XColor *));
 #endif
 #ifdef WINDOWSNT
 void gamma_correct P_ ((struct frame *, COLORREF *));
+#endif
+#ifdef HAVE_MACGUI
+void gamma_correct P_ ((struct frame *, unsigned long *));
 #endif
 
 #ifdef HAVE_WINDOW_SYSTEM

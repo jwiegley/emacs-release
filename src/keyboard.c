@@ -74,6 +74,10 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "w32term.h"
 #endif /* HAVE_NTGUI */
 
+#ifdef HAVE_MACGUI
+#include "macterm.h"
+#endif
+
 #ifdef HAVE_NS
 #include "nsterm.h"
 #endif
@@ -480,11 +484,14 @@ Lisp_Object Qmouse_fixup_help_message;
 /* Symbols to denote kinds of events.  */
 Lisp_Object Qfunction_key;
 Lisp_Object Qmouse_click;
-#if defined (WINDOWSNT)
+#if defined (WINDOWSNT) || defined (HAVE_MACGUI)
 Lisp_Object Qlanguage_change;
 #endif
 Lisp_Object Qdrag_n_drop;
 Lisp_Object Qsave_session;
+#ifdef HAVE_MACGUI
+Lisp_Object Qmac_apple_event;
+#endif
 #ifdef HAVE_DBUS
 Lisp_Object Qdbus_event;
 #endif
@@ -1331,7 +1338,13 @@ command_loop ()
   else
     while (1)
       {
+#ifdef HAVE_MACGUI
+	void *pool = mac_alloc_autorelease_pool ();
+#endif
 	internal_catch (Qtop_level, top_level_1, Qnil);
+#ifdef HAVE_MACGUI
+	mac_release_autorelease_pool (pool);
+#endif
 #if 0 /* This shouldn't be necessary anymore.  --lorentey  */
         /* Reset single_kboard in case top-level set it while
            evaluating an -f option, or we are stuck there for some
@@ -1359,7 +1372,15 @@ command_loop_2 ()
   register Lisp_Object val;
 
   do
-    val = internal_condition_case (command_loop_1, Qerror, cmd_error);
+    {
+#ifdef HAVE_MACGUI
+      void *pool = mac_alloc_autorelease_pool ();
+#endif
+      val = internal_condition_case (command_loop_1, Qerror, cmd_error);
+#ifdef HAVE_MACGUI
+      mac_release_autorelease_pool (pool);
+#endif
+    }
   while (!NILP (val));
 
   return Qnil;
@@ -1574,6 +1595,9 @@ command_loop_1 ()
 
   while (1)
     {
+#ifdef HAVE_MACGUI
+      void *pool = mac_alloc_autorelease_pool ();
+#endif
       if (! FRAME_LIVE_P (XFRAME (selected_frame)))
 	Fkill_emacs (Qnil);
 
@@ -2003,6 +2027,9 @@ command_loop_1 ()
 #if 0 /* This shouldn't be necessary anymore.  --lorentey  */
       if (!was_locked)
         any_kboard_state ();
+#endif
+#ifdef HAVE_MACGUI
+      mac_release_autorelease_pool (pool);
 #endif
     }
 }
@@ -4251,7 +4278,7 @@ kbd_buffer_get_event (kbp, used_mouse_menu, end_time)
         }
 #endif
 
-#if defined (HAVE_X11) || defined (HAVE_NTGUI) \
+#if defined (HAVE_X11) || defined (HAVE_NTGUI) || defined (HAVE_MACGUI) \
     || defined (HAVE_NS)
       else if (event->kind == DELETE_WINDOW_EVENT)
 	{
@@ -4261,7 +4288,7 @@ kbd_buffer_get_event (kbp, used_mouse_menu, end_time)
 	  kbd_fetch_ptr = event + 1;
 	}
 #endif
-#if defined (HAVE_X11) || defined (HAVE_NTGUI) \
+#if defined (HAVE_X11) || defined (HAVE_NTGUI) || defined (HAVE_MACGUI) \
     || defined (HAVE_NS)
       else if (event->kind == ICONIFY_EVENT)
 	{
@@ -4284,7 +4311,7 @@ kbd_buffer_get_event (kbp, used_mouse_menu, end_time)
 	  XSETBUFFER (obj, current_buffer);
 	  kbd_fetch_ptr = event + 1;
 	}
-#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) \
+#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) || defined (HAVE_MACGUI) \
     || defined(HAVE_NS) || defined (USE_GTK)
       else if (event->kind == MENU_BAR_ACTIVATE_EVENT)
 	{
@@ -4294,11 +4321,16 @@ kbd_buffer_get_event (kbp, used_mouse_menu, end_time)
 	    x_activate_menubar (XFRAME (event->frame_or_window));
 	}
 #endif
-#if defined (WINDOWSNT)
+#if defined (WINDOWSNT) || defined (HAVE_MACGUI)
       else if (event->kind == LANGUAGE_CHANGE_EVENT)
 	{
+#ifdef HAVE_MACGUI
+	  /* Make an event (language-change (KEY_SCRIPT)).  */
+	  obj = Fcons (make_number (event->code), Qnil);
+#else
 	  /* Make an event (language-change (FRAME CHARSET LCID)).  */
 	  obj = Fcons (event->frame_or_window, Qnil);
+#endif
 	  obj = Fcons (Qlanguage_change, Fcons (obj, Qnil));
 	  kbd_fetch_ptr = event + 1;
 	}
@@ -4394,7 +4426,7 @@ kbd_buffer_get_event (kbp, used_mouse_menu, end_time)
 	    {
 	      obj = make_lispy_event (event);
 
-#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) \
+#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) || defined(HAVE_MACGUI) \
     || defined(HAVE_NS) || defined (USE_GTK)
 	      /* If this was a menu selection, then set the flag to inhibit
 		 writing to last_nonmenu_event.  Don't do this if the event
@@ -5395,6 +5427,10 @@ Lisp_Object Vlispy_mouse_stem;
 static char *lispy_wheel_names[] =
 {
   "wheel-up", "wheel-down", "wheel-left", "wheel-right"
+#ifdef HAVE_MACGUI
+  , "swipe-up", "swipe-down", "swipe-left", "swipe-right",
+  "magnify-up", "magnify-down", "rotate-left", "rotate-right"
+#endif
 };
 
 /* drag-n-drop events are generated when a set of selected files are
@@ -6101,6 +6137,20 @@ make_lispy_event (event)
 
           if (event->kind == HORIZ_WHEEL_EVENT)
             symbol_num += 2;
+#ifdef HAVE_MACGUI
+          if (event->modifiers & drag_modifier)
+	    {
+	      /* Emit a swipe event.  */
+	      event->modifiers &= ~drag_modifier;
+	      symbol_num += 4;
+	    }
+          else if (event->modifiers & click_modifier)
+	    {
+	      /* Emit a maginify/rotate event.  */
+	      event->modifiers &= ~click_modifier;
+	      symbol_num += 8;
+	    }
+#endif
 
 	  is_double = (last_mouse_button == - (1 + symbol_num)
 		       && (eabs (XINT (event->x) - last_mouse_x) <= fuzz)
@@ -6139,10 +6189,17 @@ make_lispy_event (event)
 				      ASIZE (wheel_syms));
 	}
 
-	if (event->modifiers & (double_modifier | triple_modifier))
+	if (event->modifiers & (double_modifier | triple_modifier)
+#ifdef HAVE_MACGUI
+	    || !NILP (event->arg)
+#endif
+	    )
 	  return Fcons (head,
 			Fcons (position,
 			       Fcons (make_number (double_click_count),
+#ifdef HAVE_MACGUI
+				      !NILP (event->arg) ? Fcons (event->arg, Qnil) :
+#endif
 				      Qnil)));
 	else
 	  return Fcons (head,
@@ -6232,7 +6289,7 @@ make_lispy_event (event)
       }
 #endif /* HAVE_MOUSE */
 
-#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) \
+#if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) || defined (HAVE_MACGUI) \
     || defined(HAVE_NS) || defined (USE_GTK)
     case MENU_BAR_EVENT:
       if (EQ (event->arg, event->frame_or_window))
@@ -6270,6 +6327,19 @@ make_lispy_event (event)
 
     case SAVE_SESSION_EVENT:
       return Qsave_session;
+
+#ifdef HAVE_MACGUI
+    case MAC_APPLE_EVENT:
+      {
+	Lisp_Object spec[2];
+
+	spec[0] = event->x;
+	spec[1] = event->y;
+	return Fcons (Qmac_apple_event,
+		      Fcons (Fvector (2, spec),
+			     Fcons (event->arg, Qnil)));
+      }
+#endif
 
 #ifdef HAVE_DBUS
     case DBUS_EVENT:
@@ -7621,6 +7691,8 @@ struct user_signal_info
 /* List of user signals. */
 static struct user_signal_info *user_signals = NULL;
 
+void (*handle_user_signal_hook) P_ ((int));
+
 void
 add_user_signal (sig, name)
      int sig;
@@ -7662,6 +7734,8 @@ handle_user_signal (sig)
     if (p->sig == sig)
       {
 	p->npending++;
+	if (handle_user_signal_hook)
+	  (*handle_user_signal_hook) (sig);
 #ifdef SIGIO
 	if (interrupt_input)
 	  kill (getpid (), SIGIO);
@@ -11353,7 +11427,7 @@ See also `current-input-mode'.  */)
   int new_interrupt_input;
 #ifdef SIGIO
 /* Note SIGIO has been undef'd if FIONREAD is missing.  */
-#ifdef HAVE_X_WINDOWS
+#if defined (HAVE_X_WINDOWS) || defined (HAVE_MACGUI)
   if (x_display_list != NULL)
     {
       /* When using X, don't give the user a real choice,
@@ -11797,8 +11871,11 @@ init_keyboard ()
 
 #ifdef POLL_FOR_INPUT
   poll_timer = NULL;
-  poll_suppress_count = 1;
-  start_polling ();
+  if (!interrupt_input)
+    {
+      poll_suppress_count = 1;
+      start_polling ();
+    }
 #endif
 }
 
@@ -11889,7 +11966,7 @@ syms_of_keyboard ()
   staticpro (&Qfunction_key);
   Qmouse_click = intern_c_string ("mouse-click");
   staticpro (&Qmouse_click);
-#if defined (WINDOWSNT)
+#if defined (WINDOWSNT) || defined (HAVE_MACGUI)
   Qlanguage_change = intern_c_string ("language-change");
   staticpro (&Qlanguage_change);
 #endif
@@ -11898,6 +11975,11 @@ syms_of_keyboard ()
 
   Qsave_session = intern_c_string ("save-session");
   staticpro (&Qsave_session);
+
+#ifdef HAVE_MACGUI
+  Qmac_apple_event = intern ("mac-apple-event");
+  staticpro (&Qmac_apple_event);
+#endif
 
 #ifdef HAVE_DBUS
   Qdbus_event = intern_c_string ("dbus-event");

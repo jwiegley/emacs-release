@@ -307,7 +307,7 @@ extern Lisp_Object unuse_menu_items P_ ((Lisp_Object dummy));
    confined to an extended version of this with sections of code below
    using it unconditionally.  */
 #ifndef HAVE_NTGUI
-#if defined (USE_GTK) || defined (HAVE_NS)
+#if defined (USE_GTK) || defined (HAVE_MACGUI) || defined (HAVE_NS)
 # define ENCODE_MENU_STRING(str) ENCODE_UTF_8 (str)
 #elif defined HAVE_X_I18N
 #define ENCODE_MENU_STRING(str) ENCODE_SYSTEM (str)
@@ -426,6 +426,8 @@ extern Lisp_Object Qscroll_bar_movement;
 
 /* Symbols to use for non-text mouse positions.  */
 extern Lisp_Object Qmode_line, Qvertical_line, Qheader_line;
+
+extern void (*handle_user_signal_hook) P_ ((int));
 
 /* Forward declaration for prototypes.  */
 struct input_event;

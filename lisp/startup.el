@@ -886,7 +886,7 @@ opening the first frame (e.g. open a connection to an X server).")
   ;; only because all other settings of no-blinking-cursor are here.
   (unless (or noninteractive
 	      emacs-basic-display
-	      (and (memq window-system '(x w32 ns))
+	      (and (memq window-system '(x w32 mac ns))
 		   (not (member (x-get-resource "cursorBlink" "CursorBlink")
 				'("off" "false")))))
     (setq no-blinking-cursor t))
@@ -1456,7 +1456,14 @@ a face or button specification."
 				   (if (image-type-available-p 'xpm)
 				       "splash.xpm"
 				     "splash.pbm"))
-				  ((image-type-available-p 'svg)
+				  ((and
+				    ;; It takes time to setup WebKit
+				    ;; for SVG images on the first
+				    ;; invocation of the Mac port.  We
+				    ;; avoid it for startup.
+				    (or (not (eq initial-window-system 'mac))
+					(string-match "About" (buffer-name)))
+				    (image-type-available-p 'svg))
 				   "splash.svg")
 				  ((image-type-available-p 'png)
 				   "splash.png")

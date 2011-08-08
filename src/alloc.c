@@ -265,6 +265,9 @@ Lisp_Object Vmemory_full;
    remapping on more recent systems because this is less important
    nowadays than in the days of small memories and timesharing.  */
 
+#ifdef PURE_SECTION
+__attribute__((section (PURE_SECTION)))
+#endif
 EMACS_INT pure[(PURESIZE + sizeof (EMACS_INT) - 1) / sizeof (EMACS_INT)] = {1,};
 #define PUREBEG (char *) pure
 
@@ -2313,7 +2316,8 @@ INIT must be an integer that represents a character.  */)
 	}
     }
 
-  *p = 0;
+  if (nbytes)
+    *p = 0;
   return val;
 }
 
@@ -4109,9 +4113,14 @@ static INLINE void
 mark_maybe_object (obj)
      Lisp_Object obj;
 {
-  void *po = (void *) XPNTR (obj);
-  struct mem_node *m = mem_find (po);
+  void *po;
+  struct mem_node *m;
 
+  if (INTEGERP (obj))
+    return;
+
+  po = (void *) XPNTR (obj);
+  m = mem_find (po);
   if (m != MEM_NIL)
     {
       int mark_p = 0;
@@ -5088,6 +5097,10 @@ returns nil, because real GC can't be done.  */)
 
   /* Mark all the special slots that serve as the roots of accessibility.  */
 
+  /* Terminals need to be marked in a special way.  But they can be
+     reachable from other roots and might be marked normally if
+     mark_terminals is called later.  */
+  mark_terminals ();
   for (i = 0; i < staticidx; i++)
     mark_object (*staticvec[i]);
 
@@ -5096,7 +5109,6 @@ returns nil, because real GC can't be done.  */)
       mark_object (bind->symbol);
       mark_object (bind->old_value);
     }
-  mark_terminals ();
   mark_kboards ();
   mark_ttys ();
 
