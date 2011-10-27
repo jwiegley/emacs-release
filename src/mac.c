@@ -3315,6 +3315,9 @@ mac_get_system_locale ()
    through either a CFSocket or a dispatch source.  */
 
 static int wakeup_fds[2];
+/* Whether we have read some input from wakeup_fds[0] after resetting
+   this variable.  Don't access it outside the main thread.  */
+static int wokeup_from_run_loop_run_once_p;
 
 static int
 read_all_from_nonblocking_fd (fd)
@@ -3359,6 +3362,7 @@ wakeup_callback (s, type, address, data, info)
      void *info;
 {
   read_all_from_nonblocking_fd (CFSocketGetNative (s));
+  wokeup_from_run_loop_run_once_p = 1;
 }
 #endif
 
@@ -3388,6 +3392,7 @@ init_wakeup_fds ()
       return -1;
     dispatch_source_set_event_handler (source, ^{
 	read_all_from_nonblocking_fd (dispatch_source_get_handle (source));
+	wokeup_from_run_loop_run_once_p = 1;
       });
     dispatch_resume (source);
 
@@ -3425,6 +3430,42 @@ mac_wakeup_from_run_loop_run_once ()
   /* This function may be called from a signal hander, so only
      async-signal safe functions can be used here.  */
   write_one_byte_to_fd (wakeup_fds[1]);
+}
+
+/* Return next event in the main queue if it exists.  Otherwise return
+   NULL.  */
+
+EventRef
+mac_peek_next_event ()
+{
+  EventRef event;
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
+#if MAC_OS_X_VERSION_MIN_REQUIRED == 1020
+  if (AcquireFirstMatchingEventInQueue != NULL)
+#endif
+    {
+      event = AcquireFirstMatchingEventInQueue (GetCurrentEventQueue (), 0,
+						NULL, kEventQueueOptionsNone);
+      if (event)
+	ReleaseEvent (event);
+    }
+#if MAC_OS_X_VERSION_MIN_REQUIRED == 1020
+  else			/* AcquireFirstMatchingEventInQueue == NULL */
+#endif
+#endif	/* MAC_OS_X_VERSION_MAX_ALLOWED >= 1030  */
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1030 || MAC_OS_X_VERSION_MIN_REQUIRED == 1020
+    {
+      OSStatus err;
+
+      err = ReceiveNextEvent (0, NULL, kEventDurationNoWait,
+			      kEventLeaveInQueue, &event);
+      if (err != noErr)
+	event = NULL;
+    }
+#endif
+
+  return event;
 }
 
 #if !SELECT_USE_GCD
@@ -3579,7 +3620,28 @@ select_and_poll_event (nfds, rfds, wfds, efds, timeout)
       if (timeoutval == 0.0)
 	timedout_p = 1;
       else
-	timedout_p = mac_run_loop_run_once (timeoutval);
+	{
+	  /* On Mac OS X 10.7, delayed visible toolbar item validation
+	     (see the documentation of -[NSToolbar
+	     validateVisibleItems]) is treated as if it were an input
+	     source firing rather than a timer function (as in Mac OS
+	     X 10.6).  So it makes -[NSRunLoop runMode:beforeDate:],
+	     which is used in the implementation of
+	     mac_run_loop_run_once, return despite no available input
+	     to process.  In such cases, we want to call
+	     mac_run_loop_run_once again so as to avoid wasting CPU
+	     time caused by vacuous reactivation of delayed visible
+	     toolbar item validation via window update events issued
+	     in the application event loop.  */
+	  do
+	    {
+	      timeoutval = mac_run_loop_run_once (timeoutval);
+	    }
+	  while (timeoutval && !mac_peek_next_event ()
+		 && !detect_input_pending ());
+	  if (timeoutval == 0)
+	    timedout_p = 1;
+	}
 
       if (timeout == NULL && timedout_p)
 	{
@@ -3673,6 +3735,7 @@ sys_select (nfds, rfds, wfds, efds, timeout)
     {
 #if SELECT_USE_GCD
       dispatch_sync (select_dispatch_queue, ^{});
+      wokeup_from_run_loop_run_once_p = 0;
       dispatch_async (select_dispatch_queue, ^{
 	  SELECT_TYPE qrfds = orfds, qwfds = owfds, qefds = oefds;
 	  int qnfds = nfds;
@@ -3688,7 +3751,14 @@ sys_select (nfds, rfds, wfds, efds, timeout)
 	    mac_wakeup_from_run_loop_run_once ();
 	});
 
-      timedout_p = mac_run_loop_run_once (timeoutval);
+      do
+	{
+	  timeoutval = mac_run_loop_run_once (timeoutval);
+	}
+      while (timeoutval && !wokeup_from_run_loop_run_once_p
+	     && !mac_peek_next_event () && !detect_input_pending ());
+      if (timeoutval == 0)
+	timedout_p = 1;
 
       write_one_byte_to_fd (wakeup_fds[0]);
       dispatch_async (select_dispatch_queue, ^{
@@ -3700,9 +3770,17 @@ sys_select (nfds, rfds, wfds, efds, timeout)
 
       select_sem_wait ();
       read_all_from_nonblocking_fd (wakeup_fds[1]);
+      wokeup_from_run_loop_run_once_p = 0;
       select_fire (nfds, rfds, wfds, efds, NULL);
 
-      timedout_p = mac_run_loop_run_once (timeoutval);
+      do
+	{
+	  timeoutval = mac_run_loop_run_once (timeoutval);
+	}
+      while (timeoutval && !wokeup_from_run_loop_run_once_p
+	     && !mac_peek_next_event () && !detect_input_pending ());
+      if (timeoutval == 0)
+	timedout_p = 1;
 
       write_one_byte_to_fd (wakeup_fds[0]);
 #endif

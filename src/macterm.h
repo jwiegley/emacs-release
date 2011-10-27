@@ -508,6 +508,13 @@ enum {
 };
 #endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED == 1060
+BLOCK_EXPORT void _Block_object_assign (void *, const void *, const int) AVAILABLE_MAC_OS_X_VERSION_10_6_AND_LATER;
+BLOCK_EXPORT void _Block_object_dispose (const void *, const int) AVAILABLE_MAC_OS_X_VERSION_10_6_AND_LATER;
+BLOCK_EXPORT void * _NSConcreteGlobalBlock[32] AVAILABLE_MAC_OS_X_VERSION_10_6_AND_LATER;
+BLOCK_EXPORT void * _NSConcreteStackBlock[32] AVAILABLE_MAC_OS_X_VERSION_10_6_AND_LATER;
+#endif
+
 struct frame;
 struct face;
 struct image;
@@ -670,7 +677,7 @@ extern int mac_font_panel_visible_p P_ ((void));
 extern OSStatus mac_show_hide_font_panel P_ ((void));
 extern OSStatus mac_set_font_info_for_selection P_ ((struct frame *, int, int,
 						     int, Lisp_Object));
-extern Boolean mac_run_loop_run_once P_ ((EventTimeout));
+extern EventTimeout mac_run_loop_run_once P_ ((EventTimeout));
 extern void update_frame_tool_bar P_ ((FRAME_PTR f));
 extern void free_frame_tool_bar P_ ((FRAME_PTR f));
 extern void mac_show_hourglass P_ ((struct frame *));

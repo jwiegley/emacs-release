@@ -204,20 +204,25 @@ typedef unsigned int NSUInteger;
      started.  */
   NSSize resizeTrackingStartWindowSize;
 
-  /* Event number of the current resize control tracking session.  */
+  /* Event number of the current resize control tracking session.
+     Don't compare this with the value of a drag event: the latter is
+     is always 0 if the event comes via Screen Sharing.  */
   NSInteger resizeTrackingEventNumber;
 
   /* Whether the window should be made visible when the application
      gets unhidden next time.  */
   BOOL needsOrderFrontOnUnhide;
+
+  /* Whether to suppress the usual -constrainFrameRect:toScreen:
+     behavior.  */
+  BOOL constrainingToScreenSuspended;
 }
-- (BOOL)resizeTrackingSuspendedByEvent:(NSEvent *)event;
-- (void)suspendResizeTracking:(NSEvent *)event;
+- (void)suspendResizeTracking:(NSEvent *)event
+	   positionAdjustment:(NSPoint)adjustment;
 - (void)resumeResizeTracking;
 - (BOOL)needsOrderFrontOnUnhide;
 - (void)setNeedsOrderFrontOnUnhide:(BOOL)flag;
-- (void)updateApplicationPresentationOptions;
-- (void)showMenuBar;
+- (void)setConstrainingToScreenSuspended:(BOOL)flag;
 @end
 
 @interface EmacsFullscreenWindow : EmacsWindow
@@ -276,6 +281,8 @@ typedef unsigned int NSUInteger;
 - (void)setupEmacsView;
 - (void)setupWindow;
 - (struct frame *)emacsFrame;
+- (void)updateApplicationPresentationOptions;
+- (void)showMenuBar;
 - (void)changeWindowManagerStateWithFlags:(WMState)flagsToSet
 				    clear:(WMState)flagsToClear;
 - (BOOL)emacsViewCanDraw;
@@ -324,7 +331,7 @@ typedef unsigned int NSUInteger;
   /* Position in the last normal (non-momentum) wheel event.  */
   NSPoint savedWheelPoint;
 
-  /* Modifers in the last normal (non-momentum) wheel event.  */
+  /* Modifiers in the last normal (non-momentum) wheel event.  */
   int savedWheelModifiers;
 }
 - (id)target;
@@ -552,14 +559,11 @@ typedef unsigned int NSUInteger;
 - (long)doAppleScript:(Lisp_Object)script result:(Lisp_Object *)result;
 @end
 
-@interface NSView (Emacs)
-- (NSImage *)imageInsideRect:(NSRect)rect;
 #if USE_MAC_IMAGE_IO
+@interface NSView (Emacs)
 - (XImagePtr)createXImageFromRect:(NSRect)rect backgroundColor:(NSColor *)color;
-#endif
 @end
 
-#if USE_MAC_IMAGE_IO
 /* Class for SVG frame load delegate.  */
 @interface EmacsSVGLoader : NSObject
 {
@@ -707,6 +711,12 @@ typedef NSUInteger NSWindowCollectionBehavior;
 @interface NSWindow (AvailableOn1050AndLater)
 - (NSWindowCollectionBehavior)collectionBehavior;
 - (void)setCollectionBehavior:(NSWindowCollectionBehavior)behavior;
+@end
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1060
+@interface NSWindow (AvailableOn1060AndLater)
+- (void)setStyleMask:(NSUInteger)styleMask;
 @end
 #endif
 

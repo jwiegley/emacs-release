@@ -3103,12 +3103,11 @@ mac_ctfont_shape (font, string, glyph_layouts, glyph_len)
   if (used <= glyph_len)
     {
       CFArrayRef ctruns = CTLineGetGlyphRuns (ctline);
-      CFIndex i, j, k, ctrun_count = CFArrayGetCount (ctruns);
+      CFIndex i, k, ctrun_count = CFArrayGetCount (ctruns);
       CFRange comp_range = CFRangeMake (0, 0);
-      CGFloat total_advance = 0, comp_offset;
+      CGFloat total_advance = 0;
 
-      comp_offset = CTLineGetOffsetForStringIndex (ctline, 0, NULL);
-      for (i = j = k = 0; k < ctrun_count; k++)
+      for (i = k = 0; k < ctrun_count; k++)
 	{
 	  CTRunRef ctrun = CFArrayGetValueAtIndex (ctruns, k);
 	  CFIndex glyph_count = CTRunGetGlyphCount (ctrun);
@@ -3118,27 +3117,20 @@ mac_ctfont_shape (font, string, glyph_layouts, glyph_len)
 	       range.location++, i++)
 	    {
 	      CFIndex index;
-	      CGFloat offset;
 	      CGPoint position;
 
 	      CTRunGetStringIndices (ctrun, range, &index);
-	      offset = CTLineGetOffsetForStringIndex (ctline, index, NULL);
-	      if (offset != comp_offset)
+	      if (index >= comp_range.location + comp_range.length)
 		{
-		  CGPoint pos = CGPointMake (offset, 0);
+		  CFRange new_range =
+		    CFStringGetRangeOfComposedCharactersAtIndex (string, index);
 
-		  /* Glyph indices are not always increasing in a
-		     composed character (e.g., the first one of
-		     "Hindi" in its native name).  */
-		  comp_range.length =
-		    (CTLineGetStringIndexForPosition (ctline, pos)
-		     - comp_range.location);
-		  for (; j < i; j++)
-		    glyph_layouts[j].comp_range = comp_range;
-		  comp_range.location += comp_range.length;
-		  comp_offset = offset;
+		  comp_range.location = comp_range.location + comp_range.length;
+		  comp_range.length = (new_range.location + new_range.length
+				       - comp_range.location);
 		}
 
+	      glyph_layouts[i].comp_range = comp_range;
 	      glyph_layouts[i].string_index = index;
 	      CTRunGetGlyphs (ctrun, range, &glyph_layouts[i].glyph_id);
 
@@ -3150,9 +3142,6 @@ mac_ctfont_shape (font, string, glyph_layouts, glyph_len)
 	      total_advance += glyph_layouts[i].advance;
 	    }
 	}
-      comp_range.length = CFStringGetLength (string) - comp_range.location;
-      for (; j < i; j++)
-	glyph_layouts[j].comp_range = comp_range;
 
       result = used;
     }

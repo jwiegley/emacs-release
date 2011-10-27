@@ -204,9 +204,24 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #define LIBS_IMAGE -framework QuickTime
 #endif
 
+/* Whether to use the Quartz Core framework.  */
+#ifndef USE_MAC_QUARTZ_CORE
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
+/* The above condition excludes PPC so we don't have to worry about
+   Mac OS X 10.2 that doesn't have Quartz Core.  */
+#define USE_MAC_QUARTZ_CORE 1
+#endif
+#endif
+
+#if USE_MAC_QUARTZ_CORE
+#define LIBS_QUARTZ_CORE -framework QuartzCore
+#else
+#define LIBS_QUARTZ_CORE
+#endif
+
 #define LIBS_GUI -framework Cocoa
 
-#define LIBS_MACGUI -framework Carbon LIBS_IMAGE LIBS_GUI
+#define LIBS_MACGUI -framework Carbon LIBS_IMAGE LIBS_QUARTZ_CORE LIBS_GUI
 
 /* Reroute calls to SELECT to the version defined in mac.c to fix the
    problem of Emacs requiring an extra return to be typed to start

@@ -1,4 +1,33 @@
+* emacs-23.3a-mac-1.9995 [experimental/hackers-only] (2011-08-27)
+
+** Fixed bugs
+
+*** Devanagari string U+0936 U+094D U+0930 U+093F (3 consonants
+followed by 1 vowel, but the glyph corresponding to the last vowel
+should be displayed first) is displayed wrong and may cause hang.
+Reported by Tsuyoshi YASUMA.
+
+*** Executables compiled on Mac OS X 10.6 with
+MACOSX_DEPLOYMENT_TARGET=10.5 do not run on Mac OS X 10.5.  This is a
+regression introduced in 1.9994.
+Note: executables compiled on Mac OS X 10.7 with
+MACOSX_DEPLOYMENT_TARGET=10.6 and some optimization flag still do not
+run on Mac OS X 10.6, but I think this is a bug about weak linking in
+the compiler or linker in Xcode 4.1 and already reported to Apple.
+
+*** Updating display while a frame is resized from the bottom-right
+corner does not work via Screen Sharing.  This is a regression
+introduced in 1.9993.
+
+*** Updating display while a frame is resized does not work from
+non-bottom-right corners or edges on Mac OS X 10.7.
+
+*** Some CPU consumption is observed even if executed with -Q -D (no
+timer for cursor blinking) and M-x tool-bar-mode RET on Mac OS X 10.7.
+
+
 * emacs-23.3a-mac-1.9994 [experimental/hackers-only] (2011-08-06)
+http://lists.gnu.org/archive/html/emacs-devel/2011-08/msg00301.html
 
 ** Fixed bugs
 
