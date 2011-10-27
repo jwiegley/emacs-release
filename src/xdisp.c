@@ -14477,7 +14477,7 @@ try_window_reusing_current_matrix (w)
 	  if (row < bottom_row)
 	    {
 	      struct glyph *glyph = row->glyphs[TEXT_AREA] + w->cursor.hpos;
-	      struct glyph *end = glyph + row->used[TEXT_AREA];
+	      struct glyph *end = row->glyphs[TEXT_AREA] + row->used[TEXT_AREA];
 
 	      for (; glyph < end
 		     && (!BUFFERP (glyph->object)
@@ -24278,7 +24278,7 @@ expose_window (w, fr)
     {
       int yb = window_text_bottom_y (w);
       struct glyph_row *row;
-      int cursor_cleared_p;
+      int cursor_cleared_p, phys_cursor_on_p;
       struct glyph_row *first_overlapping_row, *last_overlapping_row;
 
       TRACE ((stderr, "expose_window (%d, %d, %d, %d)\n",
@@ -24297,6 +24297,13 @@ expose_window (w, fr)
 	}
       else
 	cursor_cleared_p = 0;
+
+      /* If the row containing the cursor extends face to end of line,
+	 then expose_area might overwrite the cursor outside the
+	 rectangle and thus notice_overwritten_cursor might clear
+	 w->phys_cursor_on_p.  We remember the original value and
+	 check later if it is changed.  */
+      phys_cursor_on_p = w->phys_cursor_on_p;
 
       /* Update lines intersecting rectangle R.  */
       first_overlapping_row = last_overlapping_row = NULL;
@@ -24364,7 +24371,8 @@ expose_window (w, fr)
 	  x_draw_vertical_border (w);
 
 	  /* Turn the cursor on again.  */
-	  if (cursor_cleared_p)
+	  if (cursor_cleared_p
+	      || (phys_cursor_on_p && !w->phys_cursor_on_p))
 	    update_window_cursor (w, 1);
 	}
     }

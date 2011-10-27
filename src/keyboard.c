@@ -1338,12 +1338,19 @@ command_loop ()
   else
     while (1)
       {
+#if MAC_USE_AUTORELEASE_LOOP
+	mac_autorelease_loop (^{
+	    internal_catch (Qtop_level, top_level_1, Qnil);
+	    return Qnil;
+	  });
+#else
 #ifdef HAVE_MACGUI
 	void *pool = mac_alloc_autorelease_pool ();
 #endif
 	internal_catch (Qtop_level, top_level_1, Qnil);
 #ifdef HAVE_MACGUI
 	mac_release_autorelease_pool (pool);
+#endif
 #endif
 #if 0 /* This shouldn't be necessary anymore.  --lorentey  */
         /* Reset single_kboard in case top-level set it while
@@ -1369,6 +1376,11 @@ command_loop ()
 Lisp_Object
 command_loop_2 ()
 {
+#if MAC_USE_AUTORELEASE_LOOP
+  mac_autorelease_loop (^{
+      return internal_condition_case (command_loop_1, Qerror, cmd_error);
+    });
+#else
   register Lisp_Object val;
 
   do
@@ -1382,6 +1394,7 @@ command_loop_2 ()
 #endif
     }
   while (!NILP (val));
+#endif
 
   return Qnil;
 }
@@ -1548,16 +1561,18 @@ extern int nonundocount;	/* Declared in cmds.c.  */
 Lisp_Object
 command_loop_1 ()
 {
-  Lisp_Object cmd;
-  int lose;
-  Lisp_Object keybuf[30];
-  int i;
-  int prev_modiff = 0;
-  struct buffer *prev_buffer = NULL;
+#if MAC_USE_AUTORELEASE_LOOP
+#define BLOCK __block
+#else
+#define BLOCK
+#endif
+  BLOCK int prev_modiff = 0;
+  BLOCK struct buffer *prev_buffer = NULL;
 #if 0 /* This shouldn't be necessary anymore.  --lorentey  */
   int was_locked = single_kboard;
 #endif
-  int already_adjusted = 0;
+  BLOCK int already_adjusted = 0;
+#undef BLOCK
 
   current_kboard->Vprefix_arg = Qnil;
   current_kboard->Vlast_prefix_arg = Qnil;
@@ -1593,11 +1608,20 @@ command_loop_1 ()
   if (!CONSP (last_command_event))
     current_kboard->Vlast_repeatable_command = real_this_command;
 
+#if MAC_USE_AUTORELEASE_LOOP
+  mac_autorelease_loop (^
+#else
   while (1)
+#endif
     {
-#ifdef HAVE_MACGUI
+#if defined (HAVE_MACGUI) && !MAC_USE_AUTORELEASE_LOOP
       void *pool = mac_alloc_autorelease_pool ();
 #endif
+      Lisp_Object cmd;
+      int lose;
+      Lisp_Object keybuf[30];
+      int i;
+
       if (! FRAME_LIVE_P (XFRAME (selected_frame)))
 	Fkill_emacs (Qnil);
 
@@ -2028,10 +2052,17 @@ command_loop_1 ()
       if (!was_locked)
         any_kboard_state ();
 #endif
-#ifdef HAVE_MACGUI
+#if defined (HAVE_MACGUI) && !MAC_USE_AUTORELEASE_LOOP
       mac_release_autorelease_pool (pool);
 #endif
+#if MAC_USE_AUTORELEASE_LOOP
+      return Qt;
+#endif
     }
+#if MAC_USE_AUTORELEASE_LOOP
+    );
+  return Qnil;
+#endif
 }
 
 extern Lisp_Object Qcomposition, Qdisplay;
