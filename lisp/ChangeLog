@@ -1,3 +1,253 @@
+2012-01-19  Chong Yidong  <cyd@gnu.org>
+
+	* Version 23.4 released.
+
+2012-01-10  Glenn Morris  <rgm@gnu.org>
+
+	* version.el (emacs-copyright): Update year to 2012.
+
+2011-08-21  Deniz Dogan  <deniz@dogan.se>
+
+	* iswitchb.el (iswitchb-window-buffer-p): Use `member' instead of
+	`memq' (Bug#8799).
+
+2011-08-09  Chong Yidong  <cyd@stupidchicken.com>
+
+	* hi-lock.el (hi-lock-unface-buffer): Fix interactive spec
+	(Bug#7554).
+
+2011-07-28  Andreas Schwab  <schwab@linux-m68k.org>
+
+	* xt-mouse.el (xterm-mouse-event-read): Try to recover the raw
+	character.  (Bug#6594)
+
+2011-07-12  Chong Yidong  <cyd@stupidchicken.com>
+
+	* window.el (split-window-horizontally): Doc fix (Bug#9060).
+
+2011-06-27  Markus Heiser  <markus.heiser@darmarit.de>  (tiny change)
+
+	* progmodes/gud.el (gud-pdb-marker-regexp): Accept \r char (Bug#5653).
+
+2011-06-27  Jambunathan K  <kjambunathan@gmail.com>
+
+	* tar-mode.el (tar-untar-buffer): Set coding-system-for-write to
+	no-conversion (Bug#8870).
+
+2011-06-19  Chong Yidong  <cyd@stupidchicken.com>
+
+	* frame.el (special-display-popup-frame): Doc fix (Bug#8853).
+
+	* info.el (Info-directory-toc-nodes): Minor doc fix (Bug#8833).
+
+2011-06-18  Chong Yidong  <cyd@stupidchicken.com>
+
+	* textmodes/fill.el (default-justification): Add :safe (Bug#8879).
+
+2011-06-09  Eli Zaretskii  <eliz@gnu.org>
+
+	* net/ange-ftp.el (ange-ftp-insert-file-contents): Let-bind
+	buffer-file-type before setting its value, to avoid disastrous
+	global effects on decoding files for DOS/Windows systems.
+	(Bug#8780)
+
+2011-06-05  Juanma Barranquero  <lekktu@gmail.com>
+
+	* progmodes/python.el (python-after-info-look): Add autoload cookie.
+	(python-unload-function): New function. (Bug#8730, bug#8781)
+
+2011-06-04  Reuben Thomas <rrt@sc3d.org>
+
+	* progmodes/flymake.el (flymake-compilation-prevents-syntax-check):
+	Doc fix (Bug#8713).
+
+2011-06-04  Chong Yidong  <cyd@stupidchicken.com>
+
+	* repeat.el (repeat-on-final-keystroke): Fix type (Bug#8696).
+
+2011-06-04  Juanma Barranquero  <lekktu@gmail.com>
+
+	* loadhist.el (unload-feature-special-hooks):
+	Add `comint-output-filter-functions'.
+
+2011-05-27  Kenichi Handa  <handa@m17n.org>
+
+	* mail/sendmail.el (mail-encode-header): Avoid double encoding by
+	let-binding rfc2047-encode-encoded-words to nil.
+
+2011-05-23  Kenichi Handa  <handa@m17n.org>
+
+	* mail/sendmail.el: Require `rfc2047'.
+	(mail-insert-from-field): Do not perform RFC2047 encoding.
+	(mail-encode-header): New function.
+	(sendmail-send-it): Set buffer-file-coding-system of the work
+	buffer to the return value of select-message-coding-system.  Call
+	mail-encode-header.
+
+	* mail/smtpmail.el (smtpmail-send-it): Call mail-encode-header.
+
+2011-05-22  Sean Neakums  <sneakums@zork.net>  (tiny change)
+
+	* mail/supercite.el (sc-default-cite-frame): Handle
+	sc-nested-citation-p when sc-cite-blank-lines-p is non-nil.
+
+2011-05-16  Andreas Schwab  <schwab@linux-m68k.org>
+
+	* diff-mode.el (diff-fixup-modifs): Fix last change.
+
+2011-05-15  Chong Yidong  <cyd@stupidchicken.com>
+
+	* diff-mode.el (diff-fixup-modifs): Locate correct position for
+	hunk-end tags (Bug#8672).
+
+2011-05-13  Juanma Barranquero  <lekktu@gmail.com>
+
+	* progmodes/python.el (python-font-lock-keywords):
+	Add the Python 3.X keyword "nonlocal" (bug#8639).
+
+2011-05-09  Eli Zaretskii  <eliz@gnu.org>
+
+	* smerge-mode.el (smerge-resolve): Use null-device rather than a
+	literal "/dev/null".
+
+2011-05-09  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* emacs-lisp/lisp.el (lisp-complete-symbol, lisp-completion-at-point):
+	Fix typo.
+
+2011-05-08  Ralph Schleicher  <rs@ralph-schleicher.de>
+
+	* progmodes/which-func.el (which-function):
+	Use add-log-current-defun instead of add-log-current-defun-function,
+	which might not be defined (Bug#8260).
+
+2011-04-25  Michael Albinus  <michael.albinus@gmx.de>
+
+	* net/tramp.el (tramp-process-actions): Add POS argument.
+	Delete region between POS and (pos).
+	(tramp-do-copy-or-rename-file-out-of-band): Use `nil' position in
+	`tramp-process-actions' call.
+	(tramp-maybe-open-connection): Call `tramp-process-actions' with pos.
+
+	* net/tramp-smb.el (tramp-smb-maybe-open-connection): Use `nil'
+	position in `tramp-process-actions' call.
+
+2011-04-24  Daniel Colascione <dan.colascione@gmail.com>
+
+	* progmodes/cc-engine.el (c-forward-decl-or-cast-1):
+	Use correct match group (bug#8438).
+
+2011-04-22  Juanma Barranquero  <lekktu@gmail.com>
+
+	* buff-menu.el (Buffer-menu--buffers): Fix typo in docstring (bug#8535).
+
+2011-04-21  Juanma Barranquero  <lekktu@gmail.com>
+
+	* play/mpuz.el (mpuz-silent): Doc fix.
+	(mpuz-mode-map): Move initialization into declaration.
+	(mpuz-put-number-on-board): Rename parameter L to COLUMNS.
+	(mpuz-letter-to-digit, mpuz-check-all-solved, mpuz-create-buffer):
+	Fix typos in docstrings.
+
+	* play/doctor.el (doc$, doctor-$, doctor-read-print, doctor-read-token)
+	(doctor-nounp, doctor-pronounp): Fix typos in docstrings.
+
+2011-04-15  Juanma Barranquero  <lekktu@gmail.com>
+
+	* mouse-drag.el (mouse-drag-throw): Fix typo in docstring.
+
+2011-04-10  Chong Yidong  <cyd@stupidchicken.com>
+
+	* minibuffer.el (completion--do-completion): Avoid the "Next char
+	not unique" prompt if icomplete-mode is enabled (Bug#5849).
+
+2011-04-10  Stephen Berman <stephen.berman@gmx.net>
+
+	* textmodes/page.el (what-page): Use line-number-at-pos to
+	calculate line number (Bug#6825).
+
+2011-04-10  Chong Yidong  <cyd@stupidchicken.com>
+
+	* mouse.el (mouse-drag-mode-line-1): Make sure that if we push
+	mouse-2 into unread-command-events, it is interpreted correctly.
+
+2011-04-09  Chong Yidong  <cyd@stupidchicken.com>
+
+	* image-mode.el (image-type, image-mode-map, image-minor-mode-map)
+	(image-toggle-display): Doc fix.
+
+2011-04-06  Juanma Barranquero  <lekktu@gmail.com>
+
+	Backport revno:103823 and revno:103824 from trunk.
+	* help-fns.el (describe-variable): Complete all variables having
+	documentation, including keywords.
+	http://lists.gnu.org/archive/html/emacs-devel/2011-04/msg00112.html
+
+2011-03-24  Juanma Barranquero  <lekktu@gmail.com>
+
+	* vc-annotate.el (vc-annotate-show-log-revision-at-line):
+	Fix typo in docstring.
+
+2011-03-19  Eli Zaretskii  <eliz@gnu.org>
+
+	* emerge.el (emerge-metachars): Separate value for ms-dos and
+	windows-nt systems.
+	(emerge-protect-metachars): Quote correctly for ms-dos and
+	windows-nt systems.
+
+2011-03-15  Ralph Schleicher  <rs@ralph-schleicher.de>  (tiny change)
+
+	* info.el (info-initialize): Replace all uses of `:' with
+	path-separator for compatibility with non-Unix systems.
+	Cache quoting of path-separator.  (Bug#8258)
+
+2011-03-12  Juanma Barranquero  <lekktu@gmail.com>
+
+	* avoid.el (mouse-avoidance-mode, mouse-avoidance-nudge-dist)
+	(mouse-avoidance-threshold, mouse-avoidance-banish-destination)
+	(mouse-avoidance-mode): Fix typos in docstrings.
+
+2011-03-12  Michael Albinus  <michael.albinus@gmx.de>
+
+	* net/tramp.el (tramp-progress-reporter-update):
+	Use `tramp-compat-funcall'.
+	(tramp-handle-start-file-process): Use `tramp-compat-process-get'.
+	(tramp-handle-insert-file-contents): Make `file-remote-p' call
+	compatible.
+	(tramp-open-connection-setup-interactive-shell):
+	Use `tramp-compat-process-put'.
+
+	* net/tramp-compat.el (tramp-compat-process-get)
+	(tramp-compat-process-put): New defuns.
+
+	* net/trampver.el: Update release number.
+
+2011-03-12  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* ebuff-menu.el (electric-buffer-menu-mode-map): Move initialization
+	into declaration.  Remove redundant and harmful binding.
+
+2011-03-11  Juanma Barranquero  <lekktu@gmail.com>
+
+	Backport revno:103463 from trunk.
+	* emacs-lisp/cl-macs.el (lexical-let*): Fix argument name in docstring.
+
+	Backport revno:103622 from trunk.
+	* help-fns.el (describe-variable): Don't complete keywords.
+	Suggested by Teodor Zlatanov <tzz@lifelogs.com>.
+
+2011-03-11  Eli Zaretskii  <eliz@gnu.org>
+
+	* files.el (file-ownership-preserved-p): Pass `integer' as an
+	explicit 2nd argument to `file-attributes'.  If the file's owner
+	is the Administrators group on Windows, and the current user is
+	Administrator, consider that a match.
+
+	* server.el (server-ensure-safe-dir): Consider server directory
+	safe on MS-Windows if its owner is the Administrators group while
+	the current Emacs user is Administrator.  Use `=' to compare
+	numerical UIDs, since they could be integers or floats.
+
 2011-03-07  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 23.3 released.
@@ -33,8 +283,8 @@
 
 2011-02-18  Eli Zaretskii  <eliz@gnu.org>
 
-	* image-mode.el (image-toggle-display-image): Disable
-	require-final-newline in buffers visiting binary image files.
+	* image-mode.el (image-toggle-display-image):
+	Disable require-final-newline in buffers visiting binary image files.
 	(Bug#8047)
 
 	* international/mule-cmds.el (read-char-by-name, ucs-insert):
@@ -53,8 +303,8 @@
 
 2011-02-14  Chong Yidong  <cyd@stupidchicken.com>
 
-	* pgg-gpg.el (pgg-gpg-process-region): Bind
-	delete-by-moving-to-trash to nil.
+	* pgg-gpg.el (pgg-gpg-process-region):
+	Bind delete-by-moving-to-trash to nil.
 
 	* pgg-pgp.el (pgg-pgp-process-region, pgg-pgp-verify-region)
 	(pgg-pgp-snarf-keys-region):
@@ -68,8 +318,8 @@
 2011-02-12  Chong Yidong  <cyd@stupidchicken.com>
 
 	* epg.el (epg-delete-output-file, epg-decrypt-string)
-	(epg-verify-string, epg-sign-string, epg-encrypt-string): Bind
-	delete-by-moving-to-trash to nil.
+	(epg-verify-string, epg-sign-string, epg-encrypt-string):
+	Bind delete-by-moving-to-trash to nil.
 
 	* epa-file.el (epa-file-insert-file-contents): Likewise.
 
@@ -3490,7 +3740,7 @@
 	(ada-goto-label-re): New; matches goto labels.
 	(ada-block-label-re): New; matches block labels.
 	(ada-label-re): New; matches both.
-	(ada-named-block-re): Deleted; callers changed to use
+	(ada-named-block-re): Delete; callers changed to use
 	`ada-block-label-re' instead.
 	(ada-get-current-indent, ada-get-indent-noindent, ada-get-indent-loop):
 	Use `ada-block-label-re'.
@@ -7094,11 +7344,11 @@
 	* bookmark.el (bookmark-bmenu-list): Don't use switch-to-buffer if
 	we're inside a dedicated or minibuffer window.
 
-2009-10-24  Karl Fogel  <kfogel@red-bean.com>
+2009-10-24  Drew Adams  <drew.adams@oracle.com>
+	    Karl Fogel  <kfogel@red-bean.com>
 
 	* bookmark.el: Update documentation, especially documentation
-	of `bookmark-alist' and of the bookmark file format.
-	Patch by Drew Adams, with minor tweaks from me.  (Bug#4195)
+	of `bookmark-alist' and of the bookmark file format.  (Bug#4195)
 
 2009-10-24  Chong Yidong  <cyd@stupidchicken.com>
 
@@ -11089,7 +11339,7 @@
 	(def-gdb-memory-format, def-gdb-memory-unit): Update memory buffer
 	after changing settings.
 	(gdb-invalidate-disassembly): Update when first shown.
-	(gdb-edit-locals-value): Fixed.
+	(gdb-edit-locals-value): Fix.
 	(gdb-registers-handler-custom): Print registers in right order and
 	allow changing register values (only for current thread yet).
 	(gdb-breakpoints-mode-map): Don't assume threads buffer is present.
@@ -11140,7 +11390,7 @@
 
 2009-08-06  Dmitry Dzhus  <dima@sphinx.net.ru>
 
-	* progmodes/gdb-mi.el (gdb-var-create-regexp): Removed.
+	* progmodes/gdb-mi.el (gdb-var-create-regexp): Remove.
 	(gdb-var-create-handler): Rewritten using JSON parser.
 	(gdb-propertize-header): Move earlier.
 	(gdb-set-header): Remove to avoid duplication.
@@ -12719,7 +12969,7 @@ See ChangeLog.14 for earlier changes.
 ;; coding: utf-8
 ;; End:
 
-  Copyright (C) 2009, 2010, 2011  Free Software Foundation, Inc.
+  Copyright (C) 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 

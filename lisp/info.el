@@ -1,7 +1,7 @@
 ;; info.el --- info package for Emacs
 
 ;; Copyright (C) 1985, 1986, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
 ;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
@@ -588,15 +588,15 @@ in `Info-file-supports-index-cookies-list'."
 (defun info-initialize ()
   "Initialize `Info-directory-list', if that hasn't been done yet."
   (unless Info-directory-list
-    (let ((path (getenv "INFOPATH")))
+    (let ((path (getenv "INFOPATH"))
+	  (sep (regexp-quote path-separator)))
       (setq Info-directory-list
 	    (prune-directory-list
 	     (if path
-		 (if (string-match ":\\'" path)
-		     (append (split-string (substring path 0 -1)
-					   (regexp-quote path-separator))
+		 (if (string-match-p (concat sep "\\'") path)
+		     (append (split-string (substring path 0 -1) sep)
 			     (Info-default-dirs))
-		   (split-string path (regexp-quote path-separator)))
+		   (split-string path sep))
 	       (Info-default-dirs)))))))
 
 ;;;###autoload
@@ -2063,7 +2063,7 @@ If SAME-FILE is non-nil, do not move to a different Info file."
 	       ))
 
 (defun Info-directory-toc-nodes (filename)
-  "Directory-specific implementation of Info-directory-toc-nodes."
+  "Directory-specific implementation of `Info-toc-nodes'."
   `(,filename
     ("Top" nil nil nil)))
 

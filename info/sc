@@ -4,7 +4,7 @@ This document describes Supercite, an Emacs package for citing and
 attributing replies to mail and news messages.
 
    Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009, 2010, 2011 Free Software Foundation, Inc.
+2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -31,7 +31,7 @@ File: sc,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
 attributing replies to mail and news messages.
 
    Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009, 2010, 2011 Free Software Foundation, Inc.
+2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -2529,41 +2529,41 @@ each appears under its `sc-'VARIABLE name and its VARIABLE name.
 
 
 Tag Table:
-Node: Top1187
-Node: Introduction2606
-Node: Usage Overview3633
-Node: What Supercite Does Not Do4795
-Node: What Supercite Does5927
-Node: Citations8759
-Node: Citation Elements11049
-Node: Recognizing Citations12932
-Node: Information Keys and the Info Alist14691
-Node: Reference Headers17278
-Node: The Built-in Header Rewrite Functions18844
-Node: Electric References21294
-Node: Getting Connected24174
-Node: Replying and Yanking27307
-Node: Reply Buffer Initialization27625
-Node: Filling Cited Text34513
-Node: Selecting an Attribution37986
-Node: Attribution Preferences38844
-Node: Anonymous Attributions42760
-Node: Author Names45800
-Node: Configuring the Citation Engine48280
-Node: Using Regi50005
-Node: Frames You Can Customize53880
-Node: Post-yank Formatting Commands56408
-Node: Citing Commands57554
-Node: Insertion Commands59765
-Node: Variable Toggling Shortcuts60705
-Node: Mail Field Commands63064
-Node: Miscellaneous Commands65401
-Node: Hints to MUA Authors65839
-Node: Thanks and History69504
-Node: GNU Free Documentation License71561
-Node: Concept Index96738
-Node: Command Index104592
-Node: Key Index111717
-Node: Variable Index114090
+Node: Top1193
+Node: Introduction2618
+Node: Usage Overview3645
+Node: What Supercite Does Not Do4807
+Node: What Supercite Does5939
+Node: Citations8771
+Node: Citation Elements11061
+Node: Recognizing Citations12944
+Node: Information Keys and the Info Alist14703
+Node: Reference Headers17290
+Node: The Built-in Header Rewrite Functions18856
+Node: Electric References21306
+Node: Getting Connected24186
+Node: Replying and Yanking27319
+Node: Reply Buffer Initialization27637
+Node: Filling Cited Text34525
+Node: Selecting an Attribution37998
+Node: Attribution Preferences38856
+Node: Anonymous Attributions42772
+Node: Author Names45812
+Node: Configuring the Citation Engine48292
+Node: Using Regi50017
+Node: Frames You Can Customize53892
+Node: Post-yank Formatting Commands56420
+Node: Citing Commands57566
+Node: Insertion Commands59777
+Node: Variable Toggling Shortcuts60717
+Node: Mail Field Commands63076
+Node: Miscellaneous Commands65413
+Node: Hints to MUA Authors65851
+Node: Thanks and History69516
+Node: GNU Free Documentation License71573
+Node: Concept Index96750
+Node: Command Index104604
+Node: Key Index111729
+Node: Variable Index114102
 
 End Tag Table

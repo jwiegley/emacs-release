@@ -1,6 +1,6 @@
 /* Interface definitions for display code.
    Copyright (C) 1985, 1993, 1994, 1997, 1998, 1999, 2000, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -71,7 +71,7 @@ typedef XImagePtr XImagePtr_or_DC;
 
 #ifdef HAVE_NS
 #include "nsgui.h"
-/* following typedef needed to accomodate the MSDOS port, believe it or not */
+/* Following typedef needed to accommodate the MSDOS port, believe it or not.  */
 typedef struct ns_display_info Display_Info;
 typedef Pixmap XImagePtr;
 typedef XImagePtr XImagePtr_or_DC;
@@ -376,7 +376,7 @@ struct glyph
      doesn't have a glyph in a font.  */
   unsigned glyph_not_available_p : 1;
 
- 
+
   /* Non-zero means don't display cursor here.  */
   unsigned avoid_cursor_p : 1;
 

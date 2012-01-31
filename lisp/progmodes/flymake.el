@@ -1,6 +1,6 @@
 ;;; flymake.el -- a universal on-the-fly syntax checker
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
 ;;   Free Software Foundation, Inc.
 
 ;; Author:  Pavel Kobyakov <pk_at_work@yahoo.com>
@@ -1112,7 +1112,7 @@ For the format of LINE-ERR-INFO, see `flymake-ler-make-ler'."
      (flymake-log 1 "Failed to delete dir %s, error ignored" dir-name))))
 
 (defcustom flymake-compilation-prevents-syntax-check t
-  "If non-nil, syntax check won't be started in case compilation is running."
+  "If non-nil, don't start syntax check if compilation is running."
   :group 'flymake
   :type 'boolean)
 

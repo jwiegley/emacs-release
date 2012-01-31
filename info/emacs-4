@@ -2,11 +2,11 @@ This is ../../info/emacs, produced by makeinfo version 4.13 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.3.
+updated for Emacs version 23.4.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-2011  Free Software Foundation, Inc.
+2011, 2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -143,8 +143,8 @@ special commands, which mostly apply to the "current breakpoint", the
 breakpoint which point is on.
 
 `<SPC>'
-     Enable/disable the current breakpoint (`gdb-toggle-breakpoint').
-     On a graphical display, this changes the color of a bullet in the
+     Enable/disable current breakpoint (`gdb-toggle-breakpoint').  On a
+     graphical display, this changes the color of a bullet in the
      margin of a source buffer at the relevant line.  This is red when
      the breakpoint is enabled and grey when it is disabled.  Text-only
      terminals correspondingly display a `B' or `b'.
@@ -5555,12 +5555,12 @@ most recently assigned or removed.
 there are three ways to use the labels: in moving, in summaries, and in
 sorting.
 
-   The command `C-M-n LABELS <RET>' (`rmail-next-labeled-message')
-moves to the next message that has one of the labels LABELS.  The
-argument LABELS specifies one or more label names, separated by commas.
-`C-M-p' (`rmail-previous-labeled-message') is similar, but moves
-backwards to previous messages.  A numeric argument to either command
-serves as a repeat count.
+   `C-M-n LABELS <RET>' (`rmail-next-labeled-message') moves to the
+next message that has one of the labels LABELS.  The argument LABELS
+specifies one or more label names, separated by commas.  `C-M-p'
+(`rmail-previous-labeled-message') is similar, but moves backwards to
+previous messages.  A numeric argument to either command serves as a
+repeat count.
 
    The command `C-M-l LABELS <RET>' (`rmail-summary-by-labels')
 displays a summary containing only the messages that have at least one

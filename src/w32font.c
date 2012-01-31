@@ -1,5 +1,5 @@
 /* Font backend for the Microsoft W32 API.
-   Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+   Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -173,7 +173,7 @@ intern_font_name (string)
 
   /* The following code is copied from the function intern (in lread.c).  */
   obarray = Vobarray;
-  if (!VECTORP (obarray) || XVECTOR (obarray)->size == 0)
+  if (!VECTORP (obarray) || XVECTOR_SIZE (obarray) == 0)
     obarray = check_obarray (obarray);
   tem = oblookup (obarray, SDATA (str), len, len);
   if (SYMBOLP (tem))

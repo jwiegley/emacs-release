@@ -1,7 +1,7 @@
 ;;; help-fns.el --- Complex help functions
 
 ;; Copyright (C) 1985, 1986, 1993, 1994, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
 ;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
@@ -585,9 +585,9 @@ it is displayed along with the global value."
 				     "Describe variable (default %s): " v)
 				  "Describe variable: ")
 				obarray
-				'(lambda (vv)
-				   (or (boundp vv)
-				       (get vv 'variable-documentation)))
+                                (lambda (vv)
+                                  (or (get vv 'variable-documentation)
+                                      (and (boundp vv) (not (keywordp vv)))))
 				t nil nil
 				(if (symbolp v) (symbol-name v))))
      (list (if (equal val "")

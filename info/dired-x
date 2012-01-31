@@ -2,7 +2,7 @@ This is ../../info/dired-x, produced by makeinfo version 4.13 from
 dired-x.texi.
 
 Copyright (C) 1994, 1995, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -33,7 +33,7 @@ provided by the file `dired-x.el'.
 
 
    Copyright (C) 1994, 1995, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1643,32 +1643,32 @@ Variable Index
 
 
 Tag Table:
-Node: Top997
-Node: Introduction2440
-Node: Features2753
-Node: Technical Details3745
-Node: Installation4167
-Node: Optional Installation Dired Jump5268
-Node: Optional Installation File At Point6038
-Node: Omitting Files in Dired7090
-Node: Omitting Variables8578
-Node: Omitting Examples11787
-Node: Omitting Technical13017
-Node: Local Variables13414
-Node: Shell Command Guessing15292
-Node: Virtual Dired18549
-Node: Advanced Mark Commands20074
-Node: Advanced Cleaning Functions21473
-Node: Advanced Cleaning Variables22279
-Node: Special Marking Function23402
-Node: Multiple Dired Directories24965
-Node: Find File At Point26182
-Node: Miscellaneous Commands28942
-Node: Bugs32422
-Node: GNU Free Documentation License32678
-Node: Concept Index57846
-Node: Command Index62143
-Node: Key Index65717
-Node: Variable Index67867
+Node: Top1003
+Node: Introduction2452
+Node: Features2765
+Node: Technical Details3757
+Node: Installation4179
+Node: Optional Installation Dired Jump5280
+Node: Optional Installation File At Point6050
+Node: Omitting Files in Dired7102
+Node: Omitting Variables8590
+Node: Omitting Examples11799
+Node: Omitting Technical13029
+Node: Local Variables13426
+Node: Shell Command Guessing15304
+Node: Virtual Dired18561
+Node: Advanced Mark Commands20086
+Node: Advanced Cleaning Functions21485
+Node: Advanced Cleaning Variables22291
+Node: Special Marking Function23414
+Node: Multiple Dired Directories24977
+Node: Find File At Point26194
+Node: Miscellaneous Commands28954
+Node: Bugs32434
+Node: GNU Free Documentation License32690
+Node: Concept Index57858
+Node: Command Index62155
+Node: Key Index65729
+Node: Variable Index67879
 
 End Tag Table

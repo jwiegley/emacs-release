@@ -3,8 +3,8 @@ remember.texi.
 
 This manual is for Remember Mode, version 1.9
 
-   Copyright (C) 2001, 2004, 2005, 2007, 2008, 2009, 2010, 2011 Free
-Software Foundation, Inc.
+   Copyright (C) 2001, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2012
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -31,8 +31,8 @@ Remember
 
 This manual is for Remember Mode, version 1.9
 
-   Copyright (C) 2001, 2004, 2005, 2007, 2008, 2009, 2010, 2011 Free
-Software Foundation, Inc.
+   Copyright (C) 2001, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2012
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -884,20 +884,20 @@ Index
 
 
 Tag Table:
-Node: Top1028
-Node: Preface2809
-Node: Introduction3154
-Node: Installation5501
-Node: Implementation5849
-Node: Quick Start8172
-Node: Function Reference10421
-Node: Keystrokes11604
-Node: Backends12044
-Node: Text File12461
-Node: Diary12879
-Node: Mailbox13277
-Node: Org13708
-Node: GNU Free Documentation License13933
-Node: Concept Index39106
+Node: Top1034
+Node: Preface2821
+Node: Introduction3166
+Node: Installation5513
+Node: Implementation5861
+Node: Quick Start8184
+Node: Function Reference10433
+Node: Keystrokes11616
+Node: Backends12056
+Node: Text File12473
+Node: Diary12891
+Node: Mailbox13289
+Node: Org13720
+Node: GNU Free Documentation License13945
+Node: Concept Index39118
 
 End Tag Table

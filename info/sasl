@@ -3,8 +3,8 @@ sasl.texi.
 
 This file describes the Emacs SASL library, version 0.2.
 
-   Copyright (C) 2000, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
-Free Software Foundation, Inc.
+   Copyright (C) 2000, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -40,8 +40,8 @@ between applications using different protocols.
 
    This file describes the Emacs SASL library, version 0.2.
 
-   Copyright (C) 2000, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
-Free Software Foundation, Inc.
+   Copyright (C) 2000, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -294,16 +294,16 @@ File: sasl,  Node: Variable Index,  Prev: Function Index,  Up: Top
 
 
 Tag Table:
-Node: Top1342
-Node: Overview2947
-Node: How to use3629
-Node: Data types4012
-Node: Mechanisms4314
-Node: Clients5654
-Node: Steps6952
-Node: Back end drivers8126
-Node: Index8267
-Node: Function Index8390
-Node: Variable Index9626
+Node: Top1348
+Node: Overview2959
+Node: How to use3641
+Node: Data types4024
+Node: Mechanisms4326
+Node: Clients5666
+Node: Steps6964
+Node: Back end drivers8138
+Node: Index8279
+Node: Function Index8402
+Node: Variable Index9638
 
 End Tag Table

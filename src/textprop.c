@@ -1,6 +1,6 @@
 /* Interface code for dealing with text properties.
    Copyright (C) 1993, 1994, 1995, 1997, 1999, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -874,8 +874,8 @@ In a buffer, it runs to (point-min), and the value cannot be less than that.
 The property values are compared with `eq'.
 If the property is constant all the way to the start of OBJECT, return the
 first valid position in OBJECT.
-If the optional fourth argument LIMIT is non-nil, don't search
-back past position LIMIT; return LIMIT if nothing is found before LIMIT.  */)
+If the optional fourth argument LIMIT is non-nil, don't search back past
+position LIMIT; return LIMIT if nothing is found before reaching LIMIT.  */)
      (position, prop, object, limit)
      Lisp_Object prop, position, object, limit;
 {

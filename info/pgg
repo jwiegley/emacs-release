@@ -4,7 +4,7 @@ This file describes PGG 0.1, an Emacs interface to various PGP
 implementations.
 
    Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-2011  Free Software Foundation, Inc.
+2011, 2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -37,7 +37,7 @@ decrypt, sign, and verify MIME messages.
 implementations.
 
    Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-2011  Free Software Foundation, Inc.
+2011, 2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1033,22 +1033,22 @@ Variable Index
 
 
 Tag Table:
-Node: Top1078
-Node: Overview2506
-Node: Prerequisites2991
-Node: How to use3983
-Node: User Commands5186
-Node: Selecting an implementation8397
-Node: Caching passphrase9403
-Ref: Caching passphrase-Footnote-112689
-Node: Default user identity12854
-Node: Architecture13894
-Node: Initializing14544
-Node: Back end methods15278
-Node: Getting output17719
-Node: Parsing OpenPGP packets18354
-Node: GNU Free Documentation License19069
-Node: Function Index44253
-Node: Variable Index45787
+Node: Top1084
+Node: Overview2518
+Node: Prerequisites3003
+Node: How to use3995
+Node: User Commands5198
+Node: Selecting an implementation8409
+Node: Caching passphrase9415
+Ref: Caching passphrase-Footnote-112701
+Node: Default user identity12866
+Node: Architecture13906
+Node: Initializing14556
+Node: Back end methods15290
+Node: Getting output17731
+Node: Parsing OpenPGP packets18366
+Node: GNU Free Documentation License19081
+Node: Function Index44265
+Node: Variable Index45799
 
 End Tag Table

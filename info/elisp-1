@@ -2,11 +2,11 @@ This is ../../info/elisp, produced by makeinfo version 4.13 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.3.
+corresponding to Emacs version 23.4.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
-Free Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -33,11 +33,11 @@ Emacs Lisp
 **********
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.3.
+corresponding to Emacs version 23.4.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
-Free Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -445,8 +445,7 @@ Writing Customization Definitions
 
 Customization Types
 
-* Simple Types::            Simple customization types: sexp, integer, number,
-                              string, file, directory, alist.
+* Simple Types::            Simple customization types: sexp, integer, etc.
 * Composite Types::         Build new types from other types or data.
 * Splicing into Lists::     Splice elements into list with `:inline'.
 * Type Keywords::           Keyword-argument pairs in a customization type.
@@ -765,7 +764,7 @@ Font Lock Mode
 Multiline Font Lock Constructs
 
 * Font Lock Multiline::     Marking multiline chunks with a text property.
-* Region to Fontify::       Controlling which region gets refontified
+* Region to Refontify::     Controlling which region gets refontified
                               after a buffer change.
 
 Documentation
@@ -1410,7 +1409,7 @@ chapters describe features that are peculiar to Emacs Lisp or relate
 specifically to editing.
 
    This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.3.
+corresponding to Emacs version 23.4.
 
 * Menu:
 
@@ -5110,7 +5109,7 @@ strings and integers.  `format' (*note Formatting Strings::) and
 `prin1-to-string' (*note Output Functions::) can also convert Lisp
 objects into strings.  `read-from-string' (*note Input Functions::) can
 "convert" a string representation of a Lisp object into an object.  The
-functions `string-make-multibyte' and `string-make-unibyte' convert the
+functions `string-to-multibyte' and `string-to-unibyte' convert the
 text representation of a string (*note Converting Representations::).
 
    *Note Documentation::, for functions that produce textual
@@ -5340,12 +5339,12 @@ first case, the string inserted in place of `%7s' has only 3 letters,
 and needs 4 blank spaces as padding.  In the second case, the string
 `"specification"' is 13 letters wide but is not truncated.
 
-     (format "The word `%7s' actually has %d letters in it."
+     (format "The word `%7s' has %d letters in it."
              "foo" (length "foo"))
-          => "The word `    foo' actually has 3 letters in it."
-     (format "The word `%7s' actually has %d letters in it."
+          => "The word `    foo' has 3 letters in it."
+     (format "The word `%7s' has %d letters in it."
              "specification" (length "specification"))
-          => "The word `specification' actually has 13 letters in it."
+          => "The word `specification' has 13 letters in it."
 
    Immediately after the `%' and before the optional width specifier,
 you can also put certain "flag characters".
@@ -5943,7 +5942,7 @@ for Emacs than `cons'.
                => (pigs pigs pigs)
           (make-list 0 'pigs)
                => nil
-          (setq l (make-list 3 '(a b))
+          (setq l (make-list 3 '(a b)))
                => ((a b) (a b) (a b))
           (eq (car l) (cadr l))
                => t
@@ -6625,8 +6624,8 @@ and the `(4)' in the `sample-list' are not `eq':
      (delq '(4) sample-list)
           => (a c (4))
 
-     If you want to delete elements that are `equal' to a given value,
-     use `delete' (see below).
+   If you want to delete elements that are `equal' to a given value,
+use `delete' (see below).
 
  -- Function: remq object list
      This function returns a copy of LIST, with all elements removed

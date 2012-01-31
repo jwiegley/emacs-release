@@ -1,6 +1,6 @@
 /* Primitive operations on Lisp data types for GNU Emacs Lisp interpreter.
    Copyright (C) 1985, 1986, 1988, 1993, 1994, 1995, 1997, 1998, 1999, 2000,
-                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -1402,7 +1402,7 @@ for this variable.  */)
 	{
 	  struct buffer *b;
 
-	  for (b = all_buffers; b; b = b->next)
+	  for (b = all_buffers; b; b = b->header.next.buffer)
 	    if (!PER_BUFFER_VALUE_P (b, idx))
 	      PER_BUFFER_VALUE (b, offset) = value;
 	}
@@ -2029,9 +2029,9 @@ or a byte-code object.  IDX starts at 0.  */)
     {
       int size = 0;
       if (VECTORP (array))
-	size = XVECTOR (array)->size;
+	size = XVECTOR_SIZE (array);
       else if (COMPILEDP (array))
-	size = XVECTOR (array)->size & PSEUDOVECTOR_SIZE_MASK;
+	size = XVECTOR_SIZE (array) & PSEUDOVECTOR_SIZE_MASK;
       else
 	wrong_type_argument (Qarrayp, array);
 
@@ -2058,7 +2058,7 @@ bool-vector.  IDX starts at 0.  */)
 
   if (VECTORP (array))
     {
-      if (idxval < 0 || idxval >= XVECTOR (array)->size)
+      if (idxval < 0 || idxval >= XVECTOR_SIZE (array))
 	args_out_of_range (array, idx);
       XVECTOR (array)->contents[idxval] = newelt;
     }

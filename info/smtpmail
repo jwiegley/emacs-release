@@ -1,8 +1,8 @@
 This is ../../info/smtpmail, produced by makeinfo version 4.13 from
 smtpmail.texi.
 
-Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free
-Software Foundation, Inc.
+Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -27,8 +27,8 @@ File: smtpmail,  Node: Top,  Next: How Mail Works,  Up: (dir)
 Emacs SMTP Library
 ******************
 
-Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free
-Software Foundation, Inc.
+Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
+Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -889,14 +889,14 @@ File: smtpmail,  Node: Index,  Prev: GNU Free Documentation License,  Up: Top
 
 
 Tag Table:
-Node: Top988
-Node: How Mail Works2362
-Node: Emacs Speaks SMTP5135
-Node: Authentication8093
-Node: Queued delivery12005
-Node: Server workarounds13264
-Node: Debugging14460
-Node: GNU Free Documentation License15597
-Node: Index40745
+Node: Top994
+Node: How Mail Works2374
+Node: Emacs Speaks SMTP5147
+Node: Authentication8105
+Node: Queued delivery12017
+Node: Server workarounds13276
+Node: Debugging14472
+Node: GNU Free Documentation License15609
+Node: Index40757
 
 End Tag Table

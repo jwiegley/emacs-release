@@ -1,6 +1,6 @@
 /* Execution of byte code produced by bytecomp.el.
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -415,7 +415,7 @@ If the third argument is incorrect, Emacs may crash.  */)
   /* Lisp_Object v1, v2; */
   Lisp_Object *vectorp;
 #ifdef BYTE_CODE_SAFE
-  int const_length = XVECTOR (vector)->size;
+  int const_length;
   Lisp_Object *stacke;
 #endif
   int bytestr_length;
@@ -437,6 +437,9 @@ If the third argument is incorrect, Emacs may crash.  */)
   CHECK_VECTOR (vector);
   CHECK_NUMBER (maxdepth);
 
+#ifdef BYTE_CODE_SAFE
+  const_length = XVECTOR_SIZE (vector);
+#endif
   if (STRING_MULTIBYTE (bytestr))
     /* BYTESTR must have been produced by Emacs 20.2 or the earlier
        because they produced a raw 8-bit string for byte-code and now

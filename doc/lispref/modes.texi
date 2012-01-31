@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../../info/modes
 @node Modes, Documentation, Keymaps, Top
@@ -1024,8 +1024,8 @@ Turning on text-mode runs the hook `text-mode-hook'."
 @end group
 @group
   ;; @r{These four lines are absent from the current version}
-  ;; @r{not because this is done some other way, but rather}
-  ;; @r{because nowadays Text mode uses the normal definition of paragraphs.}
+  ;; @r{not because this is done some other way, but because}
+  ;; @r{nowadays Text mode uses the normal definition of paragraphs.}
   (set (make-local-variable 'paragraph-start)
        (concat "[ \t]*$\\|" page-delimiter))
   (set (make-local-variable 'paragraph-separate) paragraph-start)
@@ -1117,12 +1117,15 @@ modes should understand the Lisp conventions for comments.  The rest of
 
 @smallexample
 @group
-  (set (make-local-variable 'paragraph-start) (concat page-delimiter "\\|$" ))
-  (set (make-local-variable 'paragraph-separate) paragraph-start)
+  (set (make-local-variable 'paragraph-start)
+       (concat page-delimiter "\\|$" ))
+  (set (make-local-variable 'paragraph-separate)
+       paragraph-start)
   @dots{}
 @end group
 @group
-  (set (make-local-variable 'comment-indent-function) 'lisp-comment-indent))
+  (set (make-local-variable 'comment-indent-function)
+       'lisp-comment-indent))
   @dots{}
 @end group
 @end smallexample
@@ -3143,7 +3146,7 @@ subsequent lines.
 
 @menu
 * Font Lock Multiline::         Marking multiline chunks with a text property.
-* Region to Fontify::           Controlling which region gets refontified
+* Region to Refontify::         Controlling which region gets refontified
                                   after a buffer change.
 @end menu
 
@@ -3195,7 +3198,7 @@ place the @code{font-lock-multiline} property on the text before
 Font-Lock looks at it, or use
 @code{font-lock-fontify-region-function}.
 
-@node Region to Fontify
+@node Region to Refontify
 @subsubsection Region to Fontify after a Buffer Change
 
   When a buffer is changed, the region that Font Lock refontifies is
@@ -3204,15 +3207,15 @@ While this works well most of the time, sometimes it doesn't---for
 example, when a change alters the syntactic meaning of text on an
 earlier line.
 
-  You can enlarge (or even reduce) the region to fontify by setting
-one the following variables:
+  You can enlarge (or even reduce) the region to refontify by setting
+the following variable:
 
 @defvar font-lock-extend-after-change-region-function
 This buffer-local variable is either @code{nil} or a function for
 Font-Lock to call to determine the region to scan and fontify.
 
 The function is given three parameters, the standard @var{beg},
-@var{end}, and @var{old-len} from after-change-functions
+@var{end}, and @var{old-len} from @code{after-change-functions}
 (@pxref{Change Hooks}).  It should return either a cons of the
 beginning and end buffer positions (in that order) of the region to
 fontify, or @code{nil} (which means choose the region in the standard
@@ -3590,7 +3593,9 @@ natural to have a BNF grammar that looks like this:
   (inst ("IF" exp "THEN" insts "ELSE" insts "END")
         ("CASE" exp "OF" cases "END")
         ...)
-  (cases (cases "|" cases) (caselabel ":" insts) ("ELSE" insts))
+  (cases (cases "|" cases)
+         (caselabel ":" insts)
+         ("ELSE" insts))
   ...
 @end example
 
@@ -3791,7 +3796,9 @@ block).
 Here is an example of an indentation function:
 
 @example
-(eval-when-compile (require 'cl))       ;For the `case' macro.
+;; For the `case' macro.
+(eval-when-compile (require 'cl))
+
 (defun sample-smie-rules (kind token)
   (case kind
     (:elem (case token
@@ -3872,9 +3879,10 @@ and is always at the beginning of a line, we can use a more efficient
 rule:
 @example
 ((equal token "if")
- (and (not (smie-rule-bolp)) (smie-rule-prev-p "else")
+ (and (not (smie-rule-bolp))
+      (smie-rule-prev-p "else")
       (save-excursion
-        (sample-smie-backward-token)  ;Jump before the "else".
+        (sample-smie-backward-token)
         (cons 'column (current-column)))))
 @end example
 

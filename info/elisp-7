@@ -2,11 +2,11 @@ This is ../../info/elisp, produced by makeinfo version 4.13 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.3.
+corresponding to Emacs version 23.4.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
-Free Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -25,278 +25,6 @@ INFO-DIR-SECTION GNU Emacs Lisp
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
-
-
-File: elisp,  Node: Excursions,  Next: Narrowing,  Prev: Motion,  Up: Positions
-
-30.3 Excursions
-===============
-
-It is often useful to move point "temporarily" within a localized
-portion of the program, or to switch buffers temporarily.  This is
-called an "excursion", and it is done with the `save-excursion' special
-form.  This construct initially remembers the identity of the current
-buffer, and its values of point and the mark, and restores them after
-the completion of the excursion.
-
-   The forms for saving and restoring the configuration of windows are
-described elsewhere (see *note Window Configurations::, and *note Frame
-Configurations::).  When only the identity of the current buffer needs
-to be saved and restored, it is preferable to use `save-current-buffer'
-instead.
-
- -- Special Form: save-excursion body...
-     The `save-excursion' special form saves the identity of the current
-     buffer and the values of point and the mark in it, evaluates BODY,
-     and finally restores the buffer and its saved values of point and
-     the mark.  All three saved values are restored even in case of an
-     abnormal exit via `throw' or error (*note Nonlocal Exits::).
-
-     The `save-excursion' special form is the standard way to move
-     point within one part of a program and avoid affecting the rest of
-     the program.  It is used more than 4000 times in the Lisp sources
-     of Emacs.
-
-     `save-excursion' does not save the values of point and the mark for
-     other buffers, so changes in other buffers remain in effect after
-     `save-excursion' exits.
-
-     Likewise, `save-excursion' does not restore window-buffer
-     correspondences altered by functions such as `switch-to-buffer'.
-     One way to restore these correspondences, and the selected window,
-     is to use `save-window-excursion' inside `save-excursion' (*note
-     Window Configurations::).
-
-     The value returned by `save-excursion' is the result of the last
-     form in BODY, or `nil' if no body forms were given.
-
-          (save-excursion FORMS)
-          ==
-          (let ((old-buf (current-buffer))
-                (old-pnt (point-marker))
-                (old-mark (copy-marker (mark-marker))))
-            (unwind-protect
-                (progn FORMS)
-              (set-buffer old-buf)
-              (goto-char old-pnt)
-              (set-marker (mark-marker) old-mark)))
-
-   *Warning:* Ordinary insertion of text adjacent to the saved point
-value relocates the saved value, just as it relocates all markers.
-More precisely, the saved value is a marker with insertion type `nil'.
-*Note Marker Insertion Types::.  Therefore, when the saved point value
-is restored, it normally comes before the inserted text.
-
-   Although `save-excursion' saves the location of the mark, it does
-not prevent functions which modify the buffer from setting
-`deactivate-mark', and thus causing the deactivation of the mark after
-the command finishes.  *Note The Mark::.
-
-
-File: elisp,  Node: Narrowing,  Prev: Excursions,  Up: Positions
-
-30.4 Narrowing
-==============
-
-"Narrowing" means limiting the text addressable by Emacs editing
-commands to a limited range of characters in a buffer.  The text that
-remains addressable is called the "accessible portion" of the buffer.
-
-   Narrowing is specified with two buffer positions which become the
-beginning and end of the accessible portion.  For most editing commands
-and most Emacs primitives, these positions replace the values of the
-beginning and end of the buffer.  While narrowing is in effect, no text
-outside the accessible portion is displayed, and point cannot move
-outside the accessible portion.
-
-   Values such as positions or line numbers, which usually count from
-the beginning of the buffer, do so despite narrowing, but the functions
-which use them refuse to operate on text that is inaccessible.
-
-   The commands for saving buffers are unaffected by narrowing; they
-save the entire buffer regardless of any narrowing.
-
-   If you need to display in a single buffer several very different
-types of text, consider using an alternative facility described in
-*note Swapping Text::.
-
- -- Command: narrow-to-region start end
-     This function sets the accessible portion of the current buffer to
-     start at START and end at END.  Both arguments should be character
-     positions.
-
-     In an interactive call, START and END are set to the bounds of the
-     current region (point and the mark, with the smallest first).
-
- -- Command: narrow-to-page &optional move-count
-     This function sets the accessible portion of the current buffer to
-     include just the current page.  An optional first argument
-     MOVE-COUNT non-`nil' means to move forward or backward by
-     MOVE-COUNT pages and then narrow to one page.  The variable
-     `page-delimiter' specifies where pages start and end (*note
-     Standard Regexps::).
-
-     In an interactive call, MOVE-COUNT is set to the numeric prefix
-     argument.
-
- -- Command: widen
-     This function cancels any narrowing in the current buffer, so that
-     the entire contents are accessible.  This is called "widening".
-     It is equivalent to the following expression:
-
-          (narrow-to-region 1 (1+ (buffer-size)))
-
- -- Special Form: save-restriction body...
-     This special form saves the current bounds of the accessible
-     portion, evaluates the BODY forms, and finally restores the saved
-     bounds, thus restoring the same state of narrowing (or absence
-     thereof) formerly in effect.  The state of narrowing is restored
-     even in the event of an abnormal exit via `throw' or error (*note
-     Nonlocal Exits::).  Therefore, this construct is a clean way to
-     narrow a buffer temporarily.
-
-     The value returned by `save-restriction' is that returned by the
-     last form in BODY, or `nil' if no body forms were given.
-
-     *Caution:* it is easy to make a mistake when using the
-     `save-restriction' construct.  Read the entire description here
-     before you try it.
-
-     If BODY changes the current buffer, `save-restriction' still
-     restores the restrictions on the original buffer (the buffer whose
-     restrictions it saved from), but it does not restore the identity
-     of the current buffer.
-
-     `save-restriction' does _not_ restore point and the mark; use
-     `save-excursion' for that.  If you use both `save-restriction' and
-     `save-excursion' together, `save-excursion' should come first (on
-     the outside).  Otherwise, the old point value would be restored
-     with temporary narrowing still in effect.  If the old point value
-     were outside the limits of the temporary narrowing, this would
-     fail to restore it accurately.
-
-     Here is a simple example of correct use of `save-restriction':
-
-          ---------- Buffer: foo ----------
-          This is the contents of foo
-          This is the contents of foo
-          This is the contents of foo-!-
-          ---------- Buffer: foo ----------
-
-          (save-excursion
-            (save-restriction
-              (goto-char 1)
-              (forward-line 2)
-              (narrow-to-region 1 (point))
-              (goto-char (point-min))
-              (replace-string "foo" "bar")))
-
-          ---------- Buffer: foo ----------
-          This is the contents of bar
-          This is the contents of bar
-          This is the contents of foo-!-
-          ---------- Buffer: foo ----------
-
-
-File: elisp,  Node: Markers,  Next: Text,  Prev: Positions,  Up: Top
-
-31 Markers
-**********
-
-A "marker" is a Lisp object used to specify a position in a buffer
-relative to the surrounding text.  A marker changes its offset from the
-beginning of the buffer automatically whenever text is inserted or
-deleted, so that it stays with the two characters on either side of it.
-
-* Menu:
-
-* Overview of Markers::      The components of a marker, and how it relocates.
-* Predicates on Markers::    Testing whether an object is a marker.
-* Creating Markers::         Making empty markers or markers at certain places.
-* Information from Markers:: Finding the marker's buffer or character position.
-* Marker Insertion Types::   Two ways a marker can relocate when you
-                               insert where it points.
-* Moving Markers::           Moving the marker to a new buffer or position.
-* The Mark::                 How "the mark" is implemented with a marker.
-* The Region::               How to access "the region".
-
-
-File: elisp,  Node: Overview of Markers,  Next: Predicates on Markers,  Up: Markers
-
-31.1 Overview of Markers
-========================
-
-A marker specifies a buffer and a position in that buffer.  The marker
-can be used to represent a position in the functions that require one,
-just as an integer could be used.  In that case, the marker's buffer is
-normally ignored.  Of course, a marker used in this way usually points
-to a position in the buffer that the function operates on, but that is
-entirely the programmer's responsibility.  *Note Positions::, for a
-complete description of positions.
-
-   A marker has three attributes: the marker position, the marker
-buffer, and the insertion type.  The marker position is an integer that
-is equivalent (at a given time) to the marker as a position in that
-buffer.  But the marker's position value can change often during the
-life of the marker.  Insertion and deletion of text in the buffer
-relocate the marker.  The idea is that a marker positioned between two
-characters remains between those two characters despite insertion and
-deletion elsewhere in the buffer.  Relocation changes the integer
-equivalent of the marker.
-
-   Deleting text around a marker's position leaves the marker between
-the characters immediately before and after the deleted text.  Inserting
-text at the position of a marker normally leaves the marker either in
-front of or after the new text, depending on the marker's "insertion
-type" (*note Marker Insertion Types::)--unless the insertion is done
-with `insert-before-markers' (*note Insertion::).
-
-   Insertion and deletion in a buffer must check all the markers and
-relocate them if necessary.  This slows processing in a buffer with a
-large number of markers.  For this reason, it is a good idea to make a
-marker point nowhere if you are sure you don't need it any more.
-Unreferenced markers are garbage collected eventually, but until then
-will continue to use time if they do point somewhere.
-
-   Because it is common to perform arithmetic operations on a marker
-position, most of the arithmetic operations (including `+' and `-')
-accept markers as arguments.  In such cases, the marker stands for its
-current position.
-
-   Here are examples of creating markers, setting markers, and moving
-point to markers:
-
-     ;; Make a new marker that initially does not point anywhere:
-     (setq m1 (make-marker))
-          => #<marker in no buffer>
-
-     ;; Set `m1' to point between the 99th and 100th characters
-     ;;   in the current buffer:
-     (set-marker m1 100)
-          => #<marker at 100 in markers.texi>
-
-     ;; Now insert one character at the beginning of the buffer:
-     (goto-char (point-min))
-          => 1
-     (insert "Q")
-          => nil
-
-     ;; `m1' is updated appropriately.
-     m1
-          => #<marker at 101 in markers.texi>
-
-     ;; Two markers that point to the same position
-     ;;   are not `eq', but they are `equal'.
-     (setq m2 (copy-marker m1))
-          => #<marker at 101 in markers.texi>
-     (eq m1 m2)
-          => nil
-     (equal m1 m2)
-          => t
-
-     ;; When you are finished using a marker, make it point nowhere.
-     (set-marker m1 nil)
-          => #<marker in no buffer>
 
 
 File: elisp,  Node: Predicates on Markers,  Next: Creating Markers,  Prev: Overview of Markers,  Up: Markers
@@ -3338,9 +3066,9 @@ from 1.
                            3 8 nil
                            8 11 (face italic mouse-face bold-italic))
 
-   See also the function `buffer-substring-no-properties' (*note Buffer
-Contents::) which copies text from the buffer but does not copy its
-properties.
+   *Note Buffer Contents::, for the function
+`buffer-substring-no-properties', which copies text from the buffer but
+does not copy its properties.
 
 
 File: elisp,  Node: Property Search,  Next: Special Properties,  Prev: Changing Properties,  Up: Text Properties
@@ -3513,12 +3241,6 @@ each Emacs command.  *Note Adjusting Point::.
           With this feature, you do not need to create a face each time
           you want to specify a particular attribute for certain text.
           *Note Face Attributes::.
-
-        * A cons cell with the form `(foreground-color . COLOR-NAME)'
-          or `(background-color . COLOR-NAME)'.  These are old,
-          deprecated equivalents for `(:foreground COLOR-NAME)' and
-          `(:background COLOR-NAME)'.  Please convert code that uses
-          them.
 
      It works to use the latter two forms directly as the value of the
      `face' property.
@@ -4847,7 +4569,7 @@ representation is a choice made by the user that cannot be overridden
 automatically.
 
    Converting unibyte text to multibyte text leaves ASCII characters
-unchanged, and converts bytes with codes 128 through 159 to the
+unchanged, and converts bytes with codes 128 through 255 to the
 multibyte representation of raw eight-bit bytes.
 
    Converting multibyte text to unibyte converts all ASCII and
@@ -5030,17 +4752,17 @@ However, sometimes we shorten the names to make their use easier.
 properties that Emacs knows about:
 
 `name'
-     This property corresponds to the Unicode `Name' property.  The
-     value is a string consisting of upper-case Latin letters A to Z,
-     digits, spaces, and hyphen `-' characters.
+     Corresponds to the `Name' Unicode property.  The value is a string
+     consisting of upper-case Latin letters A to Z, digits, spaces, and
+     hyphen `-' characters.
 
 `general-category'
-     This property corresponds to the Unicode `General_Category'
-     property.  The value is a symbol whose name is a 2-letter
-     abbreviation of the character's classification.
+     Corresponds to the `General_Category' Unicode property.  The value
+     is a symbol whose name is a 2-letter abbreviation of the
+     character's classification.
 
 `canonical-combining-class'
-     Corresponds to the Unicode `Canonical_Combining_Class' property.
+     Corresponds to the `Canonical_Combining_Class' Unicode property.
      The value is an integer number.
 
 `bidi-class'
@@ -5109,11 +4831,14 @@ properties that Emacs knows about:
                => Zs
           (get-char-code-property ?1  'general-category)
                => Nd
-          (get-char-code-property ?\u2084 'digit-value) ; subscript 4
+          ;; subscript 4
+          (get-char-code-property ?\u2084 'digit-value)
                => 4
-          (get-char-code-property ?\u2155 'numeric-value) ; one fifth
+          ;; one fifth
+          (get-char-code-property ?\u2155 'numeric-value)
                => 1/5
-          (get-char-code-property ?\u2163 'numeric-value) ; Roman IV
+          ;; Roman IV
+          (get-char-code-property ?\u2163 'numeric-value)
                => \4
 
  -- Function: char-code-property-description prop value
@@ -5974,11 +5699,11 @@ than `undecided' or `latin-1'.
      ENCODING-SYSTEM is the coding system for encoding (in case
      OPERATION does encoding).
 
-     The argument OPERATION is a symbol, one of `write-region',
-     `start-process', `call-process', `call-process-region',
-     `insert-file-contents', or `open-network-stream'.  These are the
-     names of the Emacs I/O primitives that can do character code and
-     eol conversion.
+     The argument OPERATION is a symbol; it should be one of
+     `write-region', `start-process', `call-process',
+     `call-process-region', `insert-file-contents', or
+     `open-network-stream'.  These are the names of the Emacs I/O
+     primitives that can do character code and eol conversion.
 
      The remaining arguments should be the same arguments that might be
      given to the corresponding I/O primitive.  Depending on the
@@ -6604,4 +6329,67 @@ functions used in Lisp code.
 
      This variable is used by passing it as an argument to the function
      `replace-match'.  *Note Replacing Match::.
+
+
+File: elisp,  Node: Regular Expressions,  Next: Regexp Search,  Prev: Searching and Case,  Up: Searching and Matching
+
+34.3 Regular Expressions
+========================
+
+A "regular expression", or "regexp" for short, is a pattern that
+denotes a (possibly infinite) set of strings.  Searching for matches for
+a regexp is a very powerful operation.  This section explains how to
+write regexps; the following section says how to search for them.
+
+   For convenient interactive development of regular expressions, you
+can use the `M-x re-builder' command.  It provides a convenient
+interface for creating regular expressions, by giving immediate visual
+feedback in a separate buffer.  As you edit the regexp, all its matches
+in the target buffer are highlighted.  Each parenthesized
+sub-expression of the regexp is shown in a distinct face, which makes
+it easier to verify even very complex regexps.
+
+* Menu:
+
+* Syntax of Regexps::       Rules for writing regular expressions.
+* Regexp Example::          Illustrates regular expression syntax.
+* Regexp Functions::        Functions for operating on regular expressions.
+
+
+File: elisp,  Node: Syntax of Regexps,  Next: Regexp Example,  Up: Regular Expressions
+
+34.3.1 Syntax of Regular Expressions
+------------------------------------
+
+Regular expressions have a syntax in which a few characters are special
+constructs and the rest are "ordinary".  An ordinary character is a
+simple regular expression that matches that character and nothing else.
+The special characters are `.', `*', `+', `?', `[', `^', `$', and `\';
+no new special characters will be defined in the future.  The character
+`]' is special if it ends a character alternative (see later).  The
+character `-' is special inside a character alternative.  A `[:' and
+balancing `:]' enclose a character class inside a character
+alternative.  Any other character appearing in a regular expression is
+ordinary, unless a `\' precedes it.
+
+   For example, `f' is not a special character, so it is ordinary, and
+therefore `f' is a regular expression that matches the string `f' and
+no other string.  (It does _not_ match the string `fg', but it does
+match a _part_ of that string.)  Likewise, `o' is a regular expression
+that matches only `o'.
+
+   Any two regular expressions A and B can be concatenated.  The result
+is a regular expression that matches a string if A matches some amount
+of the beginning of that string and B matches the rest of the string.
+
+   As a simple example, we can concatenate the regular expressions `f'
+and `o' to get the regular expression `fo', which matches only the
+string `fo'.  Still trivial.  To do something more powerful, you need
+to use one of the special regular expression constructs.
+
+* Menu:
+
+* Regexp Special::      Special characters in regular expressions.
+* Char Classes::        Character classes used in regular expressions.
+* Regexp Backslash::    Backslash-sequences in regular expressions.
 

@@ -2,11 +2,11 @@ This is ../../info/elisp, produced by makeinfo version 4.13 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.3.
+corresponding to Emacs version 23.4.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
-Free Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -4100,7 +4100,9 @@ File: elisp,  Node: Creating Buffer-Local,  Next: Default Value,  Prev: Intro to
  -- Command: make-variable-buffer-local variable
      This function marks VARIABLE (a symbol) automatically
      buffer-local, so that any subsequent attempt to set it will make it
-     local to the current buffer at the time.
+     local to the current buffer at the time.  Contrary to
+     `make-local-variable' with which it is often confused, this cannot
+     be undone, and affects the behavior of the variable in all buffers.
 
      A peculiar wrinkle of this feature is that binding the variable
      (with `let' or other binding constructs) does not create a
@@ -7021,10 +7023,99 @@ Introduction: (widget)Top, for details.
 
 * Menu:
 
-* Simple Types::            Simple customization types: sexp, integer, number,
-                              string, file, directory, alist.
+* Simple Types::            Simple customization types: sexp, integer, etc.
 * Composite Types::         Build new types from other types or data.
 * Splicing into Lists::     Splice elements into list with `:inline'.
 * Type Keywords::           Keyword-argument pairs in a customization type.
 * Defining New Types::      Give your type a name.
+
+
+File: elisp,  Node: Simple Types,  Next: Composite Types,  Up: Customization Types
+
+14.4.1 Simple Types
+-------------------
+
+This section describes all the simple customization types.
+
+`sexp'
+     The value may be any Lisp object that can be printed and read
+     back.  You can use `sexp' as a fall-back for any option, if you
+     don't want to take the time to work out a more specific type to
+     use.
+
+`integer'
+     The value must be an integer, and is represented textually in the
+     customization buffer.
+
+`number'
+     The value must be a number (floating point or integer), and is
+     represented textually in the customization buffer.
+
+`float'
+     The value must be a floating point number, and is represented
+     textually in the customization buffer.
+
+`string'
+     The value must be a string, and the customization buffer shows
+     just the contents, with no delimiting `"' characters and no
+     quoting with `\'.
+
+`regexp'
+     Like `string' except that the string must be a valid regular
+     expression.
+
+`character'
+     The value must be a character code.  A character code is actually
+     an integer, but this type shows the value by inserting the
+     character in the buffer, rather than by showing the number.
+
+`file'
+     The value must be a file name, and you can do completion with
+     `M-<TAB>'.
+
+`(file :must-match t)'
+     The value must be a file name for an existing file, and you can do
+     completion with `M-<TAB>'.
+
+`directory'
+     The value must be a directory name, and you can do completion with
+     `M-<TAB>'.
+
+`hook'
+     The value must be a list of functions (or a single function, but
+     that is obsolete usage).  This customization type is used for hook
+     variables.  You can use the `:options' keyword in a hook variable's
+     `defcustom' to specify a list of functions recommended for use in
+     the hook; see *note Variable Definitions::.
+
+`symbol'
+     The value must be a symbol.  It appears in the customization
+     buffer as the name of the symbol.
+
+`function'
+     The value must be either a lambda expression or a function name.
+     When it is a function name, you can do completion with `M-<TAB>'.
+
+`variable'
+     The value must be a variable name, and you can do completion with
+     `M-<TAB>'.
+
+`face'
+     The value must be a symbol which is a face name, and you can do
+     completion with `M-<TAB>'.
+
+`boolean'
+     The value is boolean--either `nil' or `t'.  Note that by using
+     `choice' and `const' together (see the next section), you can
+     specify that the value must be `nil' or `t', but also specify the
+     text to describe each value in a way that fits the specific
+     meaning of the alternative.
+
+`coding-system'
+     The value must be a coding-system name, and you can do completion
+     with `M-<TAB>'.
+
+`color'
+     The value must be a valid color name, and you can do completion
+     with `M-<TAB>'.  A sample is provided.
 

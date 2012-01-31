@@ -2,11 +2,11 @@ This is ../../info/emacs, produced by makeinfo version 4.13 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.3.
+updated for Emacs version 23.4.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-2011  Free Software Foundation, Inc.
+2011, 2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1078,8 +1078,7 @@ main places you can read about known issues:
      problems: (efaq)Bugs and problems.
 
    * The `bug-gnu-emacs' mailing list (also available as the newsgroup
-     `gnu.emacs.bug').  This is where you will find most Emacs bug
-     reports.  You can read the list archives at
+     `gnu.emacs.bug').  You can read the list archives at
      `http://lists.gnu.org/mailman/listinfo/bug-gnu-emacs'.  If you
      like, you can also subscribe to the list.  Be aware that the sole
      purpose of this list is to provide the Emacs maintainers with
@@ -1088,10 +1087,10 @@ main places you can read about known issues:
      this.
 
    * The bug tracker at `http://debbugs.gnu.org'.  From early 2008,
-     reports from the `bug-gnu-emacs' list have been sent here.  The
-     tracker contains the same information as the mailing list, just in
-     a different format.  You may prefer to browse and read reports
-     using the tracker.
+     reports from the `bug-gnu-emacs' list have also been sent here.
+     The tracker contains the same information as the mailing list,
+     just in a different format.  You may prefer to browse and read
+     reports using the tracker.
 
    * The `emacs-pretest-bug' mailing list.  This list is no longer
      used, and is mainly of historical interest.  At one time, it was
@@ -3324,8 +3323,8 @@ be set, but it uses their values if they are set.
      `data-directory'.
 
 `EMACSDOC'
-     Directory for the documentation string file, `DOC-EMACSVERSION'.
-     This is used to initialize the Lisp variable `doc-directory'.
+     Directory for the documentation string file, which is used to
+     initialize the Lisp variable `doc-directory'.
 
 `EMACSLOADPATH'
      A colon-separated list of directories(1) to search for Emacs Lisp
@@ -3604,13 +3603,13 @@ window displayed at their local terminal.  You might need to log in to
 another system because the files you want to edit are there, or because
 the Emacs executable file you want to run is there.
 
-   The syntax of the `DISPLAY' environment variable is
-`HOST:DISPLAY.SCREEN', where HOST is the host name of the X Window
-System server machine, DISPLAY is an arbitrarily-assigned number that
-distinguishes your server (X terminal) from other servers on the same
-machine, and SCREEN is a rarely-used field that allows an X server to
-control multiple terminal screens.  The period and the SCREEN field are
-optional.  If included, SCREEN is usually zero.
+   `DISPLAY' has the syntax `HOST:DISPLAY.SCREEN', where HOST is the
+host name of the X Window System server machine, DISPLAY is an
+arbitrarily-assigned number that distinguishes your server (X terminal)
+from other servers on the same machine, and SCREEN is a rarely-used
+field that allows an X server to control multiple terminal screens.
+The period and the SCREEN field are optional.  If included, SCREEN is
+usually zero.
 
    For example, if your host is named `glasperle' and your server is
 the first (or perhaps the only) server listed in the configuration, your
@@ -4336,18 +4335,6 @@ enable multilingual menu text you specify a `fontSet' resource instead
 of the font resource.  If both `font' and `fontSet' resources are
 specified, the `fontSet' resource is used.
 
-   Thus, to specify `-*-helvetica-medium-r-*--*-120-*-*-*-*-*-*,*' for
-both the popup and menu bar menus, write this:
-
-     Emacs*menu*fontSet:  -*-helvetica-medium-r-*--*-120-*-*-*-*-*-*,*
-
-The `*menu*' as a wildcard matches `pane.menubar' and `menu...'.
-
-   Experience shows that on some systems you may need to add `shell.'
-before the `pane.menubar' or `menu*'.  On some other systems, you must
-not add `shell.'.  The generic wildcard approach should work on both
-kinds of systems.
-
    Here is a list of the specific resources for menu bars and pop-up
 menus:
 
@@ -4859,7 +4846,7 @@ Appendix E Emacs 22 Antinews
 
 For those users who live backwards in time, here is information about
 downgrading to Emacs version 22.3.  We hope you will enjoy the greater
-simplicity that results from the absence of many Emacs 23.3 features.
+simplicity that results from the absence of many Emacs 23.4 features.
 
    * We have switched to a character representation specially designed
      for Emacs.  Rather than forcing all the widely used scripts into
@@ -5119,10 +5106,6 @@ is a list of these events.
      generating a `ns-open-file' event, the results of which are
      described above.
 
-     You can bind <ns-pop-up-frames> and <ns-open-temp-file> to other
-     Lisp functions.  When the event is registered, the name of the
-     file to open is stored in the variable `ns-input-file'.
-
 <ns-open-file-line>
      Some applications, such as ProjectBuilder and gdb, request not
      only a particular file, but also a particular line or sequence of
@@ -5244,30 +5227,29 @@ There are several ways of starting Emacs on MS-Windows:
      immediately available for invoking other commands.  In this case,
      Emacs will start in the current directory of the Windows shell.
 
-  4. Via the Emacs client program, `emacsclient.exe' or
-     `emacsclientw.exe'.  This allows to invoke Emacs from other
-     programs, and to reuse a running Emacs process for serving editing
-     jobs required by other programs.  *Note Emacs Server::.  The
-     difference between `emacsclient.exe' and `emacsclientw.exe' is
-     that the former is a console program, while the latter is a
-     Windows GUI program.  Both programs wait for Emacs to signal that
-     the editing job is finished, before they exit and return control
-     to the program that invoked them.  Which one of them to use in
-     each case depends on the expectations of the program that needs
-     editing services.  If that program is itself a console (text-mode)
-     program, you should use `emacsclient.exe', so that any of its
-     messages and prompts appear in the same command window as those of
-     the invoking program.  By contrast, if the invoking program is a
-     GUI program, you will be better off using `emacsclientw.exe',
-     because `emacsclient.exe' will pop up a command window if it is
-     invoked from a GUI program.  A notable situation where you would
-     want `emacsclientw.exe' is when you right-click on a file in the
-     Windows Explorer and select "Open With" from the pop-up menu.  Use
-     the `--alternate-editor=' or `-a' options if Emacs might not be
-     running (or not running as a server) when `emacsclient' is
-     invoked--that will always give you an editor.  When invoked via
-     `emacsclient', Emacs will start in the current directory of the
-     program that invoked `emacsclient'.
+  4. Via `emacsclient.exe' or `emacsclientw.exe', which allow you to
+     invoke Emacs from other programs, and to reuse a running Emacs
+     process for serving editing jobs required by other programs.
+     *Note Emacs Server::.  The difference between `emacsclient.exe'
+     and `emacsclientw.exe' is that the former is a console program,
+     while the latter is a Windows GUI program.  Both programs wait for
+     Emacs to signal that the editing job is finished, before they exit
+     and return control to the program that invoked them.  Which one of
+     them to use in each case depends on the expectations of the
+     program that needs editing services.  If that program is itself a
+     console (text-mode) program, you should use `emacsclient.exe', so
+     that any of its messages and prompts appear in the same command
+     window as those of the invoking program.  By contrast, if the
+     invoking program is a GUI program, you will be better off using
+     `emacsclientw.exe', because `emacsclient.exe' will pop up a
+     command window if it is invoked from a GUI program.  A notable
+     situation where you would want `emacsclientw.exe' is when you
+     right-click on a file in the Windows Explorer and select "Open
+     With" from the pop-up menu.  Use the `--alternate-editor=' or `-a'
+     options if Emacs might not be running (or not running as a server)
+     when `emacsclient' is invoked--that will always give you an
+     editor.  When invoked via `emacsclient', Emacs will start in the
+     current directory of the program that invoked `emacsclient'.
 
 
 File: emacs,  Node: Text and Binary,  Next: Windows Files,  Prev: Windows Startup,  Up: Microsoft Windows
@@ -5522,34 +5504,42 @@ G.5 HOME and Startup Directories on MS-Windows
 ==============================================
 
 The Windows equivalent of the `HOME' directory is the "user-specific
-application data directory".  The actual location depends on your
-Windows version and system configuration; typical values are
-`C:\Documents and Settings\USERNAME\Application Data' on Windows 2K/XP
-and later, and either `C:\WINDOWS\Application Data' or
+application data directory".  The actual location depends on the
+Windows version; typical values are `C:\Documents and
+Settings\USERNAME\Application Data' on Windows 2K/XP/2K3,
+`C:\Users\USERNAME\AppData\Roaming' on Windows Vista/7/2K8, and either
+`C:\WINDOWS\Application Data' or
 `C:\WINDOWS\Profiles\USERNAME\Application Data' on the older Windows
-9X/ME systems.
+9X/ME systems.  If this directory does not exist or cannot be accessed,
+Emacs falls back to `C:\' as the default value of `HOME'.
 
-   `HOME' can also be set in the system registry, for details see *note
-MS-Windows Registry::.
+   You can override this default value of `HOME' by explicitly setting
+the environment variable `HOME' to point to any directory on your
+system.  `HOME' can be set either from the command shell prompt or from
+the `My Computer's `Properties' dialog.  `HOME' can also be set in the
+system registry, for details see *note MS-Windows Registry::.
 
-   The home directory is where your init file `.emacs' is stored.  When
-Emacs starts, it first checks whether the environment variable `HOME'
-is set.  If it is, it looks for the init file in the directory pointed
-by `HOME'.  If `HOME' is not defined, Emacs checks for an existing
-`.emacs' file in `C:\', the root directory of drive `C:'(1).  If
-there's no such file in `C:\', Emacs next uses the Windows system calls
-to find out the exact location of your application data directory.  If
-that system call fails, Emacs falls back to `C:\'.
+   For compatibility with older versions of Emacs(1), if there is a
+file named `.emacs' in `C:\', the root directory of drive `C:', and
+`HOME' is set neither in the environment nor in the Registry, Emacs
+will treat `C:\' as the default `HOME' location, and will not look in
+the application data directory, even if it exists.  Note that only
+`.emacs' is looked for in `C:\'; the older name `_emacs' (see below) is
+not.  This use of `C:\.emacs' to define `HOME' is deprecated.
 
-   Whatever the final place is, Emacs sets the value of the `HOME'
-environment variable to point to it, and it will use that location for
-other files and directories it normally creates in the user's home
-directory.
+   Whatever the final place is, Emacs sets the internal value of the
+`HOME' environment variable to point to it, and it will use that
+location for other files and directories it normally looks for or
+creates in the user's home directory.
 
    You can always find out where Emacs thinks is your home directory's
 location by typing `C-x d ~/ <RET>'.  This should present the list of
 files in the home directory, and show its full name on the first line.
-Likewise, to visit your init file, type `C-x C-f ~/.emacs <RET>'.
+Likewise, to visit your init file, type `C-x C-f ~/.emacs <RET>'
+(assuming the file's name is `.emacs').
+
+   The home directory is where your init file is stored.  It can have
+any name mentioned in *note Init File::.
 
    Because MS-DOS does not allow file names with leading dots, and
 because older Windows systems made it hard to create files with such
@@ -5559,8 +5549,8 @@ as a fallback, if such a file exists in the home directory, whereas
 
    ---------- Footnotes ----------
 
-   (1) The check in `C:\' is for compatibility with older versions of
-Emacs, which didn't check the application data directory.
+   (1) Older versions of Emacs didn't check the application data
+directory.
 
 
 File: emacs,  Node: Windows Keyboard,  Next: Windows Mouse,  Prev: Windows HOME,  Up: Microsoft Windows
@@ -5988,8 +5978,8 @@ Optional properties common to all font backends on MS-Windows are:
      `mathematical'.
 
 `antialias'
-     Specifies the antialiasing to use for the font.  The value `none'
-     means no antialiasing, `standard' means use standard antialiasing,
+     Specifies the antialiasing method.  The value `none' means no
+     antialiasing, `standard' means use standard antialiasing,
      `subpixel' means use subpixel antialiasing (known as Cleartype on
      Windows), and `natural' means use subpixel antialiasing with
      adjusted spacing between letters.  If unspecified, the font will

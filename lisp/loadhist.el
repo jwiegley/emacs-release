@@ -1,7 +1,7 @@
 ;;; loadhist.el --- lisp functions for working with feature groups
 
 ;; Copyright (C) 1995, 1998, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
 ;; Author: Eric S. Raymond <esr@snark.thyrsus.com>
 ;; Maintainer: FSF
@@ -118,16 +118,16 @@ from a file."
   '(after-change-functions after-insert-file-functions
     after-make-frame-functions auto-fill-function before-change-functions
     blink-paren-function buffer-access-fontify-functions
-    choose-completion-string-functions command-line-functions
-    comment-indent-function compilation-finish-functions delete-frame-functions
-    disabled-command-function find-file-not-found-functions
-    font-lock-beginning-of-syntax-function font-lock-fontify-buffer-function
-    font-lock-fontify-region-function font-lock-mark-block-function
-    font-lock-syntactic-face-function font-lock-unfontify-buffer-function
-    font-lock-unfontify-region-function kill-buffer-query-functions
-    kill-emacs-query-functions lisp-indent-function mouse-position-function
-    redisplay-end-trigger-functions suspend-tty-functions
-    temp-buffer-show-function window-scroll-functions
+    choose-completion-string-functions comint-output-filter-functions
+    command-line-functions comment-indent-function compilation-finish-functions
+    delete-frame-functions disabled-command-function
+    find-file-not-found-functions font-lock-beginning-of-syntax-function
+    font-lock-fontify-buffer-function font-lock-fontify-region-function
+    font-lock-mark-block-function font-lock-syntactic-face-function
+    font-lock-unfontify-buffer-function font-lock-unfontify-region-function
+    kill-buffer-query-functions kill-emacs-query-functions lisp-indent-function
+    mouse-position-function redisplaylay-end-trigger-functions
+    suspend-tty-functions temp-buffer-show-function window-scroll-functions
     window-size-change-functions write-contents-functions write-file-functions
     write-region-annotate-functions)
   "A list of special hooks from Info node `(elisp)Standard Hooks'.

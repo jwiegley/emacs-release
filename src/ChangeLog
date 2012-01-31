@@ -1,3 +1,375 @@
+2012-01-25  Chong Yidong  <cyd@gnu.org>
+
+	* Version 23.4 released.
+
+2012-01-25  HIROSHI OOTA  <nil@mad.dog.cx>  (tiny change)
+
+	* coding.c (encode_designation_at_bol): Change return value to
+	EMACS_INT.
+
+2012-01-19  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* coding.c (encode_designation_at_bol): Don't use uninitialized
+	local variable (Bug#9318).
+
+2012-01-19  Kenichi Handa  <handa@m17n.org>
+
+	* coding.c (encode_designation_at_bol): New args charbuf_end and
+	dst.  Return the number of produced bytes.  Callers changed.
+	(coding_set_source): Return how many bytes coding->source was
+	relocated.
+	(coding_set_destination): Return how many bytes
+	coding->destination was relocated.
+	(CODING_DECODE_CHAR, CODING_ENCODE_CHAR, CODING_CHAR_CHARSET)
+	(CODING_CHAR_CHARSET_P): Adjusted for the avove changes.
+
+2012-01-19  Kazuhiro Ito  <kzhr@d1.dion.ne.jp>  (tiny change)
+
+	* coding.c (CODING_CHAR_CHARSET_P): New macro.
+	(encode_coding_emacs_mule, encode_coding_iso_2022): Use the above
+	macro (Bug#9318).
+
+2012-01-19  Andreas Schwab  <schwab@linux-m68k.org>
+
+	The following changes are to fix Bug#9318.
+
+	* coding.c (CODING_ENCODE_CHAR, CODING_CHAR_CHARSET): New macros.
+	(encode_coding_emacs_mule, ENCODE_ISO_CHARACTER)
+	(encode_coding_iso_2022, encode_coding_sjis)
+	(encode_coding_big5, encode_coding_charset): Use the above macros.
+
+2012-01-18  Yoshiaki Kasahara  <kasahara@nc.kyushu-u.ac.jp>  (tiny change)
+
+	* buffer.c (init_buffer) [USE_MMAP_FOR_BUFFERS]: Adjust to
+	aliasing change.
+
+2012-01-15  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* xftfont.c (xftfont_draw): Use the font metrics of s->font to
+	fill background (Bug#8992).
+
+2012-01-13  Kenichi Handa  <handa@m17n.org>
+
+	* character.c (char_width): New function.
+	(Fchar_width, c_string_width, lisp_string_width):
+	Use char_width (Bug#9496).
+
+2012-01-12  Sven Joachim  <svenjoac@gmx.de>
+
+	* s/gnu-linux.h: Use CRT_DIR.
+
+2011-11-11  Johan Bockgård  <bojohan@gnu.org>
+
+	* xdisp.c (fill_composite_glyph_string): Always set s->face, to
+	avoid a crash (bug#9496).
+
+2012-01-09  Chong Yidong  <cyd@gnu.org>
+
+	* xdisp.c (note_mouse_highlight): Fix use of uninitialized var.
+
+2012-01-09  Eli Zaretskii  <eliz@gnu.org>
+
+	* xdisp.c (note_mouse_highlight): Initialize `area'.  (Bug#9947)
+	Initialize `part', to avoid a possible random value that matches
+	one of those tested as condition to clear the mouse face.
+
+2012-01-09  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* dispnew.c (scrolling_window): Truncate overlaps in copy
+	destination of scroll runs so as to avoid assigning disabled bogus
+	rows and unnecessary graphics copy operations.
+
+2012-01-09  Eli Zaretskii  <eliz@gnu.org>
+
+	* dispnew.c (scrolling_window): Fix incorrect indices in accessing
+	current_matrix and desired_matrix.  (Bug#9990)
+
+2011-10-31  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* xmenu.c (cleanup_widget_value_tree): New function.
+	(xmenu_show, xdialog_show): Use it in record_unwind_protect instead of
+	calling free_menubar_widget_value_tree directly (Bug#9830).
+
+2011-09-19  Andreas Schwab  <schwab@linux-m68k.org>
+
+	* keymap.c (Fsingle_key_description): Use make_specified_string
+	instead of build_string to build string from push_key_description.
+	(Bug#5193)
+
+2011-09-10  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* xdisp.c (expose_window): Save original value of phys_cursor_on_p
+	and turn window cursor on if cleared (Bug#9415).
+
+2011-09-07  Andreas Schwab  <schwab@linux-m68k.org>
+
+	* search.c (boyer_moore): Take unibyte characters from pattern
+	literally.  (Bug#9458)
+
+2011-08-30  Chong Yidong  <cyd@stupidchicken.com>
+
+	* syntax.c (find_defun_start): Update all cache variables if
+	exiting early (Bug#9401).
+
+2011-08-19  Andreas Schwab  <schwab@linux-m68k.org>
+
+	* keyboard.c: Include "process.h"
+
+2011-07-28  Eli Zaretskii  <eliz@gnu.org>
+
+	* xfaces.c (update_face_from_frame_parameter): Move out of
+	HAVE_WINDOW_SYSTEM portion.  Condition window-system only parts
+	with HAVE_WINDOW_SYSTEM.
+
+2011-07-26  Andreas Schwab  <schwab@linux-m68k.org>
+
+	* fontset.c (fontset_get_font_group): Add proper type checks.
+	(Bug#9172)
+
+2011-07-23  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* unexmacosx.c (print_load_command_name): Add cases LC_FUNCTION_STARTS
+	and LC_VERSION_MIN_MACOSX.
+	(copy_linkedit_data) [LC_FUNCTION_STARTS]: New function.
+	(dump_it) [LC_FUNCTION_STARTS]: Use it.
+
+2011-07-22  Chong Yidong  <cyd@stupidchicken.com>
+
+	* frame.c (Fmodify_frame_parameters): In tty case, update the
+	default face if necessary (Bug#4238).
+
+2011-07-11  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* s/darwin.h (LD_SWITCH_SYSTEM_TEMACS): Add -fno-pie so as to suppress
+	address randomization (Bug#8395).
+
+2011-07-07  Kenichi Handa  <handa@m17n.org>
+
+	* composite.c (composition_compute_stop_pos): Ignore a static
+	composition starting before CHARPOS (Bug#8915).
+
+	* xdisp.c (handle_composition_prop): Likewise.
+
+2011-06-18  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* dispnew.c (scrolling_window): Before scrolling, turn off a
+	mouse-highlight in the window being scrolled.
+
+2011-06-16  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* nsmenu.m: Replace all uses of XVECTOR with ASIZE and AREF.  (Bug#8839)
+
+2011-06-02  Dan Nicolaescu  <dann@ics.uci.edu>
+
+	* emacs.c (main): Warn when starting a GTK emacs in daemon mode.
+
+2011-06-01  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* fringe.c (update_window_fringes): Don't update overlay arrow bitmap
+	in the current matrix if keep_current_p is non-zero.
+
+2011-05-25  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* dispextern.h (struct glyph_row): New member fringe_bitmap_periodic_p.
+
+	* dispnew.c (shift_glyph_matrix, scrolling_window): Mark scrolled row
+	for fringe update if it has periodic bitmap.
+	(row_equal_p): Also compare left_fringe_offset,	right_fringe_offset,
+	and fringe_bitmap_periodic_p.
+
+	* fringe.c (get_fringe_bitmap_data): New function.
+	(draw_fringe_bitmap_1, update_window_fringes): Use it.
+	(update_window_fringes): Record periodicity of fringe bitmap in glyph
+	row.  Mark glyph row for fringe update if periodicity changed.
+
+	* xdisp.c (try_window_reusing_current_matrix): Don't mark scrolled row
+	for fringe update unless it has periodic bitmap.
+
+2011-05-25  Kenichi Handa  <handa@m17n.org>
+
+	* xdisp.c (get_next_display_element): Set correct it->face_id for
+	a static composition.
+
+2011-05-21  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* dispnew.c (scrolling_window): Don't exclude the case that the
+	last enabled row in the desired matrix touches the bottom boundary.
+
+2011-05-11  Drew Adams  <drew.adams@oracle.com>
+
+	* textprop.c (Fprevious_single_char_property_change): Doc fix (bug#8655).
+
+2011-05-11  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* w32term.c (w32_draw_fringe_bitmap): Rename local vars `left' and
+	`width' to `bar_area_x' and `bar_area_width', respectively.
+	(x_scroll_run): Take account of fringe background extension.
+
+	* xterm.c (x_draw_fringe_bitmap) [USE_TOOLKIT_SCROLL_BARS]: Rename
+	local vars `left' and `width' to `bar_area_x' and
+	`bar_area_width', respectively.
+	(x_scroll_run) [USE_TOOLKIT_SCROLL_BARS]: Take account of fringe
+	background extension.
+
+2011-05-09  Andreas Schwab  <schwab@linux-m68k.org>
+
+	* xmenu.c (set_frame_menubar): Fix submenu loops.
+
+2011-05-09  Eli Zaretskii  <eliz@gnu.org>
+
+	Backport revisions 103939.1.41..103939.1.44 (inclusive) from trunk.
+	(bug#8623)
+	The next log entry shows the actual changes by Paul Eggert.
+
+2011-05-08  Paul Eggert  <eggert@cs.ucla.edu>
+
+	Fix a problem with aliasing and vector headers.
+	GCC 4.6.0 optimizes based on type-based alias analysis.  For
+	example, if b is of type struct buffer * and v of type struct
+	Lisp_Vector *, then gcc -O2 was incorrectly assuming that &b->size
+	!= &v->size, and therefore "v->size = 1; b->size = 2; return
+	v->size;" must therefore return 1.  This assumption is incorrect
+	for Emacs, since it type-puns struct Lisp_Vector * with many other
+	types.  To fix this problem, this patch adds a new type struct
+	vector_header that documents the constraints on layout of vectors
+	and pseudovectors, and helps optimizing compilers not get fooled
+	by Emacs's type punning.  It also adds the macros XSETTYPED_PVECTYPE
+	XSETTYPED_PSEUDOVECTOR, TYPED_PSEUDOVECTORP, for similar reasons.
+	* lisp.h (XVECTOR_SIZE): New convenience macro.  All previous uses of
+	XVECTOR (foo)->size replaced to use this macro, to avoid the hassle
+	of writing XVECTOR (foo)->header.size.
+	* lisp.h: Say "vectorlike header" rather than "vector header.
+	(struct vectorlike_header): Rename from struct vector_header.
+	(XVECTORLIKE_HEADER_SIZE): Renamed from XVECTOR_HEADER_SIZE.
+	All uses changed.
+	(XVECTOR_HEADER_SIZE): New macro, for use in XSETPSEUDOVECTOR.
+	(XSETTYPED_PVECTYPE): New macro, specifying the name of the size
+	member.
+	(XSETPVECTYPE): Rewrite in terms of new macro.
+	(XSETPVECTYPESIZE): New macro, specifying both type and size.
+	This is a bit clearer, and further avoids the possibility of
+	undesirable aliasing.
+	(XSETTYPED_PSEUDOVECTOR): New macro, specifying the size.
+	(XSETPSEUDOVECTOR): Rewrite in terms of XSETTYPED_PSEUDOVECTOR
+	and XVECTOR_HEADER_SIZE.
+	(XSETSUBR): Rewrite in terms of XSETTYPED_PSEUDOVECTOR and XSIZE,
+	since Lisp_Subr is a special case (no "next" field).
+	(ASIZE): Rewrite in terms of XVECTOR_SIZE.
+	(struct vector_header): New type.
+	(TYPED_PSEUDOVECTORP): New macro, also specifying the C type of the
+	object, to help avoid aliasing.
+	(PSEUDOVECTORP): Rewrite in terms of TYPED_PSEUDOVECTORP.
+	(SUBRP): Likewise, since Lisp_Subr is a special case.
+
+	* lisp.h (struct Lisp_Vector, struct Lisp_Char_Table):
+	(struct Lisp_Sub_Char_Table, struct Lisp_Bool_Vector):
+	(struct Lisp_Hash_Table): Combine first two members into a single
+	struct vector_header member.  All uses of "size" and "next" members
+	changed to be "header.size" and "header.next".
+	* buffer.h (struct buffer): Likewise.
+	* font.h (struct font_spec, struct font_entity, struct font): Likewise.
+	* frame.h (struct frame): Likewise.
+	* process.h (struct Lisp_Process): Likewise.
+	* termhooks.h (struct terminal): Likewise.
+	* window.c (struct save_window_data, struct saved_window): Likewise.
+	* window.h (struct window): Likewise.
+	* alloc.c (allocate_buffer, Fmake_bool_vector, allocate_pseudovector):
+	Use XSETPVECTYPESIZE, not XSETPVECTYPE, to avoid aliasing problems.
+	* buffer.c (init_buffer_once): Likewise.
+	* lread.c (defsubr): Use XSETTYPED_PVECTYPE, since Lisp_Subr is a
+	special case.
+	* process.c (Fformat_network_address): Use local var for size,
+	for brevity.
+	* fns.c (vector): Remove; this old hack is no longer needed.
+	* bytecode.c (exec_byte_code): Don't use XVECTOR before CHECK_VECTOR.
+
+2011-04-29  Eli Zaretskii  <eliz@gnu.org>
+
+	* w32heap.c (allocate_heap) [USE_LISP_UNION_TYPE || USE_LSB_TAG]:
+	New version that can reserve upto 2GB of heap space.
+
+2011-04-26  Chong Yidong  <cyd@stupidchicken.com>
+
+	* nsfns.m (Fns_read_file_name): Doc fix (Bug#8534).
+
+2011-04-18  Eli Zaretskii  <eliz@gnu.org>
+
+	* s/ms-w32.h (localtime): Redirect to sys_localtime.
+
+	* w32.c: Include <time.h>.
+	(sys_localtime): New function.
+
+2011-04-13  Chong Yidong  <cyd@stupidchicken.com>
+
+	* xdisp.c (init_xdisp): Initialize echo_area_window (Bug#6451).
+
+2011-04-10  Samuel Thibault  <sthibault@debian.org>  (tiny change)
+
+	* sysdep.c (wait_for_termination): On GNU Hurd, kill returns -1 on
+	zombies (Bug#8467).
+
+2011-04-10  Chong Yidong  <cyd@stupidchicken.com>
+
+	* buffer.c (syms_of_buffer): Doc fix (Bug#6902).
+
+2011-04-08  Chong Yidong  <cyd@stupidchicken.com>
+
+	* ftfont.c (get_adstyle_property, ftfont_pattern_entity): Use
+	unsigned char, to match FcChar8 type definition.
+
+	* xterm.c (handle_one_xevent):
+	* xmenu.c (create_and_show_popup_menu):
+	* xselect.c (x_decline_selection_request)
+	(x_reply_selection_request): Avoid type-punned deref of X events.
+
+2011-04-08  Samuel Thibault  <sthibault@debian.org>  (tiny change)
+
+	* term.c (init_tty): Fix incorrect ifdef placement (Bug#8450).
+
+2011-03-19  Christoph Scholtes  <cschol2112@googlemail.com>
+
+	* process.c (Fformat_network_address): Doc fix.
+
+2011-03-19  Chong Yidong  <cyd@stupidchicken.com>
+
+	* buffer.h (BUF_BEGV, BUF_BEGV_BYTE, BUF_ZV, BUF_ZV_BYTE, BUF_PT)
+	(BUF_PT_BYTE): Rewrite to handle indirect buffers (Bug#8219).
+	These macros can no longer be used for assignment.
+
+	* buffer.c (Fget_buffer_create, Fmake_indirect_buffer): Assign
+	struct members directly, instead of using BUF_BEGV etc.
+	(record_buffer_markers, fetch_buffer_markers): New functions for
+	recording and fetching special buffer markers.
+	(set_buffer_internal_1, set_buffer_temp): Use them.
+
+	* lread.c (unreadchar): Use SET_BUF_PT_BOTH.
+
+	* insdel.c (adjust_point): Use SET_BUF_PT_BOTH.
+
+	* intervals.c (temp_set_point_both): Use SET_BUF_PT_BOTH.
+	(get_local_map): Use SET_BUF_BEGV_BOTH and SET_BUF_ZV_BOTH.
+
+	* xdisp.c (hscroll_window_tree):
+	(reconsider_clip_changes): Use PT instead of BUF_PT.
+
+2011-03-17  Juanma Barranquero  <lekktu@gmail.com>
+
+	* xfaces.c (Fx_load_color_file):
+	Read color file from absolute filename (bug#8250).
+
+2011-03-11  Juanma Barranquero  <lekktu@gmail.com>
+
+	Backport revno:103582 from trunk.
+	* w32xfns.c (select_palette): Check success of RealizePalette against
+	GDI_ERROR, not zero.
+
+2011-03-11  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* fringe.c (update_window_fringes): Remove unused variables.
+
+	* unexmacosx.c (copy_data_segment): Also copy __got section.
+	(Bug#8223)
+
 2011-03-07  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 23.3 released.
@@ -22688,7 +23060,7 @@ See ChangeLog.10 for earlier changes.
 ;; add-log-time-zone-rule: t
 ;; End:
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 

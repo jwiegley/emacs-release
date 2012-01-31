@@ -4,7 +4,8 @@ message.texi.
 This file documents Message, the Emacs message composition mode.
 
    Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
+Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -33,7 +34,8 @@ Message
 This file documents Message, the Emacs message composition mode.
 
    Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
+Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -2916,51 +2918,51 @@ File: message,  Node: Key Index,  Prev: Index,  Up: Top
 
 
 Tag Table:
-Node: Top1144
-Node: Interface2751
-Node: New Mail Message3941
-Node: New News Message4303
-Node: Reply4696
-Node: Wide Reply6066
-Node: Followup7021
-Node: Canceling News7796
-Node: Superseding8976
-Node: Forwarding9630
-Node: Resending11178
-Node: Bouncing11533
-Node: Mailing Lists12104
-Node: Commands17301
-Node: Buffer Entry18039
-Node: Header Commands18710
-Node: Movement23577
-Node: Insertion24141
-Node: MIME25462
-Node: IDNA26665
-Node: Security27860
-Node: Signing and encryption28412
-Node: Using S/MIME31225
-Node: Using PGP/MIME34444
-Node: PGP Compatibility36281
-Node: Various Commands37936
-Node: Sending39556
-Node: Mail Aliases39966
-Node: Spelling41271
-Node: Variables42577
-Node: Message Headers43296
-Node: Mail Headers49401
-Node: Mail Variables50353
-Node: News Headers53405
-Node: News Variables60401
-Node: Insertion Variables60806
-Node: Various Message Variables65349
-Node: Sending Variables70919
-Node: Message Buffers72226
-Node: Message Actions74381
-Node: Compatibility75853
-Node: Appendices76296
-Node: Responses76514
-Node: GNU Free Documentation License77867
-Node: Index103015
-Node: Key Index125209
+Node: Top1150
+Node: Interface2763
+Node: New Mail Message3953
+Node: New News Message4315
+Node: Reply4708
+Node: Wide Reply6078
+Node: Followup7033
+Node: Canceling News7808
+Node: Superseding8988
+Node: Forwarding9642
+Node: Resending11190
+Node: Bouncing11545
+Node: Mailing Lists12116
+Node: Commands17313
+Node: Buffer Entry18051
+Node: Header Commands18722
+Node: Movement23589
+Node: Insertion24153
+Node: MIME25474
+Node: IDNA26677
+Node: Security27872
+Node: Signing and encryption28424
+Node: Using S/MIME31237
+Node: Using PGP/MIME34456
+Node: PGP Compatibility36293
+Node: Various Commands37948
+Node: Sending39568
+Node: Mail Aliases39978
+Node: Spelling41283
+Node: Variables42589
+Node: Message Headers43308
+Node: Mail Headers49413
+Node: Mail Variables50365
+Node: News Headers53417
+Node: News Variables60413
+Node: Insertion Variables60818
+Node: Various Message Variables65361
+Node: Sending Variables70931
+Node: Message Buffers72238
+Node: Message Actions74393
+Node: Compatibility75865
+Node: Appendices76308
+Node: Responses76526
+Node: GNU Free Documentation License77879
+Node: Index103027
+Node: Key Index125221
 
 End Tag Table

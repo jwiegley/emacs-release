@@ -5,7 +5,7 @@ This file documents WoMan: A program to browse Unix manual pages `W.O.
 (without) man'.
 
 Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
-2010, 2011 Free Software Foundation, Inc.
+2010, 2011, 2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -42,7 +42,7 @@ This file documents WoMan: A program to browse Unix manual pages `W.O.
 (without) man'.
 
 Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
-2010, 2011 Free Software Foundation, Inc.
+2010, 2011, 2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1871,35 +1871,35 @@ Concept Index
 
 
 Tag Table:
-Node: Top1087
-Node: Introduction3066
-Node: Background5584
-Node: Finding12841
-Node: Topic14397
-Node: Cache18782
-Node: Word at point20490
-Node: Filename21422
-Node: Automatic23672
-Node: Browsing25230
-Node: Fonts26456
-Node: Navigation27112
-Node: References27990
-Node: Changing29380
-Node: Convenience31388
-Node: Imenu32127
-Node: Customization32920
-Node: Interface Options34904
-Node: Formatting Options43603
-Node: Faces45153
-Node: Special symbols46432
-Node: Log47659
-Node: Technical48774
-Node: Bugs49485
-Node: Acknowledgements50248
-Node: GNU Free Documentation License52170
-Node: Command Index77339
-Node: Variable Index79324
-Node: Keystroke Index81953
-Node: Concept Index83708
+Node: Top1093
+Node: Introduction3078
+Node: Background5596
+Node: Finding12853
+Node: Topic14409
+Node: Cache18794
+Node: Word at point20502
+Node: Filename21434
+Node: Automatic23684
+Node: Browsing25242
+Node: Fonts26468
+Node: Navigation27124
+Node: References28002
+Node: Changing29392
+Node: Convenience31400
+Node: Imenu32139
+Node: Customization32932
+Node: Interface Options34916
+Node: Formatting Options43615
+Node: Faces45165
+Node: Special symbols46444
+Node: Log47671
+Node: Technical48786
+Node: Bugs49497
+Node: Acknowledgements50260
+Node: GNU Free Documentation License52182
+Node: Command Index77351
+Node: Variable Index79336
+Node: Keystroke Index81965
+Node: Concept Index83720
 
 End Tag Table

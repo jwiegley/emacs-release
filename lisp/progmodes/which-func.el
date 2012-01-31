@@ -1,7 +1,7 @@
 ;;; which-func.el --- print current function in mode line
 
 ;; Copyright (C) 1994, 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006
-;;   2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+;;   2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
 ;; Author:   Alex Rezinsky <alexr@msil.sps.mot.com>
 ;;           (doesn't seem to be responsive any more)
@@ -270,7 +270,7 @@ It calls them sequentially, and if any returns non-nil,
 (defun which-function ()
   "Return current function name based on point.
 Uses `which-func-functions', `imenu--index-alist'
-or `add-log-current-defun-function'.
+or `add-log-current-defun'.
 If no function name is found, return nil."
   (let ((name
 	 ;; Try the `which-func-functions' functions first.
@@ -319,9 +319,8 @@ If no function name is found, return nil."
                   imstack   (cdr imstack))))))
 
     ;; Try using add-log support.
-    (when (and (null name) (boundp 'add-log-current-defun-function)
-	       add-log-current-defun-function)
-      (setq name (funcall add-log-current-defun-function)))
+    (when (null name)
+      (setq name (add-log-current-defun)))
     ;; Filter the name if requested.
     (when name
       (if which-func-cleanup-function

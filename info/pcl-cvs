@@ -2,8 +2,8 @@ This is ../../info/pcl-cvs, produced by makeinfo version 4.13 from
 pcl-cvs.texi.
 
 Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
-Free Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -34,8 +34,8 @@ RET pcl-cvs <RET>' and to look at the documentation strings of the
 various commands and major modes for further information.
 
    Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
-Free Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1911,38 +1911,38 @@ this manual.
 
 
 Tag Table:
-Node: Top1040
-Node: About PCL-CVS4385
-Node: Contributors5480
-Node: Getting started8025
-Node: Buffer contents10721
-Node: Selected files15010
-Node: Commands16644
-Node: Entering PCL-CVS18046
-Node: Setting flags20262
-Node: Updating the buffer22732
-Node: Movement commands23792
-Node: Marking files24369
-Node: Committing changes25505
-Node: Editing files27417
-Node: Getting info about files28324
-Node: Adding and removing files28838
-Node: Undoing changes30106
-Node: Removing handled entries30577
-Node: Ignoring files31432
-Node: Viewing differences31987
-Node: Invoking Ediff33559
-Node: Updating files34416
-Node: Tagging files34677
-Node: Miscellaneous commands35450
-Node: Log Edit Mode36415
-Node: Log View Mode37753
-Node: Customization38324
-Node: Customizing Faces41951
-Node: Bugs42746
-Node: GNU Free Documentation License44285
-Node: Function and Variable Index69467
-Node: Concept Index76873
-Node: Key Index85292
+Node: Top1046
+Node: About PCL-CVS4397
+Node: Contributors5492
+Node: Getting started8037
+Node: Buffer contents10733
+Node: Selected files15022
+Node: Commands16656
+Node: Entering PCL-CVS18058
+Node: Setting flags20274
+Node: Updating the buffer22744
+Node: Movement commands23804
+Node: Marking files24381
+Node: Committing changes25517
+Node: Editing files27429
+Node: Getting info about files28336
+Node: Adding and removing files28850
+Node: Undoing changes30118
+Node: Removing handled entries30589
+Node: Ignoring files31444
+Node: Viewing differences31999
+Node: Invoking Ediff33571
+Node: Updating files34428
+Node: Tagging files34689
+Node: Miscellaneous commands35462
+Node: Log Edit Mode36427
+Node: Log View Mode37765
+Node: Customization38336
+Node: Customizing Faces41963
+Node: Bugs42758
+Node: GNU Free Documentation License44297
+Node: Function and Variable Index69479
+Node: Concept Index76885
+Node: Key Index85304
 
 End Tag Table

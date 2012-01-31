@@ -5,7 +5,7 @@ This file documents Ediff, a comprehensive visual interface to Unix diff
 and patch utilities.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software
+2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -32,7 +32,7 @@ File: ediff,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
 diff and patch utilities.
 
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software
+2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -3157,31 +3157,31 @@ Index
 
 
 Tag Table:
-Node: Top1133
-Node: Introduction2704
-Node: Major Entry Points5094
-Node: Session Commands15141
-Node: Quick Help Commands16660
-Node: Other Session Commands35110
-Node: Registry of Ediff Sessions37910
-Node: Session Groups39466
-Node: Remote and Compressed Files45631
-Node: Customization46858
-Node: Hooks48811
-Node: Quick Help Customization54110
-Node: Window and Frame Configuration55121
-Node: Selective Browsing61086
-Node: Highlighting Difference Regions66182
-Node: Narrowing70924
-Node: Refinement of Difference Regions72202
-Node: Patch and Diff Programs75137
-Node: Merging and diff379704
-Node: Support for Version Control89507
-Node: Customizing the Mode Line91132
-Node: Miscellaneous91986
-Node: Notes on Heavy-duty Customization97234
-Node: Credits99819
-Node: GNU Free Documentation License105222
-Node: Index130383
+Node: Top1139
+Node: Introduction2716
+Node: Major Entry Points5106
+Node: Session Commands15153
+Node: Quick Help Commands16672
+Node: Other Session Commands35122
+Node: Registry of Ediff Sessions37922
+Node: Session Groups39478
+Node: Remote and Compressed Files45643
+Node: Customization46870
+Node: Hooks48823
+Node: Quick Help Customization54122
+Node: Window and Frame Configuration55133
+Node: Selective Browsing61098
+Node: Highlighting Difference Regions66194
+Node: Narrowing70936
+Node: Refinement of Difference Regions72214
+Node: Patch and Diff Programs75149
+Node: Merging and diff379716
+Node: Support for Version Control89519
+Node: Customizing the Mode Line91144
+Node: Miscellaneous91998
+Node: Notes on Heavy-duty Customization97246
+Node: Credits99831
+Node: GNU Free Documentation License105234
+Node: Index130395
 
 End Tag Table

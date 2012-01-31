@@ -1,7 +1,7 @@
 ;;; lisp.el --- Lisp editing commands for Emacs
 
 ;; Copyright (C) 1985, 1986, 1994, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: lisp, languages
@@ -624,7 +624,8 @@ considered."
   (interactive)
   (let* ((data (lisp-completion-at-point predicate))
          (plist (nthcdr 3 data)))
-    (let ((completion-annotate-function (plist-get plist :annotate-function)))
+    (let ((completion-annotate-function
+           (plist-get plist :annotation-function)))
       (completion-in-region (nth 0 data) (nth 1 data) (nth 2 data)
                             (plist-get plist :predicate)))))
 
@@ -660,7 +661,7 @@ considered."
                       'fboundp))))))
       (list beg end obarray
             :predicate predicate
-            :annotate-function
+            :annotation-function
             (unless (eq predicate 'fboundp)
               (lambda (str) (if (fboundp (intern-soft str)) " <f>")))))))
 

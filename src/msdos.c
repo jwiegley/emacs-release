@@ -1,6 +1,6 @@
 /* MS-DOS specific C utilities.          -*- coding: raw-text -*-
    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1999, 2000, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -960,7 +960,7 @@ IT_set_face (int face)
 
 /* According to RBIL (INTERRUP.A, V-1000), 160 is the maximum possible
    width of a DOS display in any known text mode.  We multiply by 2 to
-   accomodate the screen attribute byte.  */
+   accommodate the screen attribute byte.  */
 #define MAX_SCREEN_BUF 160*2
 
 Lisp_Object Vdos_unsupported_char_glyph;

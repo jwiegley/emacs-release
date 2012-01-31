@@ -1,6 +1,6 @@
 /* Definitions for asynchronous process control in GNU Emacs.
    Copyright (C) 1985, 1994, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -27,13 +27,13 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 /* This structure records information about a subprocess
    or network connection.
 
-   Every field in this structure except for the first two
+   Every field in this structure except for the header
    must be a Lisp_Object, for GC's sake.  */
 
 struct Lisp_Process
   {
-    EMACS_UINT size;
-    struct Lisp_Vector *v_next;
+    struct vectorlike_header header;
+
     /* Name of subprocess terminal.  */
     Lisp_Object tty_name;
     /* Name of this process */

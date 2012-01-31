@@ -2,7 +2,7 @@ This is ../../info/autotype, produced by makeinfo version 4.13 from
 autotype.texi.
 
 Copyright (C) 1994, 1995, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -55,7 +55,7 @@ generally.  A sort of meta-expansion facility can be used to try a set
 of alternative completions and expansions of text at point.
 
    Copyright (C) 1994, 1995, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1180,22 +1180,22 @@ Variable Index
 
 
 Tag Table:
-Node: Top1076
-Node: Using Skeletons4373
-Node: Wrapping Skeletons5844
-Node: Skeletons as Abbrevs8448
-Node: Skeleton Language9339
-Node: Inserting Pairs12917
-Node: Autoinserting15299
-Node: Copyrights19085
-Node: Executables20953
-Node: Timestamps22650
-Node: QuickURL24025
-Node: Tempo24891
-Node: Hippie Expand26074
-Node: GNU Free Documentation License27106
-Node: Concept Index52284
-Node: Command Index53395
-Node: Variable Index54855
+Node: Top1082
+Node: Using Skeletons4385
+Node: Wrapping Skeletons5856
+Node: Skeletons as Abbrevs8460
+Node: Skeleton Language9351
+Node: Inserting Pairs12929
+Node: Autoinserting15311
+Node: Copyrights19097
+Node: Executables20965
+Node: Timestamps22662
+Node: QuickURL24037
+Node: Tempo24903
+Node: Hippie Expand26086
+Node: GNU Free Documentation License27118
+Node: Concept Index52296
+Node: Command Index53407
+Node: Variable Index54867
 
 End Tag Table

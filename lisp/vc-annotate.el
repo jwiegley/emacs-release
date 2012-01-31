@@ -1,7 +1,7 @@
 ;;; vc-annotate.el --- VC Annotate Support
 
 ;; Copyright (C) 1997, 1998, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+;;   2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
 ;; Author:     Martin Lorentzson  <emwson@emw.ericsson.se>
 ;; Maintainer: FSF
@@ -488,7 +488,7 @@ Return a cons (REV . FILENAME)."
   "Visit the log of the revision at line.
 If the VC backend supports it, only show the log entry for the revision.
 If a *vc-change-log* buffer exists and already shows a log for
-the file in question, search for the log entry required and move point ."
+the file in question, search for the log entry required and move point."
   (interactive)
   (if (not (equal major-mode 'vc-annotate-mode))
       (message "Cannot be invoked outside of a vc annotate buffer")

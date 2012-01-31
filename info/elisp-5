@@ -2,11 +2,11 @@ This is ../../info/elisp, produced by makeinfo version 4.13 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.3.
+corresponding to Emacs version 23.4.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
-Free Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -25,32 +25,6 @@ INFO-DIR-SECTION GNU Emacs Lisp
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
-
-
-File: elisp,  Node: Mode Help,  Next: Derived Modes,  Prev: Auto Major Mode,  Up: Major Modes
-
-23.2.4 Getting Help about a Major Mode
---------------------------------------
-
-The `describe-mode' function is used to provide information about major
-modes.  It is normally called with `C-h m'.  The `describe-mode'
-function uses the value of `major-mode', which is why every major mode
-function needs to set the `major-mode' variable.
-
- -- Command: describe-mode
-     This function displays the documentation of the current major mode.
-
-     The `describe-mode' function calls the `documentation' function
-     using the value of `major-mode' as an argument.  Thus, it displays
-     the documentation string of the major mode function.  (*Note
-     Accessing Documentation::.)
-
- -- Variable: major-mode
-     This buffer-local variable holds the symbol for the current
-     buffer's major mode.  This symbol should have a function
-     definition that is the command to switch to that major mode.  The
-     `describe-mode' function uses the documentation string of the
-     function as the documentation of the major mode.
 
 
 File: elisp,  Node: Derived Modes,  Next: Generic Modes,  Prev: Mode Help,  Up: Major Modes
@@ -317,8 +291,8 @@ existed:
        (setq local-abbrev-table text-mode-abbrev-table)
        (set-syntax-table text-mode-syntax-table)
        ;; These four lines are absent from the current version
-       ;; not because this is done some other way, but rather
-       ;; because nowadays Text mode uses the normal definition of paragraphs.
+       ;; not because this is done some other way, but because
+       ;; nowadays Text mode uses the normal definition of paragraphs.
        (set (make-local-variable 'paragraph-start)
             (concat "[ \t]*$\\|" page-delimiter))
        (set (make-local-variable 'paragraph-separate) paragraph-start)
@@ -382,10 +356,13 @@ commands to treat only blank lines as paragraph separators.  And the
 modes should understand the Lisp conventions for comments.  The rest of
 `lisp-mode-variables' sets this up:
 
-       (set (make-local-variable 'paragraph-start) (concat page-delimiter "\\|$" ))
-       (set (make-local-variable 'paragraph-separate) paragraph-start)
+       (set (make-local-variable 'paragraph-start)
+            (concat page-delimiter "\\|$" ))
+       (set (make-local-variable 'paragraph-separate)
+            paragraph-start)
        ...
-       (set (make-local-variable 'comment-indent-function) 'lisp-comment-indent))
+       (set (make-local-variable 'comment-indent-function)
+            'lisp-comment-indent))
        ...
 
    Each of the different Lisp modes has a slightly different keymap.
@@ -2234,11 +2211,11 @@ constructs:
 * Menu:
 
 * Font Lock Multiline::         Marking multiline chunks with a text property.
-* Region to Fontify::           Controlling which region gets refontified
+* Region to Refontify::         Controlling which region gets refontified
                                   after a buffer change.
 
 
-File: elisp,  Node: Font Lock Multiline,  Next: Region to Fontify,  Up: Multiline Font Lock
+File: elisp,  Node: Font Lock Multiline,  Next: Region to Refontify,  Up: Multiline Font Lock
 
 23.6.10.1 Font Lock Multiline
 .............................
@@ -2288,7 +2265,7 @@ place the `font-lock-multiline' property on the text before Font-Lock
 looks at it, or use `font-lock-fontify-region-function'.
 
 
-File: elisp,  Node: Region to Fontify,  Prev: Font Lock Multiline,  Up: Multiline Font Lock
+File: elisp,  Node: Region to Refontify,  Prev: Font Lock Multiline,  Up: Multiline Font Lock
 
 23.6.10.2 Region to Fontify after a Buffer Change
 .................................................
@@ -2299,15 +2276,15 @@ While this works well most of the time, sometimes it doesn't--for
 example, when a change alters the syntactic meaning of text on an
 earlier line.
 
-   You can enlarge (or even reduce) the region to fontify by setting
-one the following variables:
+   You can enlarge (or even reduce) the region to refontify by setting
+the following variable:
 
  -- Variable: font-lock-extend-after-change-region-function
      This buffer-local variable is either `nil' or a function for
      Font-Lock to call to determine the region to scan and fontify.
 
      The function is given three parameters, the standard BEG, END, and
-     OLD-LEN from after-change-functions (*note Change Hooks::).  It
+     OLD-LEN from `after-change-functions' (*note Change Hooks::).  It
      should return either a cons of the beginning and end buffer
      positions (in that order) of the region to fontify, or `nil'
      (which means choose the region in the standard way).  This
@@ -2656,7 +2633,9 @@ natural to have a BNF grammar that looks like this:
        (inst ("IF" exp "THEN" insts "ELSE" insts "END")
              ("CASE" exp "OF" cases "END")
              ...)
-       (cases (cases "|" cases) (caselabel ":" insts) ("ELSE" insts))
+       (cases (cases "|" cases)
+              (caselabel ":" insts)
+              ("ELSE" insts))
        ...
 
    But this will create conflicts for `"ELSE"': on the one hand, the IF
@@ -2843,7 +2822,9 @@ File: elisp,  Node: SMIE Indentation Example,  Prev: SMIE Indentation Helpers,  
 
 Here is an example of an indentation function:
 
-     (eval-when-compile (require 'cl))       ;For the `case' macro.
+     ;; For the `case' macro.
+     (eval-when-compile (require 'cl))
+
      (defun sample-smie-rules (kind token)
        (case kind
          (:elem (case token
@@ -2909,9 +2890,10 @@ A few things to note:
      is always at the beginning of a line, we can use a more efficient
      rule:
           ((equal token "if")
-           (and (not (smie-rule-bolp)) (smie-rule-prev-p "else")
+           (and (not (smie-rule-bolp))
+                (smie-rule-prev-p "else")
                 (save-excursion
-                  (sample-smie-backward-token)  ;Jump before the "else".
+                  (sample-smie-backward-token)
                   (cons 'column (current-column)))))
 
      The advantage of this formulation is that it reuses the
@@ -3088,9 +3070,9 @@ File: elisp,  Node: Accessing Documentation,  Next: Keys in Documentation,  Prev
                => "Customization of the One True Editor."
 
  -- Function: documentation function &optional verbatim
-     This function returns the documentation string of FUNCTION.
-     `documentation' handles macros, named keyboard macros, and special
-     forms, as well as ordinary functions.
+     This function returns the documentation string of FUNCTION.  It
+     handles macros, named keyboard macros, and special forms, as well
+     as ordinary functions.
 
      If FUNCTION is a symbol, this function first looks for the
      `function-documentation' property of that symbol; if that has a
@@ -3778,7 +3760,7 @@ temporary buffer.  Visiting the file is not necessary and takes longer.
      `find-file-literally' sets this variable's local value, but other
      equivalent functions and commands can do that as well, e.g. to
      avoid automatic addition of a newline at the end of the file.
-     This variable us permanent local, so it is unaffected by changes
+     This variable is permanent local, so it is unaffected by changes
      of major modes.
 
 
@@ -6568,4 +6550,210 @@ If you change one, you probably need to change the rest.
 
      Some file comparison commands use this function so that they can
      automatically compare a file with its most recent backup.
+
+
+File: elisp,  Node: Auto-Saving,  Next: Reverting,  Prev: Backup Files,  Up: Backups and Auto-Saving
+
+26.2 Auto-Saving
+================
+
+Emacs periodically saves all files that you are visiting; this is
+called "auto-saving".  Auto-saving prevents you from losing more than a
+limited amount of work if the system crashes.  By default, auto-saves
+happen every 300 keystrokes, or after around 30 seconds of idle time.
+*Note Auto Save: (emacs)Auto Save, for information on auto-save for
+users.  Here we describe the functions used to implement auto-saving
+and the variables that control them.
+
+ -- Variable: buffer-auto-save-file-name
+     This buffer-local variable is the name of the file used for
+     auto-saving the current buffer.  It is `nil' if the buffer should
+     not be auto-saved.
+
+          buffer-auto-save-file-name
+               => "/xcssun/users/rms/lewis/#backups.texi#"
+
+ -- Command: auto-save-mode arg
+     When used interactively without an argument, this command is a
+     toggle switch: it turns on auto-saving of the current buffer if it
+     is off, and vice versa.  With an argument ARG, the command turns
+     auto-saving on if the value of ARG is `t', a nonempty list, or a
+     positive integer.  Otherwise, it turns auto-saving off.
+
+ -- Function: auto-save-file-name-p filename
+     This function returns a non-`nil' value if FILENAME is a string
+     that could be the name of an auto-save file.  It assumes the usual
+     naming convention for auto-save files: a name that begins and ends
+     with hash marks (`#') is a possible auto-save file name.  The
+     argument FILENAME should not contain a directory part.
+
+          (make-auto-save-file-name)
+               => "/xcssun/users/rms/lewis/#backups.texi#"
+          (auto-save-file-name-p "#backups.texi#")
+               => 0
+          (auto-save-file-name-p "backups.texi")
+               => nil
+
+     The standard definition of this function is as follows:
+
+          (defun auto-save-file-name-p (filename)
+            "Return non-nil if FILENAME can be yielded by..."
+            (string-match "^#.*#$" filename))
+
+     This function exists so that you can customize it if you wish to
+     change the naming convention for auto-save files.  If you redefine
+     it, be sure to redefine the function `make-auto-save-file-name'
+     correspondingly.
+
+ -- Function: make-auto-save-file-name
+     This function returns the file name to use for auto-saving the
+     current buffer.  This is just the file name with hash marks (`#')
+     prepended and appended to it.  This function does not look at the
+     variable `auto-save-visited-file-name' (described below); callers
+     of this function should check that variable first.
+
+          (make-auto-save-file-name)
+               => "/xcssun/users/rms/lewis/#backups.texi#"
+
+     Here is a simplified version of the standard definition of this
+     function:
+
+          (defun make-auto-save-file-name ()
+            "Return file name to use for auto-saves \
+          of current buffer.."
+            (if buffer-file-name
+                (concat
+                 (file-name-directory buffer-file-name)
+                 "#"
+                 (file-name-nondirectory buffer-file-name)
+                 "#")
+              (expand-file-name
+               (concat "#%" (buffer-name) "#"))))
+
+     This exists as a separate function so that you can redefine it to
+     customize the naming convention for auto-save files.  Be sure to
+     change `auto-save-file-name-p' in a corresponding way.
+
+ -- User Option: auto-save-visited-file-name
+     If this variable is non-`nil', Emacs auto-saves buffers in the
+     files they are visiting.  That is, the auto-save is done in the
+     same file that you are editing.  Normally, this variable is `nil',
+     so auto-save files have distinct names that are created by
+     `make-auto-save-file-name'.
+
+     When you change the value of this variable, the new value does not
+     take effect in an existing buffer until the next time auto-save
+     mode is reenabled in it.  If auto-save mode is already enabled,
+     auto-saves continue to go in the same file name until
+     `auto-save-mode' is called again.
+
+ -- Function: recent-auto-save-p
+     This function returns `t' if the current buffer has been
+     auto-saved since the last time it was read in or saved.
+
+ -- Function: set-buffer-auto-saved
+     This function marks the current buffer as auto-saved.  The buffer
+     will not be auto-saved again until the buffer text is changed
+     again.  The function returns `nil'.
+
+ -- User Option: auto-save-interval
+     The value of this variable specifies how often to do auto-saving,
+     in terms of number of input events.  Each time this many
+     additional input events are read, Emacs does auto-saving for all
+     buffers in which that is enabled.  Setting this to zero disables
+     autosaving based on the number of characters typed.
+
+ -- User Option: auto-save-timeout
+     The value of this variable is the number of seconds of idle time
+     that should cause auto-saving.  Each time the user pauses for this
+     long, Emacs does auto-saving for all buffers in which that is
+     enabled.  (If the current buffer is large, the specified timeout
+     is multiplied by a factor that increases as the size increases;
+     for a million-byte buffer, the factor is almost 4.)
+
+     If the value is zero or `nil', then auto-saving is not done as a
+     result of idleness, only after a certain number of input events as
+     specified by `auto-save-interval'.
+
+ -- Variable: auto-save-hook
+     This normal hook is run whenever an auto-save is about to happen.
+
+ -- User Option: auto-save-default
+     If this variable is non-`nil', buffers that are visiting files
+     have auto-saving enabled by default.  Otherwise, they do not.
+
+ -- Command: do-auto-save &optional no-message current-only
+     This function auto-saves all buffers that need to be auto-saved.
+     It saves all buffers for which auto-saving is enabled and that
+     have been changed since the previous auto-save.
+
+     If any buffers are auto-saved, `do-auto-save' normally displays a
+     message saying `Auto-saving...' in the echo area while auto-saving
+     is going on.  However, if NO-MESSAGE is non-`nil', the message is
+     inhibited.
+
+     If CURRENT-ONLY is non-`nil', only the current buffer is
+     auto-saved.
+
+ -- Function: delete-auto-save-file-if-necessary &optional force
+     This function deletes the current buffer's auto-save file if
+     `delete-auto-save-files' is non-`nil'.  It is called every time a
+     buffer is saved.
+
+     Unless FORCE is non-`nil', this function only deletes the file if
+     it was written by the current Emacs session since the last true
+     save.
+
+ -- User Option: delete-auto-save-files
+     This variable is used by the function
+     `delete-auto-save-file-if-necessary'.  If it is non-`nil', Emacs
+     deletes auto-save files when a true save is done (in the visited
+     file).  This saves disk space and unclutters your directory.
+
+ -- Function: rename-auto-save-file
+     This function adjusts the current buffer's auto-save file name if
+     the visited file name has changed.  It also renames an existing
+     auto-save file, if it was made in the current Emacs session.  If
+     the visited file name has not changed, this function does nothing.
+
+ -- Variable: buffer-saved-size
+     The value of this buffer-local variable is the length of the
+     current buffer, when it was last read in, saved, or auto-saved.
+     This is used to detect a substantial decrease in size, and turn
+     off auto-saving in response.
+
+     If it is -1, that means auto-saving is temporarily shut off in
+     this buffer due to a substantial decrease in size.  Explicitly
+     saving the buffer stores a positive value in this variable, thus
+     reenabling auto-saving.  Turning auto-save mode off or on also
+     updates this variable, so that the substantial decrease in size is
+     forgotten.
+
+     If it is -2, that means this buffer should disregard changes in
+     buffer size; in particular, it should not shut off auto-saving
+     temporarily due to changes in buffer size.
+
+ -- Variable: auto-save-list-file-name
+     This variable (if non-`nil') specifies a file for recording the
+     names of all the auto-save files.  Each time Emacs does
+     auto-saving, it writes two lines into this file for each buffer
+     that has auto-saving enabled.  The first line gives the name of
+     the visited file (it's empty if the buffer has none), and the
+     second gives the name of the auto-save file.
+
+     When Emacs exits normally, it deletes this file; if Emacs crashes,
+     you can look in the file to find all the auto-save files that
+     might contain work that was otherwise lost.  The `recover-session'
+     command uses this file to find them.
+
+     The default name for this file specifies your home directory and
+     starts with `.saves-'.  It also contains the Emacs process ID and
+     the host name.
+
+ -- User Option: auto-save-list-file-prefix
+     After Emacs reads your init file, it initializes
+     `auto-save-list-file-name' (if you have not already set it
+     non-`nil') based on this prefix, adding the host name and process
+     ID.  If you set this to `nil' in your init file, then Emacs does
+     not initialize `auto-save-list-file-name'.
 

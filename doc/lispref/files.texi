@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
 @c   Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../../info/files
@@ -252,7 +252,7 @@ literally, i.e. without conversions of any kind.  The command
 @code{find-file-literally} sets this variable's local value, but other
 equivalent functions and commands can do that as well, e.g.@: to avoid
 automatic addition of a newline at the end of the file.  This variable
-us permanent local, so it is unaffected by changes of major modes.
+is permanent local, so it is unaffected by changes of major modes.
 @end defvar
 
 @node Subroutines of Visiting

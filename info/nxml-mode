@@ -4,8 +4,8 @@ nxml-mode.texi.
 This manual documents nxml-mode, an Emacs major mode for editing XML
 with RELAX NG support.
 
-   Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Foundation,
-Inc.
+   Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software
+Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -39,8 +39,8 @@ nXML Mode
 This manual documents nxml-mode, an Emacs major mode for editing XML
 with RELAX NG support.
 
-   Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Foundation,
-Inc.
+   Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software
+Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -818,21 +818,21 @@ nXML mode has some limitations:
 
 
 Tag Table:
-Node: Top1376
-Node: Introduction2779
-Node: Completion4948
-Node: Inserting end-tags9286
-Node: Paragraphs10601
-Node: Outlining12856
-Node: Locating a schema18466
-Node: Commands for locating a schema19908
-Node: Schema locating files22527
-Node: Schema locating file syntax basics23415
-Node: Using the document's URI to locate a schema25302
-Node: Using the document element to locate a schema27822
-Node: Using type identifiers in schema locating files28883
-Node: Using multiple schema locating files31294
-Node: DTDs33117
-Node: Limitations34577
+Node: Top1382
+Node: Introduction2791
+Node: Completion4960
+Node: Inserting end-tags9298
+Node: Paragraphs10613
+Node: Outlining12868
+Node: Locating a schema18478
+Node: Commands for locating a schema19920
+Node: Schema locating files22539
+Node: Schema locating file syntax basics23427
+Node: Using the document's URI to locate a schema25314
+Node: Using the document element to locate a schema27834
+Node: Using type identifiers in schema locating files28895
+Node: Using multiple schema locating files31306
+Node: DTDs33129
+Node: Limitations34589
 
 End Tag Table

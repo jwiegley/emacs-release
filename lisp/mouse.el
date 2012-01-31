@@ -1,7 +1,7 @@
 ;;; mouse.el --- window system-independent mouse support
 
 ;; Copyright (C) 1993, 1994, 1995, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: hardware, mouse
@@ -538,6 +538,9 @@ MODE-LINE-P non-nil means dragging a mode line; nil means a header line."
         ;; a `drag-mouse-1'.  In any case `on-link' would have been nulled
         ;; above if there had been any significant mouse movement.
         (when (and on-link (eq 'mouse-1 (car-safe event)))
+	  ;; If mouse-2 has never been done by the user, it doesn't
+	  ;; have the necessary property to be interpreted correctly.
+	  (put 'mouse-2 'event-kind 'mouse-click)
           (push (cons 'mouse-2 (cdr event)) unread-command-events))))))
 
 (defun mouse-drag-mode-line (start-event)

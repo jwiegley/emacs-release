@@ -1,3 +1,94 @@
+2012-01-19  Chong Yidong  <cyd@gnu.org>
+
+	* Version 23.4 released.
+
+2011-12-27  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* variables.texi (Creating Buffer-Local): Warn against misuses of
+	make-variable-buffer-local (bug#10258).
+
+2011-08-28  Dani Moncayo  <dmoncayo@gmail.com>  (tiny change)
+
+	* lists.texi (Building Lists): Fix typo.
+
+2011-07-03  Chong Yidong  <cyd@stupidchicken.com>
+
+	* customize.texi (Composite Types): Move alist and plist to here
+	from Simple Types (Bug#7545).
+
+	* elisp.texi (Top): Update menu description.
+
+	* display.texi (Face Attributes): Document negative line widths
+	(Bug#6113).
+
+2011-06-14  Chong Yidong  <cyd@stupidchicken.com>
+
+	* keymaps.texi (Searching Keymaps):
+	* display.texi (Overlay Properties): Fix errors in 2011-05-29
+	change.  Suggested by Johan Bockgård.
+
+2011-05-29  Chong Yidong  <cyd@stupidchicken.com>
+
+	* help.texi (Accessing Documentation):
+	* display.texi (Pixel Specification):
+	* processes.texi (Serial Ports, Serial Ports):
+	* nonascii.texi (Character Properties, Default Coding Systems):
+	* text.texi (Changing Properties, Special Properties):
+	* windows.texi (Window Start and End):
+	* modes.texi (SMIE Indentation Example, SMIE Tricks):
+	* keymaps.texi (Searching Keymaps, Tool Bar):
+	* minibuf.texi (Basic Completion):
+	* compile.texi (Eval During Compile):
+	* strings.texi (Formatting Strings): Tweaks to avoid overflowing
+	7x9 paper in printed manual.
+
+	* lists.texi (Sets And Lists): Fix misplaced text.
+
+2011-05-06  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* modes.texi (Region to Refontify): Rename from "Region to Fontify".
+	(Multiline Font Lock):
+	* vol2.texi (Top):
+	* vol1.texi (Top):
+	* elisp.texi (Top): Update menu accordingly.
+
+2011-05-05  Drew Adams  <drew.adams@oracle.com>
+
+	* modes.texi (Region to Fontify): Fix typo.
+
+2011-04-13  Juanma Barranquero  <lekktu@gmail.com>
+
+	* windows.texi (Choosing Window): Fix typo.
+
+2011-04-10  Chong Yidong  <cyd@stupidchicken.com>
+
+	* frames.texi (Layout Parameters): Note the difference between
+	querying and setting parameters for left-fringe and right-fringe
+	(Bug#6930).
+
+2011-03-21  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* minibuf.texi (Basic Completion): Be a bit more precise about the
+	valid kinds of completion tables.
+	(Programmed Completion): Remove obsolete text about lambda expressions
+	not being valid completion tables.
+
+2011-03-19  Chong Yidong  <cyd@stupidchicken.com>
+
+	* positions.texi (Excursions): Explain the "save-excursion
+	defeated by set-buffer" warning.
+
+	* buffers.texi (Current Buffer): Copyedits.  Don't recommend using
+	save-excursion.  Suggested by Uday S Reddy.
+
+2011-03-16  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* strings.texi (String Conversion): Don't mention
+	string-make-(uni|multi)byte (bug#8262).
+	* nonascii.texi (Converting Representations): Fix up range.
+	* keymaps.texi (Key Binding Commands): Update code point, avoid
+	"unibyte character" and remove mention of unibyte bindings.
+
 2011-03-07  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 23.3 released.
@@ -8724,7 +8815,7 @@
 ;; End:
 
     Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-      2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+      2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
