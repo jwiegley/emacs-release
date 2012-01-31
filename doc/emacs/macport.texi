@@ -1,0 +1,363 @@
+@c This is part of the Emacs Mac port manual.
+@c Copyright (C) 2000, 2001, 2002, 2003, 2004,
+@c   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+@c Copyright (C) 2012  YAMAMOTO Mitsuharu
+@c See file emacs.texi for copying conditions.
+@node Mac Port, Mac OS / GNUstep, Antinews, Top
+@appendix Emacs and Mac OS X with the Mac port
+@cindex Mac port
+
+  This section briefly describes the peculiarities of using Emacs
+under Mac OS X with the Mac port.  This port provides a native GUI
+support for Mac OS X 10.2 -- 10.7.  Note that Emacs 23 already
+contains the official GUI support via the NS (Cocoa) port for Mac OS X
+10.4 and later (@pxref{Mac OS / GNUstep}).  So if it is good enough
+for you, then you don't need to try this.
+
+  The Mac port is a descendant of the following ports for Mac OS X:
+
+@itemize
+@item
+Carbon port for Emacs 22 (aka "Carbon Emacs", don't confuse it with
+``Carbon Emacs Package''): this is a part of the official GNU Emacs 22
+distribution and provides native GUI support for Mac OS.  It has been
+used in almost all the Emacs 22 distributions/packages for Mac OS X
+with its native GUI.
+
+  The Carbon port was initiated by Andrew Choi, using his Mac OS 8/9
+port as a basis.  He had been the maintainer of Mac OS port of GNU
+Emacs and participated in the development until late 2003.
+
+@item
+Carbon+AppKit port for Emacs 22.3: this is a port of the Carbon port
+above.  The two ports differ in the GUI implementation basis: the
+Carbon port uses Carbon HIToolbox, but the Carbon+AppKit port uses the
+Cocoa Application Kit framework (AppKit).  The Carbon+AppKit port
+inherits the code of the non-GUI part of the Carbon port, such as
+drawing, font and image handling.  So in this sense, the Carbon+AppKit
+port can be regarded as a variant of the Carbon port.  Obviously, this
+is not a backport of the Cocoa/GNUstep port (aka ``Emacs.app'' or the
+NS port).
+@end itemize
+
+  The Mac port doesn't support multi-tty with GUI.  The developer has
+no idea how to detach Emacs as a GUI application from Window Server or
+Dock without separating a GUI process (not thread) from the main Emacs
+(Lisp evaluator) process.  TTY-only multi-tty is supposed to work.
+
+@menu
+* Mac Invocation::		Invocation of Emacs Mac port.
+* Mac Input::                   Keyboard and mouse input on the Mac port.
+* Mac Fonts::                   Specifying fonts on the Mac port.
+* Mac Functions::               Lisp functions specific to the Mac port.
+@end menu
+
+@node Mac Invocation
+@section Invocation of Emacs Mac Port
+@cindex Emacs invocation (Mac port)
+
+  When Emacs Mac port is run from a terminal, it inherits the values
+of environment variables from the shell from which it is invoked.
+This also applies to an invocation via the @command{open} command on
+Mac OS X 10.4 and later.
+
+  When it is run from the Finder as a GUI application, how the
+environment variables are inherited depends on whether the file
+@file{~/.MacOSX/environment.plist} exists or not.  If it exists, then
+the Mac port inherits environment variable values defined in the file,
+and it affects all the applications invoked from the Finder as well as
+Emacs.  If it doesn't exist, then the Mac port inherits those defined
+in user's login shell, so settings in @file{/etc/profile},
+@file{~/.bash_profile}, etc. are in effect if you use bash as your
+login shell.
+
+  Command line arguments are specified like
+
+@example
+/Applications/Emacs.app/Contents/MacOS/Emacs -g 80x25 &
+@end example
+
+@noindent
+if the Mac port is installed at @file{/Applications/Emacs.app}.  In
+addition to the standard command line options (@pxref{Emacs
+Invocation}), you can also specify temporary Preference settings,
+which are only applied to a specific invocation, as command line
+options just as in other Cocoa applications (e.g.,
+@samp{-AppleAntiAliasingThreshold 14}).  An alternative way to specify
+command line options on Mac OS X 10.6 and later is to use the
+@samp{--args} option in the @command{open} command.
+
+  Holding shift key on startup is recognized as the @samp{-Q} option,
+which means to start Emacs with minimum customizations.
+
+  On Mac OS X 10.7, @samp{fullscreen} and @samp{fullboth} values for
+the @samp{fullscreen} frame parameter have different meanings: the
+former means a new system-wide full screen mode with a dedicated
+desktop (or Space), while the latter means making the frame fullscreen
+in a desktop (or Space) shared with the other applications.  As a
+result, @samp{-fs} or @samp{--fullscreen} command line option means
+the former on Mac OS X 10.7.
+
+@cindex Preferences (Mac port)
+  Although the Mac port does not support X resources (@pxref{X
+Resources}) directly, one can use the Preferences system in place of X
+resources.  For example, adding the line
+
+@example
+Emacs.cursorType: bar
+@end example
+
+@noindent
+to @file{~/.Xresources} in X11 corresponds to the execution of
+
+@example
+defaults write org.gnu.Emacs Emacs.cursorType bar
+@end example
+
+@noindent
+on Mac OS X.  One can use boolean or numeric values as well as string
+values as follows:
+
+@example
+defaults write org.gnu.Emacs Emacs.toolBar -bool false
+defaults write org.gnu.Emacs Emacs.lineSpacing -int 3
+@end example
+
+@noindent
+Try @kbd{M-x man RET defaults RET} for the usage of the
+@command{defaults} command.  Alternatively, if you have Developer
+Tools installed on Mac OS X, you can use Property List Editor to edit
+the file @file{~/Library/Preferences/org.gnu.Emacs.plist}.
+
+@cindex language environments (Mac port)
+  The default language environment (@pxref{Language Environments}) is
+set according to the locale setting at the startup time.  On Mac OS X,
+the locale setting is consulted in the following order:
+
+@enumerate
+@item
+Environment variables @env{LC_ALL}, @env{LC_CTYPE} and @env{LANG} as
+in other systems.
+
+@item
+Preference @code{AppleLocale} that is set by default on Mac OS X 10.3
+and later.
+
+@item
+Preference @code{AppleLanguages} that is set by default on Mac OS X
+10.1 and later.
+
+@item
+(32-bit only) Variable @code{mac-system-locale} that is derived from
+the system language and region codes.
+@end enumerate
+
+  The default values of almost all variables about coding systems are
+also set according to the language environment.  So usually you don't
+have to customize these variables manually.
+
+@node Mac Input
+@section Keyboard and Mouse Input on the Mac Port
+@cindex Meta (Mac port)
+
+@vindex mac-control-modifier
+@vindex mac-command-modifier
+@vindex mac-option-modifier
+@vindex mac-function-modifier
+  On the Mac port, Emacs can use @key{control}, @key{command},
+@key{option}, and laptop @key{function} keys as any of Emacs modifier
+keys except @key{SHIFT} (i.e., @key{ALT}, @key{CTRL}, @key{HYPER},
+@key{META}, and @key{SUPER}).  The assignment is controlled by the
+variables @code{mac-control-modifier}, @code{mac-command-modifier},
+@code{mac-option-modifier}, and @code{mac-function-modifier}.  The
+value for each of these variables can be one of the following symbols:
+@code{alt}, @code{control}, @code{hyper}, @code{meta}, @code{super},
+and @code{nil} (no particular assignment).  By default, the
+@key{control} key works as @key{CTRL}, and the @key{command} key as
+@key{META}.
+
+  For the @key{option} key, if @code{mac-option-modifier} is set to
+@code{nil}, which is the default, the key works as the normal
+@key{option} key, i.e., dead-key processing will work.  This is useful
+for entering non-@acronym{ASCII} Latin characters directly from the
+Mac keyboard, for example.
+
+  The Mac port recognizes the setting in the International system
+preference pane and supports international and alternative keyboard
+layouts (e.g., Dvorak).  Selecting one of the layouts from the
+keyboard layout pull-down menu will affect how the keys typed on the
+keyboard are interpreted.
+
+@vindex mac-pass-command-to-system
+@vindex mac-pass-control-to-system
+  Mac OS X intercepts and handles certain key combinations. These will
+not be passed to Emacs.  One can disable this interception by setting
+@code{mac-pass-command-to-system} or @code{mac-pass-control-to-system}
+to @code{nil}.
+
+@vindex mac-emulate-three-button-mouse
+  Especially for one-button mice, the multiple button feature can be
+emulated by setting @code{mac-emulate-three-button-mouse} to @code{t}
+or @code{reverse}.  If set to @code{t} (@code{reverse}, respectively),
+pressing the mouse button with the @key{option} key is recognized as
+the second (third) button, and that with the @key{command} key is
+recognized as the third (second) button.
+
+@vindex mac-wheel-button-is-mouse-2
+  For multi-button mice, the wheel button and the secondary button are
+recognized as the second and the third button, respectively.  If
+@code{mac-wheel-button-is-mouse-2} is set to @code{nil}, their roles
+are exchanged.
+
+@vindex mac-mouse-wheel-smooth-scroll
+  Pixel-based mouse wheel smooth scrolling is enabled by default for
+newer mice/trackpads.  You can turn it off by setting
+@code{mac-mouse-wheel-smooth-scroll} to @code{nil}.
+
+  Just as in many Cocoa applications (and some Carbon applications
+like Carbon Emacs), you can use @samp{Command-Control-D} for looking
+up a word under the mouse pointer in the selected window on Mac OS X
+10.4 and later.  The same functionality is provided by double-tapping
+a trackpad with three fingers on Mac OS X 10.7.
+
+  In addition to the standard Emacs events, the Mac port also accepts
+several gesture events on newer mice/trackpads, and some gestures have
+default bindings.  For example, fullscreen can be turned on/off by
+pinching out/in on a newer trackpad with the shift key on Mac OS X
+10.5.2 and later.
+
+  The Mac port also provides Apple event sending with (a)synchronous
+reply handling.  @acronym{ODB} Editor Suite support is added as an
+example.
+
+  The Mac clipboard and the Emacs kill ring (@pxref{Killing}) are
+synchronized by default: you can yank a piece of text and paste it
+into another Mac application, or cut or copy one in another Mac
+application and yank it into a Emacs buffer.  This feature can be
+disabled by setting @code{x-select-enable-clipboard} to @code{nil}.
+One can still do copy and paste with another application from the Edit
+menu.
+
+@node Mac Fonts
+@section Specifying Fonts on the Mac Port
+@cindex fonts (Mac port)
+
+  The way of specifying fonts on the Mac port is basically the same as
+in other platforms.  @xref{Fonts}.  Clicking on @samp{Set Default
+Font} in the @samp{Options} menu brings us the modal font selection
+dialog.  You can also use the non-modal font panel via @samp{Font
+Panel} in the @samp{Show/Hide} submenu in the @samp{Options} menu.
+
+  The Mac port recognizes three formats as a string representation of
+a font name: Fontconfig pattern, GTK font description, and X Logical
+Font Description (XLFD).  In a Fontconfig pattern, you can use the
+following properties as well as the standard ones like @samp{slant},
+@samp{weight}, etc.
+
+@table @samp
+@item antialias
+One of @samp{true}, @samp{false}, @samp{on} or @samp{off}, meaning
+whether the font is antialiased or not.  Not specifying this property
+means to use the value of the @samp{AppleAntiAliasingThreshold}
+Preference as the threshold.
+
+@item minspace
+One of @samp{true}, @samp{false}, @samp{on} or @samp{off}, meaning
+whether the font ignores the leading value in font metrics.
+
+@item destination
+The value 1 means the destination is video text as in the XLFD
+Conventions, and screen font metrics are used in that case.  For
+example, you can see the difference between the following examples:
+
+@smallexample
+(make-frame '((font . "Monaco-9:antialias=off")))
+(make-frame '((font . "Monaco-9:antialias=off:destination=1")))
+@end smallexample
+@end table
+
+  As Quickdraw-style font rendering is considered obsolete as of Mac
+OS X 10.5, the variable @code{mac-allow-anti-aliasing}, which was
+supported in the preceding ports (under a somewhat inappropriate
+name), is no longer supported in the Mac port.  If you want to control
+anti-aliasing, then you can set it with either from the Appearance
+pane of the System Preferences@footnote{Change of text smoothing
+threshold setting in the Appearance pane of the System Preferences is
+reflected immediately.}, or the @code{AppleAntiAliasingThreshold}
+Preference that can be set with the @command{defaults} command.
+
+@example
+defaults write org.gnu.Emacs AppleAntiAliasingThreshold @var{n}
+@end example
+
+  The bold variant of a font is displayed as a synthetic one, if it
+lacks genuine bold (e.g., Monaco).  Unfortunately, synthetic bold
+looks thinner if the background is darker than the foreground and the
+@acronym{LCD} font smoothing is turned on.  In such cases, you can
+turn off synthetic bold for particular fonts and use overstriking
+instead by customizing the variable @code{face-ignored-fonts}:
+
+@example
+(add-to-list 'face-ignored-fonts "\\`-[^-]*-monaco-bold-")
+@end example
+
+@vindex mac-text-scale-standard-width
+  If you are using newer trackpads with Mac OS X 10.5.2 and later,
+then you can scale text size by pinch out/in.  On Mac OS X 10.7,
+double-tapping either a touch-sensitive mouse with one finger or a
+trackpad with two fingers changes the buffer text scaling to unscaled
+if previously scaled.  And if previously unscaled, then the buffer
+text is scaled so the default font occupies at least
+@code{mac-text-scale-standard-width} columns in the tapped window.
+
+  The Mac port provides several font backends, @code{mac-ct} using the
+Core Text framework introduced in Mac OS X 10.5, @code{mac-fd} using
+NSFontDescriptor expanded in Mac OS X 10.4, and @code{mac-fm} using
+NSFontManager.  An appropriate font backend is selected automatically
+depending on the @acronym{OS} version at startup, and one backend is
+used at a time.
+
+  All these backends support Unicode character display including
+non-@acronym{BMP} ones, Complex Text Layout (left-to-right only) such
+as Devanagari, and glyph selection with variation selectors.  Most of
+Adobe-Japan1 ideographic glyphs are accessible via @acronym{IVSes}
+(Ideographic Variation Sequences) even for the OS-bundled Hiragino
+fonts, which do not contain the @acronym{UVS} subtable in their cmap
+table as of Mac OS X 10.6.  If compiled and executed on Mac OS X 10.7,
+then the Mac port can also display color bitmap fonts such as Apple
+Color Emoji.
+
+  They also use non-integral x positions for displaying antialiased
+proportional fonts.  You can see the difference by putting the box
+cursor over Helvetica 12pt @samp{I}, whose ideal width is 3.33398 but
+displayed with the rounded width 3, for example.
+
+@node Mac Functions
+@section Lisp Functions Specific to the Mac Port
+@cindex Lisp functions (Mac port)
+
+@findex do-applescript
+  The function @code{do-applescript} takes a string argument,
+executes it as an AppleScript command, and returns the result as a
+string.
+
+@findex mac-set-file-creator
+@findex mac-get-file-creator
+@findex mac-set-file-type
+@findex mac-get-file-type
+@findex mac-file-alias-p
+  The functions @code{mac-set-file-creator},
+@code{mac-get-file-creator}, @code{mac-set-file-type}, and
+@code{mac-get-file-type} can be used to set and get creator and file
+codes.  The function @code{mac-file-alias-p} can be used to check if
+the specified file name is a name of an alias file, and if so, which
+file it is referring to.
+
+@findex mac-get-preference
+@findex mac-convert-property-list
+  The function @code{mac-get-preference} returns the Preferences value
+converted to a Lisp object for a specified key and application.  The
+function @code{mac-convert-property-list} converts a Core Foundation
+property list, which is typically used in a @samp{.plist} file,
+between several formats (@acronym{XML}, binary, or Lisp
+representation).

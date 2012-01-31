@@ -1369,6 +1369,9 @@ ${lprojdirs}:
 	mkdir -p $@
 
 ifneq (${emacsapp},${emacsappsrc})
+${emacsapp}Contents/MacOS/Emacs.sh: ${emacsappsrc}Contents/MacOS/Emacs.sh
+	mkdir -p ${emacsapp}Contents/MacOS/;
+	cp $< $@
 ${emacsapp}Contents/Info.plist: ${emacsappsrc}Contents/Info.plist
 	cp $< $@
 ${emacsapp}Contents/PkgInfo: ${emacsappsrc}Contents/PkgInfo
@@ -1380,14 +1383,13 @@ ${emacsapp}Contents/Resources/English.lproj/InfoPlist.strings: ${emacsappsrc}Con
 	cp $< $@
 endif
 
-macosx-bundle: ${lprojdirs} \
+macosx-bundle: ${lprojdirs} ${emacsapp}Contents/MacOS/Emacs.sh \
 	${emacsapp}Contents/Info.plist ${emacsapp}Contents/PkgInfo \
 	${emacsapp}Contents/Resources/Emacs.icns \
 	${emacsapp}Contents/Resources/English.lproj/InfoPlist.strings
 macosx-app: macosx-bundle ${emacsapp}Contents/MacOS/Emacs
 ${emacsapp}Contents/MacOS/Emacs: emacs${EXEEXT}
-	mkdir -p ${emacsapp}Contents/MacOS/;
-	cd ${emacsapp}Contents/MacOS/; cp ../../../../src/emacs${EXEEXT} Emacs${EXEEXT}
+	cd ${emacsapp}Contents/MacOS/; cp ../../../../src/emacs${EXEEXT} Emacs
 #endif /* HAVE_MACGUI */
 
 #ifdef HAVE_NS

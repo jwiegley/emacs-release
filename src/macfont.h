@@ -1,5 +1,5 @@
 /* Interface definition for Mac font backend.
-   Copyright (C) 2009, 2010, 2011  YAMAMOTO Mitsuharu
+   Copyright (C) 2009-2012  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 

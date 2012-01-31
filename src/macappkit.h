@@ -1,5 +1,5 @@
 /* Definitions and headers for AppKit framework on the Mac OS.
-   Copyright (C) 2008, 2009, 2010, 2011  YAMAMOTO Mitsuharu
+   Copyright (C) 2008-2012  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 
@@ -43,6 +43,20 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 #ifndef NSINTEGER_DEFINED
 typedef int NSInteger;
 typedef unsigned int NSUInteger;
+#endif
+
+#ifndef __has_feature
+#define __has_feature(x) 0
+#endif
+
+#ifndef USE_ARC
+#if defined (SYNC_INPUT) && defined (__clang__) && __has_feature (objc_arc)
+#define USE_ARC 1
+#endif
+#endif
+
+#if !USE_ARC
+#define __unsafe_unretained
 #endif
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1060
@@ -185,6 +199,8 @@ typedef unsigned int NSUInteger;
 - (BOOL)conflictingKeyBindingsDisabled;
 - (void)setConflictingKeyBindingsDisabled:(BOOL)flag;
 - (void)flushWindow:(NSWindow *)window force:(BOOL)flag;
+- (void)updatePresentationOptions;
+- (void)showMenuBar;
 @end
 
 /* Like NSWindow, but allows suspend/resume resize control tracking.  */
@@ -281,10 +297,8 @@ typedef unsigned int NSUInteger;
 - (void)setupEmacsView;
 - (void)setupWindow;
 - (struct frame *)emacsFrame;
-- (void)updateApplicationPresentationOptions;
-- (void)showMenuBar;
-- (void)changeWindowManagerStateWithFlags:(WMState)flagsToSet
-				    clear:(WMState)flagsToClear;
+- (WMState)windowManagerState;
+- (void)setWindowManagerState:(WMState)newState;
 - (BOOL)emacsViewCanDraw;
 - (void)lockFocusOnEmacsView;
 - (void)unlockFocusOnEmacsView;
@@ -294,6 +308,7 @@ typedef unsigned int NSUInteger;
 - (NSRect)convertEmacsViewRectToScreen:(NSRect)rect;
 - (NSRect)centerScanEmacsViewRect:(NSRect)rect;
 - (void)invalidateCursorRectsForEmacsView;
+- (void)storeModifyFrameParametersEvent:(Lisp_Object)alist;
 @end
 
 /* Class for Emacs view that handles drawing events only.  It is used
@@ -310,7 +325,7 @@ typedef unsigned int NSUInteger;
 @interface EmacsView : EmacsTipView <NSTextInput, NSTextInputClient>
 {
   /* Target object to which the EmacsView object sends actions.  */
-  id target;
+  __unsafe_unretained id target;
 
   /* Message selector of the action the EmacsView object sends.  */
   SEL action;
@@ -472,7 +487,7 @@ typedef unsigned int NSUInteger;
   NSEvent *mouseUpEvent;
 
   /* Slider being tracked.  */
-  NSSlider *trackedSlider;
+  __unsafe_unretained NSSlider *trackedSlider;
 }
 - (void)suspendSliderTracking:(NSEvent *)event;
 - (void)resumeSliderTracking;
@@ -657,6 +672,12 @@ typedef unsigned int NSUInteger;
    used with some runtime check such as `respondsToSelector:'. */
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
+@interface NSNumber (AvailableOn1050AndLater)
++ (NSNumber *)numberWithInteger:(NSInteger)value;
+@end
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
 @interface NSBitmapImageRep (AvailableOn1050AndLater)
 - (id)initWithCGImage:(CGImageRef)cgImage;
 @end
@@ -715,8 +736,11 @@ typedef NSUInteger NSWindowCollectionBehavior;
 #endif
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1060
+typedef NSUInteger NSWindowNumberListOptions;
+
 @interface NSWindow (AvailableOn1060AndLater)
 - (void)setStyleMask:(NSUInteger)styleMask;
++ (NSArray *)windowNumbersWithOptions:(NSWindowNumberListOptions)options;
 @end
 #endif
 

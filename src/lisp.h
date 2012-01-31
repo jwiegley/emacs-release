@@ -1581,6 +1581,15 @@ typedef struct {
 #define NATNUMP(x) (INTEGERP (x) && XINT (x) >= 0)
 
 #define INTEGERP(x) (LISP_INT_TAG_P (XTYPE ((x))))
+#ifdef USE_LSB_TAG    /* Below usually gives shorter instructions.  */
+#define SYMBOLP(x) (XTYPE (XUNTAG (x, Lisp_Symbol)) == 0)
+#define MISCP(x) (XTYPE (XUNTAG (x, Lisp_Misc)) == 0)
+#define VECTORLIKEP(x) (XTYPE (XUNTAG (x, Lisp_Vectorlike)) == 0)
+#define STRINGP(x) (XTYPE (XUNTAG (x, Lisp_String)) == 0)
+#define CONSP(x) (XTYPE (XUNTAG (x, Lisp_Cons)) == 0)
+
+#define FLOATP(x) (XTYPE (XUNTAG (x, Lisp_Float)) == 0)
+#else
 #define SYMBOLP(x) (XTYPE ((x)) == Lisp_Symbol)
 #define MISCP(x) (XTYPE ((x)) == Lisp_Misc)
 #define VECTORLIKEP(x) (XTYPE ((x)) == Lisp_Vectorlike)
@@ -1588,6 +1597,7 @@ typedef struct {
 #define CONSP(x) (XTYPE ((x)) == Lisp_Cons)
 
 #define FLOATP(x) (XTYPE ((x)) == Lisp_Float)
+#endif
 #define VECTORP(x)    (VECTORLIKEP (x) && !(XVECTOR_SIZE (x) & PSEUDOVECTOR_FLAG))
 #define OVERLAYP(x) (MISCP (x) && XMISCTYPE (x) == Lisp_Misc_Overlay)
 #define MARKERP(x) (MISCP (x) && XMISCTYPE (x) == Lisp_Misc_Marker)

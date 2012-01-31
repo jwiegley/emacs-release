@@ -140,7 +140,7 @@ OPTION_DEFAULT_ON([m17n-flt],[don't use m17n-flt for text shaping])
 OPTION_DEFAULT_ON([toolkit-scroll-bars],[don't use Motif or Xaw3d scroll bars])
 OPTION_DEFAULT_ON([xaw3d],[don't use Xaw3d])
 OPTION_DEFAULT_ON([xim],[don't use X11 XIM])
-OPTION_DEFAULT_OFF([mac],[use GUI on Mac OS X.  This is experimental/hackers-only!])
+OPTION_DEFAULT_OFF([mac],[use GUI on Mac OS X])
 OPTION_DEFAULT_OFF([ns],[use nextstep (Cocoa or GNUstep) windowing system])
 
 OPTION_DEFAULT_ON([gpm],[don't use -lgpm for mouse support on a GNU/Linux console])
@@ -3110,14 +3110,6 @@ if test $USE_XASSERTS = yes; then
 fi
 
 echo
-
-if test "$HAVE_MACGUI" = "yes"; then
-   echo
-   echo "Warning: The Mac port is currently experimental/hackers-only.
-It is not recommended for casual use
-or as a basis of (binary) distributions."
-   echo
-fi
 
 if test "$HAVE_NS" = "yes"; then
    echo

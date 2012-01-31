@@ -1,7 +1,7 @@
 /* Graphical user interface functions for Mac OS.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
                  2008  Free Software Foundation, Inc.
-   Copyright (C) 2009, 2010, 2011  YAMAMOTO Mitsuharu
+   Copyright (C) 2009-2012  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 
@@ -2145,7 +2145,7 @@ x_free_gcs (f)
 
 
 /* Handler for signals raised during x_create_frame and
-   x_create_top_frame.  FRAME is the frame which is partially
+   x_create_tip_frame.  FRAME is the frame which is partially
    constructed.  */
 
 static Lisp_Object
@@ -2161,18 +2161,19 @@ unwind_create_frame (frame)
     return Qnil;
 
   /* If frame is ``official'', nothing to do.  */
-  if (!CONSP (Vframe_list) || !EQ (XCAR (Vframe_list), frame))
+  if (NILP (Fmemq (frame, Vframe_list)))
     {
 #if GLYPH_DEBUG
       struct x_display_info *dpyinfo = FRAME_X_DISPLAY_INFO (f);
 #endif
 
       x_free_frame_resources (f);
+      free_glyphs (f);
 
 #if GLYPH_DEBUG
       /* Check that reference counts are indeed correct.  */
       xassert (dpyinfo->reference_count == dpyinfo_refcount);
-      xassert (dpyinfo->image_cache->refcount == image_cache_refcount);
+      xassert (dpyinfo->terminal->image_cache->refcount == image_cache_refcount);
 #endif
       return Qt;
     }
@@ -2318,7 +2319,6 @@ This function is an internal primitive--use `make-frame' instead.  */)
   FRAME_CAN_HAVE_SCROLL_BARS (f) = 1;
 
   f->terminal = dpyinfo->terminal;
-  f->terminal->reference_count++;
 
   f->output_method = output_mac;
   f->output_data.mac = (struct mac_output *) xmalloc (sizeof (struct mac_output));
@@ -2335,10 +2335,6 @@ This function is an internal primitive--use `make-frame' instead.  */)
 
   /* With FRAME_MAC_DISPLAY_INFO set up, this unwind-protect is safe.  */
   record_unwind_protect (unwind_create_frame, frame);
-#if GLYPH_DEBUG
-  image_cache_refcount = FRAME_IMAGE_CACHE (f)->refcount;
-  dpyinfo_refcount = dpyinfo->reference_count;
-#endif /* GLYPH_DEBUG */
 
   /* Specify the parent under which to make this window.  */
 
@@ -2426,6 +2422,11 @@ This function is an internal primitive--use `make-frame' instead.  */)
   x_default_parameter (f, parms, Qright_fringe, Qnil,
 		       "rightFringe", "RightFringe", RES_TYPE_NUMBER);
 
+#if GLYPH_DEBUG
+  image_cache_refcount =
+    FRAME_IMAGE_CACHE (f) ? FRAME_IMAGE_CACHE (f)->refcount : 0;
+  dpyinfo_refcount = dpyinfo->reference_count;
+#endif /* GLYPH_DEBUG */
 
   /* Init faces before x_default_parameter is called for scroll-bar
      parameters because that function calls x_set_scroll_bar_width,
@@ -2456,6 +2457,7 @@ This function is an internal primitive--use `make-frame' instead.  */)
   x_make_gc (f);
 
   /* Now consider the frame official.  */
+  f->terminal->reference_count++;
   FRAME_MAC_DISPLAY_INFO (f)->reference_count++;
   Vframe_list = Fcons (frame, Vframe_list);
 
@@ -3395,7 +3397,6 @@ x_create_tip_frame (dpyinfo, parms, text)
   record_unwind_protect (unwind_create_tip_frame, frame);
 
   f->terminal = dpyinfo->terminal;
-  f->terminal->reference_count++;
 
   /* By setting the output method, we're essentially saying that
      the frame is live, as per FRAME_LIVE_P.  If we get a signal
@@ -3409,10 +3410,6 @@ x_create_tip_frame (dpyinfo, parms, text)
   FRAME_FONTSET (f) = -1;
   f->icon_name = Qnil;
 /*   FRAME_X_DISPLAY_INFO (f) = dpyinfo; */
-#if GLYPH_DEBUG
-  image_cache_refcount = FRAME_IMAGE_CACHE (f)->refcount;
-  dpyinfo_refcount = dpyinfo->reference_count;
-#endif /* GLYPH_DEBUG */
   f->output_data.mac->parent_desc = FRAME_MAC_DISPLAY_INFO (f)->root_window;
   f->output_data.mac->explicit_parent = 0;
 
@@ -3475,6 +3472,12 @@ x_create_tip_frame (dpyinfo, parms, text)
 		       "cursorColor", "Foreground", RES_TYPE_STRING);
   x_default_parameter (f, parms, Qborder_color, build_string ("black"),
 		       "borderColor", "BorderColor", RES_TYPE_STRING);
+
+#if GLYPH_DEBUG
+  image_cache_refcount =
+    FRAME_IMAGE_CACHE (f) ? FRAME_IMAGE_CACHE (f)->refcount : 0;
+  dpyinfo_refcount = dpyinfo->reference_count;
+#endif /* GLYPH_DEBUG */
 
   /* Init faces before x_default_parameter is called for scroll-bar
      parameters because that function calls x_set_scroll_bar_width,
@@ -3562,14 +3565,16 @@ x_create_tip_frame (dpyinfo, parms, text)
 
   UNGCPRO;
 
+  /* Now that the frame will be official, it counts as a reference to
+     its display and terminal.  */
+  FRAME_MAC_DISPLAY_INFO (f)->reference_count++;
+  f->terminal->reference_count++;
+
   /* It is now ok to make the frame official even if we get an error
      below.  And the frame needs to be on Vframe_list or making it
      visible won't work.  */
   Vframe_list = Fcons (frame, Vframe_list);
 
-  /* Now that the frame is official, it counts as a reference to
-     its display.  */
-  FRAME_MAC_DISPLAY_INFO (f)->reference_count++;
 
   /* Setting attributes of faces of the tooltip frame from resources
      and similar will increment face_change_count, which leads to the

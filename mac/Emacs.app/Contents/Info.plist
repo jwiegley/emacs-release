@@ -1,7 +1,7 @@
 <!--
 Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008
   Free Software Foundation, Inc.
-Copyright (C) 2009, 2010, 2011  YAMAMOTO Mitsuharu
+Copyright (C) 2009-2012  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 
@@ -43,7 +43,7 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
-	<string>Emacs</string>
+	<string>Emacs.sh</string>
 	<key>CFBundleIconFile</key>
 	<string>Emacs.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -53,7 +53,7 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>23.3</string>
+	<string>23.4</string>
 	<key>CFBundleSignature</key>
 	<string>EMAx</string>
 	<key>CFBundleVersion</key>

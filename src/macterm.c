@@ -1,7 +1,7 @@
 /* Implementation of GUI terminal on the Mac OS.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
                  2008  Free Software Foundation, Inc.
-   Copyright (C) 2009, 2010, 2011  YAMAMOTO Mitsuharu
+   Copyright (C) 2009-2012  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 
@@ -1919,13 +1919,13 @@ mac_alloc_lighter_color (f, color, factor, delta)
       int min_delta = delta * dimness * factor / 2;
 
       if (factor < 1)
-        new = RGB_TO_ULONG (max (0, min (0xff, (int) (RED_FROM_ULONG (*color)) - min_delta)),
-			    max (0, min (0xff, (int) (GREEN_FROM_ULONG (*color)) - min_delta)),
-			    max (0, min (0xff, (int) (BLUE_FROM_ULONG (*color)) - min_delta)));
+        new = RGB_TO_ULONG (max (0, min (0xff, (int) (RED_FROM_ULONG (new)) - min_delta)),
+			    max (0, min (0xff, (int) (GREEN_FROM_ULONG (new)) - min_delta)),
+			    max (0, min (0xff, (int) (BLUE_FROM_ULONG (new)) - min_delta)));
       else
-        new = RGB_TO_ULONG (max (0, min (0xff, (int) (min_delta + RED_FROM_ULONG (*color)))),
-			    max (0, min (0xff, (int) (min_delta + GREEN_FROM_ULONG (*color)))),
-			    max (0, min (0xff, (int) (min_delta + BLUE_FROM_ULONG (*color)))));
+        new = RGB_TO_ULONG (max (0, min (0xff, (int) (min_delta + RED_FROM_ULONG (new)))),
+			    max (0, min (0xff, (int) (min_delta + GREEN_FROM_ULONG (new)))),
+			    max (0, min (0xff, (int) (min_delta + BLUE_FROM_ULONG (new)))));
     }
 
   if (new == *color)
@@ -2247,7 +2247,7 @@ static void
 x_draw_image_relief (s)
      struct glyph_string *s;
 {
-  int x0, y0, x1, y1, thick, raised_p;
+  int x1, y1, thick, raised_p, top_p, bot_p, left_p, right_p;
   NativeRectangle r;
   int x = s->x;
   int y = s->ybase - image_ascent (s->img, s->face, &s->slice);
@@ -2278,19 +2278,23 @@ x_draw_image_relief (s)
       raised_p = s->img->relief > 0;
     }
 
-  x0 = x - thick;
-  y0 = y - thick;
-  x1 = x + s->slice.width + thick - 1;
-  y1 = y + s->slice.height + thick - 1;
+  x1 = x + s->slice.width - 1;
+  y1 = y + s->slice.height - 1;
+  top_p = bot_p = left_p = right_p = 0;
+
+  if (s->slice.x == 0)
+    x -= thick, left_p = 1;
+  if (s->slice.y == 0)
+    y -= thick, top_p = 1;
+  if (s->slice.x + s->slice.width == s->img->width)
+    x1 += thick, right_p = 1;
+  if (s->slice.y + s->slice.height == s->img->height)
+    y1 += thick, bot_p = 1;
 
   x_setup_relief_colors (s);
   get_glyph_string_clip_rect (s, &r);
-  x_draw_relief_rect (s->f, x0, y0, x1, y1, thick, raised_p,
-		      s->slice.y == 0,
-		      s->slice.y + s->slice.height == s->img->height,
-		      s->slice.x == 0,
-		      s->slice.x + s->slice.width == s->img->width,
-		      &r);
+  x_draw_relief_rect (s->f, x, y, x1, y1, thick, raised_p,
+		      top_p, bot_p, left_p, right_p, &r);
 }
 
 
@@ -5558,7 +5562,8 @@ do_keystroke (action, char_code, key_code, modifiers, timestamp, buf)
 	{
 	  OSStatus status;
 	  UInt16 key_action = action - keyDown;
-	  UInt32 modifier_key_state = (modifiers & ~mapped_modifiers) >> 8;
+	  UInt32 modifier_key_state =
+	    (modifiers & ~mapped_modifiers & ~alphaLock) >> 8;
 	  UInt32 keyboard_type = LMGetKbdType ();
 	  SInt32 dead_key_state = 0;
 	  UniChar code;
@@ -5586,7 +5591,7 @@ do_keystroke (action, char_code, key_code, modifiers, timestamp, buf)
 	     like C-% so mask off shift here also.  */
 	  /* Mask off modifier keys that are mapped to some Emacs
 	     modifiers.  */
-	  int new_modifiers = modifiers & ~mapped_modifiers;
+	  int new_modifiers = modifiers & ~mapped_modifiers & ~alphaLock;
 	  /* set high byte of keycode to modifier high byte*/
 	  int new_key_code = key_code | new_modifiers;
 	  Ptr kchr_ptr = (Ptr) GetScriptManagerVariable (smKCHRCache);

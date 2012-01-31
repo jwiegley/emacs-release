@@ -1,7 +1,7 @@
 /* Unix emulation routines for GNU Emacs on the Mac OS.
    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
                  2008  Free Software Foundation, Inc.
-   Copyright (C) 2009, 2010, 2011  YAMAMOTO Mitsuharu
+   Copyright (C) 2009-2012  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 

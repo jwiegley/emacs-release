@@ -1452,8 +1452,7 @@ Optional Packages:
                           don't use Motif or Xaw3d scroll bars
   --without-xaw3d         don't use Xaw3d
   --without-xim           don't use X11 XIM
-  --with-mac              use GUI on Mac OS X. This is
-                          experimental/hackers-only!
+  --with-mac              use GUI on Mac OS X
   --with-ns               use nextstep (Cocoa or GNUstep) windowing system
   --without-gpm           don't use -lgpm for mouse support on a GNU/Linux
                           console
@@ -13654,14 +13653,6 @@ if test $USE_XASSERTS = yes; then
 fi
 
 echo
-
-if test "$HAVE_MACGUI" = "yes"; then
-   echo
-   echo "Warning: The Mac port is currently experimental/hackers-only.
-It is not recommended for casual use
-or as a basis of (binary) distributions."
-   echo
-fi
 
 if test "$HAVE_NS" = "yes"; then
    echo

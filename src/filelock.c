@@ -591,7 +591,6 @@ void
 lock_file (fn)
      Lisp_Object fn;
 {
-  return;
   register Lisp_Object attack, orig_fn, encoded_fn;
   register char *lfname, *locker;
   lock_info_type lock_info;
