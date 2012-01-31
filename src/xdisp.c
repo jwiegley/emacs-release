@@ -1,7 +1,7 @@
 /* Display generation from window structure and buffer text.
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 1994, 1995,
                  1997, 1998, 1999, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+                 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -3865,7 +3865,7 @@ setup_for_ellipsis (it, len)
     {
       struct Lisp_Vector *v = XVECTOR (DISP_INVIS_VECTOR (it->dp));
       it->dpvec = v->contents;
-      it->dpend = v->contents + v->size;
+      it->dpend = v->contents + v->header.size;
     }
   else
     {
@@ -4641,6 +4641,11 @@ handle_composition_prop (it)
       && COMPOSITION_VALID_P (start, end, prop)
       && (STRINGP (it->string) || (PT <= start || PT >= end)))
     {
+      if (start < pos)
+	/* As we can't handle this situation (perhaps, font-lock added
+	   a new composition), we just return here hoping that next
+	   redisplay will detect this composition much earlier.  */
+	return HANDLED_NORMALLY;
       if (start != pos)
 	{
 	  if (STRINGP (it->string))
@@ -5697,11 +5702,11 @@ get_next_display_element (it)
 	      /* Return the first character from the display table
 		 entry, if not empty.  If empty, don't display the
 		 current character.  */
-	      if (v->size)
+	      if (v->header.size)
 		{
 		  it->dpvec_char_len = it->len;
 		  it->dpvec = v->contents;
-		  it->dpend = v->contents + v->size;
+		  it->dpend = v->contents + v->header.size;
 		  it->current.dpvec_index = 0;
 		  it->dpvec_face_id = -1;
 		  it->saved_face_id = it->face_id;
@@ -5922,9 +5927,21 @@ get_next_display_element (it)
 	  int pos = (it->s ? -1
 		     : STRINGP (it->string) ? IT_STRING_CHARPOS (*it)
 		     : IT_CHARPOS (*it));
+	  int c;
 
-	  it->face_id = FACE_FOR_CHAR (it->f, face, it->char_to_display, pos,
-				       it->string);
+	  if (it->what == IT_CHARACTER)
+	    c = it->char_to_display;
+	  else
+	    {
+	      struct composition *cmp = composition_table[it->cmp_it.id];
+	      int i;
+
+	      c = ' ';
+	      for (i = 0; i < cmp->glyph_len; i++)
+		if ((c = COMPOSITION_GLYPH (cmp, i)) != '\t')
+		  break;
+	    }
+	  it->face_id = FACE_FOR_CHAR (it->f, face, c, pos, it->string);
 	}
     }
 #endif
@@ -10760,7 +10777,7 @@ hscroll_window_tree (window)
 	      current_buffer = XBUFFER (w->buffer);
 
 	      if (w == XWINDOW (selected_window))
-		pt = BUF_PT (current_buffer);
+		pt = PT;
 	      else
 		{
 		  pt = marker_position (w->pointm);
@@ -11194,7 +11211,7 @@ reconsider_clip_changes (w, b)
       int pt;
 
       if (w == XWINDOW (selected_window))
-	pt = BUF_PT (current_buffer);
+	pt = PT;
       else
 	pt = marker_position (w->pointm);
 
@@ -14243,7 +14260,8 @@ try_window_reusing_current_matrix (w)
 		row->visible_height -= min_y - row->y;
 	      if (row->y + row->height > max_y)
 		row->visible_height -= row->y + row->height - max_y;
-	      row->redraw_fringe_bitmaps_p = 1;
+	      if (row->fringe_bitmap_periodic_p)
+		row->redraw_fringe_bitmaps_p = 1;
 
 	      it.current_y += row->height;
 
@@ -14405,7 +14423,8 @@ try_window_reusing_current_matrix (w)
 	    row->visible_height -= min_y - row->y;
 	  if (row->y + row->height > max_y)
 	    row->visible_height -= row->y + row->height - max_y;
-	  row->redraw_fringe_bitmaps_p = 1;
+	  if (row->fringe_bitmap_periodic_p)
+	    row->redraw_fringe_bitmaps_p = 1;
 	}
 
       /* Scroll the current matrix.  */
@@ -17087,7 +17106,7 @@ display_menu_bar (w)
 
   /* Display all items of the menu bar.  */
   items = FRAME_MENU_BAR_ITEMS (it.f);
-  for (i = 0; i < XVECTOR (items)->size; i += 4)
+  for (i = 0; i < XVECTOR_SIZE (items); i += 4)
     {
       Lisp_Object string;
 
@@ -19615,6 +19634,12 @@ fill_composite_glyph_string (s, base_face, overlaps)
       ++s->nchars;
     }
   s->cmp_to = i;
+
+  if (s->face == NULL)
+    {
+      s->face = base_face->ascii_face;
+      s->font = s->face->font;
+    }
 
   /* All glyph strings for the same composition has the same width,
      i.e. the width set for the first component of the composition.  */
@@ -23086,7 +23111,7 @@ on_hot_spot_p (hot_spot, x, y)
 	{
 	  struct Lisp_Vector *v = XVECTOR (XCDR (hot_spot));
 	  Lisp_Object *poly = v->contents;
-	  int n = v->size;
+	  int n = v->header.size;
 	  int i;
 	  int inside = 0;
 	  Lisp_Object lx, ly;
@@ -23465,7 +23490,7 @@ note_mouse_highlight (f, x, y)
      int x, y;
 {
   Display_Info *dpyinfo = FRAME_X_DISPLAY_INFO (f);
-  enum window_part part;
+  enum window_part part = ON_NOTHING;
   Lisp_Object window;
   struct window *w;
   Cursor cursor = No_Cursor;
@@ -23499,11 +23524,14 @@ note_mouse_highlight (f, x, y)
   /* Which window is that in?  */
   window = window_from_coordinates (f, x, y, &part, 0, 0, 1);
 
-  /* If we were displaying active text in another window, clear that.
-     Also clear if we move out of text area in same window.  */
+  /* If displaying active text in another window, clear that.  */
   if (! EQ (window, dpyinfo->mouse_face_window)
-      || (part != ON_TEXT && part != ON_MODE_LINE && part != ON_HEADER_LINE
-	  && !NILP (dpyinfo->mouse_face_window)))
+      /* Also clear if we move out of text area in same window.  */
+      || (!NILP (dpyinfo->mouse_face_window)
+	  && !NILP (window)
+	  && part != ON_TEXT
+	  && part != ON_MODE_LINE
+	  && part != ON_HEADER_LINE))
     clear_mouse_face (dpyinfo);
 
   /* Not on a window -> return.  */
@@ -23552,7 +23580,7 @@ note_mouse_highlight (f, x, y)
       && XFASTINT (w->last_modified) == BUF_MODIFF (b)
       && XFASTINT (w->last_overlay_modified) == BUF_OVERLAY_MODIFF (b))
     {
-      int hpos, vpos, pos, i, dx, dy, area;
+      int hpos, vpos, pos, i, dx, dy, area = LAST_AREA;
       struct glyph *glyph;
       Lisp_Object object;
       Lisp_Object mouse_face = Qnil, overlay = Qnil, position;
@@ -24230,7 +24258,7 @@ expose_window (w, fr)
     {
       int yb = window_text_bottom_y (w);
       struct glyph_row *row;
-      int cursor_cleared_p;
+      int cursor_cleared_p, phys_cursor_on_p;
       struct glyph_row *first_overlapping_row, *last_overlapping_row;
 
       TRACE ((stderr, "expose_window (%d, %d, %d, %d)\n",
@@ -24249,6 +24277,13 @@ expose_window (w, fr)
 	}
       else
 	cursor_cleared_p = 0;
+
+      /* If the row containing the cursor extends face to end of line,
+	 then expose_area might overwrite the cursor outside the
+	 rectangle and thus notice_overwritten_cursor might clear
+	 w->phys_cursor_on_p.  We remember the original value and
+	 check later if it is changed.  */
+      phys_cursor_on_p = w->phys_cursor_on_p;
 
       /* Update lines intersecting rectangle R.  */
       first_overlapping_row = last_overlapping_row = NULL;
@@ -24316,7 +24351,8 @@ expose_window (w, fr)
 	  x_draw_vertical_border (w);
 
 	  /* Turn the cursor on again.  */
-	  if (cursor_cleared_p)
+	  if (cursor_cleared_p
+	      || (phys_cursor_on_p && !w->phys_cursor_on_p))
 	    update_window_cursor (w, 1);
 	}
     }
@@ -25139,6 +25175,7 @@ init_xdisp ()
 
   mini_w = XWINDOW (minibuf_window);
   root_window = FRAME_ROOT_WINDOW (XFRAME (WINDOW_FRAME (mini_w)));
+  echo_area_window = minibuf_window;
 
   if (!noninteractive)
     {

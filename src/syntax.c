@@ -1,6 +1,6 @@
 /* GNU Emacs routines to deal with syntax tables; also word and list parsing.
    Copyright (C) 1985, 1987, 1993, 1994, 1995, 1997, 1998, 1999, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -364,7 +364,12 @@ find_defun_start (pos, pos_byte)
 
   if (!open_paren_in_column_0_is_defun_start)
     {
+      find_start_value = BEGV;
       find_start_value_byte = BEGV_BYTE;
+      find_start_buffer = current_buffer;
+      find_start_modiff = MODIFF;
+      find_start_begv = BEGV;
+      find_start_pos = pos;
       return BEGV;
     }
 
@@ -956,7 +961,7 @@ text property.  */)
 	break;
       }
 
-  if (val < XVECTOR (Vsyntax_code_object)->size && NILP (match))
+  if (val < XVECTOR_SIZE (Vsyntax_code_object) && NILP (match))
     return XVECTOR (Vsyntax_code_object)->contents[val];
   else
     /* Since we can't use a shared object, let's make a new one.  */
@@ -3348,7 +3353,7 @@ init_syntax_once ()
 
   /* Create objects which can be shared among syntax tables.  */
   Vsyntax_code_object = Fmake_vector (make_number (Smax), Qnil);
-  for (i = 0; i < XVECTOR (Vsyntax_code_object)->size; i++)
+  for (i = 0; i < XVECTOR_SIZE (Vsyntax_code_object); i++)
     XVECTOR (Vsyntax_code_object)->contents[i]
       = Fcons (make_number (i), Qnil);
 

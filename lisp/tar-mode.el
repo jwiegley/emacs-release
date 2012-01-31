@@ -1,7 +1,7 @@
 ;;; tar-mode.el --- simple editing of tar files from GNU emacs
 
 ;; Copyright (C) 1990, 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com>
@@ -477,7 +477,8 @@ MODE should be an integer which is a file mode value."
             (if (and dir (not (file-exists-p dir)))
                 (make-directory dir t))
             (unless (file-directory-p name)
-              (write-region start end name))
+	      (let ((coding-system-for-write 'no-conversion))
+		(write-region start end name)))
             (set-file-modes name (tar-header-mode descriptor))))))))
 
 (defun tar-summarize-buffer ()

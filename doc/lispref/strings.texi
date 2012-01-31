@@ -1,7 +1,7 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
 @c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
 @c   Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../../info/strings
@@ -555,8 +555,8 @@ strings and integers.  @code{format} (@pxref{Formatting Strings}) and
 @code{prin1-to-string} (@pxref{Output Functions}) can also convert
 Lisp objects into strings.  @code{read-from-string} (@pxref{Input
 Functions}) can ``convert'' a string representation of a Lisp object
-into an object.  The functions @code{string-make-multibyte} and
-@code{string-make-unibyte} convert the text representation of a string
+into an object.  The functions @code{string-to-multibyte} and
+@code{string-to-unibyte} convert the text representation of a string
 (@pxref{Converting Representations}).
 
   @xref{Documentation}, for functions that produce textual descriptions
@@ -829,12 +829,12 @@ is not truncated.
 
 @example
 @group
-(format "The word `%7s' actually has %d letters in it."
+(format "The word `%7s' has %d letters in it."
         "foo" (length "foo"))
-     @result{} "The word `    foo' actually has 3 letters in it."
-(format "The word `%7s' actually has %d letters in it."
+     @result{} "The word `    foo' has 3 letters in it."
+(format "The word `%7s' has %d letters in it."
         "specification" (length "specification"))
-     @result{} "The word `specification' actually has 13 letters in it."
+     @result{} "The word `specification' has 13 letters in it."
 @end group
 @end example
 

@@ -1,3 +1,51 @@
+2012-01-19  Chong Yidong  <cyd@gnu.org>
+
+	* Version 23.4 released.
+
+2011-05-15  Chong Yidong  <cyd@stupidchicken.com>
+
+	Fixes for fitting text into 7x9 printed manual.
+	* building.texi (Flymake, Breakpoints Buffer):
+	* calendar.texi (Appointments):
+	* cmdargs.texi (General Variables, Display X):
+	* custom.texi (Saving Customizations, Face Customization)
+	(Directory Variables, Minibuffer Maps, Init Rebinding):
+	* display.texi (Font Lock, Font Lock, Useless Whitespace):
+	* fixit.texi (Spelling):
+	* frames.texi (Creating Frames, Fonts):
+	* help.texi (Help Files):
+	* mini.texi (Minibuffer File):
+	* misc.texi (emacsclient Options, Emulation):
+	* msdog.texi (Windows Startup, Windows HOME, Windows Fonts):
+	* mule.texi (International Chars, Language Environments)
+	(Select Input Method, Modifying Fontsets, Charsets):
+	* programs.texi (Custom C Indent):
+	* rmail.texi (Rmail Labels):
+	* text.texi (Table Conversion):
+	* trouble.texi (Known Problems, Known Problems):
+	* windows.texi (Change Window):
+	* xresources.texi (GTK resources): Reflow text and re-indent code
+	examples to avoid TeX overflows and underflows on 7x9 paper.
+
+	* emacs.texi: Fix the (commented out) smallbook command.
+
+	* macos.texi (Mac / GNUstep Events):
+	* xresources.texi (Lucid Resources): Remove extraneous examples.
+
+2011-04-13  Juanma Barranquero  <lekktu@gmail.com>
+
+	* mini.texi (Minibuffer Edit):
+	* screen.texi (Mode Line): Fix typo.
+
+2011-03-26  Chong Yidong  <cyd@stupidchicken.com>
+
+	* display.texi (Auto Scrolling): Fix scroll-up/scroll-down confusion.
+
+2011-03-11  Eli Zaretskii  <eliz@gnu.org>
+
+	* msdog.texi (Windows HOME): Fix the wording to clarify how Emacs sets
+	HOME on Windows and where it looks for init files.  (Bug#8221)
+
 2011-03-07  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 23.3 released.
@@ -7384,7 +7432,7 @@
 ;; End:
 
   Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2001, 2002,
-    2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+    2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
     Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.

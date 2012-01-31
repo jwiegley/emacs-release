@@ -4,7 +4,7 @@ emacs-mime.texi.
 This file documents the Emacs MIME interface functionality.
 
    Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -48,7 +48,7 @@ read at least RFC2045 and RFC2047.
    This file documents the Emacs MIME interface functionality.
 
    Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -2330,42 +2330,42 @@ File: emacs-mime,  Node: Index,  Prev: GNU Free Documentation License,  Up: Top
 
 
 Tag Table:
-Node: Top1080
-Node: Decoding and Viewing3276
-Node: Dissection4057
-Node: Non-MIME4431
-Node: Handles6017
-Node: Display6869
-Node: Display Customization7590
-Ref: Display Customization-Footnote-114060
-Ref: Display Customization-Footnote-214140
-Node: Files and Directories14267
-Node: New Viewers15988
-Node: Composing17112
-Node: Simple MML Example18073
-Node: MML Definition18716
-Node: Advanced MML Example22537
-Node: Encoding Customization25277
-Node: Charset Translation29713
-Node: Conversion32249
-Node: Flowed text33370
-Node: Interface Functions34455
-Node: Basic Functions40013
-Node: rfc204541057
-Node: rfc223141572
-Node: ietf-drums42861
-Node: rfc204743946
-Node: time-date47285
-Node: qp50729
-Node: base6451696
-Node: binhex52649
-Node: uudecode53045
-Node: yenc53401
-Node: rfc184353679
-Node: mailcap54288
-Node: Standards55212
-Node: GNU Free Documentation License56633
-Node: Index81783
+Node: Top1086
+Node: Decoding and Viewing3288
+Node: Dissection4069
+Node: Non-MIME4443
+Node: Handles6029
+Node: Display6881
+Node: Display Customization7602
+Ref: Display Customization-Footnote-114072
+Ref: Display Customization-Footnote-214152
+Node: Files and Directories14279
+Node: New Viewers16000
+Node: Composing17124
+Node: Simple MML Example18085
+Node: MML Definition18728
+Node: Advanced MML Example22549
+Node: Encoding Customization25289
+Node: Charset Translation29725
+Node: Conversion32261
+Node: Flowed text33382
+Node: Interface Functions34467
+Node: Basic Functions40025
+Node: rfc204541069
+Node: rfc223141584
+Node: ietf-drums42873
+Node: rfc204743958
+Node: time-date47297
+Node: qp50741
+Node: base6451708
+Node: binhex52661
+Node: uudecode53057
+Node: yenc53413
+Node: rfc184353691
+Node: mailcap54300
+Node: Standards55224
+Node: GNU Free Documentation License56645
+Node: Index81795
 
 End Tag Table
 

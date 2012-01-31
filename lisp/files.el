@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1985, 1986, 1987, 1992, 1993, 1994, 1995, 1996,
 ;;   1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+;;   2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 
@@ -3752,11 +3752,17 @@ we do not remove backup version numbers, only true file version numbers."
   (let ((handler (find-file-name-handler file 'file-ownership-preserved-p)))
     (if handler
 	(funcall handler 'file-ownership-preserved-p file)
-      (let ((attributes (file-attributes file)))
+      (let ((attributes (file-attributes file 'integer)))
 	;; Return t if the file doesn't exist, since it's true that no
 	;; information would be lost by an (attempted) delete and create.
 	(or (null attributes)
-	    (= (nth 2 attributes) (user-uid)))))))
+	    (= (nth 2 attributes) (user-uid))
+	    ;; Files created on Windows by Administrator (RID=500)
+	    ;; have the Administrators group (RID=544) recorded as
+	    ;; their owner.  Rewriting them will still preserve the
+	    ;; owner.
+	    (and (eq system-type 'windows-nt)
+		 (= (user-uid) 500) (= (nth 2 attributes) 544)))))))
 
 (defun file-name-sans-extension (filename)
   "Return FILENAME sans final \"extension\".

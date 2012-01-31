@@ -1,6 +1,6 @@
 ;;; tramp-compat.el --- Tramp compatibility functions
 
-;; Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+;; Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
 ;; Author: Michael Albinus <michael.albinus@gmx.de>
 ;; Keywords: comm, processes
@@ -437,6 +437,18 @@ element is not omitted."
 	    (setq result t))
 	  (setenv "UNIX95" unix95)
 	  result)))))
+
+;; The following functions do not exist in XEmacs.  We ignore this;
+;; they are used for checking a remote tty.
+(defun tramp-compat-process-get (process propname)
+  "Return the value of PROCESS' PROPNAME property.
+This is the last value stored with `(process-put PROCESS PROPNAME VALUE)'."
+  (ignore-errors (tramp-compat-funcall 'process-get process propname)))
+
+(defun tramp-compat-process-put (process propname value)
+  "Change PROCESS' PROPNAME property to VALUE.
+It can be retrieved with `(process-get PROCESS PROPNAME)'."
+  (ignore-errors (tramp-compat-funcall 'process-put process propname value)))
 
 (provide 'tramp-compat)
 

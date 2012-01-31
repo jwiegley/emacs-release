@@ -1,7 +1,7 @@
 ;;; smerge-mode.el --- Minor mode to resolve diff3 conflicts
 
 ;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+;;   2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Keywords: tools revision-control merge diff3 cvs conflict
@@ -535,7 +535,7 @@ some major modes.  Uses `smerge-resolve-function' to do the actual work."
 	      (with-current-buffer buf
 		(zerop (call-process-region
 			(point-min) (point-max) "patch" t nil nil
-			"-r" "/dev/null" "--no-backup-if-mismatch"
+			"-r" null-device "--no-backup-if-mismatch"
 			"-fl" o))))
 	    (save-restriction
 	      (narrow-to-region m0b m0e)
@@ -551,7 +551,7 @@ some major modes.  Uses `smerge-resolve-function' to do the actual work."
 	      (with-current-buffer buf
 		(zerop (call-process-region
 			(point-min) (point-max) "patch" t nil nil
-			"-r" "/dev/null" "--no-backup-if-mismatch"
+			"-r" null-device "--no-backup-if-mismatch"
 			"-fl" m))))
 	    (save-restriction
 	      (narrow-to-region m0b m0e)

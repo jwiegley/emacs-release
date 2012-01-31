@@ -1,6 +1,6 @@
 /* Things for GLYPHS and glyph tables.
    Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -62,7 +62,7 @@ extern Lisp_Object Vglyph_table;
 /* Return the current length of the GLYPH table,
    or 0 if the table isn't currently valid.  */
 #define GLYPH_TABLE_LENGTH  \
-  ((VECTORP (Vglyph_table)) ? XVECTOR (Vglyph_table)->size : 0)
+  ((VECTORP (Vglyph_table)) ? XVECTOR_SIZE (Vglyph_table) : 0)
 
 /* Return the current base (for indexing) of the GLYPH table,
    or 0 if the table isn't currently valid.  */

@@ -2,11 +2,11 @@ This is ../../info/emacs, produced by makeinfo version 4.13 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.3.
+updated for Emacs version 23.4.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-2011  Free Software Foundation, Inc.
+2011, 2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1263,7 +1263,7 @@ responses:
      when you started spell checking.
 
 `q'
-     Quit interactive spell checking and kill the Aspell/Ispell/Hunspell
+     Quit interactive spell checking and kill the spell-checker
      subprocess.
 
 `?'
@@ -4735,10 +4735,10 @@ this makes any window too small, it is deleted and its space is given
 to an adjacent window.  The minimum size is specified by the variables
 `window-min-height' and `window-min-width'.
 
-   The command `C-x -' (`shrink-window-if-larger-than-buffer') reduces
-the height of the selected window, if it is taller than necessary to
-show the whole text of the buffer it is displaying.  It gives the extra
-lines to other windows in the frame.
+   `C-x -' (`shrink-window-if-larger-than-buffer') reduces the height
+of the selected window, if it is taller than necessary to show the
+whole text of the buffer it is displaying.  It gives the extra lines to
+other windows in the frame.
 
    You can also use `C-x +' (`balance-windows') to even out the heights
 of all the windows in the selected frame.
@@ -5303,7 +5303,8 @@ Parameters, for more information.
 default foreground color and font:
 
      (add-to-list 'default-frame-alist '(font . "10x20"))
-     (add-to-list 'default-frame-alist '(foreground-color . "blue"))
+     (add-to-list 'default-frame-alist
+                  '(foreground-color . "blue"))
 
 By putting such customizations in your init file, you can control the
 appearance of all the frames Emacs creates, including the initial one
@@ -5432,12 +5433,9 @@ Here are some examples of Fontconfig patterns:
      DejaVu Sans Mono:bold:italic
      Monospace-12:weight=bold:slant=italic
 
-   See the Fontconfig manual for a more detailed description of
-Fontconfig patterns.  This manual is located in the file
-`fontconfig-user.html', distributed with Fontconfig.  It is also
-available online at `http://fontconfig.org/fontconfig-user.html'.  In
-particular, that manual describes additional font properties that
-influence how the font is hinted, antialiased, or scaled.
+   For a more detailed description of Fontconfig patterns, see the
+Fontconfig manual, which is distributed with Fontconfig and available
+online at `http://fontconfig.org/fontconfig-user.html'.
 
    The second way to specify a font is to use a "GTK font description".
 These have the syntax
@@ -5496,8 +5494,8 @@ SLANT
      other values.
 
 WIDTHTYPE
-     The font width--normally `condensed', `extended', `semicondensed'
-     or `normal' (some font names support other values).
+     The font width--normally `normal', `condensed', `extended', or
+     `semicondensed' (some font names support other values).
 
 STYLE
      An optional additional style name.  Usually it is empty--most long
@@ -6224,7 +6222,8 @@ in a buffer whose coding system is `utf-8-unix':
            buffer code: #xC3 #x80
              file code: not encodable by coding system undecided-unix
                display: by this font (glyph code)
-         xft:-unknown-DejaVu Sans Mono-normal-normal-normal-*-13-*-*-*-m-0-iso10646-1 (#x82)
+         xft:-unknown-DejaVu Sans Mono-normal-normal-
+             normal-*-13-*-*-*-m-0-iso10646-1 (#x82)
 
      Character code properties: customize what to show
        name: LATIN CAPITAL LETTER A WITH GRAVE
@@ -6306,7 +6305,7 @@ incoming mail, and any other text you read into Emacs.  It may also
 specify the default coding system to use when you create a file.  Each
 language environment also specifies a default input method.
 
-   To select a language environment, customize the variable
+   To select a language environment, customize
 `current-language-environment' or use the command `M-x
 set-language-environment'.  It makes no difference which buffer is
 current when you use this command, because the effects apply globally
@@ -6587,7 +6586,7 @@ using the selected keyboard layout.  The command `C-u C-x =' also shows
 that information in addition to the other information about the
 character.
 
-   To see a list of all the supported input methods, type `M-x
-list-input-methods'.  The list gives information about each input
-method, including the string that stands for it in the mode line.
+   `M-x list-input-methods' displays a list of all the supported input
+methods.  The list gives information about each input method, including
+the string that stands for it in the mode line.
 

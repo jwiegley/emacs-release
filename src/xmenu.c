@@ -1,6 +1,6 @@
 /* X Communication module for terminals which understand the X protocol.
    Copyright (C) 1986, 1988, 1993, 1994, 1996, 1999, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -1012,6 +1012,7 @@ set_frame_menubar (f, first_time, deep_p)
       Lisp_Object *previous_items
 	= (Lisp_Object *) alloca (previous_menu_items_used
 				  * sizeof (Lisp_Object));
+      EMACS_UINT subitems;
 
       /* If we are making a new widget, its contents are empty,
 	 do always reinitialize them.  */
@@ -1056,21 +1057,21 @@ set_frame_menubar (f, first_time, deep_p)
 
       menu_items = f->menu_bar_vector;
       menu_items_allocated = VECTORP (menu_items) ? ASIZE (menu_items) : 0;
-      submenu_start = (int *) alloca (XVECTOR (items)->size * sizeof (int *));
-      submenu_end = (int *) alloca (XVECTOR (items)->size * sizeof (int *));
-      submenu_n_panes = (int *) alloca (XVECTOR (items)->size * sizeof (int));
-      submenu_top_level_items
-	= (int *) alloca (XVECTOR (items)->size * sizeof (int *));
+      subitems = XVECTOR_SIZE (items) / 4;
+      submenu_start = (int *) alloca (subitems * sizeof (int));
+      submenu_end = (int *) alloca (subitems * sizeof (int));
+      submenu_n_panes = (int *) alloca (subitems * sizeof (int));
+      submenu_top_level_items = (int *) alloca (subitems * sizeof (int));
       init_menu_items ();
-      for (i = 0; i < XVECTOR (items)->size; i += 4)
+      for (i = 0; i < subitems; i++)
 	{
 	  Lisp_Object key, string, maps;
 
 	  last_i = i;
 
-	  key = XVECTOR (items)->contents[i];
-	  string = XVECTOR (items)->contents[i + 1];
-	  maps = XVECTOR (items)->contents[i + 2];
+	  key = XVECTOR (items)->contents[i * 4];
+	  string = XVECTOR (items)->contents[i * 4 + 1];
+	  maps = XVECTOR (items)->contents[i * 4 + 2];
 	  if (NILP (string))
 	    break;
 
@@ -1097,7 +1098,7 @@ set_frame_menubar (f, first_time, deep_p)
       wv->help = Qnil;
       first_wv = wv;
 
-      for (i = 0; i < last_i; i += 4)
+      for (i = 0; i < last_i; i++)
 	{
 	  menu_items_n_panes = submenu_n_panes[i];
 	  wv = digest_single_submenu (submenu_start[i], submenu_end[i],
@@ -1142,7 +1143,7 @@ set_frame_menubar (f, first_time, deep_p)
       /* Now GC cannot happen during the lifetime of the widget_value,
 	 so it's safe to store data from a Lisp_String.  */
       wv = first_wv->contents;
-      for (i = 0; i < XVECTOR (items)->size; i += 4)
+      for (i = 0; i < XVECTOR_SIZE (items); i += 4)
 	{
 	  Lisp_Object string;
 	  string = XVECTOR (items)->contents[i + 1];
@@ -1168,7 +1169,7 @@ set_frame_menubar (f, first_time, deep_p)
       first_wv = wv;
 
       items = FRAME_MENU_BAR_ITEMS (f);
-      for (i = 0; i < XVECTOR (items)->size; i += 4)
+      for (i = 0; i < XVECTOR_SIZE (items); i += 4)
 	{
 	  Lisp_Object string;
 
@@ -1594,7 +1595,8 @@ create_and_show_popup_menu (f, first_wv, x, y, for_click, timestamp)
   int i;
   Arg av[2];
   int ac = 0;
-  XButtonPressedEvent dummy;
+  XEvent dummy;
+  XButtonPressedEvent *event = &(dummy.xbutton);
   LWLIB_ID menu_id;
   Widget menu;
 
@@ -1608,36 +1610,35 @@ create_and_show_popup_menu (f, first_wv, x, y, for_click, timestamp)
                            popup_deactivate_callback,
                            menu_highlight_callback);
 
-  dummy.type = ButtonPress;
-  dummy.serial = 0;
-  dummy.send_event = 0;
-  dummy.display = FRAME_X_DISPLAY (f);
-  dummy.time = CurrentTime;
-  dummy.root = FRAME_X_DISPLAY_INFO (f)->root_window;
-  dummy.window = dummy.root;
-  dummy.subwindow = dummy.root;
-  dummy.x = x;
-  dummy.y = y;
+  event->type = ButtonPress;
+  event->serial = 0;
+  event->send_event = 0;
+  event->display = FRAME_X_DISPLAY (f);
+  event->time = CurrentTime;
+  event->root = FRAME_X_DISPLAY_INFO (f)->root_window;
+  event->window = event->subwindow = event->root;
+  event->x = x;
+  event->y = y;
 
   /* Adjust coordinates to be root-window-relative.  */
   x += f->left_pos + FRAME_OUTER_TO_INNER_DIFF_X (f);
   y += f->top_pos + FRAME_OUTER_TO_INNER_DIFF_Y (f);
 
-  dummy.x_root = x;
-  dummy.y_root = y;
+  event->x_root = x;
+  event->y_root = y;
 
-  dummy.state = 0;
-  dummy.button = 0;
+  event->state = 0;
+  event->button = 0;
   for (i = 0; i < 5; i++)
     if (FRAME_X_DISPLAY_INFO (f)->grabbed & (1 << i))
-      dummy.button = i;
+      event->button = i;
 
   /* Don't allow any geometry request from the user.  */
   XtSetArg (av[ac], XtNgeometry, 0); ac++;
   XtSetValues (menu, av, ac);
 
   /* Display the menu.  */
-  lw_popup_menu (menu, (XEvent *) &dummy);
+  lw_popup_menu (menu, &dummy);
   popup_activated_flag = 1;
   x_activate_timeout_atimer ();
 
@@ -1657,6 +1658,17 @@ create_and_show_popup_menu (f, first_wv, x, y, for_click, timestamp)
 
 #endif /* not USE_GTK */
 
+static Lisp_Object
+cleanup_widget_value_tree (Lisp_Object arg)
+{
+  struct Lisp_Save_Value *p = XSAVE_VALUE (arg);
+  widget_value *wv = p->pointer;
+
+  free_menubar_widget_value_tree (wv);
+
+  return Qnil;
+}
+
 Lisp_Object
 xmenu_show (FRAME_PTR f, int x, int y, int for_click, int keymaps,
 	    Lisp_Object title, char **error, EMACS_UINT timestamp)
@@ -1670,6 +1682,8 @@ xmenu_show (FRAME_PTR f, int x, int y, int for_click, int keymaps,
   int submenu_depth = 0;
 
   int first_pane;
+
+  int specpdl_count = SPECPDL_INDEX ();
 
   if (! FRAME_X_P (f))
     abort ();
@@ -1865,11 +1879,15 @@ xmenu_show (FRAME_PTR f, int x, int y, int for_click, int keymaps,
   /* No selection has been chosen yet.  */
   menu_item_selection = 0;
 
+  /* Make sure to free the widget_value objects we used to specify the
+     contents even with longjmp.  */
+  record_unwind_protect (cleanup_widget_value_tree,
+			 make_save_value (first_wv, 0));
+
   /* Actually create and show the menu until popped down.  */
   create_and_show_popup_menu (f, first_wv, x, y, for_click, timestamp);
 
-  /* Free the widget_value objects we used to specify the contents.  */
-  free_menubar_widget_value_tree (first_wv);
+  unbind_to (specpdl_count, Qnil);
 
   /* Find the selected item, and its pane, to return
      the proper value.  */
@@ -2063,6 +2081,8 @@ xdialog_show (f, keymaps, title, header, error_name)
   /* 1 means we've seen the boundary between left-hand elts and right-hand.  */
   int boundary_seen = 0;
 
+  int specpdl_count = SPECPDL_INDEX ();
+
   if (! FRAME_X_P (f))
     abort ();
 
@@ -2176,11 +2196,15 @@ xdialog_show (f, keymaps, title, header, error_name)
   /* No selection has been chosen yet.  */
   menu_item_selection = 0;
 
+  /* Make sure to free the widget_value objects we used to specify the
+     contents even with longjmp.  */
+  record_unwind_protect (cleanup_widget_value_tree,
+			 make_save_value (first_wv, 0));
+
   /* Actually create and show the dialog.  */
   create_and_show_dialog (f, first_wv);
 
-  /* Free the widget_value objects we used to specify the contents.  */
-  free_menubar_widget_value_tree (first_wv);
+  unbind_to (specpdl_count, Qnil);
 
   /* Find the selected item, and its pane, to return
      the proper value.  */

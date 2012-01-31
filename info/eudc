@@ -8,7 +8,7 @@ directory servers using various protocols such as LDAP or the CCSO white
 pages directory system (PH/QI)
 
    Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -37,7 +37,7 @@ directory servers using various protocols such as LDAP or the CCSO white
 pages directory system (PH/QI)
 
    Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1478,31 +1478,31 @@ Variables Index
 
 
 Tag Table:
-Node: Top1224
-Node: Overview2647
-Node: LDAP3716
-Node: CCSO PH/QI4692
-Node: BBDB5667
-Node: Installation6684
-Node: LDAP Requirements7568
-Node: Usage7893
-Node: Querying Servers8745
-Node: Selecting a Server9264
-Node: Return Attributes11084
-Node: Duplicate Attributes12162
-Node: Query Form14734
-Node: Display of Query Results17216
-Node: Inline Query Expansion20186
-Node: The Server Hotlist24635
-Node: The Hotlist Edit Buffer26239
-Node: Multi-server Queries27299
-Node: Creating BBDB Records28582
-Ref: Creating BBDB Records-Footnote-133484
-Node: Server/Protocol Locals33613
-Node: Manipulating local bindings34120
-Node: Credits36787
-Node: GNU Free Documentation License37110
-Node: Command and Function Index62291
-Node: Variables Index66503
+Node: Top1230
+Node: Overview2659
+Node: LDAP3728
+Node: CCSO PH/QI4704
+Node: BBDB5679
+Node: Installation6696
+Node: LDAP Requirements7580
+Node: Usage7905
+Node: Querying Servers8757
+Node: Selecting a Server9276
+Node: Return Attributes11096
+Node: Duplicate Attributes12174
+Node: Query Form14746
+Node: Display of Query Results17228
+Node: Inline Query Expansion20198
+Node: The Server Hotlist24647
+Node: The Hotlist Edit Buffer26251
+Node: Multi-server Queries27311
+Node: Creating BBDB Records28594
+Ref: Creating BBDB Records-Footnote-133496
+Node: Server/Protocol Locals33625
+Node: Manipulating local bindings34132
+Node: Credits36799
+Node: GNU Free Documentation License37122
+Node: Command and Function Index62303
+Node: Variables Index66515
 
 End Tag Table

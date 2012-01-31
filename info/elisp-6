@@ -2,11 +2,11 @@ This is ../../info/elisp, produced by makeinfo version 4.13 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.3.
+corresponding to Emacs version 23.4.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
-Free Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -25,212 +25,6 @@ INFO-DIR-SECTION GNU Emacs Lisp
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
-
-
-File: elisp,  Node: Auto-Saving,  Next: Reverting,  Prev: Backup Files,  Up: Backups and Auto-Saving
-
-26.2 Auto-Saving
-================
-
-Emacs periodically saves all files that you are visiting; this is
-called "auto-saving".  Auto-saving prevents you from losing more than a
-limited amount of work if the system crashes.  By default, auto-saves
-happen every 300 keystrokes, or after around 30 seconds of idle time.
-*Note Auto Save: (emacs)Auto Save, for information on auto-save for
-users.  Here we describe the functions used to implement auto-saving
-and the variables that control them.
-
- -- Variable: buffer-auto-save-file-name
-     This buffer-local variable is the name of the file used for
-     auto-saving the current buffer.  It is `nil' if the buffer should
-     not be auto-saved.
-
-          buffer-auto-save-file-name
-               => "/xcssun/users/rms/lewis/#backups.texi#"
-
- -- Command: auto-save-mode arg
-     When used interactively without an argument, this command is a
-     toggle switch: it turns on auto-saving of the current buffer if it
-     is off, and vice versa.  With an argument ARG, the command turns
-     auto-saving on if the value of ARG is `t', a nonempty list, or a
-     positive integer.  Otherwise, it turns auto-saving off.
-
- -- Function: auto-save-file-name-p filename
-     This function returns a non-`nil' value if FILENAME is a string
-     that could be the name of an auto-save file.  It assumes the usual
-     naming convention for auto-save files: a name that begins and ends
-     with hash marks (`#') is a possible auto-save file name.  The
-     argument FILENAME should not contain a directory part.
-
-          (make-auto-save-file-name)
-               => "/xcssun/users/rms/lewis/#backups.texi#"
-          (auto-save-file-name-p "#backups.texi#")
-               => 0
-          (auto-save-file-name-p "backups.texi")
-               => nil
-
-     The standard definition of this function is as follows:
-
-          (defun auto-save-file-name-p (filename)
-            "Return non-nil if FILENAME can be yielded by..."
-            (string-match "^#.*#$" filename))
-
-     This function exists so that you can customize it if you wish to
-     change the naming convention for auto-save files.  If you redefine
-     it, be sure to redefine the function `make-auto-save-file-name'
-     correspondingly.
-
- -- Function: make-auto-save-file-name
-     This function returns the file name to use for auto-saving the
-     current buffer.  This is just the file name with hash marks (`#')
-     prepended and appended to it.  This function does not look at the
-     variable `auto-save-visited-file-name' (described below); callers
-     of this function should check that variable first.
-
-          (make-auto-save-file-name)
-               => "/xcssun/users/rms/lewis/#backups.texi#"
-
-     Here is a simplified version of the standard definition of this
-     function:
-
-          (defun make-auto-save-file-name ()
-            "Return file name to use for auto-saves \
-          of current buffer.."
-            (if buffer-file-name
-                (concat
-                 (file-name-directory buffer-file-name)
-                 "#"
-                 (file-name-nondirectory buffer-file-name)
-                 "#")
-              (expand-file-name
-               (concat "#%" (buffer-name) "#"))))
-
-     This exists as a separate function so that you can redefine it to
-     customize the naming convention for auto-save files.  Be sure to
-     change `auto-save-file-name-p' in a corresponding way.
-
- -- User Option: auto-save-visited-file-name
-     If this variable is non-`nil', Emacs auto-saves buffers in the
-     files they are visiting.  That is, the auto-save is done in the
-     same file that you are editing.  Normally, this variable is `nil',
-     so auto-save files have distinct names that are created by
-     `make-auto-save-file-name'.
-
-     When you change the value of this variable, the new value does not
-     take effect in an existing buffer until the next time auto-save
-     mode is reenabled in it.  If auto-save mode is already enabled,
-     auto-saves continue to go in the same file name until
-     `auto-save-mode' is called again.
-
- -- Function: recent-auto-save-p
-     This function returns `t' if the current buffer has been
-     auto-saved since the last time it was read in or saved.
-
- -- Function: set-buffer-auto-saved
-     This function marks the current buffer as auto-saved.  The buffer
-     will not be auto-saved again until the buffer text is changed
-     again.  The function returns `nil'.
-
- -- User Option: auto-save-interval
-     The value of this variable specifies how often to do auto-saving,
-     in terms of number of input events.  Each time this many
-     additional input events are read, Emacs does auto-saving for all
-     buffers in which that is enabled.  Setting this to zero disables
-     autosaving based on the number of characters typed.
-
- -- User Option: auto-save-timeout
-     The value of this variable is the number of seconds of idle time
-     that should cause auto-saving.  Each time the user pauses for this
-     long, Emacs does auto-saving for all buffers in which that is
-     enabled.  (If the current buffer is large, the specified timeout
-     is multiplied by a factor that increases as the size increases;
-     for a million-byte buffer, the factor is almost 4.)
-
-     If the value is zero or `nil', then auto-saving is not done as a
-     result of idleness, only after a certain number of input events as
-     specified by `auto-save-interval'.
-
- -- Variable: auto-save-hook
-     This normal hook is run whenever an auto-save is about to happen.
-
- -- User Option: auto-save-default
-     If this variable is non-`nil', buffers that are visiting files
-     have auto-saving enabled by default.  Otherwise, they do not.
-
- -- Command: do-auto-save &optional no-message current-only
-     This function auto-saves all buffers that need to be auto-saved.
-     It saves all buffers for which auto-saving is enabled and that
-     have been changed since the previous auto-save.
-
-     If any buffers are auto-saved, `do-auto-save' normally displays a
-     message saying `Auto-saving...' in the echo area while auto-saving
-     is going on.  However, if NO-MESSAGE is non-`nil', the message is
-     inhibited.
-
-     If CURRENT-ONLY is non-`nil', only the current buffer is
-     auto-saved.
-
- -- Function: delete-auto-save-file-if-necessary &optional force
-     This function deletes the current buffer's auto-save file if
-     `delete-auto-save-files' is non-`nil'.  It is called every time a
-     buffer is saved.
-
-     Unless FORCE is non-`nil', this function only deletes the file if
-     it was written by the current Emacs session since the last true
-     save.
-
- -- User Option: delete-auto-save-files
-     This variable is used by the function
-     `delete-auto-save-file-if-necessary'.  If it is non-`nil', Emacs
-     deletes auto-save files when a true save is done (in the visited
-     file).  This saves disk space and unclutters your directory.
-
- -- Function: rename-auto-save-file
-     This function adjusts the current buffer's auto-save file name if
-     the visited file name has changed.  It also renames an existing
-     auto-save file, if it was made in the current Emacs session.  If
-     the visited file name has not changed, this function does nothing.
-
- -- Variable: buffer-saved-size
-     The value of this buffer-local variable is the length of the
-     current buffer, when it was last read in, saved, or auto-saved.
-     This is used to detect a substantial decrease in size, and turn
-     off auto-saving in response.
-
-     If it is -1, that means auto-saving is temporarily shut off in
-     this buffer due to a substantial decrease in size.  Explicitly
-     saving the buffer stores a positive value in this variable, thus
-     reenabling auto-saving.  Turning auto-save mode off or on also
-     updates this variable, so that the substantial decrease in size is
-     forgotten.
-
-     If it is -2, that means this buffer should disregard changes in
-     buffer size; in particular, it should not shut off auto-saving
-     temporarily due to changes in buffer size.
-
- -- Variable: auto-save-list-file-name
-     This variable (if non-`nil') specifies a file for recording the
-     names of all the auto-save files.  Each time Emacs does
-     auto-saving, it writes two lines into this file for each buffer
-     that has auto-saving enabled.  The first line gives the name of
-     the visited file (it's empty if the buffer has none), and the
-     second gives the name of the auto-save file.
-
-     When Emacs exits normally, it deletes this file; if Emacs crashes,
-     you can look in the file to find all the auto-save files that
-     might contain work that was otherwise lost.  The `recover-session'
-     command uses this file to find them.
-
-     The default name for this file specifies your home directory and
-     starts with `.saves-'.  It also contains the Emacs process ID and
-     the host name.
-
- -- User Option: auto-save-list-file-prefix
-     After Emacs reads your init file, it initializes
-     `auto-save-list-file-name' (if you have not already set it
-     non-`nil') based on this prefix, adding the host name and process
-     ID.  If you set this to `nil' in your init file, then Emacs does
-     not initialize `auto-save-list-file-name'.
 
 
 File: elisp,  Node: Reverting,  Prev: Auto-Saving,  Up: Backups and Auto-Saving
@@ -401,81 +195,15 @@ File: elisp,  Node: Current Buffer,  Next: Buffer Names,  Prev: Buffer Basics,  
 =======================
 
 There are, in general, many buffers in an Emacs session.  At any time,
-one of them is designated as the "current buffer".  This is the buffer
-in which most editing takes place, because most of the primitives for
-examining or changing text in a buffer operate implicitly on the
-current buffer (*note Text::).  Normally the buffer that is displayed on
-the screen in the selected window is the current buffer, but this is not
-always so: a Lisp program can temporarily designate any buffer as
-current in order to operate on its contents, without changing what is
-displayed on the screen.
+one of them is designated the "current buffer"--the buffer in which
+most editing takes place.  Most of the primitives for examining or
+changing text operate implicitly on the current buffer (*note Text::).
 
-   The way to designate a current buffer in a Lisp program is by calling
-`set-buffer'.  The specified buffer remains current until a new one is
-designated.
-
-   When an editing command returns to the editor command loop, the
-command loop designates the buffer displayed in the selected window as
-current, to prevent confusion: the buffer that the cursor is in when
-Emacs reads a command is the buffer that the command will apply to.
-(*Note Command Loop::.)  Therefore, `set-buffer' is not the way to
-switch visibly to a different buffer so that the user can edit it.  For
-that, you must use the functions described in *note Displaying
-Buffers::.
-
-   *Warning:* Lisp functions that change to a different current buffer
-should not depend on the command loop to set it back afterwards.
-Editing commands written in Emacs Lisp can be called from other programs
-as well as from the command loop; it is convenient for the caller if
-the subroutine does not change which buffer is current (unless, of
-course, that is the subroutine's purpose).  Therefore, you should
-normally use `set-buffer' within a `save-current-buffer' or
-`save-excursion' (*note Excursions::) form that will restore the
-current buffer when your function is done.  Here, as an example, is a
-simplified version of the command `append-to-buffer':
-
-     (defun append-to-buffer (buffer start end)
-       "Append to specified buffer the text of the region."
-       (interactive "BAppend to buffer: \nr")
-       (let ((oldbuf (current-buffer)))
-         (save-current-buffer
-           (set-buffer (get-buffer-create buffer))
-           (insert-buffer-substring oldbuf start end))))
-
-This function binds a local variable to record the current buffer, and
-then `save-current-buffer' arranges to make it current again.  Next,
-`set-buffer' makes the specified buffer current.  Finally,
-`insert-buffer-substring' copies the string from the original current
-buffer to the specified (and now current) buffer.
-
-   If the buffer appended to happens to be displayed in some window,
-the next redisplay will show how its text has changed.  Otherwise, you
-will not see the change immediately on the screen.  The buffer becomes
-current temporarily during the execution of the command, but this does
-not cause it to be displayed.
-
-   If you make local bindings (with `let' or function arguments) for a
-variable that may also have buffer-local bindings, make sure that the
-same buffer is current at the beginning and at the end of the local
-binding's scope.  Otherwise you might bind it in one buffer and unbind
-it in another!  There are two ways to do this.  In simple cases, you may
-see that nothing ever changes the current buffer within the scope of the
-binding.  Otherwise, use `save-current-buffer' or `save-excursion' to
-make sure that the buffer current at the beginning is current again
-whenever the variable is unbound.
-
-   Do not rely on using `set-buffer' to change the current buffer back,
-because that won't do the job if a quit happens while the wrong buffer
-is current.  For instance, in the previous example, it would have been
-wrong to do this:
-
-       (let ((oldbuf (current-buffer)))
-         (set-buffer (get-buffer-create buffer))
-         (insert-buffer-substring oldbuf start end)
-         (set-buffer oldbuf))
-
-Using `save-current-buffer', as we did, handles quitting, errors, and
-`throw', as well as ordinary evaluation.
+   Normally, the buffer displayed in the selected window is the current
+buffer, but this is not always so: a Lisp program can temporarily
+designate any buffer as current in order to operate on its contents,
+without changing what is displayed on the screen.  The most basic
+function for designating a current buffer is `set-buffer'.
 
  -- Function: current-buffer
      This function returns the current buffer.
@@ -491,6 +219,74 @@ Using `save-current-buffer', as we did, handles quitting, errors, and
      This function does not display the buffer in any window, so the
      user cannot necessarily see the buffer.  But Lisp programs will
      now operate on it.
+
+   When an editing command returns to the editor command loop, Emacs
+automatically calls `set-buffer' on the buffer shown in the selected
+window.  This is to prevent confusion: it ensures that the buffer that
+the cursor is in, when Emacs reads a command, is the buffer to which
+that command applies (*note Command Loop::).  Thus, you should not use
+`set-buffer' to switch visibly to a different buffer; for that, use the
+functions described in *note Displaying Buffers::.
+
+   When writing a Lisp function, do _not_ rely on this behavior of the
+command loop to restore the current buffer after an operation.  Editing
+commands can also be called as Lisp functions by other programs, not
+just from the command loop; it is convenient for the caller if the
+subroutine does not change which buffer is current (unless, of course,
+that is the subroutine's purpose).
+
+   To operate temporarily on another buffer, put the `set-buffer'
+within a `save-current-buffer' form.  Here, as an example, is a
+simplified version of the command `append-to-buffer':
+
+     (defun append-to-buffer (buffer start end)
+       "Append the text of the region to BUFFER."
+       (interactive "BAppend to buffer: \nr")
+       (let ((oldbuf (current-buffer)))
+         (save-current-buffer
+           (set-buffer (get-buffer-create buffer))
+           (insert-buffer-substring oldbuf start end))))
+
+Here, we bind a local variable to record the current buffer, and then
+`save-current-buffer' arranges to make it current again later.  Next,
+`set-buffer' makes the specified buffer current, and
+`insert-buffer-substring' copies the string from the original buffer to
+the specified (and now current) buffer.
+
+   Alternatively, we can use the `with-current-buffer' macro:
+
+     (defun append-to-buffer (buffer start end)
+       "Append the text of the region to BUFFER."
+       (interactive "BAppend to buffer: \nr")
+       (let ((oldbuf (current-buffer)))
+         (with-current-buffer (get-buffer-create buffer)
+           (insert-buffer-substring oldbuf start end))))
+
+   In either case, if the buffer appended to happens to be displayed in
+some window, the next redisplay will show how its text has changed.  If
+it is not displayed in any window, you will not see the change
+immediately on the screen.  The command causes the buffer to become
+current temporarily, but does not cause it to be displayed.
+
+   If you make local bindings (with `let' or function arguments) for a
+variable that may also have buffer-local bindings, make sure that the
+same buffer is current at the beginning and at the end of the local
+binding's scope.  Otherwise you might bind it in one buffer and unbind
+it in another!
+
+   Do not rely on using `set-buffer' to change the current buffer back,
+because that won't do the job if a quit happens while the wrong buffer
+is current.  For instance, in the previous example, it would have been
+wrong to do this:
+
+       (let ((oldbuf (current-buffer)))
+         (set-buffer (get-buffer-create buffer))
+         (insert-buffer-substring oldbuf start end)
+         (set-buffer oldbuf))
+
+Using `save-current-buffer' or `with-current-buffer', as we did,
+correctly handles quitting, errors, and `throw', as well as ordinary
+evaluation.
 
  -- Special Form: save-current-buffer body...
      The `save-current-buffer' special form saves the identity of the
@@ -2303,7 +2099,7 @@ customize it.
      accommodate two windows one above the other that are both at least
      `window-min-height' lines tall.  Moreover, if the window that shall
      be split has a mode line, `split-window-sensibly' does not split
-     the window unless the new window can accomodate a mode line too.
+     the window unless the new window can accommodate a mode line too.
 
  -- User Option: split-width-threshold
      This variable specifies whether `split-window-sensibly' may split
@@ -2700,10 +2496,10 @@ such code, put it into a command and bind the command to a key.
      POSITION is `t', that means to check the last visible position in
      WINDOW.
 
-     The `pos-visible-in-window-p' function considers only vertical
-     scrolling.  If POSITION is out of view only because WINDOW has
-     been scrolled horizontally, `pos-visible-in-window-p' returns
-     non-`nil' anyway.  *Note Horizontal Scrolling::.
+     This function considers only vertical scrolling.  If POSITION is
+     out of view only because WINDOW has been scrolled horizontally,
+     `pos-visible-in-window-p' returns non-`nil' anyway.  *Note
+     Horizontal Scrolling::.
 
      If POSITION is visible, `pos-visible-in-window-p' returns `t' if
      PARTIALLY is `nil'; if PARTIALLY is non-`nil', and the character
@@ -4328,18 +4124,21 @@ control their sizes.
 `right-fringe'
      The default width of the left and right fringes of windows in this
      frame (*note Fringes::).  If either of these is zero, that
-     effectively removes the corresponding fringe.  A value of `nil'
-     stands for the standard fringe width, which is the width needed to
-     display the fringe bitmaps.
+     effectively removes the corresponding fringe.
+
+     When you use `frame-parameter' to query the value of either of
+     these two frame parameters, the return value is always an integer.
+     When using `set-frame-parameter', passing a `nil' value imposes an
+     actual default value of 8 pixels.
 
      The combined fringe widths must add up to an integral number of
-     columns, so the actual default fringe widths for the frame may be
-     larger than the specified values.  The extra width needed to reach
-     an acceptable total is distributed evenly between the left and
-     right fringe.  However, you can force one fringe or the other to a
-     precise width by specifying that width as a negative integer.  If
-     both widths are negative, only the left fringe gets the specified
-     width.
+     columns, so the actual default fringe widths for the frame, as
+     reported by `frame-parameter', may be larger than what you
+     specify.  Any extra width is distributed evenly between the left
+     and right fringe.  However, you can force one fringe or the other
+     to a precise width by specifying that width as a negative integer.
+     If both widths are negative, only the left fringe gets the
+     specified width.
 
 `menu-bar-lines'
      The number of lines to allocate at the top of the frame for a menu
@@ -6590,4 +6389,276 @@ the search functions do (*note Searching and Matching::).
 
      The return value indicates the distance traveled.  It is an
      integer that is zero or less.
+
+
+File: elisp,  Node: Excursions,  Next: Narrowing,  Prev: Motion,  Up: Positions
+
+30.3 Excursions
+===============
+
+It is often useful to move point "temporarily" within a localized
+portion of the program.  This is called an "excursion", and it is done
+with the `save-excursion' special form.  This construct remembers the
+initial identity of the current buffer, and its values of point and the
+mark, and restores them after the excursion completes.  It is the
+standard way to move point within one part of a program and avoid
+affecting the rest of the program, and is used thousands of times in
+the Lisp sources of Emacs.
+
+   If you only need to save and restore the identity of the current
+buffer, use `save-current-buffer' or `with-current-buffer' instead
+(*note Current Buffer::).  If you need to save or restore window
+configurations, see the forms described in *note Window
+Configurations:: and in *note Frame Configurations::.
+
+ -- Special Form: save-excursion body...
+     This special form saves the identity of the current buffer and the
+     values of point and the mark in it, evaluates BODY, and finally
+     restores the buffer and its saved values of point and the mark.
+     All three saved values are restored even in case of an abnormal
+     exit via `throw' or error (*note Nonlocal Exits::).
+
+     The value returned by `save-excursion' is the result of the last
+     form in BODY, or `nil' if no body forms were given.
+
+   Because `save-excursion' only saves point and mark for the buffer
+that was current at the start of the excursion, any changes made to
+point and/or mark in other buffers, during the excursion, will remain
+in effect afterward.  This frequently leads to unintended consequences,
+so the byte compiler warns if you call `set-buffer' during an excursion:
+
+     Warning: `save-excursion' defeated by `set-buffer'
+
+To avoid such problems, you should call `save-excursion' only after
+setting the desired current buffer, as in the following example:
+
+     (defun append-string-to-buffer (string buffer)
+       "Append STRING to the end of BUFFER."
+       (with-current-buffer buffer
+         (save-excursion
+           (goto-char (point-max))
+           (insert string))))
+
+   Likewise, `save-excursion' does not restore window-buffer
+correspondences altered by functions such as `switch-to-buffer'.  One
+way to restore these correspondences, and the selected window, is to
+use `save-window-excursion' inside `save-excursion' (*note Window
+Configurations::).
+
+   *Warning:* Ordinary insertion of text adjacent to the saved point
+value relocates the saved value, just as it relocates all markers.
+More precisely, the saved value is a marker with insertion type `nil'.
+*Note Marker Insertion Types::.  Therefore, when the saved point value
+is restored, it normally comes before the inserted text.
+
+   Although `save-excursion' saves the location of the mark, it does
+not prevent functions which modify the buffer from setting
+`deactivate-mark', and thus causing the deactivation of the mark after
+the command finishes.  *Note The Mark::.
+
+
+File: elisp,  Node: Narrowing,  Prev: Excursions,  Up: Positions
+
+30.4 Narrowing
+==============
+
+"Narrowing" means limiting the text addressable by Emacs editing
+commands to a limited range of characters in a buffer.  The text that
+remains addressable is called the "accessible portion" of the buffer.
+
+   Narrowing is specified with two buffer positions which become the
+beginning and end of the accessible portion.  For most editing commands
+and most Emacs primitives, these positions replace the values of the
+beginning and end of the buffer.  While narrowing is in effect, no text
+outside the accessible portion is displayed, and point cannot move
+outside the accessible portion.
+
+   Values such as positions or line numbers, which usually count from
+the beginning of the buffer, do so despite narrowing, but the functions
+which use them refuse to operate on text that is inaccessible.
+
+   The commands for saving buffers are unaffected by narrowing; they
+save the entire buffer regardless of any narrowing.
+
+   If you need to display in a single buffer several very different
+types of text, consider using an alternative facility described in
+*note Swapping Text::.
+
+ -- Command: narrow-to-region start end
+     This function sets the accessible portion of the current buffer to
+     start at START and end at END.  Both arguments should be character
+     positions.
+
+     In an interactive call, START and END are set to the bounds of the
+     current region (point and the mark, with the smallest first).
+
+ -- Command: narrow-to-page &optional move-count
+     This function sets the accessible portion of the current buffer to
+     include just the current page.  An optional first argument
+     MOVE-COUNT non-`nil' means to move forward or backward by
+     MOVE-COUNT pages and then narrow to one page.  The variable
+     `page-delimiter' specifies where pages start and end (*note
+     Standard Regexps::).
+
+     In an interactive call, MOVE-COUNT is set to the numeric prefix
+     argument.
+
+ -- Command: widen
+     This function cancels any narrowing in the current buffer, so that
+     the entire contents are accessible.  This is called "widening".
+     It is equivalent to the following expression:
+
+          (narrow-to-region 1 (1+ (buffer-size)))
+
+ -- Special Form: save-restriction body...
+     This special form saves the current bounds of the accessible
+     portion, evaluates the BODY forms, and finally restores the saved
+     bounds, thus restoring the same state of narrowing (or absence
+     thereof) formerly in effect.  The state of narrowing is restored
+     even in the event of an abnormal exit via `throw' or error (*note
+     Nonlocal Exits::).  Therefore, this construct is a clean way to
+     narrow a buffer temporarily.
+
+     The value returned by `save-restriction' is that returned by the
+     last form in BODY, or `nil' if no body forms were given.
+
+     *Caution:* it is easy to make a mistake when using the
+     `save-restriction' construct.  Read the entire description here
+     before you try it.
+
+     If BODY changes the current buffer, `save-restriction' still
+     restores the restrictions on the original buffer (the buffer whose
+     restrictions it saved from), but it does not restore the identity
+     of the current buffer.
+
+     `save-restriction' does _not_ restore point and the mark; use
+     `save-excursion' for that.  If you use both `save-restriction' and
+     `save-excursion' together, `save-excursion' should come first (on
+     the outside).  Otherwise, the old point value would be restored
+     with temporary narrowing still in effect.  If the old point value
+     were outside the limits of the temporary narrowing, this would
+     fail to restore it accurately.
+
+     Here is a simple example of correct use of `save-restriction':
+
+          ---------- Buffer: foo ----------
+          This is the contents of foo
+          This is the contents of foo
+          This is the contents of foo-!-
+          ---------- Buffer: foo ----------
+
+          (save-excursion
+            (save-restriction
+              (goto-char 1)
+              (forward-line 2)
+              (narrow-to-region 1 (point))
+              (goto-char (point-min))
+              (replace-string "foo" "bar")))
+
+          ---------- Buffer: foo ----------
+          This is the contents of bar
+          This is the contents of bar
+          This is the contents of foo-!-
+          ---------- Buffer: foo ----------
+
+
+File: elisp,  Node: Markers,  Next: Text,  Prev: Positions,  Up: Top
+
+31 Markers
+**********
+
+A "marker" is a Lisp object used to specify a position in a buffer
+relative to the surrounding text.  A marker changes its offset from the
+beginning of the buffer automatically whenever text is inserted or
+deleted, so that it stays with the two characters on either side of it.
+
+* Menu:
+
+* Overview of Markers::      The components of a marker, and how it relocates.
+* Predicates on Markers::    Testing whether an object is a marker.
+* Creating Markers::         Making empty markers or markers at certain places.
+* Information from Markers:: Finding the marker's buffer or character position.
+* Marker Insertion Types::   Two ways a marker can relocate when you
+                               insert where it points.
+* Moving Markers::           Moving the marker to a new buffer or position.
+* The Mark::                 How "the mark" is implemented with a marker.
+* The Region::               How to access "the region".
+
+
+File: elisp,  Node: Overview of Markers,  Next: Predicates on Markers,  Up: Markers
+
+31.1 Overview of Markers
+========================
+
+A marker specifies a buffer and a position in that buffer.  The marker
+can be used to represent a position in the functions that require one,
+just as an integer could be used.  In that case, the marker's buffer is
+normally ignored.  Of course, a marker used in this way usually points
+to a position in the buffer that the function operates on, but that is
+entirely the programmer's responsibility.  *Note Positions::, for a
+complete description of positions.
+
+   A marker has three attributes: the marker position, the marker
+buffer, and the insertion type.  The marker position is an integer that
+is equivalent (at a given time) to the marker as a position in that
+buffer.  But the marker's position value can change often during the
+life of the marker.  Insertion and deletion of text in the buffer
+relocate the marker.  The idea is that a marker positioned between two
+characters remains between those two characters despite insertion and
+deletion elsewhere in the buffer.  Relocation changes the integer
+equivalent of the marker.
+
+   Deleting text around a marker's position leaves the marker between
+the characters immediately before and after the deleted text.  Inserting
+text at the position of a marker normally leaves the marker either in
+front of or after the new text, depending on the marker's "insertion
+type" (*note Marker Insertion Types::)--unless the insertion is done
+with `insert-before-markers' (*note Insertion::).
+
+   Insertion and deletion in a buffer must check all the markers and
+relocate them if necessary.  This slows processing in a buffer with a
+large number of markers.  For this reason, it is a good idea to make a
+marker point nowhere if you are sure you don't need it any more.
+Unreferenced markers are garbage collected eventually, but until then
+will continue to use time if they do point somewhere.
+
+   Because it is common to perform arithmetic operations on a marker
+position, most of the arithmetic operations (including `+' and `-')
+accept markers as arguments.  In such cases, the marker stands for its
+current position.
+
+   Here are examples of creating markers, setting markers, and moving
+point to markers:
+
+     ;; Make a new marker that initially does not point anywhere:
+     (setq m1 (make-marker))
+          => #<marker in no buffer>
+
+     ;; Set `m1' to point between the 99th and 100th characters
+     ;;   in the current buffer:
+     (set-marker m1 100)
+          => #<marker at 100 in markers.texi>
+
+     ;; Now insert one character at the beginning of the buffer:
+     (goto-char (point-min))
+          => 1
+     (insert "Q")
+          => nil
+
+     ;; `m1' is updated appropriately.
+     m1
+          => #<marker at 101 in markers.texi>
+
+     ;; Two markers that point to the same position
+     ;;   are not `eq', but they are `equal'.
+     (setq m2 (copy-marker m1))
+          => #<marker at 101 in markers.texi>
+     (eq m1 m2)
+          => nil
+     (equal m1 m2)
+          => t
+
+     ;; When you are finished using a marker, make it point nowhere.
+     (set-marker m1 nil)
+          => #<marker in no buffer>
 

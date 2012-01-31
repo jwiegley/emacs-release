@@ -1,7 +1,7 @@
 /* Updating of data structures for redisplay.
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 1994, 1995,
                  1997, 1998, 1999, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -1012,6 +1012,8 @@ shift_glyph_matrix (w, matrix, start, end, dy)
 	row->visible_height -= min_y - row->y;
       if (row->y + row->height > max_y)
 	row->visible_height -= row->y + row->height - max_y;
+      if (row->fringe_bitmap_periodic_p)
+	row->redraw_fringe_bitmaps_p = 1;
     }
 }
 
@@ -1533,8 +1535,11 @@ row_equal_p (w, a, b, mouse_face_p)
 	  || a->cursor_in_fringe_p != b->cursor_in_fringe_p
 	  || a->left_fringe_bitmap != b->left_fringe_bitmap
 	  || a->left_fringe_face_id != b->left_fringe_face_id
+	  || a->left_fringe_offset != b->left_fringe_offset
 	  || a->right_fringe_bitmap != b->right_fringe_bitmap
 	  || a->right_fringe_face_id != b->right_fringe_face_id
+	  || a->right_fringe_offset != b->right_fringe_offset
+	  || a->fringe_bitmap_periodic_p != b->fringe_bitmap_periodic_p
 	  || a->overlay_arrow_bitmap != b->overlay_arrow_bitmap
 	  || a->exact_window_width_line_p != b->exact_window_width_line_p
 	  || a->overlapped_p != b->overlapped_p
@@ -4990,23 +4995,29 @@ scrolling_window (w, header_line_p)
 
   first_old = first_new = i;
 
-  /* Set last_new to the index + 1 of the last enabled row in the
-     desired matrix.  */
+  /* Set last_new to the index + 1 of the row that reaches the
+     bottom boundary in the desired matrix.  Give up if we find a
+     disabled row before we reach the bottom boundary.  */
   i = first_new + 1;
-  while (i < desired_matrix->nrows - 1
-	 && MATRIX_ROW (desired_matrix, i)->enabled_p
-	 && MATRIX_ROW_BOTTOM_Y (MATRIX_ROW (desired_matrix, i)) <= yb)
-    ++i;
+  while (i < desired_matrix->nrows - 1)
+    {
+      int bottom;
 
-  if (!MATRIX_ROW (desired_matrix, i)->enabled_p)
-    return 0;
+      if (!MATRIX_ROW (desired_matrix, i)->enabled_p)
+	return 0;
+      bottom = MATRIX_ROW_BOTTOM_Y (MATRIX_ROW (desired_matrix, i));
+      if (bottom <= yb)
+	++i;
+      if (bottom >= yb)
+	break;
+    }
 
   last_new = i;
 
-  /* Set last_old to the index + 1 of the last enabled row in the
-     current matrix.  We don't look at the enabled flag here because
-     we plan to reuse part of the display even if other parts are
-     disabled.  */
+  /* Set last_old to the index + 1 of the row that reaches the bottom
+     boundary in the current matrix.  We don't look at the enabled
+     flag here because we plan to reuse part of the display even if
+     other parts are disabled.  */
   i = first_old + 1;
   while (i < current_matrix->nrows - 1)
     {
@@ -5024,10 +5035,10 @@ scrolling_window (w, header_line_p)
   j = last_old;
   while (i - 1 > first_new
          && j - 1 > first_old
-         && MATRIX_ROW (current_matrix, i - 1)->enabled_p
-	 && (MATRIX_ROW (current_matrix, i - 1)->y
-	     == MATRIX_ROW (desired_matrix, j - 1)->y)
-	 && !MATRIX_ROW (desired_matrix, j - 1)->redraw_fringe_bitmaps_p
+	 && MATRIX_ROW (current_matrix, j - 1)->enabled_p
+	 && (MATRIX_ROW (current_matrix, j - 1)->y
+	     == MATRIX_ROW (desired_matrix, i - 1)->y)
+	 && !MATRIX_ROW (desired_matrix, i - 1)->redraw_fringe_bitmaps_p
          && row_equal_p (w,
 			 MATRIX_ROW (desired_matrix, i - 1),
                          MATRIX_ROW (current_matrix, j - 1), 1))
@@ -5195,19 +5206,71 @@ scrolling_window (w, header_line_p)
 	/* Copy on the display.  */
 	if (r->current_y != r->desired_y)
 	  {
+	    rif->clear_window_mouse_face (w);
 	    rif->scroll_run_hook (w, r);
+	  }
 
-	    /* Invalidate runs that copy from where we copied to.  */
-	    for (j = i + 1; j < nruns; ++j)
+	/* Truncate runs that copy to where we copied to, and
+	   invalidate runs that copy from where we copied to.  */
+	for (j = nruns - 1; j > i; --j)
+	  {
+	    struct run *p = runs[j];
+	    int truncated_p = 0;
+
+	    if (p->nrows > 0
+		&& p->desired_y < r->desired_y + r->height
+		&& p->desired_y + p->height > r->desired_y)
 	      {
-		struct run *p = runs[j];
+		if (p->desired_y < r->desired_y)
+		  {
+		    p->nrows = r->desired_vpos - p->desired_vpos;
+		    p->height = r->desired_y - p->desired_y;
+		    truncated_p = 1;
+		  }
+		else
+		  {
+		    int nrows_copied = (r->desired_vpos + r->nrows
+					- p->desired_vpos);
 
-		if ((p->current_y >= r->desired_y
+		    if (p->nrows <= nrows_copied)
+		      p->nrows = 0;
+		    else
+		      {
+			int height_copied = (r->desired_y + r->height
+					     - p->desired_y);
+
+			p->current_vpos += nrows_copied;
+			p->desired_vpos += nrows_copied;
+			p->nrows -= nrows_copied;
+			p->current_y += height_copied;
+			p->desired_y += height_copied;
+			p->height -= height_copied;
+			truncated_p = 1;
+		      }
+		  }
+	      }
+
+	    if (r->current_y != r->desired_y
+		/* The condition below is equivalent to
+		   ((p->current_y >= r->desired_y
 		     && p->current_y < r->desired_y + r->height)
-		    || (p->current_y + p->height >= r->desired_y
+		    || (p->current_y + p->height > r->desired_y
 			&& (p->current_y + p->height
-			    < r->desired_y + r->height)))
-		  p->nrows = 0;
+			    <= r->desired_y + r->height)))
+		   because we have 0 < p->height <= r->height.  */
+		&& p->current_y < r->desired_y + r->height
+		&& p->current_y + p->height > r->desired_y)
+	      p->nrows = 0;
+
+	    /* Reorder runs by copied pixel lines if truncated.  */
+	    if (truncated_p && p->nrows > 0)
+	      {
+		int k = nruns - 1;
+
+		while (runs[k]->nrows == 0 || runs[k]->height < p->height)
+		  k--;
+		memmove (runs + j, runs + j + 1, (k - j) * sizeof (*runs));
+		runs[k] = p;
 	      }
 	  }
 
@@ -5220,15 +5283,16 @@ scrolling_window (w, header_line_p)
 	    to = MATRIX_ROW (current_matrix, r->desired_vpos + j);
 	    from = MATRIX_ROW (desired_matrix, r->desired_vpos + j);
 	    to_overlapped_p = to->overlapped_p;
-	    if (!from->mode_line_p && !w->pseudo_window_p
-		&& (to->left_fringe_bitmap != from->left_fringe_bitmap
-		    || to->right_fringe_bitmap != from->right_fringe_bitmap
-		    || to->left_fringe_face_id != from->left_fringe_face_id
-		    || to->right_fringe_face_id != from->right_fringe_face_id
-		    || to->overlay_arrow_bitmap != from->overlay_arrow_bitmap))
-	      from->redraw_fringe_bitmaps_p = 1;
+	    from->redraw_fringe_bitmaps_p = from->fringe_bitmap_periodic_p;
 	    assign_row (to, from);
-	    to->enabled_p = 1, from->enabled_p = 0;
+	    /* The above `assign_row' actually does swap, so if we had
+	       an overlap in the copy destination of two runs, then
+	       the second run would assign a previously disabled bogus
+	       row.  But thanks to the truncation code in the
+	       preceding for-loop, we no longer have such an overlap,
+	       and thus the assigned row should always be enabled.  */
+	    xassert (to->enabled_p);
+	    from->enabled_p = 0;
 	    to->overlapped_p = to_overlapped_p;
 	  }
       }
@@ -6729,7 +6793,7 @@ pass nil for VARIABLE.  */)
     state = frame_and_buffer_state;
 
   vecp = XVECTOR (state)->contents;
-  end = vecp + XVECTOR (state)->size;
+  end = vecp + XVECTOR_SIZE (state);
 
   FOR_EACH_FRAME (tail, frame)
     {
@@ -6780,8 +6844,8 @@ pass nil for VARIABLE.  */)
   /* Reallocate the vector if data has grown to need it,
      or if it has shrunk a lot.  */
   if (! VECTORP (state)
-      || n > XVECTOR (state)->size
-      || n + 20 < XVECTOR (state)->size / 2)
+      || n > XVECTOR_SIZE (state)
+      || n + 20 < XVECTOR_SIZE (state) / 2)
     /* Add 20 extra so we grow it less often.  */
     {
       state = Fmake_vector (make_number (n + 20), Qlambda);
@@ -6811,11 +6875,11 @@ pass nil for VARIABLE.  */)
   /* Fill up the vector with lambdas (always at least one).  */
   *vecp++ = Qlambda;
   while (vecp - XVECTOR (state)->contents
-	 < XVECTOR (state)->size)
+	 < XVECTOR_SIZE (state))
     *vecp++ = Qlambda;
   /* Make sure we didn't overflow the vector.  */
   if (vecp - XVECTOR (state)->contents
-      > XVECTOR (state)->size)
+      > XVECTOR_SIZE (state))
     abort ();
   return Qt;
 }

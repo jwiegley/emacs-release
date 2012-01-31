@@ -1,6 +1,6 @@
 /* Menu support for GNU Emacs on the Microsoft W32 API.
    Copyright (C) 1986, 1988, 1993, 1994, 1996, 1998, 1999, 2001, 2002,
-                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+                 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -464,11 +464,11 @@ set_frame_menubar (f, first_time, deep_p)
 
       menu_items = f->menu_bar_vector;
       menu_items_allocated = VECTORP (menu_items) ? ASIZE (menu_items) : 0;
-      submenu_start = (int *) alloca (XVECTOR (items)->size * sizeof (int *));
-      submenu_end = (int *) alloca (XVECTOR (items)->size * sizeof (int *));
-      submenu_n_panes = (int *) alloca (XVECTOR (items)->size * sizeof (int));
+      submenu_start = (int *) alloca (XVECTOR_SIZE (items) * sizeof (int *));
+      submenu_end = (int *) alloca (XVECTOR_SIZE (items) * sizeof (int *));
+      submenu_n_panes = (int *) alloca (XVECTOR_SIZE (items) * sizeof (int));
       submenu_top_level_items
-	= (int *) alloca (XVECTOR (items)->size * sizeof (int *));
+	= (int *) alloca (XVECTOR_SIZE (items) * sizeof (int *));
       init_menu_items ();
       for (i = 0; i < ASIZE (items); i += 4)
 	{

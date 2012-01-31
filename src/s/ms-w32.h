@@ -1,6 +1,6 @@
 /* System description file for Windows NT.
    Copyright (C) 1993, 1994, 1995, 2001, 2002, 2003, 2004, 2005, 2006,
-                 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+                 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -236,6 +236,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #define dup2    sys_dup2
 #define fopen   sys_fopen
 #define link    sys_link
+#define localtime sys_localtime
 #define mkdir   sys_mkdir
 #undef mktemp
 #define mktemp  sys_mktemp

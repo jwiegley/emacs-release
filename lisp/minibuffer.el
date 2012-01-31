@@ -1,6 +1,6 @@
 ;;; minibuffer.el --- Minibuffer completion functions
 
-;; Copyright (C) 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+;; Copyright (C) 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 
@@ -574,9 +574,10 @@ E = after completion we now have an Exact match.
               ;; Show the completion table, if requested.
               (cond
                ((not exact)
-                (if (case completion-auto-help
-                      (lazy (eq this-command last-command))
-                      (t completion-auto-help))
+		(if (cond (icomplete-mode t)
+			  ((eq completion-auto-help 'lazy)
+			   (eq this-command last-command))
+			  (t completion-auto-help))
                     (minibuffer-completion-help)
                   (minibuffer-message "Next char not unique")))
                ;; If the last exact completion and this one were the same, it

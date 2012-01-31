@@ -1,7 +1,7 @@
 /* Fully extensible Emacs, running on Unix, intended for GNU.
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1997, 1998, 1999,
                  2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
-                 2010, 2011  Free Software Foundation, Inc.
+                 2010, 2011, 2012  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -1120,6 +1120,11 @@ main (int argc, char **argv)
 	}
 
 #ifndef NS_IMPL_COCOA
+#ifdef USE_GTK
+      fprintf (stderr, "\nWarning: due to a long standing Gtk+ bug\nhttp://bugzilla.gnome.org/show_bug.cgi?id=85715\n\
+Emacs might crash when run in daemon mode and the X11 connection is unexpectedly lost.\n\
+Using an Emacs configured with --with-x-toolkit=lucid does not have this problem.\n");
+#endif
       f = fork ();
 #else /* NS_IMPL_COCOA */
       /* Under Cocoa we must do fork+exec as CoreFoundation lib fails in

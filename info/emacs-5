@@ -2,11 +2,11 @@ This is ../../info/emacs, produced by makeinfo version 4.13 from
 emacs.texi.
 
 This is the Sixteenth edition of the `GNU Emacs Manual',
-updated for Emacs version 23.3.
+updated for Emacs version 23.4.
 
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998,
 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-2011  Free Software Foundation, Inc.
+2011, 2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -2065,12 +2065,12 @@ visible for; and the variables `appt-disp-window-function' and
 `appt-delete-window-function' give the names of functions used to
 create and destroy the window, respectively.
 
-   To enable appointment notification, use the command `M-x
-appt-activate'.  With a positive argument, it enables notification;
-with a negative argument, it disables notification; with no argument,
-it toggles.  Enabling notification also sets up an appointment list for
-today from the diary file, giving all diary entries found with
-recognizable times of day, and reminds you just before each of them.
+   To enable appointment notification, type `M-x appt-activate'.  With
+a positive argument, it enables notification; with a negative argument,
+it disables notification; with no argument, it toggles.  Enabling
+notification also sets up an appointment list for today from the diary
+file, giving all diary entries found with recognizable times of day,
+and reminds you just before each of them.
 
    For example, suppose the diary file contains these lines:
 
@@ -4217,12 +4217,7 @@ below:
 `-a COMMAND'
 `--alternate-editor=COMMAND'
      Specify a command to run if `emacsclient' fails to contact Emacs.
-     This is useful when running `emacsclient' in a script.  For
-     example, the following setting for the `EDITOR' environment
-     variable will always give you an editor, even if no Emacs server is
-     running:
-
-          EDITOR="emacsclient --alternate-editor emacs +%d %s"
+     This is useful when running `emacsclient' in a script.
 
      As a special exception, if COMMAND is the empty string, then
      `emacsclient' starts Emacs in daemon mode and then tries
@@ -4989,9 +4984,8 @@ CRiSP/Brief (PC editor)
      (scrolling all windows together).
 
 EDT (DEC VMS editor)
-     Turn on EDT emulation with the command `M-x edt-emulation-on',
-     while `M-x edt-emulation-off' restores normal Emacs command
-     bindings.
+     Turn on EDT emulation `M-x edt-emulation-on'; use `M-x
+     edt-emulation-off' to restore normal Emacs command bindings.
 
      Most of the EDT emulation commands are keypad keys, and most
      standard Emacs key bindings are still available.  The EDT
@@ -5756,7 +5750,8 @@ for different Emacs versions, like this:
      (cond ((< emacs-major-version 22)
             ;; Emacs 21 customization.
             (setq custom-file "~/.custom-21.el"))
-           ((and (= emacs-major-version 22) (< emacs-minor-version 3))
+           ((and (= emacs-major-version 22)
+                 (< emacs-minor-version 3))
             ;; Emacs 22 customization, before version 22.3.
             (setq custom-file "~/.custom-22.el"))
            (t
@@ -5808,14 +5803,13 @@ enable or disable the attribute by clicking that button.  When the
 attribute is enabled, you can change the attribute value in the usual
 ways.
 
-   For the colors, you can specify a color name (use `M-x
-list-colors-display' for a list of them) or a hexadecimal color
-specification of the form `#RRGGBB'.  (`#000000' is black, `#ff0000' is
-red, `#00ff00' is green, `#0000ff' is blue, and `#ffffff' is white.)
-On a black-and-white display, the colors you can use for the background
-are `black', `white', `gray', `gray1', and `gray3'.  Emacs supports
-these shades of gray by using background stipple patterns instead of a
-color.
+   You can specify a color name (use `M-x list-colors-display' for a
+list of them) or a hexadecimal color specification of the form
+`#RRGGBB'.  (`#000000' is black, `#ff0000' is red, `#00ff00' is green,
+`#0000ff' is blue, and `#ffffff' is white.)  On a black-and-white
+display, the colors you can use for the background are `black', `white',
+`gray', `gray1', and `gray3'.  Emacs supports these shades of gray by
+using background stipple patterns instead of a color.
 
    Setting, saving and resetting a face work like the same operations
 for variables (*note Changing a Variable::).
@@ -6478,7 +6472,8 @@ corresponding alist applies to all the files in that subdirectory.
       (c-mode . ((c-file-style . "BSD")))
       (java-mode . ((c-file-style . "BSD")))
       ("src/imported"
-       . ((nil . ((change-log-default-name . "ChangeLog.local"))))))
+       . ((nil . ((change-log-default-name .
+                   "ChangeLog.local"))))))
 
 This example shows some settings for a hypothetical project.  It sets
 `indent-tabs-mode', `tab-width', and `fill-column' for any file in the
@@ -6692,7 +6687,7 @@ completion and exit commands.
    * `minibuffer-local-must-match-map' is for strict completion and for
      cautious completion.
 
-   * Finally, `minibuffer-local-filename-completion-map' and
+   * `minibuffer-local-filename-completion-map' and
      `minibuffer-local-must-match-filename-map' are like the two
      previous ones, but they are specifically for file name completion.
      They do not bind <SPC>.
@@ -6804,7 +6799,6 @@ and mouse events:
      (global-set-key (kbd "C-<f5>") 'linum-mode)
      (global-set-key (kbd "C-<right>") 'forward-sentence)
      (global-set-key (kbd "<mouse-2>") 'mouse-save-then-kill)
-     (global-set-key (kbd "C-<down-mouse-3>") 'mouse-yank-at-click)
 
    Instead of using the `kbd' macro, you can use a Lisp string or
 vector to specify the key sequence.  Using a string is simpler, but
@@ -6855,8 +6849,10 @@ in Texinfo mode:
 
      (add-hook 'texinfo-mode-hook
                '(lambda ()
-                  (define-key texinfo-mode-map "\C-cp" 'backward-paragraph)
-                  (define-key texinfo-mode-map "\C-cn" 'forward-paragraph)))
+                  (define-key texinfo-mode-map "\C-cp"
+                              'backward-paragraph)
+                  (define-key texinfo-mode-map "\C-cn"
+                              'forward-paragraph)))
 
 
 File: emacs,  Node: Modifier Keys,  Next: Function Keys,  Prev: Init Rebinding,  Up: Key Bindings

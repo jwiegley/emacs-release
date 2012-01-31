@@ -1,8 +1,8 @@
 This is ../../info/dbus, produced by makeinfo version 4.13 from
 dbus.texi.
 
-Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Foundation,
-Inc.
+Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software
+Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -32,8 +32,8 @@ message bus system, a simple way for applications to talk to one
 another.  An overview of D-Bus can be found at
 `http://dbus.freedesktop.org/'.
 
-   Copyright (C) 2007, 2008, 2009, 2010, 2011 Free Software Foundation,
-Inc.
+   Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software
+Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -2014,25 +2014,25 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top937
-Node: Overview2569
-Node: Inspection4915
-Node: Bus names5452
-Node: Introspection8804
-Ref: Introspection-Footnote-116426
-Ref: Introspection-Footnote-216579
-Node: Nodes and Interfaces16731
-Node: Methods and Signal20994
-Node: Properties and Annotations23981
-Ref: Properties and Annotations-Footnote-129712
-Ref: Properties and Annotations-Footnote-229813
-Node: Arguments and Signatures29904
-Node: Type Conversion32077
-Node: Synchronous Methods38962
-Node: Asynchronous Methods43774
-Node: Receiving Method Calls45571
-Node: Signals54416
-Node: Errors and Events58182
-Node: GNU Free Documentation License62576
+Node: Top943
+Node: Overview2581
+Node: Inspection4927
+Node: Bus names5464
+Node: Introspection8816
+Ref: Introspection-Footnote-116438
+Ref: Introspection-Footnote-216591
+Node: Nodes and Interfaces16743
+Node: Methods and Signal21006
+Node: Properties and Annotations23993
+Ref: Properties and Annotations-Footnote-129724
+Ref: Properties and Annotations-Footnote-229825
+Node: Arguments and Signatures29916
+Node: Type Conversion32089
+Node: Synchronous Methods38974
+Node: Asynchronous Methods43786
+Node: Receiving Method Calls45583
+Node: Signals54428
+Node: Errors and Events58194
+Node: GNU Free Documentation License62588
 
 End Tag Table

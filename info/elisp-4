@@ -2,11 +2,11 @@ This is ../../info/elisp, produced by makeinfo version 4.13 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.3.
+corresponding to Emacs version 23.4.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
-Free Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -272,12 +272,12 @@ File: elisp,  Node: Programmed Completion,  Prev: Completion Styles,  Up: Comple
 20.6.7 Programmed Completion
 ----------------------------
 
-Sometimes it is not possible to create an alist or an obarray
-containing all the intended possible completions.  In such a case, you
-can supply your own function to compute the completion of a given
-string.  This is called "programmed completion".  Emacs uses programmed
-completion when completing file names (*note File Name Completion::),
-among many other cases.
+Sometimes it is not possible or convenient to create an alist or an
+obarray containing all the intended possible completions ahead of time.
+In such a case, you can supply your own function to compute the
+completion of a given string.  This is called "programmed completion".
+Emacs uses programmed completion when completing file names (*note File
+Name Completion::), among many other cases.
 
    To use this feature, pass a function as the COLLECTION argument to
 `completing-read'.  The function `completing-read' arranges to pass
@@ -323,14 +323,6 @@ each of the four different basic operations:
      END)' where START is the position of the beginning boundary in in
      the string to complete, and END is the position of the end boundary
      in SUFFIX.
-
-   It would be consistent and clean for completion functions to allow
-lambda expressions (lists that are functions) as well as function
-symbols as COLLECTION, but this is impossible.  Lists as completion
-tables already have other meanings, and it would be unreliable to treat
-one differently just because it is also a possible function.  So you
-must arrange for any function you wish to use for completion to be
-encapsulated in a symbol.
 
  -- Function: completion-table-dynamic function
      This function is a convenient way to write a function that can act
@@ -4368,17 +4360,18 @@ After translation of event subsequences (*note Translation Keymaps::)
 Emacs looks for them in the active keymaps.  Here is a pseudo-Lisp
 description of the order and conditions for searching them:
 
-     (or (if overriding-terminal-local-map
-             (FIND-IN overriding-terminal-local-map)
-           (if overriding-local-map
-               (FIND-IN overriding-local-map)
-             (or (FIND-IN (get-char-property (point) 'keymap))
-                 (FIND-IN-ANY emulation-mode-map-alists)
-                 (FIND-IN-ANY minor-mode-overriding-map-alist)
-                 (FIND-IN-ANY minor-mode-map-alist)
-                 (if (get-text-property (point) 'local-map)
-                     (FIND-IN (get-char-property (point) 'local-map))
-                   (FIND-IN (current-local-map))))))
+     (or (cond
+          (overriding-terminal-local-map
+           (FIND-IN overriding-terminal-local-map))
+          (overriding-local-map
+           (FIND-IN overriding-local-map))
+          ((or (FIND-IN (get-char-property (point) 'keymap))
+     	  (FIND-IN-ANY emulation-mode-map-alists)
+     	  (FIND-IN-ANY minor-mode-overriding-map-alist)
+     	  (FIND-IN-ANY minor-mode-map-alist)
+     	  (if (get-text-property (point) 'local-map)
+     	      (FIND-IN (get-char-property (point) 'local-map))
+     	    (FIND-IN (current-local-map))))))
          (FIND-IN (current-global-map)))
 
 The FIND-IN and FIND-IN-ANY are pseudo functions that search in one
@@ -5184,15 +5177,10 @@ or
      (global-set-key ?o" 'my-function) ; bind o-umlaut
 
 and your language environment is multibyte Latin-1, these commands
-actually bind the multibyte character with code 2294, not the unibyte
-Latin-1 character with code 246 (`M-v').  In order to use this binding,
-you need to enter the multibyte Latin-1 character as keyboard input.
-One way to do this is by using an appropriate input method (*note Input
-Methods: (emacs)Input Methods.).
-
-   If you want to use a unibyte character in the key binding, you can
-construct the key sequence string using `multibyte-char-to-unibyte' or
-`string-make-unibyte' (*note Converting Representations::).
+actually bind the multibyte character with code 246, not the byte code
+246 (`M-v') sent by a Latin-1 terminal.  In order to use this binding,
+you need to teach Emacs how to decode the keyboard by using an
+appropriate input method (*note Input Methods: (emacs)Input Methods.).
 
  -- Command: global-set-key key binding
      This function sets the binding of KEY in the current global map to
@@ -6040,8 +6028,8 @@ indirection through `tool-bar-map'.
  -- Variable: tool-bar-map
      By default, the global map binds `[tool-bar]' as follows:
           (global-set-key [tool-bar]
-                          '(menu-item "tool bar" ignore
-                                      :filter (lambda (ignore) tool-bar-map)))
+            '(menu-item "tool bar" ignore
+                        :filter (lambda (ignore) tool-bar-map)))
      Thus the tool bar map is derived dynamically from the value of
      variable `tool-bar-map' and you should normally adjust the default
      (global) tool bar by changing that map.  Major modes may replace
@@ -6821,4 +6809,30 @@ visited.  It also processes local variables specified in the file text.
                ;; File name ends in `.C'.
                ("\\.C\\'" . c++-mode))
              auto-mode-alist))
+
+
+File: elisp,  Node: Mode Help,  Next: Derived Modes,  Prev: Auto Major Mode,  Up: Major Modes
+
+23.2.4 Getting Help about a Major Mode
+--------------------------------------
+
+The `describe-mode' function is used to provide information about major
+modes.  It is normally called with `C-h m'.  The `describe-mode'
+function uses the value of `major-mode', which is why every major mode
+function needs to set the `major-mode' variable.
+
+ -- Command: describe-mode
+     This function displays the documentation of the current major mode.
+
+     The `describe-mode' function calls the `documentation' function
+     using the value of `major-mode' as an argument.  Thus, it displays
+     the documentation string of the major mode function.  (*Note
+     Accessing Documentation::.)
+
+ -- Variable: major-mode
+     This buffer-local variable holds the symbol for the current
+     buffer's major mode.  This symbol should have a function
+     definition that is the command to switch to that major mode.  The
+     `describe-mode' function uses the documentation string of the
+     function as the documentation of the major mode.
 

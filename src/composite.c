@@ -1,6 +1,6 @@
 /* Composite sequence support.
    Copyright (C) 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
@@ -300,7 +300,7 @@ get_composition_id (charpos, bytepos, nchars, prop, string)
     }
   else if (VECTORP (components) || CONSP (components))
     {
-      int len = XVECTOR (key)->size;
+      EMACS_UINT len = XVECTOR_SIZE (key);
 
       /* The number of elements should be odd.  */
       if ((len % 2) == 0)
@@ -333,8 +333,8 @@ get_composition_id (charpos, bytepos, nchars, prop, string)
 		    : COMPOSITION_WITH_RULE_ALTCHARS));
   cmp->hash_index = hash_index;
   glyph_len = (cmp->method == COMPOSITION_WITH_RULE_ALTCHARS
-	       ? (XVECTOR (key)->size + 1) / 2
-	       : XVECTOR (key)->size);
+	       ? (XVECTOR_SIZE (key) + 1) / 2
+	       : XVECTOR_SIZE (key));
   cmp->glyph_len = glyph_len;
   cmp->offsets = (short *) xmalloc (sizeof (short) * glyph_len * 2);
   cmp->font = NULL;
@@ -1042,6 +1042,7 @@ composition_compute_stop_pos (cmp_it, charpos, bytepos, endpos, string)
   cmp_it->id = -1;
   cmp_it->ch = -2;
   if (find_composition (charpos, endpos, &start, &end, &prop, string)
+      && start >= charpos
       && COMPOSITION_VALID_P (start, end, prop))
     {
       cmp_it->stop_pos = endpos = start;

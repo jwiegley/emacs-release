@@ -1,6 +1,6 @@
 /* Parameters and display hooks for terminal devices.
    Copyright (C) 1985, 1986, 1993, 1994, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+                 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -325,10 +325,8 @@ struct w32_display_info;
 /* Terminal-local parameters. */
 struct terminal
 {
-  /* The first two fields are really the header of a vector */
-  /* The terminal code does not refer to them.  */
-  EMACS_UINT size;
-  struct Lisp_Vector *vec_next;
+  /* This is for Lisp; the terminal code does not refer to it.  */
+  struct vectorlike_header header;
 
   /* Parameter alist of this terminal.  */
   Lisp_Object param_alist;

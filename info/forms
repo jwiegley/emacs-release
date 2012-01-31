@@ -4,7 +4,7 @@ forms.texi.
 This file documents Forms mode, a form-editing major mode for GNU Emacs.
 
    Copyright (C) 1989, 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -45,7 +45,7 @@ it.
 Emacs.
 
    Copyright (C) 1989, 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1365,19 +1365,19 @@ Index
 
 
 Tag Table:
-Node: Top1133
-Node: Forms Example3463
-Node: Entering and Exiting Forms Mode4663
-Node: Forms Commands6873
-Node: Data File Format10675
-Node: Control File Format12015
-Node: Format Description16644
-Node: Modifying Forms Contents19977
-Node: Miscellaneous21855
-Node: Error Messages23394
-Node: Long Example27638
-Node: Credits30720
-Node: GNU Free Documentation License31494
-Node: Index56662
+Node: Top1139
+Node: Forms Example3475
+Node: Entering and Exiting Forms Mode4675
+Node: Forms Commands6885
+Node: Data File Format10687
+Node: Control File Format12027
+Node: Format Description16656
+Node: Modifying Forms Contents19989
+Node: Miscellaneous21867
+Node: Error Messages23406
+Node: Long Example27650
+Node: Credits30732
+Node: GNU Free Documentation License31506
+Node: Index56674
 
 End Tag Table

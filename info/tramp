@@ -2,7 +2,7 @@ This is ../../info/tramp, produced by makeinfo version 4.13 from
 tramp.texi.
 
 Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -25,11 +25,11 @@ END-INFO-DIR-ENTRY
 
 File: tramp,  Node: Top,  Next: Overview,  Prev: (dir),  Up: (dir)
 
-TRAMP version 2.1.20 User Manual
-********************************
+TRAMP version 2.1.21-pre User Manual
+************************************
 
-This file documents TRAMP version 2.1.20, a remote file editing package
-for Emacs.
+This file documents TRAMP version 2.1.21-pre, a remote file editing
+package for Emacs.
 
    TRAMP stands for `Transparent Remote (file) Access, Multiple
 Protocol'.  This package provides remote file editing, similar to
@@ -47,7 +47,7 @@ the local and the remote host, whereas TRAMP uses a combination of
 (http://lists.gnu.org/archive/html/tramp-devel/).
 
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -3498,49 +3498,49 @@ Concept Index
 
 
 Tag Table:
-Node: Top1086
-Node: Overview5350
-Ref: Overview-Footnote-111094
-Node: Obtaining Tramp11246
-Node: History12829
-Node: Configuration14071
-Node: Connection types16307
-Node: Inline methods18147
-Node: External methods24392
-Node: GVFS based methods34146
-Node: Gateway methods35540
-Node: Default Method36993
-Node: Default User40962
-Node: Default Host42912
-Node: Multi-hops43681
-Ref: Multi-hops-Footnote-147873
-Node: Customizing Methods48228
-Node: Customizing Completion48636
-Node: Password handling52048
-Ref: Using an authentication file52758
-Ref: Caching passwords53773
-Node: Connection caching54742
-Node: Remote Programs56388
-Node: Remote shell setup59183
-Node: Auto-save and Backup67394
-Node: Windows setup hints70269
-Node: Usage72028
-Node: Filename Syntax73333
-Node: Alternative Syntax75894
-Node: Filename completion76881
-Node: Remote processes79854
-Ref: Running a debugger on a remote host84928
-Node: Cleanup remote connections85903
-Node: Bug Reports87027
-Node: Frequently Asked Questions89198
-Node: Files directories and localnames108480
-Node: Localname deconstruction108895
-Node: External packages109626
-Node: Traces and Profiles112070
-Node: Issues114270
-Node: GNU Free Documentation License115971
-Node: Function Index141117
-Node: Variable Index143017
-Node: Concept Index145036
+Node: Top1092
+Node: Overview5374
+Ref: Overview-Footnote-111118
+Node: Obtaining Tramp11270
+Node: History12853
+Node: Configuration14095
+Node: Connection types16331
+Node: Inline methods18171
+Node: External methods24416
+Node: GVFS based methods34170
+Node: Gateway methods35564
+Node: Default Method37017
+Node: Default User40986
+Node: Default Host42936
+Node: Multi-hops43705
+Ref: Multi-hops-Footnote-147897
+Node: Customizing Methods48252
+Node: Customizing Completion48660
+Node: Password handling52072
+Ref: Using an authentication file52782
+Ref: Caching passwords53797
+Node: Connection caching54766
+Node: Remote Programs56412
+Node: Remote shell setup59207
+Node: Auto-save and Backup67418
+Node: Windows setup hints70293
+Node: Usage72052
+Node: Filename Syntax73357
+Node: Alternative Syntax75918
+Node: Filename completion76905
+Node: Remote processes79878
+Ref: Running a debugger on a remote host84952
+Node: Cleanup remote connections85927
+Node: Bug Reports87051
+Node: Frequently Asked Questions89222
+Node: Files directories and localnames108504
+Node: Localname deconstruction108919
+Node: External packages109650
+Node: Traces and Profiles112094
+Node: Issues114294
+Node: GNU Free Documentation License115995
+Node: Function Index141141
+Node: Variable Index143041
+Node: Concept Index145060
 
 End Tag Table

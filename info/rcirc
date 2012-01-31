@@ -1,7 +1,7 @@
 This is ../../info/rcirc, produced by makeinfo version 4.13 from
 rcirc.texi.
 
-Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Free Software
+Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -34,7 +34,7 @@ communicate with each other in real-time.  Communication occurs both in
 topic channels which are collections of many users, or privately, with
 just one other user.
 
-   Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Free Software
+   Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -1494,29 +1494,29 @@ Index
 
 
 Tag Table:
-Node: Top959
-Node: Basics2716
-Node: Internet Relay Chat2977
-Node: Getting started with rcirc4493
-Node: Reference7370
-Node: rcirc commands7707
-Node: Useful IRC commands10569
-Node: Configuration11296
-Node: Fighting Information Overload16204
-Node: Channels16699
-Node: People18270
-Node: Keywords19876
-Node: Notices20376
-Node: Hacking and Tweaking21269
-Node: Skipping /away messages using handlers21734
-Node: Using fly spell mode22481
-Node: Scrolling conservatively22902
-Node: Changing the time stamp format23574
-Node: Defining a new command23950
-Node: Reconnecting after you have lost the connection24770
-Node: GNU Free Documentation License26635
-Node: Key Index51813
-Node: Variable Index53194
-Node: Index54698
+Node: Top965
+Node: Basics2728
+Node: Internet Relay Chat2989
+Node: Getting started with rcirc4505
+Node: Reference7382
+Node: rcirc commands7719
+Node: Useful IRC commands10581
+Node: Configuration11308
+Node: Fighting Information Overload16216
+Node: Channels16711
+Node: People18282
+Node: Keywords19888
+Node: Notices20388
+Node: Hacking and Tweaking21281
+Node: Skipping /away messages using handlers21746
+Node: Using fly spell mode22493
+Node: Scrolling conservatively22914
+Node: Changing the time stamp format23586
+Node: Defining a new command23962
+Node: Reconnecting after you have lost the connection24782
+Node: GNU Free Documentation License26647
+Node: Key Index51825
+Node: Variable Index53206
+Node: Index54710
 
 End Tag Table

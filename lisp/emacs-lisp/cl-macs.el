@@ -1,7 +1,7 @@
 ;;; cl-macs.el --- Common Lisp macros
 
 ;; Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009, 2010, 2011  Free Software Foundation, Inc.
+;;   2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
 ;; Author: Dave Gillespie <daveg@synaptics.com>
 ;; Version: 2.02
@@ -1455,7 +1455,7 @@ lexical closures as in Common Lisp.
 (defmacro lexical-let* (bindings &rest body)
   "Like `let*', but lexically scoped.
 The main visible difference is that lambdas inside BODY, and in
-successive bindings within BINDINGS, will create lexical closures
+successive bindings within VARLIST, will create lexical closures
 as in Common Lisp.  This is similar to the behavior of `let*' in
 Common Lisp.
 \n(fn VARLIST BODY)"

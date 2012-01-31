@@ -4,7 +4,7 @@ eshell.texi.
 This manual is for Eshell, the Emacs shell.
 
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -38,7 +38,7 @@ handling the sort of tasks accomplished by those tools.
    This manual is for Eshell, the Emacs shell.
 
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1482,44 +1482,44 @@ Key Index
 
 
 Tag Table:
-Node: Top1057
-Node: What is Eshell?2770
-Ref: What is Eshell?-Footnote-15419
-Ref: What is Eshell?-Footnote-25509
-Node: Contributors to Eshell5702
-Node: Command basics6856
-Node: Commands verbs7412
-Node: Command arguments9176
-Node: Commands10427
-Node: Invocation10810
-Ref: Invocation-Footnote-111436
-Node: Completion11529
-Node: Aliases11645
-Node: History11752
-Node: Scripts12419
-Node: Built-ins12525
-Node: Arguments15001
-Node: The Parser15192
-Node: Variables15292
-Node: Substitution15411
-Node: Globbing15534
-Node: Predicates15650
-Node: Input/Output15749
-Node: Process control15869
-Node: Extension modules16003
-Node: Writing a module16308
-Node: Module testing16439
-Node: Directory handling16593
-Node: Key rebinding16752
-Node: Smart scrolling16902
-Node: Terminal emulation17056
-Node: Built-in UNIX commands17225
-Node: Extras and Goodies17378
-Node: Bugs and ideas17523
-Node: Known problems18118
-Node: GNU Free Documentation License33267
-Node: Concept Index58444
-Node: Function and Variable Index59624
-Node: Key Index60462
+Node: Top1063
+Node: What is Eshell?2782
+Ref: What is Eshell?-Footnote-15431
+Ref: What is Eshell?-Footnote-25521
+Node: Contributors to Eshell5714
+Node: Command basics6868
+Node: Commands verbs7424
+Node: Command arguments9188
+Node: Commands10439
+Node: Invocation10822
+Ref: Invocation-Footnote-111448
+Node: Completion11541
+Node: Aliases11657
+Node: History11764
+Node: Scripts12431
+Node: Built-ins12537
+Node: Arguments15013
+Node: The Parser15204
+Node: Variables15304
+Node: Substitution15423
+Node: Globbing15546
+Node: Predicates15662
+Node: Input/Output15761
+Node: Process control15881
+Node: Extension modules16015
+Node: Writing a module16320
+Node: Module testing16451
+Node: Directory handling16605
+Node: Key rebinding16764
+Node: Smart scrolling16914
+Node: Terminal emulation17068
+Node: Built-in UNIX commands17237
+Node: Extras and Goodies17390
+Node: Bugs and ideas17535
+Node: Known problems18130
+Node: GNU Free Documentation License33279
+Node: Concept Index58456
+Node: Function and Variable Index59636
+Node: Key Index60474
 
 End Tag Table

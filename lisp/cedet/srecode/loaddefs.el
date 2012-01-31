@@ -4,7 +4,7 @@
 
 
 ;;;### (autoloads (global-srecode-minor-mode srecode-minor-mode)
-;;;;;;  "srecode/mode" "mode.el" "5e3830e5f65ae288a9adfaf964e6e068")
+;;;;;;  "srecode/mode" "mode.el" "5028bf39d1ddf6b79c154a63b4861efa")
 ;;; Generated autoloads from mode.el
 
 (autoload 'srecode-minor-mode "srecode/mode" "\
@@ -27,7 +27,7 @@ If ARG is nil, then toggle.
 
 ;;;***
 
-;;;### (autoloads (srecode-get-maps) "srecode/map" "map.el" "6331144335e33d9e9597da2e38a46cb1")
+;;;### (autoloads (srecode-get-maps) "srecode/map" "map.el" "40efc9d34f118f06e9bc129343d31c93")
 ;;; Generated autoloads from map.el
 
 (autoload 'srecode-get-maps "srecode/map" "\
@@ -39,7 +39,7 @@ Optional argument RESET forces a reset of the current map.
 ;;;***
 
 ;;;### (autoloads (srecode-semantic-handle-:java) "srecode/java"
-;;;;;;  "java.el" "1f9565d2ea9f6c9f2e1bc1c9bddf9746")
+;;;;;;  "java.el" "35bd5d7e19840ea6cfe3593989f96cf3")
 ;;; Generated autoloads from java.el
 
 (autoload 'srecode-semantic-handle-:java "srecode/java" "\
@@ -52,7 +52,7 @@ FILENAME_AS_CLASS - file converted to a Java class name.
 
 ;;;***
 
-;;;### (autoloads (srecode-insert) "srecode/insert" "insert.el" "af80db6c085f79c4fa0486567722577c")
+;;;### (autoloads (srecode-insert) "srecode/insert" "insert.el" "c241cf2ab3b2a13cb3fc1f7238e4f3ef")
 ;;; Generated autoloads from insert.el
 
 (autoload 'srecode-insert "srecode/insert" "\
@@ -64,7 +64,7 @@ DICT-ENTRIES are additional dictionary values to add.
 ;;;***
 
 ;;;### (autoloads (srecode-insert-getset) "srecode/getset" "getset.el"
-;;;;;;  "cee3c5366233c73ddfa464c341eb56ad")
+;;;;;;  "c48863f8bd674d410fe59377f0bff235")
 ;;; Generated autoloads from getset.el
 
 (autoload 'srecode-insert-getset "srecode/getset" "\
@@ -79,7 +79,7 @@ will be derived.
 ;;;***
 
 ;;;### (autoloads (srecode-insert-prototype-expansion) "srecode/expandproto"
-;;;;;;  "expandproto.el" "e3ae547e9156ca0ec7acbbbeb6dd9fd1")
+;;;;;;  "expandproto.el" "e11609a8b748bd8218c5b0d69968e715")
 ;;; Generated autoloads from expandproto.el
 
 (autoload 'srecode-insert-prototype-expansion "srecode/expandproto" "\
@@ -90,7 +90,7 @@ Insert get/set methods for the current class.
 ;;;***
 
 ;;;### (autoloads (srecode-semantic-handle-:el-custom srecode-semantic-handle-:el)
-;;;;;;  "srecode/el" "el.el" "b3ba095830caf9b21af46e2c0dd4ae82")
+;;;;;;  "srecode/el" "el.el" "8fca9dd41c8bd62644c77483a4d678f2")
 ;;; Generated autoloads from el.el
 
 (autoload 'srecode-semantic-handle-:el "srecode/el" "\
@@ -112,7 +112,7 @@ Adds the following:
 
 ;;;### (autoloads (srecode-document-insert-group-comments srecode-document-insert-variable-one-line-comment
 ;;;;;;  srecode-document-insert-function-comment srecode-document-insert-comment)
-;;;;;;  "srecode/document" "document.el" "df6996b4dfef1cba88ddb129d2f23b70")
+;;;;;;  "srecode/document" "document.el" "2da17b960af17649c3b4aac714963c3d")
 ;;; Generated autoloads from document.el
 
 (autoload 'srecode-document-insert-comment "srecode/document" "\
@@ -153,7 +153,7 @@ If there is only one tag in the region, complain.
 ;;;***
 
 ;;;### (autoloads (srecode-semantic-handle-:cpp) "srecode/cpp" "cpp.el"
-;;;;;;  "933d7c0b244d1e3e6af506dc1637ba84")
+;;;;;;  "a3509d9d09b963acf354d8380fe1c3a5")
 ;;; Generated autoloads from cpp.el
 
 (autoload 'srecode-semantic-handle-:cpp "srecode/cpp" "\
@@ -167,7 +167,7 @@ HEADER - Shown section if in a header file.
 ;;;***
 
 ;;;### (autoloads (srecode-compile-templates) "srecode/compile" "compile.el"
-;;;;;;  "ac5230a7bf798fb26ffa9c9db98417c6")
+;;;;;;  "27edfed66b3ff599a4f36fb78399004f")
 ;;; Generated autoloads from compile.el
 
 (autoload 'srecode-compile-templates "srecode/compile" "\
@@ -178,7 +178,7 @@ Compile a semantic recode template file into a mode-local variable.
 ;;;***
 
 ;;;### (autoloads (srecode-template-setup-parser) "srecode/template"
-;;;;;;  "template.el" "d3cc74fdb0bf781d725376e3a65719d6")
+;;;;;;  "template.el" "109f17a60e8323c7cd19a115048f7585")
 ;;; Generated autoloads from template.el
 
 (autoload 'srecode-template-setup-parser "srecode/template" "\
@@ -189,7 +189,7 @@ Setup buffer for parse.
 ;;;***
 
 ;;;### (autoloads (srecode-semantic-handle-:texitag srecode-semantic-handle-:texi)
-;;;;;;  "srecode/texi" "texi.el" "fbed566d009d7783549d09749da9dcd5")
+;;;;;;  "srecode/texi" "texi.el" "156f5f15a951a79376564dffe1227b58")
 ;;; Generated autoloads from texi.el
 
 (autoload 'srecode-semantic-handle-:texi "srecode/texi" "\

@@ -1,7 +1,7 @@
 /* Fringe handling (split from xdisp.c).
    Copyright (C) 1985, 1986, 1987, 1988, 1993, 1994, 1995, 1997,
                  1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+                 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -541,6 +541,20 @@ get_fringe_bitmap_name (bn)
   return num;
 }
 
+/* Get fringe bitmap data for bitmap number BN.  */
+
+static struct fringe_bitmap *
+get_fringe_bitmap_data (int bn)
+{
+  struct fringe_bitmap *fb;
+
+  fb = fringe_bitmaps[bn];
+  if (fb == NULL)
+    fb = &standard_bitmaps[bn < MAX_STANDARD_FRINGE_BITMAPS
+			   ? bn : UNDEF_FRINGE_BITMAP];
+
+  return fb;
+}
 
 /* Draw the bitmap WHICH in one of the left or right fringes of
    window W.  ROW is the glyph row for which to display the bitmap; it
@@ -593,10 +607,7 @@ draw_fringe_bitmap_1 (w, row, left_p, overlay, which)
 	face_id = FRINGE_FACE_ID;
     }
 
-  fb = fringe_bitmaps[which];
-  if (fb == NULL)
-    fb = &standard_bitmaps[which < MAX_STANDARD_FRINGE_BITMAPS
-			   ? which : UNDEF_FRINGE_BITMAP];
+  fb = get_fringe_bitmap_data (which);
 
   period = fb->period;
 
@@ -991,17 +1002,9 @@ update_window_fringes (w, keep_current_p)
 	   y < yb && rn < nrows;
 	   y += row->height, ++rn)
 	{
-	  unsigned indicate_bob_p, indicate_top_line_p;
-	  unsigned indicate_eob_p, indicate_bottom_line_p;
-
 	  row = w->desired_matrix->rows + rn;
 	  if (!row->enabled_p)
 	    row = w->current_matrix->rows + rn;
-
-	  indicate_bob_p = row->indicate_bob_p;
-	  indicate_top_line_p = row->indicate_top_line_p;
-	  indicate_eob_p = row->indicate_eob_p;
-	  indicate_bottom_line_p = row->indicate_bottom_line_p;
 
 	  row->indicate_bob_p = row->indicate_top_line_p = 0;
 	  row->indicate_eob_p = row->indicate_bottom_line_p = 0;
@@ -1083,12 +1086,8 @@ update_window_fringes (w, keep_current_p)
 
       if (bn != NO_FRINGE_BITMAP)
 	{
-	  struct fringe_bitmap *fb;
+	  struct fringe_bitmap *fb = get_fringe_bitmap_data (bn);
 
-	  fb = fringe_bitmaps[bn];
-	  if (fb == NULL)
-	    fb = &standard_bitmaps[bn < MAX_STANDARD_FRINGE_BITMAPS
-				   ? bn : UNDEF_FRINGE_BITMAP];
 	  if (fb->align == ALIGN_BITMAP_TOP && fb->period == 0)
 	    {
 	      struct glyph_row *row1;
@@ -1142,12 +1141,8 @@ update_window_fringes (w, keep_current_p)
 
       if (bn != NO_FRINGE_BITMAP)
 	{
-	  struct fringe_bitmap *fb;
+	  struct fringe_bitmap *fb = get_fringe_bitmap_data (bn);
 
-	  fb = fringe_bitmaps[bn];
-	  if (fb == NULL)
-	    fb = &standard_bitmaps[bn < MAX_STANDARD_FRINGE_BITMAPS
-				   ? bn : UNDEF_FRINGE_BITMAP];
 	  if (fb->align == ALIGN_BITMAP_BOTTOM && fb->period == 0)
 	    {
 	      struct glyph_row *row1;
@@ -1183,6 +1178,7 @@ update_window_fringes (w, keep_current_p)
       int left, right;
       unsigned left_face_id, right_face_id;
       int left_offset, right_offset;
+      int periodic_p;
 
       row = w->desired_matrix->rows + rn;
       cur = w->current_matrix->rows + rn;
@@ -1191,6 +1187,7 @@ update_window_fringes (w, keep_current_p)
 
       left_face_id = right_face_id = DEFAULT_FACE_ID;
       left_offset = right_offset = 0;
+      periodic_p = 0;
 
       /* Decide which bitmap to draw in the left fringe.  */
       if (WINDOW_LEFT_FRINGE_WIDTH (w) == 0)
@@ -1278,6 +1275,9 @@ update_window_fringes (w, keep_current_p)
       else
 	right = NO_FRINGE_BITMAP;
 
+      periodic_p = (get_fringe_bitmap_data (left)->period != 0
+		    || get_fringe_bitmap_data (right)->period != 0);
+
       if (row->y != cur->y
 	  || row->visible_height != cur->visible_height
 	  || row->ends_at_zv_p != cur->ends_at_zv_p
@@ -1287,6 +1287,7 @@ update_window_fringes (w, keep_current_p)
 	  || right_face_id != cur->right_fringe_face_id
 	  || left_offset != cur->left_fringe_offset
 	  || right_offset != cur->right_fringe_offset
+	  || periodic_p != cur->fringe_bitmap_periodic_p
 	  || cur->redraw_fringe_bitmaps_p)
 	{
 	  redraw_p = row->redraw_fringe_bitmaps_p = 1;
@@ -1299,6 +1300,7 @@ update_window_fringes (w, keep_current_p)
 	      cur->right_fringe_face_id = right_face_id;
 	      cur->left_fringe_offset = left_offset;
 	      cur->right_fringe_offset = right_offset;
+	      cur->fringe_bitmap_periodic_p = periodic_p;
 	    }
 	}
 
@@ -1307,8 +1309,12 @@ update_window_fringes (w, keep_current_p)
 
       if (row->overlay_arrow_bitmap != cur->overlay_arrow_bitmap)
 	{
-	  redraw_p = row->redraw_fringe_bitmaps_p = cur->redraw_fringe_bitmaps_p = 1;
-	  cur->overlay_arrow_bitmap = row->overlay_arrow_bitmap;
+	  redraw_p = row->redraw_fringe_bitmaps_p = 1;
+	  if (!keep_current_p)
+	    {
+	      cur->redraw_fringe_bitmaps_p = 1;
+	      cur->overlay_arrow_bitmap = row->overlay_arrow_bitmap;
+	    }
 	}
 
       row->left_fringe_bitmap = left;
@@ -1317,6 +1323,7 @@ update_window_fringes (w, keep_current_p)
       row->right_fringe_face_id = right_face_id;
       row->left_fringe_offset = left_offset;
       row->right_fringe_offset = right_offset;
+      row->fringe_bitmap_periodic_p = periodic_p;
     }
 
   return redraw_p && !keep_current_p;
@@ -1577,7 +1584,7 @@ If BITMAP already exists, the existing definition is replaced.  */)
   if (STRINGP (bits))
     h = SCHARS (bits);
   else if (VECTORP (bits))
-    h = XVECTOR (bits)->size;
+    h = XVECTOR_SIZE (bits);
   else
     wrong_type_argument (Qsequencep, bits);
 

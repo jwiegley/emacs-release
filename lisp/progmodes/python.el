@@ -1,6 +1,6 @@
 ;;; python.el --- silly walks for Python  -*- coding: iso-8859-1 -*-
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Dave Love <fx@gnu.org>
@@ -100,7 +100,9 @@
 	     "import" "in" "is" "lambda" "not" "or" "pass" "print"
 	     "raise" "return" "try" "while" "with" "yield"
              ;; Not real keywords, but close enough to be fontified as such
-             "self" "True" "False")
+             "self" "True" "False"
+             ;; Python 3
+             "nonlocal")
 	 symbol-end)
     (,(rx symbol-start "None" symbol-end)	; see § Keywords in 2.7 manual
      . font-lock-constant-face)
@@ -1912,6 +1914,7 @@ instance.  Assumes an inferior Python is running."
 
 (declare-function info-lookup-maybe-add-help "info-look" (&rest arg))
 
+;;;###autoload
 (defun python-after-info-look ()
   "Set up info-look for Python.
 Used with `eval-after-load'."
@@ -2892,6 +2895,32 @@ filter."
 
 (defun python-sentinel (proc msg)
   (setq overlay-arrow-position nil))
+
+(defun python-unload-function ()
+  "Unload the Python library."
+  (let* ((default-mode (default-value 'major-mode))
+         (inferior-mode (or (get 'inferior-python-mode 'derived-mode-parent)
+                            default-mode)))
+    (dolist (buffer (buffer-list))
+      (set-buffer buffer)
+      (cond ((memq major-mode '(python-mode jython-mode))
+             (funcall default-mode))
+            ((eq major-mode 'inferior-python-mode)
+             (remove-hook 'comint-preoutput-filter-functions
+                          'python-preoutput-filter t)
+             (remove-hook 'comint-output-filter-functions
+                          'python-comint-output-filter-function t)
+             (let ((proc (get-buffer-process (current-buffer))))
+               (if (not proc)
+                   (funcall default-mode)
+                 (set-process-sentinel proc nil)
+                 (funcall inferior-mode)))))))
+  (setq minor-mode-alist (assq-delete-all 'python-pdbtrack-is-tracking-p
+                                          minor-mode-alist))
+  (dolist (error '("^No symbol" "^Can't shift all lines enough"))
+    (setq debug-ignored-errors (delete error debug-ignored-errors)))
+  ;; continue standard unloading
+  nil)
 
 (provide 'python)
 (provide 'python-21)

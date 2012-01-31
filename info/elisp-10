@@ -2,11 +2,11 @@ This is ../../info/elisp, produced by makeinfo version 4.13 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.3.
+corresponding to Emacs version 23.4.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
-Free Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -967,7 +967,8 @@ code intended for widespread use:
           ;; GNU General Public License for more details.
 
           ;; You should have received a copy of the GNU General Public License
-          ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+          ;; along with this program.  If not, see
+          ;; <http://www.gnu.org/licenses/>.
 
      If you have signed papers to assign the copyright to the
      Foundation, then use `Free Software Foundation, Inc.' as NAME.

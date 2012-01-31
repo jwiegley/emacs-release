@@ -2,11 +2,11 @@ This is ../../info/elisp, produced by makeinfo version 4.13 from
 elisp.texi.
 
 This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.3.
+corresponding to Emacs version 23.4.
 
    Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
-Free Software Foundation, Inc.
+2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -25,69 +25,6 @@ INFO-DIR-SECTION GNU Emacs Lisp
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
-
-
-File: elisp,  Node: Regular Expressions,  Next: Regexp Search,  Prev: Searching and Case,  Up: Searching and Matching
-
-34.3 Regular Expressions
-========================
-
-A "regular expression", or "regexp" for short, is a pattern that
-denotes a (possibly infinite) set of strings.  Searching for matches for
-a regexp is a very powerful operation.  This section explains how to
-write regexps; the following section says how to search for them.
-
-   For convenient interactive development of regular expressions, you
-can use the `M-x re-builder' command.  It provides a convenient
-interface for creating regular expressions, by giving immediate visual
-feedback in a separate buffer.  As you edit the regexp, all its matches
-in the target buffer are highlighted.  Each parenthesized
-sub-expression of the regexp is shown in a distinct face, which makes
-it easier to verify even very complex regexps.
-
-* Menu:
-
-* Syntax of Regexps::       Rules for writing regular expressions.
-* Regexp Example::          Illustrates regular expression syntax.
-* Regexp Functions::        Functions for operating on regular expressions.
-
-
-File: elisp,  Node: Syntax of Regexps,  Next: Regexp Example,  Up: Regular Expressions
-
-34.3.1 Syntax of Regular Expressions
-------------------------------------
-
-Regular expressions have a syntax in which a few characters are special
-constructs and the rest are "ordinary".  An ordinary character is a
-simple regular expression that matches that character and nothing else.
-The special characters are `.', `*', `+', `?', `[', `^', `$', and `\';
-no new special characters will be defined in the future.  The character
-`]' is special if it ends a character alternative (see later).  The
-character `-' is special inside a character alternative.  A `[:' and
-balancing `:]' enclose a character class inside a character
-alternative.  Any other character appearing in a regular expression is
-ordinary, unless a `\' precedes it.
-
-   For example, `f' is not a special character, so it is ordinary, and
-therefore `f' is a regular expression that matches the string `f' and
-no other string.  (It does _not_ match the string `fg', but it does
-match a _part_ of that string.)  Likewise, `o' is a regular expression
-that matches only `o'.
-
-   Any two regular expressions A and B can be concatenated.  The result
-is a regular expression that matches a string if A matches some amount
-of the beginning of that string and B matches the rest of the string.
-
-   As a simple example, we can concatenate the regular expressions `f'
-and `o' to get the regular expression `fo', which matches only the
-string `fo'.  Still trivial.  To do something more powerful, you need
-to use one of the special regular expression constructs.
-
-* Menu:
-
-* Regexp Special::      Special characters in regular expressions.
-* Char Classes::        Character classes used in regular expressions.
-* Regexp Backslash::    Backslash-sequences in regular expressions.
 
 
 File: elisp,  Node: Regexp Special,  Next: Char Classes,  Up: Syntax of Regexps
@@ -4566,7 +4503,7 @@ primitives return `nil'.
           The number of threads in the process.
 
     `start'
-          The time the process was started, in the
+          The time when the process was started, in the same
           `(HIGH LOW MICROSEC)' format used by `current-time' and
           `file-attributes'.
 
@@ -5232,23 +5169,15 @@ process object representing a serial port connection.
     `:parity'
     `:stopbits'
     `:flowcontrol'
-          These arguments are handled by `serial-process-configure',
-          which is called by `make-serial-process'.
+          These are handled by `serial-process-configure', which is
+          called by `make-serial-process'.
 
      The original argument list, possibly modified by later
      configuration, is available via the function `process-contact'.
 
-     Examples:
+     Here is an example:
 
           (make-serial-process :port "/dev/ttyS0" :speed 9600)
-
-          (make-serial-process :port "COM1" :speed 115200 :stopbits 2)
-
-          (make-serial-process :port "\\\\.\\COM13" :speed 1200
-                               :bytesize 7 :parity 'odd)
-
-          (make-serial-process :port "/dev/tty.BlueConsole-SPP-1"
-                               :speed nil)
 
  -- Function: serial-process-configure &rest args
      This functions configures a serial port connection.  Arguments are
@@ -5301,15 +5230,6 @@ process object representing a serial port connection.
 
      `serial-process-configure' is called by `make-serial-process' for
      the initial configuration of the serial port.
-
-     Examples:
-
-          (serial-process-configure :process "/dev/ttyS0" :speed 1200)
-
-          (serial-process-configure :buffer "COM1" :stopbits 1
-                                    :parity 'odd :flowcontrol 'hw)
-
-          (serial-process-configure :port "\\\\.\\COM13" :bytesize 7)
 
 
 File: elisp,  Node: Byte Packing,  Prev: Serial Ports,  Up: Processes
@@ -6826,4 +6746,155 @@ the overlay or outside, and likewise for the end of the overlay.
 * Overlay Properties::  How to read and set properties.
                           What properties do to the screen display.
 * Finding Overlays::    Searching for overlays.
+
+
+File: elisp,  Node: Managing Overlays,  Next: Overlay Properties,  Up: Overlays
+
+38.9.1 Managing Overlays
+------------------------
+
+This section describes the functions to create, delete and move
+overlays, and to examine their contents.  Overlay changes are not
+recorded in the buffer's undo list, since the overlays are not part of
+the buffer's contents.
+
+ -- Function: overlayp object
+     This function returns `t' if OBJECT is an overlay.
+
+ -- Function: make-overlay start end &optional buffer front-advance
+          rear-advance
+     This function creates and returns an overlay that belongs to
+     BUFFER and ranges from START to END.  Both START and END must
+     specify buffer positions; they may be integers or markers.  If
+     BUFFER is omitted, the overlay is created in the current buffer.
+
+     The arguments FRONT-ADVANCE and REAR-ADVANCE specify the marker
+     insertion type for the start of the overlay and for the end of the
+     overlay, respectively.  *Note Marker Insertion Types::.  If they
+     are both `nil', the default, then the overlay extends to include
+     any text inserted at the beginning, but not text inserted at the
+     end.  If FRONT-ADVANCE is non-`nil', text inserted at the
+     beginning of the overlay is excluded from the overlay.  If
+     REAR-ADVANCE is non-`nil', text inserted at the end of the overlay
+     is included in the overlay.
+
+ -- Function: overlay-start overlay
+     This function returns the position at which OVERLAY starts, as an
+     integer.
+
+ -- Function: overlay-end overlay
+     This function returns the position at which OVERLAY ends, as an
+     integer.
+
+ -- Function: overlay-buffer overlay
+     This function returns the buffer that OVERLAY belongs to.  It
+     returns `nil' if OVERLAY has been deleted.
+
+ -- Function: delete-overlay overlay
+     This function deletes OVERLAY.  The overlay continues to exist as
+     a Lisp object, and its property list is unchanged, but it ceases
+     to be attached to the buffer it belonged to, and ceases to have
+     any effect on display.
+
+     A deleted overlay is not permanently disconnected.  You can give
+     it a position in a buffer again by calling `move-overlay'.
+
+ -- Function: move-overlay overlay start end &optional buffer
+     This function moves OVERLAY to BUFFER, and places its bounds at
+     START and END.  Both arguments START and END must specify buffer
+     positions; they may be integers or markers.
+
+     If BUFFER is omitted, OVERLAY stays in the same buffer it was
+     already associated with; if OVERLAY was deleted, it goes into the
+     current buffer.
+
+     The return value is OVERLAY.
+
+     This is the only valid way to change the endpoints of an overlay.
+     Do not try modifying the markers in the overlay by hand, as that
+     fails to update other vital data structures and can cause some
+     overlays to be "lost."
+
+ -- Function: remove-overlays &optional start end name value
+     This function removes all the overlays between START and END whose
+     property NAME has the value VALUE.  It can move the endpoints of
+     the overlays in the region, or split them.
+
+     If NAME is omitted or `nil', it means to delete all overlays in
+     the specified region.  If START and/or END are omitted or `nil',
+     that means the beginning and end of the buffer respectively.
+     Therefore, `(remove-overlays)' removes all the overlays in the
+     current buffer.
+
+ -- Function: copy-overlay overlay
+     This function returns a copy of OVERLAY.  The copy has the same
+     endpoints and properties as OVERLAY.  However, the marker
+     insertion type for the start of the overlay and for the end of the
+     overlay are set to their default values (*note Marker Insertion
+     Types::).
+
+   Here are some examples:
+
+     ;; Create an overlay.
+     (setq foo (make-overlay 1 10))
+          => #<overlay from 1 to 10 in display.texi>
+     (overlay-start foo)
+          => 1
+     (overlay-end foo)
+          => 10
+     (overlay-buffer foo)
+          => #<buffer display.texi>
+     ;; Give it a property we can check later.
+     (overlay-put foo 'happy t)
+          => t
+     ;; Verify the property is present.
+     (overlay-get foo 'happy)
+          => t
+     ;; Move the overlay.
+     (move-overlay foo 5 20)
+          => #<overlay from 5 to 20 in display.texi>
+     (overlay-start foo)
+          => 5
+     (overlay-end foo)
+          => 20
+     ;; Delete the overlay.
+     (delete-overlay foo)
+          => nil
+     ;; Verify it is deleted.
+     foo
+          => #<overlay in no buffer>
+     ;; A deleted overlay has no position.
+     (overlay-start foo)
+          => nil
+     (overlay-end foo)
+          => nil
+     (overlay-buffer foo)
+          => nil
+     ;; Undelete the overlay.
+     (move-overlay foo 1 20)
+          => #<overlay from 1 to 20 in display.texi>
+     ;; Verify the results.
+     (overlay-start foo)
+          => 1
+     (overlay-end foo)
+          => 20
+     (overlay-buffer foo)
+          => #<buffer display.texi>
+     ;; Moving and deleting the overlay does not change its properties.
+     (overlay-get foo 'happy)
+          => t
+
+   Emacs stores the overlays of each buffer in two lists, divided
+around an arbitrary "center position."  One list extends backwards
+through the buffer from that center position, and the other extends
+forwards from that center position.  The center position can be anywhere
+in the buffer.
+
+ -- Function: overlay-recenter pos
+     This function recenters the overlays of the current buffer around
+     position POS.  That makes overlay lookup faster for positions near
+     POS, but slower for positions far away from POS.
+
+   A loop that scans the buffer forwards, creating overlays, can run
+faster if you do `(overlay-recenter (point-max))' first.
 

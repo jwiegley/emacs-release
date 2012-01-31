@@ -2,7 +2,7 @@ This is ../../info/speedbar, produced by makeinfo version 4.13 from
 speedbar.texi.
 
 Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -51,7 +51,7 @@ expanded summary of the entry the expansion button is on.  *Note Basic
 Navigation::.
 
    Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011  Free Software Foundation, Inc.
+2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1787,33 +1787,33 @@ Concept Index
 
 
 Tag Table:
-Node: Top1001
-Node: Introduction3623
-Node: Basic Navigation5145
-Node: Basic Key Bindings5585
-Node: Basic Visuals7721
-Node: Mouse Bindings11671
-Node: Displays Submenu13291
-Node: File Mode13966
-Node: Directory Display14568
-Node: Hidden Files17603
-Node: File Key Bindings18819
-Node: Buffer Mode20248
-Node: Minor Modes21358
-Node: RMAIL22212
-Node: Info23105
-Node: GDB23707
-Node: Customizing24500
-Node: Frames and Faces25306
-Node: Tag Hierarchy Methods26639
-Node: Version Control28860
-Node: Hooks30197
-Node: Extending31448
-Node: Minor Display Modes32514
-Node: Major Display Modes34500
-Node: Tagging Extensions39270
-Node: Creating a display40672
-Node: GNU Free Documentation License45210
-Node: Index70376
+Node: Top1007
+Node: Introduction3635
+Node: Basic Navigation5157
+Node: Basic Key Bindings5597
+Node: Basic Visuals7733
+Node: Mouse Bindings11683
+Node: Displays Submenu13303
+Node: File Mode13978
+Node: Directory Display14580
+Node: Hidden Files17615
+Node: File Key Bindings18831
+Node: Buffer Mode20260
+Node: Minor Modes21370
+Node: RMAIL22224
+Node: Info23117
+Node: GDB23719
+Node: Customizing24512
+Node: Frames and Faces25318
+Node: Tag Hierarchy Methods26651
+Node: Version Control28872
+Node: Hooks30209
+Node: Extending31460
+Node: Minor Display Modes32526
+Node: Major Display Modes34512
+Node: Tagging Extensions39282
+Node: Creating a display40684
+Node: GNU Free Documentation License45222
+Node: Index70388
 
 End Tag Table

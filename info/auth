@@ -3,7 +3,8 @@ auth.texi.
 
 This file describes the Emacs auth-source library.
 
-   Copyright (C) 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+   Copyright (C) 2008, 2009, 2010, 2011, 2012 Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -41,7 +42,8 @@ This manual describes the Emacs auth-source library.
 
    This file describes the Emacs auth-source library.
 
-   Copyright (C) 2008, 2009, 2010, 2011 Free Software Foundation, Inc.
+   Copyright (C) 2008, 2009, 2010, 2011, 2012 Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -253,12 +255,12 @@ File: auth,  Node: Variable Index,  Prev: Function Index,  Up: Top
 
 
 Tag Table:
-Node: Top1311
-Node: Overview2843
-Node: Help for users3502
-Node: Help for developers7621
-Node: Index9094
-Node: Function Index9220
-Node: Variable Index9434
+Node: Top1317
+Node: Overview2855
+Node: Help for users3514
+Node: Help for developers7633
+Node: Index9106
+Node: Function Index9232
+Node: Variable Index9446
 
 End Tag Table

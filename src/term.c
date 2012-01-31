@@ -1,6 +1,6 @@
 /* Terminal control module for terminals described by TERMCAP
    Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1998, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -3413,13 +3413,12 @@ init_tty (char *name, char *terminal_type, int must_succeed)
          if we don't have one at the moment.  */
       fd = emacs_open (name, O_RDWR | O_IGNORE_CTTY | O_NOCTTY, 0);
     else
-#else
+#endif /* O_IGNORE_CTTY */
       /* Alas, O_IGNORE_CTTY is a GNU extension that seems to be only
          defined on Hurd.  On other systems, we need to explicitly
          dissociate ourselves from the controlling tty when we want to
          open a frame on the same terminal.  */
       fd = emacs_open (name, O_RDWR | O_NOCTTY, 0);
-#endif /* O_IGNORE_CTTY */
 
     tty->name = xstrdup (name);
     terminal->name = xstrdup (name);

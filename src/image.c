@@ -1,6 +1,6 @@
 /* Functions for image support on window system.
    Copyright (C) 1989, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
+                 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -2459,7 +2459,7 @@ xbm_image_p (object)
 	  int i;
 
 	  /* Number of elements of the vector must be >= height.  */
-	  if (XVECTOR (data)->size < height)
+	  if (XVECTOR_SIZE (data) < height)
 	    return 0;
 
 	  /* Each string or bool-vector in data must be large enough
@@ -8083,7 +8083,7 @@ gs_image_p (object)
     }
   else if (VECTORP (tem))
     {
-      if (XVECTOR (tem)->size != 4)
+      if (XVECTOR_SIZE (tem) != 4)
 	return 0;
       for (i = 0; i < 4; ++i)
 	if (!INTEGERP (XVECTOR (tem)->contents[i]))
