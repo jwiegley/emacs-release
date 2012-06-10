@@ -1,7 +1,6 @@
 ;;; expand.el --- make abbreviations more usable
 
-;; Copyright (C) 1995, 1996, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1995-1996, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: Frederic Lepied <Frederic.Lepied@sugix.frmug.org>
 ;; Maintainer: Frederic Lepied <Frederic.Lepied@sugix.frmug.org>
@@ -112,7 +111,7 @@
     ("while" "while () {\n\n}" (8 12))
     ("default" "default:\n\nbreak;" 10)
     ("main" "int\nmain(int argc, char * argv[])\n{\n\n}\n" 37))
-  "Expansions for C mode. See `expand-add-abbrevs'.")
+  "Expansions for C mode.  See `expand-add-abbrevs'.")
 
 ;; lisp example from Jari Aalto <jaalto@tre.tele.nokia.fi>
 (defconst expand-sample-lisp-mode-expand-list
@@ -182,7 +181,7 @@
      (list 12 14))
 
     )
-   "Expansions for Lisp mode. See `expand-add-abbrevs'.")
+   "Expansions for Lisp mode.  See `expand-add-abbrevs'.")
 
 ;; perl example from Jari Aalto <jaalto@tre.tele.nokia.fi>
 (defconst expand-sample-perl-mode-expand-list
@@ -258,20 +257,20 @@
    (list "rtu"  "return ;"      (list 8))
 
    )
-  "Expansions for Perl mode. See `expand-add-abbrevs'.")
+  "Expansions for Perl mode.  See `expand-add-abbrevs'.")
 
 ;;; Code:
 
 ;;;###autoload
 (defun expand-add-abbrevs (table abbrevs)
-  "Add a list of abbrev to abbrev table TABLE.
+  "Add a list of abbreviations to abbrev table TABLE.
 ABBREVS is a list of abbrev definitions; each abbrev description entry
 has the form (ABBREV EXPANSION ARG).
 
 ABBREV is the abbreviation to replace.
 
 EXPANSION is the replacement string or a function which will make the
-expansion.  For example you, could use the DMacros or skeleton packages
+expansion.  For example, you could use the DMacros or skeleton packages
 to generate such functions.
 
 ARG is an optional argument which can be a number or a list of
@@ -280,7 +279,7 @@ beginning of the expanded text.
 
 If ARG is a list of numbers, point is placed according to the first
 member of the list, but you can visit the other specified positions
-cyclicaly with the functions `expand-jump-to-previous-slot' and
+cyclically with the functions `expand-jump-to-previous-slot' and
 `expand-jump-to-next-slot'.
 
 If ARG is omitted, point is placed at the end of the expanded text."
@@ -294,18 +293,15 @@ If ARG is omitted, point is placed at the end of the expanded text."
 (defvar expand-list nil "Temporary variable used by the Expand package.")
 
 (defvar expand-pos nil
-  "If non-nil, stores a vector containing markers to positions defined by the last expansion.
-This variable is local to a buffer.")
+  "If non-nil, stores a vector containing markers to positions defined by the last expansion.")
 (make-variable-buffer-local 'expand-pos)
 
 (defvar expand-index 0
-  "Index of the last marker used in `expand-pos'.
-This variable is local to a buffer.")
+  "Index of the last marker used in `expand-pos'.")
 (make-variable-buffer-local 'expand-index)
 
 (defvar expand-point nil
-  "End of the expanded region.
-This variable is local to a buffer.")
+  "End of the expanded region.")
 (make-variable-buffer-local 'expand-point)
 
 (defun expand-add-abbrev (table abbrev expansion arg)
@@ -368,7 +364,7 @@ See `expand-add-abbrevs'.  Value is non-nil if expansion was done."
     nil))
 
 (defun expand-do-expansion ()
-  (delete-backward-char (length last-abbrev-text))
+  (delete-char (- (length last-abbrev-text)))
   (let* ((vect (symbol-value last-abbrev))
 	 (text (aref vect 0))
 	 (position (aref vect 1))
@@ -470,7 +466,6 @@ This is used only in conjunction with `expand-add-abbrevs'."
 		      (beginning-of-defun)
 		      (point))
 		    (point-min)))
-	   (here (point))
 	   (state (parse-partial-sexp lim (point))))
       (cond
        ((nth 3 state) 'string)
@@ -504,5 +499,4 @@ This is used only in conjunction with `expand-add-abbrevs'."
 ;; run load hooks
 (run-hooks 'expand-load-hook)
 
-;; arch-tag: fee53e9e-30e3-4ef3-b191-9785e1f8e885
 ;;; expand.el ends here

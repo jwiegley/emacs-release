@@ -1,7 +1,6 @@
 ;;; gnus-range.el --- range and sequence functions for Gnus
 
-;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1996-2012 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -58,6 +57,36 @@ If RANGE is a single range, return (RANGE). Otherwise, return RANGE."
       (setq list1 (delq (car list2) list1))
       (setq list2 (cdr list2)))
     list1))
+
+(defun gnus-range-nconcat (&rest ranges)
+  "Return a range comprising all the RANGES, which are pre-sorted.
+RANGES will be destructively altered."
+  (setq ranges (delete nil ranges))
+  (let* ((result (gnus-range-normalize (pop ranges)))
+	 (last (last result)))
+    (dolist (range ranges)
+      (setq range (gnus-range-normalize range))
+      ;; Normalize the single-number case, so that we don't need to
+      ;; special-case that so much.
+      (when (numberp (car last))
+	(setcar last (cons (car last) (car last))))
+      (when (numberp (car range))
+	(setcar range (cons (car range) (car range))))
+      (if (= (1+ (cdar last)) (caar range))
+	  (progn
+	    (setcdr (car last) (cdar range))
+	    (setcdr last (cdr range)))
+	(setcdr last range)
+	;; Denormalize back, since we couldn't join the ranges up.
+	(when (= (caar range) (cdar range))
+	  (setcar range (caar range)))
+	(when (= (caar last) (cdar last))
+	  (setcar last (caar last))))
+      (setq last (last last)))
+    (if (and (consp (car result))
+	     (= (length result) 1))
+	(car result)
+      result)))
 
 (defun gnus-range-difference (range1 range2)
   "Return the range of elements in RANGE1 that do not appear in RANGE2.
@@ -654,5 +683,4 @@ LIST is a sorted list."
 
 (provide 'gnus-range)
 
-;; arch-tag: 4780bdd8-5a15-4aff-be28-18727895b6ad
 ;;; gnus-range.el ends here

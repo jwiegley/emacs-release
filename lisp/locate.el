@@ -1,7 +1,6 @@
 ;;; locate.el --- interface to the locate command
 
-;; Copyright (C) 1996, 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1996, 1998, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Peter Breton <pbreton@cs.umb.edu>
 ;; Keywords: unix files
@@ -97,7 +96,7 @@
 ;; (defadvice dired-make-relative (before set-no-error activate)
 ;;   "For locate mode and Windows, don't return errors"
 ;;   (if (and (eq   major-mode  'locate-mode)
-;; 	   (memq system-type (list 'windows-nt 'ms-dos)))
+;; 	   (memq system-type '(windows-nt ms-dos)))
 ;;       (ad-set-arg 2 t)
 ;;     ))
 ;;
@@ -335,7 +334,7 @@ then `locate-post-command-hook'."
 
 	(locate-do-setup search-string)))
     (and (not (string-equal (buffer-name) locate-buffer-name))
-	(switch-to-buffer-other-window locate-buffer-name))
+	(pop-to-buffer locate-buffer-name))
 
     (run-hooks 'dired-mode-hook)
     (dired-next-line 3)			;move to first matching file.
@@ -589,7 +588,7 @@ do not work in subdirectories.
     (message "This command only works inside main listing.")))
 
 ;; From Stephen Eglen <stephen@cns.ed.ac.uk>
-(defun locate-update (ignore1 ignore2)
+(defun locate-update (_ignore1 _ignore2)
   "Revert the *Locate* buffer.
 If `locate-update-when-revert' is non-nil, offer to update the
 locate database using the shell command in `locate-update-command'."

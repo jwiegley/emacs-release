@@ -1,7 +1,6 @@
 ;;; em-pred.el --- argument predicates and modifiers (ala zsh)
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -60,8 +59,9 @@ ordinary strings."
 
 ;;; User Variables:
 
-(defcustom eshell-pred-load-hook '(eshell-pred-initialize)
-  "*A list of functions to run when `eshell-pred' is loaded."
+(defcustom eshell-pred-load-hook nil
+  "A list of functions to run when `eshell-pred' is loaded."
+  :version "24.1"			; removed eshell-pred-initialize
   :type 'hook
   :group 'eshell-pred)
 
@@ -84,16 +84,16 @@ ordinary strings."
     (?s . (eshell-pred-file-mode 4000)) ; setuid
     (?S . (eshell-pred-file-mode 2000)) ; setgid
     (?t . (eshell-pred-file-mode 1000)) ; sticky bit
-    (?U . '(lambda (file)               ; owned by effective uid
-	     (if (file-exists-p file)
-		 (= (nth 2 (file-attributes file)) (user-uid)))))
-;;; (?G . '(lambda (file)               ; owned by effective gid
-;;;          (if (file-exists-p file)
-;;;              (= (nth 2 (file-attributes file)) (user-uid)))))
-    (?* . '(lambda (file)
-	     (and (file-regular-p file)
-		  (not (file-symlink-p file))
-		  (file-executable-p file))))
+    (?U . #'(lambda (file)                   ; owned by effective uid
+              (if (file-exists-p file)
+                  (= (nth 2 (file-attributes file)) (user-uid)))))
+    ;; (?G . #'(lambda (file)               ; owned by effective gid
+    ;;          (if (file-exists-p file)
+    ;;              (= (nth 2 (file-attributes file)) (user-uid)))))
+    (?* . #'(lambda (file)
+              (and (file-regular-p file)
+                   (not (file-symlink-p file))
+                   (file-executable-p file))))
     (?l . (eshell-pred-file-links))
     (?u . (eshell-pred-user-or-group ?u "user" 2 'eshell-user-id))
     (?g . (eshell-pred-user-or-group ?g "group" 3 'eshell-group-id))
@@ -101,7 +101,7 @@ ordinary strings."
     (?m . (eshell-pred-file-time ?m "modification" 5))
     (?c . (eshell-pred-file-time ?c "change" 6))
     (?L . (eshell-pred-file-size)))
-  "*A list of predicates than can be applied to a globbing pattern.
+  "A list of predicates than can be applied to a globbing pattern.
 The format of each entry is
 
   (CHAR . PREDICATE-FUNC-SEXP)"
@@ -111,36 +111,25 @@ The format of each entry is
 (put 'eshell-predicate-alist 'risky-local-variable t)
 
 (defcustom eshell-modifier-alist
-  '((?E . '(lambda (lst)
-	     (mapcar
-	      (function
-	       (lambda (str)
-		 (eshell-stringify
-		  (car (eshell-parse-argument str))))) lst)))
-    (?L . '(lambda (lst)
-	     (mapcar 'downcase lst)))
-    (?U . '(lambda (lst)
-	     (mapcar 'upcase lst)))
-    (?C . '(lambda (lst)
-	     (mapcar 'capitalize lst)))
-    (?h . '(lambda (lst)
-	     (mapcar 'file-name-directory lst)))
+  '((?E . #'(lambda (lst)
+              (mapcar
+               (function
+                (lambda (str)
+                  (eshell-stringify
+                   (car (eshell-parse-argument str))))) lst)))
+    (?L . #'(lambda (lst) (mapcar 'downcase lst)))
+    (?U . #'(lambda (lst) (mapcar 'upcase lst)))
+    (?C . #'(lambda (lst) (mapcar 'capitalize lst)))
+    (?h . #'(lambda (lst) (mapcar 'file-name-directory lst)))
     (?i . (eshell-include-members))
     (?x . (eshell-include-members t))
-    (?r . '(lambda (lst)
-	     (mapcar 'file-name-sans-extension lst)))
-    (?e . '(lambda (lst)
-	     (mapcar 'file-name-extension lst)))
-    (?t . '(lambda (lst)
-	     (mapcar 'file-name-nondirectory lst)))
-    (?q . '(lambda (lst)
-	     (mapcar 'eshell-escape-arg lst)))
-    (?u . '(lambda (lst)
-	     (eshell-uniqify-list lst)))
-    (?o . '(lambda (lst)
-	     (sort lst 'string-lessp)))
-    (?O . '(lambda (lst)
-	     (nreverse (sort lst 'string-lessp))))
+    (?r . #'(lambda (lst) (mapcar 'file-name-sans-extension lst)))
+    (?e . #'(lambda (lst) (mapcar 'file-name-extension lst)))
+    (?t . #'(lambda (lst) (mapcar 'file-name-nondirectory lst)))
+    (?q . #'(lambda (lst) (mapcar 'eshell-escape-arg lst)))
+    (?u . #'(lambda (lst) (eshell-uniqify-list lst)))
+    (?o . #'(lambda (lst) (sort lst 'string-lessp)))
+    (?O . #'(lambda (lst) (nreverse (sort lst 'string-lessp))))
     (?j . (eshell-join-members))
     (?S . (eshell-split-members))
     (?R . 'reverse)
@@ -150,7 +139,7 @@ The format of each entry is
 		(eshell-pred-substitute t)
 	      (error "`g' modifier cannot be used alone"))))
     (?s . (eshell-pred-substitute)))
-  "*A list of modifiers than can be applied to an argument expansion.
+  "A list of modifiers than can be applied to an argument expansion.
 The format of each entry is
 
   (CHAR ENTRYWISE-P MODIFIER-FUNC-SEXP)"
@@ -184,7 +173,7 @@ OWNERSHIP:
 
 FILE ATTRIBUTES:
   l[+-]N                 +/-/= N links
-  a[Mwhms][+-](N|'FILE') access time +/-/= N mnths/weeks/hours/mins/secs
+  a[Mwhms][+-](N|'FILE') access time +/-/= N months/weeks/hours/mins/secs
 			 (days if unspecified) if FILE specified,
 			 use as comparison basis; so a+'file.c'
 			 shows files accessed before file.c was
@@ -427,7 +416,7 @@ returning the resultant string."
       (forward-char))
     (if (looking-at "[0-9]+")
 	(progn
-	  (setq when (- (eshell-time-to-seconds (current-time))
+	  (setq when (- (float-time)
 			(* (string-to-number (match-string 0))
 			   quantum)))
 	  (goto-char (match-end 0)))
@@ -444,7 +433,7 @@ returning the resultant string."
 	     (attrs (file-attributes file)))
 	(unless attrs
 	  (error "Cannot stat file `%s'" file))
-	(setq when (eshell-time-to-seconds (nth attr-index attrs))))
+	(setq when (float-time (nth attr-index attrs))))
       (goto-char (1+ end)))
     `(lambda (file)
        (let ((attrs (file-attributes file)))
@@ -453,7 +442,7 @@ returning the resultant string."
 		   '<
 		 (if (eq qual ?+)
 		     '>
-		   '=)) ,when (eshell-time-to-seconds
+		   '=)) ,when (float-time
 			       (nth ,attr-index attrs))))))))
 
 (defun eshell-pred-file-type (type)
@@ -605,5 +594,4 @@ that 'ls -l' will show in the first column of its display. "
 ;; generated-autoload-file: "esh-groups.el"
 ;; End:
 
-;; arch-tag: 8b5ce022-17f3-4c40-93c7-5faafaa63f31
 ;;; em-pred.el ends here

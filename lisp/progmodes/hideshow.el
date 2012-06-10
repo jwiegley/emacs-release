@@ -1,7 +1,6 @@
 ;;; hideshow.el --- minor mode cmds to selectively display code/comment blocks
 
-;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003
-;;               2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1994-2012 Free Software Foundation, Inc.
 
 ;; Author: Thien-Thi Nguyen <ttn@gnu.org>
 ;;      Dan Nicolaescu <dann@ics.uci.edu>
@@ -195,9 +194,9 @@
 ;;     Unfortunately, these workarounds do not restore hideshow state.
 ;;     If someone figures out a better way, please let me know.
 
-;; * Correspondance
+;; * Correspondence
 ;;
-;; Correspondance welcome; please indicate version number.  Send bug
+;; Correspondence welcome; please indicate version number.  Send bug
 ;; reports and inquiries to <ttn@gnu.org>.
 
 ;; * Thanks
@@ -537,6 +536,11 @@ property of an overlay."
         (overlay-put ov 'display nil))))
   (overlay-put ov 'invisible (and hide-p 'hs)))
 
+(defun hs-looking-at-block-start-p ()
+  "Return non-nil if the point is at the block start."
+  (and (looking-at hs-block-start-regexp)
+       (save-match-data (not (nth 8 (syntax-ppss))))))
+
 (defun hs-forward-sexp (match-data arg)
   "Adjust point based on MATCH-DATA and call `hs-forward-sexp-func' w/ ARG.
 Original match data is restored upon return."
@@ -565,11 +569,10 @@ The block beginning is adjusted by `hs-adjust-block-beginning'
 and then further adjusted to be at the end of the line."
   (if comment-reg
       (hs-hide-comment-region (car comment-reg) (cadr comment-reg) end)
-    (when (looking-at hs-block-start-regexp)
-      (let* ((mdata (match-data t))
-	     (header-beg (match-beginning 0))
-             (header-end (match-end 0))
-	     p q ov)
+    (when (hs-looking-at-block-start-p)
+      (let ((mdata (match-data t))
+            (header-end (match-end 0))
+            p q ov)
 	;; `p' is the point at the end of the block beginning, which
 	;; may need to be adjusted
 	(save-excursion
@@ -601,9 +604,10 @@ we return a list having a nil as its car and the end of comment position
 as cdr."
   (save-excursion
     ;; the idea is to look backwards for a comment start regexp, do a
-    ;; forward comment, and see if we are inside, then extend extend
+    ;; forward comment, and see if we are inside, then extend
     ;; forward and backward as long as we have comments
     (let ((q (point)))
+      (skip-chars-forward "[:blank:]")
       (when (or (looking-at hs-c-start-regexp)
                 (re-search-backward hs-c-start-regexp (point-min) t))
         ;; first get to the beginning of this comment...
@@ -686,14 +690,16 @@ Return point, or nil if original point was not in a block."
   (let ((done nil)
         (here (point)))
     ;; look if current line is block start
-    (if (looking-at hs-block-start-regexp)
+    (if (hs-looking-at-block-start-p)
         (point)
       ;; look backward for the start of a block that contains the cursor
       (while (and (re-search-backward hs-block-start-regexp nil t)
-                  (not (setq done
-                             (< here (save-excursion
-                                       (hs-forward-sexp (match-data t) 1)
-                                       (point)))))))
+		  ;; go again if in a comment or a string
+		  (or (save-match-data (nth 8 (syntax-ppss)))
+		      (not (setq done
+				 (< here (save-excursion
+					   (hs-forward-sexp (match-data t) 1)
+					   (point))))))))
       (if done
           (point)
         (goto-char here)
@@ -712,10 +718,12 @@ Return point, or nil if original point was not in a block."
            (forward-comment (buffer-size))
            (and (< (point) maxp)
                 (re-search-forward hs-block-start-regexp maxp t)))
-    (if (> arg 1)
-        (hs-hide-level-recursive (1- arg) minp maxp)
-      (goto-char (match-beginning hs-block-start-mdata-select))
-      (hs-hide-block-at-point t)))
+    (when (save-match-data
+	    (not (nth 8 (syntax-ppss)))) ; not inside comments or strings
+      (if (> arg 1)
+	  (hs-hide-level-recursive (1- arg) minp maxp)
+	(goto-char (match-beginning hs-block-start-mdata-select))
+	(hs-hide-block-at-point t))))
   (goto-char maxp))
 
 (defmacro hs-life-goes-on (&rest body)
@@ -748,7 +756,7 @@ and `case-fold-search' are both t."
         (end-of-line)
         (when (and (not c-reg)
                    (hs-find-block-beginning)
-                   (looking-at hs-block-start-regexp))
+		   (hs-looking-at-block-start-p))
           ;; point is inside a block
           (goto-char (match-end 0)))))
     (end-of-line)
@@ -833,7 +841,7 @@ Upon completion, point is repositioned and the normal hook
                       (<= (count-lines (car c-reg) (nth 1 c-reg)) 1)))
        (message "(not enough comment lines to hide)"))
       ((or c-reg
-           (looking-at hs-block-start-regexp)
+	   (hs-looking-at-block-start-p)
            (hs-find-block-beginning))
        (hs-hide-block-at-point end c-reg)
        (run-hooks 'hs-hide-hook))))))
@@ -865,7 +873,7 @@ See documentation for functions `hs-hide-block' and `run-hooks'."
                      q (cadr c-reg))))
             ((and (hs-find-block-beginning)
                   ;; ugh, fresh match-data
-                  (looking-at hs-block-start-regexp))
+                  (hs-looking-at-block-start-p))
              (setq p (point)
                    q (progn (hs-forward-sexp (match-data t) 1) (point)))))
       (when (and p q)
@@ -921,6 +929,10 @@ This can be useful if you have huge RCS logs in those comments."
 ;;;###autoload
 (define-minor-mode hs-minor-mode
   "Minor mode to selectively hide/show code and comment blocks.
+With a prefix argument ARG, enable the mode if ARG is positive,
+and disable it otherwise.  If called from Lisp, enable the mode
+if ARG is omitted or nil.
+
 When hideshow minor mode is on, the menu bar is augmented with hideshow
 commands and the hideshow commands are enabled.
 The value '(hs . t) is added to `buffer-invisibility-spec'.
@@ -965,5 +977,4 @@ Key bindings:
 
 (provide 'hideshow)
 
-;; arch-tag: 378b6852-e82a-466a-aee8-d9c73859a65e
 ;;; hideshow.el ends here

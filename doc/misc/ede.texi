@@ -5,8 +5,7 @@
 @copying
 This file describes EDE, the Emacs Development Environment.
 
-Copyright @copyright{} 1998, 1999, 2000, 2001, 2004, 2005, 2008, 2009,
-2010, 2011, 2012  Free Software Foundation, Inc.
+Copyright @copyright{} 1998-2001, 2004-2005, 2008-2012  Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -242,7 +241,7 @@ To add the current file to an existing target, type @kbd{C-c . a}
 You can add a file to more than one target; this is OK.
 
 To remove the current file from a target, type @kbd{C-c . d}
-(@code{ede-remove-file}), or or use the @samp{Remove File} menu item
+(@code{ede-remove-file}), or use the @samp{Remove File} menu item
 in the @samp{Target Options} submenu.  If the file belongs to multiple
 targets, this command prompts for each target it could be removed
 from.
@@ -269,7 +268,7 @@ projects.
 
 Some project modes do not have a project file, but directly read a
 Makefile or other existing file.  Instead of directly editing the
-object, you can edit the file by typine @kbd{C-c . e}
+object, you can edit the file by typing @kbd{C-c . e}
 (@code{ede-edit-file-target}).  You should ``rescan'' the project
 afterwards (@pxref{Miscellaneous commands}).
 
@@ -519,7 +518,7 @@ It would look like this:
 (defun MY-LOAD (dir)
   "Load a project of type `cpp-root' for the directory DIR.
 Return nil if there isn't one."
-  ;; Use your preferred constructin method here.
+  ;; Use your preferred construction method here.
   (ede-cpp-root-project "NAME" :file (expand-file-name "FILE" dir)
                                :locate-fcn 'MYFCN)
   )
@@ -706,11 +705,11 @@ A brief description of the project or target.  This is currently used
 by the @samp{ede-speedbar} interface.
 @item ede-want-file-p
 Return non-nil if a target will accept a given file.
-It is generally unecessary to override this.  See the section on source
+It is generally unnecessary to override this.  See the section on source
 code.
 @item ede-buffer-mine
 Return non-nil if a buffer belongs to this target.  Used during
-association when a file is loaded.  It is generally unecessary to
+association when a file is loaded.  It is generally unnecessary to
 override this unless you keep auxiliary files.
 @end table
 
@@ -1589,7 +1588,7 @@ Argument @var{PROJ} is the project to save.
 @end deffn
 
 @deffn Method ede-proj-configure-recreate :AFTER this
-Delete project @var{THIS}es configure script and start over.
+Delete project @var{THIS}'s configure script and start over.
 @end deffn
 
 @deffn Method ede-proj-makefile-insert-user-rules :AFTER this
@@ -2124,7 +2123,7 @@ Results in --add-missing being passed to automake.
 @end deffn
 
 @deffn Method ede-proj-flush-autoconf :AFTER this
-Flush the configure file (current buffer) to accomodate @var{THIS}.
+Flush the configure file (current buffer) to accommodate @var{THIS}.
 By flushing, remove any cruft that may be in the file.  Subsequent
 calls to @dfn{ede-proj-tweak-autoconf} can restore items removed by flush.
 @end deffn
@@ -2175,7 +2174,7 @@ These are removed with make clean.
 @end deffn
 
 @deffn Method ede-proj-tweak-autoconf :AFTER this
-Tweak the configure file (current buffer) to accomodate @var{THIS}.
+Tweak the configure file (current buffer) to accommodate @var{THIS}.
 @end deffn
 
 @deffn Method ede-proj-compilers :AFTER obj
@@ -2484,7 +2483,7 @@ Create the make rule needed to create an archive for @var{THIS}.
 
 @deffn Method ede-proj-makefile-insert-source-variables :PRIMARY this
 Insert bin_PROGRAMS variables needed by target @var{THIS}.
-We aren't acutally inserting SOURCE details, but this is used by the
+We aren't actually inserting SOURCE details, but this is used by the
 Makefile.am generator, so use it to add this important bin program.
 @end deffn
 
@@ -2625,7 +2624,7 @@ Return the name of the main target for @var{THIS} target.
 
 @deffn Method ede-proj-makefile-insert-automake-pre-variables :AFTER this
 Insert bin_PROGRAMS variables needed by target @var{THIS}.
-We aren't acutally inserting SOURCE details, but this is used by the
+We aren't actually inserting SOURCE details, but this is used by the
 Makefile.am generator, so use it to add this important bin program.
 @end deffn
 
@@ -2685,7 +2684,7 @@ Bonus: Return a cons cell: (COMPILED . UPTODATE).
 @end deffn
 
 @deffn Method ede-proj-flush-autoconf :AFTER this
-Flush the configure file (current buffer) to accomodate @var{THIS}.
+Flush the configure file (current buffer) to accommodate @var{THIS}.
 @end deffn
 
 @deffn Method ede-buffer-mine :AFTER this buffer
@@ -2698,7 +2697,7 @@ Return the variable name for @var{THIS}'s sources.
 @end deffn
 
 @deffn Method ede-proj-tweak-autoconf :AFTER this
-Tweak the configure file (current buffer) to accomodate @var{THIS}.
+Tweak the configure file (current buffer) to accommodate @var{THIS}.
 @end deffn
 
 @deffn Method ede-update-version-in-source :AFTER this version
@@ -2778,7 +2777,7 @@ Create or update the autoload target.
 @end deffn
 
 @deffn Method ede-proj-flush-autoconf :AFTER this
-Flush the configure file (current buffer) to accomodate @var{THIS}.
+Flush the configure file (current buffer) to accommodate @var{THIS}.
 @end deffn
 
 @deffn Method ede-buffer-mine :AFTER this buffer
@@ -2797,7 +2796,7 @@ Argument @var{THIS} is the target which needs to insert an info file.
 @end deffn
 
 @deffn Method ede-proj-tweak-autoconf :AFTER this
-Tweak the configure file (current buffer) to accomodate @var{THIS}.
+Tweak the configure file (current buffer) to accommodate @var{THIS}.
 @end deffn
 
 @deffn Method ede-update-version-in-source :AFTER this version
@@ -3009,7 +3008,7 @@ The preferred interpreter for this code.
 @subsubsection Specialized Methods
 
 @deffn Method ede-proj-tweak-autoconf :AFTER this
-Tweak the configure file (current buffer) to accomodate @var{THIS}.
+Tweak the configure file (current buffer) to accommodate @var{THIS}.
 @end deffn
 
 
@@ -3274,7 +3273,7 @@ Return the default macro to 'edit' for this object type.
 @end deffn
 
 @deffn Method project-compile-target-command :AFTER this
-Default target t- use when compling a texinfo file.
+Default target t- use when compiling a texinfo file.
 @end deffn
 
 @deffn Method ede-documentation :AFTER this
@@ -3371,7 +3370,7 @@ Type: @code{(or null string)} @*
 Default Value: @code{nil}
 
 Emacs regex matching auxiliary source code this target accepts.
-Aux source are source code files needed for compilation, which are not comiled
+Aux source are source code files needed for compilation, which are not compiled
 themselves.
 @refill
 
@@ -3527,7 +3526,7 @@ use the same autoconf form.
 @item :objectextention
 Type: @code{string}
 
-A string which is the extention used for object files.
+A string which is the extension used for object files.
 For example, C code uses .o on unix, and Emacs Lisp uses .elc.
 @refill
 
@@ -3537,7 +3536,7 @@ For example, C code uses .o on unix, and Emacs Lisp uses .elc.
 @subsubsection Specialized Methods
 
 @deffn Method ede-proj-flush-autoconf :AFTER this
-Flush the configure file (current buffer) to accomodate @var{THIS}.
+Flush the configure file (current buffer) to accommodate @var{THIS}.
 @end deffn
 
 @deffn Method ede-proj-makefile-insert-rules :AFTER this
@@ -3559,7 +3558,7 @@ Retrieves the slot @code{sourcetype} from an object of class @code{ede-compilati
 @end deffn
 
 @deffn Method ede-proj-tweak-autoconf :AFTER this
-Tweak the configure file (current buffer) to accomodate @var{THIS}.
+Tweak the configure file (current buffer) to accommodate @var{THIS}.
 @end deffn
 
 
@@ -3635,7 +3634,7 @@ it's rule definition.
 @item :objectextention
 Type: @code{string}
 
-A string which is the extention used for object files.
+A string which is the extension used for object files.
 For example, C code uses .o on unix, and Emacs Lisp uses .elc.
 @refill
 
@@ -3783,7 +3782,7 @@ it's rule definition.
 @item :objectextention
 Type: @code{string}
 
-A string which is the extention used for object files.
+A string which is the extension used for object files.
 For example, C code uses .o on unix, and Emacs Lisp uses .elc.
 @refill
 
@@ -3791,7 +3790,3 @@ For example, C code uses .o on unix, and Emacs Lisp uses .elc.
 @end table
 
 @bye
-
-@ignore
-   arch-tag: c9bfdc6e-e6e9-4e87-97f7-d8348342fbf4
-@end ignore

@@ -1,7 +1,6 @@
 ;;; pp.el --- pretty printer for Emacs Lisp
 
-;; Copyright (C) 1989, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1989, 1993, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: Randal Schwartz <merlyn@stonehenge.com>
 ;; Keywords: lisp
@@ -42,17 +41,14 @@
   "Return a string containing the pretty-printed representation of OBJECT.
 OBJECT can be any Lisp object.  Quoting characters are used as needed
 to make output that `read' can handle, whenever this is possible."
-  (with-current-buffer (generate-new-buffer " pp-to-string")
-    (unwind-protect
-	(progn
-	  (lisp-mode-variables nil)
-	  (set-syntax-table emacs-lisp-mode-syntax-table)
-	  (let ((print-escape-newlines pp-escape-newlines)
-		(print-quoted t))
-	    (prin1 object (current-buffer)))
-          (pp-buffer)
-	  (buffer-string))
-      (kill-buffer (current-buffer)))))
+  (with-temp-buffer
+    (lisp-mode-variables nil)
+    (set-syntax-table emacs-lisp-mode-syntax-table)
+    (let ((print-escape-newlines pp-escape-newlines)
+          (print-quoted t))
+      (prin1 object (current-buffer)))
+    (pp-buffer)
+    (buffer-string)))
 
 ;;;###autoload
 (defun pp-buffer ()
@@ -61,9 +57,7 @@ to make output that `read' can handle, whenever this is possible."
   (while (not (eobp))
     ;; (message "%06d" (- (point-max) (point)))
     (cond
-     ((condition-case err-var
-          (prog1 t (down-list 1))
-        (error nil))
+     ((ignore-errors (down-list 1) t)
       (save-excursion
         (backward-char 1)
         (skip-chars-backward "'`#^")
@@ -72,10 +66,8 @@ to make output that `read' can handle, whenever this is possible."
            (point)
            (progn (skip-chars-backward " \t\n") (point)))
           (insert "\n"))))
-     ((condition-case err-var
-          (prog1 t (up-list 1))
-        (error nil))
-      (while (looking-at "\\s)")
+     ((ignore-errors (up-list 1) t)
+      (while (looking-at-p "\\s)")
         (forward-char 1))
       (delete-region
        (point)
@@ -155,7 +147,7 @@ Also add the value to the front of the list in the variable `values'."
     (save-excursion
       (forward-sexp -1)
       ;; If first line is commented, ignore all leading comments:
-      (if (save-excursion (beginning-of-line) (looking-at "[ \t]*;"))
+      (if (save-excursion (beginning-of-line) (looking-at-p "[ \t]*;"))
 	  (progn
 	    (setq exp (buffer-substring (point) pt))
 	    (while (string-match "\n[ \t]*;+" exp start)
@@ -202,5 +194,4 @@ Ignores leading comment characters."
 
 (provide 'pp)				; so (require 'pp) works
 
-;; arch-tag: b0f7c65b-02c7-42bb-9ee3-508a59b8fbb9
 ;;; pp.el ends here

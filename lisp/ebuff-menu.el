@@ -1,7 +1,6 @@
 ;;; ebuff-menu.el --- electric-buffer-list mode
 
-;; Copyright (C) 1985, 1986, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1985-1986, 1994, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Richard Mlynarik <mly@ai.mit.edu>
 ;; Maintainer: FSF
@@ -71,8 +70,8 @@
     (define-key map "\C-n" 'next-line)
     (define-key map "p" 'previous-line)
     (define-key map "n" 'next-line)
-    (define-key map "\C-v" 'scroll-up)
-    (define-key map "\ev" 'scroll-down)
+    (define-key map "\C-v" 'scroll-up-command)
+    (define-key map "\ev" 'scroll-down-command)
     (define-key map ">" 'scroll-right)
     (define-key map "<" 'scroll-left)
     (define-key map "\e\C-v" 'scroll-other-window)
@@ -144,7 +143,7 @@ Run hooks in `electric-buffer-menu-mode-hook' on entry.
 					     (cons first last))))))
 	(set-buffer buffer)
 	(Buffer-menu-mode)
-	(bury-buffer buffer)
+	(bury-buffer)                ;Get rid of window, if dedicated.
 	(message "")))
     (if select
 	(progn (set-buffer buffer)
@@ -283,11 +282,10 @@ Return to Electric Buffer Menu when done."
 	  (make-local-variable 'electric-buffer-overlay)
 	  (setq electric-buffer-overlay (make-overlay (point) (point)))))
     (move-overlay electric-buffer-overlay
-		  (save-excursion (beginning-of-line) (point))
-		  (save-excursion (end-of-line) (point)))
+		  (line-beginning-position)
+		  (line-end-position))
     (overlay-put electric-buffer-overlay 'face 'highlight)))
 
 (provide 'ebuff-menu)
 
-;; arch-tag: 1d4509b3-eece-4d4f-95ea-77c83eaf0275
 ;;; ebuff-menu.el ends here

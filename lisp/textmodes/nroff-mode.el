@@ -1,7 +1,7 @@
 ;;; nroff-mode.el --- GNU Emacs major mode for editing nroff source
 
-;; Copyright (C) 1985, 1986, 1994, 1995, 1997, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1985-1986, 1994-1995, 1997, 2001-2012
+;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: wp
@@ -55,6 +55,7 @@
     (define-key map "\n"  'nroff-electric-newline)
     (define-key map "\en" 'nroff-forward-text-line)
     (define-key map "\ep" 'nroff-backward-text-line)
+    (define-key map "\C-c\C-c" 'nroff-view)
     (define-key map [menu-bar nroff-mode] (cons "Nroff" menu-map))
     (define-key menu-map [nn]
       '(menu-item "Newline" nroff-electric-newline
@@ -73,6 +74,9 @@
 		  nroff-electric-mode
 		  :help "Auto insert closing requests if necessary"
 		  :button (:toggle . nroff-electric-mode)))
+    (define-key menu-map [npm]
+      '(menu-item "Preview as man page" nroff-view
+		  :help "Run man on this file."))
     map)
   "Major mode keymap for `nroff-mode'.")
 
@@ -293,13 +297,36 @@ automatically inserts the matching closing request after point."
       (forward-char 1))))
 
 (define-minor-mode nroff-electric-mode
-  "Toggle `nroff-electric-newline' minor mode.
-`nroff-electric-newline' forces Emacs to check for an nroff request at the
-beginning of the line, and insert the matching closing request if necessary.
-This command toggles that mode (off->on, on->off), with an argument,
-turns it on if arg is positive, otherwise off."
+  "Toggle automatic nroff request pairing (Nroff Electric mode).
+With a prefix argument ARG, enable Nroff Electric mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
+Nroff Electric mode is a buffer-local minor mode, for use with
+`nroff-mode'.  When enabled, Emacs checks for an nroff request at
+the beginning of the line, and inserts the matching closing
+request if necessary.  This command toggles that mode (off->on,
+on->off), with an argument, turns it on if arg is positive,
+otherwise off."
   :lighter " Electric"
   (or (derived-mode-p 'nroff-mode) (error "Must be in nroff mode")))
+
+(declare-function Man-getpage-in-background "man" (topic))
+
+(defun nroff-view ()
+  "Run man on this file."
+  (interactive)
+  (require 'man)
+  (let* ((file (buffer-file-name))
+	 (viewbuf (get-buffer (concat "*Man " file "*"))))
+    (unless file
+      (error "Buffer is not associated with any file"))
+    (and (buffer-modified-p)
+	 (y-or-n-p (format "Save buffer %s first? " (buffer-name)))
+	 (save-buffer))
+    (if viewbuf
+	(kill-buffer viewbuf))
+    (Man-getpage-in-background file)))
 
 ;; Old names that were not namespace clean.
 (define-obsolete-function-alias 'count-text-lines 'nroff-count-text-lines "22.1")
@@ -310,5 +337,4 @@ turns it on if arg is positive, otherwise off."
 
 (provide 'nroff-mode)
 
-;; arch-tag: 6e276340-6c65-4f65-b4e3-0ca431ddfb6c
 ;;; nroff-mode.el ends here

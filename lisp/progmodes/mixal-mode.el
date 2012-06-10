@@ -1,13 +1,12 @@
 ;;; mixal-mode.el --- Major mode for the mix asm language.
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2003-2012  Free Software Foundation, Inc.
 
 ;; Author: Pieter E.J. Pareit <pieter.pareit@gmail.com>
 ;; Maintainer: Pieter E.J. Pareit <pieter.pareit@gmail.com>
 ;; Created: 09 Nov 2002
 ;; Version: 0.1
-;; Keywords: languages Knuth mix mixal asm mixvm "The Art Of Computer Programming"
+;; Keywords: languages, Knuth, mix, mixal, asm, mixvm, The Art Of Computer Programming
 
 ;; This file is part of GNU Emacs.
 
@@ -89,7 +88,7 @@
 (defvar mixal-mode-syntax-table
   (let ((st (make-syntax-table)))
     ;; We need to do a bit more to make fontlocking for comments work.
-    ;; See mixal-font-lock-syntactic-keywords.
+    ;; See use of syntax-propertize-function.
     ;; (modify-syntax-entry ?* "<" st)
     (modify-syntax-entry ?\n ">" st)
     st)
@@ -125,7 +124,7 @@ value.")
 (defvar mixal-operation-codes-alist
   ;; FIXME: the codes FADD, FSUB, FMUL, FDIV, JRAD, and FCMP were in
   ;; mixal-operation-codes but not here.  They should probably be added here.
-  ;; 
+  ;;
   ;; We used to define this with a backquote and subexps like ,(+ 8 3) for
   ;; better clarity, but the resulting code was too big and caused the
   ;; byte-compiler to eat up all the stack space.  Even using
@@ -146,43 +145,43 @@ zeros to make a word."
     (LD1 loading "load I1" 9 field
          "Put in rI1 the contents of cell no. M.
 Uses a + when there is no sign in subfield. Subfield is left padded with
-zeros to make a word. Index registers only have 2 bytes and a sign, Trying
-to set anything more that that will result in undefined behavior."
+zeros to make a word. Index registers only have 2 bytes and a sign; trying
+to set anything more than that will result in undefined behavior."
          2)
 
     (LD2 loading "load I2" 10 field
          "Put in rI2 the contents of cell no. M.
 Uses a + when there is no sign in subfield. Subfield is left padded with
-zeros to make a word. Index registers only have 2 bytes and a sign, Trying
-to set anything more that that will result in undefined behavior."
+zeros to make a word. Index registers only have 2 bytes and a sign; trying
+to set anything more than that will result in undefined behavior."
          2)
 
     (LD3 loading "load I3" 11 field
          "Put in rI3 the contents of cell no. M.
 Uses a + when there is no sign in subfield. Subfield is left padded with
-zeros to make a word. Index registers only have 2 bytes and a sign, Trying
-to set anything more that that will result in undefined behavior."
+zeros to make a word. Index registers only have 2 bytes and a sign; trying
+to set anything more than that will result in undefined behavior."
          2)
 
     (LD4 loading "load I4" 12 field
          "Put in rI4 the contents of cell no. M.
 Uses a + when there is no sign in subfield. Subfield is left padded with
-zeros to make a word. Index registers only have 2 bytes and a sign, Trying
-to set anything more that that will result in undefined behavior."
+zeros to make a word. Index registers only have 2 bytes and a sign; trying
+to set anything more than that will result in undefined behavior."
          2)
 
     (LD5 loading "load I5" 13 field
          "Put in rI5 the contents of cell no. M.
 Uses a + when there is no sign in subfield. Subfield is left padded with
-zeros to make a word. Index registers only have 2 bytes and a sign, Trying
-to set anything more that that will result in undefined behavior."
+zeros to make a word. Index registers only have 2 bytes and a sign; trying
+to set anything more than that will result in undefined behavior."
          2)
 
     (LD6 loading "load I6" 14 field
          "Put in rI6 the contents of cell no. M.
 Uses a + when there is no sign in subfield. Subfield is left padded with
-zeros to make a word. Index registers only have 2 bytes and a sign, Trying
-to set anything more that that will result in undefined behavior."
+zeros to make a word. Index registers only have 2 bytes and a sign; trying
+to set anything more than that will result in undefined behavior."
          2)
 
     (LDAN loading "load A negative" 16 field
@@ -201,7 +200,7 @@ Subfield is left padded with zeros to make a word."
           "Put in rI1 the contents of cell no. M, with opposite sign.
 Uses a + when there is no sign in subfield, otherwise use the opposite sign.
 Subfield is left padded with zeros to make a word. Index registers only
-have 2 bytes and a sign, Trying to set anything more that that will result
+have 2 bytes and a sign; trying to set anything more than that will result
 in undefined behavior."
           2)
 
@@ -209,7 +208,7 @@ in undefined behavior."
           "Put in rI2 the contents of cell no. M, with opposite sign.
 Uses a + when there is no sign in subfield, otherwise use the opposite sign.
 Subfield is left padded with zeros to make a word. Index registers only
-have 2 bytes and a sign, Trying to set anything more that that will result
+have 2 bytes and a sign; trying to set anything more than that will result
 in undefined behavior."
           2)
 
@@ -217,7 +216,7 @@ in undefined behavior."
           "Put in rI3 the contents of cell no. M, with opposite sign.
 Uses a + when there is no sign in subfield, otherwise use the opposite sign.
 Subfield is left padded with zeros to make a word. Index registers only
-have 2 bytes and a sign, Trying to set anything more that that will result
+have 2 bytes and a sign; trying to set anything more than that will result
 in undefined behavior."
           2)
 
@@ -225,7 +224,7 @@ in undefined behavior."
           "Put in rI4 the contents of cell no. M, with opposite sign.
 Uses a + when there is no sign in subfield, otherwise use the opposite sign.
 Subfield is left padded with zeros to make a word. Index registers only
-have 2 bytes and a sign, Trying to set anything more that that will result
+have 2 bytes and a sign; trying to set anything more than that will result
 in undefined behavior."
           2)
 
@@ -233,7 +232,7 @@ in undefined behavior."
           "Put in rI5 the contents of cell no. M, with opposite sign.
 Uses a + when there is no sign in subfield, otherwise use the opposite sign.
 Subfield is left padded with zeros to make a word. Index registers only
-have 2 bytes and a sign, Trying to set anything more that that will result
+have 2 bytes and a sign; trying to set anything more than that will result
 in undefined behavior."
           2)
 
@@ -241,7 +240,7 @@ in undefined behavior."
           "Put in rI6 the contents of cell no. M, with opposite sign.
 Uses a + when there is no sign in subfield, otherwise use the opposite sign.
 Subfield is left padded with zeros to make a word. Index registers only
-have 2 bytes and a sign, Trying to set anything more that that will result
+have 2 bytes and a sign; trying to set anything more than that will result
 in undefined behavior."
           2)
 
@@ -1028,13 +1027,14 @@ EXECUTION-TIME holds info about the time it takes, number or string.")
 
 
 ;;; Font-locking:
-(defvar mixal-font-lock-syntactic-keywords
-  ;; Normal comments start with a * in column 0 and end at end of line.
-  '(("^\\*" (0 '(11)))                  ;(string-to-syntax "<") == '(11)
-    ;; Every line can end with a comment which is placed after the operand.
-    ;; I assume here that mnemonics without operands can not have a comment.
-    ("^[[:alnum:]]*[ \t]+[[:alnum:]]+[ \t]+[^ \n\t]+[ \t]*\\([ \t]\\)[^\n \t]"
-     (1 '(11)))))
+(defconst mixal-syntax-propertize-function
+  (syntax-propertize-rules
+   ;; Normal comments start with a * in column 0 and end at end of line.
+   ("^\\*" (0 "<"))
+   ;; Every line can end with a comment which is placed after the operand.
+   ;; I assume here that mnemonics without operands can not have a comment.
+   ("^[[:alnum:]]*[ \t]+[[:alnum:]]+[ \t]+[^ \n\t]+[ \t]*\\([ \t]\\)[^\n \t]"
+    (1 "<"))))
 
 (defvar mixal-font-lock-keywords
   `(("^\\([A-Z0-9a-z]+\\)"
@@ -1058,9 +1058,8 @@ EXECUTION-TIME holds info about the time it takes, number or string.")
    (list
     (let* ((completion-ignore-case t)
 	   ;; we already have a list, but it is not in the right format
-	   ;; transform it to a valid table so completition can use it
-	   (table (mapcar '(lambda (elm)
-			     (cons (symbol-name (car elm)) nil))
+	   ;; transform it to a valid table so completion can use it
+	   (table (mapcar (lambda (elm) (cons (symbol-name (car elm)) nil))
 			  mixal-operation-codes-alist))
 	   ;; prompt is different depending on we are close to a valid op-code
 	   (have-default (assq (intern-soft (current-word))
@@ -1104,28 +1103,19 @@ Assumes that file has been compiled with debugging support."
     (error "mixvm.el needs to be loaded to run `mixvm'")))
 
 ;;;###autoload
-(define-derived-mode mixal-mode fundamental-mode "mixal"
-  "Major mode for the mixal asm language.
-\\{mixal-mode-map}"
+(define-derived-mode mixal-mode prog-mode "mixal"
+  "Major mode for the mixal asm language."
   (set (make-local-variable 'comment-start) "*")
   (set (make-local-variable 'comment-start-skip) "^\\*[ \t]*")
   (set (make-local-variable 'font-lock-defaults)
-       `(mixal-font-lock-keywords nil nil nil nil
-         (font-lock-syntactic-keywords . ,mixal-font-lock-syntactic-keywords)
-         (parse-sexp-lookup-properties . t)))
+       `(mixal-font-lock-keywords))
+  (set (make-local-variable 'syntax-propertize-function)
+       mixal-syntax-propertize-function)
   ;; might add an indent function in the future
   ;;  (set (make-local-variable 'indent-line-function) 'mixal-indent-line)
   (set (make-local-variable 'compile-command) (concat "mixasm "
-						      buffer-file-name))
-  ;; mixasm will do strange when there is no final newline,
-  ;; so let Emacs ensure that it is always there
-  (set (make-local-variable 'require-final-newline)
-       mode-require-final-newline))
-
-;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.mixal\\'" . mixal-mode))
+						      buffer-file-name)))
 
 (provide 'mixal-mode)
 
-;; arch-tag: be7c128a-bf61-4951-a90e-9398267ce3f3
 ;;; mixal-mode.el ends here

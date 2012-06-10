@@ -1,8 +1,6 @@
 ;;; thingatpt.el --- get the `thing' at point
 
-;; Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 2000,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1991-1998, 2000-2012  Free Software Foundation, Inc.
 
 ;; Author: Mike Williams <mikew@gopher.dosli.govt.nz>
 ;; Maintainer: FSF
@@ -57,7 +55,11 @@
 
 ;;;###autoload
 (defun forward-thing (thing &optional n)
-  "Move forward to the end of the Nth next THING."
+  "Move forward to the end of the Nth next THING.
+THING should be a symbol specifying a type of syntactic entity.
+Possibilities include `symbol', `list', `sexp', `defun',
+`filename', `url', `email', `word', `sentence', `whitespace',
+`line', and `page'."
   (let ((forward-op (or (get thing 'forward-op)
 			(intern-soft (format "forward-%s" thing)))))
     (if (functionp forward-op)
@@ -69,15 +71,16 @@
 ;;;###autoload
 (defun bounds-of-thing-at-point (thing)
   "Determine the start and end buffer locations for the THING at point.
-THING is a symbol which specifies the kind of syntactic entity you want.
-Possibilities include `symbol', `list', `sexp', `defun', `filename', `url',
-`email', `word', `sentence', `whitespace', `line', `page' and others.
+THING should be a symbol specifying a type of syntactic entity.
+Possibilities include `symbol', `list', `sexp', `defun',
+`filename', `url', `email', `word', `sentence', `whitespace',
+`line', and `page'.
 
-See the file `thingatpt.el' for documentation on how to define
-a symbol as a valid THING.
+See the file `thingatpt.el' for documentation on how to define a
+valid THING.
 
-The value is a cons cell (START . END) giving the start and end positions
-of the textual entity that was found."
+Return a cons cell (START . END) giving the start and end
+positions of the thing found."
   (if (get thing 'bounds-of-thing-at-point)
       (funcall (get thing 'bounds-of-thing-at-point))
     (let ((orig (point)))
@@ -91,18 +94,19 @@ of the textual entity that was found."
              (or (get thing 'beginning-op)
                  (lambda () (forward-thing thing -1))))
 	    (let ((beg (point)))
-	      (if (not (and beg (> beg orig)))
+	      (if (<= beg orig)
 		  ;; If that brings us all the way back to ORIG,
 		  ;; it worked.  But END may not be the real end.
 		  ;; So find the real end that corresponds to BEG.
+                  ;; FIXME: in which cases can `real-end' differ from `end'?
 		  (let ((real-end
 			 (progn
 			   (funcall
 			    (or (get thing 'end-op)
                                 (lambda () (forward-thing thing 1))))
 			   (point))))
-		    (if (and beg real-end (<= beg orig) (<= orig real-end))
-			(cons beg real-end)))
+		    (when (and (<= orig real-end) (< beg real-end))
+                      (cons beg real-end)))
 		(goto-char orig)
 		;; Try a second time, moving backward first and then forward,
 		;; so that we can find a thing that ends at ORIG.
@@ -119,16 +123,17 @@ of the textual entity that was found."
 			  (or (get thing 'beginning-op)
                               (lambda () (forward-thing thing -1))))
 			 (point))))
-		  (if (and real-beg end (<= real-beg orig) (<= orig end))
+		  (if (and (<= real-beg orig) (<= orig end) (< real-beg end))
 		      (cons real-beg end))))))
 	(error nil)))))
 
 ;;;###autoload
 (defun thing-at-point (thing)
   "Return the THING at point.
-THING is a symbol which specifies the kind of syntactic entity you want.
-Possibilities include `symbol', `list', `sexp', `defun', `filename', `url',
-`email', `word', `sentence', `whitespace', `line', `page' and others.
+THING should be a symbol specifying a type of syntactic entity.
+Possibilities include `symbol', `list', `sexp', `defun',
+`filename', `url', `email', `word', `sentence', `whitespace',
+`line', and `page'.
 
 See the file `thingatpt.el' for documentation on how to define
 a symbol as a valid THING."
@@ -141,11 +146,15 @@ a symbol as a valid THING."
 ;; Go to beginning/end
 
 (defun beginning-of-thing (thing)
+  "Move point to the beginning of THING.
+The bounds of THING are determined by `bounds-of-thing-at-point'."
   (let ((bounds (bounds-of-thing-at-point thing)))
     (or bounds (error "No %s here" thing))
     (goto-char (car bounds))))
 
 (defun end-of-thing (thing)
+  "Move point to the end of THING.
+The bounds of THING are determined by `bounds-of-thing-at-point'."
   (let ((bounds (bounds-of-thing-at-point thing)))
     (or bounds (error "No %s here" thing))
     (goto-char (cdr bounds))))
@@ -163,12 +172,16 @@ a symbol as a valid THING."
 ;;  Sexps
 
 (defun in-string-p ()
+  "Return non-nil if point is in a string.
+\[This is an internal function.]"
   (let ((orig (point)))
     (save-excursion
       (beginning-of-defun)
       (nth 3 (parse-partial-sexp (point) orig)))))
 
 (defun end-of-sexp ()
+  "Move point to the end of the current sexp.
+\[This is an internal function.]"
   (let ((char-syntax (char-syntax (char-after))))
     (if (or (eq char-syntax ?\))
 	    (and (eq char-syntax ?\") (in-string-p)))
@@ -178,6 +191,8 @@ a symbol as a valid THING."
 (put 'sexp 'end-op 'end-of-sexp)
 
 (defun beginning-of-sexp ()
+  "Move point to the beginning of the current sexp.
+\[This is an internal function.]"
   (let ((char-syntax (char-syntax (char-before))))
     (if (or (eq char-syntax ?\()
 	    (and (eq char-syntax ?\") (in-string-p)))
@@ -191,6 +206,8 @@ a symbol as a valid THING."
 (put 'list 'bounds-of-thing-at-point 'thing-at-point-bounds-of-list-at-point)
 
 (defun thing-at-point-bounds-of-list-at-point ()
+  "Return the bounds of the list at point.
+\[Internal function used by `bounds-of-thing-at-point'.]"
   (save-excursion
     (let ((opoint (point))
 	  (beg (condition-case nil
@@ -208,6 +225,12 @@ a symbol as a valid THING."
 	      (if (>= opoint (point))
 		  (cons opoint end))))
 	(error nil)))))
+
+;; Defuns
+
+(put 'defun 'beginning-op 'beginning-of-defun)
+(put 'defun 'end-op       'end-of-defun)
+(put 'defun 'forward-op   'end-of-defun)
 
 ;;  Filenames and URLs  www.com/foo%32bar
 
@@ -230,7 +253,7 @@ a symbol as a valid THING."
   "A regular expression probably matching the host and filename or e-mail part of a URL.")
 
 (defvar thing-at-point-short-url-regexp
-  (concat "[-A-Za-z0-9.]+" thing-at-point-url-path-regexp)
+  (concat "[-A-Za-z0-9]+\\.[-A-Za-z0-9.]+" thing-at-point-url-path-regexp)
   "A regular expression probably matching a URL without an access scheme.
 Hostname matching is stricter in this case than for
 ``thing-at-point-url-regexp''.")
@@ -392,12 +415,17 @@ with angle brackets.")
 ;;  Whitespace
 
 (defun forward-whitespace (arg)
+  "Move point to the end of the next sequence of whitespace chars.
+Each such sequence may be a single newline, or a sequence of
+consecutive space and/or tab characters.
+With prefix argument ARG, do it ARG times if positive, or move
+backwards ARG times if negative."
   (interactive "p")
   (if (natnump arg)
       (re-search-forward "[ \t]+\\|\n" nil 'move arg)
     (while (< arg 0)
       (if (re-search-backward "[ \t]+\\|\n" nil 'move)
-	  (or (eq (char-after (match-beginning 0)) 10)
+	  (or (eq (char-after (match-beginning 0)) ?\n)
 	      (skip-chars-backward " \t")))
       (setq arg (1+ arg)))))
 
@@ -409,6 +437,11 @@ with angle brackets.")
 ;;  Symbols
 
 (defun forward-symbol (arg)
+  "Move point to the next position that is the end of a symbol.
+A symbol is any sequence of characters that are in either the
+word constituent or symbol constituent syntax class.
+With prefix argument ARG, do it ARG times if positive, or move
+backwards ARG times if negative."
   (interactive "p")
   (if (natnump arg)
       (re-search-forward "\\(\\sw\\|\\s_\\)+" nil 'move arg)
@@ -420,6 +453,9 @@ with angle brackets.")
 ;;  Syntax blocks
 
 (defun forward-same-syntax (&optional arg)
+  "Move point past all characters with the same syntax class.
+With prefix argument ARG, do it ARG times if positive, or move
+backwards ARG times if negative."
   (interactive "p")
   (while (< arg 0)
     (skip-syntax-backward
@@ -431,8 +467,13 @@ with angle brackets.")
 
 ;;  Aliases
 
-(defun word-at-point () (thing-at-point 'word))
-(defun sentence-at-point () (thing-at-point 'sentence))
+(defun word-at-point ()
+  "Return the word at point.  See `thing-at-point'."
+  (thing-at-point 'word))
+
+(defun sentence-at-point ()
+  "Return the sentence at point.  See `thing-at-point'."
+  (thing-at-point 'sentence))
 
 (defun read-from-whole-string (str)
   "Read a Lisp expression from STR.
@@ -472,5 +513,4 @@ Signal an error if the entire string was not used."
   "Return the Lisp list at point, or nil if none is found."
   (form-at-point 'list 'listp))
 
-;; arch-tag: bb65a163-dae2-4055-aedc-fe11f497f698
 ;;; thingatpt.el ends here

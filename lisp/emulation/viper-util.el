@@ -1,9 +1,9 @@
 ;;; viper-util.el --- Utilities used by viper.el
 
-;; Copyright (C) 1994, 1995, 1996, 1997, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1994-1997, 1999-2012 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
+;; Package: viper
 
 ;; This file is part of GNU Emacs.
 
@@ -76,7 +76,7 @@
 (defalias 'viper-int-to-char
   (if (featurep 'xemacs) 'int-to-char 'identity))
 (defalias 'viper-get-face
-  (if (featurep 'xemacs) 'get-face 'internal-get-face))
+  (if (featurep 'xemacs) 'get-face 'facep))
 (defalias 'viper-color-defined-p
   (if (featurep 'xemacs) 'valid-color-name-p 'x-color-defined-p))
 (defalias 'viper-iconify
@@ -295,7 +295,7 @@ Otherwise return the normal value."
     result))
 
 ;; Emacs used to count each multibyte character as several positions in the buffer,
-;; so we had to use Emacs' chars-in-region to count characters. Since 20.3,
+;; so we had to use Emacs's chars-in-region to count characters. Since 20.3,
 ;; Emacs counts multibyte characters as 1 position.  XEmacs has always been
 ;; counting each char as just one pos. So, now we can simply subtract beg from
 ;; end to determine the number of characters in a region.
@@ -871,7 +871,7 @@ Otherwise return the normal value."
     (abbreviate-file-name file)))
 
 ;; Sit for VAL milliseconds.  XEmacs doesn't support the millisecond arg
-;; in sit-for, so this function smoothes out the differences.
+;; in sit-for, so this function smooths out the differences.
 (defsubst viper-sit-for-short (val &optional nodisp)
   (sit-for (/ val 1000.0) nodisp))
 
@@ -1080,7 +1080,7 @@ Otherwise return the normal value."
 		 char-p (= (length base-key-name) 1))
 	   (setq mod-char-list
 		 (mapcar
-		  '(lambda (elt) (upcase (substring (symbol-name elt) 0 1)))
+		  (lambda (elt) (upcase (substring (symbol-name elt) 0 1)))
 		  modifiers))
 	   (if char-p
 	       (setq key-name
@@ -1112,7 +1112,7 @@ Otherwise return the normal value."
        lis)))
 
 
-;; Smoothes out the difference between Emacs' unread-command-events
+;; Smooths out the difference between Emacs's unread-command-events
 ;; and XEmacs unread-command-event.  Arg is a character, an event, a list of
 ;; events or a sequence of keys.
 ;;
@@ -1153,7 +1153,7 @@ Otherwise return the normal value."
 ;; XEmacs only
 (defun viper-event-vector-p (vec)
   (and (vectorp vec)
-       (eval (cons 'and (mapcar '(lambda (elt) (if (eventp elt) t)) vec)))))
+       (eval (cons 'and (mapcar (lambda (elt) (if (eventp elt) t)) vec)))))
 
 
 ;; check if vec is a vector of character symbols
@@ -1239,7 +1239,7 @@ Arguments become related buffers.  This function should normally be used in
 the `Local variables' section of a file."
   (setq viper-related-files-and-buffers-ring
 	(make-ring (1+ (length other-files-or-buffers))))
-  (mapc '(lambda (elt)
+  (mapc (lambda (elt)
 	  (viper-ring-insert viper-related-files-and-buffers-ring elt))
 	other-files-or-buffers)
   (viper-ring-insert viper-related-files-and-buffers-ring (buffer-name))
@@ -1554,5 +1554,4 @@ This option is appropriate if you like Emacs-style words."
 ;; eval: (put 'viper-deflocalvar 'lisp-indent-hook 'defun)
 ;; End:
 
-;; arch-tag: 7f023fd5-dd9e-4378-a397-9c179553b0e3
 ;;; viper-util.el ends here

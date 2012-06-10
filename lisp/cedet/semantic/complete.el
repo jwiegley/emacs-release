@@ -1,7 +1,6 @@
 ;;; semantic/complete.el --- Routines for performing tag completion
 
-;; Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2003-2005, 2007-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
@@ -55,7 +54,7 @@
 ;;
 ;; Here, we will treat each section separately (excluding D)
 ;; They can then be strung together in user-visible commands to
-;; fulfil specific needs.
+;; fulfill specific needs.
 ;;
 ;; COLLECTORS:
 ;;
@@ -892,7 +891,7 @@ making the action of homing in on a token faster.")
 This completion is calculated and saved for future use.")
    (last-whitespace-completion :type (or null string)
 			       :documentation "The last whitespace completion.
-For partial completion, SPC will disabiguate over whitespace type
+For partial completion, SPC will disambiguate over whitespace type
 characters.  This is the last calculated version.")
    (current-exact-match :type list
 			:protection :protected
@@ -1024,9 +1023,9 @@ Output must be in semanticdb Find result format."
 
 (defmethod semantic-collector-try-completion-whitespace
   ((obj semantic-collector-abstract) prefix)
-  "For OBJ, do whatepsace completion based on PREFIX.
+  "For OBJ, do whitespace completion based on PREFIX.
 This implies that if there are two completions, one matching
-the test \"preifx\\>\", and one not, the one matching the full
+the test \"prefix\\>\", and one not, the one matching the full
 word version of PREFIX will be chosen, and that text returned.
 This function requires that `semantic-collector-calculate-completions'
 has been run first."
@@ -1354,7 +1353,7 @@ to click on the items to aid in completion.")
 (defmethod semantic-displayor-show-request ((obj semantic-displayor-traditional))
   "A request to show the current tags table."
 
-  ;; NOTE TO SELF.  Find the character to type next, and emphesize it.
+  ;; NOTE TO SELF.  Find the character to type next, and emphasize it.
 
   (with-output-to-temp-buffer "*Completions*"
     (display-completion-list
@@ -1378,7 +1377,7 @@ given tag, by highlighting its location.")
    )
   "Abstract displayor supporting `focus'.
 A displayor which has the ability to focus in on one tag.
-Focusing is a way of differentiationg between multiple tags
+Focusing is a way of differentiating among multiple tags
 which have the same name."
   :abstract t)
 
@@ -1479,7 +1478,7 @@ one in the source buffer."
 	 (tag (cdr nt))
 	 (table (car nt))
 	)
-    ;; If we fail to normalize, resete.
+    ;; If we fail to normalize, reset.
     (when (not tag) (setq table rtable tag rtag))
     ;; Do the focus.
     (let ((buf (or (semantic-tag-buffer tag)
@@ -1619,7 +1618,7 @@ Display mechanism using tooltip for a list of possible completions.")
 		 (string= (this-command-keys) "\C-i"))
 	    (oset obj typing-count (1+ typing-count)))
 	;; At this point, we know we have too many items.
-	;; Lets be brave, and truncate l
+	;; Let's be brave, and truncate l
 	(setcdr (nthcdr (oref obj max-tags) l) nil)
 	(setq msg (mapconcat 'identity l "\n"))
 	(cond
@@ -1826,7 +1825,7 @@ HISTORY is a symbol representing a variable to store the history in."
 							initial-input
 							history)
   "Ask for a tag by name from the local type members.
-Available tags are from the the current scope.
+Available tags are from the current scope.
 Completion options are presented in a traditional way, with highlighting
 to resolve same-name collisions.
 PROMPT is a string to prompt with.
@@ -2159,5 +2158,4 @@ use `semantic-complete-analyze-inline' to complete."
 ;; generated-autoload-load-name: "semantic/complete"
 ;; End:
 
-;; arch-tag: a07c8f71-e53b-416e-9704-3a99ef101b09
 ;;; semantic/complete.el ends here

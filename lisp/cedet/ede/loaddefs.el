@@ -3,8 +3,21 @@
 ;;; Code:
 
 
+;;;### (autoloads (ede-cpp-root-project-root) "ede/cpp-root" "cpp-root.el"
+;;;;;;  "3aeab969c6e7e2876ae2546b69012fb2")
+;;; Generated autoloads from cpp-root.el
+
+(autoload 'ede-cpp-root-project-root "ede/cpp-root" "\
+Get the root directory for DIR.
+
+\(fn &optional DIR)" nil nil)
+
+(add-to-list 'ede-project-class-files (ede-project-autoload "cpp-root" :name "CPP ROOT" :file 'ede/cpp-root :proj-file 'ede-cpp-root-project-file-for-dir :proj-root 'ede-cpp-root-project-root :load-type 'ede-cpp-root-load :class-sym 'ede-cpp-root :new-p nil) t)
+
+;;;***
+
 ;;;### (autoloads (ede-project-sort-targets ede-customize-current-target
-;;;;;;  ede-customize-project) "ede/custom" "custom.el" "09c17fa1f4ce8ff12980a92d0c7ad139")
+;;;;;;  ede-customize-project) "ede/custom" "custom.el" "273a84690d54194ed3b642cfe1bd697f")
 ;;; Generated autoloads from custom.el
 
 (autoload 'ede-customize-project "ede/custom" "\
@@ -28,21 +41,8 @@ Create a custom-like buffer for sorting targets of current project.
 
 ;;;***
 
-;;;### (autoloads (ede-cpp-root-project-root) "ede/cpp-root" "cpp-root.el"
-;;;;;;  "cccc19ac315b210a877e63224213ec5a")
-;;; Generated autoloads from cpp-root.el
-
-(autoload 'ede-cpp-root-project-root "ede/cpp-root" "\
-Get the root directory for DIR.
-
-\(fn &optional DIR)" nil nil)
-
-(add-to-list 'ede-project-class-files (ede-project-autoload "cpp-root" :name "CPP ROOT" :file 'ede/cpp-root :proj-file 'ede-cpp-root-project-file-for-dir :proj-root 'ede-cpp-root-project-root :load-type 'ede-cpp-root-load :class-sym 'ede-cpp-root :new-p nil) t)
-
-;;;***
-
 ;;;### (autoloads (ede-emacs-project-root) "ede/emacs" "emacs.el"
-;;;;;;  "adb8201f560ee7d5a2c91dad37717e38")
+;;;;;;  "6ca4794695231c82dce4516b44f0d356")
 ;;; Generated autoloads from emacs.el
 
 (autoload 'ede-emacs-project-root "ede/emacs" "\
@@ -54,7 +54,7 @@ Get the root directory for DIR.
 
 ;;;***
 
-;;;### (autoloads (ede-find-file) "ede/files" "files.el" "c881bb08ad0f360c089958621581cad7")
+;;;### (autoloads (ede-find-file) "ede/files" "files.el" "6e34b470a669fc0f7623d476a565879d")
 ;;; Generated autoloads from files.el
 
 (autoload 'ede-find-file "ede/files" "\
@@ -67,7 +67,7 @@ the current EDE project.
 ;;;***
 
 ;;;### (autoloads (ede-enable-generic-projects) "ede/generic" "generic.el"
-;;;;;;  "c925a0078d64c9b980e64a15bb4435d4")
+;;;;;;  "f41cd9ab6c1b3cd82da42feb3608837b")
 ;;; Generated autoloads from generic.el
 
 (autoload 'ede-enable-generic-projects "ede/generic" "\
@@ -78,7 +78,7 @@ Enable generic project loaders.
 ;;;***
 
 ;;;### (autoloads (ede-linux-project-root) "ede/linux" "linux.el"
-;;;;;;  "c45128f8de7d43c8f62e7ebe92e6f9d7")
+;;;;;;  "ad23b3acbf4fc04619f42b722b7e9c68")
 ;;; Generated autoloads from linux.el
 
 (autoload 'ede-linux-project-root "ede/linux" "\
@@ -91,7 +91,7 @@ Get the root directory for DIR.
 ;;;***
 
 ;;;### (autoloads (ede-enable-locate-on-project) "ede/locate" "locate.el"
-;;;;;;  "bd045d711aa430a1c3505e8603d28ada")
+;;;;;;  "1bdddcb7cb1fb8dbbee667a178d0ef12")
 ;;; Generated autoloads from locate.el
 
 (autoload 'ede-enable-locate-on-project "ede/locate" "\
@@ -103,7 +103,7 @@ based on `ede-locate-setup-options'.
 
 ;;;***
 
-;;;### (autoloads (ede-make-check-version) "ede/make" "make.el" "b32d0d6434750433585717ff3e92c0ef")
+;;;### (autoloads (ede-make-check-version) "ede/make" "make.el" "6685c10bf482d5107d223175ac13594b")
 ;;; Generated autoloads from make.el
 
 (autoload 'ede-make-check-version "ede/make" "\
@@ -118,7 +118,7 @@ If NOERROR is nil, then throw an error on failure.  Return t otherwise.
 ;;;***
 
 ;;;### (autoloads (ede-speedbar-file-setup) "ede/speedbar" "speedbar.el"
-;;;;;;  "2898e2a06e27d90b53f3ff9f91c18310")
+;;;;;;  "acbe9dd460a420f281bf99353ded385e")
 ;;; Generated autoloads from speedbar.el
 
 (autoload 'ede-speedbar-file-setup "ede/speedbar" "\
@@ -130,7 +130,7 @@ Setup some keybindings in the Speedbar File display.
 
 ;;;### (autoloads (ede-vc-project-directory ede-upload-html-documentation
 ;;;;;;  ede-upload-distribution ede-edit-web-page ede-web-browse-home)
-;;;;;;  "ede/system" "system.el" "527bedb469b979aecf41f710a0e118aa")
+;;;;;;  "ede/system" "system.el" "82788557cf1e7840a4308536fe1bbf44")
 ;;; Generated autoloads from system.el
 
 (autoload 'ede-web-browse-home "ede/system" "\
@@ -164,7 +164,7 @@ Run `vc-dir' on the current project.
 
 ;;;***
 
-;;;### (autoloads (ede-update-version) "ede/util" "util.el" "c550f3b739ef7442c2ff1f44d498ed33")
+;;;### (autoloads (ede-update-version) "ede/util" "util.el" "c3faeec43650d237387a0210cf784c2f")
 ;;; Generated autoloads from util.el
 
 (autoload 'ede-update-version "ede/util" "\

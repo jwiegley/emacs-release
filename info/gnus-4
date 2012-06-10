@@ -1,9 +1,7 @@
 This is ../../info/gnus, produced by makeinfo version 4.13 from
 gnus.texi.
 
-Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
-Foundation, Inc.
+Copyright (C) 1995-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -23,589 +21,9 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: gnus,  Node: History,  Next: On Writing Manuals,  Prev: XEmacs,  Up: Appendices
-
-10.2 History
-============
-
-GNUS was written by Masanobu UMEDA.  When autumn crept up in '94, Lars
-Magne Ingebrigtsen grew bored and decided to rewrite Gnus.
-
-   If you want to investigate the person responsible for this outrage,
-you can point your (feh!) web browser to `http://quimby.gnus.org/'.
-This is also the primary distribution point for the new and spiffy
-versions of Gnus, and is known as The Site That Destroys Newsrcs And
-Drives People Mad.
-
-   During the first extended alpha period of development, the new Gnus
-was called "(ding) Gnus".  "(ding)" is, of course, short for "ding is
-not Gnus", which is a total and utter lie, but who cares?  (Besides,
-the "Gnus" in this abbreviation should probably be pronounced "news" as
-UMEDA intended, which makes it a more appropriate name, don't you
-think?)
-
-   In any case, after spending all that energy on coming up with a new
-and spunky name, we decided that the name was _too_ spunky, so we
-renamed it back again to "Gnus".  But in mixed case.  "Gnus" vs.
-"GNUS".  New vs. old.
-
-* Menu:
-
-* Gnus Versions::               What Gnus versions have been released.
-* Other Gnus Versions::         Other Gnus versions that also have been released.
-* Why?::                        What's the point of Gnus?
-* Compatibility::               Just how compatible is Gnus with GNUS?
-* Conformity::                  Gnus tries to conform to all standards.
-* Emacsen::                     Gnus can be run on a few modern Emacsen.
-* Gnus Development::            How Gnus is developed.
-* Contributors::                Oodles of people.
-* New Features::                Pointers to some of the new stuff in Gnus.
-
-
-File: gnus,  Node: Gnus Versions,  Next: Other Gnus Versions,  Up: History
-
-10.2.1 Gnus Versions
---------------------
-
-The first "proper" release of Gnus 5 was done in November 1995 when it
-was included in the Emacs 19.30 distribution (132 (ding) Gnus releases
-plus 15 Gnus 5.0 releases).
-
-   In May 1996 the next Gnus generation (aka. "September Gnus" (after 99
-releases)) was released under the name "Gnus 5.2" (40 releases).
-
-   On July 28th 1996 work on Red Gnus was begun, and it was released on
-January 25th 1997 (after 84 releases) as "Gnus 5.4" (67 releases).
-
-   On September 13th 1997, Quassia Gnus was started and lasted 37
-releases.  It was released as "Gnus 5.6" on March 8th 1998 (46
-releases).
-
-   Gnus 5.6 begat Pterodactyl Gnus on August 29th 1998 and was released
-as "Gnus 5.8" (after 99 releases and a CVS repository) on December 3rd
-1999.
-
-   On the 26th of October 2000, Oort Gnus was begun and was released as
-Gnus 5.10 on May 1st 2003 (24 releases).
-
-   On the January 4th 2004, No Gnus was begun.
-
-   On April 19, 2010 Gnus development was moved to Git.  See
-http://git.gnus.org for details (http://www.gnus.org will be updated
-with the information when possible).
-
-   If you happen upon a version of Gnus that has a prefixed name -
-"(ding) Gnus", "September Gnus", "Red Gnus", "Quassia Gnus",
-"Pterodactyl Gnus", "Oort Gnus", "No Gnus" - don't panic.  Don't let it
-know that you're frightened.  Back away.  Slowly.  Whatever you do,
-don't run.  Walk away, calmly, until you're out of its reach.  Find a
-proper released version of Gnus and snuggle up to that instead.
-
-
-File: gnus,  Node: Other Gnus Versions,  Next: Why?,  Prev: Gnus Versions,  Up: History
-
-10.2.2 Other Gnus Versions
---------------------------
-
-In addition to the versions of Gnus which have had their releases
-coordinated by Lars, one major development has been Semi-gnus from
-Japan.  It's based on a library called SEMI, which provides MIME
-capabilities.
-
-   These Gnusae are based mainly on Gnus 5.6 and Pterodactyl Gnus.
-Collectively, they are called "Semi-gnus", and different strains are
-called T-gnus, ET-gnus, Nana-gnus and Chaos.  These provide powerful
-MIME and multilingualization things, especially important for Japanese
-users.
-
-
-File: gnus,  Node: Why?,  Next: Compatibility,  Prev: Other Gnus Versions,  Up: History
-
-10.2.3 Why?
------------
-
-What's the point of Gnus?
-
-   I want to provide a "rad", "happening", "way cool" and "hep"
-newsreader, that lets you do anything you can think of.  That was my
-original motivation, but while working on Gnus, it has become clear to
-me that this generation of newsreaders really belong in the stone age.
-Newsreaders haven't developed much since the infancy of the net.  If the
-volume continues to rise with the current rate of increase, all current
-newsreaders will be pretty much useless.  How do you deal with
-newsgroups that have thousands of new articles each day?  How do you
-keep track of millions of people who post?
-
-   Gnus offers no real solutions to these questions, but I would very
-much like to see Gnus being used as a testing ground for new methods of
-reading and fetching news.  Expanding on UMEDA-san's wise decision to
-separate the newsreader from the back ends, Gnus now offers a simple
-interface for anybody who wants to write new back ends for fetching mail
-and news from different sources.  I have added hooks for customizations
-everywhere I could imagine it being useful.  By doing so, I'm inviting
-every one of you to explore and invent.
-
-   May Gnus never be complete.  `C-u 100 M-x all-hail-emacs' and `C-u
-100 M-x all-hail-xemacs'.
-
-
-File: gnus,  Node: Compatibility,  Next: Conformity,  Prev: Why?,  Up: History
-
-10.2.4 Compatibility
---------------------
-
-Gnus was designed to be fully compatible with GNUS.  Almost all key
-bindings have been kept.  More key bindings have been added, of course,
-but only in one or two obscure cases have old bindings been changed.
-
-   Our motto is:
-
-                         In a cloud bones of steel.
-
-   All commands have kept their names.  Some internal functions have
-changed their names.
-
-   The `gnus-uu' package has changed drastically.  *Note Decoding
-Articles::.
-
-   One major compatibility question is the presence of several summary
-buffers.  All variables relevant while reading a group are buffer-local
-to the summary buffer they belong in.  Although many important
-variables have their values copied into their global counterparts
-whenever a command is executed in the summary buffer, this change might
-lead to incorrect values being used unless you are careful.
-
-   All code that relies on knowledge of GNUS internals will probably
-fail.  To take two examples: Sorting `gnus-newsrc-alist' (or changing
-it in any way, as a matter of fact) is strictly verboten.  Gnus
-maintains a hash table that points to the entries in this alist (which
-speeds up many functions), and changing the alist directly will lead to
-peculiar results.
-
-   Old hilit19 code does not work at all.  In fact, you should probably
-remove all hilit code from all Gnus hooks (`gnus-group-prepare-hook'
-and `gnus-summary-prepare-hook').  Gnus provides various integrated
-functions for highlighting.  These are faster and more accurate.  To
-make life easier for everybody, Gnus will by default remove all hilit
-calls from all hilit hooks.  Uncleanliness!  Away!
-
-   Packages like `expire-kill' will no longer work.  As a matter of
-fact, you should probably remove all old GNUS packages (and other code)
-when you start using Gnus.  More likely than not, Gnus already does
-what you have written code to make GNUS do.  (Snicker.)
-
-   Even though old methods of doing things are still supported, only the
-new methods are documented in this manual.  If you detect a new method
-of doing something while reading this manual, that does not mean you
-have to stop doing it the old way.
-
-   Gnus understands all GNUS startup files.
-
-   Overall, a casual user who hasn't written much code that depends on
-GNUS internals should suffer no problems.  If problems occur, please
-let me know by issuing that magic command `M-x gnus-bug'.
-
-   If you are in the habit of sending bug reports _very_ often, you may
-find the helpful help buffer annoying after a while.  If so, set
-`gnus-bug-create-help-buffer' to `nil' to avoid having it pop up at you.
-
-
-File: gnus,  Node: Conformity,  Next: Emacsen,  Prev: Compatibility,  Up: History
-
-10.2.5 Conformity
------------------
-
-No rebels without a clue here, ma'am.  We conform to all standards known
-to (wo)man.  Except for those standards and/or conventions we disagree
-with, of course.
-
-*RFC (2)822*
-     There are no known breaches of this standard.
-
-*RFC 1036*
-     There are no known breaches of this standard, either.
-
-*Son-of-RFC 1036*
-     We do have some breaches to this one.
-
-    _X-Newsreader_
-    _User-Agent_
-          These are considered to be "vanity headers", while I consider
-          them to be consumer information.  After seeing so many badly
-          formatted articles coming from `tin' and `Netscape' I know
-          not to use either of those for posting articles.  I would not
-          have known that if it wasn't for the `X-Newsreader' header.
-
-*USEFOR*
-     USEFOR is an IETF working group writing a successor to RFC 1036,
-     based on Son-of-RFC 1036.  They have produced a number of drafts
-     proposing various changes to the format of news articles.  The
-     Gnus towers will look into implementing the changes when the draft
-     is accepted as an RFC.
-
-*MIME - RFC 2045-2049 etc*
-     All the various MIME RFCs are supported.
-
-*Disposition Notifications - RFC 2298*
-     Message Mode is able to request notifications from the receiver.
-
-*PGP - RFC 1991 and RFC 2440*
-     RFC 1991 is the original PGP message specification, published as
-     an informational RFC.  RFC 2440 was the follow-up, now called Open
-     PGP, and put on the Standards Track.  Both document a non-MIME
-     aware PGP format.  Gnus supports both encoding (signing and
-     encryption) and decoding (verification and decryption).
-
-*PGP/MIME - RFC 2015/3156*
-     RFC 2015 (superseded by 3156 which references RFC 2440 instead of
-     RFC 1991) describes the MIME-wrapping around the RFC 1991/2440
-     format.  Gnus supports both encoding and decoding.
-
-*S/MIME - RFC 2633*
-     RFC 2633 describes the S/MIME format.
-
-*IMAP - RFC 1730/2060, RFC 2195, RFC 2086, RFC 2359, RFC 2595, RFC 1731*
-     RFC 1730 is IMAP version 4, updated somewhat by RFC 2060 (IMAP 4
-     revision 1).  RFC 2195 describes CRAM-MD5 authentication for IMAP.
-     RFC 2086 describes access control lists (ACLs) for IMAP.  RFC 2359
-     describes a IMAP protocol enhancement.  RFC 2595 describes the
-     proper TLS integration (STARTTLS) with IMAP.  RFC 1731 describes
-     the GSSAPI/Kerberos4 mechanisms for IMAP.
-
-
-   If you ever notice Gnus acting non-compliant with regards to the
-texts mentioned above, don't hesitate to drop a note to Gnus Towers and
-let us know.
-
-
-File: gnus,  Node: Emacsen,  Next: Gnus Development,  Prev: Conformity,  Up: History
-
-10.2.6 Emacsen
---------------
-
-This version of Gnus should work on:
-
-   * Emacs 21.1 and up.
-
-   * XEmacs 21.4 and up.
-
-
-   This Gnus version will absolutely not work on any Emacsen older than
-that.  Not reliably, at least.  Older versions of Gnus may work on older
-Emacs versions.  Particularly, Gnus 5.10.8 should also work on Emacs
-20.7 and XEmacs 21.1.
-
-
-File: gnus,  Node: Gnus Development,  Next: Contributors,  Prev: Emacsen,  Up: History
-
-10.2.7 Gnus Development
------------------------
-
-Gnus is developed in a two-phased cycle.  The first phase involves much
-discussion on the development mailing list `ding@gnus.org', where people
-propose changes and new features, post patches and new back ends.  This
-phase is called the "alpha" phase, since the Gnusae released in this
-phase are "alpha releases", or (perhaps more commonly in other circles)
-"snapshots".  During this phase, Gnus is assumed to be unstable and
-should not be used by casual users.  Gnus alpha releases have names
-like "Oort Gnus" and "No Gnus".  *Note Gnus Versions::.
-
-   After futzing around for 10-100 alpha releases, Gnus is declared
-"frozen", and only bug fixes are applied.  Gnus loses the prefix, and
-is called things like "Gnus 5.10.1" instead.  Normal people are
-supposed to be able to use these, and these are mostly discussed on the
-`gnu.emacs.gnus' newsgroup.  This newgroup is mirrored to the mailing
-list `info-gnus-english@gnu.org' which is carried on Gmane as
-`gmane.emacs.gnus.user'.  These releases are finally integrated in
-Emacs.
-
-   Some variable defaults differ between alpha Gnusae and released
-Gnusae, in particular, `mail-source-delete-incoming'.  This is to
-prevent lossage of mail if an alpha release hiccups while handling the
-mail.  *Note Mail Source Customization::.
-
-   The division of discussion between the ding mailing list and the Gnus
-newsgroup is not purely based on publicity concerns.  It's true that
-having people write about the horrible things that an alpha Gnus release
-can do (sometimes) in a public forum may scare people off, but more
-importantly, talking about new experimental features that have been
-introduced may confuse casual users.  New features are frequently
-introduced, fiddled with, and judged to be found wanting, and then
-either discarded or totally rewritten.  People reading the mailing list
-usually keep up with these rapid changes, while people on the newsgroup
-can't be assumed to do so.
-
-   So if you have problems with or questions about the alpha versions,
-direct those to the ding mailing list `ding@gnus.org'.  This list is
-also available on Gmane as `gmane.emacs.gnus.general'.
-
-   Some variable defaults differ between alpha Gnusae and released
-Gnusae, in particular, `mail-source-delete-incoming'.  This is to
-prevent lossage of mail if an alpha release hiccups while handling the
-mail.  *Note Mail Source Customization::.
-
-
-File: gnus,  Node: Contributors,  Next: New Features,  Prev: Gnus Development,  Up: History
-
-10.2.8 Contributors
--------------------
-
-The new Gnus version couldn't have been done without the help of all the
-people on the (ding) mailing list.  Every day for over a year I have
-gotten billions of nice bug reports from them, filling me with joy,
-every single one of them.  Smooches.  The people on the list have been
-tried beyond endurance, what with my "oh, that's a neat idea <type
-type>, yup, I'll release it right away <ship off> no wait, that doesn't
-work at all <type type>, yup, I'll ship that one off right away <ship
-off> no, wait, that absolutely does not work" policy for releases.
-Micro$oft--bah.  Amateurs.  I'm _much_ worse.  (Or is that "worser"?
-"much worser"?  "worsest"?)
-
-   I would like to take this opportunity to thank the Academy for...
-oops, wrong show.
-
-   * Masanobu UMEDA--the writer of the original GNUS.
-
-   * Shenghuo Zhu--uudecode.el, mm-uu.el, rfc1843.el, webmail.el,
-     nnwarchive and many, many other things connected with MIME and
-     other types of en/decoding, as well as general bug fixing, new
-     functionality and stuff.
-
-   * Per Abrahamsen--custom, scoring, highlighting and SOUP code (as
-     well as numerous other things).
-
-   * Luis Fernandes--design and graphics.
-
-   * Joe Reiss--creator of the smiley faces.
-
-   * Justin Sheehy--the FAQ maintainer.
-
-   * Erik Naggum--help, ideas, support, code and stuff.
-
-   * Wes Hardaker--`gnus-picon.el' and the manual section on "picons"
-     (*note Picons::).
-
-   * Kim-Minh Kaplan--further work on the picon code.
-
-   * Brad Miller--`gnus-gl.el' and the GroupLens manual section.
-
-   * Sudish Joseph--innumerable bug fixes.
-
-   * Ilja Weis--`gnus-topic.el'.
-
-   * Steven L. Baur--lots and lots and lots of bugs detections and
-     fixes.
-
-   * Vladimir Alexiev--the refcard and reference booklets.
-
-   * Felix Lee & Jamie Zawinski--I stole some pieces from the XGnus
-     distribution by Felix Lee and JWZ.
-
-   * Scott Byer--`nnfolder.el' enhancements & rewrite.
-
-   * Peter Mutsaers--orphan article scoring code.
-
-   * Ken Raeburn--POP mail support.
-
-   * Hallvard B Furuseth--various bits and pieces, especially dealing
-     with .newsrc files.
-
-   * Brian Edmonds--`gnus-bbdb.el'.
-
-   * David Moore--rewrite of `nnvirtual.el' and many other things.
-
-   * Kevin Davidson--came up with the name "ding", so blame him.
-
-   * François Pinard--many, many interesting and thorough bug reports,
-     as well as autoconf support.
-
-
-   This manual was proof-read by Adrian Aichner, with Ricardo Nassif,
-Mark Borges, and Jost Krieger proof-reading parts of the manual.
-
-   The following people have contributed many patches and suggestions:
-
-   Christopher Davis, Andrew Eskilsson, Kai Grossjohann, Kevin Greiner,
-Jesper Harder, Paul Jarc, Simon Josefsson, David Kågedal, Richard Pieri,
-Fabrice Popineau, Daniel Quinlan, Michael Shields, Reiner Steib, Jason
-L. Tibbitts, III, Jack Vinson, Katsumi Yamaoka, and Teodor Zlatanov.
-
-   Also thanks to the following for patches and stuff:
-
-   Jari Aalto, Adrian Aichner, Vladimir Alexiev, Russ Allbery, Peter
-Arius, Matt Armstrong, Marc Auslander, Miles Bader, Alexei V. Barantsev,
-Frank Bennett, Robert Bihlmeyer, Chris Bone, Mark Borges, Mark Boyns,
-Lance A. Brown, Rob Browning, Kees de Bruin, Martin Buchholz, Joe
-Buehler, Kevin Buhr, Alastair Burt, Joao Cachopo, Zlatko Calusic,
-Massimo Campostrini, Castor, David Charlap, Dan Christensen, Kevin
-Christian, Jae-you Chung, James H. Cloos, Jr., Laura Conrad, Michael R.
-Cook, Glenn Coombs, Andrew J. Cosgriff, Neil Crellin, Frank D. Cringle,
-Geoffrey T. Dairiki, Andre Deparade, Ulrik Dickow, Dave Disser, Rui-Tao
-Dong, Joev Dubach, Michael Welsh Duggan, Dave Edmondson, Paul Eggert,
-Mark W. Eichin, Karl Eichwalder, Enami Tsugutomo, Michael Ernst, Luc
-Van Eycken, Sam Falkner, Nelson Jose dos Santos Ferreira, Sigbjorn
-Finne, Sven Fischer, Paul Fisher, Decklin Foster, Gary D. Foster, Paul
-Franklin, Guy Geens, Arne Georg Gleditsch, David S. Goldberg,
-Michelangelo Grigni, Dale Hagglund, D. Hall, Magnus Hammerin, Kenichi
-Handa, Raja R. Harinath, Yoshiki Hayashi, P. E. Jareth Hein, Hisashige
-Kenji, Scott Hofmann, Tassilo Horn, Marc Horowitz, Gunnar Horrigmo,
-Richard Hoskins, Brad Howes, Miguel de Icaza, François Felix Ingrand,
-Tatsuya Ichikawa, Ishikawa Ichiro, Lee Iverson, Iwamuro Motonori,
-Rajappa Iyer, Andreas Jaeger, Adam P. Jenkins, Randell Jesup, Fred
-Johansen, Gareth Jones, Greg Klanderman, Karl Kleinpaste, Michael
-Klingbeil, Peter Skov Knudsen, Shuhei Kobayashi, Petr Konecny, Koseki
-Yoshinori, Thor Kristoffersen, Jens Lautenbacher, Martin Larose,
-Seokchan Lee, Joerg Lenneis, Carsten Leonhardt, James LewisMoss,
-Christian Limpach, Markus Linnala, Dave Love, Mike McEwan, Tonny Madsen,
-Shlomo Mahlab, Nat Makarevitch, Istvan Marko, David Martin, Jason R.
-Mastaler, Gordon Matzigkeit, Timo Metzemakers, Richard Mlynarik, Lantz
-Moore, Morioka Tomohiko, Erik Toubro Nielsen, Hrvoje Niksic, Andy
-Norman, Fred Oberhauser, C. R. Oldham, Alexandre Oliva, Ken Olstad,
-Masaharu Onishi, Hideki Ono, Ettore Perazzoli, William Perry, Stephen
-Peters, Jens-Ulrik Holger Petersen, Ulrich Pfeifer, Matt Pharr, Andy
-Piper, John McClary Prevost, Bill Pringlemeir, Mike Pullen, Jim Radford,
-Colin Rafferty, Lasse Rasinen, Lars Balker Rasmussen, Joe Reiss, Renaud
-Rioboo, Roland B. Roberts, Bart Robinson, Christian von Roques, Markus
-Rost, Jason Rumney, Wolfgang Rupprecht, Jay Sachs, Dewey M. Sasser,
-Conrad Sauerwald, Loren Schall, Dan Schmidt, Ralph Schleicher, Philippe
-Schnoebelen, Andreas Schwab, Randal L. Schwartz, Danny Siu, Matt
-Simmons, Paul D. Smith, Jeff Sparkes, Toby Speight, Michael Sperber,
-Darren Stalder, Richard Stallman, Greg Stark, Sam Steingold, Paul
-Stevenson, Jonas Steverud, Paul Stodghill, Kiyokazu Suto, Kurt Swanson,
-Samuel Tardieu, Teddy, Chuck Thompson, Tozawa Akihiko, Philippe Troin,
-James Troup, Trung Tran-Duc, Jack Twilley, Aaron M. Ucko, Aki Vehtari,
-Didier Verna, Vladimir Volovich, Jan Vroonhof, Stefan Waldherr, Pete
-Ware, Barry A. Warsaw, Christoph Wedler, Joe Wells, Lee Willis, and
-Lloyd Zusman.
-
-   For a full overview of what each person has done, the ChangeLogs
-included in the Gnus alpha distributions should give ample reading
-(550kB and counting).
-
-   Apologies to everybody that I've forgotten, of which there are many,
-I'm sure.
-
-   Gee, that's quite a list of people.  I guess that must mean that
-there actually are people who are using Gnus.  Who'd'a thunk it!
-
-
-File: gnus,  Node: New Features,  Prev: Contributors,  Up: History
-
-10.2.9 New Features
--------------------
-
-* Menu:
-
-* ding Gnus::                   New things in Gnus 5.0/5.1, the first new Gnus.
-* September Gnus::              The Thing Formally Known As Gnus 5.2/5.3.
-* Red Gnus::                    Third time best---Gnus 5.4/5.5.
-* Quassia Gnus::                Two times two is four, or Gnus 5.6/5.7.
-* Pterodactyl Gnus::            Pentad also starts with P, AKA Gnus 5.8/5.9.
-* Oort Gnus::                   It's big.  It's far out.  Gnus 5.10/5.11.
-* No Gnus::                     Very punny.
-
-   These lists are, of course, just _short_ overviews of the _most_
-important new features.  No, really.  There are tons more.  Yes, we
-have feeping creaturism in full effect.
-
-
-File: gnus,  Node: ding Gnus,  Next: September Gnus,  Up: New Features
-
-10.2.9.1 (ding) Gnus
-....................
-
-New features in Gnus 5.0/5.1:
-
-   * The look of all buffers can be changed by setting format-like
-     variables (*note Group Buffer Format:: and *note Summary Buffer
-     Format::).
-
-   * Local spool and several NNTP servers can be used at once (*note
-     Select Methods::).
-
-   * You can combine groups into virtual groups (*note Virtual
-     Groups::).
-
-   * You can read a number of different mail formats (*note Getting
-     Mail::).  All the mail back ends implement a convenient mail
-     expiry scheme (*note Expiring Mail::).
-
-   * Gnus can use various strategies for gathering threads that have
-     lost their roots (thereby gathering loose sub-threads into one
-     thread) or it can go back and retrieve enough headers to build a
-     complete thread (*note Customizing Threading::).
-
-   * Killed groups can be displayed in the group buffer, and you can
-     read them as well (*note Listing Groups::).
-
-   * Gnus can do partial group updates--you do not have to retrieve the
-     entire active file just to check for new articles in a few groups
-     (*note The Active File::).
-
-   * Gnus implements a sliding scale of subscribedness to groups (*note
-     Group Levels::).
-
-   * You can score articles according to any number of criteria (*note
-     Scoring::).  You can even get Gnus to find out how to score
-     articles for you (*note Adaptive Scoring::).
-
-   * Gnus maintains a dribble buffer that is auto-saved the normal Emacs
-     manner, so it should be difficult to lose much data on what you
-     have read if your machine should go down (*note Auto Save::).
-
-   * Gnus now has its own startup file (`~/.gnus.el') to avoid
-     cluttering up the `.emacs' file.
-
-   * You can set the process mark on both groups and articles and
-     perform operations on all the marked items (*note
-     Process/Prefix::).
-
-   * You can grep through a subset of groups and create a group from the
-     results (*note Kibozed Groups::).
-
-   * You can list subsets of groups according to, well, anything (*note
-     Listing Groups::).
-
-   * You can browse foreign servers and subscribe to groups from those
-     servers (*note Browse Foreign Server::).
-
-   * Gnus can fetch articles, asynchronously, on a second connection to
-     the server (*note Asynchronous Fetching::).
-
-   * You can cache articles locally (*note Article Caching::).
-
-   * The uudecode functions have been expanded and generalized (*note
-     Decoding Articles::).
-
-   * You can still post uuencoded articles, which was a little-known
-     feature of GNUS' past (*note Uuencoding and Posting::).
-
-   * Fetching parents (and other articles) now actually works without
-     glitches (*note Finding the Parent::).
-
-   * Gnus can fetch FAQs and group descriptions (*note Group
-     Information::).
-
-   * Digests (and other files) can be used as the basis for groups
-     (*note Document Groups::).
-
-   * Articles can be highlighted and customized (*note Customizing
-     Articles::).
-
-   * URLs and other external references can be buttonized (*note
-     Article Buttons::).
-
-   * You can do lots of strange stuff with the Gnus window & frame
-     configuration (*note Window Layout::).
-
-   * You can click on buttons instead of using the keyboard (*note
-     Buttons::).
-
-
-
 File: gnus,  Node: September Gnus,  Next: Red Gnus,  Prev: ding Gnus,  Up: New Features
 
-10.2.9.2 September Gnus
+11.2.8.2 September Gnus
 .......................
 
 New features in Gnus 5.2/5.3:
@@ -663,8 +81,7 @@ New features in Gnus 5.2/5.3:
      news batches, ClariNet briefs collections, and just about
      everything else (*note Document Groups::).
 
-   * Gnus has a new back end (`nnsoup') to create/read SOUP packets
-     (*note SOUP::).
+   * Gnus has a new back end (`nnsoup') to create/read SOUP packets.
 
    * The Gnus cache is much faster.
 
@@ -703,10 +120,6 @@ New features in Gnus 5.2/5.3:
      Layout::).
 
    * Mail can be re-scanned by a daemonic process (*note Daemons::).
-
-   * Gnus can make use of NoCeM files to weed out spam (*note NoCeM::).
-
-          (setq gnus-use-nocem t)
 
    * Groups can be made permanently visible (*note Listing Groups::).
 
@@ -760,7 +173,7 @@ New features in Gnus 5.2/5.3:
 
 File: gnus,  Node: Red Gnus,  Next: Quassia Gnus,  Prev: September Gnus,  Up: New Features
 
-10.2.9.3 Red Gnus
+11.2.8.3 Red Gnus
 .................
 
 New features in Gnus 5.4/5.5:
@@ -787,7 +200,7 @@ New features in Gnus 5.4/5.5:
      considered home score and adapt files (*note Home Score File::)
      have been added.
 
-   * `nndoc' was rewritten to be easily extendable (*note Document
+   * `nndoc' was rewritten to be easily extensible (*note Document
      Server Internals::).
 
    * Groups can inherit group parameters from parent topics (*note
@@ -871,7 +284,7 @@ New features in Gnus 5.4/5.5:
 
 File: gnus,  Node: Quassia Gnus,  Next: Pterodactyl Gnus,  Prev: Red Gnus,  Up: New Features
 
-10.2.9.4 Quassia Gnus
+11.2.8.4 Quassia Gnus
 .....................
 
 New features in Gnus 5.6:
@@ -967,7 +380,7 @@ New features in Gnus 5.6:
 
 File: gnus,  Node: Pterodactyl Gnus,  Next: Oort Gnus,  Prev: Quassia Gnus,  Up: New Features
 
-10.2.9.5 Pterodactyl Gnus
+11.2.8.5 Pterodactyl Gnus
 .........................
 
 New features in Gnus 5.8:
@@ -1019,7 +432,7 @@ New features in Gnus 5.8:
 
 File: gnus,  Node: Oort Gnus,  Next: No Gnus,  Prev: Pterodactyl Gnus,  Up: New Features
 
-10.2.9.6 Oort Gnus
+11.2.8.6 Oort Gnus
 ..................
 
 New features in Gnus 5.10:
@@ -1093,8 +506,7 @@ New features in Gnus 5.10:
         * TLS wrapper shipped with Gnus
 
           TLS/SSL is now supported in IMAP and NNTP via `tls.el' and
-          GNUTLS.  The old TLS/SSL support via (external third party)
-          `ssl.el' and OpenSSL still works.
+          GnuTLS.
 
         * Improved anti-spam features.
 
@@ -1221,9 +633,6 @@ New features in Gnus 5.10:
         * If the new option `gnus-summary-display-while-building' is
           non-`nil', the summary buffer is shown and updated as it's
           being built.
-
-        * The new `recent' mark `.' indicates newly arrived messages (as
-          opposed to old but unread messages).
 
         * Gnus supports RFC 2369 mailing list headers, and adds a
           number of related commands in mailing list groups.  *Note
@@ -1598,10 +1007,21 @@ New features in Gnus 5.10:
 
 File: gnus,  Node: No Gnus,  Prev: Oort Gnus,  Up: New Features
 
-10.2.9.7 No Gnus
+11.2.8.7 No Gnus
 ................
 
 New features in No Gnus:
+
+   * Supported Emacs versions The following Emacs versions are
+     supported by No Gnus:
+        * Emacs 22 and up
+
+        * XEmacs 21.4
+
+        * XEmacs 21.5
+
+        * SXEmacs
+
 
    * Installation changes
 
@@ -1619,7 +1039,7 @@ New features in No Gnus:
           isn't safe in general.
 
         * Incompatibility when switching from Emacs 23 to Emacs 22 In
-          Emacs 23, Gnus uses Emacs' new internal coding system
+          Emacs 23, Gnus uses Emacs's new internal coding system
           `utf-8-emacs' for saving articles drafts and `~/.newsrc.eld'.
           These files may not be read correctly in Emacs 22 and below.
           If you want to use Gnus across different Emacs versions, you
@@ -1636,6 +1056,13 @@ New features in No Gnus:
           and/or tabs.
 
    * New packages and libraries within Gnus
+
+        * New version of `nnimap'
+
+          `nnimap' has been reimplemented in a mostly-compatible way.
+          See the Gnus manual for a description of the new interface.
+          In particular, `nnimap-inbox' and the client side split
+          method has changed.
 
         * Gnus includes the Emacs Lisp SASL library.
 
@@ -1666,12 +1093,19 @@ New features in No Gnus:
 
    * Changes in group mode
 
+        * Symbols like `gcc-self' now have the same precedence rules in
+          `gnus-parameters' as other "real" variables: The last match
+          wins instead of the first match.
+
         * Old intermediate incoming mail files (`Incoming*') are deleted
           after a couple of days, not immediately.  *Note Mail Source
           Customization::.  (New in Gnus 5.10.10 / No Gnus 0.8)
 
 
    * Changes in summary and article mode
+
+        * There's now only one variable that determines how HTML is
+          rendered: `mm-text-html-renderer'.
 
         * Gnus now supports sticky article buffers.  Those are article
           buffers that are not reused when you select another article.
@@ -1759,6 +1193,9 @@ New features in No Gnus:
 
    * Changes in Message mode
 
+        * Gnus now defaults to saving all outgoing messages in per-month
+          nnfolder archives.
+
         * Gnus now supports the "hashcash" client puzzle anti-spam
           mechanism.  Use `(setq message-generate-hashcash t)' to
           enable.  *Note Hashcash::.
@@ -1790,6 +1227,13 @@ New features in No Gnus:
           of the "Whomever writes:" line.  You need to set
           `message-citation-line-function' to
           `message-insert-formatted-citation-line' as well.
+
+   * Changes in Browse Server mode
+
+        * Gnus' sophisticated subscription methods are now available in
+          Browse Server buffers as well using the variable
+          `gnus-browse-subscribe-newsgroup-method'.
+
 
    * Changes in back ends
 
@@ -1843,7 +1287,7 @@ New features in No Gnus:
           group buffer, see the variable `gnus-group-update-tool-bar'.
           Its default value depends on your Emacs version.
 
-        * You can change the location of XEmacs' toolbars in Gnus
+        * You can change the location of XEmacs's toolbars in Gnus
           buffers.  See `gnus-use-toolbar' and `message-use-toolbar'.
 
 
@@ -1869,12 +1313,16 @@ New features in No Gnus:
           group that has not turned auto-expire on.  *Note Expiring
           Mail::.
 
+        * NoCeM support has been removed.
+
+        * Carpal mode has been removed.
+
 
 
 
 File: gnus,  Node: On Writing Manuals,  Next: Terminology,  Prev: History,  Up: Appendices
 
-10.3 On Writing Manuals
+11.3 On Writing Manuals
 =======================
 
 I guess most manuals are written after-the-fact; documenting a program
@@ -1896,7 +1344,7 @@ the reference manual as source material.  It would look quite different.
 
 File: gnus,  Node: Terminology,  Next: Customization,  Prev: On Writing Manuals,  Up: Appendices
 
-10.4 Terminology
+11.4 Terminology
 ================
 
 "news"
@@ -1949,16 +1397,19 @@ File: gnus,  Node: Terminology,  Next: Customization,  Prev: On Writing Manuals,
 
 "native"
      Gnus will always use one method (and back end) as the "native", or
-     default, way of getting news.
+     default, way of getting news.  Groups from the native select method
+     have names like `gnu.emacs.gnus'.
 
 "foreign"
      You can also have any number of foreign groups active at the same
-     time.  These are groups that use non-native non-secondary back
-     ends for getting news.
+     time.  These are groups that use non-native non-secondary back ends
+     for getting news.  Foreign groups have names like
+     `nntp+news.gmane.org:gmane.emacs.gnus.devel'.
 
 "secondary"
-     Secondary back ends are somewhere half-way between being native
-     and being foreign, but they mostly act like they are native.
+     Secondary back ends are somewhere half-way between being native and
+     being foreign, but they mostly act like they are native, but they,
+     too have names like `nntp+news.gmane.org:gmane.emacs.gnus.devel'.
 
 "article"
      A message that has been posted as news.
@@ -2102,7 +1553,7 @@ File: gnus,  Node: Terminology,  Next: Customization,  Prev: On Writing Manuals,
 
 File: gnus,  Node: Customization,  Next: Troubleshooting,  Prev: Terminology,  Up: Appendices
 
-10.5 Customization
+11.5 Customization
 ==================
 
 All variables are properly documented elsewhere in this manual.  This
@@ -2119,7 +1570,7 @@ for some quite common situations.
 
 File: gnus,  Node: Slow/Expensive Connection,  Next: Slow Terminal Connection,  Up: Customization
 
-10.5.1 Slow/Expensive Connection
+11.5.1 Slow/Expensive Connection
 --------------------------------
 
 If you run Emacs on a machine locally, and get your news from a machine
@@ -2146,19 +1597,13 @@ Gnus has to get from the server.
      As the variables for the other back ends, there are
      `nndiary-nov-is-evil', `nndir-nov-is-evil',
      `nnfolder-nov-is-evil', `nnimap-nov-is-evil', `nnml-nov-is-evil',
-     `nnspool-nov-is-evil', and `nnwarchive-nov-is-evil'.  Note that a
-     non-`nil' value for `gnus-nov-is-evil' overrides all those
-     variables.(1)
-
-   ---------- Footnotes ----------
-
-   (1) Although the back ends `nnkiboze', `nnslashdot', `nnultimate',
-and `nnwfm' don't have their own nn*-nov-is-evil.
+     and `nnspool-nov-is-evil'.  Note that a non-`nil' value for
+     `gnus-nov-is-evil' overrides all those variables.
 
 
 File: gnus,  Node: Slow Terminal Connection,  Next: Little Disk Space,  Prev: Slow/Expensive Connection,  Up: Customization
 
-10.5.2 Slow Terminal Connection
+11.5.2 Slow Terminal Connection
 -------------------------------
 
 Let's say you use your home computer for dialing up the system that runs
@@ -2199,7 +1644,7 @@ possible) the amount of data sent over the wires.
 
 File: gnus,  Node: Little Disk Space,  Next: Slow Machine,  Prev: Slow Terminal Connection,  Up: Customization
 
-10.5.3 Little Disk Space
+11.5.3 Little Disk Space
 ------------------------
 
 The startup files can get rather large, so you may want to cut their
@@ -2225,7 +1670,7 @@ sizes a bit if you are running out of space.
 
 File: gnus,  Node: Slow Machine,  Prev: Little Disk Space,  Up: Customization
 
-10.5.4 Slow Machine
+11.5.4 Slow Machine
 -------------------
 
 If you have a slow machine, or are just really impatient, there are a
@@ -2241,7 +1686,7 @@ buffer faster.  Also *note Slow/Expensive Connection::.
 
 File: gnus,  Node: Troubleshooting,  Next: Gnus Reference Guide,  Prev: Customization,  Up: Appendices
 
-10.6 Troubleshooting
+11.6 Troubleshooting
 ====================
 
 Gnus works _so_ well straight out of the box--I can't imagine any
@@ -2336,7 +1781,7 @@ subscribe.
 
 File: gnus,  Node: Gnus Reference Guide,  Next: Emacs for Heathens,  Prev: Troubleshooting,  Up: Appendices
 
-10.7 Gnus Reference Guide
+11.7 Gnus Reference Guide
 =========================
 
 It is my hope that other people will figure out smart stuff that Gnus
@@ -2366,7 +1811,7 @@ and general methods of operation.
 
 File: gnus,  Node: Gnus Utility Functions,  Next: Back End Interface,  Up: Gnus Reference Guide
 
-10.7.1 Gnus Utility Functions
+11.7.1 Gnus Utility Functions
 -----------------------------
 
 When writing small functions to be run from hooks (and stuff), it's
@@ -2388,13 +1833,14 @@ Below is a list of the most common ones.
      the full (prefixed) Gnus group name.
 
 `gnus-get-info'
-     Returns the group info list for GROUP.
+     Returns the group info list for GROUP (*note Group Info::).
 
 `gnus-group-unread'
      The number of unread articles in GROUP, or `t' if that is unknown.
 
 `gnus-active'
-     The active entry for GROUP.
+     The active entry (i.e., a cons cell containing the lowest and
+     highest article numbers) for GROUP.
 
 `gnus-set-active'
      Set the active entry for GROUP.
@@ -2421,7 +1867,9 @@ Below is a list of the most common ones.
      Returns the select method corresponding to SERVER.
 
 `gnus-server-equal'
-     Says whether two virtual servers are equal.
+     Says whether two virtual servers are essentially equal.  For
+     instance, two virtual servers may have server parameters in
+     different order, but this function will consider them equal.
 
 `gnus-group-native-p'
      Says whether GROUP is native or not.
@@ -2433,8 +1881,9 @@ Below is a list of the most common ones.
      Says whether GROUP is foreign or not.
 
 `gnus-group-find-parameter'
-     Returns the parameter list of GROUP.  If given a second parameter,
-     returns the value of that parameter for GROUP.
+     Returns the parameter list of GROUP (*note Group Parameters::).
+     If given a second parameter, returns the value of that parameter
+     for GROUP.
 
 `gnus-group-set-parameter'
      Takes three parameters; GROUP, PARAMETER and VALUE.
@@ -2456,7 +1905,7 @@ Below is a list of the most common ones.
 
 File: gnus,  Node: Back End Interface,  Next: Score File Syntax,  Prev: Gnus Utility Functions,  Up: Gnus Reference Guide
 
-10.7.2 Back End Interface
+11.7.2 Back End Interface
 -------------------------
 
 Gnus doesn't know anything about NNTP, spools, mail or virtual groups.
@@ -2546,7 +1995,7 @@ Back End Functions::.
 
 File: gnus,  Node: Required Back End Functions,  Next: Optional Back End Functions,  Up: Back End Interface
 
-10.7.2.1 Required Back End Functions
+11.7.2.1 Required Back End Functions
 ....................................
 
 `(nnchoke-retrieve-headers ARTICLES &optional GROUP SERVER FETCH-OLD)'
@@ -2666,12 +2115,14 @@ File: gnus,  Node: Required Back End Functions,  Next: Optional Back End Functio
      articles by `Message-ID'.  If this isn't possible, `t' should be
      returned on successful article retrieval.
 
-`(nnchoke-request-group GROUP &optional SERVER FAST)'
+`(nnchoke-request-group GROUP &optional SERVER FAST INFO)'
      Get data on GROUP.  This function also has the side effect of
      making GROUP the current group.
 
      If FAST, don't bother to return useful data, just make GROUP the
      current group.
+
+     If INFO, it allows the backend to update the group info structure.
 
      Here's an example of some result data and a definition of the same:
 
@@ -2736,7 +2187,7 @@ File: gnus,  Node: Required Back End Functions,  Next: Optional Back End Functio
 
 File: gnus,  Node: Optional Back End Functions,  Next: Error Messaging,  Prev: Required Back End Functions,  Up: Back End Interface
 
-10.7.2.2 Optional Back End Functions
+11.7.2.2 Optional Back End Functions
 ....................................
 
 `(nnchoke-retrieve-groups GROUPS &optional SERVER)'
@@ -2791,8 +2242,8 @@ File: gnus,  Node: Optional Back End Functions,  Next: Error Messaging,  Prev: R
      all marks not mentioned).  MARK is a list of marks; where each
      mark is a symbol.  Currently used marks are `read', `tick',
      `reply', `expire', `killed', `dormant', `save', `download',
-     `unsend', `forward' and `recent', but your back end should, if
-     possible, not limit itself to these.
+     `unsend', and `forward', but your back end should, if possible,
+     not limit itself to these.
 
      Given contradictory actions, the last action in the list should be
      the effective one.  That is, if your action contains a request to
@@ -2943,7 +2394,7 @@ File: gnus,  Node: Optional Back End Functions,  Next: Error Messaging,  Prev: R
 
 File: gnus,  Node: Error Messaging,  Next: Writing New Back Ends,  Prev: Optional Back End Functions,  Up: Back End Interface
 
-10.7.2.3 Error Messaging
+11.7.2.3 Error Messaging
 ........................
 
 The back ends should use the function `nnheader-report' to report error
@@ -2969,7 +2420,7 @@ argument--the server symbol.
 
 File: gnus,  Node: Writing New Back Ends,  Next: Hooking New Back Ends Into Gnus,  Prev: Error Messaging,  Up: Back End Interface
 
-10.7.2.4 Writing New Back Ends
+11.7.2.4 Writing New Back Ends
 ..............................
 
 Many back ends are quite similar.  `nnml' is just like `nnspool', but
@@ -3125,7 +2576,7 @@ following macros:
 
 File: gnus,  Node: Hooking New Back Ends Into Gnus,  Next: Mail-like Back Ends,  Prev: Writing New Back Ends,  Up: Back End Interface
 
-10.7.2.5 Hooking New Back Ends Into Gnus
+11.7.2.5 Hooking New Back Ends Into Gnus
 ........................................
 
 Having Gnus start using your new back end is rather easy--you just
@@ -3174,7 +2625,7 @@ an arbitrary number of "abilities".
 
 File: gnus,  Node: Mail-like Back Ends,  Prev: Hooking New Back Ends Into Gnus,  Up: Back End Interface
 
-10.7.2.6 Mail-like Back Ends
+11.7.2.6 Mail-like Back Ends
 ............................
 
 One of the things that separate the mail back ends from the rest of the
@@ -3222,11 +2673,11 @@ alist, like this:
 
 File: gnus,  Node: Score File Syntax,  Next: Headers,  Prev: Back End Interface,  Up: Gnus Reference Guide
 
-10.7.3 Score File Syntax
+11.7.3 Score File Syntax
 ------------------------
 
-Score files are meant to be easily parseable, but yet extremely
-mallable.  It was decided that something that had the same read syntax
+Score files are meant to be easily parsable, but yet extremely
+malleable.  It was decided that something that had the same read syntax
 as an Emacs Lisp list would fit that spec.
 
    Here's a typical score file:
@@ -3296,7 +2747,7 @@ manual (*note Score File Format::).
 
 File: gnus,  Node: Headers,  Next: Ranges,  Prev: Score File Syntax,  Up: Gnus Reference Guide
 
-10.7.4 Headers
+11.7.4 Headers
 --------------
 
 Internally Gnus uses a format for storing article headers that
@@ -3324,7 +2775,7 @@ contains an alist of header/value pairs (*note To From Newsgroups::).
 
 File: gnus,  Node: Ranges,  Next: Group Info,  Prev: Headers,  Up: Gnus Reference Guide
 
-10.7.5 Ranges
+11.7.5 Ranges
 -------------
 
 GNUS introduced a concept that I found so useful that I've started
@@ -3390,7 +2841,7 @@ sequences.)
 
 File: gnus,  Node: Group Info,  Next: Extended Interactive,  Prev: Ranges,  Up: Gnus Reference Guide
 
-10.7.6 Group Info
+11.7.6 Group Info
 -----------------
 
 Gnus stores all permanent info on groups in a "group info" list.  This
@@ -3485,7 +2936,7 @@ to the three final setter functions to have this happen automatically.
 
 File: gnus,  Node: Extended Interactive,  Next: Emacs/XEmacs Code,  Prev: Group Info,  Up: Gnus Reference Guide
 
-10.7.7 Extended Interactive
+11.7.7 Extended Interactive
 ---------------------------
 
 Gnus extends the standard Emacs `interactive' specification slightly to
@@ -3530,7 +2981,7 @@ adds a few more.
 
 File: gnus,  Node: Emacs/XEmacs Code,  Next: Various File Formats,  Prev: Extended Interactive,  Up: Gnus Reference Guide
 
-10.7.8 Emacs/XEmacs Code
+11.7.8 Emacs/XEmacs Code
 ------------------------
 
 While Gnus runs under Emacs, XEmacs and Mule, I decided that one of the
@@ -3574,7 +3025,7 @@ hit these indirections impose on Gnus under XEmacs should be slight.
 
 File: gnus,  Node: Various File Formats,  Prev: Emacs/XEmacs Code,  Up: Gnus Reference Guide
 
-10.7.9 Various File Formats
+11.7.9 Various File Formats
 ---------------------------
 
 * Menu:
@@ -3585,7 +3036,7 @@ File: gnus,  Node: Various File Formats,  Prev: Emacs/XEmacs Code,  Up: Gnus Ref
 
 File: gnus,  Node: Active File Format,  Next: Newsgroups File Format,  Up: Various File Formats
 
-10.7.9.1 Active File Format
+11.7.9.1 Active File Format
 ...........................
 
 The active file lists all groups available on the server in question.
@@ -3616,7 +3067,7 @@ group.
 
 File: gnus,  Node: Newsgroups File Format,  Prev: Active File Format,  Up: Various File Formats
 
-10.7.9.2 Newsgroups File Format
+11.7.9.2 Newsgroups File Format
 ...............................
 
 The newsgroups file lists groups along with their descriptions.  Not all
@@ -3636,7 +3087,7 @@ Here's the definition:
 
 File: gnus,  Node: Emacs for Heathens,  Next: Frequently Asked Questions,  Prev: Gnus Reference Guide,  Up: Appendices
 
-10.8 Emacs for Heathens
+11.8 Emacs for Heathens
 =======================
 
 Believe it or not, but some people who use Gnus haven't really used
@@ -3655,7 +3106,7 @@ familiar with Emacs, just ignore this and go fondle your cat instead.
 
 File: gnus,  Node: Keystrokes,  Next: Emacs Lisp,  Up: Emacs for Heathens
 
-10.8.1 Keystrokes
+11.8.1 Keystrokes
 -----------------
 
    * Q: What is an experienced Emacs user?
@@ -3695,7 +3146,7 @@ it.
 
 File: gnus,  Node: Emacs Lisp,  Prev: Keystrokes,  Up: Emacs for Heathens
 
-10.8.2 Emacs Lisp
+11.8.2 Emacs Lisp
 -----------------
 
 Emacs is the King of Editors because it's really a Lisp interpreter.
@@ -3741,10 +3192,10 @@ means:
 
      (setq gnus-read-active-file 'some)
 
-   On the other hand, if the manual says "set `gnus-nntp-server' to
-`nntp.ifi.uio.no'", that means:
+   On the other hand, if the manual says "set `gnus-nntp-server-file' to
+`/etc/nntpserver'", that means:
 
-     (setq gnus-nntp-server "nntp.ifi.uio.no")
+     (setq gnus-nntp-server-file "/etc/nntpserver")
 
    So be careful not to mix up strings (the latter) with symbols (the
 former).  The manual is unambiguous, but it can be confusing.
@@ -3752,7 +3203,7 @@ former).  The manual is unambiguous, but it can be confusing.
 
 File: gnus,  Node: Frequently Asked Questions,  Prev: Emacs for Heathens,  Up: Appendices
 
-10.9 Frequently Asked Questions
+11.9 Frequently Asked Questions
 ===============================
 
 * Menu:
@@ -3780,18 +3231,10 @@ File: gnus,  Node: Frequently Asked Questions,  Prev: Emacs for Heathens,  Up: A
 Abstract
 --------
 
-This is the new Gnus Frequently Asked Questions list.  If you have a
-Web browser, the official hypertext version is at
-`http://my.gnus.org/FAQ/', the Docbook source is available from
-http://sourceforge.net (http://sourceforge.net/projects/gnus/).
+This is the new Gnus Frequently Asked Questions list.
 
-   Please submit features and suggestions to the FAQ discussion list
-<faq-discuss@my.gnus.org>.  The list is protected against junk mail with
-qconfirm (http://smarden.org/qconfirm/index.html). As a subscriber,
-your submissions will automatically pass.  You can also subscribe to
-the list by sending a blank email to faq-discuss-subscribe@my.gnus.org
-<faq-discuss-subscribe@my.gnus.org> and browse the archive (BROKEN)
-(http://mail1.kens.com/cgi-bin/ezmlm-browse?command=monthbythread%26list=faq-discuss).
+   Please submit features and suggestions to the ding list
+<ding@gnus.org>.
 
 
 File: gnus,  Node: FAQ - Changes,  Next: FAQ - Introduction,  Up: Frequently Asked Questions
@@ -3833,21 +3276,19 @@ then Gnus is what you want.
 like to thank Steve Baur and Per Abrahamsen for doing a wonderful job
 with this FAQ before him. We would like to do the same - thanks, Justin!
 
-   If you have a Web browser, the official hypertext version is at:
-`http://my.gnus.org/FAQ/'.  This version is much nicer than the
-unofficial hypertext versions that are archived at Utrecht, Oxford,
-Smart Pages, Ohio State, and other FAQ archives. See the resources
-question below if you want information on obtaining it in another
-format.
+   This version is much nicer than the unofficial hypertext versions
+that are archived at Utrecht, Oxford, Smart Pages, Ohio State, and
+other FAQ archives. See the resources question below if you want
+information on obtaining it in another format.
 
    The information contained here was compiled with the assistance of
 the Gnus development mailing list, and any errors or misprints are the
-my.gnus.org team's fault, sorry.
+Gnus team's fault, sorry.
 
 
 File: gnus,  Node: FAQ 1 - Installation FAQ,  Next: FAQ 2 - Startup / Group buffer,  Prev: FAQ - Introduction,  Up: Frequently Asked Questions
 
-10.9.1 Installation FAQ
+11.9.1 Installation FAQ
 -----------------------
 
 * Menu:
@@ -3918,7 +3359,7 @@ Answer
 ......
 
 Gnus is released independent from releases of Emacs and XEmacs.
-Therefore, the version bundled with Emacs or the version in XEmacs'
+Therefore, the version bundled with Emacs or the version in XEmacs's
 package system might not be up to date (e.g. Gnus 5.9 bundled with Emacs
 21 is outdated).  You can get the latest released version of Gnus from
 `http://www.gnus.org/dist/gnus.tar.gz' or via anonymous FTP from
@@ -4001,7 +3442,7 @@ did the compilation. Get one copy of Gnus for Emacs and one for XEmacs.
 
 File: gnus,  Node: FAQ 2 - Startup / Group buffer,  Next: FAQ 3 - Getting Messages,  Prev: FAQ 1 - Installation FAQ,  Up: Frequently Asked Questions
 
-10.9.2 Startup / Group buffer
+11.9.2 Startup / Group buffer
 -----------------------------
 
 * Menu:
@@ -4031,9 +3472,9 @@ Answer
 ......
 
 This message means that the last time you used Gnus, it wasn't properly
-exited and therefor couldn't write its informations to disk (e.g. which
-messages you read), you are now asked if you want to restore those
-informations from the auto-save file.
+exited and therefore couldn't write its information to disk (e.g. which
+messages you read), you are now asked if you want to restore that
+information from the auto-save file.
 
    To prevent this message make sure you exit Gnus via `q' in group
 buffer instead of just killing Emacs.
@@ -4111,7 +3552,7 @@ point to the place where you want the group to be and hit `C-y'.
 
 File: gnus,  Node: FAQ 3 - Getting Messages,  Next: FAQ 4 - Reading messages,  Prev: FAQ 2 - Startup / Group buffer,  Up: Frequently Asked Questions
 
-10.9.3 Getting Messages
+11.9.3 Getting Messages
 -----------------------
 
 * Menu:
@@ -4318,7 +3759,7 @@ cases.
    However, the first thing to do is to tell Gnus in which way it
 should store the mail, in Gnus terminology which back end to use. Gnus
 supports many different back ends, the most commonly used one is nnml.
-It stores every mail in one file and is therefor quite fast. However
+It stores every mail in one file and is therefore quite fast. However
 you might prefer a one file per group approach if your file system has
 problems with many small files, the nnfolder back end is then probably
 the choice for you.  To use nnml add the following to ~/.gnus.el:
@@ -4327,8 +3768,8 @@ the choice for you.  To use nnml add the following to ~/.gnus.el:
    As you might have guessed, if you want nnfolder, it's
 
      (add-to-list 'gnus-secondary-select-methods '(nnfolder ""))
-   Now we need to tell Gnus, where to get it's mail from. If it's a
-POP3 server, then you need something like this:
+   Now we need to tell Gnus, where to get its mail from. If it's a POP3
+server, then you need something like this:
 
      (eval-after-load "mail-source"
        '(add-to-list 'mail-sources '(pop :server "pop.YourProvider.net"
@@ -4458,7 +3899,7 @@ external program (e.g. fetchmail) to fetch your mail, see the info node
 
 File: gnus,  Node: FAQ 4 - Reading messages,  Next: FAQ 5 - Composing messages,  Prev: FAQ 3 - Getting Messages,  Up: Frequently Asked Questions
 
-10.9.4 Reading messages
+11.9.4 Reading messages
 -----------------------
 
 * Menu:
@@ -4745,8 +4186,7 @@ Stop those "Can I ..." questions, the answer is always yes in Gnus
 Country :-). It's a three step process: First we make faces
 (specifications of how summary-line shall look like) for those
 postings, then we'll give them some special score and finally we'll
-tell Gnus to use the new faces. You can find detailed instructions on
-how to do it on my.gnus.org (http://my.gnus.org/node/view/224)
+tell Gnus to use the new faces.
 
 
 File: gnus,  Node: FAQ 4-12,  Next: FAQ 4-13,  Prev: FAQ 4-11,  Up: FAQ 4 - Reading messages
@@ -4823,10 +4263,10 @@ Answer
 ......
 
 You've got to play around with the variable gnus-summary-line-format.
-It's value is a string of symbols which stand for things like author,
+Its value is a string of symbols which stand for things like author,
 date, subject etc. A list of the available specifiers can be found in
 the manual node "Summary Buffer Lines" and the often forgotten node
-"Formatting Variables" and it's sub-nodes. There you'll find useful
+"Formatting Variables" and its sub-nodes. There you'll find useful
 things like positioning the cursor and tabulators which allow you a
 summary in table form, but sadly hard tabulators are broken in 5.8.8.
 
@@ -4908,13 +4348,13 @@ me before. Those rules kill about 80% of the Spam which reaches me
          ("Spam" "^CC: .*azzrael@t-online.invalid")
          ("Spam" "^X-Mailer-Version: 1.50 BETA")
          ("Uni" "^\\(CC:\\|To:\\).*localpart@uni-koblenz.invalid.*")
-         ("Inbox" "^\\(CC:\\|To:\\).*\\(my\ name\\|address@one.invalid\\|adress@two.invalid\\)")
+         ("Inbox" "^\\(CC:\\|To:\\).*\\(my\ name\\|address@one.invalid\\|address@two.invalid\\)")
          ("Spam" "")))
 
 
 File: gnus,  Node: FAQ 5 - Composing messages,  Next: FAQ 6 - Old messages,  Prev: FAQ 4 - Reading messages,  Up: Frequently Asked Questions
 
-10.9.5 Composing messages
+11.9.5 Composing messages
 -------------------------
 
 * Menu:
@@ -5093,7 +4533,7 @@ to do is to make sure that you've got either ispell
 (http://aspell.sourceforge.net/) installed and in your Path. Then you
 need ispell.el (http://www.kdstevens.com/~stevens/ispell-page.html) and
 for on-the-fly spell-checking flyspell.el
-(http://www-sop.inria.fr/mimosa/personnel/Manuel.Serrano/flyspell/flyspell.html).
+(http://www-sop.inria.fr/members/Manuel.Serrano/flyspell/flyspell.html).
 Ispell.el is shipped with Emacs and available through the XEmacs
 package system, flyspell.el is shipped with Emacs and part of XEmacs
 text-modes package which is available through the package system, so
@@ -5359,7 +4799,7 @@ Mail and looking at the Message-ID.
 
 File: gnus,  Node: FAQ 6 - Old messages,  Next: FAQ 7 - Gnus in a dial-up environment,  Prev: FAQ 5 - Composing messages,  Up: Frequently Asked Questions
 
-10.9.6 Old messages
+11.9.6 Old messages
 -------------------
 
 * Menu:
@@ -5474,7 +4914,7 @@ but this is both slow for big archives and inconvenient since you are
 not displaying the found mail in Gnus. Here comes nnir into action.
 Nnir is a front end to search engines like swish-e or swish++ and
 others. You index your mail with one of those search engines and with
-the help of nnir you can search trough the indexed mail and generate a
+the help of nnir you can search through the indexed mail and generate a
 temporary group with all messages which met your search criteria. If
 this sound cool to you get nnir.el from
 `ftp://ls6-ftp.cs.uni-dortmund.de/pub/src/emacs/' or
@@ -5561,7 +5001,7 @@ mail-) groups, or set other variables specific for some groups?")
 
 File: gnus,  Node: FAQ 7 - Gnus in a dial-up environment,  Next: FAQ 8 - Getting help,  Prev: FAQ 6 - Old messages,  Up: Frequently Asked Questions
 
-10.9.7 Gnus in a dial-up environment
+11.9.7 Gnus in a dial-up environment
 ------------------------------------
 
 * Menu:
@@ -5602,12 +5042,11 @@ solution is a small nntp server like Leafnode
 course you can also install a full featured news server like inn
 (http://www.isc.org/products/INN/).  Then you want to fetch your Mail,
 popular choices are fetchmail (http://www.catb.org/~esr/fetchmail/) and
-getmail (http://www.qcc.ca/~charlesc/software/getmail-3.0/).  You
-should tell those to write the mail to your disk and Gnus to read it
-from there. Last but not least the mail sending part: This can be done
-with every MTA like sendmail (http://www.sendmail.org/), postfix
-(http://www.qmail.org/), exim (http://www.exim.org/) or qmail
-(http://www.qmail.org/).
+getmail (http://pyropus.ca/software/getmail/).  You should tell those
+to write the mail to your disk and Gnus to read it from there. Last but
+not least the mail sending part: This can be done with every MTA like
+sendmail (http://www.sendmail.org/), postfix (http://www.qmail.org/),
+exim (http://www.exim.org/) or qmail (http://www.qmail.org/).
 
    On windows boxes I'd vote for Hamster (http://www.tglsoft.de/), it's
 a small freeware, open-source program which fetches your mail and news
@@ -5695,7 +5134,7 @@ Note that for this to work, the agent must be active.
 
 File: gnus,  Node: FAQ 8 - Getting help,  Next: FAQ 9 - Tuning Gnus,  Prev: FAQ 7 - Gnus in a dial-up environment,  Up: Frequently Asked Questions
 
-10.9.8 Getting help
+11.9.8 Getting help
 -------------------
 
 * Menu:
@@ -5740,10 +5179,10 @@ Answer
 ......
 
 There's not only the Gnus manual but also the manuals for message,
-emacs-mime, sieve and pgg. Those packages are distributed with Gnus and
-used by Gnus but aren't really part of core Gnus, so they are
-documented in different info files, you should have a look in those
-manuals, too.
+emacs-mime, sieve, EasyPG Assistant, and pgg. Those packages are
+distributed with Gnus and used by Gnus but aren't really part of core
+Gnus, so they are documented in different info files, you should have a
+look in those manuals, too.
 
 
 File: gnus,  Node: FAQ 8-3,  Next: FAQ 8-4,  Prev: FAQ 8-2,  Up: FAQ 8 - Getting help
@@ -5756,10 +5195,8 @@ Which websites should I know?
 Answer
 ......
 
-The two most important ones are the official Gnus website
-(http://www.gnus.org).  and it's sister site my.gnus.org (MGO)
-(http://my.gnus.org), hosting an archive of lisp snippets, howtos, a
-(not really finished) tutorial and this FAQ.
+The most important one is the official Gnus website
+(http://www.gnus.org).
 
    Tell me about other sites which are interesting.
 
@@ -5820,7 +5257,7 @@ Point your IRC client to irc.freenode.net, channel #gnus.
 
 File: gnus,  Node: FAQ 9 - Tuning Gnus,  Next: FAQ - Glossary,  Prev: FAQ 8 - Getting help,  Up: Frequently Asked Questions
 
-10.9.9 Tuning Gnus
+11.9.9 Tuning Gnus
 ------------------
 
 * Menu:
@@ -5840,7 +5277,7 @@ Starting Gnus is really slow, how to speed it up?
 Answer
 ......
 
-The reason for this could be the way Gnus reads it's active file, see
+The reason for this could be the way Gnus reads its active file, see
 the node "The Active File" in the Gnus manual for things you might try
 to speed the process up.  An other idea would be to byte compile your
 ~/.gnus.el (say `M-x byte-compile-file RET ~/.gnus.el RET' to do it).
@@ -5906,7 +5343,7 @@ instead of an archive group, this should bring you back to normal speed.
 
 File: gnus,  Node: FAQ - Glossary,  Prev: FAQ 9 - Tuning Gnus,  Up: Frequently Asked Questions
 
-10.9.10 Glossary
+11.9.10 Glossary
 ----------------
 
 "~/.gnus.el"
@@ -5941,7 +5378,7 @@ File: gnus,  Node: FAQ - Glossary,  Prev: FAQ 9 - Tuning Gnus,  Up: Frequently A
 
 File: gnus,  Node: GNU Free Documentation License,  Next: Index,  Prev: Appendices,  Up: Top
 
-11 GNU Free Documentation License
+12 GNU Free Documentation License
 *********************************
 
                      Version 1.3, 3 November 2008

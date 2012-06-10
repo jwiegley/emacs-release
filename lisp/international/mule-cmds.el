@@ -1,7 +1,6 @@
 ;;; mule-cmds.el --- commands for multilingual environment -*-coding: iso-2022-7bit -*-
 
-;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1997-2012 Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
 ;;   2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
@@ -140,7 +139,7 @@
 
     (define-key-after map [describe-language-environment]
       `(menu-item ,(purecopy "Describe Language Environment")
-            describe-language-environment-map
+            ,describe-language-environment-map
             :help ,(purecopy "Show multilingual settings for a specific language")))
     (define-key-after map [describe-input-method]
       `(menu-item ,(purecopy "Describe Input Method...") describe-input-method
@@ -286,9 +285,8 @@ wrong, use this command again to toggle back to the right mode."
   "Display the HELLO file, which lists many languages and characters."
   (interactive)
   ;; We have to decode the file in any environment.
-  (letf (((default-value 'enable-multibyte-characters) t)
-	 (coding-system-for-read 'iso-2022-7bit))
-	(view-file (expand-file-name "HELLO" data-directory))))
+  (letf ((coding-system-for-read 'iso-2022-7bit))
+    (view-file (expand-file-name "HELLO" data-directory))))
 
 (defun universal-coding-system-argument (coding-system)
   "Execute an I/O command using the specified coding system."
@@ -399,7 +397,11 @@ If CODING-SYSTEM specifies a certain type of EOL conversion, the coding
 systems set by this function will use that type of EOL conversion.
 
 A coding system that requires automatic detection of text+encoding
-\(e.g. undecided, unix) can't be preferred."
+\(e.g. undecided, unix) can't be preferred.
+
+To prefer, for instance, utf-8, say the following:
+
+  \(prefer-coding-system 'utf-8)"
   (interactive "zPrefer coding system: ")
   (if (not (and coding-system (coding-system-p coding-system)))
       (error "Invalid coding system `%s'" coding-system))
@@ -416,7 +418,10 @@ A coding system that requires automatic detection of text+encoding
     (if (memq eol-type '(0 1 2))
 	(setq base
 	      (coding-system-change-eol-conversion base eol-type)))
-    (set-default-coding-systems base)))
+    (set-default-coding-systems base)
+    (if (called-interactively-p 'interactive)
+	(or (eq base default-file-name-coding-system)
+	    (message "The default value of `file-name-coding-system' was not changed because the specified coding system is not suitable for file names.")))))
 
 (defvar sort-coding-systems-predicate nil
   "If non-nil, a predicate function to sort coding systems.
@@ -1029,7 +1034,7 @@ It is highly recommended to fix it before writing to a file."
 and try again)? " coding-system auto-cs))
 	      (error "Save aborted"))))
       (when (and tick (/= tick (buffer-chars-modified-tick)))
-	(error "Cancelled because the buffer was modified"))
+	(error "Canceled because the buffer was modified"))
       coding-system)))
 
 (setq select-safe-coding-system-function 'select-safe-coding-system)
@@ -1304,17 +1309,22 @@ If nil, that means no input method is activated now.")
 (make-variable-buffer-local 'current-input-method-title)
 (put 'current-input-method-title 'permanent-local t)
 
+(define-widget 'mule-input-method-string 'string
+  "String widget with completion for input method."
+  :completions
+  (lambda (string pred action)
+    (let ((completion-ignore-case t))
+      (complete-with-action action input-method-alist string pred)))
+  :prompt-history 'input-method-history)
+
 (defcustom default-input-method nil
   "Default input method for multilingual text (a string).
 This is the input method activated automatically by the command
 `toggle-input-method' (\\[toggle-input-method])."
   :link  '(custom-manual "(emacs)Input Methods")
   :group 'mule
-  :type '(choice (const nil) (string
-			      :completion-ignore-case t
-			      :complete-function widget-string-complete
-			      :completion-alist input-method-alist
-			      :prompt-history input-method-history))
+  :type `(choice (const nil)
+                 mule-input-method-string)
   :set-after '(current-language-environment))
 
 (put 'input-method-function 'permanent-local t)
@@ -1828,7 +1838,11 @@ The default status is as follows:
 This sets the coding system priority and the default input method
 and sometimes other things.  LANGUAGE-NAME should be a string
 which is the name of a language environment.  For example, \"Latin-1\"
-specifies the character set for the major languages of Western Europe."
+specifies the character set for the major languages of Western Europe.
+
+If there is a prior value for `current-language-environment', this
+runs the hook `exit-language-environment-hook'.  After setting up
+the new language environment, it runs `set-language-environment-hook'."
   (interactive (list (read-language-name
 		      nil
 		      "Set language environment (default English): ")))
@@ -1877,10 +1891,11 @@ specifies the character set for the major languages of Western Europe."
 (define-widget 'charset 'symbol
   "An Emacs charset."
   :tag "Charset"
-  :complete-function (lambda ()
-		       (interactive)
-		       (lisp-complete-symbol 'charsetp))
-  :completion-ignore-case t
+  :completions
+  (lambda (string pred action)
+    (let ((completion-ignore-case t))
+      (completion-table-with-predicate
+       obarray #'charsetp 'strict string pred action)))
   :value 'ascii
   :validate (lambda (widget)
 	      (unless (charsetp (widget-value widget))
@@ -1914,9 +1929,11 @@ See `set-language-info-alist' for use in programs."
 	   (set-language-environment current-language-environment)))
   :type `(alist
 	  :key-type (string :tag "Language environment"
-			    :completion-ignore-case t
-			    :complete-function widget-string-complete
-			    :completion-alist language-info-alist)
+			    :completions
+                            (lambda (string pred action)
+                              (let ((completion-ignore-case t))
+                                (complete-with-action
+                                 action language-info-alist string pred))))
 	  :value-type
 	  (alist :key-type symbol
 		 :options ((documentation string)
@@ -1927,12 +1944,7 @@ See `set-language-info-alist' for use in programs."
 			   (coding-system (repeat coding-system))
 			   (coding-priority (repeat coding-system))
 			   (nonascii-translation charset)
-			   (input-method
-			    (string
-			     :completion-ignore-case t
-			     :complete-function widget-string-complete
-			     :completion-alist input-method-alist
-			     :prompt-history input-method-history))
+			   (input-method mule-input-method-string)
 			   (features (repeat symbol))
 			   (unibyte-display coding-system)))))
 
@@ -2038,7 +2050,7 @@ See `set-language-info-alist' for use in programs."
 
 (defun princ-list (&rest args)
   "Print all arguments with `princ', then print \"\\n\"."
-  (while args (princ (car args)) (setq args (cdr args)))
+  (mapc #'princ args)
   (princ "\n"))
 (make-obsolete 'princ-list "use mapc and princ instead" "23.3")
 
@@ -2057,7 +2069,7 @@ See `set-language-info-alist' for use in programs."
 		  (or (not (eq last-command-event 'Default))
 		      (setq last-command-event 'English))
 		  (setq language-name (symbol-name last-command-event))))
-	(error "Bogus calling sequence"))
+	(error "This command should only be called from the menu bar"))
     (describe-language-environment language-name)))
 
 (defun describe-language-environment (language-name)
@@ -2183,7 +2195,7 @@ See `set-language-info-alist' for use in programs."
     ("af" . "Latin-1") ; Afrikaans
     ("am" "Ethiopic" utf-8) ; Amharic
     ("an" . "Latin-9") ; Aragonese
-    ; ar Arabic glibc uses 8859-6
+    ("ar" . "Arabic")
     ; as Assamese
     ; ay Aymara
     ("az" . "UTF-8") ; Azerbaijani
@@ -2711,16 +2723,6 @@ See also `locale-charset-language-names', `locale-language-names',
 
 ;;; Character property
 
-;; Each element has the form (PROP . TABLE).
-;; PROP is a symbol representing a character property.
-;; TABLE is a char-table containing the property value for each character.
-;; TABLE may be a name of file to load to build a char-table.
-;; Don't modify this variable directly but use `define-char-code-property'.
-
-(defvar char-code-property-alist nil
-  "Alist of character property name vs char-table containing property values.
-Internal use only.")
-
 (put 'char-code-property-table 'char-table-extra-slots 5)
 
 (defun define-char-code-property (name table &optional docstring)
@@ -2772,32 +2774,23 @@ See also the documentation of `get-char-code-property' and
 
 (defun get-char-code-property (char propname)
   "Return the value of CHAR's PROPNAME property."
-  (let ((slot (assq propname char-code-property-alist)))
-    (if slot
-	(let (table value func)
-	  (if (stringp (cdr slot))
-	      (load (cdr slot) nil t))
-	  (setq table (cdr slot)
-		value (aref table char)
-		func (char-table-extra-slot table 1))
+  (let ((table (unicode-property-table-internal propname)))
+    (if table
+	(let ((func (char-table-extra-slot table 1)))
 	  (if (functionp func)
-	      (setq value (funcall func char value table)))
-	  value)
+	      (funcall func char (aref table char) table)
+	    (get-unicode-property-internal table char)))
       (plist-get (aref char-code-property-table char) propname))))
 
 (defun put-char-code-property (char propname value)
   "Store CHAR's PROPNAME property with VALUE.
 It can be retrieved with `(get-char-code-property CHAR PROPNAME)'."
-  (let ((slot (assq propname char-code-property-alist)))
-    (if slot
-	(let (table func)
-	  (if (stringp (cdr slot))
-	      (load (cdr slot) nil t))
-	  (setq table (cdr slot)
-		func (char-table-extra-slot table 2))
+  (let ((table (unicode-property-table-internal propname)))
+    (if table
+	(let ((func (char-table-extra-slot table 2)))
 	  (if (functionp func)
 	      (funcall func char value table)
-	    (aset table char value)))
+	    (put-unicode-property-internal table char value)))
       (let* ((plist (aref char-code-property-table char))
 	     (x (plist-put plist propname value)))
 	(or (eq x plist)
@@ -2807,13 +2800,9 @@ It can be retrieved with `(get-char-code-property CHAR PROPNAME)'."
 (defun char-code-property-description (prop value)
   "Return a description string of character property PROP's value VALUE.
 If there's no description string for VALUE, return nil."
-  (let ((slot (assq prop char-code-property-alist)))
-    (if slot
-	(let (table func)
-	  (if (stringp (cdr slot))
-	      (load (cdr slot) nil t))
-	  (setq table (cdr slot)
-		func (char-table-extra-slot table 3))
+  (let ((table (unicode-property-table-internal prop)))
+    (if table
+	(let ((func (char-table-extra-slot table 3)))
 	  (if (functionp func)
 	      (funcall func value))))))
 
@@ -2878,16 +2867,23 @@ on encoding."
 ;; Backwards compatibility.  These might be better with :init-value t,
 ;; but that breaks loadup.
 (define-minor-mode unify-8859-on-encoding-mode
-  "Obsolete."
+  "Exists only for backwards compatibility."
   :group 'mule
   :global t)
-(define-minor-mode unify-8859-on-decoding-mode
-  "Obsolete."
-  :group 'mule
-  :global t)
+;; Doc said "obsolete" in 23.1, this statement only added in 24.1.
+(make-obsolete 'unify-8859-on-encoding-mode "don't use it." "23.1")
 
-(defvar nonascii-insert-offset 0 "This variable is obsolete.")
-(defvar nonascii-translation-table nil "This variable is obsolete.")
+(define-minor-mode unify-8859-on-decoding-mode
+  "Exists only for backwards compatibility."
+  :group 'mule
+  :global t)
+;; Doc said "obsolete" in 23.1, this statement only added in 24.1.
+(make-obsolete 'unify-8859-on-decoding-mode "don't use it." "23.1")
+
+(defvar nonascii-insert-offset 0)
+(make-obsolete-variable 'nonascii-insert-offset "do not use it." "23.1")
+(defvar nonascii-translation-table nil)
+(make-obsolete-variable 'nonascii-translation-table "do not use it." "23.1")
 
 (defvar ucs-names nil
   "Alist of cached (CHAR-NAME . CHAR-CODE) pairs.")
@@ -2897,15 +2893,19 @@ on encoding."
   (or ucs-names
       (let ((bmp-ranges
 	     '((#x0000 . #x33FF)
-	       ;; (#x3400 . #x4DBF) CJK Ideograph Extension A
+	       ;; (#x3400 . #x4DBF) CJK Ideographs Extension A
 	       (#x4DC0 . #x4DFF)
-	       ;; (#x4E00 . #x9FFF) CJK Ideograph
-	       (#xA000 . #x0D7FF)
+	       ;; (#x4E00 . #x9FFF) CJK Unified Ideographs
+	       (#xA000 . #xD7FF)
 	       ;; (#xD800 . #xFAFF) Surrogate/Private
 	       (#xFB00 . #xFFFD)))
 	    (upper-ranges
 	     '((#x10000 . #x134FF)
-	       ;; (#x13500 . #x1CFFF) unused
+	       ;; (#x13500 . #x167FF) unused
+	       (#x16800 . #x16A3F)
+	       ;; (#x16A40 . #x1AFFF) unused
+	       (#x1B000 . #x1B0FF)
+	       ;; (#x1B100 . #x1CFFF) unused
 	       (#x1D000 . #x1FFFF)
 	       ;; (#x20000 . #xDFFFF) CJK Ideograph Extension A, B, etc, unused
 	       (#xE0000 . #xE01FF)))
@@ -2929,10 +2929,6 @@ on encoding."
 	    (setq c (1+ c))))
         (setq ucs-names names))))
 
-(defvar ucs-completions (lazy-completion-table ucs-completions ucs-names)
-  "Lazy completion table for completing on Unicode character names.")
-(put 'ucs-completions 'risky-local-variable t)
-
 (defun read-char-by-name (prompt)
   "Read a character by its Unicode name or hex number string.
 Display PROMPT and read a string that represents a character by its
@@ -2950,11 +2946,16 @@ This function also accepts a hexadecimal number of Unicode code
 point or a number in hash notation, e.g. #o21430 for octal,
 #x2318 for hex, or #10r8984 for decimal."
   (let* ((completion-ignore-case t)
-	 (input (completing-read prompt ucs-completions)))
+	 (input (completing-read
+                 prompt
+                 (lambda (string pred action)
+                   (if (eq action 'metadata)
+                       '(metadata (category . unicode-name))
+                     (complete-with-action action (ucs-names) string pred))))))
     (cond
-     ((string-match-p "^[0-9a-fA-F]+$" input)
+     ((string-match-p "\\`[0-9a-fA-F]+\\'" input)
       (string-to-number input 16))
-     ((string-match-p "^#" input)
+     ((string-match-p "\\`#" input)
       (read input))
      (t
       (cdr (assoc-string input (ucs-names) t))))))
@@ -2970,6 +2971,10 @@ preceded by an asterisk `*' and use completion, it will show all
 the characters whose names include that substring, not necessarily
 at the beginning of the name.
 
+This function also accepts a hexadecimal number of Unicode code
+point or a number in hash notation, e.g. #o21430 for octal,
+#x2318 for hex, or #10r8984 for decimal.
+
 The optional third arg INHERIT (non-nil when called interactively),
 says to inherit text properties from adjoining text, if those
 properties are sticky."
@@ -2978,9 +2983,12 @@ properties are sticky."
 	 (prefix-numeric-value current-prefix-arg)
 	 t))
   (unless count (setq count 1))
-  (if (stringp character)
+  (if (and (stringp character)
+	   (string-match-p "\\`[0-9a-fA-F]+\\'" character))
       (setq character (string-to-number character 16)))
   (cond
+   ((null character)
+    (error "Not a Unicode character"))
    ((not (integerp character))
     (error "Not a Unicode character code: %S" character))
    ((or (< character 0) (> character #x10FFFF))
@@ -2991,5 +2999,4 @@ properties are sticky."
 
 (define-key ctl-x-map "8\r" 'ucs-insert)
 
-;; arch-tag: b382c432-4b36-460e-bf4c-05efd0bb18dc
 ;;; mule-cmds.el ends here

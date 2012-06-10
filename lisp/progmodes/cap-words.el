@@ -1,7 +1,6 @@
 ;;; cap-words.el --- minor mode for motion in CapitalizedWordIdentifiers
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2002-2012  Free Software Foundation, Inc.
 
 ;; Author: Dave Love <fx@gnu.org>
 ;; Keywords: languages
@@ -61,9 +60,13 @@ Looks for word boundaries before capitals."
 ;;;###autoload
 (define-minor-mode capitalized-words-mode
   "Toggle Capitalized Words mode.
+With a prefix argument ARG, enable Capitalized Words mode if ARG
+is positive, and disable it otherwise.  If called from Lisp,
+enable the mode if ARG is omitted or nil.
 
-In this minor mode, a word boundary occurs immediately before an
-uppercase letter in a symbol.  This is in addition to all the normal
+Capitalized Words mode is a buffer-local minor mode.  When
+enabled, a word boundary occurs immediately before an uppercase
+letter in a symbol.  This is in addition to all the normal
 boundaries given by the syntax and category tables.  There is no
 restriction to ASCII.
 
@@ -92,5 +95,4 @@ Obsoletes `c-forward-into-nomenclature'."
 
 (provide 'cap-words)
 
-;; arch-tag: 46513b64-fe5a-4c0b-902c-ed235c22975f
 ;;; cap-words.el ends here

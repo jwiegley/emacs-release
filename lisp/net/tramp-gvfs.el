@@ -1,9 +1,10 @@
 ;;; tramp-gvfs.el --- Tramp access functions for GVFS daemon
 
-;; Copyright (C) 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2009-2012 Free Software Foundation, Inc.
 
 ;; Author: Michael Albinus <michael.albinus@gmx.de>
 ;; Keywords: comm, processes
+;; Package: tramp
 
 ;; This file is part of GNU Emacs.
 
@@ -38,7 +39,7 @@
 ;; Consequently, GNU Emacs 23.1 with enabled D-Bus bindings is a
 ;; precondition.
 
-;; The GVFS D-Bus interface is said to be instable.  There are even no
+;; The GVFS D-Bus interface is said to be unstable.  There are even no
 ;; introspection data.  The interface, as discovered during
 ;; development time, is given in respective comments.
 
@@ -102,11 +103,13 @@
   (require 'custom))
 
 (require 'tramp)
+
 (require 'dbus)
 (require 'url-parse)
 (require 'url-util)
 (require 'zeroconf)
 
+;;;###tramp-autoload
 (defcustom tramp-gvfs-methods '("dav" "davs" "obex" "synce")
   "*List of methods for remote files, accessed with GVFS."
   :group 'tramp
@@ -121,8 +124,8 @@
 
 ;; Add a default for `tramp-default-user-alist'.  Rule: For the SYNCE
 ;; method, no user is chosen.
-(add-to-list 'tramp-default-user-alist
-	     '("synce" nil nil))
+;;;###tramp-autoload
+(add-to-list 'tramp-default-user-alist '("\\`synce\\'" nil nil))
 
 (defcustom tramp-gvfs-zeroconf-domain "local"
   "*Zeroconf domain to be used for discovering services, like host names."
@@ -132,11 +135,11 @@
 
 ;; Add the methods to `tramp-methods', in order to allow minibuffer
 ;; completion.
-(eval-after-load "tramp-gvfs"
-  '(when (featurep 'tramp-gvfs)
-     (dolist (elt tramp-gvfs-methods)
-       (unless (assoc elt tramp-methods)
-	 (add-to-list 'tramp-methods (cons elt nil))))))
+;;;###tramp-autoload
+(when (featurep 'dbusbind)
+  (dolist (elt tramp-gvfs-methods)
+    (unless (assoc elt tramp-methods)
+      (add-to-list 'tramp-methods (cons elt nil)))))
 
 (defconst tramp-gvfs-path-tramp (concat dbus-path-emacs "/Tramp")
   "The preceding object path for own objects.")
@@ -144,9 +147,12 @@
 (defconst tramp-gvfs-service-daemon "org.gtk.vfs.Daemon"
   "The well known name of the GVFS daemon.")
 
-;; Check that GVFS is available.
-(unless (dbus-ping :session tramp-gvfs-service-daemon 100)
-  (throw 'tramp-loading nil))
+;; Check that GVFS is available.  D-Bus integration is available since
+;; Emacs 23 on some system types.  We don't call `dbus-ping', because
+;; this would load dbus.el.
+(unless (and (tramp-compat-funcall 'dbus-get-unique-name :session)
+	     (tramp-compat-process-running-p "gvfs-fuse-daemon"))
+  (error "Package `tramp-gvfs' not supported"))
 
 (defconst tramp-gvfs-path-mounttracker "/org/gtk/vfs/mounttracker"
   "The object path of the GVFS daemon.")
@@ -182,7 +188,7 @@
 ;;   STRING		  stable_name
 ;;   STRING		  x_content_types	Since GVFS 1.0 only !!!
 ;;   STRING		  icon
-;;   STRING		  prefered_filename_encoding
+;;   STRING		  preferred_filename_encoding
 ;;   BOOLEAN		  user_visible
 ;;   ARRAY BYTE		  fuse_mountpoint
 ;;   STRUCT		  mount_spec
@@ -384,7 +390,7 @@ Every entry is a list (NAME ADDRESS).")
     (expand-file-name . tramp-gvfs-handle-expand-file-name)
     ;; `file-accessible-directory-p' performed by default handler.
     (file-attributes . tramp-gvfs-handle-file-attributes)
-    (file-directory-p . tramp-smb-handle-file-directory-p)
+    (file-directory-p . tramp-gvfs-handle-file-directory-p)
     (file-executable-p . tramp-gvfs-handle-file-executable-p)
     (file-exists-p . tramp-gvfs-handle-file-exists-p)
     (file-local-copy . tramp-gvfs-handle-file-local-copy)
@@ -430,13 +436,15 @@ Every entry is a list (NAME ADDRESS).")
   "Alist of handler functions for Tramp GVFS method.
 Operations not mentioned here will be handled by the default Emacs primitives.")
 
-(defun tramp-gvfs-file-name-p (filename)
+;;;###tramp-autoload
+(defsubst tramp-gvfs-file-name-p (filename)
   "Check if it's a filename handled by the GVFS daemon."
   (and (tramp-tramp-file-p filename)
        (let ((method
 	      (tramp-file-name-method (tramp-dissect-file-name filename))))
 	 (and (stringp method) (member method tramp-gvfs-methods)))))
 
+;;;###tramp-autoload
 (defun tramp-gvfs-file-name-handler (operation &rest args)
   "Invoke the GVFS related OPERATION.
 First arg specifies the OPERATION, second arg is a list of arguments to
@@ -448,8 +456,10 @@ pass to the OPERATION."
 
 ;; This might be moved to tramp.el.  It shall be the first file name
 ;; handler.
-(add-to-list 'tramp-foreign-file-name-handler-alist
-	     (cons 'tramp-gvfs-file-name-p 'tramp-gvfs-file-name-handler))
+;;;###tramp-autoload
+(when (featurep 'dbusbind)
+  (add-to-list 'tramp-foreign-file-name-handler-alist
+	       (cons 'tramp-gvfs-file-name-p 'tramp-gvfs-file-name-handler)))
 
 (defun tramp-gvfs-stringify-dbus-message (message)
   "Convert a D-Bus message into readable UTF8 strings, used for traces."
@@ -484,7 +494,8 @@ will be traced by Tramp with trace level 6."
 
 (put 'with-tramp-dbus-call-method 'lisp-indent-function 2)
 (put 'with-tramp-dbus-call-method 'edebug-form-spec '(form symbolp body))
-(font-lock-add-keywords 'emacs-lisp-mode '("\\<with-tramp-dbus-call-method\\>"))
+(tramp-compat-font-lock-add-keywords
+ 'emacs-lisp-mode '("\\<with-tramp-dbus-call-method\\>"))
 
 (defmacro with-tramp-gvfs-error-message (filename handler &rest args)
   "Apply a Tramp GVFS `handler'.
@@ -493,7 +504,7 @@ In case of an error, modify the error message by replacing
   `(let ((fuse-file-name  (regexp-quote (tramp-gvfs-fuse-file-name ,filename)))
 	 elt)
      (condition-case err
-	 (funcall ,handler ,@args)
+	 (tramp-compat-funcall ,handler ,@args)
        (error
 	(setq elt (cdr err))
 	(while elt
@@ -505,7 +516,8 @@ In case of an error, modify the error message by replacing
 
 (put 'with-tramp-gvfs-error-message 'lisp-indent-function 2)
 (put 'with-tramp-gvfs-error-message 'edebug-form-spec '(form symbolp body))
-(font-lock-add-keywords 'emacs-lisp-mode '("\\<with-tramp-gvfs-error-message\\>"))
+(tramp-compat-font-lock-add-keywords
+ 'emacs-lisp-mode '("\\<with-tramp-gvfs-error-message\\>"))
 
 (defvar tramp-gvfs-dbus-event-vector nil
   "Current Tramp file name to be used, as vector.
@@ -515,7 +527,6 @@ is no information where to trace the message.")
 (defun tramp-gvfs-dbus-event-error (event err)
   "Called when a D-Bus error message arrives, see `dbus-event-error-hooks'."
   (when tramp-gvfs-dbus-event-vector
-    ;(tramp-cleanup-connection tramp-gvfs-dbus-event-vector)
     (tramp-message tramp-gvfs-dbus-event-vector 10 "%S" event)
     (tramp-error tramp-gvfs-dbus-event-vector 'file-error "%s" (cadr err))))
 
@@ -530,7 +541,7 @@ is no information where to trace the message.")
   "Like `copy-file' for Tramp files."
   (with-parsed-tramp-file-name
       (if (tramp-tramp-file-p filename) filename newname) nil
-    (with-progress-reporter
+    (tramp-with-progress-reporter
 	v 0 (format "Copying %s to %s" filename newname)
       (condition-case err
 	  (let ((args
@@ -646,6 +657,10 @@ is no information where to trace the message.")
   "Like `file-attributes' for Tramp files."
   (file-attributes (tramp-gvfs-fuse-file-name filename) id-format))
 
+(defun tramp-gvfs-handle-file-directory-p (filename)
+  "Like `file-directory-p' for Tramp files."
+  (file-directory-p (tramp-gvfs-fuse-file-name filename)))
+
 (defun tramp-gvfs-handle-file-executable-p (filename)
   "Like `file-executable-p' for Tramp files."
   (file-executable-p (tramp-gvfs-fuse-file-name filename)))
@@ -730,7 +745,7 @@ is no information where to trace the message.")
   "Like `rename-file' for Tramp files."
   (with-parsed-tramp-file-name
       (if (tramp-tramp-file-p filename) filename newname) nil
-    (with-progress-reporter
+    (tramp-with-progress-reporter
 	v 0 (format "Renaming %s to %s" filename newname)
       (condition-case err
 	  (rename-file
@@ -955,7 +970,7 @@ ADDRESS can have the form \"xx:xx:xx:xx:xx:xx\" or \"[xx:xx:xx:xx:xx:xx]\"."
 	    ;; host signature.
 	    (with-temp-buffer
 	      ;; Preserve message for `progress-reporter'.
-	      (with-temp-message ""
+	      (tramp-compat-with-temp-message ""
 		(insert message)
 		(pop-to-buffer (current-buffer))
 		(setq choice (if (yes-or-no-p (concat (car choices) " ")) 0 1))
@@ -981,7 +996,7 @@ ADDRESS can have the form \"xx:xx:xx:xx:xx:xx\" or \"[xx:xx:xx:xx:xx:xx]\"."
     (let ((signal-name (dbus-event-member-name last-input-event))
 	  (elt mount-info))
       ;; Jump over the first elements of the mount info. Since there
-      ;; were changes in the antries, we cannot access dedicated
+      ;; were changes in the entries, we cannot access dedicated
       ;; elements.
       (while (stringp (car elt)) (setq elt (cdr elt)))
       (let* ((fuse-mountpoint (dbus-byte-array-to-string (cadr elt)))
@@ -1051,7 +1066,7 @@ ADDRESS can have the form \"xx:xx:xx:xx:xx:xx\" or \"[xx:xx:xx:xx:xx:xx]\"."
 	      tramp-gvfs-interface-mounttracker "listMounts"))
 	  nil)
        ;; Jump over the first elements of the mount info. Since there
-       ;; were changes in the antries, we cannot access dedicated
+       ;; were changes in the entries, we cannot access dedicated
        ;; elements.
        (while (stringp (car elt)) (setq elt (cdr elt)))
        (let* ((fuse-mountpoint (dbus-byte-array-to-string (cadr elt)))
@@ -1178,7 +1193,7 @@ connection if a previous connection has died for some reason."
 	      :name (tramp-buffer-name vec)
 	      :buffer (tramp-get-buffer vec)
 	      :server t :host 'local :service t)))
-      (tramp-set-process-query-on-exit-flag p nil)))
+      (tramp-compat-set-process-query-on-exit-flag p nil)))
 
   (unless (tramp-gvfs-connection-mounted-p vec)
     (let* ((method (tramp-file-name-method vec))
@@ -1188,23 +1203,23 @@ connection if a previous connection has died for some reason."
 	    (tramp-gvfs-object-path
 	     (tramp-make-tramp-file-name method user host ""))))
 
-      (with-progress-reporter
+      (tramp-with-progress-reporter
 	  vec 3
 	  (if (zerop (length user))
 	      (format "Opening connection for %s using %s" host method)
 	    (format "Opening connection for %s@%s using %s" user host method))
 
-	;; Enable auth-sorce and password-cache.
+	;; Enable auth-source and password-cache.
 	(tramp-set-connection-property vec "first-password-request" t)
 
-	;; There will be a callback of "askPassword", when a password is
+	;; There will be a callback of "askPassword" when a password is
 	;; needed.
 	(dbus-register-method
 	 :session dbus-service-emacs object-path
 	 tramp-gvfs-interface-mountoperation "askPassword"
 	 'tramp-gvfs-handler-askpassword)
 
-	;; There could be a callback of "askQuestion", when adding fingerprint.
+	;; There could be a callback of "askQuestion" when adding fingerprint.
 	(dbus-register-method
 	 :session dbus-service-emacs object-path
 	 tramp-gvfs-interface-mountoperation "askQuestion"
@@ -1252,7 +1267,7 @@ COMMAND is usually a command from the gvfs-* utilities.
     (with-current-buffer (tramp-get-buffer vec)
       (erase-buffer)
       (tramp-message vec 6 "%s %s" command (mapconcat 'identity args " "))
-      (setq result (apply 'tramp-local-call-process command nil t nil args))
+      (setq result (apply 'tramp-compat-call-process command nil t nil args))
       (tramp-message vec 6 "%s" (buffer-string))
       result)))
 
@@ -1402,16 +1417,19 @@ They are retrieved from the hal daemon."
 (tramp-set-completion-function
  "synce" '((tramp-synce-parse-device-names "")))
 
+(add-hook 'tramp-unload-hook
+	  (lambda ()
+	    (unload-feature 'tramp-gvfs 'force)))
+
 (provide 'tramp-gvfs)
 
 ;;; TODO:
 
 ;; * Host name completion via smb-server or smb-network.
-;; * Check, how two shares of the same SMB server can be mounted in
+;; * Check how two shares of the same SMB server can be mounted in
 ;;   parallel.
 ;; * Apply SDP on bluetooth devices, in order to filter out obex
 ;;   capability.
 ;; * Implement obex for other serial communication but bluetooth.
 
-;; arch-tag: f7f660ce-77f4-4132-9663-f5c25a47f7ed
 ;;; tramp-gvfs.el ends here

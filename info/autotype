@@ -1,8 +1,7 @@
 This is ../../info/autotype, produced by makeinfo version 4.13 from
 autotype.texi.
 
-Copyright (C) 1994, 1995, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+Copyright (C) 1994-1995, 1999, 2001-2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -54,8 +53,8 @@ can be defined for inserting and navigating between text more
 generally.  A sort of meta-expansion facility can be used to try a set
 of alternative completions and expansions of text at point.
 
-   Copyright (C) 1994, 1995, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 1994-1995, 1999, 2001-2012  Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -144,7 +143,7 @@ Skeletons::).  The point (*note (emacs)Point::) is left at the next
 interesting spot in the skeleton instead.
 
    A negative prefix means to do something similar with that many
-precedingly marked interregions (*note (emacs)Mark::).  In the simplest
+previously marked interregions (*note (emacs)Mark::).  In the simplest
 case, if you type `M--' just before issuing the skeleton command, that
 will wrap the skeleton around the current region, just like a positive
 argument would have wrapped it around a number of words.
@@ -409,7 +408,7 @@ inserting something.  When this is `nil', inserting is only done with
 `M-x auto-insert'.  When this is `function', you are queried whenever
 `auto-insert' is called as a function, such as when Emacs visits an
 empty file and you have set the above-mentioned hook.  Otherwise you
-are alway queried.
+are always queried.
 
    When querying, the variable `auto-insert-prompt''s value is used as a
 prompt for a y-or-n-type question.  If this includes a `%s' construct,
@@ -490,7 +489,7 @@ inserting or updating the magic number.  When this is `nil' updating is
 only done with `M-x executable-set-magic'.  When this is `function' you
 are queried whenever `executable-set-magic' is called as a function,
 such as when Emacs puts a buffer in Shell script mode.  Otherwise you
-are alway queried.
+are always queried.
 
    `M-x executable-self-display' adds a magic number to the buffer,
 which will turn it into a self displaying text file, when called as a
@@ -1180,22 +1179,22 @@ Variable Index
 
 
 Tag Table:
-Node: Top1082
-Node: Using Skeletons4385
-Node: Wrapping Skeletons5856
-Node: Skeletons as Abbrevs8460
-Node: Skeleton Language9351
-Node: Inserting Pairs12929
-Node: Autoinserting15311
-Node: Copyrights19097
-Node: Executables20965
-Node: Timestamps22662
-Node: QuickURL24037
-Node: Tempo24903
-Node: Hippie Expand26086
-Node: GNU Free Documentation License27118
-Node: Concept Index52296
-Node: Command Index53407
-Node: Variable Index54867
+Node: Top1020
+Node: Using Skeletons4261
+Node: Wrapping Skeletons5732
+Node: Skeletons as Abbrevs8335
+Node: Skeleton Language9226
+Node: Inserting Pairs12804
+Node: Autoinserting15186
+Node: Copyrights18973
+Node: Executables20841
+Node: Timestamps22539
+Node: QuickURL23914
+Node: Tempo24780
+Node: Hippie Expand25963
+Node: GNU Free Documentation License26995
+Node: Concept Index52173
+Node: Command Index53284
+Node: Variable Index54744
 
 End Tag Table

@@ -1,12 +1,10 @@
 ;;; type-break.el --- encourage rests from typing at appropriate intervals
 
-;; Copyright (C) 1994, 1995, 1997, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1994-1995, 1997, 2000-2012  Free Software Foundation, Inc.
 
 ;; Author: Noah Friedman
 ;; Maintainer: Noah Friedman <friedman@splode.com>
 ;; Keywords: extensions, timers
-;; Status: Works in GNU Emacs 19.25 or later, some versions of XEmacs
 ;; Created: 1994-07-13
 
 ;; This file is part of GNU Emacs.
@@ -49,7 +47,7 @@
 ;; or set the variable of the same name to `t'.
 
 ;; This program can truly cons up a storm because of all the calls to
-;; `current-time' (which always returns 3 fresh conses).  I'm dismayed by
+;; `current-time' (which always returns fresh conses).  I'm dismayed by
 ;; this, but I think the health of my hands is far more important than a
 ;; few pages of virtual memory.
 
@@ -77,7 +75,7 @@
 See the docstring for the `type-break-mode' command for more information.
 Setting this variable directly does not take effect;
 use either \\[customize] or the function `type-break-mode'."
-  :set (lambda (symbol value)
+  :set (lambda (_symbol value)
 	 (type-break-mode (if value 1 -1)))
   :initialize 'custom-initialize-default
   :type 'boolean
@@ -150,13 +148,6 @@ keystroke even though they really require multiple keys to generate them.
 The command `type-break-guesstimate-keystroke-threshold' can be used to
 guess a reasonably good pair of values for this variable."
   :type 'sexp
-  :group 'type-break)
-
-(defcustom type-break-query-mode t
-  "Non-nil means ask whether or not to prompt user for breaks.
-If so, call the function specified in the value of the variable
-`type-break-query-function' to do the asking."
-  :type 'boolean
   :group 'type-break)
 
 (defcustom type-break-query-function 'yes-or-no-p
@@ -244,14 +235,6 @@ remove themselves after running.")
 
 
 ;; Mode line frobs
-
-(defcustom type-break-mode-line-message-mode nil
-  "Non-nil means put type-break related messages in the mode line.
-Otherwise, messages typically go in the echo area.
-
-See also `type-break-mode-line-format' and its members."
-  :type 'boolean
-  :group 'type-break)
 
 (defvar type-break-mode-line-format
   '(type-break-mode-line-message-mode
@@ -447,14 +430,14 @@ problems."
            (message "Type Break mode is disabled")))))
   type-break-mode)
 
-(defun type-break-mode-line-message-mode (&optional prefix)
-  "Enable or disable warnings in the mode line about typing breaks.
+(define-minor-mode type-break-mode-line-message-mode
+  "Toggle warnings about typing breaks in the mode line.
+With a prefix argument ARG, enable these warnings if ARG is
+positive, and disable them otherwise.  If called from Lisp,
+enable them if ARG is omitted or nil.
 
-A negative PREFIX argument disables this mode.
-No argument or any non-negative argument enables it.
-
-The user may also enable or disable this mode simply by setting the
-variable of the same name.
+The user may also enable or disable this mode simply by setting
+the variable of the same name.
 
 Variables controlling the display of messages in the mode line include:
 
@@ -462,35 +445,17 @@ Variables controlling the display of messages in the mode line include:
         `global-mode-string'
         `type-break-mode-line-break-message'
         `type-break-mode-line-warning'"
-  (interactive "P")
-  (setq type-break-mode-line-message-mode
-        (>= (prefix-numeric-value prefix) 0))
-  (and (called-interactively-p 'interactive)
-       (if type-break-mode-line-message-mode
-           (message "type-break-mode-line-message-mode is enabled")
-         (message "type-break-mode-line-message-mode is disabled")))
-  type-break-mode-line-message-mode)
+  :global t)
 
-(defun type-break-query-mode (&optional prefix)
-  "Enable or disable warnings in the mode line about typing breaks.
+(define-minor-mode type-break-query-mode
+  "Toggle typing break queries.
+With a prefix argument ARG, enable these queries if ARG is
+positive, and disable them otherwise.  If called from Lisp,
+enable them if ARG is omitted or nil.
 
-When enabled, the user is periodically queried about whether to take a
-typing break at that moment.  The function which does this query is
-specified by the variable `type-break-query-function'.
-
-A negative PREFIX argument disables this mode.
-No argument or any non-negative argument enables it.
-
-The user may also enable or disable this mode simply by setting the
-variable of the same name."
-  (interactive "P")
-  (setq type-break-query-mode
-        (>= (prefix-numeric-value prefix) 0))
-  (and (called-interactively-p 'interactive)
-       (if type-break-query-mode
-           (message "type-break-query-mode is enabled")
-         (message "type-break-query-mode is disabled")))
-  type-break-query-mode)
+The user may also enable or disable this mode simply by setting
+the variable of the same name."
+  :global t)
 
 
 ;;; session file functions
@@ -524,7 +489,7 @@ variable of the same name."
 	    (let ((inhibit-read-only t))
 	      (goto-char (point-min))
 	      (forward-line)
-	      (delete-region (point) (save-excursion (end-of-line) (point)))
+	      (delete-region (point) (line-end-position))
 	      (insert (format "%s" type-break-keystroke-count))
 	      ;; file saving is left to auto-save
 	      ))))))
@@ -532,12 +497,9 @@ variable of the same name."
 (defun timep (time)
   "If TIME is in the format returned by `current-time' then
 return TIME, else return nil."
-  (and (listp time)
-       (eq (length time) 3)
-       (integerp (car time))
-       (integerp (nth 1 time))
-       (integerp (nth 2 time))
-       time))
+  (condition-case nil
+      (and (float-time time) time)
+    (error nil)))
 
 (defun type-break-choose-file ()
   "Return file to read from."
@@ -861,7 +823,7 @@ keystroke threshold has been exceeded."
       (quit
        (type-break-schedule type-break-query-interval))))))
 
-(defun type-break-noninteractive-query (&optional ignored-args)
+(defun type-break-noninteractive-query (&optional _ignored-args)
   "Null query function which doesn't interrupt user and assumes `no'.
 It prints a reminder in the echo area to take a break, but doesn't enforce
 this or ask the user to start one right now."
@@ -1024,12 +986,8 @@ FRAC should be the inverse of the fractional value; for example, a value of
 
 ;; Compute the difference, in seconds, between a and b, two structures
 ;; similar to those returned by `current-time'.
-;; Use addition rather than logand since that is more robust; the low 16
-;; bits of the seconds might have been incremented, making it more than 16
-;; bits wide.
 (defun type-break-time-difference (a b)
-  (+ (lsh (- (car b) (car a)) 16)
-     (- (car (cdr b)) (car (cdr a)))))
+  (round (float-time (time-subtract b a))))
 
 ;; Return (in a new list the same in structure to that returned by
 ;; `current-time') the sum of the arguments.  Each argument may be a time
@@ -1039,34 +997,11 @@ FRAC should be the inverse of the fractional value; for example, a value of
 ;; the result is passed to `current-time-string' it will toss some of the
 ;; "low" bits and format the time incorrectly.
 (defun type-break-time-sum (&rest tmlist)
-  (let ((high 0)
-        (low 0)
-        (micro 0)
-        tem)
-    (while tmlist
-      (setq tem (car tmlist))
-      (setq tmlist (cdr tmlist))
-      (cond
-       ((numberp tem)
-        (setq low (+ low tem)))
-       (t
-        (setq high  (+ high  (or (car tem) 0)))
-        (setq low   (+ low   (or (car (cdr tem)) 0)))
-        (setq micro (+ micro (or (car (cdr (cdr tem))) 0))))))
-
-    (and (>= micro 1000000)
-         (progn
-           (setq tem (/ micro 1000000))
-           (setq low (+ low tem))
-           (setq micro (- micro (* tem 1000000)))))
-
-    (setq tem (lsh low -16))
-    (and (> tem 0)
-         (progn
-           (setq low (logand low 65535))
-           (setq high (+ high tem))))
-
-    (list high low micro)))
+  (let ((sum '(0 0 0)))
+    (dolist (tem tmlist sum)
+      (setq sum (time-add sum (if (integerp tem)
+				  (list (floor tem 65536) (mod tem 65536))
+				tem))))))
 
 (defun type-break-time-stamp (&optional when)
   (if (fboundp 'format-time-string)
@@ -1272,5 +1207,4 @@ With optional non-nil ALL, force redisplay of all mode-lines."
 (if type-break-mode
     (type-break-mode 1))
 
-;; arch-tag: 943a2eb3-07e6-420b-993f-96e4796f5fd0
 ;;; type-break.el ends here

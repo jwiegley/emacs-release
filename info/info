@@ -4,9 +4,7 @@ info.texi.
 This file describes how to use Info, the on-line, menu-driven GNU
 documentation system.
 
-   Copyright (C) 1989, 1992, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free
-Software Foundation, Inc.
+   Copyright (C) 1989, 1992, 1996-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -58,9 +56,7 @@ chapter.
    This file describes how to use Info, the on-line, menu-driven GNU
 documentation system.
 
-   Copyright (C) 1989, 1992, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free
-Software Foundation, Inc.
+   Copyright (C) 1989, 1992, 1996-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -942,9 +938,9 @@ through the last menu item; this is so you need not count how many
 entries are there.
 
    If your display supports multiple fonts, colors or underlining, and
-you are using Emacs' Info mode to read Info files, the third, sixth and
-ninth menu items have a `*' that stands out, either in color or in some
-other attribute, such as underline; this makes it easy to see at a
+you are using Emacs's Info mode to read Info files, the third, sixth
+and ninth menu items have a `*' that stands out, either in color or in
+some other attribute, such as underline; this makes it easy to see at a
 glance which number to use for an item.
 
    Some terminals don't support either multiple fonts, colors or
@@ -973,6 +969,11 @@ they do so in a new Info buffer which they select in another window.
 prefix argument for the `C-h i' command (`info') which switches to the
 Info buffer with that number.  Thus, `C-u 2 C-h i' switches to the
 buffer `*info*<2>', creating it if necessary.
+
+   If you have created many Info buffers in Emacs, you might find it
+difficult to remember which buffer is showing which manual.  You can
+use the command `M-x info-display-manual' to show an Info manual by
+name, reusing an existing buffer if there is one.
 
 
 File: info,  Node: Emacs Info Variables,  Prev: Create Info buffer,  Up: Advanced
@@ -1363,6 +1364,7 @@ topics discussed in this document.
 * Info-directory:                        Help-Int.            (line  49)
 * Info-directory-list:                   Emacs Info Variables.
                                                               (line  13)
+* info-display-manual:                   Create Info buffer.  (line  22)
 * Info-enable-active-nodes:              Emacs Info Variables.
                                                               (line  72)
 * Info-exit:                             Help-Q.              (line   6)
@@ -1432,6 +1434,7 @@ topics discussed in this document.
 * stale tags tables:                     Tags.                (line  16)
 * t (Info mode):                         Help-Int.            (line  59)
 * tags tables in Info files:             Tags.                (line   6)
+* Texinfo:                               Expert Info.         (line   6)
 * u (Info mode):                         Help-FOO.            (line  13)
 * unstructured documents:                Add.                 (line  45)
 * update Info tags table:                Tags.                (line  16)
@@ -1440,35 +1443,35 @@ topics discussed in this document.
 
 
 Tag Table:
-Node: Top1461
-Node: Getting Started3802
-Node: Help-Small-Screen4655
-Node: Help6609
-Node: Help-P8257
-Node: Help-^L9460
-Ref: Help-^L-Footnote-113991
-Node: Help-Inv14364
-Node: Help-]16043
-Node: Help-M17603
-Node: Help-FOO26156
-Node: Help-Xref27116
-Node: Help-Int30688
-Node: Help-Q33693
-Node: Advanced34846
-Node: Search Text36054
-Node: Search Index37844
-Node: Go to node40280
-Node: Choose menu subtopic41302
-Node: Create Info buffer42484
-Node: Emacs Info Variables43566
-Node: Expert Info47348
-Node: Add48697
-Ref: Add-Footnote-151694
-Node: Menus51947
-Node: Cross-refs54834
-Node: Help-Cross55605
-Node: Tags56269
-Node: Checking57780
-Node: Index58702
+Node: Top1370
+Node: Getting Started3620
+Node: Help-Small-Screen4473
+Node: Help6427
+Node: Help-P8075
+Node: Help-^L9278
+Ref: Help-^L-Footnote-113809
+Node: Help-Inv14182
+Node: Help-]15861
+Node: Help-M17421
+Node: Help-FOO25974
+Node: Help-Xref26934
+Node: Help-Int30506
+Node: Help-Q33511
+Node: Advanced34664
+Node: Search Text35872
+Node: Search Index37662
+Node: Go to node40098
+Node: Choose menu subtopic41120
+Node: Create Info buffer42303
+Node: Emacs Info Variables43642
+Node: Expert Info47424
+Node: Add48773
+Ref: Add-Footnote-151770
+Node: Menus52023
+Node: Cross-refs54910
+Node: Help-Cross55681
+Node: Tags56345
+Node: Checking57856
+Node: Index58778
 
 End Tag Table

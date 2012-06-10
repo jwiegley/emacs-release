@@ -1,8 +1,9 @@
-;;; epa-file.el --- the EasyPG Assistant, transparent file encryption
-;; Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;;; epa-file.el --- the EasyPG Assistant, transparent file encryption -*- lexical-binding: t -*-
+;; Copyright (C) 2006-2012 Free Software Foundation, Inc.
 
 ;; Author: Daiki Ueno <ueno@unixuser.org>
 ;; Keywords: PGP, GnuPG
+;; Package: epa
 
 ;; This file is part of GNU Emacs.
 
@@ -35,8 +36,15 @@ way."
   :group 'epa-file)
 
 (defcustom epa-file-select-keys nil
-  "If non-nil, always asks user to select recipients."
-  :type 'boolean
+  "Control whether or not to pop up the key selection dialog.
+
+If t, always asks user to select recipients.
+If nil, query user only when `epa-file-encrypt-to' is not set.
+If neither t nor nil, doesn't ask user.  In this case, symmetric
+encryption is used."
+  :type '(choice (const :tag "Ask always" t)
+		 (const :tag "Ask when recipients are not set" nil)
+		 (const :tag "Don't ask" silent))
   :group 'epa-file)
 
 (defvar epa-file-passphrase-alist nil)
@@ -66,10 +74,11 @@ way."
 			(cons entry
 			      epa-file-passphrase-alist)))
 		(setq passphrase (epa-passphrase-callback-function context
-								   key-id nil))
+								   key-id
+								   file))
 		(setcdr entry (copy-sequence passphrase))
 		passphrase))))
-    (epa-passphrase-callback-function context key-id nil)))
+    (epa-passphrase-callback-function context key-id file)))
 
 ;;;###autoload
 (defun epa-file-handler (operation &rest args)
@@ -101,6 +110,14 @@ way."
     (insert (epa-file--decode-coding-string string (or coding-system-for-read
 						       'undecided)))))
 
+(defvar epa-file-error nil)
+(defun epa-file--find-file-not-found-function ()
+  (let ((error epa-file-error))
+    (save-window-excursion
+      (kill-buffer))
+    (signal 'file-error
+	    (cons "Opening input file" (cdr error)))))
+
 (defvar last-coding-system-used)
 (defun epa-file-insert-file-contents (file &optional visit beg end replace)
   (barf-if-buffer-read-only)
@@ -120,8 +137,10 @@ way."
      context
      (cons #'epa-file-passphrase-callback-function
 	   local-file))
-    (epg-context-set-progress-callback context
-				       #'epa-progress-callback-function)
+    (epg-context-set-progress-callback
+     context
+     (cons #'epa-progress-callback-function
+	   (format "Decrypting %s" file)))
     (unwind-protect
 	(progn
 	  (if replace
@@ -131,6 +150,16 @@ way."
 	    (error
 	     (if (setq entry (assoc file epa-file-passphrase-alist))
 		 (setcdr entry nil))
+	     ;; Hack to prevent find-file from opening empty buffer
+	     ;; when decryption failed (bug#6568).  See the place
+	     ;; where `find-file-not-found-functions' are called in
+	     ;; `find-file-noselect-1'.
+	     (when (file-exists-p local-file)
+	       (make-local-variable 'epa-file-error)
+	       (setq epa-file-error error)
+	       (add-hook 'find-file-not-found-functions
+			 'epa-file--find-file-not-found-function
+			 nil t))
 	     (signal 'file-error
 		     (cons "Opening input file" (cdr error)))))
 	  (make-local-variable 'epa-file-encrypt-to)
@@ -139,18 +168,22 @@ way."
 	  (if (or beg end)
 	      (setq string (substring string (or beg 0) end)))
 	  (save-excursion
-	    (save-restriction
-	      (narrow-to-region (point) (point))
-	      (epa-file-decode-and-insert string file visit beg end replace)
-	      (setq length (- (point-max) (point-min))))
-	    (if replace
-		(delete-region (point) (point-max)))
+	    ;; If visiting, bind off buffer-file-name so that
+	    ;; file-locking will not ask whether we should
+	    ;; really edit the buffer.
+	    (let ((buffer-file-name
+		   (if visit nil buffer-file-name)))
+	      (save-restriction
+		(narrow-to-region (point) (point))
+		(epa-file-decode-and-insert string file visit beg end replace)
+		(setq length (- (point-max) (point-min))))
+	      (if replace
+		  (delete-region (point) (point-max))))
 	    (if visit
 		(set-visited-file-modtime))))
       (if (and local-copy
 	       (file-exists-p local-copy))
-	  (let ((delete-by-moving-to-trash nil))
-	    (delete-file local-copy))))
+	  (delete-file local-copy)))
     (list file length)))
 (put 'insert-file-contents 'epa-file 'epa-file-insert-file-contents)
 
@@ -180,8 +213,10 @@ way."
      context
      (cons #'epa-file-passphrase-callback-function
 	   file))
-    (epg-context-set-progress-callback context
-				       #'epa-progress-callback-function)
+    (epg-context-set-progress-callback
+     context
+     (cons #'epa-progress-callback-function
+	   (format "Encrypting %s" file)))
     (epg-context-set-armor context epa-armor)
     (condition-case error
 	(setq string
@@ -194,12 +229,13 @@ way."
 			 end (point-max)))
 		 (epa-file--encode-coding-string (buffer-substring start end)
 						 coding-system))
-	       (if (or epa-file-select-keys
-		       (not (local-variable-p 'epa-file-encrypt-to
-					      (current-buffer))))
+	       (if (or (eq epa-file-select-keys t)
+		       (and (null epa-file-select-keys)
+			    (not (local-variable-p 'epa-file-encrypt-to
+						   (current-buffer)))))
 		   (epa-select-keys
 		    context
-		    "Select recipents for encryption.
+		    "Select recipients for encryption.
 If no one is selected, symmetric encryption will be performed.  "
 		    recipients)
 		 (if epa-file-encrypt-to
@@ -237,7 +273,7 @@ If no one is selected, symmetric encryption will be performed.  "
 	   (epg-sub-key-id (car (epg-key-sub-key-list key))))
 	(epa-select-keys
 	 (epg-make-context)
-	 "Select recipents for encryption.
+	 "Select recipients for encryption.
 If no one is selected, symmetric encryption will be performed.  "))))
 
 ;;;###autoload
@@ -266,5 +302,4 @@ If no one is selected, symmetric encryption will be performed.  "))))
 
 (provide 'epa-file)
 
-;; arch-tag: 5715152f-0eb1-4dbc-9008-07098775314d
 ;;; epa-file.el ends here

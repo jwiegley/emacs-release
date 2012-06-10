@@ -25,8 +25,7 @@
 This file documents Ediff, a comprehensive visual interface to Unix diff
 and patch utilities.
 
-Copyright @copyright{} 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+Copyright @copyright{} 1995-2012 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -64,6 +63,7 @@ developing GNU and promoting software freedom.''
 @contents
 
 @node Top, Introduction, (dir), (dir)
+@top Ediff
 
 @insertcopying
 
@@ -334,18 +334,6 @@ Brings up Ediff session registry.  This feature enables you to quickly find
 and restart active Ediff sessions.
 @end table
 
-@noindent
-If you want Ediff to be loaded from the very beginning of your Emacs
-session, you should put this line in your @file{~/.emacs} file:
-
-@example
-(require 'ediff)
-@end example
-
-@noindent
-Otherwise, Ediff will be loaded automatically when you use one of the
-above functions, either directly or through the menus.
-
 When the above functions are invoked, the user is prompted for all the
 necessary information---typically the files or buffers to compare, merge, or
 patch.  Ediff tries to be smart about these prompts.  For instance, in
@@ -445,6 +433,8 @@ command (see @kbd{ga}, @kbd{gb}, and @kbd{gc}).
 
 @node Quick Help Commands,Other Session Commands,,Session Commands
 @section Quick Help Commands
+@cindex command help
+@cindex important commands
 
 @table @kbd
 @item ?
@@ -759,7 +749,7 @@ Displays a list of currently active Ediff sessions---the Ediff Registry.
 You can then restart any of these sessions by either clicking on a session
 record or by putting the cursor over it and then typing the return key.
 
-(Some poor souls leave so many active Ediff sessions around that they loose
+(Some poor souls leave so many active Ediff sessions around that they lose
 track of them completely...  The `R' command is designed to save these
 people from the recently discovered Ediff Proficiency Syndrome.)
 
@@ -1219,7 +1209,7 @@ This hook can be used to alter bindings in Ediff's keymap,
 @code{ediff-mode-map}.  These hooks are
 run right after the default bindings are set but before
 @code{ediff-load-hook}.  The regular user needs not be concerned with this
-hook---it is provided for implementors of other Emacs packages built on top
+hook---it is provided for implementers of other Emacs packages built on top
 of Ediff.
 
 @item ediff-before-setup-windows-hook
@@ -1743,7 +1733,7 @@ faces, you can modify them when Ediff is being loaded using
 @end smallexample
 
 @strong{Please note:} to set Ediff's faces, use only @code{copy-face}
-or @code{set/make-face-@dots{}} as shown above. Emacs' low-level
+or @code{set/make-face-@dots{}} as shown above. Emacs's low-level
 face-manipulation functions should be avoided.
 
 @node Narrowing, Refinement of Difference Regions, Highlighting Difference Regions, Customization
@@ -2315,7 +2305,7 @@ other behavior.
 
 However, Ediff temporarily resets this variable to @code{t} if it is
 invoked via one of the "buffer" jobs, such as @code{ediff-buffers}.
-This is because it is all too easy to loose day's work otherwise.
+This is because it is all too easy to lose a day's work otherwise.
 Besides, in a "buffer" job, the variant buffers have already been loaded
 prior to starting Ediff, so Ediff just preserves status quo here.
 
@@ -2541,7 +2531,3 @@ Eli Zaretskii (eliz at is.elta.co.il)
 @printindex cp
 
 @bye
-
-@ignore
-   arch-tag: 165ecb88-d03c-44b1-a921-b93f50b05b46
-@end ignore

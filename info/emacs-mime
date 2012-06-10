@@ -3,8 +3,7 @@ emacs-mime.texi.
 
 This file documents the Emacs MIME interface functionality.
 
-   Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+   Copyright (C) 1998-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -47,8 +46,7 @@ read at least RFC2045 and RFC2047.
 
    This file documents the Emacs MIME interface functionality.
 
-   Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+   Copyright (C) 1998-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -319,12 +317,17 @@ File: emacs-mime,  Node: Display Customization,  Next: Files and Directories,  P
 `mm-inline-large-images'
      When displaying inline images that are larger than the window,
      Emacs does not enable scrolling, which means that you cannot see
-     the whole image.  To prevent this, the library tries to determine
+     the whole image. To prevent this, the library tries to determine
      the image size before displaying it inline, and if it doesn't fit
      the window, the library will display it externally (e.g. with
-     `ImageMagick' or `xv').  Setting this variable to `t' disables
-     this check and makes the library display all inline images as
-     inline, regardless of their size.
+     `ImageMagick' or `xv'). Setting this variable to `t' disables this
+     check and makes the library display all inline images as inline,
+     regardless of their size. If you set this variable to `resize',
+     the image will be displayed resized to fit in the window, if Emacs
+     has the ability to resize images.
+
+`mm-inline-large-images-proportion'
+     The proportion used when resizing large images.
 
 `mm-inline-override-types'
      `mm-inlined-types' may include regular expressions, for example to
@@ -338,15 +341,15 @@ File: emacs-mime,  Node: Display Customization,  Next: Files and Directories,  P
 
 `mm-text-html-renderer'
      This selects the function used to render HTML.  The predefined
-     renderers are selected by the symbols `w3', `w3m'(1), `links',
-     `lynx', `w3m-standalone' or `html2text'.  If `nil' use an external
-     viewer.  You can also specify a function, which will be called
-     with a MIME handle as the argument.
+     renderers are selected by the symbols `gnus-article-html', `w3',
+     `w3m'(1), `links', `lynx', `w3m-standalone' or `html2text'.  If
+     `nil' use an external viewer.  You can also specify a function,
+     which will be called with a MIME handle as the argument.
 
 `mm-inline-text-html-with-images'
      Some HTML mails might have the trick of spammers using `<img>'
      tags.  It is likely to be intended to verify whether you have read
-     the mail.  You can prevent your personal informations from leaking
+     the mail.  You can prevent your personal information from leaking
      by setting this option to `nil' (which is the default).  It is
      currently ignored by Emacs/w3.  For emacs-w3m, you may use the
      command `t' on the image anchor to show an image even if it is
@@ -925,6 +928,10 @@ text will look in a client that does not support flowed text, the
 default is to wrap after 66 characters.  If hard newline characters are
 not present in the buffer, no flow encoding occurs.
 
+   You can customize the value of the `mml-enable-flowed' variable to
+enable or disable the flowed encoding usage when newline characters are
+present in the buffer.
+
    On decoding flowed text, lines with soft newline characters are
 filled together and wrapped after the column decided by
 `fill-flowed-display-column'.  The default is to wrap after
@@ -1286,19 +1293,8 @@ library does.
 
 `rfc2047-encode-parameter'
      Encode a parameter in the RFC2047-like style.  This is a
-     replacement for the `rfc2231-encode-string' function.  *Note
-     rfc2231::.
-
-     When attaching files as MIME parts, we should use the RFC2231
-     encoding to specify the file names containing non-ASCII
-     characters.  However, many mail softwares don't support it in
-     practice and recipients won't be able to extract files with
-     correct names.  Instead, the RFC2047-like encoding is acceptable
-     generally.  This function provides the very RFC2047-like encoding,
-     resigning to such a regrettable trend.  To use it, put the
-     following line in your `~/.gnus.el' file:
-
-          (defalias 'mail-header-encode-parameter 'rfc2047-encode-parameter)
+     substitution for the `rfc2231-encode-string' function, that is the
+     standard but many mailers don't support it.  *Note rfc2231::.
 
 
 
@@ -2225,9 +2221,9 @@ File: emacs-mime,  Node: Index,  Prev: GNU Free Documentation License,  Up: Top
                                                               (line  42)
 * mm-display-part:                       Display.             (line   9)
 * mm-enable-external:                    Display Customization.
-                                                              (line 128)
+                                                              (line 133)
 * mm-external-terminal-program:          Display Customization.
-                                                              (line 125)
+                                                              (line 130)
 * mm-file-name-collapse-whitespace:      Files and Directories.
                                                               (line  33)
 * mm-file-name-delete-control:           Files and Directories.
@@ -2242,7 +2238,7 @@ File: emacs-mime,  Node: Index,  Prev: GNU Free Documentation License,  Up: Top
                                                               (line  14)
 * mm-file-name-trim-whitespace:          Files and Directories.
                                                               (line  30)
-* mm-fill-flowed:                        Flowed text.         (line  25)
+* mm-fill-flowed:                        Flowed text.         (line  29)
 * mm-handle-buffer:                      Handles.             (line  11)
 * mm-handle-disposition:                 Handles.             (line  28)
 * mm-handle-encoding:                    Handles.             (line  18)
@@ -2250,16 +2246,18 @@ File: emacs-mime,  Node: Index,  Prev: GNU Free Documentation License,  Up: Top
 * mm-handle-type:                        Handles.             (line  15)
 * mm-handle-undisplayer:                 Handles.             (line  21)
 * mm-inlinable-p:                        Display.             (line  15)
+* mm-inline-images-max-proportion:       Display Customization.
+                                                              (line  89)
 * mm-inline-large-images:                Display Customization.
                                                               (line  77)
 * mm-inline-media-tests:                 Display Customization.
                                                               (line   7)
 * mm-inline-override-types:              Display Customization.
-                                                              (line  87)
+                                                              (line  92)
 * mm-inline-text-html-with-images:       Display Customization.
-                                                              (line 104)
+                                                              (line 109)
 * mm-inline-text-html-with-w3m-keymap:   Display Customization.
-                                                              (line 121)
+                                                              (line 126)
 * mm-inlined-types:                      Display Customization.
                                                               (line  17)
 * mm-interactively-view-part:            Display.             (line  30)
@@ -2272,7 +2270,7 @@ File: emacs-mime,  Node: Index,  Prev: GNU Free Documentation License,  Up: Top
 * mm-remove-part:                        Display.             (line  12)
 * mm-save-part:                          Display.             (line  24)
 * mm-text-html-renderer:                 Display Customization.
-                                                              (line  97)
+                                                              (line 102)
 * mm-tmp-directory:                      Files and Directories.
                                                               (line  11)
 * mm-use-ultra-safe-encoding:            Encoding Customization.
@@ -2282,7 +2280,7 @@ File: emacs-mime,  Node: Index,  Prev: GNU Free Documentation License,  Up: Top
 * mm-uu-emacs-sources-regexp:            Non-MIME.            (line  45)
 * mm-uu-extract:                         Non-MIME.            (line  61)
 * mm-w3m-safe-url-regexp:                Display Customization.
-                                                              (line 113)
+                                                              (line 118)
 * MML:                                   Composing.           (line   6)
 * mml-generate-mime:                     Composing.           (line  10)
 * mml-to-mime:                           Conversion.          (line  12)
@@ -2330,42 +2328,42 @@ File: emacs-mime,  Node: Index,  Prev: GNU Free Documentation License,  Up: Top
 
 
 Tag Table:
-Node: Top1086
-Node: Decoding and Viewing3288
-Node: Dissection4069
-Node: Non-MIME4443
-Node: Handles6029
-Node: Display6881
-Node: Display Customization7602
-Ref: Display Customization-Footnote-114072
-Ref: Display Customization-Footnote-214152
-Node: Files and Directories14279
-Node: New Viewers16000
-Node: Composing17124
-Node: Simple MML Example18085
-Node: MML Definition18728
-Node: Advanced MML Example22549
-Node: Encoding Customization25289
-Node: Charset Translation29725
-Node: Conversion32261
-Node: Flowed text33382
-Node: Interface Functions34467
-Node: Basic Functions40025
-Node: rfc204541069
-Node: rfc223141584
-Node: ietf-drums42873
-Node: rfc204743958
-Node: time-date47297
-Node: qp50741
-Node: base6451708
-Node: binhex52661
-Node: uudecode53057
-Node: yenc53413
-Node: rfc184353691
-Node: mailcap54300
-Node: Standards55224
-Node: GNU Free Documentation License56645
-Node: Index81795
+Node: Top1007
+Node: Decoding and Viewing3130
+Node: Dissection3911
+Node: Non-MIME4285
+Node: Handles5871
+Node: Display6723
+Node: Display Customization7444
+Ref: Display Customization-Footnote-114171
+Ref: Display Customization-Footnote-214251
+Node: Files and Directories14378
+Node: New Viewers16099
+Node: Composing17223
+Node: Simple MML Example18184
+Node: MML Definition18827
+Node: Advanced MML Example22648
+Node: Encoding Customization25388
+Node: Charset Translation29824
+Node: Conversion32360
+Node: Flowed text33481
+Node: Interface Functions34732
+Node: Basic Functions40290
+Node: rfc204541334
+Node: rfc223141849
+Node: ietf-drums43138
+Node: rfc204744223
+Node: time-date47027
+Node: qp50471
+Node: base6451438
+Node: binhex52391
+Node: uudecode52787
+Node: yenc53143
+Node: rfc184353421
+Node: mailcap54030
+Node: Standards54954
+Node: GNU Free Documentation License56375
+Node: Index81525
 
 End Tag Table
 

@@ -1,7 +1,6 @@
 ;;; mpuz.el --- multiplication puzzle for GNU Emacs
 
-;; Copyright (C) 1990, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1990, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Philippe Schnoebelen <phs@lsv.ens-cachan.fr>
 ;; Overhauled: Daniel Pfeiffer <occitan@esperanto.org>
@@ -406,7 +405,7 @@ You may abort a game by typing \\<mpuz-mode-map>\\[mpuz-offer-abort]."
   "Propose a digit for a letter in puzzle."
   (interactive)
   (if mpuz-in-progress
-      (let (letter-char digit digit-char message)
+      (let (letter-char digit digit-char)
 	(setq letter-char (upcase last-command-event)
 	      digit (mpuz-to-digit (- letter-char ?A)))
 	(cond ((mpuz-digit-solved-p digit)
@@ -435,8 +434,7 @@ You may abort a game by typing \\<mpuz-mode-map>\\[mpuz-offer-abort]."
   "Propose LETTER-CHAR as code for DIGIT-CHAR."
   (let* ((letter (- letter-char ?A))
 	 (digit (- digit-char ?0))
-	 (correct-digit (mpuz-to-digit letter))
-	 (game mpuz-nb-completed-games))
+	 (correct-digit (mpuz-to-digit letter)))
     (cond ((mpuz-digit-solved-p correct-digit)
 	   (message "%c has already been found." (+ correct-digit ?0)))
 	  ((mpuz-digit-solved-p digit)
@@ -499,5 +497,4 @@ You may abort a game by typing \\<mpuz-mode-map>\\[mpuz-offer-abort]."
 
 (provide 'mpuz)
 
-;; arch-tag: 2781d6ba-89e7-43b5-85c7-5d3a2e73feb1
 ;;; mpuz.el ends here

@@ -1,7 +1,6 @@
 ;;; semantic/find.el --- Search routines for Semantic
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1999-2005, 2008-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
@@ -334,7 +333,7 @@ Used in completion."
 
 ;;;###autoload
 (define-overloadable-function semantic-find-tags-by-scope-protection (scopeprotection parent &optional table)
-  "Find all tags accessable by SCOPEPROTECTION.
+  "Find all tags accessible by SCOPEPROTECTION.
 SCOPEPROTECTION is a symbol which can be returned by the method
 `semantic-tag-protection'.  A hard-coded order is used to determine a match.
 PARENT is a tag representing the PARENT slot needed for
@@ -428,7 +427,7 @@ TABLE is a tag table.  See `semantic-something-to-tag-table'."
 
 ;;; Old Style Brute Force Search Routines
 ;;
-;; These functions will search through tags lists explicity for
+;; These functions will search through tags lists explicitly for
 ;; desired information.
 
 ;; The -by-name nonterminal search can use the built in fcn
@@ -575,7 +574,7 @@ FUNCTION must return non-nil if an element of STREAM will be included
 in the new list.
 
 If optional argument SEARCH-PARTS is non-nil, all sub-parts of tags
-are searched.  The overloadable function `semantic-tag-componenets' is
+are searched.  The overloadable function `semantic-tag-components' is
 used for the searching child lists.  If SEARCH-PARTS is the symbol
 'positiononly, then only children that have positional information are
 searched.
@@ -700,5 +699,4 @@ details are available of findable."
 ;; generated-autoload-load-name: "semantic/find"
 ;; End:
 
-;; arch-tag: db00c93e-e561-4bd6-942b-96eca5aaa9a6
 ;;; semantic/find.el ends here

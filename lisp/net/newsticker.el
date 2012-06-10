@@ -1,7 +1,6 @@
 ;;; newsticker.el --- A Newsticker for Emacs.
 
-;; Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2003-2012  Free Software Foundation, Inc.
 
 ;; Author:      Ulf Jasper <ulf.jasper@web.de>
 ;; Filename:    newsticker.el
@@ -9,6 +8,7 @@
 ;; Created:     17. June 2003
 ;; Keywords:    News, RSS, Atom
 ;; Time-stamp:  "6. Dezember 2009, 19:15:18 (ulf)"
+;; Version:     1.99
 
 ;; ======================================================================
 
@@ -106,7 +106,7 @@
 ;; asynchronous download of headlines.  The modeline in the `*newsticker*'
 ;; buffer informs whenever new headlines have arrived.  Clicking
 ;; mouse-button 2 or pressing RET in this buffer on a headline will call
-;; browse-url to load the corresponding news story in your favourite web
+;; browse-url to load the corresponding news story in your favorite web
 ;; browser.
 
 ;; The scrolling, or flashing of headlines in the echo area, can be started
@@ -408,5 +408,4 @@
 
 (provide 'newsticker)
 
-;; arch-tag: ab761dfa-67bc-4207-bc64-4307271dc381
 ;;; newsticker.el ends here

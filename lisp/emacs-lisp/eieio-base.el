@@ -1,11 +1,12 @@
 ;;; eieio-base.el --- Base classes for EIEIO.
 
-;;; Copyright (C) 2000, 2001, 2002, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2012
+;;; Copyright (C) 2000-2002, 2004-2005, 2007-2012
 ;;; Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam  <zappo@gnu.org>
 ;; Version: 0.2
 ;; Keywords: OO, lisp
+;; Package: eieio
 
 ;; This file is part of GNU Emacs.
 
@@ -53,7 +54,7 @@ not been set, use values from the parent."
 
 (defmethod slot-unbound ((object eieio-instance-inheritor) class slot-name fn)
   "If a slot OBJECT in this CLASS is unbound, try to inherit, or throw a signal.
-SLOT-NAME is the offending slot.  FN is the function signalling the error."
+SLOT-NAME is the offending slot.  FN is the function signaling the error."
   (if (slot-boundp object 'parent-instance)
       ;; It may not look like it, but this line recurses back into this
       ;; method if the parent instance's slot is unbound.
@@ -177,7 +178,7 @@ only one object ever exists."
 ;; calculate path names relative to a given instance.  This will
 ;; make the saved object location independent by converting all file
 ;; references to be relative to the directory the object is saved to.
-;; You must call `eieio-peristent-path-relative' on each file name
+;; You must call `eieio-persistent-path-relative' on each file name
 ;; saved in your object.
 (defclass eieio-persistent ()
   ((file :initarg :file
@@ -328,5 +329,4 @@ a set type."
 
 (provide 'eieio-base)
 
-;; arch-tag: 6260571e-9e8a-41a0-880f-a937b0c2ea8b
 ;;; eieio-base.el ends here

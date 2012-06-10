@@ -3,8 +3,7 @@ calc.texi.
 
 This file documents Calc, the GNU Emacs calculator.
 
-Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+Copyright (C) 1990-1991, 2001-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -562,7 +561,7 @@ File: calc,  Node: Advanced Math Functions,  Next: Branch Cuts,  Prev: Trigonome
 Calc can compute a variety of less common functions that arise in
 various branches of mathematics.  All of the functions described in
 this section allow arbitrary complex arguments and, except as noted,
-will work to arbitrarily large precisions.  They can not at present
+will work to arbitrarily large precision.  They can not at present
 handle error forms or intervals as arguments.
 
    NOTE:  These functions are still experimental.  In particular, their
@@ -864,7 +863,7 @@ numbers it produces are highly random.  Knuth's _Art of Computer
 Programming_, Volume II, contains a thorough description of the theory
 of random number generators and their measurement and characterization.
 
-   If `RandSeed' has no stored value, Calc calls Emacs' built-in
+   If `RandSeed' has no stored value, Calc calls Emacs's built-in
 `random' function to get a stream of random numbers, which it then
 treats in various ways to avoid problems inherent in the simple random
 number generators that many systems use to implement `random'.
@@ -1626,6 +1625,19 @@ the original vector.  Non-integers in the input are rounded down to
 integers.  Any vector elements outside the specified range are ignored.
 (You can tell if elements have been ignored by noting that the counts
 in the result vector don't add up to the length of the input vector.)
+
+   If no prefix is given, then you will be prompted for a vector which
+will be used to determine the bins. (If a positive integer is given at
+this prompt, it will be still treated as if it were given as a prefix.)
+Each bin will consist of the interval of numbers closest to the
+corresponding number of this new vector; if the vector `[a, b, c, ...]'
+is entered at the prompt, the bins will be `(-inf, (a+b)/2]',
+`((a+b)/2, (b+c)/2]', etc.  The result of this command will be a vector
+counting how many elements of the original vector are in each bin.
+
+   The result will then be a vector with the same length as this new
+vector; each element of the new vector will be replaced by the number of
+elements of the original vector which are closest to it.
 
    With the Hyperbolic flag, `H V H' pulls two vectors from the stack.
 The second-to-top vector is the list of numbers as before.  The top
@@ -2661,9 +2673,13 @@ to the letter `b' and press `j s', the display changes to
              . . . .
 
 Every character not part of the sub-formula `b' has been changed to a
-dot.  The `*' next to the line number is to remind you that the formula
-has a portion of it selected.  (In this case, it's very obvious, but it
-might not always be.  If Embedded mode is enabled, the word `Sel' also
+dot. (If the customizable variable
+`calc-highlight-selections-with-faces' is non-nil, then the characters
+not part of the sub-formula are de-emphasized by using a less
+noticeable face instead of using dots. *note Displaying Selections::.)
+The `*' next to the line number is to remind you that the formula has a
+portion of it selected.  (In this case, it's very obvious, but it might
+not always be.  If Embedded mode is enabled, the word `Sel' also
 appears in the mode line because the stack may not be visible.  *note
 Embedded Mode::.)
 
@@ -2841,6 +2857,12 @@ which the selected portion itself is obscured by `#' signs:
          (a + b)  . . .            ## # ##  + V c
      1*  ...............       1*  ---------------
              . . . .                   2 x + 1
+If the customizable variable `calc-highlight-selections-with-faces' is
+non-nil, then the non-selected portion of the formula will be
+de-emphasized by using a less noticeable face (`calc-nonselected-face')
+instead of dots and the selected sub-formula will be highlighted by
+using a more noticeable face (`calc-selected-face') instead of `#'
+signs. (*note Customizing Calc::.)
 
 
 File: calc,  Node: Operating on Selections,  Next: Rearranging with Selections,  Prev: Displaying Selections,  Up: Selecting Subformulas
@@ -2956,7 +2978,7 @@ formula by selecting it and pressing `n' (`calc-change-sign').
          . . . 2 x           . . . -2 x
 
    Unselecting the sub-formula reveals that the minus sign, which would
-normally have cancelled out with the subtraction automatically, has not
+normally have canceled out with the subtraction automatically, has not
 been able to do so because the subtraction was not part of the selected
 portion.  Pressing `=' (`calc-evaluate') or doing any other
 mathematical operation on the whole formula will cause it to be
@@ -3509,10 +3531,9 @@ least one of `a' and `b' are numbers.  Quotients of powers and square
 roots are distributed just as described for multiplication.
 
    Quotients of products cancel only in the leading terms of the
-numerator and denominator.  In other words, `a x b / a y b' is
-cancelled to `x b / y b' but not to `x / y'.  Once again this is
-because full cancellation can be slow; use `a s' to cancel all terms of
-the quotient.
+numerator and denominator.  In other words, `a x b / a y b' is canceled
+to `x b / y b' but not to `x / y'.  Once again this is because full
+cancellation can be slow; use `a s' to cancel all terms of the quotient.
 
    Quotients of negative-looking values are simplified according to
 `(-a) / (-b)' to `a / b', `(-a) / (b - c)' to `a / (c - b)', and `(a -
@@ -3677,7 +3698,7 @@ distributive law.  For example, `a x^2 b / c x^3 d' will cancel `x^2'
 from the top and bottom to get `a b / c x d'.  (The terms in the
 denominator will then be rearranged to `c d x' as described above.)  If
 there is any common integer or fractional factor in the numerator and
-denominator, it is cancelled out; for example, `(4 x + 6) / 8 x'
+denominator, it is canceled out; for example, `(4 x + 6) / 8 x'
 simplifies to `(2 x + 3) / 4 x'.
 
    Non-constant common factors are not found even by `a s'.  To cancel
@@ -3713,7 +3734,7 @@ modulo `M'.  For example, `(x - 23) % 10' is simplified to `(x + 7) %
 10'.
 
    If the argument is multiplied by a constant, and this constant has a
-common integer divisor with the modulus, then this factor is cancelled
+common integer divisor with the modulus, then this factor is canceled
 out.  For example, `12 x % 15' is changed to `3 (4 x % 5)' by factoring
 out 3.  Also, `(12 x + 1) % 15' is changed to `3 ((4 x + 1:3) % 5)'.
 While these forms may not seem "simpler," they allow Calc to discover
@@ -3768,13 +3789,13 @@ negative, positive imaginary, or negative imaginary.
    The error functions `erf' and `erfc' are simplified when their
 arguments are negative-looking or are calls to the `conj' function.
 
-   Equations and inequalities are simplified by cancelling factors of
+   Equations and inequalities are simplified by canceling factors of
 products, quotients, or sums on both sides.  Inequalities change sign
-if a negative multiplicative factor is cancelled.  Non-constant
-multiplicative factors as in `a b = a c' are cancelled from equations
+if a negative multiplicative factor is canceled.  Non-constant
+multiplicative factors as in `a b = a c' are canceled from equations
 only if they are provably nonzero (generally because they were declared
-so; *note Declarations::).  Factors are cancelled from inequalities
-only if they are nonzero and their sign is known.
+so; *note Declarations::).  Factors are canceled from inequalities only
+if they are nonzero and their sign is known.
 
    Simplification also replaces an equation or inequality with 1 or 0
 ("true" or "false") if it can through the use of declarations.  If `x'
@@ -3842,9 +3863,9 @@ simplifies to `a b sqrt(a+b)'.
 `x' are also unsafe because of problems with principal values (although
 these simplifications are safe if `x' is known to be real).
 
-   Common factors are cancelled from products on both sides of an
+   Common factors are canceled from products on both sides of an
 equation, even if those factors may be zero:  `a x / b x' to `a / b'.
-Such factors are never cancelled from inequalities:  Even `a e' is not
+Such factors are never canceled from inequalities:  Even `a e' is not
 bold enough to reduce `a x < b x' to `a < b' (or `a > b', depending on
 whether you believe `x' is positive or negative).  The `a M /' command
 can be used to divide a factor out of both sides of an inequality.
@@ -3877,7 +3898,7 @@ Otherwise, it is rewritten in terms of the units `u_a'.
 which the first argument is a number which is out of range for the
 leading unit are modified accordingly.
 
-   When cancelling and combining units in products and quotients, Calc
+   When canceling and combining units in products and quotients, Calc
 accounts for unit names that differ only in the prefix letter.  For
 example, `2 km m' is simplified to `2000 m^2'.  However, compatible but
 different units like `ft' and `in' are not combined in this way.

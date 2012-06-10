@@ -1,10 +1,10 @@
 This is ../../info/mh-e, produced by makeinfo version 4.13 from
 mh-e.texi.
 
-This is version 8.2 of `The MH-E Manual', last updated 2009-06-13.
+This is version 8.3 of `The MH-E Manual', last updated 2011-09-20.
 
-   Copyright (C) 1995, 2001, 2002, 2003, 2005, 2006, 2007, 2008,
-2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 1995, 2001-2003, 2005-2012  Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of either:
@@ -33,14 +33,14 @@ END-INFO-DIR-ENTRY
 
 
 Indirect:
-mh-e-1: 1391
-mh-e-2: 267963
+mh-e-1: 1347
+mh-e-2: 267969
 
 Tag Table:
 (Indirect)
-Node: Top1391
-Node: Preface5171
-Ref: Preface-Footnote-17158
+Node: Top1347
+Node: Preface5083
+Ref: Preface-Footnote-17070
 Node: Conventions7412
 Ref: Conventions-Footnote-112858
 Node: Getting Started12951
@@ -165,11 +165,11 @@ Ref: From Brian Reid-Footnote-1236036
 Node: From Jim Larus236515
 Node: From Stephen Gildea238764
 Node: From Bill Wohler240915
-Node: GFDL242831
-Node: GPL267963
-Node: Key Index305508
-Node: Command Index335813
-Node: Option Index358819
-Node: Concept Index382335
+Node: GFDL242837
+Node: GPL267969
+Node: Key Index305514
+Node: Command Index335819
+Node: Option Index358825
+Node: Concept Index382341
 
 End Tag Table

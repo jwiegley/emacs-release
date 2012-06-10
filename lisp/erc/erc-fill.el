@@ -1,7 +1,6 @@
 ;;; erc-fill.el --- Filling IRC messages in various ways
 
-;; Copyright (C) 2001, 2002, 2003, 2004, 2006,
-;;   2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2001-2004, 2006-2012 Free Software Foundation, Inc.
 
 ;; Author: Andreas Fuchs <asf@void.at>
 ;;         Mario Lang <mlang@delysid.org>
@@ -40,9 +39,12 @@
 ;;;###autoload (autoload 'erc-fill-mode "erc-fill" nil t)
 (erc-define-minor-mode erc-fill-mode
   "Toggle ERC fill mode.
-With numeric arg, turn ERC fill mode on if and only if arg is
-positive.  In ERC fill mode, messages in the channel buffers are
-filled."
+With a prefix argument ARG, enable ERC fill mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
+ERC fill mode is a global minor mode.  When enabled, messages in
+the channel buffers are filled."
   nil nil nil
   :global t :group 'erc-fill
   (if erc-fill-mode
@@ -193,4 +195,3 @@ You can put this on `erc-insert-modify-hook' and/or `erc-send-modify-hook'."
 ;; indent-tabs-mode: nil
 ;; End:
 
-;; arch-tag: 89224581-c2c2-4e26-92e5-e3a390dc516a

@@ -1,12 +1,11 @@
 ;;; foldout.el --- folding extensions for outline-mode and outline-minor-mode
 
-;; Copyright (C) 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1994, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Kevin Broadey <KevinB@bartley.demon.co.uk>
 ;; Maintainer: FSF
 ;; Created: 27 Jan 1994
-;; Version: foldout.el 1.10 dated 94/05/19 at 17:09:12
+;; Version: 1.10
 ;; Keywords: folding, outlines
 
 ;; This file is part of GNU Emacs.
@@ -112,9 +111,9 @@
 ;; setup a lot easier.
 ;;
 ;; folding.el by Jamie Lokier <u90jl@ecs.ox.ac.uk> supports folding by
-;; recognising special marker text in you file.
+;; recognizing special marker text in you file.
 ;;
-;; c-outline.el (by me) provides outline-mode support to recognise `C'
+;; c-outline.el (by me) provides outline-mode support to recognize `C'
 ;; statements as outline headings, so with foldout you can have a folding `C'
 ;; code editor without having to put in start- and end-of-fold markers.  This
 ;; is a real winner!
@@ -565,5 +564,4 @@ Valid modifiers are shift, control, meta, alt, hyper and super.")
 
 (provide 'foldout)
 
-;; arch-tag: 19d095a2-1f09-42a7-a5ac-e2a3078cfe95
 ;;; foldout.el ends here

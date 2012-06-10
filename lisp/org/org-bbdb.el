@@ -1,13 +1,11 @@
 ;;; org-bbdb.el --- Support for links to BBDB entries from within Org-mode
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2004-2012  Free Software Foundation, Inc.
 
-;; Author: Carsten Dominik <carsten at orgmode dot org>,
-;;         Thomas Baumann <thomas dot baumann at ch dot tum dot de>
+;; Authors: Carsten Dominik <carsten at orgmode dot org>
+;;       Thomas Baumann <thomas dot baumann at ch dot tum dot de>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.33x
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -114,6 +112,9 @@
           (&optional dont-check-disk already-in-db-buffer))
 (declare-function bbdb-split "ext:bbdb" (string separators))
 (declare-function bbdb-string-trim "ext:bbdb" (string))
+(declare-function bbdb-record-get-field "ext:bbdb" (record field))
+(declare-function bbdb-search-name "ext:bbdb-com" (regexp &optional layout))
+(declare-function bbdb-search-organization "ext:bbdb-com" (regexp &optional layout))
 
 (declare-function calendar-leap-year-p "calendar" (year))
 (declare-function diary-ordinal-suffix "diary-lib" (n))
@@ -136,12 +137,12 @@
   '(("birthday" lambda
      (name years suffix)
      (concat "Birthday: [[bbdb:" name "][" name " ("
-	     (number-to-string years)
+	     (format "%s" years)        ; handles numbers as well as strings
 	     suffix ")]]"))
     ("wedding" lambda
      (name years suffix)
      (concat "[[bbdb:" name "][" name "'s "
-	     (number-to-string years)
+	     (format "%s" years)
 	     suffix " wedding anniversary]]")))
   "How different types of anniversaries should be formatted.
 An alist of elements (STRING . FORMAT) where STRING is the name of an
@@ -197,8 +198,11 @@ date year)."
   "Store a link to a BBDB database entry."
   (when (eq major-mode 'bbdb-mode)
     ;; This is BBDB, we make this link!
-    (let* ((name (bbdb-record-name (bbdb-current-record)))
-	   (company (bbdb-record-getprop (bbdb-current-record) 'company))
+    (let* ((rec (bbdb-current-record))
+           (name (bbdb-record-name rec))
+	   (company (if (fboundp 'bbdb-record-getprop)
+                        (bbdb-record-getprop rec 'company)
+                      (car (bbdb-record-get-field rec 'organization))))
 	   (link (org-make-link "bbdb:" name)))
       (org-store-link-props :type "bbdb" :name name :company company
 			    :link link :description name)
@@ -207,43 +211,75 @@ date year)."
 (defun org-bbdb-export (path desc format)
   "Create the export version of a BBDB link specified by PATH or DESC.
 If exporting to either HTML or LaTeX FORMAT the link will be
-italicised, in all other cases it is left unchanged."
+italicized, in all other cases it is left unchanged."
+  (when (string= desc (format "bbdb:%s" path))
+    (setq desc path))
   (cond
-   ((eq format 'html) (format "<i>%s</i>" (or desc path)))
-   ((eq format 'latex) (format "\\textit{%s}" (or desc path)))
-   (t (or desc path))))
+   ((eq format 'html) (format "<i>%s</i>" desc))
+   ((eq format 'latex) (format "\\textit{%s}" desc))
+   (t desc)))
 
 (defun org-bbdb-open (name)
   "Follow a BBDB link to NAME."
-  (require 'bbdb)
+  (require 'bbdb-com)
   (let ((inhibit-redisplay (not debug-on-error))
 	(bbdb-electric-p nil))
-    (catch 'exit
-      ;; Exact match on name
-      (bbdb-name (concat "\\`" name "\\'") nil)
-      (if (< 0 (buffer-size (get-buffer "*BBDB*"))) (throw 'exit nil))
-      ;; Exact match on name
-      (bbdb-company (concat "\\`" name "\\'") nil)
-      (if (< 0 (buffer-size (get-buffer "*BBDB*"))) (throw 'exit nil))
-      ;; Partial match on name
-      (bbdb-name name nil)
-      (if (< 0 (buffer-size (get-buffer "*BBDB*"))) (throw 'exit nil))
-      ;; Partial match on company
-      (bbdb-company name nil)
-      (if (< 0 (buffer-size (get-buffer "*BBDB*"))) (throw 'exit nil))
-      ;; General match including network address and notes
-      (bbdb name nil)
-      (when (= 0 (buffer-size (get-buffer "*BBDB*")))
-	(delete-window (get-buffer-window "*BBDB*"))
-	(error "No matching BBDB record")))))
+    (if (fboundp 'bbdb-name)
+        (org-bbdb-open-old name)
+      (org-bbdb-open-new name))))
+
+(defun org-bbdb-open-old (name)
+  (catch 'exit
+    ;; Exact match on name
+    (bbdb-name (concat "\\`" name "\\'") nil)
+    (if (< 0 (buffer-size (get-buffer "*BBDB*"))) (throw 'exit nil))
+    ;; Exact match on name
+    (bbdb-company (concat "\\`" name "\\'") nil)
+    (if (< 0 (buffer-size (get-buffer "*BBDB*"))) (throw 'exit nil))
+    ;; Partial match on name
+    (bbdb-name name nil)
+    (if (< 0 (buffer-size (get-buffer "*BBDB*"))) (throw 'exit nil))
+    ;; Partial match on company
+    (bbdb-company name nil)
+    (if (< 0 (buffer-size (get-buffer "*BBDB*"))) (throw 'exit nil))
+    ;; General match including network address and notes
+    (bbdb name nil)
+    (when (= 0 (buffer-size (get-buffer "*BBDB*")))
+      (delete-window (get-buffer-window "*BBDB*"))
+      (error "No matching BBDB record"))))
+
+(defun org-bbdb-open-new (name)
+  (catch 'exit
+    ;; Exact match on name
+    (bbdb-search-name (concat "\\`" name "\\'") nil)
+    (if (< 0 (buffer-size (get-buffer "*BBDB*"))) (throw 'exit nil))
+    ;; Exact match on name
+    (bbdb-search-organization (concat "\\`" name "\\'") nil)
+    (if (< 0 (buffer-size (get-buffer "*BBDB*"))) (throw 'exit nil))
+    ;; Partial match on name
+    (bbdb-search-name name nil)
+    (if (< 0 (buffer-size (get-buffer "*BBDB*"))) (throw 'exit nil))
+    ;; Partial match on company
+    (bbdb-search-organization name nil)
+    (if (< 0 (buffer-size (get-buffer "*BBDB*"))) (throw 'exit nil))
+    ;; General match including network address and notes
+    (bbdb name nil)
+    (when (= 0 (buffer-size (get-buffer "*BBDB*")))
+      (delete-window (get-buffer-window "*BBDB*"))
+      (error "No matching BBDB record"))))
 
 (defun org-bbdb-anniv-extract-date (time-str)
   "Convert YYYY-MM-DD to (month date year).
-Argument TIME-STR is the value retrieved from BBDB."
-  (multiple-value-bind (y m d) (values-list (bbdb-split time-str "-"))
-    (list (string-to-number m)
-	  (string-to-number d)
-	  (string-to-number y))))
+Argument TIME-STR is the value retrieved from BBDB.  If YYYY- is omitted
+it will be considered unknown."
+  (multiple-value-bind (a b c) (values-list (bbdb-split time-str "-"))
+    (if (eq c nil)
+        (list (string-to-number a)
+              (string-to-number b)
+              nil)
+      (list (string-to-number b)
+            (string-to-number c)
+            (string-to-number a)))))
 
 (defun org-bbdb-anniv-split (str)
   "Split multiple entries in the BBDB anniversary field.
@@ -322,12 +358,16 @@ This is used by Org to re-create the anniversary hash table."
         (when rec
           (let* ((class (or (nth 2 rec)
                             org-bbdb-default-anniversary-format))
-                 (form (or (cdr (assoc class
-                                       org-bbdb-anniversary-format-alist))
+                 (form (or (cdr (assoc-string
+				 class org-bbdb-anniversary-format-alist t))
                            class))	; (as format string)
                  (name (nth 1 rec))
-                 (years (- y (car rec)))
-                 (suffix (diary-ordinal-suffix years))
+                 (years (if (eq (car rec) nil)
+                            "unknown"
+                          (- y (car rec))))
+                 (suffix (if (eq (car rec) nil)
+                             ""
+                           (diary-ordinal-suffix years)))
                  (tmp (cond
                        ((functionp form)
                         (funcall form name years suffix))
@@ -338,8 +378,7 @@ This is used by Org to re-create the anniversary hash table."
                 (setq text (append text (list tmp)))
               (setq text (list tmp)))))
         ))
-    (when text
-      (mapconcat 'identity text "; "))))
+    text))
 
 (defun org-bbdb-complete-link ()
   "Read a bbdb link with name completion."
@@ -381,7 +420,5 @@ END:VEVENT\n"
 		     categ)))))
 
 (provide 'org-bbdb)
-
-;; arch-tag: 9e4f275d-d080-48c1-b040-62247f66b5c2
 
 ;;; org-bbdb.el ends here

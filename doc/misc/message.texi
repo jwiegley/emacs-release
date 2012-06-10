@@ -1,5 +1,7 @@
 \input texinfo                  @c -*-texinfo-*-
 
+@include gnus-overrides.texi
+
 @setfilename ../../info/message
 @settitle Message Manual
 @synindex fn cp
@@ -8,8 +10,7 @@
 @copying
 This file documents Message, the Emacs message composition mode.
 
-Copyright @copyright{} 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+Copyright @copyright{} 1996-2012 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -35,7 +36,12 @@ developing GNU and promoting software freedom.''
 @end iftex
 
 @titlepage
+@ifset WEBHACKDEVEL
+@title Message Manual (DEVELOPMENT VERSION)
+@end ifset
+@ifclear WEBHACKDEVEL
 @title Message Manual
+@end ifclear
 
 @author by Lars Magne Ingebrigtsen
 @page
@@ -181,6 +187,37 @@ but you can change the behavior to suit your needs by fiddling with the
 Addresses that match the @code{message-dont-reply-to-names} regular
 expression (or list of regular expressions) will be removed from the
 @code{Cc} header. A value of @code{nil} means exclude your name only.
+
+@vindex message-prune-recipient-rules
+@code{message-prune-recipient-rules} is used to prune the addresses
+used when doing a wide reply.  It's meant to be used to remove
+duplicate addresses and the like.  It's a list of lists, where the
+first element is a regexp to match the address to trigger the rule,
+and the second is a regexp that will be expanded based on the first,
+to match addresses to be pruned.
+
+It's complicated to explain, but it's easy to use.
+
+For instance, if you get an email from @samp{foo@@example.org}, but
+@samp{foo@@zot.example.org} is also in the @code{Cc} list, then your
+wide reply will go out to both these addresses, since they are unique.
+
+To avoid this, do something like the following:
+
+@lisp
+(setq message-prune-recipient-rules
+      '(("^\\([^@@]+\\)@@\\(.*\\)" "\\1@@.*[.]\\2")))
+@end lisp
+
+If, for instance, you want all wide replies that involve messages from
+@samp{cvs@@example.org} to go to that address, and nowhere else (i.e.,
+remove all other recipients if @samp{cvs@@example.org} is in the
+recipient list:
+
+@lisp
+(setq message-prune-recipient-rules
+      '(("cvs@@example.org" ".")))
+@end lisp
 
 @vindex message-wide-reply-confirm-recipients
 If @code{message-wide-reply-confirm-recipients} is non-@code{nil} you
@@ -855,6 +892,10 @@ Manual}).
 @cindex internationalized domain names
 @cindex non-ascii domain names
 
+@acronym{IDNA} is a standard way to encode non-@acronym{ASCII} domain
+names into a readable @acronym{ASCII} string.  The details can be
+found in RFC 3490.
+
 Message is a @acronym{IDNA}-compliant posting agent.  The user
 generally doesn't have to do anything to make the @acronym{IDNA}
 happen---Message will encode non-@acronym{ASCII} domain names in @code{From},
@@ -863,7 +904,7 @@ happen---Message will encode non-@acronym{ASCII} domain names in @code{From},
 Until @acronym{IDNA} becomes more well known, Message queries you
 whether @acronym{IDNA} encoding of the domain name really should
 occur.  Some users might not be aware that domain names can contain
-non-@acronym{ASCII} now, so this gives them a safety net if they accidently
+non-@acronym{ASCII} now, so this gives them a safety net if they accidentally
 typed a non-@acronym{ASCII} domain name.
 
 @vindex message-use-idna
@@ -1059,11 +1100,12 @@ the passphrase prompt.
 @subsection Using PGP/MIME
 
 @acronym{PGP/MIME} requires an external OpenPGP implementation, such
-as @uref{http://www.gnupg.org/, GNU Privacy Guard}.  Pre-OpenPGP
-implementations such as PGP 2.x and PGP 5.x are also supported.  One
-Emacs interface to the PGP implementations, PGG (@pxref{Top, ,PGG,
-pgg, PGG Manual}), is included, but Mailcrypt and Florian Weimer's
-@code{gpg.el} are also supported.  @xref{PGP Compatibility}.
+as @uref{http://www.gnupg.org/, GNU Privacy Guard}. Pre-OpenPGP
+implementations such as PGP 2.x and PGP 5.x are also supported.  The
+default Emacs interface to the PGP implementation is EasyPG
+(@pxref{Top,,EasyPG Assistant User's Manual, epa, EasyPG Assistant
+User's Manual}), but PGG (@pxref{Top, ,PGG, pgg, PGG Manual}) and
+Mailcrypt are also supported.  @xref{PGP Compatibility}.
 
 @cindex gpg-agent
 Message internally calls GnuPG (the @command{gpg} command) to perform
@@ -1098,11 +1140,6 @@ does the trick.
 gpg --use-agent --sign < /dev/null > /dev/null
 @end example
 
-The Lisp variable @code{pgg-gpg-use-agent} controls whether to use
-@command{gpg-agent}.  See also @xref{Caching passphrase, , , pgg, The
-PGG Manual}.
-
-
 @node PGP Compatibility
 @subsection Compatibility with older implementations
 
@@ -1117,12 +1154,9 @@ your PGP implementation, so we refer to it.
 If you have imported your old PGP 2.x key into GnuPG, and want to send
 signed and encrypted messages to your fellow PGP 2.x users, you'll
 discover that the receiver cannot understand what you send. One
-solution is to use PGP 2.x instead (i.e., if you use @code{pgg}, set
-@code{pgg-default-scheme} to @code{pgp}).  If you do want to use
-GnuPG, you can use a compatibility script called @code{gpg-2comp}
-available from
-@uref{http://muppet.faveve.uni-stuttgart.de/~gero/gpg-2comp/}.  You
-could also convince your fellow PGP 2.x users to convert to GnuPG.
+solution is to use PGP 2.x instead (e.g.@: if you use @code{pgg}, set
+@code{pgg-default-scheme} to @code{pgp}). You could also convince your
+fellow PGP 2.x users to convert to GnuPG.
 @vindex mml-signencrypt-style-alist
 As a final workaround, you can make the sign and encryption work in
 two steps; separately sign, then encrypt a message.  If you would like
@@ -1163,6 +1197,10 @@ Elide the text between point and mark (@code{message-elide-region}).
 The text is killed and replaced with the contents of the variable
 @code{message-elide-ellipsis}.  The default value is to use an ellipsis
 (@samp{[...]}).
+
+This is a format-spec string, and you can use @samp{%l} to say how
+many lines were removed, and @samp{%c} to say how many characters were
+removed.
 
 @item C-c M-k
 @kindex C-c M-k
@@ -1422,8 +1460,10 @@ Allegedly.
 
 @item message-default-headers
 @vindex message-default-headers
-This string is inserted at the end of the headers in all message
-buffers.
+Header lines to be inserted in outgoing messages before you edit the
+message, so you can edit or delete their lines. If set to a string, it
+is directly inserted. If set to a function, it is called and its
+result is inserted.
 
 @item message-subject-re-regexp
 @vindex message-subject-re-regexp
@@ -1645,7 +1685,8 @@ the problem will actually occur.
 @cindex split large message
 The limitation of messages sent as message/partial.  The lower bound
 of message size in characters, beyond which the message should be sent
-in several parts.  If it is @code{nil}, the size is unlimited.
+in several parts.  If it is @code{nil} (which is the default), the
+size is unlimited.
 
 @end table
 
@@ -1889,6 +1930,25 @@ posting a prepared news message.
 @section Insertion Variables
 
 @table @code
+@item message-cite-style
+@vindex message-cite-style
+The overall style to be used when replying to messages. This controls
+things like where the reply should be put relative to the original,
+how the citation is formatted, where the signature goes, etc.
+
+Value is either @code{nil} (no variable overrides) or a let-style list
+of pairs @code{(VARIABLE VALUE)} to override default values.
+
+See @code{gnus-posting-styles} to set this variable for specific
+groups. Presets to impersonate popular mail agents are available in the
+@code{message-cite-style-*} variables.
+
+@item message-cite-reply-position
+@vindex message-cite-reply-position
+Where the reply should be positioned. Available styles are
+@code{traditional} to reply inline, @code{above} for top-posting, and
+@code{below} for bottom-posting
+
 @item message-ignored-cited-headers
 @vindex message-ignored-cited-headers
 All headers that match this regexp will be removed from yanked
@@ -1910,7 +1970,7 @@ that look like:
 Hallvard B Furuseth <h.b.furuseth@@usit.uio.no> writes:
 @end example
 
-@c FIXME: Add `message-insert-formated-citation-line' and
+@c FIXME: Add `message-insert-formatted-citation-line' and
 @c `message-citation-line-format'
 
 Point will be at the beginning of the body of the message when this
@@ -2056,7 +2116,7 @@ follows this line--} by default.
 
 @item message-directory
 @vindex message-directory
-Directory used by many mailey things.  The default is @file{~/Mail/}.
+Directory used by many mailish things.  The default is @file{~/Mail/}.
 All other mail file variables are derived from @code{message-directory}.
 
 @item message-auto-save-directory
@@ -2257,8 +2317,7 @@ created.
 
 @item unique
 @item t
-Create the new buffer with the name generated in the Message way.  This
-is the default.
+Create the new buffer with the name generated in the Message way.
 
 @item unsent
 Similar to @code{unique} but the buffer name begins with "*unsent ".
@@ -2274,7 +2333,7 @@ type, the To address and the group name (any of these may be
 @code{nil}).  The function should return the new buffer name.
 @end table
 
-The default value is @code{unique}.
+The default value is @code{unsent}.
 
 @item message-max-buffers
 @vindex message-max-buffers
@@ -2441,7 +2500,3 @@ basis of the new @code{Cc} header, except if this header is
 @bye
 
 @c End:
-
-@ignore
-   arch-tag: 16ab76af-a281-4e34-aed6-5624569f7601
-@end ignore

@@ -1,7 +1,6 @@
 ;;; gnus-dup.el --- suppression of duplicate articles in Gnus
 
-;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1996-2012 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -132,7 +131,7 @@ seen in the same session."
   "Mark duplicate articles as read."
   (unless gnus-dup-list
     (gnus-dup-open))
-  (gnus-message 6 "Suppressing duplicates...")
+  (gnus-message 8 "Suppressing duplicates...")
   (let ((auto (and gnus-newsgroup-auto-expire
 		   (memq gnus-duplicate-mark gnus-auto-expirable-marks)))
 	number)
@@ -146,7 +145,7 @@ seen in the same session."
 	    (push (cons number gnus-duplicate-mark) gnus-newsgroup-reads)
 	  (push number gnus-newsgroup-expirable)
 	  (push (cons number gnus-expirable-mark) gnus-newsgroup-reads)))))
-  (gnus-message 6 "Suppressing duplicates...done"))
+  (gnus-message 8 "Suppressing duplicates...done"))
 
 (defun gnus-dup-unsuppress-article (article)
   "Stop suppression of ARTICLE."
@@ -159,5 +158,4 @@ seen in the same session."
 
 (provide 'gnus-dup)
 
-;; arch-tag: 903e94db-7b00-4d19-83ee-cf34a81fa5fb
 ;;; gnus-dup.el ends here

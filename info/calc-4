@@ -3,8 +3,7 @@ calc.texi.
 
 This file documents Calc, the GNU Emacs calculator.
 
-Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+Copyright (C) 1990-1991, 2001-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -87,7 +86,7 @@ expression involving intervals: `b in [a .. c)'.  (See the description
 of `in' below.)  All four combinations of `<' and `<=' are allowed, or
 any of the four combinations of `>' and `>='.  Four-argument
 constructions like `a < b < c < d', and mixtures like `a < b = c' that
-involve both equalities and inequalities, are not allowed.
+involve both equations and inequalities, are not allowed.
 
    The `a .' (`calc-remove-equal') [`rmeq'] command extracts the
 righthand side of the equation or inequality on the top of the stack.
@@ -1713,6 +1712,8 @@ units expressions in this form.  Units-related commands begin with the
 * The Units Table::
 * Predefined Units::
 * User-Defined Units::
+* Logarithmic Units::
+* Musical Notes::
 
 
 File: calc,  Node: Basic Operations on Units,  Next: The Units Table,  Prev: Units,  Up: Units
@@ -1773,6 +1774,15 @@ this case, distance over time), you will be offered the previous choice
 of new units as a default.  Continuing the above example, entering the
 units expression `100 km/hr' and typing `u c <RET>' (without specifying
 new units) produces `27.7777777778 m/s'.
+
+   The `u c' command treats temperature units (like `degC' and `K') as
+relative temperatures.  For example, `u c' converts `10 degC' to `18
+degF': A change of 10 degrees Celsius corresponds to a change of 18
+degrees Fahrenheit.  To convert absolute temperatures, you can use the
+`u t' (`calc-convert-temperature') command.   The value on the stack
+must be a simple units expression with units of temperature only.  This
+command would convert `10 degC' to `50 degF', the equivalent
+temperature on the Fahrenheit scale.
 
    While many of Calc's conversion factors are exact, some are
 necessarily approximate.  If Calc is in fraction mode (*note Fraction
@@ -1835,15 +1845,8 @@ it converts the units expression on the top of the stack into `base'
 units.  If `u s' does not simplify a units expression as far as you
 would like, try `u b'.
 
-   The `u c' and `u b' commands treat temperature units (like `degC'
-and `K') as relative temperatures.  For example, `u c' converts `10
-degC' to `18 degF': A change of 10 degrees Celsius corresponds to a
-change of 18 degrees Fahrenheit.
-
-   The `u t' (`calc-convert-temperature') command converts absolute
-temperatures.  The value on the stack must be a simple units expression
-with units of temperature only.  This command would convert `10 degC'
-to `50 degF', the equivalent temperature on the Fahrenheit scale.
+   Like the `u c' command, the `u b' command treats temperature units
+as relative temperatures.
 
    The `u r' (`calc-remove-units') command removes units from the
 formula at the top of the stack.  The `u x' (`calc-extract-units')
@@ -1992,6 +1995,12 @@ equal to a standard point which is larger than the point used by TeX),
 `texdd' (a Didot point), `texcc' (a Cicero) and `texsp' (a scaled TeX
 point, all dimensions representable in TeX are multiples of this value).
 
+   When Calc is using the TeX or LaTeX language mode (*note TeX and
+LaTeX Language Modes::), the TeX specific unit names will not use the
+`tex' prefix; the unit name for a TeX point will be `pt' instead of
+`texpt', for example.  To avoid conflicts, the unit names for pint and
+parsec will simply be `pint' and `parsec' instead of `pt' and `pc'.
+
    The unit `e' stands for the elementary (electron) unit of charge;
 because algebra command could mistake this for the special constant
 `e', Calc provides the alternate unit name `ech' which is preferable to
@@ -2025,7 +2034,7 @@ units," just enter a blank line to signify that the value really is
 unitless.)
 
 
-File: calc,  Node: User-Defined Units,  Prev: Predefined Units,  Up: Units
+File: calc,  Node: User-Defined Units,  Next: Logarithmic Units,  Prev: Predefined Units,  Up: Units
 
 13.4 User-Defined Units
 =======================
@@ -2089,11 +2098,169 @@ not possible to create user-defined temperature units.
 
    The `u p' (`calc-permanent-units') command stores the user-defined
 units in your Calc init file (the file given by the variable
-`calc-settings-file', typically `~/.calc.el'), so that the units will
-still be available in subsequent Emacs sessions.  If there was already
-a set of user-defined units in your Calc init file, it is replaced by
-the new set.  (*Note General Mode Commands::, for a way to tell Calc to
-use a different file for the Calc init file.)
+`calc-settings-file', typically `~/.emacs.d/calc.el'), so that the
+units will still be available in subsequent Emacs sessions.  If there
+was already a set of user-defined units in your Calc init file, it is
+replaced by the new set.  (*Note General Mode Commands::, for a way to
+tell Calc to use a different file for the Calc init file.)
+
+
+File: calc,  Node: Logarithmic Units,  Next: Musical Notes,  Prev: User-Defined Units,  Up: Units
+
+13.5 Logarithmic Units
+======================
+
+The units `dB' (decibels) and `Np' (nepers) are logarithmic units which
+are manipulated differently than standard units.  Calc provides
+commands to work with these logarithmic units.
+
+   Decibels and nepers are used to measure power quantities as well as
+field quantities (quantities whose squares are proportional to power);
+these two types of quantities are handled slightly different from each
+other.  By default the Calc commands work as if power quantities are
+being used; with the `H' prefix the Calc commands work as if field
+quantities are being used.
+
+   The decibel level of a power P1, relative to a reference power P0,
+is defined to be 10 log10(P1/P0) dB.  (The factor of 10 is because a
+decibel, as its name implies, is one-tenth of a bel. The bel, named
+after Alexander Graham Bell, was considered to be too large of a unit
+and was effectively replaced by the decibel.)  If F is a field quantity
+with power P=k F^2, then a reference quantity of F0 would correspond to
+a power of P0=k F0^2.  If P1=k F1^2, then
+
+     10 log10(P1/P0) = 10 log10(F1^2/F0^2) = 20 log10(F1/F0).
+
+In order to get the same decibel level regardless of whether a field
+quantity or the corresponding power quantity is used,  the decibel
+level of a field quantity F1, relative to a reference F0, is defined as
+20 log10(F1/F0) dB.  For example, the decibel value of a sound pressure
+level of 60 uPa relative to 20 uPa (the threshold of human hearing) is
+20 log10(60 uPa/ 20 uPa) dB = 20 log10(3) dB, which is about 9.54 dB.
+Note that in taking the ratio, the original units cancel and so these
+logarithmic units are dimensionless.
+
+   Nepers (named after John Napier, who is credited with inventing the
+logarithm) are similar to bels except they use natural logarithms
+instead of common logarithms.  The neper level of a power P1, relative
+to a reference power P0, is (1/2) ln(P1/P0) Np.  The neper level of a
+field F1, relative to a reference field F0, is ln(F1/F0) Np.
+
+   For power quantities, Calc uses 1 mW as the default reference
+quantity; this default can be changed by changing the value of the
+customizable variable `calc-lu-power-reference' (*note Customizing
+Calc::).  For field quantities, Calc uses 20 uPa as the default
+reference quantity; this is the value used in acoustics which is where
+decibels are commonly encountered.  This default can be changed by
+changing the value of the customizable variable
+`calc-lu-field-reference' (*note Customizing Calc::).  A non-default
+reference quantity will be read from the stack if the capital `O'
+prefix is used.
+
+   The `l q' (`calc-lu-quant') [`lupquant'] command computes the power
+quantity corresponding to a given number of logarithmic units. With the
+capital `O' prefix, `O l q', the reference level will be read from the
+top of the stack. (In an algebraic formula, `lupquant' can be given an
+optional second argument which will be used for the reference level.)
+For example, `20 dB <RET> l q' will return `100 mW'; `20 dB <RET> 4 W
+<RET> O l q' will return `400 W'.  The `H l q' [`lufquant'] command
+behaves like `l q' but computes field quantities instead of power
+quantities.
+
+   The `l d' (`calc-db') [`dbpower'] command will compute the decibel
+level of a power quantity using the default reference level; `H l d'
+[`dbfield'] will compute the decibel level of a field quantity.  The
+commands `l n' (`calc-np') [`nppower'] and `H l n' [`npfield'] will
+similarly compute neper levels.  With the capital `O' prefix these
+commands will read a reference level from the stack; in an algebraic
+formula the reference level can be given as an optional second argument.
+
+   The sum of two power or field quantities doesn't correspond to the
+sum of the corresponding decibel or neper levels.  If the powers
+corresponding to decibel levels D1 and D2 are added, the corresponding
+decibel level "sum" will be
+
+       10 log10(10^(D1/10) + 10^(D2/10)) dB.
+
+When field quantities are combined, it often means the corresponding
+powers are added and so the above formula might be used.  In acoustics,
+for example, the sound pressure level is a field quantity and so the
+decibels are often defined using the field formula, but the sound
+pressure levels are combined as the sound power levels, and so the
+above formula should be used.  If two field quantities themselves are
+added, the new decibel level will be
+
+       20 log10(10^(D1/20) + 10^(D2/20)) dB.
+
+If the power corresponding to D dB is multiplied by a number N, then
+the corresponding decibel level will be
+
+       D + 10 log10(N) dB,
+
+if a field quantity is multiplied by N the corresponding decibel level
+will be
+
+       D + 20 log10(N) dB.
+
+There are similar formulas for combining nepers.  The `l +'
+(`calc-lu-plus') [`lupadd'] command will "add" two logarithmic unit
+power levels this way; with the `H' prefix, `H l +' [`lufadd'] will add
+logarithmic unit field levels.  Similarly, logarithmic units can be
+"subtracted" with `l -' (`calc-lu-minus') [`lupsub'] or `H l -'
+[`lufsub'].  The `l *' (`calc-lu-times') [`lupmul'] and `H l *'
+[`lufmul'] commands will "multiply" a logarithmic unit by a number; the
+`l /' (`calc-lu-divide') [`lupdiv'] and `H l /' [`lufdiv'] commands
+will "divide" a logarithmic unit by a number. Note that the reference
+quantities don't play a role in this arithmetic.
+
+
+File: calc,  Node: Musical Notes,  Prev: Logarithmic Units,  Up: Units
+
+13.6 Musical Notes
+==================
+
+Calc can convert between musical notes and their associated
+frequencies.  Notes can be given using either scientific pitch notation
+or midi numbers.  Since these note systems are basically logarithmic
+scales, Calc uses the `l' prefix for functions operating on notes.
+
+   Scientific pitch notation refers to a note by giving a letter A
+through G, possibly followed by a flat or sharp) with a subscript
+indicating an octave number.  Each octave starts with C and ends with B
+and the octave numbered 0 was chosen to correspond to the lowest
+audible frequency.  Using this system, middle C (about 261.625 Hz)
+corresponds to the note `C' in octave 4 and is denoted `C_4'.  Any
+frequency can be described by giving a note plus an offset in cents
+(where a cent is a ratio of frequencies so that a semitone consists of
+100 cents).
+
+   The midi note number system assigns numbers to notes so that
+`C_(-1)' corresponds to the midi note number 0 and `G_9' corresponds to
+the midi note number 127.   A midi controller can have up to 128 keys
+and each midi note number from  0 to 127 corresponds to a possible key.
+
+   The `l s' (`calc-spn') [`spn'] command converts either a frequency
+or a midi number to scientific pitch notation.  For example, `500 Hz'
+gets converted to `B_4 + 21.3094853649 cents' and `84' to `C_6'.
+
+   The `l m' (`calc-midi') [`midi'] command converts either a frequency
+or a note given in scientific pitch notation to the corresponding midi
+number. For example, `C_6' gets converted to 84 and `440 Hz' to 69.
+
+   The `l f' (`calc-freq') [`freq'] command converts either either a
+midi number or a note given in scientific pitch notation to the
+corresponding frequency. For example, `Asharp_2 + 30 cents' gets
+converted to `118.578040134 Hz' and `55' to `195.99771799 Hz'.
+
+   Since the frequencies of notes are not usually given exactly (and are
+typically irrational), the customizable variable `calc-note-threshold'
+determines how close (in cents) a frequency needs to be to a note to be
+recognized as that note (*note Customizing Calc::).  This variable has
+a default value of `1'.  For example, middle C is approximately
+`261.625565302 Hz'; this frequency is often shortened to `261.625 Hz'.
+Without `calc-note-threshold' (or a value of `0'), Calc would convert
+`261.625 Hz' to scientific pitch notation `B_3 + 99.9962592773 cents';
+with the default value of `1', Calc converts `261.625 Hz' to `C_4'.
 
 
 File: calc,  Node: Store and Recall,  Next: Graphics,  Prev: Units,  Up: Top
@@ -2355,8 +2522,8 @@ names rather than prompting for the variable name.
 
    The `s p' (`calc-permanent-variable') command saves a variable's
 value permanently in your Calc init file (the file given by the
-variable `calc-settings-file', typically `~/.calc.el'), so that its
-value will still be available in future Emacs sessions.  You can
+variable `calc-settings-file', typically `~/.emacs.d/calc.el'), so that
+its value will still be available in future Emacs sessions.  You can
 re-execute `s p' later on to update the saved value, but the only way
 to remove a saved variable is to edit your calc init file by hand.
 (*Note General Mode Commands::, for a way to tell Calc to use a
@@ -4413,10 +4580,10 @@ it in order to get it to notice the new annotation.
 which are also available outside of Embedded mode.  (*note General Mode
 Commands::.) They are `Save',  in which mode settings are recorded
 permanently in your Calc init file (the file given by the variable
-`calc-settings-file', typically `~/.calc.el') rather than by annotating
-the current document, and no-recording mode (where there is no symbol
-like `Save' or `Local' in the mode line), in which mode-changing
-commands do not leave any annotations at all.
+`calc-settings-file', typically `~/.emacs.d/calc.el') rather than by
+annotating the current document, and no-recording mode (where there is
+no symbol like `Save' or `Local' in the mode line), in which
+mode-changing commands do not leave any annotations at all.
 
    When Embedded mode is not enabled, mode-recording modes except for
 `Save' have no effect.
@@ -4642,10 +4809,10 @@ defined above.
 permanent so that it will remain in effect even in future Emacs
 sessions.  (It does this by adding a suitable bit of Lisp code into
 your Calc init file; that is, the file given by the variable
-`calc-settings-file', typically `~/.calc.el'.)  For example, `Z P s'
-would register our `sincos' command permanently.  If you later wish to
-unregister this command you must edit your Calc init file by hand.
-(*Note General Mode Commands::, for a way to tell Calc to use a
+`calc-settings-file', typically `~/.emacs.d/calc.el'.)  For example, `Z
+P s' would register our `sincos' command permanently.  If you later
+wish to unregister this command you must edit your Calc init file by
+hand.  (*Note General Mode Commands::, for a way to tell Calc to use a
 different file for the Calc init file.)
 
    The `Z P' command also saves the user definition, if any, for the
@@ -5283,16 +5450,16 @@ step of `myfact' could have been written
      :"n * myfact(n-1)"
 
    A good place to put your `defmath' commands is your Calc init file
-(the file given by `calc-settings-file', typically `~/.calc.el'), which
-will not be loaded until Calc starts.  If a file named `.emacs' exists
-in your home directory, Emacs reads and executes the Lisp forms in this
-file as it starts up.  While it may seem reasonable to put your
-favorite `defmath' commands there, this has the unfortunate side-effect
-that parts of the Calculator must be loaded in to process the `defmath'
-commands whether or not you will actually use the Calculator!  If you
-want to put the `defmath' commands there (for example, if you redefine
-`calc-settings-file' to be `.emacs'), a better effect can be had by
-writing
+(the file given by `calc-settings-file', typically
+`~/.emacs.d/calc.el'), which will not be loaded until Calc starts.  If
+a file named `.emacs' exists in your home directory, Emacs reads and
+executes the Lisp forms in this file as it starts up.  While it may
+seem reasonable to put your favorite `defmath' commands there, this has
+the unfortunate side-effect that parts of the Calculator must be loaded
+in to process the `defmath' commands whether or not you will actually
+use the Calculator!  If you want to put the `defmath' commands there
+(for example, if you redefine `calc-settings-file' to be `.emacs'), a
+better effect can be had by writing
 
      (put 'calc-define 'thing '(progn
       (defmath ... )
@@ -6140,179 +6307,4 @@ Centigrade form, the command changes it back to Fahrenheit.
    Note the use of `insert-before-markers' when changing between "F"
 and "C", so that the character winds up before the cursor instead of
 after it.
-
-
-File: calc,  Node: Internals,  Prev: Calling Calc from Your Programs,  Up: Lisp Definitions
-
-19.5.7 Calculator Internals
----------------------------
-
-This section describes the Lisp functions defined by the Calculator that
-may be of use to user-written Calculator programs (as described in the
-rest of this chapter).  These functions are shown by their names as they
-conventionally appear in `defmath'.  Their full Lisp names are
-generally gotten by prepending `calcFunc-' or `math-' to their apparent
-names.  (Names that begin with `calc-' are already in their full Lisp
-form.)  You can use the actual full names instead if you prefer them,
-or if you are calling these functions from regular Lisp.
-
-   The functions described here are scattered throughout the various
-Calc component files.  Note that `calc.el' includes `autoload's for
-only a few component files; when Calc wants to call an advanced
-function it calls `(calc-extensions)' first; this function autoloads
-`calc-ext.el', which in turn autoloads all the functions in the
-remaining component files.
-
-   Because `defmath' itself uses the extensions, user-written code
-generally always executes with the extensions already loaded, so
-normally you can use any Calc function and be confident that it will be
-autoloaded for you when necessary.  If you are doing something special,
-check carefully to make sure each function you are using is from
-`calc.el' or its components, and call `(calc-extensions)' before using
-any function based in `calc-ext.el' if you can't prove this file will
-already be loaded.
-
-* Menu:
-
-* Data Type Formats::
-* Interactive Lisp Functions::
-* Stack Lisp Functions::
-* Predicates::
-* Computational Lisp Functions::
-* Vector Lisp Functions::
-* Symbolic Lisp Functions::
-* Formatting Lisp Functions::
-* Hooks::
-
-
-File: calc,  Node: Data Type Formats,  Next: Interactive Lisp Functions,  Prev: Internals,  Up: Internals
-
-19.5.7.1 Data Type Formats
-..........................
-
-Integers are stored in either of two ways, depending on their magnitude.
-Integers less than one million in absolute value are stored as standard
-Lisp integers.  This is the only storage format for Calc data objects
-which is not a Lisp list.
-
-   Large integers are stored as lists of the form `(bigpos D0 D1 D2
-...)' for positive integers 1000000 or more, or `(bigneg D0 D1 D2 ...)'
-for negative integers -1000000 or less.  Each D is a base-1000 "digit,"
-a Lisp integer from 0 to 999.  The least significant digit is D0; the
-last digit, DN, which is always nonzero, is the most significant digit.
-For example, the integer -12345678 is stored as `(bigneg 678 345 12)'.
-
-   The distinction between small and large integers is entirely hidden
-from the user.  In `defmath' definitions, the Lisp predicate `integerp'
-returns true for either kind of integer, and in general both big and
-small integers are accepted anywhere the word "integer" is used in this
-manual.  If the distinction must be made, native Lisp integers are
-called "fixnums" and large integers are called "bignums".
-
-   Fractions are stored as a list of the form, `(frac N D)' where N is
-an integer (big or small) numerator, D is an integer denominator
-greater than one, and N and D are relatively prime.  Note that
-fractions where D is one are automatically converted to plain integers
-by all math routines; fractions where D is negative are normalized by
-negating the numerator and denominator.
-
-   Floating-point numbers are stored in the form, `(float MANT EXP)',
-where MANT (the "mantissa") is an integer less than `10^P' in absolute
-value (P represents the current precision), and EXP (the "exponent") is
-a fixnum.  The value of the float is `MANT * 10^EXP'.  For example, the
-number -3.14 is stored as `(float -314 -2) = -314*10^-2'.  Other
-constraints are that the number 0.0 is always stored as `(float 0 0)',
-and, except for the 0.0 case, the rightmost base-10 digit of MANT is
-always nonzero.  (If the rightmost digit is zero, the number is
-rearranged by dividing MANT by ten and incrementing EXP.)
-
-   Rectangular complex numbers are stored in the form `(cplx RE IM)',
-where RE and IM are each real numbers, either integers, fractions, or
-floats.  The value is `RE + IMi'.  The IM part is nonzero; complex
-numbers with zero imaginary components are converted to real numbers
-automatically.
-
-   Polar complex numbers are stored in the form `(polar R THETA)',
-where R is a positive real value and THETA is a real value or HMS form
-representing an angle.  This angle is usually normalized to lie in the
-interval `(-180 .. 180)' degrees, or `(-pi .. pi)' radians, according
-to the current angular mode.  If the angle is 0 the value is converted
-to a real number automatically.  (If the angle is 180 degrees, the
-value is usually also converted to a negative real number.)
-
-   Hours-minutes-seconds forms are stored as `(hms H M S)', where H is
-an integer or an integer-valued float (i.e., a float with `EXP >= 0'),
-M is an integer or integer-valued float in the range `[0 .. 60)', and S
-is any real number in the range `[0 .. 60)'.
-
-   Date forms are stored as `(date N)', where N is a real number that
-counts days since midnight on the morning of January 1, 1 AD.  If N is
-an integer, this is a pure date form.  If N is a fraction or float,
-this is a date/time form.
-
-   Modulo forms are stored as `(mod N M)', where M is a positive real
-number or HMS form, and N is a real number or HMS form in the range `[0
-.. M)'.
-
-   Error forms are stored as `(sdev X SIGMA)', where X is the mean
-value and SIGMA is the standard deviation.  Each component is either a
-number, an HMS form, or a symbolic object (a variable or function
-call).  If SIGMA is zero, the value is converted to a plain real
-number.  If SIGMA is negative or complex, it is automatically
-normalized to be a positive real.
-
-   Interval forms are stored as `(intv MASK LO HI)', where MASK is one
-of the integers 0, 1, 2, or 3, and LO and HI are real numbers, HMS
-forms, or symbolic objects.  The MASK is a binary integer where 1
-represents the fact that the interval is closed on the high end, and 2
-represents the fact that it is closed on the low end.  (Thus 3
-represents a fully closed interval.)  The interval `(intv 3 X X)' is
-converted to the plain number X; intervals `(intv MASK X X)' for any
-other MASK represent empty intervals.  If HI is less than LO, the
-interval is converted to a standard empty interval by replacing HI with
-LO.
-
-   Vectors are stored as `(vec V1 V2 ...)', where V1 is the first
-element of the vector, V2 is the second, and so on.  An empty vector is
-stored as `(vec)'.  A matrix is simply a vector where all V's are
-themselves vectors of equal lengths.  Note that Calc vectors are
-unrelated to the Emacs Lisp "vector" type, which is generally unused by
-Calc data structures.
-
-   Variables are stored as `(var NAME SYM)', where NAME is a Lisp
-symbol whose print name is used as the visible name of the variable,
-and SYM is a Lisp symbol in which the variable's value is actually
-stored.  Thus, `(var pi var-pi)' represents the special constant `pi'.
-Almost always, the form is `(var V var-V)'.  If the variable name was
-entered with `#' signs (which are converted to hyphens internally), the
-form is `(var U V)', where U is a symbol whose name contains `#'
-characters, and V is a symbol that contains `-' characters instead.
-The value of a variable is the Calc object stored in its SYM symbol's
-value cell.  If the symbol's value cell is void or if it contains
-`nil', the variable has no value.  Special constants have the form
-`(special-const VALUE)' stored in their value cell, where VALUE is a
-formula which is evaluated when the constant's value is requested.
-Variables which represent units are not stored in any special way; they
-are units only because their names appear in the units table.  If the
-value cell contains a string, it is parsed to get the variable's value
-when the variable is used.
-
-   A Lisp list with any other symbol as the first element is a function
-call.  The symbols `+', `-', `*', `/', `%', `^', and `|' represent
-special binary operators; these lists are always of the form `(OP LHS
-RHS)' where LHS is the sub-formula on the lefthand side and RHS is the
-sub-formula on the right.  The symbol `neg' represents unary negation;
-this list is always of the form `(neg ARG)'.  Any other symbol FUNC
-represents a function that would be displayed in function-call
-notation; the symbol FUNC is in general always of the form
-`calcFunc-NAME'.  The function cell of the symbol FUNC should contain a
-Lisp function for evaluating a call to FUNC.  This function is passed
-the remaining elements of the list (themselves already evaluated) as
-arguments; such functions should return `nil' or call `reject-arg' to
-signify that they should be left in symbolic form, or they should
-return a Calc object which represents their value, or a list of such
-objects if they wish to return multiple values.  (The latter case is
-allowed only for functions which are the outer-level call in an
-expression whose value is about to be pushed on the stack; this feature
-is considered obsolete and is not used by any built-in Calc functions.)
 

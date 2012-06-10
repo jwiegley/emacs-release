@@ -9,51 +9,51 @@
 ;;;;;;  math-read-preprocess-string calcDigit-edit calcDigit-algebraic
 ;;;;;;  calc-alg-digit-entry calc-do-alg-entry calc-alg-entry calc-algebraic-entry
 ;;;;;;  calc-auto-algebraic-entry calc-do-calc-eval calc-do-quick-calc)
-;;;;;;  "calc-aent" "calc-aent.el" "562cde4850eafefb5f08f523bcdac1ba")
+;;;;;;  "calc-aent" "calc-aent.el" "78f333ed32d8aa3113e59cf2fe7af97e")
 ;;; Generated autoloads from calc-aent.el
 
 (autoload 'calc-do-quick-calc "calc-aent" "\
-Not documented
+
 
 \(fn)" nil nil)
 
 (autoload 'calc-do-calc-eval "calc-aent" "\
-Not documented
+
 
 \(fn STR SEPARATOR ARGS)" nil nil)
 
 (autoload 'calc-auto-algebraic-entry "calc-aent" "\
-Not documented
+
 
 \(fn &optional PREFIX)" t nil)
 
 (autoload 'calc-algebraic-entry "calc-aent" "\
-Not documented
+
 
 \(fn &optional PREFIX AUTO)" t nil)
 
 (autoload 'calc-alg-entry "calc-aent" "\
-Not documented
+
 
 \(fn &optional INITIAL PROMPT)" nil nil)
 
 (autoload 'calc-do-alg-entry "calc-aent" "\
-Not documented
+
 
 \(fn &optional INITIAL PROMPT NO-NORMALIZE HISTORY)" nil nil)
 
 (autoload 'calc-alg-digit-entry "calc-aent" "\
-Not documented
+
 
 \(fn)" nil nil)
 
 (autoload 'calcDigit-algebraic "calc-aent" "\
-Not documented
+
 
 \(fn)" t nil)
 
 (autoload 'calcDigit-edit "calc-aent" "\
-Not documented
+
 
 \(fn)" t nil)
 
@@ -63,58 +63,58 @@ Replace some substrings of STR by Calc equivalents.
 \(fn STR)" nil nil)
 
 (autoload 'math-read-exprs "calc-aent" "\
-Not documented
+
 
 \(fn MATH-EXP-STR)" nil nil)
 
 (autoload 'math-read-expr-list "calc-aent" "\
-Not documented
+
 
 \(fn)" nil nil)
 
 (autoload 'math-build-parse-table "calc-aent" "\
-Not documented
+
 
 \(fn)" nil nil)
 
 (autoload 'math-find-user-tokens "calc-aent" "\
-Not documented
+
 
 \(fn P)" nil nil)
 
 (autoload 'math-read-token "calc-aent" "\
-Not documented
+
 
 \(fn)" nil nil)
 
 (autoload 'calc-check-user-syntax "calc-aent" "\
-Not documented
+
 
 \(fn &optional X PREC)" nil nil)
 
 (autoload 'calc-match-user-syntax "calc-aent" "\
-Not documented
+
 
 \(fn P &optional TERM)" nil nil)
 
 (autoload 'math-remove-dashes "calc-aent" "\
-Not documented
+
 
 \(fn X)" nil nil)
 
 (autoload 'math-read-if "calc-aent" "\
-Not documented
+
 
 \(fn COND OP)" nil nil)
 
 ;;;***
 
 ;;;### (autoloads (calc-do-embedded-activate) "calc-embed" "calc-embed.el"
-;;;;;;  "0db0c18cf39f1580cd383ab5e5061cc5")
+;;;;;;  "be6a5d75ac3e08c5c679cbedc124723f")
 ;;; Generated autoloads from calc-embed.el
 
 (autoload 'calc-do-embedded-activate "calc-embed" "\
-Not documented
+
 
 \(fn CALC-EMBED-ARG CBUF)" nil nil)
 
@@ -132,7 +132,7 @@ Not documented
 ;;;;;;  math-constp calc-record-why calc-do-handle-whys calc-help
 ;;;;;;  calc-info-summary calc-tutorial calc-info-goto-node calc-info
 ;;;;;;  another-calc calc-other-window calc-big-or-small calc-dispatch-help)
-;;;;;;  "calc-misc" "calc-misc.el" "e85040944720031a9237f3b61fad9a93")
+;;;;;;  "calc-misc" "calc-misc.el" "545a60b16451fad7dc06c6b368712c1d")
 ;;; Generated autoloads from calc-misc.el
 
 (autoload 'calc-dispatch-help "calc-misc" "\
@@ -217,87 +217,87 @@ Run the Emacs Info system on the Calculator Summary.
 \(fn)" t nil)
 
 (autoload 'calc-help "calc-misc" "\
-Not documented
+
 
 \(fn)" t nil)
 
 (autoload 'calc-do-handle-whys "calc-misc" "\
-Not documented
+
 
 \(fn)" nil nil)
 
 (autoload 'calc-record-why "calc-misc" "\
-Not documented
+
 
 \(fn &rest STUFF)" nil nil)
 
 (autoload 'math-constp "calc-misc" "\
-Not documented
+
 
 \(fn A)" nil nil)
 
 (autoload 'calc-roll-down-stack "calc-misc" "\
-Not documented
+
 
 \(fn N &optional M)" nil nil)
 
 (autoload 'calc-roll-up-stack "calc-misc" "\
-Not documented
+
 
 \(fn N &optional M)" nil nil)
 
 (autoload 'calc-do-refresh "calc-misc" "\
-Not documented
+
 
 \(fn)" nil nil)
 
 (autoload 'calc-record-list "calc-misc" "\
-Not documented
+
 
 \(fn VALS &optional PREFIX)" nil nil)
 
 (autoload 'calc-last-args-stub "calc-misc" "\
-Not documented
+
 
 \(fn ARG)" t nil)
 
 (autoload 'calc-power "calc-misc" "\
-Not documented
+
 
 \(fn ARG)" t nil)
 
 (autoload 'calc-mod "calc-misc" "\
-Not documented
+
 
 \(fn ARG)" t nil)
 
 (autoload 'calc-inv "calc-misc" "\
-Not documented
+
 
 \(fn ARG)" t nil)
 
 (autoload 'calc-percent "calc-misc" "\
-Not documented
+
 
 \(fn)" t nil)
 
 (autoload 'calc-over "calc-misc" "\
-Not documented
+
 
 \(fn N)" t nil)
 
 (autoload 'calc-pop-above "calc-misc" "\
-Not documented
+
 
 \(fn N)" t nil)
 
 (autoload 'calc-roll-down "calc-misc" "\
-Not documented
+
 
 \(fn N)" t nil)
 
 (autoload 'calc-roll-up "calc-misc" "\
-Not documented
+
 
 \(fn N)" t nil)
 
@@ -309,7 +309,7 @@ With argument 0, switch line point is in with line mark is in.
 \(fn &optional ARG)" t nil)
 
 (autoload 'calc-num-prefix-name "calc-misc" "\
-Not documented
+
 
 \(fn N)" nil nil)
 
@@ -321,42 +321,42 @@ loaded and the keystroke automatically re-typed.
 \(fn N)" t nil)
 
 (autoload 'calc-shift-Y-prefix-help "calc-misc" "\
-Not documented
+
 
 \(fn)" t nil)
 
 (autoload 'calcDigit-letter "calc-misc" "\
-Not documented
+
 
 \(fn)" t nil)
 
 (autoload 'calc-temp-minibuffer-message "calc-misc" "\
-Not documented
+
 
 \(fn M)" nil nil)
 
 (autoload 'math-concat "calc-misc" "\
-Not documented
+
 
 \(fn V1 V2)" nil nil)
 
 (autoload 'math-zerop "calc-misc" "\
-Not documented
+
 
 \(fn A)" nil nil)
 
 (autoload 'math-negp "calc-misc" "\
-Not documented
+
 
 \(fn A)" nil nil)
 
 (autoload 'math-looks-negp "calc-misc" "\
-Not documented
+
 
 \(fn A)" nil nil)
 
 (autoload 'math-posp "calc-misc" "\
-Not documented
+
 
 \(fn A)" nil nil)
 
@@ -365,71 +365,71 @@ Not documented
 (defalias 'math-fixnatnump 'natnump)
 
 (autoload 'math-evenp "calc-misc" "\
-Not documented
+
 
 \(fn A)" nil nil)
 
 (autoload 'math-div2 "calc-misc" "\
-Not documented
+
 
 \(fn A)" nil nil)
 
 (autoload 'math-div2-bignum "calc-misc" "\
-Not documented
+
 
 \(fn A)" nil nil)
 
 (autoload 'math-reject-arg "calc-misc" "\
-Not documented
+
 
 \(fn &optional A P OPTION)" nil nil)
 
 (autoload 'math-trunc "calc-misc" "\
-Not documented
+
 
 \(fn A &optional MATH-TRUNC-PREC)" nil nil)
 
 (defalias 'calcFunc-trunc 'math-trunc)
 
 (autoload 'math-floor "calc-misc" "\
-Not documented
+
 
 \(fn A &optional MATH-FLOOR-PREC)" nil nil)
 
 (defalias 'calcFunc-floor 'math-floor)
 
 (autoload 'math-imod "calc-misc" "\
-Not documented
+
 
 \(fn A B)" nil nil)
 
 (autoload 'calcFunc-inv "calc-misc" "\
-Not documented
+
 
 \(fn M)" nil nil)
 
 (autoload 'math-do-working "calc-misc" "\
-Not documented
+
 
 \(fn MSG ARG)" nil nil)
 
 (autoload 'math-mod "calc-misc" "\
-Not documented
+
 
 \(fn A B)" nil nil)
 
 (autoload 'math-pow "calc-misc" "\
-Not documented
+
 
 \(fn A B)" nil nil)
 
 (autoload 'math-ipow "calc-misc" "\
-Not documented
+
 
 \(fn A N)" nil nil)
 
 (autoload 'math-read-radix-digit "calc-misc" "\
-Not documented
+
 
 \(fn DIG)" nil nil)
 
@@ -443,11 +443,11 @@ Prompts for bug subject.  Leaves you in a mail buffer.
 
 ;;;***
 
-;;;### (autoloads (calc-yank) "calc-yank" "calc-yank.el" "2874036f975bf2568eb9f83d8b20da52")
+;;;### (autoloads (calc-yank) "calc-yank" "calc-yank.el" "a224893274586132ec0546147afd6808")
 ;;; Generated autoloads from calc-yank.el
 
 (autoload 'calc-yank "calc-yank" "\
-Not documented
+
 
 \(fn)" t nil)
 

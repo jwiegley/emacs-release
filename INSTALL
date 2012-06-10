@@ -1,6 +1,5 @@
 GNU Emacs Installation Guide
-Copyright (C) 1992, 1994, 1996, 1997, 2000, 2001, 2002, 2003, 2004,
-  2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
+Copyright (C) 1992, 1994, 1996-1997, 2000-2012
   Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
@@ -32,9 +31,9 @@ some of the steps manually.  The more detailed description in the other
 sections of this guide will help you do that, so please refer to those
 sections if you need to.
 
-  1. Unpacking the Emacs 23.2 release requires about 170 MB of free
-  disk space.  Building Emacs uses about another 60 MB of space.
-  The final installed Emacs uses about 120 MB of disk space.
+  1. Unpacking the Emacs 24.1 release requires about 180 MB of free
+  disk space.  Building Emacs uses about another 70 MB of space.
+  The final installed Emacs uses about 110 MB of disk space.
   This includes the space-saving that comes from automatically
   compressing the Lisp source files on installation.
 
@@ -105,23 +104,23 @@ sections if you need to.
 
   Note that the install automatically saves space by compressing
   (provided you have the `gzip' program) those installed Lisp source (.el)
-  files that have corresponding .elc versions.  You may also wish
-  to compress the installed Info files.
+  files that have corresponding .elc versions, as well as the Info files.
 
 
 ADDITIONAL DISTRIBUTION FILES
 
 * Complex Text Layout support libraries
 
-Emacs needs the optional libraries "m17n-db", "libm17n-flt", "libotf"
-to correctly display such complex scripts as Indic and Khmer.
-On some systems, particularly GNU/Linux, these libraries may be
-already present or available as additional packages.  Note that if
-there is a separate `dev' or `devel' package, for use at compilation
-time rather than run time, you will need that as well as the
-corresponding run time package; typically the dev package will contain
-header files and a library archive.  Otherwise, you can download and
-build libraries from sources.
+On GNU and Unix systems, Emacs needs the optional libraries "m17n-db",
+"libm17n-flt", "libotf" to correctly display such complex scripts as
+Indic and Khmer, and also for scripts that require Arabic shaping
+support (Arabic and Farsi).  On some systems, particularly GNU/Linux,
+these libraries may be already present or available as additional
+packages.  Note that if there is a separate `dev' or `devel' package,
+for use at compilation time rather than run time, you will need that
+as well as the corresponding run time package; typically the dev
+package will contain header files and a library archive.  Otherwise,
+you can download and build libraries from sources.
 
 The sources of these libraries are available by anonymous CVS from
 cvs.m17n.org.
@@ -134,6 +133,9 @@ cvs.m17n.org.
 For m17n-lib, if you have problems with making the whole package
 because you lack some other packages on which m17n-lib depends, try to
 configure it with the option "--without-gui".
+
+Note that Emacs cannot support complex scripts on a TTY, unless the
+terminal includes such a support.
 
 * intlfonts-VERSION.tar.gz
 
@@ -210,7 +212,8 @@ The names of the packages that you need varies according to the
 GNU/Linux distribution that you use, and the options that you want to
 configure Emacs with.  On Debian-based systems, you can install all the
 packages needed to build the installed version of Emacs with a command
-like `apt-get build-dep emacs23'.
+like `apt-get build-dep emacs23'.  On Red Hat systems, the
+corresponding command is `yum-builddep emacs'.
 
 
 DETAILED BUILDING AND INSTALLATION:
@@ -309,6 +312,10 @@ Use --disable-largefile to omit support for files larger than 2GB on
 systems which support that.
 
 Use --without-sound to disable sound support.
+
+Use --with-wide-int to implement Emacs values with the type 'long long',
+even on hosts where a narrower type would do.  With this option, on a
+typical 32-bit host, Emacs integers have 62 bits instead of 30.
 
 The `--prefix=PREFIXDIR' option specifies where the installation process
 should put emacs and its data files.  This defaults to `/usr/local'.
@@ -461,7 +468,7 @@ installed locations, with `make install'.  By default, Emacs's files
 are installed in the following directories:
 
 `/usr/local/bin' holds the executable programs users normally run -
-		`emacs', `etags', `ctags', `b2m', `emacsclient',
+		`emacs', `etags', `ctags', `emacsclient',
 		`grep-changelog', and `rcs-checkin'.
 
 `/usr/local/share/emacs/VERSION/lisp' holds the Emacs Lisp library;
@@ -659,13 +666,7 @@ you need to override any of the definitions in the s/*.h and m/*.h
 files for your system and machine, do so by editing config.h, not by
 changing the s/*.h and m/*.h files.
 
-3) Create src/Makefile and lib-src/Makefile from the corresponding
-`Makefile.in' files.  First copy `Makefile.in' to `Makefile.c',
-then edit in appropriate substitutions for the @...@ constructs,
-and then copy the shell commands near the end of `configure'
-that run cpp to construct `Makefile'.
-
-4) Create `Makefile' files in various other directories from the
+3) Create `Makefile' files in various directories from the
 corresponding `Makefile.in' files.  This isn't so hard, just a matter
 of editing in appropriate substitutions for the @...@ constructs.
 
@@ -682,13 +683,15 @@ the following steps.
 `./src/epaths.h' from the template file `./src/epaths.in', changing
 the paths to the values specified in `./Makefile'.
 
-2) Go to directory `./lib-src' and run `make'.  This creates
-executables named `ctags' and `etags' and `make-docfile' and
-`digest-doc' and `test-distrib'.  And others.
+2) Go to directory `./lib' and run `make'.  This creates include files
+and libraries used in later steps.
 
-3) Go to directory `./src' and run `make'.  This refers to files in
-the `./lisp' and `./lib-src' subdirectories using names `../lisp' and
-`../lib-src'.
+3) Go to directory `./lib-src' and run `make'.  This creates
+executables named `etags', `make-docfile', and others.
+
+4) Go to directory `./src' and run `make'.  This refers to files in
+the `./lisp', `./lib', and `./lib-src' subdirectories using names
+`../lisp', `../lib', and `../lib-src'.
 
 This creates a file `./src/emacs' which is the runnable Emacs,
 which has another name that contains a version number.
@@ -710,14 +713,12 @@ directory of the Emacs distribution.
 in `./lib-src' to their final destinations, as selected in `./src/epaths.h'.
 
 Strictly speaking, not all of the executables in `./lib-src' need be copied.
-- The programs `fakemail', `hexl', `movemail', `profile', `rcs2log',
-    and `vcdiff' are used by Emacs; they do need to be copied.
-- The programs `etags', `ctags', `emacsclient', `b2m', and `rcs-checkin'
+- The programs `hexl', `movemail', `profile', `rcs2log', and `vcdiff'
+    are used by Emacs; they do need to be copied.
+- The programs `etags', `ctags', `emacsclient', and `rcs-checkin'
     are intended to be run by users; they are handled below.
 - The programs `make-docfile' and `test-distrib' were
     used in building Emacs, and are not needed any more.
-- The programs `digest-doc' and `sorted-doc' convert a `DOC' file into
-    a file for users to read.  There is no important reason to move them.
 
 2) Copy the files in `./info' to the place specified in
 `./lisp/site-init.el' or `./lisp/paths.el'.  Note that if the
@@ -734,9 +735,9 @@ of installing different versions.
 
 You can delete `./src/temacs'.
 
-4) Copy the programs `b2m', `emacsclient', `ctags', `etags', and
-`rcs-checkin' from `./lib-src' to `/usr/local/bin'.  These programs are
-intended for users to run.
+4) Copy the programs `emacsclient', `ctags', `etags', and `rcs-checkin'
+from `./lib-src' to `/usr/local/bin'.  These programs are intended for
+users to run.
 
 5) Copy the man pages in `./doc/man' into the appropriate man directory.
 

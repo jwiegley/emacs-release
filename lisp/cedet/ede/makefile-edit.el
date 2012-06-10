@@ -1,6 +1,6 @@
 ;;; makefile-edit.el --- Makefile editing/scanning commands.
 
-;; Copyright (C) 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2009-2012 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
 
@@ -71,7 +71,7 @@
     (end-of-line)
     (= (preceding-char) ?\\)))
 
-;;; Programatic editing of a Makefile
+;;; Programmatic editing of a Makefile
 ;;
 (defun makefile-move-to-macro (macro &optional next)
   "Move to the definition of MACRO.  Return t if found.
@@ -126,5 +126,4 @@ Return nil if it isn't a variable."
 
 (provide 'ede/makefile-edit)
 
-;; arch-tag: aba26b5f-4306-40d9-b63c-84a9590ac986
 ;;; ede/makefile-edit.el ends here

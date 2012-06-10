@@ -10,7 +10,7 @@
 ;;;;;;  ceiling* floor* isqrt lcm gcd cl-progv-before cl-set-frame-visible-p
 ;;;;;;  cl-map-overlays cl-map-intervals cl-map-keymap-recursively
 ;;;;;;  notevery notany every some mapcon mapcan mapl maplist map
-;;;;;;  cl-mapcar-many equalp coerce) "cl-extra" "cl-extra.el" "2ad388f5b02cbddb80b7ed6724f5c7d1")
+;;;;;;  cl-mapcar-many equalp coerce) "cl-extra" "cl-extra.el" "c172dda6770ce18b556561481bfefbb2")
 ;;; Generated autoloads from cl-extra.el
 
 (autoload 'coerce "cl-extra" "\
@@ -28,7 +28,7 @@ strings case-insensitively.
 \(fn X Y)" nil nil)
 
 (autoload 'cl-mapcar-many "cl-extra" "\
-Not documented
+
 
 \(fn CL-FUNC CL-SEQS)" nil nil)
 
@@ -84,27 +84,27 @@ Return true if PREDICATE is false of some element of SEQ or SEQs.
 (defalias 'cl-map-keymap 'map-keymap)
 
 (autoload 'cl-map-keymap-recursively "cl-extra" "\
-Not documented
+
 
 \(fn CL-FUNC-REC CL-MAP &optional CL-BASE)" nil nil)
 
 (autoload 'cl-map-intervals "cl-extra" "\
-Not documented
+
 
 \(fn CL-FUNC &optional CL-WHAT CL-PROP CL-START CL-END)" nil nil)
 
 (autoload 'cl-map-overlays "cl-extra" "\
-Not documented
+
 
 \(fn CL-FUNC &optional CL-BUFFER CL-START CL-END CL-ARG)" nil nil)
 
 (autoload 'cl-set-frame-visible-p "cl-extra" "\
-Not documented
+
 
 \(fn FRAME VAL)" nil nil)
 
 (autoload 'cl-progv-before "cl-extra" "\
-Not documented
+
 
 \(fn SYMS VALUES)" nil nil)
 
@@ -180,7 +180,11 @@ Return t if OBJECT is a random-state object.
 \(fn OBJECT)" nil nil)
 
 (autoload 'cl-float-limits "cl-extra" "\
-Not documented
+Initialize the Common Lisp floating-point parameters.
+This sets the values of: `most-positive-float', `most-negative-float',
+`least-positive-float', `least-negative-float', `float-epsilon',
+`float-negative-epsilon', `least-positive-normalized-float', and
+`least-negative-normalized-float'.
 
 \(fn)" nil nil)
 
@@ -228,12 +232,12 @@ PROPLIST is a list of the sort returned by `symbol-plist'.
 \(fn PROPLIST PROPNAME &optional DEFAULT)" nil nil)
 
 (autoload 'cl-set-getf "cl-extra" "\
-Not documented
+
 
 \(fn PLIST TAG VAL)" nil nil)
 
 (autoload 'cl-do-remf "cl-extra" "\
-Not documented
+
 
 \(fn PLIST TAG)" nil nil)
 
@@ -267,7 +271,7 @@ This also does some trivial optimizations to make the form prettier.
 \(fn FORM &optional ENV)" nil nil)
 
 (autoload 'cl-prettyexpand "cl-extra" "\
-Not documented
+
 
 \(fn FORM &optional FULL)" nil nil)
 
@@ -282,7 +286,7 @@ Not documented
 ;;;;;;  flet progv psetq do-all-symbols do-symbols dotimes dolist
 ;;;;;;  do* do loop return-from return block etypecase typecase ecase
 ;;;;;;  case load-time-value eval-when destructuring-bind function*
-;;;;;;  defmacro* defun* gentemp gensym) "cl-macs" "cl-macs.el" "42c2aedfe68e4adf341955223bcf31b9")
+;;;;;;  defmacro* defun* gentemp gensym) "cl-macs" "cl-macs.el" "0be85e9c7ef309d2ccbac18b9b0f1d42")
 ;;; Generated autoloads from cl-macs.el
 
 (autoload 'gensym "cl-macs" "\
@@ -319,7 +323,7 @@ its argument list allows full Common Lisp conventions.
 \(fn FUNC)" nil (quote macro))
 
 (autoload 'destructuring-bind "cl-macs" "\
-Not documented
+
 
 \(fn ARGS EXPR &rest BODY)" nil (quote macro))
 
@@ -426,6 +430,7 @@ The Common Lisp `do*' loop.
 Loop over a list.
 Evaluate BODY with VAR bound to each `car' from LIST, in turn.
 Then evaluate RESULT to get return value, default nil.
+An implicit nil block is established around the loop.
 
 \(fn (VAR LIST [RESULT]) BODY...)" nil (quote macro))
 
@@ -445,7 +450,7 @@ from OBARRAY.
 \(fn (VAR [OBARRAY [RESULT]]) BODY...)" nil (quote macro))
 
 (autoload 'do-all-symbols "cl-macs" "\
-Not documented
+
 
 \(fn SPEC &rest BODY)" nil (quote macro))
 
@@ -500,16 +505,16 @@ Like `let', but lexically scoped.
 The main visible difference is that lambdas inside BODY will create
 lexical closures as in Common Lisp.
 
-\(fn VARLIST BODY)" nil (quote macro))
+\(fn BINDINGS BODY)" nil (quote macro))
 
 (autoload 'lexical-let* "cl-macs" "\
 Like `let*', but lexically scoped.
 The main visible difference is that lambdas inside BODY, and in
-successive bindings within VARLIST, will create lexical closures
+successive bindings within BINDINGS, will create lexical closures
 as in Common Lisp.  This is similar to the behavior of `let*' in
 Common Lisp.
 
-\(fn VARLIST BODY)" nil (quote macro))
+\(fn BINDINGS BODY)" nil (quote macro))
 
 (autoload 'multiple-value-bind "cl-macs" "\
 Collect multiple return values.
@@ -531,17 +536,23 @@ values.  For compatibility, (values A B C) is a synonym for (list A B C).
 \(fn (SYM...) FORM)" nil (quote macro))
 
 (autoload 'locally "cl-macs" "\
-Not documented
+
 
 \(fn &rest BODY)" nil (quote macro))
 
 (autoload 'the "cl-macs" "\
-Not documented
+
 
 \(fn TYPE FORM)" nil (quote macro))
 
 (autoload 'declare "cl-macs" "\
-Not documented
+Declare SPECS about the current function while compiling.
+For instance
+
+  (declare (warn 0))
+
+will turn off byte-compile warnings in the function.
+See Info node `(cl)Declarations' for details.
 
 \(fn &rest SPECS)" nil (quote macro))
 
@@ -601,7 +612,7 @@ before assigning any PLACEs to the corresponding values.
 \(fn PLACE VAL PLACE VAL ...)" nil (quote macro))
 
 (autoload 'cl-do-pop "cl-macs" "\
-Not documented
+
 
 \(fn PLACE)" nil nil)
 
@@ -689,7 +700,7 @@ value, that slot cannot be set via `setf'.
 \(fn NAME SLOTS...)" nil (quote macro))
 
 (autoload 'cl-struct-setf-expander "cl-macs" "\
-Not documented
+
 
 \(fn X NAME ACCESSOR PRED-FORM POS)" nil nil)
 
@@ -735,7 +746,7 @@ and then returning foo.
 \(fn FUNC ARGS &rest BODY)" nil (quote macro))
 
 (autoload 'compiler-macroexpand "cl-macs" "\
-Not documented
+
 
 \(fn FORM)" nil nil)
 
@@ -759,7 +770,7 @@ surrounded by (block NAME ...).
 ;;;;;;  find nsubstitute-if-not nsubstitute-if nsubstitute substitute-if-not
 ;;;;;;  substitute-if substitute delete-duplicates remove-duplicates
 ;;;;;;  delete-if-not delete-if delete* remove-if-not remove-if remove*
-;;;;;;  replace fill reduce) "cl-seq" "cl-seq.el" "3be8c58a761d2491b5afbf3f098c978b")
+;;;;;;  replace fill reduce) "cl-seq" "cl-seq.el" "99095e49c83af1c8bec0fdcf517b3f95")
 ;;; Generated autoloads from cl-seq.el
 
 (autoload 'reduce "cl-seq" "\
@@ -1037,7 +1048,7 @@ Keywords supported:  :key
 \(fn PREDICATE LIST [KEYWORD VALUE]...)" nil nil)
 
 (autoload 'cl-adjoin "cl-seq" "\
-Not documented
+
 
 \(fn CL-ITEM CL-LIST &rest CL-KEYS)" nil nil)
 
@@ -1242,7 +1253,6 @@ Keywords supported:  :test :test-not :key
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
-
-;; arch-tag: 08cc5aab-e992-47f6-992e-12a7428c1a0e
 ;;; cl-loaddefs.el ends here

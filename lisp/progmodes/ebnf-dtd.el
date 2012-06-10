@@ -1,12 +1,12 @@
 ;;; ebnf-dtd.el --- parser for DTD (Data Type Description for XML)
 
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Vinicius Jose Latorre <viniciusjl@ig.com.br>
 ;; Maintainer: Vinicius Jose Latorre <viniciusjl@ig.com.br>
 ;; Keywords: wp, ebnf, PostScript
 ;; Version: 1.1
+;; Package: ebnf2ps
 
 ;; This file is part of GNU Emacs.
 
@@ -515,7 +515,7 @@
 ;; -----
 ;;
 ;; At moment, only the `<!ELEMENT' generates a syntactic chart.  The
-;; `<!ATTLIST', `<!NOTATION' and `<!ENTITY' are syntacticly checked but they
+;; `<!ATTLIST', `<!NOTATION' and `<!ENTITY' are syntactically checked but they
 ;; don't generate a syntactic chart.
 ;;
 ;; Besides the syntax above, ebnf-dtd also accepts a `pure' dtd file.  An
@@ -1349,5 +1349,4 @@ See documentation for variable `ebnf-dtd-lex'."
 
 (provide 'ebnf-dtd)
 
-;; arch-tag: c21bb640-135f-4afa-8712-fa11d86301c4
 ;;; ebnf-dtd.el ends here

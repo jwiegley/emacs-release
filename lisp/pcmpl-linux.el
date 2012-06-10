@@ -1,7 +1,8 @@
 ;;; pcmpl-linux.el --- functions for dealing with GNU/Linux completions
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012 Free Software Foundation, Inc.
+
+;; Package: pcomplete
 
 ;; This file is part of GNU Emacs.
 
@@ -82,6 +83,19 @@
 	  (forward-line)))
       (pcomplete-uniqify-list points))))
 
+(defun pcomplete-pare-list (l r)
+  "Destructively remove from list L all elements matching any in list R.
+Test is done using `equal'."
+  (while (and l (and r (member (car l) r)))
+    (setq l (cdr l)))
+  (let ((m l))
+    (while m
+      (while (and (cdr m)
+		  (and r (member (cadr m) r)))
+	(setcdr m (cddr m)))
+      (setq m (cdr m))))
+  l)
+
 (defun pcmpl-linux-mountable-directories ()
   "Return a list of mountable directory names."
   (let (points)
@@ -97,5 +111,4 @@
        (pcomplete-uniqify-list points)
        (cons "swap" (pcmpl-linux-mounted-directories))))))
 
-;; arch-tag: bb0961a6-a623-463d-92c6-497c317293b1
 ;;; pcmpl-linux.el ends here

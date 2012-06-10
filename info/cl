@@ -2,8 +2,7 @@ This is ../../info/cl, produced by makeinfo version 4.13 from cl.texi.
 
 This file documents the GNU Emacs Common Lisp emulation package.
 
-   Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 1993, 2001-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -35,8 +34,7 @@ does assume a basic familiarity with Emacs Lisp.
 
    This file documents the GNU Emacs Common Lisp emulation package.
 
-   Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 1993, 2001-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -115,7 +113,7 @@ various reasons:
      features.
 
    * Some features conflict with existing things in Emacs Lisp.  For
-     example, Emacs' `assoc' function is incompatible with the Common
+     example, Emacs's `assoc' function is incompatible with the Common
      Lisp `assoc'.  In such cases, this package usually adds the suffix
      `*' to the function name of the Common Lisp version of the
      function (e.g., `assoc*').
@@ -902,10 +900,10 @@ variables.
                frame-width                       window-point
                get-register                      window-start
                getenv                            window-width
-               global-key-binding                x-get-cut-buffer
-               keymap-parent                     x-get-cutbuffer
-               local-key-binding                 x-get-secondary-selection
-               mark                              x-get-selection
+               global-key-binding                x-get-secondary-selection
+               keymap-parent                     x-get-selection
+               local-key-binding
+               mark
                mark-marker
 
           Most of these have directly corresponding "set" functions,
@@ -1812,7 +1810,7 @@ looping constructs to complement Emacs Lisp's basic `while' loop.
      executed with VAR bound to each element of the list in turn.
      Finally, the RESULT form (or `nil') is evaluated with VAR bound to
      `nil' to produce the result returned by the loop.  Unlike with
-     Emacs's built in `dolist', the loop is surrounded by an implicit
+     Emacs'ss built in `dolist', the loop is surrounded by an implicit
      `nil' block.
 
  -- Special Form: dotimes (var count [result]) forms...
@@ -1821,7 +1819,7 @@ looping constructs to complement Emacs Lisp's basic `while' loop.
      from zero (inclusive) to COUNT (exclusive), in turn.  Then the
      `result' form is evaluated with VAR bound to the total number of
      iterations that were done (i.e., `(max 0 COUNT)') to get the
-     return value for the loop form.  Unlike with Emacs's built in
+     return value for the loop form.  Unlike with Emacs'ss built in
      `dolist', the loop is surrounded by an implicit `nil' block.
 
  -- Special Form: do-symbols (var [obarray [result]]) forms...
@@ -1936,7 +1934,7 @@ This loop iterates over all Emacs buffers, using the list returned by
 `buffer-list'.  For each buffer `buf', it calls `buffer-file-name' and
 collects the results into a list, which is then returned from the
 `loop' construct.  The result is a list of the file names of all the
-buffers in Emacs' memory.  The words `for', `in', and `collect' are
+buffers in Emacs's memory.  The words `for', `in', and `collect' are
 reserved words in the `loop' language.
 
      (loop repeat 20 do (insert "Yowsa\n"))
@@ -2121,20 +2119,27 @@ form you use is purely a matter of style.
      or `while'.
 
 `for VAR being the hash-keys of HASH-TABLE'
-     This clause iterates over the entries in HASH-TABLE.  For each
-     hash table entry, VAR is bound to the entry's key.  If you write
-     `the hash-values' instead, VAR is bound to the values of the
-     entries.  The clause may be followed by the additional term `using
-     (hash-values VAR2)' (where `hash-values' is the opposite word of
-     the word following `the') to cause VAR and VAR2 to be bound to the
-     two parts of each hash table entry.
+`for VAR being the hash-values of HASH-TABLE'
+     This clause iterates over the entries in HASH-TABLE with VAR bound
+     to each key, or value.  A `using' clause can bind a second
+     variable to the opposite part.
+
+          (loop for k being the hash-keys of h
+                      using (hash-values v)
+                do
+                (message "key %S -> value %S" k v))
 
 `for VAR being the key-codes of KEYMAP'
+`for VAR being the key-bindings of KEYMAP'
      This clause iterates over the entries in KEYMAP.  The iteration
      does not enter nested keymaps but does enter inherited (parent)
-     keymaps.  You can use `the key-bindings' to access the commands
-     bound to the keys rather than the key codes, and you can add a
-     `using' clause to access both the codes and the bindings together.
+     keymaps.  A `using' clause can access both the codes and the
+     bindings together.
+
+          (loop for c being the key-codes of (current-local-map)
+                      using (key-bindings b)
+                do
+                (message "key %S -> binding %S" c b))
 
 `for VAR being the key-seqs of KEYMAP'
      This clause iterates over all key sequences defined by KEYMAP and
@@ -2228,7 +2233,12 @@ variables.
 trailing values are ignored, and if there are more variables than
 values the trailing variables get the value `nil'.  If `nil' is used as
 a variable name, the corresponding values are ignored.  Destructuring
-may be nested, and dotted lists of variables like `(x . y)' are allowed.
+may be nested, and dotted lists of variables like `(x . y)' are
+allowed, so for example to process an alist
+
+     (loop for (key . value) in '((a . 1) (b . 2))
+           collect value)
+          => (1 2)
 
 
 File: cl,  Node: Iteration Clauses,  Next: Accumulation Clauses,  Prev: For Clauses,  Up: Loop Facility
@@ -3274,10 +3284,10 @@ function `mapcar'.
      pointers themselves rather than the `car's of the advancing
      pointers.
 
- -- Function: mapc function seq &rest more-seqs
+ -- Function: cl-mapc function seq &rest more-seqs
      This function is like `mapcar*', except that the values returned
      by FUNCTION are ignored and thrown away rather than being
-     collected into a list.  The return value of `mapc' is SEQ, the
+     collected into a list.  The return value of `cl-mapc' is SEQ, the
      first sequence.  This function is more general than the Emacs
      primitive `mapc'.
 
@@ -3374,7 +3384,7 @@ on sequences.
 
      As an extension to Common Lisp, START and/or END may be negative,
      in which case they represent a distance back from the end of the
-     sequence.  This is for compatibility with Emacs' `substring'
+     sequence.  This is for compatibility with Emacs's `substring'
      function.  Note that `subseq' is the _only_ sequence function that
      allows negative START and END.
 
@@ -3544,7 +3554,7 @@ File: cl,  Node: Sorting Sequences,  Prev: Searching Sequences,  Up: Sequences
      numbers and strings, respectively; `>' would sort numbers into
      decreasing rather than increasing order.
 
-     This function differs from Emacs' built-in `sort' in that it can
+     This function differs from Emacs's built-in `sort' in that it can
      operate on any type of sequence, not just lists.  Also, it accepts
      a `:key' argument which is used to preprocess data fed to the
      PREDICATE function.  For example,
@@ -4536,7 +4546,7 @@ Common Lisp code into Emacs.
 
      *Note Lexical Bindings::, for a description of the `lexical-let'
      form which establishes a Common Lisp-style lexical binding, and
-     some examples of how it differs from Emacs' regular `let'.
+     some examples of how it differs from Emacs's regular `let'.
 
    * Reader macros.  Common Lisp includes a second type of macro that
      works at the level of individual characters.  For example, Common
@@ -5166,6 +5176,8 @@ Function Index
 * check-type:                            Assertions.          (line  39)
 * cl-float-limits:                       Implementation Parameters.
                                                               (line  15)
+* cl-mapc:                               Mapping over Sequences.
+                                                              (line  43)
 * cl-prettyexpand:                       Efficiency Concerns. (line  39)
 * coerce:                                Type Predicates.     (line  67)
 * compiler-macroexpand:                  Macros.              (line  60)
@@ -5245,8 +5257,6 @@ Function Index
 * make-random-state:                     Random Numbers.      (line  29)
 * map:                                   Mapping over Sequences.
                                                               (line  27)
-* mapc:                                  Mapping over Sequences.
-                                                              (line  43)
 * mapcan:                                Mapping over Sequences.
                                                               (line  54)
 * mapcar*:                               Mapping over Sequences.
@@ -5383,69 +5393,69 @@ Variable Index
 
 
 Tag Table:
-Node: Top1073
-Node: Overview3329
-Node: Usage6152
-Node: Organization6529
-Node: Installation8418
-Node: Naming Conventions8944
-Node: Program Structure10639
-Node: Argument Lists11056
-Node: Time of Evaluation20206
-Node: Predicates26074
-Node: Type Predicates26383
-Node: Equality Predicates31348
-Node: Control Structure32600
-Node: Assignment33385
-Node: Generalized Variables34630
-Node: Basic Setf35940
-Node: Modify Macros43126
-Node: Customizing Setf50354
-Node: Variable Bindings57655
-Node: Dynamic Bindings58239
-Node: Lexical Bindings59137
-Node: Function Bindings63239
-Node: Macro Bindings66626
-Node: Conditionals69548
-Node: Blocks and Exits72138
-Node: Iteration75152
-Node: Loop Facility80718
-Node: Loop Basics81648
-Node: Loop Examples84256
-Node: For Clauses86522
-Node: Iteration Clauses98067
-Node: Accumulation Clauses99920
-Node: Other Clauses102271
-Node: Multiple Values108347
-Node: Macros110245
-Node: Declarations113465
-Node: Symbols121825
-Node: Property Lists122124
-Node: Creating Symbols125332
-Node: Numbers127390
-Node: Predicates on Numbers127837
-Node: Numerical Functions128874
-Node: Random Numbers132572
-Node: Implementation Parameters135288
-Node: Sequences138565
-Node: Sequence Basics139239
-Node: Mapping over Sequences142798
-Node: Sequence Functions148738
-Node: Searching Sequences154260
-Node: Sorting Sequences157307
-Node: Lists159963
-Node: List Functions160380
-Node: Substitution of Expressions163679
-Node: Lists as Sets165574
-Node: Association Lists169347
-Node: Structures170802
-Node: Assertions185506
-Node: Efficiency Concerns188452
-Node: Common Lisp Compatibility193472
-Node: Old CL Compatibility196320
-Node: Porting Common Lisp200731
-Node: GNU Free Documentation License209887
-Node: Function Index235066
-Node: Variable Index249656
+Node: Top1011
+Node: Overview3205
+Node: Usage6029
+Node: Organization6406
+Node: Installation8295
+Node: Naming Conventions8821
+Node: Program Structure10516
+Node: Argument Lists10933
+Node: Time of Evaluation20083
+Node: Predicates25951
+Node: Type Predicates26260
+Node: Equality Predicates31225
+Node: Control Structure32477
+Node: Assignment33262
+Node: Generalized Variables34507
+Node: Basic Setf35817
+Node: Modify Macros42925
+Node: Customizing Setf50153
+Node: Variable Bindings57454
+Node: Dynamic Bindings58038
+Node: Lexical Bindings58936
+Node: Function Bindings63038
+Node: Macro Bindings66425
+Node: Conditionals69347
+Node: Blocks and Exits71937
+Node: Iteration74951
+Node: Loop Facility80519
+Node: Loop Basics81449
+Node: Loop Examples84057
+Node: For Clauses86324
+Node: Iteration Clauses98031
+Node: Accumulation Clauses99884
+Node: Other Clauses102235
+Node: Multiple Values108311
+Node: Macros110209
+Node: Declarations113429
+Node: Symbols121789
+Node: Property Lists122088
+Node: Creating Symbols125296
+Node: Numbers127354
+Node: Predicates on Numbers127801
+Node: Numerical Functions128838
+Node: Random Numbers132536
+Node: Implementation Parameters135252
+Node: Sequences138529
+Node: Sequence Basics139203
+Node: Mapping over Sequences142762
+Node: Sequence Functions148708
+Node: Searching Sequences154231
+Node: Sorting Sequences157278
+Node: Lists159935
+Node: List Functions160352
+Node: Substitution of Expressions163651
+Node: Lists as Sets165546
+Node: Association Lists169319
+Node: Structures170774
+Node: Assertions185478
+Node: Efficiency Concerns188424
+Node: Common Lisp Compatibility193444
+Node: Old CL Compatibility196292
+Node: Porting Common Lisp200703
+Node: GNU Free Documentation License209860
+Node: Function Index235039
+Node: Variable Index249629
 
 End Tag Table

@@ -1,8 +1,7 @@
 This is ../../info/smtpmail, produced by makeinfo version 4.13 from
 smtpmail.texi.
 
-Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-Free Software Foundation, Inc.
+Copyright (C) 2003-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -27,8 +26,7 @@ File: smtpmail,  Node: Top,  Next: How Mail Works,  Up: (dir)
 Emacs SMTP Library
 ******************
 
-Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-Free Software Foundation, Inc.
+Copyright (C) 2003-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -47,6 +45,7 @@ Free Software Foundation, Inc.
 * How Mail Works::      Brief introduction to mail concepts.
 * Emacs Speaks SMTP::   How to use the SMTP library in Emacs.
 * Authentication::      Authenticating yourself to the server.
+* Encryption::          Protecting your connection to the server.
 * Queued delivery::     Sending mail without an internet connection.
 * Server workarounds::  Mail servers with special requirements.
 * Debugging::           Tracking down problems.
@@ -124,22 +123,34 @@ useful if you don't have a MTA set up on your host, or if your machine
 is often disconnected from the internet.
 
    Sending mail via SMTP requires configuring your mail user agent
-(*note Mail Methods: (emacs)Mail Methods.) to use the SMTP library.
-How to do this should be described for each mail user agent; for the
-default mail user agent the variable `send-mail-function' (*note Mail
-Sending: (emacs)Mail Sending.) is used; for the Message and Gnus user
-agents the variable `message-send-mail-function' (*note Mail Variables:
-(message)Mail Variables.) is used.
+(*note Mail Methods: (emacs)Mail Methods.) to use the SMTP library.  If
+you have not configured anything, then in Emacs 24.1 and later the first
+time you try to send a mail Emacs will ask how you want to send mail.
+To use this library, answer `smtp' when prompted.  Emacs then asks for
+the name of the SMTP server.
 
-     ;; If you use the default mail user agent.
+   If you prefer, or if you are using a non-standard mail user agent,
+you can configure this yourself.  The normal way to do this is to set
+the variable `send-mail-function' (*note Mail Sending: (emacs)Mail
+Sending.) to the value you want to use.  To use this library:
+
      (setq send-mail-function 'smtpmail-send-it)
-     ;; If you use Message or Gnus.
-     (setq message-send-mail-function 'smtpmail-send-it)
+
+The default value for this variable is `sendmail-query-once', which
+interactively asks how you want to send mail.
+
+   Your mail user agent might use a different variable for this purpose.
+It should inherit from `send-mail-function', but if it does not, or if
+you prefer, you can set that variable directly.  Consult your mail user
+agent's documentation for more details.  For example, (*note Mail
+Variables: (message)Mail Variables.).
 
    Before using SMTP you must find out the hostname of the SMTP server
-to use.  Your system administrator should provide you with this
-information, but often it is the same as the server you receive mail
-from.
+to use.  Your system administrator or mail service provider should
+supply this information.  Often it is some variant of the server you
+receive mail from.  If your email address is `yourname@example.com',
+then the name of the SMTP server is may be something like
+`smtp.example.com'.
 
 `smtpmail-smtp-server'
      The variable `smtpmail-smtp-server' controls the hostname of the
@@ -178,94 +189,103 @@ to set the SMTP service port.
      (setq smtpmail-smtp-service 587)
 
 
-File: smtpmail,  Node: Authentication,  Next: Queued delivery,  Prev: Emacs Speaks SMTP,  Up: Top
+File: smtpmail,  Node: Authentication,  Next: Encryption,  Prev: Emacs Speaks SMTP,  Up: Top
 
 3 Authentication
 ****************
 
-Many environments require SMTP clients to authenticate themselves
-before they are allowed to route mail via a server.  The two following
-variables contains the authentication information needed for this.
+Most SMTP servers require clients to authenticate themselves before
+they are allowed to send mail.  Authentication usually involves
+supplying a user name and password.
 
-   The first variable, `smtpmail-auth-credentials', instructs the SMTP
-library to use a SASL authentication step, currently only the CRAM-MD5
-and LOGIN mechanisms are supported and will be selected in that order
-if the server support both.
+   If you have not configured anything, then the first time you try to
+send mail via a server, Emacs (version 24.1 and later) prompts you for
+the user name and password to use, and then offers to save the
+information.  By default, Emacs stores authentication information in a
+file `~/.authinfo'.
 
-   The second variable, `smtpmail-starttls-credentials', instructs the
-SMTP library to connect to the server using STARTTLS.  This means the
-protocol exchange may be integrity protected and confidential by using
-the Transport Layer Security (TLS) protocol, and optionally also
-authentication of the client and server.
+   The basic format of the `~/.authinfo' file is one line for each set
+of credentials.  Each line consists of pairs of variables and values.
+A simple example would be:
 
-   TLS is a security protocol that is also known as SSL, although
-strictly speaking, SSL is an older variant of TLS.  TLS is backwards
-compatible with SSL.  In most mundane situations, the two terms are
-equivalent.
+     machine mail.example.org port 25 login myuser password mypassword
 
-   The TLS feature uses the elisp package `starttls.el' (see it for
-more information on customization), which in turn require that at least
-one of the following external tools are installed:
+This specifies that when using the SMTP server called `mail.example.org'
+on port 25, Emacs should send the user name `myuser' and the password
+`mypassword'.  Either or both of the login and password fields may be
+absent, in which case Emacs prompts for the information when you try to
+send mail.  (This replaces the old `smtpmail-auth-credentials' variable
+used prior to Emacs 24.1.)
 
-  1. The GNUTLS command line tool `gnutls-cli', you can get it from
-     `http://www.gnu.org/software/gnutls/'.  This is the recommended
-     tool, mainly because it can verify the server certificates.
+   When the SMTP library connects to a host on a certain port, it
+searches the `~/.authinfo' file for a matching entry.  If an entry is
+found, the authentication process is invoked and the credentials are
+used.  If the variable `smtpmail-smtp-user' is set to a non-`nil'
+value, then only entries for that user are considered.  For more
+information on the `~/.authinfo' file, *note auth-source: (auth)Top.
 
-  2. The `starttls' external program, you can get it from
-     `starttls-*.tar.gz' from `ftp://ftp.opaopa.org/pub/elisp/'.
-
-   It is not uncommon to use both these mechanisms, e.g., to use
-STARTTLS to achieve integrity and confidentiality and then use SASL for
-client authentication.
-
-`smtpmail-auth-credentials'
-     The variable `smtpmail-auth-credentials' contains a list of
-     hostname, port, username and password tuples.  When the SMTP
-     library connects to a host on a certain port, this variable is
-     searched to find a matching entry for that hostname and port.  If
-     an entry is found, the authentication process is invoked and the
-     credentials are used.
-
-     The hostname field follows the same format as
-     `smtpmail-smtp-server' (i.e., a string) and the port field the
-     same format as `smtpmail-smtp-service' (i.e., a string or an
-     integer).  The username and password fields, which either can be
-     `nil' to indicate that the user is prompted for the value
-     interactively, should be strings with the username and password,
-     respectively, information that is normally provided by system
-     administrators.
-
-`smtpmail-starttls-credentials'
-     The variable `smtpmail-starttls-credentials' contains a list of
-     tuples with hostname, port, name of file containing client key, and
-     name of file containing client certificate.  The processing is
-     similar to the previous variable.  The client key and certificate
-     may be `nil' if you do not wish to use client authentication.
-
-   The following example illustrates what you could put in `~/.emacs'
-to enable both SASL authentication and STARTTLS.  The server name
-(`smtpmail-smtp-server') is HOSTNAME, the server port
-(`smtpmail-smtp-service') is PORT, and the username and password are
-USERNAME and PASSWORD respectively.
-
-     ;; Authenticate using this username and password against my server.
-     (setq smtpmail-auth-credentials
-           '(("HOSTNAME" "PORT" "USERNAME" "PASSWORD")))
-
-     ;; Note that if PORT is an integer, you must not quote it as a
-     ;; string.  Normally PORT should be the integer 25, and the example
-     ;; become:
-     (setq smtpmail-auth-credentials
-           '(("HOSTNAME" 25 "USERNAME" "PASSWORD")))
-
-     ;; Use STARTTLS without authentication against the server.
-     (setq smtpmail-starttls-credentials
-           '(("HOSTNAME" "PORT" nil nil)))
+   The process by which the SMTP library authenticates you to the server
+is known as "Simple Authentication and Security Layer" (SASL).  There
+are various SASL mechanisms, and this library supports three of them:
+CRAM-MD5, PLAIN, and LOGIN.  It tries each of them, in that order,
+until one succeeds.  The first uses a form of encryption to obscure
+your password, while the other two do not.
 
 
-File: smtpmail,  Node: Queued delivery,  Next: Server workarounds,  Prev: Authentication,  Up: Top
+File: smtpmail,  Node: Encryption,  Next: Queued delivery,  Prev: Authentication,  Up: Top
 
-4 Queued delivery
+4 Encryption
+************
+
+For greater security, you can encrypt your connection to the SMTP
+server.  If this is to work, both Emacs and the server must support it.
+
+   The SMTP library supports the "Transport Layer Security" (TLS), and
+the older "Secure Sockets Layer" (SSL) encryption mechanisms.  It also
+supports STARTTLS, which is a variant of TLS in which the initial
+connection to the server is made in plain text, requesting a switch to
+an encrypted channel for the rest of the process.
+
+   The variable `smtpmail-stream-type' controls what form of connection
+the SMTP library uses.  The default value is `nil', which means to use
+a plain connection, but try to switch to a STARTTLS encrypted
+connection if the server supports it.  Other possible values are:
+`starttls' - insist on STARTTLS; `ssl' - use TLS/SSL; and `plain' - no
+encryption.
+
+   Use of any form of TLS/SSL requires support in Emacs.  You can either
+use the built-in support (in Emacs 24.1 and later), or the
+`starttls.el' Lisp library.  The built-in support uses the GnuTLS (1)
+library.  If your Emacs has GnuTLS support built-in, the function
+`gnutls-available-p' is defined and returns non-`nil'.  Otherwise, you
+must use the `starttls.el' library (see that file for more information
+on customization options, etc.).  The Lisp library requires one of the
+following external tools to be installed:
+
+  1. The GnuTLS command line tool `gnutls-cli', which you can get from
+     `http://www.gnu.org/software/gnutls/'.  This is the recommended
+     tool, mainly because it can verify server certificates.
+
+  2. The `starttls' external program, which you can get from
+     `starttls-*.tar.gz' from `ftp://ftp.opaopa.org/pub/elisp/'.
+
+   The SMTP server may also request that you verify your identity by
+sending a certificate and the associated encryption key to the server.
+If you need to do this, you can use an `~/.authinfo' entry like this:
+
+     machine mail.example.org port 25 key "~/.my_smtp_tls.key" cert "~/.my_smtp_tls.cert"
+
+(This replaces the old `smtpmail-starttls-credentials' variable used
+prior to Emacs 24.1.)
+
+   ---------- Footnotes ----------
+
+   (1) `http://www.gnu.org/software/gnutls/'
+
+
+File: smtpmail,  Node: Queued delivery,  Next: Server workarounds,  Prev: Encryption,  Up: Top
+
+5 Queued delivery
 *****************
 
 If you connect to the internet via a dialup connection, or for some
@@ -295,7 +315,7 @@ are connected to the internet.
 
 File: smtpmail,  Node: Server workarounds,  Next: Debugging,  Prev: Queued delivery,  Up: Top
 
-5 Server workarounds
+6 Server workarounds
 ********************
 
 Some SMTP servers have special requirements.  The following variables
@@ -327,7 +347,7 @@ implement support for common requirements.
 
 File: smtpmail,  Node: Debugging,  Next: GNU Free Documentation License,  Prev: Server workarounds,  Up: Top
 
-6 Debugging
+7 Debugging
 ***********
 
 Sometimes delivery fails, often with the generic error message `Sending
@@ -354,7 +374,7 @@ reason for the error.
 
 File: smtpmail,  Node: GNU Free Documentation License,  Next: Index,  Prev: Debugging,  Up: Top
 
-7 GNU Free Documentation License
+8 GNU Free Documentation License
 ********************************
 
                      Version 1.3, 3 November 2008
@@ -840,63 +860,71 @@ permit their use in free software.
 
 File: smtpmail,  Node: Index,  Prev: GNU Free Documentation License,  Up: Top
 
-8 Index
+9 Index
 *******
 
-8.1 Concept Index
+9.1 Concept Index
 =================
 
  [index ]
 * Menu:
 
-* CRAM-MD5:                              Authentication.       (line  6)
+* authinfo:                              Authentication.       (line 16)
+* certificates:                          Encryption.           (line 38)
+* CRAM-MD5:                              Authentication.       (line 36)
 * Dialup connection:                     Queued delivery.      (line  6)
 * IMAP:                                  How Mail Works.       (line 36)
 * ISP:                                   How Mail Works.       (line 21)
-* LOGIN:                                 Authentication.       (line  6)
-* Mail Submission:                       Emacs Speaks SMTP.    (line 50)
+* keys:                                  Encryption.           (line 38)
+* LOGIN:                                 Authentication.       (line 36)
+* Mail Submission:                       Emacs Speaks SMTP.    (line 62)
 * MDA:                                   How Mail Works.       (line 27)
 * MTA:                                   How Mail Works.       (line  6)
 * MUA:                                   How Mail Works.       (line 14)
+* password:                              Authentication.       (line  6)
+* PLAIN:                                 Authentication.       (line 36)
 * POP3:                                  How Mail Works.       (line 36)
-* SASL:                                  Authentication.       (line  6)
+* SASL:                                  Authentication.       (line 36)
 * SMTP:                                  How Mail Works.       (line  6)
-* SSL:                                   Authentication.       (line  6)
-* STARTTLS:                              Authentication.       (line  6)
-* TLS:                                   Authentication.       (line  6)
+* SSL:                                   Encryption.           (line  6)
+* STARTTLS:                              Encryption.           (line  6)
+* TLS:                                   Encryption.           (line  6)
+* user name:                             Authentication.       (line  6)
 * Webmail:                               How Mail Works.       (line 48)
 
-8.2 Function and Variable Index
+9.2 Function and Variable Index
 ===============================
 
  [index ]
 * Menu:
 
-* smtpmail-auth-credentials:             Authentication.       (line 42)
 * smtpmail-debug-info:                   Debugging.            (line 12)
 * smtpmail-debug-verb:                   Debugging.            (line 18)
-* smtpmail-default-smtp-server:          Emacs Speaks SMTP.    (line 37)
+* smtpmail-default-smtp-server:          Emacs Speaks SMTP.    (line 49)
 * smtpmail-local-domain:                 Server workarounds.   (line 10)
 * smtpmail-queue-dir:                    Queued delivery.      (line 21)
 * smtpmail-queue-mail:                   Queued delivery.      (line 12)
 * smtpmail-send-queued-mail:             Queued delivery.      (line 25)
 * smtpmail-sendto-domain:                Server workarounds.   (line 17)
-* smtpmail-smtp-server:                  Emacs Speaks SMTP.    (line 31)
-* smtpmail-smtp-service:                 Emacs Speaks SMTP.    (line 56)
-* smtpmail-starttls-credentials:         Authentication.       (line 59)
-* SMTPSERVER:                            Emacs Speaks SMTP.    (line 31)
+* smtpmail-smtp-server:                  Emacs Speaks SMTP.    (line 43)
+* smtpmail-smtp-service:                 Emacs Speaks SMTP.    (line 68)
+* smtpmail-smtp-user:                    Authentication.       (line 29)
+* smtpmail-stream-type:                  Encryption.           (line 15)
+* SMTPSERVER:                            Emacs Speaks SMTP.    (line 43)
 
 
 
 Tag Table:
-Node: Top994
-Node: How Mail Works2374
-Node: Emacs Speaks SMTP5147
-Node: Authentication8105
-Node: Queued delivery12017
-Node: Server workarounds13276
-Node: Debugging14472
-Node: GNU Free Documentation License15609
-Node: Index40757
+Node: Top945
+Node: How Mail Works2342
+Node: Emacs Speaks SMTP5115
+Node: Authentication8713
+Node: Encryption10734
+Ref: Encryption-Footnote-112962
+Node: Queued delivery13008
+Node: Server workarounds14263
+Node: Debugging15459
+Node: GNU Free Documentation License16596
+Node: Index41744
 
 End Tag Table

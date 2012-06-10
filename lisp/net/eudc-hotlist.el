@@ -1,11 +1,11 @@
 ;;; eudc-hotlist.el --- hotlist management for EUDC
 
-;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1998-2012 Free Software Foundation, Inc.
 
 ;; Author: Oscar Figueiredo <oscar@cpe.fr>
 ;; Maintainer: Pavel Janík <Pavel@Janik.cz>
 ;; Keywords: comm
+;; Package: eudc
 
 ;; This file is part of GNU Emacs.
 
@@ -32,8 +32,17 @@
 (require 'eudc)
 
 (defvar eudc-hotlist-menu nil)
-(defvar eudc-hotlist-mode-map nil)
 (defvar eudc-hotlist-list-beginning nil)
+
+(defvar eudc-hotlist-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "a" 'eudc-hotlist-add-server)
+    (define-key map "d" 'eudc-hotlist-delete-server)
+    (define-key map "s" 'eudc-hotlist-select-server)
+    (define-key map "t" 'eudc-hotlist-transpose-servers)
+    (define-key map "q" 'eudc-hotlist-quit-edit)
+    (define-key map "x" 'kill-this-buffer)
+    map))
 
 (defun eudc-hotlist-mode ()
   "Major mode used to edit the hotlist of servers.
@@ -44,7 +53,7 @@ These are the special commands of this mode:
     s -- Select the server at point.
     t -- Transpose the server at point and the previous one
     q -- Commit the changes and quit.
-    x -- Quit without commiting the changes."
+    x -- Quit without committing the changes."
   (interactive)
   (kill-all-local-variables)
   (setq major-mode 'eudc-hotlist-mode)
@@ -80,7 +89,7 @@ These are the special commands of this mode:
 	    "------" gap "--------\n"
 	    "\n")
     (setq eudc-hotlist-list-beginning (point))
-    (mapc '(lambda (entry)
+    (mapc (lambda (entry)
 	     (insert (car entry))
 	     (indent-to proto-col)
 	     (insert (symbol-name (cdr entry)) "\n"))
@@ -94,7 +103,7 @@ These are the special commands of this mode:
       (error "Not in a EUDC hotlist edit buffer"))
   (let ((server (read-from-minibuffer "Server: "))
 	(protocol (completing-read "Protocol: "
-				   (mapcar '(lambda (elt)
+				   (mapcar (lambda (elt)
 					      (cons (symbol-name elt)
 						    elt))
 					   eudc-known-protocols)))
@@ -168,16 +177,6 @@ These are the special commands of this mode:
 	    (forward-line 1)
 	    (transpose-lines 1))))))
 
-(setq eudc-hotlist-mode-map
-      (let ((map (make-sparse-keymap)))
-	(define-key map "a" 'eudc-hotlist-add-server)
-	(define-key map "d" 'eudc-hotlist-delete-server)
-	(define-key map "s" 'eudc-hotlist-select-server)
-	(define-key map "t" 'eudc-hotlist-transpose-servers)
-	(define-key map "q" 'eudc-hotlist-quit-edit)
-	(define-key map "x" 'kill-this-buffer)
-	map))
-
 (defconst eudc-hotlist-menu
   '("EUDC Hotlist Edit"
     ["---" nil nil]
@@ -194,5 +193,4 @@ These are the special commands of this mode:
     ""
     eudc-hotlist-menu))
 
-;; arch-tag: 9b633ab3-6a6e-4b46-b12e-d96739a7e0e8
 ;;; eudc-hotlist.el ends here

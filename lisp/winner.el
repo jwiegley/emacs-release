@@ -1,7 +1,6 @@
 ;;; winner.el --- Restore old window configurations
 
-;; Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1997-1998, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Ivar Rummelhoff <ivarru@math.uio.no>
 ;; Created: 27 Feb 1997
@@ -146,7 +145,7 @@ You may want to include buffer names such as *Help*, *Apropos*,
 
 ;;; Saved configurations
 
-;; This variable contains the window cofiguration rings.
+;; This variable contains the window configuration rings.
 ;; The key in this alist is the frame.
 (defvar winner-ring-alist nil)
 
@@ -473,5 +472,4 @@ In other words, \"undo\" changes in window configuration."
 	minor-mode-map-alist))
 
 (provide 'winner)
-;; arch-tag: 686d1c1b-010e-42ca-a192-b5685112418f
 ;;; winner.el ends here

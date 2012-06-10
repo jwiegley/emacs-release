@@ -1,11 +1,10 @@
 ;;; thai-util.el --- utilities for Thai -*- coding: utf-8; -*-
 
+;; Copyright (C) 2000-2012 Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
+;;   2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
 ;;   Registration Number H14PRO021
-;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
 
 ;; Keywords: mule, multilingual, Thai, i18n
 
@@ -125,7 +124,7 @@
 	   (?ใ vowel-base "VOWEL SIGN SARA MAI MUAN")			; 0xE3
 	   (?ไ vowel-base "VOWEL SIGN SARA MAI MALAI")			; 0xE4
 	   (?ๅ vowel-base "LAK KHANG YAO")				; 0xE5
-	   (?ๆ special "MAI YAMOK (repetion)")				; 0xE6
+	   (?ๆ special "MAI YAMOK (repetition)")			; 0xE6
 	   (?็ sign-upper "VOWEL SIGN MAI TAI KHU N/S-T")		; 0xE7
 	   (?่ tone "TONE MAI EK N/S-T")				; 0xE8
 	   (?้ tone "TONE MAI THO N/S-T")				; 0xE9
@@ -258,7 +257,11 @@ positions (integers or markers) specifying the region."
 
 (define-minor-mode thai-word-mode
   "Minor mode to make word-oriented commands aware of Thai words.
-The commands affected are \\[forward-word], \\[backward-word], \\[kill-word], \\[backward-kill-word], \\[transpose-words], and \\[fill-paragraph]."
+With a prefix argument ARG, enable the mode if ARG is positive,
+and disable it otherwise.  If called from Lisp, enable the mode
+if ARG is omitted or nil.  The commands affected are
+\\[forward-word], \\[backward-word], \\[kill-word], \\[backward-kill-word],
+\\[transpose-words], and \\[fill-paragraph]."
   :global t :group 'mule
   (cond (thai-word-mode
 	 ;; This enables linebreak between Thai characters.
@@ -282,5 +285,4 @@ The commands affected are \\[forward-word], \\[backward-word], \\[kill-word], \\
 ;;
 (provide 'thai-util)
 
-;; arch-tag: 59425d6a-8cf9-4e06-a6ab-8ab7dc7a7a97
 ;;; thai-util.el ends here

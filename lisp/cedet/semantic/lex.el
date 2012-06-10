@@ -1,7 +1,6 @@
 ;;; semantic/lex.el --- Lexical Analyzer builder
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 
@@ -166,7 +165,7 @@
 ;;
 ;; %type  <punctuation> syntax "\\(\\s.\\|\\s$\\|\\s'\\)+" matchdatatype string
 ;;
-;; ;; Some punctuations based on the type defines above
+;; ;; Some punctuation based on the type defines above
 ;;
 ;; %token <punctuation> NOT         "!"
 ;; %token <punctuation> NOTEQ       "!="
@@ -492,7 +491,7 @@ For compatibility with Semantic 1.x it defaults to `semantic-flex'.")
     (symbol)
     (whitespace)
     )
-  "An alist of of semantic token types.
+  "An alist of semantic token types.
 As of December 2001 (semantic 1.4beta13), this variable is not used in
 any code.  The only use is to refer to the doc-string from elsewhere.
 
@@ -1249,7 +1248,7 @@ they are comment end characters) AND when you want whitespace tokens."
   (if (eq (semantic-lex-token-class (car semantic-lex-token-stream))
 	  'whitespace)
       ;; Merge whitespace tokens together if they are adjacent.  Two
-      ;; whitespace tokens may be sperated by a comment which is not in
+      ;; whitespace tokens may be separated by a comment which is not in
       ;; the token stream.
       (setcdr (semantic-lex-token-bounds (car semantic-lex-token-stream))
               (match-end 0))
@@ -1272,7 +1271,7 @@ they are comment end characters)."
   (if (eq (semantic-lex-token-class (car semantic-lex-token-stream))
 	  'whitespace)
       ;; Merge whitespace tokens together if they are adjacent.  Two
-      ;; whitespace tokens may be sperated by a comment which is not in
+      ;; whitespace tokens may be separated by a comment which is not in
       ;; the token stream.
       (progn
         (setq semantic-lex-end-point (match-end 0))
@@ -1314,7 +1313,7 @@ and number formats."
 
 (define-lex-analyzer semantic-lex-punctuation-type
   "Detect and create a punctuation type token.
-Recognized punctuations are defined in the current table of lexical
+Recognized punctuation is defined in the current table of lexical
 types, as the value of the `punctuation' token type."
   (and (looking-at "\\(\\s.\\|\\s$\\|\\s'\\)+")
        (let* ((key (match-string 0))
@@ -1363,11 +1362,11 @@ Return either a paren token or a semantic list token depending on
     ))
 
 (define-lex-simple-regex-analyzer semantic-lex-open-paren
-  "Detect and create an open parenthisis token."
+  "Detect and create an open parenthesis token."
   "\\s(" 'open-paren 0  (setq semantic-lex-current-depth (1+ semantic-lex-current-depth)))
 
 (define-lex-simple-regex-analyzer semantic-lex-close-paren
-  "Detect and create a close paren token."
+  "Detect and create a close parenthesis token."
   "\\s)" 'close-paren 0 (setq semantic-lex-current-depth (1- semantic-lex-current-depth)))
 
 (define-lex-regex-analyzer semantic-lex-string
@@ -1427,10 +1426,7 @@ Return either a paren token or a semantic list token depending on
 	;; to work properly.  Lets try and move over
 	;; whatever white space we matched to begin
 	;; with.
-	(skip-syntax-forward "-.'"
-			     (save-excursion
-			       (end-of-line)
-			       (point)))
+	(skip-syntax-forward "-.'" (point-at-eol))
       ;; We may need to back up so newlines or whitespace is generated.
       (if (bolp)
 	  (backward-char 1)))
@@ -1441,7 +1437,7 @@ Return either a paren token or a semantic list token depending on
 ;;; Comment lexer
 ;;
 ;; Predefined lexers that could be used instead of creating new
-;; analyers.
+;; analyzers.
 
 (define-lex semantic-comment-lexer
   "A simple lexical analyzer that handles comments.
@@ -1681,7 +1677,7 @@ When the lexer encounters the open-paren delimiter \"(\":
 ;;; Lexical Safety
 ;;
 ;; The semantic lexers, unlike other lexers, can throw errors on
-;; unbalanced syntax.  Since editing is all about changeging test
+;; unbalanced syntax.  Since editing is all about changing text
 ;; we need to provide a convenient way to protect against syntactic
 ;; inequalities.
 
@@ -1708,7 +1704,7 @@ If there is no error, then the last value of FORMS is returned."
                       nil))))
        ;; Great Sadness.  Assume that FORMS execute within the
        ;; confines of the current buffer only!  Mark this thing
-       ;; unparseable iff the special symbol was thrown.  This
+       ;; unparsable iff the special symbol was thrown.  This
        ;; will prevent future calls from parsing, but will allow
        ;; then to still return the cache.
        (when ,ret
@@ -1762,7 +1758,7 @@ If there is no error, then the last value of FORMS is returned."
 (semantic-alias-obsolete 'semantic-flex-map-keywords 'semantic-lex-map-keywords "23.2")
 (semantic-alias-obsolete 'semantic-flex-keywords 'semantic-lex-keywords "23.2")
 (semantic-alias-obsolete 'semantic-flex-buffer 'semantic-lex-buffer "23.2")
-(semantic-alias-obsolete 'semantic-flex-list   'semantic-lex-list "23.2")
+(semantic-alias-obsolete 'semantic-flex-list 'semantic-lex-list "23.2")
 
 ;; This simple scanner uses the syntax table to generate a stream of
 ;; simple tokens of the form:
@@ -1773,7 +1769,7 @@ If there is no error, then the last value of FORMS is returned."
 ;; objects boundary.
 
 (defvar semantic-flex-tokens semantic-lex-tokens
-  "An alist of of semantic token types.
+  "An alist of semantic token types.
 See variable `semantic-lex-tokens'.")
 
 (defvar semantic-flex-unterminated-syntax-end-function
@@ -1810,8 +1806,8 @@ what syntax class CHAR has.")
 
 (defvar semantic-ignore-comments t
   "Default comment handling.
-t means to strip comments when flexing.  Nil means to keep comments
-as part of the token stream.")
+The value t means to strip comments when flexing; nil means
+to keep comments as part of the token stream.")
 (make-variable-buffer-local 'semantic-ignore-comments)
 
 (defvar semantic-flex-enable-newlines nil
@@ -1997,10 +1993,7 @@ return LENGTH tokens."
                     ;; to work properly.  Lets try and move over
                     ;; whatever white space we matched to begin
                     ;; with.
-                    (skip-syntax-forward "-.'"
-                                         (save-excursion
-                                           (end-of-line)
-                                           (point)))
+                    (skip-syntax-forward "-.'" (point-at-eol))
                   ;;(forward-comment 1)
                   ;; Generate newline token if enabled
                   (if (and semantic-flex-enable-newlines
@@ -2049,5 +2042,4 @@ return LENGTH tokens."
 ;; generated-autoload-load-name: "semantic/lex"
 ;; End:
 
-;; arch-tag: a47664fc-48d9-4b36-921f-cab0ea8cdf92
 ;;; semantic/lex.el ends here

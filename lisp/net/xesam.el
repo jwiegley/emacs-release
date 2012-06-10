@@ -1,6 +1,6 @@
 ;;; xesam.el --- Xesam interface to search engines.
 
-;; Copyright (C) 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2008-2012 Free Software Foundation, Inc.
 
 ;; Author: Michael Albinus <michael.albinus@gmx.de>
 ;; Keywords: tools, hypermedia
@@ -88,7 +88,7 @@
 ;;
 ;;   (setq xesam-query-type 'fulltext-query)
 ;;
-;; Another option to be customised is the number of hits to be
+;; Another option to be customized is the number of hits to be
 ;; presented at once.
 ;;
 ;;   (setq xesam-hits-per-page 50)
@@ -151,7 +151,7 @@
 (defgroup xesam nil
   "Xesam compatible interface to search engines."
   :group 'extensions
-  :group 'hypermedia
+  :group 'comm
   :version "23.1")
 
 (defcustom xesam-query-type 'user-query
@@ -172,7 +172,7 @@
 
 (defface xesam-highlight '((t :inherit match))
   "Face to highlight query entries.
-It will be overlayed by `widget-documentation-face', so it shall
+It will be overlaid by `widget-documentation-face', so it shall
 be different at least in one face property not set in that face."
   :group 'xesam)
 
@@ -196,7 +196,7 @@ be different at least in one face property not set in that face."
 (defconst xesam-all-fields
   '("xesam:35mmEquivalent" "xesam:aimContactMedium" "xesam:aperture"
     "xesam:aspectRatio" "xesam:attachmentEncoding" "xesam:attendee"
-    "xesam:audioBirate" "xesam:audioChannels" "xesam:audioCodec"
+    "xesam:audioBitrate" "xesam:audioChannels" "xesam:audioCodec"
     "xesam:audioCodecType" "xesam:audioSampleFormat" "xesam:audioSampleRate"
     "xesam:author" "xesam:bcc" "xesam:birthDate" "xesam:blogContactURL"
     "xesam:cameraManufacturer" "xesam:cameraModel" "xesam:cc" "xesam:ccdWidth"
@@ -240,7 +240,8 @@ be different at least in one face property not set in that face."
     "xesam:subject" "xesam:supercedes" "xesam:title" "xesam:to"
     "xesam:totalSpace" "xesam:totalUncompressedSize" "xesam:url"
     "xesam:usageIntensity" "xesam:userComment" "xesam:userKeyword"
-    "xesam:uuid" "xesam:version" "xesam:verticalResolution" "xesam:videoBirate"
+    "xesam:uuid" "xesam:version" "xesam:verticalResolution"
+    "xesam:videoBitrate"
     "xesam:videoCodec" "xesam:videoCodecType" "xesam:whiteBalance"
     "xesam:width" "xesam:wordCount" "xesam:workEmailAddress"
     "xesam:workPhoneNumber" "xesam:workPostalAddress"
@@ -278,8 +279,8 @@ fields are supported.")
 
 (defun xesam-dbus-call-method (&rest args)
   "Apply a D-Bus method call.
-`dbus-call-method' is to be preferred, because it is more
-performant.  If the target D-Bus service is owned by Emacs, this
+`dbus-call-method' is preferred, because it performs better.
+If the target D-Bus service is owned by Emacs, this
 is not applicable, and `dbus-call-method-non-blocking' must be
 used instead.  ARGS are identical to the argument list of both
 functions."
@@ -409,23 +410,23 @@ If there is no registered search engine at all, the function returns `nil'."
 	(setq vendor-id (xesam-get-property engine "vendor.id")
 	      hit-fields (xesam-get-property engine "hit.fields"))
 
-	;; Ususally, `hit.fields' shall describe supported fields.
+	;; Usually, `hit.fields' shall describe supported fields.
 	;; That is not the case now, so we set it ourselves.
 	;; Hopefully, this will change later.
 	(setq hit-fields
 	      (case (intern vendor-id)
-		('Beagle
+		(Beagle
 		 '("xesam:mimeType" "xesam:url"))
-		('Strigi
+		(Strigi
 		 '("xesam:author" "xesam:cc" "xesam:charset"
 		   "xesam:contentType" "xesam:fileExtension"
 		   "xesam:id" "xesam:lineCount" "xesam:links"
 		   "xesam:mimeType" "xesam:name" "xesam:size"
 		   "xesam:sourceModified" "xesam:subject" "xesam:to"
 		   "xesam:url"))
-		('TrackerXesamSession
+		(TrackerXesamSession
 		 '("xesam:relevancyRating" "xesam:url"))
-		('Debbugs
+		(Debbugs
 		 '("xesam:keyword" "xesam:owner" "xesam:title"
 		   "xesam:url" "xesam:sourceModified" "xesam:mimeType"
 		   "debbugs:key"))
@@ -446,7 +447,12 @@ If there is no registered search engine at all, the function returns `nil'."
 
 ;;; Search buffers.
 
-(define-derived-mode xesam-mode nil "Xesam"
+(defvar xesam-mode-map
+  (let ((map (copy-keymap special-mode-map)))
+    (set-keymap-parent xesam-mode-map widget-keymap)
+    map))
+
+(define-derived-mode xesam-mode special-mode "Xesam"
   "Major mode for presenting search results of a Xesam search.
 In this mode, widgets represent the search results.
 
@@ -455,12 +461,6 @@ Turning on Xesam mode runs the normal hook `xesam-mode-hook'.  It
 can be used to set `xesam-notify-function', which must a search
 engine specific, widget :notify function to visualize xesam:url."
   (set (make-local-variable 'xesam-notify-function) nil)
-
-  ;; Keymap.
-  (setq xesam-mode-map (copy-keymap special-mode-map))
-  (set-keymap-parent xesam-mode-map widget-keymap)
-  (define-key xesam-mode-map "z" 'kill-this-buffer)
-
   ;; Maybe we implement something useful, later on.
   (set (make-local-variable 'revert-buffer-function) 'ignore)
   ;; `xesam-engine', `xesam-search', `xesam-type', `xesam-query', and
@@ -517,9 +517,9 @@ engine specific, widget :notify function to visualize xesam:url."
 
 (define-minor-mode xesam-minor-mode
   "Toggle Xesam minor mode.
-With no argument, this command toggles the mode.
-Non-null prefix argument turns on the mode.
-Null prefix argument turns off the mode.
+With a prefix argument ARG, enable Xesam minor mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
 
 When Xesam minor mode is enabled, all text which matches a
 previous Xesam query in this buffer is highlighted."
@@ -820,7 +820,7 @@ search, is returned."
     (with-current-buffer
 	(generate-new-buffer (xesam-buffer-name service search))
       (switch-to-buffer-other-window (current-buffer))
-      ;; Inialize buffer with `xesam-mode'.  `xesam-vendor' must be
+      ;; Initialize buffer with `xesam-mode'.  `xesam-vendor' must be
       ;; set before calling `xesam-mode', because we want to give the
       ;; hook functions a chance to identify their search engine.
       (setq xesam-vendor (xesam-get-cached-property engine "vendor.id"))
@@ -918,5 +918,4 @@ Example:
 ;;     yahoo, ebay, ...
 ;;   - Construct complex queries via widgets, like in mairix.el.
 
-;; arch-tag: 7fb9fc6c-c2ff-4bc7-bb42-bacb80cce2b2
 ;;; xesam.el ends here

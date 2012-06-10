@@ -1,10 +1,11 @@
 ;;;; testcover-unsafep.el -- Use testcover to test unsafep's code coverage
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2002-2012 Free Software Foundation, Inc.
 
 ;; Author: Jonathan Yavner <jyavner@engineer.com>
 ;; Maintainer: Jonathan Yavner <jyavner@engineer.com>
 ;; Keywords: safety lisp utility
+;; Package: testcover
 
 ;; This file is part of GNU Emacs.
 
@@ -28,13 +29,13 @@
 ;;;These forms are all considered safe
 (defconst testcover-unsafep-safe
   '(((lambda (x) (* x 2)) 14)
-    (apply 'cdr (mapcar '(lambda (x) (car x)) y))
+    (apply 'cdr (mapcar (lambda (x) (car x)) y))
     (cond ((= x 4) 5) (t 27))
     (condition-case x (car y) (error (car x)))
     (dolist (x y) (message "here: %s" x))
     (dotimes (x 14 (* x 2)) (message "here: %d" x))
     (let (x) (dolist (y '(1 2 3) (1+ y)) (push y x)))
-    (let (x) (apply '(lambda (x) (* x 2)) 14))
+    (let (x) (apply (lambda (x) (* x 2)) 14))
     (let ((x '(2))) (push 1 x) (pop x) (add-to-list 'x 2))
     (let ((x 1) (y 2)) (setq x (+ x y)))
     (let ((x 1)) (let ((y (+ x 3))) (* x y)))
@@ -89,7 +90,7 @@
       . (function kill-buffer))
     ( (mapcar x y)
       . (unquoted x))
-    ( (mapcar '(lambda (x) (rename-file x "x")) '("unsafep.el"))
+    ( (mapcar (lambda (x) (rename-file x "x")) '("unsafep.el"))
       . (function rename-file))
     ( (mapconcat x1 x2 " ")
       . (unquoted x1))
@@ -99,7 +100,7 @@
       . (risky-local-variable format-alist))
     ( (setq buffer-display-count (delete-file "x"))
       . (function delete-file))
-    ;;These are actualy safe (they signal errors)
+    ;;These are actually safe (they signal errors)
     ( (apply '(x) '(1 2 3))
       . (function (x)))
     ( (let (((x))) 1)
@@ -137,5 +138,4 @@
   (testcover-end "unsafep.el")
   (message "Done"))
 
-;; arch-tag: a7616c27-1998-47ae-9304-76d1439dbf29
 ;; testcover-unsafep.el ends here.

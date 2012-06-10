@@ -1,7 +1,7 @@
 ;;; time-stamp.el --- Maintain last change time stamps in files edited by Emacs
 
-;; Copyright (C) 1989, 1993, 1994, 1995, 1997, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1989, 1993-1995, 1997, 2000-2012
+;;   Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -424,10 +424,10 @@ format the string."
 	  (let ((ts-real-time-zone (getenv "TZ")))
 	    (unwind-protect
 		(progn
-		  (set-time-zone-rule time-stamp-time-zone)
+		  (setenv "TZ" time-stamp-time-zone)
 		  (format-time-string
 		   (time-stamp-string-preprocess ts-format)))
-	      (set-time-zone-rule ts-real-time-zone)))
+	      (setenv "TZ" ts-real-time-zone)))
 	(format-time-string
 	 (time-stamp-string-preprocess ts-format)))
     ;; handle version 1 compatibility
@@ -470,7 +470,7 @@ and all `time-stamp-format' compatibility."
 	(result "")
 	field-width
 	field-result
-	alt-form change-case require-padding
+	alt-form change-case
 	(paren-level 0))
     (while (< ind fmt-len)
       (setq cur-char (aref format ind))
@@ -480,7 +480,7 @@ and all `time-stamp-format' compatibility."
       (cond
        ((eq cur-char ?%)
 	;; eat any additional args to allow for future expansion
-	(setq alt-form nil change-case nil require-padding nil field-width "")
+	(setq alt-form nil change-case nil field-width "")
 	(while (progn
 		 (setq ind (1+ ind))
 		 (setq cur-char (if (< ind fmt-len)
@@ -706,5 +706,4 @@ around literals."
 
 (provide 'time-stamp)
 
-;; arch-tag: 8a12c5c3-25d6-4a71-adc5-24b0e025a1e7
 ;;; time-stamp.el ends here

@@ -1,9 +1,9 @@
 ;;; hmac-def.el --- A macro for defining HMAC functions.
 
-;; Copyright (C) 1999, 2001, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1999, 2001, 2007-2012  Free Software Foundation, Inc.
 
 ;; Author: Shuhei KOBAYASHI <shuhei@aqua.ocn.ne.jp>
-;; Keywords: HMAC, RFC-2104
+;; Keywords: HMAC, RFC2104
 
 ;; This file is part of GNU Emacs.
 
@@ -22,7 +22,7 @@
 
 ;;; Commentary:
 
-;; This program is implemented from RFC 2104,
+;; This program is implemented from RFC2104,
 ;; "HMAC: Keyed-Hashing for Message Authentication".
 
 ;;; Code:
@@ -80,5 +80,4 @@ If BIT is non-nil, truncate output to specified bits."
 
 (provide 'hmac-def)
 
-;; arch-tag: 645adcef-b835-4900-a10a-11f636c982b9
 ;;; hmac-def.el ends here

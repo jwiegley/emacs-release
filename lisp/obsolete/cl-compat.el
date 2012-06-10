@@ -1,7 +1,6 @@
 ;;; cl-compat.el --- Common Lisp extensions for GNU Emacs Lisp (compatibility)
 
-;; Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1993, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Dave Gillespie <daveg@synaptics.com>
 ;; Version: 2.02
@@ -73,11 +72,6 @@
 ;;; by capitalizing the first letter: Values, Multiple-value-*,
 ;;; to avoid conflict with the new-style definitions in cl-macs.
 
-(put 'Multiple-value-bind  'lisp-indent-function 2)
-(put 'Multiple-value-setq  'lisp-indent-function 2)
-(put 'Multiple-value-call  'lisp-indent-function 1)
-(put 'Multiple-value-prog1 'lisp-indent-function 1)
-
 (defvar *mvalues-values* nil)
 
 (defun Values (&rest val-forms)
@@ -93,18 +87,22 @@
 	     (list *mvalues-temp*))))
 
 (defmacro Multiple-value-call (function &rest args)
+  (declare (indent 1))
   (list 'apply function
 	(cons 'append
 	      (mapcar (function (lambda (x) (list 'Multiple-value-list x)))
 		      args))))
 
 (defmacro Multiple-value-bind (vars form &rest body)
+  (declare (indent 2))
   (list* 'multiple-value-bind vars (list 'Multiple-value-list form) body))
 
 (defmacro Multiple-value-setq (vars form)
+  (declare (indent 2))
   (list 'multiple-value-setq vars (list 'Multiple-value-list form)))
 
 (defmacro Multiple-value-prog1 (form &rest body)
+  (declare (indent 1))
   (list 'prog1 form (list* 'let '((*mvalues-values* nil)) body)))
 
 

@@ -1,7 +1,6 @@
 ;;; double.el --- support for keyboard remapping with double clicking
 
-;; Copyright (C) 1994, 1997, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1994, 1997-1998, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Keywords: i18n
@@ -147,12 +146,13 @@ but not `C-u X' or `ESC X' since the X is not the prefix key."
 
 ;;;###autoload
 (define-minor-mode double-mode
-  "Toggle Double mode.
-With prefix argument ARG, turn Double mode on if ARG is positive, otherwise
-turn it off.
+  "Toggle special insertion on double keypresses (Double mode).
+With a prefix argument ARG, enable Double mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
 
-When Double mode is on, some keys will insert different strings
-when pressed twice.  See variable `double-map' for details."
+When Double mode is enabled, some keys will insert different
+strings when pressed twice.  See `double-map' for details."
   :lighter " Double"
   :link '(emacs-commentary-link "double")
   (kill-local-variable 'key-translation-map)
@@ -169,5 +169,4 @@ when pressed twice.  See variable `double-map' for details."
 
 (provide 'double)
 
-;; arch-tag: 2e170036-44cb-4493-bc32-ada0a4395221
 ;;; double.el ends here

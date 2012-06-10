@@ -1,7 +1,6 @@
 ;;; ietf-drums.el --- Functions for parsing RFC822bis headers
 
-;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1998-2012 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; This file is part of GNU Emacs.
@@ -39,7 +38,6 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
-(require 'time-date)
 (require 'mm-util)
 
 (defvar ietf-drums-no-ws-ctl-token "\001-\010\013\014\016-\037\177"
@@ -296,5 +294,4 @@ a list of address strings."
 
 (provide 'ietf-drums)
 
-;; arch-tag: 379a0191-dbae-4ca6-a0f5-d4202c209ef9
 ;;; ietf-drums.el ends here

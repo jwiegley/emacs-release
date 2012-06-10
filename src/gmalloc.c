@@ -37,45 +37,18 @@ Fifth Floor, Boston, MA 02110-1301, USA.
 #include <config.h>
 #endif
 
-#ifdef HAVE_GTK_AND_PTHREAD
+#ifdef HAVE_PTHREAD
 #define USE_PTHREAD
 #endif
 
-#if ((defined __cplusplus || (defined (__STDC__) && __STDC__) \
-      || defined STDC_HEADERS || defined PROTOTYPES) \
-     && ! defined (BROKEN_PROTOTYPES))
 #undef	PP
 #define	PP(args)	args
 #undef	__ptr_t
 #define	__ptr_t		void *
-#else /* Not C++ or ANSI C.  */
-#undef	PP
-#define	PP(args)	()
-#undef	__ptr_t
-#define	__ptr_t		char *
-#endif /* C++ or ANSI C.  */
 
-#if	defined(_LIBC) || defined(STDC_HEADERS) || defined(USG)
 #include <string.h>
-#else
-#ifndef memset
-#define	memset(s, zero, n)	bzero ((s), (n))
-#endif
-#ifndef memcpy
-#define	memcpy(d, s, n)		bcopy ((s), (d), (n))
-#endif
-#endif
-
-#ifdef HAVE_LIMITS_H
 #include <limits.h>
-#endif
-#ifndef CHAR_BIT
-#define	CHAR_BIT	8
-#endif
-
-#ifdef	HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 
 #ifdef USE_PTHREAD
 #include <pthread.h>
@@ -89,26 +62,9 @@ extern "C"
 {
 #endif
 
-#ifdef STDC_HEADERS
 #include <stddef.h>
 #define	__malloc_size_t		size_t
 #define	__malloc_ptrdiff_t	ptrdiff_t
-#else
-#ifdef __GNUC__
-#include <stddef.h>
-#ifdef __SIZE_TYPE__
-#define	__malloc_size_t		__SIZE_TYPE__
-#endif
-#endif
-#ifndef __malloc_size_t
-#define	__malloc_size_t		unsigned int
-#endif
-#define	__malloc_ptrdiff_t	int
-#endif
-
-#ifndef	NULL
-#define	NULL	0
-#endif
 
 
 /* Allocate SIZE bytes of memory.  */
@@ -122,7 +78,7 @@ extern __ptr_t calloc PP ((__malloc_size_t __nmemb, __malloc_size_t __size));
 extern void free PP ((__ptr_t __ptr));
 
 /* Allocate SIZE bytes allocated to ALIGNMENT bytes.  */
-#if ! (defined (_MALLOC_INTERNAL) && __DJGPP__ - 0 == 1) /* Avoid conflict.  */
+#if !defined (_MALLOC_INTERNAL) || defined (MSDOS) /* Avoid conflict.  */
 extern __ptr_t memalign PP ((__malloc_size_t __alignment,
 			     __malloc_size_t __size));
 extern int posix_memalign PP ((__ptr_t *, __malloc_size_t,
@@ -146,7 +102,7 @@ extern void malloc_enable_thread PP ((void));
    receive a fragment of a block.  Fragment sizes are powers of two,
    and all fragments of a block are the same size.  When all the
    fragments in a block have been freed, the block itself is freed.  */
-#define INT_BIT		(CHAR_BIT * sizeof(int))
+#define INT_BIT		(CHAR_BIT * sizeof (int))
 #define BLOCKLOG	(INT_BIT > 16 ? 12 : 9)
 #define BLOCKSIZE	(1 << BLOCKLOG)
 #define BLOCKIFY(SIZE)	(((SIZE) + BLOCKSIZE - 1) / BLOCKSIZE)
@@ -395,10 +351,21 @@ Fifth Floor, Boston, MA 02110-1301, USA.
 #endif
 #include <errno.h>
 
-/* How to really get more memory.  */
-#if defined(CYGWIN)
+/* On Cygwin there are two heaps.  temacs uses the static heap
+   (defined in sheap.c and managed with bss_sbrk), and the dumped
+   emacs uses the Cygwin heap (managed with sbrk).  When emacs starts
+   on Cygwin, it reinitializes malloc, and we save the old info for
+   use by free and realloc if they're called with a pointer into the
+   static heap.
+
+   Currently (2011-08-16) the Cygwin build doesn't use ralloc.c; if
+   this is changed in the future, we'll have to similarly deal with
+   reinitializing ralloc. */
+#ifdef CYGWIN
 extern __ptr_t bss_sbrk PP ((ptrdiff_t __size));
 extern int bss_sbrk_did_unexec;
+char *bss_sbrk_heapbase;	/* _heapbase for static heap */
+malloc_info *bss_sbrk_heapinfo;	/* _heapinfo for static heap */
 #endif
 __ptr_t (*__morecore) PP ((__malloc_ptrdiff_t __size)) = __default_morecore;
 
@@ -478,7 +445,7 @@ protect_malloc_state (protect_p)
     }
 }
 
-#define PROTECT_MALLOC_STATE(PROT) protect_malloc_state(PROT)
+#define PROTECT_MALLOC_STATE(PROT) protect_malloc_state (PROT)
 
 #else
 #define PROTECT_MALLOC_STATE(PROT)	/* empty */
@@ -555,12 +522,8 @@ get_contiguous_space (size, position)
 /* This is called when `_heapinfo' and `heapsize' have just
    been set to describe a new info table.  Set up the table
    to describe itself and account for it in the statistics.  */
-static void register_heapinfo PP ((void));
-#ifdef __GNUC__
-__inline__
-#endif
-static void
-register_heapinfo ()
+static inline void
+register_heapinfo (void)
 {
   __malloc_size_t block, blocks;
 
@@ -630,6 +593,16 @@ malloc_initialize_1 ()
 {
 #ifdef GC_MCHECK
   mcheck (NULL);
+#endif
+
+#ifdef CYGWIN
+  if (bss_sbrk_did_unexec)
+    /* we're reinitializing the dumped emacs */
+    {
+      bss_sbrk_heapbase = _heapbase;
+      bss_sbrk_heapinfo = _heapinfo;
+      memset (_fraghead, 0, BLOCKLOG * sizeof (struct list));
+    }
 #endif
 
   if (__malloc_initialize_hook)
@@ -1076,20 +1049,6 @@ Fifth Floor, Boston, MA 02110-1301, USA.
 #endif
 
 
-/* Cope with systems lacking `memmove'.    */
-#ifndef memmove
-#if  (!defined(_LIBC) && !defined(STDC_HEADERS) && !defined(USG))
-#ifdef emacs
-#undef	__malloc_safe_bcopy
-#define __malloc_safe_bcopy safe_bcopy
-#endif
-/* This function is defined in realloc.c.  */
-extern void __malloc_safe_bcopy PP ((__ptr_t, __ptr_t, __malloc_size_t));
-#define memmove(to, from, size)	__malloc_safe_bcopy ((from), (to), (size))
-#endif
-#endif
-
-
 /* Debugging hook for free.  */
 void (*__free_hook) PP ((__ptr_t __ptr));
 
@@ -1115,6 +1074,12 @@ _free_internal_nolock (ptr)
 
   if (ptr == NULL)
     return;
+
+#ifdef CYGWIN
+  if (ptr < _heapbase)
+    /* We're being asked to free something in the static heap. */
+    return;
+#endif
 
   PROTECT_MALLOC_STATE (0);
 
@@ -1409,86 +1374,32 @@ Fifth Floor, Boston, MA 02110-1301, USA.
 #endif
 
 
+#define min(A, B) ((A) < (B) ? (A) : (B))
 
-/* Cope with systems lacking `memmove'.    */
-#if  (!defined(_LIBC) && !defined(STDC_HEADERS) && !defined(USG))
-
-#ifdef emacs
-#undef	__malloc_safe_bcopy
-#define __malloc_safe_bcopy safe_bcopy
-#else
-
-/* Snarfed directly from Emacs src/dispnew.c:
-   XXX Should use system bcopy if it handles overlap.  */
-
-/* Like bcopy except never gets confused by overlap.  */
-
-void
-__malloc_safe_bcopy (afrom, ato, size)
-     __ptr_t afrom;
-     __ptr_t ato;
+/* On Cygwin the dumped emacs may try to realloc storage allocated in
+   the static heap.  We just malloc space in the new heap and copy the
+   data.  */
+#ifdef CYGWIN
+__ptr_t
+special_realloc (ptr, size)
+     __ptr_t ptr;
      __malloc_size_t size;
 {
-  char *from = afrom, *to = ato;
+  __ptr_t result;
+  int type;
+  __malloc_size_t block, oldsize;
 
-  if (size <= 0 || from == to)
-    return;
-
-  /* If the source and destination don't overlap, then bcopy can
-     handle it.  If they do overlap, but the destination is lower in
-     memory than the source, we'll assume bcopy can handle that.  */
-  if (to < from || from + size <= to)
-    bcopy (from, to, size);
-
-  /* Otherwise, we'll copy from the end.  */
-  else
-    {
-      register char *endf = from + size;
-      register char *endt = to + size;
-
-      /* If TO - FROM is large, then we should break the copy into
-	 nonoverlapping chunks of TO - FROM bytes each.  However, if
-	 TO - FROM is small, then the bcopy function call overhead
-	 makes this not worth it.  The crossover point could be about
-	 anywhere.  Since I don't think the obvious copy loop is too
-	 bad, I'm trying to err in its favor.  */
-      if (to - from < 64)
-	{
-	  do
-	    *--endt = *--endf;
-	  while (endf != from);
-	}
-      else
-	{
-	  for (;;)
-	    {
-	      endt -= (to - from);
-	      endf -= (to - from);
-
-	      if (endt < to)
-		break;
-
-	      bcopy (endf, endt, to - from);
-	    }
-
-	  /* If SIZE wasn't a multiple of TO - FROM, there will be a
-	     little left over.  The amount left over is
-	     (endt + (to - from)) - to, which is endt - from.  */
-	  bcopy (from, to, endt - from);
-	}
-    }
+  block = ((char *) ptr - bss_sbrk_heapbase) / BLOCKSIZE + 1;
+  type = bss_sbrk_heapinfo[block].busy.type;
+  oldsize =
+    type == 0 ? bss_sbrk_heapinfo[block].busy.info.size * BLOCKSIZE
+    : (__malloc_size_t) 1 << type;
+  result = _malloc_internal_nolock (size);
+  if (result != NULL)
+    memcpy (result, ptr, min (oldsize, size));
+  return result;
 }
-#endif /* emacs */
-
-#ifndef memmove
-extern void __malloc_safe_bcopy PP ((__ptr_t, __ptr_t, __malloc_size_t));
-#define memmove(to, from, size) __malloc_safe_bcopy ((from), (to), (size))
 #endif
-
-#endif
-
-
-#define min(A, B) ((A) < (B) ? (A) : (B))
 
 /* Debugging hook for realloc.  */
 __ptr_t (*__realloc_hook) PP ((__ptr_t __ptr, __malloc_size_t __size));
@@ -1515,6 +1426,12 @@ _realloc_internal_nolock (ptr, size)
     }
   else if (ptr == NULL)
     return _malloc_internal_nolock (size);
+
+#ifdef CYGWIN
+  if (ptr < _heapbase)
+    /* ptr points into the static heap */
+    return special_realloc (ptr, size);
+#endif
 
   block = BLOCK (ptr);
 
@@ -1624,7 +1541,7 @@ _realloc_internal (ptr, size)
 {
   __ptr_t result;
 
-  LOCK();
+  LOCK ();
   result = _realloc_internal_nolock (ptr, size);
   UNLOCK ();
 
@@ -1708,7 +1625,7 @@ MA 02110-1301, USA.  */
 
 /* uClibc defines __GNU_LIBRARY__, but it is not completely
    compatible.  */
-#if !defined(__GNU_LIBRARY__) || defined(__UCLIBC__)
+#if !defined (__GNU_LIBRARY__) || defined (__UCLIBC__)
 #define	__sbrk	sbrk
 #else /* __GNU_LIBRARY__ && ! defined (__UCLIBC__) */
 /* It is best not to declare this and cast its result on foreign operating
@@ -1730,7 +1647,7 @@ __default_morecore (increment)
      __malloc_ptrdiff_t increment;
 {
   __ptr_t result;
-#if defined(CYGWIN)
+#if defined (CYGWIN)
   if (!bss_sbrk_did_unexec)
     {
       return bss_sbrk (increment);
@@ -1762,13 +1679,6 @@ Fifth Floor, Boston, MA 02110-1301, USA.  */
 #define _MALLOC_INTERNAL
 #include <malloc.h>
 #endif
-
-#if __DJGPP__ - 0 == 1
-
-/* There is some problem with memalign in DJGPP v1 and we are supposed
-   to omit it.  Noone told me why, they just told me to do it.  */
-
-#else
 
 __ptr_t (*__memalign_hook) PP ((__malloc_size_t __size,
 				__malloc_size_t __alignment));
@@ -1878,7 +1788,6 @@ posix_memalign (memptr, alignment, size)
   return 0;
 }
 
-#endif /* Not DJGPP v1 */
 /* Allocate memory on a page boundary.
    Copyright (C) 1991, 92, 93, 94, 96 Free Software Foundation, Inc.
 
@@ -1921,7 +1830,7 @@ extern size_t __getpagesize PP ((void));
 #endif
 #else
 #include "getpagesize.h"
-#define	 __getpagesize()	getpagesize()
+#define	 __getpagesize()	getpagesize ()
 #endif
 
 #ifndef	_MALLOC_INTERNAL
@@ -1978,12 +1887,12 @@ Fifth Floor, Boston, MA 02110-1301, USA.
 #endif
 
 /* Old hook values.  */
-static void (*old_free_hook) __P ((__ptr_t ptr));
-static __ptr_t (*old_malloc_hook) __P ((__malloc_size_t size));
-static __ptr_t (*old_realloc_hook) __P ((__ptr_t ptr, __malloc_size_t size));
+static void (*old_free_hook) (__ptr_t ptr);
+static __ptr_t (*old_malloc_hook) (__malloc_size_t size);
+static __ptr_t (*old_realloc_hook) (__ptr_t ptr, __malloc_size_t size);
 
 /* Function to call when something awful happens.  */
-static void (*abortfunc) __P ((enum mcheck_status));
+static void (*abortfunc) (enum mcheck_status);
 
 /* Arbitrary magical numbers.  */
 #define MAGICWORD	0xfedabeeb
@@ -1998,23 +1907,7 @@ struct hdr
     unsigned long int magic;	/* Magic number to check header integrity.  */
   };
 
-#if	defined(_LIBC) || defined(STDC_HEADERS) || defined(USG)
-#define flood memset
-#else
-static void flood __P ((__ptr_t, int, __malloc_size_t));
-static void
-flood (ptr, val, size)
-     __ptr_t ptr;
-     int val;
-     __malloc_size_t size;
-{
-  char *cp = ptr;
-  while (size--)
-    *cp++ = val;
-}
-#endif
-
-static enum mcheck_status checkhdr __P ((const struct hdr *));
+static enum mcheck_status checkhdr (const struct hdr *);
 static enum mcheck_status
 checkhdr (hdr)
      const struct hdr *hdr;
@@ -2040,7 +1933,7 @@ checkhdr (hdr)
   return status;
 }
 
-static void freehook __P ((__ptr_t));
+static void freehook (__ptr_t);
 static void
 freehook (ptr)
      __ptr_t ptr;
@@ -2052,7 +1945,7 @@ freehook (ptr)
       hdr = ((struct hdr *) ptr) - 1;
       checkhdr (hdr);
       hdr->magic = MAGICFREE;
-      flood (ptr, FREEFLOOD, hdr->size);
+      memset (ptr, FREEFLOOD, hdr->size);
     }
   else
     hdr = NULL;
@@ -2062,7 +1955,7 @@ freehook (ptr)
   __free_hook = freehook;
 }
 
-static __ptr_t mallochook __P ((__malloc_size_t));
+static __ptr_t mallochook (__malloc_size_t);
 static __ptr_t
 mallochook (size)
      __malloc_size_t size;
@@ -2078,11 +1971,11 @@ mallochook (size)
   hdr->size = size;
   hdr->magic = MAGICWORD;
   ((char *) &hdr[1])[size] = MAGICBYTE;
-  flood ((__ptr_t) (hdr + 1), MALLOCFLOOD, size);
+  memset ((__ptr_t) (hdr + 1), MALLOCFLOOD, size);
   return (__ptr_t) (hdr + 1);
 }
 
-static __ptr_t reallochook __P ((__ptr_t, __malloc_size_t));
+static __ptr_t reallochook (__ptr_t, __malloc_size_t);
 static __ptr_t
 reallochook (ptr, size)
      __ptr_t ptr;
@@ -2098,7 +1991,7 @@ reallochook (ptr, size)
 
       checkhdr (hdr);
       if (size < osize)
-	flood ((char *) ptr + size, FREEFLOOD, osize - size);
+	memset ((char *) ptr + size, FREEFLOOD, osize - size);
     }
 
   __free_hook = old_free_hook;
@@ -2115,7 +2008,7 @@ reallochook (ptr, size)
   hdr->magic = MAGICWORD;
   ((char *) &hdr[1])[size] = MAGICBYTE;
   if (size > osize)
-    flood ((char *) (hdr + 1) + osize, MALLOCFLOOD, size - osize);
+    memset ((char *) (hdr + 1) + osize, MALLOCFLOOD, size - osize);
   return (__ptr_t) (hdr + 1);
 }
 
@@ -2155,7 +2048,7 @@ static int mcheck_used = 0;
 
 int
 mcheck (func)
-     void (*func) __P ((enum mcheck_status));
+     void (*func) (enum mcheck_status);
 {
   abortfunc = (func != NULL) ? func : &mabort;
 
@@ -2181,6 +2074,3 @@ mprobe (__ptr_t ptr)
 }
 
 #endif /* GC_MCHECK */
-
-/* arch-tag: 93dce5c0-f49a-41b5-86b1-f91c4169c02e
-   (do not change this comment) */

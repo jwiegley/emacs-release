@@ -1,8 +1,7 @@
 This is ../../info/dbus, produced by makeinfo version 4.13 from
 dbus.texi.
 
-Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software
-Foundation, Inc.
+Copyright (C) 2007-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -32,8 +31,7 @@ message bus system, a simple way for applications to talk to one
 another.  An overview of D-Bus can be found at
 `http://dbus.freedesktop.org/'.
 
-   Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software
-Foundation, Inc.
+   Copyright (C) 2007-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -56,7 +54,10 @@ Foundation, Inc.
 * Asynchronous Methods::        Calling methods non-blocking.
 * Receiving Method Calls::      Offering own methods.
 * Signals::                     Sending and receiving signals.
+* Alternative Buses::           Alternative buses.
 * Errors and Events::           Errors and events.
+* Index::                       Index including concepts, functions, variables.
+
 * GNU Free Documentation License:: The license for this documentation.
 
 
@@ -134,14 +135,22 @@ There are several basic functions which inspect the buses for
 registered names.  Internally they use the basic interface
 `org.freedesktop.DBus', which is supported by all objects of a bus.
 
- -- Function: dbus-list-activatable-names
+ -- Function: dbus-list-activatable-names &optional bus
      This function returns the D-Bus service names, which can be
-     activated.  An activatable service is described in a service
-     registration file.  Under GNU/Linux, such files are located at
-     `/usr/share/dbus-1/services/'.
+     activated for BUS.  It must be either the symbol `:system' (the
+     default) or the symbol `:session'.  An activatable service is
+     described in a service registration file.  Under GNU/Linux, such
+     files are located at `/usr/share/dbus-1/system-services/' (for the
+     `:system' bus) or `/usr/share/dbus-1/services/'.  An activatable
+     service is not necessarily registered at BUS at already.
 
      The result is a list of strings, which is `nil' when there are no
-     activatable service names at all.
+     activatable service names at all.  Example:
+
+          ;; Check, whether the document viewer can be accessed via D-Bus.
+          (member "org.gnome.evince.Daemon"
+                  (dbus-list-activatable-names :session))
+
 
  -- Function: dbus-list-names bus
      All service names, which are registered at D-Bus BUS, are
@@ -153,10 +162,10 @@ registered names.  Internally they use the basic interface
      BUS must be either the symbol `:system' or the symbol `:session'.
 
  -- Function: dbus-list-known-names bus
-     Retrieves all services which correspond to a known name in BUS.  A
-     service has a known name if it doesn't start with `:'.  The result
-     is a list of strings, which is `nil' when there are no known names
-     at all.
+     Retrieves all registered services which correspond to a known name
+     in BUS.  A service has a known name if it doesn't start with `:'.
+     The result is a list of strings, which is `nil' when there are no
+     known names at all.
 
      BUS must be either the symbol `:system' or the symbol `:session'.
 
@@ -293,7 +302,7 @@ Example:
    `annotation' elements can be children of `interface', `method',
 `signal', and `property' elements.  Unlike properties, which can change
 their values during lifetime of a D-Bus object, annotations are static.
-Often they are used for code generators of D-Bus langugae bindings.
+Often they are used for code generators of D-Bus language bindings.
 Example:
 
      <annotation name="de.berlios.Pinot.GetStatistics" value="pinotDBus"/>
@@ -383,7 +392,7 @@ strings.
 
           => "/org/freedesktop/SystemToolsBackends/UsersConfig"
 
-     If OBJECT has no ATTRIBUTE, the function returns nil.
+     If OBJECT has no ATTRIBUTE, the function returns `nil'.
 
    ---------- Footnotes ----------
 
@@ -497,7 +506,7 @@ File: dbus,  Node: Methods and Signal,  Next: Properties and Annotations,  Prev:
 2.4 Applying the functionality.
 ===============================
 
-Methods and signals are the communicatione means to D-Bus.  The
+Methods and signals are the communication means to D-Bus.  The
 following functions return their specifications.
 
  -- Function: dbus-introspect-get-method-names bus service path
@@ -618,7 +627,7 @@ the interface for a given language binding.
  -- Function: dbus-get-property bus service path interface property
      This function returns the value of PROPERTY of INTERFACE.  It will
      be checked at BUS, SERVICE, PATH.  The result can be any valid
-     D-Bus value, or nil if there is no PROPERTY.  Example:
+     D-Bus value, or `nil' if there is no PROPERTY.  Example:
 
           (dbus-get-property
             :session "org.kde.kded" "/modules/networkstatus"
@@ -797,14 +806,14 @@ Input parameters for D-Bus methods and signals occur as arguments of a
 Lisp function call.  The following mapping to D-Bus types is applied,
 when the corresponding D-Bus message is created:
 
-     Lisp type             D-Bus type
+     Lisp type                D-Bus type
 
-     `t' and `nil'   ==>   DBUS_TYPE_BOOLEAN
-     number          ==>   DBUS_TYPE_UINT32
-     integer         ==>   DBUS_TYPE_INT32
-     float           ==>   DBUS_TYPE_DOUBLE
-     string          ==>   DBUS_TYPE_STRING
-     list            ==>   DBUS_TYPE_ARRAY
+     `t' and `nil'      ==>   DBUS_TYPE_BOOLEAN
+     natural number     ==>   DBUS_TYPE_UINT32
+     negative integer   ==>   DBUS_TYPE_INT32
+     float              ==>   DBUS_TYPE_DOUBLE
+     string             ==>   DBUS_TYPE_STRING
+     list               ==>   DBUS_TYPE_ARRAY
 
    Other Lisp objects, like symbols or hash tables, are not accepted as
 input parameters.
@@ -813,19 +822,19 @@ input parameters.
 symbol can be prepended to the corresponding Lisp object.  Basic D-Bus
 types are represented by the type symbols `:byte', `:boolean',
 `:int16', `:uint16', `:int32', `:uint32', `:int64', `:uint64',
-`:double', `:string', `:object-path' and `:signature'.
+`:double', `:string', `:object-path', `:signature' and `:unix-fd'.
 
 Example:
 
-     (dbus-call-method ... NUMBER STRING)
+     (dbus-call-method ... NAT-NUMBER STRING)
 
    is equivalent to
 
-     (dbus-call-method ... :uint32 NUMBER :string STRING)
+     (dbus-call-method ... :uint32 NAT-NUMBER :string STRING)
 
    but different to
 
-     (dbus-call-method ... :int32 NUMBER :signature STRING)
+     (dbus-call-method ... :int32 NAT-NUMBER :signature STRING)
 
    The value for a byte D-Bus type can be any integer in the range 0
 through 255.  If a character is used as argument, modifiers represented
@@ -909,13 +918,14 @@ objects.
      D-Bus type                    Lisp type
 
      DBUS_TYPE_BOOLEAN       ==>   `t' or `nil'
-     DBUS_TYPE_BYTE          ==>   number
-     DBUS_TYPE_UINT16        ==>   number
-     DBUS_TYPE_INT16         ==>   number
-     DBUS_TYPE_UINT32        ==>   number or float
-     DBUS_TYPE_INT32         ==>   number or float
-     DBUS_TYPE_UINT64        ==>   number or float
-     DBUS_TYPE_INT64         ==>   number or float
+     DBUS_TYPE_BYTE          ==>   natural number
+     DBUS_TYPE_UINT16        ==>   natural number
+     DBUS_TYPE_INT16         ==>   integer
+     DBUS_TYPE_UINT32        ==>   natural number or float
+     DBUS_TYPE_UNIX_FD       ==>   natural number or float
+     DBUS_TYPE_INT32         ==>   integer or float
+     DBUS_TYPE_UINT64        ==>   natural number or float
+     DBUS_TYPE_INT64         ==>   integer or float
      DBUS_TYPE_DOUBLE        ==>   float
      DBUS_TYPE_STRING        ==>   string
      DBUS_TYPE_OBJECT_PATH   ==>   string
@@ -926,8 +936,8 @@ objects.
      DBUS_TYPE_DICT_ENTRY    ==>   list
 
    A float object in case of `DBUS_TYPE_UINT32', `DBUS_TYPE_INT32',
-`DBUS_TYPE_UINT64' and `DBUS_TYPE_INT6432' is returned, when the C
-value exceeds the Emacs number size range.
+`DBUS_TYPE_UINT64', `DBUS_TYPE_INT64' and `DBUS_TYPE_UNIX_FD' is
+returned, when the C value exceeds the Emacs number size range.
 
    The resulting list of the last 4 D-Bus compound types contains as
 elements the elements of the D-Bus container, mapped according to the
@@ -937,7 +947,7 @@ same rules.
 Inspection::, would offer as Lisp data the following object (BOOL
 stands here for either `nil' or `t'):
 
-     (NUMBER ((STRING BOOL BOOL) (STRING BOOL BOOL) ...))
+     (INTEGER ((STRING BOOL BOOL) (STRING BOOL BOOL) ...))
 
  -- Function: dbus-byte-array-to-string byte-array
      If a D-Bus method or signal returns an array of bytes, which are
@@ -1117,9 +1127,63 @@ File: dbus,  Node: Receiving Method Calls,  Next: Signals,  Prev: Asynchronous M
 6 Offering own methods.
 ***********************
 
-Emacs can also offer own methods, which can be called by other
-applications.  These methods could be an implementation of an interface
-of a well known service, like `org.freedesktop.TextEditor'.
+In order to register methods on the D-Bus, Emacs has to request a well
+known name on the D-Bus under which it will be available for other
+clients.  Names on the D-Bus can be registered and unregistered using
+the following functions:
+
+ -- Function: dbus-register-service bus service &rest flags
+     Register the known name SERVICE on D-Bus BUS.
+
+     BUS is either the symbol `:system' or the symbol `:session'.
+
+     SERVICE is the service name to be registered on the D-Bus.  It
+     must be a known name.
+
+     FLAGS is a subset of the following keywords:
+
+        * `:allow-replacement': Allow another service to become the
+          primary owner if requested.
+
+        * `:replace-existing': Request to replace the current primary
+          owner.
+
+        * `:do-not-queue': If we can not become the primary owner do not
+          place us in the queue.
+
+     One of the following keywords is returned:
+
+        * `:primary-owner': We have become the primary owner of the name
+          SERVICE.
+
+        * `:in-queue': We could not become the primary owner and have
+          been placed in the queue.
+
+        * `:exists': We already are in the queue.
+
+        * `:already-owner': We already are the primary owner.
+
+ -- Function: dbus-unregister-service bus service
+     Unregister all objects from D-Bus BUS, registered by Emacs for
+     SERVICE.
+
+     BUS is either the symbol `:system' or the symbol `:session'.
+
+     SERVICE is the D-Bus service name of the D-Bus.  It must be a
+     known name.  Emacs releases its association to SERVICE from D-Bus.
+
+     One of the following keywords is returned:
+
+        * `:released': We successfully released the name SERVICE.
+
+        * `:non-existent': The name SERVICE does not exist on the bus.
+
+        * `:not-owner': We are not an owner of the name SERVICE.
+
+   When a name has been chosen, Emacs can offer own methods, which can
+be called by other applications.  These methods could be an
+implementation of an interface of a well known service, like
+`org.freedesktop.TextEditor'.
 
    It could be also an implementation of an own interface.  In this
 case, the service name must be `org.gnu.Emacs'.  The object path shall
@@ -1136,16 +1200,18 @@ the application which provides the interface.
      string.
 
  -- Function: dbus-register-method bus service path interface method
-          handler
+          handler dont-register-service
      With this function, an application registers METHOD on the D-Bus
      BUS.
 
      BUS is either the symbol `:system' or the symbol `:session'.
 
      SERVICE is the D-Bus service name of the D-Bus object METHOD is
-     registered for.  It must be a known name.
+     registered for.  It must be a known name (See discussion of
+     DONT-REGISTER-SERVICE below).
 
-     PATH is the D-Bus object path SERVICE is registered.
+     PATH is the D-Bus object path SERVICE is registered (See
+     discussion of DONT-REGISTER-SERVICE below).
 
      INTERFACE is the interface offered by SERVICE.  It must provide
      METHOD.
@@ -1162,6 +1228,13 @@ the application which provides the interface.
 
      In case HANDLER shall return a reply message with an empty
      argument list, HANDLER must return the symbol `:ignore'.
+
+     When DONT-REGISTER-SERVICE is non-`nil', the known name SERVICE is
+     not registered.  This means that other D-Bus clients have no way
+     of noticing the newly registered method.  When interfaces are
+     constructed incrementally by adding single methods or properties
+     at a time, DONT-REGISTER-SERVICE can be used to prevent other
+     clients from discovering the still incomplete interface.
 
      The default D-Bus timeout when waiting for a message reply is 25
      seconds.  This value could be even smaller, depending on the
@@ -1229,7 +1302,8 @@ the application which provides the interface.
              Wrong argument list: ("/etc/hosts" "/etc/passwd")
 
  -- Function: dbus-register-property bus service path interface
-          property access value
+          property access value &optional emits-signal
+          dont-register-service
      With this function, an application declares a PROPERTY on the D-Bus
      BUS.
 
@@ -1238,7 +1312,8 @@ the application which provides the interface.
      SERVICE is the D-Bus service name of the D-Bus.  It must be a
      known name.
 
-     PATH is the D-Bus object path SERVICE is registered.
+     PATH is the D-Bus object path SERVICE is registered (See
+     discussion of DONT-REGISTER-SERVICE below).
 
      INTERFACE is the name of the interface used at PATH, PROPERTY is
      the name of the property of INTERFACE.
@@ -1255,7 +1330,18 @@ the application which provides the interface.
 
      The interface `org.freedesktop.DBus.Properties' is added to PATH,
      including a default handler for the `Get', `GetAll' and `Set'
-     methods of this interface.  Example:
+     methods of this interface.  When EMITS-SIGNAL is non-`nil', the
+     signal `PropertiesChanged' is sent when the property is changed by
+     `dbus-set-property'.
+
+     When DONT-REGISTER-SERVICE is non-`nil', the known name SERVICE is
+     not registered.  This means that other D-Bus clients have no way
+     of noticing the newly registered method.  When interfaces are
+     constructed incrementally by adding single methods or properties
+     at a time, DONT-REGISTER-SERVICE can be used to prevent other
+     clients from discovering the still incomplete interface.
+
+     Example:
 
           (dbus-register-property
             :session "org.freedesktop.TextEditor" "/org/freedesktop/TextEditor"
@@ -1266,7 +1352,7 @@ the application which provides the interface.
 
           (dbus-register-property
             :session "org.freedesktop.TextEditor" "/org/freedesktop/TextEditor"
-            "org.freedesktop.TextEditor" "version" :readwrite emacs-version)
+            "org.freedesktop.TextEditor" "version" :readwrite emacs-version t)
 
           => ((:session "org.freedesktop.TextEditor" "version")
               ("org.freedesktop.TextEditor" "/org/freedesktop/TextEditor"))
@@ -1320,17 +1406,8 @@ the application which provides the interface.
      registered for the respective service, Emacs releases its
      association to the service from D-Bus.
 
- -- Function: dbus-unregister-service bus service
-     Unregister all objects from D-Bus BUS, registered by Emacs for
-     SERVICE.
-
-     BUS is either the symbol `:system' or the symbol `:session'.
-
-     SERVICE is the D-Bus service name of the D-Bus.  It must be a
-     known name.  Emacs releases its association to SERVICE from D-Bus.
-
 
-File: dbus,  Node: Signals,  Next: Errors and Events,  Prev: Receiving Method Calls,  Up: Top
+File: dbus,  Node: Signals,  Next: Alternative Buses,  Prev: Receiving Method Calls,  Up: Top
 
 7 Sending and receiving signals.
 ********************************
@@ -1370,10 +1447,10 @@ received by all objects which have registered for such a signal.
 
      SERVICE is the D-Bus service name used by the sending D-Bus
      object.  It can be either a known name or the unique name of the
-     D-Bus object sending the signal.  In case of a unique name,
-     signals won't be received any longer once the object owning this
-     unique name has disappeared, and a new queued object has replaced
-     it.
+     D-Bus object sending the signal.  A known name will be mapped onto
+     the unique name of the object, owning SERVICE at registration time.
+     When the corresponding D-Bus object disappears, signals won't be
+     received any longer.
 
      When SERVICE is `nil', related signals from all D-Bus objects
      shall be accepted.
@@ -1421,15 +1498,67 @@ received by all objects which have registered for such a signal.
      which objects the GNU/Linux `hal' daemon adds.
 
 
-File: dbus,  Node: Errors and Events,  Next: GNU Free Documentation License,  Prev: Signals,  Up: Top
+File: dbus,  Node: Alternative Buses,  Next: Errors and Events,  Prev: Signals,  Up: Top
 
-8 Errors and events.
+8 Alternative buses.
 ********************
 
-Input parameters of `dbus-call-method', `dbus-call-method-non-blocking',
-`dbus-call-method-asynchronously', and `dbus-register-signal' are
-checked for correct D-Bus types. If there is a type mismatch, the Lisp
-error `wrong-type-argument' `D-Bus ARG' is raised.
+Until now, we have spoken about the system and the session buses, which
+are the default buses to be connected to.  However, it is possible to
+connect to any bus, from which the address is known.  This is a UNIX
+domain socket.  Everywhere, where a BUS is mentioned as argument of a
+function (the symbol `:system' or the symbol `:session'), this address
+can be used instead.  The connection to this bus must be initialized
+first.
+
+ -- Function: dbus-init-bus bus
+     Establish the connection to D-Bus BUS.
+
+     BUS can be either the symbol `:system' or the symbol `:session',
+     or it can be a string denoting the address of the corresponding
+     bus.  For the system and session buses, this function is called
+     when loading `dbus.el', there is no need to call it again.
+
+     Example: You open another session bus in a terminal window on your
+     host:
+
+          # eval `dbus-launch --auto-syntax`
+          # echo $DBUS_SESSION_BUS_ADDRESS
+
+          -| unix:abstract=/tmp/dbus-JoFtAVG92w,guid=2f320a1ebe50b7ef58e
+
+     In Emacs, you can access to this bus via its address:
+
+          (setq my-bus
+                "unix:abstract=/tmp/dbus-JoFtAVG92w,guid=2f320a1ebe50b7ef58e")
+
+          => "unix:abstract=/tmp/dbus-JoFtAVG92w,guid=2f320a1ebe50b7ef58e"
+
+          (dbus-init-bus my-bus)
+
+          => nil
+
+          (dbus-get-unique-name my-bus)
+
+          => ":1.0"
+
+
+File: dbus,  Node: Errors and Events,  Next: Index,  Prev: Alternative Buses,  Up: Top
+
+9 Errors and events.
+********************
+
+The internal actions can be traced by running in a debug mode.
+
+ -- Variable: dbus-debug
+     If this variable is non-`nil', D-Bus specific debug messages are
+     raised.
+
+   Input parameters of `dbus-call-method',
+`dbus-call-method-non-blocking', `dbus-call-method-asynchronously', and
+`dbus-register-signal' are checked for correct D-Bus types. If there is
+a type mismatch, the Lisp error `wrong-type-argument' `D-Bus ARG' is
+raised.
 
    All errors raised by D-Bus are signaled with the error symbol
 `dbus-error'.  If possible, error messages from D-Bus are appended to
@@ -1438,7 +1567,7 @@ the `dbus-error'.
  -- Special Form: dbus-ignore-errors forms...
      This executes FORMS exactly like a `progn', except that
      `dbus-error' errors are ignored during the FORMS.  These errors
-     can be made visible when variable `dbus-debug' is set to `t'.
+     can be made visible when `dbus-debug' is set to `t'.
 
    Incoming D-Bus messages are handled as Emacs events, see *note Misc
 Events: (elisp)Misc Events.  They are retrieved only, when Emacs runs in
@@ -1479,11 +1608,11 @@ callback function in order to retrieve the information from the event.
 
  -- Function: dbus-event-message-type event
      Returns the message type of the corresponding D-Bus message.  The
-     result is a number.
+     result is a natural number.
 
  -- Function: dbus-event-serial-number event
      Returns the serial number of the corresponding D-Bus message.  The
-     result is a number.
+     result is a natural number.
 
  -- Function: dbus-event-service-name event
      Returns the unique name of the D-Bus object EVENT is coming from.
@@ -1507,8 +1636,8 @@ a hook function.
  -- Variable: dbus-event-error-hooks
      This hook variable keeps a list of functions, which are called
      when a D-Bus error happens in the event handler.  Every function
-     must accept two arguments, the event and the error variable
-     catched in `condition-case' by `dbus-error'.
+     must accept two arguments, the event and the error variable caught
+     in `condition-case' by `dbus-error'.
 
      Such functions can be used the adapt the error signal to be raised.
      Example:
@@ -1526,7 +1655,113 @@ D-Bus applications running.  Therefore, they shall check carefully,
 whether a given D-Bus error is related to them.
 
 
-File: dbus,  Node: GNU Free Documentation License,  Prev: Errors and Events,  Up: Top
+File: dbus,  Node: Index,  Next: GNU Free Documentation License,  Prev: Errors and Events,  Up: Top
+
+Index
+*****
+
+ [index ]
+* Menu:
+
+* asynchronous method calls:             Asynchronous Methods.
+                                                              (line   6)
+* bus names:                             Alternative Buses.   (line   6)
+* dbus-byte-array-to-string:             Type Conversion.     (line 166)
+* dbus-call-method:                      Synchronous Methods. (line  16)
+* dbus-call-method-asynchronously:       Asynchronous Methods.
+                                                              (line   8)
+* dbus-call-method-non-blocking:         Synchronous Methods. (line  97)
+* dbus-debug:                            Errors and Events.   (line   9)
+* dbus-escape-as-identifier:             Type Conversion.     (line 111)
+* dbus-event-bus-name:                   Errors and Events.   (line  61)
+* dbus-event-error-hooks:                Errors and Events.   (line  92)
+* dbus-event-interface-name:             Errors and Events.   (line  79)
+* dbus-event-member-name:                Errors and Events.   (line  83)
+* dbus-event-message-type:               Errors and Events.   (line  65)
+* dbus-event-path-name:                  Errors and Events.   (line  76)
+* dbus-event-serial-number:              Errors and Events.   (line  69)
+* dbus-event-service-name:               Errors and Events.   (line  73)
+* dbus-get-all-properties:               Properties and Annotations.
+                                                              (line  76)
+* dbus-get-name-owner:                   Bus names.           (line  54)
+* dbus-get-property:                     Properties and Annotations.
+                                                              (line  53)
+* dbus-get-unique-name:                  Bus names.           (line  85)
+* dbus-ignore-errors:                    Errors and Events.   (line  23)
+* dbus-init-bus:                         Alternative Buses.   (line  15)
+* dbus-introspect:                       Introspection.       (line  96)
+* dbus-introspect-get-all-nodes:         Nodes and Interfaces.
+                                                              (line  24)
+* dbus-introspect-get-annotation:        Properties and Annotations.
+                                                              (line 118)
+* dbus-introspect-get-annotation-names:  Properties and Annotations.
+                                                              (line  93)
+* dbus-introspect-get-argument:          Arguments and Signatures.
+                                                              (line  26)
+* dbus-introspect-get-argument-names:    Arguments and Signatures.
+                                                              (line  11)
+* dbus-introspect-get-attribute:         Introspection.       (line 165)
+* dbus-introspect-get-interface:         Nodes and Interfaces.
+                                                              (line  57)
+* dbus-introspect-get-interface-names:   Nodes and Interfaces.
+                                                              (line  39)
+* dbus-introspect-get-method:            Methods and Signal.  (line  25)
+* dbus-introspect-get-method-names:      Methods and Signal.  (line  11)
+* dbus-introspect-get-node-names:        Nodes and Interfaces.
+                                                              (line  10)
+* dbus-introspect-get-property:          Properties and Annotations.
+                                                              (line  30)
+* dbus-introspect-get-property-names:    Properties and Annotations.
+                                                              (line  16)
+* dbus-introspect-get-signal:            Methods and Signal.  (line  57)
+* dbus-introspect-get-signal-names:      Methods and Signal.  (line  44)
+* dbus-introspect-get-signature:         Arguments and Signatures.
+                                                              (line  38)
+* dbus-introspect-xml:                   Introspection.       (line 139)
+* dbus-list-activatable-names:           Bus names.           (line  11)
+* dbus-list-known-names:                 Bus names.           (line  37)
+* dbus-list-names:                       Bus names.           (line  28)
+* dbus-list-queued-owners:               Bus names.           (line  45)
+* dbus-path-emacs:                       Receiving Method Calls.
+                                                              (line  74)
+* dbus-ping:                             Bus names.           (line  63)
+* dbus-register-method:                  Receiving Method Calls.
+                                                              (line  80)
+* dbus-register-property:                Receiving Method Calls.
+                                                              (line 183)
+* dbus-register-service:                 Receiving Method Calls.
+                                                              (line  12)
+* dbus-register-signal:                  Signals.             (line  34)
+* dbus-send-signal:                      Signals.             (line  11)
+* dbus-service-emacs:                    Receiving Method Calls.
+                                                              (line  71)
+* dbus-set-property:                     Properties and Annotations.
+                                                              (line  65)
+* dbus-string-to-byte-array:             Type Conversion.     (line 101)
+* dbus-unescape-from-identifier:         Type Conversion.     (line 175)
+* dbus-unregister-object:                Receiving Method Calls.
+                                                              (line 276)
+* dbus-unregister-service:               Receiving Method Calls.
+                                                              (line  43)
+* debugging:                             Errors and Events.   (line   6)
+* errors:                                Errors and Events.   (line   6)
+* events:                                Errors and Events.   (line   6)
+* inspection:                            Inspection.          (line   6)
+* method calls, asynchronous:            Asynchronous Methods.
+                                                              (line   6)
+* method calls, returning:               Receiving Method Calls.
+                                                              (line   6)
+* method calls, synchronous:             Synchronous Methods. (line   6)
+* overview:                              Overview.            (line   6)
+* returning method calls:                Receiving Method Calls.
+                                                              (line   6)
+* signals:                               Signals.             (line   6)
+* synchronous method calls:              Synchronous Methods. (line   6)
+* type conversion:                       Type Conversion.     (line   6)
+* UNIX domain socket:                    Alternative Buses.   (line   6)
+
+
+File: dbus,  Node: GNU Free Documentation License,  Prev: Index,  Up: Top
 
 Appendix A GNU Free Documentation License
 *****************************************
@@ -2014,25 +2249,27 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top943
-Node: Overview2581
-Node: Inspection4927
-Node: Bus names5464
-Node: Introspection8816
-Ref: Introspection-Footnote-116438
-Ref: Introspection-Footnote-216591
-Node: Nodes and Interfaces16743
-Node: Methods and Signal21006
-Node: Properties and Annotations23993
-Ref: Properties and Annotations-Footnote-129724
-Ref: Properties and Annotations-Footnote-229825
-Node: Arguments and Signatures29916
-Node: Type Conversion32089
-Node: Synchronous Methods38974
-Node: Asynchronous Methods43786
-Node: Receiving Method Calls45583
-Node: Signals54428
-Node: Errors and Events58194
-Node: GNU Free Documentation License62588
+Node: Top918
+Node: Overview2663
+Node: Inspection5009
+Node: Bus names5546
+Node: Introspection9351
+Ref: Introspection-Footnote-116975
+Ref: Introspection-Footnote-217128
+Node: Nodes and Interfaces17280
+Node: Methods and Signal21543
+Node: Properties and Annotations24529
+Ref: Properties and Annotations-Footnote-130262
+Ref: Properties and Annotations-Footnote-230363
+Node: Arguments and Signatures30454
+Node: Type Conversion32627
+Node: Synchronous Methods39671
+Node: Asynchronous Methods44483
+Node: Receiving Method Calls46280
+Node: Signals57827
+Node: Alternative Buses61619
+Node: Errors and Events63133
+Node: Index67694
+Node: GNU Free Documentation License74652
 
 End Tag Table

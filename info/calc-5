@@ -3,8 +3,7 @@ calc.texi.
 
 This file documents Calc, the GNU Emacs calculator.
 
-Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+Copyright (C) 1990-1991, 2001-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -23,6 +22,181 @@ INFO-DIR-SECTION Emacs misc features
 START-INFO-DIR-ENTRY
 * Calc: (calc).                 Advanced desk calculator and mathematical tool.
 END-INFO-DIR-ENTRY
+
+
+File: calc,  Node: Internals,  Prev: Calling Calc from Your Programs,  Up: Lisp Definitions
+
+19.5.7 Calculator Internals
+---------------------------
+
+This section describes the Lisp functions defined by the Calculator that
+may be of use to user-written Calculator programs (as described in the
+rest of this chapter).  These functions are shown by their names as they
+conventionally appear in `defmath'.  Their full Lisp names are
+generally gotten by prepending `calcFunc-' or `math-' to their apparent
+names.  (Names that begin with `calc-' are already in their full Lisp
+form.)  You can use the actual full names instead if you prefer them,
+or if you are calling these functions from regular Lisp.
+
+   The functions described here are scattered throughout the various
+Calc component files.  Note that `calc.el' includes `autoload's for
+only a few component files; when Calc wants to call an advanced
+function it calls `(calc-extensions)' first; this function autoloads
+`calc-ext.el', which in turn autoloads all the functions in the
+remaining component files.
+
+   Because `defmath' itself uses the extensions, user-written code
+generally always executes with the extensions already loaded, so
+normally you can use any Calc function and be confident that it will be
+autoloaded for you when necessary.  If you are doing something special,
+check carefully to make sure each function you are using is from
+`calc.el' or its components, and call `(calc-extensions)' before using
+any function based in `calc-ext.el' if you can't prove this file will
+already be loaded.
+
+* Menu:
+
+* Data Type Formats::
+* Interactive Lisp Functions::
+* Stack Lisp Functions::
+* Predicates::
+* Computational Lisp Functions::
+* Vector Lisp Functions::
+* Symbolic Lisp Functions::
+* Formatting Lisp Functions::
+* Hooks::
+
+
+File: calc,  Node: Data Type Formats,  Next: Interactive Lisp Functions,  Prev: Internals,  Up: Internals
+
+19.5.7.1 Data Type Formats
+..........................
+
+Integers are stored in either of two ways, depending on their magnitude.
+Integers less than one million in absolute value are stored as standard
+Lisp integers.  This is the only storage format for Calc data objects
+which is not a Lisp list.
+
+   Large integers are stored as lists of the form `(bigpos D0 D1 D2
+...)' for positive integers 1000000 or more, or `(bigneg D0 D1 D2 ...)'
+for negative integers -1000000 or less.  Each D is a base-1000 "digit,"
+a Lisp integer from 0 to 999.  The least significant digit is D0; the
+last digit, DN, which is always nonzero, is the most significant digit.
+For example, the integer -12345678 is stored as `(bigneg 678 345 12)'.
+
+   The distinction between small and large integers is entirely hidden
+from the user.  In `defmath' definitions, the Lisp predicate `integerp'
+returns true for either kind of integer, and in general both big and
+small integers are accepted anywhere the word "integer" is used in this
+manual.  If the distinction must be made, native Lisp integers are
+called "fixnums" and large integers are called "bignums".
+
+   Fractions are stored as a list of the form, `(frac N D)' where N is
+an integer (big or small) numerator, D is an integer denominator
+greater than one, and N and D are relatively prime.  Note that
+fractions where D is one are automatically converted to plain integers
+by all math routines; fractions where D is negative are normalized by
+negating the numerator and denominator.
+
+   Floating-point numbers are stored in the form, `(float MANT EXP)',
+where MANT (the "mantissa") is an integer less than `10^P' in absolute
+value (P represents the current precision), and EXP (the "exponent") is
+a fixnum.  The value of the float is `MANT * 10^EXP'.  For example, the
+number -3.14 is stored as `(float -314 -2) = -314*10^-2'.  Other
+constraints are that the number 0.0 is always stored as `(float 0 0)',
+and, except for the 0.0 case, the rightmost base-10 digit of MANT is
+always nonzero.  (If the rightmost digit is zero, the number is
+rearranged by dividing MANT by ten and incrementing EXP.)
+
+   Rectangular complex numbers are stored in the form `(cplx RE IM)',
+where RE and IM are each real numbers, either integers, fractions, or
+floats.  The value is `RE + IMi'.  The IM part is nonzero; complex
+numbers with zero imaginary components are converted to real numbers
+automatically.
+
+   Polar complex numbers are stored in the form `(polar R THETA)',
+where R is a positive real value and THETA is a real value or HMS form
+representing an angle.  This angle is usually normalized to lie in the
+interval `(-180 .. 180)' degrees, or `(-pi .. pi)' radians, according
+to the current angular mode.  If the angle is 0 the value is converted
+to a real number automatically.  (If the angle is 180 degrees, the
+value is usually also converted to a negative real number.)
+
+   Hours-minutes-seconds forms are stored as `(hms H M S)', where H is
+an integer or an integer-valued float (i.e., a float with `EXP >= 0'),
+M is an integer or integer-valued float in the range `[0 .. 60)', and S
+is any real number in the range `[0 .. 60)'.
+
+   Date forms are stored as `(date N)', where N is a real number that
+counts days since midnight on the morning of January 1, 1 AD.  If N is
+an integer, this is a pure date form.  If N is a fraction or float,
+this is a date/time form.
+
+   Modulo forms are stored as `(mod N M)', where M is a positive real
+number or HMS form, and N is a real number or HMS form in the range `[0
+.. M)'.
+
+   Error forms are stored as `(sdev X SIGMA)', where X is the mean
+value and SIGMA is the standard deviation.  Each component is either a
+number, an HMS form, or a symbolic object (a variable or function
+call).  If SIGMA is zero, the value is converted to a plain real
+number.  If SIGMA is negative or complex, it is automatically
+normalized to be a positive real.
+
+   Interval forms are stored as `(intv MASK LO HI)', where MASK is one
+of the integers 0, 1, 2, or 3, and LO and HI are real numbers, HMS
+forms, or symbolic objects.  The MASK is a binary integer where 1
+represents the fact that the interval is closed on the high end, and 2
+represents the fact that it is closed on the low end.  (Thus 3
+represents a fully closed interval.)  The interval `(intv 3 X X)' is
+converted to the plain number X; intervals `(intv MASK X X)' for any
+other MASK represent empty intervals.  If HI is less than LO, the
+interval is converted to a standard empty interval by replacing HI with
+LO.
+
+   Vectors are stored as `(vec V1 V2 ...)', where V1 is the first
+element of the vector, V2 is the second, and so on.  An empty vector is
+stored as `(vec)'.  A matrix is simply a vector where all V's are
+themselves vectors of equal lengths.  Note that Calc vectors are
+unrelated to the Emacs Lisp "vector" type, which is generally unused by
+Calc data structures.
+
+   Variables are stored as `(var NAME SYM)', where NAME is a Lisp
+symbol whose print name is used as the visible name of the variable,
+and SYM is a Lisp symbol in which the variable's value is actually
+stored.  Thus, `(var pi var-pi)' represents the special constant `pi'.
+Almost always, the form is `(var V var-V)'.  If the variable name was
+entered with `#' signs (which are converted to hyphens internally), the
+form is `(var U V)', where U is a symbol whose name contains `#'
+characters, and V is a symbol that contains `-' characters instead.
+The value of a variable is the Calc object stored in its SYM symbol's
+value cell.  If the symbol's value cell is void or if it contains
+`nil', the variable has no value.  Special constants have the form
+`(special-const VALUE)' stored in their value cell, where VALUE is a
+formula which is evaluated when the constant's value is requested.
+Variables which represent units are not stored in any special way; they
+are units only because their names appear in the units table.  If the
+value cell contains a string, it is parsed to get the variable's value
+when the variable is used.
+
+   A Lisp list with any other symbol as the first element is a function
+call.  The symbols `+', `-', `*', `/', `%', `^', and `|' represent
+special binary operators; these lists are always of the form `(OP LHS
+RHS)' where LHS is the sub-formula on the lefthand side and RHS is the
+sub-formula on the right.  The symbol `neg' represents unary negation;
+this list is always of the form `(neg ARG)'.  Any other symbol FUNC
+represents a function that would be displayed in function-call
+notation; the symbol FUNC is in general always of the form
+`calcFunc-NAME'.  The function cell of the symbol FUNC should contain a
+Lisp function for evaluating a call to FUNC.  This function is passed
+the remaining elements of the list (themselves already evaluated) as
+arguments; such functions should return `nil' or call `reject-arg' to
+signify that they should be left in symbolic form, or they should
+return a Calc object which represents their value, or a list of such
+objects if they wish to return multiple values.  (The latter case is
+allowed only for functions which are the outer-level call in an
+expression whose value is about to be pushed on the stack; this feature
+is considered obsolete and is not used by any built-in Calc functions.)
 
 
 File: calc,  Node: Interactive Lisp Functions,  Next: Stack Lisp Functions,  Prev: Data Type Formats,  Up: Internals
@@ -1146,7 +1320,7 @@ Calculator.
      functions for which no derivative formula is known, new derivative
      functions are invented by adding primes to the names; *note
      Calculus::.  However, if SYMB is non-`nil', the presence of
-     undifferentiable functions in EXPR instead cancels the whole
+     nondifferentiable functions in EXPR instead cancels the whole
      differentiation, and `deriv' returns `nil' instead.
 
      Derivatives of an N-argument function can be defined by adding a
@@ -2881,7 +3055,7 @@ cases the last character of the prefix can simply be typed twice.
 
    Calc is controlled by many variables, most of which can be reset
 from within Calc.  Some variables are less involved with actual
-calculation, and can be set outside of Calc using Emacs's customization
+calculation and can be set outside of Calc using Emacs'ss customization
 facilities.  These variables are listed below.  Typing `M-x
 customize-variable RET VARIABLE-NAME RET' will bring up a buffer in
 which the variable's value can be redefined.  Typing `M-x
@@ -2903,7 +3077,9 @@ regular expressions work.
      `nil', then Calc will automatically load your settings file (if it
      exists) the first time Calc is invoked.
 
-     The default value for this variable is `"~/.calc.el"'.
+     The default value for this variable is `"~/.emacs.d/calc.el"'
+     unless the file `~/.calc.el' exists, in which case the default
+     value will be `"~/.calc.el"'.
 
  -- Variable: calc-gnuplot-name
      See *note Graphics::.
@@ -3134,6 +3310,40 @@ regular expressions work.
      should also be added to `calc-embedded-announce-formula-alist' and
      `calc-embedded-open-close-plain-alist'.
 
+ -- Variable: calc-lu-power-reference
+ -- Variable: calc-lu-field-reference
+     See *note Logarithmic Units::.
+     The variables `calc-lu-power-reference' and
+     `calc-lu-field-reference' are unit expressions (written as
+     strings) which Calc will use as reference quantities for
+     logarithmic units.
+
+     The default value of `calc-lu-power-reference' is `"mW"' and the
+     default value of `calc-lu-field-reference' is `"20 uPa"'.
+
+ -- Variable: calc-note-threshold
+     See *note Musical Notes::.
+     The variable `calc-note-threshold' is a number (written as a
+     string) which determines how close (in cents) a frequency needs to
+     be to a note to be recognized as that note.
+
+     The default value of `calc-note-threshold' is 1.
+
+ -- Variable: calc-highlight-selections-with-faces
+ -- Variable: calc-selected-face
+ -- Variable: calc-nonselected-face
+     See *note Displaying Selections::.
+     The variable `calc-highlight-selections-with-faces' determines how
+     selected sub-formulas are distinguished.  If
+     `calc-highlight-selections-with-faces' is nil, then a selected
+     sub-formula is distinguished either by changing every character
+     not part of the sub-formula with a dot or by changing every
+     character in the sub-formula with a `#' sign.  If
+     `calc-highlight-selections-with-faces' is t, then a selected
+     sub-formula is distinguished either by displaying the non-selected
+     portion of the formula with `calc-nonselected-face' or by
+     displaying the selected sub-formula with `calc-nonselected-face'.
+
  -- Variable: calc-multiplication-has-precedence
      The variable `calc-multiplication-has-precedence' determines
      whether multiplication has precedence over division in algebraic
@@ -3329,6 +3539,7 @@ keystrokes are not listed in this summary.  *Note Command Index::.
              M                          calc-more-recursion-depth
            I M                          calc-less-recursion-depth
       a      N                       5  evalvn(a)
+             O     command          32  Option
              P                          pi
            I P                          gamma
            H P                          e
@@ -3688,6 +3899,30 @@ v1 v2 x    I k F                        ltpf(x,v1,v2)
     m x    I k P                        ltpp(x,m)
     v x      k T                        utpt(x,v)
     v x    I k T                        ltpt(x,v)
+
+    a b      l +                        lupadd(a,b)
+    a b    H l +                        lufadd(a,b)
+    a b      l -                        lupsub(a,b)
+    a b    H l -                        lufsub(a,b)
+    a b      l *                        lupmul(a,b)
+    a b    H l *                        lufmul(a,b)
+    a b      l /                        lupdiv(a,b)
+    a b    H l /                        lufdiv(a,b)
+      a      l d                        dbpower(a)
+    a b    O l d                        dbpower(a,b)
+      a    H l d                        dbfield(a)
+    a b  O H l d                        dbfield(a,b)
+      a      l n                        nppower(a)
+    a b    O l n                        nppower(a,b)
+      a    H l n                        npfield(a)
+    a b  O H l n                        npfield(a,b)
+      a      l q                        lupquant(a)
+    a b    O l q                        lupquant(a,b)
+      a    H l q                        lufquant(a)
+    a b  O H l q                        lufquant(a,b)
+      a      l s                        spn(a)
+      a      l m                        midi(a)
+      a      l f                        freq(a)
 
              m a                 12,13  calc-algebraic-mode
              m d                        calc-degrees-mode
@@ -4687,13 +4922,13 @@ Index of Key Sequences
                                                               (line 143)
 * h v:                                   Help Commands.       (line  74)
 * H V e:                                 Manipulating Vectors.
-                                                              (line 125)
+                                                              (line 138)
 * H v e:                                 Manipulating Vectors.
-                                                              (line 125)
+                                                              (line 138)
 * H V H:                                 Manipulating Vectors.
-                                                              (line  89)
+                                                              (line 102)
 * H v H:                                 Manipulating Vectors.
-                                                              (line  89)
+                                                              (line 102)
 * H V h:                                 Building Vectors.    (line  98)
 * H v h:                                 Building Vectors.    (line  98)
 * H V k:                                 Building Vectors.    (line  98)
@@ -4819,11 +5054,11 @@ Index of Key Sequences
 * j ?:                                   Help Commands.       (line   6)
 * j `:                                   Operating on Selections.
                                                               (line  53)
-* j a:                                   Making Selections.   (line  66)
-* j b:                                   Making Selections.   (line  96)
+* j a:                                   Making Selections.   (line  70)
+* j b:                                   Making Selections.   (line 100)
 * j C:                                   Rearranging with Selections.
                                                               (line  74)
-* j c:                                   Making Selections.   (line 118)
+* j c:                                   Making Selections.   (line 122)
 * j D:                                   Rearranging with Selections.
                                                               (line  41)
 * j d:                                   Displaying Selections.
@@ -4843,18 +5078,18 @@ Index of Key Sequences
 * j N:                                   Rearranging with Selections.
                                                               (line  90)
 * j n:                                   Changing Selections. (line  49)
-* j O:                                   Making Selections.   (line  83)
-* j o:                                   Making Selections.   (line  73)
+* j O:                                   Making Selections.   (line  87)
+* j o:                                   Making Selections.   (line  77)
 * j p:                                   Changing Selections. (line  49)
 * j r:                                   Selections with Rewrite Rules.
                                                               (line  12)
 * j R:                                   Rearranging with Selections.
                                                               (line   6)
-* j S:                                   Making Selections.   (line  83)
+* j S:                                   Making Selections.   (line  87)
 * j s:                                   Making Selections.   (line   6)
 * j U:                                   Rearranging with Selections.
                                                               (line 167)
-* j u:                                   Making Selections.   (line 113)
+* j u:                                   Making Selections.   (line 117)
 * j v:                                   Rearranging with Selections.
                                                               (line 173)
 * K:                                     Keep Arguments.      (line   6)
@@ -4902,6 +5137,16 @@ Index of Key Sequences
                                                               (line 118)
 * L:                                     Logarithmic Functions.
                                                               (line   6)
+* l *:                                   Logarithmic Units.   (line  71)
+* l +:                                   Logarithmic Units.   (line  71)
+* l -:                                   Logarithmic Units.   (line  71)
+* l /:                                   Logarithmic Units.   (line  71)
+* l d:                                   Logarithmic Units.   (line  63)
+* l f:                                   Musical Notes.       (line  34)
+* l m:                                   Musical Notes.       (line  30)
+* l n:                                   Logarithmic Units.   (line  63)
+* l q:                                   Logarithmic Units.   (line  53)
+* l s:                                   Musical Notes.       (line  26)
 * M:                                     Recursion Depth.     (line   6)
 * m (HMS forms):                         HMS Forms.           (line  13)
 * M (modulo forms):                      Modulo Forms.        (line  12)
@@ -4958,6 +5203,8 @@ Index of Key Sequences
 * M-x:                                   Basic Commands.      (line  23)
 * n:                                     Basic Arithmetic.    (line 161)
 * N:                                     Symbolic Mode.       (line  17)
+* O:                                     Inverse and Hyperbolic.
+                                                              (line  23)
 * o:                                     Stack Basics.        (line  30)
 * o (HMS forms):                         HMS Forms.           (line  13)
 * P:                                     Scientific Functions.
@@ -5079,9 +5326,9 @@ Index of Key Sequences
 * u 0-9:                                 User-Defined Units.  (line   9)
 * u ?:                                   Help Commands.       (line   6)
 * u a:                                   Basic Operations on Units.
-                                                              (line 138)
+                                                              (line 140)
 * u b:                                   Basic Operations on Units.
-                                                              (line 116)
+                                                              (line 125)
 * u c:                                   Basic Operations on Units.
                                                               (line  51)
 * u C:                                   Paired-Sample Statistics.
@@ -5097,18 +5344,18 @@ Index of Key Sequences
                                                               (line  48)
 * u p:                                   User-Defined Units.  (line  63)
 * u r:                                   Basic Operations on Units.
-                                                              (line 131)
+                                                              (line 133)
 * u s:                                   Basic Operations on Units.
                                                               (line  31)
 * u S:                                   Single-Variable Statistics.
                                                               (line 116)
 * u t:                                   Basic Operations on Units.
-                                                              (line 126)
+                                                              (line  60)
 * u u:                                   User-Defined Units.  (line  40)
 * u V:                                   The Units Table.     (line  27)
 * u v:                                   The Units Table.     (line   6)
 * u x:                                   Basic Operations on Units.
-                                                              (line 131)
+                                                              (line 133)
 * u X:                                   Single-Variable Statistics.
                                                               (line  48)
 * V #:                                   Set Operations.      (line  95)
@@ -5188,9 +5435,9 @@ Index of Key Sequences
 * V E:                                   Set Operations.      (line  84)
 * v E:                                   Set Operations.      (line  84)
 * V e:                                   Manipulating Vectors.
-                                                              (line 115)
+                                                              (line 128)
 * v e:                                   Manipulating Vectors.
-                                                              (line 115)
+                                                              (line 128)
 * V F:                                   Set Operations.      (line  75)
 * v F:                                   Set Operations.      (line  75)
 * V f:                                   Manipulating Vectors.
@@ -5234,9 +5481,9 @@ Index of Key Sequences
 * V M:                                   Mapping.             (line   6)
 * v M:                                   Mapping.             (line   6)
 * V m:                                   Manipulating Vectors.
-                                                              (line 107)
+                                                              (line 120)
 * v m:                                   Manipulating Vectors.
-                                                              (line 107)
+                                                              (line 120)
 * V N:                                   Vector and Matrix Arithmetic.
                                                               (line  31)
 * v N:                                   Vector and Matrix Arithmetic.
@@ -5272,9 +5519,9 @@ Index of Key Sequences
 * v T:                                   Vector and Matrix Arithmetic.
                                                               (line  63)
 * V t:                                   Manipulating Vectors.
-                                                              (line  96)
+                                                              (line 109)
 * v t:                                   Manipulating Vectors.
-                                                              (line  96)
+                                                              (line 109)
 * V U:                                   Reducing.            (line  21)
 * v U:                                   Reducing.            (line  21)
 * V u:                                   Packing and Unpacking.
@@ -5288,9 +5535,9 @@ Index of Key Sequences
 * V V:                                   Set Operations.      (line  42)
 * v V:                                   Set Operations.      (line  42)
 * V v:                                   Manipulating Vectors.
-                                                              (line 101)
+                                                              (line 114)
 * v v:                                   Manipulating Vectors.
-                                                              (line 101)
+                                                              (line 114)
 * V X:                                   Set Operations.      (line  65)
 * v X:                                   Set Operations.      (line  65)
 * V x:                                   Building Vectors.    (line  61)

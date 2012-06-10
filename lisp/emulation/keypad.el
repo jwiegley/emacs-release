@@ -1,7 +1,6 @@
 ;;; keypad.el --- simplified keypad bindings
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2002-2012 Free Software Foundation, Inc.
 
 ;; Author: Kim F. Storm <storm@cua.dk>
 ;; Keywords: keyboard convenience
@@ -28,7 +27,7 @@
 ;;
 ;; With the following setup, the keypad can be used for numeric data
 ;; entry when NumLock is off, and to give numeric prefix arguments to
-;; emacs commands, when NumLock on on.
+;; emacs commands, when NumLock is on.
 ;;
 ;;  keypad-setup         => Plain Numeric Keypad
 ;;  keypad-numlock-setup => Prefix numeric args
@@ -270,5 +269,4 @@ the decimal key on the keypad is mapped to DECIMAL instead of `.'"
 
       (setq i (1+ i)))))
 
-;; arch-tag: 0899d2bd-9e12-4b4e-9aef-d0014d3b6414
 ;;; keypad.el ends here

@@ -1,7 +1,6 @@
 ;;; ffap.el --- find file (or url) at point
 
-;; Copyright (C) 1995, 1996, 1997, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1995-1997, 2000-2012  Free Software Foundation, Inc.
 
 ;; Author: Michelangelo Grigni <mic@mathcs.emory.edu>
 ;; Maintainer: FSF
@@ -524,7 +523,7 @@ The optional NOMODIFY argument suppresses the extra search."
   ;; (ffap-file-remote-p "/ffap.el:80")
   (or (and ffap-ftp-regexp
 	   (string-match ffap-ftp-regexp filename)
-	   ;; Convert "/host.com://dir" to "/host:/dir", to handle a dieing
+	   ;; Convert "/host.com://dir" to "/host:/dir", to handle a dying
 	   ;; practice of advertising ftp files as "host.dom://filename".
 	   (if (string-match "//" filename)
 	       ;; (replace-match "/" nil nil filename)
@@ -851,9 +850,24 @@ URL, or nil.  If nil, search the alist for further matches.")
   (and (not (string-match "\\.el\\'" name))
        (ffap-locate-file name '(".el") load-path)))
 
+;; FIXME this duplicates the logic of Man-header-file-path.
+;; There should be a single central variable or function for this.
+;; See also (bug#10702):
+;; cc-search-directories, semantic-c-dependency-system-include-path,
+;; semantic-gcc-setup
 (defvar ffap-c-path
-  ;; Need smarter defaults here!  Suggestions welcome.
-  '("/usr/include" "/usr/local/include"))
+  (let ((arch (with-temp-buffer
+                (when (eq 0 (ignore-errors
+                              (call-process "gcc" nil '(t nil) nil
+                                            "-print-multiarch")))
+                  (goto-char (point-min))
+                  (buffer-substring (point) (line-end-position)))))
+        (base '("/usr/include" "/usr/local/include")))
+    (if (zerop (length arch))
+        base
+      (append base (list (expand-file-name arch "/usr/include")))))
+  "List of directories to search for include files.")
+
 (defun ffap-c-mode (name)
   (ffap-locate-file name t ffap-c-path))
 
@@ -1960,5 +1974,4 @@ Of course if you do not like these bindings, just roll your own!")
 
 (provide 'ffap)
 
-;; arch-tag: 9dd3e88a-5dec-4607-bd57-60ae9ede8ebc
 ;;; ffap.el ends here

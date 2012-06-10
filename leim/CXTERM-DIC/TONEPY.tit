@@ -1,7 +1,8 @@
+# -*- coding: euc-china -*-
 # Header added for Emacs
 #
 # This file is included in the directory contrib/clients/cxterm of the
-# distribution of X11R6.  As the file itself does't contain copyright
+# distribution of X11R6.  As the file itself doesn't contain copyright
 # and license notices, the following statements in the section 6 of
 # the file .../cxterm/README covers it.
 #
@@ -2121,4 +2122,3 @@ zuo3	´é×ó×ô
 zuo4	Ôä×õ×ö×÷×ø×ùÚèßòâôëÑìñõ¡
 zuo5	
 
-# arch-tag: 6a2668ac-399a-4504-bb7a-5c641cb8e0ef

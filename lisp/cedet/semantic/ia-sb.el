@@ -1,7 +1,6 @@
 ;;; semantic/ia-sb.el --- Speedbar analysis display interactor
 
-;;; Copyright (C) 2002, 2003, 2004, 2006, 2008, 2009, 2010, 2011, 2012
-;;; Free Software Foundation, Inc.
+;;; Copyright (C) 2002-2004, 2006, 2008-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
@@ -37,7 +36,7 @@
     nil
   (setq semantic-ia-sb-key-map (speedbar-make-specialized-keymap))
 
-  ;; Basic featuers.
+  ;; Basic features.
   (define-key semantic-ia-sb-key-map "\C-m" 'speedbar-edit-line)
   (define-key semantic-ia-sb-key-map "I" 'semantic-ia-sb-show-tag-info)
   )
@@ -349,7 +348,7 @@ TEXT TAG and INDENT are the details."
 	  (insert (semantic-tag-name tag))
 	  (if movepoint (setq movepoint (point)))
 	  ;; I'd like to use this to add fancy () or what not at the end
-	  ;; but we need the parent file whih requires an upgrade to the
+	  ;; but we need the parent file which requires an upgrade to the
 	  ;; analysis tool.
 	  ;;(semantic-insert-foreign-tag tag ??))
 	  )
@@ -367,5 +366,4 @@ TEXT TAG and INDENT are the details."
 ;; generated-autoload-load-name: "semantic/ia-sb"
 ;; End:
 
-;; arch-tag: 4ab9f509-6978-415f-9938-9266edad9886
 ;;; semantic/ia-sb.el ends here

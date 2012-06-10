@@ -1,6 +1,6 @@
 /* Definitions file for GNU Emacs running on the GNU Hurd.
-   Copyright (C) 1994, 1995, 1996, 2001, 2002, 2003, 2004, 2005, 2006,
-                 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+
+Copyright (C) 1994-1996, 2001-2012  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -21,67 +21,30 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 /* Get most of the stuff from bsd-common */
 #include "bsd-common.h"
 
-/* For mem-limits.h.  */
-#define BSD4_2
-
 #undef SYSTEM_TYPE
 #define SYSTEM_TYPE "gnu"
 
 #undef NLIST_STRUCT
-#undef KERNEL_FILE
-#undef LDAV_SYMBOL
 
 #define SIGNALS_VIA_CHARACTERS
 
-#define HAVE_TERMIOS
-#define NO_TERMIO
-
-#define LIBS_DEBUG
-
-/* XXX emacs should not expect TAB3 to be defined.  */
-#define TABDLY OXTABS
-#define TAB3 OXTABS
-
-/* Tell Emacs that we are a terminfo based system; disable the use
-   of local termcap.  (GNU uses ncurses.) */
-#ifdef HAVE_LIBNCURSES
-#define TERMINFO
-#define LIBS_TERMCAP -lncurses
-#endif
-
-#define SYSV_SYSTEM_DIR
-
-/* GNU has POSIX-style pgrp behavior.  */
-#undef BSD_PGRPS
-
-/* Use mmap directly for allocating larger buffers.  */
-#ifdef DOUG_LEA_MALLOC
-#undef REL_ALLOC
-#endif
-
-/* GNU needs its own crt0, and libc defines data_start.  */
-#define ORDINARY_LINK
+/* libc defines data_start.  */
 #define DATA_START ({ extern int data_start; (char *) &data_start; })
-
-/* GNU now always uses the ELF format.  */
-#define UNEXEC unexelf.o
 
 /* Some losing code fails to include this and then assumes
    that because it is braindead that O_RDONLY==0.  */
-#ifndef NOT_C_CODE
 #include <fcntl.h>
-#endif
-
-#define NARROWPROTO 1
 
 #ifdef emacs
 #include <stdio.h>  /* Get the definition of _IO_STDIO_H.  */
-#if defined(_IO_STDIO_H) || defined(_STDIO_USES_IOSTREAM)
+#if defined (_IO_STDIO_H) || defined (_STDIO_USES_IOSTREAM)
 /* new C libio names */
 #define GNU_LIBRARY_PENDING_OUTPUT_COUNT(FILE) \
   ((FILE)->_IO_write_ptr - (FILE)->_IO_write_base)
 #endif /* !_IO_STDIO_H */
 #endif /* emacs */
 
-/* arch-tag: 577983d9-87a6-4922-b8f8-ff2b563714a4
-   (do not change this comment) */
+#define POSIX_SIGNALS 1
+
+/* Use the GC_MAKE_GCPROS_NOOPS (see lisp.h) method for marking the stack.  */
+#define GC_MARK_STACK 	GC_MAKE_GCPROS_NOOPS

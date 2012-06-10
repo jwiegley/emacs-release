@@ -1,11 +1,10 @@
 ;;; org-freemind.el --- Export Org files to freemind
 
-;; Copyright (C) 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2009-2012 Free Software Foundation, Inc.
 
 ;; Author: Lennart Borgman (lennart O borgman A gmail O com)
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.33x
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -61,30 +60,35 @@
 
 (require 'xml)
 (require 'org)
+;(require 'rx)
 (require 'org-exp)
 (eval-when-compile (require 'cl))
+
+(defgroup org-freemind nil
+  "Customization group for org-freemind export/import."
+  :group 'org)
 
 ;; Fix-me: I am not sure these are useful:
 ;;
 ;; (defcustom org-freemind-main-fgcolor "black"
 ;;   "Color of main node's text."
 ;;   :type 'color
-;;   :group 'freemind)
+;;   :group 'org-freemind)
 
 ;; (defcustom org-freemind-main-color "black"
 ;;   "Background color of main node."
 ;;   :type 'color
-;;   :group 'freemind)
+;;   :group 'org-freemind)
 
 ;; (defcustom org-freemind-child-fgcolor "black"
 ;;   "Color of child nodes' text."
 ;;   :type 'color
-;;   :group 'freemind)
+;;   :group 'org-freemind)
 
 ;; (defcustom org-freemind-child-color "black"
 ;;   "Background color of child nodes."
 ;;   :type 'color
-;;   :group 'freemind)
+;;   :group 'org-freemind)
 
 (defvar org-freemind-node-style nil "Internal use.")
 
@@ -131,11 +135,25 @@ NOT READY YET."
                                   (string :tag "Font name" :value "SansSerif"))
                             (list :format "%v" (const :format "" font-size)
                                   (integer :tag "Font size" :value 12)))))))
-  :group 'freemind)
+  :group 'org-freemind)
 
 ;;;###autoload
-(defun org-export-as-freemind (arg &optional hidden ext-plist
+(defun org-export-as-freemind (&optional hidden ext-plist
 				   to-buffer body-only pub-dir)
+  "Export the current buffer as a Freemind file.
+If there is an active region, export only the region.  HIDDEN is
+obsolete and does nothing.  EXT-PLIST is a property list with
+external parameters overriding org-mode's default settings, but
+still inferior to file-local settings.  When TO-BUFFER is
+non-nil, create a buffer with that name and export to that
+buffer.  If TO-BUFFER is the symbol `string', don't leave any
+buffer behind but just return the resulting HTML as a string.
+When BODY-ONLY is set, don't produce the file header and footer,
+simply return the content of the document (all top level
+sections).  When PUB-DIR is set, use this as the publishing
+directory.
+
+See `org-freemind-from-org-mode' for more information."
   (interactive "P")
   (let* ((opt-plist (org-combine-plists (org-default-export-plist)
 					ext-plist
@@ -182,7 +200,20 @@ NOT READY YET."
       (let ((name (read-file-name "FreeMind file: "
                                   nil nil nil
                                   (if (buffer-file-name)
-                                      (file-name-nondirectory (buffer-file-name))
+                                      (let* ((name-ext (file-name-nondirectory (buffer-file-name)))
+                                             (name (file-name-sans-extension name-ext))
+                                             (ext (file-name-extension name-ext)))
+                                        (cond
+                                         ((string= "mm" ext)
+                                          name-ext)
+                                         ((string= "org" ext)
+                                          (let ((name-mm (concat name ".mm")))
+                                            (if (file-exists-p name-mm)
+                                                name-mm
+                                              (message "Not exported to Freemind format yet")
+                                              "")))
+                                         (t
+                                          "")))
                                     "")
                                   ;; Fix-me: Is this an Emacs bug?
                                   ;; This predicate function is never
@@ -206,7 +237,7 @@ The characters \"&<> will be escaped."
     (dolist (cc chars)
       (setq fm-str
             (concat fm-str
-                    (if (< cc 256)
+                    (if (< cc 160)
                         (cond
                          ((= cc ?\") "&quot;")
                          ((= cc ?\&) "&amp;")
@@ -220,7 +251,7 @@ The characters \"&<> will be escaped."
                       ;; file is utf-8:
                       ;;
                       ;; (format "&#x%x;" (- cc ;; ?\x800))
-		      (format "&#x%x" (encode-char cc 'ucs))
+		      (format "&#x%x;" (encode-char cc 'ucs))
                       ))))
     fm-str))
 
@@ -244,52 +275,84 @@ will also unescape &#nn;."
                         )))
                   org-str))))
 
-;; (org-freemind-test-escape)
-(defun org-freemind-test-escape ()
-  (let* ((str1 "a quote: \", an amp: &, lt: <; over 256: öåäÖÅÄ")
-         (str2 (org-freemind-escape-str-from-org str1))
-         (str3 (org-freemind-unescape-str-to-org str2))
+;; (let* ((str1 "a quote: \", an amp: &, lt: <; over 256: öåäÖÅÄ")
+;;        (str2 (org-freemind-escape-str-from-org str1))
+;;        (str3 (org-freemind-unescape-str-to-org str2)))
+;;     (unless (string= str1 str3)
+;;       (error "Error str3=%s" str3)))
+
+(defun org-freemind-convert-links-helper (matched)
+  "Helper for `org-freemind-convert-links-from-org'.
+MATCHED is the link just matched."
+  (let* ((link (match-string 1 matched))
+         (text (match-string 2 matched))
+         (ext (file-name-extension link))
+         (col-pos (org-string-match-p ":" link))
+         (is-img (and (image-type-from-file-name link)
+                      (let ((url-type (substring link 0 col-pos)))
+                        (member url-type '("file" "http" "https")))))
         )
-    (unless (string= str1 str3)
-      (error "str3=%s" str3))
-    ))
+    (if is-img
+        ;; Fix-me: I can't find a way to get the border to "shrink
+        ;; wrap" around the image using <div>.
+        ;;
+        ;; (concat "<div style=\"border: solid 1px #ddd; width:auto;\">"
+        ;;         "<img src=\"" link "\" alt=\"" text "\" />"
+        ;;         "<br />"
+        ;;         "<i>" text "</i>"
+        ;;         "</div>")
+        (concat "<table border=\"0\" style=\"border: solid 1px #ddd;\"><tr><td>"
+                "<img src=\"" link "\" alt=\"" text "\" />"
+                "<br />"
+                "<i>" text "</i>"
+                "</td></tr></table>")
+      (concat "<a href=\"" link "\">" text "</a>"))))
 
 (defun org-freemind-convert-links-from-org (org-str)
   "Convert org links in ORG-STR to freemind links and return the result."
   (let ((fm-str (replace-regexp-in-string
-                 (rx (not (any "[\""))
-                     (submatch
-                      "http"
-                      (opt ?\s)
-                      "://"
-                      (1+
-                       (any "-%.?@a-zA-Z0-9()_/:~=&#"))))
+                 ;;(rx (not (any "[\""))
+                 ;;    (submatch
+                 ;;     "http"
+                 ;;     (opt ?\s)
+                 ;;     "://"
+                 ;;     (1+
+                 ;;      (any "-%.?@a-zA-Z0-9()_/:~=&#"))))
+		 "[^\"[]\\(http ?://[--:#%&()=?-Z_a-z~]+\\)"
                  "[[\\1][\\1]]"
-                 org-str)))
-    (replace-regexp-in-string (rx "[["
-                                  (submatch (*? nonl))
-                                  "]["
-                                  (submatch (*? nonl))
-                                  "]]")
-                              "<a href=\"\\1\">\\2</a>"
-                              fm-str)))
+                 org-str
+                 nil ;; fixedcase
+                 nil ;; literal
+                 1   ;; subexp
+                 )))
+    (replace-regexp-in-string
+     ;;(rx "[["
+     ;;	 (submatch (*? nonl))
+     ;; "]["
+     ;; (submatch (*? nonl))
+     ;; "]]")
+     "\\[\\[\\(.*?\\)]\\[\\(.*?\\)]]"
+     ;;"<a href=\"\\1\">\\2</a>"
+     'org-freemind-convert-links-helper
+     fm-str)))
 
 ;;(org-freemind-convert-links-to-org "<a href=\"http://www.somewhere/\">link-text</a>")
 (defun org-freemind-convert-links-to-org (fm-str)
   "Convert freemind links in FM-STR to org links and return the result."
   (let ((org-str (replace-regexp-in-string
-                  (rx "<a"
-                      space
-                      (0+
-                       (0+ (not (any ">")))
-                       space)
-                      "href=\""
-                      (submatch (0+ (not (any "\""))))
-                      "\""
-                      (0+ (not (any ">")))
-                       ">"
-                       (submatch (0+ (not (any "<"))))
-                       "</a>")
+                  ;;(rx "<a"
+                  ;;    space
+                  ;;    (0+
+                  ;;     (0+ (not (any ">")))
+                  ;;     space)
+                  ;;    "href=\""
+                  ;;    (submatch (0+ (not (any "\""))))
+                  ;;    "\""
+                  ;;    (0+ (not (any ">")))
+                  ;;     ">"
+                  ;;     (submatch (0+ (not (any "<"))))
+                  ;;     "</a>")
+		  "<a[[:space:]]\\(?:[^>]*[[:space:]]\\)*href=\"\\([^\"]*\\)\"[^>]*>\\([^<]*\\)</a>"
                   "[[\\1][\\2]]"
                   fm-str)))
     org-str))
@@ -298,29 +361,61 @@ will also unescape &#nn;."
 ;;(defun org-freemind-convert-drawers-from-org (text)
 ;;  )
 
-;; (org-freemind-test-links)
-;; (defun org-freemind-test-links ()
 ;;   (let* ((str1 "[[http://www.somewhere/][link-text]")
 ;;          (str2 (org-freemind-convert-links-from-org str1))
-;;          (str3 (org-freemind-convert-links-to-org str2))
-;;         )
+;;        (str3 (org-freemind-convert-links-to-org str2)))
 ;;     (unless (string= str1 str3)
-;;       (error "str3=%s" str3))
-;;     ))
+;;     (error "Error str3=%s" str3)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Org => FreeMind
 
+(defvar org-freemind-bol-helper-base-indent nil)
+
+(defun org-freemind-bol-helper (matched)
+  "Helper for `org-freemind-convert-text-p'.
+MATCHED is the link just matched."
+  (let ((res "")
+        (bi org-freemind-bol-helper-base-indent))
+    (dolist (cc (append matched nil))
+      (if (= 32 cc)
+          ;;(setq res (concat res "&nbsp;"))
+          ;; We need to use the numerical version. Otherwise Freemind
+          ;; ver 0.9.0 RC9 can not export to html/javascript.
+          (progn
+            (if (< 0 bi)
+                (setq bi (1- bi))
+              (setq res (concat res "&#160;"))))
+        (setq res (concat res (char-to-string cc)))))
+    res))
+;; (setq x (replace-regexp-in-string "\n +" 'org-freemind-bol-nbsp-helper "\n  "))
+
 (defun org-freemind-convert-text-p (text)
   "Convert TEXT to html with <p> paragraphs."
+  ;; (string-match-p "[^ ]" "  a")
+  (setq org-freemind-bol-helper-base-indent (org-string-match-p "[^ ]" text))
   (setq text (org-freemind-escape-str-from-org text))
-  (setq text (replace-regexp-in-string (rx "\n" (0+ blank) "\n") "</p><p>\n" text))
-  ;;(setq text (replace-regexp-in-string (rx bol (1+ blank) eol) "" text))
-  ;;(setq text (replace-regexp-in-string (rx bol (1+ blank)) "<br />" text))
+
+  (setq text (replace-regexp-in-string "\\([[:space:]]\\)\\(/\\)\\([^/]+\\)\\(/\\)\\([[:space:]]\\)" "\\1<i>\\3</i>\\5" text))
+  (setq text (replace-regexp-in-string "\\([[:space:]]\\)\\(\*\\)\\([^*]+\\)\\(\*\\)\\([[:space:]]\\)" "\\1<b>\\3</b>\\5" text))
+
+  (setq text (concat "<p>" text))
+  (setq text (replace-regexp-in-string "\n[[:blank:]]*\n" "</p><p>" text))
+  (setq text (replace-regexp-in-string "\\(?:<p>\\|\n\\) +" 'org-freemind-bol-helper text))
   (setq text (replace-regexp-in-string "\n" "<br />" text))
-  (concat "<p>"
-          (org-freemind-convert-links-from-org text)
-          "</p>\n"))
+  (setq text (concat text "</p>"))
+
+  (org-freemind-convert-links-from-org text))
+
+(defcustom org-freemind-node-css-style
+  "p { margin-top: 3px; margin-bottom: 3px; }"
+  "CSS style for Freemind nodes."
+  ;; Fix-me: I do not understand this. It worked to export from Freemind
+  ;; with this setting now, but not before??? Was this perhaps a java
+  ;; bug or is it a windows xp bug (some resource gets exhausted if you
+  ;; use sticky keys which I do).
+  :version "24.1"
+  :group 'org-freemind)
 
 (defun org-freemind-org-text-to-freemind-subnode/note (node-name start end drawers-regexp)
   "Convert text part of org node to freemind subnode or note.
@@ -369,11 +464,14 @@ DRAWERS-REGEXP are converted to freemind notes."
                         "<node style=\"bubble\" background_color=\"#eeee00\">\n"
                         "<richcontent TYPE=\"NODE\"><html>\n"
                         "<head>\n"
+                        (if (= 0 (length org-freemind-node-css-style))
+                            ""
+                          (concat
                         "<style type=\"text/css\">\n"
                         "<!--\n"
-                        "p { margin-top: 0 }\n"
+                           org-freemind-node-css-style
                         "-->\n"
-                        "</style>\n"
+                           "</style>\n"))
                         "</head>\n"
                         "<body>\n"))
         (let ((begin-html-mark (regexp-quote "#+BEGIN_HTML"))
@@ -406,21 +504,28 @@ DRAWERS-REGEXP are converted to freemind notes."
                         "</html>\n"
                         "</richcontent>\n"
                         ;; Put a note that this is for the parent node
-                        "<richcontent TYPE=\"NOTE\"><html>"
-                        "<head>"
-                        "</head>"
-                        "<body>"
-                        "<p>"
-                        "-- This is more about \"" node-name "\" --"
-                        "</p>"
-                        "</body>"
-                        "</html>"
-                        "</richcontent>\n"
+                        ;; "<richcontent TYPE=\"NOTE\"><html>"
+                        ;; "<head>"
+                        ;; "</head>"
+                        ;; "<body>"
+                        ;; "<p>"
+                        ;; "-- This is more about \"" node-name "\" --"
+                        ;; "</p>"
+                        ;; "</body>"
+                        ;; "</html>"
+                        ;; "</richcontent>\n"
+                        note-res
                         "</node>\n" ;; ok
                         )))
       (list node-res note-res))))
 
-(defun org-freemind-write-node (mm-buffer drawers-regexp num-left-nodes base-level current-level next-level this-m2 this-node-end this-children-visible next-node-start next-has-some-visible-child)
+(defun org-freemind-write-node (mm-buffer drawers-regexp
+                                num-left-nodes base-level
+                                current-level next-level this-m2
+                                this-node-end
+                                this-children-visible
+                                next-node-start
+                                next-has-some-visible-child)
   (let* (this-icons
          this-bg-color
          this-m2-escaped
@@ -482,7 +587,7 @@ DRAWERS-REGEXP are converted to freemind notes."
           (insert "<icon builtin=\"" icon "\"/>\n")))
       )
     (with-current-buffer mm-buffer
-      (when this-rich-note (insert this-rich-note))
+      ;;(when this-rich-note (insert this-rich-note))
       (when this-rich-node (insert this-rich-node))))
   num-left-nodes)
 
@@ -500,11 +605,13 @@ Otherwise give an error say the file exists."
         (error "File %s already exists" file))
     t))
 
-(defvar org-freemind-node-pattern (rx bol
-                         (submatch (1+ "*"))
-                         (1+ space)
-                         (submatch (*? nonl))
-                         eol))
+(defvar org-freemind-node-pattern
+  ;;(rx bol
+  ;;    (submatch (1+ "*"))
+  ;;    (1+ space)
+  ;;    (submatch (*? nonl))
+  ;;    eol)
+  "^\\(\\*+\\)[[:space:]]+\\(.*?\\)$")
 
 (defun org-freemind-look-for-visible-child (node-level)
   (save-excursion
@@ -531,7 +638,7 @@ Otherwise give an error say the file exists."
 (defun org-freemind-write-mm-buffer (org-buffer mm-buffer node-at-line)
   (with-current-buffer org-buffer
     (dolist (node-style org-freemind-node-styles)
-      (when (string-match-p (car node-style) buffer-file-name)
+      (when (org-string-match-p (car node-style) buffer-file-name)
         (setq org-freemind-node-style (cadr node-style))))
     ;;(message "org-freemind-node-style =%s" org-freemind-node-style)
     (save-match-data
@@ -541,11 +648,10 @@ Otherwise give an error say the file exists."
              (num-top2-nodes 0)
              num-left-nodes
              (unclosed-nodes 0)
+	     (odd-only org-odd-levels-only)
              (first-time t)
              (current-level 1)
              base-level
-             skipping-odd
-             (skipped-odd 0)
              prev-node-end
              rich-text
              unfinished-tag
@@ -553,27 +659,31 @@ Otherwise give an error say the file exists."
              node-at-line-last)
         (with-current-buffer mm-buffer
           (erase-buffer)
-          (insert "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
+          (setq buffer-file-coding-system 'utf-8)
+          ;; Fix-me: Currently Freemind (ver 0.9.0 RC9) does not support this:
+          ;;(insert "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
           (insert "<map version=\"0.9.0\">\n")
           (insert "<!-- To view this file, download free mind mapping software FreeMind from http://freemind.sourceforge.net -->\n"))
         (save-excursion
           ;; Get special buffer vars:
           (goto-char (point-min))
-          (while (re-search-forward (rx bol "#+DRAWERS:") nil t)
+          (message "Writing Freemind file...")
+          (while (re-search-forward "^#\\+DRAWERS:" nil t)
             (let ((dr-txt (buffer-substring-no-properties (match-end 0) (line-end-position))))
               (setq drawers (append drawers (split-string dr-txt) nil))))
           (setq drawers-regexp
-                (concat (rx bol (0+ blank) ":")
+                (concat "^[[:blank:]]*:"
                         (regexp-opt drawers)
-                        (rx ":" (0+ blank)
-                            "\n"
-                            (*? anything)
-                            "\n"
-                            (0+ blank)
-                            ":END:"
-                            (0+ blank)
-                            eol)
-                        ))
+                        ;;(rx ":" (0+ blank)
+                        ;;    "\n"
+                        ;;    (*? anything)
+                        ;;    "\n"
+                        ;;    (0+ blank)
+                        ;;    ":END:"
+                        ;;    (0+ blank)
+                        ;;    eol)
+			":[[:blank:]]*\n\\(?:.\\|\n\\)*?\n[[:blank:]]*:END:[[:blank:]]*$"
+			))
 
           (if node-at-line
               ;; Get number of top nodes and last line for this node
@@ -651,21 +761,6 @@ Otherwise give an error say the file exists."
                 (setq next-node-start (match-beginning 0))
                 (setq next-m2 (match-string-no-properties 2))
                 (setq next-level (length next-m1))
-                (when (> next-level current-level)
-                  (if (not (and org-odd-levels-only
-                                (/= (mod current-level 2) 0)
-                                (= next-level (+ 2 current-level))))
-                      (setq skipping-odd nil)
-                    (setq skipping-odd t)
-                    (setq skipped-odd (1+ skipped-odd)))
-                  (unless (or (= next-level (1+ current-level))
-                              skipping-odd)
-                    (if (or org-odd-levels-only
-                            (/= next-level (+ 2 current-level)))
-                        (error "Next level step > +1 for node ending at line %s" (line-number-at-pos))
-                      (error "Next level step = +2 for node ending at line %s, forgot org-odd-levels-only?"
-                             (line-number-at-pos)))
-                    ))
                 (setq next-children-visible
                       (not (eq 'outline
                                (get-char-property (line-end-position) 'invisible))))
@@ -678,11 +773,8 @@ Otherwise give an error say the file exists."
                   (while (>= current-level next-level)
                     (with-current-buffer mm-buffer
                       (insert "</node>\n")
-                      (setq current-level (1- current-level))
-                      (when (< 0 skipped-odd)
-                        (setq skipped-odd (1- skipped-odd))
-                        (setq current-level (1- current-level)))
-                      )))
+                      (setq current-level
+			    (- current-level (if odd-only 2 1))))))
                 (setq this-node-end (1+ next-node-end))
                 (setq this-m2 next-m2)
                 (setq current-level next-level)
@@ -705,7 +797,8 @@ Otherwise give an error say the file exists."
           (with-current-buffer mm-buffer
             (while (> current-level base-level)
               (insert "</node>\n")
-              (setq current-level (1- current-level))
+	      (setq current-level
+		    (- current-level (if odd-only 2 1)))
               ))
           (with-current-buffer mm-buffer
             (insert "</map>")
@@ -722,7 +815,7 @@ Otherwise give an error say the file exists."
     (dolist (style-list org-freemind-node-style)
       (let ((node-regexp (car style-list)))
         (message "node-regexp=%s node-name=%s" node-regexp node-name)
-        (when (string-match-p node-regexp node-name)
+        (when (org-string-match-p node-regexp node-name)
           ;;(setq node-style (org-freemind-do-apply-node-style style-list))
           (setq node-style (cadr style-list))
           (when node-style
@@ -792,7 +885,8 @@ Otherwise give an error say the file exists."
 
 ;;;###autoload
 (defun org-freemind-from-org-mode-node (node-line mm-file)
-  "Convert node at line NODE-LINE to the FreeMind file MM-FILE."
+  "Convert node at line NODE-LINE to the FreeMind file MM-FILE.
+See `org-freemind-from-org-mode' for more information."
   (interactive
    (progn
      (unless (org-back-to-heading nil)
@@ -805,20 +899,29 @@ Otherwise give an error say the file exists."
                                      ".mm"))
             (mm-file (read-file-name "Output FreeMind file: " nil nil nil default-mm-file)))
        (list line mm-file))))
-  (when (org-freemind-check-overwrite mm-file (called-interactively-p 'any))
+  (when (org-freemind-check-overwrite mm-file (org-called-interactively-p 'any))
     (let ((org-buffer (current-buffer))
           (mm-buffer (find-file-noselect mm-file)))
       (org-freemind-write-mm-buffer org-buffer mm-buffer node-line)
       (with-current-buffer mm-buffer
         (basic-save-buffer)
-        (when (called-interactively-p 'any)
+        (when (org-called-interactively-p 'any)
           (switch-to-buffer-other-window mm-buffer)
           (when (y-or-n-p "Show in FreeMind? ")
             (org-freemind-show buffer-file-name)))))))
 
 ;;;###autoload
 (defun org-freemind-from-org-mode (org-file mm-file)
-  "Convert the `org-mode' file ORG-FILE to the FreeMind file MM-FILE."
+  "Convert the `org-mode' file ORG-FILE to the FreeMind file MM-FILE.
+All the nodes will be opened or closed in Freemind just as you
+have them in `org-mode'.
+
+Note that exporting to Freemind also gives you an alternative way
+to export from `org-mode' to html.  You can create a dynamic html
+version of the your org file, by first exporting to Freemind and
+then exporting from Freemind to html.  The 'As
+XHTML (JavaScript)' version in Freemind works very well \(and you
+can use a CSS stylesheet to style it)."
   ;; Fix-me: better doc, include recommendations etc.
   (interactive
    (let* ((org-file buffer-file-name)
@@ -829,13 +932,13 @@ Otherwise give an error say the file exists."
                             ".mm"))
           (mm-file (read-file-name "Output FreeMind file: " nil nil nil default-mm-file)))
      (list org-file mm-file)))
-  (when (org-freemind-check-overwrite mm-file (called-interactively-p 'any))
+  (when (org-freemind-check-overwrite mm-file (org-called-interactively-p 'any))
     (let ((org-buffer (if org-file (find-file-noselect org-file) (current-buffer)))
           (mm-buffer (find-file-noselect mm-file)))
       (org-freemind-write-mm-buffer org-buffer mm-buffer nil)
       (with-current-buffer mm-buffer
         (basic-save-buffer)
-        (when (called-interactively-p 'any)
+        (when (org-called-interactively-p 'any)
           (switch-to-buffer-other-window mm-buffer)
           (when (y-or-n-p "Show in FreeMind? ")
             (org-freemind-show buffer-file-name)))))))
@@ -852,7 +955,7 @@ Otherwise give an error say the file exists."
                             "-sparse.mm"))
           (mm-file (read-file-name "Output FreeMind file: " nil nil nil default-mm-file)))
      (list (current-buffer) mm-file)))
-  (when (org-freemind-check-overwrite mm-file (called-interactively-p 'any))
+  (when (org-freemind-check-overwrite mm-file (org-called-interactively-p 'any))
     (let (org-buffer
           (mm-buffer (find-file-noselect mm-file)))
       (save-window-excursion
@@ -861,7 +964,7 @@ Otherwise give an error say the file exists."
       (org-freemind-write-mm-buffer org-buffer mm-buffer nil)
       (with-current-buffer mm-buffer
         (basic-save-buffer)
-        (when (called-interactively-p 'any)
+        (when (org-called-interactively-p 'any)
           (switch-to-buffer-other-window mm-buffer)
           (when (y-or-n-p "Show in FreeMind? ")
             (org-freemind-show buffer-file-name)))))))
@@ -1016,7 +1119,7 @@ PATH should be a list of steps, where each step has the form
   (save-match-data
     (let* ((rc (org-freemind-get-richcontent-node node))
            (txt (org-freemind-get-tree-text rc)))
-      ;;(when txt (setq txt (replace-regexp-in-string (rx (1+ whitespace)) " " txt)))
+      ;;(when txt (setq txt (replace-regexp-in-string "[[:space:]]+" " " txt)))
       txt
       )))
 
@@ -1025,7 +1128,7 @@ PATH should be a list of steps, where each step has the form
   (save-match-data
     (let* ((rc (org-freemind-get-richcontent-note node))
            (txt (when rc (org-freemind-get-tree-text rc))))
-      ;;(when txt (setq txt (replace-regexp-in-string (rx (1+ whitespace)) " " txt)))
+      ;;(when txt (setq txt (replace-regexp-in-string "[[:space:]]+" " " txt)))
       txt
       )))
 
@@ -1041,6 +1144,7 @@ PATH should be a list of steps, where each step has the form
   (let ((qname (car node))
         (attributes (cadr node))
         text
+        ;; Fix-me: note is never inserted
         (note (org-freemind-get-richcontent-note-text node))
         (mark "-- This is more about ")
         (icons (org-freemind-get-icon-names node))
@@ -1071,6 +1175,8 @@ PATH should be a list of steps, where each step has the form
         (case qname
           ('node
            (insert (make-string (- level skip-levels) ?*) " " text "\n")
+           (when note
+             (insert ":COMMENT:\n" note "\n:END:\n"))
            ))))
     (dolist (child children)
       (unless (or (null child)
@@ -1088,7 +1194,7 @@ PATH should be a list of steps, where each step has the form
             (default-org-file (concat (file-name-nondirectory mm-file) ".org"))
             (org-file (read-file-name "Output org-mode file: " nil nil nil default-org-file)))
        (list mm-file org-file))))
-  (when (org-freemind-check-overwrite org-file (called-interactively-p 'any))
+  (when (org-freemind-check-overwrite org-file (org-called-interactively-p 'any))
     (let ((mm-buffer (find-file-noselect mm-file))
           (org-buffer (find-file-noselect org-file)))
       (with-current-buffer mm-buffer
@@ -1097,7 +1203,7 @@ PATH should be a list of steps, where each step has the form
                (note (org-freemind-get-richcontent-note-text top-node))
                (skip-levels
                 (if (and note
-                         (string-match (rx bol "--org-mode: WHOLE FILE" eol) note))
+                         (string-match "^--org-mode: WHOLE FILE$" note))
                     1
                   0)))
           (with-current-buffer org-buffer
@@ -1111,7 +1217,8 @@ PATH should be a list of steps, where each step has the form
 
 (provide 'org-freemind)
 
-;; arch-tag: e7b0d776-94fd-404a-b35e-0f855fae3627
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;; org-freemind.el ends here

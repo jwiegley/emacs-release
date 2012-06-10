@@ -1,7 +1,6 @@
 This is ../../info/vip, produced by makeinfo version 4.13 from vip.texi.
 
-Copyright (C) 1987, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+Copyright (C) 1987, 2001-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -41,8 +40,7 @@ before you start using VIP.  Other nodes may be visited as needed.
 `ms@Sail.Stanford.Edu' if you are outside of Japan and to
 `masahiko@sato.riec.tohoku.junet' if you are in Japan.
 
-   Copyright (C) 1987, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+   Copyright (C) 1987, 2001-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1539,7 +1537,7 @@ expressions".  For example, a typical forward search would be invoked by
 `:/PAT/'.  If you wish to include `/' as part of PAT you must preceded
 it by `\'.  VIP strips off these `\''s before `/' and the resulting PAT
 becomes the actual search pattern.  Emacs provides a different and
-richer class or regular expressions than Vi/Ex, and VIP uses Emacs'
+richer class or regular expressions than Vi/Ex, and VIP uses Emacs's
 regular expressions.  See GNU Emacs Manual for details of regular
 expressions.
 
@@ -2604,50 +2602,50 @@ Concept Index
 
 
 Tag Table:
-Node: Top993
-Node: Survey2858
-Node: Basic Concepts3386
-Node: Loading VIP5040
-Node: Modes in VIP5783
-Node: Emacs Mode8394
-Node: Vi Mode8757
-Node: Insert Mode9074
-Node: Differences from Vi9706
-Node: Undoing10889
-Node: Changing11253
-Node: Searching11880
-Node: z Command12602
-Node: Counts12944
-Node: Marking13456
-Node: Region Commands13965
-Node: New Commands14642
-Node: New Bindings17402
-Node: Window Commands19578
-Node: Buffer Commands20054
-Node: File Commands20548
-Node: Misc Commands20924
-Node: Vi Commands21349
-Node: Numeric Arguments22369
-Node: Important Keys22864
-Node: Buffers and Windows24613
-Node: Files26842
-Node: Viewing the Buffer30093
-Node: Mark Commands32001
-Node: Motion Commands32843
-Node: Searching and Replacing38386
-Node: Modifying Commands40666
-Node: Delete Commands42093
-Node: Yank Commands43805
-Node: Put Back Commands44696
-Node: Change Commands46156
-Node: Repeating and Undoing Modifications47184
-Node: Other Vi Commands48008
-Node: Commands in Insert Mode51645
-Node: Ex Commands53723
-Node: Ex Command Reference54906
-Node: Customization61374
-Node: Customizing Constants61801
-Node: Customizing Key Bindings63130
-Node: GNU Free Documentation License64187
+Node: Top932
+Node: Survey2736
+Node: Basic Concepts3264
+Node: Loading VIP4918
+Node: Modes in VIP5661
+Node: Emacs Mode8272
+Node: Vi Mode8635
+Node: Insert Mode8952
+Node: Differences from Vi9584
+Node: Undoing10767
+Node: Changing11131
+Node: Searching11758
+Node: z Command12480
+Node: Counts12822
+Node: Marking13334
+Node: Region Commands13843
+Node: New Commands14520
+Node: New Bindings17280
+Node: Window Commands19456
+Node: Buffer Commands19932
+Node: File Commands20426
+Node: Misc Commands20802
+Node: Vi Commands21227
+Node: Numeric Arguments22247
+Node: Important Keys22742
+Node: Buffers and Windows24491
+Node: Files26720
+Node: Viewing the Buffer29971
+Node: Mark Commands31879
+Node: Motion Commands32721
+Node: Searching and Replacing38264
+Node: Modifying Commands40544
+Node: Delete Commands41971
+Node: Yank Commands43683
+Node: Put Back Commands44574
+Node: Change Commands46034
+Node: Repeating and Undoing Modifications47062
+Node: Other Vi Commands47886
+Node: Commands in Insert Mode51523
+Node: Ex Commands53601
+Node: Ex Command Reference54785
+Node: Customization61253
+Node: Customizing Constants61680
+Node: Customizing Key Bindings63009
+Node: GNU Free Documentation License64066
 
 End Tag Table

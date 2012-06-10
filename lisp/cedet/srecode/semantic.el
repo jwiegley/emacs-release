@@ -1,6 +1,6 @@
 ;;; srecode/semantic.el --- Semantic specific extensions to SRecode.
 
-;; Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2007-2012 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
 
@@ -394,7 +394,7 @@ as `function' will leave point where code might be inserted."
 	(srecode-semantic-apply-tag-to-dict tagobj dict)))
 
     ;; Insert dict-entries into the dictionary LAST so that previous
-    ;; items can be overriden.
+    ;; items can be overridden.
     (let ((entries dict-entries))
       (while entries
 	(srecode-dictionary-set-value dict
@@ -428,5 +428,4 @@ as `function' will leave point where code might be inserted."
 
 (provide 'srecode/semantic)
 
-;; arch-tag: b87ccbd6-bd87-48bc-8182-1043a9052d79
 ;;; srecode/semantic.el ends here

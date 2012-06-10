@@ -1,7 +1,6 @@
 ;;; url-cache.el --- Uniform Resource Locator retrieval tool
 
-;; Copyright (C) 1996, 1997, 1998, 1999, 2004, 2005, 2006, 2007, 2008,
-;;   2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1996-1999, 2004-2012  Free Software Foundation, Inc.
 
 ;; Keywords: comm, data, processes, hypermedia
 
@@ -28,9 +27,16 @@
 
 (defcustom url-cache-directory
   (expand-file-name "cache" url-configuration-directory)
-  "*The directory where cache files should be stored."
+  "The directory where cache files should be stored."
   :type 'directory
   :group 'url-file)
+
+(defcustom url-cache-expire-time 3600
+  "Default maximum time in seconds before cache files expire.
+Used by the function `url-cache-expired'."
+  :version "24.1"
+  :type 'integer
+  :group 'url-cache)
 
 ;; Cache manager
 (defun url-cache-file-writable-p (file)
@@ -68,6 +74,12 @@ FILE can be created or overwritten."
             (let ((coding-system-for-write 'binary))
               (write-region (point-min) (point-max) fname nil 5))))))
 
+(defun url-fetch-from-cache (url)
+  "Fetch URL from cache and return a buffer with the content."
+  (with-current-buffer (generate-new-buffer " *temp*")
+    (url-cache-extract (url-cache-create-filename url))
+    (current-buffer)))
+
 ;;;###autoload
 (defun url-is-cached (url)
   "Return non-nil if the URL is cached.
@@ -82,8 +94,7 @@ The actual return value is the last modification time of the cache file."
 (defun url-cache-create-filename-human-readable (url)
   "Return a filename in the local cache for URL."
   (if url
-      (let* ((url (if (vectorp url) (url-recreate-url url) url))
-	     (urlobj (url-generic-parse-url url))
+      (let* ((urlobj (url-generic-parse-url url))
 	     (protocol (url-type urlobj))
 	     (hostname (url-host urlobj))
 	     (host-components
@@ -91,8 +102,7 @@ The actual return value is the last modification time of the cache file."
 	       (user-real-login-name)
 	       (cons (or protocol "file")
 		     (reverse (split-string (or hostname "localhost")
-					    (eval-when-compile
-					      (regexp-quote ".")))))))
+					    "\\.")))))
 	     (fname    (url-filename urlobj)))
 	(if (and fname (/= (length fname) 0) (= (aref fname 0) ?/))
 	    (setq fname (substring fname 1 nil)))
@@ -141,8 +151,7 @@ The actual return value is the last modification time of the cache file."
 Very fast if you have an `md5' primitive function, suitably fast otherwise."
   (require 'md5)
   (if url
-      (let* ((url (if (vectorp url) (url-recreate-url url) url))
-	     (checksum (md5 url))
+      (let* ((checksum (md5 url))
 	     (urlobj (url-generic-parse-url url))
 	     (protocol (url-type urlobj))
 	     (hostname (url-host urlobj))
@@ -153,8 +162,7 @@ Very fast if you have an `md5' primitive function, suitably fast otherwise."
 		     (nreverse
 		      (delq nil
 			    (split-string (or hostname "localhost")
-					  (eval-when-compile
-					    (regexp-quote "."))))))))
+					  "\\."))))))
 	     (fname    (url-filename urlobj)))
 	(and fname
 	     (expand-file-name checksum
@@ -163,7 +171,7 @@ Very fast if you have an `md5' primitive function, suitably fast otherwise."
 				url-cache-directory))))))
 
 (defcustom url-cache-creation-function 'url-cache-create-filename-using-md5
-  "*What function to use to create a cached filename."
+  "What function to use to create a cached filename."
   :type '(choice (const :tag "MD5 of filename (low collision rate)"
 			:value url-cache-create-filename-using-md5)
 		 (const :tag "Human readable filenames (higher collision rate)"
@@ -172,32 +180,63 @@ Very fast if you have an `md5' primitive function, suitably fast otherwise."
   :group 'url-cache)
 
 (defun url-cache-create-filename (url)
-  (funcall url-cache-creation-function url))
+  (funcall url-cache-creation-function
+           ;; We need to parse+recreate in order to remove the default port
+           ;; if it has been specified: e.g. http://www.example.com:80 will
+           ;; be transcoded as http://www.example.com
+           (url-recreate-url
+            (if (vectorp url) url
+              (url-generic-parse-url url)))))
 
 ;;;###autoload
 (defun url-cache-extract (fnam)
   "Extract FNAM from the local disk cache."
   (erase-buffer)
+  (set-buffer-multibyte nil)
   (insert-file-contents-literally fnam))
 
-;;;###autoload
-(defun url-cache-expired (url mod)
-  "Return t if a cached file has expired."
-  (let* ((urlobj (if (vectorp url) url (url-generic-parse-url url)))
-	 (type (url-type urlobj)))
-    (cond
-     (url-standalone-mode
-      (not (file-exists-p (url-cache-create-filename url))))
-     ((string= type "http")
-      t)
-     ((member type '("file" "ftp"))
-      (if (or (equal mod '(0 0)) (not mod))
-	  t
-	(or (> (nth 0 mod) (nth 0 (current-time)))
-	    (> (nth 1 mod) (nth 1 (current-time))))))
-     (t nil))))
+(defun url-cache-expired (url &optional expire-time)
+  "Return non-nil if a cached URL is older than EXPIRE-TIME seconds.
+The default value of EXPIRE-TIME is `url-cache-expire-time'.
+If `url-standalone-mode' is non-nil, cached items never expire."
+  (if url-standalone-mode
+      (not (file-exists-p (url-cache-create-filename url)))
+    (let ((cache-time (url-is-cached url)))
+      (or (not cache-time)
+	  (time-less-p
+	   (time-add
+	    cache-time
+	    (seconds-to-time (or expire-time url-cache-expire-time)))
+	   (current-time))))))
+
+(defun url-cache-prune-cache (&optional directory)
+  "Remove all expired files from the cache.
+`url-cache-expire-time' says how old a file has to be to be
+considered \"expired\"."
+  (let ((current-time (current-time))
+	(total-files 0)
+	(deleted-files 0))
+    (setq directory (or directory url-cache-directory))
+    (when (file-exists-p directory)
+      (dolist (file (directory-files directory t))
+	(unless (member (file-name-nondirectory file) '("." ".."))
+	  (setq total-files (1+ total-files))
+	  (cond
+	   ((file-directory-p file)
+	    (when (url-cache-prune-cache file)
+	      (setq deleted-files (1+ deleted-files))))
+	   ((time-less-p
+	     (time-add
+	      (nth 5 (file-attributes file))
+	      (seconds-to-time url-cache-expire-time))
+	     current-time)
+	    (delete-file file)
+	    (setq deleted-files (1+ deleted-files))))))
+      (if (< deleted-files total-files)
+	  nil
+	(delete-directory directory)
+	t))))
 
 (provide 'url-cache)
 
-;; arch-tag: 95b050a6-8e81-4f23-8e63-191b9d1d657c
 ;;; url-cache.el ends here

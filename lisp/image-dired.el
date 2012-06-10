@@ -1,6 +1,6 @@
 ;;; image-dired.el --- use dired to browse and manipulate your images
 ;;
-;; Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2005-2012 Free Software Foundation, Inc.
 ;;
 ;; Version: 0.4.11
 ;; Keywords: multimedia
@@ -157,6 +157,7 @@
 (require 'widget)
 
 (eval-when-compile
+  (require 'cl)
   (require 'wid-edit))
 
 (defgroup image-dired nil
@@ -383,7 +384,7 @@ Used together with `image-dired-cmd-read-exif-data-program-options'."
   "%p -s -s -s -%t \"%f\""
   "Format of command used to read EXIF data.
 Available options are %p which is replaced by
-`image-dired-cmd-write-exif-data-options', %f which is replaced
+`image-dired-cmd-write-exif-data-program', %f which is replaced
 by the image file name and %t which is replaced by the tag name."
   :type 'string
   :group 'image-dired)
@@ -468,7 +469,7 @@ For more information, see the documentation for
 If non-nil, using `image-dired-next-line-and-display' and
 `image-dired-previous-line-and-display' will leave a trail of thumbnail
 images in the thumbnail buffer.  If you enable this and want to clean
-the thumbnail buffer because it is filled with too many thumbmnails,
+the thumbnail buffer because it is filled with too many thumbnails,
 just call `image-dired-display-thumb' to display only the image at point.
 This value can be toggled using `image-dired-toggle-append-browsing'."
   :type 'boolean
@@ -515,6 +516,14 @@ before warning the user."
   :type 'integer
   :group 'image-dired)
 
+(defmacro image-dired--with-db-file (&rest body)
+  "Run BODY in a temp buffer containing `image-dired-db-file'.
+Return the last form in BODY."
+  `(with-temp-buffer
+     (if (file-exists-p image-dired-db-file)
+	 (insert-file-contents image-dired-db-file))
+     ,@body))
+
 (defun image-dired-dir ()
   "Return the current thumbnails directory (from variable `image-dired-dir').
 Create the thumbnails directory if it does not exist."
@@ -550,7 +559,7 @@ Create the thumbnails directory if it does not exist."
     ))
 
 (defun image-dired-insert-thumbnail (file original-file-name
-                                    associated-dired-buffer)
+                                     associated-dired-buffer)
   "Insert thumbnail image FILE.
 Add text properties ORIGINAL-FILE-NAME and ASSOCIATED-DIRED-BUFFER."
   (let (beg end)
@@ -632,26 +641,32 @@ according to the Thumbnail Managing Standard."
     (call-process shell-file-name nil nil nil shell-command-switch command)))
 
 ;;;###autoload
-(defun image-dired-dired-insert-marked-thumbs ()
-  "Insert thumbnails before file names of marked files in the dired buffer."
-  (interactive)
+(defun image-dired-dired-toggle-marked-thumbs (&optional arg)
+  "Toggle thumbnails in front of file names in the dired buffer.
+If no marked file could be found, insert or hide thumbnails on the
+current line.  ARG, if non-nil, specifies the files to use instead
+of the marked files.  If ARG is an integer, use the next ARG (or
+previous -ARG, if ARG<0) files."
+  (interactive "P")
   (dired-map-over-marks
-   (let* ((image-pos (dired-move-to-filename))
-          (image-file (dired-get-filename))
-          (thumb-file (image-dired-get-thumbnail-image image-file))
+   (let* ((image-pos  (dired-move-to-filename))
+          (image-file (dired-get-filename nil t))
+          thumb-file
           overlay)
-     ;; If image is not already added, then add it.
-     (unless (delq nil (mapcar (lambda (o) (overlay-get o 'put-image))
-                               ;; Can't use (overlays-at (point)), BUG?
-                               (overlays-in (point) (1+ (point)))))
-       (put-image thumb-file image-pos)
-       (setq
-	overlay
-	(car (delq nil (mapcar (lambda (o) (and (overlay-get o 'put-image) o))
-			       (overlays-in (point) (1+ (point)))))))
-       (overlay-put overlay 'image-file image-file)
-       (overlay-put overlay 'thumb-file thumb-file)))
-   nil)
+     (when (and image-file (string-match-p (image-file-name-regexp) image-file))
+       (setq thumb-file (image-dired-get-thumbnail-image image-file))
+       ;; If image is not already added, then add it.
+       (let ((cur-ov (overlays-in (point) (1+ (point)))))
+         (if cur-ov
+             (delete-overlay (car cur-ov))
+	   (put-image thumb-file image-pos)
+	   (setq overlay (loop for o in (overlays-in (point) (1+ (point)))
+			       when (overlay-get o 'put-image) collect o into ov
+			       finally return (car ov)))
+	   (overlay-put overlay 'image-file image-file)
+	   (overlay-put overlay 'thumb-file thumb-file)))))
+   arg             ; Show or hide image on ARG next files.
+   'show-progress) ; Update dired display after each image is updated.
   (add-hook 'dired-after-readin-hook 'image-dired-dired-after-readin-hook nil t))
 
 (defun image-dired-dired-after-readin-hook ()
@@ -767,13 +782,12 @@ calling `image-dired-restore-window-configuration'."
     (dired dir)
     (delete-other-windows)
     (when (not arg)
-      (split-window-horizontally)
+      (split-window-right)
       (setq truncate-lines t)
       (save-excursion
         (other-window 1)
         (switch-to-buffer buf)
-        (split-window-vertically)
-        (other-window 1)
+        (select-window (split-window-below))
         (switch-to-buffer buf2)
         (other-window -2)))))
 
@@ -809,7 +823,7 @@ used or not.  If non-nil, use `display-buffer' instead of
 thumbnail buffer to be selected."
   (interactive "P")
   (let ((buf (image-dired-create-thumbnail-buffer))
-        curr-file thumb-name files count dired-buf beg)
+        thumb-name files dired-buf)
     (if arg
         (setq files (list (dired-get-filename)))
       (setq files (dired-get-marked-files)))
@@ -891,83 +905,76 @@ FILE-TAGS is an alist in the following form:
  ((FILE . TAG) ... )"
   (image-dired-sane-db-file)
   (let (end file tag)
-    (with-temp-file image-dired-db-file
-      (insert-file-contents image-dired-db-file)
-      (dolist (elt file-tags)
-	(setq file (car elt)
-	      tag (cdr elt))
-	(goto-char (point-min))
-	(if (search-forward-regexp (format "^%s.*$" file) nil t)
-	    (progn
-	      (setq end (point))
-	      (beginning-of-line)
-	      (when (not (search-forward (format ";%s" tag) end t))
-		(end-of-line)
-		(insert (format ";%s" tag))))
-	  (goto-char (point-max))
-	  (insert (format "\n%s;%s" file tag)))))))
+    (image-dired--with-db-file
+     (setq buffer-file-name image-dired-db-file)
+     (dolist (elt file-tags)
+       (setq file (car elt)
+	     tag (cdr elt))
+       (goto-char (point-min))
+       (if (search-forward-regexp (format "^%s.*$" file) nil t)
+	   (progn
+	     (setq end (point))
+	     (beginning-of-line)
+	     (when (not (search-forward (format ";%s" tag) end t))
+	       (end-of-line)
+	       (insert (format ";%s" tag))))
+	 (goto-char (point-max))
+	 (insert (format "\n%s;%s" file tag))))
+     (save-buffer))))
 
 (defun image-dired-remove-tag (files tag)
   "For all FILES, remove TAG from the image database."
   (image-dired-sane-db-file)
-  (save-excursion
-    (let (end buf start)
-      (setq buf (find-file image-dired-db-file))
-      (if (not (listp files))
-          (if (stringp files)
-              (setq files (list files))
-            (error "Files must be a string or a list of strings!")))
-      (mapc
-       (lambda (file)
-         (goto-char (point-min))
-         (when (search-forward-regexp
-                (format "^%s" file) nil t)
-           (end-of-line)
-           (setq end (point))
-           (beginning-of-line)
-           (when (search-forward-regexp (format "\\(;%s\\)" tag) end t)
-             (delete-region (match-beginning 1) (match-end 1))
-             ;; Check if file should still be in the database. If
-             ;; it has no tags or comments, it will be removed.
-             (end-of-line)
-             (setq end (point))
-             (beginning-of-line)
-             (when (not (search-forward ";" end t))
-               (kill-line 1)
-               ;; If on empty line at end of buffer
-               (when (and (eobp)
-                          (looking-at "^$"))
-                 (delete-backward-char 1))))))
-       files)
-      (save-buffer)
-      (kill-buffer buf))))
+  (image-dired--with-db-file
+   (setq buffer-file-name image-dired-db-file)
+   (let (end)
+     (unless (listp files)
+       (if (stringp files)
+	   (setq files (list files))
+	 (error "Files must be a string or a list of strings!")))
+     (dolist (file files)
+       (goto-char (point-min))
+       (when (search-forward-regexp (format "^%s" file) nil t)
+	 (end-of-line)
+	 (setq end (point))
+	 (beginning-of-line)
+	 (when (search-forward-regexp (format "\\(;%s\\)" tag) end t)
+	   (delete-region (match-beginning 1) (match-end 1))
+	   ;; Check if file should still be in the database. If
+	   ;; it has no tags or comments, it will be removed.
+	   (end-of-line)
+	   (setq end (point))
+	   (beginning-of-line)
+	   (when (not (search-forward ";" end t))
+	     (kill-line 1)
+	     ;; If on empty line at end of buffer
+	     (and (eobp)
+		  (looking-at "^$")
+		  (delete-char -1)))))))
+   (save-buffer)))
 
 (defun image-dired-list-tags (file)
   "Read all tags for image FILE from the image database."
   (image-dired-sane-db-file)
-  (save-excursion
-    (let (end buf (tags ""))
-      (setq buf (find-file image-dired-db-file))
-      (goto-char (point-min))
-      (when (search-forward-regexp
-             (format "^%s" file) nil t)
-        (end-of-line)
-        (setq end (point))
-        (beginning-of-line)
-        (if (search-forward ";" end t)
-            (if (search-forward "comment:" end t)
-                (if (search-forward ";" end t)
-                    (setq tags (buffer-substring (point) end)))
-              (setq tags (buffer-substring (point) end)))))
-      (kill-buffer buf)
-      (split-string tags ";"))))
+  (image-dired--with-db-file
+   (let (end (tags ""))
+     (when (search-forward-regexp (format "^%s" file) nil t)
+       (end-of-line)
+       (setq end (point))
+       (beginning-of-line)
+       (if (search-forward ";" end t)
+	   (if (search-forward "comment:" end t)
+	       (if (search-forward ";" end t)
+		   (setq tags (buffer-substring (point) end)))
+	     (setq tags (buffer-substring (point) end)))))
+     (split-string tags ";"))))
 
 ;;;###autoload
 (defun image-dired-tag-files (arg)
   "Tag marked file(s) in dired.  With prefix ARG, tag file at point."
   (interactive "P")
   (let ((tag (read-string "Tags to add (separate tags with a semicolon): "))
-        curr-file files)
+        files)
     (if arg
         (setq files (list (dired-get-filename)))
       (setq files (dired-get-marked-files)))
@@ -1591,14 +1598,14 @@ Note that n, p and <down> and <up> will be hijacked and bound to
 With prefix argument ARG, create thumbnails even if they already exist
 \(i.e. use this to refresh your thumbnails)."
   (interactive "P")
-  (let (curr-file thumb-name files count)
+  (let (thumb-name files)
     (setq files (dired-get-marked-files))
     (mapcar
      (lambda (curr-file)
        (setq thumb-name (image-dired-thumb-name curr-file))
        ;; If the user overrides the exist check, we must clear the
        ;; image cache so that if the user wants to display the
-       ;; thumnail, it is not fetched from cache.
+       ;; thumbnail, it is not fetched from cache.
        (if arg
            (clear-image-cache))
        (if (or (not (file-exists-p thumb-name))
@@ -1899,7 +1906,7 @@ overwritten.  This confirmation can be turned off using
   (if (not (image-dired-image-at-point-p))
       (message "No image at point")
     (let ((file (image-dired-original-file-name))
-          command temp-file)
+          command)
       (if (not (string-match "\.[jJ][pP[eE]?[gG]$" file))
           (error "Only JPEG images can be rotated!"))
       (setq command (format-spec
@@ -2036,7 +2043,7 @@ function.  The result is a couple of new files in
      files)))
 
 (defun image-dired-display-next-thumbnail-original ()
-  "In thubnail buffer, move to next thumbnail and display the image."
+  "In thumbnail buffer, move to next thumbnail and display the image."
   (interactive)
   (image-dired-forward-image)
   (image-dired-display-thumbnail-original-image))
@@ -2054,34 +2061,35 @@ FILE-COMMENTS is an alist on the following form:
  ((FILE . COMMENT) ... )"
   (image-dired-sane-db-file)
   (let (end comment-beg-pos comment-end-pos file comment)
-    (with-temp-file image-dired-db-file
-      (insert-file-contents image-dired-db-file)
-      (dolist (elt file-comments)
-	(setq file (car elt)
-	      comment (cdr elt))
-	(goto-char (point-min))
-	(if (search-forward-regexp (format "^%s.*$" file) nil t)
-	    (progn
-	      (setq end (point))
-	      (beginning-of-line)
-	      ;; Delete old comment, if any
-	      (when (search-forward ";comment:" end t)
-		(setq comment-beg-pos (match-beginning 0))
-		;; Any tags after the comment?
-		(if (search-forward ";" end t)
-		    (setq comment-end-pos (- (point) 1))
-		  (setq comment-end-pos end))
-		;; Delete comment tag and comment
-		(delete-region comment-beg-pos comment-end-pos))
-	      ;; Insert new comment
-	      (beginning-of-line)
-	      (unless (search-forward ";" end t)
-		(end-of-line)
-		(insert ";"))
-	      (insert (format "comment:%s;" comment)))
-	  ;; File does not exist in database - add it.
-	  (goto-char (point-max))
-	  (insert (format "\n%s;comment:%s" file comment)))))))
+    (image-dired--with-db-file
+     (setq buffer-file-name image-dired-db-file)
+     (dolist (elt file-comments)
+       (setq file (car elt)
+	     comment (cdr elt))
+       (goto-char (point-min))
+       (if (search-forward-regexp (format "^%s.*$" file) nil t)
+	   (progn
+	     (setq end (point))
+	     (beginning-of-line)
+	     ;; Delete old comment, if any
+	     (when (search-forward ";comment:" end t)
+	       (setq comment-beg-pos (match-beginning 0))
+	       ;; Any tags after the comment?
+	       (if (search-forward ";" end t)
+		   (setq comment-end-pos (- (point) 1))
+		 (setq comment-end-pos end))
+	       ;; Delete comment tag and comment
+	       (delete-region comment-beg-pos comment-end-pos))
+	     ;; Insert new comment
+	     (beginning-of-line)
+	     (unless (search-forward ";" end t)
+	       (end-of-line)
+	       (insert ";"))
+	     (insert (format "comment:%s;" comment)))
+	 ;; File does not exist in database - add it.
+	 (goto-char (point-max))
+	 (insert (format "\n%s;comment:%s" file comment))))
+     (save-buffer))))
 
 (defun image-dired-update-property (prop value)
   "Update text property PROP with value VALUE at point."
@@ -2123,24 +2131,20 @@ Optionally use old comment from FILE as initial value."
 (defun image-dired-get-comment (file)
   "Get comment for file FILE."
   (image-dired-sane-db-file)
-  (save-excursion
-    (let (end buf comment-beg-pos comment-end-pos comment)
-      (setq buf (find-file image-dired-db-file))
-      (goto-char (point-min))
-      (when (search-forward-regexp
-             (format "^%s" file) nil t)
-        (end-of-line)
-        (setq end (point))
-        (beginning-of-line)
-        (cond ((search-forward ";comment:" end t)
-               (setq comment-beg-pos (point))
-               (if (search-forward ";" end t)
-                   (setq comment-end-pos (- (point) 1))
-                 (setq comment-end-pos end))
-               (setq comment (buffer-substring
-                              comment-beg-pos comment-end-pos)))))
-      (kill-buffer buf)
-      comment)))
+  (image-dired--with-db-file
+   (let (end comment-beg-pos comment-end-pos comment)
+     (when (search-forward-regexp (format "^%s" file) nil t)
+       (end-of-line)
+       (setq end (point))
+       (beginning-of-line)
+       (when (search-forward ";comment:" end t)
+	 (setq comment-beg-pos (point))
+	 (if (search-forward ";" end t)
+	     (setq comment-end-pos (- (point) 1))
+	   (setq comment-end-pos end))
+	 (setq comment (buffer-substring
+			comment-beg-pos comment-end-pos))))
+     comment)))
 
 ;;;###autoload
 (defun image-dired-mark-tagged-files ()
@@ -2154,32 +2158,26 @@ matching tag will be marked in the dired buffer."
   (image-dired-sane-db-file)
   (let ((tag (read-string "Mark tagged files (regexp): "))
         (hits 0)
-        files buf)
-    (save-excursion
-      (setq buf (find-file image-dired-db-file))
-      (goto-char (point-min))
-      ;; Collect matches
-      (while (search-forward-regexp
-              (concat "\\(^[^;\n]+\\);.*" tag ".*$") nil t)
-        (setq files (append (list (match-string 1)) files)))
-      (kill-buffer buf)
-      ;; Mark files
-      (mapc
-       ;; I tried using `dired-mark-files-regexp' but it was
-       ;; waaaay to slow.
-       (lambda (curr-file)
-         ;; Don't bother about hits found in other directories than
-         ;; the current one.
-         (when (string= (file-name-as-directory
-                         (expand-file-name default-directory))
-                      (file-name-as-directory
-                       (file-name-directory curr-file)))
-           (setq curr-file (file-name-nondirectory curr-file))
-           (goto-char (point-min))
-           (when (search-forward-regexp (format "\\s %s$" curr-file) nil t)
-             (setq hits (+ hits 1))
-             (dired-mark 1))))
-       files))
+        files)
+    (image-dired--with-db-file
+     ;; Collect matches
+     (while (search-forward-regexp
+	     (concat "\\(^[^;\n]+\\);.*" tag ".*$") nil t)
+       (push (match-string 1) files)))
+    ;; Mark files
+    (dolist (curr-file files)
+      ;; I tried using `dired-mark-files-regexp' but it was waaaay to
+      ;; slow.  Don't bother about hits found in other directories
+      ;; than the current one.
+      (when (string= (file-name-as-directory
+		      (expand-file-name default-directory))
+		     (file-name-as-directory
+		      (file-name-directory curr-file)))
+	(setq curr-file (file-name-nondirectory curr-file))
+	(goto-char (point-min))
+	(when (search-forward-regexp (format "\\s %s$" curr-file) nil t)
+	  (setq hits (+ hits 1))
+	  (dired-mark 1))))
     (message "%d files with matching tag marked." hits)))
 
 (defun image-dired-mouse-display-image (event)
@@ -2202,11 +2200,10 @@ non-nil."
 Track this in associated dired buffer if `image-dired-track-movement' is
 non-nil."
   (interactive "e")
-  (let (file)
-    (mouse-set-point event)
-    (goto-char (posn-point (event-end event)))
-    (if image-dired-track-movement
-        (image-dired-track-original-file)))
+  (mouse-set-point event)
+  (goto-char (posn-point (event-end event)))
+  (if image-dired-track-movement
+      (image-dired-track-original-file))
   (image-dired-display-thumb-properties))
 
 (defun image-dired-mouse-toggle-mark (event)
@@ -2214,11 +2211,10 @@ non-nil."
 Track this in associated dired buffer if `image-dired-track-movement' is
 non-nil."
   (interactive "e")
-  (let (file)
-    (mouse-set-point event)
-    (goto-char (posn-point (event-end event)))
-    (if image-dired-track-movement
-        (image-dired-track-original-file)))
+  (mouse-set-point event)
+  (goto-char (posn-point (event-end event)))
+  (if image-dired-track-movement
+      (image-dired-track-original-file))
   (image-dired-toggle-mark-thumb-original-file))
 
 (defun image-dired-dired-display-properties ()
@@ -2317,29 +2313,26 @@ image-dired-file-comment-list:
 (defun image-dired-create-gallery-lists ()
   "Create temporary lists used by `image-dired-gallery-generate'."
   (image-dired-sane-db-file)
-  (let ((buf (find-file image-dired-db-file))
-        end beg file row-tags)
-    (setq image-dired-tag-file-list nil)
-    (setq image-dired-file-tag-list nil)
-    (setq image-dired-file-comment-list nil)
-    (goto-char (point-min))
-    (while (search-forward-regexp "^." nil t)
-      (end-of-line)
-      (setq end (point))
-      (beginning-of-line)
-      (setq beg (point))
-      (if (not (search-forward ";" end nil))
-          (error "Something is really wrong, check format of database"))
-      (setq row-tags (split-string
-                      (buffer-substring beg end) ";"))
-      (setq file (car row-tags))
-      (mapc
-       (lambda (x)
-         (if (not (string-match "^comment:\\(.*\\)" x))
-             (image-dired-add-to-tag-file-lists x file)
-           (image-dired-add-to-file-comment-list file (match-string 1 x))))
-       (cdr row-tags)))
-    (kill-buffer buf))
+  (image-dired--with-db-file
+   (let (end beg file row-tags)
+     (setq image-dired-tag-file-list nil)
+     (setq image-dired-file-tag-list nil)
+     (setq image-dired-file-comment-list nil)
+     (goto-char (point-min))
+     (while (search-forward-regexp "^." nil t)
+       (end-of-line)
+       (setq end (point))
+       (beginning-of-line)
+       (setq beg (point))
+       (unless (search-forward ";" end nil)
+	 (error "Something is really wrong, check format of database"))
+       (setq row-tags (split-string
+		       (buffer-substring beg end) ";"))
+       (setq file (car row-tags))
+       (dolist (x (cdr row-tags))
+	 (if (not (string-match "^comment:\\(.*\\)" x))
+	     (image-dired-add-to-tag-file-lists x file)
+	   (image-dired-add-to-file-comment-list file (match-string 1 x)))))))
   ;; Sort tag-file list
   (setq image-dired-tag-file-list
         (sort image-dired-tag-file-list
@@ -2367,7 +2360,8 @@ it easier to generate, then HTML-files are created in
 when using per-directory thumbnail file storage"))
   (image-dired-create-gallery-lists)
   (let ((tags image-dired-tag-file-list)
-        count curr tag index-buf tag-buf
+	(index-file (format "%s/index.html" image-dired-gallery-dir))
+        count tag tag-file
         comment file-tags tag-link tag-link-list)
     ;; Make sure gallery root exist
     (if (file-exists-p image-dired-gallery-dir)
@@ -2375,85 +2369,75 @@ when using per-directory thumbnail file storage"))
             (error "Variable image-dired-gallery-dir is not a directory"))
       (make-directory image-dired-gallery-dir))
     ;; Open index file
-    (setq index-buf (find-file
-                     (format "%s/index.html" image-dired-gallery-dir)))
-    (erase-buffer)
-    (insert "<html>\n")
-    (insert "  <body>\n")
-    (insert "   <h2>Image-Dired Gallery</h2>\n")
-    (insert (format "<p>\n    Gallery generated %s\n   <p>\n"
-                    (current-time-string)))
-    (insert "   <h3>Tag index</h3>\n")
-    (setq count 1)
-    ;; Pre-generate list of all tag links
-    (mapc
-     (lambda (curr)
-       (setq tag (car curr))
-       (when (not (member tag image-dired-gallery-hidden-tags))
-         (setq tag-link (format "<a href=\"%d.html\">%s</a>" count tag))
-         (if tag-link-list
-             (setq tag-link-list
-                   (append tag-link-list (list (cons tag tag-link))))
-           (setq tag-link-list (list (cons tag tag-link))))
-         (setq count (1+ count))))
-     tags)
-    (setq count 1)
-    ;; Main loop where we generated thumbnail pages per tag
-    (mapc
-     (lambda (curr)
-       (setq tag (car curr))
-       ;; Don't display hidden tags
-       (when (not (member tag image-dired-gallery-hidden-tags))
-         ;; Insert link to tag page in index
-         (insert (format "    %s<br>\n" (cdr (assoc tag tag-link-list))))
-         ;; Open per-tag file
-         (setq tag-buf (find-file
-                        (format "%s/%s.html" image-dired-gallery-dir count)))
-         (erase-buffer)
-         (insert "<html>\n")
-         (insert "  <body>\n")
-         (insert "  <p><a href=\"index.html\">Index</a></p>\n")
-         (insert (format "  <h2>Images with tag &quot;%s&quot;</h2>" tag))
-         ;; Main loop for files per tag page
-         (mapc
-          (lambda (file)
-            (when (not (image-dired-hidden-p file))
-              ;; Insert thumbnail with link to full image
-              (insert
-               (format "<a href=\"%s/%s\"><img src=\"%s/%s\"%s></a>\n"
-                       image-dired-gallery-image-root-url
-		       (file-name-nondirectory file)
-                       image-dired-gallery-thumb-image-root-url
-                       (file-name-nondirectory (image-dired-thumb-name file)) file))
-              ;; Insert comment, if any
-              (if (setq comment (cdr (assoc file image-dired-file-comment-list)))
-                  (insert (format "<br>\n%s<br>\n" comment))
-                (insert "<br>\n"))
-              ;; Insert links to other tags, if any
-              (when (> (length
-                        (setq file-tags (assoc file image-dired-file-tag-list))) 2)
-                (insert "[ ")
-                (mapc
-                 (lambda (extra-tag)
-                   ;; Only insert if not file name or the main tag
-                   (if (and (not (equal extra-tag tag))
-                            (not (equal extra-tag file)))
-                       (insert
-                        (format "%s " (cdr (assoc extra-tag tag-link-list))))))
-                 file-tags)
-                (insert "]<br>\n"))))
-          (cdr curr))
-         (insert "  <p><a href=\"index.html\">Index</a></p>\n")
-         (insert "  </body>\n")
-         (insert "</html>\n")
-         (save-buffer)
-         (kill-buffer tag-buf)
-         (setq count (1+ count))))
-       tags)
-    (insert "  </body>\n")
-    (insert "</html>")
-    (save-buffer)
-    (kill-buffer index-buf)))
+    (with-temp-file index-file
+      (if (file-exists-p index-file)
+	  (insert-file-contents index-file))
+      (insert "<html>\n")
+      (insert "  <body>\n")
+      (insert "   <h2>Image-Dired Gallery</h2>\n")
+      (insert (format "<p>\n    Gallery generated %s\n   <p>\n"
+		      (current-time-string)))
+      (insert "   <h3>Tag index</h3>\n")
+      (setq count 1)
+      ;; Pre-generate list of all tag links
+      (dolist (curr tags)
+	(setq tag (car curr))
+	(when (not (member tag image-dired-gallery-hidden-tags))
+	  (setq tag-link (format "<a href=\"%d.html\">%s</a>" count tag))
+	  (if tag-link-list
+	      (setq tag-link-list
+		    (append tag-link-list (list (cons tag tag-link))))
+	    (setq tag-link-list (list (cons tag tag-link))))
+	  (setq count (1+ count))))
+      (setq count 1)
+      ;; Main loop where we generated thumbnail pages per tag
+      (dolist (curr tags)
+	(setq tag (car curr))
+	;; Don't display hidden tags
+	(when (not (member tag image-dired-gallery-hidden-tags))
+	  ;; Insert link to tag page in index
+	  (insert (format "    %s<br>\n" (cdr (assoc tag tag-link-list))))
+	  ;; Open per-tag file
+	  (setq tag-file (format "%s/%s.html" image-dired-gallery-dir count))
+	  (with-temp-file tag-file
+	    (if (file-exists-p tag-file)
+		(insert-file-contents tag-file))
+	    (erase-buffer)
+	    (insert "<html>\n")
+	    (insert "  <body>\n")
+	    (insert "  <p><a href=\"index.html\">Index</a></p>\n")
+	    (insert (format "  <h2>Images with tag &quot;%s&quot;</h2>" tag))
+	    ;; Main loop for files per tag page
+	    (dolist (file (cdr curr))
+	      (unless (image-dired-hidden-p file)
+		;; Insert thumbnail with link to full image
+		(insert
+		 (format "<a href=\"%s/%s\"><img src=\"%s/%s\"%s></a>\n"
+			 image-dired-gallery-image-root-url
+			 (file-name-nondirectory file)
+			 image-dired-gallery-thumb-image-root-url
+			 (file-name-nondirectory (image-dired-thumb-name file)) file))
+		;; Insert comment, if any
+		(if (setq comment (cdr (assoc file image-dired-file-comment-list)))
+		    (insert (format "<br>\n%s<br>\n" comment))
+		  (insert "<br>\n"))
+		;; Insert links to other tags, if any
+		(when (> (length
+			  (setq file-tags (assoc file image-dired-file-tag-list))) 2)
+		  (insert "[ ")
+		  (dolist (extra-tag file-tags)
+		    ;; Only insert if not file name or the main tag
+		    (if (and (not (equal extra-tag tag))
+			     (not (equal extra-tag file)))
+			(insert
+			 (format "%s " (cdr (assoc extra-tag tag-link-list))))))
+		  (insert "]<br>\n"))))
+	    (insert "  <p><a href=\"index.html\">Index</a></p>\n")
+	    (insert "  </body>\n")
+	    (insert "</html>\n"))
+	  (setq count (1+ count))))
+      (insert "  </body>\n")
+      (insert "</html>"))))
 
 (defun image-dired-kill-buffer-and-window ()
   "Kill the current buffer and, if possible, also the window."
@@ -2526,7 +2510,7 @@ the operation by activating the Cancel button.\n\n")
     (widget-insert "\n")
     (widget-create 'push-button
                  :notify
-                 (lambda (&rest ignore)
+                 (lambda (&rest _ignore)
                    (image-dired-save-information-from-widgets)
                    (bury-buffer)
                    (message "Done."))
@@ -2534,7 +2518,7 @@ the operation by activating the Cancel button.\n\n")
     (widget-insert " ")
     (widget-create 'push-button
                    :notify
-                   (lambda (&rest ignore)
+                   (lambda (&rest _ignore)
                      (bury-buffer)
                      (message "Operation canceled."))
                    "Cancel")
@@ -2585,7 +2569,7 @@ tags to their respective image file.  Internal function used by
 ;;                 `(,(nth 4 fattribs) ,(nth 7 fattribs) ,f)))
 ;;             (directory-files (image-dired-dir) t ".+\.thumb\..+$"))
 ;;            ;; Sort function. Compare time between two files.
-;;            '(lambda (l1 l2)
+;;            (lambda (l1 l2)
 ;;               (time-less-p (car l1) (car l2)))))
 ;;          (dirsize (apply '+ (mapcar (lambda (x) (cadr x)) files))))
 ;;     (while (> dirsize image-dired-dir-max-size)
@@ -2615,5 +2599,4 @@ tags to their respective image file.  Internal function used by
 
 (provide 'image-dired)
 
-;; arch-tag: 9d11411d-331f-4380-8b44-8adfe3a0343e
 ;;; image-dired.el ends here

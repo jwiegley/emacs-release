@@ -1,7 +1,6 @@
 ;;; wdired.el --- Rename files editing their names in dired buffers
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2004-2012  Free Software Foundation, Inc.
 
 ;; Filename: wdired.el
 ;; Author: Juan León Lahoz García <juanleon1@gmail.com>
@@ -33,7 +32,7 @@
 ;; the files in a "dired" buffer? Now you can do this.  All the power
 ;; of Emacs commands are available to renaming files!
 ;;
-;; This package provides a function that makes the filenames of a a
+;; This package provides a function that makes the filenames of a
 ;; dired buffer editable, by changing the buffer mode (which inhibits
 ;; all of the commands of dired mode). Here you can edit the names of
 ;; one or more files and directories, and when you press C-c C-c, the
@@ -59,39 +58,13 @@
 ;;
 ;; - To mark files for deletion, by deleting their whole filename.
 
-;;; Installation:
-
-;; Add this file (byte-compiling it is recommended) to your load-path.
-;; Then add one of these set of lines (or similar ones) to your config:
-;;
-;; This is the easy way:
-;;
-;; (require 'wdired)
-;; (define-key dired-mode-map "r" 'wdired-change-to-wdired-mode)
-;;
-;; This is the recommended way for faster Emacs startup time and lower
-;; memory consumption:
-;;
-;; (autoload 'wdired-change-to-wdired-mode "wdired")
-;; (eval-after-load "dired"
-;;           '(lambda ()
-;;              (define-key dired-mode-map "r" 'wdired-change-to-wdired-mode)
-;;              (define-key dired-mode-map
-;;                [menu-bar immediate wdired-change-to-wdired-mode]
-;;                '("Edit File Names" . wdired-change-to-wdired-mode))))
-;;
-;; Type "M-x customize-group RET wdired" if you want to make changes
-;; to the default behavior.
-
 ;;; Usage:
 
-;; Then, you can start editing the names of the files by typing "r"
-;; (or whatever key you choose, or M-x wdired-change-to-wdired-mode).
-;; Use C-c C-c when finished or C-c C-k to abort. You can use also the
-;; menu options: in dired mode, "Edit File Names" under "Immediate".
-;; While editing the names, a new submenu "WDired" is available at top
-;; level. You can customize the behavior of this package from this
-;; menu.
+;; You can edit the names of the files by typing C-x C-q or by
+;; executing M-x wdired-change-to-wdired-mode.  Use C-c C-c when
+;; finished or C-c C-k to abort.  While editing filenames, a new
+;; submenu "WDired" is available at top level.  You can customize the
+;; behavior of this package from this menu.
 
 ;;; Change Log:
 
@@ -243,6 +216,8 @@ See `wdired-mode'."
        (buffer-substring (point-min) (point-max)))
   (set (make-local-variable 'wdired-old-point) (point))
   (set (make-local-variable 'query-replace-skip-read-only) t)
+  (set (make-local-variable 'isearch-filter-predicate)
+       'wdired-isearch-filter-read-only)
   (use-local-map wdired-mode-map)
   (force-mode-line-update)
   (setq buffer-read-only nil)
@@ -268,6 +243,11 @@ See `wdired-mode'."
 		 "Press \\[wdired-finish-edit] when finished \
 or \\[wdired-abort-changes] to abort changes")))
 
+(defun wdired-isearch-filter-read-only (beg end)
+  "Skip matches that have a read-only property."
+  (and (isearch-filter-visible beg end)
+       (not (text-property-not-all (min beg end) (max beg end)
+				   'read-only nil))))
 
 ;; Protect the buffer so only the filenames can be changed, and put
 ;; properties so filenames (old and new) can be easily found.
@@ -541,7 +521,7 @@ and proceed depending on the answer."
   (interactive)
   (customize-apropos "wdired" 'groups))
 
-(defun wdired-revert (&optional arg noconfirm)
+(defun wdired-revert (&optional _arg _noconfirm)
   "Discard changes in the buffer and update it based on changes on disk.
 Optional arguments are ignored."
   (wdired-change-to-dired-mode)
@@ -649,7 +629,7 @@ If OLD, return the old target.  If MOVE, move point before it."
   (if (< arg 0)
       (funcall command arg)
     (while (> arg 0)
-      (condition-case err
+      (condition-case nil
           (progn
             (funcall command 1)
             (setq arg (1- arg)))
@@ -841,5 +821,4 @@ Like original function but it skips read-only words."
 ;; byte-compile-dynamic: t
 ;; End:
 
-;; arch-tag: bc00902e-526f-4305-bc7f-8862a559184f
 ;;; wdired.el ends here

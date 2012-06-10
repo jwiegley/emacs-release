@@ -4,8 +4,8 @@
 
 
 ;;;### (autoloads (diary-bahai-date diary-bahai-mark-entries calendar-bahai-mark-date-pattern
-;;;;;;  diary-bahai-list-entries) "cal-bahai" "cal-bahai.el" (20237
-;;;;;;  33269))
+;;;;;;  diary-bahai-list-entries) "cal-bahai" "cal-bahai.el" (20352
+;;;;;;  65510))
 ;;; Generated autoloads from cal-bahai.el
 
 (autoload 'diary-bahai-list-entries "cal-bahai" "\
@@ -43,7 +43,7 @@ Bahá'í calendar equivalent of date diary entry.
 ;;;***
 
 ;;;### (autoloads (diary-chinese-date) "cal-china" "cal-china.el"
-;;;;;;  (20237 33269))
+;;;;;;  (20352 65510))
 ;;; Generated autoloads from cal-china.el
 
 (autoload 'diary-chinese-date "cal-china" "\
@@ -54,7 +54,7 @@ Chinese calendar equivalent of date diary entry.
 ;;;***
 
 ;;;### (autoloads (diary-ethiopic-date diary-coptic-date) "cal-coptic"
-;;;;;;  "cal-coptic.el" (20237 33269))
+;;;;;;  "cal-coptic.el" (20352 65510))
 ;;; Generated autoloads from cal-coptic.el
 
 (autoload 'diary-coptic-date "cal-coptic" "\
@@ -70,7 +70,7 @@ Ethiopic calendar equivalent of date diary entry.
 ;;;***
 
 ;;;### (autoloads (diary-french-date) "cal-french" "cal-french.el"
-;;;;;;  (20237 33269))
+;;;;;;  (20352 65510))
 ;;; Generated autoloads from cal-french.el
 
 (autoload 'diary-french-date "cal-french" "\
@@ -82,9 +82,9 @@ French calendar equivalent of date diary entry.
 
 ;;;### (autoloads (diary-hebrew-sabbath-candles diary-hebrew-parasha
 ;;;;;;  diary-hebrew-rosh-hodesh diary-hebrew-yahrzeit diary-hebrew-omer
-;;;;;;  diary-hebrew-date diary-hebrew-mark-entries calendar-hebrew-mark-date-pattern
-;;;;;;  diary-hebrew-list-entries) "cal-hebrew" "cal-hebrew.el" (20237
-;;;;;;  33269))
+;;;;;;  diary-hebrew-birthday diary-hebrew-date diary-hebrew-mark-entries
+;;;;;;  calendar-hebrew-mark-date-pattern diary-hebrew-list-entries)
+;;;;;;  "cal-hebrew" "cal-hebrew.el" (20352 65510))
 ;;; Generated autoloads from cal-hebrew.el
 
 (autoload 'diary-hebrew-list-entries "cal-hebrew" "\
@@ -133,6 +133,22 @@ Hebrew calendar equivalent of date diary entry.
 
 \(fn)" nil nil)
 
+(autoload 'diary-hebrew-birthday "cal-hebrew" "\
+Hebrew birthday diary entry.
+Entry applies if date is birthdate (MONTH DAY YEAR), or the day before.
+The order of the input parameters changes according to
+`calendar-date-style' (e.g. to DAY MONTH YEAR in the European style).
+
+Assumes the associated diary entry is the name of the person.
+
+Although the date of birth is specified by the *civil* calendar,
+this function determines the proper Hebrew calendar birthday.
+If the optional argument AFTER-SUNSET is non-nil, this means the
+birth occurred after local sunset on the given civil date.
+In this case, the following civil date corresponds to the Hebrew birthday.
+
+\(fn MONTH DAY YEAR &optional AFTER-SUNSET)" nil nil)
+
 (autoload 'diary-hebrew-omer "cal-hebrew" "\
 Omer count diary entry.
 Entry applies if date is within 50 days after Passover.
@@ -151,13 +167,17 @@ entry is assumed to be the name of the person.  Although the date
 of death is specified by the civil calendar, the proper Hebrew
 calendar Yahrzeit is determined.
 
+If the death occurred after local sunset on the given civil date,
+the following civil date corresponds to the Hebrew date of
+death--set the optional parameter AFTER-SUNSET non-nil in this case.
+
 The order of the input parameters changes according to `calendar-date-style'
 \(e.g. to DEATH-DAY, DEATH-MONTH, DEATH-YEAR in the European style).
 
 An optional parameter MARK specifies a face or single-character string to
 use when highlighting the day in the calendar.
 
-\(fn DEATH-MONTH DEATH-DAY DEATH-YEAR &optional MARK)" nil nil)
+\(fn DEATH-MONTH DEATH-DAY DEATH-YEAR &optional MARK AFTER-SUNSET)" nil nil)
 
 (define-obsolete-function-alias 'diary-yahrzeit 'diary-hebrew-yahrzeit "23.1")
 
@@ -195,7 +215,7 @@ use when highlighting the day in the calendar.
 
 ;;;### (autoloads (diary-islamic-date diary-islamic-mark-entries
 ;;;;;;  calendar-islamic-mark-date-pattern diary-islamic-list-entries)
-;;;;;;  "cal-islam" "cal-islam.el" (20237 33269))
+;;;;;;  "cal-islam" "cal-islam.el" (20352 65510))
 ;;; Generated autoloads from cal-islam.el
 
 (autoload 'diary-islamic-list-entries "cal-islam" "\
@@ -233,8 +253,8 @@ Islamic calendar equivalent of date diary entry.
 
 ;;;***
 
-;;;### (autoloads (diary-iso-date) "cal-iso" "cal-iso.el" (20237
-;;;;;;  33269))
+;;;### (autoloads (diary-iso-date) "cal-iso" "cal-iso.el" (20352
+;;;;;;  65510))
 ;;; Generated autoloads from cal-iso.el
 
 (autoload 'diary-iso-date "cal-iso" "\
@@ -245,7 +265,7 @@ ISO calendar equivalent of date diary entry.
 ;;;***
 
 ;;;### (autoloads (diary-astro-day-number diary-julian-date) "cal-julian"
-;;;;;;  "cal-julian.el" (20237 33269))
+;;;;;;  "cal-julian.el" (20352 65510))
 ;;; Generated autoloads from cal-julian.el
 
 (autoload 'diary-julian-date "cal-julian" "\
@@ -260,8 +280,8 @@ Astronomical (Julian) day number diary entry.
 
 ;;;***
 
-;;;### (autoloads (diary-mayan-date) "cal-mayan" "cal-mayan.el" (20237
-;;;;;;  33269))
+;;;### (autoloads (diary-mayan-date) "cal-mayan" "cal-mayan.el" (20352
+;;;;;;  65510))
 ;;; Generated autoloads from cal-mayan.el
 
 (autoload 'diary-mayan-date "cal-mayan" "\
@@ -272,7 +292,7 @@ Show the Mayan long count, haab, and tzolkin dates as a diary entry.
 ;;;***
 
 ;;;### (autoloads (diary-persian-date) "cal-persia" "cal-persia.el"
-;;;;;;  (20237 33269))
+;;;;;;  (20352 65510))
 ;;; Generated autoloads from cal-persia.el
 
 (autoload 'diary-persian-date "cal-persia" "\
@@ -283,7 +303,7 @@ Persian calendar equivalent of date diary entry.
 ;;;***
 
 ;;;### (autoloads (calendar-check-holidays calendar-holiday-list)
-;;;;;;  "holidays" "holidays.el" (20237 33269))
+;;;;;;  "holidays" "holidays.el" (20400 62402))
 ;;; Generated autoloads from holidays.el
 
 (autoload 'calendar-holiday-list "holidays" "\
@@ -294,15 +314,16 @@ The holidays are those in the list `calendar-holidays'.
 
 (autoload 'calendar-check-holidays "holidays" "\
 Check the list of holidays for any that occur on DATE.
-The value returned is a list of strings of relevant holiday descriptions.
-The holidays are those in the list `calendar-holidays'.
+DATE is a list (month day year).  This function considers the
+holidays from the list `calendar-holidays', and returns a list of
+strings describing those holidays that apply on DATE, or nil if none do.
 
 \(fn DATE)" nil nil)
 
 ;;;***
 
-;;;### (autoloads (diary-lunar-phases) "lunar" "lunar.el" (20237
-;;;;;;  33269))
+;;;### (autoloads (diary-lunar-phases) "lunar" "lunar.el" (20352
+;;;;;;  65510))
 ;;; Generated autoloads from lunar.el
 
 (autoload 'diary-lunar-phases "lunar" "\
@@ -316,8 +337,8 @@ use when highlighting the day in the calendar.
 
 ;;;***
 
-;;;### (autoloads (diary-sunrise-sunset) "solar" "solar.el" (20237
-;;;;;;  33269))
+;;;### (autoloads (diary-sunrise-sunset) "solar" "solar.el" (20352
+;;;;;;  65510))
 ;;; Generated autoloads from solar.el
 
 (autoload 'diary-sunrise-sunset "solar" "\
@@ -331,7 +352,7 @@ Accurate to a few seconds.
 ;;;### (autoloads nil nil ("appt.el" "cal-dst.el" "cal-html.el" "cal-loaddefs.el"
 ;;;;;;  "cal-menu.el" "cal-move.el" "cal-tex.el" "cal-x.el" "calendar.el"
 ;;;;;;  "diary-lib.el" "icalendar.el" "parse-time.el" "time-date.el"
-;;;;;;  "timeclock.el" "todo-mode.el") (20259 50786 649448))
+;;;;;;  "timeclock.el" "todo-mode.el") (20436 19802 347198))
 
 ;;;***
 

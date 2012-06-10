@@ -1,8 +1,6 @@
-;;; tar-mode.el --- simple editing of tar files from GNU emacs
+;;; tar-mode.el --- simple editing of tar files from GNU Emacs
 
-;; Copyright (C) 1990, 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1990-1991, 1993-2012 Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com>
 ;; Maintainer: FSF
@@ -137,7 +135,6 @@ This information is useful, but it takes screen space away from file names."
 (defvar tar-parse-info nil)
 (defvar tar-superior-buffer nil)
 (defvar tar-superior-descriptor nil)
-(defvar tar-subfile-mode nil)
 (defvar tar-file-name-coding-system nil)
 
 (put 'tar-superior-buffer 'permanent-local t)
@@ -145,7 +142,7 @@ This information is useful, but it takes screen space away from file names."
 
 ;; The Tar data is made up of bytes and better manipulated as bytes
 ;; and can be very large, so insert/delete can be costly.  The summary we
-;; want to display may contain non-ascci chars, of course, so we'd like it
+;; want to display may contain non-ascii chars, of course, so we'd like it
 ;; to be multibyte.  We used to keep both in the same buffer and switch
 ;; from/to uni/multibyte.  But this had several downsides:
 ;; - set-buffer-multibyte has an O(N^2) worst case that tends to be triggered
@@ -223,7 +220,7 @@ Preserve the modified states of the buffers and set `buffer-swapped-with'."
 (defun tar-roundup-512 (s)
   "Round S up to the next multiple of 512."
   (ash (ash (+ s 511) -9) 9))
- 
+
 (defun tar-header-block-tokenize (pos coding)
   "Return a `tar-header' structure.
 This is a list of name, mode, uid, gid, size,
@@ -286,7 +283,7 @@ write-date, checksum, link-type, and link-name."
             (let* ((size (tar-parse-octal-integer
                           string tar-size-offset tar-time-offset))
                    ;; -1 so as to strip the terminating 0 byte.
-		   (name (decode-coding-string 
+		   (name (decode-coding-string
 			  (buffer-substring pos (+ pos size -1)) coding))
                    (descriptor (tar-header-block-tokenize
                                 (+ pos (tar-roundup-512 size))
@@ -301,7 +298,7 @@ write-date, checksum, link-type, and link-name."
               (setf (tar-header-header-start descriptor)
                     (copy-marker (- pos 512) t))
               descriptor)
-        
+
           (make-tar-header
            (copy-marker pos nil)
            name
@@ -407,13 +404,19 @@ MODE should be an integer which is a file mode value."
   (string
    (if (zerop (logand 256 mode)) ?- ?r)
    (if (zerop (logand 128 mode)) ?- ?w)
-   (if (zerop (logand 1024 mode)) (if (zerop (logand  64 mode)) ?- ?x) ?s)
+   (if (zerop (logand 2048 mode))
+       (if (zerop (logand  64 mode)) ?- ?x)
+     (if (zerop (logand  64 mode)) ?S ?s))
    (if (zerop (logand  32 mode)) ?- ?r)
    (if (zerop (logand  16 mode)) ?- ?w)
-   (if (zerop (logand 2048 mode)) (if (zerop (logand   8 mode)) ?- ?x) ?s)
+   (if (zerop (logand 1024 mode))
+       (if (zerop (logand   8 mode)) ?- ?x)
+     (if (zerop (logand   8 mode)) ?S ?s))
    (if (zerop (logand   4 mode)) ?- ?r)
    (if (zerop (logand   2 mode)) ?- ?w)
-   (if (zerop (logand   1 mode)) ?- ?x)))
+   (if (zerop (logand 512 mode))
+       (if (zerop (logand   1 mode)) ?- ?x)
+     (if (zerop (logand   1 mode)) ?T ?t))))
 
 (defun tar-header-block-summarize (tar-hblock &optional mod-p)
   "Return a line similar to the output of `tar -vtf'."
@@ -505,7 +508,7 @@ MODE should be an integer which is a file mode value."
         ;;(tar-header-block-check-checksum
         ;;  hblock (tar-header-block-checksum hblock)
         ;;  (tar-header-name descriptor))
-        
+
         (push descriptor result)
         (setq pos (tar-header-data-end descriptor))
         (progress-reporter-update progress-reporter pos)))
@@ -536,13 +539,11 @@ MODE should be an integer which is a file mode value."
     (define-key map "\C-m" 'tar-extract)
     (define-key map [mouse-2] 'tar-mouse-extract)
     (define-key map "g" 'revert-buffer)
-    (define-key map "h" 'describe-mode)
     (define-key map "n" 'tar-next-line)
     (define-key map "\^N" 'tar-next-line)
     (define-key map [down] 'tar-next-line)
     (define-key map "o" 'tar-extract-other-window)
     (define-key map "p" 'tar-previous-line)
-    (define-key map "q" 'quit-window)
     (define-key map "\^P" 'tar-previous-line)
     (define-key map [up] 'tar-previous-line)
     (define-key map "R" 'tar-rename-entry)
@@ -618,7 +619,7 @@ MODE should be an integer which is a file mode value."
   (if (buffer-live-p tar-data-buffer) (kill-buffer tar-data-buffer)))
 
 ;;;###autoload
-(define-derived-mode tar-mode nil "Tar"
+(define-derived-mode tar-mode special-mode "Tar"
   "Major mode for viewing a tar file as a dired-like listing of its contents.
 You can move around using the usual cursor motion commands.
 Letters no longer insert themselves.
@@ -633,6 +634,9 @@ inside of a tar archive without extracting it and re-archiving it.
 
 See also: variables `tar-update-datestamp' and `tar-anal-blocksize'.
 \\{tar-mode-map}"
+  (and buffer-file-name
+       (file-writable-p buffer-file-name)
+       (setq buffer-read-only nil))    ; undo what `special-mode' did
   (make-local-variable 'tar-parse-info)
   (set (make-local-variable 'require-final-newline) nil) ; binary data, dude...
   (set (make-local-variable 'local-enable-local-variables) nil)
@@ -674,29 +678,24 @@ See also: variables `tar-update-datestamp' and `tar-anal-blocksize'.
      (signal (car err) (cdr err)))))
 
 
-(defun tar-subfile-mode (p)
+(define-minor-mode tar-subfile-mode
   "Minor mode for editing an element of a tar-file.
-This mode arranges for \"saving\" this buffer to write the data
-into the tar-file buffer that it came from.  The changes will actually
-appear on disk when you save the tar-file's buffer."
-  (interactive "P")
+With a prefix argument ARG, enable the mode if ARG is positive,
+and disable it otherwise.  If called from Lisp, enable the mode
+if ARG is omitted or nil.  This mode arranges for \"saving\" this
+buffer to write the data into the tar-file buffer that it came
+from.  The changes will actually appear on disk when you save the
+tar-file's buffer."
+  ;; Don't do this, because it is redundant and wastes mode line space.
+  ;; :lighter " TarFile"
+  nil nil nil
   (or (and (boundp 'tar-superior-buffer) tar-superior-buffer)
       (error "This buffer is not an element of a tar file"))
-  ;; Don't do this, because it is redundant and wastes mode line space.
-  ;;  (or (assq 'tar-subfile-mode minor-mode-alist)
-  ;;      (setq minor-mode-alist (append minor-mode-alist
-  ;;				     (list '(tar-subfile-mode " TarFile")))))
-  (make-local-variable 'tar-subfile-mode)
-  (setq tar-subfile-mode
-	(if (null p)
-	    (not tar-subfile-mode)
-	    (> (prefix-numeric-value p) 0)))
   (cond (tar-subfile-mode
 	 (add-hook 'write-file-functions 'tar-subfile-save-buffer nil t)
 	 ;; turn off auto-save.
 	 (auto-save-mode -1)
-	 (setq buffer-auto-save-file-name nil)
-	 (run-hooks 'tar-subfile-mode-hook))
+	 (setq buffer-auto-save-file-name nil))
 	(t
 	 (remove-hook 'write-file-functions 'tar-subfile-save-buffer t))))
 
@@ -854,14 +853,12 @@ appear on disk when you save the tar-file's buffer."
           (set (make-local-variable 'tar-superior-descriptor) descriptor)
           (setq buffer-read-only read-only-p)
           (tar-subfile-mode 1)))
-      (if view-p
-	  (view-buffer
-	   buffer (and just-created 'kill-buffer-if-not-modified))
-	(if (eq other-window-p 'display)
-	    (display-buffer buffer)
-	  (if other-window-p
-	      (switch-to-buffer-other-window buffer)
-	    (switch-to-buffer buffer)))))))
+      (cond
+       (view-p
+	(view-buffer buffer (and just-created 'kill-buffer-if-not-modified)))
+       ((eq other-window-p 'display) (display-buffer buffer))
+       (other-window-p (switch-to-buffer-other-window buffer))
+       (t (switch-to-buffer buffer))))))
 
 
 (defun tar-extract-other-window ()
@@ -1168,7 +1165,6 @@ to make your changes permanent."
         subfile-size)
     (with-current-buffer tar-superior-buffer
       (let* ((start (tar-header-data-start descriptor))
-             (name (tar-header-name descriptor))
              (size (tar-header-size descriptor))
              (head (memq descriptor tar-parse-info)))
         (if (not head)
@@ -1248,7 +1244,7 @@ Leaves the region wide."
 
 
 ;; Used in write-region-annotate-functions to write tar-files out correctly.
-(defun tar-write-region-annotate (start end)
+(defun tar-write-region-annotate (start _end)
   ;; When called from write-file (and auto-save), `start' is nil.
   ;; When called from M-x write-region, we assume the user wants to save
   ;; (part of) the summary, not the tar data.
@@ -1259,5 +1255,4 @@ Leaves the region wide."
 
 (provide 'tar-mode)
 
-;; arch-tag: 8a585a4a-340e-42c2-89e7-d3b1013a4b78
 ;;; tar-mode.el ends here

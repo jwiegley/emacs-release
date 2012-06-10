@@ -1,7 +1,6 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
-@c Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1998, 1999, 2001,
-@c   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
+@c Copyright (C) 1990-1995, 1998-1999, 2001-2012
 @c   Free Software Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @setfilename ../../info/objects
@@ -180,10 +179,9 @@ to
 @tex
 @math{2^{29}-1})
 @end tex
-on most machines.  (Some machines may provide a wider range.)  It is
-important to note that the Emacs Lisp arithmetic functions do not check
-for overflow.  Thus @code{(1+ 536870911)} is @minus{}536870912 on most
-machines.
+on typical 32-bit machines.  (Some machines provide a wider range.)
+Emacs Lisp arithmetic functions do not check for overflow.  Thus
+@code{(1+ 536870911)} is @minus{}536870912 if Emacs integers are 30 bits.
 
   The read syntax for integers is a sequence of (base ten) digits with an
 optional sign at the beginning and an optional period at the end.  The
@@ -196,7 +194,6 @@ leading @samp{+} or a final @samp{.}.
 1                ; @r{The integer 1.}
 1.               ; @r{Also the integer 1.}
 +1               ; @r{Also the integer 1.}
-1073741825       ; @r{Also the integer 1 on a 30-bit implementation.}
 @end group
 @end example
 
@@ -204,8 +201,8 @@ leading @samp{+} or a final @samp{.}.
 As a special exception, if a sequence of digits specifies an integer
 too large or too small to be a valid integer object, the Lisp reader
 reads it as a floating-point number (@pxref{Floating Point Type}).
-For instance, on most machines @code{536870912} is read as the
-floating-point number @code{536870912.0}.
+For instance, if Emacs integers are 30 bits, @code{536870912} is read
+as the floating-point number @code{536870912.0}.
 
   @xref{Numbers}, for more information.
 
@@ -355,7 +352,7 @@ following text.)
 
   In addition to the specific escape sequences for special important
 control characters, Emacs provides several types of escape syntax that
-you can use to specify non-ASCII text characters.
+you can use to specify non-@acronym{ASCII} text characters.
 
 @cindex unicode character escape
   You can specify characters by their Unicode values.
@@ -373,7 +370,7 @@ with other programming languages.  Unlike some other languages, Emacs
 Lisp supports this syntax only in character literals and strings.
 
 @cindex @samp{\} in character constant
-@cindex backslash in character constant
+@cindex backslash in character constants
 @cindex octal character code
   The most general read syntax for a character represents the
 character code in either octal or hex.  To use octal, write a question
@@ -395,7 +392,7 @@ value is more important than the @acronym{ASCII} representation.
 and the hexadecimal character code.  You can use any number of hex
 digits, so you can represent any character code in this way.
 Thus, @samp{?\x41} for the character @kbd{A}, @samp{?\x1} for the
-character @kbd{C-a}, and @code{?\x8e0} for the Latin-1 character
+character @kbd{C-a}, and @code{?\xe0} for the Latin-1 character
 @iftex
 @samp{@`a}.
 @end iftex
@@ -430,10 +427,10 @@ codes for these non-@acronym{ASCII} control characters include the
 @ifnottex
 2**26
 @end ifnottex
-bit as well as the code for the corresponding non-control
-character.  Ordinary terminals have no way of generating non-@acronym{ASCII}
-control characters, but you can generate them straightforwardly using X
-and other window systems.
+bit as well as the code for the corresponding non-control character.
+Ordinary text terminals have no way of generating non-@acronym{ASCII}
+control characters, but you can generate them straightforwardly using
+X and other window systems.
 
   For historical reasons, Emacs treats the @key{DEL} character as
 the control equivalent of @kbd{?}:
@@ -504,10 +501,10 @@ character is upper case or lower case.  Emacs uses the
 @end ifnottex
 bit to indicate that the shift key was used in typing a control
 character.  This distinction is possible only when you use X terminals
-or other special terminals; ordinary terminals do not report the
-distinction to the computer in any way.  The Lisp syntax for
-the shift bit is @samp{\S-}; thus, @samp{?\C-\S-o} or @samp{?\C-\S-O}
-represents the shifted-control-o character.
+or other special terminals; ordinary text terminals do not report the
+distinction.  The Lisp syntax for the shift bit is @samp{\S-}; thus,
+@samp{?\C-\S-o} or @samp{?\C-\S-O} represents the shifted-control-o
+character.
 
 @cindex hyper characters
 @cindex super characters
@@ -544,9 +541,9 @@ intended.  But you can use one symbol in all of these ways,
 independently.
 
   A symbol whose name starts with a colon (@samp{:}) is called a
-@dfn{keyword symbol}.  These symbols automatically act as constants, and
-are normally used only by comparing an unknown symbol with a few
-specific alternatives.
+@dfn{keyword symbol}.  These symbols automatically act as constants,
+and are normally used only by comparing an unknown symbol with a few
+specific alternatives.  @xref{Constant Variables}.
 
 @cindex @samp{\} in symbols
 @cindex backslash in symbols
@@ -600,6 +597,7 @@ FOO                 ; @r{A symbol named @samp{FOO}, different from @samp{foo}.}
 @end group
 @end example
 
+@cindex @samp{##} read syntax
 @ifinfo
 @c This uses ``colon'' instead of a literal `:' because Info cannot
 @c cope with a `:' in a menu
@@ -608,34 +606,39 @@ FOO                 ; @r{A symbol named @samp{FOO}, different from @samp{foo}.}
 @ifnotinfo
 @cindex @samp{#:} read syntax
 @end ifnotinfo
-  Normally the Lisp reader interns all symbols (@pxref{Creating
-Symbols}).  To prevent interning, you can write @samp{#:} before the
-name of the symbol.
+  As an exception to the rule that a symbol's name serves as its
+printed representation, @samp{##} is the printed representation for an
+interned symbol whose name is an empty string.  Furthermore,
+@samp{#:@var{foo}} is the printed representation for an uninterned
+symbol whose name is @var{foo}.  (Normally, the Lisp reader interns
+all symbols; @pxref{Creating Symbols}.)
 
 @node Sequence Type
 @subsection Sequence Types
 
   A @dfn{sequence} is a Lisp object that represents an ordered set of
-elements.  There are two kinds of sequence in Emacs Lisp, lists and
-arrays.  Thus, an object of type list or of type array is also
-considered a sequence.
+elements.  There are two kinds of sequence in Emacs Lisp: @dfn{lists}
+and @dfn{arrays}.
 
-  Arrays are further subdivided into strings, vectors, char-tables and
-bool-vectors.  Vectors can hold elements of any type, but string
-elements must be characters, and bool-vector elements must be @code{t}
-or @code{nil}.  Char-tables are like vectors except that they are
-indexed by any valid character code.  The characters in a string can
-have text properties like characters in a buffer (@pxref{Text
-Properties}), but vectors do not support text properties, even when
-their elements happen to be characters.
+  Lists are the most commonly-used sequences.  A list can hold
+elements of any type, and its length can be easily changed by adding
+or removing elements.  See the next subsection for more about lists.
 
-  Lists, strings and the other array types are different, but they have
-important similarities.  For example, all have a length @var{l}, and all
-have elements which can be indexed from zero to @var{l} minus one.
-Several functions, called sequence functions, accept any kind of
-sequence.  For example, the function @code{elt} can be used to extract
-an element of a sequence, given its index.  @xref{Sequences Arrays
-Vectors}.
+  Arrays are fixed-length sequences.  They are further subdivided into
+strings, vectors, char-tables and bool-vectors.  Vectors can hold
+elements of any type, whereas string elements must be characters, and
+bool-vector elements must be @code{t} or @code{nil}.  Char-tables are
+like vectors except that they are indexed by any valid character code.
+The characters in a string can have text properties like characters in
+a buffer (@pxref{Text Properties}), but vectors do not support text
+properties, even when their elements happen to be characters.
+
+  Lists, strings and the other array types also share important
+similarities.  For example, all have a length @var{l}, and all have
+elements which can be indexed from zero to @var{l} minus one.  Several
+functions, called sequence functions, accept any kind of sequence.
+For example, the function @code{length} reports the length of any kind
+of sequence.  @xref{Sequences Arrays Vectors}.
 
   It is generally impossible to read the same sequence twice, since
 sequences are always created anew upon reading.  If you read the read
@@ -649,28 +652,31 @@ same object, @code{nil}.
 @cindex decrement field of register
 @cindex pointers
 
-  A @dfn{cons cell} is an object that consists of two slots, called the
-@sc{car} slot and the @sc{cdr} slot.  Each slot can @dfn{hold} or
-@dfn{refer to} any Lisp object.  We also say that ``the @sc{car} of
-this cons cell is'' whatever object its @sc{car} slot currently holds,
-and likewise for the @sc{cdr}.
+  A @dfn{cons cell} is an object that consists of two slots, called
+the @sc{car} slot and the @sc{cdr} slot.  Each slot can @dfn{hold} any
+Lisp object.  We also say that ``the @sc{car} of this cons cell is''
+whatever object its @sc{car} slot currently holds, and likewise for
+the @sc{cdr}.
 
-@quotation
-A note to C programmers: in Lisp, we do not distinguish between
-``holding'' a value and ``pointing to'' the value, because pointers in
-Lisp are implicit.
-@end quotation
-
+@cindex list structure
   A @dfn{list} is a series of cons cells, linked together so that the
 @sc{cdr} slot of each cons cell holds either the next cons cell or the
 empty list.  The empty list is actually the symbol @code{nil}.
-@xref{Lists}, for functions that work on lists.  Because most cons
-cells are used as part of lists, the phrase @dfn{list structure} has
-come to refer to any structure made out of cons cells.
+@xref{Lists}, for details.  Because most cons cells are used as part
+of lists, we refer to any structure made out of cons cells as a
+@dfn{list structure}.
+
+@cindex linked list
+@quotation
+A note to C programmers: a Lisp list thus works as a @dfn{linked list}
+built up of cons cells.  Because pointers in Lisp are implicit, we do
+not distinguish between a cons cell slot ``holding'' a value versus
+``pointing to'' the value.
+@end quotation
 
 @cindex atoms
   Because cons cells are so central to Lisp, we also have a word for
-``an object which is not a cons cell.''  These objects are called
+``an object which is not a cons cell''.  These objects are called
 @dfn{atoms}.
 
 @cindex parenthesis
@@ -1024,40 +1030,40 @@ but the newline is ignored if escaped."
 @node Non-ASCII in Strings
 @subsubsection Non-@acronym{ASCII} Characters in Strings
 
-  You can include a non-@acronym{ASCII} international character in a string
-constant by writing it literally.  There are two text representations
-for non-@acronym{ASCII} characters in Emacs strings (and in buffers): unibyte
-and multibyte.  If the string constant is read from a multibyte source,
-such as a multibyte buffer or string, or a file that would be visited as
-multibyte, then the character is read as a multibyte character, and that
-makes the string multibyte.  If the string constant is read from a
-unibyte source, then the character is read as unibyte and that makes the
-string unibyte.
+  You can include a non-@acronym{ASCII} international character in a
+string constant by writing it literally.  There are two text
+representations for non-@acronym{ASCII} characters in Emacs strings
+(and in buffers): unibyte and multibyte (@pxref{Text
+Representations}).  If the string constant is read from a multibyte
+source, such as a multibyte buffer or string, or a file that would be
+visited as multibyte, then Emacs reads the non-@acronym{ASCII}
+character as a multibyte character and automatically makes the string
+a multibyte string.  If the string constant is read from a unibyte
+source, then Emacs reads the non-@acronym{ASCII} character as unibyte,
+and makes the string unibyte.
 
-  You can also represent a multibyte non-@acronym{ASCII} character with its
-character code: use a hex escape, @samp{\x@var{nnnnnnn}}, with as many
-digits as necessary.  (Multibyte non-@acronym{ASCII} character codes are all
-greater than 256.)  Any character which is not a valid hex digit
-terminates this construct.  If the next character in the string could be
-interpreted as a hex digit, write @w{@samp{\ }} (backslash and space) to
-terminate the hex escape---for example, @w{@samp{\x8e0\ }} represents
-one character, @samp{a} with grave accent.  @w{@samp{\ }} in a string
-constant is just like backslash-newline; it does not contribute any
-character to the string, but it does terminate the preceding hex escape.
+  Instead of writing a non-@acronym{ASCII} character literally into a
+multibyte string, you can write it as its character code using a hex
+escape, @samp{\x@var{nnnnnnn}}, with as many digits as necessary.
+(Multibyte non-@acronym{ASCII} character codes are all greater than
+256.)  You can also specify a character in a multibyte string using
+the @samp{\u} or @samp{\U} Unicode escape syntax (@pxref{General
+Escape Syntax}).  In either case, any character which is not a valid
+hex digit terminates the construct.  If the next character in the
+string could be interpreted as a hex digit, write @w{@samp{\ }}
+(backslash and space) to terminate the hex escape---for example,
+@w{@samp{\xe0\ }} represents one character, @samp{a} with grave
+accent.  @w{@samp{\ }} in a string constant is just like
+backslash-newline; it does not contribute any character to the string,
+but it does terminate the preceding hex escape.  Using any hex escape
+in a string (even for an @acronym{ASCII} character) automatically
+forces the string to be multibyte.
 
   You can represent a unibyte non-@acronym{ASCII} character with its
 character code, which must be in the range from 128 (0200 octal) to
 255 (0377 octal).  If you write all such character codes in octal and
 the string contains no other characters forcing it to be multibyte,
-this produces a unibyte string.  However, using any hex escape in a
-string (even for an @acronym{ASCII} character) forces the string to be
-multibyte.
-
-  You can also specify characters in a string by their numeric values
-in Unicode, using @samp{\u} and @samp{\U} (@pxref{Character Type}).
-
-  @xref{Text Representations}, for more information about the two
-text representations.
+this produces a unibyte string.
 
 @node Nonprinting Characters
 @subsubsection Nonprinting Characters in Strings
@@ -1284,7 +1290,7 @@ without qualification, we mean a Lisp macro, not a keyboard macro.
   A @dfn{primitive function} is a function callable from Lisp but
 written in the C programming language.  Primitive functions are also
 called @dfn{subrs} or @dfn{built-in functions}.  (The word ``subr'' is
-derived from ``subroutine.'')  Most primitive functions evaluate all
+derived from ``subroutine''.)  Most primitive functions evaluate all
 their arguments when they are called.  A primitive function that does
 not evaluate all its arguments is called a @dfn{special form}
 (@pxref{Special Forms}).@refill
@@ -1317,11 +1323,11 @@ with the name of the subroutine.
 @node Byte-Code Type
 @subsection Byte-Code Function Type
 
-The byte compiler produces @dfn{byte-code function objects}.
-Internally, a byte-code function object is much like a vector; however,
-the evaluator handles this data type specially when it appears as a
-function to be called.  @xref{Byte Compilation}, for information about
-the byte compiler.
+@dfn{Byte-code function objects} are produced by byte-compiling Lisp
+code (@pxref{Byte Compilation}).  Internally, a byte-code function
+object is much like a vector; however, the evaluator handles this data
+type specially when it appears in a function call.  @xref{Byte-Code
+Objects}.
 
 The printed representation and read syntax for a byte-code function
 object is like that for a vector, with an additional @samp{#} before the
@@ -1562,7 +1568,6 @@ runs in a process of this sort.  However, in Emacs Lisp, a process is a
 Lisp object that designates a subprocess created by the Emacs process.
 Programs such as shells, GDB, ftp, and compilers, running in
 subprocesses of Emacs, extend the capabilities of Emacs.
-
   An Emacs subprocess takes textual input from Emacs and returns textual
 output to Emacs for further manipulation.  Emacs can also send signals
 to the subprocess.
@@ -1626,7 +1631,7 @@ buffer temporarily in a different display style.  Overlays have no read
 syntax, and print in hash notation, giving the buffer name and range of
 positions.
 
-  @xref{Overlays}, for how to create and use overlays.
+  @xref{Overlays}, for information on how you can create and use overlays.
 
 @node Font Type
 @subsection Font Type
@@ -1789,6 +1794,9 @@ with references to further information.
 @item consp
 @xref{List-related Predicates, consp}.
 
+@item custom-variable-p
+@xref{Variable Definitions, custom-variable-p}.
+
 @item display-table-p
 @xref{Display Tables, display-table-p}.
 
@@ -1864,9 +1872,6 @@ with references to further information.
 @item syntax-table-p
 @xref{Syntax Tables, syntax-table-p}.
 
-@item user-variable-p
-@xref{Defining Variables, user-variable-p}.
-
 @item vectorp
 @xref{Vectors, vectorp}.
 
@@ -1921,23 +1926,24 @@ This function returns a symbol naming the primitive type of
 @section Equality Predicates
 @cindex equality
 
-  Here we describe functions that test for equality between any two
-objects.  Other functions test equality of contents between objects of specific
-types, e.g., strings.  For these predicates, see the appropriate chapter
-describing the data type.
+  Here we describe functions that test for equality between two
+objects.  Other functions test equality of contents between objects of
+specific types, e.g.@: strings.  For these predicates, see the
+appropriate chapter describing the data type.
 
 @defun eq object1 object2
 This function returns @code{t} if @var{object1} and @var{object2} are
-the same object, @code{nil} otherwise.
+the same object, and @code{nil} otherwise.
 
-@code{eq} returns @code{t} if @var{object1} and @var{object2} are
-integers with the same value.  Also, since symbol names are normally
-unique, if the arguments are symbols with the same name, they are
-@code{eq}.  For other types (e.g., lists, vectors, strings), two
-arguments with the same contents or elements are not necessarily
-@code{eq} to each other: they are @code{eq} only if they are the same
-object, meaning that a change in the contents of one will be reflected
-by the same change in the contents of the other.
+If @var{object1} and @var{object2} are integers with the same value,
+they are considered to be the same object (i.e.@: @code{eq} returns
+@code{t}).  If @var{object1} and @var{object2} are symbols with the
+same name, they are normally the same object---but see @ref{Creating
+Symbols} for exceptions.  For other types (e.g.@: lists, vectors,
+strings), two arguments with the same contents or elements are not
+necessarily @code{eq} to each other: they are @code{eq} only if they
+are the same object, meaning that a change in the contents of one will
+be reflected by the same change in the contents of the other.
 
 @example
 @group
@@ -1987,6 +1993,7 @@ by the same change in the contents of the other.
 @end group
 @end example
 
+@noindent
 The @code{make-symbol} function returns an uninterned symbol, distinct
 from the symbol that is used if you write the name in a Lisp expression.
 Distinct symbols with the same name are not @code{eq}.  @xref{Creating
@@ -2002,11 +2009,11 @@ Symbols}.
 
 @defun equal object1 object2
 This function returns @code{t} if @var{object1} and @var{object2} have
-equal components, @code{nil} otherwise.  Whereas @code{eq} tests if its
-arguments are the same object, @code{equal} looks inside nonidentical
-arguments to see if their elements or contents are the same.  So, if two
-objects are @code{eq}, they are @code{equal}, but the converse is not
-always true.
+equal components, and @code{nil} otherwise.  Whereas @code{eq} tests
+if its arguments are the same object, @code{equal} looks inside
+nonidentical arguments to see if their elements or contents are the
+same.  So, if two objects are @code{eq}, they are @code{equal}, but
+the converse is not always true.
 
 @example
 @group
@@ -2058,13 +2065,13 @@ always true.
 @end example
 
 Comparison of strings is case-sensitive, but does not take account of
-text properties---it compares only the characters in the strings.  Use
-@code{equal-including-properties} to also compare text properties.  For
-technical reasons, a unibyte string and a multibyte string are
-@code{equal} if and only if they contain the same sequence of
-character codes and all these codes are either in the range 0 through
-127 (@acronym{ASCII}) or 160 through 255 (@code{eight-bit-graphic}).
-(@pxref{Text Representations}).
+text properties---it compares only the characters in the strings.
+@xref{Text Properties}.  Use @code{equal-including-properties} to also
+compare text properties.  For technical reasons, a unibyte string and
+a multibyte string are @code{equal} if and only if they contain the
+same sequence of character codes and all these codes are either in the
+range 0 through 127 (@acronym{ASCII}) or 160 through 255
+(@code{eight-bit-graphic}).  (@pxref{Text Representations}).
 
 @example
 @group
@@ -2106,7 +2113,3 @@ that for two strings to be equal, they have the same text properties.
 @end group
 @end example
 @end defun
-
-@ignore
-   arch-tag: 9711a66e-4749-4265-9e8c-972d55b67096
-@end ignore

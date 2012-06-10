@@ -1,6 +1,6 @@
 ;;; hashcash.el --- Add hashcash payments to email
 
-;; Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2003-2005, 2007-2012  Free Software Foundation, Inc.
 
 ;; Written by: Paul Foley <mycroft@actrix.gen.nz> (1997-2002)
 ;; Maintainer: Paul Foley <mycroft@actrix.gen.nz>
@@ -47,6 +47,7 @@
 
 ;;; Code:
 
+;; For Emacs <22.2 and XEmacs.
 (eval-and-compile
   (unless (fboundp 'declare-function) (defmacro declare-function (&rest r))))
 
@@ -115,8 +116,6 @@ For example, you may want to set this to '(\"-Z2\") to reduce header length."
 (require 'mail-utils)
 
 (eval-and-compile
-  (unless (fboundp 'declare-function) (defmacro declare-function (&rest r)))
-
   (if (fboundp 'point-at-bol)
       (defalias 'hashcash-point-at-bol 'point-at-bol)
     (defalias 'hashcash-point-at-bol 'line-beginning-position))
@@ -131,10 +130,10 @@ For example, you may want to set this to '(\"-Z2\") to reduce header length."
       (concat (match-string 1 addr) (match-string 2 addr))
     addr))
 
-(declare-function  message-narrow-to-headers-or-head "message" ())
-(declare-function  message-fetch-field "message" (header &optional not-all))
-(declare-function  message-goto-eoh "message" ())
-(declare-function  message-narrow-to-headers "message" ())
+(declare-function message-narrow-to-headers-or-head "message" ())
+(declare-function message-fetch-field "message" (header &optional not-all))
+(declare-function message-goto-eoh "message" ())
+(declare-function message-narrow-to-headers "message" ())
 
 (defun hashcash-token-substring ()
   (save-excursion
@@ -277,7 +276,7 @@ BUFFER defaults to the current buffer."
   (unless buffer (setq buffer (current-buffer)))
   (let (entry)
     (while (setq entry (rassq buffer hashcash-process-alist))
-      (accept-process-output (car entry)))))
+      (accept-process-output (car entry) 1))))
 
 (defun hashcash-processes-running-p (buffer)
   "Return non-nil if hashcash processes in BUFFER are still running."
@@ -287,7 +286,7 @@ BUFFER defaults to the current buffer."
   "Ask user whether to wait for hashcash processes to finish."
   (interactive)
   (when (hashcash-processes-running-p (current-buffer))
-    (if (y-or-n-p 
+    (if (y-or-n-p
 	  "Hashcash process(es) still running; wait for them to finish? ")
 	(hashcash-wait-async)
       (hashcash-cancel-async))))
@@ -376,4 +375,4 @@ Prefix arg sets default accept amount temporarily."
 
 (provide 'hashcash)
 
-;; arch-tag: 0e7fe983-a124-4392-9788-0dbcbd2c4d62
+;;; hashcash.el ends here

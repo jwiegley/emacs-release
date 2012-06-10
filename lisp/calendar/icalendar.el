@@ -1,12 +1,12 @@
 ;;; icalendar.el --- iCalendar implementation -*-coding: utf-8 -*-
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2002-2012  Free Software Foundation, Inc.
 
 ;; Author:         Ulf Jasper <ulf.jasper@web.de>
 ;; Created:        August 2002
 ;; Keywords:       calendar
 ;; Human-Keywords: calendar, diary, iCalendar, vCalendar
+;; Version:        0.19
 
 ;; This file is part of GNU Emacs.
 
@@ -34,6 +34,8 @@
 ;;   week of the year 2000 when they are exported.
 ;; - Yearly diary entries are assumed to occur the first time in the year
 ;;   1900 when they are exported.
+;; - Float diary entries are assumed to occur the first time on the
+;;   day when they are exported.
 
 ;;; History:
 
@@ -110,7 +112,7 @@
 ;; Customizables
 ;; ======================================================================
 (defgroup icalendar nil
-  "Icalendar support."
+  "iCalendar support."
   :prefix "icalendar-"
   :group 'calendar)
 
@@ -212,15 +214,15 @@ if nil they are ignored."
 
 (defcustom icalendar-uid-format
   "emacs%t%c"
-  "Format of unique ID code (UID) for each iCalendar object.  
-The following specifiers are available: 
+  "Format of unique ID code (UID) for each iCalendar object.
+The following specifiers are available:
 %c COUNTER, an integer value that is increased each time a uid is
-   generated. This may be necessary for systems which do not
+   generated.  This may be necessary for systems which do not
    provide time-resolution finer than a second.
 %h HASH, a hash value of the diary entry,
 %s DTSTART, the start date (excluding time) of the diary entry,
 %t TIMESTAMP, a unique creation timestamp,
-%u USERNAME, the user-login-name.
+%u USERNAME, the variable `user-login-name'.
 
 For example, a value of \"%s_%h@mydomain.com\" will generate a
 UID code for each entry composed of the time of the event, a hash
@@ -232,7 +234,7 @@ code for the event, and your personal domain name."
   "Enable icalendar debug messages.")
 
 ;; ======================================================================
-;; NO USER SERVICABLE PARTS BELOW THIS LINE
+;; NO USER SERVICEABLE PARTS BELOW THIS LINE
 ;; ======================================================================
 
 (defconst icalendar--weekday-array ["SU" "MO" "TU" "WE" "TH" "FR" "SA"])
@@ -241,6 +243,7 @@ code for the event, and your personal domain name."
 ;; all the other libs we need
 ;; ======================================================================
 (require 'calendar)
+(require 'diary-lib)
 
 ;; ======================================================================
 ;; misc
@@ -409,10 +412,15 @@ children."
               (setq result subresult)))))
     result))
 
-                                        ; private
+;; private
 (defun icalendar--all-events (icalendar)
   "Return the list of all existing events in the given ICALENDAR."
-  (icalendar--get-children (car icalendar) 'VEVENT))
+  (let ((result '()))
+    (mapc (lambda (elt)
+	    (setq result (append (icalendar--get-children elt 'VEVENT)
+                                 result)))
+	  (nreverse icalendar))
+    result))
 
 (defun icalendar--split-value (value-string)
   "Split VALUE-STRING at ';='."
@@ -427,7 +435,7 @@ children."
         (goto-char (point-min))
         (while
             (re-search-forward
-             "\\([A-Za-z0-9-]+\\)=\\(\\([^;,:]+\\)\\|\"\\([^\"]+\\)\"\\);?"
+             "\\([A-Za-z0-9-]+\\)=\\(\\([^;:]+\\)\\|\"\\([^\"]+\\)\"\\);?"
              nil t)
           (setq param-name (intern (match-string 1)))
           (setq param-value (match-string 2))
@@ -466,9 +474,9 @@ The strings are suitable for assembling into a TZ variable."
 		    (week (if (eq day -1)
 			      byday
 			    (substring byday 0 -2))))
-               ;; "Translate" the icalendar way to specify the last
+               ;; "Translate" the iCalendar way to specify the last
                ;; (sun|mon|...)day in month to the tzset way.
-               (if (string= week "-1")  ; last day as icalendar calls it
+               (if (string= week "-1")  ; last day as iCalendar calls it
                    (setq week "5"))     ; last day as tzset calls it
 	       (concat "M" bymonth "." week "." (if (eq day -1) "0"
 						  (int-to-string day))
@@ -744,6 +752,20 @@ Note that this silently ignores seconds."
     ;; Error:
     -1))
 
+(defun icalendar--get-weekday-numbers (abbrevweekdays)
+  "Return the list of numbers for the comma-separated ABBREVWEEKDAYS."
+  (when abbrevweekdays
+    (let* ((num -1)
+           (weekday-alist (mapcar (lambda (day)
+                                    (progn
+                                      (setq num (1+ num))
+                                      (cons (downcase day) num)))
+                                  icalendar--weekday-array)))
+      (delq nil
+            (mapcar (lambda (abbrevday)
+                      (cdr (assoc abbrevday weekday-alist)))
+                    (split-string (downcase abbrevweekdays) ","))))))
+
 (defun icalendar--get-weekday-abbrev (weekday)
   "Return the abbreviated WEEKDAY."
   (catch 'found
@@ -885,7 +907,7 @@ would be \"pm\"."
                                               "\\\\," "," string)))))
 
 ;; ======================================================================
-;; Export -- convert emacs-diary to icalendar
+;; Export -- convert emacs-diary to iCalendar
 ;; ======================================================================
 
 ;;;###autoload
@@ -893,7 +915,7 @@ would be \"pm\"."
   "Export diary file to iCalendar format.
 All diary entries in the file DIARY-FILENAME are converted to iCalendar
 format.  The result is appended to the file ICAL-FILENAME."
-  (interactive "FExport diary data from file: 
+  (interactive "FExport diary data from file: \n\
 Finto iCalendar file: ")
   (save-current-buffer
     (set-buffer (find-file diary-filename))
@@ -911,27 +933,30 @@ ENTRY-FULL is the full diary entry string.  CONTENTS is the
 current iCalendar object, as a string.  Increase
 `icalendar--uid-count'.  Returns the UID string."
   (let ((uid icalendar-uid-format))
-    
-    (setq uid (replace-regexp-in-string 
-	       "%c" 
-	       (format "%d" icalendar--uid-count)
-               uid t t))
-    (setq icalendar--uid-count (1+ icalendar--uid-count))
-    (setq uid (replace-regexp-in-string 
-	       "%t"
-	       (format "%d%d%d" (car (current-time))
-		       (cadr (current-time))
-		       (car (cddr (current-time)))) 
-	       uid t t))
-    (setq uid (replace-regexp-in-string 
-	       "%h" 
-	       (format "%d" (abs (sxhash entry-full))) uid t t))
-    (setq uid (replace-regexp-in-string 
-	       "%u" (or user-login-name "UNKNOWN_USER") uid t t))
-    (let ((dtstart (if (string-match "^DTSTART[^:]*:\\([0-9]*\\)" contents)
-                       (substring contents (match-beginning 1) (match-end 1))
-                   "DTSTART")))
-          (setq uid (replace-regexp-in-string "%s" dtstart uid t t)))
+    (if
+	;; Allow other apps (such as org-mode) to create its own uid
+	(get-text-property 0 'uid entry-full)
+	(setq uid (get-text-property 0 'uid entry-full))
+      (setq uid (replace-regexp-in-string
+                 "%c"
+                 (format "%d" icalendar--uid-count)
+                 uid t t))
+      (setq icalendar--uid-count (1+ icalendar--uid-count))
+      (setq uid (replace-regexp-in-string
+                 "%t"
+                 (format "%d%d%d" (car (current-time))
+                         (cadr (current-time))
+                         (car (cddr (current-time))))
+                 uid t t))
+      (setq uid (replace-regexp-in-string
+                 "%h"
+                 (format "%d" (abs (sxhash entry-full))) uid t t))
+      (setq uid (replace-regexp-in-string
+                 "%u" (or user-login-name "UNKNOWN_USER") uid t t))
+      (let ((dtstart (if (string-match "^DTSTART[^:]*:\\([0-9]*\\)" contents)
+                         (substring contents (match-beginning 1) (match-end 1))
+                       "DTSTART")))
+        (setq uid (replace-regexp-in-string "%s" dtstart uid t t))))
 
     ;; Return the UID string
     uid))
@@ -1008,7 +1033,7 @@ FExport diary data into iCalendar file: ")
                 (if url
                     (setq contents (concat contents "\nURL:" url))))
 
-	      (setq header (concat "\nBEGIN:VEVENT\nUID:" 
+	      (setq header (concat "\nBEGIN:VEVENT\nUID:"
 				   (icalendar--create-uid entry-full contents)))
               (setq result (concat result header contents "\nEND:VEVENT")))
           ;; handle errors
@@ -1038,7 +1063,7 @@ FExport diary data into iCalendar file: ")
     found-error))
 
 (defun icalendar--convert-to-ical (nonmarker entry-main)
-  "Convert a diary entry to icalendar format.
+  "Convert a diary entry to iCalendar format.
 NONMARKER is a regular expression matching the start of non-marking
 entries.  ENTRY-MAIN is the first line of the diary entry."
   (or
@@ -1126,7 +1151,7 @@ Returns an alist."
                (list "%u"
                      (concat "\\(" icalendar-import-format-url "\\)??"))))
 	;; Need the \' regexp in order to detect multi-line items
-        (setq s (concat "\\`" 
+        (setq s (concat "\\`"
 			   (icalendar--rris "%s" "\\(.*?\\)" s nil t)
                         "\\'"))
         (if (string-match s summary-and-rest)
@@ -1169,7 +1194,7 @@ Returns an alist."
 
 ;; subroutines for icalendar-export-region
 (defun icalendar--convert-ordinary-to-ical (nonmarker entry-main)
-  "Convert \"ordinary\" diary entry to icalendar format.
+  "Convert \"ordinary\" diary entry to iCalendar format.
 NONMARKER is a regular expression matching the start of non-marking
 entries.  ENTRY-MAIN is the first line of the diary entry."
   (if (string-match
@@ -1266,7 +1291,7 @@ Returns day number."
     result))
 
 (defun icalendar--convert-weekly-to-ical (nonmarker entry-main)
-  "Convert weekly diary entry to icalendar format.
+  "Convert weekly diary entry to iCalendar format.
 NONMARKER is a regular expression matching the start of non-marking
 entries.  ENTRY-MAIN is the first line of the diary entry."
   (if (and (string-match (concat nonmarker
@@ -1348,7 +1373,7 @@ entries.  ENTRY-MAIN is the first line of the diary entry."
     nil))
 
 (defun icalendar--convert-yearly-to-ical (nonmarker entry-main)
-  "Convert yearly diary entry to icalendar format.
+  "Convert yearly diary entry to iCalendar format.
 NONMARKER is a regular expression matching the start of non-marking
 entries.  ENTRY-MAIN is the first line of the diary entry."
   (if (string-match (concat nonmarker
@@ -1428,7 +1453,7 @@ entries.  ENTRY-MAIN is the first line of the diary entry."
     nil))
 
 (defun icalendar--convert-sexp-to-ical (nonmarker entry-main)
-  "Convert complex sexp diary entry to icalendar format -- unsupported!
+  "Convert complex sexp diary entry to iCalendar format -- unsupported!
 
 FIXME!
 
@@ -1455,7 +1480,7 @@ entries.  ENTRY-MAIN is the first line of the diary entry."
          nil)))
 
 (defun icalendar--convert-block-to-ical (nonmarker entry-main)
-  "Convert block diary entry to icalendar format.
+  "Convert block diary entry to iCalendar format.
 NONMARKER is a regular expression matching the start of non-marking
 entries.  ENTRY-MAIN is the first line of the diary entry."
   (if (string-match (concat nonmarker
@@ -1531,23 +1556,70 @@ entries.  ENTRY-MAIN is the first line of the diary entry."
     nil))
 
 (defun icalendar--convert-float-to-ical (nonmarker entry-main)
-  "Convert float diary entry to icalendar format -- unsupported!
+  "Convert float diary entry to iCalendar format -- partially unsupported!
 
-FIXME!
+  FIXME! DAY from diary-float yet unimplemented.
 
-NONMARKER is a regular expression matching the start of non-marking
-entries.  ENTRY-MAIN is the first line of the diary entry."
-  (if (string-match (concat nonmarker
-                            "%%(diary-float \\([^)]+\\))\\s-*\\(.*?\\) ?$")
-                    entry-main)
-      (progn
-        (icalendar--dmsg "diary-float %s" entry-main)
-        (error "`diary-float' is not supported yet"))
+  NONMARKER is a regular expression matching the start of non-marking
+  entries.  ENTRY-MAIN is the first line of the diary entry."
+  (if (string-match (concat nonmarker "%%\\((diary-float .+\\) ?$") entry-main)
+      (with-temp-buffer
+        (insert (match-string 1 entry-main))
+        (goto-char (point-min))
+        (let* ((sexp (read (current-buffer))) ;using `read' here
+					      ;easier than regexp
+					      ;matching, esp. with
+					      ;different forms of
+					      ;MONTH
+               (month (nth 1 sexp))
+               (dayname (nth 2 sexp))
+               (n (nth 3 sexp))
+               (day (nth 4 sexp))
+               (summary
+		(replace-regexp-in-string
+		 "\\(^\s+\\|\s+$\\)" ""
+		 (buffer-substring (point) (point-max)))))
+
+          (when day
+            (progn
+              (icalendar--dmsg "diary-float %s" entry-main)
+              (error "Don't know if or how to implement day in `diary-float'")))
+
+          (list (concat
+                 ;;Start today (yes this is an arbitrary choice):
+                 "\nDTSTART;VALUE=DATE:"
+                 (format-time-string "%Y%m%d" (current-time))
+                 ;;BUT remove today if `diary-float'
+                 ;;expression does not hold true for today:
+                 (when
+                     (null (let ((date (calendar-current-date))
+                                 (entry entry-main))
+                             (diary-float month dayname n)))
+                   (concat
+                    "\nEXDATE;VALUE=DATE:"
+                    (format-time-string "%Y%m%d" (current-time))))
+                 "\nRRULE:"
+                 (if (or (numberp month) (listp month))
+                     "FREQ=YEARLY;BYMONTH="
+                   "FREQ=MONTHLY")
+                 (when
+                     (listp month)
+                   (mapconcat
+                    (lambda (m)
+                      (number-to-string m))
+                    (cadr month) ","))
+                 (when
+                     (numberp month)
+                   (number-to-string month))
+                 ";BYDAY="
+                 (number-to-string n)
+		 (aref icalendar--weekday-array dayname))
+                summary)))
     ;; no match
     nil))
 
 (defun icalendar--convert-date-to-ical (nonmarker entry-main)
-  "Convert `diary-date' diary entry to icalendar format -- unsupported!
+  "Convert `diary-date' diary entry to iCalendar format -- unsupported!
 
 FIXME!
 
@@ -1563,7 +1635,7 @@ entries.  ENTRY-MAIN is the first line of the diary entry."
     nil))
 
 (defun icalendar--convert-cyclic-to-ical (nonmarker entry-main)
-  "Convert `diary-cyclic' diary entry to icalendar format.
+  "Convert `diary-cyclic' diary entry to iCalendar format.
 NONMARKER is a regular expression matching the start of non-marking
 entries.  ENTRY-MAIN is the first line of the diary entry."
   (if (string-match (concat nonmarker
@@ -1637,7 +1709,7 @@ entries.  ENTRY-MAIN is the first line of the diary entry."
     nil))
 
 (defun icalendar--convert-anniversary-to-ical (nonmarker entry-main)
-  "Convert `diary-anniversary' diary entry to icalendar format.
+  "Convert `diary-anniversary' diary entry to iCalendar format.
 NONMARKER is a regular expression matching the start of non-marking
 entries.  ENTRY-MAIN is the first line of the diary entry."
   (if (string-match (concat nonmarker
@@ -1711,7 +1783,7 @@ entries.  ENTRY-MAIN is the first line of the diary entry."
     nil))
 
 ;; ======================================================================
-;; Import -- convert icalendar to emacs-diary
+;; Import -- convert iCalendar to emacs-diary
 ;; ======================================================================
 
 ;;;###autoload
@@ -1722,8 +1794,8 @@ Argument ICAL-FILENAME output iCalendar file.
 Argument DIARY-FILENAME input `diary-file'.
 Optional argument NON-MARKING determines whether events are created as
 non-marking or not."
-  (interactive "fImport iCalendar data from file: 
-Finto diary file: 
+  (interactive "fImport iCalendar data from file: \n\
+Finto diary file:
 p")
   ;; clean up the diary file
   (save-current-buffer
@@ -1753,19 +1825,19 @@ buffer `*icalendar-errors*'."
   (interactive)
   (save-current-buffer
     ;; prepare ical
-    (message "Preparing icalendar...")
+    (message "Preparing iCalendar...")
     (set-buffer (icalendar--get-unfolded-buffer (current-buffer)))
     (goto-char (point-min))
-    (message "Preparing icalendar...done")
+    (message "Preparing iCalendar...done")
     (if (re-search-forward "^BEGIN:VCALENDAR\\s-*$" nil t)
         (let (ical-contents ical-errors)
           ;; read ical
-          (message "Reading icalendar...")
+          (message "Reading iCalendar...")
           (beginning-of-line)
           (setq ical-contents (icalendar--read-element nil nil))
-          (message "Reading icalendar...done")
+          (message "Reading iCalendar...done")
           ;; convert ical
-          (message "Converting icalendar...")
+          (message "Converting iCalendar...")
           (setq ical-errors (icalendar--convert-ical-to-diary
                              ical-contents
                              diary-file do-not-ask non-marking))
@@ -1776,11 +1848,11 @@ buffer `*icalendar-errors*'."
                 (save-current-buffer
                   (set-buffer b)
                   (save-buffer)))))
-          (message "Converting icalendar...done")
+          (message "Converting iCalendar...done")
           ;; return t if no error occurred
           (not ical-errors))
       (message
-       "Current buffer does not contain icalendar contents!")
+       "Current buffer does not contain iCalendar contents!")
       ;; return nil, i.e. import did not work
       nil)))
 
@@ -1984,12 +2056,12 @@ written into the buffer `*icalendar-errors*'."
           (set-buffer (get-buffer-create "*icalendar-errors*"))
           (erase-buffer)
           (insert error-string)))
-    (message "Converting icalendar...done")
+    (message "Converting iCalendar...done")
     found-error))
 
 ;; subroutines for importing
 (defun icalendar--convert-recurring-to-diary (e dtstart-dec start-t end-t)
-  "Convert recurring icalendar event E to diary format.
+  "Convert recurring iCalendar event E to diary format.
 
 DTSTART-DEC is the DTSTART property of E.
 START-T is the event's start time in diary format.
@@ -2057,39 +2129,48 @@ END-T is the event's end time in diary format."
           ))
       )
     (cond ((string-equal frequency "WEEKLY")
-           (if (not start-t)
-               (progn
-                 ;; weekly and all-day
-                 (icalendar--dmsg "weekly all-day")
-                 (if until
-                     (setq result
-                           (format
-                            (concat "%%%%(and "
-                                    "(diary-cyclic %d %s) "
-                                    "(diary-block %s %s))")
-                            (* interval 7)
-                            dtstart-conv
-                            dtstart-conv
-                            (if count until-1-conv until-conv)
-                            ))
-                   (setq result
-                         (format "%%%%(and (diary-cyclic %d %s))"
-                                 (* interval 7)
-                                 dtstart-conv))))
-             ;; weekly and not all-day
-             (let* ((byday (cadr (assoc 'BYDAY rrule-props)))
-                    (weekday
-                     (icalendar--get-weekday-number byday)))
+	   (let* ((byday (cadr (assoc 'BYDAY rrule-props)))
+		  (weekdays
+		   (icalendar--get-weekday-numbers byday))
+		  (weekday-clause
+		   (when (> (length weekdays) 1)
+		     (format "(memq (calendar-day-of-week date) '%s) "
+			     weekdays))))
+	     (if (not start-t)
+		 (progn
+		   ;; weekly and all-day
+		   (icalendar--dmsg "weekly all-day")
+		   (if until
+		       (setq result
+			     (format
+			      (concat "%%%%(and "
+				      "%s"
+				      "(diary-block %s %s))")
+			      (or weekday-clause
+				  (format "(diary-cyclic %d %s) "
+					  (* interval 7)
+					  dtstart-conv))
+			      dtstart-conv
+			      (if count until-1-conv until-conv)
+			      ))
+		       (setq result
+			     (format "%%%%(and %s(diary-cyclic %d %s))"
+				     (or weekday-clause "")
+				     (if weekday-clause 1 (* interval 7))
+				     dtstart-conv))))
+               ;; weekly and not all-day
                (icalendar--dmsg "weekly not-all-day")
                (if until
                    (setq result
                          (format
                           (concat "%%%%(and "
-                                  "(diary-cyclic %d %s) "
+                                  "%s"
                                   "(diary-block %s %s)) "
                                   "%s%s%s")
-                          (* interval 7)
-                          dtstart-conv
+			  (or weekday-clause
+			      (format "(diary-cyclic %d %s) "
+				      (* interval 7)
+				      dtstart-conv))
                           dtstart-conv
                           until-conv
                           (or start-t "")
@@ -2100,10 +2181,11 @@ END-T is the event's end time in diary format."
                  ;; DTEND;VALUE=DATE-TIME:20030919T113000
                  (setq result
                        (format
-                        "%%%%(and (diary-cyclic %s %s)) %s%s%s"
-                        (* interval 7)
-                        dtstart-conv
-                        (or start-t "")
+                        "%%%%(and %s(diary-cyclic %d %s)) %s%s%s"
+			(or weekday-clause "")
+			(if weekday-clause 1 (* interval 7))
+			dtstart-conv
+			(or start-t "")
                         (if end-t "-" "") (or end-t "")))))))
           ;; yearly
           ((string-equal frequency "YEARLY")
@@ -2192,7 +2274,7 @@ END-T is the event's end time in diary format."
     result))
 
 (defun icalendar--convert-non-recurring-all-day-to-diary (event start-d end-d)
-  "Convert non-recurring icalendar EVENT to diary format.
+  "Convert non-recurring iCalendar EVENT to diary format.
 
 DTSTART is the decoded DTSTART property of E.
 Argument START-D gives the first day.
@@ -2257,7 +2339,7 @@ the entry."
 ;; Examples
 ;; ======================================================================
 (defun icalendar-import-format-sample (event)
-  "Example function for formatting an icalendar EVENT."
+  "Example function for formatting an iCalendar EVENT."
   (format (concat "SUMMARY=`%s' DESCRIPTION=`%s' LOCATION=`%s' ORGANIZER=`%s' "
                   "STATUS=`%s' URL=`%s' CLASS=`%s'")
           (or (icalendar--get-event-property event 'SUMMARY) "")
@@ -2270,5 +2352,4 @@ the entry."
 
 (provide 'icalendar)
 
-;; arch-tag: 74fdbe8e-0451-4e38-bb61-4416e822f4fc
 ;;; icalendar.el ends here

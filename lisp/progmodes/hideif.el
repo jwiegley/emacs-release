@@ -1,7 +1,6 @@
 ;;; hideif.el --- hides selected code within ifdef
 
-;; Copyright (C) 1988, 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1988, 1994, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Brian Marick
 ;;	Daniel LaLiberte <liberte@holonexus.org>
@@ -215,11 +214,15 @@
 
 ;;;###autoload
 (define-minor-mode hide-ifdef-mode
-  "Toggle Hide-Ifdef mode.  This is a minor mode, albeit a large one.
-With ARG, turn Hide-Ifdef mode on if arg is positive, off otherwise.
-In Hide-Ifdef mode, code within #ifdef constructs that the C preprocessor
-would eliminate may be hidden from view.  Several variables affect
-how the hiding is done:
+  "Toggle features to hide/show #ifdef blocks (Hide-Ifdef mode).
+With a prefix argument ARG, enable Hide-Ifdef mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
+Hide-Ifdef mode is a buffer-local minor mode for use with C and
+C-like major modes.  When enabled, code within #ifdef constructs
+that the C preprocessor would eliminate may be hidden from view.
+Several variables affect how the hiding is done:
 
 `hide-ifdef-env'
 	An association list of defined and undefined symbols for the
@@ -413,13 +416,14 @@ that form should be displayed.")
   "Pop the next token from token-list into the let variable \"hif-token\"."
   (setq hif-token (pop hif-token-list)))
 
-(defun hif-parse-if-exp (hif-token-list)
+(defun hif-parse-if-exp (token-list)
   "Parse the TOKEN-LIST.  Return translated list in prefix form."
-  (hif-nexttoken)
-  (prog1
-      (hif-expr)
-    (if hif-token ; is there still a token?
-	(error "Error: unexpected token: %s" hif-token))))
+  (let ((hif-token-list token-list))
+    (hif-nexttoken)
+    (prog1
+        (hif-expr)
+      (if hif-token ; is there still a token?
+          (error "Error: unexpected token: %s" hif-token)))))
 
 (defun hif-expr ()
   "Parse an expression as found in #if.
@@ -508,7 +512,7 @@ that form should be displayed.")
    ;; Unary plus/minus.
    ((memq hif-token '(hif-minus hif-plus))
     (list (prog1 hif-token (hif-nexttoken)) 0 (hif-factor)))
- 
+
    (t					; identifier
     (let ((ident hif-token))
       (if (memq ident '(or and))
@@ -760,7 +764,7 @@ Point is left unchanged."
       (cond ((hif-looking-at-else)
 	     (setq else (point)))
 	    (t
-	     (setq end (point)))) ; (save-excursion (end-of-line) (point))
+	     (setq end (point)))) ; (line-end-position)
       ;; If found #else, look for #endif.
       (when else
 	(while (progn
@@ -769,7 +773,7 @@ Point is left unchanged."
 	  (hif-ifdef-to-endif))
 	(if (hif-looking-at-else)
 	    (error "Found two elses in a row?  Broken!"))
-	(setq end (point)))	       ; (save-excursion (end-of-line) (point))
+	(setq end (point)))	       ; (line-end-position)
       (hif-make-range start end else))))
 
 
@@ -818,7 +822,7 @@ Point is left unchanged."
 
 (defun hif-possibly-hide ()
   "Called at #ifX expression, this hides those parts that should be hidden.
-It uses the judgement of `hide-ifdef-evaluator'."
+It uses the judgment of `hide-ifdef-evaluator'."
   ;; (message "hif-possibly-hide") (sit-for 1)
   (let ((test (hif-canonicalize))
 	(range (hif-find-range)))
@@ -1025,5 +1029,4 @@ Return as (TOP . BOTTOM) the extent of ifdef block."
 
 (provide 'hideif)
 
-;; arch-tag: c6381d17-a59a-483a-b945-658f22277981
 ;;; hideif.el ends here

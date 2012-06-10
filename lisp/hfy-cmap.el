@@ -1,6 +1,6 @@
 ;;; hfy-cmap.el --- Fallback colour name -> rgb mapping for `htmlfontify'
 
-;; Copyright (C) 2002, 2003, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2002-2003, 2009-2012  Free Software Foundation, Inc.
 
 ;; Emacs Lisp Archive Entry
 ;; Package: htmlfontify
@@ -13,6 +13,7 @@
 ;; Description: fallback code for colour name -> rgb mapping
 ;; URL: http://rtfm.etla.org/emacs/htmlfontify/
 ;; Last-Updated: Sat 2003-02-15 03:49:32 +0000
+;; Package: htmlfontify
 
 ;; This file is part of GNU Emacs.
 
@@ -803,6 +804,7 @@
 (defconst hfy-rgb-regex
   "^\\s-*\\([0-9]+\\)\\s-+\\([0-9]+\\)\\s-+\\([0-9]+\\)\\s-+\\(.+\\)\\s-*$")
 
+;;;###autoload
 (defun htmlfontify-load-rgb-file (&optional file)
   "Load an X11 style rgb.txt FILE.
 Search `hfy-rgb-load-path' if FILE is not specified.
@@ -832,14 +834,20 @@ Loads the variable `hfy-rgb-txt-colour-map', which is used by
 	  (kill-buffer rgb-buffer)))))
 
 (defun htmlfontify-unload-rgb-file ()
+  "Unload the current color name -> rgb translation map."
   (interactive)
   (setq hfy-rgb-txt-colour-map nil))
 
+;;;###autoload
 (defun hfy-fallback-colour-values (colour-string)
+  "Use a fallback method for obtaining the rgb values for a color."
   (cdr (assoc-string colour-string (or hfy-rgb-txt-colour-map
                                        hfy-fallback-colour-map))) )
 
 (provide 'hfy-cmap)
-;;; hfy-cmap.el ends here
 
-;; arch-tag: dff7feea-add4-48ba-937c-e79ac40cec9b
+;; Local Variables:
+;; generated-autoload-file: "htmlfontify.el"
+;; End:
+
+;;; hfy-cmap.el ends here

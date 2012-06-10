@@ -1,6 +1,6 @@
 # -*- Makefile -*- for leim subdirectory in GNU Emacs on the Microsoft W32 API.
-# Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-#   Free Software Foundation, Inc.
+
+# Copyright (C) 2000-2012  Free Software Foundation, Inc.
 # Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
 #   2006, 2007
 #   National Institute of Advanced Industrial Science and Technology (AIST)
@@ -37,7 +37,7 @@ BUILT_EMACS = $(THISDIR)/$(dot)$(dot)/src/$(BLD)/emacs.exe
 buildlisppath=$(CURDIR)/$(dot)$(dot)/lisp
 
 # How to run Emacs.
-RUN_EMACS = "$(BUILT_EMACS)" -batch --no-init-file --no-site-file --multibyte
+RUN_EMACS = "$(BUILT_EMACS)" -batch --no-site-file --no-site-lisp
 
 # Set EMACSLOADPATH correctly (already defined in environment).
 EMACSLOADPATH=$(buildlisppath)
@@ -118,8 +118,10 @@ MISC= \
 	$(srcdir)/quail/arabic.elc \
 	$(srcdir)/quail/ethiopic.elc \
 	$(srcdir)/quail/ipa.elc \
+	$(srcdir)/quail/ipa-praat.elc \
 	$(srcdir)/quail/hebrew.elc \
 	$(srcdir)/quail/georgian.elc \
+	$(srcdir)/quail/persian.elc \
 	$(srcdir)/quail/sisheng.elc
 
 MISC_DIC=\
@@ -170,17 +172,21 @@ $(SUBDIRS):
 # WARNING: Do NOT split the part inside $(ARGQUOTE)s into multiple lines as
 #          this can break with GNU Make 3.81 and later if sh.exe is used.
 $(TIT):
-	$(RUN_EMACS) -l $(buildlisppath)/international/titdic-cnv \
+	$(RUN_EMACS) -l \
+	    $(ARGQUOTE)$(buildlisppath)/international/titdic-cnv$(ARGQUOTE) \
 	    --eval $(ARGQUOTE)(batch-titdic-convert t)$(ARGQUOTE) \
 	    -dir quail $(srcdir)/CXTERM-DIC
-	$(RUN_EMACS)  -l $(buildlisppath)/international/quail \
+	$(RUN_EMACS)  -l \
+	    $(ARGQUOTE)$(buildlisppath)/international/quail$(ARGQUOTE) \
 	    -f batch-byte-compile $(TIT:.elc=.el)
 
 # Rule to generate quail/*.el from MISC_DIC/*.tit.
 $(MISC_DIC):
-	$(RUN_EMACS) -l $(buildlisppath)/international/titdic-cnv \
+	$(RUN_EMACS) -l \
+	    $(ARGQUOTE)$(buildlisppath)/international/titdic-cnv$(ARGQUOTE) \
 	    -f batch-miscdic-convert -dir quail $(srcdir)/MISC-DIC
-	$(RUN_EMACS)  -l $(buildlisppath)/international/quail \
+	$(RUN_EMACS)  -l \
+	    $(ARGQUOTE)$(buildlisppath)/international/quail$(ARGQUOTE) \
 	    -f batch-byte-compile $(MISC_DIC:.elc=.el)
 
 #
@@ -188,19 +194,20 @@ $(MISC_DIC):
 #          this can break with GNU Make 3.81 and later if sh.exe is used.
 leim-list.el: $(SUBDIRS) $(WORLD) $(srcdir)/leim-ext.el
 	- $(DEL) leim-list.el
-	$(RUN_EMACS) -l $(buildlisppath)/international/quail \
+	$(RUN_EMACS) -l \
+	    $(ARGQUOTE)$(buildlisppath)/international/quail$(ARGQUOTE) \
 	    --eval $(ARGQUOTE)(update-leim-list-file $(DQUOTE).$(DQUOTE))$(ARGQUOTE)
 	$(RUN_EMACS) --eval $(ARGQUOTE)(w32-append-code-lines $(DQUOTE)$@$(DQUOTE) $(DQUOTE)$(srcdir)/leim-ext.el$(DQUOTE))$(ARGQUOTE)
 
 install: all
 	- mkdir "$(INSTALLDIR)"
-	- $(DEL) same-dir.tst
-	- $(DEL) $(INSTALL_DIR)/same-dir.tst
-	echo SameDirTest > $(INSTALL_DIR)/same-dir.tst
+	- $(DEL) $(DIRNAME)_same-dir.tst
+	- $(DEL) $(INSTALL_DIR)/$(DIRNAME)_same-dir.tst
+	echo SameDirTest > $(INSTALL_DIR)/$(DIRNAME)_same-dir.tst
 	$(IFNOTSAMEDIR) $(CP) leim-list.el $(INSTALLDIR) $(ENDIF)
 	$(IFNOTSAMEDIR) $(CP_DIR) quail $(INSTALLDIR) $(ENDIF)
 	$(IFNOTSAMEDIR) $(CP_DIR) ja-dic $(INSTALLDIR) $(ENDIF)
-	- $(DEL) $(INSTALL_DIR)/same-dir.tst
+	- $(DEL) $(INSTALL_DIR)/$(DIRNAME)_same-dir.tst
 
 clean mostlyclean:
 	- $(FOREACH) $(TIT) $(FORDO) $(DEL) $(FORVAR) $(ENDFOR)

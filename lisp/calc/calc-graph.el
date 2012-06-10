@@ -1,7 +1,6 @@
 ;;; calc-graph.el --- graph output functions for Calc
 
-;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1990-1993, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -433,7 +432,7 @@
 	   (while (memq (preceding-char) '(?\s ?\t))
 	     (forward-char -1))
 	   (if (eq (preceding-char) ?\,)
-	       (delete-backward-char 1))))
+	       (delete-char -1))))
        (with-current-buffer calcbuf
 	 (setq cache-env (list calc-angle-mode
 			       calc-complex-mode
@@ -575,16 +574,16 @@
 		(setq calc-graph-xstep 1)
 	      (error "%s is not a suitable basis for %s" calc-graph-xname calc-graph-yname)))))
     (or (math-realp calc-graph-yvalue)
-	(let ((arglist nil))
+	(let ((math-arglist nil))
 	  (setq calc-graph-yvalue (math-evaluate-expr calc-graph-yvalue))
 	  (calc-default-formula-arglist calc-graph-yvalue)
-	  (or arglist
+	  (or math-arglist
 	      (error "%s does not contain any unassigned variables" calc-graph-yname))
-	  (and (cdr arglist)
+	  (and (cdr math-arglist)
 	       (error "%s contains more than one variable: %s"
-		      calc-graph-yname arglist))
+		      calc-graph-yname math-arglist))
 	  (setq calc-graph-yvalue (math-expr-subst calc-graph-yvalue
-					(math-build-var-name (car arglist))
+					(math-build-var-name (car math-arglist))
 					'(var DUMMY var-DUMMY)))))
     (setq calc-graph-ycache (assoc calc-graph-yvalue calc-graph-data-cache))
     (delq calc-graph-ycache calc-graph-data-cache)
@@ -736,17 +735,17 @@
 	      calc-graph-zp calc-graph-yvalue
 	      calc-graph-xvec t))
     (or (math-realp calc-graph-yvalue)
-	(let ((arglist nil))
+	(let ((math-arglist nil))
 	  (setq calc-graph-yvalue (math-evaluate-expr calc-graph-yvalue))
 	  (calc-default-formula-arglist calc-graph-yvalue)
-	  (setq arglist (sort arglist 'string-lessp))
-	  (or (cdr arglist)
+	  (setq math-arglist (sort math-arglist 'string-lessp))
+	  (or (cdr math-arglist)
 	      (error "%s does not contain enough unassigned variables" calc-graph-yname))
-	  (and (cdr (cdr arglist))
-	       (error "%s contains too many variables: %s" calc-graph-yname arglist))
+	  (and (cdr (cdr math-arglist))
+	       (error "%s contains too many variables: %s" calc-graph-yname math-arglist))
 	  (setq calc-graph-yvalue (math-multi-subst calc-graph-yvalue
 					 (mapcar 'math-build-var-name
-						 arglist)
+						 math-arglist)
 					 '((var DUMMY var-DUMMY)
 					   (var DUMMY2 var-DUMMY2))))))
     (if (setq calc-graph-xvec (eq (car-safe calc-graph-xvalue) 'vec))
@@ -947,13 +946,13 @@ This \"dumb\" driver will be present in Gnuplot 3.0."
     (or calc-dumb-map
 	(progn
 	  (setq calc-dumb-map (make-sparse-keymap))
-	  (define-key calc-dumb-map "\n" 'scroll-up)
-	  (define-key calc-dumb-map " " 'scroll-up)
-	  (define-key calc-dumb-map "\177" 'scroll-down)
+	  (define-key calc-dumb-map "\n" 'scroll-up-command)
+	  (define-key calc-dumb-map " " 'scroll-up-command)
+	  (define-key calc-dumb-map "\177" 'scroll-down-command)
 	  (define-key calc-dumb-map "<" 'scroll-left)
 	  (define-key calc-dumb-map ">" 'scroll-right)
-	  (define-key calc-dumb-map "{" 'scroll-down)
-	  (define-key calc-dumb-map "}" 'scroll-up)
+	  (define-key calc-dumb-map "{" 'scroll-down-command)
+	  (define-key calc-dumb-map "}" 'scroll-up-command)
 	  (define-key calc-dumb-map "q" 'exit-recursive-edit)
 	  (define-key calc-dumb-map "\C-c\C-c" 'exit-recursive-edit)))
     (use-local-map calc-dumb-map)
@@ -1506,5 +1505,4 @@ This \"dumb\" driver will be present in Gnuplot 3.0."
 
 (provide 'calc-graph)
 
-;; arch-tag: e4b06a52-c386-4d54-a2bb-7c0a0ef533c2
 ;;; calc-graph.el ends here

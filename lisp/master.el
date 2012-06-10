@@ -1,7 +1,6 @@
 ;;; master.el --- make a buffer the master over another buffer
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012  Free Software Foundation, Inc.
 
 ;; Author: Alex Schroeder <alex@gnu.org>
 ;; Maintainer: Alex Schroeder <alex@gnu.org>
@@ -73,12 +72,12 @@ You can set this variable using `master-set-slave'.")
 ;;;###autoload
 (define-minor-mode master-mode
   "Toggle Master mode.
-With no argument, this command toggles the mode.
-Non-null prefix argument turns on the mode.
-Null prefix argument turns off the mode.
+With a prefix argument ARG, enable Master mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
 
-When Master mode is enabled, you can scroll the slave buffer using the
-following commands:
+When Master mode is enabled, you can scroll the slave buffer
+using the following commands:
 
 \\{master-mode-map}
 
@@ -159,5 +158,4 @@ See `recenter'."
 
 (provide 'master)
 
-;; arch-tag: dca08daa-8127-45ae-b77e-b135160dce98
 ;;; master.el ends here

@@ -1,6 +1,5 @@
 /* CCL (Code Conversion Language) interpreter.
-   Copyright (C) 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+   Copyright (C) 2001-2012 Free Software Foundation, Inc.
    Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
      2005, 2006, 2007, 2008, 2009, 2010, 2011
      National Institute of Advanced Industrial Science and Technology (AIST)
@@ -28,6 +27,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <stdio.h>
 #include <setjmp.h>
+#include <limits.h>
 
 #include "lisp.h"
 #include "character.h"
@@ -37,24 +37,18 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 Lisp_Object Qccl, Qcclp;
 
-/* This contains all code conversion map available to CCL.  */
-Lisp_Object Vcode_conversion_map_vector;
-
-/* Alist of fontname patterns vs corresponding CCL program.  */
-Lisp_Object Vfont_ccl_encoder_alist;
-
 /* This symbol is a property which associates with ccl program vector.
    Ex: (get 'ccl-big5-encoder 'ccl-program) returns ccl program vector.  */
-Lisp_Object Qccl_program;
+static Lisp_Object Qccl_program;
 
 /* These symbols are properties which associate with code conversion
    map and their ID respectively.  */
-Lisp_Object Qcode_conversion_map;
-Lisp_Object Qcode_conversion_map_id;
+static Lisp_Object Qcode_conversion_map;
+static Lisp_Object Qcode_conversion_map_id;
 
 /* Symbols of ccl program have this property, a value of the property
-   is an index for Vccl_protram_table. */
-Lisp_Object Qccl_program_idx;
+   is an index for Vccl_program_table. */
+static Lisp_Object Qccl_program_idx;
 
 /* Table of registered CCL programs.  Each element is a vector of
    NAME, CCL_PROG, RESOLVEDP, and UPDATEDP, where NAME (symbol) is the
@@ -63,16 +57,11 @@ Lisp_Object Qccl_program_idx;
    CCL_PROG is already resolved to index numbers or not, UPDATEDP (t
    or nil) is the flat to tell if the CCL program is updated after it
    was once used.  */
-Lisp_Object Vccl_program_table;
-
-/* Vector of registered hash tables for translation.  */
-Lisp_Object Vtranslation_hash_table_vector;
+static Lisp_Object Vccl_program_table;
 
 /* Return a hash table of id number ID.  */
 #define GET_HASH_TABLE(id) \
-  (XHASH_TABLE (XCDR(XVECTOR(Vtranslation_hash_table_vector)->contents[(id)])))
-
-extern int charset_unicode;
+  (XHASH_TABLE (XCDR (XVECTOR (Vtranslation_hash_table_vector)->contents[(id)])))
 
 /* CCL (Code Conversion Language) is a simple language which has
    operations on one input buffer, one output buffer, and 7 registers.
@@ -90,9 +79,8 @@ extern int charset_unicode;
 #define CCL_HEADER_EOF		1
 #define CCL_HEADER_MAIN		2
 
-/* CCL code is a sequence of 28-bit non-negative integers (i.e. the
-   MSB is always 0), each contains CCL command and/or arguments in the
-   following format:
+/* CCL code is a sequence of 28-bit integers.  Each contains a CCL
+   command and/or arguments in the following format:
 
 	|----------------- integer (28-bit) ------------------|
 	|------- 17-bit ------|- 3-bit --|- 3-bit --|- 5-bit -|
@@ -105,10 +93,13 @@ extern int charset_unicode;
 	|------------- constant or other args ----------------|
                      cccccccccccccccccccccccccccc
 
-   where, `cc...c' is a non-negative integer indicating constant value
-   (the left most `c' is always 0) or an absolute jump address, `RRR'
+   where `cc...c' is a 17-bit, 20-bit, or 28-bit integer indicating a
+   constant value or a relative/absolute jump address, `RRR'
    and `rrr' are CCL register number, `XXXXX' is one of the following
    CCL commands.  */
+
+#define CCL_CODE_MAX ((1 << (28 - 1)) - 1)
+#define CCL_CODE_MIN (-1 - CCL_CODE_MAX)
 
 /* CCL commands
 
@@ -219,8 +210,8 @@ extern int charset_unicode;
 #define CCL_WriteArrayReadJump	0x0B /* Write an array element, read, and jump:
 					1:A--D--D--R--E--S--S-rrrXXXXX
 					2:LENGTH
-					3:ELEMENET[0]
-					4:ELEMENET[1]
+					3:ELEMENT[0]
+					4:ELEMENT[1]
 					...
 					N:A--D--D--R--E--S--S-rrrYYYYY
 					------------------------------
@@ -438,7 +429,7 @@ extern int charset_unicode;
 
 #define CCL_Extension		0x1F /* Extended CCL code
 					1:ExtendedCOMMNDRrrRRRrrrXXXXX
-					2:ARGUEMENT
+					2:ARGUMENT
 					3:...
 					------------------------------
 					extended_command (rrr,RRR,Rrr,ARGS)
@@ -493,7 +484,7 @@ extern int charset_unicode;
    If the element is t or lambda, finish without changing reg[rrr].
    If the element is a number, set reg[rrr] to the number and finish.
 
-   Detail of the map structure is descibed in the comment for
+   Detail of the map structure is described in the comment for
    CCL_MapMultiple below.  */
 
 #define CCL_IterateMultipleMap	0x10 /* Iterate multiple maps
@@ -561,7 +552,7 @@ extern int charset_unicode;
    But, when VALm is mapped to VALn and VALn is not a number, the
    mapping proceed as below:
 
-   If VALn is nil, the lastest map is ignored and the mapping of VALm
+   If VALn is nil, the last map is ignored and the mapping of VALm
    proceed to the next map.
 
    In VALn is t, VALm is reverted to reg[rrr] and the mapping of VALm
@@ -570,7 +561,7 @@ extern int charset_unicode;
    If VALn is lambda, move to the next map set like reaching to the
    end of the current map set.
 
-   If VALn is a symbol, call the CCL program refered by it.
+   If VALn is a symbol, call the CCL program referred by it.
    Then, use reg[rrr] as a mapped value except for -1, -2 and -3.
    Such special values are regarded as nil, t, and lambda respectively.
 
@@ -715,7 +706,7 @@ do					\
     ccl->status = CCL_STAT_SUCCESS;	\
     goto ccl_finish;			\
   }					\
-while(0)
+while (0)
 
 /* Suspend CCL program because of reading from empty input buffer or
    writing to full output buffer.  When this program is resumed, the
@@ -739,7 +730,7 @@ do					\
     ccl->status = CCL_STAT_INVALID_CMD;	\
     goto ccl_error_handler;	     	\
   }					\
-while(0)
+while (0)
 
 #else
 
@@ -750,9 +741,31 @@ do					\
     ccl->status = CCL_STAT_INVALID_CMD;	\
     goto ccl_error_handler;	     	\
   }					\
-while(0)
+while (0)
 
 #endif
+
+/* Use "&" rather than "&&" to suppress a bogus GCC warning; see
+   <http://gcc.gnu.org/bugzilla/show_bug.cgi?id=43772>.  */
+#define ASCENDING_ORDER(lo, med, hi) (((lo) <= (med)) & ((med) <= (hi)))
+
+#define GET_CCL_RANGE(var, ccl_prog, ic, lo, hi)		\
+  do								\
+    {								\
+      EMACS_INT prog_word = XINT ((ccl_prog)[ic]);		\
+      if (! ASCENDING_ORDER (lo, prog_word, hi))		\
+	CCL_INVALID_CMD;					\
+      (var) = prog_word;					\
+    }								\
+  while (0)
+
+#define GET_CCL_CODE(code, ccl_prog, ic)			\
+  GET_CCL_RANGE (code, ccl_prog, ic, CCL_CODE_MIN, CCL_CODE_MAX)
+
+#define GET_CCL_INT(var, ccl_prog, ic)				\
+  GET_CCL_RANGE (var, ccl_prog, ic, INT_MIN, INT_MAX)
+
+#define IN_INT_RANGE(val) ASCENDING_ORDER (INT_MIN, val, INT_MAX)
 
 /* Encode one character CH to multibyte form and write to the current
    output buffer.  If CH is less than 256, CH is written as is.  */
@@ -770,18 +783,18 @@ while(0)
    buffer.  */
 #define CCL_WRITE_STRING(len)					\
   do {								\
-    int i;							\
+    int ccli;							\
     if (!dst)							\
       CCL_INVALID_CMD;						\
     else if (dst + len <= dst_end)				\
       {								\
 	if (XFASTINT (ccl_prog[ic]) & 0x1000000)		\
-	  for (i = 0; i < len; i++)				\
-	    *dst++ = XFASTINT (ccl_prog[ic + i]) & 0xFFFFFF;	\
+	  for (ccli = 0; ccli < len; ccli++)			\
+	    *dst++ = XFASTINT (ccl_prog[ic + ccli]) & 0xFFFFFF;	\
 	else							\
-	  for (i = 0; i < len; i++)				\
-	    *dst++ = ((XFASTINT (ccl_prog[ic + (i / 3)]))	\
-		      >> ((2 - (i % 3)) * 8)) & 0xFF;		\
+	  for (ccli = 0; ccli < len; ccli++)			\
+	    *dst++ = ((XFASTINT (ccl_prog[ic + (ccli / 3)]))	\
+		      >> ((2 - (ccli % 3)) * 8)) & 0xFF;	\
       }								\
     else							\
       CCL_SUSPEND (CCL_STAT_SUSPEND_BY_DST);			\
@@ -813,20 +826,20 @@ while(0)
    : (charset = CHARSET_FROM_ID ((id)), DECODE_CHAR (charset, (code))))
 
 /* Encode character C by some of charsets in CHARSET_LIST.  Set ID to
-   the id of the used charset, ENCODED to the resulf of encoding.
+   the id of the used charset, ENCODED to the result of encoding.
    Assume that we can use the variable `charset'.  */
 
 #define CCL_ENCODE_CHAR(c, charset_list, id, encoded)		\
   do {								\
-    unsigned code;						\
+    unsigned ncode;						\
 								\
-    charset = char_charset ((c), (charset_list), &code);	\
+    charset = char_charset ((c), (charset_list), &ncode);	\
     if (! charset && ! NILP (charset_list))			\
-      charset = char_charset ((c), Qnil, &code);	  	\
+      charset = char_charset ((c), Qnil, &ncode);	  	\
     if (charset)						\
       {								\
 	(id) = CHARSET_ID (charset);				\
-	(encoded) = code;					\
+	(encoded) = ncode;					\
       }								\
    } while (0)
 
@@ -862,11 +875,7 @@ struct ccl_prog_stack
 static struct ccl_prog_stack ccl_prog_stack_struct[256];
 
 void
-ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
-     struct ccl_program *ccl;
-     int *source, *destination;
-     int src_size, dst_size;
-     Lisp_Object charset_list;
+ccl_driver (struct ccl_program *ccl, int *source, int *destination, int src_size, int dst_size, Lisp_Object charset_list)
 {
   register int *reg = ccl->reg;
   register int ic = ccl->ic;
@@ -915,7 +924,7 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	}
 
       this_ic = ic;
-      code = XINT (ccl_prog[ic]); ic++;
+      GET_CCL_CODE (code, ccl_prog, ic++);
       field1 = code >> 8;
       field2 = (code & 0xFF) >> 5;
 
@@ -936,15 +945,14 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	  break;
 
 	case CCL_SetConst:	/* 00000000000000000000rrrXXXXX */
-	  reg[rrr] = XINT (ccl_prog[ic]);
-	  ic++;
+	  GET_CCL_INT (reg[rrr], ccl_prog, ic++);
 	  break;
 
 	case CCL_SetArray:	/* CCCCCCCCCCCCCCCCCCCCRRRrrrXXXXX */
 	  i = reg[RRR];
 	  j = field1 >> 3;
-	  if ((unsigned int) i < j)
-	    reg[rrr] = XINT (ccl_prog[ic + i]);
+	  if (0 <= i && i < j)
+	    GET_CCL_INT (reg[rrr], ccl_prog, ic + i);
 	  ic += j;
 	  break;
 
@@ -972,13 +980,13 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	  break;
 
 	case CCL_WriteConstJump: /* A--D--D--R--E--S--S-000XXXXX */
-	  i = XINT (ccl_prog[ic]);
+	  GET_CCL_INT (i, ccl_prog, ic);
 	  CCL_WRITE_CHAR (i);
 	  ic += ADDR;
 	  break;
 
 	case CCL_WriteConstReadJump: /* A--D--D--R--E--S--S-rrrXXXXX */
-	  i = XINT (ccl_prog[ic]);
+	  GET_CCL_INT (i, ccl_prog, ic);
 	  CCL_WRITE_CHAR (i);
 	  ic++;
 	  CCL_READ_CHAR (reg[rrr]);
@@ -986,18 +994,17 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	  break;
 
 	case CCL_WriteStringJump: /* A--D--D--R--E--S--S-000XXXXX */
-	  j = XINT (ccl_prog[ic]);
-	  ic++;
+	  GET_CCL_INT (j, ccl_prog, ic++);
 	  CCL_WRITE_STRING (j);
 	  ic += ADDR - 1;
 	  break;
 
 	case CCL_WriteArrayReadJump: /* A--D--D--R--E--S--S-rrrXXXXX */
 	  i = reg[rrr];
-	  j = XINT (ccl_prog[ic]);
-	  if ((unsigned int) i < j)
+	  GET_CCL_INT (j, ccl_prog, ic);
+	  if (0 <= i && i < j)
 	    {
-	      i = XINT (ccl_prog[ic + 1 + i]);
+	      GET_CCL_INT (i, ccl_prog, ic + 1 + i);
 	      CCL_WRITE_CHAR (i);
 	    }
 	  ic += j + 2;
@@ -1014,10 +1021,14 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	  CCL_READ_CHAR (reg[rrr]);
 	  /* fall through ... */
 	case CCL_Branch:	/* CCCCCCCCCCCCCCCCCCCCrrrXXXXX */
-	  if ((unsigned int) reg[rrr] < field1)
-	    ic += XINT (ccl_prog[ic + reg[rrr]]);
-	  else
-	    ic += XINT (ccl_prog[ic + field1]);
+	{
+	  int incr;
+	  GET_CCL_INT (incr, ccl_prog,
+		       ic + (0 <= reg[rrr] && reg[rrr] < field1
+			     ? reg[rrr]
+			     : field1));
+	  ic += incr;
+	}
 	  break;
 
 	case CCL_ReadRegister:	/* CCCCCCCCCCCCCCCCCCCCrrXXXXX */
@@ -1025,7 +1036,7 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	    {
 	      CCL_READ_CHAR (reg[rrr]);
 	      if (!field1) break;
-	      code = XINT (ccl_prog[ic]); ic++;
+	      GET_CCL_CODE (code, ccl_prog, ic++);
 	      field1 = code >> 8;
 	      field2 = (code & 0xFF) >> 5;
 	    }
@@ -1034,7 +1045,7 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	case CCL_WriteExprConst:  /* 1:00000OPERATION000RRR000XXXXX */
 	  rrr = 7;
 	  i = reg[RRR];
-	  j = XINT (ccl_prog[ic]);
+	  GET_CCL_INT (j, ccl_prog, ic);
 	  op = field1 >> 6;
 	  jump_address = ic + 1;
 	  goto ccl_set_expr;
@@ -1045,7 +1056,7 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	      i = reg[rrr];
 	      CCL_WRITE_CHAR (i);
 	      if (!field1) break;
-	      code = XINT (ccl_prog[ic]); ic++;
+	      GET_CCL_CODE (code, ccl_prog, ic++);
 	      field1 = code >> 8;
 	      field2 = (code & 0xFF) >> 5;
 	    }
@@ -1067,10 +1078,7 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	    /* If FFF is nonzero, the CCL program ID is in the
                following code.  */
 	    if (rrr)
-	      {
-		prog_id = XINT (ccl_prog[ic]);
-		ic++;
-	      }
+	      GET_CCL_INT (prog_id, ccl_prog, ic++);
 	    else
 	      prog_id = field1;
 
@@ -1111,9 +1119,9 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 
 	case CCL_WriteArray:	/* CCCCCCCCCCCCCCCCCCCCrrrXXXXX */
 	  i = reg[rrr];
-	  if ((unsigned int) i < field1)
+	  if (0 <= i && i < field1)
 	    {
-	      j = XINT (ccl_prog[ic + i]);
+	      GET_CCL_INT (j, ccl_prog, ic + i);
 	      CCL_WRITE_CHAR (j);
 	    }
 	  ic += field1;
@@ -1138,8 +1146,7 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	  CCL_SUCCESS;
 
 	case CCL_ExprSelfConst: /* 00000OPERATION000000rrrXXXXX */
-	  i = XINT (ccl_prog[ic]);
-	  ic++;
+	  GET_CCL_INT (i, ccl_prog, ic++);
 	  op = field1 >> 6;
 	  goto ccl_expr_self;
 
@@ -1175,9 +1182,9 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 
 	case CCL_SetExprConst:	/* 00000OPERATION000RRRrrrXXXXX */
 	  i = reg[RRR];
-	  j = XINT (ccl_prog[ic]);
+	  GET_CCL_INT (j, ccl_prog, ic++);
 	  op = field1 >> 6;
-	  jump_address = ++ic;
+	  jump_address = ic;
 	  goto ccl_set_expr;
 
 	case CCL_SetExprReg:	/* 00000OPERATIONRrrRRRrrrXXXXX */
@@ -1191,10 +1198,9 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	  CCL_READ_CHAR (reg[rrr]);
 	case CCL_JumpCondExprConst: /* A--D--D--R--E--S--S-rrrXXXXX */
 	  i = reg[rrr];
-	  op = XINT (ccl_prog[ic]);
-	  jump_address = ic++ + ADDR;
-	  j = XINT (ccl_prog[ic]);
-	  ic++;
+	  jump_address = ic + ADDR;
+	  GET_CCL_INT (op, ccl_prog, ic++);
+	  GET_CCL_INT (j, ccl_prog, ic++);
 	  rrr = 7;
 	  goto ccl_set_expr;
 
@@ -1202,10 +1208,10 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	  CCL_READ_CHAR (reg[rrr]);
 	case CCL_JumpCondExprReg:
 	  i = reg[rrr];
-	  op = XINT (ccl_prog[ic]);
-	  jump_address = ic++ + ADDR;
-	  j = reg[XINT (ccl_prog[ic])];
-	  ic++;
+	  jump_address = ic + ADDR;
+	  GET_CCL_INT (op, ccl_prog, ic++);
+	  GET_CCL_RANGE (j, ccl_prog, ic++, 0, 7);
+	  j = reg[j];
 	  rrr = 7;
 
 	ccl_set_expr:
@@ -1283,28 +1289,37 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	      break;
 
 	    case CCL_TranslateCharacterConstTbl:
-	      op = XINT (ccl_prog[ic]); /* table */
-	      ic++;
-	      i = CCL_DECODE_CHAR (reg[RRR], reg[rrr]);
-	      op = translate_char (GET_TRANSLATION_TABLE (op), i);
-	      CCL_ENCODE_CHAR (op, charset_list, reg[RRR], reg[rrr]);
+	      {
+		EMACS_INT eop;
+		GET_CCL_RANGE (eop, ccl_prog, ic++, 0,
+			       (VECTORP (Vtranslation_table_vector)
+				? ASIZE (Vtranslation_table_vector)
+				: -1));
+		i = CCL_DECODE_CHAR (reg[RRR], reg[rrr]);
+		op = translate_char (GET_TRANSLATION_TABLE (eop), i);
+		CCL_ENCODE_CHAR (op, charset_list, reg[RRR], reg[rrr]);
+	      }
 	      break;
 
 	    case CCL_LookupIntConstTbl:
-	      op = XINT (ccl_prog[ic]); /* table */
-	      ic++;
 	      {
-		struct Lisp_Hash_Table *h = GET_HASH_TABLE (op);
+		ptrdiff_t eop;
+		struct Lisp_Hash_Table *h;
+		GET_CCL_RANGE (eop, ccl_prog, ic++, 0,
+			       (VECTORP (Vtranslation_hash_table_vector)
+				? ASIZE (Vtranslation_hash_table_vector)
+				: -1));
+		h = GET_HASH_TABLE (eop);
 
-		op = hash_lookup (h, make_number (reg[RRR]), NULL);
-		if (op >= 0)
+		eop = hash_lookup (h, make_number (reg[RRR]), NULL);
+		if (eop >= 0)
 		  {
 		    Lisp_Object opl;
-		    opl = HASH_VALUE (h, op);
-		    if (! CHARACTERP (opl))
+		    opl = HASH_VALUE (h, eop);
+		    if (! (IN_INT_RANGE (eop) && CHARACTERP (opl)))
 		      CCL_INVALID_CMD;
 		    reg[RRR] = charset_unicode;
-		    reg[rrr] = op;
+		    reg[rrr] = eop;
 		    reg[7] = 1; /* r7 true for success */
 		  }
 		else
@@ -1313,18 +1328,22 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	      break;
 
 	    case CCL_LookupCharConstTbl:
-	      op = XINT (ccl_prog[ic]); /* table */
-	      ic++;
-	      i = CCL_DECODE_CHAR (reg[RRR], reg[rrr]);
 	      {
-		struct Lisp_Hash_Table *h = GET_HASH_TABLE (op);
+		ptrdiff_t eop;
+		struct Lisp_Hash_Table *h;
+		GET_CCL_RANGE (eop, ccl_prog, ic++, 0,
+			       (VECTORP (Vtranslation_hash_table_vector)
+				? ASIZE (Vtranslation_hash_table_vector)
+				: -1));
+		i = CCL_DECODE_CHAR (reg[RRR], reg[rrr]);
+		h = GET_HASH_TABLE (eop);
 
-		op = hash_lookup (h, make_number (i), NULL);
-		if (op >= 0)
+		eop = hash_lookup (h, make_number (i), NULL);
+		if (eop >= 0)
 		  {
 		    Lisp_Object opl;
-		    opl = HASH_VALUE (h, op);
-		    if (!INTEGERP (opl))
+		    opl = HASH_VALUE (h, eop);
+		    if (! (INTEGERP (opl) && IN_INT_RANGE (XINT (opl))))
 		      CCL_INVALID_CMD;
 		    reg[RRR] = XINT (opl);
 		    reg[7] = 1; /* r7 true for success */
@@ -1337,9 +1356,10 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	    case CCL_IterateMultipleMap:
 	      {
 		Lisp_Object map, content, attrib, value;
-		int point, size, fin_ic;
+		EMACS_INT point, size;
+		int fin_ic;
 
-		j = XINT (ccl_prog[ic++]); /* number of maps. */
+		GET_CCL_INT (j, ccl_prog, ic++); /* number of maps. */
 		fin_ic = ic + j;
 		op = reg[rrr];
 		if ((j > reg[RRR]) && (j >= 0))
@@ -1359,7 +1379,7 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 
 		    size = ASIZE (Vcode_conversion_map_vector);
 		    point = XINT (ccl_prog[ic++]);
-		    if (point >= size) continue;
+		    if (! (0 <= point && point < size)) continue;
 		    map = AREF (Vcode_conversion_map_vector, point);
 
 		    /* Check map validity.  */
@@ -1374,18 +1394,19 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 		    /* check map type,
 		       [STARTPOINT VAL1 VAL2 ...] or
 		       [t ELEMENT STARTPOINT ENDPOINT]  */
-		    if (NUMBERP (content))
+		    if (INTEGERP (content))
 		      {
-			point = XUINT (content);
-			point = op - point + 1;
-			if (!((point >= 1) && (point < size))) continue;
-			content = AREF (map, point);
+			point = XINT (content);
+			if (!(point <= op && op - point + 1 < size)) continue;
+			content = AREF (map, op - point + 1);
 		      }
 		    else if (EQ (content, Qt))
 		      {
 			if (size != 4) continue;
-			if ((op >= XUINT (AREF (map, 2)))
-			    && (op < XUINT (AREF (map, 3))))
+			if (INTEGERP (AREF (map, 2))
+			    && XINT (AREF (map, 2)) <= op
+			    && INTEGERP (AREF (map, 3))
+			    && op < XINT (AREF (map, 3)))
 			  content = AREF (map, 1);
 			else
 			  continue;
@@ -1395,10 +1416,10 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 
 		    if (NILP (content))
 		      continue;
-		    else if (NUMBERP (content))
+		    else if (INTEGERP (content) && IN_INT_RANGE (XINT (content)))
 		      {
 			reg[RRR] = i;
-			reg[rrr] = XINT(content);
+			reg[rrr] = XINT (content);
 			break;
 		      }
 		    else if (EQ (content, Qt) || EQ (content, Qlambda))
@@ -1410,10 +1431,11 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 		      {
 			attrib = XCAR (content);
 			value = XCDR (content);
-			if (!NUMBERP (attrib) || !NUMBERP (value))
+			if (! (INTEGERP (attrib) && INTEGERP (value)
+			       && IN_INT_RANGE (XINT (value))))
 			  continue;
 			reg[RRR] = i;
-			reg[rrr] = XUINT (value);
+			reg[rrr] = XINT (value);
 			break;
 		      }
 		    else if (SYMBOLP (content))
@@ -1448,8 +1470,9 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 		  mapping_stack_pointer = mapping_stack;
 		stack_idx_of_map_multiple = 0;
 
-		map_set_rest_length =
-		  XINT (ccl_prog[ic++]); /* number of maps and separators. */
+		/* Get number of maps and separators.  */
+		GET_CCL_INT (map_set_rest_length, ccl_prog, ic++);
+
 		fin_ic = ic + map_set_rest_length;
 		op = reg[rrr];
 
@@ -1517,7 +1540,7 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 		do {
 		  for (;map_set_rest_length > 0;i++, ic++, map_set_rest_length--)
 		    {
-		      point = XINT(ccl_prog[ic]);
+		      GET_CCL_INT (point, ccl_prog, ic);
 		      if (point < 0)
 			{
 			  /* +1 is for including separator. */
@@ -1547,18 +1570,19 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 		      /* check map type,
 			 [STARTPOINT VAL1 VAL2 ...] or
 			 [t ELEMENT STARTPOINT ENDPOINT]  */
-		      if (NUMBERP (content))
+		      if (INTEGERP (content))
 			{
-			  point = XUINT (content);
-			  point = op - point + 1;
-			  if (!((point >= 1) && (point < size))) continue;
-			  content = AREF (map, point);
+			  point = XINT (content);
+			  if (!(point <= op && op - point + 1 < size)) continue;
+			  content = AREF (map, op - point + 1);
 			}
 		      else if (EQ (content, Qt))
 			{
 			  if (size != 4) continue;
-			  if ((op >= XUINT (AREF (map, 2))) &&
-			      (op < XUINT (AREF (map, 3))))
+			  if (INTEGERP (AREF (map, 2))
+			      && XINT (AREF (map, 2)) <= op
+			      && INTEGERP (AREF (map, 3))
+			      && op < XINT (AREF (map, 3)))
 			    content = AREF (map, 1);
 			  else
 			    continue;
@@ -1570,7 +1594,7 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 			continue;
 
 		      reg[RRR] = i;
-		      if (NUMBERP (content))
+		      if (INTEGERP (content) && IN_INT_RANGE (XINT (content)))
 			{
 			  op = XINT (content);
 			  i += map_set_rest_length - 1;
@@ -1582,9 +1606,10 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 			{
 			  attrib = XCAR (content);
 			  value = XCDR (content);
-			  if (!NUMBERP (attrib) || !NUMBERP (value))
+			  if (! (INTEGERP (attrib) && INTEGERP (value)
+				 && IN_INT_RANGE (XINT (value))))
 			    continue;
-			  op = XUINT (value);
+			  op = XINT (value);
 			  i += map_set_rest_length - 1;
 			  ic += map_set_rest_length - 1;
 			  POP_MAPPING_STACK (map_set_rest_length, reg[rrr]);
@@ -1629,7 +1654,7 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	    case CCL_MapSingle:
 	      {
 		Lisp_Object map, attrib, value, content;
-		int size, point;
+		int point;
 		j = XINT (ccl_prog[ic++]); /* map_id */
 		op = reg[rrr];
 		if (j >= ASIZE (Vcode_conversion_map_vector))
@@ -1644,41 +1669,36 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 		    break;
 		  }
 		map = XCDR (map);
-		if (!VECTORP (map))
+		if (! (VECTORP (map)
+		       && INTEGERP (AREF (map, 0))
+		       && XINT (AREF (map, 0)) <= op
+		       && op - XINT (AREF (map, 0)) + 1 < ASIZE (map)))
 		  {
 		    reg[RRR] = -1;
 		    break;
 		  }
-		size = ASIZE (map);
-		point = XUINT (AREF (map, 0));
+		point = XINT (AREF (map, 0));
 		point = op - point + 1;
 		reg[RRR] = 0;
-		if ((size <= 1) ||
-		    (!((point >= 1) && (point < size))))
+		content = AREF (map, point);
+		if (NILP (content))
 		  reg[RRR] = -1;
-		else
+		else if (INTEGERP (content))
+		  reg[rrr] = XINT (content);
+		else if (EQ (content, Qt));
+		else if (CONSP (content))
 		  {
-		    reg[RRR] = 0;
-		    content = AREF (map, point);
-		    if (NILP (content))
-		      reg[RRR] = -1;
-		    else if (NUMBERP (content))
-		      reg[rrr] = XINT (content);
-		    else if (EQ (content, Qt));
-		    else if (CONSP (content))
-		      {
-			attrib = XCAR (content);
-			value = XCDR (content);
-			if (!NUMBERP (attrib) || !NUMBERP (value))
-			  continue;
-			reg[rrr] = XUINT(value);
-			break;
-		      }
-		    else if (SYMBOLP (content))
-		      CCL_CALL_FOR_MAP_INSTRUCTION (content, ic);
-		    else
-		      reg[RRR] = -1;
+		    attrib = XCAR (content);
+		    value = XCDR (content);
+		    if (!INTEGERP (attrib) || !INTEGERP (value))
+		      continue;
+		    reg[rrr] = XINT (value);
+		    break;
 		  }
+		else if (SYMBOLP (content))
+		  CCL_CALL_FOR_MAP_INSTRUCTION (content, ic);
+		else
+		  reg[RRR] = -1;
 	      }
 	      break;
 
@@ -1709,8 +1729,8 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
       switch (ccl->status)
 	{
 	case CCL_STAT_INVALID_CMD:
-	  sprintf(msg, "\nCCL: Invalid command %x (ccl_code = %x) at %d.",
-		  code & 0x1F, code, this_ic);
+	  sprintf (msg, "\nCCL: Invalid command %x (ccl_code = %x) at %d.",
+                   code & 0x1F, code, this_ic);
 #ifdef CCL_DEBUG
 	  {
 	    int i = ccl_backtrace_idx - 1;
@@ -1719,7 +1739,7 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	    msglen = strlen (msg);
 	    if (dst + msglen <= (dst_bytes ? dst_end : src))
 	      {
-		bcopy (msg, dst, msglen);
+		memcpy (dst, msg, msglen);
 		dst += msglen;
 	      }
 
@@ -1728,11 +1748,11 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 		if (i < 0) i = CCL_DEBUG_BACKTRACE_LEN - 1;
 		if (ccl_backtrace_table[i] == 0)
 		  break;
-		sprintf(msg, " %d", ccl_backtrace_table[i]);
+		sprintf (msg, " %d", ccl_backtrace_table[i]);
 		msglen = strlen (msg);
 		if (dst + msglen > (dst_bytes ? dst_end : src))
 		  break;
-		bcopy (msg, dst, msglen);
+		memcpy (dst, msg, msglen);
 		dst += msglen;
 	      }
 	    goto ccl_finish;
@@ -1742,15 +1762,15 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 
 	case CCL_STAT_QUIT:
 	  if (! ccl->quit_silently)
-	    sprintf(msg, "\nCCL: Quited.");
+	    sprintf (msg, "\nCCL: Quitted.");
 	  break;
 
 	default:
-	  sprintf(msg, "\nCCL: Unknown error type (%d)", ccl->status);
+	  sprintf (msg, "\nCCL: Unknown error type (%d)", ccl->status);
 	}
 
       msglen = strlen (msg);
-      if (dst + msglen <= dst_end)
+      if (msglen <= dst_end - dst)
 	{
 	  for (i = 0; i < msglen; i++)
 	    *dst++ = msg[i];
@@ -1765,7 +1785,7 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 	  int i = src_end - src;
 	  if (dst_bytes && (dst_end - dst) < i)
 	    i = dst_end - dst;
-	  bcopy (src, dst, i);
+	  memcpy (dst, src, i);
 	  src += i;
 	  dst += i;
 #else
@@ -1788,15 +1808,14 @@ ccl_driver (ccl, source, destination, src_size, dst_size, charset_list)
 
 /* Resolve symbols in the specified CCL code (Lisp vector).  This
    function converts symbols of code conversion maps and character
-   translation tables embeded in the CCL code into their ID numbers.
+   translation tables embedded in the CCL code into their ID numbers.
 
    The return value is a vector (CCL itself or a new vector in which
    all symbols are resolved), Qt if resolving of some symbol failed,
    or nil if CCL contains invalid data.  */
 
 static Lisp_Object
-resolve_symbol_ccl_program (ccl)
-     Lisp_Object ccl;
+resolve_symbol_ccl_program (Lisp_Object ccl)
 {
   int i, veclen, unresolved = 0;
   Lisp_Object result, contents, val;
@@ -1867,9 +1886,7 @@ resolve_symbol_ccl_program (ccl)
    symbols, return Qnil.  */
 
 static Lisp_Object
-ccl_get_compiled_code (ccl_prog, idx)
-     Lisp_Object ccl_prog;
-     int *idx;
+ccl_get_compiled_code (Lisp_Object ccl_prog, int *idx)
 {
   Lisp_Object val, slot;
 
@@ -1910,9 +1927,7 @@ ccl_get_compiled_code (ccl_prog, idx)
 
    If CCL_PROG is nil, we just reset the structure pointed by CCL.  */
 int
-setup_ccl_program (ccl, ccl_prog)
-     struct ccl_program *ccl;
-     Lisp_Object ccl_prog;
+setup_ccl_program (struct ccl_program *ccl, Lisp_Object ccl_prog)
 {
   int i;
 
@@ -1950,36 +1965,10 @@ setup_ccl_program (ccl, ccl_prog)
 }
 
 
-/* Check if CCL is updated or not.  If not, re-setup members of CCL.  */
-
-int
-check_ccl_update (ccl)
-     struct ccl_program *ccl;
-{
-  Lisp_Object slot, ccl_prog;
-
-  if (ccl->idx < 0)
-    return 0;
-  slot = AREF (Vccl_program_table, ccl->idx);
-  if (NILP (AREF (slot, 3)))
-    return 0;
-  ccl_prog = ccl_get_compiled_code (AREF (slot, 0), &ccl->idx);
-  if (! VECTORP (ccl_prog))
-    return -1;
-  ccl->size = ASIZE (ccl_prog);
-  ccl->prog = XVECTOR (ccl_prog)->contents;
-  ccl->eof_ic = XINT (AREF (ccl_prog, CCL_HEADER_EOF));
-  ccl->buf_magnification = XINT (AREF (ccl_prog, CCL_HEADER_BUF_MAG));
-  ASET (slot, 3, Qnil);
-  return 0;
-}
-
-
 DEFUN ("ccl-program-p", Fccl_program_p, Sccl_program_p, 1, 1, 0,
        doc: /* Return t if OBJECT is a CCL program name or a compiled CCL program code.
 See the documentation of `define-ccl-program' for the detail of CCL program.  */)
-     (object)
-     Lisp_Object object;
+  (Lisp_Object object)
 {
   Lisp_Object val;
 
@@ -2013,8 +2002,7 @@ the corresponding register after the execution.
 
 See the documentation of `define-ccl-program' for a definition of CCL
 programs.  */)
-     (ccl_prog, reg)
-     Lisp_Object ccl_prog, reg;
+  (Lisp_Object ccl_prog, Lisp_Object reg)
 {
   struct ccl_program ccl;
   int i;
@@ -2068,18 +2056,18 @@ is a unibyte string.  By default it is a multibyte string.
 
 See the documentation of `define-ccl-program' for the detail of CCL program.
 usage: (ccl-execute-on-string CCL-PROGRAM STATUS STRING &optional CONTINUE UNIBYTE-P)  */)
-     (ccl_prog, status, str, contin, unibyte_p)
-     Lisp_Object ccl_prog, status, str, contin, unibyte_p;
+  (Lisp_Object ccl_prog, Lisp_Object status, Lisp_Object str, Lisp_Object contin, Lisp_Object unibyte_p)
 {
   Lisp_Object val;
   struct ccl_program ccl;
   int i;
-  int outbufsize;
+  ptrdiff_t outbufsize;
   unsigned char *outbuf, *outp;
-  int str_chars, str_bytes;
+  ptrdiff_t str_chars, str_bytes;
 #define CCL_EXECUTE_BUF_SIZE 1024
   int source[CCL_EXECUTE_BUF_SIZE], destination[CCL_EXECUTE_BUF_SIZE];
-  int consumed_chars, consumed_bytes, produced_chars;
+  ptrdiff_t consumed_chars, consumed_bytes, produced_chars;
+  int buf_magnification;
 
   if (setup_ccl_program (&ccl, ccl_prog) < 0)
     error ("Invalid CCL program");
@@ -2106,6 +2094,10 @@ usage: (ccl-execute-on-string CCL-PROGRAM STATUS STRING &optional CONTINUE UNIBY
 	ccl.ic = i;
     }
 
+  buf_magnification = ccl.buf_magnification ? ccl.buf_magnification : 1;
+
+  if ((min (PTRDIFF_MAX, SIZE_MAX) - 256) / buf_magnification < str_bytes)
+    memory_full (SIZE_MAX);
   outbufsize = (ccl.buf_magnification
 		? str_bytes * ccl.buf_magnification + 256
 		: str_bytes + 256);
@@ -2117,51 +2109,45 @@ usage: (ccl-execute-on-string CCL-PROGRAM STATUS STRING &optional CONTINUE UNIBY
     {
       const unsigned char *p = SDATA (str) + consumed_bytes;
       const unsigned char *endp = SDATA (str) + str_bytes;
-      int i = 0;
+      int j = 0;
       int *src, src_size;
 
       if (endp - p == str_chars - consumed_chars)
-	while (i < CCL_EXECUTE_BUF_SIZE && p < endp)
-	  source[i++] = *p++;
+	while (j < CCL_EXECUTE_BUF_SIZE && p < endp)
+	  source[j++] = *p++;
       else
-	while (i < CCL_EXECUTE_BUF_SIZE && p < endp)
-	  source[i++] = STRING_CHAR_ADVANCE (p);
-      consumed_chars += i;
+	while (j < CCL_EXECUTE_BUF_SIZE && p < endp)
+	  source[j++] = STRING_CHAR_ADVANCE (p);
+      consumed_chars += j;
       consumed_bytes = p - SDATA (str);
 
       if (consumed_bytes == str_bytes)
 	ccl.last_block = NILP (contin);
       src = source;
-      src_size = i;
+      src_size = j;
       while (1)
 	{
+	  int max_expansion = NILP (unibyte_p) ? MAX_MULTIBYTE_LENGTH : 1;
+	  ptrdiff_t offset, shortfall;
 	  ccl_driver (&ccl, src, destination, src_size, CCL_EXECUTE_BUF_SIZE,
 		      Qnil);
 	  produced_chars += ccl.produced;
+	  offset = outp - outbuf;
+	  shortfall = ccl.produced * max_expansion - (outbufsize - offset);
+	  if (0 < shortfall)
+	    {
+	      outbuf = xpalloc (outbuf, &outbufsize, shortfall, -1, 1);
+	      outp = outbuf + offset;
+	    }
 	  if (NILP (unibyte_p))
 	    {
-	      if (outp - outbuf + MAX_MULTIBYTE_LENGTH * ccl.produced
-		  > outbufsize)
-		{
-		  int offset = outp - outbuf;
-		  outbufsize += MAX_MULTIBYTE_LENGTH * ccl.produced;
-		  outbuf = (unsigned char *) xrealloc (outbuf, outbufsize);
-		  outp = outbuf + offset;
-		}
-	      for (i = 0; i < ccl.produced; i++)
-		CHAR_STRING_ADVANCE (destination[i], outp);
+	      for (j = 0; j < ccl.produced; j++)
+		CHAR_STRING_ADVANCE (destination[j], outp);
 	    }
 	  else
 	    {
-	      if (outp - outbuf + ccl.produced > outbufsize)
-		{
-		  int offset = outp - outbuf;
-		  outbufsize += ccl.produced;
-		  outbuf = (unsigned char *) xrealloc (outbuf, outbufsize);
-		  outp = outbuf + offset;
-		}
-	      for (i = 0; i < ccl.produced; i++)
-		*outp++ = destination[i];
+	      for (j = 0; j < ccl.produced; j++)
+		*outp++ = destination[j];
 	    }
 	  src += ccl.consumed;
 	  src_size -= ccl.consumed;
@@ -2199,8 +2185,7 @@ DEFUN ("register-ccl-program", Fregister_ccl_program, Sregister_ccl_program,
 CCL-PROG should be a compiled CCL program (vector), or nil.
 If it is nil, just reserve NAME as a CCL program name.
 Return index number of the registered CCL program.  */)
-     (name, ccl_prog)
-     Lisp_Object name, ccl_prog;
+     (Lisp_Object name, Lisp_Object ccl_prog)
 {
   int len = ASIZE (Vccl_program_table);
   int idx;
@@ -2275,12 +2260,11 @@ DEFUN ("register-code-conversion-map", Fregister_code_conversion_map,
        2, 2, 0,
        doc: /* Register SYMBOL as code conversion map MAP.
 Return index number of the registered map.  */)
-     (symbol, map)
-     Lisp_Object symbol, map;
+  (Lisp_Object symbol, Lisp_Object map)
 {
   int len = ASIZE (Vcode_conversion_map_vector);
   int i;
-  Lisp_Object index;
+  Lisp_Object idx;
 
   CHECK_SYMBOL (symbol);
   CHECK_VECTOR (map);
@@ -2294,11 +2278,11 @@ Return index number of the registered map.  */)
 
       if (EQ (symbol, XCAR (slot)))
 	{
-	  index = make_number (i);
+	  idx = make_number (i);
 	  XSETCDR (slot, map);
 	  Fput (symbol, Qcode_conversion_map, map);
-	  Fput (symbol, Qcode_conversion_map_id, index);
-	  return index;
+	  Fput (symbol, Qcode_conversion_map_id, idx);
+	  return idx;
 	}
     }
 
@@ -2306,43 +2290,32 @@ Return index number of the registered map.  */)
     Vcode_conversion_map_vector = larger_vector (Vcode_conversion_map_vector,
 						 len * 2, Qnil);
 
-  index = make_number (i);
+  idx = make_number (i);
   Fput (symbol, Qcode_conversion_map, map);
-  Fput (symbol, Qcode_conversion_map_id, index);
+  Fput (symbol, Qcode_conversion_map_id, idx);
   ASET (Vcode_conversion_map_vector, i, Fcons (symbol, map));
-  return index;
+  return idx;
 }
 
 
 void
-syms_of_ccl ()
+syms_of_ccl (void)
 {
   staticpro (&Vccl_program_table);
   Vccl_program_table = Fmake_vector (make_number (32), Qnil);
 
-  Qccl = intern_c_string ("ccl");
-  staticpro (&Qccl);
+  DEFSYM (Qccl, "ccl");
+  DEFSYM (Qcclp, "cclp");
+  DEFSYM (Qccl_program, "ccl-program");
+  DEFSYM (Qccl_program_idx, "ccl-program-idx");
+  DEFSYM (Qcode_conversion_map, "code-conversion-map");
+  DEFSYM (Qcode_conversion_map_id, "code-conversion-map-id");
 
-  Qcclp = intern_c_string ("cclp");
-  staticpro (&Qcclp);
-
-  Qccl_program = intern_c_string ("ccl-program");
-  staticpro (&Qccl_program);
-
-  Qccl_program_idx = intern_c_string ("ccl-program-idx");
-  staticpro (&Qccl_program_idx);
-
-  Qcode_conversion_map = intern_c_string ("code-conversion-map");
-  staticpro (&Qcode_conversion_map);
-
-  Qcode_conversion_map_id = intern_c_string ("code-conversion-map-id");
-  staticpro (&Qcode_conversion_map_id);
-
-  DEFVAR_LISP ("code-conversion-map-vector", &Vcode_conversion_map_vector,
+  DEFVAR_LISP ("code-conversion-map-vector", Vcode_conversion_map_vector,
 	       doc: /* Vector of code conversion maps.  */);
   Vcode_conversion_map_vector = Fmake_vector (make_number (16), Qnil);
 
-  DEFVAR_LISP ("font-ccl-encoder-alist", &Vfont_ccl_encoder_alist,
+  DEFVAR_LISP ("font-ccl-encoder-alist", Vfont_ccl_encoder_alist,
 	       doc: /* Alist of fontname patterns vs corresponding CCL program.
 Each element looks like (REGEXP . CCL-CODE),
  where CCL-CODE is a compiled CCL program.
@@ -2355,7 +2328,7 @@ The code point in the font is set in CCL registers R1 and R2
  If the font is single-byte font, the register R2 is not used.  */);
   Vfont_ccl_encoder_alist = Qnil;
 
-  DEFVAR_LISP ("translation-hash-table-vector", &Vtranslation_hash_table_vector,
+  DEFVAR_LISP ("translation-hash-table-vector", Vtranslation_hash_table_vector,
     doc: /* Vector containing all translation hash tables ever defined.
 Comprises pairs (SYMBOL . TABLE) where SYMBOL and TABLE were set up by calls
 to `define-translation-hash-table'.  The vector is indexed by the table id
@@ -2368,6 +2341,3 @@ used by CCL.  */);
   defsubr (&Sregister_ccl_program);
   defsubr (&Sregister_code_conversion_map);
 }
-
-/* arch-tag: bb9a37be-68ce-4576-8d3d-15d750e4a860
-   (do not change this comment) */

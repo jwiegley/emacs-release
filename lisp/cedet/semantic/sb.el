@@ -1,7 +1,6 @@
 ;;; semantic/sb.el --- Semantic tag display for speedbar
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
@@ -88,7 +87,7 @@ Restore the old current buffer when completed."
 ;;    @ type
 ;;    = default value
 ;;
-;;  +> keywrd Type
+;;  +> keyword Type
 ;;   +> type part
 ;;
 ;;  +>  -> click to see additional information
@@ -314,7 +313,7 @@ TEXT TOKEN and INDENT are the details."
     (save-excursion (speedbar-stealthy-updates))
     (semantic-go-to-tag token parent)
     (switch-to-buffer (current-buffer))
-    ;; Reset the timer with a new timeout when cliking a file
+    ;; Reset the timer with a new timeout when clicking a file
     ;; in case the user was navigating directories, we can cancel
     ;; that other timer.
     ;; (speedbar-set-timer dframe-update-speed)
@@ -400,7 +399,7 @@ Returns the tag list, or t for an error."
     (if (listp out)
 	(condition-case nil
 	    (progn
-	      ;; This brings externally defind methods into
+	      ;; This brings externally defined methods into
 	      ;; their classes, and creates meta classes for
 	      ;; orphans.
 	      (setq out (semantic-adopt-external-members out))
@@ -416,5 +415,4 @@ Returns the tag list, or t for an error."
 
 (provide 'semantic/sb)
 
-;; arch-tag: 82aa0570-9e27-41a3-a834-2641dbb2f829
 ;;; semantic/sb.el ends here

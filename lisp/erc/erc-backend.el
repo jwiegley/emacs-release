@@ -1,6 +1,6 @@
 ;;; erc-backend.el --- Backend network communication for ERC
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2004-2012 Free Software Foundation, Inc.
 
 ;; Filename: erc-backend.el
 ;; Author: Lawrence Mitchell <wence@gmx.li>
@@ -79,7 +79,7 @@
 
 ;;; TODO:
 
-;; o Generalise the display-line code so that we can use it to
+;; o Generalize the display-line code so that we can use it to
 ;;   display the stuff we send, as well as the stuff we receive.
 ;;   Then, move all display-related code into another backend-like
 ;;   file, erc-display.el, say.
@@ -324,6 +324,14 @@ Good luck."
   :type 'integer
   :group 'erc-server)
 
+(defcustom erc-coding-system-precedence '(utf-8 undecided)
+  "List of coding systems to be preferred when receiving a string from the server.
+This will only be consulted if the coding system in
+`erc-server-coding-system' is `undecided'."
+  :group 'erc-server
+  :version "24.1"
+  :type '(repeat coding-system))
+
 (defcustom erc-server-coding-system (if (and (fboundp 'coding-system-p)
                                              (coding-system-p 'undecided)
                                              (coding-system-p 'utf-8))
@@ -334,7 +342,9 @@ This is either a coding system, a cons, a function, or nil.
 
 If a cons, the encoding system for outgoing text is in the car
 and the decoding system for incoming text is in the cdr. The most
-interesting use for this is to put `undecided' in the cdr.
+interesting use for this is to put `undecided' in the cdr. This
+means that `erc-coding-system-precedence' will be consulted, and the
+first match there will be used.
 
 If a function, it is called with the argument `target' and should
 return a coding system or a cons as described above.
@@ -574,6 +584,7 @@ Make sure you are in an ERC buffer when running this."
                       nil
                     (substring erc-server-filter-data
                                (match-end 0))))
+            (erc-log-irc-protocol line nil)
             (erc-parse-server-response process line)))))))
 
 (defsubst erc-server-reconnect-p (event)
@@ -704,6 +715,14 @@ This is indicated by `erc-encoding-coding-alist', defaulting to the value of
   (let ((coding (erc-coding-system-for-target target)))
     (when (consp coding)
       (setq coding (cdr coding)))
+    (when (eq coding 'undecided)
+      (let ((codings (detect-coding-string str))
+            (precedence erc-coding-system-precedence))
+        (while (and precedence
+                    (not (memq (car precedence) codings)))
+          (pop precedence))
+        (when precedence
+          (setq coding (car precedence)))))
     (erc-decode-coding-string str coding)))
 
 ;; proposed name, not used by anything yet
@@ -973,7 +992,7 @@ Hands off to helper functions via `erc-call-hooks'."
   (if (member (erc-response.command parsed-response)
               erc-server-prevent-duplicates)
       (let ((m (erc-response.unparsed parsed-response)))
-        ;; duplicate supression
+        ;; duplicate suppression
         (if (< (or (gethash m erc-server-duplicates) 0)
                (- (erc-current-time) erc-server-duplicate-timeout))
             (erc-call-hooks process parsed-response))
@@ -1414,7 +1433,7 @@ add things to `%s' instead."
         (when (string= cmd "PRIVMSG")
           (erc-auto-query proc parsed))))))
 
-;; FIXME: need clean way of specifiying extra hooks in
+;; FIXME: need clean way of specifying extra hooks in
 ;; define-erc-response-handler.
 (add-hook 'erc-server-PRIVMSG-functions 'erc-auto-query)
 
@@ -1933,6 +1952,13 @@ See `erc-display-server-message'." nil
     (erc-display-message parsed '(error notice) 'active 's482
                          ?c channel ?m message)))
 
+(define-erc-response-handler (671)
+  "Secure connection response in WHOIS." nil
+  (let ((nick (second (erc-response.command-args parsed)))
+        (securemsg (erc-response.contents parsed)))
+    (erc-display-message parsed 'notice 'active 's671
+                         ?n nick ?a securemsg)))
+
 (define-erc-response-handler (431 445 446 451 462 463 464 481 483 484 485
                                   491 501 502)
   ;; 431 - No nickname given
@@ -1975,5 +2001,3 @@ See `erc-display-error-notice'." nil
 ;; Local Variables:
 ;; indent-tabs-mode: nil
 ;; End:
-
-;; arch-tag: a64e6bb7-a780-4efd-8f98-083b18c7c84a

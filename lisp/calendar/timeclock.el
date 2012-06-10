@@ -1,7 +1,6 @@
 ;;; timeclock.el --- mode for keeping track of how much you work
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 ;; Created: 25 Mar 1999
@@ -151,7 +150,7 @@ This variable only has effect if set with \\[customize]."
 (defcustom timeclock-use-display-time t
   "If non-nil, use `display-time-hook' for doing modeline updates.
 The advantage of this is that one less timer has to be set running
-amok in Emacs' process space.  The disadvantage is that it requires
+amok in Emacs's process space.  The disadvantage is that it requires
 you to have `display-time' running.  If you don't want to use
 `display-time', but still want the modeline to show how much time is
 left, set this variable to nil.  Changing the value of this variable
@@ -408,7 +407,7 @@ discover the reason."
     (if arg
 	(run-hooks 'timeclock-done-hook))))
 
-;; Should today-only be removed in favour of timeclock-relative? - gm
+;; Should today-only be removed in favor of timeclock-relative? - gm
 (defsubst timeclock-workday-remaining (&optional today-only)
   "Return the number of seconds until the workday is complete.
 The amount returned is relative to the value of `timeclock-workday'.
@@ -543,19 +542,12 @@ non-nil, the amount returned will be relative to past time worked."
 	(message "%s" string)
       string)))
 
-(defsubst timeclock-time-to-seconds (time)
-  "Convert TIME to a floating point number."
-  (+ (* (car time) 65536.0)
-     (cadr time)
-     (/ (or (nth 2 time) 0) 1000000.0)))
+(defalias 'timeclock-time-to-seconds (if (fboundp 'float-time) 'float-time
+				       'time-to-seconds))
 
-(defsubst timeclock-seconds-to-time (seconds)
-  "Convert SECONDS (a floating point number) to an Emacs time structure."
-  (list (floor seconds 65536)
-	(floor (mod seconds 65536))
-	(floor (* (- seconds (ffloor seconds)) 1000000))))
+(defalias 'timeclock-seconds-to-time 'seconds-to-time)
 
-;; Should today-only be removed in favour of timeclock-relative? - gm
+;; Should today-only be removed in favor of timeclock-relative? - gm
 (defsubst timeclock-when-to-leave (&optional today-only)
   "Return a time value representing the end of today's workday.
 If TODAY-ONLY is non-nil, the value returned will be relative only to
@@ -577,7 +569,7 @@ This string is relative to the value of `timeclock-workday'.  If
 SHOW-SECONDS is non-nil, the value printed/returned will include
 seconds.  If TODAY-ONLY is non-nil, the value returned will be
 relative only to the time worked today, and not to past time."
-  ;; Should today-only be removed in favour of timeclock-relative? - gm
+  ;; Should today-only be removed in favor of timeclock-relative? - gm
   (interactive)
   (let* ((then (timeclock-when-to-leave today-only))
 	 (string
@@ -1029,11 +1021,10 @@ lists:
   timeclock-current-debt LOG-DATA
 
 See the documentation for the given function if more info is needed."
-  (let* ((log-data (list 0.0 nil nil))
-	 (now (current-time))
-	 (todays-date (timeclock-time-to-date now))
-	 last-date-limited last-date-seconds last-date
-	 (line 0) last beg day entry event)
+  (let ((log-data (list 0.0 nil nil))
+	(now (current-time))
+	last-date-limited last-date-seconds last-date
+	(line 0) last beg day entry event)
     (with-temp-buffer
       (insert-file-contents (or filename timeclock-file))
       (when recent-only
@@ -1119,7 +1110,7 @@ discrepancy, today's discrepancy, and the time worked today."
   (let* ((now (current-time))
 	 (todays-date (timeclock-time-to-date now))
 	 (first t) (accum 0) (elapsed 0)
-	 event beg last-date avg
+	 event beg last-date
 	 last-date-limited last-date-seconds)
     (unless timeclock-discrepancy
       (when (file-readable-p timeclock-file)
@@ -1419,5 +1410,4 @@ HTML-P is non-nil, HTML markup is added."
 (if (file-readable-p timeclock-file)
     (timeclock-reread-log))
 
-;; arch-tag: a0be3377-deb6-44ec-b9a2-a7be28436a40
 ;;; timeclock.el ends here

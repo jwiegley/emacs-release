@@ -1,9 +1,7 @@
 This is ../../info/gnus, produced by makeinfo version 4.13 from
 gnus.texi.
 
-Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
-Foundation, Inc.
+Copyright (C) 1995-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -21,851 +19,6 @@ INFO-DIR-SECTION Emacs network features
 START-INFO-DIR-ENTRY
 * Gnus: (gnus).                 The newsreader Gnus.
 END-INFO-DIR-ENTRY
-
-
-File: gnus,  Node: Article Washing,  Next: Article Header,  Prev: Article Hiding,  Up: Article Treatment
-
-3.18.4 Article Washing
-----------------------
-
-We call this "article washing" for a really good reason.  Namely, the
-`A' key was taken, so we had to use the `W' key instead.
-
-   "Washing" is defined by us as "changing something from something to
-something else", but normally results in something looking better.
-Cleaner, perhaps.
-
-   *Note Customizing Articles::, if you want to change how Gnus displays
-articles by default.
-
-`C-u g'
-     This is not really washing, it's sort of the opposite of washing.
-     If you type this, you see the article exactly as it exists on disk
-     or on the server.
-
-`g'
-     Force redisplaying of the current article
-     (`gnus-summary-show-article').  This is also not really washing.
-     If you type this, you see the article without any previously
-     applied interactive Washing functions but with all default
-     treatments (*note Customizing Articles::).
-
-`W l'
-     Remove page breaks from the current article
-     (`gnus-summary-stop-page-breaking').  *Note Misc Article::, for
-     page delimiters.
-
-`W r'
-     Do a Caesar rotate (rot13) on the article buffer
-     (`gnus-summary-caesar-message').  Unreadable articles that tell
-     you to read them with Caesar rotate or rot13.  (Typically
-     offensive jokes and such.)
-
-     It's commonly called "rot13" because each letter is rotated 13
-     positions in the alphabet, e. g. `B' (letter #2) -> `O' (letter
-     #15).  It is sometimes referred to as "Caesar rotate" because
-     Caesar is rumored to have employed this form of, uh, somewhat weak
-     encryption.
-
-`W m'
-     Morse decode the article buffer (`gnus-summary-morse-message').
-
-`W i'
-     Decode IDNA encoded domain names in the current articles.  IDNA
-     encoded domain names looks like `xn--bar'.  If a string remain
-     unencoded after running invoking this, it is likely an invalid IDNA
-     string (`xn--bar' is invalid).  You must have GNU Libidn
-     (`http://www.gnu.org/software/libidn/') installed for this command
-     to work.
-
-`W t'
-
-`t'
-     Toggle whether to display all headers in the article buffer
-     (`gnus-summary-toggle-header').
-
-`W v'
-     Toggle whether to display all headers in the article buffer
-     permanently (`gnus-summary-verbose-headers').
-
-`W o'
-     Treat overstrike (`gnus-article-treat-overstrike').
-
-`W d'
-     Treat M****s*** sm*rtq**t*s according to
-     `gnus-article-dumbquotes-map' (`gnus-article-treat-dumbquotes').
-     Note that this function guesses whether a character is a
-     sm*rtq**t* or not, so it should only be used interactively.
-
-     Sm*rtq**t*s are M****s***'s unilateral extension to the character
-     map in an attempt to provide more quoting characters.  If you see
-     something like `\222' or `\264' where you're expecting some kind of
-     apostrophe or quotation mark, then try this wash.
-
-`W Y f'
-     Full deuglify of broken Outlook (Express) articles: Treat
-     dumbquotes, unwrap lines, repair attribution and rearrange
-     citation.  (`gnus-article-outlook-deuglify-article').
-
-`W Y u'
-     Unwrap lines that appear to be wrapped citation lines.  You can
-     control what lines will be unwrapped by frobbing
-     `gnus-outlook-deuglify-unwrap-min' and
-     `gnus-outlook-deuglify-unwrap-max', indicating the minimum and
-     maximum length of an unwrapped citation line.
-     (`gnus-article-outlook-unwrap-lines').
-
-`W Y a'
-     Repair a broken attribution line.
-     (`gnus-article-outlook-repair-attribution').
-
-`W Y c'
-     Repair broken citations by rearranging the text.
-     (`gnus-article-outlook-rearrange-citation').
-
-`W w'
-     Do word wrap (`gnus-article-fill-cited-article').
-
-     You can give the command a numerical prefix to specify the width
-     to use when filling.
-
-`W Q'
-     Fill long lines (`gnus-article-fill-long-lines').
-
-`W C'
-     Capitalize the first word in each sentence
-     (`gnus-article-capitalize-sentences').
-
-`W c'
-     Translate CRLF pairs (i. e., `^M's on the end of the lines) into LF
-     (this takes care of DOS line endings), and then translate any
-     remaining CRs into LF (this takes care of Mac line endings)
-     (`gnus-article-remove-cr').
-
-`W q'
-     Treat quoted-printable (`gnus-article-de-quoted-unreadable').
-     Quoted-Printable is one common MIME encoding employed when sending
-     non-ASCII (i.e., 8-bit) articles.  It typically makes strings like
-     `déjà vu' look like `d=E9j=E0 vu', which doesn't look very
-     readable to me.  Note that this is usually done automatically by
-     Gnus if the message in question has a `Content-Transfer-Encoding'
-     header that says that this encoding has been done.  If a prefix is
-     given, a charset will be asked for.
-
-`W 6'
-     Treat base64 (`gnus-article-de-base64-unreadable').  Base64 is one
-     common MIME encoding employed when sending non-ASCII (i.e., 8-bit)
-     articles.  Note that this is usually done automatically by Gnus if
-     the message in question has a `Content-Transfer-Encoding' header
-     that says that this encoding has been done.  If a prefix is given,
-     a charset will be asked for.
-
-`W Z'
-     Treat HZ or HZP (`gnus-article-decode-HZ').  HZ (or HZP) is one
-     common encoding employed when sending Chinese articles.  It
-     typically makes strings look like `~{<:Ky2;S{#,NpJ)l6HK!#~}'.
-
-`W A'
-     Translate ANSI SGR control sequences into overlays or extents
-     (`gnus-article-treat-ansi-sequences').  ANSI sequences are used in
-     some Chinese hierarchies for highlighting.
-
-`W u'
-     Remove newlines from within URLs.  Some mailers insert newlines
-     into outgoing email messages to keep lines short.  This
-     reformatting can split long URLs onto multiple lines.  Repair
-     those URLs by removing the newlines (`gnus-article-unsplit-urls').
-
-`W h'
-     Treat HTML (`gnus-article-wash-html').  Note that this is usually
-     done automatically by Gnus if the message in question has a
-     `Content-Type' header that says that the message is HTML.
-
-     If a prefix is given, a charset will be asked for.  If it is a
-     number, the charset defined in
-     `gnus-summary-show-article-charset-alist' (*note Paging the
-     Article::) will be used.
-
-     The default is to use the function specified by
-     `mm-text-html-renderer' (*note Display Customization:
-     (emacs-mime)Display Customization.) to convert the HTML, but this
-     is controlled by the `gnus-article-wash-function' variable.
-     Pre-defined functions you can use include:
-
-    `w3'
-          Use Emacs/W3.
-
-    `w3m'
-          Use emacs-w3m (http://emacs-w3m.namazu.org/).
-
-    `w3m-standalone'
-          Use w3m (http://w3m.sourceforge.net/).
-
-    `links'
-          Use Links (http://links.sf.net/).
-
-    `lynx'
-          Use Lynx (http://lynx.isc.org/).
-
-    `html2text'
-          Use html2text--a simple HTML converter included with Gnus.
-
-
-`W b'
-     Add clickable buttons to the article (`gnus-article-add-buttons').
-     *Note Article Buttons::.
-
-`W B'
-     Add clickable buttons to the article headers
-     (`gnus-article-add-buttons-to-head').
-
-`W p'
-     Verify a signed control message (`gnus-article-verify-x-pgp-sig').
-     Control messages such as `newgroup' and `checkgroups' are usually
-     signed by the hierarchy maintainer.  You need to add the PGP
-     public key of the maintainer to your keyring to verify the
-     message.(1)
-
-`W s'
-     Verify a signed (PGP, PGP/MIME or S/MIME) message
-     (`gnus-summary-force-verify-and-decrypt'). *Note Security::.
-
-`W a'
-     Strip headers like the `X-No-Archive' header from the beginning of
-     article bodies (`gnus-article-strip-headers-in-body').
-
-`W E l'
-     Remove all blank lines from the beginning of the article
-     (`gnus-article-strip-leading-blank-lines').
-
-`W E m'
-     Replace all blank lines with empty lines and then all multiple
-     empty lines with a single empty line.
-     (`gnus-article-strip-multiple-blank-lines').
-
-`W E t'
-     Remove all blank lines at the end of the article
-     (`gnus-article-remove-trailing-blank-lines').
-
-`W E a'
-     Do all the three commands above (`gnus-article-strip-blank-lines').
-
-`W E A'
-     Remove all blank lines (`gnus-article-strip-all-blank-lines').
-
-`W E s'
-     Remove all white space from the beginning of all lines of the
-     article body (`gnus-article-strip-leading-space').
-
-`W E e'
-     Remove all white space from the end of all lines of the article
-     body (`gnus-article-strip-trailing-space').
-
-
-   *Note Customizing Articles::, for how to wash articles automatically.
-
-   ---------- Footnotes ----------
-
-   (1) PGP keys for many hierarchies are available at
-`ftp://ftp.isc.org/pub/pgpcontrol/README.html'
-
-
-File: gnus,  Node: Article Header,  Next: Article Buttons,  Prev: Article Washing,  Up: Article Treatment
-
-3.18.5 Article Header
----------------------
-
-These commands perform various transformations of article header.
-
-`W G u'
-     Unfold folded header lines (`gnus-article-treat-unfold-headers').
-
-`W G n'
-     Fold the `Newsgroups' and `Followup-To' headers
-     (`gnus-article-treat-fold-newsgroups').
-
-`W G f'
-     Fold all the message headers (`gnus-article-treat-fold-headers').
-
-`W E w'
-     Remove excessive whitespace from all headers
-     (`gnus-article-remove-leading-whitespace').
-
-
-
-File: gnus,  Node: Article Buttons,  Next: Article Button Levels,  Prev: Article Header,  Up: Article Treatment
-
-3.18.6 Article Buttons
-----------------------
-
-People often include references to other stuff in articles, and it would
-be nice if Gnus could just fetch whatever it is that people talk about
-with the minimum of fuzz when you hit `RET' or use the middle mouse
-button on these references.
-
-   Gnus adds "buttons" to certain standard references by default:
-Well-formed URLs, mail addresses, Message-IDs, Info links, man pages and
-Emacs or Gnus related references.  This is controlled by two variables,
-one that handles article bodies and one that handles article heads:
-
-`gnus-button-alist'
-     This is an alist where each entry has this form:
-
-          (REGEXP BUTTON-PAR USE-P FUNCTION DATA-PAR)
-
-    REGEXP
-          All text that match this regular expression (case
-          insensitive) will be considered an external reference.
-          Here's a typical regexp that matches embedded URLs:
-          `<URL:\\([^\n\r>]*\\)>'.  This can also be a variable
-          containing a regexp, useful variables to use include
-          `gnus-button-url-regexp' and `gnus-button-mid-or-mail-regexp'.
-
-    BUTTON-PAR
-          Gnus has to know which parts of the matches is to be
-          highlighted.  This is a number that says what sub-expression
-          of the regexp is to be highlighted.  If you want it all
-          highlighted, you use 0 here.
-
-    USE-P
-          This form will be `eval'ed, and if the result is non-`nil',
-          this is considered a match.  This is useful if you want extra
-          sifting to avoid false matches.  Often variables named
-          `gnus-button-*-level' are used here, *Note Article Button
-          Levels::, but any other form may be used too.
-
-    FUNCTION
-          This function will be called when you click on this button.
-
-    DATA-PAR
-          As with BUTTON-PAR, this is a sub-expression number, but this
-          one says which part of the match is to be sent as data to
-          FUNCTION.
-
-
-     So the full entry for buttonizing URLs is then
-
-          ("<URL:\\([^\n\r>]*\\)>" 0 t gnus-button-url 1)
-
-`gnus-header-button-alist'
-     This is just like the other alist, except that it is applied to the
-     article head only, and that each entry has an additional element
-     that is used to say what headers to apply the buttonize coding to:
-
-          (HEADER REGEXP BUTTON-PAR USE-P FUNCTION DATA-PAR)
-
-     HEADER is a regular expression.
-
-3.18.6.1 Related variables and functions
-........................................
-
-`gnus-button-*-level'
-     *Note Article Button Levels::.
-
-`gnus-button-url-regexp'
-     A regular expression that matches embedded URLs.  It is used in the
-     default values of the variables above.
-
-`gnus-button-man-handler'
-     The function to use for displaying man pages.  It must take at
-     least one argument with a string naming the man page.
-
-`gnus-button-mid-or-mail-regexp'
-     Regular expression that matches a message ID or a mail address.
-
-`gnus-button-prefer-mid-or-mail'
-     This variable determines what to do when the button on a string as
-     `foo123@bar.invalid' is pushed.  Strings like this can be either a
-     message ID or a mail address.  If it is one of the symbols `mid' or
-     `mail', Gnus will always assume that the string is a message ID or
-     a mail address, respectively.  If this variable is set to the
-     symbol `ask', always query the user what to do.  If it is a
-     function, this function will be called with the string as its only
-     argument.  The function must return `mid', `mail', `invalid' or
-     `ask'.  The default value is the function
-     `gnus-button-mid-or-mail-heuristic'.
-
-`gnus-button-mid-or-mail-heuristic'
-     Function that guesses whether its argument is a message ID or a
-     mail address.  Returns `mid' if it's a message IDs, `mail' if it's
-     a mail address, `ask' if unsure and `invalid' if the string is
-     invalid.
-
-`gnus-button-mid-or-mail-heuristic-alist'
-     An alist of `(RATE . REGEXP)' pairs used by the function
-     `gnus-button-mid-or-mail-heuristic'.
-
-`gnus-button-ctan-handler'
-     The function to use for displaying CTAN links.  It must take one
-     argument, the string naming the URL.
-
-`gnus-ctan-url'
-     Top directory of a CTAN (Comprehensive TeX Archive Network)
-     archive used by `gnus-button-ctan-handler'.
-
-`gnus-article-button-face'
-     Face used on buttons.
-
-`gnus-article-mouse-face'
-     Face used when the mouse cursor is over a button.
-
-
-   *Note Customizing Articles::, for how to buttonize articles
-automatically.
-
-
-File: gnus,  Node: Article Button Levels,  Next: Article Date,  Prev: Article Buttons,  Up: Article Treatment
-
-3.18.7 Article button levels
-----------------------------
-
-The higher the value of the variables `gnus-button-*-level', the more
-buttons will appear.  If the level is zero, no corresponding buttons
-are displayed.  With the default value (which is 5) you should already
-see quite a lot of buttons.  With higher levels, you will see more
-buttons, but you may also get more false positives.  To avoid them, you
-can set the variables `gnus-button-*-level' local to specific groups
-(*note Group Parameters::).  Here's an example for the variable
-`gnus-parameters':
-
-     ;; increase `gnus-button-*-level' in some groups:
-     (setq gnus-parameters
-           '(("\\<\\(emacs\\|gnus\\)\\>" (gnus-button-emacs-level 10))
-             ("\\<unix\\>"               (gnus-button-man-level 10))
-             ("\\<tex\\>"                (gnus-button-tex-level 10))))
-
-`gnus-button-browse-level'
-     Controls the display of references to message IDs, mail addresses
-     and news URLs.  Related variables and functions include
-     `gnus-button-url-regexp', `browse-url', and
-     `browse-url-browser-function'.
-
-`gnus-button-emacs-level'
-     Controls the display of Emacs or Gnus references.  Related
-     functions are `gnus-button-handle-custom',
-     `gnus-button-handle-describe-function',
-     `gnus-button-handle-describe-variable',
-     `gnus-button-handle-symbol', `gnus-button-handle-describe-key',
-     `gnus-button-handle-apropos', `gnus-button-handle-apropos-command',
-     `gnus-button-handle-apropos-variable',
-     `gnus-button-handle-apropos-documentation', and
-     `gnus-button-handle-library'.
-
-`gnus-button-man-level'
-     Controls the display of references to (Unix) man pages.  See
-     `gnus-button-man-handler'.
-
-`gnus-button-message-level'
-     Controls the display of message IDs, mail addresses and news URLs.
-     Related variables and functions include
-     `gnus-button-mid-or-mail-regexp', `gnus-button-prefer-mid-or-mail',
-     `gnus-button-mid-or-mail-heuristic', and
-     `gnus-button-mid-or-mail-heuristic-alist'.
-
-`gnus-button-tex-level'
-     Controls the display of references to TeX or LaTeX stuff, e.g. for
-     CTAN URLs.  See the variables `gnus-ctan-url',
-     `gnus-button-ctan-handler', `gnus-button-ctan-directory-regexp',
-     and `gnus-button-handle-ctan-bogus-regexp'.
-
-
-
-File: gnus,  Node: Article Date,  Next: Article Display,  Prev: Article Button Levels,  Up: Article Treatment
-
-3.18.8 Article Date
--------------------
-
-The date is most likely generated in some obscure timezone you've never
-heard of, so it's quite nice to be able to find out what the time was
-when the article was sent.
-
-`W T u'
-     Display the date in UT (aka. GMT, aka ZULU)
-     (`gnus-article-date-ut').
-
-`W T i'
-     Display the date in international format, aka. ISO 8601
-     (`gnus-article-date-iso8601').
-
-`W T l'
-     Display the date in the local timezone (`gnus-article-date-local').
-
-`W T p'
-     Display the date in a format that's easily pronounceable in English
-     (`gnus-article-date-english').
-
-`W T s'
-     Display the date using a user-defined format
-     (`gnus-article-date-user').  The format is specified by the
-     `gnus-article-time-format' variable, and is a string that's passed
-     to `format-time-string'.  See the documentation of that variable
-     for a list of possible format specs.
-
-`W T e'
-     Say how much time has elapsed between the article was posted and
-     now (`gnus-article-date-lapsed').  It looks something like:
-
-          X-Sent: 6 weeks, 4 days, 1 hour, 3 minutes, 8 seconds ago
-
-     The value of `gnus-article-date-lapsed-new-header' determines
-     whether this header will just be added below the old Date one, or
-     will replace it.
-
-     An advantage of using Gnus to read mail is that it converts simple
-     bugs into wonderful absurdities.
-
-     If you want to have this line updated continually, you can put
-
-          (gnus-start-date-timer)
-
-     in your `~/.gnus.el' file, or you can run it off of some hook.  If
-     you want to stop the timer, you can use the `gnus-stop-date-timer'
-     command.
-
-`W T o'
-     Display the original date (`gnus-article-date-original').  This can
-     be useful if you normally use some other conversion function and
-     are worried that it might be doing something totally wrong.  Say,
-     claiming that the article was posted in 1854.  Although something
-     like that is _totally_ impossible.  Don't you trust me? *titter*
-
-
-   *Note Customizing Articles::, for how to display the date in your
-preferred format automatically.
-
-
-File: gnus,  Node: Article Display,  Next: Article Signature,  Prev: Article Date,  Up: Article Treatment
-
-3.18.9 Article Display
-----------------------
-
-These commands add various frivolous display gimmicks to the article
-buffer in Emacs versions that support them.
-
-   `X-Face' headers are small black-and-white images supplied by the
-message headers (*note X-Face::).
-
-   `Face' headers are small colored images supplied by the message
-headers (*note Face::).
-
-   Smileys are those little `:-)' symbols that people like to litter
-their messages with (*note Smileys::).
-
-   Picons, on the other hand, reside on your own system, and Gnus will
-try to match the headers to what you have (*note Picons::).
-
-   All these functions are toggles--if the elements already exist,
-they'll be removed.
-
-`W D x'
-     Display an `X-Face' in the `From' header.
-     (`gnus-article-display-x-face').
-
-`W D d'
-     Display a `Face' in the `From' header.
-     (`gnus-article-display-face').
-
-`W D s'
-     Display smileys (`gnus-treat-smiley').
-
-`W D f'
-     Piconify the `From' header (`gnus-treat-from-picon').
-
-`W D m'
-     Piconify all mail headers (i. e., `Cc', `To')
-     (`gnus-treat-mail-picon').
-
-`W D n'
-     Piconify all news headers (i. e., `Newsgroups' and `Followup-To')
-     (`gnus-treat-newsgroups-picon').
-
-`W D D'
-     Remove all images from the article buffer
-     (`gnus-article-remove-images').
-
-
-
-File: gnus,  Node: Article Signature,  Next: Article Miscellanea,  Prev: Article Display,  Up: Article Treatment
-
-3.18.10 Article Signature
--------------------------
-
-Each article is divided into two parts--the head and the body.  The
-body can be divided into a signature part and a text part.  The variable
-that says what is to be considered a signature is
-`gnus-signature-separator'.  This is normally the standard `^-- $' as
-mandated by son-of-RFC 1036.  However, many people use non-standard
-signature separators, so this variable can also be a list of regular
-expressions to be tested, one by one.  (Searches are done from the end
-of the body towards the beginning.)  One likely value is:
-
-     (setq gnus-signature-separator
-           '("^-- $"         ; The standard
-             "^-- *$"        ; A common mangling
-             "^-------*$"    ; Many people just use a looong
-                             ; line of dashes.  Shame!
-             "^ *--------*$" ; Double-shame!
-             "^________*$"   ; Underscores are also popular
-             "^========*$")) ; Pervert!
-
-   The more permissive you are, the more likely it is that you'll get
-false positives.
-
-   `gnus-signature-limit' provides a limit to what is considered a
-signature when displaying articles.
-
-  1. If it is an integer, no signature may be longer (in characters)
-     than that integer.
-
-  2. If it is a floating point number, no signature may be longer (in
-     lines) than that number.
-
-  3. If it is a function, the function will be called without any
-     parameters, and if it returns `nil', there is no signature in the
-     buffer.
-
-  4. If it is a string, it will be used as a regexp.  If it matches,
-     the text in question is not a signature.
-
-   This variable can also be a list where the elements may be of the
-types listed above.  Here's an example:
-
-     (setq gnus-signature-limit
-           '(200.0 "^---*Forwarded article"))
-
-   This means that if there are more than 200 lines after the signature
-separator, or the text after the signature separator is matched by the
-regular expression `^---*Forwarded article', then it isn't a signature
-after all.
-
-
-File: gnus,  Node: Article Miscellanea,  Prev: Article Signature,  Up: Article Treatment
-
-3.18.11 Article Miscellanea
----------------------------
-
-`A t'
-     Translate the article from one language to another
-     (`gnus-article-babel').
-
-
-
-File: gnus,  Node: MIME Commands,  Next: Charsets,  Prev: Article Treatment,  Up: Summary Buffer
-
-3.19 MIME Commands
-==================
-
-The following commands all understand the numerical prefix.  For
-instance, `3 K v' means "view the third MIME part".
-
-`b'
-`K v'
-     View the MIME part.
-
-`K o'
-     Save the MIME part.
-
-`K O'
-     Prompt for a file name, then save the MIME part and strip it from
-     the article.  The stripped MIME object will be referred via the
-     message/external-body MIME type.
-
-`K r'
-     Replace the MIME part with an external body.
-
-`K d'
-     Delete the MIME part and add some information about the removed
-     part.
-
-`K c'
-     Copy the MIME part.
-
-`K e'
-     View the MIME part externally.
-
-`K i'
-     View the MIME part internally.
-
-`K |'
-     Pipe the MIME part to an external command.
-
-   The rest of these MIME commands do not use the numerical prefix in
-the same manner:
-
-`K H'
-     View `text/html' parts of the current article with a WWW browser.
-     The message header is added to the beginning of every html part
-     unless the prefix argument is given.
-
-     Warning: Spammers use links to images in HTML articles to verify
-     whether you have read the message.  As this command passes the HTML
-     content to the browser without eliminating these "web bugs" you
-     should only use it for mails from trusted senders.
-
-     If you always want to display HTML parts in the browser, set
-     `mm-text-html-renderer' to `nil'.
-
-`K b'
-     Make all the MIME parts have buttons in front of them.  This is
-     mostly useful if you wish to save (or perform other actions) on
-     inlined parts.
-
-`K m'
-     Some multipart messages are transmitted with missing or faulty
-     headers.  This command will attempt to "repair" these messages so
-     that they can be viewed in a more pleasant manner
-     (`gnus-summary-repair-multipart').
-
-`X m'
-     Save all parts matching a MIME type to a directory
-     (`gnus-summary-save-parts').  Understands the process/prefix
-     convention (*note Process/Prefix::).
-
-`M-t'
-     Toggle the buttonized display of the article buffer
-     (`gnus-summary-toggle-display-buttonized').
-
-`W M w'
-     Decode RFC 2047-encoded words in the article headers
-     (`gnus-article-decode-mime-words').
-
-`W M c'
-     Decode encoded article bodies as well as charsets
-     (`gnus-article-decode-charset').
-
-     This command looks in the `Content-Type' header to determine the
-     charset.  If there is no such header in the article, you can give
-     it a prefix, which will prompt for the charset to decode as.  In
-     regional groups where people post using some common encoding (but
-     do not include MIME headers), you can set the `charset' group/topic
-     parameter to the required charset (*note Group Parameters::).
-
-`W M v'
-     View all the MIME parts in the current article
-     (`gnus-mime-view-all-parts').
-
-
-   Relevant variables:
-
-`gnus-ignored-mime-types'
-     This is a list of regexps.  MIME types that match a regexp from
-     this list will be completely ignored by Gnus.  The default value is
-     `nil'.
-
-     To have all Vcards be ignored, you'd say something like this:
-
-          (setq gnus-ignored-mime-types
-                '("text/x-vcard"))
-
-`gnus-article-loose-mime'
-     If non-`nil', Gnus won't require the `MIME-Version' header before
-     interpreting the message as a MIME message.  This helps when
-     reading messages from certain broken mail user agents.  The
-     default is `t'.
-
-`gnus-article-emulate-mime'
-     There are other, non-MIME encoding methods used.  The most common
-     is `uuencode', but yEncode is also getting to be popular.  If this
-     variable is non-`nil', Gnus will look in message bodies to see if
-     it finds these encodings, and if so, it'll run them through the
-     Gnus MIME machinery.  The default is `t'.  Only single-part yEnc
-     encoded attachments can be decoded.  There's no support for
-     encoding in Gnus.
-
-`gnus-unbuttonized-mime-types'
-     This is a list of regexps.  MIME types that match a regexp from
-     this list won't have MIME buttons inserted unless they aren't
-     displayed or this variable is overridden by
-     `gnus-buttonized-mime-types'.  The default value is `(".*/.*")'.
-     This variable is only used when `gnus-inhibit-mime-unbuttonizing'
-     is `nil'.
-
-`gnus-buttonized-mime-types'
-     This is a list of regexps.  MIME types that match a regexp from
-     this list will have MIME buttons inserted unless they aren't
-     displayed.  This variable overrides
-     `gnus-unbuttonized-mime-types'.  The default value is `nil'.  This
-     variable is only used when `gnus-inhibit-mime-unbuttonizing' is
-     `nil'.
-
-     To see e.g. security buttons but no other buttons, you could set
-     this variable to `("multipart/signed")' and leave
-     `gnus-unbuttonized-mime-types' at the default value.
-
-     You could also add `"multipart/alternative"' to this list to
-     display radio buttons that allow you to choose one of two media
-     types those mails include.  See also `mm-discouraged-alternatives'
-     (*note Display Customization: (emacs-mime)Display Customization.).
-
-`gnus-inhibit-mime-unbuttonizing'
-     If this is non-`nil', then all MIME parts get buttons.  The
-     default value is `nil'.
-
-`gnus-article-mime-part-function'
-     For each MIME part, this function will be called with the MIME
-     handle as the parameter.  The function is meant to be used to allow
-     users to gather information from the article (e. g., add Vcard
-     info to the bbdb database) or to do actions based on parts (e. g.,
-     automatically save all jpegs into some directory).
-
-     Here's an example function the does the latter:
-
-          (defun my-save-all-jpeg-parts (handle)
-            (when (equal (car (mm-handle-type handle)) "image/jpeg")
-              (with-temp-buffer
-                (insert (mm-get-part handle))
-                (write-region (point-min) (point-max)
-                              (read-file-name "Save jpeg to: ")))))
-          (setq gnus-article-mime-part-function
-                'my-save-all-jpeg-parts)
-
-`gnus-mime-multipart-functions'
-     Alist of MIME multipart types and functions to handle them.
-
-`gnus-mime-display-multipart-alternative-as-mixed'
-     Display "multipart/alternative" parts as "multipart/mixed".
-
-`gnus-mime-display-multipart-related-as-mixed'
-     Display "multipart/related" parts as "multipart/mixed".
-
-     If displaying `text/html' is discouraged, see
-     `mm-discouraged-alternatives', images or other material inside a
-     "multipart/related" part might be overlooked when this variable is
-     `nil'.  *note Display Customization: (emacs-mime)Display
-     Customization.
-
-`gnus-mime-display-multipart-as-mixed'
-     Display "multipart" parts as "multipart/mixed".  If `t', it
-     overrides `nil' values of
-     `gnus-mime-display-multipart-alternative-as-mixed' and
-     `gnus-mime-display-multipart-related-as-mixed'.
-
-`mm-file-name-rewrite-functions'
-     List of functions used for rewriting file names of MIME parts.
-     Each function takes a file name as input and returns a file name.
-
-     Ready-made functions include
-     `mm-file-name-delete-whitespace', `mm-file-name-trim-whitespace',
-     `mm-file-name-collapse-whitespace', and
-     `mm-file-name-replace-whitespace'.  The later uses the value of
-     the variable `mm-file-name-replace-whitespace' to replace each
-     whitespace character in a file name with that string; default value
-     is `"_"' (a single underscore).  
-
-     The standard functions `capitalize', `downcase', `upcase', and
-     `upcase-initials' may be useful, too.
-
-     Everybody knows that whitespace characters in file names are evil,
-     except those who don't know.  If you receive lots of attachments
-     from such unenlightened users, you can make live easier by adding
-
-          (setq mm-file-name-rewrite-functions
-                '(mm-file-name-trim-whitespace
-                  mm-file-name-collapse-whitespace
-                  mm-file-name-replace-whitespace))
-
-     to your `~/.gnus.el' file.
-
 
 
 File: gnus,  Node: Charsets,  Next: Article Commands,  Prev: MIME Commands,  Up: Summary Buffer
@@ -955,6 +108,14 @@ File: gnus,  Node: Article Commands,  Next: Summary Sorting,  Prev: Charsets,  U
      (`gnus-summary-print-article').  `gnus-ps-print-hook' will be run
      just before printing the buffer.  An alternative way to print
      article is to use Muttprint (*note Saving Articles::).
+
+`A C'
+     If `<backend>-fetch-partial-articles' is non-`nil', Gnus will
+     fetch partial articles, if the backend it fetches them from
+     supports it.  Currently only `nnimap' does.  If you're looking at a
+     partial article, and want to see the complete article instead, then
+     the `A C' command (`gnus-summary-show-complete-article') will do
+     so.
 
 
 
@@ -1089,8 +250,12 @@ then ask Google if that fails:
 not do a particularly excellent job at it.  That is, `nnmbox',
 `nnbabyl', `nnmaildir', `nnml', are able to locate articles from any
 groups, while `nnfolder', and `nnimap' are only able to locate articles
-that have been posted to the current group.  (Anything else would be
-too time consuming.)  `nnmh' does not support this at all.
+that have been posted to the current group.  `nnmh' does not support
+this at all.
+
+   Fortunately, the special `nnregistry' back end is able to locate
+articles in any groups, regardless of their back end (*note fetching by
+`Message-ID' using the registry: Registry Article Refer Method.).
 
 
 File: gnus,  Node: Alternative Approaches,  Next: Tree Display,  Prev: Finding the Parent,  Up: Summary Buffer
@@ -1534,15 +699,6 @@ File: gnus,  Node: Summary Group Information,  Next: Searching for Articles,  Up
 3.27.1 Summary Group Information
 --------------------------------
 
-`H f'
-     Try to fetch the FAQ (list of frequently asked questions) for the
-     current group (`gnus-summary-fetch-faq').  Gnus will try to get
-     the FAQ from `gnus-group-faq-directory', which is usually a
-     directory on a remote machine.  This variable can also be a list
-     of directories.  In that case, giving a prefix to this command
-     will allow you to choose between the various sites.  `ange-ftp' or
-     `efs' will probably be used for fetching the file.
-
 `H d'
      Give a brief description of the current group
      (`gnus-summary-describe-group').  If given a prefix, force
@@ -1783,8 +939,7 @@ read the same article more than once.  Unless, of course, somebody has
 posted it to several groups separately.  Posting the same article to
 several groups (not cross-posting) is called "spamming", and you are by
 law required to send nasty-grams to anyone who perpetrates such a
-heinous crime.  You may want to try NoCeM handling to filter out spam
-(*note NoCeM::).
+heinous crime.
 
    Remember: Cross-posting is kinda ok, but posting the same article
 separately to several groups is not.  Massive cross-posting (aka.
@@ -1895,8 +1050,7 @@ you need some external programs to get things to work:
   1. To handle PGP and PGP/MIME messages, you have to install an
      OpenPGP implementation such as GnuPG.  The Lisp interface to GnuPG
      included with Emacs is called EasyPG (*note EasyPG: (epa)Top.),
-     but PGG (*note PGG: (pgg)Top.), Mailcrypt, and gpg.el are also
-     supported.
+     but PGG (*note PGG: (pgg)Top.), and Mailcrypt are also supported.
 
   2. To handle S/MIME message, you need to install OpenSSL.  OpenSSL
      0.9.6 or newer is recommended.
@@ -1926,14 +1080,14 @@ reading/composing messages include:
 
 `mml1991-use'
      Symbol indicating elisp interface to OpenPGP implementation for
-     PGP messages.  The default is `epg', but `pgg', `mailcrypt', and
-     `gpg' are also supported although deprecated.  By default, Gnus
-     uses the first available interface in this order.
+     PGP messages.  The default is `epg', but `pgg', and `mailcrypt'
+     are also supported although deprecated.  By default, Gnus uses the
+     first available interface in this order.
 
 `mml2015-use'
      Symbol indicating elisp interface to OpenPGP implementation for
-     PGP/MIME messages.  The default is `epg', but `pgg', `mailcrypt',
-     and `gpg' are also supported although deprecated.  By default,
+     PGP/MIME messages.  The default is `epg', but `pgg', and
+     `mailcrypt' are also supported although deprecated.  By default,
      Gnus uses the first available interface in this order.
 
 
@@ -2011,6 +1165,7 @@ tell Gnus otherwise.
 
 * Hiding Headers::              Deciding what headers should be displayed.
 * Using MIME::                  Pushing articles through MIME before reading them.
+* HTML::                        Reading HTML messages.
 * Customizing Articles::        Tailoring the look of the articles.
 * Article Keymap::              Keystrokes available in the article buffer.
 * Misc Article::                Other stuff.
@@ -2133,7 +1288,7 @@ various "boring conditions" that Gnus can check and remove from sight.
    This is also the default value for this variable.
 
 
-File: gnus,  Node: Using MIME,  Next: Customizing Articles,  Prev: Hiding Headers,  Up: Article Buffer
+File: gnus,  Node: Using MIME,  Next: HTML,  Prev: Hiding Headers,  Up: Article Buffer
 
 4.2 Using MIME
 ==============
@@ -2191,8 +1346,8 @@ a MIME button:
 
 `r (Article)'
      Prompt for a file name, replace the MIME object with an external
-     body refering to the file via the message/external-body MIME type.
-     (`gnus-mime-replace-part').
+     body referring to the file via the message/external-body MIME
+     type.  (`gnus-mime-replace-part').
 
 `d (Article)'
      Delete the MIME object from the article and replace it with some
@@ -2261,9 +1416,67 @@ Ahem.
    Also *note MIME Commands::.
 
 
-File: gnus,  Node: Customizing Articles,  Next: Article Keymap,  Prev: Using MIME,  Up: Article Buffer
+File: gnus,  Node: HTML,  Next: Customizing Articles,  Prev: Using MIME,  Up: Article Buffer
 
-4.3 Customizing Articles
+4.3 HTML
+========
+
+If you have `w3m' installed on your system, Gnus can display HTML
+articles in the article buffer.  There are many Gnus add-ons for doing
+this, using various approaches, but there's one (sort of) built-in
+method that's used by default.
+
+   For a complete overview, consult *Note Display Customization:
+(emacs-mime)Display Customization.  This section only describes the
+default method.
+
+`mm-text-html-renderer'
+     If set to `gnus-article-html', Gnus will use the built-in method,
+     that's based on `w3m'.
+
+`gnus-blocked-images'
+     External images that have URLs that match this regexp won't be
+     fetched and displayed.  For instance, do block all URLs that have
+     the string "ads" in them, do the following:
+
+          (setq gnus-blocked-images "ads")
+
+     This can also be a function to be evaluated.  If so, it will be
+     called with the group name as the parameter.  The default value is
+     `gnus-block-private-groups', which will return `"."' for anything
+     that isn't a newsgroup.  This means that no external images will
+     be fetched as a result of reading mail, so that nobody can use web
+     bugs (and the like) to track whether you've read email.
+
+     Also *note Misc Article:: for `gnus-inhibit-images'.
+
+`gnus-html-cache-directory'
+     Gnus will download and cache images according to how
+     `gnus-blocked-images' is set.  These images will be stored in this
+     directory.
+
+`gnus-html-cache-size'
+     When `gnus-html-cache-size' bytes have been used in that
+     directory, the oldest files will be deleted.  The default is 500MB.
+
+`gnus-html-frame-width'
+     The width to use when rendering HTML.  The default is 70.
+
+`gnus-max-image-proportion'
+     How big pictures displayed are in relation to the window they're
+     in.  A value of 0.7 (the default) means that they are allowed to
+     take up 70% of the width and height of the window.  If they are
+     larger than this, and Emacs supports it, then the images will be
+     rescaled down to fit these criteria.
+
+
+   To use this, make sure that you have `w3m' and `curl' installed.  If
+you have, then Gnus should display HTML automatically.
+
+
+File: gnus,  Node: Customizing Articles,  Next: Article Keymap,  Prev: HTML,  Up: Article Buffer
+
+4.4 Customizing Articles
 ========================
 
 A slew of functions for customizing how the articles are to look like
@@ -2349,19 +1562,37 @@ possible but those listed are probably sufficient for most people.
 `gnus-treat-wash-html (t, integer)'
      *Note Article Washing::.
 
-`gnus-treat-date-english (head)'
+`gnus-treat-date (head)'
+     This will transform/add date headers according to the
+     `gnus-article-date-headers' variable.  This is a list of Date
+     headers to display.  The formats available are:
 
-`gnus-treat-date-iso8601 (head)'
+    `ut'
+          Universal time, aka GMT, aka ZULU.
 
-`gnus-treat-date-lapsed (head)'
+    `local'
+          The user's local time zone.
 
-`gnus-treat-date-local (head)'
+    `english'
+          A semi-readable English sentence.
 
-`gnus-treat-date-original (head)'
+    `lapsed'
+          The time elapsed since the message was posted.
 
-`gnus-treat-date-user-defined (head)'
+    `combined-lapsed'
+          Both the original date header and a (shortened) elapsed time.
 
-`gnus-treat-date-ut (head)'
+    `original'
+          The original date header.
+
+    `iso8601'
+          ISO8601 format, i.e., "2010-11-23T22:05:21".
+
+    `user-defined'
+          A format done according to the `gnus-article-time-format'
+          variable.
+
+
      *Note Article Date::.
 
 `gnus-treat-from-picon (head)'
@@ -2370,6 +1601,11 @@ possible but those listed are probably sufficient for most people.
 
 `gnus-treat-newsgroups-picon (head)'
      *Note Picons::.
+
+`gnus-treat-from-gravatar (head)'
+
+`gnus-treat-mail-gravatar (head)'
+     *Note Gravatars::.
 
 `gnus-treat-display-smileys (t, integer)'
 
@@ -2415,8 +1651,6 @@ possible but those listed are probably sufficient for most people.
 
 `gnus-treat-play-sounds'
 
-`gnus-treat-translate'
-
 `gnus-treat-ansi-sequences (t)'
 
 `gnus-treat-x-pgp-sig (head)'
@@ -2440,7 +1674,7 @@ everything.
 
 File: gnus,  Node: Article Keymap,  Next: Misc Article,  Prev: Customizing Articles,  Up: Article Buffer
 
-4.4 Article Keymap
+4.5 Article Keymap
 ==================
 
 Most of the keystrokes in the summary buffer can also be used in the
@@ -2505,13 +1739,17 @@ or better use it as a prefix key.
 
 File: gnus,  Node: Misc Article,  Prev: Article Keymap,  Up: Article Buffer
 
-4.5 Misc Article
+4.6 Misc Article
 ================
 
 `gnus-single-article-buffer'
      If non-`nil', use the same article buffer for all the groups.
      (This is the default.)  If `nil', each group will have its own
      article buffer.
+
+`gnus-widen-article-window'
+     If non-`nil', selecting the article buffer with the `h' command
+     will "widen" the article window to take the entire frame.
 
 `gnus-article-decode-hook'
      Hook used to decode MIME articles.  The default value is
@@ -2593,6 +1831,13 @@ File: gnus,  Node: Misc Article,  Prev: Article Keymap,  Up: Article Buffer
      messages.  This requires GNU Libidn
      (http://www.gnu.org/software/libidn/), and this variable is only
      enabled if you have installed it.
+
+`gnus-inhibit-images'
+     If this is non-`nil', inhibit displaying of images inline in the
+     article body.  It is effective to images that are in articles as
+     MIME parts, and images in HTML articles rendered when
+     `mm-text-html-renderer' (*note Display Customization:
+     (emacs-mime)Display Customization.) is `shr' or `gnus-w3m'.
 
 
 
@@ -2804,8 +2049,8 @@ File: gnus,  Node: Archived Messages,  Next: Posting Styles,  Prev: Mail and Pos
 Gnus provides a few different methods for storing the mail and news you
 send.  The default method is to use the "archive virtual server" to
 store the messages.  If you want to disable this completely, the
-`gnus-message-archive-group' variable should be `nil', which is the
-default.
+`gnus-message-archive-group' variable should be `nil'.  The default is
+"sent.%Y-%m", which gives you one archive group per month.
 
    For archiving interesting messages in a group you read, see the `B
 c' (`gnus-summary-copy-article') command (*note Mail Group Commands::).
@@ -2870,7 +2115,7 @@ an alist of regexps, functions and forms
      When a key "matches", the result is used.
 
 `nil'
-     No message archiving will take place.  This is the default.
+     No message archiving will take place.
 
    Let's illustrate:
 
@@ -2910,25 +2155,6 @@ read any other group.  If the group gets really big and annoying, you
 can simply rename if (using `G r' in the group buffer) to something
 nice--`misc-mail-september-1995', or whatever.  New messages will
 continue to be stored in the old (now empty) group.
-
-   That's the default method of archiving sent messages.  Gnus offers a
-different way for the people who don't like the default method.  In that
-case you should set `gnus-message-archive-group' to `nil'; this will
-disable archiving.
-
-`gnus-outgoing-message-group'
-     All outgoing messages will be put in this group.  If you want to
-     store all your outgoing mail and articles in the group
-     `nnml:archive', you set this variable to that value.  This
-     variable can also be a list of group names.
-
-     If you want to have greater control over what group to put each
-     message in, you can set this variable to a function that checks the
-     current newsgroup name and then returns a suitable group name (or
-     list of names).
-
-     This variable can be used instead of `gnus-message-archive-group',
-     but the latter is the preferred method.
 
 `gnus-gcc-mark-as-read'
      If non-`nil', automatically mark `Gcc' articles as read.
@@ -3017,14 +2243,20 @@ the headers of the article; if the value is `nil', the header name will
 be removed.  If the attribute name is `eval', the form is evaluated,
 and the result is thrown away.
 
-   The attribute value can be a string (used verbatim), a function with
-zero arguments (the return value will be used), a variable (its value
-will be used) or a list (it will be `eval'ed and the return value will
-be used).  The functions and sexps are called/`eval'ed in the message
-buffer that is being set up.  The headers of the current article are
-available through the `message-reply-headers' variable, which is a
-vector of the following headers: number subject from date id references
-chars lines xref extra.
+   The attribute value can be a string, a function with zero arguments
+(the return value will be used), a variable (its value will be used) or
+a list (it will be `eval'ed and the return value will be used).  The
+functions and sexps are called/`eval'ed in the message buffer that is
+being set up.  The headers of the current article are available through
+the `message-reply-headers' variable, which is a vector of the
+following headers: number subject from date id references chars lines
+xref extra.
+
+   In the case of a string value, if the `match' is a regular
+expression, a `gnus-match-substitute-replacement' is proceed on the
+value to replace the positional parameters `\N' by the corresponding
+parenthetical matches (see *Note Replacing the Text that Matched:
+(elisp)Replacing Match.)
 
    If you wish to check whether the message you are about to compose is
 meant to be a news article or a mail message, you can check the values
@@ -3119,6 +2351,9 @@ buffer.
    If you have some messages that you wish not to send, you can use the
 `D t' (`gnus-draft-toggle-sending') command to mark the message as
 unsendable.  This is a toggling command.
+
+   Finally, if you want to delete a draft, use the normal `B DEL'
+command (*note Mail Group Commands::).
 
 
 File: gnus,  Node: Rejected Articles,  Next: Signing and encrypting,  Prev: Drafts,  Up: Composing Messages
@@ -3222,10 +2457,10 @@ knows this group as `soc.motss'.
 
 * Server Buffer::               Making and editing virtual servers.
 * Getting News::                Reading USENET news with Gnus.
+* Using IMAP::                  Reading mail from IMAP.
 * Getting Mail::                Reading your personal mail with Gnus.
 * Browsing the Web::            Getting messages from a plethora of Web sources.
-* IMAP::                        Using Gnus as a IMAP client.
-* Other Sources::               Reading directories, files, SOUP packets.
+* Other Sources::               Reading directories, files.
 * Combined Groups::             Combining groups into one group.
 * Email Based Diary::           Using mails to manage diary events in Gnus.
 * Gnus Unplugged::              Reading news and mail offline.
@@ -3324,6 +2559,9 @@ File: gnus,  Node: Server Commands,  Next: Example Methods,  Prev: Server Buffer
 `e'
      Edit a server (`gnus-server-edit-server').
 
+`S'
+     Show the definition of a server (`gnus-server-show-server').
+
 `SPACE'
      Browse the current server (`gnus-server-read-server').
 
@@ -3358,6 +2596,9 @@ File: gnus,  Node: Server Commands,  Next: Example Methods,  Prev: Server Buffer
      nnml (*note Mail Spool::).  This removes gaps between article
      numbers, hence getting a correct total article count.
 
+
+   Some more commands for closing, disabling, and re-opening servers are
+listed in *note Unavailable Servers::.
 
 
 File: gnus,  Node: Example Methods,  Next: Creating a Virtual Server,  Prev: Server Commands,  Up: Server Buffer
@@ -3567,12 +2808,18 @@ with the following commands:
      Remove all marks to whether Gnus was denied connection from any
      servers (`gnus-server-remove-denials').
 
+`c'
+     Copy a server and give it a new name (`gnus-server-copy-server').
+     This can be useful if you have a complex method definition, and
+     want to use the same definition towards a different (physical)
+     server.
+
 `L'
      Set server status to offline (`gnus-server-offline-server').
 
 
 
-File: gnus,  Node: Getting News,  Next: Getting Mail,  Prev: Server Buffer,  Up: Select Methods
+File: gnus,  Node: Getting News,  Next: Using IMAP,  Prev: Server Buffer,  Up: Select Methods
 
 6.2 Getting News
 ================
@@ -3796,6 +3043,11 @@ server:
      Note that not all servers support the recommended ID.  This works
      for INN versions 2.3.0 and later, for instance.
 
+`nntp-server-list-active-group'
+     If `nil', then always use `GROUP' instead of `LIST ACTIVE'.  This
+     is usually slower, but on misconfigured servers that don't update
+     their active files often, this can help.
+
 
 * Menu:
 
@@ -3817,11 +3069,16 @@ Common Variables::).
 
 `nntp-open-network-stream'
      This is the default, and simply connects to some port or other on
-     the remote system.
+     the remote system.  If both Emacs and the server supports it, the
+     connection will be upgraded to an encrypted STARTTLS connection
+     automatically.
+
+`network-only'
+     The same as the above, but don't do automatic STARTTLS upgrades.
 
 `nntp-open-tls-stream'
      Opens a connection to a server over a "secure" channel.  To use
-     this you must have GNUTLS (http://www.gnu.org/software/gnutls/)
+     this you must have GnuTLS (http://www.gnu.org/software/gnutls/)
      installed.  You then define a server as follows:
 
           ;; "nntps" is port 563 and is predefined in our `/etc/services'
@@ -4119,9 +3376,155 @@ depends.  You just have to try to find out what's best at your site.
 
 
 
-File: gnus,  Node: Getting Mail,  Next: Browsing the Web,  Prev: Getting News,  Up: Select Methods
+File: gnus,  Node: Using IMAP,  Next: Getting Mail,  Prev: Getting News,  Up: Select Methods
 
-6.3 Getting Mail
+6.3 Using IMAP
+==============
+
+The most popular mail backend is probably `nnimap', which provides
+access to IMAP servers.  IMAP servers store mail remotely, so the
+client doesn't store anything locally.  This means that it's a
+convenient choice when you're reading your mail from different
+locations, or with different user agents.
+
+* Menu:
+
+* Connecting to an IMAP Server::     Getting started with IMAP.
+* Customizing the IMAP Connection::  Variables for IMAP connection.
+* Client-Side IMAP Splitting::       Put mail in the correct mail box.
+
+
+File: gnus,  Node: Connecting to an IMAP Server,  Next: Customizing the IMAP Connection,  Up: Using IMAP
+
+6.3.1 Connecting to an IMAP Server
+----------------------------------
+
+Connecting to an IMAP can be very easy.  Type `B' in the group buffer,
+or (if your primary interest is reading email), say something like:
+
+     (setq gnus-select-method
+           '(nnimap "imap.gmail.com"))
+
+   You'll be prompted for a user name and password.  If you grow tired
+of that, then add the following to your `~/.authinfo' file:
+
+     machine imap.gmail.com login <username> password <password> port imap
+
+   That should basically be it for most users.
+
+
+File: gnus,  Node: Customizing the IMAP Connection,  Next: Client-Side IMAP Splitting,  Prev: Connecting to an IMAP Server,  Up: Using IMAP
+
+6.3.2 Customizing the IMAP Connection
+-------------------------------------
+
+Here's an example method that's more complex:
+
+     (nnimap "imap.gmail.com"
+             (nnimap-inbox "INBOX")
+             (nnimap-split-methods default)
+             (nnimap-expunge t)
+             (nnimap-stream ssl))
+
+`nnimap-address'
+     The address of the server, like `imap.gmail.com'.
+
+`nnimap-server-port'
+     If the server uses a non-standard port, that can be specified
+     here.  A typical port would be `"imap"' or `"imaps"'.
+
+`nnimap-stream'
+     How `nnimap' should connect to the server.  Possible values are:
+
+    `undecided'
+          This is the default, and this first tries the `ssl' setting,
+          and then tries the `network' setting.
+
+    `ssl'
+          This uses standard TLS/SSL connections.
+
+    `network'
+          Non-encrypted and unsafe straight socket connection, but will
+          upgrade to encrypted STARTTLS if both Emacs and the server
+          supports it.
+
+    `starttls'
+          Encrypted STARTTLS over the normal IMAP port.
+
+    `shell'
+          If you need to tunnel via other systems to connect to the
+          server, you can use this option, and customize
+          `nnimap-shell-program' to be what you need.
+
+
+`nnimap-authenticator'
+     Some IMAP servers allow anonymous logins.  In that case, this
+     should be set to `anonymous'.
+
+`nnimap-expunge'
+     If non-`nil', expunge articles after deleting them.  This is
+     always done if the server supports UID EXPUNGE, but it's not done
+     by default on servers that doesn't support that command.
+
+`nnimap-streaming'
+     Virtually all IMAP server support fast streaming of data.  If you
+     have problems connecting to the server, try setting this to `nil'.
+
+`nnimap-fetch-partial-articles'
+     If non-`nil', fetch partial articles from the server.  If set to a
+     string, then it's interpreted as a regexp, and parts that have
+     matching types will be fetched.  For instance, `"text/"' will
+     fetch all textual parts, while leaving the rest on the server.
+
+`nnimap-record-commands'
+     If non-`nil', record all IMAP commands in the `"*imap log*"'
+     buffer.
+
+
+
+File: gnus,  Node: Client-Side IMAP Splitting,  Prev: Customizing the IMAP Connection,  Up: Using IMAP
+
+6.3.3 Client-Side IMAP Splitting
+--------------------------------
+
+Many people prefer to do the sorting/splitting of mail into their mail
+boxes on the IMAP server.  That way they don't have to download the
+mail they're not all that interested in.
+
+   If you do want to do client-side mail splitting, then the following
+variables are relevant:
+
+`nnimap-inbox'
+     This is the IMAP mail box that will be scanned for new mail.
+
+`nnimap-split-methods'
+     Uses the same syntax as `nnmail-split-methods' (*note Splitting
+     Mail::), except the symbol `default', which means that it should
+     use the value of the `nnmail-split-methods' variable.
+
+`nnimap-split-fancy'
+     Uses the same syntax as `nnmail-split-fancy'.
+
+`nnimap-unsplittable-articles'
+     List of flag symbols to ignore when doing splitting.  That is,
+     articles that have these flags won't be considered when splitting.
+     The default is `(%Deleted %Seen)'.
+
+
+   Here's a complete example `nnimap' backend with a client-side
+"fancy" splitting method:
+
+     (nnimap "imap.example.com"
+             (nnimap-inbox "INBOX")
+             (nnimap-split-methods
+              (| ("MailScanner-SpamCheck" "spam" "spam.detected")
+                 (to "foo@bar.com" "foo")
+                 "undecided")))
+
+
+File: gnus,  Node: Getting Mail,  Next: Browsing the Web,  Prev: Using IMAP,  Up: Select Methods
+
+6.4 Getting Mail
 ================
 
 Reading mail with a newsreader--isn't that just plain WeIrD? But of
@@ -4146,7 +3549,7 @@ course.
 
 File: gnus,  Node: Mail in a Newsreader,  Next: Getting Started Reading Mail,  Up: Getting Mail
 
-6.3.1 Mail in a Newsreader
+6.4.1 Mail in a Newsreader
 --------------------------
 
 If you are used to traditional mail readers, but have decided to switch
@@ -4216,7 +3619,7 @@ Do.)
 
 File: gnus,  Node: Getting Started Reading Mail,  Next: Splitting Mail,  Prev: Mail in a Newsreader,  Up: Getting Mail
 
-6.3.2 Getting Started Reading Mail
+6.4.2 Getting Started Reading Mail
 ----------------------------------
 
 It's quite easy to use Gnus to read your new mail.  You just plonk the
@@ -4253,7 +3656,7 @@ Mail::.
 
 File: gnus,  Node: Splitting Mail,  Next: Mail Sources,  Prev: Getting Started Reading Mail,  Up: Getting Mail
 
-6.3.3 Splitting Mail
+6.4.3 Splitting Mail
 --------------------
 
 The `nnmail-split-methods' variable says how the incoming mail is to be
@@ -4297,6 +3700,9 @@ to a function of your choice.  This function will be called without any
 arguments in a buffer narrowed to the headers of an incoming mail
 message.  The function should return a list of group names that it
 thinks should carry this mail message.
+
+   This variable can also be a fancy split method.  For the syntax, see
+*note Fancy Mail Splitting::.
 
    Note that the mail back ends are free to maul the poor, innocent,
 incoming headers all they want to.  They all add `Lines' headers; some
@@ -4354,7 +3760,7 @@ month's rent money.
 
 File: gnus,  Node: Mail Sources,  Next: Mail Back End Variables,  Prev: Splitting Mail,  Up: Getting Mail
 
-6.3.4 Mail Sources
+6.4.4 Mail Sources
 ------------------
 
 Mail can be gotten from many different sources--the mail spool, from a
@@ -4370,7 +3776,7 @@ instance.
 
 File: gnus,  Node: Mail Source Specifiers,  Next: Mail Source Customization,  Up: Mail Sources
 
-6.3.4.1 Mail Source Specifiers
+6.4.4.1 Mail Source Specifiers
 ..............................
 
 You tell Gnus how to fetch mail by setting `mail-sources' (*note
@@ -4544,6 +3950,16 @@ fetched from the spool file `/user/spools/foo.spool'.
           the same as the `:program' keyword.  This can also be a
           function to be run.
 
+          One popular way to use this is to set up an SSH tunnel to
+          access the POP server.  Here's an example:
+
+               (pop :server "127.0.0.1"
+                    :port 1234
+                    :user "foo"
+                    :password "secret"
+                    :prescript
+                    "nohup ssh -f -L 1234:pop.server:110 remote.host sleep 3600 &")
+
     `:postscript'
           A script to be run after fetching the mail.  The syntax is
           the same as the `:program' keyword.  This can also be a
@@ -4617,10 +4033,7 @@ fetched from the spool file `/user/spools/foo.spool'.
      intended, as a network mail reading protocol (ie with nnimap), for
      some reason or other, Gnus let you treat it similar to a POP
      server and fetches articles from a given IMAP mailbox.  *Note
-     IMAP::, for more information.
-
-     Note that for the Kerberos, GSSAPI, TLS/SSL and STARTTLS support
-     you may need external programs and libraries, *Note IMAP::.
+     Using IMAP::, for more information.
 
      Keywords:
 
@@ -4708,41 +4121,6 @@ fetched from the spool file `/user/spools/foo.spool'.
                 :stream kerberos4
                 :fetchflag "\\Seen")
 
-`webmail'
-     Get mail from a webmail server, such as `http://www.hotmail.com/',
-     `http://webmail.netscape.com/', `http://www.netaddress.com/',
-     `http://mail.yahoo.com/'.
-
-     NOTE: Webmail largely depends on cookies.  A "one-line-cookie"
-     patch is required for url "4.0pre.46".
-
-     WARNING: Mails may be lost.  NO WARRANTY.
-
-     Keywords:
-
-    `:subtype'
-          The type of the webmail server.  The default is `hotmail'.
-          The alternatives are `netscape', `netaddress', `my-deja'.
-
-    `:user'
-          The user name to give to the webmail server.  The default is
-          the login name.
-
-    `:password'
-          The password to give to the webmail server.  If not
-          specified, the user is prompted.
-
-    `:dontexpunge'
-          If non-`nil', only fetch unread articles and don't move them
-          to trash folder after finishing the fetch.
-
-
-     An example webmail source:
-
-          (webmail :subtype 'hotmail
-                   :user "user-name"
-                   :password "secret")
-
 `group'
      Get the actual mail source from the `mail-source' group parameter,
      *Note Group Parameters::.
@@ -4767,7 +4145,7 @@ fetched from the spool file `/user/spools/foo.spool'.
           This is useful when you use local mail and news.
 
 
-6.3.4.2 Function Interface
+6.4.4.2 Function Interface
 ..........................
 
 Some of the above keywords specify a Lisp function to be executed.  For
@@ -4789,7 +4167,7 @@ values).
 
 File: gnus,  Node: Mail Source Customization,  Next: Fetching Mail,  Prev: Mail Source Specifiers,  Up: Mail Sources
 
-6.3.4.3 Mail Source Customization
+6.4.4.3 Mail Source Customization
 .................................
 
 The following is a list of variables that influence how the mail is
@@ -4831,7 +4209,8 @@ variables.
      relevant if `mail-source-delete-incoming' is `nil' or a number.
 
 `mail-source-default-file-modes'
-     All new mail files will get this file mode.  The default is 384.
+     All new mail files will get this file mode.  The default is
+     `#o600'.
 
 `mail-source-movemail-program'
      If non-`nil', name of program for fetching new mail.  If `nil',
@@ -4841,7 +4220,7 @@ variables.
 
 File: gnus,  Node: Fetching Mail,  Prev: Mail Source Customization,  Up: Mail Sources
 
-6.3.4.4 Fetching Mail
+6.4.4.4 Fetching Mail
 .....................
 
 The way to actually tell Gnus where to get new mail from is to set
@@ -4878,7 +4257,7 @@ shouldn't be too surprised when Gnus moves your mail.
 
 File: gnus,  Node: Mail Back End Variables,  Next: Fancy Mail Splitting,  Prev: Mail Sources,  Up: Getting Mail
 
-6.3.5 Mail Back End Variables
+6.4.5 Mail Back End Variables
 -----------------------------
 
 These variables are (for the most part) pertinent to all the various
@@ -4908,10 +4287,10 @@ mail back ends.
      the default file modes the new mail files get:
 
           (add-hook 'nnmail-pre-get-new-mail-hook
-                    (lambda () (set-default-file-modes 511)))
+                    (lambda () (set-default-file-modes #o700)))
 
           (add-hook 'nnmail-post-get-new-mail-hook
-                    (lambda () (set-default-file-modes 551)))
+                    (lambda () (set-default-file-modes #o775)))
 
 `nnmail-use-long-file-names'
      If non-`nil', the mail back ends will use long file and directory
@@ -4941,7 +4320,7 @@ mail back ends.
 
 File: gnus,  Node: Fancy Mail Splitting,  Next: Group Mail Splitting,  Prev: Mail Back End Variables,  Up: Getting Mail
 
-6.3.6 Fancy Mail Splitting
+6.4.6 Fancy Mail Splitting
 --------------------------
 
 If the rather simple, standard method for specifying how to split mail
@@ -5033,8 +4412,8 @@ are the possible split syntaxes:
      after `save-excursion' and `save-restriction' in the example
      above.  Also note that with the nnimap backend, message bodies will
      not be downloaded by default.  You need to set
-     `nnimap-split-download-body' to `t' to do that (*note Splitting in
-     IMAP::).
+     `nnimap-split-download-body' to `t' to do that (*note Client-Side
+     IMAP Splitting::).
 
 `(! FUNC SPLIT)'
      If the split is a list, and the first element is `!', then SPLIT
@@ -5166,7 +4545,7 @@ answers to all your messages would end up in the "outgoing" group.
 
 File: gnus,  Node: Group Mail Splitting,  Next: Incorporating Old Mail,  Prev: Fancy Mail Splitting,  Up: Getting Mail
 
-6.3.7 Group Mail Splitting
+6.4.7 Group Mail Splitting
 --------------------------
 
 If you subscribe to dozens of mailing lists but you don't want to
@@ -5279,7 +4658,7 @@ by `gnus-group-split-update', this function will run
 
 File: gnus,  Node: Incorporating Old Mail,  Next: Expiring Mail,  Prev: Group Mail Splitting,  Up: Getting Mail
 
-6.3.8 Incorporating Old Mail
+6.4.8 Incorporating Old Mail
 ----------------------------
 
 Most people have lots of old mail stored in various file formats.  If
@@ -5323,7 +4702,7 @@ groups using the new mail back end.
 
 File: gnus,  Node: Expiring Mail,  Next: Washing Mail,  Prev: Incorporating Old Mail,  Up: Getting Mail
 
-6.3.9 Expiring Mail
+6.4.9 Expiring Mail
 -------------------
 
 Traditional mail readers have a tendency to remove mail articles when
@@ -5354,7 +4733,8 @@ with this.  In a nutshell, "auto-expire" means that Gnus hits `E' for
 you when you select an article.  And "total-expire" means that Gnus
 considers all articles as expirable that are read.  So, in addition to
 the articles marked `E', also the articles marked `r', `R', `O', `K',
-`Y' and so on are considered expirable.
+`Y' (and so on) are considered expirable.  `gnus-auto-expirable-marks'
+has the full list of these marks.
 
    When should either auto-expire or total-expire be used?  Most people
 who are subscribed to mailing lists split each list into its own group
@@ -5511,7 +4891,7 @@ auto-expire turned on.  The default value is `nil'.
 
 File: gnus,  Node: Washing Mail,  Next: Duplicates,  Prev: Expiring Mail,  Up: Getting Mail
 
-6.3.10 Washing Mail
+6.4.10 Washing Mail
 -------------------
 
 Mailers and list servers are notorious for doing all sorts of really,
@@ -5595,7 +4975,7 @@ various functions that can be put in these hooks.
 
 File: gnus,  Node: Duplicates,  Next: Not Reading Mail,  Prev: Washing Mail,  Up: Getting Mail
 
-6.3.11 Duplicates
+6.4.11 Duplicates
 -----------------
 
 If you are a member of a couple of mailing lists, you will sometimes
@@ -5645,7 +5025,7 @@ Think of all the fun!  She'll never see any of it!  Whee!
 
 File: gnus,  Node: Not Reading Mail,  Next: Choosing a Mail Back End,  Prev: Duplicates,  Up: Getting Mail
 
-6.3.12 Not Reading Mail
+6.4.12 Not Reading Mail
 -----------------------
 
 If you start using any of the mail back ends, they have the annoying
@@ -5670,7 +5050,7 @@ incoming mail.
 
 File: gnus,  Node: Choosing a Mail Back End,  Prev: Not Reading Mail,  Up: Getting Mail
 
-6.3.13 Choosing a Mail Back End
+6.4.13 Choosing a Mail Back End
 -------------------------------
 
 Gnus will read the mail spool when you activate a mail group.  The mail
@@ -5694,7 +5074,7 @@ back ends are available separately.  The mail back end most people use
 
 File: gnus,  Node: Unix Mail Box,  Next: Babyl,  Up: Choosing a Mail Back End
 
-6.3.13.1 Unix Mail Box
+6.4.13.1 Unix Mail Box
 ......................
 
 The "nnmbox" back end will use the standard Un*x mbox file to store
@@ -5718,7 +5098,7 @@ which group it belongs in.
 
 File: gnus,  Node: Babyl,  Next: Mail Spool,  Prev: Unix Mail Box,  Up: Choosing a Mail Back End
 
-6.3.13.2 Babyl
+6.4.13.2 Babyl
 ..............
 
 The "nnbabyl" back end will use a Babyl mail box to store mail.
@@ -5740,7 +5120,7 @@ group it belongs in.
 
 File: gnus,  Node: Mail Spool,  Next: MH Spool,  Prev: Babyl,  Up: Choosing a Mail Back End
 
-6.3.13.3 Mail Spool
+6.4.13.3 Mail Spool
 ...................
 
 The "nnml" spool mail format isn't compatible with any other known
@@ -5843,7 +5223,7 @@ interface to this functionality can be found in the server buffer
 
 File: gnus,  Node: MH Spool,  Next: Maildir,  Prev: Mail Spool,  Up: Choosing a Mail Back End
 
-6.3.13.4 MH Spool
+6.4.13.4 MH Spool
 .................
 
 `nnmh' is just like `nnml', except that is doesn't generate NOV
@@ -5872,7 +5252,7 @@ easier to write procmail scripts for.
 
 File: gnus,  Node: Maildir,  Next: Mail Folders,  Prev: MH Spool,  Up: Choosing a Mail Back End
 
-6.3.13.5 Maildir
+6.4.13.5 Maildir
 ................
 
 `nnmaildir' stores mail in the maildir format, with each maildir
@@ -5972,7 +5352,7 @@ will keep your marks.
      different in the future.  If your split rules create new groups,
      remember to supply a `create-directory' server parameter.
 
-6.3.13.6 Group parameters
+6.4.13.6 Group parameters
 .........................
 
 `nnmaildir' uses several group parameters.  It's safe to ignore all
@@ -6078,7 +5458,7 @@ value in a vector when appropriate.)
      articles that are either marked with `tick' or not marked with
      `read', plus a little extra.
 
-6.3.13.7 Article identification
+6.4.13.7 Article identification
 ...............................
 
 Articles are stored in the `cur/' subdirectory of each maildir.  Each
@@ -6092,7 +5472,7 @@ of an article is available in the variable
 `nnmaildir-article-file-name' after you request the article in the
 summary buffer.
 
-6.3.13.8 NOV data
+6.4.13.8 NOV data
 .................
 
 An article identified by `uniq' has its NOV data (used to generate
@@ -6105,7 +5485,7 @@ corresponding NOV file, but _beware_: this will also cause `nnmaildir'
 to assign a new article number for this article, which may cause trouble
 with `seen' marks, the Agent, and the cache.
 
-6.3.13.9 Article marks
+6.4.13.9 Article marks
 ......................
 
 An article identified by `uniq' is considered to have the mark `flag'
@@ -6130,7 +5510,7 @@ undo them.
 
 File: gnus,  Node: Mail Folders,  Next: Comparing Mail Back Ends,  Prev: Maildir,  Up: Choosing a Mail Back End
 
-6.3.13.10 Mail Folders
+6.4.13.10 Mail Folders
 ......................
 
 `nnfolder' is a back end for storing each mail group in a separate
@@ -6212,7 +5592,7 @@ This only works if you use long file names, though.
 
 File: gnus,  Node: Comparing Mail Back Ends,  Prev: Mail Folders,  Up: Choosing a Mail Back End
 
-6.3.13.11 Comparing Mail Back Ends
+6.4.13.11 Comparing Mail Back Ends
 ..................................
 
 First, just for terminology, the "back end" is the common word for a
@@ -6260,7 +5640,7 @@ future.  Here are some high and low points on each:
      but Babyl had its own internal format to which mail was converted,
      primarily involving creating a spool-file-like entity with a
      scheme for inserting Babyl-specific headers and status bits above
-     the top of each message in the file.  Rmail was Emacs' first mail
+     the top of each message in the file.  Rmail was Emacs's first mail
      reader, it was written by Richard Stallman, and Stallman came out
      of that TOPS/Babyl environment, so he wrote Rmail to understand
      the mail files folks already had in existence.  Gnus (and VM, for
@@ -6335,13 +5715,12 @@ future.  Here are some high and low points on each:
      other mail back ends.
 
      `nnmaildir' is largely similar to `nnml', with some notable
-     differences.  Each message is stored in a separate file, but the
-     filename is unrelated to the article number in Gnus.  `nnmaildir'
+     differences. Each message is stored in a separate file, but the
+     filename is unrelated to the article number in Gnus. `nnmaildir'
      also stores the equivalent of `nnml''s overview files in one file
-     per article, so it uses about twice as many inodes as `nnml'.  (Use
-     `df -i' to see how plentiful your inode supply is.)  If this slows
-     you down or takes up very much space, consider switching to
-     ReiserFS (http://www.namesys.com/) or another non-block-structured
+     per article, so it uses about twice as many inodes as `nnml'.
+     (Use `df -i' to see how plentiful your inode supply is.) If this
+     slows you down or takes up very much space, a non-block-structured
      file system.
 
      Since maildirs don't require locking for delivery, the maildirs
@@ -6381,9 +5760,9 @@ future.  Here are some high and low points on each:
 
 
 
-File: gnus,  Node: Browsing the Web,  Next: IMAP,  Prev: Getting Mail,  Up: Select Methods
+File: gnus,  Node: Browsing the Web,  Next: Other Sources,  Prev: Getting Mail,  Up: Select Methods
 
-6.4 Browsing the Web
+6.5 Browsing the Web
 ====================
 
 Web-based discussion forums are getting more and more popular.  On many
@@ -6410,9 +5789,6 @@ providing interfaces to these sources.
 
 * Archiving Mail::
 * Web Searches::                Creating groups from articles that match a string.
-* Slashdot::                    Reading the Slashdot comments.
-* Ultimate::                    The Ultimate Bulletin Board systems.
-* Web Archive::                 Reading mailing list archived on web.
 * RSS::                         Reading RDF site summary.
 * Customizing W3::              Doing stuff to Emacs/W3 from Gnus.
 
@@ -6434,7 +5810,7 @@ them at leisure from your local disk.  No more World Wide Wait for you.
 
 File: gnus,  Node: Archiving Mail,  Next: Web Searches,  Up: Browsing the Web
 
-6.4.1 Archiving Mail
+6.5.1 Archiving Mail
 --------------------
 
 Some of the back ends, notably `nnml', `nnfolder', and `nnmaildir', now
@@ -6464,9 +5840,9 @@ directory.  `nnmaildir' notices the new directory automatically, so `G
 m' is unnecessary in that case.
 
 
-File: gnus,  Node: Web Searches,  Next: Slashdot,  Prev: Archiving Mail,  Up: Browsing the Web
+File: gnus,  Node: Web Searches,  Next: RSS,  Prev: Archiving Mail,  Up: Browsing the Web
 
-6.4.2 Web Searches
+6.5.2 Web Searches
 ------------------
 
 It's, like, too neat to search the Usenet for articles that match a
@@ -6542,138 +5918,9 @@ to use `nnweb'.
 
 
 
-File: gnus,  Node: Slashdot,  Next: Ultimate,  Prev: Web Searches,  Up: Browsing the Web
+File: gnus,  Node: RSS,  Next: Customizing W3,  Prev: Web Searches,  Up: Browsing the Web
 
-6.4.3 Slashdot
---------------
-
-Slashdot (http://slashdot.org/) is a popular news site, with lively
-discussion following the news articles.  `nnslashdot' will let you read
-this forum in a convenient manner.
-
-   The easiest way to read this source is to put something like the
-following in your `~/.gnus.el' file:
-
-     (setq gnus-secondary-select-methods
-           '((nnslashdot "")))
-
-   This will make Gnus query the `nnslashdot' back end for new comments
-and groups.  The `F' command will subscribe each new news article as a
-new Gnus group, and you can read the comments by entering these groups.
-(Note that the default subscription method is to subscribe new groups
-as zombies.  Other methods are available (*note Subscription Methods::).
-
-   If you want to remove an old `nnslashdot' group, the `G DEL' command
-is the most handy tool (*note Foreign Groups::).
-
-   When following up to `nnslashdot' comments (or posting new
-comments), some light HTMLizations will be performed.  In particular,
-text quoted with `> ' will be quoted with `blockquote' instead, and
-signatures will have `br' added to the end of each line.  Other than
-that, you can just write HTML directly into the message buffer.  Note
-that Slashdot filters out some HTML forms.
-
-   The following variables can be altered to change its behavior:
-
-`nnslashdot-threaded'
-     Whether `nnslashdot' should display threaded groups or not.  The
-     default is `t'.  To be able to display threads, `nnslashdot' has
-     to retrieve absolutely all comments in a group upon entry.  If a
-     threaded display is not required, `nnslashdot' will only retrieve
-     the comments that are actually wanted by the user.  Threading is
-     nicer, but much, much slower than unthreaded.
-
-`nnslashdot-login-name'
-     The login name to use when posting.
-
-`nnslashdot-password'
-     The password to use when posting.
-
-`nnslashdot-directory'
-     Where `nnslashdot' will store its files.  The default is
-     `~/News/slashdot/'.
-
-`nnslashdot-active-url'
-     The URL format string that will be used to fetch the information
-     on news articles and comments.  The default is
-     `http://slashdot.org/search.pl?section=&min=%d'.
-
-`nnslashdot-comments-url'
-     The URL format string that will be used to fetch comments.
-
-`nnslashdot-article-url'
-     The URL format string that will be used to fetch the news article.
-     The default is
-     `http://slashdot.org/article.pl?sid=%s&mode=nocomment'.
-
-`nnslashdot-threshold'
-     The score threshold.  The default is -1.
-
-`nnslashdot-group-number'
-     The number of old groups, in addition to the ten latest, to keep
-     updated.  The default is 0.
-
-
-
-File: gnus,  Node: Ultimate,  Next: Web Archive,  Prev: Slashdot,  Up: Browsing the Web
-
-6.4.4 Ultimate
---------------
-
-The Ultimate Bulletin Board (http://www.ultimatebb.com/) is probably
-the most popular Web bulletin board system used.  It has a quite
-regular and nice interface, and it's possible to get the information
-Gnus needs to keep groups updated.
-
-   The easiest way to get started with `nnultimate' is to say something
-like the following in the group buffer:  `B nnultimate RET
-http://www.tcj.com/messboard/ubbcgi/ RET'.  (Substitute the URL (not
-including `Ultimate.cgi' or the like at the end) for a forum you're
-interested in; there's quite a list of them on the Ultimate web site.)
-Then subscribe to the groups you're interested in from the server
-buffer, and read them from the group buffer.
-
-   The following `nnultimate' variables can be altered:
-
-`nnultimate-directory'
-     The directory where `nnultimate' stores its files.  The default is
-     `~/News/ultimate/'.
-
-
-File: gnus,  Node: Web Archive,  Next: RSS,  Prev: Ultimate,  Up: Browsing the Web
-
-6.4.5 Web Archive
------------------
-
-Some mailing lists only have archives on Web servers, such as
-`http://www.egroups.com/' and `http://www.mail-archive.com/'.  It has a
-quite regular and nice interface, and it's possible to get the
-information Gnus needs to keep groups updated.
-
-   The easiest way to get started with `nnwarchive' is to say something
-like the following in the group buffer: `M-x
-gnus-group-make-warchive-group RET AN_EGROUP RET egroups RET
-www.egroups.com RET YOUR@EMAIL.ADDRESS RET'.  (Substitute the AN_EGROUP
-with the mailing list you subscribed, the YOUR@EMAIL.ADDRESS with your
-email address.), or to browse the back end by `B nnwarchive RET
-mail-archive RET'.
-
-   The following `nnwarchive' variables can be altered:
-
-`nnwarchive-directory'
-     The directory where `nnwarchive' stores its files.  The default is
-     `~/News/warchive/'.
-
-`nnwarchive-login'
-     The account name on the web server.
-
-`nnwarchive-passwd'
-     The password for your account on the web server.
-
-
-File: gnus,  Node: RSS,  Next: Customizing W3,  Prev: Web Archive,  Up: Browsing the Web
-
-6.4.6 RSS
+6.5.3 RSS
 ---------
 
 Some web sites have an RDF Site Summary (RSS).  RSS is a format for
@@ -6743,14 +5990,6 @@ Language).
      `nnrss-generate-download-script' to generate a download script
      using `wget'.
 
-`nnrss-wash-html-in-text-plain-parts'
-     Non-`nil' means that `nnrss' renders text in `text/plain' parts as
-     HTML.  The function specified by the `mm-text-html-renderer'
-     variable (*note Display Customization: (emacs-mime)Display
-     Customization.) will be used to render text.  If it is `nil',
-     which is the default, text will simply be folded.  Leave it `nil'
-     if you prefer to see `text/html' parts.
-
    The following code may be helpful, if you want to show the
 description in the summary buffer.
 
@@ -6809,7 +6048,7 @@ groups:
 
 File: gnus,  Node: Customizing W3,  Prev: RSS,  Up: Browsing the Web
 
-6.4.7 Customizing W3
+6.5.4 Customizing W3
 --------------------
 
 Gnus uses the url library to fetch web pages and Emacs/W3 (or those
@@ -6835,636 +6074,7 @@ HTML in the Gnus article buffers will use `browse-url' to follow the
 link.
 
 
-File: gnus,  Node: IMAP,  Next: Other Sources,  Prev: Browsing the Web,  Up: Select Methods
-
-6.5 IMAP
-========
-
-IMAP is a network protocol for reading mail (or news, or ...), think of
-it as a modernized NNTP.  Connecting to a IMAP server is much similar
-to connecting to a news server, you just specify the network address of
-the server.
-
-   IMAP has two properties.  First, IMAP can do everything that POP
-can, it can hence be viewed as a POP++.  Secondly, IMAP is a mail
-storage protocol, similar to NNTP being a news storage
-protocol--however, IMAP offers more features than NNTP because news is
-more or less read-only whereas mail is read-write.
-
-   If you want to use IMAP as a POP++, use an imap entry in
-`mail-sources'.  With this, Gnus will fetch mails from the IMAP server
-and store them on the local disk.  This is not the usage described in
-this section--*Note Mail Sources::.
-
-   If you want to use IMAP as a mail storage protocol, use an nnimap
-entry in `gnus-secondary-select-methods'.  With this, Gnus will
-manipulate mails stored on the IMAP server.  This is the kind of usage
-explained in this section.
-
-   A server configuration in `~/.gnus.el' with a few IMAP servers might
-look something like the following.  (Note that for TLS/SSL, you need
-external programs and libraries, see below.)
-
-     (setq gnus-secondary-select-methods
-           '((nnimap "simpleserver") ; no special configuration
-             ; perhaps a ssh port forwarded server:
-             (nnimap "dolk"
-                     (nnimap-address "localhost")
-                     (nnimap-server-port 1430))
-             ; a UW server running on localhost
-             (nnimap "barbar"
-                     (nnimap-server-port 143)
-                     (nnimap-address "localhost")
-                     (nnimap-list-pattern ("INBOX" "mail/*")))
-             ; anonymous public cyrus server:
-             (nnimap "cyrus.andrew.cmu.edu"
-                     (nnimap-authenticator anonymous)
-                     (nnimap-list-pattern "archive.*")
-                     (nnimap-stream network))
-             ; a ssl server on a non-standard port:
-             (nnimap "vic20"
-                     (nnimap-address "vic20.somewhere.com")
-                     (nnimap-server-port 9930)
-                     (nnimap-stream ssl))))
-
-   After defining the new server, you can subscribe to groups on the
-server using normal Gnus commands such as `U' in the Group Buffer
-(*note Subscription Commands::) or via the Server Buffer (*note Server
-Buffer::).
-
-   The following variables can be used to create a virtual `nnimap'
-server:
-
-`nnimap-address'
-     The address of the remote IMAP server.  Defaults to the virtual
-     server name if not specified.
-
-`nnimap-server-port'
-     Port on server to contact.  Defaults to port 143, or 993 for
-     TLS/SSL.
-
-     Note that this should be an integer, example server specification:
-
-          (nnimap "mail.server.com"
-                  (nnimap-server-port 4711))
-
-`nnimap-list-pattern'
-     String or list of strings of mailboxes to limit available groups
-     to.  This is used when the server has very many mailboxes and
-     you're only interested in a few--some servers export your home
-     directory via IMAP, you'll probably want to limit the mailboxes to
-     those in `~/Mail/*' then.
-
-     The string can also be a cons of REFERENCE and the string as
-     above, what REFERENCE is used for is server specific, but on the
-     University of Washington server it's a directory that will be
-     concatenated with the mailbox.
-
-     Example server specification:
-
-          (nnimap "mail.server.com"
-                  (nnimap-list-pattern ("INBOX" "Mail/*" "alt.sex.*"
-                                         ("~friend/Mail/" . "list/*"))))
-
-`nnimap-stream'
-     The type of stream used to connect to your server.  By default,
-     nnimap will detect and automatically use all of the below, with
-     the exception of TLS/SSL.  (IMAP over TLS/SSL is being replaced by
-     STARTTLS, which can be automatically detected, but it's not widely
-     deployed yet.)
-
-     Example server specification:
-
-          (nnimap "mail.server.com"
-                  (nnimap-stream ssl))
-
-     Please note that the value of `nnimap-stream' is a symbol!
-
-        * "gssapi:" Connect with GSSAPI (usually Kerberos 5).  Requires
-          the `gsasl' or `imtest' program.
-
-        * "kerberos4:" Connect with Kerberos 4.  Requires the `imtest'
-          program.
-
-        * "starttls:" Connect via the STARTTLS extension (similar to
-          TLS/SSL).  Requires the external library `starttls.el' and
-          program `starttls'.
-
-        * "tls:" Connect through TLS.  Requires GNUTLS (the program
-          `gnutls-cli').
-
-        * "ssl:" Connect through SSL.  Requires OpenSSL (the program
-          `openssl') or SSLeay (`s_client').
-
-        * "shell:" Use a shell command to start IMAP connection.
-
-        * "network:" Plain, TCP/IP network connection.
-
-     The `imtest' program is shipped with Cyrus IMAPD.  If you're using
-     `imtest' from Cyrus IMAPD < 2.0.14 (which includes version 1.5.x
-     and 1.6.x) you need to frob `imap-process-connection-type' to make
-     `imap.el' use a pty instead of a pipe when communicating with
-     `imtest'.  You will then suffer from a line length restrictions on
-     IMAP commands, which might make Gnus seem to hang indefinitely if
-     you have many articles in a mailbox.  The variable
-     `imap-kerberos4-program' contain parameters to pass to the imtest
-     program.
-
-     For TLS connection, the `gnutls-cli' program from GNUTLS is
-     needed.  It is available from
-     `http://www.gnu.org/software/gnutls/'.
-
-     This parameter specifies a list of command lines that invoke a
-     GSSAPI authenticated IMAP stream in a subshell.  They are tried
-     sequentially until a connection is made, or the list has been
-     exhausted.  By default, `gsasl' from GNU SASL, available from
-     `http://www.gnu.org/software/gsasl/', and the `imtest' program
-     from Cyrus IMAPD (see `imap-kerberos4-program'), are tried.
-
-     For SSL connections, the OpenSSL program is available from
-     `http://www.openssl.org/'.  OpenSSL was formerly known as SSLeay,
-     and nnimap support it too--although the most recent versions of
-     SSLeay, 0.9.x, are known to have serious bugs making it useless.
-     Earlier versions, especially 0.8.x, of SSLeay are known to work.
-     The variable `imap-ssl-program' contain parameters to pass to
-     OpenSSL/SSLeay.
-
-     For IMAP connections using the `shell' stream, the variable
-     `imap-shell-program' specify what program to call.  Make sure
-     nothing is interfering with the output of the program, e.g., don't
-     forget to redirect the error output to the void.
-
-`nnimap-authenticator'
-     The authenticator used to connect to the server.  By default,
-     nnimap will use the most secure authenticator your server is
-     capable of.
-
-     Example server specification:
-
-          (nnimap "mail.server.com"
-                  (nnimap-authenticator anonymous))
-
-     Please note that the value of `nnimap-authenticator' is a symbol!
-
-        * "gssapi:" GSSAPI (usually kerberos 5) authentication.
-          Requires external program `gsasl' or `imtest'.
-
-        * "kerberos4:" Kerberos 4 authentication.  Requires external
-          program `imtest'.
-
-        * "digest-md5:" Encrypted username/password via DIGEST-MD5.
-          Requires external library `digest-md5.el'.
-
-        * "cram-md5:" Encrypted username/password via CRAM-MD5.
-
-        * "login:" Plain-text username/password via LOGIN.
-
-        * "anonymous:" Login as "anonymous", supplying your email
-          address as password.
-
-`nnimap-expunge-on-close'
-     Unlike Parmenides the IMAP designers have decided things that
-     don't exist actually do exist.  More specifically, IMAP has this
-     concept of marking articles `Deleted' which doesn't actually
-     delete them, and this (marking them `Deleted', that is) is what
-     nnimap does when you delete an article in Gnus (with `B DEL' or
-     similar).
-
-     Since the articles aren't really removed when we mark them with the
-     `Deleted' flag we'll need a way to actually delete them.  Feel like
-     running in circles yet?
-
-     Traditionally, nnimap has removed all articles marked as `Deleted'
-     when closing a mailbox but this is now configurable by this server
-     variable.
-
-     The possible options are:
-
-    `always'
-          The default behavior, delete all articles marked as "Deleted"
-          when closing a mailbox.
-
-    `never'
-          Never actually delete articles.  Currently there is no way of
-          showing the articles marked for deletion in nnimap, but other
-          IMAP clients may allow you to do this.  If you ever want to
-          run the EXPUNGE command manually, *Note Expunging mailboxes::.
-
-    `ask'
-          When closing mailboxes, nnimap will ask if you wish to
-          expunge deleted articles or not.
-
-
-`nnimap-importantize-dormant'
-     If non-`nil' (the default), marks dormant articles as ticked (as
-     well), for other IMAP clients.  Within Gnus, dormant articles will
-     naturally still (only) be marked as dormant.  This is to make
-     dormant articles stand out, just like ticked articles, in other
-     IMAP clients.  (In other words, Gnus has two "Tick" marks and IMAP
-     has only one.)
-
-     Probably the only reason for frobbing this would be if you're
-     trying enable per-user persistent dormant flags, using something
-     like:
-
-          (setcdr (assq 'dormant nnimap-mark-to-flag-alist)
-                  (format "gnus-dormant-%s" (user-login-name)))
-          (setcdr (assq 'dormant nnimap-mark-to-predicate-alist)
-                  (format "KEYWORD gnus-dormant-%s" (user-login-name)))
-
-     In this case, you would not want the per-user dormant flag showing
-     up as ticked for other users.
-
-`nnimap-expunge-search-string'
-     This variable contain the IMAP search command sent to server when
-     searching for articles eligible for expiring.  The default is
-     `"UID %s NOT SINCE %s"', where the first `%s' is replaced by UID
-     set and the second `%s' is replaced by a date.
-
-     Probably the only useful value to change this to is `"UID %s NOT
-     SENTSINCE %s"', which makes nnimap use the Date: in messages
-     instead of the internal article date.  See section 6.4.4 of RFC
-     2060 for more information on valid strings.
-
-     However, if `nnimap-search-uids-not-since-is-evil' is true, this
-     variable has no effect since the search logic is reversed, as
-     described below.
-
-`nnimap-authinfo-file'
-     A file containing credentials used to log in on servers.  The
-     format is (almost) the same as the `ftp' `~/.netrc' file.  See the
-     variable `nntp-authinfo-file' for exact syntax; also see *note
-     NNTP::.  An example of an .authinfo line for an IMAP server, is:
-
-          machine students.uio.no login larsi password geheimnis port imap
-
-     Note that it should be `port imap', or `port 143', if you use a
-     `nnimap-stream' of `tls' or `ssl', even if the actual port number
-     used is port 993 for secured IMAP.  For convenience, Gnus will
-     accept `port imaps' as a synonym of `port imap'.
-
-`nnimap-need-unselect-to-notice-new-mail'
-     Unselect mailboxes before looking for new mail in them.  Some
-     servers seem to need this under some circumstances; it was
-     reported that Courier 1.7.1 did.
-
-`nnimap-nov-is-evil'
-     Never generate or use a local NOV database. Defaults to the value
-     of `gnus-agent'.
-
-     Using a NOV database usually makes header fetching much faster,
-     but it uses the `UID SEARCH UID' command, which is very slow on
-     some servers (notably some versions of Courier). Since the Gnus
-     Agent caches the information in the NOV database without using the
-     slow command, this variable defaults to true if the Agent is in
-     use, and false otherwise.
-
-`nnimap-search-uids-not-since-is-evil'
-     Avoid the `UID SEARCH UID MESSAGE NUMBERS NOT SINCE DATE' command,
-     which is slow on some IMAP servers (notably, some versions of
-     Courier). Instead, use `UID SEARCH SINCE DATE' and prune the list
-     of expirable articles within Gnus.
-
-     When Gnus expires your mail (*note Expiring Mail::), it starts
-     with a list of expirable articles and asks the IMAP server
-     questions like "Of these articles, which ones are older than a
-     week?" While this seems like a perfectly reasonable question, some
-     IMAP servers take a long time to answer it, since they seemingly
-     go looking into every old article to see if it is one of the
-     expirable ones. Curiously, the question "Of _all_ articles, which
-     ones are newer than a week?" seems to be much faster to answer, so
-     setting this variable causes Gnus to ask this question and figure
-     out the answer to the real question itself.
-
-     This problem can really sneak up on you: when you first configure
-     Gnus, everything works fine, but once you accumulate a couple
-     thousand messages, you start cursing Gnus for being so slow. On
-     the other hand, if you get a lot of email within a week, setting
-     this variable will cause a lot of network traffic between Gnus and
-     the IMAP server.
-
-`nnimap-logout-timeout'
-     There is a case where a connection to a IMAP server is unable to
-     close, when connecting to the server via a certain kind of network,
-     e.g. VPN.  In that case, it will be observed that a connection
-     between Emacs and the local network looks alive even if the server
-     has closed a connection for some reason (typically, a timeout).
-     Consequently, Emacs continues waiting for a response from the
-     server for the `LOGOUT' command that Emacs sent, or hangs in other
-     words.  If you are in such a network, setting this variable to a
-     number of seconds will be helpful.  If it is set, a hung
-     connection will be closed forcibly, after this number of seconds
-     from the time Emacs sends the `LOGOUT' command.  It should not be
-     too small value but too large value will be inconvenient too.
-     Perhaps the value 1.0 will be a good candidate but it might be
-     worth trying some other values.
-
-     Example server specification:
-
-          (nnimap "mail.server.com"
-                  (nnimap-logout-timeout 1.0))
-
-
-* Menu:
-
-* Splitting in IMAP::           Splitting mail with nnimap.
-* Expiring in IMAP::            Expiring mail with nnimap.
-* Editing IMAP ACLs::           Limiting/enabling other users access to a mailbox.
-* Expunging mailboxes::         Equivalent of a ``compress mailbox'' button.
-* A note on namespaces::        How to (not) use IMAP namespace in Gnus.
-* Debugging IMAP::              What to do when things don't work.
-
-
-File: gnus,  Node: Splitting in IMAP,  Next: Expiring in IMAP,  Up: IMAP
-
-6.5.1 Splitting in IMAP
------------------------
-
-Splitting is something Gnus users have loved and used for years, and now
-the rest of the world is catching up.  Yeah, dream on, not many IMAP
-servers have server side splitting and those that have splitting seem
-to use some non-standard protocol.  This means that IMAP support for
-Gnus has to do its own splitting.
-
-   And it does.
-
-   (Incidentally, people seem to have been dreaming on, and Sieve has
-gaining a market share and is supported by several IMAP servers.
-Fortunately, Gnus support it too, *Note Sieve Commands::.)
-
-   Here are the variables of interest:
-
-`nnimap-split-crosspost'
-     If non-`nil', do crossposting if several split methods match the
-     mail.  If `nil', the first match in `nnimap-split-rule' found will
-     be used.
-
-     Nnmail equivalent: `nnmail-crosspost'.
-
-`nnimap-split-inbox'
-     A string or a list of strings that gives the name(s) of IMAP
-     mailboxes to split from.  Defaults to `nil', which means that
-     splitting is disabled!
-
-          (setq nnimap-split-inbox
-                '("INBOX" ("~/friend/Mail" . "lists/*") "lists.imap"))
-
-     No nnmail equivalent.
-
-`nnimap-split-rule'
-     New mail found in `nnimap-split-inbox' will be split according to
-     this variable.
-
-     This variable contains a list of lists, where the first element in
-     the sublist gives the name of the IMAP mailbox to move articles
-     matching the regexp in the second element in the sublist.  Got
-     that?  Neither did I, we need examples.
-
-          (setq nnimap-split-rule
-                '(("INBOX.nnimap"
-                   "^Sender: owner-nnimap@vic20.globalcom.se")
-                  ("INBOX.junk"    "^Subject:.*MAKE MONEY")
-                  ("INBOX.private" "")))
-
-     This will put all articles from the nnimap mailing list into
-     mailbox INBOX.nnimap, all articles containing MAKE MONEY in the
-     Subject: line into INBOX.junk and everything else in INBOX.private.
-
-     The first string may contain `\\1' forms, like the ones used by
-     replace-match to insert sub-expressions from the matched text.  For
-     instance:
-
-          ("INBOX.lists.\\1"     "^Sender: owner-\\([a-z-]+\\)@")
-
-     The first element can also be the symbol `junk' to indicate that
-     matching messages should simply be deleted.  Use with care.
-
-     The second element can also be a function.  In that case, it will
-     be called with the first element of the rule as the argument, in a
-     buffer containing the headers of the article.  It should return a
-     non-`nil' value if it thinks that the mail belongs in that group.
-
-     Nnmail users might recollect that the last regexp had to be empty
-     to match all articles (like in the example above).  This is not
-     required in nnimap.  Articles not matching any of the regexps will
-     not be moved out of your inbox.  (This might affect performance if
-     you keep lots of unread articles in your inbox, since the
-     splitting code would go over them every time you fetch new mail.)
-
-     These rules are processed from the beginning of the alist toward
-     the end.  The first rule to make a match will "win", unless you
-     have crossposting enabled.  In that case, all matching rules will
-     "win".
-
-     This variable can also have a function as its value, the function
-     will be called with the headers narrowed and should return a group
-     where it thinks the article should be split to.  See
-     `nnimap-split-fancy'.
-
-     The splitting code tries to create mailboxes if it needs to.
-
-     To allow for different split rules on different virtual servers,
-     and even different split rules in different inboxes on the same
-     server, the syntax of this variable have been extended along the
-     lines of:
-
-          (setq nnimap-split-rule
-                '(("my1server"    (".*" (("ding"    "ding@gnus.org")
-                                         ("junk"    "From:.*Simon"))))
-                  ("my2server"    ("INBOX" nnimap-split-fancy))
-                  ("my[34]server" (".*" (("private" "To:.*Simon")
-                                         ("junk"    my-junk-func))))))
-
-     The virtual server name is in fact a regexp, so that the same rules
-     may apply to several servers.  In the example, the servers
-     `my3server' and `my4server' both use the same rules.  Similarly,
-     the inbox string is also a regexp.  The actual splitting rules are
-     as before, either a function, or a list with group/regexp or
-     group/function elements.
-
-     Nnmail equivalent: `nnmail-split-methods'.
-
-`nnimap-split-predicate'
-     Mail matching this predicate in `nnimap-split-inbox' will be
-     split, it is a string and the default is `UNSEEN UNDELETED'.
-
-     This might be useful if you use another IMAP client to read mail in
-     your inbox but would like Gnus to split all articles in the inbox
-     regardless of readedness.  Then you might change this to
-     `UNDELETED'.
-
-`nnimap-split-fancy'
-     It's possible to set `nnimap-split-rule' to `nnmail-split-fancy'
-     if you want to use fancy splitting.  *Note Fancy Mail Splitting::.
-
-     However, to be able to have different fancy split rules for nnmail
-     and nnimap back ends you can set `nnimap-split-rule' to
-     `nnimap-split-fancy' and define the nnimap specific fancy split
-     rule in `nnimap-split-fancy'.
-
-     Example:
-
-          (setq nnimap-split-rule 'nnimap-split-fancy
-                nnimap-split-fancy ...)
-
-     Nnmail equivalent: `nnmail-split-fancy'.
-
-`nnimap-split-download-body'
-     Set to non-`nil' to download entire articles during splitting.
-     This is generally not required, and will slow things down
-     considerably.  You may need it if you want to use an advanced
-     splitting function that analyzes the body to split the article.
-
-
-
-File: gnus,  Node: Expiring in IMAP,  Next: Editing IMAP ACLs,  Prev: Splitting in IMAP,  Up: IMAP
-
-6.5.2 Expiring in IMAP
-----------------------
-
-Even though `nnimap' is not a proper `nnmail' derived back end, it
-supports most features in regular expiring (*note Expiring Mail::).
-Unlike splitting in IMAP (*note Splitting in IMAP::) it does not clone
-the `nnmail' variables (i.e., creating NNIMAP-EXPIRY-WAIT) but reuse
-the `nnmail' variables.  What follows below are the variables used by
-the `nnimap' expiry process.
-
-   A note on how the expire mark is stored on the IMAP server is
-appropriate here as well.  The expire mark is translated into a `imap'
-client specific mark, `gnus-expire', and stored on the message.  This
-means that likely only Gnus will understand and treat the `gnus-expire'
-mark properly, although other clients may allow you to view client
-specific flags on the message.  It also means that your server must
-support permanent storage of client specific flags on messages.  Most
-do, fortunately.
-
-   If expiring IMAP mail seems very slow, try setting the server
-variable `nnimap-search-uids-not-since-is-evil'.
-
-`nnmail-expiry-wait'
-
-`nnmail-expiry-wait-function'
-     These variables are fully supported.  The expire value can be a
-     number, the symbol `immediate' or `never'.
-
-`nnmail-expiry-target'
-     This variable is supported, and internally implemented by calling
-     the `nnmail' functions that handle this.  It contains an
-     optimization that if the destination is a IMAP group on the same
-     server, the article is copied instead of appended (that is,
-     uploaded again).
-
-
-
-File: gnus,  Node: Editing IMAP ACLs,  Next: Expunging mailboxes,  Prev: Expiring in IMAP,  Up: IMAP
-
-6.5.3 Editing IMAP ACLs
------------------------
-
-ACL stands for Access Control List.  ACLs are used in IMAP for limiting
-(or enabling) other users access to your mail boxes.  Not all IMAP
-servers support this, this function will give an error if it doesn't.
-
-   To edit an ACL for a mailbox, type `G l'
-(`gnus-group-edit-nnimap-acl') and you'll be presented with an ACL
-editing window with detailed instructions.
-
-   Some possible uses:
-
-   * Giving "anyone" the "lrs" rights (lookup, read, keep seen/unseen
-     flags) on your mailing list mailboxes enables other users on the
-     same server to follow the list without subscribing to it.
-
-   * At least with the Cyrus server, you are required to give the user
-     "anyone" posting ("p") capabilities to have "plussing" work (that
-     is, mail sent to user+mailbox@domain ending up in the IMAP mailbox
-     INBOX.mailbox).
-
-
-File: gnus,  Node: Expunging mailboxes,  Next: A note on namespaces,  Prev: Editing IMAP ACLs,  Up: IMAP
-
-6.5.4 Expunging mailboxes
--------------------------
-
-If you're using the `never' setting of `nnimap-expunge-on-close', you
-may want the option of expunging all deleted articles in a mailbox
-manually.  This is exactly what `G x' does.
-
-   Currently there is no way of showing deleted articles, you can just
-delete them.
-
-
-File: gnus,  Node: A note on namespaces,  Next: Debugging IMAP,  Prev: Expunging mailboxes,  Up: IMAP
-
-6.5.5 A note on namespaces
---------------------------
-
-The IMAP protocol has a concept called namespaces, described by the
-following text in the RFC2060:
-
-     5.1.2.  Mailbox Namespace Naming Convention
-
-        By convention, the first hierarchical element of any mailbox name
-        which begins with "#" identifies the "namespace" of the remainder of
-        the name.  This makes it possible to disambiguate between different
-        types of mailbox stores, each of which have their own namespaces.
-
-           For example, implementations which offer access to USENET
-           newsgroups MAY use the "#news" namespace to partition the USENET
-           newsgroup namespace from that of other mailboxes.  Thus, the
-           comp.mail.misc newsgroup would have an mailbox name of
-           "#news.comp.mail.misc", and the name "comp.mail.misc" could refer
-           to a different object (e.g. a user's private mailbox).
-
-   While there is nothing in this text that warrants concern for the
-IMAP implementation in Gnus, some servers use namespace prefixes in a
-way that does not work with how Gnus uses mailbox names.
-
-   Specifically, University of Washington's IMAP server uses mailbox
-names like `#driver.mbx/read-mail' which are valid only in the CREATE
-and APPEND commands.  After the mailbox is created (or a messages is
-appended to a mailbox), it must be accessed without the namespace
-prefix, i.e. `read-mail'.  Since Gnus do not make it possible for the
-user to guarantee that user entered mailbox names will only be used
-with the CREATE and APPEND commands, you should simply not use the
-namespace prefixed mailbox names in Gnus.
-
-   See the UoW IMAPD documentation for the `#driver.*/' prefix for more
-information on how to use the prefixes.  They are a power tool and
-should be used only if you are sure what the effects are.
-
-
-File: gnus,  Node: Debugging IMAP,  Prev: A note on namespaces,  Up: IMAP
-
-6.5.6 Debugging IMAP
---------------------
-
-IMAP is a complex protocol, more so than NNTP or POP3.  Implementation
-bugs are not unlikely, and we do our best to fix them right away.  If
-you encounter odd behavior, chances are that either the server or Gnus
-is buggy.
-
-   If you are familiar with network protocols in general, you will
-probably be able to extract some clues from the protocol dump of the
-exchanges between Gnus and the server.  Even if you are not familiar
-with network protocols, when you include the protocol dump in
-IMAP-related bug reports you are helping us with data critical to
-solving the problem.  Therefore, we strongly encourage you to include
-the protocol dump when reporting IMAP bugs in Gnus.
-
-   Because the protocol dump, when enabled, generates lots of data, it
-is disabled by default.  You can enable it by setting `imap-log' as
-follows:
-
-     (setq imap-log t)
-
-   This instructs the `imap.el' package to log any exchanges with the
-server.  The log is stored in the buffer `*imap-log*'.  Look for error
-messages, which sometimes are tagged with the keyword `BAD'--but when
-submitting a bug, make sure to include all the data.
-
-
-File: gnus,  Node: Other Sources,  Next: Combined Groups,  Prev: IMAP,  Up: Select Methods
+File: gnus,  Node: Other Sources,  Next: Combined Groups,  Prev: Browsing the Web,  Up: Select Methods
 
 6.6 Other Sources
 =================
@@ -7478,8 +6088,1415 @@ newsgroups.
 * Directory Groups::            You can read a directory as if it was a newsgroup.
 * Anything Groups::             Dired?  Who needs dired?
 * Document Groups::             Single files can be the basis of a group.
-* SOUP::                        Reading SOUP packets ``offline''.
 * Mail-To-News Gateways::       Posting articles via mail-to-news gateways.
+* The Empty Backend::           The backend that never has any news.
+
+
+File: gnus,  Node: Directory Groups,  Next: Anything Groups,  Up: Other Sources
+
+6.6.1 Directory Groups
+----------------------
+
+If you have a directory that has lots of articles in separate files in
+it, you might treat it as a newsgroup.  The files have to have numerical
+names, of course.
+
+   This might be an opportune moment to mention `ange-ftp' (and its
+successor `efs'), that most wonderful of all wonderful Emacs packages.
+When I wrote `nndir', I didn't think much about it--a back end to read
+directories.  Big deal.
+
+   `ange-ftp' changes that picture dramatically.  For instance, if you
+enter the `ange-ftp' file name `/ftp.hpc.uh.edu:/pub/emacs/ding-list/'
+as the directory name, `ange-ftp' or `efs' will actually allow you to
+read this directory over at `sina' as a newsgroup.  Distributed news
+ahoy!
+
+   `nndir' will use NOV files if they are present.
+
+   `nndir' is a "read-only" back end--you can't delete or expire
+articles with this method.  You can use `nnmh' or `nnml' for whatever
+you use `nndir' for, so you could switch to any of those methods if you
+feel the need to have a non-read-only `nndir'.
+
+
+File: gnus,  Node: Anything Groups,  Next: Document Groups,  Prev: Directory Groups,  Up: Other Sources
+
+6.6.2 Anything Groups
+---------------------
+
+From the `nndir' back end (which reads a single spool-like directory),
+it's just a hop and a skip to `nneething', which pretends that any
+arbitrary directory is a newsgroup.  Strange, but true.
+
+   When `nneething' is presented with a directory, it will scan this
+directory and assign article numbers to each file.  When you enter such
+a group, `nneething' must create "headers" that Gnus can use.  After
+all, Gnus is a newsreader, in case you're forgetting.  `nneething' does
+this in a two-step process.  First, it snoops each file in question.
+If the file looks like an article (i.e., the first few lines look like
+headers), it will use this as the head.  If this is just some arbitrary
+file without a head (e.g. a C source file), `nneething' will cobble up
+a header out of thin air.  It will use file ownership, name and date
+and do whatever it can with these elements.
+
+   All this should happen automatically for you, and you will be
+presented with something that looks very much like a newsgroup.
+Totally like a newsgroup, to be precise.  If you select an article, it
+will be displayed in the article buffer, just as usual.
+
+   If you select a line that represents a directory, Gnus will pop you
+into a new summary buffer for this `nneething' group.  And so on.  You
+can traverse the entire disk this way, if you feel like, but remember
+that Gnus is not dired, really, and does not intend to be, either.
+
+   There are two overall modes to this action--ephemeral or solid.  When
+doing the ephemeral thing (i.e., `G D' from the group buffer), Gnus
+will not store information on what files you have read, and what files
+are new, and so on.  If you create a solid `nneething' group the normal
+way with `G m', Gnus will store a mapping table between article numbers
+and file names, and you can treat this group like any other groups.
+When you activate a solid `nneething' group, you will be told how many
+unread articles it contains, etc., etc.
+
+   Some variables:
+
+`nneething-map-file-directory'
+     All the mapping files for solid `nneething' groups will be stored
+     in this directory, which defaults to `~/.nneething/'.
+
+`nneething-exclude-files'
+     All files that match this regexp will be ignored.  Nice to use to
+     exclude auto-save files and the like, which is what it does by
+     default.
+
+`nneething-include-files'
+     Regexp saying what files to include in the group.  If this
+     variable is non-`nil', only files matching this regexp will be
+     included.
+
+`nneething-map-file'
+     Name of the map files.
+
+
+File: gnus,  Node: Document Groups,  Next: Mail-To-News Gateways,  Prev: Anything Groups,  Up: Other Sources
+
+6.6.3 Document Groups
+---------------------
+
+`nndoc' is a cute little thing that will let you read a single file as
+a newsgroup.  Several files types are supported:
+
+`babyl'
+     The Babyl format.
+
+`mbox'
+     The standard Unix mbox file.
+
+`mmdf'
+     The MMDF mail box format.
+
+`news'
+     Several news articles appended into a file.
+
+`rnews'
+     The rnews batch transport format.
+
+`nsmail'
+     Netscape mail boxes.
+
+`mime-parts'
+     MIME multipart messages.
+
+`standard-digest'
+     The standard (RFC 1153) digest format.
+
+`mime-digest'
+     A MIME digest of messages.
+
+`lanl-gov-announce'
+     Announcement messages from LANL Gov Announce.
+
+`git'
+     `git' commit messages.
+
+`rfc822-forward'
+     A message forwarded according to RFC822.
+
+`outlook'
+     The Outlook mail box.
+
+`oe-dbx'
+     The Outlook Express dbx mail box.
+
+`exim-bounce'
+     A bounce message from the Exim MTA.
+
+`forward'
+     A message forwarded according to informal rules.
+
+`rfc934'
+     An RFC934-forwarded message.
+
+`mailman'
+     A mailman digest.
+
+`clari-briefs'
+     A digest of Clarinet brief news items.
+
+`slack-digest'
+     Non-standard digest format--matches most things, but does it badly.
+
+`mail-in-mail'
+     The last resort.
+
+   You can also use the special "file type" `guess', which means that
+`nndoc' will try to guess what file type it is looking at.  `digest'
+means that `nndoc' should guess what digest type the file is.
+
+   `nndoc' will not try to change the file or insert any extra headers
+into it--it will simply, like, let you use the file as the basis for a
+group.  And that's it.
+
+   If you have some old archived articles that you want to insert into
+your new & spiffy Gnus mail back end, `nndoc' can probably help you with
+that.  Say you have an old `RMAIL' file with mail that you now want to
+split into your new `nnml' groups.  You look at that file using `nndoc'
+(using the `G f' command in the group buffer (*note Foreign Groups::)),
+set the process mark on all the articles in the buffer (`M P b', for
+instance), and then re-spool (`B r') using `nnml'.  If all goes well,
+all the mail in the `RMAIL' file is now also stored in lots of `nnml'
+directories, and you can delete that pesky `RMAIL' file.  If you have
+the guts!
+
+   Virtual server variables:
+
+`nndoc-article-type'
+     This should be one of `mbox', `babyl', `digest', `news', `rnews',
+     `mmdf', `forward', `rfc934', `rfc822-forward', `mime-parts',
+     `standard-digest', `slack-digest', `clari-briefs', `nsmail',
+     `outlook', `oe-dbx', `mailman', and `mail-in-mail' or `guess'.
+
+`nndoc-post-type'
+     This variable says whether Gnus is to consider the group a news
+     group or a mail group.  There are two valid values:  `mail' (the
+     default) and `news'.
+
+* Menu:
+
+* Document Server Internals::   How to add your own document types.
+
+
+File: gnus,  Node: Document Server Internals,  Up: Document Groups
+
+6.6.3.1 Document Server Internals
+.................................
+
+Adding new document types to be recognized by `nndoc' isn't difficult.
+You just have to whip up a definition of what the document looks like,
+write a predicate function to recognize that document type, and then
+hook into `nndoc'.
+
+   First, here's an example document type definition:
+
+     (mmdf
+      (article-begin .  "^\^A\^A\^A\^A\n")
+      (body-end .  "^\^A\^A\^A\^A\n"))
+
+   The definition is simply a unique "name" followed by a series of
+regexp pseudo-variable settings.  Below are the possible
+variables--don't be daunted by the number of variables; most document
+types can be defined with very few settings:
+
+`first-article'
+     If present, `nndoc' will skip past all text until it finds
+     something that match this regexp.  All text before this will be
+     totally ignored.
+
+`article-begin'
+     This setting has to be present in all document type definitions.
+     It says what the beginning of each article looks like.  To do more
+     complicated things that cannot be dealt with a simple regexp, you
+     can use `article-begin-function' instead of this.
+
+`article-begin-function'
+     If present, this should be a function that moves point to the
+     beginning of each article.  This setting overrides `article-begin'.
+
+`head-begin'
+     If present, this should be a regexp that matches the head of the
+     article.  To do more complicated things that cannot be dealt with a
+     simple regexp, you can use `head-begin-function' instead of this.
+
+`head-begin-function'
+     If present, this should be a function that moves point to the head
+     of the article.  This setting overrides `head-begin'.
+
+`head-end'
+     This should match the end of the head of the article.  It defaults
+     to `^$'--the empty line.
+
+`body-begin'
+     This should match the beginning of the body of the article.  It
+     defaults to `^\n'.  To do more complicated things that cannot be
+     dealt with a simple regexp, you can use `body-begin-function'
+     instead of this.
+
+`body-begin-function'
+     If present, this function should move point to the beginning of
+     the body of the article.  This setting overrides `body-begin'.
+
+`body-end'
+     If present, this should match the end of the body of the article.
+     To do more complicated things that cannot be dealt with a simple
+     regexp, you can use `body-end-function' instead of this.
+
+`body-end-function'
+     If present, this function should move point to the end of the body
+     of the article.  This setting overrides `body-end'.
+
+`file-begin'
+     If present, this should match the beginning of the file.  All text
+     before this regexp will be totally ignored.
+
+`file-end'
+     If present, this should match the end of the file.  All text after
+     this regexp will be totally ignored.
+
+
+   So, using these variables `nndoc' is able to dissect a document file
+into a series of articles, each with a head and a body.  However, a few
+more variables are needed since not all document types are all that
+news-like--variables needed to transform the head or the body into
+something that's palatable for Gnus:
+
+`prepare-body-function'
+     If present, this function will be called when requesting an
+     article.  It will be called with point at the start of the body,
+     and is useful if the document has encoded some parts of its
+     contents.
+
+`article-transform-function'
+     If present, this function is called when requesting an article.
+     It's meant to be used for more wide-ranging transformation of both
+     head and body of the article.
+
+`generate-head-function'
+     If present, this function is called to generate a head that Gnus
+     can understand.  It is called with the article number as a
+     parameter, and is expected to generate a nice head for the article
+     in question.  It is called when requesting the headers of all
+     articles.
+
+`generate-article-function'
+     If present, this function is called to generate an entire article
+     that Gnus can understand.  It is called with the article number as
+     a parameter when requesting all articles.
+
+`dissection-function'
+     If present, this function is called to dissect a document by
+     itself, overriding `first-article', `article-begin',
+     `article-begin-function', `head-begin', `head-begin-function',
+     `head-end', `body-begin', `body-begin-function', `body-end',
+     `body-end-function', `file-begin', and `file-end'.
+
+
+   Let's look at the most complicated example I can come up
+with--standard digests:
+
+     (standard-digest
+      (first-article . ,(concat "^" (make-string 70 ?-) "\n\n+"))
+      (article-begin . ,(concat "\n\n" (make-string 30 ?-) "\n\n+"))
+      (prepare-body-function . nndoc-unquote-dashes)
+      (body-end-function . nndoc-digest-body-end)
+      (head-end . "^ ?$")
+      (body-begin . "^ ?\n")
+      (file-end . "^End of .*digest.*[0-9].*\n\\*\\*\\|^End of.*Digest *$")
+      (subtype digest guess))
+
+   We see that all text before a 70-width line of dashes is ignored; all
+text after a line that starts with that `^End of' is also ignored; each
+article begins with a 30-width line of dashes; the line separating the
+head from the body may contain a single space; and that the body is run
+through `nndoc-unquote-dashes' before being delivered.
+
+   To hook your own document definition into `nndoc', use the
+`nndoc-add-type' function.  It takes two parameters--the first is the
+definition itself and the second (optional) parameter says where in the
+document type definition alist to put this definition.  The alist is
+traversed sequentially, and `nndoc-TYPE-type-p' is called for a given
+type TYPE.  So `nndoc-mmdf-type-p' is called to see whether a document
+is of `mmdf' type, and so on.  These type predicates should return
+`nil' if the document is not of the correct type; `t' if it is of the
+correct type; and a number if the document might be of the correct
+type.  A high number means high probability; a low number means low
+probability with `0' being the lowest valid number.
+
+
+File: gnus,  Node: Mail-To-News Gateways,  Next: The Empty Backend,  Prev: Document Groups,  Up: Other Sources
+
+6.6.4 Mail-To-News Gateways
+---------------------------
+
+If your local `nntp' server doesn't allow posting, for some reason or
+other, you can post using one of the numerous mail-to-news gateways.
+The `nngateway' back end provides the interface.
+
+   Note that you can't read anything from this back end--it can only be
+used to post with.
+
+   Server variables:
+
+`nngateway-address'
+     This is the address of the mail-to-news gateway.
+
+`nngateway-header-transformation'
+     News headers often have to be transformed in some odd way or other
+     for the mail-to-news gateway to accept it.  This variable says what
+     transformation should be called, and defaults to
+     `nngateway-simple-header-transformation'.  The function is called
+     narrowed to the headers to be transformed and with one
+     parameter--the gateway address.
+
+     This default function just inserts a new `To' header based on the
+     `Newsgroups' header and the gateway address.  For instance, an
+     article with this `Newsgroups' header:
+
+          Newsgroups: alt.religion.emacs
+
+     will get this `To' header inserted:
+
+          To: alt-religion-emacs@GATEWAY
+
+     The following pre-defined functions exist:
+
+    `nngateway-simple-header-transformation'
+          Creates a `To' header that looks like
+          NEWSGROUP@`nngateway-address'.
+
+    `nngateway-mail2news-header-transformation'
+          Creates a `To' header that looks like `nngateway-address'.
+
+
+   Here's an example:
+
+     (setq gnus-post-method
+           '(nngateway
+             "mail2news@replay.com"
+             (nngateway-header-transformation
+              nngateway-mail2news-header-transformation)))
+
+   So, to use this, simply say something like:
+
+     (setq gnus-post-method '(nngateway "GATEWAY.ADDRESS"))
+
+
+File: gnus,  Node: The Empty Backend,  Prev: Mail-To-News Gateways,  Up: Other Sources
+
+6.6.5 The Empty Backend
+-----------------------
+
+`nnnil' is a backend that can be used as a placeholder if you have to
+specify a backend somewhere, but don't really want to.  The classical
+example is if you don't want to have a primary select methods, but want
+to only use secondary ones:
+
+     (setq gnus-select-method '(nnnil ""))
+     (setq gnus-secondary-select-methods
+           '((nnimap "foo")
+             (nnml "")))
+
+
+File: gnus,  Node: Combined Groups,  Next: Email Based Diary,  Prev: Other Sources,  Up: Select Methods
+
+6.7 Combined Groups
+===================
+
+Gnus allows combining a mixture of all the other group types into bigger
+groups.
+
+* Menu:
+
+* Virtual Groups::              Combining articles from many groups.
+
+
+File: gnus,  Node: Virtual Groups,  Up: Combined Groups
+
+6.7.1 Virtual Groups
+--------------------
+
+An "nnvirtual group" is really nothing more than a collection of other
+groups.
+
+   For instance, if you are tired of reading many small groups, you can
+put them all in one big group, and then grow tired of reading one big,
+unwieldy group.  The joys of computing!
+
+   You specify `nnvirtual' as the method.  The address should be a
+regexp to match component groups.
+
+   All marks in the virtual group will stick to the articles in the
+component groups.  So if you tick an article in a virtual group, the
+article will also be ticked in the component group from whence it came.
+(And vice versa--marks from the component groups will also be shown in
+the virtual group.).  To create an empty virtual group, run `G V'
+(`gnus-group-make-empty-virtual') in the group buffer and edit the
+method regexp with `M-e' (`gnus-group-edit-group-method')
+
+   Here's an example `nnvirtual' method that collects all Andrea Dworkin
+newsgroups into one, big, happy newsgroup:
+
+     (nnvirtual "^alt\\.fan\\.andrea-dworkin$\\|^rec\\.dworkin.*")
+
+   The component groups can be native or foreign; everything should work
+smoothly, but if your computer explodes, it was probably my fault.
+
+   Collecting the same group from several servers might actually be a
+good idea if users have set the Distribution header to limit
+distribution.  If you would like to read `soc.motss' both from a server
+in Japan and a server in Norway, you could use the following as the
+group regexp:
+
+     "^nntp\\+server\\.jp:soc\\.motss$\\|^nntp\\+server\\.no:soc\\.motss$"
+
+   (Remember, though, that if you're creating the group with `G m', you
+shouldn't double the backslashes, and you should leave off the quote
+characters at the beginning and the end of the string.)
+
+   This should work kinda smoothly--all articles from both groups should
+end up in this one, and there should be no duplicates.  Threading (and
+the rest) will still work as usual, but there might be problems with the
+sequence of articles.  Sorting on date might be an option here (*note
+Selecting a Group::).
+
+   One limitation, however--all groups included in a virtual group have
+to be alive (i.e., subscribed or unsubscribed).  Killed or zombie
+groups can't be component groups for `nnvirtual' groups.
+
+   If the `nnvirtual-always-rescan' variable is non-`nil' (which is the
+default), `nnvirtual' will always scan groups for unread articles when
+entering a virtual group.  If this variable is `nil' and you read
+articles in a component group after the virtual group has been
+activated, the read articles from the component group will show up when
+you enter the virtual group.  You'll also see this effect if you have
+two virtual groups that have a component group in common.  If that's
+the case, you should set this variable to `t'.  Or you can just tap
+`M-g' on the virtual group every time before you enter it--it'll have
+much the same effect.
+
+   `nnvirtual' can have both mail and news groups as component groups.
+When responding to articles in `nnvirtual' groups, `nnvirtual' has to
+ask the back end of the component group the article comes from whether
+it is a news or mail back end.  However, when you do a `^', there is
+typically no sure way for the component back end to know this, and in
+that case `nnvirtual' tells Gnus that the article came from a not-news
+back end.  (Just to be on the safe side.)
+
+   `C-c C-n' in the message buffer will insert the `Newsgroups' line
+from the article you respond to in these cases.
+
+   `nnvirtual' groups do not inherit anything but articles and marks
+from component groups--group parameters, for instance, are not
+inherited.
+
+
+File: gnus,  Node: Email Based Diary,  Next: Gnus Unplugged,  Prev: Combined Groups,  Up: Select Methods
+
+6.8 Email Based Diary
+=====================
+
+This section describes a special mail back end called `nndiary', and
+its companion library `gnus-diary'.  It is "special" in the sense that
+it is not meant to be one of the standard alternatives for reading mail
+with Gnus.  See *note Choosing a Mail Back End:: for that.  Instead, it
+is used to treat _some_ of your mails in a special way, namely, as
+event reminders.
+
+   Here is a typical scenario:
+
+   * You've got a date with Andy Mc Dowell or Bruce Willis (select
+     according to your sexual preference) in one month.  You don't want
+     to forget it.
+
+   * So you send a "reminder" message (actually, a diary one) to
+     yourself.
+
+   * You forget all about it and keep on getting and reading new mail,
+     as usual.
+
+   * From time to time, as you type `g' in the group buffer and as the
+     date is getting closer, the message will pop up again to remind
+     you of your appointment, just as if it were new and unread.
+
+   * Read your "new" messages, this one included, and start dreaming
+     again of the night you're gonna have.
+
+   * Once the date is over (you actually fell asleep just after
+     dinner), the message will be automatically deleted if it is marked
+     as expirable.
+
+   The Gnus Diary back end has the ability to handle regular
+appointments (that wouldn't ever be deleted) as well as punctual ones,
+operates as a real mail back end and is configurable in many ways.  All
+of this is explained in the sections below.
+
+* Menu:
+
+* The NNDiary Back End::        Basic setup and usage.
+* The Gnus Diary Library::      Utility toolkit on top of nndiary.
+* Sending or Not Sending::      A final note on sending diary messages.
+
+
+File: gnus,  Node: The NNDiary Back End,  Next: The Gnus Diary Library,  Up: Email Based Diary
+
+6.8.1 The NNDiary Back End
+--------------------------
+
+`nndiary' is a back end very similar to `nnml' (*note Mail Spool::).
+Actually, it could appear as a mix of `nnml' and `nndraft'.  If you
+know `nnml', you're already familiar with the message storing scheme of
+`nndiary': one file per message, one directory per group.
+
+   Before anything, there is one requirement to be able to run
+`nndiary' properly: you _must_ use the group timestamp feature of Gnus.
+This adds a timestamp to each group's parameters.  *note Group
+Timestamp:: to see how it's done.
+
+* Menu:
+
+* Diary Messages::              What makes a message valid for nndiary.
+* Running NNDiary::             NNDiary has two modes of operation.
+* Customizing NNDiary::         Bells and whistles.
+
+
+File: gnus,  Node: Diary Messages,  Next: Running NNDiary,  Up: The NNDiary Back End
+
+6.8.1.1 Diary Messages
+......................
+
+`nndiary' messages are just normal ones, except for the mandatory
+presence of 7 special headers.  These headers are of the form
+`X-Diary-<something>', `<something>' being one of `Minute', `Hour',
+`Dom', `Month', `Year', `Time-Zone' and `Dow'.  `Dom' means "Day of
+Month", and `dow' means "Day of Week".  These headers actually behave
+like crontab specifications and define the event date(s):
+
+   * For all headers except the `Time-Zone' one, a header value is
+     either a star (meaning all possible values), or a list of fields
+     (separated by a comma).
+
+   * A field is either an integer, or a range.
+
+   * A range is two integers separated by a dash.
+
+   * Possible integer values are 0-59 for `Minute', 0-23 for `Hour',
+     1-31 for `Dom', 1-12 for `Month', above 1971 for `Year' and 0-6
+     for `Dow' (0 meaning Sunday).
+
+   * As a special case, a star in either `Dom' or `Dow' doesn't mean
+     "all possible values", but "use only the other field".  Note that
+     if both are star'ed, the use of either one gives the same result.
+
+   * The `Time-Zone' header is special in that it can only have one
+     value (`GMT', for instance).  A star doesn't mean "all possible
+     values" (because it makes no sense), but "the current local time
+     zone".  Most of the time, you'll be using a star here.  However,
+     for a list of available time zone values, see the variable
+     `nndiary-headers'.
+
+   As a concrete example, here are the diary headers to add to your
+message for specifying "Each Monday and each 1st of month, at 12:00,
+20:00, 21:00, 22:00, 23:00 and 24:00, from 1999 to 2010" (I'll let you
+find what to do then):
+
+     X-Diary-Minute: 0
+     X-Diary-Hour: 12, 20-24
+     X-Diary-Dom: 1
+     X-Diary-Month: *
+     X-Diary-Year: 1999-2010
+     X-Diary-Dow: 1
+     X-Diary-Time-Zone: *
+
+
+File: gnus,  Node: Running NNDiary,  Next: Customizing NNDiary,  Prev: Diary Messages,  Up: The NNDiary Back End
+
+6.8.1.2 Running NNDiary
+.......................
+
+`nndiary' has two modes of operation: "traditional" (the default) and
+"autonomous".  In traditional mode, `nndiary' does not get new mail by
+itself.  You have to move (`B m') or copy (`B c') mails from your
+primary mail back end to nndiary groups in order to handle them as
+diary messages.  In autonomous mode, `nndiary' retrieves its own mail
+and handles it independently from your primary mail back end.
+
+   One should note that Gnus is not inherently designed to allow several
+"master" mail back ends at the same time.  However, this does make
+sense with `nndiary': you really want to send and receive diary
+messages to your diary groups directly.  So, `nndiary' supports being
+sort of a "second primary mail back end" (to my knowledge, it is the
+only back end offering this feature).  However, there is a limitation
+(which I hope to fix some day): respooling doesn't work in autonomous
+mode.
+
+   In order to use `nndiary' in autonomous mode, you have several
+things to do:
+
+   * Allow `nndiary' to retrieve new mail by itself.  Put the following
+     line in your `~/.gnus.el' file:
+
+          (setq nndiary-get-new-mail t)
+
+   * You must arrange for diary messages (those containing `X-Diary-*'
+     headers) to be split in a private folder _before_ Gnus treat them.
+     Again, this is needed because Gnus cannot (yet ?) properly handle
+     multiple primary mail back ends.  Getting those messages from a
+     separate source will compensate this misfeature to some extent.
+
+     As an example, here's my procmailrc entry to store diary files in
+     `~/.nndiary' (the default `nndiary' mail source file):
+
+          :0 HD :
+          * ^X-Diary
+          .nndiary
+
+   Once this is done, you might want to customize the following two
+options that affect the diary mail retrieval and splitting processes:
+
+ -- Variable: nndiary-mail-sources
+     This is the diary-specific replacement for the standard
+     `mail-sources' variable.  It obeys the same syntax, and defaults to
+     `(file :path "~/.nndiary")'.
+
+ -- Variable: nndiary-split-methods
+     This is the diary-specific replacement for the standard
+     `nnmail-split-methods' variable.  It obeys the same syntax.
+
+   Finally, you may add a permanent `nndiary' virtual server (something
+like `(nndiary "diary")' should do) to your
+`gnus-secondary-select-methods'.
+
+   Hopefully, almost everything (see the TODO section in `nndiary.el')
+will work as expected when you restart Gnus: in autonomous mode, typing
+`g' and `M-g' in the group buffer, will also get your new diary mails
+and split them according to your diary-specific rules, `F' will find
+your new diary groups etc.
+
+
+File: gnus,  Node: Customizing NNDiary,  Prev: Running NNDiary,  Up: The NNDiary Back End
+
+6.8.1.3 Customizing NNDiary
+...........................
+
+Now that `nndiary' is up and running, it's time to customize it.  The
+custom group is called `nndiary' (no, really ?!).  You should browse it
+to figure out which options you'd like to tweak.  The following two
+variables are probably the only ones you will want to change:
+
+ -- Variable: nndiary-reminders
+     This is the list of times when you want to be reminded of your
+     appointments (e.g. 3 weeks before, then 2 days before, then 1 hour
+     before and that's it).  Remember that "being reminded" means that
+     the diary message will pop up as brand new and unread again when
+     you get new mail.
+
+ -- Variable: nndiary-week-starts-on-monday
+     Rather self-explanatory.  Otherwise, Sunday is assumed (this is the
+     default).
+
+
+File: gnus,  Node: The Gnus Diary Library,  Next: Sending or Not Sending,  Prev: The NNDiary Back End,  Up: Email Based Diary
+
+6.8.2 The Gnus Diary Library
+----------------------------
+
+Using `nndiary' manually (I mean, writing the headers by hand and so
+on) would be rather boring.  Fortunately, there is a library called
+`gnus-diary' written on top of `nndiary', that does many useful things
+for you.
+
+   In order to use it, add the following line to your `~/.gnus.el' file:
+
+     (require 'gnus-diary)
+
+   Also, you shouldn't use any `gnus-user-format-function-[d|D]' (*note
+Summary Buffer Lines::).  `gnus-diary' provides both of these (sorry if
+you used them before).
+
+* Menu:
+
+* Diary Summary Line Format::           A nicer summary buffer line format.
+* Diary Articles Sorting::              A nicer way to sort messages.
+* Diary Headers Generation::            Not doing it manually.
+* Diary Group Parameters::              Not handling them manually.
+
+
+File: gnus,  Node: Diary Summary Line Format,  Next: Diary Articles Sorting,  Up: The Gnus Diary Library
+
+6.8.2.1 Diary Summary Line Format
+.................................
+
+Displaying diary messages in standard summary line format (usually
+something like `From Joe: Subject') is pretty useless.  Most of the
+time, you're the one who wrote the message, and you mostly want to see
+the event's date.
+
+   `gnus-diary' provides two supplemental user formats to be used in
+summary line formats.  `D' corresponds to a formatted time string for
+the next occurrence of the event (e.g. "Sat, Sep 22 01, 12:00"), while
+`d' corresponds to an approximate remaining time until the next
+occurrence of the event (e.g. "in 6 months, 1 week").
+
+   For example, here's how Joe's birthday is displayed in my
+`nndiary+diary:birthdays' summary buffer (note that the message is
+expirable, but will never be deleted, as it specifies a periodic event):
+
+        E  Sat, Sep 22 01, 12:00: Joe's birthday (in 6 months, 1 week)
+
+   In order to get something like the above, you would normally add the
+following line to your diary groups'parameters:
+
+     (gnus-summary-line-format "%U%R%z %uD: %(%s%) (%ud)\n")
+
+   However, `gnus-diary' does it automatically (*note Diary Group
+Parameters::).  You can however customize the provided summary line
+format with the following user options:
+
+ -- Variable: gnus-diary-summary-line-format
+     Defines the summary line format used for diary groups (*note
+     Summary Buffer Lines::).  `gnus-diary' uses it to automatically
+     update the diary groups'parameters.
+
+ -- Variable: gnus-diary-time-format
+     Defines the format to display dates in diary summary buffers.
+     This is used by the `D' user format.  See the docstring for
+     details.
+
+ -- Variable: gnus-diary-delay-format-function
+     Defines the format function to use for displaying delays (remaining
+     times) in diary summary buffers.  This is used by the `d' user
+     format.  There are currently built-in functions for English and
+     French; you can also define your own.  See the docstring for
+     details.
+
+
+File: gnus,  Node: Diary Articles Sorting,  Next: Diary Headers Generation,  Prev: Diary Summary Line Format,  Up: The Gnus Diary Library
+
+6.8.2.2 Diary Articles Sorting
+..............................
+
+`gnus-diary' provides new sorting functions (*note Sorting the Summary
+Buffer:: ) called `gnus-summary-sort-by-schedule',
+`gnus-thread-sort-by-schedule' and `gnus-article-sort-by-schedule'.
+These functions let you organize your diary summary buffers from the
+closest event to the farthest one.
+
+   `gnus-diary' automatically installs `gnus-summary-sort-by-schedule'
+as a menu item in the summary buffer's "sort" menu, and the two others
+as the primary (hence default) sorting functions in the group
+parameters (*note Diary Group Parameters::).
+
+
+File: gnus,  Node: Diary Headers Generation,  Next: Diary Group Parameters,  Prev: Diary Articles Sorting,  Up: The Gnus Diary Library
+
+6.8.2.3 Diary Headers Generation
+................................
+
+`gnus-diary' provides a function called `gnus-diary-check-message' to
+help you handle the `X-Diary-*' headers.  This function ensures that
+the current message contains all the required diary headers, and
+prompts you for values or corrections if needed.
+
+   This function is hooked into the `nndiary' back end, so that moving
+or copying an article to a diary group will trigger it automatically.
+It is also bound to `C-c C-f d' in `message-mode' and
+`article-edit-mode' in order to ease the process of converting a usual
+mail to a diary one.
+
+   This function takes a prefix argument which will force prompting of
+all diary headers, regardless of their presence or validity.  That way,
+you can very easily reschedule an already valid diary message, for
+instance.
+
+
+File: gnus,  Node: Diary Group Parameters,  Prev: Diary Headers Generation,  Up: The Gnus Diary Library
+
+6.8.2.4 Diary Group Parameters
+..............................
+
+When you create a new diary group, or visit one, `gnus-diary'
+automatically checks your group parameters and if needed, sets the
+summary line format to the diary-specific value, installs the
+diary-specific sorting functions, and also adds the different
+`X-Diary-*' headers to the group's posting-style.  It is then easier to
+send a diary message, because if you use `C-u a' or `C-u m' on a diary
+group to prepare a message, these headers will be inserted
+automatically (although not filled with proper values yet).
+
+
+File: gnus,  Node: Sending or Not Sending,  Prev: The Gnus Diary Library,  Up: Email Based Diary
+
+6.8.3 Sending or Not Sending
+----------------------------
+
+Well, assuming you've read all of the above, here are two final notes on
+mail sending with `nndiary':
+
+   * `nndiary' is a _real_ mail back end.  You really send real diary
+     messages for real.  This means for instance that you can give
+     appointments to anybody (provided they use Gnus and `nndiary') by
+     sending the diary message to them as well.
+
+   * However, since `nndiary' also has a `request-post' method, you can
+     also use `C-u a' instead of `C-u m' on a diary group and the
+     message won't actually be sent; just stored locally in the group.
+     This comes in very handy for private appointments.
+
+
+File: gnus,  Node: Gnus Unplugged,  Prev: Email Based Diary,  Up: Select Methods
+
+6.9 Gnus Unplugged
+==================
+
+In olden times (ca. February '88), people used to run their newsreaders
+on big machines with permanent connections to the net.  News transport
+was dealt with by news servers, and all the newsreaders had to do was to
+read news.  Believe it or not.
+
+   Nowadays most people read news and mail at home, and use some sort of
+modem to connect to the net.  To avoid running up huge phone bills, it
+would be nice to have a way to slurp down all the news and mail, hang up
+the phone, read for several hours, and then upload any responses you
+have to make.  And then you repeat the procedure.
+
+   Of course, you can use news servers for doing this as well.  I've
+used `inn' together with `slurp', `pop' and `sendmail' for some years,
+but doing that's a bore.  Moving the news server functionality up to
+the newsreader makes sense if you're the only person reading news on a
+machine.
+
+   Setting up Gnus as an "offline" newsreader is quite simple.  In
+fact, you don't have to configure anything as the agent is now enabled
+by default (*note gnus-agent: Agent Variables.).
+
+   Of course, to use it as such, you have to learn a few new commands.
+
+* Menu:
+
+* Agent Basics::                How it all is supposed to work.
+* Agent Categories::            How to tell the Gnus Agent what to download.
+* Agent Commands::              New commands for all the buffers.
+* Agent Visuals::               Ways that the agent may effect your summary buffer.
+* Agent as Cache::              The Agent is a big cache too.
+* Agent Expiry::                How to make old articles go away.
+* Agent Regeneration::          How to recover from lost connections and other accidents.
+* Agent and flags::             How the Agent maintains flags.
+* Agent and IMAP::              How to use the Agent with IMAP.
+* Outgoing Messages::           What happens when you post/mail something?
+* Agent Variables::             Customizing is fun.
+* Example Setup::               An example `~/.gnus.el' file for offline people.
+* Batching Agents::             How to fetch news from a `cron' job.
+* Agent Caveats::               What you think it'll do and what it does.
+
+
+File: gnus,  Node: Agent Basics,  Next: Agent Categories,  Up: Gnus Unplugged
+
+6.9.1 Agent Basics
+------------------
+
+First, let's get some terminology out of the way.
+
+   The Gnus Agent is said to be "unplugged" when you have severed the
+connection to the net (and notified the Agent that this is the case).
+When the connection to the net is up again (and Gnus knows this), the
+Agent is "plugged".
+
+   The "local" machine is the one you're running on, and which isn't
+connected to the net continuously.
+
+   "Downloading" means fetching things from the net to your local
+machine.  "Uploading" is doing the opposite.
+
+   You know that Gnus gives you all the opportunity you'd ever want for
+shooting yourself in the foot.  Some people call it flexibility.  Gnus
+is also customizable to a great extent, which means that the user has a
+say on how Gnus behaves.  Other newsreaders might unconditionally shoot
+you in your foot, but with Gnus, you have a choice!
+
+   Gnus is never really in plugged or unplugged state.  Rather, it
+applies that state to each server individually.  This means that some
+servers can be plugged while others can be unplugged.  Additionally,
+some servers can be ignored by the Agent altogether (which means that
+they're kinda like plugged always).
+
+   So when you unplug the Agent and then wonder why is Gnus opening a
+connection to the Net, the next step to do is to look whether all
+servers are agentized.  If there is an unagentized server, you found
+the culprit.
+
+   Another thing is the "offline" state.  Sometimes, servers aren't
+reachable.  When Gnus notices this, it asks you whether you want the
+server to be switched to offline state.  If you say yes, then the
+server will behave somewhat as if it was unplugged, except that Gnus
+will ask you whether you want to switch it back online again.
+
+   Let's take a typical Gnus session using the Agent.
+
+   * You start Gnus with `gnus-unplugged'.  This brings up the Gnus
+     Agent in a disconnected state.  You can read all the news that you
+     have already fetched while in this mode.
+
+   * You then decide to see whether any new news has arrived.  You
+     connect your machine to the net (using PPP or whatever), and then
+     hit `J j' to make Gnus become "plugged" and use `g' to check for
+     new mail as usual.  To check for new mail in unplugged mode (*note
+     Mail Source Specifiers::).
+
+   * You can then read the new news immediately, or you can download the
+     news onto your local machine.  If you want to do the latter, you
+     press `g' to check if there are any new news and then `J s' to
+     fetch all the eligible articles in all the groups.  (To let Gnus
+     know which articles you want to download, *note Agent
+     Categories::).
+
+   * After fetching the articles, you press `J j' to make Gnus become
+     unplugged again, and you shut down the PPP thing (or whatever).
+     And then you read the news offline.
+
+   * And then you go to step 2.
+
+   Here are some things you should do the first time (or so) that you
+use the Agent.
+
+   * Decide which servers should be covered by the Agent.  If you have
+     a mail back end, it would probably be nonsensical to have it
+     covered by the Agent.  Go to the server buffer (`^' in the group
+     buffer) and press `J a' on the server (or servers) that you wish
+     to have covered by the Agent (*note Server Agent Commands::), or
+     `J r' on automatically added servers you do not wish to have
+     covered by the Agent.  By default, no servers are agentized.
+
+   * Decide on download policy.  It's fairly simple once you decide
+     whether you are going to use agent categories, topic parameters,
+     and/or group parameters to implement your policy.  If you're new
+     to gnus, it is probably best to start with a category, *Note Agent
+     Categories::.
+
+     Both topic parameters (*note Topic Parameters::) and agent
+     categories (*note Agent Categories::) provide for setting a policy
+     that applies to multiple groups.  Which you use is entirely up to
+     you.  Topic parameters do override categories so, if you mix the
+     two, you'll have to take that into account.  If you have a few
+     groups that deviate from your policy, you can use group parameters
+     (*note Group Parameters::) to configure them.
+
+   * Uhm... that's it.
+
+
+File: gnus,  Node: Agent Categories,  Next: Agent Commands,  Prev: Agent Basics,  Up: Gnus Unplugged
+
+6.9.2 Agent Categories
+----------------------
+
+One of the main reasons to integrate the news transport layer into the
+newsreader is to allow greater control over what articles to download.
+There's not much point in downloading huge amounts of articles, just to
+find out that you're not interested in reading any of them.  It's better
+to be somewhat more conservative in choosing what to download, and then
+mark the articles for downloading manually if it should turn out that
+you're interested in the articles anyway.
+
+   One of the more effective methods for controlling what is to be
+downloaded is to create a "category" and then assign some (or all)
+groups to this category.  Groups that do not belong in any other
+category belong to the `default' category.  Gnus has its own buffer for
+creating and managing categories.
+
+   If you prefer, you can also use group parameters (*note Group
+Parameters::) and topic parameters (*note Topic Parameters::) for an
+alternative approach to controlling the agent.  The only real
+difference is that categories are specific to the agent (so there is
+less to learn) while group and topic parameters include the kitchen
+sink.
+
+   Since you can set agent parameters in several different places we
+have a rule to decide which source to believe.  This rule specifies that
+the parameter sources are checked in the following order: group
+parameters, topic parameters, agent category, and finally customizable
+variables.  So you can mix all of these sources to produce a wide range
+of behavior, just don't blame me if you don't remember where you put
+your settings.
+
+* Menu:
+
+* Category Syntax::             What a category looks like.
+* Category Buffer::             A buffer for maintaining categories.
+* Category Variables::          Customize'r'Us.
+
+
+File: gnus,  Node: Category Syntax,  Next: Category Buffer,  Up: Agent Categories
+
+6.9.2.1 Category Syntax
+.......................
+
+A category consists of a name, the list of groups belonging to the
+category, and a number of optional parameters that override the
+customizable variables.  The complete list of agent parameters are
+listed below.
+
+`agent-groups'
+     The list of groups that are in this category.
+
+`agent-predicate'
+     A predicate which (generally) gives a rough outline of which
+     articles are eligible for downloading; and
+
+`agent-score'
+     a score rule which (generally) gives you a finer granularity when
+     deciding what articles to download.  (Note that this "download
+     score" is not necessarily related to normal scores.)
+
+`agent-enable-expiration'
+     a boolean indicating whether the agent should expire old articles
+     in this group.  Most groups should be expired to conserve disk
+     space.  In fact, its probably safe to say that the gnus.*
+     hierarchy contains the only groups that should not be expired.
+
+`agent-days-until-old'
+     an integer indicating the number of days that the agent should wait
+     before deciding that a read article is safe to expire.
+
+`agent-low-score'
+     an integer that overrides the value of `gnus-agent-low-score'.
+
+`agent-high-score'
+     an integer that overrides the value of `gnus-agent-high-score'.
+
+`agent-short-article'
+     an integer that overrides the value of `gnus-agent-short-article'.
+
+`agent-long-article'
+     an integer that overrides the value of `gnus-agent-long-article'.
+
+`agent-enable-undownloaded-faces'
+     a symbol indicating whether the summary buffer should display
+     undownloaded articles using the `gnus-summary-*-undownloaded-face'
+     faces.  Any symbol other than `nil' will enable the use of
+     undownloaded faces.
+
+   The name of a category can not be changed once the category has been
+created.
+
+   Each category maintains a list of groups that are exclusive members
+of that category.  The exclusivity rule is automatically enforced, add a
+group to a new category and it is automatically removed from its old
+category.
+
+   A predicate in its simplest form can be a single predicate such as
+`true' or `false'.  These two will download every available article or
+nothing respectively.  In the case of these two special predicates an
+additional score rule is superfluous.
+
+   Predicates of `high' or `low' download articles in respect of their
+scores in relationship to `gnus-agent-high-score' and
+`gnus-agent-low-score' as described below.
+
+   To gain even finer control of what is to be regarded eligible for
+download a predicate can consist of a number of predicates with logical
+operators sprinkled in between.
+
+   Perhaps some examples are in order.
+
+   Here's a simple predicate.  (It's the default predicate, in fact,
+used for all groups that don't belong to any other category.)
+
+     short
+
+   Quite simple, eh?  This predicate is true if and only if the article
+is short (for some value of "short").
+
+   Here's a more complex predicate:
+
+     (or high
+         (and
+          (not low)
+          (not long)))
+
+   This means that an article should be downloaded if it has a high
+score, or if the score is not low and the article is not long.  You get
+the drift.
+
+   The available logical operators are `or', `and' and `not'.  (If you
+prefer, you can use the more "C"-ish operators `|', `&' and `!'
+instead.)
+
+   The following predicates are pre-defined, but if none of these fit
+what you want to do, you can write your own.
+
+   When evaluating each of these predicates, the named constant will be
+bound to the value determined by calling `gnus-agent-find-parameter' on
+the appropriate parameter.  For example, gnus-agent-short-article will
+be bound to `(gnus-agent-find-parameter group 'agent-short-article)'.
+This means that you can specify a predicate in your category then tune
+that predicate to individual groups.
+
+`short'
+     True if the article is shorter than `gnus-agent-short-article'
+     lines; default 100.
+
+`long'
+     True if the article is longer than `gnus-agent-long-article'
+     lines; default 200.
+
+`low'
+     True if the article has a download score less than
+     `gnus-agent-low-score'; default 0.
+
+`high'
+     True if the article has a download score greater than
+     `gnus-agent-high-score'; default 0.
+
+`spam'
+     True if the Gnus Agent guesses that the article is spam.  The
+     heuristics may change over time, but at present it just computes a
+     checksum and sees whether articles match.
+
+`true'
+     Always true.
+
+`false'
+     Always false.
+
+   If you want to create your own predicate function, here's what you
+have to know:  The functions are called with no parameters, but the
+`gnus-headers' and `gnus-score' dynamic variables are bound to useful
+values.
+
+   For example, you could decide that you don't want to download
+articles that were posted more than a certain number of days ago (e.g.
+posted more than `gnus-agent-expire-days' ago) you might write a
+function something along the lines of the following:
+
+     (defun my-article-old-p ()
+       "Say whether an article is old."
+       (< (time-to-days (date-to-time (mail-header-date gnus-headers)))
+          (- (time-to-days (current-time)) gnus-agent-expire-days)))
+
+   with the predicate then defined as:
+
+     (not my-article-old-p)
+
+   or you could append your predicate to the predefined
+`gnus-category-predicate-alist' in your `~/.gnus.el' or wherever.
+
+     (require 'gnus-agent)
+     (setq  gnus-category-predicate-alist
+       (append gnus-category-predicate-alist
+              '((old . my-article-old-p))))
+
+   and simply specify your predicate as:
+
+     (not old)
+
+   If/when using something like the above, be aware that there are many
+misconfigured systems/mailers out there and so an article's date is not
+always a reliable indication of when it was posted.  Hell, some people
+just don't give a damn.
+
+   The above predicates apply to _all_ the groups which belong to the
+category.  However, if you wish to have a specific predicate for an
+individual group within a category, or you're just too lazy to set up a
+new category, you can enter a group's individual predicate in its group
+parameters like so:
+
+     (agent-predicate . short)
+
+   This is the group/topic parameter equivalent of the agent category
+default.  Note that when specifying a single word predicate like this,
+the `agent-predicate' specification must be in dotted pair notation.
+
+   The equivalent of the longer example from above would be:
+
+     (agent-predicate or high (and (not low) (not long)))
+
+   The outer parenthesis required in the category specification are not
+entered here as, not being in dotted pair notation, the value of the
+predicate is assumed to be a list.
+
+   Now, the syntax of the download score is the same as the syntax of
+normal score files, except that all elements that require actually
+seeing the article itself are verboten.  This means that only the
+following headers can be scored on: `Subject', `From', `Date',
+`Message-ID', `References', `Chars', `Lines', and `Xref'.
+
+   As with predicates, the specification of the `download score rule'
+to use in respect of a group can be in either the category definition if
+it's to be applicable to all groups in therein, or a group's parameters
+if it's to be specific to that group.
+
+   In both of these places the `download score rule' can take one of
+three forms:
+
+  1. Score rule
+
+     This has the same syntax as a normal Gnus score file except only a
+     subset of scoring keywords are available as mentioned above.
+
+     example:
+
+        * Category specification
+
+               (("from"
+                      ("Lars Ingebrigtsen" 1000000 nil s))
+               ("lines"
+                      (500 -100 nil <)))
+
+        * Group/Topic Parameter specification
+
+               (agent-score ("from"
+                                  ("Lars Ingebrigtsen" 1000000 nil s))
+                            ("lines"
+                                  (500 -100 nil <)))
+
+          Again, note the omission of the outermost parenthesis here.
+
+  2. Agent score file
+
+     These score files must _only_ contain the permitted scoring
+     keywords stated above.
+
+     example:
+
+        * Category specification
+
+               ("~/News/agent.SCORE")
+
+          or perhaps
+
+               ("~/News/agent.SCORE" "~/News/agent.group.SCORE")
+
+        * Group Parameter specification
+
+               (agent-score "~/News/agent.SCORE")
+
+          Additional score files can be specified as above.  Need I say
+          anything about parenthesis?
+
+  3. Use `normal' score files
+
+     If you don't want to maintain two sets of scoring rules for a
+     group, and your desired `downloading' criteria for a group are the
+     same as your `reading' criteria then you can tell the agent to
+     refer to your `normal' score files when deciding what to download.
+
+     These directives in either the category definition or a group's
+     parameters will cause the agent to read in all the applicable score
+     files for a group, _filtering out_ those sections that do not
+     relate to one of the permitted subset of scoring keywords.
+
+        * Category Specification
+
+               file
+
+        * Group Parameter specification
+
+               (agent-score . file)
+
+
+File: gnus,  Node: Category Buffer,  Next: Category Variables,  Prev: Category Syntax,  Up: Agent Categories
+
+6.9.2.2 Category Buffer
+.......................
+
+You'd normally do all category maintenance from the category buffer.
+When you enter it for the first time (with the `J c' command from the
+group buffer), you'll only see the `default' category.
+
+   The following commands are available in this buffer:
+
+`q'
+     Return to the group buffer (`gnus-category-exit').
+
+`e'
+     Use a customization buffer to set all of the selected category's
+     parameters at one time (`gnus-category-customize-category').
+
+`k'
+     Kill the current category (`gnus-category-kill').
+
+`c'
+     Copy the current category (`gnus-category-copy').
+
+`a'
+     Add a new category (`gnus-category-add').
+
+`p'
+     Edit the predicate of the current category
+     (`gnus-category-edit-predicate').
+
+`g'
+     Edit the list of groups belonging to the current category
+     (`gnus-category-edit-groups').
+
+`s'
+     Edit the download score rule of the current category
+     (`gnus-category-edit-score').
+
+`l'
+     List all the categories (`gnus-category-list').
+
+
+File: gnus,  Node: Category Variables,  Prev: Category Buffer,  Up: Agent Categories
+
+6.9.2.3 Category Variables
+..........................
+
+`gnus-category-mode-hook'
+     Hook run in category buffers.
+
+`gnus-category-line-format'
+     Format of the lines in the category buffer (*note Formatting
+     Variables::).  Valid elements are:
+
+    `c'
+          The name of the category.
+
+    `g'
+          The number of groups in the category.
+
+`gnus-category-mode-line-format'
+     Format of the category mode line (*note Mode Line Formatting::).
+
+`gnus-agent-short-article'
+     Articles that have fewer lines than this are short.  Default 100.
+
+`gnus-agent-long-article'
+     Articles that have more lines than this are long.  Default 200.
+
+`gnus-agent-low-score'
+     Articles that have a score lower than this have a low score.
+     Default 0.
+
+`gnus-agent-high-score'
+     Articles that have a score higher than this have a high score.
+     Default 0.
+
+`gnus-agent-expire-days'
+     The number of days that a `read' article must stay in the agent's
+     local disk before becoming eligible for expiration (While the name
+     is the same, this doesn't mean expiring the article on the server.
+     It just means deleting the local copy of the article).  What is
+     also important to understand is that the counter starts with the
+     time the article was written to the local disk and not the time
+     the article was read.  Default 7.
+
+`gnus-agent-enable-expiration'
+     Determines whether articles in a group are, by default, expired or
+     retained indefinitely.  The default is `ENABLE' which means that
+     you'll have to disable expiration when desired.  On the other hand,
+     you could set this to `DISABLE'.  In that case, you would then
+     have to enable expiration in selected groups.
+
 
 
 

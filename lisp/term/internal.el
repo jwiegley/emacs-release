@@ -1,7 +1,7 @@
 ;;; internal.el --- support for PC internal terminal
 
-;; Copyright (C) 1993, 1994, 1998, 1999, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1993-1994, 1998-1999, 2001-2012
+;;   Free Software Foundation, Inc.
 
 ;; Author: Morten Welinder <terra@diku.dk>
 
@@ -68,7 +68,7 @@
 ;;   MULE charset, Emacs can display a single MULE charset with the
 ;;   glyphs of the current codepage.  When Emacs starts on DOS, it
 ;;   automatically sets its default coding systems for file I/O and
-;;   terminal output according to the currend DOS codepage, given by
+;;   terminal output according to the current DOS codepage, given by
 ;;   the `dos-codepage' variable.
 ;;
 ;;   This leaves us with the problem of displaying character sets
@@ -604,5 +604,4 @@ list.  You can (and should) also run it if and when the value of
     (run-hooks 'dos-codepage-setup-hook)
     ))
 
-;; arch-tag: eea04c06-7311-4b5a-b531-3c1be1b070af
 ;;; internal.el ends here

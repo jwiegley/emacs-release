@@ -1,12 +1,10 @@
-This is ../../info/elisp, produced by makeinfo version 4.13 from
-elisp.texi.
+This is /home/cyd/emacs/doc/lispref/../../info/elisp, produced by
+makeinfo version 4.13 from /home/cyd/emacs/doc/lispref/elisp.texi.
 
-This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.4.
+This is the `GNU Emacs Lisp Reference Manual' corresponding to Emacs
+version 24.1.
 
-   Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
-2012  Free Software Foundation, Inc.
+Copyright (C) 1990-1996, 1998-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -25,6 +23,92 @@ INFO-DIR-SECTION GNU Emacs Lisp
 START-INFO-DIR-ENTRY
 * Elisp: (elisp).       The Emacs Lisp Reference Manual.
 END-INFO-DIR-ENTRY
+
+
+File: elisp,  Node: Simple Types,  Next: Composite Types,  Up: Customization Types
+
+14.4.1 Simple Types
+-------------------
+
+This section describes all the simple customization types.  For several
+of these customization types, the customization widget provides inline
+completion with `C-M-i' or `M-<TAB>'.
+
+`sexp'
+     The value may be any Lisp object that can be printed and read back.
+     You can use `sexp' as a fall-back for any option, if you don't
+     want to take the time to work out a more specific type to use.
+
+`integer'
+     The value must be an integer.
+
+`number'
+     The value must be a number (floating point or integer).
+
+`float'
+     The value must be a floating point number.
+
+`string'
+     The value must be a string.  The customization buffer shows the
+     string without delimiting `"' characters or `\' quotes.
+
+`regexp'
+     Like `string' except that the string must be a valid regular
+     expression.
+
+`character'
+     The value must be a character code.  A character code is actually
+     an integer, but this type shows the value by inserting the
+     character in the buffer, rather than by showing the number.
+
+`file'
+     The value must be a file name.  The widget provides completion.
+
+`(file :must-match t)'
+     The value must be a file name for an existing file.  The widget
+     provides completion.
+
+`directory'
+     The value must be a directory name.  The widget provides
+     completion.
+
+`hook'
+     The value must be a list of functions.  This customization type is
+     used for hook variables.  You can use the `:options' keyword in a
+     hook variable's `defcustom' to specify a list of functions
+     recommended for use in the hook; *Note Variable Definitions::.
+
+`symbol'
+     The value must be a symbol.  It appears in the customization
+     buffer as the symbol name.  The widget provides completion.
+
+`function'
+     The value must be either a lambda expression or a function name.
+     The widget provides completion for function names.
+
+`variable'
+     The value must be a variable name.  The widget provides completion.
+
+`face'
+     The value must be a symbol which is a face name.  The widget
+     provides completion.
+
+`boolean'
+     The value is boolean--either `nil' or `t'.  Note that by using
+     `choice' and `const' together (see the next section), you can
+     specify that the value must be `nil' or `t', but also specify the
+     text to describe each value in a way that fits the specific
+     meaning of the alternative.
+
+`coding-system'
+     The value must be a coding-system name, and you can do completion
+     with `M-<TAB>'.
+
+`color'
+     The value must be a valid color name.  The widget provides
+     completion for color names, as well as a sample and a button for
+     selecting a color name from a list of color names shown in a
+     `*Colors*' buffer.
 
 
 File: elisp,  Node: Composite Types,  Next: Splicing into Lists,  Prev: Simple Types,  Up: Customization Types
@@ -52,9 +136,8 @@ composite types:
      CDR must fit CDR-TYPE.  For example, `(cons string symbol)' is a
      customization type which matches values such as `("foo" . foo)'.
 
-     In the customization buffer, the CAR and the CDR are displayed and
-     edited separately, each according to the type that you specify for
-     it.
+     In the customization buffer, the CAR and CDR are displayed and
+     edited separately, each according to their specified type.
 
 `(list ELEMENT-TYPES...)'
      The value must be a list with exactly as many elements as the
@@ -97,7 +180,7 @@ composite types:
 
      The argument to the `:options' keywords should be a list of
      specifications for reasonable keys in the alist.  Ordinarily, they
-     are simply atoms, which stand for themselves as.  For example:
+     are simply atoms, which stand for themselves.  For example:
 
           :options '("foo" "bar" "baz")
 
@@ -156,14 +239,6 @@ composite types:
           Each element has the form (NAME AGE MALE-FLAG)."
             :type '(alist :value-type (group integer boolean)))
 
-          (defcustom pets '(("brian")
-                            ("dorith" "dog" "guppy")
-                            ("ken" "cat"))
-            "Alist of people's pets.
-          In an element (KEY . VALUE), KEY is the person's name,
-          and the VALUE is a list of that person's pets."
-            :type '(alist :value-type (repeat string)))
-
 `(plist :key-type KEY-TYPE :value-type VALUE-TYPE)'
      This customization type is similar to `alist' (see above), except
      that (i) the information is stored as a property list, (*note
@@ -171,9 +246,8 @@ composite types:
      `symbol' rather than `sexp'.
 
 `(choice ALTERNATIVE-TYPES...)'
-     The value must fit at least one of ALTERNATIVE-TYPES.  For
-     example, `(choice integer string)' allows either an integer or a
-     string.
+     The value must fit one of ALTERNATIVE-TYPES.  For example,
+     `(choice integer string)' allows either an integer or a string.
 
      In the customization buffer, the user selects an alternative using
      a menu, and can then edit the value in the usual way for that
@@ -227,7 +301,7 @@ composite types:
                   (const :tag "Ask" foo))
 
      describes a variable for which `t' means yes, `nil' means no, and
-     `foo' means "ask."
+     `foo' means "ask".
 
 `(other VALUE)'
      This alternative can match any Lisp value, but if the user chooses
@@ -241,7 +315,7 @@ composite types:
                   (other :tag "Ask" foo))
 
      describes a variable for which `t' means yes, `nil' means no, and
-     anything else means "ask."  If the user chooses `Ask' from the
+     anything else means "ask".  If the user chooses `Ask' from the
      menu of alternatives, that specifies the value `foo'; but any
      other value (not `t', `nil' or `foo') displays as `Ask', just like
      `foo'.
@@ -339,20 +413,16 @@ File: elisp,  Node: Splicing into Lists,  Next: Type Keywords,  Prev: Composite 
 --------------------------
 
 The `:inline' feature lets you splice a variable number of elements
-into the middle of a list or vector.  You use it in a `set', `choice'
-or `repeat' type which appears among the element-types of a `list' or
-`vector'.
+into the middle of a `list' or `vector' customization type.  You use it
+by adding `:inline t' to a type specification which is contained in a
+`list' or `vector' specification.
 
-   Normally, each of the element-types in a `list' or `vector'
-describes one and only one element of the list or vector.  Thus, if an
-element-type is a `repeat', that specifies a list of unspecified length
-which appears as one element.
-
-   But when the element-type uses `:inline', the value it matches is
-merged directly into the containing sequence.  For example, if it
-matches a list with three elements, those become three elements of the
-overall sequence.  This is analogous to using `,@' in the backquote
-construct.
+   Normally, each entry in a `list' or `vector' type specification
+describes a single element type.  But when an entry contains `:inline
+t', the value it matches is merged directly into the containing
+sequence.  For example, if the entry matches a list with three
+elements, those become three elements of the overall sequence.  This is
+analogous to `,@' in a backquote construct (*note Backquote::).
 
    For example, to specify a list whose first element must be `baz' and
 whose remaining arguments should be zero or more of `foo' and `bar',
@@ -389,16 +459,18 @@ type name symbol.  Here are the keywords you can use, and their
 meanings:
 
 `:value DEFAULT'
-     This is used for a type that appears as an alternative inside of
+     Provide a default value.
+
+     If `nil' is not a valid value for the alternative, then it is
+     essential to specify a valid default with `:value'.
+
+     If you use this for a type that appears as an alternative inside of
      `choice'; it specifies the default value to use, at first, if and
      when the user selects this alternative with the menu in the
      customization buffer.
 
      Of course, if the actual value of the option fits this
      alternative, it will appear showing the actual value, not DEFAULT.
-
-     If `nil' is not a valid value for the alternative, then it is
-     essential to specify a valid default with `:value'.
 
 `:format FORMAT-STRING'
      This string will be inserted in the buffer to represent the value
@@ -565,6 +637,147 @@ recursion.  The `lazy' widget prevents the recursion: it convert its
 `:type' argument only when needed.
 
 
+File: elisp,  Node: Applying Customizations,  Next: Custom Themes,  Prev: Customization Types,  Up: Customization
+
+14.5 Applying Customizations
+============================
+
+The following functions are responsible for installing the user's
+customization settings for variables and faces, respectively.  When the
+user invokes `Save for future sessions' in the Customize interface,
+that takes effect by writing a `custom-set-variables' and/or a
+`custom-set-faces' form into the custom file, to be evaluated the next
+time Emacs starts.
+
+ -- Function: custom-set-variables &rest args
+     This function installs the variable customizations specified by
+     ARGS.  Each argument in ARGS should have the form
+
+          (VAR EXPRESSION [NOW [REQUEST [COMMENT]]])
+
+     VAR is a variable name (a symbol), and EXPRESSION is an expression
+     which evaluates to the desired customized value.
+
+     If the `defcustom' form for VAR has been evaluated prior to this
+     `custom-set-variables' call, EXPRESSION is immediately evaluated,
+     and the variable's value is set to the result.  Otherwise,
+     EXPRESSION is stored into the variable's `saved-value' property,
+     to be evaluated when the relevant `defcustom' is called (usually
+     when the library defining that variable is loaded into Emacs).
+
+     The NOW, REQUEST, and COMMENT entries are for internal use only,
+     and may be omitted.  NOW, if non-`nil', means to set the
+     variable's value now, even if the variable's `defcustom' form has
+     not been evaluated.  REQUEST is a list of features to be loaded
+     immediately (*note Named Features::).  COMMENT is a string
+     describing the customization.
+
+ -- Function: custom-set-faces &rest args
+     This function installs the face customizations specified by ARGS.
+     Each argument in ARGS should have the form
+
+          (FACE SPEC [NOW [COMMENT]])
+
+     FACE is a face name (a symbol), and SPEC is the customized face
+     specification for that face (*note Defining Faces::).
+
+     The NOW and COMMENT entries are for internal use only, and may be
+     omitted.  NOW, if non-`nil', means to install the face
+     specification now, even if the `defface' form has not been
+     evaluated.  COMMENT is a string describing the customization.
+
+
+File: elisp,  Node: Custom Themes,  Prev: Applying Customizations,  Up: Customization
+
+14.6 Custom Themes
+==================
+
+"Custom themes" are collections of settings that can be enabled or
+disabled as a unit.  *Note Custom Themes: (emacs)Custom Themes.  Each
+Custom theme is defined by an Emacs Lisp source file, which should
+follow the conventions described in this section.  (Instead of writing
+a Custom theme by hand, you can also create one using a Customize-like
+interface; *note Creating Custom Themes: (emacs)Creating Custom Themes.)
+
+   A Custom theme file should be named `FOO-theme.el', where FOO is the
+theme name.  The first Lisp form in the file should be a call to
+`deftheme', and the last form should be a call to `provide-theme'.
+
+ -- Macro: deftheme theme &optional doc
+     This macro declares THEME (a symbol) as the name of a Custom
+     theme.  The optional argument DOC should be a string describing
+     the theme; this is the description shown when the user invokes the
+     `describe-theme' command or types `?' in the `*Custom Themes*'
+     buffer.
+
+     Two special theme names are disallowed (using them causes an
+     error): `user' is a "dummy" theme that stores the user's direct
+     customization settings, and `changed' is a "dummy" theme that
+     stores changes made outside of the Customize system.
+
+ -- Macro: provide-theme theme
+     This macro declares that the theme named THEME has been fully
+     specified.
+
+   In between `deftheme' and `provide-theme' are Lisp forms specifying
+the theme settings: usually a call to `custom-theme-set-variables'
+and/or a call to `custom-theme-set-faces'.
+
+ -- Function: custom-theme-set-variables theme &rest args
+     This function specifies the Custom theme THEME's variable
+     settings.  THEME should be a symbol.  Each argument in ARGS should
+     be a list of the form
+
+          (VAR EXPRESSION [NOW [REQUEST [COMMENT]]])
+
+     where the list entries have the same meanings as in
+     `custom-set-variables'.  *Note Applying Customizations::.
+
+ -- Function: custom-theme-set-faces theme &rest args
+     This function specifies the Custom theme THEME's face settings.
+     THEME should be a symbol.  Each argument in ARGS should be a list
+     of the form
+
+          (FACE SPEC [NOW [COMMENT]])
+
+     where the list entries have the same meanings as in
+     `custom-set-faces'.  *Note Applying Customizations::.
+
+   In theory, a theme file can also contain other Lisp forms, which
+would be evaluated when loading the theme, but that is "bad form".  To
+protect against loading themes containing malicious code, Emacs
+displays the source file and asks for confirmation from the user before
+loading any non-built-in theme for the first time.
+
+   The following functions are useful for programmatically enabling and
+disabling themes:
+
+ -- Function: custom-theme-p theme
+     This function return a non-`nil' value if THEME (a symbol) is the
+     name of a Custom theme (i.e. a Custom theme which has been loaded
+     into Emacs, whether or not the theme is enabled).  Otherwise, it
+     returns `nil'.
+
+ -- Command: load-theme theme &optional no-confirm no-enable
+     This function loads the Custom theme named THEME from its source
+     file, looking for the source file in the directories specified by
+     the variable `custom-theme-load-path'.  *Note Custom Themes:
+     (emacs)Custom Themes.  It also "enables" the theme (unless the
+     optional argument NO-ENABLE is non-`nil'), causing its variable
+     and face settings to take effect.  It prompts the user for
+     confirmation before loading the theme, unless the optional argument
+     NO-CONFIRM is non-`nil'.
+
+ -- Command: enable-theme theme
+     This function enables the Custom theme named THEME.  It signals an
+     error if no such theme has been loaded.
+
+ -- Command: disable-theme theme
+     This function disables the Custom theme named THEME.  The theme
+     remains loaded, so that a subsequent call to `enable-theme' will
+     re-enable it.
+
+
 File: elisp,  Node: Loading,  Next: Byte Compilation,  Prev: Customization,  Up: Top
 
 15 Loading
@@ -573,6 +786,7 @@ File: elisp,  Node: Loading,  Next: Byte Compilation,  Prev: Customization,  Up:
 Loading a file of Lisp code means bringing its contents into the Lisp
 environment in the form of Lisp objects.  Emacs finds and opens the
 file, reads the text, evaluates each form, and then closes the file.
+Such a file is also called a "Lisp library".
 
    The load functions evaluate all the expressions in a file just as
 the `eval-buffer' function evaluates all the expressions in a buffer.
@@ -585,10 +799,6 @@ form".  There is no special format for the forms in a loadable file;
 any form in a file may equally well be typed directly into a buffer and
 evaluated there.  (Indeed, most code is tested this way.)  Most often,
 the forms are function definitions and variable definitions.
-
-   A file containing Lisp code is often called a "library".  Thus, the
-"Rmail library" is a file containing code for Rmail mode.  Similarly, a
-"Lisp library directory" is a directory of files containing Lisp code.
 
 * Menu:
 
@@ -647,8 +857,7 @@ facilities call the `load' function to do the work.
      Compression mode is enabled, `load' will still use
      `jka-compr-load-suffixes' to find compressed versions.  By
      specifying the precise file name and using `t' for NOSUFFIX, you
-     can prevent perverse file names such as `foo.el.el' from being
-     tried.
+     can prevent file names like `foo.el.el' from being tried.
 
      If the optional argument MUST-SUFFIX is non-`nil', then `load'
      insists that the file name used must end in either `.el' or `.elc'
@@ -787,59 +996,29 @@ File: elisp,  Node: Library Search,  Next: Loading Non-ASCII,  Prev: Load Suffix
 When Emacs loads a Lisp library, it searches for the library in a list
 of directories specified by the variable `load-path'.
 
- -- User Option: load-path
+ -- Variable: load-path
      The value of this variable is a list of directories to search when
      loading files with `load'.  Each element is a string (which must be
      a directory name) or `nil' (which stands for the current working
      directory).
 
-   The value of `load-path' is initialized from the environment
-variable `EMACSLOADPATH', if that exists; otherwise its default value
-is specified in `emacs/src/epaths.h' when Emacs is built.  Then the
-list is expanded by adding subdirectories of the directories in the
-list.
-
-   The syntax of `EMACSLOADPATH' is the same as used for `PATH'; `:'
-(or `;', according to the operating system) separates directory names,
-and `.' is used for the current default directory.  Here is an example
-of how to set your `EMACSLOADPATH' variable from a `csh' `.login' file:
-
-     setenv EMACSLOADPATH .:/user/bil/emacs:/usr/local/share/emacs/20.3/lisp
-
-   Here is how to set it using `sh':
+   Each time Emacs starts up, it sets up the value of `load-path' in
+several steps.  First, it initializes `load-path' to the directories
+specified by the environment variable `EMACSLOADPATH', if that exists.
+The syntax of `EMACSLOADPATH' is the same as used for `PATH'; directory
+names are separated by `:' (or `;', on some operating systems), and `.'
+stands for the current default directory.  Here is an example of how to
+set `EMACSLOADPATH' variable from `sh':
 
      export EMACSLOADPATH
-     EMACSLOADPATH=.:/user/bil/emacs:/usr/local/share/emacs/20.3/lisp
+     EMACSLOADPATH=/home/foo/.emacs.d/lisp:/opt/emacs/lisp
 
-   Here is an example of code you can place in your init file (*note
-Init File::) to add several directories to the front of your default
-`load-path':
+Here is how to set it from `csh':
 
-     (setq load-path
-           (append (list nil "/user/bil/emacs"
-                         "/usr/local/lisplib"
-                         "~/emacs")
-                   load-path))
+     setenv EMACSLOADPATH /home/foo/.emacs.d/lisp:/opt/emacs/lisp
 
-In this example, the path searches the current working directory first,
-followed then by the `/user/bil/emacs' directory, the
-`/usr/local/lisplib' directory, and the `~/emacs' directory, which are
-then followed by the standard directories for Lisp code.
-
-   Dumping Emacs uses a special value of `load-path'.  If the value of
-`load-path' at the end of dumping is unchanged (that is, still the same
-special value), the dumped Emacs switches to the ordinary `load-path'
-value when it starts up, as described above.  But if `load-path' has
-any other value at the end of dumping, that value is used for execution
-of the dumped Emacs also.
-
-   Therefore, if you want to change `load-path' temporarily for loading
-a few libraries in `site-init.el' or `site-load.el', you should bind
-`load-path' locally with `let' around the calls to `load'.
-
-   The default value of `load-path', when running an Emacs which has
-been installed on the system, includes two special directories (and
-their subdirectories as well):
+   If `EMACSLOADPATH' is not set (which is usually the case), Emacs
+initializes `load-path' with the following two directories:
 
      "/usr/local/share/emacs/VERSION/site-lisp"
 
@@ -848,32 +1027,38 @@ and
      "/usr/local/share/emacs/site-lisp"
 
 The first one is for locally installed packages for a particular Emacs
-version; the second is for locally installed packages meant for use with
-all installed Emacs versions.
-
-   There are several reasons why a Lisp package that works well in one
-Emacs version can cause trouble in another.  Sometimes packages need
-updating for incompatible changes in Emacs; sometimes they depend on
-undocumented internal Emacs data that can change without notice;
-sometimes a newer Emacs version incorporates a version of the package,
-and should be used only with that version.
-
-   Emacs finds these directories' subdirectories and adds them to
-`load-path' when it starts up.  Both immediate subdirectories and
-subdirectories multiple levels down are added to `load-path'.
-
-   Not all subdirectories are included, though.  Subdirectories whose
-names do not start with a letter or digit are excluded.  Subdirectories
-named `RCS' or `CVS' are excluded.  Also, a subdirectory which contains
-a file named `.nosearch' is excluded.  You can use these methods to
-prevent certain subdirectories of the `site-lisp' directories from
-being searched.
+version; the second is for locally installed packages meant for use
+with all installed Emacs versions.
 
    If you run Emacs from the directory where it was built--that is, an
-executable that has not been formally installed--then `load-path'
-normally contains two additional directories.  These are the `lisp' and
-`site-lisp' subdirectories of the main build directory.  (Both are
-represented as absolute file names.)
+executable that has not been formally installed--Emacs puts two more
+directories in `load-path'.  These are the `lisp' and `site-lisp'
+subdirectories of the main build directory.  (Both are represented as
+absolute file names.)
+
+   Next, Emacs "expands" the initial list of directories in `load-path'
+by adding the subdirectories of those directories.  Both immediate
+subdirectories and subdirectories multiple levels down are added.  But
+it excludes subdirectories whose names do not start with a letter or
+digit, and subdirectories named `RCS' or `CVS', and subdirectories
+containing a file named `.nosearch'.
+
+   Next, Emacs adds any extra load directory that you specify using the
+`-L' command-line option (*note Action Arguments: (emacs)Action
+Arguments.).  It also adds the directories where optional packages are
+installed, if any (*note Packaging Basics::).
+
+   It is common to add code to one's init file (*note Init File::) to
+add one or more directories to `load-path'.  For example:
+
+     (push "~/.emacs.d/lisp" load-path)
+
+   Dumping Emacs uses a special value of `load-path'.  If the value of
+`load-path' at the end of dumping is unchanged (that is, still the same
+special value), the dumped Emacs switches to the ordinary `load-path'
+value when it starts up, as described above.  But if `load-path' has
+any other value at the end of dumping, that value is used for execution
+of the dumped Emacs also.
 
  -- Command: locate-library library &optional nosuffix path
           interactive-call
@@ -927,26 +1112,15 @@ example) is read without decoding, the text of the program will be
 unibyte text, and its string constants will be unibyte strings.  *Note
 Coding Systems::.
 
-   To make the results more predictable, Emacs always performs decoding
-into the multibyte representation when loading Lisp files, even if it
-was started with the `--unibyte' option.  This means that string
-constants with non-ASCII characters translate into multibyte strings.
-The only exception is when a particular file specifies no decoding.
-
-   The reason Emacs is designed this way is so that Lisp programs give
-predictable results, regardless of how Emacs was started.  In addition,
-this enables programs that depend on using multibyte text to work even
-in a unibyte Emacs.
-
    In most Emacs Lisp programs, the fact that non-ASCII strings are
 multibyte strings should not be noticeable, since inserting them in
 unibyte buffers converts them to unibyte automatically.  However, if
 this does make a difference, you can force a particular Lisp file to be
-interpreted as unibyte by writing `-*-unibyte: t;-*-' in a comment on
-the file's first line.  With that designator, the file will
-unconditionally be interpreted as unibyte, even in an ordinary
-multibyte Emacs session.  This can matter when making keybindings to
-non-ASCII characters written as `?vLITERAL'.
+interpreted as unibyte by writing `unibyte: t' in a local variables
+section.  With that designator, the file will unconditionally be
+interpreted as unibyte, even in an ordinary multibyte Emacs session.
+This can matter when making keybindings to non-ASCII characters written
+as `?vLITERAL'.
 
 
 File: elisp,  Node: Autoload,  Next: Repeated Loading,  Prev: Loading Non-ASCII,  Up: Loading
@@ -954,11 +1128,11 @@ File: elisp,  Node: Autoload,  Next: Repeated Loading,  Prev: Loading Non-ASCII,
 15.5 Autoload
 =============
 
-The "autoload" facility allows you to make a function or macro known in
-Lisp, but put off loading the file that defines it.  The first call to
-the function automatically reads the proper file to install the real
-definition and other associated code, then runs the real definition as
-if it had been loaded all along.
+The "autoload" facility allows you to register the existence of a
+function or macro, but put off loading the file that defines it.  The
+first call to the function automatically reads the proper file, in
+order to install the real definition and other associated code, then
+runs the real definition as if it had been loaded all along.
 
    There are two ways to set up an autoloaded function: by calling
 `autoload', and by writing a special "magic" comment in the source
@@ -1053,13 +1227,26 @@ update-directory-autoloads' is even more powerful; it updates autoloads
 for all files in the current directory.
 
    The same magic comment can copy any kind of form into `loaddefs.el'.
-If the form following the magic comment is not a function-defining form
-or a `defcustom' form, it is copied verbatim.  "Function-defining
-forms" include `define-skeleton', `define-derived-mode',
-`define-generic-mode' and `define-minor-mode' as well as `defun' and
-`defmacro'.  To save space, a `defcustom' form is converted to a
-`defvar' in `loaddefs.el', with some additional information if it uses
-`:require'.
+The form following the magic comment is copied verbatim, _except_ if it
+is one of the forms which the autoload facility handles specially (e.g.
+by conversion into an `autoload' call).  The forms which are not copied
+verbatim are the following:
+
+Definitions for function or function-like objects:
+     `defun' and `defmacro'; also `defun*' and `defmacro*' (*note
+     Argument Lists: (cl)Argument Lists.), and
+     `define-overloadable-function' (see the commentary in
+     `mode-local.el').
+
+Definitions for major or minor modes:
+     `define-minor-mode', `define-globalized-minor-mode',
+     `define-generic-mode', `easy-mmode-define-minor-mode',
+     `easy-mmode-define-global-mode', `define-compilation-mode',
+     `define-derived-mode', and `define-global-minor-mode'.
+
+Other definition types:
+     `defcustom', `defgroup', `defclass' (*note EIEIO: (eieio)Top.),
+     and `define-skeleton' (see the commentary in `skeleton.el').
 
    You can also use a magic comment to execute a form at build time
 _without_ executing it when the file itself is loaded.  To do this,
@@ -1193,20 +1380,25 @@ already.  If not, it loads the feature from the appropriate file.  This
 file should call `provide' at the top level to add the feature to
 `features'; if it fails to do so, `require' signals an error.
 
-   For example, in `emacs/lisp/prolog.el', the definition for
-`run-prolog' includes the following code:
+   For example, in `idlwave.el', the definition for
+`idlwave-complete-filename' includes the following code:
 
-     (defun run-prolog ()
-       "Run an inferior Prolog process, with I/O via buffer *prolog*."
-       (interactive)
-       (require 'comint)
-       (switch-to-buffer (make-comint "prolog" prolog-program-name))
-       (inferior-prolog-mode))
+     (defun idlwave-complete-filename ()
+       "Use the comint stuff to complete a file name."
+        (require 'comint)
+        (let* ((comint-file-name-chars "~/A-Za-z0-9+_.$#%={}\\-")
+               (comint-completion-addsuffix nil)
+               ...)
+            (comint-dynamic-complete-filename)))
 
 The expression `(require 'comint)' loads the file `comint.el' if it has
-not yet been loaded.  This ensures that `make-comint' is defined.
-Features are normally named after the files that provide them, so that
-`require' need not be given the file name.
+not yet been loaded, ensuring that `comint-dynamic-complete-filename'
+is defined.  Features are normally named after the files that provide
+them, so that `require' need not be given the file name.  (Note that it
+is important that the `require' statement be outside the body of the
+`let'.  Loading a library while its variables are let-bound can have
+unintended consequences, namely the variables becoming unbound after
+the let exits.)
 
    The `comint.el' file contains the following top-level expression:
 
@@ -1459,7 +1651,8 @@ loaded, use the function `eval-after-load':
           (eval-after-load "foo/bar/my_inst.elc" ...)
 
      LIBRARY can also be a feature (i.e. a symbol), in which case FORM
-     is evaluated when `(provide LIBRARY)' is called.
+     is evaluated at the end of any file where `(provide LIBRARY)' is
+     called.
 
      An error in FORM does not undo the load, but does prevent
      execution of the rest of FORM.
@@ -1470,10 +1663,6 @@ defined in another library (those meant for outside use), you can do it
 immediately--there is no need to wait until the library is loaded.  If
 you need to call functions defined by that library, you should load the
 library, preferably with `require' (*note Named Features::).
-
-   But it is OK to use `eval-after-load' in your personal
-customizations if you don't feel that they must meet the design
-standards for programs meant for wider use.
 
  -- Variable: after-load-alist
      This variable stores an alist built by `eval-after-load',
@@ -1505,12 +1694,6 @@ hardware (as true compiled code is), byte-code is completely
 transportable from machine to machine without recompilation.  It is not,
 however, as fast as true compiled code.
 
-   Compiling a Lisp file with the Emacs byte compiler always reads the
-file as multibyte text, even if Emacs was started with `--unibyte',
-unless the file specifies otherwise.  This is so that compilation gives
-results compatible with running the same file without compilation.
-*Note Loading Non-ASCII::.
-
    In general, any version of Emacs can run byte-compiled code produced
 by recent earlier versions of Emacs, but the reverse is not true.
 
@@ -1518,9 +1701,6 @@ by recent earlier versions of Emacs, but the reverse is not true.
 variable binding for `no-byte-compile' into it, like this:
 
      ;; -*-no-byte-compile: t; -*-
-
-   *Note Compilation Errors::, for how to investigate errors occurring
-in byte compilation.
 
 * Menu:
 
@@ -1544,74 +1724,64 @@ written in C, but runs much faster than the version written in Lisp.
 Here is an example:
 
      (defun silly-loop (n)
-       "Return time before and after N iterations of a loop."
-       (let ((t1 (current-time-string)))
-         (while (> (setq n (1- n))
-                   0))
-         (list t1 (current-time-string))))
+       "Return the time, in seconds, to run N iterations of a loop."
+       (let ((t1 (float-time)))
+         (while (> (setq n (1- n)) 0))
+         (- (float-time) t1)))
      => silly-loop
 
      (silly-loop 50000000)
-     => ("Wed Mar 11 21:10:19 2009"
-         "Wed Mar 11 21:10:41 2009")  ; 22 seconds
+     => 10.235304117202759
 
      (byte-compile 'silly-loop)
      => [Compiled code not shown]
 
      (silly-loop 50000000)
-     => ("Wed Mar 11 21:12:26 2009"
-         "Wed Mar 11 21:12:32 2009")  ; 6 seconds
+     => 3.705854892730713
 
-   In this example, the interpreted code required 22 seconds to run,
-whereas the byte-compiled code required 6 seconds.  These results are
-representative, but actual results will vary greatly.
+   In this example, the interpreted code required 10 seconds to run,
+whereas the byte-compiled code required less than 4 seconds.  These
+results are representative, but actual results may vary.
 
 
 File: elisp,  Node: Compilation Functions,  Next: Docs and Compilation,  Prev: Speed of Byte-Code,  Up: Byte Compilation
 
-16.2 The Compilation Functions
-==============================
+16.2 Byte-Compilation Functions
+===============================
 
 You can byte-compile an individual function or macro definition with
 the `byte-compile' function.  You can compile a whole file with
 `byte-compile-file', or several files with `byte-recompile-directory'
 or `batch-byte-compile'.
 
-   The byte compiler produces error messages and warnings about each
-file in a buffer called `*Compile-Log*'.  These report things in your
-program that suggest a problem but are not necessarily erroneous.
+   Sometimes, the byte compiler produces warning and/or error messages
+(*note Compiler Errors::, for details).  These messages are recorded in
+a buffer called `*Compile-Log*', which uses Compilation mode.  *Note
+Compilation Mode: (emacs)Compilation Mode.
 
-   Be careful when writing macro calls in files that you may someday
-byte-compile.  Macro calls are expanded when they are compiled, so the
-macros must already be defined for proper compilation.  For more
-details, see *note Compiling Macros::.  If a program does not work the
-same way when compiled as it does when interpreted, erroneous macro
-definitions are one likely cause (*note Problems with Macros::).
-Inline (`defsubst') functions are less troublesome; if you compile a
+   Be careful when writing macro calls in files that you intend to
+byte-compile.  Since macro calls are expanded when they are compiled,
+the macros need to be loaded into Emacs or the byte compiler will not
+do the right thing.  The usual way to handle this is with `require'
+forms which specify the files containing the needed macro definitions
+(*note Named Features::).  Normally, the byte compiler does not
+evaluate the code that it is compiling, but it handles `require' forms
+specially, by loading the specified libraries.  To avoid loading the
+macro definition files when someone _runs_ the compiled program, write
+`eval-when-compile' around the `require' calls (*note Eval During
+Compile::).  For more details, *Note Compiling Macros::.
+
+   Inline (`defsubst') functions are less troublesome; if you compile a
 call to such a function before its definition is known, the call will
 still work right, it will just run slower.
-
-   Normally, compiling a file does not evaluate the file's contents or
-load the file.  But it does execute any `require' calls at top level in
-the file.  One way to ensure that necessary macro definitions are
-available during compilation is to require the file that defines them
-(*note Named Features::).  To avoid loading the macro definition files
-when someone _runs_ the compiled program, write `eval-when-compile'
-around the `require' calls (*note Eval During Compile::).
 
  -- Function: byte-compile symbol
      This function byte-compiles the function definition of SYMBOL,
      replacing the previous definition with the compiled one.  The
      function definition of SYMBOL must be the actual code for the
-     function; i.e., the compiler does not follow indirection to
-     another symbol.  `byte-compile' returns the new, compiled
-     definition of SYMBOL.
-
-     If SYMBOL's definition is a byte-code function object,
-     `byte-compile' does nothing and returns `nil'.  Lisp records only
-     one function definition for any symbol, and if that is already
-     compiled, non-compiled code is not available anywhere.  So there
-     is no way to "compile the same definition again."
+     function; `byte-compile' does not handle function indirection.
+     The return value is the byte-code function object which is the
+     compiled definition of SYMBOL (*note Byte-Code Objects::).
 
           (defun factorial (integer)
             "Compute factorial of INTEGER."
@@ -1626,16 +1796,15 @@ around the `require' calls (*note Eval During Compile::).
             [integer 1 * factorial]
             4 "Compute factorial of INTEGER."]
 
-     The result is a byte-code function object.  The string it contains
-     is the actual byte-code; each character in it is an instruction or
-     an operand of an instruction.  The vector contains all the
-     constants, variable names and function names used by the function,
-     except for certain primitives that are coded as special
-     instructions.
+     If SYMBOL's definition is a byte-code function object,
+     `byte-compile' does nothing and returns `nil'.  It does not
+     "compile the symbol's definition again", since the original
+     (non-compiled) code has already been replaced in the symbol's
+     function cell by the byte-compiled code.
 
-     If the argument to `byte-compile' is a `lambda' expression, it
-     returns the corresponding compiled code, but does not store it
-     anywhere.
+     The argument to `byte-compile' can also be a `lambda' expression.
+     In that case, the function returns the corresponding compiled code
+     but does not store it anywhere.
 
  -- Command: compile-defun &optional arg
      This command reads the defun containing point, compiles it, and
@@ -1710,17 +1879,6 @@ around the `require' calls (*note Eval During Compile::).
 
           % emacs -batch -f batch-byte-compile *.el
 
- -- Function: byte-code code-string data-vector max-stack
-     This function actually interprets byte-code.  A byte-compiled
-     function is actually defined with a body that calls `byte-code'.
-     Don't call this function yourself--only the byte compiler knows
-     how to generate valid calls to this function.
-
-     In Emacs version 18, byte-code was always executed by way of a
-     call to the function `byte-code'.  Nowadays, byte-code is usually
-     executed as part of a byte-code function object, and only rarely
-     through an explicit call to `byte-code'.
-
 
 File: elisp,  Node: Docs and Compilation,  Next: Dynamic Loading,  Prev: Compilation Functions,  Up: Byte Compilation
 
@@ -1744,37 +1902,31 @@ result, but this normally is not enough to bother users.
      version), then further access to documentation strings in this
      file will probably give nonsense results.
 
-   If your site installs Emacs following the usual procedures, these
-problems will never normally occur.  Installing a new version uses a new
-directory with a different name; as long as the old version remains
-installed, its files will remain unmodified in the places where they are
-expected to be.
-
-   However, if you have built Emacs yourself and use it from the
-directory where you built it, you will experience this problem
-occasionally if you edit and recompile Lisp files.  When it happens, you
-can cure the problem by reloading the file after recompiling it.
-
-   You can turn off this feature at compile time by setting
-`byte-compile-dynamic-docstrings' to `nil'; this is useful mainly if
-you expect to change the file, and you want Emacs processes that have
-already loaded it to keep working when the file changes.  You can do
-this globally, or for one source file by specifying a file-local
-binding for the variable.  One way to do that is by adding this string
-to the file's first line:
-
-     -*-byte-compile-dynamic-docstrings: nil;-*-
-
- -- Variable: byte-compile-dynamic-docstrings
-     If this is non-`nil', the byte compiler generates compiled files
-     that are set up for dynamic loading of documentation strings.
+These problems normally occur only if you build Emacs yourself and use
+it from the directory where you built it, and you happen to edit and/or
+recompile the Lisp source files.  They can be easily cured by reloading
+each file after recompiling it.
 
    The dynamic documentation string feature writes compiled files that
 use a special Lisp reader construct, `#@COUNT'.  This construct skips
 the next COUNT characters.  It also uses the `#$' construct, which
-stands for "the name of this file, as a string."  It is usually best
+stands for "the name of this file, as a string".  It is usually best
 not to use these constructs in Lisp source files, since they are not
 designed to be clear to humans reading the file.
+
+   You can disable the dynamic documentation string feature at compile
+time by setting `byte-compile-dynamic-docstrings' to `nil'; this is
+useful mainly if you expect to change the file, and you want Emacs
+processes that have already loaded it to keep working when the file
+changes.  You can do this globally, or for one source file by
+specifying a file-local binding for the variable.  One way to do that
+is by adding this string to the file's first line:
+
+     -*-byte-compile-dynamic-docstrings: nil;-*-
+
+ -- User Option: byte-compile-dynamic-docstrings
+     If this is non-`nil', the byte compiler generates compiled files
+     that are set up for dynamic loading of documentation strings.
 
 
 File: elisp,  Node: Dynamic Loading,  Next: Eval During Compile,  Prev: Docs and Compilation,  Up: Byte Compilation
@@ -1915,10 +2067,19 @@ Byte compilation outputs all errors and warnings into the buffer
 identify the location of the problem.  The usual Emacs commands for
 operating on compiler diagnostics work properly on these messages.
 
-   However, the warnings about functions that were used but not defined
-are always "located" at the end of the file, so these commands won't
-find the places they are really used.  To do that, you must search for
-the function names.
+   When an error is due to invalid syntax in the program, the byte
+compiler might get confused about the errors' exact location.  One way
+to investigate is to switch to the buffer ` *Compiler Input*'.  (This
+buffer name starts with a space, so it does not show up in `M-x
+list-buffers'.)  This buffer contains the program being compiled, and
+point shows how far the byte compiler was able to read; the cause of
+the error might be nearby.  *Note Syntax Errors::, for some tips for
+locating syntax errors.
+
+   When the byte compiler warns about functions that were used but not
+defined, it always reports the line number for the end of the file, not
+the locations where the missing functions were called.  To find the
+latter, you must search for the function names.
 
    You can suppress the compiler warning for calling an undefined
 function FUNC by conditionalizing the function call on an `fboundp'
@@ -1954,7 +2115,7 @@ expression using the construct `with-no-warnings':
 
      We recommend that you use this construct around the smallest
      possible piece of code, to avoid missing possible warnings other
-     than one one you intend to suppress.
+     than one you intend to suppress.
 
    More precise control of warnings is possible by setting the variable
 `byte-compile-warnings'.
@@ -1966,17 +2127,14 @@ File: elisp,  Node: Byte-Code Objects,  Next: Disassembly,  Prev: Compiler Error
 ===============================
 
 Byte-compiled functions have a special data type: they are "byte-code
-function objects".
+function objects".  Whenever such an object appears as a function to be
+called, Emacs uses the byte-code interpreter to execute the byte-code.
 
-   Internally, a byte-code function object is much like a vector;
-however, the evaluator handles this data type specially when it appears
-as a function to be called.  The printed representation for a byte-code
-function object is like that for a vector, with an additional `#'
-before the opening `['.
-
-   A byte-code function object must have at least four elements; there
-is no maximum number, but only the first six elements have any normal
-use.  They are:
+   Internally, a byte-code function object is much like a vector; its
+elements can be accessed using `aref'.  Its printed representation is
+like that for a vector, with an additional `#' before the opening `['.
+It must have at least four elements; there is no maximum number, but
+only the first six elements have any normal use.  They are:
 
 ARGLIST
      The list of argument symbols.
@@ -2009,7 +2167,7 @@ representation.  It is the definition of the command `backward-sexp'.
        [arg 1 forward-sexp]
        2
        254435
-       "p"]
+       "^p"]
 
    The primitive way to create a byte-code object is with
 `make-byte-code':
@@ -2022,9 +2180,6 @@ representation.  It is the definition of the command `backward-sexp'.
 function yourself, because if they are inconsistent, Emacs may crash
 when you call the function.  Always leave it to the byte compiler to
 create these objects; it makes the elements consistent (we hope).
-
-   You can access the elements of a byte-code object using `aref'; you
-can also use `vconcat' to create a vector with the same elements.
 
 
 File: elisp,  Node: Disassembly,  Prev: Byte-Code Objects,  Up: Byte Compilation
@@ -2076,33 +2231,26 @@ source; these do not appear in the output of `disassemble'.
       doc: Compute factorial of an integer.
       args: (integer)
 
-     0   varref   integer        ; Get the value of `integer'
-                                 ;   and push it onto the stack.
-     1   constant 1              ; Push 1 onto stack.
-
-     2   eqlsign                 ; Pop top two values off stack, compare
-                                 ;   them, and push result onto stack.
-
-     3   goto-if-nil 1           ; Pop and test top of stack;
-                                 ;   if `nil', go to 1,
-                                 ;   else continue.
-     6   constant 1              ; Push 1 onto top of stack.
-     7   return                  ; Return the top element
-                                 ;   of the stack.
-
-     8:1 varref   integer        ; Push value of `integer' onto stack.
-     9   constant factorial      ; Push `factorial' onto stack.
-     10  varref   integer        ; Push value of `integer' onto stack.
-     11  sub1                    ; Pop `integer', decrement value,
-                                 ;   push new value onto stack.
-     12  call     1              ; Call function `factorial' using
-                                 ;   the first (i.e., the top) element
-                                 ;   of the stack as the argument;
-                                 ;   push returned value onto stack.
-
-     13 mult                     ; Pop top two values off stack, multiply
-                                 ;   them, and push result onto stack.
-     14 return                   ; Return the top element of stack.
+     0   varref   integer      ; Get the value of `integer' and
+                               ;   push it onto the stack.
+     1   constant 1            ; Push 1 onto stack.
+     2   eqlsign               ; Pop top two values off stack, compare
+                               ;   them, and push result onto stack.
+     3   goto-if-nil 1         ; Pop and test top of stack;
+                               ;   if `nil', go to 1, else continue.
+     6   constant 1            ; Push 1 onto top of stack.
+     7   return                ; Return the top element of the stack.
+     8:1 varref   integer      ; Push value of `integer' onto stack.
+     9   constant factorial    ; Push `factorial' onto stack.
+     10  varref   integer      ; Push value of `integer' onto stack.
+     11  sub1                  ; Pop `integer', decrement value,
+                               ;   push new value onto stack.
+     12  call     1            ; Call function `factorial' using first
+                               ;   (i.e. top) stack element as argument;
+                               ;   push returned value onto stack.
+     13 mult                   ; Pop top two values off stack, multiply
+                               ;   them, and push result onto stack.
+     14 return                 ; Return the top element of the stack.
 
    The `silly-loop' function is somewhat more complex:
 
@@ -2119,53 +2267,37 @@ source; these do not appear in the output of `disassemble'.
       doc: Return time before and after N iterations of a loop.
       args: (n)
 
-     0   constant current-time-string  ; Push
-                                       ;   `current-time-string'
+     0   constant current-time-string  ; Push `current-time-string'
                                        ;   onto top of stack.
+     1   call     0            ; Call `current-time-string' with no
+                               ;   argument, push result onto stack.
+     2   varbind  t1           ; Pop stack and bind `t1' to popped value.
+     3:1 varref   n            ; Get value of `n' from the environment
+                               ;   and push the value on the stack.
+     4   sub1                  ; Subtract 1 from top of stack.
+     5   dup                   ; Duplicate top of stack; i.e. copy the top
+                               ;   of the stack and push copy onto stack.
+     6   varset   n            ; Pop the top of the stack,
+                               ;   and bind `n' to the value.
 
-     1   call     0              ; Call `current-time-string'
-                                 ;   with no argument,
-                                 ;   pushing result onto stack.
+     ;; (In effect, the sequence `dup varset' copies the top of the stack
+     ;; into the value of `n' without popping it.)
 
-     2   varbind  t1             ; Pop stack and bind `t1'
-                                 ;   to popped value.
-
-     3:1 varref   n              ; Get value of `n' from
-                                 ;   the environment and push
-                                 ;   the value onto the stack.
-     4   sub1                    ; Subtract 1 from top of stack.
-
-     5   dup                     ; Duplicate the top of the stack;
-                                 ;   i.e., copy the top of
-                                 ;   the stack and push the
-                                 ;   copy onto the stack.
-     6   varset   n              ; Pop the top of the stack,
-                                 ;   and bind `n' to the value.
-
-                                 ; In effect, the sequence `dup varset'
-                                 ;   copies the top of the stack
-                                 ;   into the value of `n'
-                                 ;   without popping it.
-
-     7   constant 0              ; Push 0 onto stack.
-     8   gtr                     ; Pop top two values off stack,
-                                 ;   test if N is greater than 0
-                                 ;   and push result onto stack.
-
-     9   goto-if-not-nil 1       ; Goto 1 if `n' > 0
-                                 ;   (this continues the while loop)
-                                 ;   else continue.
-
-     12  varref   t1             ; Push value of `t1' onto stack.
+     7   constant 0            ; Push 0 onto stack.
+     8   gtr                   ; Pop top two values off stack,
+                               ;   test if N is greater than 0
+                               ;   and push result onto stack.
+     9   goto-if-not-nil 1     ; Goto 1 if `n' > 0
+                               ;   (this continues the while loop)
+                               ;   else continue.
+     12  varref   t1           ; Push value of `t1' onto stack.
      13  constant current-time-string  ; Push `current-time-string'
-                                       ;   onto top of stack.
-     14  call     0              ; Call `current-time-string' again.
-
-     15  unbind   1              ; Unbind `t1' in local environment.
-     16  list2                   ; Pop top two elements off stack,
-                                 ;   create a list of them,
-                                 ;   and push list onto stack.
-     17  return                  ; Return value of the top of stack.
+                                       ;   onto the top of the stack.
+     14  call     0            ; Call `current-time-string' again.
+     15  unbind   1            ; Unbind `t1' in local environment.
+     16  list2                 ; Pop top two elements off stack, create a
+                               ;   list of them, and push it onto stack.
+     17  return                ; Return value of the top of stack.
 
 
 File: elisp,  Node: Advising Functions,  Next: Debugging,  Prev: Byte Compilation,  Up: Top
@@ -2178,28 +2310,33 @@ function, by "advising the function".  This is a cleaner method for a
 library to customize functions defined within Emacs--cleaner than
 redefining the whole function.
 
-   Each function can have multiple "pieces of advice", separately
-defined.  Each defined piece of advice can be "enabled" or "disabled"
-explicitly.  All the enabled pieces of advice for any given function
-actually take effect when you "activate" advice for that function, or
-when you define or redefine the function.  Note that enabling a piece
-of advice and activating advice for a function are not the same thing.
+   Each function can have multiple "pieces of advice", each of which
+can be separately defined and then "enabled" or "disabled".  All the
+enabled pieces of advice for any given function actually take effect
+when you "activate advice" for that function, or when you define or
+redefine the function.  Note that enabling a piece of advice and
+activating advice for a function are not the same thing.
 
-   *Usage Note:* Advice is useful for altering the behavior of existing
-calls to an existing function.  If you want the new behavior for new
-calls, or for key bindings, you should define a new function (or a new
-command) which uses the existing function.
+   Advice is useful for altering the behavior of existing calls to an
+existing function.  If you want the new behavior for new function calls
+or new key bindings, you should define a new function or command, and
+have it use the existing function as a subroutine.
 
-   *Usage note:* Advising a function can cause confusion in debugging,
-since people who debug calls to the original function may not notice
-that it has been modified with advice.  Therefore, if you have the
-possibility to change the code of that function (or ask someone to do
-so) to run a hook, please solve the problem that way.  Advice should be
-reserved for the cases where you cannot get the function changed.
+   Advising a function can cause confusion in debugging, since people
+who debug calls to the original function may not notice that it has
+been modified with advice.  Therefore, if you have the possibility to
+change the code of that function to run a hook, please solve the
+problem that way.  Advice should be reserved for the cases where you
+cannot get the function changed.  In particular, Emacs's own source
+files should not put advice on functions in Emacs.  There are currently
+a few exceptions to this convention, but we aim to correct them.
 
-   In particular, this means that a file in Emacs should not put advice
-on a function in Emacs.  There are currently a few exceptions to this
-convention, but we aim to correct them.
+   Unless you know what you are doing, do _not_ advise a primitive
+(*note What Is a Function::).  Some primitives are used by the advice
+mechanism; advising them could cause an infinite recursion.  Also, many
+primitives are called directly from C code.  Calls to the primitive
+from Lisp code will take note of the advice, but calls from C code will
+ignore the advice.
 
 * Menu:
 
@@ -2212,7 +2349,6 @@ convention, but we aim to correct them.
 * Preactivation::           Preactivation is a way of speeding up the
                               loading of compiled advice.
 * Argument Access in Advice:: How advice can access the function's arguments.
-* Advising Primitives::     Accessing arguments when advising a primitive.
 * Combined Definition::     How advice is implemented.
 
 
@@ -2408,7 +2544,7 @@ All subroutines used by the advice need to be available when the byte
 compiler expands the macro.
 
  -- Command: ad-unadvise function
-     This command deletes the advice from FUNCTION.
+     This command deletes all pieces of advice from FUNCTION.
 
  -- Command: ad-unadvise-all
      This command deletes all pieces of advice from all functions.
@@ -2499,13 +2635,12 @@ File: elisp,  Node: Activation of Advice,  Next: Enabling Advice,  Prev: Compute
 =========================
 
 By default, advice does not take effect when you define it--only when
-you "activate" advice for the function that was advised.  However, the
-advice will be activated automatically if you define or redefine the
-function later.  You can request the activation of advice for a
-function when you define the advice, by specifying the `activate' flag
-in the `defadvice'.  But normally you activate the advice for a
-function by calling the function `ad-activate' or one of the other
-activation commands listed below.
+you "activate" advice for the function.  However, the advice will be
+activated automatically if you define or redefine the function later.
+You can request the activation of advice for a function when you define
+the advice, by specifying the `activate' flag in the `defadvice'; or
+you can activate the advice separately by calling the function
+`ad-activate' or one of the other activation commands listed below.
 
    Separating the activation of advice from the act of defining it
 permits you to add several pieces of advice to one function
@@ -2697,7 +2832,7 @@ packages define different pieces of advice with the same name, in the
 same class, for the same function.  But you should avoid that anyway.
 
 
-File: elisp,  Node: Argument Access in Advice,  Next: Advising Primitives,  Prev: Preactivation,  Up: Advising Functions
+File: elisp,  Node: Argument Access in Advice,  Next: Combined Definition,  Prev: Preactivation,  Up: Advising Functions
 
 17.8 Argument Access in Advice
 ==============================
@@ -2780,41 +2915,10 @@ will be `(2 1 0)' inside the body of `foo'.
 Instead they are implemented specially by the advice mechanism.
 
 
-File: elisp,  Node: Advising Primitives,  Next: Combined Definition,  Prev: Argument Access in Advice,  Up: Advising Functions
+File: elisp,  Node: Combined Definition,  Prev: Argument Access in Advice,  Up: Advising Functions
 
-17.9 Advising Primitives
-========================
-
-Advising a primitive function (*note What Is a Function::) is risky.
-Some primitive functions are used by the advice mechanism; advising
-them could cause an infinite recursion.  Also, many primitive functions
-are called directly from C code.  Calls to the primitive from Lisp code
-will take note of the advice, but calls from C code will ignore the
-advice.
-
-   When the advice facility constructs the combined definition, it needs
-to know the argument list of the original function.  This is not always
-possible for primitive functions.  When advice cannot determine the
-argument list, it uses `(&rest ad-subr-args)', which always works but
-is inefficient because it constructs a list of the argument values.
-You can use `ad-define-subr-args' to declare the proper argument names
-for a primitive function:
-
- -- Function: ad-define-subr-args function arglist
-     This function specifies that ARGLIST should be used as the
-     argument list for function FUNCTION.
-
-   For example,
-
-     (ad-define-subr-args 'fset '(sym newdef))
-
-specifies the argument list for the function `fset'.
-
-
-File: elisp,  Node: Combined Definition,  Prev: Advising Primitives,  Up: Advising Functions
-
-17.10 The Combined Definition
-=============================
+17.9 The Combined Definition
+============================
 
 Suppose that a function has N pieces of before-advice (numbered from 0
 through N-1), M pieces of around-advice and K pieces of after-advice.
@@ -2877,38 +2981,37 @@ File: elisp,  Node: Debugging,  Next: Read and Print,  Prev: Advising Functions,
 18 Debugging Lisp Programs
 **************************
 
-There are three ways to investigate a problem in an Emacs Lisp program,
-depending on what you are doing with the program when the problem
-appears.
+There are several ways to find and investigate problems in an Emacs
+Lisp program.
 
-   * If the problem occurs when you run the program, you can use a Lisp
-     debugger to investigate what is happening during execution.  In
-     addition to the ordinary debugger, Emacs comes with a source-level
-     debugger, Edebug.  This chapter describes both of them.
+   * If a problem occurs when you run the program, you can use the
+     built-in Emacs Lisp debugger to suspend the Lisp evaluator, and
+     examine and/or alter its internal state.
 
-   * If the problem is syntactic, so that Lisp cannot even read the
-     program, you can use the Emacs facilities for editing Lisp to
-     localize it.
+   * You can use Edebug, a source-level debugger for Emacs Lisp.
 
-   * If the problem occurs when trying to compile the program with the
-     byte compiler, you need to know how to examine the compiler's
-     input buffer.
+   * If a syntactic problem is preventing Lisp from even reading the
+     program, you can locate it using Lisp editing commands.
+
+   * You can look at the error and warning messages produced by the byte
+     compiler when it compiles the program.  *Note Compiler Errors::.
+
+   * You can use the Testcover package to perform coverage testing on
+     the program.
+
+   * You can use the ERT package to write regression tests for the
+     program.  *Note the ERT manual: (ERT)Top.
+
+   Other useful tools for debugging input and output problems are the
+dribble file (*note Terminal Input::) and the `open-termscript'
+function (*note Terminal Output::).
 
 * Menu:
 
-* Debugger::            How the Emacs Lisp debugger is implemented.
+* Debugger::            A debugger for the Emacs Lisp evaluator.
 * Edebug::              A source-level Emacs Lisp debugger.
 * Syntax Errors::       How to find syntax errors.
 * Test Coverage::       Ensuring you have tested all branches in your code.
-* Compilation Errors::  How to find errors that show up in byte compilation.
-
-   Another useful debugging tool is the dribble file.  When a dribble
-file is open, Emacs copies all keyboard input characters to that file.
-Afterward, you can examine the file to find out what input was used.
-*Note Terminal Input::.
-
-   For debugging problems in terminal descriptions, the
-`open-termscript' function can be useful.  *Note Terminal Output::.
 
 
 File: elisp,  Node: Debugger,  Next: Edebug,  Up: Debugging
@@ -2946,25 +3049,28 @@ happens.  This allows you to investigate the immediate causes of the
 error.
 
    However, entry to the debugger is not a normal consequence of an
-error.  Many commands frequently cause Lisp errors when invoked
-inappropriately, and during ordinary editing it would be very
-inconvenient to enter the debugger each time this happens.  So if you
-want errors to enter the debugger, set the variable `debug-on-error' to
-non-`nil'.  (The command `toggle-debug-on-error' provides an easy way
-to do this.)
+error.  Many commands signal Lisp errors when invoked inappropriately,
+and during ordinary editing it would be very inconvenient to enter the
+debugger each time this happens.  So if you want errors to enter the
+debugger, set the variable `debug-on-error' to non-`nil'.  (The command
+`toggle-debug-on-error' provides an easy way to do this.)
 
  -- User Option: debug-on-error
      This variable determines whether the debugger is called when an
      error is signaled and not handled.  If `debug-on-error' is `t',
      all kinds of errors call the debugger, except those listed in
      `debug-ignored-errors' (see below).  If it is `nil', none call the
-     debugger.  (Note that `eval-expression-debug-on-error' affects the
-     setting of this variable in some cases; see below.)
+     debugger.
 
-     The value can also be a list of error conditions that should call
-     the debugger.  For example, if you set it to the list
-     `(void-variable)', then only errors about a variable that has no
-     value invoke the debugger.
+     The value can also be a list of error conditions (*note Signaling
+     Errors::).  Then the debugger is called only for error conditions
+     in this list (except those also listed in `debug-ignored-errors').
+     For example, if you set `debug-on-error' to the list
+     `(void-variable)', the debugger is only called for errors about a
+     variable that has no value.
+
+     Note that `eval-expression-debug-on-error' overrides this variable
+     in some cases; see below.
 
      When this variable is non-`nil', Emacs does not create an error
      handler around process filter functions and sentinels.  Therefore,
@@ -2972,47 +3078,53 @@ to do this.)
      Processes::.
 
  -- User Option: debug-ignored-errors
-     This variable specifies certain kinds of errors that should not
-     enter the debugger.  Its value is a list of error condition
-     symbols and/or regular expressions.  If the error has any of those
-     condition symbols, or if the error message matches any of the
-     regular expressions, then that error does not enter the debugger,
-     regardless of the value of `debug-on-error'.
+     This variable specifies errors which should not enter the debugger,
+     regardless of the value of `debug-on-error'.  Its value is a list
+     of error condition symbols and/or regular expressions.  If the
+     error has any of those condition symbols, or if the error message
+     matches any of the regular expressions, then that error does not
+     enter the debugger.
 
      The normal value of this variable lists several errors that happen
      often during editing but rarely result from bugs in Lisp programs.
      However, "rarely" is not "never"; if your program fails with an
-     error that matches this list, you will need to change this list in
-     order to debug the error.  The easiest way is usually to set
+     error that matches this list, you may try changing this list to
+     debug the error.  The easiest way is usually to set
      `debug-ignored-errors' to `nil'.
 
  -- User Option: eval-expression-debug-on-error
-     If this variable has a non-`nil' value, then `debug-on-error' is
-     set to `t' when evaluating with the command `eval-expression'.  If
-     `eval-expression-debug-on-error' is `nil', then the value of
-     `debug-on-error' is not changed.  *Note Evaluating Emacs-Lisp
+     If this variable has a non-`nil' value (the default), running the
+     command `eval-expression' causes `debug-on-error' to be
+     temporarily bound to to `t'.  *Note Evaluating Emacs-Lisp
      Expressions: (emacs)Lisp Eval.
 
- -- User Option: debug-on-signal
-     Normally, errors that are caught by `condition-case' never run the
-     debugger, even if `debug-on-error' is non-`nil'.  In other words,
-     `condition-case' gets a chance to handle the error before the
-     debugger gets a chance.
+     If `eval-expression-debug-on-error' is `nil', then the value of
+     `debug-on-error' is not changed during `eval-expression'.
 
-     If you set `debug-on-signal' to a non-`nil' value, then the
-     debugger gets the first chance at every error; an error will
-     invoke the debugger regardless of any `condition-case', if it fits
-     the criteria specified by the values of `debug-on-error' and
-     `debug-ignored-errors'.
+ -- Variable: debug-on-signal
+     Normally, errors caught by `condition-case' never invoke the
+     debugger.  The `condition-case' gets a chance to handle the error
+     before the debugger gets a chance.
 
-     *Warning:* This variable is strong medicine!  Various parts of
-     Emacs handle errors in the normal course of affairs, and you may
-     not even realize that errors happen there.  If you set
-     `debug-on-signal' to a non-`nil' value, those errors will enter
-     the debugger.
+     If you change `debug-on-signal' to a non-`nil' value, the debugger
+     gets the first chance at every error, regardless of the presence
+     of `condition-case'.  (To invoke the debugger, the error must
+     still fulfill the criteria specified by `debug-on-error' and
+     `debug-ignored-errors'.)
 
-     *Warning:* `debug-on-signal' has no effect when `debug-on-error'
-     is `nil'.
+     *Warning:* Setting this variable to non-`nil' may have annoying
+     effects.  Various parts of Emacs catch errors in the normal course
+     of affairs, and you may not even realize that errors happen there.
+     If you need to debug code wrapped in `condition-case', consider
+     using `condition-case-unless-debug' (*note Handling Errors::).
+
+ -- User Option: debug-on-event
+     If you set `debug-on-event' to a special event (*note Special
+     Events::), Emacs will try to enter the debugger as soon as it
+     receives this event, bypassing `special-event-map'.  At present,
+     the only supported values correspond to the signals `SIGUSR1' and
+     `SIGUSR2' (this is the default).  This can be helpful when
+     `inhibit-quit' is set and Emacs is not otherwise responding.
 
    To debug an error that happens during loading of the init file, use
 the option `--debug-init'.  This binds `debug-on-error' to `t' while
@@ -3027,25 +3139,25 @@ File: elisp,  Node: Infinite Loops,  Next: Function Debugging,  Prev: Error Debu
 
 When a program loops infinitely and fails to return, your first problem
 is to stop the loop.  On most operating systems, you can do this with
-`C-g', which causes a "quit".
+`C-g', which causes a "quit".  *Note Quitting::.
 
    Ordinary quitting gives no information about why the program was
 looping.  To get more information, you can set the variable
-`debug-on-quit' to non-`nil'.  Quitting with `C-g' is not considered an
-error, and `debug-on-error' has no effect on the handling of `C-g'.
-Likewise, `debug-on-quit' has no effect on errors.
+`debug-on-quit' to non-`nil'.  Once you have the debugger running in
+the middle of the infinite loop, you can proceed from the debugger
+using the stepping commands.  If you step through the entire loop, you
+may get enough information to solve the problem.
 
-   Once you have the debugger running in the middle of the infinite
-loop, you can proceed from the debugger using the stepping commands.
-If you step through the entire loop, you will probably get enough
-information to solve the problem.
+   Quitting with `C-g' is not considered an error, and `debug-on-error'
+has no effect on the handling of `C-g'.  Likewise, `debug-on-quit' has
+no effect on errors.
 
  -- User Option: debug-on-quit
-     This variable determines whether the debugger is called when `quit'
-     is signaled and not handled.  If `debug-on-quit' is non-`nil',
-     then the debugger is called whenever you quit (that is, type
-     `C-g').  If `debug-on-quit' is `nil', then the debugger is not
-     called when you quit.  *Note Quitting::.
+     This variable determines whether the debugger is called when
+     `quit' is signaled and not handled.  If `debug-on-quit' is
+     non-`nil', then the debugger is called whenever you quit (that is,
+     type `C-g').  If `debug-on-quit' is `nil' (the default), then the
+     debugger is not called when you quit.
 
 
 File: elisp,  Node: Function Debugging,  Next: Explicit Debug,  Prev: Infinite Loops,  Up: Debugger
@@ -3160,6 +3272,15 @@ and it is wise to go back to the backtrace buffer and exit the debugger
 (with the `q' command) when you are finished with it.  Exiting the
 debugger gets out of the recursive edit and kills the backtrace buffer.
 
+   When the debugger has been entered, the `debug-on-error' variable is
+temporarily set according to `eval-expression-debug-on-error'.  If the
+latter variable is non-`nil', `debug-on-error' will temporarily be set
+to `t'.  This means that any further errors that occur while doing a
+debugging session will (by default) trigger another backtrace.  If this
+is not want you want, you can either set
+`eval-expression-debug-on-error' to `nil', or set `debug-on-error' to
+`nil' in `debugger-mode-hook'.
+
    The backtrace buffer shows you the functions that are executing and
 their argument values.  It also allows you to specify a stack frame by
 moving point to the line describing that frame.  (A stack frame is the
@@ -3171,7 +3292,7 @@ exiting that frame will call the debugger again.  This is useful for
 examining the return value of a function.
 
    If a function name is underlined, that means the debugger knows
-where its source code is located.  You can click `Mouse-2' on that
+where its source code is located.  You can click with the mouse on that
 name, or move to it and type <RET>, to visit the source code.
 
    The debugger itself must be run byte-compiled, since it makes
@@ -3198,15 +3319,10 @@ You cannot use the Lisp debugger to step through a primitive function.
    Here is a list of Debugger mode commands:
 
 `c'
-     Exit the debugger and continue execution.  When continuing is
-     possible, it resumes execution of the program as if the debugger
-     had never been entered (aside from any side-effects that you
-     caused by changing variable values or data structures while inside
-     the debugger).
-
-     Continuing is possible after entry to the debugger due to function
-     entry or exit, explicit invocation, or quitting.  You cannot
-     continue if the debugger was entered because of an error.
+     Exit the debugger and continue execution.  This resumes execution
+     of the program as if the debugger had never been entered (aside
+     from any side-effects that you caused by changing variable values
+     or data structures while inside the debugger).
 
 `d'
      Continue execution, but enter the debugger the next time any Lisp
@@ -3283,7 +3399,7 @@ File: elisp,  Node: Invoking the Debugger,  Next: Internals of Debugger,  Prev: 
 Here we describe in full detail the function `debug' that is used to
 invoke the debugger.
 
- -- Function: debug &rest debugger-args
+ -- Command: debug &rest debugger-args
      This function enters the debugger.  It switches buffers to a buffer
      named `*Backtrace*' (or `*Backtrace*<2>' if it is the second
      recursive entry to the debugger, etc.), and fills it with
@@ -3766,7 +3882,8 @@ program to stop.
      (`edebug-step-out').
 
 `i'
-     Step into the function or macro called by the form after point.
+     Step into the function or macro called by the form after point
+     (`edebug-step-in').
 
    The `h' command proceeds to the stop point at or after the current
 location of point, using a temporary breakpoint.
@@ -4065,12 +4182,12 @@ File: elisp,  Node: Edebug Eval,  Next: Eval List,  Prev: Edebug Views,  Up: Ede
 18.2.9 Evaluation
 -----------------
 
-While within Edebug, you can evaluate expressions "as if" Edebug were
-not running.  Edebug tries to be invisible to the expression's
-evaluation and printing.  Evaluation of expressions that cause side
-effects will work as expected, except for changes to data that Edebug
-explicitly saves and restores.  *Note The Outside Context::, for details
-on this process.
+While within Edebug, you can evaluate expressions as if Edebug were not
+running.  Edebug tries to be invisible to the expression's evaluation
+and printing.  Evaluation of expressions that cause side effects will
+work as expected, except for changes to data that Edebug explicitly
+saves and restores.  *Note The Outside Context::, for details on this
+process.
 
 `e EXP <RET>'
      Evaluate expression EXP in the context outside of Edebug
@@ -4390,8 +4507,8 @@ File: elisp,  Node: Edebug Display Update,  Next: Edebug Recursive Edit,  Prev: 
 
 When Edebug needs to display something (e.g., in trace mode), it saves
 the current window configuration from "outside" Edebug (*note Window
-Configurations::).  When you exit Edebug (by continuing the program),
-it restores the previous window configuration.
+Configurations::).  When you exit Edebug, it restores the previous
+window configuration.
 
    Emacs redisplays only when it pauses.  Usually, when you continue
 execution, the program re-enters Edebug at a breakpoint or after
@@ -4517,6 +4634,11 @@ looks very similar to the formal argument list of the macro definition,
 but specifications are much more general than macro arguments.  *Note
 Defining Macros::, for more explanation of the `declare' form.
 
+   Take care to ensure that the specifications are known to Edebug when
+you instrument code.  If you are instrumenting a function from a file
+that uses `eval-when-compile' to require another file containing macro
+definitions, you may need to explicitly load that file.
+
    You can also define an edebug specification for a macro separately
 from the macro definition with `def-edebug-spec'.  Adding `debug'
 declarations is preferred, and more convenient, for macro definitions
@@ -4574,8 +4696,8 @@ modify the processing of all following elements.  The latter, called
 "specification keywords", are symbols beginning with `&' (such as
 `&optional').
 
-   A specification list may contain sublists which match arguments that
-are themselves lists, or it may contain vectors used for grouping.
+   A specification list may contain sublists, which match arguments
+that are themselves lists, or it may contain vectors used for grouping.
 Sublists and groups thus subdivide the specification list into a
 hierarchy of levels.  Specification keywords apply only to the
 remainder of the sublist or group they are contained in.
@@ -4620,7 +4742,7 @@ examples):
      All following elements in the specification list are optional; as
      soon as one does not match, Edebug stops matching at this level.
 
-     To make just a few elements optional followed by non-optional
+     To make just a few elements optional, followed by non-optional
      elements, use `[&optional SPECS...]'.  To specify that several
      elements must all match or none, use `&optional [SPECS...]'.  See
      the `defun' example.
@@ -4680,8 +4802,8 @@ examples):
      just as for macros.  See the `defun' example.
 
      Otherwise, the symbol should be a predicate.  The predicate is
-     called with the argument and the specification fails if the
-     predicate returns `nil', and the argument is not instrumented.
+     called with the argument, and if the predicate returns `nil', the
+     specification fails and the argument is not instrumented.
 
      Some suitable predicates include `symbolp', `integerp', `stringp',
      `vectorp', and `atom'.
@@ -4862,10 +4984,10 @@ These options affect the behavior of Edebug:
 
  -- User Option: edebug-setup-hook
      Functions to call before Edebug is used.  Each time it is set to a
-     new value, Edebug will call those functions once and then
-     `edebug-setup-hook' is reset to `nil'.  You could use this to load
-     up Edebug specifications associated with a package you are using
-     but only when you also use Edebug.  *Note Instrumenting::.
+     new value, Edebug will call those functions once and then reset
+     `edebug-setup-hook' to `nil'.  You could use this to load up
+     Edebug specifications associated with a package you are using, but
+     only when you also use Edebug.  *Note Instrumenting::.
 
  -- User Option: edebug-all-defs
      If this is non-`nil', normal evaluation of defining forms such as
@@ -4934,6 +5056,24 @@ These options affect the behavior of Edebug:
      If non-`nil', continue defining or executing any keyboard macro
      that is executing outside of Edebug.   Use this with caution since
      it is not debugged.  *Note Edebug Execution Modes::.
+
+ -- User Option: edebug-unwrap-results
+     If non-`nil', Edebug tries to remove any of its own
+     instrumentation when showing the results of expressions.  This is
+     relevant when debugging macros where the results of expressions are
+     themselves instrumented expressions.  As a very artificial example,
+     suppose that the example function `fac' has been instrumented, and
+     consider a macro of the form:
+
+          (defmacro test () "Edebug example."
+            (if (symbol-function 'fac)
+                ...))
+
+     If you instrument the `test' macro and step through it, then by
+     default the result of the `symbol-function' call has numerous
+     `edebug-after' and `edebug-before' forms, which can make it
+     difficult to see the "actual" result.  If `edebug-unwrap-results'
+     is non-`nil', Edebug tries to remove these forms from the result.
 
  -- User Option: edebug-on-error
      Edebug binds `debug-on-error' to this value, if `debug-on-error'
@@ -5047,7 +5187,7 @@ and you have put back those parentheses, `C-M-q' should not change
 anything.
 
 
-File: elisp,  Node: Test Coverage,  Next: Compilation Errors,  Prev: Syntax Errors,  Up: Debugging
+File: elisp,  Node: Test Coverage,  Prev: Syntax Errors,  Up: Debugging
 
 18.4 Test Coverage
 ==================
@@ -5082,34 +5222,6 @@ give advice to the test coverage tool.
    Edebug also has a coverage testing feature (*note Coverage
 Testing::).  These features partly duplicate each other, and it would
 be cleaner to combine them.
-
-
-File: elisp,  Node: Compilation Errors,  Prev: Test Coverage,  Up: Debugging
-
-18.5 Debugging Problems in Compilation
-======================================
-
-When an error happens during byte compilation, it is normally due to
-invalid syntax in the program you are compiling.  The compiler prints a
-suitable error message in the `*Compile-Log*' buffer, and then stops.
-The message may state a function name in which the error was found, or
-it may not.  Either way, here is how to find out where in the file the
-error occurred.
-
-   What you should do is switch to the buffer ` *Compiler Input*'.
-(Note that the buffer name starts with a space, so it does not show up
-in `M-x list-buffers'.)  This buffer contains the program being
-compiled, and point shows how far the byte compiler was able to read.
-
-   If the error was due to invalid Lisp syntax, point shows exactly
-where the invalid syntax was _detected_.  The cause of the error is not
-necessarily near by!  Use the techniques in the previous section to find
-the error.
-
-   If the error was detected while compiling a form that had been read
-successfully, then point is located at the end of the form.  In this
-case, this technique can't localize the error precisely, but can still
-show you which function to check.
 
 
 File: elisp,  Node: Read and Print,  Next: Minibuffers,  Prev: Debugging,  Up: Top
@@ -5213,7 +5325,7 @@ FUNCTION
           FUNCTION should save the argument and arrange to return it on
           the next call.  This is called "unreading" the character; it
           happens when the Lisp reader reads one character too many and
-          wants to "put it back where it came from."  In this case, it
+          wants to "put it back where it came from".  In this case, it
           makes no difference what value FUNCTION returns.
 
 `t'
@@ -5313,11 +5425,6 @@ Note that the open and close parentheses remain in the list.  The Lisp
 reader encountered the open parenthesis, decided that it ended the
 input, and unread it.  Another attempt to read from the stream at this
 point would read `()' and return `nil'.
-
- -- Function: get-file-char
-     This function is used internally as an input stream to read from
-     the input file opened by the function `load'.  Don't use this
-     function yourself.
 
 
 File: elisp,  Node: Input Functions,  Next: Output Streams,  Prev: Input Streams,  Up: Read and Print
@@ -5591,7 +5698,7 @@ is `nil' or omitted, it defaults to the value of `standard-output'.
 
  -- Function: terpri &optional stream
      This function outputs a newline to STREAM.  The name stands for
-     "terminate print."
+     "terminate print".
 
  -- Function: write-char character &optional stream
      This function outputs CHARACTER to STREAM.  It returns CHARACTER.
@@ -5629,6 +5736,11 @@ is `nil' or omitted, it defaults to the value of `standard-output'.
 
      returns `"The buffer is foo"'.
 
+ -- Function: pp object &optional stream
+     This function outputs OBJECT to STREAM, just like `prin1', but
+     does it in a more "pretty" way.  That is, it'll indent and fill
+     the object to make it more readable for humans.
+
 
 File: elisp,  Node: Output Variables,  Prev: Output Functions,  Up: Read and Print
 
@@ -5642,9 +5754,8 @@ File: elisp,  Node: Output Variables,  Prev: Output Functions,  Up: Read and Pri
 
  -- Variable: print-quoted
      If this is non-`nil', that means to print quoted forms using
-     abbreviated reader syntax.  `(quote foo)' prints as `'foo',
-     `(function foo)' as `#'foo', and backquoted forms print using
-     modern backquote syntax.
+     abbreviated reader syntax, e.g. `(quote foo)' prints as `'foo',
+     and `(function foo)' as `#'foo'.
 
  -- Variable: print-escape-newlines
      If this variable is non-`nil', then newline characters in strings
@@ -5733,11 +5844,9 @@ shared structure:
  -- Variable: print-continuous-numbering
      If non-`nil', that means number continuously across print calls.
      This affects the numbers printed for `#N=' labels and `#M#'
-     references.
-
-     Don't set this variable with `setq'; you should only bind it
-     temporarily to `t' with `let'.  When you do that, you should also
-     bind `print-number-table' to `nil'.
+     references.  Don't set this variable with `setq'; you should only
+     bind it temporarily to `t' with `let'.  When you do that, you
+     should also bind `print-number-table' to `nil'.
 
  -- Variable: print-number-table
      This variable holds a vector used internally by printing to
@@ -5745,9 +5854,9 @@ shared structure:
      to bind it to `nil' when you bind `print-continuous-numbering'.
 
  -- Variable: float-output-format
-     This variable specifies how to print floating point numbers.  Its
-     default value is `nil', meaning use the shortest output that
-     represents the number without losing information.
+     This variable specifies how to print floating point numbers.  The
+     default is `nil', meaning use the shortest output that represents
+     the number without losing information.
 
      To control output format more precisely, you can put a string in
      this variable.  The string should hold a `%'-specification to be
@@ -5780,8 +5889,8 @@ only while it is in use for reading an argument.
 * Multiple Queries::          Asking a series of similar questions.
 * Reading a Password::        Reading a password from the terminal.
 * Minibuffer Commands::       Commands used as key bindings in minibuffers.
-* Minibuffer Contents::       How such commands access the minibuffer text.
 * Minibuffer Windows::        Operating on the special minibuffer windows.
+* Minibuffer Contents::       How such commands access the minibuffer text.
 * Recursive Mini::            Whether recursive entry to minibuffer is allowed.
 * Minibuffer Misc::           Various customization hooks and variables.
 
@@ -5811,13 +5920,15 @@ including `beginning-of-line', `forward-word', `forward-sentence', and
 actual text.
 
    The minibuffer's window is normally a single line; it grows
-automatically if the contents require more space.  You can explicitly
-resize it temporarily with the window sizing commands; it reverts to
-its normal size when the minibuffer is exited.  You can resize it
-permanently by using the window sizing commands in the frame's other
-window, when the minibuffer is not active.  If the frame contains just
-a minibuffer, you can change the minibuffer's size by changing the
-frame's size.
+automatically if the contents require more space.  Whilst it is active,
+you can explicitly resize it temporarily with the window sizing
+commands; it reverts to its normal size when the minibuffer is exited.
+When the minibuffer is not active, you can resize it permanently by
+using the window sizing commands in the frame's other window, or
+dragging the mode line with the mouse.  (Due to details of the current
+implementation, for this to work `resize-mini-windows' must be `nil'.)
+If the frame contains just a minibuffer, you can change the
+minibuffer's size by changing the frame's size.
 
    Use of the minibuffer reads input events, and that alters the values
 of variables such as `this-command' and `last-command' (*note Command
@@ -5825,8 +5936,8 @@ Loop Info::).  Your program should bind them around the code that uses
 the minibuffer, if you do not want that to change them.
 
    Under some circumstances, a command can use a minibuffer even if
-there is an active minibuffer; such minibuffers are called a "recursive
-minibuffer".  The first minibuffer is named ` *Minibuf-0*'.  Recursive
+there is an active minibuffer; such a minibuffer is called a "recursive
+minibuffer".  The first minibuffer is named ` *Minibuf-1*'.  Recursive
 minibuffers are named by incrementing the number at the end of the
 name.  (The names begin with a space so that they won't show up in
 normal buffer lists.)  Of several recursive minibuffers, the innermost
@@ -5841,6 +5952,11 @@ the minibuffer also sets up its local map according to the job to be
 done.  *Note Text from Minibuffer::, for the non-completion minibuffer
 local maps.  *Note Completion Commands::, for the minibuffer local maps
 for completion.
+
+   When a minibuffer is inactive, its major mode is
+`minibuffer-inactive-mode', with keymap `minibuffer-inactive-mode-map'.
+This is only really useful if the minibuffer is in a separate frame.
+*Note Minibuffers and Frames::.
 
    When Emacs is running in batch mode, any request to read from the
 minibuffer actually reads a line from the standard input descriptor that
@@ -5864,16 +5980,16 @@ middle of a Lisp function.  Instead, do all minibuffer input as part of
 reading the arguments for a command, in the `interactive'
 specification.  *Note Defining Commands::.
 
- -- Function: read-from-minibuffer prompt-string &optional
-          initial-contents keymap read hist default inherit-input-method
+ -- Function: read-from-minibuffer prompt &optional initial keymap read
+          history default inherit-input-method
      This function is the most general way to get input from the
      minibuffer.  By default, it accepts arbitrary text and returns it
      as a string; however, if READ is non-`nil', then it uses `read' to
      convert the text into a Lisp object (*note Input Functions::).
 
      The first thing this function does is to activate a minibuffer and
-     display it with PROMPT-STRING as the prompt.  This value must be a
-     string.  Then the user can edit text in the minibuffer.
+     display it with PROMPT (which must be a string) as the prompt.
+     Then the user can edit text in the minibuffer.
 
      When the user types a command to exit the minibuffer,
      `read-from-minibuffer' constructs the return value from the text in
@@ -5885,7 +6001,7 @@ specification.  *Note Defining Commands::.
      The argument DEFAULT specifies default values to make available
      through the history commands.  It should be a string, a list of
      strings, or `nil'.  The string or strings become the minibuffer's
-     "future history," available to the user with `M-n'.
+     "future history", available to the user with `M-n'.
 
      If READ is non-`nil', then DEFAULT is also used as the input to
      `read', if the user enters empty input.  If DEFAULT is a list of
@@ -5902,14 +6018,16 @@ specification.  *Note Defining Commands::.
      is the most important way to customize the minibuffer for various
      applications such as completion.
 
-     The argument HIST specifies which history list variable to use for
+     The argument HISTORY specifies a history list variable to use for
      saving the input and for history commands used in the minibuffer.
-     It defaults to `minibuffer-history'.  *Note Minibuffer History::.
+     It defaults to `minibuffer-history'.  You can optionally specify a
+     starting position in the history list as well.  *Note Minibuffer
+     History::.
 
      If the variable `minibuffer-allow-text-properties' is non-`nil',
-     then the string which is returned includes whatever text
-     properties were present in the minibuffer.  Otherwise all the text
-     properties are stripped when the value is returned.
+     then the string that is returned includes whatever text properties
+     were present in the minibuffer.  Otherwise all the text properties
+     are stripped when the value is returned.
 
      If the argument INHERIT-INPUT-METHOD is non-`nil', then the
      minibuffer inherits the current input method (*note Input
@@ -5917,9 +6035,9 @@ specification.  *Note Defining Commands::.
      Text Representations::) from whichever buffer was current before
      entering the minibuffer.
 
-     Use of INITIAL-CONTENTS is mostly deprecated; we recommend using a
+     Use of INITIAL is mostly deprecated; we recommend using a
      non-`nil' value only in conjunction with specifying a cons cell
-     for HIST.  *Note Initial Input::.
+     for HISTORY.  *Note Initial Input::.
 
  -- Function: read-string prompt &optional initial history default
           inherit-input-method
@@ -5932,11 +6050,11 @@ specification.  *Note Defining Commands::.
      `read-from-minibuffer', except that, if non-`nil', it also
      specifies a default value to return if the user enters null input.
      As in `read-from-minibuffer' it should be a string, a list of
-     strings, or `nil' which is equivalent to an empty string.  When
+     strings, or `nil', which is equivalent to an empty string.  When
      DEFAULT is a string, that string is the default value.  When it is
      a list of strings, the first string is the default value.  (All
      these strings are available to the user in the "future minibuffer
-     history.")
+     history".)
 
      This function works by calling the `read-from-minibuffer' function:
 
@@ -5949,16 +6067,16 @@ specification.  *Note Defining Commands::.
                 (if (consp DEFAULT) (car DEFAULT) DEFAULT)
               value))
 
- -- Function: read-regexp prompt &optional default-value
+ -- Function: read-regexp prompt &optional default
      This function reads a regular expression as a string from the
      minibuffer and returns it.  The argument PROMPT is used as in
      `read-from-minibuffer'.  The keymap used is
      `minibuffer-local-map', and `regexp-history' is used as the
      history list (*note regexp-history: Minibuffer History.).
 
-     The optional argument DEFAULT-VALUE specifies a default value to
-     return if the user enters null input; it should be a string, or
-     `nil' which is equivalent to an empty string.
+     The optional argument DEFAULT specifies a default value to return
+     if the user enters null input; it should be a string, or `nil',
+     which is equivalent to an empty string.
 
      In addition, `read-regexp' collects a few useful candidates for
      input and passes them to `read-from-minibuffer', to make them
@@ -5978,14 +6096,14 @@ specification.  *Note Defining Commands::.
      function, after computing the list of defaults as described above.
 
  -- Variable: minibuffer-allow-text-properties
-     If this variable is `nil', then `read-from-minibuffer' strips all
-     text properties from the minibuffer input before returning it.
-     This variable also affects `read-string'.  However,
-     `read-no-blanks-input' (see below), as well as `read-minibuffer'
-     and related functions (*note Reading Lisp Objects With the
-     Minibuffer: Object from Minibuffer.), and all functions that do
-     minibuffer input with completion, discard text properties
-     unconditionally, regardless of the value of this variable.
+     If this variable is `nil', then `read-from-minibuffer' and
+     `read-string' strip all text properties from the minibuffer input
+     before returning it.  However, `read-no-blanks-input' (see below),
+     as well as `read-minibuffer' and related functions (*note Reading
+     Lisp Objects With the Minibuffer: Object from Minibuffer.), and all
+     functions that do minibuffer input with completion, discard text
+     properties unconditionally, regardless of the value of this
+     variable.
 
  -- Variable: minibuffer-local-map
      This is the default local keymap for reading from the minibuffer.
@@ -6013,6 +6131,7 @@ specification.  *Note Defining Commands::.
 
     `M-r'
           `previous-matching-history-element'
+
 
  -- Function: read-no-blanks-input prompt &optional initial
           inherit-input-method
@@ -6100,23 +6219,17 @@ minibuffer.
           (eval (read-minibuffer PROMPT INITIAL))
 
  -- Function: edit-and-eval-command prompt form
-     This function reads a Lisp expression in the minibuffer, and then
-     evaluates it.  The difference between this command and
-     `eval-minibuffer' is that here the initial FORM is not optional
-     and it is treated as a Lisp object to be converted to printed
-     representation rather than as a string of text.  It is printed with
-     `prin1', so if it is a string, double-quote characters (`"')
-     appear in the initial text.  *Note Output Functions::.
-
-     The first thing `edit-and-eval-command' does is to activate the
-     minibuffer with PROMPT as the prompt.  Then it inserts the printed
-     representation of FORM in the minibuffer, and lets the user edit
-     it.  When the user exits the minibuffer, the edited text is read
-     with `read' and then evaluated.  The resulting value becomes the
-     value of `edit-and-eval-command'.
+     This function reads a Lisp expression in the minibuffer, evaluates
+     it, then returns the result.  The difference between this command
+     and `eval-minibuffer' is that here the initial FORM is not
+     optional and it is treated as a Lisp object to be converted to
+     printed representation rather than as a string of text.  It is
+     printed with `prin1', so if it is a string, double-quote
+     characters (`"') appear in the initial text.  *Note Output
+     Functions::.
 
      In the following example, we offer the user an expression with
-     initial text which is a valid form already:
+     initial text that is already a valid form:
 
           (edit-and-eval-command "Please edit: " '(forward-word 1))
 
@@ -6129,7 +6242,6 @@ minibuffer.
 
      Typing <RET> right away would exit the minibuffer and evaluate the
      expression, thus moving point forward one word.
-     `edit-and-eval-command' returns `nil' in this example.
 
 
 File: elisp,  Node: Minibuffer History,  Next: Initial Input,  Prev: Object from Minibuffer,  Up: Minibuffers
@@ -6138,16 +6250,15 @@ File: elisp,  Node: Minibuffer History,  Next: Initial Input,  Prev: Object from
 =======================
 
 A "minibuffer history list" records previous minibuffer inputs so the
-user can reuse them conveniently.  A history list is actually a symbol,
-not a list; it is a variable whose value is a list of strings (previous
-inputs), most recent first.
+user can reuse them conveniently.  It is a variable whose value is a
+list of strings (previous inputs), most recent first.
 
-   There are many separate history lists, used for different kinds of
-inputs.  It's the Lisp programmer's job to specify the right history
-list for each use of the minibuffer.
+   There are many separate minibuffer history lists, used for different
+kinds of inputs.  It's the Lisp programmer's job to specify the right
+history list for each use of the minibuffer.
 
-   You specify the history list with the optional HIST argument to
-either `read-from-minibuffer' or `completing-read'.  Here are the
+   You specify a minibuffer history list with the optional HISTORY
+argument to `read-from-minibuffer' or `completing-read'.  Here are the
 possible values for it:
 
 VARIABLE
@@ -6168,7 +6279,7 @@ VARIABLE
      history as the initial minibuffer contents, using the INITIAL
      argument to the minibuffer input function (*note Initial Input::).
 
-   If you don't specify HIST, then the default history list
+   If you don't specify HISTORY, then the default history list
 `minibuffer-history' is used.  For other standard history lists, see
 below.  You can also create your own history list variable; just
 initialize it to `nil' before the first use.
@@ -6206,15 +6317,14 @@ delete duplicates in history.
      If the value of this variable is `nil', standard functions that
      read from the minibuffer don't add new elements to the history
      list.  This lets Lisp programs explicitly manage input history by
-     using `add-to-history'.  By default, `history-add-new-input' is
-     set to a non-`nil' value.
+     using `add-to-history'.  The default value is `t'.
 
  -- User Option: history-length
      The value of this variable specifies the maximum length for all
      history lists that don't specify their own maximum lengths.  If the
      value is `t', that means there is no maximum (don't delete old
-     elements).  The value of `history-length' property of the history
-     list variable's symbol, if set, overrides this variable for that
+     elements).  If a history list variable's symbol has a non-`nil'
+     `history-length' property, it overrides this variable for that
      particular history list.
 
  -- User Option: history-delete-duplicates
@@ -6248,6 +6358,9 @@ delete duplicates in history.
  -- Variable: read-expression-history
      A history list for arguments that are Lisp expressions to evaluate.
 
+ -- Variable: face-name-history
+     A history list for arguments that are faces.
+
 
 File: elisp,  Node: Initial Input,  Next: Completion,  Prev: Minibuffer History,  Up: Minibuffers
 
@@ -6255,9 +6368,9 @@ File: elisp,  Node: Initial Input,  Next: Completion,  Prev: Minibuffer History,
 ==================
 
 Several of the functions for minibuffer input have an argument called
-INITIAL or INITIAL-CONTENTS.  This is a mostly-deprecated feature for
-specifying that the minibuffer should start out with certain text,
-instead of empty as usual.
+INITIAL.  This is a mostly-deprecated feature for specifying that the
+minibuffer should start out with certain text, instead of empty as
+usual.
 
    If INITIAL is a string, the minibuffer starts out containing the
 text of the string, with point at the end, when the user starts to edit
@@ -6270,8 +6383,8 @@ values provide a much more convenient method to offer useful default
 inputs to the user.
 
    There is just one situation where you should specify a string for an
-INITIAL argument.  This is when you specify a cons cell for the HIST or
-HISTORY argument.  *Note Minibuffer History::.
+INITIAL argument.  This is when you specify a cons cell for the HISTORY
+argument.  *Note Minibuffer History::.
 
    INITIAL can also be a cons cell of the form `(STRING . POSITION)'.
 This means to insert STRING in the minibuffer but put point at POSITION
@@ -6283,10 +6396,9 @@ interpreted as origin-zero; that is, a value of 0 means the beginning
 of the string, 1 means after the first character, etc.  In
 `read-minibuffer', and the other non-completion minibuffer input
 functions that support this argument, 1 means the beginning of the
-string 2 means after the first character, etc.
+string, 2 means after the first character, etc.
 
-   Use of a cons cell as the value for INITIAL arguments is deprecated
-in user code.
+   Use of a cons cell as the value for INITIAL arguments is deprecated.
 
 
 File: elisp,  Node: Completion,  Next: Yes-or-No Queries,  Prev: Initial Input,  Up: Minibuffers
@@ -6324,11 +6436,12 @@ certain kinds of names with completion.
 * Minibuffer Completion::  Invoking the minibuffer with completion.
 * Completion Commands::    Minibuffer commands that do completion.
 * High-Level Completion::  Convenient special cases of completion
-                             (reading buffer name, file name, etc.).
+                             (reading buffer names, variable names, etc.).
 * Reading File Names::     Using completion to read file names and
                              shell commands.
-* Completion Styles::      Specifying rules for performing completion.
-* Programmed Completion::  Writing your own completion-function.
+* Completion Variables::   Variables controlling completion behavior.
+* Programmed Completion::  Writing your own completion function.
+* Completion in Buffers::  Completing text in ordinary buffers.
 
 
 File: elisp,  Node: Basic Completion,  Next: Minibuffer Completion,  Up: Completion
@@ -6342,10 +6455,11 @@ higher-level completion features that do use the minibuffer.
 
  -- Function: try-completion string collection &optional predicate
      This function returns the longest common substring of all possible
-     completions of STRING in COLLECTION.  The value of COLLECTION must
-     be a list of strings, an alist whose keys are strings or symbols,
-     an obarray, a hash table, or a completion function (*note
-     Programmed Completion::).
+     completions of STRING in COLLECTION.
+
+     The COLLECTION argument is called the "completion table".  Its
+     value must be a list of strings, an alist whose keys are strings
+     or symbols, an obarray, a hash table, or a completion function.
 
      Completion compares STRING against each of the permissible
      completions specified by COLLECTION.  If no permissible
@@ -6358,19 +6472,14 @@ higher-level completion features that do use the minibuffer.
      permissible completions are the elements of the alist that are
      either strings, or conses whose CAR is a string or symbol.
      Symbols are converted to strings using `symbol-name'.  Other
-     elements of the alist are ignored. (Remember that in Emacs Lisp,
+     elements of the alist are ignored.  (Remember that in Emacs Lisp,
      the elements of alists do not _have_ to be conses.)  In
      particular, a list of strings is allowed, even though we usually
      do not think of such lists as alists.
 
      If COLLECTION is an obarray (*note Creating Symbols::), the names
      of all symbols in the obarray form the set of permissible
-     completions.  The global variable `obarray' holds an obarray
-     containing the names of all interned Lisp symbols.
-
-     Note that the only valid way to make a new obarray is to create it
-     empty and then add symbols to it one by one using `intern'.  Also,
-     you cannot intern a given symbol in more than one obarray.
+     completions.
 
      If COLLECTION is a hash table, then the keys that are strings are
      the possible completions.  Other keys are ignored.
@@ -6378,8 +6487,8 @@ higher-level completion features that do use the minibuffer.
      You can also use a function as COLLECTION.  Then the function is
      solely responsible for performing completion; `try-completion'
      returns whatever this function returns.  The function is called
-     with three arguments: STRING, PREDICATE and `nil' (the reason for
-     the third argument is so that the same function can be used in
+     with three arguments: STRING, PREDICATE and `nil' (the third
+     argument is so that the same function can be used in
      `all-completions' and do the appropriate thing in either case).
      *Note Programmed Completion::.
 
@@ -6402,7 +6511,7 @@ higher-level completion features that do use the minibuffer.
      matched by three of the alist CARs.  All of the matches begin with
      the characters `fooba', so that is the result.  In the second
      example, there is only one possible match, and it is exact, so the
-     value is `t'.
+     return value is `t'.
 
           (try-completion
            "foo"
@@ -6434,16 +6543,10 @@ higher-level completion features that do use the minibuffer.
                => "foobar"
 
  -- Function: all-completions string collection &optional predicate
-          nospace
      This function returns a list of all possible completions of
-     STRING.  The arguments to this function (aside from NOSPACE) are
-     the same as those of `try-completion'.  Also, this function uses
-     `completion-regexp-list' in the same way that `try-completion'
-     does.
-
-     The optional argument NOSPACE is obsolete.  If it is non-`nil',
-     completions that start with a space are ignored unless STRING
-     starts with a space.
+     STRING.  The arguments to this function are the same as those of
+     `try-completion', and it uses `completion-regexp-list' in the same
+     way that `try-completion' does.
 
      If COLLECTION is a function, it is called with three arguments:
      STRING, PREDICATE and `t'; then `all-completions' returns whatever
@@ -6464,7 +6567,7 @@ higher-level completion features that do use the minibuffer.
 
  -- Function: test-completion string collection &optional predicate
      This function returns non-`nil' if STRING is a valid completion
-     possibility specified by COLLECTION and PREDICATE.  The arguments
+     alternative specified by COLLECTION and PREDICATE.  The arguments
      are the same as in `try-completion'.  For instance, if COLLECTION
      is a list of strings, this is true if STRING appears in the list
      and PREDICATE is satisfied.
@@ -6500,8 +6603,8 @@ higher-level completion features that do use the minibuffer.
      pertains to the area after `"/usr/"' and before `"/doc"'.
 
    If you store a completion alist in a variable, you should mark the
-variable as "risky" with a non-`nil' `risky-local-variable' property.
-*Note File Local Variables::.
+variable as "risky" by giving it a non-`nil' `risky-local-variable'
+property.  *Note File Local Variables::.
 
  -- Variable: completion-ignore-case
      If the value of this variable is non-`nil', case is not considered
@@ -6526,26 +6629,9 @@ variable as "risky" with a non-`nil' `risky-local-variable' property.
      VAR.  It is done by calling FUN with no arguments.  The value FUN
      returns becomes the permanent value of VAR.
 
-     Here is an example of use:
+     Here is an example:
 
           (defvar foo (lazy-completion-table foo make-my-alist))
-
-   The function `completion-in-region' provides a convenient way to
-perform completion on an arbitrary stretch of text in an Emacs buffer:
-
- -- Function: completion-in-region start end collection &optional
-          predicate
-     This function completes the text in the current buffer between the
-     positions START and END, using COLLECTION.  The argument
-     COLLECTION has the same meaning as in `try-completion' (*note
-     Basic Completion::).
-
-     This function inserts the completion text directly into the current
-     buffer.  Unlike `completing-read' (*note Minibuffer Completion::),
-     it does not activate the minibuffer.
-
-     For this function to work, point must be somewhere between START
-     and END.
 
 
 File: elisp,  Node: Minibuffer Completion,  Next: Completion Commands,  Prev: Basic Completion,  Up: Completion
@@ -6557,17 +6643,18 @@ This section describes the basic interface for reading from the
 minibuffer with completion.
 
  -- Function: completing-read prompt collection &optional predicate
-          require-match initial hist default inherit-input-method
+          require-match initial history default inherit-input-method
      This function reads a string in the minibuffer, assisting the user
      by providing completion.  It activates the minibuffer with prompt
      PROMPT, which must be a string.
 
-     The actual completion is done by passing COLLECTION and PREDICATE
-     to the function `try-completion' (*note Basic Completion::).  This
-     happens in certain commands bound in the local keymaps used for
-     completion.  Some of these commands also call `test-completion'.
-     Thus, if PREDICATE is non-`nil', it should be compatible with
-     COLLECTION and `completion-ignore-case'.  *Note Definition of
+     The actual completion is done by passing the completion table
+     COLLECTION and the completion predicate PREDICATE to the function
+     `try-completion' (*note Basic Completion::).  This happens in
+     certain commands bound in the local keymaps used for completion.
+     Some of these commands also call `test-completion'.  Thus, if
+     PREDICATE is non-`nil', it should be compatible with COLLECTION
+     and `completion-ignore-case'.  *Note Definition of
      test-completion::.
 
      The value of the optional argument REQUIRE-MATCH determines how
@@ -6602,14 +6689,14 @@ minibuffer with completion.
      is `nil', and uses `minibuffer-local-must-match-map' if
      REQUIRE-MATCH is non-`nil'.  *Note Completion Commands::.
 
-     The argument HIST specifies which history list variable to use for
-     saving the input and for minibuffer history commands.  It defaults
-     to `minibuffer-history'.  *Note Minibuffer History::.
+     The argument HISTORY specifies which history list variable to use
+     for saving the input and for minibuffer history commands.  It
+     defaults to `minibuffer-history'.  *Note Minibuffer History::.
 
      The argument INITIAL is mostly deprecated; we recommend using a
      non-`nil' value only in conjunction with specifying a cons cell
-     for HIST.  *Note Initial Input::.  For default input, use DEFAULT
-     instead.
+     for HISTORY.  *Note Initial Input::.  For default input, use
+     DEFAULT instead.
 
      If the argument INHERIT-INPUT-METHOD is non-`nil', then the
      minibuffer inherits the current input method (*note Input
@@ -6617,11 +6704,11 @@ minibuffer with completion.
      Text Representations::) from whichever buffer was current before
      entering the minibuffer.
 
-     If the built-in variable `completion-ignore-case' is non-`nil',
-     completion ignores case when comparing the input against the
-     possible matches.  *Note Basic Completion::.  In this mode of
-     operation, PREDICATE must also ignore case, or you will get
-     surprising results.
+     If the variable `completion-ignore-case' is non-`nil', completion
+     ignores case when comparing the input against the possible
+     matches.  *Note Basic Completion::.  In this mode of operation,
+     PREDICATE must also ignore case, or you will get surprising
+     results.
 
      Here's an example of using `completing-read':
 
@@ -6644,6 +6731,13 @@ minibuffer with completion.
      to the commands that actually do completion.  They are described
      in the following section.
 
+ -- Variable: completing-read-function
+     The value of this variable must be a function, which is called by
+     `completing-read' to actually do its work.  It should accept the
+     same arguments as `completing-read'.  This can be bound to a
+     different function to completely override the normal behavior of
+     `completing-read'.
+
 
 File: elisp,  Node: Completion Commands,  Next: High-Level Completion,  Prev: Minibuffer Completion,  Up: Completion
 
@@ -6654,10 +6748,11 @@ This section describes the keymaps, commands and user options used in
 the minibuffer to do completion.
 
  -- Variable: minibuffer-completion-table
-     The value of this variable is the collection used for completion in
-     the minibuffer.  This is the global variable that contains what
-     `completing-read' passes to `try-completion'.  It is used by
-     minibuffer completion commands such as `minibuffer-complete-word'.
+     The value of this variable is the completion table used for
+     completion in the minibuffer.  This is the global variable that
+     contains what `completing-read' passes to `try-completion'.  It is
+     used by minibuffer completion commands such as
+     `minibuffer-complete-word'.
 
  -- Variable: minibuffer-completion-predicate
      This variable's value is the predicate that `completing-read'
@@ -6730,9 +6825,9 @@ the minibuffer to do completion.
      visual feedback.  This is not needed in the minibuffer; for
      minibuffer completion, you can pass `nil'.
 
-     This function is called by `minibuffer-completion-help'.  The most
-     common way to use it is together with
-     `with-output-to-temp-buffer', like this:
+     This function is called by `minibuffer-completion-help'.  A common
+     way to use it is together with `with-output-to-temp-buffer', like
+     this:
 
           (with-output-to-temp-buffer "*Completions*"
             (display-completion-list
@@ -6759,7 +6854,7 @@ the minibuffer to do completion.
     <TAB>
           `minibuffer-complete'
 
-     with other characters bound as in `minibuffer-local-map' (*note
+     and uses `minibuffer-local-map' as its parent keymap (*note
      Definition of minibuffer-local-map::).
 
  -- Variable: minibuffer-local-must-match-map
@@ -6769,32 +6864,19 @@ the minibuffer to do completion.
      minibuffer unconditionally.  By default, this keymap makes the
      following bindings:
 
-    `?'
-          `minibuffer-completion-help'
-
-    <SPC>
-          `minibuffer-complete-word'
-
-    <TAB>
-          `minibuffer-complete'
-
     `C-j'
           `minibuffer-complete-and-exit'
 
     <RET>
           `minibuffer-complete-and-exit'
 
-     with other characters bound as in `minibuffer-local-map'.
+     and uses `minibuffer-local-completion-map' as its parent keymap.
 
  -- Variable: minibuffer-local-filename-completion-map
-     This is like `minibuffer-local-completion-map' except that it does
-     not bind <SPC>.  This keymap is used by the function
-     `read-file-name'.
-
- -- Variable: minibuffer-local-filename-must-match-map
-     This is like `minibuffer-local-must-match-map' except that it does
-     not bind <SPC>.  This keymap is used by the function
-     `read-file-name'.
+     This is a sparse keymap that simply unbinds <SPC>; because
+     filenames can contain spaces.  The function `read-file-name'
+     combines this keymap with either `minibuffer-local-completion-map'
+     or `minibuffer-local-must-match-map'.
 
 
 File: elisp,  Node: High-Level Completion,  Next: Reading File Names,  Prev: Completion Commands,  Up: Completion
@@ -6802,7 +6884,7 @@ File: elisp,  Node: High-Level Completion,  Next: Reading File Names,  Prev: Com
 20.6.4 High-Level Completion Functions
 --------------------------------------
 
-This section describes the higher-level convenient functions for
+This section describes the higher-level convenience functions for
 reading certain sorts of names with completion.
 
    In most cases, you should not call these functions in the middle of a
@@ -6865,7 +6947,7 @@ specification.  *Note Defining Commands::.
      The argument DEFAULT specifies what to return if the user enters
      null input.  It can be a symbol, a string or a list of strings.
      If it is a string, `read-command' interns it before returning it.
-     If it is a list, `read-command' returns the first element of this
+     If it is a list, `read-command' interns the first element of this
      list.  If DEFAULT is `nil', that means no default has been
      specified; then if the user enters null input, the return value is
      `(intern "")', that is, a symbol whose name is an empty string.
@@ -6894,55 +6976,28 @@ specification.  *Note Defining Commands::.
 
  -- Function: read-variable prompt &optional default
      This function reads the name of a user variable and returns it as a
-     symbol.
-
-     The argument DEFAULT specifies the default value to return if the
-     user enters null input.  It can be a symbol, a string, or a list
-     of strings.  If it is a string, `read-variable' interns it to make
-     the default value.  If it is a list, `read-variable' interns the
-     first element.  If DEFAULT is `nil', that means no default has
-     been specified; then if the user enters null input, the return
-     value is `(intern "")'.
-
-          (read-variable "Variable name? ")
-
-          ;; After evaluation of the preceding expression,
-          ;;   the following prompt appears,
-          ;;   with an empty minibuffer:
-
-          ---------- Buffer: Minibuffer ----------
-          Variable name? -!-
-          ---------- Buffer: Minibuffer ----------
-
-     If the user then types `fill-p <RET>', `read-variable' returns
-     `fill-prefix'.
-
-     In general, `read-variable' is similar to `read-command', but uses
-     the predicate `user-variable-p' instead of `commandp':
-
-          (read-variable PROMPT)
-          ==
-          (intern
-           (completing-read PROMPT obarray
-                            'user-variable-p t nil))
+     symbol.  Its arguments have the same form as those of
+     `read-command'.  In general, this function is similar to
+     `read-command', but uses the predicate `user-variable-p' instead
+     of `commandp'.
 
  -- Command: read-color &optional prompt convert allow-empty display
      This function reads a string that is a color specification, either
      the color's name or an RGB hex value such as `#RRRGGGBBB'.  It
-     prompts with PROMPT (default: `"Color (name or #R+G+B+):"') and
-     provides completion for color names, but not for hex RGB values.
-     In addition to names of standard colors, completion candidates
-     include the foreground and background colors at point.
+     prompts with PROMPT (default: `"Color (name or #RGB triplet):"')
+     and provides completion for color names, but not for hex RGB
+     values.  In addition to names of standard colors, completion
+     candidates include the foreground and background colors at point.
 
      Valid RGB values are described in *note Color Names::.
 
-     The function's return value is the color name typed by the user in
-     the minibuffer.  However, when called interactively or if the
-     optional argument CONVERT is non-`nil', it converts the name into
-     the color's RGB value and returns that value as a string.  If an
-     invalid color name was specified, this function signals an error,
-     except that empty color names are allowed when `allow-empty' is
-     non-`nil' and the user enters null input.
+     The function's return value is the string typed by the user in the
+     minibuffer.  However, when called interactively or if the optional
+     argument CONVERT is non-`nil', it converts any input color name
+     into the corresponding RGB value string and instead returns that.
+     This function requires a valid color specification to be input.
+     Empty color names are allowed when ALLOW-EMPTY is non-`nil' and
+     the user enters null input.
 
      Interactively, or when DISPLAY is non-`nil', the return value is
      also displayed in the echo area.
@@ -6951,3 +7006,8 @@ specification.  *Note Defining Commands::.
 `read-non-nil-coding-system', in *note User-Chosen Coding Systems::,
 and `read-input-method-name', in *note Input Methods::.
 
+
+
+Local Variables:
+coding: iso-8859-1
+End:

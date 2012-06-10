@@ -1,8 +1,6 @@
 ;;; cc-menus.el --- imenu support for CC Mode
 
-;; Copyright (C) 1985, 1987, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-;;   1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1987, 1992-2012  Free Software Foundation, Inc.
 
 ;; Authors:    1998- Martin Stjernholm
 ;;             1992-1999 Barry A. Warsaw
@@ -11,8 +9,8 @@
 ;;             1985 Richard M. Stallman
 ;; Maintainer: bug-cc-mode@gnu.org
 ;; Created:    22-Apr-1997 (split from cc-mode.el)
-;; Version:    See cc-mode.el
-;; Keywords:   c languages oop
+;; Keywords:   c languages
+;; Package:    cc-mode
 
 ;; This file is part of GNU Emacs.
 
@@ -65,10 +63,24 @@ For example:
 
 A sample value might look like: `\\(_P\\|_PROTO\\)'.")
 
+;;			  *Warning for cc-mode developers*
+;;
+;; `cc-imenu-objc-generic-expression' elements depend on
+;; `cc-imenu-c++-generic-expression'. So if you change this
+;; expression, you need to change following variables,
+;; `cc-imenu-objc-generic-expression-*-index',
+;; too. `cc-imenu-objc-function' uses these *-index variables, in
+;; order to know where the each regexp *group \\(foobar\\)* elements
+;; are started.
+;;
+;; *-index variables are initialized during `cc-imenu-objc-generic-expression'
+;; being initialized.
+;;
+
 (defvar cc-imenu-c++-generic-expression
   `(
     ;; Try to match ::operator definitions first. Otherwise `X::operator new ()'
-    ;; will be incorrectly recognised as function `new ()' because the regexps
+    ;; will be incorrectly recognized as function `new ()' because the regexps
     ;; work by backtracking from the end of the definition.
     (nil
      ,(concat
@@ -110,8 +122,11 @@ A sample value might look like: `\\(_P\\|_PROTO\\)'.")
        "[^" c-alnum "_:<>~]"                  ; match any non-identifier char
        "\\([" c-alpha "_][" c-alnum "_:<>~]*\\)" ; match function name
        "\\([ \t\n]\\|\\\\\n\\)*("	      ; see above, BUT the arg list
-       "\\([ \t\n]\\|\\\\\n\\)*\\([^ \t\n(*][^)]*\\)?)" ; must not start
-       "\\([ \t\n]\\|\\\\\n\\)*[^ \t\n;(]"    ; with an asterisk or parentheses
+       "\\([ \t\n]\\|\\\\\n\\)*"	      ; must not start
+       "\\([^ \t\n(*]"			      ; with an asterisk or parentheses
+       "[^()]*\\(([^()]*)[^()]*\\)*"	      ; Maybe function pointer arguments
+       "\\)?)"
+       "\\([ \t\n]\\|\\\\\n\\)*[^ \t\n;(]"
        ) 1)
     ;; Special case for definitions using phony prototype macros like:
     ;; `int main _PROTO( (int argc,char *argv[]) )'.
@@ -186,23 +201,8 @@ A sample value might look like: `\\(_P\\|_PROTO\\)'.")
                ")"
                "[.," c-alnum " \t\n\r]*"
                "{"
-               )) 1))
-  "Imenu generic expression for Java mode.  See
-`imenu-generic-expression'.")
-
-;;                        *Warning for cc-mode developers*
-;;
-;; `cc-imenu-objc-generic-expression' elements depend on
-;; `cc-imenu-c++-generic-expression'. So if you change this
-;; expression, you need to change following variables,
-;; `cc-imenu-objc-generic-expression-*-index',
-;; too. `cc-imenu-objc-function' uses these *-index variables, in
-;; order to know where the each regexp *group \\(foobar\\)* elements
-;; are started.
-;;
-;; *-index variables are initialized during `cc-imenu-objc-generic-expression'
-;; being initialized.
-;;
+	       )) 1))
+  "Imenu generic expression for Java mode.  See `imenu-generic-expression'.")
 
 ;; Internal variables
 (defvar cc-imenu-objc-generic-expression-noreturn-index nil)
@@ -223,7 +223,7 @@ A sample value might look like: `\\(_P\\|_PROTO\\)'.")
    "\\|"
    ;; > General function name regexp
    ;; Pick a token by  (match-string 3)
-   (car (cdr (nth 2 cc-imenu-c++-generic-expression))) ; -> index += 5
+   (car (cdr (nth 2 cc-imenu-c++-generic-expression))) ; -> index += 6
    (prog2 (setq cc-imenu-objc-generic-expression-general-func-index 3) "")
    ;; > Special case for definitions using phony prototype macros like:
    ;; > `int main _PROTO( (int argc,char *argv[]) )'.
@@ -232,11 +232,11 @@ A sample value might look like: `\\(_P\\|_PROTO\\)'.")
        (concat
 	"\\|"
 	(car (cdr (nth 3 cc-imenu-c++-generic-expression))) ; -> index += 1
-	(prog2 (setq cc-imenu-objc-generic-expression-objc-base-index 9) "")
+	(prog2 (setq cc-imenu-objc-generic-expression-objc-base-index 10) "")
 	)
-     (prog2 (setq cc-imenu-objc-generic-expression-objc-base-index 8) "")
+     (prog2 (setq cc-imenu-objc-generic-expression-objc-base-index 9) "")
      "")				; -> index += 0
-   (prog2 (setq cc-imenu-objc-generic-expression-proto-index 8) "")
+   (prog2 (setq cc-imenu-objc-generic-expression-proto-index 9) "")
    ;;
    ;; For Objective-C
    ;; Pick a token by (match-string 8 or 9)
@@ -442,5 +442,4 @@ Example:
 
 (cc-provide 'cc-menus)
 
-;; arch-tag: f6b60933-91f0-4145-ab44-70ca6d1b919b
 ;;; cc-menus.el ends here

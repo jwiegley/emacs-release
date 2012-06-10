@@ -1,7 +1,6 @@
 ;;; calc-ext.el --- various extension functions for Calc
 
-;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1990-1993, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -104,6 +103,7 @@
   (define-key calc-mode-map "J" 'calc-conj)
   (define-key calc-mode-map "L" 'calc-ln)
   (define-key calc-mode-map "N" 'calc-eval-num)
+  (define-key calc-mode-map "O" 'calc-option)
   (define-key calc-mode-map "P" 'calc-pi)
   (define-key calc-mode-map "Q" 'calc-sqrt)
   (define-key calc-mode-map "R" 'calc-round)
@@ -135,8 +135,6 @@
   (define-key calc-mode-map "\C-w" 'calc-kill-region)
   (define-key calc-mode-map "\M-w" 'calc-copy-region-as-kill)
   (define-key calc-mode-map "\M-\C-w" 'kill-ring-save)
-  (define-key calc-mode-map "\C-_" 'calc-undo)
-  (define-key calc-mode-map "\C-xu" 'calc-undo)
   (define-key calc-mode-map "\M-\C-m" 'calc-last-args)
 
   (define-key calc-mode-map "a" nil)
@@ -422,6 +420,20 @@
   (define-key calc-mode-map "kN" 'calc-utpn)
   (define-key calc-mode-map "kP" 'calc-utpp)
   (define-key calc-mode-map "kT" 'calc-utpt)
+
+  (define-key calc-mode-map "l" nil)
+  (define-key calc-mode-map "lq" 'calc-lu-quant)
+  (define-key calc-mode-map "ld" 'calc-db)
+  (define-key calc-mode-map "ln" 'calc-np)
+  (define-key calc-mode-map "l+" 'calc-lu-plus)
+  (define-key calc-mode-map "l-" 'calc-lu-minus)
+  (define-key calc-mode-map "l*" 'calc-lu-times)
+  (define-key calc-mode-map "l/" 'calc-lu-divide)
+  (define-key calc-mode-map "ls" 'calc-spn)
+  (define-key calc-mode-map "lm" 'calc-midi)
+  (define-key calc-mode-map "lf" 'calc-freq)
+
+  (define-key calc-mode-map "l?" 'calc-l-prefix-help)
 
   (define-key calc-mode-map "m" nil)
   (define-key calc-mode-map "m?" 'calc-m-prefix-help)
@@ -931,7 +943,11 @@ calc-store-value calc-var-name)
  ("calc-stuff" calc-explain-why calcFunc-clean
 calcFunc-pclean calcFunc-pfloat calcFunc-pfrac)
 
- ("calc-units" calcFunc-usimplify
+ ("calc-units" calcFunc-usimplify calcFunc-lufadd calcFunc-lupadd
+calcFunc-lufsub calcFunc-lupsub calcFunc-lufmul calcFunc-lupmul
+calcFunc-lufdiv calcFunc-lupdiv calcFunc-lufquant calcFunc-lupquant
+calcFunc-dbfield calcFunc-dbpower calcFunc-npfield
+calcFunc-nppower calcFunc-spn calcFunc-midi calcFunc-freq
 math-build-units-table math-build-units-table-buffer
 math-check-unit-name math-convert-temperature math-convert-units
 math-extract-units math-remove-units math-simplify-units
@@ -959,7 +975,7 @@ math-read-brackets math-reduce-cols math-reduce-vec math-transpose)
 
  ("calc-yank" calc-alg-edit calc-clean-newlines
 calc-do-grab-rectangle calc-do-grab-region calc-finish-stack-edit
-calc-copy-to-register calc-insert-register 
+calc-copy-to-register calc-insert-register
 calc-append-to-register calc-prepend-to-register
 calc-force-refresh calc-locate-cursor-element calc-show-edit-buffer)
 
@@ -988,7 +1004,7 @@ calc-floor calc-idiv calc-increment calc-mant-part calc-max calc-min
 calc-round calc-scale-float calc-sign calc-trunc calc-xpon-part)
 
  ("calc-bin" calc-and calc-binary-radix calc-clip calc-twos-complement-mode
-calc-decimal-radix calc-diff calc-hex-radix calc-leading-zeros 
+calc-decimal-radix calc-diff calc-hex-radix calc-leading-zeros
 calc-lshift-arith calc-lshift-binary calc-not calc-octal-radix calc-or calc-radix
 calc-rotate-binary calc-rshift-arith calc-rshift-binary calc-word-size
 calc-xor)
@@ -1045,10 +1061,11 @@ calc-graph-zero-x calc-graph-zero-y)
 calc-d-prefix-help calc-describe-function calc-describe-key
 calc-describe-key-briefly calc-describe-variable calc-f-prefix-help
 calc-full-help calc-g-prefix-help calc-help-prefix
-calc-hyperbolic-prefix-help calc-inv-hyp-prefix-help
+calc-hyperbolic-prefix-help calc-inv-hyp-prefix-help calc-option-prefix-help
 calc-inverse-prefix-help calc-j-prefix-help calc-k-prefix-help
 calc-m-prefix-help calc-r-prefix-help calc-s-prefix-help
-calc-t-prefix-help calc-u-prefix-help calc-v-prefix-help)
+calc-t-prefix-help calc-u-prefix-help calc-l-prefix-help
+calc-v-prefix-help)
 
  ("calc-incom" calc-begin-complex calc-begin-vector calc-comma
 calc-dots calc-end-complex calc-end-vector calc-semi)
@@ -1155,14 +1172,17 @@ calc-trail-kill calc-trail-last calc-trail-marker calc-trail-next
 calc-trail-out calc-trail-previous calc-trail-scroll-left
 calc-trail-scroll-right calc-trail-yank)
 
- ("calc-undo" calc-last-args calc-redo calc-undo)
+ ("calc-undo" calc-last-args calc-redo)
 
  ("calc-units" calc-autorange-units calc-base-units
 calc-convert-temperature calc-convert-units calc-define-unit
 calc-enter-units-table calc-explain-units calc-extract-units
 calc-get-unit-definition calc-permanent-units calc-quick-units
 calc-remove-units calc-simplify-units calc-undefine-unit
-calc-view-units-table)
+calc-view-units-table calc-lu-quant calc-db
+calc-np calc-lu-plus calc-lu-minus
+calc-lu-times calc-lu-divide calc-spn calc-midi
+calc-freq)
 
  ("calc-vec" calc-arrange-vector calc-build-vector calc-cnorm
 calc-conj-transpose calc-cons calc-cross calc-kron calc-diag
@@ -1408,9 +1428,18 @@ calc-kill calc-kill-region calc-yank))))
                        (with-current-buffer calc-main-buffer
                          calc-hyperbolic-flag)
                      calc-hyperbolic-flag))
-         (msg (if hyp-flag
-                 "Inverse Hyperbolic..."
-               "Inverse...")))
+         (opt-flag (if (or
+                        (eq major-mode 'calc-keypad-mode)
+                        (eq major-mode 'calc-trail-mode))
+                       (with-current-buffer calc-main-buffer
+                         calc-option-flag)
+                     calc-option-flag))
+         (msg
+          (cond
+           ((and opt-flag hyp-flag) "Option Inverse Hyperbolic...")
+           (hyp-flag "Inverse Hyperbolic...")
+           (opt-flag "Option Inverse...")
+           (t "Inverse..."))))
     (calc-fancy-prefix 'calc-inverse-flag msg n)))
 
 (defconst calc-fancy-prefix-map
@@ -1489,9 +1518,18 @@ calc-kill calc-kill-region calc-yank))))
                        (with-current-buffer calc-main-buffer
                          calc-inverse-flag)
                      calc-inverse-flag))
-         (msg (if inv-flag
-                  "Inverse Hyperbolic..."
-                "Hyperbolic...")))
+         (opt-flag (if (or
+                        (eq major-mode 'calc-keypad-mode)
+                        (eq major-mode 'calc-trail-mode))
+                       (with-current-buffer calc-main-buffer
+                         calc-option-flag)
+                     calc-option-flag))
+         (msg
+          (cond
+           ((and opt-flag inv-flag) "Option Inverse Hyperbolic...")
+           (opt-flag "Option Hyperbolic...")
+           (inv-flag "Inverse Hyperbolic...")
+           (t "Hyperbolic..."))))
     (calc-fancy-prefix 'calc-hyperbolic-flag msg n)))
 
 (defun calc-hyperbolic-func ()
@@ -1503,6 +1541,31 @@ calc-kill calc-kill-region calc-yank))))
 
 (defun calc-is-hyperbolic ()
   calc-hyperbolic-flag)
+
+(defun calc-option (&optional n)
+  (interactive "P")
+  (let* ((inv-flag (if (or
+                        (eq major-mode 'calc-keypad-mode)
+                        (eq major-mode 'calc-trail-mode))
+                       (with-current-buffer calc-main-buffer
+                         calc-inverse-flag)
+                     calc-inverse-flag))
+         (hyp-flag (if (or
+                        (eq major-mode 'calc-keypad-mode)
+                        (eq major-mode 'calc-trail-mode))
+                       (with-current-buffer calc-main-buffer
+                         calc-hyperbolic-flag)
+                     calc-hyperbolic-flag))
+         (msg
+          (cond
+           ((and hyp-flag inv-flag) "Option Inverse Hyperbolic...")
+           (hyp-flag "Option Hyperbolic...")
+           (inv-flag "Option Inverse...")
+           (t "Option..."))))
+    (calc-fancy-prefix 'calc-option-flag msg n)))
+
+(defun calc-is-option ()
+  calc-option-flag)
 
 (defun calc-keep-args (&optional n)
   (interactive "P")
@@ -1658,8 +1721,8 @@ calc-kill calc-kill-region calc-yank))))
 (defun calc-execute-extended-command (n)
   (interactive "P")
   (let* ((prompt (concat (calc-num-prefix-name n) "M-x "))
-	 (cmd (intern 
-               (completing-read prompt obarray 'commandp t "calc-" 
+	 (cmd (intern
+               (completing-read prompt obarray 'commandp t "calc-"
                                 'calc-extended-command-history))))
     (setq prefix-arg n)
     (command-execute cmd)))
@@ -2804,38 +2867,30 @@ If X is not an error form, return 1."
 	   (memq (nth 2 expr) '(var-inf var-uinf var-nan)))))
 
 ;; The variable math-integral-cache is originally declared in calcalg2.el,
-;; but is set by math-defintegral and math-definitegral2.
+;; but is set by math-defintegral and math-defintegral-2.
 (defvar math-integral-cache)
 
 (defmacro math-defintegral (funcs &rest code)
   (setq math-integral-cache nil)
-  (append '(progn)
-	  (mapcar (function
-		   (lambda (func)
-		     (list 'put (list 'quote func) ''math-integral
-			   (list 'nconc
-				 (list 'get (list 'quote func) ''math-integral)
-				 (list 'list
-				       (list 'function
-					     (append '(lambda (u))
-						     code)))))))
-		  (if (symbolp funcs) (list funcs) funcs))))
+  (cons 'progn
+        (mapcar #'(lambda (func)
+                    `(put ',func 'math-integral
+                          (nconc
+                           (get ',func 'math-integral)
+                           (list
+                            #'(lambda (u) ,@code)))))
+                (if (symbolp funcs) (list funcs) funcs))))
 (put 'math-defintegral 'lisp-indent-hook 1)
 
 (defmacro math-defintegral-2 (funcs &rest code)
   (setq math-integral-cache nil)
-  (append '(progn)
-	  (mapcar (function
-		   (lambda (func)
-		     (list 'put (list 'quote func) ''math-integral-2
-			   (list 'nconc
-				 (list 'get (list 'quote func)
-				       ''math-integral-2)
-				 (list 'list
-				       (list 'function
-					     (append '(lambda (u v))
-						     code)))))))
-		  (if (symbolp funcs) (list funcs) funcs))))
+  (cons 'progn
+        (mapcar #'(lambda (func)
+                    `(put ',func 'math-integral-2
+                          (nconc
+                            (get ',func 'math-integral-2)
+                            (list #'(lambda (u v) ,@code)))))
+                (if (symbolp funcs) (list funcs) funcs))))
 (put 'math-defintegral-2 'lisp-indent-hook 1)
 
 (defvar var-IntegAfterRules 'calc-IntegAfterRules)
@@ -3239,7 +3294,7 @@ If X is not an error form, return 1."
 	     (concat "-" (math-format-flat-expr (nth 1 a) 1000)))
 	    (t
 	     (concat (math-remove-dashes
-		      (if (string-match "\\`calcFunc-\\([a-zA-Z0-9']+\\)\\'"
+		      (if (string-match "\\`calcFunc-\\([a-zA-Zα-ωΑ-Ω0-9']+\\)\\'"
 					(symbol-name (car a)))
 			  (math-match-substring (symbol-name (car a)) 1)
 			(symbol-name (car a))))
@@ -3425,7 +3480,8 @@ If X is not an error form, return 1."
 
 (defun math-group-float (str)   ; [X X]
   (let* ((pt (or (string-match "[^0-9a-zA-Z]" str) (length str)))
-	 (g (if (integerp calc-group-digits) (math-abs calc-group-digits) 3))
+	 (g (if (integerp calc-group-digits) (math-abs calc-group-digits)
+              (if (memq calc-number-radix '(2 16)) 4 3)))
 	 (i pt))
     (if (and (integerp calc-group-digits) (< calc-group-digits 0))
 	(while (< (setq i (+ (1+ i) g)) (length str))
@@ -3455,5 +3511,8 @@ A key may contain additional specs for Inverse, Hyperbolic, and Inv+Hyp.")
 
 (provide 'calc-ext)
 
-;; arch-tag: 1814ba7f-a390-49dc-9e25-a5adc205e97e
+;; Local variables:
+;; coding: utf-8
+;; End:
+
 ;;; calc-ext.el ends here

@@ -1,10 +1,10 @@
 ;;; rmailkwd.el --- part of the "RMAIL" mail reader for Emacs
 
-;; Copyright (C) 1985, 1988, 1994, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1988, 1994, 2001-2012  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: mail
+;; Package: rmail
 
 ;; This file is part of GNU Emacs.
 
@@ -96,7 +96,8 @@ LABEL may be a symbol or string."
       (error "More than one label specified"))
   (with-current-buffer rmail-buffer
     (rmail-maybe-set-message-counters)
-    (or msg (setq msg rmail-current-message))
+    (if (zerop (or msg (setq msg rmail-current-message)))
+	(error "No message"))
     ;; Force recalculation of summary for this message.
     (aset rmail-summary-vector (1- msg) nil)
     (let (attr-index)
@@ -193,5 +194,4 @@ With prefix argument N moves forward N messages with these labels."
 ;; generated-autoload-file: "rmail.el"
 ;; End:
 
-;; arch-tag: 1149979c-8e47-4333-9629-cf3dc887a6a7
 ;;; rmailkwd.el ends here

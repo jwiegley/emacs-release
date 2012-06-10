@@ -8,8 +8,7 @@
 @copying
 This manual is for Eshell, the Emacs shell.
 
-Copyright @copyright{} 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+Copyright @copyright{} 1999-2012 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -62,7 +61,7 @@ developing GNU and promoting software freedom.''
 @node Top, What is Eshell?, (dir), (dir)
 @top Eshell
 
-Eshell is a shell-like command interpretor
+Eshell is a shell-like command interpreter
 implemented in Emacs Lisp.  It invokes no external processes except for
 those requested by the user.  It is intended to be a functional
 replacement for command shells such as @command{bash}, @command{zsh},
@@ -95,7 +94,7 @@ handling the sort of tasks accomplished by those tools.
 @cindex Eshell, what it is
 
 Eshell is a @dfn{command shell} written in Emacs Lisp.  Everything it
-does, it uses Emacs' facilities to do.  This means that Eshell is as
+does, it uses Emacs's facilities to do.  This means that Eshell is as
 portable as Emacs itself.  It also means that cooperation with Lisp code
 is natural and seamless.
 
@@ -369,7 +368,18 @@ eshell/ls is a compiled Lisp function in `em-ls.el'
 /bin/ls
 @end example
 
-Some of the built-in commands have a special behaviour in Eshell:
+If you want to discard a given built-in command, you could declare an
+alias, @ref{Aliases}.  Eample:
+
+@example
+~ $ which sudo
+eshell/sudo is a compiled Lisp function in `em-unix.el'
+~ $ alias sudo '*sudo $*'
+~ $ which sudo
+sudo is an alias, defined as "*sudo $*"
+@end example
+
+Some of the built-in commands have a special behavior in Eshell:
 
 @table @code
 
@@ -598,7 +608,7 @@ scrolls back.
 
 @item Using C-p and C-n with rebind gets into a locked state
 
-This happened a few times in Emacs 21, but has been unreproducible
+This happened a few times in Emacs 21, but has been irreproducible
 since.
 
 @item If an interactive process is currently running, @kbd{M-!} doesn't work
@@ -804,7 +814,7 @@ way@dots{}).  If input redirection is added, also update the
 With the handling of @emph{word} specified by an
 @code{eshell-special-alist}.
 
-@item In @code{eshell-veal-using-options}, allow a @code{:complete} tag
+@item In @code{eshell-eval-using-options}, allow a @code{:complete} tag
 
 It would be used to provide completion rules for that command.  Then the
 macro will automagically define the completion function.
@@ -1004,7 +1014,3 @@ Since it keeps the cursor up where the command was invoked.
 
 @printindex ky
 @bye
-
-@ignore
-   arch-tag: 776409ba-cb15-42b9-b2b6-d2bdc7ebad01
-@end ignore

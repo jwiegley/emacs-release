@@ -1,7 +1,6 @@
 ;;; scroll-all.el --- scroll all buffers together minor mode
 
-;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1997, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: Gary D. Foster <Gary.Foster@corp.sun.com>
 ;; Keywords: scroll crisp brief lock
@@ -90,9 +89,9 @@
 	 (call-interactively 'scroll-all-scroll-down-all))
 	((eq this-command 'previous-line)
 	 (call-interactively 'scroll-all-scroll-up-all))
-	((eq this-command 'scroll-up)
+	((memq this-command '(scroll-up scroll-up-command))
 	 (call-interactively 'scroll-all-page-down-all))
-	((eq this-command 'scroll-down)
+	((memq this-command '(scroll-down scroll-down-command))
 	 (call-interactively 'scroll-all-page-up-all))
 	((eq this-command 'beginning-of-buffer)
 	 (call-interactively 'scroll-all-beginning-of-buffer-all))
@@ -102,10 +101,13 @@
 
 ;;;###autoload
 (define-minor-mode scroll-all-mode
-  "Toggle Scroll-All minor mode.
-With ARG, turn Scroll-All minor mode on if ARG is positive, off otherwise.
-When Scroll-All mode is on, scrolling commands entered in one window
-apply to all visible windows in the same frame."
+  "Toggle shared scrolling in same-frame windows (Scroll-All mode).
+With a prefix argument ARG, enable Scroll-All mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
+When Scroll-All mode is enabled, scrolling commands invoked in
+one window apply to all visible windows in the same frame."
   nil " *SL*" nil
   :global t
   :group 'windows
@@ -116,5 +118,4 @@ apply to all visible windows in the same frame."
 
 (provide 'scroll-all)
 
-;; arch-tag: db20089a-b157-45df-b5d4-2430e60acdd8
 ;;; scroll-all.el ends here

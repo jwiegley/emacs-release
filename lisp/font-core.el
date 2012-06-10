@@ -1,11 +1,10 @@
 ;;; font-core.el --- Core interface to font-lock
 
-;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1992-2012  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: languages, faces
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -80,17 +79,6 @@ functions, `font-lock-fontify-buffer-function',
 (put 'font-lock-defaults 'risky-local-variable t)
 (make-variable-buffer-local 'font-lock-defaults)
 
-(defvar font-lock-defaults-alist nil
-  "Alist of fall-back Font Lock defaults for major modes.
-
-Each item should be a list of the form:
-
- (MAJOR-MODE . FONT-LOCK-DEFAULTS)
-
-where MAJOR-MODE is a symbol and FONT-LOCK-DEFAULTS is a list of default
-settings.  See the variable `font-lock-defaults', which takes precedence.")
-(make-obsolete-variable 'font-lock-defaults-alist 'font-lock-defaults "21.1")
-
 (defvar font-lock-function 'font-lock-default-function
   "A function which is called when `font-lock-mode' is toggled.
 It will be passed one argument, which is the current value of
@@ -98,12 +86,12 @@ It will be passed one argument, which is the current value of
 
 ;; The mode for which font-lock was initialized, or nil if none.
 (defvar font-lock-major-mode)
+
 (define-minor-mode font-lock-mode
-  "Toggle Font Lock mode.
-With arg, turn Font Lock mode off if and only if arg is a non-positive
-number; if arg is nil, toggle Font Lock mode; anything else turns Font
-Lock on.
-\(Font Lock is also known as \"syntax highlighting\".)
+  "Toggle syntax highlighting in this buffer (Font Lock mode).
+With a prefix argument ARG, enable Font Lock mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
 
 When Font Lock mode is enabled, text is fontified as you type it:
 
@@ -143,14 +131,14 @@ To fontify a block (the function or paragraph containing point, or a number of
 lines around point), perhaps because modification on the current line caused
 syntactic change on other lines, you can use \\[font-lock-fontify-block].
 
-See the variable `font-lock-defaults-alist' for the Font Lock mode default
-settings.  You can set your own default settings for some mode, by setting a
+You can set your own default settings for some mode, by setting a
 buffer local value for `font-lock-defaults', via its mode hook.
 
 The above is the default behavior of `font-lock-mode'; you may specify
 your own function which is called when `font-lock-mode' is toggled via
 `font-lock-function'. "
   nil nil nil
+  :after-hook (font-lock-initial-fontify)
   ;; Don't turn on Font Lock mode if we don't have a display (we're running a
   ;; batch job) or if the buffer is invisible (the name starts with a space).
   (when (or noninteractive (eq (aref (buffer-name) 0) ?\s))
@@ -204,15 +192,7 @@ this function onto `change-major-mode-hook'."
 
   ;; Only do hard work if the mode has specified stuff in
   ;; `font-lock-defaults'.
-  (when (or font-lock-defaults
-	    (if (boundp 'font-lock-keywords) font-lock-keywords)
-	    (with-no-warnings
-	      (cdr (assq major-mode font-lock-defaults-alist)))
-	    (and mode
-		 (boundp 'font-lock-set-defaults)
-		 font-lock-set-defaults
-		 font-lock-major-mode
-		 (not (eq font-lock-major-mode major-mode))))
+  (when (font-lock-specified-p mode)
     (font-lock-mode-internal mode)))
 
 (defun turn-on-font-lock ()
@@ -225,7 +205,7 @@ this function onto `change-major-mode-hook'."
 ;; A few people have hassled in the past for a way to make it easier to turn on
 ;; Font Lock mode, without the user needing to know for which modes s/he has to
 ;; turn it on, perhaps the same way hilit19.el/hl319.el does.  I've always
-;; balked at that way, as I see it as just re-moulding the same problem in
+;; balked at that way, as I see it as just re-molding the same problem in
 ;; another form.  That is; some person would still have to keep track of which
 ;; modes (which may not even be distributed with Emacs) support Font Lock mode.
 ;; The list would always be out of date.  And that person might have to be me.
@@ -309,5 +289,4 @@ means that Font Lock mode is turned on for buffers in C and C++ modes only."
 
 (provide 'font-core)
 
-;; arch-tag: f8c286e1-02f7-41d9-b89b-1b67780aed71
 ;;; font-core.el ends here

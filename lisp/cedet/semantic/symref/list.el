@@ -1,6 +1,6 @@
 ;;; semantic/symref/list.el --- Symref Output List UI.
 
-;; Copyright (C) 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2008-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
 
@@ -24,7 +24,7 @@
 ;; Provide a simple user facing API to finding symbol references.
 ;;
 ;; This UI is the base of some refactoring tools.  For any refactor,
-;; the user will execture [FIXME what?] `semantic-symref' in a tag.
+;; the user will execute `semantic-symref' in a tag.
 ;; Once that data is collected, the output will be listed in a buffer.
 ;; In the output buffer, the user can then initiate different
 ;; refactoring operations.
@@ -103,7 +103,7 @@ Display the references in`semantic-symref-results-mode'."
     (when (not res) (error "No references found"))
     (semantic-symref-result-get-tags res t)
     (message "Gathering References...done")
-    ;; Build a refrences buffer.
+    ;; Build a references buffer.
     (let ((buff (get-buffer-create
 		 (format "*Symref %s" str)))
 	  )
@@ -189,6 +189,7 @@ Display the references in`semantic-symref-results-mode'."
   "The current results in a results mode buffer.")
 
 (defun semantic-symref-results-mode (results)
+  ;; FIXME: Use define-derived-mode.
   "Major-mode for displaying Semantic Symbol Reference RESULTS.
 RESULTS is an object of class `semantic-symref-results'."
   (interactive)
@@ -204,7 +205,7 @@ RESULTS is an object of class `semantic-symref-results'."
   (buffer-disable-undo)
   (set (make-local-variable 'font-lock-global-modes) nil)
   (font-lock-mode -1)
-  (run-hooks 'semantic-symref-results-mode-hook)
+  (run-mode-hooks 'semantic-symref-results-mode-hook)
   )
 
 (defun semantic-symref-hide-buffer ()
@@ -400,7 +401,7 @@ BUTTON is the button that was clicked."
 
 ;;; UTILS
 ;;
-;; List mode utils for understadning the current line
+;; List mode utils for understanding the current line
 
 (defun semantic-symref-list-on-hit-p ()
   "Return the line number if the cursor is on a buffer line with a hit.

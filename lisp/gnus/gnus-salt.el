@@ -1,7 +1,6 @@
 ;;; gnus-salt.el --- alternate summary mode interfaces for Gnus
 
-;; Copyright (C) 1996, 1997, 1998, 1999, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1996-1999, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -26,6 +25,9 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
+(eval-when-compile
+  (when (featurep 'xemacs)
+    (require 'easy-mmode))) ; for `define-minor-mode'
 
 (require 'gnus)
 (require 'gnus-sum)
@@ -34,10 +36,6 @@
 ;;;
 ;;; gnus-pick-mode
 ;;;
-
-(defvar gnus-pick-mode nil
-  "Minor mode for providing a pick-and-read interface in Gnus
-summary buffers.")
 
 (defcustom gnus-pick-display-summary nil
   "*Display summary while reading."
@@ -72,17 +70,15 @@ It accepts the same format specs that `gnus-summary-line-format' does."
 
 ;;; Internal variables.
 
-(defvar gnus-pick-mode-map nil)
-
-(unless gnus-pick-mode-map
-  (setq gnus-pick-mode-map (make-sparse-keymap))
-
-  (gnus-define-keys gnus-pick-mode-map
-    " " gnus-pick-next-page
-    "u" gnus-pick-unmark-article-or-thread
-    "." gnus-pick-article-or-thread
-    gnus-down-mouse-2 gnus-pick-mouse-pick-region
-    "\r" gnus-pick-start-reading))
+(defvar gnus-pick-mode-map
+  (let ((map (make-sparse-keymap)))
+    (gnus-define-keys map
+      " " gnus-pick-next-page
+      "u" gnus-pick-unmark-article-or-thread
+      "." gnus-pick-article-or-thread
+      gnus-down-mouse-2 gnus-pick-mouse-pick-region
+      "\r" gnus-pick-start-reading)
+    map))
 
 (defun gnus-pick-make-menu-bar ()
   (unless (boundp 'gnus-pick-menu)
@@ -104,30 +100,35 @@ It accepts the same format specs that `gnus-summary-line-format' does."
 	["Start reading" gnus-pick-start-reading t]
 	["Switch pick mode off" gnus-pick-mode gnus-pick-mode]))))
 
-(defun gnus-pick-mode (&optional arg)
+(eval-when-compile
+  (when (featurep 'xemacs)
+    (defvar gnus-pick-mode-on-hook)
+    (defvar gnus-pick-mode-off-hook)))
+
+(define-minor-mode gnus-pick-mode
   "Minor mode for providing a pick-and-read interface in Gnus summary buffers.
 
 \\{gnus-pick-mode-map}"
-  (interactive "P")
-  (when (eq major-mode 'gnus-summary-mode)
-    (if (not (set (make-local-variable 'gnus-pick-mode)
-		  (if (null arg) (not gnus-pick-mode)
-		    (> (prefix-numeric-value arg) 0))))
-	(remove-hook 'gnus-message-setup-hook 'gnus-pick-setup-message)
-      ;; Make sure that we don't select any articles upon group entry.
-      (set (make-local-variable 'gnus-auto-select-first) nil)
-      ;; Change line format.
-      (setq gnus-summary-line-format gnus-summary-pick-line-format)
-      (setq gnus-summary-line-format-spec nil)
-      (gnus-update-format-specifications nil 'summary)
-      (gnus-update-summary-mark-positions)
-      (add-hook 'gnus-message-setup-hook 'gnus-pick-setup-message)
-      (set (make-local-variable 'gnus-summary-goto-unread) 'never)
-      ;; Set up the menu.
-      (when (gnus-visual-p 'pick-menu 'menu)
-	(gnus-pick-make-menu-bar))
-      (add-minor-mode 'gnus-pick-mode " Pick" gnus-pick-mode-map)
-      (gnus-run-hooks 'gnus-pick-mode-hook))))
+  :lighter " Pick" :keymap gnus-pick-mode-map
+  (cond
+   ((not (derived-mode-p 'gnus-summary-mode)) (setq gnus-pick-mode nil))
+   ((not gnus-pick-mode)
+    ;; FIXME: a buffer-local minor mode removing globally from a hook??
+    (remove-hook 'gnus-message-setup-hook 'gnus-pick-setup-message))
+   (t
+    ;; Make sure that we don't select any articles upon group entry.
+    (set (make-local-variable 'gnus-auto-select-first) nil)
+    ;; Change line format.
+    (setq gnus-summary-line-format gnus-summary-pick-line-format)
+    (setq gnus-summary-line-format-spec nil)
+    (gnus-update-format-specifications nil 'summary)
+    (gnus-update-summary-mark-positions)
+    ;; FIXME: a buffer-local minor mode adding globally to a hook??
+    (add-hook 'gnus-message-setup-hook 'gnus-pick-setup-message)
+    (set (make-local-variable 'gnus-summary-goto-unread) 'never)
+    ;; Set up the menu.
+    (when (gnus-visual-p 'pick-menu 'menu)
+      (gnus-pick-make-menu-bar)))))
 
 (defun gnus-pick-setup-message ()
   "Make Message do the right thing on exit."
@@ -319,20 +320,14 @@ This must be bound to a button-down mouse event."
 ;;; gnus-binary-mode
 ;;;
 
-(defvar gnus-binary-mode nil
-  "Minor mode for providing a binary group interface in Gnus summary buffers.")
-
 (defvar gnus-binary-mode-hook nil
   "Hook run in summary binary mode buffers.")
 
-(defvar gnus-binary-mode-map nil)
-
-(unless gnus-binary-mode-map
-  (setq gnus-binary-mode-map (make-sparse-keymap))
-
-  (gnus-define-keys
-      gnus-binary-mode-map
-    "g" gnus-binary-show-article))
+(defvar gnus-binary-mode-map
+  (let ((map (make-sparse-keymap)))
+    (gnus-define-keys map
+      "g" gnus-binary-show-article)
+    map))
 
 (defun gnus-binary-make-menu-bar ()
   (unless (boundp 'gnus-binary-menu)
@@ -341,25 +336,25 @@ This must be bound to a button-down mouse event."
       '("Pick"
 	["Switch binary mode off" gnus-binary-mode t]))))
 
-(defun gnus-binary-mode (&optional arg)
+(eval-when-compile
+  (when (featurep 'xemacs)
+    (defvar gnus-binary-mode-on-hook)
+    (defvar gnus-binary-mode-off-hook)))
+
+(define-minor-mode gnus-binary-mode
   "Minor mode for providing a binary group interface in Gnus summary buffers."
-  (interactive "P")
-  (when (eq major-mode 'gnus-summary-mode)
-    (make-local-variable 'gnus-binary-mode)
-    (setq gnus-binary-mode
-	  (if (null arg) (not gnus-binary-mode)
-	    (> (prefix-numeric-value arg) 0)))
-    (when gnus-binary-mode
-      ;; Make sure that we don't select any articles upon group entry.
-      (make-local-variable 'gnus-auto-select-first)
-      (setq gnus-auto-select-first nil)
-      (make-local-variable 'gnus-summary-display-article-function)
-      (setq gnus-summary-display-article-function 'gnus-binary-display-article)
-      ;; Set up the menu.
-      (when (gnus-visual-p 'binary-menu 'menu)
-	(gnus-binary-make-menu-bar))
-      (add-minor-mode 'gnus-binary-mode " Binary" gnus-binary-mode-map)
-      (gnus-run-hooks 'gnus-binary-mode-hook))))
+  :lighter " Binary" :keymap gnus-binary-mode-map
+  (cond
+   ((not (derived-mode-p 'gnus-summary-mode)) (setq gnus-binary-mode nil))
+   (gnus-binary-mode
+    ;; Make sure that we don't select any articles upon group entry.
+    (make-local-variable 'gnus-auto-select-first)
+    (setq gnus-auto-select-first nil)
+    (make-local-variable 'gnus-summary-display-article-function)
+    (setq gnus-summary-display-article-function 'gnus-binary-display-article)
+    ;; Set up the menu.
+    (when (gnus-visual-p 'binary-menu 'menu)
+      (gnus-binary-make-menu-bar)))))
 
 (defun gnus-binary-display-article (article &optional all-header)
   "Run ARTICLE through the binary decode functions."
@@ -873,181 +868,9 @@ Two predefined functions are available:
 	(set-window-point
 	 (gnus-get-buffer-window (current-buffer) t) (cdr region))))))
 
-;;;
-;;; gnus-carpal
-;;;
-
-(defvar gnus-carpal-group-buffer-buttons
-  '(("next" . gnus-group-next-unread-group)
-    ("prev" . gnus-group-prev-unread-group)
-    ("read" . gnus-group-read-group)
-    ("select" . gnus-group-select-group)
-    ("catch-up" . gnus-group-catchup-current)
-    ("new-news" . gnus-group-get-new-news-this-group)
-    ("toggle-sub" . gnus-group-unsubscribe-current-group)
-    ("subscribe" . gnus-group-unsubscribe-group)
-    ("kill" . gnus-group-kill-group)
-    ("yank" . gnus-group-yank-group)
-    ("describe" . gnus-group-describe-group)
-    "list"
-    ("subscribed" . gnus-group-list-groups)
-    ("all" . gnus-group-list-all-groups)
-    ("killed" . gnus-group-list-killed)
-    ("zombies" . gnus-group-list-zombies)
-    ("matching" . gnus-group-list-matching)
-    ("post" . gnus-group-post-news)
-    ("mail" . gnus-group-mail)
-    ("local" . (lambda () (interactive) (gnus-group-news 0)))
-    ("rescan" . gnus-group-get-new-news)
-    ("browse-foreign" . gnus-group-browse-foreign)
-    ("exit" . gnus-group-exit)))
-
-(defvar gnus-carpal-summary-buffer-buttons
-  '("mark"
-    ("read" . gnus-summary-mark-as-read-forward)
-    ("tick" . gnus-summary-tick-article-forward)
-    ("clear" . gnus-summary-clear-mark-forward)
-    ("expirable" . gnus-summary-mark-as-expirable)
-    "move"
-    ("scroll" . gnus-summary-next-page)
-    ("next-unread" . gnus-summary-next-unread-article)
-    ("prev-unread" . gnus-summary-prev-unread-article)
-    ("first" . gnus-summary-first-unread-article)
-    ("best" . gnus-summary-best-unread-article)
-    "article"
-    ("headers" . gnus-summary-toggle-header)
-    ("uudecode" . gnus-uu-decode-uu)
-    ("enter-digest" . gnus-summary-enter-digest-group)
-    ("fetch-parent" . gnus-summary-refer-parent-article)
-    "mail"
-    ("move" . gnus-summary-move-article)
-    ("copy" . gnus-summary-copy-article)
-    ("respool" . gnus-summary-respool-article)
-    "threads"
-    ("lower" . gnus-summary-lower-thread)
-    ("kill" . gnus-summary-kill-thread)
-    "post"
-    ("post" . gnus-summary-post-news)
-    ("local" . gnus-summary-news-other-window)
-    ("mail" . gnus-summary-mail-other-window)
-    ("followup" . gnus-summary-followup-with-original)
-    ("reply" . gnus-summary-reply-with-original)
-    ("cancel" . gnus-summary-cancel-article)
-    "misc"
-    ("exit" . gnus-summary-exit)
-    ("fed-up" . gnus-summary-catchup-and-goto-next-group)))
-
-(defvar gnus-carpal-server-buffer-buttons
-  '(("add" . gnus-server-add-server)
-    ("browse" . gnus-server-browse-server)
-    ("list" . gnus-server-list-servers)
-    ("kill" . gnus-server-kill-server)
-    ("yank" . gnus-server-yank-server)
-    ("copy" . gnus-server-copy-server)
-    ("exit" . gnus-server-exit)))
-
-(defvar gnus-carpal-browse-buffer-buttons
-  '(("subscribe" . gnus-browse-unsubscribe-current-group)
-    ("exit" . gnus-browse-exit)))
-
-(defvar gnus-carpal-group-buffer "*Carpal Group*")
-(defvar gnus-carpal-summary-buffer "*Carpal Summary*")
-(defvar gnus-carpal-server-buffer "*Carpal Server*")
-(defvar gnus-carpal-browse-buffer "*Carpal Browse*")
-
-(defvar gnus-carpal-attached-buffer nil)
-
-(defvar gnus-carpal-mode-hook nil
-  "*Hook run in carpal mode buffers.")
-
-(defvar gnus-carpal-button-face 'bold
-  "*Face used on carpal buttons.")
-
-(defvar gnus-carpal-header-face 'bold-italic
-  "*Face used on carpal buffer headers.")
-
-(defvar gnus-carpal-mode-map nil)
-(put 'gnus-carpal-mode 'mode-class 'special)
-
-(if gnus-carpal-mode-map
-    nil
-  (setq gnus-carpal-mode-map (make-keymap))
-  (suppress-keymap gnus-carpal-mode-map)
-  (define-key gnus-carpal-mode-map " " 'gnus-carpal-select)
-  (define-key gnus-carpal-mode-map "\r" 'gnus-carpal-select)
-  (define-key gnus-carpal-mode-map gnus-mouse-2 'gnus-carpal-mouse-select))
-
-(defun gnus-carpal-mode ()
-  "Major mode for clicking buttons.
-
-All normal editing commands are switched off.
-\\<gnus-carpal-mode-map>
-The following commands are available:
-
-\\{gnus-carpal-mode-map}"
-  (interactive)
-  (kill-all-local-variables)
-  (setq mode-line-modified (cdr gnus-mode-line-modified))
-  (setq major-mode 'gnus-carpal-mode)
-  (setq mode-name "Gnus Carpal")
-  (setq mode-line-process nil)
-  (use-local-map gnus-carpal-mode-map)
-  (buffer-disable-undo)
-  (setq buffer-read-only t)
-  (make-local-variable 'gnus-carpal-attached-buffer)
-  (gnus-run-mode-hooks 'gnus-carpal-mode-hook))
-
-(defun gnus-carpal-setup-buffer (type)
-  (let ((buffer (symbol-value (intern (format "gnus-carpal-%s-buffer" type)))))
-    (if (get-buffer buffer)
-	()
-      (with-current-buffer (gnus-get-buffer-create buffer)
-	(gnus-carpal-mode)
-	(setq gnus-carpal-attached-buffer
-	      (intern (format "gnus-%s-buffer" type)))
-	(let ((buttons (symbol-value
-			(intern (format "gnus-carpal-%s-buffer-buttons"
-					type))))
-	      (buffer-read-only nil)
-	      button)
-	  (while buttons
-	    (setq button (car buttons)
-		  buttons (cdr buttons))
-	    (if (stringp button)
-		(set-text-properties
-		 (point)
-		 (prog2 (insert button) (point) (insert " "))
-		 (list 'face gnus-carpal-header-face))
-	      (set-text-properties
-	       (point)
-	       (prog2 (insert (car button)) (point) (insert " "))
-	       (list 'gnus-callback (cdr button)
-		     'face gnus-carpal-button-face
-		     gnus-mouse-face-prop 'highlight))))
-	  (let ((fill-column (- (window-width) 2)))
-	    (fill-region (point-min) (point-max)))
-	  (set-window-point (get-buffer-window (current-buffer))
-			    (point-min)))))))
-
-(defun gnus-carpal-select ()
-  "Select the button under point."
-  (interactive)
-  (let ((func (get-text-property (point) 'gnus-callback)))
-    (if (null func)
-	()
-      (pop-to-buffer (symbol-value gnus-carpal-attached-buffer))
-      (call-interactively func))))
-
-(defun gnus-carpal-mouse-select (event)
-  "Select the button under the mouse pointer."
-  (interactive "e")
-  (mouse-set-point event)
-  (gnus-carpal-select))
-
 ;;; Allow redefinition of functions.
 (gnus-ems-redefine)
 
 (provide 'gnus-salt)
 
-;; arch-tag: 35449164-77b3-4398-bcbd-a2e3e998f810
 ;;; gnus-salt.el ends here

@@ -1,6 +1,6 @@
 ;;; semantic/analyze/fcn.el --- Analyzer support functions.
 
-;; Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2007-2012 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 
@@ -157,7 +157,7 @@ Almost all searches use the same arguments."
 ;;
 
 (define-overloadable-function semantic-analyze-dereference-metatype (type scope &optional type-declaration)
-  ;; todo - move into typecahe!!
+  ;; todo - move into typecache!!
   "Return a concrete type tag based on input TYPE tag.
 A concrete type is an actual declaration of a memory description,
 such as a structure, or class.  A meta type is an alias,
@@ -334,5 +334,4 @@ SCOPE is the current scope."
 
 (provide 'semantic/analyze/fcn)
 
-;; arch-tag: 32525305-515e-4b96-ad11-216d3a99f829
 ;;; semantic/analyze/fcn.el ends here

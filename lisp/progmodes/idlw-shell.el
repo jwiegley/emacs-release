@@ -1,14 +1,14 @@
 ;; idlw-shell.el --- run IDL as an inferior process of Emacs.
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012  Free Software Foundation, Inc.
 
 ;; Authors: J.D. Smith <jdsmith@as.arizona.edu>
 ;;          Carsten Dominik <dominik@astro.uva.nl>
 ;;          Chris Chase <chase@att.com>
 ;; Maintainer: J.D. Smith <jdsmith@as.arizona.edu>
-;; Version: 6.1_em22
+;; Version: 6.1.22
 ;; Keywords: processes
+;; Package: idlwave
 
 ;; This file is part of GNU Emacs.
 
@@ -227,7 +227,7 @@ window, but is useful for stepping, etc."
   "Obsolete variable.  See `idlwave-shell-debug-modifiers'.")
 
 (defcustom idlwave-shell-use-truename nil
-  "*Non-nil means, use use `file-truename' when looking for buffers.
+  "*Non-nil means, use `file-truename' when looking for buffers.
 If this variable is non-nil, Emacs will use the function `file-truename' to
 resolve symbolic links in the file paths printed by e.g., STOP commands.
 This means, unvisited files will be loaded under their truename.
@@ -865,7 +865,7 @@ IDL has currently stepped.")
 (defvar idlwave-shell-only-prompt-pattern nil)
 (defvar tool-bar-map)
 
-(defun idlwave-shell-mode ()
+(define-derived-mode idlwave-shell-mode comint-mode "IDL-Shell"
   "Major mode for interacting with an inferior IDL process.
 
 1. Shell Interaction
@@ -925,7 +925,7 @@ IDL has currently stepped.")
    \\[idlwave-shell-print] or \\[idlwave-shell-mouse-print] with the
    mouse, help, \\[idlwave-shell-help-expression] or
    \\[idlwave-shell-mouse-help] with the mouse, or with a
-   configureable set of custom examine commands using
+   configurable set of custom examine commands using
    \\[idlwave-shell-examine-select].  The mouse examine commands can
    also work by click and drag, to select an expression for
    examination.
@@ -939,35 +939,30 @@ IDL has currently stepped.")
    -------------------------------
    Info documentation for this package is available.  Use \\[idlwave-info]
    to display (complain to your sysadmin if that does not work).
-   For Postscript and HTML versions of the documentation, check IDLWAVE's
+   For PostScript and HTML versions of the documentation, check IDLWAVE's
    homepage at URL `http://idlwave.org'.
    IDLWAVE has customize support - see the group `idlwave'.
 
 8. Keybindings
    -----------
 \\{idlwave-shell-mode-map}"
-
-  (interactive)
+  :abbrev-table idlwave-mode-abbrev-table
   (idlwave-setup) ; Make sure config files and paths, etc. are available.
   (unless (file-name-absolute-p idlwave-shell-command-history-file)
     (setq idlwave-shell-command-history-file
 	  (expand-file-name idlwave-shell-command-history-file
 			    idlwave-config-directory)))
 
-  ;; We don't do `kill-all-local-variables' here, because this is done by
-  ;; comint
   (setq comint-prompt-regexp idlwave-shell-prompt-pattern)
   (setq comint-process-echoes t)
 
   ;; Can not use history expansion because "!" is used for system variables.
   (setq comint-input-autoexpand nil)
-;  (setq comint-input-ring-size 64)
-  (make-local-variable 'comint-completion-addsuffix)
+  ;; (setq comint-input-ring-size 64)
+
   (set (make-local-variable 'completion-ignore-case) t)
-  (setq comint-completion-addsuffix '("/" . ""))
+  (set (make-local-variable 'comint-completion-addsuffix) '("/" . ""))
   (setq comint-input-ignoredups t)
-  (setq major-mode 'idlwave-shell-mode)
-  (setq mode-name "IDL-Shell")
   (setq idlwave-shell-mode-line-info nil)
   (setq mode-line-format
 	'(""
@@ -1022,7 +1017,6 @@ IDL has currently stepped.")
 	    nil 'local)
   (add-hook 'kill-buffer-hook 'idlwave-shell-delete-temp-files nil 'local)
   (add-hook 'kill-emacs-hook 'idlwave-shell-delete-temp-files)
-  (use-local-map idlwave-shell-mode-map)
   (easy-menu-add idlwave-shell-mode-menu idlwave-shell-mode-map)
 
   ;; Set the optional comint variables
@@ -1053,10 +1047,7 @@ IDL has currently stepped.")
   ;; with overlay-arrows.
   (remove-hook 'comint-output-filter-functions 'py-pdbtrack-track-stack-file)
 
-
   ;; IDLWAVE syntax, and turn on abbreviations
-  (setq local-abbrev-table idlwave-mode-abbrev-table)
-  (set-syntax-table idlwave-mode-syntax-table)
   (set (make-local-variable 'comment-start) ";")
   (setq abbrev-mode t)
 
@@ -1075,8 +1066,6 @@ IDL has currently stepped.")
   ;; Turn off the non-debug toolbar buttons (open,save,etc.)
   (set (make-local-variable 'tool-bar-map) nil)
 
-  ;; Run the hooks.
-  (run-mode-hooks 'idlwave-shell-mode-hook)
   (idlwave-shell-send-command idlwave-shell-initial-commands nil 'hide)
   ;; Turn off IDL's ^d interpreting, and define a system
   ;; variable which knows the version of IDLWAVE
@@ -1457,7 +1446,7 @@ Otherwise just move the line.  Move down unless UP is non-nil."
 	 (arg (if up arg (- arg))))
     (if (eq t idlwave-shell-arrows-do-history) (goto-char proc-pos))
     (if (and idlwave-shell-arrows-do-history
-	     (>= (1+ (save-excursion (end-of-line) (point))) proc-pos))
+	     (>= (1+ (point-at-eol)) proc-pos))
 	(comint-previous-input arg)
       (forward-line (- arg)))))
 
@@ -1855,7 +1844,7 @@ file name."
     (cond
      ((file-regular-p file2) file2)
      ((file-regular-p file1) file1)
-     ;; If we cannot veryfy the existence of the file, we return the shorter
+     ;; If we cannot verify the existence of the file, we return the shorter
      ;; name.  The idea behind this is that this may be a relative file name
      ;; and our idea about the current working directory may be wrong.
      ;; If it is a relative file name, it hopefully is short.
@@ -2179,8 +2168,8 @@ keywords."
       ;; Default completion of modules and keywords
       (idlwave-complete arg)))))
 
-;; Get rid of opaque dynamic variable passing of link?
-(defvar link) ;dynamic variable
+;; Get rid of opaque dynamic variable passing of idlw-help-link?
+(defvar idlw-help-link) ; dynamic variable from idlwave-do-mouse-completion-help
 (defun idlwave-shell-complete-execcomm-help (mode word)
   (let ((word (or (nth 1 idlwave-completion-help-info) word))
 	(entry (assoc-string word idlwave-executive-commands-alist t)))
@@ -2188,7 +2177,7 @@ keywords."
      ((eq mode 'test)
       (and (stringp word) entry (cdr entry)))
      ((eq mode 'set)
-      (if entry (setq link (cdr entry)))) ;; setting dynamic variable!!!
+      (if entry (setq idlw-help-link (cdr entry)))) ; setting dynamic variable!
      (t (error "This should not happen")))))
 
 (defun idlwave-shell-complete-filename (&optional arg)
@@ -2198,7 +2187,7 @@ args of an executive .run, .rnew or .compile."
   ;; CWD might have changed, resync, to set default directory
   (idlwave-shell-resync-dirs)
   (let ((comint-file-name-chars idlwave-shell-file-name-chars))
-    (comint-dynamic-complete-as-filename)))
+    (comint-filename-completion)))
 
 (defun idlwave-shell-executive-command ()
   "Return the name of the current executive command, if any."
@@ -2210,7 +2199,7 @@ args of an executive .run, .rnew or .compile."
 
 (defun idlwave-shell-filename-string ()
   "Return t if in a string and after what could be a file name."
-  (let ((limit (save-excursion (beginning-of-line) (point))))
+  (let ((limit (point-at-bol)))
     (save-excursion
       ;; Skip backwards over file name chars
       (skip-chars-backward idlwave-shell-file-name-chars limit)
@@ -2219,7 +2208,7 @@ args of an executive .run, .rnew or .compile."
 
 (defun idlwave-shell-batch-command ()
   "Return t if we're in a batch command statement like @foo"
-  (let ((limit (save-excursion (beginning-of-line) (point))))
+  (let ((limit (point-at-bol)))
     (save-excursion
       ;; Skip backwards over filename
       (skip-chars-backward idlwave-shell-file-name-chars limit)
@@ -2397,7 +2386,7 @@ matter what the settings of that variable."
                                    idlwave-shell-electric-stop-line-face
                                  idlwave-shell-stop-line-face))
 		  (move-overlay idlwave-shell-stop-line-overlay
-				(point) (save-excursion (end-of-line) (point))
+				(point) (point-at-eol)
 				(current-buffer)))
 	      ;; use the arrow instead, but only if marking is wanted.
 	      (if idlwave-shell-mark-stop-line
@@ -2590,9 +2579,7 @@ If in the IDL shell buffer, returns `idlwave-shell-pc-frame'."
     (list (idlwave-shell-file-name (buffer-file-name))
           (save-restriction
             (widen)
-            (save-excursion
-              (beginning-of-line)
-              (1+ (count-lines 1 (point))))))))
+	    (1+ (count-lines 1 (point-at-bol)))))))
 
 (defun idlwave-shell-current-module ()
   "Return the name of the module for the current file.
@@ -2916,7 +2903,7 @@ from `idlwave-shell-examine-alist' via mini-buffer shortcut key."
 	 ;; Move to beginning of current or previous expression
 	 (if (looking-at "\\<\\|(")
 	     ;; At beginning of expression, don't move backwards unless
-	     ;; this is at the end of an indentifier.
+	     ;; this is at the end of an identifier.
 	     (if (looking-at "\\>")
 		 (backward-sexp))
 	   (backward-sexp))
@@ -3644,7 +3631,7 @@ Existing overlays are recycled, in order to minimize consumption."
       (while (setq bp (pop bp-list))
 	(save-excursion
 	  (idlwave-shell-goto-frame (car bp))
-	  (let* ((end (progn (end-of-line 1) (point)))
+	  (let* ((end (point-at-eol))
 		 (beg (progn (beginning-of-line 1) (point)))
 		 (condition (idlwave-shell-bp-get bp 'condition))
 		 (count (idlwave-shell-bp-get bp 'count))
@@ -3720,7 +3707,7 @@ Existing overlays are recycled, in order to minimize consumption."
 (defun idlwave-shell-make-new-bp-overlay (&optional type disabled)
   "Make a new overlay for highlighting breakpoints.
 
-This stuff is strongly dependant upon the version of Emacs.  If TYPE
+This stuff is strongly dependent upon the version of Emacs.  If TYPE
 is passed, make an overlay of that type ('bp or 'bp-cond, currently
 only for glyphs)."
   (let ((ov (make-overlay 1 1))
@@ -3896,7 +3883,7 @@ handled by this command."
   (setq overlay-arrow-string nil)
   (let (buf)
     (cond
-     ((eq major-mode 'idlwave-mode)
+     ((derived-mode-p 'idlwave-mode)
       (save-buffer)
       (setq idlwave-shell-last-save-and-action-file (buffer-file-name)))
      (idlwave-shell-last-save-and-action-file
@@ -3998,8 +3985,7 @@ of the form:
                   (append
                    ;; compiled procedures
                    (progn
-                     (beginning-of-line)
-                     (narrow-to-region cpro (point))
+                     (narrow-to-region cpro (point-at-bol))
                      (goto-char (point-min))
                      (idlwave-shell-sources-grep))
                    ;; compiled functions
@@ -4085,7 +4071,7 @@ of the form:
 (defun idlwave-shell-file-name (name)
   "If `idlwave-shell-use-truename' is non-nil, convert file name to true name.
 Otherwise, just expand the file name."
-  (let ((def-dir (if (eq major-mode 'idlwave-shell-mode)
+  (let ((def-dir (if (derived-mode-p 'idlwave-shell-mode)
 		     default-directory
 		   idlwave-shell-default-directory)))
     (if idlwave-shell-use-truename
@@ -4257,15 +4243,15 @@ Otherwise, just expand the file name."
 (define-key idlwave-shell-electric-debug-mode-map "_"
   'idlwave-shell-stack-down)
 (define-key idlwave-shell-electric-debug-mode-map "e"
-  '(lambda () (interactive) (idlwave-shell-print '(16))))
+  (lambda () (interactive) (idlwave-shell-print '(16))))
 (define-key idlwave-shell-electric-debug-mode-map "q" 'idlwave-shell-retall)
 (define-key idlwave-shell-electric-debug-mode-map "t"
-  '(lambda () (interactive) (idlwave-shell-send-command "help,/TRACE")))
+  (lambda () (interactive) (idlwave-shell-send-command "help,/TRACE")))
 (define-key idlwave-shell-electric-debug-mode-map [(control ??)]
   'idlwave-shell-electric-debug-help)
 (define-key idlwave-shell-electric-debug-mode-map "x"
-  '(lambda (arg) (interactive "P")
-     (idlwave-shell-print arg nil nil t)))
+  (lambda (arg) (interactive "P")
+    (idlwave-shell-print arg nil nil t)))
 
 
 ; Enter the prefix map in two places.
@@ -4291,16 +4277,14 @@ Otherwise, just expand the file name."
 (defvar idlwave-shell-electric-debug-buffers nil)
 
 (define-minor-mode idlwave-shell-electric-debug-mode
-  "Toggle Electric Debug mode.
-With no argument, this command toggles the mode.
-Non-null prefix argument turns on the mode.
-Null prefix argument turns off the mode.
+  "Toggle Idlwave Shell Electric Debug mode.
+With a prefix argument ARG, enable the mode if ARG is positive,
+and disable it otherwise.  If called from Lisp, enable the mode
+if ARG is omitted or nil.
 
-When Electric Debug mode is enabled, the many debugging commands are
-available as single key sequences."
-nil
-" *Debugging*"
-idlwave-shell-electric-debug-mode-map)
+When Idlwave Shell Electric Debug mode is enabled, the Idlwave
+Shell debugging commands are available as single key sequences."
+  nil " *Debugging*" idlwave-shell-electric-debug-mode-map)
 
 (add-hook
  'idlwave-shell-electric-debug-mode-on-hook
@@ -4348,7 +4332,7 @@ idlwave-shell-electric-debug-mode-map)
       (while (setq buf (pop buffers))
 	(when (buffer-live-p buf)
 	  (set-buffer buf)
-	  (when (and (eq major-mode 'idlwave-mode)
+	  (when (and (derived-mode-p 'idlwave-mode)
 		     buffer-file-name
 		     idlwave-shell-electric-debug-mode)
 	    (idlwave-shell-electric-debug-mode 0))))))
@@ -4373,51 +4357,51 @@ idlwave-shell-electric-debug-mode-map)
     ["Electric Debug Mode"
      idlwave-shell-electric-debug-mode
      :style toggle :selected idlwave-shell-electric-debug-mode
-     :included (eq major-mode 'idlwave-mode) :keys "C-c C-d C-v"]
+     :included (derived-mode-p 'idlwave-mode) :keys "C-c C-d C-v"]
     "--"
     ("Compile & Run"
      ["Save and .RUN" idlwave-shell-save-and-run
-      (or (eq major-mode 'idlwave-mode)
+      (or (derived-mode-p 'idlwave-mode)
 	  idlwave-shell-last-save-and-action-file)]
      ["Save and .COMPILE" idlwave-shell-save-and-compile
-      (or (eq major-mode 'idlwave-mode)
+      (or (derived-mode-p 'idlwave-mode)
 	  idlwave-shell-last-save-and-action-file)]
      ["Save and @Batch" idlwave-shell-save-and-batch
-      (or (eq major-mode 'idlwave-mode)
+      (or (derived-mode-p 'idlwave-mode)
 	  idlwave-shell-last-save-and-action-file)]
      "--"
      ["Goto Next Error" idlwave-shell-goto-next-error t]
      "--"
      ["Compile and Run Region" idlwave-shell-run-region
-      (eq major-mode 'idlwave-mode)]
+      (derived-mode-p 'idlwave-mode)]
      ["Evaluate Region" idlwave-shell-evaluate-region
-      (eq major-mode 'idlwave-mode)]
+      (derived-mode-p 'idlwave-mode)]
      "--"
      ["Execute Default Cmd" idlwave-shell-execute-default-command-line t]
      ["Edit Default Cmd" idlwave-shell-edit-default-command-line t])
     ("Breakpoints"
      ["Set Breakpoint" idlwave-shell-break-here
-      :keys "C-c C-d C-b" :active (eq major-mode 'idlwave-mode)]
+      :keys "C-c C-d C-b" :active (derived-mode-p 'idlwave-mode)]
      ("Set Special Breakpoint"
       ["Set After Count Breakpoint"
        (progn
 	(let ((count (string-to-number (read-string "Break after count: "))))
 	      (if (integerp count) (idlwave-shell-break-here count))))
-       :active (eq major-mode 'idlwave-mode)]
+       :active (derived-mode-p 'idlwave-mode)]
       ["Set Condition Breakpoint"
        (idlwave-shell-break-here '(4))
-       :active (eq major-mode 'idlwave-mode)])
+       :active (derived-mode-p 'idlwave-mode)])
      ["Break in Module" idlwave-shell-break-in
-      :keys "C-c C-d C-i" :active (eq major-mode 'idlwave-mode)]
+      :keys "C-c C-d C-i" :active (derived-mode-p 'idlwave-mode)]
      ["Break in this Module" idlwave-shell-break-this-module
-      :keys "C-c C-d C-j" :active (eq major-mode 'idlwave-mode)]
+      :keys "C-c C-d C-j" :active (derived-mode-p 'idlwave-mode)]
      ["Clear Breakpoint" idlwave-shell-clear-current-bp t]
      ["Clear All Breakpoints" idlwave-shell-clear-all-bp t]
      ["Disable/Enable Breakpoint" idlwave-shell-toggle-enable-current-bp t]
      ["Goto Previous Breakpoint" idlwave-shell-goto-previous-bp
-      :keys "C-c C-d [" :active (eq major-mode 'idlwave-mode)]
+      :keys "C-c C-d [" :active (derived-mode-p 'idlwave-mode)]
      ["Goto Next Breakpoint" idlwave-shell-goto-next-bp
-      :keys "C-c C-d ]" :active (eq major-mode 'idlwave-mode)]
+      :keys "C-c C-d ]" :active (derived-mode-p 'idlwave-mode)]
      ["List All Breakpoints" idlwave-shell-list-all-bp t]
      ["Resync Breakpoints" idlwave-shell-bp-query t])
     ("Continue/Step"
@@ -4429,7 +4413,7 @@ idlwave-shell-electric-debug-mode-map)
      ["... to End of Subprog" idlwave-shell-return t]
      ["... to End of Subprog+1" idlwave-shell-out t]
      ["... to Here (Cursor Line)" idlwave-shell-to-here
-      :keys "C-c C-d C-h" :active (eq major-mode 'idlwave-mode)])
+      :keys "C-c C-d C-h" :active (derived-mode-p 'idlwave-mode)])
     ("Examine Expressions"
      ["Print expression" idlwave-shell-print t]
      ["Help on expression" idlwave-shell-help-expression t]
@@ -4514,7 +4498,7 @@ idlwave-shell-electric-debug-mode-map)
       (save-current-buffer
 	(dolist (buf (buffer-list))
           (set-buffer buf)
-          (if (eq major-mode 'idlwave-mode)
+          (if (derived-mode-p 'idlwave-mode)
               (progn
                 (easy-menu-remove idlwave-mode-debug-menu)
                 (easy-menu-add idlwave-mode-debug-menu)))))))
@@ -4692,5 +4676,4 @@ static char * file[] = {
 (if idlwave-shell-use-toolbar
     (add-hook 'idlwave-shell-mode-hook 'idlwave-toolbar-add-everywhere))
 
-;; arch-tag: 20c2e8ce-0709-41d8-a5b6-bb039148440a
 ;;; idlw-shell.el ends here

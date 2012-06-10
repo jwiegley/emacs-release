@@ -1,6 +1,6 @@
 ;;; ede/cpp-root.el --- A simple way to wrap a C++ project with a single root
 
-;; Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2007-2012 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
 
@@ -21,7 +21,7 @@
 
 ;;; Commentary:
 ;;
-;; NOTE: ede-cpp-root.el has been commented so as to also make it
+;; NOTE: ede/cpp-root.el has been commented so as to also make it
 ;;       useful for learning how to make similar project types.
 ;;
 ;; Not everyone can use automake, or an EDE project type.  For
@@ -538,5 +538,4 @@ Note: This needs some work."
 ;; generated-autoload-load-name: "ede/cpp-root"
 ;; End:
 
-;; arch-tag: c3ac8160-cba6-447e-8b9c-accb7e2d942e
 ;;; ede/cpp-root.el ends here

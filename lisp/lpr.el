@@ -1,7 +1,7 @@
 ;;; lpr.el --- print Emacs buffer on line printer
 
-;; Copyright (C) 1985, 1988, 1992, 1994, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1988, 1992, 1994, 2001-2012
+;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: unix
@@ -29,13 +29,17 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl))
+
 ;;;###autoload
 (defvar lpr-windows-system
-  (memq system-type '(ms-dos windows-nt)))
+  (memq system-type '(ms-dos windows-nt))
+  "Non-nil if running on MS-DOS or MS Windows.")
 
 ;;;###autoload
 (defvar lpr-lp-system
-  (memq system-type '(usg-unix-v hpux irix)))
+  (memq system-type '(usg-unix-v hpux irix))
+  "Non-nil if running on a system type that uses the \"lp\" command.")
 
 
 (defgroup lpr nil
@@ -258,21 +262,30 @@ for further customization of the printer command."
 			     lpr-page-header-switches)))
 	    (setq start (point-min)
 		  end   (point-max))))
-      (apply (or print-region-function 'call-process-region)
-	     (nconc (list start end lpr-command
-			  nil nil nil)
-		    (and lpr-add-switches
-			 (list "-J" name))
-		    ;; These belong in pr if we are using that.
-		    (and lpr-add-switches lpr-headers-switches
-			 (list "-T" title))
-		    (and (stringp printer-name)
-			 (list (concat lpr-printer-switch
-				       printer-name)))
-		    nswitches))
-      (if (markerp end)
-	  (set-marker end nil))
-      (message "Spooling%s...done" switch-string))))
+      (let ((buf (current-buffer)))
+        (with-temp-buffer
+          (let ((tempbuf (current-buffer)))
+            (with-current-buffer buf
+              (apply (or print-region-function 'call-process-region)
+                     (nconc (list start end lpr-command
+                                  nil tempbuf nil)
+                            (and lpr-add-switches
+                                 (list "-J" name))
+                            ;; These belong in pr if we are using that.
+                            (and lpr-add-switches lpr-headers-switches
+                                 (list "-T" title))
+                            (and (stringp printer-name)
+                                 (list (concat lpr-printer-switch
+                                               printer-name)))
+                            nswitches))))
+          (if (markerp end)
+              (set-marker end nil))
+          (message "Spooling%s...done%s%s" switch-string
+                   (case (count-lines (point-min) (point-max))
+                     (0 "")
+                     (1 ": ")
+                     (t ":\n"))
+                   (buffer-string)))))))
 
 ;; This function copies the text between start and end
 ;; into a new buffer, makes that buffer current.
@@ -301,7 +314,7 @@ The characters tab, linefeed, space, return and formfeed are not affected."
       (let (c)
 	(while (re-search-forward "[\^@-\^h\^k\^n-\^_\177-\377]" nil t)
 	  (setq c (preceding-char))
-	  (delete-backward-char 1)
+	  (delete-char -1)
 	  (insert (if (< c ?\s)
 		      (format "\\^%c" (+ c ?@))
 		    (format "\\%02x" c))))))))
@@ -337,5 +350,4 @@ The characters tab, linefeed, space, return and formfeed are not affected."
 
 (provide 'lpr)
 
-;; arch-tag: 21c3f821-ebec-4ca9-ac67-a81e4b75c62a
 ;;; lpr.el ends here

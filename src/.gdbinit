@@ -1,6 +1,4 @@
-# Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 2000, 2001,
-#   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-#   Free Software Foundation, Inc.
+# Copyright (C) 1992-1998, 2000-2012  Free Software Foundation, Inc.
 #
 # This file is part of GNU Emacs.
 #
@@ -21,6 +19,8 @@
 
 # Force loading of symbols, enough to give us gdb_valbits etc.
 set main
+# With some compilers, we need this to give us struct Lisp_Symbol etc.:
+set Fmake_symbol
 
 # Find lwlib source files too.
 dir ../lwlib
@@ -67,10 +67,7 @@ end
 # from calling OutputDebugString, which causes GDB to display each
 # character twice (yuk!).
 define pr
-  set $output_debug = print_output_debug_flag
-  set print_output_debug_flag = 0
-  set debug_print ($)
-  set print_output_debug_flag = $output_debug
+  pp $
 end
 document pr
 Print the emacs s-expression which is $.
@@ -90,48 +87,17 @@ Print the argument as an emacs s-expression
 Works only when an inferior emacs is executing.
 end
 
-# Print out s-expressions from tool bar
-define pp1
-  set $tmp = $arg0
-  set $output_debug = print_output_debug_flag
-  set print_output_debug_flag = 0
-  set safe_debug_print ($tmp)
-  set print_output_debug_flag = $output_debug
-end
-document pp1
-Print the argument as an emacs s-expression.
-Works only when an inferior emacs is executing.
-For use on tool bar when debugging in Emacs
-where the variable name would not otherwise
-be recorded in the GUD buffer.
-end
-
 # Print value of lisp variable
 define pv
-  set $tmp = "$arg0"
-  set $output_debug = print_output_debug_flag
-  set print_output_debug_flag = 0
-  set safe_debug_print ( find_symbol_value (intern ($tmp)))
-  set print_output_debug_flag = $output_debug
-end
-document pv
-Print the value of the lisp variable given as argument.
-Works only when an inferior emacs is executing.
-end
-
-# Print value of lisp variable
-define pv1
   set $tmp = "$arg0"
   set $output_debug = print_output_debug_flag
   set print_output_debug_flag = 0
   set safe_debug_print (find_symbol_value (intern ($tmp)))
   set print_output_debug_flag = $output_debug
 end
-document pv1
+document pv
 Print the value of the lisp variable given as argument.
 Works only when an inferior emacs is executing.
-For use when debugging in Emacs where the variable
-name would not otherwise be recorded in the GUD buffer.
 end
 
 # Print out current buffer point and boundaries
@@ -271,6 +237,9 @@ define pitx
     end
   end
   printf "\n"
+  if ($it->bidi_p)
+    printf "BIDI: base_stop=%d prev_stop=%d level=%d\n", $it->base_level_stop, $it->prev_stop, $it->bidi_it.resolved_level
+  end
   if ($it->region_beg_charpos >= 0)
     printf "reg=%d-%d ", $it->region_beg_charpos, $it->region_end_charpos
   end
@@ -285,8 +254,8 @@ define pitx
   while ($i < $it->sp && $i < 4)
     set $e = $it->stack[$i]
     printf "stack[%d]: ", $i
-    pitmethod $e->method
-    printf "[%d]", $e->position.charpos
+    pitmethod $e.method
+    printf "[%d]", $e.position.charpos
     printf "\n"
     set $i = $i + 1
   end
@@ -308,9 +277,8 @@ define prowx
   printf "y=%d x=%d pwid=%d", $row->y, $row->x, $row->pixel_width
   printf " a+d=%d+%d=%d", $row->ascent, $row->height-$row->ascent, $row->height
   printf " phys=%d+%d=%d", $row->phys_ascent, $row->phys_height-$row->phys_ascent, $row->phys_height
-  printf " vis=%d", $row->visible_height
-  printf "  L=%d T=%d R=%d", $row->used[0], $row->used[1], $row->used[2]
-  printf "\n"
+  printf " vis=%d\n", $row->visible_height
+  printf "used=(LMargin=%d,Text=%d,RMargin=%d) Hash=%d\n", $row->used[0], $row->used[1], $row->used[2], $row->hash
   printf "start=%d end=%d", $row->start.pos.charpos, $row->end.pos.charpos
   if ($row->enabled_p)
     printf " ENA"
@@ -389,7 +357,7 @@ define pwinx
   printf "Window %d ", $int
   xgetptr $w->buffer
   set $tem = (struct buffer *) $ptr
-  xgetptr $tem->name
+  xgetptr $tem->name_
   printf "%s", ((struct Lisp_String *) $ptr)->data
   printf "\n"
   xgetptr $w->start
@@ -447,62 +415,116 @@ document pwin
 Pretty print window structure w.
 end
 
+define pbiditype
+  if ($arg0 == 0)
+    printf "UNDEF"
+  end
+  if ($arg0 == 1)
+    printf "L"
+  end
+  if ($arg0 == 2)
+    printf "R"
+  end
+  if ($arg0 == 3)
+    printf "EN"
+  end
+  if ($arg0 == 4)
+    printf "AN"
+  end
+  if ($arg0 == 5)
+    printf "BN"
+  end
+  if ($arg0 == 6)
+    printf "B"
+  end
+  if ($arg0 < 0 || $arg0 > 6)
+    printf "%d??", $arg0
+  end
+end
+document pbiditype
+Print textual description of bidi type given as first argument.
+end
+
 define pgx
   set $g = $arg0
   # CHAR_GLYPH
-  if ($g->type == 0)
-    if ($g->u.ch >= ' ' && $g->u.ch < 127)
-      printf "CHAR[%c]", $g->u.ch
+  if ($g.type == 0)
+    if ($g.u.ch >= ' ' && $g.u.ch < 127)
+      printf "CHAR[%c]", $g.u.ch
     else
-      printf "CHAR[0x%x]", $g->u.ch
+      printf "CHAR[0x%x]", $g.u.ch
     end
   end
   # COMPOSITE_GLYPH
-  if ($g->type == 1)
-    printf "COMP[%d (%d..%d)]", $g->u.cmp.id, $g->u.cmp.from, $g->u.cmp.to
+  if ($g.type == 1)
+    printf "COMP[%d (%d..%d)]", $g.u.cmp.id, $g.slice.cmp.from, $g.slice.cmp.to
+  end
+  # GLYPHLESS_GLYPH
+  if ($g.type == 2)
+    printf "GLYPHLESS["
+    if ($g.u.glyphless.method == 0)
+      printf "THIN]"
+    end
+    if ($g.u.glyphless.method == 1)
+      printf "EMPTY]"
+    end
+    if ($g.u.glyphless.method == 2)
+      printf "ACRO]"
+    end
+    if ($g.u.glyphless.method == 3)
+      printf "HEX]"
+    end
   end
   # IMAGE_GLYPH
-  if ($g->type == 2)
-    printf "IMAGE[%d]", $g->u.img_id
+  if ($g.type == 3)
+    printf "IMAGE[%d]", $g.u.img_id
   end
   # STRETCH_GLYPH
-  if ($g->type == 3)
-    printf "STRETCH[%d+%d]", $g->u.stretch.height, $g->u.stretch.ascent
+  if ($g.type == 4)
+    printf "STRETCH[%d+%d]", $g.u.stretch.height, $g.u.stretch.ascent
   end
-  xgettype ($g->object)
+  xgettype ($g.object)
   if ($type == Lisp_String)
-    printf " str=%x[%d]", $g->object, $g->charpos
+    printf " str=%x[%d]", $g.object, $g.charpos
   else
-    printf " pos=%d", $g->charpos
+    printf " pos=%d", $g.charpos
   end
-  printf " w=%d a+d=%d+%d", $g->pixel_width, $g->ascent, $g->descent
+  # For characters, print their resolved level and bidi type
+  if ($g.type == 0)
+    printf " blev=%d,btyp=", $g.resolved_level
+    pbiditype $g.bidi_type
+  end
+  printf " w=%d a+d=%d+%d", $g.pixel_width, $g.ascent, $g.descent
   # If not DEFAULT_FACE_ID
-  if ($g->face_id != 0)
-    printf " face=%d", $g->face_id
+  if ($g.face_id != 0)
+    printf " face=%d", $g.face_id
   end
-  if ($g->voffset)
-    printf " vof=%d", $g->voffset
+  if ($g.voffset)
+    printf " vof=%d", $g.voffset
   end
-  if ($g->multibyte_p)
+  if ($g.multibyte_p)
     printf " MB"
   end
-  if ($g->padding_p)
+  if ($g.padding_p)
     printf " PAD"
   end
-  if ($g->glyph_not_available_p)
+  if ($g.glyph_not_available_p)
     printf " N/A"
   end
-  if ($g->overlaps_vertically_p)
+  if ($g.overlaps_vertically_p)
     printf " OVL"
   end
-  if ($g->left_box_line_p)
+  if ($g.avoid_cursor_p)
+    printf " AVOID"
+  end
+  if ($g.left_box_line_p)
     printf " ["
   end
-  if ($g->right_box_line_p)
+  if ($g.right_box_line_p)
     printf " ]"
   end
-  if ($g->slice.x || $g->slice.y || $g->slice.width || $g->slice.height)
-    printf " slice=%d,%d,%d,%d" ,$g->slice.x, $g->slice.y, $g->slice.width, $g->slice.height
+  if ($g.slice.img.x || $g.slice.img.y || $g.slice.img.width || $g.slice.img.height)
+    printf " slice=%d,%d,%d,%d" ,$g.slice.img.x, $g.slice.img.y, $g.slice.img.width, $g.slice.img.height
   end
   printf "\n"
 end
@@ -575,6 +597,31 @@ document pgrowit
 Pretty print all glyphs in it->glyph_row.
 end
 
+define prowlims
+  printf "edges=(%d,%d),r2l=%d,cont=%d,trunc=(%d,%d),at_zv=%d\n", $arg0->minpos.charpos, $arg0->maxpos.charpos, $arg0->reversed_p, $arg0->continued_p, $arg0->truncated_on_left_p, $arg0->truncated_on_right_p, $arg0->ends_at_zv_p
+end
+document prowlims
+Print important attributes of a glyph_row structure.
+Takes one argument, a pointer to a glyph_row structure.
+end
+
+define pmtxrows
+  set $mtx = $arg0
+  set $gl = $mtx->rows
+  set $glend = $mtx->rows + $mtx->nrows - 1
+  set $i = 0
+  while ($gl < $glend)
+    printf "%d: ", $i
+    prowlims $gl
+    set $gl = $gl + 1
+    set $i = $i + 1
+  end
+end
+document pmtxrows
+Print data about glyph rows in a glyph matrix.
+Takes one argument, a pointer to a glyph_matrix structure.
+end
+
 define xtype
   xgettype $
   output $type
@@ -595,7 +642,7 @@ end
 
 define xvectype
   xgetptr $
-  set $size = ((struct Lisp_Vector *) $ptr)->size
+  set $size = ((struct Lisp_Vector *) $ptr)->header.size
   output ($size & PVEC_FLAG) ? (enum pvec_type) ($size & PVEC_TYPE_MASK) : $size & ~gdb_array_mark_flag
   echo \n
 end
@@ -736,7 +783,7 @@ end
 define xvector
   xgetptr $
   print (struct Lisp_Vector *) $ptr
-  output ($->size > 50) ? 0 : ($->contents[0])@($->size & ~gdb_array_mark_flag)
+  output ($->header.size > 50) ? 0 : ($->contents[0])@($->header.size & ~gdb_array_mark_flag)
 echo \n
 end
 document xvector
@@ -771,7 +818,7 @@ end
 define xcompiled
   xgetptr $
   print (struct Lisp_Vector *) $ptr
-  output ($->contents[0])@($->size & 0xff)
+  output ($->contents[0])@($->header.size & 0xff)
 end
 document xcompiled
 Print $ as a compiled function pointer.
@@ -821,7 +868,7 @@ define xchartable
   print (struct Lisp_Char_Table *) $ptr
   printf "Purpose: "
   xprintsym $->purpose
-  printf "  %d extra slots", ($->size & 0x1ff) - 68
+  printf "  %d extra slots", ($->header.size & 0x1ff) - 68
   echo \n
 end
 document xchartable
@@ -829,10 +876,23 @@ Print the address of the char-table $, and its purpose.
 This command assumes that $ is an Emacs Lisp char-table value.
 end
 
+define xsubchartable
+  xgetptr $
+  print (struct Lisp_Sub_Char_Table *) $ptr
+  xgetint $->depth
+  set $depth = $int
+  xgetint $->min_char
+  printf "Depth: %d, Min char: %d (0x%x)\n", $depth, $int, $int
+end
+document xsubchartable
+Print the address of the sub-char-table $, its depth and min-char.
+This command assumes that $ is an Emacs Lisp sub-char-table value.
+end
+
 define xboolvector
   xgetptr $
   print (struct Lisp_Bool_Vector *) $ptr
-  output ($->size > 256) ? 0 : ($->data[0])@((($->size & ~gdb_array_mark_flag) + 7)/ 8)
+  output ($->header.size > 256) ? 0 : ($->data[0])@((($->header.size & ~gdb_array_mark_flag) + 7)/ 8)
   echo \n
 end
 document xboolvector
@@ -843,7 +903,7 @@ end
 define xbuffer
   xgetptr $
   print (struct buffer *) $ptr
-  xgetptr $->name
+  xgetptr $->name_
   output ((struct Lisp_String *) $ptr)->data
   echo \n
 end
@@ -998,7 +1058,7 @@ define xpr
 #    end
   end
   if $type == Lisp_Vectorlike
-    set $size = ((struct Lisp_Vector *) $ptr)->size
+    set $size = ((struct Lisp_Vector *) $ptr)->header.size
     if ($size & PVEC_FLAG)
       set $vec = (enum pvec_type) ($size & PVEC_TYPE_MASK)
       if $vec == PVEC_NORMAL_VECTOR
@@ -1107,7 +1167,7 @@ end
 
 define xfont
   xgetptr $
-  set $size = (((struct Lisp_Vector *) $ptr)->size & 0x1FF)
+  set $size = (((struct Lisp_Vector *) $ptr)->header.size & 0x1FF)
   if $size == FONT_SPEC_MAX
     print (struct font_spec *) $ptr
   else
@@ -1134,7 +1194,7 @@ define xbacktrace
       printf "0x%x ", $ptr
       if $type == Lisp_Vectorlike
 	xgetptr (*$bt->function)
-        set $size = ((struct Lisp_Vector *) $ptr)->size
+        set $size = ((struct Lisp_Vector *) $ptr)->header.size
         output ($size & PVEC_FLAG) ? (enum pvec_type) ($size & PVEC_TYPE_MASK) : $size & ~gdb_array_mark_flag
       else
         printf "Lisp type %d", $type
@@ -1150,20 +1210,36 @@ document xbacktrace
   an error was signaled.
 end
 
-define which
-  set debug_print (which_symbols ($arg0))
+define xprintbytestr
+  set $data = (char *) $arg0->data
+  printf "Bytecode: "
+  output/u ($arg0->size > 1000) ? 0 : ($data[0])@($arg0->size_byte < 0 ? $arg0->size & ~gdb_array_mark_flag : $arg0->size_byte)
 end
-document which
+document xprintbytestr
+  Print a string of byte code.
+end
+
+define xwhichsymbols
+  set $output_debug = print_output_debug_flag
+  set print_output_debug_flag = 0
+  set safe_debug_print (which_symbols ($arg0, $arg1))
+  set print_output_debug_flag = $output_debug
+end
+document xwhichsymbols
   Print symbols which references a given lisp object
   either as its symbol value or symbol function.
+  Call with two arguments: the lisp object and the
+  maximum number of symbols referencing it to produce.
 end
 
 define xbytecode
   set $bt = byte_stack_list
   while $bt
-    xgettype ($bt->byte_string)
-    printf "0x%x => ", $bt->byte_string
-    which $bt->byte_string
+    xgetptr $bt->byte_string
+    set $ptr = (struct Lisp_String *) $ptr
+    xprintbytestr $ptr
+    printf "\n0x%x => ", $bt->byte_string
+    xwhichsymbols $bt->byte_string 5
     set $bt = $bt->next
   end
 end
@@ -1183,7 +1259,9 @@ end
 
 define xreload
   set $tagmask = (((long)1 << gdb_gctypebits) - 1)
-  set $valmask = gdb_use_lsb ? ~($tagmask) : ((long)1 << gdb_valbits) - 1
+  # The consing_since_gc business widens the 1 to EMACS_INT,
+  # a symbol not directly visible to GDB.
+  set $valmask = gdb_use_lsb ? ~($tagmask) : ((consing_since_gc - consing_since_gc + 1) << gdb_valbits) - 1
 end
 document xreload
   When starting Emacs a second time in the same gdb session under
@@ -1220,7 +1298,7 @@ show environment DISPLAY
 show environment TERM
 
 # People get bothered when they see messages about non-existent functions...
-xgetptr Vsystem_type
+xgetptr globals.f_Vsystem_type
 # $ptr is NULL in temacs
 if ($ptr != 0)
   set $tem = (struct Lisp_Symbol *) $ptr
@@ -1245,7 +1323,7 @@ end
 tbreak init_sys_modes
 commands
   silent
-  xgetptr Vinitial_window_system
+  xgetptr globals.f_Vinitial_window_system
   set $tem = (struct Lisp_Symbol *) $ptr
   xgetptr $tem->xname
   set $tem = (struct Lisp_String *) $ptr
@@ -1258,4 +1336,3 @@ commands
   end
   continue
 end
-

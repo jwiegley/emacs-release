@@ -1,6 +1,5 @@
 /* Mark end of data space to dump as pure, for GNU Emacs.
-   Copyright (C) 1985, 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 1985, 2001-2012  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -24,7 +23,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
  The files of Emacs are written so as to have no initialized
  data that can ever need to be altered except at the first startup.
- This is so that those words can be dumped as sharable text.
+ This is so that those words can be dumped as shareable text.
 
  It is not possible to exercise such control over library files.
  So it is necessary to refrain from making their data areas shared.
@@ -48,6 +47,3 @@ char my_endbss[1];
    of the bss area used by Emacs.  */
 static char _my_endbss[1];
 char * my_endbss_static = _my_endbss;
-
-/* arch-tag: 67e81ab4-e14f-44b2-8875-c0c12252223e
-   (do not change this comment) */

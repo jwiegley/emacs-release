@@ -1,7 +1,6 @@
 ;;; filesets.el --- handle group of files
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2002-2012 Free Software Foundation, Inc.
 
 ;; Author: Thomas Link <sanobast-emacs@yahoo.de>
 ;; Maintainer: FSF
@@ -268,12 +267,12 @@ SYM to VAL and return t.  If INIT-FLAG is non-nil, set with
     (not ignore-flag)))
 
 (defun filesets-set-default! (sym val)
-  "Call `filestes-set-default' and reset cached data (i.e. rebuild menu)."
+  "Call `filesets-set-default' and reset cached data (i.e. rebuild menu)."
   (when (filesets-set-default sym val)
     (filesets-reset-fileset)))
 
 (defun filesets-set-default+ (sym val)
-  "Call `filestes-set-default' and reset filesets' standard menu."
+  "Call `filesets-set-default' and reset filesets' standard menu."
   (when (filesets-set-default sym val)
     (setq filesets-has-changed-flag t)))
 ;    (filesets-reset-fileset nil t)))
@@ -348,7 +347,7 @@ See `add-submenu' for documentation."
   :group 'filesets)
 
 ;;(defcustom filesets-menu-cnvfp-flag nil
-;;  "*Non-nil means show \"Convert :pattern to :files\" entry for :pattern menus."
+;;  "Non-nil means show \"Convert :pattern to :files\" entry for :pattern menus."
 ;;  :set (function filesets-set-default!)
 ;;  :type 'boolean
 ;;  :group 'filesets)
@@ -454,7 +453,7 @@ will not be rewrapped if their length exceeds this value."
   :group 'filesets)
 
 (defcustom filesets-max-entry-length 50
-  "Truncate names of splitted submenus to this length."
+  "Truncate names of split submenus to this length."
   :set (function filesets-set-default)
   :type 'integer
   :group 'filesets)
@@ -519,7 +518,7 @@ Caveat: Changes will take effect after rebuilding the menu."
 This is for calls via `filesets-find-or-display-file'
 or `filesets-find-file'.
 
-Set this to 0, if you don't use XEmacs' buffer tabs."
+Set this to 0, if you don't use XEmacs's buffer tabs."
   :set (function filesets-set-default)
   :type 'number
   :group 'filesets)
@@ -2534,5 +2533,4 @@ Set up hooks, load the cache file -- if existing -- and build the menu."
 ;; sentence-end-double-space:t
 ;; End:
 
-;; arch-tag: 2c03f85f-c3df-4cec-b0a3-b46fd5592d70
 ;;; filesets.el ends here

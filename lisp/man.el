@@ -1,7 +1,7 @@
 ;;; man.el --- browse UNIX manual pages -*- coding: iso-8859-1 -*-
 
-;; Copyright (C) 1993, 1994, 1996, 1997, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1993-1994, 1996-1997, 2001-2012
+;;   Free Software Foundation, Inc.
 
 ;; Author: Barry A. Warsaw <bwarsaw@cen.com>
 ;; Maintainer: FSF
@@ -215,11 +215,28 @@ the associated section number."
 		       (string :tag "Real Section")))
   :group 'man)
 
+;; FIXME see comments at ffap-c-path.
 (defcustom Man-header-file-path
-  '("/usr/include" "/usr/local/include")
+  (let ((arch (with-temp-buffer
+                (when (eq 0 (ignore-errors
+                              (call-process "gcc" nil '(t nil) nil
+                                            "-print-multiarch")))
+                  (goto-char (point-min))
+                  (buffer-substring (point) (line-end-position)))))
+        (base '("/usr/include" "/usr/local/include")))
+    (if (zerop (length arch))
+        base
+      (append base (list (expand-file-name arch "/usr/include")))))
   "C Header file search path used in Man."
+  :version "24.1"                       ; add multiarch
   :type '(repeat string)
   :group 'man)
+
+(defcustom Man-name-local-regexp (concat "^" (regexp-opt '("NOM" "NAME")) "$")
+  "Regexp that matches the text that precedes the command's name.
+Used in `bookmark-set' to get the default bookmark name."
+  :version "24.1"
+  :type 'string :group 'bookmark)
 
 (defvar manual-program "man"
   "The name of the program that produces man pages.")
@@ -249,8 +266,7 @@ the associated section number."
   "Regular expression describing a manpage section within parentheses.")
 
 (defvar Man-page-header-regexp
-  (if (and (string-match "-solaris2\\." system-configuration)
-	   (not (string-match "-solaris2\\.[123435]$" system-configuration)))
+  (if (string-match "-solaris2\\." system-configuration)
       (concat "^[-A-Za-z0-9_].*[ \t]\\(" Man-name-regexp
 	      "(\\(" Man-section-regexp "\\))\\)$")
     (concat "^[ \t]*\\(" Man-name-regexp
@@ -272,7 +288,9 @@ This regexp should not start with a `^' character.")
 This regular expression should start with a `^' character.")
 
 (defvar Man-reference-regexp
-  (concat "\\(" Man-name-regexp "\\)[ \t]*(\\(" Man-section-regexp "\\))")
+  (concat "\\(" Man-name-regexp
+	  "\\(\n[ \t]+" Man-name-regexp "\\)*\\)[ \t]*(\\("
+	  Man-section-regexp "\\))")
   "Regular expression describing a reference to another manpage.")
 
 (defvar Man-apropos-regexp
@@ -392,8 +410,8 @@ Otherwise, the value is whatever the function
     (suppress-keymap map)
     (set-keymap-parent map button-buffer-map)
 
-    (define-key map " "    'scroll-up)
-    (define-key map "\177" 'scroll-down)
+    (define-key map " "    'scroll-up-command)
+    (define-key map "\177" 'scroll-down-command)
     (define-key map "n"    'Man-next-section)
     (define-key map "p"    'Man-previous-section)
     (define-key map "\en"  'Man-next-manpage)
@@ -593,8 +611,8 @@ and the `Man-section-translations-alist' variables)."
     (cond
      ;; "chmod(2V)" case ?
      ((string-match (concat "^" Man-reference-regexp "$") ref)
-      (setq name (match-string 1 ref)
-	    section (match-string 2 ref)))
+      (setq name (replace-regexp-in-string "[\n\t ]" "" (match-string 1 ref))
+	    section (match-string 3 ref)))
      ;; "2v chmod" case ?
      ((string-match (concat "^\\(" Man-section-regexp
 			    "\\) +\\(" Man-name-regexp "\\)$") ref)
@@ -618,36 +636,32 @@ and the `Man-section-translations-alist' variables)."
       (concat Man-specified-section-option section " " name))))
 
 (defun Man-support-local-filenames ()
-  "Check the availability of `-l' option of the man command.
-This option allows `man' to interpret command line arguments
-as local filenames.
-Return the value of the variable `Man-support-local-filenames'
-if it was set to nil or t before the call of this function.
-If t, the man command supports `-l' option.  If nil, it doesn't.
-Otherwise, if the value of `Man-support-local-filenames'
-is neither t nor nil, then determine a new value, set it
-to the variable `Man-support-local-filenames' and return
-a new value."
-  (if (or (not Man-support-local-filenames)
-          (eq Man-support-local-filenames t))
-      Man-support-local-filenames
-    (setq Man-support-local-filenames
-          (with-temp-buffer
-            (and (equal (condition-case nil
-			    (let ((default-directory
-				    ;; Assure that `default-directory' exists
-				    ;; and is readable.
- 				    (if (and (file-directory-p default-directory)
- 					     (file-readable-p default-directory))
- 					default-directory
- 				      (expand-file-name "~/"))))
- 			      (call-process manual-program nil t nil "--help"))
-                          (error nil))
-                        0)
-                 (progn
-                   (goto-char (point-min))
-                   (search-forward "--local-file" nil t))
-                 t)))))
+  "Return non-nil if the man command supports local filenames.
+Different man programs support this feature in different ways.
+The default Debian man program (\"man-db\") has a `--local-file'
+\(or `-l') option for this purpose.  The default Red Hat man
+program has no such option, but interprets any name containing
+a \"/\" as a local filename.  The function returns either `man-db'
+`man', or nil."
+  (if (eq Man-support-local-filenames 'auto-detect)
+      (setq Man-support-local-filenames
+            (with-temp-buffer
+              (let ((default-directory
+                      ;; Ensure that `default-directory' exists and is readable.
+                      (if (and (file-directory-p default-directory)
+                               (file-readable-p default-directory))
+                        default-directory
+                        (expand-file-name "~/"))))
+                (ignore-errors
+                  (call-process manual-program nil t nil "--help")))
+              (cond ((search-backward "--local-file" nil 'move)
+                     'man-db)
+                    ;; This feature seems to be present in at least ver 1.4f,
+                    ;; which is about 20 years old.
+                    ;; I don't know if this version has an official name?
+                    ((looking-at "^man, versione? [1-9]")
+                     'man))))
+    Man-support-local-filenames))
 
 
 ;; ======================================================================
@@ -685,7 +699,7 @@ POS defaults to `point'."
 	  ;; Otherwise record the current column and look backwards.
 	  (setq column (current-column))
 	  (skip-chars-backward ",; \t")
-	  ;; Record the distance travelled.
+	  ;; Record the distance traveled.
 	  (setq distance (- column (current-column)))
 	  (when (looking-back
 		 (concat "([ \t]*\\(?:" Man-section-regexp "\\)[ \t]*)"))
@@ -752,8 +766,10 @@ POS defaults to `point'."
 
 (defun Man-completion-table (string pred action)
   (cond
-   ((eq action 'lambda)
-    (not (string-match "([^)]*\\'" string)))
+   ;; This ends up returning t for pretty much any string, and hence leads to
+   ;; spurious "complete but not unique" messages.  And since `man' doesn't
+   ;; require-match anyway, there's not point being clever.
+   ;;((eq action 'lambda) (not (string-match "([^)]*\\'" string)))
    ((equal string "-k")
     ;; Let SPC (minibuffer-complete-word) insert the space.
     (complete-with-action action '("-k ") string pred))
@@ -886,7 +902,8 @@ names or descriptions.  The pattern argument is usually an
     (man man-args)))
 
 (defun Man-getpage-in-background (topic)
-  "Use TOPIC to build and fire off the manpage and cleaning command."
+  "Use TOPIC to build and fire off the manpage and cleaning command.
+Return the buffer in which the manpage will appear."
   (let* ((man-args topic)
 	 (bufname (concat "*Man " man-args "*"))
 	 (buffer  (get-buffer bufname)))
@@ -928,7 +945,8 @@ names or descriptions.  The pattern argument is usually an
 	;;               minal (using an ioctl(2) if available, the value of
 	;;               $COLUMNS,  or falling back to 80 characters if nei-
 	;;               ther is available).
-	(unless (or (getenv "MANWIDTH") (getenv "COLUMNS"))
+	(when (or window-system
+                  (not (or (getenv "MANWIDTH") (getenv "COLUMNS"))))
 	  ;; This isn't strictly correct, since we don't know how
 	  ;; the page will actually be displayed, but it seems
 	  ;; reasonable.
@@ -964,15 +982,16 @@ names or descriptions.  The pattern argument is usually an
 			   (format "exited abnormally with code %d"
 				   exit-status)))
 		(setq msg exit-status))
-	    (Man-bgproc-sentinel bufname msg)))))))
+	    (Man-bgproc-sentinel bufname msg)))))
+    buffer))
 
 (defun Man-notify-when-ready (man-buffer)
   "Notify the user when MAN-BUFFER is ready.
 See the variable `Man-notify-method' for the different notification behaviors."
   (let ((saved-frame (with-current-buffer man-buffer
 		       Man-original-frame)))
-    (cond
-     ((eq Man-notify-method 'newframe)
+    (case Man-notify-method
+     (newframe
       ;; Since we run asynchronously, perhaps while Emacs is waiting
       ;; for input, we must not leave a different buffer current.  We
       ;; can't rely on the editor command loop to reselect the
@@ -983,28 +1002,27 @@ See the variable `Man-notify-method' for the different notification behaviors."
           (set-window-dedicated-p (frame-selected-window frame) t)
 	  (or (display-multi-frame-p frame)
 	      (select-frame frame)))))
-     ((eq Man-notify-method 'pushy)
+     (pushy
       (switch-to-buffer man-buffer))
-     ((eq Man-notify-method 'bully)
+     (bully
       (and (frame-live-p saved-frame)
 	   (select-frame saved-frame))
       (pop-to-buffer man-buffer)
       (delete-other-windows))
-     ((eq Man-notify-method 'aggressive)
+     (aggressive
       (and (frame-live-p saved-frame)
 	   (select-frame saved-frame))
       (pop-to-buffer man-buffer))
-     ((eq Man-notify-method 'friendly)
+     (friendly
       (and (frame-live-p saved-frame)
 	   (select-frame saved-frame))
       (display-buffer man-buffer 'not-this-window))
-     ((eq Man-notify-method 'polite)
+     (polite
       (beep)
       (message "Manual buffer %s is ready" (buffer-name man-buffer)))
-     ((eq Man-notify-method 'quiet)
+     (quiet
       (message "Manual buffer %s is ready" (buffer-name man-buffer)))
-     ((or (eq Man-notify-method 'meek)
-	  t)
+     (t ;; meek
       (message ""))
      )))
 
@@ -1092,7 +1110,7 @@ Same for the ANSI bold and normal escape sequences."
       (replace-match "+")
       (put-text-property (1- (point)) (point) 'face 'bold))
     ;; When the header is longer than the manpage name, groff tries to
-    ;; condense it to a shorter line interspered with ^H.  Remove ^H with
+    ;; condense it to a shorter line interspersed with ^H.  Remove ^H with
     ;; their preceding chars (but don't put Man-overstrike-face).  (Bug#5566)
     (goto-char (point-min))
     (while (re-search-forward ".\b" nil t) (backward-delete-char 2))
@@ -1105,7 +1123,7 @@ Same for the ANSI bold and normal escape sequences."
       (put-text-property (match-beginning 0)
 			 (match-end 0)
 			 'face Man-overstrike-face)))
-  (message "%s man page formatted" Man-arguments))
+  (message "%s man page formatted" (Man-page-from-arguments Man-arguments)))
 
 (defun Man-highlight-references (&optional xref-man-type)
   "Highlight the references on mouse-over.
@@ -1148,7 +1166,9 @@ default type, `Man-xref-man-page' is used for the buttons."
 		 (goto-char (point-min))
 		 nil)))
       (while (re-search-forward regexp end t)
-	(make-text-button
+	;; An overlay button is preferable because the underlying text
+	;; may have text property highlights (Bug#7881).
+	(make-button
 	 (match-beginning button-pos)
 	 (match-end button-pos)
 	 'type type
@@ -1184,7 +1204,7 @@ script would have done them."
   (goto-char (point-min))
   (while (re-search-forward "[-|]\\(\b[-|]\\)+" nil t) (replace-match "+"))
   ;; When the header is longer than the manpage name, groff tries to
-  ;; condense it to a shorter line interspered with ^H.  Remove ^H with
+  ;; condense it to a shorter line interspersed with ^H.  Remove ^H with
   ;; their preceding chars (but don't put Man-overstrike-face).  (Bug#5566)
   (goto-char (point-min))
   (while (re-search-forward ".\b" nil t) (backward-delete-char 2))
@@ -1252,12 +1272,11 @@ manpage command."
 	  (Man-mode)
 
 	  (if (not Man-page-list)
-	      (let ((args Man-arguments))
+ 	      (let ((args Man-arguments))
 		(kill-buffer (current-buffer))
-		(error "Can't find the %s manpage" args)))
-
-          (set-buffer-modified-p nil)
-          ))
+		(error "Can't find the %s manpage"
+		       (Man-page-from-arguments args)))
+	    (set-buffer-modified-p nil))))
 	;; Restore case-fold-search before calling
 	;; Man-notify-when-ready because it may switch buffers.
 
@@ -1268,9 +1287,23 @@ manpage command."
 	    (error "%s" err-mess))
 	))))
 
+(defun Man-page-from-arguments (args)
+  ;; Skip arguments and only print the page name.
+  (mapconcat
+   'identity
+   (delete nil
+	   (mapcar
+	    (lambda (elem)
+	      (and (not (string-match "^-" elem))
+		   elem))
+	    (split-string args " ")))
+   " "))
+
 
 ;; ======================================================================
 ;; set up manual mode in buffer and build alists
+
+(defvar bookmark-make-record-function)
 
 (put 'Man-mode 'mode-class 'special)
 
@@ -1328,6 +1361,8 @@ The following key bindings are currently in effect in the buffer:
   (setq imenu-generic-expression (list (list nil Man-heading-regexp 0)))
   (set (make-local-variable 'outline-regexp) Man-heading-regexp)
   (set (make-local-variable 'outline-level) (lambda () 1))
+  (set (make-local-variable 'bookmark-make-record-function)
+       'Man-bookmark-make-record)
   (Man-build-page-list)
   (Man-strip-page-headers)
   (Man-unindent)
@@ -1662,6 +1697,46 @@ Specify which REFERENCE to use; default is based on word at point."
                  (setq path nil))
         (setq complete-path nil)))
     complete-path))
+
+;;; Bookmark Man Support
+(declare-function bookmark-make-record-default
+                  "bookmark" (&optional no-file no-context posn))
+(declare-function bookmark-prop-get "bookmark" (bookmark prop))
+(declare-function bookmark-default-handler "bookmark" (bmk))
+(declare-function bookmark-get-bookmark-record "bookmark" (bmk))
+
+(defun Man-default-bookmark-title ()
+  "Default bookmark name for Man or WoMan pages.
+Uses `Man-name-local-regexp'."
+  (save-excursion
+    (goto-char (point-min))
+    (when (re-search-forward Man-name-local-regexp nil t)
+      (skip-chars-forward "\n\t ")
+      (buffer-substring-no-properties (point) (line-end-position)))))
+
+(defun Man-bookmark-make-record ()
+  "Make a bookmark entry for a Man buffer."
+  `(,(Man-default-bookmark-title)
+    ,@(bookmark-make-record-default 'no-file)
+    (location . ,(concat "man " Man-arguments))
+    (man-args . ,Man-arguments)
+    (handler . Man-bookmark-jump)))
+
+;;;###autoload
+(defun Man-bookmark-jump (bookmark)
+  "Default bookmark handler for Man buffers."
+  (let* ((man-args (bookmark-prop-get bookmark 'man-args))
+         ;; Let bookmark.el do the window handling.
+         ;; This let-binding needs to be active during the call to both
+         ;; Man-getpage-in-background and accept-process-output.
+         (Man-notify-method 'meek)
+         (buf (Man-getpage-in-background man-args))
+         (proc (get-buffer-process buf)))
+    (while (and proc (eq (process-status proc) 'run))
+      (accept-process-output proc))
+    (bookmark-default-handler
+     `("" (buffer . ,buf) . ,(bookmark-get-bookmark-record bookmark)))))
+
 
 ;; Init the man package variables, if not already done.
 (Man-init-defvars)
@@ -1671,5 +1746,4 @@ Specify which REFERENCE to use; default is based on word at point."
 
 (provide 'man)
 
-;; arch-tag: 587cda76-8e23-4594-b1f3-89b6b09a0d47
 ;;; man.el ends here

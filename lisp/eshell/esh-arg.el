@@ -1,7 +1,6 @@
 ;;; esh-arg.el --- argument processing
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -118,12 +117,13 @@ treated as a literal character."
 
 ;;; User Variables:
 
-(defcustom eshell-arg-load-hook '(eshell-arg-initialize)
+(defcustom eshell-arg-load-hook nil
   "A hook that gets run when `eshell-arg' is loaded."
+  :version "24.1"		       ; removed eshell-arg-initialize
   :type 'hook
   :group 'eshell-arg)
 
-(defcustom eshell-delimiter-argument-list '(?\; ?& ?\| ?\> ?  ?\t ?\n)
+(defcustom eshell-delimiter-argument-list '(?\; ?& ?\| ?\> ?\s ?\t ?\n)
   "List of characters to recognize as argument separators."
   :type '(repeat character)
   :group 'eshell-arg)
@@ -202,6 +202,18 @@ If POS is nil, the location of point is checked."
     (or (= pos (point-max))
 	(memq (char-after pos) eshell-delimiter-argument-list))))
 
+(defun eshell-quote-argument (string)
+  "Return STRING with magic characters quoted.
+Magic characters are those in `eshell-special-chars-outside-quoting'."
+  (let ((index 0))
+    (mapconcat (lambda (c)
+		 (prog1
+		     (or (eshell-quote-backslash string index)
+			 (char-to-string c))
+		   (setq index (1+ index))))
+	       string
+	       "")))
+
 ;; Argument parsing
 
 (defun eshell-parse-arguments (beg end)
@@ -214,25 +226,24 @@ Point is left at the end of the arguments."
       (narrow-to-region beg end)
       (let ((inhibit-point-motion-hooks t)
 	    (args (list t))
-	    after-change-functions
 	    delim)
-	(remove-text-properties (point-min) (point-max)
-				'(arg-begin nil arg-end nil))
-	(if (setq
-	     delim
-	     (catch 'eshell-incomplete
-	       (while (not (eobp))
-		 (let* ((here (point))
-			(arg (eshell-parse-argument)))
-		   (if (= (point) here)
-		       (error "Failed to parse argument '%s'"
-			      (buffer-substring here (point-max))))
-		   (and arg (nconc args (list arg)))))))
-	    (if (listp delim)
-		(throw 'eshell-incomplete delim)
-	      (throw 'eshell-incomplete
-		     (list delim (point) (cdr args)))))
-	(cdr args)))))
+        (with-silent-modifications
+          (remove-text-properties (point-min) (point-max)
+                                  '(arg-begin nil arg-end nil))
+          (if (setq
+               delim
+               (catch 'eshell-incomplete
+                 (while (not (eobp))
+                   (let* ((here (point))
+                          (arg (eshell-parse-argument)))
+                     (if (= (point) here)
+                         (error "Failed to parse argument '%s'"
+                                (buffer-substring here (point-max))))
+                     (and arg (nconc args (list arg)))))))
+              (throw 'eshell-incomplete (if (listp delim)
+                                            delim
+                                          (list delim (point) (cdr args)))))
+          (cdr args))))))
 
 (defun eshell-parse-argument ()
   "Get the next argument.  Leave point after it."
@@ -312,7 +323,7 @@ special character that is not itself a backslash."
 		  (char-to-string (char-before))))
 	;; allow \\<RET> to mean a literal "\" character followed by a
 	;; normal return, rather than a backslash followed by a line
-	;; continuator (i.e., "\\ + \n" rather than "\ + \\n").  This
+	;; continuation (i.e., "\\ + \n" rather than "\ + \\n").  This
 	;; is necessary because backslashes in Eshell are not special
 	;; unless they either precede something special, or precede a
 	;; backslash that precedes something special.  (Mainly this is
@@ -392,5 +403,4 @@ special character that is not itself a backslash."
 		   (char-to-string (char-after)))))
 	 (goto-char end)))))))
 
-;; arch-tag: 7f593a2b-8fc1-4def-8f84-8f51ed0198d6
 ;;; esh-arg.el ends here

@@ -1,7 +1,6 @@
 ;;; tvi970.el --- terminal support for the Televideo 970
 
-;; Copyright (C) 1992, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1992, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: Jim Blandy <jimb@occs.cs.oberlin.edu>
 ;; Keywords: terminals
@@ -27,6 +26,8 @@
 ;; Uses the Emacs 19 terminal initialization features --- won't work with 18.
 
 ;;; Code:
+
+(eval-when-compile (require 'cl))
 
 (defvar tvi970-terminal-map
   (let ((map (make-sparse-keymap)))
@@ -102,21 +103,20 @@
 
 
 ;; Should keypad numbers send ordinary digits or distinct escape sequences?
-(defun tvi970-set-keypad-mode (&optional arg)
-  "Set the current mode of the TVI 970 numeric keypad.
-In ``numeric keypad mode'', the number keys on the keypad act as
-ordinary digits.  In ``alternate keypad mode'', the keys send distinct
-escape sequences, meaning that they can have their own bindings,
-independent of the normal number keys.
-With no argument, toggle between the two possible modes.
-With a positive argument, select alternate keypad mode.
-With a negative argument, select numeric keypad mode."
-  (interactive "P")
-  (let ((newval (if (null arg)
-                    (not (terminal-parameter nil 'tvi970-keypad-numeric))
-                  (> (prefix-numeric-value arg) 0))))
-    (set-terminal-parameter nil 'tvi970-keypad-numeric newval)
-    (send-string-to-terminal (if newval "\e=" "\e>"))))
+(define-minor-mode tvi970-set-keypad-mode
+  "Toggle alternate keypad mode on TVI 970 keypad.
+With a prefix argument ARG, enable the mode if ARG is positive,
+and disable it otherwise.  If called from Lisp, enable the mode
+if ARG is omitted or nil.
 
-;; arch-tag: c1334cf0-1462-41c3-a963-c077d175f8f0
+In ``alternate keypad mode'', the keys send distinct escape
+sequences, meaning that they can have their own bindings,
+independent of the normal number keys.
+
+When disabled, the terminal enters ``numeric keypad mode'', in
+which the keypad's keys act as ordinary digits."
+  :variable (terminal-parameter nil 'tvi970-keypad-numeric)
+  (send-string-to-terminal
+   (if (terminal-parameter nil 'tvi970-keypad-numeric) "\e=" "\e>")))
+
 ;;; tvi970.el ends here

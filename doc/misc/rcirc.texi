@@ -5,7 +5,7 @@
 @c %**end of header
 
 @copying
-Copyright @copyright{} 2006, 2007, 2008, 2009, 2010, 2011, 2012
+Copyright @copyright{} 2006-2012
 Free Software Foundation, Inc.
 
 @quotation
@@ -509,8 +509,8 @@ This variable contains the default user name to report to the server.
 It defaults to the login name returned by @code{user-login-name}, just
 like @code{rcirc-default-nick}.
 
-@item rcirc-default-user-full-name
-@vindex rcirc-default-user-full-name
+@item rcirc-default-full-name
+@vindex rcirc-default-full-name
 @cindex full name
 @cindex real name
 @cindex surname
@@ -519,12 +519,12 @@ to the name returned by @code{user-full-name}.  If you want to hide
 your full name, you might want to set it to some pseudonym.
 
 @example
-(setq rcirc-default-user-full-name "Curious Minds Want To Know")
+(setq rcirc-default-full-name "Curious Minds Want To Know")
 @end example
 
 @item rcirc-authinfo
 @vindex rcirc-authinfo
-@cindex authentification
+@cindex authentication
 @cindex identification
 @cindex nickserv
 @cindex login
@@ -547,7 +547,7 @@ And here are the valid method symbols and the arguments they require:
 
 @table @code
 @item nickserv
-@cindex nickserv authentification
+@cindex nickserv authentication
 Use this symbol if you need to identify yourself as follows when
 connecting to a network: @code{/msg nickserv identify secret}.  The
 necessary arguments are the nickname you want to use this for, and the
@@ -558,7 +558,7 @@ pick a password for it.  Contact @code{nickserv} and check out the
 details.  (Using @code{/msg nickserv help}, for example.)
 
 @item chanserv
-@cindex chanserv authentification
+@cindex chanserv authentication
 Use this symbol if you need to identify yourself as follows if you want
 to join a particular channel: @code{/msg chanserv identify #underground
 secret}.  The necessary arguments are the nickname and channel you want
@@ -569,7 +569,7 @@ the password to use.  Contact @code{chanserv} and check out the details.
 (Using @code{/msg chanserv help}, for example.)
 
 @item bitlbee
-@cindex bitlbee authentification
+@cindex bitlbee authentication
 Use this symbol if you need to identify yourself in the Bitlbee channel
 as follows: @code{identify secret}.  The necessary arguments are the
 nickname you want to use this for, and the password to use.
@@ -585,7 +585,7 @@ Bitlbee acts like an IRC server, but in fact it is a gateway to a lot of
 other instant messaging services.  You can either install Bitlbee
 locally or use a public Bitlbee server.  There, you need to create an
 account with a password.  This is the nick and password you need to
-provide for the bitlbee authentification method.
+provide for the bitlbee authentication method.
 
 Later, you will tell Bitlbee about your accounts and passwords on all
 the other instant messaging services, and Bitlbee will log you in.  All
@@ -926,7 +926,7 @@ The real answer, therefore, is a @code{/reconnect} command:
        (delete-process process)
        (rcirc-connect server port nick
                       rcirc-default-user-name
-                      rcirc-default-user-full-name
+                      rcirc-default-full-name
                       channels))))
 @end smallexample
 
@@ -948,7 +948,3 @@ The real answer, therefore, is a @code{/reconnect} command:
 @printindex cp
 
 @bye
-
-@ignore
-   arch-tag: 2589e562-3843-4ffc-8c2f-477cbad57c01
-@end ignore

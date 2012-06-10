@@ -2,8 +2,8 @@ This is ../../info/ede, produced by makeinfo version 4.13 from ede.texi.
 
 This file describes EDE, the Emacs Development Environment.
 
-   Copyright (C) 1998, 1999, 2000, 2001, 2004, 2005, 2008, 2009, 2010,
-2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 1998-2001, 2004-2005, 2008-2012  Free Software
+Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -38,8 +38,8 @@ GNU ways of doing things.
 
    This file describes EDE, the Emacs Development Environment.
 
-   Copyright (C) 1998, 1999, 2000, 2001, 2004, 2005, 2008, 2009, 2010,
-2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 1998-2001, 2004-2005, 2008-2012  Free Software
+Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -215,9 +215,9 @@ Options' submenu.
    You can add a file to more than one target; this is OK.
 
    To remove the current file from a target, type `C-c . d'
-(`ede-remove-file'), or or use the `Remove File' menu item in the
-`Target Options' submenu.  If the file belongs to multiple targets,
-this command prompts for each target it could be removed from.
+(`ede-remove-file'), or use the `Remove File' menu item in the `Target
+Options' submenu.  If the file belongs to multiple targets, this
+command prompts for each target it could be removed from.
 
    While working in a project, if you visit a file that is not part of
 an existing target, EDE automatically prompts for a target.  If you do
@@ -242,7 +242,7 @@ individual slots.  This is usually necessary for complex projects.
 
    Some project modes do not have a project file, but directly read a
 Makefile or other existing file.  Instead of directly editing the
-object, you can edit the file by typine `C-c . e'
+object, you can edit the file by typing `C-c . e'
 (`ede-edit-file-target').  You should "rescan" the project afterwards
 (*note Miscellaneous commands::).
 
@@ -500,7 +500,7 @@ EDE how to load your project pattern
      (defun MY-LOAD (dir)
        "Load a project of type `cpp-root' for the directory DIR.
      Return nil if there isn't one."
-       ;; Use your preferred constructin method here.
+       ;; Use your preferred construction method here.
        (ede-cpp-root-project "NAME" :file (expand-file-name "FILE" dir)
                                     :locate-fcn 'MYFCN)
        )
@@ -713,12 +713,12 @@ and target types:
 
 `ede-want-file-p'
      Return non-nil if a target will accept a given file.  It is
-     generally unecessary to override this.  See the section on source
+     generally unnecessary to override this.  See the section on source
      code.
 
 `ede-buffer-mine'
      Return non-nil if a buffer belongs to this target.  Used during
-     association when a file is loaded.  It is generally unecessary to
+     association when a file is loaded.  It is generally unnecessary to
      override this unless you keep auxiliary files.
 
    These methods are used by the semantic package extensions *Note
@@ -1482,7 +1482,7 @@ Slots:
      PROJ is the project to save.
 
  -- Method: ede-proj-configure-recreate :AFTER this
-     Delete project THISes configure script and start over.
+     Delete project THIS's configure script and start over.
 
  -- Method: ede-proj-makefile-insert-user-rules :AFTER this
      Insert user specified rules needed by THIS target.  This is
@@ -1940,7 +1940,7 @@ Slots:
      Results in -add-missing being passed to automake.
 
  -- Method: ede-proj-flush-autoconf :AFTER this
-     Flush the configure file (current buffer) to accomodate THIS.  By
+     Flush the configure file (current buffer) to accommodate THIS.  By
      flushing, remove any cruft that may be in the file.  Subsequent
      calls to "ede-proj-tweak-autoconf" can restore items removed by
      flush.
@@ -1983,7 +1983,7 @@ Slots:
      These are removed with make clean.
 
  -- Method: ede-proj-tweak-autoconf :AFTER this
-     Tweak the configure file (current buffer) to accomodate THIS.
+     Tweak the configure file (current buffer) to accommodate THIS.
 
  -- Method: ede-proj-compilers :AFTER obj
      List of compilers being used by OBJ.  If the `compiler' slot is
@@ -2241,7 +2241,7 @@ Inheritance Tree:
 
  -- Method: ede-proj-makefile-insert-source-variables :PRIMARY this
      Insert bin_PROGRAMS variables needed by target THIS.  We aren't
-     acutally inserting SOURCE details, but this is used by the
+     actually inserting SOURCE details, but this is used by the
      Makefile.am generator, so use it to add this important bin program.
 
 
@@ -2352,7 +2352,7 @@ Inheritance Tree:
 
  -- Method: ede-proj-makefile-insert-automake-pre-variables :AFTER this
      Insert bin_PROGRAMS variables needed by target THIS.  We aren't
-     acutally inserting SOURCE details, but this is used by the
+     actually inserting SOURCE details, but this is used by the
      Makefile.am generator, so use it to add this important bin program.
 
 
@@ -2398,7 +2398,7 @@ Slots:
      cell: (COMPILED . UPTODATE).
 
  -- Method: ede-proj-flush-autoconf :AFTER this
-     Flush the configure file (current buffer) to accomodate THIS.
+     Flush the configure file (current buffer) to accommodate THIS.
 
  -- Method: ede-buffer-mine :AFTER this buffer
      Return `t' if object THIS lays claim to the file in BUFFER.  Lays
@@ -2408,7 +2408,7 @@ Slots:
      Return the variable name for THIS's sources.
 
  -- Method: ede-proj-tweak-autoconf :AFTER this
-     Tweak the configure file (current buffer) to accomodate THIS.
+     Tweak the configure file (current buffer) to accommodate THIS.
 
  -- Method: ede-update-version-in-source :AFTER this version
      In a Lisp file, updated a version string for THIS to VERSION.
@@ -2476,7 +2476,7 @@ Slots:
      Create or update the autoload target.
 
  -- Method: ede-proj-flush-autoconf :AFTER this
-     Flush the configure file (current buffer) to accomodate THIS.
+     Flush the configure file (current buffer) to accommodate THIS.
 
  -- Method: ede-buffer-mine :AFTER this buffer
      Return `t' if object THIS lays claim to the file in BUFFER.  Lays
@@ -2491,7 +2491,7 @@ Slots:
      is the target which needs to insert an info file.
 
  -- Method: ede-proj-tweak-autoconf :AFTER this
-     Tweak the configure file (current buffer) to accomodate THIS.
+     Tweak the configure file (current buffer) to accommodate THIS.
 
  -- Method: ede-update-version-in-source :AFTER this version
      In a Lisp file, updated a version string for THIS to VERSION.
@@ -2662,7 +2662,7 @@ Slots:
 ............................
 
  -- Method: ede-proj-tweak-autoconf :AFTER this
-     Tweak the configure file (current buffer) to accomodate THIS.
+     Tweak the configure file (current buffer) to accommodate THIS.
 
 
 File: ede,  Node: project-am-target,  Next: project-am-objectcode,  Prev: ede-proj-target-scheme,  Up: Targets
@@ -2880,7 +2880,7 @@ Slots:
      Return the default macro to 'edit' for this object type.
 
  -- Method: project-compile-target-command :AFTER this
-     Default target t- use when compling a texinfo file.
+     Default target t- use when compiling a texinfo file.
 
  -- Method: ede-documentation :AFTER this
      Return a list of files that provides documentation.  Documentation
@@ -2965,7 +2965,7 @@ Slots:
 
           Emacs regex matching auxiliary source code this target
           accepts.  Aux source are source code files needed for
-          compilation, which are not comiled themselves.
+          compilation, which are not compiled themselves.
 
     `:enable-subdirectories'
           Type: `boolean'
@@ -3104,7 +3104,7 @@ Slots:
     `:objectextention'
           Type: `string'
 
-          A string which is the extention used for object files.  For
+          A string which is the extension used for object files.  For
           example, C code uses .o on unix, and Emacs Lisp uses .elc.
 
 
@@ -3113,7 +3113,7 @@ Slots:
 ...........................
 
  -- Method: ede-proj-flush-autoconf :AFTER this
-     Flush the configure file (current buffer) to accomodate THIS.
+     Flush the configure file (current buffer) to accommodate THIS.
 
  -- Method: ede-proj-makefile-insert-rules :AFTER this
      Insert rules needed for THIS compiler object.
@@ -3131,7 +3131,7 @@ Slots:
      `ede-compilation-program'
 
  -- Method: ede-proj-tweak-autoconf :AFTER this
-     Tweak the configure file (current buffer) to accomodate THIS.
+     Tweak the configure file (current buffer) to accommodate THIS.
 
 
 File: ede,  Node: ede-compiler,  Next: ede-object-compiler,  Prev: ede-compilation-program,  Up: Compilers
@@ -3197,7 +3197,7 @@ Slots:
     `:objectextention'
           Type: `string'
 
-          A string which is the extention used for object files.  For
+          A string which is the extension used for object files.  For
           example, C code uses .o on unix, and Emacs Lisp uses .elc.
 
     `:makedepends'
@@ -3326,75 +3326,75 @@ Slots:
     `:objectextention'
           Type: `string'
 
-          A string which is the extention used for object files.  For
+          A string which is the extension used for object files.  For
           example, C code uses .o on unix, and Emacs Lisp uses .elc.
 
 
 
 
 Tag Table:
-Node: Top1048
-Node: EDE Project Concepts2908
-Node: EDE Mode4279
-Node: Creating a project4896
-Node: Modifying your project7353
-Node: Add/Remove target7878
-Node: Add/Remove files8544
-Node: Customize Features9451
-Node: EDE Project Features10423
-Node: Changing Compilers and Flags11104
-Node: Configurations12051
-Node: Building and Debugging12930
-Node: Miscellaneous commands13512
-Ref: ede-locate-setup-options14329
-Node: Simple projects14893
-Node: ede-cpp-root15968
-Node: ede-simple subclassing20875
-Node: ede-emacs21123
-Node: ede-linux21498
-Node: Custom Locate21875
-Node: Extending EDE23349
-Node: User interface methods25956
-Node: Base project methods27151
-Node: Sourcecode objects28513
-Node: Compiler and Linker objects30253
-Node: Project32527
-Node: ede-project-placeholder32870
-Node: ede-project34853
-Node: ede-cpp-root-project43814
-Node: ede-simple-project47767
-Node: ede-simple-base-project48344
-Node: ede-proj-project48878
-Node: project-am-makefile54543
-Node: ede-step-project55615
-Node: Targets59001
-Node: ede-target59808
-Node: ede-proj-target65874
-Node: ede-proj-target-makefile71841
-Node: semantic-ede-proj-target-grammar74951
-Node: ede-proj-target-makefile-objectcode76335
-Node: ede-proj-target-makefile-archive77888
-Node: ede-proj-target-makefile-program79001
-Node: ede-proj-target-makefile-shared-object80892
-Node: ede-proj-target-elisp82582
-Node: ede-proj-target-elisp-autoloads84488
-Node: ede-proj-target-makefile-miscelaneous87859
-Node: ede-proj-target-makefile-info89059
-Node: ede-proj-target-scheme91478
-Node: project-am-target92239
-Node: project-am-objectcode93235
-Node: project-am-program94253
-Node: project-am-header-noinst94846
-Node: project-am-header-inst95508
-Node: project-am-lisp96161
-Node: project-am-texinfo96731
-Node: project-am-man97744
-Node: Sourcecode98284
-Node: ede-sourcecode98509
-Node: Compilers101138
-Node: ede-compilation-program101553
-Node: ede-compiler104747
-Node: ede-object-compiler107877
-Node: ede-linker108627
+Node: Top1015
+Node: EDE Project Concepts2842
+Node: EDE Mode4213
+Node: Creating a project4830
+Node: Modifying your project7287
+Node: Add/Remove target7812
+Node: Add/Remove files8478
+Node: Customize Features9382
+Node: EDE Project Features10354
+Node: Changing Compilers and Flags11035
+Node: Configurations11982
+Node: Building and Debugging12861
+Node: Miscellaneous commands13443
+Ref: ede-locate-setup-options14260
+Node: Simple projects14824
+Node: ede-cpp-root15899
+Node: ede-simple subclassing20807
+Node: ede-emacs21055
+Node: ede-linux21430
+Node: Custom Locate21807
+Node: Extending EDE23281
+Node: User interface methods25888
+Node: Base project methods27083
+Node: Sourcecode objects28447
+Node: Compiler and Linker objects30187
+Node: Project32461
+Node: ede-project-placeholder32804
+Node: ede-project34787
+Node: ede-cpp-root-project43748
+Node: ede-simple-project47701
+Node: ede-simple-base-project48278
+Node: ede-proj-project48812
+Node: project-am-makefile54477
+Node: ede-step-project55549
+Node: Targets58935
+Node: ede-target59742
+Node: ede-proj-target65808
+Node: ede-proj-target-makefile71777
+Node: semantic-ede-proj-target-grammar74887
+Node: ede-proj-target-makefile-objectcode76271
+Node: ede-proj-target-makefile-archive77824
+Node: ede-proj-target-makefile-program78937
+Node: ede-proj-target-makefile-shared-object80828
+Node: ede-proj-target-elisp82518
+Node: ede-proj-target-elisp-autoloads84426
+Node: ede-proj-target-makefile-miscelaneous87799
+Node: ede-proj-target-makefile-info88999
+Node: ede-proj-target-scheme91418
+Node: project-am-target92180
+Node: project-am-objectcode93176
+Node: project-am-program94194
+Node: project-am-header-noinst94787
+Node: project-am-header-inst95449
+Node: project-am-lisp96102
+Node: project-am-texinfo96672
+Node: project-am-man97686
+Node: Sourcecode98226
+Node: ede-sourcecode98451
+Node: Compilers101081
+Node: ede-compilation-program101496
+Node: ede-compiler104692
+Node: ede-object-compiler107822
+Node: ede-linker108572
 
 End Tag Table

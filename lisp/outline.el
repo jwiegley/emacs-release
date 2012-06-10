@@ -1,7 +1,7 @@
 ;;; outline.el --- outline mode commands for Emacs
 
-;; Copyright (C) 1986, 1993, 1994, 1995, 1997, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1986, 1993-1995, 1997, 2000-2012
+;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: outlines
@@ -41,7 +41,7 @@
 (defgroup outlines nil
   "Support for hierarchical outlining."
   :prefix "outline-"
-  :group 'editing)
+  :group 'wp)
 
 (defcustom outline-regexp "[*\^L]+"
   "Regular expression to match the beginning of a heading.
@@ -50,9 +50,9 @@ Note that Outline mode only checks this regexp at the start of a line,
 so the regexp need not (and usually does not) start with `^'.
 The recommended way to set this is with a Local Variables: list
 in the file it applies to.  See also `outline-heading-end-regexp'."
-  :type '(choice regexp (const nil))
+  :type 'regexp
   :group 'outlines)
-;;;###autoload(put 'outline-regexp 'safe-local-variable 'string-or-null-p)
+;;;###autoload(put 'outline-regexp 'safe-local-variable 'stringp)
 
 (defcustom outline-heading-end-regexp "\n"
   "Regular expression to match the end of a heading line.
@@ -62,6 +62,7 @@ The recommended way to set this is with a `Local Variables:' list
 in the file it applies to."
   :type 'regexp
   :group 'outlines)
+;;;###autoload(put 'outline-heading-end-regexp 'safe-local-variable 'stringp)
 
 (defvar outline-mode-prefix-map
   (let ((map (make-sparse-keymap)))
@@ -136,24 +137,23 @@ in the file it applies to."
       (cons "Headings" (make-sparse-keymap "Headings")))
 
     (define-key map [headings demote-subtree]
-      '(menu-item "Demote subtree" outline-demote
+      '(menu-item "Demote Subtree" outline-demote
 		  :help "Demote headings lower down the tree"))
     (define-key map [headings promote-subtree]
-      '(menu-item "Promote subtree" outline-promote
+      '(menu-item "Promote Subtree" outline-promote
 		  :help "Promote headings higher up the tree"))
     (define-key map [headings move-subtree-down]
-      '(menu-item "Move subtree down" outline-move-subtree-down
-		  :help "Move the currrent subtree down past arg headlines of the same level"))
+      '(menu-item "Move Subtree Down" outline-move-subtree-down
+		  :help "Move the current subtree down past arg headlines of the same level"))
     (define-key map [headings move-subtree-up]
-      '(menu-item "Move subtree up" outline-move-subtree-up
-		  :help "Move the currrent subtree up past arg headlines of the same level"))
+      '(menu-item "Move Subtree Up" outline-move-subtree-up
+		  :help "Move the current subtree up past arg headlines of the same level"))
     (define-key map [headings copy]
-      '(menu-item "Copy to kill ring" outline-headers-as-kill
+      '(menu-item "Copy to Kill Ring" outline-headers-as-kill
 		  :enable mark-active
 		  :help "Save the visible outline headers in region at the start of the kill ring"))
     (define-key map [headings outline-insert-heading]
-
-      '(menu-item "New heading" outline-insert-heading
+      '(menu-item "New Heading" outline-insert-heading
 		  :help "Insert a new heading at same depth at point"))
     (define-key map [headings outline-backward-same-level]
 
@@ -356,7 +356,10 @@ After that, changing the prefix key requires manipulating keymaps."
 ;;;###autoload
 (define-minor-mode outline-minor-mode
   "Toggle Outline minor mode.
-With arg, turn Outline minor mode on if arg is positive, off otherwise.
+With a prefix argument ARG, enable Outline minor mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
 See the command `outline-mode' for more information on this mode."
   nil " Outl" (list (cons [menu-bar] outline-minor-mode-menu-bar-map)
 		    (cons outline-minor-mode-prefix outline-mode-prefix-map))
@@ -444,10 +447,6 @@ at the end of the buffer."
 (defsubst outline-invisible-p (&optional pos)
   "Non-nil if the character after point is invisible."
   (get-char-property (or pos (point)) 'invisible))
-
-(defun outline-visible ()
-  (not (outline-invisible-p)))
-(make-obsolete 'outline-visible 'outline-invisible-p "21.1")
 
 (defun outline-back-to-heading (&optional invisible-ok)
   "Move to previous heading line, or beg of this line if it's a heading.
@@ -643,12 +642,12 @@ the match data is set appropriately."
 ;; Vertical tree motion
 
 (defun outline-move-subtree-up (&optional arg)
-  "Move the currrent subtree up past ARG headlines of the same level."
+  "Move the current subtree up past ARG headlines of the same level."
   (interactive "p")
   (outline-move-subtree-down (- arg)))
 
 (defun outline-move-subtree-down (&optional arg)
-  "Move the currrent subtree down past ARG headlines of the same level."
+  "Move the current subtree down past ARG headlines of the same level."
   (interactive "p")
   (let ((movfunc (if (> arg 0) 'outline-get-next-sibling
 		   'outline-get-last-sibling))
@@ -752,6 +751,7 @@ If FLAG is nil then text is shown, while if FLAG is t the text is hidden."
     ;; very end of the heading, before the newline, so text inserted at FROM
     ;; belongs to the heading rather than to the entry.
     (let ((o (make-overlay from to nil 'front-advance)))
+      (overlay-put o 'evaporate t)
       (overlay-put o 'invisible 'outline)
       (overlay-put o 'isearch-open-invisible
 		   (or outline-isearch-open-invisible-function
@@ -803,7 +803,7 @@ If FLAG is nil then text is shown, while if FLAG is t the text is hidden."
 ;; Function to be set as an outline-isearch-open-invisible' property
 ;; to the overlay that makes the outline invisible (see
 ;; `outline-flag-region').
-(defun outline-isearch-open-invisible (overlay)
+(defun outline-isearch-open-invisible (_overlay)
   ;; We rely on the fact that isearch places point on the matched text.
   (show-entry))
 
@@ -915,7 +915,11 @@ Show the heading too, if it is currently invisible."
        (lambda ()
 	 (if (<= (funcall outline-level) levels)
 	     (outline-show-heading)))
-       beg end)))
+       beg end)
+      ;; Finally unhide any trailing newline.
+      (goto-char (point-max))
+      (if (and (bolp) (not (bobp)) (outline-invisible-p (1- (point))))
+          (outline-flag-region (1- (point)) (point) nil))))
   (run-hooks 'outline-view-change-hook))
 
 (defun hide-other ()
@@ -1118,5 +1122,4 @@ convenient way to make a table of contents of the buffer."
 (provide 'outline)
 (provide 'noutline)
 
-;; arch-tag: 1724410e-7d4d-4f46-b801-49e18171e874
 ;;; outline.el ends here

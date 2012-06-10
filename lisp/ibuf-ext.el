@@ -1,12 +1,12 @@
 ;;; ibuf-ext.el --- extensions for ibuffer
 
-;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2000-2012  Free Software Foundation, Inc.
 
 ;; Author: Colin Walters <walters@verbum.org>
 ;; Maintainer: John Paul Wallington <jpw@gnu.org>
 ;; Created: 2 Dec 2001
 ;; Keywords: buffer, convenience
+;; Package: ibuffer
 
 ;; This file is part of GNU Emacs.
 
@@ -26,7 +26,7 @@
 ;;; Commentary:
 
 ;; These functions should be automatically loaded when called, but you
-;; can explicity (require 'ibuf-ext) in your ~/.emacs to have them
+;; can explicitly (require 'ibuf-ext) in your ~/.emacs to have them
 ;; preloaded.
 
 ;;; Code:
@@ -90,11 +90,6 @@ regardless of any active filters in this buffer."
 
 (defvar ibuffer-tmp-show-regexps nil
   "A list of regexps which should match buffer names to always show.")
-
-(defvar ibuffer-auto-mode nil
-  "If non-nil, Ibuffer auto-mode should be enabled for this buffer.
-Do not set this variable directly!  Use the function
-`ibuffer-auto-mode' instead.")
 
 (defvar ibuffer-auto-buffers-changed nil)
 
@@ -220,6 +215,18 @@ Currently, this only applies to `ibuffer-saved-filters' and
 	 (ibuffer-included-in-filters-p buf ibuffer-filtering-qualifiers)
 	 (ibuffer-buf-matches-predicates buf ibuffer-always-show-predicates)))))
 
+;;;###autoload
+(define-minor-mode ibuffer-auto-mode
+  "Toggle use of Ibuffer's auto-update facility (Ibuffer Auto mode).
+With a prefix argument ARG, enable Ibuffer Auto mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil."
+  nil nil nil
+  (unless (derived-mode-p 'ibuffer-mode)
+    (error "This buffer is not in Ibuffer mode"))
+  (frame-or-buffer-changed-p 'ibuffer-auto-buffers-changed) ; Initialize state vector
+  (add-hook 'post-command-hook 'ibuffer-auto-update-changed))
+
 (defun ibuffer-auto-update-changed ()
   (when (frame-or-buffer-changed-p 'ibuffer-auto-buffers-changed)
     (dolist (buf (buffer-list))
@@ -228,20 +235,6 @@ Currently, this only applies to `ibuffer-saved-filters' and
 	  (when (and ibuffer-auto-mode
 		     (derived-mode-p 'ibuffer-mode))
 	    (ibuffer-update nil t)))))))
-
-;;;###autoload
-(defun ibuffer-auto-mode (&optional arg)
-  "Toggle use of Ibuffer's auto-update facility.
-With numeric ARG, enable auto-update if and only if ARG is positive."
-  (interactive)
-  (unless (derived-mode-p 'ibuffer-mode)
-    (error "This buffer is not in Ibuffer mode"))
-  (set (make-local-variable 'ibuffer-auto-mode)
-       (if arg
-	   (plusp arg)
-	 (not ibuffer-auto-mode)))
-  (frame-or-buffer-changed-p 'ibuffer-auto-buffers-changed) ; Initialize state vector
-  (add-hook 'post-command-hook 'ibuffer-auto-update-changed))
 
 ;;;###autoload
 (defun ibuffer-mouse-filter-by-mode (event)
@@ -514,7 +507,7 @@ To evaluate a form without viewing the buffer, see `ibuffer-do-eval'."
 	      (assoc (cdr filter)
 		     ibuffer-saved-filters)))
 	 (unless data
-	   (ibuffer-filter-disable)
+	   (ibuffer-filter-disable t)
 	   (error "Unknown saved filter %s" (cdr filter)))
 	 (ibuffer-included-in-filters-p buf (cadr data))))
       (t
@@ -523,7 +516,7 @@ To evaluate a form without viewing the buffer, see `ibuffer-do-eval'."
 	 ;; filterdat should be like (TYPE DESCRIPTION FUNC)
 	 ;; just a sanity check
 	(unless filterdat
-	  (ibuffer-filter-disable)
+	  (ibuffer-filter-disable t)
 	  (error "Undefined filter %s" (car filter)))
 	(not
 	 (not
@@ -777,11 +770,14 @@ The value from `ibuffer-saved-filter-groups' is used."
   (ibuffer-update nil t))
 
 ;;;###autoload
-(defun ibuffer-filter-disable ()
-  "Disable all filters currently in effect in this buffer."
+(defun ibuffer-filter-disable (&optional delete-filter-groups)
+  "Disable all filters currently in effect in this buffer.
+With optional arg DELETE-FILTER-GROUPS non-nil, delete all filter
+group definitions by setting `ibuffer-filter-groups' to nil."
   (interactive)
-  (setq ibuffer-filtering-qualifiers nil
-	ibuffer-filter-groups nil)
+  (setq ibuffer-filtering-qualifiers nil)
+  (if delete-filter-groups
+      (setq ibuffer-filter-groups nil))
   (let ((buf (ibuffer-current-buffer)))
     (ibuffer-update nil t)
     (when buf
@@ -1228,12 +1224,10 @@ mean move backwards, non-negative integers mean move forwards."
     (setq direction 1))
   ;; Skip the title
   (ibuffer-forward-line 0)
-  (let ((opos (point))
-	curmark)
+  (let ((opos (point)))
     (ibuffer-forward-line direction)
     (while (not (or (= (point) opos)
-		    (eq (setq curmark (ibuffer-current-mark))
-			mark)))
+		    (eq (ibuffer-current-mark) mark)))
       (ibuffer-forward-line direction))
     (when (and (= (point) opos)
 	       (not (eq (ibuffer-current-mark) mark)))
@@ -1256,7 +1250,7 @@ to move by.  The default is `ibuffer-marked-char'."
       (message "No buffers marked; use 'm' to mark a buffer")
     (let ((count
 	   (ibuffer-map-marked-lines
-	    #'(lambda (buf mark)
+	    #'(lambda (_buf _mark)
 		'kill))))
       (message "Killed %s lines" count))))
 
@@ -1288,7 +1282,7 @@ a prefix argument reverses the meaning of that variable."
     (let (buf-point)
       ;; Blindly search for our buffer: it is very likely that it is
       ;; not in a hidden filter group.
-      (ibuffer-map-lines #'(lambda (buf marks)
+      (ibuffer-map-lines #'(lambda (buf _marks)
 			     (when (string= (buffer-name buf) name)
 			       (setq buf-point (point))
 			       nil))
@@ -1302,7 +1296,7 @@ a prefix argument reverses the meaning of that variable."
 	  (dolist (group ibuffer-hidden-filter-groups)
 	    (ibuffer-jump-to-filter-group group)
 	    (ibuffer-toggle-filter-group)
-	    (ibuffer-map-lines #'(lambda (buf marks)
+	    (ibuffer-map-lines #'(lambda (buf _marks)
 				   (when (string= (buffer-name buf) name)
 				     (setq buf-point (point))
 				     nil))
@@ -1317,7 +1311,8 @@ a prefix argument reverses the meaning of that variable."
 	  (error "No buffer with name %s" name)
 	(goto-char buf-point)))))
 
-(declare-function diff-sentinel "diff" (code))
+(declare-function diff-sentinel "diff"
+		  (code &optional old-temp-file new-temp-file))
 
 (defun ibuffer-diff-buffer-with-file-1 (buffer)
   (let ((bufferfile (buffer-local-value 'buffer-file-name buffer))
@@ -1344,8 +1339,7 @@ a prefix argument reverses the meaning of that variable."
 					 (format "Buffer %s" (buffer-name buffer)))))
 		       ,(shell-quote-argument (or oldtmp old))
 		       ,(shell-quote-argument (or newtmp new)))
-		     " "))
-		   proc)
+		     " ")))
 	      (let ((inhibit-read-only t))
 		(insert command "\n")
 		(diff-sentinel
@@ -1404,7 +1398,7 @@ You can then feed the file name(s) to other commands with \\[yank]."
 		      (t
 		       'name))))
       (ibuffer-map-marked-lines
-       #'(lambda (buf mark)
+       #'(lambda (buf _mark)
 	   (setq ibuffer-copy-filename-as-kill-result
 		 (concat ibuffer-copy-filename-as-kill-result
 			 (let ((name (buffer-file-name buf)))
@@ -1425,7 +1419,7 @@ You can then feed the file name(s) to other commands with \\[yank]."
 (defun ibuffer-mark-on-buffer (func &optional ibuffer-mark-on-buffer-mark group)
   (let ((count
 	 (ibuffer-map-lines
-	  #'(lambda (buf mark)
+	  #'(lambda (buf _mark)
 	      (when (funcall func buf)
 		(ibuffer-set-mark-1 (or ibuffer-mark-on-buffer-mark
 					ibuffer-marked-char))
@@ -1593,7 +1587,7 @@ defaults to one."
   (let ((ibuffer-do-occur-bufs nil))
     ;; Accumulate a list of marked buffers
     (ibuffer-map-marked-lines
-     #'(lambda (buf mark)
+     #'(lambda (buf _mark)
 	 (push buf ibuffer-do-occur-bufs)))
     (occur-1 regexp nlines ibuffer-do-occur-bufs)))
 
@@ -1603,5 +1597,4 @@ defaults to one."
 ;; generated-autoload-file: "ibuffer.el"
 ;; End:
 
-;; arch-tag: 9af21953-deda-4c30-b76d-f81d9128e76d
 ;;; ibuf-ext.el ends here

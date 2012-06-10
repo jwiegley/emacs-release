@@ -1,7 +1,7 @@
 /* unexec() support for Cygwin;
    complete rewrite of xemacs Cygwin unexec() code
 
-   Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+   Copyright (C) 2004-2012 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -19,6 +19,8 @@ You should have received a copy of the GNU General Public License
 along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <config.h>
+#include "unexec.h"
+
 #include <setjmp.h>
 #include <lisp.h>
 #include <stdio.h>
@@ -30,6 +32,8 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #define DOTEXE ".exe"
 
 extern int bss_sbrk_did_unexec;
+
+extern int __malloc_initialized;
 
 /* emacs symbols that indicate where bss and data end for emacs internals */
 extern char my_endbss[];
@@ -208,9 +212,12 @@ fixup_executable (int fd)
 	    lseek (fd, (long) (exe_header->section_header[i].s_scnptr),
 		   SEEK_SET);
 	  assert (ret != -1);
+	  /* force the dumped emacs to reinitialize malloc */
+	  __malloc_initialized = 0;
 	  ret =
 	    write (fd, (char *) start_address,
 		   my_endbss - (char *) start_address);
+	  __malloc_initialized = 1;
 	  assert (ret == (my_endbss - (char *) start_address));
 	  if (debug_unexcw)
 	    printf ("         .bss, mem start 0x%08x mem length %d\n",
@@ -247,9 +254,8 @@ add_exe_suffix_if_necessary (const char *name, char *modified)
   return (modified);
 }
 
-int
-unexec (char *outfile, char *infile, unsigned start_data, unsigned d1,
-	unsigned d2)
+void
+unexec (const char *outfile, const char *infile)
 {
   char infile_buffer[FILENAME_MAX];
   char outfile_buffer[FILENAME_MAX];
@@ -262,7 +268,7 @@ unexec (char *outfile, char *infile, unsigned start_data, unsigned d1,
     {
       /* can only dump once */
       printf ("You can only dump Emacs once on this platform.\n");
-      return (1);
+      return;
     }
 
   report_sheap_usage (1);
@@ -297,9 +303,4 @@ unexec (char *outfile, char *infile, unsigned start_data, unsigned d1,
 
   ret = close (fd_out);
   assert (ret == 0);
-
-  return (0);
 }
-
-/* arch-tag: fc44f6c3-ca0a-45e0-a5a2-58b6101b1e65
-   (do not change this comment) */

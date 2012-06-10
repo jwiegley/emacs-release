@@ -1,6 +1,6 @@
 ;;; semantic/mru-bookmark.el --- Automatic bookmark tracking
 
-;; Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2007-2012 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
 
@@ -252,14 +252,14 @@ been edited, and you can re-visit them with \\[semantic-mrub-switch-tags]."
          (global-semantic-mru-bookmark-mode (if val 1 -1))))
 
 ;;;###autoload
-(defun global-semantic-mru-bookmark-mode (&optional arg)
+(define-minor-mode global-semantic-mru-bookmark-mode
   "Toggle global use of option `semantic-mru-bookmark-mode'.
-If ARG is positive, enable, if it is negative, disable.
-If ARG is nil, then toggle."
-  (interactive "P")
-  (setq global-semantic-mru-bookmark-mode
-        (semantic-toggle-minor-mode-globally
-         'semantic-mru-bookmark-mode arg)))
+If ARG is positive or nil, enable, if it is negative, disable."
+  :global t :group 'semantic :group 'semantic-modes
+  ;; Not needed because it's autoloaded instead.
+  ;; :require 'semantic-util-modes
+  (semantic-toggle-minor-mode-globally
+   'semantic-mru-bookmark-mode (if global-semantic-mru-bookmark-mode 1 -1)))
 
 (defcustom semantic-mru-bookmark-mode-hook nil
   "*Hook run at the end of function `semantic-mru-bookmark-mode'."
@@ -272,17 +272,18 @@ If ARG is nil, then toggle."
     km)
   "Keymap for mru-bookmark minor mode.")
 
-(defvar semantic-mru-bookmark-mode nil
-  "Non-nil if mru-bookmark minor mode is enabled.
-Use the command `semantic-mru-bookmark-mode' to change this variable.")
-(make-variable-buffer-local 'semantic-mru-bookmark-mode)
+(define-minor-mode semantic-mru-bookmark-mode
+  "Minor mode for tracking tag-based bookmarks automatically.
+When this mode is enabled, Emacs keeps track of which tags have
+been edited, and you can re-visit them with \\[semantic-mrub-switch-tags].
 
-(defun semantic-mru-bookmark-mode-setup ()
-  "Setup option `semantic-mru-bookmark-mode'.
-The minor mode can be turned on only if semantic feature is available
-and the current buffer was set up for parsing.  When minor mode is
-enabled parse the current buffer if needed.  Return non-nil if the
+\\{semantic-mru-bookmark-mode-map}
+
+With prefix argument ARG, turn on if positive, otherwise off.  The
+minor mode can be turned on only if semantic feature is available and
+the current buffer was set up for parsing.  Return non-nil if the
 minor mode is enabled."
+  :keymap semantic-mru-bookmark-mode-map
   (if semantic-mru-bookmark-mode
       (if (not (and (featurep 'semantic) (semantic-active-p)))
 	  (progn
@@ -294,47 +295,15 @@ minor mode is enabled."
         (add-hook 'semantic-edits-new-change-hooks
                   'semantic-mru-bookmark-change-hook-fcn nil t)
         (add-hook 'semantic-edits-move-change-hooks
-                  'semantic-mru-bookmark-change-hook-fcn nil t)
-        )
+                  'semantic-mru-bookmark-change-hook-fcn nil t))
     ;; Remove hooks
     (remove-hook 'semantic-edits-new-change-hooks
 		 'semantic-mru-bookmark-change-hook-fcn t)
     (remove-hook 'semantic-edits-move-change-hooks
-		 'semantic-mru-bookmark-change-hook-fcn t)
-    )
-  semantic-mru-bookmark-mode)
-
-(defun semantic-mru-bookmark-mode (&optional arg)
-  "Minor mode for tracking tag-based bookmarks automatically.
-When this mode is enabled, Emacs keeps track of which tags have
-been edited, and you can re-visit them with \\[semantic-mrub-switch-tags].
-
-\\{semantic-mru-bookmark-mode-map}
-
-With prefix argument ARG, turn on if positive, otherwise off.  The
-minor mode can be turned on only if semantic feature is available and
-the current buffer was set up for parsing.  Return non-nil if the
-minor mode is enabled."
-  (interactive
-   (list (or current-prefix-arg
-             (if semantic-mru-bookmark-mode 0 1))))
-  (setq semantic-mru-bookmark-mode
-        (if arg
-            (>
-             (prefix-numeric-value arg)
-             0)
-          (not semantic-mru-bookmark-mode)))
-  (semantic-mru-bookmark-mode-setup)
-  (run-hooks 'semantic-mru-bookmark-mode-hook)
-  (if (called-interactively-p 'interactive)
-      (message "mru-bookmark minor mode %sabled"
-               (if semantic-mru-bookmark-mode "en" "dis")))
-  (semantic-mode-line-update)
-  semantic-mru-bookmark-mode)
+		 'semantic-mru-bookmark-change-hook-fcn t)))
 
 (semantic-add-minor-mode 'semantic-mru-bookmark-mode
-                         "k"
-                         semantic-mru-bookmark-mode-map)
+                         "k")
 
 ;;; COMPLETING READ
 ;;
@@ -394,7 +363,7 @@ Argument PROMPT is the prompt to use when reading."
       (setq ans (assoc ans alist))
       (if ans
 	  (cdr ans)
-	;; no match.  Custom word.  Look it up somwhere?
+	;; no match.  Custom word.  Look it up somewhere?
 	nil)
       )))
 
@@ -432,5 +401,4 @@ Useful for debugging mrub problems."
 ;; generated-autoload-load-name: "semantic/mru-bookmark"
 ;; End:
 
-;; arch-tag: 297fa190-2942-460b-941d-f117db4e1fbf
 ;;; semantic/mru-bookmark.el ends here

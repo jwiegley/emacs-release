@@ -1,9 +1,10 @@
 ;;; tramp-compat.el --- Tramp compatibility functions
 
-;; Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2007-2012 Free Software Foundation, Inc.
 
 ;; Author: Michael Albinus <michael.albinus@gmx.de>
 ;; Keywords: comm, processes
+;; Package: tramp
 
 ;; This file is part of GNU Emacs.
 
@@ -22,11 +23,13 @@
 
 ;;; Commentary:
 
-;; Tramp's main Emacs version for development is GNU Emacs 24.  This
-;; package provides compatibility functions for GNU Emacs 22, GNU
-;; Emacs 23 and XEmacs 21.4+.
+;; Tramp's main Emacs version for development is Emacs 24.  This
+;; package provides compatibility functions for Emacs 22, Emacs 23,
+;; XEmacs 21.4+ and SXEmacs 22.
 
 ;;; Code:
+
+(require 'tramp-loaddefs)
 
 (eval-when-compile
 
@@ -35,15 +38,27 @@
 
 (eval-and-compile
 
+  (require 'advice)
   (require 'custom)
+  (require 'format-spec)
+  (require 'shell)
+
+  ;; As long as password.el is not part of (X)Emacs, it shouldn't be
+  ;; mandatory.
+  (if (featurep 'xemacs)
+      (load "password" 'noerror)
+    (or (require 'password-cache nil 'noerror)
+	(require 'password nil 'noerror))) ; Part of contrib.
+
+  ;; auth-source is relatively new.
+  (if (featurep 'xemacs)
+      (load "auth-source" 'noerror)
+    (require 'auth-source nil 'noerror))
 
   ;; Load the appropriate timer package.
   (if (featurep 'xemacs)
       (require 'timer-funcs)
     (require 'timer))
-
-  (autoload 'tramp-tramp-file-p "tramp")
-  (autoload 'tramp-file-name-handler "tramp")
 
   ;; We check whether `start-file-process' is bound.
   (unless (fboundp 'start-file-process)
@@ -51,24 +66,14 @@
     ;; tramp-util offers integration into other (X)Emacs packages like
     ;; compile.el, gud.el etc.  Not necessary in Emacs 23.
     (eval-after-load "tramp"
-      '(progn
-	 (require 'tramp-util)
-	 (add-hook 'tramp-unload-hook
-		   '(lambda ()
-		      (when (featurep 'tramp-util)
-			(unload-feature 'tramp-util 'force))))))
+      '(require 'tramp-util))
 
     ;; Make sure that we get integration with the VC package.  When it
     ;; is loaded, we need to pull in the integration module.  Not
     ;; necessary in Emacs 23.
     (eval-after-load "vc"
       (eval-after-load "tramp"
-	'(progn
-	   (require 'tramp-vc)
-	   (add-hook 'tramp-unload-hook
-		     '(lambda ()
-			(when (featurep 'tramp-vc)
-			  (unload-feature 'tramp-vc 'force))))))))
+	'(require 'tramp-vc))))
 
   ;; Avoid byte-compiler warnings if the byte-compiler supports this.
   ;; Currently, XEmacs supports this.
@@ -84,18 +89,18 @@
   ;; `directory-sep-char' is an obsolete variable in Emacs.  But it is
   ;; used in XEmacs, so we set it here and there.  The following is
   ;; needed to pacify Emacs byte-compiler.
-  (unless (boundp 'byte-compile-not-obsolete-var)
-    (defvar byte-compile-not-obsolete-var nil))
-  (setq byte-compile-not-obsolete-var 'directory-sep-char)
-  ;; Emacs 23.2.
-  (unless (boundp 'byte-compile-not-obsolete-vars)
-    (defvar byte-compile-not-obsolete-vars nil))
-  (setq byte-compile-not-obsolete-vars '(directory-sep-char))
+  ;; Note that it was removed altogether in Emacs 24.1.
+  (when (boundp 'directory-sep-char)
+    (defvar byte-compile-not-obsolete-var nil)
+    (setq byte-compile-not-obsolete-var 'directory-sep-char)
+    ;; Emacs 23.2.
+    (defvar byte-compile-not-obsolete-vars nil)
+    (setq byte-compile-not-obsolete-vars '(directory-sep-char)))
 
-  ;; `with-temp-message' does not exists in XEmacs.
-  (condition-case nil
-      (with-temp-message (current-message) nil)
-    (error (defmacro with-temp-message (message &rest body) `(progn ,@body))))
+  ;; `remote-file-name-inhibit-cache' has been introduced with Emacs 24.1.
+  ;; Besides `t', `nil', and integer, we use also timestamps (as
+  ;; returned by `current-time') internally.
+  (defvar remote-file-name-inhibit-cache nil)
 
   ;; For not existing functions, or functions with a changed argument
   ;; list, there are compiler warnings.  We want to avoid them in
@@ -109,10 +114,6 @@
   ;; `set-buffer-multibyte' comes from Emacs Leim.
   (unless (fboundp 'set-buffer-multibyte)
     (defalias 'set-buffer-multibyte 'ignore))
-
-  ;; `font-lock-add-keywords' does not exist in XEmacs.
-  (unless (fboundp 'font-lock-add-keywords)
-    (defalias 'font-lock-add-keywords 'ignore))
 
   ;; The following functions cannot be aliases of the corresponding
   ;; `tramp-handle-*' functions, because this would bypass the locking
@@ -156,7 +157,7 @@
 	   'set-file-times filename time)))))
 
   ;; We currently use "[" and "]" in the filename format for IPv6
-  ;; hosts of GNU Emacs.  This means, that Emacs wants to expand
+  ;; hosts of GNU Emacs.  This means that Emacs wants to expand
   ;; wildcards if `find-file-wildcards' is non-nil, and then barfs
   ;; because no expansion could be found.  We detect this situation
   ;; and do something really awful: we have `file-expand-wildcards'
@@ -186,24 +187,18 @@
 	'file-expand-wildcards 'around 'tramp-advice-file-expand-wildcards)
        (ad-activate 'file-expand-wildcards)))))
 
-(defsubst tramp-compat-line-beginning-position ()
-  "Return point at beginning of line (compat function).
-Calls `line-beginning-position' or `point-at-bol' if defined, else
-own implementation."
-  (cond
-   ((fboundp 'line-beginning-position)
-    (tramp-compat-funcall 'line-beginning-position))
-   ((fboundp 'point-at-bol) (tramp-compat-funcall 'point-at-bol))
-   (t (save-excursion (beginning-of-line) (point)))))
+;; `with-temp-message' does not exists in XEmacs.
+(if (fboundp 'with-temp-message)
+    (defalias 'tramp-compat-with-temp-message 'with-temp-message)
+  (defmacro tramp-compat-with-temp-message (message &rest body)
+    "Display MESSAGE temporarily if non-nil while BODY is evaluated."
+    `(progn ,@body)))
 
-(defsubst tramp-compat-line-end-position ()
-  "Return point at end of line (compat function).
-Calls `line-end-position' or `point-at-eol' if defined, else
-own implementation."
-  (cond
-   ((fboundp 'line-end-position) (tramp-compat-funcall 'line-end-position))
-   ((fboundp 'point-at-eol) (tramp-compat-funcall 'point-at-eol))
-   (t (save-excursion (end-of-line) (point)))))
+;; `font-lock-add-keywords' does not exist in XEmacs.
+(defun tramp-compat-font-lock-add-keywords (mode keywords &optional how)
+  "Add highlighting KEYWORDS for MODE."
+  (ignore-errors
+    (tramp-compat-funcall 'font-lock-add-keywords mode keywords how)))
 
 (defsubst tramp-compat-temporary-file-directory ()
   "Return name of directory for temporary files (compat function).
@@ -262,6 +257,24 @@ Add the extension of FILENAME, if existing."
    ;; Default value in XEmacs.
    (t 134217727)))
 
+(defun tramp-compat-decimal-to-octal (i)
+  "Return a string consisting of the octal digits of I.
+Not actually used.  Use `(format \"%o\" i)' instead?"
+  (cond ((< i 0) (error "Cannot convert negative number to octal"))
+        ((not (integerp i)) (error "Cannot convert non-integer to octal"))
+        ((zerop i) "0")
+        (t (concat (tramp-compat-decimal-to-octal (/ i 8))
+                   (number-to-string (% i 8))))))
+
+;; Kudos to Gerd Moellmann for this suggestion.
+(defun tramp-compat-octal-to-decimal (ostr)
+  "Given a string of octal digits, return a decimal number."
+  (let ((x (or ostr "")))
+    ;; `save-match' is in `tramp-mode-string-to-int' which calls this.
+    (unless (string-match "\\`[0-7]*\\'" x)
+      (error "Non-octal junk in string `%s'" x))
+    (string-to-number ostr 8)))
+
 ;; ID-FORMAT does not exists in XEmacs.
 (defun tramp-compat-file-attributes (filename &optional id-format)
   "Like `file-attributes' for Tramp files (compat function)."
@@ -274,9 +287,8 @@ Add the extension of FILENAME, if existing."
 	  (tramp-compat-funcall 'file-attributes filename id-format)
 	(wrong-number-of-arguments (file-attributes filename))))))
 
-;; PRESERVE-UID-GID has been introduced with Emacs 23.  It does not
-;; hurt to ignore it for other (X)Emacs versions.
-;; PRESERVE-SELINUX-CONTEXT has been introduced with Emacs 24.
+;; PRESERVE-UID-GID does not exist in XEmacs.
+;; PRESERVE-SELINUX-CONTEXT has been introduced with Emacs 24.1.
 (defun tramp-compat-copy-file
   (filename newname &optional ok-if-already-exists keep-date
 	    preserve-uid-gid preserve-selinux-context)
@@ -396,6 +408,20 @@ This is, the first, empty, element is omitted.  In XEmacs, the first
 element is not omitted."
   (delete "" (split-string string pattern)))
 
+(defun tramp-compat-call-process
+  (program &optional infile destination display &rest args)
+  "Calls `call-process' on the local host.
+This is needed because for some Emacs flavors Tramp has
+defadvised `call-process' to behave like `process-file'.  The
+Lisp error raised when PROGRAM is nil is trapped also, returning 1."
+  (let ((default-directory
+	  (if (file-remote-p default-directory)
+	      (tramp-compat-temporary-file-directory)
+	    default-directory)))
+    (if (executable-find program)
+	(apply 'call-process program infile destination display args)
+      1)))
+
 (defun tramp-compat-process-running-p (process-name)
   "Returns `t' if system process PROCESS-NAME is running for `user-login-name'."
   (when (stringp process-name)
@@ -450,9 +476,39 @@ This is the last value stored with `(process-put PROCESS PROPNAME VALUE)'."
 It can be retrieved with `(process-get PROCESS PROPNAME)'."
   (ignore-errors (tramp-compat-funcall 'process-put process propname value)))
 
+(defun tramp-compat-set-process-query-on-exit-flag (process flag)
+  "Specify if query is needed for process when Emacs is exited.
+If the second argument flag is non-nil, Emacs will query the user before
+exiting if process is running."
+  (if (fboundp 'set-process-query-on-exit-flag)
+      (tramp-compat-funcall 'set-process-query-on-exit-flag process flag)
+    (tramp-compat-funcall 'process-kill-without-query process flag)))
+
+;; There exist different implementations for this function.
+(defun tramp-compat-coding-system-change-eol-conversion (coding-system eol-type)
+  "Return a coding system like CODING-SYSTEM but with given EOL-TYPE.
+EOL-TYPE can be one of `dos', `unix', or `mac'."
+  (cond ((fboundp 'coding-system-change-eol-conversion)
+         (tramp-compat-funcall
+	  'coding-system-change-eol-conversion coding-system eol-type))
+        ((fboundp 'subsidiary-coding-system)
+         (tramp-compat-funcall
+	  'subsidiary-coding-system coding-system
+	  (cond ((eq eol-type 'dos) 'crlf)
+		((eq eol-type 'unix) 'lf)
+		((eq eol-type 'mac) 'cr)
+		(t
+		 (error "Unknown EOL-TYPE `%s', must be %s"
+			eol-type
+			"`dos', `unix', or `mac'")))))
+        (t (error "Can't change EOL conversion -- is MULE missing?"))))
+
+(add-hook 'tramp-unload-hook
+	  (lambda ()
+	    (unload-feature 'tramp-compat 'force)))
+
 (provide 'tramp-compat)
 
 ;;; TODO:
 
-;; arch-tag: 0e724b18-6699-4f87-ad96-640b272e5c85
 ;;; tramp-compat.el ends here

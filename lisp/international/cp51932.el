@@ -1,5 +1,5 @@
 ;;; cp51932.el -- translation table for CP51932. -*- no-byte-compile: t -*-
-;;; Automatically genrated from CP932-2BYTE.map
+;;; Automatically generated from CP932-2BYTE.map
 (let ((map
        '(;JISEXT<->UNICODE
 	 (#x2D21 . #x2460)
@@ -468,5 +468,3 @@
 	      (setcar x (cdr x)) (setcdr x tmp)))
 	map)
   (define-translation-table 'cp51932-encode map))
-
-;; arch-tag: d21c06e5-a548-4dda-8802-c2922ff19da3

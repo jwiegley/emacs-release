@@ -1,6 +1,6 @@
 ;;; ecomplete.el --- electric completion of addresses and the like
 
-;; Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2006-2012  Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: mail
@@ -28,9 +28,9 @@
   (require 'cl))
 
 (eval-when-compile
-  (unless (fboundp 'with-no-warnings)
-    (defmacro with-no-warnings (&rest body)
-      `(progn ,@body))))
+  (when (featurep 'xemacs)
+    ;; The `kbd' macro requires that the `read-kbd-macro' macro is available.
+    (require 'edmacro)))
 
 (defgroup ecomplete nil
   "Electric completion of email addresses and the like."
@@ -61,11 +61,10 @@
 (defun ecomplete-add-item (type key text)
   (let ((elems (assq type ecomplete-database))
 	(now (string-to-number
-	      (format "%.0f" (if (and (fboundp 'float-time)
-				      (subrp (symbol-function 'float-time)))
+	      (format "%.0f" (if (featurep 'emacs)
 				 (float-time)
-			       (with-no-warnings
-				 (time-to-seconds (current-time)))))))
+			       (require 'gnus-util)
+			       (gnus-float-time)))))
 	entry)
     (unless elems
       (push (setq elems (list type)) ecomplete-database))
@@ -95,7 +94,7 @@
   (let* ((elems (cdr (assq type ecomplete-database)))
 	 (match (regexp-quote match))
 	 (candidates
-	  (sort 
+	  (sort
 	   (loop for (key count time text) in elems
 		 when (string-match match text)
 		 collect (list count time text))
@@ -129,15 +128,24 @@
 	    (message "%s" matches)
 	    nil)
 	(setq highlight (ecomplete-highlight-match-line matches line))
-	(while (not (memq (setq command (read-event highlight)) '(? return)))
-	  (cond
-	   ((eq command ?\M-n)
-	    (setq line (min (1+ line) max-lines)))
-	   ((eq command ?\M-p)
-	    (setq line (max (1- line) 0))))
-	  (setq highlight (ecomplete-highlight-match-line matches line)))
-	(when (eq command 'return)
-	  (nth line (split-string matches "\n")))))))
+	(let ((local-map (make-sparse-keymap))
+	      selected)
+	  (define-key local-map (kbd "RET")
+	    (lambda () (setq selected (nth line (split-string matches "\n")))))
+	  (define-key local-map (kbd "M-n")
+	    (lambda () (setq line (min (1+ line) max-lines))))
+	  (define-key local-map (kbd "M-p")
+	    (lambda () (setq line (max (1- line) 0))))
+	  (let ((overriding-local-map local-map))
+	    (while (and (null selected)
+			(setq command (read-key-sequence highlight))
+			(lookup-key local-map command))
+	      (apply (key-binding command) nil)
+	      (setq highlight (ecomplete-highlight-match-line matches line))))
+	  (if selected
+	      (message selected)
+	    (message "Abort"))
+	  selected)))))
 
 (defun ecomplete-highlight-match-line (matches line)
   (with-temp-buffer
@@ -156,5 +164,4 @@
 
 (provide 'ecomplete)
 
-;; arch-tag: 34622935-bb81-4711-a600-57b89c2ece72
 ;;; ecomplete.el ends here

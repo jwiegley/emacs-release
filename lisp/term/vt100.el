@@ -1,7 +1,6 @@
 ;;; vt100.el --- define VT100 function key sequences in function-key-map
 
-;; Copyright (C) 1989, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1989, 1993, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: FSF
 ;; Keywords: terminals
@@ -41,19 +40,13 @@
   (tty-run-terminal-initialization (selected-frame) "lk201"))
 
 ;;; Controlling the screen width.
-(defvar vt100-wide-mode (= (frame-width) 132)
-  "t if vt100 is in 132-column mode.")
-
-(defun vt100-wide-mode (&optional arg)
+(define-minor-mode vt100-wide-mode
   "Toggle 132/80 column mode for vt100s.
-With positive argument, switch to 132-column mode.
-With negative argument, switch to 80-column mode."
- (interactive "P")
- (setq vt100-wide-mode
-	(if (null arg) (not vt100-wide-mode)
-	  (> (prefix-numeric-value arg) 0)))
- (send-string-to-terminal (if vt100-wide-mode "\e[?3h" "\e[?3l"))
- (set-frame-width terminal-frame (if vt100-wide-mode 132 80)))
+With a prefix argument ARG, switch to 132-column mode if ARG is
+positive, and 80-column mode otherwise.  If called from Lisp,
+switch to 132-column mode if ARG is omitted or nil."
+  :global t :init-value (= (frame-width) 132)
+  (send-string-to-terminal (if vt100-wide-mode "\e[?3h" "\e[?3l"))
+  (set-frame-width terminal-frame (if vt100-wide-mode 132 80)))
 
-;; arch-tag: 9ff41f24-a7c9-4dee-9cf2-fbaa951eb840
 ;;; vt100.el ends here

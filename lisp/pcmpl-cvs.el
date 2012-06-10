@@ -1,9 +1,9 @@
 ;;; pcmpl-cvs.el --- functions for dealing with cvs completions
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
+;; Package: pcomplete
 
 ;; This file is part of GNU Emacs.
 
@@ -107,6 +107,10 @@
 		    "j(pcmpl-cvs-tags '(?U ?P))"
 		    "I(pcmpl-cvs-entries '(??))W?"))
 	   (while (pcomplete-here (pcmpl-cvs-entries '(?U ?P)))))
+	  ((pcomplete-test "status")
+	   (setq pcomplete-help "(cvs)File status")
+	   (pcomplete-opt "vlR")
+	   (while (pcomplete-here (pcmpl-cvs-entries))))
 	  (t
 	   (while (pcomplete-here (pcmpl-cvs-entries)))))))
 
@@ -169,13 +173,13 @@ operation character applies, as displayed by 'cvs -n update'."
 	(insert-file-contents (concat dir "CVS/Entries"))
 	(goto-char (point-min))
 	(while (not (eobp))
-	  (let* ((line (buffer-substring (line-beginning-position)
-					 (line-end-position)))
-		 (fields (split-string line "/"))
-		 text)
-	    (if (eq (aref line 0) ?/)
-		(setq fields (cons "" fields)))
-	    (setq text (nth 1 fields))
+	  ;; Normal file: /NAME   -> "" "NAME"
+	  ;; Directory  : D/NAME  -> "D" "NAME"
+	  (let* ((fields (split-string (buffer-substring
+					(line-beginning-position)
+					(line-end-position))
+				       "/"))
+		 (text (nth 1 fields)))
 	    (when text
 	      (if (string= (nth 0 fields) "D")
 		  (setq text (file-name-as-directory text)))
@@ -184,5 +188,4 @@ operation character applies, as displayed by 'cvs -n update'."
     (setq pcomplete-stub nondir)
     (pcomplete-uniqify-list entries)))
 
-;; arch-tag: d2aeac43-4bf5-4509-a496-74b863c6642b
 ;;; pcmpl-cvs.el ends here

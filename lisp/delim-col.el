@@ -1,7 +1,6 @@
 ;;; delim-col.el --- prettify all columns in a region or rectangle
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012 Free Software Foundation, Inc.
 
 ;; Author: Vinicius Jose Latorre <viniciusjl@ig.com.br>
 ;; Maintainer: Vinicius Jose Latorre <viniciusjl@ig.com.br>
@@ -98,7 +97,7 @@
 ;; operates over the text rectangle selected which rectangle diagonal is
 ;; given by the region start and end.
 ;;
-;; See `delimit-columns-format' variable documentation for column formating.
+;; See `delimit-columns-format' variable documentation for column formatting.
 ;;
 ;; `delimit-columns-region' is useful when you have columns of text that
 ;; are not well aligned, like:
@@ -172,7 +171,7 @@ For examples below, consider:
 
 Valid values are:
 
-   nil		no formating.  That is, `delimit-columns-after' is followed by
+   nil		no formatting.  That is, `delimit-columns-after' is followed by
 		`delimit-columns-separator'.
 		For example, the result is: \"<ccc>:<dddd>:\"
 
@@ -191,11 +190,11 @@ Valid values are:
 		For example, the result is: \"<ccc   >:<dddd  >:\"
 
 Any other value is treated as t."
-  :type '(choice :menu-tag "Column Formating"
-		 :tag "Column Formating"
-		 (const :tag "No Formating" nil)
+  :type '(choice :menu-tag "Column Formatting"
+		 :tag "Column Formatting"
+		 (const :tag "No Formatting" nil)
 		 (const :tag "Column Alignment" t)
-		 (const :tag "Separator Aligment" separator)
+		 (const :tag "Separator Alignment" separator)
 		 (const :tag "Column Padding" padding))
   :group 'columns)
 
@@ -207,7 +206,7 @@ This has effect only when there are lines with different number of columns."
   :group 'columns)
 
 (defcustom delimit-columns-start 0
-  "Specify column number to start prettifing.
+  "Specify column number to start prettifying.
 
 See also `delimit-columns-end' for documentation.
 
@@ -222,7 +221,7 @@ column (column 0) is located at left corner."
   :group 'columns)
 
 (defcustom delimit-columns-end 1000000
-  "Specify column number to end prettifing.
+  "Specify column number to end prettifying.
 
 See also `delimit-columns-start' for documentation.
 
@@ -239,6 +238,11 @@ column (column 0) is located at left corner."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; User Commands:
+
+
+;; to avoid compilation gripes
+(defvar delimit-columns-max nil)
+(defvar delimit-columns-limit nil)
 
 
 ;;;###autoload
@@ -355,12 +359,7 @@ START and END delimits the corners of text rectangle."
 ;; Internal Variables and Functions:
 
 
-;; to avoid compilation gripes
-(defvar delimit-columns-max nil)
-(defvar delimit-columns-limit nil)
-
-
-(defun delimit-columns-rectangle-max (startpos &optional ignore1 ignore2)
+(defun delimit-columns-rectangle-max (startpos &optional _ignore1 _ignore2)
   (set-marker delimit-columns-limit (point))
   (goto-char startpos)
   (let ((ncol 1)
@@ -393,7 +392,7 @@ START and END delimits the corners of text rectangle."
       (setq values (cdr values)))))
 
 
-(defun delimit-columns-rectangle-line (startpos &optional ignore1 ignore2)
+(defun delimit-columns-rectangle-line (startpos &optional _ignore1 _ignore2)
   (let ((len  (length delimit-columns-max))
 	(ncol 0)
 	origin)
@@ -405,7 +404,7 @@ START and END delimits the corners of text rectangle."
 		(re-search-forward delimit-columns-separator
 				   delimit-columns-limit 'move))
       (setq ncol (1+ ncol)))
-    ;; insert first formating
+    ;; insert first formatting
     (insert delimit-columns-str-before delimit-columns-before)
     ;; Adjust all columns but last one
     (while (progn
@@ -437,7 +436,7 @@ START and END delimits the corners of text rectangle."
 	     (setq spaces (and delimit-columns-format
 			       (make-string (aref delimit-columns-max ncol)
 					    ?\s)))))
-      ;; insert last formating
+      ;; insert last formatting
       (cond ((null delimit-columns-format)
 	     (insert delimit-columns-after delimit-columns-str-after))
 	    ((eq delimit-columns-format 'padding)
@@ -477,5 +476,4 @@ START and END delimits the corners of text rectangle."
 (provide 'delim-col)
 
 
-;; arch-tag: 1cc0c5c5-1b2a-43e4-9ba5-bf9441cfd1a9
 ;;; delim-col.el ends here

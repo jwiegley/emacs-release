@@ -1,6 +1,6 @@
 ;;; ede/files.el --- Associate projects with files and directories.
 
-;; Copyright (C) 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2008-2012 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
 
@@ -101,7 +101,7 @@ of the anchor file for the project."
 		 (setq ans SP)
 	       (ede-find-subproject-for-directory SP dir)))))
 	ans)
-    ;; We can use inodes, so lets try it.
+    ;; We can use inodes, so let's try it.
     (let ((ans nil)
 	  (inode (ede--inode-for-dir dir)))
       (ede-map-subprojects
@@ -249,7 +249,7 @@ Do this whenever a new project is created, as opposed to loaded."
   "Return a project description object if DIR has a project.
 Optional argument FORCE means to ignore a hash-hit of 'nomatch.
 This depends on an up to date `ede-project-class-files' variable.
-Any directory that contains the file .ede-ignore will allways
+Any directory that contains the file .ede-ignore will always
 return nil."
   (when (not (file-exists-p (expand-file-name ".ede-ignore" dir)))
     (let* ((dirtest (expand-file-name dir))
@@ -501,5 +501,4 @@ Argument DIR is the directory to trim upwards."
 ;; generated-autoload-load-name: "ede/files"
 ;; End:
 
-;; arch-tag: 28e17358-0208-4678-828c-23fb0e783fd6
 ;;; ede/files.el ends here

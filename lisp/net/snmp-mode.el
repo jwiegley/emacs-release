@@ -1,7 +1,6 @@
 ;;; snmp-mode.el --- SNMP & SNMPv2 MIB major mode
 
-;; Copyright (C) 1995, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1995, 1998, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: Paul D. Smith <psmith@BayNetworks.com>
 ;; Keywords: data
@@ -677,7 +676,7 @@ controls whether case is significant."
 ;; v2 SMI TEXTUAL-CONVENTION macro template
 ;;
 (tempo-define-template "snmpv2-textual-convention"
-  '(> (P "Texual Convention Type: ") " ::= TEXTUAL-CONVENTION" n>
+  '(> (P "Textual Convention Type: ") " ::= TEXTUAL-CONVENTION" n>
     "STATUS  "
     (if tempo-interactive
         (snmp-completing-read "Status: " snmp-mode-status-list nil t)
@@ -694,5 +693,4 @@ controls whether case is significant."
 
 (provide 'snmp-mode)
 
-;; arch-tag: eb6cc0f9-1e47-4023-8625-bc9aae6c3527
 ;;; snmp-mode.el ends here

@@ -1,5 +1,5 @@
 /* Functions related to terminal devices.
-   Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+   Copyright (C) 2005-2012 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -37,10 +37,7 @@ static int next_terminal_id;
 /* The initial terminal device, created by initial_term_init. */
 struct terminal *initial_terminal;
 
-/* Function to use to ring the bell.  */
-Lisp_Object Vring_bell_function;
-
-static void delete_initial_terminal P_ ((struct terminal *));
+static void delete_initial_terminal (struct terminal *);
 
 
 
@@ -112,7 +109,7 @@ void
 raw_cursor_to (struct frame *f, int row, int col)
 {
   if (FRAME_TERMINAL (f)->raw_cursor_to_hook)
-    (*FRAME_TERMINAL (f)->raw_cursor_to_hook) (f, row, col);  
+    (*FRAME_TERMINAL (f)->raw_cursor_to_hook) (f, row, col);
 }
 
 /* Erase operations */
@@ -242,12 +239,14 @@ create_terminal (void)
   /* If default coding systems for the terminal and the keyboard are
      already defined, use them in preference to the defaults.  This is
      needed when Emacs runs in daemon mode.  */
-  keyboard_coding = SYMBOL_VALUE (intern ("default-keyboard-coding-system"));
+  keyboard_coding =
+    find_symbol_value (intern ("default-keyboard-coding-system"));
   if (NILP (keyboard_coding)
       || EQ (keyboard_coding, Qunbound)
       || NILP (Fcoding_system_p (keyboard_coding)))
     keyboard_coding = Qno_conversion;
-  terminal_coding = SYMBOL_VALUE (intern ("default-terminal-coding-system"));
+  terminal_coding =
+    find_symbol_value (intern ("default-terminal-coding-system"));
   if (NILP (terminal_coding)
       || EQ (terminal_coding, Qunbound)
       || NILP (Fcoding_system_p (terminal_coding)))
@@ -257,6 +256,8 @@ create_terminal (void)
   setup_coding_system (terminal_coding, terminal->terminal_coding);
 
   terminal->param_alist = Qnil;
+  terminal->charset_list = Qnil;
+  terminal->Vselection_alist = Qnil;
   return terminal;
 }
 
@@ -306,8 +307,6 @@ delete_terminal (struct terminal *terminal)
 
 Lisp_Object Qrun_hook_with_args;
 static Lisp_Object Qdelete_terminal_functions;
-static Lisp_Object Vdelete_terminal_functions;
-
 DEFUN ("delete-terminal", Fdelete_terminal, Sdelete_terminal, 0, 2, 0,
        doc: /* Delete TERMINAL by deleting all frames on it and closing the terminal.
 TERMINAL may be a terminal object, a frame, or nil (meaning the
@@ -315,8 +314,7 @@ selected frame's terminal).
 
 Normally, you may not delete a display if all other displays are suspended,
 but if the second argument FORCE is non-nil, you may do so. */)
-  (terminal, force)
-     Lisp_Object terminal, force;
+  (Lisp_Object terminal, Lisp_Object force)
 {
   struct terminal *t = get_terminal (terminal, 0);
 
@@ -357,8 +355,7 @@ DEFUN ("frame-terminal", Fframe_terminal, Sframe_terminal, 0, 1, 0,
 If FRAME is nil, the selected frame is used.
 
 The terminal device is represented by its integer identifier.  */)
-  (frame)
-     Lisp_Object frame;
+  (Lisp_Object frame)
 {
   struct terminal *t;
 
@@ -385,8 +382,7 @@ Value is nil if OBJECT is not a live display terminal.
 If object is a live display terminal, the return value indicates what
 sort of output terminal it uses.  See the documentation of `framep' for
 possible return values.  */)
-     (object)
-     Lisp_Object object;
+  (Lisp_Object object)
 {
   struct terminal *t;
 
@@ -417,7 +413,7 @@ possible return values.  */)
 
 DEFUN ("terminal-list", Fterminal_list, Sterminal_list, 0, 0, 0,
        doc: /* Return a list of all terminal devices.  */)
-  ()
+  (void)
 {
   Lisp_Object terminal, terminals = Qnil;
   struct terminal *t;
@@ -437,8 +433,7 @@ It is not guaranteed that the returned value is unique among opened devices.
 
 TERMINAL may be a terminal object, a frame, or nil (meaning the
 selected frame's terminal). */)
-  (terminal)
-     Lisp_Object terminal;
+  (Lisp_Object terminal)
 {
   struct terminal *t
     = TERMINALP (terminal) ? XTERMINAL (terminal) : get_terminal (terminal, 1);
@@ -448,26 +443,11 @@ selected frame's terminal). */)
 
 
 
-/* Return the value of terminal parameter PARAM in terminal T.  */
-Lisp_Object
-get_terminal_param (t, param)
-     struct terminal *t;
-     Lisp_Object param;
-{
-  Lisp_Object tem = Fassq (param, t->param_alist);
-  if (EQ (tem, Qnil))
-    return tem;
-  return Fcdr (tem);
-}
-
 /* Set the value of terminal parameter PARAMETER in terminal D to VALUE.
    Return the previous value.  */
 
-Lisp_Object
-store_terminal_param (t, parameter, value)
-     struct terminal *t;
-     Lisp_Object parameter;
-     Lisp_Object value;
+static Lisp_Object
+store_terminal_param (struct terminal *t, Lisp_Object parameter, Lisp_Object value)
 {
   Lisp_Object old_alist_elt = Fassq (parameter, t->param_alist);
   if (EQ (old_alist_elt, Qnil))
@@ -491,8 +471,7 @@ is a symbol.
 
 TERMINAL can be a terminal object, a frame, or nil (meaning the
 selected frame's terminal).  */)
-     (terminal)
-     Lisp_Object terminal;
+  (Lisp_Object terminal)
 {
   struct terminal *t
     = TERMINALP (terminal) ? XTERMINAL (terminal) : get_terminal (terminal, 1);
@@ -503,9 +482,7 @@ DEFUN ("terminal-parameter", Fterminal_parameter, Sterminal_parameter, 2, 2, 0,
        doc: /* Return TERMINAL's value for parameter PARAMETER.
 TERMINAL can be a terminal object, a frame, or nil (meaning the
 selected frame's terminal).  */)
-     (terminal, parameter)
-     Lisp_Object terminal;
-     Lisp_Object parameter;
+  (Lisp_Object terminal, Lisp_Object parameter)
 {
   Lisp_Object value;
   struct terminal *t
@@ -522,10 +499,7 @@ Return the previous value of PARAMETER.
 
 TERMINAL can be a terminal object, a frame or nil (meaning the
 selected frame's terminal).  */)
-     (terminal, parameter, value)
-     Lisp_Object terminal;
-     Lisp_Object parameter;
-     Lisp_Object value;
+  (Lisp_Object terminal, Lisp_Object parameter, Lisp_Object value)
 {
   struct terminal *t
     = TERMINALP (terminal) ? XTERMINAL (terminal) : get_terminal (terminal, 1);
@@ -567,24 +541,22 @@ delete_initial_terminal (struct terminal *terminal)
 }
 
 void
-syms_of_terminal ()
+syms_of_terminal (void)
 {
 
-  DEFVAR_LISP ("ring-bell-function", &Vring_bell_function,
+  DEFVAR_LISP ("ring-bell-function", Vring_bell_function,
     doc: /* Non-nil means call this function to ring the bell.
 The function should accept no arguments.  */);
   Vring_bell_function = Qnil;
 
-  DEFVAR_LISP ("delete-terminal-functions", &Vdelete_terminal_functions,
+  DEFVAR_LISP ("delete-terminal-functions", Vdelete_terminal_functions,
     doc: /* Special hook run when a terminal is deleted.
 Each function is called with argument, the terminal.
 This may be called just before actually deleting the terminal,
 or some time later.  */);
   Vdelete_terminal_functions = Qnil;
-  Qdelete_terminal_functions = intern_c_string ("delete-terminal-functions");
-  staticpro (&Qdelete_terminal_functions);
-  Qrun_hook_with_args = intern_c_string ("run-hook-with-args");
-  staticpro (&Qrun_hook_with_args);
+  DEFSYM (Qdelete_terminal_functions, "delete-terminal-functions");
+  DEFSYM (Qrun_hook_with_args, "run-hook-with-args");
 
   defsubr (&Sdelete_terminal);
   defsubr (&Sframe_terminal);
@@ -597,6 +569,3 @@ or some time later.  */);
 
   Fprovide (intern_c_string ("multi-tty"), Qnil);
 }
-
-/* arch-tag: e9af6f27-b483-47dc-bb1a-730c1c5cab03
-   (do not change this comment) */

@@ -1,7 +1,6 @@
 ;;; w32-win.el --- parse switches controlling interface with W32 window system
 
-;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1993-1994, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Kevin Gallo
 ;; Keywords: terminals
@@ -86,6 +85,7 @@
 (define-obsolete-function-alias 'w32-select-font 'x-select-font "23.1")
 
 (defvar w32-color-map) ;; defined in w32fns.c
+(make-obsolete 'w32-default-color-map nil "24.1")
 
 (declare-function w32-send-sys-command "w32fns.c")
 (declare-function set-message-beep "w32console.c")
@@ -148,17 +148,7 @@ the last file dropped is selected."
 (global-set-key [language-change] 'ignore)
 
 (defvar x-resource-name)
-(defvar x-colors)
 
-
-(defun xw-defined-colors (&optional frame)
-  "Internal function called by `defined-colors', which see."
-  (or frame (setq frame (selected-frame)))
-  (let ((defined-colors nil))
-    (dolist (this-color (or (mapcar 'car w32-color-map) x-colors))
-      (and (color-supported-p this-color frame t)
-	   (setq defined-colors (cons this-color defined-colors))))
-    defined-colors))
 
 ;;;; Function keys
 
@@ -196,10 +186,11 @@ See the documentation of `create-fontset-from-fontset-spec' for the format.")
   "Report an error when a suspend is attempted."
   (error "Suspending an Emacs running under W32 makes no sense"))
 
-(defvar image-library-alist)
+(defvar dynamic-library-alist)
+(defvar libpng-version)                 ; image.c #ifdef HAVE_NTGUI
 
-;;; Set default known names for image libraries
-(setq image-library-alist
+;;; Set default known names for external libraries
+(setq dynamic-library-alist
       (list
        '(xpm "libxpm.dll" "xpm4.dll" "libXpm-nox4.dll")
        ;; Versions of libpng 1.4.x and later are incompatible with
@@ -212,13 +203,14 @@ See the documentation of `create-fontset-from-fontset-spec' for the format.")
 	 '(png "libpng12d.dll" "libpng12.dll" "libpng3.dll" "libpng.dll"
 	       ;; these are libpng 1.2.8 from GTK+
 	       "libpng13d.dll" "libpng13.dll"))
-        '(jpeg "jpeg62.dll" "libjpeg.dll" "jpeg-62.dll" "jpeg.dll")
-        '(tiff "libtiff3.dll" "libtiff.dll")
-        '(gif "giflib4.dll" "libungif4.dll" "libungif.dll")
-        '(svg "librsvg-2-2.dll")
-        '(gdk-pixbuf "libgdk_pixbuf-2.0-0.dll")
-        '(glib "libglib-2.0-0.dll")
-	'(gobject "libgobject-2.0-0.dll")))
+       '(jpeg "jpeg62.dll" "libjpeg.dll" "jpeg-62.dll" "jpeg.dll")
+       '(tiff "libtiff3.dll" "libtiff.dll")
+       '(gif "giflib4.dll" "libungif4.dll" "libungif.dll")
+       '(svg "librsvg-2-2.dll")
+       '(gdk-pixbuf "libgdk_pixbuf-2.0-0.dll")
+       '(glib "libglib-2.0-0.dll")
+       '(gobject "libgobject-2.0-0.dll")
+       '(gnutls "libgnutls-28.dll" "libgnutls-26.dll")))
 
 ;;; multi-tty support
 (defvar w32-initialized nil
@@ -324,5 +316,4 @@ See the documentation of `create-fontset-from-fontset-spec' for the format.")
 
 (provide 'w32-win)
 
-;; arch-tag: 69fb1701-28c2-4890-b351-3d1fe4b4f166
 ;;; w32-win.el ends here

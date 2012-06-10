@@ -1,6 +1,6 @@
 ;;; hanja-util.el --- Korean Hanja util module  -*- coding: utf-8 -*-
 
-;; Copyright (C) 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2008-2012  Free Software Foundation, Inc.
 
 ;; Author: Jihyun Cho <jihyun.jo@gmail.com>
 ;; Keywords: multilingual, input method, Korean, Hanja
@@ -6438,7 +6438,7 @@ character.  This variable is initialized by `hanja-init-load'.")
 
 ;; List of current conversion status.
 ;; The first element is the strating position of shown list.
-;; It is a group number each splited by `hanja-list-width'.
+;; It is a group number each split by `hanja-list-width'.
 ;; The second element is the position of selected element.
 ;; The third element is a list of suitable Hanja candidate.
 (defvar hanja-conversions
@@ -6591,5 +6591,4 @@ The value is a hanja character that is selected interactively."
 
 (provide 'hanja-util)
 
-;; arch-tag: 3358afb4-c63f-472f-989a-5249129924d1
 ;;; hanja-util.el ends here

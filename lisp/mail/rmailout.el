@@ -1,10 +1,11 @@
 ;;; rmailout.el --- "RMAIL" mail reader for Emacs: output message to a file
 
-;; Copyright (C) 1985, 1987, 1993, 1994, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1987, 1993-1994, 2001-2012
+;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: mail
+;; Package: rmail
 
 ;; This file is part of GNU Emacs.
 
@@ -376,11 +377,12 @@ display message number MSG."
     (rmail-maybe-set-message-counters)
     ;; Insert the new message after the last old message.
     (widen)
-    ;; Make sure the last old message ends with a blank line.
-    (goto-char (point-max))
-    (rmail-ensure-blank-line)
-    ;; Insert the new message at the end.
-    (narrow-to-region (point-max) (point-max))
+    (unless (zerop (buffer-size))
+      ;; Make sure the last old message ends with a blank line.
+      (goto-char (point-max))
+      (rmail-ensure-blank-line)
+      ;; Insert the new message at the end.
+      (narrow-to-region (point-max) (point-max)))
     (insert-buffer-substring tembuf)
     (rmail-count-new-messages t)
     ;; FIXME should re-use existing windows.
@@ -466,6 +468,8 @@ from a non-Rmail buffer.  In this case, COUNT is ignored."
       (if rmail-buffer
 	  (set-buffer rmail-buffer)
 	(error "There is no Rmail buffer"))
+      (if (zerop rmail-total-messages)
+	  (error "No messages to output"))
       (let ((orig-count count)
 	    beg end)
 	(while (> count 0)
@@ -531,6 +535,8 @@ so you should call `rmail-output' directly in that case."
     (if rmail-buffer
 	(set-buffer rmail-buffer)
       (error "There is no Rmail buffer"))
+    (if (zerop rmail-total-messages)
+	(error "No messages to output"))
     (let ((orig-count count)
 	  (cur (current-buffer)))
       (while (> count 0)
@@ -592,6 +598,8 @@ than appending to it.  Deletes the message after writing if
 	(expand-file-name file-name
 			  (and rmail-default-body-file
 			       (file-name-directory rmail-default-body-file))))
+  (if (zerop rmail-current-message)
+      (error "No message to output"))
   (save-excursion
     (goto-char (point-min))
     (search-forward "\n\n")
@@ -602,5 +610,4 @@ than appending to it.  Deletes the message after writing if
   (if rmail-delete-after-output
       (rmail-delete-forward)))
 
-;; arch-tag: 4059abf0-f249-4be4-8e0d-602d370d01d1
 ;;; rmailout.el ends here

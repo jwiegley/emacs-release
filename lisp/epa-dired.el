@@ -1,8 +1,9 @@
-;;; epa-dired.el --- the EasyPG Assistant, dired extension
-;; Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;;; epa-dired.el --- the EasyPG Assistant, dired extension -*- lexical-binding: t -*-
+;; Copyright (C) 2006-2012 Free Software Foundation, Inc.
 
 ;; Author: Daiki Ueno <ueno@unixuser.org>
 ;; Keywords: PGP, GnuPG
+;; Package: epa
 
 ;; This file is part of GNU Emacs.
 
@@ -66,12 +67,11 @@ If no one is selected, default secret key is used.  "
     (while file-list
       (epa-encrypt-file
        (expand-file-name (car file-list))
-       (epa-select-keys (epg-make-context) "Select recipents for encryption.
+       (epa-select-keys (epg-make-context) "Select recipients for encryption.
 If no one is selected, symmetric encryption will be performed.  "))
       (setq file-list (cdr file-list)))
     (revert-buffer)))
 
 (provide 'epa-dired)
 
-;; arch-tag: 2025700b-48d0-4684-bc94-228ad1f8e9ff
 ;;; epa-dired.el ends here

@@ -1,7 +1,6 @@
 ;;; nndiary.el --- A diary back end for Gnus
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012  Free Software Foundation, Inc.
 
 ;; Author:        Didier Verna <didier@xemacs.org>
 ;; Maintainer:    Didier Verna <didier@xemacs.org>
@@ -56,7 +55,7 @@
 
 ;; * nnoo. NNDiary is very similar to nnml. This makes the idea of using nnoo
 ;;   (to derive nndiary from nnml) natural. However, my experience with nnoo
-;;   is that for reasonably complex back ends like this one, noo is a burden
+;;   is that for reasonably complex back ends like this one, nnoo is a burden
 ;;   rather than an help. It's tricky to use, not everything can be inherited,
 ;;   what can be inherited and when is not very clear, and you've got to be
 ;;   very careful because a little mistake can fuck up your other back ends,
@@ -72,8 +71,8 @@
 
 ;; * nndiary-get-new-mail, nndiary-mail-source and nndiary-split-methods:
 ;;   NNDiary has some experimental parts, in the sense Gnus normally uses only
-;;   one mail back ends for mail retreival and splitting. This back end is
-;;   also an attempt to make it behave differently. For Gnus developpers: as
+;;   one mail back ends for mail retrieval and splitting. This back end is
+;;   also an attempt to make it behave differently. For Gnus developers: as
 ;;   you can see if you snarf into the code, that was not a very difficult
 ;;   thing to do. Something should be done about the respooling breakage
 ;;   though.
@@ -225,7 +224,7 @@ The hooks will be called with the article in the current buffer."
 (defvoo nndiary-get-new-mail nil
   "Whether nndiary gets new mail and split it.
 Contrary to traditional mail back ends, this variable can be set to t
-even if your primary mail back end also retreives mail. In such a case,
+even if your primary mail back end also retrieves mail. In such a case,
 NDiary uses its own mail-sources and split-methods.")
 
 (defvoo nndiary-nov-is-evil nil
@@ -354,7 +353,7 @@ all.  This may very well take some time.")
   ;; List of NNDiary headers that specify the time spec. Each header name is
   ;; followed by either two integers (specifying a range of possible values
   ;; for this header) or one list (specifying all the possible values for this
-  ;; header). In the latter case, the list does NOT include the unspecifyed
+  ;; header). In the latter case, the list does NOT include the unspecified
   ;; spec (*).
   ;; For time zone values, we have symbolic time zone names associated with
   ;; the (relative) number of seconds ahead GMT.
@@ -380,8 +379,7 @@ all.  This may very well take some time.")
 
 (deffoo nndiary-retrieve-headers (sequence &optional group server fetch-old)
   (when (nndiary-possibly-change-directory group server)
-    (save-excursion
-      (set-buffer nntp-server-buffer)
+    (with-current-buffer nntp-server-buffer
       (erase-buffer)
       (let* ((file nil)
 	     (number (length sequence))
@@ -483,7 +481,7 @@ all.  This may very well take some time.")
       (cons (if group-num (car group-num) group)
 	    (string-to-number (file-name-nondirectory path)))))))
 
-(deffoo nndiary-request-group (group &optional server dont-check)
+(deffoo nndiary-request-group (group &optional server dont-check info)
   (let ((file-name-coding-system nnmail-pathname-coding-system))
     (cond
      ((not (nndiary-possibly-change-directory group server))
@@ -615,8 +613,7 @@ all.  This may very well take some time.")
      (let (nndiary-current-directory
 	   nndiary-current-group
 	   nndiary-article-file-alist)
-       (save-excursion
-	 (set-buffer buf)
+       (with-current-buffer buf
 	 (insert-buffer-substring nntp-server-buffer)
 	 (setq result (eval accept-form))
 	 (kill-buffer (current-buffer))
@@ -672,8 +669,7 @@ all.  This may very well take some time.")
 
 (deffoo nndiary-request-replace-article (article group buffer)
   (nndiary-possibly-change-directory group)
-  (save-excursion
-    (set-buffer buffer)
+  (with-current-buffer buffer
     (nndiary-possibly-create-directory group)
     (let ((chars (nnmail-insert-lines))
 	  (art (concat (int-to-string article) "\t"))
@@ -688,8 +684,7 @@ all.  This may very well take some time.")
 	      t)
 	(setq headers (nndiary-parse-head chars article))
 	;; Replace the NOV line in the NOV file.
-	(save-excursion
-	  (set-buffer (nndiary-open-nov group))
+	(with-current-buffer (nndiary-open-nov group)
 	  (goto-char (point-min))
 	  (if (or (looking-at art)
 		  (search-forward (concat "\n" art) nil t))
@@ -842,8 +837,7 @@ all.  This may very well take some time.")
 
 ;; Find an article number in the current group given the Message-ID.
 (defun nndiary-find-group-number (id)
-  (save-excursion
-    (set-buffer (get-buffer-create " *nndiary id*"))
+  (with-current-buffer (get-buffer-create " *nndiary id*")
     (let ((alist nndiary-group-alist)
 	  number)
       ;; We want to look through all .overview files, but we want to
@@ -888,8 +882,7 @@ all.  This may very well take some time.")
     (let ((nov (expand-file-name nndiary-nov-file-name
 				 nndiary-current-directory)))
       (when (file-exists-p nov)
-	(save-excursion
-	  (set-buffer nntp-server-buffer)
+	(with-current-buffer nntp-server-buffer
 	  (erase-buffer)
 	  (nnheader-insert-file-contents nov)
 	  (if (and fetch-old
@@ -989,8 +982,7 @@ all.  This may very well take some time.")
 
 (defun nndiary-add-nov (group article headers)
   "Add a nov line for the GROUP base."
-  (save-excursion
-    (set-buffer (nndiary-open-nov group))
+  (with-current-buffer (nndiary-open-nov group)
     (goto-char (point-max))
     (mail-header-set-number headers article)
     (nnheader-insert-nov headers)))
@@ -1015,8 +1007,7 @@ all.  This may very well take some time.")
   (or (cdr (assoc group nndiary-nov-buffer-alist))
       (let ((buffer (get-buffer-create (format " *nndiary overview %s*"
 					       group))))
-	(save-excursion
-	  (set-buffer buffer)
+	(with-current-buffer buffer
 	  (set (make-local-variable 'nndiary-nov-buffer-file-name)
 	       (expand-file-name
 		nndiary-nov-file-name
@@ -1069,9 +1060,9 @@ all.  This may very well take some time.")
 		   (file-directory-p dir))
 	  (nndiary-generate-nov-databases-1 dir seen))))
     ;; Do this directory.
-    (let ((files (sort (nnheader-article-to-file-alist dir)
+    (let ((nndiary-files (sort (nnheader-article-to-file-alist dir)
 		       'car-less-than-car)))
-      (if (not files)
+      (if (not nndiary-files)
 	  (let* ((group (nnheader-file-to-group
 			 (directory-file-name dir) nndiary-directory))
 		 (info (cadr (assoc group nndiary-group-alist))))
@@ -1079,11 +1070,11 @@ all.  This may very well take some time.")
 	      (setcar info (1+ (cdr info)))))
 	(funcall nndiary-generate-active-function dir)
 	;; Generate the nov file.
-	(nndiary-generate-nov-file dir files)
+	(nndiary-generate-nov-file dir nndiary-files)
 	(unless no-active
 	  (nnmail-save-active nndiary-group-alist nndiary-active-file))))))
 
-(defvar files)
+(defvar nndiary-files) ; dynamically bound in nndiary-generate-nov-databases-1
 (defun nndiary-generate-active-info (dir)
   ;; Update the active info for this group.
   (let* ((group (nnheader-file-to-group
@@ -1092,9 +1083,9 @@ all.  This may very well take some time.")
 	 (last (or (caadr entry) 0)))
     (setq nndiary-group-alist (delq entry nndiary-group-alist))
     (push (list group
-		(cons (or (caar files) (1+ last))
+		(cons (or (caar nndiary-files) (1+ last))
 		      (max last
-			   (or (caar (last files))
+			   (or (caar (last nndiary-files))
 			       0))))
 	  nndiary-group-alist)))
 
@@ -1103,9 +1094,8 @@ all.  This may very well take some time.")
 	 (nov (concat dir nndiary-nov-file-name))
 	 (nov-buffer (get-buffer-create " *nov*"))
 	 chars file headers)
-    (save-excursion
-      ;; Init the nov buffer.
-      (set-buffer nov-buffer)
+    ;; Init the nov buffer.
+    (with-current-buffer nov-buffer
       (buffer-disable-undo)
       (erase-buffer)
       (set-buffer nntp-server-buffer)
@@ -1125,20 +1115,17 @@ all.  This may very well take some time.")
 	  (unless (zerop (buffer-size))
 	    (goto-char (point-min))
 	    (setq headers (nndiary-parse-head chars (caar files)))
-	    (save-excursion
-	      (set-buffer nov-buffer)
+	    (with-current-buffer nov-buffer
 	      (goto-char (point-max))
 	      (nnheader-insert-nov headers)))
 	  (widen))
 	(setq files (cdr files)))
-      (save-excursion
-	(set-buffer nov-buffer)
+      (with-current-buffer nov-buffer
 	(nnmail-write-region 1 (point-max) nov nil 'nomesg)
 	(kill-buffer (current-buffer))))))
 
 (defun nndiary-nov-delete-article (group article)
-  (save-excursion
-    (set-buffer (nndiary-open-nov group))
+  (with-current-buffer (nndiary-open-nov group)
     (when (nnheader-find-nov-line article)
       (delete-region (point) (progn (forward-line 1) (point)))
       (when (bobp)
@@ -1174,11 +1161,11 @@ all.  This may very well take some time.")
 
 (defun nndiary-parse-schedule-value (str min-or-values max)
   ;; Parse the schedule string STR, or signal an error.
-  ;; Signals are caught by `nndary-schedule'.
+  ;; Signals are caught by `nndiary-schedule'.
   (if (string-match "[ \t]*\\*[ \t]*" str)
-      ;; unspecifyed
+      ;; unspecified
       nil
-    ;; specifyed
+    ;; specified
     (if (listp min-or-values)
 	;; min-or-values is values
 	;; #### NOTE: this is actually only a hack for time zones.
@@ -1217,7 +1204,7 @@ all.  This may very well take some time.")
   ;; - Returns nil if `*'
   ;; - Otherwise returns a list of integers and/or ranges (BEG . END)
   ;; The exception is the Timze-Zone value which is always of the form (STR).
-  ;; Signals are caught by `nndary-schedule'.
+  ;; Signals are caught by `nndiary-schedule'.
   (let ((header (format "^X-Diary-%s: \\(.*\\)$" head)))
     (goto-char (point-min))
     (if (not (re-search-forward header nil t))
@@ -1333,7 +1320,7 @@ all.  This may very well take some time.")
       (or minute (setq minute 59))
       (or hour (setq hour 23))
       ;; I'll just compute all possible values and test them by decreasing
-      ;; order until one succeeds. This is probably quide rude, but I got
+      ;; order until one succeeds. This is probably quite rude, but I got
       ;; bored in finding a good algorithm for doing that ;-)
       ;; ### FIXME: remove identical entries.
       (let ((dom-list (nth 2 sched))
@@ -1584,6 +1571,4 @@ all.  This may very well take some time.")
 
 (provide 'nndiary)
 
-
-;; arch-tag: 9c542b95-92e7-4ace-a038-330ab296e203
 ;;; nndiary.el ends here

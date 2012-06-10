@@ -1,6 +1,6 @@
 ;;; subword.el --- Handling capitalized subwords in a nomenclature
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2004-2012 Free Software Foundation, Inc.
 
 ;; Author: Masatake YAMATO
 
@@ -76,7 +76,7 @@
 ;; the old `c-forward-into-nomenclature' originally contributed by
 ;; Terry_Glanfield dot Southern at rxuk dot xerox dot com.
 
-;; TODO: ispell-word and subword oriented C-w in isearch.
+;; TODO: ispell-word.
 
 ;;; Code:
 
@@ -94,13 +94,19 @@
 
 ;;;###autoload
 (define-minor-mode subword-mode
-  "Mode enabling subword movement and editing keys.
-In spite of GNU Coding Standards, it is popular to name a symbol by
-mixing uppercase and lowercase letters, e.g. \"GtkWidget\",
-\"EmacsFrameClass\", \"NSGraphicsContext\", etc.  Here we call these
-mixed case symbols `nomenclatures'. Also, each capitalized (or
-completely uppercase) part of a nomenclature is called a `subword'.
-Here are some examples:
+  "Toggle subword movement and editing (Subword mode).
+With a prefix argument ARG, enable Subword mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
+Subword mode is a buffer-local minor mode.  Enabling it remaps
+word-based editing commands to subword-based commands that handle
+symbols with mixed uppercase and lowercase letters,
+e.g. \"GtkWidget\", \"EmacsFrameClass\", \"NSGraphicsContext\".
+
+Here we call these mixed case symbols `nomenclatures'.  Each
+capitalized (or completely uppercase) part of a nomenclature is
+called a `subword'.  Here are some examples:
 
   Nomenclature           Subwords
   ===========================================================
@@ -277,5 +283,4 @@ Optional argument ARG is the same as for `capitalize-word'."
 
 (provide 'subword)
 
-;; arch-tag: b8a01202-8a52-4a71-ae0a-d753fafd67ef
 ;;; subword.el ends here

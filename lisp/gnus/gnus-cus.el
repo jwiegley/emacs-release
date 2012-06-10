@@ -1,7 +1,6 @@
 ;;; gnus-cus.el --- customization commands for Gnus
 
-;; Copyright (C) 1996, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1996, 1999-2012 Free Software Foundation, Inc.
 
 ;; Author: Per Abrahamsen <abraham@dina.kvl.dk>
 ;; Keywords: news
@@ -50,7 +49,7 @@ if that value is non-nil."
   (setq major-mode 'gnus-custom-mode
 	mode-name "Gnus Customize")
   (use-local-map widget-keymap)
-  ;; Emacs 21 stuff:
+  ;; Emacs stuff:
   (when (and (facep 'custom-button-face)
 	     (facep 'custom-button-pressed-face))
     (set (make-local-variable 'widget-button-face)
@@ -865,11 +864,6 @@ This can be changed using the `\\[gnus-score-change-score-file]' command."
 Check the [ ] for the entries you want to apply to this score file, then
 edit the value to suit your taste.  Don't forget to mark the checkbox,
 if you do all your changes will be lost.  ")
-    (widget-create 'push-button
-		   :action (lambda (&rest ignore)
-			     (require 'gnus-audio)
-			     (gnus-audio-play "Evil_Laugh.au"))
-		   "Bhahahah!")
     (widget-insert "\n\n")
     (make-local-variable 'gnus-custom-scores)
     (setq gnus-custom-scores
@@ -928,7 +922,7 @@ will add a new `thread' match for each article that has X in its
 `Message-ID's of these matching articles.)  This will ensure that you
 can raise/lower the score of an entire thread, even though some
 articles in the thread may not have complete `References' headers.
-Note that using this may lead to undeterministic scores of the
+Note that using this may lead to nondeterministic scores of the
 articles in the thread.
 ")
 				     ,@types)
@@ -1040,19 +1034,19 @@ articles in the thread.
         (widget-create
          'push-button
          :notify
-         '(lambda (&rest ignore)
-            (let* ((info (assq gnus-agent-cat-name gnus-category-alist))
-                   (widgets category-fields))
-              (while widgets
-                (let* ((widget (pop widgets))
-                       (value (condition-case nil (widget-value widget) (error))))
-                  (eval `(setf (,(widget-get widget :accessor) ',info)
-                               ',value)))))
-            (gnus-category-write)
-            (gnus-kill-buffer (current-buffer))
-            (when (get-buffer gnus-category-buffer)
-              (switch-to-buffer (get-buffer gnus-category-buffer))
-              (gnus-category-list)))
+         (lambda (&rest ignore)
+           (let* ((info (assq gnus-agent-cat-name gnus-category-alist))
+                  (widgets category-fields))
+             (while widgets
+               (let* ((widget (pop widgets))
+                      (value (condition-case nil (widget-value widget) (error))))
+                 (eval `(setf (,(widget-get widget :accessor) ',info)
+                              ',value)))))
+           (gnus-category-write)
+           (gnus-kill-buffer (current-buffer))
+           (when (get-buffer gnus-category-buffer)
+             (switch-to-buffer (get-buffer gnus-category-buffer))
+             (gnus-category-list)))
                        "Done")
         (widget-insert
          "\n    Note: Empty fields default to the customizable global\
@@ -1118,5 +1112,4 @@ articles in the thread.
 
 (provide 'gnus-cus)
 
-;; arch-tag: a37c285a-49bc-4235-8244-804536effeaf
 ;;; gnus-cus.el ends here

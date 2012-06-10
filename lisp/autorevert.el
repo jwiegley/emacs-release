@@ -1,7 +1,6 @@
 ;;; autorevert.el --- revert buffers when files on disk change
 
-;; Copyright (C) 1997, 1998, 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1997-1999, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: Anders Lindgren <andersl@andersl.com>
 ;; Keywords: convenience
@@ -78,7 +77,7 @@
 ;;   M-x global-auto-revert-mode RET
 ;;
 ;; To activate Global Auto-Revert Mode every time Emacs is started
-;; customise the option `global-auto-revert-mode' or the following
+;; customize the option `global-auto-revert-mode' or the following
 ;; line could be added to your ~/.emacs:
 ;;   (global-auto-revert-mode 1)
 ;;
@@ -117,12 +116,12 @@ Global Auto-Revert Mode applies to all buffers."
 ;;; What's this?: ;; Autoload for the benefit of `make-mode-line-mouse-sensitive'.
 ;;; What's this?: ;;;###autoload
 (defvar auto-revert-mode nil
-  "*Non-nil when Auto-Revert Mode is active.
+  "Non-nil when Auto-Revert Mode is active.
 Never set this variable directly, use the command `auto-revert-mode' instead.")
 (put 'auto-revert-mode 'permanent-local t)
 
 (defvar auto-revert-tail-mode nil
-  "*Non-nil when Auto-Revert Tail Mode is active.
+  "Non-nil when Auto-Revert Tail Mode is active.
 Never set this variable directly, use the command
 `auto-revert-tail-mode' instead.")
 (put 'auto-revert-tail-mode 'permanent-local t)
@@ -255,8 +254,7 @@ buffers.  CPU usage depends on the version control system."
   :version "22.1")
 
 (defvar global-auto-revert-ignore-buffer nil
-  "*When non-nil, Global Auto-Revert Mode will not revert this buffer.
-
+  "When non-nil, Global Auto-Revert Mode will not revert this buffer.
 This variable becomes buffer local when set in any fashion.")
 (make-variable-buffer-local 'global-auto-revert-ignore-buffer)
 
@@ -286,10 +284,15 @@ the list of old buffers.")
 
 ;;;###autoload
 (define-minor-mode auto-revert-mode
-  "Toggle reverting buffer when file on disk changes.
+  "Toggle reverting buffer when the file changes (Auto Revert mode).
+With a prefix argument ARG, enable Auto Revert mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
 
-With arg, turn Auto Revert mode on if and only if arg is positive.
-This is a minor mode that affects only the current buffer.
+Auto Revert mode is a minor mode that affects only the current
+buffer.  When enabled, it reverts the buffer when the file on
+disk changes.
+
 Use `global-auto-revert-mode' to automatically revert all buffers.
 Use `auto-revert-tail-mode' if you know that the file will only grow
 without being changed in the part that is already in the buffer."
@@ -316,14 +319,16 @@ This function is designed to be added to hooks, for example:
 
 ;;;###autoload
 (define-minor-mode auto-revert-tail-mode
-  "Toggle reverting tail of buffer when file on disk grows.
-With arg, turn Tail mode on if arg is positive, otherwise turn it off.
+  "Toggle reverting tail of buffer when the file grows.
+With a prefix argument ARG, enable Auto-Revert Tail mode if ARG
+is positive, and disable it otherwise.  If called from Lisp,
+enable the mode if ARG is omitted or nil.
 
-When Tail mode is enabled, the tail of the file is constantly
-followed, as with the shell command `tail -f'.  This means that
-whenever the file grows on disk (presumably because some
-background process is appending to it from time to time), this is
-reflected in the current buffer.
+When Auto Revert Tail mode is enabled, the tail of the file is
+constantly followed, as with the shell command `tail -f'.  This
+means that whenever the file grows on disk (presumably because
+some background process is appending to it from time to time),
+this is reflected in the current buffer.
 
 You can edit the buffer and turn this mode off and on again as
 you please.  But make sure the background process has stopped
@@ -369,7 +374,7 @@ Perform a full revert? ")
 
 ;;;###autoload
 (defun turn-on-auto-revert-tail-mode ()
-  "Turn on Auto-Revert Tail Mode.
+  "Turn on Auto-Revert Tail mode.
 
 This function is designed to be added to hooks, for example:
   (add-hook 'my-logfile-mode-hook 'turn-on-auto-revert-tail-mode)"
@@ -379,12 +384,13 @@ This function is designed to be added to hooks, for example:
 ;;;###autoload
 (define-minor-mode global-auto-revert-mode
   "Toggle Global Auto Revert mode.
-With optional prefix argument ARG, enable Global Auto Revert Mode
-if ARG > 0, else disable it.
+With a prefix argument ARG, enable Global Auto Revert mode if ARG
+is positive, and disable it otherwise.  If called from Lisp,
+enable the mode if ARG is omitted or nil.
 
-This is a global minor mode that reverts any buffer associated
-with a file when the file changes on disk.  Use `auto-revert-mode'
-to revert a particular buffer.
+Global Auto Revert mode is a global minor mode that reverts any
+buffer associated with a file when the file changes on disk.  Use
+`auto-revert-mode' to revert a particular buffer.
 
 If `global-auto-revert-non-file-buffers' is non-nil, this mode
 may also revert some non-file buffers, as described in the
@@ -433,17 +439,18 @@ This is an internal function used by Auto-Revert Mode."
     (let* ((buffer (current-buffer)) size
 	   (revert
 	    (or (and buffer-file-name
-		     (file-readable-p buffer-file-name)
 		     (if auto-revert-tail-mode
 			 ;; Tramp caches the file attributes.  Setting
-			 ;; `tramp-cache-inhibit' forces Tramp to
-			 ;; reread the values.
-			 (let ((tramp-cache-inhibit-cache t))
-			   (/= auto-revert-tail-pos
-			       (setq size
-				     (nth 7 (file-attributes
-					     buffer-file-name)))))
+			 ;; `remote-file-name-inhibit-cache' forces Tramp
+			 ;; to reread the values.
+			 (let ((remote-file-name-inhibit-cache t))
+			   (and (file-readable-p buffer-file-name)
+				(/= auto-revert-tail-pos
+				    (setq size
+					  (nth 7 (file-attributes
+						  buffer-file-name))))))
 		       (and (not (file-remote-p buffer-file-name))
+			    (file-readable-p buffer-file-name)
 			    (not (verify-visited-file-modtime buffer)))))
 		(and (or auto-revert-mode
 			 global-auto-revert-non-file-buffers)
@@ -462,10 +469,10 @@ This is an internal function used by Auto-Revert Mode."
 	(when buffer-file-name
 	  (setq eob (eobp))
 	  (walk-windows
-	   #'(lambda (window)
-	       (and (eq (window-buffer window) buffer)
-		    (= (window-point window) (point-max))
-		    (push window eoblist)))
+	   (lambda (window)
+	     (and (eq (window-buffer window) buffer)
+		  (= (window-point window) (point-max))
+		  (push window eoblist)))
 	   'no-mini t))
 	(if auto-revert-tail-mode
 	    (auto-revert-tail-handler size)
@@ -576,5 +583,4 @@ the timer when no buffers need to be checked."
 
 (run-hooks 'auto-revert-load-hook)
 
-;; arch-tag: f6bcb07b-4841-477e-9e44-b18678e58876
 ;;; autorevert.el ends here

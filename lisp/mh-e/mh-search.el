@@ -1,8 +1,6 @@
 ;;; mh-search  ---  MH-Search mode
 
-;; Copyright (C) 1993, 1995,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1995, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Indexed search by Satyaki Das <satyaki@theforce.stanford.edu>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -323,7 +321,8 @@ folder containing the index search results."
                        count (> (hash-table-count msg-hash) 0)))))))
 
 ;; Shush compiler.
-(defvar pick-folder)                    ; XEmacs
+(mh-do-in-xemacs
+  (defvar pick-folder))
 
 (defun mh-search-folder (folder window-config)
   "Search FOLDER for messages matching a pattern.
@@ -403,8 +402,9 @@ or nothing to search all folders."
   (mh-index-sequenced-messages folders mh-tick-seq))
 
 ;; Shush compiler.
-(defvar mh-mairix-folder)               ; XEmacs
-(defvar mh-flists-search-folders)       ; XEmacs
+(mh-do-in-xemacs
+  (defvar mh-mairix-folder)
+  (defvar mh-flists-search-folders))
 
 ;;;###mh-autoload
 (defun mh-index-sequenced-messages (folders sequence)
@@ -454,12 +454,12 @@ search all folders."
 
 (defvar mh-flists-search-folders)
 
-(defun mh-flists-execute (&rest args)
+(defun mh-flists-execute (&rest ignored)
   "Execute flists.
 Search for messages belonging to `mh-flists-sequence' in the
 folders specified by `mh-flists-search-folders'. If
 `mh-recursive-folders-flag' is t, then the folders are searched
-recursively. All parameters ARGS are ignored."
+recursively. All arguments are IGNORED."
   (set-buffer (get-buffer-create mh-temp-index-buffer))
   (erase-buffer)
   (unless (executable-find "sh")
@@ -646,7 +646,7 @@ Uses the pick method described in `mh-pick-execute-search'."
 
 (defun mh-pick-parse-search-buffer ()
   "Parse the search buffer contents.
-The function returns a alist. The car of each element is either
+The function returns an alist. The car of each element is either
 the header name to search in or nil to search the whole message.
 The cdr of the element is the pattern to search."
   (save-excursion
@@ -1444,7 +1444,8 @@ being the list of messages originally from that folder."
   mh-index-data)
 
 ;; Shush compiler
-(defvar mh-speed-flists-inhibit-flag)   ; XEmacs
+(mh-do-in-xemacs
+  (defvar mh-speed-flists-inhibit-flag))
 
 ;;;###mh-autoload
 (defun mh-index-execute-commands ()
@@ -1511,7 +1512,7 @@ construct the base name."
       (delete-char 1))
     (goto-char (point-max))
     (while (and (not (bobp)) (memq (char-before) '(?  ?\t ?\n ?\r ?_)))
-      (delete-backward-char 1))
+      (delete-char -1))
     (subst-char-in-region (point-min) (point-max) ?  ?_ t)
     (subst-char-in-region (point-min) (point-max) ?\t ?_ t)
     (subst-char-in-region (point-min) (point-max) ?\n ?_ t)
@@ -1790,7 +1791,7 @@ PROC is used to convert the value to actual data."
 ;; To add support for your favorite checksum program add a clause to
 ;; the cond statement in mh-checksum-choose. This should set the
 ;; variable mh-checksum-cmd to the command line needed to run the
-;; checsum program and should set mh-checksum-parser to a function
+;; checksum program and should set mh-checksum-parser to a function
 ;; which returns a cons cell containing the message number and
 ;; checksum string.
 
@@ -1931,5 +1932,4 @@ folder buffer."
 ;; sentence-end-double-space: nil
 ;; End:
 
-;; arch-tag: 607762ad-0dff-4fe1-a27e-6c0dde0dcc47
 ;;; mh-search ends here

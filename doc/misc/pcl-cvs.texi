@@ -6,9 +6,7 @@
 @c %**end of header
 
 @copying
-Copyright @copyright{} 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998,
-1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-Free Software Foundation, Inc.
+Copyright @copyright{} 1991-2012 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -71,7 +69,7 @@ customize-group RET pcl-cvs @key{RET}} and to look at the documentation strings
 of the various commands and major modes for further information.
 @c This manual is updated to release 2.5 of PCL-CVS.
 
-@insertcopying 
+@insertcopying
 
 @end ifnottex
 
@@ -137,10 +135,9 @@ Customization
 PCL-CVS is a front-end to CVS versions 1.9 and later.
 It concisely shows the present status of a checked out module in an
 Emacs buffer and provides single-key access to the most frequently used CVS
-commands.
-For Emacs users accustomed to VC, PCL-CVS can be thought of as a replacement
-for VC-dired (@pxref{VC Directory Mode, , , emacs, The GNU
-Emacs Manual}) specifically designed for CVS.
+commands.  Note that the @code{vc-dir} command (@pxref{VC Directory
+Mode, , , emacs, The GNU Emacs Manual}) provides similar
+functionality, but for several version control systems, including CVS.
 
 PCL-CVS was originally written many years ago by Per Cederqvist who
 proudly maintained it until January 1996, at which point he released the
@@ -1276,7 +1273,7 @@ will be called as @samp{cvs -d @var{cvs-cvsroot}@dots{}}.  This can be
 useful if your site has several repositories.
 
 @item log-edit-require-final-newline
-@c wordy to avoid unhderfull hbox
+@c wordy to avoid underfull hbox
 When you enter a log message by typing into the
 @samp{*cvs-commit-message*} buffer, PCL-CVS normally automatically
 inserts a trailing newline, unless there already is one.  This behavior
@@ -1432,7 +1429,3 @@ this manual.
 @printindex ky
 
 @bye
-
-@ignore
-   arch-tag: 5c7178ce-56fa-40b0-abd7-f4a09758b235
-@end ignore

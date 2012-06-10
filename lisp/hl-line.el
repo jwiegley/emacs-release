@@ -1,7 +1,6 @@
 ;;; hl-line.el --- highlight the current line
 
-;; Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1998, 2000-2012  Free Software Foundation, Inc.
 
 ;; Author:  Dave Love <fx@gnu.org>
 ;; Maintainer: FSF
@@ -72,7 +71,7 @@
 (defgroup hl-line nil
   "Highlight the current line."
   :version "21.1"
-  :group 'editing)
+  :group 'convenience)
 
 (defface hl-line
   '((t :inherit highlight))
@@ -94,12 +93,24 @@
 	   (overlay-put global-hl-line-overlay 'face hl-line-face))))
 
 (defcustom hl-line-sticky-flag t
-  "Non-nil means highlight the current line in all windows.
+  "Non-nil means the HL-Line mode highlight appears in all windows.
 Otherwise Hl-Line mode will highlight only in the selected
 window.  Setting this variable takes effect the next time you use
-the command `hl-line-mode' to turn Hl-Line mode on."
+the command `hl-line-mode' to turn Hl-Line mode on.
+
+This variable has no effect in Global Highlight Line mode.
+For that, use `global-hl-line-sticky-flag'."
   :type 'boolean
   :version "22.1"
+  :group 'hl-line)
+
+(defcustom global-hl-line-sticky-flag nil
+  "Non-nil means the Global HL-Line mode highlight appears in all windows.
+Otherwise Global Hl-Line mode will highlight only in the selected
+window.  Setting this variable takes effect the next time you use
+the command `global-hl-line-mode' to turn Global Hl-Line mode on."
+  :type 'boolean
+  :version "24.1"
   :group 'hl-line)
 
 (defvar hl-line-range-function nil
@@ -113,10 +124,13 @@ This variable is expected to be made buffer-local by modes.")
 
 ;;;###autoload
 (define-minor-mode hl-line-mode
-  "Buffer-local minor mode to highlight the line about point.
-With ARG, turn Hl-Line mode on if ARG is positive, off otherwise.
+  "Toggle highlighting of the current line (Hl-Line mode).
+With a prefix argument ARG, enable Hl-Line mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
 
-If `hl-line-sticky-flag' is non-nil, Hl-Line mode highlights the
+Hl-Line mode is a buffer-local minor mode.  If
+`hl-line-sticky-flag' is non-nil, Hl-Line mode highlights the
 line about the buffer's point in all windows.  Caveat: the
 buffer's point might be different from the point of a
 non-selected window.  Hl-Line mode uses the function
@@ -160,8 +174,14 @@ addition to `hl-line-highlight' on `post-command-hook'."
 
 ;;;###autoload
 (define-minor-mode global-hl-line-mode
-  "Global minor mode to highlight the line about point in the current window.
-With ARG, turn Global-Hl-Line mode on if ARG is positive, off otherwise.
+  "Toggle line highlighting in all buffers (Global Hl-Line mode).
+With a prefix argument ARG, enable Global Hl-Line mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
+If `global-hl-line-sticky-flag' is non-nil, Global Hl-Line mode
+highlights the line about the current buffer's point in all
+windows.
 
 Global-Hl-Line mode uses the functions `global-hl-line-unhighlight' and
 `global-hl-line-highlight' on `pre-command-hook' and `post-command-hook'."
@@ -182,7 +202,9 @@ Global-Hl-Line mode uses the functions `global-hl-line-unhighlight' and
       (unless global-hl-line-overlay
         (setq global-hl-line-overlay (make-overlay 1 1)) ; to be moved
         (overlay-put global-hl-line-overlay 'face hl-line-face))
-      (overlay-put global-hl-line-overlay 'window (selected-window))
+      (overlay-put global-hl-line-overlay 'window
+		   (unless global-hl-line-sticky-flag
+		     (selected-window)))
       (hl-line-move global-hl-line-overlay))))
 
 (defun global-hl-line-unhighlight ()
@@ -219,5 +241,4 @@ the line including the point by OVERLAY."
 
 (provide 'hl-line)
 
-;; arch-tag: ac806940-0876-4959-8c89-947563ee2833
 ;;; hl-line.el ends here

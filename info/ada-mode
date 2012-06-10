@@ -1,8 +1,7 @@
 This is ../../info/ada-mode, produced by makeinfo version 4.13 from
 ada-mode.texi.
 
-Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+Copyright (C) 1999-2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -24,8 +23,10 @@ END-INFO-DIR-ENTRY
 
 File: ada-mode,  Node: Top,  Next: Overview,  Prev: (dir),  Up: (dir)
 
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+Ada Mode
+********
+
+Copyright (C) 1999-2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -171,7 +172,7 @@ convention, where file names are a simple modification of the Ada
 names, and the extension for specs and bodies are `.ads' and `.adb',
 respectively.
 
-   Ada mode uses the file extentions to allow moving from a package body
+   Ada mode uses the file extensions to allow moving from a package body
 to the corresponding spec and back.
 
    Ada mode supports a list of alternative file extensions for specs
@@ -192,7 +193,7 @@ and `UNIT_b.ada', respectively, you can add the following to your
 whose extension is `.ads', it will take the first available file that
 ends with either `.adb', `_b.ada' or `.body'.
 
-   Simililarly, if Ada mode is looking for a spec, it will look for
+   Similarly, if Ada mode is looking for a spec, it will look for
 `.ads' or `_s.ada'.
 
    If the filename is not derived from the Ada name following the GNAT
@@ -1295,8 +1296,8 @@ specified by the variable `ada-case-exception-file' (default
 casing of one word or word fragment. Comments may be included,
 separated from the word by a space.
 
-   If the word starts with an asterisk (<*>), it defines the casing af
-a word fragemnt (or "substring"); part of a word between two
+   If the word starts with an asterisk (<*>), it defines the casing as
+a word fragment (or "substring"); part of a word between two
 underscores or word boundary.
 
    For example:
@@ -2002,34 +2003,34 @@ Index
 
 
 Tag Table:
-Node: Top1024
-Node: Overview2843
-Node: Installation4146
-Node: Customization5269
-Node: Non-standard file names6171
-Node: Other compiler7663
-Node: Other customization8161
-Node: Compiling Executing8809
-Node: Compile commands9475
-Node: Compiler errors12207
-Node: Project files13081
-Node: Project File Overview13779
-Node: GUI Editor16076
-Node: Project file variables16546
-Node: Compiling Examples23619
-Node: No project files24412
-Node: Set compiler options29093
-Node: Set source search path31053
-Node: Use GNAT project file33325
-Node: Use multiple GNAT project files35503
-Node: Moving Through Ada Code37387
-Node: Identifier completion39338
-Node: Automatic Smart Indentation40895
-Node: Formatting Parameter Lists43707
-Node: Automatic Casing44108
-Node: Statement Templates47347
-Node: Comment Handling48810
-Node: GNU Free Documentation License49336
-Node: Index74509
+Node: Top951
+Node: Overview2713
+Node: Installation4016
+Node: Customization5139
+Node: Non-standard file names6041
+Node: Other compiler7531
+Node: Other customization8029
+Node: Compiling Executing8677
+Node: Compile commands9343
+Node: Compiler errors12075
+Node: Project files12949
+Node: Project File Overview13647
+Node: GUI Editor15944
+Node: Project file variables16414
+Node: Compiling Examples23487
+Node: No project files24280
+Node: Set compiler options28961
+Node: Set source search path30921
+Node: Use GNAT project file33193
+Node: Use multiple GNAT project files35371
+Node: Moving Through Ada Code37255
+Node: Identifier completion39206
+Node: Automatic Smart Indentation40763
+Node: Formatting Parameter Lists43575
+Node: Automatic Casing43976
+Node: Statement Templates47215
+Node: Comment Handling48678
+Node: GNU Free Documentation License49204
+Node: Index74377
 
 End Tag Table

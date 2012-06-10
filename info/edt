@@ -2,8 +2,7 @@ This is ../../info/edt, produced by makeinfo version 4.13 from edt.texi.
 
 This file documents the EDT emulation package for Emacs.
 
-   Copyright (C) 1986, 1992, 1994, 1995, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
+   Copyright (C) 1986, 1992, 1994-1995, 1999-2012 Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -34,8 +33,7 @@ of DEC's EDT editor.
 
    This file documents the EDT emulation package for Emacs.
 
-   Copyright (C) 1986, 1992, 1994, 1995, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
+   Copyright (C) 1986, 1992, 1994-1995, 1999-2012 Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
@@ -1373,25 +1371,25 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top1089
-Node: Overview2716
-Node: Quick start3454
-Node: Changes4747
-Node: Goals8761
-Node: Supported terminals9894
-Node: Starting emulation11012
-Node: Platform-specific notes13111
-Node: Sun workstations13520
-Node: MS-DOS16313
-Node: GNU/Linux16847
-Node: Unix18362
-Node: Differences20545
-Node: Highlights23250
-Node: Customizing30843
-Node: edt-user.el32050
-Node: Words34249
-Node: Control keys35582
-Node: Scroll margins36243
-Node: GNU Free Documentation License37439
+Node: Top1015
+Node: Overview2568
+Node: Quick start3306
+Node: Changes4599
+Node: Goals8613
+Node: Supported terminals9746
+Node: Starting emulation10864
+Node: Platform-specific notes12963
+Node: Sun workstations13372
+Node: MS-DOS16165
+Node: GNU/Linux16699
+Node: Unix18214
+Node: Differences20397
+Node: Highlights23102
+Node: Customizing30695
+Node: edt-user.el31902
+Node: Words34101
+Node: Control keys35434
+Node: Scroll margins36095
+Node: GNU Free Documentation License37291
 
 End Tag Table

@@ -1,9 +1,7 @@
 This is ../../info/pcl-cvs, produced by makeinfo version 4.13 from
 pcl-cvs.texi.
 
-Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
-2012 Free Software Foundation, Inc.
+Copyright (C) 1991-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -33,9 +31,7 @@ nowhere near complete, so you are advised to use `M-x customize-group
 RET pcl-cvs <RET>' and to look at the documentation strings of the
 various commands and major modes for further information.
 
-   Copyright (C) 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
-2012 Free Software Foundation, Inc.
+   Copyright (C) 1991-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -109,9 +105,9 @@ File: pcl-cvs,  Node: About PCL-CVS,  Next: Getting started,  Prev: Top,  Up: To
 PCL-CVS is a front-end to CVS versions 1.9 and later.  It concisely
 shows the present status of a checked out module in an Emacs buffer and
 provides single-key access to the most frequently used CVS commands.
-For Emacs users accustomed to VC, PCL-CVS can be thought of as a
-replacement for VC-dired (*note VC Directory Mode: (emacs)VC Directory
-Mode.) specifically designed for CVS.
+Note that the `vc-dir' command (*note VC Directory Mode: (emacs)VC
+Directory Mode.) provides similar functionality, but for several
+version control systems, including CVS.
 
    PCL-CVS was originally written many years ago by Per Cederqvist who
 proudly maintained it until January 1996, at which point he released the
@@ -1911,38 +1907,38 @@ this manual.
 
 
 Tag Table:
-Node: Top1046
-Node: About PCL-CVS4397
-Node: Contributors5492
-Node: Getting started8037
-Node: Buffer contents10733
-Node: Selected files15022
-Node: Commands16656
-Node: Entering PCL-CVS18058
-Node: Setting flags20274
-Node: Updating the buffer22744
-Node: Movement commands23804
-Node: Marking files24381
-Node: Committing changes25517
-Node: Editing files27429
-Node: Getting info about files28336
-Node: Adding and removing files28850
-Node: Undoing changes30118
-Node: Removing handled entries30589
-Node: Ignoring files31444
-Node: Viewing differences31999
-Node: Invoking Ediff33571
-Node: Updating files34428
-Node: Tagging files34689
-Node: Miscellaneous commands35462
-Node: Log Edit Mode36427
-Node: Log View Mode37765
-Node: Customization38336
-Node: Customizing Faces41963
-Node: Bugs42758
-Node: GNU Free Documentation License44297
-Node: Function and Variable Index69479
-Node: Concept Index76885
-Node: Key Index85304
+Node: Top925
+Node: About PCL-CVS4155
+Node: Contributors5248
+Node: Getting started7793
+Node: Buffer contents10489
+Node: Selected files14778
+Node: Commands16412
+Node: Entering PCL-CVS17814
+Node: Setting flags20030
+Node: Updating the buffer22500
+Node: Movement commands23560
+Node: Marking files24137
+Node: Committing changes25273
+Node: Editing files27185
+Node: Getting info about files28092
+Node: Adding and removing files28606
+Node: Undoing changes29874
+Node: Removing handled entries30345
+Node: Ignoring files31200
+Node: Viewing differences31755
+Node: Invoking Ediff33327
+Node: Updating files34184
+Node: Tagging files34445
+Node: Miscellaneous commands35218
+Node: Log Edit Mode36183
+Node: Log View Mode37521
+Node: Customization38092
+Node: Customizing Faces41719
+Node: Bugs42514
+Node: GNU Free Documentation License44053
+Node: Function and Variable Index69235
+Node: Concept Index76641
+Node: Key Index85060
 
 End Tag Table

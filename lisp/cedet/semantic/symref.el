@@ -1,6 +1,6 @@
 ;;; semantic/symref.el --- Symbol Reference API
 
-;; Copyright (C) 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2008-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
 
@@ -69,7 +69,7 @@
 (defvar ede-minor-mode)
 (declare-function data-debug-new-buffer "data-debug")
 (declare-function data-debug-insert-object-slots "eieio-datadebug")
-(declare-function ede-toplevel "ede/files")
+(declare-function ede-toplevel "ede/base")
 (declare-function ede-project-root-directory "ede/files")
 (declare-function ede-up-directory "ede/files")
 
@@ -324,7 +324,7 @@ Use the  `semantic-symref-hit-tags' method to get this list.")
       (setq ans (list (car files))
 	    files (cdr files))
       (dolist (F files)
-	;; This algorithm for uniqing the file list depends on the
+	;; This algorithm for uniquifying the file list depends on the
 	;; tool in question providing all the hits in the same file
 	;; grouped together.
 	(when (not (string= F (car ans)))
@@ -508,5 +508,4 @@ over until it returns nil."
 ;; generated-autoload-load-name: "semantic/symref"
 ;; End:
 
-;; arch-tag: 928394b7-19ef-4f76-8cb3-37e9a9891984
 ;;; semantic/symref.el ends here

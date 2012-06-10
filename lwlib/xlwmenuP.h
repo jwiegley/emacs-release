@@ -1,7 +1,7 @@
 /* Internals of a lightweight menubar widget.
+
+Copyright (C) 2002-2012  Free Software Foundation, Inc.
 Copyright (C) 1992 Lucid, Inc.
-Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-  Free Software Foundation, Inc.
 
 This file is part of the Lucid Widget Library.
 
@@ -25,19 +25,28 @@ Boston, MA 02110-1301, USA.  */
 
 #include "xlwmenu.h"
 #include <X11/CoreP.h>
+#ifdef HAVE_XFT
+#include <X11/Xft/Xft.h>
+#endif
 
 /* Elements in the stack arrays. */
 typedef struct _window_state
 {
+  Widget        w;
   Window	window;
+  Pixmap        pixmap;
   Position	x;
   Position	y;
   Dimension	width;
   Dimension	height;
   Dimension	label_width;
+  int           max_rest_width;
 
   /* Width of toggle buttons or radio buttons.  */
   Dimension     button_width;
+#ifdef HAVE_XFT
+  XftDraw*      xft_draw;
+#endif
 } window_state;
 
 
@@ -49,6 +58,12 @@ typedef struct _XlwMenu_part
   XFontSet	fontSet;
   XFontSetExtents *font_extents;
 #endif
+#ifdef HAVE_XFT
+  int           default_face;
+  XftFont*      xft_font;
+  XftColor      xft_fg, xft_bg, xft_disabled_fg;
+#endif
+  String	fontName;
   XFontStruct*	font;
   Pixel		foreground;
   Pixel		disabled_foreground;
@@ -127,5 +142,3 @@ extern XlwMenuClassRec xlwMenuClassRec;
 
 #endif /* _XlwMenuP_h */
 
-/* arch-tag: 18d7fc41-ffa0-47a3-a49f-3469900c7a25
-   (do not change this comment) */

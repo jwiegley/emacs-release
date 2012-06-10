@@ -1,12 +1,10 @@
 ;;; org-mhe.el --- Support for links to MH-E messages from within Org-mode
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2004-2012 Free Software Foundation, Inc.
 
 ;; Author: Thomas Baumann <thomas dot baumann at ch dot tum dot de>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.33x
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -83,18 +81,28 @@ supported by MH-E."
   "Store a link to an MH-E folder or message."
   (when (or (equal major-mode 'mh-folder-mode)
 	    (equal major-mode 'mh-show-mode))
-    (let ((from (org-mhe-get-header "From:"))
-	  (to (org-mhe-get-header "To:"))
-	  (message-id (org-mhe-get-header "Message-Id:"))
-	  (subject (org-mhe-get-header "Subject:"))
-	  link desc)
-      (org-store-link-props :type "mh" :from from :to to
-			    :subject subject :message-id message-id)
-      (setq desc (org-email-link-description))
-      (setq link (org-make-link "mhe:" (org-mhe-get-message-real-folder) "#"
-				(org-remove-angle-brackets message-id)))
-      (org-add-link-props :link link :description desc)
-      link)))
+    (save-window-excursion
+      (let* ((from (org-mhe-get-header "From:"))
+	     (to (org-mhe-get-header "To:"))
+	     (message-id (org-mhe-get-header "Message-Id:"))
+	     (subject (org-mhe-get-header "Subject:"))
+	     (date (org-mhe-get-header "Date:"))
+	     (date-ts (and date (format-time-string
+				 (org-time-stamp-format t) (date-to-time date))))
+	     (date-ts-ia (and date (format-time-string
+				    (org-time-stamp-format t t)
+				    (date-to-time date))))
+	     link desc)
+	(org-store-link-props :type "mh" :from from :to to
+			      :subject subject :message-id message-id)
+	(when date
+	  (org-add-link-props :date date :date-timestamp date-ts
+			      :date-timestamp-inactive date-ts-ia))
+	(setq desc (org-email-link-description))
+	(setq link (org-make-link "mhe:" (org-mhe-get-message-real-folder) "#"
+				  (org-remove-angle-brackets message-id)))
+	(org-add-link-props :link link :description desc)
+	link))))
 
 (defun org-mhe-open (path)
   "Follow an MH-E message link specified by PATH."
@@ -181,7 +189,7 @@ you have a better idea of how to do this then please let us know."
     (if (equal major-mode 'mh-folder-mode)
 	(mh-show)
       (mh-show-show))
-    header-field)))
+    (org-trim header-field))))
 
 (defun org-mhe-follow-link (folder article)
   "Follow an MH-E link to FOLDER and ARTICLE.
@@ -215,7 +223,5 @@ folders."
       (error "Message not found"))))
 
 (provide 'org-mhe)
-
-;; arch-tag: dcb05484-8627-491d-a8c1-01dbd2bde4ae
 
 ;;; org-mhe.el ends here

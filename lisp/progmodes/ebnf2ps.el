@@ -1,7 +1,6 @@
 ;;; ebnf2ps.el --- translate an EBNF to a syntactic chart on PostScript
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012  Free Software Foundation, Inc.
 
 ;; Author: Vinicius Jose Latorre <viniciusjl@ig.com.br>
 ;; Maintainer: Vinicius Jose Latorre <viniciusjl@ig.com.br>
@@ -2085,7 +2084,7 @@ special."
   "*Specify extra width for arrow shape drawing.
 
 The extra width is used to avoid that the arrowhead and the terminal border
-overlap.  It depens on `ebnf-arrow-shape' and `ebnf-line-width'."
+overlap.  It depends on `ebnf-arrow-shape' and `ebnf-line-width'."
   :type 'number
   :version "22"
   :group 'ebnf-shape)
@@ -2230,8 +2229,8 @@ processed.
 
 See also `ebnf-print-buffer'."
   (interactive
-   (list (read-file-name "Directory containing EBNF files (print): "
-			 nil default-directory)))
+   (list (read-directory-name "Directory containing EBNF files (print): "
+			      nil default-directory)))
   (ebnf-log-header "(ebnf-print-directory %S)" directory)
   (ebnf-directory 'ebnf-print-buffer directory))
 
@@ -2288,8 +2287,8 @@ processed.
 
 See also `ebnf-spool-buffer'."
   (interactive
-   (list (read-file-name "Directory containing EBNF files (spool): "
-			 nil default-directory)))
+   (list (read-directory-name "Directory containing EBNF files (spool): "
+			      nil default-directory)))
   (ebnf-log-header "(ebnf-spool-directory %S)" directory)
   (ebnf-directory 'ebnf-spool-buffer directory))
 
@@ -2341,8 +2340,8 @@ processed.
 
 See also `ebnf-eps-buffer'."
   (interactive
-   (list (read-file-name "Directory containing EBNF files (EPS): "
-			 nil default-directory)))
+   (list (read-directory-name "Directory containing EBNF files (EPS): "
+			      nil default-directory)))
   (ebnf-log-header "(ebnf-eps-directory %S)" directory)
   (ebnf-directory 'ebnf-eps-buffer directory))
 
@@ -2426,8 +2425,8 @@ are processed.
 
 See also `ebnf-syntax-buffer'."
   (interactive
-   (list (read-file-name "Directory containing EBNF files (syntax): "
-			 nil default-directory)))
+   (list (read-directory-name "Directory containing EBNF files (syntax): "
+			      nil default-directory)))
   (ebnf-log-header "(ebnf-syntax-directory %S)" directory)
   (ebnf-directory 'ebnf-syntax-buffer directory))
 
@@ -3261,7 +3260,7 @@ See documentation for `ebnf-terminal-shape', `ebnf-non-terminal-shape' and
 
 % --- Corners
 
-%>corner Right Descendent: height arrow corner_RD
+%>corner Right Descendant: height arrow corner_RD
 %   _             | arrow
 %  /   height > 0 |  0 - none
 % |               |  1 - right
@@ -3300,7 +3299,7 @@ See documentation for `ebnf-terminal-shape', `ebnf-non-terminal-shape' and
  Gstroke
 }def
 
-%>corner Right Ascendent: height arrow corner_RA
+%>corner Right Ascendant: height arrow corner_RA
 %                 | arrow
 %    | height > 0 |  0 - none
 %   /             |  1 - right
@@ -3339,7 +3338,7 @@ See documentation for `ebnf-terminal-shape', `ebnf-non-terminal-shape' and
  Gstroke
 }def
 
-%>corner Left Descendent: height arrow corner_LD
+%>corner Left Descendant: height arrow corner_LD
 %  _              | arrow
 %   \\  height > 0 |  0 - none
 %    |            |  1 - right
@@ -3378,7 +3377,7 @@ See documentation for `ebnf-terminal-shape', `ebnf-non-terminal-shape' and
  Gstroke
 }def
 
-%>corner Left Ascendent: height arrow corner_LA
+%>corner Left Ascendant: height arrow corner_LA
 %                 | arrow
 % |    height > 0 |  0 - none
 %  \\              |  1 - right
@@ -4008,7 +4007,7 @@ See documentation for `ebnf-terminal-shape', `ebnf-non-terminal-shape' and
 /#ebnf2ps#dict 230 dict def
 #ebnf2ps#dict begin
 
-% Initiliaze variables to avoid name-conflicting with document variables.
+% Initialize variables to avoid name-conflicting with document variables.
 % This is the case when using `bind' operator.
 /-fillp-		0 def		/h		0 def
 /-ox-			0 def		/half		0 def
@@ -5038,7 +5037,7 @@ killed after process termination."
 		(when gen-func
 		  (setq error-msg "EMPTY RULES"
 			tree      (ebnf-eliminate-empty-rules tree))
-		  (setq error-msg "OPTMIZE"
+		  (setq error-msg "OPTIMIZE"
 			tree      (ebnf-optimize tree))
 		  (setq error-msg "DIMENSIONS"
 			tree      (ebnf-dimensions tree))
@@ -5279,7 +5278,7 @@ killed after process termination."
     (goto-char (point-min))
     (and (search-forward "%%Creator: " nil t)
 	 (not (search-forward "& ebnf2ps v"
-			      (save-excursion (end-of-line) (point))
+			      (line-end-position)
 			      t))
 	 (progn
 	   ;; adjust creator comment
@@ -6070,7 +6069,7 @@ killed after process termination."
 
 
 (defun ebnf-make-terminal1 (name gen-func dim-func)
-  (vector gen-func			; 0 generatore
+  (vector gen-func			; 0 generator
 	  'ignore			; 1 width fun
 	  dim-func			; 2 dimension fun
 	  0.0				; 3 entry
@@ -6395,5 +6394,4 @@ killed after process termination."
 
 (provide 'ebnf2ps)
 
-;; arch-tag: 148bc8af-5398-468b-b922-eeb7afef3e4f
 ;;; ebnf2ps.el ends here

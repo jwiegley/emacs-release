@@ -1,7 +1,6 @@
 ;;; ezimage --- Generalized Image management
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: file, tags, tools
@@ -60,7 +59,7 @@ IMAGESPEC is the image data, and DOCSTRING is documentation for the image."
 	   (defimage ,variable ,imagespec ,docstring)
 	   (put (quote ,variable) 'ezimage t)))
 
-;; This hack is for the ezimage install which has an icons direcory for
+;; This hack is for the ezimage install which has an icons directory for
 ;; the default icons to be used.
 ;; (add-to-list 'load-path
 ;; 	     (concat (file-name-directory
@@ -72,7 +71,7 @@ IMAGESPEC is the image data, and DOCSTRING is documentation for the image."
   ;; XEmacs.
   (if (not (fboundp 'make-glyph))
 
-      (defmacro defezimage (variable imagespec docstring)
+      (defmacro defezimage (variable _imagespec docstring)
 	"Don't bother loading up an image...
 Argument VARIABLE is the variable to define.
 Argument IMAGESPEC is the list defining the image to create.
@@ -240,7 +239,7 @@ IMAGESPEC is the image data, and DOCSTRING is documentation for the image."
     ("[ ]" . ezimage-page)
     ("{+}" . ezimage-box-plus)
     ("{-}" . ezimage-box-minus)
-    ;; Some vaguely representitive entries
+    ;; Some vaguely representative entries
     ("*" . ezimage-checkout)
     ("#" . ezimage-object)
     ("!" . ezimage-object-out-of-date)
@@ -258,9 +257,9 @@ Optional argument STRING is a string upon which to add text properties."
 	   (a (assoc bt ezimage-expand-image-button-alist)))
       ;; Regular images (created with `insert-image' are intangible
       ;; which (I suppose) make them more compatible with XEmacs 21.
-      ;; Unfortunatly, there is a giant pile o code dependent on the
+      ;; Unfortunately, there is a giant pile of code dependent on the
       ;; underlying text.  This means if we leave it tangible, then I
-      ;; don't have to change said giant piles o code.
+      ;; don't have to change said giant piles of code.
       (if (and a (symbol-value (cdr a)))
 	  (ezimage-insert-over-text (symbol-value (cdr a))
 				    start
@@ -350,5 +349,4 @@ See `ezimage-expand-image-button-alist' for details."
 
 (provide 'ezimage)
 
-;; arch-tag: d4ea2d93-3c7a-4cb3-b5a6-c1b9178183aa
 ;;; sb-image.el ends here

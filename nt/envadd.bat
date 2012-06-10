@@ -1,8 +1,7 @@
 rem  Hack to change/add environment variables in the makefiles for the
 rem  Windows platform.
 
-rem  Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-rem    Free Software Foundation, Inc.
+rem Copyright (C) 2003-2012  Free Software Foundation, Inc.
 
 rem  This file is part of GNU Emacs.
 
@@ -42,6 +41,3 @@ shift
 rem Now, run the command line
 %1 %2 %3 %4 %5 %6 %7 %8 %9
 
-goto skipArchTag
-   arch-tag: 148c5181-dbce-43ae-bba6-1cc6e2a9ea75
-:skipArchTag

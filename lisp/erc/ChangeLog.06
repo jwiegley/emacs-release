@@ -18,7 +18,7 @@
 	(erc-nickserv-identify-on-connect)
 	(erc-nickserv-identify-on-nick-change): Handle 'both method.
 
-2006-12-28  Leo  <sdl.web@gmail.com>  (tiny change)
+2006-12-28  Leo Liu  <sdl.web@gmail.com>  (tiny change)
 
 	* erc.el (erc-iswitchb): Wrap body in unwind-protect so that
 	hitting C-g does not leave iswitchb-mode on.
@@ -51,7 +51,7 @@
 	* erc.el (erc-open): Restore old point correctly, or at least get
 	closer to doing so than before.
 
-2006-12-13  Leo  <sdl.web@gmail.com>  (tiny change)
+2006-12-13  Leo Liu  <sdl.web@gmail.com>  (tiny change)
 
 	* erc.el (erc-iswitchb): Temporarily enable iswitchb mode if it
 	isn't active already, instead of leaving it on.
@@ -174,7 +174,7 @@
 	* erc-nicklist.el (erc-nicklist-insert-contents): Add missing
 	parenthesis.  Thanks to Stephan Stahl for the report.
 
-2006-09-10  Eric Hanchrow  <offby1@blarg.net>  (tiny change)
+2006-09-10  Eric Hanchrow  <offby1@blarg.net>
 
 	* erc.el (erc-cmd-IGNORE): Prompt user if this might be a regexp
 	instead of a single user.
@@ -1430,7 +1430,7 @@
 
 See ChangeLog.05 for earlier changes.
 
-    Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+	Copyright (C) 2006-2012 Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
@@ -1452,4 +1452,3 @@ See ChangeLog.05 for earlier changes.
 ;; add-log-time-zone-rule: t
 ;; End:
 
-;; arch-tag: 865a75f6-2bcb-46df-bf0c-b514dadf688a

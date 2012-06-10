@@ -1,6 +1,5 @@
 /* Code for doing intervals.
-   Copyright (C) 1993, 1994, 1995, 1997, 1998, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 1993-1995, 1997-1998, 2001-2012  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -40,6 +39,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 #include <setjmp.h>
+#include <intprops.h>
 #include "lisp.h"
 #include "intervals.h"
 #include "buffer.h"
@@ -52,9 +52,10 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #define TMEM(sym, set) (CONSP (set) ? ! NILP (Fmemq (sym, set)) : ! NILP (set))
 
-Lisp_Object merge_properties_sticky ();
-static INTERVAL reproduce_tree P_ ((INTERVAL, INTERVAL));
-static INTERVAL reproduce_tree_obj P_ ((INTERVAL, Lisp_Object));
+static Lisp_Object merge_properties_sticky (Lisp_Object, Lisp_Object);
+static INTERVAL merge_interval_right (INTERVAL);
+static INTERVAL reproduce_tree (INTERVAL, INTERVAL);
+static INTERVAL reproduce_tree_obj (INTERVAL, Lisp_Object);
 
 /* Utility functions for intervals.  */
 
@@ -62,8 +63,7 @@ static INTERVAL reproduce_tree_obj P_ ((INTERVAL, Lisp_Object));
 /* Create the root interval of some object, a buffer or string.  */
 
 INTERVAL
-create_root_interval (parent)
-     Lisp_Object parent;
+create_root_interval (Lisp_Object parent)
 {
   INTERVAL new;
 
@@ -95,8 +95,7 @@ create_root_interval (parent)
 /* Make the interval TARGET have exactly the properties of SOURCE */
 
 void
-copy_properties (source, target)
-     register INTERVAL source, target;
+copy_properties (register INTERVAL source, register INTERVAL target)
 {
   if (DEFAULT_INTERVAL_P (source) && DEFAULT_INTERVAL_P (target))
     return;
@@ -110,8 +109,7 @@ copy_properties (source, target)
    is added to TARGET if TARGET has no such property as yet.  */
 
 static void
-merge_properties (source, target)
-     register INTERVAL source, target;
+merge_properties (register INTERVAL source, register INTERVAL target)
 {
   register Lisp_Object o, sym, val;
 
@@ -149,8 +147,7 @@ merge_properties (source, target)
    0 otherwise.  */
 
 int
-intervals_equal (i0, i1)
-     INTERVAL i0, i1;
+intervals_equal (INTERVAL i0, INTERVAL i1)
 {
   register Lisp_Object i0_cdr, i0_sym;
   register Lisp_Object i1_cdr, i1_val;
@@ -206,10 +203,7 @@ intervals_equal (i0, i1)
    Pass FUNCTION two args: an interval, and ARG.  */
 
 void
-traverse_intervals_noorder (tree, function, arg)
-     INTERVAL tree;
-     void (* function) P_ ((INTERVAL, Lisp_Object));
-     Lisp_Object arg;
+traverse_intervals_noorder (INTERVAL tree, void (*function) (INTERVAL, Lisp_Object), Lisp_Object arg)
 {
   /* Minimize stack usage.  */
   while (!NULL_INTERVAL_P (tree))
@@ -229,11 +223,8 @@ traverse_intervals_noorder (tree, function, arg)
    Pass FUNCTION two args: an interval, and ARG.  */
 
 void
-traverse_intervals (tree, position, function, arg)
-     INTERVAL tree;
-     int position;
-     void (* function) P_ ((INTERVAL, Lisp_Object));
-     Lisp_Object arg;
+traverse_intervals (INTERVAL tree, EMACS_INT position,
+		    void (*function) (INTERVAL, Lisp_Object), Lisp_Object arg)
 {
   while (!NULL_INTERVAL_P (tree))
     {
@@ -256,8 +247,7 @@ static int zero_length;
 INTERVAL search_interval, found_interval;
 
 void
-check_for_interval (i)
-     register INTERVAL i;
+check_for_interval (INTERVAL i)
 {
   if (i == search_interval)
     {
@@ -267,8 +257,7 @@ check_for_interval (i)
 }
 
 INTERVAL
-search_for_interval (i, tree)
-     register INTERVAL i, tree;
+search_for_interval (INTERVAL i, INTERVAL tree)
 {
   icount = 0;
   search_interval = i;
@@ -278,8 +267,7 @@ search_for_interval (i, tree)
 }
 
 static void
-inc_interval_count (i)
-     INTERVAL i;
+inc_interval_count (INTERVAL i)
 {
   icount++;
   if (LENGTH (i) == 0)
@@ -289,8 +277,7 @@ inc_interval_count (i)
 }
 
 int
-count_intervals (i)
-     register INTERVAL i;
+count_intervals (INTERVAL i)
 {
   icount = 0;
   idepth = 0;
@@ -301,8 +288,7 @@ count_intervals (i)
 }
 
 static INTERVAL
-root_interval (interval)
-     INTERVAL interval;
+root_interval (INTERVAL interval)
 {
   register INTERVAL i = interval;
 
@@ -322,13 +308,12 @@ root_interval (interval)
      c		  c
 */
 
-static INLINE INTERVAL
-rotate_right (interval)
-     INTERVAL interval;
+static inline INTERVAL
+rotate_right (INTERVAL interval)
 {
   INTERVAL i;
   INTERVAL B = interval->left;
-  int old_total = interval->total_length;
+  EMACS_INT old_total = interval->total_length;
 
   /* Deal with any Parent of A;  make it point to B.  */
   if (! ROOT_INTERVAL_P (interval))
@@ -370,13 +355,12 @@ rotate_right (interval)
     c               c
 */
 
-static INLINE INTERVAL
-rotate_left (interval)
-     INTERVAL interval;
+static inline INTERVAL
+rotate_left (INTERVAL interval)
 {
   INTERVAL i;
   INTERVAL B = interval->right;
-  int old_total = interval->total_length;
+  EMACS_INT old_total = interval->total_length;
 
   /* Deal with any parent of A;  make it point to B.  */
   if (! ROOT_INTERVAL_P (interval))
@@ -413,10 +397,9 @@ rotate_left (interval)
    themselves are already balanced.  */
 
 static INTERVAL
-balance_an_interval (i)
-     INTERVAL i;
+balance_an_interval (INTERVAL i)
 {
-  register int old_diff, new_diff;
+  register EMACS_INT old_diff, new_diff;
 
   while (1)
     {
@@ -450,9 +433,8 @@ balance_an_interval (i)
 /* Balance INTERVAL, potentially stuffing it back into its parent
    Lisp Object.  */
 
-static INLINE INTERVAL
-balance_possible_root_interval (interval)
-     register INTERVAL interval;
+static inline INTERVAL
+balance_possible_root_interval (register INTERVAL interval)
 {
   Lisp_Object parent;
   int have_parent = 0;
@@ -482,8 +464,7 @@ balance_possible_root_interval (interval)
    (the amount of text).  */
 
 static INTERVAL
-balance_intervals_internal (tree)
-     register INTERVAL tree;
+balance_intervals_internal (register INTERVAL tree)
 {
   /* Balance within each side.  */
   if (tree->left)
@@ -496,8 +477,7 @@ balance_intervals_internal (tree)
 /* Advertised interface to balance intervals.  */
 
 INTERVAL
-balance_intervals (tree)
-     INTERVAL tree;
+balance_intervals (INTERVAL tree)
 {
   if (tree == NULL_INTERVAL)
     return NULL_INTERVAL;
@@ -519,13 +499,11 @@ balance_intervals (tree)
    it is still a root after this operation.  */
 
 INTERVAL
-split_interval_right (interval, offset)
-     INTERVAL interval;
-     int offset;
+split_interval_right (INTERVAL interval, EMACS_INT offset)
 {
   INTERVAL new = make_interval ();
-  int position = interval->position;
-  int new_length = LENGTH (interval) - offset;
+  EMACS_INT position = interval->position;
+  EMACS_INT new_length = LENGTH (interval) - offset;
 
   new->position = position + offset;
   SET_INTERVAL_PARENT (new, interval);
@@ -566,12 +544,10 @@ split_interval_right (interval, offset)
    it is still a root after this operation.  */
 
 INTERVAL
-split_interval_left (interval, offset)
-     INTERVAL interval;
-     int offset;
+split_interval_left (INTERVAL interval, EMACS_INT offset)
 {
   INTERVAL new = make_interval ();
-  int new_length = offset;
+  EMACS_INT new_length = offset;
 
   new->position = interval->position;
   interval->position = interval->position + offset;
@@ -607,9 +583,8 @@ split_interval_left (interval, offset)
    Don't use this function on an interval which is the child
    of another interval!  */
 
-int
-interval_start_pos (source)
-     INTERVAL source;
+static int
+interval_start_pos (INTERVAL source)
 {
   Lisp_Object parent;
 
@@ -635,13 +610,11 @@ interval_start_pos (source)
    will update this cache based on the result of find_interval.  */
 
 INTERVAL
-find_interval (tree, position)
-     register INTERVAL tree;
-     register int position;
+find_interval (register INTERVAL tree, register EMACS_INT position)
 {
   /* The distance from the left edge of the subtree at TREE
                     to POSITION.  */
-  register int relative_position;
+  register EMACS_INT relative_position;
 
   if (NULL_INTERVAL_P (tree))
     return NULL_INTERVAL;
@@ -691,11 +664,10 @@ find_interval (tree, position)
    find_interval).  */
 
 INTERVAL
-next_interval (interval)
-     register INTERVAL interval;
+next_interval (register INTERVAL interval)
 {
   register INTERVAL i = interval;
-  register int next_position;
+  register EMACS_INT next_position;
 
   if (NULL_INTERVAL_P (i))
     return NULL_INTERVAL;
@@ -731,8 +703,7 @@ next_interval (interval)
    find_interval).  */
 
 INTERVAL
-previous_interval (interval)
-     register INTERVAL interval;
+previous_interval (register INTERVAL interval)
 {
   register INTERVAL i;
 
@@ -771,9 +742,7 @@ previous_interval (interval)
    To speed up the process, we assume that the ->position of
    I and all its parents is already uptodate.  */
 INTERVAL
-update_interval (i, pos)
-     register INTERVAL i;
-     int pos;
+update_interval (register INTERVAL i, EMACS_INT pos)
 {
   if (NULL_INTERVAL_P (i))
     return NULL_INTERVAL;
@@ -805,7 +774,7 @@ update_interval (i, pos)
 	      i = i->right;		/* Move to the right child */
 	    }
 	  else if (NULL_PARENT (i))
-	    error ("Point %d after end of properties", pos);
+	    error ("Point %"pI"d after end of properties", pos);
 	  else
             i = INTERVAL_PARENT (i);
 	  continue;
@@ -830,11 +799,10 @@ update_interval (i, pos)
    to the root.  */
 
 static INTERVAL
-adjust_intervals_for_insertion (tree, position, length)
-     INTERVAL tree;
-     int position, length;
+adjust_intervals_for_insertion (INTERVAL tree, EMACS_INT position,
+				EMACS_INT length)
 {
-  register int relative_position;
+  register EMACS_INT relative_position;
   register INTERVAL this;
 
   if (TOTAL_LENGTH (tree) == 0)	/* Paranoia */
@@ -892,15 +860,14 @@ adjust_intervals_for_insertion (tree, position, length)
    this text, and make it have the merged properties of both ends.  */
 
 static INTERVAL
-adjust_intervals_for_insertion (tree, position, length)
-     INTERVAL tree;
-     int position, length;
+adjust_intervals_for_insertion (INTERVAL tree,
+				EMACS_INT position, EMACS_INT length)
 {
   register INTERVAL i;
   register INTERVAL temp;
   int eobp = 0;
   Lisp_Object parent;
-  int offset;
+  EMACS_INT offset;
 
   if (TOTAL_LENGTH (tree) == 0)	/* Paranoia */
     abort ();
@@ -1118,9 +1085,8 @@ FR     8  9  A  B
        left rear-nonsticky = t,   right front-sticky = nil (inherit none)
 */
 
-Lisp_Object
-merge_properties_sticky (pleft, pright)
-     Lisp_Object pleft, pright;
+static Lisp_Object
+merge_properties_sticky (Lisp_Object pleft, Lisp_Object pright)
 {
   register Lisp_Object props, front, rear;
   Lisp_Object lfront, lrear, rfront, rrear;
@@ -1256,11 +1222,10 @@ merge_properties_sticky (pleft, pright)
    storing the resulting subtree into its parent.  */
 
 static INTERVAL
-delete_node (i)
-     register INTERVAL i;
+delete_node (register INTERVAL i)
 {
   register INTERVAL migrate, this;
-  register int migrate_amt;
+  register EMACS_INT migrate_amt;
 
   if (NULL_INTERVAL_P (i->left))
     return i->right;
@@ -1289,12 +1254,11 @@ delete_node (i)
    I is presumed to be empty; that is, no adjustments are made
    for the length of I.  */
 
-void
-delete_interval (i)
-     register INTERVAL i;
+static void
+delete_interval (register INTERVAL i)
 {
   register INTERVAL parent;
-  int amt = LENGTH (i);
+  EMACS_INT amt = LENGTH (i);
 
   if (amt > 0)			/* Only used on zero-length intervals now.  */
     abort ();
@@ -1344,31 +1308,30 @@ delete_interval (i)
    Do this by recursing down TREE to the interval in question, and
    deleting the appropriate amount of text.  */
 
-static int
-interval_deletion_adjustment (tree, from, amount)
-     register INTERVAL tree;
-     register int from, amount;
+static EMACS_INT
+interval_deletion_adjustment (register INTERVAL tree, register EMACS_INT from,
+			      register EMACS_INT amount)
 {
-  register int relative_position = from;
+  register EMACS_INT relative_position = from;
 
   if (NULL_INTERVAL_P (tree))
     return 0;
 
-  /* Left branch */
+  /* Left branch.  */
   if (relative_position < LEFT_TOTAL_LENGTH (tree))
     {
-      int subtract = interval_deletion_adjustment (tree->left,
-						   relative_position,
-						   amount);
+      EMACS_INT subtract = interval_deletion_adjustment (tree->left,
+							 relative_position,
+							 amount);
       tree->total_length -= subtract;
       CHECK_TOTAL_LENGTH (tree);
       return subtract;
     }
-  /* Right branch */
+  /* Right branch.  */
   else if (relative_position >= (TOTAL_LENGTH (tree)
 				 - RIGHT_TOTAL_LENGTH (tree)))
     {
-      int subtract;
+      EMACS_INT subtract;
 
       relative_position -= (tree->total_length
 			    - RIGHT_TOTAL_LENGTH (tree));
@@ -1383,9 +1346,9 @@ interval_deletion_adjustment (tree, from, amount)
   else
     {
       /* How much can we delete from this interval?  */
-      int my_amount = ((tree->total_length
-			- RIGHT_TOTAL_LENGTH (tree))
-		       - relative_position);
+      EMACS_INT my_amount = ((tree->total_length
+			       - RIGHT_TOTAL_LENGTH (tree))
+			      - relative_position);
 
       if (amount > my_amount)
 	amount = my_amount;
@@ -1407,14 +1370,13 @@ interval_deletion_adjustment (tree, from, amount)
    buffer position, i.e. origin 1).  */
 
 static void
-adjust_intervals_for_deletion (buffer, start, length)
-     struct buffer *buffer;
-     int start, length;
+adjust_intervals_for_deletion (struct buffer *buffer,
+			       EMACS_INT start, EMACS_INT length)
 {
-  register int left_to_delete = length;
+  register EMACS_INT left_to_delete = length;
   register INTERVAL tree = BUF_INTERVALS (buffer);
   Lisp_Object parent;
-  int offset;
+  EMACS_INT offset;
 
   GET_INTERVAL_OBJECT (parent, tree);
   offset = (BUFFERP (parent) ? BUF_BEG (XBUFFER (parent)) : 0);
@@ -1457,12 +1419,14 @@ adjust_intervals_for_deletion (buffer, start, length)
 /* Make the adjustments necessary to the interval tree of BUFFER to
    represent an addition or deletion of LENGTH characters starting
    at position START.  Addition or deletion is indicated by the sign
-   of LENGTH.  */
+   of LENGTH.
 
-INLINE void
-offset_intervals (buffer, start, length)
-     struct buffer *buffer;
-     int start, length;
+   The two inline functions (one static) pacify Sun C 5.8, a pre-C99
+   compiler that does not allow calling a static function (here,
+   adjust_intervals_for_deletion) from a non-static inline function.  */
+
+void
+offset_intervals (struct buffer *buffer, EMACS_INT start, EMACS_INT length)
 {
   if (NULL_INTERVAL_P (BUF_INTERVALS (buffer)) || length == 0)
     return;
@@ -1470,7 +1434,10 @@ offset_intervals (buffer, start, length)
   if (length > 0)
     adjust_intervals_for_insertion (BUF_INTERVALS (buffer), start, length);
   else
-    adjust_intervals_for_deletion (buffer, start, -length);
+    {
+      IF_LINT (if (length < - TYPE_MAXIMUM (EMACS_INT)) abort ();)
+      adjust_intervals_for_deletion (buffer, start, -length);
+    }
 }
 
 /* Merge interval I with its lexicographic successor. The resulting
@@ -1482,11 +1449,10 @@ offset_intervals (buffer, start, length)
    The caller must verify that this is not the last (rightmost)
    interval.  */
 
-INTERVAL
-merge_interval_right (i)
-     register INTERVAL i;
+static INTERVAL
+merge_interval_right (register INTERVAL i)
 {
-  register int absorb = LENGTH (i);
+  register EMACS_INT absorb = LENGTH (i);
   register INTERVAL successor;
 
   /* Zero out this interval.  */
@@ -1540,10 +1506,9 @@ merge_interval_right (i)
    The caller must verify that this is not the first (leftmost) interval.  */
 
 INTERVAL
-merge_interval_left (i)
-     register INTERVAL i;
+merge_interval_left (register INTERVAL i)
 {
-  register int absorb = LENGTH (i);
+  register EMACS_INT absorb = LENGTH (i);
   register INTERVAL predecessor;
 
   /* Zero out this interval.  */
@@ -1595,12 +1560,11 @@ merge_interval_left (i)
    the pointers of the copy.  */
 
 static INTERVAL
-reproduce_tree (source, parent)
-     INTERVAL source, parent;
+reproduce_tree (INTERVAL source, INTERVAL parent)
 {
   register INTERVAL t = make_interval ();
 
-  bcopy (source, t, INTERVAL_SIZE);
+  memcpy (t, source, INTERVAL_SIZE);
   copy_properties (source, t);
   SET_INTERVAL_PARENT (t, parent);
   if (! NULL_LEFT_CHILD (source))
@@ -1612,13 +1576,11 @@ reproduce_tree (source, parent)
 }
 
 static INTERVAL
-reproduce_tree_obj (source, parent)
-     INTERVAL source;
-     Lisp_Object parent;
+reproduce_tree_obj (INTERVAL source, Lisp_Object parent)
 {
   register INTERVAL t = make_interval ();
 
-  bcopy (source, t, INTERVAL_SIZE);
+  memcpy (t, source, INTERVAL_SIZE);
   copy_properties (source, t);
   SET_INTERVAL_OBJECT (t, parent);
   if (! NULL_LEFT_CHILD (source))
@@ -1640,9 +1602,7 @@ reproduce_tree_obj (source, parent)
    interval.  */
 
 static INTERVAL
-make_new_interval (intervals, start, length)
-     INTERVAL intervals;
-     int start, length;
+make_new_interval (INTERVAL intervals, EMACS_INT start, EMACS_INT length)
 {
   INTERVAL slot;
 
@@ -1714,15 +1674,13 @@ make_new_interval (intervals, start, length)
    text...  */
 
 void
-graft_intervals_into_buffer (source, position, length, buffer, inherit)
-     INTERVAL source;
-     int position, length;
-     struct buffer *buffer;
-     int inherit;
+graft_intervals_into_buffer (INTERVAL source, EMACS_INT position,
+			     EMACS_INT length, struct buffer *buffer,
+			     int inherit)
 {
-  register INTERVAL under, over, this, prev;
+  register INTERVAL under, over, this;
   register INTERVAL tree;
-  int over_used;
+  EMACS_INT over_used;
 
   tree = BUF_INTERVALS (buffer);
 
@@ -1741,56 +1699,37 @@ graft_intervals_into_buffer (source, position, length, buffer, inherit)
 				 Qnil, buf, 0);
 	}
       if (! NULL_INTERVAL_P (BUF_INTERVALS (buffer)))
-	/* Shouldn't be necessary.  -stef  */
+	/* Shouldn't be necessary.  --Stef  */
 	BUF_INTERVALS (buffer) = balance_an_interval (BUF_INTERVALS (buffer));
       return;
     }
 
-  if (NULL_INTERVAL_P (tree))
-    {
-      /* The inserted text constitutes the whole buffer, so
+  eassert (length == TOTAL_LENGTH (source));
+
+  if ((BUF_Z (buffer) - BUF_BEG (buffer)) == length)
+    {  /* The inserted text constitutes the whole buffer, so
 	 simply copy over the interval structure.  */
-      if ((BUF_Z (buffer) - BUF_BEG (buffer)) == TOTAL_LENGTH (source))
-	{
 	  Lisp_Object buf;
 	  XSETBUFFER (buf, buffer);
 	  BUF_INTERVALS (buffer) = reproduce_tree_obj (source, buf);
-	  BUF_INTERVALS (buffer)->position = BEG;
-	  BUF_INTERVALS (buffer)->up_obj = 1;
-
-	  /* Explicitly free the old tree here?  */
-
+      BUF_INTERVALS (buffer)->position = BUF_BEG (buffer);
+      eassert (BUF_INTERVALS (buffer)->up_obj == 1);
 	  return;
 	}
-
-      /* Create an interval tree in which to place a copy
+  else if (NULL_INTERVAL_P (tree))
+    { /* Create an interval tree in which to place a copy
 	 of the intervals of the inserted string.  */
-      {
 	Lisp_Object buf;
 	XSETBUFFER (buf, buffer);
 	tree = create_root_interval (buf);
       }
-    }
-  else if (TOTAL_LENGTH (tree) == TOTAL_LENGTH (source))
-    /* If the buffer contains only the new string, but
-       there was already some interval tree there, then it may be
-       some zero length intervals.  Eventually, do something clever
-       about inserting properly.  For now, just waste the old intervals.  */
-    {
-      BUF_INTERVALS (buffer) = reproduce_tree (source, INTERVAL_PARENT (tree));
-      BUF_INTERVALS (buffer)->position = BEG;
-      BUF_INTERVALS (buffer)->up_obj = 1;
-      /* Explicitly free the old tree here.  */
-
-      return;
-    }
   /* Paranoia -- the text has already been added, so this buffer
      should be of non-zero length.  */
   else if (TOTAL_LENGTH (tree) == 0)
     abort ();
 
   this = under = find_interval (tree, position);
-  if (NULL_INTERVAL_P (under))	/* Paranoia */
+  if (NULL_INTERVAL_P (under))	/* Paranoia.  */
     abort ();
   over = find_interval (source, interval_start_pos (source));
 
@@ -1810,7 +1749,8 @@ graft_intervals_into_buffer (source, position, length, buffer, inherit)
       /* This call may have some effect because previous_interval may
          update `position' fields of intervals.  Thus, don't ignore it
          for the moment.  Someone please tell me the truth (K.Handa).  */
-      prev = previous_interval (under);
+      INTERVAL prev = previous_interval (under);
+      (void) prev;
 #if 0
       /* But, this code surely has no effect.  And, anyway,
          END_NONSTICKY_P is unreliable now.  */
@@ -1876,18 +1816,13 @@ graft_intervals_into_buffer (source, position, length, buffer, inherit)
    and for PROP appearing on the default-text-properties list.  */
 
 Lisp_Object
-textget (plist, prop)
-     Lisp_Object plist;
-     register Lisp_Object prop;
+textget (Lisp_Object plist, register Lisp_Object prop)
 {
   return lookup_char_property (plist, prop, 1);
 }
 
 Lisp_Object
-lookup_char_property (plist, prop, textprop)
-     Lisp_Object plist;
-     register Lisp_Object prop;
-     int textprop;
+lookup_char_property (Lisp_Object plist, register Lisp_Object prop, int textprop)
 {
   register Lisp_Object tail, fallback = Qnil;
 
@@ -1922,19 +1857,10 @@ lookup_char_property (plist, prop, textprop)
 }
 
 
-/* Set point "temporarily", without checking any text properties.  */
-
-INLINE void
-temp_set_point (struct buffer *buffer, EMACS_INT charpos)
-{
-  temp_set_point_both (buffer, charpos,
-		       buf_charpos_to_bytepos (buffer, charpos));
-}
-
 /* Set point in BUFFER "temporarily" to CHARPOS, which corresponds to
    byte position BYTEPOS.  */
 
-INLINE void
+void
 temp_set_point_both (struct buffer *buffer,
 		     EMACS_INT charpos, EMACS_INT bytepos)
 {
@@ -1952,6 +1878,15 @@ temp_set_point_both (struct buffer *buffer,
   SET_BUF_PT_BOTH (buffer, charpos, bytepos);
 }
 
+/* Set point "temporarily", without checking any text properties.  */
+
+void
+temp_set_point (struct buffer *buffer, EMACS_INT charpos)
+{
+  temp_set_point_both (buffer, charpos,
+		       buf_charpos_to_bytepos (buffer, charpos));
+}
+
 /* Set point in BUFFER to CHARPOS.  If the target position is
    before an intangible character, move to an ok place.  */
 
@@ -1965,16 +1900,16 @@ set_point (EMACS_INT charpos)
    current buffer, and the invisible property has a `stickiness' such that
    inserting a character at position POS would inherit the property it,
    return POS + ADJ, otherwise return POS.  If TEST_INTANG is non-zero,
-   then intangibility is required as well as invisibleness.
+   then intangibility is required as well as invisibility.
 
    TEST_OFFS should be either 0 or -1, and ADJ should be either 1 or -1.
 
    Note that `stickiness' is determined by overlay marker insertion types,
    if the invisible property comes from an overlay.  */
 
-static int
-adjust_for_invis_intang (pos, test_offs, adj, test_intang)
-     int pos, test_offs, adj, test_intang;
+static EMACS_INT
+adjust_for_invis_intang (EMACS_INT pos, EMACS_INT test_offs, EMACS_INT adj,
+			 int test_intang)
 {
   Lisp_Object invis_propval, invis_overlay;
   Lisp_Object test_pos;
@@ -2025,7 +1960,7 @@ set_point_both (EMACS_INT charpos, EMACS_INT bytepos)
   int have_overlays;
   EMACS_INT original_position;
 
-  current_buffer->point_before_scroll = Qnil;
+  BVAR (current_buffer, point_before_scroll) = Qnil;
 
   if (charpos == PT)
     return;
@@ -2236,8 +2171,7 @@ set_point_both (EMACS_INT charpos, EMACS_INT bytepos)
    segment that reaches all the way to point.  */
 
 void
-move_if_not_intangible (position)
-     int position;
+move_if_not_intangible (EMACS_INT position)
 {
   Lisp_Object pos;
   Lisp_Object intangible_propval;
@@ -2300,11 +2234,8 @@ move_if_not_intangible (position)
    nil means the current buffer. */
 
 int
-get_property_and_range (pos, prop, val, start, end, object)
-     int pos;
-     Lisp_Object prop, *val;
-     EMACS_INT *start, *end;
-     Lisp_Object object;
+get_property_and_range (EMACS_INT pos, Lisp_Object prop, Lisp_Object *val,
+			EMACS_INT *start, EMACS_INT *end, Lisp_Object object)
 {
   INTERVAL i, prev, next;
 
@@ -2347,13 +2278,11 @@ get_property_and_range (pos, prop, val, start, end, object)
    POSITION must be in the accessible part of BUFFER.  */
 
 Lisp_Object
-get_local_map (position, buffer, type)
-     register int position;
-     register struct buffer *buffer;
-     Lisp_Object type;
+get_local_map (register EMACS_INT position, register struct buffer *buffer,
+	       Lisp_Object type)
 {
   Lisp_Object prop, lispy_position, lispy_buffer;
-  int old_begv, old_zv, old_begv_byte, old_zv_byte;
+  EMACS_INT old_begv, old_zv, old_begv_byte, old_zv_byte;
 
   /* Perhaps we should just change `position' to the limit.  */
   if (position > BUF_ZV (buffer) || position < BUF_BEGV (buffer))
@@ -2392,7 +2321,7 @@ get_local_map (position, buffer, type)
   if (EQ (type, Qkeymap))
     return Qnil;
   else
-    return buffer->keymap;
+    return BVAR (buffer, keymap);
 }
 
 /* Produce an interval tree reflecting the intervals in
@@ -2400,12 +2329,10 @@ get_local_map (position, buffer, type)
    The new interval tree has no parent and has a starting-position of 0.  */
 
 INTERVAL
-copy_intervals (tree, start, length)
-     INTERVAL tree;
-     int start, length;
+copy_intervals (INTERVAL tree, EMACS_INT start, EMACS_INT length)
 {
   register INTERVAL i, new, t;
-  register int got, prevlen;
+  register EMACS_INT got, prevlen;
 
   if (NULL_INTERVAL_P (tree) || length <= 0)
     return NULL_INTERVAL;
@@ -2442,11 +2369,9 @@ copy_intervals (tree, start, length)
 
 /* Give STRING the properties of BUFFER from POSITION to LENGTH.  */
 
-INLINE void
-copy_intervals_to_string (string, buffer, position, length)
-     Lisp_Object string;
-     struct buffer *buffer;
-     int position, length;
+void
+copy_intervals_to_string (Lisp_Object string, struct buffer *buffer,
+			  EMACS_INT position, EMACS_INT length)
 {
   INTERVAL interval_copy = copy_intervals (BUF_INTERVALS (buffer),
 					   position, length);
@@ -2461,12 +2386,11 @@ copy_intervals_to_string (string, buffer, position, length)
    Assume they have identical characters.  */
 
 int
-compare_string_intervals (s1, s2)
-     Lisp_Object s1, s2;
+compare_string_intervals (Lisp_Object s1, Lisp_Object s2)
 {
   INTERVAL i1, i2;
-  int pos = 0;
-  int end = SCHARS (s1);
+  EMACS_INT pos = 0;
+  EMACS_INT end = SCHARS (s1);
 
   i1 = find_interval (STRING_INTERVALS (s1), 0);
   i2 = find_interval (STRING_INTERVALS (s2), 0);
@@ -2474,9 +2398,9 @@ compare_string_intervals (s1, s2)
   while (pos < end)
     {
       /* Determine how far we can go before we reach the end of I1 or I2.  */
-      int len1 = (i1 != 0 ? INTERVAL_LAST_POS (i1) : end) - pos;
-      int len2 = (i2 != 0 ? INTERVAL_LAST_POS (i2) : end) - pos;
-      int distance = min (len1, len2);
+      EMACS_INT len1 = (i1 != 0 ? INTERVAL_LAST_POS (i1) : end) - pos;
+      EMACS_INT len2 = (i2 != 0 ? INTERVAL_LAST_POS (i2) : end) - pos;
+      EMACS_INT distance = min (len1, len2);
 
       /* If we ever find a mismatch between the strings,
 	 they differ.  */
@@ -2500,10 +2424,9 @@ compare_string_intervals (s1, s2)
    START_BYTE ... END_BYTE in bytes.  */
 
 static void
-set_intervals_multibyte_1 (i, multi_flag, start, start_byte, end, end_byte)
-     INTERVAL i;
-     int multi_flag;
-     int start, start_byte, end, end_byte;
+set_intervals_multibyte_1 (INTERVAL i, int multi_flag,
+			   EMACS_INT start, EMACS_INT start_byte,
+			   EMACS_INT end, EMACS_INT end_byte)
 {
   /* Fix the length of this interval.  */
   if (multi_flag)
@@ -2521,11 +2444,11 @@ set_intervals_multibyte_1 (i, multi_flag, start, start_byte, end, end_byte)
   /* Recursively fix the length of the subintervals.  */
   if (i->left)
     {
-      int left_end, left_end_byte;
+      EMACS_INT left_end, left_end_byte;
 
       if (multi_flag)
 	{
-	  int temp;
+	  EMACS_INT temp;
 	  left_end_byte = start_byte + LEFT_TOTAL_LENGTH (i);
 	  left_end = BYTE_TO_CHAR (left_end_byte);
 
@@ -2554,11 +2477,11 @@ set_intervals_multibyte_1 (i, multi_flag, start, start_byte, end, end_byte)
     }
   if (i->right)
     {
-      int right_start_byte, right_start;
+      EMACS_INT right_start_byte, right_start;
 
       if (multi_flag)
 	{
-	  int temp;
+	  EMACS_INT temp;
 
 	  right_start_byte = end_byte - RIGHT_TOTAL_LENGTH (i);
 	  right_start = BYTE_TO_CHAR (right_start_byte);
@@ -2613,13 +2536,9 @@ set_intervals_multibyte_1 (i, multi_flag, start, start_byte, end, end_byte)
    or to fit them as non-multibyte (if MULTI_FLAG is 0).  */
 
 void
-set_intervals_multibyte (multi_flag)
-     int multi_flag;
+set_intervals_multibyte (int multi_flag)
 {
   if (BUF_INTERVALS (current_buffer))
     set_intervals_multibyte_1 (BUF_INTERVALS (current_buffer), multi_flag,
 			       BEG, BEG_BYTE, Z, Z_BYTE);
 }
-
-/* arch-tag: 3d402b60-083c-4271-b4a3-ebd9a74bfe27
-   (do not change this comment) */

@@ -1,7 +1,6 @@
 ;;; nndraft.el --- draft article access for Gnus
 
-;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1995-2012 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -25,13 +24,20 @@
 
 ;;; Code:
 
+;; For Emacs <22.2 and XEmacs.
+(eval-and-compile
+  (unless (fboundp 'declare-function) (defmacro declare-function (&rest r))))
+
 (require 'nnheader)
 (require 'nnmail)
 (require 'gnus-start)
+(require 'gnus-group)
 (require 'nnmh)
 (require 'nnoo)
 (require 'mm-util)
 (eval-when-compile (require 'cl))
+
+(declare-function nndraft-request-list "nnmh" (&rest args))
 
 (nnoo-declare nndraft
   nnmh)
@@ -77,10 +83,9 @@ are generated if and only if they are also in `message-draft-headers'.")
 
 (deffoo nndraft-retrieve-headers (articles &optional group server fetch-old)
   (nndraft-possibly-change-group group)
-  (save-excursion
-    (set-buffer nntp-server-buffer)
+  (with-current-buffer nntp-server-buffer
     (erase-buffer)
-    (let* (article)
+    (let (article lines chars)
       ;; We don't support fetching by Message-ID.
       (if (stringp (car articles))
 	  'headers
@@ -92,9 +97,12 @@ are generated if and only if they are also in `message-draft-headers'.")
 	    (if (search-forward "\n\n" nil t)
 		(forward-line -1)
 	      (goto-char (point-max)))
+	    (setq lines (count-lines (point) (point-max))
+		  chars (- (point-max) (point)))
 	    (delete-region (point) (point-max))
 	    (goto-char (point-min))
 	    (insert (format "221 %d Article retrieved.\n" article))
+	    (insert (format "Lines: %d\nChars: %d\n" lines chars))
 	    (widen)
 	    (goto-char (point-max))
 	    (insert ".\n")))
@@ -119,8 +127,7 @@ are generated if and only if they are also in `message-draft-headers'.")
 			      mm-text-coding-system)
 			  mm-auto-save-coding-system)))
 		   (nnmail-find-file newest)))
-	(save-excursion
-	  (set-buffer nntp-server-buffer)
+	(with-current-buffer nntp-server-buffer
 	  (goto-char (point-min))
 	  ;; If there's a mail header separator in this file,
 	  ;; we remove it.
@@ -161,6 +168,28 @@ are generated if and only if they are also in `message-draft-headers'.")
      (message-headers-to-generate
       nndraft-required-headers message-draft-headers nil))))
 
+(defun nndraft-update-unread-articles ()
+  "Update groups' unread articles in the group buffer."
+  (nndraft-request-list)
+  (with-current-buffer gnus-group-buffer
+    (let* ((groups (mapcar (lambda (elem)
+			     (gnus-group-prefixed-name (car elem)
+						       (list 'nndraft "")))
+			   (nnmail-get-active)))
+	   (gnus-group-marked (copy-sequence groups))
+	   ;; Don't send delayed articles.
+	   (gnus-get-new-news-hook nil)
+	   (inhibit-read-only t))
+      (gnus-group-get-new-news-this-group nil t)
+      (save-excursion
+	(dolist (group groups)
+	  (unless (and gnus-permanently-visible-groups
+		       (string-match gnus-permanently-visible-groups
+				     group))
+	    (gnus-group-goto-group group)
+	    (when (zerop (gnus-group-group-unread))
+	      (gnus-delete-line))))))))
+
 (deffoo nndraft-request-associate-buffer (group)
   "Associate the current buffer with some article in the draft group."
   (nndraft-open-server "")
@@ -182,9 +211,13 @@ are generated if and only if they are also in `message-draft-headers'.")
 		  'write-contents-hooks)))
       (gnus-make-local-hook hook)
       (add-hook hook 'nndraft-generate-headers nil t))
+    (gnus-make-local-hook 'after-save-hook)
+    (add-hook 'after-save-hook 'nndraft-update-unread-articles nil t)
+    (message-add-action '(nndraft-update-unread-articles)
+			'exit 'postpone 'kill)
     article))
 
-(deffoo nndraft-request-group (group &optional server dont-check)
+(deffoo nndraft-request-group (group &optional server dont-check info)
   (nndraft-possibly-change-group group)
   (unless dont-check
     (let* ((pathname (nnmail-group-pathname group nndraft-directory))
@@ -202,15 +235,14 @@ are generated if and only if they are also in `message-draft-headers'.")
 			'nnmh-request-group
 			(list group server dont-check)))
 
-(deffoo nndraft-request-move-article (article group server accept-form 
+(deffoo nndraft-request-move-article (article group server accept-form
 				      &optional last move-is-internal)
   (nndraft-possibly-change-group group)
   (let ((buf (get-buffer-create " *nndraft move*"))
 	result)
     (and
      (nndraft-request-article article group server)
-     (save-excursion
-       (set-buffer buf)
+     (with-current-buffer buf
        (erase-buffer)
        (insert-buffer-substring nntp-server-buffer)
        (setq result (eval accept-form))
@@ -222,6 +254,11 @@ are generated if and only if they are also in `message-draft-headers'.")
 (deffoo nndraft-request-expire-articles (articles group &optional server force)
   (nndraft-possibly-change-group group)
   (let* ((nnmh-allow-delete-final t)
+	 (nnmail-expiry-target
+	  (or (gnus-group-find-parameter
+	       (gnus-group-prefixed-name group (list 'nndraft server))
+	       'expiry-target t)
+	      nnmail-expiry-target))
 	 (res (nnoo-parent-function 'nndraft
 				    'nnmh-request-expire-articles
 				    (list articles group server force)))
@@ -313,5 +350,4 @@ are generated if and only if they are also in `message-draft-headers'.")
 
 (provide 'nndraft)
 
-;; arch-tag: 3ce26ca0-41cb-48b1-8703-4dad35e188aa
 ;;; nndraft.el ends here

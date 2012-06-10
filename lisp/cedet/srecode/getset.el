@@ -1,6 +1,6 @@
 ;;; srecode/getset.el --- Package for inserting new get/set methods.
 
-;; Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2007-2012 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
 
@@ -215,7 +215,7 @@ INCLASS specifies if the cursor is already in CLASS or not."
 	  (when (not te)
 	    (message "Unknown location for tag-end in %s:" (semantic-tag-name aftertag)))
 	  (goto-char te)
-	  ;; If there is a comment immediatly after aftertag, skip over it.
+	  ;; If there is a comment immediately after aftertag, skip over it.
 	  (when (looking-at (concat "\\s-*\n?\\s-*" semantic-lex-comment-regex))
 	    (let ((pos (point))
 		  (rnext (semantic-find-tag-by-overlay-next (point))))
@@ -363,5 +363,4 @@ Base selection on the field related to POINT."
 ;; generated-autoload-load-name: "srecode/getset"
 ;; End:
 
-;; arch-tag: c2098b7a-df7f-4e8a-a9e3-2be8798a7554
 ;;; srecode/getset.el ends here

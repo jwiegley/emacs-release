@@ -1,11 +1,12 @@
 ;;; jka-cmpr-hook.el --- preloaded code to enable jka-compr.el
 
-;; Copyright (C) 1993, 1994, 1995, 1997, 1999, 2000, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1993-1995, 1997, 1999-2000, 2002-2012
+;;   Free Software Foundation, Inc.
 
 ;; Author: jka@ece.cmu.edu (Jay K. Adams)
 ;; Maintainer: FSF
 ;; Keywords: data
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -37,6 +38,12 @@
 (defgroup jka-compr nil
   "jka-compr customization."
   :group 'compression)
+
+(defcustom jka-compr-verbose t
+  "If non-nil, output messages whenever compressing or uncompressing files."
+  :version "24.1"
+  :type 'boolean
+  :group 'jka-compr)
 
 ;; List of all the elements we actually added to file-coding-system-alist.
 (defvar jka-compr-added-to-file-coding-system-alist nil)
@@ -72,10 +79,18 @@ Otherwise, it is nil.")
 
 (defun jka-compr-build-file-regexp ()
   (purecopy
-  (mapconcat
-   'jka-compr-info-regexp
-   jka-compr-compression-info-list
-   "\\|")))
+   (let ((re-anchored '())
+         (re-free '()))
+     (dolist (e jka-compr-compression-info-list)
+       (let ((re (jka-compr-info-regexp e)))
+         (if (string-match "\\\\'\\'" re)
+             (push (substring re 0 (match-beginning 0)) re-anchored)
+           (push re re-free))))
+     (concat
+      (if re-free (concat (mapconcat 'identity re-free "\\|") "\\|"))
+      "\\(?:"
+      (mapconcat 'identity re-anchored "\\|")
+      "\\)" file-name-version-regexp "?\\'"))))
 
 ;; Functions for accessing the return value of jka-compr-get-compression-info
 (defun jka-compr-info-regexp               (info)  (aref info 0))
@@ -96,17 +111,15 @@ The determination as to which compression scheme, if any, to use is
 based on the filename itself and `jka-compr-compression-info-list'."
   (catch 'compression-info
     (let ((case-fold-search nil))
-      (mapc
-       (function (lambda (x)
-		   (and (string-match (jka-compr-info-regexp x) filename)
-			(throw 'compression-info x))))
-       jka-compr-compression-info-list)
+      (dolist (x jka-compr-compression-info-list)
+        (and (string-match (jka-compr-info-regexp x) filename)
+             (throw 'compression-info x)))
       nil)))
 
 (defun jka-compr-install ()
   "Install jka-compr.
 This adds entries to `file-name-handler-alist' and `auto-mode-alist'
-and `inhibit-first-line-modes-suffixes'."
+and `inhibit-local-variables-suffixes'."
 
   (setq jka-compr-file-name-handler-entry
 	(cons (jka-compr-build-file-regexp) 'jka-compr-handler))
@@ -132,12 +145,12 @@ and `inhibit-first-line-modes-suffixes'."
          ;; are chosen right according to the file names
          ;; sans `.gz'.
          (push (list (jka-compr-info-regexp x) nil 'jka-compr) auto-mode-alist)
-         ;; Also add these regexps to
-         ;; inhibit-first-line-modes-suffixes, so that a
-         ;; -*- line in the first file of a compressed tar
-         ;; file doesn't override tar-mode.
+         ;; Also add these regexps to inhibit-local-variables-suffixes,
+         ;; so that a -*- line in the first file of a compressed tar file,
+         ;; or a Local Variables section in a member file at the end of
+         ;; the tar file don't override tar-mode.
          (push (jka-compr-info-regexp x)
-               inhibit-first-line-modes-suffixes)))
+               inhibit-local-variables-suffixes)))
   (setq auto-mode-alist
 	(append auto-mode-alist jka-compr-mode-alist-additions))
 
@@ -197,7 +210,7 @@ options through Custom does this automatically."
   ;; uncomp-message uncomp-prog uncomp-args
   ;; can-append strip-extension-flag file-magic-bytes]
   (mapcar 'purecopy
-  '(["\\.Z\\(~\\|\\.~[0-9]+~\\)?\\'"
+  '(["\\.Z\\'"
      "compressing"    "compress"     ("-c")
      ;; gzip is more common than uncompress. It can only read, not write.
      "uncompressing"  "gzip"   ("-c" "-q" "-d")
@@ -205,7 +218,7 @@ options through Custom does this automatically."
      ;; Formerly, these had an additional arg "-c", but that fails with
      ;; "Version 0.1pl2, 29-Aug-97." (RedHat 5.1 GNU/Linux) and
      ;; "Version 0.9.0b, 9-Sept-98".
-    ["\\.bz2\\(~\\|\\.~[0-9]+~\\)?\\'"
+    ["\\.bz2\\'"
      "bzip2ing"        "bzip2"         nil
      "bunzip2ing"      "bzip2"         ("-d")
      nil t "BZh"]
@@ -213,15 +226,23 @@ options through Custom does this automatically."
      "bzip2ing"        "bzip2"         nil
      "bunzip2ing"      "bzip2"         ("-d")
      nil nil "BZh"]
-    ["\\.\\(?:tgz\\|svgz\\|sifz\\)\\(~\\|\\.~[0-9]+~\\)?\\'"
+    ["\\.\\(?:tgz\\|svgz\\|sifz\\)\\'"
      "compressing"        "gzip"         ("-c" "-q")
      "uncompressing"      "gzip"         ("-c" "-q" "-d")
      t nil "\037\213"]
-    ["\\.g?z\\(~\\|\\.~[0-9]+~\\)?\\'"
+    ["\\.g?z\\'"
      "compressing"        "gzip"         ("-c" "-q")
      "uncompressing"      "gzip"         ("-c" "-q" "-d")
      t t "\037\213"]
-    ["\\.xz\\(~\\|\\.~[0-9]+~\\)?\\'"
+    ["\\.lz\\'"
+     "Lzip compressing"   "lzip"         ("-c" "-q")
+     "Lzip uncompressing" "lzip"         ("-c" "-q" "-d")
+     t t "LZIP"]
+    ["\\.lzma\\'"
+     "LZMA compressing"   "lzma"         ("-c" "-q" "-z")
+     "LZMA uncompressing" "lzma"         ("-c" "-q" "-d")
+     t t ""]
+    ["\\.xz\\'"
      "XZ compressing"     "xz"           ("-c" "-q")
      "XZ uncompressing"   "xz"           ("-c" "-q" "-d")
      t t "\3757zXZ\0"]
@@ -320,9 +341,14 @@ variables.  Setting this through Custom does that automatically."
   :group 'jka-compr)
 
 (define-minor-mode auto-compression-mode
-  "Toggle automatic file compression and uncompression.
-With prefix argument ARG, turn auto compression on if positive, else off.
-Return the new status of auto compression (non-nil means on)."
+  "Toggle Auto Compression mode.
+With a prefix argument ARG, enable Auto Compression mode if ARG
+is positive, and disable it otherwise.  If called from Lisp,
+enable the mode if ARG is omitted or nil.
+
+Auto Compression mode is a global minor mode.  When enabled,
+compressed files are automatically uncompressed for reading, and
+compressed when writing."
   :global t :init-value t :group 'jka-compr :version "22.1"
   (let* ((installed (jka-compr-installed-p))
 	 (flag auto-compression-mode))
@@ -333,7 +359,8 @@ Return the new status of auto compression (non-nil means on)."
      (t (jka-compr-uninstall)))))
 
 (defmacro with-auto-compression-mode (&rest body)
-  "Evalute BODY with automatic file compression and uncompression enabled."
+  "Evaluate BODY with automatic file compression and uncompression enabled."
+  (declare (indent 0))
   (let ((already-installed (make-symbol "already-installed")))
     `(let ((,already-installed (jka-compr-installed-p)))
        (unwind-protect
@@ -343,8 +370,6 @@ Return the new status of auto compression (non-nil means on)."
 	     ,@body)
 	 (unless ,already-installed
 	   (jka-compr-uninstall))))))
-(put 'with-auto-compression-mode 'lisp-indent-function 0)
-
 
 ;; This is what we need to know about jka-compr-handler
 ;; in order to decide when to call it.
@@ -359,5 +384,4 @@ Return the new status of auto compression (non-nil means on)."
 
 (provide 'jka-cmpr-hook)
 
-;; arch-tag: 4bd73429-f400-45fe-a065-270a113e31a8
 ;;; jka-cmpr-hook.el ends here

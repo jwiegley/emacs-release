@@ -1,7 +1,6 @@
 ;;; ccl.el --- CCL (Code Conversion Language) compiler
 
-;; Copyright (C) 1997, 1998, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1997-1998, 2001-2012  Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
 ;;   2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
@@ -281,10 +280,10 @@ the current loop.")
 ;;;###autoload
 (defun ccl-compile (ccl-program)
   "Return the compiled code of CCL-PROGRAM as a vector of integers."
-  (if (or (null (consp ccl-program))
-	  (null (integerp (car ccl-program)))
-	  (null (listp (car (cdr ccl-program)))))
-      (error "CCL: Invalid CCL program: %s" ccl-program))
+  (unless (and (consp ccl-program)
+               (integerp (car ccl-program))
+               (listp (car (cdr ccl-program))))
+    (error "CCL: Invalid CCL program: %s" ccl-program))
   (if (null (vectorp ccl-program-vector))
       (setq ccl-program-vector (make-vector 8192 0)))
   (setq ccl-loop-head nil ccl-breaks nil)
@@ -1434,7 +1433,7 @@ REG := r0 | r1 | r2 | r3 | r4 | r5 | r6 | r7
 ARG := REG | integer
 
 OPERATOR :=
-	;; Normal arithmethic operators (same meaning as C code).
+	;; Normal arithmetic operators (same meaning as C code).
 	+ | - | * | / | %
 
 	;; Bitwise operators (same meaning as C code)
@@ -1470,7 +1469,7 @@ OPERATOR :=
 	| de-sjis
 
 	;; If ARG_0 and ARG_1 are the first and second code point of
-	;; JISX0208 character CHAR, and SJIS is the correponding
+	;; JISX0208 character CHAR, and SJIS is the corresponding
 	;; Shift-JIS code,
 	;; (REG = ARG_0 en-sjis ARG_1) means:
 	;;	((REG = HIGH)
@@ -1559,5 +1558,4 @@ See the documentation of `define-ccl-program' for the detail of CCL program."
 
 (provide 'ccl)
 
-;; arch-tag: 836bcd27-63a1-4a56-b232-1145ecf823fb
 ;;; ccl.el ends here

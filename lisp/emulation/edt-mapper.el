@@ -1,11 +1,11 @@
 ;;; edt-mapper.el --- create an EDT LK-201 map file for X-Windows Emacs
 
-;; Copyright (C) 1994, 1995, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1994-1995, 2000-2012  Free Software Foundation, Inc.
 
 ;; Author: Kevin Gallagher <Kevin.Gallagher@boeing.com>
 ;; Maintainer: Kevin Gallagher <Kevin.Gallagher@boeing.com>
 ;; Keywords: emulations
+;; Package: edt
 
 ;; This file is part of GNU Emacs.
 
@@ -151,7 +151,7 @@
 ;;; Logic in simple.el maps some of these unassigned function keys to
 ;;; ordinary typing keys.  Where this is the case, a call to
 ;;; read-key-sequence, below, does not return the name of the function
-;;; key pressd by the user but, instead, it returns the name of the
+;;; key pressed by the user but, instead, it returns the name of the
 ;;; key to which it has been mapped.  It needs to know the name of the
 ;;; key pressed by the user. As a workaround, we assign a function to
 ;;; each of the unassigned function keys of interest, here.  These
@@ -546,5 +546,4 @@
 (sit-for 600)
 (kill-emacs t)
 
-;; arch-tag: 9eea59c8-b8b7-4d66-b858-c8920624c518
 ;;; edt-mapper.el ends here

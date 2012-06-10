@@ -1,8 +1,6 @@
 ;;; mh-show.el --- MH-Show mode
 
-;; Copyright (C) 1993, 1995, 1997,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1995, 1997, 2000-2012  Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -148,9 +146,7 @@ displayed."
             (if (not clean-message-header)
                 (mh-start-of-uncleaned-message)))
         (mh-display-msg msg folder)))
-    (unless (if (fboundp 'window-full-height-p)
-                (window-full-height-p)
-              (= (1+ (window-height)) (frame-height))) ; not vertically split
+    (unless (mh-window-full-height-p) ; not vertically split
       (shrink-window (- (window-height) (or mh-summary-height
                                             (mh-summary-height)))))
     (mh-recenter nil)
@@ -168,16 +164,6 @@ displayed."
       (when (mh-speed-flists-active-p)
         (apply #'mh-speed-flists t folders)))
     (run-hooks 'mh-show-hook)))
-
-;;;###mh-autoload
-(defun mh-showing-mode (&optional arg)
-  "Change whether messages should be displayed.
-
-With ARG, display messages if ARG is positive, otherwise don't display them."
-  (setq mh-showing-mode
-        (if (null arg)
-            (not mh-showing-mode)
-          (> (prefix-numeric-value arg) 0))))
 
 ;;;###mh-autoload
 (defun mh-start-of-uncleaned-message ()
@@ -333,9 +319,9 @@ ignored if VISIBLE-HEADERS is non-nil."
   "Separate current buffer from the message file it was visiting."
   (or (not (buffer-modified-p))
       (null buffer-file-name)           ;we've been here before
-      (yes-or-no-p (format "Message %s modified; flush changes? "
+      (yes-or-no-p (format "Message %s modified; discard changes? "
                            (file-name-nondirectory buffer-file-name)))
-      (error "Flushing changes not confirmed"))
+      (error "Changes preserved"))
   (clear-visited-file-modtime)
   (unlock-buffer)
   (setq buffer-file-name nil))
@@ -927,5 +913,4 @@ See also `mh-folder-mode'.
 ;; sentence-end-double-space: nil
 ;; End:
 
-;; arch-tag: 8607a80a-9b5c-43a7-a25d-d7e4a848c25b
 ;;; mh-show.el ends here

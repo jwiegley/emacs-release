@@ -1,3 +1,7 @@
+2009-02-07  Dave Love  <fx@gnu.org>
+
+	* net/tls.el (open-tls-stream): Don't query killing process.
+
 2009-06-21  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Branch for 23.1.
@@ -26,7 +30,7 @@
 2009-06-19  Kenichi Handa  <handa@m17n.org>
 
 	* international/fontset.el (setup-default-fontset): Add a spec of
-	non-OTF unicode font for Thai.
+	non-OTF Unicode font for Thai.
 
 	* fringe.el: Add coding: utf-8 cookie.
 
@@ -565,7 +569,7 @@
 	* emacs-lisp/lisp-mode.el: Give `deftype' a doc-string-elt
 	property (Bug#2984).
 
-2009-04-16  Leo  <sdl.web@gmail.com>  (tiny change)
+2009-04-16  Leo Liu  <sdl.web@gmail.com>  (tiny change)
 
 	* ediff-wind.el (ediff-make-wide-display): Fix typo in frame
 	parameter alist.
@@ -600,7 +604,7 @@
 	* help-at-pt.el (help-at-pt-kbd-string): Reflow docstring.
 	(scan-buf-previous-region): Fix typo in docstring.
 
-2009-04-14  Edward Wiebe  <usenet@pusto.de>  (tiny change)
+2009-04-14  Eduard Wiebe  <usenet@pusto.de>  (tiny change)
 
 	* jit-lock.el (jit-lock-stealth-chunk-start): Fix typo in docstring.
 
@@ -862,7 +866,7 @@
 
 	* calc/calc-embed.el (calc-embedded-restore-original-modes):
 	Add argument for Calculator buffer.
-	(calc-do-embedded): Use specific Calculator buffer when cancelling
+	(calc-do-embedded): Use specific Calculator buffer when canceling
 	embedded mode.
 
 	* calc/calc.el (calc-buffer-list): New variable.
@@ -1029,7 +1033,7 @@
 
 	* paren.el (show-paren-function):
 	* simple.el (kill-forward-chars, kill-backward-chars):
-	 Use (+/- (point) N), instead of `forward-point'.
+	Use (+/- (point) N), instead of `forward-point'.
 
 2009-03-19  Glenn Morris  <rgm@gnu.org>
 
@@ -1037,7 +1041,7 @@
 
 	* mail/supercite.el (sc-version): Doc fix.
 
-2009-03-19  Leo  <sdl.web@gmail.com>  (tiny change)
+2009-03-19  Leo Liu  <sdl.web@gmail.com>  (tiny change)
 
 	* mail/supercite.el (sc-version): Fix typo in interactive spec.
 
@@ -2144,7 +2148,7 @@
 	* emacs-lisp/find-func.el (find-library-name, find-library):
 	Doc fixes.  (Part of bug#2270)
 
-2009-02-10  Eric Hanchrow  <eric.hanchrow@gmail.com>  (tiny change)
+2009-02-10  Eric Hanchrow  <eric.hanchrow@gmail.com>
 
 	* env.el (getenv): When FRAME is non-nil, pass the frame environment
 	to `getenv-internal', not the frame.  (Bug#2259)
@@ -2881,11 +2885,11 @@
 2009-01-25  Craig Markwardt  <cbmarkwardt@gmail.com>
 
 	* calendar/icalendar.el (icalendar-uid-format): New defcustom
-	variable to allow the user to choose icalendar UID format.
+	variable to allow the user to choose iCalendar UID format.
 	(icalendar--diarytime-to-isotime): Bug fix, now times in the range
 	12:00am-12:59am are correctly converted to 0000-0059, instead of 12pm.
 	(icalendar-export-region, icalendar--create-uid): Use custom
-	function to compute icalendar UID for each entry.
+	function to compute iCalendar UID for each entry.
 	(icalendar--parse-summary-and-rest): Bug fix for parsing of lines
 	with description, location, etc. fields (need to keep active count
 	of fields encountered).  Another bug fix to the regex that matches
@@ -3012,12 +3016,12 @@
 	Don't activate node nil.  (Bug#1569)
 
 2009-01-22  Paul Reilly  <pmr@pajato.com>
-	    Henrik Enberg  <enberg@printf.se>
-	    Alex Schroeder  <alex@gnu.org>
-	    Chong Yidong  <cyd@stupidchicken.com>
-	    Richard M Stallman  <rms@gnu.org>
-	    Glenn Morris  <rgm@gnu.org>
-	    Juanma Barranquero  <lekktu@gmail.com>
+            Henrik Enberg  <enberg@printf.se>
+            Alex Schroeder  <alex@gnu.org>
+            Chong Yidong  <cyd@stupidchicken.com>
+            Richard M Stallman  <rms@gnu.org>
+            Glenn Morris  <rgm@gnu.org>
+            Juanma Barranquero  <lekktu@gmail.com>
 
 	* mail/rmail.el: Code implementing Rmail-mbox functionality.
 	(rmail-attribute-header, rmail-keyword-header)
@@ -3469,7 +3473,7 @@
 2009-01-10  Dan Nicolaescu  <dann@ics.uci.edu>
 
 	* diff-mode.el (diff-show-trailing-whitespaces): Remove function.
-	Move setting up whitepace-mode ...
+	Move setting up whitespace-mode ...
 	(diff-mode): ... here.
 	(diff-mode-menu): Add a menu entry for showing trailing whitespace.
 
@@ -4310,7 +4314,7 @@
 	was orderly adjusted, nil otherwise.
 
 2008-12-12  Juanma Barranquero  <lekktu@gmail.com>
-	    Stefan Monnier  <monnier@iro.umontreal.ca>
+            Stefan Monnier  <monnier@iro.umontreal.ca>
 
 	* server.el (server-sentinel): Uncomment code to delete connection file.
 	(server-start): Save the connection file in the server property list.
@@ -4369,7 +4373,7 @@
 	terminal variable assignment.
 
 2008-12-10  Yukihiro Matsumoto  <matz@ruby-lang.org>
-	    Nobuyoshi Nakada  <nobu@ruby-lang.org>
+            Nobuyoshi Nakada  <nobu@ruby-lang.org>
 
 	* progmodes/ruby-mode.el: New file.
 
@@ -4417,7 +4421,7 @@
 2008-12-06  Chong Yidong  <cyd@stupidchicken.com>
 
 	* term/xterm.el (terminal-init-xterm): Discard pending input
-	before reading a reply to the terminal attributes query.
+	before reading a reply to the terminal attributes query.  (Bug#1495)
 
 2008-12-05  Andreas Schwab  <schwab@suse.de>
 
@@ -5599,7 +5603,7 @@
 	New aliases, to satisfy `define-derived-mode' expectations.
 
 2008-11-15  Glenn Morris  <rgm@gnu.org>
-	    Martin Rudalics  <rudalics@gmx.at>
+            Martin Rudalics  <rudalics@gmx.at>
 
 	* emacs-lisp/find-func.el (find-function-advised-original): New.
 	(find-function-C-source, find-function-noselect):
@@ -6514,7 +6518,7 @@
 	(hl-line-unhighlight, global-hl-line-unhighlight): Use `when'.
 	(hl-line-sticky-flag): Remove spurious * in docstring.
 
-2008-10-14  Eric Hanchrow  <offby1@blarg.net>  (tiny change)
+2008-10-14  Eric Hanchrow  <offby1@blarg.net>
 
 	* vc-git.el (vc-git-show-log-entry): Include the revision in the
 	search string.
@@ -6720,7 +6724,7 @@
 	(rx-check-any): Return result as a list.  Don't convert chars to
 	strings.  Don't prepend "\\" to "^".  Don't search for close bracket.
 	Check char category string.  Call rx-form instead of rx-to-string.
-	(rx-any): Rebuid to complete the function.
+	(rx-any): Rebuild to complete the function.
 	(rx-check-not): Fix char category regexp pattern string.
 	Call rx-form instead of rx-to-string.
 	(rx-not): Call rx-form instead of rx-to-string.  Convert "[^]" to
@@ -7110,7 +7114,7 @@
 	vc-default-mark-resolved.
 	(vc-default-mark-resolved): Change to an alias for ignore.
 
-2008-09-24  Andreas Politz  <politza@fh-trier.de>  (tiny change)
+2008-09-24  Andreas Politz  <politza@fh-trier.de>
 
 	* term.el (term-emulate-terminal): Encode input string before
 	checking its length.
@@ -7909,7 +7913,7 @@
 	ignored while matching, replace the entire filename with completion.
 
 	* textmodes/flyspell.el (flyspell-check-pre-word-p): Make sure
-	flyspell-pre-point is valid to avoid signalling an error in
+	flyspell-pre-point is valid to avoid signaling an error in
 	post-command-hook.
 
 2008-08-26  Johan Bockgård  <bojohan@gnu.org>
@@ -8479,7 +8483,7 @@
 
 2008-07-31  Chong Yidong  <cyd@stupidchicken.com>
 
-	* Makefile.in: Avoid maintainer warning for autogenerated unicode
+	* Makefile.in: Avoid maintainer warning for autogenerated Unicode
 	files.
 
 	* apropos.el (apropos-symbol): Don't set button skip by default.
@@ -8625,7 +8629,7 @@
 
 2008-07-31  Alan Mackenzie  <acm@muc.de>
 
-	* progmodes/cc-mode.el (c-before-hack-hook): New function
+	* progmodes/cc-mode.el (c-before-hack-hook): New function.
 	(Top Level): Install c-before-hack-hook on
 	before-hack-local-variables-hook, rather than
 	c-postprocess-file-styles on hack-local-variables-hook.
@@ -10308,8 +10312,8 @@
 	(newsticker--treeview-propertize-tag): Show item title in tooltip.
 
 2008-06-20  Martin Blais  <blais@furius.ca>
-	    Stefan Merten  <smerten@oekonux.de>
-	    David Goodger  <goodger@python.org>
+            Stefan Merten  <smerten@oekonux.de>
+            David Goodger  <goodger@python.org>
 
 	* textmodes/rst.el: New file.
 
@@ -10615,7 +10619,7 @@
 2008-06-14  Martin Rudalics  <rudalics@gmx.at>
 
 	* window.el (window--even-window-heights): Even window heights
-	only if the selected window is higher than WINDOW.
+	only if the selected window is higher than WINDOW.  (Bug#410)
 	Reported by Stephen Berman <Stephen.Berman at gmx.net>.
 
 2008-06-14  Stefan Monnier  <monnier@iro.umontreal.ca>
@@ -10627,7 +10631,7 @@
 	* term/linux.el (terminal-init-linux): Load t-mouse.
 
 2008-06-13  Stefan Monnier  <monnier@iro.umontreal.ca>
-	    Drew Adams  <drew.adams@oracle.com>
+            Drew Adams  <drew.adams@oracle.com>
 
 	* info.el (Info-breadcrumbs-depth): New var.
 	(Info-insert-breadcrumbs): New function.
@@ -13625,7 +13629,7 @@
 	(completion-emacs22-try-completion): Place cursor after the /, as was
 	done in Emacs-22's minibuffer-complete-word.
 	Fix bug reported by David Hansen <david.hansen@gmx.net>.
-	(completion-emacs22-try-completion): Merge all mergeable text rather
+	(completion-emacs22-try-completion): Merge all mergable text rather
 	than just /.
 	(completion-pcm--delim-wild-regex): New var.
 	(completion-pcm-word-delimiters): New custom.
@@ -14185,7 +14189,7 @@
 2008-04-19  Nick Roberts  <nickrob@snap.net.nz>
 
 	* progmodes/gdb-ui.el (gdb-thread-indicator): New variable.
-	(gdb-init-1): Initialise it.
+	(gdb-init-1): Initialize it.
 	(gdb-annotation-rules): New entry for "new-thread".
 	(gdb-thread-identification): New function to customize
 	mode-line-buffer-identification.
@@ -15990,11 +15994,11 @@
 2008-04-02  Alan Mackenzie  <acm@muc.de>
 
 	* progmodes/cc-cmds.el (c-defun-name, c-cpp-define-name):
-	New optimised functions to get the name of the current defun/macro.
+	New optimized functions to get the name of the current defun/macro.
 
 	* add-log.el (add-log-current-defun): Move the functionality which
 	gets the current function name for C like modes to cc-cmds.el,
-	thus optimising for speed.
+	thus optimizing for speed.
 
 2008-04-02  Chong Yidong  <cyd@stupidchicken.com>
 
@@ -16091,10 +16095,10 @@
 	covering IPA (previously Latin), Phonetic Extensions and
 	Phonetic Extensions Supplement (both previously unassigned).
 
-	* international/fontset.el (setup-default-fontset): Use unicode fonts
+	* international/fontset.el (setup-default-fontset): Use Unicode fonts
 	that cover bopomofo script for bopomofo.
 	Likewise for braille and mathematical.
-	Use unicode scripts that cover the phonetic script for IPA.
+	Use Unicode scripts that cover the phonetic script for IPA.
 
 2008-04-01  Johan Bockgård  <bojohan@gnu.org>
 
@@ -17795,7 +17799,7 @@
 	(org-local-logging): New function.
 	(org-columns-open-link): Fix bug with opening link in column view.
 	(org-local-logging): New function.
-	(org-todo): Make sure that LOGGING properties are honoured.
+	(org-todo): Make sure that LOGGING properties are honored.
 	(org-todo-keywords): Improve docstring.
 	(org-startup-options): Cleanup startup options.
 	(org-set-regexps-and-options): Process the "!" markers.
@@ -18798,7 +18802,7 @@
 	for useful options.
 
 2008-03-01  Dan Nicolaescu  <dann@ics.uci.edu>
-	    Glenn Morris  <rgm@gnu.org>
+            Glenn Morris  <rgm@gnu.org>
 
 	* emacs-lisp/bytecomp.el (byte-recompile-directory)
 	(byte-compile-file, batch-byte-compile, batch-byte-compile-file):
@@ -19172,7 +19176,7 @@
 	toggle-read-only.
 
 	* textmodes/bibtex.el (bibtex-format-entry): Handle error message
-	refering to a missing required field with the OPT prefix.
+	referring to a missing required field with the OPT prefix.
 	Make unwindform more robust.
 
 	* textmodes/bibtex.el: Remove support for hideshow minor mode as
@@ -19388,7 +19392,7 @@
 	* progmodes/cc-mode.el (c-basic-common-init): C and ObjC now use
 	syntax-table text properties.
 	(c-common-init): Call language specific before/after-change
-	functions at mode initialisation.
+	functions at mode initialization.
 	(c-new-BEG, c-new-END, c-old-BOM, c-old-EOM): New variables.
 	(c-extend-region-for-CPP, c-neutralize-CPP-line)
 	(c-neutralize-syntax-in-CPP): New functions.
@@ -20547,7 +20551,7 @@ See ChangeLog.13 for earlier changes.
 ;; coding: utf-8
 ;; End:
 
-    Copyright (C) 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+    Copyright (C) 2008-2012  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
@@ -20563,5 +20567,3 @@ See ChangeLog.13 for earlier changes.
 
   You should have received a copy of the GNU General Public License
   along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
-
-;; arch-tag: c241c1f9-d668-48bf-920a-2897ed0340bc

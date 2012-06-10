@@ -1,11 +1,11 @@
 ;;; eudc-export.el --- functions to export EUDC query results
 
-;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1998-2012 Free Software Foundation, Inc.
 
 ;; Author: Oscar Figueiredo <oscar@cpe.fr>
 ;; Maintainer: Pavel Janík <Pavel@Janik.cz>
 ;; Keywords: comm
+;; Package: eudc
 
 ;; This file is part of GNU Emacs.
 
@@ -44,7 +44,7 @@ If SILENT is non-nil then the created BBDB record is not displayed."
   ;; This function runs in a special context where lisp symbols corresponding
   ;; to field names in record are bound to the corresponding values
   (eval
-   `(let* (,@(mapcar '(lambda (c)
+   `(let* (,@(mapcar (lambda (c)
 			(list (car c) (if (listp (cdr c))
 					  (list 'quote (cdr c))
 					(cdr c))))
@@ -108,7 +108,7 @@ If RECURSE is non-nil then SPEC may be a list of atomic specs."
       (void-variable nil)))
    ((and recurse
 	 (listp spec))
-    (mapcar '(lambda (spec-elem)
+    (mapcar (lambda (spec-elem)
 	       (eudc-parse-spec spec-elem record nil))
 	    spec))
    (t
@@ -128,7 +128,7 @@ LOCATION is used as the address location for bbdb."
 	 zip city state)
     (setq addr-components (nreverse addr-components))
     ;; If not containing the zip code the last line is supposed to contain a
-    ;; country name and the addres is supposed to be in european style
+    ;; country name and the address is supposed to be in european style
     (if (not (string-match "[0-9][0-9][0-9]" last1))
 	(progn
 	  (setq state last1)
@@ -219,5 +219,4 @@ This function can only be called from a directory query result buffer."
        (overlay-get (car (overlays-at (point))) 'eudc-record)
        (eudc-insert-record-at-point-into-bbdb)))
 
-;; arch-tag: 8cbda7dc-3163-47e6-921c-6ec5083df2d7
 ;;; eudc-export.el ends here

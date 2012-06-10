@@ -1,9 +1,9 @@
 ;;; viper-ex.el --- functions implementing the Ex commands for Viper
 
-;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1994-1998, 2000-2012 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
+;; Package: viper
 
 ;; This file is part of GNU Emacs.
 
@@ -259,7 +259,7 @@
 (defvar ex-addresses nil)
 
 ;; This flag is supposed to be set only by `#', `print', and `list',
-;; none of which is implemented.  So, it and the pices of the code it
+;; none of which is implemented.  So, it and the pieces of the code it
 ;; controls are dead weight.  We keep it just in case this might be
 ;; needed in the future.
 (defvar ex-flag nil)
@@ -750,7 +750,7 @@ reversed."
 			  (format "[^\\\\]\\(\\\\\\\\\\)*\\\\%c" c)))
 		    (setq cont nil)
 		  ;; we are at an escaped delimiter: unescape it and continue
-		  (delete-backward-char 2)
+		  (delete-char -2)
 		  (insert c)
 		  (if (eolp)
 		      ;; if at eol, exit loop and go to next line
@@ -2302,5 +2302,4 @@ Type 'mak ' (including the space) to run make with no args."
 
 
 
-;; arch-tag: 56b80d36-f880-4d10-bd66-85ad91a295db
 ;;; viper-ex.el ends here

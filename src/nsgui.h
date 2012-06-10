@@ -1,5 +1,5 @@
 /* Definitions and headers for communication on the NeXT/Open/GNUstep API.
-   Copyright (C) 1995, 2005, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+   Copyright (C) 1995, 2005, 2008-2012 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -30,6 +30,8 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #undef init_process
 #endif  /* NS_IMPL_COCOA */
 
+#undef verify
+
 #import <AppKit/AppKit.h>
 
 #ifdef NS_IMPL_COCOA
@@ -44,6 +46,9 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #endif /* __OBJC__ */
 
+#undef verify
+#undef _GL_VERIFY_H
+#include <verify.h>
 
 /* menu-related */
 #define free_widget_value(wv) xfree (wv)
@@ -60,7 +65,7 @@ typedef struct _XCharStruct
   int descent;
 } XCharStruct;
 
-/* Fake tructure from Xlib.h to represent two-byte characters.  */
+/* Fake structure from Xlib.h to represent two-byte characters.  */
 #ifndef __OBJC__
 typedef unsigned short unichar;
 #endif
@@ -129,7 +134,7 @@ typedef struct {
 } XRectangle;
 
 #ifndef __OBJC__
-#if defined(__LP64__) && __LP64__
+#if defined (__LP64__) && __LP64__
 typedef double CGFloat;
 #else
 typedef float CGFloat;
@@ -197,6 +202,3 @@ typedef struct _NSRect  { NSPoint origin; NSSize size; } NSRect;
 #define PWinGravity	(1L << 9) /* program specified window gravity */
 
 #endif  /* __NSGUI_H__ */
-
-/* arch-tag: b2af3275-62c3-45b4-9335-4c9635c67e55
-   (do not change this comment) */

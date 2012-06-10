@@ -1,8 +1,7 @@
 This is ../../info/widget, produced by makeinfo version 4.13 from
 widget.texi.
 
-Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+Copyright (C) 2000-2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -28,8 +27,7 @@ File: widget,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
 The Emacs Widget Library
 ************************
 
-Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+Copyright (C) 2000-2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -439,7 +437,6 @@ recommended way to do that is with `widget-insert'.
    There is a standard widget keymap which you might find useful.
 
  -- Const: widget-keymap
-     A keymap with the global keymap as its parent.
      <TAB> and `C-<TAB>' are bound to `widget-forward' and
      `widget-backward', respectively.  <RET> and `Mouse-2' are bound to
      `widget-button-press' and `widget-button-click'.
@@ -2264,7 +2261,7 @@ variables, and widgets described in this manual.
 * widget-get:                            Widget Properties.   (line  33)
 * widget-get-sibling:                    Utilities.           (line  11)
 * widget-global-map:                     Setting Up the Buffer.
-                                                              (line  44)
+                                                              (line  43)
 * widget-glyph-directory:                Basic Types.         (line 182)
 * widget-glyph-enable:                   Basic Types.         (line 187)
 * widget-insert:                         Setting Up the Buffer.
@@ -2304,39 +2301,39 @@ variables, and widgets described in this manual.
 
 
 Tag Table:
-Node: Top1065
-Node: Introduction2262
-Node: User Interface5333
-Node: Programming Example11054
-Node: Setting Up the Buffer15261
-Node: Basic Types16980
-Node: link23604
-Node: url-link24112
-Node: info-link24416
-Node: push-button24698
-Node: editable-field25265
-Node: text26653
-Node: menu-choice26942
-Node: radio-button-choice27790
-Node: item29372
-Node: choice-item29752
-Node: toggle30242
-Node: checkbox30989
-Node: checklist31288
-Node: editable-list32723
-Node: group33897
-Node: Sexp Types34177
-Node: constants34521
-Node: generic35589
-Node: atoms36139
-Node: composite38060
-Node: Widget Properties41040
-Node: Defining New Widgets44093
-Node: Widget Browser50121
-Node: Widget Minor Mode50974
-Node: Utilities51523
-Node: Widget Wishlist52006
-Node: GNU Free Documentation License53263
-Node: Index78433
+Node: Top998
+Node: Introduction2128
+Node: User Interface5199
+Node: Programming Example10920
+Node: Setting Up the Buffer15127
+Node: Basic Types16794
+Node: link23418
+Node: url-link23926
+Node: info-link24230
+Node: push-button24512
+Node: editable-field25079
+Node: text26467
+Node: menu-choice26756
+Node: radio-button-choice27604
+Node: item29186
+Node: choice-item29566
+Node: toggle30056
+Node: checkbox30803
+Node: checklist31102
+Node: editable-list32537
+Node: group33711
+Node: Sexp Types33991
+Node: constants34335
+Node: generic35403
+Node: atoms35953
+Node: composite37874
+Node: Widget Properties40854
+Node: Defining New Widgets43907
+Node: Widget Browser49935
+Node: Widget Minor Mode50788
+Node: Utilities51337
+Node: Widget Wishlist51820
+Node: GNU Free Documentation License53077
+Node: Index78247
 
 End Tag Table

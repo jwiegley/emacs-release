@@ -1,10 +1,10 @@
 ;;; replace.el --- replace commands for Emacs
 
-;; Copyright (C) 1985, 1986, 1987, 1992, 1994, 1996, 1997, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
+;; Copyright (C) 1985-1987, 1992, 1994, 1996-1997, 2000-2012
 ;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -33,7 +33,10 @@
   :type 'boolean
   :group 'matching)
 
-(defvar query-replace-history nil)
+(defvar query-replace-history nil
+  "Default history list for query-replace commands.
+See `query-replace-from-history-variable' and
+`query-replace-to-history-variable'.")
 
 (defvar query-replace-defaults nil
   "Default values of FROM-STRING and TO-STRING for `query-replace'.
@@ -94,6 +97,10 @@ is highlighted lazily using isearch lazy highlighting (see
   "Face for highlighting query replacement matches."
   :group 'matching
   :version "22.1")
+
+(defvar replace-count 0
+  "Number of replacements done so far.
+See `replace-regexp' and `query-replace-regexp-eval'.")
 
 (defun query-replace-descr (string)
   (mapconcat 'isearch-text-char-description string ""))
@@ -394,12 +401,13 @@ Fourth and fifth arg START and END specify the region to operate on."
 		    (car regexp-search-ring)
 		  (read-from-minibuffer "Map query replace (regexp): "
 					nil nil nil
-					'query-replace-history nil t)))
+					query-replace-from-history-variable
+					nil t)))
 	  (to (read-from-minibuffer
 	       (format "Query replace %s with (space-separated strings): "
 		       (query-replace-descr from))
 	       nil nil nil
-	       'query-replace-history from t)))
+	       query-replace-to-history-variable from t)))
      (list from to
 	   (and current-prefix-arg
 		(prefix-numeric-value current-prefix-arg))
@@ -526,6 +534,9 @@ which will run faster and will not set the mark or print anything."
 
 Maximum length of the history list is determined by the value
 of `history-length', which see.")
+
+(defvar occur-collect-regexp-history '("\\1")
+  "History of regexp for occur's collect operation")
 
 (defun read-regexp (prompt &optional default-value)
   "Read regexp as a string using the regexp history and some useful defaults.
@@ -750,45 +761,34 @@ a previously found match."
       count)))
 
 
-(defvar occur-mode-map
+(defvar occur-menu-map
   (let ((map (make-sparse-keymap)))
-    ;; We use this alternative name, so we can use \\[occur-mode-mouse-goto].
-    (define-key map [mouse-2] 'occur-mode-mouse-goto)
-    (define-key map "\C-c\C-c" 'occur-mode-goto-occurrence)
-    (define-key map "\C-m" 'occur-mode-goto-occurrence)
-    (define-key map "o" 'occur-mode-goto-occurrence-other-window)
-    (define-key map "\C-o" 'occur-mode-display-occurrence)
-    (define-key map "\M-n" 'occur-next)
-    (define-key map "\M-p" 'occur-prev)
-    (define-key map "r" 'occur-rename-buffer)
-    (define-key map "c" 'clone-buffer)
-    (define-key map "g" 'revert-buffer)
-    (define-key map "q" 'quit-window)
-    (define-key map "z" 'kill-this-buffer)
-    (define-key map "\C-c\C-f" 'next-error-follow-minor-mode)
-    (define-key map [menu-bar] (make-sparse-keymap))
-    (define-key map [menu-bar occur]
-      `(cons ,(purecopy "Occur") map))
     (define-key map [next-error-follow-minor-mode]
-      (menu-bar-make-mm-toggle next-error-follow-minor-mode
-			       "Auto Occurrence Display"
-			       "Display another occurrence when moving the cursor"))
+      `(menu-item ,(purecopy "Auto Occurrence Display")
+		  next-error-follow-minor-mode
+		  :help ,(purecopy
+			  "Display another occurrence when moving the cursor")
+		  :button (:toggle . (and (boundp 'next-error-follow-minor-mode)
+					  next-error-follow-minor-mode))))
     (define-key map [separator-1] menu-bar-separator)
     (define-key map [kill-this-buffer]
-      `(menu-item ,(purecopy "Kill occur buffer") kill-this-buffer
+      `(menu-item ,(purecopy "Kill Occur Buffer") kill-this-buffer
 		  :help ,(purecopy "Kill the current *Occur* buffer")))
     (define-key map [quit-window]
-      `(menu-item ,(purecopy "Quit occur window") quit-window
+      `(menu-item ,(purecopy "Quit Occur Window") quit-window
 		  :help ,(purecopy "Quit the current *Occur* buffer.  Bury it, and maybe delete the selected frame")))
     (define-key map [revert-buffer]
-      `(menu-item ,(purecopy "Revert occur buffer") revert-buffer
+      `(menu-item ,(purecopy "Revert Occur Buffer") revert-buffer
 		  :help ,(purecopy "Replace the text in the *Occur* buffer with the results of rerunning occur")))
     (define-key map [clone-buffer]
-      `(menu-item ,(purecopy "Clone occur buffer") clone-buffer
+      `(menu-item ,(purecopy "Clone Occur Buffer") clone-buffer
 		  :help ,(purecopy "Create and return a twin copy of the current *Occur* buffer")))
     (define-key map [occur-rename-buffer]
-      `(menu-item ,(purecopy "Rename occur buffer") occur-rename-buffer
+      `(menu-item ,(purecopy "Rename Occur Buffer") occur-rename-buffer
 		  :help ,(purecopy "Rename the current *Occur* buffer to *Occur: original-buffer-name*.")))
+    (define-key map [occur-edit-buffer]
+      `(menu-item ,(purecopy "Edit Occur Buffer") occur-edit-mode
+		  :help ,(purecopy "Edit the *Occur* buffer and apply changes to the original buffers.")))
     (define-key map [separator-2] menu-bar-separator)
     (define-key map [occur-mode-goto-occurrence-other-window]
       `(menu-item ,(purecopy "Go To Occurrence Other Window") occur-mode-goto-occurrence-other-window
@@ -800,17 +800,37 @@ a previously found match."
       `(menu-item ,(purecopy "Display Occurrence") occur-mode-display-occurrence
 		  :help ,(purecopy "Display in another window the occurrence the current line describes")))
     (define-key map [occur-next]
-      `(menu-item ,(purecopy "Move to next match") occur-next
+      `(menu-item ,(purecopy "Move to Next Match") occur-next
 		  :help ,(purecopy "Move to the Nth (default 1) next match in an Occur mode buffer")))
     (define-key map [occur-prev]
-      `(menu-item ,(purecopy "Move to previous match") occur-prev
+      `(menu-item ,(purecopy "Move to Previous Match") occur-prev
 		  :help ,(purecopy "Move to the Nth (default 1) previous match in an Occur mode buffer")))
+    map)
+  "Menu keymap for `occur-mode'.")
+
+(defvar occur-mode-map
+  (let ((map (make-sparse-keymap)))
+    ;; We use this alternative name, so we can use \\[occur-mode-mouse-goto].
+    (define-key map [mouse-2] 'occur-mode-mouse-goto)
+    (define-key map "\C-c\C-c" 'occur-mode-goto-occurrence)
+    (define-key map "e" 'occur-edit-mode)
+    (define-key map "\C-m" 'occur-mode-goto-occurrence)
+    (define-key map "o" 'occur-mode-goto-occurrence-other-window)
+    (define-key map "\C-o" 'occur-mode-display-occurrence)
+    (define-key map "\M-n" 'occur-next)
+    (define-key map "\M-p" 'occur-prev)
+    (define-key map "r" 'occur-rename-buffer)
+    (define-key map "c" 'clone-buffer)
+    (define-key map "\C-c\C-f" 'next-error-follow-minor-mode)
+    (define-key map [menu-bar occur] (cons (purecopy "Occur") occur-menu-map))
     map)
   "Keymap for `occur-mode'.")
 
 (defvar occur-revert-arguments nil
   "Arguments to pass to `occur-1' to revert an Occur mode buffer.
 See `occur-revert-function'.")
+(make-variable-buffer-local 'occur-revert-arguments)
+(put 'occur-revert-arguments 'permanent-local t)
 
 (defcustom occur-mode-hook '(turn-on-font-lock)
   "Hook run when entering Occur mode."
@@ -830,25 +850,88 @@ for this is to reveal context in an outline-mode when the occurrence is hidden."
   :group 'matching)
 
 (put 'occur-mode 'mode-class 'special)
-(defun occur-mode ()
+(define-derived-mode occur-mode special-mode "Occur"
   "Major mode for output from \\[occur].
 \\<occur-mode-map>Move point to one of the items in this buffer, then use
 \\[occur-mode-goto-occurrence] to go to the occurrence that the item refers to.
 Alternatively, click \\[occur-mode-mouse-goto] on an item to go to it.
 
 \\{occur-mode-map}"
-  (interactive)
-  (kill-all-local-variables)
-  (use-local-map occur-mode-map)
-  (setq major-mode 'occur-mode)
-  (setq mode-name "Occur")
   (set (make-local-variable 'revert-buffer-function) 'occur-revert-function)
-  (make-local-variable 'occur-revert-arguments)
-  (add-hook 'change-major-mode-hook 'font-lock-defontify nil t)
-  (setq next-error-function 'occur-next-error)
-  (run-mode-hooks 'occur-mode-hook))
+  (setq next-error-function 'occur-next-error))
 
-(defun occur-revert-function (ignore1 ignore2)
+
+;;; Occur Edit mode
+
+(defvar occur-edit-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map text-mode-map)
+    (define-key map [mouse-2] 'occur-mode-mouse-goto)
+    (define-key map "\C-c\C-c" 'occur-cease-edit)
+    (define-key map "\C-o" 'occur-mode-display-occurrence)
+    (define-key map "\C-c\C-f" 'next-error-follow-minor-mode)
+    (define-key map [menu-bar occur] (cons (purecopy "Occur") occur-menu-map))
+    map)
+  "Keymap for `occur-edit-mode'.")
+
+(define-derived-mode occur-edit-mode occur-mode "Occur-Edit"
+  "Major mode for editing *Occur* buffers.
+In this mode, changes to the *Occur* buffer are also applied to
+the originating buffer.
+
+To return to ordinary Occur mode, use \\[occur-cease-edit]."
+  (setq buffer-read-only nil)
+  (add-hook 'after-change-functions 'occur-after-change-function nil t)
+  (message (substitute-command-keys
+	    "Editing: Type \\[occur-cease-edit] to return to Occur mode.")))
+
+(defun occur-cease-edit ()
+  "Switch from Occur Edit mode to Occur mode."
+  (interactive)
+  (when (derived-mode-p 'occur-edit-mode)
+    (occur-mode)
+    (message "Switching to Occur mode.")))
+
+(defun occur-after-change-function (beg end length)
+  (save-excursion
+    (goto-char beg)
+    (let* ((line-beg (line-beginning-position))
+	   (m (get-text-property line-beg 'occur-target))
+	   (buf (marker-buffer m))
+	   col)
+      (when (and (get-text-property line-beg 'occur-prefix)
+		 (not (get-text-property end 'occur-prefix)))
+	(when (= length 0)
+	  ;; Apply occur-target property to inserted (e.g. yanked) text.
+	  (put-text-property beg end 'occur-target m)
+	  ;; Did we insert a newline?  Occur Edit mode can't create new
+	  ;; Occur entries; just discard everything after the newline.
+	  (save-excursion
+	    (and (search-forward "\n" end t)
+		 (delete-region (1- (point)) end))))
+	(let* ((line (- (line-number-at-pos)
+			(line-number-at-pos (window-start))))
+	       (readonly (with-current-buffer buf buffer-read-only))
+	       (win (or (get-buffer-window buf)
+			(display-buffer buf t)))
+	       (line-end (line-end-position))
+	       (text (save-excursion
+		       (goto-char (next-single-property-change
+				   line-beg 'occur-prefix nil
+				   line-end))
+		       (setq col (- (point) line-beg))
+		       (buffer-substring-no-properties (point) line-end))))
+	  (with-selected-window win
+	    (goto-char m)
+	    (recenter line)
+	    (if readonly
+		(message "Buffer `%s' is read only." buf)
+	      (delete-region (line-beginning-position) (line-end-position))
+	      (insert text))
+	    (move-to-column col)))))))
+
+
+(defun occur-revert-function (_ignore1 _ignore2)
   "Handle `revert-buffer' for Occur mode buffers."
   (apply 'occur-1 (append occur-revert-arguments (list (buffer-name)))))
 
@@ -862,7 +945,7 @@ Alternatively, click \\[occur-mode-mouse-goto] on an item to go to it.
 
 (defalias 'occur-mode-mouse-goto 'occur-mode-goto-occurrence)
 (defun occur-mode-goto-occurrence (&optional event)
-  "Go to the occurrence the current line describes."
+  "Go to the occurrence on the current line."
   (interactive (list last-nonmenu-event))
   (let ((pos
          (if (null event)
@@ -873,9 +956,7 @@ Alternatively, click \\[occur-mode-mouse-goto] on an item to go to it.
            (with-current-buffer (window-buffer (posn-window (event-end event)))
              (save-excursion
                (goto-char (posn-point (event-end event)))
-               (occur-mode-find-occurrence)))))
-        same-window-buffer-names
-        same-window-regexps)
+               (occur-mode-find-occurrence))))))
     (pop-to-buffer (marker-buffer pos))
     (goto-char pos)
     (run-hooks 'occur-mode-find-occurrence-hook)))
@@ -892,11 +973,8 @@ Alternatively, click \\[occur-mode-mouse-goto] on an item to go to it.
   "Display in another window the occurrence the current line describes."
   (interactive)
   (let ((pos (occur-mode-find-occurrence))
-	window
-	;; Bind these to ensure `display-buffer' puts it in another window.
-	same-window-buffer-names
-	same-window-regexps)
-    (setq window (display-buffer (marker-buffer pos)))
+	window)
+    (setq window (display-buffer (marker-buffer pos) t))
     ;; This is the way to set point in the proper window.
     (save-selected-window
       (select-window window)
@@ -1001,41 +1079,30 @@ which means to discard all text properties."
   :group 'matching
   :version "22.1")
 
-(defun occur-accumulate-lines (count &optional keep-props)
-  (save-excursion
-    (let ((forwardp (> count 0))
-	  result beg end)
-      (while (not (or (zerop count)
-		      (if forwardp
-			  (eobp)
-			(bobp))))
-	(setq count (+ count (if forwardp -1 1)))
-	(setq beg (line-beginning-position)
-	      end (line-end-position))
-	(if (and keep-props (if (boundp 'jit-lock-mode) jit-lock-mode)
-		 (text-property-not-all beg end 'fontified t))
-	    (if (fboundp 'jit-lock-fontify-now)
-		(jit-lock-fontify-now beg end)))
-	(push
-	 (if (and keep-props (not (eq occur-excluded-properties t)))
-	     (let ((str (buffer-substring beg end)))
-	       (remove-list-of-text-properties
-		0 (length str) occur-excluded-properties str)
-	       str)
-	   (buffer-substring-no-properties beg end))
-	 result)
-	(forward-line (if forwardp 1 -1)))
-      (nreverse result))))
-
 (defun occur-read-primary-args ()
-  (list (read-regexp "List lines matching regexp"
-		     (car regexp-history))
-	(when current-prefix-arg
-	  (prefix-numeric-value current-prefix-arg))))
+  (let* ((perform-collect (consp current-prefix-arg))
+         (regexp (read-regexp (if perform-collect
+                                  "Collect strings matching regexp"
+                                "List lines matching regexp")
+                              (car regexp-history))))
+    (list regexp
+	  (if perform-collect
+	      ;; Perform collect operation
+	      (if (zerop (regexp-opt-depth regexp))
+		  ;; No subexpression so collect the entire match.
+		  "\\&"
+		;; Get the regexp for collection pattern.
+		(let ((default (car occur-collect-regexp-history)))
+		  (read-string
+		   (format "Regexp to collect (default %s): " default)
+		   nil 'occur-collect-regexp-history default)))
+	    ;; Otherwise normal occur takes numerical prefix argument.
+	    (when current-prefix-arg
+	      (prefix-numeric-value current-prefix-arg))))))
 
 (defun occur-rename-buffer (&optional unique-p interactive-p)
   "Rename the current *Occur* buffer to *Occur: original-buffer-name*.
-Here `original-buffer-name' is the buffer name were Occur was originally run.
+Here `original-buffer-name' is the buffer name where Occur was originally run.
 When given the prefix argument, or called non-interactively, the renaming
 will not clobber the existing buffer(s) of that name, but use
 `generate-new-buffer-name' instead.  You can add this to `occur-hook'
@@ -1052,7 +1119,7 @@ invoke `occur'."
 
 (defun occur (regexp &optional nlines)
   "Show all lines in the current buffer containing a match for REGEXP.
-This function can not handle matches that span more than one line.
+If a match spreads across multiple lines, all those lines are shown.
 
 Each line is displayed with NLINES lines before and after, or -NLINES
 before if NLINES is negative.
@@ -1064,15 +1131,29 @@ It serves as a menu to find any of the occurrences in this buffer.
 \\<occur-mode-map>\\[describe-mode] in that buffer will explain how.
 
 If REGEXP contains upper case characters (excluding those preceded by `\\')
-and `search-upper-case' is non-nil, the matching is case-sensitive."
+and `search-upper-case' is non-nil, the matching is case-sensitive.
+
+When NLINES is a string or when the function is called
+interactively with prefix argument without a number (`C-u' alone
+as prefix) the matching strings are collected into the `*Occur*'
+buffer by using NLINES as a replacement regexp.  NLINES may
+contain \\& and \\N which convention follows `replace-match'.
+For example, providing \"defun\\s +\\(\\S +\\)\" for REGEXP and
+\"\\1\" for NLINES collects all the function names in a lisp
+program.  When there is no parenthesized subexpressions in REGEXP
+the entire match is collected.  In any case the searched buffers
+are not modified."
   (interactive (occur-read-primary-args))
   (occur-1 regexp nlines (list (current-buffer))))
+
+(defvar ido-ignore-item-temp-list)
 
 (defun multi-occur (bufs regexp &optional nlines)
   "Show all lines in buffers BUFS containing a match for REGEXP.
 This function acts on multiple buffers; otherwise, it is exactly like
 `occur'.  When you invoke this command interactively, you must specify
-the buffer names that you want, one by one."
+the buffer names that you want, one by one.
+See also `multi-occur-in-matching-buffers'."
   (interactive
    (cons
     (let* ((bufs (list (read-buffer "First buffer to search: "
@@ -1146,28 +1227,54 @@ See also `multi-occur'."
     (setq occur-buf (get-buffer-create buf-name))
 
     (with-current-buffer occur-buf
-      (occur-mode)
+      (if (stringp nlines)
+	  (fundamental-mode) ;; This is for collect operation.
+	(occur-mode))
       (let ((inhibit-read-only t)
 	    ;; Don't generate undo entries for creation of the initial contents.
 	    (buffer-undo-list t))
 	(erase-buffer)
-	(let ((count (occur-engine
-		      regexp active-bufs occur-buf
-		      (or nlines list-matching-lines-default-context-lines)
-		      (if (and case-fold-search search-upper-case)
-			  (isearch-no-upper-case-p regexp t)
-			case-fold-search)
-		      list-matching-lines-buffer-name-face
-		      nil list-matching-lines-face
-		      (not (eq occur-excluded-properties t)))))
+	(let ((count
+	       (if (stringp nlines)
+                   ;; Treat nlines as a regexp to collect.
+		   (let ((bufs active-bufs)
+			 (count 0))
+		     (while bufs
+		       (with-current-buffer (car bufs)
+			 (save-excursion
+			   (goto-char (point-min))
+			   (while (re-search-forward regexp nil t)
+                             ;; Insert the replacement regexp.
+			     (let ((str (match-substitute-replacement nlines)))
+			       (if str
+				   (with-current-buffer occur-buf
+				     (insert str)
+				     (setq count (1+ count))
+				     (or (zerop (current-column))
+					 (insert "\n"))))))))
+                       (setq bufs (cdr bufs)))
+                     count)
+		 ;; Perform normal occur.
+		 (occur-engine
+		  regexp active-bufs occur-buf
+		  (or nlines list-matching-lines-default-context-lines)
+		  (if (and case-fold-search search-upper-case)
+		      (isearch-no-upper-case-p regexp t)
+		    case-fold-search)
+		  list-matching-lines-buffer-name-face
+		  nil list-matching-lines-face
+		  (not (eq occur-excluded-properties t))))))
 	  (let* ((bufcount (length active-bufs))
 		 (diff (- (length bufs) bufcount)))
-	    (message "Searched %d buffer%s%s; %s match%s for `%s'"
+	    (message "Searched %d buffer%s%s; %s match%s%s"
 		     bufcount (if (= bufcount 1) "" "s")
 		     (if (zerop diff) "" (format " (%d killed)" diff))
 		     (if (zerop count) "no" (format "%d" count))
 		     (if (= count 1) "" "es")
-		     regexp))
+		     ;; Don't display regexp if with remaining text
+		     ;; it is longer than window-width.
+		     (if (> (+ (length regexp) 42) (window-width))
+			 "" (format " for `%s'" (query-replace-descr regexp)))))
 	  (setq occur-revert-arguments (list regexp nlines bufs))
           (if (= count 0)
               (kill-buffer occur-buf)
@@ -1177,28 +1284,26 @@ See also `multi-occur'."
             (set-buffer-modified-p nil)
             (run-hooks 'occur-hook)))))))
 
-(defun occur-engine-add-prefix (lines)
-  (mapcar
-   #'(lambda (line)
-       (concat "       :" line "\n"))
-   lines))
-
-(defun occur-engine (regexp buffers out-buf nlines case-fold-search
+(defun occur-engine (regexp buffers out-buf nlines case-fold
 			    title-face prefix-face match-face keep-props)
   (with-current-buffer out-buf
     (let ((globalcount 0)
-	  (coding nil))
+	  (coding nil)
+	  (case-fold-search case-fold))
       ;; Map over all the buffers
       (dolist (buf buffers)
 	(when (buffer-live-p buf)
 	  (let ((matches 0)	;; count of matched lines
 		(lines 1)	;; line count
+		(prev-after-lines nil)	;; context lines of prev match
+		(prev-lines nil)        ;; line number of prev match endpt
 		(matchbeg 0)
 		(origpt nil)
 		(begpt nil)
 		(endpt nil)
 		(marker nil)
 		(curstring "")
+		(ret nil)
 		(inhibit-field-text-motion t)
 		(headerpt (with-current-buffer out-buf (point))))
 	    (with-current-buffer buf
@@ -1214,24 +1319,17 @@ See also `multi-occur'."
 		  (when (setq endpt (re-search-forward regexp nil t))
 		    (setq matches (1+ matches)) ;; increment match count
 		    (setq matchbeg (match-beginning 0))
-		    (setq lines (+ lines (1- (count-lines origpt endpt))))
+		    ;; Get beginning of first match line and end of the last.
 		    (save-excursion
 		      (goto-char matchbeg)
-		      (setq begpt (line-beginning-position)
-			    endpt (line-end-position)))
+		      (setq begpt (line-beginning-position))
+		      (goto-char endpt)
+		      (setq endpt (line-end-position)))
+		    ;; Sum line numbers up to the first match line.
+		    (setq lines (+ lines (count-lines origpt begpt)))
 		    (setq marker (make-marker))
 		    (set-marker marker matchbeg)
-		    (if (and keep-props
-			     (if (boundp 'jit-lock-mode) jit-lock-mode)
-			     (text-property-not-all begpt endpt 'fontified t))
-			(if (fboundp 'jit-lock-fontify-now)
-			    (jit-lock-fontify-now begpt endpt)))
-		    (if (and keep-props (not (eq occur-excluded-properties t)))
-			(progn
-			  (setq curstring (buffer-substring begpt endpt))
-			  (remove-list-of-text-properties
-			   0 (length curstring) occur-excluded-properties curstring))
-		      (setq curstring (buffer-substring-no-properties begpt endpt)))
+		    (setq curstring (occur-engine-line begpt endpt keep-props))
 		    ;; Highlight the matches
 		    (let ((len (length curstring))
 			  (start 0))
@@ -1248,24 +1346,37 @@ See also `multi-occur'."
 			 curstring)
 			(setq start (match-end 0))))
 		    ;; Generate the string to insert for this match
-		    (let* ((out-line
+		    (let* ((match-prefix
+			    ;; Using 7 digits aligns tabs properly.
+			    (apply #'propertize (format "%7d:" lines)
+				   (append
+				    (when prefix-face
+				      `(font-lock-face prefix-face))
+				    `(occur-prefix t mouse-face (highlight)
+				      ;; Allow insertion of text at
+				      ;; the end of the prefix (for
+				      ;; Occur Edit mode).
+				      front-sticky t rear-nonsticky t
+				      occur-target ,marker follow-link t
+				      help-echo "mouse-2: go to this occurrence"))))
+			   (match-str
+			    ;; We don't put `mouse-face' on the newline,
+			    ;; because that loses.  And don't put it
+			    ;; on context lines to reduce flicker.
+			    (propertize curstring 'mouse-face (list 'highlight)
+					'occur-target marker
+					'follow-link t
+					'help-echo
+					"mouse-2: go to this occurrence"))
+			   (out-line
 			    (concat
-			     ;; Using 7 digits aligns tabs properly.
-			     (apply #'propertize (format "%7d:" lines)
-				    (append
-				     (when prefix-face
-				       `(font-lock-face prefix-face))
-				     `(occur-prefix t mouse-face (highlight)
-				       occur-target ,marker follow-link t
-				       help-echo "mouse-2: go to this occurrence")))
-			     ;; We don't put `mouse-face' on the newline,
-			     ;; because that loses.  And don't put it
-			     ;; on context lines to reduce flicker.
-			     (propertize curstring 'mouse-face (list 'highlight)
-					 'occur-target marker
-					 'follow-link t
-					 'help-echo
-					 "mouse-2: go to this occurrence")
+			     match-prefix
+			     ;; Add non-numeric prefix to all non-first lines
+			     ;; of multi-line matches.
+			     (replace-regexp-in-string
+			      "\n"
+			      "\n       :"
+			      match-str)
 			     ;; Add marker at eol, but no mouse props.
 			     (propertize "\n" 'occur-target marker)))
 			   (data
@@ -1273,30 +1384,48 @@ See also `multi-occur'."
 				;; The simple display style
 				out-line
 			      ;; The complex multi-line display style.
-			      (occur-context-lines out-line nlines keep-props)
-			      )))
+			      (setq ret (occur-context-lines
+					 out-line nlines keep-props begpt endpt
+					 lines prev-lines prev-after-lines))
+			      ;; Set first elem of the returned list to `data',
+			      ;; and the second elem to `prev-after-lines'.
+			      (setq prev-after-lines (nth 1 ret))
+			      (nth 0 ret))))
 		      ;; Actually insert the match display data
 		      (with-current-buffer out-buf
-			(let ((beg (point))
-			      (end (progn (insert data) (point))))
-			  (unless (= nlines 0)
-			    (insert "-------\n")))))
+			(insert data)))
 		    (goto-char endpt))
 		  (if endpt
 		      (progn
-			(setq lines (1+ lines))
+			;; Sum line numbers between first and last match lines.
+			(setq lines (+ lines (count-lines begpt endpt)
+				       ;; Add 1 for empty last match line since
+				       ;; count-lines returns 1 line less.
+				       (if (and (bolp) (eolp)) 1 0)))
 			;; On to the next match...
 			(forward-line 1))
-		    (goto-char (point-max))))))
+		    (goto-char (point-max)))
+		  (setq prev-lines (1- lines)))
+		;; Flush remaining context after-lines.
+		(when prev-after-lines
+		  (with-current-buffer out-buf
+		    (insert (apply #'concat (occur-engine-add-prefix
+					     prev-after-lines)))))))
 	    (when (not (zerop matches)) ;; is the count zero?
 	      (setq globalcount (+ globalcount matches))
 	      (with-current-buffer out-buf
 		(goto-char headerpt)
 		(let ((beg (point))
 		      end)
-		  (insert (format "%d match%s for \"%s\" in buffer: %s\n"
-				  matches (if (= matches 1) "" "es")
-				  regexp (buffer-name buf)))
+		  (insert (propertize
+			   (format "%d match%s%s in buffer: %s\n"
+				   matches (if (= matches 1) "" "es")
+				   ;; Don't display regexp for multi-buffer.
+				   (if (> (length buffers) 1)
+				       "" (format " for \"%s\""
+						  (query-replace-descr regexp)))
+				   (buffer-name buf))
+			   'read-only t))
 		  (setq end (point))
 		  (add-text-properties beg end
 				       (append
@@ -1304,6 +1433,18 @@ See also `multi-occur'."
 					  `(font-lock-face ,title-face))
 					`(occur-title ,buf))))
 		(goto-char (point-min)))))))
+      ;; Display total match count and regexp for multi-buffer.
+      (when (and (not (zerop globalcount)) (> (length buffers) 1))
+	(goto-char (point-min))
+	(let ((beg (point))
+	      end)
+	  (insert (format "%d match%s total for \"%s\":\n"
+			  globalcount (if (= globalcount 1) "" "es")
+			  (query-replace-descr regexp)))
+	  (setq end (point))
+	  (add-text-properties beg end (when title-face
+					 `(font-lock-face ,title-face))))
+	(goto-char (point-min)))
       (if coding
 	  ;; CODING is buffer-file-coding-system of the first buffer
 	  ;; that locally binds it.  Let's use it also for the output
@@ -1312,21 +1453,98 @@ See also `multi-occur'."
       ;; Return the number of matches
       globalcount)))
 
+(defun occur-engine-line (beg end &optional keep-props)
+  (if (and keep-props (if (boundp 'jit-lock-mode) jit-lock-mode)
+	   (text-property-not-all beg end 'fontified t))
+      (if (fboundp 'jit-lock-fontify-now)
+	  (jit-lock-fontify-now beg end)))
+  (if (and keep-props (not (eq occur-excluded-properties t)))
+      (let ((str (buffer-substring beg end)))
+	(remove-list-of-text-properties
+	 0 (length str) occur-excluded-properties str)
+	str)
+    (buffer-substring-no-properties beg end)))
+
+(defun occur-engine-add-prefix (lines)
+  (mapcar
+   #'(lambda (line)
+       (concat "       :" line "\n"))
+   lines))
+
+(defun occur-accumulate-lines (count &optional keep-props pt)
+  (save-excursion
+    (when pt
+      (goto-char pt))
+    (let ((forwardp (> count 0))
+	  result beg end moved)
+      (while (not (or (zerop count)
+		      (if forwardp
+			  (eobp)
+			(and (bobp) (not moved)))))
+	(setq count (+ count (if forwardp -1 1)))
+	(setq beg (line-beginning-position)
+	      end (line-end-position))
+	(push (occur-engine-line beg end keep-props) result)
+	(setq moved (= 0 (forward-line (if forwardp 1 -1)))))
+      (nreverse result))))
+
 ;; Generate context display for occur.
 ;; OUT-LINE is the line where the match is.
 ;; NLINES and KEEP-PROPS are args to occur-engine.
+;; LINES is line count of the current match,
+;; PREV-LINES is line count of the previous match,
+;; PREV-AFTER-LINES is a list of after-context lines of the previous match.
 ;; Generate a list of lines, add prefixes to all but OUT-LINE,
 ;; then concatenate them all together.
-(defun occur-context-lines (out-line nlines keep-props)
-  (apply #'concat
-	 (nconc
-	  (occur-engine-add-prefix
-	   (nreverse (cdr (occur-accumulate-lines
-			   (- (1+ (abs nlines))) keep-props))))
-	  (list out-line)
-	  (if (> nlines 0)
-	      (occur-engine-add-prefix
-	       (cdr (occur-accumulate-lines (1+ nlines) keep-props)))))))
+(defun occur-context-lines (out-line nlines keep-props begpt endpt
+				     lines prev-lines prev-after-lines)
+  ;; Find after- and before-context lines of the current match.
+  (let ((before-lines
+	 (nreverse (cdr (occur-accumulate-lines
+			 (- (1+ (abs nlines))) keep-props begpt))))
+	(after-lines
+	 (cdr (occur-accumulate-lines
+	       (1+ nlines) keep-props endpt)))
+	separator)
+
+    ;; Combine after-lines of the previous match
+    ;; with before-lines of the current match.
+
+    (when prev-after-lines
+      ;; Don't overlap prev after-lines with current before-lines.
+      (if (>= (+ prev-lines (length prev-after-lines))
+	      (- lines      (length before-lines)))
+	  (setq prev-after-lines
+		(butlast prev-after-lines
+			 (- (length prev-after-lines)
+			    (- lines prev-lines (length before-lines) 1))))
+	;; Separate non-overlapping context lines with a dashed line.
+	(setq separator "-------\n")))
+
+    (when prev-lines
+      ;; Don't overlap current before-lines with previous match line.
+      (if (<= (- lines (length before-lines))
+	      prev-lines)
+	  (setq before-lines
+		(nthcdr (- (length before-lines)
+			   (- lines prev-lines 1))
+			before-lines))
+	;; Separate non-overlapping before-context lines.
+	(unless (> nlines 0)
+	  (setq separator "-------\n"))))
+
+    (list
+     ;; Return a list where the first element is the output line.
+     (apply #'concat
+	    (append
+	     (and prev-after-lines
+		  (occur-engine-add-prefix prev-after-lines))
+	     (and separator (list separator))
+	     (occur-engine-add-prefix before-lines)
+	     (list out-line)))
+     ;; And the second element is the list of context after-lines.
+     (if (> nlines 0) after-lines))))
+
 
 ;; It would be nice to use \\[...], but there is no reasonable way
 ;; to make that display both SPC and Y.
@@ -1376,8 +1594,8 @@ E to edit the replacement string"
   "Keymap that defines the responses to questions in `query-replace'.
 The \"bindings\" in this map are not commands; they are answers.
 The valid answers include `act', `skip', `act-and-show',
-`exit', `act-and-exit', `edit', `delete-and-edit', `recenter',
-`automatic', `backup', `exit-prefix', and `help'.")
+`exit', `act-and-exit', `edit', `edit-replacement', `delete-and-edit',
+`recenter', `automatic', `backup', `exit-prefix', `quit', and `help'.")
 
 (defvar multi-query-replace-map
   (let ((map (make-sparse-keymap)))
@@ -1425,8 +1643,9 @@ type them using Lisp syntax."
 	  (setcar n 'replace-count))))))
     (setq n (cdr n))))
 
-(defun replace-eval-replacement (expression replace-count)
-  (let ((replacement (eval expression)))
+(defun replace-eval-replacement (expression count)
+  (let* ((replace-count count)
+         (replacement (eval expression)))
     (if (stringp replacement)
         replacement
       (prin1-to-string replacement t))))
@@ -1446,15 +1665,15 @@ with the `noescape' argument set.
 				(prin1-to-string replacement t))
 			      t t)))
 
-(defun replace-loop-through-replacements (data replace-count)
-  ;; DATA is a vector contaning the following values:
+(defun replace-loop-through-replacements (data count)
+  ;; DATA is a vector containing the following values:
   ;;   0 next-rotate-count
   ;;   1 repeat-count
   ;;   2 next-replacement
   ;;   3 replacements
-  (if (= (aref data 0) replace-count)
+  (if (= (aref data 0) count)
       (progn
-        (aset data 0 (+ replace-count (aref data 1)))
+        (aset data 0 (+ count (aref data 1)))
         (let ((next (cdr (aref data 2))))
           (aset data 2 (if (consp next) next (aref data 3))))))
   (car (aref data 2)))
@@ -1879,6 +2098,11 @@ make, or the user didn't cancel the call."
 		 (if (= replace-count 1) "" "s")))
     (or (and keep-going stack) multi-buffer)))
 
+(defvar isearch-error)
+(defvar isearch-forward)
+(defvar isearch-case-fold-search)
+(defvar isearch-string)
+
 (defvar replace-overlay nil)
 
 (defun replace-highlight (match-beg match-end range-beg range-end
@@ -1892,6 +2116,9 @@ make, or the user didn't cancel the call."
   (if query-replace-lazy-highlight
       (let ((isearch-string string)
 	    (isearch-regexp regexp)
+	    ;; Set isearch-word to nil because word-replace is regexp-based,
+	    ;; so `isearch-search-fun' should not use `word-search-forward'.
+	    (isearch-word nil)
 	    (search-whitespace-regexp nil)
 	    (isearch-case-fold-search case-fold)
 	    (isearch-forward t)
@@ -1905,5 +2132,4 @@ make, or the user didn't cancel the call."
     (lazy-highlight-cleanup lazy-highlight-cleanup)
     (setq isearch-lazy-highlight-last-string nil)))
 
-;; arch-tag: 16b4cd61-fd40-497b-b86f-b667c4cf88e4
 ;;; replace.el ends here

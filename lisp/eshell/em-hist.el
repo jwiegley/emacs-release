@@ -1,7 +1,6 @@
 ;;; em-hist.el --- history list management
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -71,8 +70,9 @@
 
 ;;; User Variables:
 
-(defcustom eshell-hist-load-hook '(eshell-hist-initialize)
-  "*A list of functions to call when loading `eshell-hist'."
+(defcustom eshell-hist-load-hook nil
+  "A list of functions to call when loading `eshell-hist'."
+  :version "24.1"			; removed eshell-hist-initialize
   :type 'hook
   :group 'eshell-hist)
 
@@ -81,31 +81,33 @@
    (function
     (lambda ()
       (remove-hook 'kill-emacs-hook 'eshell-save-some-history))))
-  "*A hook that gets run when `eshell-hist' is unloaded."
+  "A hook that gets run when `eshell-hist' is unloaded."
   :type 'hook
   :group 'eshell-hist)
 
 (defcustom eshell-history-file-name
   (expand-file-name "history" eshell-directory-name)
-  "*If non-nil, name of the file to read/write input history.
+  "If non-nil, name of the file to read/write input history.
 See also `eshell-read-history' and `eshell-write-history'.
 If it is nil, Eshell will use the value of HISTFILE."
-  :type 'file
+  :type '(choice (const :tag "Use HISTFILE" nil)
+		 file)
   :group 'eshell-hist)
 
 (defcustom eshell-history-size 128
-  "*Size of the input history ring.  If nil, use envvar HISTSIZE."
-  :type 'integer
+  "Size of the input history ring.  If nil, use envvar HISTSIZE."
+  :type '(choice (const :tag "Use HISTSIZE" nil)
+		 integer)
   :group 'eshell-hist)
 
 (defcustom eshell-hist-ignoredups nil
-  "*If non-nil, don't add input matching the last on the input ring.
+  "If non-nil, don't add input matching the last on the input ring.
 This mirrors the optional behavior of bash."
   :type 'boolean
   :group 'eshell-hist)
 
 (defcustom eshell-save-history-on-exit t
-  "*Determine if history should be automatically saved.
+  "Determine if history should be automatically saved.
 History is always preserved after sanely exiting an Eshell buffer.
 However, when Emacs is being shut down, this variable determines
 whether to prompt the user.
@@ -121,7 +123,7 @@ If set to t, history will always be saved, silently."
   (function
    (lambda (str)
      (not (string-match "\\`\\s-*\\'" str))))
-  "*Predicate for filtering additions to input history.
+  "Predicate for filtering additions to input history.
 Takes one argument, the input.  If non-nil, the input may be saved on
 the input history list.  Default is to save anything that isn't all
 whitespace."
@@ -131,7 +133,7 @@ whitespace."
 (put 'eshell-input-filter 'risky-local-variable t)
 
 (defcustom eshell-hist-match-partial t
-  "*If non-nil, movement through history is constrained by current input.
+  "If non-nil, movement through history is constrained by current input.
 Otherwise, typing <M-p> and <M-n> will always go to the next history
 element, regardless of any text on the command line.  In that case,
 <C-c M-r> and <C-c M-s> still offer that functionality."
@@ -139,25 +141,25 @@ element, regardless of any text on the command line.  In that case,
   :group 'eshell-hist)
 
 (defcustom eshell-hist-move-to-end t
-  "*If non-nil, move to the end of the buffer before cycling history."
+  "If non-nil, move to the end of the buffer before cycling history."
   :type 'boolean
   :group 'eshell-hist)
 
 (defcustom eshell-hist-event-designator
   "^!\\(!\\|-?[0-9]+\\|\\??[^:^$%*?]+\\??\\|#\\)"
-  "*The regexp used to identifier history event designators."
+  "The regexp used to identifier history event designators."
   :type 'regexp
   :group 'eshell-hist)
 
 (defcustom eshell-hist-word-designator
   "^:?\\([0-9]+\\|[$^%*]\\)?\\(\\*\\|-[0-9]*\\|[$^%*]\\)?"
-  "*The regexp used to identify history word designators."
+  "The regexp used to identify history word designators."
   :type 'regexp
   :group 'eshell-hist)
 
 (defcustom eshell-hist-modifier
   "^\\(:\\([hretpqx&g]\\|s/\\([^/]*\\)/\\([^/]*\\)/\\)\\)*"
-  "*The regexp used to identity history modifiers."
+  "The regexp used to identity history modifiers."
   :type 'regexp
   :group 'eshell-hist)
 
@@ -174,7 +176,7 @@ element, regardless of any text on the command line.  In that case,
     ([(meta ?n)]      . eshell-next-matching-input-from-input)
     ([up]             . eshell-previous-matching-input-from-input)
     ([down]           . eshell-next-matching-input-from-input))
-  "*History keys to bind differently if point is in input text."
+  "History keys to bind differently if point is in input text."
   :type '(repeat (cons (vector :tag "Keys to bind"
 			       (repeat :inline t sexp))
 		       (function :tag "Command")))
@@ -261,7 +263,13 @@ element, regardless of any text on the command line.  In that case,
 
   (make-local-variable 'eshell-history-size)
   (or eshell-history-size
-      (setq eshell-history-size (getenv "HISTSIZE")))
+      (let ((hsize (getenv "HISTSIZE")))
+        (setq eshell-history-size
+	      (if (and (stringp hsize)
+		       (integerp (setq hsize (string-to-number hsize)))
+		       (> hsize 0))
+		  hsize
+		128))))
 
   (make-local-variable 'eshell-history-file-name)
   (or eshell-history-file-name
@@ -293,7 +301,7 @@ element, regardless of any text on the command line.  In that case,
 
 (defun eshell-save-some-history ()
   "Save the history for any open Eshell buffers."
-  (eshell-for buf (buffer-list)
+  (dolist (buf (buffer-list))
     (if (buffer-live-p buf)
 	(with-current-buffer buf
 	  (if (and eshell-mode
@@ -609,7 +617,7 @@ See also `eshell-read-history'."
 					   history))))
 		 (setq index (1- index)))
 	       (let ((fhist (list t)))
-		 ;; uniqify the list, but preserve the order
+		 ;; uniquify the list, but preserve the order
 		 (while history
 		   (unless (member (car history) fhist)
 		     (nconc fhist (list (car history))))
@@ -731,7 +739,7 @@ matched."
 	  (narrow-to-region here (point))
 	  (goto-char (point-min))
 	  (let ((modifiers (cdr (eshell-parse-modifiers))))
-	    (eshell-for mod modifiers
+	    (dolist (mod modifiers)
 	      (setq hist (funcall mod hist)))
 	    hist))
       (delete-region here (point)))))
@@ -998,5 +1006,4 @@ If N is negative, search backwards for the -Nth previous match."
 ;; generated-autoload-file: "esh-groups.el"
 ;; End:
 
-;; arch-tag: 1a847333-f864-4b96-9acd-b549d620b6c6
 ;;; em-hist.el ends here

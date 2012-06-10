@@ -1,7 +1,6 @@
 ;;; semantic/tag.el --- tag creation and access
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008,
-;;   2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1999-2005, 2007-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 
@@ -920,7 +919,7 @@ That is the value of the attribute `:system-flag'."
   "Return a filename representation of TAG.
 The default action is to return the `semantic-tag-name'.
 Some languages do not use full filenames in their include statements.
-Override this method to translate the code represenation
+Override this method to translate the code representation
 into a filename.  (A relative filename if necessary.)
 
 See `semantic-dependency-tag-file' to expand an include
@@ -1163,7 +1162,7 @@ This function is for internal use only."
        (semantic-tag-components-with-overlays tag)))))
 
 (defun semantic--tag-unlink-cache-from-buffer ()
-  "Convert all tags in the current cache to use overlay proxys.
+  "Convert all tags in the current cache to use overlay proxies.
 This function is for internal use only."
   (require 'semantic)
   (semantic--tag-unlink-list-from-buffer
@@ -1369,5 +1368,4 @@ and `semantic-tag-type-interfaces' instead" "23.2")
 ;; generated-autoload-load-name: "semantic/tag"
 ;; End:
 
-;; arch-tag: f7813634-c4f0-4817-a487-cbaa84333353
 ;;; semantic/tag.el ends here

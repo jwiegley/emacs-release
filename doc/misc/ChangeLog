@@ -1,35 +1,1176 @@
-2012-01-19  Chong Yidong  <cyd@gnu.org>
+2012-06-01  Chong Yidong  <cyd@gnu.org>
 
-	* Version 23.4 released.
+	* Version 24.1 released.
+
+2012-06-01  Chong Yidong  <cyd@gnu.org>
+
+	* sc.texi: Remove bogus @ifinfo commands which prevent makeinfo
+	compilation for html-mono.
+
+2012-05-16  Bastien Guerry  <bzg@gnu.org>
+
+	* org.texi (Durations and time values): Fix typo.
+
+2012-05-12  Andreas Schwab  <schwab@linux-m68k.org>
+
+	* cc-mode.texi: Avoid space before macro in 4th argument of cross
+	reference commands.  (Bug#11461)
+
+	* Makefile.in (gnus.dvi): Use $@ instead of $*.dvi.
+
+2012-05-02  Glenn Morris  <rgm@gnu.org>
+
+	* viper.texi: Make direntry shorter (also it is no longer "newest").
+
+	* emacs-gnutls.texi, ert.texi, org.texi:
+	Fix dircategory, direntry to match info/dir.
+
+2012-04-28  Glenn Morris  <rgm@gnu.org>
+
+	* faq.texi: Convert @inforefs to @xrefs.
+	Fix some malformed cross-references.
+	(File-name conventions): Shorten section name to avoid overfull line.
+	(How to add fonts): Use smallexample to avoid overfull lines.
+
+2012-04-26  Ippei Furuhashi  <top.tuna+orgmode@gmail.com>  (tiny change)
+
+	* org.texi (Agenda commands): Fix two typos: give corresponding
+	function names, according to `org-agenda-view-mode-dispatch'.
+
+2012-04-21  Glenn Morris  <rgm@gnu.org>
+
+	* faq.texi (Major packages and programs): Remove section.
+	There is no point listing 6 packages (cf etc/MORE.STUFF).
+	(Finding Emacs and related packages): Move "Spell-checkers" here.
+
+2012-04-20  Glenn Morris  <rgm@gnu.org>
+
+	* faq.texi (New in Emacs 24): New section.
+	(Packages that do not come with Emacs): Mention M-x list-packages.
+
+2012-04-13  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in: Replace non-portable use of $< in emacs-gnutls rules.
+
+2012-04-12  Eli Zaretskii  <eliz@gnu.org>
+
+	* makefile.w32-in (INFO_TARGETS, DVI_TARGETS, clean): Add emacs-gnutls.
+	($(infodir)/emacs-gnutls, emacs-gnutls.dvi): New targets.
+
+2012-04-12  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* emacs-gnutls.texi: Add documentation for the GnuTLS integration.
+	* Makefile.in: Add emacs-gnutls.texi to build.
+
+2012-04-11  Alan Mackenzie  <acm@muc.de>
+
+	* cc-mode.texi (c-offsets-alist): Correct a typo.
+
+2012-04-11  Jérémie Courrèges-Anglas  <jca@wxcvbn.org>  (tiny change)
+
+	* org.texi (Deadlines and scheduling): Fix the example: the
+	DEADLINE item should come right after the headline.  We enforce
+	this convention, so it is a bug not to illustrate it correctly in
+	the manual.
+
+2012-04-11  Ippei FURUHASHI  <top.tuna+orgmode@gmail.com>  (tiny change)
+
+	* org.texi (Agenda commands): Fix documentation bug by swapping
+	the equivalent keybindings to `org-agenda-next-line' with the ones
+	to `org-agenda-previous-line'.
+
+2012-04-07  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in: Replace non-portable use of $< in ordinary rules.
+
+2012-04-05  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* auth.texi (Secret Service API): Edit further and give examples.
+	(Secret Service API): Adjust @samp to @code for collection names.
+
+2012-04-04  Glenn Morris  <rgm@gnu.org>
+
+	* auth.texi (Secret Service API): Copyedits.
+	(Help for developers): Fill in some missing function doc-strings.
+	(Help for users, Help for developers)
+	(GnuPG and EasyPG Assistant Configuration): Markup fixes.
+
+2012-04-04  Michael Albinus  <michael.albinus@gmx.de>
+
+	* auth.texi (Secret Service API): Add the missing text.
+
+2012-04-04  Chong Yidong  <cyd@gnu.org>
+
+	* message.texi (Using PGP/MIME): Note that epg is now the default.
+
+	* gnus.texi: Reduce references to obsolete pgg library.
+	(Security): Note that epg is now the default.
+
+	* gnus-faq.texi (FAQ 8-2): Mention EasyPG.
+
+	* nxml-mode.texi (Completion): C-RET is no longer bound to
+	nxml-complete.
+
+2012-04-01  Jambunathan K  <kjambunathan@gmail.com>
+
+	* org.texi (Customizing tables in ODT export): Correct few errors.
+
+2012-04-01  Jambunathan K  <kjambunathan@gmail.com>
+
+	* org.texi (Links in ODT export): Update.
+	(Labels and captions in ODT export): New node.
+
+2012-04-01  Jambunathan K  <kjambunathan@gmail.com>
+
+	* org.texi (Literal examples in ODT export): htmlfontify.el in
+	Emacs-24.1 now supports fontification.  So ODT source blocks will
+	be fontified by default.
+
+2012-04-01  Julian Gehring  <julian.gehring@googlemail.com>  (tiny change)
+
+	* org.texi (Refiling notes): Remove duplicated keybinding.
+
+2012-04-01  Eric Schulte  <eric.schulte@gmx.com>
+
+	* org.texi (noweb): Documentation of this new option to the :noweb
+	header argument.
+
+2012-04-01  Suvayu Ali  <fatkasuvayu+linux@gmail.com>
+
+	* org.texi (Header and sectioning): Add example demonstrating how
+	to use "LaTeX_CLASS_OPTIONS".
+
+2012-04-01  Eric Schulte  <eric.schulte@gmx.com>
+
+	* org.texi (Noweb reference syntax): Describe the ability to
+	execute noweb references in the manual.
+
+2012-04-01  Eric Schulte  <eric.schulte@gmx.com>
+
+	* org.texi (cache): Improve cache documentation when session
+	evaluation is used.
+
+2012-04-01  Nicolas Goaziou  <n.goaziou@gmail.com>
+
+	* org.texi (Plain lists): Document removal.
+
+2012-04-01  Michael Brand  <michael.ch.brand@gmail.com>
+
+	* org.texi: Decapitalize file name in references to Calc manual.
+
+2012-04-01  Nicolas Goaziou  <n.goaziou@gmail.com>
+
+	* org.texi (Plain lists): Document removal.
+
+2012-04-01  Jambunathan K  <kjambunathan@gmail.com>
+
+	* org.texi (Top, OpenDocument Text export)
+	(ODT export commands, Extending ODT export)
+	(Images in ODT export, Tables in ODT export)
+	(Configuring a document converter): Add or Update.
+
+2012-04-01  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (MobileOrg): Change the wording to reflect that the
+	Android Version is no longer just the little brother of the iOS
+	version.
+
+2012-04-01  Eric Schulte  <eric.schulte@gmx.com>
+
+	* org.texi (Key bindings and useful functions): Updated babel key
+	binding documentation in manual.
+
+2012-04-01  Eric Schulte  <eric.schulte@gmx.com>
+
+	* org.texi (noweb): Document new noweb header value.
+
+2012-04-01  Eric Schulte  <eric.schulte@gmx.com>
+
+	* org.texi (noweb-sep): Document new header argument.
+
+2012-04-01  Eric Schulte  <eric.schulte@gmx.com>
+
+	* org.texi (noweb-ref): Documentation of this new custom variable.
+
+2012-04-01  Eric Schulte  <eric.schulte@gmx.com>
+
+	* org.texi (wrap): Update the new :wrap documentation to match the
+	current implementation.
+
+2012-04-01  Thomas Dye  <dk@poto.myhome.westell.com>
+
+	* org.texi: Added documentation for :wrap.
+
+2012-04-01  Thomas Dye  <dk@poto.myhome.westell.com>
+
+	* org.texi: #+RESULTS now user-configurable.
+
+2012-04-01  Thomas Dye  <dk@poto.myhome.westell.com>
+
+	* org.texi: Documented :noweb no-export.
+
+2012-04-01  Thomas Dye  <dk@poto.local>
+
+	* org.texi: Edit :noweb no header argument for correctness.
+
+2012-04-01  Bastien Guerry  <bzg@altern.org>
+
+	* org.texi (Customization): Update the approximate number of Org
+	variables.
+
+2012-04-01  Thomas Dye  <dk@poto.local>
+
+	* org.texi: The :results wrap produces a drawer instead of a
+	begin_results block.
+
+2012-03-22  Peder O. Klingenberg  <peder@klingenberg.no>  (tiny change)
+
+	* gnus.texi (Archived Messages): Update `gnus-message-archive-group' to
+	reflect the new default.
+
+2012-03-10  Eli Zaretskii  <eliz@gnu.org>
+
+	* info.texi (Expert Info): Move the index entry for "Texinfo" from
+	"Getting Started" to this node.  (Bug#10450)
+
+2012-03-10  Chong Yidong  <cyd@gnu.org>
+
+	* flymake.texi (Example -- Configuring a tool called via make):
+	Mention the Automake COMPILE variable (Bug#8715).
+
+	* info.texi (Getting Started): Add an index entry (Bug#10450).
+
+2012-03-02  Michael Albinus  <michael.albinus@gmx.de>
+
+	* dbus.texi (Signals): Known names will be mapped onto unique
+	names, when registering for signals.
+
+2012-02-29  Glenn Morris  <rgm@gnu.org>
+
+	* url.texi: Fix quote usage in body text.
+
+	* sem-user.texi, url.texi, woman.texi: Use "" quotes in menus.
+
+	* cl.texi: Use @code{} in menus when appropriate.
+
+2012-02-28  Glenn Morris  <rgm@gnu.org>
+
+	* calc.texi, cc-mode.texi, cl.texi, ebrowse.texi, ediff.texi:
+	* eshell.texi, gnus-faq.texi, gnus-news.texi, gnus.texi:
+	* idlwave.texi, info.texi, newsticker.texi, nxml-mode.texi:
+	* org.texi, sc.texi, vip.texi, viper.texi:
+	Standardize possessive apostrophe usage.
+
+2012-02-26  Chong Yidong  <cyd@gnu.org>
+
+	* ediff.texi (Quick Help Commands): Add a couple of index entries
+	(Bug#10834).
+
+2012-02-17  Glenn Morris  <rgm@gnu.org>
+
+	* gnus.texi (Posting Styles):
+	* remember.texi (Org): Fix cross-refs to other manuals.
+
+2012-02-15  Glenn Morris  <rgm@gnu.org>
+
+	* smtpmail.texi (Emacs Speaks SMTP): General update for 24.1.
+	(Encryption): New chapter, split out from previous.
+
+2012-02-13  Lars Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Customizing the IMAP Connection): Mention
+	nnimap-record-commands.
+
+2012-02-10  Glenn Morris  <rgm@gnu.org>
+
+	* url.texi (Retrieving URLs): Update url-retrieve arguments.
+	Mention url-queue-retrieve.
+
+2012-02-09  Glenn Morris  <rgm@gnu.org>
+
+	* sem-user.texi (Semantic mode user commands): Typo fix.
+
+	* info.texi (Create Info buffer): Mention info-display-manual.
+
+2012-02-07  Lars Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Mail Source Specifiers): Add a pop3 via an SSH tunnel
+	example (modified from an example by Michael Albinus).
+
+2012-01-30  Philipp Haselwarter  <philipp.haselwarter@gmx.de>  (tiny change)
+
+	* gnus.texi (Agent Basics): Fix outdated description of
+	`gnus-agent-auto-agentize-methods'.
+
+2012-01-28  Andreas Schwab  <schwab@linux-m68k.org>
+
+	* cc-mode.texi: Always @defindex ss.
+	(Config Basics): Fix argument of @itemize.
+	(Macro Backslashes): Add @code around index entry.
+
+2012-01-23  Glenn Morris  <rgm@gnu.org>
+
+	* pcl-cvs.texi (About PCL-CVS): Refer to vc-dir rather than vc-dired.
+
+2012-01-19  Eric Hanchrow  <eric.hanchrow@gmail.com>
+
+	* tramp.texi (File): Tweak wording for the `scpc' option.
+
+2012-01-06  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Group Parameters): Really note precedence.
+
+2012-01-04  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Group Parameters): Note precedence.
+
+2012-01-03  Eric Schulte  <eric.schulte@gmx.com>
+
+	* org.texi (Noweb reference syntax): Adding documentation of
+	the `*org-babel-use-quick-and-dirty-noweb-expansion*'
+	variable.
+
+2012-01-03  Bastien Guerry  <bzg@gnu.org>
+
+	* org.texi (Plain lists): Split the table to fix the display
+	of items.
+
+2012-01-03  Bastien Guerry  <bzg@gnu.org>
+
+	* org.texi (Plain lists): Fix misplaced explanation.
+
+2012-01-03  Bastien Guerry  <bzg@gnu.org>
+
+	* org.texi (Plain lists, Agenda files): Add index entries.
+
+2012-01-03  Julian Gehring  <julian.gehring@googlemail.com>
+
+	* org.texi: Use "Org mode" instead of alternatives like
+	"Org-mode" or "org-mode".
+
+2012-01-03  Bernt Hansen  <bernt@norang.ca>
+
+	* org.texi (Agenda commands): Document
+	`org-clock-report-include-clocking-task'.
+
+2012-01-03  Bastien Guerry  <bzg@gnu.org>
+
+	* org.texi (Checkboxes): Document the new behavior of `C-u C-c
+	C-c' on checkboxes.
+
+2012-01-03  Julian Gehring  <julian.gehring@googlemail.com>
+
+	* org.texi: End sentences with two spaces.
+
+2012-01-03  Michael Brand  <michael.ch.brand@gmail.com>
+
+	* org.texi (External links): Document the link types file+sys
+	and file+emacs, slightly narrow used page width.
+
+2012-01-03  Eric Schulte  <eric.schulte@gmx.com>
+
+	* org.texi (colnames): Note that colnames behavior may differ
+	across languages.
+
+2012-01-03  Bastien Guerry  <bzg@gnu.org>
+
+	* org.texi (Weekly/daily agenda, Agenda commands): Fix typos.
+
+2012-01-03  Thomas Dye  <dk@poto.westell.com>
+
+	* org.texi: Augmented discussion of babel property
+	inheritance.  Put footnote outside sentence ending period.
+
+2012-01-03  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (eval): Documenting the full range of :eval header
+	argument values.
+
+2012-01-03  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (eval): Documentation of the new :eval option.
+
+2012-01-03  Thomas Dye  <dk@poto.local>
+
+	* org.texi: Add accumulated properties.
+
+2012-01-03  Thomas Dye  <dk@poto.local>
+
+	* org.texi: Documented no spaces in name=assign, another
+	correction to :var table.
+
+2012-01-03  Thomas Dye  <dk@poto.local>
+
+	* org.texi: Changed DATA to NAME in Working With Source Code
+	section.
+
+2012-01-03  Tom Dye  <tsd@tsdye.com>
+
+	* org.texi: Minor change to :var table.
+
+2012-01-03  Tom Dye  <tsd@tsdye.com>
+
+	* org.texi: More changes to :var table (some examples were wrong).
+
+2012-01-03  Tom Dye  <tsd@tsdye.com>
+
+	* org.texi: Cleaned up :var table.
+
+2012-01-03  Bastien Guerry  <bzg@gnu.org>
+
+	* org.texi (Timestamps, Weekly/daily agenda)
+	(Weekly/daily agenda): Add @cindex for "appointment".
+
+2012-01-03  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Literal examples): A new link to the template for
+	inserting empty code blocks.
+	(Structure of code blocks): A new link to the template for
+	inserting empty code blocks.
+
+2012-01-03  Rafael Laboissiere  <rafael@laboissiere.net>  (tiny change)
+
+	* org.texi (External links): Add footnote on how the behavior
+	of the text search in Org files are controled by the variable
+	`org-link-search-must-match-exact-headline'.
+
+2012-01-03  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Buffer-wide header arguments): Update
+	documentation to reflect removal of #+PROPERTIES.
+
+2012-01-03  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (The clock table): Mention that ACHIVED trees
+	contribute to the clock table.
+
+2012-01-03  Carsten Dominik  <carsten.dominik@gmail.com>  (tiny change)
+
+	* org.texi (Conflicts): Better yasnippet config info.
+
+2012-01-03  Bastien Guerry  <bzg@gnu.org>  (tiny change)
+
+	* org.texi (Selective export): Explicitely mention the default
+	values for `org-export-select-tags',
+	`org-export-exclude-tags'.
+
+2012-01-03  Tom Dye  <tsd@tsdye.com>
+
+	* org.texi: Added a line to specify that header arguments are
+	lowercase.
+
+2012-01-03  Tom Dye  <tsd@tsdye.com>
+
+	* org.texi: :var requires default value when declared.
+
+2012-01-03  Bastien Guerry  <bzg@gnu.org>
+
+	* org.texi (Handling links): Add a note about the
+	`org-link-frame-setup' option.
+
+2012-01-03  David Maus  <dmaus@ictsoc.de>
+
+	* org.texi (Exporting Agenda Views, Extracting agenda
+	information): Fix command line syntax, quote symbol parameter
+	values.
+
+2012-01-03  David Maus  <dmaus@ictsoc.de>
+
+	* org.texi (Exporting Agenda Views): Fix command line syntax.
+
+2011-12-28  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* gnus.texi (Mail Source Customization, Mail Back End Variables):
+	Use octal notation for file permissions, which are normally
+	thought of in octal.
+	(Mail Back End Variables): Use more-plausible modes in example.
+
+2011-12-20  Alan Mackenzie  <acm@muc.de>
+
+	* cc-mode.texi: Update version string 5.31 -> 5.32.
+
+2011-12-06  Juanma Barranquero  <lekktu@gmail.com>
+
+	* gnus-faq.texi (FAQ 2-1, FAQ 3-8, FAQ 4-14, FAQ 9-1): Fix typos.
+
+2011-11-24  Glenn Morris  <rgm@gnu.org>
+
+	* gnus.texi, smtpmail.texi: Fix case of "GnuTLS".
+
+2011-11-24  Juanma Barranquero  <lekktu@gmail.com>
+
+	* makefile.w32-in: Update dependencies.
+
+2011-11-20  Glenn Morris  <rgm@gnu.org>
+
+	* gnus.texi (Group Information):
+	Remove gnus-group-fetch-faq, command deleted 2010-09-24.
+
+2011-11-20  Juanma Barranquero  <lekktu@gmail.com>
+
+	* gnus-coding.texi (Gnus Maintenance Guide):
+	Rename from "Gnus Maintainance Guide".
+
+	* ede.texi (ede-compilation-program, ede-compiler, ede-linker):
+	* eieio.texi (Customizing):
+	* gnus.texi (Article Washing):
+	* gnus-news.texi:
+	* sem-user.texi (Smart Jump): Fix typos.
+
+2011-11-16  Juanma Barranquero  <lekktu@gmail.com>
+
+	* org.texi (Agenda commands, Exporting Agenda Views): Fix typos.
+
+2011-11-15  Juanma Barranquero  <lekktu@gmail.com>
+
+	* ede.texi (project-am-texinfo):
+	* gnus.texi (Sending or Not Sending):
+	* org.texi (Template elements): Fix typos.
+
+2011-11-14  Juanma Barranquero  <lekktu@gmail.com>
+
+	* ediff.texi (Hooks):
+	* sem-user.texi (Semanticdb Roots): Fix typos.
+
+2011-11-11  Juanma Barranquero  <lekktu@gmail.com>
+
+	* semantic.texi (Tag handling): Fix typo.
+
+2011-10-31  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus.texi (Other Gnus Versions): Remove.
+
+2011-10-28  Alan Mackenzie  <acm@muc.de>
+
+	* cc-mode.texi (Indentation Commands): Mention "macros with semicolons".
+	(Other Special Indentations): Add an xref to "Macros with ;".
+	(Customizing Macros): Add stuff about syntax in macros.  Add an xref to
+	"Macros with ;".
+	(Macros with ;): New page.
+
+	* cc-mode.texi (Movement Commands): Document `c-defun-tactic'.
+	Document the new handling of nested scopes for movement by defuns.
+
+2011-10-23  Michael Albinus  <michael.albinus@gmx.de>
+
+	Sync with Tramp 2.2.3.
+
+	* trampver.texi: Update release number.
+
+2011-10-14  Glenn Morris  <rgm@gnu.org>
+
+	* ert.texi (Introduction, How to Run Tests)
+	(Running Tests Interactively, Expected Failures)
+	(Tests and Their Environment, Useful Techniques)
+	(Interactive Debugging, Fixtures and Test Suites):
+	Minor rephrasings.
+	(Running Tests Interactively, The @code{should} Macro): Add xrefs.
+	(Running Tests in Batch Mode): Simplify loading instructions.
+	(Test Selectors): Clarify some selectors.
+	(Expected Failures, Useful Techniques):
+	Make examples fit in 80 columns.
+
+2011-10-13  Jay Belanger  <jay.p.belanger@gmail.com>
+
+	* calc.texi (Basic Operations on Units): Discuss temperature
+	conversion (`u t') alongside with other unit conversions ('u c').
+
+2011-10-12  Glenn Morris  <rgm@gnu.org>
+
+	* ert.texi: Whitespace trivia to make main menu items line up better.
+
+2011-10-08  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in: Fix ert rules.
+
+2011-10-06  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Gnus Utility Functions): Add more references and
+	explanations (bug#9683).
+
+2011-09-21  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Archived Messages): Note the default (bug#9552).
+
+2011-09-21  Bill Wohler  <wohler@newt.com>
+
+	Release MH-E manual version 8.3.
+
+	* mh-e.texi (VERSION, EDITION, UPDATED, UPDATE-MONTH): Update for
+	release 8.3.
+	(Preface): Updated support information.
+	(From Bill Wohler): Reset text to original version. As a
+	historical quote, the tense should be correct in the time that it
+	was written.
+
+2011-09-11  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Listing Groups): Explain `gnus-group-list-limit'.
+	(Finding the News): Doc clarification.
+	(Terminology): Mention naming.
+
+2011-09-10  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi: Remove mentions of `recent', which are now obsolete.
+	(Interactive): Document `quiet'.
+
+2011-08-15  Suvayu Ali  <fatkasuvayu+linux@gmail.com>  (tiny change)
+
+	* org.texi (Images in LaTeX export): rewrite.
+
+2011-08-15  Bastien Guerry  <bzg@gnu.org>
+
+	* org.texi (Using the mapping API): mention 'region as a possible
+	scope for `org-map-entries'.
+
+2011-08-15  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Visibility cycling): Document `org-copy-visible'.
+
+2011-08-15  Bastien Guerry  <bzg@gnu.org>
+
+	* org.texi (Template expansion): order template sequences in the
+	proper order.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (eval): Expand discussion of the :eval header argument.
+
+2011-08-15  Bastien Guerry  <bzg@gnu.org>
+
+	* org.texi (Languages): Add Lilypond and Awk as supported
+	languages.
+
+2011-08-15  Achim Gratz  <stromeko@nexgo.de>
+
+	* org.texi: document that both CLOCK_INTO_DRAWER and
+	LOG_INTO_DRAWER can be used to override the contents of variable
+	org-clock-into-drawer (or if unset, org-log-into-drawer).
+
+	* org.texi: replace @xref->@pxref.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Evaluating code blocks): Documenting the new option
+	for inline call lines.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Results of evaluation): More explicit about the
+	mechanism through which interactive evaluation of code is
+	performed.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (noweb-ref): New header argument documentation.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Extracting source code): Documentation of the new
+	org-babel-tangle-named-block-combination variable.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Structure of code blocks): explicitly state that the
+	behavior of multiple blocks of the same name is undefined
+
+2011-08-15  Christian Egli  <christian.egli@sbszh.ch>
+
+	* org.texi (TaskJuggler export): Modify the example to reflect the
+	new effort durations.
+
+2011-08-15  David Maus  <dmaus@ictsoc.de>
+
+	* org.texi (Images in LaTeX export): Escape curly brackets in
+	LaTeX example.
+
+2011-08-15  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (The clock table): Document the :properties and
+	:inherit-props arguments for the clocktable.
+
+2011-08-15  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Tables in LaTeX export): Document specifying placement
+	options for tables.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Evaluating code blocks): More specific documentation
+	about the different types of header arguments.
+
+2011-08-15  Manuel Giraud  <manuel.giraud@univ-nantes.fr>
+
+	* org.texi (Sitemap): Document `:sitemap-sans-extension' property.
+
+2011-08-15  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Built-in table editor): Document the table field
+	follow mode.
+
+2011-08-15  Robert P. Goldman  <rpgoldman@real-time.com>
+
+	* org.texi (Easy Templates): Document new template.
+
+2011-08-15  Robert P. Goldman  <rpgoldman@real-time.com>
+
+	* org.texi (Literal examples): Add a cross-reference from "Literal
+	Examples" to "Easy Templates."
+
+2011-08-15  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (The clock table): Add link to match syntax.
+
+2011-08-15  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Agenda commands): Document clock consistency checks.
+
+2011-08-15  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Built-in table editor): Document that \vert represents
+	a vertical bar in a table field.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Literal examples): Link from "Markup" > "Literate
+	Examples" to "Working with Source Code".
+
+2011-08-15  Puneeth Chaganti  <punchagan@gmail.com>
+
+	* org.texi (Agenda commands): Doc for function option to bulk
+	action.
+
+2011-08-15  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Template expansion): Document new %<...> template
+	escape.
+
+2011-08-15  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Selective export): Document exclusion of any tasks
+	from export.
+
+2011-08-15  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Selective export): Document how to exclude DONE tasks
+	from export.
+	(Publishing options): Document the properties to be used to turn off
+	export of DONE tasks.
+
+2011-08-15  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (The date/time prompt): Document date range protection.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (padline): Documentation of the new padline header
+	argument.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (var): Adding "[" to list of characters triggering
+	elisp evaluation.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (var): Documentation of Emacs Lisp evaluation during
+	variable assignment.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (colnames): Reference indexing into variables, and note
+	that colnames are *not* removed before indexing occurs.
+	(rownames): Reference indexing into variables, and note that
+	rownames are *not* removed before indexing occurs.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (var): Clarification of indexing into tabular
+	variables.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (results): Documentation of the `:results wrap' header
+	argument.
+
+2011-08-15  Bastien Guerry  <bzg@gnu.org>
+
+	* org.texi (LaTeX and PDF export): add a note about a limitation
+	of the LaTeX export: the org file has to be properly structured.
+
+2011-08-15  Bastien Guerry  <bzg@gnu.org>
+
+	* org.texi (Dynamic blocks, Structure editing): Mention
+	the function `org-narrow-to-block'.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Languages): Updating list of code block supported
+	languages.
+
+2011-08-15  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Special properties): CATEGORY is a special property,
+	but it may also used in the drawer.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (mkdirp): Documentation of the :mkdirp header argument.
+
+2011-08-15  Puneeth Chaganti  <punchagan@gmail.com>
+
+	* org.texi (Include files): Document :lines.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (comments): Documentation of the ":comments noweb" code
+	block header argument.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Conflicts): Changed "yasnippets" to "yasnippet" and
+	added extra whitespace around functions to be consistent with the
+	rest of the section.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Evaluating code blocks): Expanded discussion of
+	#+call: line syntax.
+	(Header arguments in function calls): Expanded discussion of
+	#+call: line syntax.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Evaluating code blocks): More explicit about how to
+	pass variables to #+call lines.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Results of evaluation): Link to the :results header
+	argument list from the "Results of evaluation" section.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Conflicts): Adding additional information about
+	resolving org/yasnippet conflicts.
+
+2011-08-15  David Maus  <dmaus@ictsoc.de>
+
+	* org.texi (Publishing options): Document style-include-scripts
+	publishing project property.
+
+2011-08-15  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Sparse trees): Document the next-error /
+	previous-error functionality.
+
+2011-08-15  Tom Dye  <tsd@tsdye.com>
+
+	* org.texi (cache): Improved documentation of code block caches.
+
+2011-08-15  Tom Dye  <tsd@tsdye.com>
+
+	* org.texi (Code block specific header arguments): Documentation
+	of multi-line header arguments.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Code evaluation security): Add example for using a
+	function.
+
+2011-08-15  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Tables in LaTeX export): Documentation of new
+	attr_latex options for tables.
+
+2011-08-03  Michael Albinus  <michael.albinus@gmx.de>
+
+	* trampver.texi: Update release number.
+
+2011-07-30  Michael Albinus  <michael.albinus@gmx.de>
+
+	Sync with Tramp 2.2.2.
+
+	* trampver.texi: Update release number.
+
+2011-07-15  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* flymake.texi (Example -- Configuring a tool called via make):
+	Use /dev/null instead of the Windows "nul" (bug#8715).
+
+2011-07-14  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* widget.texi (Setting Up the Buffer): Remove mention of the
+	global keymap parent, which doesn't seem to be accurate
+	(bug#7045).
+
+2011-07-12  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* org.texi (Special agenda views): Fix double quoting (bug#3509).
+
+2010-07-10  Kevin Ryde  <user42@zip.com.au>
+
+	* cl.texi (For Clauses): Add destructuring example processing an
+	alist (bug#6596).
+
+2011-07-07  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* ediff.texi (Major Entry Points): Remove mention of `require',
+	since that's not pertinent in the installed Emacs (bug#9016).
+
+2011-07-05  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Expiring Mail): Document gnus-auto-expirable-marks.
+	(Filtering New Groups): Clarify how simple the "options -n" format is.
+	(Agent Expiry): Remove mention of `gnus-request-expire-articles', which
+	is internal.
+
+2011-07-04  Michael Albinus  <michael.albinus@gmx.de>
+
+	* tramp.texi (Cleanup remote connections): Add
+	`tramp-cleanup-this-connection'.
+
+2011-07-03  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Subscription Methods): Link to "Group Levels" to explain
+	zombies.
+	(Checking New Groups): Ditto (bug#8974).
+	(Checking New Groups): Moved the reference to the right place.
+
+2011-07-03  Dave Abrahams  <dave@boostpro.com>  (tiny change)
+
+	* gnus.texi (Startup Files): Clarify that we're talking about numbered
+	backups, and not actual vc (bug#8975).
+
+2011-07-03  Kevin Ryde  <user42@zip.com.au>
+
+	* cl.texi (For Clauses): @items for hash-values and key-bindings
+	to make them more visible when skimming.  Add examples of `using'
+	clause to them, examples being clearer than a description in
+	words (bug#6599).
+
+2011-07-01  Alan Mackenzie  <acm@muc.de>
+
+	* cc-mode.texi (Guessing the Style): New page.
+	(Styles): Add a short introduction to above.
+
+2011-06-28  Deniz Dogan  <deniz@dogan.se>
+
+	* rcirc.texi (Configuration): Bug-fix:
+	`rcirc-default-user-full-name' is now `rcirc-default-full-name'.
+	Reported by Elias Pipping <pipping@exherbo.org>.
+
+2011-06-26  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Summary Mail Commands): Document
+	`gnus-summary-reply-to-list-with-original'.
+
+2011-06-20  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* eshell.texi (Known problems): Fix typo.
+
+2011-06-12  Michael Albinus  <michael.albinus@gmx.de>
+
+	* tramp.texi (Customizing Completion): Mention authinfo-style files.
+	(Password handling): `auth-source-debug' is good for debug messages.
+
+2011-05-31  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* gnus.texi (Store custom flags and keywords): Refer to
+	`gnus-registry-article-marks-to-{chars,names}' instead of
+	`gnus-registry-user-format-function-{M,M2}'.
+
+2011-05-27  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* texinfo.tex: Merge from gnulib.
+
+2011-05-18  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* gnus.texi (Gnus Registry Setup): Rename from "Setup".
+	(Store custom flags and keywords):
+	Mention `gnus-registry-user-format-function-M' and
+	`gnus-registry-user-format-function-M2'.
+
+2011-05-17  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* texinfo.tex: Sync from gnulib, version 2011-05-11.16.
+
+2011-05-17  Glenn Morris  <rgm@gnu.org>
+
+	* gnus.texi (Face): Fix typo.
+
+2011-05-14  Glenn Morris  <rgm@gnu.org>
+
+	* dired-x.texi (Omitting Examples): Minor addition.
+
+2011-05-10  Jim Meyering  <meyering@redhat.com>
+
+	* ede.texi: Fix typo "or or -> or".
+
+2011-05-03  Peter Münster  <pmlists@free.fr>  (tiny change)
+
+	* gnus.texi (Summary Buffer Lines):
+	gnus-summary-user-date-format-alist does not exist.
+	(Sorting the Summary Buffer): More about sorting threads.
+
+2011-04-25  Michael Albinus  <michael.albinus@gmx.de>
+
+	* trampver.texi: Update release number.
+
+2011-04-14  Michael Albinus  <michael.albinus@gmx.de>
+
+	* tramp.texi (Frequently Asked Questions): New item for disabling
+	Tramp in other packages.
+
+2011-04-14  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* gnus.texi (nnmairix caveats, Setup, Registry Article Refer Method)
+	(Fancy splitting to parent, Store arbitrary data):
+	Updated gnus-registry docs.
+
+2011-04-13  Juanma Barranquero  <lekktu@gmail.com>
+
+	* ede.texi: Fix typos.
+
+2011-04-12  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Window Layout): @itemize @code doesn't exist.
+	It's @table @code.
+
+2011-03-19  Antoine Levitt  <antoine.levitt@gmail.com>
+
+	* gnus.texi (Listing Groups): Document gnus-group-list-ticked
+
+2011-03-17  Jay Belanger  <jay.p.belanger@gmail.com>
+
+	* calc.texi (Logarithmic Units): Update the function names.
+
+2011-03-15  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* message.texi (Various Commands): Document format specs in the
+	ellipsis.
+
+2011-03-15  Antoine Levitt  <antoine.levitt@gmail.com>
+
+	* message.texi (Insertion Variables): Document message-cite-style.
+
+2011-03-14  Michael Albinus  <michael.albinus@gmx.de>
+
+	* tramp.texi (Remote processes): New subsection "Running shell on
+	a remote host".
+
+2011-03-12  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* auth.texi (Help for developers): Update docs to explain that the
+	:save-function will only run the first time.
+
+2011-03-12  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (emacs-faq.html): Fix some more cross-refs.
+	(emacs-faq.text): New target.
+	(clean): Add emacs-faq.
 
 2011-03-12  Michael Albinus  <michael.albinus@gmx.de>
 
+	Sync with Tramp 2.2.1.
+
 	* trampver.texi: Update release number.
+
+2011-03-11  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (HTML_TARGETS): New.
+	(clean): Delete $HTML_TARGETS.
+	(emacs-faq.html): New, for use with the gnu.org Emacs webpage.
+
+2011-03-08  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* auth.texi (Help for developers): Show example of using
+	`auth-source-search' with prompts and :save-function.
 
 2011-03-07  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 23.3 released.
 
-2011-02-23  Glenn Morris  <rgm@gnu.org>
+2011-03-07  Antoine Levitt  <antoine.levitt@gmail.com>
+
+	* message.texi (Message Buffers): Update default value of
+	message-generate-new-buffers.
+
+2011-03-06  Jay Belanger  <jay.p.belanger@gmail.com>
+
+	* calc.texi (Logarithmic Units): Rename calc-logunits-dblevel
+	and calc-logunits-nplevel to calc-dblevel and calc-nplevel,
+	respectively.
+	(Musical Notes): New section.
+	(Customizing Calc): Mention the customizable variable
+	calc-note-threshold.
+
+2011-03-03  Glenn Morris  <rgm@gnu.org>
+
+	* url.texi (Dealing with HTTP documents): Remove reference to
+	function url-decode-text-part; never seems to have existed.  (Bug#6038)
+	(Configuration): Update url-configuration-directory description.
+
+2011-03-02  Glenn Morris  <rgm@gnu.org>
+
+	* dired-x.texi (Multiple Dired Directories): Remove mentions
+	of dired-default-directory-alist and dired-default-directory.
+	Move dired-smart-shell-command here...
+	(Miscellaneous Commands): ... from here.
+
+2011-03-02  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* texinfo.tex: Update to version 2011-02-24.09.
+
+2011-03-02  Glenn Morris  <rgm@gnu.org>
+
+	* dired-x.texi (Omitting Variables): Refer to add-dir-local-variable
+	instead of the obsoleted dired-omit-here-always.
+
+2011-02-28  Michael Albinus  <michael.albinus@gmx.de>
+
+	* tramp.texi (Frequently Asked Questions): Add Emacs 24 to
+	supported systems.
+
+2011-02-28  Glenn Morris  <rgm@gnu.org>
 
 	* dbus.texi (Type Conversion): Grammar fix.
 
-	* dired-x.texi (Features, Local Variables): Fix typos.
-	(Features): Minor rephrasing.
-
-2011-02-19  Glenn Morris  <rgm@gnu.org>
-
-	* edt.texi, erc.texi, gnus.texi, idlwave.texi, mh-e.texi:
-	Standardize some Emacs/XEmacs terminology.
-
-2011-02-19  Michael Albinus  <michael.albinus@gmx.de>
+2011-02-23  Michael Albinus  <michael.albinus@gmx.de>
 
 	* tramp.texi: Use consistently "Emacs" (instead of "GNU Emacs") and
 	"Debian GNU/Linux".
 
 	* trampver.texi [xemacs]: Set emacsothername to "Emacs".
 
-2011-02-18  Eli Zaretskii  <eliz@gnu.org>
+2011-02-23  Glenn Morris  <rgm@gnu.org>
+
+	* dired-x.texi (Features): Minor rephrasing.
+	(Local Variables): Fix typos.
+
+	* edt.texi, erc.texi, gnus.texi, idlwave.texi, mh-e.texi:
+	Standardize some Emacs/XEmacs terminology.
+
+	* dired-x.texi (Features): Don't advertise obsolete local variables.
+	Simplify layout.
+	(Omitting Variables): Update local variables example.
+	(Local Variables): Say this is obsolete.  Fix description of
+	dired-enable-local-variables possible values.
+
+2011-02-22  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* auth.texi (Help for users): Mention ~/.netrc is also searched by
+	default now.
+
+2011-02-21  Lars Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Article Date): Clarify gnus-article-update-date-headers.
+
+2011-02-20  Lars Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Window Layout): Document layout names.
+
+2011-02-19  Eli Zaretskii  <eliz@gnu.org>
 
 	* ada-mode.texi: Sync @dircategory with ../../info/dir.
 	* auth.texi: Sync @dircategory with ../../info/dir.
@@ -79,7 +1220,28 @@
 	* widget.texi: Sync @dircategory with ../../info/dir.
 	* woman.texi: Sync @dircategory with ../../info/dir.
 
-2011-02-14  Glenn Morris  <rgm@gnu.org>
+2011-02-19  Glenn Morris  <rgm@gnu.org>
+
+	* dired-x.texi (Technical Details): No longer redefines
+	dired-add-entry, dired-initial-position, dired-clean-up-after-deletion,
+	dired-read-shell-command, or dired-find-buffer-nocreate.
+
+2011-02-18  Glenn Morris  <rgm@gnu.org>
+
+	* dired-x.texi (Optional Installation File At Point): Simplify.
+
+2011-02-17  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* auth.texi (Help for users): Use :port instead of :protocol for all
+	auth-source docs.
+	(GnuPG and EasyPG Assistant Configuration): Mention the default now is
+	to have two files in `auth-sources'.
+
+2011-02-16  Glenn Morris  <rgm@gnu.org>
+
+	* dired-x.texi: Use emacsver.texi to get Emacs version.
+	* Makefile.in ($(infodir)/dired-x, dired-x.dvi, dired-x.pdf):
+	Depend on emacsver.texi.
 
 	* dired-x.texi: Drop meaningless version number.
 	(Introduction): Remove old info.
@@ -87,76 +1249,903 @@
 	Remove incorrect info about loaddefs.el.
 	(Bugs): Just refer to M-x report-emacs-bug.
 
+	* dired-x.texi (Multiple Dired Directories): Update for rename of
+	default-directory-alist.
+	(Miscellaneous Commands): No longer mention very old VM version 4.
+
+2011-02-15  Paul Eggert  <eggert@cs.ucla.edu>
+
+	Merge from gnulib.
+	* texinfo.tex: Update to version 2011-02-14.11.
+
+2011-02-14  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* auth.texi (Help for users):
+	Login collection is "Login" and not "login".
+
+2011-02-13  Michael Albinus  <michael.albinus@gmx.de>
+
+	* tramp.texi (History): Remove IMAP support.
+	(External methods, Frequently Asked Questions): Remove `imap' and
+	`imaps' methods.
+	(Password handling): Remove IMAP entries for ~/.authinfo.gpg.
+
+	* trampver.texi: Remove default value of `emacsimap'.
+
+2011-02-13  Glenn Morris  <rgm@gnu.org>
+
+	* ada-mode.texi, dired-x.texi, ebrowse.texi, ediff.texi, eudc.texi:
+	* idlwave.texi, reftex.texi, sc.texi, speedbar.texi: Add @top.
+
 2011-02-12  Glenn Morris  <rgm@gnu.org>
 
 	* sc.texi (Getting Connected): Remove old index entries.
 
-2011-02-12  Ulrich Mueller <ulm@gentoo.org>
+2011-02-12  Ulrich Mueller  <ulm@gentoo.org>
 
 	* url.texi: Remove duplicate @dircategory (Bug#7942).
 
-2011-02-03  Michael Albinus  <michael.albinus@gmx.de>
+2011-02-11  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* auth.texi (Overview, Help for users, Help for developers):
+	Update docs.
+	(Help for users): Talk about spaces.
+
+2011-02-09  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* texinfo.tex: Update to version 2011-02-07.16.
+
+2011-02-07  Michael Albinus  <michael.albinus@gmx.de>
+
+	* dbus.texi (Bus names): Adapt descriptions for
+	dbus-list-activatable-names and dbus-list-known-names.
+
+2011-02-07  Jay Belanger  <jay.p.belanger@gmail.com>
+
+	* calc.texi (Logarithmic Units): New section.
+
+2011-02-05  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* gnus-overrides.texi: Renamed from overrides.texi and all the relevant
+	manuals use it now.
+
+	* Makefile.in (nowebhack): Fix to use -D flag instead of overrides.
+
+2011-02-05  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* overrides.texi: Remove.
+
+	* sieve.texi, sasl.texi, pgg.texi, message.texi, gnus.texi:
+	* emacs-mime.texi, auth.texi, Makefile.in: Revert last changes.
+
+2011-02-05  Michael Albinus  <michael.albinus@gmx.de>
 
 	* tramp.texi (Frequently Asked Questions): Mention problems with
 	WinSSHD.
 
-2011-01-03  Eduard Wiebe  <usenet@pusto.de>
+	* trampver.texi: Update release number.
+
+2011-02-05  Era Eriksson  <era+tramp@iki.fi>  (tiny change)
+
+	* tramp.texi:
+	Replace "delimet" with "delimit" globally.
+	Replace "explicite" with "explicit" globally.
+	Replace "instead of" with "instead" where there was nothing after "of".
+	Audit use of comma before interrogative pronoun, "that", or "which".
+	Minor word order, spelling, wording changes.
+
+2011-02-04  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* overrides.texi: New file to set or clear WEBHACKDEVEL.
+
+	* sieve.texi: Use WEBHACKDEVEL.
+
+	* sasl.texi: Use WEBHACKDEVEL.
+
+	* pgg.texi: Use WEBHACKDEVEL.
+
+	* message.texi: Use WEBHACKDEVEL.
+
+	* gnus.texi: Use WEBHACKDEVEL.
+
+	* emacs-mime.texi: Use WEBHACKDEVEL.
+
+	* auth.texi: Use WEBHACKDEVEL.
+
+	* Makefile.in (webhack, nowebhack): Hacks to produce for-the-web
+	manuals.
+
+2011-02-04  Lars Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi: Add DEVEL header (suggested by Andreas Schwab).
+
+2011-02-03  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* texinfo.tex: Update to version 2011-02-01.10 from gnulib,
+	which in turn is copied from ftp://tug.org/tex/.
+
+2011-02-03  Glenn Morris  <rgm@gnu.org>
+
+	* faq.texi (Contacting the FSF): Mainly just refer to the web-site.
+	(Binding combinations of modifiers and function keys):
+	Let's assume people reading this are not using Emacs 18.
+
+2011-02-03  Lars Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Article Date): Remove mention of gnus-stop-date-timer,
+	since it's run automatically.
+
+2011-02-01  Lars Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Customizing Articles): Fix typo.
+
+2011-01-31  Lars Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Customizing Articles): Document the new way of customizing
+	the date headers(s).
+
+2011-01-30  Lars Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Client-Side IMAP Splitting): Add a complete nnimap fancy
+	splitting example.
+
+2011-01-29  Eli Zaretskii  <eliz@gnu.org>
+
+	* makefile.w32-in (MAKEINFO): Remove options, leave only program name.
+	(MAKEINFO_OPTS): New variable.
+	(ENVADD, $(infodir)/emacs): Use $(MAKEINFO_OPTS).
+	($(infodir)/info, $(infodir)/ccmode, $(infodir)/ada-mode)
+	($(infodir)/pcl-cvs, $(infodir)/eshell, $(infodir)/cl)
+	($(infodir)/dbus, $(infodir)/dired-x, $(infodir)/ediff)
+	($(infodir)/flymake, $(infodir)/forms, $(infodir)/gnus)
+	($(infodir)/message, $(infodir)/emacs-mime, $(infodir)/sieve)
+	($(infodir)/pgg, $(infodir)/mh-e, $(infodir)/reftex)
+	($(infodir)/remember, $(infodir)/sasl, $(infodir)/sc)
+	($(infodir)/vip, $(infodir)/viper, $(infodir)/widget)
+	($(infodir)/efaq, $(infodir)/autotype, $(infodir)/calc)
+	($(infodir)/idlwave, $(infodir)/eudc, $(infodir)/ebrowse)
+	($(infodir)/woman, $(infodir)/speedbar, $(infodir)/tramp)
+	($(infodir)/ses, $(infodir)/smtpmail, $(infodir)/org)
+	($(infodir)/url, $(infodir)/newsticker, $(infodir)/nxml-mode)
+	($(infodir)/rcirc, $(infodir)/erc, $(infodir)/ert)
+	($(infodir)/epa, $(infodir)/mairix-el, $(infodir)/auth)
+	($(infodir)/eieio, $(infodir)/ede, $(infodir)/semantic)
+	($(infodir)/edt): Use $(MAKEINFO_OPTS).
+
+2011-01-26  Lars Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Article Date): Document gnus-article-update-lapsed-header.
+
+2011-01-24  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* message.texi (IDNA): Explain what it is.
+
+2011-01-24  Lars Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (The Empty Backend): Document nnnil (bug #7653).
+
+2011-01-23  Werner Lemberg  <wl@gnu.org>
+
+	* Makefile.in (MAKEINFO): Now controlled by `configure'.
+	(MAKEINFO_OPTS): New variable.  Use it where appropriate.
+	(ENVADD): Update.
+
+2011-01-18  Glenn Morris  <rgm@gnu.org>
+
+	* ert.texi: Relicense under GFDL 1.3+, and standardize license notice.
+
+2011-01-14  Eduard Wiebe  <usenet@pusto.de>
 
 	* nxml-mode.texi (Introduction): Fix file name typos.
 
-2010-12-02  Glenn Morris  <rgm@gnu.org>
+2011-01-13  Christian Ohler  <ohler@gnu.org>
+
+	* ert.texi: New file.
+
+	* Makefile.in:
+	* makefile.w32-in: Add ert.texi.
+
+2011-01-10  Jan Moringen  <jan.moringen@uni-bielefeld.de>
+
+	* dbus.texi (Receiving Method Calls): New function
+	dbus-register-service.  Rearrange node.
+
+2011-01-07  Paul Eggert  <eggert@cs.ucla.edu>
+
+	* texinfo.tex: Update to version 2010-12-23.17 from gnulib,
+	which in turn is copied from ftp://tug.org/tex/.
+
+2011-01-04  Jan Moringen  <jan.moringen@uni-bielefeld.de>
+
+	* dbus.texi (Receiving Method Calls): Describe new optional
+	parameter dont-register-service of dbus-register-{method,property}.
+
+2010-12-17  Daiki Ueno  <ueno@unixuser.org>
+
+	* epa.texi (Encrypting/decrypting *.gpg files):
+	Mention epa-file-select-keys.
+
+2010-12-16  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Archived Messages): Remove outdated text.
+
+2010-12-16  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* gnus.texi (Foreign Groups): Add clarification of foreign groups.
+
+2010-12-15  Andrew Cohen  <cohen@andy.bu.edu>
+
+	* gnus.texi (The hyrex Engine): Say that this engine is obsolete.
+
+2010-12-14  Andrew Cohen  <cohen@andy.bu.edu>
+
+	* gnus.texi (The swish++ Engine): Add customizable parameters
+	descriptions.
+	(The swish-e Engine): Ditto.
+
+2010-12-14  Michael Albinus  <michael.albinus@gmx.de>
+
+	* tramp.texi (Inline methods): Add "ksu" method.
+	(Remote processes): Add example with remote `default-directory'.
+
+2010-12-14  Glenn Morris  <rgm@gnu.org>
+
+	* faq.texi (Expanding aliases when sending mail):
+	Now build-mail-aliases is interactive.
+
+2010-12-13  Andrew Cohen  <cohen@andy.bu.edu>
+
+	* gnus.texi: First pass at adding (rough) nnir documentation.
+
+2010-12-13  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Filtering New Groups):
+	Mention gnus-auto-subscribed-categories.
+	(The First Time): Remove, since default-subscribed-newsgroups has been
+	removed.
+
+2010-12-13  Glenn Morris  <rgm@gnu.org>
 
 	* cl.texi (For Clauses): Small fixes for frames and windows.
 
-2010-11-23  Glenn Morris  <rgm@gnu.org>
+2010-12-11  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Using capture): Document using prefix arguments for
+	finalizing capture.
+	(Agenda commands): Document prefix argument for the bulk scatter
+	command.
+	(Beamer class export): Document that also overlay arguments can be
+	passed to the column environment.
+	(Template elements): Document the new entry type.
+
+2010-12-11  Puneeth Chaganti  <punchagan@gmail.com>
+
+	* org.texi (Include files): Document :minlevel.
+
+2010-12-11  Julien Danjou  <julien@danjou.info>
+
+	* org.texi (Categories): Document category icons.
+
+2010-12-11  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (noweb): Fix typo.
+
+2010-12-06  Tassilo Horn  <tassilo@member.fsf.org>
+
+	* gnus.texi (Server Commands): Point to the rest of the server
+	commands.
+
+2010-12-04  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Paging the Article): Note the reverse meanings of `C-u C-u
+	g'.
+
+2010-12-02  Julien Danjou  <julien@danjou.info>
+
+	* gnus.texi (Archived Messages): Remove gnus-outgoing-message-group.
+
+2010-11-28  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Customizing the IMAP Connection): Note the new defaults.
+	(Direct Functions): Note the STARTTLS upgrade.
+
+2010-11-27  Glenn Morris  <rgm@gnu.org>
 	    James Clark  <none@example.com>
 
 	* nxml-mode.texi (Introduction): New section.
 
-2010-11-10  Glenn Morris  <rgm@gnu.org>
+2010-11-21  Lars Magne Ingebrigtsen  <larsi@gnus.org>
 
-	* edt.texi: Remove information about Emacs 19.
+	* gnus.texi (Server Commands): Document gnus-server-show-server.
 
-2010-11-05  Michael Albinus  <michael.albinus@gmx.de>
+2010-11-20  Michael Albinus  <michael.albinus@gmx.de>
+
+	Sync with Tramp 2.2.0.
 
 	* trampver.texi: Update release number.
 
-2010-11-03  Jay Belanger  <jay.p.belanger@gmail.com>
+2010-11-19  Jay Belanger  <jay.p.belanger@gmail.com>
+
+	* calc.texi (TeX and LaTeX Language Modes, Predefined Units):
+	Mention that the TeX specific units won't use the `tex' prefix
+	in TeX mode.
+
+2010-11-18  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus.texi (Misc Article): Document gnus-inhibit-images.
+
+2010-11-17  Glenn Morris  <rgm@gnu.org>
+
+	* edt.texi: Remove information about Emacs 19.
+
+2010-11-17  Michael Albinus  <michael.albinus@gmx.de>
+
+	* trampver.texi: Update release number.
+
+2010-11-12  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus.texi (Article Washing): Fix typo.
+
+2010-11-11  Noorul Islam  <noorul@noorul.com>
+
+	* org.texi: Fix typo.
+
+2010-11-11  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Using capture): Explain that refiling is
+	sensitive to cursor position.
+
+2010-11-11  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Images and tables): Add cross reference to link section.
+
+2010-11-11  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi: Document the <c> cookie.
+
+2010-11-11  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi: multi-line header arguments :PROPERTIES: :ID:
+	b77c8857-6c76-4ea9-8a61-ddc2648d96c4 :END:.
+
+2010-11-11  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (CSS support): Document :HTML_CONTAINER_CLASS: property.
+
+2010-11-11  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Project alist): Mention that this is a property list.
+
+2010-11-11  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Setting up the staging area): Document that
+	file names remain visible when encrypting the MobileOrg files.
+
+2010-11-11  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Setting up the staging area): Document which
+	versions are needed for encryption.
+
+2010-11-11  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (noweb): Update :noweb documentation to
+	reflect the new "tangle" argument.
+
+2010-11-11  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Batch execution): Improve tangling script in
+	documentation.
+
+2010-11-11  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Handling links):
+	(In-buffer settings): Document inlining images on startup.
+
+2010-11-11  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Setting up the staging area): Document use of
+	crypt password.
+
+2010-11-11  David Maus  <dmaus@ictsoc.de>
+
+	* org.texi (Template expansion): Add date related link type escapes.
+
+2010-11-11  David Maus  <dmaus@ictsoc.de>
+
+	* org.texi (Template expansion): Add mew in table for link type
+	escapes.
+
+2010-11-11  David Maus  <dmaus@ictsoc.de>
+
+	* org.texi (Template expansion): Fix typo in link type escapes.
+
+2010-11-11  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Structure of code blocks): Another documentation tweak.
+
+2010-11-11  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Structure of code blocks): Documentation tweak.
+
+2010-11-11  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (Structure of code blocks):
+	Update documentation to mention inline code block syntax.
+
+2010-11-11  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (comments): Improve wording.
+
+2010-11-11  Eric Schulte  <schulte.eric@gmail.com>
+
+	* org.texi (comments): Document the new :comments header arguments.
+
+2010-11-11  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Installation): Remove the special
+	installation instructions for XEmacs.
+
+2010-11-11  Jambunathan K  <kjambunathan@gmail.com>  (tiny change)
+
+	* org.texi (Easy Templates): New section.  Documents quick
+	insertion of empty structural elements.
+
+2010-11-11  Noorul Islam  <noorul@noorul.com>
+
+	* org.texi: Fix doc.
+
+2010-11-11  Jambunathan K  <kjambunathan@gmail.com>  (tiny change)
+
+	* org.texi (The date/time prompt): Document specification
+	of time ranges.
+
+2010-11-11  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Internal links): Document the changes in
+	internal links.
+
+2010-11-11  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (Agenda commands): Document the limitation for
+	the filter preset - it can only be used for an entire agenda
+	view, not in an individual block in a block agenda.
+
+2010-11-11  Eric S Fraga  <e.fraga@ucl.ac.uk>
+
+	* org.texi (iCalendar export): Document alarm creation.
+
+2010-11-10  Michael Albinus  <michael.albinus@gmx.de>
+
+	* dbus.texi (Type Conversion): Introduce `:unix-fd' type mapping.
+
+2010-11-09  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Article Washing): Document gnus-article-treat-non-ascii.
+
+2010-11-09  Jay Belanger  <jay.p.belanger@gmail.com>
 
 	* calc.texi: Use emacsver.texi to determine Emacs version.
 
-2010-10-30  Glenn Morris  <rgm@gnu.org>
+2010-11-04  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Customizing the IMAP Connection): Remove nnir mention,
+	since that works by default.
+
+2010-11-03  Kan-Ru Chen  <kanru@kanru.info>  (tiny change)
+
+	* gnus.texi (Customizing the IMAP Connection): Document
+	`nnimap-expunge' and remove `nnimap-expunge-inbox' from example.
+
+2010-11-04  Michael Albinus  <michael.albinus@gmx.de>
+
+	* tramp.texi (Remote shell setup): New item "Interactive shell
+	prompt".  Reported by Christian Millour <cm@abtela.com>.
+	(Remote shell setup, Remote processes): Use @code{} for
+	environment variables.
+
+2010-11-03  Glenn Morris  <rgm@gnu.org>
+
+	* ediff.texi (Quick Help Commands, Miscellaneous):
+	* gnus.texi (Agent Variables, Configuring nnmairix): Spelling fix.
+
+2010-10-31  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Paging the Article): Document C-u g/C-u C-u g.
+
+2010-10-31  Glenn Morris  <rgm@gnu.org>
 
 	* mh-e.texi (Preface, From Bill Wohler): Change 23 to past tense.
 
-2010-10-29  Glenn Morris  <rgm@gnu.org>
+2010-10-31  Glenn Morris  <rgm@gnu.org>
 
 	* cc-mode.texi: Remove reference to defunct viewcvs URL.
 
-2010-10-22  Juanma Barranquero  <lekktu@gmail.com>
+2010-10-29  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Client-Side IMAP Splitting):
+	Mention nnimap-unsplittable-articles.
+
+2010-10-29  Julien Danjou  <julien@danjou.info>
+
+	* gnus.texi (Finding the News): Remove references to obsoletes
+	variables `gnus-nntp-server' and `gnus-secondary-servers'.
+
+2010-10-29  Eli Zaretskii  <eliz@gnu.org>
+
+	* makefile.w32-in (MAKEINFO): Add -I$(emacsdir).
+	(ENVADD): Remove extra -I$(emacsdir), included in $(MAKEINFO).
+	($(infodir)/efaq): Remove -I$(emacsdir), included in $(MAKEINFO).
+	($(infodir)/calc, calc.dvi): Depend on $(emacsdir)/emacsver.texi.
+
+2010-10-28  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (MAKEINFO, ENVADD): Add $emacsdir to include path.
+	(($(infodir)/calc, calc.dvi, calc.pdf): Depend on emacsver.texi.
+	($(infodir)/efaq): Remove -I option now in $MAKEINFO.
+
+2010-10-25  Daiki Ueno  <ueno@unixuser.org>
+
+	* epa.texi (Mail-mode integration): Add alternative key bindings
+	for epa-mail commands; escape comma.
+	Don't use the word "PGP", since it is a non-free program.
+
+2010-10-24  Jay Belanger  <jay.p.belanger@gmail.com>
+
+	* calc.texi: Use emacsver.texi to determine Emacs version.
+
+2010-10-24  Juanma Barranquero  <lekktu@gmail.com>
 
 	* gnus.texi (Group Parameters, Buttons): Fix typos.
+
+2010-10-22  Tassilo Horn  <tassilo@member.fsf.org>
+
+	* gnus.texi (Subscription Commands): Mention that you can also
+	subscribe to new groups via the Server buffer, which is probably more
+	convenient when subscribing to many groups.
+
+2010-10-21  Julien Danjou  <julien@danjou.info>
+
+	* message.texi (Message Headers): Allow message-default-headers to be a
+	function.
+
+2010-10-21  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus-news.texi: Mention new archive defaults.
+
+2010-10-21  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus.texi (RSS): Remove nnrss-wash-html-in-text-plain-parts.
+
+2010-10-20  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (HTML): Document the function value of
+	gnus-blocked-images.
+	(Article Washing): shr and gnus-w3m, not the direct function names.
+
+2010-10-20  Julien Danjou  <julien@danjou.info>
+
+	* emacs-mime.texi (Flowed text): Add a note about mml-enable-flowed
+	variable.
+
+2010-10-19  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Customizing the IMAP Connection): The port strings are
+	strings.
+	(Document Groups): Mention git.
+
+2010-10-18  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus-coding.texi (Gnus Maintainance Guide): Update to mention Emacs
+	bzr/Gnus git sync.
+
+2010-10-15  Eli Zaretskii  <eliz@gnu.org>
+
+	* auth.texi (GnuPG and EasyPG Assistant Configuration): Fix last
+	change.
+
+2010-10-13  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* auth.texi (GnuPG and EasyPG Assistant Configuration): Fix up the
+	@item syntax for in-Emacs makeinfo.
+
+2010-10-13  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* auth.texi (GnuPG and EasyPG Assistant Configuration): Fix syntax and
+	trim sentence.
+
+2010-10-12  Daiki Ueno  <ueno@unixuser.org>
+
+	* epa.texi (Caching Passphrases):
+	* auth.texi (GnuPG and EasyPG Assistant Configuration):
+	Clarify some configurations require to set up gpg-agent.
+
+2010-10-11  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (.texi.dvi): Remove unnecessary suffix rule.
+
+2010-10-09  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Spam Package Introduction): Mention `$'.
+
+2010-10-09  Eli Zaretskii  <eliz@gnu.org>
+
+	* makefile.w32-in (emacsdir): New variable.
+	($(infodir)/efaq, faq.dvi): Depend on emacsver.texi.
+	(ENVADD, $(infodir)/efaq): Add -I$(emacsdir).
+
+2010-10-09  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (mostlyclean): Delete *.toc.
+
+	* Makefile.in: Use $< in rules.
+
+	* Makefile.in (maintainer-clean): Remove harmless, long-standing error.
+
+	* Makefile.in ($(infodir)): Delete rule.
+	(mkinfodir): New.  Use it in all the info rules, rather than depending
+	on infodir.
+
+2010-10-09  Glenn Morris  <rgm@gnu.org>
+
+	* gnus.texi (Article Washing): Fix previous change.
+
+	* Makefile.in (emacsdir): New variable.
+	($(infodir)/efaq): Pass -I $(emacsdir) to makeinfo.
+	Depend on emacsver.texi.
+
+	* faq.texi (VER): Replace with EMACSVER from emacsver.texi.
+
+	* Makefile.in (.PHONY): Declare info, dvi, pdf and the clean rules.
+
+2010-10-08  Julien Danjou  <julien@danjou.info>
+
+	* gnus.texi: Add mm-shr.
+
+2010-10-08  Ludovic Courtès  <ludo@gnu.org>
+
+	* gnus.texi (Finding the Parent, The Gnus Registry)
+	(Registry Article Refer Method): Update docs for nnregistry.el.
+
+2010-10-08  Daiki Ueno  <ueno@unixuser.org>
+
+	* auth.texi (Help for users)
+	(GnuPG and EasyPG Assistant Configuration): Update docs.
 
 2010-10-08  Glenn Morris  <rgm@gnu.org>
 
 	* cl.texi (Organization, Installation, Old CL Compatibility):
 	Deprecate cl-compat for new code.
-
-2010-10-07  Glenn Morris  <rgm@gnu.org>
+	(Usage, Installation): Remove outdated information.
 
 	* eudc.texi (CCSO PH/QI, LDAP Requirements): Remove old information.
 
+2010-10-07  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus.texi (Gravatars): Document gnus-gravatar-too-ugly.
+
+2010-10-06  Julien Danjou  <julien@danjou.info>
+
+	* sieve.texi (Manage Sieve API): Document sieve-manage-authenticate.
+
+	* message.texi (PGP Compatibility): Remove reference to gpg-2comp,
+	broken link.
+
+	* gnus-faq.texi (FAQ 8-3): Remove references to my.gnus.org.
+
+	* gnus.texi (Comparing Mail Back Ends): Remove broken link and allusion
+	to ReiserFS.
+
+	* gnus-faq.texi (FAQ 5-5): Fix Flyspell URL.
+	(FAQ 7-1): Fix getmail URL.
+
+2010-10-06  Daiki Ueno  <ueno@unixuser.org>
+
+	* epa.texi (Caching Passphrases): New section.
+
 2010-10-06  Glenn Morris  <rgm@gnu.org>
 
-	* cl.texi (Usage, Installation): Remove outdated information.
+	* Makefile.in (SHELL): Set it.
+	(info): Move the mkdir dependency to the individual info files.
+	(mostlyclean): Tidy up.
+	(clean): Only delete the specific dvi and pdf files.
+	(maintainer-clean): Be more restrictive in what we delete.
+	($(infodir)): Add parallel build workaround.
+
+2010-10-04  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Misc Article): Document gnus-widen-article-window.
+
+2010-10-03  Julien Danjou  <julien@danjou.info>
+
+	* emacs-mime.texi (Display Customization):
+	Update mm-inline-large-images documentation and add documentation for
+	mm-inline-large-images-proportion.
+
+2010-10-03  Michael Albinus  <michael.albinus@gmx.de>
+
+	* tramp.texi (Frequently Asked Questions):
+	Mention remote-file-name-inhibit-cache.
+
+2010-10-02  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Splitting Mail): Fix @xref syntax.
+	(Splitting Mail): Really fix the @ref syntax.
+
+2010-10-01  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Splitting Mail): Mention the new fancy splitting function.
+	(Article Hiding): Add google banner example.
+	Suggested by Benjamin Xu.
+
+2010-09-30  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* gnus.texi (Spam Package Configuration Examples, SpamOracle):
+	Remove nnimap-split-rule from examples.
+
+2010-09-30  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Mail Source Specifiers): Remove webmail.el mentions.
+	(NNTP): Document nntp-server-list-active-group.  Suggested by Barry
+	Fishman.
+	(Client-Side IMAP Splitting): Add nnimap-split-fancy.
+
+2010-09-30  Julien Danjou  <julien@danjou.info>
+
+	* gnus.texi (Gravatars): Fix documentation about
+	gnu-gravatar-properties.
+
+2010-09-29  Daiki Ueno  <ueno@unixuser.org>
+
+	* epa.texi (Bug Reports): New section.
+
+2010-09-29  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in (top_srcdir): Remove unused variable.
+
+2010-09-29  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Using IMAP): Remove the @acronyms from the headings.
+	(Client-Side IMAP Splitting): Document 'default.
+
+2010-09-27  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Customizing the IMAP Connection):
+	Document nnimap-fetch-partial-articles.
+
+2010-09-26  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus-news.texi: Mention nnimap-inbox.
+
+	* gnus.texi (Picons): Document gnus-picon-inhibit-top-level-domains.
+
+2010-09-26  Julien Danjou  <julien@danjou.info>
+
+	* gnus.texi (Oort Gnus): Remove mention of ssl.el.
+
+2010-09-26  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Security): Remove gpg.el mention.
+
+2010-09-26  Andreas Seltenreich  <seltenreich@gmx.de>
+
+	* gnus.texi (Browse Foreign Server): New variable
+	gnus-browse-subscribe-newsgroup-method.
+
+	* gnus-news.texi: Mention it.
+
+2010-09-26  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (NoCeM): Remove.
+	(Startup Variables): No jingle.
+
+2010-09-25  Ulrich Mueller  <ulm@gentoo.org>
+
+	* woman.texi (Interface Options): xz compression is now supported.
+
+2010-09-25  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Article Commands): Document gnus-fetch-partial-articles.
+	(Unavailable Servers): Document gnus-server-copy-server.
+	(Using IMAP): Document the new nnimap.
+
+2010-09-25  Julien Danjou  <julien@danjou.info>
+
+	* gnus.texi (Customizing Articles): Remove gnus-treat-translate.
+
+2010-09-24  Glenn Morris  <rgm@gnu.org>
+
+	* url.texi (Disk Caching): Tweak previous change.
+
+2010-09-24  Julien Danjou  <julien@danjou.info>
+
+	* url.texi (Disk Caching): Mention url-cache-expire-time,
+	url-cache-expired, and url-fetch-from-cache.
+
+2010-09-24  Julien Danjou  <julien@danjou.info>
+
+	* gnus.texi: Add Gravatars.
+
+2010-09-23  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Startup Variables): Mention gnus-use-backend-marks.
+
+2010-09-21  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Expunging mailboxes): Update name of the expunging
+	command.
+
+2010-09-20  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* emacs-mime.texi (rfc2047): Update description for
+	rfc2047-encode-parameter.
+
+2010-09-13  Michael Albinus  <michael.albinus@gmx.de>
+
+	* tramp.texi (Inline methods): Remove "ssh1_old", "ssh2_old" and
+	"fish" methods.
+	(External methods): Remove "scp1_old" and "scp2_old" methods.
+
+2010-09-09  Michael Albinus  <michael.albinus@gmx.de>
+
+	* tramp.texi: Remove Japanese manual.  Fix typo.
+
+	* trampver.texi: Update release number.  Remove japanesemanual.
+
+2010-09-09  Glenn Morris  <rgm@gnu.org>
+
+	* org.texi: Restore clobbered changes (copyright years, untabify).
+
+2010-09-04  Julien Danjou  <julien@danjou.info>  (tiny change)
+
+	* gnus.texi (Adaptive Scoring): Fix typo.
+
+2010-09-03  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Article Display): Document gnus-html-show-images.
+
+2010-09-02  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* cl.texi (Basic Setf): Remove x-get-cut-buffer and x-get-cutbuffer.
+
+2010-09-01  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (HTML): Document gnus-max-image-proportion.
+
+2010-08-31  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (HTML): Document gnus-blocked-images.
+
+	* message.texi (Wide Reply): Document message-prune-recipient-rules.
+
+2010-08-30  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Summary Mail Commands): Note that only the addresses from
+	the first message are used for wide replies.
+	(Changing Servers): Remove documentation on gnus-change-server and
+	friends, since it's been removed.
+
+2010-08-29  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Drafts): Mention B DEL.
+
+2010-08-29  Tim Landscheidt  <tim@tim-landscheidt.de>  (tiny change)
+
+	* gnus.texi (Delayed Articles): Mention that the Date header is the
+	original one, even if you delay.
+
+2010-08-29  Lars Magne Ingebrigtsen  <larsi@gnus.org>
+
+	* gnus.texi (Asynchronous Fetching):
+	Document gnus-async-post-fetch-function.
+	(HTML): Made into its own section.
 
 2010-08-26  Michael Albinus  <michael.albinus@gmx.de>
 
 	Sync with Tramp 2.1.19.
 
 	* tramp.texi (Inline methods, Default Method): Mention
-	`tramp-inline-compress-start-size'.  Remove "kludgy" phrase.  Remove
-	remark about doubled "-t" argument.
+	`tramp-inline-compress-start-size'.  Remove "kludgy" phrase.
+	Remove remark about doubled "-t" argument.
 	(Auto-save and Backup): Remove reference to Emacs 21.
 	(Filename Syntax): Describe port numbers.
 	(Frequently Asked Questions): Adapt supported (X)Emacs versions.  Adapt
@@ -169,13 +2158,96 @@
 
 	* trampver.texi: Update release number.
 
-2010-08-01  Juanma Barranquero  <lekktu@gmail.com>
+2010-08-23  Michael Albinus  <michael.albinus@gmx.de>
+
+	* dbus.texi (Alternative Buses): New chapter.
+
+2010-08-12  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* cl.texi (Mapping over Sequences): Rename mapc => cl-mapc.
+
+2010-08-09  Jay Belanger  <jay.p.belanger@gmail.com>
+
+	* calc.texi (Customizing Calc): Rearrange description of new
+	variables to match the presentation of other variables.
+
+2010-08-08  Juanma Barranquero  <lekktu@gmail.com>
 
 	* org.texi (Footnotes, Tables in HTML export): Fix typos.
 
-2010-07-23  Chong Yidong  <cyd@stupidchicken.com>
+2010-08-08  Jay Belanger  <jay.p.belanger@gmail.com>
+
+	* calc.texi (Making Selections, Selecting Subformulas)
+	(Customizing Calc): Mention how to use faces to emphasize selected
+	sub-formulas.
+
+2010-08-05  Michael Albinus  <michael.albinus@gmx.de>
+
+	* tramp.texi (External packages): File attributes cache flushing
+	for asynchronous processes.
+
+2010-08-01  Alan Mackenzie  <acm@muc.de>
+
+	Enhance the manual for the latest Java Mode.
+
+	* cc-mode.texi (Syntactic Symbols): New symbols annotation-top-cont and
+	annotation-var-cont.
+	(Java Symbols): Page renamed from Anonymous Class Symbol.  Document the
+	two new symbols.
+
+2010-07-28  Michael Albinus  <michael.albinus@gmx.de>
+
+	* tramp.texi (Traces and Profiles): Describe verbose level 9.
+
+2010-07-27  Chong Yidong  <cyd@stupidchicken.com>
 
 	* nxml-mode.texi (Limitations): Remove obsolete discussion (Bug#6708).
+
+2010-07-19  Juanma Barranquero  <lekktu@gmail.com>
+
+	* org.texi: Fix typo in previous change (revno:100847).
+
+2010-07-19  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi: Add macros to get plain quotes in PDF output.
+	List additional contributors.
+	(Capture): New section, replaces the section about remember.
+	(Working With Source Code): New chapter, focused on documenting Org
+	Babel.
+	(Code evaluation security): New section.
+	(MobileOrg): Document DropBox support.
+	(TaskJuggler export): Document taskjuggler and Gantt chart support.
+	(Special symbols): Show how to display UTF8 characters for entities.
+	(Global TODO list): Clarify the use of the "M" key and the differences
+	to the "m" key.
+	(RSS Feeds): Mention Atom feeds as well.
+	(Setting tags): Remove paragraph about
+	`org-complete-tags-always-offer-all-agenda-tags'.
+
+2010-07-17  Michael Albinus  <michael.albinus@gmx.de>
+
+	* tramp.texi (Inline methods): Remove remark about doubled "-t"
+	argument.
+	(Frequently Asked Questions): Recommend "sshx" and "scpx" for
+	echoing shells.
+
+2010-07-10  Michael Albinus  <michael.albinus@gmx.de>
+
+	* tramp.texi (Inline methods): Remove "kludgy" phrase.
+	(Filename Syntax): Describe port numbers.
+
+2010-07-09  Michael Albinus  <michael.albinus@gmx.de>
+
+	* dbus.texi (Top): Introduce Index.  Emphasize "nil" whereever
+	forgotten.
+	(Type Conversion): Precise conversion of natural numbers.
+	(Errors and Events): Add "debugging" to concept index.  Add variable
+	`dbus-debug'.
+
+2010-07-04  Michael Albinus  <michael.albinus@gmx.de>
+
+	* dbus.texi (Receiving Method Calls): Add optional argument
+	EMITS-SIGNAL to `dbus-register-property'.
 
 2010-06-27  Alex Schroeder  <alex@gnu.org>
 
@@ -207,43 +2279,150 @@
 	* idlwave.texi (Load-Path Shadows):
 	* org.texi (Handling links): Fix typos.
 
-2010-05-07  Chong Yidong  <cyd@stupidchicken.com>
+2010-06-07  Teodor Zlatanov  <tzz@lifelogs.com>
 
-	* Version 23.2 released.
+	* gnus.texi (Interactive): Explain effect of gnus-expert-user better.
 
-2010-05-03  Štěpán Němec  <stepnem@gmail.com>  (tiny change)
+2010-05-26  Michael Albinus  <michael.albinus@gmx.de>
+
+	* eshell.texi (Built-ins): Describe, how to disable a built-in command
+	by an alias.  (Bug#6226)
+
+2010-05-16  Jay Belanger  <jay.p.belanger@gmail.com>
+
+	* calc.texi (Manipulating Vectors): Mention that vectors can
+	be used to determine bins for `calc-histogram'.
+
+2010-05-13  Jay Belanger  <jay.p.belanger@gmail.com>
+
+	* calc.texi: Remove "\turnoffactive" commands throughout.
+
+2010-05-08  Štěpán Němec  <stepnem@gmail.com>  (tiny change)
 
 	* url.texi (HTTP language/coding, Customization):
 	* message.texi (Header Commands, Responses):
 	* cl.texi (Argument Lists): Fix typos.
 
-2010-04-18  Chong Yidong  <cyd@stupidchicken.com>
+2010-05-08  Chong Yidong  <cyd@stupidchicken.com>
 
-	* ede.texi (EDE Mode): Refer to init file rather than `.emacs'.  Note
-	that Development menu is always available.
+	* ede.texi (EDE Mode): Refer to init file rather than `.emacs'.
+	Note that Development menu is always available.
 	(Creating a project): Fix terminology.
 	(Add/Remove files): Fix typo.
 
-2010-04-17  Teodor Zlatanov  <tzz@lifelogs.com>
+2010-05-07  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Version 23.2 released.
+
+2010-05-01  Daniel E. Doherty  <ddoherty03@gmail.com>  (tiny change)
+
+	* calc.texi (Tutorial): Use "^{\prime}" to indicate primes.
+
+2010-05-01  Michael Albinus  <michael.albinus@gmx.de>
+
+	* tramp.texi (Inline methods, Default Method):
+	Mention `tramp-inline-compress-start-size'.
+
+2010-04-18  Teodor Zlatanov  <tzz@lifelogs.com>
 
 	* gnus.texi (Gnus Versions, Oort Gnus): Mention the Git repo instead of
 	the CVS repo.  Put the Git repo in the news section.
 
-	* gnus-coding.texi (Gnus Maintainance Guide): Fixed title typo.
+	* gnus-coding.texi (Gnus Maintainance Guide): Fix title typo.
 	Removed some mentions of CVS.  Mention the new Git repo.
 
-2010-04-15  Andreas Seltenreich  <seltenreich@gmx.de>
+2010-04-18  Andreas Seltenreich  <seltenreich@gmx.de>
 
 	* gnus.texi (Score File Format): Fix typo.  Reported by Štěpán Němec.
 	(Mail Group Commands): Add index entry.
 
-2010-04-15  Glenn Morris  <rgm@gnu.org>
+2010-04-18  Glenn Morris  <rgm@gnu.org>
 
 	* info.texi (Search Index): Mention Emacs's Info-virtual-index.
 
-2010-03-14  Michael Albinus  <michael.albinus@gmx.de>
+2010-04-18  Jay Belanger  <jay.p.belanger@gmail.com>
+
+	* calc.texi (Radix modes): Mention that the option prefix will
+	turn on twos-complement mode.
+	(Inverse and Hyperbolic Flags): Mention the Option flag.
+
+2010-04-15  Carsten Dominik  <carsten.dominik@gmail.com>
+
+	* org.texi (LaTeX and PDF export): Add a footnote about xetex.
+	(LaTeX/PDF export commands): Rename and Move section.
+	(Sectioning structure): Update.
+	(References): New use case for field coordinates.
+	(The export dispatcher): Rename from ASCII export.
+	(Setting up the staging area): Document the availability of
+	encryption for MobileOrg.
+	(Images and tables): Document how to reference labels.
+	(Index entries): New section.
+	(Generating an index): New section.
+	(Column width and alignment): Document that <N> now
+	means a fixed width, not a maximum width.
+	(Publishing options): Document the :email option.
+	(Beamer class export): Fix bug in the BEAMER example.
+	(Refiling notes): Document refile logging.
+	(In-buffer settings): Document refile logging keywords.
+	(Drawers): Document `C-c C-z' command.
+	(Agenda commands): Mention the alternative key `C-c C-z'.
+	(Special properties): Document the BLOCKED property.
+	(The spreadsheet): Mention the formula editor.
+	(References): Document field coordinates.
+	(Publishing action): Correct the documentation for the
+	publishing function.
+	(The date/time prompt): Document that we accept dates
+	like month/day/year.
+	(Cooperation): Document the changes in table.el support.
+	(Faces for TODO keywords, Faces for TODO keywords)
+	(Priorities): Document the easy colors.
+	(Visibility cycling): Document the new double prefix
+	arg for `org-reveal'.
+	(Cooperation): Remember.el is part of Emacs.
+	(Clean view): Mention that `wrap-prefix' is also set by
+	org-indent-mode.
+	(Agenda commands): Add information about prefix args to
+	scheduling and deadline commands.
+	(Search view): Point to the docstring of
+	`org-search-view' for more details.
+	(Agenda commands): Document that `>' prompts for a date.
+	(Setting tags): Document variable
+	org-complete-tags-always-offer-all-agenda-tags.
+	(Column attributes): Cross-reference special properties.
+
+2010-04-10  Michael Albinus  <michael.albinus@gmx.de>
+
+	Synchronize with Tramp repository.
+
+	* tramp.texi (Auto-save and Backup): Remove reference to Emacs 21.
+	(Frequently Asked Questions): Adapt supported (X)Emacs versions.
+	Adapt supported MS Windows versions.  Remove obsolete URL.  Use the $()
+	syntax, texi2dvi reports errors with the backquotes.
 
 	* trampver.texi: Update release number.
+
+2010-04-01  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* gnus.texi (Finding the News): Add pointers to the Server buffer
+	because it's essential.
+
+2010-03-31  Katsumi Yamaoka  <yamaoka@jpl.org>
+
+	* gnus.texi (MIME Commands): Update description of
+	gnus-article-browse-html-article.
+
+2010-03-27  Teodor Zlatanov  <tzz@lifelogs.com>
+
+	* auth.texi (Secret Service API): Add TODO node.
+	(Help for users): Explain the new source options for `auth-sources'.
+
+2010-03-24  Michael Albinus  <michael.albinus@gmx.de>
+
+	* trampver.texi: Update release number.
+
+2010-03-10  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Branch for 23.2.
 
 2010-03-03  Chong Yidong  <cyd@stupidchicken.com>
 
@@ -284,7 +2463,7 @@
 2010-01-17  Michael Albinus  <michael.albinus@gmx.de>
 
 	* tramp.texi (Frequently Asked Questions): Add GNU Emacs 23 and
-	SXEmacs	22 to the supported systems.  New item for hung ssh sessions.
+	SXEmacs 22 to the supported systems.  New item for hung ssh sessions.
 
 2010-01-17  Glenn Morris  <rgm@gnu.org>
 
@@ -451,8 +2630,8 @@
 	* dbus.texi (Type Conversion): Fix typo.
 	(Asynchronous Methods): Rename `dbus-registered-functions-table' to
 	`dbus-registered-objects-table'.
-	(Receiving Method Calls): New defun `dbus-register-property'.  Move
-	`dbus-unregister-object' here.
+	(Receiving Method Calls): New defun `dbus-register-property'.
+	Move `dbus-unregister-object' here.
 
 2009-11-13  Carsten Dominik  <carsten.dominik@gmail.com>
 
@@ -466,9 +2645,9 @@
 
 2009-11-13  John Wiegley  <johnw@newartisans.com>
 
-	* org.texi (Tracking your habits): Added a new section in the
+	* org.texi (Tracking your habits): Add a new section in the
 	manual about how to track habits.
-	(Resolving idle time): Added a section on how idle and
+	(Resolving idle time): Add a section on how idle and
 	dangling clocks are resolved.
 
 2009-11-13  Carsten Dominik  <carsten.dominik@gmail.com>
@@ -495,11 +2674,11 @@
 	should be set.
 	(Agenda commands): Document that SPC is a filter for
 	any tag.
-	(Search view): Renamed from "Keyword search".
+	(Search view): Rename from "Keyword search".
 	(Capure): New chapter.
 	(Markup): New chapter.
-	(Links in HTML export, Images in HTML export): Extend
-	the section titles.
+	(Links in HTML export, Images in HTML export):
+	Extend the section titles.
 	(Images in HTML export): Document the align option.
 	(Text areas in HTML export): Extend the section title.
 	(Images in LaTeX export): Explain image placement in LaTeX.
@@ -586,8 +2765,8 @@
 
 2009-09-13  Chong Yidong  <cyd@stupidchicken.com>
 
-	* dired-x.texi (Technical Details): Delete
-	dired-up-directory (Bug#4292).
+	* dired-x.texi (Technical Details):
+	Delete dired-up-directory (Bug#4292).
 
 2009-09-03  Michael Albinus  <michael.albinus@gmx.de>
 
@@ -600,7 +2779,7 @@
 	Document entry text mode.  Improve documentation of the keys to include
 	inactive time stamps into the agenda view.
 	(Feedback): Document the new bug report command.
-	(Structure editing): Added an index entry for the sorting of subtrees.
+	(Structure editing): Add an index entry for the sorting of subtrees.
 
 2009-09-02  Teodor Zlatanov  <tzz@lifelogs.com>
 
@@ -620,8 +2799,8 @@
 
 2009-08-29  Katsumi Yamaoka  <yamaoka@jpl.org>
 
-	* gnus.texi (Expiring Mail): Mention
-	gnus-mark-copied-or-moved-articles-as-expirable.
+	* gnus.texi (Expiring Mail):
+	Mention gnus-mark-copied-or-moved-articles-as-expirable.
 	(Various Various): Mention gnus-safe-html-newsgroups.
 
 	* gnus-news.texi: Mention
@@ -649,7 +2828,7 @@
 2009-08-25  Michael Albinus  <michael.albinus@gmx.de>
 
 	* dbus.texi (Bus names): Add optional parameter TIMEOUT to dbus-ping.
-	Describe autostart behaviour of dbus-ping.
+	Describe autostart behavior of dbus-ping.
 	(Synchronous Methods, Asynchronous Methods): Use English numeric format
 	for timeout values.
 	(Top): Remove footnote saying D-Bus is not enabled by
@@ -713,7 +2892,7 @@
 	(Agenda commands): Document new bulk commands.
 	(Plain lists): Document new behavior of
 	`org-cycle-include-plain-lists'.
-	 Hyphenation only in TeX.
+	Hyphenation only in TeX.
 	(Clocking work time): Document the key to update effort
 	estimates.
 	(Clocking work time): Document the clock time display.
@@ -764,7 +2943,7 @@
 	#+LEATEX_HEADER in-buffer setting.
 	(Bugs): Section removed.
 	(Hooks): New section.
-	(Add-on packages): Moved here from old location.
+	(Add-on packages): Move here from old location.
 	(Context-sensitive commands): New section.
 	(Setting tags): Document newline option.
 	(Global TODO list, Matching tags and properties):
@@ -825,8 +3004,8 @@
 
 2009-06-30  Michael Albinus  <michael.albinus@gmx.de>
 
-	* tramp.texi (Inline methods, External methods, Gateway methods): Avoid
-	the words "kludge" and hack".
+	* tramp.texi (Inline methods, External methods, Gateway methods):
+	Avoid the words "kludge" and hack".
 	(External methods): Add `synce' method.
 
 	* trampver.texi: Update release number.
@@ -1281,8 +3460,8 @@
 
 2009-01-09  Reiner Steib  <Reiner.Steib@gmx.de>
 
-	* gnus.texi (Converting Kill Files): Fix URL.  Include
-	gnus-kill-to-score.el in contrib directory.
+	* gnus.texi (Converting Kill Files): Fix URL.
+	Include gnus-kill-to-score.el in contrib directory.
 
 2009-01-09  Reiner Steib  <Reiner.Steib@gmx.de>
 
@@ -1309,9 +3488,9 @@
 2008-12-20  Carsten Dominik  <dominik@science.uva.nl>
 
 	* org.texi (Activation, Exporting, ASCII export, HTML export)
-	(HTML Export commands, LaTeX/PDF export commands): Improve
-	documentation about transient-mark-mode.
-	(References): DOcuemtn the use of special names like $LR1 to reference
+	(HTML Export commands, LaTeX/PDF export commands):
+	Improve documentation about transient-mark-mode.
+	(References): Document the use of special names like $LR1 to reference
 	to fields in the last table row.
 
 2008-12-19  Juri Linkov  <juri@jurta.org>
@@ -1405,7 +3584,7 @@
 
 2008-11-16  Michael Kifer  <kifer@cs.stonybrook.edu>
 
-	* viper.texi (viper-ESC-keyseq-timeout, viper-ESC-key): Removed.
+	* viper.texi (viper-ESC-keyseq-timeout, viper-ESC-key): Remove.
 
 	* ediff.texi: Version/date change.
 
@@ -1456,12 +3635,12 @@
 
 2008-09-25  Teodor Zlatanov  <tzz@lifelogs.com>
 
-	* message.texi (Sending Variables): Fixed variable documentation to
+	* message.texi (Sending Variables): Fix variable documentation to
 	avoid the "y/n" wording.
 
 2008-09-24  Teodor Zlatanov  <tzz@lifelogs.com>
 
-	* message.texi (Sending Variables): Added `message-confirm-send' doc.
+	* message.texi (Sending Variables): Add `message-confirm-send' doc.
 
 2008-09-24  Katsumi Yamaoka  <yamaoka@jpl.org>
 
@@ -1675,7 +3854,7 @@
 
 2008-06-21  Michael Albinus  <michael.albinus@gmx.de>
 
-	* tramp.texi (Password handling): Renamed from "Password caching".
+	* tramp.texi (Password handling): Rename from "Password caching".
 	Add `auth-source' mechanism.
 	(Connection caching): Tramp reopens the connection automatically,
 	when the operating system on the remote host has been changed.
@@ -1780,7 +3959,7 @@
 2008-06-15  Reiner Steib  <Reiner.Steib@gmx.de>
 
 	* gnus.texi (Mail Source Customization): Correct values of
-	 `mail-source-delete-incoming'.  Reported by Tassilo Horn.
+	`mail-source-delete-incoming'.  Reported by Tassilo Horn.
 	(Oort Gnus): Fix version comment for mml-dnd-protocol-alist.
 
 2008-06-14  Reiner Steib  <Reiner.Steib@gmx.de>
@@ -1887,8 +4066,8 @@
 
 2008-04-01  Daiki Ueno  <ueno@unixuser.org>
 
-	* epa.texi (Encrypting/decrypting *.gpg files): Document
-	epa-file-name-regexp.
+	* epa.texi (Encrypting/decrypting *.gpg files):
+	Document epa-file-name-regexp.
 
 2008-03-31  Katsumi Yamaoka  <yamaoka@jpl.org>
 
@@ -2140,8 +4319,8 @@
 
 2008-01-09  Katsumi Yamaoka  <yamaoka@jpl.org>
 
-	* gnus.texi (Article Keymap): Add
-	gnus-article-wide-reply-with-original; fix descriptions of
+	* gnus.texi (Article Keymap):
+	Add gnus-article-wide-reply-with-original; fix descriptions of
 	gnus-article-reply-with-original and
 	gnus-article-followup-with-original.
 
@@ -2214,14 +4393,14 @@
 	(Getting started with rcirc): Change items to reflect prompts.
 	Add more explanation to rcirc-track-minor-mode and added a comment to
 	warn future maintainers that this section is a copy.
-	(People): Changed /ignore example.
+	(People): Change /ignore example.
 	(Keywords): Not keywords.
 
 2007-12-20  Alex Schroeder  <alex@gnu.org>
 
 	* rcirc.texi (Top): Fighting Information Overload chapter added.
 	(Getting started with rcirc): Add notice of rcirc-track-minor-mode.
-	(rcirc commands): Moved /ignore command to the new chapter.
+	(rcirc commands): Move /ignore command to the new chapter.
 	(Fighting Information Overload): New chapter documenting /keyword,
 	/bright, /dim, channel ignore, and low priority channels.
 	(Configuration): Document rcirc-server-alist, remove
@@ -2419,14 +4598,10 @@
 
 	* gnus-news.texi, gnus-coding.texi, sasl.texi: New files.
 
-2007-10-28  Emanuele Giaquinta  <e.giaquinta@glauco.it>  (tiny change)
-
-	* gnus-faq.texi ([5.12]): Remove reference to discontinued service.
-
 2007-10-28  Reiner Steib  <Reiner.Steib@gmx.de>
 
-	* gnus.texi (Sorting the Summary Buffer): Remove
-	gnus-article-sort-by-date-reverse.
+	* gnus.texi (Sorting the Summary Buffer):
+	Remove gnus-article-sort-by-date-reverse.
 
 2007-10-28  Katsumi Yamaoka  <yamaoka@jpl.org>
 
@@ -2458,8 +4633,8 @@
 
 2007-10-28  Katsumi Yamaoka  <yamaoka@jpl.org>
 
-	* gnus.texi (Archived Messages): Document
-	gnus-update-message-archive-method.
+	* gnus.texi (Archived Messages):
+	Document gnus-update-message-archive-method.
 
 2007-10-28  Katsumi Yamaoka  <yamaoka@jpl.org>
 
@@ -2467,13 +4642,13 @@
 
 2007-10-28  Michaël Cadilhac  <michael@cadilhac.name>
 
-	* gnus.texi (Group Maneuvering): Document
-	`gnus-summary-next-group-on-exit'.
+	* gnus.texi (Group Maneuvering):
+	Document `gnus-summary-next-group-on-exit'.
 
 2007-10-28  Katsumi Yamaoka  <yamaoka@jpl.org>
 
-	* gnus.texi (Really Various Summary Commands): Mention
-	gnus-auto-select-on-ephemeral-exit.
+	* gnus.texi (Really Various Summary Commands):
+	Mention gnus-auto-select-on-ephemeral-exit.
 
 2007-10-28  Reiner Steib  <Reiner.Steib@gmx.de>
 
@@ -2622,14 +4797,14 @@
 
 2007-10-28  Kevin Greiner  <kevin.greiner@compsol.cc>
 
-	* gnus.texi (nntp-open-via-telnet-and-telnet): Fixed grammar.
+	* gnus.texi (nntp-open-via-telnet-and-telnet): Fix grammar.
 	(Agent Parameters): Updated parameter names to match code.
 	(Group Agent Commands): Corrected 'gnus-agent-fetch-series' as
 	'gnus-agent-summary-fetch-series'.
 	(Agent and flags): New section providing a generalized discussion
 	of flag handling.
-	(Agent and IMAP): Removed flag discussion.
-	(Agent Variables): Added 'gnus-agent-synchronize-flags'.
+	(Agent and IMAP): Remove flag discussion.
+	(Agent Variables): Add 'gnus-agent-synchronize-flags'.
 
 2007-10-28  Romain Francoise  <romain@orebokech.com>
 
@@ -2662,7 +4837,7 @@
 	* gnus.texi (Blacklists and Whitelists, BBDB Whitelists)
 	(Gmane Spam Reporting, Bogofilter, spam-stat spam filtering)
 	(spam-stat spam filtering, SpamOracle)
-	(Extending the Spam ELisp package): Removed extra quote symbol for
+	(Extending the Spam ELisp package): Remove extra quote symbol for
 	clarity.
 
 2007-10-28  Reiner Steib  <Reiner.Steib@gmx.de>
@@ -2679,8 +4854,8 @@
 
 2007-10-28  Reiner Steib  <Reiner.Steib@gmx.de>
 
-	* gnus.texi (Sorting the Summary Buffer): Added
-	gnus-thread-sort-by-recipient.
+	* gnus.texi (Sorting the Summary Buffer):
+	Add gnus-thread-sort-by-recipient.
 
 2007-10-28  Romain Francoise  <romain@orebokech.com>
 
@@ -2715,8 +4890,8 @@
 
 2007-10-28  Simon Josefsson  <jas@extundo.com>
 
-	* gnus.texi (Article Washing): Add libidn URL.  Suggested by
-	Michael Cook <michael@waxrat.com>.
+	* gnus.texi (Article Washing): Add libidn URL.
+	Suggested by Michael Cook <michael@waxrat.com>.
 
 2007-10-28  Lars Magne Ingebrigtsen  <larsi@gnus.org>
 
@@ -2765,10 +4940,10 @@
 	everywhere for consistency.
 	(Filtering Spam Using The Spam ELisp Package): Admonish again.
 	(Spam ELisp Package Sequence of Events): This is Gnus, say so.
-	Say "regular expression" instead of "regex."  Admonish.  Pick
-	other words to sound better (s/so/thus/).
-	(Spam ELisp Package Filtering of Incoming Mail): Mention
-	statistical filters.  Remove old TODO.
+	Say "regular expression" instead of "regex."  Admonish.
+	Pick other words to sound better (s/so/thus/).
+	(Spam ELisp Package Filtering of Incoming Mail):
+	Mention statistical filters.  Remove old TODO.
 	(Spam ELisp Package Sorting and Score Display in Summary Buffer):
 	New section on sorting and displaying the spam score.
 	(BBDB Whitelists): Mention spam-use-BBDB-exclusive is not a
@@ -2794,7 +4969,7 @@
 
 2007-10-28  Reiner Steib  <Reiner.Steib@gmx.de>
 
-	* gnus.texi (Adaptive Scoring): Added gnus-adaptive-pretty-print.
+	* gnus.texi (Adaptive Scoring): Add gnus-adaptive-pretty-print.
 
 2007-10-28  Simon Josefsson  <jas@extundo.com>
 
@@ -2808,7 +4983,7 @@
 
 2007-10-28  Teodor Zlatanov  <tzz@lifelogs.com>
 
-	* gnus.texi (Hashcash): Changed location of library, also mention
+	* gnus.texi (Hashcash): Change location of library, also mention
 	that payments can be verified and fix the name of the
 	hashcash-path variable.
 
@@ -2828,7 +5003,7 @@
 
 2007-10-28  Teodor Zlatanov  <tzz@lifelogs.com>
 
-	* gnus.texi (SpamAssassin backend): Added new node about SpamAssassin.
+	* gnus.texi (SpamAssassin backend): Add new node about SpamAssassin.
 	From Hubert Chan <hubert@uhoreg.ca>.
 
 2007-10-28  Jesper Harder  <harder@ifa.au.dk>
@@ -2846,8 +5021,8 @@
 
 2007-10-28  Kevin Greiner  <kgreiner@xpediantsolutions.com>
 
-	* gnus.texi (Outgoing Messages, Agent Variables): Add
-	gnus-agent-queue-mail and gnus-agent-prompt-send-queue.
+	* gnus.texi (Outgoing Messages, Agent Variables):
+	Add gnus-agent-queue-mail and gnus-agent-prompt-send-queue.
 	Suggested by Gaute Strokkenes <gs234@srcf.ucam.org>
 
 2007-10-28  Jesper Harder  <harder@ifa.au.dk>
@@ -3185,8 +5360,8 @@
 
 2007-06-19  Jay Belanger  <jay.p.belanger@gmail.com>
 
-	* calc.texi (Basic Arithmetic, Customizing Calc): Mention
-	the variable `calc-multiplication-has-precedence'.
+	* calc.texi (Basic Arithmetic, Customizing Calc):
+	Mention the variable `calc-multiplication-has-precedence'.
 
 2007-06-19  Carsten Dominik  <dominik@science.uva.nl>
 
@@ -3409,7 +5584,7 @@
 
 2007-02-25  Carsten Dominik  <dominik@science.uva.nl>
 
-	* org.texi (The spreadsheet): Renamed from "Table calculations".
+	* org.texi (The spreadsheet): Rename from "Table calculations".
 	Completely reorganized and rewritten.
 	(CamelCase links): Section removed.
 	(Repeating items): New section.
@@ -3687,7 +5862,7 @@
 
 2006-10-20  Masatake YAMATO  <jet@gyve.org>
 
-	* cc-mode.texi (Sample .emacs File): Added missing `)' in
+	* cc-mode.texi (Sample .emacs File): Add missing `)' in
 	sample code `my-c-initialization-hook'.
 
 2006-10-19  Stuart D. Herring  <herring@lanl.gov>
@@ -3851,13 +6026,13 @@
 	* rcirc.texi: Fix typos.
 	(Getting started with rcirc): New calling convention for M-x irc.
 	Mention #rcirc.  Removed channel tracking.
-	(Configuration): Changed the names of all variables that got changed
+	(Configuration): Change the names of all variables that got changed
 	recently, eg. rcirc-server to rcirc-default-server.  Added
 	documentation for rcirc-authinfo, some background for Bitlbee, and
 	rcirc-track-minor-mode.
-	(Scrolling conservatively): Fixed the xref from Auto Scrolling to just
+	(Scrolling conservatively): Fix the xref from Auto Scrolling to just
 	Scrolling.
-	(Reconnecting after you have lost the connection): Fixed example code
+	(Reconnecting after you have lost the connection): Fix example code
 	to match code changes.
 
 2006-07-10  Nick Roberts  <nickrob@snap.net.nz>
@@ -3958,19 +6133,6 @@
 
 	* org.texi (Progress logging): New section.
 
-2006-05-29  Stefan Monnier  <monnier@iro.umontreal.ca>
-
-	* viper.texi (Viper Specials):
-	* gnus.texi (Example Setup):
-	* faq.texi (Backspace invokes help):
-	* dired-x.texi (Optional Installation Dired Jump):
-	* calc.texi (Defining Simple Commands): Use ;; instead of ;;; to better
-	follow coding conventions.
-
-2006-05-18  Reiner Steib  <Reiner.Steib@gmx.de>
-
-	* gnus.texi (Saving Articles): Clarify gnus-summary-save-article-mail.
-
 2006-06-06  Carsten Dominik  <dominik@science.uva.nl>
 
 	* org.texi (ASCII export): Document indentation adaptation.
@@ -4017,6 +6179,15 @@
 2006-05-30  Carsten Dominik  <dominik@science.uva.nl>
 
 	* org.texi: Small typo fixes.
+
+2006-05-29  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* viper.texi (Viper Specials):
+	* gnus.texi (Example Setup):
+	* faq.texi (Backspace invokes help):
+	* dired-x.texi (Optional Installation Dired Jump):
+	* calc.texi (Defining Simple Commands): Use ;; instead of ;;; to better
+	follow coding conventions.
 
 2006-05-29  Michael Albinus  <michael.albinus@gmx.de>
 
@@ -4574,10 +6745,6 @@
 
 	* gnus.texi (Article Washing): Additions.
 
-2006-01-08  Alex Schroeder  <alex@gnu.org>
-
-	* pgg.texi (Caching passphrase): Rewording.
-
 2006-01-13  Carsten Dominik  <dominik@science.uva.nl>
 
 	* org.texi (Agenda commands): Document tags command.
@@ -4687,8 +6854,8 @@
 
 	* faq.texi: Set VER to `22.1'.
 	(Basic editing): Explain how to use localized versions of the
-	Tutorial.  Mention that `C-h r' displays the manual.  Delete
-	obsolete WWW link to an Emacs 18 tutorial.
+	Tutorial.  Mention that `C-h r' displays the manual.
+	Delete obsolete WWW link to an Emacs 18 tutorial.
 	(Getting a printed manual): Point to the new locations of the
 	manuals on the GNU Web site.
 	(Emacs Lisp documentation): Explain that the Emacs Lisp manual is
@@ -4815,7 +6982,7 @@
 
 	* org.texi (FAQ): Document `org-table-tab-jumps-over-hlines'.
 	(Agenda): Document commands `org-cycle-agenda-files' and
-	`org-agenda-file-to-front'
+	`org-agenda-file-to-front'.
 	(Built-in table editor): Document `org-table-sort-lines'.
 	(HTML formatting): Export of hand-formatted lists.
 
@@ -4871,8 +7038,8 @@
 
 2005-10-23  Lars Hansen  <larsh@soem.dk>
 
-	* dired-x.texi (Miscellaneous Commands): Replace
-	dired-do-relative-symlink by dired-do-relsymlink and
+	* dired-x.texi (Miscellaneous Commands):
+	Replace dired-do-relative-symlink by dired-do-relsymlink and
 	dired-do-relative-symlink-regexp by dired-do-relsymlink-regexp.
 
 2005-10-23  Jay Belanger  <belanger@truman.edu>
@@ -4882,8 +7049,8 @@
 
 2005-10-23  Michael Albinus  <michael.albinus@gmx.de>
 
-	* faq.texi (Bugs and problems): Replace
-	`dired-move-to-filename-regexp' by
+	* faq.texi (Bugs and problems):
+	Replace `dired-move-to-filename-regexp' by
 	`directory-listing-before-filename-regexp'.
 
 2005-10-22  Eli Zaretskii  <eliz@gnu.org>
@@ -5030,8 +7197,8 @@
 
 	* newsticker.texi: Replace @command with @code.  Replace @example
 	with @lisp.
-	(Top): Added explanations to menu items.
-	(GNU Free Documentation License): Removed.
+	(Top): Add explanations to menu items.
+	(GNU Free Documentation License): Remove.
 
 2005-09-16  Romain Francoise  <romain@orebokech.com>
 
@@ -5519,7 +7686,7 @@
 
 2005-01-01  Jay Belanger  <belanger@truman.edu>
 
-	* calc.texi (Programming Tutorial): Changed description of how to
+	* calc.texi (Programming Tutorial): Change description of how to
 	edit keyboard macros to match current behavior.
 
 2004-12-31  Jay Belanger  <belanger@truman.edu>
@@ -5619,10 +7786,10 @@
 
 2004-12-08  Reiner Steib  <Reiner.Steib@gmx.de>
 
-	* gnus-faq.texi ([5.1]): Added missing bracket.
+	* gnus-faq.texi ([5.1]): Add missing bracket.
 
-	* gnus.texi (Filtering Spam Using The Spam ELisp Package): Index
-	`spam-initialize'.
+	* gnus.texi (Filtering Spam Using The Spam ELisp Package):
+	Index `spam-initialize'.
 
 2004-11-22  Reiner Steib  <Reiner.Steib@gmx.de>
 
@@ -5633,20 +7800,20 @@
 
 2004-11-02  Katsumi Yamaoka  <yamaoka@jpl.org>
 
-	* emacs-mime.texi (Encoding Customization): Fix
-	mm-coding-system-priorities entry.
+	* emacs-mime.texi (Encoding Customization):
+	Fix mm-coding-system-priorities entry.
 
 2004-11-03  Jan Djärv  <jan.h.d@swipnet.se>
 
 	* idlwave.texi (Continued Statement Indentation):
 	* reftex.texi (Options (Index Support)):
 	(Displaying and Editing the Index, Table of Contents):
-	* speedbar.texi (Creating a display, Major Display Modes): Replace
-	non-nil with non-@code{nil}.
+	* speedbar.texi (Creating a display, Major Display Modes):
+	Replace non-nil with non-@code{nil}.
 
 2004-10-21  Jay Belanger  <belanger@truman.edu>
 
-	* calc.texi (Algebraic-Style Calculations): Removed a comment.
+	* calc.texi (Algebraic-Style Calculations): Remove a comment.
 
 2004-10-18  Luc Teirlinck  <teirllm@auburn.edu>
 
@@ -5654,7 +7821,7 @@
 
 2004-10-18  Jay Belanger  <belanger@truman.edu>
 
-	* calc.texi (Reporting Bugs): Changed the address that bugs
+	* calc.texi (Reporting Bugs): Change the address that bugs
 	should be sent to.
 
 2004-10-15  Reiner Steib  <Reiner.Steib@gmx.de>
@@ -5673,7 +7840,7 @@
 
 2004-10-12  Jay Belanger  <belanger@truman.edu>
 
-	* calc.texi (Help Commands): Changed the descriptions of
+	* calc.texi (Help Commands): Change the descriptions of
 	calc-describe-function and calc-describe-variable to match their
 	current behavior.
 
@@ -5739,25 +7906,25 @@
 
 2004-09-20  Reiner Steib  <Reiner.Steib@gmx.de>
 
-	* gnus.texi (MIME Commands): Added
-	gnus-mime-display-multipart-as-mixed,
+	* gnus.texi (MIME Commands):
+	Add gnus-mime-display-multipart-as-mixed,
 	gnus-mime-display-multipart-alternative-as-mixed,
 	gnus-mime-display-multipart-related-as-mixed.
 	(Mail Source Customization): Clarify `mail-source-directory'.
 	(Splitting Mail): Mention gnus-group-find-new-groups.
-	(SpamOracle): Fixed typo.
+	(SpamOracle): Fix typo.
 
 	* gnus-faq.texi: Untabify.
 	([6.3]): nnir.el is in contrib directory.
 
 	* message.texi (News Headers): Clarify how a unique ID is created.
 
-	* gnus.texi (Batching Agents): Fixed typo in example.  Reported
-	by Hiroshi Fujishima <pooh@nature.tsukuba.ac.jp>.
+	* gnus.texi (Batching Agents): Fix typo in example.
+	Reported by Hiroshi Fujishima <pooh@nature.tsukuba.ac.jp>.
 
 2004-09-20  Andre Srinivasan  <andre@e2open.com>  (tiny change)
 
-	* gnus.texi (Group Parameters): Added more on hooks.
+	* gnus.texi (Group Parameters): Add more on hooks.
 
 2004-09-20  Florian Weimer  <fw@deneb.enyo.de>
 
@@ -5765,7 +7932,7 @@
 
 2004-09-22  Jay Belanger  <belanger@truman.edu>
 
-	* calc.texi (Vectors as Lists): Added a warning that the tutorial
+	* calc.texi (Vectors as Lists): Add a warning that the tutorial
 	might be hidden during part of the session.
 
 2004-09-20  Jay Belanger  <belanger@truman.edu>
@@ -5858,8 +8025,8 @@
 	mm-content-transfer-encoding-defaults entry.
 	(rfc2047): Update.
 
-	* gnus.texi (Article Highlighting): Add
-	gnus-cite-ignore-quoted-from.
+	* gnus.texi (Article Highlighting):
+	Add gnus-cite-ignore-quoted-from.
 	(POP before SMTP): New node.
 	(Posting Styles): Addition.
 	(Splitting Mail): Add nnmail-split-lowercase-expanded.
@@ -5873,8 +8040,8 @@
 
 2004-08-22  Reiner Steib  <Reiner.Steib@gmx.de>
 
-	* gnus.texi (Mail Source Specifiers): Describe
-	`pop3-leave-mail-on-server'.
+	* gnus.texi (Mail Source Specifiers):
+	Describe `pop3-leave-mail-on-server'.
 
 2004-08-02  Reiner Steib  <Reiner.Steib@gmx.de>
 
@@ -5901,8 +8068,8 @@
 
 2004-06-13  Luc Teirlinck  <teirllm@auburn.edu>
 
-	* autotype.texi (Copyrights, Timestamps): Recommend
-	`before-save-hook' instead of `write-file-functions'.
+	* autotype.texi (Copyrights, Timestamps):
+	Recommend `before-save-hook' instead of `write-file-functions'.
 
 2004-06-13  Lars Hansen  <larsh@math.ku.dk>
 
@@ -6013,7 +8180,7 @@
 
 2004-02-29  Simon Josefsson  <jas@extundo.com>
 
-	* smtpmail.texi (Authentication): Changed the list of supported
+	* smtpmail.texi (Authentication): Change the list of supported
 	authentication mechanisms from CRAM-MD5, PLAIN and LOGIN-MD5 to
 	CRAM-MD5 and LOGIN, tiny patch from Andreas Voegele
 	<voegelas@gmx.net>.
@@ -6032,8 +8199,8 @@
 	* tramp.texi (Customizing Completion): Explain new functions
 	`tramp-parse-shostkeys' and `tramp-parse-sknownhosts'.
 	(all): Savannah URLs unified to "http://savannah.nongnu.org".
-	(Top): Refer to Savannah mailing list as the major one.  Mention
-	older mailing lists in HTML mode only.
+	(Top): Refer to Savannah mailing list as the major one.
+	Mention older mailing lists in HTML mode only.
 	(Auto-save and Backup): Add auto-save.  Based on wording of Kai.
 	(Frequently Asked Questions): Remote hosts must not be Unix-like
 	for "smb" method.
@@ -6222,7 +8389,7 @@
 	(Multi-hop Methods): Add method `remsh'.
 	Small patch from Adrian Aichner <adrian@xemacs.org>:
 	Fix minor typos.
-	(Concept Index): Added to make manual searchable via
+	(Concept Index): Add to make manual searchable via
 	`Info-index'.
 	(Version Control): Add cindex entry.
 
@@ -6272,7 +8439,7 @@
 	appropriate.  In info case, point to node `Installation' in order
 	to explain how to generate the other way.  In html case, make a
 	link to the other html file.
-	(Obtaining TRAMP): Added a paragraph saying to perform `autoconf'
+	(Obtaining TRAMP): Add a paragraph saying to perform `autoconf'
 	after CVS checkout/update.
 	(Installation): Completely rewritten.
 	(Installation parameters, Load paths): New sections under
@@ -6310,7 +8477,7 @@
 2003-02-01  Michael Albinus  <Michael.Albinus@alcatel.de>
 
 	* tramp.texi (Frequently Asked Questions): Explain a workaround if
-	another package loads accidently Ange-FTP.
+	another package loads accidentally Ange-FTP.
 
 2003-01-24  Michael Albinus  <Michael.Albinus@alcatel.de>
 
@@ -6325,8 +8492,8 @@
 
 2002-12-26  Kai Großjohann  <kai.grossjohann@uni-duisburg.de>
 
-	* tramp.texi (External transfer methods): New method `smb'.  From
-	Michael Albinus.
+	* tramp.texi (External transfer methods): New method `smb'.
+	From Michael Albinus.
 
 2002-11-05  Karl Berry  <karl@gnu.org>
 
@@ -6335,8 +8502,8 @@
 
 2002-10-06  Kai Großjohann  <Kai.Grossjohann@CS.Uni-Dortmund.DE>
 
-	* tramp.texi: Move @copying to standard place.  Use
-	@insertcopying.
+	* tramp.texi: Move @copying to standard place.
+	Use @insertcopying.
 
 2002-10-02  Karl Berry  <karl@gnu.org>
 
@@ -6404,7 +8571,7 @@
 
 2000-12-14  Dave Love  <fx@gnu.org>
 
-	* Makefile.in (mostlyclean): Remove gnustmp.*
+	* Makefile.in (mostlyclean): Remove gnustmp.*.
 	(gnus.dvi): Change rule to remove @latex stuff.
 
 2000-10-19  Eric M. Ludlam  <zappo@ultranet.com>
@@ -6794,8 +8961,8 @@
 1989-01-17  Robert J. Chassell  (bob@rice-chex.ai.mit.edu)
 
 	* texinfo.tex: Change spelling of `\sc' font to `\smallcaps' and
-	then define `\sc' as the command for smallcaps in Texinfo.  This
-	means that the @sc command will produce small caps.  bfox has
+	then define `\sc' as the command for smallcaps in Texinfo.
+	This means that the @sc command will produce small caps.  bfox has
 	made the corresponding change to makeinfo and texinfm.el.
 
 1988-08-16  Robert J. Chassell  (bob@frosted-flakes.ai.mit.edu)
@@ -6815,12 +8982,9 @@
 
 ;; Local Variables:
 ;; coding: utf-8
-;; fill-column: 79
-;; add-log-time-zone-rule: t
 ;; End:
 
-    Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2001, 2002,
-      2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+  Copyright (C) 1993-1999, 2001-2012  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
@@ -6836,5 +9000,3 @@
 
   You should have received a copy of the GNU General Public License
   along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
-
-;; arch-tag: 08b2903e-900c-4c72-a4a9-e76416a80803

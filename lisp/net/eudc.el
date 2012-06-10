@@ -1,7 +1,6 @@
 ;;; eudc.el --- Emacs Unified Directory Client
 
-;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1998-2012 Free Software Foundation, Inc.
 
 ;; Author: Oscar Figueiredo <oscar@cpe.fr>
 ;; Maintainer: Pavel Janík <Pavel@Janik.cz>
@@ -134,7 +133,7 @@
       (setq plist (cdr (cdr plist))))
     nil))
 
-;; Emacs' plist-get lacks third parameter
+;; Emacs's plist-get lacks third parameter
 (defun eudc-plist-get (plist prop &optional default)
   "Extract a value from a property list.
 PLIST is a property list, which is a list of the form
@@ -352,12 +351,12 @@ accordingly. Otherwise it is set to its EUDC default binding"
 The translation is done according to
 `eudc-protocol-attributes-translation-alist'."
   (if eudc-protocol-attributes-translation-alist
-      (mapcar '(lambda (attribute)
-		 (let ((trans (assq (car attribute)
-				    (symbol-value eudc-protocol-attributes-translation-alist))))
-		   (if trans
-		       (cons (cdr trans) (cdr attribute))
-		     attribute)))
+      (mapcar (lambda (attribute)
+                (let ((trans (assq (car attribute)
+                                   (symbol-value eudc-protocol-attributes-translation-alist))))
+                  (if trans
+                      (cons (cdr trans) (cdr attribute))
+                    attribute)))
 	      query)
     query))
 
@@ -367,7 +366,7 @@ The translation is done according to
 `eudc-protocol-attributes-translation-alist'."
   (if eudc-protocol-attributes-translation-alist
       (let (trans)
-	(mapcar '(lambda (attribute)
+	(mapcar (lambda (attribute)
 		   (setq trans (assq attribute
 				     (symbol-value eudc-protocol-attributes-translation-alist)))
 		   (if trans
@@ -693,7 +692,7 @@ server for future sessions."
   (interactive (list
 		(read-from-minibuffer "Directory Server: ")
 		(intern (completing-read "Protocol: "
-					 (mapcar '(lambda (elt)
+					 (mapcar (lambda (elt)
 						    (cons (symbol-name elt)
 							  elt))
 						 eudc-known-protocols)))))
@@ -797,7 +796,7 @@ If none try N - 1 and so forth."
 		(> n 0))
       (setq formats
 	    (delq nil
-		  (mapcar '(lambda (format)
+		  (mapcar (lambda (format)
 			     (if (= n
 				    (length format))
 				 format
@@ -830,10 +829,7 @@ see `eudc-inline-expansion-servers'"
   (let* ((end (point))
 	 (beg (save-excursion
 		(if (re-search-backward "\\([:,]\\|^\\)[ \t]*"
-					(save-excursion
-					  (beginning-of-line)
-					  (point))
-					'move)
+					(point-at-bol) 'move)
 		    (goto-char (match-end 0)))
 		(point)))
 	 (query-words (split-string (buffer-substring beg end) "[ \t]+"))
@@ -1295,5 +1291,4 @@ This does nothing except loading eudc by autoload side-effect."
 
 (provide 'eudc)
 
-;; arch-tag: e18872b6-db83-400b-869d-be54e9a4160c
 ;;; eudc.el ends here

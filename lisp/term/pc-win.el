@@ -1,7 +1,7 @@
 ;;; pc-win.el --- setup support for `PC windows' (whatever that is)
 
-;; Copyright (C) 1994, 1996, 1997, 1999, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1994, 1996-1997, 1999, 2001-2012
+;;   Free Software Foundation, Inc.
 
 ;; Author: Morten Welinder <terra@diku.dk>
 ;; Maintainer: FSF
@@ -134,7 +134,7 @@
 ;; terminal-initialization function.  Also, our handling of reverse
 ;; video is slightly different.
 (defun msdos-create-frame-with-faces (&optional parameters)
-  "Create an frame on MS-DOS display.
+  "Create a frame on MS-DOS display.
 Optional frame parameters PARAMETERS specify the frame parameters.
 Parameters not specified by PARAMETERS are taken from
 `default-frame-alist'.  If either PARAMETERS or `default-frame-alist'
@@ -158,6 +158,12 @@ created."
 ;; values returned are questionable, but usually only the form of the
 ;; returned value matters.  Also, by the way, recall that `ignore' is
 ;; a useful function for returning 'nil regardless of argument.
+
+;; Note: Any re-definition in this file of a function that is defined
+;; in C on other platforms, should either have no doc-string, or one
+;; that is identical to the C version, but with the arglist signature
+;; at the end.  Otherwise help-split-fundoc gets confused on other
+;; platforms.  (Bug#10783)
 
 ;; From src/xfns.c
 (defun x-list-fonts (pattern &optional face frame maximum width)
@@ -192,44 +198,44 @@ the operating system.")
 
 ;; From lisp/term/w32-win.el
 ;
-;;;; Selections and cut buffers
+;;;; Selections
 ;
 ;;; We keep track of the last text selected here, so we can check the
 ;;; current selection against it, and avoid passing back our own text
-;;; from x-cut-buffer-or-selection-value.
+;;; from x-selection-value.
 (defvar x-last-selected-text nil)
 
 (defcustom x-select-enable-clipboard t
   "Non-nil means cutting and pasting uses the clipboard.
 This is in addition to, but in preference to, the primary selection.
 
-On MS-Windows, this is non-nil by default, since Windows does not
-support other types of selections.  \(The primary selection that is
-set by Emacs is not accessible to other programs on Windows.\)"
+Note that MS-Windows does not support selection types other than the
+clipboard.  (The primary selection that is set by Emacs is not
+accessible to other programs on MS-Windows.)
+
+This variable is not used by the Nextstep port."
   :type 'boolean
   :group 'killing)
 
-(defun x-select-text (text &optional push)
+(defun x-select-text (text)
   "Select TEXT, a string, according to the window system.
 
-On X, put TEXT in the primary X selection.  For backward
-compatibility with older X applications, set the value of X cut
-buffer 0 as well, and if the optional argument PUSH is non-nil,
-rotate the cut buffers.  If `x-select-enable-clipboard' is
-non-nil, copy the text to the X clipboard as well.
+On X, if `x-select-enable-clipboard' is non-nil, copy TEXT to the
+clipboard.  If `x-select-enable-primary' is non-nil, put TEXT in
+the primary selection.
 
-On Windows, make TEXT the current selection.  If
+On MS-Windows, make TEXT the current selection.  If
 `x-select-enable-clipboard' is non-nil, copy the text to the
-clipboard as well.  The argument PUSH is ignored.
+clipboard as well.
 
-On Nextstep, put TEXT in the pasteboard; PUSH is ignored."
+On Nextstep, put TEXT in the pasteboard (`x-select-enable-clipboard'
+is not used)."
   (if x-select-enable-clipboard
       (w16-set-clipboard-data text))
   (setq x-last-selected-text text))
 
 ;;; Return the value of the current selection.
-;;; Consult the selection, then the cut buffer.  Treat empty strings
-;;; as if they were unset.
+;;; Consult the selection.  Treat empty strings as if they were unset.
 (defun x-get-selection-value ()
   (if x-select-enable-clipboard
       (let (text)
@@ -249,13 +255,21 @@ On Nextstep, put TEXT in the pasteboard; PUSH is ignored."
 	  (setq x-last-selected-text text))))))
 
 ;; x-selection-owner-p is used in simple.el.
-(defun x-selection-owner-p (&optional type)
+(defun x-selection-owner-p (&optional selection terminal)
   "Whether the current Emacs process owns the given X Selection.
 The arg should be the name of the selection in question, typically one of
 the symbols `PRIMARY', `SECONDARY', or `CLIPBOARD'.
 \(Those are literal upper-case symbol names, since that's what X expects.)
 For convenience, the symbol nil is the same as `PRIMARY',
-and t is the same as `SECONDARY'."
+and t is the same as `SECONDARY'.
+
+TERMINAL should be a terminal object or a frame specifying the X
+server to query.  If omitted or nil, that stands for the selected
+frame's display, or the first available X display.
+
+On Nextstep, TERMINAL is unused.
+
+\(fn &optional SELECTION TERMINAL)"
     (if x-select-enable-clipboard
       (let (text)
 	;; Don't die if w16-get-clipboard-data signals an error.
@@ -273,30 +287,59 @@ and t is the same as `SECONDARY'."
 
 ;; x-own-selection-internal and x-disown-selection-internal are used
 ;; in select.el:x-set-selection.
-(defun x-own-selection-internal (type value)
-  "Assert an X selection of the given TYPE with the given VALUE.
-TYPE is a symbol, typically `PRIMARY', `SECONDARY', or `CLIPBOARD'.
+(defun x-own-selection-internal (selection value &optional frame)
+  "Assert an X selection of the type SELECTION with and value VALUE.
+SELECTION is a symbol, typically `PRIMARY', `SECONDARY', or `CLIPBOARD'.
 \(Those are literal upper-case symbol names, since that's what X expects.)
 VALUE is typically a string, or a cons of two markers, but may be
-anything that the functions on `selection-converter-alist' know about."
+anything that the functions on `selection-converter-alist' know about.
+
+FRAME should be a frame that should own the selection.  If omitted or
+nil, it defaults to the selected frame.
+
+On Nextstep, FRAME is unused.
+
+\(fn SELECTION VALUE &optional FRAME)"
   (ignore-errors
     (x-select-text value))
   value)
 
-(defun x-disown-selection-internal (selection &optional time)
+(defun x-disown-selection-internal (selection &optional time-object terminal)
   "If we own the selection SELECTION, disown it.
-Disowning it means there is no such selection."
+Disowning it means there is no such selection.
+
+Sets the last-change time for the selection to TIME-OBJECT (by default
+the time of the last event).
+
+TERMINAL should be a terminal object or a frame specifying the X
+server to query.  If omitted or nil, that stands for the selected
+frame's display, or the first available X display.
+
+On Nextstep, the TIME-OBJECT and TERMINAL arguments are unused.
+On MS-DOS, all this does is return non-nil if we own the selection.
+
+\(fn SELECTION &optional TIME-OBJECT TERMINAL)"
   (if (x-selection-owner-p selection)
       t))
 
-;; From lisp/faces.el: we only have one font, so always return
-;; it, no matter which variety they've asked for.
-(defun x-frob-font-slant (font which)
-  font)
-(make-obsolete 'x-frob-font-slant 'make-face-... "21.1")
-(defun x-frob-font-weight (font which)
-  font)
-(make-obsolete 'x-frob-font-weight 'make-face-... "21.1")
+;; x-get-selection-internal is used in select.el
+(defun x-get-selection-internal (selection-symbol target-type &optional time-stamp terminal)
+  "Return text selected from some X window.
+SELECTION-SYMBOL is typically `PRIMARY', `SECONDARY', or `CLIPBOARD'.
+\(Those are literal upper-case symbol names, since that's what X expects.)
+TARGET-TYPE is the type of data desired, typically `STRING'.
+
+TIME-STAMP is the time to use in the XConvertSelection call for foreign
+selections.  If omitted, defaults to the time for the last event.
+
+TERMINAL should be a terminal object or a frame specifying the X
+server to query.  If omitted or nil, that stands for the selected
+frame's display, or the first available X display.
+
+On Nextstep, TIME-STAMP and TERMINAL are unused.
+
+\(fn SELECTION-SYMBOL TARGET-TYPE &optional TIME-STAMP TERMINAL)"
+  (x-get-selection-value))
 
 ;; From src/fontset.c:
 (fset 'query-fontset 'ignore)
@@ -420,5 +463,4 @@ Errors out because it is not supposed to be called, ever."
 
 (provide 'pc-win)
 
-;; arch-tag: 5cbdb455-b495-427b-95d0-e417d77d00b4
 ;;; pc-win.el ends here

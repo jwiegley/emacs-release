@@ -1,7 +1,6 @@
 ;;; mm-bodies.el --- Functions for decoding MIME things
 
-;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1998-2012 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;;	MORIOKA Tomohiko <morioka@jaist.ac.jp>
@@ -24,7 +23,7 @@
 
 ;;; Code:
 
-;; For Emacs < 22.2.
+;; For Emacs <22.2 and XEmacs.
 (eval-and-compile
   (unless (fboundp 'declare-function) (defmacro declare-function (&rest r))))
 
@@ -88,9 +87,9 @@ If no encoding was done, nil is returned."
 	    (goto-char (point-min))
 	    (if (re-search-forward "[^\x0-\x7f]" nil t)
 		(or mail-parse-charset
-		    (message-options-get 'mm-encody-body-charset)
+		    (message-options-get 'mm-body-charset-encoding-alist)
 		    (message-options-set
-		     'mm-encody-body-charset
+		     'mm-body-charset-encoding-alist
 		     (mm-read-coding-system "Charset used in the article: ")))
 	      ;; The logic in `mml-generate-mime-1' confirms that it's OK
 	      ;; to return nil here.
@@ -198,7 +197,8 @@ If TYPE is `text/plain' CRLF->LF translation may occur."
 	       (while (re-search-forward "^[\t ]*\r?\n" nil t)
 		 (delete-region (match-beginning 0) (match-end 0)))
 	       (goto-char (point-max))
-	       (when (re-search-backward "^[A-Za-z0-9+/]+=*[\t ]*$" nil t)
+	       (when (re-search-backward "^[\t ]*[A-Za-z0-9+/]+=*[\t ]*$"
+					 nil t)
 		 (forward-line))
 	       (point))))
 	   ((memq encoding '(nil 7bit 8bit binary))
@@ -302,5 +302,4 @@ decoding.  If it is nil, default to `mail-parse-charset'."
 
 (provide 'mm-bodies)
 
-;; arch-tag: 41104bb6-4443-4ca9-8d5c-ff87ecf27d8d
 ;;; mm-bodies.el ends here

@@ -1,9 +1,9 @@
 ;;; viper-init.el --- some common definitions for Viper
 
-;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1997-2012  Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
+;; Package: viper
 
 ;; This file is part of GNU Emacs.
 
@@ -62,9 +62,10 @@
 (defun viper-window-display-p ()
   (and (viper-device-type) (not (memq (viper-device-type) '(tty stream pc)))))
 
-(defcustom viper-ms-style-os-p (memq system-type
-				     '(ms-dos windows-nt windows-95))
-  "Tells if Emacs is running under an MS-style OS: ms-dos, windows-nt, W95."
+(defcustom viper-ms-style-os-p
+  (memq system-type (if (featurep 'emacs) '(ms-dos windows-nt)
+		      '(ms-dos windows-nt windows-95)))
+  "Non-nil if Emacs is running under an MS-style OS: MS-DOS, or MS-Windows."
   :type 'boolean
   :tag "Is it Microsoft-made OS?"
   :group 'viper-misc)
@@ -204,7 +205,7 @@ designated buffers.")
 
 (viper-deflocalvar viper-insert-diehard-minor-mode nil
   "Minor mode that simulates Vi very closely.
-Not recommened, except for the novice user.")
+Not recommended, except for the novice user.")
 
 (viper-deflocalvar viper-insert-kbd-minor-mode nil
 "Minor mode for Ex command macros Insert state.
@@ -592,7 +593,7 @@ to a new place after repeating previous Vi command."
 ;; The reason this is needed is because dabbrev-expand (and possibly
 ;; others) may jump to before the insertion point, delete something and
 ;; then reinsert a bigger piece.  For instance:  bla^blo
-;; If dabbrev-expand is called after `blo' and ^ undicates viper-insert-point,
+;; If dabbrev-expand is called after `blo' and ^ indicates viper-insert-point,
 ;; then point jumps to the beginning of `blo'.  If expansion is found, `blablo'
 ;; is deleted, and we have |^, where | denotes point.  Next, dabbrev-expand
 ;; will insert the expansion, and we get: blablo^
@@ -678,7 +679,7 @@ to a new place after repeating previous Vi command."
   :group 'viper-search)
 
 (defcustom viper-search-scroll-threshold 2
-  "*If search lands within this threshnold from the window top/bottom,
+  "*If search lands within this threshold from the window top/bottom,
 the window will be scrolled up or down appropriately, to reveal context.
 If you want Viper search to behave as usual in Vi, set this variable to a
 negative number."
@@ -783,7 +784,7 @@ Related buffers can be cycled through via :R and :P commands."
 
 ;; These two vars control the interaction of jumps performed by ' and `.
 ;; In this new version, '' doesn't erase the marks set by ``, so one can
-;; use both kinds of jumps interchangeably and without loosing positions
+;; use both kinds of jumps interchangeably and without losing positions
 ;; inside the lines.
 
 ;; Remembers position of the last jump done using ``'.
@@ -817,7 +818,7 @@ Related buffers can be cycled through via :R and :P commands."
 ;;; Face-saving tricks
 
 (defgroup viper-highlighting nil
-  "Hilighting of replace region, search pattern, minibuffer, etc."
+  "Highlighting of replace region, search pattern, minibuffer, etc."
   :prefix "viper-"
   :group 'viper)
 
@@ -995,5 +996,4 @@ on a dumb terminal."
 ;; eval: (put 'viper-deflocalvar 'lisp-indent-hook 'defun)
 ;; End:
 
-;; arch-tag: 4efa2416-1fcb-4690-be10-1a2a0248d250
 ;;; viper-init.el ends here

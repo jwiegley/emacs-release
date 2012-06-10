@@ -2,8 +2,7 @@ This is ../../info/erc, produced by makeinfo version 4.13 from erc.texi.
 
 This manual is for ERC version 5.3.
 
-   Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free
-Software Foundation, Inc.
+   Copyright (C) 2005-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -33,8 +32,7 @@ ERC
 
 This manual is for ERC version 5.3.
 
-   Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free
-Software Foundation, Inc.
+   Copyright (C) 2005-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -2258,25 +2256,25 @@ Index
 
 
 Tag Table:
-Node: Top1137
-Node: Introduction3640
-Node: Obtaining ERC4309
-Node: Releases4968
-Node: Development5543
-Node: Installation8656
-Node: Getting Started10293
-Node: Sample Session11259
-Node: Special Features13662
-Node: Keystroke Summary15955
-Node: Modules18492
-Node: Advanced Usage20556
-Node: Connecting20903
-Node: Sample Configuration24252
-Node: Options27616
-Node: Getting Help and Reporting Bugs27869
-Node: History28998
-Node: Copying31072
-Node: GNU Free Documentation License68567
-Node: Concept Index93649
+Node: Top1100
+Node: Introduction3566
+Node: Obtaining ERC4235
+Node: Releases4894
+Node: Development5469
+Node: Installation8582
+Node: Getting Started10219
+Node: Sample Session11185
+Node: Special Features13588
+Node: Keystroke Summary15881
+Node: Modules18418
+Node: Advanced Usage20482
+Node: Connecting20829
+Node: Sample Configuration24178
+Node: Options27542
+Node: Getting Help and Reporting Bugs27795
+Node: History28924
+Node: Copying30998
+Node: GNU Free Documentation License68493
+Node: Concept Index93575
 
 End Tag Table

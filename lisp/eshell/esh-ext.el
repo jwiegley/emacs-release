@@ -1,7 +1,6 @@
 ;;; esh-ext.el --- commands external to Eshell
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012  Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -47,18 +46,19 @@ loaded into memory, thus beginning a new process."
 
 ;;; User Variables:
 
-(defcustom eshell-ext-load-hook '(eshell-ext-initialize)
-  "*A hook that gets run when `eshell-ext' is loaded."
+(defcustom eshell-ext-load-hook nil
+  "A hook that gets run when `eshell-ext' is loaded."
+  :version "24.1"			; removed eshell-ext-initialize
   :type 'hook
   :group 'eshell-ext)
 
 (defcustom eshell-binary-suffixes exec-suffixes
-  "*A list of suffixes used when searching for executable files."
+  "A list of suffixes used when searching for executable files."
   :type '(repeat string)
   :group 'eshell-ext)
 
 (defcustom eshell-force-execution nil
-  "*If non-nil, try to execute binary files regardless of permissions.
+  "If non-nil, try to execute binary files regardless of permissions.
 This can be useful on systems like Windows, where the operating system
 doesn't happen to honor the permission bits in certain cases; or in
 cases where you want to associate an interpreter with a particular
@@ -91,12 +91,12 @@ since nothing else but Eshell will be able to understand
 
 (defcustom eshell-windows-shell-file
   (if (eshell-under-windows-p)
-      (if (string-match "\\(\\`cmdproxy\\|sh\\)\\.\\(com\\|exe\\)"
+      (if (string-match "\\(cmdproxy\\|sh\\)\\.\\(com\\|exe\\)"
 			shell-file-name)
 	  (or (eshell-search-path "cmd.exe")
 	      (eshell-search-path "command.com"))
 	shell-file-name))
-  "*The name of the shell command to use for DOS/Windows batch files.
+  "The name of the shell command to use for DOS/Windows batch files.
 This defaults to nil on non-Windows systems, where this variable is
 wholly ignored."
   :type '(choice file (const nil))
@@ -108,12 +108,14 @@ wholly ignored."
   ;; argument...
   (setcar args (subst-char-in-string ?/ ?\\ (car args)))
   (throw 'eshell-replace-command
-	 (eshell-parse-command eshell-windows-shell-file (cons "/c" args))))
+	 (eshell-parse-command
+	  (eshell-quote-argument eshell-windows-shell-file)
+	  (cons "/c" args))))
 
 (defcustom eshell-interpreter-alist
   (if (eshell-under-windows-p)
       '(("\\.\\(bat\\|cmd\\)\\'" . eshell-invoke-batch-file)))
-  "*An alist defining interpreter substitutions.
+  "An alist defining interpreter substitutions.
 Each member is a cons cell of the form:
 
   (MATCH . INTERPRETER)
@@ -134,7 +136,7 @@ possible return values of `eshell-external-command', which see."
   :group 'eshell-ext)
 
 (defcustom eshell-alternate-command-hook nil
-  "*A hook run whenever external command lookup fails.
+  "A hook run whenever external command lookup fails.
 If a functions wishes to provide an alternate command, they must throw
 it using the tag `eshell-replace-command'.  This is done because the
 substituted command need not be external at all, and therefore must be
@@ -147,12 +149,12 @@ by the user on the command line."
   :group 'eshell-ext)
 
 (defcustom eshell-command-interpreter-max-length 256
-  "*The maximum length of any command interpreter string, plus args."
+  "The maximum length of any command interpreter string, plus args."
   :type 'integer
   :group 'eshell-ext)
 
 (defcustom eshell-explicit-command-char ?*
-  "*If this char occurs before a command name, call it externally.
+  "If this char occurs before a command name, call it externally.
 That is, although `vi' may be an alias, `\vi' will always call the
 external version."
   :type 'character
@@ -203,7 +205,7 @@ causing the user to wonder if anything's really going on..."
 (defun eshell-external-command (command args)
   "Insert output from an external COMMAND, using ARGS."
   (setq args (eshell-stringify-list (eshell-flatten-list args)))
-  (if (string-equal (file-remote-p default-directory 'method) "ftp")
+  (if (file-remote-p default-directory)
       (eshell-remote-command command args))
   (let ((interp (eshell-find-interpreter command)))
     (assert interp)
@@ -264,7 +266,7 @@ line of the form #!<interp>."
   (let ((finterp
 	 (catch 'found
 	   (ignore
-	    (eshell-for possible eshell-interpreter-alist
+	    (dolist (possible eshell-interpreter-alist)
 	      (cond
 	       ((functionp (car possible))
 		(and (funcall (car possible) file)
@@ -306,5 +308,4 @@ line of the form #!<interp>."
 			    (cdr interp)))))
 	  (or interp (list fullname)))))))
 
-;; arch-tag: 178d4064-7e60-4745-b81f-bab5d8d7c40f
 ;;; esh-ext.el ends here

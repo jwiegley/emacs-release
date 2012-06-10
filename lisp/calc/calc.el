@@ -1,7 +1,6 @@
 ;;; calc.el --- the GNU Emacs calculator
 
-;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1990-1993, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -125,7 +124,7 @@
 ;;	target integral is not complete (and the time limit has not run out)
 ;;	choose an incomplete integral from the cache and, for every integral
 ;;	appearing in its RHS's, add those integrals to the cache using the
-;;	same substitition, parts, etc. rules.  The cache should be organized
+;;	same substitution, parts, etc. rules.  The cache should be organized
 ;;	as a priority queue, choosing the "simplest" incomplete integral at
 ;;	each step, or choosing randomly among equally simple integrals.
 ;;	Simplicity equals small size, and few steps removed from the original
@@ -419,11 +418,54 @@ in normal mode."
   :group 'calc
   :type 'boolean)
 
-(defcustom calc-undo-length 
+(defcustom calc-undo-length
   100
   "The number of undo steps that will be preserved when Calc is quit."
   :group 'calc
   :type 'integer)
+
+(defcustom calc-highlight-selections-with-faces
+  nil
+  "If non-nil, use a separate face to indicate selected sub-formulas.
+If `calc-show-selections' is non-nil, then selected sub-formulas are shown
+by displaying the rest of the formula in `calc-nonselected-face'.
+If `calc-show-selections' is nil, then selected sub-formulas are shown
+by displaying the sub-formula in `calc-selected-face'."
+  :version "24.1"
+  :group 'calc
+  :type 'boolean)
+
+(defcustom calc-lu-field-reference
+  "20 uPa"
+  "The default reference level for logarithmic units (field)."
+  :version "24.1"
+  :group 'calc
+  :type '(string))
+
+(defcustom calc-lu-power-reference
+  "mW"
+  "The default reference level for logarithmic units (power)."
+  :version "24.1"
+  :group 'calc
+  :type '(string))
+
+(defcustom calc-note-threshold "1"
+  "The number of cents that a frequency should be near a note
+to be identified as that note."
+  :version "24.1"
+  :type 'string
+  :group 'calc)
+
+(defface calc-nonselected-face
+  '((t :inherit shadow
+       :slant italic))
+  "Face used to show the non-selected portion of a formula."
+  :group 'calc)
+
+(defface calc-selected-face
+  '((t :weight bold))
+  "Face used to show the selected portion of a formula."
+  :group 'calc)
 
 (defvar calc-bug-address "jay.p.belanger@gmail.com"
   "Address of the maintainer of Calc, for use by `report-calc-bug'.")
@@ -797,6 +839,7 @@ Used by `calc-user-invocation'.")
 				calc-matrix-mode
 				calc-inverse-flag
 				calc-hyperbolic-flag
+                                calc-option-flag
 				calc-keep-args-flag
 				calc-angle-mode
 				calc-number-radix
@@ -926,6 +969,8 @@ Used by `calc-user-invocation'.")
   "If non-nil, next operation is Inverse.")
 (defvar calc-hyperbolic-flag nil
   "If non-nil, next operation is Hyperbolic.")
+(defvar calc-option-flag nil
+  "If non-nil, next operation has Optional behavior.")
 (defvar calc-keep-args-flag nil
   "If non-nil, next operation should not remove its arguments from stack.")
 (defvar calc-function-open "("
@@ -962,7 +1007,7 @@ Used by `calc-user-invocation'.")
 (defvar calc-quick-prev-results nil
   "Previous results from Quick Calc.")
 (defvar calc-said-hello nil
-  "Non-nil if the welcomd message has been displayed.")
+  "Non-nil if the welcome message has been displayed.")
 (defvar calc-executing-macro nil
   "Non-nil if a keyboard macro is executing from the \"K\" key.")
 (defvar calc-any-selections nil
@@ -996,9 +1041,12 @@ Used by `calc-user-invocation'.")
 (defvar math-working-step-2 nil)
 (defvar var-i '(special-const (math-imaginary 1)))
 (defvar var-pi '(special-const (math-pi)))
+(defvar var-π '(special-const (math-pi)))
 (defvar var-e '(special-const (math-e)))
 (defvar var-phi '(special-const (math-phi)))
+(defvar var-φ '(special-const (math-phi)))
 (defvar var-gamma '(special-const (math-gamma-const)))
+(defvar var-γ '(special-const (math-gamma-const)))
 (defvar var-Modes '(special-const (math-get-modes-vec)))
 
 (mapc (lambda (v) (or (boundp v) (set v nil)))
@@ -1034,12 +1082,13 @@ Used by `calc-user-invocation'.")
     (define-key map "\C-j" 'calc-over)
     (define-key map "\C-y" 'calc-yank)
     (define-key map [mouse-2] 'calc-yank)
+    (define-key map [remap undo] 'calc-undo)
 
     (mapc (lambda (x) (define-key map (char-to-string x) 'undefined))
           "lOW")
     (mapc (lambda (x) (define-key map (char-to-string x) 'calc-missing-key))
-          (concat "ABCDEFGHIJKLMNPQRSTUVXZabcdfghjkmoprstuvwxyz"
-                  ":\\|!()[]<>{},;=~`\C-k\C-w\C-_"))
+          (concat "ABCDEFGHIJKLMNOPQRSTUVXZabcdfghjkmoprstuvwxyz"
+                  ":\\|!()[]<>{},;=~`\C-k\C-w"))
     (define-key map "\M-w" 'calc-missing-key)
     (define-key map "\M-k" 'calc-missing-key)
     (define-key map "\M-\C-w" 'calc-missing-key)
@@ -1190,7 +1239,8 @@ Used by `calc-user-invocation'.")
 	(glob (current-global-map))
 	(loc (current-local-map)))
     (or (input-pending-p) (message "%s" prompt))
-    (let ((key (calc-read-key t)))
+    (let ((key (calc-read-key t))
+	  (input-method-function nil))
       (calc-unread-command (cdr key))
       (unwind-protect
 	  (progn
@@ -1227,7 +1277,7 @@ the trail buffer."
     ;; Eventually, prompt user with a list of buffers using embedded mode.
     (when (and
            info-list
-           (yes-or-no-p 
+           (yes-or-no-p
             (concat "This Calc stack is being used for embedded mode. Kill anyway?")))
       (while info-list
         (with-current-buffer (car (car info-list))
@@ -1248,19 +1298,20 @@ the trail buffer."
     (if (not info-list)
         (progn
           (setq calc-buffer-list (delete cb calc-buffer-list))
-          (with-current-buffer calc-trail-buffer
-            (if (eq cb calc-main-buffer)
-                ;; If there are other Calc stacks, make another one
-                ;; the calc-main-buffer ...
-                (if calc-buffer-list
-                    (setq calc-main-buffer (car calc-buffer-list))
-                  ;; ... otherwise kill the trail and its windows.
-                  (let ((wl (get-buffer-window-list calc-trail-buffer)))
-                    (while wl
-                      (delete-window (car wl))
-                      (setq wl (cdr wl))))
-                  (kill-buffer calc-trail-buffer)
-                  (setq calc-trail-buffer nil))))
+          (if (buffer-live-p calc-trail-buffer)
+              (with-current-buffer calc-trail-buffer
+                (if (eq cb calc-main-buffer)
+                    ;; If there are other Calc stacks, make another one
+                    ;; the calc-main-buffer ...
+                    (if calc-buffer-list
+                        (setq calc-main-buffer (car calc-buffer-list))
+                      ;; ... otherwise kill the trail and its windows.
+                      (let ((wl (get-buffer-window-list calc-trail-buffer)))
+                        (while wl
+                          (delete-window (car wl))
+                          (setq wl (cdr wl))))
+                      (kill-buffer calc-trail-buffer)))))
+          (setq calc-trail-buffer nil)
           t))))
 
 (defun calc-mode ()
@@ -1379,8 +1430,7 @@ commands given here will actually operate on the *Calculator* stack."
     (set (make-local-variable 'calc-main-buffer) buf))
   (when (= (buffer-size) 0)
     (let ((buffer-read-only nil))
-      (insert (propertize (concat "Emacs Calculator Trail\n")
-			  'font-lock-face 'italic))))
+      (insert (propertize "Emacs Calculator Trail\n" 'face 'italic))))
   (run-mode-hooks 'calc-trail-mode-hook))
 
 (defun calc-create-buffer ()
@@ -1619,6 +1669,7 @@ See calc-keypad for details."
 	  (calc-select-buffer)
 	  (setq calc-inverse-flag nil
 		calc-hyperbolic-flag nil
+                calc-option-flag nil
 		calc-keep-args-flag nil)))
       (when (memq 'do-edit calc-command-flags)
 	(switch-to-buffer (get-buffer-create "*Calc Edit*")))
@@ -1757,6 +1808,7 @@ See calc-keypad for details."
 			      (> (calc-stack-size) 0)
 			      (calc-top 1 'sel)) "Sel " "")
 		     (if calc-display-dirty "Dirty " "")
+                     (if calc-option-flag "Opt " "")
 		     (if calc-inverse-flag "Inv " "")
 		     (if calc-hyperbolic-flag "Hyp " "")
 		     (if calc-keep-args-flag "Keep " "")
@@ -1968,7 +2020,7 @@ See calc-keypad for details."
 	 (erase-buffer)
 	 (when calc-show-banner
 	   (insert (propertize "--- Emacs Calculator Mode ---\n"
-			       'font-lock-face 'italic)))
+			       'face 'italic)))
 	 (while thing
 	   (goto-char (point-min))
 	   (when calc-show-banner
@@ -2378,7 +2430,7 @@ See calc-keypad for details."
 	    (progn
 	      (require 'calc-ext)
 	      (calc-digit-dots))
-	  (delete-backward-char 1)
+	  (delete-char -1)
 	  (beep)
 	  (calc-temp-minibuffer-message " [Bad format]"))))))
   (setq calc-prev-prev-char calc-prev-char
@@ -3401,7 +3453,7 @@ largest Emacs integer.")
                   (Math-lessp a math-half-2-word-size))
              (and (Math-integer-negp a)
                   (require 'calc-ext)
-                  (let ((comparison 
+                  (let ((comparison
                          (math-compare (Math-integer-neg a) math-half-2-word-size)))
                     (or (= comparison 0)
                         (= comparison -1))))))
@@ -3545,7 +3597,7 @@ largest Emacs integer.")
   (math-normalize
    (save-match-data
      (cond
-      
+
       ;; Integers (most common case)
       ((string-match "\\` *\\([0-9]+\\) *\\'" s)
        (let ((digs (math-match-substring s 1)))
@@ -3557,22 +3609,22 @@ largest Emacs integer.")
            (if (<= (length digs) (* 2 math-bignum-digit-length))
                (string-to-number digs)
              (cons 'bigpos (math-read-bignum digs))))))
-      
+
       ;; Clean up the string if necessary
       ((string-match "\\`\\(.*\\)[ \t\n]+\\([^\001]*\\)\\'" s)
        (math-read-number (concat (math-match-substring s 1)
                                  (math-match-substring s 2))))
-      
+
       ;; Plus and minus signs
       ((string-match "^[-_+]\\(.*\\)$" s)
        (let ((val (math-read-number (math-match-substring s 1))))
          (and val (if (eq (aref s 0) ?+) val (math-neg val)))))
-      
+
       ;; Forms that require extensions module
       ((string-match "[^-+0-9eE.]" s)
        (require 'calc-ext)
        (math-read-number-fancy s))
-      
+
       ;; Decimal point
       ((string-match "^\\([0-9]*\\)\\.\\([0-9]*\\)$" s)
        (let ((int (math-match-substring s 1))
@@ -3585,7 +3637,7 @@ largest Emacs integer.")
                   (list 'float
                         (math-add (math-scale-int int flen) frac)
                         (- flen)))))))
-      
+
       ;; "e" notation
       ((string-match "^\\(.*\\)[eE]\\([-+]?[0-9]+\\)$" s)
        (let ((mant (math-match-substring s 1))
@@ -3596,7 +3648,7 @@ largest Emacs integer.")
            (and mant exp (Math-realp mant) (> exp -4000000) (< exp 4000000)
                 (let ((mant (math-float mant)))
                   (list 'float (nth 1 mant) (+ (nth 2 mant) exp)))))))
-      
+
       ;; Syntax error!
       (t nil)))))
 
@@ -3789,7 +3841,7 @@ See Info node `(calc)Defining Functions'."
       (setq unread-command-event nil)
     (setq unread-command-events nil)))
 
-(defcalcmodevar math-2-word-size 
+(defcalcmodevar math-2-word-size
   (math-read-number-simple "4294967296")
   "Two to the power of `calc-word-size'.")
 
@@ -3806,5 +3858,8 @@ See Info node `(calc)Defining Functions'."
 
 (provide 'calc)
 
-;; arch-tag: 0c3b170c-4ce6-4eaf-8d9b-5834d1fe938f
+;; Local variables:
+;; coding: utf-8
+;; End:
+
 ;;; calc.el ends here

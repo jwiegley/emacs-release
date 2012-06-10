@@ -1,6 +1,6 @@
 ;;; semantic-scm-by.el --- Generated parser support file
 
-;; Copyright (C) 2001, 2003, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2001, 2003, 2009-2012 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -187,5 +187,4 @@
 
 (provide 'semantic/bovine/scm-by)
 
-;; arch-tag: 945749cc-a039-434f-bf95-bf2480a506c3
 ;;; semantic/bovine/scm-by.el ends here

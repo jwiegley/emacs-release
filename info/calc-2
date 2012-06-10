@@ -3,8 +3,7 @@ calc.texi.
 
 This file documents Calc, the GNU Emacs calculator.
 
-Copyright (C) 1990, 1991, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+Copyright (C) 1990-1991, 2001-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -172,7 +171,7 @@ File: calc,  Node: Help Commands,  Next: Stack Basics,  Prev: Basic Commands,  U
 =================
 
 The `?' key (`calc-help') displays a series of brief help messages.
-Some keys (such as `b' and `d') are prefix keys, like Emacs' <ESC> and
+Some keys (such as `b' and `d') are prefix keys, like Emacs's <ESC> and
 `C-x' prefixes.  You can type `?' after a prefix to see a list of
 commands beginning with that prefix.  (If the message includes
 `[MORE]', press `?' again to see additional commands for that prefix.)
@@ -917,7 +916,7 @@ displayed in any radix just like integers and fractions.  Since a float
 that is entered in a radix other that 10 will be converted to decimal,
 the number that Calc stores may not be exactly the number that was
 entered, it will be the closest decimal approximation given the current
-precison.  The notation `RADIX#DDD.DDD' is a floating-point number
+precision.  The notation `RADIX#DDD.DDD' is a floating-point number
 whose digits are in the specified radix.  Note that the `.'  is more
 aptly referred to as a "radix point" than as a decimal point in this
 case.  The number `8#123.4567' is defined as `8#1234567 * 8^-4'.  If
@@ -1265,7 +1264,7 @@ time period which contains multiples of all three cycles is the least
 common multiple of 15 years, 19 years and 28 years, which (since they're
 pairwise relatively prime) is 15*19*28 = 7980 years.  This is the
 length of a Julian cycle.  Working backwards, the previous year in
-which all three cycles began was 4713 BC, and so Scalinger chose that
+which all three cycles began was 4713 BC, and so Scaliger chose that
 year as the beginning of a Julian cycle.  Since at the time there were
 no historical records from before 4713 BC, using this year as a
 starting point had the advantage of avoiding negative year numbers.  In
@@ -2070,8 +2069,8 @@ prompted for a file name.  All Calc modes are then reset to their
 default values, then settings from the file you named are loaded if
 this file exists, and this file becomes the one that Calc will use in
 the future for commands like `m m'.  The default settings file name is
-`~/.calc.el'.  You can see the current file name by giving a blank
-response to the `m F' prompt.  See also the discussion of the
+`~/.emacs.d/calc.el'.  You can see the current file name by giving a
+blank response to the `m F' prompt.  See also the discussion of the
 `calc-settings-file' variable; *note Customizing Calc::.
 
    If the file name you give is your user init file (typically
@@ -2181,14 +2180,18 @@ may be executed with `x' or `M-x'.  Their effect is simply to toggle
 the Inverse and/or Hyperbolic flags and then execute the corresponding
 base command (`calc-sin' in this case).
 
-   The Inverse and Hyperbolic flags apply only to the next Calculator
-command, after which they are automatically cleared.  (They are also
-cleared if the next keystroke is not a Calc command.)  Digits you type
-after `I' or `H' (or `K') are treated as prefix arguments for the next
-command, not as numeric entries.  The same is true of `C-u', but not of
-the minus sign (`K -' means to subtract and keep arguments).
+   The `O' key (`calc-option') sets another flag, the "Option Flag",
+which also can alter the subsequent Calc command in various ways.
 
-   The third Calc prefix flag, `K' (keep-arguments), is discussed
+   The Inverse, Hyperbolic and Option flags apply only to the next
+Calculator command, after which they are automatically cleared.  (They
+are also cleared if the next keystroke is not a Calc command.)  Digits
+you type after `I', `H' or `O' (or `K') are treated as prefix arguments
+for the next command, not as numeric entries.  The same is true of
+`C-u', but not of the minus sign (`K -' means to subtract and keep
+arguments).
+
+   Another Calc prefix flag, `K' (keep-arguments), is discussed
 elsewhere.  *Note Keep Arguments::.
 
 
@@ -2727,7 +2730,7 @@ sides of `a x = b x' only if it is sure `x' is non-zero, say, because
 it has a `pos' declaration.  To declare specifically that `x' is real
 and non-zero, use `[[-inf .. 0), (0 .. inf]]'.  (There is no way in the
 current notation to say that `x' is nonzero but not necessarily real.)
-The `a e' command does "unsafe" simplifications, including cancelling
+The `a e' command does "unsafe" simplifications, including canceling
 `x' from the equation when `x' is not known to be nonzero.
 
    Another set of type symbols distinguish between scalars and vectors.
@@ -2936,22 +2939,23 @@ the word size is `w', all integers are displayed with at least enough
 digits to represent `(2^w)-1' in the current radix.  (Larger integers
 will still be displayed in their entirety.)
 
-   With the binary, octal and hexadecimal display modes, Calc can
-display `w'-bit integers using two's complement notation.  This option
-is selected with the key sequences `C-u d 2', `C-u d 8' and `C-u d 6',
-respectively, and a negative word size might be appropriate (*note
-Binary Functions::). In two's complement notation, the integers in the
-(nearly) symmetric interval from `-2^(w-1)' to `2^(w-1)-1' are
-represented by the integers from `0' to `2^w-1': the integers from `0'
-to `2^(w-1)-1' are represented by themselves and the integers from
-`-2^(w-1)' to `-1' are represented by the integers from `2^(w-1)' to
-`2^w-1' (the integer `k' is represented by `k+2^w').  Calc will display
-a two's complement integer by the radix (either `2', `8' or `16'), two
-`#' symbols, and then its representation (including any leading zeros
-necessary to include all `w' bits).  In a two's complement display
-mode, numbers that are not displayed in two's complement notation
-(i.e., that aren't integers from `-2^(w-1)' to `2^(w-1)-1') will be
-represented using Calc's usual notation (in the appropriate radix).
+   Calc can display `w'-bit integers using two's complement notation,
+although this is most useful with the binary, octal and hexadecimal
+display modes.  This option is selected by using the `O' option prefix
+before setting the display radix, and a negative word size might be
+appropriate (*note Binary Functions::). In two's complement notation,
+the integers in the (nearly) symmetric interval from `-2^(w-1)' to
+`2^(w-1)-1' are represented by the integers from `0' to `2^w-1': the
+integers from `0' to `2^(w-1)-1' are represented by themselves and the
+integers from `-2^(w-1)' to `-1' are represented by the integers from
+`2^(w-1)' to `2^w-1' (the integer `k' is represented by `k+2^w').  Calc
+will display a two's complement integer by the radix (either `2', `8'
+or `16'), two `#' symbols, and then its representation (including any
+leading zeros necessary to include all `w' bits).  In a two's
+complement display mode, numbers that are not displayed in two's
+complement notation (i.e., that aren't integers from `-2^(w-1)' to
+`2^(w-1)-1') will be represented using Calc's usual notation (in the
+appropriate radix).
 
 
 File: calc,  Node: Grouping Digits,  Next: Float Formats,  Prev: Radix Modes,  Up: Display Modes
@@ -3853,6 +3857,10 @@ instead of parentheses for very simple arguments.  During input, curly
 braces and parentheses work equally well for grouping, but when the
 document is formatted the curly braces will be invisible.  Thus the
 printed result is `sin 2x' but `sin(2 + x)'.
+
+   The TeX specific unit names (*note Predefined Units::) will not use
+the `tex' prefix;  the unit name for a TeX point will be `pt' instead
+of `texpt', for example.
 
    Function and variable names not treated specially by TeX and LaTeX
 are simply written out as-is, which will cause them to come out in
@@ -5215,7 +5223,7 @@ the mode line:
      Selections show deep structure (`j b'; *note Making Selections::).
 
 `Save'
-     Record modes in `~/.calc.el' (`m R'; *note General Mode
+     Record modes in `~/.emacs.d/calc.el' (`m R'; *note General Mode
      Commands::).
 
 `Local'
@@ -5864,7 +5872,7 @@ specified time zone.
    The `t U' (`calc-unix-time') [`unixtime'] command converts a date
 form into a Unix time value, which is the number of seconds since
 midnight on Jan 1, 1970, or vice-versa.  The numeric result will be an
-integer if the current precision is 12 or less; for higher precisions,
+integer if the current precision is 12 or less; for higher precision,
 the result may be a float with (PRECISION-12) digits after the decimal.
 Just as for `t J', the numeric time is interpreted in the GMT time zone
 and the date form is interpreted in the current or specified zone.
@@ -5917,7 +5925,7 @@ form as an integer in the range 0 to 59.
 
    The `M-6 t P' [`second'] function extracts the second from a date
 form.  If the current precision is 12 or less, the result is an integer
-in the range 0 to 59.  For higher precisions, the result may instead be
+in the range 0 to 59.  For higher precision, the result may instead be
 a floating-point number.
 
    The `M-7 t P' [`weekday'] function extracts the weekday number from
