@@ -694,11 +694,11 @@
 	(gnus-agent-regenerate): Uses new gnus-agent-covered-methods
 	function as gnus-agent-covered-methods variable no longer provides
 	methods.
-	(gnus-agent-covered-methods): New function
+	(gnus-agent-covered-methods): New function.
 	(gnus-agent-expire-group, gnus-agent-expire): Final message will,
 	if gnus-verbose is greater than 4, report statistics of NOV
 	entries and files deleted as well as total bytes recovered.
-	(gnus-agent-expire-done-message): New function
+	(gnus-agent-expire-done-message): New function.
 	(gnus-agent-unread-articles): Bug fix.  No longer drops last
 	unread article onto read list.
 	(gnus-agent-regenerate-group): Changed prompt to use typical
@@ -900,7 +900,7 @@
 
 	* spam.el
 	(spam-log-processing-to-registry): Improved message and comments.
-	(spam-log-unregistration-needed-p): New function
+	(spam-log-unregistration-needed-p): New function.
 	(spam-ifile-register-spam-routine)
 	(spam-ifile-register-ham-routine, spam-stat-register-spam-routine)
 	(spam-stat-register-ham-routine)
@@ -970,9 +970,9 @@
 	* pgg-gpg.el (pgg-gpg-possibly-cache-passphrase): New optional
 	parameter key, overrides the key id used to store passphrase
 	under (uses true key id from gpg output if nil).
-	(pgg-gpg-encrypt-region): Search for passphrase using user suplied
+	(pgg-gpg-encrypt-region): Search for passphrase using user supplied
 	string STR, instead of (pgg-lookup-key STR t).
-	(pgg-gpg-encrypt-region): Store passphrase under user suplied
+	(pgg-gpg-encrypt-region): Store passphrase under user supplied
 	string, instead of real key id taken from gpg output.
 	(pgg-gpg-decrypt-region): Likewise.
 	(pgg-gpg-sign-region): Likewise.
@@ -1120,7 +1120,7 @@
 
 	* message.el (message-mode-field-menu): Added
 	message-generate-unsubscribed-mail-followup-to.
-	(message-forward-subject-fwd): Avoid double "Fwd: "
+	(message-forward-subject-fwd): Avoid double "Fwd: ".
 	(message-change-subject): Added comment.
 
 2003-10-19  Lars Magne Ingebrigtsen  <larsi@gnus.org>
@@ -1396,7 +1396,7 @@
 	* tls.el (tls-process-connection-type): Doc fix.
 
 	* imap.el (imap-starttls-open): Rewrite, should support both old
-	starttls.el and new starttls.el that uses GNUTLS.
+	starttls.el and new starttls.el that uses GnuTLS.
 
 2003-09-18  Katsumi Yamaoka  <yamaoka@jpl.org>
 
@@ -2084,7 +2084,7 @@
 	(spam-spamoracle-learn-ham, spam-spamoracle-learn-spam): New functions.
 
 	* gnus.el (gnus-group-spam-exit-processor-spamoracle)
-	(gnus-group-ham-exit-processor-spamoracle): New variables for SpamOracle
+	(gnus-group-ham-exit-processor-spamoracle): New variables for SpamOracle.
 	(spam-process, ham-process): Added spamoracle spam/ham processors.
 
 2003-06-08  Jesper Harder  <harder@ifa.au.dk>
@@ -2111,7 +2111,7 @@
 	* gnus-srvr.el (gnus-browse-foreign-server): Parse garbage NNTP
 	groups correctly.
 
-2003-06-06  Benjamin Rutt  <rutt+news@cis.ohio-state.edu>.
+2003-06-06  Benjamin Rutt  <rutt+news@cis.ohio-state.edu>
 
 	* message.el (message-fetch-field): Augment documentation to state
 	the narrowed-to-headers restriction.
@@ -2781,7 +2781,7 @@
 	* gnus-registry.el (gnus-registry-split-fancy-with-parent): Added
 	diagnostic message.
 	(gnus-registry-grep-in-list): Don't run when word is nil.
-	(gnus-registry-fetch-message-id-fast): New function
+	(gnus-registry-fetch-message-id-fast): New function.
 	(gnus-registry-delete-group, gnus-registry-add-group): Make sure
 	the id and group are not nil.
 	(gnus-registry-register-message-ids): New function.
@@ -3561,7 +3561,7 @@
 	`message-valid-fqdn-regexp' for initialization.
 	(gnus-button-handle-info-url): Renamed and extended version of
 	`gnus-button-handle-info'.
-	(gnus-button-message-level): Renamed from `gnus-button-mail-level'
+	(gnus-button-message-level): Renamed from `gnus-button-mail-level'.
 	(gnus-button-handle-symbol, gnus-button-handle-library)
 	(gnus-button-handle-info-keystrokes): New functions.
 	(gnus-button-browse-level): New variable.
@@ -4904,8 +4904,8 @@
 2003-02-08  Michael Welsh Duggan  <md5i@cs.cmu.edu>
 
 	* nnmail.el (nnmail-split-it): If a message ends up matching the
-	  same mailbox more than once, it will cause duplicates to appear
-	  in the mailbox.
+	same mailbox more than once, it will cause duplicates to appear
+	in the mailbox.
 
 2003-02-08  Simon Josefsson  <jas@extundo.com>
 
@@ -5094,7 +5094,7 @@
 2003-02-02  Katsumi Yamaoka  <yamaoka@jpl.org>
 
 	* nnheader.el (nnheader-directory-separator-character): Change the
-	way to compute the dafault value.
+	way to compute the default value.
 
 2003-02-02  Jesper Harder  <harder@ifa.au.dk>
 
@@ -5120,7 +5120,7 @@
 	* gnus-util.el (gnus-prin1-to-string): Bind print-length and
 	print-level.
 
-	* gnus-art.el (article-display-x-face): Removed grey x-face stuff.
+	* gnus-art.el (article-display-x-face): Removed gray x-face stuff.
 	(gnus-treat-display-grey-xface): Removed.
 
 	* gnus-fun.el (gnus-grab-cam-face): New.
@@ -5552,8 +5552,8 @@
 2003-01-13  Jhair Tocancipa Triana  <jhair_tocancipa@gmx.net>
 
 	* gnus-audio.el (gnus-audio-au-player, gnus-audio-wav-player): Use
-	  /usr/bin/play as default player.
-	  (gnus-audio-play): Added ARG-DESCRIPTOR to prompt for a file to play.
+	/usr/bin/play as default player.
+	(gnus-audio-play): Added ARG-DESCRIPTOR to prompt for a file to play.
 
 2003-01-14  Katsumi Yamaoka  <yamaoka@jpl.org>
 
@@ -5562,7 +5562,7 @@
 
 2003-01-14  Kevin Greiner  <kgreiner@xpediantsolutions.com>
 	* gnus-agent.el (gnus-agent-get-undownloaded-list): Include the
-	fictious headers generated by nnagent (ie. Undownloaded Article
+	fictitious headers generated by nnagent (ie. Undownloaded Article
 	####) in the list of articles that have not been downloaded.
 
 	* gnus-int.el (): Added require declarations to resolve
@@ -6295,8 +6295,8 @@
 
 2003-01-02  Reiner Steib  <Reiner.Steib@gmx.de>
 
-	* gnus-art.el (gnus-button-url-regexp,
-	(gnus-button-mid-or-mail-regexp, gnus-button-alist,
+	* gnus-art.el (gnus-button-url-regexp)
+	(gnus-button-mid-or-mail-regexp, gnus-button-alist)
 	(gnus-header-button-alist): Regexps are case insensitive here.
 
 2003-01-02  Simon Josefsson  <jas@extundo.com>
@@ -6816,7 +6816,7 @@
 	downloaded variable if we're in an uncovered group.
 
 	* gnus-agent.el (gnus-agent-downloaded-article-face): Change the
-	font to soemthing less noticeable.
+	font to something less noticeable.
 	(gnus-agent-group-covered-p): New function.
 
 2002-12-09  ShengHuo ZHU  <zsh@cs.rochester.edu>
@@ -6972,7 +6972,7 @@
 	* gnus-agent.el (gnus-agent-check-overview-buffer): Make debugger
 	print message on entry.
 
-2002-11-25  Kevin Greiner  <kgreiner@xpediantsolutions.com>.
+2002-11-25  Kevin Greiner  <kgreiner@xpediantsolutions.com>
 
 	* gnus-range.el (gnus-range-difference): New function.
 	* gnus-sum.el (gnus-summary-insert-old-articles): Use it.
@@ -7194,7 +7194,7 @@
 
 2002-10-31  Alex Schroeder  <alex@emacswiki.org>
 
-	* spam-stat.el (spam-stat-process-directory): Add dir to message
+	* spam-stat.el (spam-stat-process-directory): Add dir to message.
 	(spam-stat-reduce-size): No longer remove words
 	with values close to 0.5, because the default value is 0.2.
 
@@ -7964,7 +7964,7 @@
 	(mml2015-pgg-encrypt): New functions.
 	(defvar, autoload): Prevent byte-compile warnings.
 
-2002-09-24  TSUCHIYA Masatoshi  <tsuchiya@namazu.org>.
+2002-09-24  TSUCHIYA Masatoshi  <tsuchiya@namazu.org>
 
 	* gnus-art.el (article-strip-banner): Check for the existence of
 	from header.
@@ -8097,7 +8097,7 @@
 
 	* gnus-sum.el (gnus-summary-next-group): Semi-exit only when needed.
 
-2002-09-12  John Paul Wallington  <jpw@shootybangbang.com>.
+2002-09-12  John Paul Wallington  <jpw@shootybangbang.com>
 
 	* gnus.el (gnus-visual, gnus-meta): Fix typo.
 
@@ -8111,7 +8111,7 @@
 	(nnimap-split-rule): Doc fix.
 	(nnimap-request-expire-articles): Cleanup code.
 
-2002-09-11  TSUCHIYA Masatoshi  <tsuchiya@namazu.org>.
+2002-09-11  TSUCHIYA Masatoshi  <tsuchiya@namazu.org>
 
 	* gnus-art.el (gnus-article-address-banner-alist): New option.
 	(article-strip-banner): Refer the above option to split banners of
@@ -8170,7 +8170,7 @@
 
 2002-09-03  Simon Josefsson  <jas@extundo.com>
 
-	* nntp.el (nntp-wait-for-string): Dont infloop if process died.
+	* nntp.el (nntp-wait-for-string): Don't infloop if process died.
 
 	* gnus-agent.el (gnus-agent-batch): Add doc.
 
@@ -8205,7 +8205,7 @@
 	(gnus-group-fetch-control): New function.
 	Add them to the keymap and menu.  Require mm-url.
 
-2002-08-30  Alex Schroeder  <alex@emacswiki.org>.
+2002-08-30  Alex Schroeder  <alex@emacswiki.org>
 
 	* gnus-mlspl.el (gnus-group-split-fancy): Doc fix.
 
@@ -8270,7 +8270,7 @@
 
 	* gnus-util.el (gnus-select-frame-set-input-focus): New function.
 
-2002-08-20  小関 吉則 (KOSEKI Yoshinori)  <kose@meadowy.org>.
+2002-08-20  小関 吉則 (KOSEKI Yoshinori)  <kose@meadowy.org>
 
 	* message.el (message-set-auto-save-file-name): Add support for
 	the Cygwin Emacs; the system-type is `cygwin'.
@@ -8396,7 +8396,7 @@
 	* nnimap.el (nnimap-split-articles): Do not call nnmail-fetch-field
 	when splitting malformed messages without message-id.
 
-2002-07-28  Niklas Morberg  <niklas.morberg@axis.com>.
+2002-07-28  Niklas Morberg  <niklas.morberg@axis.com>
 
 	* nnweb.el (nnweb-type, nnweb-type-definition)
 	(nnweb-gmane-create-mapping, nnweb-gmane-wash-article)
@@ -8440,18 +8440,18 @@
 	nnmail-expiry-target to 'delete, so that absolute deletion
 	happens when absolute deletion is requested.
 
-2002-07-21  Nevin Kapur  <nevin@jhu.edu>.
+2002-07-21  Nevin Kapur  <nevin@jhu.edu>
 
-	* nnmail.el (nnmail-fancy-expiry-target): Treat nonexisting
+	* nnmail.el (nnmail-fancy-expiry-target): Treat nonexistent
 	headers as empty headers.
 
-2002-07-21  Jochen Hein  <jochen@jochen.org>.
+2002-07-21  Jochen Hein  <jochen@jochen.org>
 
 	* gnus-art.el (gnus-emphasis-alist): Add strikethrough and
 	correct typo.
 	(gnus-emphasis-strikethru): New face.
 
-2002-07-20  Jason Merrill  <jason@redhat.com>.
+2002-07-20  Jason Merrill  <jason@redhat.com>
 
 	* nnfolder.el (nnfolder-retrieve-headers): Avoid searching the
 	entire file for each of a sequence of missing articles.
@@ -9033,7 +9033,7 @@
 	boolean not a string
 	* gnus-group.el (gnus-group-line-format): Add description of %C
 	* gnus-group.el (gnus-group-line-format-alist): Add gnus-tmp-comment
-	  as %C
+	as %C
 	* gnus-group.el (gnus-group-insert-group-line): Add gnus-tmp-comment.
 
 2002-04-22  Paul Jarc  <prj@po.cwru.edu>
@@ -9243,7 +9243,7 @@
 	(nnmaildir--with-nntp-buffer, nnmaildir--with-work-buffer,
 	nnmaildir--with-nov-buffer, nnmaildir--with-move-buffer,
 	nnmaildir--group-ls): New macros/functions.  Use them.
-	(nnmaildir--unlink): Evalutate argument only once.
+	(nnmaildir--unlink): Evaluate argument only once.
 
 2002-03-27  Jesper Harder  <harder@ifa.au.dk>
 
@@ -9836,7 +9836,7 @@
 2002-02-08  ShengHuo ZHU  <zsh@cs.rochester.edu>
 
 	* gnus-art.el (gnus-treat-display-grey-xface): New variable.
-	(article-display-x-face): Use it.  Disable grey xface, if
+	(article-display-x-face): Use it.  Disable gray xface, if
 	uncompface is not found.
 
 	* message.el (message-mode): Don't enable multibyte on an indirect
@@ -9879,7 +9879,7 @@
 	(rfc2047-decode-region): Don't unfold.  Let
 	gnus-article-treat-unfold-headers do it.
 
-2002-02-07  Matt Armstrong  <matt@lickey.com>.
+2002-02-07  Matt Armstrong  <matt@lickey.com>
 
 	* message.el (message-mode): Set local-abbrev-table.
 
@@ -10428,7 +10428,7 @@
 	* mml-sec.el (mml-secure-message-encrypt-smime): New.
 	* mml-sec.el (mml-secure-message-encrypt-pgp): New.
 	* mml-sec.el (mml-secure-message-encrypt-pgpmime): New.
-	* mml.el (mml-parse-1): Added code to recognise the secure tag and
+	* mml.el (mml-parse-1): Added code to recognize the secure tag and
 	convert it to either a part or multipart depending on if there are
 	other parts in the message.
 	* mml.el (mml-mode-map): Changed default sign/encrypt keybindings
@@ -11325,7 +11325,7 @@
 2002-01-02  ShengHuo ZHU  <zsh@cs.rochester.edu>
 
 	* gnus-picon.el (gnus-picon-transform-newsgroups): Fix for the case
-	  "Newsgroups: rec.music.beatles.moderated, rec.music.beatles".
+	"Newsgroups: rec.music.beatles.moderated, rec.music.beatles".
 
 2002-01-03  Steve Youngs  <youngs@xemacs.org>
 
@@ -11350,7 +11350,7 @@
 	* gnus-fun.el (gnus-convert-gray-x-face-to-xpm): Renamed.
 
 	* gnus-art.el (gnus-ignored-headers): Hide all X-Faces.
-	(article-display-x-face): Display grey X-Faces.
+	(article-display-x-face): Display gray X-Faces.
 
 	* gnus-fun.el (gnus-convert-gray-x-face-region): New function.
 	(gnus-convert-gray-x-face-to-ppm): Ditto.
@@ -12255,7 +12255,7 @@
 	(imap-stream-alist): Backslash.
 
 	* gnus-sum.el (gnus-summary-limit-to-author): Missing arguments.
-	  Thanks to david.goldberg6@verizon.net (David S. Goldberg).
+	Thanks to david.goldberg6@verizon.net (David S. Goldberg).
 
 2001-11-27 14:00:00  ShengHuo ZHU  <zsh@cs.rochester.edu>
 
@@ -12402,7 +12402,7 @@
 	Support "Importance:" header in Message.
 
 	* message.el (message-mode-map): Bind C-c C-p to
-	`message-insert-or-toggle-importance'
+	`message-insert-or-toggle-importance'.
 	(message-mode-menu): Add message-insert-importance-{high,low}.
 	(message-insert-importance-high, message-insert-importance-low)
 	(message-insert-or-toggle-importance): New functions.
@@ -12754,7 +12754,7 @@
 2001-10-30 13:00:00  ShengHuo ZHU  <zsh@cs.rochester.edu>
 
 	* gnus-spec.el (gnus-parse-simple-format): Use
-	  buffer-substring-no-properties.
+	buffer-substring-no-properties.
 
 2001-10-30  Katsumi Yamaoka  <yamaoka@jpl.org>
 
@@ -12870,7 +12870,7 @@
 
 2001-10-21  Simon Josefsson  <jas@extundo.com>
 
-	* nnimap.el (nnimap): Defgroup
+	* nnimap.el (nnimap): Defgroup.
 	(nnimap-strict-function, nnimap-strict-function-match): New
 	widget, from Per Abrahamsen  <abraham@dina.kvl.dk>.
 	(nnimap-split-crosspost, nnimap-split-inbox)
@@ -13226,7 +13226,7 @@
 	(gnus-topic-catchup-articles): New function.  Suggested by Robin
 	S. Socha <robin-dated-1001857693.185e29@socha.net>.
 
-2001-09-27 11:00:00  Gerd M,Avllmann  <gerd@gnu.org>.
+2001-09-27 11:00:00  Gerd M,Avllmann  <gerd@gnu.org>
 
 	* gnus-ems.el (gnus-article-display-xface): Insert xface after
 	previous ones.
@@ -13977,7 +13977,7 @@
 	* mml.el (mml-menu): Changed name to "Attachments".
 
 	* mm-decode.el (mm-destroy-postponed-undisplay-list): Only message
-	when there is something to detroy.
+	when there is something to destroy.
 
 2001-05-21 17:11:46  Lars Magne Ingebrigtsen  <larsi@gnus.org>
 
@@ -16433,7 +16433,7 @@
 2001-01-09  Didier Verna  <didier@xemacs.org>
 
 	* gnus-agent.el: Moved some XEmacs specific hook add-ons from
-	`gnus-xmas-[re]define' to avoid loosing user custom settings.
+	`gnus-xmas-[re]define' to avoid losing user custom settings.
 	* gnus-art.el: Ditto.
 	* gnus-group.el: Ditto.
 	* gnus-salt.el: Ditto.
@@ -16688,7 +16688,7 @@
 	* gnus-cus.el (gnus-group-customize): Use it.
 
 	* gnus.el (gnus-define-group-parameter): New macro.
-	(auto-expire): Use it
+	(auto-expire): Use it.
 	(total-expire): Use it.
 	* gnus-art.el (banner): Use it.
 
@@ -18553,8 +18553,7 @@
 
 See ChangeLog.1 for earlier changes.
 
-    Copyright (C) 2000, 2001, 2002, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-      Free Software Foundation, Inc.
+  Copyright (C) 2000-2002, 2004-2012  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
@@ -18574,5 +18573,3 @@ See ChangeLog.1 for earlier changes.
 ;; Local Variables:
 ;; coding: iso-2022-7bit
 ;; End:
-
-;; arch-tag: 956fd310-042f-4fca-8dca-a01dbe06acff

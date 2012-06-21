@@ -1,7 +1,6 @@
 ;;; cmuscheme.el --- Scheme process in a buffer. Adapted from tea.el
 
-;; Copyright (C) 1988, 1994, 1997, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1988, 1994, 1997, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: Olin Shivers <olin.shivers@cs.cmu.edu>
 ;; Maintainer: FSF
@@ -247,8 +246,7 @@ is run).
 	(inferior-scheme-mode)))
   (setq scheme-program-name cmd)
   (setq scheme-buffer "*scheme*")
-  (pop-to-buffer "*scheme*"))
-;;;###autoload (add-hook 'same-window-buffer-names (purecopy "*scheme*"))
+  (pop-to-buffer-same-window "*scheme*"))
 
 (defun scheme-start-file (prog)
   "Return the name of the start file corresponding to PROG.
@@ -373,7 +371,7 @@ With argument, position cursor at end of buffer."
   (interactive "P")
   (if (or (and scheme-buffer (get-buffer scheme-buffer))
           (scheme-interactively-start-process))
-      (pop-to-buffer scheme-buffer)
+      (pop-to-buffer-same-window scheme-buffer)
     (error "No current process buffer.  See variable `scheme-buffer'"))
   (when eob-p
     (push-mark)
@@ -504,7 +502,7 @@ See variable `scheme-buffer'."
                           (current-buffer)
                         scheme-buffer)))
 
-(defun scheme-interactively-start-process (&optional cmd)
+(defun scheme-interactively-start-process (&optional _cmd)
   "Start an inferior Scheme process.  Return the process started.
 Since this command is run implicitly, always ask the user for the
 command to run."
@@ -523,5 +521,4 @@ This is a good place to put keybindings."
 
 (provide 'cmuscheme)
 
-;; arch-tag: e8795f4a-c496-45a2-97b4-8e0f2a2c57d2
 ;;; cmuscheme.el ends here

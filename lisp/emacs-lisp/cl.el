@@ -1,7 +1,6 @@
 ;;; cl.el --- Common Lisp extensions for Emacs
 
-;; Copyright (C) 1993, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1993, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Dave Gillespie <daveg@synaptics.com>
 ;; Version: 2.02
@@ -162,7 +161,14 @@ an element already on the list.
   (if (symbolp place)
       (if (null keys)
  	  `(let ((x ,x))
-	     (if (memql x ,place) ,place (setq ,place (cons x ,place))))
+	     (if (memql x ,place)
+                 ;; This symbol may later on expand to actual code which then
+                 ;; trigger warnings like "value unused" since pushnew's return
+                 ;; value is rarely used.  It should not matter that other
+                 ;; warnings may be silenced, since `place' is used earlier and
+                 ;; should have triggered them already.
+                 (with-no-warnings ,place)
+               (setq ,place (cons x ,place))))
 	(list 'setq place (list* 'adjoin x place keys)))
     (list* 'callf2 'adjoin x place keys)))
 
@@ -272,9 +278,9 @@ definitions to shadow the loaded ones for use in file byte-compilation.
 (defvar cl-compiling-file nil)
 (defun cl-compiling-file ()
   (or cl-compiling-file
-      (and (boundp 'bytecomp-outbuffer)
-           (bufferp (symbol-value 'bytecomp-outbuffer))
-	   (equal (buffer-name (symbol-value 'bytecomp-outbuffer))
+      (and (boundp 'byte-compile--outbuffer)
+           (bufferp (symbol-value 'byte-compile--outbuffer))
+	   (equal (buffer-name (symbol-value 'byte-compile--outbuffer))
 		  " *Compiler Output*"))))
 
 (defvar cl-proclaims-deferred nil)
@@ -327,15 +333,51 @@ always returns nil."
 
 (defvar *random-state* (vector 'cl-random-state-tag -1 30 (cl-random-time)))
 
-;; The following are actually set by cl-float-limits.
-(defconst most-positive-float nil)
-(defconst most-negative-float nil)
-(defconst least-positive-float nil)
-(defconst least-negative-float nil)
-(defconst least-positive-normalized-float nil)
-(defconst least-negative-normalized-float nil)
-(defconst float-epsilon nil)
-(defconst float-negative-epsilon nil)
+(defconst most-positive-float nil
+  "The largest value that a Lisp float can hold.
+If your system supports infinities, this is the largest finite value.
+For IEEE machines, this is approximately 1.79e+308.
+Call `cl-float-limits' to set this.")
+
+(defconst most-negative-float nil
+  "The largest negative value that a Lisp float can hold.
+This is simply -`most-positive-float'.
+Call `cl-float-limits' to set this.")
+
+(defconst least-positive-float nil
+  "The smallest value greater than zero that a Lisp float can hold.
+For IEEE machines, it is about 4.94e-324 if denormals are supported,
+or 2.22e-308 if they are not.
+Call `cl-float-limits' to set this.")
+
+(defconst least-negative-float nil
+  "The smallest value less than zero that a Lisp float can hold.
+This is simply -`least-positive-float'.
+Call `cl-float-limits' to set this.")
+
+(defconst least-positive-normalized-float nil
+  "The smallest normalized Lisp float greater than zero.
+This is the smallest value for which IEEE denormalization does not lose
+precision.  For IEEE machines, this value is about 2.22e-308.
+For machines that do not support the concept of denormalization
+and gradual underflow, this constant equals `least-positive-float'.
+Call `cl-float-limits' to set this.")
+
+(defconst least-negative-normalized-float nil
+  "The smallest normalized Lisp float less than zero.
+This is simply -`least-positive-normalized-float'.
+Call `cl-float-limits' to set this.")
+
+(defconst float-epsilon nil
+  "The smallest positive float that adds to 1.0 to give a distinct value.
+Adding a number less than this to 1.0 returns 1.0 due to roundoff.
+For IEEE machines, epsilon is about 2.22e-16.
+Call `cl-float-limits' to set this.")
+
+(defconst float-negative-epsilon nil
+  "The smallest positive float that subtracts from 1.0 to give a distinct value.
+For IEEE machines, it is about 1.11e-16.
+Call `cl-float-limits' to set this.")
 
 
 ;;; Sequence functions.
@@ -645,7 +687,6 @@ If ALIST is non-nil, the new pairs are prepended to it."
 (load "cl-loaddefs" nil 'quiet)
 
 ;; This goes here so that cl-macs can find it if it loads right now.
-(provide 'cl-19)     ; usage: (require 'cl-19 "cl")
 (provide 'cl)
 
 ;; Things to do after byte-compiler is loaded.
@@ -677,5 +718,4 @@ If ALIST is non-nil, the new pairs are prepended to it."
 ;; byte-compile-warnings: (not cl-functions)
 ;; End:
 
-;; arch-tag: 5f07fa74-f153-4524-9303-21f5be125851
 ;;; cl.el ends here

@@ -1,6 +1,5 @@
 /* Unix emulation routines for GNU Emacs on the Mac OS.
-   Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-                 2008  Free Software Foundation, Inc.
+   Copyright (C) 2000-2008  Free Software Foundation, Inc.
    Copyright (C) 2009-2012  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
@@ -28,7 +27,6 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "lisp.h"
 #include "process.h"
-#undef select
 #include "systime.h"
 #include "sysselect.h"
 #include "blockinput.h"
@@ -58,12 +56,6 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <pthread.h>
 #endif
 
-/* The system script code. */
-static EMACS_INT mac_system_script_code;
-
-/* The system locale identifier string.  */
-static Lisp_Object Vmac_system_locale;
-
 /* An instance of the AppleScript component.  */
 static ComponentInstance as_scripting_component;
 /* The single script context used for all script executions.  */
@@ -78,8 +70,7 @@ static OSAID as_script_context;
    LIST is circular.  */
 
 static EMACS_INT
-cdr_chain_length (list)
-     Lisp_Object list;
+cdr_chain_length (Lisp_Object list)
 {
   EMACS_INT result = 0;
   Lisp_Object tortoise, hare;
@@ -123,9 +114,7 @@ struct bstree_node
    return value contains NULL.  */
 
 static struct bstree_node **
-bstree_find (bstree, obj)
-     struct bstree_node **bstree;
-     Lisp_Object obj;
+bstree_find (struct bstree_node **bstree, Lisp_Object obj)
 {
   while (*bstree)
     if (XHASH (obj) < XHASH ((*bstree)->obj))
@@ -166,8 +155,7 @@ static struct {
   };
 
 static Lisp_Object
-mac_aelist_to_lisp (desc_list)
-     const AEDescList *desc_list;
+mac_aelist_to_lisp (const AEDescList *desc_list)
 {
   OSErr err;
   long count;
@@ -267,8 +255,7 @@ mac_aelist_to_lisp (desc_list)
 }
 
 Lisp_Object
-mac_aedesc_to_lisp (desc)
-     const AEDesc *desc;
+mac_aedesc_to_lisp (const AEDesc *desc)
 {
   OSErr err = noErr;
   DescType desc_type = desc->descriptorType;
@@ -330,11 +317,8 @@ mac_aedesc_to_lisp (desc)
 }
 
 static OSErr
-mac_ae_put_lisp_1 (desc, keyword_or_index, obj, ancestors)
-     AEDescList *desc;
-     UInt32 keyword_or_index;
-     Lisp_Object obj;
-     struct bstree_node **ancestors;
+mac_ae_put_lisp_1 (AEDescList *desc, UInt32 keyword_or_index, Lisp_Object obj,
+		   struct bstree_node **ancestors)
 {
   OSErr err;
 
@@ -431,10 +415,7 @@ mac_ae_put_lisp_1 (desc, keyword_or_index, obj, ancestors)
 }
 
 OSErr
-mac_ae_put_lisp (desc, keyword_or_index, obj)
-     AEDescList *desc;
-     UInt32 keyword_or_index;
-     Lisp_Object obj;
+mac_ae_put_lisp (AEDescList *desc, UInt32 keyword_or_index, Lisp_Object obj)
 {
   struct bstree_node *root = NULL;
 
@@ -447,15 +428,13 @@ mac_ae_put_lisp (desc, keyword_or_index, obj)
 }
 
 OSErr
-create_apple_event_from_lisp (apple_event, result)
-     Lisp_Object apple_event;
-     AppleEvent *result;
+create_apple_event_from_lisp (Lisp_Object apple_event, AppleEvent *result)
 {
   OSErr err;
 
   if (!(CONSP (apple_event) && STRINGP (XCAR (apple_event))
 	&& SBYTES (XCAR (apple_event)) == 4
-	&& strcmp (SDATA (XCAR (apple_event)), "aevt") == 0
+	&& strcmp (SSDATA (XCAR (apple_event)), "aevt") == 0
 	&& cdr_chain_length (XCDR (apple_event)) >= 0))
     return errAEBuildSyntaxError;
 
@@ -524,14 +503,9 @@ create_apple_event_from_lisp (apple_event, result)
 }
 
 static pascal OSErr
-mac_coerce_file_name_ptr (type_code, data_ptr, data_size,
-			  to_type, handler_refcon, result)
-     DescType type_code;
-     const void *data_ptr;
-     Size data_size;
-     DescType to_type;
-     long handler_refcon;
-     AEDesc *result;
+mac_coerce_file_name_ptr (DescType type_code, const void *data_ptr,
+			  Size data_size, DescType to_type, long handler_refcon,
+			  AEDesc *result)
 {
   OSErr err;
 
@@ -572,7 +546,7 @@ mac_coerce_file_name_ptr (type_code, data_ptr, data_size,
 	{
 	  /* Just to be paranoid ...  */
 	  FSRef fref;
-	  char *buf;
+	  UInt8 *buf;
 
 	  buf = xmalloc (data_size + 1);
 	  memcpy (buf, data_ptr, data_size);
@@ -601,7 +575,7 @@ mac_coerce_file_name_ptr (type_code, data_ptr, data_size,
 	{
 	  AEDesc desc;
 	  Size size;
-	  char *buf;
+	  UInt8 *buf;
 
 	  err = AECoercePtr (type_code, data_ptr, data_size,
 			     typeFileURL, &desc);
@@ -640,7 +614,7 @@ mac_coerce_file_name_ptr (type_code, data_ptr, data_size,
 	{
 	  /* Coercion from typeAlias to typeFileURL fails on Mac OS X
 	     10.2.  In such cases, try typeFSRef as a target type.  */
-	  char file_name[MAXPATHLEN];
+	  UInt8 file_name[MAXPATHLEN];
 
 	  if (type_code == typeFSRef && data_size == sizeof (FSRef))
 	    err = FSRefMakePath (data_ptr, file_name, sizeof (file_name));
@@ -661,7 +635,7 @@ mac_coerce_file_name_ptr (type_code, data_ptr, data_size,
 	    }
 	  if (err == noErr)
 	    err = AECreateDesc (TYPE_FILE_NAME, file_name,
-				strlen (file_name), result);
+				strlen ((char *) file_name), result);
 	}
     }
   else
@@ -673,11 +647,8 @@ mac_coerce_file_name_ptr (type_code, data_ptr, data_size,
 }
 
 static pascal OSErr
-mac_coerce_file_name_desc (from_desc, to_type, handler_refcon, result)
-     const AEDesc *from_desc;
-     DescType to_type;
-     long handler_refcon;
-     AEDesc *result;
+mac_coerce_file_name_desc (const AEDesc *from_desc, DescType to_type,
+			   long handler_refcon, AEDesc *result)
 {
   OSErr err = noErr;
   DescType from_type = from_desc->descriptorType;
@@ -707,7 +678,7 @@ mac_coerce_file_name_desc (from_desc, to_type, handler_refcon, result)
 }
 
 OSErr
-init_coercion_handler ()
+init_coercion_handler (void)
 {
   OSErr err;
 
@@ -737,10 +708,7 @@ init_coercion_handler ()
 }
 
 OSErr
-create_apple_event (class, id, result)
-     AEEventClass class;
-     AEEventID id;
-     AppleEvent *result;
+create_apple_event (AEEventClass class, AEEventID id, AppleEvent *result)
 {
   OSErr err;
   static const ProcessSerialNumber psn = {0, kCurrentProcess};
@@ -762,11 +730,9 @@ create_apple_event (class, id, result)
 }
 
 Lisp_Object
-mac_event_parameters_to_lisp (event, num_params, names, types)
-     EventRef event;
-     UInt32 num_params;
-     const EventParamName *names;
-     const EventParamType *types;
+mac_event_parameters_to_lisp (EventRef event, UInt32 num_params,
+			      const EventParamName *names,
+			      const EventParamType *types)
 {
   OSStatus err;
   Lisp_Object result = Qnil;
@@ -798,7 +764,8 @@ mac_event_parameters_to_lisp (event, num_params, names, types)
 	  result =
 	    Fcons (Fcons (make_unibyte_string ((char *) &name, 4),
 			  Fcons (make_unibyte_string ((char *) &type, 4),
-				 make_unibyte_string (CFDataGetBytePtr (data),
+				 make_unibyte_string (((char *)
+						       CFDataGetBytePtr (data)),
 						      CFDataGetLength (data)))),
 		   result);
 	  CFRelease (data);
@@ -835,7 +802,6 @@ mac_event_parameters_to_lisp (event, num_params, names, types)
 
 Lisp_Object Qstring, Qnumber, Qboolean, Qdate, Qarray, Qdictionary;
 Lisp_Object Qrange, Qpoint;
-extern Lisp_Object Qdata;
 static Lisp_Object Qdescription;
 
 struct cfdict_context
@@ -847,8 +813,7 @@ struct cfdict_context
 /* C string to CFString.  */
 
 CFStringRef
-cfstring_create_with_utf8_cstring (c_str)
-     const char *c_str;
+cfstring_create_with_utf8_cstring (const char *c_str)
 {
   CFStringRef str;
 
@@ -866,8 +831,7 @@ cfstring_create_with_utf8_cstring (c_str)
    characters.  */
 
 CFStringRef
-cfstring_create_with_string_noencode (s)
-     Lisp_Object s;
+cfstring_create_with_string_noencode (Lisp_Object s)
 {
   CFStringRef string = CFStringCreateWithBytes (NULL, SDATA (s), SBYTES (s),
 						kCFStringEncodingUTF8, false);
@@ -883,14 +847,13 @@ cfstring_create_with_string_noencode (s)
 /* Lisp string to CFString.  */
 
 CFStringRef
-cfstring_create_with_string (s)
-     Lisp_Object s;
+cfstring_create_with_string (Lisp_Object s)
 {
   if (STRING_MULTIBYTE (s))
     {
-      char *p, *end = SDATA (s) + SBYTES (s);
+      char *p, *end = SSDATA (s) + SBYTES (s);
 
-      for (p = SDATA (s); p < end; p++)
+      for (p = SSDATA (s); p < end; p++)
 	if (!isascii (*p))
 	  {
 	    s = ENCODE_UTF_8 (s);
@@ -907,8 +870,7 @@ cfstring_create_with_string (s)
 /* From CFData to a lisp string.  Always returns a unibyte string.  */
 
 Lisp_Object
-cfdata_to_lisp (data)
-     CFDataRef data;
+cfdata_to_lisp (CFDataRef data)
 {
   CFIndex len = CFDataGetLength (data);
   Lisp_Object result = make_uninit_string (len);
@@ -923,8 +885,7 @@ cfdata_to_lisp (data)
    containing a UTF-8 byte sequence.  */
 
 Lisp_Object
-cfstring_to_lisp_nodecode (string)
-     CFStringRef string;
+cfstring_to_lisp_nodecode (CFStringRef string)
 {
   Lisp_Object result = Qnil;
   CFDataRef data;
@@ -959,8 +920,7 @@ cfstring_to_lisp_nodecode (string)
    This may cause GC during code conversion. */
 
 Lisp_Object
-cfstring_to_lisp (string)
-     CFStringRef string;
+cfstring_to_lisp (CFStringRef string)
 {
   Lisp_Object result = cfstring_to_lisp_nodecode (string);
 
@@ -980,8 +940,7 @@ cfstring_to_lisp (string)
    containing a UTF-16 byte sequence in native byte order, no BOM.  */
 
 Lisp_Object
-cfstring_to_lisp_utf_16 (string)
-     CFStringRef string;
+cfstring_to_lisp_utf_16 (CFStringRef string)
 {
   Lisp_Object result = Qnil;
   CFIndex len, buf_len;
@@ -1002,8 +961,7 @@ cfstring_to_lisp_utf_16 (string)
 /* CFNumber to a lisp integer, float, or string in decimal.  */
 
 Lisp_Object
-cfnumber_to_lisp (number)
-     CFNumberRef number;
+cfnumber_to_lisp (CFNumberRef number)
 {
   Lisp_Object result = Qnil;
 #if BITS_PER_EMACS_INT > 32
@@ -1038,8 +996,7 @@ cfnumber_to_lisp (number)
    `current-time'.  */
 
 Lisp_Object
-cfdate_to_lisp (date)
-     CFDateRef date;
+cfdate_to_lisp (CFDateRef date)
 {
   CFTimeInterval sec;
   int high, low, microsec;
@@ -1056,8 +1013,7 @@ cfdate_to_lisp (date)
 /* CFBoolean to a lisp symbol, `t' or `nil'.  */
 
 Lisp_Object
-cfboolean_to_lisp (boolean)
-     CFBooleanRef boolean;
+cfboolean_to_lisp (CFBooleanRef boolean)
 {
   return CFBooleanGetValue (boolean) ? Qt : Qnil;
 }
@@ -1066,8 +1022,7 @@ cfboolean_to_lisp (boolean)
 /* Any Core Foundation object to a (lengthy) lisp string.  */
 
 Lisp_Object
-cfobject_desc_to_lisp (object)
-     CFTypeRef object;
+cfobject_desc_to_lisp (CFTypeRef object)
 {
   Lisp_Object result = Qnil;
   CFStringRef desc = CFCopyDescription (object);
@@ -1085,10 +1040,7 @@ cfobject_desc_to_lisp (object)
 /* Callback functions for cfobject_to_lisp.  */
 
 static void
-cfdictionary_add_to_list (key, value, context)
-     const void *key;
-     const void *value;
-     void *context;
+cfdictionary_add_to_list (const void *key, const void *value, void *context)
 {
   struct cfdict_context *cxt = (struct cfdict_context *)context;
   Lisp_Object lisp_key;
@@ -1107,15 +1059,12 @@ cfdictionary_add_to_list (key, value, context)
 }
 
 static void
-cfdictionary_puthash (key, value, context)
-     const void *key;
-     const void *value;
-     void *context;
+cfdictionary_puthash (const void *key, const void *value, void *context)
 {
   Lisp_Object lisp_key;
   struct cfdict_context *cxt = (struct cfdict_context *)context;
   struct Lisp_Hash_Table *h = XHASH_TABLE (*(cxt->result));
-  unsigned hash_code;
+  EMACS_UINT hash_code;
 
   if (CFGetTypeID (key) != CFStringGetTypeID ())
     lisp_key = cfobject_to_lisp (key, cxt->flags, cxt->hash_bound);
@@ -1150,9 +1099,7 @@ cfdictionary_puthash (key, value, context)
    otherwise.  */
 
 Lisp_Object
-cfobject_to_lisp (obj, flags, hash_bound)
-     CFTypeRef obj;
-     int flags, hash_bound;
+cfobject_to_lisp (CFTypeRef obj, int flags, int hash_bound)
 {
   CFTypeID type_id = CFGetTypeID (obj);
   Lisp_Object tag = Qnil, result = Qnil;
@@ -1269,18 +1216,15 @@ cfobject_to_lisp (obj, flags, hash_bound)
    and a hash table otherwise.  */
 
 Lisp_Object
-cfproperty_list_to_lisp (plist, with_tag, hash_bound)
-     CFPropertyListRef plist;
-     int with_tag, hash_bound;
+cfproperty_list_to_lisp (CFPropertyListRef plist, int with_tag, int hash_bound)
 {
   return cfobject_to_lisp (plist, with_tag ? CFOBJECT_TO_LISP_WITH_TAG : 0,
 			   hash_bound);
 }
 
 static CFPropertyListRef
-cfproperty_list_create_with_lisp_1 (obj, ancestors)
-     Lisp_Object obj;
-     struct bstree_node **ancestors;
+cfproperty_list_create_with_lisp_1 (Lisp_Object obj,
+				    struct bstree_node **ancestors)
 {
   CFPropertyListRef result = NULL;
   Lisp_Object type, data;
@@ -1312,7 +1256,7 @@ cfproperty_list_create_with_lisp_1 (obj, ancestors)
 	}
       else if (STRINGP (data))
 	{
-	  SInt64 value = strtoll (SDATA (data), NULL, 0);
+	  SInt64 value = strtoll (SSDATA (data), NULL, 0);
 
 	  result = CFNumberCreate (NULL, kCFNumberSInt64Type, &value);
 	}
@@ -1440,8 +1384,7 @@ cfproperty_list_create_with_lisp_1 (obj, ancestors)
 	      struct Lisp_Hash_Table *h = XHASH_TABLE (data);
 
 	      dictionary =
-		CFDictionaryCreateMutable (NULL,
-					   XINT (Fhash_table_count (data)),
+		CFDictionaryCreateMutable (NULL, h->count,
 					   &kCFTypeDictionaryKeyCallBacks,
 					   &kCFTypeDictionaryValueCallBacks);
 	      if (dictionary)
@@ -1494,8 +1437,7 @@ cfproperty_list_create_with_lisp_1 (obj, ancestors)
    of a return value of cfproperty_list_to_lisp with with_tag set.  */
 
 CFPropertyListRef
-cfproperty_list_create_with_lisp (obj)
-     Lisp_Object obj;
+cfproperty_list_create_with_lisp (Lisp_Object obj)
 {
   struct bstree_node *root = NULL;
 
@@ -1508,9 +1450,7 @@ cfproperty_list_create_with_lisp (obj)
    occurred.  */
 
 Lisp_Object
-cfproperty_list_to_string (plist, format)
-     CFPropertyListRef plist;
-     CFPropertyListFormat format;
+cfproperty_list_to_string (CFPropertyListRef plist, CFPropertyListFormat format)
 {
   Lisp_Object result = Qnil;
   CFDataRef data = NULL;
@@ -1566,8 +1506,7 @@ cfproperty_list_to_string (plist, format)
    Return NULL if an error has occurred.  */
 
 CFPropertyListRef
-cfproperty_list_create_with_string (string)
-     Lisp_Object string;
+cfproperty_list_create_with_string (Lisp_Object string)
 {
   CFPropertyListRef result = NULL;
   CFDataRef data;
@@ -1626,8 +1565,7 @@ cfproperty_list_create_with_string (string)
 #define SINGLE_COMPONENT Qquote	 /* '?' ("Q"uestion) */
 
 static void
-skip_white_space (p)
-     const char **p;
+skip_white_space (const char **p)
 {
   /* WhiteSpace = {<space> | <horizontal tab>} */
   while (*P == ' ' || *P == '\t')
@@ -1635,8 +1573,7 @@ skip_white_space (p)
 }
 
 static int
-parse_comment (p)
-     const char **p;
+parse_comment (const char **p)
 {
   /* Comment = "!" {<any character except null or newline>} */
   if (*P == '!')
@@ -1653,8 +1590,7 @@ parse_comment (p)
 
 /* Don't interpret filename.  Just skip until the newline.  */
 static int
-parse_include_file (p)
-     const char **p;
+parse_include_file (const char **p)
 {
   /* IncludeFile = "#" WhiteSpace "include" WhiteSpace FileName WhiteSpace */
   if (*P == '#')
@@ -1670,8 +1606,7 @@ parse_include_file (p)
 }
 
 static char
-parse_binding (p)
-     const char **p;
+parse_binding (const char **p)
 {
   /* Binding = "." | "*"  */
   if (*P == '.' || *P == '*')
@@ -1688,8 +1623,7 @@ parse_binding (p)
 }
 
 static Lisp_Object
-parse_component (p)
-     const char **p;
+parse_component (const char **p)
 {
   /*  Component = "?" | ComponentName
       ComponentName = NameChar {NameChar}
@@ -1713,8 +1647,7 @@ parse_component (p)
 }
 
 static Lisp_Object
-parse_resource_name (p)
-     const char **p;
+parse_resource_name (const char **p)
 {
   Lisp_Object result = Qnil, component;
   char binding;
@@ -1747,8 +1680,7 @@ parse_resource_name (p)
 }
 
 static Lisp_Object
-parse_value (p)
-     const char **p;
+parse_value (const char **p)
 {
   char *q, *buf;
   Lisp_Object seq = Qnil, result;
@@ -1819,7 +1751,7 @@ parse_value (p)
   xfree (buf);
 
   if (SBYTES (XCAR (seq)) == total_len)
-    return make_string (SDATA (XCAR (seq)), total_len);
+    return make_string (SSDATA (XCAR (seq)), total_len);
   else
     {
       buf = xmalloc (total_len);
@@ -1837,8 +1769,7 @@ parse_value (p)
 }
 
 static Lisp_Object
-parse_resource_line (p)
-     const char **p;
+parse_resource_line (const char **p)
 {
   Lisp_Object quarks, value;
 
@@ -1887,7 +1818,7 @@ parse_resource_line (p)
 #define HASHKEY_QUERY_CACHE (make_number (-1))
 
 static XrmDatabase
-xrm_create_database ()
+xrm_create_database (void)
 {
   XrmDatabase database;
 
@@ -1902,12 +1833,10 @@ xrm_create_database ()
 }
 
 static void
-xrm_q_put_resource (database, quarks, value)
-     XrmDatabase database;
-     Lisp_Object quarks, value;
+xrm_q_put_resource (XrmDatabase database, Lisp_Object quarks, Lisp_Object value)
 {
   struct Lisp_Hash_Table *h = XHASH_TABLE (database);
-  unsigned hash_code;
+  EMACS_UINT hash_code;
   int i;
   EMACS_INT max_nid;
   Lisp_Object node_id, key;
@@ -1940,9 +1869,7 @@ xrm_q_put_resource (database, quarks, value)
    combination of XrmGetStringDatabase and XrmMergeDatabases.  */
 
 void
-xrm_merge_string_database (database, data)
-     XrmDatabase database;
-     const char *data;
+xrm_merge_string_database (XrmDatabase database, const char *data)
 {
   Lisp_Object quarks_value;
 
@@ -1956,9 +1883,8 @@ xrm_merge_string_database (database, data)
 }
 
 static Lisp_Object
-xrm_q_get_resource_1 (database, node_id, quark_name, quark_class)
-     XrmDatabase database;
-     Lisp_Object node_id, quark_name, quark_class;
+xrm_q_get_resource_1 (XrmDatabase database, Lisp_Object node_id,
+		      Lisp_Object quark_name, Lisp_Object quark_class)
 {
   struct Lisp_Hash_Table *h = XHASH_TABLE (database);
   Lisp_Object key, labels[3], value;
@@ -2004,9 +1930,8 @@ xrm_q_get_resource_1 (database, node_id, quark_name, quark_class)
 }
 
 static Lisp_Object
-xrm_q_get_resource (database, quark_name, quark_class)
-     XrmDatabase database;
-     Lisp_Object quark_name, quark_class;
+xrm_q_get_resource (XrmDatabase database, Lisp_Object quark_name,
+		    Lisp_Object quark_class)
 {
   return xrm_q_get_resource_1 (database, make_number (0),
 			       quark_name, quark_class);
@@ -2016,20 +1941,18 @@ xrm_q_get_resource (database, quark_name, quark_class)
    resource database DATABASE.  It corresponds to XrmGetResource.  */
 
 Lisp_Object
-xrm_get_resource (database, name, class)
-     XrmDatabase database;
-     const char *name, *class;
+xrm_get_resource (XrmDatabase database, const char *name, const char *class)
 {
   Lisp_Object key, query_cache, quark_name, quark_class, tmp;
   int i, nn, nc;
   struct Lisp_Hash_Table *h;
-  unsigned hash_code;
+  EMACS_UINT hash_code;
 
   nn = strlen (name);
   nc = strlen (class);
   key = make_uninit_string (nn + nc + 1);
-  strcpy (SDATA (key), name);
-  strncpy (SDATA (key) + nn + 1, class, nc);
+  memcpy (SDATA (key), name, nn + 1);
+  memcpy (SDATA (key) + nn + 1, class, nc);
 
   query_cache = Fgethash (HASHKEY_QUERY_CACHE, database, Qnil);
   if (NILP (query_cache))
@@ -2070,8 +1993,7 @@ xrm_get_resource (database, name, class)
 }
 
 static Lisp_Object
-xrm_cfproperty_list_to_value (plist)
-     CFPropertyListRef plist;
+xrm_cfproperty_list_to_value (CFPropertyListRef plist)
 {
   CFTypeID type_id = CFGetTypeID (plist);
 
@@ -2104,14 +2026,12 @@ xrm_cfproperty_list_to_value (plist)
    application.  */
 
 XrmDatabase
-xrm_get_preference_database (application)
-     const char *application;
+xrm_get_preference_database (const char *application)
 {
   CFStringRef app_id, *keys, user_doms[2], host_doms[2];
   CFMutableSetRef key_set = NULL;
   CFArrayRef key_array;
   CFIndex index, count;
-  char *res_name;
   XrmDatabase database;
   Lisp_Object quarks = Qnil, value = Qnil;
   CFPropertyListRef plist;
@@ -2160,7 +2080,8 @@ xrm_get_preference_database (application)
   CFSetGetValues (key_set, (const void **)keys);
   for (index = 0; index < count; index++)
     {
-      res_name = SDATA (cfstring_to_lisp_nodecode (keys[index]));
+      const char *res_name = SSDATA (cfstring_to_lisp_nodecode (keys[index]));
+
       quarks = parse_resource_name (&res_name);
       if (!(NILP (quarks) || *res_name))
 	{
@@ -2187,7 +2108,7 @@ xrm_get_preference_database (application)
 Lisp_Object Qmac_file_alias_p;
 
 void
-initialize_applescript ()
+initialize_applescript (void)
 {
   AEDesc null_desc;
   OSAError osaerror;
@@ -2209,7 +2130,7 @@ initialize_applescript ()
 
 
 void
-terminate_applescript()
+terminate_applescript (void)
 {
   OSADispose (as_scripting_component, as_script_context);
   CloseComponent (as_scripting_component);
@@ -2218,7 +2139,7 @@ terminate_applescript()
 /* Convert a lisp string to the 4 byte character code.  */
 
 OSType
-mac_get_code_from_arg(Lisp_Object arg, OSType defCode)
+mac_get_code_from_arg (Lisp_Object arg, OSType defCode)
 {
   OSType result;
   if (NILP(arg))
@@ -2241,7 +2162,7 @@ mac_get_code_from_arg(Lisp_Object arg, OSType defCode)
 /* Convert the 4 byte character code into a 4 byte string.  */
 
 Lisp_Object
-mac_get_object_from_code(OSType defCode)
+mac_get_object_from_code (OSType defCode)
 {
   UInt32 code = EndianU32_NtoB (defCode);
 
@@ -2251,8 +2172,7 @@ mac_get_object_from_code(OSType defCode)
 
 DEFUN ("mac-get-file-creator", Fmac_get_file_creator, Smac_get_file_creator, 1, 1, 0,
        doc: /* Get the creator code of FILENAME as a four character string. */)
-     (filename)
-     Lisp_Object filename;
+  (Lisp_Object filename)
 {
   OSStatus status;
   FSRef fref;
@@ -2287,8 +2207,7 @@ DEFUN ("mac-get-file-creator", Fmac_get_file_creator, Smac_get_file_creator, 1, 
 
 DEFUN ("mac-get-file-type", Fmac_get_file_type, Smac_get_file_type, 1, 1, 0,
        doc: /* Get the type code of FILENAME as a four character string. */)
-     (filename)
-     Lisp_Object filename;
+  (Lisp_Object filename)
 {
   OSStatus status;
   FSRef fref;
@@ -2325,8 +2244,7 @@ DEFUN ("mac-set-file-creator", Fmac_set_file_creator, Smac_set_file_creator, 1, 
        doc: /* Set creator code of file FILENAME to CODE.
 If non-nil, CODE must be a 4-character string.  Otherwise, 'EMAx' is
 assumed. Return non-nil if successful.  */)
-     (filename, code)
-     Lisp_Object filename, code;
+  (Lisp_Object filename, Lisp_Object code)
 {
   OSStatus status;
   FSRef fref;
@@ -2366,8 +2284,7 @@ assumed. Return non-nil if successful.  */)
 DEFUN ("mac-set-file-type", Fmac_set_file_type, Smac_set_file_type, 2, 2, 0,
        doc: /* Set file code of file FILENAME to CODE.
 CODE must be a 4-character string.  Return non-nil if successful.  */)
-     (filename, code)
-     Lisp_Object filename, code;
+  (Lisp_Object filename, Lisp_Object code)
 {
   OSStatus status;
   FSRef fref;
@@ -2411,8 +2328,7 @@ Otherwise it returns nil.
 
 This function returns t when given the name of an alias file
 containing an unresolvable alias.  */)
-     (filename)
-     Lisp_Object filename;
+  (Lisp_Object filename)
 {
   OSStatus err;
   Lisp_Object handler, result = Qnil;
@@ -2442,11 +2358,11 @@ containing an unresolvable alias.  */)
 	{
 	  char buf[MAXPATHLEN];
 
-	  err = FSRefMakePath (&fref, buf, sizeof (buf));
+	  err = FSRefMakePath (&fref, (UInt8 *) buf, sizeof (buf));
 	  if (err == noErr)
 	    {
 	      result = make_unibyte_string (buf, strlen (buf));
-	      if (buf[0] == '/' && index (buf, ':'))
+	      if (buf[0] == '/' && strchr (buf, ':'))
 		result = concat2 (build_string ("/:"), result);
 	      result = DECODE_FILE (result);
 	    }
@@ -2462,8 +2378,7 @@ containing an unresolvable alias.  */)
 DEFUN ("system-move-file-to-trash", Fsystem_move_file_to_trash,
        Ssystem_move_file_to_trash, 1, 1, 0,
        doc: /* Move file or directory named FILENAME to the recycle bin.  */)
-     (filename)
-     Lisp_Object filename;
+  (Lisp_Object filename)
 {
   OSStatus err;
   FSRef fref;
@@ -2514,7 +2429,7 @@ DEFUN ("system-move-file-to-trash", Fsystem_move_file_to_trash,
 	err = FSPathMakeRef (SDATA (encoded_file), &fref, NULL);
       else
 	{
-	  char *leaf = rindex (SDATA (encoded_file), '/') + 1;
+	  char *leaf = strrchr (SDATA (encoded_file), '/') + 1;
 	  size_t parent_len = leaf - (char *) SDATA (encoded_file);
 	  char *parent = alloca (parent_len + 1);
 	  FSRef parent_ref;
@@ -2552,9 +2467,11 @@ DEFUN ("system-move-file-to-trash", Fsystem_move_file_to_trash,
     {
       BLOCK_INPUT;
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+      if (!mac_system_move_file_to_trash_use_finder
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1050 && MAC_OS_X_VERSION_MIN_REQUIRED >= 1020
-      if (FSMoveObjectToTrashSync != NULL)
+	  && FSMoveObjectToTrashSync != NULL
 #endif
+	  )
 	{
 	  /* FSPathMoveObjectToTrashSync tries to delete the
 	     destination of the specified symbolic link.  So we use
@@ -2563,14 +2480,11 @@ DEFUN ("system-move-file-to-trash", Fsystem_move_file_to_trash,
 	  err = FSMoveObjectToTrashSync (&fref, NULL,
 					 kFSFileOperationDefaultOptions);
 	}
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1050 && MAC_OS_X_VERSION_MIN_REQUIRED >= 1020
-      else				/* FSMoveObjectToTrashSync == NULL */
+      else
 #endif
-#endif
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050 || (MAC_OS_X_VERSION_MIN_REQUIRED < 1050 && MAC_OS_X_VERSION_MIN_REQUIRED >= 1020)
 	{
 	  const OSType finderSignature = 'MACS';
-	  UInt32 response;
+	  SInt32 response;
 	  AEDesc desc;
 	  AppleEvent event, reply;
 
@@ -2640,7 +2554,6 @@ DEFUN ("system-move-file-to-trash", Fsystem_move_file_to_trash,
 	      AEDisposeDesc (&reply);
 	    }
 	}
-#endif
       UNBLOCK_INPUT;
     }
 
@@ -2686,8 +2599,7 @@ DEFUN ("system-move-file-to-trash", Fsystem_move_file_to_trash,
    Components.  */
 
 long
-do_applescript (script, result)
-     Lisp_Object script, *result;
+do_applescript (Lisp_Object script, Lisp_Object *result)
 {
   AEDesc script_desc, result_desc, error_desc, *desc = NULL;
   OSErr error;
@@ -2768,8 +2680,7 @@ unibyte SCRIPT is interpreted as a yen sign when the value of
 a multibyte SCRIPT is interpreted as a reverse solidus.  You may want
 to apply `string-to-multibyte' to the script if it is given as an
 ASCII-only string literal.  */)
-    (script)
-    Lisp_Object script;
+  (Lisp_Object script)
 {
   Lisp_Object result;
   long status;
@@ -2778,7 +2689,7 @@ ASCII-only string literal.  */)
 
   BLOCK_INPUT;
   {
-    extern long mac_appkit_do_applescript P_ ((Lisp_Object, Lisp_Object *));
+    extern long mac_appkit_do_applescript (Lisp_Object, Lisp_Object *);
 
     if (!inhibit_window_system)
       status = mac_appkit_do_applescript (script, &result);
@@ -2789,7 +2700,7 @@ ASCII-only string literal.  */)
   if (status == 0)
     return result;
   else if (!STRINGP (result))
-    error ("AppleScript error %d", status);
+    error ("AppleScript error %ld", status);
   else
     error ("%s", SDATA (result));
 }
@@ -2799,8 +2710,7 @@ DEFUN ("mac-coerce-ae-data", Fmac_coerce_ae_data, Smac_coerce_ae_data, 3, 3, 0,
        doc: /* Coerce Apple event data SRC-DATA of type SRC-TYPE to DST-TYPE.
 Each type should be a string of length 4 or the symbol
 `undecoded-file-name'.  */)
-  (src_type, src_data, dst_type)
-     Lisp_Object src_type, src_data, dst_type;
+  (Lisp_Object src_type, Lisp_Object src_data, Lisp_Object dst_type)
 {
   OSErr err;
   Lisp_Object result = Qnil;
@@ -2848,8 +2758,8 @@ nil, that stands for the current application.
 Optional args FORMAT and HASH-BOUND specify the data format of the
 return value (see `mac-convert-property-list').  FORMAT also accepts
 `xml' as a synonym of `xml1' for compatibility.  */)
-     (key, application, format, hash_bound)
-     Lisp_Object key, application, format, hash_bound;
+  (Lisp_Object key, Lisp_Object application, Lisp_Object format,
+   Lisp_Object hash_bound)
 {
   CFStringRef app_id, key_str;
   CFPropertyListRef app_plist = NULL, plist;
@@ -2973,8 +2883,7 @@ CFDictionary.  If HASH-BOUND is a negative integer or nil, always
 generate alists.  If HASH-BOUND >= 0, generate an alist if the number
 of keys in the dictionary is smaller than HASH-BOUND, and a hash table
 otherwise.  */)
-     (property_list, format, hash_bound)
-     Lisp_Object property_list, format, hash_bound;
+  (Lisp_Object property_list, Lisp_Object format, Lisp_Object hash_bound)
 {
   Lisp_Object result = Qnil;
   CFPropertyListRef plist;
@@ -3016,8 +2925,7 @@ otherwise.  */)
 }
 
 static CFStringEncoding
-get_cfstring_encoding_from_lisp (obj)
-     Lisp_Object obj;
+get_cfstring_encoding_from_lisp (Lisp_Object obj)
 {
   CFStringRef iana_name;
   CFStringEncoding encoding = kCFStringEncodingInvalidId;
@@ -3054,9 +2962,7 @@ get_cfstring_encoding_from_lisp (obj)
 }
 
 static CFStringRef
-cfstring_create_normalized (str, symbol)
-     CFStringRef str;
-     Lisp_Object symbol;
+cfstring_create_normalized (CFStringRef str, Lisp_Object symbol)
 {
   int form = -1;
   TextEncodingVariant variant;
@@ -3168,8 +3074,8 @@ On Mac OS X 10.2 and later, you can do Unicode Normalization by
 specifying the optional argument NORMALIZATION-FORM with a symbol NFD,
 NFKD, NFC, NFKC, HFS+D, or HFS+C.
 On successful conversion, return the result string, else return nil.  */)
-     (string, source, target, normalization_form)
-     Lisp_Object string, source, target, normalization_form;
+  (Lisp_Object string, Lisp_Object source, Lisp_Object target,
+   Lisp_Object normalization_form)
 {
   Lisp_Object result = Qnil;
   struct gcpro gcpro1, gcpro2, gcpro3, gcpro4;
@@ -3232,13 +3138,12 @@ DEFUN ("mac-process-hi-command", Fmac_process_hi_command, Smac_process_hi_comman
        doc: /* Send a HI command whose ID is COMMAND-ID to the command chain.
 COMMAND-ID must be a 4-character string.  Some common command IDs are
 defined in the Carbon Event Manager.  */)
-     (command_id)
-     Lisp_Object command_id;
+  (Lisp_Object command_id)
 {
   OSStatus err;
   HICommand command;
 
-  bzero (&command, sizeof (HICommand));
+  memset (&command, 0, sizeof (HICommand));
   command.commandID = mac_get_code_from_arg (command_id, 0);
 
   BLOCK_INPUT;
@@ -3252,7 +3157,7 @@ defined in the Carbon Event Manager.  */)
 }
 
 static ScriptCode
-mac_get_system_script_code ()
+mac_get_system_script_code (void)
 {
   ScriptCode result;
   OSStatus err;
@@ -3266,7 +3171,7 @@ mac_get_system_script_code ()
 }
 
 static Lisp_Object
-mac_get_system_locale ()
+mac_get_system_locale (void)
 {
 #if !__LP64__
   OSStatus err;
@@ -3320,8 +3225,7 @@ static int wakeup_fds[2];
 static int wokeup_from_run_loop_run_once_p;
 
 static int
-read_all_from_nonblocking_fd (fd)
-     int fd;
+read_all_from_nonblocking_fd (int fd)
 {
   int rtnval;
   char buf[64];
@@ -3336,8 +3240,7 @@ read_all_from_nonblocking_fd (fd)
 }
 
 static int
-write_one_byte_to_fd (fd)
-     int fd;
+write_one_byte_to_fd (int fd)
 {
   int rtnval;
 
@@ -3354,12 +3257,8 @@ write_one_byte_to_fd (fd)
 static dispatch_queue_t select_dispatch_queue;
 #else
 static void
-wakeup_callback (s, type, address, data, info)
-     CFSocketRef s;
-     CFSocketCallBackType type;
-     CFDataRef address;
-     const void *data;
-     void *info;
+wakeup_callback (CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
+		 const void *data, void *info)
 {
   read_all_from_nonblocking_fd (CFSocketGetNative (s));
   wokeup_from_run_loop_run_once_p = 1;
@@ -3367,7 +3266,7 @@ wakeup_callback (s, type, address, data, info)
 #endif
 
 int
-init_wakeup_fds ()
+init_wakeup_fds (void)
 {
   int result, i;
   int flags;
@@ -3425,7 +3324,7 @@ init_wakeup_fds ()
 }
 
 void
-mac_wakeup_from_run_loop_run_once ()
+mac_wakeup_from_run_loop_run_once (void)
 {
   /* This function may be called from a signal hander, so only
      async-signal safe functions can be used here.  */
@@ -3436,7 +3335,7 @@ mac_wakeup_from_run_loop_run_once ()
    NULL.  */
 
 EventRef
-mac_peek_next_event ()
+mac_peek_next_event (void)
 {
   EventRef event;
 
@@ -3477,7 +3376,7 @@ static struct
 } select_sem = {0, PTHREAD_MUTEX_INITIALIZER, PTHREAD_COND_INITIALIZER};
 
 static void
-select_sem_wait ()
+select_sem_wait (void)
 {
   pthread_mutex_lock (&select_sem.mutex);
   while (select_sem.value <= 0)
@@ -3487,7 +3386,7 @@ select_sem_wait ()
 }
 
 static void
-select_sem_signal ()
+select_sem_signal (void)
 {
   pthread_mutex_lock (&select_sem.mutex);
   select_sem.value++;
@@ -3506,8 +3405,7 @@ static struct
 } select_args;
 
 static void
-select_perform (info)
-     void *info;
+select_perform (void *info)
 {
   int qnfds = select_args.nfds;
   SELECT_TYPE qrfds, qwfds, qefds;
@@ -3538,10 +3436,8 @@ select_perform (info)
 }
 
 static void
-select_fire (nfds, rfds, wfds, efds, timeout)
-     int nfds;
-     SELECT_TYPE *rfds, *wfds, *efds;
-     EMACS_TIME *timeout;
+select_fire (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
+	     EMACS_TIME *timeout)
 {
   select_args.nfds = nfds;
   select_args.rfds = rfds;
@@ -3554,8 +3450,7 @@ select_fire (nfds, rfds, wfds, efds, timeout)
 }
 
 static void *
-select_thread_main (arg)
-     void *arg;
+select_thread_main (void *arg)
 {
   CFRunLoopSourceContext context = {0, NULL, NULL, NULL, NULL, NULL, NULL,
 				    NULL, NULL, select_perform};
@@ -3569,7 +3464,7 @@ select_thread_main (arg)
 }
 
 static void
-select_thread_launch ()
+select_thread_launch (void)
 {
   pthread_attr_t  attr;
   pthread_t       thread;
@@ -3581,10 +3476,8 @@ select_thread_launch ()
 #endif	/* !SELECT_USE_GCD */
 
 static int
-select_and_poll_event (nfds, rfds, wfds, efds, timeout)
-     int nfds;
-     SELECT_TYPE *rfds, *wfds, *efds;
-     EMACS_TIME *timeout;
+select_and_poll_event (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds,
+		       SELECT_TYPE *efds, EMACS_TIME *timeout)
 {
   int timedout_p = 0;
   int r = 0;
@@ -3668,10 +3561,8 @@ select_and_poll_event (nfds, rfds, wfds, efds, timeout)
 }
 
 int
-sys_select (nfds, rfds, wfds, efds, timeout)
-     int nfds;
-     SELECT_TYPE *rfds, *wfds, *efds;
-     EMACS_TIME *timeout;
+sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
+	    EMACS_TIME *timeout)
 {
   int timedout_p = 0;
   int r;
@@ -3811,7 +3702,7 @@ sys_select (nfds, rfds, wfds, efds, timeout)
    already registered.  */
 
 int
-mac_service_provider_registered_p ()
+mac_service_provider_registered_p (void)
 {
   name_t name = "org.gnu.Emacs";
   CFBundleRef bundle;
@@ -3846,7 +3737,7 @@ mac_service_provider_registered_p ()
    sets an environment variable, he will want to use files in his path
    instead of ones in the application bundle.  */
 void
-init_mac_osx_environment ()
+init_mac_osx_environment (void)
 {
   CFBundleRef bundle;
   CFURLRef bundleURL;
@@ -3883,7 +3774,7 @@ init_mac_osx_environment ()
     Lisp_Object temp = cfstring_to_lisp_nodecode (cf_app_bundle_pathname);
 
     app_bundle_pathname_len = SBYTES (temp);
-    app_bundle_pathname = SDATA (temp);
+    app_bundle_pathname = SSDATA (temp);
   }
 
   CFRelease (cf_app_bundle_pathname);
@@ -3998,49 +3889,40 @@ init_mac_osx_environment ()
 
 
 void
-syms_of_mac ()
+syms_of_mac (void)
 {
-  Qundecoded_file_name = intern_c_string ("undecoded-file-name");
-  staticpro (&Qundecoded_file_name);
+  DEFSYM (Qundecoded_file_name, "undecoded-file-name");
 
-  Qstring  = intern_c_string ("string");	staticpro (&Qstring);
-  Qnumber  = intern_c_string ("number");	staticpro (&Qnumber);
-  Qboolean = intern_c_string ("boolean");	staticpro (&Qboolean);
-  Qdate	   = intern_c_string ("date");		staticpro (&Qdate);
-  Qarray   = intern_c_string ("array");		staticpro (&Qarray);
-  Qdictionary = intern_c_string ("dictionary");	staticpro (&Qdictionary);
-  Qrange = intern_c_string ("range");		staticpro (&Qrange);
-  Qpoint = intern_c_string ("point");		staticpro (&Qpoint);
-  Qdescription = intern_c_string ("description"); staticpro (&Qdescription);
+  DEFSYM (Qstring, "string");
+  DEFSYM (Qnumber, "number");
+  DEFSYM (Qboolean, "boolean");
+  DEFSYM (Qdate, "date");
+  DEFSYM (Qarray, "array");
+  DEFSYM (Qdictionary, "dictionary");
+  DEFSYM (Qrange, "range");
+  DEFSYM (Qpoint, "point");
+  DEFSYM (Qdescription, "description");
 
-  Qmac_file_alias_p = intern_c_string ("mac-file-alias-p");
-  staticpro (&Qmac_file_alias_p);
+  DEFSYM (Qmac_file_alias_p, "mac-file-alias-p");
 
-  Qxml = intern_c_string ("xml");
-  staticpro (&Qxml);
-  Qxml1 = intern_c_string ("xml1");
-  staticpro (&Qxml1);
-  Qbinary1 = intern_c_string ("binary1");
-  staticpro (&Qbinary1);
+  DEFSYM (Qxml, "xml");
+  DEFSYM (Qxml1, "xml1");
+  DEFSYM (Qbinary1, "binary1");
 
-  QCmime_charset = intern_c_string (":mime-charset");
-  staticpro (&QCmime_charset);
+  DEFSYM (QCmime_charset, ":mime-charset");
 
-  QNFD  = intern_c_string ("NFD");		staticpro (&QNFD);
-  QNFKD = intern_c_string ("NFKD");		staticpro (&QNFKD);
-  QNFC  = intern_c_string ("NFC");		staticpro (&QNFC);
-  QNFKC = intern_c_string ("NFKC");		staticpro (&QNFKC);
-  QHFS_plus_D = intern_c_string ("HFS+D");	staticpro (&QHFS_plus_D);
-  QHFS_plus_C = intern_c_string ("HFS+C");	staticpro (&QHFS_plus_C);
+  DEFSYM (QNFD, "NFD");
+  DEFSYM (QNFKD, "NFKD");
+  DEFSYM (QNFC, "NFC");
+  DEFSYM (QNFKC, "NFKC");
+  DEFSYM (QHFS_plus_D, "HFS+D");
+  DEFSYM (QHFS_plus_C, "HFS+C");
 
   {
     int i;
 
     for (i = 0; i < sizeof (ae_attr_table) / sizeof (ae_attr_table[0]); i++)
-      {
-	ae_attr_table[i].symbol = intern_c_string (ae_attr_table[i].name);
-	staticpro (&ae_attr_table[i].symbol);
-      }
+      DEFSYM (ae_attr_table[i].symbol, ae_attr_table[i].name);
   }
 
   defsubr (&Smac_coerce_ae_data);
@@ -4057,16 +3939,22 @@ syms_of_mac ()
   defsubr (&Ssystem_move_file_to_trash);
   defsubr (&Sdo_applescript);
 
-  DEFVAR_INT ("mac-system-script-code", &mac_system_script_code,
+  DEFVAR_INT ("mac-system-script-code", mac_system_script_code,
     doc: /* The system script code.  */);
   mac_system_script_code = mac_get_system_script_code ();
 
-  DEFVAR_LISP ("mac-system-locale", &Vmac_system_locale,
+  DEFVAR_LISP ("mac-system-locale", Vmac_system_locale,
     doc: /* The system locale identifier string.
 This is not a POSIX locale ID, but an ICU locale ID.  So encoding
 information is not included.  */);
   Vmac_system_locale = mac_get_system_locale ();
-}
 
-/* arch-tag: 29d30c1f-0c6b-4f88-8a6d-0558d7f9dbff
-   (do not change this comment) */
+  DEFVAR_BOOL ("mac-system-move-file-to-trash-use-finder",
+	       mac_system_move_file_to_trash_use_finder,
+     doc: /* *Non-nil means that `system-move-file-to-trash' uses the Finder.
+Setting this variable non-nil enables us to use the `Put Back' context
+menu for trashed items, but it also affects the `Edit' - `Undo' menu
+in the Finder.  On Mac OS X 10.4 and earlier, this variable has no
+effect and trashing is always done via the Finder.  */);
+  mac_system_move_file_to_trash_use_finder = 0;
+}

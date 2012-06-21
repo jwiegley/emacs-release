@@ -1,7 +1,6 @@
 ;;; autoarg.el --- make digit keys supply prefix args
 
-;; Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1998, 2000-2012 Free Software Foundation, Inc.
 
 ;; Author:  Dave Love <fx@gnu.org>
 ;; Created: 1998-09-04
@@ -91,15 +90,19 @@
 
 ;;;###autoload
 (define-minor-mode autoarg-mode
-  "Toggle Autoarg minor mode globally.
-With ARG, turn Autoarg mode on if ARG is positive, off otherwise.
+  "Toggle Autoarg mode, a global minor mode.
+With a prefix argument ARG, enable Autoarg mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
 \\<autoarg-mode-map>
-In Autoarg mode digits are bound to `digit-argument' -- i.e. they
-supply prefix arguments as C-DIGIT and M-DIGIT normally do -- and
-C-DIGIT inserts DIGIT.  \\[autoarg-terminate] terminates the prefix sequence
-and inserts the digits of the autoarg sequence into the buffer.
-Without a numeric prefix arg the normal binding of \\[autoarg-terminate] is
-invoked, i.e. what it would be with Autoarg mode off.
+In Autoarg mode, digits are bound to `digit-argument', i.e. they
+supply prefix arguments as C-DIGIT and M-DIGIT normally do.
+Furthermore, C-DIGIT inserts DIGIT.
+\\[autoarg-terminate] terminates the prefix sequence and inserts
+the digits of the autoarg sequence into the buffer.
+Without a numeric prefix arg, the normal binding of \\[autoarg-terminate]
+is invoked, i.e. what it would be with Autoarg mode off.
 
 For example:
 `6 9 \\[autoarg-terminate]' inserts `69' into the buffer, as does `C-6 C-9'.
@@ -113,11 +116,14 @@ then invokes the normal binding of \\[autoarg-terminate].
 
 ;;;###autoload
 (define-minor-mode autoarg-kp-mode
-  "Toggle Autoarg-KP minor mode globally.
-With ARG, turn Autoarg mode on if ARG is positive, off otherwise.
+  "Toggle Autoarg-KP mode, a global minor mode.
+With a prefix argument ARG, enable Autoarg-KP mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
 \\<autoarg-kp-mode-map>
-This is similar to \\[autoarg-mode] but rebinds the keypad keys `kp-1'
-etc. to supply digit arguments.
+This is similar to `autoarg-mode' but rebinds the keypad keys
+`kp-1' etc. to supply digit arguments.
 
 \\{autoarg-kp-mode-map}"
   nil " Aakp" autoarg-kp-mode-map :global t :group 'keyboard
@@ -144,5 +150,4 @@ which invoked this function, excluding the Autoarg keymap."
 
 (provide 'autoarg)
 
-;; arch-tag: 2ba2ab4f-d60e-402a-ae4d-37e29af723c2
 ;;; autoarg.el ends here

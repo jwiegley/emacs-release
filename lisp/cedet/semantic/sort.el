@@ -1,7 +1,6 @@
-;;; sort.el --- Utilities for sorting and re-arranging tag tables.
+;;; semantic/sort.el --- Utilities for sorting and re-arranging tag tables.
 
-;;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007,
-;;; 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;;; Copyright (C) 1999-2005, 2007-2012 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
@@ -28,7 +27,7 @@
 ;; purposes.  Re-organization may be alphabetical, or even a complete
 ;; reorganization of parents and children.
 ;;
-;; Originally written in semantic-util.el
+;; Originally written in semantic/util.el
 ;;
 
 (require 'semantic)
@@ -230,7 +229,7 @@ unmodified as components of their parent tags."
     (mapc (lambda (tag)
 	    (let ((components (semantic-tag-components tag)))
 	      (if (and components
-		       ;; unpositined tags can be hazardous to
+		       ;; unpositioned tags can be hazardous to
 		       ;; completion.  Do we need any type of tag
 		       ;; here?  - EL
 		       (semantic-tag-with-position-p (car components)))
@@ -566,5 +565,4 @@ See `semantic-tag-external-class' for details."
 ;; generated-autoload-load-name: "semantic/sort"
 ;; End:
 
-;; arch-tag: 9231c8e7-ac7f-4b35-9302-651a02e5fef0
-;;; semantic-sort.el ends here
+;;; semantic/sort.el ends here

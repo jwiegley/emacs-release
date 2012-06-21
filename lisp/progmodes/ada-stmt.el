@@ -1,14 +1,13 @@
 ;;; ada-stmt.el --- an extension to Ada mode for inserting statement templates
 
-;; Copyright (C) 1987, 1993, 1994, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1987, 1993-1994, 1996-2012  Free Software Foundation, Inc.
 
 ;; Authors: Daniel Pfeiffer
 ;;	Markus Heritsch
 ;;	Rolf Ebert <ebert@waporo.muc.de>
 ;; Maintainer: Stephen Leake <stephen_leake@stephe-leake.org>
 ;; Keywords: languages, ada
+;; Package: ada-mode
 
 ;; This file is part of GNU Emacs.
 
@@ -57,7 +56,7 @@
 ;; BUGS:
 ;;;> I have the following suggestions for the function template: 1) I
 ;;;> don't want it automatically assigning it a name for the return variable. I
-;;;> never want it to be called "Result" because that is nondescriptive. If you
+;;;> never want it to be called "Result" because that is nondescript. If you
 ;;;> must define a variable, give me the ability to specify its name.
 ;;;>
 ;;;> 2) You do not provide a type for variable 'Result'. Its type is the same
@@ -483,5 +482,4 @@ Invoke right after `ada-function-spec' or `ada-procedure-spec'."
 
 (provide 'ada-stmt)
 
-;; arch-tag: 94f51555-cc0e-44e5-8865-8788aae8ecd3
 ;;; ada-stmt.el ends here

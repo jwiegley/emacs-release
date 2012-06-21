@@ -1,6 +1,6 @@
 ;;; mairix.el --- Mairix interface for Emacs
 
-;; Copyright (C) 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2008-2012  Free Software Foundation, Inc.
 
 ;; Author: David Engster <dengste@eml.cc>
 ;; Keywords: mail searching
@@ -51,7 +51,7 @@
 ;; Currently, RMail, Gnus (with mbox files), and VM are supported as
 ;; mail programs, but it is pretty easy to interface it with other
 ;; ones as well.  Please see the docs and the source for details.
-;; In a nutshell: include your favourite mail program in
+;; In a nutshell: include your favorite mail program in
 ;; `mairix-mail-program' and write functions for
 ;; `mairix-display-functions' and `mairix-get-mail-header-functions'.
 ;; If you have written such functions for your Emacs mail program of
@@ -570,10 +570,10 @@ whole threads.  Function returns t if messages were found."
 	       mairix-output-buffer)))
     (zerop rval)))
 
-(defun mairix-replace-illegal-chars (header)
-  "Replace illegal characters in HEADER for mairix query."
+(defun mairix-replace-invalid-chars (header)
+  "Replace invalid characters in HEADER for mairix query."
   (when header
-    (while (string-match "[^-.@/,& [:alnum:]]" header)
+    (while (string-match "[^-.@/,^=~& [:alnum:]]" header)
       (setq header (replace-match "" t t header)))
     (while (string-match "[& ]" header)
       (setq header (replace-match "," t t header)))
@@ -620,7 +620,7 @@ See %s for details" mairix-output-buffer)))
 	 (concat
 	  (nth 1 cur)
 	  ":"
-	  (mairix-replace-illegal-chars
+	  (mairix-replace-invalid-chars
 	   (widget-value
 	   (cadr (assoc (concat "e" (car (cddr cur))) widgets)))))
 	 query)))
@@ -652,9 +652,17 @@ Fill in VALUES if based on an article."
     (kill-all-local-variables)
     (erase-buffer)
     (widget-insert
-     "Specify your query for Mairix (check boxes for activating fields):\n\n")
+     "Specify your query for Mairix using check boxes for activating fields.\n\n")
     (widget-insert
-     "(Whitespaces will be converted to ',' (i.e. AND). Use '/' for OR.)\n\n")
+     (concat "Use ~word        to match messages "
+	     (propertize "not" 'face 'italic)
+	     " containing the word)\n"
+	     "    substring=   to match words containing the substring\n"
+	     "    substring=N  to match words containing the substring, allowing\n"
+	     "                  up to N errors(missing/extra/different letters)\n"
+	     "    ^substring=  to match the substring at the beginning of a word.\n"))
+    (widget-insert
+     "Whitespace will be converted to ',' (i.e. AND).  Use '/' for OR.\n\n")
     (setq mairix-widgets (mairix-widget-build-editable-fields values))
     (when (member 'flags mairix-widget-other)
       (widget-insert "\nFlags:\n      Seen:     ")
@@ -735,23 +743,21 @@ VALUES may contain values for editable fields from current article."
 
 ;;;; Major mode for editing/deleting/saving searches
 
-(defvar mairix-searches-mode-map nil "'mairix-searches-mode' keymap.")
-
-;; Keymap
-(if (not mairix-searches-mode-map)
-    (let ((map (make-keymap)))
-      (define-key map [(return)] 'mairix-select-search)
-      (define-key map [(down)] 'mairix-next-search)
-      (define-key map [(up)] 'mairix-previous-search)
-      (define-key map [(right)] 'mairix-next-search)
-      (define-key map [(left)] 'mairix-previous-search)
-      (define-key map "\C-p" 'mairix-previous-search)
-      (define-key map "\C-n" 'mairix-next-search)
-      (define-key map [(q)] 'mairix-select-quit)
-      (define-key map [(e)] 'mairix-select-edit)
-      (define-key map [(d)] 'mairix-select-delete)
-      (define-key map [(s)] 'mairix-select-save)
-      (setq mairix-searches-mode-map map)))
+(defvar mairix-searches-mode-map
+  (let ((map (make-keymap)))
+    (define-key map [(return)] 'mairix-select-search)
+    (define-key map [(down)] 'mairix-next-search)
+    (define-key map [(up)] 'mairix-previous-search)
+    (define-key map [(right)] 'mairix-next-search)
+    (define-key map [(left)] 'mairix-previous-search)
+    (define-key map "\C-p" 'mairix-previous-search)
+    (define-key map "\C-n" 'mairix-next-search)
+    (define-key map [(q)] 'mairix-select-quit)
+    (define-key map [(e)] 'mairix-select-edit)
+    (define-key map [(d)] 'mairix-select-delete)
+    (define-key map [(s)] 'mairix-select-save)
+    map)
+  "'mairix-searches-mode' keymap.")
 
 (defvar mairix-searches-mode-font-lock-keywords)
 
@@ -937,7 +943,7 @@ Use cursor keys or C-n,C-p to select next/previous search.\n\n")
 	      (lambda (field)
 		(list (car (cddr field))
 		      (if (car field)
-			  (mairix-replace-illegal-chars
+			  (mairix-replace-invalid-chars
 			   (funcall get-mail-header (car field)))
 			nil))))
 	     mairix-widget-fields-list)))
@@ -947,5 +953,3 @@ Use cursor keys or C-n,C-p to select next/previous search.\n\n")
 (provide 'mairix)
 
 ;;; mairix.el ends here
-
-;; arch-tag: 787ab678-fcd5-4c50-9295-01c2ee5124a6

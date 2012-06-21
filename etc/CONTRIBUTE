@@ -1,5 +1,4 @@
-Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012
-  Free Software Foundation, Inc.
+Copyright (C) 2006-2012 Free Software Foundation, Inc.
 See end for license conditions.
 
 
@@ -45,13 +44,24 @@ Ref: The "Tips" Appendix in the Emacs Lisp Reference.
 
 * Copyright Assignment
 
-We can accept small changes (roughly, fewer than 15 lines) without
-legal papers.  Anything more substantial requires a copyright
-disclaimer or assignment (the latter is preferred, especially for
-larger changes).  Both of these involved filling out a short form and
-filing it with the FSF.  The process is straightforward -- contact us
-at emacs-devel@gnu.org to obtain the relevant forms.
+The FSF (Free Software Foundation) is the copyright holder for GNU Emacs.
+The FSF is a nonprofit with a worldwide mission to promote computer
+user freedom and to defend the rights of all free software users.
+For general information, see the website http://www.fsf.org/ .
 
+Generally speaking, for non-trivial contributions to GNU Emacs we
+require that the copyright be assigned to the FSF.  For the reasons
+behind this, see: http://www.gnu.org/licenses/why-assign.html .
+
+Copyright assignment is a simple process.  If you live in the US, you
+can do it entirely electronically.  We can help you get started, and
+answer any questions you may have (or point you to the people with the
+answers), at the emacs-devel@gnu.org mailing list.
+
+A copyright disclaimer is also a possibility, but we prefer an assignment.
+We can accept small changes (roughly, fewer than 15 lines) without
+an assignment.  This is a cumulative limit (e.g. three separate 5 line
+patches) over all your contributions.
 
 * Getting the Source Code
 
@@ -74,9 +84,12 @@ Every patch must have several pieces of information before we
 can properly evaluate it.
 
 When you have all these pieces, bundle them up in a mail message and
-send it to bug-gnu-emacs@gnu.org or emacs-devel@gnu.org.
-
-All subsequent discussion should be sent to the same mailing list.
+send it to the developers.  Sending it to bug-gnu-emacs@gnu.org
+(which is the bug/feature list) is recommended, because that list
+is coupled to a tracking system that makes it easier to locate patches.
+If your patch is not complete and you think it needs more discussion,
+you might want to send it to emacs-devel@gnu.org instead.  If you
+revise your patch, send it as a followup to the initial topic.
 
 ** Description
 
@@ -156,12 +169,12 @@ giving you write access to the Bazaar repository.
 
 Discussion about Emacs development takes place on emacs-devel@gnu.org.
 
-Bug reports and feature requests are sent to bug-gnu-emacs@gnu.org.
+Bug reports and fixes, feature requests and implementations should be
+sent to bug-gnu-emacs@gnu.org, the bug/feature list.  This is coupled
+to the tracker at http://debbugs.gnu.org .
 
-You can subscribe to the mailing lists at savannah.gnu.org/projects/emacs.
-
-You can find the mailing lists archives at lists.gnu.org or gmane.org.
-
+You can subscribe to the mailing lists, or see the list archives,
+by following links from http://savannah.gnu.org/mail/?group=emacs .
 
 ** Document your changes.
 

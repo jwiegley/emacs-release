@@ -1,6 +1,6 @@
 ;;; srecode/srt-mode.el --- Major mode for writing screcode macros
 
-;; Copyright (C) 2005, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2007-2012 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -183,27 +183,20 @@ we can tell font lock about them.")
   "Keymap used in srecode mode.")
 
 ;;;###autoload
-(defun srecode-template-mode ()
+(define-derived-mode srecode-template-mode fundamental-mode "SRecorder"
   "Major-mode for writing SRecode macros."
-  (interactive)
-  (kill-all-local-variables)
-  (setq major-mode 'srecode-template-mode
-        mode-name "SRecoder"
-	comment-start ";;"
+  (setq comment-start ";;"
 	comment-end "")
   (set (make-local-variable 'parse-sexp-ignore-comments) t)
   (set (make-local-variable 'comment-start-skip)
        "\\(\\(^\\|[^\\\\\n]\\)\\(\\\\\\\\\\)*\\);+ *")
-  (set-syntax-table srecode-template-mode-syntax-table)
-  (use-local-map srecode-template-mode-map)
   (set (make-local-variable 'font-lock-defaults)
        '(srecode-font-lock-keywords
          nil  ;; perform string/comment fontification
          nil  ;; keywords are case sensitive.
-         ;; This puts _ & - as a word constituant,
+         ;; This puts _ & - as a word constituent,
          ;; simplifying our keywords significantly
-         ((?_ . "w") (?- . "w"))))
-  (run-hooks 'srecode-template-mode-hook))
+         ((?_ . "w") (?- . "w")))))
 
 ;;;###autoload
 (defalias 'srt-mode 'srecode-template-mode)
@@ -490,7 +483,7 @@ section or ? for an ask variable."
 
 	(if (> start (point))
 	    ;; If our starting point is after the found point, that
-	    ;; means we are not inside the macro.  Retur nil.
+	    ;; means we are not inside the macro.  Return nil.
 	    nil
 	  ;; We are inside the macro, extract the text so far.
 	  (let* ((macroend (match-beginning 0))
@@ -747,5 +740,4 @@ When optional BUFFER is provided, search that buffer."
 ;; generated-autoload-load-name: "srecode/srt-mode"
 ;; End:
 
-;; arch-tag: 9c613c25-d885-417a-8f0d-1824b26b22a5
 ;;; srecode/srt-mode.el ends here

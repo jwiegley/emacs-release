@@ -11,8 +11,7 @@
 @copying
 This file documents SES: the Simple Emacs Spreadsheet.
 
-Copyright @copyright{} 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
-2010, 2011, 2012 Free Software Foundation, Inc.
+Copyright @copyright{} 2002-2012 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -447,7 +446,7 @@ list.
 execute when starting SES mode for a buffer).
 
 The variable @code{safe-functions} is a list of possibly-unsafe
-functions to be treated as safe when analysing formulas and printers.
+functions to be treated as safe when analyzing formulas and printers.
 @xref{Virus protection}.  Before customizing @code{safe-functions},
 think about how much you trust the person who's suggesting this
 change.  The value @code{t} turns off all anti-virus protection.  A
@@ -982,7 +981,3 @@ Jean-Philippe Theberge @email{jphil@@acs.pagesjaunes.fr}
 @include doclicense.texi
 
 @bye
-
-@ignore
-   arch-tag: 10a4ee1c-7ef4-4c06-8b7a-f975e39f0dec
-@end ignore

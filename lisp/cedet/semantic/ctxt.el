@@ -1,7 +1,6 @@
 ;;; semantic/ctxt.el --- Context calculations for Semantic tools.
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
@@ -107,7 +106,7 @@ Return non-nil if there is no upper context."
   (let ((start (point)))
     (if (semantic-up-context)
 	t
-      ;; Go over the list, and back over the end parenthisis.
+      ;; Go over the list, and back over the end parenthesis.
       (condition-case nil
 	  (progn
 	    (forward-sexp 1)
@@ -155,7 +154,7 @@ Return non-nil if there is no upper context."
 (define-overloadable-function semantic-get-local-variables (&optional point)
   "Get the local variables based on POINT's context.
 Local variables are returned in Semantic tag format.
-This can be overriden with `get-local-variables'."
+This can be overridden with `get-local-variables'."
   ;; Disable parsing messages
   (let ((semantic--progress-reporter nil))
     (save-excursion
@@ -411,7 +410,7 @@ Depends on `semantic-type-relation-separator-character'."
 	  ;; Set our end point.
 	  (setq end (point))
 
-	  ;; Now that we have gotten started, lets do the rest.
+	  ;; Now that we have gotten started, let's do the rest.
 	  (condition-case nil
 	      (while (save-excursion
 		       (forward-char -1)
@@ -619,5 +618,4 @@ means that the first symbol might be:
 ;; generated-autoload-load-name: "semantic/ctxt"
 ;; End:
 
-;; arch-tag: 04f3ae3c-78bb-40ca-b112-ba77f5e4ea88
 ;;; semantic/ctxt.el ends here

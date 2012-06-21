@@ -1,6 +1,5 @@
 ;;; reftex.el --- minor mode for doing \label, \ref, \cite, \index in LaTeX
-;; Copyright (C) 1997, 1998, 1999, 2000, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1997-2000, 2003-2012 Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <dominik@science.uva.nl>
 ;; Maintainer: auctex-devel@gnu.org
@@ -43,7 +42,7 @@
 ;; - For XEmacs 21.x, you need to install the RefTeX plug-in package
 ;;   available from the XEmacs distribution sites.
 ;; - If you have downloaded this file from the maintainers webpage, follow
-;;   the instructions in the INSTALL file of the distrubution.
+;;   the instructions in the INSTALL file of the distribution.
 ;;
 ;; To turn RefTeX Mode on and off in a buffer, use `M-x reftex-mode'.
 ;;
@@ -305,10 +304,6 @@
 (defconst reftex-version "RefTeX version 4.31"
   "Version string for RefTeX.")
 
-(defvar reftex-mode nil
-  "Determines if RefTeX mode is active.")
-(make-variable-buffer-local 'reftex-mode)
-
 (defvar reftex-mode-map (make-sparse-keymap)
   "Keymap for RefTeX mode.")
 
@@ -504,9 +499,17 @@
   "Turn on RefTeX mode."
   (reftex-mode t))
 
+(put 'reftex-mode :included '(memq major-mode '(latex-mode tex-mode)))
+(put 'reftex-mode :menu-tag "RefTeX Mode")
 ;;;###autoload
-(defun reftex-mode (&optional arg)
-  "Minor mode with distinct support for \\label, \\ref and \\cite in LaTeX.
+(define-minor-mode reftex-mode
+  "Toggle RefTeX mode.
+With a prefix argument ARG, enable RefTeX mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
+RefTeX mode is a buffer-local minor mode with distinct support
+for \\label, \\ref and \\cite in LaTeX.
 
 \\<reftex-mode-map>A Table of Contents of the entire (multifile) document with browsing
 capabilities is available with `\\[reftex-toc]'.
@@ -535,11 +538,7 @@ Under X, these and other functions will also be available as `Ref' menu
 on the menu bar.
 
 ------------------------------------------------------------------------------"
-
-  (interactive "P")
-  (setq reftex-mode (not (or (and (null arg) reftex-mode)
-                             (<= (prefix-numeric-value arg) 0))))
-
+  :lighter " Ref" :keymap reftex-mode-map
   (if reftex-mode
       (progn
         ;; Mode was turned on
@@ -565,30 +564,16 @@ on the menu bar.
         (modify-syntax-entry ?\' "." reftex-syntax-table-for-bib)
         (modify-syntax-entry ?\" "." reftex-syntax-table-for-bib)
         (modify-syntax-entry ?\[ "." reftex-syntax-table-for-bib)
-        (modify-syntax-entry ?\] "." reftex-syntax-table-for-bib)
-
-        (run-hooks 'reftex-mode-hook))
+        (modify-syntax-entry ?\] "." reftex-syntax-table-for-bib))
     ;; Mode was turned off
     (easy-menu-remove reftex-mode-menu)))
-
-(if (fboundp 'add-minor-mode)
-    ;; Use it so that we get the extras
-    (progn
-      (put 'reftex-mode :included '(memq major-mode '(latex-mode tex-mode)))
-      (put 'reftex-mode :menu-tag "RefTeX Mode")
-      (add-minor-mode 'reftex-mode " Ref" reftex-mode-map))
-  ;; The standard way
-  (unless (assoc 'reftex-mode minor-mode-alist)
-    (push '(reftex-mode " Ref") minor-mode-alist))
-  (unless (assoc 'reftex-mode minor-mode-map-alist)
-    (push (cons 'reftex-mode reftex-mode-map) minor-mode-map-alist)))
 
 (defvar reftex-docstruct-symbol)
 (defun reftex-kill-buffer-hook ()
   "Save RefTeX's parse file for this buffer if the information has changed."
   ;; Save the parsing information if it was modified.
   ;; This function should be installed in `kill-buffer-hook'.
-  ;; We are careful to make sure nothing goes wring in this function.
+  ;; We are careful to make sure nothing goes wrong in this function.
   (when (and (boundp 'reftex-mode)  reftex-mode
              (boundp 'reftex-save-parse-info)  reftex-save-parse-info
              (boundp 'reftex-docstruct-symbol)  reftex-docstruct-symbol
@@ -619,17 +604,16 @@ on the menu bar.
 (defvar font-lock-mode)
 (defvar font-lock-keywords)
 (defvar font-lock-fontify-region-function)
-(defvar font-lock-syntactic-keywords)
 
 ;;; =========================================================================
 ;;;
 ;;; Multibuffer Variables
 ;;;
-;;; Technical notes: These work as follows: We keep just one list
-;;; of labels for each master file - this can save a lot of memory.
-;;; `reftex-master-index-list' is an alist which connects the true file name
-;;; of each master file with the symbols holding the information on that
-;;; document.  Each buffer has local variables which point to these symbols.
+;; Technical notes: These work as follows: We keep just one list
+;; of labels for each master file - this can save a lot of memory.
+;; `reftex-master-index-list' is an alist which connects the true file name
+;; of each master file with the symbols holding the information on that
+;; document.  Each buffer has local variables which point to these symbols.
 
 ;; List of variables which handle the multifile stuff.
 ;; This list is used to tie, untie, and reset these symbols.
@@ -704,7 +688,7 @@ on the menu bar.
               (TeX-master-file t)
             (error (buffer-file-name))))
          ((fboundp 'tex-main-file) (tex-main-file)) ; Emacs LaTeX mode
-         ((boundp 'TeX-master)       ; The variable is defined - lets use it.
+         ((boundp 'TeX-master)       ; The variable is defined - let's use it.
           (cond
            ((eq TeX-master t)
             (buffer-file-name))
@@ -1538,7 +1522,7 @@ Valid actions are: readable, restore, read, kill, write."
 ;;;    (while all
 ;;;      (when (and (eq (car (car all)) 'bof)
 ;;;              (not (file-regular-p (nth 1 (car all)))))
-;;;     (message "File %s in saved parse info not avalable" (cdr (car all)))
+;;;     (message "File %s in saved parse info not available" (cdr (car all)))
 ;;;     (error "File not found"))
 ;;;      (setq all (cdr all))))
   )
@@ -1584,7 +1568,7 @@ Valid actions are: readable, restore, read, kill, write."
 ;;; Finding files
 
 (defun reftex-locate-file (file type master-dir &optional die)
-  "Find FILE of type TYPE in MASTER-DIR or on the path associcted with TYPE.
+  "Find FILE of type TYPE in MASTER-DIR or on the path associated with TYPE.
 If the file does not have any of the valid extensions for TYPE,
 try first the default extension and only then the naked file name.
 When DIE is non-nil, throw an error if file not found."
@@ -1628,7 +1612,7 @@ When DIE is non-nil, throw an error if file not found."
 (defun reftex-find-file-externally (file type &optional master-dir)
   ;; Use external program to find FILE.
   ;; The program is taken from `reftex-external-file-finders'.
-  ;; Interprete relative path definitions starting from MASTER-DIR.
+  ;; Interpret relative path definitions starting from MASTER-DIR.
   (let ((default-directory (or master-dir default-directory))
         (prg (cdr (assoc type reftex-external-file-finders)))
         out)
@@ -2074,7 +2058,7 @@ When DIE is non-nil, throw an error if file not found."
                (with-current-buffer buf
                  (run-hooks 'reftex-initialize-temporary-buffers))))
 
-           ;; Lets see if we got a license to kill :-|
+           ;; Let's see if we got a license to kill :-|
            (and mark-to-kill
                 (add-to-list 'reftex-buffers-to-kill buf))
 
@@ -2270,7 +2254,7 @@ IGNORE-WORDS List of words which should be removed from the string."
 (defvar font-lock-defaults-computed)
 (defun reftex-fontify-select-label-buffer (parent-buffer)
   ;; Fontify the `*RefTeX Select*' buffer.  Buffer is temporarily renamed to
-  ;; start with none-SPC char, beacuse Font-Lock otherwise refuses operation.
+  ;; start with none-SPC char, because Font-Lock otherwise refuses operation.
   (run-hook-with-args 'reftex-pre-refontification-functions
                       parent-buffer 'reftex-ref)
   (let* ((oldname (buffer-name))
@@ -2419,7 +2403,7 @@ IGNORE-WORDS List of words which should be removed from the string."
   (define-key reftex-mode-map
     reftex-extra-bindings-prefix
     reftex-extra-bindings-map))
-    
+
 
 ;;; =========================================================================
 ;;;
@@ -2590,7 +2574,8 @@ With optional NODE, go directly to that node."
 ;;; Install the kill-buffer and kill-emacs hooks ------------------------------
 
 (add-hook 'kill-buffer-hook 'reftex-kill-buffer-hook)
-(add-hook 'kill-emacs-hook  'reftex-kill-emacs-hook)
+(unless noninteractive
+  (add-hook 'kill-emacs-hook  'reftex-kill-emacs-hook))
 
 ;;; Run Hook ------------------------------------------------------------------
 
@@ -2603,5 +2588,4 @@ With optional NODE, go directly to that node."
 
 ;;;============================================================================
 
-;; arch-tag: 49e0da4e-bd5e-4cfc-a717-fb444fccb9e6
 ;;; reftex.el ends here

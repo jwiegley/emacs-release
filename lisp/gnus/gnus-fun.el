@@ -1,6 +1,6 @@
 ;;; gnus-fun.el --- various frivolous extension functions to Gnus
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2002-2012 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -24,7 +24,7 @@
 
 ;;; Code:
 
-;; For Emacs < 22.2.
+;; For Emacs <22.2 and XEmacs.
 (eval-and-compile
   (unless (fboundp 'declare-function) (defmacro declare-function (&rest r))))
 
@@ -54,10 +54,7 @@
   "convert -scale 48x48! %s xbm:- | xbm2xface.pl"
   "Command for converting an image to an X-Face.
 The command must take a image filename (use \"%s\") as input.
-The output must be the Face header data on stdout in PNG format.
-
-By default it takes a GIF filename and output the X-Face header data
-on stdout."
+The output must be the X-Face header data on stdout."
   :version "22.1"
   :group 'gnus-fun
   :type '(choice (const :tag "giftopnm, netpbm (GIF input only)"
@@ -277,10 +274,10 @@ colors of the displayed X-Faces."
     result))
 
 (defun gnus-fun-ppm-change-string ()
-  (let* ((possibilites '("%02x0000" "00%02x00" "0000%02x"
-			"%02x%02x00" "00%02x%02x" "%02x00%02x"))
+  (let* ((possibilities '("%02x0000" "00%02x00" "0000%02x"
+			  "%02x%02x00" "00%02x%02x" "%02x00%02x"))
 	 (format (concat "'#%02x%02x%02x' '#"
-			 (nth (random 6) possibilites)
+			 (nth (random 6) possibilities)
 			 "'"))
 	 (values nil))
   (dotimes (i 255)
@@ -290,5 +287,4 @@ colors of the displayed X-Faces."
 
 (provide 'gnus-fun)
 
-;; arch-tag: 9d000a69-15cc-4491-9dc0-4627484f50c1
 ;;; gnus-fun.el ends here

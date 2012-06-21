@@ -1,6 +1,6 @@
 ;;; spam-stat.el --- detecting spam based on statistics
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2002-2012  Free Software Foundation, Inc.
 
 ;; Author: Alex Schroeder <alex@gnu.org>
 ;; Keywords: network
@@ -136,12 +136,6 @@ whether a buffer contains spam or not."
   "File used to save and load the dictionary.
 See `spam-stat-to-hash-table' for the format of the file."
   :type 'file
-  :group 'spam-stat)
-
-(defcustom spam-stat-install-hooks t
-  "Whether spam-stat should install its hooks in Gnus.
-This is set to nil if you use spam-stat through spam.el."
-  :type 'boolean
   :group 'spam-stat)
 
 (defcustom spam-stat-unknown-word-score 0.2
@@ -557,6 +551,8 @@ check the variable `spam-stat-score-data'."
     (when (re-search-forward "^Xref:.*\n" nil t)
       (delete-region (match-beginning 0) (match-end 0)))))
 
+(autoload 'time-to-number-of-days "time-date")
+
 (defun spam-stat-process-directory (dir func)
   "Process all the regular files in directory DIR using function FUNC."
   (let* ((files (directory-files dir t "^[^.]"))
@@ -656,9 +652,6 @@ COUNT defaults to 5"
   (add-hook 'gnus-select-article-hook
 	    'spam-stat-store-gnus-article-buffer))
 
-(when spam-stat-install-hooks
-  (spam-stat-install-hooks-function))
-
 (defun spam-stat-unload-hook ()
   "Uninstall the spam-stat function hooks."
   (interactive)
@@ -671,5 +664,4 @@ COUNT defaults to 5"
 
 (provide 'spam-stat)
 
-;; arch-tag: ff1d2200-8ddb-42fb-bb7b-1b5e20448554
 ;;; spam-stat.el ends here

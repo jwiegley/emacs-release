@@ -1,11 +1,10 @@
 This is ../../info/nxml-mode, produced by makeinfo version 4.13 from
 nxml-mode.texi.
 
-This manual documents nxml-mode, an Emacs major mode for editing XML
+This manual documents nXML mode, an Emacs major mode for editing XML
 with RELAX NG support.
 
-   Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software
-Foundation, Inc.
+   Copyright (C) 2007-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -36,11 +35,10 @@ File: nxml-mode,  Node: Top,  Next: Introduction,  Up: (dir)
 nXML Mode
 *********
 
-This manual documents nxml-mode, an Emacs major mode for editing XML
+This manual documents nXML mode, an Emacs major mode for editing XML
 with RELAX NG support.
 
-   Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software
-Foundation, Inc.
+   Copyright (C) 2007-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -129,32 +127,28 @@ File: nxml-mode,  Node: Completion,  Next: Inserting end-tags,  Prev: Introducti
 2 Completion
 ************
 
-Apart from real-time validation, the most important feature that
-nxml-mode provides for assisting in document creation is "completion".
+Apart from real-time validation, the most important feature that nXML
+mode provides for assisting in document creation is "completion".
 Completion assists the user in inserting characters at point, based on
 knowledge of the schema and on the contents of the buffer before point.
 
-   The traditional GNU Emacs key combination for completion in a buffer
-is `M-<TAB>'. However, many window systems and window managers use this
-key combination themselves (typically for switching between windows)
-and do not pass it to applications. It's hard to find key combinations
-in GNU Emacs that are both easy to type and not taken by something
-else.  `C-<RET>' (i.e.  pressing the Enter or Return key, while the
-Ctrl key is held down) is available.  It won't be available on a
-traditional terminal (because it is indistinguishable from Return), but
-it will work with a window system.  Therefore we adopt the following
-solution by default: use `C-<RET>' when there's a window system and
-`M-<TAB>' when there's not.  In the following, I will assume that a
-window system is being used and will therefore refer to `C-<RET>'.
+   nXML mode adapts the standard GNU Emacs command for completion in a
+buffer: `completion-at-point', which is bound to `C-M-i' and `M-<TAB>'.
+Note that many window systems and window managers use `M-<TAB>'
+themselves (typically for switching between windows) and do not pass it
+to applications.  In that case, you should type `C-M-i' or `<ESC>
+<TAB>' for completion, or bind `completion-at-point' to a key that is
+convenient for you.  In the following, I will assume that you type
+`C-M-i'.
 
-   Completion works by examining the symbol preceding point.  This is
-the symbol to be completed. The symbol to be completed may be the
-empty. Completion considers what symbols starting with the symbol to be
-completed would be valid replacements for the symbol to be completed,
-given the schema and the contents of the buffer before point.  These
-symbols are the possible completions.  An example may make this
-clearer.  Suppose the buffer looks like this (where -!- indicates
-point):
+   nXML mode completion works by examining the symbol preceding point.
+This is the symbol to be completed. The symbol to be completed may be
+the empty. Completion considers what symbols starting with the symbol
+to be completed would be valid replacements for the symbol to be
+completed, given the schema and the contents of the buffer before
+point.  These symbols are the possible completions.  An example may
+make this clearer.  Suppose the buffer looks like this (where -!-
+indicates point):
 
      <html xmlns="http://www.w3.org/1999/xhtml">
      <h-!-
@@ -176,7 +170,7 @@ completions are `base', `isindex', `link', `meta', `script', `style',
 In this case, the symbol to be completed is empty, and the possible
 completions are just `http://www.w3.org/1999/xhtml'.
 
-   When you type `C-<RET>', what happens depends on what the set of
+   When you type `C-M-i', what happens depends on what the set of
 possible completions are.
 
    * If the set of completions is empty, nothing happens.
@@ -188,7 +182,7 @@ possible completions are.
           <html xmlns="http://www.w3.org/1999/xhtml">
           <-!-
 
-     `C-<RET>' will yield
+     `C-M-i' will yield
 
           <html xmlns="http://www.w3.org/1999/xhtml">
           <head-!-
@@ -201,12 +195,12 @@ possible completions are.
 
      The symbol to be completed is `x'. The possible completions are
      `xmlns' and `xml:lang'.  These share a common prefix of `xml'.
-     Thus, `C-<RET>' will yield:
+     Thus, `C-M-i' will yield:
 
           <html xml-!-
 
-     Typically, you would do `C-<RET>' again, which would have the
-     result described in the next item.
+     Typically, you would do `C-M-i' again, which would have the result
+     described in the next item.
 
    * If there is more than one possible completion, but the possible
      completions do not share a non-empty prefix, then Emacs will
@@ -232,7 +226,7 @@ possible completions are.
 
           <html xmlns="-!-
 
-     (If you do `C-<RET>' again, the namespace URI will be inserted.
+     (If you do `C-M-i' again, the namespace URI will be inserted.
      Should that happen automatically?)
 
 
@@ -241,11 +235,11 @@ File: nxml-mode,  Node: Inserting end-tags,  Next: Paragraphs,  Prev: Completion
 3 Inserting end-tags
 ********************
 
-The main redundancy in XML syntax is end-tags.  nxml-mode provides
+The main redundancy in XML syntax is end-tags.  nXML mode provides
 several ways to make it easier to enter end-tags.  You can use all of
 these without a schema.
 
-   You can use `C-<RET>' after `</' to complete the rest of the end-tag.
+   You can use `C-M-i' after `</' to complete the rest of the end-tag.
 
    `C-c C-f' inserts an end-tag for the element containing point. This
 command is useful when you want to input the start-tag, then input the
@@ -259,7 +253,7 @@ block-level elements: it puts the start-tag, point and the end-tag on
 successive lines, appropriately indented. The `i' is mnemonic for
 inline and the `b' is mnemonic for block.
 
-   Finally, you can customize nxml-mode so that `/' automatically
+   Finally, you can customize nXML mode so that `/' automatically
 inserts the rest of the end-tag when it occurs after `<', by doing
 
      `M-x customize-variable <RET> nxml-slash-auto-complete-flag <RET>'
@@ -327,7 +321,7 @@ File: nxml-mode,  Node: Outlining,  Next: Locating a schema,  Prev: Paragraphs, 
 ***********
 
 nXML mode allows you to display all or part of a buffer as an outline,
-in a similar way to Emacs' outline mode.  An outline in nXML mode is
+in a similar way to Emacs's outline mode.  An outline in nXML mode is
 based on recognizing two kinds of element: sections and headings.
 There is one heading for every section and one section for every
 heading.  A section contains its heading as or within its first child
@@ -777,7 +771,7 @@ File: nxml-mode,  Node: DTDs,  Next: Limitations,  Prev: Locating a schema,  Up:
 7 DTDs
 ******
 
-nxml-mode is designed to support the creation of standalone XML
+nXML mode is designed to support the creation of standalone XML
 documents that do not depend on a DTD.  Although it is common practice
 to insert a DOCTYPE declaration referencing an external DTD, this has
 undesirable side-effects.  It means that the document is no longer
@@ -786,7 +780,7 @@ the document in different ways, since the XML Recommendation does not
 require XML parsers to read the DTD.  With DTDs, it was impractical to
 get validation without using an external DTD or reference to an
 parameter entity.  With RELAX NG and other schema languages, you can
-simulataneously get the benefits of validation and standalone XML
+simultaneously get the benefits of validation and standalone XML
 documents.  Therefore, I recommend that you do not reference an
 external DOCTYPE in your XML documents.
 
@@ -818,21 +812,21 @@ nXML mode has some limitations:
 
 
 Tag Table:
-Node: Top1382
-Node: Introduction2791
-Node: Completion4960
-Node: Inserting end-tags9298
-Node: Paragraphs10613
-Node: Outlining12868
-Node: Locating a schema18478
-Node: Commands for locating a schema19920
-Node: Schema locating files22539
-Node: Schema locating file syntax basics23427
-Node: Using the document's URI to locate a schema25314
-Node: Using the document element to locate a schema27834
-Node: Using type identifiers in schema locating files28895
-Node: Using multiple schema locating files31306
-Node: DTDs33129
-Node: Limitations34589
+Node: Top1357
+Node: Introduction2741
+Node: Completion4910
+Node: Inserting end-tags8910
+Node: Paragraphs10223
+Node: Outlining12478
+Node: Locating a schema18089
+Node: Commands for locating a schema19531
+Node: Schema locating files22150
+Node: Schema locating file syntax basics23038
+Node: Using the document's URI to locate a schema24925
+Node: Using the document element to locate a schema27445
+Node: Using type identifiers in schema locating files28506
+Node: Using multiple schema locating files30917
+Node: DTDs32740
+Node: Limitations34199
 
 End Tag Table

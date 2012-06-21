@@ -84,7 +84,7 @@
 
 2004-12-30  Andreas Leue  <al@sphenon.de>
 
-	* textmodes/artist.el (artist-version): 1.2.6
+	* textmodes/artist.el (artist-version): 1.2.6.
 	(artist-prev-next-op-alist): New variable.
 	(artist-select-next-op-in-list): New function.
 	(artist-select-prev-op-in-list): New function.
@@ -380,7 +380,7 @@
 	(calculator-radix-grouping-digits)
 	(calculator-radix-grouping-separator):
 	New defcustoms for the new radix grouping mode functionality.
-	(calculator-mode-hook): Now used in electric mode too,
+	(calculator-mode-hook): Now used in electric mode too.
 	(calculator): Call it.
 	(calculator-mode-map): Some new keys.
 	(calculator-message): New function.  Some new calls.
@@ -1744,7 +1744,7 @@
 	substitute-env-vars -- not quite shell compatible but better than
 	nothing.
 	(compilation-error-regexp-alist-alist): Simplify ftnchek to only
-	handle the newer versions messages, which are more parseable.
+	handle the newer versions messages, which are more parsable.
 
 2004-11-22  Stefan Monnier  <monnier@iro.umontreal.ca>
 
@@ -2000,7 +2000,7 @@
 	(math-rewrite, math-rewrite-phase): Replace variable expr by
 	declared variable.
 	(math-rewrite-heads-heads, math-rewrite-heads-skips)
-	(math-rewrite-heads-blanks ): New variables.
+	(math-rewrite-heads-blanks): New variables.
 	(math-rewrite-heads, math-rewrite-heads-rec): Replace variables
 	heads, skips and blanks by declared variables.
 	(math-rwcomp-subst-old, math-rwcomp-subst-new)
@@ -2239,7 +2239,7 @@
 	(math-so-far, math-integ-expr, math-expr-parts, calc-low)
 	(calc-high, math-solve-var, math-solve-full, math-solve-vars)
 	(math-try-solve-sign, math-solve-b, math-solve-system-vv)
-	(math-solve-res): New variables
+	(math-solve-res): New variables.
 	(math-derivative, calcFunc-deriv, calcFunc-tderiv)
 	(math-integral, math-replace-integral-parts)
 	(math-integrate-by-parts, calc-dump-integral-cache)
@@ -4692,7 +4692,7 @@
 	mark mode (to include the current match to region boundaries).
 	Push the search string to `query-replace-from-history-variable'.
 	Add prompt "Query replace regexp" for isearch-regexp.
-	Add region beginning/end as last arguments of `perform-replace.'
+	Add region beginning/end as last arguments of `perform-replace'.
 	(isearch-query-replace-regexp): Replace code by the call to
 	`isearch-query-replace' with arg `t'.
 
@@ -5283,7 +5283,7 @@
 	(disabled-command-function): Function renamed from
 	`disabled-command-hook'.  Adapt code to name change of the variable.
 
-2004-08-07  Satyaki Das  <satyaki@theforce.stanford.edu>  (tiny change)
+2004-08-07  Satyaki Das  <satyaki@theforce.stanford.edu>
 
 	* simple.el (completion-root-regexp): New defvar.
 	(completion-setup-function): Use it instead of a literal string.
@@ -6728,11 +6728,11 @@
 2004-05-28  Simon Josefsson  <jas@extundo.com>
 
 	* mail/smtpmail.el (smtpmail-open-stream):
-	Bind starttls-extra-arguments too, if starttls.el uses GNUTLS.
+	Bind starttls-extra-arguments too, if starttls.el uses GnuTLS.
 
 2004-05-26  Simon Josefsson  <jas@extundo.com>
 
-	* starttls.el: Merge with my GNUTLS based starttls.el.
+	* starttls.el: Merge with my GnuTLS based starttls.el.
 	(starttls-gnutls-program, starttls-use-gnutls)
 	(starttls-extra-arguments, starttls-process-connection-type)
 	(starttls-connect, starttls-failure, starttls-success): New variables.
@@ -6884,7 +6884,7 @@
 
 2004-05-22  Richard M. Stallman  <rms@gnu.org>
 
-	* textmodes/paragraphs.el (sentence-end): Match unicode curly quotes
+	* textmodes/paragraphs.el (sentence-end): Match Unicode curly quotes
 	as a close quote.
 
 	* textmodes/bibtex.el: Use assoc-string, not assoc-ignore-case.
@@ -7074,7 +7074,7 @@
 2004-05-14  Stefan Monnier  <monnier@iro.umontreal.ca>
 
 	* descr-text.el (describe-char-unicode-data)
-	(describe-char-unicodedata-file): Re-enable the unicode code now that
+	(describe-char-unicodedata-file): Re-enable the Unicode code now that
 	the licensing issues have been cleared in the unicode-4 license.
 	(describe-text-properties-1): Remove unused `overlay' var.
 	(describe-char): Remove unused var `buffer'.
@@ -7234,7 +7234,7 @@
 
 2004-05-10  Miles Bader  <miles@gnu.org>
 
-	* lisp/progmodes/gud.el (gud-common-init): Only consider an existing
+	* progmodes/gud.el (gud-common-init): Only consider an existing
 	buffer an error if the debugger process is actually running.
 
 2004-05-10  Juanma Barranquero  <lektu@terra.es>
@@ -7529,7 +7529,7 @@
 
 2004-05-03  Michael Mauger  <mmaug@yahoo.com>
 
-	* emacs/lisp/progmodes/sql.el (sql-xemacs-p, sql-emacs19-p)
+	* progmodes/sql.el (sql-xemacs-p, sql-emacs19-p)
 	(sql-emacs20-p): Remove.
 	(sql-mode-syntax-table): Use shared GNU Emacs/XEmacs syntax.
 	(sql-builtin-face, sql-doc-face): Remove.
@@ -9809,7 +9809,7 @@
 
 	(compile): Additional argument for interactive compiles like TeX.
 
-	* progmodes/grep.el (kill-grep): Move here from compile.el
+	* progmodes/grep.el (kill-grep): Move here from compile.el.
 	(grep-error, grep-hit-face, grep-error-face)
 	(grep-mode-font-lock-keywords): New variables.
 	(grep-regexp-alist): Simplify regexp and add `binary' case.
@@ -10944,12 +10944,12 @@
 	(rsf-bbdb-auto-delete-spam-entries): Rename from
 	rmail-bbdb-auto-delete-spam-bbdb-entries.  The cc: field is
 	scanned together with the recipients field for spam testing; Don't
-	delete spam message if rmail-delete-after-output is non-nil;
+	delete spam message if rmail-delete-after-output is non-nil.
 	(rsf-check-field): New function, extracted from code in
 	rmail-spam-filter to ease addition of header fields like
-	content-type:;
+	content-type:.
 	(message-content-type): New variable.  The content-type: field was
-	added also in defcustom of rsf-definitions-alist;
+	added also in defcustom of rsf-definitions-alist.
 	(rmail-spam-filter): Replace repeated test code for header fields
 	by calls to check-field; change the call to
 	rmail-output-to-rmail-file such that rmail-current-message stays
@@ -11474,7 +11474,7 @@
 2003-12-29  Stuart Herring  <herring@lanl.gov>  (tiny change)
 
 	* comint.el (comint-watch-for-password-prompt): Pass `string' as
-	arg to send-invisible
+	arg to send-invisible.
 	(send-invisible): Doc fix.  The argument is now a prompt, not the
 	string to send.
 	(comint-read-noecho): Doc fix.
@@ -11494,7 +11494,7 @@
 	* net/zone-mode.el (zone-mode): Use write-file-functions, not
 	write-file-hooks.
 
-2003-12-29  Eric Hanchrow  <offby1@blarg.net>  (tiny change)
+2003-12-29  Eric Hanchrow  <offby1@blarg.net>
 
 	* autorevert.el (auto-revert-interval): Doc fix.
 
@@ -11832,7 +11832,7 @@
 	(ido-saved-vc-hb): Rename from ido-saved-vc-mt.  Uses changed.
 	(ido-no-final-slash): New defun.
 	(ido-make-prompt, ido-file-internal, ido-toggle-vc)
-	(ido-read-file-name): ): Toggle VC checking via
+	(ido-read-file-name): Toggle VC checking via
 	vc-handled-backends instead of vc-master-templates.
 	(ido-file-internal): Handle ido-use-url-at-point and
 	ido-use-filename-at-point via code borrowed from ffap-guesser.
@@ -12922,7 +12922,7 @@
 
 	* emacs-lisp/tq.el (tq-create): Fix mixed up unquote style.
 
-2003-09-12  Eric Hanchrow  <offby1@blarg.net>  (tiny change)
+2003-09-12  Eric Hanchrow  <offby1@blarg.net>
 
 	* dired.el (dired-mode-map): Fix typo.
 
@@ -12951,7 +12951,7 @@
 	Ensure that recentf correctly updates the menu bar.
 	* recentf.el (recentf-menu-path,recentf-menu-before): Doc fix.
 	(recentf-menu-bar): New function.
-	(recentf-clear-data): Use it
+	(recentf-clear-data): Use it.
 	(recentf-update-menu): Likewise.  Use easy-menu-add-item instead
 	of easy-menu-change.
 
@@ -13500,7 +13500,7 @@
 	(reftex-toc-split-windows-fraction): New option.
 	(reftex-recenter-toc-when-idle): Search *toc* window on all
 	visible frames.
-	(reftex-toc): Additional parameter REUSE
+	(reftex-toc): Additional parameter REUSE.
 	(reftex-toc-recenter): Remember current frame.  Call `reftex-toc'
 	with REUSE argument.
 	(reftex-recenter-toc-when-idle): Reset `current-prefix-arg' for
@@ -14153,7 +14153,7 @@
 	erroneously in previous version.
 	(bibtex-string-files): Docstring reflects new parsing scheme.
 	(bibtex-autokey-transcriptions): Merge some rewrite entries, fix
-	docstring, add # as one of the chars to crush
+	docstring, add # as one of the chars to crush.
 	(bibtex-autokey-prefix-string, bibtex-autokey-names)
 	(bibtex-autokey-names-stretch, bibtex-autokey-additional-names)
 	(bibtex-autokey-name-change-strings)
@@ -14229,7 +14229,7 @@
 	preamble entries.
 	(bibtex-fill-field-bounds): New function.
 	(bibtex-fill-field): New command.  Bound to fill-paragraph-function.
-	(bibtex-fill-entry): Use bibtex-fill-field-bounds
+	(bibtex-fill-entry): Use bibtex-fill-field-bounds.
 	(bibtex-String): Use bibtex-strings.  Always obey
 	bibtex-sort-ignore-string-entries.
 
@@ -14336,8 +14336,7 @@ See ChangeLog.10 for earlier changes.
 ;; coding: utf-8
 ;; End:
 
-    Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-      Free Software Foundation, Inc.
+  Copyright (C) 2003-2011  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
@@ -14353,5 +14352,3 @@ See ChangeLog.10 for earlier changes.
 
   You should have received a copy of the GNU General Public License
   along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
-
-;; arch-tag: 2fe8d7b0-27e3-4634-a0b7-db70ff071825

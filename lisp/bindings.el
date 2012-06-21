@@ -1,11 +1,11 @@
 ;;; bindings.el --- define standard key bindings and some variables
 
-;; Copyright (C) 1985, 1986, 1987, 1992, 1993, 1994, 1995, 1996, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
+;; Copyright (C) 1985-1987, 1992-1996, 1999-2012
 ;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -59,24 +59,6 @@ corresponding to the mode line clicked."
   (save-selected-window
     (select-window (posn-window (event-start event)))
     (widen)
-    (force-mode-line-update)))
-
-
-(defun mode-line-abbrev-mode (event)
-  "Turn off `abbrev-mode' from the mode-line."
-  (interactive "e")
-  (save-selected-window
-    (select-window (posn-window (event-start event)))
-    (abbrev-mode)
-    (force-mode-line-update)))
-
-
-(defun mode-line-auto-fill-mode (event)
-  "Turn off `auto-fill-mode' from the mode-line."
-  (interactive "e")
-  (save-selected-window
-    (select-window (posn-window (event-start event)))
-    (auto-fill-mode)
     (force-mode-line-update)))
 
 
@@ -171,17 +153,17 @@ mouse-3: Describe current input method"))
     ,(propertize
       "%z"
       'help-echo
-      #'(lambda (window object point)
-	  (with-current-buffer (window-buffer window)
-	    ;; Don't show this tip if the coding system is nil,
-	    ;; it reads like a bug, and is not useful anyway.
-	    (when buffer-file-coding-system
-	      (format "Buffer coding system %s\nmouse-1: describe coding system"
-		      (if enable-multibyte-characters
-			  (concat "(multi-byte): "
-				  (symbol-name buffer-file-coding-system))
-			(concat "(unibyte): "
-				(symbol-name buffer-file-coding-system)))))))
+      (lambda (window _object _point)
+	(with-current-buffer (window-buffer window)
+	  ;; Don't show this tip if the coding system is nil,
+	  ;; it reads like a bug, and is not useful anyway.
+	  (when buffer-file-coding-system
+	    (format "Buffer coding system %s\nmouse-1: describe coding system"
+		    (if enable-multibyte-characters
+			(concat "(multi-byte): "
+				(symbol-name buffer-file-coding-system))
+		      (concat "(unibyte): "
+			      (symbol-name buffer-file-coding-system)))))))
       'mouse-face 'mode-line-highlight
       'local-map mode-line-coding-system-map)
     (:eval (mode-line-eol-desc)))
@@ -227,7 +209,7 @@ Normally nil in most modes, since there is no process to display.")
 (defvar mode-line-modified
   (list (propertize
 	 "%1*"
-	 'help-echo (purecopy (lambda (window object point)
+	 'help-echo (purecopy (lambda (window _object _point)
  				(format "Buffer is %s\nmouse-1 toggles"
 					(save-selected-window
 					  (select-window window)
@@ -240,7 +222,7 @@ Normally nil in most modes, since there is no process to display.")
 	 'mouse-face 'mode-line-highlight)
 	(propertize
 	 "%1+"
-	 'help-echo  (purecopy (lambda (window object point)
+	 'help-echo  (purecopy (lambda (window _object _point)
 				 (format "Buffer is %sodified\nmouse-1 toggles modified state"
 					 (save-selected-window
 					   (select-window window)
@@ -260,7 +242,7 @@ Normally nil in most modes, since there is no process to display.")
   (list (propertize
 	 "%1@"
 	 'mouse-face 'mode-line-highlight
-	 'help-echo (purecopy (lambda (window object point)
+	 'help-echo (purecopy (lambda (window _object _point)
  				(format "%s"
 					(save-selected-window
 					  (select-window window)
@@ -335,11 +317,13 @@ Keymap to display on column and line numbers.")
 mouse-2: Make current window occupy the whole frame\n\
 mouse-3: Remove current window from display")
        (recursive-edit-help-echo "Recursive edit, type C-M-c to get out")
-       (dashes (propertize "--" 'help-echo help-echo))
+       (spaces (propertize " " 'help-echo help-echo))
        (standard-mode-line-format
 	(list
 	 "%e"
-	 (propertize "-" 'help-echo help-echo)
+	 `(:eval (if (display-graphic-p)
+		     ,(propertize " " 'help-echo help-echo)
+		   ,(propertize "-" 'help-echo help-echo)))
 	 'mode-line-mule-info
 	 'mode-line-client
 	 'mode-line-modified
@@ -351,9 +335,10 @@ mouse-3: Remove current window from display")
 	 '(vc-mode vc-mode)
 	 (propertize "  " 'help-echo help-echo)
 	 'mode-line-modes
-	 `(which-func-mode ("" which-func-format ,dashes))
-	 `(global-mode-string ("" global-mode-string ,dashes))
-	 (propertize "-%-" 'help-echo help-echo)))
+	 `(which-func-mode ("" which-func-format ,spaces))
+	 `(global-mode-string ("" global-mode-string ,spaces))
+	 `(:eval (unless (display-graphic-p)
+		   ,(propertize "-%-" 'help-echo help-echo)))))
        (standard-mode-line-modes
 	(list
 	 (propertize "%[" 'help-echo recursive-edit-help-echo)
@@ -379,7 +364,7 @@ mouse-3: Toggle minor modes"
 				 'mouse-2 #'mode-line-widen))
 	 (propertize ")" 'help-echo help-echo)
 	 (propertize "%]" 'help-echo recursive-edit-help-echo)
-	 (propertize "--" 'help-echo help-echo)))
+	 spaces))
 
        (standard-mode-line-position
 	`((-3 ,(propertize
@@ -469,11 +454,6 @@ Major modes that edit things other than ordinary files may change this
 (put 'mode-line-buffer-identification 'risky-local-variable t)
 (make-variable-buffer-local 'mode-line-buffer-identification)
 
-(defun unbury-buffer () "\
-Switch to the last buffer in the buffer list."
-  (interactive)
-  (switch-to-buffer (last-buffer)))
-
 (defun mode-line-unbury-buffer (event) "\
 Call `unbury-buffer' in this window."
   (interactive "e")
@@ -491,7 +471,7 @@ Like `bury-buffer', but temporarily select EVENT's window."
 (defun mode-line-other-buffer () "\
 Switch to the most recently selected buffer other than the current one."
   (interactive)
-  (switch-to-buffer (other-buffer)))
+  (switch-to-buffer (other-buffer) nil t))
 
 (defun mode-line-next-buffer (event)
   "Like `next-buffer', but temporarily select EVENT's window."
@@ -613,9 +593,12 @@ is okay.  See `mode-line-format'.")
 	 ".fas" ".lib" ".mem"
 	 ;; CMUCL
 	 ".x86f" ".sparcf"
-         ;; Other CL implementations (Allegro, LispWorks, OpenMCL)
-         ".fasl" ".ufsl" ".fsl" ".dxl" ".pfsl" ".dfsl"
-	 ".p64fsl" ".d64fsl" ".dx64fsl"
+	 ;; OpenMCL / Clozure CL
+	 ".dfsl" ".pfsl" ".d64fsl" ".p64fsl" ".lx64fsl" ".lx32fsl"
+	 ".dx64fsl" ".dx32fsl" ".fx64fsl" ".fx32fsl" ".sx64fsl"
+	 ".sx32fsl" ".wx64fsl" ".wx32fsl"
+         ;; Other CL implementations (Allegro, LispWorks)
+         ".fasl" ".ufsl" ".fsl" ".dxl"
 	 ;; Libtool
 	 ".lo" ".la"
 	 ;; Gettext
@@ -663,37 +646,24 @@ is okay.  See `mode-line-format'.")
 
 (make-variable-buffer-local 'indent-tabs-mode)
 
-;; We have base64 and md5 functions built in now.
+;; We have base64, md5 and sha1 functions built in now.
 (provide 'base64)
 (provide 'md5)
+(provide 'sha1)
 (provide 'overlay '(display syntax-table field))
 (provide 'text-properties '(display syntax-table field point-entered))
 
 (define-key esc-map "\t" 'complete-symbol)
 
 (defun complete-symbol (arg)
-  "Perform tags completion on the text around point.
-If a tags table is loaded, call `complete-tag'.
-Otherwise, if Semantic is active, call `semantic-ia-complete-symbol'.
+  "Perform completion on the text around point.
+The completion method is determined by `completion-at-point-functions'.
 
 With a prefix argument, this command does completion within
 the collection of symbols listed in the index of the manual for the
 language you are using."
   (interactive "P")
-  (cond (arg
-	 (info-complete-symbol))
-	((or tags-table-list tags-file-name)
-	 (complete-tag))
-	((and (fboundp 'semantic-ia-complete-symbol)
-	      (fboundp 'semantic-active-p)
-	      (semantic-active-p))
-	 (semantic-ia-complete-symbol))
-        (completion-at-point-functions (completion-at-point))
-	(t
-	 (error "%s"
-		(substitute-command-keys
-		 "No completions available; use \\[visit-tags-table] \
-or \\[semantic-mode]")))))
+  (if arg (info-complete-symbol) (completion-at-point)))
 
 ;; Reduce total amount of space we must allocate during this function
 ;; that we will not need to keep permanently.
@@ -719,6 +689,63 @@ or \\[semantic-mode]")))))
 ;These commands are defined in editfns.c
 ;but they are not assigned to keys there.
 (put 'narrow-to-region 'disabled t)
+
+;; Moving with arrows in bidi-sensitive direction.
+(defun right-char (&optional n)
+  "Move point N characters to the right (to the left if N is negative).
+On reaching beginning or end of buffer, stop and signal error.
+
+Depending on the bidirectional context, this may move either forward
+or backward in the buffer.  This is in contrast with \\[forward-char]
+and \\[backward-char], which see."
+  (interactive "^p")
+  (if (eq (current-bidi-paragraph-direction) 'left-to-right)
+      (forward-char n)
+    (backward-char n)))
+
+(defun left-char ( &optional n)
+  "Move point N characters to the left (to the right if N is negative).
+On reaching beginning or end of buffer, stop and signal error.
+
+Depending on the bidirectional context, this may move either backward
+or forward in the buffer.  This is in contrast with \\[backward-char]
+and \\[forward-char], which see."
+  (interactive "^p")
+  (if (eq (current-bidi-paragraph-direction) 'left-to-right)
+      (backward-char n)
+    (forward-char n)))
+
+(defun right-word (&optional n)
+  "Move point N words to the right (to the left if N is negative).
+
+Depending on the bidirectional context, this may move either forward
+or backward in the buffer.  This is in contrast with \\[forward-word]
+and \\[backward-word], which see.
+
+Value is normally t.
+If an edge of the buffer or a field boundary is reached, point is left there
+there and the function returns nil.  Field boundaries are not noticed
+if `inhibit-field-text-motion' is non-nil."
+  (interactive "^p")
+  (if (eq (current-bidi-paragraph-direction) 'left-to-right)
+      (forward-word n)
+    (backward-word n)))
+
+(defun left-word (&optional n)
+  "Move point N words to the left (to the right if N is negative).
+
+Depending on the bidirectional context, this may move either backward
+or forward in the buffer.  This is in contrast with \\[backward-word]
+and \\[forward-word], which see.
+
+Value is normally t.
+If an edge of the buffer or a field boundary is reached, point is left there
+there and the function returns nil.  Field boundaries are not noticed
+if `inhibit-field-text-motion' is non-nil."
+  (interactive "^p")
+  (if (eq (current-bidi-paragraph-direction) 'left-to-right)
+      (backward-word n)
+    (forward-word n)))
 
 (defvar narrow-map (make-sparse-keymap)
   "Keymap for narrowing commands.")
@@ -746,7 +773,7 @@ or \\[semantic-mode]")))))
 (define-key ctl-x-map "\C-o" 'delete-blank-lines)
 (define-key esc-map " " 'just-one-space)
 (define-key esc-map "z" 'zap-to-char)
-(define-key esc-map "=" 'count-lines-region)
+(define-key esc-map "=" 'count-words-region)
 (define-key ctl-x-map "=" 'what-cursor-position)
 (define-key esc-map ":" 'eval-expression)
 ;; Define ESC ESC : like ESC : for people who type ESC ESC out of habit.
@@ -807,6 +834,10 @@ or \\[semantic-mode]")))))
     (setq i (1+ i))))
 (define-key global-map [?\C-\M--] 'negative-argument)
 
+;; Update tutorial--default-keys if you change these.
+(define-key global-map "\177" 'delete-backward-char)
+(define-key global-map "\C-d" 'delete-char)
+
 (define-key global-map "\C-k" 'kill-line)
 (define-key global-map "\C-w" 'kill-region)
 (define-key esc-map "w" 'kill-ring-save)
@@ -819,6 +850,8 @@ or \\[semantic-mode]")))))
 (define-key global-map "\C-@" 'set-mark-command)
 ;; Many people are used to typing C-SPC and getting C-@.
 (define-key global-map [?\C- ] 'set-mark-command)
+(put 'set-mark-command :advertised-binding [?\C- ])
+
 (define-key ctl-x-map "\C-x" 'exchange-point-and-mark)
 (define-key ctl-x-map "\C-@" 'pop-global-mark)
 (define-key ctl-x-map [?\C- ] 'pop-global-mark)
@@ -870,12 +903,12 @@ or \\[semantic-mode]")))))
 (define-key global-map [C-home]		'beginning-of-buffer)
 (define-key global-map [M-home]		'beginning-of-buffer-other-window)
 (define-key esc-map    [home]		'beginning-of-buffer-other-window)
-(define-key global-map [left]		'backward-char)
+(define-key global-map [left]		'left-char)
 (define-key global-map [up]		'previous-line)
-(define-key global-map [right]		'forward-char)
+(define-key global-map [right]		'right-char)
 (define-key global-map [down]		'next-line)
-(define-key global-map [prior]		'scroll-down)
-(define-key global-map [next]		'scroll-up)
+(define-key global-map [prior]		'scroll-down-command)
+(define-key global-map [next]		'scroll-up-command)
 (define-key global-map [C-up]		'backward-paragraph)
 (define-key global-map [C-down]		'forward-paragraph)
 (define-key global-map [C-prior]	'scroll-right)
@@ -914,7 +947,7 @@ or \\[semantic-mode]")))))
 ;; (define-key global-map [clearline]	'function-key-error)
 (define-key global-map [insertline]	'open-line)
 (define-key global-map [deleteline]	'kill-line)
-(define-key global-map [deletechar]	'delete-char)
+(define-key global-map [deletechar]	'delete-forward-char)
 ;; (define-key global-map [backtab]	'function-key-error)
 ;; (define-key global-map [f1]		'function-key-error)
 ;; (define-key global-map [f2]		'function-key-error)
@@ -1070,13 +1103,13 @@ or \\[semantic-mode]")))))
   "Keymap for characters following C-c.")
 (define-key global-map "\C-c" 'mode-specific-command-prefix)
 
-(global-set-key [M-right]  'forward-word)
+(global-set-key [M-right]  'right-word)
 (define-key esc-map [right] 'forward-word)
-(global-set-key [M-left]   'backward-word)
+(global-set-key [M-left]   'left-word)
 (define-key esc-map [left] 'backward-word)
 ;; ilya@math.ohio-state.edu says these bindings are standard on PC editors.
-(global-set-key [C-right]  'forward-word)
-(global-set-key [C-left]   'backward-word)
+(global-set-key [C-right]  'right-word)
+(global-set-key [C-left]   'left-word)
 ;; This is not quite compatible, but at least is analogous
 (global-set-key [C-delete] 'kill-word)
 (global-set-key [C-backspace] 'backward-kill-word)
@@ -1184,5 +1217,4 @@ or \\[semantic-mode]")))))
 ;; no-update-autoloads: t
 ;; End:
 
-;; arch-tag: 23b5c7e6-e47b-49ed-8c6c-ed213c5fffe0
 ;;; bindings.el ends here

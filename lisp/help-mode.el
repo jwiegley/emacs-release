@@ -1,10 +1,11 @@
 ;;; help-mode.el --- `help-mode' used by *Help* buffers
 
-;; Copyright (C) 1985, 1986, 1993, 1994, 1998, 1999, 2000, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1985-1986, 1993-1994, 1998-2012
+;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: help, internal
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -32,17 +33,17 @@
 (require 'view)
 (eval-when-compile (require 'easymenu))
 
-(defvar help-mode-map (make-sparse-keymap)
+(defvar help-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map (make-composed-keymap button-buffer-map
+                                                 special-mode-map))
+    (define-key map [mouse-2] 'help-follow-mouse)
+    (define-key map "\C-c\C-b" 'help-go-back)
+    (define-key map "\C-c\C-f" 'help-go-forward)
+    (define-key map "\C-c\C-c" 'help-follow-symbol)
+    (define-key map "\r" 'help-follow)
+    map)
   "Keymap for help mode.")
-
-(set-keymap-parent help-mode-map button-buffer-map)
-
-(define-key help-mode-map [mouse-2] 'help-follow-mouse)
-(define-key help-mode-map "\C-c\C-b" 'help-go-back)
-(define-key help-mode-map "\C-c\C-f" 'help-go-forward)
-(define-key help-mode-map "\C-c\C-c" 'help-follow-symbol)
-;; Documentation only, since we use minor-mode-overriding-map-alist.
-(define-key help-mode-map "\r" 'help-follow)
 
 (easy-menu-define help-mode-menu help-mode-map
   "Menu for Help Mode."
@@ -140,7 +141,7 @@ The format is (FUNCTION ARGS...).")
   'help-function 'describe-character-set
   'help-echo (purecopy "mouse-2, RET: describe this character set"))
 
-;; make some more ideosyncratic button types
+;; Make some more idiosyncratic button types.
 
 (define-button-type 'help-symbol
   :supertype 'help-xref
@@ -160,7 +161,7 @@ The format is (FUNCTION ARGS...).")
 (define-button-type 'help-info-variable
   :supertype 'help-xref
   ;; the name of the variable is put before the argument to Info
-  'help-function (lambda (a v) (info v))
+  'help-function (lambda (_a v) (info v))
   'help-echo (purecopy "mouse-2, RET: read this Info node"))
 
 (define-button-type 'help-info
@@ -244,35 +245,34 @@ The format is (FUNCTION ARGS...).")
 		       (message "Unable to find location in file"))))
   'help-echo (purecopy "mouse-2, RET: find face's definition"))
 
+(define-button-type 'help-package
+  :supertype 'help-xref
+  'help-function 'describe-package
+  'help-echo (purecopy "mouse-2, RET: Describe package"))
+
+(define-button-type 'help-package-def
+  :supertype 'help-xref
+  'help-function (lambda (file) (dired file))
+  'help-echo (purecopy "mouse-2, RET: visit package directory"))
+
+(define-button-type 'help-theme-def
+  :supertype 'help-xref
+  'help-function 'find-file
+  'help-echo (purecopy "mouse-2, RET: visit theme file"))
+
+(define-button-type 'help-theme-edit
+  :supertype 'help-xref
+  'help-function 'customize-create-theme
+  'help-echo (purecopy "mouse-2, RET: edit this theme file"))
 
 ;;;###autoload
-(defun help-mode ()
+(define-derived-mode help-mode special-mode "Help"
   "Major mode for viewing help text and navigating references in it.
 Entry to this mode runs the normal hook `help-mode-hook'.
 Commands:
 \\{help-mode-map}"
-  (interactive)
-  (kill-all-local-variables)
-  (use-local-map help-mode-map)
-  (setq mode-name "Help")
-  (setq major-mode 'help-mode)
-
-  (view-mode)
-  (set (make-local-variable 'view-no-disable-on-exit) t)
-  ;; With Emacs 22 `view-exit-action' could delete the selected window
-  ;; disregarding whether the help buffer was shown in that window at
-  ;; all.  Since `view-exit-action' is called with the help buffer as
-  ;; argument it seems more appropriate to have it work on the buffer
-  ;; only and leave it to `view-mode-exit' to delete any associated
-  ;; window(s).
-  (setq view-exit-action
-	(lambda (buffer)
-	  ;; Use `with-current-buffer' to make sure that `bury-buffer'
-	  ;; also removes BUFFER from the selected window.
-	  (with-current-buffer buffer
-	    (bury-buffer))))
-
-  (run-mode-hooks 'help-mode-hook))
+  (set (make-local-variable 'revert-buffer-function)
+       'help-mode-revert-buffer))
 
 ;;;###autoload
 (defun help-mode-setup ()
@@ -281,27 +281,19 @@ Commands:
 
 ;;;###autoload
 (defun help-mode-finish ()
-  (if (eq help-window t)
-      ;; If `help-window' is t, `view-return-to-alist' is handled by
-      ;; `with-help-window'.  In this case set `help-window' to the
-      ;; selected window since now is the only moment where we can
-      ;; unambiguously identify it.
-      (setq help-window (selected-window))
-    (let ((entry (assq (selected-window) view-return-to-alist)))
-      (if entry
-	  ;; When entering Help mode from the Help window,
-	  ;; such as by following a link, preserve the same
-	  ;; meaning for the q command.
-	  ;; (setcdr entry (cons (selected-window) help-return-method))
-	  nil
-	(setq view-return-to-alist
-	      (cons (cons (selected-window) help-return-method)
-		    view-return-to-alist)))))
-
   (when (eq major-mode 'help-mode)
     ;; View mode's read-only status of existing *Help* buffer is lost
     ;; by with-output-to-temp-buffer.
     (toggle-read-only 1)
+
+    (save-excursion
+      (goto-char (point-min))
+      (let ((inhibit-read-only t))
+	(when (re-search-forward "^This [^[:space:]]+ is advised.$" nil t)
+	  (put-text-property (match-beginning 0)
+			     (match-end 0)
+			     'face 'font-lock-warning-face))))
+
     (help-make-xrefs (current-buffer))))
 
 ;; Grokking cross-reference information in doc strings and
@@ -376,20 +368,16 @@ restore it properly when going back."
 (defun help-buffer ()
   "Return the name of a buffer for inserting help.
 If `help-xref-following' is non-nil, this is the name of the
-current buffer.
-Otherwise, it is *Help*; if no buffer with that name currently
-exists, it is created."
+current buffer.  Signal an error if this buffer is not derived
+from `help-mode'.
+Otherwise, return \"*Help*\", creating a buffer with that name if
+it does not already exist."
   (buffer-name				;for with-output-to-temp-buffer
-   (if help-xref-following
-       (current-buffer)
-     (get-buffer-create "*Help*"))))
-
-(defvar help-xref-override-view-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map view-mode-map)
-    (define-key map "\r" nil)
-    map)
-  "Replacement keymap for `view-mode' in help buffers.")
+   (if (not help-xref-following)
+       (get-buffer-create "*Help*")
+     (unless (derived-mode-p 'help-mode)
+       (error "Current buffer is not in Help mode"))
+     (current-buffer))))
 
 ;;;###autoload
 (defun help-make-xrefs (&optional buffer)
@@ -433,7 +421,9 @@ that."
                     (let ((data (match-string 2)))
                       (save-match-data
                         (unless (string-match "^([^)]+)" data)
-                          (setq data (concat "(emacs)" data))))
+                          (setq data (concat "(emacs)" data)))
+			(setq data ;; possible newlines if para filled
+			      (replace-regexp-in-string "[ \t\n]+" " " data t t)))
                       (help-xref-button 2 'help-info data))))
                 ;; URLs
                 (save-excursion
@@ -573,9 +563,6 @@ that."
                                      (current-buffer)))
           (when (or help-xref-stack help-xref-forward-stack)
             (insert "\n")))
-        ;; View mode steals RET from us.
-        (set (make-local-variable 'minor-mode-overriding-map-alist)
-             (list (cons 'view-mode help-xref-override-view-map)))
         (set-buffer-modified-p old-modified)))))
 
 ;;;###autoload
@@ -740,7 +727,7 @@ help buffer."
       (help-xref-go-forward (current-buffer))
     (error "No next help buffer")))
 
-(defun help-do-xref (pos function args)
+(defun help-do-xref (_pos function args)
   "Call the help cross-reference function FUNCTION with args ARGS.
 Things are set up properly so that the resulting help-buffer has
 a proper [back] button."
@@ -781,6 +768,17 @@ Show all docs for that symbol as either a variable, function or face."
 	      (fboundp sym) (facep sym))
       (help-do-xref pos #'help-xref-interned (list sym)))))
 
+(defun help-mode-revert-buffer (_ignore-auto noconfirm)
+  (when (or noconfirm (yes-or-no-p "Revert help buffer? "))
+    (let ((pos (point))
+	  (item help-xref-stack-item)
+	  ;; Pretend there is no current item to add to the history.
+	  (help-xref-stack-item nil)
+	  ;; Use the current buffer.
+	  (help-xref-following t))
+      (apply (car item) (cdr item))
+      (goto-char pos))))
+
 (defun help-insert-string (string)
   "Insert STRING to the help buffer and install xref info for it.
 This function can be used to restore the old contents of the help buffer
@@ -793,5 +791,4 @@ help buffer by other means."
 
 (provide 'help-mode)
 
-;; arch-tag: 850954ae-3725-4cb4-8e91-0bf6d52d6b0b
 ;;; help-mode.el ends here

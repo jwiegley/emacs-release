@@ -1,7 +1,6 @@
 ;;; tibet-util.el --- utilities for Tibetan   -*- coding: iso-2022-7bit; -*-
 
-;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1997, 2001-2012  Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
 ;;   2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
@@ -28,7 +27,7 @@
 
 ;;; History:
 ;; 1997.03.13 Modification in treatment of text properties;
-;;            Support for some special signs and punctuations.
+;;            Support for some special signs and punctuation.
 ;; 1999.10.25 Modification for a new composition way by K.Handa.
 
 ;;; Commentary:
@@ -421,5 +420,4 @@ before writing buffer in Unicode.  See also
 
 (provide 'tibet-util)
 
-;; arch-tag: 7a7333e8-1584-446c-b39c-a02b9def265d
 ;;; tibet-util.el ends here

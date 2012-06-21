@@ -1,7 +1,6 @@
 ;;; sun.el --- keybinding for standard default sunterm keys
 
-;; Copyright (C) 1987, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1987, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: Jeff Peck <peck@sun.com>
 ;; Keywords: terminals
@@ -134,10 +133,10 @@
   (global-set-key [r3]	'backward-page)
   (global-set-key [r6]	'forward-page)
   (global-set-key [r7]	'beginning-of-buffer)
-  (global-set-key [r9]	'scroll-down)
+  (global-set-key [r9]	'scroll-down-command)
   (global-set-key [r11]	'recenter)
   (global-set-key [r13]	'end-of-buffer)
-  (global-set-key [r15]	'scroll-up)
+  (global-set-key [r15]	'scroll-up-command)
   (global-set-key [redo]	'redraw-display) ;FIXME: collides with default.
   (global-set-key [props]	'list-buffers)
   (global-set-key [put]	'sun-select-region)
@@ -155,5 +154,4 @@
 	(eval (car hooks))
 	(setq hooks (cdr hooks))))))
 
-;; arch-tag: db761d47-fd7d-42b4-aae1-04fa116b6ba6
 ;;; sun.el ends here

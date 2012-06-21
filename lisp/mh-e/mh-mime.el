@@ -1,8 +1,6 @@
 ;;; mh-mime.el --- MH-E MIME support
 
-;; Copyright (C) 1993, 1995,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1995, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -392,11 +390,11 @@ do the work."
                     (equal nil mh-mime-save-parts-default-directory)
                     (equal t mh-mime-save-parts-default-directory))
                 (not mh-mime-save-parts-directory))
-           (read-file-name "Store in directory: " nil nil t nil))
+           (read-directory-name "Store in directory: " nil nil t))
           ((and (or prompt
                     (equal t mh-mime-save-parts-default-directory))
                 mh-mime-save-parts-directory)
-           (read-file-name (format
+           (read-directory-name (format
                             "Store in directory (default %s): "
                             mh-mime-save-parts-directory)
                            "" mh-mime-save-parts-directory t ""))
@@ -506,6 +504,15 @@ decoding the same message multiple times."
   (when mh-decode-mime-flag
     (let ((buffer-read-only nil))
       (rfc2047-decode-region (point-min) (mh-mail-header-end)))))
+
+;;;###mh-autoload
+(defun mh-decode-message-subject ()
+  "Decode RFC2047 encoded message header fields."
+  (when mh-decode-mime-flag
+    (save-excursion
+      (let ((buffer-read-only nil))
+        (rfc2047-decode-region (progn (mh-goto-header-field "Subject:") (point))
+                               (progn (mh-header-field-end) (point)))))))
 
 ;;;###mh-autoload
 (defun mh-mime-display (&optional pre-dissected-handles)
@@ -828,9 +835,10 @@ being used to highlight the signature in a MIME part."
 ;;; Button Display
 
 ;; Shush compiler.
-(defvar dots)                           ; XEmacs
-(defvar type)                           ; XEmacs
-(defvar ov)                             ; XEmacs
+(mh-do-in-xemacs
+  (defvar dots)
+  (defvar type)
+  (defvar ov))
 
 (defun mh-insert-mime-button (handle index displayed)
   "Insert MIME button for HANDLE.
@@ -877,7 +885,8 @@ by commands like \"K v\" which operate on individual MIME parts."
 ;; Shush compiler.
 (defvar mm-verify-function-alist)       ; < Emacs 22
 (defvar mm-decrypt-function-alist)      ; < Emacs 22
-(defvar pressed-details)                ; XEmacs
+(mh-do-in-xemacs
+  (defvar pressed-details))
 
 (defun mh-insert-mime-security-button (handle)
   "Display buttons for PGP message, HANDLE."
@@ -1390,7 +1399,7 @@ See also \\[mh-mh-to-mime]."
     ("mailto")          ; RFC1738 Electronic mail address
     ("news")            ; RFC1738 Usenet news
     ("nntp")            ; RFC1738 Usenet news using NNTP access
-    ("propspero")       ; RFC1738 Prospero Directory Service
+    ("prospero")        ; RFC1738 Prospero Directory Service
     ("telnet")          ; RFC1738 Telnet
     ("tftp")            ; RFC2046 Trivial File Transfer Protocol
     ("url")             ; RFC2017 URL scheme MIME access-type Protocol
@@ -1629,8 +1638,8 @@ This action can be undone by running \\[undo]."
     ;; Do an alias lookup on recipients
     (message-options-set 'message-recipients
                          (mapconcat
-                          '(lambda (ali)
-                             (mail-strip-quoted-names (mh-alias-expand ali)))
+                          (lambda (ali)
+                            (mail-strip-quoted-names (mh-alias-expand ali)))
                           (split-string (message-options-get 'message-recipients) "[, ]+")
                           ", ")))
   (let ((saved-text (buffer-string))
@@ -1681,19 +1690,19 @@ buffer, while END defaults to the end of the buffer."
   (unless begin (setq begin (point-min)))
   (unless end (setq end (point-max)))
   (save-excursion
-    (block 'search-for-mh-directive
+    (block search-for-mh-directive
       (goto-char begin)
       (while (re-search-forward "^#" end t)
         (let ((s (buffer-substring-no-properties
                   (point) (mh-line-end-position))))
           (cond ((equal s ""))
                 ((string-match "^forw[ \t\n]+" s)
-                 (return-from 'search-for-mh-directive t))
+                 (return-from search-for-mh-directive t))
                 (t (let ((first-token (car (split-string s "[ \t;@]"))))
                      (when (and first-token
                                 (string-match mh-media-type-regexp
                                               first-token))
-                       (return-from 'search-for-mh-directive t)))))))
+                       (return-from search-for-mh-directive t)))))))
       nil)))
 
 (defun mh-minibuffer-read-type (filename &optional default)
@@ -1825,5 +1834,4 @@ initialized. Always use the command `mh-have-file-command'.")
 ;; sentence-end-double-space: nil
 ;; End:
 
-;; arch-tag: 0dd36518-1b64-4a84-8f4e-59f422d3f002
 ;;; mh-mime.el ends here

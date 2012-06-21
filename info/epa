@@ -2,8 +2,7 @@ This is ../../info/epa, produced by makeinfo version 4.13 from epa.texi.
 
 This file describes EasyPG Assistant 1.0.0.
 
-   Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software
-Foundation, Inc.
+   Copyright (C) 2007-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -43,8 +42,7 @@ interface called EasyPG Library.
 
    This file describes EasyPG Assistant 1.0.0.
 
-   Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software
-Foundation, Inc.
+   Copyright (C) 2007-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -69,6 +67,8 @@ Foundation, Inc.
 * Overview::
 * Quick start::
 * Commands::
+* Caching Passphrases::
+* Bug Reports::
 
 
 File: epa,  Node: Overview,  Next: Quick start,  Prev: Top,  Up: Top
@@ -110,7 +110,7 @@ integrated into other Emacs functionalities.  For example, automatic
 encryption/decryption of `*.gpg' files.
 
 
-File: epa,  Node: Commands,  Prev: Quick start,  Up: Top
+File: epa,  Node: Commands,  Next: Caching Passphrases,  Prev: Quick start,  Up: Top
 
 3 Commands
 **********
@@ -294,27 +294,28 @@ File: epa,  Node: Mail-mode integration,  Next: Encrypting/decrypting *.gpg file
 =========================
 
 EasyPG Assistant provides a minor mode `epa-mail-mode' to help user
-compose inline PGP messages.  Inline PGP is a traditional style of
-sending signed/encrypted emails by embedding raw OpenPGP blobs inside a
-message body, not using modern MIME format.
+compose inline OpenPGP messages.  Inline OpenPGP is a traditional style
+of sending signed/encrypted emails by embedding raw OpenPGP blobs
+inside a message body, not using modern MIME format.
 
-   NOTE: Inline PGP is not recommended and you should consider to use
-PGP/MIME.  See Mm'kay?.
+   NOTE: Inline OpenPGP is not recommended and you should consider to
+use PGP/MIME.  See Inline OpenPGP in E-mail is bad, Mm'kay?
+(http://josefsson.org/inline-openpgp-considered-harmful.html).
 
 Once `epa-mail-mode' is enabled, the following keys are assigned.  You
 can do it by `C-u 1 M-x epa-mail-mode' or through the Customize
 interface.  Try `M-x customize-variable epa-global-mail-mode'.
 
-`C-c C-e d'
+`C-c C-e C-d and C-c C-e d'
      Decrypt OpenPGP armors in the current buffer.
 
-`C-c C-e v'
+`C-c C-e C-v and C-c C-e v'
      Verify OpenPGP cleartext signed messages in the current buffer.
 
-`C-c C-e s'
+`C-c C-e C-s and C-c C-e s'
      Compose a signed message from the current buffer.
 
-`C-c C-e e'
+`C-c C-e C-e and C-c C-e e'
      Compose an encrypted message from the current buffer.  By default
      it tries to build the recipient list from `to', `cc', and `bcc'
      fields of the mail header.  To include your key in the recipient
@@ -327,15 +328,19 @@ File: epa,  Node: Encrypting/decrypting *.gpg files,  Prev: Mail-mode integratio
 3.6 Encrypting/decrypting *.gpg files
 =====================================
 
-By default, every file whose extension is `.gpg' will be treated as
-encrypted.  That is, when you attempt to open such a file which already
-exists, the decrypted text is inserted in the buffer rather than
-encrypted one.  On the other hand, when you attempt to save the buffer
-to a file whose extension is `.gpg', encrypted data is written.
+By default, every file whose name ends with `.gpg' will be treated as
+encrypted.  That is, when you open such a file, the decrypted text is
+inserted in the buffer rather than encrypted one.  Similarly, when you
+save the buffer to a `foo.gpg' file, encrypted data is written.
 
-   If you want to temporarily disable this behavior, use `M-x
-epa-file-disable', and then to enable this behavior use `M-x
-epa-file-enable'.
+   The file name pattern for encrypted files can be controlled by
+EPA-FILE-NAME-REGEXP.
+
+ -- Variable: epa-file-name-regexp
+     Regexp which matches filenames treated as encrypted.
+
+   You can disable this behavior with `M-x epa-file-disable', and then
+get it back with `M-x epa-file-enable'.
 
  -- Command: epa-file-disable
      Disable automatic encryption/decryption of *.gpg files.
@@ -343,17 +348,37 @@ epa-file-enable'.
  -- Command: epa-file-enable
      Enable automatic encryption/decryption of *.gpg files.
 
-`epa-file' will let you select recipients.  If you want to suppress
-this question, it might be a good idea to put the following line on the
-first line of the text being encrypted.  
+By default, `epa-file' will try to use symmetric encryption, aka
+password-based encryption.  If you want to use public key encryption
+instead, do `M-x epa-file-select-keys', which will pops up the key
+selection dialog.
+
+ -- Command: epa-file-select-keys
+     Select recipient keys to encrypt the currently visiting file with
+     public key encryption.
+
+   You can also change the default behavior with the variable
+EPA-FILE-SELECT-KEYS.
+
+ -- Variable: epa-file-select-keys
+     Control whether or not to pop up the key selection dialog.
+
+   For frequently visited files, it might be a good idea to tell Emacs
+which encryption method should be used through *Note File Variables:
+(emacs)File Variables.  Use the `epa-file-encrypt-to' local variable
+for this.  
+
+   For example, if you want an Elisp file should be encrypted with a
+public key associated with an email address `ueno@unixuser.org', add
+the following line to the beginning of the file.
 
      ;; -*- epa-file-encrypt-to: ("ueno@unixuser.org") -*-
 
-   The file name extension of encrypted files can be controlled by
-EPA-FILE-NAME-REGEXP.
+   Instead, if you want the file always (regardless of the value of the
+`epa-file-select-keys' variable) encrypted with symmetric encryption,
+change the line as follows.
 
- -- Variable: epa-file-name-regexp
-     Regexp which matches filenames treated as encrypted.
+     ;; -*- epa-file-encrypt-to: nil -*-
 
    Other variables which control the automatic encryption/decryption
 behavior are below.
@@ -366,18 +391,81 @@ behavior are below.
      If non-`nil', disable auto-saving when opening an encrypted file.
      The default value is `t'.
 
+
+File: epa,  Node: Caching Passphrases,  Next: Bug Reports,  Prev: Commands,  Up: Top
+
+4 Caching Passphrases
+*********************
+
+Typing passphrases is an irritating task if you frequently open and
+close the same file.  GnuPG and EasyPG Assistant provide mechanisms to
+remember your passphrases.  However, the configuration is a bit
+confusing since it depends on your GnuPG installation (GnuPG version 1
+or GnuPG version 2), encryption method (symmetric or public key), and
+whether or not you want to use gpg-agent.  Here are some questions:
+
+  1. Do you use GnuPG version 2 instead of GnuPG version 1?
+
+  2. Do you use symmetric encryption rather than public key encryption?
+
+  3. Do you want to use gpg-agent?
+
+   Here are configurations depending on your answers:
+
+1     2     3     Configuration
+Yes   Yes   Yes   Set up gpg-agent.
+Yes   Yes   No    You can't, without gpg-agent.
+Yes   No    Yes   Set up gpg-agent.
+Yes   No    No    You can't, without gpg-agent.
+No    Yes   Yes   Set up elisp passphrase cache.
+No    Yes   No    Set up elisp passphrase cache.
+No    No    Yes   Set up gpg-agent.
+No    No    No    You can't, without gpg-agent.
+
+   To set up gpg-agent, follow the instruction in GnuPG manual.  *note
+Invoking GPG-AGENT: (gnupg)Invoking GPG-AGENT.
+
+   To set up elisp passphrase cache, set
+`epa-file-cache-passphrase-for-symmetric-encryption'.  *Note
+Encrypting/decrypting *.gpg files::.
+
+
+File: epa,  Node: Bug Reports,  Prev: Caching Passphrases,  Up: Top
+
+5 Bug Reports
+*************
+
+Bugs and problems with EasyPG Assistant are actively worked on by the
+Emacs development team.  Feature requests and suggestions are also more
+than welcome.  Use `M-x report-emacs-bug', *note Bugs: (emacs)Bugs.
+
+   When submitting a bug report, please try to describe in excruciating
+detail the steps required to reproduce the problem.  Also try to
+collect necessary information to fix the bug, such as:
+
+   * the GnuPG version.  Send the output of `gpg --version'.
+
+   * the GnuPG configuration.  Send the contents of `~/.gnupg/gpg.conf'.
+
+   Before reporting the bug, you should set `epg-debug' in the
+`~/.emacs' file and repeat the bug.  Then, include the contents of the
+` *epg-debug*' buffer.  Note that the first letter of the buffer name
+is a whitespace.
+
 
 
 Tag Table:
-Node: Top1328
-Node: Overview2866
-Node: Quick start3226
-Node: Commands3773
-Node: Key management4114
-Node: Cryptographic operations on regions6791
-Node: Cryptographic operations on files8779
-Node: Dired integration9369
-Node: Mail-mode integration9960
-Node: Encrypting/decrypting *.gpg files11182
+Node: Top1303
+Node: Overview2856
+Node: Quick start3216
+Node: Commands3763
+Node: Key management4132
+Node: Cryptographic operations on regions6809
+Node: Cryptographic operations on files8797
+Node: Dired integration9387
+Node: Mail-mode integration9978
+Node: Encrypting/decrypting *.gpg files11371
+Node: Caching Passphrases13919
+Node: Bug Reports15332
 
 End Tag Table

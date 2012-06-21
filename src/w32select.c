@@ -1,6 +1,6 @@
 /* Selection processing for Emacs on the Microsoft W32 API.
-   Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+
+Copyright (C) 1993-1994, 2001-2012  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -39,7 +39,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
  *
  * When copying or cutting (sending data to the OS), the data is
  * announced and stored internally, but only actually rendered on
- * request.  The requester determines the format provided.  The
+ * request.  The requestor determines the format provided.  The
  * {next-}selection-coding-system is only used, when its corresponding
  * clipboard type matches the type requested.
  *
@@ -78,10 +78,8 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "w32term.h"	/* for all of the w32 includes */
 #include "w32heap.h"	/* os_subtype */
 #include "blockinput.h"
-#include "keyboard.h"	/* cmd_error_internal() */
 #include "charset.h"
 #include "coding.h"
-#include "character.h"
 #include "composite.h"
 
 
@@ -89,8 +87,8 @@ static HGLOBAL convert_to_handle_as_ascii (void);
 static HGLOBAL convert_to_handle_as_coded (Lisp_Object coding_system);
 static Lisp_Object render (Lisp_Object oformat);
 static Lisp_Object render_locale (void);
-static Lisp_Object render_all (void);
-static void run_protected (Lisp_Object (*code) (), Lisp_Object arg);
+static Lisp_Object render_all (Lisp_Object ignore);
+static void run_protected (Lisp_Object (*code) (Lisp_Object), Lisp_Object arg);
 static Lisp_Object lisp_error_handler (Lisp_Object error);
 static LRESULT CALLBACK owner_callback (HWND win, UINT msg,
 					WPARAM wp, LPARAM lp);
@@ -109,13 +107,6 @@ static void setup_windows_coding_system (Lisp_Object coding_system,
    selections are not used on Windows, so we don't need symbols for
    PRIMARY and SECONDARY.  */
 Lisp_Object QCLIPBOARD;
-
-/* Coding system for communicating with other programs via the
-   clipboard.  */
-static Lisp_Object Vselection_coding_system;
-
-/* Coding system for the next communication with other programs.  */
-static Lisp_Object Vnext_selection_coding_system;
 
 /* Internal pseudo-constants, initialized in globals_of_w32select()
    based on current system parameters. */
@@ -334,7 +325,7 @@ render_locale (void)
    data survives us.  This code will do that.  */
 
 static Lisp_Object
-render_all (void)
+render_all (Lisp_Object ignore)
 {
   ONTRACE (fprintf (stderr, "render_all\n"));
 
@@ -344,7 +335,7 @@ render_all (void)
 
   OpenClipboard (NULL);
 
-  /* There is no usefull means to report errors here, there are none
+  /* There is no useful means to report errors here, there are none
      expected anyway, and even if there were errors, they wouldn't do
      any harm.  So we just go ahead and do what has to be done without
      bothering with error handling.  */
@@ -392,13 +383,13 @@ render_all (void)
 }
 
 static void
-run_protected (Lisp_Object (*code) (), Lisp_Object arg)
+run_protected (Lisp_Object (*code) (Lisp_Object), Lisp_Object arg)
 {
   /* FIXME: This works but it doesn't feel right.  Too much fiddling
      with global variables and calling strange looking functions.  Is
      this really the right way to run Lisp callbacks?  */
 
-  extern int waiting_for_input;
+  extern int waiting_for_input; /* from keyboard.c */
   int owfi;
 
   BLOCK_INPUT;
@@ -681,8 +672,7 @@ setup_windows_coding_system (Lisp_Object coding_system,
 DEFUN ("w32-set-clipboard-data", Fw32_set_clipboard_data,
        Sw32_set_clipboard_data, 1, 2, 0,
        doc: /* This sets the clipboard data to the given text.  */)
-    (string, ignored)
-    Lisp_Object string, ignored;
+  (Lisp_Object string, Lisp_Object ignored)
 {
   BOOL ok = TRUE;
   int nbytes;
@@ -760,7 +750,7 @@ DEFUN ("w32-set-clipboard-data", Fw32_set_clipboard_data,
       else
 	{
 	  /* Advertise all supported formats so that whatever the
-	     requester chooses, only one encoding step needs to be
+	     requestor chooses, only one encoding step needs to be
 	     made.  This is intentionally different from what we do in
 	     the handler for WM_RENDERALLFORMATS.  */
 	  SetClipboardData (CF_UNICODETEXT, NULL);
@@ -802,8 +792,7 @@ DEFUN ("w32-set-clipboard-data", Fw32_set_clipboard_data,
 DEFUN ("w32-get-clipboard-data", Fw32_get_clipboard_data,
        Sw32_get_clipboard_data, 0, 1, 0,
        doc: /* This gets the clipboard data in text format.  */)
-     (ignored)
-     Lisp_Object ignored;
+  (Lisp_Object ignored)
 {
   HGLOBAL htext;
   Lisp_Object ret = Qnil;
@@ -1020,15 +1009,17 @@ DEFUN ("w32-get-clipboard-data", Fw32_get_clipboard_data,
 /* Support checking for a clipboard selection. */
 
 DEFUN ("x-selection-exists-p", Fx_selection_exists_p, Sx_selection_exists_p,
-       0, 1, 0,
-       doc: /* Whether there is an owner for the given X Selection.
-The arg should be the name of the selection in question, typically one of
-the symbols `PRIMARY', `SECONDARY', or `CLIPBOARD'.
-\(Those are literal upper-case symbol names, since that's what X expects.)
-For convenience, the symbol nil is the same as `PRIMARY',
-and t is the same as `SECONDARY'.  */)
-     (selection)
-     Lisp_Object selection;
+       0, 2, 0,
+       doc: /* Whether there is an owner for the given X selection.
+SELECTION should be the name of the selection in question, typically
+one of the symbols `PRIMARY', `SECONDARY', or `CLIPBOARD'.  (X expects
+these literal upper-case names.)  The symbol nil is the same as
+`PRIMARY', and t is the same as `SECONDARY'.
+
+TERMINAL should be a terminal object or a frame specifying the X
+server to query.  If omitted or nil, that stands for the selected
+frame's display, or the first available X display.  */)
+  (Lisp_Object selection, Lisp_Object terminal)
 {
   CHECK_SYMBOL (selection);
 
@@ -1065,28 +1056,52 @@ and t is the same as `SECONDARY'.  */)
    dumped version. */
 
 void
-syms_of_w32select ()
+syms_of_w32select (void)
 {
   defsubr (&Sw32_set_clipboard_data);
   defsubr (&Sw32_get_clipboard_data);
   defsubr (&Sx_selection_exists_p);
 
-  DEFVAR_LISP ("selection-coding-system", &Vselection_coding_system,
+  DEFVAR_LISP ("selection-coding-system", Vselection_coding_system,
 	       doc: /* Coding system for communicating with other programs.
-When sending or receiving text via cut_buffer, selection, and
-clipboard, the text is encoded or decoded by this coding system.
-The default value is the current system default encoding on 9x/Me and
-`utf-16le-dos' (Unicode) on NT/W2K/XP.  */);
+
+For MS-Windows and MS-DOS:
+When sending or receiving text via selection and clipboard, the text
+is encoded or decoded by this coding system.  The default value is
+the current system default encoding on 9x/Me, `utf-16le-dos'
+\(Unicode) on NT/W2K/XP, and `iso-latin-1-dos' on MS-DOS.
+
+For X Windows:
+When sending text via selection and clipboard, if the target
+data-type matches with the type of this coding system, it is used
+for encoding the text.  Otherwise (including the case that this
+variable is nil), a proper coding system is used as below:
+
+data-type	coding system
+---------	-------------
+UTF8_STRING	utf-8
+COMPOUND_TEXT	compound-text-with-extensions
+STRING		iso-latin-1
+C_STRING	no-conversion
+
+When receiving text, if this coding system is non-nil, it is used
+for decoding regardless of the data-type.  If this is nil, a
+proper coding system is used according to the data-type as above.
+
+See also the documentation of the variable `x-select-request-type' how
+to control which data-type to request for receiving text.
+
+The default value is nil.  */);
   /* The actual value is set dynamically in the dumped Emacs, see
      below. */
   Vselection_coding_system = Qnil;
 
-  DEFVAR_LISP ("next-selection-coding-system", &Vnext_selection_coding_system,
+  DEFVAR_LISP ("next-selection-coding-system", Vnext_selection_coding_system,
 	       doc: /* Coding system for the next communication with other programs.
 Usually, `selection-coding-system' is used for communicating with
-other programs.  But, if this variable is set, it is used for the
-next communication only.  After the communication, this variable is
-set to nil.  */);
+other programs (X Windows clients or MS Windows programs).  But, if this
+variable is set, it is used for the next communication only.
+After the communication, this variable is set to nil.  */);
   Vnext_selection_coding_system = Qnil;
 
   DEFSYM (QCLIPBOARD, "CLIPBOARD");
@@ -1104,7 +1119,7 @@ set to nil.  */);
    un-dumped version. */
 
 void
-globals_of_w32select ()
+globals_of_w32select (void)
 {
   DEFAULT_LCID = GetUserDefaultLCID ();
   /* Drop the sort order from the LCID, so we can compare this with
@@ -1126,6 +1141,3 @@ globals_of_w32select ()
 
   clipboard_owner = create_owner ();
 }
-
-/* arch-tag: c96e9724-5eb1-4dad-be07-289f092fd2af
-   (do not change this comment) */

@@ -1,11 +1,9 @@
 ;;; select.el --- lisp portion of standard selection support
 
+;; Copyright (C) 1993-1994, 2001-2012  Free Software Foundation, Inc.
+
 ;; Maintainer: FSF
 ;; Keywords: internal
-
-;; Copyright (C) 1993, 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
-;; Based partially on earlier release by Lucid.
 
 ;; This file is part of GNU Emacs.
 
@@ -24,11 +22,20 @@
 
 ;;; Commentary:
 
+;; Based partially on earlier release by Lucid.
+
 ;;; Code:
 
 (defcustom selection-coding-system nil
-  "Coding system for communicating with other X clients.
+  "Coding system for communicating with other programs.
 
+For MS-Windows and MS-DOS:
+When sending or receiving text via selection and clipboard, the text
+is encoded or decoded by this coding system.  The default value is
+the current system default encoding on 9x/Me, `utf-16le-dos'
+\(Unicode) on NT/W2K/XP, and `iso-latin-1-dos' on MS-DOS.
+
+For X Windows:
 When sending text via selection and clipboard, if the target
 data-type matches with the type of this coding system, it is used
 for encoding the text.  Otherwise (including the case that this
@@ -58,14 +65,14 @@ The default value is nil."
          (set symbol value)))
 
 (defvar next-selection-coding-system nil
-  "Coding system for the next communication with other X clients.
+  "Coding system for the next communication with other programs.
 Usually, `selection-coding-system' is used for communicating with
-other X clients.  But, if this variable is set, it is used for
-the next communication only.  After the communication, this
-variable is set to nil.")
+other programs (X Windows clients or MS Windows programs).  But, if this
+variable is set, it is used for the next communication only.
+After the communication, this variable is set to nil.")
 
 (declare-function x-get-selection-internal "xselect.c"
-		  (selection-symbol target-type &optional time-stamp))
+		  (selection-symbol target-type &optional time-stamp terminal))
 
 ;; Only declared obsolete in 23.3.
 (define-obsolete-function-alias 'x-selection 'x-get-selection "at least 19.34")
@@ -99,7 +106,7 @@ in `selection-converter-alist', which see."
 			     ((eq data-type 'STRING)
 			      'iso-8859-1)
 			     (t
-			      (error "Unknow selection data type: %S" type))))
+			      (error "Unknown selection data type: %S" type))))
 	    data (if coding (decode-coding-string data coding)
 		   (string-to-multibyte data)))
       (setq next-selection-coding-system nil)
@@ -111,9 +118,9 @@ in `selection-converter-alist', which see."
   (x-get-selection-internal 'CLIPBOARD 'STRING))
 
 (declare-function x-own-selection-internal "xselect.c"
-		  (selection-name selection-value))
+		  (selection-name selection-value &optional frame))
 (declare-function x-disown-selection-internal "xselect.c"
-		  (selection &optional time))
+		  (selection &optional time terminal))
 
 (defun x-set-selection (type data)
   "Make an X selection of type TYPE and value DATA.
@@ -175,36 +182,6 @@ are not available to other programs."
       (symbolp data)
       (integerp data)))
 
-;;; Cut Buffer support
-
-(declare-function x-get-cut-buffer-internal "xselect.c")
-
-(defun x-get-cut-buffer (&optional which-one)
-  "Return the value of one of the 8 X server cut-buffers.
-Optional arg WHICH-ONE should be a number from 0 to 7, defaulting to 0.
-Cut buffers are considered obsolete; you should use selections instead."
-  (x-get-cut-buffer-internal
-   (if which-one
-       (aref [CUT_BUFFER0 CUT_BUFFER1 CUT_BUFFER2 CUT_BUFFER3
-	      CUT_BUFFER4 CUT_BUFFER5 CUT_BUFFER6 CUT_BUFFER7]
-	     which-one)
-     'CUT_BUFFER0)))
-
-(declare-function x-rotate-cut-buffers-internal "xselect.c")
-(declare-function x-store-cut-buffer-internal "xselect.c")
-
-(defun x-set-cut-buffer (string &optional push)
-  "Store STRING into the X server's primary cut buffer.
-If PUSH is non-nil, also rotate the cut buffers:
-this means the previous value of the primary cut buffer moves to the second
-cut buffer, and the second to the third, and so on (there are 8 buffers.)
-Cut buffers are considered obsolete; you should use selections instead."
-  (or (stringp string) (signal 'wrong-type-argument (list 'stringp string)))
-  (if push
-      (x-rotate-cut-buffers-internal 1))
-  (x-store-cut-buffer-internal 'CUT_BUFFER0 string))
-
-
 ;; Functions to convert the selection into various other selection types.
 ;; Every selection type that Emacs handles is implemented this way, except
 ;; for TIMESTAMP, which is a special case.
@@ -236,44 +213,45 @@ two markers or an overlay.  Otherwise, it is nil."
 (defun xselect--int-to-cons (n)
   (cons (ash n -16) (logand n 65535)))
 
-(defun xselect-convert-to-string (selection type value)
-  (let (str coding)
-    ;; Get the actual string from VALUE.
-    (cond ((stringp value)
-	   (setq str value))
-	  ((setq value (xselect--selection-bounds value))
-	   (with-current-buffer (nth 2 value)
-	     (setq str (buffer-substring (nth 0 value)
-					 (nth 1 value))))))
-    (when str
-      ;; If TYPE is nil, this is a local request, thus return STR as
-      ;; is.  Otherwise, encode STR.
-      (if (not type)
-	  str
-	(setq coding (or next-selection-coding-system selection-coding-system))
+(defun xselect--encode-string (type str &optional can-modify)
+  (when str
+    ;; If TYPE is nil, this is a local request; return STR as-is.
+    (if (null type)
+	str
+      ;; Otherwise, encode STR.
+      (let ((coding (or next-selection-coding-system
+			selection-coding-system)))
 	(if coding
 	    (setq coding (coding-system-base coding)))
 	(let ((inhibit-read-only t))
 	  ;; Suppress producing escape sequences for compositions.
+	  ;; But avoid modifying the string if it's a buffer name etc.
+	  (unless can-modify (setq str (substring str 0)))
 	  (remove-text-properties 0 (length str) '(composition nil) str)
-	  (if (eq type 'TEXT)
-	      ;; TEXT is a polymorphic target.  We must select the
-	      ;; actual type from `UTF8_STRING', `COMPOUND_TEXT',
-	      ;; `STRING', and `C_STRING'.
-	      (if (not (multibyte-string-p str))
-		  (setq type 'C_STRING)
-		(let (non-latin-1 non-unicode eight-bit)
-		  (mapc #'(lambda (x)
-			    (if (>= x #x100)
-				(if (< x #x110000)
-				    (setq non-latin-1 t)
-				  (if (< x #x3FFF80)
-				      (setq non-unicode t)
-				    (setq eight-bit t)))))
-			str)
-		  (setq type (if non-unicode 'COMPOUND_TEXT
-			       (if non-latin-1 'UTF8_STRING
-				 (if eight-bit 'C_STRING 'STRING)))))))
+	  ;; For X selections, TEXT is a polymorphic target; choose
+	  ;; the actual type from `UTF8_STRING', `COMPOUND_TEXT',
+	  ;; `STRING', and `C_STRING'.  On Nextstep, always use UTF-8
+	  ;; (see ns_string_to_pasteboard_internal in nsselect.m).
+	  (when (eq type 'TEXT)
+	    (cond
+	     ((featurep 'ns)
+	      (setq type 'UTF8_STRING))
+	     ((not (multibyte-string-p str))
+	      (setq type 'C_STRING))
+	     (t
+	      (let (non-latin-1 non-unicode eight-bit)
+		(mapc #'(lambda (x)
+			  (if (>= x #x100)
+			      (if (< x #x110000)
+				  (setq non-latin-1 t)
+				(if (< x #x3FFF80)
+				    (setq non-unicode t)
+				  (setq eight-bit t)))))
+		      str)
+		(setq type (if non-unicode 'COMPOUND_TEXT
+			     (if non-latin-1 'UTF8_STRING
+			       (if eight-bit 'C_STRING
+				 'STRING))))))))
 	  (cond
 	   ((eq type 'UTF8_STRING)
 	    (if (or (not coding)
@@ -302,7 +280,15 @@ two markers or an overlay.  Otherwise, it is nil."
       (setq next-selection-coding-system nil)
       (cons type str))))
 
-(defun xselect-convert-to-length (selection type value)
+(defun xselect-convert-to-string (_selection type value)
+  (let ((str (cond ((stringp value) value)
+		   ((setq value (xselect--selection-bounds value))
+		    (with-current-buffer (nth 2 value)
+		      (buffer-substring (nth 0 value)
+					(nth 1 value)))))))
+    (xselect--encode-string type str t)))
+
+(defun xselect-convert-to-length (_selection _type value)
   (let ((len (cond ((stringp value)
 		    (length value))
 		   ((setq value (xselect--selection-bounds value))
@@ -310,9 +296,11 @@ two markers or an overlay.  Otherwise, it is nil."
     (if len
 	(xselect--int-to-cons len))))
 
-(defun xselect-convert-to-targets (selection type value)
+(defun xselect-convert-to-targets (_selection _type _value)
   ;; return a vector of atoms, but remove duplicates first.
-  (let* ((all (cons 'TIMESTAMP (mapcar 'car selection-converter-alist)))
+  (let* ((all (cons 'TIMESTAMP
+		    (cons 'MULTIPLE
+			  (mapcar 'car selection-converter-alist))))
 	 (rest all))
     (while rest
       (cond ((memq (car rest) (cdr rest))
@@ -323,25 +311,25 @@ two markers or an overlay.  Otherwise, it is nil."
 	     (setq rest (cdr rest)))))
     (apply 'vector all)))
 
-(defun xselect-convert-to-delete (selection type value)
+(defun xselect-convert-to-delete (selection _type _value)
   (x-disown-selection-internal selection)
   ;; A return value of nil means that we do not know how to do this conversion,
   ;; and replies with an "error".  A return value of NULL means that we have
   ;; done the conversion (and any side-effects) but have no value to return.
   'NULL)
 
-(defun xselect-convert-to-filename (selection type value)
+(defun xselect-convert-to-filename (_selection _type value)
   (when (setq value (xselect--selection-bounds value))
-    (buffer-file-name (nth 2 value))))
+    (xselect--encode-string 'TEXT (buffer-file-name (nth 2 value)))))
 
-(defun xselect-convert-to-charpos (selection type value)
+(defun xselect-convert-to-charpos (_selection _type value)
   (when (setq value (xselect--selection-bounds value))
     (let ((beg (1- (nth 0 value))) ; zero-based
 	  (end (1- (nth 1 value))))
       (cons 'SPAN (vector (xselect--int-to-cons (min beg end))
 			  (xselect--int-to-cons (max beg end)))))))
 
-(defun xselect-convert-to-lineno (selection type value)
+(defun xselect-convert-to-lineno (_selection _type value)
   (when (setq value (xselect--selection-bounds value))
     (with-current-buffer (nth 2 value)
       (let ((beg (line-number-at-pos (nth 0 value)))
@@ -349,7 +337,7 @@ two markers or an overlay.  Otherwise, it is nil."
 	(cons 'SPAN (vector (xselect--int-to-cons (min beg end))
 			    (xselect--int-to-cons (max beg end))))))))
 
-(defun xselect-convert-to-colno (selection type value)
+(defun xselect-convert-to-colno (_selection _type value)
   (when (setq value (xselect--selection-bounds value))
     (with-current-buffer (nth 2 value)
       (let ((beg (progn (goto-char (nth 0 value)) (current-column)))
@@ -357,36 +345,42 @@ two markers or an overlay.  Otherwise, it is nil."
 	(cons 'SPAN (vector (xselect--int-to-cons (min beg end))
 			    (xselect--int-to-cons (max beg end))))))))
 
-(defun xselect-convert-to-os (selection type size)
-  (symbol-name system-type))
+(defun xselect-convert-to-os (_selection _type _size)
+  (xselect--encode-string 'TEXT (symbol-name system-type)))
 
-(defun xselect-convert-to-host (selection type size)
-  (system-name))
+(defun xselect-convert-to-host (_selection _type _size)
+  (xselect--encode-string 'TEXT (system-name)))
 
-(defun xselect-convert-to-user (selection type size)
-  (user-full-name))
+(defun xselect-convert-to-user (_selection _type _size)
+  (xselect--encode-string 'TEXT (user-full-name)))
 
-(defun xselect-convert-to-class (selection type size)
+(defun xselect-convert-to-class (_selection _type _size)
   "Convert selection to class.
 This function returns the string \"Emacs\"."
   "Emacs")
 
 ;; We do not try to determine the name Emacs was invoked with,
 ;; because it is not clean for a program's behavior to depend on that.
-(defun xselect-convert-to-name (selection type size)
+(defun xselect-convert-to-name (_selection _type _size)
   "Convert selection to name.
 This function returns the string \"emacs\"."
   "emacs")
 
-(defun xselect-convert-to-integer (selection type value)
+(defun xselect-convert-to-integer (_selection _type value)
   (and (integerp value)
        (xselect--int-to-cons value)))
 
-(defun xselect-convert-to-atom (selection type value)
+(defun xselect-convert-to-atom (_selection _type value)
   (and (symbolp value) value))
 
-(defun xselect-convert-to-identity (selection type value) ; used internally
+(defun xselect-convert-to-identity (_selection _type value) ; used internally
   (vector value))
+
+;; Null target that tells clipboard managers we support SAVE_TARGETS
+;; (see freedesktop.org Clipboard Manager spec).
+(defun xselect-convert-to-save-targets (selection _type _value)
+  (when (eq selection 'CLIPBOARD)
+    'NULL))
 
 (setq selection-converter-alist
       '((TEXT . xselect-convert-to-string)
@@ -407,6 +401,7 @@ This function returns the string \"emacs\"."
 	(NAME . xselect-convert-to-name)
 	(ATOM . xselect-convert-to-atom)
 	(INTEGER . xselect-convert-to-integer)
+	(SAVE_TARGETS . xselect-convert-to-save-targets)
 	(_EMACS_INTERNAL . xselect-convert-to-identity)))
 
 (provide 'select)

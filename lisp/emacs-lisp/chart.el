@@ -1,6 +1,6 @@
 ;;; chart.el --- Draw charts (bar charts, etc)
 
-;; Copyright (C) 1996, 1998, 1999, 2001, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2012
+;; Copyright (C) 1996, 1998-1999, 2001, 2004-2005, 2007-2012
 ;;   Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam  <zappo@gnu.org>
@@ -62,20 +62,12 @@
 (require 'eieio)
 
 ;;; Code:
-(defvar chart-map nil "Keymap used in chart mode.")
-(if chart-map
-    ()
-  (setq chart-map (make-sparse-keymap))
-  )
+(defvar chart-mode-map (make-sparse-keymap) "Keymap used in chart mode.")
+(define-obsolete-variable-alias 'chart-map 'chart-mode-map "24.1")
 
 (defvar chart-local-object nil
   "Local variable containing the locally displayed chart object.")
 (make-variable-buffer-local 'chart-local-object)
-
-(defvar chart-face-list nil
-  "Faces used to colorize charts.
-List is limited currently, which is ok since you really can't display
-too much in text characters anyways.")
 
 (defvar chart-face-color-list '("red" "green" "blue"
 				"cyan" "yellow" "purple")
@@ -94,41 +86,42 @@ Useful if new Emacs is used on B&W display.")
   :group 'eieio
   :type 'boolean)
 
-(if (and (if (fboundp 'display-color-p)
-	     (display-color-p)
-	   window-system)
-	 (not chart-face-list))
-    (let ((cl chart-face-color-list)
-	  (pl chart-face-pixmap-list)
-	  nf)
-      (while cl
-	(setq nf (make-face (intern (concat "chart-" (car cl) "-" (car pl)))))
-	(if (condition-case nil
-		(> (x-display-color-cells) 4)
-	      (error t))
-	    (set-face-background nf (car cl))
-	  (set-face-background nf "white"))
-	(set-face-foreground nf "black")
-	(if (and chart-face-use-pixmaps
-		 pl
-		 (fboundp 'set-face-background-pixmap))
-	    (condition-case nil
-		(set-face-background-pixmap nf (car pl))
-	      (error (message "Cannot set background pixmap %s" (car pl)))))
-	(setq chart-face-list (cons nf chart-face-list))
-	(setq cl (cdr cl)
-	      pl (cdr pl)))))
+(defvar chart-face-list
+  (if (if (fboundp 'display-color-p)
+          (display-color-p)
+        window-system)
+      (let ((cl chart-face-color-list)
+            (pl chart-face-pixmap-list)
+            (faces ())
+            nf)
+        (while cl
+          (setq nf (make-face
+                    (intern (concat "chart-" (car cl) "-" (car pl)))))
+          (set-face-background nf (if (condition-case nil
+                                          (> (x-display-color-cells) 4)
+                                        (error t))
+                                      (car cl)
+                                    "white"))
+          (set-face-foreground nf "black")
+          (if (and chart-face-use-pixmaps
+                   pl
+                   (fboundp 'set-face-background-pixmap))
+              (condition-case nil
+                  (set-face-background-pixmap nf (car pl))
+                (error (message "Cannot set background pixmap %s" (car pl)))))
+          (push nf faces)
+          (setq cl (cdr cl)
+                pl (cdr pl)))
+        faces))
+  "Faces used to colorize charts.
+List is limited currently, which is ok since you really can't display
+too much in text characters anyways.")
 
-(defun chart-mode ()
+(define-derived-mode chart-mode fundamental-mode "CHART"
   "Define a mode in Emacs for displaying a chart."
-  (kill-all-local-variables)
-  (use-local-map chart-map)
-  (setq major-mode 'chart-mode
-	mode-name "CHART")
   (buffer-disable-undo)
   (set (make-local-variable 'font-lock-global-modes) nil)
-  (font-lock-mode -1)
-  (run-hooks 'chart-mode-hook)
+  (font-lock-mode -1)                   ;Isn't it off already?  --Stef
   )
 
 (defun chart-new-buffer (obj)
@@ -176,7 +169,7 @@ Make sure the width/height is correct."
 	      :initform t)
    (name-face :initarg :name-face
 	      :initform 'bold)
-   (labels-face :initarg :lables-face
+   (labels-face :initarg :labels-face
 		:initform 'italic)
    (chart :initarg :chart
 	  :initform nil)
@@ -529,9 +522,9 @@ cons cells of the form (NAME . NUM).  See `sort' for more details."
 (defun chart-zap-chars (n)
   "Zap up to N chars without deleting EOLs."
   (if (not (eobp))
-      (if (< n (- (save-excursion (end-of-line) (point)) (point)))
+      (if (< n (- (point-at-eol) (point)))
 	  (delete-char n)
-	(delete-region (point) (save-excursion (end-of-line) (point))))))
+	(delete-region (point) (point-at-eol)))))
 
 (defun chart-display-label (label dir zone start end &optional face)
   "Display LABEL in direction DIR in column/row ZONE between START and END.
@@ -641,12 +634,12 @@ SORT-PRED if desired."
 	    (setq extlst (cons s extlst)
 		  cntlst (cons 1 cntlst)))))
       (setq flst (cdr flst)))
-    ;; Lets create the chart!
+    ;; Let's create the chart!
     (chart-bar-quickie 'vertical "Files Extension Distribution"
 		       extlst "File Extensions"
 		       cntlst "# of occurrences"
 		       10
-		       '(lambda (a b) (> (cdr a) (cdr b))))
+		       (lambda (a b) (> (cdr a) (cdr b))))
     ))
 
 (defun chart-space-usage (d)
@@ -676,7 +669,7 @@ SORT-PRED if desired."
 		       nmlst "File Name"
 		       cntlst "File Size"
 		       10
-		       '(lambda (a b) (> (cdr a) (cdr b))))
+		       (lambda (a b) (> (cdr a) (cdr b))))
     ))
 
 (defun chart-emacs-storage ()
@@ -700,7 +693,7 @@ SORT-PRED if desired."
 		     ;(car (nth 5 data)) ; floats are Emacs only
 		     ;(cdr (nth 5 data))
 		     )))
-    ;; Lets create the chart!
+    ;; Let's create the chart!
     (chart-bar-quickie 'vertical "Emacs Runtime Storage Usage"
 		       names "Storage Items"
 		       nums "Objects")))
@@ -717,7 +710,7 @@ SORT-PRED if desired."
     (if (fboundp 'x-display-list)
 	(setq names (append names '("x-displays"))
 	      nums (append nums (list (length (x-display-list))))))
-    ;; Lets create the chart!
+    ;; Let's create the chart!
     (chart-bar-quickie 'vertical "Emacs List Size Chart"
 		       names "Various Lists"
 		       nums "Objects")))
@@ -744,11 +737,10 @@ SORT-PRED if desired."
 		       nmlst "User Names"
 		       cntlst "# of occurrences"
 		       10
-		       '(lambda (a b) (> (cdr a) (cdr b))))
+		       (lambda (a b) (> (cdr a) (cdr b))))
     ))
 
 
 (provide 'chart)
 
-;; arch-tag: 43847e44-5b45-465e-adc9-e505490a6b59
 ;;; chart.el ends here

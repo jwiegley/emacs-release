@@ -7,8 +7,7 @@ This file documents EUDC v1.30b.
 directory servers using various protocols such as LDAP or the CCSO white
 pages directory system (PH/QI)
 
-   Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 1998, 2000-2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -30,14 +29,16 @@ END-INFO-DIR-ENTRY
 
 File: eudc,  Node: Top,  Next: Overview,  Prev: (dir),  Up: (dir)
 
-   This file documents EUDC v1.30b.
+Emacs Unified Directory Client
+******************************
+
+This file documents EUDC v1.30b.
 
    EUDC is the Emacs Unified Directory Client, a common interface to
 directory servers using various protocols such as LDAP or the CCSO white
 pages directory system (PH/QI)
 
-   Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 1998, 2000-2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -1478,31 +1479,31 @@ Variables Index
 
 
 Tag Table:
-Node: Top1230
-Node: Overview2659
-Node: LDAP3728
-Node: CCSO PH/QI4704
-Node: BBDB5679
-Node: Installation6696
-Node: LDAP Requirements7580
-Node: Usage7905
-Node: Querying Servers8757
-Node: Selecting a Server9276
-Node: Return Attributes11096
-Node: Duplicate Attributes12174
-Node: Query Form14746
-Node: Display of Query Results17228
-Node: Inline Query Expansion20198
-Node: The Server Hotlist24647
-Node: The Hotlist Edit Buffer26251
-Node: Multi-server Queries27311
-Node: Creating BBDB Records28594
-Ref: Creating BBDB Records-Footnote-133496
-Node: Server/Protocol Locals33625
-Node: Manipulating local bindings34132
-Node: Credits36799
-Node: GNU Free Documentation License37122
-Node: Command and Function Index62303
-Node: Variables Index66515
+Node: Top1163
+Node: Overview2585
+Node: LDAP3654
+Node: CCSO PH/QI4630
+Node: BBDB5605
+Node: Installation6622
+Node: LDAP Requirements7506
+Node: Usage7831
+Node: Querying Servers8683
+Node: Selecting a Server9202
+Node: Return Attributes11022
+Node: Duplicate Attributes12100
+Node: Query Form14672
+Node: Display of Query Results17154
+Node: Inline Query Expansion20124
+Node: The Server Hotlist24573
+Node: The Hotlist Edit Buffer26177
+Node: Multi-server Queries27237
+Node: Creating BBDB Records28520
+Ref: Creating BBDB Records-Footnote-133422
+Node: Server/Protocol Locals33551
+Node: Manipulating local bindings34058
+Node: Credits36725
+Node: GNU Free Documentation License37048
+Node: Command and Function Index62229
+Node: Variables Index66441
 
 End Tag Table

@@ -1,7 +1,6 @@
 ;;; gs.el --- interface to Ghostscript
 
-;; Copyright (C) 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1998, 2001-2012  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
@@ -97,7 +96,7 @@ FILE is the value to substitute for the place-holder `<file>'."
 (declare-function x-display-pixel-width "xfns.c" (&optional terminal))
 
 (defun gs-width-in-pt (frame pixel-width)
-  "Return, on FRAME, pixel width PIXEL-WIDTH tranlated to pt."
+  "Return, on FRAME, pixel width PIXEL-WIDTH translated to pt."
   (let ((mm (* (float pixel-width)
 	       (/ (float (x-display-mm-width frame))
 		  (float (x-display-pixel-width frame))))))
@@ -107,7 +106,7 @@ FILE is the value to substitute for the place-holder `<file>'."
 (declare-function x-display-pixel-height "xfns.c" (&optional terminal))
 
 (defun gs-height-in-pt (frame pixel-height)
-  "Return, on FRAME, pixel height PIXEL-HEIGHT tranlated to pt."
+  "Return, on FRAME, pixel height PIXEL-HEIGHT translated to pt."
   (let ((mm (* (float pixel-height)
 	       (/ (float (x-display-mm-height frame))
 		  (float (x-display-pixel-height frame))))))
@@ -221,5 +220,4 @@ the form \"WINDOW-ID PIXMAP-ID\".  Value is non-nil if successful."
 
 (provide 'gs)
 
-;; arch-tag: 06ab51b8-4932-4cfe-9f60-b924a8edb3f0
 ;;; gs.el ends here

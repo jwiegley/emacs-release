@@ -1,7 +1,6 @@
 ;;; mail-utils.el --- utility functions used both by rmail and rnews
 
-;; Copyright (C) 1985, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1985, 2001-2012  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: mail, news
@@ -28,16 +27,23 @@
 
 ;;; Code:
 
-;;; We require lisp-mode to make sure that lisp-mode-syntax-table has
-;;; been initialized.
-(require 'lisp-mode)
-
 ;;;###autoload
 (defcustom mail-use-rfc822 nil
   "If non-nil, use a full, hairy RFC822 parser on mail addresses.
 Otherwise, (the default) use a smaller, somewhat faster, and
 often correct parser."
   :type 'boolean
+  :group 'mail)
+
+;;;###autoload
+(defcustom mail-dont-reply-to-names nil
+  "Regexp specifying addresses to prune from a reply message.
+If this is nil, it is set the first time you compose a reply, to
+a value which excludes your own email address.
+
+Matching addresses are excluded from the CC field in replies, and
+also the To field, unless this would leave an empty To field."
+  :type '(choice regexp (const :tag "Your Name" nil))
   :group 'mail)
 
 ;; Returns t if file FILE is an Rmail file.
@@ -57,12 +63,16 @@ from START (inclusive) to END (exclusive)."
 
 ;;;###autoload
 (defun mail-quote-printable (string &optional wrapper)
-  "Convert a string to the \"quoted printable\" Q encoding.
+  "Convert a string to the \"quoted printable\" Q encoding if necessary.
+If the string contains only ASCII characters and no troublesome ones,
+we return it unconverted.
+
 If the optional argument WRAPPER is non-nil,
 we add the wrapper characters =?ISO-8859-1?Q?....?=."
   (let ((i 0) (result ""))
     (save-match-data
-      (while (string-match "[?=\"\200-\377]" string i)
+      (while (or (string-match "[?=\"]" string i)
+		 (string-match "[^\000-\177]" string i))
 	(setq result
 	      (concat result (substring string i (match-beginning 0))
 		      (upcase (format "=%02x"
@@ -186,87 +196,63 @@ Return a modified address list."
 	       (mapconcat 'identity (rfc822-addresses address) ", "))
       (let (pos)
 
-       ;; Detect nested comments.
-       (if (string-match "[ \t]*(\\([^)\\]\\|\\\\.\\|\\\\\n\\)*(" address)
-	   ;; Strip nested comments.
-	   (with-temp-buffer
-	     (insert address)
-	     (set-syntax-table lisp-mode-syntax-table)
-	     (goto-char 1)
-	     (while (search-forward "(" nil t)
-	       (forward-char -1)
-	       (skip-chars-backward " \t")
-	       (delete-region (point)
-			      (save-excursion
-				(condition-case ()
-				    (forward-sexp 1)
-				  (error (goto-char (point-max))))
-				  (point))))
-	     (setq address (buffer-string)))
-	 ;; Strip non-nested comments an easier way.
-	 (while (setq pos (string-match
-			    ;; This doesn't hack rfc822 nested comments
-			    ;;  `(xyzzy (foo) whinge)' properly.  Big deal.
-			    "[ \t]*(\\([^)\\]\\|\\\\.\\|\\\\\n\\)*)"
-			    address))
-	   (setq address (replace-match "" nil nil address 0))))
+        ;; Strip comments.
+        (while (setq pos (string-match
+                          "[ \t]*(\\([^()\\]\\|\\\\.\\|\\\\\n\\)*)"
+                          address))
+          (setq address (replace-match "" nil nil address 0)))
 
-       ;; strip surrounding whitespace
-       (string-match "\\`[ \t\n]*" address)
-       (setq address (substring address
-				(match-end 0)
-				(string-match "[ \t\n]*\\'" address
-					      (match-end 0))))
+        ;; strip surrounding whitespace
+        (string-match "\\`[ \t\n]*" address)
+        (setq address (substring address
+                                 (match-end 0)
+                                 (string-match "[ \t\n]*\\'" address
+                                               (match-end 0))))
 
-       ;; strip `quoted' names (This is supposed to hack `"Foo Bar" <bar@host>')
-       (setq pos 0)
-       (while (setq pos (string-match
+        ;; strip `quoted' names (This is supposed to hack `"Foo Bar" <bar@host>')
+        (setq pos 0)
+        (while (setq pos (string-match
                           "\\([ \t]?\\)\\([ \t]*\"\\([^\"\\]\\|\\\\.\\|\\\\\n\\)*\"[ \t\n]*\\)"
 			  address pos))
-	 ;; If the next thing is "@", we have "foo bar"@host.  Leave it.
-	 (if (and (> (length address) (match-end 0))
-		  (= (aref address (match-end 0)) ?@))
-	     (setq pos (match-end 0))
-	   ;; Otherwise discard the "..." part.
-	   (setq address (replace-match "" nil nil address 2))))
-       ;; If this address contains <...>, replace it with just
-       ;; the part between the <...>.
-       (while (setq pos (string-match "\\(,\\s-*\\|\\`\\)\\([^,]*<\\([^>,:]*\\)>[^,]*\\)\\(\\s-*,\\|\\'\\)"
-				      address))
-	 (setq address (replace-match (match-string 3 address)
-				      nil 'literal address 2)))
-       address))))
+          ;; If the next thing is "@", we have "foo bar"@host.  Leave it.
+          (if (and (> (length address) (match-end 0))
+                   (= (aref address (match-end 0)) ?@))
+              (setq pos (match-end 0))
+            ;; Otherwise discard the "..." part.
+            (setq address (replace-match "" nil nil address 2))))
+        ;; If this address contains <...>, replace it with just
+        ;; the part between the <...>.
+        (while (setq pos (string-match "\\(,\\s-*\\|\\`\\)\\([^,]*<\\([^>,:]*\\)>[^,]*\\)\\(\\s-*,\\|\\'\\)"
+                                       address))
+          (setq address (replace-match (match-string 3 address)
+                                       nil 'literal address 2)))
+        address))))
 
-;; The following piece of ugliness is legacy code.  The name was an
-;; unfortunate choice --- a flagrant violation of the Emacs Lisp
-;; coding conventions.  `mail-dont-reply-to' would have been
-;; infinitely better.  Also, `rmail-dont-reply-to-names' might have
-;; been better named `mail-dont-reply-to-names' and sourced from this
-;; file instead of in rmail.el.  Yuck.  -pmr
-(defun rmail-dont-reply-to (destinations)
+(defun mail-dont-reply-to (destinations)
   "Prune addresses from DESTINATIONS, a list of recipient addresses.
-All addresses matching `rmail-dont-reply-to-names' are removed from
-the comma-separated list.  The pruned list is returned."
+Remove all addresses matching `mail-dont-reply-to-names' from the
+comma-separated list, and return the pruned list."
   ;; FIXME this (setting a user option the first time a command is used)
   ;; is somewhat strange.  Normally one would never set the option,
   ;; but instead fall back to the default so long as it was nil.
   ;; Or just set the default directly in the defcustom.
-  (if (null rmail-dont-reply-to-names)
-      (setq rmail-dont-reply-to-names
-	    (concat (if rmail-default-dont-reply-to-names
-			(concat rmail-default-dont-reply-to-names "\\|")
-                      "")
-                    (if (and user-mail-address
-                             (not (equal user-mail-address user-login-name)))
-			;; Anchor the login name and email address so
-			;; that we don't match substrings: if the
-			;; login name is "foo", we shouldn't match
-			;; "barfoo@baz.com".
-                        (concat "\\`"
-				(regexp-quote user-mail-address)
-				"\\'\\|")
-                      "")
-                    (concat "\\`" (regexp-quote user-login-name) "@"))))
+  (if (null mail-dont-reply-to-names)
+      (setq mail-dont-reply-to-names
+	    (concat
+	     ;; `rmail-default-dont-reply-to-names' is obsolete.
+	     (if (bound-and-true-p rmail-default-dont-reply-to-names)
+		 (concat rmail-default-dont-reply-to-names "\\|")
+	       "")
+	     (if (and user-mail-address
+		      (not (equal user-mail-address user-login-name)))
+		 ;; Anchor the login name and email address so that we
+		 ;; don't match substrings: if the login name is
+		 ;; "foo", we shouldn't match "barfoo@baz.com".
+		 (concat "\\`"
+			 (regexp-quote user-mail-address)
+			 "\\'\\|")
+	       "")
+	     (concat "\\`" (regexp-quote user-login-name) "@"))))
   ;; Split up DESTINATIONS and match each element separately.
   (let ((start-pos 0) (cur-pos 0)
 	(case-fold-search t))
@@ -286,7 +272,7 @@ the comma-separated list.  The pruned list is returned."
 	      (setq cur-pos start-pos)))
 	(let* ((address (substring destinations start-pos cur-pos))
 	       (naked-address (mail-strip-quoted-names address)))
-	  (if (string-match rmail-dont-reply-to-names naked-address)
+	  (if (string-match mail-dont-reply-to-names naked-address)
 	      (setq destinations (concat (substring destinations 0 start-pos)
 				    (and cur-pos (substring destinations
 							    (1+ cur-pos))))
@@ -301,6 +287,9 @@ the comma-separated list.  The pruned list is returned."
   (if (string-match "\\(\\s \\|,\\)*" destinations)
       (substring destinations (match-end 0))
     destinations))
+
+;; Legacy name
+(define-obsolete-function-alias 'rmail-dont-reply-to 'mail-dont-reply-to "24.1")
 
 
 ;;;###autoload

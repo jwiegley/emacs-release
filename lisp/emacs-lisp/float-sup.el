@@ -1,10 +1,10 @@
 ;;; float-sup.el --- define some constants useful for floating point numbers.
 
-;; Copyright (C) 1985, 1986, 1987, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1985-1987, 2001-2012  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -25,36 +25,33 @@
 
 ;;; Code:
 
-;; Provide a meaningful error message if we are running on
-;; bare (non-float) emacs.
-
-(if (fboundp 'atan)
-    nil
-  (error "Floating point was disabled at compile time"))
-
-;; provide an easy hook to tell if we are running with floats or not.
-;; define pi and e via math-lib calls. (much less prone to killer typos.)
+;; Provide an easy hook to tell if we are running with floats or not.
+;; Define pi and e via math-lib calls (much less prone to killer typos).
 (defconst float-pi (* 4 (atan 1)) "The value of Pi (3.1415926...).")
-(defconst pi float-pi "Obsolete since Emacs-23.3.  Use `float-pi' instead.")
+(progn
+  ;; Simulate a defconst that doesn't declare the variable dynamically bound.
+  (setq-default pi float-pi)
+  (put 'pi 'variable-documentation
+       "Obsolete since Emacs-23.3.  Use `float-pi' instead.")
+  (put 'pi 'risky-local-variable t)
+  (push 'pi current-load-list))
 
 (defconst float-e (exp 1) "The value of e (2.7182818...).")
-(defvar e float-e "Obsolete since Emacs-23.3.  Use `float-e' instead.")
 
 (defconst degrees-to-radians (/ float-pi 180.0)
   "Degrees to radian conversion constant.")
 (defconst radians-to-degrees (/ 180.0 float-pi)
   "Radian to degree conversion constant.")
 
-;; these expand to a single multiply by a float when byte compiled
+;; These expand to a single multiply by a float when byte compiled.
 
 (defmacro degrees-to-radians (x)
-  "Convert ARG from degrees to radians."
+  "Convert X from degrees to radians."
   (list '* degrees-to-radians x))
 (defmacro radians-to-degrees (x)
-  "Convert ARG from radians to degrees."
+  "Convert X from radians to degrees."
   (list '* radians-to-degrees x))
 
 (provide 'lisp-float-type)
 
-;; arch-tag: e7837072-a4af-4d08-9953-8a3e755abf9d
 ;;; float-sup.el ends here

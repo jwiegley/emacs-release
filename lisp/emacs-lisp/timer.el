@@ -1,9 +1,9 @@
 ;;; timer.el --- run a function with args at some time in future
 
-;; Copyright (C) 1996, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1996, 2001-2012  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -92,67 +92,34 @@ fire each time Emacs is idle for that many seconds."
 More precisely, the next value, after TIME, that is an integral multiple
 of SECS seconds since the epoch.  SECS may be a fraction."
   (let ((time-base (ash 1 16)))
-    (if (fboundp 'atan)
-	;; Use floating point, taking care to not lose precision.
-	(let* ((float-time-base (float time-base))
-	       (million 1000000.0)
-	       (time-usec (+ (* million
-				(+ (* float-time-base (nth 0 time))
-				   (nth 1 time)))
-			     (nth 2 time)))
-	       (secs-usec (* million secs))
-	       (mod-usec (mod time-usec secs-usec))
-	       (next-usec (+ (- time-usec mod-usec) secs-usec))
-	       (time-base-million (* float-time-base million)))
-	  (list (floor next-usec time-base-million)
-		(floor (mod next-usec time-base-million) million)
-		(floor (mod next-usec million))))
-      ;; Floating point is not supported.
-      ;; Use integer arithmetic, avoiding overflow if possible.
-      (let* ((mod-sec (mod (+ (* (mod time-base secs)
-				 (mod (nth 0 time) secs))
-			      (nth 1 time))
-			   secs))
-	     (next-1-sec (+ (- (nth 1 time) mod-sec) secs)))
-	(list (+ (nth 0 time) (floor next-1-sec time-base))
-	      (mod next-1-sec time-base)
-	      0)))))
+    ;; Use floating point, taking care to not lose precision.
+    (let* ((float-time-base (float time-base))
+	   (million 1000000.0)
+	   (time-usec (+ (* million
+			    (+ (* float-time-base (nth 0 time))
+			       (nth 1 time)))
+			 (nth 2 time)))
+	   (secs-usec (* million secs))
+	   (mod-usec (mod time-usec secs-usec))
+	   (next-usec (+ (- time-usec mod-usec) secs-usec))
+	   (time-base-million (* float-time-base million)))
+      (list (floor next-usec time-base-million)
+	    (floor (mod next-usec time-base-million) million)
+	    (floor (mod next-usec million))))))
 
 (defun timer-relative-time (time secs &optional usecs)
   "Advance TIME by SECS seconds and optionally USECS microseconds.
 SECS may be either an integer or a floating point number."
-  ;; FIXME: we should just use (time-add time (list 0 secs usecs))
-  (let ((high (car time))
-	(low (if (consp (cdr time)) (nth 1 time) (cdr time)))
-	(micro (if (numberp (car-safe (cdr-safe (cdr time))))
-		   (nth 2 time)
-		 0)))
-    ;; Add
-    (if usecs (setq micro (+ micro usecs)))
-    (if (floatp secs)
-	(setq micro (+ micro (floor (* 1000000 (- secs (floor secs)))))))
-    (setq low (+ low (floor secs)))
-
-    ;; Normalize
-    ;; `/' rounds towards zero while `mod' returns a positive number,
-    ;; so we can't rely on (= a (+ (* 100 (/ a 100)) (mod a 100))).
-    (setq low (+ low (/ micro 1000000) (if (< micro 0) -1 0)))
-    (setq micro (mod micro 1000000))
-    (setq high (+ high (/ low 65536) (if (< low 0) -1 0)))
-    (setq low (logand low 65535))
-
-    (list high low (and (/= micro 0) micro))))
+  (let ((delta (if (floatp secs)
+		   (seconds-to-time secs)
+		 (list (floor secs 65536) (mod secs 65536)))))
+    (if usecs
+	(setq delta (time-add delta (list 0 0 usecs))))
+    (time-add time delta)))
 
 (defun timer--time-less-p (t1 t2)
   "Say whether time value T1 is less than time value T2."
-  ;; FIXME just use time-less-p.
-  (destructuring-bind (high1 low1 micro1) (timer--time t1)
-    (destructuring-bind (high2 low2 micro2) (timer--time t2)
-      (or (< high1 high2)
-          (and (= high1 high2)
-               (or (< low1 low2)
-                   (and (= low1 low2)
-                        (< micro1 micro2))))))))
+  (time-less-p (timer--time t1) (timer--time t2)))
 
 (defun timer-inc-time (timer secs &optional usecs)
   "Increment the time set in TIMER by SECS seconds and USECS microseconds.
@@ -200,35 +167,35 @@ fire repeatedly that many seconds apart."
 	      (setcdr reuse-cell timers))
 	  (setq reuse-cell (cons timer timers)))
 	;; Insert new timer after last which possibly means in front of queue.
-	(if last
-	    (setcdr last reuse-cell)
-          (if idle
-              (setq timer-idle-list reuse-cell)
-            (setq timer-list reuse-cell)))
+	(cond (last (setcdr last reuse-cell))
+	      (idle (setq timer-idle-list reuse-cell))
+	      (t    (setq timer-list reuse-cell)))
 	(setf (timer--triggered timer) triggered-p)
 	(setf (timer--idle-delay timer) idle)
 	nil)
     (error "Invalid or uninitialized timer")))
 
-(defun timer-activate (timer &optional triggered-p reuse-cell idle)
-  "Put TIMER on the list of active timers.
+(defun timer-activate (timer &optional triggered-p reuse-cell)
+  "Insert TIMER into `timer-list'.
+If TRIGGERED-P is t, make TIMER inactive (put it on the list, but
+mark it as already triggered).  To remove it, use `cancel-timer'.
 
-If TRIGGERED-P is t, that means to make the timer inactive
-\(put it on the list, but mark it as already triggered).
-To remove from the list, use `cancel-timer'.
-
-REUSE-CELL, if non-nil, is a cons cell to reuse instead
-of allocating a new one."
+REUSE-CELL, if non-nil, is a cons cell to reuse when inserting
+TIMER into `timer-list' (usually a cell removed from that list by
+`cancel-timer-internal'; using this reduces consing for repeat
+timers).  If nil, allocate a new cell."
   (timer--activate timer triggered-p reuse-cell nil))
 
 (defun timer-activate-when-idle (timer &optional dont-wait reuse-cell)
-  "Arrange to activate TIMER whenever Emacs is next idle.
-If optional argument DONT-WAIT is non-nil, then enable the
-timer to activate immediately, or at the right time, if Emacs
-is already idle.
+  "Insert TIMER into `timer-idle-list'.
+This arranges to activate TIMER whenever Emacs is next idle.
+If optional argument DONT-WAIT is non-nil, set TIMER to activate
+immediately, or at the right time, if Emacs is already idle.
 
-REUSE-CELL, if non-nil, is a cons cell to reuse instead
-of allocating a new one."
+REUSE-CELL, if non-nil, is a cons cell to reuse when inserting
+TIMER into `timer-idle-list' (usually a cell removed from that
+list by `cancel-timer-internal'; using this reduces consing for
+repeat timers).  If nil, allocate a new cell."
   (timer--activate timer (not dont-wait) reuse-cell 'idle))
 
 (defalias 'disable-timeout 'cancel-timer)
@@ -284,10 +251,7 @@ how many will really happen.")
   "Calculate number of seconds from when TIMER will run, until TIME.
 TIMER is a timer, and stands for the time when its next repeat is scheduled.
 TIME is a time-list."
-  ;; FIXME: (float-time (time-subtract (timer--time timer) time))
-  (let ((high (- (car time) (timer--high-seconds timer)))
-	(low (- (nth 1 time) (timer--low-seconds timer))))
-    (+ low (* high 65536))))
+  (float-time (time-subtract time (timer--time timer))))
 
 (defun timer-event-handler (timer)
   "Call the handler for the timer TIMER.
@@ -321,7 +285,11 @@ This function is called, by name, directly by the C code."
 	  ;; We do this after rescheduling so that the handler function
 	  ;; can cancel its own timer successfully with cancel-timer.
 	  (condition-case nil
-	      (apply (timer--function timer) (timer--args timer))
+              ;; Timer functions should not change the current buffer.
+              ;; If they do, all kinds of nasty surprises can happen,
+              ;; and it can be hellish to track down their source.
+              (save-current-buffer
+                (apply (timer--function timer) (timer--args timer)))
 	    (error nil))
 	  (if retrigger
 	      (setf (timer--triggered timer) nil)))
@@ -434,12 +402,6 @@ This function returns a timer object which you can use in `cancel-timer'."
     (timer-activate-when-idle timer t)
     timer))
 
-(defun with-timeout-handler (tag)
-  "This is the timer function used for the timer made by `with-timeout'."
-  (throw tag 'timeout))
-
-(put 'with-timeout 'lisp-indent-function 1)
-
 (defvar with-timeout-timers nil
   "List of all timers used by currently pending `with-timeout' calls.")
 
@@ -451,23 +413,27 @@ event (such as keyboard input, input from subprocesses, or a certain time);
 if the program loops without waiting in any way, the timeout will not
 be detected.
 \n(fn (SECONDS TIMEOUT-FORMS...) BODY)"
+  (declare (indent 1) (debug ((form body) body)))
   (let ((seconds (car list))
-	(timeout-forms (cdr list)))
-    `(let ((with-timeout-tag (cons nil nil))
-	   with-timeout-value with-timeout-timer
-	   (with-timeout-timers with-timeout-timers))
-       (if (catch with-timeout-tag
-	     (progn
-	       (setq with-timeout-timer
-		     (run-with-timer ,seconds nil
-				      'with-timeout-handler
-				      with-timeout-tag))
-	       (push with-timeout-timer with-timeout-timers)
-	       (setq with-timeout-value (progn . ,body))
-	       nil))
-	   (progn . ,timeout-forms)
-	 (cancel-timer with-timeout-timer)
-	 with-timeout-value))))
+	(timeout-forms (cdr list))
+        (timeout (make-symbol "timeout")))
+    `(let ((-with-timeout-value-
+            (catch ',timeout
+              (let* ((-with-timeout-timer-
+                      (run-with-timer ,seconds nil
+                                      (lambda () (throw ',timeout ',timeout))))
+                     (with-timeout-timers
+                         (cons -with-timeout-timer- with-timeout-timers)))
+                (unwind-protect
+                    ,@body
+                  (cancel-timer -with-timeout-timer-))))))
+       ;; It is tempting to avoid the `if' altogether and instead run
+       ;; timeout-forms in the timer, just before throwing `timeout'.
+       ;; But that would mean that timeout-forms are run in the deeper
+       ;; dynamic context of the timer, with inhibit-quit set etc...
+       (if (eq -with-timeout-value- ',timeout)
+           (progn ,@timeout-forms)
+         -with-timeout-value-))))
 
 (defun with-timeout-suspend ()
   "Stop the clock for `with-timeout'.  Used by debuggers.
@@ -539,5 +505,4 @@ If the user does not answer after SECONDS seconds, return DEFAULT-VALUE."
 
 (provide 'timer)
 
-;; arch-tag: b1a9237b-7787-4382-9e46-8f2c3b3273e0
 ;;; timer.el ends here

@@ -1,7 +1,6 @@
 ;;; gomoku.el --- Gomoku game between you and Emacs
 
-;; Copyright (C) 1988, 1994, 1996, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1988, 1994, 1996, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: Philippe Schnoebelen <phs@lsv.ens-cachan.fr>
 ;; Maintainer: FSF
@@ -102,66 +101,67 @@ One useful value to include is `turn-on-font-lock' to highlight the pieces."
   "*Number of lines between the Gomoku board and the top of the window.")
 
 
-(defvar gomoku-mode-map nil
+(defvar gomoku-mode-map
+  (let ((map (make-sparse-keymap)))
+
+    ;; Key bindings for cursor motion.
+    (define-key map "y" 'gomoku-move-nw)		    ; y
+    (define-key map "u" 'gomoku-move-ne)		    ; u
+    (define-key map "b" 'gomoku-move-sw)		    ; b
+    (define-key map "n" 'gomoku-move-se)		    ; n
+    (define-key map "h" 'backward-char)			    ; h
+    (define-key map "l" 'forward-char)			    ; l
+    (define-key map "j" 'gomoku-move-down)		    ; j
+    (define-key map "k" 'gomoku-move-up)		    ; k
+
+    (define-key map [kp-7] 'gomoku-move-nw)
+    (define-key map [kp-9] 'gomoku-move-ne)
+    (define-key map [kp-1] 'gomoku-move-sw)
+    (define-key map [kp-3] 'gomoku-move-se)
+    (define-key map [kp-4] 'backward-char)
+    (define-key map [kp-6] 'forward-char)
+    (define-key map [kp-2] 'gomoku-move-down)
+    (define-key map [kp-8] 'gomoku-move-up)
+
+    (define-key map "\C-n" 'gomoku-move-down)		    ; C-n
+    (define-key map "\C-p" 'gomoku-move-up)		    ; C-p
+
+    ;; Key bindings for entering Human moves.
+    (define-key map "X" 'gomoku-human-plays)		    ; X
+    (define-key map "x" 'gomoku-human-plays)		    ; x
+    (define-key map " " 'gomoku-human-plays)		    ; SPC
+    (define-key map "\C-m" 'gomoku-human-plays)		    ; RET
+    (define-key map "\C-c\C-p" 'gomoku-human-plays)	    ; C-c C-p
+    (define-key map "\C-c\C-b" 'gomoku-human-takes-back)    ; C-c C-b
+    (define-key map "\C-c\C-r" 'gomoku-human-resigns)	    ; C-c C-r
+    (define-key map "\C-c\C-e" 'gomoku-emacs-plays)	    ; C-c C-e
+
+    (define-key map [kp-enter] 'gomoku-human-plays)
+    (define-key map [insert] 'gomoku-human-plays)
+    (define-key map [down-mouse-1] 'gomoku-click)
+    (define-key map [drag-mouse-1] 'gomoku-click)
+    (define-key map [mouse-1] 'gomoku-click)
+    (define-key map [down-mouse-2] 'gomoku-click)
+    (define-key map [mouse-2] 'gomoku-mouse-play)
+    (define-key map [drag-mouse-2] 'gomoku-mouse-play)
+
+    (define-key map [remap previous-line] 'gomoku-move-up)
+    (define-key map [remap next-line] 'gomoku-move-down)
+    (define-key map [remap move-beginning-of-line] 'gomoku-beginning-of-line)
+    (define-key map [remap move-end-of-line] 'gomoku-end-of-line)
+    (define-key map [remap undo] 'gomoku-human-takes-back)
+    (define-key map [remap advertised-undo] 'gomoku-human-takes-back)
+    map)
+
   "Local keymap to use in Gomoku mode.")
 
-(if gomoku-mode-map nil
-  (setq gomoku-mode-map (make-sparse-keymap))
-
-  ;; Key bindings for cursor motion.
-  (define-key gomoku-mode-map "y" 'gomoku-move-nw)		; y
-  (define-key gomoku-mode-map "u" 'gomoku-move-ne)		; u
-  (define-key gomoku-mode-map "b" 'gomoku-move-sw)		; b
-  (define-key gomoku-mode-map "n" 'gomoku-move-se)		; n
-  (define-key gomoku-mode-map "h" 'backward-char)		; h
-  (define-key gomoku-mode-map "l" 'forward-char)		; l
-  (define-key gomoku-mode-map "j" 'gomoku-move-down)		; j
-  (define-key gomoku-mode-map "k" 'gomoku-move-up)		; k
-
-  (define-key gomoku-mode-map [kp-7] 'gomoku-move-nw)
-  (define-key gomoku-mode-map [kp-9] 'gomoku-move-ne)
-  (define-key gomoku-mode-map [kp-1] 'gomoku-move-sw)
-  (define-key gomoku-mode-map [kp-3] 'gomoku-move-se)
-  (define-key gomoku-mode-map [kp-4] 'backward-char)
-  (define-key gomoku-mode-map [kp-6] 'forward-char)
-  (define-key gomoku-mode-map [kp-2] 'gomoku-move-down)
-  (define-key gomoku-mode-map [kp-8] 'gomoku-move-up)
-
-  (define-key gomoku-mode-map "\C-n" 'gomoku-move-down)		; C-n
-  (define-key gomoku-mode-map "\C-p" 'gomoku-move-up)		; C-p
-
-  ;; Key bindings for entering Human moves.
-  (define-key gomoku-mode-map "X" 'gomoku-human-plays)		; X
-  (define-key gomoku-mode-map "x" 'gomoku-human-plays)		; x
-  (define-key gomoku-mode-map " " 'gomoku-human-plays)		; SPC
-  (define-key gomoku-mode-map "\C-m" 'gomoku-human-plays)	; RET
-  (define-key gomoku-mode-map "\C-c\C-p" 'gomoku-human-plays)	; C-c C-p
-  (define-key gomoku-mode-map "\C-c\C-b" 'gomoku-human-takes-back) ; C-c C-b
-  (define-key gomoku-mode-map "\C-c\C-r" 'gomoku-human-resigns)	; C-c C-r
-  (define-key gomoku-mode-map "\C-c\C-e" 'gomoku-emacs-plays)	; C-c C-e
-
-  (define-key gomoku-mode-map [kp-enter] 'gomoku-human-plays)
-  (define-key gomoku-mode-map [insert] 'gomoku-human-plays)
-  (define-key gomoku-mode-map [down-mouse-1] 'gomoku-click)
-  (define-key gomoku-mode-map [drag-mouse-1] 'gomoku-click)
-  (define-key gomoku-mode-map [mouse-1] 'gomoku-click)
-  (define-key gomoku-mode-map [down-mouse-2] 'gomoku-click)
-  (define-key gomoku-mode-map [mouse-2] 'gomoku-mouse-play)
-  (define-key gomoku-mode-map [drag-mouse-2] 'gomoku-mouse-play)
-
-  (define-key gomoku-mode-map [remap previous-line] 'gomoku-move-up)
-  (define-key gomoku-mode-map [remap next-line] 'gomoku-move-down)
-  (define-key gomoku-mode-map [remap move-beginning-of-line] 'gomoku-beginning-of-line)
-  (define-key gomoku-mode-map [remap move-end-of-line] 'gomoku-end-of-line)
-  (define-key gomoku-mode-map [remap undo] 'gomoku-human-takes-back)
-  (define-key gomoku-mode-map [remap advertised-undo] 'gomoku-human-takes-back))
 
 (defvar gomoku-emacs-won ()
   "For making font-lock use the winner's face for the line.")
 
 (defface gomoku-O
     '((((class color)) (:foreground "red" :weight bold)))
-  "Face to use for Emacs' O."
+  "Face to use for Emacs's O."
   :group 'gomoku)
 
 (defface gomoku-X
@@ -182,28 +182,20 @@ One useful value to include is `turn-on-font-lock' to highlight the pieces."
 ;; allow View Mode to be activated in its buffer.
 (put 'gomoku-mode 'mode-class 'special)
 
-(defun gomoku-mode ()
+(define-derived-mode gomoku-mode nil "Gomoku"
   "Major mode for playing Gomoku against Emacs.
 You and Emacs play in turn by marking a free square.  You mark it with X
 and Emacs marks it with O.  The winner is the first to get five contiguous
 marks horizontally, vertically or in diagonal.
-
+\\<gomoku-mode-map>
 You play by moving the cursor over the square you choose and hitting \\[gomoku-human-plays].
 
-Other useful commands:
-\\{gomoku-mode-map}
-Entry to this mode calls the value of `gomoku-mode-hook' if that value
-is non-nil."
-  (interactive)
-  (kill-all-local-variables)
-  (setq major-mode 'gomoku-mode
-	mode-name "Gomoku")
+Other useful commands:\n
+\\{gomoku-mode-map}"
   (gomoku-display-statistics)
-  (use-local-map gomoku-mode-map)
   (make-local-variable 'font-lock-defaults)
   (setq font-lock-defaults '(gomoku-font-lock-keywords t)
-	buffer-read-only t)
-  (run-mode-hooks 'gomoku-mode-hook))
+	buffer-read-only t))
 
 ;;;
 ;;; THE BOARD.
@@ -285,7 +277,7 @@ is non-nil."
 ;; its contents as a set, i.e. not considering the order of its elements. The
 ;; highest score is given to the "OOOO" qtuples because playing in such a
 ;; qtuple is winning the game. Just after this comes the "XXXX" qtuple because
-;; not playing in it is just loosing the game, and so on. Note that a
+;; not playing in it is just losing the game, and so on. Note that a
 ;; "polluted" qtuple, i.e. one containing at least one X and at least one O,
 ;; has score zero because there is no more any point in playing in it, from
 ;; both an attacking and a defending point of view.
@@ -306,15 +298,15 @@ is non-nil."
 ;; these values will change (hopefully improve) the strength of the program
 ;; and may change its style (rather aggressive here).
 
-(defconst nil-score	  7  "Score of an empty qtuple.")
-(defconst Xscore	 15  "Score of a qtuple containing one X.")
-(defconst XXscore	400  "Score of a qtuple containing two X's.")
-(defconst XXXscore     1800  "Score of a qtuple containing three X's.")
-(defconst XXXXscore  100000  "Score of a qtuple containing four X's.")
-(defconst Oscore	 35  "Score of a qtuple containing one O.")
-(defconst OOscore	800  "Score of a qtuple containing two O's.")
-(defconst OOOscore    15000  "Score of a qtuple containing three O's.")
-(defconst OOOOscore  800000  "Score of a qtuple containing four O's.")
+(defconst gomoku-nil-score	  7  "Score of an empty qtuple.")
+(defconst gomoku-Xscore	 15  "Score of a qtuple containing one X.")
+(defconst gomoku-XXscore	400  "Score of a qtuple containing two X's.")
+(defconst gomoku-XXXscore     1800  "Score of a qtuple containing three X's.")
+(defconst gomoku-XXXXscore  100000  "Score of a qtuple containing four X's.")
+(defconst gomoku-Oscore	 35  "Score of a qtuple containing one O.")
+(defconst gomoku-OOscore	800  "Score of a qtuple containing two O's.")
+(defconst gomoku-OOOscore    15000  "Score of a qtuple containing three O's.")
+(defconst gomoku-OOOOscore  800000  "Score of a qtuple containing four O's.")
 
 ;; These values are not just random: if, given the following situation:
 ;;
@@ -327,7 +319,7 @@ is non-nil."
 ;; you want Emacs to play in "a" and not in "b", then the parameters must
 ;; satisfy the inequality:
 ;;
-;;		   6 * XXscore > XXXscore + XXscore
+;;		   6 * gomoku-XXscore > gomoku-XXXscore + gomoku-XXscore
 ;;
 ;; because "a" mainly belongs to six "XX" qtuples (the others are less
 ;; important) while "b" belongs to one "XXX" and one "XX" qtuples.  Other
@@ -341,26 +333,26 @@ is non-nil."
 ;; we just have to set up a translation table.
 
 (defconst gomoku-score-trans-table
-  (vector nil-score Xscore XXscore XXXscore XXXXscore 0
-	  Oscore    0	   0	   0	    0	      0
-	  OOscore   0	   0	   0	    0	      0
-	  OOOscore  0	   0	   0	    0	      0
-	  OOOOscore 0	   0	   0	    0	      0
+  (vector gomoku-nil-score gomoku-Xscore gomoku-XXscore gomoku-XXXscore gomoku-XXXXscore 0
+	  gomoku-Oscore    0	   0	   0	    0	      0
+	  gomoku-OOscore   0	   0	   0	    0	      0
+	  gomoku-OOOscore  0	   0	   0	    0	      0
+	  gomoku-OOOOscore 0	   0	   0	    0	      0
 	  0)
   "Vector associating qtuple contents to their score.")
 
 
 ;; If you do not modify drastically the previous constants, the only way for a
-;; square to have a score higher than OOOOscore is to belong to a "OOOO"
+;; square to have a score higher than gomoku-OOOOscore is to belong to a "OOOO"
 ;; qtuple, thus to be a winning move. Similarly, the only way for a square to
-;; have a score between XXXXscore and OOOOscore is to belong to a "XXXX"
+;; have a score between gomoku-XXXXscore and gomoku-OOOOscore is to belong to a "XXXX"
 ;; qtuple. We may use these considerations to detect when a given move is
-;; winning or loosing.
+;; winning or losing.
 
-(defconst gomoku-winning-threshold OOOOscore
+(defconst gomoku-winning-threshold gomoku-OOOOscore
   "Threshold score beyond which an Emacs move is winning.")
 
-(defconst gomoku-loosing-threshold XXXXscore
+(defconst gomoku-losing-threshold gomoku-XXXXscore
   "Threshold score beyond which a human move is winning.")
 
 
@@ -387,7 +379,7 @@ is non-nil."
 		  best-square square
 		  score-max   score)
 	    (aset gomoku-score-table square -1))) ; no: kill it !
-       ;; If score is equally good, choose randomly. But first check freeness:
+       ;; If score is equally good, choose randomly. But first check freedom:
        ((not (zerop (aref gomoku-board square)))
 	(aset gomoku-score-table square -1))
        ((zerop (random (setq count (1+ count))))
@@ -401,10 +393,10 @@ is non-nil."
 ;;;
 
 ;; At initialization the board is empty so that every qtuple amounts for
-;; nil-score. Therefore, the score of any square is nil-score times the number
+;; gomoku-nil-score. Therefore, the score of any square is gomoku-nil-score times the number
 ;; of qtuples that pass through it. This number is 3 in a corner and 20 if you
 ;; are sufficiently far from the sides. As computing the number is time
-;; consuming, we initialize every square with 20*nil-score and then only
+;; consuming, we initialize every square with 20*gomoku-nil-score and then only
 ;; consider squares at less than 5 squares from one side. We speed this up by
 ;; taking symmetry into account.
 ;; Also, as it is likely that successive games will be played on a board with
@@ -428,7 +420,7 @@ is non-nil."
       (setq gomoku-score-table (copy-sequence gomoku-saved-score-table))
       ;; No, compute it:
       (setq gomoku-score-table
-	    (make-vector gomoku-vector-length (* 20 nil-score)))
+	    (make-vector gomoku-vector-length (* 20 gomoku-nil-score)))
       (let (i j maxi maxj maxi2 maxj2)
 	(setq maxi  (/ (1+ gomoku-board-width) 2)
 	      maxj  (/ (1+ gomoku-board-height) 2)
@@ -879,7 +871,7 @@ If the game is finished, this command requests for another game."
 	    (t
 	     (setq score (aref gomoku-score-table square))
 	     (gomoku-play-move square 1)
-	     (cond ((and (>= score gomoku-loosing-threshold)
+	     (cond ((and (>= score gomoku-losing-threshold)
 			 ;; Just testing SCORE > THRESHOLD is not enough for
 			 ;; detecting wins, it just gives an indication that
 			 ;; we confirm with GOMOKU-FIND-FILLED-QTUPLE.
@@ -936,11 +928,7 @@ If the game is finished, this command requests for another game."
   "Display a message asking for Human's move."
   (message (if (zerop gomoku-number-of-human-moves)
 	       "Your move?  (Move to a free square and hit X, RET ...)"
-	       "Your move?"))
-  ;; This may seem silly, but if one omits the following line (or a similar
-  ;; one), the cursor may very well go to some place where POINT is not.
-  ;; FIXME: this can't be right!!  --Stef
-  (save-excursion (set-buffer (other-buffer))))
+	       "Your move?")))
 
 (defun gomoku-prompt-for-other-game ()
   "Ask for another game, and start it."
@@ -1055,11 +1043,11 @@ If the game is finished, this command requests for another game."
       (insert-char ?\n gomoku-square-height))
     (or (eq (char-after 1) ?.)
 	(put-text-property 1 2 'point-entered
-			   (lambda (x y) (if (bobp) (forward-char)))))
+			   (lambda (_x _y) (if (bobp) (forward-char)))))
     (or intangible
 	(put-text-property point (point) 'intangible 2))
     (put-text-property point (point) 'point-entered
-		       (lambda (x y) (if (eobp) (backward-char))))
+		       (lambda (_x _y) (if (eobp) (backward-char))))
     (put-text-property (point-min) (point) 'category 'gomoku-mode))
   (gomoku-goto-xy (/ (1+ n) 2) (/ (1+ m) 2)) ; center of the board
   (sit-for 0))				; Display NOW

@@ -984,7 +984,7 @@
 1988-01-06  Richard Stallman  (rms@frosted-flakes)
 
 	* s-hpux.h: Don't define nomultiplejobs, LDAV_SYMBOL, LIBS_DEBUG
-	 or BROKEN_FIONREAD.
+	or BROKEN_FIONREAD.
 	* m-hp9000s300.h: Define those four.
 	* s-hpux.h: Define BSTRING, and define bcopy, etc., as macros.
 
@@ -1152,7 +1152,7 @@
 
 1987-07-29  Richard Mlynarik  (mly@prep)
 
-	* lread.c (init_read): Initialise load_in_progress.
+	* lread.c (init_read): Initialize load_in_progress.
 
 1987-07-28  Richard M. Stallman  (rms@prep)
 
@@ -1222,7 +1222,7 @@
 1987-07-10  Chris Hanson  (cph@prep)
 
 	* xterm.h: Define macros to abstract control of input signals.
-	Alternate set of macros for hp-ux does no signalling.
+	Alternate set of macros for hp-ux does no signaling.
 
 	* xterm.c:
 	* xfns.c:
@@ -1323,7 +1323,7 @@
 
 1987-06-09  Richard M. Stallman  (rms@prep)
 
-	* syntax.c: (scan_lists): Clear mathexit on 2nd math-char in a pair.
+	* syntax.c (scan_lists): Clear mathexit on 2nd math-char in a pair.
 
 1987-06-08  Richard M. Stallman  (rms@prep)
 
@@ -1811,7 +1811,7 @@
 1987-03-13  Richard M. Stallman  (rms@prep)
 
 	* sysdep.c: Don't redefine TCSETAW if already defined.
-	(Cancelled by change on March 17).
+	(Canceled by change on March 17).
 
 	* sunfns.c: New file containing interface to Sun windows.
 	This is enabled by the switch HAVE_SUN_WINDOWS.
@@ -2251,10 +2251,10 @@
 1987-01-16  Richard Mlynarik  (mly@prep)
 
 	* xfns.c (Fx_set_{background,cursor,mouse}_color):
-	Initialise save_color.
+	Initialize save_color.
 
 	* fileio.c, search.c, sysdep.c, filelock.c, editfns.c, process.c:
-	Delete/replace unused/conditionalised variables
+	Delete/replace unused/conditionalized variables
 
 1987-01-15  Richard M. Stallman  (rms@prep)
 
@@ -2632,7 +2632,7 @@
 	* fns.c: Fding requires an arg; pass Qnil.
 
 	* m-alliant.h: define TEXT_START as 0x1000.
-	Don't define LIBS_STANDARD; the default (sharable) library
+	Don't define LIBS_STANDARD; the default (shareable) library
 	is said to work now.
 
 	* alloc.c (mark_object): Now pass address of slot being marked.
@@ -2817,7 +2817,7 @@
 1986-11-26  Richard M. Stallman  (rms@prep)
 
 	* sysdep.c (get_system_name):
-	 Eliminate internal static var in USG case.
+	Eliminate internal static var in USG case.
 
 	* lisp.h: New case testing and conversion macros
 	UPPERCASEP, LOWERCASEP, NOCASEP, UPCASE, DOWNCASE.
@@ -3002,7 +3002,7 @@
 1986-11-18  Richard Mlynarik  (mly@prep)
 
 	* emacs.c (main):
-	Giving `inhibit_x_windows' an initialisation loses;
+	Giving `inhibit_x_windows' an initialization loses;
 	do it explicitly.
 
 	* xfns.c (Fx_rubber_band):
@@ -3102,9 +3102,9 @@
 	[So (-259 . (259 . x)) means to format x -exactly- 259 chars wide.]
 
 	* dispnew.c (Fding):
-	Do not terminate macro-definition if given an argument
+	Do not terminate macro-definition if given an argument.
 	(This is so things like asynchronous process notifications
-	can beep but not screw)
+	can beep but not screw.)
 
 1986-11-10  Richard M. Stallman  (rms@prep)
 
@@ -3291,7 +3291,7 @@
 1986-11-03  Richard Mlynarik  (mly@prep)
 
 	* xterm.c (stufflines):
-	Initialise signal mask.
+	Initialize signal mask.
 
 	* xterm.h:
 	Add definition of sigmask
@@ -3346,7 +3346,7 @@
 	New function.
 
 	* window.c (Fset_window_hscroll):
-	Don't inhibit redisplay optimisations if hscroll is same.
+	Don't inhibit redisplay optimizations if hscroll is same.
 
 	* ymakefile:
 	rm ../etc/DOC to avoid make-docfile overwriting any files which
@@ -3358,7 +3358,7 @@
 	VMS changes from Sasaki
 
 	* termcap.c (tgetent):
-	Make sure `indirect' initialised.
+	Make sure `indirect' initialized.
 
 	* xfns.c (grey_p and callers):
 	New function to compensate for ugly chauvinistic American
@@ -3496,7 +3496,7 @@
 	core-dump)
 
 	Dike out global-minor-modes.  This wasn't actually being used by
-	anything (due to a bug) and wasn't even being initialised!
+	anything (due to a bug) and wasn't even being initialized!
 	minor-mode-alist does what this thought it was doing.
 
 1986-10-11  Richard Mlynarik  (mly@prep)
@@ -3852,7 +3852,7 @@
 	(so now (let ((case-fold-search t))) doesn't force buffer-localness)
 	However, setting a binding will still make it buffer-local.
 	(ie (let ((case-fold-search t)) (setq case-fold-search t))
-	 will cause case-fold-search be buffer-local even outside the let)
+	will cause case-fold-search be buffer-local even outside the let)
 
 	* xfns.c:
 	Preserve studlycaps: "Gnuemacs" => "GNU Emacs"
@@ -4220,7 +4220,7 @@
 	Increase PURESIZE again (sigh)
 
 	* unexec.c (write_segment):
-	Kludgey coercions ("(int)") to get this line to compile:
+	Kludgy coercions ("(int)") to get this line to compile:
          nwrite = (((int) ptr + 128) & ~127) - (int) ptr;
 	Also changed incorrect ~128 to ~127.
 
@@ -4452,16 +4452,16 @@
 	* search.c (Freplace_match): Delete unused some_multiletter_word init.
 	* alloc.c (gc_sweep): Delete unused next initializers.
 	* fns.c (concat): After error on non-int elt for string,
-	   do store the new value from the error handler.
+	do store the new value from the error handler.
 	* lread.c (read1): Comment out unused end =.
 	* lread.c (read_list): Delete unused tail =.
 	* data.c (Fmake_variable_buffer_local):
-	  If value type is Lisp_Some_Buffer_Local_Value,
-	  change it to Lisp_Buffer_Local_Value permanently.
+	If value type is Lisp_Some_Buffer_Local_Value,
+	change it to Lisp_Buffer_Local_Value permanently.
 	* undo.c (record_block): Delete unused cp =.
-	  Don't bother reallocing if n = 0 after first batch.
+	Don't bother reallocing if n = 0 after first batch.
 	* fileio.c (Fverify_visited_file_modtime):
-	  If CHECK_BUFFER changes buf, use the changed value.
+	If CHECK_BUFFER changes buf, use the changed value.
 
 1986-07-07  Richard M. Stallman  (rms@prep)
 
@@ -4663,8 +4663,8 @@
 
 	* editfns.c (Fgoto_char): Use new interactive code N.
 
-	* callint.c (Fcall_interactively): New code N
-	means use prefix argif have one, else read number from minibuffer.
+	* callint.c (Fcall_interactively): New code N means use
+	prefix arg if have one, else read number from minibuffer.
 
 	* buffer.c (record_buffer):
 	Don't use Frassq, Fmemq or Fdelq since their loops
@@ -4771,8 +4771,7 @@
 
 See ChangeLog.1 for earlier changes.
 
-    Copyright (C) 1986, 1987, 1988, 2001, 2002, 2003, 2004, 2005, 2006,
-	2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+    Copyright (C) 1986-1988, 2001-2012  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
@@ -4788,5 +4787,3 @@ See ChangeLog.1 for earlier changes.
 
   You should have received a copy of the GNU General Public License
   along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
-
-;;; arch-tag: 3334fc8a-ec24-4601-99fc-4c8adc2b31bb

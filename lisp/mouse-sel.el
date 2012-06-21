@@ -1,7 +1,6 @@
 ;;; mouse-sel.el --- multi-click selection support
 
-;; Copyright (C) 1993, 1994, 1995, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1993-1995, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Mike Williams <mdub@bigfoot.com>
 ;; Keywords: mouse
@@ -61,7 +60,7 @@
 ;;
 ;; Thanks to KevinB@bartley.demon.co.uk for his useful input.
 ;;
-;;--- Customisation -------------------------------------------------------
+;;--- Customization -------------------------------------------------------
 ;;
 ;; * You may want to use none or more of following:
 ;;
@@ -98,7 +97,7 @@
 ;;
 ;;       Selection/kill-ring interaction is retained
 ;;         interprogram-cut-function   = x-select-text
-;;         interprogram-paste-function = x-cut-buffer-or-selection-value
+;;         interprogram-paste-function = x-selection-value
 ;;
 ;;       What you lose is the ability to select some text in
 ;;       delete-selection-mode and yank over the top of it.
@@ -129,11 +128,6 @@
 ;;   that the X primary selection is used.  Under other windowing systems,
 ;;   alternate functions are used, which simply store the selection value
 ;;   in a variable.
-;;
-;; * You can change the selection highlight face by altering the properties
-;;   of mouse-drag-overlay, eg.
-;;
-;;     (overlay-put mouse-drag-overlay 'face 'bold)
 
 ;;; Code:
 
@@ -205,17 +199,14 @@ If nil, point will always be placed at the beginning of the region."
 ;;;###autoload
 (define-minor-mode mouse-sel-mode
   "Toggle Mouse Sel mode.
-With prefix ARG, turn Mouse Sel mode on if and only if ARG is positive.
-Returns the new status of Mouse Sel mode (non-nil means on).
+With a prefix argument ARG, enable Mouse Sel mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
 
-When Mouse Sel mode is enabled, mouse selection is enhanced in various ways:
+Mouse Sel mode is a global minor mode.  When enabled, mouse
+selection is enhanced in various ways:
 
-- Clicking mouse-1 starts (cancels) selection, dragging extends it.
-
-- Clicking or dragging mouse-3 extends the selection as well.
-
-- Double-clicking on word constituents selects words.
-Double-clicking on symbol constituents selects symbols.
+- Double-clicking on symbol constituents selects symbols.
 Double-clicking on quotes or parentheses selects sexps.
 Double-clicking on whitespace selects whitespace.
 Triple-clicking selects lines.
@@ -230,14 +221,8 @@ mouse-sel sets the variables `interprogram-cut-function' and
 - Clicking mouse-2 inserts the contents of the primary selection at
 the mouse position (or point, if `mouse-yank-at-point' is non-nil).
 
-- Pressing mouse-2 while selecting or extending copies selection
-to the kill ring.  Pressing mouse-1 or mouse-3 kills it.
-
-- Double-clicking mouse-3 also kills selection.
-
-- M-mouse-1, M-mouse-2 & M-mouse-3 work similarly to mouse-1, mouse-2
-& mouse-3, but operate on the X secondary selection rather than the
-primary selection and region."
+- mouse-2 while selecting or extending copies selection to the
+kill ring; mouse-1 or mouse-3 kills it."
   :global t
   :group 'mouse-sel
   (if mouse-sel-mode
@@ -292,8 +277,16 @@ primary selection and region."
   (setq mouse-secondary-overlay (make-overlay 1 1))
   (overlay-put mouse-secondary-overlay 'face 'secondary-selection))
 
+(defconst mouse-sel-primary-overlay
+  (let ((ol (make-overlay (point-min) (point-min))))
+    (delete-overlay ol)
+    (overlay-put ol 'face 'region)
+    ol)
+  "An overlay which records the current primary selection.
+This is used by Mouse Sel mode only.")
+
 (defconst mouse-sel-selection-alist
-  '((PRIMARY mouse-drag-overlay mouse-sel-primary-thing)
+  '((PRIMARY mouse-sel-primary-overlay mouse-sel-primary-thing)
     (SECONDARY mouse-secondary-overlay mouse-sel-secondary-thing))
   "Alist associating selections with variables.
 Each element is of the form:
@@ -305,7 +298,7 @@ where   SELECTION-NAME          = name of selection
 	SELECTION-THING-SYMBOL 	= name of variable where the current selection
  				  type for this selection should be stored.")
 
-(declare-function x-select-text "term/x-win" (text &optional push))
+(declare-function x-select-text "term/common-win" (text))
 
 (defvar mouse-sel-set-selection-function
   (if (eq mouse-sel-default-bindings 'interprogram-cut-paste)
@@ -320,15 +313,15 @@ Called with two arguments:
   SELECTION, the name of the selection concerned, and
   VALUE, the text to store.
 
-This sets the selection as well as the cut buffer for the older applications,
-unless `mouse-sel-default-bindings' is `interprogram-cut-paste'.")
+This sets the selection, unless `mouse-sel-default-bindings'
+is `interprogram-cut-paste'.")
 
-(declare-function x-cut-buffer-or-selection-value "term/x-win" ())
+(declare-function x-selection-value "term/x-win" ())
 
 (defvar mouse-sel-get-selection-function
   (lambda (selection)
     (if (eq selection 'PRIMARY)
-	(or (x-cut-buffer-or-selection-value)
+	(or (x-selection-value)
 	    (bound-and-true-p x-last-selected-text)
 	    (bound-and-true-p x-last-selected-text-primary))
       (x-get-selection selection)))
@@ -555,7 +548,6 @@ See documentation for mouse-select-internal for more details."
 	  (let* ((thing-symbol (mouse-sel-selection-thing selection))
 		 (overlay (mouse-sel-selection-overlay selection))
 		 (orig-window (selected-window))
-		 (orig-window-frame (window-frame orig-window))
 		 (top (nth 1 (window-edges orig-window)))
 		 (bottom (nth 3 (window-edges orig-window)))
 		 (mark-active nil)	; inhibit normal region highlight

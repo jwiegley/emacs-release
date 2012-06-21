@@ -1,5 +1,6 @@
-This is ../../info/eintr, produced by makeinfo version 4.13 from
-emacs-lisp-intro.texi.
+This is /home/cyd/emacs/doc/lispintro/../../info/eintr, produced by
+makeinfo version 4.13 from
+/home/cyd/emacs/doc/lispintro/emacs-lisp-intro.texi.
 
 INFO-DIR-SECTION GNU Emacs Lisp
 START-INFO-DIR-ENTRY
@@ -12,17 +13,16 @@ who are not programmers.
 
    Edition 3.10, 28 October 2009
 
-   Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1997, 2001,
-2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-Free Software Foundation, Inc.
+   Copyright (C) 1990-1995, 1997, 2001-2012 Free Software Foundation,
+Inc.
 
    Published by the:
 
-     GNU Press,                          Website: http://www.gnupress.org
-     a division of the                   General: press@gnu.org
-     Free Software Foundation, Inc.      Orders:  sales@gnu.org
-     51 Franklin Street, Fifth Floor     Tel: +1 (617) 542-5942
-     Boston, MA 02110-1301 USA           Fax: +1 (617) 542-2652
+     GNU Press,                        http://www.fsf.org/campaigns/gnu-press/
+     a division of the                 email: sales@fsf.org
+     Free Software Foundation, Inc.    Tel: +1 (617) 542-5942
+     51 Franklin Street, Fifth Floor   Fax: +1 (617) 542-2652
+     Boston, MA 02110-1301 USA
 
 
    ISBN 1-882114-43-4
@@ -45,14 +45,14 @@ File: eintr,  Node: Debugging Exercises,  Prev: edebug,  Up: Debugging
 17.5 Debugging Exercises
 ========================
 
-   * Install the `count-words-region' function and then cause it to
+   * Install the `count-words-example' function and then cause it to
      enter the built-in debugger when you call it.  Run the command on a
      region containing two words.  You will need to press `d' a
      remarkable number of times.  On your system, is a `hook' called
      after the command finishes?  (For information on hooks, see *note
      Command Loop Overview: (elisp)Command Overview.)
 
-   * Copy `count-words-region' into the `*scratch*' buffer, instrument
+   * Copy `count-words-example' into the `*scratch*' buffer, instrument
      the function for Edebug, and walk through its execution.  The
      function does not need to have a bug, although you can introduce
      one if you wish.  If the function lacks a bug, the walk-through
@@ -65,7 +65,7 @@ File: eintr,  Node: Debugging Exercises,  Prev: edebug,  Up: Debugging
 
    * In the Edebug debugging buffer, use the `p'
      (`edebug-bounce-point') command to see where in the region the
-     `count-words-region' is working.
+     `count-words-example' is working.
 
    * Move point to some spot further down the function and then type the
      `h' (`edebug-goto-here') command to jump to that location.
@@ -504,7 +504,7 @@ human expects to attempt this sort of thing, if only to find out
 whether the kill ring is full or empty.  This is an act of exploration.
 
    From the human point of view, the act of exploration and discovery is
-not necessarily an error, and therefore should not be labelled as one,
+not necessarily an error, and therefore should not be labeled as one,
 even in the bowels of a computer.  As it is, the code in Emacs implies
 that a human who is acting virtuously, by exploring his or her
 environment, is making an error.  This is bad.  Even though the computer
@@ -752,28 +752,28 @@ were written earlier.
 
 File: eintr,  Node: Full Graph,  Next: Free Software and Free Manuals,  Prev: Kill Ring,  Up: Top
 
-Appendix C A Graph with Labelled Axes
-*************************************
+Appendix C A Graph with Labeled Axes
+************************************
 
 Printed axes help you understand a graph.  They convey scale.  In an
 earlier chapter (*note Readying a Graph: Readying a Graph.), we wrote
 the code to print the body of a graph.  Here we write the code for
-printing and labelling vertical and horizontal axes, along with the
-body itself.
+printing and labeling vertical and horizontal axes, along with the body
+itself.
 
 * Menu:
 
-* Labelled Example::
+* Labeled Example::
 * print-graph Varlist::         `let' expression in `print-graph'.
 * print-Y-axis::                Print a label for the vertical axis.
 * print-X-axis::                Print a horizontal label.
 * Print Whole Graph::           The function to print a complete graph.
 
 
-File: eintr,  Node: Labelled Example,  Next: print-graph Varlist,  Prev: Full Graph,  Up: Full Graph
+File: eintr,  Node: Labeled Example,  Next: print-graph Varlist,  Prev: Full Graph,  Up: Full Graph
 
-Labelled Example Graph
-======================
+Labeled Example Graph
+=====================
 
    Since insertions fill a buffer to the right and below point, the new
 graph printing function should first print the Y or vertical axis, then
@@ -803,9 +803,9 @@ sequence lays out for us the contents of the function:
               |   |    |    |
               1   5   10   15
 
-In this graph, both the vertical and the horizontal axes are labelled
+In this graph, both the vertical and the horizontal axes are labeled
 with numbers.  However, in some graphs, the horizontal axis is time and
-would be better labelled with months, like this:
+would be better labeled with months, like this:
 
           5 -      *
                  * ** *
@@ -816,9 +816,9 @@ would be better labelled with months, like this:
               Jan  June   Jan
 
    Indeed, with a little thought, we can easily come up with a variety
-of vertical and horizontal labelling schemes.  Our task could become
+of vertical and horizontal labeling schemes.  Our task could become
 complicated.  But complications breed confusion.  Rather than permit
-this, it is better choose a simple labelling scheme for our first
+this, it is better choose a simple labeling scheme for our first
 effort, and to modify or replace it later.
 
    These considerations suggest the following outline for the
@@ -836,7 +836,7 @@ effort, and to modify or replace it later.
 turn.
 
 
-File: eintr,  Node: print-graph Varlist,  Next: print-Y-axis,  Prev: Labelled Example,  Up: Full Graph
+File: eintr,  Node: print-graph Varlist,  Next: print-Y-axis,  Prev: Labeled Example,  Up: Full Graph
 
 C.1 The `print-graph' Varlist
 =============================
@@ -1267,7 +1267,7 @@ blank spaces and also separated according to the value of the variable
    The value of the variable `X-axis-label-spacing' should itself be
 measured in units of `symbol-width', since you may want to change the
 width of the symbols that you are using to print the body of the graph
-without changing the ways the graph is labelled.
+without changing the ways the graph is labeled.
 
 * Menu:
 
@@ -1504,7 +1504,7 @@ C.4 Printing the Whole Graph
 Now we are nearly ready to print the whole graph.
 
    The function to print the graph with the proper labels follows the
-outline we created earlier (*note A Graph with Labelled Axes: Full
+outline we created earlier (*note A Graph with Labeled Axes: Full
 Graph.), but with additions.
 
    Here is the outline:
@@ -1605,7 +1605,7 @@ are computed by `print-graph' in its `let' expression; so
      ;;; Final version.
      (defun print-graph
        (numbers-list &optional vertical-step)
-       "Print labelled bar graph of the NUMBERS-LIST.
+       "Print labeled bar graph of the NUMBERS-LIST.
      The numbers-list consists of the Y-axis values.
 
      Optionally, VERTICAL-STEP, a positive integer,
@@ -1987,7 +1987,7 @@ text is too much to print).
 
      (defun print-graph
        (numbers-list &optional vertical-step horizontal-step)
-       "Print labelled bar graph of the NUMBERS-LIST.
+       "Print labeled bar graph of the NUMBERS-LIST.
      The numbers-list consists of the Y-axis values.
 
      Optionally, VERTICAL-STEP, a positive integer,
@@ -2732,7 +2732,7 @@ Index
 * Byte compiling:                        Byte Compiling.      (line   6)
 * C language primitives:                 Primitive Functions. (line   6)
 * C, a digression into:                  Digression into C.   (line   6)
-* call defined:                          Switching Buffers.   (line  57)
+* call defined:                          Switching Buffers.   (line  55)
 * cancel-debug-on-entry:                 debug-on-entry.      (line  83)
 * car, introduced:                       car cdr & cons.      (line   6)
 * cdr, introduced:                       car cdr & cons.      (line   6)
@@ -2756,9 +2756,9 @@ Index
 * copy-to-buffer:                        copy-to-buffer.      (line   6)
 * Count words recursively:               recursive-count-words.
                                                               (line   6)
+* count-words-example:                   count-words-example. (line   6)
 * count-words-in-defun:                  count-words-in-defun.
                                                               (line  99)
-* count-words-region:                    count-words-region.  (line   6)
 * Counting:                              Counting.            (line   6)
 * Counting words in a defun <1>:         count-words-in-defun.
                                                               (line   6)
@@ -2849,7 +2849,7 @@ Index
 * Formatting help:                       Typing Lists.        (line   6)
 * forward-paragraph:                     forward-paragraph.   (line   6)
 * forward-sentence:                      forward-sentence.    (line   6)
-* function defined:                      Making Errors.       (line  51)
+* function defined:                      Making Errors.       (line  46)
 * function definition defined:           defun.               (line   6)
 * Function definition installation:      Install.             (line   6)
 * Function definition writing:           Writing Defuns.      (line   6)
@@ -3005,7 +3005,7 @@ Index
 * Print vertical axis:                   print-Y-axis.        (line   6)
 * print-elements-of-list:                print-elements-of-list.
                                                               (line   6)
-* print-elements-recursively:            Recursion with list. (line  25)
+* print-elements-recursively:            Recursion with list. (line  23)
 * print-graph Final version.:            The final version.   (line  75)
 * print-graph varlist:                   print-graph Varlist. (line   6)
 * print-X-axis:                          X Axis Tic Marks.    (line 146)

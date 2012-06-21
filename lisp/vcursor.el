@@ -1,7 +1,6 @@
 ;;; vcursor.el --- manipulate an alternative ("virtual") cursor
 
-;; Copyright (C) 1994, 1996, 1998, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1994, 1996, 1998, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author:   Peter Stephenson <pws@ibmth.df.unipi.it>
 ;; Maintainer: FSF
@@ -224,7 +223,7 @@
 ;; automatically for a PC if Oemacs is detected.  This set uses separate
 ;; control, shift and meta keys with function keys 1 to 10.  In
 ;; particular, movement keys are concentrated on f5 to f8 with (in
-;; increasing order of distance travelled) C-, M- and S- as prefixes.
+;; increasing order of distance traveled) C-, M- and S- as prefixes.
 ;; See the actual bindings below (search for C-f1).  This is because the
 ;; C-S- prefix is represented by weird key sequences and the set is
 ;; incomplete; if you don't mind that, some hints are given in comments
@@ -325,7 +324,7 @@
 (defgroup vcursor nil
   "Manipulate an alternative (\"virtual\") cursor."
   :prefix "vcursor-"
-  :group 'editing)
+  :group 'convenience)
 
 (defface vcursor
   '((((class color)) (:foreground "blue" :background "cyan" :underline t))
@@ -814,6 +813,8 @@ out how much to copy."
 
 (define-minor-mode vcursor-use-vcursor-map
   "Toggle the state of the vcursor key map.
+With a prefix argument ARG, enable it if ARG is positive, and disable
+it otherwise.  If called from Lisp, enable it if ARG is omitted or nil.
 When on, the keys defined in it are mapped directly on top of the main
 keymap, allowing you to move the vcursor with ordinary motion keys.
 An indication \"!VC\" appears in the mode list.  The effect is
@@ -1144,5 +1145,4 @@ line is treated like ordinary characters."
 
 (provide 'vcursor)
 
-;; arch-tag: cdfe1cdc-2c46-4046-88e4-ed57d20f7aca
 ;;; vcursor.el ends here

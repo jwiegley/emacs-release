@@ -3,8 +3,7 @@ eshell.texi.
 
 This manual is for Eshell, the Emacs shell.
 
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+   Copyright (C) 1999-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -29,7 +28,7 @@ File: eshell,  Node: Top,  Next: What is Eshell?,  Prev: (dir),  Up: (dir)
 Eshell
 ******
 
-Eshell is a shell-like command interpretor implemented in Emacs Lisp.
+Eshell is a shell-like command interpreter implemented in Emacs Lisp.
 It invokes no external processes except for those requested by the
 user.  It is intended to be a functional replacement for command shells
 such as `bash', `zsh', `rc', or `4dos'; since Emacs itself is capable of
@@ -37,8 +36,7 @@ handling the sort of tasks accomplished by those tools.
 
    This manual is for Eshell, the Emacs shell.
 
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+   Copyright (C) 1999-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -75,9 +73,9 @@ File: eshell,  Node: What is Eshell?,  Next: Command basics,  Prev: Top,  Up: To
 *****************
 
 Eshell is a "command shell" written in Emacs Lisp.  Everything it does,
-it uses Emacs' facilities to do.  This means that Eshell is as portable
-as Emacs itself.  It also means that cooperation with Lisp code is
-natural and seamless.
+it uses Emacs's facilities to do.  This means that Eshell is as
+portable as Emacs itself.  It also means that cooperation with Lisp code
+is natural and seamless.
 
    What is a command shell?  To properly understand the role of a shell,
 it's necessary to visualize what a computer does for you.  Basically, a
@@ -364,7 +362,16 @@ the `which' command:
      ~ $ which *ls
      /bin/ls
 
-   Some of the built-in commands have a special behaviour in Eshell:
+   If you want to discard a given built-in command, you could declare an
+alias, *note Aliases::.  Eample:
+
+     ~ $ which sudo
+     eshell/sudo is a compiled Lisp function in `em-unix.el'
+     ~ $ alias sudo '*sudo $*'
+     ~ $ which sudo
+     sudo is an alias, defined as "*sudo $*"
+
+   Some of the built-in commands have a special behavior in Eshell:
 
 `cd'
      This command changes the current working directory.  Usually, it is
@@ -610,7 +617,7 @@ It's not possible to fully `unload-feature' Eshell
 Menu support was removed, but never put back
 
 Using C-p and C-n with rebind gets into a locked state
-     This happened a few times in Emacs 21, but has been unreproducible
+     This happened a few times in Emacs 21, but has been irreproducible
      since.
 
 If an interactive process is currently running, `M-!' doesn't work
@@ -788,7 +795,7 @@ Implement input redirection
 Allow `#<WORD ARG>' as a generic syntax
      With the handling of _word_ specified by an `eshell-special-alist'.
 
-In `eshell-veal-using-options', allow a `:complete' tag
+In `eshell-eval-using-options', allow a `:complete' tag
      It would be used to provide completion rules for that command.
      Then the macro will automagically define the completion function.
 
@@ -1466,10 +1473,10 @@ Function and Variable Index
 * $-:                                    History.              (line 12)
 * $?:                                    History.              (line 23)
 * $_:                                    History.              (line 16)
-* cd:                                    Built-ins.            (line 19)
-* history:                               Built-ins.            (line 39)
-* su:                                    Built-ins.            (line 54)
-* sudo:                                  Built-ins.            (line 55)
+* cd:                                    Built-ins.            (line 28)
+* history:                               Built-ins.            (line 48)
+* su:                                    Built-ins.            (line 63)
+* sudo:                                  Built-ins.            (line 64)
 
 
 File: eshell,  Node: Key Index,  Prev: Function and Variable Index,  Up: Top
@@ -1482,44 +1489,44 @@ Key Index
 
 
 Tag Table:
-Node: Top1063
-Node: What is Eshell?2782
-Ref: What is Eshell?-Footnote-15431
-Ref: What is Eshell?-Footnote-25521
-Node: Contributors to Eshell5714
-Node: Command basics6868
-Node: Commands verbs7424
-Node: Command arguments9188
-Node: Commands10439
-Node: Invocation10822
-Ref: Invocation-Footnote-111448
-Node: Completion11541
-Node: Aliases11657
-Node: History11764
-Node: Scripts12431
-Node: Built-ins12537
-Node: Arguments15013
-Node: The Parser15204
-Node: Variables15304
-Node: Substitution15423
-Node: Globbing15546
-Node: Predicates15662
-Node: Input/Output15761
-Node: Process control15881
-Node: Extension modules16015
-Node: Writing a module16320
-Node: Module testing16451
-Node: Directory handling16605
-Node: Key rebinding16764
-Node: Smart scrolling16914
-Node: Terminal emulation17068
-Node: Built-in UNIX commands17237
-Node: Extras and Goodies17390
-Node: Bugs and ideas17535
-Node: Known problems18130
-Node: GNU Free Documentation License33279
-Node: Concept Index58456
-Node: Function and Variable Index59636
-Node: Key Index60474
+Node: Top990
+Node: What is Eshell?2636
+Ref: What is Eshell?-Footnote-15286
+Ref: What is Eshell?-Footnote-25376
+Node: Contributors to Eshell5569
+Node: Command basics6723
+Node: Commands verbs7279
+Node: Command arguments9043
+Node: Commands10294
+Node: Invocation10677
+Ref: Invocation-Footnote-111303
+Node: Completion11396
+Node: Aliases11512
+Node: History11619
+Node: Scripts12286
+Node: Built-ins12392
+Node: Arguments15152
+Node: The Parser15343
+Node: Variables15443
+Node: Substitution15562
+Node: Globbing15685
+Node: Predicates15801
+Node: Input/Output15900
+Node: Process control16020
+Node: Extension modules16154
+Node: Writing a module16459
+Node: Module testing16590
+Node: Directory handling16744
+Node: Key rebinding16903
+Node: Smart scrolling17053
+Node: Terminal emulation17207
+Node: Built-in UNIX commands17376
+Node: Extras and Goodies17529
+Node: Bugs and ideas17674
+Node: Known problems18269
+Node: GNU Free Documentation License33418
+Node: Concept Index58595
+Node: Function and Variable Index59775
+Node: Key Index60613
 
 End Tag Table

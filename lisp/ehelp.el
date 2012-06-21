@@ -1,7 +1,6 @@
-;;; ehelp.el --- bindings for electric-help mode
+;;; ehelp.el --- bindings for electric-help mode -*- lexical-binding: t -*-
 
-;; Copyright (C) 1986, 1995, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1986, 1995, 2000-2012  Free Software Foundation, Inc.
 
 ;; Author: Richard Mlynarik
 ;; (according to ack.texi and authors.el)
@@ -94,10 +93,14 @@
     map)
   "Keymap defining commands available in `electric-help-mode'.")
 
+(defvar electric-help-orig-major-mode nil)
+(make-variable-buffer-local 'electric-help-orig-major-mode)
+
 (defun electric-help-mode ()
   "`with-electric-help' temporarily places its buffer in this mode.
-\(On exit from `with-electric-help', the buffer is put in default `major-mode'.)"
+\(On exit from `with-electric-help', the original `major-mode' is restored.)"
   (setq buffer-read-only t)
+  (setq electric-help-orig-major-mode major-mode)
   (setq mode-name "Help")
   (setq major-mode 'help)
   (setq mode-line-buffer-identification '(" Help:  %b"))
@@ -131,7 +134,7 @@ If THUNK returns non-nil, we don't do those things.
 
 When the user exits (with `electric-help-exit', or otherwise), the help
 buffer's window disappears (i.e., we use `save-window-excursion'), and
-BUFFER is put into default `major-mode' (or `fundamental-mode')."
+BUFFER is put back into its original major mode."
   (setq buffer (get-buffer-create (or buffer "*Help*")))
   (let ((one (one-window-p t))
 	(config (current-window-configuration))
@@ -170,13 +173,17 @@ BUFFER is put into default `major-mode' (or `fundamental-mode')."
       (set-buffer buffer)
       (setq buffer-read-only nil)
 
+      ;; Restore the original major mode saved by `electric-help-mode'.
       ;; We should really get a usable *Help* buffer when retaining
       ;; the electric one with `r'.  The problem is that a simple
-      ;; call to help-mode won't cut it; at least RET is bound wrong
-      ;; afterwards.  It's also not clear that `help-mode' is always
-      ;; the right thing, maybe we should add an optional parameter.
+      ;; call to `help-mode' won't cut it; e.g. RET is bound wrong
+      ;; afterwards (`View-scroll-line-forward' instead of `help-follow').
+      ;; That's because Help mode should be set with `with-help-window'
+      ;; instead of the direct call to `help-mode'. But at least
+      ;; RET works correctly on links after using `help-mode'.
+      ;; This is satisfactory enough.
       (condition-case ()
-          (funcall (or (default-value 'major-mode) 'fundamental-mode))
+          (funcall (or electric-help-orig-major-mode 'fundamental-mode))
         (error nil))
 
       (set-window-configuration config)
@@ -340,14 +347,14 @@ will select it.)"
 
 ;; This is to be bound to M-x in ehelp mode. Retains ehelp buffer and then
 ;; continues with execute-extended-command.
-(defun electric-help-execute-extended (prefixarg)
+(defun electric-help-execute-extended (_prefixarg)
   (interactive "p")
   (setq electric-help-form-to-execute '(execute-extended-command nil))
   (electric-help-retain))
 
 ;; This is to be buond to C-x in ehelp mode. Retains ehelp buffer and then
 ;; continues with ctrl-x prefix.
-(defun electric-help-ctrl-x-prefix (prefixarg)
+(defun electric-help-ctrl-x-prefix (_prefixarg)
   (interactive "p")
   (setq electric-help-form-to-execute '(progn (message nil) (setq unread-command-char ?\C-x)))
   (electric-help-retain))
@@ -418,5 +425,4 @@ will select it.)"
 
 (provide 'ehelp)
 
-;; arch-tag: e0e3037f-42c0-433e-ba18-322c5d951f46
 ;;; ehelp.el ends here

@@ -1,8 +1,9 @@
 ;;; cedet-files.el --- Common routines dealing with file names.
 
-;; Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2007-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
+;; Package: cedet
 
 ;; This file is part of GNU Emacs.
 
@@ -82,12 +83,11 @@ specific conversions during tests."
 	  (setq file (concat driveletter ":"
 			     (substring file (match-end 1))))))
 
-      ;; Handle the \\file\name nomenclature on some windows boxes.
+      ;; Handle the \\file\name nomenclature on some Windows boxes.
       (when (string-match "^!" file)
 	(setq file (concat "//" (substring file 1)))))
     file))
 
 (provide 'cedet-files)
 
-;; arch-tag: 4884c616-82c3-475d-ac9f-039e3431a702
 ;;; cedet-files.el ends here

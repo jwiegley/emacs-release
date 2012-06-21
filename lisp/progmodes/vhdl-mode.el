@@ -1,8 +1,6 @@
 ;;; vhdl-mode.el --- major mode for editing VHDL code
 
-;; Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000,
-;;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1992-2012 Free Software Foundation, Inc.
 
 ;; Authors:     Reto Zimmermann <reto@gnu.org>
 ;;              Rodney J. Whitby <software.vhdl-mode@rwhitby.net>
@@ -60,7 +58,7 @@
 ;;   - Word/keyword completion
 ;;   - Block commenting
 ;;   - Code fixing/alignment/beautification
-;;   - Postscript printing
+;;   - PostScript printing
 ;;   - VHDL'87/'93 and VHDL-AMS supported
 ;;   - Comprehensive menu
 ;;   - Fully customizable
@@ -198,21 +196,6 @@ Examples:
 (defgroup vhdl-mode nil
   "Customizations for modes."
   :group 'vhdl)
-
-(defcustom vhdl-electric-mode t
-  "*Non-nil enables electrification (automatic template generation).
-If nil, template generators can still be invoked through key bindings and
-menu.  Is indicated in the modeline by \"/e\" after the mode name and can be
-toggled by `\\[vhdl-electric-mode]'."
-  :type 'boolean
-  :group 'vhdl-mode)
-
-(defcustom vhdl-stutter-mode t
-  "*Non-nil enables stuttering.
-Is indicated in the modeline by \"/s\" after the mode name and can be toggled
-by `\\[vhdl-stutter-mode]'."
-  :type 'boolean
-  :group 'vhdl-mode)
 
 (defcustom vhdl-indent-tabs-mode nil
   "*Non-nil means indentation can insert tabs.
@@ -1731,7 +1714,7 @@ an absolute path (i.e. all caches can be stored in one global directory)."
 
 
 (defgroup vhdl-menu nil
-  "Customizations for menues."
+  "Customizations for menus."
   :group 'vhdl)
 
 (defcustom vhdl-index-menu nil
@@ -1769,7 +1752,7 @@ NOTE: Activate the new setting in a VHDL buffer by using the menu entry
 
 (defcustom vhdl-print-two-column t
   "*Non-nil means print code in two columns and landscape format.
-Adjusts settings in a way that postscript printing (\"File\" menu, `ps-print')
+Adjusts settings in a way that PostScript printing (\"File\" menu, `ps-print')
 prints VHDL files in a nice two-column landscape style.
 
 NOTE: Activate the new setting by restarting Emacs.
@@ -1778,7 +1761,7 @@ NOTE: Activate the new setting by restarting Emacs.
   :group 'vhdl-print)
 
 (defcustom vhdl-print-customize-faces t
-  "*Non-nil means use an optimized set of faces for postscript printing.
+  "*Non-nil means use an optimized set of faces for PostScript printing.
 
 NOTE: Activate the new setting by restarting Emacs.
       Overrides `ps-print' settings locally."
@@ -1861,7 +1844,7 @@ NOTE: Activate the new setting in a VHDL buffer by using the menu entry
 ;; Internal variables
 
 (defvar vhdl-menu-max-size 20
-  "*Specifies the maximum size of a menu before splitting it into submenues.")
+  "*Specifies the maximum size of a menu before splitting it into submenus.")
 
 (defvar vhdl-progress-interval 1
   "*Interval used to update progress status during long operations.
@@ -1954,7 +1937,7 @@ Here is the current list of valid syntactic element symbols:
  comment                -- a line containing only a comment
  arglist-intro          -- the first line in an argument list
  arglist-cont           -- subsequent argument list lines when no
-                           arguments follow on the same line as the
+                           arguments follow on the same line as
                            the arglist opening paren
  arglist-cont-nonempty  -- subsequent argument list lines when at
                            least one argument follows on the same
@@ -2057,7 +2040,7 @@ Ignore byte-compiler warnings you might see."
 ;; `wildcard-to-regexp' is included only in XEmacs 21
 (unless (fboundp 'wildcard-to-regexp)
   (defun wildcard-to-regexp (wildcard)
-    "Simplified version of `wildcard-to-regexp' from Emacs' `files.el'."
+    "Simplified version of `wildcard-to-regexp' from Emacs's `files.el'."
     (let* ((i (string-match "[*?]" wildcard))
 	   (result (substring wildcard 0 i))
 	   (len (length wildcard)))
@@ -2104,7 +2087,7 @@ Ignore byte-compiler warnings you might see."
 ;; `file-expand-wildcards' undefined (XEmacs)
 (unless (fboundp 'file-expand-wildcards)
   (defun file-expand-wildcards (pattern &optional full)
-    "Taken from Emacs' `files.el'."
+    "Taken from Emacs's `files.el'."
     (let* ((nondir (file-name-nondirectory pattern))
     	   (dirpart (file-name-directory pattern))
     	   (dirs (if (and dirpart (string-match "[[*?]" dirpart))
@@ -2148,7 +2131,7 @@ Ignore byte-compiler warnings you might see."
   (if (fboundp 'start-itimer)
       (start-itimer "vhdl-mode" function secs repeat t)
 ;    (run-with-idle-timer secs repeat function)))
-    ;; explicitely activate timer (necessary when Emacs is already idle)
+    ;; explicitly activate timer (necessary when Emacs is already idle)
     (aset (run-with-idle-timer secs repeat function) 0 nil)))
 
 (defun vhdl-warning-when-idle (&rest args)
@@ -2485,7 +2468,7 @@ conversion."
   (goto-char marker))
 
 (defun vhdl-menu-split (list title)
-  "Split menu LIST into several submenues, if number of
+  "Split menu LIST into several submenus, if number of
 elements > `vhdl-menu-max-size'."
   (if (> (length list) vhdl-menu-max-size)
       (let ((remain list)
@@ -3134,7 +3117,7 @@ STRING are replaced by `-' and substrings are converted to lower case."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Menues
+;;; Menus
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3466,13 +3449,11 @@ STRING are replaced by `-' and substrings are converted to lower case."
      ("Mode"
       ["Electric Mode"
        (progn (customize-set-variable 'vhdl-electric-mode
-				      (not vhdl-electric-mode))
-	      (vhdl-mode-line-update))
+				      (not vhdl-electric-mode)))
        :style toggle :selected vhdl-electric-mode :keys "C-c C-m C-e"]
       ["Stutter Mode"
        (progn (customize-set-variable 'vhdl-stutter-mode
-				      (not vhdl-stutter-mode))
-	      (vhdl-mode-line-update))
+				      (not vhdl-stutter-mode)))
        :style toggle :selected vhdl-stutter-mode :keys "C-c C-m C-s"]
       ["Indent Tabs Mode"
        (progn (customize-set-variable 'vhdl-indent-tabs-mode
@@ -3529,7 +3510,7 @@ STRING are replaced by `-' and substrings are converted to lower case."
 			menu-list))
 	    (setq comp-alist (cdr comp-alist)))
 	  (setq menu-list (nreverse menu-list))
-	  (vhdl-menu-split menu-list "Compler")))
+	  (vhdl-menu-split menu-list "Compiler")))
       ["Use Local Error Regexp"
        (customize-set-variable 'vhdl-compile-use-local-error-regexp
 			       (not vhdl-compile-use-local-error-regexp))
@@ -4134,7 +4115,10 @@ The directory of the current source file is scanned."
 ;; performs all buffer local initializations
 
 ;;;###autoload
-(defun vhdl-mode ()
+(define-derived-mode vhdl-mode prog-mode
+  '("VHDL" (vhdl-electric-mode "/" (vhdl-stutter-mode "/"))
+           (vhdl-electric-mode "e")
+           (vhdl-stutter-mode "s"))
   "Major mode for editing VHDL code.
 
 Usage:
@@ -4282,7 +4266,7 @@ Usage:
 
   CODE BEAUTIFICATION:
     `C-c M-b' and `C-c C-b' beautify the code of a region or of the entire
-    buffer respectively.  This inludes indentation, alignment, and case
+    buffer respectively.  This includes indentation, alignment, and case
     fixing.  Code beautification can also be run non-interactively using the
     command:
 
@@ -4583,10 +4567,10 @@ Usage:
 
 
   PRINTING:
-    Postscript printing with different faces (an optimized set of faces is
+    PostScript printing with different faces (an optimized set of faces is
     used if `vhdl-print-customize-faces' is non-nil) or colors \(if
     `ps-print-color-p' is non-nil) is possible using the standard Emacs
-    postscript printing commands.  Option `vhdl-print-two-column' defines
+    PostScript printing commands.  Option `vhdl-print-two-column' defines
     appropriate default settings for nice landscape two-column printing.
     The paper format can be set by option `ps-paper-type'.  Do not forget to
     switch `ps-print-color-p' to nil for printing on black-and-white
@@ -4667,23 +4651,13 @@ Key bindings:
 -------------
 
 \\{vhdl-mode-map}"
-  (interactive)
-  (kill-all-local-variables)
-  (setq major-mode 'vhdl-mode)
-  (setq mode-name "VHDL")
-
-  ;; set maps and tables
-  (use-local-map vhdl-mode-map)
-  (set-syntax-table vhdl-mode-syntax-table)
-  (setq local-abbrev-table vhdl-mode-abbrev-table)
+  :abbrev-table vhdl-mode-abbrev-table
 
   ;; set local variables
   (set (make-local-variable 'paragraph-start)
        "\\s-*\\(--+\\s-*$\\|[^ -]\\|$\\)")
   (set (make-local-variable 'paragraph-separate) paragraph-start)
   (set (make-local-variable 'paragraph-ignore-fill-prefix) t)
-  (set (make-local-variable 'require-final-newline)
-       (if vhdl-emacs-22 mode-require-final-newline t))
   (set (make-local-variable 'parse-sexp-ignore-comments) t)
   (set (make-local-variable 'indent-line-function) 'vhdl-indent-line)
   (set (make-local-variable 'comment-start) "--")
@@ -4700,15 +4674,21 @@ Key bindings:
   ;; setup the comment indent variable in a Emacs version portable way
   ;; ignore any byte compiler warnings you might get here
   (when (boundp 'comment-indent-function)
-    (make-local-variable 'comment-indent-function)
-    (setq comment-indent-function 'vhdl-comment-indent))
+    (set (make-local-variable 'comment-indent-function) 'vhdl-comment-indent))
 
   ;; initialize font locking
   (set (make-local-variable 'font-lock-defaults)
        (list
 	'(nil vhdl-font-lock-keywords) nil
-	(not vhdl-highlight-case-sensitive) '((?\_ . "w")) 'beginning-of-line
-	'(font-lock-syntactic-keywords . vhdl-font-lock-syntactic-keywords)))
+	(not vhdl-highlight-case-sensitive) '((?\_ . "w")) 'beginning-of-line))
+  (if (eval-when-compile (fboundp 'syntax-propertize-rules))
+      (set (make-local-variable 'syntax-propertize-function)
+           (syntax-propertize-rules
+            ;; Mark single quotes as having string quote syntax in
+            ;; 'c' instances.
+            ("\\(\'\\).\\(\'\\)" (1 "\"'") (2 "\"'"))))
+    (set (make-local-variable 'font-lock-syntactic-keywords)
+         vhdl-font-lock-syntactic-keywords))
   (unless vhdl-emacs-21
     (set (make-local-variable 'font-lock-support-mode) 'lazy-lock-mode)
     (set (make-local-variable 'lazy-lock-defer-contextually) nil)
@@ -4737,14 +4717,8 @@ Key bindings:
   ;; miscellaneous
   (vhdl-ps-print-init)
   (vhdl-write-file-hooks-init)
-  (vhdl-mode-line-update)
   (message "VHDL Mode %s.%s" vhdl-version
-	   (if noninteractive "" "  See menu for documentation and release notes."))
-
-  ;; run hooks
-  (if vhdl-emacs-22
-      (run-mode-hooks 'vhdl-mode-hook)
-    (run-hooks 'vhdl-mode-hook)))
+	   (if noninteractive "" "  See menu for documentation and release notes.")))
 
 (defun vhdl-activate-customizations ()
   "Activate all customizations on local variables."
@@ -4757,16 +4731,15 @@ Key bindings:
   (vhdl-write-file-hooks-init)
   (vhdl-update-mode-menu)
   (vhdl-hideshow-init)
-  (run-hooks 'menu-bar-update-hook)
-  (vhdl-mode-line-update))
+  (run-hooks 'menu-bar-update-hook))
 
 (defun vhdl-write-file-hooks-init ()
   "Add/remove hooks when buffer is saved."
   (if vhdl-modify-date-on-saving
-      (add-hook 'local-write-file-hooks 'vhdl-template-modify-noerror)
-    (remove-hook 'local-write-file-hooks 'vhdl-template-modify-noerror))
-  (make-local-variable 'after-save-hook)
-  (add-hook 'after-save-hook 'vhdl-add-modified-file))
+      (add-hook 'local-write-file-hooks 'vhdl-template-modify-noerror nil t)
+    (remove-hook 'local-write-file-hooks 'vhdl-template-modify-noerror t))
+  (if (featurep 'xemacs) (make-local-hook 'after-save-hook))
+  (add-hook 'after-save-hook 'vhdl-add-modified-file nil t))
 
 (defun vhdl-process-command-line-option (option)
   "Process command line options for VHDL Mode."
@@ -5280,13 +5253,12 @@ argument.  The styles are chosen from the `vhdl-style-alist' variable."
       (lambda (varentry)
 	(let ((var (car varentry))
 	      (val (cdr varentry)))
-	  (and local
-	       (make-local-variable var))
 	  ;; special case for vhdl-offsets-alist
 	  (if (not (eq var 'vhdl-offsets-alist))
-	      (set var val)
+	      (set (if local (make-local-variable var) var) val)
 	    ;; reset vhdl-offsets-alist to the default value first
-	    (setq vhdl-offsets-alist (copy-alist vhdl-offsets-alist-default))
+	    (set (if local (make-local-variable var) var)
+                 (copy-alist vhdl-offsets-alist-default))
 	    ;; now set the langelems that are different
 	    (mapcar
 	     (function
@@ -7278,7 +7250,7 @@ indentation is done before aligning."
        (save-excursion
 	 (goto-char begin)
 	 (let (element
-	       (eol (save-excursion (progn (end-of-line) (point)))))
+	       (eol (point-at-eol)))
 	   (setq element (nth 0 copy))
 	   (when (and (or (and (listp (car element))
 			       (memq major-mode (car element)))
@@ -7304,7 +7276,7 @@ the token in MATCH."
       ;; Determine the greatest whitespace distance to the alignment
       ;; character
       (goto-char begin)
-      (setq eol (progn (end-of-line) (point))
+      (setq eol (point-at-eol)
 	    bol (setq begin (progn (beginning-of-line) (point))))
       (while (< bol end)
 	(save-excursion
@@ -7315,13 +7287,13 @@ the token in MATCH."
 	      (setq max distance))))
 	(forward-line)
 	(setq bol (point)
-	      eol (save-excursion (end-of-line) (point)))
+	      eol (point-at-eol))
 	(setq lines (1+ lines)))
       ;; Now insert enough maxs to push each assignment operator to
       ;; the same column.  We need to use 'lines' as a counter, since
       ;; the location of the mark may change
       (goto-char (setq bol begin))
-      (setq eol (save-excursion (end-of-line) (point)))
+      (setq eol (point-at-eol))
       (while (> lines 0)
   	(when (and (re-search-forward match eol t)
 		   (not (vhdl-in-literal)))
@@ -7333,7 +7305,7 @@ the token in MATCH."
 	(beginning-of-line)
 	(forward-line)
 	(setq bol (point)
-	      eol (save-excursion (end-of-line) (point)))
+	      eol (point-at-eol))
 	(setq lines (1- lines))))))
 
 (defun vhdl-align-region-groups (beg end &optional spacing
@@ -7997,7 +7969,7 @@ buffer."
 	   (forward-char)
 	   (vhdl-forward-syntactic-ws))
 	 (goto-char end)
-	 (when (> pos (save-excursion (end-of-line) (point)))
+	 (when (> pos (point-at-eol))
 	   (error "ERROR:  Not within a generic/port clause"))
 	 ;; delete closing parenthesis on separate line (not supported style)
 	 (when (save-excursion (beginning-of-line) (looking-at "^\\s-*);"))
@@ -8010,7 +7982,7 @@ buffer."
 		       (condition-case () (forward-sexp)
 			 (error (goto-char (point-max))))
 		       (< (point) end))
-	   (delete-backward-char 1))
+	   (delete-char -1))
 	 ;; add closing parenthesis
 	 (when (> (point) end)
 	   (goto-char end)
@@ -8055,31 +8027,19 @@ project is defined."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Enabling/disabling
 
-(defun vhdl-mode-line-update ()
-  "Update the modeline string for VHDL major mode."
-  (setq mode-name (concat "VHDL"
-			  (and (or vhdl-electric-mode vhdl-stutter-mode) "/")
-			  (and vhdl-electric-mode "e")
-			  (and vhdl-stutter-mode "s")))
-  (force-mode-line-update t))
-
-(defun vhdl-electric-mode (arg)
+(define-minor-mode vhdl-electric-mode
   "Toggle VHDL electric mode.
-Turn on if ARG positive, turn off if ARG negative, toggle if ARG zero or nil."
-  (interactive "P")
-  (setq vhdl-electric-mode
-	(cond ((or (not arg) (zerop arg)) (not vhdl-electric-mode))
-	      ((> arg 0) t) (t nil)))
-  (vhdl-mode-line-update))
+With a prefix argument ARG, enable the mode if ARG is positive,
+and disable it otherwise.  If called from Lisp, enable it if ARG
+is omitted or nil."
+  :global t)
 
-(defun vhdl-stutter-mode (arg)
+(define-minor-mode vhdl-stutter-mode
   "Toggle VHDL stuttering mode.
-Turn on if ARG positive, turn off if ARG negative, toggle if ARG zero or nil."
-  (interactive "P")
-  (setq vhdl-stutter-mode
-	(cond ((or (not arg) (zerop arg)) (not vhdl-stutter-mode))
-	      ((> arg 0) t) (t nil)))
-  (vhdl-mode-line-update))
+With a prefix argument ARG, enable the mode if ARG is positive,
+and disable it otherwise.  If called from Lisp, enable it if ARG
+is omitted or nil."
+  :global t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Stuttering
@@ -8137,7 +8097,7 @@ Turn on if ARG positive, turn off if ARG negative, toggle if ARG zero or nil."
   (interactive "p")
   (if (and vhdl-stutter-mode (= count 1) (not (vhdl-in-literal)))
       (if (= (preceding-char) last-input-event)
-	  (progn (delete-backward-char 1) (insert-char ?\" 1))
+	  (progn (delete-char -1) (insert-char ?\" 1))
 	(insert-char ?\' 1))
     (self-insert-command count)))
 
@@ -8204,7 +8164,7 @@ Turn on if ARG positive, turn off if ARG negative, toggle if ARG zero or nil."
       (unless (vhdl-template-field
 	       (concat "[type" (and (vhdl-standard-p 'ams) " or nature") "]")
 	       nil t)
-	(delete-backward-char 3))
+	(delete-char -3))
       (vhdl-insert-keyword " IS ")
       (vhdl-template-field "name" ";")
       (vhdl-comment-insert-inline))))
@@ -8568,7 +8528,7 @@ a configuration declaration if not within a design unit."
 	       (vhdl-template-field "library name" "." nil nil nil nil
 				    (vhdl-work-library))
 	       (vhdl-template-field "configuration name" ";"))
-	      (t (delete-backward-char 1) (insert ";") t))))))
+	      (t (delete-char -1) (insert ";") t))))))
 
 
 (defun vhdl-template-configuration-decl ()
@@ -8735,7 +8695,7 @@ a configuration declaration if not within a design unit."
 	(vhdl-insert-keyword " OPEN ")
 	(unless (vhdl-template-field "[READ_MODE | WRITE_MODE | APPEND_MODE]"
 				     nil t)
-	  (delete-backward-char 6)))
+	  (delete-char -6)))
       (vhdl-insert-keyword " IS ")
       (when (vhdl-standard-p '87)
 	(vhdl-template-field "[IN | OUT]" " " t))
@@ -9063,7 +9023,7 @@ otherwise."
 	      (insert "\n")
 	      (indent-to margin))
 	    (delete-region end-pos (point))
-	    (delete-backward-char 1)
+	    (delete-char -1)
 	    (insert ")")
 	    (when vhdl-auto-align (vhdl-align-region-groups start (point) 1))
 	    t)
@@ -9437,7 +9397,7 @@ otherwise."
     (vhdl-insert-keyword "REPORT ")
     (if (equal "\"\"" (vhdl-template-field
 		       "string expression" nil t start (point) t))
-	(delete-backward-char 2)
+	(delete-char -2)
       (setq start (point))
       (vhdl-insert-keyword " SEVERITY ")
       (unless (vhdl-template-field "[NOTE | WARNING | ERROR | FAILURE]" nil t)
@@ -9585,7 +9545,7 @@ otherwise."
 		    "[scalar type | ARRAY | RECORD | ACCESS | FILE]" nil t)
 		   ""))))
 	(cond ((equal definition "")
-	       (delete-backward-char 4)
+	       (delete-char -4)
 	       (insert ";"))
 	      ((equal definition "ARRAY")
 	       (delete-region (point) (progn (forward-word -1) (point)))
@@ -10085,13 +10045,13 @@ If starting after end-comment-column, start a new line."
       (if (not (or (and string (progn (insert string) t))
 		   (vhdl-template-field "[comment]" nil t)))
 	  (delete-region position (point))
-	(while (= (preceding-char) ? ) (delete-backward-char 1))
-; 	(when (> (current-column) end-comment-column)
-; 	  (setq position (point-marker))
-; 	  (re-search-backward "-- ")
-; 	  (insert "\n")
-; 	  (indent-to comment-column)
-; 	  (goto-char position))
+	(while (= (preceding-char) ?\ ) (delete-char -1))
+	;; (when (> (current-column) end-comment-column)
+	;;   (setq position (point-marker))
+	;;   (re-search-backward "-- ")
+	;;   (insert "\n")
+	;;   (indent-to comment-column)
+	;;   (goto-char position))
 	))))
 
 (defun vhdl-comment-block ()
@@ -10224,7 +10184,7 @@ Point is left between them."
     (when semicolon-pos (goto-char semicolon-pos))
     (if not-empty
 	(progn (delete-char 1) (insert ")"))
-      (delete-backward-char 2))))
+      (delete-char -2))))
 
 (defun vhdl-template-generic-list (optional &optional no-value)
   "Read from user a generic spec argument list."
@@ -10852,7 +10812,7 @@ but not if inside a comment or quote."
 
 (defvar vhdl-port-list nil
   "Variable to hold last port map parsed.")
-;; structure: (parenthesised expression means list of such entries)
+;; structure: (parenthesized expression means list of such entries)
 ;; (ent-name
 ;;  ((generic-names) generic-type generic-init generic-comment group-comment)
 ;;  ((port-names) port-object port-direct port-type port-comment group-comment)
@@ -11700,7 +11660,7 @@ reflected in a subsequent paste operation."
 
 (defvar vhdl-subprog-list nil
   "Variable to hold last subprogram interface parsed.")
-;; structure: (parenthesised expression means list of such entries)
+;; structure: (parenthesized expression means list of such entries)
 ;; (subprog-name kind
 ;;  ((names) object direct type init comment group-comment)
 ;;  return-type return-comment group-comment)
@@ -12140,9 +12100,7 @@ options vhdl-upper-case-{keywords,types,attributes,enum-values}."
   "Return the line number of the line containing point."
   (save-restriction
     (widen)
-    (save-excursion
-      (beginning-of-line)
-      (1+ (count-lines (point-min) (point))))))
+    (1+ (count-lines (point-min) (point-at-bol)))))
 
 (defun vhdl-line-kill-entire (&optional arg)
   "Delete entire line."
@@ -12159,8 +12117,7 @@ options vhdl-upper-case-{keywords,types,attributes,enum-values}."
   "Copy current line."
   (interactive "p")
   (save-excursion
-    (beginning-of-line)
-    (let ((position (point)))
+    (let ((position (point-at-bol)))
       (forward-line (or arg 1))
       (copy-region-as-kill position (point)))))
 
@@ -12528,12 +12485,12 @@ File statistics: \"%s\"\n\
 	    (cons (list 'vhdl-mode vhdl-hs-start-regexp nil "--\\( \\|$\\)"
 			'vhdl-hs-forward-sexp-func nil)
 		  hs-special-modes-alist)))
-    (make-local-variable 'hs-minor-mode-hook)
+    (if (featurep 'xemacs) (make-local-hook 'hs-minor-mode-hook))
     (if vhdl-hide-all-init
-	(add-hook 'hs-minor-mode-hook 'hs-hide-all)
-      (remove-hook 'hs-minor-mode-hook 'hs-hide-all))
+	(add-hook 'hs-minor-mode-hook 'hs-hide-all nil t)
+      (remove-hook 'hs-minor-mode-hook 'hs-hide-all t))
     (hs-minor-mode arg)
-    (vhdl-mode-line-update)))		; hack to update menu bar
+    (force-mode-line-update)))		; hack to update menu bar
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -12946,10 +12903,9 @@ This does background highlighting of translate-off regions.")
   "Re-initialize fontification and fontify buffer."
   (interactive)
   (setq font-lock-defaults
-	(list
-	 'vhdl-font-lock-keywords nil
-	 (not vhdl-highlight-case-sensitive) '((?\_ . "w")) 'beginning-of-line
-	 '(font-lock-syntactic-keywords . vhdl-font-lock-syntactic-keywords)))
+	`(vhdl-font-lock-keywords
+          nil ,(not vhdl-highlight-case-sensitive) ((?\_ . "w"))
+          beginning-of-line))
   (when (fboundp 'font-lock-unset-defaults)
     (font-lock-unset-defaults))		; not implemented in XEmacs
   (font-lock-set-defaults)
@@ -12957,10 +12913,10 @@ This does background highlighting of translate-off regions.")
   (font-lock-mode t))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Initialization for postscript printing
+;; Initialization for PostScript printing
 
 (defun vhdl-ps-print-settings ()
-  "Initialize custom face and page settings for postscript printing."
+  "Initialize custom face and page settings for PostScript printing."
   ;; define custom face settings
   (unless (or (not vhdl-print-customize-faces)
 	      ps-print-color-p)
@@ -12995,12 +12951,12 @@ This does background highlighting of translate-off regions.")
       (set (make-local-variable 'ps-right-margin) 40.0))))
 
 (defun vhdl-ps-print-init ()
-  "Initialize postscript printing."
+  "Initialize PostScript printing."
   (if (featurep 'xemacs)
       (when (boundp 'ps-print-color-p)
 	(vhdl-ps-print-settings))
-    (make-local-variable 'ps-print-hook)
-    (add-hook 'ps-print-hook 'vhdl-ps-print-settings)))
+    (if (featurep 'xemacs) (make-local-hook 'ps-print-hook))
+    (add-hook 'ps-print-hook 'vhdl-ps-print-settings nil t)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -13015,7 +12971,7 @@ This does background highlighting of translate-off regions.")
 (defvar vhdl-entity-alist nil
   "Cache with entities and corresponding architectures for each
 project/directory.")
-;; structure: (parenthesised expression means list of such entries)
+;; structure: (parenthesized expression means list of such entries)
 ;; (cache-key
 ;;   (ent-key ent-name ent-file ent-line
 ;;     (arch-key arch-name arch-file arch-line
@@ -13026,7 +12982,7 @@ project/directory.")
 
 (defvar vhdl-config-alist nil
   "Cache with configurations for each project/directory.")
-;; structure: (parenthesised expression means list of such entries)
+;; structure: (parenthesized expression means list of such entries)
 ;; (cache-key
 ;;   (conf-key conf-name conf-file conf-line ent-key arch-key
 ;;     (inst-key inst-comp-name inst-ent-key inst-arch-key
@@ -13035,7 +12991,7 @@ project/directory.")
 
 (defvar vhdl-package-alist nil
   "Cache with packages for each project/directory.")
-;; structure: (parenthesised expression means list of such entries)
+;; structure: (parenthesized expression means list of such entries)
 ;; (cache-key
 ;;   (pack-key pack-name pack-file pack-line
 ;;     (comp-key comp-name comp-file comp-line)
@@ -13047,19 +13003,19 @@ project/directory.")
 
 (defvar vhdl-ent-inst-alist nil
   "Cache with instantiated entities for each project/directory.")
-;; structure: (parenthesised expression means list of such entries)
+;; structure: (parenthesized expression means list of such entries)
 ;; (cache-key (inst-ent-key))
 
 (defvar vhdl-file-alist nil
   "Cache with design units in each file for each project/directory.")
-;; structure: (parenthesised expression means list of such entries)
+;; structure: (parenthesized expression means list of such entries)
 ;; (cache-key
 ;;   (file-name (ent-list) (arch-list) (arch-ent-list) (conf-list)
 ;;		(pack-list) (pack-body-list) (inst-list) (inst-ent-list))
 
 (defvar vhdl-directory-alist nil
   "Cache with source directories for each project.")
-;; structure: (parenthesised expression means list of such entries)
+;; structure: (parenthesized expression means list of such entries)
 ;; (cache-key (directory))
 
 (defvar vhdl-speedbar-shown-unit-alist nil
@@ -13699,7 +13655,7 @@ of PROJECT."
       (vhdl-speedbar-update-current-unit)
       (when updated (message "Updating hierarchy...done")))))
 
-;; structure (parenthesised expression means list of such entries)
+;; structure (parenthesized expression means list of such entries)
 ;; (inst-key inst-file-marker comp-ent-key comp-ent-file-marker
 ;;  comp-arch-key comp-arch-file-marker comp-conf-key comp-conf-file-marker
 ;;  comp-lib-name level)
@@ -15942,7 +15898,7 @@ current project/directory."
 							 &optional insert-conf)
   "Generate block configuration for architecture."
   (let ((margin (current-indentation))
-	(beg (save-excursion (beginning-of-line) (point)))
+	(beg (point-at-bol))
 	ent-entry inst-entry inst-path inst-prev-path cons-key tmp-alist)
     ;; insert block configuration (for architecture)
     (vhdl-insert-keyword "FOR ") (insert arch-name "\n")
@@ -16901,7 +16857,7 @@ User Options
 `vhdl-configuration-file-name': (new)
   Specify how the configuration file name is obtained.
 `vhdl-compose-configuration-name': (new)
-  Specify how the configuration name is optained.
+  Specify how the configuration name is obtained.
 `vhdl-compose-configuration-create-file': (new)
   Specify whether a new file should be created for a configuration.
 `vhdl-compose-configuration-hierarchical': (new)
@@ -17003,5 +16959,4 @@ to visually support naming conventions.")
 
 (provide 'vhdl-mode)
 
-;; arch-tag: 780d7073-9b5d-4c6c-b0d8-26b28783aba3
 ;;; vhdl-mode.el ends here

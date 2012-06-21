@@ -1,7 +1,6 @@
 ;;; rot13.el --- display a buffer in ROT13
 
-;; Copyright (C) 1988, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1988, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: Howard Gayle
 ;; Maintainer: FSF
@@ -33,7 +32,7 @@
 ;; This hack is mainly to show off the char table stuff.
 ;;
 ;; New entry points, `rot13', `rot13-string', and `rot13-region' that
-;; performs Ceasar cipher encrypt/decrypt on buffers and strings, was
+;; performs Caesar cipher encrypt/decrypt on buffers and strings, was
 ;; added by Simon Josefsson.
 
 ;;; Code:
@@ -109,5 +108,4 @@ See also `toggle-rot13-mode'."
 
 (provide 'rot13)
 
-;; arch-tag: ad5b9ca8-946c-4414-996f-e9b1bf9ec79f
 ;;; rot13.el ends here

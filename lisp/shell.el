@@ -1,7 +1,6 @@
-;;; shell.el --- specialized comint.el for running the shell
+;;; shell.el --- specialized comint.el for running the shell -*- lexical-binding: t -*-
 
-;; Copyright (C) 1988, 1993, 1994, 1995, 1996, 1997, 2000, 2001,
-;;   2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1988, 1993-1997, 2000-2012 Free Software Foundation, Inc.
 
 ;; Author: Olin Shivers <shivers@cs.cmu.edu>
 ;;	Simon Marshall <simon@gnu.org>
@@ -36,7 +35,7 @@
 ;; This makes these modes easier to use.
 
 ;; For documentation on the functionality provided by comint mode, and
-;; the hooks available for customising it, see the file comint.el.
+;; the hooks available for customizing it, see the file comint.el.
 ;; For further information on shell mode, see the comments below.
 
 ;; Needs fixin:
@@ -70,7 +69,7 @@
 ;; c-c c-c comint-interrupt-subjob 	   ^c
 ;; c-c c-z comint-stop-subjob	    	   ^z
 ;; c-c c-\ comint-quit-subjob	    	   ^\
-;; c-c c-o comint-kill-output		   Delete last batch of process output
+;; c-c c-o comint-delete-output		   Delete last batch of process output
 ;; c-c c-r comint-show-output		   Show last batch of process output
 ;; c-c c-l comint-dynamic-list-input-ring  List input history
 ;;         send-invisible                  Read line w/o echo & send to proc
@@ -80,7 +79,7 @@
 
 ;; Shell Mode Commands:
 ;;         shell			Fires up the shell process
-;; tab     comint-dynamic-complete	Complete filename/command/history
+;; tab     completion-at-point		Complete filename/command/history
 ;; m-?     comint-dynamic-list-filename-completions
 ;;					List completions in help buffer
 ;; m-c-f   shell-forward-command	Forward a shell command
@@ -90,14 +89,16 @@
 ;;         comint-strip-ctrl-m		Remove trailing ^Ms from output
 ;;
 ;; The shell mode hook is shell-mode-hook
-;; comint-prompt-regexp is initialised to shell-prompt-pattern, for backwards
+;; comint-prompt-regexp is initialized to shell-prompt-pattern, for backwards
 ;; compatibility.
 
 ;; Read the rest of this file for more information.
 
 ;;; Code:
 
+(eval-when-compile (require 'cl))
 (require 'comint)
+(require 'pcomplete)
 
 ;;; Customization and Buffer Variables
 
@@ -152,12 +153,15 @@ This is a fine thing to set in your `.emacs' file."
   :type '(repeat (string :tag "Suffix"))
   :group 'shell)
 
-(defvar shell-delimiter-argument-list '(?\| ?& ?< ?> ?\( ?\) ?\;)
+(defcustom shell-delimiter-argument-list '(?\| ?& ?< ?> ?\( ?\) ?\;)
   "List of characters to recognize as separate arguments.
 This variable is used to initialize `comint-delimiter-argument-list' in the
-shell buffer.  The value may depend on the operating system or shell.
-
-This is a fine thing to set in your `.emacs' file.")
+shell buffer.  The value may depend on the operating system or shell."
+  :type '(choice (const nil)
+		 (repeat :tag "List of characters" character))
+  ;; Reverted.
+;;  :version "24.1"			; changed to nil (bug#8027)
+  :group 'shell)
 
 (defvar shell-file-name-chars
   (if (memq system-type '(ms-dos windows-nt cygwin))
@@ -180,12 +184,13 @@ shell buffer.  The value may depend on the operating system or shell.
 This is a fine thing to set in your `.emacs' file.")
 
 (defvar shell-dynamic-complete-functions
-  '(comint-replace-by-expanded-history
-    shell-dynamic-complete-environment-variable
-    shell-dynamic-complete-command
-    shell-replace-by-expanded-directory
-    shell-dynamic-complete-filename
-    comint-dynamic-complete-filename)
+  '(comint-c-a-p-replace-by-expanded-history
+    shell-environment-variable-completion
+    shell-command-completion
+    shell-c-a-p-replace-by-expanded-directory
+    pcomplete-completions-at-point
+    shell-filename-completion
+    comint-filename-completion)
   "List of functions called to perform completion.
 This variable is used to initialize `comint-dynamic-complete-functions' in the
 shell buffer.
@@ -288,7 +293,7 @@ Value is a list of strings, which may be nil."
 		   (getenv "ESHELL") shell-file-name))
 	 (name (file-name-nondirectory prog)))
     ;; Tell bash not to use readline, except for bash 1.x which
-    ;; doesn't grook --noediting.  Bash 1.x has -nolineediting, but
+    ;; doesn't grok --noediting.  Bash 1.x has -nolineediting, but
     ;; process-send-eof cannot terminate bash if we use it.
     (if (and (not purify-flag)
 	     (equal name "bash")
@@ -311,7 +316,7 @@ This mirrors the optional behavior of tcsh (its autoexpand and histlit).
 If the value is `input', then the expansion is seen on input.
 If the value is `history', then the expansion is only when inserting
 into the buffer's input ring.  See also `comint-magic-space' and
-`comint-dynamic-complete'.
+`comint-dynamic-complete-functions'.
 
 This variable supplies a default for `comint-input-autoexpand',
 for Shell mode only."
@@ -334,25 +339,25 @@ Thus, this does not include the shell's current directory.")
 (defvar shell-dirstack-query nil
   "Command used by `shell-resync-dirs' to query the shell.")
 
-(defvar shell-mode-map nil)
-(cond ((not shell-mode-map)
-       (setq shell-mode-map (nconc (make-sparse-keymap) comint-mode-map))
-       (define-key shell-mode-map "\C-c\C-f" 'shell-forward-command)
-       (define-key shell-mode-map "\C-c\C-b" 'shell-backward-command)
-       (define-key shell-mode-map "\t" 'comint-dynamic-complete)
-       (define-key shell-mode-map "\M-?"
-	 'comint-dynamic-list-filename-completions)
-       (define-key shell-mode-map [menu-bar completion]
-	 (cons "Complete"
-	       (copy-keymap (lookup-key comint-mode-map [menu-bar completion]))))
-       (define-key-after (lookup-key shell-mode-map [menu-bar completion])
-	 [complete-env-variable] '("Complete Env. Variable Name" .
-				   shell-dynamic-complete-environment-variable)
-	 'complete-file)
-       (define-key-after (lookup-key shell-mode-map [menu-bar completion])
-	 [expand-directory] '("Expand Directory Reference" .
-			      shell-replace-by-expanded-directory)
-	 'complete-expand)))
+(defvar shell-mode-map
+  (let ((map (nconc (make-sparse-keymap) comint-mode-map)))
+    (define-key map "\C-c\C-f" 'shell-forward-command)
+    (define-key map "\C-c\C-b" 'shell-backward-command)
+    (define-key map "\t" 'completion-at-point)
+    (define-key map (kbd "M-RET") 'shell-resync-dirs)
+    (define-key map "\M-?" 'comint-dynamic-list-filename-completions)
+    (define-key map [menu-bar completion]
+      (cons "Complete"
+	    (copy-keymap (lookup-key comint-mode-map [menu-bar completion]))))
+    (define-key-after (lookup-key map [menu-bar completion])
+      [complete-env-variable] '("Complete Env. Variable Name" .
+				shell-dynamic-complete-environment-variable)
+      'complete-file)
+    (define-key-after (lookup-key map [menu-bar completion])
+      [expand-directory] '("Expand Directory Reference" .
+			   shell-replace-by-expanded-directory)
+      'complete-expand)
+    map))
 
 (defcustom shell-mode-hook '()
   "Hook for customizing Shell mode."
@@ -366,6 +371,84 @@ Thus, this does not include the shell's current directory.")
   "Additional expressions to highlight in Shell mode.")
 
 ;;; Basic Procedures
+
+(defun shell-parse-pcomplete-arguments ()
+  "Parse whitespace separated arguments in the current region."
+  (let ((begin (save-excursion (shell-backward-command 1) (point)))
+	(end (point))
+	begins args)
+    (save-excursion
+      (goto-char begin)
+      (while (< (point) end)
+	(skip-chars-forward " \t\n")
+	(push (point) begins)
+        (let ((arg ()))
+          (while (looking-at
+                  (eval-when-compile
+                    (concat
+                     "\\(?:[^\s\t\n\\\"']+"
+                     "\\|'\\([^']*\\)'?"
+                     "\\|\"\\(\\(?:[^\"\\]\\|\\\\.\\)*\\)\"?"
+                     "\\|\\\\\\(\\(?:.\\|\n\\)?\\)\\)")))
+            (goto-char (match-end 0))
+            (cond
+             ((match-beginning 3)       ;Backslash escape.
+              (push (cond
+                     ((null pcomplete-arg-quote-list)
+                      (goto-char (match-beginning 3)) "\\")
+                     ((= (match-beginning 3) (match-end 3)) "\\")
+                     (t (match-string 3)))
+                    arg))
+             ((match-beginning 2)       ;Double quote.
+              (push (if (null pcomplete-arg-quote-list) (match-string 2)
+                      (replace-regexp-in-string
+                       "\\\\\\(.\\)" "\\1" (match-string 2)))
+                    arg))
+             ((match-beginning 1)       ;Single quote.
+              (push (match-string 1) arg))
+             (t (push (match-string 0) arg))))
+          (push (mapconcat #'identity (nreverse arg) "") args)))
+      (cons (nreverse args) (nreverse begins)))))
+
+(defun shell-command-completion-function ()
+  "Completion function for shell command names.
+This is the value of `pcomplete-command-completion-function' for
+Shell buffers.  It implements `shell-completion-execonly' for
+`pcomplete' completion."
+  (pcomplete-here (pcomplete-entries nil
+				     (if shell-completion-execonly
+					 'file-executable-p))))
+
+(defun shell-completion-vars ()
+  "Setup completion vars for `shell-mode' and `read-shell-command'."
+  (set (make-local-variable 'comint-completion-fignore)
+       shell-completion-fignore)
+  (set (make-local-variable 'comint-delimiter-argument-list)
+       shell-delimiter-argument-list)
+  (set (make-local-variable 'comint-file-name-chars) shell-file-name-chars)
+  (set (make-local-variable 'comint-file-name-quote-list)
+       shell-file-name-quote-list)
+  (set (make-local-variable 'comint-dynamic-complete-functions)
+       shell-dynamic-complete-functions)
+  (set (make-local-variable 'pcomplete-parse-arguments-function)
+       #'shell-parse-pcomplete-arguments)
+  (set (make-local-variable 'pcomplete-arg-quote-list)
+       comint-file-name-quote-list)
+  (set (make-local-variable 'pcomplete-termination-string)
+       (cond ((not comint-completion-addsuffix) "")
+             ((stringp comint-completion-addsuffix)
+              comint-completion-addsuffix)
+             ((not (consp comint-completion-addsuffix)) " ")
+             (t (cdr comint-completion-addsuffix))))
+  (set (make-local-variable 'pcomplete-command-completion-function)
+       #'shell-command-completion-function)
+  ;; Don't use pcomplete's defaulting mechanism, rely on
+  ;; shell-dynamic-complete-functions instead.
+  (set (make-local-variable 'pcomplete-default-completion-function) #'ignore)
+  (setq comint-input-autoexpand shell-input-autoexpand)
+  ;; Not needed in shell-mode because it's inherited from comint-mode, but
+  ;; placed here for read-shell-command.
+  (add-hook 'completion-at-point-functions 'comint-completion-at-point nil t))
 
 (put 'shell-mode 'mode-class 'special)
 
@@ -392,7 +475,7 @@ to continue it.
 keep this buffer's default directory the same as the shell's working directory.
 While directory tracking is enabled, the shell's working directory is displayed
 by \\[list-buffers] or \\[mouse-buffer-menu] in the `File' field.
-\\[dirs] queries the shell and resyncs Emacs' idea of what the current
+\\[dirs] queries the shell and resyncs Emacs's idea of what the current
     directory stack is.
 \\[shell-dirtrack-mode] turns directory tracking on and off.
 \(The `dirtrack' package provides an alternative implementation of this
@@ -424,30 +507,35 @@ Variables `comint-output-filter-functions', a hook, and
 control whether input and output cause the window to scroll to the end of the
 buffer."
   (setq comint-prompt-regexp shell-prompt-pattern)
-  (setq comint-completion-fignore shell-completion-fignore)
-  (setq comint-delimiter-argument-list shell-delimiter-argument-list)
-  (setq comint-file-name-chars shell-file-name-chars)
-  (setq comint-file-name-quote-list shell-file-name-quote-list)
-  (set (make-local-variable 'comint-dynamic-complete-functions)
-       shell-dynamic-complete-functions)
+  (shell-completion-vars)
   (set (make-local-variable 'paragraph-separate) "\\'")
-  (make-local-variable 'paragraph-start)
-  (setq paragraph-start comint-prompt-regexp)
-  (make-local-variable 'font-lock-defaults)
-  (setq font-lock-defaults '(shell-font-lock-keywords t))
-  (make-local-variable 'shell-dirstack)
-  (setq shell-dirstack nil)
-  (make-local-variable 'shell-last-dir)
-  (setq shell-last-dir nil)
-  (setq comint-input-autoexpand shell-input-autoexpand)
+  (set (make-local-variable 'paragraph-start) comint-prompt-regexp)
+  (set (make-local-variable 'font-lock-defaults) '(shell-font-lock-keywords t))
+  (set (make-local-variable 'shell-dirstack) nil)
+  (set (make-local-variable 'shell-last-dir) nil)
   (shell-dirtrack-mode 1)
+
+  ;; By default, ansi-color applies faces using overlays.  This is
+  ;; very inefficient in Shell buffers (e.g. Bug#10835).  We use a
+  ;; custom `ansi-color-apply-face-function' to convert color escape
+  ;; sequences into `font-lock-face' properties.
+  (set (make-local-variable 'ansi-color-apply-face-function)
+       (lambda (beg end face)
+	 (when face
+	   (put-text-property beg end 'font-lock-face face))))
+
   ;; This is not really correct, since the shell buffer does not really
   ;; edit this directory.  But it is useful in the buffer list and menus.
   (setq list-buffers-directory (expand-file-name default-directory))
   ;; shell-dependent assignments.
   (when (ring-empty-p comint-input-ring)
     (let ((shell (file-name-nondirectory (car
-		   (process-command (get-buffer-process (current-buffer)))))))
+		   (process-command (get-buffer-process (current-buffer))))))
+	  (hsize (getenv "HISTSIZE")))
+      (and (stringp hsize)
+	   (integerp (setq hsize (string-to-number hsize)))
+	   (> hsize 0)
+	   (set (make-local-variable 'comint-input-ring-size) hsize))
       (setq comint-input-ring-file-name
 	    (or (getenv "HISTFILE")
 		(cond ((string-equal shell "bash") "~/.bash_history")
@@ -469,7 +557,7 @@ buffer."
 		  (t "dirs")))
       ;; Bypass a bug in certain versions of bash.
       (when (string-equal shell "bash")
-        (add-hook 'comint-output-filter-functions
+        (add-hook 'comint-preoutput-filter-functions
                   'shell-filter-ctrl-a-ctrl-b nil t)))
     (comint-read-input-ring t)))
 
@@ -483,15 +571,10 @@ started with the `--noediting' option and Select Graphic
 Rendition (SGR) control sequences (formerly known as ANSI escape
 sequences) are used to color the prompt.
 
-This function can be put on `comint-output-filter-functions'.
-The argument STRING is ignored."
-  (let ((pmark (process-mark (get-buffer-process (current-buffer)))))
-    (save-excursion
-      (goto-char (or (and (markerp comint-last-output-start)
-			  (marker-position comint-last-output-start))
-		     (point-min)))
-      (while (re-search-forward "[\C-a\C-b]" pmark t)
-        (replace-match "")))))
+This function can be put on `comint-preoutput-filter-functions'."
+  (if (string-match "[\C-a\C-b]" string)
+      (replace-regexp-in-string "[\C-a\C-b]" "" string t t)
+    string))
 
 (defun shell-write-history-on-exit (process event)
   "Called when the shell process is stopped.
@@ -549,16 +632,36 @@ Otherwise, one argument `-i' is passed to the shell.
 			  (generate-new-buffer-name "*shell*"))
 	   (if (file-remote-p default-directory)
 	       ;; It must be possible to declare a local default-directory.
+               ;; FIXME: This can't be right: it changes the default-directory
+               ;; of the current-buffer rather than of the *shell* buffer.
 	       (setq default-directory
 		     (expand-file-name
-		      (read-file-name
+		      (read-directory-name
 		       "Default directory: " default-directory default-directory
-		       t nil 'file-directory-p))))))))
-  (require 'ansi-color)
-  (setq buffer (get-buffer-create (or buffer "*shell*")))
-  ;; Pop to buffer, so that the buffer's window will be correctly set
-  ;; when we call comint (so that comint sets the COLUMNS env var properly).
-  (pop-to-buffer buffer)
+		       t nil))))))))
+  (setq buffer (if (or buffer (not (derived-mode-p 'shell-mode))
+                       (comint-check-proc (current-buffer)))
+                   (get-buffer-create (or buffer "*shell*"))
+                 ;; If the current buffer is a dead shell buffer, use it.
+                 (current-buffer)))
+
+  ;; On remote hosts, the local `shell-file-name' might be useless.
+  (if (and (called-interactively-p 'any)
+	   (file-remote-p default-directory)
+	   (null explicit-shell-file-name)
+	   (null (getenv "ESHELL")))
+      (with-current-buffer buffer
+	(set (make-local-variable 'explicit-shell-file-name)
+	     (file-remote-p
+	      (expand-file-name
+	       (read-file-name
+		"Remote shell path: " default-directory shell-file-name
+		t shell-file-name))
+	      'localname))))
+
+  ;; The buffer's window must be correctly set when we call comint (so
+  ;; that comint sets the COLUMNS env var properly).
+  (pop-to-buffer-same-window buffer)
   (unless (comint-check-proc buffer)
     (let* ((prog (or explicit-shell-file-name
 		     (getenv "ESHELL") shell-file-name))
@@ -574,9 +677,6 @@ Otherwise, one argument `-i' is passed to the shell.
 	       '("-i")))
       (shell-mode)))
   buffer)
-
-;; Don't do this when shell.el is loaded, only while dumping.
-;;;###autoload (add-hook 'same-window-buffer-names (purecopy "*shell*"))
 
 ;;; Directory tracking
 ;;
@@ -636,11 +736,12 @@ and `shell-pushd-dunique' control the behavior of the relevant command.
 Environment variables are expanded, see function `substitute-in-file-name'."
   (if shell-dirtrackp
       ;; We fail gracefully if we think the command will fail in the shell.
-      (condition-case chdir-failure
+      (condition-case nil
 	  (let ((start (progn (string-match
 			       (concat "^" shell-command-separator-regexp)
 			       str) ; skip whitespace
 			      (match-end 0)))
+		(case-fold-search)
 		end cmd arg1)
 	    (while (string-match shell-command-regexp str start)
 	      (setq end (match-end 0)
@@ -700,7 +801,7 @@ Environment variables are expanded, see function `substitute-in-file-name'."
 (defun shell-process-popd (arg)
   (let ((num (or (shell-extract-num arg) 0)))
     (cond ((and num (= num 0) shell-dirstack)
-	   (shell-cd (car shell-dirstack))
+	   (shell-cd (shell-prefixed-directory-name (car shell-dirstack)))
 	   (setq shell-dirstack (cdr shell-dirstack))
 	   (shell-dirstack-message))
 	  ((and num (> num 0) (<= num (length shell-dirstack)))
@@ -783,9 +884,13 @@ Environment variables are expanded, see function `substitute-in-file-name'."
 
 (defvaralias 'shell-dirtrack-mode 'shell-dirtrackp)
 (define-minor-mode shell-dirtrack-mode
-  "Turn directory tracking on and off in a shell buffer.
-The `dirtrack' package provides an alternative implementation of this
-feature - see the function `dirtrack-mode'."
+  "Toggle directory tracking in this shell buffer (Shell Dirtrack mode).
+With a prefix argument ARG, enable Shell Dirtrack mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
+The `dirtrack' package provides an alternative implementation of
+this feature; see the function `dirtrack-mode'."
   nil nil nil
   (setq list-buffers-directory (if shell-dirtrack-mode default-directory))
   (if shell-dirtrack-mode
@@ -928,7 +1033,7 @@ Copy Shell environment variable to Emacs: ")))
   "Move forward across ARG shell command(s).  Does not cross lines.
 See `shell-command-regexp'."
   (interactive "p")
-  (let ((limit (save-excursion (end-of-line nil) (point))))
+  (let ((limit (line-end-position)))
     (if (re-search-forward (concat shell-command-regexp "\\([;&|][\t ]*\\)+")
 			   limit 'move arg)
 	(skip-syntax-backward " "))))
@@ -955,30 +1060,36 @@ candidates.  Note that this may not be the same as the shell's idea of the
 path.
 
 Completion is dependent on the value of `shell-completion-execonly', plus
-those that effect file completion.  See `shell-dynamic-complete-as-command'.
+those that effect file completion.
 
 Returns t if successful."
   (interactive)
+  (let ((data (shell-command-completion)))
+    (if data
+	(prog2 (unless (window-minibuffer-p (selected-window))
+		 (message "Completing command name..."))
+	    (apply #'completion-in-region data)))))
+
+(defun shell-command-completion ()
+  "Return the completion data for the command at point, if any."
   (let ((filename (comint-match-partial-filename)))
     (if (and filename
 	     (save-match-data (not (string-match "[~/]" filename)))
 	     (eq (match-beginning 0)
 		 (save-excursion (shell-backward-command 1) (point))))
-	(prog2 (unless (window-minibuffer-p (selected-window))
-		 (message "Completing command name..."))
-	    (shell-dynamic-complete-as-command)))))
+	(shell--command-completion-data))))
 
-
-(defun shell-dynamic-complete-as-command ()
-  "Dynamically complete at point as a command.
-See `shell-dynamic-complete-filename'.  Returns t if successful."
+(defun shell--command-completion-data ()
+  "Return the completion data for the command at point."
   (let* ((filename (or (comint-match-partial-filename) ""))
+         (start (if (zerop (length filename)) (point) (match-beginning 0)))
+         (end (if (zerop (length filename)) (point) (match-end 0)))
 	 (filenondir (file-name-nondirectory filename))
-	 (path-dirs (cdr (reverse exec-path)))
+	 (path-dirs (cdr (reverse exec-path))) ;FIXME: Why `cdr'?
 	 (cwd (file-name-as-directory (expand-file-name default-directory)))
 	 (ignored-extensions
 	  (and comint-completion-fignore
-	       (mapconcat (function (lambda (x) (concat (regexp-quote x) "$")))
+	       (mapconcat (function (lambda (x) (concat (regexp-quote x) "\\'")))
 			  comint-completion-fignore "\\|")))
 	 (dir "") (comps-in-dir ())
 	 (file "") (abs-file-name "") (completions ()))
@@ -1002,18 +1113,34 @@ See `shell-dynamic-complete-filename'.  Returns t if successful."
 	(setq comps-in-dir (cdr comps-in-dir)))
       (setq path-dirs (cdr path-dirs)))
     ;; OK, we've got a list of completions.
-    (let ((success (let ((comint-completion-addsuffix nil))
-		     (comint-dynamic-simple-complete filenondir completions))))
-      (if (and (memq success '(sole shortest)) comint-completion-addsuffix
-	       (not (file-directory-p (comint-match-partial-filename))))
-	  (insert " "))
-      success)))
+    (list
+     start end
+     (lambda (string pred action)
+       (if (string-match "/" string)
+           (completion-file-name-table string pred action)
+         (complete-with-action action completions string pred)))
+     :exit-function
+     (lambda (_string finished)
+       (when (memq finished '(sole finished))
+         (if (looking-at " ")
+             (goto-char (match-end 0))
+           (insert " ")))))))
+
+;; (defun shell-dynamic-complete-as-command ()
+;;    "Dynamically complete at point as a command.
+;;  See `shell-dynamic-complete-filename'.  Returns t if successful."
+;;    (apply #'completion-in-region shell--command-completion-data))
 
 (defun shell-dynamic-complete-filename ()
   "Dynamically complete the filename at point.
 This completes only if point is at a suitable position for a
 filename argument."
   (interactive)
+  (let ((data (shell-filename-completion)))
+    (if data (apply #'completion-in-region data))))
+
+(defun shell-filename-completion ()
+  "Return the completion data for file name at point, if any."
   (let ((opoint (point))
 	(beg (comint-line-beginning-position)))
     (when (save-excursion
@@ -1021,24 +1148,21 @@ filename argument."
 			   (match-end 0)
 			 beg))
 	    (re-search-forward "[^ \t][ \t]" opoint t))
-      (comint-dynamic-complete-as-filename))))
+      (comint-filename-completion))))
 
 (defun shell-match-partial-variable ()
   "Return the shell variable at point, or nil if none is found."
   (save-excursion
-    (let ((limit (point)))
-      (if (re-search-backward "[^A-Za-z0-9_{}]" nil 'move)
-	  (or (looking-at "\\$") (forward-char 1)))
-      ;; Anchor the search forwards.
-      (if (or (eolp) (looking-at "[^A-Za-z0-9_{}$]"))
-	  nil
-	(re-search-forward "\\$?{?[A-Za-z0-9_]*}?" limit)
-	(buffer-substring (match-beginning 0) (match-end 0))))))
+    (if (re-search-backward "[^A-Za-z0-9_{(]" nil 'move)
+        (or (looking-at "\\$") (forward-char 1)))
+    (if (or (eolp) (looking-at "[^A-Za-z0-9_{($]"))
+        nil
+      (looking-at "\\$?[{(]?[A-Za-z0-9_]*[})]?")
+      (buffer-substring (match-beginning 0) (match-end 0)))))
 
 (defun shell-dynamic-complete-environment-variable ()
   "Dynamically complete the environment variable at point.
 Completes if after a variable, i.e., if it starts with a \"$\".
-See `shell-dynamic-complete-as-environment-variable'.
 
 This function is similar to `comint-dynamic-complete-filename', except that it
 searches `process-environment' for completion candidates.  Note that this may
@@ -1050,38 +1174,68 @@ called `shell-dynamic-complete-process-environment-variable'.
 
 Returns non-nil if successful."
   (interactive)
-  (let ((variable (shell-match-partial-variable)))
-    (if (and variable (string-match "^\\$" variable))
+  (let ((data (shell-environment-variable-completion)))
+    (if data
 	(prog2 (unless (window-minibuffer-p (selected-window))
 		 (message "Completing variable name..."))
-	    (shell-dynamic-complete-as-environment-variable)))))
+	    (apply #'completion-in-region data)))))
 
 
-(defun shell-dynamic-complete-as-environment-variable ()
-  "Dynamically complete at point as an environment variable.
-Used by `shell-dynamic-complete-environment-variable'.
-Uses `comint-dynamic-simple-complete'."
-  (let* ((var (or (shell-match-partial-variable) ""))
-	 (variable (substring var (or (string-match "[^$({]\\|$" var) 0)))
-	 (variables (mapcar (function (lambda (x)
-					(substring x 0 (string-match "=" x))))
-			    process-environment))
-	 (addsuffix comint-completion-addsuffix)
-	 (comint-completion-addsuffix nil)
-	 (success (comint-dynamic-simple-complete variable variables)))
-    (if (memq success '(sole shortest))
-	(let* ((var (shell-match-partial-variable))
-	       (variable (substring var (string-match "[^$({]" var)))
-	       (protection (cond ((string-match "{" var) "}")
-				 ((string-match "(" var) ")")
-				 (t "")))
-	       (suffix (cond ((null addsuffix) "")
-			     ((file-directory-p
-			       (comint-directory (getenv variable))) "/")
-			     (t " "))))
-	  (insert protection suffix)))
-    success))
+(defun shell-environment-variable-completion ()
+  "Completion data for an environment variable at point, if any."
+  (let* ((var (shell-match-partial-variable))
+         (end (match-end 0)))
+    (when (and (not (zerop (length var))) (eq (aref var 0) ?$))
+      (let* ((start
+              (save-excursion
+                (goto-char (match-beginning 0))
+                (looking-at "\\$?[({]*")
+                (match-end 0)))
+             (variables (mapcar (lambda (x)
+                                  (substring x 0 (string-match "=" x)))
+                                process-environment))
+             (suffix (case (char-before start) (?\{ "}") (?\( ")") (t ""))))
+        (list start end variables
+              :exit-function
+              (lambda (s finished)
+                (when (memq finished '(sole finished))
+                  (let ((suf (concat suffix
+                                     (if (file-directory-p
+                                          (comint-directory (getenv s)))
+                                         "/"))))
+                    (if (looking-at (regexp-quote suf))
+                        (goto-char (match-end 0))
+                      (insert suf))))))))))
 
+
+(defun shell-c-a-p-replace-by-expanded-directory ()
+  "Expand directory stack reference before point.
+For use on `completion-at-point-functions'."
+  (when (comint-match-partial-filename)
+    (save-excursion
+      (goto-char (match-beginning 0))
+      (let ((stack (cons default-directory shell-dirstack))
+            (index (cond ((looking-at "=-/?")
+                          (length shell-dirstack))
+                         ((looking-at "=\\([0-9]+\\)/?")
+                          (string-to-number
+                           (buffer-substring
+                            (match-beginning 1) (match-end 1)))))))
+        (when index
+          (let ((start (match-beginning 0))
+                (end (match-end 0))
+                (replacement (file-name-as-directory (nth index stack))))
+            (lambda ()
+              (cond
+               ((>= index (length stack))
+                (error "Directory stack not that deep"))
+               (t
+                (save-excursion
+                  (goto-char start)
+                  (insert replacement)
+                  (delete-char (- end start)))
+                (message "Directory item: %d" index)
+                t)))))))))
 
 (defun shell-replace-by-expanded-directory ()
   "Expand directory stack reference before point.
@@ -1090,26 +1244,9 @@ See `default-directory' and `shell-dirstack'.
 
 Returns t if successful."
   (interactive)
-  (if (comint-match-partial-filename)
-      (save-excursion
-	(goto-char (match-beginning 0))
-	(let ((stack (cons default-directory shell-dirstack))
-	      (index (cond ((looking-at "=-/?")
-			    (length shell-dirstack))
-			   ((looking-at "=\\([0-9]+\\)/?")
-			    (string-to-number
-			     (buffer-substring
-			      (match-beginning 1) (match-end 1)))))))
-	  (cond ((null index)
-		 nil)
-		((>= index (length stack))
-		 (error "Directory stack not that deep"))
-		(t
-		 (replace-match (file-name-as-directory (nth index stack)) t t)
-		 (message "Directory item: %d" index)
-		 t))))))
+  (let ((f (shell-c-a-p-replace-by-expanded-directory)))
+    (if f (funcall f))))
 
 (provide 'shell)
 
-;; arch-tag: bcb5f12a-c1f4-4aea-a809-2504bd5bd797
 ;;; shell.el ends here

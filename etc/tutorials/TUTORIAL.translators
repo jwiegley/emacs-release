@@ -2,8 +2,8 @@ This file contains the list of translators and maintainers of the
 tutorial.
 
 * TUTORIAL.bg:
-Author:     Ognyan Kulev <ogi@fmi.uni-sofia.bg>
-Maintainer: Ognyan Kulev <ogi@fmi.uni-sofia.bg>
+Author:     Ognyan Kulev <ogi@tower.3.bg>
+Maintainer: Ognyan Kulev <ogi@tower.3.bg>
 
 * TUTORIAL.cn:
 Author:     Sun Yijiang <sunyijiang@gmail.com>
@@ -12,8 +12,7 @@ Maintainer: Sun Yijiang <sunyijiang@gmail.com>
 * TUTORIAL.cs:
 Author:     Milan Zamazal <pdm@zamazal.org>
             Pavel Janík <Pavel@Janik.cz>
-Maintainer: Milan Zamazal <pdm@zamazal.org>
-            Pavel Janík <Pavel@Janik.cz>
+Maintainer: Maintainer needed.
 
 * TUTORIAL.de:
 Author:     Werner Lemberg <wl@gnu.org>
@@ -30,6 +29,10 @@ Maintainer: Rafael Sepúlveda <drs@gnulinux.org.mx>
 * TUTORIAL.fr:
 Author:     Éric Jacoboni <jaco@teaser.fr>
 Maintainer: Éric Jacoboni <jaco@teaser.fr>
+
+* TUTORIAL.he
+Author:     Eli Zaretskii <eliz@gnu.org>
+Maintainer: Eli Zaretskii <eliz@gnu.org>
 
 * TUTORIAL.it:
 Author:     Alfredo Finelli <alfredofnl@tiscali.it>
@@ -69,11 +72,11 @@ Maintainer: Alex Ott <ottalex@narod.ru>
 * TUTORIAL.sk:
 Author:     Miroslav Vaško <vasko@debian.cz>
             Pavel Janík <Pavel@Janik.cz>
-Maintainer: Pavel Janík <Pavel@Janik.cz>
+Maintainer: Maintainer needed.
 
 * TUTORIAL.sl:
-Author:     Primož Peterlin <primoz.peterlin@biofiz.mf.uni-lj.si>
-Maintainer: Primož Peterlin <primoz.peterlin@biofiz.mf.uni-lj.si>
+Author:     Primož Peterlin <primozz.peterlin@gmail.com>
+Maintainer: Primož Peterlin <primozz.peterlin@gmail.com>
 
 * TUTORIAL.sv:
 Author:     Mats Lidell <matsl@contactor.se>
@@ -92,4 +95,3 @@ Maintainer: Chao-Hong Liu <chliu@gnu.org>
 ;;; coding: utf-8
 ;;; End:
 
-;;; arch-tag: 8788b16b-e739-4304-a7f2-729bdb999fa0

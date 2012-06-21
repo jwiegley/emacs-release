@@ -1,10 +1,10 @@
 ;;; image.el --- image API
 
-;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1998-2012 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: multimedia
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -30,6 +30,7 @@
   "Image support."
   :group 'multimedia)
 
+(defalias 'image-refresh 'image-flush)
 
 (defconst image-type-header-regexps
   `(("\\`/[\t\n\r ]*\\*.*XPM.\\*/" . xpm)
@@ -59,7 +60,7 @@ IMAGE-TYPE must be a pair (PREDICATE . TYPE).  PREDICATE is called
 with one argument, a string containing the image data.  If PREDICATE returns
 a non-nil value, TYPE is the image's type.")
 
-(defconst image-type-file-name-regexps
+(defvar image-type-file-name-regexps
   '(("\\.png\\'" . png)
     ("\\.gif\\'" . gif)
     ("\\.jpe?g\\'" . jpeg)
@@ -162,7 +163,7 @@ compatibility with versions of Emacs that lack the variable
                 dir (expand-file-name "../" dir))))
       (setq image-directory-load-path dir))
 
-    ;; If `image-directory-load-path' isn't Emacs' image directory,
+    ;; If `image-directory-load-path' isn't Emacs's image directory,
     ;; it's probably a user preference, so use it. Then use a
     ;; relative setting if possible; otherwise, use
     ;; `image-directory-load-path'.
@@ -193,7 +194,7 @@ compatibility with versions of Emacs that lack the variable
               ;; Set it to nil if image is not found.
               (cond ((file-exists-p (expand-file-name image d2ei)) d2ei)
                     ((file-exists-p (expand-file-name image d1ei)) d1ei)))))
-     ;; Use Emacs' image directory.
+     ;; Use Emacs's image directory.
      (image-directory-load-path
       (setq image-directory image-directory-load-path))
      (no-error
@@ -206,6 +207,8 @@ compatibility with versions of Emacs that lack the variable
            (delete image-directory (copy-sequence (or path load-path))))))
 
 
+;; Used to be in image-type-header-regexps, but now not used anywhere
+;; (since 2009-08-28).
 (defun image-jpeg-p (data)
   "Value is non-nil if DATA, a string, consists of JFIF image data.
 We accept the tag Exif because that is the same format."
@@ -328,14 +331,20 @@ Optional DATA-P non-nil means SOURCE is a string containing image data."
   type)
 
 
-(defvar image-library-alist)
+(if (fboundp 'image-metadata)           ; eg not --without-x
+    (define-obsolete-function-alias 'image-extension-data
+      'image-metadata' "24.1"))
+
+(define-obsolete-variable-alias
+    'image-library-alist
+    'dynamic-library-alist "24.1")
 
 ;;;###autoload
 (defun image-type-available-p (type)
   "Return non-nil if image type TYPE is available.
 Image types are symbols like `xbm' or `jpeg'."
   (and (fboundp 'init-image-library)
-       (init-image-library type image-library-alist)))
+       (init-image-library type dynamic-library-alist)))
 
 
 ;;;###autoload
@@ -386,6 +395,7 @@ IMAGE must be an image created with `create-image' or `defimage'.
 IMAGE is displayed by putting an overlay into the current buffer with a
 `before-string' STRING that has a `display' property whose value is the
 image.  STRING is defaulted if you omit it.
+The overlay created will have the `put-image' property set to t.
 POS may be an integer or marker.
 AREA is where to display the image.  AREA nil or omitted means
 display it in the text area, a value of `left-margin' means
@@ -409,8 +419,8 @@ means display it in the right marginal area."
 (defun insert-image (image &optional string area slice)
   "Insert IMAGE into current buffer at point.
 IMAGE is displayed by inserting STRING into the current buffer
-with a `display' property whose value is the image.  STRING is
-defaulted if you omit it.
+with a `display' property whose value is the image.  STRING
+defaults to the empty string if you omit it.
 AREA is where to display the image.  AREA nil or omitted means
 display it in the text area, a value of `left-margin' means
 display it in the left marginal area, a value of `right-margin'
@@ -584,8 +594,134 @@ Example:
   (declare (doc-string 3))
   `(defvar ,symbol (find-image ',specs) ,doc))
 
+
+;;; Animated image API
+
+(defconst image-animated-types '(gif)
+  "List of supported animated image types.")
+
+(defun image-animated-p (image)
+  "Return non-nil if IMAGE can be animated.
+To be capable of being animated, an image must be of a type
+listed in `image-animated-types', and contain more than one
+sub-image, with a specified animation delay.  The actual return
+value is a cons (NIMAGES . DELAY), where NIMAGES is the number
+of sub-images in the animated image and DELAY is the delay in
+seconds until the next sub-image should be displayed."
+  (cond
+   ((memq (plist-get (cdr image) :type) image-animated-types)
+    (let* ((metadata (image-metadata image))
+	   (images (plist-get metadata 'count))
+	   (delay (plist-get metadata 'delay)))
+      (when (and images (> images 1) (numberp delay))
+	(if (< delay 0) (setq delay 0.1))
+	(cons images delay))))))
+
+;; "Destructively"?
+(defun image-animate (image &optional index limit)
+  "Start animating IMAGE.
+Animation occurs by destructively altering the IMAGE spec list.
+
+With optional INDEX, begin animating from that animation frame.
+LIMIT specifies how long to animate the image.  If omitted or
+nil, play the animation until the end.  If t, loop forever.  If a
+number, play until that number of seconds has elapsed."
+  (let ((animation (image-animated-p image))
+	timer)
+    (when animation
+      (if (setq timer (image-animate-timer image))
+	  (cancel-timer timer))
+      (run-with-timer 0.2 nil 'image-animate-timeout
+		      image (or index 0) (car animation)
+		      0 limit))))
+
+(defun image-animate-timer (image)
+  "Return the animation timer for image IMAGE."
+  ;; See cancel-function-timers
+  (let ((tail timer-list) timer)
+    (while tail
+      (setq timer (car tail)
+	    tail (cdr tail))
+      (if (and (eq (aref timer 5) 'image-animate-timeout)
+	       (eq (car-safe (aref timer 6)) image))
+	  (setq tail nil)
+	(setq timer nil)))
+    timer))
+
+;; FIXME? The delay may not be the same for different sub-images,
+;; hence we need to call image-animated-p to return it.
+;; But it also returns count, so why do we bother passing that as an
+;; argument?
+(defun image-animate-timeout (image n count time-elapsed limit)
+  "Display animation frame N of IMAGE.
+N=0 refers to the initial animation frame.
+COUNT is the total number of frames in the animation.
+TIME-ELAPSED is the total time that has elapsed since
+`image-animate-start' was called.
+LIMIT determines when to stop.  If t, loop forever.  If nil, stop
+ after displaying the last animation frame.  Otherwise, stop
+ after LIMIT seconds have elapsed.
+The minimum delay between successive frames is 0.01s."
+  (plist-put (cdr image) :index n)
+  (force-window-update)
+  (setq n (1+ n))
+  (let* ((time (float-time))
+	 (animation (image-animated-p image))
+	 ;; Subtract off the time we took to load the image from the
+	 ;; stated delay time.
+	 (delay (max (+ (cdr animation) time (- (float-time)))
+		     0.01))
+	 done)
+    (if (>= n count)
+	(if limit
+	    (setq n 0)
+	  (setq done t)))
+    (setq time-elapsed (+ delay time-elapsed))
+    (if (numberp limit)
+	(setq done (>= time-elapsed limit)))
+    (unless done
+      (run-with-timer delay nil 'image-animate-timeout
+		      image n count time-elapsed limit))))
+
+
+(defcustom imagemagick-types-inhibit
+  '(C HTML HTM TXT PDF)
+  "ImageMagick types that should not be visited in Image mode.
+This should be a list of symbols, each of which should be one of
+the ImageMagick types listed in `imagemagick-types'.  These image
+types are not registered by `imagemagick-register-types'.
+
+If Emacs is compiled without ImageMagick support, this variable
+has no effect."
+  :type '(choice (const :tag "Let ImageMagick handle all types it can" nil)
+		 (repeat symbol))
+  ;; Ideally, would have a :set function that checks if we already did
+  ;; imagemagick-register-types, and if so undoes it, then redoes it.
+  :version "24.1"
+  :group 'image)
+
+;;;###autoload
+(defun imagemagick-register-types ()
+  "Register file types that can be handled by ImageMagick.
+This registers the ImageMagick types listed in `imagemagick-types',
+excluding those listed in `imagemagick-types-inhibit'.
+
+Registered image types are added to `auto-mode-alist', so that
+Emacs visits them in Image mode.  They are also added to
+`image-type-file-name-regexps', so that the `image-type' function
+recognizes these files as having image type `imagemagick'.
+
+If Emacs is compiled without ImageMagick support, do nothing."
+  (when (fboundp 'imagemagick-types)
+    (let ((im-types '()))
+      (dolist (im-type (imagemagick-types))
+        (unless (memq im-type imagemagick-types-inhibit)
+          (push (downcase (symbol-name im-type)) im-types)))
+      (let ((extension (concat "\\." (regexp-opt im-types) "\\'")))
+        (push (cons extension 'image-mode) auto-mode-alist)
+        (push (cons extension 'imagemagick)
+              image-type-file-name-regexps)))))
 
 (provide 'image)
 
-;; arch-tag: 8e76a07b-eb48-4f3e-a7a0-1a7ba9f096b3
 ;;; image.el ends here

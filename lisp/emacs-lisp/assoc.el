@@ -1,7 +1,6 @@
-;;; assoc.el --- insert/delete/sort functions on association lists
+;;; assoc.el --- insert/delete functions on association lists
 
-;; Copyright (C) 1996, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1996, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Barry A. Warsaw <bwarsaw@cen.com>
 ;; Keywords: extensions
@@ -36,7 +35,7 @@ head is one matching KEY.  Returns the sorted list and doesn't affect
 the order of any other key-value pair.  Side effect sets alist to new
 sorted list."
   (set alist-symbol
-       (sort (copy-alist (eval alist-symbol))
+       (sort (copy-alist (symbol-value alist-symbol))
 	     (function (lambda (a b) (equal (car a) key))))))
 
 
@@ -62,10 +61,9 @@ pair is not at the head of alist.  ALIST is not altered."
 
 
 (defun aput (alist-symbol key &optional value)
-  "Inserts a key-value pair into an alist.
+  "Insert a key-value pair into an alist.
 The alist is referenced by ALIST-SYMBOL.  The key-value pair is made
-from KEY and optionally, VALUE.  Returns the altered alist or nil if
-ALIST is nil.
+from KEY and optionally, VALUE.  Returns the altered alist.
 
 If the key-value pair referenced by KEY can be found in the alist, and
 VALUE is supplied non-nil, then the value of KEY will be set to VALUE.
@@ -76,10 +74,10 @@ of the alist (with value nil if VALUE is nil or not supplied)."
   (lexical-let ((elem (aelement key value))
 		alist)
     (asort alist-symbol key)
-    (setq alist (eval alist-symbol))
+    (setq alist (symbol-value alist-symbol))
     (cond ((null alist) (set alist-symbol elem))
 	  ((anot-head-p alist key) (set alist-symbol (nconc elem alist)))
-	  (value (setcar alist (car elem)))
+	  (value (setcar alist (car elem)) alist)
 	  (t alist))))
 
 
@@ -88,7 +86,7 @@ of the alist (with value nil if VALUE is nil or not supplied)."
 Alist is referenced by ALIST-SYMBOL and the key-value pair to remove
 is pair matching KEY.  Returns the altered alist."
   (asort alist-symbol key)
-  (lexical-let ((alist (eval alist-symbol)))
+  (lexical-let ((alist (symbol-value alist-symbol)))
     (cond ((null alist) nil)
 	  ((anot-head-p alist key) alist)
 	  (t (set alist-symbol (cdr alist))))))
@@ -134,9 +132,8 @@ extra values are ignored.  Returns the created alist."
 	  (t
 	   (amake alist-symbol keycdr valcdr)
 	   (aput alist-symbol keycar valcar))))
-  (eval alist-symbol))
+  (symbol-value alist-symbol))
 
 (provide 'assoc)
 
-;; arch-tag: 3e58bd89-d912-4b74-a0dc-6ed9735922bc
 ;;; assoc.el ends here

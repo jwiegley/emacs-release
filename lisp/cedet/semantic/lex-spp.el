@@ -1,6 +1,6 @@
-;;; lex-spp.el --- Semantic Lexical Pre-processor
+;;; semantic/lex-spp.el --- Semantic Lexical Pre-processor
 
-;; Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2006-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 
@@ -452,7 +452,7 @@ continue processing recursively."
 	 ;; If val is nil, that's probably wrong.
 	 ;; Found a system header case where this was true.
 	 ((null val) "")
-	 ;; Debug wierd stuff.
+	 ;; Debug weird stuff.
 	 (t (debug)))
 	))
      ((stringp txt)
@@ -577,7 +577,7 @@ and what valid VAL values are."
 	(cond
 	 ;; CASE 3: Merge symbols together.
 	 ((eq (semantic-lex-token-class v) 'spp-symbol-merge)
-	  ;; We need to merge the tokens in the 'text segement together,
+	  ;; We need to merge the tokens in the 'text segment together,
 	  ;; and produce a single symbol from it.
 	  (let ((newsym
 		 (mapconcat (lambda (tok)
@@ -639,7 +639,7 @@ and what valid VAL values are."
 
 ;;; Macro Merging
 ;;
-;; Used when token streams from different macros include eachother.
+;; Used when token streams from different macros include each other.
 ;; Merged macro streams perform in place replacements.
 
 (defun semantic-lex-spp-merge-streams (raw-stream)
@@ -709,7 +709,7 @@ ARGVALUES are values for any arg list, or nil."
 
 ;;; Symbol Is Macro
 ;;
-;; An analyser that will push tokens from a macro in place
+;; An analyzer that will push tokens from a macro in place
 ;; of the macro symbol.
 ;;
 (defun semantic-lex-spp-anlyzer-do-replace (sym val beg end)
@@ -821,7 +821,7 @@ STR occurs in the current buffer between BEG and END."
 ;; a macro.
 
 (defun semantic-lex-spp-first-token-arg-list (token)
-  "If TOKEN is a semantic-list, turn it into a an SPP ARG LIST."
+  "If TOKEN is a semantic-list, turn it into an SPP ARG LIST."
   (when (and (consp token)
 	     (symbolp (car token))
 	     (eq 'semantic-list (car token)))
@@ -1067,7 +1067,7 @@ of type `spp-macro-undef' is to be created."
 ;;
 ;; These analyzers help a language define how include files
 ;; are identified.  These are ONLY for languages that perform
-;; an actual textual includesion, and not for imports.
+;; an actual textual inclusion, and not for imports.
 ;;
 ;; This section is supposed to allow the macros from the headers to be
 ;; added to the local dynamic macro table, but that hasn't been
@@ -1230,5 +1230,4 @@ If BUFFER is not provided, use the current buffer."
 ;; generated-autoload-load-name: "semantic/lex-spp"
 ;; End:
 
-;; arch-tag: 8877d83e-07ea-4d86-a960-e3562138d8a5
-;;; semantic-lex-spp.el ends here
+;;; semantic/lex-spp.el ends here

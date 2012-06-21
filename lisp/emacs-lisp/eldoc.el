@@ -1,7 +1,6 @@
 ;;; eldoc.el --- show function arglist or variable docstring in echo area
 
-;; Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1996-2012 Free Software Foundation, Inc.
 
 ;; Author: Noah Friedman <friedman@splode.com>
 ;; Maintainer: friedman@splode.com
@@ -150,14 +149,17 @@ This is used to determine if `eldoc-idle-delay' is changed by the user.")
 
 ;;;###autoload
 (define-minor-mode eldoc-mode
-  "Toggle ElDoc mode on or off.
-In ElDoc mode, the echo area displays information about a
-function or variable in the text where point is.  If point is
-on a documented variable, it displays the first line of that
-variable's doc string.  Otherwise it displays the argument list
-of the function called in the expression point is on.
+  "Toggle echo area display of Lisp objects at point (ElDoc mode).
+With a prefix argument ARG, enable ElDoc mode if ARG is positive,
+and disable it otherwise.  If called from Lisp, enable ElDoc mode
+if ARG is omitted or nil.
 
-With prefix ARG, turn ElDoc mode on if and only if ARG is positive."
+ElDoc mode is a buffer-local minor mode.  When enabled, the echo
+area displays information about a function or variable in the
+text where point is.  If point is on a documented variable, it
+displays the first line of that variable's doc string.  Otherwise
+it displays the argument list of the function called in the
+expression point is on."
   :group 'eldoc :lighter eldoc-minor-mode-string
   (setq eldoc-last-message nil)
   (if eldoc-mode
@@ -432,7 +434,7 @@ In the absence of INDEX, just call `eldoc-docstring-format-sym-doc'."
 	  nil
 	(list (eldoc-current-symbol) argument-index)))))
 
-;; Move to the beginnig of current sexp.  Return the number of nested
+;; Move to the beginning of current sexp.  Return the number of nested
 ;; sexp the point was over or after.
 (defun eldoc-beginning-of-sexp ()
   (let ((parse-sexp-ignore-comments t)
@@ -530,15 +532,14 @@ The words \"&rest\", \"&optional\" are returned unchanged."
 
 ;; Prime the command list.
 (eldoc-add-command-completions
- "backward-" "beginning-of-" "move-beginning-of-" "delete-other-windows"
- "delete-window" "handle-select-window"
- "end-of-" "move-end-of-" "exchange-point-and-mark" "forward-"
- "indent-for-tab-command" "goto-" "mark-page" "mark-paragraph"
- "mouse-set-point" "move-" "pop-global-mark" "next-" "other-window"
- "previous-" "recenter" "scroll-" "self-insert-command"
- "split-window-" "up-list" "down-list")
+ "backward-" "beginning-of-" "delete-other-windows" "delete-window"
+ "down-list" "end-of-" "exchange-point-and-mark" "forward-" "goto-"
+ "handle-select-window" "indent-for-tab-command" "left-" "mark-page"
+ "mark-paragraph" "mouse-set-point" "move-" "move-beginning-of-"
+ "move-end-of-" "next-" "other-window" "pop-global-mark" "previous-"
+ "recenter" "right-" "scroll-" "self-insert-command" "split-window-"
+ "up-list")
 
 (provide 'eldoc)
 
-;; arch-tag: c9a58f9d-2055-46c1-9b82-7248b71a8375
 ;;; eldoc.el ends here

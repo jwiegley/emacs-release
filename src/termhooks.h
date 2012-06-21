@@ -1,6 +1,6 @@
 /* Parameters and display hooks for terminal devices.
-   Copyright (C) 1985, 1986, 1993, 1994, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+
+Copyright (C) 1985-1986, 1993-1994, 2001-2012  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -19,6 +19,8 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 /* Miscellanea.   */
+
+#include "systime.h" /* for Time */
 
 struct glyph;
 struct frame;
@@ -39,15 +41,10 @@ enum scroll_bar_part {
 /* If the value of the frame parameter changed, whis hook is called.
    For example, if going from fullscreen to not fullscreen this hook
    may do something OS dependent, like extended window manager hints on X11.  */
-extern void (*fullscreen_hook) P_ ((struct frame *f));
+extern void (*fullscreen_hook) (struct frame *f);
 
 
 /* Input queue declarations and hooks.  */
-
-/* Expedient hack: only provide the below definitions to files that
-   are prepared to handle lispy things.  CONSP is defined if lisp.h
-   has been included before this file.  */
-#ifdef CONSP
 
 enum event_kind
 {
@@ -238,15 +235,17 @@ struct input_event
   /* For an ASCII_KEYSTROKE_EVENT and MULTIBYTE_CHAR_KEYSTROKE_EVENT,
      this is the character.
      For a NON_ASCII_KEYSTROKE_EVENT, this is the keysym code.
-     For a mouse event, this is the button number.  */
+     For a mouse event, this is the button number.
+     For a HELP_EVENT, this is the position within the object
+      (stored in ARG below) where the help was found.  */
   /* In WindowsNT, for a mouse wheel event, this is the delta.  */
-  int code;
+  EMACS_INT code;
   enum scroll_bar_part part;
 
   int modifiers;		/* See enum below for interpretation.  */
 
   Lisp_Object x, y;
-  unsigned long timestamp;
+  Time timestamp;
 
   /* This is padding just to put the frame_or_window field
      past the size of struct selection_input_event.  */
@@ -265,7 +264,7 @@ struct input_event
   Lisp_Object arg;
 };
 
-#define EVENT_INIT(event) bzero (&(event), sizeof (struct input_event))
+#define EVENT_INIT(event) memset (&(event), 0, sizeof (struct input_event))
 
 /* Bits in the modifiers member of the input_event structure.
    Note that reorder_modifiers assumes that the bits are in canonical
@@ -299,12 +298,12 @@ enum {
   /* The next four modifier bits are used also in keyboard events at
      the Lisp level.
 
-     It's probably not the greatest idea to use the 2^23 bit for any
+     It's probably not the greatest idea to use the 2^28 bit for any
      modifier.  It may or may not be the sign bit, depending on
-     VALBITS, so using it to represent a modifier key means that
+     FIXNUM_BITS, so using it to represent a modifier key means that
      characters thus modified have different integer equivalents
      depending on the architecture they're running on.  Oh, and
-     applying XINT to a character whose 2^23 bit is set sign-extends
+     applying XINT to a character whose 2^28 bit is set might sign-extend
      it, so you get a bunch of bits in the mask you didn't want.
 
      The CHAR_ macros are defined in lisp.h.  */
@@ -319,13 +318,13 @@ enum {
 #ifdef HAVE_GPM
 #include <gpm.h>
 extern int handle_one_term_event (struct tty_display_info *, Gpm_Event *, struct input_event *);
+#ifndef HAVE_WINDOW_SYSTEM
 extern void term_mouse_moveto (int, int);
+#endif
 
 /* The device for which we have enabled gpm support.  */
 extern struct tty_display_info *gpm_tty;
 #endif
-
-#endif /* CONSP */
 
 
 struct mac_display_info;
@@ -341,6 +340,36 @@ struct terminal
 
   /* Parameter alist of this terminal.  */
   Lisp_Object param_alist;
+
+  /* List of charsets supported by the terminal.  It is set by
+     Fset_terminal_coding_system_internal along with
+     the member terminal_coding.  */
+  Lisp_Object charset_list;
+
+  /* This is an association list containing the X selections that
+     Emacs might own on this terminal.  Each element has the form
+       (SELECTION-NAME SELECTION-VALUE SELECTION-TIMESTAMP FRAME)
+     In the Mac port, each element has the form
+       (SELECTION-NAME SELECTION-VALUE SELECTION-TIMESTAMP FRAME OWNERSHIP-INFO)
+     SELECTION-NAME is a lisp symbol, whose name is the name of an X Atom.
+     SELECTION-VALUE is the value that emacs owns for that selection.
+      It may be any kind of Lisp object.
+     SELECTION-TIMESTAMP is the time at which emacs began owning this
+      selection, as a cons of two 16-bit numbers (making a 32 bit
+      time.)
+     OWNERSHIP-INFO is a value saved when emacs owns for that selection.
+      If another application takes the ownership of that selection
+      later, then newly examined ownership info value should be
+      different from the saved one.
+     If there is an entry in this alist, the current ownership info for
+      the selection coincides with OWNERSHIP-INFO, then it can be
+      assumed that Emacs owns that selection.
+     FRAME is the frame for which we made the selection.  If there is
+      an entry in this alist, then it can be assumed that Emacs owns
+      that selection.
+     The only (eq) parts of this list that are visible from Lisp are
+    the selection-values.  */
+  Lisp_Object Vselection_alist;
 
   /* All fields before `next_terminal' should be Lisp_Object and are traced
      by the GC.  All fields afterwards are ignored by the GC.  */
@@ -425,28 +454,28 @@ struct terminal
 
   /* Text display hooks.  */
 
-  void (*cursor_to_hook) P_ ((struct frame *f, int vpos, int hpos));
-  void (*raw_cursor_to_hook) P_ ((struct frame *, int, int));
+  void (*cursor_to_hook) (struct frame *f, int vpos, int hpos);
+  void (*raw_cursor_to_hook) (struct frame *, int, int);
 
-  void (*clear_to_end_hook) P_ ((struct frame *));
-  void (*clear_frame_hook) P_ ((struct frame *));
-  void (*clear_end_of_line_hook) P_ ((struct frame *, int));
+  void (*clear_to_end_hook) (struct frame *);
+  void (*clear_frame_hook) (struct frame *);
+  void (*clear_end_of_line_hook) (struct frame *, int);
 
-  void (*ins_del_lines_hook) P_ ((struct frame *f, int, int));
+  void (*ins_del_lines_hook) (struct frame *f, int, int);
 
-  void (*insert_glyphs_hook) P_ ((struct frame *f, struct glyph *s, int n));
-  void (*write_glyphs_hook) P_ ((struct frame *f, struct glyph *s, int n));
-  void (*delete_glyphs_hook) P_ ((struct frame *, int));
+  void (*insert_glyphs_hook) (struct frame *f, struct glyph *s, int n);
+  void (*write_glyphs_hook) (struct frame *f, struct glyph *s, int n);
+  void (*delete_glyphs_hook) (struct frame *, int);
 
-  void (*ring_bell_hook) P_ ((struct frame *f));
-  void (*toggle_invisible_pointer_hook) P_ ((struct frame *f, int invisible));
+  void (*ring_bell_hook) (struct frame *f);
+  void (*toggle_invisible_pointer_hook) (struct frame *f, int invisible);
 
-  void (*reset_terminal_modes_hook) P_ ((struct terminal *));
-  void (*set_terminal_modes_hook) P_ ((struct terminal *));
+  void (*reset_terminal_modes_hook) (struct terminal *);
+  void (*set_terminal_modes_hook) (struct terminal *);
 
-  void (*update_begin_hook) P_ ((struct frame *));
-  void (*update_end_hook) P_ ((struct frame *));
-  void (*set_terminal_window_hook) P_ ((struct frame *, int));
+  void (*update_begin_hook) (struct frame *);
+  void (*update_end_hook) (struct frame *);
+  void (*set_terminal_window_hook) (struct frame *, int);
 
   /* Multi-frame and mouse support hooks.  */
 
@@ -468,12 +497,12 @@ struct terminal
 
      This should clear mouse_moved until the next motion
      event arrives.  */
-  void (*mouse_position_hook) P_ ((struct frame **f, int,
-                                   Lisp_Object *bar_window,
-                                   enum scroll_bar_part *part,
-                                   Lisp_Object *x,
-                                   Lisp_Object *y,
-                                   unsigned long *time));
+  void (*mouse_position_hook) (struct frame **f, int,
+                               Lisp_Object *bar_window,
+                               enum scroll_bar_part *part,
+                               Lisp_Object *x,
+                               Lisp_Object *y,
+                               Time *);
 
   /* The window system handling code should set this if the mouse has
      moved since the last call to the mouse_position_hook.  Calling that
@@ -483,7 +512,7 @@ struct terminal
   /* When a frame's focus redirection is changed, this hook tells the
      window system code to re-decide where to put the highlight.  Under
      X, this means that Emacs lies about where the focus is.  */
-  void (*frame_rehighlight_hook) P_ ((struct frame *));
+  void (*frame_rehighlight_hook) (struct frame *);
 
   /* If we're displaying frames using a window system that can stack
      frames on top of each other, this hook allows you to bring a frame
@@ -492,15 +521,15 @@ struct terminal
      support overlapping frames, so there's no need to raise or lower
      anything.
 
-     If RAISE is non-zero, F is brought to the front, before all other
-     windows.  If RAISE is zero, F is sent to the back, behind all other
+     If RAISE_FLAG is non-zero, F is brought to the front, before all other
+     windows.  If RAISE_FLAG is zero, F is sent to the back, behind all other
      windows.  */
-  void (*frame_raise_lower_hook) P_ ((struct frame *f, int raise));
+  void (*frame_raise_lower_hook) (struct frame *f, int raise_flag);
 
   /* If the value of the frame parameter changed, whis hook is called.
      For example, if going from fullscreen to not fullscreen this hook
      may do something OS dependent, like extended window manager hints on X11.  */
-  void (*fullscreen_hook) P_ ((struct frame *f));
+  void (*fullscreen_hook) (struct frame *f);
 
   
   /* Scroll bar hooks.  */
@@ -530,9 +559,9 @@ struct terminal
      indicate that we are displaying PORTION characters out of a total
      of WHOLE characters, starting at POSITION.  If WINDOW doesn't yet
      have a scroll bar, create one for it.  */
-  void (*set_vertical_scroll_bar_hook) P_ ((struct window *window,
-                                            int portion, int whole,
-                                            int position));
+  void (*set_vertical_scroll_bar_hook) (struct window *window,
+                                        int portion, int whole,
+                                        int position);
 
 
   /* The following three hooks are used when we're doing a thorough
@@ -545,7 +574,7 @@ struct terminal
 
   /* Arrange for all scroll bars on FRAME to be removed at the next call
      to `*judge_scroll_bars_hook'.  A scroll bar may be spared if
-     `*redeem_scroll_bar_hook' is applied to its window before the judgement.
+     `*redeem_scroll_bar_hook' is applied to its window before the judgment.
 
      This should be applied to each frame each time its window tree is
      redisplayed, even if it is not displaying scroll bars at the moment;
@@ -555,11 +584,11 @@ struct terminal
      If non-zero, this hook should be safe to apply to any frame,
      whether or not it can support scroll bars, and whether or not it is
      currently displaying them.  */
-  void (*condemn_scroll_bars_hook) P_ ((struct frame *frame));
+  void (*condemn_scroll_bars_hook) (struct frame *frame);
 
-  /* Unmark WINDOW's scroll bar for deletion in this judgement cycle.
+  /* Unmark WINDOW's scroll bar for deletion in this judgment cycle.
      Note that it's okay to redeem a scroll bar that is not condemned.  */
-  void (*redeem_scroll_bar_hook) P_ ((struct window *window));
+  void (*redeem_scroll_bar_hook) (struct window *window);
 
   /* Remove all scroll bars on FRAME that haven't been saved since the
      last call to `*condemn_scroll_bars_hook'.
@@ -572,7 +601,7 @@ struct terminal
      If non-zero, this hook should be safe to apply to any frame,
      whether or not it can support scroll bars, and whether or not it is
      currently displaying them.  */
-  void (*judge_scroll_bars_hook) P_ ((struct frame *FRAME));
+  void (*judge_scroll_bars_hook) (struct frame *FRAME);
 
 
   /* Called to read input events.
@@ -594,17 +623,17 @@ struct terminal
      Therefore, in most cases EXPECTED should be simply ignored.
 
      XXX This documentation needs to be updated.  */
-  int (*read_socket_hook) P_ ((struct terminal *terminal,
-                               int expected,
-                               struct input_event *hold_quit));
+  int (*read_socket_hook) (struct terminal *terminal,
+                           int expected,
+                           struct input_event *hold_quit);
 
   /* Called when a frame's display becomes entirely up to date.  */
-  void (*frame_up_to_date_hook) P_ ((struct frame *));
+  void (*frame_up_to_date_hook) (struct frame *);
 
 
   /* Called to delete the device-specific portions of a frame that is
      on this terminal device. */
-  void (*delete_frame_hook) P_ ((struct frame *));
+  void (*delete_frame_hook) (struct frame *);
 
   /* Called after the last frame on this terminal is deleted, or when
      the display device was closed (hangup).
@@ -616,7 +645,7 @@ struct terminal
      on the terminal.  delete_frame ensures that there are no live
      frames on the terminal when it calls this hook, so infinite
      recursion is prevented.  */
-  void (*delete_terminal_hook) P_ ((struct terminal *));
+  void (*delete_terminal_hook) (struct terminal *);
 };
 
 
@@ -641,36 +670,19 @@ extern struct terminal *terminal_list;
 
 #define FRAME_TERMINAL(f) ((f)->terminal)
 
-/* FRAME_WINDOW_P tests whether the frame is a window, and is
-   defined to be the predicate for the window system being used.  */
-
-#ifdef HAVE_X_WINDOWS
-#define FRAME_WINDOW_P(f) FRAME_X_P (f)
-#endif
-#ifdef HAVE_NTGUI
-#define FRAME_WINDOW_P(f) FRAME_W32_P (f)
-#endif
-#ifdef HAVE_MACGUI
-#define FRAME_WINDOW_P(f) FRAME_MAC_P (f)
-#endif
-#ifndef FRAME_WINDOW_P
-#define FRAME_WINDOW_P(f) (0)
-#endif
-
 /* Return true if the terminal device is not suspended. */
 #define TERMINAL_ACTIVE_P(d) (((d)->type != output_termcap && (d)->type !=output_msdos_raw) || (d)->display_info.tty->input)
 
-extern Lisp_Object get_terminal_param P_ ((struct terminal *, Lisp_Object));
-extern struct terminal *get_terminal P_ ((Lisp_Object terminal, int));
-extern struct terminal *create_terminal P_ ((void));
-extern void delete_terminal P_ ((struct terminal *));
+extern struct terminal *get_terminal (Lisp_Object terminal, int);
+extern struct terminal *create_terminal (void);
+extern void delete_terminal (struct terminal *);
 
 /* The initial terminal device, created by initial_term_init. */
 extern struct terminal *initial_terminal;
 
+extern unsigned char *encode_terminal_code (struct glyph *, int,
+					    struct coding_system *);
+
 #ifdef HAVE_GPM
 extern void close_gpm (int gpm_fd);
 #endif
-
-/* arch-tag: 33a00ecc-52b5-4186-a410-8801ac9f087d
-   (do not change this comment) */

@@ -1,6 +1,6 @@
 ;;; dbus.el --- Elisp bindings for D-Bus.
 
-;; Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2007-2012 Free Software Foundation, Inc.
 
 ;; Author: Michael Albinus <michael.albinus@gmx.de>
 ;; Keywords: comm, hardware
@@ -39,6 +39,7 @@
 (declare-function dbus-method-error-internal "dbusbind.c")
 (declare-function dbus-register-signal "dbusbind.c")
 (declare-function dbus-register-method "dbusbind.c")
+(declare-function dbus-send-signal "dbusbind.c")
 (defvar dbus-debug)
 (defvar dbus-registered-objects-table)
 
@@ -91,31 +92,26 @@
 (defmacro dbus-ignore-errors (&rest body)
   "Execute BODY; signal D-Bus error when `dbus-debug' is non-nil.
 Otherwise, return result of last form in BODY, or all other errors."
+  (declare (indent 0) (debug t))
   `(condition-case err
        (progn ,@body)
      (dbus-error (when dbus-debug (signal (car err) (cdr err))))))
-
-(put 'dbus-ignore-errors 'lisp-indent-function 0)
-(put 'dbus-ignore-errors 'edebug-form-spec '(form body))
 (font-lock-add-keywords 'emacs-lisp-mode '("\\<dbus-ignore-errors\\>"))
 
 (defvar dbus-event-error-hooks nil
   "Functions to be called when a D-Bus error happens in the event handler.
 Every function must accept two arguments, the event and the error variable
-catched in `condition-case' by `dbus-error'.")
+caught in `condition-case' by `dbus-error'.")
 
 
 ;;; Hash table of registered functions.
 
-;; We create it here.  So we have a simple test in dbusbind.c, whether
-;; the Lisp code has been loaded.
-(setq dbus-registered-objects-table (make-hash-table :test 'equal))
-
 (defvar dbus-return-values-table (make-hash-table :test 'equal)
   "Hash table for temporary storing arguments of reply messages.
-A key in this hash table is a list (BUS SERIAL).  BUS is either the
-symbol `:system' or the symbol `:session'.  SERIAL is the serial number
-of the reply message.  See `dbus-call-method-non-blocking-handler' and
+A key in this hash table is a list (BUS SERIAL).  BUS is either a
+Lisp symbol, `:system' or `:session', or a string denoting the
+bus address.  SERIAL is the serial number of the reply message.
+See `dbus-call-method-non-blocking-handler' and
 `dbus-call-method-non-blocking'.")
 
 (defun dbus-list-hash-table ()
@@ -125,7 +121,7 @@ See `dbus-registered-objects-table' for a description of the
 hash table."
   (let (result)
     (maphash
-     '(lambda (key value) (add-to-list 'result (cons key value) 'append))
+     (lambda (key value) (add-to-list 'result (cons key value) 'append))
      dbus-registered-objects-table)
     result))
 
@@ -144,50 +140,70 @@ association to the service from D-Bus."
 
   ;; Find the corresponding entry in the hash table.
   (let* ((key (car object))
-	 (value (cdr object))
+	 (value (cadr object))
+	 (bus (car key))
+	 (service (car value))
 	 (entry (gethash key dbus-registered-objects-table))
 	 ret)
-    ;; entry has the structure ((UNAME SERVICE PATH MEMBER) ...).
-    ;; value has the structure ((SERVICE PATH [HANDLER]) ...).
+    ;; key has the structure (BUS INTERFACE MEMBER).
+    ;; value has the structure (SERVICE PATH [HANDLER]).
+    ;; entry has the structure ((UNAME SERVICE PATH MEMBER [RULE]) ...).
     ;; MEMBER is either a string (the handler), or a cons cell (a
     ;; property value).  UNAME and property values are not taken into
-    ;; account for comparision.
+    ;; account for comparison.
 
     ;; Loop over the registered functions.
     (dolist (elt entry)
       (when (equal
-	     (car value)
-	     (butlast (cdr elt) (- (length (cdr elt)) (length (car value)))))
+	     value
+	     (butlast (cdr elt) (- (length (cdr elt)) (length value))))
+	(setq ret t)
 	;; Compute new hash value.  If it is empty, remove it from the
 	;; hash table.
 	(unless (puthash key (delete elt entry) dbus-registered-objects-table)
 	  (remhash key dbus-registered-objects-table))
-	(setq ret t)))
+	;; Remove match rule of signals.
+	(let ((rule (nth 4 elt)))
+	  (when (stringp rule)
+	    (setq service nil) ; We do not need to unregister the service.
+	    (dbus-call-method
+	     bus dbus-service-dbus dbus-path-dbus dbus-interface-dbus
+	     "RemoveMatch" rule)))))
     ;; Check, whether there is still a registered function or property
     ;; for the given service.  If not, unregister the service from the
     ;; bus.
-    (dolist (elt entry)
-      (let ((service (cadr elt))
-	    (bus (car key))
-	    found)
-	(maphash
-	 (lambda (k v)
-	   (dolist (e v)
-	     (ignore-errors
-	       (when (and (equal bus (car k)) (string-equal service (cadr e)))
-		 (setq found t)))))
-	 dbus-registered-objects-table)
-	(unless found
-	  (dbus-call-method
-	   bus dbus-service-dbus dbus-path-dbus dbus-interface-dbus
-	   "ReleaseName" service))))
+    (when service
+      (dolist (elt entry)
+	(let (found)
+	  (maphash
+	   (lambda (k v)
+	     (dolist (e v)
+	       (ignore-errors
+		 (when (and (equal bus (car k)) (string-equal service (cadr e)))
+		   (setq found t)))))
+	   dbus-registered-objects-table)
+	  (unless found
+	    (dbus-call-method
+	     bus dbus-service-dbus dbus-path-dbus dbus-interface-dbus
+	     "ReleaseName" service)))))
     ;; Return.
     ret))
 
 (defun dbus-unregister-service (bus service)
   "Unregister all objects related to SERVICE from D-Bus BUS.
-BUS must be either the symbol `:system' or the symbol `:session'.
-SERVICE must be a known service name."
+BUS is either a Lisp symbol, `:system' or `:session', or a string
+denoting the bus address.  SERVICE must be a known service name.
+
+The function returns a keyword, indicating the result of the
+operation.  One of the following keywords is returned:
+
+`:released': Service has become the primary owner of the name.
+
+`:non-existent': Service name does not exist on this bus.
+
+`:not-owner': We are neither the primary owner nor waiting in the
+queue of this service."
+
   (maphash
    (lambda (key value)
      (dolist (elt value)
@@ -197,9 +213,14 @@ SERVICE must be a known service name."
 	       (puthash key (delete elt value) dbus-registered-objects-table)
 	     (remhash key dbus-registered-objects-table))))))
    dbus-registered-objects-table)
-  (dbus-call-method
-   bus dbus-service-dbus dbus-path-dbus dbus-interface-dbus
-   "ReleaseName" service))
+  (let ((reply (dbus-call-method
+		bus dbus-service-dbus dbus-path-dbus dbus-interface-dbus
+		"ReleaseName" service)))
+    (case reply
+      (1 :released)
+      (2 :non-existent)
+      (3 :not-owner)
+      (t (signal 'dbus-error (list "Could not unregister service" service))))))
 
 (defun dbus-call-method-non-blocking-handler (&rest args)
   "Handler for reply messages of asynchronous D-Bus message calls.
@@ -243,7 +264,7 @@ This handler is applied when a \"NameOwnerChanged\" signal has
 arrived.  SERVICE is the object name for which the name owner has
 been changed.  OLD-OWNER is the previous owner of SERVICE, or the
 empty string if SERVICE was not owned yet.  NEW-OWNER is the new
-owner of SERVICE, or the empty string if SERVICE looses any name owner.
+owner of SERVICE, or the empty string if SERVICE loses any name owner.
 
 usage: (dbus-name-owner-changed-handler service old-owner new-owner)"
   (save-match-data
@@ -259,20 +280,20 @@ usage: (dbus-name-owner-changed-handler service old-owner new-owner)"
 	  ;; Check whether SERVICE is a known name.
 	  (when (not (string-match "^:" service))
 	    (maphash
-	     '(lambda (key value)
-		(dolist (elt value)
-		  ;; key has the structure (BUS INTERFACE MEMBER).
-		  ;; elt has the structure (UNAME SERVICE PATH HANDLER).
-		  (when (string-equal old-owner (car elt))
-		    ;; Remove old key, and add new entry with changed name.
-		    (dbus-unregister-object (list key (cdr elt)))
-		    ;; Maybe we could arrange the lists a little bit better
-		    ;; that we don't need to extract every single element?
-		    (dbus-register-signal
-		     ;; BUS      SERVICE     PATH
-		     (nth 0 key) (nth 1 elt) (nth 2 elt)
-		     ;; INTERFACE MEMBER     HANDLER
-		     (nth 1 key) (nth 2 key) (nth 3 elt)))))
+	     (lambda (key value)
+               (dolist (elt value)
+                 ;; key has the structure (BUS INTERFACE MEMBER).
+                 ;; elt has the structure (UNAME SERVICE PATH HANDLER).
+                 (when (string-equal old-owner (car elt))
+                   ;; Remove old key, and add new entry with changed name.
+                   (dbus-unregister-object (list key (cdr elt)))
+                   ;; Maybe we could arrange the lists a little bit better
+                   ;; that we don't need to extract every single element?
+                   (dbus-register-signal
+                    ;; BUS      SERVICE     PATH
+                    (nth 0 key) (nth 1 elt) (nth 2 elt)
+                    ;; INTERFACE MEMBER     HANDLER
+                    (nth 1 key) (nth 2 key) (nth 3 elt)))))
 	     (copy-hash-table dbus-registered-objects-table))))
       ;; The error is reported only in debug mode.
       (when  dbus-debug
@@ -352,15 +373,15 @@ EVENT is a list which starts with symbol `dbus-event':
   (dbus-event BUS TYPE SERIAL SERVICE PATH INTERFACE MEMBER HANDLER &rest ARGS)
 
 BUS identifies the D-Bus the message is coming from.  It is
-either the symbol `:system' or the symbol `:session'.  TYPE is
-the D-Bus message type which has caused the event, SERIAL is the
-serial number of the received D-Bus message.  SERVICE and PATH
-are the unique name and the object path of the D-Bus object
-emitting the message.  INTERFACE and MEMBER denote the message
-which has been sent.  HANDLER is the function which has been
-registered for this message.  ARGS are the arguments passed to
-HANDLER, when it is called during event handling in
-`dbus-handle-event'.
+either a Lisp symbol, `:system' or `:session', or a string
+denoting the bus address.  TYPE is the D-Bus message type which
+has caused the event, SERIAL is the serial number of the received
+D-Bus message.  SERVICE and PATH are the unique name and the
+object path of the D-Bus object emitting the message.  INTERFACE
+and MEMBER denote the message which has been sent.  HANDLER is
+the function which has been registered for this message.  ARGS
+are the arguments passed to HANDLER, when it is called during
+event handling in `dbus-handle-event'.
 
 This function raises a `dbus-error' signal in case the event is
 not well formed."
@@ -368,7 +389,8 @@ not well formed."
   (unless (and (listp event)
 	       (eq (car event) 'dbus-event)
 	       ;; Bus symbol.
-	       (symbolp (nth 1 event))
+	       (or (symbolp (nth 1 event))
+		   (stringp (nth 1 event)))
 	       ;; Type.
 	       (and (natnump (nth 2 event))
 		    (< dbus-message-type-invalid (nth 2 event)))
@@ -433,9 +455,10 @@ If the HANDLER returns a `dbus-error', it is propagated as return message."
 
 (defun dbus-event-bus-name (event)
   "Return the bus name the event is coming from.
-The result is either the symbol `:system' or the symbol `:session'.
-EVENT is a D-Bus event, see `dbus-check-event'.  This function
-raises a `dbus-error' signal in case the event is not well formed."
+The result is either a Lisp symbol, `:system' or `:session', or a
+string denoting the bus address.  EVENT is a D-Bus event, see
+`dbus-check-event'.  This function raises a `dbus-error' signal
+in case the event is not well formed."
   (dbus-check-event event)
   (nth 1 event))
 
@@ -482,7 +505,7 @@ not well formed."
 
 (defun dbus-event-member-name (event)
   "Return the member name the event is coming from.
-It is either a signal name or a method name. The result is is a
+It is either a signal name or a method name. The result is a
 string.  EVENT is a D-Bus event, see `dbus-check-event'.  This
 function raises a `dbus-error' signal in case the event is not
 well formed."
@@ -492,13 +515,14 @@ well formed."
 
 ;;; D-Bus registered names.
 
-(defun dbus-list-activatable-names ()
+(defun dbus-list-activatable-names (&optional bus)
   "Return the D-Bus service names which can be activated as list.
-The result is a list of strings, which is `nil' when there are no
-activatable service names at all."
+If BUS is left nil, `:system' is assumed.  The result is a list
+of strings, which is `nil' when there are no activatable service
+names at all."
   (dbus-ignore-errors
     (dbus-call-method
-     :system dbus-service-dbus
+     (or bus :system) dbus-service-dbus
      dbus-path-dbus dbus-interface-dbus "ListActivatableNames")))
 
 (defun dbus-list-names (bus)
@@ -565,10 +589,11 @@ apply
   "Return all interfaces and sub-nodes of SERVICE,
 registered at object path PATH at bus BUS.
 
-BUS must be either the symbol `:system' or the symbol `:session'.
-SERVICE must be a known service name, and PATH must be a valid
-object path.  The last two parameters are strings.  The result,
-the introspection data, is a string in XML format."
+BUS is either a Lisp symbol, `:system' or `:session', or a string
+denoting the bus address.  SERVICE must be a known service name,
+and PATH must be a valid object path.  The last two parameters
+are strings.  The result, the introspection data, is a string in
+XML format."
   ;; We don't want to raise errors.  `dbus-call-method-non-blocking'
   ;; is used, because the handler can be registered in our Emacs
   ;; instance; caller an callee would block each other.
@@ -809,15 +834,15 @@ be \"out\"."
       (setq direction nil))
     ;; Collect the signatures.
     (mapconcat
-     '(lambda (x)
-	(let ((arg (dbus-introspect-get-argument
-		    bus service path interface name x)))
-	  (if (or (not (stringp direction))
-		  (string-equal
-		   direction
-		   (dbus-introspect-get-attribute arg "direction")))
-	      (dbus-introspect-get-attribute arg "type")
-	    "")))
+     (lambda (x)
+       (let ((arg (dbus-introspect-get-argument
+                   bus service path interface name x)))
+         (if (or (not (stringp direction))
+                 (string-equal
+                  direction
+                  (dbus-introspect-get-attribute arg "direction")))
+             (dbus-introspect-get-attribute arg "type")
+           "")))
      (dbus-introspect-get-argument-names bus service path interface name)
      "")))
 
@@ -869,20 +894,23 @@ name of the property, and its value.  If there are no properties,
 	(add-to-list 'result (cons (car dict) (caadr dict)) 'append)))))
 
 (defun dbus-register-property
-  (bus service path interface property access value)
+  (bus service path interface property access value
+   &optional emits-signal dont-register-service)
   "Register property PROPERTY on the D-Bus BUS.
 
-BUS is either the symbol `:system' or the symbol `:session'.
+BUS is either a Lisp symbol, `:system' or `:session', or a string
+denoting the bus address.
 
 SERVICE is the D-Bus service name of the D-Bus.  It must be a
-known name.
+known name (See discussion of DONT-REGISTER-SERVICE below).
 
-PATH is the D-Bus object path SERVICE is registered.  INTERFACE
-is the name of the interface used at PATH, PROPERTY is the name
-of the property of INTERFACE.  ACCESS indicates, whether the
-property can be changed by other services via D-Bus.  It must be
-either the symbol `:read' or `:readwrite'.  VALUE is the initial
-value of the property, it can be of any valid type (see
+PATH is the D-Bus object path SERVICE is registered (See
+discussion of DONT-REGISTER-SERVICE below).  INTERFACE is the
+name of the interface used at PATH, PROPERTY is the name of the
+property of INTERFACE.  ACCESS indicates, whether the property
+can be changed by other services via D-Bus.  It must be either
+the symbol `:read' or `:readwrite'.  VALUE is the initial value
+of the property, it can be of any valid type (see
 `dbus-call-method' for details).
 
 If PROPERTY already exists on PATH, it will be overwritten.  For
@@ -892,29 +920,58 @@ can be changed by `dbus-set-property'.
 
 The interface \"org.freedesktop.DBus.Properties\" is added to
 PATH, including a default handler for the \"Get\", \"GetAll\" and
-\"Set\" methods of this interface."
+\"Set\" methods of this interface.  When EMITS-SIGNAL is non-nil,
+the signal \"PropertiesChanged\" is sent when the property is
+changed by `dbus-set-property'.
+
+When DONT-REGISTER-SERVICE is non-nil, the known name SERVICE is
+not registered.  This means that other D-Bus clients have no way
+of noticing the newly registered property.  When interfaces are
+constructed incrementally by adding single methods or properties
+at a time, DONT-REGISTER-SERVICE can be used to prevent other
+clients from discovering the still incomplete interface."
   (unless (member access '(:read :readwrite))
     (signal 'dbus-error (list "Access type invalid" access)))
 
   ;; Register SERVICE.
-  (unless (member service (dbus-list-names bus))
+  (unless (or dont-register-service
+	      (member service (dbus-list-names bus)))
     (dbus-call-method
      bus dbus-service-dbus dbus-path-dbus dbus-interface-dbus
      "RequestName" service 0))
 
-  ;; Add the handler.  We use `dbus-service-emacs' as service name, in
-  ;; order to let unregister SERVICE despite of this default handler.
+  ;; Add handlers for the three property-related methods.
   (dbus-register-method
-   bus service path dbus-interface-properties "Get" 'dbus-property-handler)
+   bus service path dbus-interface-properties "Get"
+   'dbus-property-handler 'dont-register)
   (dbus-register-method
-   bus service path dbus-interface-properties "GetAll" 'dbus-property-handler)
+   bus service path dbus-interface-properties "GetAll"
+   'dbus-property-handler 'dont-register)
   (dbus-register-method
-   bus service path dbus-interface-properties "Set" 'dbus-property-handler)
+   bus service path dbus-interface-properties "Set"
+   'dbus-property-handler 'dont-register)
+
+  ;; Register the name SERVICE with BUS.
+  (unless dont-register-service
+    (dbus-register-service bus service))
+
+  ;; Send the PropertiesChanged signal.
+  (when emits-signal
+    (dbus-send-signal
+     bus service path dbus-interface-properties "PropertiesChanged"
+     (list (list :dict-entry property (list :variant value)))
+     '(:array)))
 
   ;; Create a hash table entry.  We use nil for the unique name,
   ;; because the property might be accessed from anybody.
   (let ((key (list bus interface property))
-	(val (list (list nil service path (cons access value)))))
+	(val
+	 (list
+	  (list
+	   nil service path
+	   (cons
+	    (if emits-signal (list access :emits-signal) (list access))
+	    value)))))
     (puthash key val dbus-registered-objects-table)
 
     ;; Return the object.
@@ -924,6 +981,7 @@ PATH, including a default handler for the \"Get\", \"GetAll\" and
   "Default handler for the \"org.freedesktop.DBus.Properties\" interface.
 It will be registered for all objects created by `dbus-register-object'."
   (let ((bus (dbus-event-bus-name last-input-event))
+	(service (dbus-event-service-name last-input-event))
 	(path (dbus-event-path-name last-input-event))
 	(method (dbus-event-member-name last-input-event))
 	(interface (car args))
@@ -931,25 +989,40 @@ It will be registered for all objects created by `dbus-register-object'."
     (cond
      ;; "Get" returns a variant.
      ((string-equal method "Get")
-      (let ((val (gethash (list bus interface property)
-			  dbus-registered-objects-table)))
-	(when (string-equal path (nth 2 (car val)))
-	  (list (list :variant (cdar (last (car val))))))))
+      (let ((entry (gethash (list bus interface property)
+			    dbus-registered-objects-table)))
+	(when (string-equal path (nth 2 (car entry)))
+	  (list (list :variant (cdar (last (car entry))))))))
 
      ;; "Set" expects a variant.
      ((string-equal method "Set")
-      (let ((val (gethash (list bus interface property)
-			  dbus-registered-objects-table)))
-	(unless (consp (car (last (car val))))
+      (let* ((value (caar (cddr args)))
+	     (entry (gethash (list bus interface property)
+			     dbus-registered-objects-table))
+	     ;; The value of the hash table is a list; in case of
+	     ;; properties it contains just one element (UNAME SERVICE
+	     ;; PATH OBJECT).  OBJECT is a cons cell of a list, which
+	     ;; contains a list of annotations (like :read,
+	     ;; :read-write, :emits-signal), and the value of the
+	     ;; property.
+	     (object (car (last (car entry)))))
+	(unless (consp object)
 	  (signal 'dbus-error
 		  (list "Property not registered at path" property path)))
-	(unless (equal (caar (last (car val))) :readwrite)
+	(unless (member :readwrite (car object))
 	  (signal 'dbus-error
 		  (list "Property not writable at path" property path)))
 	(puthash (list bus interface property)
-		 (list (append (butlast (car val))
-			       (list (cons :readwrite (caar (cddr args))))))
+		 (list (append (butlast (car entry))
+			       (list (cons (car object) value))))
 		 dbus-registered-objects-table)
+	;; Send the "PropertiesChanged" signal.
+	(when (member :emits-signal (car object))
+	  (dbus-send-signal
+	   bus service path dbus-interface-properties "PropertiesChanged"
+	   (list (list :dict-entry property (list :variant value)))
+	   '(:array)))
+	;; Return empty reply.
 	:ignore))
 
      ;; "GetAll" returns "a{sv}".
@@ -966,7 +1039,8 @@ It will be registered for all objects created by `dbus-register-object'."
 		    (car (last key))
 		    (list :variant (cdar (last (car val))))))))
 	 dbus-registered-objects-table)
-	(list result))))))
+	;; Return the result, or an empty array.
+	(list :array (or result '(:signature "{sv}"))))))))
 
  
 ;; Initialize :system and :session buses.  This adds their file
@@ -979,5 +1053,4 @@ It will be registered for all objects created by `dbus-register-object'."
 
 (provide 'dbus)
 
-;; arch-tag: a47caf84-9162-4811-90cc-5d388e37b9bd
 ;;; dbus.el ends here

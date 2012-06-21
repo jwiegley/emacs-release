@@ -1,11 +1,10 @@
 ;;; repeat.el --- convenient way to repeat the previous command
 
-;; Copyright (C) 1998, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1998, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: Will Mengarini <seldon@eskimo.com>
 ;; Created: Mo 02 Mar 98
-;; Version: 0.51, We 13 May 98
+;; Version: 0.51
 ;; Keywords: convenience, vi, repeat
 
 ;; This file is part of GNU Emacs.
@@ -27,7 +26,7 @@
 
 ;; Sometimes the fastest way to get something done is just to lean on a key;
 ;; moving forward through a series of words by leaning on M-f is an example.
-;; But 'forward-page is orthodoxily bound to C-x ], so moving forward through
+;; But 'forward-page is orthodoxly bound to C-x ], so moving forward through
 ;; several pages requires
 ;;   Loop until desired page is reached:
 ;;     Hold down control key with left pinkie.
@@ -364,7 +363,7 @@ recently executed command not bound to an input event\"."
 
 ;; OK, there's one situation left where that doesn't work correctly: when the
 ;; most recent self-insertion provoked an auto-fill.  The problem is that
-;; unravelling the undo information after an auto-fill is too hard, since all
+;; unraveling the undo information after an auto-fill is too hard, since all
 ;; kinds of stuff can get in there as a result of comment prefixes etc.  It'd
 ;; be possible to advise do-auto-fill to record the most recent
 ;; self-insertion before it does its thing, but that's a performance hit on
@@ -394,5 +393,4 @@ recently executed command not bound to an input event\"."
 
 (provide 'repeat)
 
-;; arch-tag: cd569600-a1ad-4fa7-9062-bb91dfeaf1db
 ;;; repeat.el ends here

@@ -1,7 +1,6 @@
 ;;; executable.el --- base functionality for executable interpreter scripts -*- byte-compile-dynamic: t -*-
 
-;; Copyright (C) 1994, 1995, 1996, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1994-1996, 2000-2012  Free Software Foundation, Inc.
 
 ;; Author: Daniel Pfeiffer <occitan@esperanto.org>
 ;; Keywords: languages, unix
@@ -174,6 +173,8 @@ non-executable files."
 				     (file-modes buffer-file-name)))))))
 
 
+(defvar compilation-error-regexp-alist) ; from compile.el
+
 ;;;###autoload
 (defun executable-interpret (command)
   "Run script with user-specified args, and collect output in a buffer.
@@ -187,7 +188,7 @@ command to find the next error.  The buffer is also in `comint-mode' and
   (save-some-buffers (not compilation-ask-about-save))
   (set (make-local-variable 'executable-command) command)
   (let ((compilation-error-regexp-alist executable-error-regexp-alist))
-    (compilation-start command t (lambda (x) "*interpretation*"))))
+    (compilation-start command t (lambda (_x) "*interpretation*"))))
 
 
 
@@ -267,14 +268,17 @@ file modes."
        (save-restriction
 	 (widen)
 	 (string= "#!" (buffer-substring (point-min) (+ 2 (point-min)))))
-       (let* ((current-mode (file-modes (buffer-file-name)))
-              (add-mode (logand ?\111 (default-file-modes))))
-         (or (/= (logand ?\111 current-mode) 0)
-             (zerop add-mode)
-             (set-file-modes (buffer-file-name)
-                             (logior current-mode add-mode))))))
+       (condition-case nil
+           (let* ((current-mode (file-modes (buffer-file-name)))
+                  (add-mode (logand ?\111 (default-file-modes))))
+             (or (/= (logand ?\111 current-mode) 0)
+                 (zerop add-mode)
+                 (set-file-modes (buffer-file-name)
+                                 (logior current-mode add-mode))))
+         ;; Eg file-modes can return nil (bug#9879).  It should not,
+         ;; in this context, but we should handle it all the same.
+         (error (message "Unable to make file executable")))))
 
 (provide 'executable)
 
-;; arch-tag: 58458d1c-d9db-45ec-942b-8bbb1d5e319d
 ;;; executable.el ends here

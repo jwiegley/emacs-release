@@ -1,7 +1,6 @@
 ;;; mml-sec.el --- A package with security functions for MML documents
 
-;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2000-2012 Free Software Foundation, Inc.
 
 ;; Author: Simon Josefsson <simon@josefsson.org>
 
@@ -25,10 +24,6 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
-
-(if (locate-library "password-cache")
-    (require 'password-cache)
-  (require 'password))
 
 (autoload 'mml2015-sign "mml2015")
 (autoload 'mml2015-encrypt "mml2015")
@@ -109,12 +104,18 @@ details."
   :group 'message
   :type 'boolean)
 
-(defcustom mml-secure-cache-passphrase password-cache
+(defcustom mml-secure-cache-passphrase
+  (if (boundp 'password-cache)
+      password-cache
+    t)
   "If t, cache passphrase."
   :group 'message
   :type 'boolean)
 
-(defcustom mml-secure-passphrase-cache-expiry password-cache-expiry
+(defcustom mml-secure-passphrase-cache-expiry
+  (if (boundp 'password-cache-expiry)
+      password-cache-expiry
+    16)
   "How many seconds the passphrase is cached.
 Whether the passphrase is cached at all is controlled by
 `mml-secure-cache-passphrase'."
@@ -306,11 +307,11 @@ Use METHOD if given.  Else use `mml-secure-method' or
 
 
 (defun mml-secure-message-sign (&optional method)
-  "Add MML tags to sign this MML part.
+  "Add MML tags to sign the entire message.
 Use METHOD if given. Else use `mml-secure-method' or
 `mml-default-sign-method'."
   (interactive)
-  (mml-secure-part
+  (mml-secure-message
    (or method mml-secure-method mml-default-sign-method)
    'sign))
 
@@ -378,5 +379,4 @@ If called with a prefix argument, only encrypt (do NOT sign)."
 
 (provide 'mml-sec)
 
-;; arch-tag: 111c56e7-df5e-4287-87d7-93ed2911ec6c
 ;;; mml-sec.el ends here

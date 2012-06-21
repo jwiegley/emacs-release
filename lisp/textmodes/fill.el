@@ -1,10 +1,11 @@
 ;;; fill.el --- fill commands for Emacs		-*- coding: utf-8 -*-
 
-;; Copyright (C) 1985, 1986, 1992, 1994, 1995, 1996, 1997, 1999, 2001, 2002,
-;;   2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1985-1986, 1992, 1994-1997, 1999, 2001-2012
+;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: wp
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -81,7 +82,7 @@ reinserts the fill prefix in each resulting line."
       (setq fill-prefix nil)))
   (if fill-prefix
       (message "fill-prefix: \"%s\"" fill-prefix)
-    (message "fill-prefix cancelled")))
+    (message "fill-prefix canceled")))
 
 (defcustom adaptive-fill-mode t
   "Non-nil means determine a paragraph's fill prefix from its text."
@@ -92,7 +93,8 @@ reinserts the fill prefix in each resulting line."
   ;; Added `!' for doxygen comments starting with `//!' or `/*!'.
   ;; Added `%' for TeX comments.
   ;; RMS: deleted the code to match `1.' and `(1)'.
-  (purecopy "[ \t]*\\([-!|#%;>*·•‣⁃◦]+[ \t]*\\)*")
+  ;; Update mail-mode's paragraph-separate if you change this.
+  (purecopy "[ \t]*\\([-–!|#%;>*·•‣⁃◦]+[ \t]*\\)*")
   "Regexp to match text at start of line that constitutes indentation.
 If Adaptive Fill mode is enabled, a prefix matching this pattern
 on the first and second lines of a paragraph is used as the
@@ -136,7 +138,7 @@ The fill column to use for a line is the first column at which the column
 number equals or exceeds the local fill-column - right-margin difference."
   (save-excursion
     (if fill-column
-	(let* ((here (progn (beginning-of-line) (point)))
+	(let* ((here (line-beginning-position))
 	       (here-col 0)
 	       (eol (progn (end-of-line) (point)))
 	       margin fill-col change col)
@@ -382,7 +384,7 @@ and `fill-nobreak-invisible'."
   "Char-table of characters that don't use space between words.")
 
 (progn
-  ;; Register `kinsoku' for scripts HAN, KANA, BOPOMPFO, and CJK-MISS.
+  ;; Register `kinsoku' for scripts HAN, KANA, BOPOMOFO, and CJK-MISC.
   ;; Also tell that they don't use space between words.
   (map-char-table
    #'(lambda (key val)
@@ -468,7 +470,7 @@ Point is moved to just past the fill prefix on the first line."
 
   (goto-char from)
   (if enable-multibyte-characters
-      ;; Delete unnecessay newlines surrounded by words.  The
+      ;; Delete unnecessary newlines surrounded by words.  The
       ;; character category `|' means that we can break a line at the
       ;; character.  And, char-table
       ;; `fill-nospace-between-words-table' tells how to concatenate
@@ -657,7 +659,7 @@ space does not end a sentence, so don't break a line there."
       (if (and oneleft
 	       (not (and use-hard-newlines
 			 (get-text-property (1- (point)) 'hard))))
-	  (delete-backward-char 1)
+	  (delete-char -1)
 	(backward-char 1)
 	(setq oneleft t)))
     (setq to (copy-marker (point) t))
@@ -987,7 +989,7 @@ can take care of filling.  JUSTIFY is used as in `fill-paragraph'."
 (defun fill-region (from to &optional justify nosqueeze to-eop)
   "Fill each of the paragraphs in the region.
 A prefix arg means justify as well.
-Ordinarily the variable `fill-column' controls the width.
+The `fill-column' variable controls the width.
 
 Noninteractively, the third argument JUSTIFY specifies which
 kind of justification to do: `full', `left', `right', `center',
@@ -1290,18 +1292,16 @@ otherwise it is made canonical."
 		     (skip-chars-backward " "))
 		   (setq ncols (- fc endcol))
 		   ;; Ncols is number of additional space chars needed
-		   (if (and (> ncols 0) (> nspaces 0) (not eop))
-		       (progn
-			 (setq curr-fracspace (+ ncols (/ (1+ nspaces) 2))
-			       count nspaces)
-			 (while (> count 0)
-			   (skip-chars-forward " ")
-			   (insert-and-inherit
-			    (make-string (/ curr-fracspace nspaces) ?\s))
-			   (search-forward " " nil t)
-			   (setq count (1- count)
-				 curr-fracspace
-				   (+ (% curr-fracspace nspaces) ncols)))))))
+		   (when (and (> ncols 0) (> nspaces 0) (not eop))
+                     (setq curr-fracspace (+ ncols (/ nspaces 2))
+                           count nspaces)
+                     (while (> count 0)
+                       (skip-chars-forward " ")
+                       (insert-char ?\s (/ curr-fracspace nspaces) t)
+                       (search-forward " " nil t)
+                       (setq count (1- count)
+                             curr-fracspace
+                             (+ (% curr-fracspace nspaces) ncols))))))
 		(t (error "Unknown justification value"))))
 	(goto-char pos)
 	(move-marker pos nil)))
@@ -1519,5 +1519,4 @@ Also, if CITATION-REGEXP is non-nil, don't fill header lines."
 	"")
     string))
 
-;; arch-tag: 727ad455-1161-4fa9-8df5-0f74b179216d
 ;;; fill.el ends here

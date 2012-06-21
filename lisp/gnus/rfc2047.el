@@ -1,7 +1,6 @@
 ;;; rfc2047.el --- functions for encoding and decoding rfc2047 messages
 
-;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1998-2012  Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;;	MORIOKA Tomohiko <morioka@jaist.ac.jp>
@@ -31,7 +30,6 @@
   (require 'cl))
 (defvar message-posting-charset)
 
-(require 'qp)
 (require 'mm-util)
 (require 'ietf-drums)
 ;; Fixme: Avoid this (used for mail-parse-charset) mm dependence on gnus.
@@ -287,11 +285,11 @@ Should be called narrowed to the head of the message."
 		       mail-parse-charset)
 		  (mm-encode-coding-region (point) (point-max)
 					   mail-parse-charset)))
-	     ;; We get this when CC'ing messsages to newsgroups with
+	     ;; We get this when CC'ing messages to newsgroups with
 	     ;; 8-bit names.  The group name mail copy just got
 	     ;; unconditionally encoded.  Previously, it would ask
 	     ;; whether to encode, which was quite confusing for the
-	     ;; user.  If the new behavior is wrong, tell me. I have
+	     ;; user.  If the new behavior is wrong, tell me.  I have
 	     ;; left the old code commented out below.
 	     ;; -- Per Abrahamsen <abraham@dina.kvl.dk> Date: 2001-10-07.
 	     ;; Modified by Dave Love, with the commented-out code changed
@@ -343,17 +341,13 @@ The buffer may be narrowed."
 (defconst rfc2047-syntax-table
   ;; (make-char-table 'syntax-table '(2)) only works in Emacs.
   (let ((table (make-syntax-table)))
-    ;; The following is done to work for setting all elements of the table
-    ;; in Emacs 21-23 and XEmacs; it appears to be the cleanest way.
+    ;; The following is done to work for setting all elements of the table;
+    ;; it appears to be the cleanest way.
     ;; Play safe and don't assume the form of the word syntax entry --
     ;; copy it from ?a.
-    (if (fboundp 'set-char-table-range)	; Emacs
-	(funcall (intern "set-char-table-range")
-		 table t (aref (standard-syntax-table) ?a))
-      (if (fboundp 'put-char-table)
-	  (if (fboundp 'get-char-table)	; warning avoidance
-	      (put-char-table t (get-char-table ?a (standard-syntax-table))
-			      table))))
+    (if (featurep 'xemacs)
+	(put-char-table t (get-char-table ?a (standard-syntax-table)) table)
+      (set-char-table-range table t (aref (standard-syntax-table) ?a)))
     (modify-syntax-entry ?\\ "\\" table)
     (modify-syntax-entry ?\" "\"" table)
     (modify-syntax-entry ?\( "(" table)
@@ -368,7 +362,7 @@ The buffer may be narrowed."
     (modify-syntax-entry ?@ "." table)
     table))
 
-(defun rfc2047-encode-region (b e)
+(defun rfc2047-encode-region (b e &optional dont-fold)
   "Encode words in region B to E that need encoding.
 By default, the region is treated as containing RFC2822 addresses.
 Dynamically bind `rfc2047-encoding-type' to change that."
@@ -428,7 +422,7 @@ Dynamically bind `rfc2047-encoding-type' to change that."
 		      ;; since encoded words can't occur in quotes.
 		      (progn
 			(goto-char end)
-			(delete-backward-char 1)
+			(delete-char -1)
 			(goto-char start)
 			(delete-char 1)
 			(when last-encoded
@@ -552,16 +546,17 @@ Dynamically bind `rfc2047-encoding-type' to change that."
 		 (signal (car err) (cdr err))
 	       (error "Invalid data for rfc2047 encoding: %s"
 		      (mm-replace-in-string orig-text "[ \t\n]+" " "))))))))
-    (rfc2047-fold-region b (point))
+    (unless dont-fold
+      (rfc2047-fold-region b (point)))
     (goto-char (point-max))))
 
-(defun rfc2047-encode-string (string)
+(defun rfc2047-encode-string (string &optional dont-fold)
   "Encode words in STRING.
 By default, the string is treated as containing addresses (see
 `rfc2047-encoding-type')."
   (mm-with-multibyte-buffer
     (insert string)
-    (rfc2047-encode-region (point-min) (point-max))
+    (rfc2047-encode-region (point-min) (point-max) dont-fold)
     (buffer-string)))
 
 ;; From RFC 2047:
@@ -592,7 +587,7 @@ should not change this value.")
 	((>= column rfc2047-encode-max-chars)
 	 (when eword
 	   (cond ((string-match "\n[ \t]+\\'" eword)
-		  ;; Reomove a superfluous empty line.
+		  ;; Remove a superfluous empty line.
 		  (setq eword (substring eword 0 (match-beginning 0))))
 		 ((string-match "(+\\'" eword)
 		  ;; Break the line before the open parenthesis.
@@ -645,7 +640,7 @@ should not change this value.")
 	       (setq crest " "
 		     eword (concat eword next)))
 	     (when (string-match "\n[ \t]+\\'" eword)
-	       ;; Reomove a superfluous empty line.
+	       ;; Remove a superfluous empty line.
 	       (setq eword (substring eword 0 (match-beginning 0))))
 	     (rfc2047-encode-1 (length crest) (substring string index)
 			       cs encoder start " " tail
@@ -656,6 +651,9 @@ should not change this value.")
 Point moves to the end of the region."
   (let ((mime-charset (or (mm-find-mime-charset-region b e) (list 'us-ascii)))
 	cs encoding tail crest eword)
+    ;; Use utf-8 as a last resort if determining charset of text fails.
+    (if (memq nil mime-charset)
+	(setq mime-charset (list 'utf-8)))
     (cond ((> (length mime-charset) 1)
 	   (error "Can't rfc2047-encode `%s'"
 		  (buffer-substring-no-properties b e)))
@@ -827,6 +825,8 @@ Point moves to the end of the region."
   "Base64-encode the header contained in STRING."
   (base64-encode-string string t))
 
+(autoload 'quoted-printable-encode-region "qp")
+
 (defun rfc2047-q-encode-string (string)
   "Quoted-printable-encode the header in STRING."
   (mm-with-unibyte-buffer
@@ -847,21 +847,11 @@ Point moves to the end of the region."
 
 (defun rfc2047-encode-parameter (param value)
   "Return and PARAM=VALUE string encoded in the RFC2047-like style.
-This is a replacement for the `rfc2231-encode-string' function.
-
-When attaching files as MIME parts, we should use the RFC2231 encoding
-to specify the file names containing non-ASCII characters.  However,
-many mail softwares don't support it in practice and recipients won't
-be able to extract files with correct names.  Instead, the RFC2047-like
-encoding is acceptable generally.  This function provides the very
-RFC2047-like encoding, resigning to such a regrettable trend.  To use
-it, put the following line in your ~/.gnus.el file:
-
-\(defalias 'mail-header-encode-parameter 'rfc2047-encode-parameter)
-"
+This is a substitution for the `rfc2231-encode-string' function, that
+is the standard but many mailers don't support it."
   (let ((rfc2047-encoding-type 'mime)
 	(rfc2047-encode-max-chars nil))
-    (rfc2045-encode-string param (rfc2047-encode-string value))))
+    (rfc2045-encode-string param (rfc2047-encode-string value t))))
 
 ;;;
 ;;; Functions for decoding RFC2047 messages
@@ -896,7 +886,7 @@ them.")
 		  (goto-char beg)
 		  (while (search-forward "\\" nil 'move)
 		    (unless (memq (char-after) '(?\"))
-		      (delete-backward-char 1))
+		      (delete-char -1))
 		    (forward-char)))
 		(forward-char))
 	    (error
@@ -928,6 +918,8 @@ only be used for decoding, not for encoding."
     (if (eq cs 'ascii)
 	'raw-text
       cs)))
+
+(autoload 'quoted-printable-decode-string "qp")
 
 (defun rfc2047-decode-encoded-words (words)
   "Decode successive encoded-words in WORDS and return a decoded string.
@@ -1169,5 +1161,4 @@ strings are stripped."
 
 (provide 'rfc2047)
 
-;; arch-tag: a07fe3d4-22b5-4c4a-bd89-b1f82d5d36f6
 ;;; rfc2047.el ends here

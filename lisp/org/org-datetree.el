@@ -1,11 +1,10 @@
 ;;; org-datetree.el --- Create date entries in a tree
 
-;; Copyright (C) 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2009-2012  Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.33x
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -36,13 +35,14 @@
 (defvar org-datetree-base-level 1
   "The level at which years should be placed in the date tree.
 This is normally one, but if the buffer has an entry with a DATE_TREE
-property, the date tree will become a subtree under that entry, so the
-base level will be properly adjusted.")
+property (any value), the date tree will become a subtree under that entry,
+so the base level will be properly adjusted.")
 
+;;;###autoload
 (defun org-datetree-find-date-create (date &optional keep-restriction)
   "Find or create an entry for DATE.
 If KEEP-RESTRICTION is non-nil, do not widen the buffer.
-When it is nit, the buffer will be widened to make sure an existing date
+When it is nil, the buffer will be widened to make sure an existing date
 tree can be found."
   (let ((year (nth 2 date))
 	(month (car date))
@@ -63,7 +63,7 @@ tree can be found."
       (goto-char (prog1 (point) (widen))))))
 
 (defun org-datetree-find-year-create (year)
-  (let ((re "^\\*+[ \t]+\\([12][0-9][0-9][0-9]\\)[ \t\n]")
+  (let ((re "^\\*+[ \t]+\\([12][0-9][0-9][0-9]\\)$")
 	match)
     (goto-char (point-min))
     (while (and (setq match (re-search-forward re nil t))
@@ -82,7 +82,7 @@ tree can be found."
 
 (defun org-datetree-find-month-create (year month)
   (org-narrow-to-subtree)
-  (let ((re (format "^\\*+[ \t]+%d-\\([01][0-9]\\)[ \t\n]" year))
+  (let ((re (format "^\\*+[ \t]+%d-\\([01][0-9]\\) \\w+$" year))
 	match)
     (goto-char (point-min))
     (while (and (setq match (re-search-forward re nil t))
@@ -101,7 +101,7 @@ tree can be found."
 
 (defun org-datetree-find-day-create (year month day)
   (org-narrow-to-subtree)
-  (let ((re (format "^\\*+[ \t]+%d-%02d-\\([0123][0-9]\\)[ \t\n]" year month))
+  (let ((re (format "^\\*+[ \t]+%d-%02d-\\([0123][0-9]\\) \\w+$" year month))
 	match)
     (goto-char (point-min))
     (while (and (setq match (re-search-forward re nil t))
@@ -193,7 +193,5 @@ before running this command, even though the command tries to be smart."
 	  (org-datetree-file-entry-under (current-kill 0) date)))))))
 
 (provide 'org-datetree)
-
-;; arch-tag: 1daea962-fd08-448b-9f98-6e8b511b3601
 
 ;;; org-datetree.el ends here

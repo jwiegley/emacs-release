@@ -28,10 +28,10 @@
 
 	* gnus-start.el (gnus-slave-save-newsrc):
 	* gnus-uu.el (gnus-uu-tmp-dir, gnus-uu-decode-binhex)
-	  (gnus-uu-decode-binhex-view, gnus-uu-digest-mail-forward)
-	  (gnus-uu-initialize):
+	(gnus-uu-decode-binhex-view, gnus-uu-digest-mail-forward)
+	(gnus-uu-initialize):
 	* nnmail.el (nnmail-make-complex-temp-name, nnmail-get-new-mail):
-	  Use make-temp-file.
+	Use make-temp-file.
 
 1999-09-07  Eli Zaretskii  <eliz@gnu.org>
 
@@ -506,10 +506,10 @@
 
 1998-08-13  Simon Josefsson  <jas@pdc.kth.se>
 
-	* gnus-msg.el (gnus-setup-message): use message-setup-hook
-	instead
-	(gnus-configure-posting-styles): new posting-style 'body
-	(gnus-configure-posting-styles): insert headers immediately
+	* gnus-msg.el (gnus-setup-message): Use message-setup-hook
+	instead.
+	(gnus-configure-posting-styles): New posting-style 'body.
+	(gnus-configure-posting-styles): Insert headers immediately
 
 1998-08-13  Lars Magne Ingebrigtsen  <larsi@gnus.org>
 
@@ -524,9 +524,9 @@
 
 1998-08-12  Simon Josefsson  <jas@pdc.kth.se>
 
-	* gnus-cache.el (gnus-uncacheable-groups): doc change
-	(gnus-cacheable-groups): new variable
-	(gnus-cache-possibly-enter-article): use it
+	* gnus-cache.el (gnus-uncacheable-groups): Doc change.
+	(gnus-cacheable-groups): New variable.
+	(gnus-cache-possibly-enter-article): Use it.
 
 1998-08-12  Lars Magne Ingebrigtsen  <larsi@gnus.org>
 
@@ -1336,7 +1336,7 @@
 
 1998-05-07  Hrvoje Niksic  <hniksic@srce.hr>
 
-	* nnmail.el: (nnmail-get-split-group): Use `regexp-quote'
+	* nnmail.el (nnmail-get-split-group): Use `regexp-quote'
 	when file name is a part of pattern.
 
 	* nnmail.el (nnmail-crosspost-link-function): Ditto.
@@ -2346,7 +2346,7 @@
 
 	* nnmh.el: Don't call nnmail-activate.
 
-	* gnus.el: User-variabelize all custom vars.
+	* gnus.el: User-variablize all custom vars.
 
 1998-02-13  Lars Magne Ingebrigtsen  <larsi@menja.ifi.uio.no>
 
@@ -2540,7 +2540,7 @@
 	`gnus-simplify-ignored-prefixes'.
 	(gnus-summary-set-display-table): Keep TAB.
 
-1998-01-15   <Use-Author-Address-Header@[127.1]>
+1998-01-15  Lars Magne Ingebrigtsen  <larsi@ifi.uio.no>
 
 	* gnus-art.el (gnus-request-article-this-buffer): Put it into the
 	backlog.
@@ -3471,7 +3471,7 @@
 	* pop3.el (pop3-md5): `with-temp-buffer' doesn't exist in Emacs
 	19.34.
 
-	* nneething.el (nneething-directory): Defvarred.
+	* nneething.el (nneething-directory): Defvared.
 
 	* message.el: Autoloaded nndraft things.
 	(message-set-auto-save-file-name): Use it.
@@ -3708,8 +3708,7 @@
 	* gnus.el: Quassia Gnus v0.1 is released.
 
 
-    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-      2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+  Copyright (C) 1997-2012 Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
@@ -3725,5 +3724,3 @@
 
   You should have received a copy of the GNU General Public License
   along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
-
-;;; arch-tag: c2f4e9c8-94fb-4c63-bdfd-4ab680cc9db7

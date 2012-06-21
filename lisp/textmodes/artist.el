@@ -1,7 +1,6 @@
 ;;; artist.el --- draw ascii graphics with your mouse
 
-;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2000-2012  Free Software Foundation, Inc.
 
 ;; Author:       Tomas Abrahamsson <tab@lysator.liu.se>
 ;; Maintainer:   Tomas Abrahamsson <tab@lysator.liu.se>
@@ -423,7 +422,7 @@ be in `artist-spray-chars', or spraying will behave strangely.")
 (defvar artist-mode-name " Artist"
   "Name of Artist mode beginning with a space (appears in the mode-line).")
 
-(defvar artist-curr-go 'pen-char
+(defvar artist-curr-go 'pen-line
   "Current selected graphics operation.")
 (make-variable-buffer-local 'artist-curr-go)
 
@@ -503,6 +502,50 @@ This variable is initialized by the `artist-make-prev-next-op-alist' function.")
 (defvar artist-arrow-point-1 nil)
 (defvar artist-arrow-point-2 nil)
 
+(defvar artist-menu-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [spray-chars]
+      '(menu-item "Characters for Spray" artist-select-spray-chars
+		  :help "Choose characters for sprayed by the spray-can"))
+    (define-key map [borders]
+      '(menu-item "Draw Shape Borders" artist-toggle-borderless-shapes
+		  :help "Toggle whether shapes are drawn with borders"
+		  :button (:toggle . (not artist-borderless-shapes))))
+    (define-key map [trimming]
+      '(menu-item "Trim Line Endings" artist-toggle-trim-line-endings
+		  :help "Toggle trimming of line-endings"
+		  :button (:toggle . artist-trim-line-endings)))
+    (define-key map [rubber-band]
+      '(menu-item "Rubber-banding" artist-toggle-rubber-banding
+		  :help "Toggle rubber-banding"
+		  :button (:toggle . artist-rubber-banding)))
+    (define-key map [set-erase]
+      '(menu-item "Character to Erase..." artist-select-erase-char
+		  :help "Choose a specific character to erase"))
+    (define-key map [set-line]
+      '(menu-item "Character for Line..." artist-select-line-char
+		  :help "Choose the character to insert when drawing lines"))
+    (define-key map [set-fill]
+      '(menu-item "Character for Fill..." artist-select-fill-char
+		  :help "Choose the character to insert when filling in shapes"))
+    (define-key map [artist-separator] '(menu-item "--"))
+    (dolist (op '(("Vaporize" artist-select-op-vaporize-lines vaporize-lines)
+		  ("Erase" artist-select-op-erase-rectangle erase-rect)
+		  ("Spray-can" artist-select-op-spray-set-size spray-get-size)
+		  ("Text" artist-select-op-text-overwrite text-ovwrt)
+		  ("Ellipse" artist-select-op-circle circle)
+		  ("Poly-line" artist-select-op-straight-poly-line spolyline)
+		  ("Square" artist-select-op-square square)
+		  ("Rectangle" artist-select-op-rectangle rectangle)
+    		  ("Line" artist-select-op-straight-line s-line)
+    		  ("Pen" artist-select-op-pen-line pen-line)))
+      (define-key map (vector (nth 2 op))
+    	`(menu-item ,(nth 0 op)
+    		    ,(nth 1 op)
+    		    :help ,(format "Draw using the %s style" (nth 0 op))
+    		    :button (:radio . (eq artist-curr-go ',(nth 2 op))))))
+    map))
+
 (defvar artist-mode-map
   (let ((map (make-sparse-keymap)))
     (setq artist-mode-map (make-sparse-keymap))
@@ -555,6 +598,7 @@ This variable is initialized by the `artist-make-prev-next-op-alist' function.")
     (define-key map "\C-c\C-a\C-y" 'artist-select-op-paste)
     (define-key map "\C-c\C-af"    'artist-select-op-flood-fill)
     (define-key map "\C-c\C-a\C-b" 'artist-submit-bug-report)
+    (define-key map [menu-bar artist] (cons "Artist" artist-menu-map))
     map)
   "Keymap for `artist-minor-mode'.")
 
@@ -1899,7 +1943,7 @@ Return a list (RETURN-CODE STDOUT STDERR)."
   ;;
   ;;	Example: In the figure below, the `X' is the very last
   ;;		 character in the buffer ("a non-empty line at the
-  ;;             end"). Suppose point is at at P. Then (forward-line 1)
+  ;;             end"). Suppose point is at P. Then (forward-line 1)
   ;;             returns 0 and puts point after the `X'.
   ;;
   ;;			--------top of buffer--------
@@ -1942,7 +1986,7 @@ Also updates the variables `artist-draw-min-y' and `artist-draw-max-y'."
   "Retrieve a replacement for character C from `artist-replacement-table'.
 The replacement is used to convert tabs and new-lines to spaces."
   ;; Characters may be outside the range of the `artist-replacement-table',
-  ;; for example if they are unicode code points >= 256.
+  ;; for example if they are Unicode code points >= 256.
   ;; Check so we don't attempt to access the array out of its bounds,
   ;; assuming no such character needs to be replaced.
   (if (< c (length artist-replacement-table))
@@ -1957,24 +2001,11 @@ The replacement is used to convert tabs and new-lines to spaces."
 
 (defun artist-replace-char (new-char)
   "Replace the character at point with NEW-CHAR."
-  ;; Check that the variable exists first. The doc says it was added in 19.23.
-  (if (and (and (boundp 'emacs-major-version) (= emacs-major-version 20))
-	   (and (boundp 'emacs-minor-version) (<= emacs-minor-version 3)))
-      ;; This is a bug workaround for Emacs 20, versions up to 20.3:
-      ;; The self-insert-command doesn't care about the overwrite-mode,
-      ;; so the insertion is done in the same way as in picture mode.
-      ;; This seems to be a little bit slower.
-      (progn
-	(artist-move-to-xy (1+ (artist-current-column))
-			   (artist-current-line))
-	(delete-char -1)
-	(insert (artist-get-replacement-char new-char)))
-    ;; In emacs-19, the self-insert-command works better and faster
-    (let ((overwrite-mode 'overwrite-mode-textual)
-	  (fill-column 32765)		; Large :-)
-	  (blink-matching-paren nil))
-      (setq last-command-event (artist-get-replacement-char new-char))
-      (self-insert-command 1))))
+  (let ((overwrite-mode 'overwrite-mode-textual)
+	(fill-column 32765)		; Large :-)
+	(blink-matching-paren nil))
+    (setq last-command-event (artist-get-replacement-char new-char))
+    (self-insert-command 1)))
 
 (defun artist-replace-chars (new-char count)
   "Replace characters at point with NEW-CHAR.  COUNT chars are replaced."
@@ -2233,7 +2264,7 @@ Returns a DIRECTION, a number 0--7, coded as follows:
 
 
 ;; Things for drawing lines in all directions.
-;; The line drawing engine is the eight-point alrogithm.
+;; The line drawing engine is the eight-point algorithm.
 ;;
 ;; A line is here a list of (x y saved-char new-char)s.
 ;;
@@ -2308,7 +2339,7 @@ Octant are numbered 1--8, anti-clockwise as:
 	  5
 	6))))
 
-;; Some inline funtions for creating, setting and reading
+;; Some inline functions for creating, setting and reading
 ;; members of a coordinate
 ;;
 
@@ -2407,7 +2438,7 @@ in the coord."
     point-list))
 
 ;; artist-save-chars-under-point-list
-;; Remebers the chars that were there before we did draw the line.
+;; Remembers the chars that were there before we did draw the line.
 ;; Returns point-list.
 ;;
 (defun artist-save-chars-under-point-list (point-list)
@@ -2484,7 +2515,7 @@ This function returns a point-list."
 
 
 ;;
-;; functions for accessing endoints and elements in object requiring
+;; functions for accessing endpoints and elements in object requiring
 ;; 2 endpoints
 ;;
 
@@ -3185,7 +3216,7 @@ X1, Y1.  An endpoint is a cons pair, (ENDPOINT-X . ENDPOINT-Y)."
 ;;         2|     |
 ;;         3+-----+
 ;;
-;;   We will then pop (0,0) and remove the left-most vertival line while
+;;   We will then pop (0,0) and remove the left-most vertical line while
 ;;   pushing the lower left corner (0,3) on the stack, and so on until
 ;;   the entire rectangle is vaporized.
 ;;
@@ -3552,7 +3583,7 @@ FILL-INFO is a list of vectors on the form [X Y ELLIPSE-WIDTH-ON-THIS-LINE]."
          (width (abs (- x2 x1)))
 	 (height (abs (- y2 y1)))
 	 ;; When drawing our circle, we want it to through the cursor
-	 ;; just as when drawing the ellispe, but we have to take
+	 ;; just as when drawing the ellipse, but we have to take
 	 ;; care for the aspect-ratio.
 	 ;; The equation for the ellipse  (where a is the x-radius and
 	 ;; b is the y-radius):
@@ -3930,11 +3961,11 @@ The 2-point shape SHAPE is drawn from X1, Y1 to X2, Y2."
 ;; Implementation note: This really should honor the interval-fn entry
 ;; in the master table, `artist-mt', which would mean leaving a timer
 ;; that calls `draw-fn' every now and then. That timer would then have
-;; to be cancelled and reinstalled whenever the user moves the cursor.
+;; to be canceled and reinstalled whenever the user moves the cursor.
 ;; This could be done, but what if the user suddenly switches to another
 ;; drawing mode, or even kills the buffer! In the mouse case, it is much
 ;; simpler: when at the end of `artist-mouse-draw-continously', the
-;; user has released the button, so the timer will always be cancelled
+;; user has released the button, so the timer will always be canceled
 ;; at that point.
 (defun artist-key-draw-continously (x y)
   "Draw current continuous shape at X,Y."
@@ -4000,7 +4031,7 @@ The 2-point shape SHAPE is drawn from X1, Y1 to X2, Y2."
 (defun artist-draw-region-trim-line-endings (min-y max-y)
   "Trim lines in current draw-region from MIN-Y to MAX-Y.
 Trimming here means removing white space at end of a line."
-  ;; Safetyc check: switch min-y and max-y if if max-y is smaller
+  ;; Safety check: switch min-y and max-y if max-y is smaller
   (if (< max-y min-y)
       (let ((tmp min-y))
 	(setq min-y max-y)
@@ -4425,7 +4456,7 @@ If N is negative, move backward."
   "Set current fill character to be C."
   (interactive "cType fill char (type RET to turn off): ")
   (cond ((eq c ?\r) (setq artist-fill-char-set nil)
-		    (message "Fill cancelled"))
+		    (message "Fill canceled"))
 	(t	    (setq artist-fill-char-set t)
 		    (setq artist-fill-char c)
 		    (message "Fill set to \"%c\"" c))))
@@ -4615,6 +4646,10 @@ If optional argument STATE is positive, turn borders on."
 
 	  (artist-arrow-point-set-state artist-arrow-point-2 new-state)))))
 
+(defun artist-select-op-pen-line ()
+  "Select drawing pen lines."
+  (interactive)
+  (artist-select-operation "Pen Line"))
 
 (defun artist-select-op-line ()
   "Select drawing lines."
@@ -5555,7 +5590,7 @@ The event, EV, is the mouse event."
 ;;         of drawing mode.
 ;;
 ;;         You should provide these functions. You might think that
-;;         only you is using your type of mode, so noone will be able
+;;         only you is using your type of mode, so no one will be able
 ;;         to switch to another operation of the same type of mode,
 ;;         but someone else might base a new drawing mode upon your
 ;;         work.
@@ -5570,5 +5605,4 @@ The event, EV, is the mouse event."
 ;; Don't hesitate to ask me any questions.
 
 
-;; arch-tag: 3e63b881-aaaa-4b83-a072-220d4661a8a3
 ;;; artist.el ends here

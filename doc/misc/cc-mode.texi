@@ -147,10 +147,7 @@ CC Mode
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 @comment Define an index for syntactic symbols.
-@ifnottex @c In texi2dvi, the @defindex would create an empty cc-mode.ss
-          @c For Info, unlike tex, @syncodeindex needs a matching @defindex.
 @defindex ss
-@end ifnottex
 
 @comment Combine key, syntactic symbol and concept indices into one.
 @syncodeindex ss cp
@@ -159,9 +156,7 @@ CC Mode
 @copying
 This manual is for CC Mode in Emacs.
 
-Copyright @copyright{} 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-Free Software Foundation, Inc.
+Copyright @copyright{} 1995-2012 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -192,7 +187,7 @@ developing GNU and promoting software freedom.''
 @titlepage
 @sp 10
 
-@center @titlefont{CC Mode 5.31}
+@center @titlefont{CC Mode 5.32}
 @sp 2
 @center @subtitlefont{A GNU Emacs mode for editing C and C-like languages}
 @sp 2
@@ -292,6 +287,7 @@ Styles
 * Built-in Styles::
 * Choosing a Style::
 * Adding Styles::
+* Guessing the Style::
 * File Styles::
 
 Customizing Auto-newlines
@@ -322,7 +318,7 @@ Syntactic Symbols
 * Literal Symbols::
 * Multiline Macro Symbols::
 * Objective-C Method Symbols::
-* Anonymous Class Symbol::
+* Java Symbols::
 * Statement Block Symbols::
 * K&R Symbols::
 
@@ -341,6 +337,11 @@ Line-Up Functions
 * Operator Line-Up::
 * Comment Line-Up::
 * Misc Line-Up::
+
+Customizing Macros
+
+* Macro Backslashes::
+* Macros with ;::
 
 @end detailmenu
 @end menu
@@ -374,7 +375,7 @@ was added in version 5.30.
 
 This manual describes @ccmode{}
 @comment The following line must appear on its own, so that the
-version 5.31.
+version 5.32.
 @comment Release.py script can update the version number automatically
 
 @ccmode{} supports the editing of K&R and ANSI C, C++, Objective-C,
@@ -656,6 +657,10 @@ expression, to some statements, or perhaps to whole functions, the
 syntactic recognition can be wrong.  @ccmode{} manages to figure it
 out correctly most of the time, though.
 
+Some macros, when invoked, ''have their own semicolon''.  To get the
+next line indented correctly, rather than as a continuation line,
+@xref{Macros with ;}.
+
 Reindenting large sections of code can take a long time.  When
 @ccmode{} reindents a region of code, it is essentially equivalent to
 hitting @key{TAB} on every line of the region.
@@ -696,7 +701,7 @@ in some circumstances---@code{c-insert-tab-function} then defines
 precisely what sort of ``whitespace'' this will be.  Set the standard
 Emacs variable @code{indent-tabs-mode} to @code{t} if you want real
 @samp{tab} characters to be used in the indentation, to @code{nil} if
-you want only spaces.  @xref{Just Spaces,,, @emacsman{},
+you want only spaces.  @xref{Just Spaces,,,@emacsman{},
 @emacsmantitle{}}.
 
 @defopt c-tab-always-indent
@@ -883,6 +888,8 @@ lines.
 @itemx @kbd{C-M-e} (@code{c-end-of-defun})
 @findex c-beginning-of-defun
 @findex c-end-of-defun
+@vindex c-defun-tactic
+@vindex defun-tactic (c-)
 
 Move to the beginning or end of the current or next function.  Other
 constructs (such as a structs or classes) which have a brace block
@@ -895,6 +902,15 @@ as a @code{struct}) which doesn't end at the brace.  These two
 commands try to leave point at the beginning of a line near the actual
 start or end of the function.  This occasionally causes point not to
 move at all.
+
+By default, these commands will recognize functions contained within a
+@dfn{declaration scope} such as a C++ @code{class} or @code{namespace}
+construct, should the point start inside it.  If @ccmode fails to find
+function beginnings or ends inside the current declaration scope, it
+will search the enclosing scopes.  If you want @ccmode to recognize
+functions only at the top level@footnote{this was @ccmode{}'s
+behavior prior to version 5.32.}, set @code{c-defun-tactic} to
+@code{t}.
 
 These functions are analogous to the Emacs built-in commands
 @code{beginning-of-defun} and @code{end-of-defun}, except they
@@ -1042,8 +1058,8 @@ set this up for you, so you probably won't have to bother.
 @cindex Auto Fill mode
 @cindex paragraph filling
 Line breaks are by default handled (almost) the same regardless of
-whether they are made by auto fill mode (@pxref{Auto Fill,,,
-@emacsman{}, @emacsmantitle{}}), by paragraph filling (e.g. with
+whether they are made by auto fill mode (@pxref{Auto
+Fill,,,@emacsman{}, @emacsmantitle{}}), by paragraph filling (e.g. with
 @kbd{M-q}), or explicitly with @kbd{M-j} or similar methods.  In
 string literals, the new line gets the same indentation as the
 previous nonempty line.@footnote{You can change this default by
@@ -1154,7 +1170,7 @@ Full details on how these minor modes work are at @ref{Electric Keys},
 and @ref{Indentation Engine Basics}.
 
 You can toggle each of these minor modes on and off, and you can
-configure @ccmode{} so that it starts up with your favourite
+configure @ccmode{} so that it starts up with your favorite
 combination of them (@pxref{Sample .emacs File}).  By default, when
 you initialize a buffer, electric mode and syntactic-indentation mode
 are enabled but the other two modes are disabled.
@@ -1386,7 +1402,7 @@ continuation of the preceding @code{if}.
 @vindex abbrev-mode
 @findex abbrev-mode
 @cindex Abbrev mode
-@ccmode{} uses Abbrev mode (@pxref{Abbrevs,,, @emacsman{}, @emacsmantitle{}})
+@ccmode{} uses Abbrev mode (@pxref{Abbrevs,,,@emacsman{}, @emacsmantitle{}})
 to accomplish this. It's therefore turned on by default in all language
 modes except IDL mode, since CORBA IDL doesn't have any statements.
 @end deffn
@@ -2141,7 +2157,7 @@ A space between the function name and opening parenthesis when calling
 a user function.  The last character of the function name and the
 opening parenthesis are highlighted.  This font-locking rule will
 spuriously highlight a valid concatenation expression where an
-identifier precedes a parenthesised expression.  Unfortunately.
+identifier precedes a parenthesized expression.  Unfortunately.
 
 @item
 Whitespace following the @samp{\} in what otherwise looks like an
@@ -2181,7 +2197,7 @@ method, ``Top-level commands or the customization interface''.
 
 If you make conflicting settings in several of these ways, the way
 that takes precedence is the one that appears latest in this list:
-@itemize @asis
+@itemize @w{}
 @item
 @table @asis
 @item Style
@@ -2279,14 +2295,14 @@ to create them.
 A @dfn{file local variable setting} is a setting which applies to an
 individual source file.  You put this in a @dfn{local variables list},
 a special block at the end of the source file (@pxref{Specifying File
-Variables,,, @emacsman{}}).
+Variables,,,@emacsman{}}).
 
 @item File Styles
 A @dfn{file style} is a rarely used variant of the ``style'' mechanism
 described above, which applies to an individual source file.
 @xref{File Styles}.  You use this by setting certain special variables
-in a local variables list (@pxref{Specifying File Variables,,,
-@emacsman{}}).
+in a local variables list (@pxref{Specifying File
+Variables,,,@emacsman{}}).
 
 @item Hooks with Styles
 For ultimate flexibility, you can use hooks and styles together.  For
@@ -2513,13 +2529,17 @@ groupings of customizations called @dfn{styles}, associate a single name
 for any particular style, and pretty easily start editing new or
 existing code using these styles.
 
+As an alternative to writing a style definition yourself, you can have
+@ccmode{} @dfn{guess} (at least part of) your style by looking at an
+already formatted piece of your code, @ref{Guessing the Style}.
+
 @menu
 * Built-in Styles::
 * Choosing a Style::
 * Adding Styles::
+* Guessing the Style::
 * File Styles::
 @end menu
-
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @node    Built-in Styles, Choosing a Style, Styles, Styles
@@ -2655,9 +2675,8 @@ This variable always contains the buffer's current style name, as a
 string.
 @end defvar
 
-
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node    Adding Styles, File Styles, Choosing a Style, Styles
+@node    Adding Styles, Guessing the Style, Choosing a Style, Styles
 @comment node-name, next, previous, up
 @subsection Adding and Amending Styles
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -2744,9 +2763,131 @@ This is the variable that holds the definitions for the styles.  It
 should not be changed directly; use @code{c-add-style} instead.
 @end defvar
 
+@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+@node    Guessing the Style, File Styles, Adding Styles, Styles
+@comment node-name, next, previous, up
+@subsection Guessing the Style
+@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Instead of specifying a style, you can get @ccmode{} to @dfn{guess}
+your style by examining an already formatted code buffer.  @ccmode{}
+then determines the ''most frequent'' offset (@pxref{c-offsets-alist})
+for each of the syntactic symbols (@pxref{Indentation Engine Basics})
+encountered in the buffer, and the ''most frequent'' value of
+c-basic-offset (@pxref{Customizing Indentation}), then merges the
+current style with these ''guesses'' to form a new style.  This
+combined style is known as the @dfn{guessed style}.
+
+To do this, call @code{c-guess} (or one of the other 5 guessing
+commands) on your sample buffer.  The analysis of your code may take
+some time.
+
+You can then set the guessed style in any @ccmode{} buffer with
+@code{c-guess-install}.  You can display the style with
+@code{c-guess-view}, and preserve it by copying it into your
+@file{.emacs} for future use, preferably after editing it.
+
+@table @asis
+@item @kbd{M-x c-guess-no-install}
+@itemx @kbd{M-x c-guess-buffer-no-install}
+@itemx @kbd{M-x c-guess-region-no-install}
+@findex c-guess-no-install
+@findex c-guess-buffer-no-install
+@findex c-guess-region-no-install
+@findex guess-no-install (c-)
+@findex guess-buffer-no-install (c-)
+@findex guess-region-no-install (c-)
+These commands analyze a part of the current buffer and guess the
+style from it.
+
+The part of the buffer examined is either the region
+(@code{c-guess-region-no-install}), the entire buffer
+(@code{c-guess-buffer-no-install}), or the first
+@code{c-guess-region-max} bytes (@code{c-guess-no-install}).
+
+Each of these commands can be given an optional prefix argument.  This
+instructs @ccmode{} to combine the new guesses with the current
+guesses before forming the guessed style.
+@end table
+
+@table @asis
+@item @kbd{M-x c-guess}
+@itemx @kbd{M-x c-guess-buffer}
+@itemx @kbd{M-x c-guess-region}
+@findex c-guess
+@findex c-guess-buffer
+@findex c-guess-region
+@findex guess (c-)
+@findex guess-buffer (c-)
+@findex guess-region (c-)
+These commands analyze a part of the current buffer, guess the style
+from it, then install the guessed style on the buffer.  The guessed
+style is given a name based on the buffer's absolute file name, and
+you can then set this style on any @ccmode{} buffer with @kbd{C-c .}.
+
+The part of the buffer examined is either the region
+(@code{c-guess-region}), the entire buffer (@code{c-guess-buffer}), or
+the first @code{c-guess-region-max} bytes (@code{c-guess}).
+
+Each of these commands can be given an optional prefix argument.  This
+instructs @ccmode{} to combine the new guesses with the current
+guesses before forming the guessed style.
+@end table
+
+@defopt c-guess-region-max
+@vindex guess-region-max (c-)
+This variable, default 50000, is the size in bytes of the buffer
+portion examined by c-guess and c-guess-no-install.  If set to
+@code{nil}, the entire buffer is examined.
+@end defopt
+
+@defopt c-guess-offset-threshold
+@vindex guess-offset-threshold (c-)
+This variable, default 10, is the maximum offset, either outwards or
+inwards, which will be taken into account by the analysis process.
+Any offset bigger than this will be ignored.  For no limit, set this
+variable to a large number.
+@end defopt
+
+@table @asis
+@item  @kbd{M-x c-guess-install}
+@findex c-guess-install
+@findex guess-install (c-)
+
+Set the current buffer's style to the guessed style.  This prompts you
+to enter an optional new style name to give to the guessed style.  By
+default, this name is based on the buffer's absolute file name.  You
+can then use this style like any other.
+
+@item  @kbd{M-x c-guess-view}
+@findex c-guess-view
+@findex guess-view (c-)
+Display the most recently guessed style in a temporary buffer.  This
+display is in the form of a @code{c-add-style} form (@pxref{Adding
+Styles}) which can be easily copied to your @file{.emacs}.  You will
+probably want to edit it first.
+
+The display of the guessed style contains these elements:
+
+@table @asis
+@item Placeholder Name
+You should replace this with a style name of your own.
+@item Parent Style
+The style current when the guessing began, from which the guessed
+style inherits (@pxref{Config Basics}) the settings which weren't
+guessed.
+@item Guessed Offsets
+These are the core result of the guessing process.  Each of them is
+marked by a comment.
+@item Inherited Offsets
+These are syntactic offsets which have been taken over from the parent
+style.  To avoid possible future conflicts, you should remove either
+these offsets or the parent style name.
+@end table
+@end table
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node    File Styles,  , Adding Styles, Styles
+@node    File Styles,  , Guessing the Style, Styles
 @comment node-name, next, previous, up
 @subsection File Styles
 @cindex styles, file local
@@ -2756,7 +2897,7 @@ should not be changed directly; use @code{c-add-style} instead.
 
 The Emacs manual describes how you can customize certain variables on a
 per-file basis by including a @dfn{file local variable} block at the end
-of the file (@pxref{File Variables,, Local Variables in Files, @emacsman{},
+of the file (@pxref{File Variables,, Local Variables in Files,@emacsman{},
 @emacsmantitle{}}).
 
 So far, you've only seen a functional interface for setting styles in
@@ -2998,8 +3139,9 @@ results in the current implementation.
 @end defopt
 
 @vindex comment-multi-line
-If inside a comment and @code{comment-multi-line} (@pxref{Auto Fill,,,
-@emacsman{}, @emacsmantitle{}} is non-@code{nil}, the indentation and
+If inside a comment and @code{comment-multi-line} (@pxref{Auto
+Fill,,,@emacsman{}, @emacsmantitle{}} is non-@code{nil}, the
+indentation and
 line prefix are preserved.  If inside a comment and
 @code{comment-multi-line} is @code{nil}, a new comment of the same
 type is started on the next line and indented as appropriate for
@@ -3971,6 +4113,9 @@ The first line in a ``topmost'' definition.  @ref{Function Symbols}.
 Topmost definition continuation lines.  This is only used in the parts
 that aren't covered by other symbols such as @code{func-decl-cont} and
 @code{knr-argdecl}.  @ref{Function Symbols}.
+@item annotation-top-cont
+Topmost definition continuation lines where all previous items are
+annotations.  @ref{Java Symbols}.
 @item member-init-intro
 First line in a member initialization list.  @ref{Class Symbols}.
 @item member-init-cont
@@ -3999,6 +4144,9 @@ with an open brace.  @ref{Brace List Symbols}.
 A statement.  @ref{Function Symbols}.
 @item statement-cont
 A continuation of a statement.  @ref{Function Symbols}.
+@item annotation-var-cont
+A continuation of a statement where all previous items are
+annotations.  @ref{Java Symbols}.
 @item statement-block-intro
 The first line in a new statement block.  @ref{Conditional Construct
 Symbols}.
@@ -4112,7 +4260,7 @@ Symbols}.
 @item inexpr-class
 A class definition inside an expression.  This is used for anonymous
 classes in Java.  It's also used for anonymous array initializers in
-Java.  @ref{Anonymous Class Symbol}.
+Java.  @ref{Java Symbols}.
 @end table
 
 @menu
@@ -4126,7 +4274,7 @@ Java.  @ref{Anonymous Class Symbol}.
 * Literal Symbols::
 * Multiline Macro Symbols::
 * Objective-C Method Symbols::
-* Anonymous Class Symbol::
+* Java Symbols::
 * Statement Block Symbols::
 * K&R Symbols::
 @end menu
@@ -4233,7 +4381,7 @@ Hitting @kbd{C-c C-s} on line 5 shows the following analysis:
 
 @noindent
 The primary syntactic symbol for this line is @code{access-label} as
-this a label keyword that specifies access protection in C++.  However,
+this is a label keyword that specifies access protection in C++.  However,
 because this line is also a top-level construct inside a class
 definition, the analysis actually shows two syntactic symbols.  The
 other syntactic symbol assigned to this line is @code{inclass}.
@@ -4740,7 +4888,7 @@ macros.}.
 @xref{Custom Macros}, for more info about the treatment of macros.
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node    Objective-C Method Symbols, Anonymous Class Symbol, Multiline Macro Symbols, Syntactic Symbols
+@node    Objective-C Method Symbols, Java Symbols, Multiline Macro Symbols, Syntactic Symbols
 @comment node-name, next, previous, up
 @subsection Objective-C Method Symbols
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -4767,34 +4915,45 @@ assigned @code{objc-method-args-cont} syntax.  Lines 5 and 6 are both
 assigned @code{objc-method-call-cont} syntax.
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node    Anonymous Class Symbol, Statement Block Symbols, Objective-C Method Symbols, Syntactic Symbols
+@node    Java Symbols, Statement Block Symbols, Objective-C Method Symbols, Syntactic Symbols
 @comment node-name, next, previous, up
-@subsection Anonymous Class Symbol (Java)
+@subsection Java Symbols
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 Java has a concept of anonymous classes which can look something like
 this:
 
 @example
- 1: public void watch(Observable o) @{
- 2:     o.addObserver(new Observer() @{
- 3:             public void update(Observable o, Object arg) @{
- 4:                 history.addElement(arg);
- 5:             @}
- 6:         @});
- 7: @}
+ 1:  @@Test
+ 2:  public void watch(Observable o) @{
+ 3:      @@NonNull
+ 4:      Observer obs = new Observer() @{
+ 5:          public void update(Observable o, Object arg) @{
+ 6:              history.addElement(arg);
+ 7:          @}
+ 8:      @};
+ 9:      o.addObserver(obs);
+ 10: @}
 @end example
 
 @ssindex inexpr-class
 The brace following the @code{new} operator opens the anonymous class.
-Lines 3 and 6 are assigned the @code{inexpr-class} syntax, besides the
+Lines 5 and 8 are assigned the @code{inexpr-class} syntax, besides the
 @code{inclass} symbol used in normal classes.  Thus, the class will be
 indented just like a normal class, with the added indentation given to
 @code{inexpr-class}.  An @code{inexpr-class} syntactic element doesn't
 have an anchor position.
 
+@ssindex annotation-top-cont
+@ssindex annotation-var-cont
+Line 2 is assigned the @code{annotation-top-cont} syntax, due to it being a
+continuation of a topmost introduction with an annotation symbol preceding
+the current line.  Similarly, line 4 is assigned the @code{annotation-var-cont}
+syntax due to it being a continuation of a variable declaration where preceding
+the declaration is an annotation.
+
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@node    Statement Block Symbols, K&R Symbols, Anonymous Class Symbol, Syntactic Symbols
+@node    Statement Block Symbols, K&R Symbols, Java Symbols, Syntactic Symbols
 @comment node-name, next, previous, up
 @subsection Statement Block Symbols
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -5037,7 +5196,7 @@ indentation.
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 This section explains the structure and semantics of the style
-variable @code{c-offset-alist}, the principal variable for configuring
+variable @code{c-offsets-alist}, the principal variable for configuring
 indentation.  Details of how to set it up, and its relationship to
 @ccmode{}'s style system are given in @ref{Style Variables}.
 
@@ -6409,6 +6568,9 @@ custom line-up function associated with it.
 @section Other Special Indentations
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+To configure macros which you invoke without a terminating @samp{;},
+see @xref{Macros with ;}.
+
 Here are the remaining odds and ends regarding indentation:
 
 @defopt c-label-minimum-indentation
@@ -6460,6 +6622,13 @@ functions to this hook, not remove them.  @xref{Style Variables}.
 @cindex preprocessor directives
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+Preprocessor macros in C, C++, and Objective C (introduced by
+@code{#define}) have a syntax different from the main language---for
+example, a macro declaration is not terminated by a semicolon, and if
+it is more than a line long, line breaks in it must be escaped with
+backslashes.  @ccmode{} has some commands to manipulate these, see
+@ref{Macro Backslashes}.
+
 Normally, the lines in a multi-line macro are indented relative to
 each other as though they were code.  You can suppress this behavior
 by setting the following user option:
@@ -6470,6 +6639,28 @@ Enable syntactic analysis inside macros, which is the default.  If this
 is @code{nil}, all lines inside macro definitions are analyzed as
 @code{cpp-macro-cont}.
 @end defopt
+
+Because a macro can expand into anything at all, near where one is
+invoked @ccmode{} can only indent and fontify code heuristically.
+Sometimes it gets it wrong.  Usually you should try to design your
+macros so that they ''look like ordinary code'' when you invoke them.
+However, one situation is so common that @ccmode{} handles it
+specially: that is when certain macros needn't (or mustn't) be
+followed by a @samp{;}.  You need to configure @ccmode{} to handle
+these macros properly, see @ref{Macros with ;}.
+
+@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+@menu
+* Macro Backslashes::
+* Macros with ;::
+@end menu
+
+@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+@node     Macro Backslashes, Macros with ;, Custom Macros, Custom Macros
+@comment  node-name,  next,  previous,  up
+@section Customizing Macro Backslashes
+@cindex @code{#define}
+@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 @ccmode{} provides some tools to help keep the line continuation
 backslashes in macros neat and tidy.  Their precise action is
@@ -6513,6 +6704,62 @@ get aligned only when you explicitly invoke the command
 @end defopt
 
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+@node Macros with ;,  , Macro Backslashes, Custom Macros
+@comment  node-name,  next,  previous,  up
+@section Macros with semicolons
+@cindex macros with semicolons
+@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Macros which needn't (or mustn't) be followed by a semicolon when you
+invoke them, @dfn{macros with semicolons}, are very common.  These can
+cause @ccmode{} to parse the next line wrongly as a
+@code{statement-cont} (@pxref{Function Symbols}) and thus mis-indent
+it.
+
+You can prevent this by specifying which macros have semicolons.  It
+doesn't matter whether or not such a macro has a parameter list:
+
+@defopt c-macro-names-with-semicolon
+@vindex macro-names-with-semicolon (c-)
+This buffer-local variable specifies which macros have semicolons.
+After setting its value, you need to call
+@code{c-make-macro-with-semi-re} for it to take effect.  It should be
+set to one of these values:
+
+@table @asis
+@item nil
+There are no macros with semicolons.
+@item a list of strings
+Each string is the name of a macro with a semicolon.  Only valid
+@code{#define} names are allowed here.  For example, to set the
+default value, you could write the following into your @file{.emacs}:
+
+@example
+(setq c-macro-names-with-semicolon
+      '("Q_OBJECT" "Q_PROPERTY" "Q_DECLARE" "Q_ENUMS"))
+@end example
+
+@item a regular expression
+This matches each symbol which is a macro with a semicolon.  It must
+not match any string which isn't a valid @code{#define} name.  For
+example:
+
+@example
+(setq c-macro-names-with-semicolon
+      "\\<\\(CLEAN_UP_AND_RETURN\\|Q_[[:upper:]]+\\)\\>")
+@end example
+@end table
+@end defopt
+
+@defun c-make-macro-with-semi-re
+@findex make-macro-with-semi-re (c-)
+Call this (non-interactive) function, which sets internal variables,
+each time you change the value of
+@code{c-macro-names-with-semicolon}.  It takes no arguments, and its
+return value has no meaning.  This function is called by @ccmode{}'s
+initialization code.
+@end defun
+
+@comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @node    Odds and Ends, Sample .emacs File, Custom Macros, Top
 @comment node-name, next, previous, up
 @chapter Odds and Ends
@@ -6525,7 +6772,7 @@ The stuff that didn't fit in anywhere else is documented here.
 Controls whether a final newline is enforced when the file is saved.
 The value is an association list that for each language mode specifies
 the value to give to @code{require-final-newline} (@pxref{Saving
-Buffers,,, @lispref{}, @lispreftitle{}}) at mode initialization.  If a
+Buffers,,,@lispref{}, @lispreftitle{}}) at mode initialization.  If a
 language isn't present on the association list, CC Mode won't touch
 @code{require-final-newline} in buffers for that language.
 
@@ -6696,7 +6943,7 @@ circumstances, can locate the top-most opening brace much more quickly than
 styles where these braces are hung (e.g. most JDK-derived Java styles),
 this hack can improve performance of the core syntax parsing routines
 from 3 to 60 times.  However, for styles which @emph{do} conform to
-Emacs' recommended style of putting top-level braces in column zero,
+Emacs's recommended style of putting top-level braces in column zero,
 this hack can degrade performance by about as much.  Thus this variable
 is set to @code{nil} by default, since the Emacs-friendly styles should
 be more common (and encouraged!).  Note that this variable has no effect
@@ -6807,7 +7054,7 @@ Set the variable @code{c-basic-offset}.  @xref{Getting Started}.
 @kindex C-j
 @emph{Why doesn't the @kbd{RET} key indent the new line?}
 
-Emacs' convention is that @kbd{RET} just adds a newline, and that
+Emacs's convention is that @kbd{RET} just adds a newline, and that
 @kbd{C-j} adds a newline and indents it.  You can make @kbd{RET} do this
 too by adding this to your @code{c-initialization-hook}:
 
@@ -6997,4 +7244,3 @@ Since most @ccmode{} variables are prepended with the string
 @comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 @bye
-

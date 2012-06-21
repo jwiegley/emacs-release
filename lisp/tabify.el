@@ -1,9 +1,9 @@
 ;;; tabify.el --- tab conversion commands for Emacs
 
-;; Copyright (C) 1985, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1994, 2001-2012 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -34,19 +34,21 @@ Called non-interactively, the region is specified by arguments
 START and END, rather than by the position of point and mark.
 The variable `tab-width' controls the spacing of tab stops."
   (interactive "r")
-  (save-excursion
-    (save-restriction
-      (narrow-to-region (point-min) end)
-      (goto-char start)
-      (while (search-forward "\t" nil t)	; faster than re-search
-	(forward-char -1)
-	(let ((tab-beg (point))
-	      (indent-tabs-mode nil)
-	      column)
-	  (skip-chars-forward "\t")
-	  (setq column (current-column))
-	  (delete-region tab-beg (point))
-	  (indent-to column))))))
+  (let ((c (current-column)))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region (point-min) end)
+        (goto-char start)
+        (while (search-forward "\t" nil t)      ; faster than re-search
+          (forward-char -1)
+          (let ((tab-beg (point))
+                (indent-tabs-mode nil)
+                column)
+            (skip-chars-forward "\t")
+            (setq column (current-column))
+            (delete-region tab-beg (point))
+            (indent-to column)))))
+    (move-to-column c)))
 
 (defvar tabify-regexp " [ \t]+"
   "Regexp matching whitespace that tabify should consider.
@@ -89,5 +91,4 @@ The variable `tab-width' controls the spacing of tab stops."
 
 (provide 'tabify)
 
-;; arch-tag: c83893b1-e0cc-4e57-8a09-73fd03466416
 ;;; tabify.el ends here

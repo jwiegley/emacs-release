@@ -1,6 +1,6 @@
 ;;; semantic/bovine/debug.el --- Debugger support for bovinator
 
-;; Copyright (C) 2003, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2003, 2009-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 
@@ -114,7 +114,7 @@ LEXTOKEN, is a token returned by the lexer which is being matched."
 	      :documentation
 	      "An error condition caught in an action.")
    )
-  "Debugger frame representaion of a lisp error thrown during parsing.")
+  "Debugger frame representation of a lisp error thrown during parsing.")
 
 (defun semantic-create-bovine-debug-error-frame (condition)
   "Create an error frame for bovine debugger.
@@ -144,5 +144,4 @@ Argument CONDITION is the thrown error condition."
 
 (provide 'semantic/bovine/debug)
 
-;; arch-tag: d1bf98b3-faeb-4dc3-ac34-cac6264fd94e
 ;;; semantic/bovine/debug.el ends here

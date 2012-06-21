@@ -4,9 +4,7 @@ ediff.texi.
 This file documents Ediff, a comprehensive visual interface to Unix diff
 and patch utilities.
 
-   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
-Foundation, Inc.
+   Copyright (C) 1995-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -28,12 +26,13 @@ END-INFO-DIR-ENTRY
 
 File: ediff,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
 
-   This file documents Ediff, a comprehensive visual interface to Unix
-diff and patch utilities.
+Ediff
+*****
 
-   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
-Foundation, Inc.
+This file documents Ediff, a comprehensive visual interface to Unix diff
+and patch utilities.
+
+   Copyright (C) 1995-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -282,14 +281,6 @@ Tools menu: Compare, Merge, and Apply Patch.
 `eregistry'
      Brings up Ediff session registry.  This feature enables you to
      quickly find and restart active Ediff sessions.
-
-If you want Ediff to be loaded from the very beginning of your Emacs
-session, you should put this line in your `~/.emacs' file:
-
-     (require 'ediff)
-
-Otherwise, Ediff will be loaded automatically when you use one of the
-above functions, either directly or through the menus.
 
    When the above functions are invoked, the user is prompted for all
 the necessary information--typically the files or buffers to compare,
@@ -685,8 +676,8 @@ File: ediff,  Node: Quick Help Commands,  Next: Other Session Commands,  Up: Ses
      then typing the return key.
 
      (Some poor souls leave so many active Ediff sessions around that
-     they loose track of them completely...  The `R' command is
-     designed to save these people from the recently discovered Ediff
+     they lose track of them completely...  The `R' command is designed
+     to save these people from the recently discovered Ediff
      Proficiency Syndrome.)
 
      Typing `R' brings up Ediff Registry only if it is typed into an
@@ -1141,7 +1132,7 @@ The bulk of customization can be done via the following hooks:
      `ediff-mode-map'.  These hooks are run right after the default
      bindings are set but before `ediff-load-hook'.  The regular user
      needs not be concerned with this hook--it is provided for
-     implementors of other Emacs packages built on top of Ediff.
+     implementers of other Emacs packages built on top of Ediff.
 
 `ediff-before-setup-windows-hook'
 `ediff-after-setup-windows-hook'
@@ -1601,7 +1592,7 @@ faces, you can modify them when Ediff is being loaded using
                    ediff-current-diff-face-B)))
 
    *Please note:* to set Ediff's faces, use only `copy-face' or
-`set/make-face-...' as shown above. Emacs' low-level face-manipulation
+`set/make-face-...' as shown above. Emacs's low-level face-manipulation
 functions should be avoided.
 
 
@@ -2133,7 +2124,7 @@ Here are a few other variables for customizing Ediff:
 
      However, Ediff temporarily resets this variable to `t' if it is
      invoked via one of the "buffer" jobs, such as `ediff-buffers'.
-     This is because it is all too easy to loose day's work otherwise.
+     This is because it is all too easy to lose a day's work otherwise.
      Besides, in a "buffer" job, the variant buffers have already been
      loaded prior to starting Ediff, so Ediff just preserves status quo
      here.
@@ -2869,6 +2860,7 @@ Index
 * C-l:                                   Quick Help Commands. (line 332)
 * ca:                                    Quick Help Commands. (line  92)
 * cb:                                    Quick Help Commands. (line  96)
+* command help:                          Quick Help Commands. (line   6)
 * Comparing files and buffers:           Introduction.        (line   6)
 * D:                                     Quick Help Commands. (line 282)
 * DEL:                                   Quick Help Commands. (line 101)
@@ -3074,7 +3066,7 @@ Index
                                                               (line  33)
 * ediff-unselect-hook:                   Hooks.               (line  85)
 * ediff-use-last-dir <1>:                Miscellaneous.       (line  45)
-* ediff-use-last-dir:                    Major Entry Points.  (line 192)
+* ediff-use-last-dir:                    Major Entry Points.  (line 184)
 * ediff-use-long-help-message:           Quick Help Customization.
                                                               (line   6)
 * ediff-use-toolbar-p:                   Other Session Commands.
@@ -3118,6 +3110,7 @@ Index
                                                               (line  29)
 * h:                                     Quick Help Commands. (line 191)
 * i:                                     Quick Help Commands. (line 279)
+* important commands:                    Quick Help Commands. (line   6)
 * j:                                     Quick Help Commands. (line 110)
 * M:                                     Quick Help Commands. (line 306)
 * m:                                     Quick Help Commands. (line 169)
@@ -3157,31 +3150,31 @@ Index
 
 
 Tag Table:
-Node: Top1139
-Node: Introduction2716
-Node: Major Entry Points5106
-Node: Session Commands15153
-Node: Quick Help Commands16672
-Node: Other Session Commands35122
-Node: Registry of Ediff Sessions37922
-Node: Session Groups39478
-Node: Remote and Compressed Files45643
-Node: Customization46870
-Node: Hooks48823
-Node: Quick Help Customization54122
-Node: Window and Frame Configuration55133
-Node: Selective Browsing61098
-Node: Highlighting Difference Regions66194
-Node: Narrowing70936
-Node: Refinement of Difference Regions72214
-Node: Patch and Diff Programs75149
-Node: Merging and diff379716
-Node: Support for Version Control89519
-Node: Customizing the Mode Line91144
-Node: Miscellaneous91998
-Node: Notes on Heavy-duty Customization97246
-Node: Credits99831
-Node: GNU Free Documentation License105234
-Node: Index130395
+Node: Top1042
+Node: Introduction2532
+Node: Major Entry Points4922
+Node: Session Commands14691
+Node: Quick Help Commands16210
+Node: Other Session Commands34659
+Node: Registry of Ediff Sessions37459
+Node: Session Groups39015
+Node: Remote and Compressed Files45180
+Node: Customization46407
+Node: Hooks48360
+Node: Quick Help Customization53659
+Node: Window and Frame Configuration54670
+Node: Selective Browsing60635
+Node: Highlighting Difference Regions65731
+Node: Narrowing70474
+Node: Refinement of Difference Regions71752
+Node: Patch and Diff Programs74687
+Node: Merging and diff379254
+Node: Support for Version Control89057
+Node: Customizing the Mode Line90682
+Node: Miscellaneous91536
+Node: Notes on Heavy-duty Customization96785
+Node: Credits99370
+Node: GNU Free Documentation License104773
+Node: Index129934
 
 End Tag Table

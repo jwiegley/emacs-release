@@ -1,6 +1,6 @@
 ;;; srecode/srt-wy.el --- Generated parser support file
 
-;; Copyright (C) 2005, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2007-2012 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -19,12 +19,11 @@
 
 ;;; Commentary:
 ;;
-;; This file was generated from etc/grammars/srecode-template.wy.
+;; This file was generated from admin/grammars/srecode-template.wy.
 
 ;;; Code:
 
 (require 'semantic/lex)
-
 
 ;;; Prologue
 ;;
@@ -206,10 +205,12 @@
 
 
 ;;; Analyzers
-;;
-(define-lex-keyword-type-analyzer srecode-template-wy--<keyword>-keyword-analyzer
-  "keyword analyzer for <keyword> tokens."
-  "\\(\\sw\\|\\s_\\)+")
+
+(define-lex-string-type-analyzer srecode-template-wy--<punctuation>-string-analyzer
+  "string analyzer for <punctuation> tokens."
+  "\\s.+"
+  nil
+  'punctuation)
 
 (define-lex-regex-type-analyzer srecode-template-wy--<symbol>-regexp-analyzer
   "regexp analyzer for <symbol> tokens."
@@ -217,22 +218,20 @@
   nil
   'symbol)
 
-(define-lex-sexp-type-analyzer srecode-template-wy--<string>-sexp-analyzer
-  "sexp analyzer for <string> tokens."
-  "\\s\""
-  'string)
-
 (define-lex-regex-type-analyzer srecode-template-wy--<number>-regexp-analyzer
   "regexp analyzer for <number> tokens."
   semantic-lex-number-expression
   nil
   'number)
 
-(define-lex-string-type-analyzer srecode-template-wy--<punctuation>-string-analyzer
-  "string analyzer for <punctuation> tokens."
-  "\\s.+"
-  nil
-  'punctuation)
+(define-lex-sexp-type-analyzer srecode-template-wy--<string>-sexp-analyzer
+  "sexp analyzer for <string> tokens."
+  "\\s\""
+  'string)
+
+(define-lex-keyword-type-analyzer srecode-template-wy--<keyword>-keyword-analyzer
+  "keyword analyzer for <keyword> tokens."
+  "\\(\\sw\\|\\s_\\)+")
 
 
 ;;; Epilogue
@@ -274,5 +273,4 @@ It ignores whitespace, newlines and comments."
 
 (provide 'srecode/srt-wy)
 
-;; arch-tag: 1be4c0bc-2a79-4f75-a07a-1ac518f41271
 ;;; srecode/srt-wy.el ends here

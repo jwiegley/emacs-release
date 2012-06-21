@@ -1,6 +1,5 @@
 /* Header for composite sequence handler.
-   Copyright (C) 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+   Copyright (C) 2001-2012 Free Software Foundation, Inc.
    Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
      National Institute of Advanced Industrial Science and Technology (AIST)
      Registration Number H14PRO021
@@ -42,7 +41,7 @@ enum composition_method {
   COMPOSITION_NO
 };
 
-/* Maximum number of compoments a single composition can have.  */
+/* Maximum number of components a single composition can have.  */
 #define MAX_COMPOSITION_COMPONENTS 16
 
 /* These macros access information about a composition that
@@ -127,27 +126,37 @@ extern Lisp_Object composition_temp;
 	->contents[(n) * 2 - 1])
 
 /* Decode encoded composition rule RULE_CODE into GREF (global
-   reference point code), NREF (new reference point code), XOFF
-   (horizontal offset) YOFF (vertical offset).  Don't check RULE_CODE,
+   reference point code), NREF (new ref. point code).  Don't check RULE_CODE;
    always set GREF and NREF to valid values.  By side effect,
    RULE_CODE is modified.  */
 
-#define COMPOSITION_DECODE_RULE(rule_code, gref, nref, xoff, yoff)	\
+#define COMPOSITION_DECODE_REFS(rule_code, gref, nref)			\
   do {									\
-    xoff = (rule_code) >> 16;						\
-    yoff = ((rule_code) >> 8) & 0xFF;					\
     rule_code &= 0xFF;							\
     gref = (rule_code) / 12;						\
     if (gref > 12) gref = 11;						\
     nref = (rule_code) % 12;						\
   } while (0)
 
+/* Like COMPOSITION_DECODE_REFS (RULE_CODE, GREF, NREF), but also
+   decode RULE_CODE into XOFF and YOFF (vertical offset).  */
+
+#define COMPOSITION_DECODE_RULE(rule_code, gref, nref, xoff, yoff)	\
+  do {									\
+    xoff = (rule_code) >> 16;						\
+    yoff = ((rule_code) >> 8) & 0xFF;					\
+    COMPOSITION_DECODE_REFS (rule_code, gref, nref);			\
+  } while (0)
+
+/* Nonzero if the global reference point GREF and new reference point NREF are
+   valid.  */
+#define COMPOSITION_ENCODE_RULE_VALID(gref, nref)	\
+  (UNSIGNED_CMP (gref, <, 12) && UNSIGNED_CMP (nref, <, 12))
+
 /* Return encoded composition rule for the pair of global reference
-   point GREF and new reference point NREF.  If arguments are invalid,
-   return -1. */
+   point GREF and new reference point NREF.  Arguments must be valid.  */
 #define COMPOSITION_ENCODE_RULE(gref, nref)		\
-  ((unsigned) (gref) < 12 && (unsigned) (nref) < 12	\
-   ? (gref) * 12 + (nref) : -1)
+  ((gref) * 12 + (nref))
 
 /* Data structure that records information about a composition
    currently used in some buffers or strings.
@@ -161,7 +170,7 @@ extern Lisp_Object composition_temp;
 
 struct composition {
   /* Number of glyphs of the composition components.  */
-  unsigned glyph_len;
+  int glyph_len;
 
   /* Width, ascent, and descent pixels of the composition.  */
   short pixel_width, ascent, descent;
@@ -177,14 +186,14 @@ struct composition {
   enum composition_method method;
 
   /* Index to the composition hash table.  */
-  int hash_index;
+  EMACS_INT hash_index;
 
   /* For which font we have calculated the remaining members.  The
      actual type is device dependent.  */
   void *font;
 
   /* Pointer to an array of x-offset and y-offset (by pixels) of
-     glyphs.  This points to a sufficient memory space (sizeof (int) *
+     glyphs.  This points to a sufficient memory space (sizeof (short) *
      glyph_len * 2) that is allocated when the composition is
      registered in composition_table.  X-offset and Y-offset of Nth
      glyph are (2N)th and (2N+1)th elements respectively.  */
@@ -195,7 +204,7 @@ struct composition {
    COMPOSITION-ID.  */
 extern struct composition **composition_table;
 /* Number of the currently registered compositions.  */
-extern int n_compositions;
+extern ptrdiff_t n_compositions;
 
 /* Mask bits for CHECK_MASK arg to update_compositions.
    For a change in the region FROM and TO, check compositions ... */
@@ -207,21 +216,17 @@ extern int n_compositions;
 
 extern Lisp_Object Qcomposition;
 extern Lisp_Object composition_hash_table;
-extern Lisp_Object Qauto_composed;
-extern Lisp_Object Vauto_composition_function;
-extern Lisp_Object Qauto_composition_function;
-extern Lisp_Object Vcomposition_function_table;
-
-extern int get_composition_id P_ ((int, int, int, Lisp_Object, Lisp_Object));
-extern int find_composition P_ ((int, int, EMACS_INT *, EMACS_INT *, Lisp_Object *,
-				 Lisp_Object));
-extern void update_compositions P_ ((EMACS_INT, EMACS_INT, int));
-extern void make_composition_value_copy P_ ((Lisp_Object));
-extern void compose_region P_ ((int, int, Lisp_Object, Lisp_Object,
-				Lisp_Object));
-extern void syms_of_composite P_ ((void));
-extern void compose_text P_ ((int, int, Lisp_Object, Lisp_Object,
-			      Lisp_Object));
+extern ptrdiff_t get_composition_id (EMACS_INT, EMACS_INT, EMACS_INT,
+				     Lisp_Object, Lisp_Object);
+extern int find_composition (EMACS_INT, EMACS_INT, EMACS_INT *, EMACS_INT *,
+			     Lisp_Object *, Lisp_Object);
+extern void update_compositions (EMACS_INT, EMACS_INT, int);
+extern void make_composition_value_copy (Lisp_Object);
+extern void compose_region (int, int, Lisp_Object, Lisp_Object,
+                            Lisp_Object);
+extern void syms_of_composite (void);
+extern void compose_text (EMACS_INT, EMACS_INT, Lisp_Object, Lisp_Object,
+                          Lisp_Object);
 
 /* Macros for lispy glyph-string.  This is completely different from
    struct glyph_string.  */
@@ -260,10 +265,7 @@ enum lglyph_indices
 #define LGLYPH_CODE(g)						\
   (NILP (AREF ((g), LGLYPH_IX_CODE))				\
    ? FONT_INVALID_CODE						\
-   : CONSP (AREF ((g), LGLYPH_IX_CODE))				\
-   ? ((XFASTINT (XCAR (AREF ((g), LGLYPH_IX_CODE))) << 16)	\
-      | (XFASTINT (XCDR (AREF ((g), LGLYPH_IX_CODE)))))		\
-   : XFASTINT (AREF ((g), LGLYPH_IX_CODE)))
+   : cons_to_unsigned (AREF (g, LGLYPH_IX_CODE), TYPE_MAXIMUM (unsigned)))
 #define LGLYPH_WIDTH(g) XINT (AREF ((g), LGLYPH_IX_WIDTH))
 #define LGLYPH_LBEARING(g) XINT (AREF ((g), LGLYPH_IX_LBEARING))
 #define LGLYPH_RBEARING(g) XINT (AREF ((g), LGLYPH_IX_RBEARING))
@@ -275,16 +277,9 @@ enum lglyph_indices
 #define LGLYPH_SET_CHAR(g, val) ASET ((g), LGLYPH_IX_CHAR, make_number (val))
 /* Callers must assure that VAL is not negative!  */
 #define LGLYPH_SET_CODE(g, val)						\
-  do {									\
-    if (val == FONT_INVALID_CODE)					\
-      ASET ((g), LGLYPH_IX_CODE, Qnil);					\
-    else if ((EMACS_INT)val > MOST_POSITIVE_FIXNUM)			\
-      ASET ((g), LGLYPH_IX_CODE, Fcons (make_number ((val) >> 16),	\
-					make_number ((val) & 0xFFFF)));	\
-    else								\
-      ASET ((g), LGLYPH_IX_CODE, make_number (val));			\
-  } while (0)
-      
+  ASET (g, LGLYPH_IX_CODE,						\
+	val == FONT_INVALID_CODE ? Qnil : INTEGER_TO_CONS (val))
+
 #define LGLYPH_SET_WIDTH(g, val) ASET ((g), LGLYPH_IX_WIDTH, make_number (val))
 #define LGLYPH_SET_LBEARING(g, val) ASET ((g), LGLYPH_IX_LBEARING, make_number (val))
 #define LGLYPH_SET_RBEARING(g, val) ASET ((g), LGLYPH_IX_RBEARING, make_number (val))
@@ -303,29 +298,22 @@ struct composition_it;
 struct face;
 struct font_metrics;
 
-extern Lisp_Object composition_gstring_put_cache P_ ((Lisp_Object, int));
-extern Lisp_Object composition_gstring_from_id P_ ((int));
-extern int composition_gstring_p P_ ((Lisp_Object));
-extern int composition_gstring_width P_ ((Lisp_Object, int, int,
-					  struct font_metrics *));
+extern Lisp_Object composition_gstring_put_cache (Lisp_Object, EMACS_INT);
+extern Lisp_Object composition_gstring_from_id (ptrdiff_t);
+extern int composition_gstring_p (Lisp_Object);
+extern int composition_gstring_width (Lisp_Object, EMACS_INT, EMACS_INT,
+                                      struct font_metrics *);
 
-extern void composition_compute_stop_pos P_ ((struct composition_it *,
-					      EMACS_INT, EMACS_INT, EMACS_INT,
-					      Lisp_Object));
-extern int composition_reseat_it P_ ((struct composition_it *,
-				      EMACS_INT, EMACS_INT, EMACS_INT,
-				      struct window *, struct face *,
-				      Lisp_Object));
-extern int composition_update_it P_ ((struct composition_it *,
-				      EMACS_INT, EMACS_INT, Lisp_Object));
+extern void composition_compute_stop_pos (struct composition_it *,
+                                          EMACS_INT, EMACS_INT, EMACS_INT,
+                                          Lisp_Object);
+extern int composition_reseat_it (struct composition_it *,
+                                  EMACS_INT, EMACS_INT, EMACS_INT,
+                                  struct window *, struct face *,
+                                  Lisp_Object);
+extern int composition_update_it (struct composition_it *,
+                                  EMACS_INT, EMACS_INT, Lisp_Object);
 
-extern int composition_adjust_point P_ ((EMACS_INT, EMACS_INT));
-
-EXFUN (Fcompose_region_internal, 4);
-EXFUN (Fcompose_string_internal, 5);
-EXFUN (Fcomposition_get_gstring, 4);
+extern EMACS_INT composition_adjust_point (EMACS_INT, EMACS_INT);
 
 #endif /* not EMACS_COMPOSITE_H */
-
-/* arch-tag: 59524d89-c645-47bd-b5e6-65e861690118
-   (do not change this comment) */

@@ -1,7 +1,6 @@
 ;;; forms.el --- Forms mode: edit a file as a form to fill in
 
-;; Copyright (C) 1991, 1994, 1995, 1996, 1997, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1991, 1994-1997, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: Johan Vromans <jvromans@squirrel.nl>
 
@@ -582,7 +581,7 @@ Commands:                        Equivalent keys in read-only mode:
 	    (error (concat "Forms control file error: "
 			   "`forms-modified-record-filter' is not a function")))
 
-	;; The filters acces the contents of the forms using `forms-fields'.
+	;; The filters access the contents of the forms using `forms-fields'.
 	(make-local-variable 'forms-fields)
 
 	;; Dynamic text support.
@@ -710,7 +709,7 @@ Commands:                        Equivalent keys in read-only mode:
       (forms-first-record))
     )
 
-  ;; user customising
+  ;; user customizing
   ;;(message "forms: proceeding setup (user hooks)...")
   (run-mode-hooks 'forms-mode-hook 'forms-mode-hooks)
   ;;(message "forms: setting up... done.")
@@ -846,7 +845,7 @@ Commands:                        Equivalent keys in read-only mode:
 (defvar forms--iif-properties nil
   "Original properties of the character being overridden.")
 
-(defun forms--iif-hook (begin end)
+(defun forms--iif-hook (_begin _end)
   "`insert-in-front-hooks' function for read-only segments."
 
   ;; Note start location.  By making it a marker that points one
@@ -1198,6 +1197,8 @@ Commands:                        Equivalent keys in read-only mode:
       (setq forms--field nil)))
    ))
 
+(defvar read-file-filter) ; bound in forms--intuit-from-file
+
 (defun forms--intuit-from-file ()
   "Get number of fields and a default form using the data file."
 
@@ -1294,7 +1295,7 @@ Commands:                        Equivalent keys in read-only mode:
   )
 
 (defun forms--mode-menu-ro (map)
-;;; Menu initialisation
+;;; Menu initialization
 ;  (define-key map [menu-bar] (make-sparse-keymap))
   (define-key map [menu-bar forms]
     (cons "Forms" (make-sparse-keymap "Forms")))
@@ -1340,7 +1341,7 @@ Commands:                        Equivalent keys in read-only mode:
   (put 'forms-delete-record 'menu-enable '(not forms-read-only))
 )
 (defun forms--mode-menu-edit (map)
-;;; Menu initialisation
+;;; Menu initialization
 ;  (define-key map [menu-bar] (make-sparse-keymap))
   (define-key map [menu-bar forms]
     (cons "Forms" (make-sparse-keymap "Forms")))
@@ -1407,7 +1408,9 @@ Commands:                        Equivalent keys in read-only mode:
   (if forms-forms-scroll
       (progn
 	(local-set-key [remap scroll-up] 'forms-next-record)
-	(local-set-key [remap scroll-down] 'forms-prev-record)))
+	(local-set-key [remap scroll-down] 'forms-prev-record)
+	(local-set-key [remap scroll-up-command] 'forms-next-record)
+	(local-set-key [remap scroll-down-command] 'forms-prev-record)))
   ;;
   ;; beginning-of-buffer -> forms-first-record
   ;; end-of-buffer -> forms-end-record
@@ -1918,7 +1921,7 @@ after writing out the data."
     (forms-jump-record cur))
   t)
 
-(defun forms--revert-buffer (&optional arg noconfirm)
+(defun forms--revert-buffer (&optional _arg noconfirm)
   "Reverts current form to un-modified."
   (interactive "P")
   (if (or noconfirm
@@ -2053,5 +2056,4 @@ Usage: (setq forms-number-of-fields
 	  (goto-char (point-max))
 	  (insert ret)))))
 
-;; arch-tag: 4a6695c7-d47a-4a21-809b-5cec7f8ec7a1
 ;;; forms.el ends here

@@ -1,16 +1,196 @@
-2012-01-19  Chong Yidong  <cyd@gnu.org>
+2012-06-01  Chong Yidong  <cyd@gnu.org>
 
-	* Version 23.4 released.
+	* Version 24.1 released.
+
+2011-11-20  Bill Wohler  <wohler@newt.com>
+
+	* Release MH-E version 8.3.1.
+
+	* mh-e.el (Version, mh-version): Update for release 8.3.1.
+
+2011-11-20  Juanma Barranquero  <lekktu@gmail.com>
+
+	* mh-utils.el (mh-folder-list): Fix typo.
+	(mh-children-p): Move part of the docstring to a comment.
+
+2011-11-16  Juanma Barranquero  <lekktu@gmail.com>
+
+	* mh-search.el (mh-pick-parse-search-buffer): Fix typo.
+
+2011-09-20  Bill Wohler  <wohler@newt.com>
+
+	Release MH-E version 8.3.
+
+	* mh-e.el (Version, mh-version): Update for release 8.3.
+
+2011-07-30  Bill Wohler  <wohler@newt.com>
+
+	* mh-show.el (mh-unvisit-file): Clarify language in yes-or-no-p
+	and error messages.
+
+2011-07-17  Bill Wohler  <wohler@newt.com>
+
+	Release MH-E version 8.2.93.
+
+	* mh-e.el (Version, mh-version): Update for release 8.2.93.
+
+	* mh-compat.el (mh-pop-to-buffer-same-window): Delete.
+	* mh-folder.el (mh-inc-folder, mh-modify, mh-scan-folder)
+	(mh-make-folder): Revert to switch-to-buffer, as the Emacs folks
+	decided that it was fine to use it in programs.
+
+2011-07-16  Bill Wohler  <wohler@newt.com>
+
+	Release MH-E version 8.2.92.
+
+	* mh-e.el (Version, mh-version): Update for release 8.2.92.
+
+2011-07-12  Bill Wohler  <wohler@newt.com>
+
+	Release MH-E version 8.2.91.
+
+	* mh-e.el (Version, mh-version): Update for release 8.2.91.
+
+	* mh-compat.el (mh-pop-to-buffer-same-window): Add compatibility
+	function to call switch-to-buffer on systems that lack
+	pop-to-buffer-same-window.
+	* mh-folder.el (mh-inc-folder, mh-modify, mh-scan-folder)
+	(mh-make-folder): Call mh-pop-to-buffer-same-window instead of
+	switch-to-buffer.  The previous change which used pop-to-buffer
+	produced the wrong behavior.
+
+2011-07-12  Henrique Martins  <henrique@martins.cc>  (tiny change)
+
+	* mh-xface.el (mh-picon-get-image): Remove quote from block
+	argument.
+	* mh-mime.el (mh-mh-directive-present-p): Ditto.
+
+2011-07-10  Bill Wohler  <wohler@newt.com>
+
+	Release MH-E version 8.2.90.
+
+	* mh-e.el (Version, mh-version): Update for release 8.2.90.
+
+	* mh-utils.el (mh-sub-folders-actual): Remove FIXME question.
+
+	* mh-mime.el (mh-decode-message-subject): Fix case of Subject.
+
+	* mh-folder.el (mh-inc-folder, mh-modify, mh-scan-folder)
+	(mh-make-folder): Replace calls to switch-to-buffer with of
+	pop-to-buffer.  The former is intended for interactive use only
+	and generates warnings in Emacs 24.
+
+2011-07-09  Bill Wohler  <wohler@newt.com>
+
+	* mh-speed.el (mh-speed-toggle,mh-speed-view): Document "ignored"
+	arguments to keep checkdoc happy.
+
+	* mh-search.el (mh-flists-execute): Ditto.
+
+	* mh-funcs.el (mh-undo-folder): Ditto.
+
+	* mh-comp.el (mh-user-agent-compose): Ditto.
+
+	* mh-xface.el (mh-face-to-png, mh-uncompface)
+	(mh-picon-file-contents): Only call set-buffer-multibyte if it
+	exists, which it doesn't in XEmacs.
+
+2011-07-04  Bill Wohler  <wohler@newt.com>
+
+	* mh-e.el: Just require mh-loaddefs since loading it in an
+	eval-and-compile block causes compilation errors in XEmacs.
+
+	* mh-acros.el, mh-comp.el, mh-e.el, mh-folder.el, mh-letter.el:
+	* mh-mime.el, mh-search.el, mh-seq.el: Shush XEmacs compiler in
+	mh-do-in-xemacs block.
+
+	* mh-compat.el (mh-window-full-height-p): Add compatibility
+	function for XEmacs.
+	* mh-show.el (mh-show-msg): Use it, and avoid compiler warning on
+	XEmacs.
+
+	* mh-letter.el (mh-letter-mode-map, mh-letter-complete)
+	(mh-complete-word): Remove FIXME comments since these functions
+	are still needed in other Emacsen.  However, they can probably
+	stand to be generalized like completion-at-point.
+	(mh-letter-complete-or-space): Remove unused variable.
+
+2011-07-03  Bill Wohler  <wohler@newt.com>
+
+	* mh-compat.el (mh-test-completion): Add compatibility function
+	for XEmacs.
+	* mh-alias.el (mh-alias-letter-expand-alias): Use it, and avoid
+	compiler warning on XEmacs.
+
+	* mh-utils.el:
+	* mh-mime.el: Shush XEmacs compiler in mh-do-in-xemacs block.
+
+	* mh-folder.el: Use boundp instead of fboundp when testing
+	existence of desktop-buffer-mode-handlers (closes SF #1510145).
+
+2011-05-10  Jim Meyering  <meyering@redhat.com>
+
+	Fix doubled-word typos.
+	* mh-alias.el (mh-alias-minibuffer-confirm-address): if if -> if it
+	* mh-scan.el (mh-scan-destination-width): in in -> in
+
+2011-04-28  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* mh-utils.el (mh-folder-completion-function): Make it work like
+	file-name completion, so partial-completion can do its job.
+
+	* mh-letter.el (mh-letter-completion-at-point): New function, extracted
+	from mh-letter-complete
+	(mh-letter-mode, mh-letter-complete, mh-letter-complete-or-space):
+	Use it.
+	(mh-complete-word): Only use the common-substring arg when it works.
+	(mh-folder-expand-at-point):
+	* mh-alias.el (mh-alias-letter-expand-alias): Return data suitable for
+	completion-at-point-functions.
+
+2011-04-06  Juanma Barranquero  <lekktu@gmail.com>
+
+	* mh-funcs.el (mh-undo-folder): Accept and ignore arguments,
+	for compatibility with `revert-buffer'.  Doc fix.  (Bug#8431)
 
 2011-03-07  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 23.3 released.
 
+2011-03-05  Antoine Levitt  <antoine.levitt@gmail.com>
+
+	* mh-funcs.el (mh-store-msg, mh-store-buffer):
+	* mh-mime.el (mh-mime-save-parts): Use read-directory-name.
+
+2011-01-13  Chong Yidong  <cyd@stupidchicken.com>
+
+	* mh-comp.el (mh-user-agent-compose): New arg RETURN-ACTION.
+
+2010-11-07  Glenn Morris  <rgm@gnu.org>
+
+	* mh-seq.el (mh-read-msg-list): Use point-at-eol.
+
+2010-11-03  Glenn Morris  <rgm@gnu.org>
+
+	* mh-mime.el (dots, type, ov): Avoid unnecessary declaration.
+
+2010-05-14  Peter S Galbraith  <psg@debian.org>
+
+	* mh-mime.el (mh-decode-message-subject): New function to decode
+	RFC2047 encoded Subject lines.  Used for reply drafts.
+	* mh-comp.el (mh-compose-and-send-mail): Call
+	`mh-decode-message-subject' on (reply or forward) message drafts.
+
 2010-05-07  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 23.2 released.
 
-2010-03-22  Juanma Barranquero  <lekktu@gmail.com>
+2010-05-03  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* mh-show.el (mh-showing-mode): Move function to mh-e.el.
+	* mh-e.el (mh-showing-mode): Use define-minor-mode.
+
+2010-03-24  Juanma Barranquero  <lekktu@gmail.com>
 
 	* mh-scan.el (mh-scan-cmd-note-width): Doc fix.
 	(mh-scan-format-mh, mh-scan-body-regexp, mh-scan-cur-msg-number-regexp)
@@ -21,6 +201,10 @@
 	(mh-scan-refiled-msg-regexp, mh-scan-sent-to-me-sender-regexp)
 	(mh-scan-subject-regexp, mh-update-scan-format)
 	(mh-msg-num-width-to-column): Fix typos in docstrings.
+
+2010-03-10  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Branch for 23.2.
 
 2009-12-01  Bill Wohler  <wohler@newt.com>
 
@@ -52,7 +236,8 @@
 	(mh-handle-process-error, mh-variant-info):
 	* mh-comp.el (mh-forward):
 	* mh-alias.el (mh-alias-local-users, mh-alias-which-file-has-alias):
-	(mh-alias-add-alias-to-file): Use with-current-buffer.
+	(mh-alias-add-alias-to-file): Use with-current-buffer (closes SF
+	#1903293).
 
 2009-11-04  Stefan Monnier  <monnier@iro.umontreal.ca>
 
@@ -178,7 +363,7 @@
 
 2008-06-20  Stephen Eglen  <stephen@gnu.org>
 
-	* mh-show.el (mh-defun-show-buffer): Use `...' rather than than
+	* mh-show.el (mh-defun-show-buffer): Use `...' rather than
 	"..." in generated docstrings.
 
 2008-06-12  Glenn Morris  <rgm@gnu.org>
@@ -496,8 +681,8 @@
 
 2006-06-02  Bill Wohler  <wohler@newt.com>
 
-	(mh-folder-exists-p): Change test from an empty buffer, to one
-	that contains the actual folder, since GNU mailutils' folder
+	* mh-search.el (mh-folder-exists-p): Change test from an empty buffer,
+	to one that contains the actual folder, since GNU mailutils' folder
 	command displays output if the folder doesn't exist (closes SF
 	#1499712).
 
@@ -1407,7 +1592,7 @@
 	(mh-get-field): Delete ancient alias.
 
 	* mh-xface.el (mh-face-foreground-compat): Move to mh-compat.el
-	and rename to mh-face-foreground
+	and rename to mh-face-foreground.
 	(mh-face-background-compat): Move to mh-compat.el
 	and rename to mh-face-background.
 	(mh-face-display-function): Use the new names.
@@ -1724,7 +1909,7 @@
 	(mh-identity-make-menu-no-autoload): New alias for
 	mh-identity-make-menu which can be called from mh-e.el.
 	(mh-identity-list-set): Move to mh-e.el.
-	(mh-identity-add-menu): New function
+	(mh-identity-add-menu): New function.
 	(mh-insert-identity): Add optional argument maybe-insert so that
 	local variable mh-identity-local does not have to be visible.
 
@@ -1883,7 +2068,7 @@
 	(mh-find-path-run, mh-find-path): Move here from deprecated file
 	mh-init.el.
 	(mh-help-messages): Now an alist of modes to an alist of messages.
-	(mh-set-help): New function used to set mh-help-messages
+	(mh-set-help): New function used to set mh-help-messages.
 	(mh-help): Adjust for new format of mh-help-messages.  Add
 	help-messages argument.
 	(mh-prefix-help): Refactor to use mh-help.
@@ -2452,7 +2637,7 @@
 	(mh-scan-good-msg-regexp, mh-scan-deleted-msg-regexp)
 	(mh-scan-refiled-msg-regexp, mh-scan-cur-msg-number-regexp)
 	(mh-scan-date-regexp, mh-scan-rcpt-regexp, mh-scan-body-regexp)
-	(mh-scan-subject-regexp): Sync docstrings with manual
+	(mh-scan-subject-regexp): Sync docstrings with manual.
 	(mh-scan-format-regexp): Rename to
 	mh-scan-sent-to-me-sender-regexp.  Drop date parenthesized
 	expression.  Make expression more like the others (anchored at the
@@ -2494,7 +2679,7 @@
 
 	Follow MH-E Developers Guide conventions.  Use `' quotes for Help
 	hyperlinks such as symbols, Info nodes, or URLs.  Use \" quotes for
-	everything else.  Otherwise, you can accidently get links to
+	everything else.  Otherwise, you can accidentally get links to
 	nonsense symbols.
 
 2005-12-22  Bill Wohler  <wohler@newt.com>
@@ -2752,7 +2937,7 @@
 	(mh-mime-save-parts-default-directory, mh-print-background-flag)
 	(mh-show-maximum-size, mh-show-use-goto-addr-flag)
 	(mh-show-use-xface-flag, mh-store-default-directory)
-	(mh-summary-height, mh-delete-msg-hook
+	(mh-summary-height, mh-delete-msg-hook)
 	(mh-show-hook, mh-show-mode-hook): Sync docstrings with manual.
 
 	* mh-e.el (mh-scan-format-mh, mh-scan-good-msg-regexp)
@@ -3254,7 +3439,7 @@
 	* ChangeLog.1: New file.  Contains old ChangeLog.
 
 
-  Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+	Copyright (C) 2005-2012  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
@@ -3276,5 +3461,3 @@
 ;; sentence-end-double-space: nil
 ;; add-log-time-zone-rule: t
 ;; End:
-
-;;; arch-tag: 87324964-69b6-4925-a3c2-9c1df53d7d51

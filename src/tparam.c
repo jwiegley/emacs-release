@@ -18,65 +18,14 @@ the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 Boston, MA 02110-1301, USA.  */
 
 /* Emacs config.h may rename various library functions such as malloc.  */
-#ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
-
-#ifdef emacs
 #include <setjmp.h>
 #include "lisp.h"		/* for xmalloc */
-#else
-
-#ifdef STDC_HEADERS
-#include <stdlib.h>
-#include <string.h>
-#else
-char *malloc ();
-char *realloc ();
-#endif
-
-/* Do this after the include, in case string.h prototypes bcopy.  */
-#if (defined(HAVE_STRING_H) || defined(STDC_HEADERS)) && !defined(bcopy)
-#define bcopy(s, d, n) memcpy ((d), (s), (n))
-#endif
-
-#endif /* not emacs */
+#include "tparam.h"
 
 #ifndef NULL
 #define NULL (char *) 0
 #endif
-
-#ifndef emacs
-static void
-memory_out ()
-{
-  write (2, "virtual memory exhausted\n", 25);
-  exit (1);
-}
-
-static char *
-xmalloc (size)
-     unsigned size;
-{
-  register char *tem = malloc (size);
-
-  if (!tem)
-    memory_out ();
-  return tem;
-}
-
-static char *
-xrealloc (ptr, size)
-     char *ptr;
-     unsigned size;
-{
-  register char *tem = realloc (ptr, size);
-
-  if (!tem)
-    memory_out ();
-  return tem;
-}
-#endif /* not emacs */
 
 /* Assuming STRING is the value of a termcap string entry
    containing `%' constructs to expand parameters,
@@ -90,15 +39,12 @@ xrealloc (ptr, size)
 
    The fourth and following args to tparam serve as the parameter values.  */
 
-static char *tparam1 ();
+static char *tparam1 (char const *string, char *outstring, int len,
+		      char *up, char *left, int *argp);
 
-/* VARARGS 2 */
 char *
-tparam (string, outstring, len, arg0, arg1, arg2, arg3)
-     char *string;
-     char *outstring;
-     int len;
-     int arg0, arg1, arg2, arg3;
+tparam (const char *string, char *outstring, int len,
+	int arg0, int arg1, int arg2, int arg3)
 {
   int arg[4];
 
@@ -118,9 +64,7 @@ char *UP;
 static char tgoto_buf[50];
 
 char *
-tgoto (cm, hpos, vpos)
-     char *cm;
-     int hpos, vpos;
+tgoto (const char *cm, int hpos, int vpos)
 {
   int args[2];
   if (!cm)
@@ -132,46 +76,42 @@ tgoto (cm, hpos, vpos)
 #endif
 
 static char *
-tparam1 (string, outstring, len, up, left, argp)
-     char *string;
-     char *outstring;
-     int len;
-     char *up, *left;
-     register int *argp;
+tparam1 (const char *string, char *outstring, int len,
+	 char *up, char *left, register int *argp)
 {
   register int c;
-  register char *p = string;
+  register const char *p = string;
   register char *op = outstring;
   char *outend;
-  int outlen = 0;
+  char *new = 0;
+  ptrdiff_t outlen = 0;
 
   register int tem;
   int *old_argp = argp;                 /* can move */
   int *fixed_argp = argp;               /* never moves */
   int explicit_param_p = 0;             /* set by %p */
-  int doleft = 0;
-  int doup = 0;
+  ptrdiff_t doleft = 0;
+  ptrdiff_t doup = 0;
+  ptrdiff_t append_len = 0;
 
   outend = outstring + len;
 
   while (1)
     {
       /* If the buffer might be too short, make it bigger.  */
-      if (op + 5 >= outend)
+      while (outend - op - append_len <= 5)
 	{
-	  register char *new;
-	  int offset = op - outstring;
+	  ptrdiff_t offset = op - outstring;
 
 	  if (outlen == 0)
 	    {
 	      outlen = len + 40;
 	      new = (char *) xmalloc (outlen);
-	      bcopy (outstring, new, offset);
+	      memcpy (new, outstring, offset);
 	    }
 	  else
 	    {
-	      outlen *= 2;
-	      new = (char *) xrealloc (outstring, outlen);
+	      new = xpalloc (outstring, &outlen, 1, -1, 1);
 	    }
 
 	  op = new + offset;
@@ -231,11 +171,15 @@ tparam1 (string, outstring, len, up, left, argp)
 		     and this is one of them, increment it.  */
 		  while (tem == 0 || tem == '\n' || tem == '\t')
 		    {
+		      ptrdiff_t append_len_incr;
 		      tem++;
 		      if (argp == old_argp)
-			doup++, outend -= strlen (up);
+			doup++, append_len_incr = strlen (up);
 		      else
-			doleft++, outend -= strlen (left);
+			doleft++, append_len_incr = strlen (left);
+		      if (INT_ADD_OVERFLOW (append_len, append_len_incr))
+			memory_full (SIZE_MAX);
+		      append_len += append_len_incr;
 		    }
 		}
 	      *op++ = tem ? tem : 0200;
@@ -329,21 +273,17 @@ tparam1 (string, outstring, len, up, left, argp)
 
 #ifdef DEBUG
 
-main (argc, argv)
-     int argc;
-     char **argv;
+int
+main (int argc, char **argv)
 {
   char buf[50];
   int args[3];
   args[0] = atoi (argv[2]);
   args[1] = atoi (argv[3]);
   args[2] = atoi (argv[4]);
-  tparam1 (argv[1], buf, "LEFT", "UP", args);
+  tparam1 (argv[1], buf, 50, "LEFT", "UP", args);
   printf ("%s\n", buf);
   return 0;
 }
 
 #endif /* DEBUG */
-
-/* arch-tag: 83f7b5ac-a808-4f75-b87a-123de009b402
-   (do not change this comment) */

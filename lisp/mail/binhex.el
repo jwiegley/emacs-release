@@ -1,7 +1,6 @@
 ;;; binhex.el --- decode BinHex-encoded text
 
-;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1998-2012 Free Software Foundation, Inc.
 
 ;; Author: Shenghuo Zhu <zsh@cs.rochester.edu>
 ;; Keywords: binhex news
@@ -80,10 +79,11 @@ input and write the converted data to its standard output."
 
 ;;;###autoload
 (defconst binhex-begin-line
-  "^:...............................................................$")
+  "^:...............................................................$"
+  "Regular expression matching the start of a BinHex encoded region.")
 (defconst binhex-body-line
   "^[^:]...............................................................$")
-(defconst binhex-end-line ":$")
+(defconst binhex-end-line ":$")		; unused
 
 (defvar binhex-temporary-file-directory
   (cond ((fboundp 'temp-directory) (temp-directory))
@@ -226,7 +226,8 @@ If HEADER-ONLY is non-nil only decode header and return filename."
 	  (goto-char start)
 	  (when (re-search-forward binhex-begin-line end t)
             (setq work-buffer (generate-new-buffer " *binhex-work*"))
-            (with-current-buffer work-buffer (set-buffer-multibyte nil))
+	    (unless (featurep 'xemacs)
+	      (with-current-buffer work-buffer (set-buffer-multibyte nil)))
 	    (beginning-of-line)
 	    (setq bits 0 counter 0)
 	    (while tmp
@@ -332,5 +333,4 @@ If HEADER-ONLY is non-nil only decode header and return filename."
 
 (provide 'binhex)
 
-;; arch-tag: 8476badd-1e76-4f1d-a640-f9a38c72eed8
 ;;; binhex.el ends here

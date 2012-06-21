@@ -1,8 +1,7 @@
 This is ../../info/viper, produced by makeinfo version 4.13 from
 viper.texi.
 
-Copyright (C) 1995, 1996, 1997, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+Copyright (C) 1995-1997, 2001-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -18,9 +17,7 @@ Copyright (C) 1995, 1996, 1997, 2001, 2002, 2003, 2004, 2005, 2006,
 
 INFO-DIR-SECTION Emacs misc features
 START-INFO-DIR-ENTRY
-* VIPER: (viper).               The newest Emacs VI-emulation mode.
-                                  (also, A VI Plan for Emacs Rescue
-                                  or the VI PERil.)
+* VIPER: (viper).               A VI-emulation mode for Emacs.
 END-INFO-DIR-ENTRY
 
 
@@ -68,8 +65,7 @@ may be visited as needed.
 the current address for Viper bug reports.  Please use the Ex command
 `:submitReport' for this purpose.
 
-   Copyright (C) 1995, 1996, 1997, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+   Copyright (C) 1995-1997, 2001-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -560,7 +556,7 @@ Insert state.  For instance, Emacs has a "yank" command, `C-y', which
 is similar to Vi's `p'.  However, unlike `p', `C-y' can be used in
 Insert state of Viper.  Emacs also has a kill ring where it keeps
 pieces of text you deleted while editing buffers.  The command `M-y' is
-used to delete the text previously put back by Emacs' `C-y' or by Vi's
+used to delete the text previously put back by Emacs's `C-y' or by Vi's
 `p' command and reinsert text that was placed on the kill-ring earlier.
 
    This works both in Vi and Insert states.  In Vi state, `M-y' is a
@@ -1092,7 +1088,7 @@ the following example:
    The above discussion of the meaning of Viper's words concerns only
 Viper's movement commands.  In regular expressions, words remain the
 same as in Emacs.  That is, the expressions `\w', `\>', `\<', etc., use
-Emacs' idea of what is a word, and they don't look into the value of
+Emacs's idea of what is a word, and they don't look into the value of
 variable `viper-syntax-preference'.  This is because Viper doesn't
 change syntax tables in fear of upsetting the various major modes that
 set these tables.
@@ -2168,7 +2164,7 @@ explained here.
 `viper-minibuffer-emacs-face  'viper-minibuffer-emacs-face'
      These faces control the appearance of the minibuffer text in the
      corresponding Viper states.  You can change the appearance of
-     these faces through Emacs' customization widget, which is
+     these faces through Emacs's customization widget, which is
      accessible through the menubar.
 
      Viper is located in this widget under the _Emulations_
@@ -2777,7 +2773,7 @@ different major modes, you should execute, for example,
 
    The above discussion concerns only the movement commands.  In regular
 expressions, words remain the same as in Emacs.  That is, the
-expressions `\w', `\>', `\<', etc., use Emacs' idea of what is a word,
+expressions `\w', `\>', `\<', etc., use Emacs's idea of what is a word,
 and they don't look into the value of variable
 `viper-syntax-preference'.  This is because Viper avoids changing
 syntax tables in order to not thwart the various major modes that set
@@ -5249,60 +5245,60 @@ Concept Index
 
 
 Tag Table:
-Node: Top1132
-Node: Overview4408
-Node: Emacs Preliminaries6004
-Node: Loading Viper11359
-Node: States in Viper13545
-Node: Emacs State18609
-Node: Vi State20090
-Node: Insert State26969
-Node: Replace State29847
-Node: The Minibuffer31511
-Node: Multiple Files in Viper33414
-Node: Unimplemented Features36856
-Node: Improvements over Vi37579
-Node: Basics38665
-Node: Undo and Backups41116
-Node: History42289
-Node: Macros and Registers43895
-Node: Completion45579
-Node: Improved Search46013
-Node: Abbreviation Facilities48373
-Node: Movement and Markers49353
-Node: New Commands52404
-Node: Useful Packages58492
-Node: Customization60554
-Node: Rudimentary Changes62361
-Node: Key Bindings77178
-Node: Packages that Change Keymaps87023
-Node: Viper Specials92897
-Node: Vi Macros110611
-Node: Commands124015
-Node: Groundwork124854
-Node: Text Handling131322
-Node: Move Commands131994
-Node: Marking135747
-Node: Appending Text136989
-Node: Editing in Insert State139327
-Node: Deleting Text139917
-Node: Changing Text141261
-Node: Search and Replace144263
-Node: Yanking146821
-Node: Undoing147742
-Node: Display148085
-Node: File and Buffer Handling149397
-Node: Mapping153923
-Node: Shell Commands155621
-Node: Options157461
-Node: Emacs Related Commands159664
-Node: Mouse-bound Commands161240
-Node: Acknowledgments162107
-Node: GNU Free Documentation License165248
-Node: Key Index190379
-Node: Function Index207989
-Node: Variable Index219666
-Node: Package Index225332
-Node: Concept Index225986
+Node: Top939
+Node: Overview4147
+Node: Emacs Preliminaries5743
+Node: Loading Viper11098
+Node: States in Viper13284
+Node: Emacs State18348
+Node: Vi State19829
+Node: Insert State26708
+Node: Replace State29587
+Node: The Minibuffer31251
+Node: Multiple Files in Viper33154
+Node: Unimplemented Features36596
+Node: Improvements over Vi37319
+Node: Basics38405
+Node: Undo and Backups40856
+Node: History42029
+Node: Macros and Registers43635
+Node: Completion45319
+Node: Improved Search45753
+Node: Abbreviation Facilities48113
+Node: Movement and Markers49093
+Node: New Commands52145
+Node: Useful Packages58233
+Node: Customization60295
+Node: Rudimentary Changes62102
+Node: Key Bindings76919
+Node: Packages that Change Keymaps86764
+Node: Viper Specials92638
+Node: Vi Macros110353
+Node: Commands123757
+Node: Groundwork124596
+Node: Text Handling131065
+Node: Move Commands131737
+Node: Marking135490
+Node: Appending Text136732
+Node: Editing in Insert State139070
+Node: Deleting Text139660
+Node: Changing Text141004
+Node: Search and Replace144006
+Node: Yanking146564
+Node: Undoing147485
+Node: Display147828
+Node: File and Buffer Handling149140
+Node: Mapping153666
+Node: Shell Commands155364
+Node: Options157204
+Node: Emacs Related Commands159407
+Node: Mouse-bound Commands160983
+Node: Acknowledgments161850
+Node: GNU Free Documentation License164991
+Node: Key Index190122
+Node: Function Index207732
+Node: Variable Index219409
+Node: Package Index225075
+Node: Concept Index225729
 
 End Tag Table

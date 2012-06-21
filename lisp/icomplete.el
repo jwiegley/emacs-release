@@ -1,7 +1,7 @@
 ;;; icomplete.el --- minibuffer completion incremental feedback
 
-;; Copyright (C) 1992, 1993, 1994, 1997, 1999, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1992-1994, 1997, 1999, 2001-2012
+;;   Free Software Foundation, Inc.
 
 ;; Author: Ken Manheimer <klm@i.am>
 ;; Maintainer: Ken Manheimer <klm@i.am>
@@ -172,9 +172,10 @@ except those on this list.")
 ;;;_ > icomplete-mode (&optional prefix)
 ;;;###autoload
 (define-minor-mode icomplete-mode
-  "Toggle incremental minibuffer completion for this Emacs session.
-With a numeric argument, turn Icomplete mode on if ARG is positive,
-otherwise turn it off."
+  "Toggle incremental minibuffer completion (Icomplete mode).
+With a prefix argument ARG, enable Icomplete mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil."
   :global t :group 'icomplete
   (if icomplete-mode
       ;; The following is not really necessary after first time -
@@ -206,6 +207,7 @@ Conditions are:
   "Run in minibuffer on activation to establish incremental completion.
 Usually run by inclusion in `minibuffer-setup-hook'."
   (when (and icomplete-mode (icomplete-simple-completing-p))
+    (set (make-local-variable 'completion-show-inline-help) nil)
     (add-hook 'pre-command-hook
 	      (lambda () (run-hooks 'icomplete-pre-command-hook))
 	      nil t)
@@ -283,7 +285,9 @@ The displays for unambiguous matches have ` [Matched]' appended
 matches exist.  \(Keybindings for uniquely matched commands
 are exhibited within the square braces.)"
 
-  (let* ((comps (completion-all-sorted-completions))
+  (let* ((non-essential t)
+         (md (completion--field-metadata (field-beginning)))
+	 (comps (completion-all-sorted-completions))
          (last (if (consp comps) (last comps)))
          (base-size (cdr last))
          (open-bracket (if require-match "(" "["))
@@ -295,11 +299,11 @@ are exhibited within the square braces.)"
       (let* ((most-try
               (if (and base-size (> base-size 0))
                   (completion-try-completion
-                   name candidates predicate (length name))
+                   name candidates predicate (length name) md)
                 ;; If the `comps' are 0-based, the result should be
                 ;; the same with `comps'.
                 (completion-try-completion
-                 name comps nil (length name))))
+                 name comps nil (length name) md)))
 	     (most (if (consp most-try) (car most-try)
                      (if most-try (car comps) "")))
              ;; Compare name and most, so we can determine if name is
@@ -329,21 +333,23 @@ are exhibited within the square braces.)"
                  (window-width)))
              (prefix-len
               ;; Find the common prefix among `comps'.
-	      (if (eq t (compare-strings (car comps) nil (length most)
-					 most nil nil completion-ignore-case))
-                  ;; Common case.
-		  (length most)
-                ;; Else, use try-completion.
-		(let ((comps-prefix (try-completion "" comps)))
-                  (and (stringp comps-prefix)
-                       (length comps-prefix)))))
+	      ;; We can't use the optimization below because its assumptions
+	      ;; aren't always true, e.g. when completion-cycling (bug#10850):
+	      ;; (if (eq t (compare-strings (car comps) nil (length most)
+	      ;; 			 most nil nil completion-ignore-case))
+	      ;;     ;; Common case.
+	      ;;     (length most)
+	      ;; Else, use try-completion.
+	      (let ((comps-prefix (try-completion "" comps)))
+		(and (stringp comps-prefix)
+		     (length comps-prefix)))) ;;)
 
 	     prospects most-is-exact comp limit)
 	(if (eq most-try t) ;; (or (null (cdr comps))
 	    (setq prospects nil)
 	  (while (and comps (not limit))
 	    (setq comp
-                  (if prefix-len (substring (car comps) prefix-len) (car comps))
+		  (if prefix-len (substring (car comps) prefix-len) (car comps))
 		  comps (cdr comps))
 	    (cond ((string-equal comp "") (setq most-is-exact t))
 		  ((member comp prospects))
@@ -375,5 +381,4 @@ are exhibited within the square braces.)"
 ;;allout-layout: (-2 :)
 ;;End:
 
-;; arch-tag: 339ec25a-0741-4eb6-be63-997532e89b0f
 ;;; icomplete.el ends here

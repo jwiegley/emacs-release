@@ -1,7 +1,6 @@
 ;;; picture.el --- "Picture mode" -- editing using quarter-plane screen model
 
-;; Copyright (C) 1985, 1994, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1994, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: K. Shane Hartman
 ;; Maintainer: FSF
@@ -34,30 +33,30 @@
 (defgroup picture nil
   "Picture mode --- editing using quarter-plane screen model."
   :prefix "picture-"
-  :group 'editing)
+  :group 'wp)
 
 (defcustom picture-rectangle-ctl ?+
-  "*Character `picture-draw-rectangle' uses for top left corners."
+  "Character `picture-draw-rectangle' uses for top left corners."
   :type 'character
   :group 'picture)
 (defcustom picture-rectangle-ctr ?+
-  "*Character `picture-draw-rectangle' uses for top right corners."
+  "Character `picture-draw-rectangle' uses for top right corners."
   :type 'character
   :group 'picture)
 (defcustom picture-rectangle-cbr ?+
-  "*Character `picture-draw-rectangle' uses for bottom right corners."
+  "Character `picture-draw-rectangle' uses for bottom right corners."
   :type 'character
   :group 'picture)
 (defcustom picture-rectangle-cbl ?+
-  "*Character `picture-draw-rectangle' uses for bottom left corners."
+  "Character `picture-draw-rectangle' uses for bottom left corners."
   :type 'character
   :group 'picture)
 (defcustom picture-rectangle-v   ?|
-  "*Character `picture-draw-rectangle' uses for vertical lines."
+  "Character `picture-draw-rectangle' uses for vertical lines."
   :type 'character
   :group 'picture)
 (defcustom picture-rectangle-h   ?-
-  "*Character `picture-draw-rectangle' uses for horizontal lines."
+  "Character `picture-draw-rectangle' uses for horizontal lines."
   :type 'character
   :group 'picture)
 
@@ -84,7 +83,7 @@
   "Position point at the beginning of the line.
 With ARG not nil, move forward ARG - 1 lines first.
 If scan reaches end of buffer, stop there without error."
-  (interactive "P")
+  (interactive "^P")
   (if arg (forward-line (1- (prefix-numeric-value arg))))
   (beginning-of-line)
   (setq picture-desired-column 0))
@@ -93,7 +92,7 @@ If scan reaches end of buffer, stop there without error."
   "Position point after last non-blank character on current line.
 With ARG not nil, move forward ARG - 1 lines first.
 If scan reaches end of buffer, stop there without error."
-  (interactive "P")
+  (interactive "^P")
   (if arg (forward-line (1- (prefix-numeric-value arg))))
   (beginning-of-line)
   (skip-chars-backward " \t" (prog1 (point) (end-of-line)))
@@ -102,7 +101,7 @@ If scan reaches end of buffer, stop there without error."
 (defun picture-forward-column (arg &optional interactive)
   "Move cursor right, making whitespace if necessary.
 With argument, move that many columns."
-  (interactive "p\nd")
+  (interactive "^p\nd")
   (let (deactivate-mark)
     (picture-update-desired-column interactive)
     (setq picture-desired-column (max 0 (+ picture-desired-column arg)))
@@ -116,14 +115,14 @@ With argument, move that many columns."
 (defun picture-backward-column (arg &optional interactive)
   "Move cursor left, making whitespace if necessary.
 With argument, move that many columns."
-  (interactive "p\nd")
+  (interactive "^p\nd")
   (picture-update-desired-column interactive)
   (picture-forward-column (- arg)))
 
 (defun picture-move-down (arg)
   "Move vertically down, making whitespace if necessary.
 With argument, move that many lines."
-  (interactive "p")
+  (interactive "^p")
   (let (deactivate-mark)
     (picture-update-desired-column nil)
     (picture-newline arg)
@@ -140,7 +139,7 @@ With argument, move that many lines."
 (defun picture-move-up (arg)
   "Move vertically up, making whitespace if necessary.
 With argument, move that many lines."
-  (interactive "p")
+  (interactive "^p")
   (picture-update-desired-column nil)
   (picture-move-down (- arg)))
 
@@ -212,8 +211,8 @@ The mode line is updated to reflect the current direction."
   "Move point in direction of current picture motion in Picture mode.
 With ARG do it that many times.  Useful for delineating rectangles in
 conjunction with diagonal picture motion.
-Do \\[command-apropos]  picture-movement  to see commands which control motion."
-  (interactive "p")
+Use \"\\[command-apropos] picture-movement\" to see commands which control motion."
+  (interactive "^p")
   (picture-move-down (* arg picture-vertical-step))
   (picture-forward-column (* arg picture-horizontal-step)))
 
@@ -221,8 +220,8 @@ Do \\[command-apropos]  picture-movement  to see commands which control motion."
   "Move point in direction opposite of current picture motion in Picture mode.
 With ARG do it that many times.  Useful for delineating rectangles in
 conjunction with diagonal picture motion.
-Do \\[command-apropos]  picture-movement  to see commands which control motion."
-  (interactive "p")
+Use \"\\[command-apropos] picture-movement\" to see commands which control motion."
+  (interactive "^p")
   (picture-motion (- arg)))
 
 (defun picture-mouse-set-point (event)
@@ -281,7 +280,7 @@ Do \\[command-apropos]  picture-movement  to see commands which control motion."
   "Insert this character in place of character previously at the cursor.
 The cursor then moves in the direction you previously specified
 with the commands `picture-movement-right', `picture-movement-up', etc.
-Do \\[command-apropos] `picture-movement' to see those commands."
+Use \"\\[command-apropos] picture-movement\" to see those commands."
   (interactive "p")
   (picture-update-desired-column (not (eq this-command last-command)))
   (picture-insert last-command-event arg)) ; Always a character in this case.
@@ -324,13 +323,14 @@ many lines."
   "Move to the beginning of the following line.
 With argument, moves that many lines (up, if negative argument);
 always moves to the beginning of a line."
-  (interactive "p")
-  (if (< arg 0)
-      (forward-line arg)
-    (while (> arg 0)
-      (end-of-line)
-      (if (eobp) (newline) (forward-char 1))
-      (setq arg (1- arg)))))
+  (interactive "^p")
+  (let ((start (point))
+        (lines-left (forward-line arg)))
+    (if (and (eobp)
+             (> (point) start))
+        (newline))
+    (if (> lines-left 0)
+        (newline lines-left))))
 
 (defun picture-open-line (arg)
   "Insert an empty line after the current line.
@@ -377,9 +377,11 @@ With positive argument insert that many lines."
 ;; Picture Tabs
 
 (defcustom picture-tab-chars "!-~"
-  "*A character set which controls behavior of commands.
-\\[picture-set-tab-stops] and \\[picture-tab-search].  It is NOT a
-regular expression, any regexp special characters will be quoted.
+  "A character set which controls behavior of commands.
+\\[picture-set-tab-stops] and \\[picture-tab-search].
+The syntax for this variable is like the syntax used inside of `[...]'
+in a regular expression--but without the `[' and the `]'.
+It is NOT a regular expression, any regexp special characters will be quoted.
 It defines a set of \"interesting characters\" to look for when setting
 \(or searching for) tab stops, initially \"!-~\" (all printing characters).
 For example, suppose that you are editing a table which is formatted thus:
@@ -439,7 +441,7 @@ With ARG move to column occupied by next interesting character in this
 line.  The character must be preceded by whitespace.
 \"interesting characters\" are defined by variable `picture-tab-chars'.
 If no such character is found, move to beginning of line."
-  (interactive "P")
+  (interactive "^P")
   (let ((target (current-column)))
     (save-excursion
       (if (and (not arg)
@@ -452,7 +454,7 @@ If no such character is found, move to beginning of line."
 	  (move-to-column target))
       (if (re-search-forward
 	   (concat "[ \t]+[" (regexp-quote picture-tab-chars) "]")
-	   (save-excursion (end-of-line) (point))
+	   (line-end-position)
 	   'move)
 	  (setq target (1- (current-column)))
 	(setq target nil)))
@@ -465,7 +467,7 @@ If no such character is found, move to beginning of line."
 With prefix arg, overwrite the traversed text with spaces.  The tab stop
 list can be changed by \\[picture-set-tab-stops] and \\[edit-tab-stops].
 See also documentation for variable `picture-tab-chars'."
-  (interactive "P")
+  (interactive "^P")
   (let* ((opoint (point)))
     (move-to-tab-stop)
     (if arg
@@ -602,6 +604,8 @@ Leaves the region surrounding the rectangle."
 
 ;; Picture Keymap, entry and exit points.
 
+(defalias 'picture-delete-char 'delete-char)
+
 (defvar picture-mode-map nil)
 
 (defun picture-substitute (oldfun newfun)
@@ -627,11 +631,11 @@ Leaves the region surrounding the rectangle."
       (picture-substitute 'newline-and-indent 'picture-duplicate-line)
       (picture-substitute 'next-line 'picture-move-down)
       (picture-substitute 'previous-line 'picture-move-up)
-      (picture-substitute 'beginning-of-line 'picture-beginning-of-line)
-      (picture-substitute 'end-of-line 'picture-end-of-line)
+      (picture-substitute 'move-beginning-of-line 'picture-beginning-of-line)
+      (picture-substitute 'move-end-of-line 'picture-end-of-line)
       (picture-substitute 'mouse-set-point 'picture-mouse-set-point)
 
-      (define-key picture-mode-map "\C-c\C-d" 'delete-char)
+      (define-key picture-mode-map "\C-c\C-d" 'picture-delete-char)
       (define-key picture-mode-map "\e\t" 'picture-toggle-tab-state)
       (define-key picture-mode-map "\t" 'picture-tab)
       (define-key picture-mode-map "\e\t" 'picture-tab-search)
@@ -720,7 +724,7 @@ You can edit tabular text with these commands:
 
 You can manipulate text with these commands:
  Clear ARG columns after point without moving:    \\[picture-clear-column]
- Delete char at point:                            \\[delete-char]
+ Delete char at point:                            \\[picture-delete-char]
  Clear ARG columns backward:                      \\[picture-backward-clear-column]
  Clear ARG lines, advancing over them:            \\[picture-clear-line]
   (the cleared text is saved in the kill ring)
@@ -742,7 +746,7 @@ by supplying an argument.
 Entry to this mode calls the value of `picture-mode-hook' if non-nil.
 
 Note that Picture mode commands will work outside of Picture mode, but
-they are not defaultly assigned to keys."
+they are not by default assigned to keys."
   (interactive)
   (if (eq major-mode 'picture-mode)
       (error "You are already editing a picture")
@@ -789,5 +793,4 @@ Runs `picture-mode-exit-hook' at the end."
 
 (provide 'picture)
 
-;; arch-tag: e452d08d-a470-4fbf-896e-ea276698d1ca
 ;;; picture.el ends here

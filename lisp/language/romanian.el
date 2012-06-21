@@ -1,7 +1,6 @@
 ;;; romanian.el --- support for Romanian -*- coding: iso-latin-2; no-byte-compile: t -*-
 
-;; Copyright (C) 1998, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation.
+;; Copyright (C) 1998, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author:    Dan Nicolaescu <done@ece.arizona.edu>
 ;; Keywords: multilingual, Romanian, i18n
@@ -36,7 +35,7 @@
 	      (unibyte-display . iso-8859-2)
 	      (tutorial . "TUTORIAL.ro")
 	      (sample-text . "Bunã ziua, bine aþi venit!")
-	      (documentation . "Rmoanian environment using Latin-2 encoding.
+	      (documentation . "Romanian environment using Latin-2 encoding.
 An environment for generic Latin-10 encoding is also available."))
  '("European"))
 
@@ -52,5 +51,4 @@ An environment for generic Latin-10 encoding is also available."))
 
 (provide 'romanian)
 
-;; arch-tag: a0bf93ee-2f02-4678-a477-c08acc35366b
 ;;; romanian.el ends here

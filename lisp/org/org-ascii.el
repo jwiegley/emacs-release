@@ -1,12 +1,10 @@
 ;;; org-ascii.el --- ASCII export for Org-mode
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2004-2012  Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.33x
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -26,7 +24,10 @@
 ;;
 ;;; Commentary:
 
+;;; Code:
+
 (require 'org-exp)
+
 (eval-when-compile
   (require 'cl))
 
@@ -35,7 +36,7 @@
   :tag "Org Export ASCII"
   :group 'org-export)
 
-(defcustom org-export-ascii-underline '(?\$ ?\# ?^ ?\~ ?\= ?\-)
+(defcustom org-export-ascii-underline '(?\- ?\= ?\~ ?^ ?\# ?\$)
   "Characters for underlining headings in ASCII export.
 In the given sequence, these characters will be used for level 1, 2, ..."
   :group 'org-export-ascii
@@ -52,18 +53,33 @@ Org-mode file."
   :type '(repeat character))
 
 (defcustom org-export-ascii-links-to-notes t
-  "Non-nil means, convert links to notes before the next headline.
+  "Non-nil means convert links to notes before the next headline.
 When nil, the link will be exported in place.  If the line becomes long
 in this way, it will be wrapped."
   :group 'org-export-ascii
   :type 'boolean)
 
 (defcustom org-export-ascii-table-keep-all-vertical-lines nil
-  "Non-nil means, keep all vertical lines in ASCII tables.
+  "Non-nil means keep all vertical lines in ASCII tables.
 When nil, vertical lines will be removed except for those needed
 for column grouping."
   :group 'org-export-ascii
   :type 'boolean)
+
+(defcustom org-export-ascii-table-widen-columns t
+  "Non-nil means widen narrowed columns for export.
+When nil, narrowed columns will look in ASCII export just like in org-mode,
+i.e. with \"=>\" as ellipsis."
+  :group 'org-export-ascii
+  :type 'boolean)
+
+(defvar org-export-ascii-entities 'ascii
+  "The ascii representation to be used during ascii export.
+Possible values are:
+
+ascii     Only use plain ASCII characters
+latin1    Include Latin-1 character
+utf8      Use all UTF-8 characters")
 
 ;;; Hooks
 
@@ -73,6 +89,42 @@ for column grouping."
 ;;; ASCII export
 
 (defvar org-ascii-current-indentation nil) ; For communication
+
+;;;###autoload
+(defun org-export-as-latin1 (&rest args)
+  "Like `org-export-as-ascii', use latin1 encoding for special symbols."
+  (interactive)
+  (org-export-as-encoding 'org-export-as-ascii (org-called-interactively-p 'any)
+			  'latin1 args))
+
+;;;###autoload
+(defun org-export-as-latin1-to-buffer (&rest args)
+  "Like `org-export-as-ascii-to-buffer', use latin1 encoding for symbols."
+  (interactive)
+  (org-export-as-encoding 'org-export-as-ascii-to-buffer
+			  (org-called-interactively-p 'any) 'latin1 args))
+
+;;;###autoload
+(defun org-export-as-utf8 (&rest args)
+  "Like `org-export-as-ascii', use encoding for special symbols."
+  (interactive)
+  (org-export-as-encoding 'org-export-as-ascii
+			  (org-called-interactively-p 'any)
+			  'utf8 args))
+
+;;;###autoload
+(defun org-export-as-utf8-to-buffer (&rest args)
+  "Like `org-export-as-ascii-to-buffer', use utf8 encoding for symbols."
+  (interactive)
+  (org-export-as-encoding 'org-export-as-ascii-to-buffer
+			  (org-called-interactively-p 'any) 'utf8 args))
+
+(defun org-export-as-encoding (command interactivep encoding &rest args)
+  (let ((org-export-ascii-entities encoding))
+    (if interactivep
+	(call-interactively command)
+      (apply command args))))
+
 
 ;;;###autoload
 (defun org-export-as-ascii-to-buffer (arg)
@@ -92,7 +144,7 @@ command to convert it."
   (interactive "r")
   (let (reg ascii buf pop-up-frames)
     (save-window-excursion
-      (if (org-mode-p)
+      (if (eq major-mode 'org-mode)
 	  (setq ascii (org-export-region-as-ascii
 		      beg end t 'string))
 	(setq reg (buffer-substring beg end)
@@ -123,7 +175,7 @@ a Lisp program could call this function in the following way:
 When called interactively, the output buffer is selected, and shown
 in a window.  A non-interactive call will only return the buffer."
   (interactive "r\nP")
-  (when (interactive-p)
+  (when (org-called-interactively-p 'any)
     (setq buffer "*Org ASCII Export*"))
   (let ((transient-mark-mode t) (zmacs-regions t)
 	ext-plist rtn)
@@ -135,7 +187,7 @@ in a window.  A non-interactive call will only return the buffer."
 	       nil nil ext-plist
 	       buffer body-only))
     (if (fboundp 'deactivate-mark) (deactivate-mark))
-    (if (and (interactive-p) (bufferp rtn))
+    (if (and (org-called-interactively-p 'any) (bufferp rtn))
 	(switch-to-buffer-other-window rtn)
       rtn)))
 
@@ -156,6 +208,7 @@ resulting ASCII as a string.  When BODY-ONLY is set, don't produce
 the file header and footer.  When PUB-DIR is set, use this as the
 publishing directory."
   (interactive "P")
+  (run-hooks 'org-export-first-hook)
   (setq-default org-todo-line-regexp org-todo-line-regexp)
   (let* ((opt-plist (org-combine-plists (org-default-export-plist)
 					ext-plist
@@ -181,6 +234,11 @@ publishing directory."
 			  (if subtree-p
 			      (org-export-add-subtree-options opt-plist rbeg)
 			    opt-plist)))
+	 ;; The following two are dynamically scoped into other
+	 ;; routines below.
+	 (org-current-export-dir
+	  (or pub-dir (org-export-directory :html opt-plist)))
+	 (org-current-export-file buffer-file-name)
 	 (custom-times org-display-custom-times)
 	 (org-ascii-current-indentation '(0 . 0))
 	 (level 0) line txt
@@ -219,21 +277,25 @@ publishing directory."
 		    (and (not
 			  (plist-get opt-plist :skip-before-1st-heading))
 			 (org-export-grab-title-from-buffer))
-		    (file-name-sans-extension
-		     (file-name-nondirectory bfname))))
+		    (and (buffer-file-name)
+			 (file-name-sans-extension
+			  (file-name-nondirectory bfname)))
+		    "UNTITLED"))
 	 (email (plist-get opt-plist :email))
 	 (language (plist-get opt-plist :language))
-	 (quote-re0 (concat "^[ \t]*" org-quote-string "\\>"))
+	 (quote-re0 (concat "^\\(" org-quote-string "\\)\\( +\\|[ \t]*$\\)"))
 	 (todo nil)
 	 (lang-words nil)
 	 (region
 	  (buffer-substring
 	   (if (org-region-active-p) (region-beginning) (point-min))
 	   (if (org-region-active-p) (region-end) (point-max))))
+	 (org-export-footnotes-seen nil)
+	 (org-export-footnotes-data (org-footnote-all-labels 'with-defs))
 	 (lines (org-split-string
 		 (org-export-preprocess-string
 		  region
-		  :for-ascii t
+		  :for-backend 'ascii
 		  :skip-before-1st-heading
 		  (plist-get opt-plist :skip-before-1st-heading)
 		  :drawers (plist-get opt-plist :drawers)
@@ -242,6 +304,7 @@ publishing directory."
 		  :footnotes (plist-get opt-plist :footnotes)
 		  :timestamps (plist-get opt-plist :timestamps)
 		  :todo-keywords (plist-get opt-plist :todo-keywords)
+		  :tasks (plist-get opt-plist :tasks)
 		  :verbatim-multiline t
 		  :select-tags (plist-get opt-plist :select-tags)
 		  :exclude-tags (plist-get opt-plist :exclude-tags)
@@ -250,7 +313,7 @@ publishing directory."
 		  :add-text (plist-get opt-plist :text))
 		 "\n"))
 	 thetoc have-headings first-heading-pos
-	 table-open table-buffer link-buffer link desc desc0 rpl wrap)
+	 table-open table-buffer link-buffer link type path desc desc0 rpl wrap fnc)
     (let ((inhibit-read-only t))
       (org-unmodified
        (remove-text-properties (point-min) (point-max)
@@ -286,8 +349,10 @@ publishing directory."
 
       (if (and (or author email)
 	       org-export-author-info)
-	  (insert(concat (nth 1 lang-words) ": " (or author "")
-			  (if email (concat " <" email ">") "")
+	  (insert (concat (nth 1 lang-words) ": " (or author "")
+			  (if (and org-export-email-info
+				   email (string-match "\\S-" email))
+			      (concat " <" email ">") "")
 			  "\n")))
 
       (cond
@@ -307,7 +372,7 @@ publishing directory."
 	  (push (concat (nth 3 lang-words) "\n") thetoc)
 	  (push (concat (make-string (string-width (nth 3 lang-words)) ?=)
 			"\n") thetoc)
-	  (mapc '(lambda (line)
+	  (mapc #'(lambda (line)
 		   (if (string-match org-todo-line-regexp
 				     line)
 		       ;; This is a headline
@@ -337,11 +402,11 @@ publishing directory."
 
 			 (if (and (memq org-export-with-tags '(not-in-toc nil))
 				  (string-match
-				   (org-re "[ \t]+:[[:alnum:]_@:]+:[ \t]*$")
+				   (org-re "[ \t]+:[[:alnum:]_@#%:]+:[ \t]*$")
 				   txt))
 			     (setq txt (replace-match "" t t txt)))
 			 (if (string-match quote-re0 txt)
-			     (setq txt (replace-match "" t t txt)))
+			     (setq txt (replace-match "" t t txt 1)))
 
 			 (if org-export-with-section-numbers
 			     (setq txt (concat (org-section-number level)
@@ -361,17 +426,21 @@ publishing directory."
 
     (org-init-section-numbers)
     (while (setq line (pop lines))
-      (when (and link-buffer (string-match "^\\*+ " line))
+      (when (and link-buffer (string-match org-outline-regexp-bol line))
 	(org-export-ascii-push-links (nreverse link-buffer))
 	(setq link-buffer nil))
       (setq wrap nil)
       ;; Remove the quoted HTML tags.
       (setq line (org-html-expand-for-ascii line))
       ;; Replace links with the description when possible
-      (while (string-match org-bracket-link-regexp line)
-	(setq link (match-string 1 line)
-	      desc0 (match-string 3 line)
-	      desc (or desc0 (match-string 1 line)))
+      (while (string-match org-bracket-link-analytic-regexp++ line)
+	(setq path (match-string 3 line)
+	      link (concat (match-string 1 line) path)
+	      type (match-string 2 line)
+	      desc0 (match-string 5 line)
+	      desc0 (replace-regexp-in-string "\\\\_" "_" desc0)
+	      desc (or desc0 link)
+	      desc (replace-regexp-in-string "\\\\_" "_" desc))
 	(if (and (> (length link) 8)
 		 (equal (substring link 0 8) "coderef:"))
 	    (setq line (replace-match
@@ -380,15 +449,18 @@ publishing directory."
 				      (substring link 8)
 				      org-export-code-refs)))
 			t t line))
-	  (setq rpl (concat "["
-			    (or (match-string 3 line) (match-string 1 line))
-			    "]"))
-	  (when (and desc0 (not (equal desc0 link)))
-	    (if org-export-ascii-links-to-notes
-		(push (cons desc0 link) link-buffer)
-	      (setq rpl (concat rpl " (" link ")")
-		    wrap (+ (length line) (- (length (match-string 0 line)))
-			    (length desc)))))
+	  (setq rpl (concat "[" desc "]"))
+	  (if (functionp (setq fnc (nth 2 (assoc type org-link-protocols))))
+	      (setq rpl (or (save-match-data
+			      (funcall fnc (org-link-unescape path)
+				       desc0 'ascii))
+			    rpl))
+	    (when (and desc0 (not (equal desc0 link)))
+	      (if org-export-ascii-links-to-notes
+		  (push (cons desc0 link) link-buffer)
+		(setq rpl (concat rpl " (" link ")")
+		      wrap (+ (length line) (- (length (match-string 0 line)))
+			      (length desc))))))
 	  (setq line (replace-match rpl t t line))))
       (when custom-times
 	(setq line (org-translate-time line)))
@@ -419,7 +491,8 @@ publishing directory."
 		   (org-format-table-ascii table-buffer)
 		   "\n") "\n")))
        (t
-	(if (string-match "^\\([ \t]*\\)\\([-+*][ \t]+\\)\\(.*?\\)\\( ::\\)" line)
+	(if (string-match "^\\([ \t]*\\)\\([-+*][ \t]+\\)\\(.*?\\)\\( ::\\)"
+			  line)
 	    (setq line (replace-match "\\1\\3:" t nil line)))
 	(setq line (org-fix-indentation line org-ascii-current-indentation))
 	;; Remove forced line breaks
@@ -481,19 +554,39 @@ publishing directory."
       (current-buffer))))
 
 (defun org-export-ascii-preprocess (parameters)
-  "Do extra work for ASCII export"
+  "Do extra work for ASCII export."
+  ;;
+  ;; Realign tables to get rid of narrowing
+  (when org-export-ascii-table-widen-columns
+    (let ((org-table-do-narrow nil))
+      (goto-char (point-min))
+      (org-ascii-replace-entities)
+      (goto-char (point-min))
+      (org-table-map-tables
+       (lambda () (org-if-unprotected (org-table-align)))
+       'quietly)))
   ;; Put quotes around verbatim text
   (goto-char (point-min))
   (while (re-search-forward org-verbatim-re nil t)
-    (goto-char (match-end 2))
-    (backward-delete-char 1) (insert "'")
-    (goto-char (match-beginning 2))
-    (delete-char 1) (insert "`")
-    (goto-char (match-end 2)))
+    (org-if-unprotected-at (match-beginning 4)
+      (goto-char (match-end 2))
+      (backward-delete-char 1) (insert "'")
+      (goto-char (match-beginning 2))
+      (delete-char 1) (insert "`")
+      (goto-char (match-end 2))))
   ;; Remove target markers
   (goto-char (point-min))
   (while (re-search-forward  "<<<?\\([^<>]*\\)>>>?\\([ \t]*\\)" nil t)
-    (replace-match "\\1\\2")))
+    (org-if-unprotected-at (match-beginning 1)
+      (replace-match "\\1\\2")))
+  ;; Remove list start counters
+  (goto-char (point-min))
+  (while (org-list-search-forward
+	  "\\[@\\(?:start:\\)?\\([0-9]+\\|[A-Za-z]\\)\\][ \t]*" nil t)
+    (replace-match ""))
+  (remove-text-properties
+   (point-min) (point-max)
+   '(face nil font-lock-fontified nil font-lock-multiline nil line-prefix nil wrap-prefix nil)))
 
 (defun org-html-expand-for-ascii (line)
   "Handle quoted HTML for ASCII export."
@@ -502,6 +595,15 @@ publishing directory."
 	;; We just remove the tags for now.
 	(setq line (replace-match "" nil nil line))))
   line)
+
+(defun org-ascii-replace-entities ()
+  "Replace entities with the ASCII representation."
+  (let (e)
+    (while (re-search-forward "\\\\\\([a-zA-Z]+[0-9]*\\)\\({}\\)?" nil t)
+      (org-if-unprotected-at (match-beginning 1)
+	(setq e (org-entity-get-representation (match-string 1)
+					       org-export-ascii-entities))
+	(and e (replace-match e t t))))))
 
 (defun org-export-ascii-wrap (line where)
   "Wrap LINE at or before WHERE."
@@ -527,7 +629,9 @@ publishing directory."
       (save-match-data
 	(if (save-excursion
 	      (re-search-backward
-	       "^\\(\\([ \t]*\\)\\|\\(\\*+ \\)\\)[^ \t\n]" nil t))
+	       (concat "^\\(\\([ \t]*\\)\\|\\("
+		       org-outline-regexp
+		       "\\)\\)[^ \t\n]") nil t))
 	    (setq ind (or (match-string 2)
 			  (make-string (length (match-string 3)) ?\ )))))
       (mapc (lambda (x) (insert ind "[" (car x) "]: " (cdr x) "\n"))
@@ -554,9 +658,10 @@ publishing directory."
       (if (or (not (equal (char-before) ?\n))
 	      (not (equal (char-before (1- (point))) ?\n)))
 	  (insert "\n"))
-      (setq char (nth (- umax level) (reverse org-export-ascii-underline)))
+      (setq char (or (nth (1- level) org-export-ascii-underline)
+      		     (car (last org-export-ascii-underline))))
       (unless org-export-with-tags
-	(if (string-match (org-re "[ \t]+\\(:[[:alnum:]_@:]+:\\)[ \t]*$") title)
+	(if (string-match (org-re "[ \t]+\\(:[[:alnum:]_@#%:]+:\\)[ \t]*$") title)
 	    (setq title (replace-match "" t t title))))
       (if org-export-with-section-numbers
 	  (setq title (concat (org-section-number level) " " title)))
@@ -621,5 +726,4 @@ publishing directory."
 
 (provide 'org-ascii)
 
-;; arch-tag: aa96f882-f477-4e13-86f5-70d43e7adf3c
 ;;; org-ascii.el ends here

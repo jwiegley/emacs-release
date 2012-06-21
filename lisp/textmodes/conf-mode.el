@@ -1,7 +1,6 @@
 ;;; conf-mode.el --- Simple major mode for editing conf/ini/properties files
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2004-2012  Free Software Foundation, Inc.
 
 ;; Author: Daniel Pfeiffer <occitan@esperanto.org>
 ;; Keywords: conf ini windows java
@@ -156,7 +155,7 @@ not align (only setting space according to `conf-assignment-space')."
     (modify-syntax-entry ?/  ". 124" table)
     (modify-syntax-entry ?*  ". 23b" table)
     table)
-  "Syntax table in use in Java prperties buffers.")
+  "Syntax table in use in Java properties buffers.")
 
 (defvar conf-ppd-mode-syntax-table
   (let ((table (make-syntax-table conf-mode-syntax-table)))
@@ -178,7 +177,7 @@ not align (only setting space according to `conf-assignment-space')."
 
 
 (defvar conf-font-lock-keywords
-  `(;; [section] (do this first because it may look like a parameter)
+  '(;; [section] (do this first because it may look like a parameter)
     ("^[ \t]*\\[\\(.+\\)\\]" 1 'font-lock-type-face)
     ;; var=val or var[index]=val
     ("^[ \t]*\\(.+?\\)\\(?:\\[\\(.*?\\)\\]\\)?[ \t]*="
@@ -186,7 +185,7 @@ not align (only setting space according to `conf-assignment-space')."
      (2 'font-lock-constant-face nil t))
     ;; section { ... } (do this last because some assign ...{...)
     ("^[ \t]*\\([^=:\n]+?\\)[ \t\n]*{[^{}]*?$" 1 'font-lock-type-face prepend))
-  "Keywords to hilight in Conf mode.")
+  "Keywords to highlight in Conf mode.")
 
 (defvar conf-javaprop-font-lock-keywords
   '(;; var=val
@@ -198,7 +197,7 @@ not align (only setting space according to `conf-assignment-space')."
      (5 'font-lock-variable-name-face nil t)
      (6 'font-lock-constant-face nil t)
      (7 'font-lock-variable-name-face nil t)))
-  "Keywords to hilight in Conf Java Properties mode.")
+  "Keywords to highlight in Conf Java Properties mode.")
 
 (defvar conf-space-keywords-alist
   '(("\\`/etc/gpm/" . "key\\|name\\|foreground\\|background\\|border\\|head")
@@ -241,7 +240,7 @@ This variable is best set in the file local variables, or through
      (1 'font-lock-variable-name-face))
     ;; section { ... } (do this last because some assign ...{...)
     ("^[ \t]*\\([^:\n]+\\)[ \t\n]*{[^{}]*?$" 1 'font-lock-type-face prepend))
-  "Keywords to hilight in Conf Colon mode.")
+  "Keywords to highlight in Conf Colon mode.")
 
 (defvar conf-assignment-sign ?=
   "Sign used for assignments (char or string).")
@@ -418,7 +417,7 @@ See also `conf-space-mode', `conf-colon-mode', `conf-javaprop-mode',
     (run-mode-hooks 'conf-mode-hook)))
 
 (defun conf-mode-initialize (comment &optional font-lock)
-  "Intitializations for sub-modes of conf-mode.
+  "Initializations for sub-modes of conf-mode.
 COMMENT initializes `comment-start' and `comment-start-skip'.
 The optional arg FONT-LOCK is the value for FONT-LOCK-KEYWORDS."
   (set (make-local-variable 'comment-start) comment)
@@ -621,5 +620,4 @@ For details see `conf-mode'.  Example:
 
 (provide 'conf-mode)
 
-;; arch-tag: 0a3805b2-0371-4d3a-8498-8897116b2356
 ;;; conf-mode.el ends here

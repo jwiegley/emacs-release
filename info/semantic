@@ -3,8 +3,8 @@ semantic.texi.
 
 This manual documents the Semantic library and utilities.
 
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2009,
-2010, 2011, 2012 Free Software Foundation, Inc.
+   Copyright (C) 1999-2005, 2007, 2009-2012 Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -43,8 +43,8 @@ use the mailing list cedet-semantic@sourceforge.net via the URL:
 
    This manual documents the Semantic library and utilities.
 
-   Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2009,
-2010, 2011, 2012 Free Software Foundation, Inc.
+   Copyright (C) 1999-2005, 2007, 2009-2012 Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -199,7 +199,7 @@ information, and so forth.
 * Analyzer::            Semantic tools for analyzing code.
 * Speedbar::            Using Semantic with the Speedbar.
 * SymRef::              Interface to symbol reference tools.
-* MRU Bookmarks::       Managing tag ``bookmarks''.
+* MRU Bookmarks::       Managing tag "bookmarks".
 * Sticky Func Mode::    Showing declarations in the header line.
 * Highlight Func Mode:: Highlight the current function declaration.
 * Tag Decoration Mode:: Minor mode to decorate tags.
@@ -352,7 +352,7 @@ the "current tag", meaning the tag at (or around) point.
      it as well.  This allows you to insert or jump to that tag with
      the usual register commands.  *Note Registers: (emacs)Registers.
 
-`\C-c , up'
+`C-c , up'
      Transpose the current tag with the previous one
      (`senator-transpose-tags-up').
 
@@ -563,7 +563,7 @@ yourself.
      The value of this variable is a list of directories (strings) that
      are project roots.  All subdirectories of a project root are
      considered part of the same project.  This variable can be
-     overriden by `semanticdb-project-root-functions'.
+     overridden by `semanticdb-project-root-functions'.
 
  -- Variable: semanticdb-project-root-functions
      The value of this variable is a list of functions to determine a
@@ -726,7 +726,7 @@ input cancels this, returning Emacs to its normal editing behavior.
      reparsed regardless of their size.
 
  -- Option: semantic-idle-scheduler-no-working-message
-     If non-`nil', disable display of working messages whie reparsing.
+     If non-`nil', disable display of working messages while reparsing.
 
  -- Option: semantic-idle-scheduler-working-in-modeline-flag
      If non-`nil', show working messages in the mode line.  Normally,
@@ -783,7 +783,7 @@ File: semantic,  Node: Debugging Idle Time Issues,  Next: Idle Summary Mode,  Pr
 2.3.3 Debugging Idle Time Issues
 --------------------------------
 
-If you see an error signalled during idle time, it could be an
+If you see an error signaled during idle time, it could be an
 indication of a more serious issue elsewhere.  It is not enough to
 enable `debug-on-error', because the idle scheduler inhibits the
 debugger.  Instead, use the following commands to debug the error:
@@ -1049,8 +1049,8 @@ for a code symbol.
 
           (global-set-key '[(S-mouse-1)] semantic-ia-fast-mouse-jump)
 
-   These commands are often more accurate than than the `find-tag'
-command (*note Tags: (emacs)Tags.), because the Semantic Analyzer is
+   These commands are often more accurate than the `find-tag' command
+(*note Tags: (emacs)Tags.), because the Semantic Analyzer is
 context-sensitive.
 
    You can also use `C-c , j' (`semantic-complete-jump-local') and `C-c
@@ -1570,7 +1570,7 @@ function or variable.  Tag handling is handled in several source files.
      for a prototype.
 
 `semantic-tag-ls.el'
-     Language dependant features of a tag, such as parent calculation,
+     Language dependent features of a tag, such as parent calculation,
      slot protection, and other states like abstract, virtual, static,
      and leaf.
 
@@ -1616,7 +1616,7 @@ problem to try and solve.
      automatically associates files with tables in databases so that
      tags are _saved_ while a buffer is not in memory.
 
-     The database and tables both also provide applicate cache
+     The database and tables both also provide applicable cache
      information, and cache flushing system.  The semanticdb search
      routines use caches to save datastructures that are complex to
      calculate.
@@ -1648,7 +1648,7 @@ problem to try and solve.
 
 `semanticdb-ref.el'
      Tracks crossreferences.   Cross references are needed when buffer
-     is reparsed, and must alert other tables that any dependant caches
+     is reparsed, and must alert other tables that any dependent caches
      may need to be flushed.  References are in the form of include
      files.
 
@@ -1690,7 +1690,7 @@ across several modules.  When the Semantic analyzer fails, start with
      as C++ using statements.
 
 `semanticdb-typecache.el'
-     The typecache is part of `semanticdb', but is used primarilly by
+     The typecache is part of `semanticdb', but is used primarily by
      the analyzer to look up datatypes and complex names.  The
      typecache is bound across source files and builds a master lookup
      table for data type names.
@@ -1806,7 +1806,7 @@ bovine lambda
 
 bovine parser
      A parser using the bovine parser generator.  It is an LL parser
-     suitible for small simple languages.
+     suitable for small simple languages.
 
 context
 
@@ -2456,62 +2456,62 @@ Index
 
 
 Tag Table:
-Node: Top1068
-Node: Introduction2760
-Node: Semantic Components6037
-Node: Using Semantic7383
-Node: Semantic mode8805
-Node: Semantic mode user commands11683
-Node: SemanticDB14856
-Node: Semanticdb Tag Storage16231
-Node: Semanticdb Search Configuration18796
-Node: Search Throttle20221
-Node: Semanticdb Roots22410
-Node: Include paths23889
-Node: Semanticdb search debugging commands25189
-Node: Changing Backends26564
-Node: Create System Databases27317
-Node: Idle Scheduler27947
-Node: Reparsing Options29651
-Node: Idle Working Options31129
-Node: Debugging Idle Time Issues32394
-Node: Idle Summary Mode33073
-Node: Idle Completions Mode34689
-Node: Analyzer37671
-Node: Smart Completion38218
-Node: Smart Summary41360
-Node: Smart Jump42271
-Node: Analyzer Debug43290
-Node: Speedbar49762
-Node: SymRef51048
-Node: MRU Bookmarks52998
-Node: Sticky Func Mode53940
-Node: Highlight Func Mode55090
-Node: Tag Decoration Mode56142
-Node: Semantic Internals60137
-Node: Parser code60856
-Node: Tag handling62605
-Node: Semanticdb Internals64279
-Node: Analyzer Internals66406
-Node: Tools68364
-Node: Tests70046
-Node: Glossary70499
-Ref: BNF70651
-Ref: bovinate70850
-Ref: bovine lambda70939
-Ref: bovine parser71122
-Ref: context71248
-Ref: LALR71257
-Ref: lexer71263
-Ref: LL71477
-Ref: nonterminal71481
-Ref: overloadable71673
-Ref: parser71781
-Ref: tag71834
-Ref: token72179
-Ref: token stream72297
-Ref: wisent parser72376
-Node: GNU Free Documentation License72542
-Node: Index97707
+Node: Top1024
+Node: Introduction2672
+Node: Semantic Components5949
+Node: Using Semantic7295
+Node: Semantic mode8715
+Node: Semantic mode user commands11593
+Node: SemanticDB14765
+Node: Semanticdb Tag Storage16140
+Node: Semanticdb Search Configuration18705
+Node: Search Throttle20130
+Node: Semanticdb Roots22319
+Node: Include paths23799
+Node: Semanticdb search debugging commands25099
+Node: Changing Backends26474
+Node: Create System Databases27227
+Node: Idle Scheduler27857
+Node: Reparsing Options29561
+Node: Idle Working Options31040
+Node: Debugging Idle Time Issues32305
+Node: Idle Summary Mode32983
+Node: Idle Completions Mode34599
+Node: Analyzer37581
+Node: Smart Completion38128
+Node: Smart Summary41270
+Node: Smart Jump42181
+Node: Analyzer Debug43195
+Node: Speedbar49667
+Node: SymRef50953
+Node: MRU Bookmarks52903
+Node: Sticky Func Mode53845
+Node: Highlight Func Mode54995
+Node: Tag Decoration Mode56047
+Node: Semantic Internals60042
+Node: Parser code60761
+Node: Tag handling62510
+Node: Semanticdb Internals64184
+Node: Analyzer Internals66312
+Node: Tools68269
+Node: Tests69951
+Node: Glossary70404
+Ref: BNF70556
+Ref: bovinate70755
+Ref: bovine lambda70844
+Ref: bovine parser71027
+Ref: context71153
+Ref: LALR71162
+Ref: lexer71168
+Ref: LL71382
+Ref: nonterminal71386
+Ref: overloadable71578
+Ref: parser71686
+Ref: tag71739
+Ref: token72084
+Ref: token stream72202
+Ref: wisent parser72281
+Node: GNU Free Documentation License72447
+Node: Index97612
 
 End Tag Table

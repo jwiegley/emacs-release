@@ -1,10 +1,10 @@
 ;;; tooltip.el --- show tooltip windows
 
-;; Copyright (C) 1997, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1997, 1999-2012 Free Software Foundation, Inc.
 
 ;; Author: Gerd Moellmann <gerd@acm.org>
 ;; Keywords: help c mouse tools
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -40,14 +40,16 @@
 
 (define-minor-mode tooltip-mode
   "Toggle Tooltip mode.
-With ARG, turn Tooltip mode on if and only if ARG is positive.
-When this minor mode is enabled, Emacs displays help text
-in a pop-up window for buttons and menu items that you put the mouse on.
-\(However, if `tooltip-use-echo-area' is non-nil, this and
-all pop-up help appears in the echo area.)
+With a prefix argument ARG, enable Tooltip mode if ARG is positive,
+and disable it otherwise.  If called from Lisp, enable the mode
+if ARG is omitted or nil.
 
-When Tooltip mode is disabled, Emacs displays one line of
-the help text in the echo area, and does not make a pop-up window."
+When this global minor mode is enabled, Emacs displays help
+text (e.g. for buttons and menu items that you put the mouse on)
+in a pop-up window.
+
+When Tooltip mode is disabled, Emacs displays help text in the
+echo area, instead of making a pop-up window."
   :global t
   ;; Even if we start on a text-only terminal, make this non-nil by
   ;; default because we can open a graphical frame later (multi-tty).
@@ -141,10 +143,13 @@ of the `tooltip' face are used instead."
 
 (defcustom tooltip-use-echo-area nil
   "Use the echo area instead of tooltip frames for help and GUD tooltips.
-To display multi-line help text in the echo area, set this to t
-and enable `tooltip-mode'."
+This variable is obsolete; instead of setting it to t, disable
+`tooltip-mode' (which has a similar effect)."
   :type 'boolean
   :group 'tooltip)
+
+(make-obsolete-variable 'tooltip-use-echo-area
+			"disable Tooltip mode instead" "24.1")
 
 
 ;;; Variables that are not customizable.
@@ -198,7 +203,7 @@ This might return nil if the event did not occur over a buffer."
   (setq tooltip-timeout-id
 	(add-timeout (tooltip-delay) 'tooltip-timeout nil)))
 
-(defun tooltip-timeout (object)
+(defun tooltip-timeout (_object)
   "Function called when timer with id `tooltip-timeout-id' fires."
   (run-hook-with-args-until-success 'tooltip-functions
 				    tooltip-last-mouse-motion-event))
@@ -256,7 +261,7 @@ in echo area."
 
 (declare-function x-hide-tip "xfns.c" ())
 
-(defun tooltip-hide (&optional ignored-arg)
+(defun tooltip-hide (&optional _ignored-arg)
   "Hide a tooltip, if one is displayed.
 Value is non-nil if tooltip was open."
   (tooltip-cancel-delayed-tip)
@@ -373,7 +378,7 @@ MSG is either a help string to display, or nil to cancel the display."
     ;; On text-only displays, try `tooltip-show-help-non-mode'.
     (tooltip-show-help-non-mode msg)))
 
-(defun tooltip-help-tips (event)
+(defun tooltip-help-tips (_event)
   "Hook function to display a help tooltip.
 This is installed on the hook `tooltip-functions', which
 is run when the timer with id `tooltip-timeout-id' fires.
@@ -384,5 +389,4 @@ Value is non-nil if this function handled the tip."
 
 (provide 'tooltip)
 
-;; arch-tag: 3d61135e-4618-4a78-af28-183f6df5636f
 ;;; tooltip.el ends here

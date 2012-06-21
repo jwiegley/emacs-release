@@ -1,6 +1,6 @@
 ;;; semantic/wisent/js-wy.el --- Generated parser support file
 
-;; Copyright (C) 2005, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2005, 2009-2012  Free Software Foundation, Inc.
 ;; Copyright (C) 1998-2011 Ecma International.
 
 ;; This file is part of GNU Emacs.
@@ -20,8 +20,8 @@
 
 ;;; Commentary:
 ;;
-;; This file was generated from etc/grammars/js.wy.
-;;
+;; This file was generated from admin/grammars/js.wy.
+
 ;; It is derived from the grammar in the ECMAScript Language
 ;; Specification published at
 ;;
@@ -58,6 +58,7 @@
 ;; DAMAGE.
 
 ;;; Code:
+
 (require 'semantic/lex)
 
 ;;; Prologue
@@ -405,7 +406,7 @@
    '((parse-stream . wisent-parse-stream)))
   (setq semantic-parser-name "LALR"
 	semantic--parse-table wisent-javascript-jv-wy--parse-table
-	semantic-debug-parser-source "wisent-javascript-jv.wy"
+	semantic-debug-parser-source "js.wy"
 	semantic-flex-keywords-obarray wisent-javascript-jv-wy--keyword-table
 	semantic-lex-types-obarray wisent-javascript-jv-wy--token-table)
   ;; Collect unmatched syntax lexical tokens
@@ -415,38 +416,6 @@
 
 
 ;;; Analyzers
-;;
-(define-lex-keyword-type-analyzer wisent-javascript-jv-wy--<keyword>-keyword-analyzer
-  "keyword analyzer for <keyword> tokens."
-  "\\(\\sw\\|\\s_\\)+")
-
-(define-lex-block-type-analyzer wisent-javascript-jv-wy--<block>-block-analyzer
-  "block analyzer for <block> tokens."
-  "\\s(\\|\\s)"
-  '((("(" OPEN_PARENTHESIS PAREN_BLOCK)
-     ("{" START_BLOCK BRACE_BLOCK)
-     ("[" OPEN_SQ_BRACKETS BRACK_BLOCK))
-    (")" CLOSE_PARENTHESIS)
-    ("}" END_BLOCK)
-    ("]" CLOSE_SQ_BRACKETS))
-  )
-
-(define-lex-regex-type-analyzer wisent-javascript-jv-wy--<symbol>-regexp-analyzer
-  "regexp analyzer for <symbol> tokens."
-  "\\(\\sw\\|\\s_\\)+"
-  nil
-  'VARIABLE)
-
-(define-lex-sexp-type-analyzer wisent-javascript-jv-wy--<string>-sexp-analyzer
-  "sexp analyzer for <string> tokens."
-  "\\s\""
-  'STRING)
-
-(define-lex-regex-type-analyzer wisent-javascript-jv-wy--<number>-regexp-analyzer
-  "regexp analyzer for <number> tokens."
-  semantic-lex-number-expression
-  nil
-  'NUMBER)
 
 (define-lex-string-type-analyzer wisent-javascript-jv-wy--<punctuation>-string-analyzer
   "string analyzer for <punctuation> tokens."
@@ -493,6 +462,38 @@
     (ASSIGN_SYMBOL . "="))
   'punctuation)
 
+(define-lex-block-type-analyzer wisent-javascript-jv-wy--<block>-block-analyzer
+  "block analyzer for <block> tokens."
+  "\\s(\\|\\s)"
+  '((("(" OPEN_PARENTHESIS PAREN_BLOCK)
+     ("{" START_BLOCK BRACE_BLOCK)
+     ("[" OPEN_SQ_BRACKETS BRACK_BLOCK))
+    (")" CLOSE_PARENTHESIS)
+    ("}" END_BLOCK)
+    ("]" CLOSE_SQ_BRACKETS))
+  )
+
+(define-lex-regex-type-analyzer wisent-javascript-jv-wy--<symbol>-regexp-analyzer
+  "regexp analyzer for <symbol> tokens."
+  "\\(\\sw\\|\\s_\\)+"
+  nil
+  'VARIABLE)
+
+(define-lex-regex-type-analyzer wisent-javascript-jv-wy--<number>-regexp-analyzer
+  "regexp analyzer for <number> tokens."
+  semantic-lex-number-expression
+  nil
+  'NUMBER)
+
+(define-lex-sexp-type-analyzer wisent-javascript-jv-wy--<string>-sexp-analyzer
+  "sexp analyzer for <string> tokens."
+  "\\s\""
+  'STRING)
+
+(define-lex-keyword-type-analyzer wisent-javascript-jv-wy--<keyword>-keyword-analyzer
+  "keyword analyzer for <keyword> tokens."
+  "\\(\\sw\\|\\s_\\)+")
+
 
 ;;; Epilogue
 ;;
@@ -523,5 +524,4 @@
 
 (provide 'semantic/wisent/js-wy)
 
-;; arch-tag: ff9ecf05-18e6-46a6-a3bb-e7f43f04640f
 ;;; semantic/wisent/js-wy.el ends here

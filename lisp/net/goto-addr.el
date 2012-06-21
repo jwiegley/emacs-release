@@ -1,7 +1,6 @@
 ;;; goto-addr.el --- click to browse URL or to send to e-mail address
 
-;; Copyright (C) 1995, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1995, 2000-2012 Free Software Foundation, Inc.
 
 ;; Author: Eric Ding <ericding@alum.mit.edu>
 ;; Maintainer: FSF
@@ -76,7 +75,7 @@
 (defgroup goto-address nil
   "Click to browse URL or to send to e-mail address."
   :group 'mouse
-  :group 'hypermedia)
+  :group 'comm)
 
 
 ;; I don't expect users to want fontify'ing without highlighting.
@@ -276,7 +275,10 @@ Also fontifies the buffer appropriately (see `goto-address-fontify-p' and
 
 ;;;###autoload
 (define-minor-mode goto-address-mode
-  "Minor mode to buttonize URLs and e-mail addresses in the current buffer."
+  "Minor mode to buttonize URLs and e-mail addresses in the current buffer.
+With a prefix argument ARG, enable the mode if ARG is positive,
+and disable it otherwise.  If called from Lisp, enable the mode
+if ARG is omitted or nil."
   nil
   ""
   nil
@@ -289,7 +291,7 @@ Also fontifies the buffer appropriately (see `goto-address-fontify-p' and
 
 ;;;###autoload
 (define-minor-mode goto-address-prog-mode
-  "Turn on `goto-address-mode', but only in comments and strings."
+  "Like `goto-address-mode', but only for comments and strings."
   nil
   ""
   nil
@@ -302,5 +304,4 @@ Also fontifies the buffer appropriately (see `goto-address-fontify-p' and
 
 (provide 'goto-addr)
 
-;; arch-tag: ca47c505-5661-425d-a471-62bc6e75cf0a
 ;;; goto-addr.el ends here

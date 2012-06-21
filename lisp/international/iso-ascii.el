@@ -1,7 +1,6 @@
 ;;; iso-ascii.el --- set up char tables for ISO 8859/1 on ASCII terminals
 
-;; Copyright (C) 1987, 1995, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1987, 1995, 1998, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: Howard Gayle
 ;; Maintainer: FSF
@@ -33,6 +32,7 @@
 ;;; Code:
 
 (require 'disp-table)
+(eval-when-compile (require 'cl))
 
 (defgroup iso-ascii nil
   "Set up char tables for ISO 8859/1 on ASCII terminals."
@@ -40,7 +40,7 @@
   :group 'i18n)
 
 (defcustom iso-ascii-convenient nil
-  "*Non-nil means `iso-ascii' should aim for convenience, not precision."
+  "Non-nil means `iso-ascii' should aim for convenience, not precision."
   :type 'boolean
   :group 'iso-ascii)
 
@@ -162,17 +162,15 @@
 (iso-ascii-display 254 "th")  ; small thorn, Icelandic
 (iso-ascii-display 255 "\"y") ; small y with diaeresis or umlaut mark
 
-(defun iso-ascii-mode (arg)
-  "Toggle ISO-ASCII mode."
-  (interactive "P")
-  (unless arg
-    (setq arg (eq standard-display-table iso-ascii-standard-display-table)))
-  (setq standard-display-table
-	(if arg
-	    iso-ascii-display-table
-	  iso-ascii-standard-display-table)))
+(define-minor-mode iso-ascii-mode
+  "Toggle ISO-ASCII mode.
+With a prefix argument ARG, enable the mode if ARG is positive,
+and disable it otherwise.  If called from Lisp, enable the mode
+if ARG is omitted or nil."
+  :variable (eq standard-display-table iso-ascii-display-table)
+  (unless standard-display-table
+    (setq standard-display-table iso-ascii-standard-display-table)))
 
 (provide 'iso-ascii)
 
-;; arch-tag: 687edf0d-f792-471e-b50e-be805938359a
 ;;; iso-ascii.el ends here

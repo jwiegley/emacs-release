@@ -10,8 +10,7 @@
 @copying
 This file documents Ebrowse, a C++ class browser for GNU Emacs.
 
-Copyright @copyright{} 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+Copyright @copyright{} 2000-2012 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -47,6 +46,7 @@ developing GNU and promoting software freedom.''
 
 @ifnottex
 @node Top, Overview, (dir), (dir)
+@top Ebrowse
 
 You can browse C++ class hierarchies from within Emacs by using
 Ebrowse.
@@ -149,7 +149,7 @@ importantly you can find or view member declarations and definitions
 with a keystroke.  @xref{Member Buffers}.
 
 These two buffer types and the commands they provide support the
-navigational use of the browser.  The second form resembles Emacs' Tags
+navigational use of the browser.  The second form resembles Emacs's Tags
 package for C and other procedural languages.  Ebrowse's commands of
 this type are not confined to special buffers; they are most often used
 while you are editing your source code.
@@ -482,7 +482,7 @@ name.
 @table @kbd
 @item SPC
 This command views the class declaration if the database
-contains informations about it.  If you don't parse the entire source
+contains information about it.  If you don't parse the entire source
 you are working on, some classes will only be known to exist but the
 location of their declarations and definitions will not be known.@refill
 
@@ -1451,7 +1451,3 @@ in on with the command @kbd{C-c C-m m}.
 @printindex cp
 
 @bye
-
-@ignore
-   arch-tag: 52fe78ac-a1c4-48e7-815e-0a31acfad4bf
-@end ignore

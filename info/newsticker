@@ -3,8 +3,7 @@ newsticker.texi.
 
 This manual is for Newsticker (version 1.99, June 2008).
 
-Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free
-Software Foundation, Inc.
+Copyright (C) 2004-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -31,8 +30,7 @@ Newsticker
 
 This manual is for Newsticker (version 1.99, June 2008).
 
-Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free
-Software Foundation, Inc.
+Copyright (C) 2004-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -115,7 +113,7 @@ well as XEmacs (http://www.xemacs.org).  It requires an XML-parser
 (`xml.el') which is part of GNU Emacs.  If you are using XEmacs you
 want to get the `net-utils' package which contains `xml.el' for XEmacs.
 
-   Newsticker retrieves headlines either via Emacs' built-in retrieval
+   Newsticker retrieves headlines either via Emacs's built-in retrieval
 functions, by an arbitrary external program that retrieves files via
 http and prints them to stdout (like wget
 (http://www.gnu.org/software/wget/wget.html), or - on a per feed basis
@@ -158,7 +156,7 @@ headlines.  It will also start the asynchronous download of headlines.
      buffer informs whenever new headlines have arrived.
    In both views clicking mouse-button 2 or pressing RET on a headline
 will call `browse-url' to load the corresponding news story in your
-favourite web browser.
+favorite web browser.
 
    The scrolling, or flashing of headlines in the echo area, can be
 started with the command `newsticker-start-ticker'. It can be stopped
@@ -192,8 +190,8 @@ and some of the most important options.
           retrieved.
 
         * `newsticker-retrieval-method' defines how headlines are
-          retrieved. This is either done using Emacs' built-in download
-          capabilities or using an external tool.
+          retrieved.  This is either done using Emacs's built-in
+          download capabilities or using an external tool.
 
         * `newsticker-retrieval-interval' defines how often headlines
           are retrieved.
@@ -766,14 +764,14 @@ Index
 
 
 Tag Table:
-Node: Top1035
-Node: Overview2388
-Node: Requirements3994
-Node: Installation4719
-Node: Usage5190
-Node: Configuration6495
-Node: Remarks9293
-Node: GNU Free Documentation License9467
-Node: Index34633
+Node: Top992
+Node: Overview2302
+Node: Requirements3908
+Node: Installation4634
+Node: Usage5105
+Node: Configuration6409
+Node: Remarks9209
+Node: GNU Free Documentation License9383
+Node: Index34549
 
 End Tag Table

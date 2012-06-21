@@ -40,8 +40,9 @@
 IPA is International Phonetic Alphabet for English, French, German
 and Italian.")))
 
-;; This is for Arabic.  But, as we still don't have Arabic language
-;; support, we at least define a coding system here.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Arabic
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-coding-system 'iso-8859-6
   "ISO-8859-6 based encoding (MIME:ISO-8859-6)."
@@ -58,7 +59,19 @@ and Italian.")))
   :mime-charset 'windows-1256)
 (define-coding-system-alias 'cp1256 'windows-1256)
 
+(set-language-info-alist
+ "Arabic" '((charset unicode)
+	    (coding-system utf-8 iso-8859-6 windows-1256)
+	    (coding-priority utf-8 iso-8859-6 windows-1256)
+	    (input-method . "arabic")
+	    (sample-text . "Arabic	السّلام عليكم")
+	    (documentation . "Bidirectional editing is supported.")))
+
+(set-char-table-range
+ composition-function-table
+ '(#x600 . #x6FF)
+ (list ["[\u0600-\u06FF]+" 0 font-shape-gstring]))
+
 (provide 'misc-lang)
 
-;; arch-tag: 6953585c-1a1a-4c09-be82-a2518afb6074
 ;;; misc-lang.el ends here

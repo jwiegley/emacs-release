@@ -1,6 +1,6 @@
 ;;; semantic/symref/grep.el --- Symref implementation using find/grep
 
-;; Copyright (C) 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2008-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
 
@@ -102,7 +102,7 @@ ROOTDIR is the root location to run the `find' from.
 FILEPATTERN is a string representing find flags for searching file patterns.
 GREPFLAGS are flags passed to grep, such as -n or -l.
 GREPPATTERN is the pattern used by grep."
-  ;; We have grep-compute-defaults.  Lets use it.
+  ;; We have grep-compute-defaults.  Let's use it.
   (grep-compute-defaults)
   (let* ((grep-expand-keywords semantic-symref-grep-expand-keywords)
 	 (cmd (grep-expand-template grep-find-template
@@ -187,5 +187,4 @@ Moves cursor to end of the match."
 ;; generated-autoload-load-name: "semantic/symref/grep"
 ;; End:
 
-;; arch-tag: 43d4469d-963c-4094-ac6f-99f7490973ce
 ;;; semantic/symref/grep.el ends here

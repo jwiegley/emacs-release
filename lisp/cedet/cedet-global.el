@@ -1,8 +1,9 @@
 ;;; cedet-global.el --- GNU Global support for CEDET.
 
-;; Copyright (C) 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2008-2012 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
+;; Package: cedet
 
 ;; This file is part of GNU Emacs.
 
@@ -26,7 +27,7 @@
 (declare-function inversion-check-version "inversion")
 
 (defvar cedet-global-min-version "5.0"
-  "Minimum version of GNU global required.")
+  "Minimum version of GNU Global required.")
 
 (defcustom cedet-global-command "global"
   "Command name for the GNU Global executable."
@@ -130,8 +131,8 @@ If a default starting DIR is not specified, the current buffer's
 
 (defun cedet-gnu-global-version-check (&optional noerror)
   "Check the version of the installed GNU Global command.
-If optional programatic argument NOERROR is non-nil, then
-instead of throwing an error if Global isn't available, then
+If optional programmatic argument NOERROR is non-nil,
+then instead of throwing an error if Global isn't available,
 return nil."
   (interactive)
   (require 'inversion)
@@ -185,5 +186,4 @@ If a database already exists, then just update it."
 
 (provide 'cedet-global)
 
-;; arch-tag: 0d0d3ac2-91ef-4820-bb2b-1d59ccf38392
 ;;; cedet-global.el ends here

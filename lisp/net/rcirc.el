@@ -1,9 +1,10 @@
 ;;; rcirc.el --- default, simple IRC client.
 
-;; Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2005-2012 Free Software Foundation, Inc.
 
-;; Author: Ryan Yeske
-;; URL: http://www.nongnu.org/rcirc
+;; Author: Ryan Yeske <rcyeske@gmail.com>
+;; Maintainers: Ryan Yeske <rcyeske@gmail.com>,
+;;              Deniz Dogan <deniz@dogan.se>
 ;; Keywords: comm
 
 ;; This file is part of GNU Emacs.
@@ -54,7 +55,10 @@
   :group 'applications)
 
 (defcustom rcirc-server-alist
-  '(("irc.freenode.net" :channels ("#rcirc")))
+  '(("irc.freenode.net" :channels ("#rcirc")
+     ;; Don't use the TLS port by default, in case gnutls is not available.
+     ;; :port 7000 :encryption tls
+     ))
   "An alist of IRC connections to establish when running `rcirc'.
 Each element looks like (SERVER-NAME PARAMETERS).
 
@@ -94,14 +98,22 @@ used.
 
 VALUE must be a list of strings describing which channels to join
 when connecting to this server.  If absent, no channels will be
-connected to automatically."
+connected to automatically.
+
+`:encryption'
+
+VALUE must be `plain' (the default) for unencrypted connections, or `tls'
+for connections using SSL/TLS."
   :type '(alist :key-type string
-		:value-type (plist :options ((:nick string)
-					     (:port integer)
-					     (:user-name string)
-					     (:password string)
-					     (:full-name string)
-					     (:channels (repeat string)))))
+		:value-type (plist :options
+                                   ((:nick string)
+                                    (:port integer)
+                                    (:user-name string)
+                                    (:password string)
+                                    (:full-name string)
+                                    (:channels (repeat string))
+                                    (:encryption (choice (const tls)
+                                                         (const plain))))))
   :group 'rcirc)
 
 (defcustom rcirc-default-port 6667
@@ -114,15 +126,15 @@ connected to automatically."
   :type 'string
   :group 'rcirc)
 
-(defcustom rcirc-default-user-name (user-login-name)
+(defcustom rcirc-default-user-name "user"
   "Your user name sent to the server when connecting."
+  :version "24.1"                       ; changed default
   :type 'string
   :group 'rcirc)
 
-(defcustom rcirc-default-full-name (if (string= (user-full-name) "")
-				       rcirc-default-user-name
-				     (user-full-name))
+(defcustom rcirc-default-full-name "unknown"
   "The full name sent to the server when connecting."
+  :version "24.1"                       ; changed default
   :type 'string
   :group 'rcirc)
 
@@ -203,12 +215,14 @@ The ARGUMENTS for each METHOD symbol are:
   `nickserv': NICK PASSWORD [NICKSERV-NICK]
   `chanserv': NICK CHANNEL PASSWORD
   `bitlbee': NICK PASSWORD
+  `quakenet': ACCOUNT PASSWORD
 
 Examples:
  ((\"freenode\" nickserv \"bob\" \"p455w0rd\")
   (\"freenode\" chanserv \"bob\" \"#bobland\" \"passwd99\")
   (\"bitlbee\" bitlbee \"robert\" \"sekrit\")
-  (\"dal.net\" nickserv \"bob\" \"sekrit\" \"NickServ@services.dal.net\"))"
+  (\"dal.net\" nickserv \"bob\" \"sekrit\" \"NickServ@services.dal.net\")
+  (\"quakenet.org\" quakenet \"bobby\" \"sekrit\"))"
   :type '(alist :key-type (string :tag "Server")
 		:value-type (choice (list :tag "NickServ"
 					  (const nickserv)
@@ -222,12 +236,23 @@ Examples:
 				    (list :tag "BitlBee"
 					  (const bitlbee)
 					  (string :tag "Nick")
-					  (string :tag "Password"))))
+					  (string :tag "Password"))
+                                    (list :tag "QuakeNet"
+                                          (const quakenet)
+                                          (string :tag "Account")
+                                          (string :tag "Password"))))
   :group 'rcirc)
 
 (defcustom rcirc-auto-authenticate-flag t
   "*Non-nil means automatically send authentication string to server.
 See also `rcirc-authinfo'."
+  :type 'boolean
+  :group 'rcirc)
+
+(defcustom rcirc-authenticate-before-join t
+  "*Non-nil means authenticate to services before joining channels.
+Currently only works with NickServ on some networks."
+  :version "24.1"
   :type 'boolean
   :group 'rcirc)
 
@@ -281,13 +306,18 @@ Called with 5 arguments, PROCESS, SENDER, RESPONSE, TARGET and TEXT."
   :type 'hook
   :group 'rcirc)
 
+(defvar rcirc-authenticated-hook nil
+  "Hook run after successfully authenticated.")
+
 (defcustom rcirc-always-use-server-buffer-flag nil
   "Non-nil means messages without a channel target will go to the server buffer."
   :type 'boolean
   :group 'rcirc)
 
 (defcustom rcirc-decode-coding-system 'utf-8
-  "Coding system used to decode incoming irc messages."
+  "Coding system used to decode incoming irc messages.
+Set to 'undecided if you want the encoding of the incoming
+messages autodetected."
   :type 'coding-system
   :group 'rcirc)
 
@@ -319,6 +349,16 @@ and the cdr part is used for encoding."
 (defcustom rcirc-multiline-major-mode 'fundamental-mode
   "Major-mode function to use in multiline edit buffers."
   :type 'function
+  :group 'rcirc)
+
+(defcustom rcirc-nick-completion-format "%s: "
+  "Format string to use in nick completions.
+
+The format string is only used when completing at the beginning
+of a line.  The string is passed as the first argument to
+`format' with the nickname as the second argument."
+  :version "24.1"
+  :type 'string
   :group 'rcirc)
 
 (defvar rcirc-nick nil)
@@ -375,6 +415,9 @@ and the cdr part is used for encoding."
 (defvar rcirc-nick-name-history nil
   "History variable for \\[rcirc] call.")
 
+(defvar rcirc-user-name-history nil
+  "History variable for \\[rcirc] call.")
+
 ;;;###autoload
 (defun rcirc (arg)
   "Connect to all servers in `rcirc-server-alist'.
@@ -399,22 +442,23 @@ If ARG is non-nil, instead prompt for connection parameters."
 				(or (plist-get server-plist :nick)
 				    rcirc-default-nick)
 				'rcirc-nick-name-history))
-             (password (read-passwd "IRC Password: "
-                                    (plist-get server-plist 'password)))
+	     (user-name (read-string "IRC Username: "
+                                     (or (plist-get server-plist :user-name)
+                                         rcirc-default-user-name)
+                                     'rcirc-user-name-history))
+	     (password (read-passwd "IRC Password: " nil
+                                    (plist-get server-plist :password)))
 	     (channels (split-string
 			(read-string "IRC Channels: "
 				     (mapconcat 'identity
 						(plist-get server-plist
 							   :channels)
 						" "))
-			"[, ]+" t)))
-
-        (when (= 0 (length password))
-          (setq password nil))
-
-	(rcirc-connect server port nick rcirc-default-user-name
+			"[, ]+" t))
+             (encryption (rcirc-prompt-for-encryption server-plist)))
+	(rcirc-connect server port nick user-name
 		       rcirc-default-full-name
-		       channels password))
+		       channels password encryption))
     ;; connect to servers in `rcirc-server-alist'
     (let (connected-servers)
       (dolist (c rcirc-server-alist)
@@ -426,7 +470,8 @@ If ARG is non-nil, instead prompt for connection parameters."
 	      (full-name (or (plist-get (cdr c) :full-name)
 			     rcirc-default-full-name))
 	      (channels (plist-get (cdr c) :channels))
-              (password (plist-get (cdr c) :password)))
+              (password (plist-get (cdr c) :password))
+              (encryption (plist-get (cdr c) :encryption)))
 	  (when server
 	    (let (connected)
 	      (dolist (p (rcirc-process-list))
@@ -435,7 +480,7 @@ If ARG is non-nil, instead prompt for connection parameters."
 	      (if (not connected)
 		  (condition-case e
 		      (rcirc-connect server port nick user-name
-				     full-name channels password)
+				     full-name channels password encryption)
 		    (quit (message "Quit connecting to %s" server)))
 		(with-current-buffer (process-buffer connected)
 		  (setq connected-servers
@@ -461,13 +506,14 @@ If ARG is non-nil, instead prompt for connection parameters."
 (defvar rcirc-server nil)		; server provided by server
 (defvar rcirc-server-name nil)		; server name given by 001 response
 (defvar rcirc-timeout-timer nil)
+(defvar rcirc-user-authenticated nil)
 (defvar rcirc-user-disconnect nil)
 (defvar rcirc-connecting nil)
 (defvar rcirc-process nil)
 
 ;;;###autoload
-(defun rcirc-connect (server &optional port nick user-name full-name
-			     startup-channels password)
+(defun rcirc-connect (server &optional port nick user-name
+                             full-name startup-channels password encryption)
   (save-excursion
     (message "Connecting to %s..." server)
     (let* ((inhibit-eol-conversion)
@@ -480,7 +526,9 @@ If ARG is non-nil, instead prompt for connection parameters."
 	   (user-name (or user-name rcirc-default-user-name))
 	   (full-name (or full-name rcirc-default-full-name))
 	   (startup-channels startup-channels)
-           (process (make-network-process :name server :host server :service port-number)))
+           (process (open-network-stream
+                     server nil server port-number
+                     :type (or encryption 'plain))))
       ;; set up process
       (set-process-coding-system process 'raw-text 'raw-text)
       (switch-to-buffer (rcirc-generate-new-buffer-name process nil))
@@ -488,40 +536,32 @@ If ARG is non-nil, instead prompt for connection parameters."
       (rcirc-mode process nil)
       (set-process-sentinel process 'rcirc-sentinel)
       (set-process-filter process 'rcirc-filter)
-      (make-local-variable 'rcirc-process)
-      (setq rcirc-process process)
-      (make-local-variable 'rcirc-server)
-      (setq rcirc-server server)
-      (make-local-variable 'rcirc-server-name)
-      (setq rcirc-server-name server)	; update when we get 001 response
-      (make-local-variable 'rcirc-buffer-alist)
-      (setq rcirc-buffer-alist nil)
-      (make-local-variable 'rcirc-nick-table)
-      (setq rcirc-nick-table (make-hash-table :test 'equal))
-      (make-local-variable 'rcirc-nick)
-      (setq rcirc-nick nick)
-      (make-local-variable 'rcirc-process-output)
-      (setq rcirc-process-output nil)
-      (make-local-variable 'rcirc-startup-channels)
-      (setq rcirc-startup-channels startup-channels)
-      (make-local-variable 'rcirc-last-server-message-time)
-      (setq rcirc-last-server-message-time (current-time))
-      (make-local-variable 'rcirc-timeout-timer)
-      (setq rcirc-timeout-timer nil)
-      (make-local-variable 'rcirc-user-disconnect)
-      (setq rcirc-user-disconnect nil)
-      (make-local-variable 'rcirc-connecting)
-      (setq rcirc-connecting t)
+
+      (set (make-local-variable 'rcirc-process) process)
+      (set (make-local-variable 'rcirc-server) server)
+      (set (make-local-variable 'rcirc-server-name) server) ; Update when we get 001 response.
+      (set (make-local-variable 'rcirc-buffer-alist) nil)
+      (set (make-local-variable 'rcirc-nick-table)
+           (make-hash-table :test 'equal))
+      (set (make-local-variable 'rcirc-nick) nick)
+      (set (make-local-variable 'rcirc-process-output) nil)
+      (set (make-local-variable 'rcirc-startup-channels) startup-channels)
+      (set (make-local-variable 'rcirc-last-server-message-time)
+           (current-time))
+
+      (set (make-local-variable 'rcirc-timeout-timer) nil)
+      (set (make-local-variable 'rcirc-user-disconnect) nil)
+      (set (make-local-variable 'rcirc-user-authenticated) nil)
+      (set (make-local-variable 'rcirc-connecting) t)
 
       (add-hook 'auto-save-hook 'rcirc-log-write)
 
       ;; identify
-      (when password
+      (unless (zerop (length password))
         (rcirc-send-string process (concat "PASS " password)))
       (rcirc-send-string process (concat "NICK " nick))
       (rcirc-send-string process (concat "USER " user-name
-                                      " hostname servername :"
-                                      full-name))
+                                         " 0 * :" full-name))
 
       ;; setup ping timer if necessary
       (unless rcirc-keepalive-timer
@@ -543,6 +583,22 @@ If ARG is non-nil, instead prompt for connection parameters."
   `(with-current-buffer rcirc-server-buffer
      ,@body))
 
+(defun rcirc-float-time ()
+  (if (featurep 'xemacs)
+      (time-to-seconds (current-time))
+    (float-time)))
+
+(defun rcirc-prompt-for-encryption (server-plist)
+  "Prompt the user for the encryption method to use.
+SERVER-PLIST is the property list for the server."
+  (let ((msg "Encryption (default %s): ")
+        (choices '("plain" "tls"))
+        (default (or (plist-get server-plist :encryption)
+                     'plain)))
+    (intern
+     (completing-read (format msg default)
+                      choices nil t nil nil (symbol-name default)))))
+
 (defun rcirc-keepalive ()
   "Send keep alive pings to active rcirc processes.
 Kill processes that have not received a server message since the
@@ -551,13 +607,10 @@ last ping."
       (mapc (lambda (process)
 	      (with-rcirc-process-buffer process
 		(when (not rcirc-connecting)
-		  (rcirc-send-string process
-				     (format "PRIVMSG %s :\C-aKEEPALIVE %f\C-a"
-					     rcirc-nick
-                                             (if (featurep 'xemacs)
-                                                 (time-to-seconds
-                                                  (current-time))
-                                               (float-time)))))))
+                  (rcirc-send-ctcp process
+                                   rcirc-nick
+                                   (format "KEEPALIVE %f"
+                                           (rcirc-float-time))))))
             (rcirc-process-list))
     ;; no processes, clean up timer
     (cancel-timer rcirc-keepalive-timer)
@@ -565,13 +618,10 @@ last ping."
 
 (defun rcirc-handler-ctcp-KEEPALIVE (process target sender message)
   (with-rcirc-process-buffer process
-    (setq header-line-format (format "%f" (- (if (featurep 'xemacs)
-                                                 (time-to-seconds
-                                                  (current-time))
-                                               (float-time))
+    (setq header-line-format (format "%f" (- (rcirc-float-time)
 					     (string-to-number message))))))
 
-(defvar rcirc-debug-buffer " *rcirc debug*")
+(defvar rcirc-debug-buffer "*rcirc debug*")
 (defvar rcirc-debug-flag nil
   "If non-nil, write information to `rcirc-debug-buffer'.")
 (defun rcirc-debug (process text)
@@ -609,7 +659,7 @@ Functions are called with PROCESS and SENTINEL arguments.")
 (defun rcirc-disconnect-buffer (&optional buffer)
   (with-current-buffer (or buffer (current-buffer))
     ;; set rcirc-target to nil for each channel so cleanup
-    ;; doesnt happen when we reconnect
+    ;; doesn't happen when we reconnect
     (setq rcirc-target nil)
     (setq mode-line-process ":disconnected")))
 
@@ -691,15 +741,26 @@ Function is called with PROCESS, COMMAND, SENDER, ARGS and LINE.")
                (mapconcat 'identity (cdr args) " ")
 	       (not (member response rcirc-responses-no-activity))))
 
+(defun rcirc--connection-open-p (process)
+  (memq (process-status process) '(run open)))
+
 (defun rcirc-send-string (process string)
   "Send PROCESS a STRING plus a newline."
   (let ((string (concat (encode-coding-string string rcirc-encode-coding-system)
                         "\n")))
-    (unless (eq (process-status process) 'open)
+    (unless (rcirc--connection-open-p process)
       (error "Network connection to %s is not open"
              (process-name process)))
     (rcirc-debug process string)
     (process-send-string process string)))
+
+(defun rcirc-send-privmsg (process target string)
+  (rcirc-send-string process (format "PRIVMSG %s :%s" target string)))
+
+(defun rcirc-send-ctcp (process target request &optional args)
+  (let ((args (if args (concat " " args) "")))
+    (rcirc-send-privmsg process target
+                        (format "\C-a%s%s\C-a" request args))))
 
 (defun rcirc-buffer-process (&optional buffer)
   "Return the process associated with channel BUFFER.
@@ -754,104 +815,126 @@ If SILENT is non-nil, do not print the message in any irc buffer."
 
 (defvar rcirc-input-ring nil)
 (defvar rcirc-input-ring-index 0)
+
 (defun rcirc-prev-input-string (arg)
   (ring-ref rcirc-input-ring (+ rcirc-input-ring-index arg)))
 
-(defun rcirc-insert-prev-input (arg)
-  (interactive "p")
+(defun rcirc-insert-prev-input ()
+  (interactive)
   (when (<= rcirc-prompt-end-marker (point))
     (delete-region rcirc-prompt-end-marker (point-max))
     (insert (rcirc-prev-input-string 0))
     (setq rcirc-input-ring-index (1+ rcirc-input-ring-index))))
 
-(defun rcirc-insert-next-input (arg)
-  (interactive "p")
+(defun rcirc-insert-next-input ()
+  (interactive)
   (when (<= rcirc-prompt-end-marker (point))
     (delete-region rcirc-prompt-end-marker (point-max))
     (setq rcirc-input-ring-index (1- rcirc-input-ring-index))
     (insert (rcirc-prev-input-string -1))))
 
-(defvar rcirc-nick-completions nil)
-(defvar rcirc-nick-completion-start-offset nil)
+(defvar rcirc-server-commands
+  '("/admin"   "/away"   "/connect" "/die"      "/error"   "/info"
+    "/invite"  "/ison"   "/join"    "/kick"     "/kill"    "/links"
+    "/list"    "/lusers" "/mode"    "/motd"     "/names"   "/nick"
+    "/notice"  "/oper"   "/part"    "/pass"     "/ping"    "/pong"
+    "/privmsg" "/quit"   "/rehash"  "/restart"  "/service" "/servlist"
+    "/server"  "/squery" "/squit"   "/stats"    "/summon"  "/time"
+    "/topic"   "/trace"  "/user"    "/userhost" "/users"   "/version"
+    "/wallops" "/who"    "/whois"   "/whowas")
+  "A list of user commands by IRC server.
+The value defaults to RFCs 1459 and 2812.")
 
-(defun rcirc-complete-nick ()
-  "Cycle through nick completions from list of nicks in channel."
+;; /me and /ctcp are not defined by `defun-rcirc-command'.
+(defvar rcirc-client-commands '("/me" "/ctcp")
+  "A list of user commands defined by IRC client rcirc.
+The list is updated automatically by `defun-rcirc-command'.")
+
+(defun rcirc-completion-at-point ()
+  "Function used for `completion-at-point-functions' in `rcirc-mode'."
+  (and (rcirc-looking-at-input)
+       (let* ((beg (save-excursion
+		     (if (re-search-backward " " rcirc-prompt-end-marker t)
+			 (1+ (point))
+		       rcirc-prompt-end-marker)))
+	      (table (if (and (= beg rcirc-prompt-end-marker)
+			      (eq (char-after beg) ?/))
+			 (delete-dups
+			  (nconc (sort (copy-sequence rcirc-client-commands)
+				       'string-lessp)
+				 (sort (copy-sequence rcirc-server-commands)
+				       'string-lessp)))
+		       (rcirc-channel-nicks (rcirc-buffer-process)
+					    rcirc-target))))
+	 (list beg (point) table))))
+
+(defvar rcirc-completions nil)
+(defvar rcirc-completion-start nil)
+
+(defun rcirc-complete ()
+  "Cycle through completions from list of nicks in channel or IRC commands.
+IRC command completion is performed only if '/' is the first input char."
   (interactive)
+  (unless (rcirc-looking-at-input)
+    (error "Point not located after rcirc prompt"))
   (if (eq last-command this-command)
-      (setq rcirc-nick-completions
-            (append (cdr rcirc-nick-completions)
-                    (list (car rcirc-nick-completions))))
-    (setq rcirc-nick-completion-start-offset
-          (- (save-excursion
-               (if (re-search-backward " " rcirc-prompt-end-marker t)
-                   (1+ (point))
-                 rcirc-prompt-end-marker))
-             rcirc-prompt-end-marker))
-    (setq rcirc-nick-completions
-          (let ((completion-ignore-case t))
-            (all-completions
-	     (buffer-substring
-	      (+ rcirc-prompt-end-marker
-		 rcirc-nick-completion-start-offset)
-	      (point))
-	     (mapcar (lambda (x) (cons x nil))
-		     (rcirc-channel-nicks (rcirc-buffer-process)
-					  rcirc-target))))))
-  (let ((completion (car rcirc-nick-completions)))
+      (setq rcirc-completions
+	    (append (cdr rcirc-completions) (list (car rcirc-completions))))
+    (let ((completion-ignore-case t)
+	  (table (rcirc-completion-at-point)))
+      (setq rcirc-completion-start (car table))
+      (setq rcirc-completions
+	    (and rcirc-completion-start
+		 (all-completions (buffer-substring rcirc-completion-start
+						    (cadr table))
+				  (nth 2 table))))))
+  (let ((completion (car rcirc-completions)))
     (when completion
-      (delete-region (+ rcirc-prompt-end-marker
-			rcirc-nick-completion-start-offset)
-		     (point))
-      (insert (concat completion
-                      (if (= (+ rcirc-prompt-end-marker
-                                rcirc-nick-completion-start-offset)
-                             rcirc-prompt-end-marker)
-                          ": "))))))
+      (delete-region rcirc-completion-start (point))
+      (insert
+       (cond
+        ((= (aref completion 0) ?/) (concat completion " "))
+        ((= rcirc-completion-start rcirc-prompt-end-marker)
+         (format rcirc-nick-completion-format completion))
+        (t completion))))))
 
 (defun set-rcirc-decode-coding-system (coding-system)
   "Set the decode coding system used in this channel."
   (interactive "zCoding system for incoming messages: ")
-  (setq rcirc-decode-coding-system coding-system))
+  (set (make-local-variable 'rcirc-decode-coding-system) coding-system))
 
 (defun set-rcirc-encode-coding-system (coding-system)
   "Set the encode coding system used in this channel."
   (interactive "zCoding system for outgoing messages: ")
-  (setq rcirc-encode-coding-system coding-system))
+  (set (make-local-variable 'rcirc-encode-coding-system) coding-system))
 
-(defvar rcirc-mode-map (make-sparse-keymap)
+(defvar rcirc-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET") 'rcirc-send-input)
+    (define-key map (kbd "M-p") 'rcirc-insert-prev-input)
+    (define-key map (kbd "M-n") 'rcirc-insert-next-input)
+    (define-key map (kbd "TAB") 'rcirc-complete)
+    (define-key map (kbd "C-c C-b") 'rcirc-browse-url)
+    (define-key map (kbd "C-c C-c") 'rcirc-edit-multiline)
+    (define-key map (kbd "C-c C-j") 'rcirc-cmd-join)
+    (define-key map (kbd "C-c C-k") 'rcirc-cmd-kick)
+    (define-key map (kbd "C-c C-l") 'rcirc-toggle-low-priority)
+    (define-key map (kbd "C-c C-d") 'rcirc-cmd-mode)
+    (define-key map (kbd "C-c C-m") 'rcirc-cmd-msg)
+    (define-key map (kbd "C-c C-r") 'rcirc-cmd-nick) ; rename
+    (define-key map (kbd "C-c C-o") 'rcirc-omit-mode)
+    (define-key map (kbd "C-c C-p") 'rcirc-cmd-part)
+    (define-key map (kbd "C-c C-q") 'rcirc-cmd-query)
+    (define-key map (kbd "C-c C-t") 'rcirc-cmd-topic)
+    (define-key map (kbd "C-c C-n") 'rcirc-cmd-names)
+    (define-key map (kbd "C-c C-w") 'rcirc-cmd-whois)
+    (define-key map (kbd "C-c C-x") 'rcirc-cmd-quit)
+    (define-key map (kbd "C-c TAB") ; C-i
+      'rcirc-toggle-ignore-buffer-activity)
+    (define-key map (kbd "C-c C-s") 'rcirc-switch-to-server-buffer)
+    (define-key map (kbd "C-c C-a") 'rcirc-jump-to-first-unread-line)
+    map)
   "Keymap for rcirc mode.")
-
-(define-key rcirc-mode-map (kbd "RET") 'rcirc-send-input)
-(define-key rcirc-mode-map (kbd "M-p") 'rcirc-insert-prev-input)
-(define-key rcirc-mode-map (kbd "M-n") 'rcirc-insert-next-input)
-(define-key rcirc-mode-map (kbd "TAB") 'rcirc-complete-nick)
-(define-key rcirc-mode-map (kbd "C-c C-b") 'rcirc-browse-url)
-(define-key rcirc-mode-map (kbd "C-c C-c") 'rcirc-edit-multiline)
-(define-key rcirc-mode-map (kbd "C-c C-j") 'rcirc-cmd-join)
-(define-key rcirc-mode-map (kbd "C-c C-k") 'rcirc-cmd-kick)
-(define-key rcirc-mode-map (kbd "C-c C-l") 'rcirc-toggle-low-priority)
-(define-key rcirc-mode-map (kbd "C-c C-d") 'rcirc-cmd-mode)
-(define-key rcirc-mode-map (kbd "C-c C-m") 'rcirc-cmd-msg)
-(define-key rcirc-mode-map (kbd "C-c C-r") 'rcirc-cmd-nick) ; rename
-(define-key rcirc-mode-map (kbd "C-c C-o") 'rcirc-omit-mode)
-(define-key rcirc-mode-map (kbd "M-o") 'rcirc-omit-mode)
-(define-key rcirc-mode-map (kbd "C-c C-p") 'rcirc-cmd-part)
-(define-key rcirc-mode-map (kbd "C-c C-q") 'rcirc-cmd-query)
-(define-key rcirc-mode-map (kbd "C-c C-t") 'rcirc-cmd-topic)
-(define-key rcirc-mode-map (kbd "C-c C-n") 'rcirc-cmd-names)
-(define-key rcirc-mode-map (kbd "C-c C-w") 'rcirc-cmd-whois)
-(define-key rcirc-mode-map (kbd "C-c C-x") 'rcirc-cmd-quit)
-(define-key rcirc-mode-map (kbd "C-c TAB") ; C-i
-  'rcirc-toggle-ignore-buffer-activity)
-(define-key rcirc-mode-map (kbd "C-c C-s") 'rcirc-switch-to-server-buffer)
-(define-key rcirc-mode-map (kbd "C-c C-a") 'rcirc-jump-to-first-unread-line)
-
-(defvar rcirc-browse-url-map (make-sparse-keymap)
-  "Keymap used for browsing URLs in `rcirc-mode'.")
-
-(define-key rcirc-browse-url-map (kbd "RET") 'rcirc-browse-url-at-point)
-(define-key rcirc-browse-url-map (kbd "<mouse-2>") 'rcirc-browse-url-at-mouse)
-(define-key rcirc-browse-url-map [follow-link] 'mouse-face)
 
 (defvar rcirc-short-buffer-name nil
   "Generated abbreviation to use to indicate buffer activity.")
@@ -870,6 +953,7 @@ Each element looks like (FILENAME . TEXT).")
 This number is independent of the number of lines in the buffer.")
 
 (defun rcirc-mode (process target)
+  ;; FIXME: Use define-derived-mode.
   "Major mode for IRC channel buffers.
 
 \\{rcirc-mode-map}"
@@ -879,58 +963,51 @@ This number is independent of the number of lines in the buffer.")
   (setq major-mode 'rcirc-mode)
   (setq mode-line-process nil)
 
-  (make-local-variable 'rcirc-input-ring)
-  (setq rcirc-input-ring (make-ring rcirc-input-ring-size))
-  (make-local-variable 'rcirc-server-buffer)
-  (setq rcirc-server-buffer (process-buffer process))
-  (make-local-variable 'rcirc-target)
-  (setq rcirc-target target)
-  (make-local-variable 'rcirc-topic)
-  (setq rcirc-topic nil)
-  (make-local-variable 'rcirc-last-post-time)
-  (setq rcirc-last-post-time (current-time))
-  (make-local-variable 'fill-paragraph-function)
-  (setq fill-paragraph-function 'rcirc-fill-paragraph)
-  (make-local-variable 'rcirc-recent-quit-alist)
-  (setq rcirc-recent-quit-alist nil)
-  (make-local-variable 'rcirc-current-line)
-  (setq rcirc-current-line 0)
+  (set (make-local-variable 'rcirc-input-ring)
+       ;; If rcirc-input-ring is already a ring with desired size do
+       ;; not re-initialize.
+       (if (and (ring-p rcirc-input-ring)
+		(= (ring-size rcirc-input-ring)
+		   rcirc-input-ring-size))
+	   rcirc-input-ring
+	 (make-ring rcirc-input-ring-size)))
+  (set (make-local-variable 'rcirc-server-buffer) (process-buffer process))
+  (set (make-local-variable 'rcirc-target) target)
+  (set (make-local-variable 'rcirc-topic) nil)
+  (set (make-local-variable 'rcirc-last-post-time) (current-time))
+  (set (make-local-variable 'fill-paragraph-function) 'rcirc-fill-paragraph)
+  (set (make-local-variable 'rcirc-recent-quit-alist) nil)
+  (set (make-local-variable 'rcirc-current-line) 0)
 
-  (make-local-variable 'rcirc-short-buffer-name)
-  (setq rcirc-short-buffer-name nil)
-  (make-local-variable 'rcirc-urls)
-  (setq use-hard-newlines t)
+  (use-hard-newlines t)
+  (set (make-local-variable 'rcirc-short-buffer-name) nil)
+  (set (make-local-variable 'rcirc-urls) nil)
 
   ;; setup for omitting responses
   (setq buffer-invisibility-spec '())
   (setq buffer-display-table (make-display-table))
   (set-display-table-slot buffer-display-table 4
-			  (let ((glyph (make-glyph-code 
+			  (let ((glyph (make-glyph-code
 					?. 'font-lock-keyword-face)))
 			    (make-vector 3 glyph)))
 
-  (make-local-variable 'rcirc-decode-coding-system)
-  (make-local-variable 'rcirc-encode-coding-system)
   (dolist (i rcirc-coding-system-alist)
     (let ((chan (if (consp (car i)) (caar i) (car i)))
 	  (serv (if (consp (car i)) (cdar i) "")))
       (when (and (string-match chan (or target ""))
 		 (string-match serv (rcirc-server-name process)))
-	(setq rcirc-decode-coding-system (if (consp (cdr i)) (cadr i) (cdr i))
-	      rcirc-encode-coding-system (if (consp (cdr i)) (cddr i) (cdr i))))))
+	(set (make-local-variable 'rcirc-decode-coding-system)
+             (if (consp (cdr i)) (cadr i) (cdr i)))
+        (set (make-local-variable 'rcirc-encode-coding-system)
+             (if (consp (cdr i)) (cddr i) (cdr i))))))
 
   ;; setup the prompt and markers
-  (make-local-variable 'rcirc-prompt-start-marker)
-  (setq rcirc-prompt-start-marker (make-marker))
-  (set-marker rcirc-prompt-start-marker (point-max))
-  (make-local-variable 'rcirc-prompt-end-marker)
-  (setq rcirc-prompt-end-marker (make-marker))
-  (set-marker rcirc-prompt-end-marker (point-max))
+  (set (make-local-variable 'rcirc-prompt-start-marker) (point-max-marker))
+  (set (make-local-variable 'rcirc-prompt-end-marker) (point-max-marker))
   (rcirc-update-prompt)
   (goto-char rcirc-prompt-end-marker)
-  (make-local-variable 'overlay-arrow-position)
-  (setq overlay-arrow-position (make-marker))
-  (set-marker overlay-arrow-position nil)
+
+  (set (make-local-variable 'overlay-arrow-position) (make-marker))
 
   ;; if the user changes the major mode or kills the buffer, there is
   ;; cleanup work to do
@@ -945,7 +1022,10 @@ This number is independent of the number of lines in the buffer.")
 				       rcirc-buffer-alist))))
     (rcirc-update-short-buffer-names))
 
-  (run-hooks 'rcirc-mode-hook))
+  (add-hook 'completion-at-point-functions
+            'rcirc-completion-at-point nil 'local)
+
+  (run-mode-hooks 'rcirc-mode-hook))
 
 (defun rcirc-update-prompt (&optional all)
   "Reset the prompt string in the current buffer.
@@ -996,9 +1076,23 @@ If ALL is non-nil, update prompts in all IRC buffers."
        (or (eq (aref target 0) ?#)
            (eq (aref target 0) ?&))))
 
+(defcustom rcirc-log-directory "~/.emacs.d/rcirc-log"
+  "Directory to keep IRC logfiles."
+  :type 'directory
+  :group 'rcirc)
+
+(defcustom rcirc-log-flag nil
+  "Non-nil means log IRC activity to disk.
+Logfiles are kept in `rcirc-log-directory'."
+  :type 'boolean
+  :group 'rcirc)
+
 (defun rcirc-kill-buffer-hook ()
   "Part the channel when killing an rcirc buffer."
   (when (eq major-mode 'rcirc-mode)
+    (when (and rcirc-log-flag
+               rcirc-log-directory)
+      (rcirc-log-write))
     (rcirc-clean-up-buffer "Killed buffer")))
 
 (defun rcirc-change-major-mode-hook ()
@@ -1009,7 +1103,7 @@ If ALL is non-nil, update prompts in all IRC buffers."
   (let ((buffer (current-buffer)))
     (rcirc-clear-activity buffer)
     (when (and (rcirc-buffer-process)
-	       (eq (process-status (rcirc-buffer-process)) 'open))
+	       (rcirc--connection-open-p (rcirc-buffer-process)))
       (with-rcirc-server-buffer
        (setq rcirc-buffer-alist
 	     (rassq-delete-all buffer rcirc-buffer-alist)))
@@ -1057,7 +1151,7 @@ Create the buffer if it doesn't exist."
 			   (rcirc-generate-new-buffer-name process target))))
 	  (with-current-buffer new-buffer
 	    (rcirc-mode process target)
-	    (rcirc-put-nick-channel process (rcirc-nick process) target 
+	    (rcirc-put-nick-channel process (rcirc-nick process) target
 				    rcirc-current-line))
 	  new-buffer)))))
 
@@ -1136,13 +1230,15 @@ Create the buffer if it doesn't exist."
 			     (concat command " :" args)))))))
 
 (defvar rcirc-parent-buffer nil)
+(make-variable-buffer-local 'rcirc-parent-buffer)
+(put 'rcirc-parent-buffer 'permanent-local t)
 (defvar rcirc-window-configuration nil)
 (defun rcirc-edit-multiline ()
   "Move current edit to a dedicated buffer."
   (interactive)
   (let ((pos (1+ (- (point) rcirc-prompt-end-marker))))
     (goto-char (point-max))
-    (let ((text (buffer-substring-no-properties rcirc-prompt-end-marker 
+    (let ((text (buffer-substring-no-properties rcirc-prompt-end-marker
 						(point)))
           (parent (buffer-name)))
       (delete-region rcirc-prompt-end-marker (point))
@@ -1155,26 +1251,25 @@ Create the buffer if it doesn't exist."
       (and (> pos 0) (goto-char pos))
       (message "Type C-c C-c to return text to %s, or C-c C-k to cancel" parent))))
 
-(defvar rcirc-multiline-minor-mode-map (make-sparse-keymap)
+(defvar rcirc-multiline-minor-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-c") 'rcirc-multiline-minor-submit)
+    (define-key map (kbd "C-x C-s") 'rcirc-multiline-minor-submit)
+    (define-key map (kbd "C-c C-k") 'rcirc-multiline-minor-cancel)
+    (define-key map (kbd "ESC ESC ESC") 'rcirc-multiline-minor-cancel)
+    map)
   "Keymap for multiline mode in rcirc.")
-(define-key rcirc-multiline-minor-mode-map
-  (kbd "C-c C-c") 'rcirc-multiline-minor-submit)
-(define-key rcirc-multiline-minor-mode-map
-  (kbd "C-x C-s") 'rcirc-multiline-minor-submit)
-(define-key rcirc-multiline-minor-mode-map
-  (kbd "C-c C-k") 'rcirc-multiline-minor-cancel)
-(define-key rcirc-multiline-minor-mode-map
-  (kbd "ESC ESC ESC") 'rcirc-multiline-minor-cancel)
 
 (define-minor-mode rcirc-multiline-minor-mode
-  "Minor mode for editing multiple lines in rcirc."
+  "Minor mode for editing multiple lines in rcirc.
+With a prefix argument ARG, enable the mode if ARG is positive,
+and disable it otherwise.  If called from Lisp, enable the mode
+if ARG is omitted or nil."
   :init-value nil
   :lighter " rcirc-mline"
   :keymap rcirc-multiline-minor-mode-map
   :global nil
   :group 'rcirc
-  (make-local-variable 'rcirc-parent-buffer)
-  (put 'rcirc-parent-buffer 'permanent-local t)
   (setq fill-column rcirc-max-message-length))
 
 (defun rcirc-multiline-minor-submit ()
@@ -1323,21 +1418,16 @@ is found by looking up RESPONSE in `rcirc-response-formats'."
 (defvar rcirc-last-sender nil)
 (make-variable-buffer-local 'rcirc-last-sender)
 
-(defcustom rcirc-log-directory "~/.emacs.d/rcirc-log"
-  "Directory to keep IRC logfiles."
-  :type 'directory
-  :group 'rcirc)
-
-(defcustom rcirc-log-flag nil
-  "Non-nil means log IRC activity to disk.
-Logfiles are kept in `rcirc-log-directory'."
-  :type 'boolean
-  :group 'rcirc)
-
 (defcustom rcirc-omit-threshold 100
   "Number of lines since last activity from a nick before `rcirc-omit-responses' are omitted."
   :type 'integer
   :group 'rcirc)
+
+(defcustom rcirc-log-process-buffers nil
+  "Non-nil if rcirc process buffers should be logged to disk."
+  :group 'rcirc
+  :type 'boolean
+  :version "24.1")
 
 (defun rcirc-last-quit-line (process nick target)
   "Return the line number where NICK left TARGET.
@@ -1390,7 +1480,7 @@ record activity."
 			       (match-string 1 text)))
 			   rcirc-ignore-list))
 	       ;; do not ignore if we sent the message
- 	       (not (string= sender (rcirc-nick process))))    
+ 	       (not (string= sender (rcirc-nick process))))
     (let* ((buffer (rcirc-target-buffer process sender response target text))
 	   (inhibit-read-only t))
       (with-current-buffer buffer
@@ -1398,9 +1488,8 @@ record activity."
 	      (old-point (point-marker))
 	      (fill-start (marker-position rcirc-prompt-start-marker)))
 
+	  (setq text (decode-coding-string text rcirc-decode-coding-system))
 	  (unless (string= sender (rcirc-nick process))
-	    ;; only decode text from other senders, not ours
-	    (setq text (decode-coding-string text rcirc-decode-coding-system))
 	    ;; mark the line with overlay arrow
 	    (unless (or (marker-position overlay-arrow-position)
 			(get-buffer-window (current-buffer))
@@ -1477,18 +1566,16 @@ record activity."
 
 	  ;; keep window on bottom line if it was already there
 	  (when rcirc-scroll-show-maximum-output
-	    (walk-windows (lambda (w)
-			    (when (eq (window-buffer w) (current-buffer))
-			      (with-current-buffer (window-buffer w)
-				(when (eq major-mode 'rcirc-mode)
-				  (with-selected-window w
-				    (when (<= (- (window-height)
-						 (count-screen-lines (window-point)
-								     (window-start))
-						 1)
-					      0)
-				      (recenter -1)))))))
-				  nil t))
+	    (let ((window (get-buffer-window)))
+	      (when window
+		(with-selected-window window
+		  (when (eq major-mode 'rcirc-mode)
+		    (when (<= (- (window-height)
+				 (count-screen-lines (window-point)
+						     (window-start))
+				 1)
+			      0)
+		      (recenter -1)))))))
 
 	  ;; flush undo (can we do something smarter here?)
 	  (buffer-disable-undo)
@@ -1504,14 +1591,21 @@ record activity."
 				     (when (not (rcirc-channel-p rcirc-target))
 				       'nick)))
 
-	(when rcirc-log-flag
+	(when (and rcirc-log-flag
+		   (or target
+		       rcirc-log-process-buffers))
 	  (rcirc-log process sender response target text))
 
 	(sit-for 0)			; displayed text before hook
 	(run-hook-with-args 'rcirc-print-hooks
 			    process sender response target text)))))
 
-(defcustom rcirc-log-filename-function 'rcirc-generate-new-buffer-name
+(defun rcirc-generate-log-filename (process target)
+  (if target
+      (rcirc-generate-new-buffer-name process target)
+    (process-name process)))
+
+(defcustom rcirc-log-filename-function 'rcirc-generate-log-filename
   "A function to generate the filename used by rcirc's logging facility.
 
 It is called with two arguments, PROCESS and TARGET (see
@@ -1562,8 +1656,8 @@ log-files with absolute names (see `rcirc-log-filename-function')."
 (defun rcirc-view-log-file ()
   "View logfile corresponding to the current buffer."
   (interactive)
-  (find-file-other-window 
-   (expand-file-name (funcall rcirc-log-filename-function 
+  (find-file-other-window
+   (expand-file-name (funcall rcirc-log-filename-function
 			      (rcirc-buffer-process) rcirc-target)
 		     rcirc-log-directory)))
 
@@ -1653,16 +1747,45 @@ if NICK is also on `rcirc-ignore-list-automatic'."
 	    rcirc-ignore-list
 	    (delete nick rcirc-ignore-list))))
 
-;;; activity tracking
-(defvar rcirc-track-minor-mode-map (make-sparse-keymap)
-  "Keymap for rcirc track minor mode.")
+(defun rcirc-nickname< (s1 s2)
+  "Return t if IRC nickname S1 is less than S2, and nil otherwise.
+Operator nicknames (@) are considered less than voiced
+nicknames (+).  Any other nicknames are greater than voiced
+nicknames.  The comparison is case-insensitive."
+  (setq s1 (downcase s1)
+        s2 (downcase s2))
+  (let* ((s1-op (eq ?@ (string-to-char s1)))
+         (s2-op (eq ?@ (string-to-char s2))))
+    (if s1-op
+        (if s2-op
+            (string< (substring s1 1) (substring s2 1))
+          t)
+      (if s2-op
+          nil
+        (string< s1 s2)))))
 
-(define-key rcirc-track-minor-mode-map (kbd "C-c C-@") 'rcirc-next-active-buffer)
-(define-key rcirc-track-minor-mode-map (kbd "C-c C-SPC") 'rcirc-next-active-buffer)
+(defun rcirc-sort-nicknames-join (input sep)
+  "Return a string of sorted nicknames.
+INPUT is a string containing nicknames separated by SEP.
+This function does not alter the INPUT string."
+  (let* ((parts (split-string input sep t))
+         (sorted (sort parts 'rcirc-nickname<)))
+    (mapconcat 'identity sorted sep)))
+
+;;; activity tracking
+(defvar rcirc-track-minor-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-@") 'rcirc-next-active-buffer)
+    (define-key map (kbd "C-c C-SPC") 'rcirc-next-active-buffer)
+    map)
+  "Keymap for rcirc track minor mode.")
 
 ;;;###autoload
 (define-minor-mode rcirc-track-minor-mode
-  "Global minor mode for tracking activity in rcirc buffers."
+  "Global minor mode for tracking activity in rcirc buffers.
+With a prefix argument ARG, enable the mode if ARG is positive,
+and disable it otherwise.  If called from Lisp, enable the mode
+if ARG is omitted or nil."
   :init-value nil
   :lighter ""
   :keymap rcirc-track-minor-mode-map
@@ -1730,6 +1853,8 @@ Uninteresting lines are those whose responses are listed in
 (defun rcirc-switch-to-server-buffer ()
   "Switch to the server buffer associated with current channel buffer."
   (interactive)
+  (unless (buffer-live-p rcirc-server-buffer)
+    (error "No such buffer"))
   (switch-to-buffer rcirc-server-buffer))
 
 (defun rcirc-jump-to-first-unread-line ()
@@ -1968,16 +2093,18 @@ activity.  Only run if the buffer is not visible and
 ;; containing the text following the /cmd.
 
 (defmacro defun-rcirc-command (command argument docstring interactive-form
-                                       &rest body)
+				       &rest body)
   "Define a command."
-  `(defun ,(intern (concat "rcirc-cmd-" (symbol-name command)))
-     (,@argument &optional process target)
-     ,(concat docstring "\n\nNote: If PROCESS or TARGET are nil, the values given"
-              "\nby `rcirc-buffer-process' and `rcirc-target' will be used.")
-     ,interactive-form
-     (let ((process (or process (rcirc-buffer-process)))
-           (target (or target rcirc-target)))
-       ,@body)))
+  `(progn
+     (add-to-list 'rcirc-client-commands ,(concat "/" (symbol-name command)))
+     (defun ,(intern (concat "rcirc-cmd-" (symbol-name command)))
+       (,@argument &optional process target)
+       ,(concat docstring "\n\nNote: If PROCESS or TARGET are nil, the values given"
+		"\nby `rcirc-buffer-process' and `rcirc-target' will be used.")
+       ,interactive-form
+       (let ((process (or process (rcirc-buffer-process)))
+	     (target (or target rcirc-target)))
+	 ,@body))))
 
 (defun-rcirc-command msg (message)
   "Send private MESSAGE to TARGET."
@@ -2007,14 +2134,29 @@ activity.  Only run if the buffer is not visible and
     (when (not existing-buffer)
       (rcirc-cmd-whois nick))))
 
-(defun-rcirc-command join (channel)
-  "Join CHANNEL."
-  (interactive "sJoin channel: ")
-  (let ((buffer (rcirc-get-buffer-create process
-                                         (car (split-string channel)))))
-    (rcirc-send-string process (concat "JOIN " channel))
+(defun-rcirc-command join (channels)
+  "Join CHANNELS.
+CHANNELS is a comma- or space-separated string of channel names."
+  (interactive "sJoin channels: ")
+  (let* ((split-channels (split-string channels "[ ,]" t))
+         (buffers (mapcar (lambda (ch)
+                            (rcirc-get-buffer-create process ch))
+                          split-channels))
+         (channels (mapconcat 'identity split-channels ",")))
+    (rcirc-send-string process (concat "JOIN " channels))
     (when (not (eq (selected-window) (minibuffer-window)))
-      (switch-to-buffer buffer))))
+      (dolist (b buffers) ;; order the new channel buffers in the buffer list
+        (switch-to-buffer b)))))
+
+(defun-rcirc-command invite (nick-channel)
+  "Invite NICK to CHANNEL."
+  (interactive (list
+		(concat
+		 (completing-read "Invite nick: "
+				  (with-rcirc-server-buffer rcirc-nick-table))
+		 " "
+		 (read-string "Channel: "))))
+  (rcirc-send-string process (concat "INVITE " nick-channel)))
 
 ;; TODO: /part #channel reason, or consider removing #channel altogether
 (defun-rcirc-command part (channel)
@@ -2103,17 +2245,22 @@ With a prefix arg, prompt for new topic."
 
 (defun rcirc-cmd-ctcp (args &optional process target)
   (if (string-match "^\\([^ ]+\\)\\s-+\\(.+\\)$" args)
-      (let ((target (match-string 1 args))
-            (request (match-string 2 args)))
-        (rcirc-send-string process
-			   (format "PRIVMSG %s \C-a%s\C-a"
-				   target (upcase request))))
+      (let* ((target (match-string 1 args))
+             (request (upcase (match-string 2 args)))
+             (function (intern-soft (concat "rcirc-ctcp-sender-" request))))
+        (if (fboundp function) ;; use special function if available
+            (funcall function process target request)
+          (rcirc-send-ctcp process target request)))
     (rcirc-print process (rcirc-nick process) "ERROR" nil
                  "usage: /ctcp NICK REQUEST")))
 
+(defun rcirc-ctcp-sender-PING (process target request)
+  "Send a CTCP PING message to TARGET."
+  (let ((timestamp (format "%.0f" (rcirc-float-time))))
+    (rcirc-send-ctcp process target "PING" timestamp)))
+
 (defun rcirc-cmd-me (args &optional process target)
-  (rcirc-send-string process (format "PRIVMSG %s :\C-aACTION %s\C-a"
-                                     target args)))
+  (rcirc-send-ctcp process target "ACTION" args))
 
 (defun rcirc-add-or-remove (set &rest elements)
   (dolist (elt elements)
@@ -2218,21 +2365,6 @@ keywords when no KEYWORD is given."
     (browse-url (completing-read "rcirc browse-url: "
                                  completions nil nil initial-input 'history)
                 arg)))
-
-(defun rcirc-browse-url-at-point (point)
-  "Send URL at point to `browse-url'."
-  (interactive "d")
-  (let ((beg (previous-single-property-change (1+ point) 'mouse-face))
-	(end (next-single-property-change point 'mouse-face)))
-    (browse-url (buffer-substring-no-properties beg end))))
-
-(defun rcirc-browse-url-at-mouse (event)
-  "Send URL at mouse click to `browse-url'."
-  (interactive "e")
-  (let ((position (event-end event)))
-    (with-current-buffer (window-buffer (posn-window position))
-      (rcirc-browse-url-at-point (posn-point position)))))
-
 
 (defun rcirc-markup-timestamp (sender response)
   (goto-char (point-min))
@@ -2252,6 +2384,7 @@ keywords when no KEYWORD is given."
     (delete-region (match-beginning 1) (match-end 1))
     (goto-char (match-beginning 1)))
   ;; remove the ^O characters now
+  (goto-char (point-min))
   (while (re-search-forward "\C-o+" nil t)
     (delete-region (match-beginning 0) (match-end 0))))
 
@@ -2270,14 +2403,19 @@ keywords when no KEYWORD is given."
 	(rcirc-record-activity (current-buffer) 'nick)))))
 
 (defun rcirc-markup-urls (sender response)
-  (while (re-search-forward rcirc-url-regexp nil t)
+  (while (and rcirc-url-regexp ;; nil means disable URL catching
+              (re-search-forward rcirc-url-regexp nil t))
     (let ((start (match-beginning 0))
-	  (end (match-end 0)))
-      (rcirc-add-face start end 'rcirc-url)
-      (add-text-properties start end (list 'mouse-face 'highlight
-					   'keymap rcirc-browse-url-map))
+	  (end (match-end 0))
+	  (url (match-string-no-properties 0)))
+      (make-button start end
+		   'face 'rcirc-url
+		   'follow-link t
+		   'rcirc-url url
+		   'action (lambda (button)
+			     (browse-url (button-get button 'rcirc-url))))
       ;; record the url
-      (push (buffer-substring-no-properties start end) rcirc-urls))))
+      (push url rcirc-urls))))
 
 (defun rcirc-markup-keywords (sender response)
   (when (and (string= response "PRIVMSG")
@@ -2312,7 +2450,7 @@ keywords when no KEYWORD is given."
 				 rcirc-fill-column)
 				(t fill-column))
 			  ;; make sure ... doesn't cause line wrapping
-			  3)))		
+			  3)))
       (fill-region (point) (point-max) nil t))))
 
 ;;; handlers
@@ -2328,10 +2466,30 @@ keywords when no KEYWORD is given."
     (setq rcirc-server-name sender)
     (setq rcirc-nick (car args))
     (rcirc-update-prompt)
-    (when rcirc-auto-authenticate-flag (rcirc-authenticate))
+    (if rcirc-auto-authenticate-flag
+        (if (and rcirc-authenticate-before-join
+		 ;; We have to ensure that there's an authentication
+		 ;; entry for that server.  Else,
+		 ;; rcirc-authenticated-hook won't be triggered, and
+		 ;; autojoin won't happen at all.
+		 (let (auth-required)
+		   (dolist (s rcirc-authinfo auth-required)
+		     (when (string-match (car s) rcirc-server-name)
+		       (setq auth-required t)))))
+            (progn
+	      (add-hook 'rcirc-authenticated-hook 'rcirc-join-channels-post-auth t t)
+              (rcirc-authenticate))
+          (rcirc-authenticate)
+          (rcirc-join-channels process rcirc-startup-channels))
+      (rcirc-join-channels process rcirc-startup-channels))))
+
+(defun rcirc-join-channels-post-auth (process)
+  "Join `rcirc-startup-channels' after authenticating."
+  (with-rcirc-process-buffer process
     (rcirc-join-channels process rcirc-startup-channels)))
 
 (defun rcirc-handler-PRIVMSG (process sender args text)
+  (rcirc-check-auth-status process sender args text)
   (let ((target (if (rcirc-channel-p (car args))
                     (car args)
                   sender))
@@ -2344,6 +2502,7 @@ keywords when no KEYWORD is given."
       (rcirc-put-nick-channel process sender target rcirc-current-line))))
 
 (defun rcirc-handler-NOTICE (process sender args text)
+  (rcirc-check-auth-status process sender args text)
   (let ((target (car args))
         (message (cadr args)))
     (if (string-match "^\C-a\\(.*\\)\C-a$" message)
@@ -2361,6 +2520,34 @@ keywords when no KEYWORD is given."
 			    sender)))
                  message t))))
 
+(defun rcirc-check-auth-status (process sender args text)
+  "Check if the user just authenticated.
+If authenticated, runs `rcirc-authenticated-hook' with PROCESS as
+the only argument."
+  (with-rcirc-process-buffer process
+    (when (and (not rcirc-user-authenticated)
+               rcirc-authenticate-before-join
+               rcirc-auto-authenticate-flag)
+      (let ((target (car args))
+            (message (cadr args)))
+        (when (or
+               (and ;; nickserv
+                (string= sender "NickServ")
+                (string= target rcirc-nick)
+                (member message
+                        (list
+                         (format "You are now identified for \C-b%s\C-b." rcirc-nick)
+			 (format "You are successfully identified as \C-b%s\C-b." rcirc-nick)
+                         "Password accepted - you are now recognized."
+                         )))
+               (and ;; quakenet
+                (string= sender "Q")
+                (string= target rcirc-nick)
+                (string-match "\\`You are now logged in as .+\\.\\'" message)))
+          (setq rcirc-user-authenticated t)
+          (run-hook-with-args 'rcirc-authenticated-hook process)
+          (remove-hook 'rcirc-authenticated-hook 'rcirc-join-channels-post-auth t))))))
+
 (defun rcirc-handler-WALLOPS (process sender args text)
   (rcirc-print process sender "WALLOPS" sender (car args) t))
 
@@ -2373,7 +2560,10 @@ keywords when no KEYWORD is given."
 				     (rcirc-elapsed-lines process sender channel)))
 				(when (and last-activity-lines
 					   (< last-activity-lines rcirc-omit-threshold))
-				  (rcirc-last-line process sender channel)))))
+                                  (rcirc-last-line process sender channel))))
+      ;; reset mode-line-process in case joining a channel with an
+      ;; already open buffer (after getting kicked e.g.)
+      (setq mode-line-process nil))
 
     (rcirc-print process sender "JOIN" channel "")
 
@@ -2507,6 +2697,20 @@ keywords when no KEYWORD is given."
 	(setq rcirc-nick-away-alist (cons (cons nick away-message)
 					  rcirc-nick-away-alist))))))
 
+(defun rcirc-handler-317 (process sender args text)
+  "RPL_WHOISIDLE"
+  (let* ((nick (nth 1 args))
+         (idle-secs (string-to-number (nth 2 args)))
+         (idle-string
+          (if (< idle-secs most-positive-fixnum)
+              (format-seconds "%yy %dd %hh %mm %z%ss" idle-secs)
+            "a very long time"))
+         (signon-time (seconds-to-time (string-to-number (nth 3 args))))
+         (signon-string (format-time-string "%c" signon-time))
+         (message (format "%s idle for %s, signed on %s"
+                          nick idle-string signon-string)))
+    (rcirc-print process sender "317" nil message t)))
+
 (defun rcirc-handler-332 (process sender args text)
   "RPL_TOPIC"
   (let ((buffer (or (rcirc-get-buffer process (cadr args))
@@ -2515,7 +2719,8 @@ keywords when no KEYWORD is given."
       (setq rcirc-topic (caddr args)))))
 
 (defun rcirc-handler-333 (process sender args text)
-  "Not in rfc1459.txt"
+  "333 says who set the topic and when.
+Not in rfc1459.txt"
   (let ((buffer (or (rcirc-get-buffer process (cadr args))
 		    (rcirc-get-temp-buffer-create process (cadr args)))))
     (with-current-buffer buffer
@@ -2552,10 +2757,13 @@ keywords when no KEYWORD is given."
 
 (defun rcirc-handler-353 (process sender args text)
   "RPL_NAMREPLY"
-  (let ((channel (caddr args)))
+  (let ((channel (nth 2 args))
+	(names (or (nth 3 args) "")))
     (mapc (lambda (nick)
             (rcirc-put-nick-channel process nick channel))
-          (split-string (cadddr args) " " t))
+          (split-string names " " t))
+    ;; create a temporary buffer to insert the names into
+    ;; rcirc-handler-366 (RPL_ENDOFNAMES) will handle it
     (with-current-buffer (rcirc-get-temp-buffer-create process channel)
       (goto-char (point-max))
       (insert (car (last args)) " "))))
@@ -2566,7 +2774,8 @@ keywords when no KEYWORD is given."
          (buffer (rcirc-get-temp-buffer-create process channel)))
     (with-current-buffer buffer
       (rcirc-print process sender "NAMES" channel
-                   (buffer-substring (point-min) (point-max))))
+                   (let ((content (buffer-substring (point-min) (point-max))))
+		     (rcirc-sort-nicknames-join content " "))))
     (kill-buffer buffer)))
 
 (defun rcirc-handler-433 (process sender args text)
@@ -2587,26 +2796,33 @@ Passwords are stored in `rcirc-authinfo' (which see)."
 	    (nick (caddr i))
 	    (method (cadr i))
 	    (args (cdddr i)))
-	(when (and (string-match server rcirc-server)
-		   (string-match nick rcirc-nick))
-	  (cond ((equal method 'nickserv)
-		 (rcirc-send-string
-		  process
-		  (concat "PRIVMSG " (or (cadr args) "nickserv")
-                          " :identify " (car args))))
-		((equal method 'chanserv)
-		 (rcirc-send-string
-		  process
-		  (concat
-		   "PRIVMSG chanserv :identify "
-		   (car args) " " (cadr args))))
-		((equal method 'bitlbee)
-		 (rcirc-send-string
-		  process
-		  (concat "PRIVMSG &bitlbee :identify " (car args))))
-		(t
-		 (message "No %S authentication method defined"
-			  method))))))))
+	(when (and (string-match server rcirc-server))
+          (if (and (memq method '(nickserv chanserv bitlbee))
+                   (string-match nick rcirc-nick))
+              ;; the following methods rely on the user's nickname.
+              (case method
+                (nickserv
+                 (rcirc-send-privmsg
+                  process
+                  (or (cadr args) "NickServ")
+                  (concat "IDENTIFY " (car args))))
+                (chanserv
+                 (rcirc-send-privmsg
+                  process
+                  "ChanServ"
+                  (format "IDENTIFY %s %s" (car args) (cadr args))))
+                (bitlbee
+                 (rcirc-send-privmsg
+                  process
+                  "&bitlbee"
+                  (concat "IDENTIFY " (car args)))))
+            ;; quakenet authentication doesn't rely on the user's nickname.
+            ;; the variable `nick' here represents the Q account name.
+            (when (eq method 'quakenet)
+              (rcirc-send-privmsg
+               process
+               "Q@CServe.quakenet.org"
+               (format "AUTH %s %s" nick (car args))))))))))
 
 (defun rcirc-handler-INVITE (process sender args text)
   (rcirc-print process sender "INVITE" nil (mapconcat 'identity args " ") t))
@@ -2786,5 +3002,4 @@ Passwords are stored in `rcirc-authinfo' (which see)."
 
 (provide 'rcirc)
 
-;; arch-tag: b471b7e8-6b5a-4399-b2c6-a3c78dfc8ffb
 ;;; rcirc.el ends here

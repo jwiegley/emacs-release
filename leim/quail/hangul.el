@@ -1,6 +1,6 @@
 ;;; hangul.el --- Korean Hangul input method
 
-;; Copyright (C) 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2008-2012  Free Software Foundation, Inc.
 
 ;; Author: Jihyun Cho <jihyun.jo@gmail.com>
 ;; Keywords: multilingual, input method, Korean, Hangul
@@ -112,7 +112,7 @@
 
 (defun hangul-character (cho jung jong)
   "Convert CHO, JUNG, JONG to the precomposed `Hangul Syllables' character.
-CHO, JUNG, JONG are relative indices in `Hangul Compatibility Jamo' of unicode.
+CHO, JUNG, JONG are relative indices in `Hangul Compatibility Jamo' of Unicode.
 Return a zero-length string if the conversion fails."
   (or
    (decode-char
@@ -539,5 +539,4 @@ HELP-TEXT is a text set in `hangul-input-method-help-text'."
 
 (provide 'hangul)
 
-;; arch-tag: 26bc93fc-64ee-4fb1-b26d-22220d132dbe
 ;;; hangul.el ends here

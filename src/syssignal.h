@@ -1,6 +1,5 @@
 /* syssignal.h - System-dependent definitions for signals.
-   Copyright (C) 1993, 1999, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 1993, 1999, 2001-2012  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -17,20 +16,14 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
-extern void init_signals P_ ((void));
+extern void init_signals (void);
 
-#if defined (HAVE_GTK_AND_PTHREAD) || defined (HAVE_MACGUI) || defined (HAVE_NS)
+#ifdef HAVE_PTHREAD
 #include <pthread.h>
 /* If defined, asynchronous signals delivered to a non-main thread are
    forwarded to the main thread.  */
 #define FORWARD_SIGNAL_TO_MAIN_THREAD
 #endif
-
-#ifdef FORWARD_SIGNAL_TO_MAIN_THREAD
-extern pthread_t main_thread;
-#endif
-
-#ifdef POSIX_SIGNALS
 
 /* Don't #include <signal.h>.  That header should always be #included
    before "config.h", because some configuration files (like s/hpux.h)
@@ -42,12 +35,11 @@ extern pthread_t main_thread;
 #define SIGMASKTYPE sigset_t
 
 #define SIGEMPTYMASK (empty_mask)
-#define SIGFULLMASK (full_mask)
-extern sigset_t empty_mask, full_mask;
+extern sigset_t empty_mask;
 
 /* POSIX pretty much destroys any possibility of writing sigmask as a
    macro in standard C.  We always define our own version because the
-   predefined macro in Glibc 2.1 is only provided for compatility for old
+   predefined macro in Glibc 2.1 is only provided for compatibility for old
    programs that use int as signal mask type.  */
 #undef sigmask
 #ifdef __GNUC__
@@ -71,77 +63,22 @@ extern sigset_t sys_sigmask ();
 #ifndef sigsetmask
 #define sigsetmask(SIG)  sys_sigsetmask (SIG)
 #endif
-#define sighold(SIG)     ONLY_USED_IN_BSD_4_1
-#define sigrelse(SIG)    ONLY_USED_IN_BSD_4_1
 #undef signal
 #define signal(SIG,ACT)      sys_signal(SIG,ACT)
 
 /* Whether this is what all systems want or not, this is what
    appears to be assumed in the source, for example data.c:arith_error.  */
-typedef RETSIGTYPE (*signal_handler_t) (/*int*/);
+typedef void (*signal_handler_t) (int);
 
-signal_handler_t sys_signal P_ ((int signal_number, signal_handler_t action));
-sigset_t sys_sigblock   P_ ((sigset_t new_mask));
-sigset_t sys_sigunblock P_ ((sigset_t new_mask));
-sigset_t sys_sigsetmask P_ ((sigset_t new_mask));
+signal_handler_t sys_signal (int signal_number, signal_handler_t action);
+sigset_t sys_sigblock   (sigset_t new_mask);
+sigset_t sys_sigunblock (sigset_t new_mask);
+sigset_t sys_sigsetmask (sigset_t new_mask);
+#if ! (defined TIOCNOTTY || defined USG5 || defined CYGWIN)
+void croak (char *) NO_RETURN;
+#endif
 
 #define sys_sigdel(MASK,SIG) sigdelset (&MASK,SIG)
-
-#else /* ! defined (POSIX_SIGNALS) */
-#ifdef USG5_4
-
-extern SIGMASKTYPE sigprocmask_set;
-
-#ifndef sigblock
-#define sigblock(sig)					\
-     (sigprocmask_set = SIGEMPTYMASK | (sig),		\
-      sigprocmask (SIG_BLOCK, &sigprocmask_set, NULL))
-#endif
-
-#ifndef sigunblock
-#define sigunblock(sig)						\
-     (sigprocmask_set = SIGFULLMASK & ~(sig),			\
-      sigprocmask (SIG_SETMASK, &sigprocmask_set, NULL))
-#endif
-
-#else
-#ifdef USG
-
-#ifndef sigunblock
-#define sigunblock(sig)
-#endif
-
-#else
-
-#ifndef sigunblock
-#define sigunblock(SIG) \
-{ SIGMASKTYPE omask = sigblock (SIGEMPTYMASK); sigsetmask (omask & ~SIG); }
-#endif
-
-#endif /* ! defined (USG) */
-#endif /* ! defined (USG5_4) */
-#endif /* ! defined (POSIX_SIGNALS) */
-
-#ifndef SIGMASKTYPE
-#define SIGMASKTYPE int
-#endif
-
-#ifndef SIGEMPTYMASK
-#define SIGEMPTYMASK (0)
-#endif
-
-#ifndef SIGFULLMASK
-#define SIGFULLMASK (0xffffffff)
-#endif
-
-#ifndef sigmask
-#define sigmask(no) (1L << ((no) - 1))
-#endif
-
-#ifndef sigunblock
-#define sigunblock(SIG) \
-{ SIGMASKTYPE omask = sigblock (SIGFULLMASK); sigsetmask (omask & ~SIG); }
-#endif
 
 #define sigfree() sigsetmask (SIGEMPTYMASK)
 
@@ -150,9 +87,6 @@ extern SIGMASKTYPE sigprocmask_set;
 #endif
 #if defined (SIGIO) && defined (BROKEN_SIGIO)
 # undef SIGIO
-# if defined (__Lynx__)
-# undef SIGPOLL /* Defined as SIGIO on LynxOS */
-# endif
 #endif
 #if defined (SIGPOLL) && defined (BROKEN_SIGPOLL)
 #undef SIGPOLL
@@ -200,10 +134,11 @@ extern SIGMASKTYPE sigprocmask_set;
 
 #ifndef HAVE_STRSIGNAL
 /* strsignal is in sysdep.c */
-char *strsignal ();
+char *strsignal (int);
 #endif
 
 #ifdef FORWARD_SIGNAL_TO_MAIN_THREAD
+extern pthread_t main_thread;
 #define SIGNAL_THREAD_CHECK(signo)                                      \
   do {                                                                  \
     if (!pthread_equal (pthread_self (), main_thread))			\
@@ -225,5 +160,3 @@ char *strsignal ();
 #else /* not FORWARD_SIGNAL_TO_MAIN_THREAD */
 #define SIGNAL_THREAD_CHECK(signo)
 #endif /* not FORWARD_SIGNAL_TO_MAIN_THREAD */
-/* arch-tag: 4580e86a-340d-4574-9e11-a742b6e1a152
-   (do not change this comment) */

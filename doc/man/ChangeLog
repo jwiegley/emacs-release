@@ -1,22 +1,50 @@
-2012-01-19  Chong Yidong  <cyd@gnu.org>
+2012-06-01  Chong Yidong  <cyd@gnu.org>
 
-	* Version 23.4 released.
+	* Version 24.1 released.
+
+2011-11-16  Juanma Barranquero  <lekktu@gmail.com>
+
+	* etags.1: Fix typo.
+
+2011-10-06  Chong Yidong  <cyd@stupidchicken.com>
+
+	* emacsclient.1: Document how -a "" starts the daemon.
+
+2011-09-17  Sven Joachim  <svenjoac@gmx.de>
+
+	* emacs.1: Escape a dash.
+
+2011-07-12  Chong Yidong  <cyd@stupidchicken.com>
+
+	* emacsclient.1: Document exit status.
+
+2011-06-25  Andreas Rottmann  <a.rottmann@gmx.at>
+
+	* emacsclient.1: Mention --frame-parameters.
 
 2011-03-07  Chong Yidong  <cyd@stupidchicken.com>
 
 	* Version 23.3 released.
 
-2010-12-29  Jari Aalto  <jari.aalto@cante.net>  (tiny change)
+2011-01-02  Jari Aalto  <jari.aalto@cante.net>
 
 	* emacsclient.1: Arrange options alphabetically (Bug#7620).
 
-2010-10-10  Glenn Morris  <rgm@gnu.org>
+2010-10-12  Glenn Morris  <rgm@gnu.org>
 
 	* emacs.1: Small fixes.
 
-2010-10-09  Ulrich Mueller  <ulm@gentoo.org>
+2010-10-12  Ulrich Mueller  <ulm@gentoo.org>
 
 	* emacs.1: Update license description.
+
+2010-10-09  Glenn Morris  <rgm@gnu.org>
+
+	* b2m.1: Remove file.
+
+2010-09-25  Ulrich Mueller  <ulm@gentoo.org>
+
+	* etags.1: xz compression is now supported.
 
 2010-08-26  Sven Joachim  <svenjoac@gmx.de>
 
@@ -26,10 +54,14 @@
 
 	* Version 23.2 released.
 
+2010-03-10  Chong Yidong  <cyd@stupidchicken.com>
+
+	* Branch for 23.2.
+
 2010-01-09  Chong Yidong  <cyd@stupidchicken.com>
 
-	* emacs.1: Copyedits.  Update options -Q, -mm and --daemon.  Remove
-	deprecated --unibyte option.
+	* emacs.1: Copyedits.  Update options -Q, -mm and --daemon.
+	Remove deprecated --unibyte option.
 
 2009-06-21  Chong Yidong  <cyd@stupidchicken.com>
 
@@ -106,7 +138,7 @@
 ;; add-log-time-zone-rule: t
 ;; End:
 
-    Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+    Copyright (C) 2007-2012  Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
@@ -123,4 +155,3 @@
   You should have received a copy of the GNU General Public License
   along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
-;; arch-tag: 2bd1112e-157f-4884-b0ca-0fb1057972d7

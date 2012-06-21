@@ -20,8 +20,7 @@
 @copying
 This file documents the Emacs Lisp URL loading package.
 
-Copyright @copyright{} 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2002,
-2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+Copyright @copyright{} 1993-1999, 2002, 2004-2012 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -97,7 +96,7 @@ where @samp{@r{[}} and @samp{@r{]}} delimit optional parts.
 but you should beware of the security risks of sending cleartext
 passwords.  @var{hostname} may be a domain name or a dotted decimal
 address.  If the @samp{:@var{port}} is omitted then the library will
-use the `well known' port for that service when accessing URLs.  With
+use the ``well known'' port for that service when accessing URLs.  With
 the possible exception of @code{telnet}, it is rare for ports to be
 specified, and it is possible using a non-standard port may have
 undesired consequences if a different service is listening on that
@@ -117,7 +116,10 @@ The meaning of the @var{path} component depends on the service.
 @cindex @file{~/.url}
 @cindex configuration files
 The directory in which URL configuration files, the cache etc.,
-reside.  Default @file{~/.url}.
+reside.  The old default was @file{~/.url}, and this directory
+is still used if it exists.  The new default is a @file{url/}
+directory in @code{user-emacs-directory}, which is normally
+@file{~/.emacs.d}.
 @end defvar
 
 @node Parsed URLs
@@ -143,7 +145,7 @@ is the host name associated with it, or @code{nil};
 @item port
 is the port number associated with it, or @code{nil};
 @item file
-is the `file' part of it, or @code{nil}.  This doesn't necessarily
+is the ``file'' part of it, or @code{nil}.  This doesn't necessarily
 actually refer to a file;
 @item target
 is the target part, or @code{nil};
@@ -199,13 +201,25 @@ data.  @var{url} is either a string or a parsed URL structure.  Return
 info, or mailto URLs that need no further processing).
 @end defun
 
-@defun url-retrieve url callback &optional cbargs
+@defun url-retrieve url callback &optional cbargs silent no-cookies
 Retrieve @var{url} asynchronously and call @var{callback} with args
 @var{cbargs} when finished.  The callback is called when the object
 has been completely retrieved, with the current buffer containing the
 object and any MIME headers associated with it.  @var{url} is either a
 string or a parsed URL structure.  Returns the buffer @var{url} will
 load into, or @code{nil} if the process has already completed.
+If the optional argument @var{silent} is non-@code{nil}, suppress
+progress messages.  If the optional argument @var{no-cookies} is
+non-@code{nil}, do not store or send cookies.
+@end defun
+
+@vindex url-queue-parallel-processes
+@vindex url-queue-timeout
+@defun url-queue-retrieve url callback &optional cbargs silent no-cookies
+This acts like the @code{url-retrieve} function, but with limits on
+the degree of parallelism.  The option @code{url-queue-parallel-processes}
+controls the number of concurrent processes, and the option
+@code{url-queue-timeout} sets a timeout in seconds.
 @end defun
 
 @node Supported URL Types
@@ -214,7 +228,7 @@ load into, or @code{nil} if the process has already completed.
 @menu
 * http/https::                  Hypertext Transfer Protocol.
 * file/ftp::                    Local files and FTP archives.
-* info::                        Emacs `Info' pages.
+* info::                        Emacs "Info" pages.
 * mailto::                      Sending email.
 * news/nntp/snews::             Usenet news.
 * rlogin/telnet/tn3270::        Remote host connectivity.
@@ -384,20 +398,7 @@ Currently this is just the raw header contents.
 HTTP URLs are retrieved into a buffer containing the HTTP headers
 followed by the body.  Since the headers are quasi-MIME, they may be
 processed using the MIME library.  @xref{Top,, Emacs MIME,
-emacs-mime, The Emacs MIME Manual}.  The URL package provides a
-function to do this in general:
-
-@defun url-decode-text-part handle &optional coding
-This function decodes charset-encoded text in the current buffer.  In
-Emacs, the buffer is expected to be unibyte initially and is set to
-multibyte after decoding.
-HANDLE is the MIME handle of the original part.  CODING is an explicit
-coding to use, overriding what the MIME headers specify.
-The coding system used for the decoding is returned.
-
-Note that this function doesn't deal with @samp{http-equiv} charset
-specifications in HTML @samp{<meta>} elements.
-@end defun
+emacs-mime, The Emacs MIME Manual}.
 
 @node file/ftp
 @section file and ftp
@@ -471,7 +472,7 @@ The form of a mailto URL is
 @var{header} is @samp{body}, then @var{contents} is put in the body
 otherwise a @var{header} header field is created with @var{contents}
 as its contents.  Note that the URL library does not consider any
-headers `dangerous' so you should check them before sending the
+headers ``dangerous'' so you should check them before sending the
 message.
 
 @c Fixme: update
@@ -730,14 +731,6 @@ directory to store the cache files.  It defaults to sub-directory
 @file{cache} of @code{url-configuration-directory}.
 @end defopt
 
-@c Fixme: function v. option, but neither used.
-@c @findex url-cache-expired
-@c @defopt url-cache-expired
-@c This is a function to decide whether or not a cache entry has expired.
-@c It takes two times as it parameters and returns non-@code{nil} if the
-@c second time is ``too old'' when compared with the first time.
-@c @end defopt
-
 @defopt url-cache-creation-function
 The cache relies on a scheme for mapping URLs to files in the cache.
 This variable names a function which sets the type of cache to use.
@@ -765,6 +758,22 @@ more likely to conflict with other files.
 (url-cache-create-filename-human-readable "http://www.example.com/foo/bar")
   @result{} "/home/fx/.url/cache/fx/http/com/example/www/foo/bar"
 @end smallexample
+@end defun
+
+@defun url-cache-expired
+This function returns non-nil if a cache entry has expired (or is absent).
+The arguments are a URL and optional expiration delay in seconds
+(default @var{url-cache-expire-time}).
+@end defun
+
+@defopt url-cache-expire-time
+This variable is the default number of seconds to use for the
+expire-time argument of the function @code{url-cache-expired}.
+@end defopt
+
+@defun url-fetch-from-cache
+This function takes a URL as its argument and returns a buffer
+containing the data cached for that URL.
 @end defun
 
 @c Fixme: never actually used currently?
@@ -1000,7 +1009,7 @@ This the @samp{nslookup} program.  It is @code{"nslookup"} by default.
 In some circumstances it is desirable to suppress making network
 connections.  A typical case is when rendering HTML in a mail user
 agent, when external URLs should not be activated, particularly to
-avoid `bugs' which `call home' by fetch single-pixel images and the
+avoid ``bugs'' which ``call home'' by fetch single-pixel images and the
 like.  To arrange this, bind the following variable for the duration
 of such processing.
 
@@ -1053,7 +1062,7 @@ automatically via @code{url-do-setup} when it is configured to be on.
 Note that the size of the history list is currently not limited.
 
 @vindex url-history-hash-table
-The history `list' is actually a hash table,
+The history ``list'' is actually a hash table,
 @code{url-history-hash-table}.  It contains access times keyed by URL
 strings.  The times are in the format returned by @code{current-time}.
 
@@ -1185,7 +1194,3 @@ Connect directly.
 @printindex cp
 
 @bye
-
-@ignore
-   arch-tag: c96be356-7e2d-4196-bcda-b13246c5c3f0
-@end ignore

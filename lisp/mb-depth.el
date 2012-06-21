@@ -1,6 +1,6 @@
 ;;; mb-depth.el --- Indicate minibuffer-depth in prompt
 ;;
-;; Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2006-2012  Free Software Foundation, Inc.
 ;;
 ;; Author: Miles Bader <miles@gnu.org>
 ;; Keywords: convenience
@@ -56,12 +56,14 @@ The prompt should already have been inserted."
 ;;;###autoload
 (define-minor-mode minibuffer-depth-indicate-mode
   "Toggle Minibuffer Depth Indication mode.
-When active, any recursive use of the minibuffer will show
-the recursion depth in the minibuffer prompt.  This is only
-useful if `enable-recursive-minibuffers' is non-nil.
+With a prefix argument ARG, enable Minibuffer Depth Indication
+mode if ARG is positive, and disable it otherwise.  If called
+from Lisp, enable the mode if ARG is omitted or nil.
 
-With prefix argument ARG, turn on if positive, otherwise off.
-Returns non-nil if the new state is enabled."
+Minibuffer Depth Indication mode is a global minor mode.  When
+enabled, any recursive use of the minibuffer will show the
+recursion depth in the minibuffer prompt.  This is only useful if
+`enable-recursive-minibuffers' is non-nil."
   :global t
   :group 'minibuffer
   (if minibuffer-depth-indicate-mode
@@ -72,5 +74,4 @@ Returns non-nil if the new state is enabled."
 
 (provide 'mb-depth)
 
-;; arch-tag: 50224089-5bf5-46f8-803d-18f018c5eacf
 ;;; mb-depth.el ends here

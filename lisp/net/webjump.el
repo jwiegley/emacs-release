@@ -1,7 +1,6 @@
 ;;; webjump.el --- programmable Web hotlist
 
-;; Copyright (C) 1996, 1997, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1996-1997, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author:    Neil W. Van Dyke <nwv@acm.org>
 ;; Created:   09-Aug-1996
@@ -236,7 +235,7 @@
      "www.faqs.org/faqs/")
     ("RTFM Usenet FAQs by Group" .
      "ftp://rtfm.mit.edu/pub/usenet-by-group/")
-    ("RTFM Usenet FAQs by Hierachy" .
+    ("RTFM Usenet FAQs by Hierarchy" .
      "ftp://rtfm.mit.edu/pub/usenet-by-hierarchy/")
     ("X Consortium Archive" . "ftp.x.org")
 
@@ -448,11 +447,11 @@ Please submit bug reports and other feedback to the author, Neil W. Van Dyke
   (or (null str) (string-match "^[ \t]*$" str)))
 
 (defun webjump-url-encode (str)
-  (mapconcat '(lambda (c)
-                (let ((s (char-to-string c)))
-                  (cond ((string= s " ") "+")
-                        ((string-match "[a-zA-Z_.-/]" s) s)
-                        (t (upcase (format "%%%02x" c))))))
+  (mapconcat (lambda (c)
+               (let ((s (char-to-string c)))
+                 (cond ((string= s " ") "+")
+                       ((string-match "[a-zA-Z_.-/]" s) s)
+                       (t (upcase (format "%%%02x" c))))))
              (encode-coding-string str 'utf-8)
              ""))
 
@@ -480,5 +479,4 @@ Please submit bug reports and other feedback to the author, Neil W. Van Dyke
 
 (provide 'webjump)
 
-;; arch-tag: f1d20156-0a6f-488b-bd91-f69ee8b6d5cc
 ;;; webjump.el ends here

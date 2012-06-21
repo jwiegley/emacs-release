@@ -1,7 +1,6 @@
 ;;; calc-frac.el --- fraction functions for Calc
 
-;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1990-1993, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -205,18 +204,33 @@
 	    n temp))
     (math-div n d)))
 
-
-
 (defun calcFunc-fdiv (a b)   ; [R I I] [Public]
-  (if (Math-num-integerp a)
-      (if (Math-num-integerp b)
-	  (if (Math-zerop b)
-	      (math-reject-arg a "*Division by zero")
-	    (math-make-frac (math-trunc a) (math-trunc b)))
-	(math-reject-arg b 'integerp))
-    (math-reject-arg a 'integerp)))
+  (cond
+   ((Math-num-integerp a)
+    (cond 
+     ((Math-num-integerp b)
+      (if (Math-zerop b)
+	  (math-reject-arg a "*Division by zero")
+	(math-make-frac (math-trunc a) (math-trunc b))))
+     ((eq (car-safe b) 'frac)
+      (if (Math-zerop (nth 1 b))
+	  (math-reject-arg a "*Division by zero")
+	(math-make-frac (math-mul (math-trunc a) (nth 2 b)) (nth 1 b))))
+     (t (math-reject-arg b 'integerp))))
+   ((eq (car-safe a) 'frac)
+    (cond 
+     ((Math-num-integerp b)
+      (if (Math-zerop b)
+	  (math-reject-arg a "*Division by zero")
+	(math-make-frac (cadr a) (math-mul (nth 2 a) (math-trunc b)))))
+     ((eq (car-safe b) 'frac)
+      (if (Math-zerop (nth 1 b))
+	  (math-reject-arg a "*Division by zero")
+	(math-make-frac (math-mul (nth 1 a) (nth 2 b)) (math-mul (nth 2 a) (nth 1 b)))))
+     (t (math-reject-arg b 'integerp))))
+   (t 
+    (math-reject-arg a 'integerp))))
 
 (provide 'calc-frac)
 
-;; arch-tag: 89d65274-0b3b-42d8-aacd-eaf86da5b4ea
 ;;; calc-frac.el ends here

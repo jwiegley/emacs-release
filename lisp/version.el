@@ -1,11 +1,11 @@
-;;; version.el --- record version number of Emacs -*- no-byte-compile: t -*-
+;;; version.el --- record version number of Emacs
 
-;; Copyright (C) 1985, 1992, 1994, 1995, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
+;; Copyright (C) 1985, 1992, 1994-1995, 1999-2012
 ;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -29,12 +29,6 @@
 
 ;;; Code:
 
-(defconst emacs-copyright "Copyright (C) 2012 Free Software Foundation, Inc." "\
-Short copyright string for this version of Emacs.")
-
-(defconst emacs-version "23.4" "\
-Version numbers of this version of Emacs.")
-
 (defconst emacs-major-version (progn (string-match "^[0-9]+" emacs-version) (string-to-number (match-string 0 emacs-version))) "\
 Major version number of this version of Emacs.
 This variable first existed in version 19.23.")
@@ -46,7 +40,8 @@ This variable first existed in version 19.23.")
 (defconst emacs-build-time (current-time) "\
 Time at which Emacs was dumped out.")
 
-(defconst emacs-build-system (system-name))
+(defconst emacs-build-system (system-name) "\
+Name of the system on which Emacs was built.")
 
 (defun emacs-version (&optional here) "\
 Return string describing the version of Emacs that is running.
@@ -91,8 +86,9 @@ to the system configuration; look at `system-configuration' instead."
     (purecopy (concat "\n$Id: " (subst-char-in-string ?\n ?\s (emacs-version))
 		      " $\n")))
 
-;;Local variables:
-;;version-control: never
-;;End:
+;; Local Variables:
+;; version-control: never
+;; no-byte-compile: t
+;; End:
 
 ;;; version.el ends here

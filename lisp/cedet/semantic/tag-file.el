@@ -1,7 +1,6 @@
 ;;; semantic/tag-file.el --- Routines that find files based on tags.
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008,
-;;   2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1999-2005, 2007-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
@@ -32,7 +31,7 @@
 (declare-function semanticdb-table-child-p "semantic/db" t t)
 (declare-function semanticdb-get-buffer "semantic/db")
 (declare-function semantic-dependency-find-file-on-path "semantic/dep")
-(declare-function ede-toplevel "ede/files")
+(declare-function ede-toplevel "ede/base")
 
 ;;; Code:
 
@@ -126,7 +125,7 @@ Depends on `semantic-dependency-include-path' for searching.  Always searches
 	  (tag-fname nil))
       (cond ((semantic-tag-in-buffer-p tag)
 	     ;; If the tag has an overlay and buffer associated with it,
-	     ;; switch to that buffer so that we get the right override metohds.
+	     ;; switch to that buffer so that we get the right override methods.
 	     (set-buffer (semantic-tag-buffer tag)))
 	    ((semantic-tag-file-name tag)
 	     ;; If it didn't have a buffer, but does have a file
@@ -155,7 +154,7 @@ Depends on `semantic-dependency-include-path' for searching.  Always searches
 	  (setq result
 		;; I don't have a plan for refreshing tags with a dependency
 		;; stuck on them somehow.  I'm thinking that putting a cache
-		;; onto the dependancy finding with a hash table might be best.
+		;; onto the dependency finding with a hash table might be best.
 		;;(if (semantic--tag-get-property tag 'dependency-file)
 		;;  (semantic--tag-get-property tag 'dependency-file)
 		(:override
@@ -214,5 +213,4 @@ file prototypes belong in."
 ;; generated-autoload-load-name: "semantic/tag-file"
 ;; End:
 
-;; arch-tag: 71d4cf18-c1ec-414c-bb0a-c2ed914c1361
 ;;; semantic/tag-file.el ends here

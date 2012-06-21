@@ -1,8 +1,7 @@
 This is ../../info/rcirc, produced by makeinfo version 4.13 from
 rcirc.texi.
 
-Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
-Foundation, Inc.
+Copyright (C) 2006-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -34,8 +33,7 @@ communicate with each other in real-time.  Communication occurs both in
 topic channels which are collections of many users, or privately, with
 just one other user.
 
-   Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
-Foundation, Inc.
+   Copyright (C) 2006-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -378,12 +376,12 @@ liking.
      server.  It defaults to the login name returned by
      `user-login-name', just like `rcirc-default-nick'.
 
-`rcirc-default-user-full-name'
+`rcirc-default-full-name'
      This variable is used to set your "real name" on IRC.  It defaults
      to the name returned by `user-full-name'.  If you want to hide
      your full name, you might want to set it to some pseudonym.
 
-          (setq rcirc-default-user-full-name "Curious Minds Want To Know")
+          (setq rcirc-default-full-name "Curious Minds Want To Know")
 
 `rcirc-authinfo'
      This variable is an alist used to automatically identify yourself
@@ -435,7 +433,7 @@ liking.
           install Bitlbee locally or use a public Bitlbee server.
           There, you need to create an account with a password.  This
           is the nick and password you need to provide for the bitlbee
-          authentification method.
+          authentication method.
 
           Later, you will tell Bitlbee about your accounts and
           passwords on all the other instant messaging services, and
@@ -713,7 +711,7 @@ every channel buffer -- one dead and one live.
             (delete-process process)
             (rcirc-connect server port nick
                            rcirc-default-user-name
-                           rcirc-default-user-full-name
+                           rcirc-default-full-name
                            channels))))
 
 
@@ -1239,9 +1237,9 @@ Variable Index
 * Menu:
 
 * rcirc-authinfo:                        Configuration.        (line 69)
+* rcirc-default-full-name:               Configuration.        (line 62)
 * rcirc-default-nick:                    Configuration.        (line 47)
 * rcirc-default-port:                    Configuration.        (line 53)
-* rcirc-default-user-full-name:          Configuration.        (line 62)
 * rcirc-default-user-name:               Configuration.        (line 57)
 * rcirc-mode-hook <1>:                   Scrolling conservatively.
                                                                (line  6)
@@ -1289,12 +1287,12 @@ Index
 * active channel:                        Channels.            (line   6)
 * addressing other people:               Internet Relay Chat. (line  30)
 * AIM:                                   Configuration.       (line 113)
-* authentification:                      Configuration.       (line  69)
+* authentication:                        Configuration.       (line  69)
 * automatic spelling:                    Using fly spell mode.
                                                               (line   6)
 * away notices, how to omit:             Notices.             (line  10)
 * away status:                           Useful IRC commands. (line  11)
-* bitlbee authentification:              Configuration.       (line 108)
+* bitlbee authentication:                Configuration.       (line 108)
 * brighten nicks:                        People.              (line  24)
 * buddies:                               People.              (line   6)
 * buddies, highlight:                    People.              (line  24)
@@ -1311,7 +1309,7 @@ Index
 * channels, configuration:               Configuration.       (line  10)
 * channels, connecting:                  Getting started with rcirc.
                                                               (line  35)
-* chanserv authentification:             Configuration.       (line  97)
+* chanserv authentication:               Configuration.       (line  97)
 * command unknown:                       rcirc commands.      (line  33)
 * commands <1>:                          Useful IRC commands. (line   6)
 * commands:                              rcirc commands.      (line   6)
@@ -1415,7 +1413,7 @@ Index
 * nicks, highlight:                      People.              (line  24)
 * nicks, how to ignore:                  People.              (line   6)
 * nickserv:                              Configuration.       (line  69)
-* nickserv authentification:             Configuration.       (line  86)
+* nickserv authentication:               Configuration.       (line  86)
 * obnoxious people online:               People.              (line  31)
 * one-to-one conversation:               rcirc commands.      (line  60)
 * other channels:                        rcirc commands.      (line  38)
@@ -1494,29 +1492,29 @@ Index
 
 
 Tag Table:
-Node: Top965
-Node: Basics2728
-Node: Internet Relay Chat2989
-Node: Getting started with rcirc4505
-Node: Reference7382
-Node: rcirc commands7719
-Node: Useful IRC commands10581
-Node: Configuration11308
-Node: Fighting Information Overload16216
-Node: Channels16711
-Node: People18282
-Node: Keywords19888
-Node: Notices20388
-Node: Hacking and Tweaking21281
-Node: Skipping /away messages using handlers21746
-Node: Using fly spell mode22493
-Node: Scrolling conservatively22914
-Node: Changing the time stamp format23586
-Node: Defining a new command23962
-Node: Reconnecting after you have lost the connection24782
-Node: GNU Free Documentation License26647
-Node: Key Index51825
-Node: Variable Index53206
-Node: Index54710
+Node: Top934
+Node: Basics2666
+Node: Internet Relay Chat2927
+Node: Getting started with rcirc4443
+Node: Reference7320
+Node: rcirc commands7657
+Node: Useful IRC commands10519
+Node: Configuration11246
+Node: Fighting Information Overload16142
+Node: Channels16637
+Node: People18208
+Node: Keywords19814
+Node: Notices20314
+Node: Hacking and Tweaking21207
+Node: Skipping /away messages using handlers21672
+Node: Using fly spell mode22419
+Node: Scrolling conservatively22840
+Node: Changing the time stamp format23512
+Node: Defining a new command23888
+Node: Reconnecting after you have lost the connection24708
+Node: GNU Free Documentation License26568
+Node: Key Index51746
+Node: Variable Index53127
+Node: Index54631
 
 End Tag Table

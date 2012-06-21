@@ -1,6 +1,5 @@
 /* Display module for Mac OS.
-   Copyright (C) 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+   Copyright (C) 2000-2008 Free Software Foundation, Inc.
    Copyright (C) 2009-2012  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
@@ -93,7 +92,7 @@ struct mac_display_info
 #if 0
   /* Emacs bitmap-id of the default icon bitmap for this frame.
      Or -1 if none has been allocated yet.  */
-  int icon_bitmap_id;
+  ptrdiff_t icon_bitmap_id;
 
 #endif
   /* The root window of this screen.  */
@@ -114,36 +113,9 @@ struct mac_display_info
   /* Reusable Graphics Context for drawing a cursor in a non-default face. */
   GC scratch_cursor_gc;
 
-  /* These variables describe the range of text currently shown in its
-     mouse-face, together with the window they apply to.  As long as
-     the mouse stays within this range, we need not redraw anything on
-     its account.  Rows and columns are glyph matrix positions in
-     MOUSE_FACE_WINDOW.  */
-  int mouse_face_beg_row, mouse_face_beg_col;
-  int mouse_face_beg_x, mouse_face_beg_y;
-  int mouse_face_end_row, mouse_face_end_col;
-  int mouse_face_end_x, mouse_face_end_y;
-  int mouse_face_past_end;
-  Lisp_Object mouse_face_window;
-  int mouse_face_face_id;
-  Lisp_Object mouse_face_overlay;
-
-  /* 1 if a mouse motion event came and we didn't handle it right away because
-     gc was in progress.  */
-  int mouse_face_deferred_gc;
-
-  /* FRAME and X, Y position of mouse when last checked for
-     highlighting.  X and Y can be negative or out of range for the frame.  */
-  struct frame *mouse_face_mouse_frame;
-  int mouse_face_mouse_x, mouse_face_mouse_y;
-
-  /* Nonzero means defer mouse-motion highlighting.  */
-  int mouse_face_defer;
-
-  /* Nonzero means that the mouse highlight should not be shown.  */
-  int mouse_face_hidden;
-
-  int mouse_face_image_state;
+  /* Information about the range of text currently shown in
+     mouse-face.  */
+  Mouse_HLInfo mouse_highlight;
 
   char *mac_id_name;
 
@@ -154,10 +126,10 @@ struct mac_display_info
   struct mac_bitmap_record *bitmaps;
 
   /* Allocated size of bitmaps field.  */
-  int bitmaps_size;
+  ptrdiff_t bitmaps_size;
 
   /* Last used bitmap index.  */
-  int bitmaps_last;
+  ptrdiff_t bitmaps_last;
 
   /* The frame (if any) which has the window that has keyboard focus.
      Zero if none.  This is examined by Ffocus_frame in macfns.c.  Note
@@ -185,7 +157,7 @@ struct mac_display_info
 };
 
 /* This checks to make sure we have a display.  */
-extern void check_mac P_ ((void));
+extern void check_mac (void);
 
 #define x_display_info mac_display_info
 
@@ -201,10 +173,9 @@ extern struct mac_display_info one_mac_display_info;
    FONT-LIST-CACHE records previous values returned by x-list-fonts.  */
 extern Lisp_Object x_display_name_list;
 
-extern struct x_display_info *x_display_info_for_name P_ ((Lisp_Object));
-extern void x_set_frame_alpha P_ ((struct frame *));
+extern void x_set_frame_alpha (struct frame *);
 
-extern struct mac_display_info *mac_term_init P_ ((Lisp_Object, char *, char *));
+extern struct mac_display_info *mac_term_init (Lisp_Object, char *, char *);
 
 
 struct font;
@@ -519,50 +490,43 @@ struct frame;
 struct face;
 struct image;
 
-Lisp_Object display_x_get_resource P_ ((struct x_display_info *,
-					Lisp_Object, Lisp_Object,
-					Lisp_Object, Lisp_Object));
-struct frame *check_x_frame P_ ((Lisp_Object));
-EXFUN (Fx_display_color_p, 1);
+struct frame *check_x_frame (Lisp_Object);
 EXFUN (Fx_display_grayscale_p, 1);
 EXFUN (Fx_display_planes, 1);
-extern void x_free_gcs P_ ((struct frame *));
-extern int XParseGeometry P_ ((char *, int *, int *, unsigned int *,
-			       unsigned int *));
+extern void x_free_gcs (struct frame *);
+extern int XParseGeometry (char *, int *, int *, unsigned int *,
+			   unsigned int *);
 
 /* Defined in macterm.c.  */
 
-extern void x_set_window_size P_ ((struct frame *, int, int, int));
-extern void x_set_mouse_position P_ ((struct frame *, int, int));
-extern void x_set_mouse_pixel_position P_ ((struct frame *, int, int));
-extern void x_raise_frame P_ ((struct frame *));
-extern void x_lower_frame P_ ((struct frame *));
-extern void x_make_frame_visible P_ ((struct frame *));
-extern void x_make_frame_invisible P_ ((struct frame *));
-extern void x_iconify_frame P_ ((struct frame *));
-extern void x_free_frame_resources P_ ((struct frame *));
-extern void x_destroy_window P_ ((struct frame *));
-extern void x_wm_set_size_hint P_ ((struct frame *, long, int));
-extern void x_delete_display P_ ((struct x_display_info *));
-extern void x_delete_terminal P_ ((struct terminal *terminal));
-extern void mac_initialize P_ ((void));
-extern Pixmap mac_create_pixmap P_ ((Window, unsigned int, unsigned int,
-				     unsigned int));
-extern Pixmap mac_create_pixmap_from_bitmap_data P_ ((Window, char *,
-						      unsigned int,
-						      unsigned int,
-						      unsigned long,
-						      unsigned long,
-						      unsigned int));
-extern void mac_free_pixmap P_ ((Pixmap));
-extern GC mac_create_gc P_ ((unsigned long, XGCValues *));
-extern void mac_free_gc P_ ((GC));
-extern void mac_set_foreground P_ ((GC, unsigned long));
-extern void mac_set_background P_ ((GC, unsigned long));
-extern void mac_draw_line_to_pixmap P_ ((Pixmap, GC, int, int, int, int));
-extern void mac_clear_area P_ ((struct frame *, int, int,
-				unsigned int, unsigned int));
-extern int mac_quit_char_key_p P_ ((UInt32, UInt32));
+extern void x_set_window_size (struct frame *, int, int, int);
+extern void x_set_mouse_position (struct frame *, int, int);
+extern void x_set_mouse_pixel_position (struct frame *, int, int);
+extern void x_raise_frame (struct frame *);
+extern void x_lower_frame (struct frame *);
+extern void x_make_frame_visible (struct frame *);
+extern void x_make_frame_invisible (struct frame *);
+extern void x_iconify_frame (struct frame *);
+extern void x_free_frame_resources (struct frame *);
+extern void x_wm_set_size_hint (struct frame *, long, int);
+extern void x_delete_terminal (struct terminal *terminal);
+extern Pixmap mac_create_pixmap (Window, unsigned int, unsigned int,
+				 unsigned int);
+extern Pixmap mac_create_pixmap_from_bitmap_data (Window, char *,
+						  unsigned int,
+						  unsigned int,
+						  unsigned long,
+						  unsigned long,
+						  unsigned int);
+extern void mac_free_pixmap (Pixmap);
+extern GC mac_create_gc (unsigned long, XGCValues *);
+extern void mac_free_gc (GC);
+extern void mac_set_foreground (GC, unsigned long);
+extern void mac_set_background (GC, unsigned long);
+extern void mac_draw_line_to_pixmap (Pixmap, GC, int, int, int, int);
+extern void mac_clear_area (struct frame *, int, int,
+			    unsigned int, unsigned int);
+extern int mac_quit_char_key_p (UInt32, UInt32);
 #define x_display_pixel_height(dpyinfo)	((dpyinfo)->height)
 #define x_display_pixel_width(dpyinfo)	((dpyinfo)->width)
 #define XCreatePixmap(display, w, width, height, depth) \
@@ -580,142 +544,145 @@ extern int mac_quit_char_key_p P_ ((UInt32, UInt32));
 #define XDrawLine(display, p, gc, x1, y1, x2, y2)	\
   mac_draw_line_to_pixmap (p, gc, x1, y1, x2, y2)
 
-#if USE_MAC_IMAGE_IO
+#ifdef USE_MAC_IMAGE_IO
 extern CGColorSpaceRef mac_cg_color_space_rgb;
 #endif
 
-extern void x_set_sticky P_ ((struct frame *, Lisp_Object, Lisp_Object));
+extern void x_set_sticky (struct frame *, Lisp_Object, Lisp_Object);
 
 /* Defined in macselect.c */
 
-extern void x_clear_frame_selections P_ ((struct frame *));
-EXFUN (Fx_selection_owner_p, 1);
+extern void x_clear_frame_selections (struct frame *);
+EXFUN (Fx_selection_owner_p, 2);
 
 /* Defined in macfns.c */
 
-extern void x_real_positions P_ ((struct frame *, int *, int *));
-extern void x_set_menu_bar_lines P_ ((struct frame *, Lisp_Object, Lisp_Object));
-extern int x_pixel_width P_ ((struct frame *));
-extern int x_pixel_height P_ ((struct frame *));
-extern int x_char_width P_ ((struct frame *));
-extern int x_char_height P_ ((struct frame *));
-extern void x_sync P_ ((struct frame *));
-extern void x_set_tool_bar_lines P_ ((struct frame *, Lisp_Object, Lisp_Object));
-extern void mac_update_title_bar P_ ((struct frame *, int));
-extern Lisp_Object x_get_focus_frame P_ ((struct frame *));
+extern void x_real_positions (struct frame *, int *, int *);
+extern void x_set_menu_bar_lines (struct frame *, Lisp_Object, Lisp_Object);
+extern int x_pixel_width (struct frame *);
+extern int x_pixel_height (struct frame *);
+extern int x_char_width (struct frame *);
+extern int x_char_height (struct frame *);
+extern void x_sync (struct frame *);
+extern int mac_defined_color (struct frame *, const char *, XColor *, int);
+extern void x_set_tool_bar_lines (struct frame *, Lisp_Object, Lisp_Object);
+extern void mac_update_title_bar (struct frame *, int);
+extern Lisp_Object x_get_focus_frame (struct frame *);
 
 /* Defined in mac.c.  */
 
-extern Lisp_Object mac_aedesc_to_lisp P_ ((const AEDesc *));
-extern OSErr mac_ae_put_lisp P_ ((AEDescList *, UInt32, Lisp_Object));
-extern OSErr create_apple_event_from_lisp P_ ((Lisp_Object, AppleEvent *));
-extern OSErr create_apple_event P_ ((AEEventClass, AEEventID, AppleEvent *));
-extern Lisp_Object mac_event_parameters_to_lisp P_ ((EventRef, UInt32,
-						     const EventParamName *,
-						     const EventParamType *));
-extern CFStringRef cfstring_create_with_utf8_cstring P_ ((const char *));
-extern CFStringRef cfstring_create_with_string_noencode P_ ((Lisp_Object));
-extern CFStringRef cfstring_create_with_string P_ ((Lisp_Object));
-extern Lisp_Object cfdata_to_lisp P_ ((CFDataRef));
-extern Lisp_Object cfstring_to_lisp_nodecode P_ ((CFStringRef));
-extern Lisp_Object cfstring_to_lisp P_ ((CFStringRef));
-extern Lisp_Object cfstring_to_lisp_utf_16 P_ ((CFStringRef));
-extern Lisp_Object cfnumber_to_lisp P_ ((CFNumberRef));
-extern Lisp_Object cfdate_to_lisp P_ ((CFDateRef));
-extern Lisp_Object cfboolean_to_lisp P_ ((CFBooleanRef));
-extern Lisp_Object cfobject_desc_to_lisp P_ ((CFTypeRef));
-extern Lisp_Object cfobject_to_lisp P_ ((CFTypeRef, int, int));
-extern Lisp_Object cfproperty_list_to_lisp P_ ((CFPropertyListRef, int, int));
-extern CFPropertyListRef cfproperty_list_create_with_lisp P_ ((Lisp_Object));
-extern Lisp_Object cfproperty_list_to_string P_ ((CFPropertyListRef,
-						  CFPropertyListFormat));
-extern CFPropertyListRef cfproperty_list_create_with_string P_ ((Lisp_Object));
-extern void xrm_merge_string_database P_ ((XrmDatabase, const char *));
-extern Lisp_Object xrm_get_resource P_ ((XrmDatabase, const char *,
-					 const char *));
-extern XrmDatabase xrm_get_preference_database P_ ((const char *));
+extern Lisp_Object mac_aedesc_to_lisp (const AEDesc *);
+extern OSErr mac_ae_put_lisp (AEDescList *, UInt32, Lisp_Object);
+extern OSErr create_apple_event_from_lisp (Lisp_Object, AppleEvent *);
+extern OSErr create_apple_event (AEEventClass, AEEventID, AppleEvent *);
+extern Lisp_Object mac_event_parameters_to_lisp (EventRef, UInt32,
+						 const EventParamName *,
+						 const EventParamType *);
+extern CFStringRef cfstring_create_with_utf8_cstring (const char *);
+extern CFStringRef cfstring_create_with_string_noencode (Lisp_Object);
+extern CFStringRef cfstring_create_with_string (Lisp_Object);
+extern Lisp_Object cfdata_to_lisp (CFDataRef);
+extern Lisp_Object cfstring_to_lisp_nodecode (CFStringRef);
+extern Lisp_Object cfstring_to_lisp (CFStringRef);
+extern Lisp_Object cfstring_to_lisp_utf_16 (CFStringRef);
+extern Lisp_Object cfnumber_to_lisp (CFNumberRef);
+extern Lisp_Object cfdate_to_lisp (CFDateRef);
+extern Lisp_Object cfboolean_to_lisp (CFBooleanRef);
+extern Lisp_Object cfobject_desc_to_lisp (CFTypeRef);
+extern Lisp_Object cfobject_to_lisp (CFTypeRef, int, int);
+extern Lisp_Object cfproperty_list_to_lisp (CFPropertyListRef, int, int);
+extern CFPropertyListRef cfproperty_list_create_with_lisp (Lisp_Object);
+extern Lisp_Object cfproperty_list_to_string (CFPropertyListRef,
+					      CFPropertyListFormat);
+extern CFPropertyListRef cfproperty_list_create_with_string (Lisp_Object);
+extern int init_wakeup_fds (void);
+extern void xrm_merge_string_database (XrmDatabase, const char *);
+extern Lisp_Object xrm_get_resource (XrmDatabase, const char *,
+				     const char *);
+extern XrmDatabase xrm_get_preference_database (const char *);
 EXFUN (Fmac_get_preference, 4);
-extern int mac_service_provider_registered_p P_ ((void));
+extern int mac_service_provider_registered_p (void);
 
 /* Defined in macmenu.c.  */
 
-extern void x_activate_menubar P_ ((struct frame *));
-extern void free_frame_menubar P_ ((struct frame *));
+extern void x_activate_menubar (struct frame *);
+extern void free_frame_menubar (struct frame *);
 
 /* Defined in macappkit.m.  */
 
-extern Lisp_Object mac_nsvalue_to_lisp P_ ((CFTypeRef));
-extern void mac_alert_sound_play P_ ((void));
-extern OSStatus install_application_handler P_ ((void));
-extern void mac_get_window_structure_bounds P_ ((struct frame *,
-						 NativeRectangle *));
-extern void mac_get_frame_mouse P_ ((struct frame *, Point *));
-extern void mac_convert_frame_point_to_global P_ ((struct frame *, int *,
-						   int *));
-extern void mac_update_proxy_icon P_ ((struct frame *));
-extern void mac_set_frame_window_background P_ ((struct frame *,
-						 unsigned long));
-extern void mac_update_begin P_ ((struct frame *));
-extern void mac_update_end P_ ((struct frame *));
-extern void mac_update_window_end P_ ((struct window *));
-extern void mac_cursor_to P_ ((int, int, int, int));
-extern void x_flush P_ ((struct frame *));
-extern void mac_flush P_ ((struct frame *));
-extern void mac_create_frame_window P_ ((struct frame *));
-extern void mac_dispose_frame_window P_ ((struct frame *));
-extern void mac_change_frame_window_wm_state P_ ((struct frame *, WMState,
-						  WMState));
-extern CGContextRef mac_begin_cg_clip P_ ((struct frame *, GC));
-extern void mac_end_cg_clip P_ ((struct frame *));
-extern void mac_create_scroll_bar P_ ((struct scroll_bar *));
-extern void mac_dispose_scroll_bar P_ ((struct scroll_bar *));
-extern void mac_update_scroll_bar_bounds P_ ((struct scroll_bar *));
-extern void mac_redraw_scroll_bar P_ ((struct scroll_bar *));
-extern void x_set_toolkit_scroll_bar_thumb P_ ((struct scroll_bar *,
-						int, int, int));
-extern int mac_font_panel_visible_p P_ ((void));
-extern OSStatus mac_show_hide_font_panel P_ ((void));
-extern OSStatus mac_set_font_info_for_selection P_ ((struct frame *, int, int,
-						     int, Lisp_Object));
-extern EventTimeout mac_run_loop_run_once P_ ((EventTimeout));
-extern void update_frame_tool_bar P_ ((FRAME_PTR f));
-extern void free_frame_tool_bar P_ ((FRAME_PTR f));
-extern void mac_show_hourglass P_ ((struct frame *));
-extern void mac_hide_hourglass P_ ((struct frame *));
-extern Lisp_Object mac_file_dialog P_ ((Lisp_Object, Lisp_Object, Lisp_Object,
-					Lisp_Object, Lisp_Object));
-extern Lisp_Object mac_font_dialog P_ ((FRAME_PTR f));
-extern int mac_activate_menubar P_ ((struct frame *));
-extern void mac_fill_menubar P_ ((widget_value *, int));
-extern int create_and_show_popup_menu P_ ((FRAME_PTR, widget_value *,
-					   int, int, int));
-extern int create_and_show_dialog P_ ((FRAME_PTR, widget_value *));
-extern OSStatus mac_get_selection_from_symbol P_ ((Lisp_Object, int,
-						   Selection *));
-extern int mac_valid_selection_target_p P_ ((Lisp_Object));
-extern OSStatus mac_clear_selection P_ ((Selection *));
-extern Lisp_Object mac_get_selection_ownership_info P_ ((Selection));
-extern int mac_valid_selection_value_p P_ ((Lisp_Object, Lisp_Object));
-extern OSStatus mac_put_selection_value P_ ((Selection, Lisp_Object,
-					     Lisp_Object));
-extern int mac_selection_has_target_p P_ ((Selection, Lisp_Object));
-extern Lisp_Object mac_get_selection_value P_ ((Selection, Lisp_Object));
-extern Lisp_Object mac_get_selection_target_list P_ ((Selection));
-extern Lisp_Object mac_dnd_default_known_types P_ ((void));
+extern Lisp_Object mac_nsvalue_to_lisp (CFTypeRef);
+extern void mac_alert_sound_play (void);
+extern OSStatus install_application_handler (void);
+extern int mac_close_display (void);
+extern void mac_get_window_structure_bounds (struct frame *,
+					     NativeRectangle *);
+extern void mac_get_frame_mouse (struct frame *, Point *);
+extern void mac_convert_frame_point_to_global (struct frame *, int *,
+					       int *);
+extern void mac_update_proxy_icon (struct frame *);
+extern void mac_set_frame_window_background (struct frame *,
+					     unsigned long);
+extern void mac_update_begin (struct frame *);
+extern void mac_update_end (struct frame *);
+extern void mac_update_window_end (struct window *);
+extern void mac_cursor_to (int, int, int, int);
+extern void x_flush (struct frame *);
+extern void mac_flush (struct frame *);
+extern void mac_create_frame_window (struct frame *);
+extern void mac_dispose_frame_window (struct frame *);
+extern void mac_change_frame_window_wm_state (struct frame *, WMState,
+					      WMState);
+extern CGContextRef mac_begin_cg_clip (struct frame *, GC);
+extern void mac_end_cg_clip (struct frame *);
+extern void mac_create_scroll_bar (struct scroll_bar *);
+extern void mac_dispose_scroll_bar (struct scroll_bar *);
+extern void mac_update_scroll_bar_bounds (struct scroll_bar *);
+extern void mac_redraw_scroll_bar (struct scroll_bar *);
+extern void x_set_toolkit_scroll_bar_thumb (struct scroll_bar *,
+					    int, int, int);
+extern int mac_font_panel_visible_p (void);
+extern OSStatus mac_show_hide_font_panel (void);
+extern OSStatus mac_set_font_info_for_selection (struct frame *, int, int,
+						     int, Lisp_Object);
+extern EventTimeout mac_run_loop_run_once (EventTimeout);
+extern void update_frame_tool_bar (FRAME_PTR f);
+extern void free_frame_tool_bar (FRAME_PTR f);
+extern void mac_show_hourglass (struct frame *);
+extern void mac_hide_hourglass (struct frame *);
+extern Lisp_Object mac_file_dialog (Lisp_Object, Lisp_Object, Lisp_Object,
+				    Lisp_Object, Lisp_Object);
+extern Lisp_Object mac_font_dialog (FRAME_PTR f);
+extern int mac_activate_menubar (struct frame *);
+extern void mac_fill_menubar (widget_value *, int);
+extern int create_and_show_popup_menu (FRAME_PTR, widget_value *,
+					   int, int, int);
+extern int create_and_show_dialog (FRAME_PTR, widget_value *);
+extern OSStatus mac_get_selection_from_symbol (Lisp_Object, int,
+					       Selection *);
+extern int mac_valid_selection_target_p (Lisp_Object);
+extern OSStatus mac_clear_selection (Selection *);
+extern Lisp_Object mac_get_selection_ownership_info (Selection);
+extern int mac_valid_selection_value_p (Lisp_Object, Lisp_Object);
+extern OSStatus mac_put_selection_value (Selection, Lisp_Object,
+					     Lisp_Object);
+extern int mac_selection_has_target_p (Selection, Lisp_Object);
+extern Lisp_Object mac_get_selection_value (Selection, Lisp_Object);
+extern Lisp_Object mac_get_selection_target_list (Selection);
+extern Lisp_Object mac_dnd_default_known_types (void);
 
 #if defined (__clang__) && MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
 #define MAC_USE_AUTORELEASE_LOOP 1
-extern void mac_autorelease_loop P_ ((Lisp_Object (^) (void)));
+extern void mac_autorelease_loop (Lisp_Object (^) (void));
 #else
-extern void *mac_alloc_autorelease_pool P_ ((void));
-extern void mac_release_autorelease_pool P_ ((void *));
+extern void *mac_alloc_autorelease_pool (void);
+extern void mac_release_autorelease_pool (void *);
 #endif
 
-extern int mac_tracking_area_works_with_cursor_rects_invalidation_p P_ ((void));
-extern void mac_invalidate_frame_cursor_rects P_ ((struct frame *f));
-
-extern CGContextRef mac_begin_cg_clip P_ ((struct frame *, GC));
-extern void mac_end_cg_clip P_ ((struct frame *));
+extern int mac_tracking_area_works_with_cursor_rects_invalidation_p (void);
+extern void mac_invalidate_frame_cursor_rects (struct frame *f);
+#ifdef USE_MAC_IMAGE_IO
+extern int mac_webkit_supports_svg_p (void);
+#endif
 
 #define CG_SET_FILL_COLOR(context, color)				\
   CGContextSetRGBFillColor (context,					\
@@ -774,9 +741,14 @@ extern void mac_end_cg_clip P_ ((struct frame *));
 					  (gc)->cg_fore_color)
 
 /* Defined in macfont.c */
-extern void macfont_update_antialias_threshold P_ ((void));
-extern void *macfont_get_nsctfont P_ ((struct font *));
-extern Lisp_Object macfont_nsctfont_to_spec P_ ((void *));
+extern void macfont_update_antialias_threshold (void);
+extern void *macfont_get_nsctfont (struct font *);
+extern Lisp_Object macfont_nsctfont_to_spec (void *);
 
-/* arch-tag: 6b4ca125-5bef-476d-8ee8-31ed808b7e79
-   (do not change this comment) */
+/* Defined in xdisp.c */
+extern struct glyph *x_y_to_hpos_vpos (struct window *, int, int,
+				       int *, int *, int *, int *, int *);
+extern void frame_to_window_pixel_xy (struct window *, int *, int *);
+extern void rows_from_pos_range (struct window *, EMACS_INT , EMACS_INT,
+				 Lisp_Object, struct glyph_row **,
+				 struct glyph_row **);

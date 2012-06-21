@@ -1,5 +1,6 @@
-/* Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-     Free Software Foundation, Inc.
+/* runemacs --- Simple program to start Emacs with its console window hidden.
+
+Copyright (C) 2001-2012  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -43,7 +44,8 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <string.h>
 #include <malloc.h>
 
-static void set_user_model_id ();
+static void set_user_model_id (void);
+static int ensure_unicows_dll (void);
 
 int WINAPI
 WinMain (HINSTANCE hSelf, HINSTANCE hPrev, LPSTR cmdline, int nShow)
@@ -57,6 +59,9 @@ WinMain (HINSTANCE hSelf, HINSTANCE hPrev, LPSTR cmdline, int nShow)
   char *new_cmdline;
   char *p;
   char modname[MAX_PATH];
+
+  if (!ensure_unicows_dll ())
+    goto error;
 
   set_user_model_id ();
 
@@ -106,7 +111,7 @@ WinMain (HINSTANCE hSelf, HINSTANCE hPrev, LPSTR cmdline, int nShow)
 #endif
 
   /* Append original arguments if any; first look for arguments we
-     recognise (-wait, -high, and -low), and apply them ourselves.  */
+     recognize (-wait, -high, and -low), and apply them ourselves.  */
   while (cmdline[0] == '-' || cmdline[0] == '/')
     {
       if (strncmp (cmdline+1, "wait", 4) == 0)
@@ -174,7 +179,8 @@ error:
   return 1;
 }
 
-void set_user_model_id ()
+void
+set_user_model_id (void)
 {
   HMODULE shell;
   HRESULT (WINAPI * set_user_model) (wchar_t * id);
@@ -201,5 +207,43 @@ void set_user_model_id ()
     }
 }
 
-/* arch-tag: 7e02df73-4df7-4aa0-baea-99c6d047a384
-   (do not change this comment) */
+static int
+ensure_unicows_dll (void)
+{
+  OSVERSIONINFO os_ver;
+  HMODULE h;
+
+  ZeroMemory (&os_ver, sizeof (OSVERSIONINFO));
+  os_ver.dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
+  if (!GetVersionEx (&os_ver))
+    return 0;
+
+  if (os_ver.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS)
+    {
+      h = LoadLibrary ("Unicows.dll");
+      if (!h)
+	{
+	  int button;
+
+	  button = MessageBox (NULL,
+			       "Emacs cannot load the UNICOWS.DLL library.\n"
+			       "This library is essential for using Emacs\n"
+			       "on this system.  You need to install it.\n\n"
+			       "However, you can still use Emacs by invoking\n"
+			       "it with the '-nw' command-line option.\n\n"
+			       "Emacs will exit when you click OK.",
+			       "Emacs cannot load UNICOWS.DLL",
+			       MB_ICONERROR | MB_TASKMODAL
+			       | MB_SETFOREGROUND | MB_OK);
+	  switch (button)
+	    {
+	      case IDOK:
+	      default:
+	        return 0;
+	    }
+	}
+      FreeLibrary (h);
+      return 1;
+    }
+  return 1;
+}

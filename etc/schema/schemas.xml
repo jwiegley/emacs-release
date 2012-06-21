@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2003, 2004, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+<!-- Copyright (C) 2003-2004, 2007-2012  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -40,10 +40,14 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>. -->
 
   <documentElement prefix="" localName="article" typeId="DocBook"/>
   <documentElement prefix="" localName="book" typeId="DocBook"/>
+  <documentElement prefix="" localName="chapter" typeId="DocBook"/>
+  <documentElement prefix="" localName="part" typeId="DocBook"/>
+  <documentElement prefix="" localName="refentry" typeId="DocBook"/>
+  <documentElement prefix="" localName="section" typeId="DocBook"/>
 
   <documentElement localName="RDF" typeId="RDF"/>
   <documentElement prefix="rdf" typeId="RDF"/>
-  
+
   <documentElement localName="locatingRules" uri="locate.rnc"/>
 
   <typeId id="XSLT" uri="xslt.rnc"/>
@@ -52,6 +56,3 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>. -->
   <typeId id="DocBook" uri="docbook.rnc"/>
   <typeId id="RDF" uri="rdfxml.rnc"/>
 </locatingRules>
-
-<!-- arch-tag: 1fde96fa-b401-4033-8514-c4990b1e18a5
-     (do not change this comment) -->

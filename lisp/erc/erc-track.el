@@ -1,7 +1,6 @@
 ;;; erc-track.el --- Track modified channel buffers
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2002-2012 Free Software Foundation, Inc.
 
 ;; Author: Mario Lang <mlang@delysid.org>
 ;; Keywords: comm, faces
@@ -85,8 +84,8 @@ Activity means that there was no user input in the last 10 seconds."
   :type  '(choice (const :tag "All frames" t)
 		  (const :tag "All visible frames" visible)
 		  (const :tag "Only the selected frame" nil)
-		  (const :tag "Only the selected frame if it was active"
-			 active)))
+		  (const :tag "Only the selected frame if it is visible"
+			 selected-visible)))
 
 (defcustom erc-track-exclude nil
   "A list targets (channel names or query targets) which should not be tracked."
@@ -589,12 +588,15 @@ START is the minimum length of the name used."
 
 ;;;###autoload
 (define-minor-mode erc-track-minor-mode
-  "Global minor mode for tracking ERC buffers and showing activity in the
-mode line.
+  "Toggle mode line display of ERC activity (ERC Track minor mode).
+With a prefix argument ARG, enable ERC Track minor mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
 
-This exists for the sole purpose of providing the C-c C-SPC and
-C-c C-@ keybindings.  Make sure that you have enabled the track
-module, otherwise the keybindings will not do anything useful."
+ERC Track minor mode is a global minor mode.  It exists for the
+sole purpose of providing the C-c C-SPC and C-c C-@ keybindings.
+Make sure that you have enabled the track module, otherwise the
+keybindings will not do anything useful."
   :init-value nil
   :lighter ""
   :keymap erc-track-minor-mode-map
@@ -654,7 +656,7 @@ module, otherwise the keybindings will not do anything useful."
 	   (defadvice switch-to-buffer (after erc-update (&rest args) activate)
 	     (erc-modified-channels-update))
 	 (add-hook 'window-configuration-change-hook
-		   'erc-modified-channels-update))
+		   'erc-window-configuration-change))
        (add-hook 'erc-insert-post-hook 'erc-track-modified-channels)
        (add-hook 'erc-disconnected-hook 'erc-modified-channels-update))
      ;; enable the tracking keybindings
@@ -676,7 +678,7 @@ module, otherwise the keybindings will not do anything useful."
        (if (featurep 'xemacs)
 	   (ad-disable-advice 'switch-to-buffer 'after 'erc-update)
 	 (remove-hook 'window-configuration-change-hook
-		      'erc-modified-channels-update))
+		      'erc-window-configuration-change))
        (remove-hook 'erc-disconnected-hook 'erc-modified-channels-update)
        (remove-hook 'erc-insert-post-hook 'erc-track-modified-channels))
      ;; disable the tracking keybindings
@@ -731,6 +733,12 @@ only consider active buffers visible.")
 
 ;;; Tracking the channel modifications
 
+(defun erc-window-configuration-change ()
+  (unless (minibuffer-window-active-p (minibuffer-window))
+    ;; delay this until command has finished to make sure window is
+    ;; actually visible before clearing activity
+    (add-hook 'post-command-hook 'erc-modified-channels-update)))
+
 (defvar erc-modified-channels-update-inside nil
   "Variable to prevent running `erc-modified-channels-update' multiple
 times.  Without it, you cannot debug `erc-modified-channels-display',
@@ -758,8 +766,9 @@ ARGS are ignored."
 		  (erc-modified-channels-remove-buffer buffer))))
 	    erc-modified-channels-alist)
       (when removed-channel
-      (erc-modified-channels-display)
-	(force-mode-line-update t)))))
+	(erc-modified-channels-display)
+	(force-mode-line-update t)))
+    (remove-hook 'post-command-hook 'erc-modified-channels-update)))
 
 (defvar erc-track-mouse-face (if (featurep 'xemacs)
 				 'modeline-mousable
@@ -1031,7 +1040,7 @@ relative to `erc-track-switch-direction'"
 		   ((oldest leastactive)
 		    (- (length erc-modified-channels-alist) arg))
 		   (t (1- arg))))
-    ;; normalise out of range user input
+    ;; normalize out of range user input
     (cond ((>= offset (length erc-modified-channels-alist))
 	   (setq offset (1- (length erc-modified-channels-alist))))
 	  ((< offset 0)
@@ -1066,5 +1075,3 @@ switch back to the last non-ERC buffer visited.  Next is defined by
 ;; indent-tabs-mode: t
 ;; tab-width: 8
 ;; End:
-
-;; arch-tag: 11b439f5-e5d7-4c6c-bb3f-eda98f9b0ac1

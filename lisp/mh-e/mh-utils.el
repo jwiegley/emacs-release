@@ -1,8 +1,6 @@
 ;;; mh-utils.el --- MH-E general utilities
 
-;; Copyright (C) 1993, 1995, 1997,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1995, 1997, 2000-2012  Free Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -486,18 +484,18 @@ no effect."
   folder)
 
 (defmacro mh-children-p (folder)
-  "Return t if FOLDER from sub-folders cache has children.
-The car of folder is the name, and the cdr is either t or some
-sort of count that I do not understand. It's too small to be the
-number of messages in the sub-folders and too large to be the
-number of sub-folders. XXX"
+  "Return t if FOLDER from sub-folders cache has children."
+;; The car of folder is the name, and the cdr is either t or some
+;; sort of count that I do not understand. It's too small to be the
+;; number of messages in the sub-folders and too large to be the
+;; number of sub-folders. XXX
   `(if (cdr ,folder)
        t
      nil))
 
 ;;;###mh-autoload
 (defun mh-folder-list (folder)
-  "Return FOLDER and its descendents.
+  "Return FOLDER and its descendants.
 FOLDER may have a + prefix. Returns a list of strings without the
 + prefix. If FOLDER is nil, then all folders are considered. For
 example, if your Mail directory only contains the folders +inbox,
@@ -704,36 +702,38 @@ See Info node `(elisp) Programmed Completion' for details."
          (remainder (cond (last-complete (substring name (1+ last-slash)))
                           (name (substring name 1))
                           (t ""))))
-    (cond ((eq flag nil)
+    (cond ((eq (car-safe flag) 'boundaries)
+           (list* 'boundaries
+                  (let ((slash (mh-search-from-end ?/ orig-name)))
+                    (if slash (1+ slash)
+                      (if (string-match "\\`\\+" orig-name) 1 0)))
+                  (if (cdr flag) (string-match "/" (cdr flag)))))
+          ((eq flag nil)
            (let ((try-res
                   (try-completion
-                   name
-                   (mapcar (lambda (x)
-                             (cons (concat (or last-complete "+") (car x))
-                                   (cdr x)))
-                    (mh-sub-folders last-complete t))
+                   remainder
+                   (mh-sub-folders last-complete t)
                    predicate)))
              (cond ((eq try-res nil) nil)
                    ((and (eq try-res t) (equal name orig-name)) t)
                    ((eq try-res t) name)
-                   (t try-res))))
+                   (t (concat (or last-complete "+") try-res)))))
           ((eq flag t)
-           (mapcar (lambda (x)
-                     (concat (or last-complete "+") x))
-                   (all-completions
-                    remainder (mh-sub-folders last-complete t) predicate)))
+           (all-completions
+            remainder (mh-sub-folders last-complete t) predicate))
           ((eq flag 'lambda)
            (let ((path (concat (unless (and (> (length name) 1)
                                             (eq (aref name 1) ?/))
                                  mh-user-path)
                                (substring name 1))))
-             (cond (mh-allow-root-folder-flag (file-exists-p path))
+             (cond (mh-allow-root-folder-flag (file-directory-p path))
                    ((equal path mh-user-path) nil)
-                   (t (file-exists-p path))))))))
+                   (t (file-directory-p path))))))))
 
 ;; Shush compiler.
-(defvar completion-root-regexp)          ; XEmacs
-(defvar minibuffer-completing-file-name) ; XEmacs
+(mh-do-in-xemacs
+  (defvar completion-root-regexp)
+  (defvar minibuffer-completing-file-name))
 
 (defun mh-folder-completing-read (prompt default allow-root-folder-flag)
   "Read folder name with PROMPT and default result DEFAULT.
@@ -1013,5 +1013,4 @@ If the current line is too long truncate a part of it as well."
 ;; sentence-end-double-space: nil
 ;; End:
 
-;; arch-tag: 1af39fdf-f66f-4b06-9b48-18a7656c8e36
 ;;; mh-utils.el ends here

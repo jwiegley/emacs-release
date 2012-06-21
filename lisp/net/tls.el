@@ -1,7 +1,6 @@
 ;;; tls.el --- TLS/SSL support via wrapper around GnuTLS
 
-;; Copyright (C) 1996, 1997, 1998, 1999, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1996-1999, 2002-2012  Free Software Foundation, Inc.
 
 ;; Author: Simon Josefsson <simon@josefsson.org>
 ;; Keywords: comm, tls, gnutls, ssl
@@ -75,8 +74,8 @@ and `gnutls-cli' (version 2.0.1) output."
   :type 'regexp
   :group 'tls)
 
-(defcustom tls-program '("gnutls-cli -p %p %h"
-			 "gnutls-cli -p %p %h --protocols ssl3"
+(defcustom tls-program '("gnutls-cli --insecure -p %p %h"
+			 "gnutls-cli --insecure -p %p %h --protocols ssl3"
 			 "openssl s_client -connect %h:%p -no_ssl2 -ign_eof")
   "List of strings containing commands to start TLS stream to a host.
 Each entry in the list is tried until a connection is successful.
@@ -124,7 +123,7 @@ successful negotiation."
 
 (defcustom tls-success "- Handshake was completed\\|SSL handshake has read "
   "Regular expression indicating completed TLS handshakes.
-The default is what GNUTLS's \"gnutls-cli\" or OpenSSL's
+The default is what GnuTLS's \"gnutls-cli\" or OpenSSL's
 \"openssl s_client\" outputs."
   :version "22.1"
   :type 'regexp
@@ -151,7 +150,7 @@ consider trustworthy, e.g.:
 (defcustom tls-untrusted
   "- Peer's certificate is NOT trusted\\|Verify return code: \\([^0] \\|.[^ ]\\)"
   "Regular expression indicating failure of TLS certificate verification.
-The default is what GNUTLS's \"gnutls-cli\" or OpenSSL's
+The default is what GnuTLS's \"gnutls-cli\" or OpenSSL's
 \"openssl s_client\" return in the event of unsuccessful
 verification."
   :type 'regexp
@@ -298,5 +297,4 @@ match `%s'. Connect anyway? " host))))))
 
 (provide 'tls)
 
-;; arch-tag: 5596d1c4-facc-4bc4-94a9-9863b928d7ac
 ;;; tls.el ends here

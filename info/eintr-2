@@ -1,5 +1,6 @@
-This is ../../info/eintr, produced by makeinfo version 4.13 from
-emacs-lisp-intro.texi.
+This is /home/cyd/emacs/doc/lispintro/../../info/eintr, produced by
+makeinfo version 4.13 from
+/home/cyd/emacs/doc/lispintro/emacs-lisp-intro.texi.
 
 INFO-DIR-SECTION GNU Emacs Lisp
 START-INFO-DIR-ENTRY
@@ -12,17 +13,16 @@ who are not programmers.
 
    Edition 3.10, 28 October 2009
 
-   Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1997, 2001,
-2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-Free Software Foundation, Inc.
+   Copyright (C) 1990-1995, 1997, 2001-2012 Free Software Foundation,
+Inc.
 
    Published by the:
 
-     GNU Press,                          Website: http://www.gnupress.org
-     a division of the                   General: press@gnu.org
-     Free Software Foundation, Inc.      Orders:  sales@gnu.org
-     51 Franklin Street, Fifth Floor     Tel: +1 (617) 542-5942
-     Boston, MA 02110-1301 USA           Fax: +1 (617) 542-2652
+     GNU Press,                        http://www.fsf.org/campaigns/gnu-press/
+     a division of the                 email: sales@fsf.org
+     Free Software Foundation, Inc.    Tel: +1 (617) 542-5942
+     51 Franklin Street, Fifth Floor   Fax: +1 (617) 542-2652
+     Boston, MA 02110-1301 USA
 
 
    ISBN 1-882114-43-4
@@ -1758,20 +1758,18 @@ The example of a `while' loop that printed the elements of a list of
 numbers can be written recursively.  Here is the code, including an
 expression to set the value of the variable `animals' to a list.
 
-   If you are using GNU Emacs 20 or before, this example must be copied
-to the `*scratch*' buffer and each expression must be evaluated there.
-Use `C-u C-x C-e' to evaluate the `(print-elements-recursively
-animals)' expression so that the results are printed in the buffer;
-otherwise the Lisp interpreter will try to squeeze the results into the
-one line of the echo area.
+   If you are reading this in Info in Emacs, you can evaluate this
+expression directly in Info.  Otherwise, you must copy the example to
+the `*scratch*' buffer and evaluate each expression there.  Use `C-u
+C-x C-e' to evaluate the `(print-elements-recursively animals)'
+expression so that the results are printed in the buffer; otherwise the
+Lisp interpreter will try to squeeze the results into the one line of
+the echo area.
 
    Also, place your cursor immediately after the last closing
 parenthesis of the `print-elements-recursively' function, before the
 comment.  Otherwise, the Lisp interpreter will try to evaluate the
 comment.
-
-   If you are using a more recent version of Emacs, you can evaluate
-this expression directly in Info.
 
      (setq animals '(gazelle giraffe lion tiger))
 
@@ -2607,7 +2605,7 @@ arguments:
 
   1. The first argument is the regular expression that the function
      searches for.  The regular expression will be a string between
-     quotations marks.
+     quotation marks.
 
   2. The optional second argument limits how far the function will
      search; it is a bound, which is specified as a position in the
@@ -3316,7 +3314,7 @@ supported languages.
 
    The `etags' program handles more than 20 languages, including Emacs
 Lisp, Common Lisp, Scheme, C, C++, Ada, Fortran, HTML, Java, LaTeX,
-Pascal, Perl, Postscript, Python, TeX, Texinfo, makefiles, and most
+Pascal, Perl, PostScript, Python, TeX, Texinfo, makefiles, and most
 assemblers.  The program has no switches for specifying the language;
 it recognizes the language in an input file according to its file name
 and contents.
@@ -3461,36 +3459,38 @@ count commands using `while' loops and recursion.
 * Menu:
 
 * Why Count Words::
-* count-words-region::          Use a regexp, but find a problem.
+* count-words-example::          Use a regexp, but find a problem.
 * recursive-count-words::       Start with case of no words in region.
 * Counting Exercise::
 
 
-File: eintr,  Node: Why Count Words,  Next: count-words-region,  Prev: Counting Words,  Up: Counting Words
+File: eintr,  Node: Why Count Words,  Next: count-words-example,  Prev: Counting Words,  Up: Counting Words
 
 Counting words
 ==============
 
-   The standard Emacs distribution contains a function for counting the
-number of lines within a region.  However, there is no corresponding
-function for counting words.
+   The standard Emacs distribution contains functions for counting the
+number of lines and words within a region.
 
    Certain types of writing ask you to count words.  Thus, if you write
 an essay, you may be limited to 800 words; if you write a novel, you
-may discipline yourself to write 1000 words a day.  It seems odd to me
-that Emacs lacks a word count command.  Perhaps people use Emacs mostly
-for code or types of documentation that do not require word counts; or
-perhaps they restrict themselves to the operating system word count
-command, `wc'.  Alternatively, people may follow the publishers'
-convention and compute a word count by dividing the number of
-characters in a document by five.  In any event, here are commands to
-count words.
+may discipline yourself to write 1000 words a day.  It seems odd, but
+for a long time, Emacs lacked a word count command.  Perhaps people used
+Emacs mostly for code or types of documentation that did not require
+word counts; or perhaps they restricted themselves to the operating
+system word count command, `wc'.  Alternatively, people may have
+followed the publishers' convention and computed a word count by
+dividing the number of characters in a document by five.
+
+   There are many ways to implement a command to count words.  Here are
+some examples, which you may wish to compare with the standard Emacs
+command, `count-words-region'.
 
 
-File: eintr,  Node: count-words-region,  Next: recursive-count-words,  Prev: Why Count Words,  Up: Counting Words
+File: eintr,  Node: count-words-example,  Next: recursive-count-words,  Prev: Why Count Words,  Up: Counting Words
 
-13.1 The `count-words-region' Function
-======================================
+13.1 The `count-words-example' Function
+=======================================
 
 A word count command could count words in a line, paragraph, region, or
 buffer.  What should the command cover?  You could design the command
@@ -3498,8 +3498,8 @@ to count the number of words in a complete buffer.  However, the Emacs
 tradition encourages flexibility--you may want to count words in just a
 section, rather than all of a buffer.  So it makes more sense to design
 the command to count the number of words in a region.  Once you have a
-`count-words-region' command, you can, if you wish, count words in a
-whole buffer by marking it with `C-x h' (`mark-whole-buffer').
+command to count words in a region, you can, if you wish, count words
+in a whole buffer by marking it with `C-x h' (`mark-whole-buffer').
 
    Clearly, counting words is a repetitive act: starting from the
 beginning of the region, you count the first word, then the second
@@ -3509,14 +3509,14 @@ or to a `while' loop.
 
 * Menu:
 
-* Design count-words-region::   The definition using a `while' loop.
-* Whitespace Bug::              The Whitespace Bug in `count-words-region'.
+* Design count-words-example::  The definition using a `while' loop.
+* Whitespace Bug::              The Whitespace Bug in `count-words-example'.
 
 
-File: eintr,  Node: Design count-words-region,  Next: Whitespace Bug,  Prev: count-words-region,  Up: count-words-region
+File: eintr,  Node: Design count-words-example,  Next: Whitespace Bug,  Prev: count-words-example,  Up: count-words-example
 
-Designing `count-words-region'
-------------------------------
+Designing `count-words-example'
+-------------------------------
 
    First, we will implement the word count command with a `while' loop,
 then with recursion.  The command will, of course, be interactive.
@@ -3532,7 +3532,9 @@ then with recursion.  The command will, of course, be interactive.
 
    The name of the function should be self-explanatory and similar to
 the existing `count-lines-region' name.  This makes the name easier to
-remember.  `count-words-region' is a good choice.
+remember.  `count-words-region' is the obvious choice.  Since that name
+is now used for the standard Emacs command to count words, we will name
+our implementation `count-words-example'.
 
    The function counts words within a region.  This means that the
 argument list must contain symbols that are bound to the two positions,
@@ -3549,7 +3551,7 @@ first, to set up conditions under which the `while' loop can count
 words, second, to run the `while' loop, and third, to send a message to
 the user.
 
-   When a user calls `count-words-region', point may be at the
+   When a user calls `count-words-example', point may be at the
 beginning or the end of the region.  However, the counting process must
 start at the beginning of the region.  This means we will want to put
 point there if it is not already there.  Executing `(goto-char
@@ -3589,9 +3591,8 @@ this is:
      \w+\W*
 
 The buffer's syntax table determines which characters are and are not
-word constituents.  (*Note What Constitutes a Word or Symbol?: Syntax,
-for more about syntax.  Also, see *note Syntax: (emacs)Syntax, and
-*note Syntax Tables: (elisp)Syntax Tables.)
+word constituents.  For more information about syntax, *note Syntax
+Tables: (elisp)Syntax Tables.
 
    The search expression looks like this:
 
@@ -3627,7 +3628,7 @@ appropriate.
    All this leads to the following function definition:
 
      ;;; First version; has bugs!
-     (defun count-words-region (beginning end)
+     (defun count-words-example (beginning end)
        "Print number of words in the region.
      Words are defined as at least one word-constituent
      character followed by at least one character that
@@ -3660,18 +3661,19 @@ appropriate.
 As written, the function works, but not in all circumstances.
 
 
-File: eintr,  Node: Whitespace Bug,  Prev: Design count-words-region,  Up: count-words-region
+File: eintr,  Node: Whitespace Bug,  Prev: Design count-words-example,  Up: count-words-example
 
-13.1.1 The Whitespace Bug in `count-words-region'
--------------------------------------------------
+13.1.1 The Whitespace Bug in `count-words-example'
+--------------------------------------------------
 
-The `count-words-region' command described in the preceding section has
-two bugs, or rather, one bug with two manifestations.  First, if you
-mark a region containing only whitespace in the middle of some text,
-the `count-words-region' command tells you that the region contains one
-word!  Second, if you mark a region containing only whitespace at the
-end of the buffer or the accessible portion of a narrowed buffer, the
-command displays an error message that looks like this:
+The `count-words-example' command described in the preceding section
+has two bugs, or rather, one bug with two manifestations.  First, if
+you mark a region containing only whitespace in the middle of some
+text, the `count-words-example' command tells you that the region
+contains one word!  Second, if you mark a region containing only
+whitespace at the end of the buffer or the accessible portion of a
+narrowed buffer, the command displays an error message that looks like
+this:
 
      Search failed: "\\w+\\W*"
 
@@ -3683,7 +3685,7 @@ Here is a copy of the definition.  Place your cursor after the closing
 parenthesis and type `C-x C-e' to install it.
 
      ;; First version; has bugs!
-     (defun count-words-region (beginning end)
+     (defun count-words-example (beginning end)
        "Print number of words in the region.
      Words are defined as at least one word-constituent character followed
      by at least one character that is not a word-constituent.  The buffer's
@@ -3709,11 +3711,11 @@ parenthesis and type `C-x C-e' to install it.
 
    If you wish, you can also install this keybinding by evaluating it:
 
-     (global-set-key "\C-c=" 'count-words-region)
+     (global-set-key "\C-c=" 'count-words-example)
 
    To conduct the first test, set mark and point to the beginning and
 end of the following line and then type `C-c =' (or `M-x
-count-words-region' if you have not bound `C-c ='):
+count-words-example' if you have not bound `C-c ='):
 
          one   two  three
 
@@ -3721,7 +3723,7 @@ Emacs will tell you, correctly, that the region has three words.
 
    Repeat the test, but place mark at the beginning of the line and
 place point just _before_ the word `one'.  Again type the command `C-c
-=' (or `M-x count-words-region').  Emacs should tell you that the
+=' (or `M-x count-words-example').  Emacs should tell you that the
 region has no words, since it is composed only of the whitespace at the
 beginning of the line.  But instead Emacs tells you that the region has
 one word!
@@ -3730,7 +3732,7 @@ one word!
 `*scratch*' buffer and then type several spaces at the end of the line.
 Place mark right after the word `three' and point at the end of line.
 (The end of the line will be the end of the buffer.)  Type `C-c =' (or
-`M-x count-words-region') as you did before.  Again, Emacs should tell
+`M-x count-words-example') as you did before.  Again, Emacs should tell
 you that the region has no words, since it is composed only of the
 whitespace at the end of the line.  Instead, Emacs displays an error
 message saying `Search failed'.
@@ -3739,9 +3741,9 @@ message saying `Search failed'.
 
    Consider the first manifestation of the bug, in which the command
 tells you that the whitespace at the beginning of the line contains one
-word.  What happens is this: The `M-x count-words-region' command moves
-point to the beginning of the region.  The `while' tests whether the
-value of point is smaller than the value of `end', which it is.
+word.  What happens is this: The `M-x count-words-example' command
+moves point to the beginning of the region.  The `while' tests whether
+the value of point is smaller than the value of `end', which it is.
 Consequently, the regular expression search looks for and finds the
 first word.  It leaves point after the word.  `count' is set to one.
 The `while' loop repeats; but this time the value of point is larger
@@ -3772,14 +3774,14 @@ the search fails.  The optional fourth argument is a repeat count.  (In
 Emacs, you can see a function's documentation by typing `C-h f', the
 name of the function, and then <RET>.)
 
-   In the `count-words-region' definition, the value of the end of the
+   In the `count-words-example' definition, the value of the end of the
 region is held by the variable `end' which is passed as an argument to
 the function.  Thus, we can add `end' as an argument to the regular
 expression search expression:
 
      (re-search-forward "\\w+\\W*" end)
 
-   However, if you make only this change to the `count-words-region'
+   However, if you make only this change to the `count-words-example'
 definition and then test the new version of the definition on a stretch
 of whitespace, you will receive an error message saying `Search failed'.
 
@@ -3809,7 +3811,7 @@ tests true because the value of point is still less than the value of
 end, since the `re-search-forward' expression did not move point. ...
 and the cycle repeats ...
 
-   The `count-words-region' definition requires yet another
+   The `count-words-example' definition requires yet another
 modification, to cause the true-or-false-test of the `while' loop to
 test false if the search fails.  Put another way, there are two
 conditions that must be satisfied in the true-or-false-test before the
@@ -3831,14 +3833,15 @@ succeeds and as a side effect moves point.  Consequently, as words are
 found, point is moved through the region.  When the search expression
 fails to find another word, or when point reaches the end of the
 region, the true-or-false-test tests false, the `while' loop exits, and
-the `count-words-region' function displays one or other of its messages.
+the `count-words-example' function displays one or other of its
+messages.
 
-   After incorporating these final changes, the `count-words-region'
+   After incorporating these final changes, the `count-words-example'
 works without bugs (or at least, without bugs that I have found!).
 Here is what it looks like:
 
      ;;; Final version: `while'
-     (defun count-words-region (beginning end)
+     (defun count-words-example (beginning end)
        "Print number of words in the region."
        (interactive "r")
        (message "Counting words in region ... ")
@@ -3865,7 +3868,7 @@ Here is what it looks like:
                    "The region has %d words." count))))))
 
 
-File: eintr,  Node: recursive-count-words,  Next: Counting Exercise,  Prev: count-words-region,  Up: Counting Words
+File: eintr,  Node: recursive-count-words,  Next: Counting Exercise,  Prev: count-words-example,  Up: Counting Words
 
 13.2 Count Words Recursively
 ============================
@@ -3873,7 +3876,7 @@ File: eintr,  Node: recursive-count-words,  Next: Counting Exercise,  Prev: coun
 You can write the function for counting words recursively as well as
 with a `while' loop.  Let's see how this is done.
 
-   First, we need to recognize that the `count-words-region' function
+   First, we need to recognize that the `count-words-example' function
 has three jobs: it sets up the appropriate conditions for counting to
 occur; it counts the words in the region; and it sends a message to the
 user telling how many words there are.
@@ -3887,7 +3890,7 @@ other.  One function will set up the conditions and display the
 message; the other will return the word count.
 
    Let us start with the function that causes the message to be
-displayed.  We can continue to call this `count-words-region'.
+displayed.  We can continue to call this `count-words-example'.
 
    This is the function that the user will call.  It will be
 interactive.  Indeed, it will be similar to our previous versions of
@@ -3898,7 +3901,7 @@ determine how many words are in the region.
 previous versions:
 
      ;; Recursive version; uses regular expression search
-     (defun count-words-region (beginning end)
+     (defun count-words-example (beginning end)
        "DOCUMENTATION..."
        (INTERACTIVE-EXPRESSION...)
 
@@ -3927,7 +3930,7 @@ counting words, is done within the `let' expression.
 
    Using `let', the function definition looks like this:
 
-     (defun count-words-region (beginning end)
+     (defun count-words-example (beginning end)
        "Print number of words in the region."
        (interactive "r")
 
@@ -4004,7 +4007,7 @@ succeeds, the function should call itself again.
 
    Note that the search expression is part of the do-again-test--the
 function returns `t' if its search succeeds and `nil' if it fails.
-(*Note The Whitespace Bug in `count-words-region': Whitespace Bug, for
+(*Note The Whitespace Bug in `count-words-example': Whitespace Bug, for
 an explanation of how `re-search-forward' works.)
 
    The do-again-test is the true-or-false test of an `if' clause.
@@ -4138,7 +4141,7 @@ The recursive function:
 The wrapper:
 
      ;;; Recursive version
-     (defun count-words-region (beginning end)
+     (defun count-words-example (beginning end)
        "Print number of words in the region.
 
      Words are defined as at least one word-constituent
@@ -4177,10 +4180,10 @@ File: eintr,  Node: Words in a defun,  Next: Readying a Graph,  Prev: Counting W
 
 Our next project is to count the number of words in a function
 definition.  Clearly, this can be done using some variant of
-`count-word-region'.  *Note Counting Words: Repetition and Regexps:
+`count-words-example'.  *Note Counting Words: Repetition and Regexps:
 Counting Words.  If we are just going to count the words in one
 definition, it is easy enough to mark the definition with the `C-M-h'
-(`mark-defun') command, and then call `count-word-region'.
+(`mark-defun') command, and then call `count-words-example'.
 
    However, I am more ambitious: I want to count the words and symbols
 in every definition in the Emacs sources and then print a graph that
@@ -4194,7 +4197,7 @@ this will tell.
 * Divide and Conquer::
 * Words and Symbols::           What to count?
 * Syntax::                      What constitutes a word or symbol?
-* count-words-in-defun::        Very like `count-words'.
+* count-words-in-defun::        Very like `count-words-example'.
 * Several defuns::              Counting several defuns in a file.
 * Find a File::                 Do you want to look at a file?
 * lengths-list-file::           A list of the lengths of many definitions.
@@ -4255,19 +4258,19 @@ repeated, so the definition contains a total of ten words and symbols.
        (* 7 number))
 
 However, if we mark the `multiply-by-seven' definition with `C-M-h'
-(`mark-defun'), and then call `count-words-region' on it, we will find
-that `count-words-region' claims the definition has eleven words, not
+(`mark-defun'), and then call `count-words-example' on it, we will find
+that `count-words-example' claims the definition has eleven words, not
 ten!  Something is wrong!
 
-   The problem is twofold: `count-words-region' does not count the `*'
+   The problem is twofold: `count-words-example' does not count the `*'
 as a word, and it counts the single symbol, `multiply-by-seven', as
 containing three words.  The hyphens are treated as if they were
 interword spaces rather than intraword connectors: `multiply-by-seven'
 is counted as if it were written `multiply by seven'.
 
    The cause of this confusion is the regular expression search within
-the `count-words-region' definition that moves point forward word by
-word.  In the canonical version of `count-words-region', the regexp is:
+the `count-words-example' definition that moves point forward word by
+word.  In the canonical version of `count-words-example', the regexp is:
 
      "\\w+\\W*"
 
@@ -4289,15 +4292,15 @@ specifying one or more _word constituent_ characters.  Word constituent
 characters are members of one syntax category.  Other syntax categories
 include the class of punctuation characters, such as the period and the
 comma, and the class of whitespace characters, such as the blank space
-and the tab character.  (For more information, see *note Syntax:
-(emacs)Syntax, and *note Syntax Tables: (elisp)Syntax Tables.)
+and the tab character.  (For more information, *note Syntax Tables:
+(elisp)Syntax Tables.)
 
    Syntax tables specify which characters belong to which categories.
 Usually, a hyphen is not specified as a `word constituent character'.
 Instead, it is specified as being in the `class of characters that are
 part of symbol names but not words.'  This means that the
-`count-words-region' function treats it in the same way it treats an
-interword white space, which is why `count-words-region' counts
+`count-words-example' function treats it in the same way it treats an
+interword white space, which is why `count-words-example' counts
 `multiply-by-seven' as three words.
 
    There are two ways to cause Emacs to count `multiply-by-seven' as
@@ -4309,9 +4312,9 @@ would serve our purpose, except that a hyphen is merely the most common
 character within symbols that is not typically a word constituent
 character; there are others, too.
 
-   Alternatively, we can redefine the regular expression used in the
-`count-words' definition so as to include symbols.  This procedure has
-the merit of clarity, but the task is a little tricky.
+   Alternatively, we can redefine the regexp used in the
+`count-words-example' definition so as to include symbols.  This
+procedure has the merit of clarity, but the task is a little tricky.
 
    The first part is simple enough: the pattern must match "at least one
 character that is a word or symbol constituent".  Thus:
@@ -4357,9 +4360,9 @@ File: eintr,  Node: count-words-in-defun,  Next: Several defuns,  Prev: Syntax, 
 14.3 The `count-words-in-defun' Function
 ========================================
 
-We have seen that there are several ways to write a `count-word-region'
-function.  To write a `count-words-in-defun', we need merely adapt one
-of these versions.
+We have seen that there are several ways to write a
+`count-words-region' function.  To write a `count-words-in-defun', we
+need merely adapt one of these versions.
 
    The version that uses a `while' loop is easy to understand, so I am
 going to adapt that.  Because `count-words-in-defun' will be part of a
@@ -4436,11 +4439,11 @@ word and symbol by symbol, and another expression that counts the
 jumps.  The true-or-false-test for the `while' loop should test true so
 long as point should jump forward, and false when point is at the end
 of the definition.  We have already redefined the regular expression
-for this (*note Syntax::), so the loop is straightforward:
+for this, so the loop is straightforward:
 
      (while (and (< (point) end)
                  (re-search-forward
-                  "\\(\\w\\|\\s_\\)+[^ \t\n]*[ \t\n]*" end t)
+                  "\\(\\w\\|\\s_\\)+[^ \t\n]*[ \t\n]*" end t))
        (setq count (1+ count)))
 
    The third part of the function definition returns the count of words
@@ -4466,7 +4469,7 @@ which when evaluated returns the count.
    How to test this?  The function is not interactive, but it is easy to
 put a wrapper around the function to make it interactive; we can use
 almost the same code as for the recursive version of
-`count-words-region':
+`count-words-example':
 
      ;;; Interactive version.
      (defun count-words-defun ()
@@ -4648,7 +4651,7 @@ will work.  It has four lines of documentation, but no interactive
 specification.  Since people worry that a computer is broken if they
 don't see anything going on, the first line of the body is a message.
 
-   The next line contains a `save-excursion' that returns Emacs'
+   The next line contains a `save-excursion' that returns Emacs's
 attention to the current buffer when the function completes.  This is
 useful in case you embed this function in another function that
 presumes point is restored to the original buffer.
@@ -5928,14 +5931,14 @@ File: eintr,  Node: Printed Axes,  Next: Line Graph Exercise,  Prev: recursive-g
 ==========================
 
 A graph needs printed axes, so you can orient yourself.  For a do-once
-project, it may be reasonable to draw the axes by hand using Emacs'
+project, it may be reasonable to draw the axes by hand using Emacs's
 Picture mode; but a graph drawing function may be used more than once.
 
    For this reason, I have written enhancements to the basic
 `print-graph-body' function that automatically print labels for the
 horizontal and vertical axes.  Since the label printing functions do
 not contain much new material, I have placed their description in an
-appendix.  *Note A Graph with Labelled Axes: Full Graph.
+appendix.  *Note A Graph with Labeled Axes: Full Graph.
 
 
 File: eintr,  Node: Line Graph Exercise,  Prev: Printed Axes,  Up: Readying a Graph
@@ -5980,10 +5983,10 @@ expressions in Emacs Lisp you can change or extend Emacs.
 
 File: eintr,  Node: Default Configuration,  Next: Site-wide Init,  Prev: Emacs Initialization,  Up: Emacs Initialization
 
-Emacs' Default Configuration
-============================
+Emacs's Default Configuration
+=============================
 
-   There are those who appreciate Emacs' default configuration.  After
+   There are those who appreciate Emacs's default configuration.  After
 all, Emacs starts you in C mode when you edit a C file, starts you in
 Fortran mode when you edit a Fortran file, and starts you in
 Fundamental mode when you edit an unadorned file.  This all makes
@@ -6006,7 +6009,7 @@ so it suits me.
 contents, written in Emacs Lisp, tell Emacs what to do.(1)
 
    A `~/.emacs' file contains Emacs Lisp code.  You can write this code
-yourself; or you can use Emacs' `customize' feature to write the code
+yourself; or you can use Emacs's `customize' feature to write the code
 for you.  You can combine your own expressions and auto-written
 Customize expressions in your `.emacs' file.
 
@@ -6074,7 +6077,7 @@ File: eintr,  Node: defcustom,  Next: Beginning a .emacs File,  Prev: Site-wide 
 ===========================================
 
 You can specify variables using `defcustom' so that you and others can
-then use Emacs' `customize' feature to set their values.  (You cannot
+then use Emacs's `customize' feature to set their values.  (You cannot
 use `customize' to write function definitions; but you can write
 `defuns' in your `.emacs' file.  Indeed, you can write any Lisp
 expression in your `.emacs' file.)
@@ -6582,8 +6585,8 @@ keys to `split-window-quietly', like this:
 
    If you load many extensions, as I do, then instead of specifying the
 exact location of the extension file, as shown above, you can specify
-that directory as part of Emacs' `load-path'.  Then, when Emacs loads a
-file, it will search that directory as well as its default list of
+that directory as part of Emacs's `load-path'.  Then, when Emacs loads
+a file, it will search that directory as well as its default list of
 directories.  (The default list is specified in `paths.h' when Emacs is
 built.)
 
@@ -6725,9 +6728,9 @@ following conditional:
        ;; evaluate version 23 code
        ( ... )))
 
-   For example, in contrast to version 20, more recent versions blink
-their cursors by default.  I hate such blinking, as well as other
-features, so I placed the following in my `.emacs' file(1):
+   For example, recent versions blink their cursors by default.  I hate
+such blinking, as well as other features, so I placed the following in
+my `.emacs' file(1):
 
      (when (>= emacs-major-version 21)
        (blink-cursor-mode 0)

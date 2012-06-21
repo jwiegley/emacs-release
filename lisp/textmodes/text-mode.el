@@ -1,10 +1,10 @@
 ;;; text-mode.el --- text mode, and its idiosyncratic commands
 
-;; Copyright (C) 1985, 1992, 1994, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1992, 1994, 2001-2012 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: wp
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -32,7 +32,7 @@
   "Normal hook run when entering Text mode and many related modes."
   :type 'hook
   :options '(turn-on-auto-fill turn-on-flyspell)
-  :group 'data)
+  :group 'wp)
 
 (defvar text-mode-variant nil
   "Non-nil if this buffer's major mode is a variant of Text mode.
@@ -63,8 +63,7 @@ You can thus get the full benefit of adaptive filling
  (see the variable `adaptive-fill-mode').
 \\{text-mode-map}
 Turning on Text mode runs the normal hook `text-mode-hook'."
-  (make-local-variable 'text-mode-variant)
-  (setq text-mode-variant t)
+  (set (make-local-variable 'text-mode-variant) t)
   (set (make-local-variable 'require-final-newline)
        mode-require-final-newline)
   (set (make-local-variable 'indent-line-function) 'indent-relative))
@@ -181,5 +180,4 @@ The argument NLINES says how many lines to center."
 	   (setq nlines (1+ nlines))
 	   (forward-line -1)))))
 
-;; arch-tag: a07ccaad-da13-4d7b-9c61-cd04f5926aab
 ;;; text-mode.el ends here

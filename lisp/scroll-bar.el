@@ -1,10 +1,10 @@
 ;;; scroll-bar.el --- window system-independent scroll bar support
 
-;; Copyright (C) 1993, 1994, 1995, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1993-1995, 1999-2012 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: hardware
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -29,6 +29,7 @@
 ;;; Code:
 
 (require 'mouse)
+(eval-when-compile (require 'cl))
 
 
 ;;;; Utilities.
@@ -79,11 +80,9 @@ SIDE must be the symbol `left' or `right'."
   "Non-nil means `set-scroll-bar-mode' should really do something.
 This is nil while loading `scroll-bar.el', and t afterward.")
 
-(defun set-scroll-bar-mode-1 (ignore value)
-  (set-scroll-bar-mode value))
-
 (defun set-scroll-bar-mode (value)
-  "Set `scroll-bar-mode' to VALUE and put the new value into effect."
+  "Set the scroll bar mode to VALUE and put the new value into effect.
+See the `scroll-bar-mode' variable for possible values to use."
   (if scroll-bar-mode
       (setq previous-scroll-bar-mode scroll-bar-mode))
 
@@ -107,27 +106,26 @@ Setting the variable with a customization buffer also takes effect."
   ;; The default value for :initialize would try to use :set
   ;; when processing the file in cus-dep.el.
   :initialize 'custom-initialize-default
-  :set 'set-scroll-bar-mode-1)
+  :set (lambda (_sym val) (set-scroll-bar-mode val)))
 
 ;; We just set scroll-bar-mode, but that was the default.
 ;; If it is set again, that is for real.
 (setq scroll-bar-mode-explicit t)
 
-(defun scroll-bar-mode (&optional flag)
-  "Toggle display of vertical scroll bars on all frames.
-This command applies to all frames that exist and frames to be
-created in the future.
-With a numeric argument, if the argument is positive
-turn on scroll bars; otherwise turn off scroll bars."
-  (interactive "P")
+(defun get-scroll-bar-mode () scroll-bar-mode)
+(defsetf get-scroll-bar-mode set-scroll-bar-mode)
 
-  ;; Tweedle the variable according to the argument.
-  (set-scroll-bar-mode (if (if (null flag)
-			       (not scroll-bar-mode)
-			     (setq flag (prefix-numeric-value flag))
-			     (or (not (numberp flag)) (> flag 0)))
-			   (or previous-scroll-bar-mode
-			       default-frame-scroll-bars))))
+(define-minor-mode scroll-bar-mode
+  "Toggle vertical scroll bars on all frames (Scroll Bar mode).
+With a prefix argument ARG, enable Scroll Bar mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
+This command applies to all frames that exist and frames to be
+created in the future."
+  :variable (eq (get-scroll-bar-mode)
+                (or previous-scroll-bar-mode
+                    default-frame-scroll-bars)))
 
 (defun toggle-scroll-bar (arg)
   "Toggle whether or not the selected frame has vertical scroll bars.
@@ -147,7 +145,7 @@ when they are turned on; if it is nil, they go on the left."
 	       (if (> arg 0)
 		   (or scroll-bar-mode default-frame-scroll-bars))))))
 
-(defun toggle-horizontal-scroll-bar (arg)
+(defun toggle-horizontal-scroll-bar (_arg)
   "Toggle whether or not the selected frame has horizontal scroll bars.
 With arg, turn horizontal scroll bars on if and only if arg is positive.
 Horizontal scroll bars aren't implemented yet."
@@ -210,7 +208,7 @@ EVENT should be a scroll bar click or drag event."
   (let* ((start-position (event-start event))
 	 (window (nth 0 start-position))
 	 (portion-whole (nth 2 start-position)))
-    (save-excursion 
+    (save-excursion
       (with-current-buffer (window-buffer window)
 	;; Calculate position relative to the accessible part of the buffer.
 	(goto-char (+ (point-min)
@@ -356,5 +354,4 @@ EVENT should be a scroll bar click."
 
 (provide 'scroll-bar)
 
-;; arch-tag: 6f1d01d0-0b1e-4bf8-86db-d491e0f399f3
 ;;; scroll-bar.el ends here

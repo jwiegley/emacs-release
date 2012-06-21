@@ -1,8 +1,7 @@
 This is ../../info/dired-x, produced by makeinfo version 4.13 from
 dired-x.texi.
 
-Copyright (C) 1994, 1995, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+Copyright (C) 1994-1995, 1999, 2001-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -24,16 +23,19 @@ END-INFO-DIR-ENTRY
 
 File: dired-x,  Node: Top,  Next: Introduction,  Up: (dir)
 
+Dired Extra
+***********
+
 This documents the "extra" features for GNU Emacs's Dired Mode that are
 provided by the file `dired-x.el'.
 
    * Based on `dired.texi' by Sebastian Kremer <sk@thp.uni-koeln.de>
 
-   * For `dired-x.el' as distributed with GNU Emacs 23.
+   * For `dired-x.el' as distributed with GNU Emacs 24.1.
 
 
-   Copyright (C) 1994, 1995, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
-2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 1994-1995, 1999, 2001-2012 Free Software Foundation,
+Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -88,25 +90,19 @@ File: dired-x,  Node: Features,  Next: Technical Details,  Up: Introduction
 1.1 Features
 ============
 
-Some features provided by Dired Extra
+Some features provided by Dired Extra:
 
-  1. Omitting uninteresting files from Dired listing.
-          *Note Omitting Files in Dired::.
+  1. Omitting uninteresting files from Dired listing (*note Omitting
+     Files in Dired::).
 
-  2. Local variables for Dired directories.
-          *Note Local Variables::.
+  2. Guessing shell commands in Dired buffers (*note Shell Command
+     Guessing::).
 
-  3. Guessing shell commands in Dired buffers.
-          *Note Shell Command Guessing::.
+  3. Running Dired command in non-Dired buffers (*note Virtual Dired::).
 
-  4. Running Dired commands in non-Dired buffers.
-          *Note Virtual Dired::.
+  4. Finding a file mentioned in a buffer (*note Find File At Point::).
 
-  5. Finding a file mentioned in a buffer.
-          *Note Find File At Point::.
-
-  6. Commands using file marking.
-          *Note Advanced Mark Commands::.
+  5. Commands using file marking (*note Advanced Mark Commands::).
 
 `dired-x.el' binds some functions to keys in Dired Mode (*note Key
 Index::) and also binds `C-x C-j' and `C-x 4 C-j' _globally_ to
@@ -121,20 +117,15 @@ File: dired-x,  Node: Technical Details,  Prev: Features,  Up: Introduction
 1.2 Technical Details
 =====================
 
-When loaded this code _redefines_ the following functions of GNU Emacs
-from `dired.el'
-
-   * `dired-clean-up-after-deletion'
-
-   * `dired-find-buffer-nocreate'
-
-   * `dired-initial-position'
-
-and the following functions from `dired-aux.el'
-
-   * `dired-add-entry'
-
-   * `dired-read-shell-command'
+When `dired-x.el' is loaded, some standard Dired functions from
+`dired.el' and `dired-aux.el' offer additional features.
+`dired-add-entry' obeys Dired Omit mode (*note Omitting Files in
+Dired::), if it is active.  `dired-find-buffer-nocreate' and
+`dired-initial-position' respect the value of `dired-find-subdir'
+(*note Miscellaneous Commands::).  `dired-clean-up-after-deletion'
+respects the value of `dired-clean-up-buffers-too'.
+`dired-read-shell-command' uses `dired-guess-shell-command' (*note
+Shell Command Guessing::) to offer a smarter default command.
 
 
 File: dired-x,  Node: Installation,  Next: Omitting Files in Dired,  Prev: Introduction,  Up: Top
@@ -198,20 +189,9 @@ File: dired-x,  Node: Optional Installation File At Point,  Prev: Optional Insta
 
 If you choose to have `dired-x.el' bind `dired-x-find-file' over
 `find-file' (*note Find File At Point::), then you will need to set
-`dired-x-hands-off-my-keys' and make a call to the function
-`dired-x-bind-find-file' in the `dired-load-hook':
-
-     (add-hook 'dired-load-hook
-               (lambda ()
-                 (load "dired-x")
-                 ;; Bind dired-x-find-file.
-                 (setq dired-x-hands-off-my-keys nil)
-                 ;; Make sure our binding preference is invoked.
-                 (dired-x-bind-find-file)
-                 ))
-
-   Alternatively, you can set the variable _before_ `dired-x.el' is
-loaded
+`dired-x-hands-off-my-keys'.  To do this, either set it _before_
+`dired-x.el' is loaded, or use `M-x customize-variable', or call
+`dired-x-bind-find-file' after changing the value.
 
      (add-hook 'dired-load-hook
                (lambda ()
@@ -285,23 +265,14 @@ The following variables can be used to customize omitting.
      in _every_ Dired buffer (*note Installation::).  You can then use
      `M-o' to unomit in that buffer.
 
-     To enable omitting automatically only in certain directories one
-     can use Dired Local Variables and put
+     To enable omitting automatically only in certain directories you
+     can add a directory local setting (*note Directory Variables:
+     (emacs)Directory Variables.) for Dired mode
 
-          Local Variables:
-          dired-omit-mode: t
-          End:
+          ((dired-mode . ((dired-omit-mode . t))))
 
-     into a file `.dired' (the default value of
-     `dired-local-variables-file') in that directory (*note Local
-     Variables::).
-
-    `dired-omit-here-always'
-          This is an interactive function that creates a local
-          variables file exactly like the example above (if it does not
-          already exist) in the file `dired-local-variables-file' in
-          the current directory and then refreshes the directory
-          listing (*note Local Variables::).
+     to a `.dir-locals.el' file in that directory.  You can use the
+     command `add-dir-local-variable' to do this.
 
 `dired-omit-files'
      Default: `"^#\\|\\.$"'
@@ -384,7 +355,9 @@ File: dired-x,  Node: Omitting Examples,  Next: Omitting Technical,  Prev: Omitt
           (setq dired-omit-files
                 (concat dired-omit-files "\\|^\\..+$"))
 
-     in the `dired-load-hook' (*note Installation::).
+     in the `dired-load-hook' (*note Installation::).  (Of course, a
+     better way to achieve this particular goal is simply to omit `-a'
+     from `dired-listing-switches'.)
 
 
 
@@ -404,7 +377,12 @@ File: dired-x,  Node: Local Variables,  Next: Shell Command Guessing,  Prev: Omi
 4 Local Variables for Dired Directories
 ***************************************
 
-When Dired visits a directory, it looks for a file whose name is the
+This Dired-X feature is obsolete as of Emacs 24.1.  The standard Emacs
+directory local variables mechanism (*note Directory Variables:
+(emacs)Directory Variables.) replaces it.  For an example of the new
+mechanisms, *note Omitting Variables::.
+
+   When Dired visits a directory, it looks for a file whose name is the
 value of variable `dired-local-variables-file' (default: `.dired').  If
 such a file is found, Dired will temporarily insert it into the Dired
 buffer and run `hack-local-variables'.
@@ -444,13 +422,11 @@ The following variables affect Dired Local Variables
 `dired-enable-local-variables'
      Default: `t'
 
-     Controls the use of local-variables lists in Dired.  The value can
-     be `t', `nil', or something else.  A value of `t' means
-     local-variables lists are obeyed in the
-     `dired-local-variables-file'; `nil' means they are ignored;
-     anything else means query.  This variable temporarily overrides
-     the value of `enable-local-variables' when the Dired Local
-     Variables are hacked.
+     Controls the use of local-variables lists in Dired.  This variable
+     temporarily overrides the value of `enable-local-variables' when
+     the Dired Local Variables are hacked.  It takes the same values as
+     that variable.  A value of `nil' means to ignore any Dired Local
+     Variables.
 
 
 File: dired-x,  Node: Shell Command Guessing,  Next: Virtual Dired,  Prev: Local Variables,  Up: Top
@@ -742,20 +718,9 @@ some commands it is appropriate that they use the current Dired
 directory instead of `default-directory', e.g., `find-file' and
 `compile'.
 
-   A general mechanism is provided for special handling of the working
-directory in special major modes:
-
-`default-directory-alist'
-     Default: `((dired-mode . (dired-current-directory)))'
-
-     Alist of major modes and their notion of `default-directory', as a
-     Lisp expression to evaluate.  A resulting value of `nil' is ignored
-     in favor of `default-directory'.
-
-`dired-default-directory'
-     Use this function like you would use the variable
-     `default-directory', except that `dired-default-directory' also
-     consults the variable `default-directory-alist'.
+   The command `dired-smart-shell-command', bound to `M-!' in Dired
+buffers, is like `shell-command', but it runs with `default-directory'
+bound to the current Dired directory.
 
 
 File: dired-x,  Node: Find File At Point,  Next: Miscellaneous Commands,  Prev: Multiple Dired Directories,  Up: Top
@@ -850,10 +815,6 @@ Miscellaneous features not fitting anywhere else:
      directory.  This command reads its argument, with completion
      derived from the names of the inserted subdirectories.
 
-`dired-smart-shell-command'
-     Like function `shell-command', but in the current Dired directory.
-     Bound to `M-!' in Dired buffers.
-
 `dired-jump'
      Bound to `C-x C-j'.  Jump back to Dired: If in a file, edit the
      current directory and move to file's line.  If in Dired already,
@@ -877,13 +838,12 @@ Miscellaneous features not fitting anywhere else:
      (assumed to be a UNIX mail folder).
 
      If you give this command a prefix argument, it will visit the
-     folder read-only.  This only works in VM 5, not VM 4.
+     folder read-only.
 
      If the variable `dired-vm-read-only-folders' is `t', `dired-vm'
      will visit all folders read-only.  If it is neither `nil' nor `t',
      e.g., the symbol `if-file-read-only', only files not writable by
-     you are visited read-only.  This is the recommended value if you
-     run VM 5.
+     you are visited read-only.
 
      If the variable `dired-bind-vm' is `t', `dired-vm' will be bound
      to `V'.  Otherwise, `dired-bind-rmail' will be bound.
@@ -1443,16 +1403,17 @@ Concept Index
 * How to make omitting the default in Dired: Omitting Variables.
                                                                (line 11)
 * Jumping to Dired listing containing file.: Miscellaneous Commands.
-                                                               (line 32)
+                                                               (line 28)
 * Lisp expression, marking files with in Dired: Special Marking Function.
                                                                (line  7)
 * Local Variables for Dired Directories: Local Variables.      (line  6)
 * ls listings, how to peruse them in Dired: Virtual Dired.     (line  6)
 * Mark file by Lisp expression:          Special Marking Function.
                                                                (line  7)
+* Modified functions:                    Technical Details.    (line  6)
 * Multiple Dired directories:            Multiple Dired Directories.
                                                                (line  6)
-* Omitting additional files:             Omitting Variables.   (line 72)
+* Omitting additional files:             Omitting Variables.   (line 63)
 * Omitting dot files in Dired:           Omitting Examples.    (line 27)
 * Omitting Files in Dired:               Omitting Files in Dired.
                                                                (line  6)
@@ -1463,14 +1424,13 @@ Concept Index
 * Perusing ls listings:                  Virtual Dired.        (line  6)
 * RCS files, how to omit them in Dired:  Omitting Examples.    (line  6)
 * Reading mail.:                         Miscellaneous Commands.
-                                                               (line 50)
-* Redefined functions:                   Technical Details.    (line  6)
+                                                               (line 46)
 * Relative symbolic links.:              Miscellaneous Commands.
-                                                               (line 84)
+                                                               (line 79)
 * Running info.:                         Miscellaneous Commands.
-                                                               (line 70)
+                                                               (line 65)
 * Running man.:                          Miscellaneous Commands.
-                                                               (line 77)
+                                                               (line 72)
 * Simultaneous visiting of several files: Advanced Mark Commands.
                                                                (line  7)
 * Tib files, how to omit them in Dired:  Omitting Examples.    (line 18)
@@ -1498,51 +1458,48 @@ Function Index
                                                                (line  7)
 * dired-clean-tex:                       Advanced Cleaning Functions.
                                                                (line 11)
-* dired-default-directory:               Multiple Dired Directories.
-                                                               (line 25)
 * dired-do-find-marked-files:            Advanced Mark Commands.
                                                                (line  7)
 * dired-do-relsymlink:                   Miscellaneous Commands.
-                                                               (line 84)
+                                                               (line 79)
 * dired-do-relsymlink-regexp:            Miscellaneous Commands.
-                                                               (line 95)
+                                                               (line 90)
 * dired-flag-extension:                  Advanced Mark Commands.
                                                                (line 28)
 * dired-goto-subdir:                     Miscellaneous Commands.
                                                                (line 22)
 * dired-info:                            Miscellaneous Commands.
-                                                               (line 70)
+                                                               (line 65)
 * dired-jump:                            Miscellaneous Commands.
-                                                               (line 32)
+                                                               (line 28)
 * dired-jump-other-window:               Miscellaneous Commands.
-                                                               (line 39)
+                                                               (line 35)
 * dired-man:                             Miscellaneous Commands.
-                                                               (line 77)
+                                                               (line 72)
 * dired-mark-extension:                  Advanced Mark Commands.
                                                                (line 20)
 * dired-mark-omitted:                    Omitting Files in Dired.
                                                                (line 30)
 * dired-mark-sexp:                       Special Marking Function.
                                                                (line  7)
-* dired-omit-here-always:                Omitting Variables.   (line 34)
 * dired-omit-mode:                       Omitting Files in Dired.
                                                                (line 26)
 * dired-rmail:                           Miscellaneous Commands.
-                                                               (line 66)
-* dired-smart-shell-command:             Miscellaneous Commands.
-                                                               (line 28)
+                                                               (line 61)
+* dired-smart-shell-command:             Multiple Dired Directories.
+                                                               (line 14)
 * dired-very-clean-tex:                  Advanced Cleaning Functions.
                                                                (line 24)
 * dired-virtual:                         Virtual Dired.        (line 13)
 * dired-virtual-mode:                    Virtual Dired.        (line 22)
 * dired-virtual-revert:                  Virtual Dired.        (line 13)
 * dired-vm:                              Miscellaneous Commands.
-                                                               (line 50)
+                                                               (line 46)
 * dired-x-bind-find-file:                Find File At Point.   (line 58)
 * dired-x-find-file:                     Find File At Point.   (line 21)
 * dired-x-find-file-other-window:        Find File At Point.   (line 43)
-* shell-command:                         Miscellaneous Commands.
-                                                               (line 28)
+* shell-command:                         Multiple Dired Directories.
+                                                               (line 14)
 
 
 File: dired-x,  Node: Key Index,  Next: Variable Index,  Prev: Command Index,  Up: Top
@@ -1554,22 +1511,22 @@ Key Index
 * Menu:
 
 * %Y:                                    Miscellaneous Commands.
-                                                               (line 95)
+                                                               (line 90)
 * * O:                                   Omitting Files in Dired.
                                                                (line 30)
 * C-x 4 C-f:                             Find File At Point.   (line 43)
 * C-x 4 C-j:                             Miscellaneous Commands.
-                                                               (line 39)
+                                                               (line 35)
 * C-x C-f:                               Find File At Point.   (line 21)
 * C-x C-j:                               Miscellaneous Commands.
-                                                               (line 32)
+                                                               (line 28)
 * F:                                     Advanced Mark Commands.
                                                                (line  7)
 * g:                                     Virtual Dired.        (line 13)
 * I:                                     Miscellaneous Commands.
-                                                               (line 70)
-* M-!:                                   Miscellaneous Commands.
-                                                               (line 28)
+                                                               (line 65)
+* M-!:                                   Multiple Dired Directories.
+                                                               (line 14)
 * M-(:                                   Special Marking Function.
                                                                (line  7)
 * M-G:                                   Miscellaneous Commands.
@@ -1577,11 +1534,11 @@ Key Index
 * M-o:                                   Omitting Files in Dired.
                                                                (line 26)
 * N:                                     Miscellaneous Commands.
-                                                               (line 77)
+                                                               (line 72)
 * V:                                     Miscellaneous Commands.
-                                                               (line 50)
+                                                               (line 46)
 * Y:                                     Miscellaneous Commands.
-                                                               (line 84)
+                                                               (line 79)
 
 
 File: dired-x,  Node: Variable Index,  Prev: Key Index,  Up: Top
@@ -1593,18 +1550,16 @@ Variable Index
 * Menu:
 
 * auto-mode-alist:                       Virtual Dired.        (line 22)
-* default-directory-alist:               Multiple Dired Directories.
-                                                               (line 18)
 * dired-bibtex-unclean-extensions:       Advanced Cleaning Variables.
                                                                (line 32)
 * dired-bind-info:                       Miscellaneous Commands.
-                                                               (line 73)
+                                                               (line 68)
 * dired-bind-jump:                       Miscellaneous Commands.
-                                                               (line 45)
+                                                               (line 41)
 * dired-bind-man:                        Miscellaneous Commands.
-                                                               (line 80)
+                                                               (line 75)
 * dired-bind-vm:                         Miscellaneous Commands.
-                                                               (line 62)
+                                                               (line 57)
 * dired-enable-local-variables:          Local Variables.      (line  6)
 * dired-find-subdir:                     Miscellaneous Commands.
                                                                (line  9)
@@ -1623,10 +1578,10 @@ Variable Index
 * dired-latex-unclean-extensions:        Advanced Cleaning Variables.
                                                                (line 27)
 * dired-local-variables-file:            Local Variables.      (line  6)
-* dired-omit-extensions:                 Omitting Variables.   (line 52)
-* dired-omit-files:                      Omitting Variables.   (line 41)
-* dired-omit-localp:                     Omitting Variables.   (line 61)
-* dired-omit-marker-char:                Omitting Variables.   (line 72)
+* dired-omit-extensions:                 Omitting Variables.   (line 43)
+* dired-omit-files:                      Omitting Variables.   (line 32)
+* dired-omit-localp:                     Omitting Variables.   (line 52)
+* dired-omit-marker-char:                Omitting Variables.   (line 63)
 * dired-omit-mode:                       Omitting Variables.   (line  8)
 * dired-patch-unclean-extensions:        Advanced Cleaning Variables.
                                                                (line 10)
@@ -1637,38 +1592,38 @@ Variable Index
 * dired-texinfo-unclean-extensions:      Advanced Cleaning Variables.
                                                                (line 21)
 * dired-vm-read-only-folders:            Miscellaneous Commands.
-                                                               (line 53)
+                                                               (line 49)
 * dired-x-hands-off-my-keys:             Find File At Point.   (line 49)
 
 
 
 Tag Table:
-Node: Top1003
-Node: Introduction2452
-Node: Features2765
-Node: Technical Details3757
-Node: Installation4179
-Node: Optional Installation Dired Jump5280
-Node: Optional Installation File At Point6050
-Node: Omitting Files in Dired7102
-Node: Omitting Variables8590
-Node: Omitting Examples11799
-Node: Omitting Technical13029
-Node: Local Variables13426
-Node: Shell Command Guessing15304
-Node: Virtual Dired18561
-Node: Advanced Mark Commands20086
-Node: Advanced Cleaning Functions21485
-Node: Advanced Cleaning Variables22291
-Node: Special Marking Function23414
-Node: Multiple Dired Directories24977
-Node: Find File At Point26194
-Node: Miscellaneous Commands28954
-Node: Bugs32434
-Node: GNU Free Documentation License32690
-Node: Concept Index57858
-Node: Command Index62155
-Node: Key Index65729
-Node: Variable Index67879
+Node: Top940
+Node: Introduction2353
+Node: Features2666
+Node: Technical Details3543
+Node: Installation4229
+Node: Optional Installation Dired Jump5330
+Node: Optional Installation File At Point6100
+Node: Omitting Files in Dired6828
+Node: Omitting Variables8316
+Node: Omitting Examples11219
+Node: Omitting Technical12572
+Node: Local Variables12969
+Node: Shell Command Guessing14992
+Node: Virtual Dired18249
+Node: Advanced Mark Commands19774
+Node: Advanced Cleaning Functions21173
+Node: Advanced Cleaning Variables21979
+Node: Special Marking Function23102
+Node: Multiple Dired Directories24665
+Node: Find File At Point25479
+Node: Miscellaneous Commands28239
+Node: Bugs31491
+Node: GNU Free Documentation License31747
+Node: Concept Index56915
+Node: Command Index61212
+Node: Key Index64579
+Node: Variable Index66733
 
 End Tag Table

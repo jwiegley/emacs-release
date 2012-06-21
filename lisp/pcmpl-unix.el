@@ -1,7 +1,8 @@
 ;;; pcmpl-unix.el --- standard UNIX completions
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012 Free Software Foundation, Inc.
+
+;; Package: pcomplete
 
 ;; This file is part of GNU Emacs.
 
@@ -38,13 +39,22 @@
 
 (defcustom pcmpl-ssh-known-hosts-file "~/.ssh/known_hosts"
   "If non-nil, a string naming your SSH \"known_hosts\" file.
-This allows completion of SSH host names.  Note that newer
-versions of ssh hash the hosts by default to prevent
-Island-hopping SSH attacks.  This can be disabled, at some risk,
-with the SSH option \"HashKnownHosts no\"."
+This allows one method of completion of SSH host names, the other
+being via `pcmpl-ssh-config-file'.  Note that newer versions of
+ssh hash the hosts by default, to prevent Island-hopping SSH
+attacks.  This can be disabled, at some risk, with the SSH option
+\"HashKnownHosts no\"."
   :type '(choice file (const nil))
   :group 'pcmpl-unix
   :version "23.1")
+
+(defcustom pcmpl-ssh-config-file "~/.ssh/config"
+  "If non-nil, a string naming your SSH \"config\" file.
+This allows one method of completion of SSH host names, the other
+being via `pcmpl-ssh-known-hosts-file'."
+  :type '(choice file (const nil))
+  :group 'pcmpl-unix
+  :version "24.1")
 
 ;; Functions:
 
@@ -136,25 +146,48 @@ documentation), this function returns nil."
 ;; ssh support by Phil Hagelberg.
 ;; http://www.emacswiki.org/cgi-bin/wiki/pcmpl-ssh.el
 
-(defun pcmpl-ssh-hosts ()
+(defun pcmpl-ssh-known-hosts ()
   "Return a list of hosts found in `pcmpl-ssh-known-hosts-file'."
   (when (and pcmpl-ssh-known-hosts-file
              (file-readable-p pcmpl-ssh-known-hosts-file))
     (with-temp-buffer
       (insert-file-contents-literally pcmpl-ssh-known-hosts-file)
-      (let (ssh-hosts-list)
-        (while (re-search-forward "^ *\\([-.[:alnum:]]+\\)[, ]" nil t)
-          (add-to-list 'ssh-hosts-list (match-string 1))
+      (let ((host-re "\\(?:\\([-.[:alnum:]]+\\)\\|\\[\\([-.[:alnum:]]+\\)\\]:[0-9]+\\)[, ]")
+            ssh-hosts-list)
+        (while (re-search-forward (concat "^ *" host-re) nil t)
+          (add-to-list 'ssh-hosts-list (concat (match-string 1)
+                                               (match-string 2)))
           (while (and (looking-back ",")
-                      (re-search-forward "\\([-.[:alnum:]]+\\)[, ]"
-                                         (line-end-position) t))
-            (add-to-list 'ssh-hosts-list (match-string 1))))
+                      (re-search-forward host-re (line-end-position) t))
+            (add-to-list 'ssh-hosts-list (concat (match-string 1)
+                                                 (match-string 2)))))
         ssh-hosts-list))))
+
+(defun pcmpl-ssh-config-hosts ()
+  "Return a list of hosts found in `pcmpl-ssh-config-file'."
+  (when (and pcmpl-ssh-config-file
+             (file-readable-p pcmpl-ssh-config-file))
+    (with-temp-buffer
+      (insert-file-contents-literally pcmpl-ssh-config-file)
+      (let (ssh-hosts-list
+            (case-fold-search t))
+        (while (re-search-forward "^ *host\\(name\\)? +\\([-.[:alnum:]]+\\)"
+                                  nil t)
+          (add-to-list 'ssh-hosts-list (match-string 2)))
+        ssh-hosts-list))))
+
+(defun pcmpl-ssh-hosts ()
+  "Return a list of known SSH hosts.
+Uses both `pcmpl-ssh-config-file' and `pcmpl-ssh-known-hosts-file'."
+  (let ((hosts (pcmpl-ssh-known-hosts)))
+    (dolist (h (pcmpl-ssh-config-hosts))
+      (add-to-list 'hosts h))
+    hosts))
 
 ;;;###autoload
 (defun pcomplete/ssh ()
   "Completion rules for the `ssh' command."
-  (pcomplete-opt "1246AaCfgKkMNnqsTtVvXxYbcDeFiLlmOopRSw" nil t)
+  (pcomplete-opt "1246AaCfgKkMNnqsTtVvXxYbcDeFiLlmOopRSw")
   (pcomplete-here (pcmpl-ssh-hosts)))
 
 ;;;###autoload
@@ -162,12 +195,26 @@ documentation), this function returns nil."
   "Completion rules for the `scp' command.
 Includes files as well as host names followed by a colon."
   (pcomplete-opt "1246BCpqrvcFiloPS")
-  (while t (pcomplete-here (append (pcomplete-all-entries)
-                                   (mapcar (lambda (host)
-                                             (concat host ":"))
-                                           (pcmpl-ssh-hosts))))))
+  (while t (pcomplete-here
+            (lambda (string pred action)
+              (let ((table
+                     (cond
+                      ((string-match "\\`[^:/]+:" string) ; Remote file name.
+		       (if (and (eq action 'lambda)
+				(eq (match-end 0) (length string)))
+			   ;; Avoid connecting to the remote host when we're
+			   ;; only completing the host name.
+			   (list string)
+			 (comint--table-subvert (pcomplete-all-entries)
+						"" "/ssh:")))
+                      ((string-match "/" string) ; Local file name.
+                       (pcomplete-all-entries))
+                      (t                ;Host name or local file name.
+                       (append (all-completions string (pcomplete-all-entries))
+                               (mapcar (lambda (host) (concat host ":"))
+                                       (pcmpl-ssh-hosts)))))))
+                (complete-with-action action table string pred))))))
 
 (provide 'pcmpl-unix)
 
-;; arch-tag: 3f9eb5af-7e0e-449d-b586-381cbbf8fc5c
 ;;; pcmpl-unix.el ends here

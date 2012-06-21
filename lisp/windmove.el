@@ -1,7 +1,6 @@
 ;;; windmove.el --- directional window-selection routines
 ;;
-;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1998-2012 Free Software Foundation, Inc.
 ;;
 ;; Author: Hovav Shacham (hovav@cs.stanford.edu)
 ;; Created: 17 October 1998
@@ -246,7 +245,7 @@ placement bugs in old versions of Emacs."
 ;; Actually, the whole subject of the minibuffer edge of the frame is
 ;; rather messy.  It turns out that with a sufficiently large delta,
 ;; we can fly off the bottom edge of the frame and miss the minibuffer
-;; altogther.  This, I think, is never right: if there's a minibuffer
+;; altogether.  This, I think, is never right: if there's a minibuffer
 ;; and you're not in it, and you move down, the minibuffer should be
 ;; in your way.
 ;;
@@ -374,14 +373,12 @@ Returns the constrained coordinate."
 ;; otherwise would be.  the only complication is that we need to check
 ;; if the minibuffer is active, and, if not, pretend that it's not
 ;; even part of the frame.
-(defun windmove-wrap-loc-for-movement (coord window dir)
+(defun windmove-wrap-loc-for-movement (coord window)
   "Takes the constrained COORD and wraps it around for the movement.
 This makes an out-of-range x or y coordinate and wraps it around the
 frame, giving a coordinate (hopefully) in the window on the other edge
 of the frame.  WINDOW is the window that movement is relative to (nil
-means the currently selected window); DIR is the direction of the
-movement, one of `left', `up', `right',or `down'.
-Returns the wrapped coordinate."
+means the currently selected window).  Returns the wrapped coordinate."
   (let* ((frame-edges (windmove-frame-edges window))
          (frame-minibuffer (minibuffer-window (if window
                                                   (window-frame window)
@@ -420,17 +417,17 @@ supplied, if ARG is greater or smaller than zero, respectively."
                               (- (nth 3 edges) 1))))
       (cond
        ((> effective-arg 0)
-          top-left)
+	top-left)
        ((< effective-arg 0)
-          bottom-right)
+	bottom-right)
        ((= effective-arg 0)
-          (windmove-coord-add
-             top-left
-	     (let ((col-row
-		    (posn-col-row
-		     (posn-at-point (window-point window) window))))
-	       (cons (- (car col-row) (window-hscroll window))
-		     (cdr col-row)))))))))
+	(windmove-coord-add
+	 top-left
+	 ;; Don't care whether window is horizontally scrolled -
+	 ;; `posn-at-point' handles that already.  See also:
+	 ;; http://lists.gnu.org/archive/html/emacs-devel/2012-01/msg00638.html
+	 (posn-col-row
+	  (posn-at-point (window-point window) window))))))))
 
 ;; This uses the reference location in the current window (calculated
 ;; by `windmove-reference-loc' above) to find a reference location
@@ -475,8 +472,7 @@ DIR, ARG, and WINDOW are handled as by `windmove-other-window-loc'."
          (other-window-loc
           (if windmove-wrap-around
             (windmove-wrap-loc-for-movement constrained-other-window-loc
-                                            actual-current-window
-                                            dir)
+                                            actual-current-window)
             constrained-other-window-loc)))
     (window-at (car other-window-loc)
                (cdr other-window-loc))))
@@ -568,5 +564,4 @@ Default MODIFIER is 'shift."
 
 (provide 'windmove)
 
-;; arch-tag: 56267432-bf1a-4296-a9a0-85c6bd9f2375
 ;;; windmove.el ends here

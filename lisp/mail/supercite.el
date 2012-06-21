@@ -1,7 +1,6 @@
 ;;; supercite.el --- minor mode for citing mail and news replies
 
-;; Copyright (C) 1993, 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1997, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: 1993 Barry A. Warsaw <bwarsaw@python.org>
 ;; Maintainer:    Glenn Morris <rgm@gnu.org>
@@ -34,7 +33,6 @@
 
 
 (require 'regi)
-(require 'sendmail)	;; For mail-header-end.
 
 ;; start user configuration variables
 ;; vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -1486,18 +1484,22 @@ non-nil."
   "Does nothing.  Use this instead of nil to get a blank header."
   ())
 
-(defun sc-no-blank-line-or-header()
+(declare-function mh-in-header-p "mh-utils" ())
+
+(defun sc-no-blank-line-or-header ()
   "Similar to `sc-no-header' except it removes the preceding blank line."
-  (if (not (bobp))
-      (if (and (eolp)
-	       (progn (forward-line -1)
-		      (or (= (point) (mail-header-end))
-			  (and (eq major-mode 'mh-letter-mode)
-			       (with-no-warnings
-				 (mh-in-header-p))))))
-	  (progn (forward-line)
-		 (let ((kill-lines-magic t))
-		   (kill-line))))))
+  (and (not (bobp))
+       (eolp)
+       (progn (forward-line -1)
+	      (or (= (point)
+		     (save-excursion
+		       (rfc822-goto-eoh)
+		       (line-beginning-position 2)))
+		  (and (eq major-mode 'mh-letter-mode)
+		       (mh-in-header-p))))
+       (progn
+	 (forward-line)
+	 (kill-line))))
 
 (defun sc-header-on-said ()
   "\"On <date>, <from> said:\" unless:
@@ -1618,21 +1620,20 @@ error occurs."
 	       (cadr err) sc-eref-style)
 	      (beep))))))
 
-(defun sc-electric-mode (&optional arg)
-  "
-Mode for viewing Supercite reference headers.  Commands are:
+(defun sc-electric-mode (&optional style)
+  "Mode for viewing Supercite reference headers.  Commands are:
 \n\\{sc-electric-mode-map}
 
 `sc-electric-mode' is not intended to be run interactively, but rather
 accessed through Supercite's electric reference feature.  See
-`sc-insert-reference' for more details.  Optional ARG is the initial
+`sc-insert-reference' for more details.  Optional STYLE is the initial
 header style to use, unless not supplied or invalid, in which case
 `sc-preferred-header-style' is used."
 
   (let ((info sc-mail-info))
 
     (setq sc-eref-style
-	  (or (sc-valid-index-p arg)
+	  (or (sc-valid-index-p style)
 	      (sc-valid-index-p sc-preferred-header-style)
 	      0))
 
@@ -1846,8 +1847,7 @@ Note on function names in this list: all functions of the form
 ;; ======================================================================
 ;; published interface to mail and news readers
 
-(define-minor-mode sc-minor-mode
-  "Supercite minor mode."
+(define-minor-mode sc-minor-mode nil
   :group 'supercite
   :lighter (" SC" (sc-auto-fill-region-p
 		   (":f" (sc-fixup-whitespace-p "w"))
@@ -1997,5 +1997,4 @@ version at point."
 (provide 'supercite)
 (run-hooks 'sc-load-hook)
 
-;; arch-tag: a5d5bfa6-3bd5-4414-8c65-0afc83e45cd3
 ;;; supercite.el ends here

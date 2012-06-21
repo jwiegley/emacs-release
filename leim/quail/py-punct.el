@@ -1,7 +1,6 @@
 ;;; py-punct.el --- Quail packages for Chinese (pinyin + extra symbols)  -*-coding: iso-2022-7bit;-*-
 
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2001-2012  Free Software Foundation, Inc.
 ;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
 ;;   2006, 2007, 2008, 2009, 2010, 2011
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
@@ -9,7 +8,7 @@
 
 ;; Author: Ken'ichi HANDA <handa@etl.go.jp>
 
-;; Keywords: multilingual, input method, Chienese
+;; Keywords: multilingual, input method, Chinese
 
 ;; This file is part of GNU Emacs.
 
@@ -75,5 +74,4 @@ For instance, typing `v' and `%' insert `％'.
 
 (quail-defrule "v" (nth 2 (assoc "chinese-punct" quail-package-alist)))
 
-;; arch-tag: 941fd2ac-2d26-4b0e-8458-b5e485c5aa7d
 ;;; py-punct.el ends here

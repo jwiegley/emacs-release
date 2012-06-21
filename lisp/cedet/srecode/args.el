@@ -1,6 +1,6 @@
 ;;; srecode/args.el --- Provide some simple template arguments
 
-;; Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2007-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
 
@@ -32,7 +32,7 @@
 ;;; :blank
 ;;
 ;; Using :blank means that the template should force blank lines
-;; before and after the template, reguardless of where the insertion
+;; before and after the template, regardless of where the insertion
 ;; is occurring.
 (defun srecode-semantic-handle-:blank (dict)
   "Add macros into the dictionary DICT specifying blank line spacing.
@@ -185,5 +185,3 @@ do not contain any text from preceding or following text."
 (provide 'srecode/args)
 
 ;;; srecode/args.el ends here
-
-;; arch-tag: 645fc31e-30a9-469b-9215-fb320a46ee96

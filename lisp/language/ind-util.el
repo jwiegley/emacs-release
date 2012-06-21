@@ -1,7 +1,6 @@
 ;;; ind-util.el --- Transliteration and Misc. Tools for Indian Languages -*- coding: iso-2022-7bit; -*-
 
-;; Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2001-2012  Free Software Foundation, Inc.
 
 ;; Maintainer:  KAWABATA, Taichi <kawabata@m17n.org>
 ;; Keywords: multilingual, Indian, Devanagari
@@ -272,7 +271,7 @@
     (;; Misc Symbols
      nil ?$,1<"(B ?$,1<#(B nil ?$,1<m(B nil nil)
     (;; Digits
-     nil ?$,1='(B ?$,1=((B ?$,1=)(B ?$,1=*(B ?$,1=+(B ?$,1=,(B ?$,1=-(B ?$,1=.(B ?$,1=/(B)
+     ?$,1=&(B ?$,1='(B ?$,1=((B ?$,1=)(B ?$,1=*(B ?$,1=+(B ?$,1=,(B ?$,1=-(B ?$,1=.(B ?$,1=/(B)
     (;; Inscript-extra (4)  (#, $, ^, *, ])
      "$,1<m<P(B" "$,1<P<m(B" "$,1<D<m<P(B" nil nil)))
 
@@ -302,6 +301,25 @@
      "y"   "r"   "rh"  "l"   ("L" "ld") nil  ("v" "w")
      "sh" ("Sh" "shh") "s" "h"
      "q" "K" "G" ("J" "z") ".D" ".Dh" "f" ("Y" "yh")
+     ("GY" "dny") "x")
+    (;; misc -- 7
+     ".N" (".n" "M") "H" ".a" ".h" ("AUM" "OM") "..")))
+
+(defvar indian-itrans-v5-table-for-tamil
+  '(;; for encode/decode
+    (;; vowels -- 18
+     "a" ("aa" "A") "i" ("ii" "I") "u" ("uu" "U")
+     ("RRi" "R^i") ("LLi" "L^i") (".c" "e.c") "E" "e" "ai"
+     "o.c"  "O"   "o"   "au"  ("RRI" "R^I") ("LLI" "L^I"))
+    (;; consonants -- 40
+     "k"   "kh"  "g"   "gh"  ("~N" "N^")
+     "ch" ("Ch" "chh") "j" "jh" ("~n" "JN")
+     "T"   "Th"  "D"   "Dh"  "N"
+     "t"   "th"  "d"   "dh"  "n"   "nh"
+     "p"   "ph"  "b"   "bh"  "m"
+     "y"   "r"   "rh"  "l"   ("L" "ld") ("J" "z")  ("v" "w")
+     "sh" ("Sh" "shh") "s" "h"
+     "q" "K" "G" nil ".D" ".Dh" "f" ("Y" "yh")
      ("GY" "dny") "x")
     (;; misc -- 7
      ".N" (".n" "M") "H" ".a" ".h" ("AUM" "OM") "..")))
@@ -509,7 +527,7 @@
 
 (defvar indian-tml-itrans-v5-hash
   (indian-make-hash indian-tml-base-table
-			  indian-itrans-v5-table))
+			  indian-itrans-v5-table-for-tamil))
 )
 
 (defmacro indian-translate-region (from to hashtable encode-p)
@@ -1213,5 +1231,4 @@ Returns new end position."
 
 (provide 'ind-util)
 
-;; arch-tag: 59aacd71-46c2-4cb3-bb26-e12bbad55545
 ;;; ind-util.el ends here

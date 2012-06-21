@@ -1,7 +1,6 @@
 ;;; mac-win.el --- parse switches controlling interface with Mac window system -*-coding: utf-8-*-
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008  Free Software Foundation, Inc.
+;; Copyright (C) 1999-2008  Free Software Foundation, Inc.
 ;; Copyright (C) 2009-2012  YAMAMOTO Mitsuharu
 
 ;; Author: Andrew Choi <akochoi@mac.com>
@@ -131,49 +130,7 @@
 (defconst x-pointer-sb-v-double-arrow mac-pointer-resize-up-down)
 
 
-(defvar x-colors)
-
-(defun xw-defined-colors (&optional frame)
-  "Internal function called by `defined-colors'."
-  (or frame (setq frame (selected-frame)))
-  (let ((all-colors x-colors)
-	(this-color nil)
-	(defined-colors nil))
-    (while all-colors
-      (setq this-color (car all-colors)
-	    all-colors (cdr all-colors))
-      (and (color-supported-p this-color frame t)
-	   (setq defined-colors (cons this-color defined-colors))))
-    defined-colors))
-
-;;;; Function keys
-
-(defvar x-alternatives-map
-  (let ((map (make-sparse-keymap)))
-    ;; Map certain keypad keys into ASCII characters that people usually expect.
-    (define-key map [M-backspace] [?\M-\d])
-    (define-key map [M-delete] [?\M-\d])
-    (define-key map [M-tab] [?\M-\t])
-    (define-key map [M-linefeed] [?\M-\n])
-    (define-key map [M-clear] [?\M-\C-l])
-    (define-key map [M-return] [?\M-\C-m])
-    (define-key map [M-escape] [?\M-\e])
-    (define-key map [iso-lefttab] [backtab])
-    (define-key map [S-iso-lefttab] [backtab])
-    map)
-  "Keymap of possible alternative meanings for some keys.")
-
-(defun x-setup-function-keys (frame)
-  "Set up `function-key-map' on the graphical frame FRAME."
-  ;; Don't do this twice on the same display, or it would break
-  ;; normal-erase-is-backspace-mode.
-  (unless (terminal-parameter frame 'x-setup-function-keys)
-    ;; Map certain keypad keys into ASCII characters that people usually expect.
-    (with-selected-frame frame
-      (let ((map (copy-keymap x-alternatives-map)))
-        (set-keymap-parent map (keymap-parent local-function-key-map))
-        (set-keymap-parent local-function-key-map map)))
-    (set-terminal-parameter frame 'x-setup-function-keys t)))
+;;;; Modifier keys
 
 ;; Modifier name `ctrl' is an alias of `control'.
 (put 'ctrl 'modifier-value (get 'control 'modifier-value))
@@ -459,7 +416,7 @@
 
 ;; We keep track of the last text selected here, so we can check the
 ;; current selection against it, and avoid passing back our own text
-;; from x-get-selection-value.
+;; from x-selection-value.
 (defvar x-last-selected-text-clipboard nil
   "The value of the CLIPBOARD selection last time we selected or
 pasted text.")
@@ -467,43 +424,10 @@ pasted text.")
   "The value of the PRIMARY selection last time we selected or
 pasted text.")
 
-(defcustom x-select-enable-clipboard t
-  "Non-nil means cutting and pasting uses the clipboard.
-This is in addition to, but in preference to, the primary selection.
-
-On MS-Windows, this is non-nil by default, since Windows does not
-support other types of selections.  \(The primary selection that is
-set by Emacs is not accessible to other programs on Windows.\)"
-  :type 'boolean
-  :group 'killing)
-
-(defcustom x-select-enable-primary t
+(defcustom x-select-enable-primary nil
   "Non-nil means cutting and pasting uses the primary selection."
   :type 'boolean
   :group 'killing)
-
-(defun x-select-text (text &optional push)
-  "Select TEXT, a string, according to the window system.
-
-On X, put TEXT in the primary X selection.  For backward
-compatibility with older X applications, set the value of X cut
-buffer 0 as well, and if the optional argument PUSH is non-nil,
-rotate the cut buffers.  If `x-select-enable-clipboard' is
-non-nil, copy the text to the X clipboard as well.
-
-On Windows, make TEXT the current selection.  If
-`x-select-enable-clipboard' is non-nil, copy the text to the
-clipboard as well.  The argument PUSH is ignored.
-
-On Nextstep, put TEXT in the pasteboard; PUSH is ignored."
-  ;; With multi-tty, this function may be called from a tty frame.
-  (when (eq (framep (selected-frame)) 'mac)
-    (when x-select-enable-primary
-      (x-set-selection 'PRIMARY text)
-      (setq x-last-selected-text-primary text))
-    (when x-select-enable-clipboard
-      (x-set-selection 'CLIPBOARD text)
-      (setq x-last-selected-text-clipboard text))))
 
 (declare-function x-get-selection-internal "macselect.c"
 		  (selection-symbol target-type &optional time-stamp))
@@ -532,7 +456,7 @@ in `selection-converter-alist', which see."
       (put-text-property 0 (length data) 'foreign-selection data-type data))
     data))
 
-(defun x-selection-value (type)
+(defun x-selection-value-internal (type)
   (let ((data-types '(NSStringPboardType))
 	text tiff-image)
     (while (and (null text) data-types)
@@ -571,16 +495,16 @@ in `selection-converter-alist', which see."
 ;; If this function is called twice and finds the same text,
 ;; it returns nil the second time.  This is so that a single
 ;; selection won't be added to the kill ring over and over.
-(defun x-get-selection-value ()
+(defun x-selection-value ()
   ;; With multi-tty, this function may be called from a tty frame.
   (when (eq (framep (selected-frame)) 'mac)
     (let (clip-text primary-text selection-value)
       (when x-select-enable-clipboard
-	(setq clip-text (x-selection-value 'CLIPBOARD))
+	(setq clip-text (x-selection-value-internal 'CLIPBOARD))
 	(if (equal clip-text "") (setq clip-text nil))
 
 	;; Check the CLIPBOARD selection for 'newness', is it different
-	;; from what we remebered them to be last time we did a
+	;; from what we remembered them to be last time we did a
 	;; cut/paste operation.
 	(setq clip-text
 	      (cond ;; check clipboard
@@ -597,9 +521,9 @@ in `selection-converter-alist', which see."
 		(setq x-last-selected-text-clipboard clip-text)))))
 
       (when x-select-enable-primary
-	(setq primary-text (x-selection-value 'PRIMARY))
+	(setq primary-text (x-selection-value-internal 'PRIMARY))
 	;; Check the PRIMARY selection for 'newness', is it different
-	;; from what we remebered them to be last time we did a
+	;; from what we remembered them to be last time we did a
 	;; cut/paste operation.
 	(setq primary-text
 	      (cond ;; check primary selection
@@ -630,9 +554,19 @@ in `selection-converter-alist', which see."
 	  (setq selection-value (copy-sequence selection-value)))
       selection-value)))
 
+(define-obsolete-function-alias 'x-cut-buffer-or-selection-value
+  'x-selection-value "24.1")
+
 ;; Arrange for the kill and yank functions to set and check the clipboard.
 (setq interprogram-cut-function 'x-select-text)
-(setq interprogram-paste-function 'x-get-selection-value)
+(setq interprogram-paste-function 'x-selection-value)
+
+;; Make paste from other applications use the decoding in x-select-request-type
+;; and not just STRING.
+(defun x-get-selection-value ()
+  "Get the current value of the PRIMARY selection.
+Request data types in the order specified by `x-select-request-type'."
+  (x-selection-value-internal 'PRIMARY))
 
 (defun mac-setup-selection-properties ()
   (put 'CLIPBOARD 'mac-pasteboard-name
@@ -648,24 +582,23 @@ in `selection-converter-alist', which see."
        "NSFilenamesPboardType"))
 
 (defun mac-select-convert-to-string (selection type value)
-  (let ((str (cdr (xselect-convert-to-string selection nil value)))
+  (let ((str (xselect-convert-to-string selection nil value))
 	(coding (or next-selection-coding-system selection-coding-system)))
     (when str
-      ;; If TYPE is nil, this is a local request, thus return STR as
-      ;; is.  Otherwise, encode STR.
-      (if (not type)
+      ;; If TYPE is nil, this is a local request; return STR as-is.
+      (if (null type)
 	  str
+	;; Otherwise, encode STR.
 	(let ((inhibit-read-only t))
 	  (remove-text-properties 0 (length str) '(composition nil) str)
 	  (cond
 	   ((eq type 'NSStringPboardType)
 	    (setq str (mac-string-to-pasteboard-string str coding)))
 	   (t
-	    (error "Unknown selection type: %S" type))
-	   )))
+	    (error "Unknown selection type: %S" type))))
 
-      (setq next-selection-coding-system nil)
-      (cons type str))))
+	(setq next-selection-coding-system nil)
+	(cons type str)))))
 
 (defun mac-select-convert-to-pasteboard-filenames (selection type value)
   (let ((filename (xselect-convert-to-filename selection type value)))
@@ -1387,6 +1320,15 @@ the echo area or in a buffer where the cursor is not displayed."
   'mac-text-input-insert-text)
 
 ;;; Converted Actions
+(defun mac-handle-about (event)
+  "Display the *About GNU Emacs* buffer in response to EVENT."
+  (interactive "e")
+  (if (use-fancy-splash-screens-p)
+      (mac-start-animation (fancy-splash-frame) :type 'mod :duration 0.5))
+  ;; Convert a event bound in special-event-map to a normal event.
+  (setq unread-command-events
+	(append '(menu-bar help-menu about-emacs) unread-command-events)))
+
 (defun mac-handle-copy (event)
   "Copy the selected text to the clipboard.
 This is used in response to \"Speak selected text.\""
@@ -1396,6 +1338,12 @@ This is used in response to \"Speak selected text.\""
 	     (buffer-substring-no-properties (region-beginning) (region-end))
 	   (error ""))))
     (x-set-selection 'CLIPBOARD string)))
+
+(defun mac-handle-preferences (event)
+  "Display the `Mac' customization group in response to EVENT."
+  (interactive "e")
+  (mac-start-animation (selected-window) :type 'swipe :duration 0.5)
+  (customize-group 'mac))
 
 (defun mac-handle-toolbar-pill-button-clicked (event)
   "Toggle visibility of tool-bars in response to EVENT.
@@ -1413,6 +1361,22 @@ modifiers, it changes the global tool-bar visibility setting."
 			     (if (= (frame-parameter frame 'tool-bar-lines) 0)
 				 1 0))))))
 
+(defun mac-handle-change-toolbar-display-mode (event)
+  "Change tool bar style in response to EVENT."
+  (interactive "e")
+  (let* ((ae (mac-event-ae event))
+	 (tag-data (cdr (mac-ae-parameter ae "tag")))
+	 style)
+    (when (eq (car tag-data) 'number)
+      (setq style (cond ((= (cdr tag-data) 1) ; NSToolbarDisplayModeIconAndLabel
+			 'both)
+			((= (cdr tag-data) 2) ; NSToolbarDisplayModeIconOnly
+			 'image)
+			((= (cdr tag-data) 3) ; NSToolbarDisplayModeLabelOnly
+			 'text)))
+      (setq tool-bar-style style)
+      (force-mode-line-update t))))
+
 ;; Currently, this is called only when the zoom button is clicked
 ;; while the frame is in fullwidth/fullheight/maximized.
 (defun mac-handle-zoom (event)
@@ -1422,11 +1386,14 @@ modifiers, it changes the global tool-bar visibility setting."
     (let ((frame (cdr (mac-ae-parameter ae 'frame))))
       (set-frame-parameter frame 'fullscreen nil))))
 
-(define-key mac-apple-event-map [action about] 'about-emacs)
+(define-key mac-apple-event-map [action about] 'mac-handle-about)
 (define-key mac-apple-event-map [action copy] 'mac-handle-copy)
-(define-key mac-apple-event-map [action preferences] 'customize)
+(define-key mac-apple-event-map [action preferences] 'mac-handle-preferences)
 (define-key mac-apple-event-map [action toolbar-pill-button-clicked]
  'mac-handle-toolbar-pill-button-clicked)
+(define-key mac-apple-event-map [action change-toolbar-display-mode]
+ 'mac-handle-change-toolbar-display-mode)
+(put 'change-toolbar-display-mode 'mac-action-key-paths '("tag"))
 (define-key mac-apple-event-map [action zoom] 'mac-handle-zoom)
 
 ;;; Spotlight for Help (Mac OS X 10.6 and later)
@@ -1580,7 +1547,7 @@ modifiers, it changes the global tool-bar visibility setting."
   "Create a new buffer containing the selection value for Services."
   (interactive)
   (switch-to-buffer (generate-new-buffer "*untitled*"))
-  (insert (x-selection-value mac-service-selection))
+  (insert (x-selection-value-internal mac-service-selection))
   (sit-for 0)
   (save-buffer) ; It pops up the save dialog.
   )
@@ -1591,17 +1558,17 @@ modifiers, it changes the global tool-bar visibility setting."
   (compose-mail)
   (rfc822-goto-eoh)
   (forward-line 1)
-  (insert (x-selection-value mac-service-selection) "\n"))
+  (insert (x-selection-value-internal mac-service-selection) "\n"))
 
 (defun mac-service-mail-to ()
   "Prepare a mail buffer to be sent to the selection value for Services."
   (interactive)
-  (compose-mail (x-selection-value mac-service-selection)))
+  (compose-mail (x-selection-value-internal mac-service-selection)))
 
 (defun mac-service-insert-text ()
   "Insert the selection value for Services."
   (interactive)
-  (let ((text (x-selection-value mac-service-selection)))
+  (let ((text (x-selection-value-internal mac-service-selection)))
     (if (not buffer-read-only)
 	(insert text)
       (kill-new text)
@@ -1738,12 +1705,15 @@ See also `mac-dnd-known-types'."
   :group 'mac
   :type 'boolean)
 
+(defvar mac-ignore-momentum-wheel-events)
+
 (defun mac-mwheel-scroll (event)
   "Scroll up or down according to the EVENT.
 Mostly like `mwheel-scroll', but try scrolling by pixel unit if
 EVENT has no modifier keys, `mac-mouse-wheel-smooth-scroll' is
 non-nil, and the input device supports it."
   (interactive (list last-input-event))
+  (setq mac-ignore-momentum-wheel-events nil)
   ;; (nth 3 event) is a list of the following form:
   ;; (isDirectionInvertedFromDevice	; nil (normal) or t (inverted)
   ;;  (deltaX deltaY deltaZ)		; floats
@@ -1752,7 +1722,21 @@ non-nil, and the input device supports it."
   ;;  )
   ;; The list might end early if the remaining elements are all nil.
   ;; TODO: horizontal scrolling
-  (when (memq (event-basic-type event) '(wheel-up wheel-down))
+  (if (not (memq (event-basic-type event) '(wheel-up wheel-down)))
+      (when (and (memq (event-basic-type event) '(wheel-left wheel-right))
+		 (eq (nth 1 (nth 3 (nth 3 event))) 1)) ;; NSEventPhaseBegan
+	;; Post a swipe event when the momentum phase begins for
+	;; horizontal wheel events.
+	(setq mac-ignore-momentum-wheel-events t)
+	(push (cons
+	       (event-convert-list
+		(nconc (delq 'click
+			     (delq 'double
+				   (delq 'triple (event-modifiers event))))
+		       (if (eq (event-basic-type event) 'wheel-left)
+			   '(swipe-left) '(swipe-right))))
+	       (cdr event))
+	      unread-command-events))
     (if (or (not mac-mouse-wheel-smooth-scroll)
 	    (delq 'click (delq 'double (delq 'triple (event-modifiers event))))
 	    (null (nth 1 (nth 2 (nth 3 event)))))
@@ -2050,6 +2034,31 @@ Return non-nil if the new state is enabled."
 	(push key mac-mwheel-installed-bindings)))))
 
 
+;;; Swipe events
+(declare-function mac-start-animation "macfns.c"
+		  (frame-or-window &rest properties))
+
+(defun mac-previous-buffer (event)
+  "Like `previous-buffer', but operate on the window where EVENT occurred."
+  (interactive "e")
+  (let ((window (posn-window (event-start event))))
+    (mac-start-animation window :type 'move-out :direction 'right)
+    (with-selected-window window
+      (previous-buffer))))
+
+(defun mac-next-buffer (event)
+  "Like `next-buffer', but operate on the window where EVENT occurred."
+  (interactive "e")
+  (let ((window (posn-window (event-start event))))
+    (mac-start-animation window :type 'none)
+    (with-selected-window window
+      (next-buffer))
+    (mac-start-animation window :type 'move-in :direction 'left)))
+
+(global-set-key [swipe-left] 'mac-previous-buffer)
+(global-set-key [swipe-right] 'mac-next-buffer)
+
+
 ;;; Trackpad events
 (defvar text-scale-mode-step) ;; in face-remap.el
 (defvar text-scale-mode-amount) ;; in face-remap.el
@@ -2149,8 +2158,6 @@ The actual magnification is performed by `text-scale-mode'."
 (defun x-win-suspend-error ()
   (error "Suspending an Emacs running under Mac makes no sense"))
 
-(defalias 'x-cut-buffer-or-selection-value 'x-get-selection-value)
-
 (defvar mac-initialized nil
   "Non-nil if the Mac window system has been initialized.")
 
@@ -2204,6 +2211,12 @@ standard ones in `x-handle-args'."
 	      site-run-file nil
 	      inhibit-x-resources t))))
 
+(defun mac-exit-splash-screen ()
+  "Stop displaying the splash screen buffer with possibly an animation."
+  (interactive)
+  (mac-start-animation (selected-window) :type 'fade-out)
+  (exit-splash-screen))
+
 (defun mac-initialize-window-system ()
   "Initialize Emacs for Mac GUI frames."
   ;; Make sure we have a valid resource name.
@@ -2231,7 +2244,7 @@ standard ones in `x-handle-args'."
       ;; Built on Mac OS X 10.7 or later.
       (set-fontset-font t nil (font-spec :family "Apple Color Emoji")
 			nil 'prepend))
-  (set-fontset-font t nil (font-spec :family "LastResort") nil 'append)
+  ;; (set-fontset-font t nil (font-spec :family "LastResort") nil 'append)
   (set-fontset-font t '(#x20000 . #x2FFFF)
 		    '("HanaMinB" . "unicode-sip") nil 'append)
 
@@ -2313,6 +2326,9 @@ standard ones in `x-handle-args'."
 
   (add-hook 'menu-bar-update-hook 'mac-setup-help-topics)
 
+  (substitute-key-definition 'exit-splash-screen 'mac-exit-splash-screen
+			     splash-screen-keymap)
+
   (setq mac-initialized t))
 
 (add-to-list 'handle-args-function-alist '(mac . mac-handle-args))
@@ -2324,5 +2340,4 @@ standard ones in `x-handle-args'."
 
 (provide 'mac-win)
 
-;; arch-tag: 71dfcd14-cde8-4d66-b05c-85ec94fb23a6
 ;;; mac-win.el ends here

@@ -1,6 +1,6 @@
 ;;; ede/linux.el --- Special project for Linux
 
-;; Copyright (C) 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2008-2012 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
 
@@ -62,7 +62,7 @@ DIR is the directory to search from."
     (if proj
 	(ede-up-directory (file-name-directory
 			   (oref proj :file)))
-      ;; No pre-existing project.  Lets take a wild-guess if we have
+      ;; No pre-existing project.  Let's take a wild-guess if we have
       ;; an Linux project here.
       (when (string-match "linux[^/]*" dir)
 	(let ((base (substring dir 0 (match-end 0))))
@@ -101,7 +101,7 @@ Return nil if there isn't one.
 Argument DIR is the directory it is created for.
 ROOTPROJ is nil, since there is only one project."
   (or (ede-linux-file-existing dir)
-      ;; Doesn't already exist, so lets make one.
+      ;; Doesn't already exist, so let's make one.
       (ede-linux-project "Linux"
 			 :name "Linux"
 			 :version (ede-linux-version dir)
@@ -245,5 +245,4 @@ Knows about how the Linux source tree is organized."
 ;; generated-autoload-load-name: "ede/linux"
 ;; End:
 
-;; arch-tag: 41f310c8-b169-4259-8a2d-0ff4bd0a736d
 ;;; ede/linux.el ends here

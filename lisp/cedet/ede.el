@@ -1,10 +1,10 @@
 ;;; ede.el --- Emacs Development Environment gloss
 
-;; Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1998-2005, 2007-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: project, make
+;; Version: 1.0pre7
 
 ;; This file is part of GNU Emacs.
 
@@ -55,7 +55,7 @@
 (declare-function ede-directory-project-p "ede/files")
 (declare-function ede-find-subproject-for-directory "ede/files")
 (declare-function ede-project-directory-remove-hash "ede/files")
-(declare-function ede-toplevel "ede/files")
+(declare-function ede-toplevel "ede/base")
 (declare-function ede-toplevel-project "ede/files")
 (declare-function ede-up-directory "ede/files")
 (declare-function semantic-lex-make-spp-table "semantic/lex-spp")
@@ -80,7 +80,7 @@ project file, all targets are queried to see if it should be added.
 If the value is 'always, then the new file is added to the first
 target encountered.  If the value is 'multi-ask, then if more than one
 target wants the file, the user is asked.  If only one target wants
-the file, then then it is automatically added to that target.  If the
+the file, then it is automatically added to that target.  If the
 value is 'ask, then the user is always asked, unless there is no
 target willing to take the file.  'never means never perform the check."
   :group 'ede
@@ -250,7 +250,7 @@ Argument LIST-O-O is the list of objects to choose from."
     (and obj (obj-of-class-p obj ede-target))))
 
 (defun ede-buffer-belongs-to-project-p ()
-  "Return non-nil if this buffer belongs to at least one target."
+  "Return non-nil if this buffer belongs to at least one project."
   (if (or (null ede-object) (consp ede-object)) nil
     (obj-of-class-p ede-object ede-project)))
 
@@ -279,7 +279,7 @@ Argument MENU-DEF is the menu definition to use."
 	      ede-obj (if (listp ede-object) ede-object (list ede-object)))
 	;; First, collect the build items from the project
 	(setq newmenu (append newmenu (ede-menu-items-build obj t)))
-	;; Second, Declare the current target menu items
+	;; Second, declare the current target menu items
 	(if (and ede-obj (ede-menu-obj-of-class-p ede-target))
 	    (while ede-obj
 	      (setq newmenu (append newmenu
@@ -300,7 +300,7 @@ Argument MENU-DEF is the menu definition to use."
 	  (setq targets (cdr targets)))
 	;; Fourth, build sub projects.
 	;; -- nerp
-	;; Fifth, Add make distribution
+	;; Fifth, add make distribution
 	(append newmenu (list [ "Make distribution" ede-make-dist t ]))
 	)))))
 
@@ -434,8 +434,9 @@ To be used in hook functions."
 
 (define-minor-mode ede-minor-mode
   "Toggle EDE (Emacs Development Environment) minor mode.
-With non-nil argument ARG, enable EDE minor mode if ARG is
-positive; otherwise, disable it.
+With a prefix argument ARG, enable EDE minor mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+EDE minor mode if ARG is omitted or nil.
 
 If this file is contained, or could be contained in an EDE
 controlled project, then this mode is activated automatically
@@ -512,8 +513,9 @@ ONOFF indicates enabling or disabling the mode."
 ;;;###autoload
 (define-minor-mode global-ede-mode
   "Toggle global EDE (Emacs Development Environment) mode.
-With non-nil argument ARG, enable global EDE mode if ARG is
-positive; otherwise, disable it.
+With a prefix argument ARG, enable global EDE mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
 
 This global minor mode enables `ede-minor-mode' in all buffers in
 an EDE controlled project."
@@ -564,7 +566,7 @@ an EDE controlled project."
   "Look for a target that wants to own the current file.
 Follow the preference set with `ede-auto-add-method' and get the list
 of objects with the `ede-want-file-p' method."
-  (if ede-object (error "Ede-object already defined for %s" (buffer-name)))
+  (if ede-object (error "ede-object already defined for %s" (buffer-name)))
   (if (or (eq ede-auto-add-method 'never)
 	  (ede-ignore-file (buffer-file-name)))
       nil
@@ -678,7 +680,7 @@ Add it to the list of allowed project directories? "
 	      t)))))
 
 (defun ede-new (type &optional name)
-  "Create a new project starting of project type TYPE.
+  "Create a new project starting from project type TYPE.
 Optional argument NAME is the name to give this project."
   (interactive
    (list (completing-read "Project Type: "
@@ -763,7 +765,7 @@ Optional argument NAME is the name to give this project."
 
 (defun ede-invoke-method (sym &rest args)
   "Invoke method SYM on the current buffer's project object.
-ARGS are additional arguments to pass to method sym."
+ARGS are additional arguments to pass to method SYM."
   (if (not ede-object)
       (error "Cannot invoke %s for %s" (symbol-name sym)
 	     (buffer-name)))
@@ -941,7 +943,7 @@ Argument FNND is an argument."
   (error "remove-file not supported by %s" (object-name ot)))
 
 (defmethod project-edit-file-target ((ot ede-target))
-  "Edit the target OT associated w/ this file."
+  "Edit the target OT associated with this file."
   (find-file (oref (ede-current-project) file)))
 
 (defmethod project-new-target ((proj ede-project) &rest args)
@@ -983,7 +985,7 @@ Argument COMMAND is the command to use for compiling the target."
   (error "Dist-files is not supported by %s" (object-name this)))
 
 (defmethod project-rescan ((this ede-project))
-  "Rescan the EDE proj project THIS."
+  "Rescan the EDE project THIS."
   (error "Rescanning a project is not supported by %s" (object-name this)))
 
 (defun ede-ecb-project-paths ()
@@ -1005,7 +1007,7 @@ On success, return the added project."
   (when (not proj)
     (error "No project created to add to master list"))
   (when (not (eieio-object-p proj))
-    (error "Attempt to add Non-object to master project list"))
+    (error "Attempt to add non-object to master project list"))
   (when (not (obj-of-class-p proj ede-project-placeholder))
     (error "Attempt to add a non-project to the ede projects list"))
   (add-to-list 'ede-projects proj)
@@ -1035,7 +1037,7 @@ Optional ROOTRETURN will return the root project for DIR."
 	;; recomment as we go
 	;;nil
 	))
-     ;; Do nothing if we are buiding an EDE project already
+     ;; Do nothing if we are building an EDE project already.
      (ede-constructing
       nil)
      ;; Load in the project in question.
@@ -1272,7 +1274,7 @@ See also `ede-map-all-subprojects'."
   (mapcar proc (oref this subproj)))
 
 (defmethod ede-map-all-subprojects ((this ede-project) allproc)
-  "For object THIS, execute PROC on THIS and  all subprojects.
+  "For object THIS, execute PROC on THIS and all subprojects.
 This function also applies PROC to sub-sub projects.
 See also `ede-map-subprojects'."
   (apply 'append
@@ -1293,16 +1295,6 @@ See also `ede-map-subprojects'."
   "For project THIS, map PROC to all targets and return if any non-nil.
 Return the first non-nil value returned by PROC."
   (eval (cons 'or (ede-map-targets this proc))))
-
-;;; VC Handling
-;;
-(defun ede-maybe-checkout (&optional buffer)
-  "Check BUFFER out of VC if necessary."
-  (save-excursion
-    (if buffer (set-buffer buffer))
-    (if (and buffer-read-only vc-mode
-	     (y-or-n-p "Checkout Makefile.am from VC? "))
-	(vc-toggle-read-only))))
 
 
 ;;; Some language specific methods.
@@ -1394,5 +1386,4 @@ is the project to use, instead of `ede-current-project'."
     (ede-speedbar-file-setup)
   (add-hook 'speedbar-load-hook 'ede-speedbar-file-setup))
 
-;; arch-tag: 0e1e0eba-484f-4119-abdb-30951f725705
 ;;; ede.el ends here

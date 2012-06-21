@@ -1,10 +1,10 @@
 ;;; lisp.el --- Lisp editing commands for Emacs
 
-;; Copyright (C) 1985, 1986, 1994, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1985-1986, 1994, 2000-2012 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: lisp, languages
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -140,9 +140,19 @@ A negative argument means move backward but still to a less deep spot.
 This command assumes point is not in a string or comment."
   (interactive "^p")
   (or arg (setq arg 1))
-  (let ((inc (if (> arg 0) 1 -1)))
+  (let ((inc (if (> arg 0) 1 -1))
+        pos)
     (while (/= arg 0)
-      (goto-char (or (scan-lists (point) inc 1) (buffer-end arg)))
+      (if (null forward-sexp-function)
+          (goto-char (or (scan-lists (point) inc 1) (buffer-end arg)))
+	(condition-case err
+	    (while (progn (setq pos (point))
+			  (forward-sexp inc)
+			  (/= (point) pos)))
+	  (scan-error (goto-char (nth (if (> arg 0) 3 2) err))))
+	(if (= (point) pos)
+            (signal 'scan-error
+                    (list "Unbalanced parentheses" (point) (point)))))
       (setq arg (- arg inc)))))
 
 (defun kill-sexp (&optional arg)
@@ -247,9 +257,8 @@ is called as a function to find the defun's beginning."
        (if (> arg 0)
            (dotimes (i arg)
              (funcall beginning-of-defun-function))
-         ;; Better not call end-of-defun-function directly, in case
-         ;; it's not defined.
-         (end-of-defun (- arg))))))
+	 (dotimes (i (- arg))
+	   (funcall end-of-defun-function))))))
 
    ((or defun-prompt-regexp open-paren-in-column-0-is-defun-start)
     (and (< arg 0) (not (eobp)) (forward-char 1))
@@ -624,46 +633,58 @@ considered."
   (interactive)
   (let* ((data (lisp-completion-at-point predicate))
          (plist (nthcdr 3 data)))
-    (let ((completion-annotate-function
-           (plist-get plist :annotation-function)))
-      (completion-in-region (nth 0 data) (nth 1 data) (nth 2 data)
-                            (plist-get plist :predicate)))))
+    (if (null data)
+        (minibuffer-message "Nothing to complete")
+      (let ((completion-extra-properties plist))
+        (completion-in-region (nth 0 data) (nth 1 data) (nth 2 data)
+                              (plist-get plist :predicate))))))
 
 
 (defun lisp-completion-at-point (&optional predicate)
   "Function used for `completion-at-point-functions' in `emacs-lisp-mode'."
   ;; FIXME: the `end' could be after point?
   (with-syntax-table emacs-lisp-mode-syntax-table
-    (let* ((end (point))
-           (beg (save-excursion
-                  (backward-sexp 1)
-                  (while (= (char-syntax (following-char)) ?\')
-                    (forward-char 1))
-                  (point)))
-           (predicate
-            (or predicate
-                (save-excursion
-                  (goto-char beg)
-                  (if (not (eq (char-before) ?\())
-                      (lambda (sym)          ;why not just nil ?   -sm
-                        (or (boundp sym) (fboundp sym)
-                            (symbol-plist sym)))
-                    ;; Looks like a funcall position.  Let's double check.
-                    (if (condition-case nil
-                            (progn (up-list -2) (forward-char 1)
-                                   (eq (char-after) ?\())
-                          (error nil))
-                        ;; If the first element of the parent list is an open
-                        ;; paren we are probably not in a funcall position.
-                        ;; Maybe a `let' varlist or something.
-                        nil
-                      ;; Else, we assume that a function name is expected.
-                      'fboundp))))))
-      (list beg end obarray
-            :predicate predicate
-            :annotation-function
-            (unless (eq predicate 'fboundp)
-              (lambda (str) (if (fboundp (intern-soft str)) " <f>")))))))
+    (let* ((pos (point))
+	   (beg (condition-case nil
+		    (save-excursion
+		      (backward-sexp 1)
+		      (skip-syntax-forward "'")
+		      (point))
+		  (scan-error pos)))
+	   (predicate
+	    (or predicate
+		(save-excursion
+		  (goto-char beg)
+		  (if (not (eq (char-before) ?\())
+		      (lambda (sym)	     ;why not just nil ?   -sm
+			(or (boundp sym) (fboundp sym)
+			    (symbol-plist sym)))
+		    ;; Looks like a funcall position.  Let's double check.
+		    (if (condition-case nil
+			    (progn (up-list -2) (forward-char 1)
+				   (eq (char-after) ?\())
+			  (error nil))
+			;; If the first element of the parent list is an open
+			;; paren we are probably not in a funcall position.
+			;; Maybe a `let' varlist or something.
+			nil
+		      ;; Else, we assume that a function name is expected.
+		      'fboundp)))))
+	   (end
+	    (unless (or (eq beg (point-max))
+			(member (char-syntax (char-after beg)) '(?\" ?\( ?\))))
+	      (condition-case nil
+		  (save-excursion
+		    (goto-char beg)
+		    (forward-sexp 1)
+		    (when (>= (point) pos)
+		      (point)))
+		(scan-error pos)))))
+      (when end
+	(list beg end obarray
+	      :predicate predicate
+	      :annotation-function
+	      (unless (eq predicate 'fboundp)
+		(lambda (str) (if (fboundp (intern-soft str)) " <f>"))))))))
 
-;; arch-tag: aa7fa8a4-2e6f-4e9b-9cd9-fef06340e67e
 ;;; lisp.el ends here

@@ -1,6 +1,6 @@
 /* Work-alike for termcap, plus extra features.
    Copyright (C) 1985, 1986, 1993, 1994, 1995, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+                 2004, 2005, 2006, 2007, 2008, 2011 Free Software Foundation, Inc.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,54 +18,20 @@ the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 Boston, MA 02110-1301, USA.  */
 
 /* Emacs config.h may rename various library functions such as malloc.  */
-#ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
-
-#ifdef emacs
-
 #include <setjmp.h>
-#include <lisp.h>		/* xmalloc is here */
-/* Get the O_* definitions for open et al.  */
 #include <sys/file.h>
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 
-#else /* not emacs */
-
-#ifdef STDC_HEADERS
-#include <stdlib.h>
-#include <string.h>
-#else
-char *getenv ();
-char *malloc ();
-char *realloc ();
+#include "lisp.h"
+#include "tparam.h"
+#ifdef MSDOS
+#include "msdos.h"
 #endif
-
-/* Do this after the include, in case string.h prototypes bcopy.  */
-#if (defined(HAVE_STRING_H) || defined(STDC_HEADERS)) && !defined(bcopy)
-#define bcopy(s, d, n) memcpy ((d), (s), (n))
-#endif
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
-
-#endif /* not emacs */
 
 #ifndef NULL
 #define NULL (char *) 0
-#endif
-
-#ifndef O_RDONLY
-#define O_RDONLY 0
 #endif
 
 /* BUFSIZE is the initial size allocated for the buffer
@@ -89,37 +55,6 @@ int bufsize = 128;
 #define TERMCAP_FILE "/etc/termcap"
 #endif
 
-#ifndef emacs
-static void
-memory_out ()
-{
-  write (2, "virtual memory exhausted\n", 25);
-  exit (1);
-}
-
-static char *
-xmalloc (size)
-     unsigned size;
-{
-  register char *tem = malloc (size);
-
-  if (!tem)
-    memory_out ();
-  return tem;
-}
-
-static char *
-xrealloc (ptr, size)
-     char *ptr;
-     unsigned size;
-{
-  register char *tem = realloc (ptr, size);
-
-  if (!tem)
-    memory_out ();
-  return tem;
-}
-#endif /* not emacs */
 
 /* Looking up capabilities in the entry already found.  */
 
@@ -127,15 +62,14 @@ xrealloc (ptr, size)
    for tgetnum, tgetflag and tgetstr to find.  */
 static char *term_entry;
 
-static char *tgetst1 ();
+static char *tgetst1 (char *ptr, char **area);
 
 /* Search entry BP for capability CAP.
    Return a pointer to the capability (in BP) if found,
    0 if not found.  */
 
 static char *
-find_capability (bp, cap)
-     register char *bp, *cap;
+find_capability (register char *bp, register const char *cap)
 {
   for (; *bp; bp++)
     if (bp[0] == ':'
@@ -149,8 +83,7 @@ find_capability (bp, cap)
    cause prebinding to fail.  */
 #ifndef DARWIN_OS
 int
-tgetnum (cap)
-     char *cap;
+tgetnum (const char *cap)
 {
   register char *ptr = find_capability (term_entry, cap);
   if (!ptr || ptr[-1] != '#')
@@ -159,8 +92,7 @@ tgetnum (cap)
 }
 
 int
-tgetflag (cap)
-     char *cap;
+tgetflag (const char *cap)
 {
   register char *ptr = find_capability (term_entry, cap);
   return ptr && ptr[-1] == ':';
@@ -172,16 +104,14 @@ tgetflag (cap)
    If AREA is null, space is allocated with `malloc'.  */
 
 char *
-tgetstr (cap, area)
-     char *cap;
-     char **area;
+tgetstr (const char *cap, char **area)
 {
   register char *ptr = find_capability (term_entry, cap);
   if (!ptr || (ptr[-1] != '=' && ptr[-1] != '~'))
     return NULL;
   return tgetst1 (ptr, area);
 }
-#endif /* DARWIN_OS */
+#endif /* !DARWIN_OS */
 
 #ifdef IS_EBCDIC_HOST
 /* Table, indexed by a character in range 0200 to 0300 with 0200 subtracted,
@@ -213,9 +143,7 @@ static const char esctab[]
    or NULL if PTR is NULL.  */
 
 static char *
-tgetst1 (ptr, area)
-     char *ptr;
-     char **area;
+tgetst1 (char *ptr, char **area)
 {
   register char *p, *r;
   register int c;
@@ -326,7 +254,7 @@ tgetst1 (ptr, area)
 
 	cut[last_p_param].len = r - cut[last_p_param].beg;
 	for (i = 0, wp = ret; i <= last_p_param; wp += cut[i++].len)
-	  bcopy (cut[i].beg, wp, cut[i].len);
+	  memcpy (wp, cut[i].beg, cut[i].len);
 	r = wp;
       }
   }
@@ -340,55 +268,22 @@ tgetst1 (ptr, area)
 
 /* Outputting a string with padding.  */
 
-#ifndef emacs
-short ospeed;
-/* If OSPEED is 0, we use this as the actual baud rate.  */
-int tputs_baud_rate;
-#endif
-
 /* Already defined in the System framework in Mac OS X and causes
    prebinding to fail.  */
 #ifndef DARWIN_OS
 char PC;
-#endif  /* DARWIN_OS */
 
-#ifndef emacs
-/* Actual baud rate if positive;
-   - baud rate / 100 if negative.  */
-
-static const int speeds[] =
-  {
-    0, 50, 75, 110, 135, 150, -2, -3, -6, -12,
-    -18, -24, -48, -96, -192, -288, -384, -576, -1152
-  };
-
-#endif /* not emacs */
-
-/* Already defined in the System framework in Mac OS X and causes
-   prebinding to fail.  */
-#ifndef DARWIN_OS
 void
-tputs (str, nlines, outfun)
-     register char *str;
-     int nlines;
-     register int (*outfun) ();
+tputs (register const char *str, int nlines, int (*outfun) (int))
 {
   register int padcount = 0;
   register int speed;
 
-#ifdef emacs
-  extern EMACS_INT baud_rate;
   speed = baud_rate;
   /* For quite high speeds, convert to the smaller
      units to avoid overflow.  */
   if (speed > 10000)
     speed = - speed / 100;
-#else
-  if (ospeed == 0)
-    speed = tputs_baud_rate;
-  else
-    speed = speeds[ospeed];
-#endif
 
   if (!str)
     return;
@@ -429,30 +324,29 @@ tputs (str, nlines, outfun)
   while (padcount-- > 0)
     (*outfun) (PC);
 }
-#endif /* DARWIN_OS */
+#endif /* !DARWIN_OS */
 
 /* Finding the termcap entry in the termcap data base.  */
 
 struct termcap_buffer
   {
     char *beg;
-    int size;
+    ptrdiff_t size;
     char *ptr;
     int ateof;
-    int full;
+    ptrdiff_t full;
   };
 
 /* Forward declarations of static functions.  */
 
-static int scan_file ();
-static char *gobble_line ();
-static int compare_contin ();
-static int name_match ();
+static int scan_file (char *str, int fd, register struct termcap_buffer *bufp);
+static char *gobble_line (int fd, register struct termcap_buffer *bufp, char *append_end);
+static int compare_contin (register char *str1, register char *str2);
+static int name_match (char *line, char *name);
 
 #ifdef MSDOS /* MW, May 1993 */
 static int
-valid_filename_p (fn)
-     char *fn;
+valid_filename_p (char *fn)
 {
   return *fn == '/' || fn[1] == ':';
 }
@@ -475,8 +369,7 @@ valid_filename_p (fn)
    prebinding to fail.  */
 #ifndef DARWIN_OS
 int
-tgetent (bp, name)
-     char *bp, *name;
+tgetent (char *bp, const char *name)
 {
   register char *termcap_name;
   register int fd;
@@ -484,7 +377,7 @@ tgetent (bp, name)
   register char *bp1;
   char *tc_search_point;
   char *term;
-  int malloc_size = 0;
+  ptrdiff_t malloc_size = 0;
   register int c;
   char *tcenv = NULL;		/* TERMCAP value, if it contains :tc=.  */
   char *indirect = NULL;	/* Terminal type in :tc= in TERMCAP value.  */
@@ -518,7 +411,7 @@ tgetent (bp, name)
   if (termcap_name && (*termcap_name == '\\'
 		       || *termcap_name == '/'
 		       || termcap_name[1] == ':'))
-    dostounix_filename(termcap_name);
+    dostounix_filename (termcap_name);
 #endif
 
   filep = termcap_name && valid_filename_p (termcap_name);
@@ -563,7 +456,7 @@ tgetent (bp, name)
   buf.size = BUFSIZE;
   /* Add 1 to size to ensure room for terminating null.  */
   buf.beg = (char *) xmalloc (buf.size + 1);
-  term = indirect ? indirect : name;
+  term = indirect ? indirect : (char *)name;
 
   if (!bp)
     {
@@ -585,20 +478,20 @@ tgetent (bp, name)
       if (scan_file (term, fd, &buf) == 0)
 	{
 	  close (fd);
-	  free (buf.beg);
+	  xfree (buf.beg);
 	  if (malloc_size)
-	    free (bp);
+	    xfree (bp);
 	  return 0;
 	}
 
       /* Free old `term' if appropriate.  */
       if (term != name)
-	free (term);
+	xfree (term);
 
       /* If BP is malloc'd by us, make sure it is big enough.  */
       if (malloc_size)
 	{
-	  int offset1 = bp1 - bp, offset2 = tc_search_point - bp;
+	  ptrdiff_t offset1 = bp1 - bp, offset2 = tc_search_point - bp;
 	  malloc_size = offset1 + buf.size;
 	  bp = termcap_name = (char *) xrealloc (bp, malloc_size);
 	  bp1 = termcap_name + offset1;
@@ -623,7 +516,7 @@ tgetent (bp, name)
     }
 
   close (fd);
-  free (buf.beg);
+  xfree (buf.beg);
 
   if (malloc_size)
     bp = (char *) xrealloc (bp, bp1 - bp + 1);
@@ -632,7 +525,7 @@ tgetent (bp, name)
   term_entry = bp;
   return 1;
 }
-#endif /* DARWIN_OS */
+#endif /* !DARWIN_OS */
 
 /* Given file open on FD and buffer BUFP,
    scan the file from the beginning until a line is found
@@ -641,10 +534,7 @@ tgetent (bp, name)
    or 0 if no entry is found in the file.  */
 
 static int
-scan_file (str, fd, bufp)
-     char *str;
-     int fd;
-     register struct termcap_buffer *bufp;
+scan_file (char *str, int fd, register struct termcap_buffer *bufp)
 {
   register char *end;
 
@@ -681,8 +571,7 @@ scan_file (str, fd, bufp)
    by termcap entry LINE.  */
 
 static int
-name_match (line, name)
-     char *line, *name;
+name_match (char *line, char *name)
 {
   register char *tem;
 
@@ -697,8 +586,7 @@ name_match (line, name)
 }
 
 static int
-compare_contin (str1, str2)
-     register char *str1, *str2;
+compare_contin (register char *str1, register char *str2)
 {
   register int c1, c2;
   while (1)
@@ -738,15 +626,11 @@ compare_contin (str1, str2)
    thing as one line.  The caller decides when a line is continued.  */
 
 static char *
-gobble_line (fd, bufp, append_end)
-     int fd;
-     register struct termcap_buffer *bufp;
-     char *append_end;
+gobble_line (int fd, register struct termcap_buffer *bufp, char *append_end)
 {
   register char *end;
   register int nread;
   register char *buf = bufp->beg;
-  register char *tem;
 
   if (!append_end)
     append_end = bufp->ptr;
@@ -763,18 +647,20 @@ gobble_line (fd, bufp, append_end)
 	{
 	  if (bufp->full == bufp->size)
 	    {
-	      bufp->size *= 2;
+	      ptrdiff_t ptr_offset = bufp->ptr - buf;
+	      ptrdiff_t append_end_offset = append_end - buf;
 	      /* Add 1 to size to ensure room for terminating null.  */
-	      tem = (char *) xrealloc (buf, bufp->size + 1);
-	      bufp->ptr = (bufp->ptr - buf) + tem;
-	      append_end = (append_end - buf) + tem;
-	      bufp->beg = buf = tem;
+	      ptrdiff_t size = bufp->size + 1;
+	      bufp->beg = buf = xpalloc (buf, &size, 1, -1, 1);
+	      bufp->size = size - 1;
+	      bufp->ptr = buf + ptr_offset;
+	      append_end = buf + append_end_offset;
 	    }
 	}
       else
 	{
 	  append_end -= bufp->ptr - buf;
-	  bcopy (bufp->ptr, buf, bufp->full -= bufp->ptr - buf);
+	  memcpy (buf, bufp->ptr, bufp->full -= bufp->ptr - buf);
 	  bufp->ptr = buf;
 	}
       if (!(nread = read (fd, buf + bufp->full, bufp->size - bufp->full)))
@@ -793,9 +679,29 @@ gobble_line (fd, bufp, append_end)
 
 #include <stdio.h>
 
-main (argc, argv)
-     int argc;
-     char **argv;
+static void
+tprint (char *cap)
+{
+  char *x = tgetstr (cap, 0);
+  register char *y;
+
+  printf ("%s: ", cap);
+  if (x)
+    {
+      for (y = x; *y; y++)
+	if (*y <= ' ' || *y == 0177)
+	  printf ("\\%0o", *y);
+	else
+	  putchar (*y);
+      free (x);
+    }
+  else
+    printf ("none");
+  putchar ('\n');
+}
+
+int
+main (int argc, char **argv)
 {
   char *term;
   char *buf;
@@ -817,30 +723,8 @@ main (argc, argv)
 
   printf ("co: %d\n", tgetnum ("co"));
   printf ("am: %d\n", tgetflag ("am"));
-}
 
-tprint (cap)
-     char *cap;
-{
-  char *x = tgetstr (cap, 0);
-  register char *y;
-
-  printf ("%s: ", cap);
-  if (x)
-    {
-      for (y = x; *y; y++)
-	if (*y <= ' ' || *y == 0177)
-	  printf ("\\%0o", *y);
-	else
-	  putchar (*y);
-      free (x);
-    }
-  else
-    printf ("none");
-  putchar ('\n');
+  return 0;
 }
 
 #endif /* TEST */
-
-/* arch-tag: c2e8d427-2271-4fac-95fe-411857238b80
-   (do not change this comment) */

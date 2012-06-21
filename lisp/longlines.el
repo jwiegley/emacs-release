@@ -1,6 +1,6 @@
 ;;; longlines.el --- automatically wrap long lines   -*- coding:utf-8 -*-
 
-;; Copyright (C) 2000, 2001, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2000-2001, 2004-2012 Free Software Foundation, Inc.
 
 ;; Authors:    Kai Grossjohann <Kai.Grossjohann@CS.Uni-Dortmund.DE>
 ;;             Alex Schroeder <alex@gnu.org>
@@ -95,17 +95,22 @@ This is used when `longlines-show-hard-newlines' is on."
 
 ;;;###autoload
 (define-minor-mode longlines-mode
-  "Toggle Long Lines mode.
-In Long Lines mode, long lines are wrapped if they extend beyond
-`fill-column'.  The soft newlines used for line wrapping will not
-show up when the text is yanked or saved to disk.
+  "Toggle Long Lines mode in this buffer.
+With a prefix argument ARG, enable Long Lines mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
 
-If the variable `longlines-auto-wrap' is non-nil, lines are automatically
-wrapped whenever the buffer is changed.  You can always call
-`fill-paragraph' to fill individual paragraphs.
+When Long Lines mode is enabled, long lines are wrapped if they
+extend beyond `fill-column'.  The soft newlines used for line
+wrapping will not show up when the text is yanked or saved to
+disk.
 
-If the variable `longlines-show-hard-newlines' is non-nil, hard newlines
-are indicated with a symbol."
+If the variable `longlines-auto-wrap' is non-nil, lines are
+automatically wrapped whenever the buffer is changed.  You can
+always call `fill-paragraph' to fill individual paragraphs.
+
+If the variable `longlines-show-hard-newlines' is non-nil, hard
+newlines are indicated with a symbol."
   :group 'longlines :lighter " ll"
   (if longlines-mode
       ;; Turn on longlines mode
@@ -370,7 +375,7 @@ If BEG and END are nil, the point and mark are used."
   "Turn all newlines in the buffer into hard newlines."
   (longlines-decode-region (point-min) (point-max)))
 
-(defun longlines-encode-region (beg end &optional buffer)
+(defun longlines-encode-region (beg end &optional _buffer)
   "Replace each soft newline between BEG and END with exactly one space.
 Hard newlines are left intact.  The optional argument BUFFER exists for
 compatibility with `format-alist', and is ignored."
@@ -413,7 +418,7 @@ If automatic line wrapping is turned on, wrap the entire buffer."
     (setq longlines-auto-wrap nil)
     (message "Auto wrap disabled.")))
 
-(defun longlines-after-change-function (beg end len)
+(defun longlines-after-change-function (beg end _len)
   "Update `longlines-wrap-beg' and `longlines-wrap-end'.
 This is called by `after-change-functions' to keep track of the region
 that has changed."
@@ -503,5 +508,4 @@ This is called by `window-configuration-change-hook'."
 
 (provide 'longlines)
 
-;; arch-tag: 3489d225-5506-47b9-8659-d8807b77c624
 ;;; longlines.el ends here

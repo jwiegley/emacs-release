@@ -1,7 +1,6 @@
-;;; make-mode.el --- makefile editing commands for Emacs
+;;; make-mode.el --- makefile editing commands for Emacs -*- lexical-binding:t -*-
 
-;; Copyright (C) 1992, 1994, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1992, 1994, 1999-2012  Free Software Foundation, Inc.
 
 ;; Author: Thomas Neumann <tom@smart.bo.open.de>
 ;;	Eric S. Raymond <esr@snark.thyrsus.com>
@@ -281,8 +280,7 @@ not be enclosed in { } or ( )."
   "Regex used to highlight makepp rule action lines in font lock mode.")
 
 (defconst makefile-bsdmake-rule-action-regex
-  (progn (string-match "-@" makefile-rule-action-regex)
-	 (replace-match "-+@" t t makefile-rule-action-regex))
+  (replace-regexp-in-string "-@" "-+@" makefile-rule-action-regex)
   "Regex used to highlight BSD rule action lines in font lock mode.")
 
 ;; Note that the first and second subexpression is used by font lock.  Note
@@ -317,25 +315,32 @@ not be enclosed in { } or ( )."
   "List of keywords understood by automake.")
 
 (defconst makefile-gmake-statements
-  `("-sinclude" "sinclude" "vpath"	; makefile-makepp-statements takes rest
+  `("-sinclude" "sinclude"		; makefile-makepp-statements takes rest
     "ifdef" "ifndef" "ifeq" "ifneq" "-include" "define" "endef" "export"
-    "override define" "override" "unexport"
+    "override define" "override" "unexport" "vpath"
     ,@(cdr makefile-automake-statements))
   "List of keywords understood by gmake.")
 
-;; These are even more silly, because you can have more spaces in between.
 (defconst makefile-makepp-statements
-  `("and ifdef" "and ifndef" "and ifeq" "and ifneq" "and ifperl"
-    "and ifmakeperl" "and ifsys" "and ifnsys" "build_cache" "build_check"
+  `(t					; - alternately means _
+    ;; todo: take if* out of these lists, and let the negation regexp do it all
+    "ifperl" "ifmakeperl" "ifsys" "ifnsys" "iftrue" "ifntrue"
+    "and ifdef" "and ifndef" "and ifeq" "and ifneq" "and ifperl"
+    "and ifmakeperl" "and ifsys" "and ifnsys" "and iftrue" "and ifntrue"
     "else ifdef" "else ifndef" "else ifeq" "else ifneq" "else ifperl"
-    "else ifmakeperl" "else ifsys" "else ifnsys" "enddef" "global"
-    "load_makefile" "ifperl" "ifmakeperl" "ifsys" "ifnsys" "_include"
-    "makeperl" "makesub" "no_implicit_load" "perl" "perl-begin" "perl_begin"
-    "perl-end" "perl_end" "prebuild" "or ifdef" "or ifndef" "or ifeq"
-    "or ifneq" "or ifperl" "or ifmakeperl" "or ifsys" "or ifnsys"
-    "override export" "override global" "register_command_parser"
-    "register_scanner" "repository" "runtime" "signature" "sub"
-    ,@(nthcdr 3 makefile-gmake-statements))
+    "else ifmakeperl" "else ifsys" "else ifnsys" "else iftrue" "else ifntrue"
+    "or ifdef" "or ifndef" "or ifeq" "or ifneq" "or ifperl"
+    "or ifmakeperl" "or ifsys" "or ifnsys" "or iftrue" "or ifntrue"
+
+    "autoload" "build-cache" "build-check" "enddef" "export define"
+    "global" "global build-cache" "global build-check" "global define"
+    "global signature" "global override signature" "load-makefile"
+    "make" "makeperl" "makesub" "no-implicit-load" "perl" "perl-begin"
+    "perl-end" "prebuild" "override export" "override global" "register-parser"
+    "register-command-parser" "register-input-suffix"
+    "register-scanner" "repository" "runtime" "signature" "sub"
+
+    ,@(nthcdr 2 makefile-gmake-statements))
   "List of keywords understood by gmake.")
 
 (defconst makefile-bsdmake-statements
@@ -345,7 +350,7 @@ not be enclosed in { } or ( )."
 
 (defun makefile-make-font-lock-keywords (var keywords space
 					     &optional negation
-					     &rest font-lock-keywords)
+					     &rest fl-keywords)
   `(;; Do macro assignments.  These get the "variable-name" face.
     (,makefile-macroassign-regex
      (1 font-lock-variable-name-face)
@@ -374,7 +379,12 @@ not be enclosed in { } or ( )."
 
     ;; Fontify conditionals and includes.
     (,(concat "^\\(?: [ \t]*\\)?"
-	      (regexp-opt keywords t)
+	      (replace-regexp-in-string
+	       " " "[ \t]+"
+	       (if (eq (car keywords) t)
+		   (replace-regexp-in-string "-" "[_-]"
+                                             (regexp-opt (cdr keywords) t))
+		 (regexp-opt keywords t)))
 	      "\\>[ \t]*\\([^: \t\n#]*\\)")
      (1 font-lock-keyword-face) (2 font-lock-variable-name-face))
 
@@ -395,7 +405,7 @@ not be enclosed in { } or ( )."
 	    ;; They can make a tab fail to be effective.
 	    ("^\\( +\\)\t" 1 makefile-space)))
 
-    ,@font-lock-keywords
+    ,@fl-keywords
 
     ;; Do dependencies.
     (makefile-match-dependency
@@ -438,7 +448,7 @@ not be enclosed in { } or ( )."
    makefile-var-use-regex
    makefile-makepp-statements
    nil
-   "^\\(?: [ \t]*\\)?\\(?:and[ \t]+\\|else[ \t]+\\|or[ \t]+\\)?if\\(n\\)\\(?:def\\|eq\\|sys\\)\\>"
+   "^\\(?: [ \t]*\\)?\\(?:and[ \t]+\\|else[ \t]+\\|or[ \t]+\\)?if\\(n\\)\\(?:def\\|eq\\|sys\\|true\\)\\>"
 
    '("[^$]\\(\\$[({]\\(?:output\\|stem\\|target\\)s?\\_>.*?[})]\\)"
      1 'makefile-targets append)
@@ -449,17 +459,17 @@ not be enclosed in { } or ( )."
      (2 font-lock-keyword-face t)
      (3 font-lock-variable-name-face t))
 
-   ;; $(function ...) $((function ...)) ${function ...} ${{function ...}}
-   '("[^$]\\$\\(?:((?\\|{{?\\)\\([-a-zA-Z0-9_.]+\\s \\)"
+   ;; $(function ...) $((function ...)) ${...} ${{...}} $[...] $[[...]]
+   '("[^$]\\$\\(?:((?\\|{{?\\|\\[\\[?\\)\\([-a-zA-Z0-9_.]+\\s \\)"
      1 font-lock-function-name-face prepend)
 
-   ;; $(shell ...) $((shell ...)) ${shell ...} ${{shell ...}}
-   '("[^$]\\$\\(((?\\|{{?\\)shell\\(?:[-_]\\(?:global[-_]\\)?once\\)?[ \t]+"
+   ;; $(shell ...) $((shell ...)) ${...} ${{...}} $[...] $[[...]]
+   '("[^$]\\$\\(((?\\|{{?\\|\\[\\[?\\)shell\\(?:[-_]\\(?:global[-_]\\)?once\\)?[ \t]+"
      makefile-match-function-end nil nil
      (1 'makefile-shell prepend t))
 
-   ;; $(perl ...) $((perl ...)) ${perl ...} ${{perl ...}}
-   '("[^$]\\$\\(((?\\|{{?\\)makeperl[ \t]+"
+   ;; $(perl ...) $((perl ...)) ${...} ${{...}} $[...] $[[...]]
+   '("[^$]\\$\\(((?\\|{{?\\|\\[\\[?\\)makeperl[ \t]+"
      makefile-match-function-end nil nil
      (1 'makefile-makepp-perl prepend t))
    '("[^$]\\$\\(((?\\|{{?\\)perl[ \t]+"
@@ -493,7 +503,7 @@ not be enclosed in { } or ( )."
    '("^[ \t]*\\.for[ \t].+[ \t]\\(in\\)\\>" 1 font-lock-keyword-face)))
 
 (defconst makefile-imake-font-lock-keywords
-  (append 
+  (append
    (makefile-make-font-lock-keywords
     makefile-var-use-regex
     makefile-statements
@@ -506,40 +516,41 @@ not be enclosed in { } or ( )."
    cpp-font-lock-keywords))
 
 
-(defconst makefile-font-lock-syntactic-keywords
-  ;; From sh-script.el.
-  ;; A `#' begins a comment in sh when it is unquoted and at the beginning
-  ;; of a word.  In the shell, words are separated by metacharacters.
-  ;; The list of special chars is taken from the single-unix spec of the
-  ;; shell command language (under `quoting') but with `$' removed.
-  '(("[^|&;<>()`\\\"' \t\n]\\(#+\\)" 1 "_")
-    ;; Change the syntax of a quoted newline so that it does not end a comment.
-    ("\\\\\n" 0 ".")))
+(defconst makefile-syntax-propertize-function
+  (syntax-propertize-rules
+   ;; From sh-script.el.
+   ;; A `#' begins a comment in sh when it is unquoted and at the beginning
+   ;; of a word.  In the shell, words are separated by metacharacters.
+   ;; The list of special chars is taken from the single-unix spec of the
+   ;; shell command language (under `quoting') but with `$' removed.
+   ("[^|&;<>()`\\\"' \t\n]\\(#+\\)" (1 "_"))
+   ;; Change the syntax of a quoted newline so that it does not end a comment.
+   ("\\\\\n" (0 "."))))
 
 (defvar makefile-imenu-generic-expression
   `(("Dependencies" makefile-previous-dependency 1)
     ("Macro Assignment" ,makefile-macroassign-regex 1))
   "Imenu generic expression for Makefile mode.  See `imenu-generic-expression'.")
 
-;;; ------------------------------------------------------------
-;;; The following configurable variables are used in the
-;;; up-to-date overview .
-;;; The standard configuration assumes that your `make' program
-;;; can be run in question/query mode using the `-q' option, this
-;;; means that the command
-;;;
-;;;    make -q foo
-;;;
-;;; should return an exit status of zero if the target `foo' is
-;;; up to date and a nonzero exit status otherwise.
-;;; Many makes can do this although the docs/manpages do not mention
-;;; it. Try it with your favourite one.  GNU make, System V make, and
-;;; Dennis Vadura's DMake have no problems.
-;;; Set the variable `makefile-brave-make' to the name of the
-;;; make utility that does this on your system.
-;;; To understand what this is all about see the function definition
-;;; of `makefile-query-by-make-minus-q' .
-;;; ------------------------------------------------------------
+;; ------------------------------------------------------------
+;; The following configurable variables are used in the
+;; up-to-date overview .
+;; The standard configuration assumes that your `make' program
+;; can be run in question/query mode using the `-q' option, this
+;; means that the command
+;;
+;;    make -q foo
+;;
+;; should return an exit status of zero if the target `foo' is
+;; up to date and a nonzero exit status otherwise.
+;; Many makes can do this although the docs/manpages do not mention
+;; it. Try it with your favorite one.  GNU make, System V make, and
+;; Dennis Vadura's DMake have no problems.
+;; Set the variable `makefile-brave-make' to the name of the
+;; make utility that does this on your system.
+;; To understand what this is all about see the function definition
+;; of `makefile-query-by-make-minus-q' .
+;; ------------------------------------------------------------
 
 (defcustom makefile-brave-make "make"
   "*How to invoke make, for `makefile-query-targets'.
@@ -574,11 +585,8 @@ The function must satisfy this calling convention:
 
 ;;; --- end of up-to-date-overview configuration ------------------
 
-(defvar makefile-mode-abbrev-table nil
+(define-abbrev-table 'makefile-mode-abbrev-table ()
   "Abbrev table in use in Makefile buffers.")
-(if makefile-mode-abbrev-table
-    ()
-  (define-abbrev-table 'makefile-mode-abbrev-table ()))
 
 (defvar makefile-mode-map
   (let ((map (make-sparse-keymap))
@@ -606,7 +614,7 @@ The function must satisfy this calling convention:
     (define-key map "\C-c\C-m\C-p" 'makefile-makepp-mode)
     (define-key map "\M-p"     'makefile-previous-dependency)
     (define-key map "\M-n"     'makefile-next-dependency)
-    (define-key map "\e\t"     'makefile-complete)
+    (define-key map "\e\t"     'completion-at-point)
 
     ;; Make menus.
     (define-key map [menu-bar makefile-mode]
@@ -657,7 +665,7 @@ The function must satisfy this calling convention:
       '(menu-item "Find Targets and Macros" makefile-pickup-everything
 		  :help "Notice names of all macros and targets in Makefile"))
     (define-key map [menu-bar makefile-mode complete]
-      '(menu-item "Complete Target or Macro" makefile-complete
+      '(menu-item "Complete Target or Macro" completion-at-point
 		  :help "Perform completion on Makefile construct preceding point"))
     (define-key map [menu-bar makefile-mode backslash]
       '(menu-item "Backslash Region" makefile-backslash-region
@@ -706,15 +714,13 @@ The function must satisfy this calling convention:
     (modify-syntax-entry ?\n ">     " st)
     st))
 
-(defvar makefile-imake-mode-syntax-table (copy-syntax-table
-					  makefile-mode-syntax-table))
-(if makefile-imake-mode-syntax-table
-    ()
-  (modify-syntax-entry ?/  ". 14" makefile-imake-mode-syntax-table)
-  (modify-syntax-entry ?*  ". 23" makefile-imake-mode-syntax-table)
-  (modify-syntax-entry ?#  "'" makefile-imake-mode-syntax-table)
-  (modify-syntax-entry ?\n ". b" makefile-imake-mode-syntax-table))
-
+(defvar makefile-imake-mode-syntax-table
+  (let ((st (make-syntax-table makefile-mode-syntax-table)))
+    (modify-syntax-entry ?/  ". 14" st)
+    (modify-syntax-entry ?*  ". 23" st)
+    (modify-syntax-entry ?#  "'"    st)
+    (modify-syntax-entry ?\n ". b"  st)
+    st))
 
 ;;; ------------------------------------------------------------
 ;;; Internal variables.
@@ -774,7 +780,7 @@ The function must satisfy this calling convention:
 ;;; ------------------------------------------------------------
 
 ;;;###autoload
-(defun makefile-mode ()
+(define-derived-mode makefile-mode prog-mode "Makefile"
   "Major mode for editing standard Makefiles.
 
 If you are editing a file for a different make, try one of the
@@ -858,9 +864,8 @@ Makefile mode can be configured by modifying the following variables:
    List of special targets. You will be offered to complete
    on one of those in the minibuffer whenever you enter a `.'.
    at the beginning of a line in Makefile mode."
-
-  (interactive)
-  (kill-all-local-variables)
+  (add-hook 'completion-at-point-functions
+            #'makefile-completions-at-point nil t)
   (add-hook 'write-file-functions
 	    'makefile-warn-suspicious-lines nil t)
   (add-hook 'write-file-functions
@@ -874,59 +879,44 @@ Makefile mode can be configured by modifying the following variables:
   (make-local-variable 'makefile-need-macro-pickup)
 
   ;; Font lock.
-  (make-local-variable 'font-lock-defaults)
-  (setq font-lock-defaults
-	;; SYNTAX-BEGIN set to backward-paragraph to avoid slow-down
-	;; near the end of a large buffer, due to parse-partial-sexp's
-	;; trying to parse all the way till the beginning of buffer.
- 	'(makefile-font-lock-keywords
- 	  nil nil
- 	  ((?$ . "."))
- 	  backward-paragraph
-	  (font-lock-syntactic-keywords
-	   . makefile-font-lock-syntactic-keywords)))
+  (set (make-local-variable 'font-lock-defaults)
+       ;; SYNTAX-BEGIN set to backward-paragraph to avoid slow-down
+       ;; near the end of a large buffer, due to parse-partial-sexp's
+       ;; trying to parse all the way till the beginning of buffer.
+       '(makefile-font-lock-keywords
+         nil nil
+         ((?$ . "."))
+         backward-paragraph))
+  (set (make-local-variable 'syntax-propertize-function)
+       makefile-syntax-propertize-function)
 
   ;; Add-log.
-  (make-local-variable 'add-log-current-defun-function)
-  (setq add-log-current-defun-function 'makefile-add-log-defun)
+  (set (make-local-variable 'add-log-current-defun-function)
+       'makefile-add-log-defun)
 
   ;; Imenu.
-  (make-local-variable 'imenu-generic-expression)
-  (setq imenu-generic-expression makefile-imenu-generic-expression)
+  (set (make-local-variable 'imenu-generic-expression)
+       makefile-imenu-generic-expression)
 
   ;; Dabbrev.
-  (make-local-variable 'dabbrev-abbrev-skip-leading-regexp)
-  (setq dabbrev-abbrev-skip-leading-regexp "\\$")
+  (set (make-local-variable 'dabbrev-abbrev-skip-leading-regexp) "\\$")
 
   ;; Other abbrevs.
   (setq local-abbrev-table makefile-mode-abbrev-table)
 
   ;; Filling.
-  (make-local-variable 'fill-paragraph-function)
-  (setq fill-paragraph-function 'makefile-fill-paragraph)
+  (set (make-local-variable 'fill-paragraph-function) 'makefile-fill-paragraph)
 
   ;; Comment stuff.
-  (make-local-variable 'comment-start)
-  (setq comment-start "#")
-  (make-local-variable 'comment-end)
-  (setq comment-end "")
-  (make-local-variable 'comment-start-skip)
-  (setq comment-start-skip "#+[ \t]*")
+  (set (make-local-variable 'comment-start) "#")
+  (set (make-local-variable 'comment-end) "")
+  (set (make-local-variable 'comment-start-skip) "#+[ \t]*")
 
   ;; Make sure TAB really inserts \t.
   (set (make-local-variable 'indent-line-function) 'indent-to-left-margin)
 
-  ;; become the current major mode
-  (setq major-mode 'makefile-mode)
-  (setq mode-name "Makefile")
-
-  ;; Activate keymap and syntax table.
-  (use-local-map makefile-mode-map)
-  (set-syntax-table makefile-mode-syntax-table)
-
   ;; Real TABs are important in makefiles
-  (setq indent-tabs-mode t)
-  (run-mode-hooks 'makefile-mode-hook))
+  (setq indent-tabs-mode t))
 
 ;; These should do more than just differentiate font-lock.
 ;;;###autoload
@@ -967,15 +957,9 @@ Makefile mode can be configured by modifying the following variables:
 (define-derived-mode makefile-imake-mode makefile-mode "Imakefile"
   "An adapted `makefile-mode' that knows about imake."
   :syntax-table makefile-imake-mode-syntax-table
-  (let ((base `(makefile-imake-font-lock-keywords ,@(cdr font-lock-defaults)))
-	new)
-    ;; Remove `font-lock-syntactic-keywords' entry from font-lock-defaults.
-    (mapc (lambda (elt)
-	    (unless (and (consp elt)
-			 (eq (car elt) 'font-lock-syntactic-keywords))
-	      (setq new (cons elt new))))
-	  base)
-    (setq font-lock-defaults (nreverse new))))
+  (set (make-local-variable 'syntax-propertize-function) nil)
+  (setq font-lock-defaults
+        `(makefile-imake-font-lock-keywords ,@(cdr font-lock-defaults))))
 
 
 
@@ -1177,15 +1161,10 @@ and adds all qualifying names to the list of known targets."
 
 ;;; Completion.
 
-(defun makefile-complete ()
-  "Perform completion on Makefile construct preceding point.
-Can complete variable and target names.
-The context determines which are considered."
-  (interactive)
+(defun makefile-completions-at-point ()
   (let* ((beg (save-excursion
 		(skip-chars-backward "^$(){}:#= \t\n")
 		(point)))
-	 (try (buffer-substring beg (point)))
 	 (paren nil)
 	 (do-macros
           (save-excursion
@@ -1199,22 +1178,26 @@ The context determines which are considered."
                ;; Preceding "$(" or "${" means macros only.
                ((and (memq pc '(?\{ ?\())
                      (progn
-                       (setq paren (if (eq paren ?\{) ?\} ?\)))
+                       (setq paren (if (eq pc ?\{) ?\} ?\)))
                        (backward-char)
                        (= (preceding-char) ?$)))
                 t)))))
+         (suffix (cond
+                  (do-macros (if paren (string paren)))
+                  ((save-excursion (goto-char beg) (bolp)) ":")
+                  (t " "))))
+    (list beg (point)
+          (append (if do-macros '() makefile-target-table)
+                  makefile-macro-table)
+          :exit-function
+          (if suffix
+              (lambda (_s finished)
+                (when (memq finished '(sole finished))
+                  (if (looking-at (regexp-quote suffix))
+                      (goto-char (match-end 0))
+                    (insert suffix))))))))
 
-         (table (apply-partially 'completion-table-with-terminator
-                                   (cond
-                                    (do-macros (or paren ""))
-                                    ((save-excursion (goto-char beg) (bolp)) ":")
-                                    (t " "))
-                                   (append (if do-macros
-                                               '()
-                                             makefile-target-table)
-                                           makefile-macro-table))))
-    (completion-in-region beg (point) table)))
-
+(define-obsolete-function-alias 'makefile-complete 'completion-at-point "24.1")
 
 
 ;; Backslashification.  Stolen from cc-mode.el.
@@ -1292,7 +1275,7 @@ definition and conveniently use this command."
 
 ;; Filling
 
-(defun makefile-fill-paragraph (arg)
+(defun makefile-fill-paragraph (_arg)
   ;; Fill comments, backslashed lines, and variable definitions
   ;; specially.
   (save-excursion
@@ -1307,7 +1290,7 @@ definition and conveniently use this command."
      ((or (eq (char-before (line-end-position 1)) ?\\)
 	  (eq (char-before (line-end-position 0)) ?\\))
       ;; A backslash region.  Find beginning and end, remove
-      ;; backslashes, fill, and then reapply backslahes.
+      ;; backslashes, fill, and then reapply backslashes.
       (end-of-line)
       (let ((beginning
 	     (save-excursion
@@ -1710,15 +1693,17 @@ Then prompts for all required parameters."
 ;;; Utility functions
 ;;; ------------------------------------------------------------
 
-(defun makefile-match-function-end (end)
+(defun makefile-match-function-end (_end)
   "To be called as an anchored matcher by font-lock.
 The anchor must have matched the opening parens in the first group."
   (let ((s (match-string-no-properties 1)))
     ;; FIXME forward-sexp or somesuch would be better?
     (if (setq s (cond ((string= s "(") ")")
 		      ((string= s "{") "}")
+		      ((string= s "[") "]")
 		      ((string= s "((") "))")
-		      ((string= s "{{") "}}")))
+		      ((string= s "{{") "}}")
+		      ((string= s "[[") "]]")))
 	(re-search-forward (concat "\\(.*\\)[ \t]*" s) (line-end-position) t))))
 
 (defun makefile-match-dependency (bound)
@@ -1868,5 +1853,4 @@ If it isn't in one, return nil."
 
 (provide 'make-mode)
 
-;; arch-tag: bd23545a-de91-44fb-b1b2-feafbb2635a0
 ;;; make-mode.el ends here

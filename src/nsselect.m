@@ -1,5 +1,5 @@
 /* NeXT/Open/GNUstep / MacOSX Cocoa selection processing for emacs.
-   Copyright (C) 1993, 1994, 2005, 2006, 2008, 2009, 2010, 2011, 2012
+   Copyright (C) 1993-1994, 2005-2006, 2008-2012
      Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -27,24 +27,22 @@ GNUstep port and post-20 update by Adrian Robert (arobert@cogsci.ucsd.edu)
 
 /* This should be the first include, as it may set up #defines affecting
    interpretation of even the system includes. */
-#include "config.h"
+#include <config.h>
 #include <setjmp.h>
 
 #include "lisp.h"
 #include "nsterm.h"
 #include "termhooks.h"
+#include "keyboard.h"
 
-#define CUT_BUFFER_SUPPORT
+Lisp_Object QCLIPBOARD, QSECONDARY, QTEXT, QFILE_NAME;
 
-Lisp_Object QPRIMARY, QSECONDARY, QTEXT, QFILE_NAME;
-
-static Lisp_Object Vns_sent_selection_hooks;
-static Lisp_Object Vns_lost_selection_hooks;
 static Lisp_Object Vselection_alist;
-static Lisp_Object Vselection_converter_alist;
 
 static Lisp_Object Qforeign_selection;
 
+/* NSGeneralPboard is pretty much analogous to X11 CLIPBOARD */
+NSString *NXPrimaryPboard;
 NSString *NXSecondaryPboard;
 
 
@@ -60,17 +58,25 @@ static NSString *
 symbol_to_nsstring (Lisp_Object sym)
 {
   CHECK_SYMBOL (sym);
-  if (EQ (sym, QPRIMARY))     return NSGeneralPboard;
+  if (EQ (sym, QCLIPBOARD))   return NSGeneralPboard;
+  if (EQ (sym, QPRIMARY))     return NXPrimaryPboard;
   if (EQ (sym, QSECONDARY))   return NXSecondaryPboard;
   if (EQ (sym, QTEXT))        return NSStringPboardType;
   return [NSString stringWithUTF8String: SDATA (XSYMBOL (sym)->xname)];
 }
 
+static NSPasteboard *
+ns_symbol_to_pb (Lisp_Object symbol)
+{
+  return [NSPasteboard pasteboardWithName: symbol_to_nsstring (symbol)];
+}
 
 static Lisp_Object
 ns_string_to_symbol (NSString *t)
 {
   if ([t isEqualToString: NSGeneralPboard])
+    return QCLIPBOARD;
+  if ([t isEqualToString: NXPrimaryPboard])
     return QPRIMARY;
   if ([t isEqualToString: NXSecondaryPboard])
     return QSECONDARY;
@@ -152,8 +158,10 @@ ns_string_to_pasteboard_internal (id pb, Lisp_Object str, NSString *gtype)
       CHECK_STRING (str);
 
       utfStr = SDATA (str);
-      nsStr = [NSString stringWithUTF8String: utfStr];
-
+      nsStr = [[NSString alloc] initWithBytesNoCopy: utfStr
+                                             length: SBYTES (str)
+                                           encoding: NSUTF8StringEncoding
+                                       freeWhenDone: NO];
       if (gtype == nil)
         {
           [pb declareTypes: ns_send_types owner: nil];
@@ -165,11 +173,12 @@ ns_string_to_pasteboard_internal (id pb, Lisp_Object str, NSString *gtype)
         {
           [pb setString: nsStr forType: gtype];
         }
+      [nsStr release];
     }
 }
 
 
-static Lisp_Object
+Lisp_Object
 ns_get_local_selection (Lisp_Object selection_name,
                        Lisp_Object target_type)
 {
@@ -224,69 +233,10 @@ static Lisp_Object
 ns_get_foreign_selection (Lisp_Object symbol, Lisp_Object target)
 {
   id pb;
-  pb =[NSPasteboard pasteboardWithName: symbol_to_nsstring (symbol)];
-  return ns_string_from_pasteboard (pb);
+  pb = ns_symbol_to_pb (symbol);
+  return pb != nil ? ns_string_from_pasteboard (pb) : Qnil;
 }
 
-
-static void
-ns_handle_selection_request (struct input_event *event)
-{
-  // FIXME: BIG UGLY HACK!!!
-  id pb = (id)*(EMACS_INT*)&(event->x);
-  NSString *type = (NSString *)*(EMACS_INT*)&(event->y);
-  Lisp_Object selection_name, selection_data, target_symbol, data;
-  Lisp_Object successful_p, rest;
-
-  selection_name = ns_string_to_symbol ([(NSPasteboard *)pb name]);
-  target_symbol = ns_string_to_symbol (type);
-  selection_data = assq_no_quit (selection_name, Vselection_alist);
-  successful_p = Qnil;
-
-  if (!NILP (selection_data))
-    {
-      data = ns_get_local_selection (selection_name, target_symbol);
-      if (!NILP (data))
-        {
-          if (STRINGP (data))
-            ns_string_to_pasteboard_internal (pb, data, type);
-          successful_p = Qt;
-        }
-    }
-
-  if (!EQ (Vns_sent_selection_hooks, Qunbound))
-    {
-      for (rest = Vns_sent_selection_hooks; CONSP (rest); rest = Fcdr (rest))
-        call3 (Fcar (rest), selection_name, target_symbol, successful_p);
-    }
-}
-
-
-static void
-ns_handle_selection_clear (struct input_event *event)
-{
-  id pb = (id)*(EMACS_INT*)&(event->x);
-  Lisp_Object selection_name, selection_data, rest;
-
-  selection_name = ns_string_to_symbol ([(NSPasteboard *)pb name]);
-  selection_data = assq_no_quit (selection_name, Vselection_alist);
-  if (NILP (selection_data)) return;
-
-  if (EQ (selection_data, Fcar (Vselection_alist)))
-    Vselection_alist = Fcdr (Vselection_alist);
-  else
-    {
-      for (rest = Vselection_alist; !NILP (rest); rest = Fcdr (rest))
-        if (EQ (selection_data, Fcar (Fcdr (rest))))
-          Fsetcdr (rest, Fcdr (Fcdr (rest)));
-    }
-
-  if (!EQ (Vns_lost_selection_hooks, Qunbound))
-    {
-      for (rest = Vns_lost_selection_hooks;CONSP (rest); rest = Fcdr (rest))
-        call1 (Fcar (rest), selection_name);
-    }
-}
 
 
 
@@ -302,6 +252,7 @@ ns_string_from_pasteboard (id pb)
 {
   NSString *type, *str;
   const char *utfStr;
+  int length;
 
   type = [pb availableTypeFromArray: ns_return_types];
   if (type == nil)
@@ -343,17 +294,29 @@ ns_string_from_pasteboard (id pb)
             options: NSLiteralSearch range: NSMakeRange (0, [mstr length])];
 
       utfStr = [mstr UTF8String];
-      if (!utfStr)
-        utfStr = [mstr cString];
+      length = [mstr lengthOfBytesUsingEncoding: NSUTF8StringEncoding];
+
+#if ! defined (NS_IMPL_COCOA) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_4
+      if (!utfStr) 
+        {
+          utfStr = [mstr cString];
+          length = strlen (utfStr);
+        }
+#endif
     }
   NS_HANDLER
     {
       message1 ("ns_string_from_pasteboard: UTF8String failed\n");
+#if defined (NS_IMPL_COCOA) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
+      utfStr = "Conversion failed";
+#else
       utfStr = [str lossyCString];
+#endif
+      length = strlen (utfStr);
     }
   NS_ENDHANDLER
 
-  return build_string (utfStr);
+    return make_string (utfStr, length);
 }
 
 
@@ -373,69 +336,103 @@ ns_string_to_pasteboard (id pb, Lisp_Object str)
 
 
 DEFUN ("x-own-selection-internal", Fx_own_selection_internal,
-       Sx_own_selection_internal, 2, 2, 0,
-       doc: /* Assert a selection.
-SELECTION-NAME is a symbol, typically `PRIMARY', `SECONDARY', or `CLIPBOARD'.
+       Sx_own_selection_internal, 2, 3, 0,
+       doc: /* Assert an X selection of type SELECTION and value VALUE.
+SELECTION is a symbol, typically `PRIMARY', `SECONDARY', or `CLIPBOARD'.
+\(Those are literal upper-case symbol names, since that's what X expects.)
 VALUE is typically a string, or a cons of two markers, but may be
-anything that the functions on `selection-converter-alist' know about.  */)
-     (selection_name, selection_value)
-     Lisp_Object selection_name, selection_value;
+anything that the functions on `selection-converter-alist' know about.
+
+FRAME should be a frame that should own the selection.  If omitted or
+nil, it defaults to the selected frame.
+
+On Nextstep, FRAME is unused.  */)
+     (Lisp_Object selection, Lisp_Object value, Lisp_Object frame)
 {
   id pb;
   Lisp_Object old_value, new_value;
+  NSString *type;
+  Lisp_Object successful_p = Qnil, rest;
+  Lisp_Object target_symbol, data;
+
 
   check_ns ();
-  CHECK_SYMBOL (selection_name);
-  if (NILP (selection_value))
-      error ("selection-value may not be nil.");
-  pb =[NSPasteboard pasteboardWithName: symbol_to_nsstring (selection_name)];
+  CHECK_SYMBOL (selection);
+  if (NILP (value))
+      error ("selection value may not be nil.");
+  pb = ns_symbol_to_pb (selection);
+  if (pb == nil) return Qnil;
+
   ns_declare_pasteboard (pb);
-  old_value = assq_no_quit (selection_name, Vselection_alist);
-  new_value = Fcons (selection_name, Fcons (selection_value, Qnil));
+  old_value = assq_no_quit (selection, Vselection_alist);
+  new_value = Fcons (selection, Fcons (value, Qnil));
+
   if (NILP (old_value))
     Vselection_alist = Fcons (new_value, Vselection_alist);
   else
     Fsetcdr (old_value, Fcdr (new_value));
-  /* XXX An evil hack, but a necessary one I fear XXX */
-  {
-    struct input_event ev;
-    ev.kind = SELECTION_REQUEST_EVENT;
-    ev.modifiers = 0;
-    ev.code = 0;
-    *(EMACS_INT*)(&(ev.x)) = (EMACS_INT)pb; // FIXME: BIG UGLY HACK!!
-    *(EMACS_INT*)(&(ev.y)) = (EMACS_INT)NSStringPboardType;
-    ns_handle_selection_request (&ev);
-  }
-  return selection_value;
+
+  /* We only support copy of text.  */
+  type = NSStringPboardType;
+  target_symbol = ns_string_to_symbol (type);
+  data = ns_get_local_selection (selection, target_symbol);
+  if (!NILP (data))
+    {
+      if (STRINGP (data))
+        ns_string_to_pasteboard_internal (pb, data, type);
+      successful_p = Qt;
+    }
+
+  if (!EQ (Vns_sent_selection_hooks, Qunbound))
+    {
+      for (rest = Vns_sent_selection_hooks; CONSP (rest); rest = Fcdr (rest))
+        call3 (Fcar (rest), selection, target_symbol, successful_p);
+    }
+  
+  return value;
 }
 
 
 DEFUN ("x-disown-selection-internal", Fx_disown_selection_internal,
-       Sx_disown_selection_internal, 1, 2, 0,
-       doc: /* If we own the selection SELECTION, disown it.  */)
-     (selection_name, time)
-     Lisp_Object selection_name, time;
+       Sx_disown_selection_internal, 1, 3, 0,
+       doc: /* If we own the selection SELECTION, disown it.
+Disowning it means there is no such selection.
+
+Sets the last-change time for the selection to TIME-OBJECT (by default
+the time of the last event).
+
+TERMINAL should be a terminal object or a frame specifying the X
+server to query.  If omitted or nil, that stands for the selected
+frame's display, or the first available X display.
+
+On Nextstep, the TIME-OBJECT and TERMINAL arguments are unused.
+On MS-DOS, all this does is return non-nil if we own the selection.  */)
+  (Lisp_Object selection, Lisp_Object time_object, Lisp_Object terminal)
 {
   id pb;
   check_ns ();
-  CHECK_SYMBOL (selection_name);
-  if (NILP (assq_no_quit (selection_name, Vselection_alist))) return Qnil;
+  CHECK_SYMBOL (selection);
+  if (NILP (assq_no_quit (selection, Vselection_alist))) return Qnil;
 
-  pb =[NSPasteboard pasteboardWithName: symbol_to_nsstring (selection_name)];
-  ns_undeclare_pasteboard (pb);
+  pb = ns_symbol_to_pb (selection);
+  if (pb != nil) ns_undeclare_pasteboard (pb);
   return Qt;
 }
 
 
 DEFUN ("x-selection-exists-p", Fx_selection_exists_p, Sx_selection_exists_p,
-       0, 1, 0, doc: /* Whether there is an owner for the given selection.
-The arg should be the name of the selection in question, typically one of
-the symbols `PRIMARY', `SECONDARY', or `CLIPBOARD'.
-\(Those are literal upper-case symbol names.)
-For convenience, the symbol nil is the same as `PRIMARY',
-and t is the same as `SECONDARY'.)  */)
-     (selection)
-     Lisp_Object selection;
+       0, 2, 0, doc: /* Whether there is an owner for the given X selection.
+SELECTION should be the name of the selection in question, typically
+one of the symbols `PRIMARY', `SECONDARY', or `CLIPBOARD'.  (X expects
+these literal upper-case names.)  The symbol nil is the same as
+`PRIMARY', and t is the same as `SECONDARY'.
+
+TERMINAL should be a terminal object or a frame specifying the X
+server to query.  If omitted or nil, that stands for the selected
+frame's display, or the first available X display.
+
+On Nextstep, TERMINAL is unused.  */)
+     (Lisp_Object selection, Lisp_Object terminal)
 {
   id pb;
   NSArray *types;
@@ -444,22 +441,29 @@ and t is the same as `SECONDARY'.)  */)
   CHECK_SYMBOL (selection);
   if (EQ (selection, Qnil)) selection = QPRIMARY;
   if (EQ (selection, Qt)) selection = QSECONDARY;
-  pb =[NSPasteboard pasteboardWithName: symbol_to_nsstring (selection)];
-  types =[pb types];
+  pb = ns_symbol_to_pb (selection);
+  if (pb == nil) return Qnil;
+  
+  types = [pb types];
   return ([types count] == 0) ? Qnil : Qt;
 }
 
 
 DEFUN ("x-selection-owner-p", Fx_selection_owner_p, Sx_selection_owner_p,
-       0, 1, 0,
-       doc: /* Whether the current Emacs process owns the given selection.
+       0, 2, 0,
+       doc: /* Whether the current Emacs process owns the given X Selection.
 The arg should be the name of the selection in question, typically one of
 the symbols `PRIMARY', `SECONDARY', or `CLIPBOARD'.
-\(Those are literal upper-case symbol names.)
+\(Those are literal upper-case symbol names, since that's what X expects.)
 For convenience, the symbol nil is the same as `PRIMARY',
-and t is the same as `SECONDARY'.)  */)
-     (selection)
-     Lisp_Object selection;
+and t is the same as `SECONDARY'.
+
+TERMINAL should be a terminal object or a frame specifying the X
+server to query.  If omitted or nil, that stands for the selected
+frame's display, or the first available X display.
+
+On Nextstep, TERMINAL is unused.  */)
+     (Lisp_Object selection, Lisp_Object terminal)
 {
   check_ns ();
   CHECK_SYMBOL (selection);
@@ -470,13 +474,22 @@ and t is the same as `SECONDARY'.)  */)
 
 
 DEFUN ("x-get-selection-internal", Fx_get_selection_internal,
-       Sx_get_selection_internal, 2, 2, 0,
-       doc: /* Return text selected from some pasteboard.
-SELECTION is a symbol, typically `PRIMARY', `SECONDARY', or `CLIPBOARD'.
-\(Those are literal upper-case symbol names.)
-TYPE is the type of data desired, typically `STRING'.  */)
-     (selection_name, target_type)
-     Lisp_Object selection_name, target_type;
+       Sx_get_selection_internal, 2, 4, 0,
+       doc: /* Return text selected from some X window.
+SELECTION-SYMBOL is typically `PRIMARY', `SECONDARY', or `CLIPBOARD'.
+\(Those are literal upper-case symbol names, since that's what X expects.)
+TARGET-TYPE is the type of data desired, typically `STRING'.
+
+TIME-STAMP is the time to use in the XConvertSelection call for foreign
+selections.  If omitted, defaults to the time for the last event.
+
+TERMINAL should be a terminal object or a frame specifying the X
+server to query.  If omitted or nil, that stands for the selected
+frame's display, or the first available X display.
+
+On Nextstep, TIME-STAMP and TERMINAL are unused.  */)
+     (Lisp_Object selection_name, Lisp_Object target_type,
+      Lisp_Object time_stamp, Lisp_Object terminal)
 {
   Lisp_Object val;
 
@@ -497,79 +510,60 @@ TYPE is the type of data desired, typically `STRING'.  */)
 }
 
 
-#ifdef CUT_BUFFER_SUPPORT
-DEFUN ("ns-get-cut-buffer-internal", Fns_get_cut_buffer_internal,
-       Sns_get_cut_buffer_internal, 1, 1, 0,
-       doc: /* Returns the value of the named cut buffer.  */)
-     (buffer)
-     Lisp_Object buffer;
+DEFUN ("ns-get-selection-internal", Fns_get_selection_internal,
+       Sns_get_selection_internal, 1, 1, 0,
+       doc: /* Returns the value of SELECTION as a string.
+SELECTION is a symbol, typically `PRIMARY', `SECONDARY', or `CLIPBOARD'. */)
+     (Lisp_Object selection)
 {
   id pb;
   check_ns ();
-  pb =[NSPasteboard pasteboardWithName: symbol_to_nsstring (buffer)];
-  return ns_string_from_pasteboard (pb);
+  pb = ns_symbol_to_pb (selection);
+  return pb != nil ? ns_string_from_pasteboard (pb) : Qnil;
 }
 
 
-DEFUN ("ns-rotate-cut-buffers-internal", Fns_rotate_cut_buffers_internal,
-       Sns_rotate_cut_buffers_internal, 1, 1, 0,
-       doc: /* Rotate the values of the cut buffers by N steps.
-Positive N means move values forward, negative means
-backward. CURRENTLY NOT IMPLEMENTED UNDER NEXTSTEP. */ )
-     (n)
-     Lisp_Object n;
-{
-  /* XXX This function is unimplemented under NeXTstep XXX */
-  Fsignal (Qquit, Fcons (build_string (
-      "Warning: ns-rotate-cut-buffers-internal not implemented\n"), Qnil));
-  return Qnil;
-}
-
-
-DEFUN ("ns-store-cut-buffer-internal", Fns_store_cut_buffer_internal,
-       Sns_store_cut_buffer_internal, 2, 2, 0,
-       doc: /* Sets the value of the named cut buffer (typically CUT_BUFFER0).  */)
-     (buffer, string)
-     Lisp_Object buffer, string;
+DEFUN ("ns-store-selection-internal", Fns_store_selection_internal,
+       Sns_store_selection_internal, 2, 2, 0,
+       doc: /* Sets the string value of SELECTION.
+SELECTION is a symbol, typically `PRIMARY', `SECONDARY', or `CLIPBOARD'. */)
+     (Lisp_Object selection, Lisp_Object string)
 {
   id pb;
   check_ns ();
-  pb =[NSPasteboard pasteboardWithName: symbol_to_nsstring (buffer)];
-  ns_string_to_pasteboard (pb, string);
+  pb = ns_symbol_to_pb (selection);
+  if (pb != nil) ns_string_to_pasteboard (pb, string);
   return Qnil;
 }
-#endif
 
 
 void
 nxatoms_of_nsselect (void)
 {
-  NXSecondaryPboard = @"Selection";
+  NXPrimaryPboard = @"Selection";
+  NXSecondaryPboard = @"Secondary";
 }
 
 void
 syms_of_nsselect (void)
 {
-  QPRIMARY   = intern ("PRIMARY");	staticpro (&QPRIMARY);
-  QSECONDARY = intern ("SECONDARY");	staticpro (&QSECONDARY);
-  QTEXT      = intern ("TEXT"); 	staticpro (&QTEXT);
-  QFILE_NAME = intern ("FILE_NAME"); 	staticpro (&QFILE_NAME);
+  QCLIPBOARD = intern_c_string ("CLIPBOARD");	staticpro (&QCLIPBOARD);
+  QSECONDARY = intern_c_string ("SECONDARY");	staticpro (&QSECONDARY);
+  QTEXT      = intern_c_string ("TEXT"); 	staticpro (&QTEXT);
+  QFILE_NAME = intern_c_string ("FILE_NAME"); 	staticpro (&QFILE_NAME);
 
   defsubr (&Sx_disown_selection_internal);
   defsubr (&Sx_get_selection_internal);
   defsubr (&Sx_own_selection_internal);
   defsubr (&Sx_selection_exists_p);
   defsubr (&Sx_selection_owner_p);
-#ifdef CUT_BUFFER_SUPPORT
-  defsubr (&Sns_get_cut_buffer_internal);
-  defsubr (&Sns_rotate_cut_buffers_internal);
-  defsubr (&Sns_store_cut_buffer_internal);
-#endif
+  defsubr (&Sns_get_selection_internal);
+  defsubr (&Sns_store_selection_internal);
 
   Vselection_alist = Qnil;
   staticpro (&Vselection_alist);
 
-  DEFVAR_LISP ("ns-sent-selection-hooks", &Vns_sent_selection_hooks,
+  DEFVAR_LISP ("ns-sent-selection-hooks", Vns_sent_selection_hooks,
                "A list of functions to be called when Emacs answers a selection request.\n\
 The functions are called with four arguments:\n\
   - the selection name (typically `PRIMARY', `SECONDARY', or `CLIPBOARD');\n\
@@ -583,7 +577,7 @@ This hook doesn't let you change the behavior of Emacs's selection replies,\n\
 it merely informs you that they have happened.");
   Vns_sent_selection_hooks = Qnil;
 
-  DEFVAR_LISP ("selection-converter-alist", &Vselection_converter_alist,
+  DEFVAR_LISP ("selection-converter-alist", Vselection_converter_alist,
                "An alist associating X Windows selection-types with functions.\n\
 These functions are called to convert the selection, with three args:\n\
 the name of the selection (typically `PRIMARY', `SECONDARY', or `CLIPBOARD');\n\
@@ -598,7 +592,7 @@ means that a side-effect was executed,\n\
 and there is no meaningful selection value.");
   Vselection_converter_alist = Qnil;
 
-  DEFVAR_LISP ("ns-lost-selection-hooks", &Vns_lost_selection_hooks,
+  DEFVAR_LISP ("ns-lost-selection-hooks", Vns_lost_selection_hooks,
                "A list of functions to be called when Emacs loses an X selection.\n\
 \(This happens when some other X client makes its own selection\n\
 or when a Lisp program explicitly clears the selection.)\n\
@@ -606,8 +600,7 @@ The functions are called with one argument, the selection type\n\
 \(a symbol, typically `PRIMARY', `SECONDARY', or `CLIPBOARD').");
   Vns_lost_selection_hooks = Qnil;
 
-  Qforeign_selection = intern ("foreign-selection");
+  Qforeign_selection = intern_c_string ("foreign-selection");
   staticpro (&Qforeign_selection);
 }
 
-// arch-tag: 39d1dde7-06a6-49ff-95a7-0e7af12d2218

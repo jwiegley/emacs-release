@@ -1,9 +1,10 @@
 ;;; image-mode.el --- support for visiting image files
 ;;
-;; Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2005-2012 Free Software Foundation, Inc.
 ;;
 ;; Author: Richard Stallman <rms@gnu.org>
 ;; Keywords: multimedia
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -34,18 +35,6 @@
 
 (require 'image)
 (eval-when-compile (require 'cl))
-
-;;;###autoload (push (cons (purecopy "\\.jpe?g\\'")    'image-mode) auto-mode-alist)
-;;;###autoload (push (cons (purecopy "\\.png\\'")      'image-mode) auto-mode-alist)
-;;;###autoload (push (cons (purecopy "\\.gif\\'")      'image-mode) auto-mode-alist)
-;;;###autoload (push (cons (purecopy "\\.tiff?\\'")    'image-mode) auto-mode-alist)
-;;;###autoload (push (cons (purecopy "\\.p[bpgn]m\\'") 'image-mode) auto-mode-alist)
-
-;;;###autoload (push (cons (purecopy "\\.x[bp]m\\'")   'c-mode)     auto-mode-alist)
-;;;###autoload (push (cons (purecopy "\\.x[bp]m\\'")   'image-mode) auto-mode-alist)
-
-;;;###autoload (push (cons (purecopy "\\.svgz?\\'")    'xml-mode)   auto-mode-alist)
-;;;###autoload (push (cons (purecopy "\\.svgz?\\'")    'image-mode) auto-mode-alist)
 
 ;;; Image mode window-info management.
 
@@ -129,13 +118,16 @@ A winprops object has the shape (WINDOW . ALIST)."
 (declare-function image-size "image.c" (spec &optional pixels frame))
 
 (defun image-display-size (spec &optional pixels frame)
-  "Wrapper around `image-size', to handle slice display properties.
-If SPEC is an image display property, call `image-size' with the
-given arguments.
-If SPEC is a list of properties containing `image' and `slice'
-properties, calculate the display size from the slice property.
-If SPEC contains `image' but not `slice', call `image-size' with
-the specified image."
+  "Wrapper around `image-size', handling slice display properties.
+Like `image-size', the return value is (WIDTH . HEIGHT).
+WIDTH and HEIGHT are in canonical character units if PIXELS is
+nil, and in pixel units if PIXELS is non-nil.
+
+If SPEC is an image display property, this function is equivalent
+to `image-size'.  If SPEC is a list of properties containing
+`image' and `slice' properties, return the display size taking
+the slice property into account.  If the list contains `image'
+but not `slice', return the `image-size' of the specified image."
   (if (eq (car spec) 'image)
       (image-size spec pixels frame)
     (let ((image (assoc 'image spec))
@@ -171,7 +163,7 @@ Stop if the left edge of the image is reached."
   (interactive "p")
   (image-forward-hscroll (- n)))
 
-(defun image-next-line (&optional n)
+(defun image-next-line (n)
   "Scroll image in current window upward by N lines.
 Stop if the bottom edge of the image is reached."
   (interactive "p")
@@ -279,7 +271,7 @@ stopping if the top or bottom edge of the image is reached."
 ;; Adjust frame and image size.
 
 (defun image-mode-fit-frame ()
-  "Fit the frame to the current image.
+  "Toggle whether to fit the frame to the current image.
 This function assumes the current frame has only one window."
   ;; FIXME: This does not take into account decorations like mode-line,
   ;; minibuffer, header-line, ...
@@ -312,17 +304,21 @@ This function assumes the current frame has only one window."
 
 (defvar image-mode-map
   (let ((map (make-sparse-keymap)))
-    (suppress-keymap map)
-    (define-key map "q"         'quit-window)
+    (set-keymap-parent map special-mode-map)
     (define-key map "\C-c\C-c" 'image-toggle-display)
     (define-key map (kbd "SPC")       'image-scroll-up)
     (define-key map (kbd "DEL")       'image-scroll-down)
+    (define-key map (kbd "RET")       'image-toggle-animation)
     (define-key map [remap forward-char] 'image-forward-hscroll)
     (define-key map [remap backward-char] 'image-backward-hscroll)
+    (define-key map [remap right-char] 'image-forward-hscroll)
+    (define-key map [remap left-char] 'image-backward-hscroll)
     (define-key map [remap previous-line] 'image-previous-line)
     (define-key map [remap next-line] 'image-next-line)
     (define-key map [remap scroll-up] 'image-scroll-up)
     (define-key map [remap scroll-down] 'image-scroll-down)
+    (define-key map [remap scroll-up-command] 'image-scroll-up)
+    (define-key map [remap scroll-down-command] 'image-scroll-down)
     (define-key map [remap move-beginning-of-line] 'image-bol)
     (define-key map [remap move-end-of-line] 'image-eol)
     (define-key map [remap beginning-of-buffer] 'image-bob)
@@ -376,12 +372,22 @@ to toggle between display as an image and display as text."
 	(image-mode-setup-winprops)
 
 	(add-hook 'change-major-mode-hook 'image-toggle-display-text nil t)
+	(add-hook 'after-revert-hook 'image-after-revert-hook nil t)
 	(run-mode-hooks 'image-mode-hook)
-	(message "%s" (concat
-		       (substitute-command-keys
-			"Type \\[image-toggle-display] to view the image as ")
-		       (if (image-get-display-property)
-			   "text" "an image") ".")))
+	(let ((image (image-get-display-property))
+	      (msg1 (substitute-command-keys
+		     "Type \\[image-toggle-display] to view the image as ")))
+	  (cond
+	   ((null image)
+	    (message "%s" (concat msg1 "an image.")))
+	   ((image-animated-p image)
+	    (message "%s"
+		     (concat msg1 "text, or "
+			     (substitute-command-keys
+			      "\\[image-toggle-animation] to animate."))))
+	   (t
+	    (message "%s" (concat msg1 "text."))))))
+
     (error
      (image-mode-as-text)
      (funcall
@@ -390,11 +396,14 @@ to toggle between display as an image and display as text."
 
 ;;;###autoload
 (define-minor-mode image-minor-mode
-  "Toggle Image minor mode.
-With arg, turn Image minor mode on if arg is positive, off otherwise.
-It provides the key \\<image-mode-map>\\[image-toggle-display] \
-to switch back to `image-mode'
-to display an image file as the actual image."
+  "Toggle Image minor mode in this buffer.
+With a prefix argument ARG, enable Image minor mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
+Image minor mode provides the key \\<image-mode-map>\\[image-toggle-display],
+to switch back to `image-mode' and display an image file as the
+actual image."
   nil (:eval (if image-type (format " Image[%s]" image-type) " Image"))
   image-minor-mode-map
   :group 'image
@@ -459,7 +468,7 @@ Remove text properties that display the image."
 	(buffer-undo-list t)
 	(modified (buffer-modified-p)))
     (remove-list-of-text-properties (point-min) (point-max)
-				    '(display intangible read-nonsticky
+				    '(display read-nonsticky ;; intangible
 					      read-only front-sticky))
     (set-buffer-modified-p modified)
     (if (called-interactively-p 'any)
@@ -467,12 +476,14 @@ Remove text properties that display the image."
 
 (defvar archive-superior-buffer)
 (defvar tar-superior-buffer)
-(declare-function image-refresh "image.c" (spec &optional frame))
+(declare-function image-flush "image.c" (spec &optional frame))
 
 (defun image-toggle-display-image ()
   "Show the image of the image file.
 Turn the image data into a real image, but only if the whole file
 was inserted."
+  (unless (derived-mode-p 'image-mode)
+    (error "The buffer is not in Image mode"))
   (let* ((filename (buffer-file-name))
 	 (data-p (not (and filename
 			   (file-readable-p filename)
@@ -488,15 +499,20 @@ was inserted."
 			 filename))
 	 (type (image-type file-or-data nil data-p))
 	 (image (create-image file-or-data type data-p))
-	 (props
-	  `(display ,image
-		    intangible ,image
-		    rear-nonsticky (display intangible)
-		    read-only t front-sticky (read-only)))
 	 (inhibit-read-only t)
 	 (buffer-undo-list t)
-	 (modified (buffer-modified-p)))
-    (image-refresh image)
+	 (modified (buffer-modified-p))
+	 props)
+
+    ;; Discard any stale image data before looking it up again.
+    (image-flush image)
+    (setq image (append image (image-transform-properties image)))
+    (setq props
+	  `(display ,image
+		    ;; intangible ,image
+		    rear-nonsticky (display) ;; intangible
+		    read-only t front-sticky (read-only)))
+
     (let ((buffer-file-truename nil)) ; avoid changing dir mtime by lock_file
       (add-text-properties (point-min) (point-max) props)
       (restore-buffer-modified-p modified))
@@ -510,7 +526,7 @@ was inserted."
     ;; is written with, e.g., C-x C-w.
     (if (coding-system-equal (coding-system-base buffer-file-coding-system)
 			     'no-conversion)
-	(set (make-local-variable 'require-final-newline) nil))
+	(set (make-local-variable 'find-file-literally) t))
     ;; Allow navigation of large images
     (set (make-local-variable 'auto-hscroll-mode) nil)
     (setq image-type type)
@@ -528,17 +544,59 @@ the image by calling `image-mode'."
   (if (image-get-display-property)
       (image-mode-as-text)
     (image-mode)))
+
+(defun image-after-revert-hook ()
+  (when (image-get-display-property)
+    (image-toggle-display-text)
+    ;; Update image display.
+    (mapc (lambda (window) (redraw-frame (window-frame window)))
+          (get-buffer-window-list (current-buffer) 'nomini 'visible))
+    (image-toggle-display-image)))
+
+
+;;; Animated images
+
+(defcustom image-animate-loop nil
+  "Non-nil means animated images loop forever, rather than playing once."
+  :type 'boolean
+  :version "24.1"
+  :group 'image)
+
+(defun image-toggle-animation ()
+  "Start or stop animating the current image.
+If `image-animate-loop' is non-nil, animation loops forever.
+Otherwise it plays once, then stops."
+  (interactive)
+  (let ((image (image-get-display-property))
+	animation)
+    (cond
+     ((null image)
+      (error "No image is present"))
+     ((null (setq animation (image-animated-p image)))
+      (message "No image animation."))
+     (t
+      (let ((timer (image-animate-timer image)))
+	(if timer
+	    (cancel-timer timer)
+	  (let ((index (plist-get (cdr image) :index)))
+	    ;; If we're at the end, restart.
+	    (and index
+		 (>= index (1- (car animation)))
+		 (setq index nil))
+	    (image-animate image index
+			   (if image-animate-loop t)))))))))
+
 
 ;;; Support for bookmark.el
-(declare-function bookmark-make-record-default "bookmark"
-                  (&optional point-only))
+(declare-function bookmark-make-record-default
+                  "bookmark" (&optional no-file no-context posn))
 (declare-function bookmark-prop-get "bookmark" (bookmark prop))
 (declare-function bookmark-default-handler "bookmark" (bmk))
 
 (defun image-bookmark-make-record ()
-  (nconc (bookmark-make-record-default)
-         `((image-type . ,image-type)
-           (handler    . image-bookmark-jump))))
+  `(,@(bookmark-make-record-default nil 'no-context 0)
+      (image-type . ,image-type)
+      (handler    . image-bookmark-jump)))
 
 ;;;###autoload
 (defun image-bookmark-jump (bmk)
@@ -548,7 +606,104 @@ the image by calling `image-mode'."
     (when (not (string= image-type (bookmark-prop-get bmk 'image-type)))
       (image-toggle-display))))
 
+
+;; Not yet implemented.
+;;; (defvar image-transform-minor-mode-map
+;;;   (let ((map (make-sparse-keymap)))
+;;;     ;; (define-key map  [(control ?+)] 'image-scale-in)
+;;;     ;; (define-key map  [(control ?-)] 'image-scale-out)
+;;;     ;; (define-key map  [(control ?=)] 'image-scale-none)
+;;;     ;; (define-key map "c f h" 'image-scale-fit-height)
+;;;     ;; (define-key map "c ]" 'image-rotate-right)
+;;;     map)
+;;;   "Minor mode keymap `image-transform-mode'.")
+;;;
+;;; (define-minor-mode image-transform-mode
+;;;   "Minor mode for scaling and rotating images.
+;;; With a prefix argument ARG, enable the mode if ARG is positive,
+;;; and disable it otherwise.  If called from Lisp, enable the mode
+;;; if ARG is omitted or nil.  This minor mode requires Emacs to have
+;;; been compiled with ImageMagick support."
+;;;   nil "image-transform" image-transform-minor-mode-map)
+
+
+;; FIXME this doesn't seem mature yet. Document in manual when it is.
+(defvar image-transform-resize nil
+  "The image resize operation.
+Its value should be one of the following:
+ - nil, meaning no resizing.
+ - `fit-height', meaning to fit the image to the window height.
+ - `fit-width', meaning to fit the image to the window width.
+ - A number, which is a scale factor (the default size is 100).")
+
+(defvar image-transform-rotation 0.0
+  "Rotation angle for the image in the current Image mode buffer.")
+
+(defun image-transform-properties (spec)
+  "Return rescaling/rotation properties for image SPEC.
+These properties are determined by the Image mode variables
+`image-transform-resize' and `image-transform-rotation'.  The
+return value is suitable for appending to an image spec.
+
+Rescaling and rotation properties only take effect if Emacs is
+compiled with ImageMagick support."
+  (when (or image-transform-resize
+	    (not (equal image-transform-rotation 0.0)))
+    ;; Note: `image-size' looks up and thus caches the untransformed
+    ;; image.  There's no easy way to prevent that.
+    (let* ((size (image-size spec t))
+	   (height
+	    (cond
+	     ((numberp image-transform-resize)
+	      (unless (= image-transform-resize 100)
+		(* image-transform-resize (cdr size))))
+	     ((eq image-transform-resize 'fit-height)
+	      (- (nth 3 (window-inside-pixel-edges))
+		 (nth 1 (window-inside-pixel-edges))))))
+	   (width (if (eq image-transform-resize 'fit-width)
+		      (- (nth 2 (window-inside-pixel-edges))
+			 (nth 0 (window-inside-pixel-edges))))))
+      ;;TODO fit-to-* should consider the rotation angle
+      `(,@(if height (list :height height))
+	,@(if width (list :width width))
+	,@(if (not (equal 0.0 image-transform-rotation))
+	      (list :rotation image-transform-rotation))))))
+
+;; FIXME 2 works, but eg 1.9 or 0.5 don't?
+(defun image-transform-set-scale (scale)
+  "Prompt for a number, and resize the current image by that amount.
+This command has no effect unless Emacs is compiled with
+ImageMagick support."
+  (interactive "nScale: ")
+  (setq image-transform-resize scale)
+  (image-toggle-display-image))
+
+(defun image-transform-fit-to-height ()
+  "Fit the current image to the height of the current window.
+This command has no effect unless Emacs is compiled with
+ImageMagick support."
+  (interactive)
+  (setq image-transform-resize 'fit-height)
+  (image-toggle-display-image))
+
+(defun image-transform-fit-to-width ()
+  "Fit the current image to the width of the current window.
+This command has no effect unless Emacs is compiled with
+ImageMagick support."
+  (interactive)
+  (setq image-transform-resize 'fit-width)
+  (image-toggle-display-image))
+
+(defun image-transform-set-rotation (rotation)
+  "Prompt for an angle ROTATION, and rotate the image by that amount.
+ROTATION should be in degrees.  This command has no effect unless
+Emacs is compiled with ImageMagick support."
+  (interactive "nRotation angle (in degrees): ")
+  ;;TODO 0 90 180 270 degrees are the only reasonable angles here
+  ;;otherwise combining with rescaling will get very awkward
+  (setq image-transform-rotation (float rotation))
+  (image-toggle-display-image))
+
 (provide 'image-mode)
 
-;; arch-tag: b5b2b7e6-26a7-4b79-96e3-1546b5c4c6cb
 ;;; image-mode.el ends here

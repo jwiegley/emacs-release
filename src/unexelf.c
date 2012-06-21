@@ -1,5 +1,4 @@
-/* Copyright (C) 1985, 1986, 1987, 1988, 1990, 1992, 1999, 2000, 2001,
-                 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
+/* Copyright (C) 1985-1988, 1990, 1992, 1999-2012
                  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -33,33 +32,12 @@ what you give them.   Help stamp out software-hoarding!  */
  * Modified heavily since then.
  *
  * Synopsis:
- *	unexec (new_name, old_name, data_start, bss_start, entry_address)
- *	char *new_name, *old_name;
- *	unsigned data_start, bss_start, entry_address;
+ *	unexec (const char *new_name, const char *old_name);
  *
  * Takes a snapshot of the program and makes an a.out format file in the
  * file named by the string argument new_name.
  * If old_name is non-NULL, the symbol table will be taken from the given file.
  * On some machines, an existing old_name file is required.
- *
- * The boundaries within the a.out file may be adjusted with the data_start
- * and bss_start arguments.  Either or both may be given as 0 for defaults.
- *
- * Data_start gives the boundary between the text segment and the data
- * segment of the program.  The text segment can contain shared, read-only
- * program code and literal data, while the data segment is always unshared
- * and unprotected.  Data_start gives the lowest unprotected address.
- * The value you specify may be rounded down to a suitable boundary
- * as required by the machine you are using.
- *
- * Bss_start indicates how much of the data segment is to be saved in the
- * a.out file and restored when the program is executed.  It gives the lowest
- * unsaved address, and is rounded up to a page boundary.  The default when 0
- * is given assumes that the entire data segment is to be stored, including
- * the previous data and bss as well as any additional storage allocated with
- * break (2).
- *
- * The new file is set up to start at entry_address.
  *
  */
 
@@ -407,15 +385,13 @@ temacs:
 /* We do not use mmap because that fails with NFS.
    Instead we read the whole file, modify it, and write it out.  */
 
-#ifndef emacs
-#define fatal(a, b, c) fprintf (stderr, a, b, c), exit (1)
-#include <string.h>
-#else
 #include <config.h>
+#include <unexec.h>
+
 extern void fatal (const char *msgid, ...);
-#endif
 
 #include <sys/types.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <memory.h>
@@ -424,7 +400,7 @@ extern void fatal (const char *msgid, ...);
 #include <fcntl.h>
 #if !defined (__NetBSD__) && !defined (__OpenBSD__)
 #include <elf.h>
-#endif
+#endif /* not __NetBSD__ and not __OpenBSD__ */
 #include <sys/mman.h>
 #if defined (_SYSTYPE_SYSV)
 #include <sys/elf_mips.h>
@@ -477,7 +453,7 @@ typedef struct {
 	long cbRfdOffset;
 	long cbExtOffset;
 } HDRR, *pHDRR;
-#define cbHDRR sizeof(HDRR)
+#define cbHDRR sizeof (HDRR)
 #define hdrNil ((pHDRR)0)
 #endif
 
@@ -545,10 +521,6 @@ typedef struct {
 # define ElfW(type) ElfExpandBitsW (ELFSIZE, type)
 #endif
 
-#ifndef ELF_BSS_SECTION_NAME
-#define ELF_BSS_SECTION_NAME ".bss"
-#endif
-
 /* Get the address of a particular section or program header entry,
  * accounting for the size of the entries.
  */
@@ -577,13 +549,11 @@ typedef struct {
    */
 
 #define OLD_SECTION_H(n) \
-     (*(ElfW(Shdr) *) ((byte *) old_section_h + old_file_h->e_shentsize * (n)))
+     (*(ElfW (Shdr) *) ((byte *) old_section_h + old_file_h->e_shentsize * (n)))
 #define NEW_SECTION_H(n) \
-     (*(ElfW(Shdr) *) ((byte *) new_section_h + new_file_h->e_shentsize * (n)))
-#define OLD_PROGRAM_H(n) \
-     (*(ElfW(Phdr) *) ((byte *) old_program_h + old_file_h->e_phentsize * (n)))
+     (*(ElfW (Shdr) *) ((byte *) new_section_h + new_file_h->e_shentsize * (n)))
 #define NEW_PROGRAM_H(n) \
-     (*(ElfW(Phdr) *) ((byte *) new_program_h + new_file_h->e_phentsize * (n)))
+     (*(ElfW (Phdr) *) ((byte *) new_program_h + new_file_h->e_phentsize * (n)))
 
 #define PATCH_INDEX(n) \
   do { \
@@ -593,9 +563,8 @@ typedef unsigned char byte;
 
 /* Round X up to a multiple of Y.  */
 
-static ElfW(Addr)
-round_up (x, y)
-     ElfW(Addr) x, y;
+static ElfW (Addr)
+round_up (ElfW (Addr) x, ElfW (Addr) y)
 {
   int rem = x % y;
   if (rem == 0)
@@ -611,13 +580,8 @@ round_up (x, y)
    if NOERROR is 0; we return -1 if NOERROR is nonzero.  */
 
 static int
-find_section (name, section_names, file_name, old_file_h, old_section_h, noerror)
-     char *name;
-     char *section_names;
-     char *file_name;
-     ElfW(Ehdr) *old_file_h;
-     ElfW(Shdr) *old_section_h;
-     int noerror;
+find_section (const char *name, const char *section_names, const char *file_name,
+	      ElfW (Ehdr) *old_file_h, ElfW (Shdr) *old_section_h, int noerror)
 {
   int idx;
 
@@ -652,11 +616,13 @@ find_section (name, section_names, file_name, old_file_h, old_section_h, noerror
  *
  */
 void
-unexec (new_name, old_name, data_start, bss_start, entry_address)
-     char *new_name, *old_name;
-     unsigned data_start, bss_start, entry_address;
+unexec (const char *new_name, const char *old_name)
 {
   int new_file, old_file, new_file_size;
+
+#if defined (emacs) || !defined (DEBUG)
+  void *new_break;
+#endif
 
   /* Pointers to the base of the image of the two files.  */
   caddr_t old_base, new_base;
@@ -669,24 +635,26 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 
   /* Pointers to the file, program and section headers for the old and
      new files.  */
-  ElfW(Ehdr) *old_file_h, *new_file_h;
-  ElfW(Phdr) *old_program_h, *new_program_h;
-  ElfW(Shdr) *old_section_h, *new_section_h;
+  ElfW (Ehdr) *old_file_h, *new_file_h;
+  ElfW (Phdr) *old_program_h, *new_program_h;
+  ElfW (Shdr) *old_section_h, *new_section_h;
 
   /* Point to the section name table in the old file.  */
   char *old_section_names;
 
-  ElfW(Addr) old_bss_addr, new_bss_addr;
-  ElfW(Word) old_bss_size, new_data2_size;
-  ElfW(Off)  new_data2_offset;
-  ElfW(Addr) new_data2_addr;
-  ElfW(Off)  old_bss_offset;
-  ElfW(Word) new_data2_incr;
+  ElfW (Addr) old_bss_addr, new_bss_addr;
+  ElfW (Word) old_bss_size, new_data2_size;
+  ElfW (Off)  new_data2_offset;
+  ElfW (Addr) new_data2_addr;
+  ElfW (Off)  old_bss_offset;
+  ElfW (Word) new_data2_incr;
 
   int n, nn;
   int old_bss_index, old_sbss_index, old_plt_index;
   int old_data_index, new_data2_index;
+#if defined _SYSTYPE_SYSV || defined __sgi
   int old_mdebug_index;
+#endif
   struct stat stat_buf;
   int old_file_size;
 
@@ -722,16 +690,18 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 
   /* Get pointers to headers & section names */
 
-  old_file_h = (ElfW(Ehdr) *) old_base;
-  old_program_h = (ElfW(Phdr) *) ((byte *) old_base + old_file_h->e_phoff);
-  old_section_h = (ElfW(Shdr) *) ((byte *) old_base + old_file_h->e_shoff);
+  old_file_h = (ElfW (Ehdr) *) old_base;
+  old_program_h = (ElfW (Phdr) *) ((byte *) old_base + old_file_h->e_phoff);
+  old_section_h = (ElfW (Shdr) *) ((byte *) old_base + old_file_h->e_shoff);
   old_section_names = (char *) old_base
     + OLD_SECTION_H (old_file_h->e_shstrndx).sh_offset;
 
   /* Find the mdebug section, if any.  */
 
+#if defined _SYSTYPE_SYSV || defined __sgi
   old_mdebug_index = find_section (".mdebug", old_section_names,
 				   old_name, old_file_h, old_section_h, 1);
+#endif
 
   /* Find the old .bss section.  Figure out parameters of the new
      data2 and bss sections.  */
@@ -788,7 +758,8 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
 				 old_name, old_file_h, old_section_h, 0);
 
 #if defined (emacs) || !defined (DEBUG)
-  new_bss_addr = (ElfW(Addr)) sbrk (0);
+  new_break = sbrk (0);
+  new_bss_addr = (ElfW (Addr)) new_break;
 #else
   new_bss_addr = old_bss_addr + old_bss_size + 0x1234;
 #endif
@@ -814,7 +785,7 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
   fprintf (stderr, "new_data2_incr %x\n", new_data2_incr);
 #endif
 
-  if ((unsigned) new_bss_addr < (unsigned) old_bss_addr + old_bss_size)
+  if ((uintptr_t) new_bss_addr < (uintptr_t) old_bss_addr + old_bss_size)
     fatal (".bss shrank when undumping???\n", 0, 0);
 
   /* Set the output file to the right size.  Allocate a buffer to hold
@@ -835,9 +806,9 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
   if (new_base == MAP_FAILED)
     fatal ("Can't allocate buffer for %s\n", old_name, 0);
 
-  new_file_h = (ElfW(Ehdr) *) new_base;
-  new_program_h = (ElfW(Phdr) *) ((byte *) new_base + old_file_h->e_phoff);
-  new_section_h = (ElfW(Shdr) *)
+  new_file_h = (ElfW (Ehdr) *) new_base;
+  new_program_h = (ElfW (Phdr) *) ((byte *) new_base + old_file_h->e_phoff);
+  new_section_h = (ElfW (Shdr) *)
     ((byte *) new_base + old_file_h->e_shoff + new_data2_incr);
 
   /* Make our new file, program and section headers as copies of the
@@ -873,7 +844,7 @@ unexec (new_name, old_name, data_start, bss_start, entry_address)
   for (n = new_file_h->e_phnum - 1; n >= 0; n--)
     {
       /* Compute maximum of all requirements for alignment of section.  */
-      ElfW(Word) alignment = (NEW_PROGRAM_H (n)).p_align;
+      ElfW (Word) alignment = (NEW_PROGRAM_H (n)).p_align;
       if ((OLD_SECTION_H (old_bss_index)).sh_addralign > alignment)
 	alignment = OLD_SECTION_H (old_bss_index).sh_addralign;
 
@@ -989,13 +960,13 @@ temacs:
 	Link	Info	Adralgn      Entsize
 
 [22]	1	3	0x335150     0x315150     0x4          	.data.rel.local
-	0	0	0x4          0            
+	0	0	0x4          0
 
 [23]	8	3	0x335158     0x315158     0x42720      	.bss
-	0	0	0x8          0            
+	0	0	0x8          0
 
 [24]	2	0	0            0x315154     0x1c9d0      	.symtab
-	25	1709	0x4          0x10         
+	25	1709	0x4          0x10
 	  */
 
 	  if (NEW_SECTION_H (nn).sh_offset >= old_bss_offset
@@ -1048,7 +1019,7 @@ temacs:
 	  /* The conditional bit below was in Oliva's original code
 	     (1999-08-25) and seems to have been dropped by mistake
 	     subsequently.  It prevents a crash at startup under X in
-	     `IRIX64 6.5 6.5.17m', whether compiled on that relase or
+	     `IRIX64 6.5 6.5.17m', whether compiled on that release or
 	     an earlier one.  It causes no trouble on the other ELF
 	     platforms I could test (Irix 6.5.15m, Solaris 8, Debian
 	     Potato x86, Debian Woody SPARC); however, it's reported
@@ -1082,7 +1053,7 @@ temacs:
       memcpy (NEW_SECTION_H (nn).sh_offset + new_base, src,
 	      NEW_SECTION_H (nn).sh_size);
 
-#ifdef __alpha__
+#if defined __alpha__ && !defined __OpenBSD__
       /* Update Alpha COFF symbol table: */
       if (strcmp (old_section_names + OLD_SECTION_H (n).sh_name, ".mdebug")
 	  == 0)
@@ -1101,14 +1072,14 @@ temacs:
 	  symhdr->cbRfdOffset += new_data2_size;
 	  symhdr->cbExtOffset += new_data2_size;
 	}
-#endif /* __alpha__ */
+#endif /* __alpha__ && !__OpenBSD__ */
 
 #if defined (_SYSTYPE_SYSV)
       if (NEW_SECTION_H (nn).sh_type == SHT_MIPS_DEBUG
 	  && old_mdebug_index != -1)
 	{
-	  int diff = NEW_SECTION_H(nn).sh_offset
-		- OLD_SECTION_H(old_mdebug_index).sh_offset;
+	  int diff = NEW_SECTION_H (nn).sh_offset
+		- OLD_SECTION_H (old_mdebug_index).sh_offset;
 	  HDRR *phdr = (HDRR *)(NEW_SECTION_H (nn).sh_offset + new_base);
 
 	  if (diff)
@@ -1187,9 +1158,9 @@ temacs:
       if (NEW_SECTION_H (nn).sh_type == SHT_SYMTAB
 	  || NEW_SECTION_H (nn).sh_type == SHT_DYNSYM)
 	{
-	  ElfW(Shdr) *spt = &NEW_SECTION_H (nn);
+	  ElfW (Shdr) *spt = &NEW_SECTION_H (nn);
 	  unsigned int num = spt->sh_size / spt->sh_entsize;
-	  ElfW(Sym) * sym = (ElfW(Sym) *) (NEW_SECTION_H (nn).sh_offset +
+	  ElfW (Sym) * sym = (ElfW (Sym) *) (NEW_SECTION_H (nn).sh_offset +
 					   new_base);
 	  for (; num--; sym++)
 	    {
@@ -1207,7 +1178,7 @@ temacs:
   for (n = new_file_h->e_shnum - 1; n; n--)
     {
       byte *symnames;
-      ElfW(Sym) *symp, *symendp;
+      ElfW (Sym) *symp, *symendp;
 
       if (NEW_SECTION_H (n).sh_type != SHT_DYNSYM
 	  && NEW_SECTION_H (n).sh_type != SHT_SYMTAB)
@@ -1215,8 +1186,8 @@ temacs:
 
       symnames = ((byte *) new_base
 		  + NEW_SECTION_H (NEW_SECTION_H (n).sh_link).sh_offset);
-      symp = (ElfW(Sym) *) (NEW_SECTION_H (n).sh_offset + new_base);
-      symendp = (ElfW(Sym) *) ((byte *)symp + NEW_SECTION_H (n).sh_size);
+      symp = (ElfW (Sym) *) (NEW_SECTION_H (n).sh_offset + new_base);
+      symendp = (ElfW (Sym) *) ((byte *)symp + NEW_SECTION_H (n).sh_size);
 
       for (; symp < symendp; symp ++)
 	{
@@ -1248,9 +1219,15 @@ temacs:
 	      nn = symp->st_shndx;
 	      if (nn > old_bss_index)
 		nn--;
-	      old = ((symp->st_value - NEW_SECTION_H (symp->st_shndx).sh_addr)
-		     + OLD_SECTION_H (nn).sh_offset + old_base);
-	      memcpy (new, old, symp->st_size);
+	      if (nn == old_bss_index)
+		memset (new, 0, symp->st_size);
+	      else
+		{
+		  old = ((symp->st_value
+			  - NEW_SECTION_H (symp->st_shndx).sh_addr)
+			 + OLD_SECTION_H (nn).sh_offset + old_base);
+		  memcpy (new, old, symp->st_size);
+		}
 	    }
 #endif
 	}
@@ -1260,11 +1237,11 @@ temacs:
      that it can undo relocations performed by the runtime linker.  */
   for (n = new_file_h->e_shnum - 1; n; n--)
     {
-      ElfW(Shdr) section = NEW_SECTION_H (n);
+      ElfW (Shdr) section = NEW_SECTION_H (n);
 
       /* Cause a compilation error if anyone uses n instead of nn below.  */
-      struct {int a;} n;
-      (void)n.a;		/* Prevent `unused variable' warnings.  */
+      #define n ((void) 0);
+      n /* Prevent 'macro "n" is not used' warnings.  */
 
       switch (section.sh_type)
 	{
@@ -1292,37 +1269,34 @@ temacs:
 	      || !strcmp ((old_section_names + NEW_SECTION_H (nn).sh_name),
 			  ".data1"))
 	    {
-	      ElfW(Addr) offset = (NEW_SECTION_H (nn).sh_addr
+	      ElfW (Addr) offset = (NEW_SECTION_H (nn).sh_addr
 				   - NEW_SECTION_H (nn).sh_offset);
 	      caddr_t reloc = old_base + section.sh_offset, end;
 	      for (end = reloc + section.sh_size; reloc < end;
 		   reloc += section.sh_entsize)
 		{
-		  ElfW(Addr) addr = ((ElfW(Rel) *) reloc)->r_offset - offset;
+		  ElfW (Addr) addr = ((ElfW (Rel) *) reloc)->r_offset - offset;
 #ifdef __alpha__
 		  /* The Alpha ELF binutils currently have a bug that
 		     sometimes results in relocs that contain all
 		     zeroes.  Work around this for now...  */
-		  if (((ElfW(Rel) *) reloc)->r_offset == 0)
+		  if (((ElfW (Rel) *) reloc)->r_offset == 0)
 		    continue;
 #endif
-		  memcpy (new_base + addr, old_base + addr, sizeof(ElfW(Addr)));
+		  memcpy (new_base + addr, old_base + addr, sizeof (ElfW (Addr)));
 		}
 	    }
 	  break;
 	}
+
+      #undef n
     }
 
   /* Write out new_file, and free the buffers.  */
 
   if (write (new_file, new_base, new_file_size) != new_file_size)
-#ifndef emacs
-    fatal ("Didn't write %d bytes: errno %d\n",
-	   new_file_size, errno);
-#else
     fatal ("Didn't write %d bytes to %s: errno %d\n",
 	   new_file_size, new_name, errno);
-#endif
   munmap (old_base, old_file_size);
   munmap (new_base, new_file_size);
 
@@ -1347,6 +1321,3 @@ temacs:
   if (chmod (new_name, stat_buf.st_mode) == -1)
     fatal ("Can't chmod (%s): errno %d\n", new_name, errno);
 }
-
-/* arch-tag: e02e1512-95e2-4ef0-bba7-b6bce658f1e3
-   (do not change this comment) */

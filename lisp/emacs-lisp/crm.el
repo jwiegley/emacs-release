@@ -1,7 +1,6 @@
 ;;; crm.el --- read multiple strings with completion
 
-;; Copyright (C) 1985, 1986, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1985-1986, 1993-2012 Free Software Foundation, Inc.
 
 ;; Author: Sen Nagata <sen@eccosys.com>
 ;; Keywords: completion, minibuffer, multiple elements
@@ -144,7 +143,7 @@ nil if none.
 
 The value of FLAG is used to specify the type of completion operation.
 A value of nil specifies `try-completion'.  A value of t specifies
-`all-completions'.  A value of lambda specifes a test for an exact match.
+`all-completions'.  A value of lambda specifies a test for an exact match.
 
 For more information on STRING, PREDICATE, and FLAG, see the Elisp
 Reference sections on 'Programmed Completion' and 'Basic Completion
@@ -321,5 +320,4 @@ INHERIT-INPUT-METHOD."
 
 (provide 'crm)
 
-;; arch-tag: db1911d9-86c6-4a42-b32a-4910701b15a6
 ;;; crm.el ends here

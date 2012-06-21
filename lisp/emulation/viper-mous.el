@@ -1,9 +1,9 @@
 ;;; viper-mous.el --- mouse support for Viper
 
-;; Copyright (C) 1994, 1995, 1996, 1997, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1994-1997, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
+;; Package: viper
 
 ;; This file is part of GNU Emacs.
 
@@ -66,7 +66,7 @@
   "*Function that determines what constitutes a word for clicking events.
 Takes two parameters: a COUNT, indicating how many words to return,
 and CLICK-COUNT, telling whether this is the first click, a double-click,
-or a tripple-click."
+or a triple-click."
   :type 'symbol
   :group 'viper-mouse)
 
@@ -95,7 +95,7 @@ considered related."
 
 ;; remembers prefix argument to pass along to commands invoked by second
 ;; click.
-;; This is needed because in Emacs (not XEmacs), assigning to preix-arg
+;; This is needed because in Emacs (not XEmacs), assigning to prefix-arg
 ;; causes Emacs to count the second click as if it was a single click
 (defvar viper-global-prefix-argument nil)
 
@@ -662,5 +662,4 @@ This buffer may be different from the one where the click occurred."
 ;; End:
 
 
-;; arch-tag: e56b2390-06c4-4dd1-96f5-c7876e2d8c2f
 ;;; viper-mous.el ends here

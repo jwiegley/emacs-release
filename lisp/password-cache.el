@@ -1,7 +1,6 @@
 ;;; password-cache.el --- Read passwords, possibly using a password cache.
 
-;; Copyright (C) 1999, 2000, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1999-2000, 2003-2012  Free Software Foundation, Inc.
 
 ;; Author: Simon Josefsson <simon@josefsson.org>
 ;; Created: 2003-12-21
@@ -51,11 +50,15 @@
 
 ;;; Code:
 
+;; Options are autoloaded since they are used by eg mml-sec.el.
+
+;;;###autoload
 (defcustom password-cache t
   "Whether to cache passwords."
   :group 'password
   :type 'boolean)
 
+;;;###autoload
 (defcustom password-cache-expiry 16
   "How many seconds passwords are cached, or nil to disable expiring.
 Whether passwords are cached at all is controlled by `password-cache'."
@@ -72,6 +75,13 @@ regulate cache behavior."
   (and password-cache
        key
        (symbol-value (intern-soft key password-data))))
+
+;;;###autoload
+(defun password-in-cache-p (key)
+  "Check if KEY is in the cache."
+  (and password-cache
+       key
+       (intern-soft key password-data)))
 
 (defun password-read (prompt &optional key)
   "Read password, for use with KEY, from user, or from cache if wanted.
@@ -101,17 +111,19 @@ remove incorrect ones from the cache."
 
 (defun password-cache-remove (key)
   "Remove password indexed by KEY from password cache.
-This is typically run be a timer setup from `password-cache-add',
+This is typically run by a timer setup from `password-cache-add',
 but can be invoked at any time to forcefully remove passwords
 from the cache.  This may be useful when it has been detected
 that a password is invalid, so that `password-read' query the
 user again."
-  (let ((password (symbol-value (intern-soft key password-data))))
-    (when password
-      (if (fboundp 'clear-string)
-	  (clear-string password)
-	(fillarray password ?_))
-      (unintern key password-data))))
+  (let ((sym (intern-soft key password-data)))
+    (when sym
+      (let ((password (symbol-value sym)))
+        (when (stringp password)
+          (if (fboundp 'clear-string)
+              (clear-string password)
+            (fillarray password ?_)))
+        (unintern key password-data)))))
 
 (defun password-cache-add (key password)
   "Add password to cache.
@@ -130,5 +142,4 @@ The password is removed by a timer after `password-cache-expiry' seconds."
 
 (provide 'password-cache)
 
-;; arch-tag: ab160494-16c8-4c68-a4a1-73eebf6686e5
 ;;; password-cache.el ends here

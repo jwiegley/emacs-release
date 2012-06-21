@@ -1,6 +1,6 @@
 ;; bug-reference.el --- buttonize bug references
 
-;; Copyright (C) 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2008-2012 Free Software Foundation, Inc.
 
 ;; Author: Tom Tromey <tromey@redhat.com>
 ;; Created: 21 Mar 2007
@@ -41,13 +41,28 @@
 (defvar bug-reference-url-format nil
   "Format used to turn a bug number into a URL.
 The bug number is supplied as a string, so this should have a single %s.
-There is no default setting for this, it must be set per file.")
+This can also be a function designator; it is called without arguments
+ and should return a string.
+It can use `match-string' to get parts matched against
+`bug-reference-bug-regexp', specifically:
+ 1. issue kind (bug, patch, rfe &c)
+ 2. issue number.
+
+There is no default setting for this, it must be set per file.
+If you set it to a symbol in the file Local Variables section,
+you need to add a `bug-reference-url-format' property to it:
+\(put 'my-bug-reference-url-format 'bug-reference-url-format t)
+so that it is considered safe, see `enable-local-variables'.")
 
 ;;;###autoload
-(put 'bug-reference-url-format 'safe-local-variable 'stringp)
+(put 'bug-reference-url-format 'safe-local-variable
+     (lambda (s)
+       (or (stringp s)
+           (and (symbolp s)
+                (get s 'bug-reference-url-format)))))
 
 (defconst bug-reference-bug-regexp
-  "\\(?:[Bb]ug ?#\\|PR [a-z-+]+/\\)\\([0-9]+\\)"
+  "\\([Bb]ug ?#\\|[Pp]atch ?#\\|RFE ?#\\|PR [a-z-+]+/\\)\\([0-9]+\\)"
   "Regular expression which matches bug references.")
 
 (defun bug-reference-set-overlay-properties ()
@@ -87,12 +102,14 @@ There is no default setting for this, it must be set per file.")
 	    (overlay-put overlay 'category 'bug-reference)
 	    ;; Don't put a link if format is undefined
 	    (when bug-reference-url-format
-	      (overlay-put overlay 'bug-reference-url
-			   (format bug-reference-url-format
-				   (match-string-no-properties 1))))))))))
+              (overlay-put overlay 'bug-reference-url
+                           (if (stringp bug-reference-url-format)
+                               (format bug-reference-url-format
+                                       (match-string-no-properties 2))
+                             (funcall bug-reference-url-format))))))))))
 
 ;; Taken from button.el.
-(defun bug-reference-push-button (&optional pos use-mouse-action)
+(defun bug-reference-push-button (&optional pos _use-mouse-action)
   "Open URL corresponding to the bug reference at POS."
   (interactive
    (list (if (integerp last-command-event) (point) last-command-event)))
@@ -110,7 +127,10 @@ There is no default setting for this, it must be set per file.")
 
 ;;;###autoload
 (define-minor-mode bug-reference-mode
-  "Minor mode to buttonize bugzilla references in the current buffer."
+  "Toggle hyperlinking bug references in the buffer (Bug Reference mode).
+With a prefix argument ARG, enable Bug Reference mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil."
   nil
   ""
   nil
@@ -134,5 +154,4 @@ There is no default setting for this, it must be set per file.")
       (widen)
       (bug-reference-unfontify (point-min) (point-max)))))
 
-;; arch-tag: b138abce-e5c3-475e-bd58-7afba40387ea
 ;;; bug-reference.el ends here

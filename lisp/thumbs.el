@@ -1,6 +1,6 @@
 ;;; thumbs.el --- Thumbnails previewer for images files
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2004-2012 Free Software Foundation, Inc.
 
 ;; Author: Jean-Philippe Theberge <jphiltheberge@videotron.ca>
 ;; Maintainer: FSF
@@ -26,7 +26,7 @@
 ;; This package create two new modes: thumbs-mode and thumbs-view-image-mode.
 ;; It is used for basic browsing and viewing of images from within Emacs.
 ;; Minimal image manipulation functions are also available via external
-;; programs.  If you want to do more complex tasks like categorise and tag
+;; programs.  If you want to do more complex tasks like categorize and tag
 ;; your images, use image-dired.el
 ;;
 ;; The 'convert' program from 'ImageMagick'
@@ -92,7 +92,7 @@ When it reaches that size (in bytes), a warning is sent."
   :group 'thumbs)
 
 ;; Unfortunately Windows XP has a program called CONVERT.EXE in
-;; C:/WINDOWS/SYSTEM32/ for partioning NTFS system.  So Emacs
+;; C:/WINDOWS/SYSTEM32/ for partitioning NTFS systems.  So Emacs
 ;; can find the one in your ImageMagick directory, you need to
 ;; customize this value to the absolute filename.
 (defcustom thumbs-conversion-program
@@ -226,7 +226,7 @@ reached."
 	      (let ((fattribs-list (file-attributes f)))
 		`(,(nth 4 fattribs-list) ,(nth 7 fattribs-list) ,f)))
 	    (directory-files (thumbs-thumbsdir) t (image-file-name-regexp)))
-	   '(lambda (l1 l2) (time-less-p (car l1) (car l2)))))
+	   (lambda (l1 l2) (time-less-p (car l1) (car l2)))))
 	 (dirsize (apply '+ (mapcar (lambda (x) (cadr x)) files-list))))
     (while (> dirsize thumbs-thumbsdir-max-size)
       (progn
@@ -235,7 +235,7 @@ reached."
       (setq dirsize (- dirsize (car (cdar files-list))))
       (setq files-list (cdr files-list)))))
 
-;; Check the thumbsnail directory size and clean it if necessary.
+;; Check the thumbnail directory size and clean it if necessary.
 (when thumbs-thumbsdir-auto-clean
   (thumbs-cleanup-thumbsdir))
 
@@ -816,5 +816,4 @@ ACTION and ARG should be a valid convert command."
 
 (provide 'thumbs)
 
-;; arch-tag: f9ac1ef8-83fc-42c0-8069-1fae43fd2e5c
 ;;; thumbs.el ends here

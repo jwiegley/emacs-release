@@ -1,7 +1,6 @@
 ;;; semantic/grammar.el --- Major mode framework for Semantic grammars
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2002-2005, 2007-2012  Free Software Foundation, Inc.
 
 ;; Author: David Ponce <david@dponce.com>
 ;; Maintainer: David Ponce <david@dponce.com>
@@ -105,10 +104,10 @@ It ignores whitespaces, newlines and comments."
   ;; regexp match semicolons inside strings!
   semantic-lex-ignore-comments
   ;; Must detect prefixed list before punctuation because prefix chars
-  ;; are also punctuations!
+  ;; are also punctuation!
   semantic-grammar-wy--<qlist>-sexp-analyzer
-  ;; Must detect punctuations after comments because the semicolon can
-  ;; be a punctuation or a comment start!
+  ;; Must detect punctuation after comments because the semicolon can
+  ;; be punctuation or a comment start!
   semantic-grammar-wy--<punctuation>-string-analyzer
   semantic-grammar-wy--<block>-block-analyzer
   semantic-grammar-wy--<sexp>-sexp-analyzer)
@@ -248,10 +247,7 @@ That is tag names plus names defined in tag attribute `:rest'."
               (skip-chars-backward "\r\n\t")
               ;; If a grammar footer is found, skip it.
               (re-search-backward "^;;;\\s-+\\S-+\\s-+ends here"
-                                  (save-excursion
-                                    (beginning-of-line)
-                                    (point))
-                                  t)
+                                  (point-at-bol) t)
               (skip-chars-backward "\r\n\t")
               (point)))
            "\n"))
@@ -455,7 +451,7 @@ Also load the specified macro libraries."
       ',(semantic-grammar-keyword-properties keywords))))
 
 (define-overloadable-function semantic-grammar-keywordtable-builder ()
-  "Return the keyword table table value.")
+  "Return the keyword table value.")
 
 ;;; Token table builder
 ;;
@@ -805,7 +801,7 @@ Block definitions are read from the current table of lexical types."
     (with-current-buffer semantic--grammar-input-buffer
       (setq tokens (semantic-grammar-tokens)
             props  (semantic-grammar-token-properties tokens)))
-    (insert "(require 'semantic-lex)\n\n")
+    (insert "(require 'semantic/lex)\n\n")
     (let ((semantic-lex-types-obarray
            (semantic-lex-make-type-table tokens props))
           semantic-grammar--lex-block-specs)
@@ -1294,7 +1290,7 @@ the change bounds to encompass the whole nonterminal tag."
           semantic-grammar-mode-keywords-3)
          nil  ;; perform string/comment fontification
          nil  ;; keywords are case sensitive.
-         ;; This puts _ & - as a word constituant,
+         ;; This puts _ & - as a word constituent,
          ;; simplifying our keywords significantly
          ((?_ . "w") (?- . "w"))))
   ;; Setup Semantic to parse grammar
@@ -1897,5 +1893,4 @@ Optional argument COLOR determines if color is added to the text."
 
 (provide 'semantic/grammar)
 
-;; arch-tag: 12ffc9d5-557d-49af-a5fd-a66a006ddb3e
 ;;; semantic/grammar.el ends here

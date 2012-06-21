@@ -1,7 +1,7 @@
 ;;; erc-dcc.el --- CTCP DCC module for ERC
 
-;; Copyright (C) 1993, 1994, 1995, 1998, 2002, 2003, 2004, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1993-1995, 1998, 2002-2004, 2006-2012
+;;   Free Software Foundation, Inc.
 
 ;; Author: Ben A. Mesander <ben@gnu.ai.mit.edu>
 ;;         Noah Friedman <friedman@prep.ai.mit.edu>
@@ -649,7 +649,16 @@ that subcommand."
        ?q query ?n nick ?u login ?h host))))
 
 (defconst erc-dcc-ctcp-query-send-regexp
-  "^DCC SEND \\([^ ]+\\) \\([0-9]+\\) \\([0-9]+\\) *\\([0-9]*\\)")
+  (concat "^DCC SEND \\("
+          ;; Following part matches either filename without spaces
+          ;; or filename enclosed in double quotes with any number
+          ;; of escaped double quotes inside.
+          "\"\\(\\(.*?\\(\\\\\"\\)?\\)+?\\)\"\\|\\([^ ]+\\)"
+          "\\) \\([0-9]+\\) \\([0-9]+\\) *\\([0-9]*\\)"))
+
+(defsubst erc-dcc-unquote-filename (filename)
+  (erc-replace-regexp-in-string "\\\\\\\\" "\\"
+                                (erc-replace-regexp-in-string "\\\\\"" "\"" filename t t) t t))
 
 (defun erc-dcc-handle-ctcp-send (proc query nick login host to)
   "This is called if a CTCP DCC SEND subcommand is sent to the client.
@@ -664,10 +673,12 @@ It extracts the information about the dcc request and adds it to
        'dcc-request-bogus
        ?r "SEND" ?n nick ?u login ?h host))
      ((string-match erc-dcc-ctcp-query-send-regexp query)
-      (let ((filename (match-string 1 query))
-            (ip       (erc-decimal-to-ip (match-string 2 query)))
-            (port     (match-string 3 query))
-            (size     (match-string 4 query)))
+      (let ((filename
+             (or (match-string 3 query)
+                 (erc-dcc-unquote-filename (match-string 2 query))))
+            (ip       (erc-decimal-to-ip (match-string 6 query)))
+            (port     (match-string 7 query))
+            (size     (match-string 8 query)))
         ;; FIXME: a warning really should also be sent
         ;; if the ip address != the host the dcc sender is on.
         (erc-display-message
@@ -1094,21 +1105,16 @@ Possible values are: ask, auto, ignore."
 (defvar erc-dcc-chat-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "RET") 'erc-send-current-line)
-    (define-key map "\t" 'erc-complete-word)
+    (define-key map "\t" 'completion-at-point)
     map)
   "Keymap for `erc-dcc-mode'.")
 
-(defun erc-dcc-chat-mode ()
+(define-derived-mode erc-dcc-chat-mode fundamental-mode "DCC-Chat"
   "Major mode for wasting time via DCC chat."
-  (interactive)
-  (kill-all-local-variables)
   (setq mode-line-process '(":%s")
-        mode-name "DCC-Chat"
-        major-mode 'erc-dcc-chat-mode
         erc-send-input-line-function 'erc-dcc-chat-send-input-line
         erc-default-recipients '(dcc))
-  (use-local-map erc-dcc-chat-mode-map)
-  (run-hooks 'erc-dcc-chat-mode-hook))
+  (add-hook 'completion-at-point-functions 'erc-complete-word-at-point nil t))
 
 (defun erc-dcc-chat-send-input-line (recipient line &optional force)
   "Send LINE to the remote end.
@@ -1257,4 +1263,3 @@ other client."
 ;; indent-tabs-mode: nil
 ;; End:
 
-;; arch-tag: cda5a6b3-c510-4dbe-b699-84cccfa04edb

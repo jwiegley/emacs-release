@@ -1,11 +1,11 @@
-;;; newcomment.el --- (un)comment regions of buffers
+;;; newcomment.el --- (un)comment regions of buffers -*- lexical-binding: t -*-
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1999-2012 Free Software Foundation, Inc.
 
 ;; Author: code extracted from Emacs-20's simple.el
 ;; Maintainer: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Keywords: comment uncomment
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -118,7 +118,7 @@ at the place matched by the close of the first pair.")
 
 ;;;###autoload
 (defvar comment-end-skip nil
-  "Regexp to match the end of a comment plus everything up to its body.")
+  "Regexp to match the end of a comment plus everything back to its body.")
 ;;;###autoload(put 'comment-end-skip 'safe-local-variable 'string-or-null-p)
 
 ;;;###autoload
@@ -185,22 +185,60 @@ The `plain' comment style doubles this value.
 This should generally stay 0, except for a few modes like Lisp where
 it is 1 so that regions are commented with two or three semi-colons.")
 
+;;;###autoload
 (defconst comment-styles
-  '((plain	. (nil nil nil nil))
-    (indent	. (nil nil nil t))
-    (indent-or-triple
-                . (nil nil nil multi-char))
-    (aligned	. (nil t nil t))
-    (multi-line	. (t nil nil t))
-    (extra-line	. (t nil t t))
-    (box	. (nil t t t))
-    (box-multi	. (t t t t)))
-  "Comment region styles of the form (STYLE . (MULTI ALIGN EXTRA INDENT)).
+  '((plain      nil nil nil nil
+                "Start in column 0 (do not indent), as in Emacs-20")
+    (indent-or-triple nil nil nil multi-char
+              "Start in column 0, but only for single-char starters")
+    (indent     nil nil nil t
+                "Full comment per line, ends not aligned")
+    (aligned	nil t   nil t
+                "Full comment per line, ends aligned")
+    (box	nil t   t   t
+                "Full comment per line, ends aligned, + top and bottom")
+    (extra-line	t   nil t   t
+                "One comment for all lines, end on a line by itself")
+    (multi-line	t   nil nil t
+                "One comment for all lines, end on last commented line")
+    (box-multi	t   t   t   t
+                "One comment for all lines, + top and bottom"))
+  "Comment region style definitions.
+Each style is defined with a form (STYLE . (MULTI ALIGN EXTRA INDENT DOC)).
+DOC should succinctly describe the style.
 STYLE should be a mnemonic symbol.
 MULTI specifies that comments are allowed to span multiple lines.
+  e.g. in C it comments regions as
+     /* blabla
+      * bli */
+  rather than
+     /* blabla */
+     /* bli */
+  if `comment-end' is empty, this has no effect.
+
 ALIGN specifies that the `comment-end' markers should be aligned.
+  e.g. in C it comments regions as
+     /* blabla */
+     /* bli    */
+  rather than
+     /* blabla */
+     /* bli */
+  if `comment-end' is empty, this has no effect, unless EXTRA is also set,
+  in which case the comment gets wrapped in a box.
+
 EXTRA specifies that an extra line should be used before and after the
   region to comment (to put the `comment-end' and `comment-start').
+  e.g. in C it comments regions as
+     /*
+      * blabla
+      * bli
+      */
+  rather than
+     /* blabla
+      * bli */
+  if the comment style is not multi line, this has no effect, unless ALIGN
+  is also set, in which case the comment gets wrapped in a box.
+
 INDENT specifies that the `comment-start' markers should not be put at the
   left margin but at the current indentation of the region to comment.
 If INDENT is `multi-char', that means indent multi-character
@@ -211,8 +249,11 @@ If INDENT is `multi-char', that means indent multi-character
   "Style to be used for `comment-region'.
 See `comment-styles' for a list of available styles."
   :type (if (boundp 'comment-styles)
-	    `(choice ,@(mapcar (lambda (s) `(const ,(car s)))
-			       comment-styles))
+	    `(choice
+              ,@(mapcar (lambda (s)
+                          `(const :tag ,(format "%s: %s" (car s) (nth 5 s))
+                                  ,(car s)))
+                        comment-styles))
 	  'symbol)
   :version "23.1"
   :group 'comment)
@@ -276,7 +317,8 @@ the variables are properly set."
       (let ((cs (read-string "No comment syntax is defined.  Use: ")))
 	(if (zerop (length cs))
 	    (error "No comment syntax defined")
-	  (set (make-local-variable 'comment-start) cs))))
+	  (set (make-local-variable 'comment-start) cs)
+	  (set (make-local-variable 'comment-start-skip) cs))))
     ;; comment-use-syntax
     (when (eq comment-use-syntax 'undecided)
       (set (make-local-variable 'comment-use-syntax)
@@ -545,7 +587,7 @@ Point is expected to be at the start of the comment."
                    (save-excursion (end-of-line) (current-column)))))
         (other nil)
         (min (save-excursion (skip-chars-backward " \t")
-                             (1+ (current-column)))))
+                             (if (bolp) 0 (1+ (current-column))))))
     ;; Fix up the range.
     (if (< max min) (setq max min))
     ;; Don't move past the fill column.
@@ -682,7 +724,7 @@ With any other arg, set comment column to indentation of the previous comment
 With prefix ARG, kill comments on that many lines starting with this one."
   (interactive "P")
   (comment-normalize-vars)
-  (dotimes (_ (prefix-numeric-value arg))
+  (dotimes (_i (prefix-numeric-value arg))
     (save-excursion
       (beginning-of-line)
       (let ((cs (comment-search-forward (line-end-position) t)))
@@ -831,14 +873,15 @@ comment markers."
 	  (when (and sre (looking-at (concat "\\s-*\n\\s-*" srei)))
 	    (goto-char (match-end 0)))
 	  (if (null arg) (delete-region (point-min) (point))
-	    (skip-syntax-backward " ")
-	    (delete-char (- numarg))
-	    (unless (or (bobp)
-			(save-excursion (goto-char (point-min))
-					(looking-at comment-start-skip)))
-	      ;; If there's something left but it doesn't look like
-	      ;; a comment-start any more, just remove it.
-	      (delete-region (point-min) (point))))
+            (let ((opoint (point-marker)))
+              (skip-syntax-backward " ")
+              (delete-char (- numarg))
+              (unless (and (not (bobp))
+                           (save-excursion (goto-char (point-min))
+                                           (looking-at comment-start-skip)))
+                ;; If there's something left but it doesn't look like
+                ;; a comment-start any more, just remove it.
+                (delete-region (point-min) opoint))))
 
 	  ;; Remove the end-comment (and leading padding and such).
 	  (goto-char (point-max)) (comment-enter-backward)
@@ -946,12 +989,12 @@ indentation to be kept as it was before narrowing."
 		   (delete-char n)
 		   (setq ,bindent (- ,bindent n)))))))))))
 
-;; Compute the number of extra comment starter characters
-;; (extra semicolons in Lisp mode, extra stars in C mode, etc.)
-;; If ARG is non-nil, just follow ARG.
-;; If the comment-starter is multi-char, just follow ARG.
-;; Otherwise obey comment-add, and double it if EXTRA is non-nil.
 (defun comment-add (arg)
+  "Compute the number of extra comment starter characters.
+\(Extra semicolons in Lisp mode, extra stars in C mode, etc.)
+If ARG is non-nil, just follow ARG.
+If the comment starter is multi-char, just follow ARG.
+Otherwise obey `comment-add'."
   (if (and (null arg) (= (string-match "[ \t]*\\'" comment-start) 1))
       (* comment-add 1)
     (1- (prefix-numeric-value arg))))
@@ -1144,6 +1187,12 @@ end- comment markers additionally to what `comment-add' already specifies."
 			   'box-multi 'box)))
     (comment-region beg end (+ comment-add arg))))
 
+(defun comment-only-p (beg end)
+  "Return non-nil if the text between BEG and END is all comments."
+  (save-excursion
+    (goto-char beg)
+    (comment-forward (point-max))
+    (<= end (point))))
 
 ;;;###autoload
 (defun comment-or-uncomment-region (beg end &optional arg)
@@ -1152,10 +1201,7 @@ in which case call `uncomment-region'.  If a prefix arg is given, it
 is passed on to the respective function."
   (interactive "*r\nP")
   (comment-normalize-vars)
-  (funcall (if (save-excursion ;; check for already commented region
-		 (goto-char beg)
-		 (comment-forward (point-max))
-		 (<= end (point)))
+  (funcall (if (comment-only-p beg end)
 	       'uncomment-region 'comment-region)
 	   beg end arg))
 
@@ -1163,8 +1209,8 @@ is passed on to the respective function."
 (defun comment-dwim (arg)
   "Call the comment command you want (Do What I Mean).
 If the region is active and `transient-mark-mode' is on, call
-  `comment-region' (unless it only consists of comments, in which
-  case it calls `uncomment-region').
+`comment-region' (unless it only consists of comments, in which
+case it calls `uncomment-region').
 Else, if the current line is empty, call `comment-insert-comment-function'
 if it is defined, otherwise insert a comment and indent it.
 Else if a prefix ARG is specified, call `comment-kill'.
@@ -1200,7 +1246,7 @@ This has no effect in modes that do not define a comment syntax."
   :group 'comment)
 
 (defun comment-valid-prefix-p (prefix compos)
-    "Check that the adaptive-fill-prefix is consistent with the context.
+    "Check that the adaptive fill prefix is consistent with the context.
 PREFIX is the prefix (presumably guessed by `adaptive-fill-mode').
 COMPOS is the position of the beginning of the comment we're in, or nil
 if we're not inside a comment."
@@ -1346,5 +1392,4 @@ unless optional argument SOFT is non-nil."
 
 (provide 'newcomment)
 
-;; arch-tag: 01e3320a-00c8-44ea-a696-8f8e7354c858
 ;;; newcomment.el ends here

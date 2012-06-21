@@ -1,7 +1,6 @@
 ;;; calc-misc.el --- miscellaneous functions for Calc
 
-;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1990-1993, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -35,6 +34,7 @@
 (declare-function calc-inv-hyp-prefix-help "calc-help" ())
 (declare-function calc-inverse-prefix-help "calc-help" ())
 (declare-function calc-hyperbolic-prefix-help "calc-help" ())
+(declare-function calc-option-prefix-help "calc-help" ())
 (declare-function calc-explain-why "calc-stuff" (why &optional more))
 (declare-function calc-clear-command-flag "calc-ext" (f))
 (declare-function calc-roll-down-with-selections "calc-sel" (n m))
@@ -219,10 +219,10 @@ Calc user interface as before (either C-x * C or C-x * K; initially C-x * C).
   (let ((msgs
 	 '("Press `h' for complete help; press `?' repeatedly for a summary"
 	   "Letter keys: Negate; Precision; Yank; Why; Xtended cmd; Quit"
-	   "Letter keys: SHIFT + Undo, reDo; Keep-args; Inverse, Hyperbolic"
+	   "Letter keys: SHIFT + Undo, reDo; Inverse, Hyperbolic, Option"
 	   "Letter keys: SHIFT + sQrt; Sin, Cos, Tan; Exp, Ln, logB"
 	   "Letter keys: SHIFT + Floor, Round; Abs, conJ, arG; Pi"
-	   "Letter keys: SHIFT + Num-eval; More-recn; eXec-kbd-macro"
+	   "Letter keys: SHIFT + Num-eval; More-recn; eXec-kbd-macro; Keep-args"
 	   "Other keys: +, -, *, /, ^, \\ (int div), : (frac div)"
 	   "Other keys: & (1/x), | (concat), % (modulo), ! (factorial)"
 	   "Other keys: ' (alg-entry), = (eval), ` (edit); M-RET (last-args)"
@@ -245,26 +245,28 @@ Calc user interface as before (either C-x * C or C-x * K; initially C-x * C).
 		  (calc-inv-hyp-prefix-help)
 		(calc-inverse-prefix-help))
 	    (calc-hyperbolic-prefix-help))
-	(setq calc-help-phase
-	      (if (eq this-command last-command)
-		  (% (1+ calc-help-phase) (1+ (length msgs)))
-		0))
-	(let ((msg (nth calc-help-phase msgs)))
-	  (message "%s" (if msg
-			    (concat msg ":"
-				    (make-string (- (apply 'max
-							   (mapcar 'length
-								   msgs))
-						    (length msg)) 32)
-				    "  [?=MORE]")
-			  "")))))))
+        (if calc-option-flag
+            (calc-option-prefix-help)
+          (setq calc-help-phase
+                (if (eq this-command last-command)
+                    (% (1+ calc-help-phase) (1+ (length msgs)))
+                  0))
+          (let ((msg (nth calc-help-phase msgs)))
+            (message "%s" (if msg
+                              (concat msg ":"
+                                      (make-string (- (apply 'max
+                                                             (mapcar 'length
+                                                                     msgs))
+                                                      (length msg)) 32)
+                                      "  [?=MORE]")
+                            ""))))))))
 
 
 
 
 ;;;; Stack and buffer management.
 
-;; The variable calc-last-why-command is set in calc-do-handly-whys
+;; The variable calc-last-why-command is set in calc-do-handle-whys
 ;; and used in calc-why (in calc-stuff.el).
 (defvar calc-last-why-command)
 
@@ -960,5 +962,4 @@ doing 'M-x toggle-debug-on-error', then reproducing the bug.
 ;; generated-autoload-file: "calc-loaddefs.el"
 ;; End:
 
-;; arch-tag: 7984d9d0-62e5-41dc-afb8-e904b975f250
 ;;; calc-misc.el ends here

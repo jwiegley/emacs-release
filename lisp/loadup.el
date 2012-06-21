@@ -1,10 +1,11 @@
 ;;; loadup.el --- load up standardly loaded Lisp files for Emacs
 
-;; Copyright (C) 1985, 1986, 1992, 1994, 2001, 2002, 2003, 2004, 2005,
-;;   2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1985-1986, 1992, 1994, 2001-2012
+;;   Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: internal
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -28,21 +29,15 @@
 ;; If you add/remove Lisp files to be loaded here, consider the
 ;; following issues:
 
-;; i) Any file loaded on all platforms should appear in $lisp
-;; and $shortlisp in src/Makefile.in.  Use the .el or .elc version as
-;; appropriate.
+;; i) Any file loaded on any platform should appear in $lisp in src/lisp.mk.
+;; Use the .el or .elc version as appropriate.
 
-;; ii) Any file that is only loaded on some platforms should appear
-;; in the version of $lisp in the generated Makefile on that platform.
-;; At the present time, this is achieved by use of #ifdefs.
-;; It should also appear in $SOME_MACHINE_LISP on all platforms.
+;; This ensures both that the Lisp files are compiled (if necessary)
+;; before the emacs executable is dumped, and that they are passed to
+;; make-docfile.  (Any that are not processed for DOC will not have
+;; doc strings in the dumped Emacs.)  Because of this:
 
-;; The above steps ensure both that the Lisp files are compiled (if
-;; necessary) before the emacs executable is dumped, and that they are
-;; passed to make-docfile.  (Any that are not processed for DOC will
-;; not have doc strings in the dumped Emacs.)  Because of this:
-
-;; iii) If the file is loaded uncompiled, it should (where possible)
+;; ii) If the file is loaded uncompiled, it should (where possible)
 ;; obey the doc-string conventions expected by make-docfile.
 
 ;;; Code:
@@ -54,7 +49,7 @@
 	(equal (nth 3 command-line-args) "unidata-gen.el")
 	(equal (nth 4 command-line-args) "unidata-gen-files")
 	;; In case CANNOT_DUMP.
-	(equal (nth 0 command-line-args) "../src/bootstrap-emacs"))
+	(string-match "src/bootstrap-emacs" (nth 0 command-line-args)))
     (let ((dir (car load-path)))
       ;; We'll probably overflow the pure space.
       (setq purify-flag nil)
@@ -63,6 +58,10 @@
 			    (expand-file-name "language" dir)
 			    (expand-file-name "international" dir)
 			    (expand-file-name "textmodes" dir)))))
+
+(if (eq t purify-flag)
+    ;; Hash consing saved around 11% of pure space in my tests.
+    (setq purify-flag (make-hash-table :test 'equal)))
 
 (message "Using load-path %s" load-path)
 
@@ -82,7 +81,7 @@
 
 ;; Do it after subr, since both after-load-functions and add-hook are
 ;; implemented in subr.el.
-(add-hook 'after-load-functions '(lambda (f) (garbage-collect)))
+(add-hook 'after-load-functions (lambda (f) (garbage-collect)))
 
 ;; We specify .el in case someone compiled version.el by mistake.
 (load "version.el")
@@ -96,12 +95,12 @@
 (load "env")
 (load "format")
 (load "bindings")
+(load "window")  ; Needed here for `replace-buffer-in-windows'.
 (setq load-source-file-function 'load-with-code-conversion)
 (load "files")
 
 (load "cus-face")
 (load "faces")  ; after here, `defface' may be used.
-(load "minibuffer")
 
 (load "button")
 (load "startup")
@@ -112,6 +111,7 @@
   ;; In case loaddefs hasn't been generated yet.
   (file-error (load "ldefs-boot.el")))
 
+(load "minibuffer")
 (load "abbrev")         ;lisp-mode.el and simple.el use define-abbrev-table.
 (load "simple")
 
@@ -123,11 +123,11 @@
 ;; multilingual text.
 (load "international/mule-cmds")
 (load "case-table")
-(load "international/characters")
-(load "composite")
 ;; This file doesn't exist when building a development version of Emacs
 ;; from the repository.  It is generated just after temacs is built.
 (load "international/charprop.el" t)
+(load "international/characters")
+(load "composite")
 
 ;; Load language-specific files.
 (load "language/chinese")
@@ -157,7 +157,6 @@
 (load "language/cham")
 
 (load "indent")
-(load "window")
 (load "frame")
 (load "term/tty-colors")
 (load "font-core")
@@ -199,8 +198,8 @@
       (load "dnd")
       (load "tool-bar")))
 
-(if (or (featurep 'system-font-setting) (featurep 'font-render-setting))
-    (load "font-setting"))
+(if (featurep 'dynamic-setting)
+    (load "dynamic-setting"))
 
 (if (featurep 'x)
     (progn
@@ -233,18 +232,17 @@
       (load "term/mac-win")))
 (if (featurep 'ns)
     (progn
-      (load "emacs-lisp/easymenu")  ;; for platform-related menu adjustments
+      (load "term/common-win")
       (load "term/ns-win")))
 (if (fboundp 'x-create-frame)
     ;; Do it after loading term/foo-win.el since the value of the
     ;; mouse-wheel-*-event vars depends on those files being loaded or not.
     (load "mwheel"))
-(if (fboundp 'atan)	; preload some constants and
-    (progn		; floating pt. functions if we have float support.
-      (load "emacs-lisp/float-sup")))
+;; Preload some constants and floating point functions.
+(load "emacs-lisp/float-sup")
 
-(load "vc-hooks")
-(load "ediff-hook")
+(load "vc/vc-hooks")
+(load "vc/ediff-hook")
 (if (fboundp 'x-show-tip) (load "tooltip"))
 
 ;If you want additional libraries to be preloaded and their
@@ -263,7 +261,7 @@
     (let* ((base (concat "emacs-" emacs-version "."))
 	   (files (file-name-all-completions base default-directory))
 	   (versions (mapcar (function (lambda (name)
-					 (string-to-int (substring name (length base)))))
+					 (string-to-number (substring name (length base)))))
 			     files)))
       ;; `emacs-version' is a constant, so we shouldn't change it with `setq'.
       (defconst emacs-version
@@ -292,46 +290,16 @@
       (error nil)))
 (message "Finding pointers to doc strings...done")
 
-;;;Note: You can cause additional libraries to be preloaded
-;;;by writing a site-init.el that loads them.
-;;;See also "site-load" above.
+;; Note: You can cause additional libraries to be preloaded
+;; by writing a site-init.el that loads them.
+;; See also "site-load" above.
 (load "site-init" t)
 (setq current-load-list nil)
 
-;; Write the value of load-history into fns-VERSION.el,
-;; then clear out load-history.
-;; (if (or (equal (nth 3 command-line-args) "dump")
-;; 	(equal (nth 4 command-line-args) "dump"))
-;;     (let ((buffer-undo-list t))
-;;       (princ "(setq load-history\n" (current-buffer))
-;;       (princ "      (nconc load-history\n" (current-buffer))
-;;       (princ "             '(" (current-buffer))
-;;       (let ((tem load-history))
-;; 	(while tem
-;; 	  (prin1 (car tem) (current-buffer))
-;; 	  (terpri (current-buffer))
-;; 	  (if (cdr tem)
-;; 	      (princ "               " (current-buffer)))
-;; 	  (setq tem (cdr tem))))
-;;       (princ ")))\n" (current-buffer))
-;;       (write-region (point-min) (point-max)
-;; 		    (expand-file-name
-;; 		     (cond
-;; 		      ((eq system-type 'ms-dos)
-;; 		       "../lib-src/fns.el")
-;; 		      ((eq system-type 'windows-nt)
-;; 		       (format "../../../lib-src/fns-%s.el" emacs-version))
-;; 		      (t
-;; 		       (format "../lib-src/fns-%s.el" emacs-version)))
-;; 		     invocation-directory))
-;;       (erase-buffer)
-;;       (setq load-history nil))
-;;   (setq symbol-file-load-history-loaded t))
-;; We don't use this fns-*.el file.  Instead we keep the data in PURE space.
+;; We keep the load-history data in PURE space.
 ;; Make sure that the spine of the list is not in pure space because it can
 ;; be destructively mutated in lread.c:build_load_history.
 (setq load-history (mapcar 'purecopy load-history))
-(setq symbol-file-load-history-loaded t)
 
 (set-buffer-modified-p nil)
 
@@ -340,7 +308,7 @@
 	(equal (nth 4 command-line-args) "bootstrap"))
     (setcdr load-path nil))
 
-(remove-hook 'after-load-functions '(lambda (f) (garbage-collect)))
+(remove-hook 'after-load-functions (lambda (f) (garbage-collect)))
 
 (setq inhibit-load-charset-map nil)
 (clear-charset-maps)
@@ -348,6 +316,10 @@
 
 ;; At this point, we're ready to resume undo recording for scratch.
 (buffer-enable-undo "*scratch*")
+
+;; Avoid error if user loads some more libraries now and make sure the
+;; hash-consing hash table is GC'd.
+(setq purify-flag nil)
 
 (if (null (garbage-collect))
     (setq pure-space-overflow t))
@@ -368,7 +340,7 @@
       (dump-emacs "emacs" "temacs")
       (message "%d pure bytes used" pure-bytes-used)
       ;; Recompute NAME now, so that it isn't set when we dump.
-      (if (not (or (memq system-type '(ms-dos windows-nt cygwin))
+      (if (not (or (memq system-type '(ms-dos windows-nt))
                    ;; Don't bother adding another name if we're just
                    ;; building bootstrap-emacs.
                    (equal (nth 3 command-line-args) "bootstrap")
@@ -381,9 +353,6 @@
             (message "Adding name %s" name)
 	    (add-name-to-file "emacs" name t)))
       (kill-emacs)))
-
-;; Avoid error if user loads some more libraries now.
-(setq purify-flag nil)
 
 ;; For machines with CANNOT_DUMP defined in config.h,
 ;; this file must be loaded each time Emacs is run.
@@ -401,5 +370,4 @@
 ;; no-update-autoloads: t
 ;; End:
 
-;; arch-tag: 121e1dd4-36e1-45ac-860e-239f577a6335
 ;;; loadup.el ends here

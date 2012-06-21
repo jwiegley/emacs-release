@@ -1,9 +1,9 @@
 ;;; mwheel.el --- Wheel mouse support
 
-;; Copyright (C) 1998, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-;;   2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1998, 2000-2012  Free Software Foundation, Inc.
 ;; Maintainer: William M. Perry <wmperry@gnu.org>
 ;; Keywords: mouse
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -232,12 +232,17 @@ This should only be bound to mouse buttons 4 and 5."
                    (end-of-buffer (while t (funcall mwheel-scroll-up-function)))))
 		(t (error "Bad binding in mwheel-scroll"))))
       (if curwin (select-window curwin)))
-    ;; If there is a temporarily active region, deactivate it iff
+    ;; If there is a temporarily active region, deactivate it if
     ;; scrolling moves point.
     (when opoint
       (with-current-buffer buffer
 	(when (/= opoint (point))
-	  (deactivate-mark)))))
+	  ;; Call `deactivate-mark' at the original position, so that
+	  ;; the original region is saved to the X selection.
+	  (let ((newpoint (point)))
+	    (goto-char opoint)
+	    (deactivate-mark)
+	    (goto-char newpoint))))))
   (when (and mouse-wheel-click-event mouse-wheel-inhibit-click-time)
     (if mwheel-inhibit-click-event-timer
 	(cancel-timer mwheel-inhibit-click-event-timer)
@@ -246,13 +251,15 @@ This should only be bound to mouse buttons 4 and 5."
 	  (run-with-timer mouse-wheel-inhibit-click-time nil
 			  'mwheel-inhibit-click-timeout))))
 
+(put 'mwheel-scroll 'scroll-command t)
+
 (defvar mwheel-installed-bindings nil)
 
-;; preloaded ;;;###autoload
 (define-minor-mode mouse-wheel-mode
-  "Toggle mouse wheel support.
-With prefix argument ARG, turn on if positive, otherwise off.
-Return non-nil if the new state is enabled."
+  "Toggle mouse wheel support (Mouse Wheel mode).
+With a prefix argument ARG, enable Mouse Wheel mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil."
   :init-value t
   ;; We'd like to use custom-initialize-set here so the setup is done
   ;; before dumping, but at the point where the defcustom is evaluated,

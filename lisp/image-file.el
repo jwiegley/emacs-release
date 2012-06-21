@@ -1,7 +1,6 @@
 ;;; image-file.el --- support for visiting image files
 ;;
-;; Copyright (C) 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2000-2012 Free Software Foundation, Inc.
 ;;
 ;; Author: Miles Bader <miles@gnu.org>
 ;; Keywords: multimedia
@@ -179,11 +178,12 @@ Optional argument ARGS are the arguments to call FUNCTION with."
 
 ;;;###autoload
 (define-minor-mode auto-image-file-mode
-  "Toggle visiting of image files as images.
-With prefix argument ARG, turn on if positive, otherwise off.
-Returns non-nil if the new state is enabled.
+  "Toggle visiting of image files as images (Auto Image File mode).
+With a prefix argument ARG, enable Auto Image File mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
 
-Image files are those whose name has an extension in
+An image file is one whose name has an extension in
 `image-file-name-extensions', or matches a regexp in
 `image-file-name-regexps'."
   :global t
@@ -202,5 +202,4 @@ Image files are those whose name has an extension in
 
 (provide 'image-file)
 
-;; arch-tag: 04cafe36-f7ba-4c80-9f47-4cb656520ce1
 ;;; image-file.el ends here

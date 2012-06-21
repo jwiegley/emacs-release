@@ -1,8 +1,6 @@
 ;;; mule.el --- basic commands for multilingual environment
 
-;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1997-2012 Free Software Foundation, Inc.
 ;; Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
 ;;   2005, 2006, 2007, 2008, 2009, 2010, 2011
 ;;   National Institute of Advanced Industrial Science and Technology (AIST)
@@ -122,14 +120,14 @@ MAX-N is the maximum byte value of that.
 
 `:min-code'
 
-VALUE must be an integer specifying the mininum code point of the
+VALUE must be an integer specifying the minimum code point of the
 charset.  If omitted, it is calculated from `:code-space'.  VALUE may
 be a cons (HIGH . LOW), where HIGH is the most significant 16 bits of
 the code point and LOW is the least significant 16 bits.
 
 `:max-code'
 
-VALUE must be an integer specifying the maxinum code point of the
+VALUE must be an integer specifying the maximum code point of the
 charset.  If omitted, it is calculated from `:code-space'.  VALUE may
 be a cons (HIGH . LOW), where HIGH is the most significant 16 bits of
 the code point and LOW is the least significant 16 bits.
@@ -167,7 +165,7 @@ compatibility.
 
 VALUE must be a nonnegative integer that can be used as an invalid
 code point of the charset.  If the minimum code is 0 and the maximum
-code is greater than Emacs' maximum integer value, `:invalid-code'
+code is greater than Emacs's maximum integer value, `:invalid-code'
 should not be omitted.
 
 `:code-offset'
@@ -326,8 +324,7 @@ Return t if file exists."
 	    (with-current-buffer buffer
               ;; So that we don't get completely screwed if the
               ;; file is encoded in some complicated character set,
-              ;; read it with real decoding, as a multibyte buffer,
-              ;; even if this is a --unibyte Emacs session.
+              ;; read it with real decoding, as a multibyte buffer.
               (set-buffer-multibyte t)
 	      ;; Don't let deactivate-mark remain set.
 	      (let (deactivate-mark)
@@ -346,12 +343,7 @@ Return t if file exists."
 	    (eval-buffer buffer nil
 			 ;; This is compatible with what `load' does.
 			 (if purify-flag file fullname)
-			 ;; If this Emacs is running with --unibyte,
-			 ;; convert multibyte strings to unibyte
-			 ;; after reading them.
-;;			 (not (default-value 'enable-multibyte-characters))
-			 nil t
-			 ))
+			 nil t))
 	(let (kill-buffer-hook kill-buffer-query-functions)
 	  (kill-buffer buffer)))
       (do-after-load-evaluation fullname)
@@ -609,9 +601,8 @@ VALUE must be one of `charset', `utf-8', `utf-16', `iso-2022',
 VALUE is the EOL (end-of-line) format of the coding system.  It must be
 one of `unix', `dos', `mac'.  The symbol `unix' means Unix-like EOL
 \(i.e. single LF), `dos' means DOS-like EOL \(i.e. sequence of CR LF),
-and `mac' means Mac-like EOL \(i.e. single CR).  If omitted, on
-decoding by the coding system, Emacs automatically detects the EOL
-format of the source text.
+and `mac' means Mac-like EOL \(i.e. single CR).  If omitted, Emacs
+detects the EOL format automatically when decoding.
 
 `:charset-list'
 
@@ -666,13 +657,6 @@ the coding system is replaced with VALUE.
 VALUE non-nil means that visiting a file with the coding system
 results in a unibyte buffer.
 
-`:eol-type'
-
-VALUE must be `unix', `dos', `mac'.  The symbol `unix' means Unix-like
-EOL (LF), `dos' means DOS-like EOL (CRLF), and `mac' means Mac-like
-EOL (CR).  If omitted, on decoding, the coding system detects EOL
-format automatically, and on encoding, uses Unix-like EOL.
-
 `:mime-charset'
 
 VALUE must be a symbol whose name is that of a MIME charset converted
@@ -719,13 +703,13 @@ If the value is nil, on decoding, don't treat the first two-byte as
 BOM, and on encoding, don't produce BOM bytes.
 
 If the value is t, on decoding, skip the first two-byte as BOM, and on
-encoding, produce BOM bytes accoding to the value of `:endian'.
+encoding, produce BOM bytes according to the value of `:endian'.
 
 If the value is cons, on decoding, check the first two-byte.  If they
 are 0xFE 0xFF, use the car part coding system of the value.  If they
 are 0xFF 0xFE, use the cdr part coding system of the value.
 Otherwise, treat them as bytes for a normal character.  On encoding,
-produce BOM bytes accoding to the value of `:endian'.
+produce BOM bytes according to the value of `:endian'.
 
 This attribute has a meaning only when `:coding-type' is `utf-16' or
 `utf-8'.
@@ -1167,6 +1151,64 @@ Internal use only.")
 (make-variable-buffer-local 'buffer-file-coding-system-explicit)
 (put 'buffer-file-coding-system-explicit 'permanent-local t)
 
+(defun read-buffer-file-coding-system ()
+  (let* ((bcss (find-coding-systems-region (point-min) (point-max)))
+         (css-table
+          (unless (equal bcss '(undecided))
+            (append '("dos" "unix" "mac")
+                    (delq nil (mapcar (lambda (cs)
+                                        (if (memq (coding-system-base cs) bcss)
+                                            (symbol-name cs)))
+                                      coding-system-list)))))
+         (combined-table
+          (if css-table
+              (completion-table-in-turn css-table coding-system-alist)
+            coding-system-alist))
+         (auto-cs
+          (unless find-file-literally
+            (save-excursion
+              (save-restriction
+                (widen)
+                (goto-char (point-min))
+                (funcall set-auto-coding-function
+                         (or buffer-file-name "") (buffer-size))))))
+         (preferred
+          (let ((bfcs (default-value 'buffer-file-coding-system)))
+            (cons (and (or (equal bcss '(undecided))
+                           (memq (coding-system-base bfcs) bcss))
+                       bfcs)
+                  (mapcar (lambda (cs)
+                            (and (coding-system-p cs)
+                                 (coding-system-get cs :mime-charset)
+                                 (or (equal bcss '(undecided))
+                                     (memq (coding-system-base cs) bcss))
+                                 cs))
+                          (coding-system-priority-list)))))
+         (default
+           (let ((current (coding-system-base buffer-file-coding-system)))
+             ;; Generally use as a default the first preferred coding-system
+             ;; different from the current coding-system, except for
+             ;; the case of auto-cs since choosing anything else is asking
+             ;; for trouble (would lead to using a different coding
+             ;; system than specified in the coding tag).
+             (or auto-cs
+                 (car (delq nil
+                            (mapcar (lambda (cs)
+                                      (if (eq current (coding-system-base cs))
+                                          nil
+                                        cs))
+                                    preferred))))))
+         (completion-ignore-case t)
+         (completion-pcm--delim-wild-regex ; Let "u8" complete to "utf-8".
+          (concat completion-pcm--delim-wild-regex
+                  "\\|\\([[:alpha:]]\\)[[:digit:]]"))
+         (cs (completing-read
+              (format "Coding system for saving file (default %s): " default)
+              combined-table
+              nil t nil 'coding-system-history
+              (if default (symbol-name default)))))
+    (unless (zerop (length cs)) (intern cs))))
+
 (defun set-buffer-file-coding-system (coding-system &optional force nomodify)
   "Set the file coding-system of the current buffer to CODING-SYSTEM.
 This means that when you save the buffer, it will be converted
@@ -1184,19 +1226,26 @@ surely saves the buffer with CODING-SYSTEM.  From a program, if you
 don't want to mark the buffer modified, specify t for NOMODIFY.
 If you know exactly what coding system you want to use,
 just set the variable `buffer-file-coding-system' directly."
-  (interactive "zCoding system for saving file (default nil): \nP")
+  (interactive
+   (list (read-buffer-file-coding-system)
+         current-prefix-arg))
   (check-coding-system coding-system)
   (if (and coding-system buffer-file-coding-system (null force))
       (setq coding-system
 	    (merge-coding-systems coding-system buffer-file-coding-system)))
+  (when (called-interactively-p 'interactive)
+    ;; Check whether save would succeed, and jump to the offending char(s)
+    ;; if not.
+    (let ((css (find-coding-systems-region (point-min) (point-max))))
+      (unless (or (eq (car css) 'undecided)
+                  (memq (coding-system-base coding-system) css))
+        (setq coding-system (select-safe-coding-system-interactively
+                             (point-min) (point-max) css
+                             (list coding-system))))))
   (setq buffer-file-coding-system coding-system)
   (if buffer-file-coding-system-explicit
       (setcdr buffer-file-coding-system-explicit coding-system)
     (setq buffer-file-coding-system-explicit (cons nil coding-system)))
-  ;; This is in case of an explicit call.  Normally, `normal-mode' and
-  ;; `set-buffer-major-mode-hook' take care of setting the table.
-  (if (fboundp 'ucs-set-table-for-input) ; don't lose when building
-      (ucs-set-table-for-input))
   (unless nomodify
     (set-buffer-modified-p t))
   (force-mode-line-update))
@@ -1517,13 +1566,13 @@ of `ctext-non-standard-encodings-alist'.")
 
 ;; Return an alist of CHARSET vs CTEXT-USAGE-INFO generated from
 ;; `ctext-non-standard-encodings' and a list specified by the key
-;; `ctext-non-standard-encodings' for the currrent language
+;; `ctext-non-standard-encodings' for the current language
 ;; environment.  CTEXT-USAGE-INFO is one of the element of
 ;; `ctext-non-standard-encodings-alist' or nil.  In the former case, a
 ;; character in CHARSET is encoded using extended segment.  In the
 ;; latter case, a character in CHARSET is encoded using normal ISO2022
 ;; designation sequence.  If a character is not in any of CHARSETs, it
-;; is encoded using UTF-8 encoding extention.
+;; is encoded using UTF-8 encoding extension.
 
 (defun ctext-non-standard-encodings-table ()
   (let* ((table (append ctext-non-standard-encodings
@@ -1560,7 +1609,7 @@ in-place."
       (set-buffer (generate-new-buffer " *temp"))
       (set-buffer-multibyte (multibyte-string-p from))
       (insert from)
-      (setq from 1 to (point-max)))
+      (setq from (point-min) to (point-max)))
     (save-restriction
       (narrow-to-region from to)
       (goto-char from)
@@ -1607,7 +1656,7 @@ in-place."
 		      (insert 2)))
 		;; Encode this range as characters in CHARSET.
 		(put-text-property last-pos (point) 'charset charset))
-	    ;; Encode this range using UTF-8 encoding extention.
+	    ;; Encode this range using UTF-8 encoding extension.
 	    (encode-coding-region last-pos (point) 'mule-utf-8)
 	    (save-excursion
 	      (goto-char last-pos)
@@ -1619,17 +1668,18 @@ in-place."
 
 ;;; FILE I/O
 
+;; TODO many elements of this list are also in inhibit-local-variables-regexps.
 (defcustom auto-coding-alist
   ;; .exe and .EXE are added to support archive-mode looking at DOS
   ;; self-extracting exe archives.
   (mapcar (lambda (arg) (cons (purecopy (car arg)) (cdr arg)))
 	  '(("\\.\\(\
-arc\\|zip\\|lzh\\|lha\\|zoo\\|[jew]ar\\|xpi\\|rar\\|\
-ARC\\|ZIP\\|LZH\\|LHA\\|ZOO\\|[JEW]AR\\|XPI\\|RAR\\)\\'"
+arc\\|zip\\|lzh\\|lha\\|zoo\\|[jew]ar\\|xpi\\|rar\\|7z\\|\
+ARC\\|ZIP\\|LZH\\|LHA\\|ZOO\\|[JEW]AR\\|XPI\\|RAR\\|7Z\\)\\'"
      . no-conversion-multibyte)
     ("\\.\\(exe\\|EXE\\)\\'" . no-conversion)
-    ("\\.\\(sx[dmicw]\\|odt\\|tar\\|tgz\\)\\'" . no-conversion)
-    ("\\.\\(gz\\|Z\\|bz\\|bz2\\|gpg\\)\\'" . no-conversion)
+    ("\\.\\(sx[dmicw]\\|odt\\|tar\\|t[bg]z\\)\\'" . no-conversion)
+    ("\\.\\(gz\\|Z\\|bz\\|bz2\\|xz\\|gpg\\)\\'" . no-conversion)
     ("\\.\\(jpe?g\\|png\\|gif\\|tiff?\\|p[bpgn]m\\)\\'" . no-conversion)
     ("\\.pdf\\'" . no-conversion)
     ("/#[^/]+#\\'" . emacs-mule)))
@@ -1640,6 +1690,7 @@ A file whose name matches REGEXP is decoded by CODING-SYSTEM on reading.
 The settings in this alist take priority over `coding:' tags
 in the file (see the function `set-auto-coding')
 and the contents of `file-coding-system-alist'."
+  :version "24.1"                       ; added xz
   :group 'files
   :group 'mule
   :type '(repeat (cons (regexp :tag "File name regexp")
@@ -1703,8 +1754,9 @@ functions, so they won't be called at all."
   :type '(repeat function))
 
 (defvar set-auto-coding-for-load nil
-  "Non-nil means look for `load-coding' property instead of `coding'.
-This is used for loading and byte-compiling Emacs Lisp files.")
+  "Non-nil means respect a \"unibyte: t\" entry in file local variables.
+Emacs binds this variable to t when loading or byte-compiling Emacs Lisp
+files.")
 
 (defun auto-coding-alist-lookup (filename)
   "Return the coding system specified by `auto-coding-alist' for FILENAME."
@@ -1735,7 +1787,7 @@ contents of the current buffer following point against
 succeed, it checks to see if any function in `auto-coding-functions'
 gives a match.
 
-If a coding system is specifed, the return value is a cons
+If a coding system is specified, the return value is a cons
 \(CODING . SOURCE), where CODING is the specified coding system and
 SOURCE is a symbol `auto-coding-alist', `auto-coding-regexp-alist',
 `:coding', or `auto-coding-functions' indicating by what CODING is
@@ -2128,8 +2180,7 @@ character, say TO-ALT, FROM is also translated to TO-ALT."
 (defun make-translation-table-from-vector (vec)
   "Make translation table from decoding vector VEC.
 VEC is an array of 256 elements to map unibyte codes to multibyte
-characters.  Elements may be nil for undefined code points.
-See also the variable `nonascii-translation-table'."
+characters.  Elements may be nil for undefined code points."
   (let ((table (make-char-table 'translation-table))
 	(rev-table (make-char-table 'translation-table))
 	ch)
@@ -2248,13 +2299,12 @@ It returns the number of characters changed."
 	(setq table val)))
   (translate-region-internal start end table))
 
-(put 'with-category-table 'lisp-indent-function 1)
-
 (defmacro with-category-table (table &rest body)
   "Execute BODY like `progn' with TABLE the current category table.
 The category table of the current buffer is saved, BODY is evaluated,
 then the saved table is restored, even in case of an abnormal exit.
 Value is what BODY returns."
+  (declare (indent 1) (debug t))
   (let ((old-table (make-symbol "old-table"))
 	(old-buffer (make-symbol "old-buffer")))
     `(let ((,old-table (category-table))
@@ -2355,8 +2405,8 @@ This function is intended to be added to `auto-coding-functions'."
     ;; (allowing for whitespace at bob).  Note: 'DOCTYPE NETSCAPE' is
     ;; useful for Mozilla bookmark files.
     (when (and (re-search-forward "\\`[[:space:]\n]*\\(<!doctype[[:space:]\n]+\\(html\\|netscape\\)\\|<html\\)" size t)
-	       (re-search-forward "<meta\\s-+http-equiv=[\"']?content-type[\"']?\\s-+content=[\"']text/\\sw+;\\s-*charset=\\(.+?\\)[\"']" size t))
-      (let* ((match (match-string 1))
+	       (re-search-forward "<meta\\s-+\\(http-equiv=[\"']?content-type[\"']?\\s-+content=[\"']text/\\sw+;\\s-*\\)?charset=[\"']?\\(.+?\\)[\"'\\s-/>]" size t))
+      (let* ((match (match-string 2))
 	     (sym (intern (downcase match))))
 	(if (coding-system-p sym)
 	    sym
@@ -2394,5 +2444,4 @@ added by processing software."
 ;;;
 (provide 'mule)
 
-;; arch-tag: 9aebaa6e-0e8a-40a9-b857-cb5d04a39e7c
 ;;; mule.el ends here

@@ -1,7 +1,6 @@
 ;;; which-func.el --- print current function in mode line
 
-;; Copyright (C) 1994, 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006
-;;   2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1994, 1997-1998, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author:   Alex Rezinsky <alexr@msil.sps.mot.com>
 ;;           (doesn't seem to be responsive any more)
@@ -179,7 +178,9 @@ and you want to simplify them for the mode line
 (defvar which-func-table (make-hash-table :test 'eq :weakness 'key))
 
 (defconst which-func-current
-  '(:eval (gethash (selected-window) which-func-table which-func-unknown)))
+  '(:eval (replace-regexp-in-string
+	   "%" "%%"
+	   (gethash (selected-window) which-func-table which-func-unknown))))
 ;;;###autoload (put 'which-func-current 'risky-local-variable t)
 
 (defvar which-func-mode nil
@@ -198,7 +199,7 @@ It creates the Imenu index for the buffer, if necessary."
 	     (or (eq which-func-modes t)
 		 (member major-mode which-func-modes))))
 
-  (condition-case nil
+  (condition-case err
       (if (and which-func-mode
 	       (not (member major-mode which-func-non-auto-modes))
 	       (or (null which-func-maxout)
@@ -207,6 +208,8 @@ It creates the Imenu index for the buffer, if necessary."
 	  (setq imenu--index-alist
 		(save-excursion (funcall imenu-create-index-function))))
     (error
+     (unless (equal err '(error "This buffer cannot use `imenu-default-create-index-function'"))
+       (message "which-func-ff-hook error: %S" err))
      (setq which-func-mode nil))))
 
 (defun which-func-update ()
@@ -225,22 +228,26 @@ It creates the Imenu index for the buffer, if necessary."
 	      (force-mode-line-update)))
 	(error
 	 (setq which-func-mode nil)
-	 (error "Error in which-func-update: %s" info))))))
+	 (error "Error in which-func-update: %S" info))))))
 
 ;;;###autoload
-(defalias 'which-func-mode 'which-function-mode)
+(defun which-func-mode (&optional arg)
+  (which-function-mode arg))
+(make-obsolete 'which-func-mode 'which-function-mode "24.1")
 
 (defvar which-func-update-timer nil)
 
 ;; This is the name people would normally expect.
 ;;;###autoload
 (define-minor-mode which-function-mode
-  "Toggle Which Function mode, globally.
-When Which Function mode is enabled, the current function name is
-continuously displayed in the mode line, in certain major modes.
+  "Toggle mode line display of current function (Which Function mode).
+With a prefix argument ARG, enable Which Function mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
 
-With prefix ARG, turn Which Function mode on if arg is positive,
-and off otherwise."
+Which Function mode is a global minor mode.  When enabled, the
+current function name is continuously displayed in the mode line,
+in certain major modes."
   :global t :group 'which-func
   (when (timerp which-func-update-timer)
     (cancel-timer which-func-update-timer))
@@ -282,8 +289,7 @@ If no function name is found, return nil."
 	       (null which-function-imenu-failed))
       (imenu--make-index-alist t)
       (unless imenu--index-alist
-	(make-local-variable 'which-function-imenu-failed)
-	(setq which-function-imenu-failed t)))
+        (set (make-local-variable 'which-function-imenu-failed) t)))
     ;; If we have an index alist, use it.
     (when (and (null name)
 	       (boundp 'imenu--index-alist) imenu--index-alist)
@@ -294,29 +300,31 @@ If no function name is found, return nil."
         ;; ("submenu" ("name" . marker) ... ). The list can be
         ;; arbitrarily nested.
         (while (or alist imstack)
-          (if alist
-              (progn
-                (setq pair (car-safe alist)
-                      alist (cdr-safe alist))
+          (if (null alist)
+              (setq alist     (car imstack)
+                    namestack (cdr namestack)
+                    imstack   (cdr imstack))
 
-                (cond ((atom pair))     ; skip anything not a cons
+            (setq pair (car-safe alist)
+                  alist (cdr-safe alist))
 
-                      ((imenu--subalist-p pair)
-                       (setq imstack   (cons alist imstack)
-                             namestack (cons (car pair) namestack)
-                             alist     (cdr pair)))
+            (cond
+             ((atom pair))              ; Skip anything not a cons.
 
-                      ((number-or-marker-p (setq mark (cdr pair)))
-                       (if (>= (setq offset (- (point) mark)) 0)
-                           (if (< offset minoffset) ; find the closest item
-                               (setq minoffset offset
-                                     name (funcall
-                                           which-func-imenu-joiner-function
-					   (reverse (cons (car pair)
-							  namestack)))))))))
-            (setq alist     (car imstack)
-                  namestack (cdr namestack)
-                  imstack   (cdr imstack))))))
+             ((imenu--subalist-p pair)
+              (setq imstack   (cons alist imstack)
+                    namestack (cons (car pair) namestack)
+                    alist     (cdr pair)))
+
+             ((number-or-marker-p (setq mark (cdr pair)))
+              (when (and (>= (setq offset (- (point) mark)) 0)
+                         (< offset minoffset)) ; Find the closest item.
+                (setq minoffset offset
+                      name (if (null which-func-imenu-joiner-function)
+                               (car pair)
+                             (funcall
+                              which-func-imenu-joiner-function
+                              (reverse (cons (car pair) namestack))))))))))))
 
     ;; Try using add-log support.
     (when (null name)
@@ -329,5 +337,4 @@ If no function name is found, return nil."
 
 (provide 'which-func)
 
-;; arch-tag: fa8a55c7-bfe3-4ffc-95ab-01bf21796827
 ;;; which-func.el ends here

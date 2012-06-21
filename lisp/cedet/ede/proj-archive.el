@@ -1,6 +1,6 @@
 ;;; ede/proj-archive.el --- EDE Generic Project archive support
 
-;;  Copyright (C) 1998, 1999, 2000, 2001, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;;  Copyright (C) 1998-2001, 2009-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: project, make
@@ -46,7 +46,7 @@
 (defmethod ede-proj-makefile-insert-source-variables :BEFORE
   ((this ede-proj-target-makefile-archive) &optional moresource)
   "Insert bin_PROGRAMS variables needed by target THIS.
-We aren't acutally inserting SOURCE details, but this is used by the
+We aren't actually inserting SOURCE details, but this is used by the
 Makefile.am generator, so use it to add this important bin program."
   (ede-pmake-insert-variable-shared
       (concat "lib" (ede-name this) "_a_LIBRARIES")
@@ -61,5 +61,4 @@ This makes sure that the archive is removed with 'make clean'."
 
 (provide 'ede/proj-archive)
 
-;; arch-tag: a0b2cfe8-0d11-4a4f-8e47-ebfb11b6ac33
 ;;; ede/proj-archive.el ends here

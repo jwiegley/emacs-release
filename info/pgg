@@ -3,8 +3,7 @@ This is ../../info/pgg, produced by makeinfo version 4.13 from pgg.texi.
 This file describes PGG 0.1, an Emacs interface to various PGP
 implementations.
 
-   Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 2001, 2003-2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -36,8 +35,7 @@ decrypt, sign, and verify MIME messages.
    This file describes PGG 0.1, an Emacs interface to various PGP
 implementations.
 
-   Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 2001, 2003-2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -353,8 +351,9 @@ singleton object wrapped with the luna object system.
 
    Since PGG was designed for accessing and developing PGP
 functionality, the architecture had to be designed not just for
-interoperability but also for extensiblity.  In this chapter we explore
-the architecture while finding out how to write the PGG back end.
+interoperability but also for extensibility.  In this chapter we
+explore the architecture while finding out how to write the PGG back
+end.
 
 * Menu:
 
@@ -1033,22 +1032,22 @@ Variable Index
 
 
 Tag Table:
-Node: Top1084
-Node: Overview2518
-Node: Prerequisites3003
-Node: How to use3995
-Node: User Commands5198
-Node: Selecting an implementation8409
-Node: Caching passphrase9415
-Ref: Caching passphrase-Footnote-112701
-Node: Default user identity12866
-Node: Architecture13906
-Node: Initializing14556
-Node: Back end methods15290
-Node: Getting output17731
-Node: Parsing OpenPGP packets18366
-Node: GNU Free Documentation License19081
-Node: Function Index44265
-Node: Variable Index45799
+Node: Top1035
+Node: Overview2420
+Node: Prerequisites2905
+Node: How to use3897
+Node: User Commands5100
+Node: Selecting an implementation8311
+Node: Caching passphrase9317
+Ref: Caching passphrase-Footnote-112603
+Node: Default user identity12768
+Node: Architecture13808
+Node: Initializing14459
+Node: Back end methods15193
+Node: Getting output17634
+Node: Parsing OpenPGP packets18269
+Node: GNU Free Documentation License18984
+Node: Function Index44168
+Node: Variable Index45702
 
 End Tag Table

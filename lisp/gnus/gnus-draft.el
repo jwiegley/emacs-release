@@ -1,7 +1,6 @@
 ;;; gnus-draft.el --- draft message support for Gnus
 
-;; Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1997-2012 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -32,23 +31,21 @@
 (require 'nndraft)
 (require 'gnus-agent)
 (eval-when-compile (require 'cl))
+(eval-when-compile
+  (when (featurep 'xemacs)
+    (require 'easy-mmode))) ; for `define-minor-mode'
 
 ;;; Draft minor mode
 
-(defvar gnus-draft-mode nil
-  "Minor mode for providing a draft summary buffers.")
-
-(defvar gnus-draft-mode-map nil)
-
-(unless gnus-draft-mode-map
-  (setq gnus-draft-mode-map (make-sparse-keymap))
-
-  (gnus-define-keys gnus-draft-mode-map
-    "Dt" gnus-draft-toggle-sending
-    "e"  gnus-draft-edit-message ;; Use `B w' for `gnus-summary-edit-article'
-    "De" gnus-draft-edit-message
-    "Ds" gnus-draft-send-message
-    "DS" gnus-draft-send-all-messages))
+(defvar gnus-draft-mode-map
+  (let ((map (make-sparse-keymap)))
+    (gnus-define-keys map
+     "Dt" gnus-draft-toggle-sending
+     "e"  gnus-draft-edit-message ;; Use `B w' for `gnus-summary-edit-article'
+     "De" gnus-draft-edit-message
+     "Ds" gnus-draft-send-message
+     "DS" gnus-draft-send-all-messages)
+    map))
 
 (defun gnus-draft-make-menu-bar ()
   (unless (boundp 'gnus-draft-menu)
@@ -61,20 +58,18 @@
        ["Send all messages" gnus-draft-send-all-messages t]
        ["Delete draft" gnus-summary-delete-article t]))))
 
-(defun gnus-draft-mode (&optional arg)
+(define-minor-mode gnus-draft-mode
   "Minor mode for providing a draft summary buffers.
 
 \\{gnus-draft-mode-map}"
-  (interactive "P")
-  (when (eq major-mode 'gnus-summary-mode)
-    (when (set (make-local-variable 'gnus-draft-mode)
-	       (if (null arg) (not gnus-draft-mode)
-		 (> (prefix-numeric-value arg) 0)))
-      ;; Set up the menu.
-      (when (gnus-visual-p 'draft-menu 'menu)
-	(gnus-draft-make-menu-bar))
-      (add-minor-mode 'gnus-draft-mode " Draft" gnus-draft-mode-map)
-      (gnus-run-hooks 'gnus-draft-mode-hook))))
+  :lighter " Draft" :keymap gnus-draft-mode-map
+  (cond
+   ((not (derived-mode-p 'gnus-summary-mode)) (setq gnus-draft-mode nil))
+   (gnus-draft-mode
+    ;; Set up the menu.
+    (when (gnus-visual-p 'draft-menu 'menu)
+      (gnus-draft-make-menu-bar))
+    (add-hook 'gnus-summary-prepare-exit-hook 'gnus-draft-clear-marks t t))))
 
 ;;; Commands
 
@@ -154,7 +149,7 @@ Obeys the standard process/prefix convention."
                                      gnus-agent-queue-mail))
 	 (rfc2047-encode-encoded-words nil)
          type method move-to)
-    (gnus-draft-setup article (or group "nndraft:queue"))
+    (gnus-draft-setup article (or group "nndraft:queue") nil 'dont-pop)
     ;; We read the meta-information that says how and where
     ;; this message is to be sent.
     (save-restriction
@@ -226,7 +221,8 @@ Obeys the standard process/prefix convention."
 	    (let ((message-sending-message
 		   (format "Sending message %d of %d..."
 			   (- total (length articles)) total)))
-	      (gnus-draft-send article))))))))
+	      (gnus-draft-send article))))))
+    (gnus-group-refresh-group "nndraft:queue")))
 
 ;;;###autoload
 (defun gnus-draft-reminder ()
@@ -248,55 +244,53 @@ Obeys the standard process/prefix convention."
   :version "23.1" ;; No Gnus
   :type 'hook)
 
-;;; Utility functions
 
-;;;!!!If this is byte-compiled, it fails miserably.
-;;;!!!This is because `gnus-setup-message' uses uninterned symbols.
-;;;!!!This has been fixed in recent versions of Emacs and XEmacs,
-;;;!!!but for the time being, we'll just run this tiny function uncompiled.
-
-(progn
-  (defun gnus-draft-setup (narticle group &optional restore)
-    (let (ga)
-      (gnus-setup-message 'forward
-	(let ((article narticle))
-	  (message-mail)
-	  (erase-buffer)
-	  (if (not (gnus-request-restore-buffer article group))
-	      (error "Couldn't restore the article")
-	    (when (and restore
-		       (equal group "nndraft:queue"))
-	      (mime-to-mml))
-	    ;; Insert the separator.
-	    (goto-char (point-min))
-	    (search-forward "\n\n")
-	    (forward-char -1)
-	    (save-restriction
-	      (narrow-to-region (point-min) (point))
-	      (setq ga
-		    (message-fetch-field gnus-draft-meta-information-header)))
-	    (insert mail-header-separator)
-	    (forward-line 1)
-	    (message-set-auto-save-file-name))))
-      (gnus-backlog-remove-article group narticle)
-      (when (and ga
-		 (ignore-errors (setq ga (car (read-from-string ga)))))
-	(setq gnus-newsgroup-name
-	      (if (equal (car ga) "") nil (car ga)))
-	(gnus-configure-posting-styles)
-	(setq gnus-message-group-art (cons gnus-newsgroup-name (cadr ga)))
-	(setq message-post-method
-	      `(lambda (arg)
-		 (gnus-post-method arg ,(car ga))))
-	(unless (equal (cadr ga) "")
-	  (dolist (article (cdr ga))
-	    (message-add-action
-	     `(progn
-		(gnus-add-mark ,(car ga) 'replied ,article)
-		(gnus-request-set-mark ,(car ga) (list (list (list ,article)
-							     'add '(reply)))))
-	     'send))))
-      (run-hooks 'gnus-draft-setup-hook))))
+(defun gnus-draft-setup (narticle group &optional restore dont-pop)
+  "Setup a mail draft buffer.
+If DONT-POP is nil, display the buffer after setting it up."
+  (let (ga)
+    (gnus-setup-message 'forward
+      (let ((article narticle))
+        (message-mail nil nil nil nil
+                      (if dont-pop
+                          (lambda (buf) (set-buffer (get-buffer-create buf)))))
+        (let ((inhibit-read-only t))
+          (erase-buffer))
+        (if (not (gnus-request-restore-buffer article group))
+            (error "Couldn't restore the article")
+          (when (and restore
+                     (equal group "nndraft:queue"))
+            (mime-to-mml))
+          ;; Insert the separator.
+          (goto-char (point-min))
+          (search-forward "\n\n")
+          (forward-char -1)
+          (save-restriction
+            (narrow-to-region (point-min) (point))
+            (setq ga
+                  (message-fetch-field gnus-draft-meta-information-header)))
+          (insert mail-header-separator)
+          (forward-line 1)
+          (message-set-auto-save-file-name))))
+    (gnus-backlog-remove-article group narticle)
+    (when (and ga
+               (ignore-errors (setq ga (car (read-from-string ga)))))
+      (setq gnus-newsgroup-name
+            (if (equal (car ga) "") nil (car ga)))
+      (gnus-configure-posting-styles)
+      (setq gnus-message-group-art (cons gnus-newsgroup-name (cadr ga)))
+      (setq message-post-method
+            `(lambda (arg)
+               (gnus-post-method arg ,(car ga))))
+      (unless (equal (cadr ga) "")
+        (dolist (article (cdr ga))
+          (message-add-action
+           `(progn
+              (gnus-add-mark ,(car ga) 'replied ,article)
+              (gnus-request-set-mark ,(car ga) (list (list (list ,article)
+                                                           'add '(reply)))))
+           'send))))
+    (run-hooks 'gnus-draft-setup-hook)))
 
 (defun gnus-draft-article-sendable-p (article)
   "Say whether ARTICLE is sendable."
@@ -315,6 +309,8 @@ Obeys the standard process/prefix convention."
 	  (while buffs
 	    (set-buffer (setq buff (pop buffs)))
 	    (if (and buffer-file-name
+		     (equal (file-remote-p file)
+			    (file-remote-p buffer-file-name))
 		     (string-equal (file-truename buffer-file-name)
 				   (file-truename file))
 		     (buffer-modified-p))
@@ -328,7 +324,11 @@ Obeys the standard process/prefix convention."
 	    (pop-to-buffer buff t)))
 	(error "The draft %s is under edit" file)))))
 
+(defun gnus-draft-clear-marks ()
+  (setq gnus-newsgroup-reads nil
+	gnus-newsgroup-marked nil
+	gnus-newsgroup-unreads (nndraft-articles)))
+
 (provide 'gnus-draft)
 
-;; arch-tag: 3d92af58-8c97-4a5c-9db4-a98e85198022
 ;;; gnus-draft.el ends here

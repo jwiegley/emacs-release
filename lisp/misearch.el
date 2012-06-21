@@ -1,6 +1,6 @@
 ;;; misearch.el --- isearch extensions for multi-buffer search
 
-;; Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2007-2012  Free Software Foundation, Inc.
 
 ;; Author: Juri Linkov <juri@jurta.org>
 ;; Keywords: matching
@@ -142,7 +142,7 @@ Intended to be added to `isearch-mode-hook'."
        ;; 1. First try searching in the initial buffer
        (let ((res (funcall search-fun string bound noerror)))
 	 ;; Reset wrapping for all-buffers pause after successful search
-	 (if (and res (eq multi-isearch-pause t))
+	 (if (and res (not bound) (eq multi-isearch-pause t))
 	     (setq multi-isearch-current-buffer nil))
 	 res)
        ;; 2. If the above search fails, start visiting next/prev buffers
@@ -173,8 +173,8 @@ Intended to be added to `isearch-mode-hook'."
 		   found)
 	       ;; Return nil when multi-isearch-next-buffer-current-function fails
 	       ;; (`with-current-buffer' raises an error for nil returned from it).
-	       (error nil))
-	   (signal 'search-failed (list string "Repeat for next buffer"))))))))
+	       (error (signal 'search-failed (list string "end of multi"))))
+	   (signal 'search-failed (list string "repeat for next buffer"))))))))
 
 (defun multi-isearch-wrap ()
   "Wrap the multiple buffers search when search is failed.
@@ -201,7 +201,7 @@ search status stack."
   `(lambda (cmd)
      (multi-isearch-pop-state cmd ,(current-buffer))))
 
-(defun multi-isearch-pop-state (cmd buffer)
+(defun multi-isearch-pop-state (_cmd buffer)
   "Restore the multiple buffers search state.
 Switch to the buffer restored from the search status stack."
   (unless (equal buffer (current-buffer))
@@ -223,6 +223,8 @@ set in `multi-isearch-buffers' or `multi-isearch-buffers-regexp'."
     (if wrap
 	(car buffers)
       (cadr (member buffer buffers)))))
+
+(defvar ido-ignore-item-temp-list)  ; from ido.el
 
 (defun multi-isearch-read-buffers ()
   "Return a list of buffers specified interactively, one by one."
@@ -378,5 +380,4 @@ whose file names match the specified wildcard."
 
 (provide 'multi-isearch)
 
-;; arch-tag: a6d38ffa-4d14-4e39-8ac6-46af9d6a6773
 ;;; misearch.el ends here

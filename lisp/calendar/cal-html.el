@@ -1,12 +1,12 @@
 ;;; cal-html.el --- functions for printing HTML calendars
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2002-2012  Free Software Foundation, Inc.
 
 ;; Author: Anna M. Bigatti <bigatti@dima.unige.it>
 ;; Keywords: calendar
 ;; Human-Keywords: calendar, diary, HTML
 ;; Created: 23 Aug 2002
+;; Package: calendar
 
 ;; This file is part of GNU Emacs.
 
@@ -54,11 +54,16 @@
   :type 'integer
   :group 'calendar-html)
 
-(defcustom cal-html-day-abbrev-array
-  (calendar-abbrev-construct calendar-day-abbrev-array
-                             calendar-day-name-array)
+(defcustom cal-html-day-abbrev-array calendar-day-abbrev-array
   "Array of seven strings for abbreviated day names (starting with Sunday)."
-  :type '(vector string string string string string string string)
+  :set-after '(calendar-day-abbrev-array)
+  :type '(vector (string :tag "Sun")
+                 (string :tag "Mon")
+                 (string :tag "Tue")
+                 (string :tag "Wed")
+                 (string :tag "Thu")
+                 (string :tag "Fri")
+                 (string :tag "Sat"))
   :group 'calendar-html)
 
 (defcustom cal-html-css-default
@@ -247,7 +252,7 @@ Contains links to previous and next month and year, and current minical."
     (insert cal-html-e-tablerow-string)
     ;; Initial empty slots.
     (insert cal-html-b-tablerow-string)
-    (dotimes (i blank-days)
+    (dotimes (_i blank-days)
       (insert
        cal-html-b-tabledata-string
        cal-html-e-tabledata-string))
@@ -442,5 +447,4 @@ specified by EVENT.  Note that any existing output files are overwritten."
 
 (provide 'cal-html)
 
-;; arch-tag: 4e73377d-d2c1-46ea-a103-02c111da5f57
 ;;; cal-html.el ends here

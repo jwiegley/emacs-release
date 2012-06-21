@@ -1,9 +1,10 @@
 ;;; tutorial.el --- tutorial for Emacs
 
-;; Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2006-2012 Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: help, internal
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -181,7 +182,7 @@ LEFT and RIGHT are the elements to compare."
                 (equal (car x) (car y)))
       (setq x (cdr x))
       (setq y (cdr y)))
-    ;; Try to make a comparision that is useful for presentation (this
+    ;; Try to make a comparison that is useful for presentation (this
     ;; could be made nicer perhaps):
     (let ((cx (car x))
           (cy (car y)))
@@ -218,8 +219,8 @@ LEFT and RIGHT are the elements to compare."
              (save-buffers-kill-terminal [?\C-x ?\C-c])
 
              ;; * SUMMARY
-             (scroll-up [?\C-v])
-             (scroll-down [?\M-v])
+             (scroll-up-command [?\C-v])
+             (scroll-down-command [?\M-v])
              (recenter-top-bottom [?\C-l])
 
              ;; * BASIC CURSOR CONTROL
@@ -297,7 +298,7 @@ LEFT and RIGHT are the elements to compare."
              (isearch-backward [?\C-r])
 
              ;; * MULTIPLE WINDOWS
-             (split-window-vertically [?\C-x ?2])
+             (split-window-below [?\C-x ?2])
              (scroll-other-window [?\C-\M-v])
              (other-window [?\C-x ?o])
              (find-file-other-window [?\C-x ?4 ?\C-f])
@@ -829,6 +830,10 @@ Run the Viper tutorial? "))
         (if old-tut-file
             (progn
               (insert-file-contents (tutorial--saved-file))
+	      (let ((enable-local-variables :safe))
+		(hack-local-variables))
+              ;; FIXME?  What we actually want is to ignore dir-locals (?).
+              (setq buffer-read-only nil) ; bug#11118
               (goto-char (point-min))
               (setq old-tut-point
                     (string-to-number
@@ -844,6 +849,10 @@ Run the Viper tutorial? "))
               (goto-char tutorial--point-before-chkeys)
               (setq tutorial--point-before-chkeys (point-marker)))
           (insert-file-contents (expand-file-name filename tutorial-directory))
+	  (let ((enable-local-variables :safe))
+	    (hack-local-variables))
+          ;; FIXME?  What we actually want is to ignore dir-locals (?).
+          (setq buffer-read-only nil) ; bug#11118
           (forward-line)
           (setq tutorial--point-before-chkeys (point-marker)))
 
@@ -884,6 +893,11 @@ Run the Viper tutorial? "))
                  (search-forward ">>")
                  (replace-match "]")))
           (beginning-of-line)
+          ;; FIXME: if the window is not tall, and especially if the
+          ;; big red "NOTICE: The main purpose..." text has been
+          ;; inserted at the start of the buffer, the "type C-v to
+          ;; move to the next screen" might not be visible on the
+          ;; first screen (n < 0).  How will the novice know what to do?
           (let ((n (- (window-height (selected-window))
                       (count-lines (point-min) (point))
                       6)))
@@ -892,7 +906,7 @@ Run the Viper tutorial? "))
                   ;; For a short gap, we don't need the [...] line,
                   ;; so delete it.
                   (delete-region (point) (progn (end-of-line) (point)))
-                  (newline n))
+                  (if (> n 0) (newline n)))
               ;; Some people get confused by the large gap.
               (newline (/ n 2))
 
@@ -958,5 +972,4 @@ Currently this feature is only used in `help-with-tutorial'."
 
 (provide 'tutorial)
 
-;; arch-tag: c8e80aef-c3bb-4ffb-8af6-22171bf0c100
 ;;; tutorial.el ends here

@@ -1,10 +1,11 @@
-;;; linum.el --- display line numbers in the left margin
+;;; linum.el --- display line numbers in the left margin -*- lexical-binding: t -*-
 
-;; Copyright (C) 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2008-2012 Free Software Foundation, Inc.
 
 ;; Author: Markus Triska <markus.triska@gmx.at>
 ;; Maintainer: FSF
 ;; Keywords: convenience
+;; Version: 0.9x
 
 ;; This file is part of GNU Emacs.
 
@@ -72,7 +73,12 @@ and you have to scroll or press \\[recenter-top-bottom] to update the numbers."
 
 ;;;###autoload
 (define-minor-mode linum-mode
-  "Toggle display of line numbers in the left margin."
+  "Toggle display of line numbers in the left margin (Linum mode).
+With a prefix argument ARG, enable Linum mode if ARG is positive,
+and disable it otherwise.  If called from Lisp, enable the mode
+if ARG is omitted or nil.
+
+Linum mode is a buffer-local minor mode."
   :lighter ""                           ; for desktop.el
   (if linum-mode
       (progn
@@ -173,14 +179,14 @@ and you have to scroll or press \\[recenter-top-bottom] to update the numbers."
       (setq line (1+ line)))
     (set-window-margins win width (cdr (window-margins win)))))
 
-(defun linum-after-change (beg end len)
+(defun linum-after-change (beg end _len)
   ;; update overlays on deletions, and after newlines are inserted
   (when (or (= beg end)
             (= end (point-max))
             (string-match-p "\n" (buffer-substring-no-properties beg end)))
     (linum-update-current)))
 
-(defun linum-after-scroll (win start)
+(defun linum-after-scroll (win _start)
   (linum-update (window-buffer win)))
 
 ;; (defun linum-after-size (frame)
@@ -201,5 +207,4 @@ and you have to scroll or press \\[recenter-top-bottom] to update the numbers."
 
 (provide 'linum)
 
-;; arch-tag: dea45631-ed3c-4867-8b49-1c41c80aec6a
 ;;; linum.el ends here

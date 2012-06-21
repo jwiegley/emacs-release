@@ -1,6 +1,5 @@
 /* Dump Emacs in Mach-O format for use on Mac OS X.
-   Copyright (C) 2001, 2002, 2003, 2004, 2005,
-                 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+   Copyright (C) 2001-2012 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -86,8 +85,20 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
    be changed accordingly.
 */
 
-#include <stdio.h>
+/* config.h #define:s malloc/realloc/free and then includes stdlib.h.
+   We want the undefined versions, but if config.h includes stdlib.h
+   with the #define:s in place, the prototypes will be wrong and we get
+   warnings.  To prevent that, include stdlib.h before config.h.  */
+
 #include <stdlib.h>
+#include <config.h>
+#undef malloc
+#undef realloc
+#undef free
+
+#include "unexec.h"
+
+#include <stdio.h>
 #include <fcntl.h>
 #include <stdarg.h>
 #include <sys/types.h>
@@ -98,10 +109,6 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #if defined (__ppc__)
 #include <mach-o/ppc/reloc.h>
 #endif
-#include <config.h>
-#undef malloc
-#undef realloc
-#undef free
 #ifdef HAVE_MALLOC_MALLOC_H
 #include <malloc/malloc.h>
 #else
@@ -190,6 +197,8 @@ static off_t data_segment_old_fileoff = 0;
 
 static struct segment_command *data_segment_scp;
 
+static void unexec_error (const char *format, ...) NO_RETURN;
+
 /* Read N bytes from infd into memory starting at address DEST.
    Return true if successful, false otherwise.  */
 static int
@@ -218,7 +227,7 @@ unexec_write_zero (off_t dest, size_t count)
   char buf[UNEXEC_COPY_BUFSZ];
   ssize_t bytes;
 
-  bzero (buf, UNEXEC_COPY_BUFSZ);
+  memset (buf, 0, UNEXEC_COPY_BUFSZ);
   if (lseek (outfd, dest, SEEK_SET) != dest)
     return 0;
 
@@ -267,7 +276,7 @@ unexec_copy (off_t dest, off_t src, ssize_t count)
 /* Debugging and informational messages routines.  */
 
 static void
-unexec_error (char *format, ...)
+unexec_error (const char *format, ...)
 {
   va_list ap;
 
@@ -305,7 +314,7 @@ print_region (vm_address_t address, vm_size_t size, vm_prot_t prot,
 }
 
 static void
-print_region_list ()
+print_region_list (void)
 {
   struct region_t *r;
 
@@ -316,7 +325,7 @@ print_region_list ()
 }
 
 static void
-print_regions ()
+print_regions (void)
 {
   task_t target_task = mach_task_self ();
   vm_address_t address = (vm_address_t) 0;
@@ -346,7 +355,7 @@ print_regions ()
    cannot be omitted because they some regions created at run time are
    read-only.  */
 static void
-build_region_list ()
+build_region_list (void)
 {
   task_t target_task = mach_task_self ();
   vm_address_t address = (vm_address_t) 0;
@@ -465,11 +474,11 @@ unexec_reader (task_t task, vm_address_t address, vm_size_t size, void **ptr)
 }
 
 static void
-find_emacs_zone_regions ()
+find_emacs_zone_regions (void)
 {
   num_unexec_regions = 0;
 
-  emacs_zone->introspect->enumerator (mach_task_self(), 0,
+  emacs_zone->introspect->enumerator (mach_task_self (), 0,
 				      MALLOC_PTR_REGION_RANGE_TYPE
 				      | MALLOC_ADMIN_REGION_RANGE_TYPE,
 				      (vm_address_t) emacs_zone,
@@ -495,7 +504,7 @@ unexec_regions_sort_compare (const void *a, const void *b)
 }
 
 static void
-unexec_regions_merge ()
+unexec_regions_merge (void)
 {
   int i, n;
   unexec_region_info r;
@@ -637,7 +646,7 @@ print_load_command (struct load_command *lc)
    the global array lca.  Store the total number of load commands in
    global variable nlc.  */
 static void
-read_load_commands ()
+read_load_commands (void)
 {
   int i;
 
@@ -694,8 +703,8 @@ read_load_commands ()
 	}
     }
 
-  printf ("Highest address of load commands in input file: %#8x\n",
-	  infile_lc_highest_addr);
+  printf ("Highest address of load commands in input file: %#8lx\n",
+	  (unsigned long)infile_lc_highest_addr);
 
   printf ("Lowest offset of all sections in __TEXT segment: %#8lx\n",
 	  text_seg_lowest_offset);
@@ -1216,7 +1225,7 @@ copy_other (struct load_command *lc)
 /* Loop through all load commands and dump them.  Then write the Mach
    header.  */
 static void
-dump_it ()
+dump_it (void)
 {
   int i;
   long linkedit_delta = 0;
@@ -1300,8 +1309,7 @@ dump_it ()
    and infile, respectively.  The three other parameters are
    ignored.  */
 void
-unexec (char *outfile, char *infile, void *start_data, void *start_bss,
-        void *entry_address)
+unexec (const char *outfile, const char *infile)
 {
   if (in_dumped_exec)
     unexec_error ("Unexec from a dumped executable is not supported.");
@@ -1335,7 +1343,7 @@ unexec (char *outfile, char *infile, void *start_data, void *start_bss,
 
 
 void
-unexec_init_emacs_zone ()
+unexec_init_emacs_zone (void)
 {
   emacs_zone = malloc_create_zone (0, 0);
   malloc_set_zone_name (emacs_zone, "EmacsZone");
@@ -1455,6 +1463,3 @@ unexec_free (void *ptr)
   else
     malloc_zone_free (emacs_zone, (unexec_malloc_header_t *) ptr - 1);
 }
-
-/* arch-tag: 1a784f7b-a184-4c4f-9544-da8619593d72
-   (do not change this comment) */

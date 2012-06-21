@@ -1,7 +1,6 @@
 ;;; url-dired.el --- URL Dired minor mode
 
-;; Copyright (C) 1996, 1997, 1998, 1999, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1996-1999, 2004-2012 Free Software Foundation, Inc.
 
 ;; Keywords: comm, files
 
@@ -31,11 +30,6 @@
     map)
   "Keymap used when browsing directories.")
 
-(defvar url-dired-minor-mode nil
-  "Whether we are in url-dired-minor-mode.")
-
-(make-variable-buffer-local 'url-dired-minor-mode)
-
 (defun url-dired-find-file ()
   "In dired, visit the file or directory named on this line."
   (interactive)
@@ -48,39 +42,12 @@
   (mouse-set-point event)
   (url-dired-find-file))
 
-(defun url-dired-minor-mode (&optional arg)
-  "Minor mode for directory browsing."
-  (interactive "P")
-  (cond
-   ((null arg)
-    (setq url-dired-minor-mode (not url-dired-minor-mode)))
-   ((equal 0 arg)
-    (setq url-dired-minor-mode nil))
-   (t
-    (setq url-dired-minor-mode t))))
-
-(if (not (fboundp 'add-minor-mode))
-    (defun add-minor-mode (toggle name &optional keymap after toggle-fun)
-      "Add a minor mode to `minor-mode-alist' and `minor-mode-map-alist'.
-TOGGLE is a symbol which is used as the variable which toggle the minor mode,
-NAME is the name that should appear in the modeline (it should be a string
-beginning with a space), KEYMAP is a keymap to make active when the minor
-mode is active, and AFTER is the toggling symbol used for another minor
-mode.  If AFTER is non-nil, then it is used to position the new mode in the
-minor-mode alists.  TOGGLE-FUN specifies an interactive function that
-is called to toggle the mode on and off; this affects what appens when
-button2 is pressed on the mode, and when button3 is pressed somewhere
-in the list of modes.  If TOGGLE-FUN is nil and TOGGLE names an
-interactive function, TOGGLE is used as the toggle function.
-
-Example:  (add-minor-mode 'view-minor-mode \" View\" view-mode-map)"
-      (if (not (assq toggle minor-mode-alist))
-	  (setq minor-mode-alist (cons (list toggle name) minor-mode-alist)))
-      (if (and keymap (not (assq toggle minor-mode-map-alist)))
-	  (setq minor-mode-map-alist (cons (cons toggle keymap)
-					   minor-mode-map-alist)))))
-
-(add-minor-mode 'url-dired-minor-mode " URL" url-dired-minor-mode-map)
+(define-minor-mode url-dired-minor-mode
+  "Minor mode for directory browsing.
+With a prefix argument ARG, enable the mode if ARG is positive,
+and disable it otherwise.  If called from Lisp, enable the mode
+if ARG is omitted or nil."
+  :lighter " URL" :keymap url-dired-minor-mode-map)
 
 (defun url-find-file-dired (dir)
   "\"Edit\" directory DIR, but with additional URL-friendly bindings."
@@ -90,5 +57,4 @@ Example:  (add-minor-mode 'view-minor-mode \" View\" view-mode-map)"
 
 (provide 'url-dired)
 
-;; arch-tag: 2694f21a-43e1-4391-b3cb-cf6e5349f15f
 ;;; url-dired.el ends here

@@ -1,6 +1,6 @@
 ;;; ps-samp.el --- ps-print sample setup code
 
-;; Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2007-2012 Free Software Foundation, Inc.
 
 ;; Author: Jim Thompson (was <thompson@wg2.waii.com>)
 ;;	Jacques Duthen (was <duthen@cegelec-red.fr>)
@@ -10,6 +10,7 @@
 ;;	Vinicius Jose Latorre <viniciusjl@ig.com.br>
 ;; Keywords: wp, print, PostScript
 ;; X-URL: http://www.emacswiki.org/cgi-bin/wiki/ViniciusJoseLatorre
+;; Package: ps-print
 
 ;; This file is part of GNU Emacs.
 
@@ -33,7 +34,7 @@
 ;;; Code:
 
 
-(eval-and-compile (require 'ps-print))
+(require 'ps-print)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -236,7 +237,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; If zeroconf is enabled, all CUPS printers can be detected.  The
-;; "Postscript printer" menu will be modified dynamically, as printers
+;; "PostScript printer" menu will be modified dynamically, as printers
 ;; are added or removed.
 
 ;; Preconditions:
@@ -253,11 +254,10 @@
 (eval-when-compile
   (require 'cl))
 
-(eval-and-compile
-  (require 'printing)
-  (require 'zeroconf))
+(require 'printing)
+(require 'zeroconf)
 
-;; Add a Postscript printer to the "Postscript printer" menu.
+;; Add a PostScript printer to the "PostScript printer" menu.
 (defun ps-add-printer (service)
   (let ((name (zeroconf-service-name service))
 	(text (zeroconf-service-txt service))
@@ -267,7 +267,7 @@
     ;; `text' is an array of key=value strings like ("Duplex=T" "Copies=T").
     (dolist (string text)
       (let ((split (split-string string "=" t)))
-	;; If it is a Postscript printer, there must be a string like
+	;; If it is a PostScript printer, there must be a string like
 	;; "pdl=application/postscript,application/vnd.hp-PCL,...".
 	(when (and (string-equal "pdl" (car split))
 		   (string-match "application/postscript" (cadr split)))
@@ -288,7 +288,7 @@
 				    "-H" (format "%s:%s" addr port))))
       (pr-update-menus t))))
 
-;; Remove a printer from the "Postscript printer" menu.
+;; Remove a printer from the "PostScript printer" menu.
 (defun ps-remove-printer (service)
   (setq pr-ps-printer-alist
 	(delete (assoc (intern (zeroconf-service-name service))
@@ -308,5 +308,4 @@
 
 (provide 'ps-samp)
 
-;; arch-tag: 99c415d3-be39-43c6-aa32-7ee33ba19600
 ;;; ps-samp.el ends here

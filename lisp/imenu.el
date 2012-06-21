@@ -1,7 +1,6 @@
 ;;; imenu.el --- framework for mode-specific buffer indexes
 
-;; Copyright (C) 1994, 1995, 1996, 1997, 1998, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1994-1998, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: Ake Stenhoff <etxaksf@aom.ericsson.se>
 ;;         Lars Lindberg <lli@sypro.cap.se>
@@ -162,7 +161,7 @@ element should come before the second.  The arguments are cons cells;
 
 ;; No longer used.  KFS 2004-10-27
 ;; (defcustom imenu-scanning-message "Scanning buffer for index (%3d%%)"
-;;   "*Progress message during the index scanning of the buffer.
+;;   "Progress message during the index scanning of the buffer.
 ;; If non-nil, user gets a message during the scanning of the buffer.
 ;;
 ;; Relevant only if the mode-specific function that creates the buffer
@@ -964,13 +963,15 @@ See the command `imenu' for more information."
 	  imenu-generic-expression
 	  (not (eq imenu-create-index-function
 		   'imenu-default-create-index-function)))
-      (let ((newmap (make-sparse-keymap)))
-	(set-keymap-parent newmap (current-local-map))
-	(setq imenu--last-menubar-index-alist nil)
-	(define-key newmap [menu-bar index]
-	  `(menu-item ,name ,(make-sparse-keymap "Imenu")))
-	(use-local-map newmap)
-	(add-hook 'menu-bar-update-hook 'imenu-update-menubar))
+      (unless (and (current-local-map)
+                   (keymapp (lookup-key (current-local-map) [menu-bar index])))
+	(let ((newmap (make-sparse-keymap)))
+	  (set-keymap-parent newmap (current-local-map))
+	  (setq imenu--last-menubar-index-alist nil)
+	  (define-key newmap [menu-bar index]
+	    `(menu-item ,name ,(make-sparse-keymap "Imenu")))
+	  (use-local-map newmap)
+	  (add-hook 'menu-bar-update-hook 'imenu-update-menubar)))
     (error "The mode `%s' does not support Imenu"
            (format-mode-line mode-name))))
 
@@ -1009,6 +1010,9 @@ to `imenu-update-menubar'.")
 						   (car (cdr menu))))
 					    'imenu--menubar-select))
 	  (setq old (lookup-key (current-local-map) [menu-bar index]))
+	  ;; This should never happen, but in some odd cases, potentially,
+	  ;; lookup-key may return a dynamically composed keymap.
+	  (if (keymapp (cadr old)) (setq old (cadr old)))
 	  (setcdr old (cdr menu1)))))))
 
 (defun imenu--menubar-select (item)
@@ -1066,5 +1070,4 @@ for more information."
 
 (provide 'imenu)
 
-;; arch-tag: 98a2f5f5-4b91-4704-b18c-3aacf77d77a7
 ;;; imenu.el ends here

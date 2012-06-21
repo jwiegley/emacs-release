@@ -1,11 +1,11 @@
 ;;; eieio-speedbar.el -- Classes for managing speedbar displays.
 
-;; Copyright (C) 1999, 2000, 2001, 2002, 2005, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1999-2002, 2005, 2007-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Version: 0.2
 ;; Keywords: OO, tools
+;; Package: eieio
 
 ;; This file is part of GNU Emacs.
 
@@ -282,7 +282,7 @@ Add one of the child classes to this class to the parent list of a class."
   :abstract t)
 
 
-;;; Methods to eieio-speedbar-* which do not need to be overriden
+;;; Methods to eieio-speedbar-* which do not need to be overridden
 ;;
 (defmethod eieio-speedbar-make-tag-line ((object eieio-speedbar)
 					 depth)
@@ -409,7 +409,7 @@ Optional DEPTH is the depth we start at."
 	default-directory))))
 
 
-;;; Methods to the eieio-speedbar-* classes which need to be overriden.
+;;; Methods to the eieio-speedbar-* classes which need to be overridden.
 ;;
 (defmethod eieio-speedbar-object-children ((object eieio-speedbar))
   "Return a list of children to be displayed in speedbar.
@@ -421,5 +421,4 @@ to create a speedbar button."
 
 (provide 'eieio-speedbar)
 
-;; arch-tag: eaac1283-10b0-4419-a929-982b87e83234
 ;;; eieio-speedbar.el ends here

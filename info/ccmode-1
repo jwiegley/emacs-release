@@ -3,9 +3,7 @@ cc-mode.texi.
 
 This manual is for CC Mode in Emacs.
 
-   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
-Foundation, Inc.
+   Copyright (C) 1995-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -40,9 +38,7 @@ classes etc - there are other packages for that.
 
    This manual is for CC Mode in Emacs.
 
-   Copyright (C) 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software
-Foundation, Inc.
+   Copyright (C) 1995-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -115,6 +111,7 @@ Styles
 * Built-in Styles::
 * Choosing a Style::
 * Adding Styles::
+* Guessing the Style::
 * File Styles::
 
 Customizing Auto-newlines
@@ -145,7 +142,7 @@ Syntactic Symbols
 * Literal Symbols::
 * Multiline Macro Symbols::
 * Objective-C Method Symbols::
-* Anonymous Class Symbol::
+* Java Symbols::
 * Statement Block Symbols::
 * K&R Symbols::
 
@@ -164,6 +161,11 @@ Line-Up Functions
 * Operator Line-Up::
 * Comment Line-Up::
 * Misc Line-Up::
+
+Customizing Macros
+
+* Macro Backslashes::
+* Macros with ;::
 
 
 File: ccmode,  Node: Introduction,  Next: Overview,  Prev: Top,  Up: Top
@@ -185,7 +187,7 @@ team, implementing AWK support in version 5.30.  CC Mode did not
 originally contain the font lock support for its languages -- that was
 added in version 5.30.
 
-   This manual describes CC Mode version 5.31.
+   This manual describes CC Mode version 5.32.
 
    CC Mode supports the editing of K&R and ANSI C, C++, Objective-C,
 Java, CORBA's Interface Definition Language, Pike(1) and AWK files.  In
@@ -415,6 +417,10 @@ expression, to some statements, or perhaps to whole functions, the
 syntactic recognition can be wrong.  CC Mode manages to figure it out
 correctly most of the time, though.
 
+   Some macros, when invoked, "have their own semicolon".  To get the
+next line indented correctly, rather than as a continuation line, *Note
+Macros with ;::.
+
    Reindenting large sections of code can take a long time.  When CC
 Mode reindents a region of code, it is essentially equivalent to
 hitting <TAB> on every line of the region.
@@ -602,6 +608,14 @@ CC Mode contains some useful commands for moving around in C code.
      actual start or end of the function.  This occasionally causes
      point not to move at all.
 
+     By default, these commands will recognize functions contained
+     within a "declaration scope" such as a C++ `class' or `namespace'
+     construct, should the point start inside it.  If CC Mode fails to
+     find function beginnings or ends inside the current declaration
+     scope, it will search the enclosing scopes.  If you want CC Mode
+     to recognize functions only at the top level(1), set
+     `c-defun-tactic' to `t'.
+
      These functions are analogous to the Emacs built-in commands
      `beginning-of-defun' and `end-of-defun', except they eliminate the
      constraint that the top-level opening brace of the defun must be
@@ -692,6 +706,10 @@ CC Mode contains some useful commands for moving around in C code.
      `subword-mode', which you should use instead.  *Note Subword
      Movement::.  They might be removed from a future release of CC
      Mode.
+
+   ---------- Footnotes ----------
+
+   (1) this was CC Mode's behavior prior to version 5.32.
 
 
 File: ccmode,  Node: Filling and Breaking,  Next: Minor Modes,  Prev: Movement Commands,  Up: Commands
@@ -813,7 +831,7 @@ Keys::, *note Auto-newlines::, *note Hungry WS Deletion::, *note
 Subword Movement::, and *note Indentation Engine Basics::.
 
    You can toggle each of these minor modes on and off, and you can
-configure CC Mode so that it starts up with your favourite combination
+configure CC Mode so that it starts up with your favorite combination
 of them (*note Sample .emacs File::).  By default, when you initialize
 a buffer, electric mode and syntactic-indentation mode are enabled but
 the other two modes are disabled.
@@ -1564,7 +1582,7 @@ AWK mode:
           function name and the opening parenthesis are highlighted.
           This font-locking rule will spuriously highlight a valid
           concatenation expression where an identifier precedes a
-          parenthesised expression.  Unfortunately.
+          parenthesized expression.  Unfortunately.
 
         * Whitespace following the `\' in what otherwise looks like an
           escaped newline.  The `\' is highlighted.
@@ -1885,11 +1903,16 @@ to set up logical groupings of customizations called "styles",
 associate a single name for any particular style, and pretty easily
 start editing new or existing code using these styles.
 
+   As an alternative to writing a style definition yourself, you can
+have CC Mode "guess" (at least part of) your style by looking at an
+already formatted piece of your code, *note Guessing the Style::.
+
 * Menu:
 
 * Built-in Styles::
 * Choosing a Style::
 * Adding Styles::
+* Guessing the Style::
 * File Styles::
 
 
@@ -2003,7 +2026,7 @@ override the one that the style system would have given the variable.
      string.
 
 
-File: ccmode,  Node: Adding Styles,  Next: File Styles,  Prev: Choosing a Style,  Up: Styles
+File: ccmode,  Node: Adding Styles,  Next: Guessing the Style,  Prev: Choosing a Style,  Up: Styles
 
 6.3.3 Adding and Amending Styles
 --------------------------------
@@ -2084,9 +2107,106 @@ this value will override the one the style system tries to give it.
 *Note Config Basics::.
 
 
-File: ccmode,  Node: File Styles,  Prev: Adding Styles,  Up: Styles
+File: ccmode,  Node: Guessing the Style,  Next: File Styles,  Prev: Adding Styles,  Up: Styles
 
-6.3.4 File Styles
+6.3.4 Guessing the Style
+------------------------
+
+Instead of specifying a style, you can get CC Mode to "guess" your
+style by examining an already formatted code buffer.  CC Mode then
+determines the "most frequent" offset (*note c-offsets-alist::) for
+each of the syntactic symbols (*note Indentation Engine Basics::)
+encountered in the buffer, and the "most frequent" value of
+c-basic-offset (*note Customizing Indentation::), then merges the
+current style with these "guesses" to form a new style.  This combined
+style is known as the "guessed style".
+
+   To do this, call `c-guess' (or one of the other 5 guessing commands)
+on your sample buffer.  The analysis of your code may take some time.
+
+   You can then set the guessed style in any CC Mode buffer with
+`c-guess-install'.  You can display the style with `c-guess-view', and
+preserve it by copying it into your `.emacs' for future use, preferably
+after editing it.
+
+`M-x c-guess-no-install'
+`M-x c-guess-buffer-no-install'
+`M-x c-guess-region-no-install'
+     These commands analyze a part of the current buffer and guess the
+     style from it.
+
+     The part of the buffer examined is either the region
+     (`c-guess-region-no-install'), the entire buffer
+     (`c-guess-buffer-no-install'), or the first `c-guess-region-max'
+     bytes (`c-guess-no-install').
+
+     Each of these commands can be given an optional prefix argument.
+     This instructs CC Mode to combine the new guesses with the current
+     guesses before forming the guessed style.
+
+`M-x c-guess'
+`M-x c-guess-buffer'
+`M-x c-guess-region'
+     These commands analyze a part of the current buffer, guess the
+     style from it, then install the guessed style on the buffer.  The
+     guessed style is given a name based on the buffer's absolute file
+     name, and you can then set this style on any CC Mode buffer with
+     `C-c .'.
+
+     The part of the buffer examined is either the region
+     (`c-guess-region'), the entire buffer (`c-guess-buffer'), or the
+     first `c-guess-region-max' bytes (`c-guess').
+
+     Each of these commands can be given an optional prefix argument.
+     This instructs CC Mode to combine the new guesses with the current
+     guesses before forming the guessed style.
+
+ -- User Option: c-guess-region-max
+     This variable, default 50000, is the size in bytes of the buffer
+     portion examined by c-guess and c-guess-no-install.  If set to
+     `nil', the entire buffer is examined.
+
+ -- User Option: c-guess-offset-threshold
+     This variable, default 10, is the maximum offset, either outwards
+     or inwards, which will be taken into account by the analysis
+     process.  Any offset bigger than this will be ignored.  For no
+     limit, set this variable to a large number.
+
+`M-x c-guess-install'
+     Set the current buffer's style to the guessed style.  This prompts
+     you to enter an optional new style name to give to the guessed
+     style.  By default, this name is based on the buffer's absolute
+     file name.  You can then use this style like any other.
+
+`M-x c-guess-view'
+     Display the most recently guessed style in a temporary buffer.
+     This display is in the form of a `c-add-style' form (*note Adding
+     Styles::) which can be easily copied to your `.emacs'.  You will
+     probably want to edit it first.
+
+     The display of the guessed style contains these elements:
+
+    Placeholder Name
+          You should replace this with a style name of your own.
+
+    Parent Style
+          The style current when the guessing began, from which the
+          guessed style inherits (*note Config Basics::) the settings
+          which weren't guessed.
+
+    Guessed Offsets
+          These are the core result of the guessing process.  Each of
+          them is marked by a comment.
+
+    Inherited Offsets
+          These are syntactic offsets which have been taken over from
+          the parent style.  To avoid possible future conflicts, you
+          should remove either these offsets or the parent style name.
+
+
+File: ccmode,  Node: File Styles,  Prev: Guessing the Style,  Up: Styles
+
+6.3.5 File Styles
 -----------------
 
 The Emacs manual describes how you can customize certain variables on a
@@ -3108,6 +3228,10 @@ by using `C-c C-s'.
      parts that aren't covered by other symbols such as
      `func-decl-cont' and `knr-argdecl'.  *note Function Symbols::.
 
+`annotation-top-cont'
+     Topmost definition continuation lines where all previous items are
+     annotations.  *note Java Symbols::.
+
 `member-init-intro'
      First line in a member initialization list.  *note Class Symbols::.
 
@@ -3153,6 +3277,10 @@ by using `C-c C-s'.
 
 `statement-cont'
      A continuation of a statement.  *note Function Symbols::.
+
+`annotation-var-cont'
+     A continuation of a statement where all previous items are
+     annotations.  *note Java Symbols::.
 
 `statement-block-intro'
      The first line in a new statement block.  *note Conditional
@@ -3308,7 +3436,7 @@ by using `C-c C-s'.
 `inexpr-class'
      A class definition inside an expression.  This is used for
      anonymous classes in Java.  It's also used for anonymous array
-     initializers in Java.  *note Anonymous Class Symbol::.
+     initializers in Java.  *note Java Symbols::.
 
 * Menu:
 
@@ -3322,7 +3450,7 @@ by using `C-c C-s'.
 * Literal Symbols::
 * Multiline Macro Symbols::
 * Objective-C Method Symbols::
-* Anonymous Class Symbol::
+* Java Symbols::
 * Statement Block Symbols::
 * K&R Symbols::
 
@@ -3403,8 +3531,8 @@ inheritance list is given `inher-cont' syntax.
 
      ((inclass 58) (access-label 58))
 
-The primary syntactic symbol for this line is `access-label' as this a
-label keyword that specifies access protection in C++.  However,
+The primary syntactic symbol for this line is `access-label' as this is
+a label keyword that specifies access protection in C++.  However,
 because this line is also a top-level construct inside a class
 definition, the analysis actually shows two syntactic symbols.  The
 other syntactic symbol assigned to this line is `inclass'.  Similarly,
@@ -3816,7 +3944,7 @@ anchor position pointing to the `#' which starts the cpp directive(1).
    (1) This is how CC Mode 5.28 and earlier analyzed macros.
 
 
-File: ccmode,  Node: Objective-C Method Symbols,  Next: Anonymous Class Symbol,  Prev: Multiline Macro Symbols,  Up: Syntactic Symbols
+File: ccmode,  Node: Objective-C Method Symbols,  Next: Java Symbols,  Prev: Multiline Macro Symbols,  Up: Syntactic Symbols
 
 10.2.10 Objective-C Method Symbols
 ----------------------------------
@@ -3838,31 +3966,40 @@ assigned `objc-method-args-cont' syntax.  Lines 5 and 6 are both
 assigned `objc-method-call-cont' syntax.
 
 
-File: ccmode,  Node: Anonymous Class Symbol,  Next: Statement Block Symbols,  Prev: Objective-C Method Symbols,  Up: Syntactic Symbols
+File: ccmode,  Node: Java Symbols,  Next: Statement Block Symbols,  Prev: Objective-C Method Symbols,  Up: Syntactic Symbols
 
-10.2.11 Anonymous Class Symbol (Java)
--------------------------------------
+10.2.11 Java Symbols
+--------------------
 
 Java has a concept of anonymous classes which can look something like
 this:
 
-      1: public void watch(Observable o) {
-      2:     o.addObserver(new Observer() {
-      3:             public void update(Observable o, Object arg) {
-      4:                 history.addElement(arg);
-      5:             }
-      6:         });
-      7: }
+      1:  @Test
+      2:  public void watch(Observable o) {
+      3:      @NonNull
+      4:      Observer obs = new Observer() {
+      5:          public void update(Observable o, Object arg) {
+      6:              history.addElement(arg);
+      7:          }
+      8:      };
+      9:      o.addObserver(obs);
+      10: }
 
    The brace following the `new' operator opens the anonymous class.
-Lines 3 and 6 are assigned the `inexpr-class' syntax, besides the
+Lines 5 and 8 are assigned the `inexpr-class' syntax, besides the
 `inclass' symbol used in normal classes.  Thus, the class will be
 indented just like a normal class, with the added indentation given to
 `inexpr-class'.  An `inexpr-class' syntactic element doesn't have an
 anchor position.
 
+   Line 2 is assigned the `annotation-top-cont' syntax, due to it being
+a continuation of a topmost introduction with an annotation symbol
+preceding the current line.  Similarly, line 4 is assigned the
+`annotation-var-cont' syntax due to it being a continuation of a
+variable declaration where preceding the declaration is an annotation.
+
 
-File: ccmode,  Node: Statement Block Symbols,  Next: K&R Symbols,  Prev: Anonymous Class Symbol,  Up: Syntactic Symbols
+File: ccmode,  Node: Statement Block Symbols,  Next: K&R Symbols,  Prev: Java Symbols,  Up: Syntactic Symbols
 
 10.2.12 Statement Block Symbols
 -------------------------------
@@ -4080,7 +4217,7 @@ File: ccmode,  Node: c-offsets-alist,  Next: Interactive Customization,  Prev: C
 ====================
 
 This section explains the structure and semantics of the style variable
-`c-offset-alist', the principal variable for configuring indentation.
+`c-offsets-alist', the principal variable for configuring indentation.
 Details of how to set it up, and its relationship to CC Mode's style
 system are given in *note Style Variables::.
 
@@ -5102,7 +5239,10 @@ File: ccmode,  Node: Other Indentation,  Prev: Custom Line-Up,  Up: Customizing 
 11.5 Other Special Indentations
 ===============================
 
-Here are the remaining odds and ends regarding indentation:
+To configure macros which you invoke without a terminating `;', see
+*Note Macros with ;::.
+
+   Here are the remaining odds and ends regarding indentation:
 
  -- User Option: c-label-minimum-indentation
      In `gnu' style (*note Built-in Styles::), a minimum indentation is
@@ -5147,8 +5287,15 @@ File: ccmode,  Node: Custom Macros,  Next: Odds and Ends,  Prev: Customizing Ind
 12 Customizing Macros
 *********************
 
-Normally, the lines in a multi-line macro are indented relative to each
-other as though they were code.  You can suppress this behavior by
+Preprocessor macros in C, C++, and Objective C (introduced by
+`#define') have a syntax different from the main language--for example,
+a macro declaration is not terminated by a semicolon, and if it is more
+than a line long, line breaks in it must be escaped with backslashes.
+CC Mode has some commands to manipulate these, see *note Macro
+Backslashes::.
+
+   Normally, the lines in a multi-line macro are indented relative to
+each other as though they were code.  You can suppress this behavior by
 setting the following user option:
 
  -- User Option: c-syntactic-indentation-in-macros
@@ -5156,7 +5303,27 @@ setting the following user option:
      this is `nil', all lines inside macro definitions are analyzed as
      `cpp-macro-cont'.
 
-   CC Mode provides some tools to help keep the line continuation
+   Because a macro can expand into anything at all, near where one is
+invoked CC Mode can only indent and fontify code heuristically.
+Sometimes it gets it wrong.  Usually you should try to design your
+macros so that they "look like ordinary code" when you invoke them.
+However, one situation is so common that CC Mode handles it specially:
+that is when certain macros needn't (or mustn't) be followed by a `;'.
+You need to configure CC Mode to handle these macros properly, see
+*note Macros with ;::.
+
+* Menu:
+
+* Macro Backslashes::
+* Macros with ;::
+
+
+File: ccmode,  Node: Macro Backslashes,  Next: Macros with ;,  Prev: Custom Macros,  Up: Custom Macros
+
+12.1 Customizing Macro Backslashes
+==================================
+
+CC Mode provides some tools to help keep the line continuation
 backslashes in macros neat and tidy.  Their precise action is
 customized with these variables:
 
@@ -5191,6 +5358,53 @@ customized with these variables:
      backslashes are preceded by a single space, and backslashes get
      aligned only when you explicitly invoke the command
      `c-backslash-region' (`C-c C-\').
+
+
+File: ccmode,  Node: Macros with ;,  Prev: Macro Backslashes,  Up: Custom Macros
+
+12.2 Macros with semicolons
+===========================
+
+Macros which needn't (or mustn't) be followed by a semicolon when you
+invoke them, "macros with semicolons", are very common.  These can
+cause CC Mode to parse the next line wrongly as a `statement-cont'
+(*note Function Symbols::) and thus mis-indent it.
+
+   You can prevent this by specifying which macros have semicolons.  It
+doesn't matter whether or not such a macro has a parameter list:
+
+ -- User Option: c-macro-names-with-semicolon
+     This buffer-local variable specifies which macros have semicolons.
+     After setting its value, you need to call
+     `c-make-macro-with-semi-re' for it to take effect.  It should be
+     set to one of these values:
+
+    nil
+          There are no macros with semicolons.
+
+    a list of strings
+          Each string is the name of a macro with a semicolon.  Only
+          valid `#define' names are allowed here.  For example, to set
+          the default value, you could write the following into your
+          `.emacs':
+
+               (setq c-macro-names-with-semicolon
+                     '("Q_OBJECT" "Q_PROPERTY" "Q_DECLARE" "Q_ENUMS"))
+
+    a regular expression
+          This matches each symbol which is a macro with a semicolon.
+          It must not match any string which isn't a valid `#define'
+          name.  For example:
+
+               (setq c-macro-names-with-semicolon
+                     "\\<\\(CLEAN_UP_AND_RETURN\\|Q_[[:upper:]]+\\)\\>")
+
+ -- Function: c-make-macro-with-semi-re
+     Call this (non-interactive) function, which sets internal
+     variables, each time you change the value of
+     `c-macro-names-with-semicolon'.  It takes no arguments, and its
+     return value has no meaning.  This function is called by CC Mode's
+     initialization code.
 
 
 File: ccmode,  Node: Odds and Ends,  Next: Sample .emacs File,  Prev: Custom Macros,  Up: Top
@@ -5355,7 +5569,7 @@ circumstances, can locate the top-most opening brace much more quickly
 than `beginning-of-defun'.  Preliminary testing has shown that for
 styles where these braces are hung (e.g. most JDK-derived Java styles),
 this hack can improve performance of the core syntax parsing routines
-from 3 to 60 times.  However, for styles which _do_ conform to Emacs'
+from 3 to 60 times.  However, for styles which _do_ conform to Emacs's
 recommended style of putting top-level braces in column zero, this hack
 can degrade performance by about as much.  Thus this variable is set to
 `nil' by default, since the Emacs-friendly styles should be more common
@@ -5455,7 +5669,7 @@ Appendix A Frequently Asked Questions
 
    * _Why doesn't the `RET' key indent the new line?_
 
-     Emacs' convention is that `RET' just adds a newline, and that
+     Emacs's convention is that `RET' just adds a newline, and that
      `C-j' adds a newline and indents it.  You can make `RET' do this
      too by adding this to your `c-initialization-hook':
 
@@ -6068,35 +6282,35 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * add-style (c-):                        Adding Styles.       (line  53)
 * auto-fill-mode:                        Filling and Breaking.
                                                               (line  19)
-* awk-beginning-of-defun (c-):           Movement Commands.   (line  30)
-* awk-end-of-defun (c-):                 Movement Commands.   (line  30)
+* awk-beginning-of-defun (c-):           Movement Commands.   (line  38)
+* awk-end-of-defun (c-):                 Movement Commands.   (line  38)
 * awk-mode:                              Introduction.        (line  28)
 * backslash-region (c-):                 Other Commands.      (line  31)
-* backward-conditional (c-):             Movement Commands.   (line  89)
+* backward-conditional (c-):             Movement Commands.   (line  97)
 * backward-delete-char-untabify:         Hungry WS Deletion.  (line  40)
-* backward-into-nomenclature (c-):       Movement Commands.   (line  98)
+* backward-into-nomenclature (c-):       Movement Commands.   (line 106)
 * backward-kill-subword (c-):            Subword Movement.    (line  23)
 * backward-subword (c-):                 Subword Movement.    (line  23)
 * beginning-of-defun:                    Performance Issues.  (line  31)
-* beginning-of-statement (c-):           Movement Commands.   (line  42)
+* beginning-of-statement (c-):           Movement Commands.   (line  50)
 * c++-mode:                              Introduction.        (line  28)
 * c-add-style:                           Adding Styles.       (line  53)
-* c-awk-beginning-of-defun:              Movement Commands.   (line  30)
-* c-awk-end-of-defun:                    Movement Commands.   (line  30)
+* c-awk-beginning-of-defun:              Movement Commands.   (line  38)
+* c-awk-end-of-defun:                    Movement Commands.   (line  38)
 * c-backslash-region:                    Other Commands.      (line  31)
-* c-backward-conditional:                Movement Commands.   (line  89)
-* c-backward-into-nomenclature:          Movement Commands.   (line  98)
+* c-backward-conditional:                Movement Commands.   (line  97)
+* c-backward-into-nomenclature:          Movement Commands.   (line 106)
 * c-backward-kill-subword:               Subword Movement.    (line  23)
 * c-backward-subword:                    Subword Movement.    (line  23)
 * c-beginning-of-defun:                  Movement Commands.   (line  10)
-* c-beginning-of-statement:              Movement Commands.   (line  42)
+* c-beginning-of-statement:              Movement Commands.   (line  50)
 * c-capitalize-subword:                  Subword Movement.    (line  23)
 * c-context-line-break:                  Filling and Breaking.
                                                               (line  49)
 * c-context-open-line:                   Filling and Breaking.
                                                               (line  65)
-* c-down-conditional:                    Movement Commands.   (line  75)
-* c-down-conditional-with-else:          Movement Commands.   (line  84)
+* c-down-conditional:                    Movement Commands.   (line  83)
+* c-down-conditional-with-else:          Movement Commands.   (line  92)
 * c-downcase-subword:                    Subword Movement.    (line  23)
 * c-electric-backspace:                  Hungry WS Deletion.  (line  30)
 * c-electric-brace:                      Electric Keys.       (line  77)
@@ -6111,22 +6325,30 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * c-electric-slash:                      Electric Keys.       (line  38)
 * c-electric-star:                       Electric Keys.       (line  38)
 * c-end-of-defun:                        Movement Commands.   (line  10)
-* c-end-of-statement:                    Movement Commands.   (line  42)
+* c-end-of-statement:                    Movement Commands.   (line  50)
 * c-fill-paragraph:                      Filling and Breaking.
                                                               (line  26)
-* c-forward-conditional:                 Movement Commands.   (line  89)
-* c-forward-into-nomenclature:           Movement Commands.   (line  98)
+* c-forward-conditional:                 Movement Commands.   (line  97)
+* c-forward-into-nomenclature:           Movement Commands.   (line 106)
 * c-forward-subword:                     Subword Movement.    (line  23)
-* c-gnu-impose-minimum:                  Other Indentation.   (line  13)
+* c-gnu-impose-minimum:                  Other Indentation.   (line  16)
+* c-guess:                               Guessing the Style.  (line  41)
+* c-guess-buffer:                        Guessing the Style.  (line  41)
+* c-guess-buffer-no-install:             Guessing the Style.  (line  26)
+* c-guess-install:                       Guessing the Style.  (line  67)
+* c-guess-no-install:                    Guessing the Style.  (line  26)
+* c-guess-region:                        Guessing the Style.  (line  41)
+* c-guess-region-no-install:             Guessing the Style.  (line  26)
+* c-guess-view:                          Guessing the Style.  (line  73)
 * c-hungry-delete:                       Hungry WS Deletion.  (line  84)
 * c-hungry-delete-backwards:             Hungry WS Deletion.  (line  67)
 * c-hungry-delete-forward:               Hungry WS Deletion.  (line  74)
 * c-indent-command:                      Indentation Commands.
-                                                              (line  38)
+                                                              (line  42)
 * c-indent-defun:                        Indentation Commands.
-                                                              (line 107)
+                                                              (line 111)
 * c-indent-exp:                          Indentation Commands.
-                                                              (line 102)
+                                                              (line 106)
 * c-indent-multi-line-block:             Brace/Paren Line-Up. (line  69)
 * c-indent-new-comment-line:             Filling and Breaking.
                                                               (line  42)
@@ -6166,8 +6388,9 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * c-lineup-topmost-intro-cont:           Misc Line-Up.        (line 104)
 * c-lineup-whitesmith-in-block:          Brace/Paren Line-Up. (line 151)
 * c-macro-expand:                        Other Commands.      (line  57)
+* c-make-macro-with-semi-re:             Macros with ;.       (line  41)
 * c-mark-function:                       Indentation Commands.
-                                                              (line 121)
+                                                              (line 125)
 * c-mark-subword:                        Subword Movement.    (line  23)
 * c-mode:                                Introduction.        (line  28)
 * c-scope-operator:                      Other Commands.      (line  26)
@@ -6196,8 +6419,8 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * c-toggle-hungry-state:                 Minor Modes.         (line  66)
 * c-toggle-syntactic-indentation:        Minor Modes.         (line  75)
 * c-transpose-subwords:                  Subword Movement.    (line  23)
-* c-up-conditional:                      Movement Commands.   (line  59)
-* c-up-conditional-with-else:            Movement Commands.   (line  71)
+* c-up-conditional:                      Movement Commands.   (line  67)
+* c-up-conditional-with-else:            Movement Commands.   (line  79)
 * c-upcase-subword:                      Subword Movement.    (line  23)
 * c-version:                             Getting Started.     (line  84)
 * capitalize-subword (c-):               Subword Movement.    (line  23)
@@ -6209,8 +6432,8 @@ appears under its `c-THING' name and its `THING (c-)' name.
                                                               (line  65)
 * defun-prompt-regexp:                   Performance Issues.  (line  39)
 * delete-char:                           Hungry WS Deletion.  (line  56)
-* down-conditional (c-):                 Movement Commands.   (line  75)
-* down-conditional-with-else (c-):       Movement Commands.   (line  84)
+* down-conditional (c-):                 Movement Commands.   (line  83)
+* down-conditional-with-else (c-):       Movement Commands.   (line  92)
 * downcase-subword (c-):                 Subword Movement.    (line  23)
 * electric-backspace (c-):               Hungry WS Deletion.  (line  30)
 * electric-brace (c-):                   Electric Keys.       (line  77)
@@ -6224,32 +6447,40 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * electric-semi&comma (c-):              Electric Keys.       (line  98)
 * electric-slash (c-):                   Electric Keys.       (line  38)
 * electric-star (c-):                    Electric Keys.       (line  38)
-* end-of-statement (c-):                 Movement Commands.   (line  42)
+* end-of-statement (c-):                 Movement Commands.   (line  50)
 * fill-paragraph (c-):                   Filling and Breaking.
                                                               (line  26)
 * filladapt-mode:                        Custom Filling and Breaking.
                                                               (line  73)
-* forward-conditional (c-):              Movement Commands.   (line  89)
-* forward-into-nomenclature (c-):        Movement Commands.   (line  98)
+* forward-conditional (c-):              Movement Commands.   (line  97)
+* forward-into-nomenclature (c-):        Movement Commands.   (line 106)
 * forward-subword (c-):                  Subword Movement.    (line  23)
-* gnu-impose-minimum (c-):               Other Indentation.   (line  13)
+* gnu-impose-minimum (c-):               Other Indentation.   (line  16)
+* guess (c-):                            Guessing the Style.  (line  41)
+* guess-buffer (c-):                     Guessing the Style.  (line  41)
+* guess-buffer-no-install (c-):          Guessing the Style.  (line  26)
+* guess-install (c-):                    Guessing the Style.  (line  67)
+* guess-no-install (c-):                 Guessing the Style.  (line  26)
+* guess-region (c-):                     Guessing the Style.  (line  41)
+* guess-region-no-install (c-):          Guessing the Style.  (line  26)
+* guess-view (c-):                       Guessing the Style.  (line  73)
 * hungry-delete (c-):                    Hungry WS Deletion.  (line  84)
 * hungry-delete-backwards (c-):          Hungry WS Deletion.  (line  67)
 * hungry-delete-forward (c-):            Hungry WS Deletion.  (line  74)
 * idl-mode:                              Introduction.        (line  28)
 * indent-command (c-):                   Indentation Commands.
-                                                              (line  38)
+                                                              (line  42)
 * indent-defun (c-):                     Indentation Commands.
-                                                              (line 107)
+                                                              (line 111)
 * indent-exp (c-):                       Indentation Commands.
-                                                              (line 102)
+                                                              (line 106)
 * indent-for-comment:                    Comment Commands.    (line  15)
 * indent-multi-line-block (c-):          Brace/Paren Line-Up. (line  69)
 * indent-new-comment-line (c-):          Filling and Breaking.
                                                               (line  42)
 * indent-one-line-block (c-):            Brace/Paren Line-Up. (line  48)
 * indent-region:                         Indentation Commands.
-                                                              (line 115)
+                                                              (line 119)
 * java-mode:                             Introduction.        (line  28)
 * kill-subword (c-):                     Subword Movement.    (line  23)
 * langelem-2nd-pos (c-):                 Custom Line-Up.      (line  74)
@@ -6286,11 +6517,12 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * lineup-topmost-intro-cont (c-):        Misc Line-Up.        (line 104)
 * lineup-whitesmith-in-block (c-):       Brace/Paren Line-Up. (line 151)
 * macro-expand (c-):                     Other Commands.      (line  57)
+* make-macro-with-semi-re (c-):          Macros with ;.       (line  41)
 * mark-function (c-):                    Indentation Commands.
-                                                              (line 121)
+                                                              (line 125)
 * mark-subword (c-):                     Subword Movement.    (line  23)
 * newline-and-indent:                    Indentation Commands.
-                                                              (line  98)
+                                                              (line 102)
 * normal-erase-is-backspace-mode:        Hungry WS Deletion.  (line  94)
 * objc-mode:                             Introduction.        (line  28)
 * pike-mode:                             Introduction.        (line  28)
@@ -6316,15 +6548,15 @@ appears under its `c-THING' name and its `THING (c-)' name.
                                                               (line   6)
 * subword-mode:                          Minor Modes.         (line  72)
 * tab-to-tab-stop:                       Indentation Commands.
-                                                              (line  78)
+                                                              (line  82)
 * toggle-auto-hungry-state (c-):         Minor Modes.         (line  69)
 * toggle-auto-newline (c-):              Minor Modes.         (line  62)
 * toggle-electric-state (c-):            Minor Modes.         (line  58)
 * toggle-hungry-state (c-):              Minor Modes.         (line  66)
 * toggle-syntactic-indentation (c-):     Minor Modes.         (line  75)
 * transpose-subwords (c-):               Subword Movement.    (line  23)
-* up-conditional (c-):                   Movement Commands.   (line  59)
-* up-conditional-with-else (c-):         Movement Commands.   (line  71)
+* up-conditional (c-):                   Movement Commands.   (line  67)
+* up-conditional-with-else (c-):         Movement Commands.   (line  79)
 * upcase-subword (c-):                   Subword Movement.    (line  23)
 * version (c-):                          Getting Started.     (line  84)
 
@@ -6347,10 +6579,10 @@ appears under its `c-THING' name and its `THING (c-)' name.
                                                               (line  11)
 * adaptive-fill-regexp:                  Custom Filling and Breaking.
                                                               (line  11)
-* auto-align-backslashes (c-):           Custom Macros.       (line  40)
+* auto-align-backslashes (c-):           Macro Backslashes.   (line  31)
 * awk-mode-hook:                         CC Hooks.            (line  38)
-* backslash-column (c-):                 Custom Macros.       (line  20)
-* backslash-max-column (c-):             Custom Macros.       (line  21)
+* backslash-column (c-):                 Macro Backslashes.   (line  11)
+* backslash-max-column (c-):             Macro Backslashes.   (line  12)
 * backspace-function (c-):               Hungry WS Deletion.  (line  40)
 * basic-offset (c-):                     Customizing Indentation.
                                                               (line  18)
@@ -6359,9 +6591,9 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * c++-font-lock-extra-types:             Font Locking Preliminaries.
                                                               (line  60)
 * c++-mode-hook:                         CC Hooks.            (line  33)
-* c-auto-align-backslashes:              Custom Macros.       (line  40)
-* c-backslash-column:                    Custom Macros.       (line  20)
-* c-backslash-max-column:                Custom Macros.       (line  21)
+* c-auto-align-backslashes:              Macro Backslashes.   (line  31)
+* c-backslash-column:                    Macro Backslashes.   (line  11)
+* c-backslash-max-column:                Macro Backslashes.   (line  12)
 * c-backspace-function:                  Hungry WS Deletion.  (line  40)
 * c-basic-offset:                        Customizing Indentation.
                                                               (line  18)
@@ -6374,6 +6606,7 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * c-comment-prefix-regexp:               Custom Filling and Breaking.
                                                               (line  11)
 * c-default-style:                       Choosing a Style.    (line  20)
+* c-defun-tactic:                        Movement Commands.   (line  10)
 * c-delete-function:                     Hungry WS Deletion.  (line  56)
 * c-doc-comment-style:                   Doc Comments.        (line  12)
 * c-echo-syntactic-information-p:        Odds and Ends.       (line  21)
@@ -6383,6 +6616,8 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * c-file-style:                          File Styles.         (line  17)
 * c-font-lock-extra-types:               Font Locking Preliminaries.
                                                               (line  59)
+* c-guess-offset-threshold:              Guessing the Style.  (line  61)
+* c-guess-region-max:                    Guessing the Style.  (line  56)
 * c-hanging-braces-alist <1>:            Custom Braces.       (line   6)
 * c-hanging-braces-alist:                Hanging Braces.      (line  38)
 * c-hanging-colons-alist:                Hanging Colons.      (line   6)
@@ -6395,10 +6630,11 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * c-indentation-style:                   Choosing a Style.    (line  45)
 * c-initialization-hook:                 CC Hooks.            (line  23)
 * c-insert-tab-function:                 Indentation Commands.
-                                                              (line  78)
+                                                              (line  82)
 * c-invalid-face:                        Faces.               (line  54)
 * c-Java-defun-prompt-regexp:            Performance Issues.  (line  39)
-* c-label-minimum-indentation:           Other Indentation.   (line   9)
+* c-label-minimum-indentation:           Other Indentation.   (line  12)
+* c-macro-names-with-semicolon:          Macros with ;.       (line  15)
 * c-max-one-liner-length:                Clean-ups.           (line 149)
 * c-mode-common-hook:                    CC Hooks.            (line  28)
 * c-mode-hook:                           CC Hooks.            (line  32)
@@ -6406,10 +6642,10 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * c-offsets-alist:                       Syntactic Symbols.   (line   6)
 * c-old-style-variable-behavior:         Style Variables.     (line  19)
 * c-progress-interval:                   Indentation Commands.
-                                                              (line 134)
+                                                              (line 138)
 * c-report-syntactic-errors:             Odds and Ends.       (line  28)
 * c-require-final-newline:               Odds and Ends.       (line   9)
-* c-special-indent-hook:                 Other Indentation.   (line  18)
+* c-special-indent-hook:                 Other Indentation.   (line  21)
 * c-strict-syntax-p:                     c-offsets-alist.     (line 152)
 * c-style-alist:                         Adding Styles.       (line  69)
 * c-syntactic-context <1>:               Custom Line-Up.      (line  48)
@@ -6417,9 +6653,9 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * c-syntactic-element:                   Custom Line-Up.      (line  48)
 * c-syntactic-indentation:               Indentation Engine Basics.
                                                               (line  35)
-* c-syntactic-indentation-in-macros:     Custom Macros.       (line  11)
+* c-syntactic-indentation-in-macros:     Custom Macros.       (line  18)
 * c-tab-always-indent:                   Indentation Commands.
-                                                              (line  63)
+                                                              (line  67)
 * cleanup-list (c-):                     Clean-ups.           (line  26)
 * comment-column:                        Comment Commands.    (line  24)
 * comment-continuation-stars (c-):       Custom Filling and Breaking.
@@ -6437,6 +6673,7 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * comment-start-skip:                    Custom Filling and Breaking.
                                                               (line  11)
 * default-style (c-):                    Choosing a Style.    (line  20)
+* defun-tactic (c-):                     Movement Commands.   (line  10)
 * delete-function (c-):                  Hungry WS Deletion.  (line  56)
 * delete-key-deletes-forward:            Hungry WS Deletion.  (line  84)
 * doc-comment-style (c-):                Doc Comments.        (line  12)
@@ -6463,6 +6700,8 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * font-lock-type-face:                   Faces.               (line  38)
 * font-lock-variable-name-face:          Faces.               (line  28)
 * font-lock-warning-face:                Faces.               (line  54)
+* guess-offset-threshold (c-):           Guessing the Style.  (line  61)
+* guess-region-max (c-):                 Guessing the Style.  (line  56)
 * hanging-braces-alist (c-) <1>:         Custom Braces.       (line   6)
 * hanging-braces-alist (c-):             Hanging Braces.      (line  38)
 * hanging-colons-alist (c-):             Hanging Colons.      (line   6)
@@ -6476,17 +6715,18 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * indent-comment-alist (c-):             Comment Commands.    (line  24)
 * indent-comments-syntactically-p (c-):  Comment Commands.    (line  37)
 * indent-tabs-mode:                      Indentation Commands.
-                                                              (line 129)
+                                                              (line 133)
 * indentation-style (c-):                Choosing a Style.    (line  45)
 * initialization-hook (c-):              CC Hooks.            (line  23)
 * insert-tab-function (c-):              Indentation Commands.
-                                                              (line  78)
+                                                              (line  82)
 * invalid-face (c-):                     Faces.               (line  54)
 * Java-defun-prompt-regexp (c-):         Performance Issues.  (line  39)
 * java-font-lock-extra-types:            Font Locking Preliminaries.
                                                               (line  62)
 * java-mode-hook:                        CC Hooks.            (line  35)
-* label-minimum-indentation (c-):        Other Indentation.   (line   9)
+* label-minimum-indentation (c-):        Other Indentation.   (line  12)
+* macro-names-with-semicolon (c-):       Macros with ;.       (line  15)
 * max-one-liner-length (c-):             Clean-ups.           (line 149)
 * mode-common-hook (c-):                 CC Hooks.            (line  28)
 * objc-font-lock-extra-types:            Font Locking Preliminaries.
@@ -6505,10 +6745,10 @@ appears under its `c-THING' name and its `THING (c-)' name.
                                                               (line  64)
 * pike-mode-hook:                        CC Hooks.            (line  37)
 * progress-interval (c-):                Indentation Commands.
-                                                              (line 134)
+                                                              (line 138)
 * report-syntactic-errors (c-):          Odds and Ends.       (line  28)
 * require-final-newline (c-):            Odds and Ends.       (line   9)
-* special-indent-hook (c-):              Other Indentation.   (line  18)
+* special-indent-hook (c-):              Other Indentation.   (line  21)
 * strict-syntax-p (c-):                  c-offsets-alist.     (line 152)
 * style-alist (c-):                      Adding Styles.       (line  69)
 * syntactic-context (c-) <1>:            Custom Line-Up.      (line  48)
@@ -6516,7 +6756,7 @@ appears under its `c-THING' name and its `THING (c-)' name.
 * syntactic-element (c-):                Custom Line-Up.      (line  48)
 * syntactic-indentation (c-):            Indentation Engine Basics.
                                                               (line  35)
-* syntactic-indentation-in-macros (c-):  Custom Macros.       (line  11)
+* syntactic-indentation-in-macros (c-):  Custom Macros.       (line  18)
 * tab-always-indent (c-):                Indentation Commands.
-                                                              (line  63)
+                                                              (line  67)
 

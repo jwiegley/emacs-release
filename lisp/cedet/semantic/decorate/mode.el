@@ -1,7 +1,6 @@
 ;;; semantic/decorate/mode.el --- Minor mode for decorating tags
 
-;; Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008,
-;;   2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 2000-2005, 2007-2012  Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: syntax
@@ -224,46 +223,34 @@ Flush functions from `semantic-decorate-pending-decoration-hook'."
 ;; Generic mode for handling basic highlighting and decorations.
 ;;
 
-(defcustom global-semantic-decoration-mode nil
-  "*If non-nil, enable global use of command `semantic-decoration-mode'.
-When this mode is activated, decorations specified by
-`semantic-decoration-styles'."
-  :group 'semantic
-  :group 'semantic-modes
-  :type 'boolean
-  :require 'semantic/decorate/mode
-  :initialize 'custom-initialize-default
-  :set (lambda (sym val)
-         (global-semantic-decoration-mode (if val 1 -1))))
-
 ;;;###autoload
-(defun global-semantic-decoration-mode (&optional arg)
+(define-minor-mode global-semantic-decoration-mode
   "Toggle global use of option `semantic-decoration-mode'.
 Decoration mode turns on all active decorations as specified
-by `semantic-decoration-styles'.
-If ARG is positive, enable, if it is negative, disable.
-If ARG is nil, then toggle."
-  (interactive "P")
-  (setq global-semantic-decoration-mode
-        (semantic-toggle-minor-mode-globally
-         'semantic-decoration-mode arg)))
+by `semantic-decoration-styles'."
+  :global t :group 'semantic :group 'semantic-modes
+  ;; Not needed because it's autoloaded instead.
+  ;; :require 'semantic/decorate/mode
+  (semantic-toggle-minor-mode-globally
+   'semantic-decoration-mode (if global-semantic-decoration-mode 1 -1)))
 
 (defcustom semantic-decoration-mode-hook nil
   "Hook run at the end of function `semantic-decoration-mode'."
   :group 'semantic
   :type 'hook)
 
-;;;;###autoload
-(defvar semantic-decoration-mode nil
-  "Non-nil if command `semantic-decoration-mode' is enabled.
-Use the command `semantic-decoration-mode' to change this variable.")
-(make-variable-buffer-local 'semantic-decoration-mode)
-
-(defun semantic-decoration-mode-setup ()
-  "Setup the `semantic-decoration-mode' minor mode.
-The minor mode can be turned on only if the semantic feature is available
-and the current buffer was set up for parsing.  Return non-nil if the
+(define-minor-mode semantic-decoration-mode
+  "Minor mode for decorating tags.
+Decorations are specified in `semantic-decoration-styles'.
+You can define new decoration styles with
+`define-semantic-decoration-style'.
+With prefix argument ARG, turn on if positive, otherwise off.  The
+minor mode can be turned on only if semantic feature is available and
+the current buffer was set up for parsing.  Return non-nil if the
 minor mode is enabled."
+;;
+;;\\{semantic-decoration-map}"
+  nil nil nil
   (if semantic-decoration-mode
       (if (not (and (featurep 'semantic) (semantic-active-p)))
           (progn
@@ -280,8 +267,7 @@ minor mode is enabled."
                   'semantic-decorate-tags-after-full-reparse nil t)
         ;; Add decorations to available tags.  The above hooks ensure
         ;; that new tags will be decorated when they become available.
-        (semantic-decorate-add-decorations (semantic-fetch-available-tags))
-        )
+        (semantic-decorate-add-decorations (semantic-fetch-available-tags)))
     ;; Remove decorations from available tags.
     (semantic-decorate-clear-decorations (semantic-fetch-available-tags))
     ;; Cleanup any leftover crap too.
@@ -290,41 +276,10 @@ minor mode is enabled."
     (remove-hook 'semantic-after-partial-cache-change-hook
                  'semantic-decorate-tags-after-partial-reparse t)
     (remove-hook 'semantic-after-toplevel-cache-change-hook
-                 'semantic-decorate-tags-after-full-reparse t)
-    )
-  semantic-decoration-mode)
-
-(defun semantic-decoration-mode (&optional arg)
-  "Minor mode for decorating tags.
-Decorations are specified in `semantic-decoration-styles'.
-You can define new decoration styles with
-`define-semantic-decoration-style'.
-With prefix argument ARG, turn on if positive, otherwise off.  The
-minor mode can be turned on only if semantic feature is available and
-the current buffer was set up for parsing.  Return non-nil if the
-minor mode is enabled."
-;;
-;;\\{semantic-decoration-map}"
-  (interactive
-   (list (or current-prefix-arg
-             (if semantic-decoration-mode 0 1))))
-  (setq semantic-decoration-mode
-        (if arg
-            (>
-             (prefix-numeric-value arg)
-             0)
-          (not semantic-decoration-mode)))
-  (semantic-decoration-mode-setup)
-  (run-hooks 'semantic-decoration-mode-hook)
-  (if (called-interactively-p 'interactive)
-      (message "decoration-mode minor mode %sabled"
-               (if semantic-decoration-mode "en" "dis")))
-  (semantic-mode-line-update)
-  semantic-decoration-mode)
+                 'semantic-decorate-tags-after-full-reparse t)))
 
 (semantic-add-minor-mode 'semantic-decoration-mode
-                         ""
-                         nil)
+                         "")
 
 (defun semantic-decorate-tags-after-full-reparse (tag-list)
   "Add decorations after a complete reparse of the current buffer.
@@ -564,5 +519,4 @@ Use a primary decoration."
 ;; generated-autoload-load-name: "semantic/decorate/mode"
 ;; End:
 
-;; arch-tag: c1ac7888-e323-4467-96d6-18eb2820ed58
 ;;; semantic/decorate/mode.el ends here

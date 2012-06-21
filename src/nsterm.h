@@ -1,5 +1,5 @@
 /* Definitions and headers for communication with NeXT/Open/GNUstep API.
-   Copyright (C) 1989, 1993, 2005, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+   Copyright (C) 1989, 1993, 2005, 2008-2012 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -21,8 +21,24 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "frame.h"
 #include "character.h"
 #include "font.h"
+#include "sysselect.h"
 
 #ifdef HAVE_NS
+
+#ifdef NS_IMPL_COCOA
+#ifndef MAC_OS_X_VERSION_10_3
+#define MAC_OS_X_VERSION_10_3 1030
+#endif
+#ifndef MAC_OS_X_VERSION_10_4
+#define MAC_OS_X_VERSION_10_4 1040
+#endif
+#ifndef MAC_OS_X_VERSION_10_5
+#define MAC_OS_X_VERSION_10_5 1050
+#endif
+#ifndef MAC_OS_X_VERSION_10_6
+#define MAC_OS_X_VERSION_10_6 1060
+#endif
+#endif /* NS_IMPL_COCOA */
 
 #ifdef __OBJC__
 
@@ -54,7 +70,11 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 @class EmacsToolbar;
 
-@interface EmacsView : NSView <NSTextInput> /* 10.6+: NSWindowDelegate */
+#if defined (NS_IMPL_COCOA) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6
+@interface EmacsView : NSView <NSTextInput, NSWindowDelegate>
+#else
+@interface EmacsView : NSView <NSTextInput>
+#endif
    {
    char *old_title;
    BOOL windowClosing;
@@ -65,6 +85,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
    int rows, cols;
    int scrollbarsNeedingUpdate;
    EmacsToolbar *toolbar;
+   NSRect ns_userRect;
    }
 
 /* AppKit-side interface */
@@ -104,7 +125,11 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
    ========================================================================== */
 
-@interface EmacsMenu : NSMenu  /* 10.6+: <NSMenuDelegate> */
+#if defined (NS_IMPL_COCOA) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6
+@interface EmacsMenu : NSMenu  <NSMenuDelegate>
+#else
+@interface EmacsMenu : NSMenu
+#endif
 {
   struct frame *frame;
   unsigned long keyEquivModMask;
@@ -113,10 +138,10 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 - initWithTitle: (NSString *)title frame: (struct frame *)f;
 - (void)setFrame: (struct frame *)f;
 - (void)menuNeedsUpdate: (NSMenu *)menu; /* (delegate method) */
-- (NSString *)parseKeyEquiv: (char *)key;
+- (NSString *)parseKeyEquiv: (const char *)key;
 - (NSMenuItem *)addItemWithWidgetValue: (void *)wvptr;
 - (void)fillWithWidgetValue: (void *)wvptr;
-- (EmacsMenu *)addSubmenuWithTitle: (char *)title forFrame: (struct frame *)f;
+- (EmacsMenu *)addSubmenuWithTitle: (const char *)title forFrame: (struct frame *)f;
 - (void) clear;
 - (Lisp_Object)runMenuAt: (NSPoint)p forFrame: (struct frame *)f
                  keymaps: (int)keymaps;
@@ -131,7 +156,11 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 @class EmacsImage;
 
-@interface EmacsToolbar : NSToolbar  /* 10.6+: <NSToolbarDelegate> */
+#if defined (NS_IMPL_COCOA) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6
+@interface EmacsToolbar : NSToolbar <NSToolbarDelegate>
+#else
+@interface EmacsToolbar : NSToolbar
+#endif
    {
      EmacsView *emacsView;
      NSMutableDictionary *identifierToItem;
@@ -143,7 +172,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 - (void) clearActive;
 - (BOOL) changed;
 - (void) addDisplayItemWithImage: (EmacsImage *)img idx: (int)idx
-                        helpText: (char *)help
+                        helpText: (const char *)help
                          enabled: (BOOL)enabled;
 /* delegate methods */
 - (NSToolbarItem *)toolbar: (NSToolbar *)toolbar
@@ -174,7 +203,11 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 - (Lisp_Object)runDialogAt: (NSPoint)p;
 @end
 
-@interface EmacsTooltip : NSObject  /* 10.6+: <NSWindowDelegate> */
+#if defined (NS_IMPL_COCOA) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6
+@interface EmacsTooltip : NSObject <NSWindowDelegate>
+#else
+@interface EmacsTooltip : NSObject
+#endif
   {
     NSWindow *win;
     NSTextField *textField;
@@ -329,7 +362,7 @@ extern EmacsMenu *mainMenu, *svcsMenu, *dockMenu;
 #endif
 
 #ifndef NS_HAVE_NSINTEGER
-#if defined(__LP64__) && __LP64__
+#if defined (__LP64__) && __LP64__
 typedef double CGFloat;
 typedef long NSInteger;
 typedef unsigned long NSUInteger;
@@ -383,8 +416,8 @@ struct ns_bitmap_record
 /* this to map between emacs color indices and NSColor objects */
 struct ns_color_table
 {
-  unsigned int size;
-  unsigned int avail;
+  ptrdiff_t size;
+  ptrdiff_t avail;
 #ifdef __OBJC__
   NSColor **colors;
   NSMutableSet *empty_indices;
@@ -414,7 +447,7 @@ struct nsfont_info
 {
   struct font font;
 
-  char *name;  /* postscript name, uniquely identifies on NS systems */
+  char *name;  /* PostScript name, uniquely identifies on NS systems */
   float width;  /* this and following metrics stored as float rather than int */
   float height;
   float underpos;
@@ -434,11 +467,10 @@ struct nsfont_info
 #endif
   char bold, ital;  /* convenience flags */
   char synthItal;
-  float voffset;  /* mean of ascender/descender offsets */
   XCharStruct max_bounds;
   /* we compute glyph codes and metrics on-demand in blocks of 256 indexed
      by hibyte, lobyte */
-  unsigned short **glyphs; /* map unicode index to glyph */
+  unsigned short **glyphs; /* map Unicode index to glyph */
   struct font_metrics **metrics;
 };
 
@@ -466,8 +498,8 @@ struct ns_display_info
   int smallest_font_height;
 
   struct ns_bitmap_record *bitmaps;
-  int bitmaps_size;
-  int bitmaps_last;
+  ptrdiff_t bitmaps_size;
+  ptrdiff_t bitmaps_last;
 
   struct image_cache *image_cache;
 
@@ -491,21 +523,9 @@ struct ns_display_info
   /* The cursor to use for vertical scroll bars. */
   Cursor vertical_scroll_bar_cursor;
 
-  /* most mouse face stuff moved in here as of 21+ (and reasonably so) */
-  int mouse_face_beg_row, mouse_face_beg_col;
-  int mouse_face_end_row, mouse_face_end_col;
-  int mouse_face_beg_x, mouse_face_beg_y;
-  int mouse_face_end_x, mouse_face_end_y;
-  int mouse_face_past_end;
-  Lisp_Object mouse_face_window;
-  int mouse_face_face_id;
-  int mouse_face_deferred_gc;
-  Lisp_Object mouse_face_overlay;
-  FRAME_PTR mouse_face_mouse_frame;
-  int mouse_face_mouse_x, mouse_face_mouse_y;
-  int mouse_face_defer;
-  int mouse_face_hidden;
-  int mouse_face_image_state;
+  /* Information about the range of text currently shown in
+     mouse-face.  */
+  Mouse_HLInfo mouse_highlight;
 
   struct frame *x_highlight_frame;
   struct frame *x_focus_frame;
@@ -576,6 +596,12 @@ struct ns_output
 
   /* This is the Emacs structure for the NS display this frame is on.  */
   struct ns_display_info *display_info;
+
+  /* Non-zero if we want to constrain the frame to the screen.  */
+  int dont_constrain;
+
+  /* Non-zero if we are zooming (maximizing) the frame.  */
+  int zooming;
 };
 
 /* this dummy decl needed to support TTYs */
@@ -704,6 +730,8 @@ extern void check_ns (void);
 extern Lisp_Object ns_map_event_to_object ();
 extern Lisp_Object ns_string_from_pasteboard ();
 extern void ns_string_to_pasteboard ();
+extern Lisp_Object ns_get_local_selection (Lisp_Object selection_name,
+                                           Lisp_Object target_type);
 extern void nxatoms_of_nsselect ();
 extern int ns_lisp_to_cursor_type ();
 extern Lisp_Object ns_cursor_type_to_lisp (int arg);
@@ -712,7 +740,9 @@ extern void ns_set_name_as_filename (struct frame *f);
 extern void ns_set_doc_edited (struct frame *f, Lisp_Object arg);
 
 extern int
-ns_defined_color (struct frame *f, char *name, XColor *color_def, int alloc,
+ns_defined_color (struct frame *f,
+                  const char *name,
+                  XColor *color_def, int alloc,
                   char makeIndex);
 extern void
 ns_query_color (void *col, XColor *color_def, int setPixel);
@@ -730,6 +760,7 @@ extern void  ns_release_object (void *obj);
 extern void  ns_retain_object (void *obj);
 extern void *ns_alloc_autorelease_pool ();
 extern void ns_release_autorelease_pool ();
+extern const char *ns_get_defaults_value ();
 
 /* in nsmenu */
 extern void update_frame_tool_bar (FRAME_PTR f);
@@ -742,10 +773,38 @@ extern Lisp_Object find_and_return_menu_selection (FRAME_PTR f,
 extern Lisp_Object ns_popup_dialog (Lisp_Object position, Lisp_Object contents,
                                     Lisp_Object header);
 
-/* two more prototypes that should be moved to a more general include file */
+/* More prototypes that should be moved to a more general include file */
 extern void set_frame_menubar (struct frame *f, int first_time, int deep_p);
 extern void x_set_window_size (struct frame *f, int change_grav,
                               int cols, int rows);
+extern void x_sync (struct frame *);
+extern Lisp_Object x_get_focus_frame (struct frame *);
+extern void x_set_mouse_position (struct frame *f, int h, int v);
+extern void x_set_mouse_pixel_position (struct frame *f, int pix_x, int pix_y);
+extern void x_make_frame_visible (struct frame *f);
+extern void x_make_frame_invisible (struct frame *f);
+extern void x_iconify_frame (struct frame *f);
+extern int x_char_width (struct frame *f);
+extern int x_char_height (struct frame *f);
+extern int x_pixel_width (struct frame *f);
+extern int x_pixel_height (struct frame *f);
+extern void x_set_frame_alpha (struct frame *f);
+extern void x_set_menu_bar_lines (struct frame *, Lisp_Object, Lisp_Object);
+extern void x_set_tool_bar_lines (struct frame *f,
+                                  Lisp_Object value,
+                                  Lisp_Object oldval);
+extern void x_activate_menubar (struct frame *);
+extern void free_frame_menubar (struct frame *);
+extern void x_free_frame_resources (struct frame *);
+
+#define NSAPP_DATA2_RUNASSCRIPT 10
+extern void ns_run_ascript (void);
+
+extern void ns_init_paths (void);
+extern void syms_of_nsterm (void);
+extern void syms_of_nsfns (void);
+extern void syms_of_nsmenu (void);
+extern void syms_of_nsselect (void);
 
 /* From nsimage.m, needed in image.c */
 struct image;
@@ -760,13 +819,22 @@ extern unsigned long ns_get_pixel (void *img, int x, int y);
 extern void ns_put_pixel (void *img, int x, int y, unsigned long argb);
 extern void ns_set_alpha (void *img, int x, int y, unsigned char a);
 
-extern int x_display_pixel_height P_ ((struct ns_display_info *));
-extern int x_display_pixel_width P_ ((struct ns_display_info *));
+extern int x_display_pixel_height (struct ns_display_info *);
+extern int x_display_pixel_width (struct ns_display_info *);
 
 /* This in nsterm.m */
+extern int ns_select (int nfds, fd_set *readfds, fd_set *writefds,
+                      fd_set *exceptfds, struct timeval *timeout);
 extern unsigned long ns_get_rgb_color (struct frame *f,
                                        float r, float g, float b, float a);
 extern NSPoint last_mouse_motion_position;
+
+/* From nsterm.m, needed in nsfont.m. */
+#ifdef __OBJC__
+extern void
+ns_draw_text_decoration (struct glyph_string *s, struct face *face,
+                         NSColor *defaultCol, CGFloat width, CGFloat x);
+#endif
 
 #ifdef NS_IMPL_GNUSTEP
 extern char gnustep_base_version[];  /* version tracking */
@@ -794,6 +862,3 @@ extern char gnustep_base_version[];  /* version tracking */
 
 
 #endif	/* HAVE_NS */
-
-/* arch-tag: 0a28b142-4ac1-4a81-a243-abcd82d9c4e5
-   (do not change this comment) */

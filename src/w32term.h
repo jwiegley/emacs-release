@@ -1,6 +1,5 @@
 /* Definitions and headers for communication on the Microsoft W32 API.
-   Copyright (C) 1995, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+   Copyright (C) 1995, 2001-2012 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -48,8 +47,6 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 extern MSG CurMsg;
 extern BOOL bUseDflt;
 
-extern struct frame *x_window_to_frame ();
-
 /* Structure recording bitmaps and reference count.
    If REFCOUNT is 0 then this record is free to be reused.  */
 
@@ -63,12 +60,6 @@ struct w32_bitmap_record
   int height, width, depth;
 };
 
-/* Palette book-keeping stuff for mapping requested colors into the
-   system palette.  Keep a ref-counted list of requested colors and
-   regenerate the app palette whenever the requested list changes. */
-
-extern Lisp_Object Vw32_enable_palette;
-
 struct w32_palette_entry {
   struct w32_palette_entry * next;
   PALETTEENTRY entry;
@@ -77,7 +68,7 @@ struct w32_palette_entry {
 #endif
 };
 
-extern void w32_regenerate_palette(struct frame *f);
+extern void w32_regenerate_palette (struct frame *f);
 
 
 /* For each display (currently only one on w32), we have a structure that
@@ -112,7 +103,7 @@ struct w32_display_info
 
   /* Emacs bitmap-id of the default icon bitmap for this frame.
      Or -1 if none has been allocated yet.  */
-  int icon_bitmap_id;
+  ptrdiff_t icon_bitmap_id;
 
   /* The root window of this screen.  */
   Window root_window;
@@ -145,36 +136,9 @@ struct w32_display_info
   /* Reusable Graphics Context for drawing a cursor in a non-default face. */
   XGCValues *scratch_cursor_gc;
 
-  /* These variables describe the range of text currently shown in its
-     mouse-face, together with the window they apply to. As long as
-     the mouse stays within this range, we need not redraw anything on
-     its account.  Rows and columns are glyph matrix positions in
-     MOUSE_FACE_WINDOW.  */
-  int mouse_face_beg_row, mouse_face_beg_col;
-  int mouse_face_beg_x, mouse_face_beg_y;
-  int mouse_face_end_row, mouse_face_end_col;
-  int mouse_face_end_x, mouse_face_end_y;
-  int mouse_face_past_end;
-  Lisp_Object mouse_face_window;
-  int mouse_face_face_id;
-  Lisp_Object mouse_face_overlay;
-
-  /* 1 if a mouse motion event came and we didn't handle it right away because
-     gc was in progress.  */
-  int mouse_face_deferred_gc;
-
-  /* FRAME and X, Y position of mouse when last checked for
-     highlighting.  X and Y can be negative or out of range for the frame.  */
-  struct frame *mouse_face_mouse_frame;
-  int mouse_face_mouse_x, mouse_face_mouse_y;
-
-  /* Nonzero means defer mouse-motion highlighting.  */
-  int mouse_face_defer;
-
-  /* Nonzero means that the mouse highlight should not be shown.  */
-  int mouse_face_hidden;
-
-  int mouse_face_image_state;
+  /* Information about the range of text currently shown in
+     mouse-face.  */
+  Mouse_HLInfo mouse_highlight;
 
   char *w32_id_name;
 
@@ -187,10 +151,10 @@ struct w32_display_info
   struct w32_bitmap_record *bitmaps;
 
   /* Allocated size of bitmaps field.  */
-  int bitmaps_size;
+  ptrdiff_t bitmaps_size;
 
   /* Last used bitmap index.  */
-  int bitmaps_last;
+  ptrdiff_t bitmaps_last;
 
   /* The frame (if any) which has the window that has keyboard focus.
      Zero if none.  This is examined by Ffocus_frame in w32fns.c.  Note
@@ -223,19 +187,19 @@ extern struct w32_display_info one_w32_display_info;
    FONT-LIST-CACHE records previous values returned by x-list-fonts.  */
 extern Lisp_Object w32_display_name_list;
 
-/* Regexp matching a font name whose width is the same as `PIXEL_SIZE'.  */
-extern Lisp_Object Vx_pixel_size_width_font_regexp;
+extern struct frame *x_window_to_frame (struct w32_display_info *, HWND);
 
-struct w32_display_info *x_display_info_for_name ();
+struct w32_display_info *x_display_info_for_name (Lisp_Object);
 
-Lisp_Object display_x_get_resource P_ ((struct w32_display_info *,
-					Lisp_Object, Lisp_Object,
-					Lisp_Object, Lisp_Object));
+Lisp_Object display_x_get_resource (struct w32_display_info *,
+                                    Lisp_Object, Lisp_Object,
+                                    Lisp_Object, Lisp_Object);
 
-extern struct w32_display_info *w32_term_init ();
+extern struct w32_display_info *w32_term_init (Lisp_Object,
+					       char *, char *);
 
-extern int x_display_pixel_height P_ ((struct w32_display_info *));
-extern int x_display_pixel_width P_ ((struct w32_display_info *));
+extern int x_display_pixel_height (struct w32_display_info *);
+extern int x_display_pixel_width (struct w32_display_info *);
 
 
 #define PIX_TYPE COLORREF
@@ -245,7 +209,7 @@ extern int x_display_pixel_width P_ ((struct w32_display_info *));
    the information that is specific to W32 windows.  */
 
 /* Put some things in x_output for compatibility.
-   NTEMACS_TODO: Move all common things here to eliminate unneccesary
+   NTEMACS_TODO: Move all common things here to eliminate unnecessary
    diffs between X and w32 code.  */
 struct x_output
 {
@@ -265,7 +229,7 @@ enum
 {
   /* Values for focus_state, used as bit mask.
      EXPLICIT means we received a FocusIn for the frame and know it has
-     the focus.  IMPLICIT means we recevied an EnterNotify and the frame
+     the focus.  IMPLICIT means we received an EnterNotify and the frame
      may have the focus if no window manager is running.
      FocusOut and LeaveNotify clears EXPLICIT/IMPLICIT. */
   FOCUS_NONE     = 0,
@@ -544,8 +508,10 @@ struct scroll_bar {
 #define VERTICAL_SCROLL_BAR_WIDTH_TRIM (0)
 
 
-extern void w32_fill_rect ();
-extern void w32_clear_window ();
+struct frame;  /* from frame.h */
+
+extern void w32_fill_rect (struct frame *, HDC, COLORREF, RECT *);
+extern void w32_clear_window (struct frame *);
 
 #define w32_fill_area(f,hdc,pix,x,y,nx,ny) \
 do { \
@@ -581,7 +547,7 @@ do { \
 #define WM_APPCOMMAND 0x319
 #define GET_APPCOMMAND_LPARAM(lParam)  (HIWORD(lParam) & 0x7fff)
 #endif
-#ifndef WM_UNICHAR 
+#ifndef WM_UNICHAR
 #define WM_UNICHAR 0x109
 #endif
 #ifndef UNICODE_NOCHAR
@@ -645,10 +611,10 @@ typedef struct deferred_msg
 
 extern CRITICAL_SECTION critsect;
 
-extern void init_crit ();
-extern void delete_crit ();
+extern void init_crit (void);
+extern void delete_crit (void);
 
-extern void signal_quit ();
+extern void signal_quit (void);
 
 #define enter_crit() EnterCriticalSection (&critsect)
 #define leave_crit() LeaveCriticalSection (&critsect)
@@ -658,21 +624,20 @@ extern void deselect_palette (struct frame * f, HDC hdc);
 extern HDC get_frame_dc (struct frame * f);
 extern int release_frame_dc (struct frame * f, HDC hDC);
 
-extern void drain_message_queue ();
+extern void drain_message_queue (void);
 
-extern BOOL get_next_msg ();
-extern BOOL post_msg ();
+extern BOOL get_next_msg (W32Msg *, BOOL);
+extern BOOL post_msg (W32Msg *);
 extern void complete_deferred_msg (HWND hwnd, UINT msg, LRESULT result);
-extern void wait_for_sync ();
 
-extern BOOL parse_button ();
+extern BOOL parse_button (int, int, int *, int *);
 
 extern void w32_sys_ring_bell (struct frame *f);
 extern void x_delete_display (struct w32_display_info *dpyinfo);
 
 /* Keypad command key support.  W32 doesn't have virtual keys defined
    for the function keys on the keypad (they are mapped to the standard
-   fuction keys), so we define our own.  */
+   function keys), so we define our own.  */
 #define VK_NUMPAD_BEGIN		0x92
 #define VK_NUMPAD_CLEAR		(VK_NUMPAD_BEGIN + 0)
 #define VK_NUMPAD_ENTER		(VK_NUMPAD_BEGIN + 1)
@@ -725,12 +690,14 @@ struct frame * check_x_frame (Lisp_Object);
 EXFUN (Fx_display_color_p, 1);
 EXFUN (Fx_display_grayscale_p, 1);
 
-typedef DWORD (WINAPI * ClipboardSequence_Proc) ();
+typedef DWORD (WINAPI * ClipboardSequence_Proc) (void);
 typedef BOOL (WINAPI * AppendMenuW_Proc) (
     IN HMENU,
     IN UINT,
     IN UINT_PTR,
     IN LPCWSTR);
 
-/* arch-tag: f201d05a-1240-4fc5-8ea4-ca24d4ee5671
-   (do not change this comment) */
+extern HWND w32_system_caret_hwnd;
+extern int w32_system_caret_height;
+extern int w32_system_caret_x;
+extern int w32_system_caret_y;

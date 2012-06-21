@@ -156,8 +156,8 @@ enum {
 #if USE_CT_GLYPH_INFO
 #define mac_font_get_glyph_for_cid mac_ctfont_get_glyph_for_cid
 #else
-extern CGGlyph mac_font_get_glyph_for_cid P_ ((FontRef, CharacterCollection,
-					       CGFontIndex));
+extern CGGlyph mac_font_get_glyph_for_cid (FontRef, CharacterCollection,
+					   CGFontIndex);
 #endif
 
 #define mac_nsctfont_copy_font_descriptor CTFontCopyFontDescriptor
@@ -203,44 +203,44 @@ enum {
   MAC_ADOBE_KOREA1_CHARACTER_COLLECTION = 5
 };
 
-extern FontDescriptorRef mac_font_descriptor_create_with_attributes P_ ((CFDictionaryRef));
-extern CFArrayRef mac_font_descriptor_create_matching_font_descriptors P_ ((FontDescriptorRef,
-									    CFSetRef));
-extern FontDescriptorRef mac_font_descriptor_create_matching_font_descriptor P_ ((FontDescriptorRef,
-										  CFSetRef));
-extern CFTypeRef mac_font_descriptor_copy_attribute P_ ((FontDescriptorRef,
-							 CFStringRef));
-extern Boolean mac_font_descriptor_supports_languages P_ ((FontDescriptorRef,
-							   CFArrayRef));
-extern FontRef mac_font_create_with_name P_ ((CFStringRef, CGFloat));
-extern CGFloat mac_font_get_size P_ ((FontRef));
-extern CFStringRef mac_font_copy_family_name P_ ((FontRef));
-extern CFCharacterSetRef mac_font_copy_character_set P_ ((FontRef));
-extern Boolean mac_font_get_glyphs_for_characters P_ ((FontRef,
-						       const UniChar *,
-						       CGGlyph *, CFIndex));
-extern CGFloat mac_font_get_ascent P_ ((FontRef));
-extern CGFloat mac_font_get_descent P_ ((FontRef));
-extern CGFloat mac_font_get_leading P_ ((FontRef));
-extern CGFloat mac_font_get_underline_position P_ ((FontRef));
-extern CGFloat mac_font_get_underline_thickness P_ ((FontRef));
-extern CGFontRef mac_font_copy_graphics_font P_ ((FontRef));
-extern CFDataRef mac_font_copy_non_synthetic_table P_ ((FontRef, FourCharCode));
-extern ATSUTextLayout mac_font_get_text_layout_for_text_ptr P_ ((FontRef,
-								 ConstUniCharArrayPtr,
-								 UniCharCount));
+extern FontDescriptorRef mac_font_descriptor_create_with_attributes (CFDictionaryRef);
+extern CFArrayRef mac_font_descriptor_create_matching_font_descriptors (FontDescriptorRef,
+									CFSetRef);
+extern FontDescriptorRef mac_font_descriptor_create_matching_font_descriptor (FontDescriptorRef,
+									      CFSetRef);
+extern CFTypeRef mac_font_descriptor_copy_attribute (FontDescriptorRef,
+						     CFStringRef);
+extern Boolean mac_font_descriptor_supports_languages (FontDescriptorRef,
+						       CFArrayRef);
+extern FontRef mac_font_create_with_name (CFStringRef, CGFloat);
+extern CGFloat mac_font_get_size (FontRef);
+extern CFStringRef mac_font_copy_family_name (FontRef);
+extern CFCharacterSetRef mac_font_copy_character_set (FontRef);
+extern Boolean mac_font_get_glyphs_for_characters (FontRef,
+						   const UniChar *,
+						   CGGlyph *, CFIndex);
+extern CGFloat mac_font_get_ascent (FontRef);
+extern CGFloat mac_font_get_descent (FontRef);
+extern CGFloat mac_font_get_leading (FontRef);
+extern CGFloat mac_font_get_underline_position (FontRef);
+extern CGFloat mac_font_get_underline_thickness (FontRef);
+extern CGFontRef mac_font_copy_graphics_font (FontRef);
+extern CFDataRef mac_font_copy_non_synthetic_table (FontRef, FourCharCode);
+extern ATSUTextLayout mac_font_get_text_layout_for_text_ptr (FontRef,
+							     ConstUniCharArrayPtr,
+							     UniCharCount);
 
-extern CFStringRef mac_font_create_preferred_family_for_attributes P_ ((CFDictionaryRef));
-extern CGFloat mac_font_get_advance_width_for_glyph P_ ((FontRef, CGGlyph));
-extern CGRect mac_font_get_bounding_rect_for_glyph P_ ((FontRef, CGGlyph));
-extern CFArrayRef mac_font_create_available_families P_ ((void));
-extern CFIndex mac_font_shape P_ ((FontRef, CFStringRef,
-				   struct mac_glyph_layout *, CFIndex));
-extern CGGlyph mac_font_get_glyph_for_cid P_ ((FontRef, CharacterCollection,
-					       CGFontIndex));
+extern CFStringRef mac_font_create_preferred_family_for_attributes (CFDictionaryRef);
+extern CGFloat mac_font_get_advance_width_for_glyph (FontRef, CGGlyph);
+extern CGRect mac_font_get_bounding_rect_for_glyph (FontRef, CGGlyph);
+extern CFArrayRef mac_font_create_available_families (void);
+extern CFIndex mac_font_shape (FontRef, CFStringRef,
+			       struct mac_glyph_layout *, CFIndex);
+extern CGGlyph mac_font_get_glyph_for_cid (FontRef, CharacterCollection,
+					   CGFontIndex);
 
-extern void *mac_font_get_nsctfont P_ ((FontRef));
-extern FontDescriptorRef mac_nsctfont_copy_font_descriptor P_ ((void *));
+extern void *mac_font_get_nsctfont (FontRef);
+extern FontDescriptorRef mac_nsctfont_copy_font_descriptor (void *);
 
 #endif	/* MAC_OS_X_VERSION_MIN_REQUIRED < 1050 */
 
@@ -249,26 +249,25 @@ extern FontDescriptorRef mac_nsctfont_copy_font_descriptor P_ ((void *));
 
 typedef const struct _EmacsScreenFont *ScreenFontRef; /* opaque */
 
-extern CFComparisonResult mac_font_family_compare P_ ((const void *,
-						       const void *, void *));
-extern ScreenFontRef mac_screen_font_create_with_name P_ ((CFStringRef,
-							   CGFloat));
-extern CGFloat mac_screen_font_get_advance_width_for_glyph P_ ((ScreenFontRef,
-								CGGlyph));
-Boolean mac_screen_font_get_metrics P_ ((ScreenFontRef, CGFloat *,
-					 CGFloat *, CGFloat *));
-CFIndex mac_screen_font_shape P_ ((ScreenFontRef, CFStringRef,
-				   struct mac_glyph_layout *, CFIndex));
-extern void mac_register_font_driver P_ ((struct frame *));
+extern CFComparisonResult mac_font_family_compare (const void *,
+						   const void *, void *);
+extern ScreenFontRef mac_screen_font_create_with_name (CFStringRef,
+						       CGFloat);
+extern CGFloat mac_screen_font_get_advance_width_for_glyph (ScreenFontRef,
+							    CGGlyph);
+Boolean mac_screen_font_get_metrics (ScreenFontRef, CGFloat *,
+				     CGFloat *, CGFloat *);
+CFIndex mac_screen_font_shape (ScreenFontRef, CFStringRef,
+			       struct mac_glyph_layout *, CFIndex);
 #if USE_CORE_TEXT
-extern Boolean mac_ctfont_descriptor_supports_languages P_ ((CTFontDescriptorRef,
-							     CFArrayRef));
-extern CFStringRef mac_ctfont_create_preferred_family_for_attributes P_ ((CFDictionaryRef));
-extern CFIndex mac_ctfont_shape P_ ((CTFontRef, CFStringRef,
-				     struct mac_glyph_layout *, CFIndex));
+extern Boolean mac_ctfont_descriptor_supports_languages (CTFontDescriptorRef,
+							 CFArrayRef);
+extern CFStringRef mac_ctfont_create_preferred_family_for_attributes (CFDictionaryRef);
+extern CFIndex mac_ctfont_shape (CTFontRef, CFStringRef,
+				 struct mac_glyph_layout *, CFIndex);
 #if USE_CT_GLYPH_INFO
-extern CGGlyph mac_ctfont_get_glyph_for_cid P_ ((CTFontRef,
-						 CTCharacterCollection,
-						 CGFontIndex));
+extern CGGlyph mac_ctfont_get_glyph_for_cid (CTFontRef,
+					     CTCharacterCollection,
+					     CGFontIndex);
 #endif
 #endif

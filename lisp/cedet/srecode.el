@@ -1,9 +1,10 @@
 ;;; srecode.el --- Semantic buffer evaluator.
 
-;;; Copyright (C) 2005, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;;; Copyright (C) 2005, 2007-2012 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <zappo@gnu.org>
 ;; Keywords: codegeneration
+;; Version: 1.0pre7
 
 ;; This file is part of GNU Emacs.
 
@@ -30,7 +31,7 @@
 ;;
 ;; Contemplation of the simplistic problem within the scope of
 ;; semantic showed that the solution was more complex than could
-;; possibly be handled in semantic-format.el.   Semantic Recode, or
+;; possibly be handled in semantic/format.el.   Semantic Recode, or
 ;; srecode is a rich API for generating code out of semantic tags, or
 ;; recoding the tags.
 ;;
@@ -51,5 +52,4 @@
 
 (provide 'srecode)
 
-;; arch-tag: 6c671a1c-40e5-4ed3-ab05-84249c3afdaf
 ;;; srecode.el ends here

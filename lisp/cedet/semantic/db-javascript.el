@@ -1,7 +1,6 @@
 ;;; semantic/db-javascript.el --- Semantic database extensions for javascript
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2002-2012  Free Software Foundation, Inc.
 
 ;; Author: Joakim Verona
 
@@ -138,7 +137,7 @@ Create one of our special tables that can act as an intermediary."
 
 (defmethod semanticdb-get-tags ((table semanticdb-table-javascript ))
   "Return the list of tags belonging to TABLE."
-  ;; NOTE: Omniscient databases probably don't want to keep large tabes
+  ;; NOTE: Omniscient databases probably don't want to keep large tables
   ;;       lolly-gagging about.  Keep internal Emacs tables empty and
   ;;       refer to alternate databases when you need something.
   semanticdb-javascript-tags)
@@ -152,7 +151,7 @@ local variable."
 
 ;;; Usage
 ;;
-;; Unlike other tables, an omniscent database does not need to
+;; Unlike other tables, an omniscient database does not need to
 ;; be associated with a path.  Use this routine to always add ourselves
 ;; to a search list.
 (define-mode-local-override semanticdb-find-translate-path javascript-mode
@@ -307,5 +306,4 @@ Return a list of tags."
 
 (provide 'semantic/db-javascript)
 
-;; arch-tag: 69cf8ad1-7ea9-41af-851c-41f24c873374
 ;;; semantic/db-javascript.el ends here

@@ -1,7 +1,6 @@
 ;;; semantic/wisent/python-wy.el --- Generated parser support file
 
-;; Copyright (C) 2002, 2003, 2004, 2007, 2010, 2011, 2012
-;; Free Software Foundation, Inc.
+;; Copyright (C) 2002-2004, 2007, 2010-2012  Free Software Foundation, Inc.
 ;; Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
 ;; 2009, 2010 Python Software Foundation; All Rights Reserved
 
@@ -22,7 +21,7 @@
 
 ;;; Commentary:
 ;;
-;; This file was generated from etc/grammars/python.wy.
+;; This file was generated from admin/grammars/python.wy.
 ;; It is derived in part from the Python grammar, used under the
 ;; following license:
 ;;
@@ -728,10 +727,6 @@
 
 ;;; Analyzers
 
-(define-lex-keyword-type-analyzer wisent-python-wy--<keyword>-keyword-analyzer
-  "keyword analyzer for <keyword> tokens."
-  "\\(\\sw\\|\\s_\\)+")
-
 (define-lex-block-type-analyzer wisent-python-wy--<block>-block-analyzer
   "block analyzer for <block> tokens."
   "\\s(\\|\\s)"
@@ -742,18 +737,6 @@
     ("}" RBRACE)
     ("]" RBRACK))
   )
-
-(define-lex-regex-type-analyzer wisent-python-wy--<symbol>-regexp-analyzer
-  "regexp analyzer for <symbol> tokens."
-  "\\(\\sw\\|\\s_\\)+"
-  nil
-  'NAME)
-
-(define-lex-regex-type-analyzer wisent-python-wy--<number>-regexp-analyzer
-  "regexp analyzer for <number> tokens."
-  semantic-lex-number-expression
-  nil
-  'NUMBER_LITERAL)
 
 (define-lex-string-type-analyzer wisent-python-wy--<punctuation>-string-analyzer
   "string analyzer for <punctuation> tokens."
@@ -797,6 +780,22 @@
     (GTGTEQ . ">>=")
     (LTLTEQ . "<<="))
   'punctuation)
+
+(define-lex-regex-type-analyzer wisent-python-wy--<symbol>-regexp-analyzer
+  "regexp analyzer for <symbol> tokens."
+  "\\(\\sw\\|\\s_\\)+"
+  nil
+  'NAME)
+
+(define-lex-regex-type-analyzer wisent-python-wy--<number>-regexp-analyzer
+  "regexp analyzer for <number> tokens."
+  semantic-lex-number-expression
+  nil
+  'NUMBER_LITERAL)
+
+(define-lex-keyword-type-analyzer wisent-python-wy--<keyword>-keyword-analyzer
+  "keyword analyzer for <keyword> tokens."
+  "\\(\\sw\\|\\s_\\)+")
 
 
 ;;; Epilogue

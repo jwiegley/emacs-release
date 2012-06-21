@@ -1,7 +1,6 @@
 ;;; erc-autoaway.el --- Provides autoaway for ERC
 
-;; Copyright (C) 2002, 2003, 2004, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2002-2004, 2006-2012  Free Software Foundation, Inc.
 
 ;; Author: Jorgen Schaefer <forcer@forcix.cx>
 ;; URL: http://www.emacswiki.org/cgi-bin/wiki.pl?ErcAutoAway
@@ -264,7 +263,7 @@ exceeds `erc-autoaway-idle-seconds'."
   "Set the away state globally.
 
 If NOTEST is specified, do not check to see whether there is an
-activer server buffer available."
+active server buffer available."
   ;; Note that the idle timer runs, even when Emacs is inactive.  In
   ;; order to prevent flooding when we connect, we test for an
   ;; existing process.
@@ -285,5 +284,3 @@ activer server buffer available."
 ;; indent-tabs-mode: t
 ;; tab-width: 8
 ;; End:
-
-;; arch-tag: 16fc241e-8358-4b56-9fe2-116bdd0ba3bc

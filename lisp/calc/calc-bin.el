@@ -1,7 +1,6 @@
 ;;; calc-bin.el --- binary functions for Calc
 
-;; Copyright (C) 1990, 1991, 1992, 1993, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1990-1993, 2001-2012 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -175,7 +174,7 @@ the size of a Calc bignum digit.")
        (progn
 	 (calc-change-mode 
           (list 'calc-number-radix 'calc-twos-complement-mode)
-          (list n (and (or (= n 2) (= n 8) (= n 16)) arg)) t)
+          (list n (or arg (calc-is-option))) t)
 	 ;; also change global value so minibuffer sees it
 	 (setq-default calc-number-radix calc-number-radix))
      (setq n calc-number-radix))
@@ -292,7 +291,7 @@ the size of a Calc bignum digit.")
 	  (if (eq (car-safe b) 'mod)
 	      (if (equal mod (nth 2 b))
 		  (setq b (nth 1 b))
-		(math-reject-arg b "*Inconsistent modulos"))))
+		(math-reject-arg b "*Inconsistent modulus"))))
       (setq mod (nth 2 b)
 	    b (nth 1 b)))
     (if (Math-messy-integerp mod)
@@ -304,9 +303,9 @@ the size of a Calc bignum digit.")
 	  (if w
 	      (if (/= w bits)
 		  (calc-record-why
-		   "*Warning: Modulo inconsistent with word size"))
+		   "*Warning: Modulus inconsistent with word size"))
 	    (setq w bits))
-	(calc-record-why "*Warning: Modulo is not a power of 2"))
+	(calc-record-why "*Warning: Modulus is not a power of 2"))
       (math-make-mod (if b
 			 (funcall f a b w)
 		       (funcall f a w))
@@ -845,6 +844,8 @@ the size of a Calc bignum digit.")
            (len (length num)))
       (if (< len digs)
           (setq num (concat (make-string (- digs len) ?0) num))))
+    (when calc-group-digits
+      (setq num (math-group-float num)))
     (concat 
      (number-to-string calc-number-radix)
      "##"
@@ -852,5 +853,4 @@ the size of a Calc bignum digit.")
 
 (provide 'calc-bin)
 
-;; arch-tag: f6dba7bc-53b2-41ae-919c-c266ab0ca8b3
 ;;; calc-bin.el ends here

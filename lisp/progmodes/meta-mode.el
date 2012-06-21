@@ -1,7 +1,6 @@
-;;; meta-mode.el --- major mode for editing Metafont or MetaPost sources
+;;; meta-mode.el --- major mode for editing Metafont or MetaPost sources -*- lexical-binding:t -*-
 
-;; Copyright (C) 1997, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;; Free Software Foundation, Inc.
+;; Copyright (C) 1997, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Ulrik Vieth <vieth@thphy.uni-duesseldorf.de>
 ;; Version: 1.0
@@ -28,52 +27,16 @@
 ;;
 ;; This Emacs Lisp package provides a major mode for editing Metafont
 ;; or MetaPost sources.  It includes all the necessary code to set up
-;; a major mode including an approriate syntax table, keymap, and a
+;; a major mode including an appropriate syntax table, keymap, and a
 ;; mode-specific pull-down menu.  It also provides a sophisticated set
 ;; of font-lock patterns, a fancy indentation function adapted from
 ;; AUCTeX's latex.el, and some basic mode-specific editing functions
 ;; such as functions to move to the beginning or end of the enclosing
 ;; environment, or to mark, re-indent, or comment-out environments.
 ;; On the other hand, it doesn't yet provide any functionality for
-;; running Metafont or MetaPost in a shell buffer form within Emacs,
+;; running Metafont or MetaPost in a shell buffer from within Emacs,
 ;; but such functionality might be added later, either as part of this
 ;; package or as a separate Emacs Lisp package.
-
-;; Installation:
-;;
-;; An interface to running Metafont or MetaPost as a shell process
-;; from within Emacs is currently under development as a separate
-;; Emacs Lisp package (meta-buf.el).  In order to have that package
-;; loaded automatically when first entering Metafont or MetaPost mode,
-;; you might use the load-hook provided in this package by adding
-;; these lines to your startup file:
-;;
-;;  (add-hook 'meta-mode-load-hook
-;;            (lambda () (require 'meta-buf)))
-;;
-;; The add-on package loaded this way may in turn make use of the
-;; mode-hooks provided in this package to activate additional features
-;; when entering Metafont or MetaPost mode.
-
-;; Font Lock Support:
-;;
-;; If you are using global-font-lock-mode (introduced in Emacs 19.31),
-;; fontification in Metafont and/or MetaPost mode will be activated
-;; automatically.  To speed up fontification for the rather complex
-;; patterns used in these modes, it may be a good idea to activate
-;; lazy-lock as a font-lock-support-mode (introduced in Emacs 19.32)
-;; by adding these lines to your startup file:
-;;
-;;  (global-font-lock-mode t)
-;;  (setq font-lock-support-mode 'lazy-lock-mode)
-;;
-;; If you are using an older version of Emacs, which doesn't provide
-;; global-font-lock-mode or font-lock-support-mode, you can also
-;; activate fontification in Metafont and/or MetaPost mode by adding
-;; the following lines to your startup file:
-;;
-;;  (add-hook 'meta-common-mode-hook 'turn-on-font-lock)
-;;  (add-hook 'meta-common-mode-hook 'turn-on-lazy-lock)
 
 ;; Customization:
 ;;
@@ -89,10 +52,6 @@
 
 ;; Availability:
 ;;
-;; This package is currently available via my "TeX Software" WWW page:
-;;
-;;  http://www.thphy.uni-duesseldorf.de/~vieth/subjects/tex/software.html
-;;
 ;; As of this version 1.0, this package will be uploaded to CTAN
 ;; archives, where it shall find a permanent home, presumably in
 ;; tex-archive/support/emacs-modes.  It will also be submitted for
@@ -105,7 +64,7 @@
 ;; v 0.2 -- 1997/02/03  UV  Improved and debugged font-lock patterns.
 ;;                          Added indent-line-function for TAB.
 ;; v 0.3 -- 1997/02/17  UV  Improved font-lock patterns and syntax table.
-;;                          Improved and debbuged indentation function.
+;;                          Improved and debugged indentation function.
 ;; v 0.4 -- 1997/02/18  UV  Added functions to indent regions for M-C-q,
 ;;                          also added a preliminary mode-specific menu.
 ;; v 0.5 -- 1997/02/19  UV  Added functions to skip to next or previous
@@ -202,7 +161,7 @@
                        "[ \t\f]+\\(\\sw+\\|\\s_+\\|\\s.+\\)")
                '((1 font-lock-keyword-face)
                  (2 font-lock-function-name-face)))
-         ;; binary macro defintions: <leveldef> x operator y
+         ;; binary macro definitions: <leveldef> x operator y
          (cons (concat "\\<" macro-keywords-2 "\\>"
                        "[ \t\f]+\\(\\sw+\\)"
                        "[ \t\f]*\\(\\sw+\\|\\s.+\\)"
@@ -425,7 +384,7 @@ Each entry is a list with the following elements:
 1. Regexp matching the preceding text.
 2. A number indicating the subgroup in the regexp containing the text.
 3. A function returning an alist of possible completions.
-4. Text to append after a succesful completion (if any).
+4. Text to append after a successful completion (if any).
 
 Or alternatively:
 1. Regexp matching the preceding text.
@@ -472,15 +431,13 @@ If the list was changed, sort the list and remove duplicates first."
   (string-lessp (car a) (car b)))
 
 
-(defun meta-complete-symbol ()
-  "Perform completion on Metafont or MetaPost symbol preceding point."
-  (interactive "*")
+(defun meta-completions-at-point ()
   (let ((list meta-complete-list)
         entry)
     (while list
       (setq entry (car list)
             list (cdr list))
-      (if (meta-looking-at-backward (car entry) 200)
+      (if (looking-back (car entry) (max (point-min) (- (point) 200)))
           (setq list nil)))
     (if (numberp (nth 1 entry))
         (let* ((sub (nth 1 entry))
@@ -488,53 +445,41 @@ If the list was changed, sort the list and remove duplicates first."
                (begin (match-beginning sub))
                (end (match-end sub))
                (list (funcall (nth 2 entry))))
-          (completion-in-region
-           begin end
-           (if (zerop (length close)) list
-             (apply-partially 'completion-table-with-terminator
-                              close list))))
-      (funcall (nth 1 entry)))))
+          (list
+           begin end list
+           :exit-function
+           (unless (zerop (length close))
+             (lambda (_s finished)
+               (when (memq finished '(sole finished))
+                 (if (looking-at (regexp-quote close))
+                     (goto-char (match-end 0))
+                   (insert close)))))))
+      (nth 1 entry))))
 
-
-(defun meta-looking-at-backward (regexp &optional limit)
-  ;; utility function used in `meta-complete-symbol'
-  (let ((pos (point)))
-    (save-excursion
-      (and (re-search-backward
-            regexp (if limit (max (point-min) (- (point) limit))) t)
-           (eq (match-end 0) pos)))))
-
-(defun meta-match-buffer (n)
-  ;; utility function used in `meta-complete-symbol'
-  (if (match-beginning n)
-      (let ((str (buffer-substring (match-beginning n) (match-end n))))
-        (set-text-properties 0 (length str) nil str)
-        (copy-sequence str))
-    ""))
-
-
+(define-obsolete-function-alias 'meta-complete-symbol
+  'completion-at-point "24.1")
 
 ;;; Indentation.
 
 (defcustom meta-indent-level 2
-  "*Indentation of begin-end blocks in Metafont or MetaPost mode."
+  "Indentation of begin-end blocks in Metafont or MetaPost mode."
   :type 'integer
   :group 'meta-font)
 
 
 (defcustom meta-left-comment-regexp "%%+"
-  "*Regexp matching comments that should be placed on the left margin."
+  "Regexp matching comments that should be placed on the left margin."
   :type 'regexp
   :group 'meta-font)
 
 (defcustom meta-right-comment-regexp nil
-  "*Regexp matching comments that should be placed to the right margin."
+  "Regexp matching comments that should be placed on the right margin."
   :type '(choice regexp
 		 (const :tag "None" nil))
   :group 'meta-font)
 
 (defcustom meta-ignore-comment-regexp "%[^%]"
-  "*Regexp matching comments that whose indentation should not be touched."
+  "Regexp matching comments whose indentation should not be touched."
   :type 'regexp
   :group 'meta-font)
 
@@ -543,21 +488,21 @@ If the list was changed, sort the list and remove duplicates first."
   (concat "\\(begin\\(char\\|fig\\|gr\\(aph\\|oup\\)\\|logochar\\)\\|"
           "def\\|for\\(\\|ever\\|suffixes\\)\\|if\\|mode_def\\|"
           "primarydef\\|secondarydef\\|tertiarydef\\|vardef\\)")
-  "*Regexp matching the beginning of environments to be indented."
+  "Regexp matching the beginning of environments to be indented."
   :type 'regexp
   :group 'meta-font)
 
 (defcustom meta-end-environment-regexp
   (concat "\\(end\\(char\\|def\\|f\\(ig\\|or\\)\\|gr\\(aph\\|oup\\)\\)"
           "\\|fi\\)")
-  "*Regexp matching the end of environments to be indented."
+  "Regexp matching the end of environments to be indented."
   :type 'regexp
   :group 'meta-font)
 
 (defcustom meta-within-environment-regexp
 ; (concat "\\(e\\(lse\\(\\|if\\)\\|xit\\(if\\|unless\\)\\)\\)")
   (concat "\\(else\\(\\|if\\)\\)")
-  "*Regexp matching keywords within environments not to be indented."
+  "Regexp matching keywords within environments not to be indented."
   :type 'regexp
   :group 'meta-font)
 
@@ -575,12 +520,11 @@ If the list was changed, sort the list and remove duplicates first."
   "Indent the line containing point as Metafont or MetaPost source."
   (interactive)
   (let ((indent (meta-indent-calculate)))
-    (save-excursion
-      (if (/= (current-indentation) indent)
-          (let ((beg (progn (beginning-of-line) (point)))
-                (end (progn (back-to-indentation) (point))))
-            (delete-region beg end)
-            (indent-to indent))))
+    (if (/= (current-indentation) indent)
+        (save-excursion
+          (delete-region (line-beginning-position)
+                         (progn (back-to-indentation) (point)))
+          (indent-to indent)))
     (if (< (current-column) indent)
         (back-to-indentation))))
 
@@ -744,19 +688,19 @@ If the list was changed, sort the list and remove duplicates first."
 (defcustom meta-begin-defun-regexp
   (concat "\\(begin\\(char\\|fig\\|logochar\\)\\|def\\|mode_def\\|"
           "primarydef\\|secondarydef\\|tertiarydef\\|vardef\\)")
-  "*Regexp matching beginning of defuns in Metafont or MetaPost mode."
+  "Regexp matching beginning of defuns in Metafont or MetaPost mode."
   :type 'regexp
   :group 'meta-font)
 
 (defcustom meta-end-defun-regexp
   (concat "\\(end\\(char\\|def\\|fig\\)\\)")
-  "*Regexp matching the end of defuns in Metafont or MetaPost mode."
+  "Regexp matching the end of defuns in Metafont or MetaPost mode."
   :type 'regexp
   :group 'meta-font)
 
 
 (defun meta-beginning-of-defun (&optional arg)
-  "Move backward to beginnning of a defun in Metafont or MetaPost code.
+  "Move backward to beginning of a defun in Metafont or MetaPost code.
 With numeric argument, do it that many times.
 Negative arg -N means move forward to Nth following beginning of defun.
 Returns t unless search stops due to beginning or end of buffer."
@@ -845,11 +789,10 @@ The environment marked is the one that contains point or follows point."
 
 ;;; Syntax table, keymap and menu.
 
-(defvar meta-mode-abbrev-table nil
+(define-abbrev-table 'meta-mode-abbrev-table ()
   "Abbrev table used in Metafont or MetaPost mode.")
-(define-abbrev-table 'meta-mode-abbrev-table ())
 
-(defvar meta-mode-syntax-table
+(defvar meta-common-mode-syntax-table
   (let ((st (make-syntax-table)))
     ;; underscores are word constituents
     (modify-syntax-entry ?_  "w"  st)
@@ -886,9 +829,8 @@ The environment marked is the one that contains point or follows point."
     st)
   "Syntax table used in Metafont or MetaPost mode.")
 
-(defvar meta-mode-map
+(defvar meta-common-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-m"      'reindent-then-newline-and-indent)
     ;; Comment Paragraphs:
     ;; (define-key map "\M-a"      'backward-sentence)
     ;; (define-key map "\M-e"      'forward-sentence)
@@ -909,17 +851,17 @@ The environment marked is the one that contains point or follows point."
     (define-key map "\C-c;"     'meta-comment-region)
     (define-key map "\C-c:"     'meta-uncomment-region)
     ;; Symbol Completion:
-    (define-key map "\M-\t"     'meta-complete-symbol)
+    (define-key map "\M-\t"     'completion-at-point)
     ;; Shell Commands:
     ;; (define-key map "\C-c\C-c"  'meta-command-file)
     ;; (define-key map "\C-c\C-k"  'meta-kill-job)
     ;; (define-key map "\C-c\C-l"  'meta-recenter-output)
     map)
   "Keymap used in Metafont or MetaPost mode.")
-
+(define-obsolete-variable-alias 'meta-mode-map 'meta-common-mode-map "24.1")
 
 (easy-menu-define
- meta-mode-menu meta-mode-map
+ meta-mode-menu meta-common-mode-map
  "Menu used in Metafont or MetaPost mode."
  (list "Meta"
        ["Forward Environment"           meta-beginning-of-defun t]
@@ -938,7 +880,7 @@ The environment marked is the one that contains point or follows point."
        ["Uncomment Region"              meta-uncomment-region
         :active (meta-mark-active)]
        "--"
-       ["Complete Symbol"               meta-complete-symbol t]
+       ["Complete Symbol"               completion-at-point t]
 ;      "--"
 ;      ["Command on Buffer"             meta-command-file t]
 ;      ["Kill Job"                      meta-kill-job t]
@@ -955,21 +897,21 @@ The environment marked is the one that contains point or follows point."
 ;;; Hook variables.
 
 (defcustom meta-mode-load-hook nil
-  "*Hook evaluated when first loading Metafont or MetaPost mode."
+  "Hook evaluated when first loading Metafont or MetaPost mode."
   :type 'hook
   :group 'meta-font)
 
 (defcustom meta-common-mode-hook nil
-  "*Hook evaluated by both `metafont-mode' and `metapost-mode'."
+  "Hook evaluated by both `metafont-mode' and `metapost-mode'."
   :type 'hook
   :group 'meta-font)
 
 (defcustom metafont-mode-hook nil
-  "*Hook evaluated by `metafont-mode' after `meta-common-mode-hook'."
+  "Hook evaluated by `metafont-mode' after `meta-common-mode-hook'."
   :type 'hook
   :group 'meta-font)
 (defcustom metapost-mode-hook nil
-  "*Hook evaluated by `metapost-mode' after `meta-common-mode-hook'."
+  "Hook evaluated by `metapost-mode' after `meta-common-mode-hook'."
   :type 'hook
   :group 'meta-font)
 
@@ -977,106 +919,63 @@ The environment marked is the one that contains point or follows point."
 
 ;;; Initialization.
 
-(defun meta-common-initialization ()
+(define-derived-mode meta-common-mode prog-mode "-Meta-common-"
   "Common initialization for Metafont or MetaPost mode."
-  (kill-all-local-variables)
+  :abbrev-table meta-mode-abbrev-table
+  (set (make-local-variable 'paragraph-start)
+       (concat page-delimiter "\\|$"))
+  (set (make-local-variable 'paragraph-separate)
+       (concat page-delimiter "\\|$"))
 
-  (make-local-variable 'paragraph-start)
-  (make-local-variable 'paragraph-separate)
-  (setq paragraph-start
-        (concat page-delimiter "\\|$"))
-  (setq paragraph-separate
-        (concat page-delimiter "\\|$"))
+  (set (make-local-variable 'paragraph-ignore-fill-prefix) t)
 
-  (make-local-variable 'paragraph-ignore-fill-prefix)
-  (setq paragraph-ignore-fill-prefix t)
-
-  (make-local-variable 'comment-start-skip)
-  (make-local-variable 'comment-start)
-  (make-local-variable 'comment-end)
-  (make-local-variable 'comment-multi-line)
-  (setq comment-start-skip "%+[ \t\f]*")
-  (setq comment-start "%")
-  (setq comment-end "")
-  (setq comment-multi-line nil)
+  (set (make-local-variable 'comment-start-skip) "%+[ \t\f]*")
+  (set (make-local-variable 'comment-start) "%")
+  (set (make-local-variable 'comment-end) "")
+  (set (make-local-variable 'comment-multi-line) nil)
 
   ;; We use `back-to-indentation' but \f is no indentation sign.
   (modify-syntax-entry ?\f "_   ")
 
-  (make-local-variable 'parse-sexp-ignore-comments)
-  (setq parse-sexp-ignore-comments t)
+  (set (make-local-variable 'parse-sexp-ignore-comments) t)
 
-  (make-local-variable 'comment-indent-function)
-  (setq comment-indent-function 'meta-comment-indent)
-  (make-local-variable 'indent-line-function)
-  (setq indent-line-function 'meta-indent-line)
+  (add-hook 'completion-at-point-functions #'meta-completions-at-point nil t)
+  (set (make-local-variable 'comment-indent-function) #'meta-comment-indent)
+  (set (make-local-variable 'indent-line-function) #'meta-indent-line)
   ;; No need to define a mode-specific 'indent-region-function.
   ;; Simply use the generic 'indent-region and 'comment-region.
 
   ;; Set defaults for font-lock mode.
-  (make-local-variable 'font-lock-defaults)
-  (setq font-lock-defaults
-        '(meta-font-lock-keywords
-          nil nil ((?_ . "w")) nil
-          (font-lock-comment-start-regexp . "%")))
+  (set (make-local-variable 'font-lock-defaults)
+       '(meta-font-lock-keywords
+         nil nil ((?_ . "w")) nil
+         (font-lock-comment-start-regexp . "%")))
 
   ;; Activate syntax table, keymap and menu.
-  (setq local-abbrev-table meta-mode-abbrev-table)
-  (set-syntax-table meta-mode-syntax-table)
-  (use-local-map meta-mode-map)
-  (easy-menu-add meta-mode-menu)
-  )
+  (easy-menu-add meta-mode-menu))
 
 
 ;;;###autoload
-(defun metafont-mode ()
-  "Major mode for editing Metafont sources.
-Special commands:
-\\{meta-mode-map}
-
-Turning on Metafont mode calls the value of the variables
-`meta-common-mode-hook' and `metafont-mode-hook'."
-  (interactive)
-  (meta-common-initialization)
-  (setq mode-name "Metafont")
-  (setq major-mode 'metafont-mode)
-
+(define-derived-mode metafont-mode meta-common-mode "Metafont"
+  "Major mode for editing Metafont sources."
   ;; Set defaults for completion function.
-  (make-local-variable 'meta-symbol-list)
-  (make-local-variable 'meta-symbol-changed)
-  (make-local-variable 'meta-complete-list)
-  (setq meta-symbol-list nil)
-  (setq meta-symbol-changed nil)
+  (set (make-local-variable 'meta-symbol-list) nil)
+  (set (make-local-variable 'meta-symbol-changed) nil)
   (apply 'meta-add-symbols metafont-symbol-list)
-  (setq meta-complete-list
+  (set (make-local-variable 'meta-complete-list)
         (list (list "\\<\\(\\sw+\\)" 1 'meta-symbol-list)
-              (list "" 'ispell-complete-word)))
-  (run-mode-hooks 'meta-common-mode-hook 'metafont-mode-hook))
+              (list "" 'ispell-complete-word))))
 
 ;;;###autoload
-(defun metapost-mode ()
-  "Major mode for editing MetaPost sources.
-Special commands:
-\\{meta-mode-map}
-
-Turning on MetaPost mode calls the value of the variable
-`meta-common-mode-hook' and `metafont-mode-hook'."
-  (interactive)
-  (meta-common-initialization)
-  (setq mode-name "MetaPost")
-  (setq major-mode 'metapost-mode)
-
+(define-derived-mode metapost-mode meta-common-mode "MetaPost"
+  "Major mode for editing MetaPost sources."
   ;; Set defaults for completion function.
-  (make-local-variable 'meta-symbol-list)
-  (make-local-variable 'meta-symbol-changed)
-  (make-local-variable 'meta-complete-list)
-  (setq meta-symbol-list nil)
-  (setq meta-symbol-changed nil)
+  (set (make-local-variable 'meta-symbol-list) nil)
+  (set (make-local-variable 'meta-symbol-changed) nil)
   (apply 'meta-add-symbols metapost-symbol-list)
-  (setq meta-complete-list
+  (set (make-local-variable 'meta-complete-list)
         (list (list "\\<\\(\\sw+\\)" 1 'meta-symbol-list)
-              (list "" 'ispell-complete-word)))
-  (run-mode-hooks 'meta-common-mode-hook 'metapost-mode-hook))
+              (list "" 'ispell-complete-word))))
 
 
 ;;; Just in case ...
@@ -1084,5 +983,4 @@ Turning on MetaPost mode calls the value of the variable
 (provide 'meta-mode)
 (run-hooks 'meta-mode-load-hook)
 
-;; arch-tag: ec2916b2-3a83-4cf7-962d-d8019370c006
 ;;; meta-mode.el ends here

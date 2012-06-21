@@ -1,6 +1,6 @@
 ;;; gmm-utils.el --- Utility functions for Gnus, Message and MML
 
-;; Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 2006-2012 Free Software Foundation, Inc.
 
 ;; Author: Reiner Steib <reiner.steib@gmx.de>
 ;; Keywords: news
@@ -27,8 +27,6 @@
 ;; dependencies on Gnus, Message, or MML.
 
 ;;; Code:
-
-(require 'wid-edit)
 
 (defgroup gmm nil
   "Utility functions for Gnus, Message and MML."
@@ -95,6 +93,10 @@ ARGS are passed to `message'."
   "Non-nil if SYMBOL is a widget."
   (get symbol 'widget-type))
 
+(autoload 'widget-create-child-value "wid-edit")
+(autoload 'widget-convert "wid-edit")
+(autoload 'widget-default-get "wid-edit")
+
 ;; Copy of the `nnmail-lazy' code from `nnmail.el':
 (define-widget 'gmm-lazy 'default
   "Base widget for recursive datastructures.
@@ -138,7 +140,7 @@ This is a copy of the `lazy' widget in Emacs 22.1 provided for compatibility."
 ;;   :mouse-2 command-on-mouse-2-press
 ;;   :mouse-3 command-on-mouse-3-press) ;; typically a menu of related commands
 ;;
-;; Combinations of mouse-[23] plus shift and/or controll might be overkill.
+;; Combinations of mouse-[23] plus shift and/or control might be overkill.
 ;;
 ;; Then use (plist-get rs-command :none), (plist-get rs-command :shift)
 
@@ -215,7 +217,7 @@ This is a copy of the `lazy' widget in Emacs 22.1 provided for compatibility."
 				 'static-color 'pseudo-color)))))
       'gnome
     'retro)
-  "Prefered tool bar style."
+  "Preferred tool bar style."
   :type '(choice (const :tag "GNOME style" gnome)
 		 (const :tag "Retro look"  retro))
   :group 'gmm)
@@ -265,27 +267,16 @@ DEFAULT-MAP specifies the default key map for ICON-LIST."
 		       ;; (tool-bar-add-item ICON DEF KEY &rest PROPS)
 		       (apply 'tool-bar-add-item icon nil nil :enable nil props)))
 		    ((equal fmap t) ;; Not a menu command
-		     (if (fboundp 'tool-bar-local-item)
-			 (apply 'tool-bar-local-item
-				icon command
-				(intern icon) ;; reuse icon or fmap here?
-				tool-bar-map props)
-		       ;; Emacs 21 compatibility:
-		       (apply 'tool-bar-add-item
-			      icon command
-			      (intern icon)
-			      props)))
+		     (apply 'tool-bar-local-item
+			    icon command
+			    (intern icon) ;; reuse icon or fmap here?
+			    tool-bar-map props))
 		    (t ;; A menu command
-		     (if (fboundp 'tool-bar-local-item-from-menu)
-			 (apply 'tool-bar-local-item-from-menu
-				;; (apply 'tool-bar-local-item icon def key
-				;; tool-bar-map props)
-				command icon tool-bar-map (symbol-value fmap)
-				props)
-		       ;; Emacs 21 compatibility:
-		       (apply 'tool-bar-add-item-from-menu
-			      command icon (symbol-value fmap)
-			      props))))
+		     (apply 'tool-bar-local-item-from-menu
+			    ;; (apply 'tool-bar-local-item icon def key
+			    ;; tool-bar-map props)
+			    command icon tool-bar-map (symbol-value fmap)
+			    props)))
 	      t))
 	  (if (symbolp icon-list)
 	      (eval icon-list)
@@ -361,7 +352,7 @@ compatibility with versions of Emacs that lack the variable
                 dir (expand-file-name "../" dir))))
       (setq image-directory-load-path dir))
 
-    ;; If `image-directory-load-path' isn't Emacs' image directory,
+    ;; If `image-directory-load-path' isn't Emacs's image directory,
     ;; it's probably a user preference, so use it.  Then use a
     ;; relative setting if possible; otherwise, use
     ;; `image-directory-load-path'.
@@ -392,7 +383,7 @@ compatibility with versions of Emacs that lack the variable
               ;; Set it to nil if image is not found.
               (cond ((file-exists-p (expand-file-name image d2ei)) d2ei)
                     ((file-exists-p (expand-file-name image d1ei)) d1ei)))))
-     ;; Use Emacs' image directory.
+     ;; Use Emacs's image directory.
      (image-directory-load-path
       (setq image-directory image-directory-load-path))
      (no-error
@@ -420,16 +411,12 @@ If mode is nil, use `major-mode' of the current buffer."
 
 In XEmacs, the seventh argument of `write-region' specifies the
 coding-system."
-  (if (and mustbenew
-	   (or (featurep 'xemacs)
-	       (= emacs-major-version 20)))
+  (if (and mustbenew (featurep 'xemacs))
       (if (file-exists-p filename)
-	  (signal 'file-already-exists
-		  (list "File exists" filename))
+	  (signal 'file-already-exists (list "File exists" filename))
 	(write-region start end filename append visit lockname))
     (write-region start end filename append visit lockname mustbenew)))
 
 (provide 'gmm-utils)
 
-;; arch-tag: e0b60920-2ce6-40c1-bfc0-cadbbe26b602
 ;;; gmm-utils.el ends here

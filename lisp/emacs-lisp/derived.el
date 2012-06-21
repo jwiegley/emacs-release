@@ -1,12 +1,12 @@
 ;;; derived.el --- allow inheritance of major modes
 ;; (formerly mode-clone.el)
 
-;; Copyright (C) 1993, 1994, 1999, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1993-1994, 1999, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: David Megginson (dmeggins@aix1.uottawa.ca)
 ;; Maintainer: FSF
 ;; Keywords: extensions
+;; Package: emacs
 
 ;; This file is part of GNU Emacs.
 
@@ -133,10 +133,10 @@ BODY can start with a bunch of keyword arguments.  The following keyword
 	Declare the customization group that corresponds to this mode.
 	The command `customize-mode' uses this.
 :syntax-table TABLE
-	Use TABLE instead of the default.
+	Use TABLE instead of the default (CHILD-syntax-table).
 	A nil value means to simply use the same syntax-table as the parent.
 :abbrev-table TABLE
-	Use TABLE instead of the default.
+	Use TABLE instead of the default (CHILD-abbrev-table).
 	A nil value means to simply use the same abbrev-table as the parent.
 
 Here is how you could define LaTeX-Thesis mode as a variant of LaTeX mode:
@@ -201,7 +201,7 @@ No problems result if this variable is not bound.
 		       name))))
        (unless (boundp ',map)
 	 (put ',map 'definition-name ',child))
-       (defvar ,map (make-sparse-keymap))
+       (with-no-warnings (defvar ,map (make-sparse-keymap)))
        (unless (get ',map 'variable-documentation)
 	 (put ',map 'variable-documentation
 	      (purecopy ,(format "Keymap for `%s'." child))))
@@ -253,8 +253,14 @@ No problems result if this variable is not bound.
 		   `(let ((parent (char-table-parent ,syntax)))
 		      (unless (and parent
 				   (not (eq parent (standard-syntax-table))))
-			(set-char-table-parent ,syntax (syntax-table)))))))
-
+			(set-char-table-parent ,syntax (syntax-table)))))
+                ,(when declare-abbrev
+                   `(unless (or (abbrev-table-get ,abbrev :parents)
+                                ;; This can happen if the major mode defines
+                                ;; the abbrev-table to be its parent's.
+                                (eq ,abbrev local-abbrev-table))
+                      (abbrev-table-put ,abbrev :parents
+                                        (list local-abbrev-table))))))
 	  (use-local-map ,map)
 	  ,(when syntax `(set-syntax-table ,syntax))
 	  ,(when abbrev `(setq local-abbrev-table ,abbrev))
@@ -456,5 +462,4 @@ Where the new table already has an entry, nothing is copied from the old one."
 
 (provide 'derived)
 
-;; arch-tag: 630be248-47d1-4f02-afa0-8207de0ebea0
 ;;; derived.el ends here

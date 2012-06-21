@@ -1,11 +1,10 @@
 ;;; arc-mode.el --- simple editing of archives
 
-;; Copyright (C) 1995, 1997, 1998, 2001, 2002, 2003, 2004, 2005, 2006,
-;;   2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1995, 1997-1998, 2001-2012  Free Software Foundation, Inc.
 
 ;; Author: Morten Welinder <terra@gnu.org>
 ;; Keywords: files archives msdog editing major-mode
-;; Favourite-brand-of-beer: None, I hate beer.
+;; Favorite-brand-of-beer: None, I hate beer.
 
 ;; This file is part of GNU Emacs.
 
@@ -52,17 +51,17 @@
 ;; ARCHIVE TYPES: Currently only the archives below are handled, but the
 ;; structure for handling just about anything is in place.
 ;;
-;;			Arc	Lzh	Zip	Zoo	 Rar
-;;			----------------------------------------
-;; View listing		Intern	Intern	Intern	Intern   Y
-;; Extract member	Y	Y	Y	Y        Y
-;; Save changed member	Y	Y	Y	Y        N
-;; Add new member	N	N	N	N        N
-;; Delete member	Y	Y	Y	Y        N
-;; Rename member	Y	Y	N	N        N
-;; Chmod		-	Y	Y	-        N
-;; Chown		-	Y	-	-        N
-;; Chgrp		-	Y	-	-        N
+;;			Arc	Lzh	Zip	Zoo	Rar	7z
+;;			--------------------------------------------
+;; View listing		Intern	Intern	Intern	Intern	Y	Y
+;; Extract member	Y	Y	Y	Y	Y	Y
+;; Save changed member	Y	Y	Y	Y	N	Y
+;; Add new member	N	N	N	N	N	N
+;; Delete member	Y	Y	Y	Y	N	Y
+;; Rename member	Y	Y	N	N	N	N
+;; Chmod		-	Y	Y	-	N	N
+;; Chown		-	Y	-	-	N	N
+;; Chgrp		-	Y	-	-	N	N
 ;;
 ;; Special thanks to Bill Brodie <wbrodie@panix.com> for very useful tips
 ;; on the first released version of this package.
@@ -76,7 +75,7 @@
 ;;
 ;; LZH         A series of (header,file).  Headers are checksummed.  No
 ;;             interaction among members.
-;;             Headers come in three flavours called level 0, 1 and 2 headers.
+;;             Headers come in three flavors called level 0, 1 and 2 headers.
 ;;             Level 2 header is free of DOS specific restrictions and most
 ;;             prevalently used.  Also level 1 and 2 headers consist of base
 ;;             and extension headers.  For more details see
@@ -217,17 +216,17 @@ Archive and member name will be added."
 ;; Zip archive configuration
 
 (defcustom archive-zip-extract
-  (if (and (not (executable-find "unzip"))
-           (executable-find "pkunzip"))
-      '("pkunzip" "-e" "-o-")
-    '("unzip" "-qq" "-c"))
+  (cond ((executable-find "unzip")   '("unzip" "-qq" "-c"))
+	((executable-find "7z")      '("7z" "x" "-so"))
+	((executable-find "pkunzip") '("pkunzip" "-e" "-o-"))
+	(t                           '("unzip" "-qq" "-c")))
   "Program and its options to run in order to extract a zip file member.
 Extraction should happen to standard output.  Archive and member name will
 be added."
   :type '(list (string :tag "Program")
-		(repeat :tag "Options"
-			:inline t
-			(string :format "%v")))
+	       (repeat :tag "Options"
+		       :inline t
+		       (string :format "%v")))
   :group 'archive-zip)
 
 ;; For several reasons the latter behavior is not desirable in general.
@@ -236,44 +235,44 @@ be added."
 ;; names.
 
 (defcustom archive-zip-expunge
-  (if (and (not (executable-find "zip"))
-           (executable-find "pkzip"))
-      '("pkzip" "-d")
-    '("zip" "-d" "-q"))
+  (cond ((executable-find "zip")     '("zip" "-d" "-q"))
+	((executable-find "7z")      '("7z" "d"))
+	((executable-find "pkzip")   '("pkzip" "-d"))
+	(t                           '("zip" "-d" "-q")))
   "Program and its options to run in order to delete zip file members.
 Archive and member names will be added."
   :type '(list (string :tag "Program")
-		(repeat :tag "Options"
-			:inline t
-			(string :format "%v")))
+	       (repeat :tag "Options"
+		       :inline t
+		       (string :format "%v")))
   :group 'archive-zip)
 
 (defcustom archive-zip-update
-  (if (and (not (executable-find "zip"))
-           (executable-find "pkzip"))
-      '("pkzip" "-u" "-P")
-    '("zip" "-q"))
+  (cond ((executable-find "zip")     '("zip" "-q"))
+	((executable-find "7z")      '("7z" "u"))
+	((executable-find "pkzip")   '("pkzip" "-u" "-P"))
+	(t                           '("zip" "-q")))
   "Program and its options to run in order to update a zip file member.
 Options should ensure that specified directory will be put into the zip
 file.  Archive and member name will be added."
   :type '(list (string :tag "Program")
-		(repeat :tag "Options"
-			:inline t
-			(string :format "%v")))
+	       (repeat :tag "Options"
+		       :inline t
+		       (string :format "%v")))
   :group 'archive-zip)
 
 (defcustom archive-zip-update-case
-  (if (and (not (executable-find "zip"))
-           (executable-find "pkzip"))
-      '("pkzip" "-u" "-P")
-    '("zip" "-q" "-k"))
+  (cond ((executable-find "zip")     '("zip" "-q" "-k"))
+	((executable-find "7z")      '("7z" "u"))
+	((executable-find "pkzip")   '("pkzip" "-u" "-P"))
+	(t                           '("zip" "-q" "-k")))
   "Program and its options to run in order to update a case fiddled zip member.
 Options should ensure that specified directory will be put into the zip file.
 Archive and member name will be added."
   :type '(list (string :tag "Program")
-		(repeat :tag "Options"
-			:inline t
-			(string :format "%v")))
+	       (repeat :tag "Options"
+		       :inline t
+		       (string :format "%v")))
   :group 'archive-zip)
 
 (defcustom archive-zip-case-fiddle t
@@ -315,6 +314,44 @@ Archive and member name will be added."
 			:inline t
 			(string :format "%v")))
   :group 'archive-zoo)
+;; ------------------------------
+;; 7z archive configuration
+
+(defcustom archive-7z-extract
+  '("7z" "x" "-so")
+  "Program and its options to run in order to extract a 7z file member.
+Extraction should happen to standard output.  Archive and member name will
+be added."
+  :version "24.1"
+  :type '(list (string :tag "Program")
+	       (repeat :tag "Options"
+		       :inline t
+		       (string :format "%v")))
+  :group 'archive-7z)
+
+(defcustom archive-7z-expunge
+  '("7z" "d")
+  "Program and its options to run in order to delete 7z file members.
+Archive and member names will be added."
+  :version "24.1"
+  :type '(list (string :tag "Program")
+	       (repeat :tag "Options"
+		       :inline t
+		       (string :format "%v")))
+  :group 'archive-7z)
+
+(defcustom archive-7z-update
+  '("7z" "u")
+  "Program and its options to run in order to update a 7z file member.
+Options should ensure that specified directory will be put into the 7z
+file.  Archive and member name will be added."
+  :version "24.1"
+  :type '(list (string :tag "Program")
+	       (repeat :tag "Options"
+		       :inline t
+		       (string :format "%v")))
+  :group 'archive-7z)
+
 ;; -------------------------------------------------------------------------
 ;;; Section: Variables
 
@@ -326,7 +363,7 @@ Archive and member name will be added."
 (defvar archive-local-name nil "Name of local copy of remote archive.")
 (defvar archive-mode-map
   (let ((map (make-keymap)))
-    (suppress-keymap map)
+    (set-keymap-parent map special-mode-map)
     (define-key map " " 'archive-next-line)
     (define-key map "a" 'archive-alternate-display)
     ;;(define-key map "c" 'archive-copy)
@@ -335,15 +372,12 @@ Archive and member name will be added."
     (define-key map "e" 'archive-extract)
     (define-key map "f" 'archive-extract)
     (define-key map "\C-m" 'archive-extract)
-    (define-key map "g" 'revert-buffer)
-    (define-key map "h" 'describe-mode)
     (define-key map "m" 'archive-mark)
     (define-key map "n" 'archive-next-line)
     (define-key map "\C-n" 'archive-next-line)
     (define-key map [down] 'archive-next-line)
     (define-key map "o" 'archive-extract-other-window)
     (define-key map "p" 'archive-previous-line)
-    (define-key map "q" 'quit-window)
     (define-key map "\C-p" 'archive-previous-line)
     (define-key map [up] 'archive-previous-line)
     (define-key map "r" 'archive-rename-entry)
@@ -602,7 +636,7 @@ the mode is invalid.  If ERROR is nil then nil will be returned."
 (defun archive-get-lineno ()
   (if (>= (point) archive-file-list-start)
       (count-lines archive-file-list-start
-		   (save-excursion (beginning-of-line) (point)))
+		   (line-beginning-position))
     0))
 
 (defun archive-get-descr (&optional noerror)
@@ -732,6 +766,7 @@ archive.
           ((and (looking-at "MZ")
                 (re-search-forward "Rar!" (+ (point) 100000) t))
            'rar-exe)
+	  ((looking-at "7z\274\257\047\034") '7z)
 	  (t (error "Buffer format not recognized")))))
 ;; -------------------------------------------------------------------------
 
@@ -828,13 +863,13 @@ using `make-temp-file', and the generated name is returned."
 	  dir)))
     (if (or alien (file-exists-p fullname))
 	(progn
-	  ;; Maked sure all the leading directories in
+	  ;; Make sure all the leading directories in
 	  ;; archive-local-name exist under archive-tmpdir, so that
 	  ;; the directory structure recorded in the archive is
 	  ;; reconstructed in the temporary directory.
 	  (make-directory (file-name-directory tmpfile) t)
 	  (make-temp-file tmpfile))
-      ;; Maked sure all the leading directories in `fullname' exist
+      ;; Make sure all the leading directories in `fullname' exist
       ;; under archive-tmpdir.  This is necessary for nested archives
       ;; (`archive-extract' sets `archive-remote' to t in case
       ;; an archive occurs inside another archive).
@@ -1004,7 +1039,7 @@ using `make-temp-file', and the generated name is returned."
 	  (setq archive-file-name-coding-system file-name-coding)
 	  (if (and
 	       (null
-		(let (;; We may have to encode file name arguement for
+		(let (;; We may have to encode the file name argument for
 		      ;; external programs.
 		      (coding-system-for-write
 		       (and enable-multibyte-characters
@@ -1047,8 +1082,8 @@ using `make-temp-file', and the generated name is returned."
 	(archive-maybe-update t))
       (or (not (buffer-name buffer))
           (cond
-           (view-p (view-buffer
-		    buffer (and just-created 'kill-buffer-if-not-modified)))
+           (view-p
+	    (view-buffer buffer (and just-created 'kill-buffer-if-not-modified)))
            ((eq other-window-p 'display) (display-buffer buffer))
            (other-window-p (switch-to-buffer-other-window buffer))
            (t (switch-to-buffer buffer))))))
@@ -1081,11 +1116,11 @@ using `make-temp-file', and the generated name is returned."
     (archive-delete-local tmpfile)
     success))
 
-(defun archive-extract-by-stdout (archive name command)
+(defun archive-extract-by-stdout (archive name command &optional stderr-file)
   (apply 'call-process
 	 (car command)
 	 nil
-	 t
+	 (if stderr-file (list t stderr-file) t)
 	 nil
 	 (append (cdr command) (list archive name))))
 
@@ -1375,7 +1410,7 @@ as a relative change like \"g+rw\" as for chmod(2)."
       (error "Renaming is not supported for this archive type"))))
 
 ;; Revert the buffer and recompute the dired-like listing.
-(defun archive-mode-revert (&optional no-auto-save no-confirm)
+(defun archive-mode-revert (&optional _no-auto-save _no-confirm)
   (let ((no (archive-get-lineno)))
     (setq archive-files nil)
     (let ((revert-buffer-function nil)
@@ -1787,20 +1822,27 @@ This doesn't recover lost files, it just undoes changes in the buffer itself."
     (apply 'vector (nreverse files))))
 
 (defun archive-zip-extract (archive name)
-  (if (member-ignore-case (car archive-zip-extract) '("pkunzip" "pkzip"))
-      (archive-*-extract archive name archive-zip-extract)
+  (cond
+   ((member-ignore-case (car archive-zip-extract) '("pkunzip" "pkzip"))
+    (archive-*-extract archive name archive-zip-extract))
+   ((equal (car archive-zip-extract) "7z")
+    (let ((archive-7z-extract archive-zip-extract))
+      (archive-7z-extract archive name)))
+   (t
     (archive-extract-by-stdout
      archive
      ;; unzip expands wildcards in NAME, so we need to quote it.  But
      ;; not on DOS/Windows, since that fails extraction on those
-     ;; systems, and file names with wildcards in zip archives don't
-     ;; work there anyway.
+     ;; systems (unless w32-quote-process-args is nil), and file names
+     ;; with wildcards in zip archives don't work there anyway.
      ;; FIXME: Does pkunzip need similar treatment?
-     (if (and (not (memq system-type '(windows-nt ms-dos)))
+     (if (and (or (not (memq system-type '(windows-nt ms-dos)))
+		  (and (boundp 'w32-quote-process-args)
+		       (null w32-quote-process-args)))
 	      (equal (car archive-zip-extract) "unzip"))
 	 (shell-quote-argument name)
        name)
-     archive-zip-extract)))
+     archive-zip-extract))))
 
 (defun archive-zip-write-file-member (archive descr)
   (archive-*-write-file-member
@@ -2008,7 +2050,73 @@ This doesn't recover lost files, it just undoes changes in the buffer itself."
       (if tmpbuf (kill-buffer tmpbuf))
       (delete-file tmpfile))))
 
+;; -------------------------------------------------------------------------
+;;; Section: 7z Archives
 
+(defun archive-7z-summarize ()
+  (let ((maxname 10)
+	(maxsize 5)
+	(file buffer-file-name)
+	(files ()))
+    (with-temp-buffer
+      (call-process "7z" nil t nil "l" "-slt" file)
+      (goto-char (point-min))
+      ;; Four dashes start the meta info section that should be skipped.
+      ;; Archive members start with more than four dashes.
+      (re-search-forward "^-----+\n")
+      (while (re-search-forward "^Path = \\(.*\\)\n" nil t)
+        (goto-char (match-end 0))
+        (let ((name (match-string 1))
+              (size (save-excursion
+		      (and (re-search-forward "^Size = \\(.*\\)\n")
+			   (match-string 1))))
+	      (time (save-excursion
+		      (and (re-search-forward "^Modified = \\(.*\\)\n")
+			   (match-string 1)))))
+          (if (> (length name) maxname) (setq maxname (length name)))
+          (if (> (length size) maxsize) (setq maxsize (length size)))
+          (push (vector name name nil nil time nil nil size)
+                files))))
+    (setq files (nreverse files))
+    (goto-char (point-min))
+    (let* ((format (format " %%%ds %%s %%s" maxsize))
+           (sep (format format (make-string maxsize ?-) "-------------------" ""))
+           (column (length sep)))
+      (insert (format format "Size " "Date       Time    " " Filename") "\n")
+      (insert sep (make-string maxname ?-) "\n")
+      (archive-summarize-files (mapcar (lambda (desc)
+                                         (let ((text
+                                                (format format
+							(aref desc 7)
+							(aref desc 4)
+							(aref desc 1))))
+                                           (vector text
+                                                   column
+                                                   (length text))))
+                                       files))
+      (insert sep (make-string maxname ?-) "\n")
+      (apply 'vector files))))
+
+(defun archive-7z-extract (archive name)
+  (let ((tmpfile (make-temp-file "7z-stderr")))
+    ;; 7z doesn't provide a `quiet' option to suppress non-essential
+    ;; stderr messages.  So redirect stderr to a temp file and display it
+    ;; in the echo area when it contains error messages.
+    (prog1 (archive-extract-by-stdout
+	    archive name archive-7z-extract tmpfile)
+      (with-temp-buffer
+	(insert-file-contents tmpfile)
+	(unless (search-forward "Everything is Ok" nil t)
+	  (message "%s" (buffer-string)))
+	(delete-file tmpfile)))))
+
+(defun archive-7z-write-file-member (archive descr)
+  (archive-*-write-file-member
+   archive
+   descr
+   archive-7z-update))
+
+;; -------------------------------------------------------------------------
 ;;; Section `ar' archives.
 
 ;; TODO: we currently only handle the basic format of ar archives,
@@ -2135,5 +2243,4 @@ This doesn't recover lost files, it just undoes changes in the buffer itself."
 
 (provide 'arc-mode)
 
-;; arch-tag: e5966a01-35ec-4f27-8095-a043a79b457b
 ;;; arc-mode.el ends here

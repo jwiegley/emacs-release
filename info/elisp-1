@@ -1,12 +1,10 @@
-This is ../../info/elisp, produced by makeinfo version 4.13 from
-elisp.texi.
+This is /home/cyd/emacs/doc/lispref/../../info/elisp, produced by
+makeinfo version 4.13 from /home/cyd/emacs/doc/lispref/elisp.texi.
 
-This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.4.
+This is the `GNU Emacs Lisp Reference Manual' corresponding to Emacs
+version 24.1.
 
-   Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
-2012  Free Software Foundation, Inc.
+Copyright (C) 1990-1996, 1998-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -32,12 +30,10 @@ File: elisp,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
 Emacs Lisp
 **********
 
-This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.4.
+This is the `GNU Emacs Lisp Reference Manual' corresponding to Emacs
+version 24.1.
 
-   Copyright (C) 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1998, 1999,
-2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
-2012  Free Software Foundation, Inc.
+Copyright (C) 1990-1996, 1998-2012 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -72,7 +68,7 @@ corresponding to Emacs version 23.4.
 * Functions::               A function is a Lisp program
                               that can be invoked from other functions.
 * Macros::                  Macros are a way to extend the Lisp language.
-* Customization::           Writing customization declarations.
+* Customization::           Making variables and faces customizable.
 
 * Loading::                 Reading files of Lisp code into Lisp.
 * Byte Compilation::        Compilation makes programs run faster.
@@ -108,19 +104,19 @@ corresponding to Emacs version 23.4.
 * System Interface::        Getting the user id, system type, environment
                               variables, and other such things.
 
+* Packaging::               Preparing Lisp code for distribution.
+
 Appendices
 
-* Antinews::                Info for users downgrading to Emacs 22.
+* Antinews::                Info for users downgrading to Emacs 23.
 * GNU Free Documentation License:: The license for this documentation.
 * GPL::                     Conditions for copying and changing GNU Emacs.
 * Tips::                    Advice and coding conventions for Emacs Lisp.
 * GNU Emacs Internals::     Building and dumping Emacs;
                               internal data structures.
-* Standard Errors::         List of all error symbols.
-* Standard Buffer-Local Variables::
-                            List of variables buffer-local in all buffers.
-* Standard Keymaps::        List of standard keymaps.
-* Standard Hooks::          List of standard hook variables.
+* Standard Errors::         List of some standard error symbols.
+* Standard Keymaps::        List of some standard keymaps.
+* Standard Hooks::          List of some standard hook variables.
 
 * Index::                   Index including concepts, functions, variables,
                               and other terms.
@@ -130,7 +126,7 @@ Appendices
  --- The Detailed Node Listing ---
  ---------------------------------
 
-Here are other nodes that are inferiors of those already listed,
+Here are other nodes that are subnodes of those already listed,
 mentioned here so you can get to them in one step:
 
 Introduction
@@ -263,7 +259,6 @@ Lists
 * Modifying Lists::         Storing new pieces into an existing list.
 * Sets And Lists::          A list can represent a finite mathematical set.
 * Association Lists::       A list can represent a finite relation or mapping.
-* Rings::                   Managing a fixed-size ring of objects.
 
 Modifying Existing List Structure
 
@@ -281,6 +276,7 @@ Sequences, Arrays, and Vectors
 * Vector Functions::        Functions specifically for vectors.
 * Char-Tables::             How to work with char-tables.
 * Bool-Vectors::            How to work with bool-vectors.
+* Rings::                   Managing a fixed-size ring of objects.
 
 Hash Tables
 
@@ -311,6 +307,7 @@ Evaluation
 * Forms::                   How various sorts of objects are evaluated.
 * Quoting::                 Avoiding evaluation (to put constants in
                               the program).
+* Backquote::               Easier construction of list structure.
 * Eval::                    How to invoke the Lisp interpreter explicitly.
 
 Kinds of Forms
@@ -367,19 +364,16 @@ Variables
 * File Local Variables::    Handling local variable lists in files.
 * Directory Local Variables:: Local variables common to all files in a
                                 directory.
-* Frame-Local Variables::   Frame-local bindings for variables.
 * Variable Aliases::        Variables that are aliases for other variables.
 * Variables with Restricted Values::  Non-constant variables whose value can
                                         _not_ be an arbitrary Lisp object.
 
 Scoping Rules for Variable Bindings
 
-* Scope::                   Scope means where in the program a value
-                              is visible.  Comparison with other languages.
-* Extent::                  Extent means how long in time a value exists.
-* Impl of Scope::           Two ways to implement dynamic scoping.
-* Using Scoping::           How to use dynamic scoping carefully and
-                              avoid problems.
+* Dynamic Binding::         The default for binding local variables in Emacs.
+* Dynamic Binding Tips::    Avoiding problems with dynamic binding.
+* Lexical Binding::         A different type of local variable binding.
+* Using Lexical Binding::   How to enable lexical binding.
 
 Buffer-Local Variables
 
@@ -399,9 +393,10 @@ Functions
 * Anonymous Functions::     Lambda expressions are functions with no names.
 * Function Cells::          Accessing or setting the function definition
                               of a symbol.
+* Closures::                Functions that enclose a lexical environment.
 * Obsolete Functions::      Declaring functions obsolete.
 * Inline Functions::        Defining functions that the compiler
-                              will open code.
+                              will expand inline.
 * Declaring Functions::     Telling the compiler that a function is defined.
 * Function Safety::         Determining whether a function is safe to call.
 * Related Topics::          Cross-references to specific Lisp primitives
@@ -421,7 +416,6 @@ Macros
 * Expansion::               How, when and why macros are expanded.
 * Compiling Macros::        How macros are expanded by the compiler.
 * Defining Macros::         How to write a macro definition.
-* Backquote::               Easier construction of list structure.
 * Problems with Macros::    Don't evaluate the macro arguments too many times.
                               Don't hide the user's variables.
 * Indenting Macros::        Specifying how to indent macro calls.
@@ -435,13 +429,15 @@ Common Problems Using Macros
 * Eval During Expansion::  Don't evaluate them; put them in the expansion.
 * Repeated Expansion::     Avoid depending on how many times expansion is done.
 
-Writing Customization Definitions
+Customization Settings
 
 * Common Keywords::         Common keyword arguments for all kinds of
                               customization declarations.
 * Group Definitions::       Writing customization group definitions.
 * Variable Definitions::    Declaring user options.
 * Customization Types::     Specifying the type of a user option.
+* Applying Customizations:: Functions to apply customization settings.
+* Custom Themes::           Writing Custom themes.
 
 Customization Types
 
@@ -487,17 +483,14 @@ Advising Emacs Lisp Functions
 * Preactivation::           Preactivation is a way of speeding up the
                               loading of compiled advice.
 * Argument Access in Advice:: How advice can access the function's arguments.
-* Advising Primitives::     Accessing arguments when advising a primitive.
 * Combined Definition::     How advice is implemented.
 
 Debugging Lisp Programs
 
-* Debugger::                How the Emacs Lisp debugger is implemented.
+* Debugger::                A debugger for the Emacs Lisp evaluator.
 * Edebug::                  A source-level Emacs Lisp debugger.
 * Syntax Errors::           How to find syntax errors.
 * Test Coverage::           Ensuring you have tested all branches in your code.
-* Compilation Errors::      How to find errors that show up in
-                              byte compilation.
 
 The Lisp Debugger
 
@@ -580,8 +573,8 @@ Minibuffers
 * Multiple Queries::        Asking a series of similar questions.
 * Reading a Password::      Reading a password from the terminal.
 * Minibuffer Commands::     Commands used as key bindings in minibuffers.
-* Minibuffer Contents::     How such commands access the minibuffer text.
 * Minibuffer Windows::      Operating on the special minibuffer windows.
+* Minibuffer Contents::     How such commands access the minibuffer text.
 * Recursive Mini::          Whether recursive entry to minibuffer is allowed.
 * Minibuffer Misc::         Various customization hooks and variables.
 
@@ -591,11 +584,12 @@ Completion
 * Minibuffer Completion::   Invoking the minibuffer with completion.
 * Completion Commands::     Minibuffer commands that do completion.
 * High-Level Completion::   Convenient special cases of completion
-                              (reading buffer name, file name, etc.).
+                              (reading buffer names, variable names, etc.).
 * Reading File Names::      Using completion to read file names and
                               shell commands.
-* Completion Styles::       Specifying rules for performing completion.
-* Programmed Completion::   Writing your own completion-function.
+* Completion Variables::    Variables controlling completion behavior.
+* Programmed Completion::   Writing your own completion function.
+* Completion in Buffers::   Completing text in ordinary buffers.
 
 Command Loop
 
@@ -696,6 +690,7 @@ Defining Menus
                               various features.
 * Menu Separators::         Drawing a horizontal line through a menu.
 * Alias Menu Items::        Using command aliases in menu items.
+* Toolkit Differences::     Not all toolkits provide the same features.
 
 Major and Minor Modes
 
@@ -703,9 +698,9 @@ Major and Minor Modes
 * Major Modes::        Defining major modes.
 * Minor Modes::        Defining minor modes.
 * Mode Line Format::   Customizing the text that appears in the mode line.
-* Imenu::              How a mode can provide a menu
-                         of definitions in the buffer.
+* Imenu::              Providing a menu of definitions made in a buffer.
 * Font Lock Mode::     How modes can highlight text according to syntax.
+* Auto-Indentation::   How to teach Emacs to indent for a major mode.
 * Desktop Save Mode::  How modes can have buffer state saved between
                          Emacs sessions.
 
@@ -716,15 +711,16 @@ Hooks
 
 Major Modes
 
-* Major Mode Basics::
 * Major Mode Conventions::  Coding conventions for keymaps, etc.
 * Auto Major Mode::         How Emacs chooses the major mode automatically.
 * Mode Help::               Finding out how to use a mode.
 * Derived Modes::           Defining a new major mode based on another major
                               mode.
+* Basic Major Modes::       Modes that other modes are often derived from.
+* Mode Hooks::              Hooks run at the end of major mode functions.
+* Tabulated List Mode::     Parent mode for buffers containing tabulated data.
 * Generic Modes::           Defining a simple major mode that supports
                               comment syntax and Font Lock mode.
-* Mode Hooks::              Hooks run at the end of major mode functions.
 * Example Major Modes::     Text mode and Lisp modes.
 
 Minor Modes
@@ -756,8 +752,6 @@ Font Lock Mode
                                   contents can also specify how to fontify it.
 * Faces for Font Lock::     Special faces specifically for Font Lock.
 * Syntactic Font Lock::     Fontification based on syntax tables.
-* Setting Syntax Properties::   Defining character syntax based on context
-                                  using the Font Lock mechanism.
 * Multiline Font Lock::     How to coerce Font Lock into properly
                               highlighting multiline constructs.
 
@@ -767,10 +761,24 @@ Multiline Font Lock Constructs
 * Region to Refontify::     Controlling which region gets refontified
                               after a buffer change.
 
+Automatic Indentation of code
+
+* SMIE::                    A simple minded indentation engine.
+
+Simple Minded Indentation Engine
+
+* SMIE setup::              SMIE setup and features.
+* Operator Precedence Grammars:: A very simple parsing technique.
+* SMIE Grammar::            Defining the grammar of a language.
+* SMIE Lexer::              Defining tokens.
+* SMIE Tricks::             Working around the parser's limitations.
+* SMIE Indentation::        Specifying indentation rules.
+* SMIE Indentation Helpers:: Helper functions for indentation rules.
+* SMIE Indentation Example:: Sample indentation rules.
+
 Documentation
 
-* Documentation Basics::    Good style for doc strings.
-                              Where to put them.  How Emacs stores them.
+* Documentation Basics::    Where doc strings are defined and stored.
 * Accessing Documentation:: How Lisp programs can access doc strings.
 * Keys in Documentation::   Substituting current key bindings.
 * Describing Characters::   Making printable descriptions of
@@ -786,12 +794,11 @@ Files
 * File Locks::              Locking and unlocking files, to prevent
                               simultaneous editing by two people.
 * Information about Files:: Testing existence, accessibility, size of files.
-* Changing Files::          Renaming files, changing protection, etc.
+* Changing Files::          Renaming files, changing permissions, etc.
 * File Names::              Decomposing and expanding file names.
 * Contents of Directories:: Getting a list of the files in a directory.
 * Create/Delete Dirs::      Creating and Deleting Directories.
-* Magic File Names::        Defining "magic" special handling
-                              for certain file names.
+* Magic File Names::        Special handling for certain file names.
 * Format Conversion::       Conversion to and from various file formats.
 
 Visiting Files
@@ -852,7 +859,7 @@ Buffers
                               is visited.
 * Buffer Modification::     A buffer is "modified" if it needs to be saved.
 * Modification Time::       Determining whether the visited file was changed
-                              ``behind Emacs's back''.
+                              "behind Emacs's back".
 * Read Only Buffers::       Modifying text is not allowed in a
                               read-only buffer.
 * The Buffer List::         How to look at all the existing buffers.
@@ -866,26 +873,30 @@ Buffers
 Windows
 
 * Basic Windows::           Basic information on using windows.
+* Windows and Frames::      Relating windows to the frame they appear on.
+* Window Sizes::            Accessing a window's size.
+* Resizing Windows::        Changing the sizes of windows.
 * Splitting Windows::       Splitting one window into two windows.
 * Deleting Windows::        Deleting a window gives its space to other windows.
 * Selecting Windows::       The selected window is the one that you edit in.
 * Cyclic Window Ordering::  Moving around the existing windows.
 * Buffers and Windows::     Each window displays the contents of a buffer.
-* Displaying Buffers::      Higher-level functions for displaying a buffer
-                              and choosing a window for it.
+* Switching Buffers::       Higher-level functions for switching to a buffer.
 * Choosing Window::         How to choose a window for displaying a buffer.
+* Display Action Functions:: Subroutines for `display-buffer'.
+* Choosing Window Options:: Extra options affecting how buffers are displayed.
+* Window History::          Each window remembers the buffers displayed in it.
 * Dedicated Windows::       How to avoid displaying another buffer in
                               a specific window.
+* Quitting Windows::        How to restore the state prior to displaying a
+                              buffer.
 * Window Point::            Each window has its own location of point.
 * Window Start and End::    Buffer positions indicating which text is
                               on-screen in a window.
 * Textual Scrolling::       Moving text up and down through the window.
 * Vertical Scrolling::      Moving the contents up and down on the window.
 * Horizontal Scrolling::    Moving the contents sideways on the window.
-* Size of Window::          Accessing the size of a window.
-* Resizing Windows::        Changing the size of a window.
 * Coordinates and Windows:: Converting coordinates to windows.
-* Window Tree::             The layout and sizes of all windows in a frame.
 * Window Configurations::   Saving and restoring the state of the screen.
 * Window Parameters::       Associating additional information with windows.
 * Window Hooks::            Hooks for scrolling, window size changes,
@@ -901,8 +912,6 @@ Frames
 * Frame Titles::            Automatic updating of frame titles.
 * Deleting Frames::         Frames last until explicitly deleted.
 * Finding All Frames::      How to examine all existing frames.
-* Frames and Windows::      A frame contains windows;
-                              display of text always works through windows.
 * Minibuffers and Frames::  How a frame finds the minibuffer to use.
 * Input Focus::             Specifying the selected frame.
 * Visibility of Frames::    Frames may be visible or invisible, or icons.
@@ -917,7 +926,7 @@ Frames
 * Window System Selections::Transferring text to and from other X clients.
 * Drag and Drop::               Internals of Drag-and-Drop implementation.
 * Color Names::             Getting the definitions of color names.
-* Text Terminal Colors::    Defining colors for text-only terminals.
+* Text Terminal Colors::    Defining colors for text terminals.
 * Resources::               Getting resource values from the server.
 * Display Feature Testing:: Determining the features of a terminal.
 
@@ -999,7 +1008,8 @@ Text
 * Registers::               How registers are implemented.  Accessing
                               the text or position stored in a register.
 * Base 64::                 Conversion to or from base 64 encoding.
-* MD5 Checksum::            Compute the MD5 "message digest"/"checksum".
+* Checksum/Hash::           Computing cryptographic hashes.
+* Parsing HTML/XML::        Parsing HTML and XML.
 * Atomic Changes::          Installing several buffer changes "atomically".
 * Change Hooks::            Supplying functions to be run when text is changed.
 
@@ -1131,7 +1141,6 @@ Parsing Expressions
 
 Abbrevs and Abbrev Expansion
 
-* Abbrev Mode::             Setting up Emacs for abbreviation.
 * Abbrev Tables::           Creating and working with abbrev tables.
 * Defining Abbrevs::        Specifying abbreviations and their expansions.
 * Abbrev Files::            Saving abbrevs in files.
@@ -1163,8 +1172,7 @@ Processes
 * Datagrams::               UDP network connections.
 * Low-Level Network::       Lower-level but more general function
                               to create connections and servers.
-* Misc Network::            Additional relevant functions for
-                              network connections.
+* Misc Network::            Additional relevant functions for net connections.
 * Serial Ports::            Communicating with serial ports.
 * Byte Packing::            Using bindat to pack and unpack binary data.
 
@@ -1208,13 +1216,13 @@ Emacs Display
 * Display Property::        Enabling special display features.
 * Images::                  Displaying images in Emacs buffers.
 * Buttons::                 Adding clickable buttons to Emacs buffers.
-* Abstract Display::        Emacs' Widget for Object Collections.
+* Abstract Display::        Emacs's Widget for Object Collections.
 * Blinking::                How Emacs shows the matching open parenthesis.
-* Usual Display::           The usual conventions for displaying
-                              nonprinting chars.
-* Display Tables::          How to specify other conventions.
+* Character Display::   How Emacs displays individual characters.
 * Beeping::                 Audible signal to the user.
 * Window Systems::          Which window system is being used.
+* Bidirectional Display::   Display of bidirectional scripts, such as
+                              Arabic and Farsi.
 
 The Echo Area
 
@@ -1229,6 +1237,7 @@ Reporting Warnings
 * Warning Variables::       Variables programs bind to customize
                               their warnings.
 * Warning Options::         Variables users set to control display of warnings.
+* Delayed Warnings::        Deferring a warning until the end of a command.
 
 Overlays
 
@@ -1239,7 +1248,7 @@ Overlays
 
 Faces
 
-* Defining Faces::          How to define a face with `defface'.
+* Defining Faces::          How to define a face.
 * Face Attributes::         What is in a face?
 * Attribute Functions::     Functions to examine and set face attributes.
 * Displaying Faces::        How Emacs combines the faces specified for
@@ -1247,6 +1256,7 @@ Faces
 * Face Remapping::         Remapping faces to alternative definitions.
 * Face Functions::          How to define and examine faces.
 * Auto Faces::              Hook for automatic face assignment.
+* Basic Faces::         Faces that are defined by default.
 * Font Selection::          Finding the best available font for a face.
 * Font Lookup::             Looking up the names of available fonts
                               and information about them.
@@ -1282,10 +1292,12 @@ Images
 * GIF Images::              Special features for GIF format.
 * TIFF Images::             Special features for TIFF format.
 * PostScript Images::       Special features for PostScript format.
+* ImageMagick Images::      Special features available through ImageMagick.
 * Other Image Types::       Various other formats are supported.
 * Defining Images::         Convenient ways to define an image for later use.
 * Showing Images::          Convenient ways to display an image once
                               it is defined.
+* Animated Images::         Some image formats can be animated.
 * Image Cache::             Internal mechanisms of image display.
 
 Buttons
@@ -1301,11 +1313,13 @@ Abstract Display
 * Abstract Display Functions::  Functions in the Ewoc package.
 * Abstract Display Example::    Example of using Ewoc.
 
-Display Tables
+Character Display
 
-* Display Table Format::    What a display table consists of.
-* Active Display Table::    How Emacs selects a display table to use.
-* Glyphs::                  How to define a glyph, and what glyphs mean.
+* Usual Display::       The usual conventions for displaying characters.
+* Display Tables::      What a display table consists of.
+* Active Display Table::  How Emacs selects a display table to use.
+* Glyphs::              How to define a glyph, and what glyphs mean.
+* Glyphless Chars::     How glyphless characters are drawn.
 
 Operating System Interface
 
@@ -1331,6 +1345,8 @@ Operating System Interface
 * Batch Mode::              Running Emacs without terminal interaction.
 * Session Management::      Saving and restoring state with
                               X Session Management.
+* Notifications::           Desktop notifications.
+* Dynamic Libraries::       On-demand loading of support libraries.
 
 Starting Up Emacs
 
@@ -1350,6 +1366,13 @@ Terminal Input
 * Input Modes::             Options for how input is processed.
 * Recording Input::         Saving histories of recent or all input events.
 
+Preparing Lisp code for distribution
+
+* Packaging Basics::        The basic concepts of Emacs Lisp packages.
+* Simple Packages::         How to package a single .el file.
+* Multi-file Packages::     How to package multiple files.
+* Package Archives::        Maintaining package archives.
+
 Tips and Conventions
 
 * Coding Conventions::      Conventions for clean and robust programs.
@@ -1364,7 +1387,7 @@ Tips and Conventions
 GNU Emacs Internals
 
 * Building Emacs::          How the dumped Emacs is made.
-* Pure Storage::            A kludge to make preloaded Lisp functions sharable.
+* Pure Storage::            Kludge to make preloaded Lisp functions shareable.
 * Garbage Collection::      Reclaiming space for Lisp objects no longer used.
 * Memory Usage::            Info about total size of Lisp objects made so far.
 * Writing Emacs Primitives::  Writing C code for Emacs.
@@ -1408,8 +1431,8 @@ Lisp that have counterparts in many programming languages, and later
 chapters describe features that are peculiar to Emacs Lisp or relate
 specifically to editing.
 
-   This is edition 3.0 of the GNU Emacs Lisp Reference Manual,
-corresponding to Emacs version 23.4.
+   This is the `GNU Emacs Lisp Reference Manual', corresponding to
+Emacs version 24.1.
 
 * Menu:
 
@@ -1462,7 +1485,7 @@ other purposes as well, such as writing editing commands.
    Dozens of Lisp implementations have been built over the years, each
 with its own idiosyncrasies.  Many of them were inspired by Maclisp,
 which was written in the 1960s at MIT's Project MAC.  Eventually the
-implementors of the descendants of Maclisp came together and developed a
+implementers of the descendants of Maclisp came together and developed a
 standard for Lisp systems, called Common Lisp.  In the meantime, Gerry
 Sussman and Guy Steele at MIT developed a simplified but very powerful
 dialect of Lisp, called Scheme.
@@ -1477,11 +1500,11 @@ from Common Lisp.  If you don't know Common Lisp, don't worry about it;
 this manual is self-contained.
 
    A certain amount of Common Lisp emulation is available via the `cl'
-library.  *note Overview: (cl)Top.
+library.  *Note Overview: (cl)Top.
 
    Emacs Lisp is not at all influenced by Scheme; but the GNU project
-has an implementation of Scheme, called Guile.  We use Guile in all new
-GNU software that calls for extensibility.
+has an implementation of Scheme, called Guile.  We use it in all new GNU
+software that calls for extensibility.
 
 
 File: elisp,  Node: Conventions,  Next: Version Info,  Prev: Lisp History,  Up: Introduction
@@ -1513,7 +1536,7 @@ printer" refer to those routines in Lisp that convert textual
 representations of Lisp objects into actual Lisp objects, and vice
 versa.  *Note Printed Representation::, for more details.  You, the
 person reading this manual, are thought of as "the programmer" and are
-addressed as "you."  "The user" is the person who uses Lisp programs,
+addressed as "you".  "The user" is the person who uses Lisp programs,
 including those you write.
 
    Examples of Lisp code are formatted like this: `(list 1 2 3)'.
@@ -1526,10 +1549,10 @@ File: elisp,  Node: nil and t,  Next: Evaluation Notation,  Prev: Some Terms,  U
 1.3.2 `nil' and `t'
 -------------------
 
-In Lisp, the symbol `nil' has three separate meanings: it is a symbol
-with the name `nil'; it is the logical truth value FALSE; and it is the
-empty list--the list of zero elements.  When used as a variable, `nil'
-always has the value `nil'.
+In Emacs Lisp, the symbol `nil' has three separate meanings: it is a
+symbol with the name `nil'; it is the logical truth value FALSE; and it
+is the empty list--the list of zero elements.  When used as a variable,
+`nil' always has the value `nil'.
 
    As far as the Lisp reader is concerned, `()' and `nil' are
 identical: they stand for the same object, the symbol `nil'.  The
@@ -1575,7 +1598,7 @@ examples in this manual, this is indicated with `=>':
      (car '(1 2))
           => 1
 
-You can read this as "`(car '(1 2))' evaluates to 1."
+You can read this as "`(car '(1 2))' evaluates to 1".
 
    When a form is a macro call, it expands into a new form for Lisp to
 evaluate.  We show the result of the expansion with `==>'.  We may or
@@ -1605,7 +1628,7 @@ function `eval-region'), the printed text is displayed in the echo area.
 
    Examples in this manual indicate printed text with `-|',
 irrespective of where that text goes.  The value returned by evaluating
-the form (here `bar') follows on a separate line with `=>'.
+the form follows on a separate line with `=>'.
 
      (progn (prin1 'foo) (princ "\n") (prin1 'bar))
           -| foo
@@ -1729,13 +1752,13 @@ Form', respectively.  Commands are simply functions that may be called
 interactively; macros process their arguments differently from functions
 (the arguments are not evaluated), but are presented the same way.
 
-   Special form descriptions use a more complex notation to specify
-optional and repeated arguments because they can break the argument
-list down into separate arguments in more complicated ways.
-`[OPTIONAL-ARG]' means that OPTIONAL-ARG is optional and
-`REPEATED-ARGS...' stands for zero or more arguments.  Parentheses are
-used when several arguments are grouped into additional levels of list
-structure.  Here is an example:
+   The descriptions of macros and special forms use a more complex
+notation to specify optional and repeated arguments, because they can
+break the argument list down into separate arguments in more
+complicated ways.  `[OPTIONAL-ARG]' means that OPTIONAL-ARG is optional
+and `REPEATED-ARGS...' stands for zero or more arguments.  Parentheses
+are used when several arguments are grouped into additional levels of
+list structure.  Here is an example:
 
  -- Special Form: count-loop (VAR [FROM TO [INC]]) BODY...
      This imaginary special form implements a loop that executes the
@@ -1813,8 +1836,8 @@ use.
 
  -- Variable: emacs-build-time
      The value of this variable indicates the time at which Emacs was
-     built at the local site.  It is a list of three integers, like the
-     value of `current-time' (*note Time of Day::).
+     built.  It is a list of three integers, like the value of
+     `current-time' (*note Time of Day::).
 
           emacs-build-time
                => (18846 52016 156039)
@@ -1826,8 +1849,6 @@ use.
      incremented each time you build Emacs in any given directory.  A
      value with four numeric components, such as `"22.0.91.1"',
      indicates an unreleased test version.
-
-   The following two variables have existed since Emacs version 19.23:
 
  -- Variable: emacs-major-version
      The major version number of Emacs, as an integer.  For Emacs
@@ -1843,16 +1864,16 @@ File: elisp,  Node: Acknowledgements,  Prev: Version Info,  Up: Introduction
 1.5 Acknowledgements
 ====================
 
-This manual was written by Robert Krawitz, Bil Lewis, Dan LaLiberte,
-Richard M. Stallman and Chris Welty, the volunteers of the GNU manual
-group, in an effort extending over several years.  Robert J. Chassell
-helped to review and edit the manual, with the support of the Defense
-Advanced Research Projects Agency, ARPA Order 6082, arranged by
+This manual was originally written by Robert Krawitz, Bil Lewis, Dan
+LaLiberte, Richard M. Stallman and Chris Welty, the volunteers of the
+GNU manual group, in an effort extending over several years.  Robert J.
+Chassell helped to review and edit the manual, with the support of the
+Defense Advanced Research Projects Agency, ARPA Order 6082, arranged by
 Warren A. Hunt, Jr. of Computational Logic, Inc.  Additional sections
-were written by Miles Bader, Lars Brinkhoff, Chong Yidong, Kenichi
-Handa, Lute Kamstra, Juri Linkov, Glenn Morris, Thien-Thi Nguyen, Dan
-Nicolaescu, Martin Rudalics, Kim F. Storm, Luc Teirlinck, and Eli
-Zaretskii.
+have since been written by Miles Bader, Lars Brinkhoff, Chong Yidong,
+Kenichi Handa, Lute Kamstra, Juri Linkov, Glenn Morris, Thien-Thi
+Nguyen, Dan Nicolaescu, Martin Rudalics, Kim F. Storm, Luc Teirlinck,
+and Eli Zaretskii, and others.
 
    Corrections were supplied by Drew Adams, Juanma Barranquero, Karl
 Berry, Jim Blandy, Bard Bloom, Stephane Boucher, David Boyes, Alan
@@ -1864,9 +1885,12 @@ Kirman, Bob Knighten, Frederick M. Korz, Joe Lammens, Glenn M. Lewis,
 K. Richard Magill, Brian Marick, Roland McGrath, Stefan Monnier, Skip
 Montanaro, John Gardiner Myers, Thomas A. Peterson, Francesco Potorti,
 Friedrich Pukelsheim, Arnold D. Robbins, Raul Rockwell, Jason Rumney,
-Per Starba"ck, Shinichirou Sugou, Kimmo Suominen, Edward Tharp, Bill
+Per Starbäck, Shinichirou Sugou, Kimmo Suominen, Edward Tharp, Bill
 Trost, Rickard Westman, Jean White, Eduard Wiebe, Matthew Wilding, Carl
 Witty, Dale Worley, Rusty Wright, and David D. Zuhn.
+
+   For a more complete list of contributors, please see the relevant
+ChangeLog file in the Emacs sources.
 
 
 File: elisp,  Node: Lisp Data Types,  Next: Numbers,  Prev: Introduction,  Up: Top
@@ -2026,10 +2050,10 @@ File: elisp,  Node: Integer Type,  Next: Floating Point Type,  Up: Programming T
 ------------------
 
 The range of values for integers in Emacs Lisp is -536870912 to
-536870911 (30 bits; i.e., -2**29 to 2**29 - 1) on most machines.  (Some
-machines may provide a wider range.)  It is important to note that the
-Emacs Lisp arithmetic functions do not check for overflow.  Thus `(1+
-536870911)' is -536870912 on most machines.
+536870911 (30 bits; i.e., -2**29 to 2**29 - 1) on typical 32-bit
+machines.  (Some machines provide a wider range.)  Emacs Lisp
+arithmetic functions do not check for overflow.  Thus `(1+ 536870911)'
+is -536870912 if Emacs integers are 30 bits.
 
    The read syntax for integers is a sequence of (base ten) digits with
 an optional sign at the beginning and an optional period at the end.
@@ -2040,13 +2064,12 @@ leading `+' or a final `.'.
      1                ; The integer 1.
      1.               ; Also the integer 1.
      +1               ; Also the integer 1.
-     1073741825       ; Also the integer 1 on a 30-bit implementation.
 
 As a special exception, if a sequence of digits specifies an integer
 too large or too small to be a valid integer object, the Lisp reader
 reads it as a floating-point number (*note Floating Point Type::).  For
-instance, on most machines `536870912' is read as the floating-point
-number `536870912.0'.
+instance, if Emacs integers are 30 bits, `536870912' is read as the
+floating-point number `536870912.0'.
 
    *Note Numbers::, for more information.
 
@@ -2203,7 +2226,7 @@ precise octal value is more important than the ASCII representation.
    To use hex, write a question mark followed by a backslash, `x', and
 the hexadecimal character code.  You can use any number of hex digits,
 so you can represent any character code in this way.  Thus, `?\x41' for
-the character `A', `?\x1' for the character `C-a', and `?\x8e0' for the
+the character `A', `?\x1' for the character `C-a', and `?\xe0' for the
 Latin-1 character `a' with grave accent.
 
 
@@ -2227,9 +2250,10 @@ example, both `?\^I' and `?\^i' are valid read syntax for the character
 that exist in ASCII; but for keyboard input purposes, you can turn any
 character into a control character with `C-'.  The character codes for
 these non-ASCII control characters include the 2**26 bit as well as the
-code for the corresponding non-control character.  Ordinary terminals
-have no way of generating non-ASCII control characters, but you can
-generate them straightforwardly using X and other window systems.
+code for the corresponding non-control character.  Ordinary text
+terminals have no way of generating non-ASCII control characters, but
+you can generate them straightforwardly using X and other window
+systems.
 
    For historical reasons, Emacs treats the <DEL> character as the
 control equivalent of `?':
@@ -2282,10 +2306,10 @@ example, ASCII distinguishes between the characters `a' and `A'.  But
 ASCII has no way to represent whether a control character is upper case
 or lower case.  Emacs uses the 2**25 bit to indicate that the shift key
 was used in typing a control character.  This distinction is possible
-only when you use X terminals or other special terminals; ordinary
-terminals do not report the distinction to the computer in any way.
-The Lisp syntax for the shift bit is `\S-'; thus, `?\C-\S-o' or
-`?\C-\S-O' represents the shifted-control-o character.
+only when you use X terminals or other special terminals; ordinary text
+terminals do not report the distinction.  The Lisp syntax for the shift
+bit is `\S-'; thus, `?\C-\S-o' or `?\C-\S-O' represents the
+shifted-control-o character.
 
    The X Window System defines three other modifier bits that can be set
 in a character: "hyper", "super" and "alt".  The syntaxes for these
@@ -2316,7 +2340,7 @@ independently.
    A symbol whose name starts with a colon (`:') is called a "keyword
 symbol".  These symbols automatically act as constants, and are
 normally used only by comparing an unknown symbol with a few specific
-alternatives.
+alternatives.  *Note Constant Variables::.
 
    A symbol name can contain any characters whatever.  Most symbol names
 are written with letters, digits, and the punctuation characters
@@ -2353,9 +2377,12 @@ makes it invalid as a number.
      +-*/_~!@$%^&=:<>{}  ; A symbol named `+-*/_~!@$%^&=:<>{}'.
                          ;   These characters need not be escaped.
 
-   Normally the Lisp reader interns all symbols (*note Creating
-Symbols::).  To prevent interning, you can write `#:' before the name
-of the symbol.
+   As an exception to the rule that a symbol's name serves as its
+printed representation, `##' is the printed representation for an
+interned symbol whose name is an empty string.  Furthermore, `#:FOO' is
+the printed representation for an uninterned symbol whose name is FOO.
+(Normally, the Lisp reader interns all symbols; *note Creating
+Symbols::.)
 
 
 File: elisp,  Node: Sequence Type,  Next: Cons Cell Type,  Prev: Symbol Type,  Up: Programming Types
@@ -2364,25 +2391,28 @@ File: elisp,  Node: Sequence Type,  Next: Cons Cell Type,  Prev: Symbol Type,  U
 --------------------
 
 A "sequence" is a Lisp object that represents an ordered set of
-elements.  There are two kinds of sequence in Emacs Lisp, lists and
-arrays.  Thus, an object of type list or of type array is also
-considered a sequence.
+elements.  There are two kinds of sequence in Emacs Lisp: "lists" and
+"arrays".
 
-   Arrays are further subdivided into strings, vectors, char-tables and
-bool-vectors.  Vectors can hold elements of any type, but string
-elements must be characters, and bool-vector elements must be `t' or
-`nil'.  Char-tables are like vectors except that they are indexed by
-any valid character code.  The characters in a string can have text
-properties like characters in a buffer (*note Text Properties::), but
-vectors do not support text properties, even when their elements happen
-to be characters.
+   Lists are the most commonly-used sequences.  A list can hold
+elements of any type, and its length can be easily changed by adding or
+removing elements.  See the next subsection for more about lists.
 
-   Lists, strings and the other array types are different, but they have
-important similarities.  For example, all have a length L, and all have
-elements which can be indexed from zero to L minus one.  Several
-functions, called sequence functions, accept any kind of sequence.  For
-example, the function `elt' can be used to extract an element of a
-sequence, given its index.  *Note Sequences Arrays Vectors::.
+   Arrays are fixed-length sequences.  They are further subdivided into
+strings, vectors, char-tables and bool-vectors.  Vectors can hold
+elements of any type, whereas string elements must be characters, and
+bool-vector elements must be `t' or `nil'.  Char-tables are like
+vectors except that they are indexed by any valid character code.  The
+characters in a string can have text properties like characters in a
+buffer (*note Text Properties::), but vectors do not support text
+properties, even when their elements happen to be characters.
+
+   Lists, strings and the other array types also share important
+similarities.  For example, all have a length L, and all have elements
+which can be indexed from zero to L minus one.  Several functions,
+called sequence functions, accept any kind of sequence.  For example,
+the function `length' reports the length of any kind of sequence.
+*Note Sequences Arrays Vectors::.
 
    It is generally impossible to read the same sequence twice, since
 sequences are always created anew upon reading.  If you read the read
@@ -2397,23 +2427,23 @@ File: elisp,  Node: Cons Cell Type,  Next: Array Type,  Prev: Sequence Type,  Up
 ------------------------------
 
 A "cons cell" is an object that consists of two slots, called the CAR
-slot and the CDR slot.  Each slot can "hold" or "refer to" any Lisp
-object.  We also say that "the CAR of this cons cell is" whatever
-object its CAR slot currently holds, and likewise for the CDR.
-
-     A note to C programmers: in Lisp, we do not distinguish between
-     "holding" a value and "pointing to" the value, because pointers in
-     Lisp are implicit.
+slot and the CDR slot.  Each slot can "hold" any Lisp object.  We also
+say that "the CAR of this cons cell is" whatever object its CAR slot
+currently holds, and likewise for the CDR.
 
    A "list" is a series of cons cells, linked together so that the CDR
 slot of each cons cell holds either the next cons cell or the empty
 list.  The empty list is actually the symbol `nil'.  *Note Lists::, for
-functions that work on lists.  Because most cons cells are used as part
-of lists, the phrase "list structure" has come to refer to any
-structure made out of cons cells.
+details.  Because most cons cells are used as part of lists, we refer
+to any structure made out of cons cells as a "list structure".
+
+     A note to C programmers: a Lisp list thus works as a "linked list"
+     built up of cons cells.  Because pointers in Lisp are implicit, we
+     do not distinguish between a cons cell slot "holding" a value
+     versus "pointing to" the value.
 
    Because cons cells are so central to Lisp, we also have a word for
-"an object which is not a cons cell."  These objects are called "atoms".
+"an object which is not a cons cell".  These objects are called "atoms".
 
    The read syntax and printed representation for lists are identical,
 and consist of a left parenthesis, an arbitrary number of elements, and
@@ -2727,36 +2757,34 @@ File: elisp,  Node: Non-ASCII in Strings,  Next: Nonprinting Characters,  Prev: 
 You can include a non-ASCII international character in a string
 constant by writing it literally.  There are two text representations
 for non-ASCII characters in Emacs strings (and in buffers): unibyte and
-multibyte.  If the string constant is read from a multibyte source,
-such as a multibyte buffer or string, or a file that would be visited as
-multibyte, then the character is read as a multibyte character, and that
-makes the string multibyte.  If the string constant is read from a
-unibyte source, then the character is read as unibyte and that makes the
-string unibyte.
+multibyte (*note Text Representations::).  If the string constant is
+read from a multibyte source, such as a multibyte buffer or string, or
+a file that would be visited as multibyte, then Emacs reads the
+non-ASCII character as a multibyte character and automatically makes
+the string a multibyte string.  If the string constant is read from a
+unibyte source, then Emacs reads the non-ASCII character as unibyte,
+and makes the string unibyte.
 
-   You can also represent a multibyte non-ASCII character with its
-character code: use a hex escape, `\xNNNNNNN', with as many digits as
-necessary.  (Multibyte non-ASCII character codes are all greater than
-256.)  Any character which is not a valid hex digit terminates this
-construct.  If the next character in the string could be interpreted as
-a hex digit, write `\ ' (backslash and space) to terminate the hex
-escape--for example, `\x8e0\ ' represents one character, `a' with grave
-accent.  `\ ' in a string constant is just like backslash-newline; it
-does not contribute any character to the string, but it does terminate
-the preceding hex escape.
+   Instead of writing a non-ASCII character literally into a multibyte
+string, you can write it as its character code using a hex escape,
+`\xNNNNNNN', with as many digits as necessary.  (Multibyte non-ASCII
+character codes are all greater than 256.)  You can also specify a
+character in a multibyte string using the `\u' or `\U' Unicode escape
+syntax (*note General Escape Syntax::).  In either case, any character
+which is not a valid hex digit terminates the construct.  If the next
+character in the string could be interpreted as a hex digit, write `\ '
+(backslash and space) to terminate the hex escape--for example,
+`\xe0\ ' represents one character, `a' with grave accent.  `\ ' in a
+string constant is just like backslash-newline; it does not contribute
+any character to the string, but it does terminate the preceding hex
+escape.  Using any hex escape in a string (even for an ASCII character)
+automatically forces the string to be multibyte.
 
    You can represent a unibyte non-ASCII character with its character
 code, which must be in the range from 128 (0200 octal) to 255 (0377
 octal).  If you write all such character codes in octal and the string
 contains no other characters forcing it to be multibyte, this produces
-a unibyte string.  However, using any hex escape in a string (even for
-an ASCII character) forces the string to be multibyte.
-
-   You can also specify characters in a string by their numeric values
-in Unicode, using `\u' and `\U' (*note Character Type::).
-
-   *Note Text Representations::, for more information about the two
-text representations.
+a unibyte string.
 
 
 File: elisp,  Node: Nonprinting Characters,  Next: Text Props and Strings,  Prev: Non-ASCII in Strings,  Up: String Type
@@ -2975,7 +3003,7 @@ File: elisp,  Node: Primitive Function Type,  Next: Byte-Code Type,  Prev: Macro
 A "primitive function" is a function callable from Lisp but written in
 the C programming language.  Primitive functions are also called
 "subrs" or "built-in functions".  (The word "subr" is derived from
-"subroutine.")  Most primitive functions evaluate all their arguments
+"subroutine".)  Most primitive functions evaluate all their arguments
 when they are called.  A primitive function that does not evaluate all
 its arguments is called a "special form" (*note Special Forms::).
 
@@ -3006,11 +3034,11 @@ File: elisp,  Node: Byte-Code Type,  Next: Autoload Type,  Prev: Primitive Funct
 2.3.16 Byte-Code Function Type
 ------------------------------
 
-The byte compiler produces "byte-code function objects".  Internally, a
-byte-code function object is much like a vector; however, the evaluator
-handles this data type specially when it appears as a function to be
-called.  *Note Byte Compilation::, for information about the byte
-compiler.
+"Byte-code function objects" are produced by byte-compiling Lisp code
+(*note Byte Compilation::).  Internally, a byte-code function object is
+much like a vector; however, the evaluator handles this data type
+specially when it appears in a function call.  *Note Byte-Code
+Objects::.
 
    The printed representation and read syntax for a byte-code function
 object is like that for a vector, with an additional `#' before the
@@ -3246,11 +3274,10 @@ The word "process" usually means a running program.  Emacs itself runs
 in a process of this sort.  However, in Emacs Lisp, a process is a Lisp
 object that designates a subprocess created by the Emacs process.
 Programs such as shells, GDB, ftp, and compilers, running in
-subprocesses of Emacs, extend the capabilities of Emacs.
-
-   An Emacs subprocess takes textual input from Emacs and returns
-textual output to Emacs for further manipulation.  Emacs can also send
-signals to the subprocess.
+subprocesses of Emacs, extend the capabilities of Emacs.    An Emacs
+subprocess takes textual input from Emacs and returns textual output to
+Emacs for further manipulation.  Emacs can also send signals to the
+subprocess.
 
    Process objects have no read syntax.  They print in hash notation,
 giving the name of the process:
@@ -3315,7 +3342,8 @@ temporarily in a different display style.  Overlays have no read
 syntax, and print in hash notation, giving the buffer name and range of
 positions.
 
-   *Note Overlays::, for how to create and use overlays.
+   *Note Overlays::, for information on how you can create and use
+overlays.
 
 
 File: elisp,  Node: Font Type,  Prev: Overlay Type,  Up: Editing Types
@@ -3457,6 +3485,9 @@ with references to further information.
 `consp'
      *Note consp: List-related Predicates.
 
+`custom-variable-p'
+     *Note custom-variable-p: Variable Definitions.
+
 `display-table-p'
      *Note display-table-p: Display Tables.
 
@@ -3532,9 +3563,6 @@ with references to further information.
 `syntax-table-p'
      *Note syntax-table-p: Syntax Tables.
 
-`user-variable-p'
-     *Note user-variable-p: Defining Variables.
-
 `vectorp'
      *Note vectorp: Vectors.
 
@@ -3582,23 +3610,24 @@ File: elisp,  Node: Equality Predicates,  Prev: Type Predicates,  Up: Lisp Data 
 2.7 Equality Predicates
 =======================
 
-Here we describe functions that test for equality between any two
-objects.  Other functions test equality of contents between objects of
-specific types, e.g., strings.  For these predicates, see the
-appropriate chapter describing the data type.
+Here we describe functions that test for equality between two objects.
+Other functions test equality of contents between objects of specific
+types, e.g. strings.  For these predicates, see the appropriate chapter
+describing the data type.
 
  -- Function: eq object1 object2
      This function returns `t' if OBJECT1 and OBJECT2 are the same
-     object, `nil' otherwise.
+     object, and `nil' otherwise.
 
-     `eq' returns `t' if OBJECT1 and OBJECT2 are integers with the same
-     value.  Also, since symbol names are normally unique, if the
-     arguments are symbols with the same name, they are `eq'.  For
-     other types (e.g., lists, vectors, strings), two arguments with
-     the same contents or elements are not necessarily `eq' to each
-     other: they are `eq' only if they are the same object, meaning
-     that a change in the contents of one will be reflected by the same
-     change in the contents of the other.
+     If OBJECT1 and OBJECT2 are integers with the same value, they are
+     considered to be the same object (i.e. `eq' returns `t').  If
+     OBJECT1 and OBJECT2 are symbols with the same name, they are
+     normally the same object--but see *note Creating Symbols:: for
+     exceptions.  For other types (e.g. lists, vectors, strings), two
+     arguments with the same contents or elements are not necessarily
+     `eq' to each other: they are `eq' only if they are the same
+     object, meaning that a change in the contents of one will be
+     reflected by the same change in the contents of the other.
 
           (eq 'foo 'foo)
                => t
@@ -3640,11 +3669,11 @@ appropriate chapter describing the data type.
 
  -- Function: equal object1 object2
      This function returns `t' if OBJECT1 and OBJECT2 have equal
-     components, `nil' otherwise.  Whereas `eq' tests if its arguments
-     are the same object, `equal' looks inside nonidentical arguments
-     to see if their elements or contents are the same.  So, if two
-     objects are `eq', they are `equal', but the converse is not always
-     true.
+     components, and `nil' otherwise.  Whereas `eq' tests if its
+     arguments are the same object, `equal' looks inside nonidentical
+     arguments to see if their elements or contents are the same.  So,
+     if two objects are `eq', they are `equal', but the converse is not
+     always true.
 
           (equal 'foo 'foo)
                => t
@@ -3674,12 +3703,12 @@ appropriate chapter describing the data type.
                => nil
 
      Comparison of strings is case-sensitive, but does not take account
-     of text properties--it compares only the characters in the
-     strings.  Use `equal-including-properties' to also compare text
-     properties.  For technical reasons, a unibyte string and a
-     multibyte string are `equal' if and only if they contain the same
-     sequence of character codes and all these codes are either in the
-     range 0 through 127 (ASCII) or 160 through 255
+     of text properties--it compares only the characters in the strings.
+     *Note Text Properties::.  Use `equal-including-properties' to also
+     compare text properties.  For technical reasons, a unibyte string
+     and a multibyte string are `equal' if and only if they contain the
+     same sequence of character codes and all these codes are either in
+     the range 0 through 127 (ASCII) or 160 through 255
      (`eight-bit-graphic').  (*note Text Representations::).
 
           (equal "asdf" "ASDF")
@@ -3745,17 +3774,19 @@ File: elisp,  Node: Integer Basics,  Next: Float Basics,  Up: Numbers
 
 The range of values for an integer depends on the machine.  The minimum
 range is -536870912 to 536870911 (30 bits; i.e., -2**29 to 2**29 - 1),
-but some machines may provide a wider range.  Many examples in this
-chapter assume an integer has 30 bits.  
+but some machines provide a wider range.  Many examples in this chapter
+assume that an integer has 30 bits and that floating point numbers are
+IEEE double precision.  
 
    The Lisp reader reads an integer as a sequence of digits with
-optional initial sign and optional final period.
+optional initial sign and optional final period.  An integer that is
+out of the Emacs range is treated as a floating-point number.
 
       1               ; The integer 1.
       1.              ; The integer 1.
      +1               ; Also the integer 1.
      -1               ; The integer -1.
-      1073741825      ; Also the integer 1, due to overflow.
+      1073741825      ; The floating point number 1073741825.0.
       0               ; The integer 0.
      -0               ; The integer 0.
 
@@ -3777,14 +3808,15 @@ view the numbers in their binary form.
 
    In 30-bit binary, the decimal integer 5 looks like this:
 
-     00 0000  0000 0000  0000 0000  0000 0101
+     0000...000101 (30 bits total)
 
-(We have inserted spaces between groups of 4 bits, and two spaces
-between groups of 8 bits, to make the binary integer easier to read.)
+(The `...' stands for enough bits to fill out a 30-bit word; in this
+case, `...' stands for twenty 0 bits.  Later examples also use the
+`...' notation to make binary integers easier to read.)
 
    The integer -1 looks like this:
 
-     11 1111  1111 1111  1111 1111  1111 1111
+     1111...111111 (30 bits total)
 
 -1 is represented as 30 ones.  (This is called "two's complement"
 notation.)
@@ -3792,12 +3824,12 @@ notation.)
    The negative integer, -5, is creating by subtracting 4 from -1.  In
 binary, the decimal integer 4 is 100.  Consequently, -5 looks like this:
 
-     11 1111  1111 1111  1111 1111  1111 1011
+     1111...111011 (30 bits total)
 
    In this implementation, the largest 30-bit binary integer value is
 536,870,911 in decimal.  In binary, it looks like this:
 
-     01 1111  1111 1111  1111 1111  1111 1111
+     0111...111111 (30 bits total)
 
    Since the arithmetic functions do not check whether integers go
 outside their range, when you add 1 to 536,870,911, the value is the
@@ -3805,7 +3837,7 @@ negative integer -536,870,912:
 
      (+ 1 536870911)
           => -536870912
-          => 10 0000  0000 0000  0000 0000  0000 0000
+          => 1000...000000 (30 bits total)
 
    Many of the functions described in this chapter accept markers for
 arguments in place of numbers.  (*Note Markers::.)  Since the actual
@@ -3833,26 +3865,29 @@ File: elisp,  Node: Float Basics,  Next: Predicates on Numbers,  Prev: Integer B
 Floating point numbers are useful for representing numbers that are not
 integral.  The precise range of floating point numbers is
 machine-specific; it is the same as the range of the C data type
-`double' on the machine you are using.
+`double' on the machine you are using.  Emacs uses the IEEE floating
+point standard where possible (the standard is supported by most modern
+computers).
 
-   The read-syntax for floating point numbers requires either a decimal
+   The read syntax for floating point numbers requires either a decimal
 point (with at least one digit following), an exponent, or both.  For
 example, `1500.0', `15e2', `15.0e2', `1.5e3', and `.15e4' are five ways
 of writing a floating point number whose value is 1500.  They are all
 equivalent.  You can also use a minus sign to write negative floating
 point numbers, as in `-1.0'.
 
-   Most modern computers support the IEEE floating point standard,
-which provides for positive infinity and negative infinity as floating
-point values.  It also provides for a class of values called NaN or
-"not-a-number"; numerical functions return such values in cases where
-there is no correct answer.  For example, `(/ 0.0 0.0)' returns a NaN.
-For practical purposes, there's no significant difference between
-different NaN values in Emacs Lisp, and there's no rule for precisely
-which NaN value should be used in a particular case, so Emacs Lisp
-doesn't try to distinguish them (but it does report the sign, if you
-print it).  Here are the read syntaxes for these special floating point
-values:
+   Emacs Lisp treats `-0.0' as equal to ordinary zero (with respect to
+`equal' and `='), even though the two are distinguishable in the IEEE
+floating point standard.
+
+   The IEEE floating point standard supports positive infinity and
+negative infinity as floating point values.  It also provides for a
+class of values called NaN or "not-a-number"; numerical functions
+return such values in cases where there is no correct answer.  For
+example, `(/ 0.0 0.0)' returns a NaN.  (NaN values can also carry a
+sign, but for practical purposes there's no significant difference
+between different NaN values in Emacs Lisp.)  Here are the read
+syntaxes for these special floating point values:
 
 positive infinity
      `1.0e+INF'
@@ -3863,16 +3898,30 @@ negative infinity
 Not-a-number
      `0.0e+NaN' or `-0.0e+NaN'.
 
-   To test whether a floating point value is a NaN, compare it with
-itself using `='.  That returns `nil' for a NaN, and `t' for any other
-floating point value.
+ -- Function: isnan number
+     This predicate tests whether its argument is NaN, and returns `t'
+     if so, `nil' otherwise.  The argument must be a number.
 
-   The value `-0.0' is distinguishable from ordinary zero in IEEE
-floating point, but Emacs Lisp `equal' and `=' consider them equal
-values.
+   The following functions are specialized for handling floating point
+numbers:
 
-   You can use `logb' to extract the binary exponent of a floating
-point number (or estimate the logarithm of an integer):
+ -- Function: frexp x
+     This function returns a cons cell `(SIG . EXP)', where SIG and EXP
+     are respectively the significand and exponent of the floating
+     point number X:
+
+          X = SIG * 2^EXP
+
+     SIG is a floating point number between 0.5 (inclusive) and 1.0
+     (exclusive).  If X is zero, the return value is `(0 . 0)'.
+
+ -- Function: ldexp sig &optional exp
+     This function returns a floating point number corresponding to the
+     significand SIG and exponent EXP.
+
+ -- Function: copysign x1 x2
+     This function copies the sign of X2 to the value of X1, and
+     returns the result.  X1 and X2 must be floating point numbers.
 
  -- Function: logb number
      This function returns the binary exponent of NUMBER.  More
@@ -3883,12 +3932,6 @@ point number (or estimate the logarithm of an integer):
                => 3
           (logb 10.0e20)
                => 69
-
- -- Variable: float-e
-     The mathematical constant e (2.71828...).
-
- -- Variable: float-pi
-     The mathematical constant pi (3.14159...).
 
 
 File: elisp,  Node: Predicates on Numbers,  Next: Comparison of Numbers,  Prev: Float Basics,  Up: Numbers
@@ -3907,8 +3950,6 @@ Markers::.
      This predicate tests whether its argument is a floating point
      number and returns `t' if so, `nil' otherwise.
 
-     `floatp' does not exist in Emacs versions 18 and earlier.
-
  -- Function: integerp object
      This predicate tests whether its argument is an integer, and
      returns `t' if so, `nil' otherwise.
@@ -3917,13 +3958,12 @@ Markers::.
      This predicate tests whether its argument is a number (either
      integer or floating point), and returns `t' if so, `nil' otherwise.
 
- -- Function: wholenump object
-     The `wholenump' predicate (whose name comes from the phrase
-     "whole-number-p") tests to see whether its argument is a
-     nonnegative integer, and returns `t' if so, `nil' otherwise.  0 is
-     considered non-negative.
+ -- Function: natnump object
+     This predicate (whose name comes from the phrase "natural number")
+     tests to see whether its argument is a nonnegative integer, and
+     returns `t' if so, `nil' otherwise.  0 is considered non-negative.
 
-     `natnump' is an obsolete synonym for `wholenump'.
+     This is a synonym for `natnump'.
 
  -- Function: zerop number
      This predicate tests whether its argument is zero, and returns `t'
@@ -4128,8 +4168,8 @@ commonly used.
 any argument is floating.
 
    It is important to note that in Emacs Lisp, arithmetic functions do
-not check for overflow.  Thus `(1+ 268435455)' may evaluate to
--268435456, depending on your hardware.
+not check for overflow.  Thus `(1+ 536870911)' may evaluate to
+-536870912, depending on your hardware.
 
  -- Function: 1+ number-or-marker
      This function returns NUMBER-OR-MARKER plus 1.  For example,
@@ -4322,7 +4362,7 @@ In a computer, an integer is represented as a binary number, a sequence
 of "bits" (digits which are either zero or one).  A bitwise operation
 acts on the individual bits of such a sequence.  For example,
 "shifting" moves the whole sequence left or right one or more places,
-reproducing the same pattern "moved over."
+reproducing the same pattern "moved over".
 
    The bitwise operations in Emacs Lisp apply only to integers.
 
@@ -4378,21 +4418,20 @@ reproducing the same pattern "moved over."
      The function `lsh', like all Emacs Lisp arithmetic functions, does
      not check for overflow, so shifting left can discard significant
      bits and change the sign of the number.  For example, left shifting
-     536,870,911 produces -2 on a 30-bit machine:
+     536,870,911 produces -2 in the 30-bit implementation:
 
           (lsh 536870911 1)          ; left shift
                => -2
 
-     In binary, in the 30-bit implementation, the argument looks like
-     this:
+     In binary, the argument looks like this:
 
           ;; Decimal 536,870,911
-          01 1111  1111 1111  1111 1111  1111 1111
+          0111...111111 (30 bits total)
 
      which becomes the following when left shifted:
 
           ;; Decimal -2
-          11 1111  1111 1111  1111 1111  1111 1110
+          1111...111110 (30 bits total)
 
  -- Function: ash integer1 count
      `ash' ("arithmetic shift") shifts the bits in INTEGER1 to the left
@@ -4408,39 +4447,40 @@ reproducing the same pattern "moved over."
 
           (ash -6 -1) => -3
           ;; Decimal -6 becomes decimal -3.
-          11 1111  1111 1111  1111 1111  1111 1010
+          1111...111010 (30 bits total)
                =>
-          11 1111  1111 1111  1111 1111  1111 1101
+          1111...111101 (30 bits total)
 
      In contrast, shifting the pattern of bits one place to the right
      with `lsh' looks like this:
 
           (lsh -6 -1) => 536870909
           ;; Decimal -6 becomes decimal 536,870,909.
-          11 1111  1111 1111  1111 1111  1111 1010
+          1111...111010 (30 bits total)
                =>
-          01 1111  1111 1111  1111 1111  1111 1101
+          0111...111101 (30 bits total)
 
      Here are other examples:
 
-                             ;               30-bit binary values
+                             ;         30-bit binary values
 
-          (lsh 5 2)          ;   5  =  00 0000  0000 0000  0000 0000  0000 0101
-               => 20         ;      =  00 0000  0000 0000  0000 0000  0001 0100
+          (lsh 5 2)          ;   5  =  0000...000101
+               => 20         ;      =  0000...010100
           (ash 5 2)
                => 20
-          (lsh -5 2)         ;  -5  =  11 1111  1111 1111  1111 1111  1111 1011
-               => -20        ;      =  11 1111  1111 1111  1111 1111  1110 1100
+          (lsh -5 2)         ;  -5  =  1111...111011
+               => -20        ;      =  1111...101100
           (ash -5 2)
                => -20
-          (lsh 5 -2)         ;   5  =  00 0000  0000 0000  0000 0000  0000 0101
-               => 1          ;      =  00 0000  0000 0000  0000 0000  0000 0001
+          (lsh 5 -2)         ;   5  =  0000...000101
+               => 1          ;      =  0000...000001
           (ash 5 -2)
                => 1
-          (lsh -5 -2)        ;  -5  =  11 1111  1111 1111  1111 1111  1111 1011
-               => 268435454  ;      =  00 0111  1111 1111  1111 1111  1111 1110
-          (ash -5 -2)        ;  -5  =  11 1111  1111 1111  1111 1111  1111 1011
-               => -2         ;      =  11 1111  1111 1111  1111 1111  1111 1110
+          (lsh -5 -2)        ;  -5  =  1111...111011
+               => 268435454
+                             ;      =  0011...111110
+          (ash -5 -2)        ;  -5  =  1111...111011
+               => -2         ;      =  1111...111110
 
  -- Function: logand &rest ints-or-markers
      This function returns the "logical and" of the arguments: the Nth
@@ -4466,19 +4506,19 @@ reproducing the same pattern "moved over."
      representation consists entirely of ones.  If `logand' is passed
      just one argument, it returns that argument.
 
-                             ;                30-bit binary values
+                             ;        30-bit binary values
 
-          (logand 14 13)     ; 14  =  00 0000  0000 0000  0000 0000  0000 1110
-                             ; 13  =  00 0000  0000 0000  0000 0000  0000 1101
-               => 12         ; 12  =  00 0000  0000 0000  0000 0000  0000 1100
+          (logand 14 13)     ; 14  =  0000...001110
+                             ; 13  =  0000...001101
+               => 12         ; 12  =  0000...001100
 
-          (logand 14 13 4)   ; 14  =  00 0000  0000 0000  0000 0000  0000 1110
-                             ; 13  =  00 0000  0000 0000  0000 0000  0000 1101
-                             ;  4  =  00 0000  0000 0000  0000 0000  0000 0100
-               => 4          ;  4  =  00 0000  0000 0000  0000 0000  0000 0100
+          (logand 14 13 4)   ; 14  =  0000...001110
+                             ; 13  =  0000...001101
+                             ;  4  =  0000...000100
+               => 4          ;  4  =  0000...000100
 
           (logand)
-               => -1         ; -1  =  11 1111  1111 1111  1111 1111  1111 1111
+               => -1         ; -1  =  1111...111111
 
  -- Function: logior &rest ints-or-markers
      This function returns the "inclusive or" of its arguments: the Nth
@@ -4487,16 +4527,16 @@ reproducing the same pattern "moved over."
      is zero, which is an identity element for this operation.  If
      `logior' is passed just one argument, it returns that argument.
 
-                             ;               30-bit binary values
+                             ;        30-bit binary values
 
-          (logior 12 5)      ; 12  =  00 0000  0000 0000  0000 0000  0000 1100
-                             ;  5  =  00 0000  0000 0000  0000 0000  0000 0101
-               => 13         ; 13  =  00 0000  0000 0000  0000 0000  0000 1101
+          (logior 12 5)      ; 12  =  0000...001100
+                             ;  5  =  0000...000101
+               => 13         ; 13  =  0000...001101
 
-          (logior 12 5 7)    ; 12  =  00 0000  0000 0000  0000 0000  0000 1100
-                             ;  5  =  00 0000  0000 0000  0000 0000  0000 0101
-                             ;  7  =  00 0000  0000 0000  0000 0000  0000 0111
-               => 15         ; 15  =  00 0000  0000 0000  0000 0000  0000 1111
+          (logior 12 5 7)    ; 12  =  0000...001100
+                             ;  5  =  0000...000101
+                             ;  7  =  0000...000111
+               => 15         ; 15  =  0000...001111
 
  -- Function: logxor &rest ints-or-markers
      This function returns the "exclusive or" of its arguments: the Nth
@@ -4505,16 +4545,16 @@ reproducing the same pattern "moved over."
      result is 0, which is an identity element for this operation.  If
      `logxor' is passed just one argument, it returns that argument.
 
-                             ;               30-bit binary values
+                             ;        30-bit binary values
 
-          (logxor 12 5)      ; 12  =  00 0000  0000 0000  0000 0000  0000 1100
-                             ;  5  =  00 0000  0000 0000  0000 0000  0000 0101
-               => 9          ;  9  =  00 0000  0000 0000  0000 0000  0000 1001
+          (logxor 12 5)      ; 12  =  0000...001100
+                             ;  5  =  0000...000101
+               => 9          ;  9  =  0000...001001
 
-          (logxor 12 5 7)    ; 12  =  00 0000  0000 0000  0000 0000  0000 1100
-                             ;  5  =  00 0000  0000 0000  0000 0000  0000 0101
-                             ;  7  =  00 0000  0000 0000  0000 0000  0000 0111
-               => 14         ; 14  =  00 0000  0000 0000  0000 0000  0000 1110
+          (logxor 12 5 7)    ; 12  =  0000...001100
+                             ;  5  =  0000...000101
+                             ;  7  =  0000...000111
+               => 14         ; 14  =  0000...001110
 
  -- Function: lognot integer
      This function returns the logical complement of its argument: the
@@ -4523,9 +4563,9 @@ reproducing the same pattern "moved over."
 
           (lognot 5)
                => -6
-          ;;  5  =  00 0000  0000 0000  0000 0000  0000 0101
+          ;;  5  =  0000...000101 (30 bits total)
           ;; becomes
-          ;; -6  =  11 1111  1111 1111  1111 1111  1111 1010
+          ;; -6  =  1111...111010 (30 bits total)
 
 
 File: elisp,  Node: Math Functions,  Next: Random Numbers,  Prev: Bitwise Operations,  Up: Numbers
@@ -4559,14 +4599,12 @@ numbers as arguments.
      between the vector `[X, Y]' and the `X' axis.
 
  -- Function: exp arg
-     This is the exponential function; it returns e to the power ARG.  e
-     is a fundamental mathematical constant also called the base of
-     natural logarithms.
+     This is the exponential function; it returns e to the power ARG.
 
  -- Function: log arg &optional base
      This function returns the logarithm of ARG, with base BASE.  If
-     you don't specify BASE, the base e is used.  If ARG is negative,
-     it signals a `domain-error' error.
+     you don't specify BASE, the natural base e is used.  If ARG is
+     negative, it signals a `domain-error' error.
 
  -- Function: log10 arg
      This function returns the logarithm of ARG, with base 10.  If ARG
@@ -4581,6 +4619,15 @@ numbers as arguments.
  -- Function: sqrt arg
      This returns the square root of ARG.  If ARG is negative, it
      signals a `domain-error' error.
+
+   In addition, Emacs defines the following common mathematical
+constants:
+
+ -- Variable: float-e
+     The mathematical constant e (2.71828...).
+
+ -- Variable: float-pi
+     The mathematical constant pi (3.14159...).
 
 
 File: elisp,  Node: Random Numbers,  Prev: Math Functions,  Up: Numbers
@@ -4671,7 +4718,9 @@ terminated by a character with ASCII code 0.)
 operate on them with the general array and sequence functions.  (*Note
 Sequences Arrays Vectors::.)  For example, you can access or change
 individual characters in a string using the functions `aref' and `aset'
-(*note Array Functions::).
+(*note Array Functions::).  However, note that `length' should _not_ be
+used for computing the width of a string on display; use `string-width'
+(*note Width::) instead.
 
    There are two text representations for non-ASCII characters in Emacs
 strings (and in buffers): unibyte and multibyte (*note Text
@@ -4982,8 +5031,13 @@ File: elisp,  Node: Text Comparison,  Next: String Conversion,  Prev: Modifying 
  -- Function: string= string1 string2
      This function returns `t' if the characters of the two strings
      match exactly.  Symbols are also allowed as arguments, in which
-     case their print names are used.  Case is always significant,
+     case the symbol names are used.  Case is always significant,
      regardless of `case-fold-search'.
+
+     This function is equivalent to `equal' for comparing two strings
+     (*note Equality Predicates::).  In particular, the text properties
+     of the two strings are ignored.  But if either argument is not a
+     string or symbol, an error is signaled.
 
           (string= "abc" "abc")
                => t
@@ -4991,10 +5045,6 @@ File: elisp,  Node: Text Comparison,  Next: String Conversion,  Prev: Modifying 
                => nil
           (string= "ab" "ABC")
                => nil
-
-     The function `string=' ignores the text properties of the two
-     strings.  When `equal' (*note Equality Predicates::) compares two
-     strings, it uses `string='.
 
      For technical reasons, a unibyte and a multibyte string are
      `equal' if and only if they contain the same sequence of character
@@ -5061,6 +5111,11 @@ File: elisp,  Node: Text Comparison,  Next: String Conversion,  Prev: Modifying 
 
  -- Function: string-lessp string1 string2
      `string-lessp' is another name for `string<'.
+
+ -- Function: string-prefix-p string1 string2 &optional ignore-case
+     This function returns non-`nil' if STRING1 is a prefix of STRING2;
+     i.e., if STRING2 starts with STRING1.  If the optional argument
+     IGNORE-CASE is non-`nil', the comparison ignores case differences.
 
  -- Function: compare-strings string1 start1 end1 string2 start2 end2
           &optional ignore-case
@@ -5363,13 +5418,14 @@ For `%x' and `%X', it prefixes the result with `0x' or `0X'.  For `%e',
 `%f', and `%g', the `#' flag means include a decimal point even if the
 precision is zero.
 
+   The flag `0' ensures that the padding consists of `0' characters
+instead of spaces.  This flag is ignored for non-numerical
+specification characters like `%s', `%S' and `%c'.  These specification
+characters accept the `0' flag, but still pad with _spaces_.
+
    The flag `-' causes the padding inserted by the width specifier, if
-any, to be inserted on the right rather than the left.  The flag `0'
-ensures that the padding consists of `0' characters instead of spaces,
-inserted on the left.  These flags are ignored for specification
-characters for which they do not make sense: `%s', `%S' and `%c' accept
-the `0' flag, but still pad with _spaces_ on the left.  If both `-' and
-`0' are present and valid, `-' takes precedence.
+any, to be inserted on the right rather than the left.  If both `-' and
+`0' are present, the `0' flag is ignored.
 
      (format "%06d is padded on the left with zeros" 123)
           => "000123 is padded on the left with zeros"
@@ -5627,7 +5683,6 @@ the whole list.
 * Modifying Lists::     Storing new pieces into an existing list.
 * Sets And Lists::      A list can represent a finite mathematical set.
 * Association Lists::   A list can represent a finite relation or mapping.
-* Rings::               Managing a fixed-size ring of objects.
 
 
 File: elisp,  Node: Cons Cells,  Next: List-related Predicates,  Up: Lists
@@ -5636,53 +5691,50 @@ File: elisp,  Node: Cons Cells,  Next: List-related Predicates,  Up: Lists
 ========================
 
 Lists in Lisp are not a primitive data type; they are built up from
-"cons cells".  A cons cell is a data object that represents an ordered
-pair.  That is, it has two slots, and each slot "holds", or "refers
-to", some Lisp object.  One slot is known as the CAR, and the other is
-known as the CDR.  (These names are traditional; see *note Cons Cell
-Type::.)  CDR is pronounced "could-er."
+"cons cells" (*note Cons Cell Type::).  A cons cell is a data object
+that represents an ordered pair.  That is, it has two slots, and each
+slot "holds", or "refers to", some Lisp object.  One slot is known as
+the CAR, and the other is known as the CDR.  (These names are
+traditional; see *note Cons Cell Type::.)  CDR is pronounced "could-er".
 
    We say that "the CAR of this cons cell is" whatever object its CAR
 slot currently holds, and likewise for the CDR.
 
-   A list is a series of cons cells "chained together," so that each
-cell refers to the next one.  There is one cons cell for each element of
-the list.  By convention, the CARs of the cons cells hold the elements
-of the list, and the CDRs are used to chain the list: the CDR slot of
-each cons cell refers to the following cons cell.  The CDR of the last
-cons cell is `nil'.  This asymmetry between the CAR and the CDR is
-entirely a matter of convention; at the level of cons cells, the CAR
-and CDR slots have the same characteristics.
+   A list is a series of cons cells "chained together", so that each
+cell refers to the next one.  There is one cons cell for each element
+of the list.  By convention, the CARs of the cons cells hold the
+elements of the list, and the CDRs are used to chain the list (this
+asymmetry between CAR and CDR is entirely a matter of convention; at
+the level of cons cells, the CAR and CDR slots have similar
+properties).  Hence, the CDR slot of each cons cell in a list refers to
+the following cons cell.
 
-   Since `nil' is the conventional value to put in the CDR of the last
-cons cell in the list, we call that case a "true list".
+   Also by convention, the CDR of the last cons cell in a list is
+`nil'.  We call such a `nil'-terminated structure a "true list".  In
+Emacs Lisp, the symbol `nil' is both a symbol and a list with no
+elements.  For convenience, the symbol `nil' is considered to have
+`nil' as its CDR (and also as its CAR).
 
-   In Lisp, we consider the symbol `nil' a list as well as a symbol; it
-is the list with no elements.  For convenience, the symbol `nil' is
-considered to have `nil' as its CDR (and also as its CAR).  Therefore,
-the CDR of a true list is always a true list.
+   Hence, the CDR of a true list is always a true list.  The CDR of a
+nonempty true list is a true list containing all the elements except
+the first.
 
-   If the CDR of a list's last cons cell is some other value, neither
-`nil' nor another cons cell, we call the structure a "dotted list",
-since its printed representation would use `.'.  There is one other
-possibility: some cons cell's CDR could point to one of the previous
-cons cells in the list.  We call that structure a "circular list".
+   If the CDR of a list's last cons cell is some value other than
+`nil', we call the structure a "dotted list", since its printed
+representation would use dotted pair notation (*note Dotted Pair
+Notation::).  There is one other possibility: some cons cell's CDR
+could point to one of the previous cons cells in the list.  We call
+that structure a "circular list".
 
    For some purposes, it does not matter whether a list is true,
-circular or dotted.  If the program doesn't look far enough down the
-list to see the CDR of the final cons cell, it won't care.  However,
-some functions that operate on lists demand true lists and signal
-errors if given a dotted list.  Most functions that try to find the end
-of a list enter infinite loops if given a circular list.
+circular or dotted.  If a program doesn't look far enough down the list
+to see the CDR of the final cons cell, it won't care.  However, some
+functions that operate on lists demand true lists and signal errors if
+given a dotted list.  Most functions that try to find the end of a list
+enter infinite loops if given a circular list.
 
-   Because most cons cells are used as part of lists, the phrase "list
-structure" has come to mean any structure made out of cons cells.
-
-   The CDR of any nonempty true list L is a list containing all the
-elements of L except the first.
-
-   *Note Cons Cell Type::, for the read and print syntax of cons cells
-and lists, and for "box and arrow" illustrations of lists.
+   Because most cons cells are used as part of lists, we refer to any
+structure made out of cons cells as a "list structure".
 
 
 File: elisp,  Node: List-related Predicates,  Next: List Elements,  Prev: Cons Cells,  Up: Lists
@@ -5693,7 +5745,7 @@ File: elisp,  Node: List-related Predicates,  Next: List Elements,  Prev: Cons C
 The following predicates test whether a Lisp object is an atom, whether
 it is a cons cell or is a list, or whether it is the distinguished
 object `nil'.  (Many of these predicates can be defined in terms of the
-others, but they are used so often that it is worth having all of them.)
+others, but they are used so often that it is worth having them.)
 
  -- Function: consp object
      This function returns `t' if OBJECT is a cons cell, `nil'
@@ -5808,6 +5860,9 @@ File: elisp,  Node: List Elements,  Next: Building Lists,  Prev: List-related Pr
                => a
           x
                => (b c)
+
+     For the `pop' macro, which removes an element from a list, *Note
+     List Variables::.
 
  -- Function: nth n list
      This function returns the Nth element of LIST.  Elements are
@@ -6128,6 +6183,9 @@ list which is stored in a variable.
           l
                => (c a b)
 
+     For the `pop' macro, which removes the first element from a list,
+     *Note List Elements::.
+
    Two functions modify lists that are the values of variables.
 
  -- Function: add-to-list symbol element &optional append compare-fn
@@ -6186,8 +6244,7 @@ list which is stored in a variable.
 
      The argument SYMBOL is not implicitly quoted;
      `add-to-ordered-list' is an ordinary function, like `set' and
-     unlike `setq'.  Quote the argument yourself if that is what you
-     want.
+     unlike `setq'.  Quote the argument yourself if necessary.
 
      The ordering information is stored in a hash table on SYMBOL's
      `list-order' property.
@@ -6566,9 +6623,9 @@ sets include `memq' and `delq', and their `equal' versions, `member'
 and `delete'.
 
      Common Lisp note: Common Lisp has functions `union' (which avoids
-     duplicate elements) and `intersection' for set operations, but GNU
-     Emacs Lisp does not have them.  You can write them in Lisp if you
-     wish.
+     duplicate elements) and `intersection' for set operations.
+     Although standard GNU Emacs Lisp does not have them, the `cl'
+     library provides versions.  *Note Overview: (cl)Top.
 
  -- Function: memq object list
      This function tests to see whether OBJECT is a member of LIST.  If
@@ -6691,7 +6748,7 @@ Predicates::.
           l
                => ((2) (1))
           ;; If you want to change `l' reliably,
-          ;; write `(setq l (delete elt l))'.
+          ;; write `(setq l (delete '(2) l))'.
           (setq l '((2) (1) (2)))
           (delete '(1) l)
                => ((2) (2))
@@ -6734,7 +6791,7 @@ a way to add an element to a list stored in a variable and used as a
 set.
 
 
-File: elisp,  Node: Association Lists,  Next: Rings,  Prev: Sets And Lists,  Up: Lists
+File: elisp,  Node: Association Lists,  Prev: Sets And Lists,  Up: Lists
 
 5.8 Association Lists
 =====================
@@ -6830,7 +6887,7 @@ ignores certain differences between strings.  *Note Text Comparison::.
 
      `rassoc' is like `assoc' except that it compares the CDR of each
      ALIST association instead of the CAR.  You can think of this as
-     "reverse `assoc'," finding the key for a given value.
+     "reverse `assoc'", finding the key for a given value.
 
  -- Function: assq key alist
      This function is like `assoc' in that it returns the first
@@ -6864,7 +6921,7 @@ ignores certain differences between strings.  *Note Text Comparison::.
 
      `rassq' is like `assq' except that it compares the CDR of each
      ALIST association instead of the CAR.  You can think of this as
-     "reverse `assq'," finding the key for a given value.
+     "reverse `assq'", finding the key for a given value.
 
      For example:
 
@@ -6974,90 +7031,15 @@ it means a value used to look up an item in a table.  In this case, the
 table is the alist, and the alist associations are the items.
 
 
-File: elisp,  Node: Rings,  Prev: Association Lists,  Up: Lists
-
-5.9 Managing a Fixed-Size Ring of Objects
-=========================================
-
-This section describes functions for operating on rings.  A "ring" is a
-fixed-size data structure that supports insertion, deletion, rotation,
-and modulo-indexed reference and traversal.
-
- -- Function: make-ring size
-     This returns a new ring capable of holding SIZE objects.  SIZE
-     should be an integer.
-
- -- Function: ring-p object
-     This returns `t' if OBJECT is a ring, `nil' otherwise.
-
- -- Function: ring-size ring
-     This returns the maximum capacity of the RING.
-
- -- Function: ring-length ring
-     This returns the number of objects that RING currently contains.
-     The value will never exceed that returned by `ring-size'.
-
- -- Function: ring-elements ring
-     This returns a list of the objects in RING, in order, newest first.
-
- -- Function: ring-copy ring
-     This returns a new ring which is a copy of RING.  The new ring
-     contains the same (`eq') objects as RING.
-
- -- Function: ring-empty-p ring
-     This returns `t' if RING is empty, `nil' otherwise.
-
-   The newest element in the ring always has index 0.  Higher indices
-correspond to older elements.  Indices are computed modulo the ring
-length.  Index -1 corresponds to the oldest element, -2 to the
-next-oldest, and so forth.
-
- -- Function: ring-ref ring index
-     This returns the object in RING found at index INDEX.  INDEX may
-     be negative or greater than the ring length.  If RING is empty,
-     `ring-ref' signals an error.
-
- -- Function: ring-insert ring object
-     This inserts OBJECT into RING, making it the newest element, and
-     returns OBJECT.
-
-     If the ring is full, insertion removes the oldest element to make
-     room for the new element.
-
- -- Function: ring-remove ring &optional index
-     Remove an object from RING, and return that object.  The argument
-     INDEX specifies which item to remove; if it is `nil', that means
-     to remove the oldest item.  If RING is empty, `ring-remove'
-     signals an error.
-
- -- Function: ring-insert-at-beginning ring object
-     This inserts OBJECT into RING, treating it as the oldest element.
-     The return value is not significant.
-
-     If the ring is full, this function removes the newest element to
-     make room for the inserted element.
-
-   If you are careful not to exceed the ring size, you can use the ring
-as a first-in-first-out queue.  For example:
-
-     (let ((fifo (make-ring 5)))
-       (mapc (lambda (obj) (ring-insert fifo obj))
-             '(0 one "two"))
-       (list (ring-remove fifo) t
-             (ring-remove fifo) t
-             (ring-remove fifo)))
-          => (0 t one t "two")
-
-
 File: elisp,  Node: Sequences Arrays Vectors,  Next: Hash Tables,  Prev: Lists,  Up: Top
 
 6 Sequences, Arrays, and Vectors
 ********************************
 
-Recall that the "sequence" type is the union of two other Lisp types:
-lists and arrays.  In other words, any list is a sequence, and any
-array is a sequence.  The common property that all sequences have is
-that each is an ordered collection of elements.
+The "sequence" type is the union of two other Lisp types: lists and
+arrays.  In other words, any list is a sequence, and any array is a
+sequence.  The common property that all sequences have is that each is
+an ordered collection of elements.
 
    An "array" is a fixed-length object with a slot for each of its
 elements.  All the elements are accessible in constant time.  The four
@@ -7097,6 +7079,7 @@ possible to add elements to the list, or remove elements.
 * Vector Functions::      Functions specifically for vectors.
 * Char-Tables::           How to work with char-tables.
 * Bool-Vectors::          How to work with bool-vectors.
+* Rings::                 Managing a fixed-size ring of objects.
 
 
 File: elisp,  Node: Sequence Functions,  Next: Arrays,  Up: Sequences Arrays Vectors
@@ -7104,14 +7087,11 @@ File: elisp,  Node: Sequence Functions,  Next: Arrays,  Up: Sequences Arrays Vec
 6.1 Sequences
 =============
 
-In Emacs Lisp, a "sequence" is either a list or an array.  The common
-property of all sequences is that they are ordered collections of
-elements.  This section describes functions that accept any kind of
-sequence.
+This section describes functions that accept any kind of sequence.
 
  -- Function: sequencep object
-     Returns `t' if OBJECT is a list, vector, string, bool-vector, or
-     char-table, `nil' otherwise.
+     This function returns `t' if OBJECT is a list, vector, string,
+     bool-vector, or char-table, `nil' otherwise.
 
  -- Function: length sequence
      This function returns the number of elements in SEQUENCE.  If
@@ -7135,6 +7115,11 @@ sequence.
               => 5
 
 See also `string-bytes', in *note Text Representations::.
+
+   If you need to compute the width of a string on display, you should
+use `string-width' (*note Width::), not `length', since `length' only
+counts the number of characters, but does not account for the display
+width of each character.
 
  -- Function: elt sequence index
      This function returns the element of SEQUENCE indexed by INDEX.
@@ -7160,9 +7145,9 @@ See also `string-bytes', in *note Text Representations::.
      `nth' (*note Definition of nth::).
 
  -- Function: copy-sequence sequence
-     Returns a copy of SEQUENCE.  The copy is the same type of object
-     as the original sequence, and it has the same elements in the same
-     order.
+     This function returns a copy of SEQUENCE.  The copy is the same
+     type of object as the original sequence, and it has the same
+     elements in the same order.
 
      Storing a new element into the copy does not affect the original
      SEQUENCE, and vice versa.  However, the elements of the new
@@ -7207,3 +7192,8 @@ See also `string-bytes', in *note Text Representations::.
           x => [quux (69 2)]
           y => [foo (69 2)]
 
+
+
+Local Variables:
+coding: iso-8859-1
+End:

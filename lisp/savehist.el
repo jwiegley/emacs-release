@@ -1,7 +1,6 @@
-;;; savehist.el --- Save minibuffer history.
+;;; savehist.el --- Save minibuffer history
 
-;; Copyright (C) 1997, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1997, 2005-2012  Free Software Foundation, Inc.
 
 ;; Author: Hrvoje Niksic <hniksic@xemacs.org>
 ;; Maintainer: FSF
@@ -58,17 +57,6 @@
   "Save minibuffer history."
   :version "22.1"
   :group 'minibuffer)
-
-;;;###autoload
-(defcustom savehist-mode nil
-  "Mode for automatic saving of minibuffer history.
-Set this by calling the `savehist-mode' function or using the customize
-interface."
-  :type 'boolean
-  :set (lambda (symbol value) (savehist-mode (or value 0)))
-  :initialize 'custom-initialize-default
-  :require 'savehist
-  :group 'savehist)
 
 (defcustom savehist-save-minibuffer-history t
   "If non-nil, save all recorded minibuffer histories.
@@ -181,21 +169,21 @@ minibuffer history.")
 ;; Functions.
 
 ;;;###autoload
-(defun savehist-mode (arg)
-  "Toggle savehist-mode.
-Positive ARG turns on `savehist-mode'.  When on, savehist-mode causes
-minibuffer history to be saved periodically and when exiting Emacs.
-When turned on for the first time in an Emacs session, it causes the
-previous minibuffer history to be loaded from `savehist-file'.
+(define-minor-mode savehist-mode
+  "Toggle saving of minibuffer history (Savehist mode).
+With a prefix argument ARG, enable Savehist mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
+When Savehist mode is enabled, minibuffer history is saved
+periodically and when exiting Emacs.  When Savehist mode is
+enabled for the first time in an Emacs session, it loads the
+previous minibuffer history from `savehist-file'.
 
 This mode should normally be turned on from your Emacs init file.
-Calling it at any other time replaces your current minibuffer histories,
-which is probably undesirable."
-  (interactive "P")
-  (setq savehist-mode
-	(if (null arg)
-	    (not savehist-mode)
-	  (> (prefix-numeric-value arg) 0)))
+Calling it at any other time replaces your current minibuffer
+histories, which is probably undesirable."
+  :global t
   (if (not savehist-mode)
       (savehist-uninstall)
     (when (and (not savehist-loaded)
@@ -214,11 +202,7 @@ which is probably undesirable."
 	 (setq savehist-mode nil)
 	 (savehist-uninstall)
 	 (signal (car errvar) (cdr errvar)))))
-    (savehist-install)
-    (run-hooks 'savehist-mode-hook))
-  ;; Return the new setting.
-  savehist-mode)
-(add-minor-mode 'savehist-mode "")
+    (savehist-install)))
 
 (defun savehist-load ()
   "Load the variables stored in `savehist-file' and turn on `savehist-mode'.
@@ -273,6 +257,10 @@ Normally invoked by calling `savehist-mode' to unset the minor mode."
 	(delete-itimer savehist-timer)
       (cancel-timer savehist-timer))
     (setq savehist-timer nil)))
+
+;; From XEmacs?
+(defvar print-readably)
+(defvar print-string-length)
 
 (defun savehist-save (&optional auto-save)
   "Save the values of minibuffer history variables.
@@ -381,9 +369,11 @@ trimming of history lists to `history-length' items."
   "Return non-nil if VALUE is printable."
   (cond
    ;; Quick response for oft-encountered types known to be printable.
-   ((stringp value))
    ((numberp value))
    ((symbolp value))
+   ;; String without properties
+   ((and (stringp value)
+	 (equal-including-properties value (substring-no-properties value))))
    (t
     ;; For others, check explicitly.
     (with-temp-buffer
@@ -408,6 +398,5 @@ trimming of history lists to `history-length' items."
 
 (provide 'savehist)
 
-;; arch-tag: b3ce47f4-c5ad-4ebc-ad02-73aba705cf9f
 
 ;;; savehist.el ends here

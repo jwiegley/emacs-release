@@ -9,10 +9,10 @@
 
   This section briefly describes the peculiarities of using Emacs
 under Mac OS X with the Mac port.  This port provides a native GUI
-support for Mac OS X 10.2 -- 10.7.  Note that Emacs 23 already
-contains the official GUI support via the NS (Cocoa) port for Mac OS X
-10.4 and later (@pxref{Mac OS / GNUstep}).  So if it is good enough
-for you, then you don't need to try this.
+support for Mac OS X 10.4 -- 10.7.  Note that Emacs 23 and later
+already contain the official GUI support via the NS (Cocoa) port for
+Mac OS X 10.4 and later (@pxref{Mac OS / GNUstep}).  So if it is good
+enough for you, then you don't need to try this.
 
   The Mac port is a descendant of the following ports for Mac OS X:
 
@@ -94,9 +94,9 @@ which means to start Emacs with minimum customizations.
 the @samp{fullscreen} frame parameter have different meanings: the
 former means a new system-wide full screen mode with a dedicated
 desktop (or Space), while the latter means making the frame fullscreen
-in a desktop (or Space) shared with the other applications.  As a
-result, @samp{-fs} or @samp{--fullscreen} command line option means
-the former on Mac OS X 10.7.
+in a desktop (or Space) shared with the other applications.  Because
+the command line option @samp{-fs} or @samp{--fullscreen} corresponds
+to @samp{fullboth}, it means the latter on all versions of Mac OS X.
 
 @cindex Preferences (Mac port)
   Although the Mac port does not support X resources (@pxref{X
@@ -230,14 +230,6 @@ pinching out/in on a newer trackpad with the shift key on Mac OS X
 reply handling.  @acronym{ODB} Editor Suite support is added as an
 example.
 
-  The Mac clipboard and the Emacs kill ring (@pxref{Killing}) are
-synchronized by default: you can yank a piece of text and paste it
-into another Mac application, or cut or copy one in another Mac
-application and yank it into a Emacs buffer.  This feature can be
-disabled by setting @code{x-select-enable-clipboard} to @code{nil}.
-One can still do copy and paste with another application from the Edit
-menu.
-
 @node Mac Fonts
 @section Specifying Fonts on the Mac Port
 @cindex fonts (Mac port)
@@ -318,14 +310,13 @@ depending on the @acronym{OS} version at startup, and one backend is
 used at a time.
 
   All these backends support Unicode character display including
-non-@acronym{BMP} ones, Complex Text Layout (left-to-right only) such
-as Devanagari, and glyph selection with variation selectors.  Most of
-Adobe-Japan1 ideographic glyphs are accessible via @acronym{IVSes}
-(Ideographic Variation Sequences) even for the OS-bundled Hiragino
-fonts, which do not contain the @acronym{UVS} subtable in their cmap
-table as of Mac OS X 10.6.  If compiled and executed on Mac OS X 10.7,
-then the Mac port can also display color bitmap fonts such as Apple
-Color Emoji.
+non-@acronym{BMP} ones, Complex Text Layout such as Devanagari, and
+glyph selection with variation selectors.  Most of Adobe-Japan1
+ideographic glyphs are accessible via @acronym{IVSes} (Ideographic
+Variation Sequences) even for the OS-bundled Hiragino fonts, which do
+not contain the @acronym{UVS} subtable in their cmap table as of Mac
+OS X 10.6.  If compiled and executed on Mac OS X 10.7, then the Mac
+port can also display color bitmap fonts such as Apple Color Emoji.
 
   They also use non-integral x positions for displaying antialiased
 proportional fonts.  You can see the difference by putting the box
@@ -361,3 +352,15 @@ function @code{mac-convert-property-list} converts a Core Foundation
 property list, which is typically used in a @samp{.plist} file,
 between several formats (@acronym{XML}, binary, or Lisp
 representation).
+
+@findex mac-start-animation
+  The function @code{mac-start-animation} starts animation effect
+using Core Animation on Mac OS X 10.5 and later.
+
+The Mac port provides an image type symbol @code{image-io}, which is
+parallel to another image type symbol @code{imagemagick}
+(@pxref{ImageMagick Images,,, elisp}), but using the Image I/O
+framework on Mac OS X 10.4 and later.  It also works as a fallback of
+@code{imagemagick} if the Mac port is not compiled with the
+ImageMagick support, so you can scale and rotate images even without
+ImageMagick.

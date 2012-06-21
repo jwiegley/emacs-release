@@ -1,7 +1,6 @@
 ;;; unrmail.el --- convert Rmail Babyl files to mailbox files
 
-;; Copyright (C) 1992, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-;;   2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+;; Copyright (C) 1992, 2001-2012  Free Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: mail
@@ -70,7 +69,8 @@ For example, invoke `emacs -batch -f batch-unrmail RMAIL'."
       (setq from (point))
       (goto-char (point-max))
       (search-backward "\n\^_" from 'mv)
-      (setq to (point))
+      (if (= from (setq to (point)))
+	  (error "The input file contains no messages"))
       (unless (and coding-system
 		   (coding-system-p coding-system))
 	(setq coding-system
@@ -232,10 +232,9 @@ For example, invoke `emacs -batch -f batch-unrmail RMAIL'."
 	      (while (search-forward "\nFrom " nil t)
 		(forward-char -5)
 		(insert ?>)))
-	    ;; Make sure the message ends with two newlines
 	    (goto-char (point-max))
-	    (unless (looking-back "\n\n")
-	      (insert "\n"))
+	    ;; Add terminator blank line to message.
+	    (insert "\n")
 	    ;; Write it to the output file, suitably encoded.
 	    (let ((coding-system-for-write coding))
 	      (write-region (point-min) (point-max) to-file t
@@ -245,5 +244,4 @@ For example, invoke `emacs -batch -f batch-unrmail RMAIL'."
 
 (provide 'unrmail)
 
-;; arch-tag: 14c6290d-60b2-456f-8909-5c2387de6acb
 ;;; unrmail.el ends here

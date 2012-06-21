@@ -1,12 +1,10 @@
 ;;; org-remember.el --- Fast note taking in Org-mode
 
-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2004-2012 Free Software Foundation, Inc.
 
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
 ;; Homepage: http://orgmode.org
-;; Version: 6.33x
 ;;
 ;; This file is part of GNU Emacs.
 ;;
@@ -34,12 +32,16 @@
 (eval-when-compile
   (require 'cl))
 (require 'org)
+(require 'org-compat)
 (require 'org-datetree)
 
 (declare-function remember-mode "remember" ())
 (declare-function remember "remember" (&optional initial))
 (declare-function remember-buffer-desc "remember" ())
 (declare-function remember-finalize "remember" ())
+(declare-function org-pop-to-buffer-same-window
+		  "org-compat" (&optional buffer-or-name norecord label))
+
 (defvar remember-save-after-remembering)
 (defvar remember-register)
 (defvar remember-buffer)
@@ -54,14 +56,15 @@
   :group 'org)
 
 (defcustom org-remember-store-without-prompt t
-  "Non-nil means, `C-c C-c' stores remember note without further prompts.
+  "Non-nil means \\<org-remember-mode-map>\\[org-remember-finalize] \
+stores the remember note without further prompts.
 It then uses the file and headline specified by the template or (if the
 template does not specify them) by the variables `org-default-notes-file'
 and `org-remember-default-headline'.  To force prompting anyway, use
-`C-u C-c C-c' to file the note.
+\\[universal-argument] \\[org-remember-finalize] to file the note.
 
-When this variable is nil, `C-c C-c' gives you the prompts, and
-`C-u C-c C-c' triggers the fasttrack."
+When this variable is nil, \\[org-remember-finalize] gives you the prompts, and
+\\[universal-argument] \\[org-remember-finalize] triggers the fasttrack."
   :group 'org-remember
   :type 'boolean)
 
@@ -94,10 +97,10 @@ You can set this on a per-template basis with the variable
 (defcustom org-remember-templates nil
   "Templates for the creation of remember buffers.
 When nil, just let remember make the buffer.
-When non-nil, this is a list of 5-element lists.  In each entry, the first
-element is the name of the template, which should be a single short word.
-The second element is a character, a unique key to select this template.
-The third element is the template.
+When non-nil, this is a list of (up to) 6-element lists.  In each entry,
+the first element is the name of the template, which should be a single
+short word.  The second element is a character, a unique key to select
+this template.  The third element is the template.
 
 The fourth element is optional and can specify a destination file for
 remember items created with this template.  The default file is given
@@ -114,46 +117,49 @@ An optional sixth element specifies the contexts in which the template
 will be offered to the user.  This element can be a list of major modes
 or a function, and the template will only be offered if `org-remember'
 is called from a mode in the list, or if the function returns t.
-Templates that specify t or nil for the context will be always be added
+Templates that specify t or nil for the context will always be added
 to the list of selectable templates.
 
 The template specifies the structure of the remember buffer.  It should have
 a first line starting with a star, to act as the org-mode headline.
 Furthermore, the following %-escapes will be replaced with content:
 
-  %^{prompt}  Prompt the user for a string and replace this sequence with it.
-              A default value and a completion table ca be specified like this:
+  %^{PROMPT}  prompt the user for a string and replace this sequence with it.
+              A default value and a completion table can be specified like this:
               %^{prompt|default|completion2|completion3|...}
+              The arrow keys access a prompt-specific history.
+  %a          annotation, normally the link created with `org-store-link'
+  %A          like %a, but prompt for the description part
+  %i          initial content, copied from the active region.  If %i is
+              indented, the entire inserted text will be indented as well.
   %t          time stamp, date only
   %T          time stamp with date and time
   %u, %U      like the above, but inactive time stamps
   %^t         like %t, but prompt for date.  Similarly %^T, %^u, %^U.
-              You may define a prompt like %^{Please specify birthday
+              You may define a prompt like %^{Please specify birthday}t
   %n          user name (taken from `user-full-name')
-  %a          annotation, normally the link created with org-store-link
-  %i          initial content, copied from the active region.  If %i is 
-              indented, the entire inserted text will be indented as well.
   %c          current kill ring head
   %x          content of the X clipboard
-  %^C         Interactive selection of which kill or clip to use
-  %^L         Like %^C, but insert as link
-  %k          title of currently clocked task
-  %K          link to currently clocked task
-  %^g         prompt for tags, with completion on tags in target file
-  %^G         prompt for tags, with completion all tags in all agenda files
-  %^{prop}p   Prompt the user for a value for property `prop'
   %:keyword   specific information for certain link types, see below
-  %[pathname] insert the contents of the file given by `pathname'
-  %(sexp)     evaluate elisp `(sexp)' and replace with the result
-  %!          Store this note immediately after filling the template
-  %&          Visit note immediately after storing it
-
-  %?          After completing the template, position cursor here.
+  %^C         interactive selection of which kill or clip to use
+  %^L         like %^C, but insert as link
+  %k          title of the currently clocked task
+  %K          link to the currently clocked task
+  %^g         prompt for tags, completing tags in the target file
+  %^G         prompt for tags, completing all tags in all agenda files
+  %^{PROP}p   Prompt the user for a value for property PROP
+  %[PATHNAME] insert the contents of the file given by PATHNAME
+  %(SEXP)     evaluate elisp `(SEXP)' and replace with the result
+  %!          store this note immediately after completing the template\
+              \\<org-remember-mode-map>
+              (skipping the \\[org-remember-finalize] that normally triggers storing)
+  %&          jump to target location immediately after storing note
+  %?          after completing the template, position cursor here.
 
 Apart from these general escapes, you can access information specific to the
 link type that is created.  For example, calling `remember' in emails or gnus
 will record the author and the subject of the message, which you can access
-with %:author and %:subject, respectively.  Here is a complete list of what
+with %:fromname and %:subject, respectively.  Here is a complete list of what
 is recorded for each link type.
 
 Link type          |  Available information
@@ -163,7 +169,8 @@ vm, wl, mh, rmail  |  %:type %:subject %:message-id
                    |  %:from %:fromname %:fromaddress
                    |  %:to   %:toname   %:toaddress
                    |  %:fromto (either \"to NAME\" or \"from NAME\")
-gnus               |  %:group, for messages also all email fields
+gnus               |  %:group, for messages also all email fields and
+                   |  %:org-date (the Date: header in Org format)
 w3, w3m            |  %:type %:url
 info               |  %:type %:file %:node
 calendar           |  %:type %:date"
@@ -211,7 +218,7 @@ The remember buffer is still current when this hook runs."
   :type 'hook)
 
 (defvar org-remember-mode-map (make-sparse-keymap)
-  "Keymap for org-remember-mode, a minor mode.
+  "Keymap for `org-remember-mode', a minor mode.
 Use this map to set additional keybindings for when Org-mode is used
 for a Remember buffer.")
 (defvar org-remember-mode-hook nil
@@ -225,11 +232,11 @@ for a Remember buffer.")
 (define-key org-remember-mode-map "\C-c\C-k" 'org-remember-kill)
 
 (defcustom org-remember-clock-out-on-exit 'query
-  "Non-nil means, stop the clock when exiting a clocking remember buffer.
+  "Non-nil means stop the clock when exiting a clocking remember buffer.
 This only applies if the clock is running in the remember buffer.  If the
 clock is not stopped, it continues to run in the storage location.
 Instead of nil or t, this may also be the symbol `query' to prompt the
-user each time a remember buffer with a running clock is filed away.  "
+user each time a remember buffer with a running clock is filed away."
   :group 'org-remember
   :type '(choice
 	  (const :tag "Never" nil)
@@ -248,7 +255,7 @@ See also `org-remember-auto-remove-backup-files'."
 	  (directory :tag "Directory")))
 
 (defcustom org-remember-auto-remove-backup-files t
-  "Non-nil means, remove remember backup files after successfully storage.
+  "Non-nil means remove remember backup files after successfully storage.
 When remember is finished successfully, with storing the note at the
 desired target, remove the backup files related to this remember process
 and show a message about remaining backup files, from previous, unfinished
@@ -265,7 +272,7 @@ Set this to nil if you find that you don't need the warning.
 
 If you cancel remember calls frequently and know when they
 contain useful information (because you know that you made an
-error or emacs crashed, for example) nil is more useful.  In the
+error or Emacs crashed, for example) nil is more useful.  In the
 opposite case, the default, t, is more useful."
   :group 'org-remember
   :type 'boolean)
@@ -351,7 +358,7 @@ RET at beg-of-buf -> Append to file as level 2 headline
 			 org-force-remember-template-char))
 		      (t
 		       (setq msg (format
-				  "Select template: %s"
+				  "Select template: %s%s"
 				  (mapconcat
 				   (lambda (x)
 				     (cond
@@ -362,13 +369,17 @@ RET at beg-of-buf -> Append to file as level 2 headline
 				       (format "[%c]%s" (car x)
 					       (substring (nth 1 x) 1)))
 				      (t (format "[%c]%s" (car x) (nth 1 x)))))
-				   templates " ")))
+				   templates " ")
+				  (if (assoc ?C templates)
+				      ""
+				    " [C]customize templates")))
 		       (let ((inhibit-quit t) char0)
 			 (while (not char0)
 			   (message msg)
 			   (setq char0 (read-char-exclusive))
 			   (when (and (not (assoc char0 templates))
-				      (not (equal char0 ?\C-g)))
+				      (not (equal char0 ?\C-g))
+				      (not (equal char0 ?C)))
 			     (message "No such template \"%c\"" char0)
 			     (ding) (sit-for 1)
 			     (setq char0 nil)))
@@ -376,14 +387,13 @@ RET at beg-of-buf -> Append to file as level 2 headline
 			   (jump-to-register remember-register)
 			   (kill-buffer remember-buffer)
 			   (error "Abort"))
+			 (when (not (assoc char0 templates))
+			   (jump-to-register remember-register)
+			   (kill-buffer remember-buffer)
+			   (customize-variable 'org-remember-templates)
+			   (error "Customize templates"))
 			 char0))))))
       (cddr (assoc char templates)))))
-
-(defun org-get-x-clipboard (value)
-  "Get the value of the x clipboard, compatible with XEmacs, and GNU Emacs 21."
-  (if (eq window-system 'x)
-      (let ((x (org-get-x-clipboard-compat value)))
-	(if x (org-no-properties x)))))
 
 ;;;###autoload
 (defun org-remember-apply-template (&optional use-char skip-interactive)
@@ -470,7 +480,7 @@ to be run from that hook to function properly."
 ## C-u C-c C-c  like C-c C-c, and immediately visit note at target location
 ## C-0 C-c C-c  \"%s\" -> \"* %s\"
 ## %s  to select file and header location interactively.
-## C-2 C-c C-c  as child of the currently clocked item
+## C-2 C-c C-c  as child (C-3: as sibling) of the currently clocked item
 ## To switch templates, use `\\[org-remember]'.  To abort use `C-c C-k'.\n\n"
 		  (if org-remember-store-without-prompt "    C-c C-c" "    C-1 C-c C-c")
 		  (abbreviate-file-name (or file org-default-notes-file))
@@ -479,21 +489,6 @@ to be run from that hook to function properly."
 		  (or (cdr org-remember-previous-location) "???")
 		  (if org-remember-store-without-prompt "C-1 C-c C-c" "        C-c C-c"))))
 	(insert tpl)
-	(goto-char (point-min))
-
-	;; Simple %-escapes
-	(while (re-search-forward "%\\([tTuUaiAcxkKI]\\)" nil t)
-	  (unless (org-remember-escaped-%)
-	    (when (and initial (equal (match-string 0) "%i"))
-	      (save-match-data
-		(let* ((lead (buffer-substring
-			      (point-at-bol) (match-beginning 0))))
-		  (setq v-i (mapconcat 'identity
-				       (org-split-string initial "\n")
-				       (concat "\n" lead))))))
-	    (replace-match
-	     (or (eval (intern (concat "v-" (match-string 1)))) "")
-	     t t)))
 
 	;; %[] Insert contents of a file.
 	(goto-char (point-min))
@@ -508,6 +503,21 @@ to be run from that hook to function properly."
 		  (insert-file-contents filename)
 		(error (insert (format "%%![Couldn't insert %s: %s]"
 				       filename error)))))))
+	;; Simple %-escapes
+	(goto-char (point-min))
+	(while (re-search-forward "%\\([tTuUaiAcxkKI]\\)" nil t)
+	  (unless (org-remember-escaped-%)
+	    (when (and initial (equal (match-string 0) "%i"))
+	      (save-match-data
+		(let* ((lead (buffer-substring
+			      (point-at-bol) (match-beginning 0))))
+		  (setq v-i (mapconcat 'identity
+				       (org-split-string initial "\n")
+				       (concat "\n" lead))))))
+	    (replace-match
+	     (or (eval (intern (concat "v-" (match-string 1)))) "")
+	     t t)))
+
 	;; %() embedded elisp
 	(goto-char (point-min))
 	(while (re-search-forward "%\\((.+)\\)" nil t)
@@ -567,7 +577,7 @@ to be run from that hook to function properly."
 			   'org-tags-completion-function nil nil nil
 			   'org-tags-history)))
 		(setq ins (mapconcat 'identity
-				     (org-split-string ins (org-re "[^[:alnum:]_@]+"))
+				     (org-split-string ins (org-re "[^[:alnum:]_@#%]+"))
 				     ":"))
 		(when (string-match "\\S-" ins)
 		  (or (equal (char-before) ?:) (insert ":"))
@@ -718,9 +728,11 @@ from that hook."
 If there is an active region, make sure remember uses it as initial content
 of the remember buffer.
 
-When called interactively with a `C-u' prefix argument GOTO, don't remember
+When called interactively with a \\[universal-argument] \
+prefix argument GOTO, don't remember
 anything, just go to the file/headline where the selected template usually
-stores its notes.  With a double prefix arg `C-u C-u', go to the last
+stores its notes.  With a double prefix argument \
+\\[universal-argument] \\[universal-argument], go to the last
 note stored by remember.
 
 Lisp programs can set ORG-FORCE-REMEMBER-TEMPLATE-CHAR to a character
@@ -775,7 +787,7 @@ The user is queried for the template."
       (setq heading org-remember-default-headline))
     (setq visiting (org-find-base-buffer-visiting file))
     (if (not visiting) (find-file-noselect file))
-    (switch-to-buffer (or visiting (get-file-buffer file)))
+    (org-pop-to-buffer-same-window (or visiting (get-file-buffer file)))
     (widen)
     (goto-char (point-min))
     (if (re-search-forward
@@ -792,21 +804,24 @@ The user is queried for the template."
 When the template has specified a file and a headline, the entry is filed
 there, or in the location defined by `org-default-notes-file' and
 `org-remember-default-headline'.
-
+\\<org-remember-mode-map>
 If no defaults have been defined, or if the current prefix argument
-is 1 (so you must use `C-1 C-c C-c' to exit remember), an interactive
+is 1 (using C-1 \\[org-remember-finalize] to exit remember), an interactive
 process is used to select the target location.
 
-When the prefix is 0 (i.e. when remember is exited with `C-0 C-c C-c'),
+When the prefix is 0 (i.e. when remember is exited with \
+C-0 \\[org-remember-finalize]),
 the entry is filed to the same location as the previous note.
 
-When the prefix is 2 (i.e. when remember is exited with `C-2 C-c C-c'),
+When the prefix is 2 (i.e. when remember is exited with \
+C-2 \\[org-remember-finalize]),
 the entry is filed as a subentry of the entry where the clock is
 currently running.
 
-When `C-u' has been used as prefix argument, the note is stored and emacs
-moves point to the new location of the note, so that editing can be
-continued there (similar to inserting \"%&\" into the template).
+When \\[universal-argument] has been used as prefix argument, the
+note is stored and Emacs moves point to the new location of the
+note, so that editing can be continued there (similar to
+inserting \"%&\" into the template).
 
 Before storing the note, the function ensures that the text has an
 org-mode-style headline, i.e. a first line that starts with
@@ -860,6 +875,7 @@ See also the variable `org-reverse-note-order'."
 	   (previousp (and (member current-prefix-arg '((16) 0))
 			   org-remember-previous-location))
 	   (clockp (equal current-prefix-arg 2))
+	   (clocksp (equal current-prefix-arg 3))
 	   (fastp (org-xor (equal current-prefix-arg 1)
 			   org-remember-store-without-prompt))
 	   (file (cond
@@ -882,7 +898,7 @@ See also the variable `org-reverse-note-order'."
 	      visiting (and file (org-find-base-buffer-visiting file))
 	      heading (cdr org-remember-previous-location)
 	      fastp t))
-      (when clockp
+      (when (or clockp clocksp)
 	(setq file (buffer-file-name (marker-buffer org-clock-marker))
 	      visiting (and file (org-find-base-buffer-visiting file))
 	      heading org-clock-heading-for-remember
@@ -927,7 +943,7 @@ See also the variable `org-reverse-note-order'."
 	(throw 'quit t))
       ;; Find the file
       (with-current-buffer (or visiting (find-file-noselect file))
-	(unless (or (org-mode-p) (member heading '(top bottom)))
+	(unless (or (eq major-mode 'org-mode) (member heading '(top bottom)))
 	  (error "Target files for notes must be in Org-mode if not filing to top/bottom"))
 	(save-excursion
 	  (save-restriction
@@ -937,7 +953,7 @@ See also the variable `org-reverse-note-order'."
 	    ;; Find the default location
 	    (when heading
 	      (cond
-	       ((not (org-mode-p))
+	       ((not (eq major-mode 'org-mode))
 		(if (eq heading 'top)
 		    (goto-char (point-min))
 		  (goto-char (point-max))
@@ -990,7 +1006,7 @@ See also the variable `org-reverse-note-order'."
 	     ((eq org-remember-interactive-interface 'outline-path-completion)
 	      (let ((org-refile-targets '((nil . (:maxlevel . 10))))
 		    (org-refile-use-outline-path t))
-		(setq spos (org-refile-get-location "Heading: ")
+		(setq spos (org-refile-get-location "Heading")
 		      exitcmd 'return
 		      spos (nth 3 spos))))
 	     (t (error "This should not happen")))
@@ -998,7 +1014,7 @@ See also the variable `org-reverse-note-order'."
 					; not handle this note
 	    (and visitp (run-with-idle-timer 0.01 nil 'org-remember-visit-immediately))
 	    (goto-char spos)
-	    (cond ((org-on-heading-p t)
+	    (cond ((org-at-heading-p t)
 		   (org-back-to-heading t)
 		   (setq level (funcall outline-level))
 		   (cond
@@ -1015,7 +1031,9 @@ See also the variable `org-reverse-note-order'."
 			       (beginning-of-line 2)
 			     (end-of-line 1)
 			     (insert "\n"))))
-		     (org-paste-subtree (org-get-valid-level level 1) txt)
+		     (org-paste-subtree (if clocksp
+					    level
+					  (org-get-valid-level level 1)) txt)
 		     (and org-auto-align-tags (org-set-tags nil t))
 		     (bookmark-set "org-remember-last-stored")
 		     (move-marker org-remember-last-stored-marker (point)))
@@ -1056,7 +1074,7 @@ See also the variable `org-reverse-note-order'."
 		   (save-restriction
 		     (widen)
 		     (goto-char (point-min))
-		     (re-search-forward "^\\*+ " nil t)
+		     (re-search-forward org-outline-regexp-bol nil t)
 		     (beginning-of-line 1)
 		     (org-paste-subtree 1 txt)
 		     (and org-auto-align-tags (org-set-tags nil t))
@@ -1133,7 +1151,4 @@ See also the variable `org-reverse-note-order'."
 
 (provide 'org-remember)
 
-;; arch-tag: 497f30d0-4bc3-4097-8622-2d27ac5f2698
-
 ;;; org-remember.el ends here
-

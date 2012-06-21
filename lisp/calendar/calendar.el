@@ -1,8 +1,6 @@
 ;;; calendar.el --- calendar functions
 
-;; Copyright (C) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1997,
-;;   2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1988-1995, 1997, 2000-2012  Free Software Foundation, Inc.
 
 ;; Author: Edward M. Reingold <reingold@cs.uiuc.edu>
 ;; Maintainer: Glenn Morris <rgm@gnu.org>
@@ -43,7 +41,7 @@
 ;; can be translated from the (usual) Gregorian calendar to the day of
 ;; the year/days remaining in year, to the ISO commercial calendar, to
 ;; the Julian (old style) calendar, to the Hebrew calendar, to the
-;; Islamic calendar, to the Baha'i calendar, to the French
+;; Islamic calendar, to the Bahá'í calendar, to the French
 ;; Revolutionary calendar, to the Mayan calendar, to the Chinese
 ;; calendar, to the Coptic calendar, to the Ethiopic calendar, and to
 ;; the astronomical (Julian) day number.  Times of sunrise/sunset can
@@ -54,7 +52,7 @@
 ;; The following files are part of the calendar/diary code:
 
 ;;    appt.el                    Appointment notification
-;;    cal-bahai.el               Baha'i calendar
+;;    cal-bahai.el               Bahá'í calendar
 ;;    cal-china.el               Chinese calendar
 ;;    cal-coptic.el              Coptic/Ethiopic calendars
 ;;    cal-dst.el                 Daylight saving time rules
@@ -644,7 +642,7 @@ causes the diary entry \"Vacation\" to appear from November 1 through
 November 10, 1990.  See the documentation for the function
 `diary-list-sexp-entries' for more details.
 
-Diary entries based on the Hebrew, the Islamic and/or the Baha'i
+Diary entries based on the Hebrew, the Islamic and/or the Bahá'í
 calendar are also possible, but because these are somewhat slow, they
 are ignored unless you set the `diary-nongregorian-listing-hook' and
 the `diary-nongregorian-marking-hook' appropriately.  See the
@@ -681,7 +679,7 @@ details, see the documentation for the variable `diary-list-entries-hook'."
   'diary-bahai-entry-symbol "23.1")
 
 (defcustom diary-bahai-entry-symbol "B"
-  "Symbol indicating a diary entry according to the Baha'i calendar."
+  "Symbol indicating a diary entry according to the Bahá'í calendar."
   :type 'string
   :group 'diary)
 
@@ -1007,9 +1005,9 @@ calendar."
   'calendar-bahai-all-holidays-flag "23.1")
 
 (defcustom calendar-bahai-all-holidays-flag nil
-  "If nil, show only major holidays from the Baha'i calendar.
+  "If nil, show only major holidays from the Bahá'í calendar.
 These are the days on which work and school must be suspended.
-Otherwise, show all the holidays that would appear in a complete Baha'i
+Otherwise, show all the holidays that would appear in a complete Bahá'í
 calendar."
   :type 'boolean
   :group 'holidays)
@@ -1332,12 +1330,12 @@ display the generated calendar."
         ;; the right thing in that case.
         ;;
         ;; Is this a wide frame?  If so, split it horizontally.
-        (if (window-splittable-p t) (split-window-horizontally))
+        (if (window-splittable-p t) (split-window-right))
         (pop-to-buffer calendar-buffer)
         ;; Has the window already been split vertically?
         (when (and (not (window-dedicated-p))
                    (window-full-height-p))
-          (let ((win (split-window-vertically)))
+          (let ((win (split-window-below)))
             ;; In the upper window, show whatever was visible before.
             ;; This looks better than using other-buffer.
             (switch-to-buffer buff)
@@ -1365,7 +1363,6 @@ Optional integers MON and YR are used instead of today's date."
          (year (calendar-extract-year today))
          (today-visible (or (not mon)
                             (<= (abs (calendar-interval mon yr month year)) 1)))
-         (day-in-week (calendar-day-of-week today))
          (in-calendar-window (eq (window-buffer (selected-window))
                                  (get-buffer calendar-buffer))))
     (calendar-generate (or mon month) (or yr year))
@@ -1376,17 +1373,12 @@ Optional integers MON and YR are used instead of today's date."
     ;; Don't do any window-related stuff if we weren't called from a
     ;; window displaying the calendar.
     (when in-calendar-window
-      ;; The second test used to be window-full-width-p.
-      ;; Not sure what it was/is for, except perhaps some way of saying
-      ;; "try not to mess with existing configurations".
-      ;; If did the wrong thing on wide frames, where we have done a
-      ;; horizontal split in calendar-basic-setup.
-      (if (or (one-window-p t) (not (window-safely-shrinkable-p)))
-          ;; Don't mess with the window size, but ensure that the first
-          ;; line is fully visible.
-          (set-window-vscroll nil 0)
-        ;; Adjust the window to exactly fit the displayed calendar.
-        (fit-window-to-buffer nil nil calendar-minimum-window-height))
+      (if (window-combined-p)
+	  ;; Adjust the window to exactly fit the displayed calendar.
+	  (fit-window-to-buffer nil nil calendar-minimum-window-height)
+	;; For a full height window or a window that is horizontally
+	;; combined don't fit height to that of its buffer.
+	(set-window-vscroll nil 0))
       (sit-for 0))
     (and (bound-and-true-p font-lock-mode)
          (font-lock-fontify-buffer))
@@ -1432,16 +1424,24 @@ Optional integers MON and YR are used instead of today's date."
   "Move to column INDENT, adding spaces as needed.
 Inserts STRING so that it ends at INDENT.  STRING is either a
 literal string, or a sexp to evaluate to return such.  Truncates
-STRING to length TRUNCATE, ensure a trailing space."
+STRING to length TRUNCATE, and ensures a trailing space."
   (if (not (ignore-errors (stringp (setq string (eval string)))))
       (calendar-move-to-column indent)
-    (if (> (length string) truncate)
-        (setq string (substring string 0 truncate)))
+    (if (> (string-width string) truncate)
+        (setq string (truncate-string-to-width string truncate)))
     (or (string-match " $" string)
-        (if (= (length string) truncate)
-            (aset string (1- truncate) ?\s)
-          (setq string (concat string " "))))
-    (calendar-move-to-column (- indent (length string)))
+        (setq string (concat (if (= (string-width string) truncate)
+                                 (substring string 0 -1)
+                               string)
+                             ;; Avoid inserting text properties unless
+                             ;; we have to (ie, non-unit-width chars).
+                             ;; This is by no means essential.
+                             (if (= (string-width string) (length string))
+                                 " "
+                               ;; Cribbed from buff-menu.el.
+                               (propertize
+                                " " 'display `(space :align-to ,indent))))))
+    (calendar-move-to-column (- indent (string-width string)))
     (insert string)))
 
 (defun calendar-generate-month (month year indent)
@@ -1650,14 +1650,17 @@ line."
     (define-key map [down-mouse-2]
       (easy-menu-binding cal-menu-global-mouse-menu))
 
-    ;; Left-click moves us forward in time, right-click backwards.
     ;; cf scroll-bar.el.
-    (define-key map [vertical-scroll-bar mouse-1] 'calendar-scroll-left)
-    (define-key map [vertical-scroll-bar drag-mouse-1] 'calendar-scroll-left)
-    ;; down-mouse-2 stays as scroll-bar-drag.
-    (define-key map [vertical-scroll-bar mouse-3] 'calendar-scroll-right)
-    (define-key map [vertical-scroll-bar drag-mouse-3] 'calendar-scroll-right)
-
+    (if (and (boundp 'x-toolkit-scroll-bars) x-toolkit-scroll-bars)
+        (define-key map [vertical-scroll-bar mouse-1]
+          'calendar-scroll-toolkit-scroll)
+      ;; Left-click moves us forward in time, right-click backwards.
+      (define-key map [vertical-scroll-bar mouse-1] 'calendar-scroll-left)
+      (define-key map [vertical-scroll-bar drag-mouse-1] 'calendar-scroll-left)
+      ;; down-mouse-2 stays as scroll-bar-drag.
+      (define-key map [vertical-scroll-bar mouse-3] 'calendar-scroll-right)
+      (define-key map [vertical-scroll-bar drag-mouse-3]
+        'calendar-scroll-right))
     map)
   "Keymap for `calendar-mode'.")
 
@@ -1735,6 +1738,7 @@ For a complete description, see the info node `Calendar/Diary'.
   (setq buffer-read-only t
         buffer-undo-list t
         indent-tabs-mode nil)
+  (set (make-local-variable 'scroll-margin) 0) ; bug#10379
   (calendar-update-mode-line)
   (make-local-variable 'calendar-mark-ring)
   (make-local-variable 'displayed-month) ; month in middle of window
@@ -1760,8 +1764,8 @@ the STRINGS are just concatenated and the result truncated."
                           (if (< (length strings) 2)
                               (append (list "") strings (list ""))
                             strings)))
-         (n (- length (length (apply 'concat strings))))
-         (m (1- (length strings)))
+         (n (- length (string-width (apply 'concat strings))))
+         (m (* (1- (length strings)) (char-width char)))
          (s (car strings))
          (strings (cdr strings))
          (i 0))
@@ -1770,7 +1774,7 @@ the STRINGS are just concatenated and the result truncated."
                       (make-string (max 0 (/ (+ n i) m)) char)
                       string)
             i (1+ i)))
-    (substring s 0 length)))
+    (truncate-string-to-width s length)))
 
 (defun calendar-update-mode-line ()
   "Update the calendar mode line with the current date and date style."
@@ -2034,18 +2038,40 @@ is a string to insert in the minibuffer before reading."
     value))
 
 
-(defvar calendar-abbrev-length 3
-  "*Length of abbreviations to be used for day and month names.
-See also `calendar-day-abbrev-array' and `calendar-month-abbrev-array'.")
+(defun calendar-customized-p (symbol)
+  "Return non-nil if SYMBOL has been customized."
+  (and (default-boundp symbol)
+       (let ((standard (get symbol 'standard-value)))
+         (and standard
+              (not (equal (eval (car standard)) (default-value symbol)))))))
 
-;; FIXME does it have to start from Sunday?
+(defun calendar-abbrev-construct (full)
+  "From sequence FULL, return a vector of abbreviations.
+Each abbreviation is no longer than `calendar-abbrev-length' characters."
+  (apply 'vector (mapcar
+                  (lambda (f)
+                    (substring f 0 (min calendar-abbrev-length (length f))))
+                  full)))
+
 (defcustom calendar-day-name-array
   ["Sunday" "Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday"]
-  "Array of capitalized strings giving, in order, the day names.
+  "Array of capitalized strings giving, in order from Sunday, the day names.
 The first two characters of each string will be used to head the
-day columns in the calendar.  See also the variable
-`calendar-day-abbrev-array'."
+day columns in the calendar.
+If you change this without using customize after the calendar has loaded,
+then you may also want to change `calendar-day-abbrev-array'."
   :group 'calendar
+  :initialize 'custom-initialize-default
+  :set (lambda (symbol value)
+         (let ((dcustomized (calendar-customized-p 'calendar-day-abbrev-array))
+               (hcustomized (calendar-customized-p 'cal-html-day-abbrev-array)))
+           (set symbol value)
+           (or dcustomized
+               (setq calendar-day-abbrev-array
+                     (calendar-abbrev-construct calendar-day-name-array)))
+           (and (not hcustomized)
+                (boundp 'cal-html-day-abbrev-array)
+                (setq cal-html-day-abbrev-array calendar-day-abbrev-array))))
   :type '(vector (string :tag "Sunday")
                  (string :tag "Monday")
                  (string :tag "Tuesday")
@@ -2054,23 +2080,74 @@ day columns in the calendar.  See also the variable
                  (string :tag "Friday")
                  (string :tag "Saturday")))
 
-(defvar calendar-day-abbrev-array
-  [nil nil nil nil nil nil nil]
-  "*Array of capitalized strings giving the abbreviated day names.
+(defcustom calendar-abbrev-length 3
+  "Default length of abbreviations to use for day and month names.
+If you change this without using customize after the calendar has loaded,
+then you may also want to change `calendar-day-abbrev-array' and
+`calendar-month-abbrev-array'."
+  :group 'calendar
+  :initialize 'custom-initialize-default
+  :set (lambda (symbol value)
+         (let ((dcustomized (calendar-customized-p 'calendar-day-abbrev-array))
+               (mcustomized (calendar-customized-p
+                             'calendar-month-abbrev-array))
+               (hcustomized (calendar-customized-p 'cal-html-day-abbrev-array)))
+           (set symbol value)
+           (or dcustomized
+               (setq calendar-day-abbrev-array
+                     (calendar-abbrev-construct calendar-day-name-array)))
+           (or mcustomized
+               (setq calendar-month-abbrev-array
+                     (calendar-abbrev-construct calendar-month-name-array)))
+           (and (not hcustomized)
+                (boundp 'cal-html-day-abbrev-array)
+                (setq cal-html-day-abbrev-array calendar-day-abbrev-array))))
+  :type 'integer)
+
+(defcustom calendar-day-abbrev-array
+  (calendar-abbrev-construct calendar-day-name-array)
+  "Array of capitalized strings giving the abbreviated day names.
 The order should be the same as that of the full names specified
 in `calendar-day-name-array'.  These abbreviations may be used
 instead of the full names in the diary file.  Do not include a
 trailing `.' in the strings specified in this variable, though
-you may use such in the diary file.  If any element of this array
-is nil, then the abbreviation will be constructed as the first
-`calendar-abbrev-length' characters of the corresponding full name.")
+you may use such in the diary file.  By default, each string is
+the first `calendar-abbrev-length' characters of the corresponding
+full name."
+  :group 'calendar
+  :initialize 'custom-initialize-default
+  :set-after '(calendar-abbrev-length calendar-day-name-array)
+  :set (lambda (symbol value)
+         (let ((hcustomized (calendar-customized-p 'cal-html-day-abbrev-array)))
+           (set symbol value)
+           (and (not hcustomized)
+                (boundp 'cal-html-day-abbrev-array)
+                (setq cal-html-day-abbrev-array calendar-day-abbrev-array))))
+  :type '(vector (string :tag "Sun")
+                 (string :tag "Mon")
+                 (string :tag "Tue")
+                 (string :tag "Wed")
+                 (string :tag "Thu")
+                 (string :tag "Fri")
+                 (string :tag "Sat"))
+  ;; Made defcustom, changed defaults from nil nil...
+  :version "24.1")
 
 (defcustom calendar-month-name-array
   ["January" "February" "March"     "April"   "May"      "June"
    "July"    "August"   "September" "October" "November" "December"]
   "Array of capitalized strings giving, in order, the month names.
-See also the variable `calendar-month-abbrev-array'."
+If you change this without using customize after the calendar has loaded,
+then you may also want to change `calendar-month-abbrev-array'."
   :group 'calendar
+  :initialize 'custom-initialize-default
+  :set (lambda (symbol value)
+         (let ((mcustomized (calendar-customized-p
+                            'calendar-month-abbrev-array)))
+           (set symbol value)
+           (or mcustomized
+               (setq calendar-month-abbrev-array
+                     (calendar-abbrev-construct calendar-month-name-array)))))
   :type '(vector (string :tag "January")
                  (string :tag "February")
                  (string :tag "March")
@@ -2084,46 +2161,54 @@ See also the variable `calendar-month-abbrev-array'."
                  (string :tag "November")
                  (string :tag "December")))
 
-(defvar calendar-month-abbrev-array
-  [nil nil nil nil nil nil nil nil nil nil nil nil]
- "*Array of capitalized strings giving the abbreviated month names.
+(defcustom calendar-month-abbrev-array
+  (calendar-abbrev-construct calendar-month-name-array)
+ "Array of capitalized strings giving the abbreviated month names.
 The order should be the same as that of the full names specified
 in `calendar-month-name-array'.  These abbreviations are used in
 the calendar menu entries, and can also be used in the diary
 file.  Do not include a trailing `.' in the strings specified in
-this variable, though you may use such in the diary file.  If any
-element of this array is nil, then the abbreviation will be
-constructed as the first `calendar-abbrev-length' characters of the
-corresponding full name.")
+this variable, though you may use such in the diary file.  By
+default, each string is the first ``calendar-abbrev-length'
+characters of the corresponding full name."
+ :group 'calendar
+ :set-after '(calendar-abbrev-length calendar-month-name-array)
+ :type '(vector (string :tag "Jan")
+                (string :tag "Feb")
+                (string :tag "Mar")
+                (string :tag "Apr")
+                (string :tag "May")
+                (string :tag "Jun")
+                (string :tag "Jul")
+                (string :tag "Aug")
+                (string :tag "Sep")
+                (string :tag "Oct")
+                (string :tag "Nov")
+                (string :tag "Dec"))
+ ;; Made defcustom, changed defaults from nil nil...
+ :version "24.1")
 
-(defun calendar-make-alist (sequence &optional start-index filter abbrevs)
-  "Make an assoc list corresponding to SEQUENCE.
-Each element of sequence will be associated with an integer, starting
-from 1, or from START-INDEX if that is non-nil.  If a sequence ABBREVS
-is supplied, the function `calendar-abbrev-construct' is used to
-construct abbreviations corresponding to the elements in SEQUENCE.
-Each abbreviation is entered into the alist with the same
-association index as the full name it represents.
-If FILTER is provided, apply it to each key in the alist."
-  (let ((index 0)
-        (offset (or start-index 1))
-        (aseq (if abbrevs (calendar-abbrev-construct abbrevs sequence)))
-        (aseqp (if abbrevs (calendar-abbrev-construct abbrevs sequence
-                                                      'period)))
-        alist elem)
-    (dotimes (i (length sequence) (reverse alist))
-      (setq index (+ i offset)
-            elem (elt sequence i)
-            alist
-            (cons (cons (if filter (funcall filter elem) elem) index) alist))
-      (if aseq
-          (setq elem (elt aseq i)
-                alist (cons (cons (if filter (funcall filter elem) elem)
-                                  index) alist)))
-      (if aseqp
-          (setq elem (elt aseqp i)
-                alist (cons (cons (if filter (funcall filter elem) elem)
-                                  index) alist))))))
+(defun calendar-make-alist (sequence &optional start-index filter
+                                     &rest sequences)
+  "Return an association list corresponding to SEQUENCE.
+Associates each element of SEQUENCE with an incremented integer,
+starting from START-INDEX (default 1).  Applies the function FILTER,
+if provided, to each key in the alist.  Repeats the process, with
+indices starting from START-INDEX each time, for any remaining
+arguments SEQUENCES."
+  (or start-index (setq start-index 1))
+  (let (index alist)
+    (mapc (lambda (seq)
+            (setq index start-index)
+            (mapc (lambda (elem)
+                    (setq alist (cons
+                                 (cons (if filter (funcall filter elem) elem)
+                                       index)
+                                 alist)
+                          index (1+ index)))
+                  seq))
+          (append (list sequence) sequences))
+    (reverse alist)))
 
 (defun calendar-read-date (&optional noday)
   "Prompt for Gregorian date.  Return a list (month day year).
@@ -2162,23 +2247,6 @@ Negative years are interpreted as years BC; -1 being 1 BC, and so on."
   (+ (* 12 (- yr2 yr1))
      (- mon2 mon1)))
 
-(defun calendar-abbrev-construct (abbrev full &optional period)
-  "Internal calendar function to return a complete abbreviation array.
-ABBREV is an array of abbreviations, FULL the corresponding array
-of full names.  The return value is the ABBREV array, with any nil
-elements replaced by the first three characters taken from the
-corresponding element of FULL.  If optional argument PERIOD is non-nil,
-each element returned has a final `.' character."
-  (let (elem array name)
-    (dotimes (i (length full))
-      (setq name (aref full i)
-            elem (or (aref abbrev i)
-                     (substring name 0
-                                (min calendar-abbrev-length (length name))))
-            elem (format "%s%s" elem (if period "." ""))
-            array (append array (list elem))))
-    (vconcat array)))
-
 (defvar calendar-font-lock-keywords
   `((,(concat (regexp-opt (mapcar 'identity calendar-month-name-array) t)
               " -?[0-9]+")
@@ -2204,10 +2272,7 @@ be an integer in the range 0 to 6 corresponding to the day of the
 week.  Day names are taken from the variable `calendar-day-name-array',
 unless the optional argument ABBREV is non-nil, in which case
 the variable `calendar-day-abbrev-array' is used."
-  (aref (if abbrev
-            (calendar-abbrev-construct calendar-day-abbrev-array
-                                       calendar-day-name-array)
-          calendar-day-name-array)
+  (aref (if abbrev calendar-day-abbrev-array calendar-day-name-array)
         (if absolute date (calendar-day-of-week date))))
 
 (defun calendar-month-name (month &optional abbrev)
@@ -2216,10 +2281,7 @@ Months are numbered from one.  Month names are taken from the
 variable `calendar-month-name-array', unless the optional
 argument ABBREV is non-nil, in which case
 `calendar-month-abbrev-array' is used."
-  (aref (if abbrev
-            (calendar-abbrev-construct calendar-month-abbrev-array
-                                       calendar-month-name-array)
-          calendar-month-name-array)
+  (aref (if abbrev calendar-month-abbrev-array calendar-month-name-array)
         (1- month)))
 
 (defun calendar-day-of-week (date)
@@ -2498,7 +2560,7 @@ DATE is (month day year).  Calendars that do not apply are omitted."
            (unless (string-equal
                     (setq odate (calendar-bahai-date-string date))
                     "")
-             (format "Baha'i date: %s" odate))
+             (format "Bahá'í date: %s" odate))
            (format "Chinese date: %s"
                    (calendar-chinese-date-string date))
            (unless (string-equal
@@ -2548,7 +2610,7 @@ If called by a mouse-event, pops up a menu with the result."
     ;; If no frame exists yet, we have no idea what width to use.
     (and (= width 10)
          (not window-system)
-         (setq width (or (getenv "COLUMNS") 80)))
+         (setq width (string-to-number (or (getenv "COLUMNS") "80"))))
     (setq mode-line-format
           (if buffer-file-name
               `("-" mode-line-modified
@@ -2570,6 +2632,7 @@ If called by a mouse-event, pops up a menu with the result."
 
 ;; Local variables:
 ;; byte-compile-dynamic: t
+;; coding: utf-8
 ;; End:
 
 ;;; calendar.el ends here

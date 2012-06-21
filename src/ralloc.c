@@ -1,6 +1,5 @@
 /* Block-relocating memory allocator.
-   Copyright (C) 1993, 1995, 2000, 2001, 2002, 2003, 2004,
-                 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 1993, 1995, 2000-2012  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -30,21 +29,14 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "lisp.h"		/* Needed for VALBITS.  */
 #include "blockinput.h"
 
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 
 typedef POINTER_TYPE *POINTER;
 typedef size_t SIZE;
 
-/* Declared in dispnew.c, this version doesn't screw up if regions
-   overlap.  */
-
-extern void safe_bcopy ();
-
 #ifdef DOUG_LEA_MALLOC
 #define M_TOP_PAD           -2
-extern int mallopt ();
+extern int mallopt (int, int);
 #else /* not DOUG_LEA_MALLOC */
 #ifndef SYSTEM_MALLOC
 extern size_t __malloc_extra_blocks;
@@ -60,9 +52,6 @@ typedef void *POINTER;
 
 #include <unistd.h>
 #include <malloc.h>
-
-#define safe_bcopy(x, y, z) memmove (y, x, z)
-#define bzero(x, len) memset (x, 0, len)
 
 #endif	/* not emacs */
 
@@ -81,13 +70,13 @@ typedef void *POINTER;
 
 static int r_alloc_initialized = 0;
 
-static void r_alloc_init ();
+static void r_alloc_init (void);
 
 
 /* Declarations for working with the malloc, ralloc, and system breaks.  */
 
 /* Function to set the real break value.  */
-POINTER (*real_morecore) ();
+POINTER (*real_morecore) (long int);
 
 /* The break value, as seen by malloc.  */
 static POINTER virtual_break_value;
@@ -111,7 +100,7 @@ static int extra_bytes;
 		       & ~(page_size - 1))
 #define ROUND_TO_PAGE(addr) (addr & (~(page_size - 1)))
 
-#define MEM_ALIGN sizeof(double)
+#define MEM_ALIGN sizeof (double)
 #define MEM_ROUNDUP(addr) (((unsigned long int)(addr) + MEM_ALIGN - 1) \
 				   & ~(MEM_ALIGN - 1))
 
@@ -119,7 +108,7 @@ static int extra_bytes;
    from the system.  */
 
 #ifndef SYSTEM_MALLOC
-extern POINTER (*__morecore) ();
+extern POINTER (*__morecore) (long int);
 #endif
 
 
@@ -210,8 +199,7 @@ static int r_alloc_freeze_level;
 /* Find the heap that ADDRESS falls within.  */
 
 static heap_ptr
-find_heap (address)
-    POINTER address;
+find_heap (POINTER address)
 {
   heap_ptr heap;
 
@@ -231,21 +219,19 @@ find_heap (address)
    If enough space is not presently available in our reserve, this means
    getting more page-aligned space from the system.  If the returned space
    is not contiguous to the last heap, allocate a new heap, and append it
+   to the heap list.
 
-   obtain does not try to keep track of whether space is in use
-   or not in use.  It just returns the address of SIZE bytes that
-   fall within a single heap.  If you call obtain twice in a row
-   with the same arguments, you typically get the same value.
-   to the heap list.  It's the caller's responsibility to keep
-   track of what space is in use.
+   obtain does not try to keep track of whether space is in use or not
+   in use.  It just returns the address of SIZE bytes that fall within a
+   single heap.  If you call obtain twice in a row with the same arguments,
+   you typically get the same value.  It's the caller's responsibility to
+   keep track of what space is in use.
 
    Return the address of the space if all went well, or zero if we couldn't
    allocate the memory.  */
 
 static POINTER
-obtain (address, size)
-    POINTER address;
-    SIZE size;
+obtain (POINTER address, SIZE size)
 {
   heap_ptr heap;
   SIZE already_available;
@@ -326,7 +312,7 @@ obtain (address, size)
    it can also eliminate the last heap entirely.  */
 
 static void
-relinquish ()
+relinquish (void)
 {
   register heap_ptr h;
   long excess = 0;
@@ -385,7 +371,7 @@ relinquish ()
    above where malloc gets space.  */
 
 long
-r_alloc_size_in_use ()
+r_alloc_size_in_use (void)
 {
   return (char *) break_value - (char *) virtual_break_value;
 }
@@ -396,15 +382,14 @@ r_alloc_size_in_use ()
    to that block.  */
 
 static bloc_ptr
-find_bloc (ptr)
-     POINTER *ptr;
+find_bloc (POINTER *ptr)
 {
   register bloc_ptr p = first_bloc;
 
   while (p != NIL_BLOC)
     {
       /* Consistency check. Don't return inconsistent blocs.
-	 Don't abort here, as callers might be expecting this,  but
+	 Don't abort here, as callers might be expecting this, but
 	 callers that always expect a bloc to be returned should abort
 	 if one isn't to avoid a memory corruption bug that is
 	 difficult to track down.  */
@@ -422,8 +407,7 @@ find_bloc (ptr)
    memory for the new block.  */
 
 static bloc_ptr
-get_bloc (size)
-     SIZE size;
+get_bloc (SIZE size)
 {
   register bloc_ptr new_bloc;
   register heap_ptr heap;
@@ -478,16 +462,13 @@ get_bloc (size)
    Do not touch the contents of blocs or break_value.  */
 
 static int
-relocate_blocs (bloc, heap, address)
-    bloc_ptr bloc;
-    heap_ptr heap;
-    POINTER address;
+relocate_blocs (bloc_ptr bloc, heap_ptr heap, POINTER address)
 {
   register bloc_ptr b = bloc;
 
   /* No need to ever call this if arena is frozen, bug somewhere!  */
   if (r_alloc_freeze_level)
-    abort();
+    abort ();
 
   while (b)
     {
@@ -535,44 +516,12 @@ relocate_blocs (bloc, heap, address)
 
   return 1;
 }
-
-/* Reorder the bloc BLOC to go before bloc BEFORE in the doubly linked list.
-   This is necessary if we put the memory of space of BLOC
-   before that of BEFORE.  */
-
-static void
-reorder_bloc (bloc, before)
-     bloc_ptr bloc, before;
-{
-  bloc_ptr prev, next;
-
-  /* Splice BLOC out from where it is.  */
-  prev = bloc->prev;
-  next = bloc->next;
-
-  if (prev)
-    prev->next = next;
-  if (next)
-    next->prev = prev;
-
-  /* Splice it in before BEFORE.  */
-  prev = before->prev;
-
-  if (prev)
-    prev->next = bloc;
-  bloc->prev = prev;
-
-  before->prev = bloc;
-  bloc->next = before;
-}
 
 /* Update the records of which heaps contain which blocs, starting
    with heap HEAP and bloc BLOC.  */
 
 static void
-update_heap_bloc_correspondence (bloc, heap)
-     bloc_ptr bloc;
-     heap_ptr heap;
+update_heap_bloc_correspondence (bloc_ptr bloc, heap_ptr heap)
 {
   register bloc_ptr b;
 
@@ -634,9 +583,7 @@ update_heap_bloc_correspondence (bloc, heap)
    that come after BLOC in memory.  */
 
 static int
-resize_bloc (bloc, size)
-    bloc_ptr bloc;
-    SIZE size;
+resize_bloc (bloc_ptr bloc, SIZE size)
 {
   register bloc_ptr b;
   heap_ptr heap;
@@ -645,7 +592,7 @@ resize_bloc (bloc, size)
 
   /* No need to ever call this if arena is frozen, bug somewhere!  */
   if (r_alloc_freeze_level)
-    abort();
+    abort ();
 
   if (bloc == NIL_BLOC || size == bloc->size)
     return 1;
@@ -689,7 +636,8 @@ resize_bloc (bloc, size)
             }
 	  else
 	    {
-	      safe_bcopy (b->data, b->new_data, b->size);
+	      if (b->new_data != b->data)
+		memmove (b->new_data, b->data, b->size);
 	      *b->variable = b->data = b->new_data;
             }
 	}
@@ -700,8 +648,9 @@ resize_bloc (bloc, size)
 	}
       else
 	{
-	  safe_bcopy (bloc->data, bloc->new_data, old_size);
-	  bzero ((char *) bloc->new_data + old_size, size - old_size);
+	  if (bloc->new_data != bloc->data)
+	    memmove (bloc->new_data, bloc->data, old_size);
+	  memset ((char *) bloc->new_data + old_size, 0, size - old_size);
 	  *bloc->variable = bloc->data = bloc->new_data;
 	}
     }
@@ -716,7 +665,8 @@ resize_bloc (bloc, size)
             }
 	  else
 	    {
-	      safe_bcopy (b->data, b->new_data, b->size);
+	      if (b->new_data != b->data)
+		memmove (b->new_data, b->data, b->size);
 	      *b->variable = b->data = b->new_data;
 	    }
 	}
@@ -733,8 +683,7 @@ resize_bloc (bloc, size)
    This may return space to the system.  */
 
 static void
-free_bloc (bloc)
-     bloc_ptr bloc;
+free_bloc (bloc_ptr bloc)
 {
   heap_ptr heap = bloc->heap;
 
@@ -800,8 +749,7 @@ free_bloc (bloc)
    GNU malloc package.  */
 
 POINTER
-r_alloc_sbrk (size)
-     long size;
+r_alloc_sbrk (long int size)
 {
   register bloc_ptr b;
   POINTER address;
@@ -871,7 +819,8 @@ r_alloc_sbrk (size)
 	     header.  */
 	  for (b = last_bloc; b != NIL_BLOC; b = b->prev)
 	    {
-	      safe_bcopy (b->data, b->new_data, b->size);
+	      if (b->new_data != b->data)
+		memmove (b->new_data, b->data, b->size);
 	      *b->variable = b->data = b->new_data;
 	    }
 
@@ -898,7 +847,7 @@ r_alloc_sbrk (size)
 	    last_heap = first_heap;
 	}
 
-      bzero (address, size);
+      memset (address, 0, size);
     }
   else /* size < 0 */
     {
@@ -917,7 +866,8 @@ r_alloc_sbrk (size)
 
 	  for (b = first_bloc; b != NIL_BLOC; b = b->next)
 	    {
-	      safe_bcopy (b->data, b->new_data, b->size);
+	      if (b->new_data != b->data)
+		memmove (b->new_data, b->data, b->size);
 	      *b->variable = b->data = b->new_data;
 	    }
 	}
@@ -952,9 +902,7 @@ r_alloc_sbrk (size)
    return zero.  */
 
 POINTER
-r_alloc (ptr, size)
-     POINTER *ptr;
-     SIZE size;
+r_alloc (POINTER *ptr, SIZE size)
 {
   register bloc_ptr new_bloc;
 
@@ -977,8 +925,7 @@ r_alloc (ptr, size)
    Store 0 in *PTR to show there's no block allocated.  */
 
 void
-r_alloc_free (ptr)
-     register POINTER *ptr;
+r_alloc_free (register POINTER *ptr)
 {
   register bloc_ptr dead_bloc;
 
@@ -1012,9 +959,7 @@ r_alloc_free (ptr)
    return zero.  */
 
 POINTER
-r_re_alloc (ptr, size)
-     POINTER *ptr;
-     SIZE size;
+r_re_alloc (POINTER *ptr, SIZE size)
 {
   register bloc_ptr bloc;
 
@@ -1075,8 +1020,7 @@ r_re_alloc (ptr, size)
    malloc must return a null pointer.  */
 
 void
-r_alloc_freeze (size)
-     long size;
+r_alloc_freeze (long int size)
 {
   if (! r_alloc_initialized)
     r_alloc_init ();
@@ -1093,7 +1037,7 @@ r_alloc_freeze (size)
 }
 
 void
-r_alloc_thaw ()
+r_alloc_thaw (void)
 {
 
   if (! r_alloc_initialized)
@@ -1103,7 +1047,7 @@ r_alloc_thaw ()
     abort ();
 
   /* This frees all unused blocs.  It is not too inefficient, as the resize
-     and bcopy is done only once.  Afterwards, all unreferenced blocs are
+     and memcpy is done only once.  Afterwards, all unreferenced blocs are
      already shrunk to zero size.  */
   if (!r_alloc_freeze_level)
     {
@@ -1122,7 +1066,7 @@ r_alloc_thaw ()
 /* Reinitialize the morecore hook variables after restarting a dumped
    Emacs.  This is needed when using Doug Lea's malloc from GNU libc.  */
 void
-r_alloc_reinit ()
+r_alloc_reinit (void)
 {
   /* Only do this if the hook has been reset, so that we don't get an
      infinite loop, in case Emacs was linked statically.  */
@@ -1140,7 +1084,7 @@ r_alloc_reinit ()
 #include <assert.h>
 
 void
-r_alloc_check ()
+r_alloc_check (void)
 {
   int found = 0;
   heap_ptr h, ph = 0;
@@ -1235,14 +1179,13 @@ r_alloc_check ()
    is checked to ensure that memory corruption does not occur due to
    misuse.  */
 void
-r_alloc_reset_variable (old, new)
-     POINTER *old, *new;
+r_alloc_reset_variable (POINTER *old, POINTER *new)
 {
   bloc_ptr bloc = first_bloc;
 
   /* Find the bloc that corresponds to the data pointed to by pointer.
      find_bloc cannot be used, as it has internal consistency checks
-     which fail when the variable needs reseting.  */
+     which fail when the variable needs resetting.  */
   while (bloc != NIL_BLOC)
     {
       if (bloc->data == *new)
@@ -1258,6 +1201,17 @@ r_alloc_reset_variable (old, new)
   bloc->variable = new;
 }
 
+void
+r_alloc_inhibit_buffer_relocation (int inhibit)
+{
+  if (use_relocatable_buffers < 0)
+    use_relocatable_buffers = 0;
+  if (inhibit)
+    use_relocatable_buffers++;
+  else if (use_relocatable_buffers > 0)
+    use_relocatable_buffers--;
+}
+
 
 /***********************************************************************
 			    Initialization
@@ -1266,7 +1220,7 @@ r_alloc_reset_variable (old, new)
 /* Initialize various things for memory allocation.  */
 
 static void
-r_alloc_init ()
+r_alloc_init (void)
 {
   if (r_alloc_initialized)
     return;
@@ -1314,13 +1268,10 @@ r_alloc_init ()
      even though it is after the sbrk value.  */
   /* Doubly true, with the additional call that explicitly adds the
      rest of that page to the address space.  */
-  bzero (first_heap->start,
-	 (char *) first_heap->end - (char *) first_heap->start);
+  memset (first_heap->start, 0,
+	  (char *) first_heap->end - (char *) first_heap->start);
   virtual_break_value = break_value = first_heap->bloc_start = first_heap->end;
 #endif
 
   use_relocatable_buffers = 1;
 }
-
-/* arch-tag: 6a524a15-faff-44c8-95d4-a5da6f55110f
-   (do not change this comment) */

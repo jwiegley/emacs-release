@@ -1,9 +1,9 @@
 ;;; rmail-spam-filter.el --- spam filter for Rmail, the Emacs mail reader
 
-;; Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 2002-2012  Free Software Foundation, Inc.
 ;; Keywords: email, spam, filter, rmail
 ;; Author: Eli Tziperman <eli AT deas.harvard.edu>
+;; Package: rmail
 
 ;; This file is part of GNU Emacs.
 
@@ -317,7 +317,7 @@ it from rmail file.  Called for each new message retrieved by
           ;; that this email is spam, output the email to the spam
           ;; rmail file, mark the email for deletion, leave the
           ;; while loop and return nil so that an rmail summary line
-          ;; wont be displayed for this message: (FIXME ?)
+          ;; won't be displayed for this message: (FIXME ?)
           (if (and (car maybe-spam) (cdr maybe-spam))
               (setq exit-while-loop t)
             ;; Else, spam was not yet found, proceed to next element
@@ -554,5 +554,4 @@ checks to see if the old format is used, and updates it if necessary."
 
 (provide 'rmail-spam-filter)
 
-;; arch-tag: 03e1d45d-b72f-4dd7-8f04-e7fd78249746
-;;; rmail-spam-fitler ends here
+;;; rmail-spam-filter ends here

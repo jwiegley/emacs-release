@@ -1,6 +1,7 @@
 /* Platform-independent code for terminal communications.
-   Copyright (C) 1986, 1988, 1993, 1994, 1996, 1999, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+
+Copyright (C) 1986, 1988, 1993-1994, 1996, 1999-2012
+  Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -20,6 +21,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <config.h>
 #include <stdio.h>
 #include <setjmp.h>
+#include <limits.h> /* for INT_MAX */
 
 #include "lisp.h"
 #include "keyboard.h"
@@ -67,16 +69,13 @@ extern Lisp_Object Qmac_apple_event;
 #define HAVE_BOXES 1
 #endif
 
-/* The timestamp of the last input event Emacs received from the X server.  */
-/* Defined in keyboard.c.  */
-extern unsigned long last_event_timestamp;
-
-extern Lisp_Object QCtoggle, QCradio;
-
 Lisp_Object menu_items;
 
 /* If non-nil, means that the global vars defined here are already in use.
    Used to detect cases where we try to re-enter this non-reentrant code.  */
+#if ! (defined USE_GTK || defined USE_MOTIF)
+static
+#endif
 Lisp_Object menu_items_inuse;
 
 /* Number of slots currently allocated in menu_items.  */
@@ -93,7 +92,7 @@ int menu_items_n_panes;
 static int menu_items_submenu_depth;
 
 void
-init_menu_items ()
+init_menu_items (void)
 {
   if (!NILP (menu_items_inuse))
     error ("Trying to use a menu from within a menu-entry");
@@ -113,13 +112,12 @@ init_menu_items ()
 /* Call at the end of generating the data in menu_items.  */
 
 void
-finish_menu_items ()
+finish_menu_items (void)
 {
 }
 
 Lisp_Object
-unuse_menu_items (dummy)
-     Lisp_Object dummy;
+unuse_menu_items (Lisp_Object dummy)
 {
   return menu_items_inuse = Qnil;
 }
@@ -128,7 +126,7 @@ unuse_menu_items (dummy)
    in menu_items.  */
 
 void
-discard_menu_items ()
+discard_menu_items (void)
 {
   /* Free the structure if it is especially large.
      Otherwise, hold on to it, to save time.  */
@@ -140,19 +138,20 @@ discard_menu_items ()
   xassert (NILP (menu_items_inuse));
 }
 
+#ifdef HAVE_NS
 static Lisp_Object
 cleanup_popup_menu (Lisp_Object arg)
 {
   discard_menu_items ();
   return Qnil;
 }
+#endif
 
 /* This undoes save_menu_items, and it is called by the specpdl unwind
    mechanism.  */
 
 static Lisp_Object
-restore_menu_items (saved)
-     Lisp_Object saved;
+restore_menu_items (Lisp_Object saved)
 {
   menu_items = XCAR (saved);
   menu_items_inuse = (! NILP (menu_items) ? Qt : Qnil);
@@ -170,7 +169,7 @@ restore_menu_items (saved)
    It will be restored when the specpdl is unwound.  */
 
 void
-save_menu_items ()
+save_menu_items (void)
 {
   Lisp_Object saved = list4 (!NILP (menu_items_inuse) ? menu_items : Qnil,
 			     make_number (menu_items_used),
@@ -185,16 +184,21 @@ save_menu_items ()
 /* Make the menu_items vector twice as large.  */
 
 static void
-grow_menu_items ()
+grow_menu_items (void)
 {
+  if ((INT_MAX - MENU_ITEMS_PANE_LENGTH) / 2 < menu_items_allocated)
+    memory_full (SIZE_MAX);
   menu_items_allocated *= 2;
   menu_items = larger_vector (menu_items, menu_items_allocated, Qnil);
 }
 
+#if (defined USE_X_TOOLKIT || defined USE_GTK || defined HAVE_MACGUI || defined HAVE_NS \
+     || defined HAVE_NTGUI)
+
 /* Begin a submenu.  */
 
 static void
-push_submenu_start ()
+push_submenu_start (void)
 {
   if (menu_items_used + 1 > menu_items_allocated)
     grow_menu_items ();
@@ -206,7 +210,7 @@ push_submenu_start ()
 /* End a submenu.  */
 
 static void
-push_submenu_end ()
+push_submenu_end (void)
 {
   if (menu_items_used + 1 > menu_items_allocated)
     grow_menu_items ();
@@ -215,10 +219,12 @@ push_submenu_end ()
   menu_items_submenu_depth--;
 }
 
+#endif /* USE_X_TOOLKIT || USE_GTK || HAVE_MACGUI || HAVE_NS || defined HAVE_NTGUI */
+
 /* Indicate boundary between left and right.  */
 
 static void
-push_left_right_boundary ()
+push_left_right_boundary (void)
 {
   if (menu_items_used + 1 > menu_items_allocated)
     grow_menu_items ();
@@ -230,8 +236,7 @@ push_left_right_boundary ()
    NAME is the pane name.  PREFIX_VEC is a prefix key for this pane.  */
 
 static void
-push_menu_pane (name, prefix_vec)
-     Lisp_Object name, prefix_vec;
+push_menu_pane (Lisp_Object name, Lisp_Object prefix_vec)
 {
   if (menu_items_used + MENU_ITEMS_PANE_LENGTH > menu_items_allocated)
     grow_menu_items ();
@@ -252,8 +257,7 @@ push_menu_pane (name, prefix_vec)
    item, one of nil, `toggle' or `radio'. */
 
 static void
-push_menu_item (name, enable, key, def, equiv, type, selected, help)
-     Lisp_Object name, enable, key, def, equiv, type, selected, help;
+push_menu_item (Lisp_Object name, Lisp_Object enable, Lisp_Object key, Lisp_Object def, Lisp_Object equiv, Lisp_Object type, Lisp_Object selected, Lisp_Object help)
 {
   if (menu_items_used + MENU_ITEMS_ITEM_LENGTH > menu_items_allocated)
     grow_menu_items ();
@@ -278,8 +282,8 @@ struct skp
      int notbuttons;
   };
 
-static void single_menu_item P_ ((Lisp_Object, Lisp_Object, Lisp_Object,
-				  void *));
+static void single_menu_item (Lisp_Object, Lisp_Object, Lisp_Object,
+                              void *);
 
 /* This is a recursive subroutine of keymap_panes.
    It handles one keymap, KEYMAP.
@@ -338,9 +342,7 @@ single_keymap_panes (Lisp_Object keymap, Lisp_Object pane_name,
    If we encounter submenus deeper than SKP->MAXDEPTH levels, ignore them.  */
 
 static void
-single_menu_item (key, item, dummy, skp_v)
-     Lisp_Object key, item, dummy;
-     void *skp_v;
+single_menu_item (Lisp_Object key, Lisp_Object item, Lisp_Object dummy, void *skp_v)
 {
   Lisp_Object map, item_string, enabled;
   struct gcpro gcpro1, gcpro2;
@@ -368,7 +370,7 @@ single_menu_item (key, item, dummy, skp_v)
       return;
     }
 
-#if defined(HAVE_X_WINDOWS) || defined(MSDOS)
+#if defined (HAVE_X_WINDOWS) || defined (MSDOS)
 #ifndef HAVE_BOXES
   /* Simulate radio buttons and toggle boxes by putting a prefix in
      front of them.  */
@@ -383,34 +385,34 @@ single_menu_item (key, item, dummy, skp_v)
 	if (skp->notbuttons)
 	  /* The first button. Line up previous items in this menu.  */
 	  {
-	    int index = skp->notbuttons; /* Index for first item this menu.  */
+	    int idx = skp->notbuttons; /* Index for first item this menu.  */
 	    int submenu = 0;
 	    Lisp_Object tem;
-	    while (index < menu_items_used)
+	    while (idx < menu_items_used)
 	      {
 		tem
-		  = XVECTOR (menu_items)->contents[index + MENU_ITEMS_ITEM_NAME];
+		  = XVECTOR (menu_items)->contents[idx + MENU_ITEMS_ITEM_NAME];
 		if (NILP (tem))
 		  {
-		    index++;
+		    idx++;
 		    submenu++;		/* Skip sub menu.  */
 		  }
 		else if (EQ (tem, Qlambda))
 		  {
-		    index++;
+		    idx++;
 		    submenu--;		/* End sub menu.  */
 		  }
 		else if (EQ (tem, Qt))
-		  index += 3;		/* Skip new pane marker. */
+		  idx += 3;		/* Skip new pane marker. */
 		else if (EQ (tem, Qquote))
-		  index++;		/* Skip a left, right divider. */
+		  idx++;		/* Skip a left, right divider. */
 		else
 		  {
 		    if (!submenu && SREF (tem, 0) != '\0'
 			&& SREF (tem, 0) != '-')
-		      XVECTOR (menu_items)->contents[index + MENU_ITEMS_ITEM_NAME]
+		      XVECTOR (menu_items)->contents[idx + MENU_ITEMS_ITEM_NAME]
 			= concat2 (build_string ("    "), tem);
-		    index += MENU_ITEMS_ITEM_LENGTH;
+		    idx += MENU_ITEMS_ITEM_LENGTH;
 		  }
 	      }
 	    skp->notbuttons = 0;
@@ -462,9 +464,7 @@ single_menu_item (key, item, dummy, skp_v)
    and generate menu panes for them in menu_items.  */
 
 static void
-keymap_panes (keymaps, nmaps)
-     Lisp_Object *keymaps;
-     int nmaps;
+keymap_panes (Lisp_Object *keymaps, int nmaps)
 {
   int mapno;
 
@@ -483,8 +483,7 @@ keymap_panes (keymaps, nmaps)
 
 /* Push the items in a single pane defined by the alist PANE.  */
 static void
-list_of_items (pane)
-     Lisp_Object pane;
+list_of_items (Lisp_Object pane)
 {
   Lisp_Object tail, item, item1;
 
@@ -511,8 +510,7 @@ list_of_items (pane)
    alist-of-alists MENU.
    This handles old-fashioned calls to x-popup-menu.  */
 void
-list_of_panes (menu)
-     Lisp_Object menu;
+list_of_panes (Lisp_Object menu)
 {
   Lisp_Object tail;
 
@@ -537,8 +535,7 @@ list_of_panes (menu)
    whose event type is ITEM_KEY (with string ITEM_NAME)
    and whose contents come from the list of keymaps MAPS.  */
 int
-parse_single_submenu (item_key, item_name, maps)
-     Lisp_Object item_key, item_name, maps;
+parse_single_submenu (Lisp_Object item_key, Lisp_Object item_name, Lisp_Object maps)
 {
   Lisp_Object length;
   int len;
@@ -589,7 +586,7 @@ parse_single_submenu (item_key, item_name, maps)
 /* Allocate a widget_value, blocking input.  */
 
 widget_value *
-xmalloc_widget_value ()
+xmalloc_widget_value (void)
 {
   widget_value *value;
 
@@ -606,8 +603,7 @@ xmalloc_widget_value ()
    must be left alone.  */
 
 void
-free_menubar_widget_value_tree (wv)
-     widget_value *wv;
+free_menubar_widget_value_tree (widget_value *wv)
 {
   if (! wv) return;
 
@@ -633,8 +629,7 @@ free_menubar_widget_value_tree (wv)
    in menu_items starting at index START, up to index END.  */
 
 widget_value *
-digest_single_submenu (start, end, top_level_items)
-     int start, end, top_level_items;
+digest_single_submenu (int start, int end, int top_level_items)
 {
   widget_value *wv, *prev_wv, *save_wv, *first_wv;
   int i;
@@ -684,13 +679,12 @@ digest_single_submenu (start, end, top_level_items)
       else if (EQ (XVECTOR (menu_items)->contents[i], Qt))
 	{
 	  /* Create a new pane.  */
-	  Lisp_Object pane_name, prefix;
-	  char *pane_string;
+	  Lisp_Object pane_name;
+	  const char *pane_string;
 
 	  panes_seen++;
 
 	  pane_name = XVECTOR (menu_items)->contents[i + MENU_ITEMS_PANE_NAME];
-	  prefix = XVECTOR (menu_items)->contents[i + MENU_ITEMS_PANE_PREFIX];
 
 #ifdef HAVE_NTGUI
 	  if (STRINGP (pane_name))
@@ -703,6 +697,12 @@ digest_single_submenu (start, end, top_level_items)
 
 	      ASET (menu_items, i + MENU_ITEMS_PANE_NAME, pane_name);
 	    }
+#elif defined (USE_LUCID) && defined (HAVE_XFT)
+	  if (STRINGP (pane_name))
+            {
+              pane_name = ENCODE_UTF_8 (pane_name);
+	      ASET (menu_items, i + MENU_ITEMS_PANE_NAME, pane_name);
+            }
 #elif !defined (HAVE_MULTILINGUAL_MENU)
 	  if (STRINGP (pane_name) && STRING_MULTIBYTE (pane_name))
 	    {
@@ -712,7 +712,7 @@ digest_single_submenu (start, end, top_level_items)
 #endif
 
 	  pane_string = (NILP (pane_name)
-			 ? "" : (char *) SDATA (pane_name));
+			 ? "" : SSDATA (pane_name));
 	  /* If there is just one top-level pane, put all its items directly
 	     under the top-level menu.  */
 	  if (menu_items_n_panes == 1)
@@ -776,6 +776,18 @@ digest_single_submenu (start, end, top_level_items)
 	      descrip = ENCODE_SYSTEM (descrip);
 	      ASET (menu_items, i + MENU_ITEMS_ITEM_EQUIV_KEY, descrip);
 	    }
+#elif USE_LUCID
+	  if (STRINGP (item_name))
+	    {
+              item_name = ENCODE_UTF_8 (item_name);
+	      ASET (menu_items, i + MENU_ITEMS_ITEM_NAME, item_name);
+	    }
+
+	  if (STRINGP (descrip))
+	    {
+	      descrip = ENCODE_UTF_8 (descrip);
+	      ASET (menu_items, i + MENU_ITEMS_ITEM_EQUIV_KEY, descrip);
+	    }
 #elif !defined (HAVE_MULTILINGUAL_MENU)
           if (STRING_MULTIBYTE (item_name))
 	    {
@@ -800,9 +812,9 @@ digest_single_submenu (start, end, top_level_items)
 	  if (!NILP (descrip))
 	    wv->lkey = descrip;
 	  wv->value = 0;
-	  /* The EMACS_INT cast avoids a warning.  There's no problem
+	  /* The intptr_t cast avoids a warning.  There's no problem
 	     as long as pointers have enough bits to hold small integers.  */
-	  wv->call_data = (!NILP (def) ? (void *) (EMACS_INT) i : 0);
+	  wv->call_data = (!NILP (def) ? (void *) (intptr_t) i : 0);
 	  wv->enabled = !NILP (enable);
 
 	  if (NILP (type))
@@ -844,8 +856,7 @@ digest_single_submenu (start, end, top_level_items)
    tree is constructed, and small strings are relocated.  So we must wait
    until no GC can happen before storing pointers into lisp values.  */
 void
-update_submenu_strings (first_wv)
-     widget_value *first_wv;
+update_submenu_strings (widget_value *first_wv)
 {
   widget_value *wv;
 
@@ -853,7 +864,7 @@ update_submenu_strings (first_wv)
     {
       if (STRINGP (wv->lname))
         {
-          wv->name = (char *) SDATA (wv->lname);
+          wv->name = SSDATA (wv->lname);
 
           /* Ignore the @ that means "separate pane".
              This is a kludge, but this isn't worth more time.  */
@@ -866,7 +877,7 @@ update_submenu_strings (first_wv)
         }
 
       if (STRINGP (wv->lkey))
-        wv->key = (char *) SDATA (wv->lkey);
+        wv->key = SSDATA (wv->lkey);
 
       if (wv->contents)
         update_submenu_strings (wv->contents);
@@ -879,11 +890,7 @@ update_submenu_strings (first_wv)
    VECTOR is an array of menu events for the whole menu.  */
 
 void
-find_and_call_menu_selection (f, menu_bar_items_used, vector, client_data)
-     FRAME_PTR f;
-     int menu_bar_items_used;
-     Lisp_Object vector;
-     void *client_data;
+find_and_call_menu_selection (FRAME_PTR f, int menu_bar_items_used, Lisp_Object vector, void *client_data)
 {
   Lisp_Object prefix, entry;
   Lisp_Object *subprefix_stack;
@@ -916,9 +923,9 @@ find_and_call_menu_selection (f, menu_bar_items_used, vector, client_data)
       else
 	{
 	  entry = XVECTOR (vector)->contents[i + MENU_ITEMS_ITEM_VALUE];
-	  /* The EMACS_INT cast avoids a warning.  There's no problem
+	  /* Treat the pointer as an integer.  There's no problem
 	     as long as pointers have enough bits to hold small integers.  */
-	  if ((int) (EMACS_INT) client_data == i)
+	  if ((intptr_t) client_data == i)
 	    {
 	      int j;
 	      struct input_event buf;
@@ -976,7 +983,7 @@ find_and_return_menu_selection (FRAME_PTR f, int keymaps, void *client_data)
   prefix = entry = Qnil;
   i = 0;
   subprefix_stack =
-    (Lisp_Object *)alloca(menu_items_used * sizeof (Lisp_Object));
+    (Lisp_Object *)alloca (menu_items_used * sizeof (Lisp_Object));
 
   while (i < menu_items_used)
     {
@@ -1070,13 +1077,12 @@ keyboard input, then this normally results in a quit and
 `x-popup-menu' does not return.  But if POSITION is a mouse button
 event (indicating that the user invoked the menu with the mouse) then
 no quit occurs and `x-popup-menu' returns nil.  */)
-  (position, menu)
-     Lisp_Object position, menu;
+  (Lisp_Object position, Lisp_Object menu)
 {
   Lisp_Object keymap, tem;
   int xpos = 0, ypos = 0;
   Lisp_Object title;
-  char *error_name = NULL;
+  const char *error_name = NULL;
   Lisp_Object selection = Qnil;
   FRAME_PTR f = NULL;
   Lisp_Object x, y, window;
@@ -1155,13 +1161,13 @@ no quit occurs and `x-popup-menu' returns nil.  */)
 #else /* not HAVE_X_WINDOWS */
 	Lisp_Object bar_window;
 	enum scroll_bar_part part;
-	unsigned long time;
-	void (*mouse_position_hook) P_ ((struct frame **, int,
-					 Lisp_Object *,
-					 enum scroll_bar_part *,
-					 Lisp_Object *,
-					 Lisp_Object *,
-					 unsigned long *)) =
+	Time time;
+        void (*mouse_position_hook) (struct frame **, int,
+                                     Lisp_Object *,
+                                     enum scroll_bar_part *,
+                                     Lisp_Object *,
+                                     Lisp_Object *,
+                                     Time *) =
 	  FRAME_TERMINAL (new_f)->mouse_position_hook;
 
 	if (mouse_position_hook)
@@ -1358,12 +1364,12 @@ no quit occurs and `x-popup-menu' returns nil.  */)
 
   UNGCPRO;
 
-  if (error_name) error (error_name);
+  if (error_name) error ("%s", error_name);
   return selection;
 }
 
 void
-syms_of_menu ()
+syms_of_menu (void)
 {
   staticpro (&menu_items);
   menu_items = Qnil;
@@ -1371,6 +1377,3 @@ syms_of_menu ()
 
   defsubr (&Sx_popup_menu);
 }
-
-/* arch-tag: 78bbc7cf-8025-4156-aa8a-6c7fd99bf51d
-   (do not change this comment) */

@@ -1,7 +1,6 @@
 ;;; iswitchb.el --- switch between buffers using substrings
 
-;; Copyright (C) 1996, 1997, 2000, 2001, 2002, 2003, 2004,
-;;   2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
+;; Copyright (C) 1996-1997, 2000-2012  Free Software Foundation, Inc.
 
 ;; Author: Stephen Eglen <stephen@gnu.org>
 ;; Maintainer: Stephen Eglen <stephen@gnu.org>
@@ -123,7 +122,7 @@
 ;; t               IN          | INBOX
 ;; t               In          | [No match]
 
-;;; Customisation
+;;; Customization
 
 ;; See the User Variables section below for easy ways to change the
 ;; functionality of the program.  These are accessible using the
@@ -164,7 +163,7 @@
 ;; Font-Lock
 
 ;; font-lock is used to highlight the first matching buffer.  To
-;; switch this off, set (setq iswitchb-use-faces nil).  Colouring of
+;; switch this off, set (setq iswitchb-use-faces nil).  Coloring of
 ;; the matching buffer name was suggested by Carsten Dominik
 ;; (dominik@strw.leidenuniv.nl)
 
@@ -208,7 +207,7 @@
 ;;    (delete-minibuffer-contents))
 ;;
 ;; (add-hook 'iswitchb-define-mode-map-hook
-;; 	  '(lambda () (define-key
+;; 	     (lambda () (define-key
 ;; 			iswitchb-mode-map "\C-o"
 ;; 			'iswitchb-exclude-nonmatching)))
 
@@ -659,7 +658,7 @@ the selection process begins.  Used by isearchb.el."
 	     (not (iswitchb-existing-buffer-p)))
 	(let ((virt (car iswitchb-virtual-buffers))
 	      (new-buf))
-	  ;; Keep the name of the buffer returned by find-file-noselect, as 
+	  ;; Keep the name of the buffer returned by find-file-noselect, as
 	  ;; the buffer 'virt' could be a symlink to a file of a different name.
 	  (setq new-buf (buffer-name (find-file-noselect (cdr virt))))
 	  (setq iswitchb-matches (list new-buf)
@@ -1016,7 +1015,7 @@ Return the modified list with the last element prepended to it."
 	    (display-completion-list (or iswitchb-matches iswitchb-buflist)
 				     :help-string "iswitchb "
 				     :activate-callback
-				     (lambda (x y z)
+				     (lambda (_x _y _z)
 				       (message "doesn't work yet, sorry!")))
 	  ;; else running Emacs
 	  (display-completion-list (or iswitchb-matches iswitchb-buflist))))
@@ -1033,7 +1032,9 @@ Return the modified list with the last element prepended to it."
     (setq buf (car iswitchb-matches))
     ;; check to see if buf is non-nil.
     (if buf
-	(progn
+	(let ((bufobjs (mapcar (lambda (name)
+				 (or (get-buffer name) name))
+			       iswitchb-buflist)))
 	  (kill-buffer buf)
 
 	  ;; Check if buffer exists.  XEmacs gnuserv.el makes alias
@@ -1044,8 +1045,13 @@ Return the modified list with the last element prepended to it."
 	      (setq iswitchb-rescan t)
 	    ;; Else `kill-buffer' succeeds so re-make the buffer list
 	    ;; taking into account packages like uniquify may rename
-	    ;; buffers
-	    (iswitchb-make-buflist iswitchb-default))))))
+	    ;; buffers, and try to preserve the ordering of buffers.
+	    (setq iswitchb-buflist
+		  (delq nil (mapcar (lambda (b)
+				      (if (bufferp b)
+					  (buffer-name b)
+					b))
+				    bufobjs))))))))
 
 ;;; VISIT CHOSEN BUFFER
 (defun iswitchb-visit-buffer (buffer)
@@ -1104,7 +1110,7 @@ Return the modified list with the last element prepended to it."
 	  (if (fboundp 'set-buffer-major-mode)
 	      (set-buffer-major-mode newbufcreated))
 	  (iswitchb-visit-buffer newbufcreated))
-      ;; else wont create new buffer
+      ;; else won't create new buffer
       (message "no buffer matching `%s'" buf))))
 
 (defun iswitchb-window-buffer-p  (buffer)
@@ -1117,19 +1123,6 @@ If BUFFER is visible in the current frame, return nil."
       ;; maybe in other frame or icon
       (get-buffer-window buffer 0) ; better than 'visible
       )))
-
-(defun iswitchb-default-keybindings ()
-  "Set up default keybindings for `iswitchb-buffer'.
-Call this function to override the normal bindings.  This function also
-adds a hook to the minibuffer."
-  (interactive)
-  (add-hook 'minibuffer-setup-hook 'iswitchb-minibuffer-setup)
-  (global-set-key "\C-xb" 'iswitchb-buffer)
-  (global-set-key "\C-x4b" 'iswitchb-buffer-other-window)
-  (global-set-key "\C-x4\C-o" 'iswitchb-display-buffer)
-  (global-set-key "\C-x5b" 'iswitchb-buffer-other-frame))
-
-(make-obsolete 'iswitchb-default-keybindings 'iswitchb-mode "21.1")
 
 (defun iswitchb-buffer ()
   "Switch to another buffer.
@@ -1431,10 +1424,13 @@ See the variable `iswitchb-case' for details."
 
 ;;;###autoload
 (define-minor-mode iswitchb-mode
-  "Toggle Iswitchb global minor mode.
-With arg, turn Iswitchb mode on if ARG is positive, otherwise turn it off.
-This mode enables switching between buffers using substrings.  See
-`iswitchb' for details."
+  "Toggle Iswitchb mode.
+With a prefix argument ARG, enable Iswitchb mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil.
+
+Iswitchb mode is a global minor mode that enables switching
+between buffers using substrings.  See `iswitchb' for details."
   nil nil iswitchb-global-map :global t :group 'iswitchb
   (if iswitchb-mode
       (add-hook 'minibuffer-setup-hook 'iswitchb-minibuffer-setup)
@@ -1442,5 +1438,4 @@ This mode enables switching between buffers using substrings.  See
 
 (provide 'iswitchb)
 
-;; arch-tag: d74198ae-753f-44f2-b34f-0c515398d90a
 ;;; iswitchb.el ends here

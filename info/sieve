@@ -4,8 +4,7 @@ sieve.texi.
 This file documents the Emacs Sieve package, for server-side mail
 filtering.
 
-   Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
-2010, 2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 2001-2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -40,8 +39,7 @@ the language, so keep RFC 3028 around.
    This file documents the Emacs Sieve package, for server-side mail
 filtering.
 
-   Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
-2010, 2011, 2012  Free Software Foundation, Inc.
+   Copyright (C) 2001-2012  Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -224,9 +222,6 @@ talking to a server with the MANAGESIEVE protocol.
 
    A number of user-visible variables exist, which all can be customized
 in the `sieve' group (`M-x customize-group RET sieve RET'):
-
-`sieve-manage-default-user'
-     Sets the default username.
 
 `sieve-manage-default-port'
      Sets the default port to use, the suggested port number is `2000'.
@@ -794,19 +789,18 @@ Index
 * sieve-edit-script-other-window:        Managing Sieve.       (line 49)
 * sieve-help:                            Managing Sieve.       (line 58)
 * sieve-manage:                          Sieve Mode.           (line 23)
-* sieve-manage-authenticate:             Manage Sieve API.     (line 36)
-* sieve-manage-capability:               Manage Sieve API.     (line 39)
-* sieve-manage-close:                    Manage Sieve API.     (line 33)
-* sieve-manage-default-port:             Manage Sieve API.     (line 16)
-* sieve-manage-default-user:             Manage Sieve API.     (line 13)
-* sieve-manage-getscript:                Manage Sieve API.     (line 48)
-* sieve-manage-havespace:                Manage Sieve API.     (line 45)
-* sieve-manage-listscripts:              Manage Sieve API.     (line 42)
-* sieve-manage-log:                      Manage Sieve API.     (line 19)
-* sieve-manage-open:                     Manage Sieve API.     (line 26)
-* sieve-manage-opened:                   Manage Sieve API.     (line 30)
-* sieve-manage-putscript:                Manage Sieve API.     (line 51)
-* sieve-manage-setactive:                Manage Sieve API.     (line 54)
+* sieve-manage-authenticate:             Manage Sieve API.     (line 33)
+* sieve-manage-capability:               Manage Sieve API.     (line 36)
+* sieve-manage-close:                    Manage Sieve API.     (line 30)
+* sieve-manage-default-port:             Manage Sieve API.     (line 13)
+* sieve-manage-getscript:                Manage Sieve API.     (line 45)
+* sieve-manage-havespace:                Manage Sieve API.     (line 42)
+* sieve-manage-listscripts:              Manage Sieve API.     (line 39)
+* sieve-manage-log:                      Manage Sieve API.     (line 16)
+* sieve-manage-open:                     Manage Sieve API.     (line 23)
+* sieve-manage-opened:                   Manage Sieve API.     (line 27)
+* sieve-manage-putscript:                Manage Sieve API.     (line 48)
+* sieve-manage-setactive:                Manage Sieve API.     (line 51)
 * sieve-mode-map:                        Sieve Mode.           (line 12)
 * sieve-mode-syntax-table:               Sieve Mode.           (line 12)
 * sieve-remove:                          Managing Sieve.       (line 37)
@@ -816,14 +810,14 @@ Index
 
 
 Tag Table:
-Node: Top1076
-Node: Installation2875
-Node: Sieve Mode3348
-Node: Managing Sieve4316
-Node: Examples5816
-Node: Manage Sieve API7138
-Node: Standards8598
-Node: GNU Free Documentation License9085
-Node: Index34248
+Node: Top1015
+Node: Installation2753
+Node: Sieve Mode3226
+Node: Managing Sieve4194
+Node: Examples5694
+Node: Manage Sieve API7016
+Node: Standards8415
+Node: GNU Free Documentation License8902
+Node: Index34065
 
 End Tag Table
