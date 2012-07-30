@@ -614,7 +614,7 @@ Request data types in the order specified by `x-select-request-type'."
 	 )
        selection-converter-alist))
 
-;;;; Apple events, HICommand events, and Services menu
+;;;; Apple events, Action events, and Services menu
 
 (defvar mac-startup-options)
 
@@ -1977,6 +1977,11 @@ non-nil, and the input device supports it."
 				(cadr (pos-visible-in-window-p
 				       (posn-point target-posn) nil t)))
 			       (scrolled-pixel-height (- target-y first-y)))
+			  ;; Emacs 23 -> 24 incompatibility: the
+			  ;; actual row part of POSITION now counts
+			  ;; the header line.
+			  (if header-line-height
+			      (setq target-row (1- target-row)))
 			  (scroll-up (if (= delta-y scrolled-pixel-height)
 					 target-row
 				       (1+ target-row)))
@@ -2079,12 +2084,36 @@ as base.")
   "Number of columns window occupies in standard buffer text scaling.
 On Mac OS X 10.7 and later, you can change buffer text scaling to
 the standard state by double-tapping either a touch-sensitive
-mouse with one finger or a trackpad with two fingers if the
-buffer is previously unscaled.  In this standard buffer text
-scaling state, the default font is scaled so at least this number
-of columns can be shown in the tapped window."
+mouse with one finger or a trackpad with two fingers, if the
+buffer is previously unscaled and the place that mouse pointer is
+pointing to is before the indentation or after the end of line.
+In this standard buffer text scaling state, the default font is
+scaled so at least this number of columns can be shown in the
+tapped window."
   :type 'integer
   :group 'mac)
+
+(defun mac-scroll-point-to-y (target-point target-y)
+  ;; Without this, pos-visible-in-window-p after text-scale-increase
+  ;; may return an outdated value.
+  (scroll-up 0)
+  (condition-case nil
+      (let* ((last-point (point))
+	     (current-y (cadr (pos-visible-in-window-p target-point nil t)))
+	     (direction (if (if current-y (< target-y current-y)
+			      (< (window-start) target-point))
+			    -1 1)))	; Negative if upward.
+	(while (< 0 (* direction (if current-y
+				     (- target-y current-y)
+				   (- (window-start) target-point))))
+	  (scroll-down direction)
+	  (setq last-point (point))
+	  (setq current-y (cadr (pos-visible-in-window-p target-point nil t))))
+	(unless (and (< direction 0) current-y)
+	  ;; Cancel the last scroll.
+	  (scroll-up direction)
+	  (goto-char last-point)))
+    ((beginning-of-buffer end-of-buffer) nil)))
 
 (defun mac-magnify-text-scale (event)
   "Magnify the height of the default face in the buffer where EVENT happened.
@@ -2096,20 +2125,33 @@ The actual magnification is performed by `text-scale-mode'."
       (let ((magnification (car (nth 3 event)))
 	    (level
 	     (round (log mac-text-scale-magnification text-scale-mode-step))))
+	;; Sync with text-scale-mode-amount.
+	(if (/= level text-scale-mode-amount)
+	    (setq mac-text-scale-magnification
+		  (expt text-scale-mode-step text-scale-mode-amount)))
 	(if (= magnification 0.0)
-	    ;; This is double-tapping a mouse with a finger or
+	    ;; This is double-tapping a mouse with one finger or
 	    ;; double-tapping a trackpad with two fingers on Mac OS X
 	    ;; 10.7
-	    (if (/= level 0)
+	    (if (/= text-scale-mode-amount 0)
 		(setq mac-text-scale-magnification 1.0)
-	      (setq mac-text-scale-magnification
-		    (expt text-scale-mode-step
-			  (floor (log (/ (window-width)
-					 (float mac-text-scale-standard-width))
-				      text-scale-mode-step)))))
-	  (if (/= level text-scale-mode-amount)
-	      (setq mac-text-scale-magnification
-		    (expt text-scale-mode-step text-scale-mode-amount)))
+	      (let ((event-point (posn-point (event-start event))))
+		(if (and (not (memq (char-after event-point) '(?\n nil)))
+			 (save-excursion
+			   (goto-char event-point)
+			   (back-to-indentation)
+			   (>= event-point (point))))
+		    ;; Between indentation and eol.  Scale to 150%.
+		    (setq mac-text-scale-magnification 1.5)
+		  ;; Before indentation or after eol.  Scale so the
+		  ;; number of columns becomes at least the value of
+		  ;; mac-text-scale-standard-width.
+		  (setq mac-text-scale-magnification
+			(expt text-scale-mode-step
+			      (floor (log (/ (window-width)
+					     (float
+					      mac-text-scale-standard-width))
+					  text-scale-mode-step)))))))
 	  (setq mac-text-scale-magnification
 		(* mac-text-scale-magnification (+ 1.0 magnification))))
 	(setq mac-text-scale-magnification
@@ -2119,15 +2161,19 @@ The actual magnification is performed by `text-scale-mode'."
 	(setq level
 	      (round (log mac-text-scale-magnification text-scale-mode-step)))
 	(if (/= level text-scale-mode-amount)
-	    (let ((inc (if (< level text-scale-mode-amount) -1 1)))
+	    (let ((inc (if (< level text-scale-mode-amount) -1 1))
+		  (target-point (posn-point (event-start event)))
+		  (target-y (cdr (posn-x-y (event-start event)))))
 	      (unwind-protect
 		  (while (and (not (input-pending-p))
 			      (/= text-scale-mode-amount level))
 		    (text-scale-increase inc)
+		    (mac-scroll-point-to-y target-point target-y)
 		    (with-selected-window original-selected-window
 		      (sit-for 0.017)))
-		(if (/= text-scale-mode-amount level)
-		    (text-scale-set level)))))))))
+		(when (/= text-scale-mode-amount level)
+		  (text-scale-set level)
+		  (mac-scroll-point-to-y target-point target-y)))))))))
 
 (defun mac-mouse-turn-on-fullscreen (event)
   "Turn on fullscreen in response to the mouse event EVENT."

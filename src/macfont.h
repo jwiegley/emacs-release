@@ -239,7 +239,6 @@ extern CFIndex mac_font_shape (FontRef, CFStringRef,
 extern CGGlyph mac_font_get_glyph_for_cid (FontRef, CharacterCollection,
 					   CGFontIndex);
 
-extern void *mac_font_get_nsctfont (FontRef);
 extern FontDescriptorRef mac_nsctfont_copy_font_descriptor (void *);
 
 #endif	/* MAC_OS_X_VERSION_MIN_REQUIRED < 1050 */

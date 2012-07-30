@@ -1509,7 +1509,7 @@ init_fringe_bitmap (int which, struct fringe_bitmap *fb, int once_p)
 	{
 	  unsigned short b = *bits;
 	  b <<= (16 - fb->width);
-#ifndef WORDS_BIG_ENDIAN
+#ifndef WORDS_BIGENDIAN
 	  b = ((b >> 8) | (b << 8));
 #endif
 	  *bits++ = b;

@@ -2615,7 +2615,7 @@ do_applescript (Lisp_Object script, Lisp_Object *result)
     {
       desc_type = typeUnicodeText;
       script = code_convert_string_norecord (script,
-#ifdef WORDS_BIG_ENDIAN
+#ifdef WORDS_BIGENDIAN
 					     intern ("utf-16be"),
 #else
 					     intern ("utf-16le"),
@@ -2648,7 +2648,7 @@ do_applescript (Lisp_Object script, Lisp_Object *result)
       AEGetDescData (desc, SDATA (*result), SBYTES (*result));
       if (desc_type == typeUnicodeText)
 	*result = code_convert_string_norecord (*result,
-#ifdef WORDS_BIG_ENDIAN
+#ifdef WORDS_BIGENDIAN
 						intern ("utf-16be"),
 #else
 						intern ("utf-16le"),

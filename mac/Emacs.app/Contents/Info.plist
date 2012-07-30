@@ -157,5 +157,7 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.
 			</array>
 		</dict>
 	</array>
+	<key>NSSupportsAutomaticGraphicsSwitching</key>
+	<true/>
 </dict>
 </plist>

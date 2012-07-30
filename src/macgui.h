@@ -69,27 +69,6 @@ typedef float CGFloat;
 
 typedef void *Window;
 typedef void *Selection;
-extern void mac_set_frame_window_title (struct frame *, CFStringRef);
-extern void mac_set_frame_window_modified (struct frame *, Boolean);
-extern Boolean mac_is_frame_window_visible (struct frame *);
-extern Boolean mac_is_frame_window_collapsed (struct frame *);
-extern void mac_bring_frame_window_to_front (struct frame *);
-extern void mac_send_frame_window_behind (struct frame *);
-extern void mac_hide_frame_window (struct frame *);
-extern void mac_show_frame_window (struct frame *);
-extern OSStatus mac_collapse_frame_window (struct frame *, Boolean);
-extern Boolean mac_is_frame_window_front (struct frame *);
-extern void mac_activate_frame_window (struct frame *);
-extern OSStatus mac_move_frame_window_structure (struct frame *,
-						 short, short);
-extern void mac_move_frame_window (struct frame *, short, short, Boolean);
-extern void mac_size_frame_window (struct frame *, short, short, Boolean);
-extern OSStatus mac_set_frame_window_alpha (struct frame *, CGFloat);
-extern OSStatus mac_get_frame_window_alpha (struct frame *, CGFloat *);
-extern void mac_get_global_mouse (Point *);
-extern Boolean mac_is_frame_window_toolbar_visible (struct frame *);
-extern CGRect mac_rect_make (struct frame *, CGFloat, CGFloat,
-			     CGFloat, CGFloat);
 
 #ifdef USE_MAC_IMAGE_IO
 typedef struct _XImage

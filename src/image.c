@@ -189,6 +189,25 @@ static Lisp_Object Finit_image_library (Lisp_Object, Lisp_Object);
    the bitmaps yourself.  That is, creating a bitmap from the same
    data more than once will not be caught.  */
 
+/* For Mac OS X high resolution versions of images, the actual bitmap
+   width/height (in pixels) is not necessarily the same as the logical
+   image width/height (in points).  We should use the former for
+   bitmap or pixel-level operations especially on postprocessing.
+
+   The width and height arguments to x_create_x_image_and_pixmap
+   should be specified in pixels, but we don't care about the
+   arguments to XGetImage and x_put_x_image, because the Mac port
+   doesn't use these arguments.  For four_corners_best, we set
+   img->corners using pixel coordinates rather than passing pixel
+   width and height as its arguments.  */
+#ifdef USE_MAC_IMAGE_IO
+#define IMAGE_BITMAP_WIDTH(img)		((img)->pixmap->width)
+#define IMAGE_BITMAP_HEIGHT(img)	((img)->pixmap->height)
+#else
+#define IMAGE_BITMAP_WIDTH(img)		((img)->width)
+#define IMAGE_BITMAP_HEIGHT(img)	((img)->height)
+#endif
+
 #ifdef HAVE_MACGUI
 
 static XImagePtr
@@ -224,7 +243,7 @@ XPutPixel (XImagePtr ximage, int x, int y, unsigned long pixel)
   PixMapHandle pixmap = GetGWorldPixMap (ximage);
   short depth = GetPixDepth (pixmap);
 
-#if defined (WORDS_BIG_ENDIAN)
+#ifdef WORDS_BIGENDIAN
   if (depth == 32)
     {
       char *base_addr = GetPixBaseAddr (pixmap);
@@ -276,7 +295,7 @@ XGetPixel (XImagePtr ximage, int x, int y)
   PixMapHandle pixmap = GetGWorldPixMap (ximage);
   short depth = GetPixDepth (pixmap);
 
-#if defined (WORDS_BIG_ENDIAN)
+#ifdef WORDS_BIGENDIAN
   if (depth == 32)
     {
       char *base_addr = GetPixBaseAddr (pixmap);
@@ -1731,7 +1750,12 @@ search_image_cache (struct frame *f, Lisp_Object spec, EMACS_UINT hash)
     if (img->hash == hash
 	&& !NILP (Fequal (img->spec, spec))
 	&& img->frame_foreground == FRAME_FOREGROUND_PIXEL (f)
-	&& img->frame_background == FRAME_BACKGROUND_PIXEL (f))
+	&& img->frame_background == FRAME_BACKGROUND_PIXEL (f)
+#ifdef USE_MAC_IMAGE_IO
+	&& (img->target_backing_scale == 0
+	    || img->target_backing_scale == FRAME_BACKING_SCALE_FACTOR (f))
+#endif
+	)
       break;
   return img;
 }
@@ -2547,6 +2571,125 @@ slurp_file (char *file, ptrdiff_t *size)
  ***********************************************************************/
 
 #ifdef USE_MAC_IMAGE_IO
+/* Return the name of 2x image file that corresponds to the given
+   ENCODED_FILE_NAME.  Return nil if the 2x file doesn't exist or not
+   readable.  We assume ENCODED_FILE_NAME stands for an existing file
+   name, so its length does not exceed PATH_MAX thus fits in int.  */
+
+static Lisp_Object
+mac_find_2x_image_file (Lisp_Object encoded_file_name)
+{
+  Lisp_Object result;
+  char *p, *last_component;
+  ptrdiff_t prefix_len;
+  int desc;
+
+  p = strrchr (SSDATA (encoded_file_name), '/');
+  last_component = p ? p + 1 : SSDATA (encoded_file_name);
+  p = strrchr (last_component, '.');
+  if (p == NULL)
+    p = SSDATA (encoded_file_name) + SBYTES (encoded_file_name);
+  prefix_len = p - SSDATA (encoded_file_name);
+  result = make_uninit_string (SBYTES (encoded_file_name) + sizeof ("@2x") - 1);
+  sprintf (SSDATA (result), "%.*s@2x%.*s",
+	   (int) prefix_len, SSDATA (encoded_file_name),
+	   (int) (SBYTES (encoded_file_name) - prefix_len), p);
+
+  desc = emacs_open (SSDATA (result), O_RDONLY, 0);
+  if (desc < 0)
+    result = Qnil;
+  else
+    emacs_close (desc);
+
+  return result;
+}
+
+static Lisp_Object
+mac_preprocess_image_for_2x_file (struct frame *f, struct image *img,
+				  Lisp_Object file)
+{
+  Lisp_Object file_2x = mac_find_2x_image_file (file);
+
+  if (!NILP (file_2x))
+    {
+      img->target_backing_scale = FRAME_BACKING_SCALE_FACTOR (f);
+      if (img->target_backing_scale == 2)
+	file = file_2x;
+    }
+
+  return file;
+}
+
+static void
+mac_postprocess_image_for_2x (struct image *img)
+{
+  /* Let four_corners_best use the corner positions measured by the
+     actual bitmap width/height data rather than the logical one.  */
+  if (img->target_backing_scale == 2)
+    {
+      img->corners[LEFT_CORNER] = img->corners[TOP_CORNER] = 0;
+      img->corners[RIGHT_CORNER] = img->width;
+      img->corners[BOT_CORNER] = img->height;
+      img->width /= 2;
+      img->height /= 2;
+    }
+}
+
+static void
+mac_cg_image_source_get_pixel_size (CGImageSourceRef source, size_t index,
+				    int *width, int *height)
+{
+  CFDictionaryRef props = CGImageSourceCopyPropertiesAtIndex (source, index,
+							      NULL);
+  int w = 0, h = 0;
+
+  if (props)
+    {
+      CFNumberRef num;
+      int val;
+
+      num = CFDictionaryGetValue (props, kCGImagePropertyPixelWidth);
+      if (num && CFNumberGetValue (num, kCFNumberIntType, &val))
+	w = val;
+      num = CFDictionaryGetValue (props, kCGImagePropertyPixelHeight);
+      if (num && CFNumberGetValue (num, kCFNumberIntType, &val))
+	h = val;
+      CFRelease (props);
+    }
+  *width = w;
+  *height = h;
+}
+
+/* Given a multiimage CGImage SOURCE, return the index of an image
+   that is twice as large as the 0th image in both width and height.
+   If not found, return 0.  */
+
+static size_t
+mac_cg_image_source_find_2x_index (CGImageSourceRef source)
+{
+  size_t result = 0;
+  int base_width, base_height;
+
+  mac_cg_image_source_get_pixel_size (source, 0, &base_width, &base_height);
+  if (base_width > 0 && base_height > 0)
+    {
+      size_t i, count = CGImageSourceGetCount (source);
+      int width, height;
+
+      for (i = 1; i < count; i++)
+	{
+	  mac_cg_image_source_get_pixel_size (source, i, &width, &height);
+	  if (width == base_width * 2 && height == base_height * 2)
+	    {
+	      result = i;
+	      break;
+	    }
+	}
+    }
+
+  return result;
+}
+
 static int
 image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
 {
@@ -2560,7 +2703,7 @@ image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
   CGImageRef image = NULL;
   int loop_count = -1;
   double delay_time = -1.0;
-  int width, height;
+  int width, height, scale_factor;
   XImagePtr ximg = NULL;
   CGContextRef context;
   CGRect rectangle, clip_rectangle;
@@ -2608,6 +2751,7 @@ image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
 	  image_error ("Cannot find image file `%s'", specified_file, Qnil);
 	  return 0;
 	}
+      file = mac_preprocess_image_for_2x_file (f, img, file);
       path = cfstring_create_with_utf8_cstring (SSDATA (file));
       if (path)
 	{
@@ -2623,9 +2767,16 @@ image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
     }
   else
     {
-      CFDataRef data = CFDataCreate (NULL, SDATA (specified_data),
-				     SBYTES (specified_data));
+      CFDataRef data;
 
+      if (!STRINGP (specified_data))
+	{
+	  CFRelease (options);
+	  image_error ("Invalid image data `%s'", specified_data, Qnil);
+	  return 0;
+	}
+      data = CFDataCreate (NULL, SDATA (specified_data),
+			   SBYTES (specified_data));
       if (data)
 	{
 	  source = CGImageSourceCreateWithData (data, options);
@@ -2653,6 +2804,18 @@ image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
 
 	      if (INTEGERP (image))
 		ino = XFASTINT (image);
+	      else if (tiff_p && count > 1 && img->target_backing_scale == 0)
+		{
+		  size_t index_2x = mac_cg_image_source_find_2x_index (source);
+
+		  if (index_2x > 0)
+		    {
+		      img->target_backing_scale =
+			FRAME_BACKING_SCALE_FACTOR (f);
+		      if (img->target_backing_scale == 2)
+			ino = index_2x;
+		    }
+		}
 	    }
 	  if (ino < count)
 	    {
@@ -2709,8 +2872,9 @@ image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
       CFRelease (props);
     }
 
-  width = CGImageGetWidth (image);
-  height = CGImageGetHeight (image);
+  scale_factor = (img->target_backing_scale == 2 ? 2 : 1);
+  width = CGImageGetWidth (image) / scale_factor;
+  height = CGImageGetHeight (image) / scale_factor;
   if (type == NULL)
     {
       Lisp_Object value;
@@ -2813,6 +2977,9 @@ image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
 	}
     }
 
+  width *= scale_factor;
+  height *= scale_factor;
+
   if (!check_image_size (f, width, height))
     {
       CGImageRelease (image);
@@ -2851,6 +3018,7 @@ image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
 				color.blue / 65535.0, 1.0);
       CGContextFillRect (context, CGRectMake (0, 0, width, height));
     }
+  CGContextScaleCTM (context, scale_factor, scale_factor);
   CGContextConcatCTM (context, transform);
   CGContextClipToRect (context, clip_rectangle);
   CGContextDrawImage (context, rectangle, image);
@@ -2909,6 +3077,7 @@ image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
 
   img->width = width;
   img->height = height;
+  mac_postprocess_image_for_2x (img);
   /* Maybe fill in the background field while we have ximg handy. */
   if (NILP (image_spec_value (img->spec, QCbackground, NULL)))
     IMAGE_BACKGROUND (img, f, ximg);
@@ -3132,6 +3301,11 @@ image_load_quicktime (struct frame *f, struct image *img, OSType type)
       int success_p;
       Handle dh;
 
+      if (!STRINGP (specified_data))
+	{
+	  image_error ("Invalid image data `%s'", specified_data, Qnil);
+	  return 0;
+	}
       err = PtrToHand (SDATA (specified_data), &dh, SBYTES (specified_data));
       if (err != noErr)
 	{
@@ -3151,7 +3325,6 @@ image_load_quartz2d (struct frame *f, struct image *img, int png_p)
 {
   Lisp_Object file, specified_file;
   Lisp_Object specified_data, specified_bg;
-  struct gcpro gcpro1;
   CGDataProviderRef source;
   CGImageRef image;
   int width, height;
@@ -3164,9 +3337,6 @@ image_load_quartz2d (struct frame *f, struct image *img, int png_p)
   specified_file = image_spec_value (img->spec, QCfile, NULL);
   specified_data = image_spec_value (img->spec, QCdata, NULL);
 
-  file = Qnil;
-  GCPRO1 (file);
-
   if (NILP (specified_data))
     {
       CFStringRef path;
@@ -3176,7 +3346,6 @@ image_load_quartz2d (struct frame *f, struct image *img, int png_p)
       if (!STRINGP (file))
 	{
 	  image_error ("Cannot find image file `%s'", specified_file, Qnil);
-	  UNGCPRO;
 	  return 0;
 	}
       path = cfstring_create_with_utf8_cstring (SSDATA (file));
@@ -3187,8 +3356,15 @@ image_load_quartz2d (struct frame *f, struct image *img, int png_p)
       CFRelease (url);
     }
   else
-    source = CGDataProviderCreateWithData (NULL, SDATA (specified_data),
-					   SBYTES (specified_data), NULL);
+    {
+      if (!STRINGP (specified_data))
+	{
+	  image_error ("Invalid image data `%s'", specified_data, Qnil);
+	  return 0;
+	}
+      source = CGDataProviderCreateWithData (NULL, SDATA (specified_data),
+					     SBYTES (specified_data), NULL);
+    }
 
   if (png_p)
     image = CGImageCreateWithPNGDataProvider (source, NULL, false,
@@ -3200,7 +3376,6 @@ image_load_quartz2d (struct frame *f, struct image *img, int png_p)
   CGDataProviderRelease (source);
   if (image == NULL)
     {
-      UNGCPRO;
       image_error ("Error reading image `%s'", img->spec, Qnil);
       return 0;
     }
@@ -3210,7 +3385,6 @@ image_load_quartz2d (struct frame *f, struct image *img, int png_p)
   if (!check_image_size (f, width, height))
     {
       CGImageRelease (image);
-      UNGCPRO;
       image_error ("Invalid image size (see `max-image-size')", Qnil, Qnil);
       return 0;
     }
@@ -3231,7 +3405,6 @@ image_load_quartz2d (struct frame *f, struct image *img, int png_p)
   if (!x_create_x_image_and_pixmap (f, width, height, 0, &ximg, &img->pixmap))
     {
       CGImageRelease (image);
-      UNGCPRO;
       return 0;
     }
   rectangle = CGRectMake (0, 0, width, height);
@@ -3254,7 +3427,6 @@ image_load_quartz2d (struct frame *f, struct image *img, int png_p)
   /* Put the image into the pixmap.  */
   x_put_x_image (f, ximg, img->pixmap, width, height);
   x_destroy_x_image (ximg);
-  UNGCPRO;
   return 1;
 }
 #endif	/* !USE_MAC_IMAGE_IO */
@@ -3913,6 +4085,10 @@ xbm_load (struct frame *f, struct image *img)
 	  return 0;
 	}
 
+#ifdef USE_MAC_IMAGE_IO
+      file = mac_preprocess_image_for_2x_file (f, img, file);
+#endif
+
       contents = slurp_file (SSDATA (file), &size);
       if (contents == NULL)
 	{
@@ -3922,6 +4098,9 @@ xbm_load (struct frame *f, struct image *img)
 
       success_p = xbm_load_image (f, img, contents, contents + size);
       xfree (contents);
+#ifdef USE_MAC_IMAGE_IO
+      mac_postprocess_image_for_2x (img);
+#endif
     }
   else
     {
@@ -5137,6 +5316,10 @@ xpm_load (struct frame *f,
 	  return 0;
 	}
 
+#ifdef USE_MAC_IMAGE_IO
+      file = mac_preprocess_image_for_2x_file (f, img, file);
+#endif
+
       contents = slurp_file (SSDATA (file), &size);
       if (contents == NULL)
 	{
@@ -5146,6 +5329,9 @@ xpm_load (struct frame *f,
 
       success_p = xpm_load_image (f, img, contents, contents + size);
       xfree (contents);
+#ifdef USE_MAC_IMAGE_IO
+      mac_postprocess_image_for_2x (img);
+#endif
     }
   else
     {
@@ -5507,9 +5693,11 @@ x_to_xcolors (struct frame *f, struct image *img, int rgb_p)
   HGDIOBJ prev;
 #endif /* HAVE_NTGUI */
 
-  if (min (PTRDIFF_MAX, SIZE_MAX) / sizeof *colors / img->width < img->height)
+  if (min (PTRDIFF_MAX, SIZE_MAX) / sizeof *colors / IMAGE_BITMAP_WIDTH (img)
+      < IMAGE_BITMAP_HEIGHT (img))
     memory_full (SIZE_MAX);
-  colors = (XColor *) xmalloc (sizeof *colors * img->width * img->height);
+  colors = (XColor *) xmalloc (sizeof *colors * IMAGE_BITMAP_WIDTH (img)
+			       * IMAGE_BITMAP_HEIGHT (img));
 
 #ifndef HAVE_NTGUI
   /* Get the X image IMG->pixmap.  */
@@ -5526,15 +5714,15 @@ x_to_xcolors (struct frame *f, struct image *img, int rgb_p)
   /* Fill the `pixel' members of the XColor array.  I wished there
      were an easy and portable way to circumvent XGetPixel.  */
   p = colors;
-  for (y = 0; y < img->height; ++y)
+  for (y = 0; y < IMAGE_BITMAP_HEIGHT (img); ++y)
     {
       XColor *row = p;
 
 #if defined (HAVE_X_WINDOWS) || defined (HAVE_NTGUI) || defined (HAVE_MACGUI)
-      for (x = 0; x < img->width; ++x, ++p)
+      for (x = 0; x < IMAGE_BITMAP_WIDTH (img); ++x, ++p)
 	p->pixel = GET_PIXEL (ximg, x, y);
       if (rgb_p)
-	x_query_colors (f, row, img->width);
+	x_query_colors (f, row, IMAGE_BITMAP_WIDTH (img));
 
 #else
 
@@ -5617,11 +5805,12 @@ x_from_xcolors (struct frame *f, struct image *img, XColor *colors)
 
   init_color_table ();
 
-  x_create_x_image_and_pixmap (f, img->width, img->height, 0,
+  x_create_x_image_and_pixmap (f, IMAGE_BITMAP_WIDTH (img),
+			       IMAGE_BITMAP_HEIGHT (img), 0,
 			       &oimg, &pixmap);
   p = colors;
-  for (y = 0; y < img->height; ++y)
-    for (x = 0; x < img->width; ++x, ++p)
+  for (y = 0; y < IMAGE_BITMAP_HEIGHT (img); ++y)
+    for (x = 0; x < IMAGE_BITMAP_WIDTH (img); ++x, ++p)
       {
 	unsigned long pixel;
 	pixel = lookup_rgb_color (f, p->red, p->green, p->blue);
@@ -5659,33 +5848,35 @@ x_detect_edges (struct frame *f, struct image *img, int *matrix, int color_adjus
   for (i = sum = 0; i < 9; ++i)
     sum += eabs (matrix[i]);
 
-#define COLOR(A, X, Y) ((A) + (Y) * img->width + (X))
+#define COLOR(A, X, Y) ((A) + (Y) * IMAGE_BITMAP_WIDTH (img) + (X))
 
-  if (min (PTRDIFF_MAX, SIZE_MAX) / sizeof *new / img->width < img->height)
+  if (min (PTRDIFF_MAX, SIZE_MAX) / sizeof *new / IMAGE_BITMAP_WIDTH (img)
+      < IMAGE_BITMAP_HEIGHT (img))
     memory_full (SIZE_MAX);
-  new = (XColor *) xmalloc (sizeof *new * img->width * img->height);
+  new = (XColor *) xmalloc (sizeof *new * IMAGE_BITMAP_WIDTH (img)
+			    * IMAGE_BITMAP_HEIGHT (img));
 
-  for (y = 0; y < img->height; ++y)
+  for (y = 0; y < IMAGE_BITMAP_HEIGHT (img); ++y)
     {
       p = COLOR (new, 0, y);
       p->red = p->green = p->blue = 0xffff/2;
-      p = COLOR (new, img->width - 1, y);
+      p = COLOR (new, IMAGE_BITMAP_WIDTH (img) - 1, y);
       p->red = p->green = p->blue = 0xffff/2;
     }
 
-  for (x = 1; x < img->width - 1; ++x)
+  for (x = 1; x < IMAGE_BITMAP_WIDTH (img) - 1; ++x)
     {
       p = COLOR (new, x, 0);
       p->red = p->green = p->blue = 0xffff/2;
-      p = COLOR (new, x, img->height - 1);
+      p = COLOR (new, x, IMAGE_BITMAP_HEIGHT (img) - 1);
       p->red = p->green = p->blue = 0xffff/2;
     }
 
-  for (y = 1; y < img->height - 1; ++y)
+  for (y = 1; y < IMAGE_BITMAP_HEIGHT (img) - 1; ++y)
     {
       p = COLOR (new, 1, y);
 
-      for (x = 1; x < img->width - 1; ++x, ++p)
+      for (x = 1; x < IMAGE_BITMAP_WIDTH (img) - 1; ++x, ++p)
 	{
 	  int r, g, b, yy, xx;
 
@@ -5796,7 +5987,7 @@ x_disable_image (struct frame *f, struct image *img)
       const int h = 15000;
       const int l = 30000;
 
-      for (p = colors, end = colors + img->width * img->height;
+      for (p = colors, end = colors + IMAGE_BITMAP_WIDTH (img) * IMAGE_BITMAP_HEIGHT (img);
 	   p < end;
 	   ++p)
 	{
@@ -5826,20 +6017,20 @@ x_disable_image (struct frame *f, struct image *img)
 
       gc = XCreateGC (dpy, img->pixmap, 0, NULL);
       XSetForeground (dpy, gc, BLACK_PIX_DEFAULT (f));
-      XDrawLine (dpy, img->pixmap, gc, 0, 0,
-		 img->width - 1, img->height - 1);
-      XDrawLine (dpy, img->pixmap, gc, 0, img->height - 1,
-		 img->width - 1, 0);
+      XDrawLine (dpy, img->pixmap, gc, 0, 0, IMAGE_BITMAP_WIDTH (img) - 1,
+		 IMAGE_BITMAP_HEIGHT (img) - 1);
+      XDrawLine (dpy, img->pixmap, gc, 0, IMAGE_BITMAP_HEIGHT (img) - 1,
+		 IMAGE_BITMAP_WIDTH (img) - 1, 0);
       XFreeGC (dpy, gc);
 
       if (img->mask)
 	{
 	  gc = XCreateGC (dpy, img->mask, 0, NULL);
 	  XSetForeground (dpy, gc, MaskForeground (f));
-	  XDrawLine (dpy, img->mask, gc, 0, 0,
-		     img->width - 1, img->height - 1);
-	  XDrawLine (dpy, img->mask, gc, 0, img->height - 1,
-		     img->width - 1, 0);
+	  XDrawLine (dpy, img->mask, gc, 0, 0, IMAGE_BITMAP_WIDTH (img) - 1,
+		     IMAGE_BITMAP_HEIGHT (img) - 1);
+	  XDrawLine (dpy, img->mask, gc, 0, IMAGE_BITMAP_HEIGHT (img) - 1,
+		     IMAGE_BITMAP_WIDTH (img) - 1, 0);
 	  XFreeGC (dpy, gc);
 	}
 #endif /* !HAVE_NS */
@@ -5907,7 +6098,8 @@ x_build_heuristic_mask (struct frame *f, struct image *img, Lisp_Object how)
 #ifndef HAVE_NTGUI
 #ifndef HAVE_NS
   /* Create an image and pixmap serving as mask.  */
-  rc = x_create_x_image_and_pixmap (f, img->width, img->height, 1,
+  rc = x_create_x_image_and_pixmap (f, IMAGE_BITMAP_WIDTH (img),
+				    IMAGE_BITMAP_HEIGHT (img), 1,
 				    &mask_img, &img->mask);
   if (!rc)
     return 0;
@@ -5963,8 +6155,8 @@ x_build_heuristic_mask (struct frame *f, struct image *img, Lisp_Object how)
   /* Set all bits in mask_img to 1 whose color in ximg is different
      from the background color bg.  */
 #ifndef HAVE_NTGUI
-  for (y = 0; y < img->height; ++y)
-    for (x = 0; x < img->width; ++x)
+  for (y = 0; y < IMAGE_BITMAP_HEIGHT (img); ++y)
+    for (x = 0; x < IMAGE_BITMAP_WIDTH (img); ++x)
 #ifndef HAVE_NS
       XPutPixel (mask_img, x, y, (XGetPixel (ximg, x, y) != bg
 				  ? PIX_MASK_DRAW : PIX_MASK_RETAIN));
@@ -6183,6 +6375,10 @@ pbm_load (struct frame *f, struct image *img)
 	  image_error ("Cannot find image file `%s'", specified_file, Qnil);
 	  return 0;
 	}
+
+#ifdef USE_MAC_IMAGE_IO
+      file = mac_preprocess_image_for_2x_file (f, img, file);
+#endif
 
       contents = slurp_file (SSDATA (file), &size);
       if (contents == NULL)
@@ -6415,6 +6611,9 @@ pbm_load (struct frame *f, struct image *img)
      img->height = height; */
 
   xfree (contents);
+#ifdef USE_MAC_IMAGE_IO
+  mac_postprocess_image_for_2x (img);
+#endif
   return 1;
 }
 
@@ -8623,6 +8822,11 @@ gif_load (struct frame *f, struct image *img)
       Handle dref = NULL;
       long file_type_atom[3];
 
+      if (!STRINGP (specified_data))
+	{
+	  image_error ("Invalid image data `%s'", specified_data, Qnil);
+	  return 0;
+	}
       err = PtrToHand (SDATA (specified_data), &dh, SBYTES (specified_data));
       if (err != noErr)
 	{
@@ -9026,6 +9230,15 @@ imagemagick_load_image (struct frame *f, struct image *img,
   desired_width = (INTEGERP (value)  ? XFASTINT (value) : -1);
   value = image_spec_value (img->spec, QCheight, NULL);
   desired_height = (INTEGERP (value) ? XFASTINT (value) : -1);
+#ifdef USE_MAC_IMAGE_IO
+  if (img->target_backing_scale == 2)
+    {
+      if (desired_width > 0)
+	desired_width *= 2;
+      if (desired_height > 0)
+	desired_height *= 2;
+    }
+#endif
 
   height = MagickGetImageHeight (image_wand);
   width = MagickGetImageWidth (image_wand);
@@ -9071,6 +9284,15 @@ imagemagick_load_image (struct frame *f, struct image *img,
 	      if (CONSP (crop) && TYPE_RANGED_INTEGERP (ssize_t, XCAR (crop)))
 		{
 		  ssize_t crop_y = XINT (XCAR (crop));
+#ifdef USE_MAC_IMAGE_IO
+		  if (img->target_backing_scale == 2)
+		    {
+		      crop_x *= 2;
+		      crop_y *= 2;
+		      crop_width *= 2;
+		      crop_height *= 2;
+		    }
+#endif
 		  MagickCropImage (image_wand, crop_width, crop_height,
 				   crop_x, crop_y);
 		}
@@ -9278,7 +9500,13 @@ imagemagick_load (struct frame *f, struct image *img)
 	  image_error ("Cannot find image file `%s'", file_name, Qnil);
 	  return 0;
 	}
+#ifdef USE_MAC_IMAGE_IO
+      file = mac_preprocess_image_for_2x_file (f, img, file);
+#endif
       success_p = imagemagick_load_image (f, img, 0, 0, SSDATA (file));
+#ifdef USE_MAC_IMAGE_IO
+      mac_postprocess_image_for_2x (img);
+#endif
     }
   /* Else its not a file, its a lisp object.  Load the image from a
      lisp object rather than a file.  */
@@ -9709,6 +9937,10 @@ svg_load (struct frame *f, struct image *img)
 	  return 0;
 	}
 
+#ifdef USE_MAC_IMAGE_IO
+      file = mac_preprocess_image_for_2x_file (f, img, file);
+#endif
+
       /* Read the entire file into memory.  */
       contents = slurp_file (SSDATA (file), &size);
       if (contents == NULL)
@@ -9735,8 +9967,22 @@ svg_load (struct frame *f, struct image *img)
       success_p = svg_load_image (f, img, SDATA (data), SBYTES (data));
     }
 
+#ifdef USE_MAC_IMAGE_IO
+  if (success_p)
+    mac_postprocess_image_for_2x (img);
+#endif
+
   return success_p;
 }
+
+#ifdef USE_MAC_IMAGE_IO
+static void
+mac_svg_set_size_2x (gint *width, gint *height, gpointer user_data)
+{
+  *width *= 2;
+  *height *= 2;
+}
+#endif
 
 /* svg_load_image is a helper function for svg_load, which does the
    actual loading given contents and size, apart from frame and image
@@ -9770,6 +10016,16 @@ svg_load_image (struct frame *f,         /* Pointer to emacs frame structure.  *
   fn_g_type_init ();
   /* Make a handle to a new rsvg object.  */
   rsvg_handle = fn_rsvg_handle_new ();
+
+#ifdef USE_MAC_IMAGE_IO
+  if (img->target_backing_scale == 0)
+    {
+      img->target_backing_scale = FRAME_BACKING_SCALE_FACTOR (f);
+      if (img->target_backing_scale == 2)
+	rsvg_handle_set_size_callback (rsvg_handle, mac_svg_set_size_2x,
+				       NULL, NULL);
+    }
+#endif
 
   /* Parse the contents argument and fill in the rsvg_handle.  */
   fn_rsvg_handle_write (rsvg_handle, contents, size, &err);
@@ -9901,7 +10157,7 @@ static int
 svg_load (struct frame *f, struct image *img)
 {
   extern int mac_svg_load_image (struct frame *, struct image *,
-				 unsigned char *, unsigned int, XColor *,
+				 unsigned char *, ptrdiff_t, XColor *,
 				 int (*) (struct frame *, int, int),
 				 void (*) (const char *, Lisp_Object,
 					   Lisp_Object));
@@ -9927,30 +10183,27 @@ svg_load (struct frame *f, struct image *img)
       Lisp_Object file;
       unsigned char *contents;
       ptrdiff_t size;
-      struct gcpro gcpro1;
 
       file = x_find_image_file (file_name);
-      GCPRO1 (file);
       if (!STRINGP (file))
 	{
 	  image_error ("Cannot find image file `%s'", file_name, Qnil);
-	  UNGCPRO;
 	  return 0;
 	}
+
+      file = mac_preprocess_image_for_2x_file (f, img, file);
 
       /* Read the entire file into memory.  */
       contents = slurp_file (SSDATA (file), &size);
       if (contents == NULL)
 	{
 	  image_error ("Error loading SVG image `%s'", img->spec, Qnil);
-	  UNGCPRO;
 	  return 0;
 	}
       /* If the file was slurped into memory properly, parse it.  */
       success_p = mac_svg_load_image (f, img, contents, size, &background,
 				      check_image_size, image_error);
       xfree (contents);
-      UNGCPRO;
     }
   /* Else its not a file, its a lisp object.  Load the image from a
      lisp object rather than a file.  */
@@ -9959,6 +10212,11 @@ svg_load (struct frame *f, struct image *img)
       Lisp_Object data;
 
       data = image_spec_value (img->spec, QCdata, NULL);
+      if (!STRINGP (data))
+	{
+	  image_error ("Invalid image data `%s'", data, Qnil);
+	  return 0;
+	}
       success_p = mac_svg_load_image (f, img, SDATA (data), SBYTES (data),
 				      &background,
 				      check_image_size, image_error);
@@ -9966,6 +10224,7 @@ svg_load (struct frame *f, struct image *img)
 
   if (success_p)
     {
+      mac_postprocess_image_for_2x (img);
       /* Maybe fill in the background field while we have ximg handy. */
       if (NILP (image_spec_value (img->spec, QCbackground, NULL)))
 	IMAGE_BACKGROUND (img, f, img->pixmap);

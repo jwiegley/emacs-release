@@ -2810,6 +2810,12 @@ struct image
      valid, respectively. */
   unsigned background_valid : 1, background_transparent_valid : 1;
 
+#ifdef USE_MAC_IMAGE_IO
+  /* Target backing scale factor (<= 2) that this image is dedicated
+     to.  0 means it is not dedicated to any particular one.  */
+  unsigned target_backing_scale : 2;
+#endif
+
   /* Width and height of the image.  */
   int width, height;
 

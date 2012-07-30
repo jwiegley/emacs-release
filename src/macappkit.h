@@ -42,6 +42,9 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 #ifndef NSAppKitVersionNumber10_6
 #define NSAppKitVersionNumber10_6 1038
 #endif
+#ifndef NSAppKitVersionNumber10_7
+#define NSAppKitVersionNumber10_7 1138
+#endif
 
 #ifndef NSINTEGER_DEFINED
 typedef int NSInteger;
@@ -105,7 +108,7 @@ typedef unsigned int NSUInteger;
 @end
 
 @interface NSImage (Emacs)
-+ (id)imageWithCGImage:(CGImageRef)cgImage;
++ (id)imageWithCGImage:(CGImageRef)cgImage exclusive:(BOOL)flag;
 @end
 
 @interface NSApplication (Emacs)
@@ -311,6 +314,7 @@ typedef unsigned int NSUInteger;
 - (struct frame *)emacsFrame;
 - (WMState)windowManagerState;
 - (void)setWindowManagerState:(WMState)newState;
+- (void)updateBackingScaleFactor;
 - (BOOL)emacsViewCanDraw;
 - (void)lockFocusOnEmacsView;
 - (void)unlockFocusOnEmacsView;
@@ -473,10 +477,11 @@ typedef unsigned int NSUInteger;
 
 @interface EmacsToolbarItem : NSToolbarItem
 {
-  /* CoreGraphics image of the item.  */
-  CGImageRef coreGraphicsImage;
+  /* Array of CoreGraphics images of the item.  */
+  NSArray *coreGraphicsImages;
 }
 - (void)setCoreGraphicsImage:(CGImageRef)cgImage;
+- (void)setCoreGraphicsImages:(NSArray *)cgImages;
 @end
 
 @interface EmacsFrameController (Toolbar) <NSToolbarDelegate>
@@ -588,8 +593,16 @@ typedef unsigned int NSUInteger;
 @end
 
 #ifdef USE_MAC_IMAGE_IO
+@interface DOMSVGRect : DOMObject
+- (float)x;
+- (float)y;
+- (float)width;
+- (float)height;
+@end
+
 @interface NSView (Emacs)
-- (XImagePtr)createXImageFromRect:(NSRect)rect backgroundColor:(NSColor *)color;
+- (XImagePtr)createXImageFromRect:(NSRect)rect backgroundColor:(NSColor *)color
+		      scaleFactor:(CGFloat)scaleFactor;
 @end
 
 /* Class for SVG frame load delegate.  */
@@ -860,6 +873,12 @@ typedef NSUInteger NSEventPhase;
 - (BOOL)isDirectionInvertedFromDevice;
 - (NSEventPhase)phase;
 @end
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+enum {
+    NSEventTypeSmartMagnify = 32
+};
 #endif
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1030
