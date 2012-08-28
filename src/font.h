@@ -469,11 +469,12 @@ struct font_bitmap
   } while (0)
 
 #define XFONT_SPEC(p)	\
-  (eassert (FONT_SPEC_P(p)), (struct font_spec *) XPNTR (p))
+  (eassert (FONT_SPEC_P(p)), (struct font_spec *) XUNTAG (p, Lisp_Vectorlike))
 #define XFONT_ENTITY(p)	\
-  (eassert (FONT_ENTITY_P(p)), (struct font_entity *) XPNTR (p))
+  (eassert (FONT_ENTITY_P(p)), \
+   (struct font_entity *) XUNTAG (p, Lisp_Vectorlike))
 #define XFONT_OBJECT(p)	\
-  (eassert (FONT_OBJECT_P(p)), (struct font *) XPNTR (p))
+  (eassert (FONT_OBJECT_P(p)), (struct font *) XUNTAG (p, Lisp_Vectorlike))
 #define XSETFONT(a, b) (XSETPSEUDOVECTOR (a, b, PVEC_FONT))
 
 /* Number of pt per inch (from the TeXbook).  */
@@ -743,6 +744,9 @@ EXFUN (Ffont_xlfd_name, 2);
 
 extern Lisp_Object font_make_entity (void);
 extern Lisp_Object font_make_object (int, Lisp_Object, int);
+#ifdef HAVE_MACGUI
+extern Lisp_Object font_make_spec (void);
+#endif
 
 extern Lisp_Object find_font_encoding (Lisp_Object);
 extern int font_registry_charsets (Lisp_Object, struct charset **,
@@ -835,6 +839,11 @@ extern struct font_driver w32font_driver;
 extern struct font_driver uniscribe_font_driver;
 extern void syms_of_w32font (void);
 #endif	/* WINDOWSNT */
+#ifdef HAVE_MACGUI
+extern void mac_register_font_driver (struct frame *);
+extern struct font_driver macfont_driver;
+extern void syms_of_macfont (void);
+#endif	/* HAVE_MACGUI */
 #ifdef HAVE_NS
 extern Lisp_Object Qfontsize;
 extern struct font_driver nsfont_driver;

@@ -56,6 +56,12 @@ extern HMENU current_popup_menu;
 
 #endif /* HAVE_NTGUI  */
 
+#ifdef HAVE_MACGUI
+#include "macterm.h"
+
+extern Lisp_Object Qmac_apple_event;
+#endif
+
 #include "menu.h"
 
 /* Define HAVE_BOXES if menus can handle radio and toggle buttons.  */
@@ -186,7 +192,7 @@ grow_menu_items (void)
   menu_items = larger_vector (menu_items, menu_items_allocated, Qnil);
 }
 
-#if (defined USE_X_TOOLKIT || defined USE_GTK || defined HAVE_NS \
+#if (defined USE_X_TOOLKIT || defined USE_GTK || defined HAVE_MACGUI || defined HAVE_NS \
      || defined HAVE_NTGUI)
 
 /* Begin a submenu.  */
@@ -213,7 +219,7 @@ push_submenu_end (void)
   menu_items_submenu_depth--;
 }
 
-#endif /* USE_X_TOOLKIT || USE_GTK || HAVE_NS || defined HAVE_NTGUI */
+#endif /* USE_X_TOOLKIT || USE_GTK || HAVE_MACGUI || HAVE_NS || defined HAVE_NTGUI */
 
 /* Indicate boundary between left and right.  */
 
@@ -443,7 +449,7 @@ single_menu_item (Lisp_Object key, Lisp_Object item, Lisp_Object dummy, void *sk
 		  XVECTOR (item_properties)->contents[ITEM_PROPERTY_SELECTED],
 		  XVECTOR (item_properties)->contents[ITEM_PROPERTY_HELP]);
 
-#if defined (USE_X_TOOLKIT) || defined (USE_GTK) || defined (HAVE_NS) || defined (HAVE_NTGUI)
+#if defined (USE_X_TOOLKIT) || defined (USE_GTK) || defined (HAVE_MACGUI) || defined (HAVE_NS) || defined (HAVE_NTGUI)
   /* Display a submenu using the toolkit.  */
   if (! (NILP (map) || NILP (enabled)))
     {
@@ -575,7 +581,7 @@ parse_single_submenu (Lisp_Object item_key, Lisp_Object item_name, Lisp_Object m
 }
 
 
-#if defined (USE_X_TOOLKIT) || defined (USE_GTK) || defined (HAVE_NS) || defined (HAVE_NTGUI)
+#if defined (USE_X_TOOLKIT) || defined (USE_GTK) || defined (HAVE_MACGUI) || defined (HAVE_NS) || defined (HAVE_NTGUI)
 
 /* Allocate a widget_value, blocking input.  */
 
@@ -961,7 +967,7 @@ find_and_call_menu_selection (FRAME_PTR f, int menu_bar_items_used, Lisp_Object 
     }
 }
 
-#endif /* USE_X_TOOLKIT || USE_GTK || HAVE_NS || HAVE_NTGUI */
+#endif /* USE_X_TOOLKIT || USE_GTK || HAVE_MACGUI || HAVE_NS || HAVE_NTGUI */
 
 #ifdef HAVE_NS
 /* As above, but return the menu selection instead of storing in kb buffer.
@@ -1098,7 +1104,11 @@ no quit occurs and `x-popup-menu' returns nil.  */)
     /* Decode the first argument: find the window and the coordinates.  */
     if (EQ (position, Qt)
 	|| (CONSP (position) && (EQ (XCAR (position), Qmenu_bar)
-				 || EQ (XCAR (position), Qtool_bar))))
+				 || EQ (XCAR (position), Qtool_bar)
+#ifdef HAVE_MACGUI
+				 || EQ (XCAR (position), Qmac_apple_event)
+#endif
+				 )))
       {
 	get_current_pos_p = 1;
       }
@@ -1205,7 +1215,7 @@ no quit occurs and `x-popup-menu' returns nil.  */)
 
     /* FIXME: Find a more general check!  */
     if (!(FRAME_X_P (f) || FRAME_MSDOS_P (f)
-	  || FRAME_W32_P (f) || FRAME_NS_P (f)))
+	  || FRAME_W32_P (f) || FRAME_MAC_P (f) || FRAME_NS_P (f)))
       error ("Can not put GUI menu on this terminal");
 
     XSETFRAME (Vmenu_updating_frame, f);
@@ -1321,6 +1331,9 @@ no quit occurs and `x-popup-menu' returns nil.  */)
   /* FIXME: Use a terminal hook!  */
 #if defined HAVE_NTGUI
   selection = w32_menu_show (f, xpos, ypos, for_click,
+			     keymaps, title, &error_name);
+#elif defined HAVE_MACGUI
+  selection = mac_menu_show (f, xpos, ypos, for_click,
 			     keymaps, title, &error_name);
 #elif defined HAVE_NS
   selection = ns_menu_show (f, xpos, ypos, for_click,

@@ -60,6 +60,14 @@ typedef XImage *XImagePtr;
 typedef HDC XImagePtr_or_DC;
 #endif
 
+#ifdef HAVE_MACGUI
+#include "macgui.h"
+typedef struct mac_display_info Display_Info;
+/* Mac equivalent of XImage.  */
+typedef Pixmap XImagePtr;
+typedef XImagePtr XImagePtr_or_DC;
+#endif
+
 #ifdef HAVE_NS
 #include "nsgui.h"
 /* Following typedef needed to accommodate the MSDOS port, believe it or not.  */
@@ -1283,7 +1291,7 @@ struct glyph_string
   unsigned padding_p : 1;
 
   /* The GC to use for drawing this glyph string.  */
-#if defined (HAVE_X_WINDOWS)
+#if defined (HAVE_X_WINDOWS) || defined (HAVE_MACGUI)
   GC gc;
 #endif
 #if defined (HAVE_NTGUI)
@@ -2802,6 +2810,12 @@ struct image
      valid, respectively. */
   unsigned background_valid : 1, background_transparent_valid : 1;
 
+#ifdef USE_MAC_IMAGE_IO
+  /* Target backing scale factor (<= 2) that this image is dedicated
+     to.  0 means it is not dedicated to any particular one.  */
+  unsigned target_backing_scale : 2;
+#endif
+
   /* Width and height of the image.  */
   int width, height;
 
@@ -2849,6 +2863,11 @@ struct image
   /* A place for image types to store additional data.  It is marked
      during GC.  */
   Lisp_Object lisp_data;
+
+#ifdef HAVE_MACGUI
+  /* A place for image types to store Core Graphics image data.  */
+  CGImageRef cg_image;
+#endif
 
   /* Hash value of image specification to speed up comparisons.  */
   EMACS_UINT hash;
@@ -3139,6 +3158,9 @@ void compute_fringe_widths (struct frame *, int);
 void w32_init_fringe (struct redisplay_interface *);
 void w32_reset_fringes (void);
 #endif
+#ifdef HAVE_MACGUI
+void mac_init_fringe (struct redisplay_interface *);
+#endif
 
 extern unsigned row_hash (struct glyph_row *);
 
@@ -3240,6 +3262,9 @@ void gamma_correct (struct frame *, XColor *);
 #endif
 #ifdef WINDOWSNT
 void gamma_correct (struct frame *, COLORREF *);
+#endif
+#ifdef HAVE_MACGUI
+void gamma_correct (struct frame *, unsigned long *);
 #endif
 
 #ifdef HAVE_WINDOW_SYSTEM

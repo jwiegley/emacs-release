@@ -46,6 +46,9 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #ifdef MSDOS
 #include "msdos.h"
 #endif
+#ifdef HAVE_MACGUI
+#include "macterm.h"
+#endif
 #ifdef HAVE_NS
 #include "nsterm.h"
 #endif

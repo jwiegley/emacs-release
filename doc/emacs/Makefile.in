@@ -102,6 +102,7 @@ EMACSSOURCES= \
 	${srcdir}/cmdargs.texi \
 	${srcdir}/xresources.texi \
 	${srcdir}/anti.texi \
+	${srcdir}/macport.texi \
 	${srcdir}/macos.texi \
 	${srcdir}/msdog.texi \
 	${srcdir}/gnu.texi \

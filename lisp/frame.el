@@ -762,7 +762,7 @@ recently selected windows nor the buffer list."
   (select-frame frame norecord)
   (raise-frame frame)
   ;; Ensure, if possible, that FRAME gets input focus.
-  (when (memq (window-system frame) '(x w32 ns))
+  (when (memq (window-system frame) '(x mac w32 ns))
     (x-focus-frame frame))
   ;; Move mouse cursor if necessary.
   (cond
@@ -816,7 +816,7 @@ Calls `suspend-emacs' if invoked from the controlling tty device,
   (interactive)
   (let ((type (framep (selected-frame))))
     (cond
-     ((memq type '(x ns w32)) (iconify-or-deiconify-frame))
+     ((memq type '(x ns w32 mac)) (iconify-or-deiconify-frame))
      ((eq type t)
       (if (controlling-tty-p)
 	  (suspend-emacs)
@@ -1263,8 +1263,8 @@ frame's display)."
      ((eq system-type 'windows-nt)
       (with-no-warnings
        (> w32-num-mouse-buttons 0)))
-     ((memq frame-type '(x ns))
-      t)    ;; We assume X and NeXTstep *always* have a pointing device
+     ((memq frame-type '(x mac ns))
+      t)    ;; We assume X, Mac, and NeXTstep *always* have a pointing device
      (t
       (or (and (featurep 'xt-mouse)
 	       xterm-mouse-mode)
@@ -1279,7 +1279,7 @@ frame's display).
 Support for popup menus requires that the mouse be available."
   (and
    (let ((frame-type (framep-on-display display)))
-     (memq frame-type '(x w32 pc ns)))
+     (memq frame-type '(x w32 pc mac ns)))
    (display-mouse-p display)))
 
 (defun display-graphic-p (&optional display)
@@ -1289,7 +1289,7 @@ frames and several different fonts at once.  This is true for displays
 that use a window system such as X, and false for text-only terminals.
 DISPLAY can be a display name, a frame, or nil (meaning the selected
 frame's display)."
-  (not (null (memq (framep-on-display display) '(x w32 ns)))))
+  (not (null (memq (framep-on-display display) '(x w32 mac ns)))))
 
 (defun display-images-p (&optional display)
   "Return non-nil if DISPLAY can display images.
@@ -1316,7 +1316,7 @@ frame's display)."
       ;; the Windows' DOS Box.
       (with-no-warnings
        (not (null dos-windows-version))))
-     ((memq frame-type '(x w32 ns))
+     ((memq frame-type '(x w32 mac ns))
       t)    ;; FIXME?
      (t
       nil))))
@@ -1327,7 +1327,7 @@ frame's display)."
   "Return the number of screens associated with DISPLAY."
   (let ((frame-type (framep-on-display display)))
     (cond
-     ((memq frame-type '(x w32 ns))
+     ((memq frame-type '(x w32 mac ns))
       (x-display-screens display))
      (t
       1))))
@@ -1339,7 +1339,7 @@ frame's display)."
 For character terminals, each character counts as a single pixel."
   (let ((frame-type (framep-on-display display)))
     (cond
-     ((memq frame-type '(x w32 ns))
+     ((memq frame-type '(x w32 mac ns))
       (x-display-pixel-height display))
      (t
       (frame-height (if (framep display) display (selected-frame)))))))
@@ -1351,7 +1351,7 @@ For character terminals, each character counts as a single pixel."
 For character terminals, each character counts as a single pixel."
   (let ((frame-type (framep-on-display display)))
     (cond
-     ((memq frame-type '(x w32 ns))
+     ((memq frame-type '(x w32 mac ns))
       (x-display-pixel-width display))
      (t
       (frame-width (if (framep display) display (selected-frame)))))))
@@ -1380,7 +1380,7 @@ displays not explicitly specified."
   "Return the height of DISPLAY's screen in millimeters.
 System values can be overridden by `display-mm-dimensions-alist'.
 If the information is unavailable, value is nil."
-  (and (memq (framep-on-display display) '(x w32 ns))
+  (and (memq (framep-on-display display) '(x w32 mac ns))
        (or (cddr (assoc (or display (frame-parameter nil 'display))
 			display-mm-dimensions-alist))
 	   (cddr (assoc t display-mm-dimensions-alist))
@@ -1392,7 +1392,7 @@ If the information is unavailable, value is nil."
   "Return the width of DISPLAY's screen in millimeters.
 System values can be overridden by `display-mm-dimensions-alist'.
 If the information is unavailable, value is nil."
-  (and (memq (framep-on-display display) '(x w32 ns))
+  (and (memq (framep-on-display display) '(x w32 mac ns))
        (or (cadr (assoc (or display (frame-parameter nil 'display))
 			display-mm-dimensions-alist))
 	   (cadr (assoc t display-mm-dimensions-alist))
@@ -1406,7 +1406,7 @@ The value may be `always', `when-mapped', `not-useful', or nil if
 the question is inapplicable to a certain kind of display."
   (let ((frame-type (framep-on-display display)))
     (cond
-     ((memq frame-type '(x w32 ns))
+     ((memq frame-type '(x w32 mac ns))
       (x-display-backing-store display))
      (t
       'not-useful))))
@@ -1417,7 +1417,7 @@ the question is inapplicable to a certain kind of display."
   "Return non-nil if DISPLAY's screen supports the SaveUnder feature."
   (let ((frame-type (framep-on-display display)))
     (cond
-     ((memq frame-type '(x w32 ns))
+     ((memq frame-type '(x w32 mac ns))
       (x-display-save-under display))
      (t
       'not-useful))))
@@ -1428,7 +1428,7 @@ the question is inapplicable to a certain kind of display."
   "Return the number of planes supported by DISPLAY."
   (let ((frame-type (framep-on-display display)))
     (cond
-     ((memq frame-type '(x w32 ns))
+     ((memq frame-type '(x w32 mac ns))
       (x-display-planes display))
      ((eq frame-type 'pc)
       4)
@@ -1441,7 +1441,7 @@ the question is inapplicable to a certain kind of display."
   "Return the number of color cells supported by DISPLAY."
   (let ((frame-type (framep-on-display display)))
     (cond
-     ((memq frame-type '(x w32 ns))
+     ((memq frame-type '(x w32 mac ns))
       (x-display-color-cells display))
      ((eq frame-type 'pc)
       16)
@@ -1456,7 +1456,7 @@ The value is one of the symbols `static-gray', `gray-scale',
 `static-color', `pseudo-color', `true-color', or `direct-color'."
   (let ((frame-type (framep-on-display display)))
     (cond
-     ((memq frame-type '(x w32 ns))
+     ((memq frame-type '(x w32 mac ns))
       (x-display-visual-class display))
      ((and (memq frame-type '(pc t))
 	   (tty-display-color-p display))
@@ -1638,7 +1638,7 @@ terminals, cursor blinking is controlled by the terminal."
   :init-value (not (or noninteractive
 		       no-blinking-cursor
 		       (eq system-type 'ms-dos)
-		       (not (memq window-system '(x w32 ns)))))
+		       (not (memq window-system '(x w32 mac ns)))))
   :initialize 'custom-initialize-delay
   :group 'cursor
   :global t

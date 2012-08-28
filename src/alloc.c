@@ -204,6 +204,9 @@ static int malloc_hysteresis;
    remapping on more recent systems because this is less important
    nowadays than in the days of small memories and timesharing.  */
 
+#ifdef PURE_SECTION
+__attribute__((section (PURE_SECTION)))
+#endif
 EMACS_INT pure[(PURESIZE + sizeof (EMACS_INT) - 1) / sizeof (EMACS_INT)] = {1,};
 #define PUREBEG (char *) pure
 
@@ -2371,7 +2374,8 @@ INIT must be an integer that represents a character.  */)
 	}
     }
 
-  *p = 0;
+  if (nbytes)
+    *p = 0;
   return val;
 }
 

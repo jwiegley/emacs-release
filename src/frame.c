@@ -32,6 +32,9 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #ifdef WINDOWSNT
 #include "w32term.h"
 #endif
+#ifdef HAVE_MACGUI
+#include "macterm.h"
+#endif
 #ifdef HAVE_NS
 #include "nsterm.h"
 #endif
@@ -184,6 +187,7 @@ Value is:
   t for a termcap frame (a character-only terminal),
  'x' for an Emacs frame that is really an X window,
  'w32' for an Emacs frame that is a window on MS-Windows display,
+ 'mac' for an Emacs frame on a Mac display,
  'ns' for an Emacs frame on a GNUstep or Macintosh Cocoa display,
  'pc' for a direct-write MS-DOS frame.
 See also `frame-live-p'.  */)
@@ -231,6 +235,7 @@ The value is a symbol:
  nil for a termcap frame (a character-only terminal),
  'x' for an Emacs frame that is really an X window,
  'w32' for an Emacs frame that is a window on MS-Windows display,
+ 'mac' for an Emacs frame on a Mac display,
  'ns' for an Emacs frame on a GNUstep or Macintosh Cocoa display,
  'pc' for a direct-write MS-DOS frame.
 
@@ -655,8 +660,12 @@ affects all frames on the same terminal device.  */)
     abort ();
 #else /* not MSDOS */
 
-#ifdef WINDOWSNT                           /* This should work now! */
-  if (sf->output_method != output_termcap)
+#if defined (WINDOWSNT) || defined (HAVE_MACGUI) /* This should work now! */
+  if (sf->output_method != output_termcap
+#ifdef HAVE_MACGUI
+      && sf->output_method != output_initial
+#endif
+      )
     error ("Not using an ASCII terminal now; cannot make a new ASCII frame");
 #endif
 #endif /* not MSDOS */
@@ -1295,6 +1304,10 @@ delete_frame (Lisp_Object frame, Lisp_Object force)
   /* Clear any X selections for this frame.  */
 #ifdef HAVE_X_WINDOWS
   if (FRAME_X_P (f))
+    x_clear_frame_selections (f);
+#endif
+#ifdef HAVE_MACGUI
+  if (FRAME_MAC_P (f))
     x_clear_frame_selections (f);
 #endif
 
@@ -1975,7 +1988,7 @@ See `redirect-frame-focus'.  */)
 
 /* Return the value of frame parameter PROP in frame FRAME.  */
 
-#if !HAVE_NS
+#if !defined (HAVE_MACGUI) && !HAVE_NS
 static
 #endif
 Lisp_Object
@@ -3131,7 +3144,13 @@ x_set_fullscreen (struct frame *f, Lisp_Object new_value, Lisp_Object old_value)
 {
   if (NILP (new_value))
     f->want_fullscreen = FULLSCREEN_NONE;
+#ifdef HAVE_MACGUI
+  else if (EQ (new_value, Qfullscreen))
+    f->want_fullscreen = FULLSCREEN_DEDICATED_DESKTOP;
+  else if (EQ (new_value, Qfullboth))
+#else
   else if (EQ (new_value, Qfullboth) || EQ (new_value, Qfullscreen))
+#endif
     f->want_fullscreen = FULLSCREEN_BOTH;
   else if (EQ (new_value, Qfullwidth))
     f->want_fullscreen = FULLSCREEN_WIDTH;
@@ -3554,7 +3573,7 @@ x_set_alpha (struct frame *f, Lisp_Object arg, Lisp_Object oldval)
   for (i = 0; i < 2; i++)
     f->alpha[i] = newval[i];
 
-#if defined (HAVE_X_WINDOWS) || defined (HAVE_NTGUI) || defined (NS_IMPL_COCOA)
+#if defined (HAVE_X_WINDOWS) || defined (HAVE_NTGUI) || defined (HAVE_MACGUI) || defined (NS_IMPL_COCOA)
   BLOCK_INPUT;
   x_set_frame_alpha (f);
   UNBLOCK_INPUT;
@@ -4361,7 +4380,7 @@ Setting this variable does not affect existing frames, only new ones.  */);
   DEFVAR_LISP ("default-frame-scroll-bars", Vdefault_frame_scroll_bars,
 	       doc: /* Default position of scroll bars on this window-system.  */);
 #ifdef HAVE_WINDOW_SYSTEM
-#if defined (HAVE_NTGUI) || defined (NS_IMPL_COCOA) || (defined (USE_GTK) && defined (USE_TOOLKIT_SCROLL_BARS))
+#if defined (HAVE_NTGUI) || defined (HAVE_MACGUI) || defined (NS_IMPL_COCOA) || (defined (USE_GTK) && defined (USE_TOOLKIT_SCROLL_BARS))
   /* MS-Windows, Mac OS X, and GTK have scroll bars on the right by
      default.  */
   Vdefault_frame_scroll_bars = Qright;

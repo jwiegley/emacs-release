@@ -2203,6 +2203,7 @@ See `menu-bar-mode' for more information."
 
 (declare-function x-menu-bar-open "term/x-win" (&optional frame))
 (declare-function w32-menu-bar-open "term/w32-win" (&optional frame))
+(declare-function mac-menu-bar-open "term/mac-win" (&optional frame))
 
 (defun menu-bar-open (&optional frame)
   "Start key navigation of the menu bar in FRAME.
@@ -2218,6 +2219,7 @@ If FRAME is nil or not given, use the selected frame."
     (cond
      ((eq type 'x) (x-menu-bar-open frame))
      ((eq type 'w32) (w32-menu-bar-open frame))
+     ((eq type 'mac) (mac-menu-bar-open frame))
      (t (with-selected-frame (or frame (selected-frame))
           (tmm-menubar))))))
 

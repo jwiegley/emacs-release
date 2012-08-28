@@ -74,7 +74,7 @@ C_SWITCH_MACHINE=@C_SWITCH_MACHINE@
 ## System-specific CFLAGS.
 C_SWITCH_SYSTEM=@C_SWITCH_SYSTEM@
 
-## Currently only set if NS_IMPL_GNUSTEP.
+## Currently only set if HAVE_MACGUI or NS_IMPL_GNUSTEP.
 ## C_SWITCH_X_SITE may override this.
 C_SWITCH_X_SYSTEM=@C_SWITCH_X_SYSTEM@
 
@@ -246,6 +246,12 @@ MSDOS_OBJ =
 ## w16select.o termcap.o if MSDOS && HAVE_X_WINDOWS.
 MSDOS_X_OBJ =
 
+## mac.o macterm.o macfns.o macmenu.o macselect.o macfont.o fontset.o
+## fringe.o image.o if HAVE_MACGUI, otherwise empty.
+MAC_OBJ=@MAC_OBJ@
+## macappkit.o if HAVE_MACGUI, otherwise empty.
+MAC_OBJC_OBJ=@MAC_OBJC_OBJ@
+
 ns_appdir=@ns_appdir@
 ns_appbindir=@ns_appbindir@
 ns_appsrc=@ns_appsrc@
@@ -340,8 +346,8 @@ base_obj = dispnew.o frame.o scroll.o xdisp.o menu.o $(XMENU_OBJ) window.o \
 	process.o gnutls.o callproc.o \
 	region-cache.o sound.o atimer.o \
 	doprnt.o intervals.o textprop.o composite.o xml.o \
-	$(MSDOS_OBJ) $(MSDOS_X_OBJ) $(NS_OBJ) $(CYGWIN_OBJ) $(FONT_OBJ)
-obj = $(base_obj) $(NS_OBJC_OBJ)
+	$(MSDOS_OBJ) $(MSDOS_X_OBJ) $(MAC_OBJ) $(NS_OBJ) $(CYGWIN_OBJ) $(FONT_OBJ)
+obj = $(base_obj) $(MAC_OBJC_OBJ) $(NS_OBJC_OBJ)
 
 ## Object files used on some machine or other.
 ## These go in the DOC file on all machines in case they are needed.
@@ -349,7 +355,7 @@ obj = $(base_obj) $(NS_OBJC_OBJ)
 ## in the list, in case they ever add any such entries.
 SOME_MACHINE_OBJECTS = dosfns.o msdos.o \
   xterm.o xfns.o xmenu.o xselect.o xrdb.o xsmfns.o fringe.o image.o \
-  fontset.o dbusbind.o \
+  mac.o macterm.o macfns.o macmenu.o macselect.o fontset.o dbusbind.o \
   nsterm.o nsfns.o nsmenu.o nsselect.o nsimage.o nsfont.o \
   w32.o w32console.o w32fns.o w32heap.o w32inevt.o \
   w32menu.o w32proc.o w32reg.o w32select.o w32term.o w32xfns.o \
@@ -437,7 +443,7 @@ buildobj.h: Makefile
 
 globals.h: gl-stamp; @true
 
-GLOBAL_SOURCES = $(base_obj:.o=.c) $(NS_OBJC_OBJ:.o=.m)
+GLOBAL_SOURCES = $(base_obj:.o=.c) $(MAC_OBJC_OBJ:.o=.m) $(NS_OBJC_OBJ:.o=.m)
 
 gl-stamp: $(libsrc)/make-docfile$(EXEEXT) $(GLOBAL_SOURCES)
 	@rm -f gl-tmp
@@ -491,6 +497,8 @@ $(OLDXMENU): $(OLDXMENU_TARGET)
 
 doc.o: buildobj.h
 
+## If HAVE_MACGUI, some Mac-specific rules are inserted here.
+@mac_frag@
 
 ## If HAVE_NS, some ns-specific rules (for OTHER_FILES) are inserted here.
 @ns_frag@

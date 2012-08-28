@@ -303,5 +303,36 @@ intervals.o: intervals.c buffer.h $(INTERVALS_H) keyboard.h puresize.h \
 textprop.o: textprop.c buffer.h window.h $(INTERVALS_H) \
    lisp.h globals.h $(config_h)
 
+## Mac support.
+alloc.o buffer.o bytecode.o callint.o callproc.o cm.o cmds.o coding.o \
+  composite.o data.o dispnew.o editfns.o emacs.o eval.o fileio.o fns.o font.o \
+  fontset.o frame.o fringe.o image.o indent.o insdel.o intervals.o keyboard.o \
+  keymap.o lread.o macros.o menu.o minibuf.o print.o process.o scroll.o \
+  search.o syntax.o sysdep.o term.o terminal.o textprop.o undo.o window.o \
+  xdisp.o xfaces.o: macgui.h
+mac.o: mac.c process.h systime.h sysselect.h blockinput.h atimer.h macterm.h \
+  macgui.h frame.h dispextern.h charset.h coding.h composite.h lisp.h \
+  $(config_h)
+macfont.o: macfont.c dispextern.h macgui.h macterm.h frame.h blockinput.h \
+  atimer.h systime.h character.h charset.h composite.h fontset.h font.h ccl.h \
+  macfont.h macuvs.h lisp.h $(config_h)
+macfns.o: macfns.c macterm.h macgui.h frame.h $(INTERVALS_H) window.h buffer.h \
+  keyboard.h systime.h coding.h blockinput.h atimer.h epaths.h character.h \
+  charset.h fontset.h termhooks.h font.h ccl.h lisp.h $(config_h)
+macmenu.o: macmenu.c frame.h dispextern.h macgui.h termhooks.h keyboard.h \
+  systime.h coding.h composite.h keymap.h window.h blockinput.h atimer.h \
+  buffer.h charset.h macterm.h menu.h lisp.h $(config_h)
+macterm.o: macterm.c blockinput.h atimer.h systime.h macterm.h macgui.h \
+  frame.h $(INTERVALS_H) systty.h charset.h character.h coding.h fontset.h \
+  termhooks.h termopts.h termchar.h disptab.h buffer.h window.h keyboard.h \
+  keymap.h font.h ccl.h lisp.h $(config_h)
+macselect.o: macselect.c macterm.h macgui.h frame.h dispextern.h blockinput.h \
+  atimer.h systime.h keymap.h lisp.h $(config_h)
+macappkit.o: macappkit.m blockinput.h atimer.h systime.h macterm.h macgui.h \
+  frame.h $(INTERVALS_H) charset.h character.h fontset.h termhooks.h buffer.h \
+  window.h keyboard.h coding.h keymap.h macfont.h macappkit.h lisp.h $(config_h)
+mactoolbox.o: mactoolbox.c blockinput.h atimer.h systime.h macterm.h macgui.h \
+  frame.h dispextern.h charset.h character.h coding.h composite.h fontset.h \
+  termhooks.h buffer.h window.h keyboard.h font.h ccl.h lisp.h $(config_h)
 
 ### deps.mk ends here

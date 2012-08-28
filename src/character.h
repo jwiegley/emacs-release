@@ -120,14 +120,12 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
   do {					\
     Lisp_Object tmp = XCAR (x);		\
     CHECK_CHARACTER (tmp);		\
-    XSETCAR ((x), tmp);			\
   } while (0)
 
 #define CHECK_CHARACTER_CDR(x) \
   do {					\
     Lisp_Object tmp = XCDR (x);		\
     CHECK_CHARACTER (tmp);		\
-    XSETCDR ((x), tmp);			\
   } while (0)
 
 /* Nonzero iff C is a character of code less than 0x100.  */

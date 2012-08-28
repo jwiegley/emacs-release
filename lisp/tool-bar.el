@@ -146,6 +146,8 @@ To define items in any other map, use `tool-bar-local-item'."
 	 (bg (face-attribute 'tool-bar :background))
 	 (colors (nconc (if (eq fg 'unspecified) nil (list :foreground fg))
 			(if (eq bg 'unspecified) nil (list :background bg))))
+	 (tiff-spec (append (list :type 'tiff :file (concat icon ".tiff"))
+			    colors))
 	 (xpm-spec (list :type 'xpm :file (concat icon ".xpm")))
 	 (xpm-lo-spec (list :type 'xpm :file
 			    (concat "low-color/" icon ".xpm")))
@@ -157,6 +159,8 @@ To define items in any other map, use `tool-bar-local-item'."
 			',(list pbm-spec xbm-spec xpm-lo-spec xpm-spec))
 		       ((< (display-color-cells) 256)
 			',(list xpm-lo-spec xpm-spec pbm-spec xbm-spec))
+		       ((eq window-system 'mac)
+			',(list tiff-spec xpm-spec pbm-spec xbm-spec))
 		       (t
 			',(list xpm-spec pbm-spec xbm-spec))))))
 

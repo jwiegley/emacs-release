@@ -6704,7 +6704,7 @@ call `normal-erase-is-backspace-mode' (which see) instead."
        (if (if (eq normal-erase-is-backspace 'maybe)
                (and (not noninteractive)
                     (or (memq system-type '(ms-dos windows-nt))
-			(memq window-system '(ns))
+			(memq window-system '(mac ns))
                         (and (memq window-system '(x))
                              (fboundp 'x-backspace-delete-keys-p)
                              (x-backspace-delete-keys-p))
@@ -6752,7 +6752,7 @@ See also `normal-erase-is-backspace'."
   (let ((enabled (eq 1 (terminal-parameter
                         nil 'normal-erase-is-backspace))))
 
-    (cond ((or (memq window-system '(x w32 ns pc))
+    (cond ((or (memq window-system '(x w32 mac ns pc))
 	       (memq system-type '(ms-dos windows-nt)))
 	   (let ((bindings
 		  `(([M-delete] [M-backspace])

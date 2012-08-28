@@ -938,6 +938,46 @@ copy_data_segment (struct load_command *lc)
     }
 }
 
+/* Copy a LC_SEGMENT load command for the EMACS_READ_ONLY segment from
+   the input file to the output file, adjusting the file offset of the
+   segment and the file offsets of sections contained in it.  The VM
+   protection is changed to read-only, and the sections are dumped
+   from memory.  */
+static void
+copy_emacs_read_only_segment (struct load_command *lc)
+{
+  struct segment_command *scp = (struct segment_command *) lc;
+  unsigned long old_fileoff = scp->fileoff;
+  struct section *sectp;
+  int j;
+
+  scp->fileoff = curr_file_offset;
+  scp->maxprot = scp->initprot = VM_PROT_READ;
+
+  printf ("Writing segment %-16.16s @ %#8lx (%#8lx/%#8lx @ %#10lx)\n",
+	  scp->segname, (long) (scp->fileoff), (long) (scp->filesize),
+	  (long) (scp->vmsize), (long) (scp->vmaddr));
+
+  sectp = (struct section *) (scp + 1);
+  for (j = 0; j < scp->nsects; j++)
+    {
+      sectp->offset += curr_file_offset - old_fileoff;
+      if (!unexec_write (sectp->offset, (void *) sectp->addr, sectp->size))
+	unexec_error ("cannot write section %.16s", sectp->sectname);
+      printf ("        section %-16.16s at %#8lx - %#8lx (sz: %#8lx)\n",
+	      sectp->sectname, (long) (sectp->offset),
+	      (long) (sectp->offset + sectp->size), (long) (sectp->size));
+      sectp++;
+    }
+
+  curr_file_offset += ROUNDUP_TO_PAGE_BOUNDARY (scp->filesize);
+
+  if (!unexec_write (curr_header_offset, lc, lc->cmdsize))
+    unexec_error ("cannot write load command to header");
+
+  curr_header_offset += lc->cmdsize;
+}
+
 /* Copy a LC_SYMTAB load command from the input file to the output
    file, adjusting the file offset fields.  */
 static void
@@ -1241,6 +1281,10 @@ dump_it (void)
 	      data_segment_scp = scp;
 
 	      copy_data_segment (lca[i]);
+	    }
+	  else if (strncmp (scp->segname, EMACS_READ_ONLY_SEGMENT, 16) == 0)
+	    {
+	      copy_emacs_read_only_segment (lca[i]);
 	    }
 	  else
 	    {

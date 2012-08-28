@@ -306,7 +306,7 @@ extern Lisp_Object unuse_menu_items (Lisp_Object dummy);
    confined to an extended version of this with sections of code below
    using it unconditionally.  */
 #ifndef HAVE_NTGUI
-#if defined (USE_GTK) || defined (HAVE_NS)
+#if defined (USE_GTK) || defined (HAVE_MACGUI) || defined (HAVE_NS)
 # define ENCODE_MENU_STRING(str) ENCODE_UTF_8 (str)
 #elif defined HAVE_X_I18N
 #define ENCODE_MENU_STRING(str) ENCODE_SYSTEM (str)
@@ -420,6 +420,8 @@ extern Lisp_Object Qhelp_echo;
 
 /* Symbols to use for non-text mouse positions.  */
 extern Lisp_Object Qmode_line, Qvertical_line, Qheader_line;
+
+extern void (*handle_user_signal_hook) (int);
 
 /* True while doing kbd input.  */
 extern int waiting_for_input;

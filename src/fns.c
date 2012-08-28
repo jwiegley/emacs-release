@@ -2074,6 +2074,16 @@ internal_equal (register Lisp_Object o1, register Lisp_Object o2, int depth, int
 		  && (XMARKER (o1)->buffer == 0
 		      || XMARKER (o1)->bytepos == XMARKER (o2)->bytepos));
 	}
+#ifdef HAVE_MACGUI
+      /* Font-objects, which are subject to equality testing, may
+	 contain save-values in the mac font backends.  */
+      if (SAVE_VALUEP (o1))
+	{
+	  return (XSAVE_VALUE (o1)->dogc == XSAVE_VALUE (o2)->dogc
+		  && XSAVE_VALUE (o1)->pointer == XSAVE_VALUE (o2)->pointer
+		  && XSAVE_VALUE (o1)->integer == XSAVE_VALUE (o2)->integer);
+	}
+#endif
       break;
 
     case Lisp_Vectorlike:
