@@ -1115,8 +1115,9 @@ named function that you create (e.g.@: with @code{defun}), as well as
 any anonymous function that you create using the @code{lambda} macro
 or the @code{function} special form or the @code{#'} syntax
 (@pxref{Anonymous Functions}), is automatically converted into a
-closure.
+@dfn{closure}.
 
+@cindex closures
   A closure is a function that also carries a record of the lexical
 environment that existed when the function was defined.  When it is
 invoked, any lexical variable references within its definition use the
@@ -1264,8 +1265,8 @@ example, byte-compiling @file{fortran.el} used to warn:
 
 @example
 In end of data:
-fortran.el:2152:1:Warning: the function `gud-find-c-expr' is not known
-    to be defined.
+fortran.el:2152:1:Warning: the function `gud-find-c-expr' is not
+    known to be defined.
 @end example
 
 In fact, @code{gud-find-c-expr} is only used in the function that

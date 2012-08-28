@@ -68,7 +68,7 @@ is not used)."
 	 (setq ns-last-selected-text text))
 	(t
 	 ;; With multi-tty, this function may be called from a tty frame.
-	 (when (memq (framep (selected-frame)) '(x mac))
+	 (when (eq (framep (selected-frame)) 'x)
 	   (when x-select-enable-primary
 	     (x-set-selection 'PRIMARY text)
 	     (setq x-last-selected-text-primary text))

@@ -112,9 +112,9 @@ File: url,  Node: Parsed URLs,  Prev: Configuration,  Up: Getting Started
 ===============
 
 The library functions typically operate on "parsed" versions of URLs.
-These are actually vectors of the form:
+These are actually CL structures (vectors) of the form:
 
-     [TYPE USER PASSWORD HOST PORT FILE TARGET ATTRIBUTES FULL]
+     [cl-struct-url TYPE USER PASSWORD HOST PORT FILENAME TARGET ATTRIBUTES FULLNESS USE-COOKIES]
 
 where
 TYPE
@@ -132,7 +132,7 @@ HOST
 PORT
      is the port number associated with it, or `nil';
 
-FILE
+FILENAME
      is the "file" part of it, or `nil'.  This doesn't necessarily
      actually refer to a file;
 
@@ -142,13 +142,21 @@ TARGET
 ATTRIBUTES
      is the attributes associated with it, or `nil';
 
-FULL
+FULLNESS
      is `t' for a fully-specified URL, with a host part indicated by
      `//' after the scheme part.
 
+USE-COOKIES
+     is `nil' to neither send or store cookies to the server, `t'
+     otherwise.
+
    These attributes have accessors named `url-PART', where PART is the
-name of one of the elements above, e.g., `url-host'.  Similarly, there
-are setters of the form `url-set-PART'.
+name of one of the elements above, e.g., `url-host'.  These attributes
+can be set with the same accessors using `setf':
+
+     (setf (url-port url) 80)
+
+   If PORT is NIL, `url-port' returns the default port of the protocol.
 
    There are functions for parsing and unparsing between the string and
 vector forms.
@@ -1495,44 +1503,35 @@ Command and Function Index
 * Info-goto-node:                        info.                 (line  6)
 * man:                                   man.                  (line  6)
 * terminal-emulator:                     rlogin/telnet/tn3270. (line  6)
-* url-attributes:                        Parsed URLs.          (line 41)
+* url-attributes:                        Parsed URLs.          (line 45)
 * url-cache-create-filename-human-readable: Disk Caching.      (line 37)
 * url-cache-create-filename-using-md5:   Disk Caching.         (line 31)
 * url-cache-expired:                     Disk Caching.         (line 44)
 * url-completion-function:               History.              (line 43)
 * url-do-setup:                          History.              (line  6)
 * url-fetch-from-cache:                  Disk Caching.         (line 53)
-* url-file:                              Parsed URLs.          (line 41)
-* url-full:                              Parsed URLs.          (line 41)
-* url-generic-parse-url:                 Parsed URLs.          (line 49)
+* url-filename:                          Parsed URLs.          (line 45)
+* url-fullness:                          Parsed URLs.          (line 45)
+* url-generic-parse-url:                 Parsed URLs.          (line 57)
 * url-history-parse-history:             History.              (line 35)
 * url-history-save-history:              History.              (line 39)
 * url-history-setup-save-timer:          History.              (line 29)
 * url-history-update-url:                History.              (line 16)
-* url-host:                              Parsed URLs.          (line 41)
+* url-host:                              Parsed URLs.          (line 45)
 * url-http-options:                      HTTP URL Options.     (line 10)
 * url-irc-erc:                           irc.                  (line 19)
 * url-irc-rcirc:                         irc.                  (line 16)
 * url-irc-zenirc:                        irc.                  (line 22)
 * url-open-stream:                       Gateways in general.  (line 14)
-* url-password:                          Parsed URLs.          (line 41)
-* url-port:                              Parsed URLs.          (line 41)
+* url-password:                          Parsed URLs.          (line 45)
+* url-port:                              Parsed URLs.          (line 45)
 * url-queue-retrieve:                    Retrieving URLs.      (line 26)
-* url-recreate-url:                      Parsed URLs.          (line 52)
+* url-recreate-url:                      Parsed URLs.          (line 60)
 * url-retrieve:                          Retrieving URLs.      (line 14)
 * url-retrieve-synchronously:            Retrieving URLs.      (line  7)
-* url-set-attributes:                    Parsed URLs.          (line 41)
-* url-set-file:                          Parsed URLs.          (line 41)
-* url-set-full:                          Parsed URLs.          (line 41)
-* url-set-host:                          Parsed URLs.          (line 41)
-* url-set-password:                      Parsed URLs.          (line 41)
-* url-set-port:                          Parsed URLs.          (line 41)
-* url-set-target:                        Parsed URLs.          (line 41)
-* url-set-type:                          Parsed URLs.          (line 41)
-* url-set-user:                          Parsed URLs.          (line 41)
-* url-target:                            Parsed URLs.          (line 41)
-* url-type:                              Parsed URLs.          (line 41)
-* url-user:                              Parsed URLs.          (line 41)
+* url-target:                            Parsed URLs.          (line 45)
+* url-type:                              Parsed URLs.          (line 45)
+* url-user:                              Parsed URLs.          (line 45)
 
 
 File: url,  Node: Variable Index,  Next: Concept Index,  Prev: Function Index,  Up: Top
@@ -1693,7 +1692,7 @@ Concept Index
 * tn3270:                                rlogin/telnet/tn3270.
                                                               (line   6)
 * Unix man pages:                        man.                 (line   6)
-* unparsing URLs:                        Parsed URLs.         (line  52)
+* unparsing URLs:                        Parsed URLs.         (line  60)
 * URIs:                                  Getting Started.     (line   6)
 * URLs, definition:                      Getting Started.     (line   6)
 * usenet:                                news/nntp/snews.     (line   6)
@@ -1707,43 +1706,43 @@ Node: Top995
 Node: Getting Started2484
 Node: Configuration3874
 Node: Parsed URLs4299
-Node: Retrieving URLs5651
-Node: Supported URL Types7114
-Node: http/https7974
-Node: Cookies9155
-Node: HTTP language/coding10141
-Node: HTTP URL Options11768
-Node: Dealing with HTTP documents12699
-Node: file/ftp13065
-Node: info13965
-Node: mailto14232
-Node: news/nntp/snews15340
-Node: rlogin/telnet/tn327016574
-Node: irc17141
-Node: data18048
-Node: nfs18513
-Node: cid19263
-Node: about19369
-Node: ldap19470
-Node: imap19611
-Node: man19719
-Node: Defining New URLs19917
-Node: Naming conventions20201
-Node: Required functions20339
-Node: Optional functions20504
-Node: Asynchronous fetching20672
-Node: Supporting file-name-handlers20857
-Node: General Facilities21031
-Node: Disk Caching21247
-Node: Proxies23770
-Node: Gateways in general25825
-Ref: Gateways in general-Footnote-129871
-Node: Suppressing network connections29946
-Node: History30597
-Node: Customization32436
-Node: GNU Free Documentation License34310
-Node: Function Index59484
-Node: Variable Index62662
-Node: Concept Index67459
+Node: Retrieving URLs5917
+Node: Supported URL Types7380
+Node: http/https8240
+Node: Cookies9421
+Node: HTTP language/coding10407
+Node: HTTP URL Options12034
+Node: Dealing with HTTP documents12965
+Node: file/ftp13331
+Node: info14231
+Node: mailto14498
+Node: news/nntp/snews15606
+Node: rlogin/telnet/tn327016840
+Node: irc17407
+Node: data18314
+Node: nfs18779
+Node: cid19529
+Node: about19635
+Node: ldap19736
+Node: imap19877
+Node: man19985
+Node: Defining New URLs20183
+Node: Naming conventions20467
+Node: Required functions20605
+Node: Optional functions20770
+Node: Asynchronous fetching20938
+Node: Supporting file-name-handlers21123
+Node: General Facilities21297
+Node: Disk Caching21513
+Node: Proxies24036
+Node: Gateways in general26091
+Ref: Gateways in general-Footnote-130137
+Node: Suppressing network connections30212
+Node: History30863
+Node: Customization32702
+Node: GNU Free Documentation License34576
+Node: Function Index59750
+Node: Variable Index62271
+Node: Concept Index67068
 
 End Tag Table

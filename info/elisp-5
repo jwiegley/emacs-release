@@ -2,7 +2,7 @@ This is /home/cyd/emacs/doc/lispref/../../info/elisp, produced by
 makeinfo version 4.13 from /home/cyd/emacs/doc/lispref/elisp.texi.
 
 This is the `GNU Emacs Lisp Reference Manual' corresponding to Emacs
-version 24.1.
+version 24.2.
 
 Copyright (C) 1990-1996, 1998-2012 Free Software Foundation, Inc.
 
@@ -869,8 +869,8 @@ correspondingly more complicated.  Here are excerpts from
    The three modes for Lisp share much of their code.  For instance,
 each calls the following function to set various variables:
 
-     (defun lisp-mode-variables (&optional lisp-syntax keywords-case-insensitive)
-       (when lisp-syntax
+     (defun lisp-mode-variables (&optional syntax keywords-case-insensitive)
+       (when syntax
          (set-syntax-table lisp-mode-syntax-table))
        (setq local-abbrev-table lisp-mode-abbrev-table)
        ...
@@ -922,9 +922,9 @@ Finally, here is the major mode command for Lisp mode:
      Entry to this mode calls the value of `lisp-mode-hook'
      if that value is non-nil."
        (lisp-mode-variables nil t)
-       (set (make-local-variable 'find-tag-default-function) 'lisp-find-tag-default)
-       (make-local-variable 'comment-start-skip)
-       (setq comment-start-skip
+       (set (make-local-variable 'find-tag-default-function)
+            'lisp-find-tag-default)
+       (set (make-local-variable 'comment-start-skip)
             "\\(\\(^\\|[^\\\\\n]\\)\\(\\\\\\\\\\)*\\)\\(;+\\|#|\\) *")
        (setq imenu-case-fold-search t))
 
@@ -6487,7 +6487,8 @@ uses the `operations' property to say it doesn't handle
             (let ((remote-file-name-inhibit-cache
                    (- display-time-interval 5)))
               (and (file-exists-p file)
-                   (< 0 (nth 7 (file-attributes (file-chase-links file)))))))
+                   (< 0 (nth 7 (file-attributes
+                                 (file-chase-links file)))))))
 
 
 File: elisp,  Node: Format Conversion,  Prev: Magic File Names,  Up: Files

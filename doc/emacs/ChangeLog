@@ -1,3 +1,59 @@
+2012-08-24  Chong Yidong  <cyd@gnu.org>
+
+	* Version 24.2 released.
+
+2012-07-31  Chong Yidong  <cyd@gnu.org>
+
+	* emacs.texi: Fix ISBN (Bug#12080).
+
+2012-07-21  Eli Zaretskii  <eliz@gnu.org>
+
+	* frames.texi (Mouse Commands): Fix the description of mouse-2.
+	(Bug#11958)
+
+2012-07-19  Chong Yidong  <cyd@gnu.org>
+
+	* emacs.texi: Update ISBN.
+
+2012-06-29  Chong Yidong  <cyd@gnu.org>
+
+	* maintaining.texi (Basic VC Editing, VC Pull, Merging):
+	* basic.texi (Erasing, Basic Undo): Fix markup.
+
+2012-06-26  Glenn Morris  <rgm@gnu.org>
+
+	* fixit.texi (Undo): Grammar fixes.  (Bug#11779)
+
+2012-06-24  Michael Witten  <mfwitten@gmail.com>  (tiny change)
+
+	* fixit.texi (Undo): Fix typo.  (Bug#11775)
+
+2012-06-19  Glenn Morris  <rgm@gnu.org>
+
+	* Makefile.in: Rename infodir to buildinfodir throughout.  (Bug#11737)
+
+2012-06-11  Chong Yidong  <cyd@gnu.org>
+
+	* emacs.texi: Remove urlcolor setting.
+
+2012-06-10  Chong Yidong  <cyd@gnu.org>
+
+	* emacs.texi: Update ISBN and edition number.
+
+	* anti.texi:
+	* building.texi:
+	* cmdargs.texi:
+	* custom.texi:
+	* display.texi:
+	* files.texi:
+	* frames.texi:
+	* glossary.texi:
+	* misc.texi:
+	* mule.texi:
+	* programs.texi:
+	* sending.texi:
+	* text.texi: Copyedits to avoid underfull/overfull in 7x9 manual.
+
 2012-06-01  Chong Yidong  <cyd@gnu.org>
 
 	* Version 24.1 released.

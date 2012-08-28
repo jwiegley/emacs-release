@@ -560,11 +560,10 @@ thinking of using it for any other purpose, it is quite likely that
 you're making a mistake.  Think: what do you want to do when the
 command is called from a keyboard macro?
 
-This function is meant for implementing advice and other
-function-modifying features.  Instead of using this, it is sometimes
-cleaner to give your function an extra optional argument whose
-`interactive' spec specifies non-nil unconditionally (\"p\" is a good
-way to do this), or via (not (or executing-kbd-macro noninteractive)).  */)
+Instead of using this function, it is sometimes cleaner to give your
+function an extra optional argument whose `interactive' spec specifies
+non-nil unconditionally (\"p\" is a good way to do this), or via
+\(not (or executing-kbd-macro noninteractive)).  */)
   (Lisp_Object kind)
 {
   return ((INTERACTIVE || !EQ (kind, intern ("interactive")))
@@ -2254,8 +2253,8 @@ eval_sub (Lisp_Object form)
 	error ("Lisp nesting exceeds `max-lisp-eval-depth'");
     }
 
-  original_fun = XCAR (form);
-  original_args = XCDR (form);
+  original_fun = Fcar (form);
+  original_args = Fcdr (form);
 
   backtrace.next = backtrace_list;
   backtrace_list = &backtrace;

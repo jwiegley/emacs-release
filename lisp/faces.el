@@ -315,7 +315,7 @@ specifies an invalid attribute."
 
 (defun set-face-attributes-from-resources (face frame)
   "Set attributes of FACE from X resources for FRAME."
-  (when (memq (framep frame) '(x w32 mac))
+  (when (memq (framep frame) '(x w32))
     (dolist (definition face-x-resources)
       (let ((attribute (car definition)))
 	(dolist (entry (cdr definition))
@@ -1122,7 +1122,7 @@ of a global face.  Value is the new attribute value."
 	       ;; explicitly in VALID, using color approximation code
 	       ;; in tty-colors.el.
 	       (when (and (memq attribute '(:foreground :background))
-			  (not (memq (window-system frame) '(x w32 mac ns)))
+			  (not (memq (window-system frame) '(x w32 ns)))
 			  (not (member new-value
 				       '("unspecified"
 					 "unspecified-fg" "unspecified-bg"))))
@@ -1444,7 +1444,7 @@ If FRAME is nil, the current FRAME is used."
 	    match (cond ((eq req 'type)
 			 (or (memq (window-system frame) options)
 			     (and (memq 'graphic options)
-				  (memq (window-system frame) '(x w32 mac ns)))
+				  (memq (window-system frame) '(x w32 ns)))
 			     ;; FIXME: This should be revisited to use
 			     ;; display-graphic-p, provided that the
 			     ;; color selection depends on the number
@@ -1646,7 +1646,7 @@ The argument FRAME specifies which frame to try.
 The value may be different for frames on different display types.
 If FRAME doesn't support colors, the value is nil.
 If FRAME is nil, that stands for the selected frame."
-  (if (memq (framep (or frame (selected-frame))) '(x w32 mac ns))
+  (if (memq (framep (or frame (selected-frame))) '(x w32 ns))
       (xw-defined-colors frame)
     (mapcar 'car (tty-color-alist frame))))
 (defalias 'x-defined-colors 'defined-colors)
@@ -1660,7 +1660,7 @@ If COLOR is the symbol `unspecified' or one of the strings
 \"unspecified-fg\" or \"unspecified-bg\", the value is nil."
   (if (member color '(unspecified "unspecified-bg" "unspecified-fg"))
       nil
-    (if (member (framep (or frame (selected-frame))) '(x w32 mac ns))
+    (if (member (framep (or frame (selected-frame))) '(x w32 ns))
 	(xw-color-defined-p color frame)
       (numberp (tty-color-translate color frame)))))
 (defalias 'x-color-defined-p 'color-defined-p)
@@ -1686,7 +1686,7 @@ return value is nil."
   (cond
    ((member color '(unspecified "unspecified-fg" "unspecified-bg"))
     nil)
-   ((memq (framep (or frame (selected-frame))) '(x w32 mac ns))
+   ((memq (framep (or frame (selected-frame))) '(x w32 ns))
     (xw-color-values color frame))
    (t
     (tty-color-values color frame))))
@@ -1700,7 +1700,7 @@ return value is nil."
 The optional argument DISPLAY specifies which display to ask about.
 DISPLAY should be either a frame or a display name (a string).
 If omitted or nil, that stands for the selected frame's display."
-  (if (memq (framep-on-display display) '(x w32 mac ns))
+  (if (memq (framep-on-display display) '(x w32 ns))
       (xw-display-color-p display)
     (tty-display-color-p display)))
 (defalias 'x-display-color-p 'display-color-p)
@@ -1711,7 +1711,7 @@ If omitted or nil, that stands for the selected frame's display."
   "Return non-nil if frames on DISPLAY can display shades of gray."
   (let ((frame-type (framep-on-display display)))
     (cond
-     ((memq frame-type '(x w32 mac ns))
+     ((memq frame-type '(x w32 ns))
       (x-display-grayscale-p display))
      (t
       (> (tty-color-gray-shades display) 2)))))
@@ -1932,7 +1932,7 @@ Calculate the face definitions using the face specs, custom theme
 settings, X resources, and `face-new-frame-defaults'.
 Finally, apply any relevant face attributes found amongst the
 frame parameters in PARAMETERS."
-  (let ((window-system-p (memq (window-system frame) '(x w32 mac))))
+  (let ((window-system-p (memq (window-system frame) '(x w32))))
     ;; The `reverse' is so that `default' goes first.
     (dolist (face (nreverse (face-list)))
       (condition-case ()
@@ -2401,7 +2401,7 @@ Note: Other faces cannot inherit from the cursor face."
   '((default
      :box (:line-width 1 :style released-button)
      :foreground "black")
-    (((type x w32 mac ns) (class color))
+    (((type x w32 ns) (class color))
      :background "grey75")
     (((type x) (class mono))
      :background "grey"))

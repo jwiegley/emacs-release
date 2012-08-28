@@ -118,9 +118,6 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 /* Define to 1 if GCC-style __attribute__ ((__aligned__ (expr))) works. */
 #undef HAVE_ATTRIBUTE_ALIGNED
 
-/* Define to 1 if you have the <AvailabilityMacros.h> header file. */
-#undef HAVE_AVAILABILITYMACROS_H
-
 /* Define to 1 if strtold conforms to C99. */
 #undef HAVE_C99_STRTOLD
 
@@ -506,9 +503,6 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* Define to 1 if using libm17n-flt. */
 #undef HAVE_M17N_FLT
-
-/* Define to 1 if you are using GUI on Mac OS X. */
-#undef HAVE_MACGUI
 
 /* Define to 1 if you have the <machine/soundcard.h> header file. */
 #undef HAVE_MACHINE_SOUNDCARD_H
@@ -1068,9 +1062,9 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be
    automatically deduced at runtime.
-	STACK_DIRECTION > 0 => grows toward higher addresses
-	STACK_DIRECTION < 0 => grows toward lower addresses
-	STACK_DIRECTION = 0 => direction of growth unknown */
+        STACK_DIRECTION > 0 => grows toward higher addresses
+        STACK_DIRECTION < 0 => grows toward lower addresses
+        STACK_DIRECTION = 0 => direction of growth unknown */
 #undef STACK_DIRECTION
 
 /* Define to 1 if the `S_IS*' macros in <sys/stat.h> do not work properly. */
@@ -1112,9 +1106,6 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* Define to 1 if using the Lucid X toolkit. */
 #undef USE_LUCID
-
-/* Define if use the Image I/O framework for reading images. */
-#undef USE_MAC_IMAGE_IO
 
 /* Define to use mmap to allocate buffer text. */
 #undef USE_MMAP_FOR_BUFFERS
@@ -1164,7 +1155,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
    XPointer or XPointer*. */
 #undef XRegisterIMInstantiateCallback_arg6
 
-/* Enable large inode numbers on Mac OS X 10.5.  */
+/* Enable large inode numbers on Mac OS X.  */
 #ifndef _DARWIN_USE_64_BIT_INODE
 # define _DARWIN_USE_64_BIT_INODE 1
 #endif

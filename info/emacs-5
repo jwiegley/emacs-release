@@ -1,7 +1,7 @@
 This is /home/cyd/emacs/doc/emacs/../../info/emacs, produced by
 makeinfo version 4.13 from /home/cyd/emacs/doc/emacs/emacs.texi.
 
-This is the `GNU Emacs Manual', updated for Emacs version 24.1.
+This is the `GNU Emacs Manual', updated for Emacs version 24.2.
 
 Copyright (C) 1985-1987, 1993-2012 Free Software Foundation, Inc.
 
@@ -296,8 +296,8 @@ Here is an example of the contents of a mail buffer:
      Subject: Re: What is best in life?
      From: conan@example.org
      --text follows this line--
-     To crush your enemies, see them driven before you, and to hear the
-     lamentation of their women.
+     To crush your enemies, see them driven before you, and to
+     hear the lamentation of their women.
 
 At the top of the mail buffer is a set of "header fields", which are
 used for specifying information about the email's recipient(s),
@@ -4335,16 +4335,16 @@ GNU Emacs can be programmed to emulate (more or less) most other
 editors.  Standard facilities can emulate these:
 
 CRiSP/Brief (PC editor)
-     You can turn on key bindings to emulate the CRiSP/Brief editor with
-     `M-x crisp-mode'.  Note that this rebinds `M-x' to exit Emacs
-     unless you set the variable `crisp-override-meta-x'.  You can also
-     use the command `M-x scroll-all-mode' or set the variable
+     `M-x crisp-mode' enables key bindings to emulate the CRiSP/Brief
+     editor.  Note that this rebinds `M-x' to exit Emacs unless you set
+     the variable `crisp-override-meta-x'.  You can also use the
+     command `M-x scroll-all-mode' or set the variable
      `crisp-load-scroll-all' to emulate CRiSP's scroll-all feature
      (scrolling all windows together).
 
 EDT (DEC VMS editor)
-     Turn on EDT emulation `M-x edt-emulation-on'; use `M-x
-     edt-emulation-off' to restore normal Emacs command bindings.
+     Turn on EDT emulation with `M-x edt-emulation-on'; restore normal
+     command bindings with `M-x edt-emulation-off'.
 
      Most of the EDT emulation commands are keypad keys, and most
      standard Emacs key bindings are still available.  The EDT
@@ -4507,7 +4507,7 @@ in Rmail, Gnus and VM article buffers.
      `find-file-read-only-other-window'.
 
 `C-x 4 d'
-     `ffap-dired-other-window', analogous to `dired-other-window'.
+     `ffap-dired-other-window', like `dired-other-window'.
 
 `C-x 5 f'
      `ffap-other-frame', analogous to `find-file-other-frame'.
@@ -4537,7 +4537,7 @@ File: emacs,  Node: Amusements,  Next: Packages,  Prev: Hyperlinking,  Up: Top
 46 Other Amusements
 *******************
 
-The `animate' package makes text dance (e.g. try `M-x
+The `animate' package makes text dance (e.g.  `M-x
 animate-birthday-present').
 
    `M-x blackbox', `M-x mpuz' and `M-x 5x5' are puzzles.  `blackbox'
@@ -5497,16 +5497,14 @@ displays something like this:
 
      fill-column is a variable defined in `C source code'.
      fill-column's value is 70
-     Local in buffer custom.texi; global value is 70
-     Automatically becomes buffer-local when set in any fashion.
 
-       Automatically becomes buffer-local when set in any fashion.
-       This variable is safe as a file local variable if its value
-       satisfies the predicate `integerp'.
+     Automatically becomes buffer-local when set in any fashion.
+     This variable is safe as a file local variable if its value
+     satisfies the predicate `integerp'.
 
      Documentation:
-     *Column beyond which automatic line-wrapping should happen.
-     Interactively, you can set the buffer local value using C-x f.
+     Column beyond which automatic line-wrapping should happen.
+     Interactively, you can set the local value with C-x f.
 
      You can customize this variable.
 
@@ -5743,13 +5741,14 @@ pair with a colon and semicolon.  The special variable/value pair
 `mode: MODENAME;', if present, specifies a major mode.  The VALUEs are
 used literally, and not evaluated.
 
-   You can use the command `M-x add-file-local-variable-prop-line'
-instead of adding entries by hand.  It prompts for a variable and
-value, and adds them to the first line in the appropriate way.  `M-x
+   You can use `M-x add-file-local-variable-prop-line' instead of
+adding entries by hand.  This command prompts for a variable and value,
+and adds them to the first line in the appropriate way.  `M-x
 delete-file-local-variable-prop-line' prompts for a variable, and
-deletes its entry from the line.  `M-x
-copy-dir-locals-to-file-locals-prop-line' copies directory-local
-variables to the first line (*note Directory Variables::).
+deletes its entry from the line.  The command `M-x
+copy-dir-locals-to-file-locals-prop-line' copies the current
+directory-local variables to the first line (*note Directory
+Variables::).
 
    Here is an example first line that specifies Lisp mode and sets two
 variables with numeric values:

@@ -445,6 +445,9 @@ the URL of the image to the kill buffer instead."
 	(string-match "\\`[a-z]*:" url)
 	(not shr-base))
     url)
+   ((and (string-match "\\`//" url)
+	 (string-match "\\`[a-z]*:" shr-base))
+    (concat (match-string 0 shr-base) url))
    ((and (not (string-match "/\\'" shr-base))
 	 (not (string-match "\\`/" url)))
     (concat shr-base "/" url))
@@ -1392,5 +1395,9 @@ ones, in case fg and bg are nil."
     max))
 
 (provide 'shr)
+
+;; Local Variables:
+;; coding: iso-8859-1
+;; End:
 
 ;;; shr.el ends here

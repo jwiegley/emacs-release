@@ -609,6 +609,21 @@ print_load_command_name (int lc)
       printf ("LC_FUNCTION_STARTS");
       break;
 #endif
+#ifdef LC_MAIN
+    case LC_MAIN:
+      printf ("LC_MAIN          ");
+      break;
+#endif
+#ifdef LC_SOURCE_VERSION
+    case LC_SOURCE_VERSION:
+      printf ("LC_SOURCE_VERSION");
+      break;
+#endif
+#ifdef LC_DYLIB_CODE_SIGN_DRS
+    case LC_DYLIB_CODE_SIGN_DRS:
+      printf ("LC_DYLIB_CODE_SIGN_DRS");
+      break;
+#endif
     default:
       printf ("unknown          ");
     }
@@ -800,8 +815,24 @@ copy_data_segment (struct load_command *lc)
 	 file.  */
       if (strncmp (sectp->sectname, SECT_DATA, 16) == 0)
 	{
-	  if (!unexec_write (sectp->offset, (void *) sectp->addr, sectp->size))
+	  extern char my_edata[];
+	  unsigned long my_size;
+
+	  /* The __data section is basically dumped from memory.  But
+	     initialized data in statically linked libraries are
+	     copied from the input file.  In particular,
+	     add_image_hook.names and add_image_hook.pointers stored
+	     by libarclite_macosx.a, are restored so that they will be
+	     reinitialized when the dumped binary is executed.  */
+	  my_size = (unsigned long)my_edata - sectp->addr;
+	  if (!(sectp->addr <= (unsigned long)my_edata
+		&& my_size <= sectp->size))
+	    unexec_error ("my_edata is not in section %s", SECT_DATA);
+	  if (!unexec_write (sectp->offset, (void *) sectp->addr, my_size))
 	    unexec_error ("cannot write section %s", SECT_DATA);
+	  if (!unexec_copy (sectp->offset + my_size, old_file_offset + my_size,
+			    sectp->size - my_size))
+	    unexec_error ("cannot copy section %s", SECT_DATA);
 	  if (!unexec_write (header_offset, sectp, sizeof (struct section)))
 	    unexec_error ("cannot write section %s's header", SECT_DATA);
 	}
@@ -905,46 +936,6 @@ copy_data_segment (struct load_command *lc)
       curr_header_offset += sc.cmdsize;
       mh.ncmds++;
     }
-}
-
-/* Copy a LC_SEGMENT load command for the EMACS_READ_ONLY segment from
-   the input file to the output file, adjusting the file offset of the
-   segment and the file offsets of sections contained in it.  The VM
-   protection is changed to read-only, and the sections are dumped
-   from memory.  */
-static void
-copy_emacs_read_only_segment (struct load_command *lc)
-{
-  struct segment_command *scp = (struct segment_command *) lc;
-  unsigned long old_fileoff = scp->fileoff;
-  struct section *sectp;
-  int j;
-
-  scp->fileoff = curr_file_offset;
-  scp->maxprot = scp->initprot = VM_PROT_READ;
-
-  printf ("Writing segment %-16.16s @ %#8lx (%#8lx/%#8lx @ %#10lx)\n",
-	  scp->segname, (long) (scp->fileoff), (long) (scp->filesize),
-	  (long) (scp->vmsize), (long) (scp->vmaddr));
-
-  sectp = (struct section *) (scp + 1);
-  for (j = 0; j < scp->nsects; j++)
-    {
-      sectp->offset += curr_file_offset - old_fileoff;
-      if (!unexec_write (sectp->offset, (void *) sectp->addr, sectp->size))
-	unexec_error ("cannot write section %.16s", sectp->sectname);
-      printf ("        section %-16.16s at %#8lx - %#8lx (sz: %#8lx)\n",
-	      sectp->sectname, (long) (sectp->offset),
-	      (long) (sectp->offset + sectp->size), (long) (sectp->size));
-      sectp++;
-    }
-
-  curr_file_offset += ROUNDUP_TO_PAGE_BOUNDARY (scp->filesize);
-
-  if (!unexec_write (curr_header_offset, lc, lc->cmdsize))
-    unexec_error ("cannot write load command to header");
-
-  curr_header_offset += lc->cmdsize;
 }
 
 /* Copy a LC_SYMTAB load command from the input file to the output
@@ -1186,8 +1177,9 @@ copy_dyld_info (struct load_command *lc, long delta)
 #endif
 
 #ifdef LC_FUNCTION_STARTS
-/* Copy a LC_FUNCTION_STARTS load command from the input file to the
-   output file, adjusting the data offset field.  */
+/* Copy a LC_FUNCTION_STARTS/LC_DYLIB_CODE_SIGN_DRS load command from
+   the input file to the output file, adjusting the data offset
+   field.  */
 static void
 copy_linkedit_data (struct load_command *lc, long delta)
 {
@@ -1250,10 +1242,6 @@ dump_it (void)
 
 	      copy_data_segment (lca[i]);
 	    }
-	  else if (strncmp (scp->segname, EMACS_READ_ONLY_SEGMENT, 16) == 0)
-	    {
-	      copy_emacs_read_only_segment (lca[i]);
-	    }
 	  else
 	    {
 	      if (strncmp (scp->segname, SEG_LINKEDIT, 16) == 0)
@@ -1285,6 +1273,9 @@ dump_it (void)
 #endif
 #ifdef LC_FUNCTION_STARTS
       case LC_FUNCTION_STARTS:
+#ifdef LC_DYLIB_CODE_SIGN_DRS
+      case LC_DYLIB_CODE_SIGN_DRS:
+#endif
 	copy_linkedit_data (lca[i], linkedit_delta);
 	break;
 #endif

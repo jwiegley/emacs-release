@@ -22,7 +22,7 @@ dnl  You should have received a copy of the GNU General Public License
 dnl  along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 AC_PREREQ(2.65)
-AC_INIT(emacs, 24.1)
+AC_INIT(emacs, 24.2)
 AC_CONFIG_HEADER(src/config.h:src/config.in)
 AC_CONFIG_SRCDIR(src/lisp.h)
 AC_CONFIG_AUX_DIR(build-aux)
@@ -168,7 +168,6 @@ OPTION_DEFAULT_ON([m17n-flt],[don't use m17n-flt for text shaping])
 OPTION_DEFAULT_ON([toolkit-scroll-bars],[don't use Motif or Xaw3d scroll bars])
 OPTION_DEFAULT_ON([xaw3d],[don't use Xaw3d])
 OPTION_DEFAULT_ON([xim],[don't use X11 XIM])
-OPTION_DEFAULT_OFF([mac],[use GUI on Mac OS X.])
 OPTION_DEFAULT_OFF([ns],[use NeXTstep (Cocoa or GNUstep) windowing system])
 
 OPTION_DEFAULT_ON([gpm],[don't use -lgpm for mouse support on a GNU/Linux console])
@@ -216,12 +215,6 @@ AC_ARG_WITH(gameuser,dnl
 test "X${with_gameuser}" != X && test "${with_gameuser}" != yes \
   && gameuser="${with_gameuser}"
 test "X$gameuser" = X && gameuser=games
-
-AC_ARG_ENABLE(mac-app,
-[AS_HELP_STRING([--enable-mac-app@<:@=DIR@:>@],
-                [specify install directory for Emacs.app on Mac OS X
-		 [DIR=/Application]])],
-[ mac_appdir_x=${enableval}])
 
 AC_ARG_WITH([gnustep-conf],dnl
 [AS_HELP_STRING([--with-gnustep-conf=PATH],[path to GNUstep.conf; default $GNUSTEP_CONFIG_FILE, or /etc/GNUstep/GNUstep.conf])])
@@ -756,6 +749,7 @@ if test "$machine" = "amdx86-64"; then
     machine=intel386
     machfile="m/${machine}.h"
   fi
+  AC_CHECK_DECL([__ILP32__], [machfile="m/intel386.h"])
 fi
 
 AC_PATH_PROG(INSTALL_INFO, install-info)
@@ -1494,12 +1488,6 @@ else
   fi
 fi
 
-HAVE_MACGUI=no
-if test "${with_mac}" != no; then
-  AC_CHECK_HEADER(Carbon/Carbon.h, HAVE_MACGUI=yes)
-  test "${HAVE_MACGUI}" = yes && window_system=mac
-fi
-
 HAVE_NS=no
 NS_IMPL_COCOA=no
 NS_IMPL_GNUSTEP=no
@@ -1577,23 +1565,10 @@ fail;
 fi
 AC_SUBST(TEMACS_LDFLAGS2)
 
-mac_frag=/dev/null
-MAC_OBJ=
-MAC_OBJC_OBJ=
-if test "${HAVE_MACGUI}" = yes; then
-  mac_frag=$srcdir/src/mac.mk
-  MAC_OBJ="mac.o macterm.o macfns.o macmenu.o macselect.o macfont.o fontset.o fringe.o image.o"
-  MAC_OBJC_OBJ="macappkit.o"
-fi
-AC_SUBST(MAC_OBJ)
-AC_SUBST(MAC_OBJC_OBJ)
-AC_SUBST_FILE(mac_frag)
-
 ns_frag=/dev/null
 NS_OBJ=
 NS_OBJC_OBJ=
 if test "${HAVE_NS}" = yes; then
-  test "${window_system}" = mac && HAVE_MACGUI=no
   if test "$with_toolkit_scroll_bars" = "no"; then
     AC_MSG_ERROR([Non-toolkit scroll bars are not implemented for Nextstep.])
   fi
@@ -1636,7 +1611,7 @@ dnl use the toolkit if we have gtk, or X11R5 or newer.
       * ) USE_X_TOOLKIT=maybe ;;
     esac
   ;;
-  mac | nextstep | none )
+  nextstep | none )
     HAVE_X_WINDOWS=no
     HAVE_X11=no
     USE_X_TOOLKIT=none
@@ -1903,7 +1878,7 @@ fi
 
 ### Use -lrsvg-2 if available, unless `--with-rsvg=no' is specified.
 HAVE_RSVG=no
-if test "${HAVE_X11}" = "yes" || test "${HAVE_MACGUI}" = "yes" || test "${HAVE_NS}" = "yes"; then
+if test "${HAVE_X11}" = "yes" || test "${HAVE_NS}" = "yes"; then
   if test "${with_rsvg}" != "no"; then
     RSVG_REQUIRED=2.11.0
     RSVG_MODULE="librsvg-2.0 >= $RSVG_REQUIRED"
@@ -1921,7 +1896,7 @@ if test "${HAVE_X11}" = "yes" || test "${HAVE_MACGUI}" = "yes" || test "${HAVE_N
 fi
 
 HAVE_IMAGEMAGICK=no
-if test "${HAVE_X11}" = "yes" || test "${HAVE_MACGUI}" = "yes"; then
+if test "${HAVE_X11}" = "yes"; then
   if test "${with_imagemagick}" != "no"; then
     ## 6.2.8 is the earliest version known to work, but earlier versions
     ## might work - let us know if you find one.
@@ -2288,9 +2263,6 @@ if test "${with_toolkit_scroll_bars}" != "no"; then
   elif test "${HAVE_GTK}" = "yes"; then
     AC_DEFINE(USE_TOOLKIT_SCROLL_BARS)
     USE_TOOLKIT_SCROLL_BARS=yes
-  elif test "${HAVE_MACGUI}" = "yes"; then
-    AC_DEFINE(USE_TOOLKIT_SCROLL_BARS)
-    USE_TOOLKIT_SCROLL_BARS=yes
   elif test "${HAVE_NS}" = "yes"; then
     AC_DEFINE(USE_TOOLKIT_SCROLL_BARS)
     USE_TOOLKIT_SCROLL_BARS=yes
@@ -2622,26 +2594,6 @@ dnl Check for malloc/malloc.h on darwin
 AC_CHECK_HEADER(malloc/malloc.h, [AC_DEFINE(HAVE_MALLOC_MALLOC_H, 1, [Define to 1 if you have the <malloc/malloc.h> header file.])])
 
 C_SWITCH_X_SYSTEM=
-### Use Mac OS X GUI.
-if test "${HAVE_MACGUI}" = "yes"; then
-  AC_DEFINE(HAVE_MACGUI, 1, [Define to 1 if you are using GUI on Mac OS X.])
-  AC_CHECK_HEADERS(AvailabilityMacros.h)
-  C_SWITCH_X_SYSTEM="-fconstant-cfstrings"
-  ## Specify the install directory
-  mac_appdir=
-  if test "${mac_appdir_x}" != ""; then
-    case ${mac_appdir_x} in
-      y | ye | yes)  mac_appdir=/Applications ;;
-      * ) mac_appdir=${mac_appdir_x} ;;
-    esac
-  fi
-  # We also have mouse menus.
-  HAVE_MENUS=yes
-  # Tell src/Makefile.in to create files in the Mac OS X application
-  # bundle mac/Emacs.app.
-  OTHER_FILES=macosx-app
-fi
-
 ### Use NeXTstep API to implement GUI.
 if test "${HAVE_NS}" = "yes"; then
   AC_DEFINE(HAVE_NS, 1, [Define to 1 if you are using the NeXTstep API, either GNUstep or Cocoa on Mac OS X.])
@@ -2899,29 +2851,11 @@ case "$opsys" in
   ##  The ncurses library has been moved out of the System framework in
   ##  Mac OS X 10.2.  So if configure detects it, set the command-line
   ##  option to use it.
-  darwin)
+  darwin|gnu*)
     ## (HAVE_LIBNCURSES was not always true, but is since 2010-03-18.)
     if test "x$HAVE_LIBNCURSES" = "xyes"; then
       TERMINFO=yes
       LIBS_TERMCAP="-lncurses"
-      if test "${HAVE_MACGUI}" = "yes"; then
-        AC_MSG_CHECKING(Mac OS X version min required >= 10.4)
-        AC_CACHE_VAL(emacs_cv_mac_os_x_min_required_10_4,
-        [AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#ifdef HAVE_AVAILABILITYMACROS_H
-#include <AvailabilityMacros.h>
-#endif]],
-[[#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040 && MAC_OS_X_VERSION_MIN_REQUIRED >= 1020
-fail;
-#endif
-]])], emacs_cv_mac_os_x_min_required_10_4=yes, emacs_cv_mac_os_x_min_required_10_4=no)])
-        if test $emacs_cv_mac_os_x_min_required_10_4 = yes; then
-          AC_MSG_RESULT(10.4 or later)
-        else
-          AC_MSG_RESULT(before 10.4)
-          LIBS_TERMCAP="-lncurses.5"
-        fi
-      fi
     fi
     ;;
 
@@ -2941,14 +2875,6 @@ fail;
       LIBS_TERMCAP="-lncurses"
     else
       LIBS_TERMCAP="-ltermcap"
-    fi
-    ;;
-
-  gnu*)
-    ## (HAVE_LIBNCURSES was not always true, but is since 2010-03-18.)
-    if test "x$HAVE_LIBNCURSES" = "xyes"; then
-      TERMINFO=yes
-      LIBS_TERMCAP="-lncurses"
     fi
     ;;
 
@@ -3311,7 +3237,6 @@ fi
 S_FILE="\$(srcdir)/${opsysfile}"
 AC_SUBST(M_FILE)
 AC_SUBST(S_FILE)
-AC_SUBST(mac_appdir)
 AC_SUBST(ns_appdir)
 AC_SUBST(ns_appbindir)
 AC_SUBST(ns_appresdir)
@@ -3491,57 +3416,14 @@ case "$opsys" in
    ## end of the header for adding load commands.  Needed for dumping.
    ## 0x690 is the total size of 30 segment load commands (at 56
    ## each); under Cocoa 31 commands are required.
-   if test "$HAVE_MACGUI" = "yes"; then
-     # Check if the Image I/O framework is always available at
-     # runtime.  If not, fall back on QuickTime.
-     AC_MSG_CHECKING(Mac OS X version >= 10.4)
-     AC_CACHE_VAL(emacs_cv_mac_os_x_10_4,
-     [AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#ifdef HAVE_AVAILABILITYMACROS_H
-#include <AvailabilityMacros.h>
-#endif]],
-[[#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040 && (MAC_OS_X_VERSION_MIN_REQUIRED >= 1040 || MAC_OS_X_VERSION_MIN_REQUIRED < 1020)
-fail;
-#endif
-]])], emacs_cv_mac_os_x_10_4=no, emacs_cv_mac_os_x_10_4=yes)])
-     if test $emacs_cv_mac_os_x_10_4 = yes; then
-       AC_MSG_RESULT(always 10.4 or later)
-       AC_DEFINE(USE_MAC_IMAGE_IO, 1, [Define if use the Image I/O framework for reading images.])
-       libs_image="-framework WebKit"
-     else
-       AC_MSG_RESULT(not always 10.4 or later)
-       libs_image="-framework QuickTime"
-     fi
-     # Check if the Quartz Core framework is necessary and always
-     # available at runtime.
-     AC_MSG_CHECKING(Mac OS X version max allowed >= 10.5)
-     AC_CACHE_VAL(emacs_cv_mac_os_x_max_allowed_10_5,
-     [AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#ifdef HAVE_AVAILABILITYMACROS_H
-#include <AvailabilityMacros.h>
-#endif]],
-[[#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050 && MAC_OS_X_VERSION_MIN_REQUIRED > 1020
-fail;
-#endif
-]])], emacs_cv_mac_os_x_max_allowed_10_5=no, emacs_cv_mac_os_x_max_allowed_10_5=yes)])
-     if test $emacs_cv_mac_os_x_max_allowed_10_5 = yes; then
-       AC_MSG_RESULT(10.5 or later)
-       libs_quartz_core="-framework QuartzCore"
-     else
-       AC_MSG_RESULT(before 10.5)
-       libs_quartz_core=
-     fi
-     # Whether to use the Cocoa framework.
-     libs_macgui="-framework Carbon $libs_image $libs_quartz_core -framework Cocoa"
-     headerpad_extra=690
-   elif test "$HAVE_NS" = "yes"; then
-     libs_macgui="-framework AppKit"
+   if test "$HAVE_NS" = "yes"; then
+     libs_nsgui="-framework AppKit"
      headerpad_extra=6C8
    else
-     libs_macgui=
+     libs_nsgui=
      headerpad_extra=690
    fi
-   LD_SWITCH_SYSTEM_TEMACS="-fno-pie -prebind $libs_macgui -Xlinker -headerpad -Xlinker $headerpad_extra"
+   LD_SWITCH_SYSTEM_TEMACS="-fno-pie -prebind $libs_nsgui -Xlinker -headerpad -Xlinker $headerpad_extra"
 
    ## This is here because src/Makefile.in did some extra fiddling around
    ## with LD_SWITCH_SYSTEM.  The cpp logic was:
@@ -3659,7 +3541,7 @@ AC_SUBST(LIB_GCC)
 
 
 ## If we're using X11/GNUstep, define some consequences.
-if test "$HAVE_X_WINDOWS" = "yes" || test "$HAVE_MACGUI" = "yes" || test "$HAVE_NS" = "yes"; then
+if test "$HAVE_X_WINDOWS" = "yes" || test "$HAVE_NS" = "yes"; then
   AC_DEFINE(HAVE_WINDOW_SYSTEM, 1, [Define if you have a window system.])
   AC_DEFINE(HAVE_MOUSE, 1, [Define if you have mouse support.])
 fi

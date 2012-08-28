@@ -2,7 +2,7 @@ This is /home/cyd/emacs/doc/lispref/../../info/elisp, produced by
 makeinfo version 4.13 from /home/cyd/emacs/doc/lispref/elisp.texi.
 
 This is the `GNU Emacs Lisp Reference Manual' corresponding to Emacs
-version 24.1.
+version 24.2.
 
 Copyright (C) 1990-1996, 1998-2012 Free Software Foundation, Inc.
 
@@ -1671,8 +1671,8 @@ mechanism can change the variable `delayed-warnings-hook':
 
           (collapse-delayed-warnings display-delayed-warnings)
 
-     The function `collapse-delayed-warnings' iterates through
-     `delayed-warnings-list', removing repeated entries.  The function
+     The function `collapse-delayed-warnings' removes repeated entries
+     from `delayed-warnings-list'.  The function
      `display-delayed-warnings' calls `display-warning' on each of the
      entries in `delayed-warnings-list', in turn, and then sets
      `delayed-warnings-list' to `nil'.
@@ -2869,10 +2869,10 @@ attribute is ignored.
      and `?' are allowed.  *Note Fonts: (emacs)Fonts.
 
 `:width'
-     Relative proportionate character width, also known as the character
-     set width.  This should be one of the symbols `ultra-condensed',
-     `extra-condensed', `condensed', `semi-condensed', `normal',
-     `semi-expanded', `expanded', `extra-expanded', or `ultra-expanded'.
+     Relative character width.  This should be one of the symbols
+     `ultra-condensed', `extra-condensed', `condensed',
+     `semi-condensed', `normal', `semi-expanded', `expanded',
+     `extra-expanded', or `ultra-expanded'.
 
 `:height'
      The height of the font.  In the simplest case, this is an integer

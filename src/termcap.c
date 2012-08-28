@@ -79,9 +79,6 @@ find_capability (register char *bp, register const char *cap)
   return NULL;
 }
 
-/* These are already defined in the System framework in Mac OS X and
-   cause prebinding to fail.  */
-#ifndef DARWIN_OS
 int
 tgetnum (const char *cap)
 {
@@ -111,7 +108,6 @@ tgetstr (const char *cap, char **area)
     return NULL;
   return tgetst1 (ptr, area);
 }
-#endif /* !DARWIN_OS */
 
 #ifdef IS_EBCDIC_HOST
 /* Table, indexed by a character in range 0200 to 0300 with 0200 subtracted,
@@ -268,9 +264,6 @@ tgetst1 (char *ptr, char **area)
 
 /* Outputting a string with padding.  */
 
-/* Already defined in the System framework in Mac OS X and causes
-   prebinding to fail.  */
-#ifndef DARWIN_OS
 char PC;
 
 void
@@ -324,7 +317,6 @@ tputs (register const char *str, int nlines, int (*outfun) (int))
   while (padcount-- > 0)
     (*outfun) (PC);
 }
-#endif /* !DARWIN_OS */
 
 /* Finding the termcap entry in the termcap data base.  */
 
@@ -365,9 +357,6 @@ valid_filename_p (char *fn)
    0 if the data base is accessible but the type NAME is not defined
    in it, and some other value otherwise.  */
 
-/* Already defined in the System framework in Mac OS X and causes
-   prebinding to fail.  */
-#ifndef DARWIN_OS
 int
 tgetent (char *bp, const char *name)
 {
@@ -525,7 +514,6 @@ tgetent (char *bp, const char *name)
   term_entry = bp;
   return 1;
 }
-#endif /* !DARWIN_OS */
 
 /* Given file open on FD and buffer BUFP,
    scan the file from the beginning until a line is found

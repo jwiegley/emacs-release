@@ -1,3 +1,114 @@
+2012-08-24  Chong Yidong  <cyd@gnu.org>
+
+	* Version 24.2 released.
+
+2012-08-24  Eli Zaretskii  <eliz@gnu.org>
+
+	* ralloc.c (free_bloc): Don't dereference a 'heap' structure if it
+	is not one of the heaps we manage.  (Bug#12242)
+
+2012-08-14  Glenn Morris  <rgm@gnu.org>
+
+	* eval.c (Fcalled_interactively_p): Doc fix.  (Bug#11747)
+
+2012-08-14  Ulrich Mueller  <ulm@gentoo.org>
+
+	* systime.h (EMACS_TIME_CMP): Don't cast time_t values to long
+	(Bug#11712).
+
+2012-08-13  Eli Zaretskii  <eliz@gnu.org>
+
+	* w32menu.c: Include w32heap.h.
+	(add_menu_item): If the call to AppendMenuW (via
+	unicode_append_menu) fails, disable Unicode menus only if we are
+	running on Windows 9X/Me.
+
+	* makefile.w32-in ($(BLD)/w32menu.$(O)): Depend on w32heap.h.
+
+	* window.c (Fdelete_other_windows_internal)
+	(Fdelete_window_internal): Don't access frame's mouse highlight
+	info of the initial frame.  (Bug#11677)
+
+2012-08-12  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* nsterm.m (ns_read_socket): Return early if there is a modal
+	window (Bug#12043).
+
+	* nsmenu.m (Popdown_data): New struct.
+	(pop_down_menu): p->pointer is Popdown_data.  Release the pool and
+	free Popdown_data.
+	(ns_popup_dialog): Use NSAutoreleasePool and pass it to pop_down_menu.
+	(initWithContentRect): Make imgView and contentView non-static
+	and autorelease them.  Also autorelease img and matrix (Bug#12005).
+	(dealloc): Remove (Bug#12005).
+
+	* nsterm.m (keyDown:): Interpret flags without left/right bits
+	as the left key (Bug#11670).
+
+	* nsmenu.m (ns_update_menubar): Add braces to ambigous if-else.
+
+2012-08-08  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* unexmacosx.c (copy_data_segment): Copy initialized data in
+	statically linked libraries from input file rather than memory.
+
+2012-08-07  YAMAMOTO Mitsuharu  <mituharu@math.s.chiba-u.ac.jp>
+
+	* unexmacosx.c (print_load_command_name): Add cases LC_MAIN,
+	LC_SOURCE_VERSION, and LC_DYLIB_CODE_SIGN_DRS.
+	(dump_it) [LC_DYLIB_CODE_SIGN_DRS]: Call copy_linkedit_data.
+
+2012-07-19  Chong Yidong  <cyd@gnu.org>
+
+	* window.c (Fwindow_absolute_pixel_edges)
+	(Fdelete_other_windows_internal): Signal an error if the window is
+	on a dead frame (Bug#11984).
+
+2012-07-14  Eli Zaretskii  <eliz@gnu.org>
+
+	Remove FILE_SYSTEM_CASE.
+	* s/msdos.h (FILE_SYSTEM_CASE): Don't define.
+
+	* fileio.c (FILE_SYSTEM_CASE): Don't define.
+	(Ffile_name_directory, Fexpand_file_name): Don't use FILE_SYSTEM_CASE.
+	Fixes problems on MS-DOS with Vtemp_file_name_pattern when
+	call-process-region passes it through expand-file-name.
+
+	* dired.c (file_name_completion): Don't use FILE_SYSTEM_CASE.
+
+2012-07-12  Andreas Schwab  <schwab@linux-m68k.org>
+
+	Fix crash when creating indirect buffer (Bug#11917)
+	* buffer.c (buffer_lisp_local_variables): Add argument CLONE.
+	Don't handle unbound variables specially if non-zero.
+	(Fbuffer_local_variables): Pass zero.
+	(clone_per_buffer_values): Pass non-zero.
+
+2012-06-28  Andreas Schwab  <schwab@linux-m68k.org>
+
+	* gnutls.c (emacs_gnutls_handshake): Revert last change.  Add QUIT
+	to make the loop interruptible.
+
+2012-06-26  Andreas Schwab  <schwab@linux-m68k.org>
+
+	* gnutls.c (emacs_gnutls_handshake): Only retry if
+	GNUTLS_E_INTERRUPTED.
+
+2012-06-23  Eli Zaretskii  <eliz@gnu.org>
+
+	* ralloc.c (r_alloc_inhibit_buffer_relocation): Fix stupid thinko
+	in the logic of incrementing and decrementing the value of
+	use_relocatable_buffers.
+
+2012-06-21  Glenn Morris  <rgm@gnu.org>
+
+	* charset.c (init_charset): Make lack of etc/charsets fatal.
+
+2012-06-11  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* nsterm.m (x_free_frame_resources): Move xfree so freed memory isn't
+	referenced (Bug#11583).
+
 2012-06-01  Chong Yidong  <cyd@gnu.org>
 
 	* Version 24.1 released.

@@ -81,8 +81,8 @@ Activate the region around the text selected by dragging, and copy it
 to the kill ring (@code{mouse-set-region}).
 
 @item Mouse-2
-Yank the last killed text at the click position
-(@code{mouse-yank-at-click}).
+Move point to where you click, and insert the contents of the primary
+selection there (@code{mouse-yank-primary}).
 
 @item Mouse-3
 If the region is active, move the nearer end of the region to the
@@ -499,7 +499,8 @@ Add a line to your init file, modifying the variable
 (@pxref{Frame Parameters}), like this:
 
 @example
-(add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono-10"))
+(add-to-list 'default-frame-alist
+             '(font . "DejaVu Sans Mono-10"))
 @end example
 
 @cindex X defaults file

@@ -38,13 +38,13 @@
       (unless facep
 	;; If the user has already created the face, respect that.
 	(let ((value (or (get face 'saved-face) spec))
-	      (have-window-system (memq initial-window-system '(x w32 mac))))
+	      (have-window-system (memq initial-window-system '(x w32))))
 	  ;; Create global face.
 	  (make-empty-face face)
 	  ;; Create frame-local faces
 	  (dolist (frame (frame-list))
 	    (face-spec-set-2 face frame value)
-	    (when (memq (window-system frame) '(x w32 mac ns))
+	    (when (memq (window-system frame) '(x w32 ns))
 	      (setq have-window-system t)))
 	  ;; When making a face after frames already exist
 	  (if have-window-system

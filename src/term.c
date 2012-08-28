@@ -57,9 +57,6 @@ static int been_here = -1;
 #ifdef HAVE_X_WINDOWS
 #include "xterm.h"
 #endif
-#ifdef HAVE_MACGUI
-#include "macterm.h"
-#endif
 
 #ifndef O_RDWR
 #define O_RDWR 2

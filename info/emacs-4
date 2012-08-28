@@ -1,7 +1,7 @@
 This is /home/cyd/emacs/doc/emacs/../../info/emacs, produced by
 makeinfo version 4.13 from /home/cyd/emacs/doc/emacs/emacs.texi.
 
-This is the `GNU Emacs Manual', updated for Emacs version 24.1.
+This is the `GNU Emacs Manual', updated for Emacs version 24.2.
 
 Copyright (C) 1985-1987, 1993-2012 Free Software Foundation, Inc.
 
@@ -385,7 +385,7 @@ for Edebug, the Emacs Lisp Debugger.  *Note Instrumenting for Edebug:
 or more Lisp expressions, evaluating them one by one.  `M-x
 eval-buffer' is similar but evaluates the entire buffer.
 
-   The customizable variables `eval-expression-print-level' and
+   The options `eval-expression-print-level' and
 `eval-expression-print-length' control the maximum depth and length of
 lists to print in the result of the evaluation commands before
 abbreviating them.  `eval-expression-debug-on-error' controls whether
@@ -1266,7 +1266,7 @@ File: emacs,  Node: VC Change Log,  Next: VC Undo,  Prev: Old Revisions,  Up: Ve
      Display the changes that will be sent by the next push operation
      (`vc-log-outgoing').
 
-   The command `C-x v l' (`vc-print-log') displays a buffer named
+   `C-x v l' (`vc-print-log') displays a buffer named
 `*vc-change-log*', showing the history of changes made to the current
 file, including who made the changes, the dates, and the log entry for
 each change (these are the same log entries you would enter via the
@@ -5091,11 +5091,12 @@ that new months become visible in the window.
 
 `C-v'
 `<next>'
-     Scroll three months forward (`calendar-scroll-left-three-months').
+     Scroll forward by three months
+     (`calendar-scroll-left-three-months').
 
 `M-v'
 `<prior>'
-     Scroll three months backward
+     Scroll backward by three months
      (`calendar-scroll-right-three-months').
 
    The most basic calendar scroll commands scroll by one month at a

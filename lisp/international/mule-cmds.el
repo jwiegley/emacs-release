@@ -35,7 +35,7 @@
 (defvar dos-codepage)
 (autoload 'widget-value "wid-edit")
 
-(defvar mac-system-locale)
+(defvar mac-system-coding-system)
 
 ;;; MULE related key bindings and menus.
 
@@ -94,7 +94,7 @@
         :help ,(purecopy "How to decode keyboard input")))
     (define-key-after map [set-terminal-coding-system]
       `(menu-item ,(purecopy "For Terminal") set-terminal-coding-system
-        :enable (null (memq initial-window-system '(x w32 mac ns)))
+        :enable (null (memq initial-window-system '(x w32 ns)))
         :help ,(purecopy "How to encode terminal output")))
     (define-key-after map [separator-3] menu-bar-separator)
 
@@ -131,10 +131,10 @@
       `(menu-item ,(purecopy "Set Coding Systems") ,set-coding-system-map
 		  :enable (default-value 'enable-multibyte-characters)))
     (define-key-after map [view-hello-file]
-      `(menu-item ,(purecopy "Show Multi-lingual Text") view-hello-file
+      `(menu-item ,(purecopy "Show Multilingual Sample Text") view-hello-file
         :enable (file-readable-p
                  (expand-file-name "HELLO" data-directory))
-        :help ,(purecopy "Display file which says HELLO in many languages")))
+        :help ,(purecopy "Demonstrate various character sets")))
     (define-key-after map [separator-coding-system] menu-bar-separator)
 
     (define-key-after map [describe-language-environment]
@@ -150,7 +150,7 @@
       `(menu-item ,(purecopy "List Character Sets") list-character-sets
         :help ,(purecopy "Show table of available character sets")))
     (define-key-after map [mule-diag]
-      `(menu-item ,(purecopy "Show All of Mule Status") mule-diag
+      `(menu-item ,(purecopy "Show All Multilingual Settings") mule-diag
         :help ,(purecopy "Display multilingual environment settings")))
     map)
   "Keymap for Mule (Multilingual environment) menu specific commands.")
@@ -1834,7 +1834,7 @@ The default status is as follows:
     (set-terminal-coding-system (or coding-system coding) display)))
 
 (defun set-language-environment (language-name)
-  "Set up multi-lingual environment for using LANGUAGE-NAME.
+  "Set up multilingual environment for using LANGUAGE-NAME.
 This sets the coding system priority and the default input method
 and sometimes other things.  LANGUAGE-NAME should be a string
 which is the name of a language environment.  For example, \"Latin-1\"
@@ -2506,7 +2506,7 @@ For example, translate \"swedish\" into \"sv_SE.ISO8859-1\"."
     locale))
 
 (defun set-locale-environment (&optional locale-name frame)
-  "Set up multi-lingual environment for using LOCALE-NAME.
+  "Set up multilingual environment for using LOCALE-NAME.
 This sets the language environment, the coding system priority,
 the default input method and sometimes other things.
 
@@ -2560,18 +2560,6 @@ See also `locale-charset-language-names', `locale-language-names',
 	(while (and vars
 		    (= 0 (length locale))) ; nil or empty string
 	  (setq locale (getenv (pop vars) frame)))))
-
-    (unless locale
-      ;; The two tests are kept separate so the byte-compiler sees
-      ;; that mac-get-preference is only called after checking its existence.
-      (when (fboundp 'mac-get-preference)
-        (setq locale (mac-get-preference "AppleLocale"))
-        (unless locale
-          (let ((languages (mac-get-preference "AppleLanguages")))
-            (unless (= (length languages) 0) ; nil or empty vector
-              (setq locale (aref languages 0)))))))
-    (unless (or locale (not (boundp 'mac-system-locale)))
-      (setq locale mac-system-locale))
 
     (when locale
       (setq locale (locale-translate locale))

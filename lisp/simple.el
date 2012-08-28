@@ -3500,7 +3500,7 @@ Goes backward if ARG is negative; error if CHAR not found."
 ;; kill-line and its subroutines.
 
 (defcustom kill-whole-line nil
-  "If non-nil, `kill-line' with no arg at beg of line kills the whole line."
+  "If non-nil, `kill-line' with no arg at start of line kills the whole line."
   :type 'boolean
   :group 'killing)
 
@@ -6704,7 +6704,7 @@ call `normal-erase-is-backspace-mode' (which see) instead."
        (if (if (eq normal-erase-is-backspace 'maybe)
                (and (not noninteractive)
                     (or (memq system-type '(ms-dos windows-nt))
-			(memq window-system '(mac ns))
+			(memq window-system '(ns))
                         (and (memq window-system '(x))
                              (fboundp 'x-backspace-delete-keys-p)
                              (x-backspace-delete-keys-p))
@@ -6752,7 +6752,7 @@ See also `normal-erase-is-backspace'."
   (let ((enabled (eq 1 (terminal-parameter
                         nil 'normal-erase-is-backspace))))
 
-    (cond ((or (memq window-system '(x w32 mac ns pc))
+    (cond ((or (memq window-system '(x w32 ns pc))
 	       (memq system-type '(ms-dos windows-nt)))
 	   (let ((bindings
 		  `(([M-delete] [M-backspace])

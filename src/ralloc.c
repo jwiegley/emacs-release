@@ -686,6 +686,7 @@ static void
 free_bloc (bloc_ptr bloc)
 {
   heap_ptr heap = bloc->heap;
+  heap_ptr h;
 
   if (r_alloc_freeze_level)
     {
@@ -715,20 +716,38 @@ free_bloc (bloc_ptr bloc)
       bloc->prev->next = bloc->next;
     }
 
-  /* Update the records of which blocs are in HEAP.  */
-  if (heap->first_bloc == bloc)
+  /* Sometimes, 'heap' obtained from bloc->heap above is not really a
+     'heap' structure.  It can even be beyond the current break point,
+     which will cause crashes when we dereference it below (see
+     bug#12242).  Evidently, the reason is bloc allocations done while
+     use_relocatable_buffers was non-positive, because additional
+     memory we get then is not recorded in the heaps we manage.  If
+     bloc->heap records such a "heap", we cannot (and don't need to)
+     update its records.  So we validate the 'heap' value by making
+     sure it is one of the heaps we manage via the heaps linked list,
+     and don't touch a 'heap' that isn't found there.  This avoids
+     accessing memory we know nothing about.  */
+  for (h = first_heap; h != NIL_HEAP; h = h->next)
+    if (heap == h)
+      break;
+
+  if (h)
     {
-      if (bloc->next != 0 && bloc->next->heap == heap)
-	heap->first_bloc = bloc->next;
-      else
-	heap->first_bloc = heap->last_bloc = NIL_BLOC;
-    }
-  if (heap->last_bloc == bloc)
-    {
-      if (bloc->prev != 0 && bloc->prev->heap == heap)
-	heap->last_bloc = bloc->prev;
-      else
-	heap->first_bloc = heap->last_bloc = NIL_BLOC;
+      /* Update the records of which blocs are in HEAP.  */
+      if (heap->first_bloc == bloc)
+	{
+	  if (bloc->next != 0 && bloc->next->heap == heap)
+	    heap->first_bloc = bloc->next;
+	  else
+	    heap->first_bloc = heap->last_bloc = NIL_BLOC;
+	}
+      if (heap->last_bloc == bloc)
+	{
+	  if (bloc->prev != 0 && bloc->prev->heap == heap)
+	    heap->last_bloc = bloc->prev;
+	  else
+	    heap->first_bloc = heap->last_bloc = NIL_BLOC;
+	}
     }
 
   relinquish ();
@@ -757,7 +776,7 @@ r_alloc_sbrk (long int size)
   if (! r_alloc_initialized)
     r_alloc_init ();
 
-  if (! use_relocatable_buffers)
+  if (use_relocatable_buffers <= 0)
     return (*real_morecore) (size);
 
   if (size == 0)
@@ -1204,12 +1223,12 @@ r_alloc_reset_variable (POINTER *old, POINTER *new)
 void
 r_alloc_inhibit_buffer_relocation (int inhibit)
 {
-  if (use_relocatable_buffers < 0)
-    use_relocatable_buffers = 0;
+  if (use_relocatable_buffers > 1)
+    use_relocatable_buffers = 1;
   if (inhibit)
-    use_relocatable_buffers++;
-  else if (use_relocatable_buffers > 0)
     use_relocatable_buffers--;
+  else if (use_relocatable_buffers < 1)
+    use_relocatable_buffers++;
 }
 
 

@@ -149,7 +149,6 @@ lisp = \
 	$(lispsource)/dos-vars.elc \
 	$(lispsource)/term/pc-win.elc \
 	$(lispsource)/term/internal.elc \
-	$(lispsource)/term/mac-win.elc \
 	$(lispsource)/term/ns-win.elc \
 	$(lispsource)/mwheel.elc \
 	$(lispsource)/emacs-lisp/float-sup.elc \

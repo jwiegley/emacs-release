@@ -1,7 +1,7 @@
 This is /home/cyd/emacs/doc/emacs/../../info/emacs, produced by
 makeinfo version 4.13 from /home/cyd/emacs/doc/emacs/emacs.texi.
 
-This is the `GNU Emacs Manual', updated for Emacs version 24.1.
+This is the `GNU Emacs Manual', updated for Emacs version 24.2.
 
 Copyright (C) 1985-1987, 1993-2012 Free Software Foundation, Inc.
 
@@ -1241,12 +1241,12 @@ File: emacs,  Node: Undo,  Next: Transpose,  Up: Fixit
 The "undo" command reverses recent changes in the buffer's text.  Each
 buffer records changes individually, and the undo command always
 applies to the current buffer.  You can undo all the changes in a
-buffer for as far as back its records go.  Usually, each editing
-command makes a separate entry in the undo records, but some commands
-such as `query-replace' divide their changes into multiple entries for
-flexibility in undoing.  Consecutive character insertion commands are
-usually grouped together into a single undo record, to make undoing
-less tedious.
+buffer for as far back as the buffer's records go.  Usually, each
+editing command makes a separate entry in the undo records, but some
+commands such as `query-replace' divide their changes into multiple
+entries for flexibility in undoing.  Consecutive character insertion
+commands are usually grouped together into a single undo record, to
+make undoing less tedious.
 
 `C-/'
 `C-x u'
@@ -1296,10 +1296,10 @@ To undo further changes in the same region, repeat the `undo' command
 names start with spaces never do; these buffers are used internally by
 Emacs to hold text that users don't normally look at or edit.
 
-   When the undo records for a buffer becomes too large, Emacs discards
-the oldest undo records from time to time (during "garbage
-collection").  You can specify how much undo records to keep by setting
-the variables `undo-limit', `undo-strong-limit', and
+   When the undo information for a buffer becomes too large, Emacs
+discards the oldest records from time to time (during "garbage
+collection").  You can specify how much undo information to keep by
+setting the variables `undo-limit', `undo-strong-limit', and
 `undo-outer-limit'.  Their values are expressed in bytes.
 
    The variable `undo-limit' sets a soft limit: Emacs keeps undo data
@@ -3287,12 +3287,11 @@ file, and asks once again whether to recover that file.
 are present in Emacs buffers.  You should then save them.  Only
 this--saving them--updates the files themselves.
 
-   Emacs records information about interrupted sessions for later
-recovery in files named `.saves-PID-HOSTNAME' in the directory
-`~/.emacs.d/auto-save-list/'.  This directory is determined by the
-variable `auto-save-list-file-prefix'.  If you set
-`auto-save-list-file-prefix' to `nil', sessions are not recorded for
-recovery.
+   Emacs records information about interrupted sessions in files named
+`.saves-PID-HOSTNAME' in the directory `~/.emacs.d/auto-save-list/'.
+This directory is determined by the variable
+`auto-save-list-file-prefix'.  If you set `auto-save-list-file-prefix'
+to `nil', sessions are not recorded for recovery.
 
 
 File: emacs,  Node: File Aliases,  Next: Directories,  Prev: Auto Save,  Up: Files
@@ -5092,8 +5091,8 @@ File: emacs,  Node: Mouse Commands,  Next: Word and Line Mouse,  Up: Frames
      it to the kill ring (`mouse-set-region').
 
 `Mouse-2'
-     Yank the last killed text at the click position
-     (`mouse-yank-at-click').
+     Move point to where you click, and insert the contents of the
+     primary selection there (`mouse-yank-primary').
 
 `Mouse-3'
      If the region is active, move the nearer end of the region to the
@@ -5456,7 +5455,8 @@ different font:
      `default-frame-alist' to specify the `font' parameter (*note Frame
      Parameters::), like this:
 
-          (add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono-10"))
+          (add-to-list 'default-frame-alist
+                       '(font . "DejaVu Sans Mono-10"))
 
    * Add an `emacs.font' X resource setting to your X resource file,
      like this:

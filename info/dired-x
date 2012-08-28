@@ -31,7 +31,7 @@ provided by the file `dired-x.el'.
 
    * Based on `dired.texi' by Sebastian Kremer <sk@thp.uni-koeln.de>
 
-   * For `dired-x.el' as distributed with GNU Emacs 24.1.
+   * For `dired-x.el' as distributed with GNU Emacs 24.2.
 
 
    Copyright (C) 1994-1995, 1999, 2001-2012 Free Software Foundation,

@@ -1,7 +1,7 @@
 This is /home/cyd/emacs/doc/emacs/../../info/emacs, produced by
 makeinfo version 4.13 from /home/cyd/emacs/doc/emacs/emacs.texi.
 
-This is the `GNU Emacs Manual', updated for Emacs version 24.1.
+This is the `GNU Emacs Manual', updated for Emacs version 24.2.
 
 Copyright (C) 1985-1987, 1993-2012 Free Software Foundation, Inc.
 
@@ -2894,8 +2894,7 @@ be set, but it uses their values if they are set.
 
 `EMACSDATA'
      Directory for the architecture-independent files that come with
-     Emacs.  This is used to initialize the Lisp variable
-     `data-directory'.
+     Emacs.  This is used to initialize the variable `data-directory'.
 
 `EMACSDOC'
      Directory for the documentation string file, which is used to
@@ -4248,7 +4247,7 @@ Appendix E Emacs 23 Antinews
 
 For those users who live backwards in time, here is information about
 downgrading to Emacs version 23.4.  We hope you will enjoy the greater
-simplicity that results from the absence of many Emacs 24.1 features.
+simplicity that results from the absence of many Emacs 24.2 features.
 
    * Support for displaying and editing "bidirectional" text has been
      removed.  Text is now always displayed on the screen in a single
@@ -4295,17 +4294,17 @@ simplicity that results from the absence of many Emacs 24.1 features.
      The mismatch with the usual meanings of `C-y' and `M-y' is
      unintended.
 
-   * Various completion features have been simplified.  The options
-     `completion-cycle-threshold' and `completion-category-overrides'
-     have been removed.  Due to the latter removal, Emacs uses a single
-     consistent scheme to generate completions, instead of using a
-     separate scheme for (say) buffer name completion.  Several major
+   * Various completion features have been simplified.  The option
+     `completion-category-overrides' has been removed, so Emacs uses a
+     single consistent scheme to generate completions, instead of using
+     a separate scheme for (say) buffer name completion.  Several major
      modes, such as Shell mode, now implement their own inline
      completion commands instead of using `completion-at-point'.
 
-   * We have removed various options for controlling how windows are
-     used, e.g. `display-buffer-base-action', `display-buffer-alist',
-     `window-combination-limit', and `window-combination-resize'.
+   * We have removed several options for controlling how windows are
+     used, such as `display-buffer-base-action',
+     `display-buffer-alist', `window-combination-limit', and
+     `window-combination-resize'.
 
    * The command `M-x customize-themes' has been removed.  Emacs no
      longer comes with pre-defined themes (you can write your own).
@@ -4899,15 +4898,14 @@ File: emacs,  Node: Windows HOME,  Next: Windows Keyboard,  Prev: ls in Lisp,  U
 G.5 HOME and Startup Directories on MS-Windows
 ==============================================
 
-The Windows equivalent of the `HOME' directory is the "user-specific
-application data directory".  The actual location depends on the
-Windows version; typical values are `C:\Documents and
-Settings\USERNAME\Application Data' on Windows 2K/XP/2K3,
-`C:\Users\USERNAME\AppData\Roaming' on Windows Vista/7/2K8, and either
-`C:\WINDOWS\Application Data' or
-`C:\WINDOWS\Profiles\USERNAME\Application Data' on the older Windows
-9X/ME systems.  If this directory does not exist or cannot be accessed,
-Emacs falls back to `C:\' as the default value of `HOME'.
+The Windows equivalent of `HOME' is the "user-specific application data
+directory".  The actual location depends on the Windows version;
+typical values are `C:\Documents and Settings\USERNAME\Application
+Data' on Windows 2000/XP/2K3, `C:\Users\USERNAME\AppData\Roaming' on
+Windows Vista/7/2008, and either `C:\WINDOWS\Application Data' or
+`C:\WINDOWS\Profiles\USERNAME\Application Data' on Windows 9X/ME.  If
+this directory does not exist or cannot be accessed, Emacs falls back
+to `C:\' as the default value of `HOME'.
 
    You can override this default value of `HOME' by explicitly setting
 the environment variable `HOME' to point to any directory on your
@@ -6428,8 +6426,8 @@ ASCII control character
      letter, or the Control version of one of the characters `@[\]^_?'.
 
 ASCII printing character
-     ASCII printing characters include letters, digits, space, and these
-     punctuation characters: `!@#$%^&*()_-+=|\~`{}[]:;"'<>,.?/'.
+     ASCII letters, digits, space, and the following punctuation
+     characters: `!@#$%^&*()_-+=|\~`{}[]:;"'<>,.?/'.
 
 Auto Fill Mode
      Auto Fill mode is a minor mode (q.v.) in which text that you

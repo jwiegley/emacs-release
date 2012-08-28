@@ -238,12 +238,6 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #define GCGraphicsExposures 0
 #endif /* WINDOWSNT */
 
-#ifdef HAVE_MACGUI
-#include "macterm.h"
-#define x_display_info mac_display_info
-#define check_x check_mac
-#endif /* HAVE_MACGUI */
-
 #ifdef HAVE_NS
 #include "nsterm.h"
 #undef FRAME_X_DISPLAY_INFO
@@ -721,30 +715,6 @@ x_free_gc (struct frame *f, GC gc)
 }
 #endif  /* HAVE_NS */
 
-#ifdef HAVE_MACGUI
-/* Mac OS emulation of GCs */
-
-static inline GC
-x_create_gc (struct frame *f, unsigned long mask, XGCValues *xgcv)
-{
-  GC gc;
-  BLOCK_INPUT;
-  gc = XCreateGC (FRAME_MAC_DISPLAY (f), FRAME_MAC_WINDOW (f), mask, xgcv);
-  UNBLOCK_INPUT;
-  IF_DEBUG (++ngcs);
-  return gc;
-}
-
-static void
-x_free_gc (struct frame *f, GC gc)
-{
-  eassert (interrupt_input_blocked);
-  IF_DEBUG (xassert (--ngcs >= 0));
-  XFreeGC (FRAME_MAC_DISPLAY (f), gc);
-}
-
-#endif  /* HAVE_MACGUI */
-
 /* Like strcasecmp/stricmp.  Used to compare parts of font names which
    are in ISO8859-1.  */
 
@@ -818,9 +788,6 @@ init_frame_faces (struct frame *f)
 #endif
 #ifdef WINDOWSNT
   if (!FRAME_WINDOW_P (f) || FRAME_W32_WINDOW (f))
-#endif
-#ifdef HAVE_MACGUI
-  if (!FRAME_MAC_P (f) || FRAME_MAC_WINDOW (f))
 #endif
 #ifdef HAVE_NS
   if (!FRAME_NS_P (f) || FRAME_NS_WINDOW (f))
@@ -1201,10 +1168,6 @@ defined_color (struct frame *f, const char *color_name, XColor *color_def,
 #ifdef WINDOWSNT
   else if (FRAME_W32_P (f))
     return w32_defined_color (f, color_name, color_def, alloc);
-#endif
-#ifdef HAVE_MACGUI
-  else if (FRAME_MAC_P (f))
-    return mac_defined_color (f, color_name, color_def, alloc);
 #endif
 #ifdef HAVE_NS
   else if (FRAME_NS_P (f))
@@ -2212,13 +2175,7 @@ lface_fully_specified_p (Lisp_Object *attrs)
 
   for (i = 1; i < LFACE_VECTOR_SIZE; ++i)
     if (i != LFACE_FONT_INDEX && i != LFACE_INHERIT_INDEX)
-      if ((UNSPECIFIEDP (attrs[i]) || IGNORE_DEFFACE_P (attrs[i]))
-#ifdef HAVE_MACGUI
-        /* MAC_TODO: No stipple support on Mac OS yet, this index is
-           always unspecified.  */
-          && i != LFACE_STIPPLE_INDEX
-#endif
-	  )
+      if ((UNSPECIFIEDP (attrs[i]) || IGNORE_DEFFACE_P (attrs[i])))
 	break;
 
   return i == LFACE_VECTOR_SIZE;
@@ -6150,14 +6107,14 @@ face_for_overlay_string (struct window *w, EMACS_INT pos,
 
   *endptr = endpos;
 
-  /* Optimize common case where we can use the default face.  */
+  default_face = FACE_FROM_ID (f, DEFAULT_FACE_ID);
+
+  /* Optimize common cases where we can use the default face.  */
   if (NILP (prop)
-      && !(pos >= region_beg && pos < region_end)
-      && NILP (Vface_remapping_alist))
+      && !(pos >= region_beg && pos < region_end))
     return DEFAULT_FACE_ID;
 
   /* Begin with attributes from the default face.  */
-  default_face = FACE_FROM_ID (f, lookup_basic_face (f, DEFAULT_FACE_ID));
   memcpy (attrs, default_face->lface, sizeof attrs);
 
   /* Merge in attributes specified via text properties.  */

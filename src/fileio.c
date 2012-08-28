@@ -83,10 +83,6 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "commands.h"
 
-#ifndef FILE_SYSTEM_CASE
-#define FILE_SYSTEM_CASE(filename)  (filename)
-#endif
-
 /* Nonzero during writing of auto-save files */
 static int auto_saving;
 
@@ -334,7 +330,6 @@ Given a Unix syntax file name, returns a string ending in slash.  */)
       return STRINGP (handled_name) ? handled_name : Qnil;
     }
 
-  filename = FILE_SYSTEM_CASE (filename);
 #ifdef DOS_NT
   beg = (char *) alloca (SBYTES (filename) + 1);
   memcpy (beg, SSDATA (filename), SBYTES (filename) + 1);
@@ -864,7 +859,6 @@ filesystem tree, not (expand-file-name ".."  dirname).  */)
 	UNGCPRO;
       }
   }
-  name = FILE_SYSTEM_CASE (name);
   multibyte = STRING_MULTIBYTE (name);
   if (multibyte != STRING_MULTIBYTE (default_directory))
     {
@@ -2564,12 +2558,13 @@ See also `file-exists-p' and `file-attributes'.  */)
 
   absname = ENCODE_FILE (absname);
 
-#if defined (DOS_NT)
-  /* Under MS-DOS, Windows, open does not work for directories.  */
+#if defined (DOS_NT) || defined (macintosh)
+  /* Under MS-DOS, Windows, and Macintosh, open does not work for
+     directories.  */
   if (access (SDATA (absname), 0) == 0)
     return Qt;
   return Qnil;
-#else /* not DOS_NT */
+#else /* not DOS_NT and not macintosh */
   flags = O_RDONLY;
 #ifdef O_NONBLOCK
   /* Opening a fifo without O_NONBLOCK can wait.
@@ -2586,7 +2581,7 @@ See also `file-exists-p' and `file-attributes'.  */)
     return Qnil;
   emacs_close (desc);
   return Qt;
-#endif /* not DOS_NT */
+#endif /* not DOS_NT and not macintosh */
 }
 
 /* Having this before file-symlink-p mysteriously caused it to be forgotten
@@ -5535,7 +5530,7 @@ The return value is only relevant for a call to `read-file-name' that happens
 before any other event (mouse or keypress) is handled.  */)
   (void)
 {
-#if defined (USE_MOTIF) || defined (HAVE_NTGUI) || defined (USE_GTK) || defined (HAVE_MACGUI)
+#if defined (USE_MOTIF) || defined (HAVE_NTGUI) || defined (USE_GTK)
   if ((NILP (last_nonmenu_event) || CONSP (last_nonmenu_event))
       && use_dialog_box
       && use_file_dialog

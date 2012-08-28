@@ -3349,7 +3349,6 @@ the message given by REASON."
 				   ((featurep 'gtk)
 				    (concat ", GTK+ Version "
 					    gtk-version-string))
-				   ((featurep 'mac) ", Mac")
 				   ((featurep 'x-toolkit) ", X toolkit")
 				   (t ""))
 			     (if (and (boundp 'x-toolkit-scroll-bars)

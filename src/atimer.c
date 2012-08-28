@@ -351,9 +351,7 @@ run_timers (void)
 
       t = atimers;
       atimers = atimers->next;
-#ifndef DARWIN_OS
       t->fn (t);
-#endif
 
       if (t->type == ATIMER_CONTINUOUS)
 	{
@@ -365,10 +363,6 @@ run_timers (void)
 	  t->next = free_atimers;
 	  free_atimers = t;
 	}
-#ifdef DARWIN_OS
-      /* Fix for Ctrl-G.  Perhaps this should apply to all platforms. */
-      t->fn (t); 
-#endif
 
       EMACS_GET_TIME (now);
     }

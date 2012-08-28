@@ -1,3 +1,162 @@
+2012-08-24  Chong Yidong  <cyd@gnu.org>
+
+	* Version 24.2 released.
+
+2012-08-23  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* files.el (safe-local-eval-forms): Fix before-save-hook entry to
+	be buffer-local; add delete-trailing-whitespace (bug#12259).
+
+2012-08-22  Jeremy Moore  <jmoore@ieee.org>  (tiny change)
+
+	* progmodes/hideif.el (hif-compress-define-list):
+	Fix typo.  (Bug#11951)
+
+2012-08-20  Dan Nicolaescu  <dann@gnu.org>
+
+	* progmodes/hideshow.el (hs-block-end-regexp): Restore lost
+	buffer local setting.
+
+2012-08-15  Glenn Morris  <rgm@gnu.org>
+
+	* vc/log-edit.el (log-edit-font-lock-gnu-style): Mark safe if boolean.
+
+2012-08-15  Leo Liu  <sdl.web@gmail.com>
+
+	* net/rcirc.el (rcirc-split-message): Fix for buffer-local
+	rcirc-encode-coding-system.
+
+2012-08-13  Leo Liu  <sdl.web@gmail.com>
+
+	* net/rcirc.el (rcirc-split-message): New function.
+	(rcirc-send-message): Use it.  (Bug#12051)
+
+2012-08-10  Glenn Morris  <rgm@gnu.org>
+
+	* emacs-lisp/copyright.el (copyright-update-directory): Logic fix.
+
+	* tutorial.el (help-with-tutorial):
+	* emacs-lisp/copyright.el (copyright-update-directory):
+	* emacs-lisp/autoload.el (autoload-find-generated-file)
+	(autoload-find-file): Disable local eval: (for insurance).
+
+2012-08-07  Glenn Morris  <rgm@gnu.org>
+
+	* files.el (hack-local-variables-filter): If an eval: form is not
+	known to be safe, and enable-local-variables is :safe, then ignore
+	the form totally, as is done for non-eval forms.  (Bug#12155)
+	This is CVE-2012-3479.
+
+2012-08-07  Chong Yidong  <cyd@gnu.org>
+
+	* mouse.el (mouse-drag-track): Deactivate the mark before popping.
+
+2012-08-06  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* progmodes/cperl-mode.el (cperl-mode): Yet another fix for
+	syntax-propertize-function (bug#10095).
+
+2012-07-28  Chong Yidong  <cyd@gnu.org>
+
+	* progmodes/gdb-mi.el (gdb-place-breakpoints): Fix the call to
+	gdb-get-location.
+
+2012-07-25  Leo Liu  <sdl.web@gmail.com>
+
+	* progmodes/cc-menus.el (cc-imenu-objc-function): Avoid leaving nil in
+	the alist (bug#12029).
+
+2012-07-25  Chong Yidong  <cyd@gnu.org>
+
+	* mouse.el (mouse-drag-track): Do not set the mark if the user
+	releases the mouse without selecting anything (Bug#11588).
+
+2012-07-21  Leo Liu  <sdl.web@gmail.com>
+
+	* progmodes/cc-cmds.el (c-defun-name):
+	Use match-string-no-properties instead for consistency.
+
+2012-07-20  Leo Liu  <sdl.web@gmail.com>
+
+	* progmodes/cc-cmds.el (c-defun-name): Handle objc selectors properly.
+	(Bug#7879)
+
+	* progmodes/cc-langs.el (c-symbol-start): Include char _ (bug#11986).
+
+2012-07-18  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* userlock.el, emacs-lisp/map-ynp.el: Declare part of `emacs' package.
+	* progmodes/bug-reference.el, misearch.el: Provide themselves
+	(bug#11915).
+
+	* progmodes/cperl-mode.el (cperl-unwind-to-safe): Don't inf-loop at end
+	of narrowed buffer (bug#11966).
+
+2012-07-14  Jan Djärv  <jan.h.d@swipnet.se>
+
+	* progmodes/cc-cmds.el (c-defun-name): Recognize Objective-C methods
+	also (Bug#7879).
+
+2012-07-09  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* progmodes/sh-script.el (sh-syntax-propertize-function): Fix last
+	change (bug#11826).
+
+2012-07-02  Glenn Morris  <rgm@gnu.org>
+
+	* simple.el (kill-whole-line): Doc tweak.
+
+2012-07-01  Eli Zaretskii  <eliz@gnu.org>
+
+	* files.el (file-relative-name): Compare file names
+	case-insensitively if on MS-Windows or MS-DOS, or if
+	read-file-name-completion-ignore-case is non-nil.  Don't use
+	case-fold-search for this purpose.  (Bug#11827)
+
+2012-06-28  Andreas Schwab  <schwab@linux-m68k.org>
+
+	* calendar/cal-dst.el (calendar-current-time-zone):
+	Return calendar-current-time-zone-cache if non-nil.
+
+2012-06-25  Masatake YAMATO  <yamato@redhat.com>
+
+	* progmodes/which-func.el (which-func-format):
+	Add mouse-face.  (Bug#11698)
+
+2012-06-24  Leo Liu  <sdl.web@gmail.com>
+
+	* ibuf-ext.el (ibuffer-diff-buffer-with-file-1): Avoid buffer
+	read-only error.
+
+	* net/rcirc.el (rcirc): Avoid error when process-contact returns t.
+
+	* vc/diff-mode.el (diff-file-prev/next): Fix typo.
+
+2012-06-23  Leo Liu  <sdl.web@gmail.com>
+
+	* textmodes/enriched.el (enriched-next-annotation):
+	Use eq (Bug#11528).
+
+2012-06-23  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* minibuffer.el (minibuffer-confirm-exit-commands):
+	Add completion-at-point (bug#11725).
+
+2012-06-21  Glenn Morris  <rgm@gnu.org>
+
+	* progmodes/f90.el (f90-font-lock-keywords-2):
+	Add some preprocessor elements.  (Bug#10499)
+
+2012-06-21  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* progmodes/cperl-mode.el (cperl-update-syntaxification):
+	Use syntax-propertize (bug#11739).
+
+2012-06-13  Glenn Morris  <rgm@gnu.org>
+
+	* international/mule-cmds.el (mule-menu-keymap)
+	(set-language-environment, set-locale-environment): Doc tweaks.
+
 2012-06-01  Chong Yidong  <cyd@gnu.org>
 
 	* Version 24.1 released.
@@ -13,13 +172,13 @@
 
 2012-06-01  Chong Yidong  <cyd@gnu.org>
 
-	* cus-edit.el (customize-changed-options-previous-release): Bump
-	to 23.4.
+	* cus-edit.el (customize-changed-options-previous-release):
+	Bump to 23.4.
 
 2012-05-31  Stefan Monnier  <monnier@iro.umontreal.ca>
 
-	* emacs-lisp/bytecomp.el (byte-compile-fix-header): Handle
-	arbitrary file name lengths (Bug#11585).
+	* emacs-lisp/bytecomp.el (byte-compile-fix-header):
+	Handle arbitrary file name lengths (Bug#11585).
 
 2012-05-28  Martin Rudalics  <rudalics@gmx.at>
 
@@ -28,9 +187,9 @@
 
 2012-05-18  Eli Zaretskii  <eliz@gnu.org>
 
-	* mail/sendmail.el (mail-yank-region): Recognize
-	rmail-yank-current-message in addition to insert-buffer.  Fixes
-	mail-mode's "C-c C-r" that otherwise does nothing when invoked in
+	* mail/sendmail.el (mail-yank-region):
+	Recognize rmail-yank-current-message in addition to insert-buffer.
+	Fixes mail-mode's "C-c C-r" that otherwise does nothing when invoked in
 	a *mail* buffer created through rmail-start-mail with sendmail as
 	mail-user-agent.
 

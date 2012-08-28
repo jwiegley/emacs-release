@@ -475,7 +475,6 @@ enum pvec_type
      (var) = (type) | (intptr_t) (ptr))
 
 #define XPNTR(a) ((intptr_t) ((a) & ~TYPEMASK))
-#define XUNTAG(a, type) ((uintptr_t) (a) - (type))
 
 #else  /* not USE_LSB_TAG */
 
@@ -518,7 +517,6 @@ enum pvec_type
 #else
 #define XPNTR(a) ((uintptr_t) ((a) & VALMASK))
 #endif
-#define XUNTAG(a, type) XPNTR (a)
 
 #endif /* not USE_LSB_TAG */
 
@@ -609,20 +607,15 @@ extern Lisp_Object make_number (EMACS_INT);
 
 /* Extract a value or address from a Lisp_Object.  */
 
-#define XCONS(a) (eassert (CONSP(a)), \
-		  (struct Lisp_Cons *) XUNTAG (a, Lisp_Cons))
-#define XVECTOR(a) (eassert (VECTORLIKEP(a)), \
-		    (struct Lisp_Vector *) XUNTAG (a, Lisp_Vectorlike))
-#define XSTRING(a) (eassert (STRINGP(a)), \
-		    (struct Lisp_String *) XUNTAG (a, Lisp_String))
-#define XSYMBOL(a) (eassert (SYMBOLP(a)), \
-		    (struct Lisp_Symbol *) XUNTAG (a, Lisp_Symbol))
-#define XFLOAT(a) (eassert (FLOATP(a)), \
-		   (struct Lisp_Float *) XUNTAG (a, Lisp_Float))
+#define XCONS(a) (eassert (CONSP (a)), (struct Lisp_Cons *) XPNTR (a))
+#define XVECTOR(a) (eassert (VECTORLIKEP (a)), (struct Lisp_Vector *) XPNTR (a))
+#define XSTRING(a) (eassert (STRINGP (a)), (struct Lisp_String *) XPNTR (a))
+#define XSYMBOL(a) (eassert (SYMBOLP (a)), (struct Lisp_Symbol *) XPNTR (a))
+#define XFLOAT(a) (eassert (FLOATP (a)), (struct Lisp_Float *) XPNTR (a))
 
 /* Misc types.  */
 
-#define XMISC(a)   ((union Lisp_Misc *) XUNTAG (a, Lisp_Misc))
+#define XMISC(a)   ((union Lisp_Misc *) XPNTR (a))
 #define XMISCANY(a)	(eassert (MISCP (a)), &(XMISC (a)->u_any))
 #define XMISCTYPE(a)   (XMISCANY (a)->type)
 #define XMARKER(a)	(eassert (MARKERP (a)), &(XMISC (a)->u_marker))
@@ -642,22 +635,14 @@ extern Lisp_Object make_number (EMACS_INT);
 
 /* Pseudovector types.  */
 
-#define XPROCESS(a) (eassert (PROCESSP(a)), \
-		     (struct Lisp_Process *) XUNTAG (a, Lisp_Vectorlike))
-#define XWINDOW(a) (eassert (WINDOWP(a)), \
-		    (struct window *) XUNTAG (a, Lisp_Vectorlike))
-#define XTERMINAL(a) (eassert (TERMINALP(a)), \
-		      (struct terminal *) XUNTAG (a, Lisp_Vectorlike))
-#define XSUBR(a) (eassert (SUBRP(a)), \
-		  (struct Lisp_Subr *) XUNTAG (a, Lisp_Vectorlike))
-#define XBUFFER(a) (eassert (BUFFERP(a)), \
-		    (struct buffer *) XUNTAG (a, Lisp_Vectorlike))
-#define XCHAR_TABLE(a) (eassert (CHAR_TABLE_P (a)), \
-			(struct Lisp_Char_Table *) XUNTAG (a, Lisp_Vectorlike))
-#define XSUB_CHAR_TABLE(a) (eassert (SUB_CHAR_TABLE_P (a)), \
-			    (struct Lisp_Sub_Char_Table *) XUNTAG (a, Lisp_Vectorlike))
-#define XBOOL_VECTOR(a) (eassert (BOOL_VECTOR_P (a)), \
-			 (struct Lisp_Bool_Vector *) XUNTAG (a, Lisp_Vectorlike))
+#define XPROCESS(a) (eassert (PROCESSP (a)), (struct Lisp_Process *) XPNTR (a))
+#define XWINDOW(a) (eassert (WINDOWP (a)), (struct window *) XPNTR (a))
+#define XTERMINAL(a) (eassert (TERMINALP (a)), (struct terminal *) XPNTR (a))
+#define XSUBR(a) (eassert (SUBRP (a)), (struct Lisp_Subr *) XPNTR (a))
+#define XBUFFER(a) (eassert (BUFFERP (a)), (struct buffer *) XPNTR (a))
+#define XCHAR_TABLE(a) (eassert (CHAR_TABLE_P (a)), (struct Lisp_Char_Table *) XPNTR (a))
+#define XSUB_CHAR_TABLE(a) (eassert (SUB_CHAR_TABLE_P (a)), (struct Lisp_Sub_Char_Table *) XPNTR (a))
+#define XBOOL_VECTOR(a) (eassert (BOOL_VECTOR_P (a)), (struct Lisp_Bool_Vector *) XPNTR (a))
 
 /* Construct a Lisp_Object from a value or address.  */
 
@@ -684,7 +669,7 @@ extern Lisp_Object make_number (EMACS_INT);
 /* The cast to struct vectorlike_header * avoids aliasing issues.  */
 #define XSETPSEUDOVECTOR(a, b, code) \
   XSETTYPED_PSEUDOVECTOR(a, b,       \
-			 ((struct vectorlike_header *) XUNTAG (a, Lisp_Vectorlike))->size, \
+			 ((struct vectorlike_header *) XPNTR (a))->size, \
 			 code)
 #define XSETTYPED_PSEUDOVECTOR(a, b, size, code)			\
   (XSETVECTOR (a, b),							\
@@ -852,14 +837,14 @@ extern EMACS_INT string_bytes (struct Lisp_String *);
 
 /* Mark STR as a unibyte string.  */
 #define STRING_SET_UNIBYTE(STR)  \
-  do { if (XSTRING (STR)->size == 0)  \
+  do { if (EQ (STR, empty_multibyte_string))  \
       (STR) = empty_unibyte_string;  \
     else XSTRING (STR)->size_byte = -1; } while (0)
 
 /* Mark STR as a multibyte string.  Assure that STR contains only
    ASCII characters in advance.  */
 #define STRING_SET_MULTIBYTE(STR)  \
-  do { if (XSTRING (STR)->size == 0)  \
+  do { if (EQ (STR, empty_unibyte_string))  \
       (STR) = empty_multibyte_string;  \
     else XSTRING (STR)->size_byte = XSTRING (STR)->size; } while (0)
 
@@ -1292,7 +1277,7 @@ struct Lisp_Hash_Table
 
 
 #define XHASH_TABLE(OBJ) \
-     ((struct Lisp_Hash_Table *) XUNTAG (OBJ, Lisp_Vectorlike))
+     ((struct Lisp_Hash_Table *) XPNTR (OBJ))
 
 #define XSET_HASH_TABLE(VAR, PTR) \
      (XSETPSEUDOVECTOR (VAR, PTR, PVEC_HASH_TABLE))
@@ -1732,15 +1717,6 @@ typedef struct {
   RANGED_INTEGERP (TYPE_MINIMUM (type), x, TYPE_MAXIMUM (type))
 
 #define INTEGERP(x) (LISP_INT_TAG_P (XTYPE ((x))))
-#ifdef USE_LSB_TAG    /* Below usually gives shorter instructions.  */
-#define SYMBOLP(x) (XTYPE (XUNTAG (x, Lisp_Symbol)) == 0)
-#define MISCP(x) (XTYPE (XUNTAG (x, Lisp_Misc)) == 0)
-#define VECTORLIKEP(x) (XTYPE (XUNTAG (x, Lisp_Vectorlike)) == 0)
-#define STRINGP(x) (XTYPE (XUNTAG (x, Lisp_String)) == 0)
-#define CONSP(x) (XTYPE (XUNTAG (x, Lisp_Cons)) == 0)
-
-#define FLOATP(x) (XTYPE (XUNTAG (x, Lisp_Float)) == 0)
-#else
 #define SYMBOLP(x) (XTYPE ((x)) == Lisp_Symbol)
 #define MISCP(x) (XTYPE ((x)) == Lisp_Misc)
 #define VECTORLIKEP(x) (XTYPE ((x)) == Lisp_Vectorlike)
@@ -1748,7 +1724,6 @@ typedef struct {
 #define CONSP(x) (XTYPE ((x)) == Lisp_Cons)
 
 #define FLOATP(x) (XTYPE ((x)) == Lisp_Float)
-#endif
 #define VECTORP(x) (VECTORLIKEP (x) && !(ASIZE (x) & PSEUDOVECTOR_FLAG))
 #define OVERLAYP(x) (MISCP (x) && XMISCTYPE (x) == Lisp_Misc_Overlay)
 #define MARKERP(x) (MISCP (x) && XMISCTYPE (x) == Lisp_Misc_Marker)
@@ -1769,7 +1744,7 @@ typedef struct {
    code is CODE.  */
 #define TYPED_PSEUDOVECTORP(x, t, code)				\
   (VECTORLIKEP (x)						\
-   && (((((struct t *) XUNTAG (x, Lisp_Vectorlike))->size	\
+   && (((((struct t *) XPNTR (x))->size				\
 	 & (PSEUDOVECTOR_FLAG | (code))))			\
        == (PSEUDOVECTOR_FLAG | (code))))
 
@@ -2747,9 +2722,6 @@ extern Lisp_Object Qleft_margin, Qright_margin;
 extern Lisp_Object Qglyphless_char;
 extern Lisp_Object QCdata, QCfile;
 extern Lisp_Object QCmap;
-#ifdef HAVE_MACGUI
-extern Lisp_Object Qrect;
-#endif
 extern Lisp_Object Qrisky_local_variable;
 extern struct frame *last_glyphless_glyph_frame;
 extern unsigned last_glyphless_glyph_face_id;
@@ -2929,9 +2901,6 @@ extern ptrdiff_t evxprintf (char **, ptrdiff_t *, char const *, ptrdiff_t,
   ATTRIBUTE_FORMAT_PRINTF (5, 0);
 
 /* Defined in lread.c.  */
-#ifdef HAVE_MACGUI
-extern Lisp_Object Qdata, Qsize;
-#endif
 extern Lisp_Object Qvariable_documentation, Qstandard_input;
 extern Lisp_Object Qbackquote, Qcomma, Qcomma_at, Qcomma_dot, Qfunction;
 EXFUN (Fread, 1);
@@ -3300,7 +3269,7 @@ extern Lisp_Object Qvisible;
 extern void store_frame_param (struct frame *, Lisp_Object, Lisp_Object);
 extern void store_in_alist (Lisp_Object *, Lisp_Object, Lisp_Object);
 extern Lisp_Object do_switch_frame (Lisp_Object, int, int, Lisp_Object);
-#if defined (HAVE_MACGUI) || HAVE_NS
+#if HAVE_NS
 extern Lisp_Object get_frame_param (struct frame *, Lisp_Object);
 #endif
 extern Lisp_Object frame_buffer_predicate (Lisp_Object);
@@ -3577,31 +3546,13 @@ extern char *x_get_keysym_name (int);
 EXFUN (Fmsdos_downcase_filename, 1);
 #endif
 
-#ifdef HAVE_MACGUI
-/* Defined in macfns.c */
-extern void syms_of_macfns (void);
-
-/* Defined in macselect.c */
-extern void syms_of_macselect (void);
-
-/* Defined in macterm.c */
-extern void syms_of_macterm (void);
-
-/* Defined in macmenu.c */
-extern void syms_of_macmenu (void);
-
-/* Defined in mac.c */
-extern void syms_of_mac (void);
-extern void init_mac_osx_environment (void);
-#endif /* HAVE_MACGUI */
-
 #ifdef HAVE_LIBXML2
 /* Defined in xml.c */
 extern void syms_of_xml (void);
 #endif
 
 #ifdef HAVE_MENUS
-/* Defined in (x|mac|w32)fns.c, nsfns.m...  */
+/* Defined in (x|w32)fns.c, nsfns.m...  */
 extern int have_menus_p (void);
 #endif
 

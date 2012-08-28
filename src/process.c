@@ -3061,10 +3061,7 @@ usage: (make-network-process &rest ARGS)  */)
       /* SERVICE can either be a string or int.
 	 Convert to a C string for later use by getaddrinfo.  */
       if (EQ (service, Qt))
-	/* We pass NULL for unspecified port, because some versions of
-	   Darwin return EAI_NONAME for getaddrinfo ("localhost", "0",
-	   ...).  */
-	portstring = NULL;
+	portstring = "0";
       else if (INTEGERP (service))
 	{
 	  sprintf (portbuf, "%"pI"d", XINT (service));
@@ -3090,19 +3087,11 @@ usage: (make-network-process &rest ARGS)  */)
 
       ret = getaddrinfo (SSDATA (host), portstring, &hints, &res);
       if (ret)
-	{
 #ifdef HAVE_GAI_STRERROR
-	  if (portstring)
-	    error ("%s/%s %s", SSDATA (host), portstring, gai_strerror (ret));
-	  else
-	    error ("%s %s", SSDATA (host), gai_strerror (ret));
+	error ("%s/%s %s", SSDATA (host), portstring, gai_strerror (ret));
 #else
-	  if (portstring)
-	    error ("%s/%s getaddrinfo error %d", SSDATA (host), portstring, ret);
-	  else
-	    error ("%s getaddrinfo error %d", SSDATA (host), ret);
+	error ("%s/%s getaddrinfo error %d", SSDATA (host), portstring, ret);
 #endif
-	}
       immediate_quit = 0;
 
       goto open_socket;
@@ -4259,14 +4248,7 @@ wait_reading_process_output_1 (void)
 static inline int
 select_wrapper (int n, fd_set *rfd, fd_set *wfd, fd_set *xfd, struct timeval *tmo)
 {
-#ifdef HAVE_MACGUI
-  extern int sys_select (int, SELECT_TYPE *, SELECT_TYPE *, SELECT_TYPE *,
-			 EMACS_TIME *);
-
-  return sys_select (n, rfd, wfd, xfd, tmo);
-#else
   return select (n, rfd, wfd, xfd, tmo);
-#endif
 }
 #define select select_wrapper
 #endif
@@ -7323,6 +7305,42 @@ init_process (void)
   memset (datagram_address, 0, sizeof datagram_address);
 #endif
 
+ {
+   Lisp_Object subfeatures = Qnil;
+   const struct socket_options *sopt;
+
+#define ADD_SUBFEATURE(key, val) \
+  subfeatures = pure_cons (pure_cons (key, pure_cons (val, Qnil)), subfeatures)
+
+#ifdef NON_BLOCKING_CONNECT
+   ADD_SUBFEATURE (QCnowait, Qt);
+#endif
+#ifdef DATAGRAM_SOCKETS
+   ADD_SUBFEATURE (QCtype, Qdatagram);
+#endif
+#ifdef HAVE_SEQPACKET
+   ADD_SUBFEATURE (QCtype, Qseqpacket);
+#endif
+#ifdef HAVE_LOCAL_SOCKETS
+   ADD_SUBFEATURE (QCfamily, Qlocal);
+#endif
+   ADD_SUBFEATURE (QCfamily, Qipv4);
+#ifdef AF_INET6
+   ADD_SUBFEATURE (QCfamily, Qipv6);
+#endif
+#ifdef HAVE_GETSOCKNAME
+   ADD_SUBFEATURE (QCservice, Qt);
+#endif
+#if defined (O_NONBLOCK) || defined (O_NDELAY)
+   ADD_SUBFEATURE (QCserver, Qt);
+#endif
+
+   for (sopt = socket_options; sopt->name; sopt++)
+     subfeatures = pure_cons (intern_c_string (sopt->name), subfeatures);
+
+   Fprovide (intern_c_string ("make-network-process"), subfeatures);
+ }
+
 #if defined (DARWIN_OS)
   /* PTYs are broken on Darwin < 6, but are sometimes useful for interactive
      processes.  As such, we only change the default value.  */
@@ -7534,42 +7552,6 @@ The variable takes effect when `start-process' is called.  */);
   defsubr (&Sprocess_coding_system);
   defsubr (&Sset_process_filter_multibyte);
   defsubr (&Sprocess_filter_multibyte_p);
-
- {
-   Lisp_Object subfeatures = Qnil;
-   const struct socket_options *sopt;
-
-#define ADD_SUBFEATURE(key, val) \
-  subfeatures = pure_cons (pure_cons (key, pure_cons (val, Qnil)), subfeatures)
-
-#ifdef NON_BLOCKING_CONNECT
-   ADD_SUBFEATURE (QCnowait, Qt);
-#endif
-#ifdef DATAGRAM_SOCKETS
-   ADD_SUBFEATURE (QCtype, Qdatagram);
-#endif
-#ifdef HAVE_SEQPACKET
-   ADD_SUBFEATURE (QCtype, Qseqpacket);
-#endif
-#ifdef HAVE_LOCAL_SOCKETS
-   ADD_SUBFEATURE (QCfamily, Qlocal);
-#endif
-   ADD_SUBFEATURE (QCfamily, Qipv4);
-#ifdef AF_INET6
-   ADD_SUBFEATURE (QCfamily, Qipv6);
-#endif
-#ifdef HAVE_GETSOCKNAME
-   ADD_SUBFEATURE (QCservice, Qt);
-#endif
-#if defined (O_NONBLOCK) || defined (O_NDELAY)
-   ADD_SUBFEATURE (QCserver, Qt);
-#endif
-
-   for (sopt = socket_options; sopt->name; sopt++)
-     subfeatures = pure_cons (intern_c_string (sopt->name), subfeatures);
-
-   Fprovide (intern_c_string ("make-network-process"), subfeatures);
- }
 
 #endif	/* subprocesses */
 

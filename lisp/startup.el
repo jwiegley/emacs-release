@@ -909,7 +909,7 @@ Amongst another things, it parses the command-line arguments."
       (setq menu-bar-mode nil
 	    tool-bar-mode nil
 	    no-blinking-cursor t))
-     ((memq initial-window-system '(x w32 mac ns))
+     ((memq initial-window-system '(x w32 ns))
       (let ((no-vals  '("no" "off" "false" "0")))
 	(if (member (x-get-resource "menuBar" "MenuBar") no-vals)
 	    (setq menu-bar-mode nil))
@@ -937,7 +937,7 @@ Amongst another things, it parses the command-line arguments."
   ;; only because all other settings of no-blinking-cursor are here.
   (unless (or noninteractive
 	      emacs-basic-display
-	      (and (memq window-system '(x w32 mac ns))
+	      (and (memq window-system '(x w32 ns))
 		   (not (member (x-get-resource "cursorBlink" "CursorBlink")
 				'("no" "off" "false" "0")))))
     (setq no-blinking-cursor t))
@@ -1515,14 +1515,7 @@ a face or button specification."
 				   (if (image-type-available-p 'xpm)
 				       "splash.xpm"
 				     "splash.pbm"))
-				  ((and
-				    ;; It takes time to setup WebKit
-				    ;; for SVG images on the first
-				    ;; invocation of the Mac port.  We
-				    ;; avoid it for startup.
-				    (or (not (eq initial-window-system 'mac))
-					(string-match "About" (buffer-name)))
-				    (image-type-available-p 'svg))
+				  ((image-type-available-p 'svg)
 				   "splash.svg")
 				  ((image-type-available-p 'png)
 				   "splash.png")

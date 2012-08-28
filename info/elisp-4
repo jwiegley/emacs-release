@@ -2,7 +2,7 @@ This is /home/cyd/emacs/doc/lispref/../../info/elisp, produced by
 makeinfo version 4.13 from /home/cyd/emacs/doc/lispref/elisp.texi.
 
 This is the `GNU Emacs Lisp Reference Manual' corresponding to Emacs
-version 24.1.
+version 24.2.
 
 Copyright (C) 1990-1996, 1998-2012 Free Software Foundation, Inc.
 
@@ -4352,8 +4352,8 @@ that it inherits from both `button-buffer-map' and `special-mode-map':
 
      (defvar help-mode-map
        (let ((map (make-sparse-keymap)))
-         (set-keymap-parent map (make-composed-keymap button-buffer-map
-                                                      special-mode-map))
+         (set-keymap-parent map
+           (make-composed-keymap button-buffer-map special-mode-map))
          ... map) ... )
 
 
@@ -5299,7 +5299,7 @@ read, as it is read, against `input-decode-map', then
      character set to another, including ordinary characters normally
      bound to `self-insert-command'.
 
-   You can use `input-decode-map', `local-function-key-map', or
+   You can use `input-decode-map', `local-function-key-map', and
 `key-translation-map' for more than simple aliases, by using a
 function, instead of a key sequence, as the "translation" of a key.
 Then this function is called to compute the translation of that key.

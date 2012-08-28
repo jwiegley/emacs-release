@@ -45,10 +45,6 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "w32term.h"
 #endif /* HAVE_NTGUI */
 
-#ifdef HAVE_MACGUI
-#include "macterm.h"
-#endif /* HAVE_MACGUI */
-
 #ifdef HAVE_NS
 #include "nsterm.h"
 #endif /* HAVE_NS */
@@ -168,10 +164,7 @@ static struct font_driver_list *font_driver_list;
 
 /* Creators of font-related Lisp object.  */
 
-#ifndef HAVE_MACGUI
-static
-#endif
-Lisp_Object
+static Lisp_Object
 font_make_spec (void)
 {
   Lisp_Object font_spec;
@@ -1453,16 +1446,8 @@ font_parse_fcname (char *name, Lisp_Object font)
         {
           struct font_driver_list *driver_list = font_driver_list;
           for ( ; driver_list; driver_list = driver_list->next)
-	    {
-#ifdef HAVE_MACGUI
-	      extern Lisp_Object macfont_driver_type;
-
-	      if (!EQ (macfont_driver_type, driver_list->driver->type))
-		continue;
-#endif
-	      if (driver_list->driver->filter_properties)
-		(*driver_list->driver->filter_properties) (font, extra_props);
-	    }
+            if (driver_list->driver->filter_properties)
+              (*driver_list->driver->filter_properties) (font, extra_props);
         }
 
     }
@@ -4332,7 +4317,6 @@ created glyph-string.  Otherwise, the value is nil.  */)
   if (XINT (n) < LGSTRING_GLYPH_LEN (gstring))
     LGSTRING_SET_GLYPH (gstring, XINT (n), Qnil);
 
-#ifndef HAVE_MACGUI
   glyph = LGSTRING_GLYPH (gstring, 0);
   from = LGLYPH_FROM (glyph);
   to = LGLYPH_TO (glyph);
@@ -4370,7 +4354,6 @@ created glyph-string.  Otherwise, the value is nil.  */)
 	LGLYPH_SET_FROM (glyph, from);
 	LGLYPH_SET_TO (glyph, to);
       }
-#endif
   return composition_gstring_put_cache (gstring, XINT (n));
 }
 
@@ -5219,9 +5202,6 @@ EMACS_FONT_LOG is set.  Otherwise, it is set to t.  */);
 #ifdef WINDOWSNT
   syms_of_w32font ();
 #endif	/* WINDOWSNT */
-#ifdef HAVE_MACGUI
-  syms_of_macfont ();
-#endif	/* HAVE_MACGUI */
 #ifdef HAVE_NS
   syms_of_nsfont ();
 #endif	/* HAVE_NS */

@@ -62,12 +62,8 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #endif
 
 /* hash table read constants */
-static Lisp_Object Qhash_table;
-#ifndef HAVE_MACGUI
-static
-#endif
-Lisp_Object Qdata, Qsize;
-static Lisp_Object Qtest;
+static Lisp_Object Qhash_table, Qdata;
+static Lisp_Object Qtest, Qsize;
 static Lisp_Object Qweakness;
 static Lisp_Object Qrehash_size;
 static Lisp_Object Qrehash_threshold;
@@ -4302,15 +4298,11 @@ init_lread (void)
     }
 #endif  /* CANNOT_DUMP */
 
-#if (!(defined (WINDOWSNT) || (defined (HAVE_MACGUI)) || (defined (HAVE_NS))))
+#if (!(defined (WINDOWSNT) || (defined (HAVE_NS))))
   /* When Emacs is invoked over network shares on NT, PATH_LOADSEARCH is
      almost never correct, thereby causing a warning to be printed out that
      confuses users.  Since PATH_LOADSEARCH is always overridden by the
-     EMACSLOADPATH environment variable below, disable the warning on NT.
-     Also, when using the "self-contained" option for the Mac port,
-     the "standard" paths may not exist and would be overridden by
-     EMACSLOADPATH as on NT.  Since this depends on how the executable
-     was build and packaged, turn off the warnings in general */
+     EMACSLOADPATH environment variable below, disable the warning on NT.  */
 
   /* HAVE_NS also uses EMACSLOADPATH.  */
 
@@ -4338,7 +4330,7 @@ init_lread (void)
 	    }
 	}
     }
-#endif /* !(WINDOWSNT || HAVE_MACGUI || HAVE_NS) */
+#endif /* !(WINDOWSNT || HAVE_NS) */
 
   /* If the EMACSLOADPATH environment variable is set, use its value.
      This doesn't apply if we're dumping.  */
