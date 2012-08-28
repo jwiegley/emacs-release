@@ -2,7 +2,7 @@ This is /home/cyd/emacs/doc/lispref/../../info/elisp, produced by
 makeinfo version 4.13 from /home/cyd/emacs/doc/lispref/elisp.texi.
 
 This is the `GNU Emacs Lisp Reference Manual' corresponding to Emacs
-version 24.1.
+version 24.2.
 
 Copyright (C) 1990-1996, 1998-2012 Free Software Foundation, Inc.
 
@@ -1551,7 +1551,8 @@ point and/or mark in other buffers, during the excursion, will remain
 in effect afterward.  This frequently leads to unintended consequences,
 so the byte compiler warns if you call `set-buffer' during an excursion:
 
-     Warning: Use `with-current-buffer' rather than save-excursion+set-buffer
+     Warning: Use `with-current-buffer' rather than
+              save-excursion+set-buffer
 
 To avoid such problems, you should call `save-excursion' only after
 setting the desired current buffer, as in the following example:
@@ -2444,8 +2445,7 @@ any portion of the text in the buffer into a string.
 
  -- Function: buffer-string
      This function returns the contents of the entire accessible
-     portion of the current buffer as a string.  It is equivalent to
-     `(buffer-substring (point-min) (point-max))'.
+     portion of the current buffer, as a string.
 
  -- Function: filter-buffer-substring start end &optional delete
      This function passes the buffer text between START and END through

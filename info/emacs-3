@@ -1,7 +1,7 @@
 This is /home/cyd/emacs/doc/emacs/../../info/emacs, produced by
 makeinfo version 4.13 from /home/cyd/emacs/doc/emacs/emacs.texi.
 
-This is the `GNU Emacs Manual', updated for Emacs version 24.1.
+This is the `GNU Emacs Manual', updated for Emacs version 24.2.
 
 Copyright (C) 1985-1987, 1993-2012 Free Software Foundation, Inc.
 
@@ -422,11 +422,11 @@ communication with other processes.
 
 `C-x <RET> x CODING <RET>'
      Use coding system CODING for transferring selections to and from
-     other window-based applications (`set-selection-coding-system').
+     other graphical applications (`set-selection-coding-system').
 
 `C-x <RET> X CODING <RET>'
      Use coding system CODING for transferring _one_ selection--the
-     next one--to or from another window-based application
+     next one--to or from another graphical application
      (`set-next-selection-coding-system').
 
 `C-x <RET> p INPUT-CODING <RET> OUTPUT-CODING <RET>'
@@ -2446,7 +2446,7 @@ forward to heading lines.
 heading line.  `C-c C-p' (`outline-previous-visible-heading') moves
 similarly backward.  Both accept numeric arguments as repeat counts.
 
-   The commands `C-c C-f' (`outline-forward-same-level') and `C-c C-b'
+   `C-c C-f' (`outline-forward-same-level') and `C-c C-b'
 (`outline-backward-same-level') move from one heading line to another
 visible heading at the same depth in the outline.  `C-c C-u'
 (`outline-up-heading') moves backward to another heading that is less
@@ -3507,8 +3507,7 @@ disallows alteration of the text), `invisible' (which hides text), and
 `Remove Special' menu item removes all of these special properties from
 the text in the region.
 
-   The `invisible' and `intangible' properties are not saved in the
-`text/enriched' format.
+   The `invisible' and `intangible' properties are not saved.
 
 
 File: emacs,  Node: Text Based Tables,  Next: Two-Column,  Prev: Enriched Text,  Up: Text
@@ -3537,8 +3536,8 @@ automatically resize the table, whenever the contents become too large
 to fit in the cell.  You can use the commands defined in the following
 sections for navigating and editing the table layout.
 
-   To toggle the automatic table resizing feature, type `M-x
-table-fixed-width-mode'.
+   Type `M-x table-fixed-width-mode' to toggle the automatic table
+resizing feature.
 
 * Menu:
 
@@ -3673,15 +3672,14 @@ direction.  This command signals an error if the merge would result in
 an illegitimate cell layout.
 
    `M-x table-split-cell' splits the current cell vertically or
-horizontally, prompting for the direction with the minibuffer.  The
-commands `M-x table-split-cell-vertically' and `M-x
-table-split-cell-horizontally' split in a specific direction.  When
-splitting vertically, the old cell contents are automatically split
-between the two new cells.  When splitting horizontally, you are
-prompted for how to divide the cell contents, if the cell is non-empty;
-the options are `split' (divide the contents at point), `left' (put all
-the contents in the left cell), and `right' (put all the contents in
-the right cell).
+horizontally, prompting for the direction with the minibuffer.  To
+split in a specific direction, use `M-x table-split-cell-vertically'
+and `M-x table-split-cell-horizontally'.  When splitting vertically,
+the old cell contents are automatically split between the two new
+cells.  When splitting horizontally, you are prompted for how to divide
+the cell contents, if the cell is non-empty; the options are `split'
+(divide the contents at point), `left' (put all the contents in the
+left cell), and `right' (put all the contents in the right cell).
 
    The following commands enlarge or shrink a cell.  By default, they
 resize by one row or column; if a numeric argument is supplied, that
@@ -5322,7 +5320,8 @@ File: emacs,  Node: Other C Commands,  Prev: Hungry Delete,  Up: C Modes
      keymap is loaded before we try to change it.
 
           (defun my-bind-clb ()
-            (define-key c-mode-base-map "\C-j" 'c-context-line-break))
+            (define-key c-mode-base-map "\C-j"
+                        'c-context-line-break))
           (add-hook 'c-initialization-hook 'my-bind-clb)
 
 `C-M-h'
@@ -6293,9 +6292,9 @@ usually the C compiler.  Flymake can also use build tools such as
 
    To enable Flymake mode, type `M-x flymake-mode'.  You can jump to
 the errors that it finds by using `M-x flymake-goto-next-error' and
-`M-x flymake-goto-prev-error'.  Use the command `M-x
-flymake-display-err-menu-for-current-line' to display any error
-messages associated with the current line.
+`M-x flymake-goto-prev-error'.  To display any error messages
+associated with the current line, type `M-x
+flymake-display-err-menu-for-current-line'.
 
    For more details about using Flymake, see *note Flymake:
 (flymake)Top.

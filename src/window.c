@@ -484,9 +484,7 @@ for future use.  */)
   (Lisp_Object window, Lisp_Object limit)
 {
   register struct window *w = decode_any_window (window);
-
   w->combination_limit = limit;
-
   return w->combination_limit;
 }
 
@@ -800,6 +798,8 @@ of just the text area, use `window-inside-absolute-pixel-edges'.  */)
 {
   register struct window *w = decode_any_window (window);
   int add_x, add_y;
+
+  CHECK_LIVE_FRAME (w->frame);
   calc_absolute_offset (w, &add_x, &add_y);
 
   return Fcons (make_number (WINDOW_LEFT_EDGE_X (w) + add_x),
@@ -2565,9 +2565,9 @@ window-start value is reasonable when this function is called.  */)
   Lisp_Object sibling, pwindow, swindow IF_LINT (= Qnil), delta;
   EMACS_INT startpos IF_LINT (= 0);
   int top IF_LINT (= 0), new_top, resize_failed;
-  Mouse_HLInfo *hlinfo;
 
   w = decode_any_window (window);
+  CHECK_LIVE_FRAME (w->frame);
   XSETWINDOW (window, w);
   f = XFRAME (w->frame);
 
@@ -2581,6 +2581,7 @@ window-start value is reasonable when this function is called.  */)
     /* ROOT must be an ancestor of WINDOW.  */
     {
       r = decode_any_window (root);
+      CHECK_LIVE_FRAME (r->frame);
       pwindow = XWINDOW (window)->parent;
       while (!NILP (pwindow))
 	if (EQ (pwindow, root))
@@ -2646,19 +2647,23 @@ window-start value is reasonable when this function is called.  */)
     }
 
   BLOCK_INPUT;
-  hlinfo = MOUSE_HL_INFO (f);
-  /* We are going to free the glyph matrices of WINDOW, and with that
-     we might lose any information about glyph rows that have some of
-     their glyphs highlighted in mouse face.  (These rows are marked
-     with a non-zero mouse_face_p flag.)  If WINDOW indeed has some
-     glyphs highlighted in mouse face, signal to frame's up-to-date
-     hook that mouse highlight was overwritten, so that it will
-     arrange for redisplaying the highlight.  */
-  if (EQ (hlinfo->mouse_face_window, window))
+  if (!FRAME_INITIAL_P (f))
     {
-      hlinfo->mouse_face_beg_row = hlinfo->mouse_face_beg_col = -1;
-      hlinfo->mouse_face_end_row = hlinfo->mouse_face_end_col = -1;
-      hlinfo->mouse_face_window = Qnil;
+        Mouse_HLInfo *hlinfo = MOUSE_HL_INFO (f);
+
+      /* We are going to free the glyph matrices of WINDOW, and with
+	 that we might lose any information about glyph rows that have
+	 some of their glyphs highlighted in mouse face.  (These rows
+	 are marked with a non-zero mouse_face_p flag.)  If WINDOW
+	 indeed has some glyphs highlighted in mouse face, signal to
+	 frame's up-to-date hook that mouse highlight was overwritten,
+	 so that it will arrange for redisplaying the highlight.  */
+      if (EQ (hlinfo->mouse_face_window, window))
+	{
+	  hlinfo->mouse_face_beg_row = hlinfo->mouse_face_beg_col = -1;
+	  hlinfo->mouse_face_end_row = hlinfo->mouse_face_end_col = -1;
+	  hlinfo->mouse_face_window = Qnil;
+	}
     }
   free_window_matrices (r);
 
@@ -3901,7 +3906,6 @@ Signal an error when WINDOW is the only window on its frame.  */)
       && EQ (r->new_total, (horflag ? r->total_cols : r->total_lines)))
     /* We can delete WINDOW now.  */
     {
-      Mouse_HLInfo *hlinfo;
 
       /* Block input.  */
       BLOCK_INPUT;
@@ -3909,9 +3913,13 @@ Signal an error when WINDOW is the only window on its frame.  */)
 
       /* If this window is referred to by the dpyinfo's mouse
 	 highlight, invalidate that slot to be safe (Bug#9904).  */
-      hlinfo = MOUSE_HL_INFO (XFRAME (w->frame));
-      if (EQ (hlinfo->mouse_face_window, window))
-	hlinfo->mouse_face_window = Qnil;
+      if (!FRAME_INITIAL_P (f))
+	{
+	  Mouse_HLInfo *hlinfo = MOUSE_HL_INFO (f);
+
+	  if (EQ (hlinfo->mouse_face_window, window))
+	    hlinfo->mouse_face_window = Qnil;
+	}
 
       windows_or_buffers_changed++;
       Vwindow_list = Qnil;

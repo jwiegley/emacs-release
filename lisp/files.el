@@ -2842,7 +2842,8 @@ symbol and VAL is a value that is considered safe."
   ;; This should be here at least as long as Emacs supports write-file-hooks.
   '((add-hook 'write-file-hooks 'time-stamp)
     (add-hook 'write-file-functions 'time-stamp)
-    (add-hook 'before-save-hook 'time-stamp))
+    (add-hook 'before-save-hook 'time-stamp nil t)
+    (add-hook 'before-save-hook 'delete-trailing-whitespace nil t))
   "Expressions that are considered safe in an `eval:' local variable.
 Add expressions to this list if you want Emacs to evaluate them, when
 they appear in an `eval' local variable specification, without first
@@ -3107,11 +3108,16 @@ DIR-NAME is the name of the associated directory.  Otherwise it is nil."
 	      ;; Obey `enable-local-eval'.
 	      ((eq var 'eval)
 	       (when enable-local-eval
-		 (push elt all-vars)
-		 (or (eq enable-local-eval t)
-		     (hack-one-local-variable-eval-safep (eval (quote val)))
-		     (safe-local-variable-p var val)
-		     (push elt unsafe-vars))))
+		 (let ((safe (or (hack-one-local-variable-eval-safep
+				  (eval (quote val)))
+				 ;; In case previously marked safe (bug#5636).
+				 (safe-local-variable-p var val))))
+		   ;; If not safe and e-l-v = :safe, ignore totally.
+		   (when (or safe (not (eq enable-local-variables :safe)))
+		     (push elt all-vars)
+		     (or (eq enable-local-eval t)
+			 safe
+			 (push elt unsafe-vars))))))
 	      ;; Ignore duplicates (except `mode') in the present list.
 	      ((and (assq var all-vars) (not (eq var 'mode))) nil)
 	      ;; Accept known-safe variables.
@@ -4310,7 +4316,9 @@ on a DOS/Windows machine, it returns FILENAME in expanded form."
 							default-directory))))
     (setq filename (expand-file-name filename))
     (let ((fremote (file-remote-p filename))
-          (dremote (file-remote-p directory)))
+	  (dremote (file-remote-p directory))
+	  (fold-case (or (memq system-type '(ms-dos cygwin windows-nt))
+			 read-file-name-completion-ignore-case)))
       (if ;; Conditions for separate trees
 	  (or
 	   ;; Test for different filesystems on DOS/Windows
@@ -4319,7 +4327,7 @@ on a DOS/Windows machine, it returns FILENAME in expanded form."
 	    (memq system-type '(ms-dos cygwin windows-nt))
 	    (or
 	     ;; Test for different drive letters
-	     (not (eq t (compare-strings filename 0 2 directory 0 2)))
+	     (not (eq t (compare-strings filename 0 2 directory 0 2 fold-case)))
 	     ;; Test for UNCs on different servers
 	     (not (eq t (compare-strings
 			 (progn
@@ -4344,16 +4352,16 @@ on a DOS/Windows machine, it returns FILENAME in expanded form."
           (while (not
 		  (or
 		   (eq t (compare-strings filename-dir nil (length directory)
-					  directory nil nil case-fold-search))
+					  directory nil nil fold-case))
 		   (eq t (compare-strings filename nil (length directory)
-					  directory nil nil case-fold-search))))
+					  directory nil nil fold-case))))
             (setq directory (file-name-directory (substring directory 0 -1))
 		  ancestor (if (equal ancestor ".")
 			       ".."
 			     (concat "../" ancestor))))
           ;; Now ancestor is empty, or .., or ../.., etc.
           (if (eq t (compare-strings filename nil (length directory)
-				     directory nil nil case-fold-search))
+				     directory nil nil fold-case))
 	      ;; We matched within FILENAME's directory part.
 	      ;; Add the rest of FILENAME onto ANCESTOR.
 	      (let ((rest (substring filename (length directory))))

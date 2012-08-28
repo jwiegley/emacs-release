@@ -1,7 +1,7 @@
 This is /home/cyd/emacs/doc/emacs/../../info/emacs, produced by
 makeinfo version 4.13 from /home/cyd/emacs/doc/emacs/emacs.texi.
 
-This is the `GNU Emacs Manual', updated for Emacs version 24.1.
+This is the `GNU Emacs Manual', updated for Emacs version 24.2.
 
 Copyright (C) 1985-1987, 1993-2012 Free Software Foundation, Inc.
 
@@ -32,14 +32,14 @@ The Emacs Editor
 Emacs is the extensible, customizable, self-documenting real-time
 display editor.  This Info file describes how to edit with Emacs and
 some of the ways to customize it; it corresponds to GNU Emacs version
-24.1.
+24.2.
 
    If you are reading this in Emacs, type `h' to read a basic
 introduction to the Info documentation system.
 
    For information on extending Emacs, see *note Emacs Lisp: (elisp)Top.
 
-   This is the `GNU Emacs Manual', updated for Emacs version 24.1.
+   This is the `GNU Emacs Manual', updated for Emacs version 24.2.
 
    Copyright (C) 1985-1987, 1993-2012 Free Software Foundation, Inc.
 
@@ -5966,10 +5966,10 @@ buffer, type `M-x font-lock-mode'.  A positive numeric argument
 unconditionally enables Font Lock mode, and a negative or zero argument
 disables it.
 
-   To toggle Font Lock mode in all buffers, type `M-x
-global-font-lock-mode'.  To impose this setting for future Emacs
-sessions, customize the variable `global-font-lock-mode' (*note Easy
-Customization::), or add the following line to your init file:
+   Type `M-x global-font-lock-mode' to toggle Font Lock mode in all
+buffers.  To impose this setting for future Emacs sessions, customize
+the variable `global-font-lock-mode' (*note Easy Customization::), or
+add the following line to your init file:
 
      (global-font-lock-mode 0)
 

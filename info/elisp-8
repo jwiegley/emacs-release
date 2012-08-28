@@ -2,7 +2,7 @@ This is /home/cyd/emacs/doc/lispref/../../info/elisp, produced by
 makeinfo version 4.13 from /home/cyd/emacs/doc/lispref/elisp.texi.
 
 This is the `GNU Emacs Lisp Reference Manual' corresponding to Emacs
-version 24.1.
+version 24.2.
 
 Copyright (C) 1990-1996, 1998-2012 Free Software Foundation, Inc.
 
@@ -92,13 +92,12 @@ properties that Emacs knows about:
      (strong R).
 
 `decomposition'
-     Corresponds to the Unicode `Decomposition_Type' and
-     `Decomposition_Value' properties.  The value is a list, whose
-     first element may be a symbol representing a compatibility
-     formatting tag, such as `small'(1); the other elements are
-     characters that give the compatibility decomposition sequence of
-     this character.  For unassigned codepoints, the value is the
-     character itself.
+     Corresponds to the Unicode properties `Decomposition_Type' and
+     `Decomposition_Value'.  The value is a list, whose first element
+     may be a symbol representing a compatibility formatting tag, such
+     as `small'(1); the other elements are characters that give the
+     compatibility decomposition sequence of this character.  For
+     unassigned codepoints, the value is the character itself.
 
 `decimal-digit-value'
      Corresponds to the Unicode `Numeric_Value' property for characters
@@ -6291,7 +6290,7 @@ primitives return `nil'.
 
     `start'
           The time when the process was started, in the same
-          `(HIGH LOW MICROSEC)' format used by `current-time' and
+          `(HIGH LOW MICROSEC)' format used by `current-time' and by
           `file-attributes'.
 
     `etime'

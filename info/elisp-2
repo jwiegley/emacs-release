@@ -2,7 +2,7 @@ This is /home/cyd/emacs/doc/lispref/../../info/elisp, produced by
 makeinfo version 4.13 from /home/cyd/emacs/doc/lispref/elisp.texi.
 
 This is the `GNU Emacs Lisp Reference Manual' corresponding to Emacs
-version 24.1.
+version 24.2.
 
 Copyright (C) 1990-1996, 1998-2012 Free Software Foundation, Inc.
 
@@ -3984,7 +3984,7 @@ value cell, where the dynamic value is stored.
    Lexical bindings have indefinite extent.  Even after a binding
 construct has finished executing, its lexical environment can be "kept
 around" in Lisp objects called "closures".  A closure is created when
-you create a named or anonymous function with lexical binding enabled.
+you define a named or anonymous function with lexical binding enabled.
 *Note Closures::, for details.
 
    When a closure is called as a function, any lexical variable
@@ -5769,7 +5769,7 @@ lexical binding of variables.  When lexical binding is enabled, any
 named function that you create (e.g. with `defun'), as well as any
 anonymous function that you create using the `lambda' macro or the
 `function' special form or the `#'' syntax (*note Anonymous
-Functions::), is automatically converted into a closure.
+Functions::), is automatically converted into a "closure".
 
    A closure is a function that also carries a record of the lexical
 environment that existed when the function was defined.  When it is
@@ -5907,8 +5907,8 @@ defined in other files which would be loaded if that code is run.  For
 example, byte-compiling `fortran.el' used to warn:
 
      In end of data:
-     fortran.el:2152:1:Warning: the function `gud-find-c-expr' is not known
-         to be defined.
+     fortran.el:2152:1:Warning: the function `gud-find-c-expr' is not
+         known to be defined.
 
    In fact, `gud-find-c-expr' is only used in the function that Fortran
 mode uses for the local value of `gud-find-expr-function', which is a
@@ -6371,8 +6371,9 @@ This macro allows us to write a "for" loop construct.
        "Execute a simple \"for\" loop.
      For example, (for i from 1 to 10 do (print i))."
        (list 'let (list (list var init))
-             (cons 'while (cons (list '<= var final)
-                                (append body (list (list 'inc var)))))))
+             (cons 'while
+                   (cons (list '<= var final)
+                         (append body (list (list 'inc var)))))))
      => for
 
      (for i from 1 to 3 do

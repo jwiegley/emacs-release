@@ -471,7 +471,8 @@ If ARG is non-nil, instead prompt for connection parameters."
 			     rcirc-default-full-name))
 	      (channels (plist-get (cdr c) :channels))
               (password (plist-get (cdr c) :password))
-              (encryption (plist-get (cdr c) :encryption)))
+              (encryption (plist-get (cdr c) :encryption))
+              contact)
 	  (when server
 	    (let (connected)
 	      (dolist (p (rcirc-process-list))
@@ -483,10 +484,11 @@ If ARG is non-nil, instead prompt for connection parameters."
 				     full-name channels password encryption)
 		    (quit (message "Quit connecting to %s" server)))
 		(with-current-buffer (process-buffer connected)
-		  (setq connected-servers
-			(cons (process-contact (get-buffer-process
-						(current-buffer)) :host)
-			      connected-servers))))))))
+                  (setq contact (process-contact
+                                 (get-buffer-process (current-buffer)) :host))
+                  (setq connected-servers
+                        (cons (if (stringp contact) contact server)
+                              connected-servers))))))))
       (when connected-servers
 	(message "Already connected to %s"
 		 (if (cdr connected-servers)
@@ -792,26 +794,36 @@ With no argument or nil as argument, use the current buffer."
 (defvar rcirc-max-message-length 420
   "Messages longer than this value will be split.")
 
+(defun rcirc-split-message (message)
+  "Split MESSAGE into chunks within `rcirc-max-message-length'."
+  ;; `rcirc-encode-coding-system' can have buffer-local value.
+  (let ((encoding rcirc-encode-coding-system))
+    (with-temp-buffer
+      (insert message)
+      (goto-char (point-min))
+      (let (result)
+	(while (not (eobp))
+	  (goto-char (or (byte-to-position rcirc-max-message-length)
+			 (point-max)))
+	  ;; max message length is 512 including CRLF
+	  (while (and (not (bobp))
+		      (> (length (encode-coding-region
+				  (point-min) (point) encoding t))
+			 rcirc-max-message-length))
+	    (forward-char -1))
+	  (push (delete-and-extract-region (point-min) (point)) result))
+	(nreverse result)))))
+
 (defun rcirc-send-message (process target message &optional noticep silent)
   "Send TARGET associated with PROCESS a privmsg with text MESSAGE.
 If NOTICEP is non-nil, send a notice instead of privmsg.
 If SILENT is non-nil, do not print the message in any irc buffer."
-  ;; max message length is 512 including CRLF
-  (let* ((response (if noticep "NOTICE" "PRIVMSG"))
-         (oversize (> (length message) rcirc-max-message-length))
-         (text (if oversize
-                   (substring message 0 rcirc-max-message-length)
-                 message))
-         (text (if (string= text "")
-                   " "
-                 text))
-         (more (if oversize
-                   (substring message rcirc-max-message-length))))
+  (let ((response (if noticep "NOTICE" "PRIVMSG")))
     (rcirc-get-buffer-create process target)
-    (rcirc-send-string process (concat response " " target " :" text))
-    (unless silent
-      (rcirc-print process (rcirc-nick process) response target text))
-    (when more (rcirc-send-message process target more noticep))))
+    (dolist (msg (rcirc-split-message message))
+      (rcirc-send-string process (concat response " " target " :" msg))
+      (unless silent
+	(rcirc-print process (rcirc-nick process) response target msg)))))
 
 (defvar rcirc-input-ring nil)
 (defvar rcirc-input-ring-index 0)

@@ -2,7 +2,7 @@ This is /home/cyd/emacs/doc/lispref/../../info/elisp, produced by
 makeinfo version 4.13 from /home/cyd/emacs/doc/lispref/elisp.texi.
 
 This is the `GNU Emacs Lisp Reference Manual' corresponding to Emacs
-version 24.1.
+version 24.2.
 
 Copyright (C) 1990-1996, 1998-2012 Free Software Foundation, Inc.
 
@@ -31,7 +31,7 @@ Emacs Lisp
 **********
 
 This is the `GNU Emacs Lisp Reference Manual' corresponding to Emacs
-version 24.1.
+version 24.2.
 
 Copyright (C) 1990-1996, 1998-2012 Free Software Foundation, Inc.
 
@@ -1432,7 +1432,7 @@ chapters describe features that are peculiar to Emacs Lisp or relate
 specifically to editing.
 
    This is the `GNU Emacs Lisp Reference Manual', corresponding to
-Emacs version 24.1.
+Emacs version 24.2.
 
 * Menu:
 
