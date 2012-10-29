@@ -617,6 +617,10 @@ Request data types in the order specified by `x-select-request-type'."
 ;;;; Apple events, Action events, and Services menu
 
 (defvar mac-startup-options)
+(declare-function mac-send-apple-event-internal "macselect.c"
+		  (apple-event &optional send-mode))
+(declare-function mac-start-animation "macfns.c"
+		  (frame-or-window &rest properties))
 
 ;;; Event classes
 (put 'core-event     'mac-apple-event-class "aevt") ; kCoreEventClass
@@ -1687,6 +1691,8 @@ See also `mac-dnd-known-types'."
       (mac-dnd-drop-data event (selected-frame) window data type action))))
 
 
+(defvar mac-popup-menu-add-contexual-menu)
+
 (declare-function accelerate-menu "macmenu.c" (&optional frame) t)
 
 (defun mac-menu-bar-open (&optional frame)
@@ -1696,6 +1702,12 @@ See also `mac-dnd-known-types'."
 	   (fboundp 'accelerate-menu))
       (accelerate-menu frame)
     (tmm-menubar)))
+
+(defun mac-mouse-buffer-menu (event)
+  "Like 'mouse-buffer-menu', but contextual menu is added if possible."
+  (interactive "e")
+  (let ((mac-popup-menu-add-contexual-menu t))
+    (mouse-buffer-menu event)))
 
 
 ;;; Mouse wheel smooth scroll
@@ -2040,9 +2052,6 @@ Return non-nil if the new state is enabled."
 
 
 ;;; Swipe events
-(declare-function mac-start-animation "macfns.c"
-		  (frame-or-window &rest properties))
-
 (defun mac-previous-buffer (event)
   "Like `previous-buffer', but operate on the window where EVENT occurred."
   (interactive "e")
@@ -2286,10 +2295,14 @@ standard ones in `x-handle-args'."
   (create-default-fontset)
 
   (set-fontset-font t nil (font-spec :family "Apple Symbols") nil 'prepend)
-  (if (string-match "darwin[1-9][1-9]" system-configuration)
-      ;; Built on Mac OS X 10.7 or later.
-      (set-fontset-font t nil (font-spec :family "Apple Color Emoji")
-			nil 'prepend))
+  (when (and (string-match "darwin\\([0-9]+\\)" system-configuration)
+	     (>= (string-to-number (match-string 1 system-configuration)) 11))
+    ;; Built on Mac OS X 10.7 or later.
+    (set-fontset-font t nil (font-spec :family "Apple Color Emoji")
+		      nil 'prepend)
+    ;; Regional Indicator Symbols
+    (set-char-table-range composition-function-table '(#x1F1E6 . #x1F1FF)
+			  '(["[\x1F1E6-\x1F1FF]+" 0 font-shape-gstring])))
   ;; (set-fontset-font t nil (font-spec :family "LastResort") nil 'append)
   (set-fontset-font t '(#x20000 . #x2FFFF)
 		    '("HanaMinB" . "unicode-sip") nil 'append)
@@ -2374,6 +2387,9 @@ standard ones in `x-handle-args'."
 
   (substitute-key-definition 'exit-splash-screen 'mac-exit-splash-screen
 			     splash-screen-keymap)
+
+  (if (eq (lookup-key global-map [C-down-mouse-1]) 'mouse-buffer-menu)
+      (global-set-key [C-down-mouse-1] 'mac-mouse-buffer-menu))
 
   (setq mac-initialized t))
 

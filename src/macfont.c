@@ -2419,13 +2419,21 @@ macfont_shape (Lisp_Object lgstring)
       to -= j;
       LGLYPH_SET_TO (lglyph, to - 1);
 
-      if (unichars[gl->string_index] >= 0xD800
-	  && unichars[gl->string_index] < 0xDC00)
-	LGLYPH_SET_CHAR (lglyph, (((unichars[gl->string_index] - 0xD800) << 10)
-				  + (unichars[gl->string_index + 1] - 0xDC00)
-				  + 0x10000));
-      else
-	LGLYPH_SET_CHAR (lglyph, unichars[gl->string_index]);
+      /* LGLYPH_CHAR is used in `describe-char' for checking whether
+	 the composition is trivial.  */
+      {
+	UTF32Char c;
+
+	if (unichars[gl->string_index] >= 0xD800
+	    && unichars[gl->string_index] < 0xDC00)
+	  c = (((unichars[gl->string_index] - 0xD800) << 10)
+	       + (unichars[gl->string_index + 1] - 0xDC00) + 0x10000);
+	else
+	  c = unichars[gl->string_index];
+	if (macfont_get_glyph_for_character (font, c) != gl->glyph_id)
+	  c = 0;
+	LGLYPH_SET_CHAR (lglyph, c);
+      }
 
       LGLYPH_SET_CODE (lglyph, gl->glyph_id);
 
@@ -3212,8 +3220,9 @@ mac_ctfont_shape (CTFontRef font, CFStringRef string,
 	      CTRunGetPositions (ctrun, range, &position);
 	      gl->advance_delta = position.x - total_advance;
 	      gl->baseline_delta = position.y;
-	      gl->advance = CTRunGetTypographicBounds (ctrun, range,
-						       NULL, NULL, NULL);
+	      gl->advance = (gl->advance_delta
+			     + CTRunGetTypographicBounds (ctrun, range,
+							  NULL, NULL, NULL));
 	      total_advance += gl->advance;
 	    }
 

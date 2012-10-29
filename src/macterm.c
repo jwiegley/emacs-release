@@ -337,9 +337,9 @@ mac_draw_line_to_pixmap (Pixmap p, GC gc, int x1, int y1, int x2, int y2)
     CG_SET_STROKE_COLOR_WITH_GC_FOREGROUND (context, gc);
   else
     CGContextSetGrayStrokeColor (context, gc->xgcv.foreground / 255.0f, 1.0);
+  CGContextBeginPath (context);
   CGContextMoveToPoint (context, gx1, gy1);
   CGContextAddLineToPoint (context, gx2, gy2);
-  CGContextClosePath (context);
   CGContextStrokePath (context);
   CGContextRelease (context);
 #else
@@ -545,32 +545,51 @@ mac_create_pixmap_from_bitmap_data (Window w, char *data,
   BitMap bitmap;
 #ifdef USE_MAC_IMAGE_IO
   CGDataProviderRef provider;
-  CGImageRef image_mask;
-  CGContextRef context;
+  CGImageRef image_mask = NULL;
 
-  pixmap = XCreatePixmap (display, w, width, height, depth);
-  if (pixmap == NULL)
-    return NULL;
-
+  pixmap = NULL;
   mac_create_bitmap_from_bitmap_data (&bitmap, data, width, height);
   provider = CGDataProviderCreateWithData (NULL, bitmap.baseAddr,
 					   bitmap.rowBytes * height, NULL);
-  image_mask = CGImageMaskCreate (width, height, 1, 1, bitmap.rowBytes,
-				  provider, NULL, 0);
-  CGDataProviderRelease (provider);
+  if (provider)
+    {
+      image_mask = CGImageMaskCreate (width, height, 1, 1, bitmap.rowBytes,
+				      provider, NULL, 0);
+      CGDataProviderRelease (provider);
+    }
+  if (image_mask)
+    {
+      CGContextRef context;
 
-  context = CGBitmapContextCreate (pixmap->data, width, height, 8,
-				   pixmap->bytes_per_line,
-				   mac_cg_color_space_rgb,
-				   kCGImageAlphaNoneSkipFirst
-				   | kCGBitmapByteOrder32Host);
+      pixmap = mac_create_pixmap (w, width, height, depth);
+      context = CGBitmapContextCreate (pixmap->data, width, height, 8,
+				       pixmap->bytes_per_line,
+				       mac_cg_color_space_rgb,
+				       kCGImageAlphaNoneSkipFirst
+				       | kCGBitmapByteOrder32Host);
+      if (context)
+	{
+	  XGCValues xgcv;
+	  GC gc;
 
-  CG_SET_FILL_COLOR (context, fg);
-  CGContextFillRect (context, CGRectMake (0, 0, width, height));
-  CG_SET_FILL_COLOR (context, bg);
-  CGContextDrawImage (context, CGRectMake (0, 0, width, height), image_mask);
-  CGContextRelease (context);
-  CGImageRelease (image_mask);
+	  xgcv.foreground = fg;
+	  xgcv.background = bg;
+	  gc = mac_create_gc (GCForeground | GCBackground, &xgcv);
+	  CG_SET_FILL_COLOR_WITH_GC_FOREGROUND (context, gc);
+	  CGContextFillRect (context, CGRectMake (0, 0, width, height));
+	  CG_SET_FILL_COLOR_WITH_GC_BACKGROUND (context, gc);
+	  CGContextDrawImage (context, CGRectMake (0, 0, width, height),
+			      image_mask);
+	  mac_free_gc (gc);
+	  CGContextRelease (context);
+	}
+      else
+	{
+	  mac_free_pixmap (pixmap);
+	  pixmap = NULL;
+	}
+      CGImageRelease (image_mask);
+    }
 #else
   CGrafPtr old_port;
   GDHandle old_gdh;
@@ -689,23 +708,29 @@ enum corners
 static void
 mac_erase_corners_for_relief (struct frame *f, GC gc, int x, int y,
 			      unsigned int width, unsigned int height,
-			      int radius, int corners)
+			      int radius, int margin, int corners)
 {
   CGContextRef context;
+  CGRect rect = mac_rect_make (f, x, y, width, height);
   int i;
 
   context = mac_begin_cg_clip (f, gc);
   CG_SET_FILL_COLOR_WITH_GC_BACKGROUND (context, gc);
+  CGContextClipToRect (context, rect);
   CGContextBeginPath (context);
   for (i = 0; i < CORNER_LAST; i++)
     if (corners & (1 << i))
       {
 	CGFloat x1, y1, x2, y2;
 
-	x1 = x + (i % 2) * width;
-	y1 = y + (i / 2) * height;
-	x2 = x1 + (1 - 2 * (i % 2)) * radius;
-	y2 = y1 + (1 - 2 * (i / 2)) * radius;
+	if (i % 2 == 0)
+	  x1 = CGRectGetMinX (rect) - margin, x2 = x1 + radius;
+	else
+	  x1 = CGRectGetMaxX (rect) + margin, x2 = x1 - radius;
+	if (i / 2 == 0)
+	  y1 = CGRectGetMinY (rect) - margin, y2 = y1 + radius;
+	else
+	  y1 = CGRectGetMaxY (rect) + margin, y2 = y1 - radius;
 
 	CGContextMoveToPoint (context, x1, y2);
 	CGContextAddArcToPoint (context, x1, y1, x2, y1, radius);
@@ -2154,7 +2179,7 @@ x_draw_relief_rect (struct frame *f,
 		      FRAME_BACKGROUND_PIXEL (f));
       mac_erase_corners_for_relief (f, top_left_gc, left_x, top_y,
 				    right_x - left_x + 1, bottom_y - top_y + 1,
-				    3, corners);
+				    6, 1, corners);
     }
 
   mac_set_clip_rectangles (f, top_left_gc, clip_rect, 1);
@@ -2818,6 +2843,7 @@ x_draw_glyph_string (struct glyph_string *s)
 		mac_reset_clip_rectangles (next->f, next->gc);
 		next->hl = save;
 		next->num_clips = 0;
+		next->clip_head = s->next;
 	      }
 	}
     }

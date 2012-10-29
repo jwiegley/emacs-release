@@ -2343,11 +2343,16 @@ containing an unresolvable alias.  */)
 
       if (url)
 	{
-	  CFBooleanRef is_alias_file;
+	  CFBooleanRef is_alias_file = NULL, is_symbolic_link = NULL;
 
 	  if (CFURLCopyResourcePropertyForKey (url, kCFURLIsAliasFileKey,
 					       &is_alias_file, NULL)
-	      && CFBooleanGetValue (is_alias_file))
+	      && CFBooleanGetValue (is_alias_file)
+	      /* kCFURLIsAliasFileKey returns true also for a symbolic
+		 link.  */
+	      && CFURLCopyResourcePropertyForKey (url, kCFURLIsSymbolicLinkKey,
+						  &is_symbolic_link, NULL)
+	      && !CFBooleanGetValue (is_symbolic_link))
 	    {
 	      CFDataRef data;
 	      Boolean stale_p;
@@ -2380,6 +2385,10 @@ containing an unresolvable alias.  */)
 	      if (!STRINGP (result))
 		result = Qt;
 	    }
+	  if (is_alias_file)
+	    CFRelease (is_alias_file);
+	  if (is_symbolic_link)
+	    CFRelease (is_symbolic_link);
 	  CFRelease (url);
 	}
     }
