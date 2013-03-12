@@ -1,6 +1,6 @@
 ;;; autorevert.el --- revert buffers when files on disk change
 
-;; Copyright (C) 1997-1999, 2001-2012 Free Software Foundation, Inc.
+;; Copyright (C) 1997-1999, 2001-2013 Free Software Foundation, Inc.
 
 ;; Author: Anders Lindgren <andersl@andersl.com>
 ;; Keywords: convenience
@@ -94,9 +94,6 @@
 
 (require 'timer)
 
-(eval-when-compile (require 'cl))
-
-
 ;; Custom Group:
 ;;
 ;; The two modes will be placed next to Auto Save Mode under the
@@ -104,9 +101,8 @@
 
 (defgroup auto-revert nil
   "Revert individual buffers when files on disk change.
-
-Auto-Revert Mode can be activated for individual buffer.
-Global Auto-Revert Mode applies to all buffers."
+Auto-Revert mode enables auto-revert in individual buffers.
+Global Auto-Revert mode does so in all buffers."
   :group 'files
   :group 'convenience)
 

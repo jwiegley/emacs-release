@@ -1,6 +1,7 @@
 ;;; socks.el --- A Socks v5 Client for Emacs
 
-;; Copyright (C) 1996-2000, 2002, 2007-2012 Free Software Foundation, Inc.
+;; Copyright (C) 1996-2000, 2002, 2007-2013 Free Software Foundation,
+;; Inc.
 
 ;; Author: William M. Perry <wmperry@gnu.org>
 ;;         Dave Love <fx@gnu.org>
@@ -343,7 +344,7 @@ If PATTERN is omitted, it defaults to \"[ \\f\\t\\n\\r\\v]+\"."
 ;; could get a wrapper hook, or defer to open-network-stream-function.
 
 (defvar socks-override-functions nil
-  "*Whether to overwrite the open-network-stream function with the SOCKSified
+  "Whether to overwrite the open-network-stream function with the SOCKSified
 version.")
 
 (require 'network-stream)
@@ -480,7 +481,7 @@ version.")
 
 ;; Replacement functions for open-network-stream, etc.
 (defvar socks-noproxy nil
-  "*List of regexps matching hosts that we should not socksify connections to")
+  "List of regexps matching hosts that we should not socksify connections to")
 
 (defun socks-find-route (host service)
   (let ((route socks-server)
@@ -626,7 +627,7 @@ version.")
 
 
 (defcustom socks-nslookup-program "nslookup"
-  "*If non-NIL then a string naming the nslookup program."
+  "If non-NIL then a string naming the nslookup program."
   :type '(choice (const :tag "None" :value nil) string)
   :group 'socks)
 

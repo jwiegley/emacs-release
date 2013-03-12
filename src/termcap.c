@@ -1,6 +1,6 @@
 /* Work-alike for termcap, plus extra features.
-   Copyright (C) 1985, 1986, 1993, 1994, 1995, 2000, 2001, 2002, 2003,
-                 2004, 2005, 2006, 2007, 2008, 2011 Free Software Foundation, Inc.
+   Copyright (C) 1985-1986, 1993-1995, 2000-2008, 2011, 2013 Free
+   Software Foundation, Inc.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,13 +13,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program; see the file COPYING.  If not, write to
-the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-Boston, MA 02110-1301, USA.  */
+along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* Emacs config.h may rename various library functions such as malloc.  */
 #include <config.h>
-#include <setjmp.h>
 #include <sys/file.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -28,10 +25,6 @@ Boston, MA 02110-1301, USA.  */
 #include "tparam.h"
 #ifdef MSDOS
 #include "msdos.h"
-#endif
-
-#ifndef NULL
-#define NULL (char *) 0
 #endif
 
 /* BUFSIZE is the initial size allocated for the buffer
@@ -157,7 +150,7 @@ tgetst1 (char *ptr, char **area)
       p = ptr;
       while ((c = *p++) && c != ':' && c != '\n')
 	;
-      ret = (char *) xmalloc (p - ptr + 1);
+      ret = xmalloc (p - ptr + 1);
     }
   else
     ret = *area;
@@ -381,7 +374,7 @@ tgetent (char *bp, const char *name)
       if (!bp)
 	{
 	  malloc_size = 1 + strlen (term);
-	  bp = (char *) xmalloc (malloc_size);
+	  bp = xmalloc (malloc_size);
 	}
       strcpy (bp, term);
       goto ret;
@@ -444,13 +437,13 @@ tgetent (char *bp, const char *name)
 
   buf.size = BUFSIZE;
   /* Add 1 to size to ensure room for terminating null.  */
-  buf.beg = (char *) xmalloc (buf.size + 1);
+  buf.beg = xmalloc (buf.size + 1);
   term = indirect ? indirect : (char *)name;
 
   if (!bp)
     {
       malloc_size = indirect ? strlen (tcenv) + 1 : buf.size;
-      bp = (char *) xmalloc (malloc_size);
+      bp = xmalloc (malloc_size);
     }
   tc_search_point = bp1 = bp;
 
@@ -482,7 +475,7 @@ tgetent (char *bp, const char *name)
 	{
 	  ptrdiff_t offset1 = bp1 - bp, offset2 = tc_search_point - bp;
 	  malloc_size = offset1 + buf.size;
-	  bp = termcap_name = (char *) xrealloc (bp, malloc_size);
+	  bp = termcap_name = xrealloc (bp, malloc_size);
 	  bp1 = termcap_name + offset1;
 	  tc_search_point = termcap_name + offset2;
 	}
@@ -508,7 +501,7 @@ tgetent (char *bp, const char *name)
   xfree (buf.beg);
 
   if (malloc_size)
-    bp = (char *) xrealloc (bp, bp1 - bp + 1);
+    bp = xrealloc (bp, bp1 - bp + 1);
 
  ret:
   term_entry = bp;
@@ -660,10 +653,6 @@ gobble_line (int fd, register struct termcap_buffer *bufp, char *append_end)
 }
 
 #ifdef TEST
-
-#ifdef NULL
-#undef NULL
-#endif
 
 #include <stdio.h>
 

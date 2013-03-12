@@ -1,5 +1,4 @@
 @c -*-texinfo-*-
-@setfilename ../../info/index
 
 @c Indexing guidelines
 
@@ -13,17 +12,15 @@
 @c I tried to include words in a cindex that give the context of the entry,
 @c particularly if there is more than one entry for the same concept.
 @c For example, "nil in keymap"
-@c Similarly for explicit findex and vindex entries, e.g. "print example".
+@c Similarly for explicit findex and vindex entries, e.g., "print example".
 
-@c Error codes are given cindex entries, e.g. "end-of-file error".
+@c Error codes are given cindex entries, e.g., "end-of-file error".
 
 @c pindex is used for .el files and Unix programs
 
-@node Index, , Standard Hooks, Top
+@node Index
 @unnumbered Index
 
 @c Print the indices
 
 @printindex fn
-
-

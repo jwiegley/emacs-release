@@ -1,7 +1,7 @@
 ;;; elp.el --- Emacs Lisp Profiler
 
-;; Copyright (C) 1994-1995, 1997-1998, 2001-2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1994-1995, 1997-1998, 2001-2013 Free Software
+;; Foundation, Inc.
 
 ;; Author: Barry A. Warsaw
 ;; Maintainer: FSF
@@ -258,7 +258,7 @@ FUNSYM must be a symbol of a defined function."
     ;; the autoload here, since that could have side effects, and
     ;; elp-instrument-function is similar (in my mind) to defun-ish
     ;; type functionality (i.e. it shouldn't execute the function).
-    (and (eq (car-safe funguts) 'autoload)
+    (and (autoloadp funguts)
 	 (error "ELP cannot profile autoloaded function: %s" funsym))
     ;; We cannot profile functions used internally during profiling.
     (unless (elp-profilable-p funsym)

@@ -1,6 +1,6 @@
 ;;; nndraft.el --- draft article access for Gnus
 
-;; Copyright (C) 1995-2012 Free Software Foundation, Inc.
+;; Copyright (C) 1995-2013 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -37,7 +37,8 @@
 (require 'mm-util)
 (eval-when-compile (require 'cl))
 
-(declare-function nndraft-request-list "nnmh" (&rest args))
+;; The nnoo-import at the end, I think.
+(declare-function nndraft-request-list "nndraft" (&rest args) t)
 
 (nnoo-declare nndraft
   nnmh)

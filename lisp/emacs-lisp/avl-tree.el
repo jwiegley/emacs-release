@@ -1,6 +1,6 @@
 ;;; avl-tree.el --- balanced binary trees, AVL-trees
 
-;; Copyright (C) 1995, 2007-2012  Free Software Foundation, Inc.
+;; Copyright (C) 1995, 2007-2013 Free Software Foundation, Inc.
 
 ;; Author: Per Cederqvist <ceder@lysator.liu.se>
 ;;         Inge Wallin <inge@lysator.liu.se>
@@ -260,7 +260,7 @@ Return t if the height of the tree has grown."
 	(opp (avl-tree--switch-dir dir))
 	;; direction 0,1 -> sign factor -1,+1
 	(sgn (avl-tree--dir-to-sign dir))
-        p1 p2 b2 result)
+        p1 p2 b2)
     (cond
      ((< (* sgn (avl-tree--node-balance br)) 0)
       (setf (avl-tree--node-balance br) 0)

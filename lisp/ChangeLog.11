@@ -10889,7 +10889,7 @@
 2004-01-29  Jari Aalto  <jari.aalto@poboxes.com>
 
 	* progmodes/executable.el (executable-command-find-posix-p):
-	New.  Check if find handles arguments Posix-style.
+	New.  Check if find handles arguments POSIX-style.
 
 	* progmodes/grep.el (grep-compute-defaults):
 	Use executable-command-find-posix-p.
@@ -14336,7 +14336,7 @@ See ChangeLog.10 for earlier changes.
 ;; coding: utf-8
 ;; End:
 
-  Copyright (C) 2003-2011  Free Software Foundation, Inc.
+  Copyright (C) 2003-2011, 2013 Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 

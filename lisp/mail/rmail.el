@@ -1,7 +1,7 @@
 ;;; rmail.el --- main code of "RMAIL" mail reader for Emacs
 
-;; Copyright (C) 1985-1988, 1993-1998, 2000-2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1985-1988, 1993-1998, 2000-2013 Free Software
+;; Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: mail
@@ -39,6 +39,9 @@
 
 (require 'mail-utils)
 (require 'rfc2047)
+
+(declare-function compilation--message->loc "compile" (cl-x) t)
+(declare-function epa--find-coding-system-for-mime-charset "epa" (mime-charset))
 
 (defconst rmail-attribute-header "X-RMAIL-ATTRIBUTES"
   "The header that stores the Rmail attribute data.")
@@ -97,8 +100,6 @@ its character representation and its display representation.")
   "The current header display style choice, one of
 'normal (selected headers) or 'full (all headers).")
 
-;; rmail-spool-directory and rmail-file-name are defined in paths.el.
-
 (defgroup rmail nil
   "Mail reader for Emacs."
   :group 'mail)
@@ -139,6 +140,40 @@ its character representation and its display representation.")
   "Rmail editing."
   :prefix "rmail-edit-"
   :group 'rmail)
+
+;;;###autoload
+(defcustom rmail-file-name (purecopy "~/RMAIL")
+  "Name of user's primary mail file."
+  :type 'string
+  :group 'rmail
+  :version "21.1")
+
+;;;###autoload
+(put 'rmail-spool-directory 'standard-value
+     '((cond ((file-exists-p "/var/mail") "/var/mail/")
+	     ((file-exists-p "/var/spool/mail") "/var/spool/mail/")
+	     ((memq system-type '(hpux usg-unix-v irix)) "/usr/mail/")
+	     (t "/usr/spool/mail/"))))
+
+;;;###autoload
+(defcustom rmail-spool-directory
+  (purecopy
+  (cond ((file-exists-p "/var/mail")
+	 ;; SVR4 and recent BSD are said to use this.
+	 ;; Rather than trying to know precisely which systems use it,
+	 ;; let's assume this dir is never used for anything else.
+	 "/var/mail/")
+	;; Many GNU/Linux systems use this name.
+	((file-exists-p "/var/spool/mail") "/var/spool/mail/")
+	((memq system-type '(hpux usg-unix-v irix)) "/usr/mail/")
+	(t "/usr/spool/mail/")))
+  "Name of directory used by system mailer for delivering new mail.
+Its name should end with a slash."
+  :initialize 'custom-initialize-delay
+  :type 'directory
+  :group 'rmail)
+
+;;;###autoload(custom-initialize-delay 'rmail-spool-directory nil)
 
 (defcustom rmail-movemail-program nil
   "If non-nil, the file name of the `movemail' program."
@@ -628,6 +663,7 @@ Element N specifies the summary line for message N+1.")
 (defvar rmail-last-regexp nil)
 (put 'rmail-last-regexp 'permanent-local t)
 
+;; Note that rmail-output-read-file-name modifies this.
 (defcustom rmail-default-file "~/xmail"
   "Default file name for \\[rmail-output]."
   :type 'file
@@ -709,19 +745,6 @@ to an appropriate value, and optionally also set
 `rmail-search-mime-header-function',
 `rmail-insert-mime-forwarded-message-function', and
 `rmail-insert-mime-resent-message-function'.")
-
-;; FIXME this is unused since 23.1.
-(defvar rmail-decode-mime-charset t
-  "*Non-nil means a message is decoded by MIME's charset specification.
-If this variable is nil, or the message has not MIME specification,
-the message is decoded as normal way.
-
-If the variable `rmail-enable-mime' is non-nil, this variable is
-ignored, and all the decoding work is done by a feature specified by
-the variable `rmail-mime-feature'.")
-
-(make-obsolete-variable 'rmail-decode-mime-charset
-			"it does nothing." "23.1")
 
 (defvar rmail-mime-charset-pattern
   (concat "^content-type:[ \t]*text/plain;"
@@ -4045,6 +4068,13 @@ The variable `rmail-retry-ignored-headers' is a regular expression
 specifying headers which should not be copied into the new message."
   (interactive)
   (require 'mail-utils)
+  (if rmail-enable-mime
+      (with-current-buffer rmail-buffer
+	(if (rmail-mime-message-p)
+	    (let ((rmail-mime-mbox-buffer rmail-view-buffer)
+		  (rmail-mime-view-buffer rmail-buffer))
+	      (rmail-mime-toggle-raw 'raw)))))
+
   (let ((rmail-this-buffer (current-buffer))
 	(msgnum rmail-current-message)
 	bounce-start bounce-end bounce-indent resending
@@ -4164,6 +4194,7 @@ This has an effect only if a summary buffer exists."
 ;; Put the summary buffer back on the screen, if user wants that.
 (defun rmail-maybe-display-summary ()
   (let ((selected (selected-window))
+	(buffer (current-buffer))
 	window)
     ;; If requested, make sure the summary is displayed.
     (and rmail-summary-buffer (buffer-name rmail-summary-buffer)
@@ -4185,7 +4216,8 @@ This has an effect only if a summary buffer exists."
 	     (progn
 	       (select-window window)
 	       (enlarge-window (- rmail-summary-window-size (window-height))))
-	   (select-window selected)))))
+	   (select-window selected)
+	   (set-buffer buffer)))))
 
 ;;;; *** Rmail Local Fontification ***
 
@@ -4228,10 +4260,13 @@ This has an effect only if a summary buffer exists."
 ;;; Speedbar support for RMAIL files.
 (eval-when-compile (require 'speedbar))
 
-(defvar rmail-speedbar-match-folder-regexp "^[A-Z0-9]+\\(\\.[A-Z0-9]+\\)?$"
-  "*This regex is used to match folder names to be displayed in speedbar.
-Enabling this will permit speedbar to display your folders for easy
-browsing, and moving of messages.")
+(defcustom rmail-speedbar-match-folder-regexp "^[A-Z0-9]+\\(\\.[A-Z0-9]+\\)?$"
+  "Regexp matching Rmail folder names to be displayed in Speedbar.
+Enabling this permits Speedbar to display your folders for easy
+browsing, and moving of messages."
+  :type 'regexp
+  :group 'rmail
+  :group 'speedbar)
 
 (defvar rmail-speedbar-last-user nil
   "The last user to be displayed in the speedbar.")
@@ -4517,7 +4552,7 @@ encoded string (and the same mask) will decode the string."
 ;;; Start of automatically extracted autoloads.
 
 ;;;### (autoloads (rmail-edit-current-message) "rmailedit" "rmailedit.el"
-;;;;;;  "7d558f958574f6003fa474ce2f3c80a8")
+;;;;;;  "1aec1d54f9767ee0fea557bbfb1d547b")
 ;;; Generated autoloads from rmailedit.el
 
 (autoload 'rmail-edit-current-message "rmailedit" "\
@@ -4529,7 +4564,7 @@ Edit the contents of this message.
 
 ;;;### (autoloads (rmail-next-labeled-message rmail-previous-labeled-message
 ;;;;;;  rmail-read-label rmail-kill-label rmail-add-label) "rmailkwd"
-;;;;;;  "rmailkwd.el" "4ae5660d86d49e524f4a6bcbc6d9a984")
+;;;;;;  "rmailkwd.el" "b5337290fd35bbc11888afb25d767195")
 ;;; Generated autoloads from rmailkwd.el
 
 (autoload 'rmail-add-label "rmailkwd" "\
@@ -4572,7 +4607,7 @@ With prefix argument N moves forward N messages with these labels.
 
 ;;;***
 
-;;;### (autoloads (rmail-mime) "rmailmm" "rmailmm.el" "cd7656f82944d0b92b0d093a5f3a4c36")
+;;;### (autoloads (rmail-mime) "rmailmm" "rmailmm.el" "da37981a8295ba2411fdfb77488b1cc3")
 ;;; Generated autoloads from rmailmm.el
 
 (autoload 'rmail-mime "rmailmm" "\
@@ -4599,7 +4634,7 @@ The arguments ARG and STATE have no effect in this case.
 ;;;***
 
 ;;;### (autoloads (set-rmail-inbox-list) "rmailmsc" "rmailmsc.el"
-;;;;;;  "e2212ea15561d60365ffa1f7a5902939")
+;;;;;;  "8a2466563b4a463710531d01766c07a3")
 ;;; Generated autoloads from rmailmsc.el
 
 (autoload 'set-rmail-inbox-list "rmailmsc" "\
@@ -4615,7 +4650,7 @@ This applies only to the current session.
 
 ;;;### (autoloads (rmail-sort-by-labels rmail-sort-by-lines rmail-sort-by-correspondent
 ;;;;;;  rmail-sort-by-recipient rmail-sort-by-author rmail-sort-by-subject
-;;;;;;  rmail-sort-by-date) "rmailsort" "rmailsort.el" "38da5f17d4ed0dcd2b09c158642cef63")
+;;;;;;  rmail-sort-by-date) "rmailsort" "rmailsort.el" "3e3a30326fc95d7f17835906c2ccb19f")
 ;;; Generated autoloads from rmailsort.el
 
 (autoload 'rmail-sort-by-date "rmailsort" "\
@@ -4674,7 +4709,7 @@ If prefix argument REVERSE is non-nil, sorts in reverse order.
 
 ;;;### (autoloads (rmail-summary-by-senders rmail-summary-by-topic
 ;;;;;;  rmail-summary-by-regexp rmail-summary-by-recipients rmail-summary-by-labels
-;;;;;;  rmail-summary) "rmailsum" "rmailsum.el" "bef21a376bd5bd59792a20dd86e6ec34")
+;;;;;;  rmail-summary) "rmailsum" "rmailsum.el" "341825201e892b8fc875c1ae49ffd560")
 ;;; Generated autoloads from rmailsum.el
 
 (autoload 'rmail-summary "rmailsum" "\
@@ -4722,7 +4757,7 @@ SENDERS is a string of regexps separated by commas.
 ;;;***
 
 ;;;### (autoloads (unforward-rmail-message undigestify-rmail-message)
-;;;;;;  "undigest" "undigest.el" "a31a35802a2adbc51be42959c3043dbd")
+;;;;;;  "undigest" "undigest.el" "9b273a3e15b5496ab6121b585d8bd3b3")
 ;;; Generated autoloads from undigest.el
 
 (autoload 'undigestify-rmail-message "undigest" "\

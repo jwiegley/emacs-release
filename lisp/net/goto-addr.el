@@ -1,6 +1,6 @@
 ;;; goto-addr.el --- click to browse URL or to send to e-mail address
 
-;; Copyright (C) 1995, 2000-2012 Free Software Foundation, Inc.
+;; Copyright (C) 1995, 2000-2013 Free Software Foundation, Inc.
 
 ;; Author: Eric Ding <ericding@alum.mit.edu>
 ;; Maintainer: FSF
@@ -33,7 +33,7 @@
 ;; INSTALLATION
 ;;
 ;; To use goto-address in a particular mode (for example, while
-;; reading mail in mh-e), add something like this in your .emacs file:
+;; reading mail in mh-e), add this to your init file:
 ;;
 ;; (add-hook 'mh-show-mode-hook 'goto-address)
 ;;
@@ -80,18 +80,18 @@
 
 ;; I don't expect users to want fontify'ing without highlighting.
 (defcustom goto-address-fontify-p t
-  "*Non-nil means URLs and e-mail addresses in buffer are fontified.
+  "Non-nil means URLs and e-mail addresses in buffer are fontified.
 But only if `goto-address-highlight-p' is also non-nil."
   :type 'boolean
   :group 'goto-address)
 
 (defcustom goto-address-highlight-p t
-  "*Non-nil means URLs and e-mail addresses in buffer are highlighted."
+  "Non-nil means URLs and e-mail addresses in buffer are highlighted."
   :type 'boolean
   :group 'goto-address)
 
 (defcustom goto-address-fontify-maximum-size 30000
-  "*Maximum size of file in which to fontify and/or highlight URLs.
+  "Maximum size of file in which to fontify and/or highlight URLs.
 A value of t means there is no limit--fontify regardless of the size."
   :type '(choice (integer :tag "Maximum size") (const :tag "No limit" t))
   :group 'goto-address)
@@ -156,18 +156,19 @@ A value of t means there is no limit--fontify regardless of the size."
 
 (defvar goto-address-prog-mode)
 
-(defun goto-address-fontify ()
+(defun goto-address-fontify (&optional start end)
   "Fontify the URLs and e-mail addresses in the current buffer.
 This function implements `goto-address-highlight-p'
 and `goto-address-fontify-p'."
   ;; Clean up from any previous go.
-  (goto-address-unfontify (point-min) (point-max))
+  (goto-address-unfontify (or start (point-min)) (or end (point-max)))
   (save-excursion
     (let ((inhibit-point-motion-hooks t))
-      (goto-char (point-min))
+      (goto-char (or start (point-min)))
       (when (or (eq t goto-address-fontify-maximum-size)
-		(< (- (point-max) (point)) goto-address-fontify-maximum-size))
-	(while (re-search-forward goto-address-url-regexp nil t)
+		(< (- (or end (point-max)) (point))
+                   goto-address-fontify-maximum-size))
+	(while (re-search-forward goto-address-url-regexp end t)
 	  (let* ((s (match-beginning 0))
 		 (e (match-end 0))
 		 this-overlay)
@@ -187,8 +188,8 @@ and `goto-address-fontify-p'."
 	      (overlay-put this-overlay
 			   'keymap goto-address-highlight-keymap)
 	      (overlay-put this-overlay 'goto-address t))))
-	(goto-char (point-min))
-	(while (re-search-forward goto-address-mail-regexp nil t)
+	(goto-char (or start (point-min)))
+	(while (re-search-forward goto-address-mail-regexp end t)
 	  (let* ((s (match-beginning 0))
 		 (e (match-end 0))
 		 this-overlay)
@@ -212,11 +213,9 @@ and `goto-address-fontify-p'."
 (defun goto-address-fontify-region (start end)
   "Fontify URLs and e-mail addresses in the given region."
   (save-excursion
-    (save-restriction
-      (let ((beg-line (progn (goto-char start) (line-beginning-position)))
-	    (end-line (progn (goto-char end) (line-end-position))))
-	(narrow-to-region beg-line end-line)
-	(goto-address-fontify)))))
+    (let ((beg-line (progn (goto-char start) (line-beginning-position)))
+          (end-line (progn (goto-char end) (line-end-position))))
+      (goto-address-fontify beg-line end-line))))
 
 ;; code to find and goto addresses; much of this has been blatantly
 ;; snarfed from browse-url.el

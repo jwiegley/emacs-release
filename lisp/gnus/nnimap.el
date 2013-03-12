@@ -1,6 +1,6 @@
 ;;; nnimap.el --- IMAP interface for Gnus
 
-;; Copyright (C) 2010-2012 Free Software Foundation, Inc.
+;; Copyright (C) 2010-2013 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;;         Simon Josefsson <simon@josefsson.org>
@@ -117,7 +117,7 @@ some servers.")
 
 (defvoo nnimap-fetch-partial-articles nil
   "If non-nil, Gnus will fetch partial articles.
-If t, nnimap will fetch only the first part.  If a string, it
+If t, Gnus will fetch only the first part.  If a string, it
 will fetch all parts that have types that match that string.  A
 likely value would be \"text/\" to automatically fetch all
 textual parts.")
@@ -475,6 +475,8 @@ textual parts.")
 	    (when nnimap-object
 	      (when (nnimap-capability "QRESYNC")
 		(nnimap-command "ENABLE QRESYNC"))
+              (nnheader-message 7 "Opening connection to %s...done"
+				nnimap-address)
 	      (nnimap-process nnimap-object))))))))
 
 (autoload 'rfc2104-hash "rfc2104")
@@ -969,7 +971,7 @@ textual parts.")
 (defun nnimap-find-article-by-message-id (group message-id)
   (with-current-buffer (nnimap-buffer)
     (erase-buffer)
-    (unless (equal group (nnimap-group nnimap-object))
+    (unless (or (not group) (equal group (nnimap-group nnimap-object)))
       (setf (nnimap-group nnimap-object) nil)
       (setf (nnimap-examined nnimap-object) group)
       (nnimap-send-command "EXAMINE %S" (utf7-encode group t)))

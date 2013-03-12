@@ -3,7 +3,7 @@
 @settitle Ada Mode
 
 @copying
-Copyright @copyright{} 1999-2012  Free Software Foundation, Inc.
+Copyright @copyright{} 1999--2013 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -14,8 +14,7 @@ and with the Back-Cover Texts as in (a) below.  A copy of the license
 is included in the section entitled ``GNU Free Documentation License''.
 
 (a) The FSF's Back-Cover Text is: ``You have the freedom to copy and
-modify this GNU manual.  Buying copies from the FSF supports it in
-developing GNU and promoting software freedom.''
+modify this GNU manual.''
 @end quotation
 @end copying
 
@@ -26,7 +25,7 @@ developing GNU and promoting software freedom.''
 
 @titlepage
 @sp 10
-@title{Ada Mode}
+@title Ada Mode
 @sp 2
 @subtitle An Emacs major mode for programming in Ada
 @subtitle Ada Mode Version 4.00
@@ -73,7 +72,7 @@ existing code and facilitates writing new code.
 
 When the Gnu Ada compiler GNAT is used, the cross-reference
 information output by the compiler is used to provide powerful code
-navigation (jump to definition, find all uses, etc).
+navigation (jump to definition, find all uses, etc.).
 
 When you open a file with a file extension of @file{.ads} or
 @file{.adb}, Emacs will automatically load and activate Ada mode.
@@ -522,8 +521,8 @@ ada_project_path_sep=:
 ada_project_path=$GDS_ROOT/makerules
 ada_project_path=../opentoken
 @end example
-the environment variable @code{ADA_PROJECT_PATH} will be set to
-@code{"/home/shared/makerules:/home/opentoken/"}.
+then as a result the environment variable @code{ADA_PROJECT_PATH} will
+be set to @code{"/home/shared/makerules:/home/opentoken/"}.
 
 The default value is not the current value of this environment
 variable, because that will typically have been set by another
@@ -731,7 +730,7 @@ In buffer @file{hello.adb}, invoke @samp{Ada | Check file}. You should
 get a @code{*compilation*} buffer containing something like (the
 directory paths will be different):
 
-@example
+@smallexample
 cd c:/Examples/Example_1/
 gnatmake -u -c -gnatc -g c:/Examples/Example_1/hello.adb -cargs -gnatq -gnatQ
 gcc -c -Ic:/Examples/Example_1/ -gnatc -g -gnatq -gnatQ -I- c:/Examples/Example_1/hello.adb
@@ -739,7 +738,7 @@ hello.adb:4:04: "Put_Line" is not visible
 hello.adb:4:04: non-visible declaration at a-textio.ads:264
 hello.adb:4:04: non-visible declaration at a-textio.ads:260
 gnatmake: "c:/Examples/Example_1/hello.adb" compilation error
-@end example
+@end smallexample
 
 If you have enabled font-lock, the lines with actual errors (starting
 with @file{hello.adb}) are highlighted, with the file name in red.
@@ -1046,14 +1045,14 @@ Then, again in @file{hello_4.adb}, invoke @samp{Ada | Set main and
 Build}. You should get a @code{*compilation*} buffer containing
 something like (the directory paths will be different):
 
-@example
+@smallexample
 cd c:/Examples/Example_4/Gnat_Project/
 gnatmake -o hello_4 hello_4 -Phello_4.gpr -cargs -gnatq -gnatQ -bargs  -largs
 gcc -c -g -gnatyt -gnatq -gnatQ -I- -gnatA c:\Examples\Example_4\Gnat_Project\hello_4.adb
 gcc -c -g -gnatyt -gnatq -gnatQ -I- -gnatA c:\Examples\Example_4\hello_pkg.adb
 hello_pkg.adb:2:08: keyword "body" expected here [see file name]
 gnatmake: "c:\examples\example_4\hello_pkg.adb" compilation error
-@end example
+@end smallexample
 
 Compare the @code{gcc} options to the compiler output in @ref{Set
 compiler options}; this shows that @file{hello_4.gpr} is being used to
@@ -1113,14 +1112,14 @@ Then, again in @file{hello_5.adb}, invoke @samp{Ada | Set main and
 Build}. You should get a @code{*compilation*} buffer containing
 something like (the directory paths will be different):
 
-@example
+@smallexample
 cd c:/Examples/Example_5/
 gnatmake -o hello_5 hello_5 -Phello_5.gpr -g -cargs -gnatq -gnatQ -bargs  -largs
 gcc -c -g -gnatyt -g -gnatq -gnatQ -I- -gnatA c:\Examples\Example_5\hello_5.adb
 gcc -c -g -gnatyt -g -gnatq -gnatQ -I- -gnatA c:\Examples\Example_4\hello_pkg.adb
 hello_pkg.adb:2:08: keyword "body" expected here [see file name]
 gnatmake: "c:\examples\example_4\hello_pkg.adb" compilation error
-@end example
+@end smallexample
 
 Now type @kbd{C-x `}. @file{Example_4/hello_pkg.adb} is shown,
 demonstrating that @file{hello_5.gpr} and @file{hello_4.gpr} are being
@@ -1268,7 +1267,7 @@ Non-@code{nil} means that the current line will also be re-indented
 before inserting a newline, when you press @key{RET}.
 @end table
 
-Most of the time, the indentation will be automatic, i.e when you
+Most of the time, the indentation will be automatic, i.e., when you
 press @key{RET}, the cursor will move to the correct column on the
 next line.
 
@@ -1507,7 +1506,7 @@ Start a comment in default column.
 @item M-j
 Continue comment on next line.
 @item C-c ;
-Comment the selected region (add -- at the beginning of lines).
+Comment the selected region (add @samp{--} at the beginning of lines).
 @item C-c :
 Uncomment the selected region
 @item M-q

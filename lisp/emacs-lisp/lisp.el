@@ -1,6 +1,7 @@
 ;;; lisp.el --- Lisp editing commands for Emacs
 
-;; Copyright (C) 1985-1986, 1994, 2000-2012 Free Software Foundation, Inc.
+;; Copyright (C) 1985-1986, 1994, 2000-2013 Free Software Foundation,
+;; Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: lisp, languages
@@ -447,7 +448,21 @@ Optional ARG is ignored."
       ;; Try first in this order for the sake of languages with nested
       ;; functions where several can end at the same place as with
       ;; the offside rule, e.g. Python.
-      (beginning-of-defun)
+
+      ;; Finding the start of the function is a bit problematic since
+      ;; `beginning-of-defun' when we are on the first character of
+      ;; the function might go to the previous function.
+      ;;
+      ;; Therefore we first move one character forward and then call
+      ;; `beginning-of-defun'.  However now we must check that we did
+      ;; not move into the next function.
+      (let ((here (point)))
+        (unless (eolp)
+	  (forward-char))
+        (beginning-of-defun)
+        (when (< (point) here)
+          (goto-char here)
+          (beginning-of-defun)))
       (setq beg (point))
       (end-of-defun)
       (setq end (point))

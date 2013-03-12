@@ -1,6 +1,6 @@
 ;;; pp.el --- pretty printer for Emacs Lisp
 
-;; Copyright (C) 1989, 1993, 2001-2012 Free Software Foundation, Inc.
+;; Copyright (C) 1989, 1993, 2001-2013 Free Software Foundation, Inc.
 
 ;; Author: Randal Schwartz <merlyn@stonehenge.com>
 ;; Keywords: lisp
@@ -110,7 +110,8 @@ after OUT-BUFFER-NAME."
 			 (progn
 			   (select-window window)
 			   (run-hooks 'temp-buffer-show-hook))
-		       (select-window old-selected)
+		       (when (window-live-p old-selected)
+			 (select-window old-selected))
 		       (message "See buffer %s." out-buffer-name)))
 		 (message "%s" (buffer-substring (point-min) (point)))
 		 ))))))

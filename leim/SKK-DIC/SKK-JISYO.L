@@ -30,11 +30,9 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Daredevil SKK, see the file COPYING.  If not, write to
-;; the Free Software Foundation Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; along with this dictionary.  If not, see <http://www.gnu.org/licenses/>.
 ;;
-;; ACKNOWLEDGEMENT
+;; ACKNOWLEDGMENT
 ;;
 ;; この辞書は、SKK 原作者の佐藤雅彦先生が、第 1 版作成のために東北大学
 ;; 電気通信研究所佐藤研究室 (当時) の学生さん達とともに scratch から作

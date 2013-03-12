@@ -1,6 +1,6 @@
 ;;; eudc.el --- Emacs Unified Directory Client
 
-;; Copyright (C) 1998-2012 Free Software Foundation, Inc.
+;; Copyright (C) 1998-2013 Free Software Foundation, Inc.
 
 ;; Author: Oscar Figueiredo <oscar@cpe.fr>
 ;; Maintainer: Pavel Janík <Pavel@Janik.cz>
@@ -48,9 +48,7 @@
 
 (eval-and-compile
   (if (not (fboundp 'make-overlay))
-      (require 'overlay))
-  (if (not (fboundp 'unless))
-      (require 'cl)))
+      (require 'overlay)))
 
 (unless (fboundp 'custom-menu-create)
   (autoload 'custom-menu-create "cus-edit"))
@@ -1213,7 +1211,7 @@ queries the server for the existing fields and displays a corresponding form."
 ;;; Load the options file
 (if (and (not noninteractive)
 	 (and (locate-library eudc-options-file)
-	      (progn (message "") t))   ; Remove modeline message
+	      (progn (message "") t))   ; Remove mode line message
 	 (not (featurep 'eudc-options-file)))
     (load eudc-options-file))
 

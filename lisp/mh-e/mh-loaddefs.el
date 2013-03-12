@@ -7,7 +7,8 @@
 ;;;;;;  mh-do-at-event-location mh-in-show-buffer with-mh-folder-updating
 ;;;;;;  mh-defstruct mh-mark-active-p mh-make-local-hook defmacro-mh
 ;;;;;;  defun-mh mh-funcall-if-exists mh-do-in-xemacs mh-do-in-gnu-emacs
-;;;;;;  mh-require-cl) "mh-acros" "mh-acros.el" (20533 49334))
+;;;;;;  mh-require-cl) "mh-acros" "mh-acros.el" (20707 18685 911514
+;;;;;;  0))
 ;;; Generated autoloads from mh-acros.el
 
 (autoload 'mh-require-cl "mh-acros" "\
@@ -20,50 +21,50 @@ particular, the expansion of (setf (gethash ...) ...) used
 functions in \"cl\" at run time. This macro recognizes that and
 loads \"cl\" appropriately.
 
-\(fn)" nil (quote macro))
+\(fn)" nil t)
 
 (autoload 'mh-do-in-gnu-emacs "mh-acros" "\
 Execute BODY if in GNU Emacs.
 
-\(fn &rest BODY)" nil (quote macro))
+\(fn &rest BODY)" nil t)
 
 (autoload 'mh-do-in-xemacs "mh-acros" "\
 Execute BODY if in XEmacs.
 
-\(fn &rest BODY)" nil (quote macro))
+\(fn &rest BODY)" nil t)
 
 (autoload 'mh-funcall-if-exists "mh-acros" "\
 Call FUNCTION with ARGS as parameters if it exists.
 
-\(fn FUNCTION &rest ARGS)" nil (quote macro))
+\(fn FUNCTION &rest ARGS)" nil t)
 
 (autoload 'defun-mh "mh-acros" "\
 Create function NAME.
 If FUNCTION exists, then NAME becomes an alias for FUNCTION.
 Otherwise, create function NAME with ARG-LIST and BODY.
 
-\(fn NAME FUNCTION ARG-LIST &rest BODY)" nil (quote macro))
+\(fn NAME FUNCTION ARG-LIST &rest BODY)" nil t)
 
 (autoload 'defmacro-mh "mh-acros" "\
 Create macro NAME.
 If MACRO exists, then NAME becomes an alias for MACRO.
 Otherwise, create macro NAME with ARG-LIST and BODY.
 
-\(fn NAME MACRO ARG-LIST &rest BODY)" nil (quote macro))
+\(fn NAME MACRO ARG-LIST &rest BODY)" nil t)
 
 (autoload 'mh-make-local-hook "mh-acros" "\
 Make HOOK local if needed.
 XEmacs and versions of GNU Emacs before 21.1 require
 `make-local-hook' to be called.
 
-\(fn HOOK)" nil (quote macro))
+\(fn HOOK)" nil t)
 
 (autoload 'mh-mark-active-p "mh-acros" "\
 A macro that expands into appropriate code in XEmacs and nil in GNU Emacs.
 In GNU Emacs if CHECK-TRANSIENT-MARK-MODE-FLAG is non-nil then
 check if variable `transient-mark-mode' is active.
 
-\(fn CHECK-TRANSIENT-MARK-MODE-FLAG)" nil (quote macro))
+\(fn CHECK-TRANSIENT-MARK-MODE-FLAG)" nil t)
 
 (autoload 'mh-defstruct "mh-acros" "\
 Replacement for `defstruct' from the \"cl\" package.
@@ -76,7 +77,7 @@ NAME-SPEC declares the name of the structure, while FIELDS
 describes the various structure fields. Lookup `defstruct' for
 more details.
 
-\(fn NAME-SPEC &rest FIELDS)" nil (quote macro))
+\(fn NAME-SPEC &rest FIELDS)" nil t)
 
 (autoload 'with-mh-folder-updating "mh-acros" "\
 Format is (with-mh-folder-updating (SAVE-MODIFICATION-FLAG) &body BODY).
@@ -85,14 +86,14 @@ worry about file locking or the read-only flag, and return its result.
 If SAVE-MODIFICATION-FLAG is non-nil, the buffer's modification flag
 is unchanged, otherwise it is cleared.
 
-\(fn SAVE-MODIFICATION-FLAG &rest BODY)" nil (quote macro))
+\(fn SAVE-MODIFICATION-FLAG &rest BODY)" nil t)
 
 (autoload 'mh-in-show-buffer "mh-acros" "\
 Format is (mh-in-show-buffer (SHOW-BUFFER) &body BODY).
 Display buffer SHOW-BUFFER in other window and execute BODY in it.
 Stronger than `save-excursion', weaker than `save-window-excursion'.
 
-\(fn SHOW-BUFFER &rest BODY)" nil (quote macro))
+\(fn SHOW-BUFFER &rest BODY)" nil t)
 
 (autoload 'mh-do-at-event-location "mh-acros" "\
 Switch to the location of EVENT and execute BODY.
@@ -100,7 +101,7 @@ After BODY has been executed return to original window. The
 modification flag of the buffer in the event window is
 preserved.
 
-\(fn EVENT &rest BODY)" nil (quote macro))
+\(fn EVENT &rest BODY)" nil t)
 
 (defsubst mh-seq-msgs (sequence) "\
 Extract messages from the given SEQUENCE." (cdr sequence))
@@ -113,7 +114,7 @@ starting from BEGIN till END. In each step BODY is executed.
 
 If VAR is nil then the loop is executed without any binding.
 
-\(fn VAR BEGIN END &rest BODY)" nil (quote macro))
+\(fn VAR BEGIN END &rest BODY)" nil t)
 
 (autoload 'mh-iterate-on-range "mh-acros" "\
 Iterate an operation over a region or sequence.
@@ -127,14 +128,14 @@ The parameter RANGE is usually created with
 `mh-interactive-range' in order to provide a uniform interface to
 MH-E functions.
 
-\(fn VAR RANGE &rest BODY)" nil (quote macro))
+\(fn VAR RANGE &rest BODY)" nil t)
 
 ;;;***
 
 ;;;### (autoloads (mh-alias-grab-from-field mh-alias-for-from-p mh-alias-address-to-alias
 ;;;;;;  mh-alias-letter-expand-alias mh-alias-minibuffer-confirm-address
 ;;;;;;  mh-read-address mh-alias-expand mh-alias-reload-maybe) "mh-alias"
-;;;;;;  "mh-alias.el" (20533 49334))
+;;;;;;  "mh-alias.el" (20707 18685 911514 0))
 ;;; Generated autoloads from mh-alias.el
 
 (autoload 'mh-alias-reload-maybe "mh-alias" "\
@@ -182,7 +183,8 @@ Add alias for the sender of the current message.
 
 ;;;### (autoloads (mh-insert-auto-fields mh-show-buffer-message-number
 ;;;;;;  mh-send mh-reply mh-redistribute mh-forward mh-extract-rejected-mail
-;;;;;;  mh-edit-again) "mh-comp" "mh-comp.el" (20533 49334))
+;;;;;;  mh-edit-again) "mh-comp" "mh-comp.el" (20707 18685 911514
+;;;;;;  0))
 ;;; Generated autoloads from mh-comp.el
 
 (autoload 'mh-edit-again "mh-comp" "\
@@ -375,7 +377,8 @@ added; otherwise return nil.
 ;;;;;;  mh-prev-button mh-page-msg mh-next-unread-msg mh-next-undeleted-msg
 ;;;;;;  mh-next-button mh-modify mh-last-msg mh-inc-folder mh-goto-msg
 ;;;;;;  mh-first-msg mh-execute-commands mh-delete-msg-no-motion
-;;;;;;  mh-delete-msg) "mh-folder" "mh-folder.el" (20533 49334))
+;;;;;;  mh-delete-msg) "mh-folder" "mh-folder.el" (20707 18685 911514
+;;;;;;  0))
 ;;; Generated autoloads from mh-folder.el
 
 (autoload 'mh-delete-msg "mh-folder" "\
@@ -844,7 +847,7 @@ Return the file name of MSG in FOLDER (default current folder).
 ;;;### (autoloads (mh-undo-folder mh-store-msg mh-sort-folder mh-pipe-msg
 ;;;;;;  mh-page-digest-backwards mh-page-digest mh-pack-folder mh-list-folders
 ;;;;;;  mh-kill-folder mh-copy-msg mh-burst-digest) "mh-funcs" "mh-funcs.el"
-;;;;;;  (20533 49334))
+;;;;;;  (20707 18685 911514 0))
 ;;; Generated autoloads from mh-funcs.el
 
 (autoload 'mh-burst-digest "mh-funcs" "\
@@ -972,7 +975,7 @@ Arguments are IGNORED (for `revert-buffer').
 ;;;;;;  mh-identity-insert-attribution-verb mh-identity-handler-attribution-verb
 ;;;;;;  mh-identity-handler-signature mh-identity-handler-gpg-identity
 ;;;;;;  mh-insert-identity mh-identity-add-menu mh-identity-make-menu)
-;;;;;;  "mh-identity" "mh-identity.el" (20533 49334))
+;;;;;;  "mh-identity" "mh-identity.el" (20707 18685 911514 0))
 ;;; Generated autoloads from mh-identity.el
 
 (autoload 'mh-identity-make-menu "mh-identity" "\
@@ -1046,8 +1049,8 @@ the header.
 
 ;;;***
 
-;;;### (autoloads (mh-inc-spool-make) "mh-inc" "mh-inc.el" (20533
-;;;;;;  49334))
+;;;### (autoloads (mh-inc-spool-make) "mh-inc" "mh-inc.el" (20707
+;;;;;;  18685 911514 0))
 ;;; Generated autoloads from mh-inc.el
 
 (autoload 'mh-inc-spool-make "mh-inc" "\
@@ -1060,7 +1063,8 @@ Make all commands and defines keys for contents of `mh-inc-spool-list'.
 ;;;### (autoloads (mh-spamprobe-whitelist mh-spamprobe-blacklist
 ;;;;;;  mh-bogofilter-whitelist mh-bogofilter-blacklist mh-spamassassin-identify-spammers
 ;;;;;;  mh-spamassassin-whitelist mh-spamassassin-blacklist mh-junk-whitelist
-;;;;;;  mh-junk-blacklist) "mh-junk" "mh-junk.el" (20533 49334))
+;;;;;;  mh-junk-blacklist) "mh-junk" "mh-junk.el" (20707 18685 911514
+;;;;;;  0))
 ;;; Generated autoloads from mh-junk.el
 
 (autoload 'mh-junk-blacklist "mh-junk" "\
@@ -1304,7 +1308,7 @@ See `mh-spamprobe-blacklist' for more information.
 ;;;### (autoloads (mh-letter-toggle-header-field-display-button mh-complete-word
 ;;;;;;  mh-position-on-field mh-letter-next-header-field mh-yank-cur-msg
 ;;;;;;  mh-insert-signature mh-letter-mode) "mh-letter" "mh-letter.el"
-;;;;;;  (20533 49334))
+;;;;;;  (20707 18685 911514 0))
 ;;; Generated autoloads from mh-letter.el
 
 (autoload 'mh-letter-mode "mh-letter" "\
@@ -1422,7 +1426,8 @@ callable from a mouse button.
 
 ;;;### (autoloads (mh-narrow-to-to mh-narrow-to-subject mh-narrow-to-range
 ;;;;;;  mh-narrow-to-from mh-narrow-to-cc mh-delete-subject-or-thread
-;;;;;;  mh-delete-subject) "mh-limit" "mh-limit.el" (20533 49334))
+;;;;;;  mh-delete-subject) "mh-limit" "mh-limit.el" (20707 18685
+;;;;;;  911514 0))
 ;;; Generated autoloads from mh-limit.el
 
 (autoload 'mh-delete-subject "mh-limit" "\
@@ -1507,13 +1512,14 @@ Use \\<mh-folder-mode-map>\\[mh-widen] to undo this command.
 ;;;;;;  mh-decode-message-header mh-toggle-mime-buttons mh-toggle-mh-decode-mime-flag
 ;;;;;;  mh-mime-save-parts mh-folder-toggle-mime-part mh-folder-save-mime-part
 ;;;;;;  mh-folder-inline-mime-part mh-display-with-external-viewer
-;;;;;;  mh-buffer-data) "mh-mime" "mh-mime.el" (20533 49334))
+;;;;;;  mh-buffer-data) "mh-mime" "mh-mime.el" (20707 18685 911514
+;;;;;;  0))
 ;;; Generated autoloads from mh-mime.el
 
 (autoload 'mh-buffer-data "mh-mime" "\
 Convenience macro to get the MIME data structures of the current buffer.
 
-\(fn)" nil (quote macro))
+\(fn)" nil t)
 
 (autoload 'mh-display-with-external-viewer "mh-mime" "\
 View attachment externally.
@@ -1844,7 +1850,7 @@ Free MIME data for externally displayed MIME parts.
 
 ;;;### (autoloads (mh-print-msg mh-ps-print-toggle-color mh-ps-print-toggle-faces
 ;;;;;;  mh-ps-print-msg-file mh-ps-print-msg) "mh-print" "mh-print.el"
-;;;;;;  (20533 49334))
+;;;;;;  (20707 18685 911514 0))
 ;;; Generated autoloads from mh-print.el
 
 (autoload 'mh-ps-print-msg "mh-print" "\
@@ -1930,7 +1936,7 @@ Consider using \\[mh-ps-print-msg] instead.
 
 ;;;### (autoloads (mh-msg-num-width-to-column mh-msg-num-width mh-scan-format
 ;;;;;;  mh-set-cmd-note mh-scan-msg-search-regexp mh-scan-msg-number-regexp)
-;;;;;;  "mh-scan" "mh-scan.el" (20533 49334))
+;;;;;;  "mh-scan" "mh-scan.el" (20707 18685 911514 0))
 ;;; Generated autoloads from mh-scan.el
 
 (autoload 'mh-scan-msg-number-regexp "mh-scan" "\
@@ -1981,7 +1987,7 @@ comes after that.
 ;;;;;;  mh-index-group-by-folder mh-index-visit-folder mh-index-previous-folder
 ;;;;;;  mh-index-next-folder mh-index-sequenced-messages mh-index-ticked-messages
 ;;;;;;  mh-index-new-messages mh-search) "mh-search" "mh-search.el"
-;;;;;;  (20533 49334))
+;;;;;;  (20707 18685 911514 0))
 ;;; Generated autoloads from mh-search.el
 
 (autoload 'mh-search "mh-search" "\
@@ -2254,7 +2260,7 @@ origin-index) map is updated too.
 ;;;;;;  mh-read-seq-default mh-widen mh-toggle-tick mh-put-msg-in-seq
 ;;;;;;  mh-narrow-to-tick mh-narrow-to-seq mh-msg-is-in-seq mh-list-sequences
 ;;;;;;  mh-delete-seq mh-delete-msg-from-seq mh-catchup) "mh-seq"
-;;;;;;  "mh-seq.el" (20533 49334))
+;;;;;;  "mh-seq.el" (20707 18685 911514 0))
 ;;; Generated autoloads from mh-seq.el
 
 (autoload 'mh-catchup "mh-seq" "\
@@ -2550,8 +2556,8 @@ Remove all notations on all scan lines that MH-E introduces.
 ;;;;;;  mh-show-mode mh-show-font-lock-keywords-with-cite mh-show-font-lock-keywords
 ;;;;;;  mh-invalidate-show-buffer mh-clean-msg-header mh-display-msg
 ;;;;;;  mh-start-of-uncleaned-message mh-maybe-show mh-show-preferred-alternative
-;;;;;;  mh-header-display mh-show) "mh-show" "mh-show.el" (20533
-;;;;;;  49334))
+;;;;;;  mh-header-display mh-show) "mh-show" "mh-show.el" (20707
+;;;;;;  18685 911514 0))
 ;;; Generated autoloads from mh-show.el
 
 (autoload 'mh-show "mh-show" "\
@@ -2669,8 +2675,8 @@ Highlight cited text in current buffer using Gnus.
 ;;;***
 
 ;;;### (autoloads (mh-speed-add-folder mh-speed-invalidate-map mh-speed-flists
-;;;;;;  mh-folder-speedbar-buttons) "mh-speed" "mh-speed.el" (20533
-;;;;;;  49334))
+;;;;;;  mh-folder-speedbar-buttons) "mh-speed" "mh-speed.el" (20707
+;;;;;;  18685 911514 0))
 ;;; Generated autoloads from mh-speed.el
 
 (autoload 'mh-folder-speedbar-buttons "mh-speed" "\
@@ -2711,7 +2717,7 @@ The function invalidates the latest ancestor that is present.
 ;;;;;;  mh-thread-print-scan-lines mh-thread-generate mh-thread-parse-scan-line
 ;;;;;;  mh-thread-inc mh-toggle-threads mh-thread-refile mh-thread-previous-sibling
 ;;;;;;  mh-thread-next-sibling mh-thread-delete mh-thread-ancestor)
-;;;;;;  "mh-thread" "mh-thread.el" (20533 49334))
+;;;;;;  "mh-thread" "mh-thread.el" (20707 18685 911514 0))
 ;;; Generated autoloads from mh-thread.el
 
 (autoload 'mh-thread-ancestor "mh-thread" "\
@@ -2813,7 +2819,8 @@ Forget the message INDEX from the threading tables.
 ;;;;;;  mh-help mh-set-help mh-ephem-message mh-find-path mh-logo-display
 ;;;;;;  mh-replace-string mh-quote-pick-expr mh-mapc mh-make-local-vars
 ;;;;;;  mh-delete-line mh-colors-in-use-p mh-colors-available-p mh-beginning-of-word
-;;;;;;  mh-search-from-end) "mh-utils" "mh-utils.el" (20533 49334))
+;;;;;;  mh-search-from-end) "mh-utils" "mh-utils.el" (20707 18685
+;;;;;;  911514 0))
 ;;; Generated autoloads from mh-utils.el
 
 (autoload 'mh-search-from-end "mh-utils" "\
@@ -3120,7 +3127,7 @@ Return non-nil if buffer includes \"^-- $\".
 ;;;***
 
 ;;;### (autoloads (mh-set-x-image-cache-directory mh-show-xface)
-;;;;;;  "mh-xface" "mh-xface.el" (20533 49334))
+;;;;;;  "mh-xface" "mh-xface.el" (20707 18685 911514 0))
 ;;; Generated autoloads from mh-xface.el
 
 (autoload 'mh-show-xface "mh-xface" "\
@@ -3137,7 +3144,7 @@ This is only done if `mh-x-image-cache-directory' is nil.
 ;;;***
 
 ;;;### (autoloads nil nil ("mh-buffers.el" "mh-compat.el" "mh-e.el"
-;;;;;;  "mh-gnus.el" "mh-tool-bar.el") (20535 20472 963371))
+;;;;;;  "mh-gnus.el" "mh-tool-bar.el") (20793 40499 323992 759000))
 
 ;;;***
 

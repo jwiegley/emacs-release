@@ -1,6 +1,6 @@
 ;;; smtpmail.el --- simple SMTP protocol (RFC 821) for sending mail
 
-;; Copyright (C) 1995-1996, 2001-2012 Free Software Foundation, Inc.
+;; Copyright (C) 1995-1996, 2001-2013 Free Software Foundation, Inc.
 
 ;; Author: Tomoji Kagatani <kagatani@rbc.ncl.omron.co.jp>
 ;; Maintainer: Simon Josefsson <simon@josefsson.org>
@@ -200,10 +200,10 @@ The list is in preference order.")
 	;; local binding in the mail buffer will take effect.
 	(smtpmail-mail-address
          (or (and mail-specify-envelope-from (mail-envelope-from))
-             (smtpmail-user-mail-address)
-	     (let ((from (mail-fetch-field "from")))
+             (let ((from (mail-fetch-field "from")))
 	       (and from
-		    (cadr (mail-extract-address-components from))))))
+		    (cadr (mail-extract-address-components from))))
+	     (smtpmail-user-mail-address)))
 	(smtpmail-code-conv-from
 	 (if enable-multibyte-characters
 	     (let ((sendmail-coding-system smtpmail-code-conv-from))
@@ -653,12 +653,10 @@ Returns an error if the server cannot be contacted."
 	 (or smtpmail-mail-address
 	     (and mail-specify-envelope-from
 		  (mail-envelope-from))
-	     (smtpmail-user-mail-address)
-	     ;; Fall back on the From: header as the envelope From
-	     ;; address.
 	     (let ((from (mail-fetch-field "from")))
 	       (and from
-		    (cadr (mail-extract-address-components from))))))
+		    (cadr (mail-extract-address-components from))))
+	     (smtpmail-user-mail-address)))
 	response-code
 	process-buffer
 	result

@@ -1,6 +1,6 @@
 ;;; vc-svn.el --- non-resident support for Subversion version-control
 
-;; Copyright (C) 2003-2012  Free Software Foundation, Inc.
+;; Copyright (C) 2003-2013 Free Software Foundation, Inc.
 
 ;; Author:      FSF (see vc.el for full credits)
 ;; Maintainer:  Stefan Monnier <monnier@gnu.org>
@@ -399,7 +399,7 @@ The changes are between FIRST-VERSION and SECOND-VERSION."
                ;; We also used to match the filename in column 0 without any
                ;; meta-info before it, but I believe this can never happen.
                (concat "^\\(\\([ACGDU]\\)\\(.[B ]\\)?  \\)"
-                       (regexp-quote (file-name-nondirectory file)))
+		       (regexp-quote (file-relative-name file)))
                nil t)
               (cond
                ;; Merge successful, we are in sync with repository now

@@ -1,6 +1,6 @@
 ;;; cc-cmds.el --- user level commands for CC Mode
 
-;; Copyright (C) 1985, 1987, 1992-2012  Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1987, 1992-2013 Free Software Foundation, Inc.
 
 ;; Authors:    2003- Alan Mackenzie
 ;;             1998- Martin Stjernholm
@@ -310,7 +310,7 @@ left out.
 Turning on auto-newline automatically enables electric indentation.
 
 When the auto-newline feature is enabled (indicated by \"/la\" on the
-modeline after the mode name) newlines are automatically inserted
+mode line after the mode name) newlines are automatically inserted
 after special characters such as brace, comma, semi-colon, and colon."
   (interactive "P")
   (setq c-auto-newline
@@ -329,7 +329,7 @@ positive, turns it off when negative, and just toggles it when zero or
 left out.
 
 When the hungry-delete-key feature is enabled (indicated by \"/h\" on
-the modeline after the mode name) the delete key gobbles all preceding
+the mode line after the mode name) the delete key gobbles all preceding
 whitespace in one fell swoop."
   (interactive "P")
   (setq c-hungry-delete-key (c-calculate-state arg c-hungry-delete-key))
@@ -493,13 +493,16 @@ inside a literal or a macro, nothing special happens."
       (insert-char ?\n 1)
       ;; In AWK (etc.) or in a macro, make sure this CR hasn't changed
       ;; the syntax.  (There might already be an escaped NL there.)
-      (when (or (c-at-vsemi-p (1- (point)))
-		(let ((pt (point)))
-		  (save-excursion
-		    (backward-char)
-		    (and (c-beginning-of-macro)
-			 (progn (c-end-of-macro)
-				(< (point) pt))))))
+      (when (or
+	     (save-excursion
+	       (c-skip-ws-backward (c-point 'bopl))
+	       (c-at-vsemi-p))
+	     (let ((pt (point)))
+	       (save-excursion
+		 (backward-char)
+		 (and (c-beginning-of-macro)
+		      (progn (c-end-of-macro)
+			     (< (point) pt))))))
 	(backward-char)
 	(insert-char ?\\ 1)
 	(forward-char))

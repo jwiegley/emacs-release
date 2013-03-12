@@ -1,6 +1,6 @@
 ;;; em-unix.el --- UNIX command aliases
 
-;; Copyright (C) 1999-2012 Free Software Foundation, Inc.
+;; Copyright (C) 1999-2013 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@gnu.org>
 
@@ -40,7 +40,8 @@
 (require 'pcomplete)
 
 ;;;###autoload
-(eshell-defgroup eshell-unix nil
+(progn
+(defgroup eshell-unix nil
   "This module defines many of the more common UNIX utilities as
 aliases implemented in Lisp.  These include mv, ln, cp, rm, etc.  If
 the user passes arguments which are too complex, or are unrecognized
@@ -51,7 +52,7 @@ with Eshell makes them more versatile than their traditional cousins
 \(such as being able to use `kill' to kill Eshell background processes
 by name)."
   :tag "UNIX commands in Lisp"
-  :group 'eshell-module)
+  :group 'eshell-module))
 
 (defcustom eshell-unix-load-hook nil
   "A list of functions to run when `eshell-unix' is loaded."
@@ -1036,9 +1037,6 @@ Show wall-clock time elapsed during execution of COMMAND.")
 
 (put 'eshell/occur 'eshell-no-numeric-conversions t)
 
-;; Pacify the byte-compiler.
-(defvar tramp-default-proxies-alist)
-
 (defun eshell/su (&rest args)
   "Alias \"su\" to call Tramp."
   (require 'tramp)
@@ -1056,23 +1054,24 @@ Become another USER during a login session.")
 		  (host (or (file-remote-p default-directory 'host)
 			    "localhost"))
 		  (dir (or (file-remote-p default-directory 'localname)
-			   (expand-file-name default-directory))))
+			   (expand-file-name default-directory)))
+		  (prefix (file-remote-p default-directory)))
 	      (dolist (arg args)
 		(if (string-equal arg "-") (setq login t) (setq user arg)))
 	      ;; `eshell-eval-using-options' does not handle "-".
 	      (if (member "-" orig-args) (setq login t))
 	      (if login (setq dir "~/"))
-	      (if (and (file-remote-p default-directory)
+	      (if (and prefix
 		       (or
 			(not (string-equal
 			      "su" (file-remote-p default-directory 'method)))
 			(not (string-equal
 			      user (file-remote-p default-directory 'user)))))
-		  (add-to-list
-		   'tramp-default-proxies-alist
-		   (list host user (file-remote-p default-directory))))
-	      (eshell-parse-command
-	       "cd" (list (format "/su:%s@%s:%s" user host dir))))))))
+		  (eshell-parse-command
+		   "cd" (list (format "%s|su:%s@%s:%s"
+				      (substring prefix 0 -1) user host dir)))
+		(eshell-parse-command
+		 "cd" (list (format "/su:%s@%s:%s" user host dir)))))))))
 
 (put 'eshell/su 'eshell-no-numeric-conversions t)
 
@@ -1093,21 +1092,26 @@ Execute a COMMAND as the superuser or another USER.")
 		  (host (or (file-remote-p default-directory 'host)
 			    "localhost"))
 		  (dir (or (file-remote-p default-directory 'localname)
-			   (expand-file-name default-directory))))
+			   (expand-file-name default-directory)))
+		  (prefix (file-remote-p default-directory)))
 	      ;; `eshell-eval-using-options' reads options of COMMAND.
 	      (while (and (stringp (car orig-args))
 			  (member (car orig-args) '("-u" "--user")))
 		(setq orig-args (cddr orig-args)))
-	      (if (and (file-remote-p default-directory)
-		       (or
-			(not (string-equal
-			      "sudo" (file-remote-p default-directory 'method)))
-			(not (string-equal
-			      user (file-remote-p default-directory 'user)))))
-		  (add-to-list
-		   'tramp-default-proxies-alist
-		   (list host user (file-remote-p default-directory))))
-	      (let ((default-directory (format "/sudo:%s@%s:%s" user host dir)))
+	      (let ((default-directory
+		      (if (and prefix
+			       (or
+				(not
+				 (string-equal
+				  "sudo"
+				  (file-remote-p default-directory 'method)))
+				(not
+				 (string-equal
+				  user
+				  (file-remote-p default-directory 'user)))))
+			  (format "%s|sudo:%s@%s:%s"
+				  (substring prefix 0 -1) user host dir)
+			(format "/sudo:%s@%s:%s" user host dir))))
 		(eshell-named-command (car orig-args) (cdr orig-args))))))))
 
 (put 'eshell/sudo 'eshell-no-numeric-conversions t)
