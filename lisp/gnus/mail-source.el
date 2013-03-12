@@ -1,6 +1,6 @@
 ;;; mail-source.el --- functions for fetching mail
 
-;; Copyright (C) 1999-2012  Free Software Foundation, Inc.
+;; Copyright (C) 1999-2013 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news, mail
@@ -720,12 +720,6 @@ Deleting old (> %s day(s)) incoming mail file `%s'." diff bfile)
 	(kill-buffer errors))
       ;; Return whether we moved successfully or not.
       to)))
-
-(defun mail-source-movemail-and-remove (from to)
-  "Move FROM to TO using movemail, then remove FROM if empty."
-  (or (not (mail-source-movemail from to))
-      (not (zerop (nth 7 (file-attributes from))))
-      (delete-file from)))
 
 (defun mail-source-fetch-with-program (program)
   (eq 0 (call-process shell-file-name nil nil nil

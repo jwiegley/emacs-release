@@ -11,7 +11,7 @@
 @copying
 This file documents SES: the Simple Emacs Spreadsheet.
 
-Copyright @copyright{} 2002-2012 Free Software Foundation, Inc.
+Copyright @copyright{} 2002--2013 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -22,8 +22,7 @@ and with the Back-Cover Texts as in (a) below.  A copy of the license
 is included in the section entitled ``GNU Free Documentation License.''
 
 (a) The FSF's Back-Cover Text is: ``You have the freedom to copy and
-modify this GNU manual.  Buying copies from the FSF supports it in
-developing GNU and promoting software freedom.''
+modify this GNU manual.''
 @end quotation
 @end copying
 
@@ -71,7 +70,7 @@ To report bugs, send email to @email{jyavner@@member.fsf.org}.
 * Advanced Features::           Want to know more?
 * For Gurus::                   Want to know @emph{even more}?
 * Index::                       Concept, Function and Variable Index
-* Acknowledgements::            Acknowledgements
+* Acknowledgments::             Acknowledgments
 * GNU Free Documentation License:: The license for this documentation.
 @end menu
 
@@ -693,7 +692,7 @@ Export a range of cells as tab-separated values (@code{ses-export-tsv}).
 Export a range of cells as tab-separated formulas (@code{ses-export-tsf}).
 @end table
 
-The exported text goes to the kill ring --- you can paste it into
+The exported text goes to the kill ring; you can paste it into
 another buffer.  Columns are separated by tabs, rows by newlines.
 
 To import text, use any of the yank commands where the text to paste
@@ -843,7 +842,7 @@ Begins with an 014 character, followed by sets of cell-definition
 macros for each row, followed by column-widths, column-printers,
 default-printer, and header-row.  Then there's the global parameters
 (file-format ID, numrows, numcols) and the local variables (specifying
-SES mode for the buffer, etc.)
+SES mode for the buffer, etc.).
 
 When a SES file is loaded, first the numrows and numcols values are
 loaded, then the entire data area is @code{eval}ed, and finally the local
@@ -853,7 +852,7 @@ You can edit the data area, but don't insert or delete any newlines
 except in the local-variables part, since SES locates things by
 counting newlines.  Use @kbd{C-x C-e} at the end of a line to install
 your edits into the spreadsheet data structures (this does not update
-the print area, use e.g. @kbd{C-c C-l} for that).
+the print area, use, e.g., @kbd{C-c C-l} for that).
 
 The data area is maintained as an image of spreadsheet data
 structures that area stored in buffer-local variables.  If the data
@@ -889,7 +888,7 @@ order to avoid a virus warning.
 You can define functions by making them values for the fake local
 variable @code{eval}.  Such functions can then be used in your
 formulas and printers, but usually each @code{eval} is presented to
-the user during file loading as a potential virus --- this can get
+the user during file loading as a potential virus.  This can get
 annoying.
 
 You can define functions in your @file{.emacs} file.  Other people can
@@ -927,15 +926,15 @@ cell.
 @end table
 
 @c ===================================================================
-@node Index, Acknowledgements, For Gurus, Top
+@node Index, Acknowledgments, For Gurus, Top
 @unnumbered Index
 
 @printindex cp
 
 @c ===================================================================
 
-@node Acknowledgements, GNU Free Documentation License, Index, Top
-@chapter Acknowledgements
+@node Acknowledgments, GNU Free Documentation License, Index, Top
+@chapter Acknowledgments
 
 Coding by:
 @quotation
@@ -976,7 +975,7 @@ Jean-Philippe Theberge @email{jphil@@acs.pagesjaunes.fr}
 
 @c ===================================================================
 
-@node GNU Free Documentation License, , Acknowledgements, Top
+@node GNU Free Documentation License, , Acknowledgments, Top
 @appendix GNU Free Documentation License
 @include doclicense.texi
 

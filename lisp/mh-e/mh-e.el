@@ -1,7 +1,7 @@
 ;;; mh-e.el --- GNU Emacs interface to the MH mail system
 
-;; Copyright (C) 1985-1988, 1990, 1992-1995, 1997, 1999-2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1985-1988, 1990, 1992-1995, 1997, 1999-2013 Free
+;; Software Foundation, Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -3189,7 +3189,9 @@ function used to insert the signature with
   :group 'mh-letter
   :package-version '(MH-E . "8.0"))
 
-(defcustom-mh mh-kill-folder-suppress-prompt-hooks '(mh-search-p)
+(define-obsolete-variable-alias 'mh-kill-folder-suppress-prompt-hooks
+  'mh-kill-folder-suppress-prompt-functions "24.3")
+(defcustom-mh mh-kill-folder-suppress-prompt-functions '(mh-search-p)
   "Abnormal hook run at the beginning of \\<mh-folder-mode-map>\\[mh-kill-folder].
 
 The hook functions are called with no arguments and should return

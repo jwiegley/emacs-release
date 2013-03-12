@@ -1,5 +1,5 @@
 /* Dump Emacs in Mach-O format for use on Mac OS X.
-   Copyright (C) 2001-2012 Free Software Foundation, Inc.
+   Copyright (C) 2001-2013 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -204,8 +204,6 @@ static off_t data_segment_old_fileoff = 0;
 
 static struct segment_command *data_segment_scp;
 
-static void unexec_error (const char *format, ...) NO_RETURN;
-
 /* Read N bytes from infd into memory starting at address DEST.
    Return true if successful, false otherwise.  */
 static int
@@ -282,7 +280,7 @@ unexec_copy (off_t dest, off_t src, ssize_t count)
 
 /* Debugging and informational messages routines.  */
 
-static void
+static _Noreturn void
 unexec_error (const char *format, ...)
 {
   va_list ap;
@@ -403,7 +401,7 @@ build_region_list (void)
 	}
       else
 	{
-	  r = (struct region_t *) malloc (sizeof (struct region_t));
+	  r = malloc (sizeof *r);
 
 	  if (!r)
 	    unexec_error ("cannot allocate region structure");
@@ -698,7 +696,7 @@ read_load_commands (void)
 #endif
 
   nlc = mh.ncmds;
-  lca = (struct load_command **) malloc (nlc * sizeof (struct load_command *));
+  lca = malloc (nlc * sizeof *lca);
 
   for (i = 0; i < nlc; i++)
     {
@@ -707,7 +705,7 @@ read_load_commands (void)
 	 size first and then read the rest.  */
       if (!unexec_read (&lc, sizeof (struct load_command)))
         unexec_error ("cannot read load command");
-      lca[i] = (struct load_command *) malloc (lc.cmdsize);
+      lca[i] = malloc (lc.cmdsize);
       memcpy (lca[i], &lc, sizeof (struct load_command));
       if (!unexec_read (lca[i] + 1, lc.cmdsize - sizeof (struct load_command)))
         unexec_error ("cannot read content of load command");
@@ -852,9 +850,9 @@ copy_data_segment (struct load_command *lc)
 	{
 	  sectp->flags = S_REGULAR;
 	  if (!unexec_write (sectp->offset, (void *) sectp->addr, sectp->size))
-	    unexec_error ("cannot write section %s", sectp->sectname);
+	    unexec_error ("cannot write section %.16s", sectp->sectname);
 	  if (!unexec_write (header_offset, sectp, sizeof (struct section)))
-	    unexec_error ("cannot write section %s's header", sectp->sectname);
+	    unexec_error ("cannot write section %.16s's header", sectp->sectname);
 	}
       else if (strncmp (sectp->sectname, SECT_BSS, 16) == 0)
 	{
@@ -872,15 +870,15 @@ copy_data_segment (struct load_command *lc)
 	  my_size = (unsigned long)my_endbss_static - sectp->addr;
 	  if (!(sectp->addr <= (unsigned long)my_endbss_static
 		&& my_size <= sectp->size))
-	    unexec_error ("my_endbss_static is not in section %s",
+	    unexec_error ("my_endbss_static is not in section %.16s",
 			  sectp->sectname);
 	  if (!unexec_write (sectp->offset, (void *) sectp->addr, my_size))
-	    unexec_error ("cannot write section %s", sectp->sectname);
+	    unexec_error ("cannot write section %.16s", sectp->sectname);
 	  if (!unexec_write_zero (sectp->offset + my_size,
 				  sectp->size - my_size))
-	    unexec_error ("cannot write section %s", sectp->sectname);
+	    unexec_error ("cannot write section %.16s", sectp->sectname);
 	  if (!unexec_write (header_offset, sectp, sizeof (struct section)))
-	    unexec_error ("cannot write section %s's header", sectp->sectname);
+	    unexec_error ("cannot write section %.16s's header", sectp->sectname);
 	}
       else if (strncmp (sectp->sectname, "__la_symbol_ptr", 16) == 0
 	       || strncmp (sectp->sectname, "__nl_symbol_ptr", 16) == 0
@@ -891,15 +889,18 @@ copy_data_segment (struct load_command *lc)
 	       || strncmp (sectp->sectname, "__cfstring", 16) == 0
 	       || strncmp (sectp->sectname, "__gcc_except_tab", 16) == 0
 	       || strncmp (sectp->sectname, "__program_vars", 16) == 0
+	       || strncmp (sectp->sectname, "__mod_init_func", 16) == 0
+	       || strncmp (sectp->sectname, "__mod_term_func", 16) == 0
 	       || strncmp (sectp->sectname, "__objc_", 7) == 0)
 	{
 	  if (!unexec_copy (sectp->offset, old_file_offset, sectp->size))
-	    unexec_error ("cannot copy section %s", sectp->sectname);
+	    unexec_error ("cannot copy section %.16s", sectp->sectname);
 	  if (!unexec_write (header_offset, sectp, sizeof (struct section)))
-	    unexec_error ("cannot write section %s's header", sectp->sectname);
+	    unexec_error ("cannot write section %.16s's header", sectp->sectname);
 	}
       else
-	unexec_error ("unrecognized section name in __DATA segment");
+	unexec_error ("unrecognized section %.16s in __DATA segment",
+		      sectp->sectname);
 
       printf ("        section %-16.16s at %#8lx - %#8lx (sz: %#8lx)\n",
 	      sectp->sectname, (long) (sectp->offset),
@@ -1471,7 +1472,7 @@ unexec_realloc (void *old_ptr, size_t new_size)
 	  size_t old_size = ((unexec_malloc_header_t *) old_ptr)[-1].u.size;
 	  size_t size = new_size > old_size ? old_size : new_size;
 
-	  p = (size_t *) malloc (new_size);
+	  p = malloc (new_size);
 	  if (size)
 	    memcpy (p, old_ptr, size);
 	}

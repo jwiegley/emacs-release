@@ -1,7 +1,7 @@
 ;;; view.el --- peruse file or buffer without editing
 
-;; Copyright (C) 1985, 1989, 1994-1995, 1997, 2000-2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1985, 1989, 1994-1995, 1997, 2000-2013 Free Software
+;; Foundation, Inc.
 
 ;; Author: K. Shane Hartman
 ;; Maintainer: Inge Frick <inge@nada.kth.se>
@@ -513,6 +513,7 @@ that can be added see the RETURN-TO-ALIST argument of the
 function `view-mode-exit'.  If `view-return-to-alist' contains an
 entry for the selected window, purge that entry from
 `view-return-to-alist' before adding ITEM."
+  (declare (obsolete "this function has no effect." "24.1"))
   (with-current-buffer buffer
     (when view-return-to-alist
       (let* ((list view-return-to-alist)
@@ -535,7 +536,6 @@ entry for the selected window, purge that entry from
     (when item
       (setq view-return-to-alist
 	    (cons item view-return-to-alist)))))
-(make-obsolete 'view-return-to-alist-update "this function has no effect." "24.1")
 
 ;;;###autoload
 (defun view-mode-enter (&optional quit-restore exit-action)

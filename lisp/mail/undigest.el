@@ -1,7 +1,7 @@
 ;;; undigest.el --- digest-cracking support for the RMAIL mail reader
 
-;; Copyright (C) 1985-1986, 1994, 1996, 2001-2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1985-1986, 1994, 1996, 2001-2013 Free Software
+;; Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: mail
@@ -32,7 +32,7 @@
 
 (defcustom rmail-forward-separator-regex
   "^----.*\\([Ff]orwarded\\|[Oo]riginal\\).*[Mm]essage"
-  "*Regexp to match the string that introduces forwarded messages.
+  "Regexp to match the string that introduces forwarded messages.
 This is not a header, but a string contained in the body of the message.
 You may need to customize it for local needs."
   :type 'regexp

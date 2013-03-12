@@ -1,5 +1,6 @@
 /* Includes for memory limit warnings.
-   Copyright (C) 1990, 1993-1996, 2001-2012  Free Software Foundation, Inc.
+   Copyright (C) 1990, 1993-1996, 2001-2013 Free Software Foundation,
+   Inc.
 
 This file is part of GNU Emacs.
 
@@ -33,12 +34,10 @@ extern int etext;
 # endif
 #endif
 
-extern char *start_of_data (void);
-#if defined USE_LSB_TAG || UINTPTR_MAX >> VALBITS == 0
+extern char *start_of_data (void) ATTRIBUTE_CONST;
+#if USE_LSB_TAG || UINTPTR_MAX <= VAL_MAX
 #define EXCEEDS_LISP_PTR(ptr) 0
-#elif defined DATA_SEG_BITS
+#else
 #define EXCEEDS_LISP_PTR(ptr) \
   (((uintptr_t) (ptr) & ~DATA_SEG_BITS) >> VALBITS)
-#else
-#define EXCEEDS_LISP_PTR(ptr) ((uintptr_t) (ptr) >> VALBITS)
 #endif

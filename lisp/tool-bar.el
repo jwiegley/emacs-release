@@ -1,6 +1,6 @@
 ;;; tool-bar.el --- setting up the tool bar
 
-;; Copyright (C) 2000-2012  Free Software Foundation, Inc.
+;; Copyright (C) 2000-2013 Free Software Foundation, Inc.
 
 ;; Author: Dave Love <fx@gnu.org>
 ;; Keywords: mouse frames
@@ -146,8 +146,7 @@ To define items in any other map, use `tool-bar-local-item'."
 	 (bg (face-attribute 'tool-bar :background))
 	 (colors (nconc (if (eq fg 'unspecified) nil (list :foreground fg))
 			(if (eq bg 'unspecified) nil (list :background bg))))
-	 (tiff-spec (append (list :type 'tiff :file (concat icon ".tiff"))
-			    colors))
+	 (tiff-spec (list :type 'tiff :file (concat icon ".tiff")))
 	 (xpm-spec (list :type 'xpm :file (concat icon ".xpm")))
 	 (xpm-lo-spec (list :type 'xpm :file
 			    (concat "low-color/" icon ".xpm")))

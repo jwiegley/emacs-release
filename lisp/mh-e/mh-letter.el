@@ -1,6 +1,7 @@
 ;;; mh-letter.el --- MH-Letter mode
 
-;; Copyright (C) 1993, 1995, 1997, 2000-2012  Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1995, 1997, 2000-2013 Free Software Foundation,
+;; Inc.
 
 ;; Author: Bill Wohler <wohler@newt.com>
 ;; Maintainer: Bill Wohler <wohler@newt.com>
@@ -66,8 +67,9 @@ Each hook function can find the citation between point and mark.
 And each hook function should leave point and mark around the
 citation text as modified.
 
-This is a normal hook, misnamed for historical reasons. It is
-semi-obsolete and is only used if `mail-citation-hook' is nil.")
+This is a normal hook, misnamed for historical reasons.
+It is obsolete and is only used if `mail-citation-hook' is nil.")
+(make-obsolete-variable 'mh-yank-hooks 'mail-citation-hook "19.34")
 
 
 

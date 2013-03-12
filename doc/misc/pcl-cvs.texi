@@ -1,12 +1,12 @@
 \input texinfo  @c -*-texinfo-*-
 @c %**start of header
 @setfilename ../../info/pcl-cvs
-@settitle PCL-CVS --- Emacs Front-End to CVS
+@settitle PCL-CVS---Emacs Front-End to CVS
 @syncodeindex vr fn
 @c %**end of header
 
 @copying
-Copyright @copyright{} 1991-2012 Free Software Foundation, Inc.
+Copyright @copyright{} 1991--2013 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -17,8 +17,7 @@ and with the Back-Cover Texts as in (a) below.  A copy of the license
 is included in the section entitled ``GNU Free Documentation License''.
 
 (a) The FSF's Back-Cover Text is: ``You have the freedom to copy and
-modify this GNU manual.  Buying copies from the FSF supports it in
-developing GNU and promoting software freedom.''
+modify this GNU manual.''
 @end quotation
 @end copying
 
@@ -32,10 +31,10 @@ developing GNU and promoting software freedom.''
 @sp 4
 @c The title is printed in a large font.
 @center @titlefont{User's Guide}
-@sp
+@sp 1
 @center @titlefont{to}
-@sp
-@center @titlefont{PCL-CVS --- The Emacs Front-End to CVS}
+@sp 1
+@center @titlefont{PCL-CVS---The Emacs Front-End to CVS}
 @ignore
 @sp 2
 @center release 2.9
@@ -63,7 +62,7 @@ developing GNU and promoting software freedom.''
 @ifnottex
 @top PCL-CVS
 
-This manual describes PCL-CVS, the GNU Emacs front-end to CVS.  It
+This manual describes PCL-CVS, the GNU Emacs front-end to CVS@.  It
 is nowhere near complete, so you are advised to use @kbd{M-x
 customize-group RET pcl-cvs @key{RET}} and to look at the documentation strings
 of the various commands and major modes for further information.
@@ -202,7 +201,7 @@ and cleanups.
 the build and installation procedure.
 
 @item
-@email{woods@@weird.com, Greg A.@: Woods} contributed code to implement
+@email{woods@@weird.com, Greg A. Woods} contributed code to implement
 the use of per-file diff buffers, and vendor join diffs with emerge and
 ediff, as well as various and sundry bug fixes and cleanups.
 
@@ -236,7 +235,7 @@ there would be no new releases of PCL-CVS.
 @cindex Sample session
 
 This document assumes that you know what CVS is, and that you at least
-know the fundamental concepts of CVS.  If that is not the case, you
+know the fundamental concepts of CVS@.  If that is not the case, you
 should read the CVS documentation.  Type @kbd{info -f cvs} or @kbd{man
 cvs}.
 
@@ -476,7 +475,7 @@ This chapter describes all the commands that you can use in PCL-CVS.
 @end iftex
 @ifnottex
 The nodes in this menu contains explanations about all the commands that
-you can use in PCL-CVS.  They are grouped together by type.
+you can use in PCL-CVS@.  They are grouped together by type.
 @end ifnottex
 
 @menu
@@ -568,7 +567,7 @@ argument to the command (e.g., by typing
 @cindex Command-line options to CVS
 
 This section describes the convention used by nearly all PCL-CVS
-commands for setting optional flags sent to CVS.  A single @kbd{C-u}
+commands for setting optional flags sent to CVS@.  A single @kbd{C-u}
 prefix argument is used to cause the command to prompt for flags to be
 used for the current invocation of the command only.  Two @kbd{C-u} prefix
 arguments are used to prompt for flags which will be set permanently, for the
@@ -582,7 +581,7 @@ and the file will be added.  Subsequent @samp{cvs add}
 commands will use the previously prevailing flags.
 
 As a second example, say you are about to perform a diff and want to see
-the result in unified diff format, i.e. you'd like to pass the flag
+the result in unified diff format, i.e., you'd like to pass the flag
 @samp{-u} to both @samp{cvs diff} and @samp{diff}.  You'd also like all
 subsequent diffs to use this flag.  You can type @kbd{C-u C-u = -u @key{RET}}
 and the diff will be performed, and the default flags will be set to
@@ -683,7 +682,7 @@ the fact that the buffer is a PCL-CVS buffer:
 These keys move the cursor one file forward, towards the end of the
 buffer (@code{cvs-mode-next-line}).@refill
 
-@itemx p
+@item p
 This key moves one file backward, towards the beginning of the buffer
 (@code{cvs-mode-previous-line}).
 @end table
@@ -789,8 +788,8 @@ risk of error, @kbd{C-c C-c} will ask for confirmation if the set of
 selected files has changed between the first step and the last.  You can
 change this last detail with @code{log-edit-confirm}.
 
-As for the difference between @kbd{c} (i.e. @code{cvs-mode-commit}) and
-@kbd{C} (i.e. @code{cvs-mode-commit-setup}) is that the first gets you
+As for the difference between @kbd{c} (i.e., @code{cvs-mode-commit}) and
+@kbd{C} (i.e., @code{cvs-mode-commit-setup}) is that the first gets you
 straight to @samp{*cvs-commit*} without erasing it or changing anything
 to its content, while the second first erases @samp{*cvs-commit*}
 and tries to initialize it with a sane default (it does that by either
@@ -1170,13 +1169,13 @@ kill the contents of the buffer with @kbd{C-w}.
 
 @findex log-edit-insert-changelog
 If you work by writing entries in the @file{ChangeLog}
-(@pxref{(emacs)Change Log}) and then commit the change under revision
+(@pxref{Change Log,,, emacs, The GNU Emacs Manual}) and then commit the change under revision
 control, you can generate the Log Edit text from the ChangeLog using
 @kbd{C-c C-a} (@kbd{log-edit-insert-changelog}).  This looks for
 entries for the file(s) concerned in the top entry in the ChangeLog
 and uses those paragraphs as the log text.  This text is only inserted
 if the top entry was made under your user name on the current date.
-@xref{(emacs)Change Logs and VC}, for the opposite way of
+@xref{Change Logs and VC,,, emacs, The GNU Emacs Manual}, for the opposite way of
 working---generating ChangeLog entries from the revision control log.
 
 In the Log Edit buffer, @kbd{C-c C-f} (@kbd{M-x log-edit-show-files})
@@ -1391,7 +1390,7 @@ Below is a partial list of currently known problems with PCL-CVS.
 
 @table @asis
 @item Unexpected output from CVS
-Unexpected output from CVS may confuse PCL-CVS.  It will create
+Unexpected output from CVS may confuse PCL-CVS@.  It will create
 warning messages in the @samp{*cvs*} buffer alerting you to any parse errors.
 If you get these messages, please send a bug report to the email
 addresses listed above.  Include the contents of the @samp{*cvs*} buffer, the

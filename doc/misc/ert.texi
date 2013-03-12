@@ -10,7 +10,7 @@
 @end direntry
 
 @copying
-Copyright @copyright{} 2008, 2010-2012 Free Software Foundation, Inc.
+Copyright @copyright{} 2008, 2010--2013 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -18,17 +18,10 @@ under the terms of the GNU Free Documentation License, Version 1.3 or
 any later version published by the Free Software Foundation; with no
 Invariant Sections, with the Front-Cover texts being ``A GNU Manual,''
 and with the Back-Cover Texts as in (a) below.  A copy of the license
-is included in the section entitled ``GNU Free Documentation License''
-in the Emacs manual.
+is included in the section entitled ``GNU Free Documentation License''.
 
 (a) The FSF's Back-Cover Text is: ``You have the freedom to copy and
-modify this GNU manual.  Buying copies from the FSF supports it in
-developing GNU and promoting software freedom.''
-
-This document is part of a collection distributed under the GNU Free
-Documentation License.  If you want to distribute this document
-separately from the collection, you can do so by adding a copy of the
-license to the document, as described in section 6 of the license.
+modify this GNU manual.''
 @end quotation
 @end copying
 
@@ -53,6 +46,7 @@ traditional software development methods.
 * How to Debug Tests::          What to do if a test fails.
 * Extending ERT::               ERT is extensible in several ways.
 * Other Testing Concepts::      Features not in ERT.
+* GNU Free Documentation License::  The license for this documentation.
 
 @detailmenu
  --- The Detailed Node Listing ---
@@ -85,6 +79,10 @@ Other Testing Concepts
 * Mocks and Stubs::           Stubbing out code that is irrelevant to the test.
 * Fixtures and Test Suites::  How ERT differs from tools for other languages.
 
+Appendix
+
+* GNU Free Documentation License:: The license for this documentation.
+
 @end detailmenu
 @end menu
 
@@ -93,7 +91,7 @@ Other Testing Concepts
 
 ERT allows you to define @emph{tests} in addition to functions,
 macros, variables, and the other usual Lisp constructs.  Tests are
-simply Lisp code --- code that invokes other code and checks whether
+simply Lisp code: code that invokes other code and checks whether
 it behaves as expected.
 
 ERT keeps track of the tests that are defined and provides convenient
@@ -130,12 +128,12 @@ familiar: This example defines a test named @code{pp-test-quote} that
 will pass if the three calls to @code{equal} all return true
 (non-nil).
 
-@code{should} is a macro with the same meaning as @code{assert} but
+@code{should} is a macro with the same meaning as @code{cl-assert} but
 better error reporting.  @xref{The @code{should} Macro}.
 
 Each test should have a name that describes what functionality it tests.
-Test names can be chosen arbitrarily --- they are in a
-namespace separate from functions and variables --- but should follow
+Test names can be chosen arbitrarily---they are in a
+namespace separate from functions and variables---but should follow
 the usual Emacs Lisp convention of having a prefix that indicates
 which package they belong to.  Test names are displayed by ERT when
 reporting failures and can be used when selecting which tests to run.
@@ -342,7 +340,7 @@ to find where a test was defined if the test was loaded from a file.
 Test bodies can include arbitrary code; but to be useful, they need to
 check whether the code being tested (or @emph{code under test})
 does what it is supposed to do.  The macro @code{should} is similar to
-@code{assert} from the cl package
+@code{cl-assert} from the cl package
 (@pxref{Assertions,,, cl, Common Lisp Extensions}),
 but analyzes its argument form and records information that ERT can
 display to help debugging.
@@ -504,7 +502,7 @@ buffer if one is already visiting the requested file; and it runs
 Instead, it is better to use lower-level mechanisms with simple and
 predictable semantics like @code{with-temp-buffer}, @code{insert} or
 @code{insert-file-contents-literally}, and to activate any desired mode
-by calling the corresponding function directly --- after binding the
+by calling the corresponding function directly, after binding the
 hook variables to nil.  This avoids the above problems.
 
 
@@ -561,9 +559,9 @@ could be used instead.
 The reason why this test only checks the first line of the backtrace
 is that the remainder of the backtrace is dependent on ERT's internals
 as well as whether the code is running interpreted or compiled.  By
-looking only at the first line, the test checks a useful property
---- that the backtrace correctly captures the call to @code{signal} that
-results from the call to @code{ert-fail} --- without being brittle.
+looking only at the first line, the test checks a useful property---that
+the backtrace correctly captures the call to @code{signal} that
+results from the call to @code{ert-fail}---without being brittle.
 
 This example also shows that writing tests is much easier if the code
 under test was structured with testing in mind.
@@ -701,12 +699,12 @@ strips them out, so it is more convenient.
 failed.  This can be useful to figure out how far it got.
 
 @item You can instrument tests for debugging the same way you instrument
-@code{defun}s for debugging --- go to the source code of the test and
+@code{defun}s for debugging: go to the source code of the test and
 type @kbd{@kbd{C-u} @kbd{C-M-x}}.  Then, go back to the ERT buffer and
 re-run the test with @kbd{r} or @kbd{d}.
 
 @item If you have been editing and rearranging tests, it is possible that
-ERT remembers an old test that you have since renamed or removed ---
+ERT remembers an old test that you have since renamed or removed:
 renamings or removals of definitions in the source code leave around a
 stray definition under the old name in the running process (this is a
 common problem in Lisp).  In such a situation, hit @kbd{D} to let ERT
@@ -759,7 +757,7 @@ meant to be usable by other code.  But there is no mature API yet.
 Contributions to ERT are welcome.
 
 
-@node Other Testing Concepts,  , Extending ERT, Top
+@node Other Testing Concepts, GNU Free Documentation License , Extending ERT, Top
 @chapter Other Testing Concepts
 
 For information on mocks, stubs, fixtures, or test suites, see below.
@@ -838,9 +836,13 @@ solve this by allowing regexp matching on test names; e.g., the
 selector "^ert-" selects ERT's self-tests.
 
 Other uses include grouping tests by their expected execution time,
-e.g. to run quick tests during interactive development and slow tests less
+e.g., to run quick tests during interactive development and slow tests less
 often.  This can be achieved with the @code{:tag} argument to
 @code{ert-deftest} and @code{tag} test selectors.
+
+@node GNU Free Documentation License, , Other Testing Concepts, Top
+@appendix GNU Free Documentation License
+@include doclicense.texi
 
 @bye
 

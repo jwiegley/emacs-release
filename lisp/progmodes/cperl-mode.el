@@ -1,6 +1,6 @@
 ;;; cperl-mode.el --- Perl code editing commands for Emacs
 
-;; Copyright (C) 1985-1987, 1991-2012  Free Software Foundation, Inc.
+;; Copyright (C) 1985-1987, 1991-2013 Free Software Foundation, Inc.
 
 ;; Author: Ilya Zakharevich
 ;;	Bob Olson
@@ -1551,7 +1551,7 @@ and POD directives (Disabled by default, see `cperl-electric-keywords'.)
 
 The user types the keyword immediately followed by a space, which
 causes the construct to be expanded, and the point is positioned where
-she is most likely to want to be.  eg. when the user types a space
+she is most likely to want to be.  E.g., when the user types a space
 following \"if\" the following appears in the buffer: if () { or if ()
 } { } and the cursor is between the parentheses.  The user can then
 type some boolean expression within the parens.  Having done that,
@@ -2328,8 +2328,7 @@ to nil."
 						 nil t)))) ; Only one
 		     (progn
 		       (forward-word 1)
-		       (setq name (file-name-sans-extension
-				   (file-name-nondirectory (buffer-file-name)))
+		       (setq name (file-name-base)
 			     p (point))
 		       (insert " NAME\n\n" name
 			       " - \n\n=head1 SYNOPSIS\n\n\n\n"

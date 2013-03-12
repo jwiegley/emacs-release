@@ -1,5 +1,5 @@
 /* Definitions and headers for AppKit framework on the Mac OS.
-   Copyright (C) 2008-2012  YAMAMOTO Mitsuharu
+   Copyright (C) 2008-2013  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 
@@ -18,21 +18,12 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #undef Z
 #import <Cocoa/Cocoa.h>
-#import <AppKit/NSAccessibility.h> /* Mac OS X 10.2 needs this.  */
-#ifdef USE_MAC_IMAGE_IO
 #import <WebKit/WebKit.h>
-#endif
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
 #import <QuartzCore/QuartzCore.h>
 #endif
 #define Z (current_buffer->text->z)
 
-#ifndef NSAppKitVersionNumber10_2
-#define NSAppKitVersionNumber10_2 663
-#endif
-#ifndef NSAppKitVersionNumber10_3
-#define NSAppKitVersionNumber10_3 743
-#endif
 #ifndef NSAppKitVersionNumber10_4
 #define NSAppKitVersionNumber10_4 824
 #endif
@@ -56,7 +47,7 @@ typedef unsigned int NSUInteger;
 #endif
 
 #ifndef USE_ARC
-#if defined (SYNC_INPUT) && defined (__clang__) && __has_feature (objc_arc)
+#if defined (__clang__) && __has_feature (objc_arc)
 #define USE_ARC 1
 #endif
 #endif
@@ -138,8 +129,9 @@ typedef unsigned int NSUInteger;
 @end
 
 /* Class for delegate for NSApplication.  It also becomes the target
-   of several actions such as those from EmacsView, menus, dialogs,
-   and actions/services bound in the mac-apple-event keymap.  */
+   of several actions such as those from EmacsMainView, menus,
+   dialogs, and actions/services bound in the mac-apple-event
+   keymap.  */
 
 @interface EmacsController : NSObject <NSApplicationDelegate>
 {
@@ -277,7 +269,8 @@ typedef unsigned int NSUInteger;
      EmacsFrameController object is associated with as delegate.  */
   struct frame *emacsFrame;
 
-  /* The view for the Emacs frame.  */
+  /* Window and view for the Emacs frame.  */
+  EmacsWindow *emacsWindow;
   EmacsView *emacsView;
 
   /* Window and view overlaid on the Emacs frame window.  */
@@ -308,14 +301,15 @@ typedef unsigned int NSUInteger;
      parameter after the full screen transition.  */
   Lisp_Object *fullscreenFrameParameterAfterTransition;
 
-  /* Window used for the full screen transition.  */
-  NSWindow *fullScreenTransitionWindow;
+  /* View used for the full screen transition.  */
+  NSView *fullScreenTransitionView;
 #endif
 }
 - (id)initWithEmacsFrame:(struct frame *)emacsFrame;
 - (void)setupEmacsView;
 - (void)setupWindow;
 - (struct frame *)emacsFrame;
+- (EmacsWindow *)emacsWindow;
 - (WMState)windowManagerState;
 - (void)setWindowManagerState:(WMState)newState;
 - (void)updateBackingScaleFactor;
@@ -335,19 +329,21 @@ typedef unsigned int NSUInteger;
    directly by tooltip frames, and indirectly by ordinary frames via
    inheritance.  */
 
-@interface EmacsTipView : NSView
+@interface EmacsView : NSView
 - (struct frame *)emacsFrame;
 @end
 
 /* Class for Emacs view that also handles input events.  Used by
    ordinary frames.  */
 
-@interface EmacsView : EmacsTipView <NSTextInput, NSTextInputClient>
+@interface EmacsMainView : EmacsView <NSTextInput, NSTextInputClient>
 {
-  /* Target object to which the EmacsView object sends actions.  */
+  /* Target object to which the EmacsMainView object sends
+     actions.  */
   __unsafe_unretained id target;
 
-  /* Message selector of the action the EmacsView object sends.  */
+  /* Message selector of the action the EmacsMainView object
+     sends.  */
   SEL action;
 
   /* Stores the Emacs input event that the action method is expected
@@ -596,7 +592,6 @@ typedef unsigned int NSUInteger;
 - (long)doAppleScript:(Lisp_Object)script result:(Lisp_Object *)result;
 @end
 
-#ifdef USE_MAC_IMAGE_IO
 @interface DOMSVGRect : DOMObject
 - (float)x;
 - (float)y;
@@ -618,7 +613,7 @@ typedef unsigned int NSUInteger;
   struct image *emacsImage;
 
   /* Function called when checking image size.  */
-  int (*checkImageSizeFunc) (struct frame *, int, int);
+  bool (*checkImageSizeFunc) (struct frame *, int, int);
 
   /* Function called when reporting image load errors.  */
   void (*imageErrorFunc) (const char *, Lisp_Object, Lisp_Object);
@@ -627,11 +622,10 @@ typedef unsigned int NSUInteger;
   BOOL isLoaded;
 }
 - (id)initWithEmacsFrame:(struct frame *)f emacsImage:(struct image *)img
-      checkImageSizeFunc:(int (*)(struct frame *, int, int))checkImageSize
+      checkImageSizeFunc:(bool (*)(struct frame *, int, int))checkImageSize
 	  imageErrorFunc:(void (*)(const char *, Lisp_Object, Lisp_Object))imageError;
 - (int)loadData:(NSData *)data backgroundColor:(NSColor *)backgroundColor;
 @end
-#endif
 
 @interface EmacsFrameController (Accessibility)
 - (void)postAccessibilityNotificationsToEmacsView;
@@ -658,10 +652,8 @@ typedef unsigned int NSUInteger;
   LangCode langCode;
   RegionCode regionCode;
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
   /* Exemplar character set for the locale.  */
   NSCharacterSet *exemplarCharacterSet;
-#endif
 }
 - (id)initWithLocaleIdentifier:(NSString *)string;
 - (BOOL)isCompatibleWithFont:(NSFont *)font;
@@ -693,15 +685,6 @@ typedef unsigned int NSUInteger;
 - (id)initWithFontDescriptor:(NSFontDescriptor *)aFontDescriptor;
 - (NSFontDescriptor *)fontDescriptor;
 + (id)fontDescriptorWithFontDescriptor:(NSFontDescriptor *)aFontDescriptor;
-@end
-
-#endif
-
-#if USE_NS_FONT_MANAGER
-@interface EmacsFMFontDescriptor : EmacsFontDescriptor
-{
-  NSMutableDictionary *fontAttributes;
-}
 @end
 
 #endif
@@ -768,12 +751,6 @@ enum {
 };
 #endif
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1040
-@interface NSWindow (AvailableOn1040AndLater)
-- (CGFloat)userSpaceScaleFactor;
-@end
-#endif
-
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
 enum {
   NSWindowCollectionBehaviorDefault		= 0,
@@ -826,28 +803,10 @@ enum {
 @end
 #endif
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1030
-@interface NSSavePanel (AvailableOn1030AndLater)
-- (void)setNameFieldLabel:(NSString *)label;
-@end
-#endif
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1030
-@interface NSMenu (AvailableOn1030AndLater)
-- (void)setDelegate:(id)anObject;
-@end
-#endif
-
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1060
 @interface NSMenu (AvailableOn1060AndLater)
 - (BOOL)popUpMenuPositioningItem:(NSMenuItem *)item
 		      atLocation:(NSPoint)location inView:(NSView *)view;
-@end
-#endif
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1040
-@interface NSEvent (AvailableOn1040AndLater)
-- (float)rotation;
 @end
 #endif
 
@@ -890,13 +849,10 @@ typedef NSUInteger NSEventPhase;
 enum {
     NSEventTypeSmartMagnify = 32
 };
-#endif
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1030
-@interface NSObject (AvailableOn1030AndLater)
-- (id)accessibilityAttributeValue:(NSString *)attribute
-		     forParameter:(id)parameter;
-@end
+enum {
+    NSEventPhaseMayBegin    = 0x1 << 5
+};
 #endif
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1070
@@ -904,6 +860,7 @@ enum {
 @interface NSAnimationContext (AvailableOn1070AndLater)
 + (void)runAnimationGroup:(void (^)(NSAnimationContext *context))changes
         completionHandler:(void (^)(void))completionHandler;
+- (void)setTimingFunction:(CAMediaTimingFunction *)newTimingFunction;
 @end
 
 @interface CALayer (AvailableOn1070AndLater)

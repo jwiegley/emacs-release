@@ -1,6 +1,6 @@
 ;;; cookie1.el --- retrieve random phrases from fortune cookie files
 
-;; Copyright (C) 1993, 2001-2012 Free Software Foundation, Inc.
+;; Copyright (C) 1993, 2001-2013 Free Software Foundation, Inc.
 
 ;; Author: Eric S. Raymond <esr@snark.thyrsus.com>
 ;; Maintainer: FSF
@@ -53,9 +53,6 @@
 
 ;;; Code:
 
-; Randomize the seed in the random number generator.
-(random t)
-
 (defconst cookie-delimiter "\n%%\n\\|\n%\n\\|\0"
   "Delimiter used to separate cookie file entries.")
 
@@ -96,6 +93,8 @@ of load, ENDMSG at the end."
   "Reads in the PHRASE-FILE, returns it as a vector of strings.
 Emit STARTMSG and ENDMSG before and after.  Caches the result; second
 and subsequent calls on the same file won't go to disk."
+  (or (file-readable-p phrase-file)
+      (error "Cannot read file `%s'" phrase-file))
   (let ((sym (intern-soft phrase-file cookie-cache)))
     (and sym (not (equal (symbol-function sym)
 			 (nth 5 (file-attributes phrase-file))))

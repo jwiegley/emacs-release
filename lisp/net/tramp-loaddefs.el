@@ -3,16 +3,18 @@
 ;;; Code:
 
 
-;;;### (autoloads (tramp-shell-quote-argument tramp-parse-putty tramp-parse-netrc
-;;;;;;  tramp-parse-passwd tramp-parse-hosts tramp-parse-shostkeys
-;;;;;;  tramp-parse-sconfig tramp-parse-shosts tramp-parse-rhosts
-;;;;;;  tramp-completion-mode-p tramp-set-completion-function tramp-tramp-file-p
-;;;;;;  tramp-default-user-alist tramp-default-method-alist) "tramp"
-;;;;;;  "tramp.el" (20533 49334))
+;;;### (autoloads (tramp-shell-quote-argument tramp-time-diff tramp-time-less-p
+;;;;;;  tramp-clear-passwd tramp-read-passwd tramp-make-tramp-temp-file
+;;;;;;  tramp-local-host-p tramp-mode-string-to-int tramp-parse-putty
+;;;;;;  tramp-parse-netrc tramp-parse-passwd tramp-parse-hosts tramp-parse-sknownhosts
+;;;;;;  tramp-parse-shostkeys tramp-parse-sconfig tramp-parse-shosts
+;;;;;;  tramp-parse-rhosts tramp-completion-mode-p tramp-set-completion-function
+;;;;;;  tramp-tramp-file-p tramp-default-user-alist tramp-default-method-alist)
+;;;;;;  "tramp" "tramp.el" (20773 47373 975742 0))
 ;;; Generated autoloads from tramp.el
 
 (defvar tramp-methods nil "\
-*Alist of methods for remote files.
+Alist of methods for remote files.
 This is a list of entries of the form (NAME PARAM1 PARAM2 ...).
 Each NAME stands for a remote access method.  Each PARAM is a
 pair of the form (KEY VALUE).  The following KEYs are defined:
@@ -72,15 +74,6 @@ pair of the form (KEY VALUE).  The following KEYs are defined:
   * `tramp-gw-args'
     As the attribute name says, additional arguments are specified here
     when a method is applied via a gateway.
-  * `tramp-password-end-of-line'
-    This specifies the string to use for terminating the line after
-    submitting the password.  If this method parameter is nil, then the
-    value of the normal variable `tramp-default-password-end-of-line'
-    is used.  This parameter is necessary because the \"plink\" program
-    requires any two characters after sending the password.  These do
-    not have to be newline or carriage return characters.  Other login
-    programs are happy with just one character, the newline character.
-    We use \"xy\" as the value for methods using \"plink\".
   * `tramp-tmpdir'
     A directory on the remote host for temporary files.  If not
     specified, \"/tmp\" is taken as default.
@@ -114,7 +107,7 @@ started on the local host.  You should specify a remote host
 useful only in combination with `tramp-default-proxies-alist'.")
 
 (defvar tramp-default-method-alist nil "\
-*Default method to use for specific host/user pairs.
+Default method to use for specific host/user pairs.
 This is an alist of items (HOST USER METHOD).  The first matching item
 specifies the method to use for a file name which does not specify a
 method.  HOST and USER are regular expressions or nil, which is
@@ -129,7 +122,7 @@ See `tramp-methods' for a list of possibilities for METHOD.")
 (custom-autoload 'tramp-default-method-alist "tramp" t)
 
 (defvar tramp-default-user-alist nil "\
-*Default user to use for specific method/host pairs.
+Default user to use for specific method/host pairs.
 This is an alist of items (METHOD HOST USER).  The first matching item
 specifies the user to use for a file name which does not specify a
 user.  METHOD and USER are regular expressions or nil, which is
@@ -142,13 +135,13 @@ empty string for the method name.")
 (custom-autoload 'tramp-default-user-alist "tramp" t)
 
 (defconst tramp-local-host-regexp (concat "\\`" (regexp-opt (list "localhost" "localhost6" (system-name) "127.0.0.1" "::1") t) "\\'") "\
-*Host names which are regarded as local host.")
+Host names which are regarded as local host.")
 
 (defconst tramp-prefix-domain-format "%" "\
-*String matching delimiter between user and domain names.")
+String matching delimiter between user and domain names.")
 
 (defconst tramp-prefix-domain-regexp (regexp-quote tramp-prefix-domain-format) "\
-*Regexp matching delimiter between user and domain names.
+Regexp matching delimiter between user and domain names.
 Derived from `tramp-prefix-domain-format'.")
 
 (defvar tramp-foreign-file-name-handler-alist nil "\
@@ -166,9 +159,7 @@ Sets the list of completion functions for METHOD.
 FUNCTION-LIST is a list of entries of the form (FUNCTION FILE).
 The FUNCTION is intended to parse FILE according its syntax.
 It might be a predefined FUNCTION, or a user defined FUNCTION.
-Predefined FUNCTIONs are `tramp-parse-rhosts', `tramp-parse-shosts',
-`tramp-parse-sconfig', `tramp-parse-hosts', `tramp-parse-passwd',
-and `tramp-parse-netrc'.
+For the list of predefined FUNCTIONs see `tramp-completion-function-alist'.
 
 Example:
 
@@ -208,6 +199,12 @@ User is always nil.
 
 \(fn DIRNAME)" nil nil)
 
+(autoload 'tramp-parse-sknownhosts "tramp" "\
+Return a list of (user host) tuples allowed to access.
+User is always nil.
+
+\(fn DIRNAME)" nil nil)
+
 (autoload 'tramp-parse-hosts "tramp" "\
 Return a list of (user host) tuples allowed to access.
 User is always nil.
@@ -230,7 +227,46 @@ User may be nil.
 Return a list of (user host) tuples allowed to access.
 User is always nil.
 
-\(fn REGISTRY)" nil nil)
+\(fn REGISTRY-OR-DIRNAME)" nil nil)
+
+(autoload 'tramp-mode-string-to-int "tramp" "\
+Converts a ten-letter `drwxrwxrwx'-style mode string into mode bits.
+
+\(fn MODE-STRING)" nil nil)
+
+(autoload 'tramp-local-host-p "tramp" "\
+Return t if this points to the local host, nil otherwise.
+
+\(fn VEC)" nil nil)
+
+(autoload 'tramp-make-tramp-temp-file "tramp" "\
+Create a temporary file on the remote host identified by VEC.
+Return the local name of the temporary file.
+
+\(fn VEC)" nil nil)
+
+(autoload 'tramp-read-passwd "tramp" "\
+Read a password from user (compat function).
+Consults the auth-source package.
+Invokes `password-read' if available, `read-passwd' else.
+
+\(fn PROC &optional PROMPT)" nil nil)
+
+(autoload 'tramp-clear-passwd "tramp" "\
+Clear password cache for connection related to VEC.
+
+\(fn VEC)" nil nil)
+
+(autoload 'tramp-time-less-p "tramp" "\
+Say whether time value T1 is less than time value T2.
+
+\(fn T1 T2)" nil nil)
+
+(autoload 'tramp-time-diff "tramp" "\
+Return the difference between the two times, in seconds.
+T1 and T2 are time values (as returned by `current-time' for example).
+
+\(fn T1 T2)" nil nil)
 
 (autoload 'tramp-shell-quote-argument "tramp" "\
 Similar to `shell-quote-argument', but groks newlines.
@@ -241,11 +277,10 @@ Only works for Bourne-like shells.
 ;;;***
 
 ;;;### (autoloads (tramp-parse-connection-properties tramp-list-connections
-;;;;;;  tramp-cache-print tramp-flush-connection-property with-connection-property
-;;;;;;  tramp-set-connection-property tramp-get-connection-property
-;;;;;;  tramp-flush-directory-property tramp-flush-file-property
-;;;;;;  with-file-property tramp-set-file-property tramp-get-file-property)
-;;;;;;  "tramp-cache" "tramp-cache.el" (20533 49334))
+;;;;;;  tramp-cache-print tramp-flush-connection-property tramp-set-connection-property
+;;;;;;  tramp-get-connection-property tramp-flush-directory-property
+;;;;;;  tramp-flush-file-property tramp-set-file-property tramp-get-file-property)
+;;;;;;  "tramp-cache" "tramp-cache.el" (20707 18685 911514 0))
 ;;; Generated autoloads from tramp-cache.el
 
 (defvar tramp-cache-data (make-hash-table :test 'equal) "\
@@ -262,14 +297,6 @@ Set the PROPERTY of FILE to VALUE, in the cache context of VEC.
 Returns VALUE.
 
 \(fn VEC FILE PROPERTY VALUE)" nil nil)
-
-(autoload 'with-file-property "tramp-cache" "\
-Check in Tramp cache for PROPERTY, otherwise execute BODY and set cache.
-FILE must be a local file name on a connection identified via VEC.
-
-\(fn VEC FILE PROPERTY &rest BODY)" nil (quote macro))
-
-(put 'with-file-property 'lisp-indent-function 3)
 
 (autoload 'tramp-flush-file-property "tramp-cache" "\
 Remove all properties of FILE in the cache context of VEC.
@@ -295,13 +322,6 @@ KEY identifies the connection, it is either a process or a vector.
 PROPERTY is set persistent when KEY is a vector.
 
 \(fn KEY PROPERTY VALUE)" nil nil)
-
-(autoload 'with-connection-property "tramp-cache" "\
-Check in Tramp for property PROPERTY, otherwise executes BODY and set.
-
-\(fn KEY PROPERTY &rest BODY)" nil (quote macro))
-
-(put 'with-connection-property 'lisp-indent-function 2)
 
 (autoload 'tramp-flush-connection-property "tramp-cache" "\
 Remove all properties identified by KEY.
@@ -330,8 +350,8 @@ for all methods.  Resulting data are derived from connection history.
 
 ;;;### (autoloads (tramp-bug tramp-version tramp-cleanup-all-buffers
 ;;;;;;  tramp-cleanup-all-connections tramp-cleanup-this-connection
-;;;;;;  tramp-cleanup-connection) "tramp-cmds" "tramp-cmds.el" (20533
-;;;;;;  49334))
+;;;;;;  tramp-cleanup-connection) "tramp-cmds" "tramp-cmds.el" (20707
+;;;;;;  18685 911514 0))
 ;;; Generated autoloads from tramp-cmds.el
 
 (autoload 'tramp-cleanup-connection "tramp-cmds" "\
@@ -370,11 +390,11 @@ Submit a bug report to the Tramp developers.
 ;;;***
 
 ;;;### (autoloads (tramp-ftp-file-name-handler) "tramp-ftp" "tramp-ftp.el"
-;;;;;;  (20533 49334))
+;;;;;;  (20707 18685 911514 0))
 ;;; Generated autoloads from tramp-ftp.el
 
 (defconst tramp-ftp-method "ftp" "\
-*When this method name is used, forward all calls to Ange-FTP.")
+When this method name is used, forward all calls to Ange-FTP.")
 
 (unless (featurep 'xemacs) (add-to-list 'tramp-methods (cons tramp-ftp-method nil)) (add-to-list 'tramp-default-method-alist (list "\\`ftp\\." nil tramp-ftp-method)) (add-to-list 'tramp-default-method-alist (list nil "\\`\\(anonymous\\|ftp\\)\\'" tramp-ftp-method)))
 
@@ -388,18 +408,18 @@ pass to the OPERATION.
 \(fn OPERATION &rest ARGS)" nil nil)
 
 (defsubst tramp-ftp-file-name-p (filename) "\
-Check if it's a filename that should be forwarded to Ange-FTP." (let ((v (tramp-dissect-file-name filename))) (string= (tramp-file-name-method v) tramp-ftp-method)))
+Check if it's a filename that should be forwarded to Ange-FTP." (string= (tramp-file-name-method (tramp-dissect-file-name filename)) tramp-ftp-method))
 
 (unless (featurep 'xemacs) (add-to-list 'tramp-foreign-file-name-handler-alist (cons 'tramp-ftp-file-name-p 'tramp-ftp-file-name-handler)))
 
 ;;;***
 
 ;;;### (autoloads (tramp-gvfs-file-name-handler tramp-gvfs-methods)
-;;;;;;  "tramp-gvfs" "tramp-gvfs.el" (20533 49334))
+;;;;;;  "tramp-gvfs" "tramp-gvfs.el" (20707 18685 911514 0))
 ;;; Generated autoloads from tramp-gvfs.el
 
 (defvar tramp-gvfs-methods '("dav" "davs" "obex" "synce") "\
-*List of methods for remote files, accessed with GVFS.")
+List of methods for remote files, accessed with GVFS.")
 
 (custom-autoload 'tramp-gvfs-methods "tramp-gvfs" t)
 
@@ -422,14 +442,14 @@ pass to the OPERATION.
 ;;;***
 
 ;;;### (autoloads (tramp-gw-open-connection) "tramp-gw" "tramp-gw.el"
-;;;;;;  (20533 49334))
+;;;;;;  (20707 18685 911514 0))
 ;;; Generated autoloads from tramp-gw.el
 
 (defconst tramp-gw-tunnel-method "tunnel" "\
-*Method to connect HTTP gateways.")
+Method to connect HTTP gateways.")
 
 (defconst tramp-gw-socks-method "socks" "\
-*Method to connect SOCKS servers.")
+Method to connect SOCKS servers.")
 
 (add-to-list 'tramp-default-user-alist (list (concat "\\`" (regexp-opt (list tramp-gw-tunnel-method tramp-gw-socks-method)) "\\'") nil (user-login-name)))
 
@@ -448,11 +468,11 @@ instead of the host name declared in TARGET-VEC.
 ;;;***
 
 ;;;### (autoloads (tramp-sh-file-name-handler tramp-remote-path tramp-terminal-type)
-;;;;;;  "tramp-sh" "tramp-sh.el" (20533 49334))
+;;;;;;  "tramp-sh" "tramp-sh.el" (20770 34246 257277 0))
 ;;; Generated autoloads from tramp-sh.el
 
 (defvar tramp-terminal-type "dumb" "\
-*Value of TERM environment variable for logging in to remote host.
+Value of TERM environment variable for logging in to remote host.
 Because Tramp wants to parse the output of the remote shell, it is easily
 confused by ANSI color escape sequences and suchlike.  Often, shell init
 files conditionalize this setup based on the TERM environment variable.")
@@ -504,15 +524,15 @@ Prompt when establishing a connection.")
 
 (add-to-list 'tramp-methods '("krlogin" (tramp-login-program "krlogin") (tramp-login-args (("%h") ("-l" "%u") ("-x"))) (tramp-remote-shell "/bin/sh") (tramp-remote-shell-args ("-c"))))
 
-(add-to-list 'tramp-methods '("plink" (tramp-login-program "plink") (tramp-login-args (("-l" "%u") ("-P" "%p") ("-ssh") ("%h"))) (tramp-remote-shell "/bin/sh") (tramp-remote-shell-args ("-c")) (tramp-password-end-of-line "xy") (tramp-default-port 22)))
+(add-to-list 'tramp-methods '("plink" (tramp-login-program "plink") (tramp-login-args (("-l" "%u") ("-P" "%p") ("-ssh") ("%h"))) (tramp-remote-shell "/bin/sh") (tramp-remote-shell-args ("-c")) (tramp-default-port 22)))
 
-(add-to-list 'tramp-methods '("plink1" (tramp-login-program "plink") (tramp-login-args (("-l" "%u") ("-P" "%p") ("-1" "-ssh") ("%h"))) (tramp-remote-shell "/bin/sh") (tramp-remote-shell-args ("-c")) (tramp-password-end-of-line "xy") (tramp-default-port 22)))
+(add-to-list 'tramp-methods '("plink1" (tramp-login-program "plink") (tramp-login-args (("-l" "%u") ("-P" "%p") ("-1" "-ssh") ("%h"))) (tramp-remote-shell "/bin/sh") (tramp-remote-shell-args ("-c")) (tramp-default-port 22)))
 
 (add-to-list 'tramp-methods `("plinkx" (tramp-login-program "plink") (tramp-login-args (("-load") ("%h") ("-t") (,(format "env 'TERM=%s' 'PROMPT_COMMAND=' 'PS1=%s'" tramp-terminal-type tramp-initial-end-of-output)) ("/bin/sh"))) (tramp-remote-shell "/bin/sh") (tramp-remote-shell-args ("-c"))))
 
-(add-to-list 'tramp-methods '("pscp" (tramp-login-program "plink") (tramp-login-args (("-l" "%u") ("-P" "%p") ("-ssh") ("%h"))) (tramp-remote-shell "/bin/sh") (tramp-remote-shell-args ("-c")) (tramp-copy-program "pscp") (tramp-copy-args (("-l" "%u") ("-P" "%p") ("-scp") ("-p" "%k") ("-q") ("-r"))) (tramp-copy-keep-date t) (tramp-copy-recursive t) (tramp-password-end-of-line "xy") (tramp-default-port 22)))
+(add-to-list 'tramp-methods '("pscp" (tramp-login-program "plink") (tramp-login-args (("-l" "%u") ("-P" "%p") ("-ssh") ("%h"))) (tramp-remote-shell "/bin/sh") (tramp-remote-shell-args ("-c")) (tramp-copy-program "pscp") (tramp-copy-args (("-l" "%u") ("-P" "%p") ("-scp") ("-p" "%k") ("-q") ("-r"))) (tramp-copy-keep-date t) (tramp-copy-recursive t) (tramp-default-port 22)))
 
-(add-to-list 'tramp-methods '("psftp" (tramp-login-program "plink") (tramp-login-args (("-l" "%u") ("-P" "%p") ("-ssh") ("%h"))) (tramp-remote-shell "/bin/sh") (tramp-remote-shell-args ("-c")) (tramp-copy-program "pscp") (tramp-copy-args (("-l" "%u") ("-P" "%p") ("-sftp") ("-p" "%k") ("-q") ("-r"))) (tramp-copy-keep-date t) (tramp-copy-recursive t) (tramp-password-end-of-line "xy")))
+(add-to-list 'tramp-methods '("psftp" (tramp-login-program "plink") (tramp-login-args (("-l" "%u") ("-P" "%p") ("-ssh") ("%h"))) (tramp-remote-shell "/bin/sh") (tramp-remote-shell-args ("-c")) (tramp-copy-program "pscp") (tramp-copy-args (("-l" "%u") ("-P" "%p") ("-sftp") ("-p" "%k") ("-q") ("-r"))) (tramp-copy-keep-date t) (tramp-copy-recursive t)))
 
 (add-to-list 'tramp-methods '("fcp" (tramp-login-program "fsh") (tramp-login-args (("%h") ("-l" "%u") ("sh" "-i"))) (tramp-remote-shell "/bin/sh") (tramp-remote-shell-args ("-i") ("-c")) (tramp-copy-program "fcp") (tramp-copy-args (("-p" "%k"))) (tramp-copy-keep-date t)))
 
@@ -534,13 +554,13 @@ Default list of (FUNCTION FILE) pairs to be examined for telnet methods.")
 (defconst tramp-completion-function-alist-su '((tramp-parse-passwd "/etc/passwd")) "\
 Default list of (FUNCTION FILE) pairs to be examined for su methods.")
 
-(defconst tramp-completion-function-alist-putty '((tramp-parse-putty "HKEY_CURRENT_USER\\Software\\SimonTatham\\PuTTY\\Sessions")) "\
-Default list of (FUNCTION REGISTRY) pairs to be examined for putty methods.")
+(defconst tramp-completion-function-alist-putty `((tramp-parse-putty ,(if (memq system-type '(windows-nt)) "HKEY_CURRENT_USER\\Software\\SimonTatham\\PuTTY\\Sessions" "~/.putty/sessions"))) "\
+Default list of (FUNCTION REGISTRY) pairs to be examined for putty sessions.")
 
 (eval-after-load 'tramp '(progn (tramp-set-completion-function "rcp" tramp-completion-function-alist-rsh) (tramp-set-completion-function "remcp" tramp-completion-function-alist-rsh) (tramp-set-completion-function "scp" tramp-completion-function-alist-ssh) (tramp-set-completion-function "scp1" tramp-completion-function-alist-ssh) (tramp-set-completion-function "scp2" tramp-completion-function-alist-ssh) (tramp-set-completion-function "scpc" tramp-completion-function-alist-ssh) (tramp-set-completion-function "scpx" tramp-completion-function-alist-ssh) (tramp-set-completion-function "sftp" tramp-completion-function-alist-ssh) (tramp-set-completion-function "rsync" tramp-completion-function-alist-ssh) (tramp-set-completion-function "rsyncc" tramp-completion-function-alist-ssh) (tramp-set-completion-function "rsh" tramp-completion-function-alist-rsh) (tramp-set-completion-function "remsh" tramp-completion-function-alist-rsh) (tramp-set-completion-function "ssh" tramp-completion-function-alist-ssh) (tramp-set-completion-function "ssh1" tramp-completion-function-alist-ssh) (tramp-set-completion-function "ssh2" tramp-completion-function-alist-ssh) (tramp-set-completion-function "ssh1_old" tramp-completion-function-alist-ssh) (tramp-set-completion-function "ssh2_old" tramp-completion-function-alist-ssh) (tramp-set-completion-function "sshx" tramp-completion-function-alist-ssh) (tramp-set-completion-function "telnet" tramp-completion-function-alist-telnet) (tramp-set-completion-function "su" tramp-completion-function-alist-su) (tramp-set-completion-function "sudo" tramp-completion-function-alist-su) (tramp-set-completion-function "ksu" tramp-completion-function-alist-su) (tramp-set-completion-function "krlogin" tramp-completion-function-alist-rsh) (tramp-set-completion-function "plink" tramp-completion-function-alist-ssh) (tramp-set-completion-function "plink1" tramp-completion-function-alist-ssh) (tramp-set-completion-function "plinkx" tramp-completion-function-alist-putty) (tramp-set-completion-function "pscp" tramp-completion-function-alist-ssh) (tramp-set-completion-function "fcp" tramp-completion-function-alist-ssh)))
 
-(defvar tramp-remote-path '(tramp-default-remote-path "/bin" "/usr/bin" "/usr/sbin" "/usr/local/bin" "/local/bin" "/local/freeware/bin" "/local/gnu/bin" "/usr/freeware/bin" "/usr/pkg/bin" "/usr/contrib/bin") "\
-*List of directories to search for executables on remote host.
+(defvar tramp-remote-path '(tramp-default-remote-path "/bin" "/usr/bin" "/sbin" "/usr/sbin" "/usr/local/bin" "/usr/local/sbin" "/local/bin" "/local/freeware/bin" "/local/gnu/bin" "/usr/freeware/bin" "/usr/pkg/bin" "/usr/contrib/bin" "/opt/bin" "/opt/sbin" "/opt/local/bin") "\
+List of directories to search for executables on remote host.
 For every remote host, this variable will be set buffer local,
 keeping the list of existing directories on that host.
 
@@ -570,11 +590,11 @@ Fall back to normal file name handler if no Tramp handler exists.
 ;;;***
 
 ;;;### (autoloads (tramp-smb-file-name-handler) "tramp-smb" "tramp-smb.el"
-;;;;;;  (20533 49334))
+;;;;;;  (20707 18685 911514 0))
 ;;; Generated autoloads from tramp-smb.el
 
 (defconst tramp-smb-method "smb" "\
-*Method to connect SAMBA and M$ SMB servers.")
+Method to connect SAMBA and M$ SMB servers.")
 
 (unless (memq system-type '(cygwin windows-nt)) (add-to-list 'tramp-methods `(,tramp-smb-method (tramp-remote-shell "") (tramp-tmpdir "/C$/Temp"))))
 
@@ -585,7 +605,7 @@ Fall back to normal file name handler if no Tramp handler exists.
 (eval-after-load 'tramp '(tramp-set-completion-function tramp-smb-method '((tramp-parse-netrc "~/.netrc"))))
 
 (defsubst tramp-smb-file-name-p (filename) "\
-Check if it's a filename for SMB servers." (let ((v (tramp-dissect-file-name filename))) (string= (tramp-file-name-method v) tramp-smb-method)))
+Check if it's a filename for SMB servers." (string= (tramp-file-name-method (tramp-dissect-file-name filename)) tramp-smb-method))
 
 (autoload 'tramp-smb-file-name-handler "tramp-smb" "\
 Invoke the SMB related OPERATION.
@@ -599,7 +619,7 @@ pass to the OPERATION.
 ;;;***
 
 ;;;### (autoloads (tramp-uuencode-region) "tramp-uu" "tramp-uu.el"
-;;;;;;  (20533 49334))
+;;;;;;  (20707 18685 911514 0))
 ;;; Generated autoloads from tramp-uu.el
 
 (autoload 'tramp-uuencode-region "tramp-uu" "\
@@ -609,10 +629,11 @@ UU-encode the region between BEG and END.
 
 ;;;***
 
-;;;### (autoloads nil "trampver" "trampver.el" (20533 49334))
+;;;### (autoloads nil "trampver" "trampver.el" (20707 18685 911514
+;;;;;;  0))
 ;;; Generated autoloads from trampver.el
 
-(defconst tramp-version "2.2.3-24.1" "\
+(defconst tramp-version "2.2.6-24.3" "\
 This version of Tramp.")
 
 (defconst tramp-bug-report-address "tramp-devel@gnu.org" "\
@@ -631,7 +652,7 @@ Email address to send bug reports to.")
 ;;;;;;  "sasl-cram.el" "sasl-digest.el" "sasl-ntlm.el" "sasl.el"
 ;;;;;;  "secrets.el" "snmp-mode.el" "soap-client.el" "soap-inspect.el"
 ;;;;;;  "socks.el" "telnet.el" "tls.el" "tramp-compat.el" "webjump.el"
-;;;;;;  "xesam.el" "zeroconf.el") (20535 20473 871717))
+;;;;;;  "xesam.el" "zeroconf.el") (20793 40500 415379 745000))
 
 ;;;***
 

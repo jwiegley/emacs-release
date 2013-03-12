@@ -1,7 +1,7 @@
 ;;; mac-win.el --- parse switches controlling interface with Mac window system -*-coding: utf-8-*-
 
 ;; Copyright (C) 1999-2008  Free Software Foundation, Inc.
-;; Copyright (C) 2009-2012  YAMAMOTO Mitsuharu
+;; Copyright (C) 2009-2013  YAMAMOTO Mitsuharu
 
 ;; Author: Andrew Choi <akochoi@mac.com>
 ;;	YAMAMOTO Mitsuharu <mituharu@math.s.chiba-u.ac.jp>
@@ -63,6 +63,8 @@
 
 ;; An alist of X options and the function which handles them.  See
 ;; ../startup.el.
+
+(eval-when-compile (require 'cl-lib))
 
 ;; (if (not (eq window-system 'mac))
 ;;     (error "%s: Loading mac-win.el but not compiled for Mac" (invocation-name)))
@@ -310,6 +312,107 @@
 	(define-key key-translation-map [?\x80] "\\"))))
 
 (define-key special-event-map [language-change] 'mac-handle-language-change)
+
+
+;;;; Composition
+(defconst mac-emoji-variation-characters-alist
+  '((keycap . "#0123456789")
+    (non-keycap . "\u203C\u2049\u2139\u2194\u2195\u2196\u2197\u2198\
+\u2199\u21A9\u21AA\u231A\u231B\u24C2\u25AA\u25AB\
+\u25B6\u25C0\u25FB\u25FC\u25FD\u25FE\u2600\u2601\
+\u260E\u2611\u2614\u2615\u261D\u263A\u2648\u2649\
+\u264A\u264B\u264C\u264D\u264E\u264F\u2650\u2651\
+\u2652\u2653\u2660\u2663\u2665\u2666\u2668\u267B\
+\u267F\u2693\u26A0\u26A1\u26AA\u26AB\u26BD\u26BE\
+\u26C4\u26C5\u26D4\u26EA\u26F2\u26F3\u26F5\u26FA\
+\u26FD\u2702\u2708\u2709\u270C\u270F\u2712\u2714\
+\u2716\u2733\u2734\u2744\u2747\u2757\u2764\u27A1\
+\u2934\u2935\u2B05\u2B06\u2B07\u2B1B\u2B1C\u2B50\
+\u2B55\u303D\u3297\u3299\U0001F004\U0001F17F\U0001F21A\U0001F22F")
+    (mac-specific . "\u00a9\u00ae\u2122\U0001F170\U0001F171\U0001F17E"))
+  "Groups of characters that are sensitive to variation selectors 15 and 16.
+It is an alist of label symbols vs sequences of characters.")
+
+(defun mac-compose-gstring-for-keycap-variation (gstring)
+  "Compose keycap glyph-string GSTRING for graphic display.
+GSTRING must have three glyphs; the first is a character that is
+part of a keycap symbol, the second is a glyph for the variation
+selector 15 (U+FE0E, text-style) or 16 (U+FE0F, emoji-style), and
+the third is the combining enclosing keycap character (U+20E3)."
+  (let ((saved-header (lgstring-header gstring))
+	(g2 (lgstring-glyph gstring 2))
+	(i 0)
+	glyph from to)
+    (lgstring-set-header gstring (vector (lgstring-font gstring)
+					 (lgstring-char gstring 0)
+					 (lgstring-char gstring 2)))
+    (lglyph-set-from-to g2 (1- (lglyph-from g2)) (1- (lglyph-to g2)))
+    (lgstring-set-glyph gstring 1 g2)
+    (lgstring-set-glyph gstring 2 nil)
+    (setq gstring (font-shape-gstring gstring))
+    (when gstring
+      (lgstring-set-header gstring saved-header)
+      (lgstring-set-id gstring nil)
+      (while (and (< i (lgstring-glyph-len gstring))
+		  (setq glyph (lgstring-glyph gstring i)))
+	(setq from (lglyph-from glyph)
+	      to (lglyph-to glyph))
+	(if (>= from 1) (setq from (1+ from)))
+	(if (>= to 1) (setq to (1+ to)))
+	(lglyph-set-from-to glyph from to)
+	(setq i (1+ i)))))
+  gstring)
+
+(defun mac-compose-gstring-for-text-style-variation (gstring)
+  "Compose glyph-string GSTRING in text style for graphic display.
+GSTRING must have two glyphs; the first is a character that is
+sensitive to the text/emoji-style variation selector, and the
+second is a glyph for the variation selector 15 (U+FE0E)."
+  (let ((g0 (lgstring-glyph gstring 0))
+	(g1 (lgstring-glyph gstring 1)))
+    (lglyph-set-from-to g0 (lglyph-from g0) (lglyph-to g1))
+    (lglyph-set-char g0 0)
+    (lgstring-set-glyph gstring 1 nil))
+  gstring)
+
+(defun mac-compose-gstring-for-emoji-style-variation (gstring)
+  "Compose glyph-string GSTRING in emoji style for graphic display.
+GSTRING must have two glyphs; the first is a character that is
+sensitive to the text/emoji-style variation selector, and the
+second is a glyph for the variation selector 16 (U+FE0F)."
+  (let ((saved-header (lgstring-header gstring))
+	glyph)
+    (lgstring-set-header gstring (vector (lgstring-font gstring)
+					 (lgstring-char gstring 0)))
+    (lgstring-set-glyph gstring 1 nil)
+    (setq gstring (font-shape-gstring gstring))
+    (when gstring
+      (lgstring-set-header gstring saved-header)
+      (lgstring-set-id gstring nil)
+      (setq glyph (lgstring-glyph gstring 0))
+      (lglyph-set-from-to glyph (lglyph-from glyph) (1+ (lglyph-to glyph)))
+      (lglyph-set-char glyph 0)))
+  gstring)
+
+(defun mac-setup-composition-function-table ()
+  ;; Regional Indicator Symbols
+  (set-char-table-range composition-function-table '(#x1F1E6 . #x1F1FF)
+			'(["[\x1F1E6-\x1F1FF]+" 0 font-shape-gstring]))
+  ;; Variation Selectors 15 and 16
+  (let ((regexp-keycap
+	 (concat "[" (cdr (assq 'keycap mac-emoji-variation-characters-alist))
+		 "].\u20E3"))
+	(regexp-all
+	 (concat "[" (mapconcat 'cdr mac-emoji-variation-characters-alist "")
+		 "].")))
+    (set-char-table-range
+     composition-function-table ?\uFE0E
+     `([,regexp-keycap 1 mac-compose-gstring-for-keycap-variation 1]
+       [,regexp-all 1 mac-compose-gstring-for-text-style-variation -1]))
+    (set-char-table-range
+     composition-function-table ?\uFE0F
+     `([,regexp-keycap 1 mac-compose-gstring-for-keycap-variation 0]
+       [,regexp-all 1 mac-compose-gstring-for-emoji-style-variation 0]))))
 
 
 ;;;; Conversion between common flavors and Lisp string.
@@ -1696,12 +1799,15 @@ See also `mac-dnd-known-types'."
 (declare-function accelerate-menu "macmenu.c" (&optional frame) t)
 
 (defun mac-menu-bar-open (&optional frame)
-  "Open the menu bar if `menu-bar-mode' is on, otherwise call `tmm-menubar'."
+  "Open the menu bar if it is shown.
+`popup-menu' is used if it is off."
   (interactive "i")
-  (if (and menu-bar-mode
-	   (fboundp 'accelerate-menu))
-      (accelerate-menu frame)
-    (tmm-menubar)))
+  (cond
+   ((and (not (zerop (or (frame-parameter nil 'menu-bar-lines) 0)))
+	 (fboundp 'accelerate-menu))
+    (accelerate-menu frame))
+   (t
+    (popup-menu (mouse-menu-bar-map) last-nonmenu-event))))
 
 (defun mac-mouse-buffer-menu (event)
   "Like 'mouse-buffer-menu', but contextual menu is added if possible."
@@ -1792,7 +1898,7 @@ non-nil, and the input device supports it."
 		     (+ (car first-height) (nth 3 first-height)))
 		    (t	  ; might be partly hidden by the header line.
 		     (+ (- (car first-height)
-			   (- (car header-line-height) (nth 2 first-height)))
+			   (- first-y (max (nth 2 first-height) 0)))
 			(nth 3 first-height)))))
 	     (scroll-amount (nth 3 event))
 	     (delta-y (- (round (nth 1 (nth 2 scroll-amount)))))
@@ -1841,7 +1947,10 @@ non-nil, and the input device supports it."
 			 (= (nth 2 first-height) (nth 2 last-height)))))
 		      (t
 		       t))
-		(set-window-vscroll nil (+ (window-vscroll nil t) delta-y) t)
+		(if (zerop (set-window-vscroll nil (+ (window-vscroll nil t)
+						      delta-y) t))
+		    ;; XXX: Why is this necessary?
+		    (set-window-start nil (window-start)))
 	      (when (> (window-vscroll nil t) 0)
 		(setq delta-y (- delta-y first-height-sans-hidden-top))
 		(condition-case nil
@@ -1857,8 +1966,8 @@ non-nil, and the input device supports it."
 	      (condition-case nil
 		  (if (< delta-y 0)
 		      ;; Scroll down
-		      (let (prev-first prev-point prev-first-y)
-			(while (< delta-y 0)
+		      (let (prev-first prev-point prev-first-y prev-first-row)
+			(while (null prev-first-row)
 			  ;; It might be the case that `point-min' is
 			  ;; visible but `window-start' < `point-min'.
 			  (if (pos-visible-in-window-p (point-min) nil t)
@@ -1869,14 +1978,28 @@ non-nil, and the input device supports it."
 				 (cadr (pos-visible-in-window-p prev-first
 								nil t))))
 			    (scroll-down)
+			    ;; Sometimes the point gets invisible.
+			    (if (< (point) (window-start))
+				(goto-char (window-start))
+			      (while (not (pos-visible-in-window-p nil nil t))
+				(vertical-motion -1)))
 			    (while (null (setq prev-first-y
 					       (cadr (pos-visible-in-window-p
 						      prev-first nil t))))
-			      ;; If the previous last position gets
+			      ;; If the previous first position gets
 			      ;; invisible after scroll down, scroll
 			      ;; up by line and try again.
 			      (scroll-up 1))
-			    (when (= prev-first-y prev-first-prev-y)
+			    (if (/= prev-first-y prev-first-prev-y)
+				(progn
+				  (setq delta-y
+					(+ delta-y
+					   (- prev-first-y prev-first-prev-y)))
+				  (if (>= delta-y 0)
+				      (setq prev-first-row
+					    (cdr
+					     (posn-actual-col-row
+					      (posn-at-x-y 0 prev-first-y))))))
 			      ;; It might be the case that `point-min'
 			      ;; is visible but `window-start' <
 			      ;; `point-min'.
@@ -1887,50 +2010,62 @@ non-nil, and the input device supports it."
 			      ;; taller than the window height before
 			      ;; the last scroll up.
 			      (scroll-down 1)
-			      (while (not (pos-visible-in-window-p
-					   prev-first nil t))
-				(set-window-vscroll
-				 nil (+ (window-vscroll nil t)
-					window-inside-pixel-height) t))
-			      (setq prev-first-y
-				    (+ (window-vscroll nil t)
-				       (cadr (pos-visible-in-window-p
-					      prev-first nil t))))
-			      (set-window-vscroll nil 0 t))
-			    (setq delta-y
-				  (+ delta-y
-				     (- prev-first-y prev-first-prev-y)))))
-			(if (>= delta-y window-inside-pixel-height)
-			    (progn
-			      ;; Cancel the last scroll.
-			      (goto-char prev-point)
-			      (set-window-start nil prev-first))
-			  (let* ((target-posn
-				  (posn-at-x-y 0 (+ first-y delta-y)))
-				 (target-row
-				  (cdr (posn-actual-col-row target-posn)))
-				 (target-y
-				  (cadr (pos-visible-in-window-p
-					 (posn-point target-posn) nil t)))
-				 (scrolled-pixel-height (- target-y first-y))
-				 (prev-first-row
-				  (cdr (posn-actual-col-row
-					(posn-at-x-y 0 prev-first-y)))))
-			    ;; Cancel the last scroll.
-			    (goto-char prev-point)
-			    (set-window-start nil prev-first)
-			    (scroll-down (- prev-first-row target-row
-					    (if (= delta-y
-						   scrolled-pixel-height)
-						0 1)))
-			    (setq delta-y (- delta-y scrolled-pixel-height)))))
+			      (let (prev-first-vscrolled-y)
+				(while (not (setq prev-first-vscrolled-y
+						  (cadr (pos-visible-in-window-p
+							 prev-first nil t))))
+				  (set-window-vscroll
+				   nil (+ (window-vscroll nil t)
+					  window-inside-pixel-height) t))
+				(setq prev-first-y
+				      (+ (window-vscroll nil t)
+					 prev-first-vscrolled-y))
+				(setq delta-y
+				      (+ delta-y
+					 (- prev-first-y prev-first-prev-y)))
+				(if (>= delta-y 0)
+				    (setq prev-first-row
+					  (cdr (posn-actual-col-row
+						(posn-at-x-y
+						 0 prev-first-vscrolled-y))))))
+			      (set-window-vscroll nil 0 t))))
+			(let* ((target-posn (posn-at-x-y 0 (+ first-y delta-y)))
+			       (target-coord (pos-visible-in-window-p
+					      (posn-point target-posn) nil t))
+			       (target-row (cdr (posn-actual-col-row
+						 target-posn)))
+			       target-y scrolled-pixel-height)
+			  (if (and target-coord target-row)
+			      (setq target-y (cadr target-coord))
+			    ;; The target row is below the visible
+			    ;; area.  Temporarily set vscroll so the
+			    ;; target row comes at the top and
+			    ;; re-measure the position.
+			    (set-window-vscroll nil delta-y t)
+			    (setq target-posn (posn-at-x-y 0 first-y))
+			    (setq target-coord (pos-visible-in-window-p
+						(posn-point target-posn) nil t))
+			    (set-window-vscroll nil 0 t)
+			    (setq target-row (cdr (posn-actual-col-row
+						   target-posn)))
+			    (setq target-y (cadr target-coord))
+			    (if (= target-y 0)
+				(setq target-y (- (or (nth 2 target-coord)) 0)))
+			    (setq target-y (+ target-y delta-y)))
+			  (setq scrolled-pixel-height (- target-y first-y))
+			  ;; Cancel the last scroll.
+			  (goto-char prev-point)
+			  (set-window-start nil prev-first)
+			  (scroll-down (- prev-first-row target-row
+					  (if (= delta-y
+						 scrolled-pixel-height)
+					      0 1)))
+			  (setq delta-y (- delta-y scrolled-pixel-height))))
 		    ;; Scroll up
 		    (let (found)
 		      (while (and (not found)
 				  (>= delta-y window-inside-pixel-height))
-			(let* ((prev-first-prev-coord
-				(pos-visible-in-window-p (window-start) nil t))
-			       (prev-last-prev-coord
+			(let* ((prev-last-prev-coord
 				(pos-visible-in-window-p t nil t))
 			       (prev-last-prev-posn
 				(posn-at-x-y (car prev-last-prev-coord)
@@ -2012,7 +2147,7 @@ non-nil, and the input device supports it."
 		(scroll-down 1)
 		(set-window-vscroll nil delta-y t)
 		(setq redisplay-needed t))
-	      (if (> (count-screen-lines (window-start) (window-end)) 1)
+	      (if (> (count-screen-lines (window-start) (window-end nil t)) 1)
 		  ;; Make sure that the cursor is fully visible.
 		  (while (and (< (window-start) (point))
 			      (not (pos-visible-in-window-p)))
@@ -2274,6 +2409,8 @@ standard ones in `x-handle-args'."
 
 (defun mac-initialize-window-system ()
   "Initialize Emacs for Mac GUI frames."
+  (cl-assert (not mac-initialized))
+
   ;; Make sure we have a valid resource name.
   (or (stringp x-resource-name)
       (let (i)
@@ -2295,14 +2432,12 @@ standard ones in `x-handle-args'."
   (create-default-fontset)
 
   (set-fontset-font t nil (font-spec :family "Apple Symbols") nil 'prepend)
-  (when (and (string-match "darwin\\([0-9]+\\)" system-configuration)
-	     (>= (string-to-number (match-string 1 system-configuration)) 11))
-    ;; Built on Mac OS X 10.7 or later.
-    (set-fontset-font t nil (font-spec :family "Apple Color Emoji")
-		      nil 'prepend)
-    ;; Regional Indicator Symbols
-    (set-char-table-range composition-function-table '(#x1F1E6 . #x1F1FF)
-			  '(["[\x1F1E6-\x1F1FF]+" 0 font-shape-gstring])))
+  (if (and (string-match "darwin\\([0-9]+\\)" system-configuration)
+	   (>= (string-to-number (match-string 1 system-configuration)) 11))
+      ;; Built on Mac OS X 10.7 or later.
+      (set-fontset-font t nil (font-spec :family "Apple Color Emoji")
+			nil 'append))
+  (mac-setup-composition-function-table)
   ;; (set-fontset-font t nil (font-spec :family "LastResort") nil 'append)
   (set-fontset-font t '(#x20000 . #x2FFFF)
 		    '("HanaMinB" . "unicode-sip") nil 'append)
@@ -2391,6 +2526,8 @@ standard ones in `x-handle-args'."
   (if (eq (lookup-key global-map [C-down-mouse-1]) 'mouse-buffer-menu)
       (global-set-key [C-down-mouse-1] 'mac-mouse-buffer-menu))
 
+  (x-apply-session-resources)
+  (add-to-list 'display-format-alist '("\\`Mac\\'" . mac))
   (setq mac-initialized t))
 
 (add-to-list 'handle-args-function-alist '(mac . mac-handle-args))

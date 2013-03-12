@@ -1,6 +1,6 @@
 ;;; trace.el --- tracing facility for Emacs Lisp functions
 
-;; Copyright (C) 1993, 1998, 2000-2012 Free Software Foundation, Inc.
+;; Copyright (C) 1993, 1998, 2000-2013 Free Software Foundation, Inc.
 
 ;; Author: Hans Chalupsky <hans@cs.buffalo.edu>
 ;; Maintainer: FSF
@@ -254,7 +254,9 @@ and return values will be inserted into BUFFER.  This function generates the
 trace advice for FUNCTION and activates it together with any other advice
 there might be!!  The trace BUFFER will popup whenever FUNCTION is called.
 Do not use this to trace functions that switch buffers or do any other
-display oriented stuff, use `trace-function-background' instead."
+display oriented stuff, use `trace-function-background' instead.
+
+To untrace a function, use `untrace-function' or `untrace-all'."
   (interactive
    (list
     (intern (completing-read "Trace function: " obarray 'fboundp t))
@@ -271,7 +273,9 @@ and activates it together with any other advice there might be.
 The trace output goes to BUFFER quietly, without changing
 the window or buffer configuration.
 
-BUFFER defaults to `trace-buffer'."
+BUFFER defaults to `trace-buffer'.
+
+To untrace a function, use `untrace-function' or `untrace-all'."
   (interactive
    (list
     (intern
@@ -285,7 +289,7 @@ Activation is performed with `ad-update', hence remaining advice will get
 activated only if the advice of FUNCTION is currently active.  If FUNCTION
 was not traced this is a noop."
   (interactive
-   (list (ad-read-advised-function "Untrace function: " 'trace-is-traced)))
+   (list (ad-read-advised-function "Untrace function" 'trace-is-traced)))
   (when (trace-is-traced function)
     (ad-remove-advice function 'around trace-advice-name)
     (ad-update function)))

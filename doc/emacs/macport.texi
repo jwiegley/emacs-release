@@ -1,9 +1,8 @@
 @c This is part of the Emacs Mac port manual.
-@c Copyright (C) 2000, 2001, 2002, 2003, 2004,
-@c   2005, 2006, 2007, 2008 Free Software Foundation, Inc.
-@c Copyright (C) 2012  YAMAMOTO Mitsuharu
+@c Copyright (C) 2000-2008 Free Software Foundation, Inc.
+@c Copyright (C) 2012-2013  YAMAMOTO Mitsuharu
 @c See file emacs.texi for copying conditions.
-@node Mac Port, Mac OS / GNUstep, Antinews, Top
+@node Mac Port
 @appendix Emacs and Mac OS X with the Mac port
 @cindex Mac port
 
@@ -18,7 +17,7 @@ enough for you, then you don't need to try this.
 
 @itemize
 @item
-Carbon port for Emacs 22 (aka "Carbon Emacs", don't confuse it with
+Carbon port for Emacs 22 (aka ``Carbon Emacs'', don't confuse it with
 ``Carbon Emacs Package''): this is a part of the official GNU Emacs 22
 distribution and provides native GUI support for Mac OS.  It has been
 used in almost all the Emacs 22 distributions/packages for Mac OS X
@@ -46,10 +45,11 @@ Dock without separating a GUI process (not thread) from the main Emacs
 (Lisp evaluator) process.  TTY-only multi-tty is supposed to work.
 
 @menu
-* Mac Invocation::		Invocation of Emacs Mac port.
-* Mac Input::                   Keyboard and mouse input on the Mac port.
-* Mac Fonts::                   Specifying fonts on the Mac port.
-* Mac Functions::               Lisp functions specific to the Mac port.
+* Mac Invocation::        Invocation of Emacs Mac port.
+* Mac Input::             Keyboard and mouse input on the Mac port.
+* Mac Fonts::             Specifying fonts on the Mac port.
+* Mac Images and Colors:: Images and colors on the Mac port.
+* Mac Functions::         Lisp functions specific to the Mac port.
 @end menu
 
 @node Mac Invocation
@@ -58,8 +58,7 @@ Dock without separating a GUI process (not thread) from the main Emacs
 
   When Emacs Mac port is run from a terminal, it inherits the values
 of environment variables from the shell from which it is invoked.
-This also applies to an invocation via the @command{open} command on
-Mac OS X 10.4 and later.
+This also applies to an invocation via the @command{open} command.
 
   When it is run from the Finder as a GUI application on Mac OS X 10.7
 and earlier, how the environment variables are inherited depends on
@@ -70,8 +69,8 @@ the Finder as well as Emacs.  If it doesn't exist, then the Mac port
 inherits those defined in user's login shell, so settings in
 @file{/etc/profile}, @file{~/.bash_profile}, etc. are in effect if you
 use bash as your login shell.  On OS X 10.8 and later,
-@file{~/.MacOSX/environment.plist} is ignored and always inherits the
-login shell settings.
+@file{~/.MacOSX/environment.plist} is ignored and the Mac port always
+inherits the login shell settings.
 
   Command line arguments are specified like
 
@@ -149,10 +148,6 @@ and later.
 @item
 Preference @code{AppleLanguages} that is set by default on Mac OS X
 10.1 and later.
-
-@item
-(32-bit only) Variable @code{mac-system-locale} that is derived from
-the system language and region codes.
 @end enumerate
 
   The default values of almost all variables about coding systems are
@@ -219,10 +214,9 @@ newer mice/trackpads.  You can turn it off by setting
 
   Just as in many Cocoa applications (and some Carbon applications
 like Carbon Emacs), you can use @samp{Command-Control-D} for looking
-up a word under the mouse pointer in the selected window on Mac OS X
-10.4 and later.  The same functionality is provided by
-double/single-tapping a trackpad with three fingers on Mac OS X
-10.7/10.8, respectively.
+up a word under the mouse pointer in the selected window.  The same
+functionality is provided by double/single-tapping a trackpad with
+three fingers on Mac OS X 10.7/10.8, respectively.
 
   In addition to the standard Emacs events, the Mac port also accepts
 several gesture events on newer mice/trackpads, and some gestures have
@@ -309,12 +303,11 @@ then the buffer text is scaled so the default font occupies at least
 previously unscaled and the pointer is between the indentation and the
 end of line, then the buffer text is scaled to approximately 150%.
 
-  The Mac port provides several font backends, @code{mac-ct} using the
-Core Text framework introduced in Mac OS X 10.5, @code{mac-fd} using
-NSFontDescriptor expanded in Mac OS X 10.4, and @code{mac-fm} using
-NSFontManager.  An appropriate font backend is selected automatically
-depending on the @acronym{OS} version at startup, and one backend is
-used at a time.
+  The Mac port provides a couple of font backends, @code{mac-ct} using
+the Core Text framework introduced in Mac OS X 10.5, and @code{mac-fd}
+using NSFontDescriptor expanded in Mac OS X 10.4.  An appropriate font
+backend is selected automatically depending on the @acronym{OS}
+version at startup, and one backend is used at a time.
 
   All these backends support Unicode character display including
 non-@acronym{BMP} ones, Complex Text Layout such as Devanagari, and
@@ -324,12 +317,69 @@ Variation Sequences) even for the OS-bundled Hiragino fonts, which do
 not contain the @acronym{UVS} subtable in their cmap table as of Mac
 OS X 10.6.  If compiled and executed on Mac OS X 10.7 and later, then
 the Mac port can also display color bitmap fonts such as Apple Color
-Emoji.
+Emoji.  This also supports display of some combinations of regional
+indicator symbols, such as U+1F1EF followed by U+1F1F5, as national
+flags.  Variation Selectors 15 (text-style) and 16 (emoji-style) are
+also supported.
 
   They also use non-integral x positions for displaying antialiased
 proportional fonts.  You can see the difference by putting the box
 cursor over Helvetica 12pt @samp{I}, whose ideal width is 3.33398 but
 displayed with the rounded width 3, for example.
+
+@node Mac Images and Colors
+@section Images and Colors on the Mac Port
+@cindex Images and Colors (Mac port)
+
+@cindex image formats (Mac port)
+The Mac port supports almost all the image formats that GNU Emacs
+supports (@pxref{Image Formats,,, elisp, The Emacs Lisp Reference
+Manual}), except PostScript.  None of them but ImageMagick requires
+external libraries.  SVG is supported via the WebKit framework, which
+is bundled to the system, but the Mac port can also be built with
+@code{librsvg} as an alternative SVG renderer.  If you have
+@code{librsvg} installed but want to use the WebKit framework for
+rendering SVG, then give the @code{--without-rsvg} option to the
+@code{configure} command.
+
+In addition to the standard image types, the Mac port provides an
+image type symbol @code{image-io}, which is parallel to the image type
+symbol @code{imagemagick} but uses the Image I/O framework.  It also
+works as a fallback of @code{imagemagick} if the Mac port is not
+compiled with the ImageMagick support, so you can scale and rotate
+images even without ImageMagick.
+
+@cindex high-resolution image support (Mac port)
+When loading an image from a file, the Mac port respects the
+@code{@@2x} naming convention for high-resolution and automatically
+selects an image file according to the backing scale factor.  For
+example, if a file named @file{foo.png} is to be loaded on a
+high-resolution environment, and there is another file named
+@file{foo@@2x.png} in the same directory, then the latter is used
+automatically.
+
+An alternative way to support high-resolution is to use the TIFF image
+format.  A single TIFF file or data can contain multiple images for
+multiple resolutions, typically the one with standard width and
+height, and the one with width and height doubled.  If an image
+descriptor (@pxref{Image Descriptors,,, elisp, The Emacs Lisp
+Reference Manual}) for a TIFF file or data does not contain an
+explicit @code{:index} property specifying the image number, then an
+appropriate image is automatically selected from the images in the
+file or data.  If tool bar icons are provided by TIFF files, they are
+preferred on the Mac port.
+
+As SVG images are inherently resolution-independent, the images are
+automatically rendered with appropriate scaling for high-resolution
+environment.  Note that resolution can change dynamically on Mac OS X
+10.7 and later even for the same frame, by dragging it from one
+display to another for example.  The Mac port detects such a
+resolution change and re-render images or reload files automatically.
+
+@cindex color specifications (Mac port)
+When specifying colors, RGB triplets (@pxref{Colors}) are interpreted
+as those in the sRGB color space.  This may give a different look from
+other ports of GNU Emacs.
 
 @node Mac Functions
 @section Lisp Functions Specific to the Mac Port
@@ -340,17 +390,10 @@ displayed with the rounded width 3, for example.
 executes it as an AppleScript command, and returns the result as a
 string.
 
-@findex mac-set-file-creator
-@findex mac-get-file-creator
-@findex mac-set-file-type
-@findex mac-get-file-type
 @findex mac-file-alias-p
-  The functions @code{mac-set-file-creator},
-@code{mac-get-file-creator}, @code{mac-set-file-type}, and
-@code{mac-get-file-type} can be used to set and get creator and file
-codes.  The function @code{mac-file-alias-p} can be used to check if
-the specified file name is a name of an alias file, and if so, which
-file it is referring to.
+  The function @code{mac-file-alias-p} can be used to check if the
+specified file name is a name of an alias file, and if so, which file
+it is referring to.
 
 @findex mac-get-preference
 @findex mac-convert-property-list
@@ -364,11 +407,3 @@ representation).
 @findex mac-start-animation
   The function @code{mac-start-animation} starts animation effect
 using Core Animation on Mac OS X 10.5 and later.
-
-The Mac port provides an image type symbol @code{image-io}, which is
-parallel to another image type symbol @code{imagemagick}
-(@pxref{ImageMagick Images,,, elisp}), but using the Image I/O
-framework on Mac OS X 10.4 and later.  It also works as a fallback of
-@code{imagemagick} if the Mac port is not compiled with the
-ImageMagick support, so you can scale and rotate images even without
-ImageMagick.

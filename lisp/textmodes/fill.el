@@ -1,7 +1,7 @@
 ;;; fill.el --- fill commands for Emacs		-*- coding: utf-8 -*-
 
-;; Copyright (C) 1985-1986, 1992, 1994-1997, 1999, 2001-2012
-;;   Free Software Foundation, Inc.
+;; Copyright (C) 1985-1986, 1992, 1994-1997, 1999, 2001-2013 Free
+;; Software Foundation, Inc.
 
 ;; Maintainer: FSF
 ;; Keywords: wp
@@ -1011,7 +1011,8 @@ space does not end a sentence, so don't break a line there."
 		       (if current-prefix-arg 'full))))
   (unless (memq justify '(t nil none full center left right))
     (setq justify 'full))
-  (let (max beg fill-pfx)
+  (let ((start-point (point-marker))
+	max beg fill-pfx)
     (goto-char (max from to))
     (when to-eop
       (skip-chars-backward "\n")
@@ -1042,6 +1043,8 @@ space does not end a sentence, so don't break a line there."
 	    (setq fill-pfx
 		  (fill-region-as-paragraph (point) end justify nosqueeze))
 	  (goto-char end))))
+    (goto-char start-point)
+    (set-marker start-point nil)
     fill-pfx))
 
 

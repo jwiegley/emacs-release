@@ -1,6 +1,6 @@
 /* Display module for Mac OS.
    Copyright (C) 2000-2008 Free Software Foundation, Inc.
-   Copyright (C) 2009-2012  YAMAMOTO Mitsuharu
+   Copyright (C) 2009-2013  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 
@@ -173,8 +173,6 @@ extern struct mac_display_info one_mac_display_info;
    FONT-LIST-CACHE records previous values returned by x-list-fonts.  */
 extern Lisp_Object x_display_name_list;
 
-extern void x_set_frame_alpha (struct frame *);
-
 extern struct mac_display_info *mac_term_init (Lisp_Object, char *, char *);
 
 
@@ -261,10 +259,6 @@ struct mac_output
 
   /* Non-zero means hourglass cursor is currently displayed.  */
   unsigned hourglass_p : 1;
-
-  /* Flag to set when the window needs to be completely repainted.  */
-  int needs_exposure;
-
 #endif
 
   /* This is the Emacs structure for the display this frame is on.  */
@@ -350,9 +344,6 @@ struct mac_output
 #define FRAME_MAC_DISPLAY(f) (0)
 #define FRAME_X_DISPLAY(f) (0)
 
-/* This is the 'font_info *' which frame F has.  */
-#define FRAME_MAC_FONT_TABLE(f) (FRAME_MAC_DISPLAY_INFO (f)->font_table)
-
 /* Value is the smallest width of any character in any font on frame F.  */
 
 #define FRAME_SMALLEST_CHAR_WIDTH(F) \
@@ -376,8 +367,7 @@ struct mac_output
 struct scroll_bar {
 
   /* These fields are shared by all vectors.  */
-  EMACS_INT size_from_Lisp_Vector_struct;
-  struct Lisp_Vector *next_from_Lisp_Vector_struct;
+  struct vectorlike_header header;
 
   /* The window we're a scroll bar for.  */
   Lisp_Object window;
@@ -441,43 +431,10 @@ enum {
 };
 
 /* Some constants that are not defined in older versions.  */
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1030
-/* Keywords for Apple event attributes */
-enum {
-  keyReplyRequestedAttr		= 'repq'
-};
-#endif
-
-#if 0
-/* We can't determine the availability of these enumerators by
-   MAC_OS_X_VERSION_MAX_ALLOWED, because they are defined in
-   MacOSX10.3.9.sdk for Mac OS X 10.4, but not in Mac OS X 10.3.  */
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1040
-/* Gestalt selectors */
-enum {
-  gestaltSystemVersionMajor	= 'sys1',
-  gestaltSystemVersionMinor	= 'sys2',
-  gestaltSystemVersionBugFix	= 'sys3'
-};
-#endif
-#endif
-
 /* kCGBitmapByteOrder32Host is defined in Universal SDK for 10.4 but
    not in PPC SDK for 10.4.0.  */
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1050 && !defined (kCGBitmapByteOrder32Host)
 #define kCGBitmapByteOrder32Host 0
-#endif
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1030
-/* System UI mode constants */
-enum {
-  kUIModeAllSuppressed = 4
-};
-
-/* System UI options */
-enum {
-  kUIOptionDisableHide = 1 << 6
-};
 #endif
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED == 1060
@@ -492,11 +449,7 @@ struct face;
 struct image;
 
 struct frame *check_x_frame (Lisp_Object);
-EXFUN (Fx_display_grayscale_p, 1);
-EXFUN (Fx_display_planes, 1);
 extern void x_free_gcs (struct frame *);
-extern int XParseGeometry (char *, int *, int *, unsigned int *,
-			   unsigned int *);
 
 /* Defined in macterm.c.  */
 
@@ -505,15 +458,9 @@ extern void x_set_mouse_position (struct frame *, int, int);
 extern void x_set_mouse_pixel_position (struct frame *, int, int);
 extern void x_raise_frame (struct frame *);
 extern void x_lower_frame (struct frame *);
-extern void x_make_frame_visible (struct frame *);
-extern void x_make_frame_invisible (struct frame *);
-extern void x_iconify_frame (struct frame *);
-extern void x_free_frame_resources (struct frame *);
-extern void x_wm_set_size_hint (struct frame *, long, int);
 extern void x_delete_terminal (struct terminal *terminal);
-extern Pixmap mac_create_pixmap (Window, unsigned int, unsigned int,
-				 unsigned int);
-extern Pixmap mac_create_pixmap_from_bitmap_data (Window, char *,
+extern Pixmap mac_create_pixmap (unsigned int, unsigned int, unsigned int);
+extern Pixmap mac_create_pixmap_from_bitmap_data (char *,
 						  unsigned int,
 						  unsigned int,
 						  unsigned long,
@@ -531,9 +478,9 @@ extern int mac_quit_char_key_p (UInt32, UInt32);
 #define x_display_pixel_height(dpyinfo)	((dpyinfo)->height)
 #define x_display_pixel_width(dpyinfo)	((dpyinfo)->width)
 #define XCreatePixmap(display, w, width, height, depth) \
-  mac_create_pixmap (w, width, height, depth)
+  mac_create_pixmap (width, height, depth)
 #define XCreatePixmapFromBitmapData(display, w, data, width, height, fg, bg, depth) \
-  mac_create_pixmap_from_bitmap_data (w, data, width, height, fg, bg, depth)
+  mac_create_pixmap_from_bitmap_data (data, width, height, fg, bg, depth)
 #define XFreePixmap(display, pixmap)	mac_free_pixmap (pixmap)
 #define XChangeGC(display, gc, mask, xgcv)	mac_change_gc (gc, mask, xgcv)
 #define XCreateGC(display, d, mask, xgcv)	mac_create_gc (mask, xgcv)
@@ -545,7 +492,6 @@ extern int mac_quit_char_key_p (UInt32, UInt32);
 #define XDrawLine(display, p, gc, x1, y1, x2, y2)	\
   mac_draw_line_to_pixmap (p, gc, x1, y1, x2, y2)
 
-#ifdef USE_MAC_IMAGE_IO
 extern CGColorSpaceRef mac_cg_color_space_rgb;
 extern int mac_scale_mismatch_detection;
 enum
@@ -555,26 +501,18 @@ enum
     SCALE_MISMATCH_DETECT_NOT_2X,
     SCALE_MISMATCH_DETECTED,
   };
-#endif
 
 extern void x_set_sticky (struct frame *, Lisp_Object, Lisp_Object);
 
 /* Defined in macselect.c */
 
 extern void x_clear_frame_selections (struct frame *);
-EXFUN (Fx_selection_owner_p, 2);
 
 /* Defined in macfns.c */
 
-extern void x_real_positions (struct frame *, int *, int *);
-extern void x_set_menu_bar_lines (struct frame *, Lisp_Object, Lisp_Object);
 extern int x_pixel_width (struct frame *);
 extern int x_pixel_height (struct frame *);
-extern int x_char_width (struct frame *);
-extern int x_char_height (struct frame *);
-extern void x_sync (struct frame *);
-extern int mac_defined_color (struct frame *, const char *, XColor *, int);
-extern void x_set_tool_bar_lines (struct frame *, Lisp_Object, Lisp_Object);
+extern bool mac_defined_color (struct frame *, const char *, XColor *, bool);
 extern void mac_update_title_bar (struct frame *, int);
 extern Lisp_Object x_get_focus_frame (struct frame *);
 
@@ -611,13 +549,7 @@ extern void xrm_merge_string_database (XrmDatabase, const char *);
 extern Lisp_Object xrm_get_resource (XrmDatabase, const char *,
 				     const char *);
 extern XrmDatabase xrm_get_preference_database (const char *);
-EXFUN (Fmac_get_preference, 4);
 extern int mac_service_provider_registered_p (void);
-
-/* Defined in macmenu.c.  */
-
-extern void x_activate_menubar (struct frame *);
-extern void free_frame_menubar (struct frame *);
 
 /* Defined in macappkit.m.  */
 
@@ -718,65 +650,14 @@ extern void mac_release_autorelease_pool (void *);
 
 extern int mac_tracking_area_works_with_cursor_rects_invalidation_p (void);
 extern void mac_invalidate_frame_cursor_rects (struct frame *f);
-#ifdef USE_MAC_IMAGE_IO
 extern int mac_webkit_supports_svg_p (void);
-#endif
 
-#define CG_SET_FILL_COLOR(context, color)				\
-  CGContextSetRGBFillColor (context,					\
-			    RED_FROM_ULONG (color) / 255.0f,		\
-			    GREEN_FROM_ULONG (color) / 255.0f,		\
-			    BLUE_FROM_ULONG (color) / 255.0f, 1.0f)
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
-#if MAC_OS_X_VERSION_MIN_REQUIRED == 1020
-#define CG_SET_FILL_COLOR_MAYBE_WITH_CGCOLOR(context, color, cg_color) \
-  do {								       \
-    if (CGColorGetTypeID != NULL)				       \
-      CGContextSetFillColorWithColor (context, cg_color);	       \
-    else							       \
-      CG_SET_FILL_COLOR (context, color);			       \
-  } while (0)
-#else
-#define CG_SET_FILL_COLOR_MAYBE_WITH_CGCOLOR(context, color, cg_color)	\
-  CGContextSetFillColorWithColor (context, cg_color)
-#endif
-#else
-#define CG_SET_FILL_COLOR_MAYBE_WITH_CGCOLOR(context, color, cg_color)	\
-  CG_SET_FILL_COLOR (context, color)
-#endif
-#define CG_SET_FILL_COLOR_WITH_GC_FOREGROUND(context, gc)		\
-  CG_SET_FILL_COLOR_MAYBE_WITH_CGCOLOR (context, (gc)->xgcv.foreground,	\
-					(gc)->cg_fore_color)
-#define CG_SET_FILL_COLOR_WITH_GC_BACKGROUND(context, gc)		\
-  CG_SET_FILL_COLOR_MAYBE_WITH_CGCOLOR (context, (gc)->xgcv.background,	\
-					(gc)->cg_back_color)
-
-
-#define CG_SET_STROKE_COLOR(context, color)				\
-  CGContextSetRGBStrokeColor (context,					\
-			      RED_FROM_ULONG (color) / 255.0f,		\
-			      GREEN_FROM_ULONG (color) / 255.0f,	\
-			      BLUE_FROM_ULONG (color) / 255.0f, 1.0f)
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
-#if MAC_OS_X_VERSION_MIN_REQUIRED == 1020
-#define CG_SET_STROKE_COLOR_MAYBE_WITH_CGCOLOR(context, color, cg_color) \
-  do {								       \
-    if (CGColorGetTypeID != NULL)				       \
-      CGContextSetStrokeColorWithColor (context, cg_color);	       \
-    else							       \
-      CG_SET_STROKE_COLOR (context, color);			       \
-  } while (0)
-#else
-#define CG_SET_STROKE_COLOR_MAYBE_WITH_CGCOLOR(context, color, cg_color) \
-  CGContextSetStrokeColorWithColor (context, cg_color)
-#endif
-#else
-#define CG_SET_STROKE_COLOR_MAYBE_WITH_CGCOLOR(context, color, cg_color) \
-  CG_SET_STROKE_COLOR (context, color)
-#endif
-#define CG_SET_STROKE_COLOR_WITH_GC_FOREGROUND(context, gc) \
-  CG_SET_STROKE_COLOR_MAYBE_WITH_CGCOLOR (context, (gc)->xgcv.foreground, \
-					  (gc)->cg_fore_color)
+#define CG_SET_FILL_COLOR_WITH_GC_FOREGROUND(context, gc)	\
+  CGContextSetFillColorWithColor (context, (gc)->cg_fore_color)
+#define CG_SET_FILL_COLOR_WITH_GC_BACKGROUND(context, gc)	\
+  CGContextSetFillColorWithColor (context, (gc)->cg_back_color)
+#define CG_SET_STROKE_COLOR_WITH_GC_FOREGROUND(context, gc)		\
+  CGContextSetStrokeColorWithColor (context, (gc)->cg_fore_color)
 
 /* Defined in macfont.c */
 extern void macfont_update_antialias_threshold (void);
@@ -787,6 +668,6 @@ extern Lisp_Object macfont_nsctfont_to_spec (void *);
 extern struct glyph *x_y_to_hpos_vpos (struct window *, int, int,
 				       int *, int *, int *, int *, int *);
 extern void frame_to_window_pixel_xy (struct window *, int *, int *);
-extern void rows_from_pos_range (struct window *, EMACS_INT , EMACS_INT,
+extern void rows_from_pos_range (struct window *, ptrdiff_t , ptrdiff_t,
 				 Lisp_Object, struct glyph_row **,
 				 struct glyph_row **);

@@ -1,6 +1,6 @@
 /* Definitions and headers for communication on the Mac OS.
    Copyright (C) 2000-2008 Free Software Foundation, Inc.
-   Copyright (C) 2009-2012  YAMAMOTO Mitsuharu
+   Copyright (C) 2009-2013  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 
@@ -35,7 +35,6 @@ typedef Lisp_Object XrmDatabase;
    precompiled header Carbon.h.  */
 #undef max
 #undef min
-#undef init_process
 #define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
 #include <Carbon/Carbon.h>
 #ifdef check /* __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES is
@@ -55,8 +54,6 @@ typedef Lisp_Object XrmDatabase;
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #undef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
-#undef init_process
-#define init_process emacs_init_process
 #undef INFINITY
 #undef Z
 #define Z (current_buffer->text->z)
@@ -70,7 +67,6 @@ typedef float CGFloat;
 typedef void *Window;
 typedef void *Selection;
 
-#ifdef USE_MAC_IMAGE_IO
 typedef struct _XImage
 {
   int width, height;		/* size of image */
@@ -78,9 +74,6 @@ typedef struct _XImage
   int bytes_per_line;		/* accelarator to next line */
   int bits_per_pixel;		/* bits per pixel (ZPixmap) */
 } *Pixmap;
-#else
-typedef GWorldPtr Pixmap;
-#endif
 
 #define Cursor ThemeCursor
 #define No_Cursor (-1)
@@ -119,13 +112,11 @@ typedef struct _XGC
 
   /* Cached data members follow.  */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
   /* Quartz 2D foreground color.  */
   CGColorRef cg_fore_color;
 
   /* Quartz 2D background color.  */
   CGColorRef cg_back_color;
-#endif
 
 #define MAX_CLIP_RECTS 2
   /* Number of clipping rectangles.  */

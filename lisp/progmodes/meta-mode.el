@@ -1,6 +1,6 @@
 ;;; meta-mode.el --- major mode for editing Metafont or MetaPost sources -*- lexical-binding:t -*-
 
-;; Copyright (C) 1997, 2001-2012  Free Software Foundation, Inc.
+;; Copyright (C) 1997, 2001-2013 Free Software Foundation, Inc.
 
 ;; Author: Ulrik Vieth <vieth@thphy.uni-duesseldorf.de>
 ;; Version: 1.0
@@ -829,6 +829,7 @@ The environment marked is the one that contains point or follows point."
     st)
   "Syntax table used in Metafont or MetaPost mode.")
 
+(define-obsolete-variable-alias 'meta-mode-map 'meta-common-mode-map "24.1")
 (defvar meta-common-mode-map
   (let ((map (make-sparse-keymap)))
     ;; Comment Paragraphs:
@@ -858,7 +859,6 @@ The environment marked is the one that contains point or follows point."
     ;; (define-key map "\C-c\C-l"  'meta-recenter-output)
     map)
   "Keymap used in Metafont or MetaPost mode.")
-(define-obsolete-variable-alias 'meta-mode-map 'meta-common-mode-map "24.1")
 
 (easy-menu-define
  meta-mode-menu meta-common-mode-map

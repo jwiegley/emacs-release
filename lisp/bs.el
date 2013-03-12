@@ -1,6 +1,6 @@
 ;;; bs.el --- menu for selecting and displaying buffers -*- lexical-binding: t -*-
 
-;; Copyright (C) 1998-2012 Free Software Foundation, Inc.
+;; Copyright (C) 1998-2013 Free Software Foundation, Inc.
 ;; Author: Olaf Sylvester <Olaf.Sylvester@netsurf.de>
 ;; Maintainer: Olaf Sylvester <Olaf.Sylvester@netsurf.de>
 ;; Keywords: convenience
@@ -123,8 +123,6 @@
 ;;; History:
 
 ;;; Code:
-
-(eval-when-compile (require 'cl))
 
 ;; ----------------------------------------------------------------------
 ;; Globals for customization
@@ -830,10 +828,10 @@ See `visit-tags-table'."
   (interactive)
   (let ((res
          (with-current-buffer (bs--current-buffer)
-           (setq bs-buffer-show-mark (case bs-buffer-show-mark
-                                       ((nil)   'never)
-                                       ((never) 'always)
-                                       (t       nil))))))
+           (setq bs-buffer-show-mark (pcase bs-buffer-show-mark
+                                       (`nil   'never)
+                                       (`never 'always)
+                                       (_       nil))))))
     (bs--update-current-line)
     (bs--set-window-height)
     (bs--show-config-message res)))
@@ -964,7 +962,7 @@ Default is `bs--current-sort-function'."
 Uses function `toggle-read-only'."
   (interactive)
   (with-current-buffer (bs--current-buffer)
-    (toggle-read-only))
+    (read-only-mode 'toggle))
   (bs--update-current-line))
 
 (defun bs-clear-modified ()

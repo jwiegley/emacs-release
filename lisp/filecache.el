@@ -1,6 +1,6 @@
 ;;; filecache.el --- find files using a pre-loaded cache
 
-;; Copyright (C) 1996, 2000-2012  Free Software Foundation, Inc.
+;; Copyright (C) 1996, 2000-2013 Free Software Foundation, Inc.
 
 ;; Author:  Peter Breton <pbreton@cs.umb.edu>
 ;; Created: Sun Nov 10 1996
@@ -303,7 +303,9 @@ files in each directory, not to the directory list itself."
    directory-list))
 
 (defun file-cache-add-file-list  (file-list)
-  "Add FILE-LIST (a list of files names) to the file cache."
+  "Add FILE-LIST (a list of file names) to the file cache.
+Interactively, FILE-LIST is read as a Lisp expression, which
+should evaluate to the desired list of file names."
   (interactive "XFile List: ")
   (mapcar 'file-cache-add-file file-list))
 

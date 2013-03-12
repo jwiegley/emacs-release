@@ -1,6 +1,6 @@
 /* Unix emulation routines for GNU Emacs on the Mac OS.
    Copyright (C) 2000-2008  Free Software Foundation, Inc.
-   Copyright (C) 2009-2012  YAMAMOTO Mitsuharu
+   Copyright (C) 2009-2013  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 
@@ -23,7 +23,6 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <stdio.h>
 #include <errno.h>
-#include <setjmp.h>
 
 #include "lisp.h"
 #include "process.h"
@@ -42,10 +41,8 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <libkern/OSByteOrder.h>
 
-#undef init_process
 #include <mach/mach.h>
 #include <servers/bootstrap.h>
-#define init_process emacs_init_process
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
 #ifndef SELECT_USE_GCD
@@ -546,22 +543,6 @@ mac_coerce_file_name_ptr (DescType type_code, const void *data_ptr,
 	}
       else
 	err = memFullErr;
-
-      if (err != noErr)
-	{
-	  /* Just to be paranoid ...  */
-	  FSRef fref;
-	  UInt8 *buf;
-
-	  buf = xmalloc (data_size + 1);
-	  memcpy (buf, data_ptr, data_size);
-	  buf[data_size] = '\0';
-	  err = FSPathMakeRef (buf, &fref, NULL);
-	  xfree (buf);
-	  if (err == noErr)
-	    err = AECoercePtr (typeFSRef, &fref, sizeof (FSRef),
-			       to_type, result);
-	}
     }
   else if (to_type == TYPE_FILE_NAME)
     /* Coercion to undecoded file name.  */
@@ -614,37 +595,9 @@ mac_coerce_file_name_ptr (DescType type_code, const void *data_ptr,
 			      CFDataGetLength (data), result);
 	  CFRelease (data);
 	}
-
-      if (err != noErr)
-	{
-	  /* Coercion from typeAlias to typeFileURL fails on Mac OS X
-	     10.2.  In such cases, try typeFSRef as a target type.  */
-	  UInt8 file_name[MAXPATHLEN];
-
-	  if (type_code == typeFSRef && data_size == sizeof (FSRef))
-	    err = FSRefMakePath (data_ptr, file_name, sizeof (file_name));
-	  else
-	    {
-	      AEDesc desc;
-	      FSRef fref;
-
-	      err = AECoercePtr (type_code, data_ptr, data_size,
-				 typeFSRef, &desc);
-	      if (err == noErr)
-		{
-		  err = AEGetDescData (&desc, &fref, sizeof (FSRef));
-		  AEDisposeDesc (&desc);
-		}
-	      if (err == noErr)
-		err = FSRefMakePath (&fref, file_name, sizeof (file_name));
-	    }
-	  if (err == noErr)
-	    err = AECreateDesc (TYPE_FILE_NAME, file_name,
-				strlen ((char *) file_name), result);
-	}
     }
   else
-    abort ();
+    emacs_abort ();
 
   if (err != noErr)
     return errAECoercionFail;
@@ -991,21 +944,25 @@ cfnumber_to_lisp (CFNumberRef number)
 }
 
 
-/* CFDate to a list of three integers as in a return value of
+/* CFDate to a list of four integers as in a return value of
    `current-time'.  */
 
 Lisp_Object
 cfdate_to_lisp (CFDateRef date)
 {
-  CFTimeInterval sec;
-  int high, low, microsec;
+  CFTimeInterval sec, frac;
+  int high, low, microsec, picosec;
 
   sec = CFDateGetAbsoluteTime (date) + kCFAbsoluteTimeIntervalSince1970;
+  frac = modf (sec, &sec);
   high = sec / 65536.0;
   low = sec - high * 65536.0;
-  microsec = (sec - floor (sec)) * 1000000.0;
+  frac = modf (frac * 1000000.0, &sec);
+  microsec = sec;
+  picosec = frac * 1000000.0;
 
-  return list3 (make_number (high), make_number (low), make_number (microsec));
+  return list4 (make_number (high), make_number (low),
+		make_number (microsec), make_number (picosec));
 }
 
 
@@ -1141,9 +1098,9 @@ cfobject_to_lisp (CFTypeRef obj, int flags, int hash_bound)
       tag = Qarray;
       result = Fmake_vector (make_number (count), Qnil);
       for (index = 0; index < count; index++)
-	XVECTOR (result)->contents[index] =
-	  cfobject_to_lisp (CFArrayGetValueAtIndex (obj, index),
-			    flags, hash_bound);
+	ASET (result, index,
+	      cfobject_to_lisp (CFArrayGetValueAtIndex (obj, index),
+				flags, hash_bound));
     }
   else if (type_id == CFDictionaryGetTypeID ())
     {
@@ -1279,6 +1236,9 @@ cfproperty_list_create_with_lisp_1 (Lisp_Object obj,
 	  at = (XINT (XCAR (data)) * 65536.0 + XINT (XCAR (XCDR (data)))
 		+ XINT (XCAR (XCDR (XCDR (data)))) * 0.000001
 		- kCFAbsoluteTimeIntervalSince1970);
+	  if (CONSP (XCDR (XCDR (XCDR (data))))
+	      && INTEGERP (XCAR (XCDR (XCDR (XCDR (data))))))
+	    at += XINT (XCAR (XCDR (XCDR (XCDR (data))))) * 1.0e-12;
 	  result = CFDateCreate (NULL, at);
 	}
     }
@@ -2158,157 +2118,6 @@ mac_get_code_from_arg (Lisp_Object arg, OSType defCode)
   return result;
 }
 
-DEFUN ("mac-get-file-creator", Fmac_get_file_creator, Smac_get_file_creator, 1, 1, 0,
-       doc: /* Get the creator code of FILENAME as a four character string. */)
-  (Lisp_Object filename)
-{
-  OSStatus status;
-  FSRef fref;
-  Lisp_Object result = Qnil;
-  CHECK_STRING (filename);
-
-  if (NILP(Ffile_exists_p(filename)) || !NILP(Ffile_directory_p(filename))) {
-    return Qnil;
-  }
-  filename = Fexpand_file_name (filename, Qnil);
-
-  BLOCK_INPUT;
-  status = FSPathMakeRef(SDATA(ENCODE_FILE(filename)), &fref, NULL);
-
-  if (status == noErr)
-    {
-      FSCatalogInfo catalogInfo;
-
-      status = FSGetCatalogInfo(&fref, kFSCatInfoFinderInfo,
-				&catalogInfo, NULL, NULL, NULL);
-      if (status == noErr)
-	{
-	  result = mac_four_char_code_to_string (((FileInfo*)&catalogInfo.finderInfo)->fileCreator);
-	}
-    }
-  UNBLOCK_INPUT;
-  if (status != noErr) {
-    error ("Error while getting file information.");
-  }
-  return result;
-}
-
-DEFUN ("mac-get-file-type", Fmac_get_file_type, Smac_get_file_type, 1, 1, 0,
-       doc: /* Get the type code of FILENAME as a four character string. */)
-  (Lisp_Object filename)
-{
-  OSStatus status;
-  FSRef fref;
-  Lisp_Object result = Qnil;
-  CHECK_STRING (filename);
-
-  if (NILP(Ffile_exists_p(filename)) || !NILP(Ffile_directory_p(filename))) {
-    return Qnil;
-  }
-  filename = Fexpand_file_name (filename, Qnil);
-
-  BLOCK_INPUT;
-  status = FSPathMakeRef(SDATA(ENCODE_FILE(filename)), &fref, NULL);
-
-  if (status == noErr)
-    {
-      FSCatalogInfo catalogInfo;
-
-      status = FSGetCatalogInfo(&fref, kFSCatInfoFinderInfo,
-				&catalogInfo, NULL, NULL, NULL);
-      if (status == noErr)
-	{
-	  result = mac_four_char_code_to_string (((FileInfo*)&catalogInfo.finderInfo)->fileType);
-	}
-    }
-  UNBLOCK_INPUT;
-  if (status != noErr) {
-    error ("Error while getting file information.");
-  }
-  return result;
-}
-
-DEFUN ("mac-set-file-creator", Fmac_set_file_creator, Smac_set_file_creator, 1, 2, 0,
-       doc: /* Set creator code of file FILENAME to CODE.
-If non-nil, CODE must be a 4-character string.  Otherwise, 'EMAx' is
-assumed. Return non-nil if successful.  */)
-  (Lisp_Object filename, Lisp_Object code)
-{
-  OSStatus status;
-  FSRef fref;
-  OSType cCode;
-  CHECK_STRING (filename);
-
-  cCode = mac_get_code_from_arg(code, MAC_EMACS_CREATOR_CODE);
-
-  if (NILP(Ffile_exists_p(filename)) || !NILP(Ffile_directory_p(filename))) {
-    return Qnil;
-  }
-  filename = Fexpand_file_name (filename, Qnil);
-
-  BLOCK_INPUT;
-  status = FSPathMakeRef(SDATA(ENCODE_FILE(filename)), &fref, NULL);
-
-  if (status == noErr)
-    {
-      FSCatalogInfo catalogInfo;
-      FSRef parentDir;
-      status = FSGetCatalogInfo(&fref, kFSCatInfoFinderInfo,
-				&catalogInfo, NULL, NULL, &parentDir);
-      if (status == noErr)
-	{
-	((FileInfo*)&catalogInfo.finderInfo)->fileCreator = cCode;
-	status = FSSetCatalogInfo(&fref, kFSCatInfoFinderInfo, &catalogInfo);
-	/* TODO: on Mac OS 10.2, we need to touch the parent dir, FNNotify? */
-	}
-    }
-  UNBLOCK_INPUT;
-  if (status != noErr) {
-    error ("Error while setting creator information.");
-  }
-  return Qt;
-}
-
-DEFUN ("mac-set-file-type", Fmac_set_file_type, Smac_set_file_type, 2, 2, 0,
-       doc: /* Set file code of file FILENAME to CODE.
-CODE must be a 4-character string.  Return non-nil if successful.  */)
-  (Lisp_Object filename, Lisp_Object code)
-{
-  OSStatus status;
-  FSRef fref;
-  OSType cCode;
-  CHECK_STRING (filename);
-
-  cCode = mac_get_code_from_arg(code, 0); /* Default to empty code*/
-
-  if (NILP(Ffile_exists_p(filename)) || !NILP(Ffile_directory_p(filename))) {
-    return Qnil;
-  }
-  filename = Fexpand_file_name (filename, Qnil);
-
-  BLOCK_INPUT;
-  status = FSPathMakeRef(SDATA(ENCODE_FILE(filename)), &fref, NULL);
-
-  if (status == noErr)
-    {
-      FSCatalogInfo catalogInfo;
-      FSRef parentDir;
-      status = FSGetCatalogInfo(&fref, kFSCatInfoFinderInfo,
-				&catalogInfo, NULL, NULL, &parentDir);
-      if (status == noErr)
-	{
-	((FileInfo*)&catalogInfo.finderInfo)->fileType = cCode;
-	status = FSSetCatalogInfo(&fref, kFSCatInfoFinderInfo, &catalogInfo);
-	/* TODO: on Mac OS 10.2, we need to touch the parent dir, FNNotify? */
-	}
-    }
-  UNBLOCK_INPUT;
-  if (status != noErr) {
-    error ("Error while setting creator information.");
-  }
-  return Qt;
-}
-
 DEFUN ("mac-file-alias-p", Fmac_file_alias_p, Smac_file_alias_p, 1, 1, 0,
        doc: /* Return non-nil if file FILENAME is the name of an alias file.
 The value is the file referred to by the alias file, as a string.
@@ -2329,7 +2138,7 @@ containing an unresolvable alias.  */)
   if (!NILP (handler))
     return call2 (handler, Qmac_file_alias_p, filename);
 
-  BLOCK_INPUT;
+  block_input ();
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
   if (CFURLCreateByResolvingBookmarkData != NULL)
@@ -2422,7 +2231,7 @@ containing an unresolvable alias.  */)
 	}
     }
 #endif
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   if (STRINGP (result))
     {
@@ -2434,116 +2243,6 @@ containing an unresolvable alias.  */)
     }
 
   return result;
-}
-
-static OSStatus
-mac_fs_path_make_ref_do_not_follow_leaf_symlink (const UInt8 *file, FSRef *ref)
-{
-  OSStatus err;
-
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1040
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040 && MAC_OS_X_VERSION_MIN_REQUIRED >= 1020
-  if (FSPathMakeRefWithOptions != NULL)
-#endif
-    {
-      err = FSPathMakeRefWithOptions (file,
-				      kFSPathMakeRefDoNotFollowLeafSymlink,
-				      ref, NULL);
-    }
-#endif
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1040 && MAC_OS_X_VERSION_MIN_REQUIRED >= 1020
-  else				/* FSPathMakeRefWithOptions == NULL */
-#endif
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1040 || (MAC_OS_X_VERSION_MIN_REQUIRED < 1040 && MAC_OS_X_VERSION_MIN_REQUIRED >= 1020)
-    {
-      struct stat st;
-
-      if (lstat (file, &st) < 0)
-	err = fnfErr;
-      else if (!S_ISLNK (st.st_mode))
-	err = FSPathMakeRef (file, ref, NULL);
-      else
-	{
-	  char *leaf = strrchr (file, '/') + 1;
-	  size_t parent_len = leaf - (char *) file;
-	  char *parent = alloca (parent_len + 1);
-	  FSRef parent_ref;
-
-	  memcpy (parent, file, parent_len);
-	  parent[parent_len] = '\0';
-	  err = FSPathMakeRef (parent, &parent_ref, NULL);
-	  if (err == noErr)
-	    {
-	      CFStringRef name_str =
-		CFStringCreateWithBytes (NULL, leaf,
-					 strlen ((char *) file) - parent_len,
-					 kCFStringEncodingUTF8, false);
-
-	      if (name_str)
-		{
-		  UniCharCount name_len = CFStringGetLength (name_str);
-		  UniChar *name = alloca (sizeof (UniChar) * name_len);
-
-		  CFStringGetCharacters (name_str, CFRangeMake (0, name_len),
-					 name);
-		  err = FSMakeFSRefUnicode (&parent_ref, name_len, name,
-					    kTextEncodingUnknown, ref);
-		  CFRelease (name_str);
-		}
-	      else
-		err = memFullErr;
-	    }
-	}
-    }
-#endif
-
-  return err;
-}
-
-static OSStatus
-mac_ae_create_desc_for_file_to_trash (const UInt8 *file, AEDesc *desc)
-{
-  OSStatus err;
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1040 || (MAC_OS_X_VERSION_MIN_REQUIRED < 1040 && MAC_OS_X_VERSION_MIN_REQUIRED >= 1020)
-  SInt32 response;
-
-  err = Gestalt (gestaltSystemVersion, &response);
-  if (err == noErr)
-    {
-      if (response < 0x1040)
-	{
-	  FSRef fref;
-
-	  err = mac_fs_path_make_ref_do_not_follow_leaf_symlink (file, &fref);
-	  if (err == noErr)
-	    {
-	      if (response < 0x1030)
-		/* Coerce to typeAlias as Finder on Mac OS X 10.2
-		   doesn't accept FSRef.  We should not do this on
-		   later versions because it leads to the deletion of
-		   the destination of the symbolic link.  */
-		err = AECoercePtr (typeFSRef, &fref, sizeof (FSRef),
-				   typeAlias, desc);
-	      else
-		/* Specifying typeFileURL as target type enables us to
-		   delete the specified symbolic link itself on Mac OS
-		   X 10.4 and later.  But that doesn't work on Mac OS
-		   X 10.3.  That's why we created an FSRef without
-		   following the link at the leaf position.  */
-		err = AECreateDesc (typeFSRef, &fref, sizeof (FSRef), desc);
-	    }
-	}
-      else
-#endif
-	{
-	  err = AECoercePtr (TYPE_FILE_NAME, file, strlen ((char *) file),
-			     typeFileURL, desc);
-	}
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1040 || (MAC_OS_X_VERSION_MIN_REQUIRED < 1040 && MAC_OS_X_VERSION_MIN_REQUIRED >= 1020)
-    }
-#endif
-
-  return err;
 }
 
 /* Moving files to the system recycle bin.
@@ -2574,7 +2273,7 @@ DEFUN ("system-move-file-to-trash", Fsystem_move_file_to_trash,
 
   encoded_file = ENCODE_FILE (filename);
 
-  BLOCK_INPUT;
+  block_input ();
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
   if (!mac_system_move_file_to_trash_use_finder
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1050 && MAC_OS_X_VERSION_MIN_REQUIRED >= 1020
@@ -2584,9 +2283,9 @@ DEFUN ("system-move-file-to-trash", Fsystem_move_file_to_trash,
     {
       FSRef fref;
 
-      err =
-	mac_fs_path_make_ref_do_not_follow_leaf_symlink (SDATA (encoded_file),
-							 &fref);
+      err = FSPathMakeRefWithOptions (SDATA (encoded_file),
+				      kFSPathMakeRefDoNotFollowLeafSymlink,
+				      &fref, NULL);
       if (err == noErr)
 	/* FSPathMoveObjectToTrashSync tries to delete the destination
 	   of the specified symbolic link.  So we use
@@ -2602,7 +2301,8 @@ DEFUN ("system-move-file-to-trash", Fsystem_move_file_to_trash,
       AEDesc desc;
       AppleEvent event, reply;
 
-      err = mac_ae_create_desc_for_file_to_trash (SDATA (encoded_file), &desc);
+      err = AECoercePtr (TYPE_FILE_NAME, SDATA (encoded_file),
+			 SBYTES (encoded_file), typeFileURL, &desc);
       if (err == noErr)
 	{
 	  err = AEBuildAppleEvent (kAECoreSuite, kAEDelete, typeApplSignature,
@@ -2647,7 +2347,7 @@ DEFUN ("system-move-file-to-trash", Fsystem_move_file_to_trash,
 	  AEDisposeDesc (&reply);
 	}
     }
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   if (err != noErr)
     {
@@ -2779,7 +2479,7 @@ ASCII-only string literal.  */)
 
   CHECK_STRING (script);
 
-  BLOCK_INPUT;
+  block_input ();
   {
     extern long mac_appkit_do_applescript (Lisp_Object, Lisp_Object *);
 
@@ -2788,7 +2488,7 @@ ASCII-only string literal.  */)
     else
       status = do_applescript (script, &result);
   }
-  UNBLOCK_INPUT;
+  unblock_input ();
   if (status == 0)
     return result;
   else if (!STRINGP (result))
@@ -2820,7 +2520,7 @@ Each type should be a string of length 4 or the symbol
   else
     dst_desc_type = mac_get_code_from_arg (dst_type, 0);
 
-  BLOCK_INPUT;
+  block_input ();
   err = AECoercePtr (src_desc_type, SDATA (src_data), SBYTES (src_data),
 		     dst_desc_type, &dst_desc);
   if (err == noErr)
@@ -2828,7 +2528,7 @@ Each type should be a string of length 4 or the symbol
       result = Fcdr (mac_aedesc_to_lisp (&dst_desc));
       AEDisposeDesc (&dst_desc);
     }
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   return result;
 }
@@ -2878,7 +2578,7 @@ return value (see `mac-convert-property-list').  FORMAT also accepts
 
   GCPRO2 (key, format);
 
-  BLOCK_INPUT;
+  block_input ();
 
   app_id = kCFPreferencesCurrentApplication;
   if (!NILP (application))
@@ -2931,7 +2631,7 @@ return value (see `mac-convert-property-list').  FORMAT also accepts
     CFRelease (app_plist);
   CFRelease (app_id);
 
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   UNGCPRO;
 
@@ -2953,7 +2653,7 @@ object is converted into a corresponding Lisp object as follows:
   CFString           Multibyte string               string
   CFNumber           Integer, float, or string      number
   CFBoolean          Symbol (t or nil)              boolean
-  CFDate             List of three integers         date
+  CFDate             List of three or four integers date
                        (cf. `current-time')
   CFData             Unibyte string                 data
   CFArray            Vector                         array
@@ -2988,7 +2688,7 @@ otherwise.  */)
 
   GCPRO2 (property_list, format);
 
-  BLOCK_INPUT;
+  block_input ();
 
   if (CONSP (property_list))
     plist = cfproperty_list_create_with_lisp (property_list);
@@ -3009,7 +2709,7 @@ otherwise.  */)
       CFRelease (plist);
     }
 
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   UNGCPRO;
 
@@ -3183,7 +2883,7 @@ On successful conversion, return the result string, else return nil.  */)
 
   GCPRO4 (string, source, target, normalization_form);
 
-  BLOCK_INPUT;
+  block_input ();
 
   src_encoding = get_cfstring_encoding_from_lisp (source);
   tgt_encoding = get_cfstring_encoding_from_lisp (target);
@@ -3219,33 +2919,11 @@ On successful conversion, return the result string, else return nil.  */)
       CFRelease (str);
     }
 
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   UNGCPRO;
 
   return result;
-}
-
-DEFUN ("mac-process-hi-command", Fmac_process_hi_command, Smac_process_hi_command, 1, 1, 0,
-       doc: /* Send a HI command whose ID is COMMAND-ID to the command chain.
-COMMAND-ID must be a 4-character string.  Some common command IDs are
-defined in the Carbon Event Manager.  */)
-  (Lisp_Object command_id)
-{
-  OSStatus err;
-  HICommand command;
-
-  memset (&command, 0, sizeof (HICommand));
-  command.commandID = mac_get_code_from_arg (command_id, 0);
-
-  BLOCK_INPUT;
-  err = ProcessHICommand (&command);
-  UNBLOCK_INPUT;
-
-  if (err != noErr)
-    error ("HI command (command ID: '%s') not handled.", SDATA (command_id));
-
-  return Qnil;
 }
 
 static ScriptCode
@@ -3260,31 +2938,6 @@ mac_get_system_script_code (void)
     result = 0;
 
   return result;
-}
-
-static Lisp_Object
-mac_get_system_locale (void)
-{
-#if !__LP64__
-  OSStatus err;
-  LangCode lang;
-  RegionCode region;
-  LocaleRef locale;
-  Str255 str;
-
-  lang = GetScriptVariable (smSystemScript, smScriptLang);
-  region = GetScriptManagerVariable (smRegionCode);
-  err = LocaleRefFromLangOrRegionCode (lang, region, &locale);
-  if (err == noErr)
-    err = LocaleRefGetPartString (locale, kLocaleAllPartsMask,
-				  sizeof (str), str);
-  if (err == noErr)
-    return build_string (str);
-  else
-    return Qnil;
-#else
-  return Qnil;
-#endif
 }
 
 
@@ -3431,30 +3084,10 @@ mac_peek_next_event (void)
 {
   EventRef event;
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
-#if MAC_OS_X_VERSION_MIN_REQUIRED == 1020
-  if (AcquireFirstMatchingEventInQueue != NULL)
-#endif
-    {
-      event = AcquireFirstMatchingEventInQueue (GetCurrentEventQueue (), 0,
-						NULL, kEventQueueOptionsNone);
-      if (event)
-	ReleaseEvent (event);
-    }
-#if MAC_OS_X_VERSION_MIN_REQUIRED == 1020
-  else			/* AcquireFirstMatchingEventInQueue == NULL */
-#endif
-#endif	/* MAC_OS_X_VERSION_MAX_ALLOWED >= 1030  */
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1030 || MAC_OS_X_VERSION_MIN_REQUIRED == 1020
-    {
-      OSStatus err;
-
-      err = ReceiveNextEvent (0, NULL, kEventDurationNoWait,
-			      kEventLeaveInQueue, &event);
-      if (err != noErr)
-	event = NULL;
-    }
-#endif
+  event = AcquireFirstMatchingEventInQueue (GetCurrentEventQueue (), 0,
+					    NULL, kEventQueueOptionsNone);
+  if (event)
+    ReleaseEvent (event);
 
   return event;
 }
@@ -3517,10 +3150,10 @@ select_perform (void *info)
     qnfds = wakeup_fds[1] + 1;
   FD_SET (wakeup_fds[1], &qrfds);
 
-  r = select (qnfds, select_args.rfds ? &qrfds : NULL,
-	      select_args.wfds ? &qwfds : NULL,
-	      select_args.efds ? &qefds : NULL,
-	      select_args.timeout ? &qtimeout : NULL);
+  r = pselect (qnfds, select_args.rfds ? &qrfds : NULL,
+	       select_args.wfds ? &qwfds : NULL,
+	       select_args.efds ? &qefds : NULL,
+	       select_args.timeout ? &qtimeout : NULL, NULL);
   if (r < 0 || (r > 0 && !FD_ISSET (wakeup_fds[1], &qrfds)))
     mac_wakeup_from_run_loop_run_once ();
 
@@ -3574,11 +3207,8 @@ select_and_poll_event (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds,
   int timedout_p = 0;
   int r = 0;
   EMACS_TIME select_timeout;
-  EventTimeout timeoutval =
-    (timeout
-     ? (EMACS_SECS (*timeout) * kEventDurationSecond
-	+ EMACS_USECS (*timeout) * kEventDurationMicrosecond)
-     : kEventDurationForever);
+  EventTimeout timeoutval = (timeout ? EMACS_TIME_TO_DOUBLE (*timeout)
+			     : kEventDurationForever);
   SELECT_TYPE orfds, owfds, oefds;
 
   if (timeout == NULL)
@@ -3591,14 +3221,14 @@ select_and_poll_event (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds,
   /* Try detect_input_pending before mac_run_loop_run_once in the same
      BLOCK_INPUT block, in case that some input has already been read
      asynchronously.  */
-  BLOCK_INPUT;
+  block_input ();
   while (1)
     {
       if (detect_input_pending ())
 	break;
 
-      EMACS_SET_SECS_USECS (select_timeout, 0, 0);
-      r = select (nfds, rfds, wfds, efds, &select_timeout);
+      select_timeout = make_emacs_time (0, 0);
+      r = pselect (nfds, rfds, wfds, efds, &select_timeout, NULL);
       if (r != 0)
 	break;
 
@@ -3637,7 +3267,7 @@ select_and_poll_event (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds,
       else
 	break;
     }
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   if (r != 0)
     return r;
@@ -3654,7 +3284,7 @@ select_and_poll_event (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds,
 
 int
 sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
-	    EMACS_TIME *timeout)
+	    EMACS_TIME *timeout, void *sigmask)
 {
   int timedout_p = 0;
   int r;
@@ -3664,7 +3294,9 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
 
   if (inhibit_window_system || noninteractive
       || nfds < 1 || rfds == NULL || !FD_ISSET (0, rfds))
-    return select (nfds, rfds, wfds, efds, timeout);
+    return pselect (nfds, rfds, wfds, efds, timeout, sigmask);
+
+  eassert (sigmask == NULL);
 
   FD_CLR (0, rfds);
   orfds = *rfds;
@@ -3679,9 +3311,7 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
   else
     FD_ZERO (&oefds);
 
-  timeoutval = (timeout
-		? (EMACS_SECS (*timeout) * kEventDurationSecond
-		   + EMACS_USECS (*timeout) * kEventDurationMicrosecond)
+  timeoutval = (timeout ? EMACS_TIME_TO_DOUBLE (*timeout)
 		: kEventDurationForever);
 
   FD_SET (0, rfds);		/* sentinel */
@@ -3699,7 +3329,7 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
 
   /* Avoid initial overhead of RunLoop setup for the case that some
      input is already available.  */
-  EMACS_SET_SECS_USECS (select_timeout, 0, 0);
+  select_timeout = make_emacs_time (0, 0);
   r = select_and_poll_event (nfds, rfds, wfds, efds, &select_timeout);
   if (r != 0 || timeoutval == 0.0)
     return r;
@@ -3713,7 +3343,7 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
   /* Try detect_input_pending before mac_run_loop_run_once in the same
      BLOCK_INPUT block, in case that some input has already been read
      asynchronously.  */
-  BLOCK_INPUT;
+  block_input ();
   if (!detect_input_pending ())
     {
 #if SELECT_USE_GCD
@@ -3728,8 +3358,8 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
 	    qnfds = wakeup_fds[1] + 1;
 	  FD_SET (wakeup_fds[1], &qrfds);
 
-	  r = select (qnfds, &qrfds, wfds ? &qwfds : NULL,
-		      efds ? &qefds : NULL, NULL);
+	  r = pselect (qnfds, &qrfds, wfds ? &qwfds : NULL,
+		       efds ? &qefds : NULL, NULL, NULL);
 	  if (r < 0 || (r > 0 && !FD_ISSET (wakeup_fds[1], &qrfds)))
 	    mac_wakeup_from_run_loop_run_once ();
 	});
@@ -3768,11 +3398,11 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
       write_one_byte_to_fd (wakeup_fds[0]);
 #endif
     }
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   if (!timedout_p)
     {
-      EMACS_SET_SECS_USECS (select_timeout, 0, 0);
+      select_timeout = make_emacs_time (0, 0);
       r = select_and_poll_event (nfds, rfds, wfds, efds, &select_timeout);
       if (r != 0)
 	return r;
@@ -3818,6 +3448,8 @@ mac_service_provider_registered_p (void)
   return kr == KERN_SUCCESS;
 }
 
+const char *mac_exec_path, *mac_load_path, *mac_etc_directory;
+
 /* Set up environment variables so that Emacs can correctly find its
    support files when packaged as an application bundle.  Directories
    placed in /usr/local/share/emacs/<emacs-version>/, /usr/local/bin,
@@ -3841,7 +3473,6 @@ init_mac_osx_environment (void)
 
   /* Initialize locale related variables.  */
   mac_system_script_code = mac_get_system_script_code ();
-  Vmac_system_locale = IS_DAEMON ? Qnil : mac_get_system_locale ();
 
   /* Fetch the pathname of the application bundle as a C string into
      app_bundle_pathname.  */
@@ -3878,105 +3509,74 @@ init_mac_osx_environment (void)
      to leim dir>".  */
   p = (char *) alloca (app_bundle_pathname_len + 50);
   q = (char *) alloca (3 * app_bundle_pathname_len + 150);
-  if (!getenv ("EMACSLOADPATH"))
+
+  /* Set `mac_load_path'.  */
+  q[0] = '\0';
+
+  strcpy (p, app_bundle_pathname);
+  strcat (p, "/Contents/Resources/site-lisp");
+  if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
+    strcat (q, p);
+
+  strcpy (p, app_bundle_pathname);
+  strcat (p, "/Contents/Resources/lisp");
+  if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
     {
-      q[0] = '\0';
-
-      strcpy (p, app_bundle_pathname);
-      strcat (p, "/Contents/Resources/site-lisp");
-      if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
-	strcat (q, p);
-
-      strcpy (p, app_bundle_pathname);
-      strcat (p, "/Contents/Resources/lisp");
-      if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
-	{
-	  if (q[0] != '\0')
-	    strcat (q, ":");
-	  strcat (q, p);
-	}
-
-      strcpy (p, app_bundle_pathname);
-      strcat (p, "/Contents/Resources/leim");
-      if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
-	{
-	  if (q[0] != '\0')
-	    strcat (q, ":");
-	  strcat (q, p);
-	}
-
       if (q[0] != '\0')
-	setenv ("EMACSLOADPATH", q, 1);
+	strcat (q, ":");
+      strcat (q, p);
     }
 
-  if (!getenv ("EMACSPATH"))
+  strcpy (p, app_bundle_pathname);
+  strcat (p, "/Contents/Resources/leim");
+  if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
     {
-      q[0] = '\0';
-
-      strcpy (p, app_bundle_pathname);
-      strcat (p, "/Contents/MacOS/libexec");
-      if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
-	strcat (q, p);
-
-      strcpy (p, app_bundle_pathname);
-      strcat (p, "/Contents/MacOS/bin");
-      if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
-	{
-	  if (q[0] != '\0')
-	    strcat (q, ":");
-	  strcat (q, p);
-	}
-
       if (q[0] != '\0')
-	setenv ("EMACSPATH", q, 1);
+	strcat (q, ":");
+      strcat (q, p);
     }
 
-  if (!getenv ("EMACSDATA"))
+  if (q[0] != '\0')
+    mac_load_path = strdup (q);
+
+  /* Set `mac_exec_path'.  */
+  q[0] = '\0';
+
+  strcpy (p, app_bundle_pathname);
+  strcat (p, "/Contents/MacOS/libexec");
+  if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
+    strcat (q, p);
+
+  strcpy (p, app_bundle_pathname);
+  strcat (p, "/Contents/MacOS/bin");
+  if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
     {
-      strcpy (p, app_bundle_pathname);
-      strcat (p, "/Contents/Resources/etc");
-      if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
-	setenv ("EMACSDATA", p, 1);
+      if (q[0] != '\0')
+	strcat (q, ":");
+      strcat (q, p);
     }
 
-  if (!getenv ("EMACSDOC"))
-    {
-      strcpy (p, app_bundle_pathname);
-      strcat (p, "/Contents/Resources/etc");
-      if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
-	setenv ("EMACSDOC", p, 1);
-    }
+  if (q[0] != '\0')
+    mac_exec_path = strdup (q);
 
-  if (!getenv ("INFOPATH"))
-    {
-      strcpy (p, app_bundle_pathname);
-      strcat (p, "/Contents/Resources/info");
-      if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
-	setenv ("INFOPATH", p, 1);
-    }
+  /* Set `mac_etc_directory'.  */
+  strcpy (p, app_bundle_pathname);
+  strcat (p, "/Contents/Resources/etc");
+  if (stat (p, &st) == 0 && (st.st_mode & S_IFMT) == S_IFDIR)
+    mac_etc_directory = strdup (p);
 
   if (IS_DAEMON)
     inhibit_window_system = 1;
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1030
   else
     {
-      /* AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER is missing in some SDKs.  */
-      CG_EXTERN CFDictionaryRef CGSessionCopyCurrentDictionary(void)  AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER;
+      CFDictionaryRef session_dict = CGSessionCopyCurrentDictionary ();
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED == 1020
-      if (CGSessionCopyCurrentDictionary != NULL)
-#endif
-	{
-	  CFDictionaryRef session_dict = CGSessionCopyCurrentDictionary ();
-
-	  if (session_dict == NULL)
-	    /* No window server session.  */
-	    inhibit_window_system = 1;
-	  else
-	    CFRelease (session_dict);
-	}
+      if (session_dict == NULL)
+	/* No window server session.  */
+	inhibit_window_system = 1;
+      else
+	CFRelease (session_dict);
     }
-#endif
 }
 
 
@@ -4021,12 +3621,7 @@ syms_of_mac (void)
   defsubr (&Smac_get_preference);
   defsubr (&Smac_convert_property_list);
   defsubr (&Smac_code_convert_string);
-  defsubr (&Smac_process_hi_command);
 
-  defsubr (&Smac_set_file_creator);
-  defsubr (&Smac_set_file_type);
-  defsubr (&Smac_get_file_creator);
-  defsubr (&Smac_get_file_type);
   defsubr (&Smac_file_alias_p);
   defsubr (&Ssystem_move_file_to_trash);
   defsubr (&Sdo_applescript);
@@ -4034,12 +3629,6 @@ syms_of_mac (void)
   DEFVAR_INT ("mac-system-script-code", mac_system_script_code,
     doc: /* The system script code.  */);
   mac_system_script_code = mac_get_system_script_code ();
-
-  DEFVAR_LISP ("mac-system-locale", Vmac_system_locale,
-    doc: /* The system locale identifier string.
-This is not a POSIX locale ID, but an ICU locale ID.  So encoding
-information is not included.  */);
-  Vmac_system_locale = mac_get_system_locale ();
 
   DEFVAR_BOOL ("mac-system-move-file-to-trash-use-finder",
 	       mac_system_move_file_to_trash_use_finder,

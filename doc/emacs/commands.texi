@@ -1,6 +1,6 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 1985-1987, 1993-1995, 1997, 2001-2012
-@c   Free Software Foundation, Inc.
+@c Copyright (C) 1985-1987, 1993-1995, 1997, 2001-2013 Free Software
+@c Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @iftex
 @chapter Characters, Keys and Commands
@@ -15,7 +15,7 @@ input.
 @raisesections
 @end ifnottex
 
-@node User Input, Keys, Screen, Top
+@node User Input
 @section Kinds of User Input
 @cindex input with the keyboard
 @cindex keyboard input
@@ -53,7 +53,7 @@ holding down the @key{Ctrl} key while pressing @kbd{a}; we will refer
 to this as @kbd{C-a} for short.  Similarly @kbd{Meta-a}, or @kbd{M-a}
 for short, is entered by holding down the @key{Alt} key and pressing
 @kbd{a}.  Modifier keys can also be applied to non-alphanumerical
-characters, e.g. @kbd{C-@key{F1}} or @kbd{M-@key{left}}.
+characters, e.g., @kbd{C-@key{F1}} or @kbd{M-@key{left}}.
 
 @cindex @key{ESC} replacing @key{Meta} key
   You can also type Meta characters using two-character sequences
@@ -80,7 +80,7 @@ as @dfn{input events}.  For details about how Emacs internally handles
 input events, see @ref{Input Events,,, elisp, The Emacs Lisp Reference
 Manual}.
 
-@node Keys, Commands, User Input, Top
+@node Keys
 @section Keys
 
   Some Emacs commands are invoked by just one input event; for
@@ -133,7 +133,7 @@ exception to this rule is @key{ESC}: @kbd{@key{ESC} C-h} is equivalent
 to @kbd{C-M-h}, which does something else entirely.  You can, however,
 use @key{F1} to display a list of commands starting with @key{ESC}.
 
-@node Commands, Entering Emacs, Keys, Top
+@node Commands
 @section Keys and Commands
 
 @cindex binding

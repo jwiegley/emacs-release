@@ -4,7 +4,7 @@
 
 
 ;;;### (autoloads (ede-cpp-root-project-root) "ede/cpp-root" "cpp-root.el"
-;;;;;;  "3aeab969c6e7e2876ae2546b69012fb2")
+;;;;;;  "390335e8b40807bcc7dd6b9ecfbbb786")
 ;;; Generated autoloads from cpp-root.el
 
 (autoload 'ede-cpp-root-project-root "ede/cpp-root" "\
@@ -12,12 +12,12 @@ Get the root directory for DIR.
 
 \(fn &optional DIR)" nil nil)
 
-(add-to-list 'ede-project-class-files (ede-project-autoload "cpp-root" :name "CPP ROOT" :file 'ede/cpp-root :proj-file 'ede-cpp-root-project-file-for-dir :proj-root 'ede-cpp-root-project-root :load-type 'ede-cpp-root-load :class-sym 'ede-cpp-root :new-p nil) t)
+(ede-add-project-autoload (ede-project-autoload "cpp-root" :name "CPP ROOT" :file 'ede-cpp-root :proj-file 'ede-cpp-root-project-file-for-dir :proj-root 'ede-cpp-root-project-root :load-type 'ede-cpp-root-load :class-sym 'ede-cpp-root :new-p nil :safe-p t) 'unique)
 
 ;;;***
 
 ;;;### (autoloads (ede-project-sort-targets ede-customize-current-target
-;;;;;;  ede-customize-project) "ede/custom" "custom.el" "273a84690d54194ed3b642cfe1bd697f")
+;;;;;;  ede-customize-project) "ede/custom" "custom.el" "856181c6583938388b9fa46720cb2b25")
 ;;; Generated autoloads from custom.el
 
 (autoload 'ede-customize-project "ede/custom" "\
@@ -42,7 +42,7 @@ Create a custom-like buffer for sorting targets of current project.
 ;;;***
 
 ;;;### (autoloads (ede-emacs-project-root) "ede/emacs" "emacs.el"
-;;;;;;  "6ca4794695231c82dce4516b44f0d356")
+;;;;;;  "314cd162c83d80b4e3e58e70e5298438")
 ;;; Generated autoloads from emacs.el
 
 (autoload 'ede-emacs-project-root "ede/emacs" "\
@@ -50,11 +50,11 @@ Get the root directory for DIR.
 
 \(fn &optional DIR)" nil nil)
 
-(add-to-list 'ede-project-class-files (ede-project-autoload "emacs" :name "EMACS ROOT" :file 'ede/emacs :proj-file "src/emacs.c" :proj-root 'ede-emacs-project-root :load-type 'ede-emacs-load :class-sym 'ede-emacs-project :new-p nil) t)
+(ede-add-project-autoload (ede-project-autoload "emacs" :name "EMACS ROOT" :file 'ede/emacs :proj-file "src/emacs.c" :proj-root-dirmatch "emacs[^/]*" :proj-root 'ede-emacs-project-root :load-type 'ede-emacs-load :class-sym 'ede-emacs-project :new-p nil :safe-p t) 'unique)
 
 ;;;***
 
-;;;### (autoloads (ede-find-file) "ede/files" "files.el" "6e34b470a669fc0f7623d476a565879d")
+;;;### (autoloads (ede-find-file) "ede/files" "files.el" "feaabd59d89f91d8c0a2684a5c1094de")
 ;;; Generated autoloads from files.el
 
 (autoload 'ede-find-file "ede/files" "\
@@ -67,7 +67,7 @@ the current EDE project.
 ;;;***
 
 ;;;### (autoloads (ede-enable-generic-projects) "ede/generic" "generic.el"
-;;;;;;  "f41cd9ab6c1b3cd82da42feb3608837b")
+;;;;;;  "f8cee9b06faf0fbfd680e27f27cd0a86")
 ;;; Generated autoloads from generic.el
 
 (autoload 'ede-enable-generic-projects "ede/generic" "\
@@ -77,8 +77,8 @@ Enable generic project loaders.
 
 ;;;***
 
-;;;### (autoloads (ede-linux-project-root) "ede/linux" "linux.el"
-;;;;;;  "ad23b3acbf4fc04619f42b722b7e9c68")
+;;;### (autoloads (ede-linux-load ede-linux-project-root) "ede/linux"
+;;;;;;  "linux.el" "1dffda7f812a76dc23f1bddb1b75b0ba")
 ;;; Generated autoloads from linux.el
 
 (autoload 'ede-linux-project-root "ede/linux" "\
@@ -86,12 +86,20 @@ Get the root directory for DIR.
 
 \(fn &optional DIR)" nil nil)
 
-(add-to-list 'ede-project-class-files (ede-project-autoload "linux" :name "LINUX ROOT" :file 'ede/linux :proj-file "scripts/ver_linux" :proj-root 'ede-linux-project-root :load-type 'ede-linux-load :class-sym 'ede-linux-project :new-p nil) t)
+(autoload 'ede-linux-load "ede/linux" "\
+Return an Linux Project object if there is a match.
+Return nil if there isn't one.
+Argument DIR is the directory it is created for.
+ROOTPROJ is nil, since there is only one project.
+
+\(fn DIR &optional ROOTPROJ)" nil nil)
+
+(ede-add-project-autoload (ede-project-autoload "linux" :name "LINUX ROOT" :file 'ede/linux :proj-file "scripts/ver_linux" :proj-root-dirmatch "linux[^/]*" :proj-root 'ede-linux-project-root :load-type 'ede-linux-load :class-sym 'ede-linux-project :new-p nil :safe-p t) 'unique)
 
 ;;;***
 
 ;;;### (autoloads (ede-enable-locate-on-project) "ede/locate" "locate.el"
-;;;;;;  "1bdddcb7cb1fb8dbbee667a178d0ef12")
+;;;;;;  "75746759e62640f3ca35db80d57481dc")
 ;;; Generated autoloads from locate.el
 
 (autoload 'ede-enable-locate-on-project "ede/locate" "\
@@ -103,7 +111,7 @@ based on `ede-locate-setup-options'.
 
 ;;;***
 
-;;;### (autoloads (ede-make-check-version) "ede/make" "make.el" "6685c10bf482d5107d223175ac13594b")
+;;;### (autoloads (ede-make-check-version) "ede/make" "make.el" "84364d952d6bc626c1a605a7e823c3cb")
 ;;; Generated autoloads from make.el
 
 (autoload 'ede-make-check-version "ede/make" "\
@@ -118,7 +126,7 @@ If NOERROR is nil, then throw an error on failure.  Return t otherwise.
 ;;;***
 
 ;;;### (autoloads (ede-speedbar-file-setup) "ede/speedbar" "speedbar.el"
-;;;;;;  "acbe9dd460a420f281bf99353ded385e")
+;;;;;;  "ac8d088844e4cfc7ec3aa18e85f395d1")
 ;;; Generated autoloads from speedbar.el
 
 (autoload 'ede-speedbar-file-setup "ede/speedbar" "\
@@ -130,7 +138,7 @@ Setup some keybindings in the Speedbar File display.
 
 ;;;### (autoloads (ede-vc-project-directory ede-upload-html-documentation
 ;;;;;;  ede-upload-distribution ede-edit-web-page ede-web-browse-home)
-;;;;;;  "ede/system" "system.el" "82788557cf1e7840a4308536fe1bbf44")
+;;;;;;  "ede/system" "system.el" "af9b58fc58b806c47ac6eebb05f595dd")
 ;;; Generated autoloads from system.el
 
 (autoload 'ede-web-browse-home "ede/system" "\
@@ -164,7 +172,7 @@ Run `vc-dir' on the current project.
 
 ;;;***
 
-;;;### (autoloads (ede-update-version) "ede/util" "util.el" "c3faeec43650d237387a0210cf784c2f")
+;;;### (autoloads (ede-update-version) "ede/util" "util.el" "7694c70ea28eab86440b482cf66e8f73")
 ;;; Generated autoloads from util.el
 
 (autoload 'ede-update-version "ede/util" "\

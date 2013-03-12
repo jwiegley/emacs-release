@@ -1,6 +1,6 @@
 ;;; mm-view.el --- functions for viewing MIME objects
 
-;; Copyright (C) 1998-2012  Free Software Foundation, Inc.
+;; Copyright (C) 1998-2013 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; This file is part of GNU Emacs.
@@ -494,9 +494,6 @@
 			 ,(copy-marker (point))))))))
 
 (defun mm-inline-audio (handle)
-  (message "Not implemented"))
-
-(defun mm-view-sound-file ()
   (message "Not implemented"))
 
 (defun mm-w3-prepare-buffer ()

@@ -1,6 +1,6 @@
 ;;; calc-forms.el --- data format conversion functions for Calc
 
-;; Copyright (C) 1990-1993, 2001-2012 Free Software Foundation, Inc.
+;; Copyright (C) 1990-1993, 2001-2013 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -444,7 +444,7 @@
 
 
 (defun math-this-year ()
-  (string-to-number (substring (current-time-string) -4)))
+  (nth 5 (decode-time)))
 
 (defun math-leap-year-p (year)
   (if (Math-lessp year 1752)
@@ -494,7 +494,7 @@
 			      (car res))))))))
 
 
-;;; It is safe to redefine these in your .emacs file to use a different
+;;; It is safe to redefine these in your init file to use a different
 ;;; language.
 
 (defvar math-long-weekday-names '( "Sunday" "Monday" "Tuesday" "Wednesday"

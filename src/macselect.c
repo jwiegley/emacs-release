@@ -1,6 +1,6 @@
 /* Selection processing for Emacs on Mac OS.
    Copyright (C) 2005-2008 Free Software Foundation, Inc.
-   Copyright (C) 2009-2012  YAMAMOTO Mitsuharu
+   Copyright (C) 2009-2013  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 
@@ -18,11 +18,11 @@ You should have received a copy of the GNU General Public License
 along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <config.h>
-#include <setjmp.h>
 
 #include "lisp.h"
 #include "macterm.h"
 #include "blockinput.h"
+#include "character.h"
 #include "keymap.h"
 #include "termhooks.h"
 #include "keyboard.h"
@@ -61,7 +61,7 @@ x_selection_owner_p (Lisp_Object selection, struct mac_display_info *dpyinfo)
   if (NILP (local_selection_data))
     return 0;
 
-  BLOCK_INPUT;
+  block_input ();
 
   err = mac_get_selection_from_symbol (selection, 0, &sel);
   if (err == noErr && sel)
@@ -76,7 +76,7 @@ x_selection_owner_p (Lisp_Object selection, struct mac_display_info *dpyinfo)
   else
     result = 1;
 
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   return result;
 }
@@ -97,11 +97,10 @@ x_own_selection (Lisp_Object selection_name, Lisp_Object selection_value,
   Selection sel;
   struct gcpro gcpro1, gcpro2;
   Lisp_Object rest, handler_fn, value, target_type;
-  int count;
 
   GCPRO2 (selection_name, selection_value);
 
-  BLOCK_INPUT;
+  block_input ();
 
   err = mac_get_selection_from_symbol (selection_name, 1, &sel);
   if (err == noErr && sel)
@@ -109,7 +108,7 @@ x_own_selection (Lisp_Object selection_name, Lisp_Object selection_value,
       /* Don't allow a quit within the converter.
 	 When the user types C-g, he would be surprised
 	 if by luck it came during a converter.  */
-      count = SPECPDL_INDEX ();
+      ptrdiff_t count = SPECPDL_INDEX ();
       specbind (Qinhibit_quit, Qt);
 
       for (rest = Vselection_converter_alist; CONSP (rest); rest = XCDR (rest))
@@ -142,7 +141,7 @@ x_own_selection (Lisp_Object selection_name, Lisp_Object selection_value,
       unbind_to (count, Qnil);
     }
 
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   UNGCPRO;
 
@@ -157,9 +156,9 @@ x_own_selection (Lisp_Object selection_name, Lisp_Object selection_value,
 
     if (sel)
       {
-	BLOCK_INPUT;
+	block_input ();
 	ownership_info = mac_get_selection_ownership_info (sel);
-	UNBLOCK_INPUT;
+	unblock_input ();
       }
     else
       ownership_info = Qnil; 	/* dummy value for local-only selection */
@@ -167,8 +166,9 @@ x_own_selection (Lisp_Object selection_name, Lisp_Object selection_value,
 			    INTEGER_TO_CONS (timestamp), frame, ownership_info);
     prev_value = LOCAL_SELECTION (selection_name, dpyinfo);
 
-    dpyinfo->terminal->Vselection_alist
-      = Fcons (selection_data, dpyinfo->terminal->Vselection_alist);
+    tset_selection_alist
+      (dpyinfo->terminal,
+       Fcons (selection_data, dpyinfo->terminal->Vselection_alist));
 
     /* If we already owned the selection, remove the old selection
        data.  Don't use Fdelq as that may QUIT.  */
@@ -201,7 +201,6 @@ x_get_local_selection (Lisp_Object selection_symbol, Lisp_Object target_type,
 {
   Lisp_Object local_value;
   Lisp_Object handler_fn, value, type, check;
-  int count;
 
   if (!x_selection_owner_p (selection_symbol, dpyinfo))
     return Qnil;
@@ -219,7 +218,7 @@ x_get_local_selection (Lisp_Object selection_symbol, Lisp_Object target_type,
       /* Don't allow a quit within the converter.
 	 When the user types C-g, he would be surprised
 	 if by luck it came during a converter.  */
-      count = SPECPDL_INDEX ();
+      ptrdiff_t count = SPECPDL_INDEX ();
       specbind (Qinhibit_quit, Qt);
 
       CHECK_SYMBOL (target_type);
@@ -281,7 +280,7 @@ x_clear_frame_selections (FRAME_PTR f)
       if (x_selection_owner_p (args[1], dpyinfo))
 	Frun_hook_with_args (2, args);
 
-      t->Vselection_alist = XCDR (t->Vselection_alist);
+      tset_selection_alist (t, XCDR (t->Vselection_alist));
     }
 
   /* Delete elements after the beginning of Vselection_alist.  */
@@ -314,7 +313,7 @@ x_get_foreign_selection (Lisp_Object selection_symbol, Lisp_Object target_type,
   if (!FRAME_LIVE_P (f))
     return Qnil;
 
-  BLOCK_INPUT;
+  block_input ();
 
   err = mac_get_selection_from_symbol (selection_symbol, 0, &sel);
   if (err == noErr && sel)
@@ -336,7 +335,7 @@ x_get_foreign_selection (Lisp_Object selection_symbol, Lisp_Object target_type,
 	}
     }
 
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   return result;
 }
@@ -504,7 +503,7 @@ frame's display, or the first available display.  */)
 	  }
     }
 
-  dpyinfo->terminal->Vselection_alist = Vselection_alist;
+  tset_selection_alist (dpyinfo->terminal, Vselection_alist);
 
   /* Run the `x-lost-selection-functions' abnormal hook.  */
 
@@ -518,13 +517,13 @@ frame's display, or the first available display.  */)
   prepare_menu_bars ();
   redisplay_preserve_echo_area (20);
 
-  BLOCK_INPUT;
+  block_input ();
 
   err = mac_get_selection_from_symbol (selection, 0, &sel);
   if (err == noErr && sel)
     mac_clear_selection (&sel);
 
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   return Qt;
 }
@@ -584,7 +583,7 @@ frame's display, or the first available display.  */)
   if (x_selection_owner_p (selection, dpyinfo))
     return Qt;
 
-  BLOCK_INPUT;
+  block_input ();
 
   err = mac_get_selection_from_symbol (selection, 0, &sel);
   if (err == noErr && sel)
@@ -598,7 +597,7 @@ frame's display, or the first available display.  */)
 	  }
       }
 
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   return result;
 }
@@ -925,7 +924,7 @@ DEFUN ("mac-process-deferred-apple-events", Fmac_process_deferred_apple_events, 
   if (mac_ready_for_apple_events)
     return Qnil;
 
-  BLOCK_INPUT;
+  block_input ();
   mac_ready_for_apple_events = 1;
 #if __LP64__ && MAC_OS_X_VERSION_MIN_REQUIRED < 1060
   {
@@ -965,7 +964,7 @@ DEFUN ("mac-process-deferred-apple-events", Fmac_process_deferred_apple_events, 
 
       deferred_apple_events = NULL;
     }
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   return Qt;
 }
@@ -977,9 +976,9 @@ Return the number of expired events.   */)
 {
   int nexpired;
 
-  BLOCK_INPUT;
+  block_input ();
   nexpired = cleanup_suspended_apple_events (&suspended_apple_events, 0);
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   return make_number (nexpired);
 }
@@ -1015,7 +1014,7 @@ Return t if the parameter is successfully set.  Otherwise return nil.  */)
     error ("Apple event keyword must be a 4-byte string: %s",
 	   SDATA (keyword));
 
-  BLOCK_INPUT;
+  block_input ();
   for (p = suspended_apple_events; p; p = p->next)
     if (p->suspension_id == suspension_id)
       break;
@@ -1027,7 +1026,7 @@ Return t if the parameter is successfully set.  Otherwise return nil.  */)
       if (err == noErr)
 	result = Qt;
     }
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   return result;
 }
@@ -1053,7 +1052,7 @@ nil, which means the event is already resumed or expired.  */)
 
   suspension_id = get_suspension_id (apple_event);
 
-  BLOCK_INPUT;
+  block_input ();
   for (p = &suspended_apple_events; *p; p = &(*p)->next)
     if ((*p)->suspension_id == suspension_id)
       break;
@@ -1079,7 +1078,7 @@ nil, which means the event is already resumed or expired.  */)
       xfree (ae);
       result = Qt;
     }
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   return result;
 }
@@ -1121,7 +1120,7 @@ Otherwise, return the error code as an integer.  */)
 	mode |= kAENoReply;
     }
 
-  BLOCK_INPUT;
+  block_input ();
   err = create_apple_event_from_lisp (apple_event, &event);
   if (err == noErr)
     {
@@ -1134,7 +1133,7 @@ Otherwise, return the error code as an integer.  */)
     }
   else
     result = make_number (err);
-  UNBLOCK_INPUT;
+  unblock_input ();
 
   return result;
 }
