@@ -2752,6 +2752,7 @@ MAC_CFLAGS=
 ### Use Mac OS X GUI.
 if test "${HAVE_MACGUI}" = "yes"; then
   AC_DEFINE(HAVE_MACGUI, 1, [Define to 1 if you are using GUI on Mac OS X.])
+  AC_DEFINE(HAVE_SOUND, 1, [Define to 1 if you have sound support.])
   AC_CHECK_HEADERS(AvailabilityMacros.h)
   MAC_CFLAGS="-fconstant-cfstrings"
   ## Specify the install directory

@@ -1204,8 +1204,10 @@ Currently the `mailto' scheme is supported."
 (declare-function mac-set-font-panel-visible-p "macfns.c" (flag))
 
 (define-minor-mode mac-font-panel-mode
-  "Toggle use of the font panel.
-With numeric ARG, display the font panel if and only if ARG is positive."
+  "Toggle font panel display (Mac Font Panel mode).
+With a prefix argument ARG, enable Mac Font Panel mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil."
   :init-value nil
   :global t
   :group 'mac
@@ -1676,12 +1678,17 @@ modifiers, it changes the global tool-bar visibility setting."
   "Insert the selection value for Services."
   (interactive)
   (let ((text (x-selection-value-internal mac-service-selection)))
-    (if (not buffer-read-only)
-	(insert text)
-      (kill-new text)
-      (message "%s"
-       (substitute-command-keys
-	"The text from the Services menu can be accessed with \\[yank]")))))
+    (if (null text)
+	(message "Emacs does not understand the output from the Services menu.")
+      (if (not buffer-read-only)
+	  (progn
+	    (if (use-region-p)
+		(delete-region (region-beginning) (region-end)))
+	    (insert text))
+	(kill-new text)
+	(message "%s"
+	 (substitute-command-keys
+	  "The text from the Services menu can be accessed with \\[yank]"))))))
 
 ;; kEventClassService/kEventServicePaste
 (define-key mac-apple-event-map [service paste] 'mac-service-insert-text)
@@ -1794,7 +1801,7 @@ See also `mac-dnd-known-types'."
       (mac-dnd-drop-data event (selected-frame) window data type action))))
 
 
-(defvar mac-popup-menu-add-contexual-menu)
+(defvar mac-popup-menu-add-contextual-menu)
 
 (declare-function accelerate-menu "macmenu.c" (&optional frame) t)
 
@@ -1812,7 +1819,7 @@ See also `mac-dnd-known-types'."
 (defun mac-mouse-buffer-menu (event)
   "Like 'mouse-buffer-menu', but contextual menu is added if possible."
   (interactive "e")
-  (let ((mac-popup-menu-add-contexual-menu t))
+  (let ((mac-popup-menu-add-contextual-menu t))
     (mouse-buffer-menu event)))
 
 
@@ -2156,19 +2163,25 @@ non-nil, and the input device supports it."
 	  (if redisplay-needed
 	      (let ((mac-redisplay-dont-reset-vscroll t))
 		(redisplay))))
-	;; If there is a temporarily active region, deactivate it iff
+	;; If there is a temporarily active region, deactivate it if
 	;; scrolling moves point.
 	(when opoint
 	  (with-current-buffer buffer
 	    (when (/= opoint (point))
-	      (deactivate-mark))))))))
+	      ;; Call `deactivate-mark' at the original position, so
+	      ;; that the original region is saved to the selection.
+	      (let ((newpoint (point)))
+		(goto-char opoint)
+		(deactivate-mark)
+		(goto-char newpoint)))))))))
 
 (defvar mac-mwheel-installed-bindings nil)
 
 (define-minor-mode mac-mouse-wheel-mode
-  "Toggle mouse wheel support with smooth scroll.
-With prefix argument ARG, turn on if positive, otherwise off.
-Return non-nil if the new state is enabled."
+  "Toggle mouse wheel support with smooth scroll (Mac Mouse Wheel mode).
+With a prefix argument ARG, enable Mac Mouse Wheel mode if ARG is
+positive, and disable it otherwise.  If called from Lisp, enable
+the mode if ARG is omitted or nil."
   :init-value nil
   :global t
   :group 'mac
@@ -2525,6 +2538,7 @@ standard ones in `x-handle-args'."
 
   (if (eq (lookup-key global-map [C-down-mouse-1]) 'mouse-buffer-menu)
       (global-set-key [C-down-mouse-1] 'mac-mouse-buffer-menu))
+  (push 'mac-mouse-buffer-menu selection-inhibit-update-commands)
 
   (x-apply-session-resources)
   (add-to-list 'display-format-alist '("\\`Mac\\'" . mac))

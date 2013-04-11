@@ -650,7 +650,11 @@ extern void mac_release_autorelease_pool (void *);
 
 extern int mac_tracking_area_works_with_cursor_rects_invalidation_p (void);
 extern void mac_invalidate_frame_cursor_rects (struct frame *f);
+extern void mac_mask_rounded_bottom_corners (struct frame *, CGRect, Boolean);
 extern int mac_webkit_supports_svg_p (void);
+
+extern CFTypeRef mac_sound_create (Lisp_Object, Lisp_Object);
+extern void mac_sound_play (CFTypeRef, Lisp_Object, Lisp_Object);
 
 #define CG_SET_FILL_COLOR_WITH_GC_FOREGROUND(context, gc)	\
   CGContextSetFillColorWithColor (context, (gc)->cg_fore_color)

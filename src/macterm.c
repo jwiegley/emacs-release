@@ -2793,6 +2793,7 @@ XTflash (struct frame *f)
   int width;
   NativeRectangle rects[2];
   int nrects;
+  CGRect clip_rect;
 
   /* Don't flash the area between a scroll bar and the frame
      edge it is next to.  */
@@ -2822,6 +2823,8 @@ XTflash (struct frame *f)
       rects[1] = rects[0];
       rects[1].y = height - flash_height - FRAME_INTERNAL_BORDER_WIDTH (f);
       nrects = 2;
+      clip_rect = mac_rect_make (f, flash_left, rects[0].y, width,
+				 rects[1].y + rects[1].height - rects[0].y);
     }
   else
     {
@@ -2830,11 +2833,14 @@ XTflash (struct frame *f)
 			 flash_left, FRAME_INTERNAL_BORDER_WIDTH (f),
 			 width, height - 2 * FRAME_INTERNAL_BORDER_WIDTH (f));
       nrects = 1;
+      clip_rect = mac_rect_make (f, flash_left, rects[0].y, width,
+				 rects[0].height);
     }
 
   block_input ();
 
   mac_invert_rectangles (f, rects, nrects);
+  mac_mask_rounded_bottom_corners (f, clip_rect, true);
 
   x_flush (f);
 
@@ -2862,6 +2868,7 @@ XTflash (struct frame *f)
   }
 
   mac_invert_rectangles (f, rects, nrects);
+  mac_mask_rounded_bottom_corners (f, clip_rect, false);
 
   x_flush (f);
 
@@ -4486,7 +4493,8 @@ x_free_frame_resources (struct frame *f)
       hlinfo->mouse_face_mouse_frame = 0;
     }
 
-  mac_dispose_frame_window (f);
+  if (FRAME_MAC_WINDOW (f))
+    mac_dispose_frame_window (f);
 
   free_frame_menubar (f);
 

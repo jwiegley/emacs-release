@@ -362,7 +362,7 @@ NSSizeToCGSize (NSSize nssize)
     {
       static id sRGBColorSpace;
 
-      if (sRGBColorSpace == NULL)
+      if (sRGBColorSpace == nil)
 	{
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1050
@@ -1417,7 +1417,7 @@ static EventRef peek_if_next_event_activates_menu_bar (void);
   else
     {
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
-      __block int result;
+      int __block result;
 
       [NSApp runTemporarilyWithBlock:^{
 	  result = [self handleQueuedNSEventsWithHoldingQuitIn:bufp];
@@ -1580,7 +1580,7 @@ emacs_windows_need_display_p (void)
 {
   NSTimeInterval timeInterval;
 
-  if (deferredFlushWindows == NULL)
+  if (deferredFlushWindows == nil)
     deferredFlushWindows = [[NSMutableSet alloc] initWithCapacity:0];
   if (window)
     [deferredFlushWindows addObject:window];
@@ -1828,7 +1828,7 @@ install_application_handler (void)
  ************************************************************************/
 
 static void set_global_focus_view_frame (struct frame *);
-static void unset_global_focus_view_frame (void);
+static CGRect unset_global_focus_view_frame (void);
 static void mac_update_accessibility_status (struct frame *);
 
 extern void mac_handle_visibility_change (struct frame *);
@@ -2767,6 +2767,28 @@ extern void mac_save_keyboard_input_source (void);
   [[emacsView window] invalidateCursorRectsForView:emacsView];
 }
 
+- (void)maskRoundedBottomCorners:(NSRect)clipRect display:(BOOL)flag
+{
+  NSWindow *window = [emacsView window];
+
+  if ([window respondsToSelector:@selector(_intersectBottomCornersWithRect:)])
+    {
+      NSRect rect = [emacsView convertRect:clipRect toView:nil];
+
+      rect = [window _intersectBottomCornersWithRect:rect];
+      if (!NSIsEmptyRect (rect))
+	{
+	  if (flag)
+	    [window _maskRoundedBottomCorners:rect];
+	  else
+	    {
+	      rect = [emacsView convertRect:rect fromView:nil];
+	      [emacsView setNeedsDisplayInRect:rect];
+	    }
+	}
+    }
+}
+
 /* Delegete Methods.  */
 
 - (void)windowDidBecomeKey:(NSNotification *)notification
@@ -3523,8 +3545,6 @@ mac_set_frame_window_background (struct frame *f, unsigned long color)
 
 /* Flush display of frame F, or of all frames if F is null.  */
 
-static struct frame *global_focus_view_frame;
-
 void
 x_flush (struct frame *f)
 {
@@ -3587,9 +3607,10 @@ mac_update_end (struct frame *f)
 {
   EmacsFrameController *frameController = FRAME_CONTROLLER (f);
   EmacsWindow *window = [frameController emacsWindow];
+  CGRect clip_rect = unset_global_focus_view_frame ();
 
-  unset_global_focus_view_frame ();
   [frameController unlockFocusOnEmacsView];
+  mac_mask_rounded_bottom_corners (f, clip_rect, false);
   [window enableFlushWindow];
 }
 
@@ -3693,6 +3714,16 @@ mac_invalidate_frame_cursor_rects (struct frame *f)
   EmacsFrameController *frameController = FRAME_CONTROLLER (f);
 
   [frameController invalidateCursorRectsForEmacsView];
+}
+
+void
+mac_mask_rounded_bottom_corners (struct frame *f, CGRect clip_rect,
+				 Boolean display_p)
+{
+  EmacsFrameController *frameController = FRAME_CONTROLLER (f);
+
+  [frameController maskRoundedBottomCorners:(NSRectFromCGRect (clip_rect))
+				    display:display_p];
 }
 
 
@@ -3829,6 +3860,38 @@ static int mac_event_to_emacs_modifiers (NSEvent *);
   [markedText release];
   [super dealloc];
 #endif
+}
+
+- (void)drawRect:(NSRect)aRect
+{
+  [super drawRect:aRect];
+  roundedBottomCornersCopied = NO;
+}
+
+- (void)scrollRect:(NSRect)aRect by:(NSSize)offset
+{
+  NSWindow *window = [self window];
+
+  [super scrollRect:aRect by:offset];
+  if ([window respondsToSelector:@selector(_intersectBottomCornersWithRect:)])
+    {
+      if (roundedBottomCornersCopied)
+	[self setNeedsDisplay:YES];
+      else
+	{
+	  NSRect rect = [self convertRect:aRect toView:nil];
+
+	  rect = [window _intersectBottomCornersWithRect:rect];
+	  if (!NSIsEmptyRect (rect))
+	    {
+	      rect = [self convertRect:rect fromView:nil];
+	      rect.origin.x += offset.width;
+	      rect.origin.y += offset.height;
+	      [self setNeedsDisplayInRect:rect];
+	      roundedBottomCornersCopied = YES;
+	    }
+	}
+    }
 }
 
 - (void)setMarkedText:(id)aString
@@ -4917,9 +4980,11 @@ extern CFStringRef mac_ax_string_for_range (struct frame *,
 
 /* Emacs frame containing the globally focused NSView.  */
 static struct frame *global_focus_view_frame;
+static CGRect global_focus_view_accumulated_clip_rect;
 /* -[EmacsView drawRect:] might be called during update_frame.  */
 static struct frame *saved_focus_view_frame;
 static CGContextRef saved_focus_view_context;
+static CGRect saved_focus_view_accumulated_clip_rect;
 
 static void
 set_global_focus_view_frame (struct frame *f)
@@ -4928,23 +4993,36 @@ set_global_focus_view_frame (struct frame *f)
   if (f != global_focus_view_frame)
     {
       if (saved_focus_view_frame)
-	saved_focus_view_context = FRAME_CG_CONTEXT (saved_focus_view_frame);
+	{
+	  saved_focus_view_context = FRAME_CG_CONTEXT (saved_focus_view_frame);
+	  saved_focus_view_accumulated_clip_rect =
+	    global_focus_view_accumulated_clip_rect;
+	}
       global_focus_view_frame = f;
       FRAME_CG_CONTEXT (f) = [[NSGraphicsContext currentContext] graphicsPort];
+      global_focus_view_accumulated_clip_rect = CGRectNull;
     }
 }
 
-static void
+static CGRect
 unset_global_focus_view_frame (void)
 {
+  CGRect result = global_focus_view_accumulated_clip_rect;
+
   if (global_focus_view_frame != saved_focus_view_frame)
     {
       FRAME_CG_CONTEXT (global_focus_view_frame) = NULL;
       global_focus_view_frame = saved_focus_view_frame;
       if (global_focus_view_frame)
-	FRAME_CG_CONTEXT (global_focus_view_frame) = saved_focus_view_context;
+	{
+	  FRAME_CG_CONTEXT (global_focus_view_frame) = saved_focus_view_context;
+	  global_focus_view_accumulated_clip_rect =
+	    saved_focus_view_accumulated_clip_rect;
+	}
     }
   saved_focus_view_frame = NULL;
+
+  return result;
 }
 
 CGContextRef
@@ -4965,7 +5043,17 @@ mac_begin_cg_clip (struct frame *f, GC gc)
 
   CGContextSaveGState (context);
   if (gc && gc->n_clip_rects)
-    CGContextClipToRects (context, gc->clip_rects, gc->n_clip_rects);
+    {
+      int i;
+
+      CGContextClipToRects (context, gc->clip_rects, gc->n_clip_rects);
+      for (i = 0; i < gc->n_clip_rects; i++)
+	global_focus_view_accumulated_clip_rect =
+	  CGRectUnion (global_focus_view_accumulated_clip_rect,
+		       gc->clip_rects[i]);
+    }
+  else
+    global_focus_view_accumulated_clip_rect = CGRectInfinite;
 
   return context;
 }
@@ -7088,7 +7176,7 @@ mac_hide_hourglass (struct frame *f)
     return [super runModal];
   else
     {
-      __block NSInteger response;
+      NSInteger __block response;
 
       [NSApp runTemporarilyWithBlock:^{
 	  response = [self runModal];
@@ -7147,7 +7235,7 @@ mac_hide_hourglass (struct frame *f)
     return [super runModal];
   else
     {
-      __block NSInteger response;
+      NSInteger __block response;
 
       [NSApp runTemporarilyWithBlock:^{
 	  response = [self runModal];
@@ -7338,7 +7426,7 @@ mac_file_dialog (Lisp_Object prompt, Lisp_Object dir,
 - (NSInteger)runModal
 {
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
-  __block NSInteger response;
+  NSInteger __block response;
 
   [NSApp runTemporarilyWithBlock:^{
       response = [NSApp runModalForWindow:self];
@@ -7881,7 +7969,7 @@ restore_show_help_function (Lisp_Object old_show_help_function)
 
 - (void)popUpMenu:(NSMenu *)menu atLocationInEmacsView:(NSPoint)location
 {
-  if (!mac_popup_menu_add_contexual_menu
+  if (!mac_popup_menu_add_contextual_menu
       && [menu respondsToSelector:
 		 @selector(popUpMenuPositioningItem:atLocation:inView:)])
     [menu popUpMenuPositioningItem:nil atLocation:location inView:emacsView];
@@ -8152,7 +8240,7 @@ create_and_show_popup_menu (FRAME_PTR f, widget_value *first_wv, int x, int y,
   CGFloat buttons_height, text_height, inner_width, inner_height;
   NSString *message;
   NSRect frameRect;
-  __unsafe_unretained NSButton **buttons;
+  NSButton * __unsafe_unretained *buttons;
   NSButton *defaultButton = nil;
   NSTextField *text;
   NSImageView *icon;
@@ -8171,7 +8259,7 @@ create_and_show_popup_menu (FRAME_PTR f, widget_value *first_wv, int x, int y,
 
   wv = wv->next;
 
-  buttons = ((__unsafe_unretained NSButton **)
+  buttons = ((NSButton * __unsafe_unretained *)
 	     alloca (sizeof (NSButton *) * nb_buttons));
 
   for (i = 0; i < nb_buttons; i++)
@@ -8406,7 +8494,7 @@ create_and_show_dialog (FRAME_PTR f, widget_value *first_wv)
 				     styleMask:NSTitledWindowMask
 				       backing:NSBackingStoreBuffered
 					 defer:YES]));
-  __unsafe_unretained NSPanel *panel = (__bridge NSPanel *) cfpanel;
+  NSPanel * __unsafe_unretained panel = (__bridge NSPanel *) cfpanel;
   NSWindow *window = FRAME_MAC_WINDOW_OBJECT (f);
   NSRect panelFrame, windowFrame, visibleFrame;
 
@@ -9140,6 +9228,7 @@ copy_pasteboard_to_service_selection (NSPasteboard *pboard)
     return NO;
 
   servicePboard = (__bridge NSPasteboard *) sel;
+  [servicePboard declareTypes:[NSArray array] owner:nil];
   enumerator = [[pboard types] objectEnumerator];
   while ((type = [enumerator nextObject]) != nil)
     {
@@ -9245,8 +9334,8 @@ services_handler_signature (void)
 static void
 handle_services_invocation (NSInvocation *invocation)
 {
-  __unsafe_unretained NSPasteboard *pboard;
-  __unsafe_unretained NSString *userData;
+  NSPasteboard * __unsafe_unretained pboard;
+  NSString * __unsafe_unretained userData;
   /* NSString **error; */
   BOOL result;
 
@@ -9364,7 +9453,7 @@ action_signature (void)
 static void
 handle_action_invocation (NSInvocation *invocation)
 {
-  __unsafe_unretained id sender;
+  id __unsafe_unretained sender;
   Lisp_Object arg = Qnil;
   struct input_event inev;
   NSString *name = NSStringFromSelector ([invocation selector]);
@@ -9455,7 +9544,7 @@ extern long do_applescript (Lisp_Object, Lisp_Object *);
   else
     {
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
-      __block long osaerror;
+      long __block osaerror;
 
       [NSApp runTemporarilyWithBlock:^{
 	  osaerror = do_applescript (script, result);
@@ -9771,7 +9860,7 @@ mac_appkit_do_applescript (Lisp_Object script, Lisp_Object *result)
   else
     {
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
-      __block int result;
+      int __block result;
 
       [NSApp runTemporarilyWithBlock:^{
 	  result = [self loadData:data backgroundColor:backgroundColor];
@@ -9981,9 +10070,9 @@ static void
 init_accessibility (void)
 {
   int i;
-  __unsafe_unretained NSString **buf;
+  NSString * __unsafe_unretained *buf;
 
-  buf = ((__unsafe_unretained NSString **)
+  buf = ((NSString * __unsafe_unretained *)
 	 xmalloc (sizeof (NSString *) * ax_attribute_count));
   ax_attribute_event_ids =
     Fmake_vector (make_number (ax_attribute_count), Qnil);
@@ -9998,7 +10087,7 @@ init_accessibility (void)
   ax_attribute_names = [[NSArray alloc] initWithObjects:buf
 						  count:ax_attribute_count];
 
-  buf = ((__unsafe_unretained NSString **)
+  buf = ((NSString * __unsafe_unretained *)
 	 xrealloc (buf,
 		   sizeof (NSString *) * ax_parameterized_attribute_count));
   for (i = 0; i < ax_parameterized_attribute_count; i++)
@@ -10010,7 +10099,7 @@ init_accessibility (void)
     [[NSArray alloc] initWithObjects:buf
 			       count:ax_parameterized_attribute_count];
 
-  buf = ((__unsafe_unretained NSString **)
+  buf = ((NSString * __unsafe_unretained *)
 	 xrealloc (buf, sizeof (NSString *) * ax_action_count));
   ax_action_event_ids = Fmake_vector (make_number (ax_action_count), Qnil);
   staticpro (&ax_action_event_ids);
@@ -12206,4 +12295,58 @@ mac_font_shape_1 (NSFont *font, NSString *string,
   MRC_RELEASE (textStorage);
 
   return result;
+}
+
+
+/***********************************************************************
+				Sound
+***********************************************************************/
+@implementation EmacsController (Sound)
+
+- (void)sound:(NSSound *)sound didFinishPlaying:(BOOL)finishedPlaying
+{
+  [NSApp postDummyEvent];
+}
+
+@end
+
+CFTypeRef
+mac_sound_create (Lisp_Object file, Lisp_Object data)
+{
+  NSSound *sound;
+
+  if (STRINGP (file))
+    {
+      file = ENCODE_FILE (file);
+      sound = [[NSSound alloc]
+		initWithContentsOfFile:[NSString stringWithUTF8LispString:file]
+			   byReference:YES];
+    }
+  else if (STRINGP (data))
+    sound = [[NSSound alloc]
+	      initWithData:[NSData dataWithBytes:(SDATA (data))
+					  length:(SBYTES (data))]];
+  else
+    sound = nil;
+
+  return CF_BRIDGING_RETAIN (MRC_AUTORELEASE (sound));
+}
+
+void
+mac_sound_play (CFTypeRef mac_sound, Lisp_Object volume, Lisp_Object device)
+{
+  NSSound *sound = (__bridge NSSound *) mac_sound;
+
+  if ((INTEGERP (volume) || FLOATP (volume))
+      && [sound respondsToSelector:@selector(setVolume:)])
+    [sound setVolume:(INTEGERP (volume) ? XFASTINT (volume) * 0.01
+		      : XFLOAT_DATA (volume))];
+  if (STRINGP (device)
+      && [sound respondsToSelector:@selector(setPlaybackDeviceIdentifier:)])
+    [sound setPlaybackDeviceIdentifier:[NSString stringWithLispString:device]];
+
+  [sound setDelegate:emacsController];
+  [sound play];
+  while ([sound isPlaying])
+    mac_run_loop_run_once (kEventDurationForever);
 }

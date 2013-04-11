@@ -61,6 +61,7 @@ typedef unsigned int NSUInteger;
    compiled on Mac OS X 10.5 fails in startup at -[EmacsController
    methodSignatureForSelector:] when executed on Mac OS X 10.6.  */
 @protocol NSApplicationDelegate @end
+@protocol NSSoundDelegate @end
 @protocol NSWindowDelegate @end
 @protocol NSToolbarDelegate @end
 @protocol NSMenuDelegate @end
@@ -322,6 +323,7 @@ typedef unsigned int NSUInteger;
 - (NSRect)convertEmacsViewRectToScreen:(NSRect)rect;
 - (NSRect)centerScanEmacsViewRect:(NSRect)rect;
 - (void)invalidateCursorRectsForEmacsView;
+- (void)maskRoundedBottomCorners:(NSRect)clipRect display:(BOOL)flag;
 - (void)storeModifyFrameParametersEvent:(Lisp_Object)alist;
 @end
 
@@ -340,7 +342,7 @@ typedef unsigned int NSUInteger;
 {
   /* Target object to which the EmacsMainView object sends
      actions.  */
-  __unsafe_unretained id target;
+  id __unsafe_unretained target;
 
   /* Message selector of the action the EmacsMainView object
      sends.  */
@@ -352,6 +354,9 @@ typedef unsigned int NSUInteger;
 
   /* Whether key events were interpreted by intepretKeyEvents:.  */
   BOOL keyEventsInterpreted;
+
+  /* Whether scrollRect:by: has copied rounded bottom corner area.  */
+  BOOL roundedBottomCornersCopied;
 
   /* Raw key event that is interpreted by intepretKeyEvents:.  */
   NSEvent *rawKeyEvent;
@@ -505,7 +510,7 @@ typedef unsigned int NSUInteger;
   NSEvent *mouseUpEvent;
 
   /* Slider being tracked.  */
-  __unsafe_unretained NSSlider *trackedSlider;
+  NSSlider * __unsafe_unretained trackedSlider;
 }
 - (void)suspendSliderTracking:(NSEvent *)event;
 - (void)resumeSliderTracking;
@@ -691,6 +696,9 @@ typedef unsigned int NSUInteger;
 
 #endif	/* MAC_OS_X_VERSION_MIN_REQUIRED < 1050 */
 
+@interface EmacsController (Sound) <NSSoundDelegate>
+@end
+
 /* Some methods that are not declared in older versions.  Should be
    used with some runtime check such as `respondsToSelector:'. */
 
@@ -803,6 +811,11 @@ enum {
 @end
 #endif
 
+@interface NSWindow (Undocumented)
+- (NSRect)_intersectBottomCornersWithRect:(NSRect)viewRect;
+- (void)_maskRoundedBottomCorners:(NSRect)clipRect;
+@end
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1060
 @interface NSMenu (AvailableOn1060AndLater)
 - (BOOL)popUpMenuPositioningItem:(NSMenuItem *)item
@@ -867,4 +880,11 @@ enum {
 @property CGFloat contentsScale;
 @end
 #endif
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
+@interface NSSound (AvailableOn1050AndLater)
+- (void)setVolume:(float)volume;
+- (void)setPlaybackDeviceIdentifier:(NSString *)deviceUID;
+@end
 #endif

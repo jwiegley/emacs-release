@@ -1065,9 +1065,9 @@ later, and otherwise the value is kept to t so as to avoid needless
 recalculation.  */);
   Vmac_help_topics = Qt;
 
-  DEFVAR_BOOL ("mac-popup-menu-add-contexual-menu",
-	       mac_popup_menu_add_contexual_menu,
-    doc: /* Non-nil means contexual menu is added to popup menu.
+  DEFVAR_BOOL ("mac-popup-menu-add-contextual-menu",
+	       mac_popup_menu_add_contextual_menu,
+    doc: /* Non-nil means contextual menu is added to popup menu.
 This works on OS X 10.6 and later.  */);
-  mac_popup_menu_add_contexual_menu = 0;
+  mac_popup_menu_add_contextual_menu = 0;
 }

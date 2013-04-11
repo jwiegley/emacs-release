@@ -53,7 +53,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 
 /* BEGIN: Non Windows Includes */
-#ifndef WINDOWSNT
+#if !defined WINDOWSNT && !defined HAVE_MACGUI
 
 #include <sys/ioctl.h>
 
@@ -79,7 +79,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* END: Non Windows Includes */
 
-#else /* WINDOWSNT */
+#elif defined WINDOWSNT
 
 /* BEGIN: Windows Specific Includes */
 #include <stdio.h>
@@ -88,7 +88,10 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <mmsystem.h>
 /* END: Windows Specific Includes */
 
-#endif /* WINDOWSNT */
+#else /* HAVE_MACGUI */
+#include "blockinput.h"
+#include "macterm.h"
+#endif /* HAVE_MACGUI */
 
 /* BEGIN: Common Definitions */
 
@@ -112,7 +115,7 @@ enum sound_attr
 /* END: Common Definitions */
 
 /* BEGIN: Non Windows Definitions */
-#ifndef WINDOWSNT
+#if !defined WINDOWSNT && !defined HAVE_MACGUI
 
 /* Structure forward declarations.  */
 
@@ -291,7 +294,7 @@ static u_int16_t be2hs (u_int16_t);
 #endif
 
 /* END: Non Windows Definitions */
-#else /* WINDOWSNT */
+#elif defined WINDOWSNT
 
 /* BEGIN: Windows Specific Definitions */
 static int do_play_sound (const char *, unsigned long);
@@ -428,7 +431,7 @@ parse_sound (Lisp_Object sound, Lisp_Object *attrs)
 /* END: Common functions */
 
 /* BEGIN: Non Windows functions */
-#ifndef WINDOWSNT
+#if !defined WINDOWSNT && !defined HAVE_MACGUI
 
 /* Find out the type of the sound file whose file descriptor is FD.
    S is the sound file structure to fill in.  */
@@ -1247,7 +1250,7 @@ alsa_init (struct sound_device *sd)
 
 
 /* END: Non Windows functions */
-#else /* WINDOWSNT */
+#elif defined WINDOWSNT
 
 /* BEGIN: Windows specific functions */
 
@@ -1356,6 +1359,9 @@ Internal use only, use `play-sound' instead.  */)
   Lisp_Object file;
   struct gcpro gcpro1, gcpro2;
   Lisp_Object args[2];
+#ifdef HAVE_MACGUI
+  CFTypeRef mac_sound;
+#endif
 #else /* WINDOWSNT */
   int len = 0;
   Lisp_Object lo_file = {0};
@@ -1369,7 +1375,7 @@ Internal use only, use `play-sound' instead.  */)
   if (!parse_sound (sound, attrs))
     error ("Invalid sound specification");
 
-#ifndef WINDOWSNT
+#if !defined WINDOWSNT && !defined HAVE_MACGUI
   file = Qnil;
   GCPRO2 (sound, file);
   current_sound_device = xzalloc (sizeof *current_sound_device);
@@ -1435,7 +1441,7 @@ Internal use only, use `play-sound' instead.  */)
   /* Clean up.  */
   UNGCPRO;
 
-#else /* WINDOWSNT */
+#elif defined WINDOWSNT
 
   lo_file = Fexpand_file_name (attrs[SOUND_FILE], Qnil);
   len = XSTRING (lo_file)->size;
@@ -1464,7 +1470,46 @@ Internal use only, use `play-sound' instead.  */)
     }
   i_result = do_play_sound (psz_file, ui_volume);
 
-#endif /* WINDOWSNT */
+#else /* HAVE_MACGUI */
+  if (inhibit_window_system || noninteractive)
+    error ("Sound support on Mac requires a window system");
+
+  file = Qnil;
+  GCPRO2 (sound, file);
+
+  if (STRINGP (attrs[SOUND_FILE]))
+    {
+      /* Open the sound file.  */
+      int fd = openp (Fcons (Vdata_directory, Qnil),
+		      attrs[SOUND_FILE], Qnil, &file, Qnil);
+
+      if (fd < 0)
+	{
+	  if (errno == 0)
+	    error ("Could not open sound file");
+	  else
+	    error ("Could not open sound file: %s", strerror (errno));
+	}
+      emacs_close (fd);
+    }
+
+  block_input ();
+  mac_sound = mac_sound_create (file, attrs[SOUND_DATA]);
+  unblock_input ();
+  if (mac_sound == NULL)
+    error ("Unknown sound format");
+
+  args[0] = Qplay_sound_functions;
+  args[1] = sound;
+  Frun_hook_with_args (2, args);
+
+  block_input ();
+  mac_sound_play (mac_sound, attrs[SOUND_VOLUME], attrs[SOUND_DEVICE]);
+  CFRelease (mac_sound);
+  unblock_input ();
+
+  UNGCPRO;
+#endif /* HAVE_MACGUI */
 
   unbind_to (count, Qnil);
   return Qnil;

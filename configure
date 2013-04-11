@@ -13076,6 +13076,9 @@ if test "${HAVE_MACGUI}" = "yes"; then
 
 $as_echo "#define HAVE_MACGUI 1" >>confdefs.h
 
+
+$as_echo "#define HAVE_SOUND 1" >>confdefs.h
+
   for ac_header in AvailabilityMacros.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "AvailabilityMacros.h" "ac_cv_header_AvailabilityMacros_h" "$ac_includes_default"

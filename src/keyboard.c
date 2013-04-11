@@ -1377,9 +1377,9 @@ command_loop_1 (void)
 #else
 #define BLOCK
 #endif
-  BLOCK EMACS_INT prev_modiff = 0;
-  BLOCK struct buffer *prev_buffer = NULL;
-  BLOCK bool already_adjusted = 0;
+  EMACS_INT BLOCK prev_modiff = 0;
+  struct buffer * BLOCK prev_buffer = NULL;
+  bool BLOCK already_adjusted = 0;
 #undef BLOCK
 
   kset_prefix_arg (current_kboard, Qnil);
