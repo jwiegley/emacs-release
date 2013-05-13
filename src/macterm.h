@@ -603,6 +603,7 @@ extern void mac_change_frame_window_wm_state (struct frame *, WMState,
 					      WMState);
 extern CGContextRef mac_begin_cg_clip (struct frame *, GC);
 extern void mac_end_cg_clip (struct frame *);
+extern Lisp_Object mac_display_monitor_attributes_list (struct mac_display_info *);
 extern void mac_create_scroll_bar (struct scroll_bar *);
 extern void mac_dispose_scroll_bar (struct scroll_bar *);
 extern void mac_update_scroll_bar_bounds (struct scroll_bar *);
@@ -613,7 +614,7 @@ extern int mac_get_default_scroll_bar_width (struct frame *);
 extern int mac_font_panel_visible_p (void);
 extern OSStatus mac_show_hide_font_panel (void);
 extern OSStatus mac_set_font_info_for_selection (struct frame *, int, int,
-						     int, Lisp_Object);
+						 int, Lisp_Object);
 extern EventTimeout mac_run_loop_run_once (EventTimeout);
 extern void update_frame_tool_bar (FRAME_PTR f);
 extern void free_frame_tool_bar (FRAME_PTR f);

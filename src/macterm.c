@@ -277,7 +277,8 @@ mac_draw_line_to_pixmap (Pixmap p, GC gc, int x1, int y1, int x2, int y2)
   if (ximg->bits_per_pixel == 32)
     CG_SET_STROKE_COLOR_WITH_GC_FOREGROUND (context, gc);
   else
-    CGContextSetGrayStrokeColor (context, gc->xgcv.foreground / 255.0f, 1.0);
+    CGContextSetGrayStrokeColor (context,
+				 (CGFloat) gc->xgcv.foreground / 255.0f, 1.0f);
   CGContextBeginPath (context);
   CGContextMoveToPoint (context, gx1, gy1);
   CGContextAddLineToPoint (context, gx2, gy2);
@@ -382,8 +383,7 @@ mac_create_bitmap_from_bitmap_data (BitMap *bitmap, char *bits, int w, int h)
 
   w1 = (w + 7) / 8;         /* nb of 8bits elt in X bitmap */
   bitmap->rowBytes = ((w + 15) / 16) * 2; /* nb of 16bits elt in Mac bitmap */
-  bitmap->baseAddr = xmalloc (bitmap->rowBytes * h);
-  memset (bitmap->baseAddr, 0, bitmap->rowBytes * h);
+  bitmap->baseAddr = xzalloc (bitmap->rowBytes * h);
   for (i = 0; i < h; i++)
     {
       p = bitmap->baseAddr + i * bitmap->rowBytes;
@@ -611,10 +611,10 @@ mac_draw_horizontal_wave (struct frame *f, GC gc, int x, int y,
 
   gperiod = period;
   wave_clip = mac_rect_make (f, x, y, width, height);
-  gx1 = (ceil (CGRectGetMinX (wave_clip) / gperiod) - 1) * gperiod + 0.5;
+  gx1 = (ceil (CGRectGetMinX (wave_clip) / gperiod) - 1) * gperiod + 0.5f;
   gxmax = CGRectGetMaxX (wave_clip);
-  gy1 = y + 0.5;
-  gy2 = y + height - 0.5;
+  gy1 = (CGFloat) y + 0.5f;
+  gy2 = (CGFloat) (y + height) - 0.5f;
 
   context = mac_begin_cg_clip (f, gc);
   CGContextClipToRect (context, wave_clip);
@@ -623,7 +623,7 @@ mac_draw_horizontal_wave (struct frame *f, GC gc, int x, int y,
   CGContextMoveToPoint (context, gx1, gy1);
   while (gx1 <= gxmax)
     {
-      CGContextAddLineToPoint (context, gx1 + gperiod * 0.5, gy2);
+      CGContextAddLineToPoint (context, gx1 + gperiod * 0.5f, gy2);
       gx1 += gperiod;
       CGContextAddLineToPoint (context, gx1, gy1);
     }
@@ -699,9 +699,8 @@ mac_change_gc (GC gc, unsigned long mask, XGCValues *xgcv)
 GC
 mac_create_gc (unsigned long mask, XGCValues *xgcv)
 {
-  GC gc = xmalloc (sizeof (*gc));
+  GC gc = xzalloc (sizeof (*gc));
 
-  memset (gc, 0, sizeof (*gc));
   gc->cg_fore_color = gc->cg_back_color = mac_cg_color_black;
   CGColorRetain (gc->cg_fore_color);
   CGColorRetain (gc->cg_back_color);
@@ -752,9 +751,9 @@ mac_set_foreground (GC gc, unsigned long color)
 	{
 	  CGFloat rgba[4];
 
-	  rgba[0] = RED_FROM_ULONG (color) / 255.0f;
-	  rgba[1] = GREEN_FROM_ULONG (color) / 255.0f;
-	  rgba[2] = BLUE_FROM_ULONG (color) / 255.0f;
+	  rgba[0] = (CGFloat) RED_FROM_ULONG (color) / 255.0f;
+	  rgba[1] = (CGFloat) GREEN_FROM_ULONG (color) / 255.0f;
+	  rgba[2] = (CGFloat) BLUE_FROM_ULONG (color) / 255.0f;
 	  rgba[3] = 1.0f;
 	  gc->cg_fore_color = CGColorCreate (mac_cg_color_space_rgb, rgba);
 	}
@@ -780,9 +779,9 @@ mac_set_background (GC gc, unsigned long color)
 	{
 	  CGFloat rgba[4];
 
-	  rgba[0] = RED_FROM_ULONG (color) / 255.0f;
-	  rgba[1] = GREEN_FROM_ULONG (color) / 255.0f;
-	  rgba[2] = BLUE_FROM_ULONG (color) / 255.0f;
+	  rgba[0] = (CGFloat) RED_FROM_ULONG (color) / 255.0f;
+	  rgba[1] = (CGFloat) GREEN_FROM_ULONG (color) / 255.0f;
+	  rgba[2] = (CGFloat) BLUE_FROM_ULONG (color) / 255.0f;
 	  rgba[3] = 1.0f;
 	  gc->cg_back_color = CGColorCreate (mac_cg_color_space_rgb, rgba);
 	}
@@ -4548,10 +4547,7 @@ x_wm_set_size_hint (struct frame *f, long flags, bool user_position)
 
   size_hints = FRAME_SIZE_HINTS (f);
   if (size_hints == NULL)
-    {
-      size_hints = FRAME_SIZE_HINTS (f) = xmalloc (sizeof (XSizeHints));
-      memset (size_hints, 0, sizeof (XSizeHints));
-    }
+    size_hints = FRAME_SIZE_HINTS (f) = xzalloc (sizeof (XSizeHints));
 
   size_hints->flags |= PResizeInc | PMinSize | PBaseSize ;
   size_hints->width_inc  = width_inc;

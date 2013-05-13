@@ -712,8 +712,7 @@ defer_apple_events (const AppleEvent *apple_event, const AppleEvent *reply)
   OSErr err;
   struct suspended_ae_info *new;
 
-  new = xmalloc (sizeof (struct suspended_ae_info));
-  memset (new, 0, sizeof (struct suspended_ae_info));
+  new = xzalloc (sizeof (struct suspended_ae_info));
   new->apple_event.descriptorType = typeNull;
   new->reply.descriptorType = typeNull;
 
@@ -750,8 +749,7 @@ mac_handle_apple_event_1 (Lisp_Object class, Lisp_Object id,
   static UInt32 suspension_id = 0;
   struct suspended_ae_info *new;
 
-  new = xmalloc (sizeof (struct suspended_ae_info));
-  memset (new, 0, sizeof (struct suspended_ae_info));
+  new = xzalloc (sizeof (struct suspended_ae_info));
   new->apple_event.descriptorType = typeNull;
   new->reply.descriptorType = typeNull;
 

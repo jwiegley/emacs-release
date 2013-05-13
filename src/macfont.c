@@ -483,8 +483,8 @@ enum metrics_status
       METRICS_SET_VALUE (metrics, descent, status);} while (0)
 
 #define METRICS_NCOLS_PER_ROW	(128)
-#define LCD_FONT_SMOOTHING_LEFT_MARGIN	(0.396)
-#define LCD_FONT_SMOOTHING_RIGHT_MARGIN	(0.396)
+#define LCD_FONT_SMOOTHING_LEFT_MARGIN	(0.396f)
+#define LCD_FONT_SMOOTHING_RIGHT_MARGIN	(0.396f)
 
 static int
 macfont_glyph_extents (struct font *font, CGGlyph glyph,
@@ -705,8 +705,7 @@ macfont_lookup_cache (CFStringRef key)
 
       if (macfont)
 	{
-	  cache = xmalloc (sizeof (struct macfont_cache));
-	  memset (cache, 0, sizeof (struct macfont_cache));
+	  cache = xzalloc (sizeof (struct macfont_cache));
 	  /* Treat the LastResort font as if it contained glyphs for
 	     all characters.  This may look too rough, but neither
 	     CTFontCopyCharacterSet nor -[NSFont coveredCharacterSet]
@@ -2033,25 +2032,25 @@ macfont_open (FRAME_PTR f, Lisp_Object entity, int pixel_size)
 		  == kCFCompareEqualTo)
 	      || (CFStringCompare (family_name, CFSTR ("Times"), 0)
 		  == kCFCompareEqualTo))
-	    ascent += (ascent + descent) * .15;
+	    ascent += (ascent + descent) * .15f;
 	  else if (CFStringHasPrefix (family_name, CFSTR ("Hiragino")))
 	    {
-	      leading *= .25;
+	      leading *= .25f;
 	      ascent += leading;
 	    }
 	  CFRelease (family_name);
 	}
     }
-  font->ascent = ascent + 0.5;
+  font->ascent = ascent + 0.5f;
   val = assq_no_quit (QCminspace, AREF (entity, FONT_EXTRA_INDEX));
   if (CONSP (val) && !NILP (XCDR (val)))
-    font->descent = descent + 0.5;
+    font->descent = descent + 0.5f;
   else
-    font->descent = descent + leading + 0.5;
+    font->descent = descent + leading + 0.5f;
   font->height = font->ascent + font->descent;
 
-  font->underline_position = - mac_font_get_underline_position (macfont) + 0.5;
-  font->underline_thickness = mac_font_get_underline_thickness (macfont) + 0.5;
+  font->underline_position = - mac_font_get_underline_position (macfont) + 0.5f;
+  font->underline_thickness = mac_font_get_underline_thickness (macfont) + 0.5f;
 
   unblock_input ();
 

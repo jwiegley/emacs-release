@@ -52,6 +52,7 @@ static int mac_in_use;
 static Lisp_Object Qsuppress_icon;
 static Lisp_Object Qundefined_color;
 static Lisp_Object Qcancel_timer;
+Lisp_Object Qgeometry, Qworkarea, Qmm_size, Qframes, Qbacking_scale_factor;
 Lisp_Object Qfont_param;
 
 #ifdef GLYPH_DEBUG
@@ -2458,7 +2459,11 @@ DEFUN ("x-display-pixel-width", Fx_display_pixel_width, Sx_display_pixel_width,
        doc: /* Return the width in pixels of the display TERMINAL.
 The optional argument TERMINAL specifies which display to ask about.
 TERMINAL should be a terminal object, a frame or a display name (a string).
-If omitted or nil, that stands for the selected frame's display.  */)
+If omitted or nil, that stands for the selected frame's display.
+
+On \"multi-monitor\" setups this refers to the pixel width for all
+physical monitors associated with TERMINAL.  To get information for
+each physical monitor, use `display-monitor-attributes-list'.  */)
   (Lisp_Object terminal)
 {
   struct mac_display_info *dpyinfo = check_x_display_info (terminal);
@@ -2471,7 +2476,11 @@ DEFUN ("x-display-pixel-height", Fx_display_pixel_height,
        doc: /* Return the height in pixels of the display TERMINAL.
 The optional argument TERMINAL specifies which display to ask about.
 TERMINAL should be a terminal object, a frame or a display name (a string).
-If omitted or nil, that stands for the selected frame's display.  */)
+If omitted or nil, that stands for the selected frame's display.
+
+On \"multi-monitor\" setups this refers to the pixel height for all
+physical monitors associated with TERMINAL.  To get information for
+each physical monitor, use `display-monitor-attributes-list'.  */)
   (Lisp_Object terminal)
 {
   struct mac_display_info *dpyinfo = check_x_display_info (terminal);
@@ -2575,11 +2584,15 @@ DEFUN ("x-display-mm-height", Fx_display_mm_height, Sx_display_mm_height, 0, 1, 
        doc: /* Return the height in millimeters of the display TERMINAL.
 The optional argument TERMINAL specifies which display to ask about.
 TERMINAL should be a terminal object, a frame or a display name (a string).
-If omitted or nil, that stands for the selected frame's display.  */)
+If omitted or nil, that stands for the selected frame's display.
+
+On \"multi-monitor\" setups this refers to the height in millimeters for
+all physical monitors associated with TERMINAL.  To get information
+for each physical monitor, use `display-monitor-attributes-list'.  */)
   (Lisp_Object terminal)
 {
   struct mac_display_info *dpyinfo = check_x_display_info (terminal);
-  float mm_per_pixel;
+  CGFloat mm_per_pixel;
   CGSize size;
 
   block_input ();
@@ -2587,19 +2600,22 @@ If omitted or nil, that stands for the selected frame's display.  */)
   mm_per_pixel = size.height / CGDisplayPixelsHigh (kCGDirectMainDisplay);
   unblock_input ();
 
-  return make_number ((int) (x_display_pixel_height (dpyinfo) * mm_per_pixel
-			     + 0.5f));
+  return make_number (x_display_pixel_height (dpyinfo) * mm_per_pixel + 0.5f);
 }
 
 DEFUN ("x-display-mm-width", Fx_display_mm_width, Sx_display_mm_width, 0, 1, 0,
        doc: /* Return the width in millimeters of the display TERMINAL.
 The optional argument TERMINAL specifies which display to ask about.
 TERMINAL should be a terminal object, a frame or a display name (a string).
-If omitted or nil, that stands for the selected frame's display.  */)
+If omitted or nil, that stands for the selected frame's display.
+
+On \"multi-monitor\" setups this refers to the width in millimeters for
+all physical monitors associated with TERMINAL.  To get information
+for each physical monitor, use `display-monitor-attributes-list'.  */)
   (Lisp_Object terminal)
 {
   struct mac_display_info *dpyinfo = check_x_display_info (terminal);
-  float mm_per_pixel;
+  CGFloat mm_per_pixel;
   CGSize size;
 
   block_input ();
@@ -2607,8 +2623,7 @@ If omitted or nil, that stands for the selected frame's display.  */)
   mm_per_pixel = size.width / CGDisplayPixelsWide (kCGDirectMainDisplay);
   unblock_input ();
 
-  return make_number ((int) (x_display_pixel_width (dpyinfo) * mm_per_pixel
-			     + 0.5f));
+  return make_number (x_display_pixel_width (dpyinfo) * mm_per_pixel + 0.5f);
 }
 
 DEFUN ("x-display-backing-store", Fx_display_backing_store,
@@ -2651,6 +2666,36 @@ If omitted or nil, that stands for the selected frame's display.  */)
 
   return Qnil;
 }
+
+DEFUN ("mac-display-monitor-attributes-list", Fmac_display_monitor_attributes_list,
+       Smac_display_monitor_attributes_list,
+       0, 1, 0,
+       doc: /* Return a list of physical monitor attributes on the Mac display TERMINAL.
+
+The optional argument TERMINAL specifies which display to ask about.
+TERMINAL should be a terminal object, a frame or a display name (a string).
+If omitted or nil, that stands for the selected frame's display.
+
+In addition to the standard attribute keys listed in
+`display-monitor-attributes-list', the following keys are contained in
+the attributes:
+
+ backing-scale-factor -- Backing scale factor as a number, usually
+			 2 for Retina displays and 1 for the others.
+
+Internal use only, use `display-monitor-attributes-list' instead.  */)
+  (Lisp_Object terminal)
+{
+  struct mac_display_info *dpyinfo = check_x_display_info (terminal);
+  Lisp_Object attributes_list;
+
+  block_input ();
+  attributes_list = mac_display_monitor_attributes_list (dpyinfo);
+  unblock_input ();
+
+  return attributes_list;
+}
+
 
 int
 x_pixel_width (register struct frame *f)
@@ -3963,6 +4008,11 @@ syms_of_macfns (void)
   DEFSYM (Qsuppress_icon, "suppress-icon");
   DEFSYM (Qundefined_color, "undefined-color");
   DEFSYM (Qcancel_timer, "cancel-timer");
+  DEFSYM (Qgeometry, "geometry");
+  DEFSYM (Qworkarea, "workarea");
+  DEFSYM (Qmm_size, "mm-size");
+  DEFSYM (Qframes, "frames");
+  DEFSYM (Qbacking_scale_factor, "backing-scale-factor");
   DEFSYM (Qfont_param, "font-parameter");
   DEFSYM (QCdirection, ":direction");
   DEFSYM (QCduration, ":duration");
@@ -4096,6 +4146,7 @@ Chinese, Japanese, and Korean.  */);
   defsubr (&Sx_display_visual_class);
   defsubr (&Sx_display_backing_store);
   defsubr (&Sx_display_save_under);
+  defsubr (&Smac_display_monitor_attributes_list);
   defsubr (&Sx_create_frame);
   defsubr (&Sx_open_connection);
   defsubr (&Sx_close_connection);

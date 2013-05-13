@@ -350,10 +350,10 @@ NSSizeToCGSize (NSSize nssize)
 {
   CGFloat components[4];
 
-  components[0] = RED_FROM_ULONG (pixel) / 255.0;
-  components[1] = GREEN_FROM_ULONG (pixel) / 255.0;
-  components[2] = BLUE_FROM_ULONG (pixel) / 255.0;
-  components[3] = 1.0;
+  components[0] = (CGFloat) RED_FROM_ULONG (pixel) / 255.0f;
+  components[1] = (CGFloat) GREEN_FROM_ULONG (pixel) / 255.0f;
+  components[2] = (CGFloat) BLUE_FROM_ULONG (pixel) / 255.0f;
+  components[3] = 1.0f;
 
   if ([self respondsToSelector:@selector(colorWithSRGBRed:green:blue:alpha:)])
     return [self colorWithSRGBRed:components[0] green:components[1]
@@ -1231,6 +1231,21 @@ static EventRef peek_if_next_event_activates_menu_bar (void);
     }
 }
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+- (void)setTrackingResumeBlock:(void (^)(void))block
+{
+  MRC_RELEASE (trackingResumeBlock);
+  trackingResumeBlock = [block copy];
+}
+
+#define MOUSE_TRACKING_SET_RESUMPTION(controller, obj, sel_name)	\
+  [(controller) setTrackingResumeBlock:^{[(obj) sel_name];}]
+
+/* These macros can only be used inside EmacsController.  */
+#define MOUSE_TRACKING_SUSPENDED_P()	(trackingResumeBlock != nil)
+#define MOUSE_TRACKING_RESUME()		trackingResumeBlock ()
+#define MOUSE_TRACKING_RESET()		[self setTrackingResumeBlock:nil]
+#else  /* MAC_OS_X_VERSION_MIN_REQUIRED < 1060 */
 - (void)setTrackingObject:(id)object andResumeSelector:(SEL)selector
 {
   if (trackingObject != object)
@@ -1240,6 +1255,29 @@ static EventRef peek_if_next_event_activates_menu_bar (void);
     }
 
   trackingResumeSelector = selector;
+}
+
+#define MOUSE_TRACKING_SET_RESUMPTION(controller, obj, sel_name)	\
+  [(controller) setTrackingObject:(obj) andResumeSelector:@selector(sel_name)]
+
+/* These macros can only be used inside EmacsController.  */
+#define MOUSE_TRACKING_SUSPENDED_P()	(trackingObject != nil)
+#define MOUSE_TRACKING_RESUME()					\
+  [trackingObject performSelector:trackingResumeSelector]
+#define MOUSE_TRACKING_RESET()						\
+  [self setTrackingObject:nil andResumeSelector:@selector(dummy)]
+#endif  /* MAC_OS_X_VERSION_MIN_REQUIRED < 1060 */
+
+/* Minimum time interval between successive XTread_socket calls.  */
+
+#define READ_SOCKET_MIN_INTERVAL (1/60.0)
+
+- (NSTimeInterval)minimumIntervalForReadSocket
+{
+  if (MOUSE_TRACKING_SUSPENDED_P ())
+    return READ_SOCKET_MIN_INTERVAL * 6;
+  else
+    return READ_SOCKET_MIN_INTERVAL;
 }
 
 /* Handle the NSEvent EVENT.  */
@@ -1365,7 +1403,7 @@ static EventRef peek_if_next_event_activates_menu_bar (void);
 	  NSEvent *event;
 	  NSUInteger mask;
 
-	  if (trackingObject)
+	  if (MOUSE_TRACKING_SUSPENDED_P ())
 	    {
 	      NSEvent *leftMouseEvent =
 		[NSApp nextEventMatchingMask:
@@ -1376,9 +1414,8 @@ static EventRef peek_if_next_event_activates_menu_bar (void);
 	      if (leftMouseEvent)
 		{
 		  if ([leftMouseEvent type] == NSLeftMouseDragged)
-		    [trackingObject performSelector:trackingResumeSelector];
-		  [self setTrackingObject:nil
-			andResumeSelector:@selector(dummy)];
+		    MOUSE_TRACKING_RESUME ();
+		  MOUSE_TRACKING_RESET ();
 		}
 	    }
 	  else if (dpyinfo->saved_menu_event == NULL)
@@ -1400,7 +1437,8 @@ static EventRef peek_if_next_event_activates_menu_bar (void);
 		}
 	    }
 
-	  mask = (trackingObject == nil && dpyinfo->saved_menu_event == NULL
+	  mask = ((!MOUSE_TRACKING_SUSPENDED_P ()
+		   && dpyinfo->saved_menu_event == NULL)
 		  ? NSAnyEventMask : (NSAnyEventMask & ~ANY_MOUSE_EVENT_MASK));
 	  event = [NSApp nextEventMatchingMask:mask untilDate:expiration
 			 inMode:NSDefaultRunLoopMode dequeue:YES];
@@ -1898,9 +1936,7 @@ extern void mac_save_keyboard_input_source (void);
   mouseUpEvent = MRC_RETAIN ([event mouseEventByChangingType:NSLeftMouseUp
 						 andLocation:locationInWindow]);
   [NSApp postEvent:mouseUpEvent atStart:YES];
-  /* Use notification?  */
-  [emacsController setTrackingObject:self
-		   andResumeSelector:@selector(resumeResizeTracking)];
+  MOUSE_TRACKING_SET_RESUMPTION (emacsController, self, resumeResizeTracking);
 }
 
 - (void)resumeResizeTracking
@@ -2340,7 +2376,7 @@ extern void mac_save_keyboard_input_source (void);
   else
     emacsViewSize.width = size_hints->base_width
       + (int) ((emacsViewSize.width - size_hints->base_width)
-	       / size_hints->width_inc + (flag ? .5 : 0))
+	       / size_hints->width_inc + (flag ? .5f : 0))
       * size_hints->width_inc;
 
   if (emacsViewSize.height < size_hints->min_height)
@@ -2348,7 +2384,7 @@ extern void mac_save_keyboard_input_source (void);
   else
     emacsViewSize.height = size_hints->base_height
       + (int) ((emacsViewSize.height - size_hints->base_height)
-	       / size_hints->height_inc + (flag ? .5 : 0))
+	       / size_hints->height_inc + (flag ? .5f : 0))
       * size_hints->height_inc;
 
   emacsViewSizeInPixels = [emacsView convertSize:emacsViewSize toView:nil];
@@ -2767,7 +2803,7 @@ extern void mac_save_keyboard_input_source (void);
   [[emacsView window] invalidateCursorRectsForView:emacsView];
 }
 
-- (void)maskRoundedBottomCorners:(NSRect)clipRect display:(BOOL)flag
+- (void)maskRoundedBottomCorners:(NSRect)clipRect directly:(BOOL)flag
 {
   NSWindow *window = [emacsView window];
 
@@ -2782,8 +2818,12 @@ extern void mac_save_keyboard_input_source (void);
 	    [window _maskRoundedBottomCorners:rect];
 	  else
 	    {
+	      struct frame *f = emacsFrame;
+
 	      rect = [emacsView convertRect:rect fromView:nil];
 	      [emacsView setNeedsDisplayInRect:rect];
+	      if (!f->garbaged)
+		[window displayIfNeeded];
 	    }
 	}
     }
@@ -3718,12 +3758,12 @@ mac_invalidate_frame_cursor_rects (struct frame *f)
 
 void
 mac_mask_rounded_bottom_corners (struct frame *f, CGRect clip_rect,
-				 Boolean display_p)
+				 Boolean direct_p)
 {
   EmacsFrameController *frameController = FRAME_CONTROLLER (f);
 
   [frameController maskRoundedBottomCorners:(NSRectFromCGRect (clip_rect))
-				    display:display_p];
+				   directly:direct_p];
 }
 
 
@@ -5181,6 +5221,130 @@ create_resize_indicator_image (void)
 
 
 /************************************************************************
+			Multi-monitor support
+ ************************************************************************/
+
+static Lisp_Object
+list2i (EMACS_INT x, EMACS_INT y)
+{
+  return list2 (make_number (x), make_number (y));
+}
+
+static Lisp_Object
+list4i (EMACS_INT x, EMACS_INT y, EMACS_INT w, EMACS_INT h)
+{
+  return list4 (make_number (x), make_number (y),
+		make_number (w), make_number (h));
+}
+
+extern Lisp_Object Qgeometry, Qworkarea, Qmm_size, Qframes;
+extern Lisp_Object Qbacking_scale_factor;
+
+Lisp_Object
+mac_display_monitor_attributes_list (struct mac_display_info *dpyinfo)
+{
+  Lisp_Object attributes_list = Qnil, rest, frame;
+  NSRect baseScreenFrame = mac_get_base_screen_frame ();
+  CGFloat baseScreenFrameMinX = NSMinX (baseScreenFrame);
+  CGFloat baseScreenFrameMaxY = NSMaxY (baseScreenFrame);
+  NSArray *screens = [NSScreen screens];
+  NSUInteger i, count = [screens count];
+  Lisp_Object monitor_frames = Fmake_vector (make_number (count), Qnil);
+  struct gcpro gcpro1, gcpro2;
+
+  GCPRO2 (attributes_list, monitor_frames);
+
+  FOR_EACH_FRAME (rest, frame)
+    {
+      struct frame *f = XFRAME (frame);
+
+      if (FRAME_MAC_P (f) && FRAME_MAC_DISPLAY_INFO (f) == dpyinfo
+	  && !EQ (frame, tip_frame))
+	{
+	  NSWindow *window = FRAME_MAC_WINDOW_OBJECT (f);
+	  NSScreen *screen = [window screen];
+
+	  if (screen == nil)
+	    screen = [NSScreen closestScreenForRect:[window frame]];
+	  i = [screens indexOfObject:screen];
+	  if (i != NSNotFound)
+	    ASET (monitor_frames, i, Fcons (frame, AREF (monitor_frames, i)));
+	}
+    }
+
+  i = count;
+  while (i-- > 0)
+    {
+      Lisp_Object geometry, workarea, attributes = Qnil;
+      NSScreen *screen = [screens objectAtIndex:i];
+      CGFloat backingScaleFactor;
+      CGDirectDisplayID displayID;
+      CFDictionaryRef displayInfo;
+      CGSize size;
+      NSRect rect;
+
+      if ([screen respondsToSelector:@selector(backingScaleFactor)])
+	backingScaleFactor = [screen backingScaleFactor];
+      else
+	backingScaleFactor = 1.0;
+      attributes = Fcons (Fcons (Qbacking_scale_factor,
+				 make_number (backingScaleFactor)),
+			  attributes);
+
+      displayID = (CGDirectDisplayID) [[[screen deviceDescription]
+					 objectForKey:@"NSScreenNumber"]
+					unsignedIntValue];
+      displayInfo =
+	IODisplayCreateInfoDictionary (CGDisplayIOServicePort (displayID),
+				       kIODisplayOnlyPreferredName);
+      if (displayInfo)
+	{
+	  CFDictionaryRef localizedNames =
+	    CFDictionaryGetValue (displayInfo, CFSTR (kDisplayProductName));
+
+	  if (localizedNames)
+	    {
+	      NSDictionary *names = (__bridge NSDictionary *) localizedNames;
+	      NSString *name = [[names objectEnumerator] nextObject];
+
+	      if (name)
+		attributes = Fcons (Fcons (Qname, [name lispString]),
+				    attributes);
+	    }
+	  CFRelease (displayInfo);
+	}
+
+      attributes = Fcons (Fcons (Qframes, AREF (monitor_frames, i)),
+			  attributes);
+
+      size = CGDisplayScreenSize (displayID);
+      attributes = Fcons (Fcons (Qmm_size,
+				 list2i (size.width + 0.5f,
+					 size.height + 0.5f)),
+			  attributes);
+
+      rect = [screen visibleFrame];
+      workarea = list4i (NSMinX (rect) + baseScreenFrameMinX,
+			 - NSMaxY (rect) + baseScreenFrameMaxY,
+			 NSWidth (rect), NSHeight (rect));
+      attributes = Fcons (Fcons (Qworkarea, workarea), attributes);
+
+      rect = [screen frame];
+      geometry = list4i (NSMinX (rect) + baseScreenFrameMinX,
+			 - NSMaxY (rect) + baseScreenFrameMaxY,
+			 NSWidth (rect), NSHeight (rect));
+      attributes = Fcons (Fcons (Qgeometry, geometry), attributes);
+
+      attributes_list = Fcons (attributes, attributes_list);
+    }
+
+  UNGCPRO;
+
+  return attributes_list;
+}
+
+
+/************************************************************************
 			     Scroll bars
  ************************************************************************/
 extern Time last_mouse_movement_time;
@@ -5210,10 +5374,17 @@ static BOOL NonmodalScrollerPagingBehavior;
   NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
 
   [userDefaults synchronize];
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
+  NonmodalScrollerButtonDelay =
+    [userDefaults doubleForKey:@"NSScrollerButtonDelay"];
+  NonmodalScrollerButtonPeriod =
+    [userDefaults doubleForKey:@"NSScrollerButtonPeriod"];
+#else
   NonmodalScrollerButtonDelay =
     [userDefaults floatForKey:@"NSScrollerButtonDelay"];
   NonmodalScrollerButtonPeriod =
     [userDefaults floatForKey:@"NSScrollerButtonPeriod"];
+#endif
   NonmodalScrollerPagingBehavior =
     [userDefaults boolForKey:@"AppleScrollerPagingBehavior"];
 }
@@ -5492,7 +5663,11 @@ static BOOL NonmodalScrollerPagingBehavior;
 	  if (minEdge > maximum)
 	    minEdge = maximum;
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
+	  [self setDoubleValue:minEdge/maximum];
+#else
 	  [self setFloatValue:minEdge/maximum];
+#endif
 	}
 
       [self sendAction:[self action] to:[self target]];
@@ -5543,7 +5718,11 @@ static BOOL NonmodalScrollerPagingBehavior;
 - (void)viewFrameDidChange:(NSNotification *)notification
 {
   BOOL enabled = [self isEnabled], tooSmall = NO;
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
+  double floatValue = [self doubleValue];
+#else
   float floatValue = [self floatValue];
+#endif
   CGFloat knobProportion = [self knobProportion];
   const NSControlSize controlSizes[] =
     {NSRegularControlSize, NSSmallControlSize}; /* Descending */
@@ -5653,7 +5832,11 @@ static BOOL NonmodalScrollerPagingBehavior;
   if (knobSlotSpan < 0)
     {
       BOOL enabled = [self isEnabled];
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
+      double floatValue = [self doubleValue];
+#else
       float floatValue = [self floatValue];
+#endif
       CGFloat knobProportion = [self knobProportion];
       NSRect bounds, knobSlotRect;
 
@@ -5945,8 +6128,7 @@ x_set_toolkit_scroll_bar_thumb (struct scroll_bar *bar, int portion,
     {
       CGFloat knobSlotSpan = [scroller knobSlotSpan];
       CGFloat maximum, scale, top, size;
-      float floatValue;
-      CGFloat knobProportion;
+      CGFloat floatValue, knobProportion;
 
       maximum = knobSlotSpan - minKnobSpan;
       scale = maximum / whole;
@@ -6472,9 +6654,7 @@ extern OSStatus mac_store_event_ref_as_apple_event (AEEventClass, AEEventID,
     MRC_RETAIN ([event mouseEventByChangingType:NSLeftMouseUp
 				    andLocation:[event locationInWindow]]);
   [NSApp postEvent:mouseUpEvent atStart:YES];
-  /* Use notification?  */
-  [emacsController setTrackingObject:self
-		   andResumeSelector:@selector(resumeSliderTracking)];
+  MOUSE_TRACKING_SET_RESUMPTION (emacsController, self, resumeSliderTracking);
 }
 
 - (void)resumeSliderTracking
@@ -6684,9 +6864,6 @@ static void update_dragged_types (void);
    MENU_BAR_ACTIVATE_EVENT is not processed: e.g., "M-! sleep 30 RET
    -> try to activate menu bar -> C-g".  */
 #define SAVE_MENU_EVENT_TIMEOUT	5
-
-/* Minimum time interval between successive XTread_socket calls.  */
-#define READ_SOCKET_MIN_INTERVAL (1/60.0)
 
 @implementation EmacsFrameController (EventHandling)
 
@@ -6986,7 +7163,7 @@ XTread_socket (struct terminal *terminal, struct input_event *hold_quit)
 #endif
   static NSDate *lastCallDate;
   static NSTimer *timer;
-  NSTimeInterval timeInterval;
+  NSTimeInterval timeInterval, minimumInterval;
 
   block_input ();
 
@@ -6999,14 +7176,15 @@ XTread_socket (struct terminal *terminal, struct input_event *hold_quit)
   pool = [[NSAutoreleasePool alloc] init];
 #endif
 
+  minimumInterval = [emacsController minimumIntervalForReadSocket];
   if (lastCallDate
       && (timeInterval = - [lastCallDate timeIntervalSinceNow],
-	  timeInterval < READ_SOCKET_MIN_INTERVAL))
+	  timeInterval < minimumInterval))
     {
       if (![timer isValid])
 	{
 	  MRC_RELEASE (timer);
-	  timeInterval = READ_SOCKET_MIN_INTERVAL - timeInterval;
+	  timeInterval = minimumInterval - timeInterval;
 	  timer =
 	    MRC_RETAIN ([NSTimer scheduledTimerWithTimeInterval:timeInterval
 							 target:emacsController
@@ -10706,7 +10884,7 @@ get_symbol_from_filter_input_key (NSString *key)
 		    break;
 		  if (INTEGERP (XCAR (value)))
 		    components[i] =
-		      min (max (0, XINT (XCAR (value)) / 65535.0), 1);
+		      min (max (0, (CGFloat) XINT (XCAR (value)) / 65535), 1);
 		  else if (FLOATP (XCAR (value)))
 		    components[i] =
 		      min (max (0, XFLOAT_DATA (XCAR (value))), 1);
@@ -10794,7 +10972,7 @@ get_symbol_from_filter_input_key (NSString *key)
 
       if ([overlayWindow respondsToSelector:@selector(backingScaleFactor)])
 	{
-	  CGFloat scale = 1.0 / [overlayWindow backingScaleFactor];
+	  CGFloat scale = 1 / [overlayWindow backingScaleFactor];
 
 	  atfm = CGAffineTransformScale (atfm, scale, scale);
 	}
@@ -12339,8 +12517,8 @@ mac_sound_play (CFTypeRef mac_sound, Lisp_Object volume, Lisp_Object device)
 
   if ((INTEGERP (volume) || FLOATP (volume))
       && [sound respondsToSelector:@selector(setVolume:)])
-    [sound setVolume:(INTEGERP (volume) ? XFASTINT (volume) * 0.01
-		      : XFLOAT_DATA (volume))];
+    [sound setVolume:(INTEGERP (volume) ? XFASTINT (volume) * 0.01f
+		      : (float) XFLOAT_DATA (volume))];
   if (STRINGP (device)
       && [sound respondsToSelector:@selector(setPlaybackDeviceIdentifier:)])
     [sound setPlaybackDeviceIdentifier:[NSString stringWithLispString:device]];

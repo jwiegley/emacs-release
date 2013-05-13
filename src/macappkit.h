@@ -22,6 +22,7 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
 #import <QuartzCore/QuartzCore.h>
 #endif
+#import <IOKit/graphics/IOGraphicsLib.h>
 #define Z (current_buffer->text->z)
 
 #ifndef NSAppKitVersionNumber10_4
@@ -157,12 +158,18 @@ typedef unsigned int NSUInteger;
   /* The item selected in the popup menu.  */
   int menuItemSelection;
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+  /* Non-nil means left mouse tracking has been suspended and will be
+     resumed when this block is called.  */
+  void (^trackingResumeBlock)(void);
+#else
   /* Non-nil means left mouse tracking has been suspended by this
      object.  */
   id trackingObject;
 
   /* Selector used for resuming suspended left mouse tracking.  */
   SEL trackingResumeSelector;
+#endif
 
   /* Whether a service provider for Emacs is registered as of
      applicationWillFinishLaunching: or not.  */
@@ -200,7 +207,12 @@ typedef unsigned int NSUInteger;
 - (void)storeInputEvent:(id)sender;
 - (void)setMenuItemSelectionToTag:(id)sender;
 - (void)storeEvent:(struct input_event *)bufp;
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+ - (void)setTrackingResumeBlock:(void (^)(void))block;
+#else
 - (void)setTrackingObject:(id)object andResumeSelector:(SEL)selector;
+#endif
+- (NSTimeInterval)minimumIntervalForReadSocket;
 - (int)handleQueuedNSEventsWithHoldingQuitIn:(struct input_event *)bufp;
 - (void)cancelHelpEchoForEmacsFrame:(struct frame *)f;
 - (BOOL)conflictingKeyBindingsDisabled;
@@ -323,7 +335,7 @@ typedef unsigned int NSUInteger;
 - (NSRect)convertEmacsViewRectToScreen:(NSRect)rect;
 - (NSRect)centerScanEmacsViewRect:(NSRect)rect;
 - (void)invalidateCursorRectsForEmacsView;
-- (void)maskRoundedBottomCorners:(NSRect)clipRect display:(BOOL)flag;
+- (void)maskRoundedBottomCorners:(NSRect)clipRect directly:(BOOL)flag;
 - (void)storeModifyFrameParametersEvent:(Lisp_Object)alist;
 @end
 
@@ -815,6 +827,12 @@ enum {
 - (NSRect)_intersectBottomCornersWithRect:(NSRect)viewRect;
 - (void)_maskRoundedBottomCorners:(NSRect)clipRect;
 @end
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1070
+@interface NSScreen (AvailableOn1070AndLater)
+- (CGFloat)backingScaleFactor;
+@end
+#endif
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1060
 @interface NSMenu (AvailableOn1060AndLater)

@@ -2841,14 +2841,14 @@ image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
 	     );
 #endif
-	  rgba[0] = rgba[1] = rgba[2] = rgba[3] = 1.0;
+	  rgba[0] = rgba[1] = rgba[2] = rgba[3] = 1.0f;
 	}
       else
 	{
-	  rgba[0] = color.red / 65535.0;
-	  rgba[1] = color.green / 65535.0;
-	  rgba[2] = color.blue / 65535.0;
-	  rgba[3] = 1.0;
+	  rgba[0] = (CGFloat) color.red / 65535.0f;
+	  rgba[1] = (CGFloat) color.green / 65535.0f;
+	  rgba[2] = (CGFloat) color.blue / 65535.0f;
+	  rgba[3] = 1.0f;
 	}
       cg_color = CGColorCreate (mac_cg_color_space_rgb, rgba);
       if (cg_color)
