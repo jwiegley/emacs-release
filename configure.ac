@@ -2817,6 +2817,19 @@ HAVE_LIBXML2=no
 if test "${with_xml2}" != "no"; then
   ### I'm not sure what the version number should be, so I just guessed.
   PKG_CHECK_MODULES(LIBXML2, libxml-2.0 > 2.6.17, HAVE_LIBXML2=yes, HAVE_LIBXML2=no)
+  # Built-in libxml2 on OS X 10.8 lacks libxml-2.0.pc.
+  if test "${HAVE_LIBXML2}" != "yes" -a "$opsys" = "darwin"; then
+    SAVE_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -I/usr/include/libxml2"
+    AC_CHECK_HEADER(libxml/HTMLparser.h,
+      [AC_CHECK_DECL(HTML_PARSE_RECOVER, HAVE_LIBXML2=yes, ,
+      		     [#include <libxml/HTMLparser.h>])])
+    CPPFLAGS="$SAVE_CPPFLAGS"
+    if test "${HAVE_LIBXML2}" = "yes"; then
+      LIBXML2_LIBS="-lxml2"
+      LIBXML2_CFLAGS="-I/usr/include/libxml2"
+    fi
+  fi
   if test "${HAVE_LIBXML2}" = "yes"; then
     LIBS="$LIBXML2_LIBS $LIBS"
     AC_CHECK_LIB(xml2, htmlReadMemory, HAVE_LIBXML2=yes, HAVE_LIBXML2=no)
@@ -4395,7 +4408,7 @@ fail;
        libs_quartz_core=
      fi
      # Whether to use the Cocoa framework.
-     libs_macgui="-framework Carbon -framework WebKit $libs_quartz_core -framework IOKit -framework Cocoa"
+     libs_macgui="-framework Carbon -framework WebKit -framework Quartz $libs_quartz_core -framework IOKit -framework Cocoa"
      headerpad_extra=690
    elif test "$HAVE_NS" = "yes"; then
      libs_macgui="-framework AppKit"

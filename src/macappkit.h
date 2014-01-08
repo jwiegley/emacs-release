@@ -19,6 +19,7 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 #undef Z
 #import <Cocoa/Cocoa.h>
 #import <WebKit/WebKit.h>
+#import <Quartz/Quartz.h>
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
 #import <QuartzCore/QuartzCore.h>
 #endif
@@ -36,6 +37,9 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 #endif
 #ifndef NSAppKitVersionNumber10_7
 #define NSAppKitVersionNumber10_7 1138
+#endif
+#ifndef NSAppKitVersionNumber10_8
+#define NSAppKitVersionNumber10_8 1187
 #endif
 
 #ifndef NSINTEGER_DEFINED
@@ -67,6 +71,7 @@ typedef unsigned int NSUInteger;
 @protocol NSToolbarDelegate @end
 @protocol NSMenuDelegate @end
 @protocol NSUserInterfaceItemSearching @end
+@protocol NSLayoutManagerDelegate @end
 #endif
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
@@ -102,6 +107,7 @@ typedef unsigned int NSUInteger;
 
 @interface NSColor (Emacs)
 + (NSColor *)colorWithXColorPixel:(unsigned long)pixel;
+- (CGColorRef)copyCGColor;
 @end
 
 @interface NSImage (Emacs)
@@ -121,6 +127,14 @@ typedef unsigned int NSUInteger;
 + (NSScreen *)screenContainingPoint:(NSPoint)aPoint;
 + (NSScreen *)closestScreenForRect:(NSRect)aRect;
 - (BOOL)containsDock;
+- (BOOL)canShowMenuBar;
+@end
+
+/* Workarounds for memory leaks on OS X 10.9.  Should be removed once
+   the problem is fixed in the framework.  */
+@interface NSApplication (Undocumented)
+- (void)_installMemoryPressureDispatchSources;
+- (void)_installMemoryStatusDispatchSources;
 @end
 
 @interface EmacsApplication : NSApplication
@@ -337,6 +351,7 @@ typedef unsigned int NSUInteger;
 - (void)invalidateCursorRectsForEmacsView;
 - (void)maskRoundedBottomCorners:(NSRect)clipRect directly:(BOOL)flag;
 - (void)storeModifyFrameParametersEvent:(Lisp_Object)alist;
+- (BOOL)isWindowFrontmost;
 @end
 
 /* Class for Emacs view that handles drawing events only.  It is used
@@ -502,12 +517,6 @@ typedef unsigned int NSUInteger;
 @end
 
 @interface EmacsFrameController (Toolbar) <NSToolbarDelegate>
-- (NSToolbarItem *)toolbar:(NSToolbar *)toolbar
-     itemForItemIdentifier:(NSString *)itemIdentifier
- willBeInsertedIntoToolbar:(BOOL)flag;
-- (NSArray *)toolbarAllowedItemIdentifiers:(NSToolbar *)toolbar;
-- (NSArray *)toolbarDefaultItemIdentifiers:(NSToolbar *)toolbar;
-- (BOOL)validateToolbarItem:(NSToolbarItem *)theItem;
 - (void)setupToolBarWithVisibility:(BOOL)visible;
 - (void)updateToolbarDisplayMode;
 - (void)storeToolBarEvent:(id)sender;
@@ -644,6 +653,40 @@ typedef unsigned int NSUInteger;
 - (int)loadData:(NSData *)data backgroundColor:(NSColor *)backgroundColor;
 @end
 
+/* Protocol for document rasterization.  */
+
+@protocol EmacsDocumentRasterizer <NSObject>
+- (id)initWithURL:(NSURL *)url;
+- (id)initWithData:(NSData *)data;
++ (NSArray *)supportedTypes;
+- (NSUInteger)pageCount;
+- (NSSize)integralSizeOfPageAtIndex:(NSUInteger)index;
+- (CGColorRef)copyBackgroundCGColorOfPageAtIndex:(NSUInteger)index;
+- (NSDictionary *)documentAttributesOfPageAtIndex:(NSUInteger)index;
+- (void)drawPageAtIndex:(NSUInteger)index inRect:(NSRect)rect
+	      inContext:(CGContextRef)ctx;
+@end
+
+/* Class for PDF rasterization.  */
+
+@interface EmacsPDFDocument : PDFDocument <EmacsDocumentRasterizer>
+@end
+
+/* Class for document rasterization other than PDF.  It also works as
+   the layout manager delegate when rasterizing a multi-page
+   document.  */
+
+@interface EmacsDocumentRasterizer : NSObject <EmacsDocumentRasterizer, NSLayoutManagerDelegate>
+{
+  /* The text storage and document attributes for the document to be
+     rasterized.  */
+  NSTextStorage *textStorage;
+  NSDictionary *documentAttributes;
+}
+- (id)initWithAttributedString:(NSAttributedString *)anAttributedString
+	    documentAttributes:(NSDictionary *)docAttributes;
+@end
+
 @interface EmacsFrameController (Accessibility)
 - (void)postAccessibilityNotificationsToEmacsView;
 @end
@@ -720,10 +763,28 @@ typedef unsigned int NSUInteger;
 @end
 #endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
+@interface NSAttributedString (AvailableOn1050AndLater)
++ (NSArray *)textTypes;
+@end
+#endif
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1070
 @interface NSColor (AvailableOn1070AndLater)
 + (NSColor *)colorWithSRGBRed:(CGFloat)red green:(CGFloat)green
 			 blue:(CGFloat)blue alpha:(CGFloat)alpha;
+@end
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+@interface NSColor (AvailableOn1080AndLater)
+- (CGColorRef)CGColor;
+@end
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
+@interface NSColorSpace (AvailableOn1050AndLater)
+- (CGColorSpaceRef)CGColorSpace;
 @end
 #endif
 
@@ -761,6 +822,7 @@ typedef NSUInteger NSApplicationPresentationOptions;
 - (void)registerUserInterfaceItemSearchHandler:(id<NSUserInterfaceItemSearching>)handler;
 - (BOOL)searchString:(NSString *)searchString inUserInterfaceItemString:(NSString *)stringToSearch
 	 searchRange:(NSRange)searchRange foundRange:(NSRange *)foundRange;
+- (void)setHelpMenu:(NSMenu *)helpMenu;
 @end
 #endif
 
@@ -834,6 +896,18 @@ enum {
 @end
 #endif
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+@interface NSScreen (AvailableOn1090AndLater)
++ (BOOL)screensHaveSeparateSpaces;
+@end
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+@interface NSSavePanel (AvailableOn1090AndLater)
+- (void)setShowsTagField:(BOOL)flag;
+@end
+#endif
+
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1060
 @interface NSMenu (AvailableOn1060AndLater)
 - (BOOL)popUpMenuPositioningItem:(NSMenuItem *)item
@@ -873,6 +947,7 @@ typedef NSUInteger NSEventPhase;
 - (NSEventPhase)momentumPhase;
 - (BOOL)isDirectionInvertedFromDevice;
 - (NSEventPhase)phase;
++ (BOOL)isSwipeTrackingFromScrollEventsEnabled;
 @end
 #endif
 
@@ -898,6 +973,18 @@ enum {
 @property CGFloat contentsScale;
 @end
 #endif
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1060
+@interface NSFileHandle (AvailableOn1060AndLater)
++ (id)fileHandleForReadingFromURL:(NSURL *)url error:(NSError **)error;
+@end
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+@interface NSView (AvailableOn1090AndLater)
+- (void)setLayerUsesCoreImageFilters:(BOOL)usesFilters;
+@end
 #endif
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1050

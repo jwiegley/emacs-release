@@ -346,6 +346,43 @@ NSSizeToCGSize (NSSize nssize)
 
 @implementation NSColor (Emacs)
 
+static NSColorSpace *
+get_srgb_color_space (void)
+{
+  static NSColorSpace *sRGBColorSpace;
+
+  if (sRGBColorSpace == nil)
+    {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+      if ([NSColorSpace respondsToSelector:@selector(sRGBColorSpace)])
+#endif
+	sRGBColorSpace = MRC_RETAIN ([NSColorSpace sRGBColorSpace]);
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+      else
+#endif
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050 || MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+	{
+	  extern CMProfileRef mac_open_srgb_profile (void);
+	  CMProfileRef profile = mac_open_srgb_profile ();
+
+	  if (profile)
+	    {
+	      sRGBColorSpace = [[NSColorSpace alloc]
+				 initWithColorSyncProfile:profile];
+	      CMCloseProfile (profile);
+	    }
+	  else
+	    sRGBColorSpace =
+	      MRC_RETAIN ([NSColorSpace deviceRGBColorSpace]);
+	}
+#endif
+    }
+
+  return sRGBColorSpace;
+}
+
 + (NSColor *)colorWithXColorPixel:(unsigned long)pixel
 {
   CGFloat components[4];
@@ -359,41 +396,47 @@ NSSizeToCGSize (NSSize nssize)
     return [self colorWithSRGBRed:components[0] green:components[1]
 			     blue:components[2] alpha:components[3]];
   else
+    return [self colorWithColorSpace:(get_srgb_color_space ())
+			  components:components count:4];
+}
+
+- (CGColorRef)copyCGColor
+{
+  if ([self respondsToSelector:@selector(CGColor)])
+    return CGColorRetain ([self CGColor]);
+  else
     {
-      static id sRGBColorSpace;
+      NSColorSpace *colorSpace = [self colorSpace];
+      CGColorSpaceRef cgColorSpace = nil;
+      CGFloat *components;
 
-      if (sRGBColorSpace == nil)
+      if ([colorSpace respondsToSelector:@selector(CGColorSpace)])
 	{
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1050
-	  if ([NSColorSpace respondsToSelector:@selector(sRGBColorSpace)])
-#endif
-	    sRGBColorSpace = MRC_RETAIN ([NSColorSpace sRGBColorSpace]);
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1050
-	  else
-#endif
-#endif
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050 || MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+	  cgColorSpace = [colorSpace CGColorSpace];
+	  if (cgColorSpace)
 	    {
-	      extern CMProfileRef mac_open_srgb_profile (void);
-	      CMProfileRef profile = mac_open_srgb_profile ();
-
-	      if (profile)
-		{
-		  sRGBColorSpace = [[NSColorSpace alloc]
-				     initWithColorSyncProfile:profile];
-		  CMCloseProfile (profile);
-		}
-	      else
-		sRGBColorSpace =
-		  MRC_RETAIN ([NSColorSpace deviceRGBColorSpace]);
+	      components = alloca (sizeof (CGFloat)
+				   * [self numberOfComponents]);
+	      [self getComponents:components];
 	    }
-#endif
 	}
+      if (cgColorSpace == nil)
+	{
+	  NSColor *colorInSRGB =
+	    [self colorUsingColorSpace:(get_srgb_color_space ())];
 
-      return [self colorWithColorSpace:sRGBColorSpace
-			    components:components count:4];
+	  if (colorInSRGB)
+	    {
+	      components = alloca (sizeof (CGFloat) * 4);
+	      cgColorSpace = mac_cg_color_space_rgb;
+	      [colorInSRGB getComponents:components];
+	    }
+	}
+      if (cgColorSpace)
+	return CGColorCreate (cgColorSpace, components);
     }
+
+  return NULL;
 }
 
 @end				// NSColor (Emacs)
@@ -463,9 +506,15 @@ NSSizeToCGSize (NSSize nssize)
 - (void)runTemporarilyWithBlock:(void (^)(void))block
 {
   [[NSRunLoop currentRunLoop]
-    performSelector:@selector(stopAfterCallingBlock:)
-    target:self argument:block order:0
-    modes:[NSArray arrayWithObject:NSDefaultRunLoopMode]];
+    performSelector:@selector(stopAfterCallingBlock:) target:self
+#if USE_ARC && defined (__clang__) && __clang_major__ < 5
+    /* `copy' is unnecessary for ARC on clang Apple LLVM version 5.0.
+       Without `copy', earlier versions leak memory.  */
+	   argument:[block copy]
+#else
+	   argument:block
+#endif
+	      order:0 modes:[NSArray arrayWithObject:NSDefaultRunLoopMode]];
   [self run];
 }
 #else
@@ -548,6 +597,16 @@ NSSizeToCGSize (NSSize nssize)
   return (NSMinY (frame) != NSMinY (visibleFrame)
 	  || NSMinX (frame) != NSMinX (visibleFrame)
 	  || NSMaxX (frame) != NSMaxX (visibleFrame));
+}
+
+- (BOOL)canShowMenuBar
+{
+  return ([self isEqual:[[NSScreen screens] objectAtIndex:0]]
+	  /* OS X 10.9 may have menu bars on non-main screens (in an
+	     inactive appearance) if [NSScreen
+	     screensHaveSeparateSpaces] returns YES.  */
+	  || ([NSScreen respondsToSelector:@selector(screensHaveSeparateSpaces)]
+	      && [NSScreen screensHaveSeparateSpaces]));
 }
 
 @end				// NSScreen (Emacs)
@@ -782,7 +841,7 @@ extern Lisp_Object Qrange, Qpoint, Qsize, Qrect;
    created from NSRange, NSPoint, NSSize, or NSRect, then return
    nil.  */
 
-Lisp_Object
+static Lisp_Object
 mac_nsvalue_to_lisp (CFTypeRef obj)
 {
   Lisp_Object result = Qnil;
@@ -833,6 +892,34 @@ mac_nsvalue_to_lisp (CFTypeRef obj)
   return result;
 }
 
+static Lisp_Object
+mac_nsfont_to_lisp (CFTypeRef obj)
+{
+  Lisp_Object result = Qnil;
+
+  if ([(__bridge id)obj isKindOfClass:[NSFont class]])
+    {
+      result = macfont_nsctfont_to_spec ((void *) obj);
+      if (!NILP (result))
+	result = Fcons (Qfont, result);
+    }
+
+  return result;
+}
+
+Lisp_Object
+mac_nsobject_to_lisp (CFTypeRef obj)
+{
+  Lisp_Object result;
+
+  result = mac_nsvalue_to_lisp (obj);
+  if (!NILP (result))
+    return result;
+  result = mac_nsfont_to_lisp (obj);
+
+  return result;
+}
+
 static int
 has_resize_indicator_at_bottom_right_p (void)
 {
@@ -857,6 +944,26 @@ has_full_screen_with_dedicated_desktop (void)
 
 /* Autorelease pool.  */
 
+#if __clang_major__ >= 3
+#define BEGIN_AUTORELEASE_POOL	@autoreleasepool {
+#define END_AUTORELEASE_POOL	}
+#define BEGIN_AUTORELEASE_POOL_BLOCK_INPUT	\
+  @autoreleasepool {
+#define END_AUTORELEASE_POOL_BLOCK_INPUT	\
+  block_input (); } unblock_input ()
+#else
+#define BEGIN_AUTORELEASE_POOL					\
+  { NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init]
+#define END_AUTORELEASE_POOL			\
+  [pool release]; }
+#define BEGIN_AUTORELEASE_POOL_BLOCK_INPUT				\
+  block_input ();							\
+  { NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];		\
+  unblock_input ()
+#define END_AUTORELEASE_POOL_BLOCK_INPUT		\
+  block_input (); [pool release]; } unblock_input ()
+#endif
+
 #if MAC_USE_AUTORELEASE_LOOP
 void
 mac_autorelease_loop (Lisp_Object (^body) (void))
@@ -865,25 +972,9 @@ mac_autorelease_loop (Lisp_Object (^body) (void))
 
   do
     {
-#if __clang_major__ >= 3
-      @autoreleasepool {
-#else
-      NSAutoreleasePool *pool;
-
-      block_input ();
-      pool = [[NSAutoreleasePool alloc] init];
-      unblock_input ();
-#endif
-
+      BEGIN_AUTORELEASE_POOL_BLOCK_INPUT;
       val = body ();
-
-      block_input ();
-#if __clang_major__ >= 3
-      }
-#else
-      [pool release];
-#endif
-      unblock_input ();
+      END_AUTORELEASE_POOL_BLOCK_INPUT;
     }
   while (!NILP (val));
 }
@@ -895,9 +986,6 @@ mac_alloc_autorelease_pool (void)
 {
   NSAutoreleasePool *pool;
 
-  if (noninteractive)
-    return NULL;
-
   block_input ();
   pool = [[NSAutoreleasePool alloc] init];
   unblock_input ();
@@ -908,9 +996,6 @@ mac_alloc_autorelease_pool (void)
 void
 mac_release_autorelease_pool (void *pool)
 {
-  if (noninteractive)
-    return;
-
   block_input ();
   [(NSAutoreleasePool *)pool release];
   unblock_input ();
@@ -947,6 +1032,49 @@ mac_system_uptime (void)
 
       return nanoseconds.hi * 4.294967296 + nanoseconds.lo * 1e-9;
     }
+#endif
+}
+
+Boolean
+mac_is_current_process_frontmost (void)
+{
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+  return [[NSRunningApplication currentApplication] isActive];
+#else
+  OSErr err;
+  ProcessSerialNumber front_psn;
+  static const ProcessSerialNumber current_psn = {0, kCurrentProcess};
+  Boolean front_p;
+
+  err = GetFrontProcess (&front_psn);
+  if (err == noErr)
+    err = SameProcess (&front_psn, &current_psn, &front_p);
+  if (err == noErr)
+    return front_p;
+  return false;
+#endif
+}
+
+void
+mac_bring_current_process_to_front (Boolean front_window_only_p)
+{
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
+  NSApplicationActivationOptions options;
+
+  if (front_window_only_p)
+    options = NSApplicationActivateIgnoringOtherApps;
+  else
+    options = (NSApplicationActivateAllWindows
+	       | NSApplicationActivateIgnoringOtherApps);
+  [[NSRunningApplication currentApplication] activateWithOptions:options];
+#else
+  static const ProcessSerialNumber current_psn = {0, kCurrentProcess};
+
+  if (front_window_only_p)
+    SetFrontProcessWithOptions (&current_psn,
+				kSetFrontProcessFrontWindowOnly);
+  else
+    SetFrontProcess (&current_psn);
 #endif
 }
 
@@ -1112,6 +1240,31 @@ extern UInt32 mac_mapped_modifiers (UInt32, UInt32);
     }
 }
 #endif
+
+/* Workarounds for memory leaks on OS X 10.9.  Should be removed once
+   the problem is fixed in the framework.  */
+
+- (void)_installMemoryPressureDispatchSources
+{
+  static BOOL doNotInstallDispatchSources;
+
+  if (doNotInstallDispatchSources)
+    return;
+  [super _installMemoryPressureDispatchSources];
+  if (!(floor (NSAppKitVersionNumber) <= NSAppKitVersionNumber10_8))
+    doNotInstallDispatchSources = YES;
+}
+
+- (void)_installMemoryStatusDispatchSources
+{
+  static BOOL doNotInstallDispatchSources;
+
+  if (doNotInstallDispatchSources)
+    return;
+  [super _installMemoryStatusDispatchSources];
+  if (!(floor (NSAppKitVersionNumber) <= NSAppKitVersionNumber10_8))
+    doNotInstallDispatchSources = YES;
+}
 
 @end				// EmacsApplication
 
@@ -1731,7 +1884,11 @@ emacs_windows_need_display_p (void)
 	{
 	  if ((options & (NSApplicationPresentationFullScreen
 			  | NSApplicationPresentationAutoHideMenuBar))
-	      == NSApplicationPresentationFullScreen)
+	      == NSApplicationPresentationFullScreen
+	      /* Application can be in full screen mode without hiding
+		 the dock on OS X 10.9.  */
+	      && (options & (NSApplicationPresentationHideDock
+			     | NSApplicationPresentationAutoHideDock)))
 	    {
 	      options |= NSApplicationPresentationAutoHideMenuBar;
 	      [NSApp setPresentationOptions:options];
@@ -1743,7 +1900,7 @@ emacs_windows_need_display_p (void)
 	{
 	  NSScreen *screen = [window screen];
 
-	  if ([screen isEqual:[[NSScreen screens] objectAtIndex:0]])
+	  if ([screen canShowMenuBar])
 	    options = (NSApplicationPresentationAutoHideMenuBar
 		       | NSApplicationPresentationAutoHideDock);
 	  else if ([screen containsDock])
@@ -1790,7 +1947,7 @@ emacs_windows_need_display_p (void)
 		  {
 		    NSScreen *screen = [window screen];
 
-		    if ([screen isEqual:[[NSScreen screens] objectAtIndex:0]])
+		    if ([screen canShowMenuBar])
 		      options |= (NSApplicationPresentationAutoHideMenuBar
 				  | NSApplicationPresentationAutoHideDock);
 		    else if ([screen containsDock])
@@ -1834,7 +1991,7 @@ emacs_windows_need_display_p (void)
 #endif
       if (windowManagerState & WM_STATE_FULLSCREEN)
 	{
-	  if ([[window screen] isEqual:[[NSScreen screens] objectAtIndex:0]])
+	  if ([[window screen] canShowMenuBar])
 	    {
 	      options = (NSApplicationPresentationAutoHideDock
 			 | NSApplicationPresentationDisableMenuBarTransparency);
@@ -1924,7 +2081,9 @@ extern void mac_save_keyboard_input_source (void);
 {
   NSPoint locationInWindow = [event locationInWindow];
 
-  if (!has_resize_indicator_at_bottom_right_p ())
+  if (!has_resize_indicator_at_bottom_right_p ()
+      /* OS X 10.9 no longer needs position adjustment.  */
+      && floor (NSAppKitVersionNumber) <= NSAppKitVersionNumber10_8)
     {
       if (resizeTrackingStartLocation.x * 2
 	  < resizeTrackingStartWindowSize.width)
@@ -2082,7 +2241,8 @@ extern void mac_save_keyboard_input_source (void);
 - (void)toggleToolbarShown:(id)sender
 {
   Lisp_Object alist =
-    list1 (Fcons (Qtool_bar_lines, make_number ([sender state] != NSOffState)));
+    list1 (Fcons (Qtool_bar_lines,
+		  make_number ([(NSMenuItem *)sender state] != NSOffState)));
   EmacsFrameController *frameController = ((EmacsFrameController *)
 					   [self delegate]);
 
@@ -2219,7 +2379,6 @@ extern void mac_save_keyboard_input_source (void);
   Class windowClass;
   NSRect contentRect;
   NSUInteger windowStyle;
-  BOOL deferCreation;
   EmacsWindow *window;
 
   if (!FRAME_TOOLTIP_P (f))
@@ -2235,17 +2394,25 @@ extern void mac_save_keyboard_input_source (void);
 	  windowStyle = (NSTitledWindowMask | NSClosableWindowMask
 			 | NSMiniaturizableWindowMask | NSResizableWindowMask);
 	}
-      deferCreation = YES;
     }
   else
     {
       windowClass = [EmacsWindow class];
       windowStyle = NSBorderlessWindowMask;
-      deferCreation = NO;
     }
 
   if (oldWindow == nil)
-    contentRect = [emacsView frame];
+    {
+      NSScreen *screen = nil;
+
+      if (f->size_hint_flags & (USPosition | PPosition))
+	screen = [NSScreen screenContainingPoint:(NSMakePoint (f->left_pos,
+							       f->top_pos))];
+      if (screen == nil)
+	screen = [NSScreen mainScreen];
+      contentRect.origin = [screen frame].origin;
+      contentRect.size = [emacsView frame].size;
+    }
   else
     {
       NSView *contentView = [oldWindow contentView];
@@ -2259,7 +2426,13 @@ extern void mac_save_keyboard_input_source (void);
   window = [[windowClass alloc] initWithContentRect:contentRect
 					  styleMask:windowStyle
 					    backing:NSBackingStoreBuffered
-					      defer:deferCreation];
+					      defer:YES];
+#if USE_ARC
+  /* Increase retain count to accommodate itself to
+     released-when-closed on ARC.  Just setting released-when-closed
+     to NO leads to crash in some situations.  */
+  CF_BRIDGING_RETAIN (window);
+#endif
   if (oldWindow)
     {
       [window setTitle:[oldWindow title]];
@@ -3101,6 +3274,19 @@ extern void mac_save_keyboard_input_source (void);
   return proposedOptions | NSApplicationPresentationAutoHideToolbar;
 }
 
+- (void)windowWillEnterFullScreen:(NSNotification *)notification
+{
+  /* We used to detach/attach the overlay window in the
+     `window:startCustomAnimationToExitFullScreenWithDuration:'
+     delegate method, but this places the overlay window below the
+     parent window (although `-[NSWindow addChildWindow:ordered:]' is
+     used with NSWindowAbove in `attachOverlayWindow') when exiting
+     from full screen on OS X 10.9.  To work around this problem, we
+     detach/attach the overlay window in the
+     `window{Will,Did}{Enter,Exit}FullScreen:' delegate methods.  */
+  [self detachOverlayWindow];
+}
+
 - (void)windowDidEnterFullScreen:(NSNotification *)notification
 {
   if (fullscreenFrameParameterAfterTransition)
@@ -3111,6 +3297,13 @@ extern void mac_save_keyboard_input_source (void);
       [self storeModifyFrameParametersEvent:alist];
       fullscreenFrameParameterAfterTransition = NULL;
     }
+
+  [self attachOverlayWindow];
+}
+
+- (void)windowWillExitFullScreen:(NSNotification *)notification
+{
+  [self detachOverlayWindow];
 }
 
 - (void)windowDidExitFullScreen:(NSNotification *)notification
@@ -3124,6 +3317,7 @@ extern void mac_save_keyboard_input_source (void);
       fullscreenFrameParameterAfterTransition = NULL;
     }
 
+  [self attachOverlayWindow];
   [emacsController updatePresentationOptions];
   [self updateCollectionBehavior];
 }
@@ -3144,7 +3338,6 @@ extern void mac_save_keyboard_input_source (void);
   BOOL toolbarIsVisible;
 
   [self setupFullScreenTransitionView];
-  [self detachOverlayWindow];
 
   titleBarHeight = NSHeight (srcRect) - NSMaxY ([contentView frame]);
 
@@ -3190,7 +3383,6 @@ extern void mac_save_keyboard_input_source (void);
       [window setAlphaValue:previousAlphaValue];
       [(EmacsWindow *)window setConstrainingToScreenSuspended:NO];
       [emacsView setAutoresizingMask:previousAutoresizingMask];
-      [self attachOverlayWindow];
       /* Mac OS X 10.7 needs this.  */
       [emacsView setFrame:[[emacsView superview] bounds]];
       /* This is a workaround for the problem of not preserving
@@ -3216,7 +3408,6 @@ extern void mac_save_keyboard_input_source (void);
   BOOL toolbarIsVisible;
 
   [self setupFullScreenTransitionView];
-  [self detachOverlayWindow];
 
   if (fullScreenTargetState & WM_STATE_DEDICATED_DESKTOP)
     {
@@ -3264,7 +3455,6 @@ extern void mac_save_keyboard_input_source (void);
       [window setLevel:previousWindowLevel];
       [(EmacsWindow *)window setConstrainingToScreenSuspended:NO];
       [emacsView setAutoresizingMask:previousAutoresizingMask];
-      [self attachOverlayWindow];
       /* Mac OS X 10.7 needs this.  */
       [emacsView setFrame:[[emacsView superview] bounds]];
       /* This is a workaround for the problem of not preserving
@@ -3279,6 +3469,21 @@ extern void mac_save_keyboard_input_source (void);
 {
   if ([keyPath isEqualToString:@"alphaValue"])
     [overlayWindow setAlphaValue:[emacsWindow alphaValue]];
+}
+
+- (BOOL)isWindowFrontmost
+{
+  NSArray *orderedWindows = [NSApp orderedWindows];
+
+  if ([orderedWindows count] > 0)
+    {
+      NSWindow *frontWindow = [orderedWindows objectAtIndex:0];
+
+      return ([frontWindow isEqual:overlayWindow]
+	      || [frontWindow isEqual:emacsWindow]);
+    }
+
+  return NO;
 }
 
 @end				// EmacsFrameController
@@ -3383,13 +3588,11 @@ mac_collapse_frame_window (struct frame *f, Boolean collapse)
 }
 
 Boolean
-mac_is_frame_window_front (struct frame *f)
+mac_is_frame_window_frontmost (struct frame *f)
 {
-  NSWindow *window = FRAME_MAC_WINDOW_OBJECT (f);
-  NSArray *orderedWindows = [NSApp orderedWindows];
+  EmacsFrameController *frameController = FRAME_CONTROLLER (f);
 
-  return ([orderedWindows count] > 0
-	  && [[orderedWindows objectAtIndex:0] isEqual:window]);
+  return [frameController isWindowFrontmost];
 }
 
 void
@@ -4076,6 +4279,7 @@ static int mac_event_to_emacs_modifiers (NSEvent *);
   int modifiers = mac_event_to_emacs_modifiers (theEvent);
   NSEventType type = [theEvent type];
   BOOL isDirectionInvertedFromDevice = NO;
+  BOOL isSwipeTrackingFromScrollEventsEnabled = NO;
   CGFloat deltaX = 0, deltaY = 0, deltaZ = 0;
   CGFloat scrollingDeltaX = 0, scrollingDeltaY = 0;
   Lisp_Object phase = Qnil, momentumPhase = Qnil;
@@ -4131,6 +4335,9 @@ static int mac_event_to_emacs_modifiers (NSEvent *);
 	      modifiers = savedWheelModifiers;
 	    }
 	}
+      if ([NSEvent respondsToSelector:@selector(isSwipeTrackingFromScrollEventsEnabled)])
+	isSwipeTrackingFromScrollEventsEnabled =
+	  [NSEvent isSwipeTrackingFromScrollEventsEnabled];
       /* fall through */
 
     case NSEventTypeSwipe:
@@ -4204,6 +4411,9 @@ static int mac_event_to_emacs_modifiers (NSEvent *);
 	  if (!NILP (phase) || !NILP (momentumPhase))
 	    inputEvent.arg = nconc2 (inputEvent.arg,
 				     list1 (list2 (phase, momentumPhase)));
+	  if (isSwipeTrackingFromScrollEventsEnabled)
+	    inputEvent.arg = nconc2 (inputEvent.arg,
+				     list1 (Qt));
 	}
     }
   else if (type == NSEventTypeMagnify || type == NSEventTypeGesture)
@@ -5115,8 +5325,7 @@ mac_end_cg_clip (struct frame *f)
 
 void
 mac_scroll_area (struct frame *f, GC gc, int src_x, int src_y,
-		 unsigned int width, unsigned int height, int dest_x,
-		 int dest_y)
+		 int width, int height, int dest_x, int dest_y)
 {
   EmacsFrameController *frameController = FRAME_CONTROLLER (f);
   NSRect rect = NSMakeRect (src_x, src_y, width, height);
@@ -7118,32 +7327,41 @@ peek_if_next_event_activates_menu_bar (void)
       err = GetEventParameter (event, kEventParamMouseLocation,
 			       typeHIPoint, NULL, sizeof (HIPoint), NULL,
 			       &point);
-      if (err == noErr
-	  && point.x >= 0 && point.y >= 0
-	  && point.x < CGDisplayPixelsWide (kCGDirectMainDisplay))
+      if (err == noErr)
 	{
-	  CGFloat menuBarHeight;
+	  NSRect baseScreenFrame = mac_get_base_screen_frame ();
+	  NSPoint mouseLocation =
+	    NSMakePoint (point.x - NSMinX (baseScreenFrame),
+			 - point.y + NSMaxY (baseScreenFrame));
+	  NSScreen *screen = [NSScreen screenContainingPoint:mouseLocation];
+
+	  if ([screen canShowMenuBar])
+	    {
+	      NSRect frame = [screen frame];
+	      CGFloat menuBarHeight;
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1050 && MAC_OS_X_VERSION_MIN_REQUIRED >= 1020
-	  /* -[NSMenu menuBarHeight] is unreliable on 10.4. */
-	  if (!(floor (NSAppKitVersionNumber) <= NSAppKitVersionNumber10_4))
+	      /* -[NSMenu menuBarHeight] is unreliable on 10.4. */
+	      if (!(floor (NSAppKitVersionNumber) <= NSAppKitVersionNumber10_4))
 #endif
-	    {
-	      menuBarHeight = [[NSApp mainMenu] menuBarHeight];
-	    }
+		{
+		  menuBarHeight = [[NSApp mainMenu] menuBarHeight];
+		}
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1050 && MAC_OS_X_VERSION_MIN_REQUIRED >= 1020
-	  else
+	      else
 #endif
 #endif
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1050 || (MAC_OS_X_VERSION_MIN_REQUIRED < 1050 && MAC_OS_X_VERSION_MIN_REQUIRED >= 1020)
-	    {
-	      menuBarHeight = [NSMenuView menuBarHeight];
-	    }
+		{
+		  menuBarHeight = [NSMenuView menuBarHeight];
+		}
 #endif
-
-	  if (point.y < menuBarHeight)
-	    return event;
+	      frame.origin.y = NSMaxY (frame) - menuBarHeight;
+	      frame.size.height = menuBarHeight;
+	      if (NSMouseInRect (mouseLocation, frame, NO))
+		return event;
+	    }
 	}
     }
 
@@ -7170,11 +7388,7 @@ XTread_socket (struct terminal *terminal, struct input_event *hold_quit)
   /* So people can tell when we have read the available input.  */
   input_signal_count++;
 
-#if __clang_major__ >= 3
-  @autoreleasepool {
-#else
-  pool = [[NSAutoreleasePool alloc] init];
-#endif
+  BEGIN_AUTORELEASE_POOL;
 
   minimumInterval = [emacsController minimumIntervalForReadSocket];
   if (lastCallDate
@@ -7266,11 +7480,7 @@ XTread_socket (struct terminal *terminal, struct input_event *hold_quit)
 	}
     }
 
-#if __clang_major__ >= 3
-  }
-#else
-  [pool release];
-#endif
+  END_AUTORELEASE_POOL;
 
   unblock_input ();
 
@@ -7496,6 +7706,8 @@ mac_file_dialog (Lisp_Object prompt, Lisp_Object dir,
       [savePanel setTitle:[NSString stringWithLispString:prompt]];
       [savePanel setPrompt:@"OK"];
       [savePanel setNameFieldLabel:@"Enter Name:"];
+      if ([savePanel respondsToSelector:@selector(setShowsTagField:)])
+	[savePanel setShowsTagField:NO];
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
       [savePanel setDirectoryURL:[NSURL fileURLWithPath:directory
@@ -7721,7 +7933,7 @@ extern int name_is_separator (const char *);
 static void update_services_menu_types (void);
 static void mac_fake_menu_bar_click (EventPriority);
 
-static NSString *localizedMenuTitleForEdit;
+static NSString *localizedMenuTitleForEdit, *localizedMenuTitleForHelp;
 
 @implementation NSMenu (Emacs)
 
@@ -8207,6 +8419,9 @@ init_menu_bar (void)
   NSMenu *appleMenu = [[NSMenu alloc] init];
   EmacsMenu *mainMenu = [[EmacsMenu alloc] init];
   NSBundle *appKitBundle = [NSBundle bundleWithIdentifier:@"com.apple.AppKit"];
+  NSString *localizedTitleForServices = /* Mac OS X 10.6 and later.  */
+    NSLocalizedStringFromTableInBundle (@"Services", @"Services",
+					appKitBundle, NULL);
 
   [NSApp setServicesMenu:servicesMenu];
 
@@ -8220,8 +8435,8 @@ init_menu_bar (void)
 	     action:@selector(preferences:) keyEquivalent:@""];
   [appleMenu addItem:[NSMenuItem separatorItem]];
   [appleMenu setSubmenu:servicesMenu
-	     forItem:[appleMenu addItemWithTitle:@"Services"
-				action:nil keyEquivalent:@""]];
+		forItem:[appleMenu addItemWithTitle:localizedTitleForServices
+					     action:nil keyEquivalent:@""]];
   [appleMenu addItem:[NSMenuItem separatorItem]];
   [appleMenu addItemWithTitle:@"Hide Emacs"
 	     action:@selector(hide:) keyEquivalent:@"h"];
@@ -8250,6 +8465,9 @@ init_menu_bar (void)
   localizedMenuTitleForEdit =
     MRC_RETAIN (NSLocalizedStringFromTableInBundle (@"Edit", @"InputManager",
 						    appKitBundle, NULL));
+  localizedMenuTitleForHelp =
+    MRC_RETAIN (NSLocalizedStringFromTableInBundle (@"Help", @"HelpManager",
+						    appKitBundle, NULL));
 }
 
 /* Fill menu bar with the items defined by WV.  If DEEP_P, consider
@@ -8259,7 +8477,7 @@ init_menu_bar (void)
 void
 mac_fill_menubar (widget_value *wv, int deep_p)
 {
-  NSMenu *newMenu, *mainMenu = [NSApp mainMenu];
+  NSMenu *newMenu, *mainMenu = [NSApp mainMenu], *helpMenu = nil;
   NSInteger index, nitems = [mainMenu numberOfItems];
   int needs_update_p = deep_p;
 
@@ -8273,6 +8491,10 @@ mac_fill_menubar (widget_value *wv, int deep_p)
 					      kCFStringEncodingMacRoman));
       NSMenu *submenu;
 
+      /* The title of the Help menu needs to be localized in order for
+	 Spotlight for Help to be installed on Mac OS X 10.5.  */
+      if ([title isEqualToString:@"Help"])
+	title = localizedMenuTitleForHelp;
       if (!needs_update_p)
 	{
 	  if (index >= nitems)
@@ -8292,6 +8514,8 @@ mac_fill_menubar (widget_value *wv, int deep_p)
 	 "Edit" menu, we have to localize the menu title.  */
       if ([title isEqualToString:@"Edit"])
 	title = localizedMenuTitleForEdit;
+      else if (title == localizedMenuTitleForHelp)
+	helpMenu = submenu;
 
       [newMenu setSubmenu:submenu
 		  forItem:[newMenu addItemWithTitle:title action:nil
@@ -8315,6 +8539,8 @@ mac_fill_menubar (widget_value *wv, int deep_p)
       MRC_RELEASE (appleMenuItem);
 
       [NSApp setMainMenu:newMenu];
+      if (helpMenu && [NSApp respondsToSelector:@selector(setHelpMenu:)])
+	[NSApp setHelpMenu:helpMenu];
     }
 
   MRC_RELEASE (newMenu);
@@ -9825,7 +10051,9 @@ mac_appkit_do_applescript (Lisp_Object script, Lisp_Object *result)
   transform = [NSAffineTransform transform];
   [transform scaleBy:scaleFactor];
   [transform translateXBy:(- NSMinX (rect)) yBy:(- NSMinY (rect))];
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
   if (!(floor (NSAppKitVersionNumber) <= NSAppKitVersionNumber10_5))
+#endif
     {
       [NSGraphicsContext saveGraphicsState];
       [NSGraphicsContext setCurrentContext:gcontext];
@@ -9843,6 +10071,7 @@ mac_appkit_do_applescript (Lisp_Object script, Lisp_Object *result)
       [self displayRectIgnoringOpacity:rect inContext:gcontext];
       [NSGraphicsContext restoreGraphicsState];
     }
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
   else
     {
       NSRect bounds = [self bounds];
@@ -9895,6 +10124,7 @@ mac_appkit_do_applescript (Lisp_Object script, Lisp_Object *result)
       MRC_RELEASE (rep);
       [NSGraphicsContext restoreGraphicsState];
     }
+#endif
   CGContextRelease (context);
 
   return ximg;
@@ -9948,46 +10178,101 @@ mac_appkit_do_applescript (Lisp_Object script, Lisp_Object *result)
 
       @try
 	{
-	  DOMSVGRect *boundingBox =
-	    [mainFrame valueForKeyPath:@"DOMDocument.rootElement.BBox"];
 	  id val;
 	  NSNumber *unitType, *num;
 	  enum {
 	    SVG_LENGTHTYPE_PERCENTAGE = 2
 	  };
 
-	  val = [mainFrame
-		  valueForKeyPath:@"DOMDocument.rootElement.width.baseVal"];
-	  unitType = [val valueForKey:@"unitType"];
-	  if ([unitType intValue] == SVG_LENGTHTYPE_PERCENTAGE)
+	  if (NSClassFromString (@"DOMSVGDocument"))
 	    {
-	      frameRect.size.width =
-		roundf ([boundingBox x] + [boundingBox width]);
-	      num = [val valueForKey:@"valueInSpecifiedUnits"];
-	      width = lround (frameRect.size.width * [num doubleValue] / 100);
-	    }
-	  else
-	    {
-	      num = [val valueForKey:@"value"];
-	      width = lround ([num doubleValue]);
-	      frameRect.size.width = width;
-	    }
+	      /* SVG DOM Objective-C bindings is available.  */
+	      DOMSVGRect *boundingBox =
+		[mainFrame valueForKeyPath:@"DOMDocument.rootElement.BBox"];
 
-	  val = [mainFrame
+	      val =
+		[mainFrame
+		  valueForKeyPath:@"DOMDocument.rootElement.width.baseVal"];
+	      unitType = [val valueForKey:@"unitType"];
+	      if ([unitType intValue] == SVG_LENGTHTYPE_PERCENTAGE)
+		{
+		  frameRect.size.width =
+		    roundf ([boundingBox x] + [boundingBox width]);
+		  num = [val valueForKey:@"valueInSpecifiedUnits"];
+		  width = lround (frameRect.size.width
+				  * [num doubleValue] / 100);
+		}
+	      else
+		{
+		  num = [val valueForKey:@"value"];
+		  width = lround ([num doubleValue]);
+		  frameRect.size.width = width;
+		}
+
+	      val =
+		[mainFrame
 		  valueForKeyPath:@"DOMDocument.rootElement.height.baseVal"];
-	  unitType = [val valueForKey:@"unitType"];
-	  if ([unitType intValue] == SVG_LENGTHTYPE_PERCENTAGE)
-	    {
-	      frameRect.size.height =
-		roundf ([boundingBox y] + [boundingBox height]);
-	      num = [val valueForKey:@"valueInSpecifiedUnits"];
-	      height = lround (frameRect.size.height * [num doubleValue] / 100);
+	      unitType = [val valueForKey:@"unitType"];
+	      if ([unitType intValue] == SVG_LENGTHTYPE_PERCENTAGE)
+		{
+		  frameRect.size.height =
+		    roundf ([boundingBox y] + [boundingBox height]);
+		  num = [val valueForKey:@"valueInSpecifiedUnits"];
+		  height = lround (frameRect.size.height
+				   * [num doubleValue] / 100);
+		}
+	      else
+		{
+		  num = [val valueForKey:@"value"];
+		  height = lround ([num doubleValue]);
+		  frameRect.size.height = height;
+		}
 	    }
 	  else
 	    {
-	      num = [val valueForKey:@"value"];
-	      height = lround ([num doubleValue]);
-	      frameRect.size.height = height;
+	      /* SVG DOM Objective-C bindings is not available.  Use
+		 JavaScript bindings instead.  */
+	      WebScriptObject *rootElement, *boundingBox;
+
+	      rootElement = [[webView windowScriptObject]
+			      valueForKeyPath:@"document.rootElement"];
+	      boundingBox = [rootElement callWebScriptMethod:@"getBBox"
+					       withArguments:[NSArray array]];
+	      val = [rootElement valueForKeyPath:@"width.baseVal"];
+	      unitType = [val valueForKey:@"unitType"];
+	      if ([unitType intValue] == SVG_LENGTHTYPE_PERCENTAGE)
+		{
+		  frameRect.size.width =
+		    round ([[boundingBox valueForKey:@"x"] doubleValue]
+			   + [[boundingBox valueForKey:@"width"] doubleValue]);
+		  num = [val valueForKey:@"valueInSpecifiedUnits"];
+		  width = lround (frameRect.size.width
+				  * [num doubleValue] / 100);
+		}
+	      else
+		{
+		  num = [val valueForKey:@"value"];
+		  width = lround ([num doubleValue]);
+		  frameRect.size.width = width;
+		}
+
+	      val = [rootElement valueForKeyPath:@"height.baseVal"];
+	      unitType = [val valueForKey:@"unitType"];
+	      if ([unitType intValue] == SVG_LENGTHTYPE_PERCENTAGE)
+		{
+		  frameRect.size.height =
+		    round ([[boundingBox valueForKey:@"y"] doubleValue]
+			   + [[boundingBox valueForKey:@"height"] doubleValue]);
+		  num = [val valueForKey:@"valueInSpecifiedUnits"];
+		  height = lround (frameRect.size.height
+				   * [num doubleValue] / 100);
+		}
+	      else
+		{
+		  num = [val valueForKey:@"value"];
+		  height = lround ([num doubleValue]);
+		  frameRect.size.height = height;
+		}
 	    }
 	}
       @catch (NSException *exception)
@@ -10109,6 +10394,671 @@ mac_svg_load_image (struct frame *f, struct image *img, unsigned char *contents,
   MRC_RELEASE (loader);
 
   return result;
+}
+
+
+/***********************************************************************
+			Document rasterization
+***********************************************************************/
+
+static NSMutableDictionary *documentRasterizerCache;
+static NSDate *documentRasterizerCacheOldestTimestamp;
+#define DOCUMENT_RASTERIZER_CACHE_DURATION 60.0
+
+@implementation EmacsPDFDocument
+
+/* Like -[PDFDocument initWithURL:], but suppress warnings if not
+   loading a PDF file.  */
+
+- (id)initWithURL:(NSURL *)url
+{
+  /* On Mac OS X 10.4, -[PDFDocument init] calls -[PDFDocument
+     initWithURL:] with argument nil.  */
+  if (url)
+    {
+      NSFileHandle *fileHandle;
+      NSData *data;
+
+      if ([NSFileHandle
+	    respondsToSelector:@selector(fileHandleForReadingFromURL:error:)])
+	fileHandle = [NSFileHandle fileHandleForReadingFromURL:url error:NULL];
+      else if ([url isFileURL])
+	fileHandle = [NSFileHandle fileHandleForReadingAtPath:[url path]];
+      else
+	fileHandle = nil;
+      data = [fileHandle readDataOfLength:5];
+
+      if ([data length] < 5 || memcmp ([data bytes], "%PDF-", 5) != 0)
+	{
+	  self = [super init];
+	  MRC_RELEASE (self);
+	  self = nil;
+
+	  return self;
+	}
+    }
+
+  self = [super initWithURL:url];
+
+  return self;
+}
+
+/* Like -[PDFDocument initWithData:], but suppress warnings if not
+   loading a PDF data.  */
+
+- (id)initWithData:(NSData *)data
+{
+  if ([data length] < 5 || memcmp ([data bytes], "%PDF-", 5) != 0)
+    {
+      self = [super init];
+      MRC_RELEASE (self);
+      self = nil;
+
+      return self;
+    }
+
+  self = [super initWithData:data];
+
+  return self;
+}
+
++ (NSArray *)supportedTypes
+{
+  return [NSArray arrayWithObject:((__bridge NSString *) kUTTypePDF)];
+}
+
+- (NSSize)integralSizeOfPageAtIndex:(NSUInteger)index
+{
+  PDFPage *page = [self pageAtIndex:index];
+  NSRect bounds = [page boundsForBox:kPDFDisplayBoxTrimBox];
+  int rotation = [page rotation];
+
+  if (rotation == 0 || rotation == 180)
+    return NSMakeSize (ceil (NSWidth (bounds)), ceil (NSHeight (bounds)));
+  else
+    return NSMakeSize (ceil (NSHeight (bounds)), ceil (NSWidth (bounds)));
+}
+
+- (CGColorRef)copyBackgroundCGColorOfPageAtIndex:(NSUInteger)index;
+{
+  return NULL;
+}
+
+- (NSDictionary *)documentAttributesOfPageAtIndex:(NSUInteger)index
+{
+  return [self documentAttributes];
+}
+
+- (void)drawPageAtIndex:(NSUInteger)index inRect:(NSRect)rect
+	      inContext:(CGContextRef)ctx;
+{
+  PDFPage *page = [self pageAtIndex:index];
+  NSRect bounds = [page boundsForBox:kPDFDisplayBoxTrimBox];
+  int rotation = [page rotation];
+  NSAffineTransform *transform = [NSAffineTransform transform];
+  CGFloat width, height;
+  NSGraphicsContext *gcontext;
+
+  if (rotation == 0 || rotation == 180)
+    width = ceil (NSWidth (bounds)), height = ceil (NSHeight (bounds));
+  else
+    width = ceil (NSHeight (bounds)), height = ceil (NSWidth (bounds));
+
+  gcontext = [NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:NO];
+  [NSGraphicsContext saveGraphicsState];
+  [NSGraphicsContext setCurrentContext:gcontext];
+  [transform translateXBy:(NSMinX (rect)) yBy:(NSMinY (rect))];
+  [transform scaleXBy:(NSWidth (rect) / width) yBy:(NSHeight (rect) / height)];
+  [transform concat];
+  [page drawWithBox:kPDFDisplayBoxTrimBox];
+  [NSGraphicsContext restoreGraphicsState];
+}
+
+@end				// EmacsPDFDocument
+
+@implementation EmacsDocumentRasterizer
+- (id)initWithAttributedString:(NSAttributedString *)anAttributedString
+	    documentAttributes:(NSDictionary *)docAttributes
+{
+  NSLayoutManager *layoutManager;
+  NSTextContainer *textContainer;
+  int viewMode;
+  NSSize containerSize;
+  NSRange glyphRange;
+
+  self = [super init];
+
+  if (self == nil)
+    return nil;
+
+  textStorage = [[NSTextStorage alloc]
+		  initWithAttributedString:anAttributedString];
+  layoutManager = [[NSLayoutManager alloc] init];
+  textContainer = [[NSTextContainer alloc] init];
+
+  [layoutManager setUsesScreenFonts:NO];
+
+  [layoutManager addTextContainer:textContainer];
+  MRC_RELEASE (textContainer);
+  [textStorage addLayoutManager:layoutManager];
+  MRC_RELEASE (layoutManager);
+
+  if (!(textStorage && layoutManager && textContainer))
+    {
+      MRC_RELEASE (self);
+      self = nil;
+
+      return self;
+    }
+
+  viewMode = [[docAttributes objectForKey:NSViewModeDocumentAttribute]
+	       intValue];
+  if (viewMode == 0)
+    [textContainer setLineFragmentPadding:0];
+  else
+    {
+      /* page layout */
+      NSSize pageSize =
+	[[docAttributes objectForKey:NSPaperSizeDocumentAttribute] sizeValue];
+      NSString * __unsafe_unretained marginAttributes[4] = {
+	NSLeftMarginDocumentAttribute, NSRightMarginDocumentAttribute,
+	NSTopMarginDocumentAttribute, NSBottomMarginDocumentAttribute
+      };
+      NSNumber * __unsafe_unretained marginValues[4];
+      int i;
+
+      for (i = 0; i < 4; i++)
+	marginValues[i] = [docAttributes objectForKey:marginAttributes[i]];
+      for (i = 0; i < 2; i++)
+	if (marginValues[i])
+	  pageSize.width -= [marginValues[i] doubleValue];
+      for (; i < 4; i++)
+	if (marginValues[i])
+	  pageSize.height -= [marginValues[i] doubleValue];
+
+      pageSize.width = ceil (pageSize.width);
+      pageSize.height = ceil (pageSize.height);
+      [textContainer setContainerSize:pageSize];
+
+      [layoutManager setDelegate:self];
+    }
+
+  /* Fully lay out.  */
+  glyphRange =
+    [layoutManager
+      glyphRangeForCharacterRange:(NSMakeRange (0, [textStorage length]))
+	     actualCharacterRange:NULL];
+  if (NSMaxRange (glyphRange) == 0)
+    {
+      MRC_RELEASE (self);
+      self = nil;
+
+      return self;
+    }
+  (void) [layoutManager
+	   textContainerForGlyphAtIndex:(NSMaxRange (glyphRange) - 1)
+			 effectiveRange:NULL];
+
+  if (viewMode == 0)
+    {
+      NSRect rect = [layoutManager usedRectForTextContainer:textContainer];
+      NSSize containerSize = NSMakeSize (ceil (NSMaxX (rect)),
+					 ceil (NSMaxY (rect)));
+
+      [textContainer setContainerSize:containerSize];
+    }
+
+  documentAttributes = MRC_RETAIN (docAttributes);
+
+  return self;
+}
+
+- (id)initWithURL:(NSURL *)url
+{
+  NSAttributedString *attrString;
+  NSDictionary *docAttributes;
+
+  attrString = [[NSAttributedString alloc]
+		 initWithURL:url options:nil
+		 documentAttributes:&docAttributes error:NULL];
+  if (attrString == nil)
+    {
+      self = [self init];
+      MRC_RELEASE (self);
+      self = nil;
+
+      return self;
+    }
+
+  self = [self initWithAttributedString:attrString
+		     documentAttributes:docAttributes];
+  MRC_RELEASE (attrString);
+
+  return self;
+}
+
+- (id)initWithData:(NSData *)data
+{
+  NSAttributedString *attrString;
+  NSDictionary *docAttributes;
+
+  attrString = [[NSAttributedString alloc]
+		 initWithData:data options:nil
+		 documentAttributes:&docAttributes error:NULL];
+  if (attrString == nil)
+    {
+      self = [self init];
+      MRC_RELEASE (self);
+      self = nil;
+
+      return self;
+    }
+
+  self = [self initWithAttributedString:attrString
+		     documentAttributes:docAttributes];
+  MRC_RELEASE (attrString);
+
+  return self;
+}
+
+#if !USE_ARC
+- (void)dealloc
+{
+  [textStorage release];
+  [documentAttributes release];
+  [super dealloc];
+}
+#endif
+
+- (NSLayoutManager *)layoutManager
+{
+  return [[textStorage layoutManagers] objectAtIndex:0];
+}
+
+- (NSUInteger)pageCount
+{
+  NSLayoutManager *layoutManager = [self layoutManager];
+
+  return [[layoutManager textContainers] count];
+}
+
++ (NSArray *)supportedTypes
+{
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+  if ([NSAttributedString respondsToSelector:@selector(textTypes)])
+#endif
+    return [NSAttributedString textTypes];
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+  else
+#endif
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050 || MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+    {
+      NSArray *textFileTypes = [NSAttributedString textFileTypes];
+      NSMutableArray *identifiers = [NSMutableArray
+				      arrayWithCapacity:[textFileTypes count]];
+      NSEnumerator *enumerator = [textFileTypes objectEnumerator];
+      NSString *textFileType;
+
+      while ((textFileType = [enumerator nextObject]) != nil)
+	{
+	  OSType hfsTypeCode = NSHFSTypeCodeFromFileType (textFileType);
+	  CFStringRef identifier;
+
+	  if (hfsTypeCode)
+	    {
+	      CFStringRef osTypeString = UTCreateStringForOSType (hfsTypeCode);
+
+	      if (osTypeString)
+		{
+		  identifier =
+		    UTTypeCreatePreferredIdentifierForTag (kUTTagClassOSType,
+							   osTypeString, NULL);
+		  CFRelease (osTypeString);
+		}
+	    }
+	  else
+	    identifier =
+	      UTTypeCreatePreferredIdentifierForTag (kUTTagClassFilenameExtension,
+						     ((__bridge CFStringRef)
+						      textFileType), NULL);
+	  if (identifier)
+	    {
+	      NSString *string = (__bridge NSString *) identifier;
+
+	      if (![identifiers containsObject:string])
+		[identifiers addObject:string];
+
+	      CFRelease (identifier);
+	    }
+	}
+
+      return identifiers;
+    }
+#endif
+}
+
+- (NSSize)integralSizeOfPageAtIndex:(NSUInteger)index;
+{
+  NSLayoutManager *layoutManager = [self layoutManager];
+  NSTextContainer *textContainer =
+    [[layoutManager textContainers] objectAtIndex:index];
+
+  return [textContainer containerSize];
+}
+
+- (CGColorRef)copyBackgroundCGColorOfPageAtIndex:(NSUInteger)index;
+{
+  NSColor *backgroundColor = [documentAttributes
+			       objectForKey:NSBackgroundColorDocumentAttribute];
+
+  /* `backgroundColor' might be nil, but that's OK.  */
+  return [backgroundColor copyCGColor];
+}
+
+- (NSDictionary *)documentAttributesOfPageAtIndex:(NSUInteger)index
+{
+  return documentAttributes;
+}
+
+- (void)drawPageAtIndex:(NSUInteger)index inRect:(NSRect)rect
+	      inContext:(CGContextRef)ctx;
+{
+  NSLayoutManager *layoutManager = [self layoutManager];
+  NSTextContainer *textContainer =
+    [[layoutManager textContainers] objectAtIndex:index];
+  NSSize containerSize = [textContainer containerSize];
+  NSRange glyphRange = [layoutManager glyphRangeForTextContainer:textContainer];
+  NSAffineTransform *transform = [NSAffineTransform transform];
+  NSGraphicsContext *gcontext =
+    [NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:YES];
+
+  [NSGraphicsContext saveGraphicsState];
+  [NSGraphicsContext setCurrentContext:gcontext];
+  [transform translateXBy:(NSMinX (rect)) yBy:(NSMaxY (rect))];
+  [transform scaleXBy:(NSWidth (rect) / containerSize.width)
+		  yBy:(- NSHeight (rect) / containerSize.height)];
+  [transform concat];
+  [layoutManager drawBackgroundForGlyphRange:glyphRange atPoint:NSZeroPoint];
+  [layoutManager drawGlyphsForGlyphRange:glyphRange atPoint:NSZeroPoint];
+  [NSGraphicsContext restoreGraphicsState];
+}
+
+- (void)layoutManager:(NSLayoutManager *)aLayoutManager
+didCompleteLayoutForTextContainer:(NSTextContainer *)aTextContainer
+		atEnd:(BOOL)flag
+{
+  if (aTextContainer == nil)
+    {
+      NSLayoutManager *layoutManager = [self layoutManager];
+      NSTextContainer *firstContainer =
+	[[layoutManager textContainers] objectAtIndex:0];
+      NSSize containerSize = [firstContainer containerSize];
+      NSTextContainer *textContainer = [[NSTextContainer alloc]
+					 initWithContainerSize:containerSize];
+
+      [aLayoutManager addTextContainer:textContainer];
+      MRC_RELEASE (textContainer);
+    }
+}
+
+@end				// EmacsDocumentRasterizer
+
+static NSArray *
+document_rasterizer_get_classes (void)
+{
+#if __LP64__ && MAC_OS_X_VERSION_MAX_ALLOWED < 1060
+  /* If we load classes before dumping on Mac OS X 10.5 x86_64, then
+     the dumped executable fails to load on startup.  */
+  if (noninteractive)
+    return nil;
+#endif
+  return [NSArray arrayWithObjects:[EmacsPDFDocument class],
+		  [EmacsDocumentRasterizer class],
+		  nil];
+}
+
+CFArrayRef
+mac_document_copy_type_identifiers (void)
+{
+  NSArray *classes = document_rasterizer_get_classes ();
+  NSEnumerator *enumerator = [classes objectEnumerator];
+  Class <EmacsDocumentRasterizer> class;
+  NSMutableArray *identifiers = [NSMutableArray array];
+
+  while ((class = [enumerator nextObject]) != Nil)
+    [identifiers addObjectsFromArray:[class supportedTypes]];
+
+  return CF_BRIDGING_RETAIN (identifiers);
+}
+
+static void
+document_cache_evict (void)
+{
+  NSDate *currentDate, *oldestTimestamp;
+  NSArray *keys;
+  NSEnumerator *enumerator;
+  id key;
+
+  if ([documentRasterizerCacheOldestTimestamp timeIntervalSinceNow]
+      > - DOCUMENT_RASTERIZER_CACHE_DURATION)
+    return;
+
+  currentDate = [NSDate date];
+  oldestTimestamp = nil;
+  keys = [documentRasterizerCache allKeys];
+  enumerator = [keys objectEnumerator];
+  while ((key = [enumerator nextObject]) != nil)
+    {
+      NSDictionary *value = [documentRasterizerCache objectForKey:key];
+      NSDate *timestamp = [value objectForKey:@"timestamp"];
+
+      if ([currentDate timeIntervalSinceDate:timestamp]
+	  >= DOCUMENT_RASTERIZER_CACHE_DURATION)
+	[documentRasterizerCache removeObjectForKey:key];
+      else
+	{
+	  if (oldestTimestamp == nil)
+	    oldestTimestamp = timestamp;
+	  else
+	    oldestTimestamp = [oldestTimestamp earlierDate:timestamp];
+	}
+    }
+  MRC_RELEASE (documentRasterizerCacheOldestTimestamp);
+  documentRasterizerCacheOldestTimestamp = MRC_RETAIN (oldestTimestamp);
+}
+
+static id <EmacsDocumentRasterizer>
+document_cache_lookup (id key, NSDate *modificationDate)
+{
+  id <EmacsDocumentRasterizer> result = nil;
+
+  if (documentRasterizerCache)
+    {
+      NSDictionary *dictionary = [documentRasterizerCache objectForKey:key];
+
+      if (dictionary
+	  && (modificationDate == nil
+	      || [modificationDate
+		   isEqualToDate:[dictionary fileModificationDate]]))
+	result = [dictionary objectForKey:@"document"];
+    }
+
+  return result;
+}
+
+static void
+document_cache_set (id key, id <EmacsDocumentRasterizer> document,
+		    NSDate *modificationDate)
+{
+  NSDate *currentDate;
+  NSDictionary *value;
+
+  if (documentRasterizerCache == nil)
+    documentRasterizerCache = [[NSMutableDictionary alloc] init];
+
+  currentDate = [NSDate date];
+  value = [NSDictionary dictionaryWithObjectsAndKeys:document, @"document",
+			currentDate, @"timestamp",
+			/* The value of modificationDate might be nil,
+			   but that's OK.  */
+			modificationDate, NSFileModificationDate,
+			nil];
+  /* This might update an object containing the oldest time stamp.
+     Even in such a case, documentRasterizerCacheOldestTimestamp still
+     holds an older or equal date than the real oldest time stamp in
+     the cache.  */
+  [documentRasterizerCache setObject:value forKey:key];
+  if (documentRasterizerCacheOldestTimestamp == nil)
+    documentRasterizerCacheOldestTimestamp = MRC_RETAIN (currentDate);
+}
+
+static id <EmacsDocumentRasterizer>
+document_rasterizer_create (id url_or_data)
+{
+  BOOL isURL = [url_or_data isKindOfClass:[NSURL class]];
+  NSArray *classes = document_rasterizer_get_classes ();
+  NSEnumerator *enumerator = [classes objectEnumerator];
+  Class class;
+
+  while ((class = [enumerator nextObject]) != Nil)
+    {
+      id <EmacsDocumentRasterizer> document;
+
+      if (isURL)
+	document = [((id <EmacsDocumentRasterizer>) [class alloc])
+		     initWithURL:((NSURL *) url_or_data)];
+      else
+	document = [((id <EmacsDocumentRasterizer>) [class alloc])
+		     initWithData:((NSData *) url_or_data)];
+
+      if (document)
+	return document;
+    }
+
+  return nil;
+}
+
+EmacsDocumentRef
+mac_document_create_with_url (CFURLRef url)
+{
+  NSURL *nsurl = (__bridge NSURL *) url;
+  NSDate *modificationDate = nil;
+  id <EmacsDocumentRasterizer> document = nil;
+
+  if ([nsurl isFileURL])
+    {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+      if ([nsurl respondsToSelector:@selector(getResourceValue:forKey:error:)])
+#endif
+	{
+	  [[nsurl URLByResolvingSymlinksInPath]
+	    getResourceValue:&modificationDate
+		      forKey:NSURLAttributeModificationDateKey
+		       error:NULL];
+	}
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+      else
+#endif
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1060 || MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+	{
+	  NSString *path = [nsurl path];
+	  NSFileManager *fileManager = [NSFileManager defaultManager];
+	  NSDictionary *attributes;
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+	  if ([fileManager
+		respondsToSelector:@selector(attributesOfItemAtPath:error:)])
+#endif
+	    {
+	      path = [path stringByResolvingSymlinksInPath];
+	      attributes = [fileManager attributesOfItemAtPath:path error:NULL];
+	    }
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+	  else
+#endif
+#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050 || MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+	    {
+	      attributes = [fileManager fileAttributesAtPath:path
+						traverseLink:YES];
+	    }
+#endif
+	  modificationDate = [attributes fileModificationDate];
+	}
+#endif
+    }
+
+  if (modificationDate)
+    {
+      document = document_cache_lookup (nsurl, modificationDate);
+      if (document == nil)
+	document = MRC_AUTORELEASE (document_rasterizer_create (nsurl));
+      if (document)
+	document_cache_set (nsurl, document, modificationDate);
+    }
+
+  document_cache_evict ();
+
+  return CF_BRIDGING_RETAIN (document);
+}
+
+EmacsDocumentRef
+mac_document_create_with_data (CFDataRef data)
+{
+  NSData *nsdata = (__bridge NSData *) data;
+  id <EmacsDocumentRasterizer> document = document_cache_lookup (nsdata, nil);
+
+  if (document == nil)
+    document = MRC_AUTORELEASE (document_rasterizer_create (nsdata));
+  if (document)
+    document_cache_set (nsdata, document, nil);
+
+  document_cache_evict ();
+
+  return CF_BRIDGING_RETAIN (document);
+}
+
+size_t
+mac_document_get_page_count (EmacsDocumentRef document)
+{
+  id <EmacsDocumentRasterizer> documentRasterizer =
+    (__bridge id <EmacsDocumentRasterizer>) document;
+
+  return [documentRasterizer pageCount];
+}
+
+void
+mac_document_copy_page_info (EmacsDocumentRef document, size_t index,
+			     CGSize *size, CGColorRef *background,
+			     CFDictionaryRef *attributes)
+{
+  id <EmacsDocumentRasterizer> documentRasterizer =
+    (__bridge id <EmacsDocumentRasterizer>) document;
+
+  if (size)
+    *size = NSSizeToCGSize ([documentRasterizer
+			      integralSizeOfPageAtIndex:index]);
+  if (background)
+    *background = [documentRasterizer copyBackgroundCGColorOfPageAtIndex:index];
+  if (attributes)
+    *attributes = CF_BRIDGING_RETAIN ([documentRasterizer
+					documentAttributesOfPageAtIndex:index]);
+}
+
+void
+mac_document_draw_page (CGContextRef c, CGRect rect, EmacsDocumentRef document,
+			size_t index)
+{
+  id <EmacsDocumentRasterizer> documentRasterizer =
+    (__bridge id <EmacsDocumentRasterizer>) document;
+
+  [documentRasterizer drawPageAtIndex:index inRect:(NSRectFromCGRect (rect))
+			    inContext:c];
 }
 
 
@@ -10704,6 +11654,10 @@ extern Lisp_Object Qpage_curl, Qpage_curl_with_shadow, Qripple, Qswipe;
     }
   [layerHostingView setLayer:rootLayer];
   [layerHostingView setWantsLayer:YES];
+  /* OS X 10.9 needs this.  */
+  if ([layerHostingView
+	respondsToSelector:@selector(setLayerUsesCoreImageFilters:)])
+    [layerHostingView setLayerUsesCoreImageFilters:YES];
 
   [overlayView addSubview:layerHostingView];
 }
@@ -11856,7 +12810,7 @@ mac_font_create_preferred_family_for_attributes (CFDictionaryRef attributes)
     return mac_ctfont_create_preferred_family_for_attributes (attributes);
 #endif
   {
-    NSString *result = nil;
+    CFStringRef result = NULL;
     CFStringRef charsetString =
       CFDictionaryGetValue (attributes,
 			    MAC_FONT_CHARACTER_SET_STRING_ATTRIBUTE);
@@ -11865,25 +12819,41 @@ mac_font_create_preferred_family_for_attributes (CFDictionaryRef attributes)
     if (charsetString
 	&& (length = CFStringGetLength (charsetString)) > 0)
       {
-	NSMutableAttributedString *attrString =
-	  [[[NSMutableAttributedString alloc]
-	     initWithString:((NSString *) charsetString)] autorelease];
-	NSRange attrStringRange = NSMakeRange(0, [attrString length]), range;
-	NSFont *font;
+	CFArrayRef languages
+	  = CFDictionaryGetValue (attributes, MAC_FONT_LANGUAGES_ATTRIBUTE);
 
-	[attrString fixFontAttributeInRange:attrStringRange];
-	font = [attrString attribute:NSFontAttributeName atIndex:0
-			   longestEffectiveRange:&range
-			   inRange:attrStringRange];
-	if (NSEqualRanges (range, attrStringRange))
+	if (languages && CFArrayGetCount (languages) > 0)
 	  {
-	    result = [font familyName];
-	    if ([result isEqualToString:@"LastResort"])
-	      result = nil;
+	    CFCharacterSetRef charset =
+	      CFDictionaryGetValue (attributes,
+				    MAC_FONT_CHARACTER_SET_ATTRIBUTE);
+
+	    result = mac_font_copy_default_name_for_charset_and_languages (charset, languages);
+	  }
+	if (result == NULL)
+	  {
+	    NSMutableAttributedString *attrString =
+	      [[[NSMutableAttributedString alloc]
+		 initWithString:((NSString *) charsetString)] autorelease];
+	    NSRange attrStringRange, range;
+	    NSFont *font;
+
+	    attrStringRange = NSMakeRange(0, [attrString length]);
+	    [attrString fixFontAttributeInRange:attrStringRange];
+	    font = [attrString attribute:NSFontAttributeName atIndex:0
+			       longestEffectiveRange:&range
+				 inRange:attrStringRange];
+	    if (NSEqualRanges (range, attrStringRange))
+	      {
+		NSString *familyName = [font familyName];
+
+		if (![familyName isEqualToString:@"LastResort"])
+		  result = CF_BRIDGING_RETAIN (familyName);
+	      }
 	  }
       }
 
-    return CF_BRIDGING_RETAIN (result);
+    return result;
   }
 }
 

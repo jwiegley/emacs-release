@@ -472,8 +472,7 @@ extern void mac_free_gc (GC);
 extern void mac_set_foreground (GC, unsigned long);
 extern void mac_set_background (GC, unsigned long);
 extern void mac_draw_line_to_pixmap (Pixmap, GC, int, int, int, int);
-extern void mac_clear_area (struct frame *, int, int,
-			    unsigned int, unsigned int);
+extern void mac_clear_area (struct frame *, int, int, int, int);
 extern int mac_quit_char_key_p (UInt32, UInt32);
 #define x_display_pixel_height(dpyinfo)	((dpyinfo)->height)
 #define x_display_pixel_width(dpyinfo)	((dpyinfo)->width)
@@ -553,10 +552,12 @@ extern int mac_service_provider_registered_p (void);
 
 /* Defined in macappkit.m.  */
 
-extern Lisp_Object mac_nsvalue_to_lisp (CFTypeRef);
+extern Lisp_Object mac_nsobject_to_lisp (CFTypeRef);
 extern void mac_alert_sound_play (void);
 extern double mac_appkit_version (void);
 extern double mac_system_uptime (void);
+extern Boolean mac_is_current_process_frontmost (void);
+extern void mac_bring_current_process_to_front (Boolean);
 extern OSStatus install_application_handler (void);
 extern void mac_set_frame_window_title (struct frame *, CFStringRef);
 extern void mac_set_frame_window_modified (struct frame *, Boolean);
@@ -567,7 +568,7 @@ extern void mac_send_frame_window_behind (struct frame *);
 extern void mac_hide_frame_window (struct frame *);
 extern void mac_show_frame_window (struct frame *);
 extern OSStatus mac_collapse_frame_window (struct frame *, Boolean);
-extern Boolean mac_is_frame_window_front (struct frame *);
+extern Boolean mac_is_frame_window_frontmost (struct frame *);
 extern void mac_activate_frame_window (struct frame *);
 extern OSStatus mac_move_frame_window_structure (struct frame *,
 						 short, short);
@@ -653,7 +654,14 @@ extern int mac_tracking_area_works_with_cursor_rects_invalidation_p (void);
 extern void mac_invalidate_frame_cursor_rects (struct frame *f);
 extern void mac_mask_rounded_bottom_corners (struct frame *, CGRect, Boolean);
 extern int mac_webkit_supports_svg_p (void);
-
+extern CFArrayRef mac_document_copy_type_identifiers (void);
+extern EmacsDocumentRef mac_document_create_with_url (CFURLRef);
+extern EmacsDocumentRef mac_document_create_with_data (CFDataRef);
+extern size_t mac_document_get_page_count (EmacsDocumentRef);
+extern void mac_document_copy_page_info (EmacsDocumentRef, size_t, CGSize *,
+					 CGColorRef *, CFDictionaryRef *);
+extern void mac_document_draw_page (CGContextRef, CGRect, EmacsDocumentRef,
+				    size_t);
 extern CFTypeRef mac_sound_create (Lisp_Object, Lisp_Object);
 extern void mac_sound_play (CFTypeRef, Lisp_Object, Lisp_Object);
 

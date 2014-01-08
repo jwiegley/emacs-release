@@ -702,6 +702,9 @@ static Lisp_Object QCcrop, QCrotation;
 /* Other symbols.  */
 
 static Lisp_Object Qcount, Qextension_data, Qdelay;
+#ifdef HAVE_MACGUI
+static Lisp_Object Qdocument_attributes;
+#endif
 static Lisp_Object Qlaplace, Qemboss, Qedge_detection, Qheuristic;
 
 /* Forward function prototypes.  */
@@ -2492,16 +2495,20 @@ mac_cg_image_source_find_2x_index (CGImageSourceRef source)
 static bool
 image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
 {
-  CFDictionaryRef options, src_props = NULL, props = NULL;
+  Lisp_Object specified_file, specified_data, metadata = Qnil;
+  CFURLRef url = NULL;
+  CFDataRef data = NULL;
+  CFDictionaryRef options;
   CFStringRef keys[2];
   CFTypeRef values[2];
   CFIndex num_values;
-  Lisp_Object specified_file, specified_data;
   CGImageSourceRef source = NULL;
-  size_t count;
-  CGImageRef image = NULL;
-  int loop_count = -1;
-  double delay_time = -1.0;
+  CFTypeRef obj = NULL;
+  size_t page_index;
+  /* If non-NULL and the background is not specified by the image
+     spec, then the background is filled with the specified color on
+     top of the frame background, in case the former isn't opaque.  */
+  CGColorRef default_bg;
   int width, height, scale_factor;
   XImagePtr ximg = NULL, mask_img;
   CGContextRef context;
@@ -2511,6 +2518,35 @@ image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
   dispatch_group_t group;
 #endif
+
+  /* Open the file.  */
+  specified_file = image_spec_value (img->spec, QCfile, NULL);
+  specified_data = image_spec_value (img->spec, QCdata, NULL);
+
+  if (NILP (specified_data))
+    {
+      Lisp_Object file;
+
+      file = x_find_image_file (specified_file);
+      if (!STRINGP (file))
+	{
+	  image_error ("Cannot find image file `%s'", specified_file, Qnil);
+	  return 0;
+	}
+      file = mac_preprocess_image_for_2x_file (f, img, file);
+      url = CFURLCreateFromFileSystemRepresentation (NULL, SDATA (file),
+						     SBYTES (file), false);
+    }
+  else
+    {
+      if (!STRINGP (specified_data))
+	{
+	  image_error ("Invalid image data `%s'", specified_data, Qnil);
+	  return 0;
+	}
+      data = CFDataCreate (NULL, SDATA (specified_data),
+			   SBYTES (specified_data));
+    }
 
   keys[0] = kCGImageSourceShouldCache;
   values[0] = (CFTypeRef) kCFBooleanFalse;
@@ -2530,60 +2566,22 @@ image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
 				(const void **) values, num_values,
 				&kCFTypeDictionaryKeyCallBacks,
 				&kCFTypeDictionaryValueCallBacks);
-  if (options == NULL)
+  if (options)
     {
-      image_error ("Error creating options for image `%s'", img->spec, Qnil);
-      return 0;
-    }
-
-  /* Open the file.  */
-  specified_file = image_spec_value (img->spec, QCfile, NULL);
-  specified_data = image_spec_value (img->spec, QCdata, NULL);
-
-  if (NILP (specified_data))
-    {
-      Lisp_Object file;
-      CFURLRef url;
-
-      file = x_find_image_file (specified_file);
-      if (!STRINGP (file))
-	{
-	  CFRelease (options);
-	  image_error ("Cannot find image file `%s'", specified_file, Qnil);
-	  return 0;
-	}
-      file = mac_preprocess_image_for_2x_file (f, img, file);
-      url = CFURLCreateFromFileSystemRepresentation (NULL, SDATA (file),
-						     SBYTES (file), false);
       if (url)
-	{
-	  source = CGImageSourceCreateWithURL (url, options);
-	  CFRelease (url);
-	}
+	source = CGImageSourceCreateWithURL (url, options);
+      else if (data)
+	source = CGImageSourceCreateWithData (data, options);
+      CFRelease (options);
     }
-  else
-    {
-      CFDataRef data;
-
-      if (!STRINGP (specified_data))
-	{
-	  CFRelease (options);
-	  image_error ("Invalid image data `%s'", specified_data, Qnil);
-	  return 0;
-	}
-      data = CFDataCreate (NULL, SDATA (specified_data),
-			   SBYTES (specified_data));
-      if (data)
-	{
-	  source = CGImageSourceCreateWithData (data, options);
-	  CFRelease (data);
-	}
-    }
-  CFRelease (options);
 
   if (source)
     {
       CFStringRef real_type;
+      CFDictionaryRef src_props = NULL, props = NULL;
+      size_t count;
+      int loop_count = -1;
+      double delay_time = -1.0;
 
       if (type == NULL
 	  || (real_type = CGImageSourceGetType (source),
@@ -2617,60 +2615,191 @@ image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
 	    {
 	      props = CGImageSourceCopyPropertiesAtIndex (source, ino, NULL);
 	      if (props)
-		image = CGImageSourceCreateImageAtIndex (source, ino, NULL);
+		{
+		  CGImageRef cg_image =
+		    CGImageSourceCreateImageAtIndex (source, ino, NULL);
+
+		  if (cg_image)
+		    {
+		      scale_factor = (img->target_backing_scale == 2 ? 2 : 1);
+		      width = CGImageGetWidth (cg_image) / scale_factor;
+		      height = CGImageGetHeight (cg_image) / scale_factor;
+		      obj = cg_image;
+		      default_bg = NULL;
+		    }
+		}
 	    }
 	}
-      CFRelease (source);
-    }
 
-  if (image == NULL)
-    {
+      if (obj)
+	{
+	  CFBooleanRef boolean =
+	    CFDictionaryGetValue (props, kCGImagePropertyHasAlpha);
+
+	  has_alpha_p = (boolean && CFBooleanGetValue (boolean));
+	  if (gif_p)
+	    {
+	      CFDictionaryRef dict;
+	      CFNumberRef num;
+
+	      dict = CFDictionaryGetValue (src_props,
+					   kCGImagePropertyGIFDictionary);
+	      if (dict)
+		{
+		  num = CFDictionaryGetValue (dict,
+					      kCGImagePropertyGIFLoopCount);
+		  if (num)
+		    CFNumberGetValue (num, kCFNumberIntType, &loop_count);
+		}
+
+	      dict = CFDictionaryGetValue (props,
+					   kCGImagePropertyGIFDictionary);
+	      if (dict)
+		{
+		  /* Use the unclamped delay time if available.  */
+		  num = CFDictionaryGetValue (dict,
+					      CFSTR ("UnclampedDelayTime"));
+		  if (num == NULL)
+		    num = CFDictionaryGetValue (dict,
+						kCGImagePropertyGIFDelayTime);
+		  if (num)
+		    CFNumberGetValue (num, kCFNumberDoubleType, &delay_time);
+		}
+	    }
+	}
       if (src_props)
 	CFRelease (src_props);
       if (props)
 	CFRelease (props);
+
+      if (gif_p)
+	{
+	  Lisp_Object extension_data = Qnil;
+
+	  /* Save GIF image extension data.
+	     Format is (0xff "NETSCAPE2.0" 0x00 DATA_SUB_BLOCK_FOR_LOOP_COUNT
+		        0xf9 GRAPHIC_CONTROL_EXTENSION_BLOCK).  */
+	  if (delay_time >= 0)
+	    {
+	      Lisp_Object gce = make_uninit_string (4);
+	      int centisec = delay_time * 100.0 + 0.5;
+
+	      /* Fill the delay time field.  */
+	      SSET (gce, 1, centisec & 0xff);
+	      SSET (gce, 2, (centisec >> 8) & 0xff);
+	      /* We don't know about other fields.  */
+	      SSET (gce, 0, 0);
+	      SSET (gce, 3, 0);
+	      extension_data = Fcons (make_number (0xf9),
+				      Fcons (gce,
+					     extension_data));
+	    }
+	  if (loop_count >= 0)
+	    {
+	      Lisp_Object data_sub_block = make_uninit_string (3);
+
+	      SSET (data_sub_block, 0, 0x01);
+	      SSET (data_sub_block, 1, loop_count & 0xff);
+	      SSET (data_sub_block, 2, (loop_count >> 8) & 0xff);
+	      extension_data = Fcons (make_number (0),
+				      Fcons (data_sub_block,
+					     extension_data));
+	      extension_data = Fcons (make_number (0xff),
+				      Fcons (build_string ("NETSCAPE2.0"),
+					     extension_data));
+	    }
+	  if (!NILP (extension_data))
+	    metadata = Fcons (Qextension_data,
+			      Fcons (extension_data,
+				     metadata));
+	  if (delay_time >= 0)
+	    metadata = Fcons (Qdelay,
+			      Fcons (make_float (delay_time),
+				     metadata));
+	}
+      if ((type == NULL || gif_p || tiff_p) && count > 1)
+	metadata = Fcons (Qcount,
+			  Fcons (make_number (count),
+				 metadata));
+      CFRelease (source);
+    }
+
+  if (obj == NULL && type == NULL)
+    {
+      EmacsDocumentRef document;
+
+      if (url)
+	document = mac_document_create_with_url (url);
+      else if (data)
+	document = mac_document_create_with_data (data);
+      else
+	document = NULL;
+
+      if (document)
+	{
+	  Lisp_Object image = image_spec_value (img->spec, QCindex, NULL);
+	  EMACS_INT ino = INTEGERP (image) ? XFASTINT (image) : 0;
+	  size_t count = mac_document_get_page_count (document);
+
+	  if (ino < count)
+	    {
+	      CGSize size;
+	      CFDictionaryRef attributes;
+
+	      mac_document_copy_page_info (document, ino, &size, &default_bg,
+					   &attributes);
+	      width = size.width;
+	      height = size.height;
+	      obj = document;
+	      page_index = ino;
+	      if (img->target_backing_scale == 0)
+		img->target_backing_scale = FRAME_BACKING_SCALE_FACTOR (f);
+	      scale_factor = (img->target_backing_scale == 2 ? 2 : 1);
+	      has_alpha_p = true;
+	      if (default_bg == NULL)
+		{
+		  /* Specify the clear color as the default
+		     background, which actually results in the frame
+		     background.  We prefer not to use image masks for
+		     rasterized documents because proper text
+		     smoothing requires opaque background.  */
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
+		  default_bg =
+		    CGColorRetain (CGColorGetConstantColor (kCGColorClear));
+#else
+		  CGFloat rgba[] = {0.0f, 0.0f, 0.0f, 0.0f};
+
+		  default_bg = CGColorCreate (mac_cg_color_space_rgb, rgba);
+#endif
+		}
+	      if (attributes)
+		{
+		  metadata = Fcons (Qdocument_attributes,
+				    Fcons (cfobject_to_lisp (attributes, 0, -1),
+					   Qnil));
+		  CFRelease (attributes);
+		}
+	      if (count > 1)
+		metadata = Fcons (Qcount,
+				  Fcons (make_number (count),
+					 metadata));
+	    }
+	  else
+	    CFRelease (document);
+	}
+    }
+
+  if (url)
+    CFRelease (url);
+  else if (data)
+    CFRelease (data);
+
+  if (obj == NULL)
+    {
       image_error ("Error reading image `%s'", img->spec, Qnil);
       return 0;
     }
-  else
-    {
-      CFBooleanRef boolean;
 
-      has_alpha_p =
-	(CFDictionaryGetValueIfPresent (props, kCGImagePropertyHasAlpha,
-					(const void **) &boolean)
-	 && CFBooleanGetValue (boolean));
-      if (gif_p)
-	{
-	  CFDictionaryRef dict;
-	  CFNumberRef number;
-
-	  dict = CFDictionaryGetValue (src_props,
-				       kCGImagePropertyGIFDictionary);
-	  if (dict
-	      && CFDictionaryGetValueIfPresent (dict,
-						kCGImagePropertyGIFLoopCount,
-						(const void **) &number))
-	    CFNumberGetValue (number, kCFNumberIntType, &loop_count);
-
-	  dict = CFDictionaryGetValue (props, kCGImagePropertyGIFDictionary);
-	  if (dict
-	      /* Use the unclamped delay time if available.  */
-	      && (CFDictionaryGetValueIfPresent (dict,
-						 CFSTR ("UnclampedDelayTime"),
-						 (const void **) &number)
-		  || CFDictionaryGetValueIfPresent (dict,
-						    kCGImagePropertyGIFDelayTime,
-						    (const void **) &number)))
-	    CFNumberGetValue (number, kCFNumberDoubleType, &delay_time);
-	}
-      CFRelease (src_props);
-      CFRelease (props);
-    }
-
-  scale_factor = (img->target_backing_scale == 2 ? 2 : 1);
-  width = CGImageGetWidth (image) / scale_factor;
-  height = CGImageGetHeight (image) / scale_factor;
   if (type == NULL)
     {
       Lisp_Object value;
@@ -2778,14 +2907,16 @@ image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
 
   if (!check_image_size (f, width, height))
     {
-      CGImageRelease (image);
+      CFRelease (obj);
+      CGColorRelease (default_bg);
       image_error ("Invalid image size (see `max-image-size')", Qnil, Qnil);
       return 0;
     }
 
   if (!x_create_x_image_and_pixmap (f, width, height, 0, &ximg, &img->pixmap))
     {
-      CGImageRelease (image);
+      CFRelease (obj);
+      CGColorRelease (default_bg);
       image_error ("Out of memory (%s)", img->spec, Qnil);
       return 0;
     }
@@ -2807,41 +2938,62 @@ image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
       if (!STRINGP (specified_bg)
 	  || !mac_defined_color (f, SSDATA (specified_bg), &color, 0))
 	{
-	  if (!x_create_x_image_and_pixmap (f, width, height, 1,
-					    &mask_img, &img->mask))
+	  if (default_bg == NULL)
 	    {
-	      CGContextRelease (context);
-	      CGImageRelease (image);
-	      image_error ("Out of memory (%s)", img->spec, Qnil);
-	      return 0;
-	    }
-	  CGImageRetain (image);
+	      if (!x_create_x_image_and_pixmap (f, width, height, 1,
+						&mask_img, &img->mask))
+		{
+		  CGContextRelease (context);
+		  CFRelease (obj);
+		  image_error ("Out of memory (%s)", img->spec, Qnil);
+		  return 0;
+		}
+	      CFRetain (obj);
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
-	  group = dispatch_group_create ();
-	  dispatch_group_async
-	    (group, dispatch_get_global_queue (DISPATCH_QUEUE_PRIORITY_DEFAULT,
-					       0), ^
+	      group = dispatch_group_create ();
+	      dispatch_group_async
+		(group,
+		 dispatch_get_global_queue (DISPATCH_QUEUE_PRIORITY_DEFAULT,
+					    0), ^
 #endif
-	     {
-	       CGContextRef mask_context =
-		 CGBitmapContextCreate (mask_img->data,
-					mask_img->width, mask_img->height,
-					8, mask_img->bytes_per_line,
-					NULL, kCGImageAlphaOnly);
+		 {
+		   CGContextRef mask_context =
+		     CGBitmapContextCreate (mask_img->data,
+					    mask_img->width, mask_img->height,
+					    8, mask_img->bytes_per_line,
+					    NULL, kCGImageAlphaOnly);
 
-	       CGContextClearRect (mask_context,
-				   CGRectMake (0, 0, width, height));
-	       CGContextScaleCTM (mask_context, scale_factor, scale_factor);
-	       CGContextConcatCTM (mask_context, transform);
-	       CGContextClipToRect (mask_context, clip_rectangle);
-	       CGContextDrawImage (mask_context, rectangle, image);
-	       CGContextRelease (mask_context);
-	       CGImageRelease (image);
-	     }
+		   CGContextClearRect (mask_context,
+				       CGRectMake (0, 0, width, height));
+		   CGContextScaleCTM (mask_context, scale_factor, scale_factor);
+		   CGContextConcatCTM (mask_context, transform);
+		   CGContextClipToRect (mask_context, clip_rectangle);
+		   if (CFGetTypeID (obj) == CGImageGetTypeID ())
+		     CGContextDrawImage (mask_context, rectangle,
+					 (CGImageRef) obj);
+		   else
+		     mac_document_draw_page (mask_context, rectangle,
+					     (EmacsDocumentRef) obj,
+					     page_index);
+		   CGContextRelease (mask_context);
+		   CFRelease (obj);
+		 }
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
-	     );
+		 );
 #endif
-	  rgba[0] = rgba[1] = rgba[2] = rgba[3] = 1.0f;
+	      rgba[0] = rgba[1] = rgba[2] = rgba[3] = 1.0f;
+	    }
+	  else
+	    {
+	      color.pixel = FRAME_BACKGROUND_PIXEL (f);
+	      color.red = RED16_FROM_ULONG (color.pixel);
+	      color.green = GREEN16_FROM_ULONG (color.pixel);
+	      color.blue = BLUE16_FROM_ULONG (color.pixel);
+	      rgba[0] = (CGFloat) color.red / 65535.0f;
+	      rgba[1] = (CGFloat) color.green / 65535.0f;
+	      rgba[2] = (CGFloat) color.blue / 65535.0f;
+	      rgba[3] = 1.0f;
+	    }
 	}
       else
 	{
@@ -2849,71 +3001,35 @@ image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
 	  rgba[1] = (CGFloat) color.green / 65535.0f;
 	  rgba[2] = (CGFloat) color.blue / 65535.0f;
 	  rgba[3] = 1.0f;
+	  /* Background color is specified in the image spec.
+	     Override default_bg.  */
+	  CGColorRelease (default_bg);
+	  default_bg = NULL;
 	}
       cg_color = CGColorCreate (mac_cg_color_space_rgb, rgba);
-      if (cg_color)
+      if (cg_color && (default_bg == NULL || CGColorGetAlpha (default_bg) != 1))
 	{
 	  CGContextSetFillColorWithColor (context, cg_color);
 	  CGContextFillRect (context, CGRectMake (0, 0, width, height));
-	  CGColorRelease (cg_color);
 	}
+      CGColorRelease (cg_color);
+      if (default_bg && CGColorGetAlpha (default_bg) != 0)
+	{
+	  CGContextSetFillColorWithColor (context, default_bg);
+	  CGContextFillRect (context, CGRectMake (0, 0, width, height));
+	}
+      CGColorRelease (default_bg);
     }
   CGContextScaleCTM (context, scale_factor, scale_factor);
   CGContextConcatCTM (context, transform);
   CGContextClipToRect (context, clip_rectangle);
-  CGContextDrawImage (context, rectangle, image);
+  if (CFGetTypeID (obj) == CGImageGetTypeID ())
+    CGContextDrawImage (context, rectangle, (CGImageRef) obj);
+  else
+    mac_document_draw_page (context, rectangle, (EmacsDocumentRef) obj,
+			    page_index);
   CGContextRelease (context);
-  CGImageRelease (image);
-
-  if (gif_p)
-    {
-      Lisp_Object extension_data = Qnil;
-
-      /* Save GIF image extension data.
-	 Format is (0xff "NETSCAPE2.0" 0x00 DATA_SUB_BLOCK_FOR_LOOP_COUNT
-		    0xf9 GRAPHIC_CONTROL_EXTENSION_BLOCK).  */
-      if (delay_time >= 0)
-	{
-	  Lisp_Object gce = make_uninit_string (4);
-	  int centisec = delay_time * 100.0 + 0.5;
-
-	  /* Fill the delay time field.  */
-	  SSET (gce, 1, centisec & 0xff);
-	  SSET (gce, 2, (centisec >> 8) & 0xff);
-	  /* We don't know about other fields.  */
-	  SSET (gce, 0, 0);
-	  SSET (gce, 3, 0);
-	  extension_data = Fcons (make_number (0xf9),
-				  Fcons (gce,
-					 extension_data));
-	}
-      if (loop_count >= 0)
-	{
-	  Lisp_Object data_sub_block = make_uninit_string (3);
-
-	  SSET (data_sub_block, 0, 0x01);
-	  SSET (data_sub_block, 1, loop_count & 0xff);
-	  SSET (data_sub_block, 2, (loop_count >> 8) & 0xff);
-	  extension_data = Fcons (make_number (0),
-				  Fcons (data_sub_block,
-					 extension_data));
-	  extension_data = Fcons (make_number (0xff),
-				  Fcons (build_string ("NETSCAPE2.0"),
-					 extension_data));
-	}
-      if (!NILP (extension_data))
-	img->lisp_data = Fcons (Qextension_data,
-				Fcons (extension_data,
-				       img->lisp_data));
-      if (delay_time >= 0)
-	img->lisp_data = Fcons (Qdelay,
-				Fcons (make_float (delay_time),
-				       img->lisp_data));
-    }
-  if ((type == NULL || gif_p || tiff_p) && count > 1)
-    img->lisp_data = Fcons (Qcount,
-			    Fcons (make_number (count),
-				   img->lisp_data));
+  CFRelease (obj);
 
   img->width = width;
   img->height = height;
@@ -2921,6 +3037,7 @@ image_load_image_io (struct frame *f, struct image *img, CFStringRef type)
   /* Maybe fill in the background field while we have ximg handy. */
   if (NILP (image_spec_value (img->spec, QCbackground, NULL)))
     IMAGE_BACKGROUND (img, f, ximg);
+  img->lisp_data = metadata;
 
   /* Put the image into the pixmap.  */
   x_put_x_image (f, ximg, img->pixmap, width, height);
@@ -9028,34 +9145,38 @@ is not available.  */)
   (void)
 {
   Lisp_Object typelist = Qnil;
-  CFArrayRef identifiers;
+  CFArrayRef identifiers[2];
+  int j;
 
   block_input ();
-  identifiers = CGImageSourceCopyTypeIdentifiers ();
-  if (identifiers)
-    {
-      CFIndex i, count;
+  identifiers[0] = CGImageSourceCopyTypeIdentifiers ();
+  identifiers[1] = mac_document_copy_type_identifiers ();
+  for (j = 0; j < sizeof (identifiers) / sizeof (identifiers[0]); j++)
+    if (identifiers[j])
+      {
+	CFIndex i, count;
 
-      count = CFArrayGetCount (identifiers);
-      for (i = 0; i < count; i++)
-	{
-	  CFStringRef identifier, extension;
-	  Lisp_Object ext = Qnil;
+	count = CFArrayGetCount (identifiers[j]);
+	for (i = 0; i < count; i++)
+	  {
+	    CFStringRef identifier, extension;
+	    Lisp_Object ext = Qnil;
 
-	  identifier = CFArrayGetValueAtIndex (identifiers, i);
-	  extension =
-	    UTTypeCopyPreferredTagWithClass (identifier,
-					     kUTTagClassFilenameExtension);
-	  if (extension)
-	    {
-	      ext = cfstring_to_lisp_nodecode (extension);
-	      CFRelease (extension);
-	    }
-	  typelist = Fcons (list2 (cfstring_to_lisp_nodecode (identifier), ext),
-			    typelist);
-	}
-      CFRelease (identifiers);
-    }
+	    identifier = CFArrayGetValueAtIndex (identifiers[j], i);
+	    extension =
+	      UTTypeCopyPreferredTagWithClass (identifier,
+					       kUTTagClassFilenameExtension);
+	    if (extension)
+	      {
+		ext = cfstring_to_lisp_nodecode (extension);
+		CFRelease (extension);
+	      }
+	    typelist = Fcons (list2 (cfstring_to_lisp_nodecode (identifier),
+				     ext),
+			      typelist);
+	  }
+	CFRelease (identifiers[j]);
+      }
   unblock_input ();
 
   return Fnreverse (typelist);
@@ -10044,6 +10165,9 @@ non-numeric, there is no explicit limit on the size of images.  */);
   DEFSYM (Qcount, "count");
   DEFSYM (Qextension_data, "extension-data");
   DEFSYM (Qdelay, "delay");
+#ifdef HAVE_MACGUI
+  DEFSYM (Qdocument_attributes, "document-attributes");
+#endif
 
   DEFSYM (QCascent, ":ascent");
   DEFSYM (QCmargin, ":margin");

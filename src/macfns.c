@@ -124,7 +124,7 @@ check_x_display_info (Lisp_Object object)
       struct terminal *t = get_terminal (object, 1);
 
       if (t->type != output_mac)
-        error ("Terminal %"pI"d is not a Mac display", XINT (object));
+        error ("Terminal %d is not a Mac display", t->id);
 
       dpyinfo = t->display_info.mac;
     }
@@ -2362,29 +2362,11 @@ DEFUN ("x-focus-frame", Fx_focus_frame, Sx_focus_frame, 1, 1, 0,
 FRAME nil means use the selected frame.  */)
   (Lisp_Object frame)
 {
-  OSErr err;
-  ProcessSerialNumber front_psn;
-  static const ProcessSerialNumber current_psn = {0, kCurrentProcess};
-  Boolean front_p;
   struct frame *f = check_x_frame (frame);
 
   block_input ();
-  /* Move the current process to the foreground if it is not.  Don't
-     call SetFrontProcess if the current process is already running in
-     the foreground so as not to change the z-order of windows.  */
-  err = GetFrontProcess (&front_psn);
-  if (err == noErr)
-    err = SameProcess (&front_psn, &current_psn, &front_p);
-  if (err == noErr)
-    if (!front_p)
-      {
-	if (mac_is_frame_window_front (f))
-	  SetFrontProcessWithOptions (&current_psn,
-				      kSetFrontProcessFrontWindowOnly);
-	else
-	  SetFrontProcess (&current_psn);
-      }
-
+  if (!mac_is_current_process_frontmost ())
+    mac_bring_current_process_to_front (mac_is_frame_window_frontmost (f));
   mac_activate_frame_window (f);
   unblock_input ();
 
@@ -3664,6 +3646,10 @@ Text larger than the specified size is clipped.  */)
   mac_move_frame_window (f, root_x, root_y, false);
   mac_size_frame_window (f, width, height, true);
   mac_show_frame_window (f);
+  /* Now that we have deferred creation of the window device and also
+     turned off automatic display for tooltip windows, we have to draw
+     the internal border ourselves after showing the window.  */
+  mac_clear_area (f, 0, 0, width, height);
   mac_bring_frame_window_to_front (f);
   unblock_input ();
 
@@ -3715,7 +3701,11 @@ Value is t if tooltip was open, nil otherwise.  */)
 
   if (FRAMEP (frame))
     {
-      delete_frame (frame, Qnil);
+      /* Fx_hide_tip might be called just after Command-H has hidden
+	 all the frames.  We pass Qt for the `force' arg so as to
+	 avoid the "Attempt to delete the sole visible or iconified
+	 frame" error in that case.  */
+      delete_frame (frame, Qt);
       deleted = Qt;
     }
 

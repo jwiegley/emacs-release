@@ -289,7 +289,7 @@ mac_draw_line_to_pixmap (Pixmap p, GC gc, int x1, int y1, int x2, int y2)
 
 static void
 mac_erase_rectangle (struct frame *f, GC gc, int x, int y,
-		     unsigned int width, unsigned int height)
+		     int width, int height)
 {
   CGContextRef context;
 
@@ -303,8 +303,7 @@ mac_erase_rectangle (struct frame *f, GC gc, int x, int y,
 /* Mac version of XClearArea.  */
 
 void
-mac_clear_area (struct frame *f, int x, int y,
-		unsigned int width, unsigned int height)
+mac_clear_area (struct frame *f, int x, int y, int width, int height)
 {
   mac_erase_rectangle (f, FRAME_NORMAL_GC (f), x, y, width, height);
 }
@@ -333,8 +332,7 @@ mac_clear_window (struct frame *f)
 
 static void
 mac_draw_cg_image (CGImageRef image, struct frame *f, GC gc,
-		   int src_x, int src_y,
-		   unsigned int width, unsigned int height,
+		   int src_x, int src_y, int width, int height,
 		   int dest_x, int dest_y, int flags)
 {
   CGContextRef context;
@@ -497,8 +495,7 @@ mac_free_pixmap (Pixmap pixmap)
 /* Mac replacement for XFillRectangle.  */
 
 static void
-mac_fill_rectangle (struct frame *f, GC gc, int x, int y,
-		    unsigned int width, unsigned int height)
+mac_fill_rectangle (struct frame *f, GC gc, int x, int y, int width, int height)
 {
   CGContextRef context;
 
@@ -512,8 +509,7 @@ mac_fill_rectangle (struct frame *f, GC gc, int x, int y,
 /* Mac replacement for XDrawRectangle: dest is a window.  */
 
 static void
-mac_draw_rectangle (struct frame *f, GC gc, int x, int y,
-		    unsigned int width, unsigned int height)
+mac_draw_rectangle (struct frame *f, GC gc, int x, int y, int width, int height)
 {
   CGContextRef context;
   CGRect rect;
@@ -528,8 +524,7 @@ mac_draw_rectangle (struct frame *f, GC gc, int x, int y,
 
 static void
 mac_fill_trapezoid_for_relief (struct frame *f, GC gc, int x, int y,
-			       unsigned int width, unsigned int height,
-			       int top_p)
+			       int width, int height, int top_p)
 {
   CGContextRef context;
   CGRect rect = mac_rect_make (f, x, y, width, height);
@@ -565,7 +560,7 @@ enum corners
 
 static void
 mac_erase_corners_for_relief (struct frame *f, GC gc, int x, int y,
-			      unsigned int width, unsigned int height,
+			      int width, int height,
 			      int radius, int margin, int corners)
 {
   CGContextRef context;
@@ -602,8 +597,7 @@ mac_erase_corners_for_relief (struct frame *f, GC gc, int x, int y,
 
 static void
 mac_draw_horizontal_wave (struct frame *f, GC gc, int x, int y,
-			  unsigned int width, unsigned int height,
-			  unsigned int period)
+			  int width, int height, int period)
 {
   CGContextRef context;
   CGRect wave_clip;
@@ -633,8 +627,7 @@ mac_draw_horizontal_wave (struct frame *f, GC gc, int x, int y,
 
 
 static void
-mac_invert_rectangle (struct frame *f, int x, int y,
-		      unsigned int width, unsigned int height)
+mac_invert_rectangle (struct frame *f, int x, int y, int width, int height)
 {
   CGContextRef context;
 
@@ -678,8 +671,7 @@ mac_invert_rectangles (struct frame *f, NativeRectangle *rectangles, int n)
 /* Mac replacement for XCopyArea: used only for scrolling.  */
 
 /* Defined in macappkit.m.  */
-extern void mac_scroll_area (struct frame *, GC, int, int,
-			     unsigned int, unsigned int, int, int);
+extern void mac_scroll_area (struct frame *, GC, int, int, int, int, int, int);
 
 
 /* Mac replacement for XChangeGC.  */

@@ -138,7 +138,7 @@ ps: emacs.ps
 # Note: "<" is not portable in ordinary make rules.
 $(buildinfodir)/emacs$(INFO_EXT): ${EMACSSOURCES}
 	$(mkinfodir)
-	$(MAKEINFO) $(MAKEINFO_OPTS) $(INFO_OPTS) -o $@ ${srcdir}/emacs.texi
+	LANG=C $(MAKEINFO) $(MAKEINFO_OPTS) $(INFO_OPTS) -o $@ ${srcdir}/emacs.texi
 
 emacs.dvi: ${EMACSSOURCES}
 	$(ENVADD) $(TEXI2DVI) ${srcdir}/emacs.texi

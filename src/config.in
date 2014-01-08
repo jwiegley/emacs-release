@@ -1167,9 +1167,6 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 /* Define if XEditRes should not be used. */
 #undef NO_EDITRES
 
-/* Define to 1 if your C compiler doesn't accept -c and -o together. */
-#undef NO_MINUS_C_MINUS_O
-
 /* Minimum value of NSIG. */
 #undef NSIG_MINIMUM
 

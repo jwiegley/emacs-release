@@ -75,6 +75,8 @@ typedef struct _XImage
   int bits_per_pixel;		/* bits per pixel (ZPixmap) */
 } *Pixmap;
 
+typedef const struct _EmacsDocument *EmacsDocumentRef; /* opaque */
+
 #define Cursor ThemeCursor
 #define No_Cursor (-1)
 
@@ -220,7 +222,7 @@ typedef uint32_t WMState;
 
 typedef struct {
     int x, y;
-    unsigned width, height;
+    int width, height;
 } XRectangle;
 
 #define NativeRectangle XRectangle

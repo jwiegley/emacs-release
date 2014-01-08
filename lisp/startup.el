@@ -1517,7 +1517,11 @@ a face or button specification."
 				    (or (not (eq initial-window-system 'mac))
 					(string-match "About" (buffer-name)))
 				    (or (image-type-available-p 'svg)
-					(image-type-available-p 'imagemagick)))
+					(and
+					 ;; Genuine ImageMagick, not
+					 ;; emulated by Image I/O.
+					 (boundp 'imagemagick-render-type)
+					 (image-type-available-p 'imagemagick))))
 				   "splash.svg")
 				  ((image-type-available-p 'png)
 				   "splash.png")

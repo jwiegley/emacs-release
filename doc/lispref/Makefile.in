@@ -114,7 +114,7 @@ ps: elisp.ps
 ## Note: "<" is not portable in ordinary make rules.
 $(buildinfodir)/elisp$(INFO_EXT): $(srcs)
 	$(mkinfodir)
-	$(MAKEINFO) $(MAKEINFO_OPTS) $(INFO_OPTS) -o $@ $(srcdir)/elisp.texi
+	LANG=C $(MAKEINFO) $(MAKEINFO_OPTS) $(INFO_OPTS) -o $@ $(srcdir)/elisp.texi
 
 elisp.dvi: $(srcs)
 	$(ENVADD) $(TEXI2DVI) $(srcdir)/elisp.texi

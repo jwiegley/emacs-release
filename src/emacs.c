@@ -794,16 +794,6 @@ main (int argc, char **argv)
     }
 #endif /* HAVE_PERSONALITY_LINUX32 */
 
-#ifdef HAVE_MACGUI
-  /* Skip process serial number passed in the form -psn_x_y as
-     command-line argument.  The WindowServer adds this option when
-     Emacs is invoked from the Finder or by the `open' command.  In
-     these cases, the working directory becomes `/', so we change it
-     to the user's home directory.  */
-  if (argc > skip_args + 1 && strncmp (argv[skip_args+1], "-psn_", 5) == 0)
-    chdir (getenv ("HOME"));
-#endif /* HAVE_MACGUI */
-
 #if defined (HAVE_SETRLIMIT) && defined (RLIMIT_STACK)
   /* Extend the stack space available.
      Don't do that if dumping, since some systems (e.g. DJGPP)

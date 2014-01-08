@@ -1130,7 +1130,7 @@ cfobject_to_lisp (CFTypeRef obj, int flags, int hash_bound)
     }
   else
     {
-      Lisp_Object tag_result = mac_nsvalue_to_lisp (obj);
+      Lisp_Object tag_result = mac_nsobject_to_lisp (obj);
 
       if (CONSP (tag_result))
 	{
@@ -3014,17 +3014,19 @@ int
 init_wakeup_fds (void)
 {
   int result, i;
-  int flags;
 
   result = socketpair (AF_UNIX, SOCK_STREAM, 0, wakeup_fds);
   if (result < 0)
     return result;
   for (i = 0; i < 2; i++)
     {
-      flags = fcntl (wakeup_fds[i], F_GETFL, 0);
-      result = fcntl (wakeup_fds[i], F_SETFL, flags | O_NONBLOCK);
-      if (result < 0)
-	return result;
+      int flags;
+
+      if ((flags = fcntl (wakeup_fds[i], F_GETFL, 0)) < 0
+	  || fcntl (wakeup_fds[i], F_SETFL, flags | O_NONBLOCK) == -1
+	  || (flags = fcntl (wakeup_fds[i], F_GETFD, 0)) < 0
+	  || fcntl (wakeup_fds[i], F_SETFD, flags | FD_CLOEXEC) == -1)
+	return -1;
     }
 #if SELECT_USE_GCD
   {

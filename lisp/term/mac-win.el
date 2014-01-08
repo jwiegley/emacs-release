@@ -1387,6 +1387,29 @@ the echo area or in a buffer where the cursor is not displayed."
 				  (cdr replacement-range)))
 	      (error nil)))))))
 
+(defvar mac-emoji-font-regexp "\\<emoji\\>"
+  "Regexp matching font names for emoji.
+This is used for complementing the variation selector
+16 (emoji-style) when inserting emoji characters that are
+sensitive to the variation selector.")
+
+(defun mac-complement-emoji-by-variation-selector (string)
+  (let ((len (length string))
+	base)
+    (cond ((and (= len 1)
+		(string-match
+		 (regexp-quote string)
+		 (mapconcat 'cdr mac-emoji-variation-characters-alist "")))
+	   (concat string "\uFE0F"))
+	  ((and (= len 2)
+		(eq (aref string 1) #x20E3)
+		(string-match
+		 (regexp-quote (setq base (substring string 0 1)))
+		 (cdr (assq 'keycap mac-emoji-variation-characters-alist))))
+	   (concat base "\uFE0F\u20E3"))
+	  (t
+	   string))))
+
 (defun mac-text-input-insert-text (event)
   (interactive "e")
   (let* ((ae (mac-event-ae event))
@@ -1421,7 +1444,14 @@ the echo area or in a buffer where the cursor is not displayed."
 			   (+ (point-min) (car replacement-range)
 			      (cdr replacement-range)))
 	  (error nil)))
-    (mac-unread-string (mac-utxt-to-string text coding))))
+    (let ((string (mac-utxt-to-string text coding))
+	  (font (cdr (get-text-property 0 'NSFont text)))) ; NSFontAttributeName
+      (if (and (fontp font)
+	       (not (next-single-property-change 0 'NSFont text))
+	       (string-match mac-emoji-font-regexp
+			     (symbol-name (font-get font :family))))
+	  (setq string (mac-complement-emoji-by-variation-selector string)))
+      (mac-unread-string string))))
 
 (define-key mac-apple-event-map [text-input set-marked-text]
   'mac-text-input-set-marked-text)
@@ -1515,16 +1545,23 @@ modifiers, it changes the global tool-bar visibility setting."
 (defvar mac-help-topics)
 
 (defun mac-setup-help-topics ()
-  (unless mac-help-topics
-    (require 'info)
-    (info-initialize)
-    (let ((filename (Info-find-file "Emacs" t)))
-      (if (null filename)
-	  (setq mac-help-topics t)
-	(setq mac-help-topics
-	      (mapcar (lambda (node-info)
-			(encode-coding-string (car node-info) 'utf-8))
-		      (Info-toc-build filename)))))))
+  (unless (or mac-help-topics inhibit-menubar-update)
+    (let ((current-message (current-message)))
+      (unwind-protect
+	  (progn
+	    (require 'info)
+	    (info-initialize)
+	    (let ((filename (Info-find-file "Emacs" t)))
+	      (if (null filename)
+		  (setq mac-help-topics t)
+		(setq mac-help-topics
+		      (mapcar (lambda (node-info)
+				(encode-coding-string (car node-info) 'utf-8))
+			      (Info-toc-build filename))))))
+	(unless (equal (current-message) current-message)
+	  (if current-message
+	      (message "%s" current-message)
+	    (message nil)))))))
 
 (defun mac-handle-select-help-topic (event)
   (interactive "e")
@@ -1844,11 +1881,13 @@ non-nil, and the input device supports it."
   ;;  (deltaX deltaY deltaZ)		; floats
   ;;  (scrollingDeltaX scrollingDeltaY) ; nil or floats
   ;;  (phase momentumPhase)		; nil, nil and an integer, or integers
+  ;;  isSwipeTrackingFromScrollEventsEnabled ; nil or t
   ;;  )
   ;; The list might end early if the remaining elements are all nil.
   ;; TODO: horizontal scrolling
   (if (not (memq (event-basic-type event) '(wheel-up wheel-down)))
       (when (and (memq (event-basic-type event) '(wheel-left wheel-right))
+		 (nth 4 (nth 3 event)) ;; "Swipe between pages" enabled.
 		 (eq (nth 1 (nth 3 (nth 3 event))) 1)) ;; NSEventPhaseBegan
 	;; Post a swipe event when the momentum phase begins for
 	;; horizontal wheel events.
@@ -2532,6 +2571,7 @@ standard ones in `x-handle-args'."
 	      (mac-mouse-wheel-mode 1)))
 
   (add-hook 'menu-bar-update-hook 'mac-setup-help-topics)
+  (run-with-idle-timer 0.1 nil 'mac-setup-help-topics)
 
   (substitute-key-definition 'exit-splash-screen 'mac-exit-splash-screen
 			     splash-screen-keymap)
