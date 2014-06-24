@@ -1,5 +1,5 @@
 /* Font driver on Mac OS.
-   Copyright (C) 2009-2013  YAMAMOTO Mitsuharu
+   Copyright (C) 2009-2014  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 
@@ -2206,10 +2206,11 @@ macfont_draw (struct glyph_string *s, int from, int to, int x, int y,
 
   if (with_background)
     {
+      CGRect background_rect = mac_rect_make (f, x, y - FONT_BASE (s->font),
+					      s->width, FONT_HEIGHT (s->font));
+
       CG_SET_FILL_COLOR_WITH_GC_BACKGROUND (context, s->gc);
-      CGContextFillRect (context,
-			 mac_rect_make (f, x, y - FONT_BASE (s->font),
-					s->width, FONT_HEIGHT (s->font)));
+      CGContextFillRects (context, &background_rect, 1);
     }
 
   if (macfont_info->cgfont)
@@ -2234,8 +2235,7 @@ macfont_draw (struct glyph_string *s, int from, int to, int x, int y,
 	{
 	  int width;
 
-	  glyphs[i] = ((XCHAR2B_BYTE1 (s->char2b + from + i) << 8)
-		       | XCHAR2B_BYTE2 (s->char2b + from + i));
+	  glyphs[i] = s->char2b[from + i];
 	  width = (s->padding_p ? 1
 		   : macfont_glyph_extents (s->font, glyphs[i],
 					    NULL, &advance_delta,
@@ -2250,8 +2250,7 @@ macfont_draw (struct glyph_string *s, int from, int to, int x, int y,
 	  int width;
 	  CGFloat last_advance_delta = advance_delta;
 
-	  glyphs[i] = ((XCHAR2B_BYTE1 (s->char2b + from + i) << 8)
-		       | XCHAR2B_BYTE2 (s->char2b + from + i));
+	  glyphs[i] = s->char2b[from + i];
 	  width = (s->padding_p ? 1
 		   : macfont_glyph_extents (s->font, glyphs[i],
 					    NULL, &advance_delta,

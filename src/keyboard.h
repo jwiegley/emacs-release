@@ -359,7 +359,7 @@ extern Lisp_Object unuse_menu_items (Lisp_Object dummy);
 #define ENCODE_MENU_STRING(str) (str)
 #endif
 
-#if defined (HAVE_NS) || defined (HAVE_NTGUI) || defined (USE_GTK)
+#if defined (HAVE_MACGUI) || defined (HAVE_NS) || defined (HAVE_NTGUI) || defined (USE_GTK)
 
 /* Definitions copied from lwlib.h */
 

@@ -1,6 +1,6 @@
 /* Definitions and headers for communication on the Mac OS.
    Copyright (C) 2000-2008 Free Software Foundation, Inc.
-   Copyright (C) 2009-2013  YAMAMOTO Mitsuharu
+   Copyright (C) 2009-2014  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 
@@ -80,24 +80,18 @@ typedef const struct _EmacsDocument *EmacsDocumentRef; /* opaque */
 #define Cursor ThemeCursor
 #define No_Cursor (-1)
 
-#define FACE_DEFAULT (~0)
 
+typedef CGGlyph XChar2b;
 
-/* Structure borrowed from Xlib.h to represent two-byte characters.  */
-
-typedef struct {
-  unsigned char byte1;
-  unsigned char byte2;
-} XChar2b;
-
-#define STORE_XCHAR2B(chp, b1, b2) \
-  ((chp)->byte1 = (b1), (chp)->byte2 = (b2))
+/* Dealing with bits of CGGlyph as if they were an XChar2b.  */
+#define STORE_XCHAR2B(chp, byte1, byte2) \
+  ((*(chp)) = ((XChar2b)((((byte1) & 0x00ff) << 8) | ((byte2) & 0x00ff))))
 
 #define XCHAR2B_BYTE1(chp) \
-  ((chp)->byte1)
+  (((*(chp)) & 0xff00) >> 8)
 
 #define XCHAR2B_BYTE2(chp) \
-  ((chp)->byte2)
+  ((*(chp)) & 0x00ff)
 
 
 /* Emulate X GC's by keeping color and font info in a structure.  */
@@ -239,69 +233,6 @@ enum {
   CFOBJECT_TO_LISP_DONT_DECODE_DICTIONARY_KEY	= 1 << 2
 };
 
-/* Definitions copied from lwlib.h */
-
-typedef void * XtPointer;
-
-enum button_type
-{
-  BUTTON_TYPE_NONE,
-  BUTTON_TYPE_TOGGLE,
-  BUTTON_TYPE_RADIO
-};
-
-/* This structure is based on the one in ../lwlib/lwlib.h, modified
-   for Mac OS.  */
-typedef struct _widget_value
-{
-  /* name of widget */
-  Lisp_Object   lname;
-  const char*	name;
-  /* value (meaning depend on widget type) */
-  const char*	value;
-  /* keyboard equivalent. no implications for XtTranslations */
-  Lisp_Object   lkey;
-  const char*	key;
-  /* Help string or nil if none.
-     GC finds this string through the frame's menu_bar_vector
-     or through menu_items.  */
-  Lisp_Object	help;
-  /* true if enabled */
-  Boolean	enabled;
-  /* true if selected */
-  Boolean	selected;
-  /* The type of a button.  */
-  enum button_type button_type;
-  /* true if menu title */
-  Boolean       title;
-#if 0
-  /* true if was edited (maintained by get_value) */
-  Boolean	edited;
-  /* true if has changed (maintained by lw library) */
-  change_type	change;
-  /* true if this widget itself has changed,
-     but not counting the other widgets found in the `next' field.  */
-  change_type   this_one_change;
-#endif
-  /* Contents of the sub-widgets, also selected slot for checkbox */
-  struct _widget_value*	contents;
-  /* data passed to callback */
-  XtPointer	call_data;
-  /* next one in the list */
-  struct _widget_value*	next;
-#if 0
-  /* slot for the toolkit dependent part.  Always initialize to NULL. */
-  void* toolkit_data;
-  /* tell us if we should free the toolkit data slot when freeing the
-     widget_value itself. */
-  Boolean free_toolkit_data;
-
-  /* we resource the widget_value structures; this points to the next
-     one on the free list if this one has been deallocated.
-   */
-  struct _widget_value *free_list;
-#endif
-} widget_value;
 /* Assumed by other routines to zero area returned.  */
 #define malloc_widget_value() (void *)memset (xmalloc (sizeof (widget_value)),\
                                               0, (sizeof (widget_value)))

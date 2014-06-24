@@ -1,6 +1,6 @@
 /* Menu support for GNU Emacs on Mac OS.
    Copyright (C) 2000-2008  Free Software Foundation, Inc.
-   Copyright (C) 2009-2013  YAMAMOTO Mitsuharu
+   Copyright (C) 2009-2014  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 
@@ -53,16 +53,14 @@ along with GNU Emacs Mac port.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include "menu.h"
 
-#ifndef TRUE
-#define TRUE 1
-#define FALSE 0
-#endif /* no TRUE */
-
 static Lisp_Object Qdebug_on_next_call;
 
 extern Lisp_Object Qmac_apple_event;
 
-void set_frame_menubar (FRAME_PTR, bool, bool);
+extern void mac_fill_menubar (widget_value *, int);
+extern int create_and_show_popup_menu (FRAME_PTR, widget_value *,
+					   int, int, int);
+extern int create_and_show_dialog (FRAME_PTR, widget_value *);
 
 #ifdef HAVE_DIALOGS
 static Lisp_Object mac_dialog_show (FRAME_PTR, bool, Lisp_Object, Lisp_Object,
@@ -724,8 +722,7 @@ mac_menu_show (FRAME_PTR f, int x, int y, bool for_click, bool keymaps,
 #endif
 
       wv_title->name = SSDATA (title);
-      wv_title->enabled = FALSE;
-      wv_title->title = TRUE;
+      wv_title->enabled = 0;
       wv_title->button_type = BUTTON_TYPE_NONE;
       wv_title->help = Qnil;
       wv_title->next = wv_sep;

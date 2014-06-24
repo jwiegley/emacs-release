@@ -1,5 +1,5 @@
 /* Functions for GUI implemented with Cocoa AppKit on the Mac OS.
-   Copyright (C) 2008-2013  YAMAMOTO Mitsuharu
+   Copyright (C) 2008-2014  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 
@@ -3303,7 +3303,9 @@ extern void mac_save_keyboard_input_source (void);
 
 - (void)windowWillExitFullScreen:(NSNotification *)notification
 {
-  [self detachOverlayWindow];
+  /* Called also when a full screen window is being closed.  */
+  if (overlayWindow)
+    [self detachOverlayWindow];
 }
 
 - (void)windowDidExitFullScreen:(NSNotification *)notification
@@ -3317,7 +3319,9 @@ extern void mac_save_keyboard_input_source (void);
       fullscreenFrameParameterAfterTransition = NULL;
     }
 
-  [self attachOverlayWindow];
+  /* Called also when a full screen window is being closed.  */
+  if (overlayWindow)
+    [self attachOverlayWindow];
   [emacsController updatePresentationOptions];
   [self updateCollectionBehavior];
 }
@@ -3700,7 +3704,7 @@ mac_get_window_structure_bounds (struct frame *f, NativeRectangle *bounds)
   NSRect windowFrame = [window frame];
 
   STORE_NATIVE_RECT (*bounds,
-		     NSMinX (windowFrame) + NSMinX (baseScreenFrame),
+		     NSMinX (windowFrame) - NSMinX (baseScreenFrame),
 		     - NSMaxY (windowFrame) + NSMaxY (baseScreenFrame),
 		     NSWidth (windowFrame), NSHeight (windowFrame));
 }
@@ -3725,7 +3729,7 @@ mac_get_global_mouse (Point *point)
   NSRect baseScreenFrame = mac_get_base_screen_frame ();
 
   /* Header file for SetPt is not available on Mac OS X 10.7.  */
-  point->h = mouseLocation.x + NSMinX (baseScreenFrame);
+  point->h = mouseLocation.x - NSMinX (baseScreenFrame);
   point->v = - mouseLocation.y + NSMaxY (baseScreenFrame);
 }
 
@@ -3737,7 +3741,7 @@ mac_convert_frame_point_to_global (struct frame *f, int *x, int *y)
   NSRect baseScreenFrame = mac_get_base_screen_frame ();
 
   point = [frameController convertEmacsViewPointToScreen:point];
-  *x = point.x + NSMinX (baseScreenFrame);
+  *x = point.x - NSMinX (baseScreenFrame);
   *y = - point.y + NSMaxY (baseScreenFrame);
 }
 
@@ -5257,10 +5261,11 @@ set_global_focus_view_frame (struct frame *f)
 static CGRect
 unset_global_focus_view_frame (void)
 {
-  CGRect result = global_focus_view_accumulated_clip_rect;
+  CGRect result;
 
   if (global_focus_view_frame != saved_focus_view_frame)
     {
+      result = global_focus_view_accumulated_clip_rect;
       FRAME_CG_CONTEXT (global_focus_view_frame) = NULL;
       global_focus_view_frame = saved_focus_view_frame;
       if (global_focus_view_frame)
@@ -5270,6 +5275,8 @@ unset_global_focus_view_frame (void)
 	    saved_focus_view_accumulated_clip_rect;
 	}
     }
+  else
+    result = CGRectNull;
   saved_focus_view_frame = NULL;
 
   return result;
@@ -5279,6 +5286,7 @@ CGContextRef
 mac_begin_cg_clip (struct frame *f, GC gc)
 {
   CGContextRef context;
+  int n_clip_rects = gc ? gc->n_clip_rects : 0;
 
   if (global_focus_view_frame != f)
     {
@@ -5289,21 +5297,24 @@ mac_begin_cg_clip (struct frame *f, GC gc)
       FRAME_CG_CONTEXT (f) = context;
     }
   else
-    context = FRAME_CG_CONTEXT (f);
+    {
+      context = FRAME_CG_CONTEXT (f);
+      if (n_clip_rects)
+	{
+	  int i;
+
+	  for (i = 0; i < n_clip_rects; i++)
+	    global_focus_view_accumulated_clip_rect =
+	      CGRectUnion (global_focus_view_accumulated_clip_rect,
+			   gc->clip_rects[i]);
+	}
+      else
+	global_focus_view_accumulated_clip_rect = CGRectInfinite;
+    }
 
   CGContextSaveGState (context);
-  if (gc && gc->n_clip_rects)
-    {
-      int i;
-
-      CGContextClipToRects (context, gc->clip_rects, gc->n_clip_rects);
-      for (i = 0; i < gc->n_clip_rects; i++)
-	global_focus_view_accumulated_clip_rect =
-	  CGRectUnion (global_focus_view_accumulated_clip_rect,
-		       gc->clip_rects[i]);
-    }
-  else
-    global_focus_view_accumulated_clip_rect = CGRectInfinite;
+  if (n_clip_rects)
+    CGContextClipToRects (context, gc->clip_rects, n_clip_rects);
 
   return context;
 }
@@ -5533,13 +5544,13 @@ mac_display_monitor_attributes_list (struct mac_display_info *dpyinfo)
 			  attributes);
 
       rect = [screen visibleFrame];
-      workarea = list4i (NSMinX (rect) + baseScreenFrameMinX,
+      workarea = list4i (NSMinX (rect) - baseScreenFrameMinX,
 			 - NSMaxY (rect) + baseScreenFrameMaxY,
 			 NSWidth (rect), NSHeight (rect));
       attributes = Fcons (Fcons (Qworkarea, workarea), attributes);
 
       rect = [screen frame];
-      geometry = list4i (NSMinX (rect) + baseScreenFrameMinX,
+      geometry = list4i (NSMinX (rect) - baseScreenFrameMinX,
 			 - NSMaxY (rect) + baseScreenFrameMaxY,
 			 NSWidth (rect), NSHeight (rect));
       attributes = Fcons (Fcons (Qgeometry, geometry), attributes);
@@ -7065,6 +7076,8 @@ mac_set_font_info_for_selection (struct frame *f, int face_id, int c, int pos,
 			    Event Handling
  ************************************************************************/
 
+extern Boolean _IsSymbolicHotKeyEvent (EventRef, UInt32 *, Boolean *) AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER;
+
 static void update_apple_event_handler (void);
 static void update_dragged_types (void);
 
@@ -7316,10 +7329,26 @@ static EventRef
 peek_if_next_event_activates_menu_bar (void)
 {
   EventRef event = mac_peek_next_event ();
+  OSType event_class;
+  UInt32 event_kind;
 
-  if (event
-      && GetEventClass (event) == kEventClassMouse
-      && GetEventKind (event) == kEventMouseDown)
+  if (event == NULL)
+    return NULL;
+
+  event_class = GetEventClass (event);
+  event_kind = GetEventKind (event);
+  if (event_class == kEventClassKeyboard
+      && event_kind == kEventRawKeyDown)
+    {
+      UInt32 code;
+      Boolean isEnabled;
+
+      if (_IsSymbolicHotKeyEvent (event, &code, &isEnabled)
+	  && isEnabled && code == 7) /* Move focus to the menu bar */
+	return event;
+    }
+  else if (event_class == kEventClassMouse
+	   && event_kind == kEventMouseDown)
     {
       OSStatus err;
       HIPoint point;
@@ -7331,7 +7360,7 @@ peek_if_next_event_activates_menu_bar (void)
 	{
 	  NSRect baseScreenFrame = mac_get_base_screen_frame ();
 	  NSPoint mouseLocation =
-	    NSMakePoint (point.x - NSMinX (baseScreenFrame),
+	    NSMakePoint (point.x + NSMinX (baseScreenFrame),
 			 - point.y + NSMaxY (baseScreenFrame));
 	  NSScreen *screen = [NSScreen screenContainingPoint:mouseLocation];
 
@@ -8066,24 +8095,15 @@ static NSString *localizedMenuTitleForEdit, *localizedMenuTitleForHelp;
   firstResponder = [window firstResponder];
   if ([firstResponder isMemberOfClass:[EmacsMainView class]])
     {
-      extern Boolean _IsSymbolicHotKeyEvent (EventRef, UInt32 *, Boolean *) AVAILABLE_MAC_OS_X_VERSION_10_3_AND_LATER;
       UInt32 code;
       Boolean isEnabled;
 
       if (_IsSymbolicHotKeyEvent ([theEvent _eventRef], &code, &isEnabled)
 	  && isEnabled)
 	{
-	  switch (code)
-	    {
-	    case 7:		/* Move focus to the menu bar */
-	      mac_fake_menu_bar_click (kEventPriorityStandard);
-	      return YES;
-	      break;
-
-	    case 98:	 /* Show Help menu, Mac OS X 10.5 and later */
-	      [emacsController showMenuBar];
-	      break;
-	    }
+	  if (code == 98 /* Show Help menu, Mac OS X 10.5 and later */
+	      && floor (NSAppKitVersionNumber) <= NSAppKitVersionNumber10_7)
+	    [emacsController showMenuBar];
 	}
       else
 	{
@@ -8393,6 +8413,8 @@ mac_activate_menubar (FRAME_PTR f)
   EventRef menu_event;
 
   update_services_menu_types ();
+  if (floor (NSAppKitVersionNumber) <= NSAppKitVersionNumber10_7)
+    [emacsController showMenuBar];
   menu_event = dpyinfo->saved_menu_event;
   if (menu_event)
     {
@@ -8551,7 +8573,19 @@ mac_fake_menu_bar_click (EventPriority priority)
 {
   OSStatus err = noErr;
   const EventKind kinds[] = {kEventMouseDown, kEventMouseUp};
+  Point point = {0, 10};	/* vertical, horizontal */
+  NSScreen *mainScreen = [NSScreen mainScreen];
   int i;
+
+  if ([mainScreen canShowMenuBar])
+    {
+      NSRect baseScreenFrame, mainScreenFrame;
+
+      baseScreenFrame = mac_get_base_screen_frame ();
+      mainScreenFrame = [mainScreen frame];
+      point.h += NSMinX (mainScreenFrame) - NSMinX (baseScreenFrame);
+      point.v += - NSMaxY (mainScreenFrame) + NSMaxY (baseScreenFrame);
+    }
 
   [emacsController showMenuBar];
 
@@ -8565,7 +8599,6 @@ mac_fake_menu_bar_click (EventPriority priority)
 			   kEventAttributeNone, &event);
       if (err == noErr)
 	{
-	  const Point point = {0, 10}; /* vertical, horizontal */
 	  const UInt32 modifiers = 0, count = 1;
 	  const EventMouseButton button = kEventMouseButtonPrimary;
 	  const struct {
@@ -10889,7 +10922,7 @@ document_cache_lookup (id key, NSDate *modificationDate)
 }
 
 static void
-document_cache_set (id key, id <EmacsDocumentRasterizer> document,
+document_cache_set (id <NSCopying> key, id <EmacsDocumentRasterizer> document,
 		    NSDate *modificationDate)
 {
   NSDate *currentDate;

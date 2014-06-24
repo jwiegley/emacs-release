@@ -1,6 +1,6 @@
 /* Graphical user interface functions for Mac OS.
    Copyright (C) 2000-2008  Free Software Foundation, Inc.
-   Copyright (C) 2009-2013  YAMAMOTO Mitsuharu
+   Copyright (C) 2009-2014  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 
@@ -1232,7 +1232,6 @@ x_set_foreground_color (struct frame *f, Lisp_Object arg, Lisp_Object oldval)
 
       block_input ();
       XSetForeground (dpy, mac->normal_gc, fg);
-      XSetBackground (dpy, mac->reverse_gc, fg);
 
       if (mac->cursor_pixel == old_fg)
 	{
@@ -1268,7 +1267,6 @@ x_set_background_color (struct frame *f, Lisp_Object arg, Lisp_Object oldval)
 
       block_input ();
       XSetBackground (dpy, mac->normal_gc, bg);
-      XSetForeground (dpy, mac->reverse_gc, bg);
       mac_set_frame_window_background (f, bg);
       XSetForeground (dpy, mac->cursor_gc, bg);
 
@@ -1846,15 +1844,6 @@ x_make_gc (struct frame *f)
 		 GCForeground | GCBackground,
 		 &gc_values);
 
-  /* Reverse video style.  */
-  gc_values.foreground = FRAME_BACKGROUND_PIXEL (f);
-  gc_values.background = FRAME_FOREGROUND_PIXEL (f);
-  f->output_data.mac->reverse_gc
-    = XCreateGC (FRAME_MAC_DISPLAY (f),
-		 FRAME_MAC_WINDOW (f),
-		 GCForeground | GCBackground,
-		 &gc_values);
-
   /* Cursor has cursor-color background, background-color foreground.  */
   gc_values.foreground = FRAME_BACKGROUND_PIXEL (f);
   gc_values.background = f->output_data.mac->cursor_pixel;
@@ -1885,12 +1874,6 @@ x_free_gcs (struct frame *f)
     {
       XFreeGC (dpy, f->output_data.mac->normal_gc);
       f->output_data.mac->normal_gc = 0;
-    }
-
-  if (f->output_data.mac->reverse_gc)
-    {
-      XFreeGC (dpy, f->output_data.mac->reverse_gc);
-      f->output_data.mac->reverse_gc = 0;
     }
 
   if (f->output_data.mac->cursor_gc)

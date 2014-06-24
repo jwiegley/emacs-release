@@ -1,6 +1,6 @@
 /* Display module for Mac OS.
    Copyright (C) 2000-2008 Free Software Foundation, Inc.
-   Copyright (C) 2009-2013  YAMAMOTO Mitsuharu
+   Copyright (C) 2009-2014  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 
@@ -202,7 +202,6 @@ struct mac_output
 
   /* Here are the Graphics Contexts for the default font.  */
   GC normal_gc;				/* Normal video */
-  GC reverse_gc;			/* Reverse video */
   GC cursor_gc;				/* cursor drawing */
 
   /* The window used for this frame.
@@ -625,10 +624,6 @@ extern Lisp_Object mac_file_dialog (Lisp_Object, Lisp_Object, Lisp_Object,
 				    Lisp_Object, Lisp_Object);
 extern Lisp_Object mac_font_dialog (FRAME_PTR f);
 extern int mac_activate_menubar (struct frame *);
-extern void mac_fill_menubar (widget_value *, int);
-extern int create_and_show_popup_menu (FRAME_PTR, widget_value *,
-					   int, int, int);
-extern int create_and_show_dialog (FRAME_PTR, widget_value *);
 extern OSStatus mac_get_selection_from_symbol (Lisp_Object, int,
 					       Selection *);
 extern int mac_valid_selection_target_p (Lisp_Object);

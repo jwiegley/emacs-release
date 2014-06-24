@@ -1,6 +1,6 @@
 /* Implementation of GUI terminal on the Mac OS.
    Copyright (C) 2000-2008  Free Software Foundation, Inc.
-   Copyright (C) 2009-2013  YAMAMOTO Mitsuharu
+   Copyright (C) 2009-2014  YAMAMOTO Mitsuharu
 
 This file is part of GNU Emacs Mac port.
 
@@ -155,7 +155,6 @@ static void x_after_update_window_line (struct glyph_row *);
 static void x_check_fullscreen (struct frame *);
 static void mac_initialize (void);
 
-#define GC_FONT(gc)		((gc)->xgcv.font)
 #define FRAME_NORMAL_GC(f)	((f)->output_data.mac->normal_gc)
 
 /* State for image vs. backing scaling factor mismatch detection.  */
@@ -295,7 +294,11 @@ mac_erase_rectangle (struct frame *f, GC gc, int x, int y,
 
   context = mac_begin_cg_clip (f, gc);
   CG_SET_FILL_COLOR_WITH_GC_BACKGROUND (context, gc);
-  CGContextFillRect (context, mac_rect_make (f, x, y, width, height));
+  {
+    CGRect rect = mac_rect_make (f, x, y, width, height);
+
+    CGContextFillRects (context, &rect, 1);
+  }
   mac_end_cg_clip (f);
 }
 
@@ -318,8 +321,12 @@ mac_clear_window (struct frame *f)
 
   context = mac_begin_cg_clip (f, NULL);
   CG_SET_FILL_COLOR_WITH_GC_BACKGROUND (context, gc);
-  CGContextFillRect (context, CGRectMake (0, 0, FRAME_PIXEL_WIDTH (f),
-					  FRAME_PIXEL_HEIGHT (f)));
+  {
+    CGRect rect = CGRectMake (0, 0, FRAME_PIXEL_WIDTH (f),
+			      FRAME_PIXEL_HEIGHT (f));
+
+    CGContextFillRects (context, &rect, 1);
+  }
   mac_end_cg_clip (f);
 }
 
@@ -350,7 +357,7 @@ mac_draw_cg_image (CGImageRef image, struct frame *f, GC gc,
   if (!(flags & MAC_DRAW_CG_IMAGE_OVERLAY))
     {
       CG_SET_FILL_COLOR_WITH_GC_BACKGROUND (context, gc);
-      CGContextFillRect (context, dest_rect);
+      CGContextFillRects (context, &dest_rect, 1);
     }
   CGContextClipToRect (context, dest_rect);
   CGContextTranslateCTM (context,
@@ -456,15 +463,15 @@ mac_create_pixmap_from_bitmap_data (char *data,
 	{
 	  XGCValues xgcv;
 	  GC gc;
+	  CGRect rect = CGRectMake (0, 0, width, height);
 
 	  xgcv.foreground = fg;
 	  xgcv.background = bg;
 	  gc = mac_create_gc (GCForeground | GCBackground, &xgcv);
 	  CG_SET_FILL_COLOR_WITH_GC_FOREGROUND (context, gc);
-	  CGContextFillRect (context, CGRectMake (0, 0, width, height));
+	  CGContextFillRects (context, &rect, 1);
 	  CG_SET_FILL_COLOR_WITH_GC_BACKGROUND (context, gc);
-	  CGContextDrawImage (context, CGRectMake (0, 0, width, height),
-			      image_mask);
+	  CGContextDrawImage (context, rect, image_mask);
 	  mac_free_gc (gc);
 	  CGContextRelease (context);
 	}
@@ -501,7 +508,11 @@ mac_fill_rectangle (struct frame *f, GC gc, int x, int y, int width, int height)
 
   context = mac_begin_cg_clip (f, gc);
   CG_SET_FILL_COLOR_WITH_GC_FOREGROUND (context, gc);
-  CGContextFillRect (context, mac_rect_make (f, x, y, width, height));
+  {
+    CGRect rect = mac_rect_make (f, x, y, width, height);
+
+    CGContextFillRects (context, &rect, 1);
+  }
   mac_end_cg_clip (f);
 }
 
@@ -634,7 +645,11 @@ mac_invert_rectangle (struct frame *f, int x, int y, int width, int height)
   context = mac_begin_cg_clip (f, NULL);
   CGContextSetGrayFillColor (context, 1.0f, 1.0f);
   CGContextSetBlendMode (context, kCGBlendModeDifference);
-  CGContextFillRect (context, mac_rect_make (f, x, y, width, height));
+  {
+    CGRect rect = mac_rect_make (f, x, y, width, height);
+
+    CGContextFillRects (context, &rect, 1);
+  }
   mac_end_cg_clip (f);
 }
 
@@ -1459,7 +1474,7 @@ x_compute_glyph_string_overhangs (struct glyph_string *s)
 	  int i;
 
 	  for (i = 0; i < s->nchars; i++)
-	    code[i] = (s->char2b[i].byte1 << 8) | s->char2b[i].byte2;
+	    code[i] = s->char2b[i];
 	  font->driver->text_extents (font, code, s->nchars, &metrics);
 	}
       else
@@ -2015,8 +2030,8 @@ x_draw_relief_rect (struct frame *f,
 				    6, 1, corners);
     }
 
-  mac_set_clip_rectangles (f, top_left_gc, clip_rect, 1);
-  mac_set_clip_rectangles (f, bottom_right_gc, clip_rect, 1);
+  mac_reset_clip_rectangles (f, top_left_gc);
+  mac_reset_clip_rectangles (f, bottom_right_gc);
 }
 
 
