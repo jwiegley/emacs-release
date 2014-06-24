@@ -316,18 +316,7 @@ mac_clear_area (struct frame *f, int x, int y, int width, int height)
 static void
 mac_clear_window (struct frame *f)
 {
-  CGContextRef context;
-  GC gc = FRAME_NORMAL_GC (f);
-
-  context = mac_begin_cg_clip (f, NULL);
-  CG_SET_FILL_COLOR_WITH_GC_BACKGROUND (context, gc);
-  {
-    CGRect rect = CGRectMake (0, 0, FRAME_PIXEL_WIDTH (f),
-			      FRAME_PIXEL_HEIGHT (f));
-
-    CGContextFillRects (context, &rect, 1);
-  }
-  mac_end_cg_clip (f);
+  mac_clear_area (f, 0, 0, FRAME_PIXEL_WIDTH (f), FRAME_PIXEL_HEIGHT (f));
 }
 
 
@@ -2299,13 +2288,15 @@ x_draw_glyph_string_bg_rect (struct glyph_string *s, int x, int y, int w, int h)
 static void
 x_draw_image_glyph_string (struct glyph_string *s)
 {
-  int x, y;
   int box_line_hwidth = eabs (s->face->box_line_width);
   int box_line_vwidth = max (s->face->box_line_width, 0);
   int height;
 
-  height = s->height - 2 * box_line_vwidth;
-
+  height = s->height;
+  if (s->slice.y == 0)
+    height -= box_line_vwidth;
+  if (s->slice.y + s->slice.height >= s->img->height)
+    height -= box_line_vwidth;
 
   /* Fill background with face under the image.  Do it only if row is
      taller than image or if image has a clip mask to reduce
@@ -2318,16 +2309,21 @@ x_draw_image_glyph_string (struct glyph_string *s)
       || s->img->pixmap == 0
       || s->width != s->background_width)
     {
-      x = s->x;
+      int x = s->x;
+      int y = s->y;
+      int width = s->background_width;
+
       if (s->first_glyph->left_box_line_p
 	  && s->slice.x == 0)
-	x += box_line_hwidth;
+	{
+	  x += box_line_hwidth;
+	  width -= box_line_hwidth;
+	}
 
-      y = s->y;
       if (s->slice.y == 0)
 	y += box_line_vwidth;
 
-      x_draw_glyph_string_bg_rect (s, x, y, s->background_width, height);
+      x_draw_glyph_string_bg_rect (s, x, y, width, height);
 
       s->background_filled_p = 1;
     }
@@ -2420,6 +2416,8 @@ x_draw_stretch_glyph_string (struct glyph_string *s)
 	  else
 #endif /* MAC_TODO */
 	    mac_erase_rectangle (s->f, gc, x, y, w, h);
+
+	  mac_reset_clip_rectangles (s->f, gc);
 	}
     }
   else if (!s->background_filled_p)
@@ -4606,8 +4604,6 @@ Lisp_Object Qpanel_closed, Qselection;
 static void
 x_check_font (struct frame *f, struct font *font)
 {
-  Lisp_Object frame;
-
   eassert (font != NULL && ! NILP (font->props[FONT_TYPE_INDEX]));
   if (font->driver->check)
     eassert (font->driver->check (f, font) == 0);

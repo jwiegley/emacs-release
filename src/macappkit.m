@@ -1551,27 +1551,28 @@ static EventRef peek_if_next_event_activates_menu_bar (void);
       hold_quit = bufp;
       count = 0;
 
+      if (MOUSE_TRACKING_SUSPENDED_P ())
+	{
+	  NSEvent *leftMouseEvent =
+	    [NSApp
+	      nextEventMatchingMask:(NSLeftMouseDraggedMask|NSLeftMouseUpMask)
+			  untilDate:expiration
+			     inMode:NSDefaultRunLoopMode dequeue:NO];
+
+	  if (leftMouseEvent)
+	    {
+	      if ([leftMouseEvent type] == NSLeftMouseDragged)
+		MOUSE_TRACKING_RESUME ();
+	      MOUSE_TRACKING_RESET ();
+	    }
+	}
+
       while (1)
 	{
 	  NSEvent *event;
 	  NSUInteger mask;
 
-	  if (MOUSE_TRACKING_SUSPENDED_P ())
-	    {
-	      NSEvent *leftMouseEvent =
-		[NSApp nextEventMatchingMask:
-			 (NSLeftMouseDraggedMask|NSLeftMouseUpMask)
-		       untilDate:expiration
-		       inMode:NSDefaultRunLoopMode dequeue:NO];
-
-	      if (leftMouseEvent)
-		{
-		  if ([leftMouseEvent type] == NSLeftMouseDragged)
-		    MOUSE_TRACKING_RESUME ();
-		  MOUSE_TRACKING_RESET ();
-		}
-	    }
-	  else if (dpyinfo->saved_menu_event == NULL)
+	  if (dpyinfo->saved_menu_event == NULL)
 	    {
 	      EventRef menu_event = peek_if_next_event_activates_menu_bar ();
 
@@ -8413,7 +8414,7 @@ mac_activate_menubar (FRAME_PTR f)
   EventRef menu_event;
 
   update_services_menu_types ();
-  if (floor (NSAppKitVersionNumber) <= NSAppKitVersionNumber10_7)
+  if (floor (NSAppKitVersionNumber) <= NSAppKitVersionNumber10_6)
     [emacsController showMenuBar];
   menu_event = dpyinfo->saved_menu_event;
   if (menu_event)
