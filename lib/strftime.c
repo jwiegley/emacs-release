@@ -1,4 +1,4 @@
-/* Copyright (C) 1991-2001, 2003-2007, 2009-2013 Free Software Foundation, Inc.
+/* Copyright (C) 1991-2001, 2003-2007, 2009-2014 Free Software Foundation, Inc.
 
    NOTE: The canonical source of this file is maintained with the GNU C Library.
    Bugs can be reported to bug-glibc@prep.ai.mit.edu.
@@ -26,7 +26,6 @@
 #else
 # include <config.h>
 # if FPRINTFTIME
-#  include "ignore-value.h"
 #  include "fprintftime.h"
 # else
 #  include "strftime.h"
@@ -210,13 +209,12 @@ extern char *tzname[];
            fwrite_uppcase (p, (s), _n);                                       \
          else                                                                 \
            {                                                                  \
-             /* We are ignoring the value of fwrite here, in spite of the     \
-                fact that technically, that may not be valid: the fwrite      \
-                specification in POSIX 2008 defers to that of fputc, which    \
-                is intended to be consistent with the one from ISO C,         \
-                which permits failure due to ENOMEM *without* setting the     \
-                stream's error indicator.  */                                 \
-             ignore_value (fwrite ((s), _n, 1, p));                           \
+             /* Ignore the value of fwrite.  The caller can determine whether \
+                an error occurred by inspecting ferror (P).  All known fwrite \
+                implementations set the stream's error indicator when they    \
+                fail due to ENOMEM etc., even though C11 and POSIX.1-2008 do  \
+                not require this.  */                                         \
+             fwrite (s, _n, 1, p);                                            \
            }                                                                  \
        }                                                                      \
      while (0)                                                                \
@@ -683,24 +681,44 @@ strftime_case_ (bool upcase, STREAM_OR_CHAR_T *s,
       switch (format_char)
         {
 #define DO_NUMBER(d, v) \
-          digits = d;                                                         \
-          number_value = v; goto do_number
+          do                                                                  \
+            {                                                                 \
+              digits = d;                                                     \
+              number_value = v;                                               \
+              goto do_number;                                                 \
+            }                                                                 \
+          while (0)
 #define DO_SIGNED_NUMBER(d, negative, v) \
-          digits = d;                                                         \
-          negative_number = negative;                                         \
-          u_number_value = v; goto do_signed_number
+          do                                                                  \
+            {                                                                 \
+              digits = d;                                                     \
+              negative_number = negative;                                     \
+              u_number_value = v;                                             \
+              goto do_signed_number;                                          \
+            }                                                                 \
+          while (0)
 
           /* The mask is not what you might think.
              When the ordinal i'th bit is set, insert a colon
              before the i'th digit of the time zone representation.  */
 #define DO_TZ_OFFSET(d, negative, mask, v) \
-          digits = d;                                                         \
-          negative_number = negative;                                         \
-          tz_colon_mask = mask;                                               \
-          u_number_value = v; goto do_tz_offset
+          do                                                                  \
+            {                                                                 \
+              digits = d;                                                     \
+              negative_number = negative;                                     \
+              tz_colon_mask = mask;                                           \
+              u_number_value = v;                                             \
+              goto do_tz_offset;                                              \
+            }                                                                 \
+          while (0)
 #define DO_NUMBER_SPACEPAD(d, v) \
-          digits = d;                                                         \
-          number_value = v; goto do_number_spacepad
+          do                                                                  \
+            {                                                                 \
+              digits = d;                                                     \
+              number_value = v;                                               \
+              goto do_number_spacepad;                                        \
+            }                                                                 \
+          while (0)
 
         case L_('%'):
           if (modifier != 0)
@@ -1267,9 +1285,9 @@ strftime_case_ (bool upcase, STREAM_OR_CHAR_T *s,
             }
           if (modifier == L_('O'))
             goto bad_format;
-          else
-            DO_SIGNED_NUMBER (4, tp->tm_year < -TM_YEAR_BASE,
-                              tp->tm_year + (unsigned int) TM_YEAR_BASE);
+
+          DO_SIGNED_NUMBER (4, tp->tm_year < -TM_YEAR_BASE,
+                            tp->tm_year + (unsigned int) TM_YEAR_BASE);
 
         case L_('y'):
           if (modifier == L_('E'))

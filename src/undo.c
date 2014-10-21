@@ -1,5 +1,5 @@
 /* undo handling for GNU Emacs.
-   Copyright (C) 1990, 1993-1994, 2000-2013 Free Software Foundation,
+   Copyright (C) 1990, 1993-1994, 2000-2014 Free Software Foundation,
    Inc.
 
 This file is part of GNU Emacs.
@@ -55,7 +55,7 @@ static Lisp_Object pending_boundary;
 static void
 record_point (ptrdiff_t pt)
 {
-  int at_boundary;
+  bool at_boundary;
 
   /* Don't record position of pt when undo_inhibit_record_point holds.  */
   if (undo_inhibit_record_point)
@@ -75,27 +75,8 @@ record_point (ptrdiff_t pt)
     Fundo_boundary ();
   last_undo_buffer = current_buffer;
 
-  if (CONSP (BVAR (current_buffer, undo_list)))
-    {
-      /* Set AT_BOUNDARY to 1 only when we have nothing other than
-         marker adjustment before undo boundary.  */
-
-      Lisp_Object tail = BVAR (current_buffer, undo_list), elt;
-
-      while (1)
-	{
-	  if (NILP (tail))
-	    elt = Qnil;
-	  else
-	    elt = XCAR (tail);
-	  if (NILP (elt) || ! (CONSP (elt) && MARKERP (XCAR (elt))))
-	    break;
-	  tail = XCDR (tail);
-	}
-      at_boundary = NILP (elt);
-    }
-  else
-    at_boundary = 1;
+  at_boundary = ! CONSP (BVAR (current_buffer, undo_list))
+                || NILP (XCAR (BVAR (current_buffer, undo_list)));
 
   if (MODIFF <= SAVE_MODIFF)
     record_first_change ();
@@ -147,11 +128,61 @@ record_insert (ptrdiff_t beg, ptrdiff_t length)
 		  Fcons (Fcons (lbeg, lend), BVAR (current_buffer, undo_list)));
 }
 
-/* Record that a deletion is about to take place,
-   of the characters in STRING, at location BEG.  */
+/* Record the fact that markers in the region of FROM, TO are about to
+   be adjusted.  This is done only when a marker points within text
+   being deleted, because that's the only case where an automatic
+   marker adjustment won't be inverted automatically by undoing the
+   buffer modification.  */
+
+static void
+record_marker_adjustments (ptrdiff_t from, ptrdiff_t to)
+{
+  Lisp_Object marker;
+  register struct Lisp_Marker *m;
+  register ptrdiff_t charpos, adjustment;
+
+  /* Allocate a cons cell to be the undo boundary after this command.  */
+  if (NILP (pending_boundary))
+    pending_boundary = Fcons (Qnil, Qnil);
+
+  if (current_buffer != last_undo_buffer)
+    Fundo_boundary ();
+  last_undo_buffer = current_buffer;
+
+  for (m = BUF_MARKERS (current_buffer); m; m = m->next)
+    {
+      charpos = m->charpos;
+      eassert (charpos <= Z);
+
+      if (from <= charpos && charpos <= to)
+        {
+          /* insertion_type nil markers will end up at the beginning of
+             the re-inserted text after undoing a deletion, and must be
+             adjusted to move them to the correct place.
+
+             insertion_type t markers will automatically move forward
+             upon re-inserting the deleted text, so we have to arrange
+             for them to move backward to the correct position.  */
+          adjustment = (m->insertion_type ? to : from) - charpos;
+
+          if (adjustment)
+            {
+              XSETMISC (marker, m);
+              bset_undo_list
+                (current_buffer,
+                 Fcons (Fcons (marker, make_number (adjustment)),
+                        BVAR (current_buffer, undo_list)));
+            }
+        }
+    }
+}
+
+/* Record that a deletion is about to take place, of the characters in
+   STRING, at location BEG.  Optionally record adjustments for markers
+   in the region STRING occupies in the current buffer.  */
 
 void
-record_delete (ptrdiff_t beg, Lisp_Object string)
+record_delete (ptrdiff_t beg, Lisp_Object string, bool record_markers)
 {
   Lisp_Object sbeg;
 
@@ -169,34 +200,15 @@ record_delete (ptrdiff_t beg, Lisp_Object string)
       record_point (beg);
     }
 
+  /* primitive-undo assumes marker adjustments are recorded
+     immediately before the deletion is recorded.  See bug 16818
+     discussion.  */
+  if (record_markers)
+    record_marker_adjustments (beg, beg + SCHARS (string));
+
   bset_undo_list
     (current_buffer,
      Fcons (Fcons (string, sbeg), BVAR (current_buffer, undo_list)));
-}
-
-/* Record the fact that MARKER is about to be adjusted by ADJUSTMENT.
-   This is done only when a marker points within text being deleted,
-   because that's the only case where an automatic marker adjustment
-   won't be inverted automatically by undoing the buffer modification.  */
-
-void
-record_marker_adjustment (Lisp_Object marker, ptrdiff_t adjustment)
-{
-  if (EQ (BVAR (current_buffer, undo_list), Qt))
-    return;
-
-  /* Allocate a cons cell to be the undo boundary after this command.  */
-  if (NILP (pending_boundary))
-    pending_boundary = Fcons (Qnil, Qnil);
-
-  if (current_buffer != last_undo_buffer)
-    Fundo_boundary ();
-  last_undo_buffer = current_buffer;
-
-  bset_undo_list
-    (current_buffer,
-     Fcons (Fcons (marker, make_number (adjustment)),
-	    BVAR (current_buffer, undo_list)));
 }
 
 /* Record that a replacement is about to take place,
@@ -206,7 +218,7 @@ record_marker_adjustment (Lisp_Object marker, ptrdiff_t adjustment)
 void
 record_change (ptrdiff_t beg, ptrdiff_t length)
 {
-  record_delete (beg, make_buffer_string (beg, beg + length, 1));
+  record_delete (beg, make_buffer_string (beg, beg + length, 1), false);
   record_insert (beg, length);
 }
 
@@ -229,10 +241,9 @@ record_first_change (void)
   if (base_buffer->base_buffer)
     base_buffer = base_buffer->base_buffer;
 
-  bset_undo_list
-    (current_buffer,
-     Fcons (Fcons (Qt, make_lisp_time (base_buffer->modtime)),
-	    BVAR (current_buffer, undo_list)));
+  bset_undo_list (current_buffer,
+		  Fcons (Fcons (Qt, Fvisited_file_modtime ()),
+			 BVAR (current_buffer, undo_list)));
 }
 
 /* Record a change in property PROP (whose old value was VAL)
@@ -245,7 +256,7 @@ record_property_change (ptrdiff_t beg, ptrdiff_t length,
 {
   Lisp_Object lbeg, lend, entry;
   struct buffer *obuf = current_buffer, *buf = XBUFFER (buffer);
-  int boundary = 0;
+  bool boundary = 0;
 
   if (EQ (BVAR (buf, undo_list), Qt))
     return;
@@ -445,223 +456,6 @@ truncate_undo_list (struct buffer *b)
   unbind_to (count, Qnil);
 }
 
-static _Noreturn void
-user_error (const char *msg)
-{
-  xsignal1 (Quser_error, build_string (msg));
-}
-
-
-DEFUN ("primitive-undo", Fprimitive_undo, Sprimitive_undo, 2, 2, 0,
-       doc: /* Undo N records from the front of the list LIST.
-Return what remains of the list.  */)
-  (Lisp_Object n, Lisp_Object list)
-{
-  struct gcpro gcpro1, gcpro2;
-  Lisp_Object next;
-  ptrdiff_t count = SPECPDL_INDEX ();
-  register EMACS_INT arg;
-  Lisp_Object oldlist;
-  int did_apply = 0;
-
-#if 0  /* This is a good feature, but would make undo-start
-	  unable to do what is expected.  */
-  Lisp_Object tem;
-
-  /* If the head of the list is a boundary, it is the boundary
-     preceding this command.  Get rid of it and don't count it.  */
-  tem = Fcar (list);
-  if (NILP (tem))
-    list = Fcdr (list);
-#endif
-
-  CHECK_NUMBER (n);
-  arg = XINT (n);
-  next = Qnil;
-  GCPRO2 (next, list);
-  /* I don't think we need to gcpro oldlist, as we use it only
-     to check for EQ.  ++kfs  */
-
-  /* In a writable buffer, enable undoing read-only text that is so
-     because of text properties.  */
-  if (NILP (BVAR (current_buffer, read_only)))
-    specbind (Qinhibit_read_only, Qt);
-
-  /* Don't let `intangible' properties interfere with undo.  */
-  specbind (Qinhibit_point_motion_hooks, Qt);
-
-  oldlist = BVAR (current_buffer, undo_list);
-
-  while (arg > 0)
-    {
-      while (CONSP (list))
-	{
-	  next = XCAR (list);
-	  list = XCDR (list);
-	  /* Exit inner loop at undo boundary.  */
-	  if (NILP (next))
-	    break;
-	  /* Handle an integer by setting point to that value.  */
-	  if (INTEGERP (next))
-	    SET_PT (clip_to_bounds (BEGV, XINT (next), ZV));
-	  else if (CONSP (next))
-	    {
-	      Lisp_Object car, cdr;
-
-	      car = XCAR (next);
-	      cdr = XCDR (next);
-	      if (EQ (car, Qt))
-		{
-		  /* Element (t . TIME) records previous modtime.
-		     Preserve any flag of NONEXISTENT_MODTIME_NSECS or
-		     UNKNOWN_MODTIME_NSECS.  */
-		  struct buffer *base_buffer = current_buffer;
-		  EMACS_TIME mod_time;
-
-		  if (CONSP (cdr)
-		      && CONSP (XCDR (cdr))
-		      && CONSP (XCDR (XCDR (cdr)))
-		      && CONSP (XCDR (XCDR (XCDR (cdr))))
-		      && INTEGERP (XCAR (XCDR (XCDR (XCDR (cdr)))))
-		      && XINT (XCAR (XCDR (XCDR (XCDR (cdr))))) < 0)
-		    mod_time =
-		      (make_emacs_time
-		       (0, XINT (XCAR (XCDR (XCDR (XCDR (cdr))))) / 1000));
-		  else
-		    mod_time = lisp_time_argument (cdr);
-
-		  if (current_buffer->base_buffer)
-		    base_buffer = current_buffer->base_buffer;
-
-		  /* If this records an obsolete save
-		     (not matching the actual disk file)
-		     then don't mark unmodified.  */
-		  if (EMACS_TIME_NE (mod_time, base_buffer->modtime))
-		    continue;
-#ifdef CLASH_DETECTION
-		  Funlock_buffer ();
-#endif /* CLASH_DETECTION */
-		  Fset_buffer_modified_p (Qnil);
-		}
-	      else if (EQ (car, Qnil))
-		{
-		  /* Element (nil PROP VAL BEG . END) is property change.  */
-		  Lisp_Object beg, end, prop, val;
-
-		  prop = Fcar (cdr);
-		  cdr = Fcdr (cdr);
-		  val = Fcar (cdr);
-		  cdr = Fcdr (cdr);
-		  beg = Fcar (cdr);
-		  end = Fcdr (cdr);
-
-		  if (XINT (beg) < BEGV || XINT (end) > ZV)
-		    user_error ("Changes to be undone are outside visible portion of buffer");
-		  Fput_text_property (beg, end, prop, val, Qnil);
-		}
-	      else if (INTEGERP (car) && INTEGERP (cdr))
-		{
-		  /* Element (BEG . END) means range was inserted.  */
-
-		  if (XINT (car) < BEGV
-		      || XINT (cdr) > ZV)
-		    user_error ("Changes to be undone are outside visible portion of buffer");
-		  /* Set point first thing, so that undoing this undo
-		     does not send point back to where it is now.  */
-		  Fgoto_char (car);
-		  Fdelete_region (car, cdr);
-		}
-	      else if (EQ (car, Qapply))
-		{
-		  /* Element (apply FUN . ARGS) means call FUN to undo.  */
-		  struct buffer *save_buffer = current_buffer;
-
-		  car = Fcar (cdr);
-		  cdr = Fcdr (cdr);
-		  if (INTEGERP (car))
-		    {
-		      /* Long format: (apply DELTA START END FUN . ARGS).  */
-		      Lisp_Object delta = car;
-		      Lisp_Object start = Fcar (cdr);
-		      Lisp_Object end   = Fcar (Fcdr (cdr));
-		      Lisp_Object start_mark = Fcopy_marker (start, Qnil);
-		      Lisp_Object end_mark   = Fcopy_marker (end, Qt);
-
-		      cdr = Fcdr (Fcdr (cdr));
-		      apply1 (Fcar (cdr), Fcdr (cdr));
-
-		      /* Check that the function did what the entry said it
-			 would do.  */
-		      if (!EQ (start, Fmarker_position (start_mark))
-			  || (XINT (delta) + XINT (end)
-			      != marker_position (end_mark)))
-			error ("Changes to be undone by function different than announced");
-		      Fset_marker (start_mark, Qnil, Qnil);
-		      Fset_marker (end_mark, Qnil, Qnil);
-		    }
-		  else
-		    apply1 (car, cdr);
-
-		  if (save_buffer != current_buffer)
-		    error ("Undo function switched buffer");
-		  did_apply = 1;
-		}
-	      else if (STRINGP (car) && INTEGERP (cdr))
-		{
-		  /* Element (STRING . POS) means STRING was deleted.  */
-		  Lisp_Object membuf;
-		  EMACS_INT pos = XINT (cdr);
-
-		  membuf = car;
-		  if (pos < 0)
-		    {
-		      if (-pos < BEGV || -pos > ZV)
-			user_error ("Changes to be undone are outside visible portion of buffer");
-		      SET_PT (-pos);
-		      Finsert (1, &membuf);
-		    }
-		  else
-		    {
-		      if (pos < BEGV || pos > ZV)
-			user_error ("Changes to be undone are outside visible portion of buffer");
-		      SET_PT (pos);
-
-		      /* Now that we record marker adjustments
-			 (caused by deletion) for undo,
-			 we should always insert after markers,
-			 so that undoing the marker adjustments
-			 put the markers back in the right place.  */
-		      Finsert (1, &membuf);
-		      SET_PT (pos);
-		    }
-		}
-	      else if (MARKERP (car) && INTEGERP (cdr))
-		{
-		  /* (MARKER . INTEGER) means a marker MARKER
-		     was adjusted by INTEGER.  */
-		  if (XMARKER (car)->buffer)
-		    Fset_marker (car,
-				 make_number (marker_position (car) - XINT (cdr)),
-				 Fmarker_buffer (car));
-		}
-	    }
-	}
-      arg--;
-    }
-
-
-  /* Make sure an apply entry produces at least one undo entry,
-     so the test in `undo' for continuing an undo series
-     will work right.  */
-  if (did_apply
-      && EQ (oldlist, BVAR (current_buffer, undo_list)))
-    bset_undo_list
-      (current_buffer,
-       Fcons (list3 (Qapply, Qcdr, Qnil), BVAR (current_buffer, undo_list)));
-
-  UNGCPRO;
-  return unbind_to (count, list);
-}
 
 void
 syms_of_undo (void)
@@ -675,7 +469,6 @@ syms_of_undo (void)
   last_undo_buffer = NULL;
   last_boundary_buffer = NULL;
 
-  defsubr (&Sprimitive_undo);
   defsubr (&Sundo_boundary);
 
   DEFVAR_INT ("undo-limit", undo_limit,

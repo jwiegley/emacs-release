@@ -1,14 +1,12 @@
-This is
-/misc/emacs/bzr/emacs24-merge/doc/misc/../../info/speedbar.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/speedbar.texi.
+This is ../../info/speedbar.info, produced by makeinfo version 4.13
+from ./speedbar.texi.
 
-Copyright (C) 1999-2013 Free Software Foundation, Inc.
+Copyright (C) 1999-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -22,7 +20,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: speedbar.info,  Node: Top,  Up: (dir)Top
+File: speedbar.info,  Node: Top,  Next: Introduction,  Up: (dir)
 
 Speedbar
 ********
@@ -53,12 +51,12 @@ Expanding refers to clicking on an expansion button to display an
 expanded summary of the entry the expansion button is on.  *Note Basic
 Navigation::.
 
-   Copyright (C) 1999-2013 Free Software Foundation, Inc.
+   Copyright (C) 1999-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -79,7 +77,7 @@ Navigation::.
 * Index::
 
 
-File: speedbar.info,  Node: Introduction,  Next: Basic Navigation,  Up: Top
+File: speedbar.info,  Node: Introduction,  Next: Basic Navigation,  Prev: Top,  Up: Top
 
 1 Introduction
 **************
@@ -128,7 +126,7 @@ to use.
 * Displays Submenu::
 
 
-File: speedbar.info,  Node: Basic Key Bindings,  Next: Basic Visuals,  Prev: Basic Navigation,  Up: Basic Navigation
+File: speedbar.info,  Node: Basic Key Bindings,  Next: Basic Visuals,  Up: Basic Navigation
 
 2.1 Basic Key Bindings
 ======================
@@ -387,7 +385,7 @@ has some associated object file.
 * File Key Bindings::   Performing file operations.
 
 
-File: speedbar.info,  Node: Directory Display,  Next: Hidden Files,  Prev: File Mode,  Up: File Mode
+File: speedbar.info,  Node: Directory Display,  Next: Hidden Files,  Up: File Mode
 
 3.1 Directory Display
 =====================
@@ -598,7 +596,7 @@ bindings and visuals, but will have specialized behaviors.
             stack trace.
 
 
-File: speedbar.info,  Node: RMAIL,  Next: Info,  Prev: Minor Modes,  Up: Minor Modes
+File: speedbar.info,  Node: RMAIL,  Next: Info,  Up: Minor Modes
 
 5.1 RMAIL
 =========
@@ -689,7 +687,7 @@ modify speedbar's behavior.
 * Hooks::                   The many hooks you can use.
 
 
-File: speedbar.info,  Node: Frames and Faces,  Next: Tag Hierarchy Methods,  Prev: Customizing,  Up: Customizing
+File: speedbar.info,  Node: Frames and Faces,  Next: Tag Hierarchy Methods,  Up: Customizing
 
 6.1 Frames and Faces
 ====================
@@ -896,7 +894,7 @@ specialized tagging functions.
 * Creating a display::     How to insert buttons and hierarchies.
 
 
-File: speedbar.info,  Node: Minor Display Modes,  Next: Major Display Modes,  Prev: Extending,  Up: Extending
+File: speedbar.info,  Node: Minor Display Modes,  Next: Major Display Modes,  Up: Extending
 
 7.1 Minor Display Modes
 =======================
@@ -1202,7 +1200,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -1788,33 +1786,38 @@ Concept Index
 
 
 Tag Table:
-Node: Top921
-Node: Introduction3401
-Node: Basic Navigation4928
-Node: Basic Key Bindings5373
-Node: Basic Visuals7514
-Node: Mouse Bindings11465
-Node: Displays Submenu13090
-Node: File Mode13770
-Node: Directory Display14377
-Node: Hidden Files17417
-Node: File Key Bindings18638
-Node: Buffer Mode20072
-Node: Minor Modes21187
-Node: RMAIL22046
-Node: Info22944
-Node: GDB23551
-Node: Customizing24349
-Node: Frames and Faces25160
-Node: Tag Hierarchy Methods26498
-Node: Version Control28724
-Node: Hooks30066
-Node: Extending31322
-Node: Minor Display Modes32393
-Node: Major Display Modes34384
-Node: Tagging Extensions39159
-Node: Creating a display40566
-Node: GNU Free Documentation License45111
-Node: Index70282
+Node: Top845
+Node: Introduction3343
+Node: Basic Navigation4882
+Node: Basic Key Bindings5327
+Node: Basic Visuals7443
+Node: Mouse Bindings11394
+Node: Displays Submenu13019
+Node: File Mode13699
+Node: Directory Display14306
+Node: Hidden Files17328
+Node: File Key Bindings18549
+Node: Buffer Mode19983
+Node: Minor Modes21098
+Node: RMAIL21957
+Node: Info22835
+Node: GDB23442
+Node: Customizing24240
+Node: Frames and Faces25051
+Node: Tag Hierarchy Methods26369
+Node: Version Control28595
+Node: Hooks29937
+Node: Extending31193
+Node: Minor Display Modes32264
+Node: Major Display Modes34237
+Node: Tagging Extensions39012
+Node: Creating a display40419
+Node: GNU Free Documentation License44964
+Node: Index70129
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

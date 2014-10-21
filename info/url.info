@@ -1,6 +1,5 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/url.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/url.texi.
+This is ../../info/url.info, produced by makeinfo version 4.13 from
+./url.texi.
 
 INFO-DIR-SECTION Emacs lisp libraries
 START-INFO-DIR-ENTRY
@@ -9,13 +8,13 @@ END-INFO-DIR-ENTRY
 
    This is the manual for the `url' Emacs Lisp library.
 
-   Copyright (C) 1993-1999, 2002, 2004-2013 Free Software Foundation,
+   Copyright (C) 1993-1999, 2002, 2004-2014 Free Software Foundation,
 Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -31,13 +30,13 @@ URL
 
 This is the manual for the `url' Emacs Lisp library.
 
-   Copyright (C) 1993-1999, 2002, 2004-2013 Free Software Foundation,
+   Copyright (C) 1993-1999, 2002, 2004-2014 Free Software Foundation,
 Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -119,7 +118,7 @@ which converts a parsed URI back into a URI string.
    The return value of `url-generic-parse-url', and the argument
 expected by `url-recreate-url', is a "parsed URI": a CL structure whose
 slots hold the various components of the URI.  *Note the CL Manual:
-(cl)top, for details about CL structures.  Most of the other functions
+(cl)Top, for details about CL structures.  Most of the other functions
 in the `url' library act on parsed URIs.
 
 * Menu:
@@ -305,7 +304,7 @@ URI-encoded (*note URI Encoding::).
      The value of this option is an integer specifying the maximum
      number of concurrent `url-queue-retrieve' network processes.  If
      the number of `url-queue-retrieve' calls is larger than this
-     number, later ones are queued until ealier ones are finished.
+     number, later ones are queued until earlier ones are finished.
 
  -- User Option: url-queue-timeout
      The value of this option is a number specifying the maximum
@@ -371,6 +370,11 @@ File: url.info,  Node: Cookies,  Next: HTTP language/coding,  Up: http/https
 
 4.1.1 Cookies
 -------------
+
+ -- Function: url-cookie-list
+     This command creates a `*url cookies*' buffer listing the current
+     cookies, if there are any.  You can remove a cookie using the
+     `C-k' (`url-cookie-delete') command.
 
  -- User Option: url-cookie-file
      The file in which cookies are stored, defaulting to `cookies' in
@@ -764,9 +768,9 @@ cleared automatically.
             => "/home/fx/.url/cache/fx/http/com/example/www/foo/bar"
 
  -- Function: url-cache-expired
-     This function returns non-nil if a cache entry has expired (or is
-     absent).  The arguments are a URL and optional expiration delay in
-     seconds (default URL-CACHE-EXPIRE-TIME).
+     This function returns non-`nil' if a cache entry has expired (or
+     is absent).  The arguments are a URL and optional expiration delay
+     in seconds (default URL-CACHE-EXPIRE-TIME).
 
  -- User Option: url-cache-expire-time
      This variable is the default number of seconds to use for the
@@ -1085,7 +1089,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -1580,6 +1584,8 @@ Command and Function Index
 * url-cache-create-filename-using-md5:   Disk Caching.         (line 31)
 * url-cache-expired:                     Disk Caching.         (line 44)
 * url-completion-function:               History.              (line 43)
+* url-cookie-delete:                     Cookies.              (line  6)
+* url-cookie-list:                       Cookies.              (line  7)
 * url-do-setup:                          History.              (line  6)
 * url-encode-url:                        URI Encoding.         (line 22)
 * url-fetch-from-cache:                  Disk Caching.         (line 53)
@@ -1631,12 +1637,12 @@ Variable Index
 * url-cache-expire-time:                 Disk Caching.        (line  49)
 * url-configuration-directory:           Customization.       (line  16)
 * url-confirmation-func:                 Customization.       (line  51)
-* url-cookie-confirmation:               Cookies.             (line  11)
-* url-cookie-file:                       Cookies.             (line   7)
-* url-cookie-multiple-line:              Cookies.             (line  14)
-* url-cookie-save-interval:              Cookies.             (line  27)
-* url-cookie-trusted-urls:               Cookies.             (line  19)
-* url-cookie-untrusted-urls:             Cookies.             (line  23)
+* url-cookie-confirmation:               Cookies.             (line  16)
+* url-cookie-file:                       Cookies.             (line  12)
+* url-cookie-multiple-line:              Cookies.             (line  19)
+* url-cookie-save-interval:              Cookies.             (line  32)
+* url-cookie-trusted-urls:               Cookies.             (line  24)
+* url-cookie-untrusted-urls:             Cookies.             (line  28)
 * url-debug:                             Customization.       (line  27)
 * url-directory-index-file:              file/ftp.            (line  24)
 * url-gateway-local-host-regexp:         Gateways in general. (line  19)
@@ -1776,39 +1782,44 @@ Concept Index
 
 
 Tag Table:
-Node: Top980
-Node: Introduction2345
-Node: URI Parsing3612
-Node: Parsed URIs4929
-Node: URI Encoding6938
-Node: Retrieving URLs9289
-Node: Supported URL Types12635
-Node: http/https13493
-Node: Cookies14559
-Node: HTTP language/coding15550
-Node: HTTP URL Options17182
-Node: Dealing with HTTP documents18118
-Node: file/ftp18489
-Node: info19606
-Node: mailto19922
-Node: news/nntp/snews21268
-Node: rlogin/telnet/tn327022781
-Node: irc23385
-Node: data24303
-Node: nfs24792
-Node: ldap25565
-Node: man25708
-Node: General Facilities25952
-Node: Disk Caching26175
-Node: Proxies28703
-Node: Gateways in general30763
-Ref: Gateways in general-Footnote-134814
-Node: Suppressing network connections34889
-Node: History35545
-Node: Customization37389
-Node: GNU Free Documentation License39642
-Node: Function Index64821
-Node: Variable Index67347
-Node: Concept Index72222
+Node: Top904
+Node: Introduction2269
+Node: URI Parsing3536
+Node: Parsed URIs4853
+Node: URI Encoding6862
+Node: Retrieving URLs9213
+Node: Supported URL Types12560
+Node: http/https13418
+Node: Cookies14484
+Node: HTTP language/coding15686
+Node: HTTP URL Options17318
+Node: Dealing with HTTP documents18254
+Node: file/ftp18625
+Node: info19742
+Node: mailto20058
+Node: news/nntp/snews21404
+Node: rlogin/telnet/tn327022917
+Node: irc23521
+Node: data24439
+Node: nfs24928
+Node: ldap25701
+Node: man25844
+Node: General Facilities26088
+Node: Disk Caching26311
+Node: Proxies28841
+Node: Gateways in general30901
+Ref: Gateways in general-Footnote-134952
+Node: Suppressing network connections35027
+Node: History35683
+Node: Customization37527
+Node: GNU Free Documentation License39780
+Node: Function Index64953
+Node: Variable Index67625
+Node: Concept Index72500
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

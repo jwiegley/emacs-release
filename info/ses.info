@@ -1,15 +1,14 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/ses.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/ses.texi.
+This is ../../info/ses.info, produced by makeinfo version 4.13 from
+./ses.texi.
 
 This file documents SES: the Simple Emacs Spreadsheet.
 
-   Copyright (C) 2002-2013 Free Software Foundation, Inc.
+   Copyright (C) 2002-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License."
@@ -23,7 +22,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: ses.info,  Node: Top,  Next: Sales Pitch,  Prev: (dir),  Up: (dir)
+File: ses.info,  Node: Top,  Next: Sales Pitch,  Up: (dir)
 
 SES: Simple Emacs Spreadsheet
 *****************************
@@ -32,16 +31,16 @@ SES: Simple Emacs Spreadsheet
      contain a rectangular grid of cells.  The cells' values are specified
      by formulas that can refer to the values of other cells.
 
-   To report bugs, send email to <jyavner@member.fsf.org>.
+   To report bugs, use `M-x report-emacs-bug'.
 
    This file documents SES: the Simple Emacs Spreadsheet.
 
-   Copyright (C) 2002-2013 Free Software Foundation, Inc.
+   Copyright (C) 2002-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License."
@@ -52,6 +51,7 @@ SES: Simple Emacs Spreadsheet
 * Menu:
 
 * Sales Pitch::                 Why use SES?
+* Quick Tutorial::              A quick introduction
 * The Basics::                  Basic spreadsheet commands
 * Advanced Features::           Want to know more?
 * For Gurus::                   Want to know _even more_?
@@ -60,7 +60,7 @@ SES: Simple Emacs Spreadsheet
 * GNU Free Documentation License:: The license for this documentation.
 
 
-File: ses.info,  Node: Sales Pitch,  Next: The Basics,  Prev: Top,  Up: Top
+File: ses.info,  Node: Sales Pitch,  Next: Quick Tutorial,  Prev: Top,  Up: Top
 
 1 Sales Pitch
 *************
@@ -92,9 +92,81 @@ File: ses.info,  Node: Sales Pitch,  Next: The Basics,  Prev: Top,  Up: Top
    * Plaintext, easily-hacked file format.
 
 
-File: ses.info,  Node: The Basics,  Next: Advanced Features,  Prev: Sales Pitch,  Up: Top
+File: ses.info,  Node: Quick Tutorial,  Next: The Basics,  Prev: Sales Pitch,  Up: Top
 
-2 The Basics
+2 Quick Tutorial
+****************
+
+If you want to get started quickly and think that you know what to
+expect from a simple spreadsheet, this chapter may be all that you need.
+
+   First, visit a new file with the `.ses' extension.  Emacs presents
+you with an empty spreadsheet containing a single cell.
+
+   Begin by inserting a headline: `"Income"<RET>'.  The double quotes
+indicate that this is a text cell.  (Notice that Emacs automatically
+inserts the closing quotation mark.)
+
+   To insert your first income value, you must first resize the
+spreadsheet.  Press <TAB> to add a new cell and navigate back up to it.
+Enter a number, such as `2.23'.  Then proceed to add a few more income
+entries, e.g.:
+
+     A
+      Income
+        2.23
+        0.02
+       15.76
+       -4.00
+
+   To add up the values, enter a Lisp expression:
+
+     (+ A2 A3 A4 A5)
+
+   Perhaps you want to add a cell to the right of cell A4 to explain
+why you have a negative entry.  Pressing `TAB' in that cell adds an
+entire new column `B', where you can add such a note.
+
+   The column is fairly narrow by default, but pressing `w' allows you
+to resize it as needed.  Make it 20 characters wide.  You can now add
+descriptive legends for all the entries, e.g.:
+
+     A       B
+      Income
+        2.23       Consulting fee
+        0.02     Informed opinion
+       15.76       Lemonade stand
+          -4          Loan to Joe
+       14.01                Total
+
+   By default, the labels in column B are right-justified.  To change
+that, you can enter a printer function for the whole column, using
+e.g., `M-p ("%s")'.  You can override a column's printer function in
+any individual cell using `p'.
+
+   If Joe pays back his loan, you might blank that entry; e.g., by
+positioning the cursor in cell A5 and pressing `C-d' twice.  If you do
+that, the total cell will display `######'.  That is because the
+regular `+' operator does not handle a range that contains some empty
+cells.  Instead of emptying the cell, you could enter a literal `0', or
+delete the entire row using `C-k'.  An alternative is to use the
+special function `ses+' instead of the regular `+':
+
+     (ses+ A2 A3 A4 A5)
+
+   To make a formula robust against changes in the spreadsheet geometry,
+you can use the `ses-range' macro to refer to a range of cells by the
+end-points, e.g.:
+
+     (apply 'ses+ (ses-range A2 A5))
+
+   (The `apply' is necessary because `ses-range' produces a _list_ of
+values.  This allows for more complex possibilities.)
+
+
+File: ses.info,  Node: The Basics,  Next: Advanced Features,  Prev: Quick Tutorial,  Up: Top
+
+3 The Basics
 ************
 
 To create a new spreadsheet, visit a nonexistent file whose name ends
@@ -103,7 +175,8 @@ with ".ses".  For example, `C-x C-f test.ses RET'.
    A "cell identifier" is a symbol with a column letter and a row
 number.  Cell B7 is the 2nd column of the 7th row.  For very wide
 spreadsheets, there are two column letters: cell AB7 is the 28th column
-of the 7th row. Super wide spreadsheets get AAA1, etc.
+of the 7th row. Super wide spreadsheets get AAA1, etc.  You move around
+with the regular Emacs movement commands.
 
 `j'
      Moves point to cell, specified by identifier (`ses-jump').
@@ -115,7 +188,7 @@ uses transient mark mode).  Drag the mouse from A1 to A3 to create the
 range A1-A2.  Many SES commands operate only on single cells, not
 ranges.
 
-`C-SPC'
+`C-<SPC>'
 `C-@'
      Set mark at point (`set-mark-command').
 
@@ -141,12 +214,13 @@ ranges.
 * Customizing SES::
 
 
-File: ses.info,  Node: Formulas,  Next: Resizing,  Prev: The Basics,  Up: The Basics
+File: ses.info,  Node: Formulas,  Next: Resizing,  Up: The Basics
 
-2.1 Cell formulas
+3.1 Cell formulas
 =================
 
-To enter a number into the current cell, just start typing:
+To insert a value into a cell, simply type a numeric expression,
+`"double-quoted text"', or a Lisp expression.
 
 `0..9'
      Self-insert a digit (`ses-read-cell').
@@ -189,7 +263,7 @@ erase the digit and type whatever you want.
 
 File: ses.info,  Node: Resizing,  Next: Printer functions,  Prev: Formulas,  Up: The Basics
 
-2.2 Resizing the spreadsheet
+3.2 Resizing the spreadsheet
 ============================
 
 Basic commands:
@@ -234,7 +308,7 @@ column becomes `(+ A1 B1)'.  In case this is not what you wanted:
 
 File: ses.info,  Node: Printer functions,  Next: Clearing cells,  Prev: Resizing,  Up: The Basics
 
-2.3 Printer functions
+3.3 Printer functions
 =====================
 
 Printer functions convert binary cell values into the print forms that
@@ -288,7 +362,7 @@ default-printer if `nil') and then center the result:
 
 File: ses.info,  Node: Clearing cells,  Next: Copy/cut/paste,  Prev: Printer functions,  Up: The Basics
 
-2.4 Clearing cells
+3.4 Clearing cells
 ==================
 
 These commands set both formula and printer to `nil':
@@ -302,7 +376,7 @@ These commands set both formula and printer to `nil':
 
 File: ses.info,  Node: Copy/cut/paste,  Next: Customizing SES,  Prev: Clearing cells,  Up: The Basics
 
-2.5 Copy, cut, and paste
+3.5 Copy, cut, and paste
 ========================
 
 The copy functions work on rectangular regions of cells.  You can paste
@@ -366,7 +440,7 @@ the copies into non-SES buffers to export the print text.
 
 File: ses.info,  Node: Customizing SES,  Prev: Copy/cut/paste,  Up: The Basics
 
-2.6 Customizing SES
+3.6 Customizing SES
 ===================
 
 By default, a newly-created spreadsheet has 1 row and 1 column.  The
@@ -395,7 +469,7 @@ is for people who don't wear safety belts!
 
 File: ses.info,  Node: Advanced Features,  Next: For Gurus,  Prev: The Basics,  Up: Top
 
-3 Advanced Features
+4 Advanced Features
 *******************
 
 `C-c M-C-h'
@@ -410,6 +484,16 @@ File: ses.info,  Node: Advanced Features,  Next: For Gurus,  Prev: The Basics,  
      Pops up a menu to set the current row as the header, or revert to
      column letters.
 
+`M-x ses-rename-cell'
+     Rename a cell from a standard A1-like name to any string.
+
+`M-x ses-repair-cell-reference-all'
+     When you interrupt a cell formula update by clicking `C-g', then
+     the cell reference link may be broken, which will jeopardize
+     automatic cell update when any other cell on which it depends is
+     changed. To repair that use function
+     `ses-repair-cell-reference-all'
+
 * Menu:
 
 * The print area::
@@ -422,9 +506,9 @@ File: ses.info,  Node: Advanced Features,  Next: For Gurus,  Prev: The Basics,  
 * Spreadsheets with details and summary::
 
 
-File: ses.info,  Node: The print area,  Next: Ranges in formulas,  Prev: Advanced Features,  Up: Advanced Features
+File: ses.info,  Node: The print area,  Next: Ranges in formulas,  Up: Advanced Features
 
-3.1 The print area
+4.1 The print area
 ==================
 
 A SES file consists of a print area and a data area.  Normally the
@@ -447,7 +531,7 @@ printer functions, etc.
 
 File: ses.info,  Node: Ranges in formulas,  Next: Sorting by column,  Prev: The print area,  Up: Advanced Features
 
-3.2 Ranges in formulas
+4.2 Ranges in formulas
 ======================
 
 A formula like
@@ -489,10 +573,67 @@ the formula relocator will delete the ses-range from the formula.
 a new column just beyond a one-row range, the new cell is included in
 the range.  New cells inserted just before a range are not included.
 
+   Flags can be added to `ses-range' immediately after the TO cell.
+`!'
+     Empty cells in range can be removed by adding the `!' flag. An
+     empty cell is a cell the value of which is one of symbols `nil' or
+     `*skip*'. For instance `(ses-range A1 A4 !)' will do the same as
+     `(list A1 A3)' when cells `A2' and `A4' are empty.
+
+`_'
+     Empty cell values are replaced by the argument following flag `_',
+     or `0' when flag `_' is last in argument list. For instance
+     `(ses-range A1 A4 _ "empty")' will do the same as `(list A1
+     "empty" A3 "empty")' when cells `A2' and `A4' are empty.
+     Similarly, `(ses-range A1 A4 _ )' will do the same as `(list A1 0
+     A3 0)'.
+
+`>v'
+     When order matters, list cells by reading cells row-wise from top
+     left to bottom right. This flag is provided for completeness only
+     as it is the default reading order.
+
+`<v'
+     List cells by reading cells row-wise from top right to bottom left.
+
+`v>'
+     List cells by reading cells column-wise from top left to bottom
+     right.
+
+`v<'
+     List cells by reading cells column-wise from top right to bottom
+     left.
+
+`v'
+     A short hand for `v>'.
+
+`^'
+     A short hand for `^>'.
+
+`>'
+     A short hand for `>v'.
+
+`<'
+     A short hand for `>^'.
+
+`*'
+     Instead of listing cells, it makes a Calc vector or matrix of it
+     (*note Top: (calc)Top.). If the range contains only one row or one
+     column a vector is made, otherwise a matrix is made.
+
+`*2'
+     Same as `*' except that a matrix is always made even when there is
+     only one row or column in the range.
+
+`*1'
+     Same as `*' except that a vector is always made even when there is
+     only one row or column in the range, that is to say the
+     corresponding matrix is flattened.
+
 
 File: ses.info,  Node: Sorting by column,  Next: Standard formula functions,  Prev: Ranges in formulas,  Up: Advanced Features
 
-3.3 Sorting by column
+4.3 Sorting by column
 =====================
 
 `C-c M-C-s'
@@ -518,7 +659,7 @@ the range.
 
 File: ses.info,  Node: Standard formula functions,  Next: More on cell printing,  Prev: Sorting by column,  Up: Advanced Features
 
-3.4 Standard formula functions
+4.4 Standard formula functions
 ==============================
 
 Oftentimes you want a calculation to exclude the blank cells.  Here are
@@ -538,7 +679,7 @@ some useful functions to call from your formulas:
 
 File: ses.info,  Node: More on cell printing,  Next: Import and export,  Prev: Standard formula functions,  Up: Advanced Features
 
-3.5 More on cell printing
+4.5 More on cell printing
 =========================
 
 Special cell values:
@@ -583,7 +724,7 @@ such cells will display "Format specifier doesn't match argument type".
 
 File: ses.info,  Node: Import and export,  Next: Virus protection,  Prev: More on cell printing,  Up: Advanced Features
 
-3.6 Import and export
+4.6 Import and export
 =====================
 
 `x t'
@@ -602,7 +743,7 @@ contains tabs and/or newlines.  Imported formulas are not relocated.
 
 File: ses.info,  Node: Virus protection,  Next: Spreadsheets with details and summary,  Prev: Import and export,  Up: Advanced Features
 
-3.7 Virus protection
+4.7 Virus protection
 ====================
 
 Whenever a formula or printer is read from a file or is pasted into the
@@ -631,7 +772,7 @@ for more info on how Lisp forms are classified as safe or unsafe.
 
 File: ses.info,  Node: Spreadsheets with details and summary,  Prev: Virus protection,  Up: Advanced Features
 
-3.8 Spreadsheets with details and summary
+4.8 Spreadsheets with details and summary
 =========================================
 
 A common organization for spreadsheets is to have a bunch of "detail"
@@ -659,7 +800,7 @@ a details-and-summary spreadsheet.
 
 File: ses.info,  Node: For Gurus,  Next: Index,  Prev: Advanced Features,  Up: Top
 
-4 For Gurus
+5 For Gurus
 ***********
 
 * Menu:
@@ -671,9 +812,9 @@ File: ses.info,  Node: For Gurus,  Next: Index,  Prev: Advanced Features,  Up: T
 * Uses of defadvice in SES::
 
 
-File: ses.info,  Node: Deferred updates,  Next: Nonrelocatable references,  Prev: For Gurus,  Up: For Gurus
+File: ses.info,  Node: Deferred updates,  Next: Nonrelocatable references,  Up: For Gurus
 
-4.1 Deferred updates
+5.1 Deferred updates
 ====================
 
 To save time by avoiding redundant computations, cells that need
@@ -703,7 +844,7 @@ ahead without worrying about the glitch.
 
 File: ses.info,  Node: Nonrelocatable references,  Next: The data area,  Prev: Deferred updates,  Up: For Gurus
 
-4.2 Nonrelocatable references
+5.2 Nonrelocatable references
 =============================
 
 `C-y' relocates all cell-references in a pasted formula, while `C-u
@@ -726,7 +867,7 @@ kind of dependency is also not recorded.
 
 File: ses.info,  Node: The data area,  Next: Buffer-local variables in spreadsheets,  Prev: Nonrelocatable references,  Up: For Gurus
 
-4.3 The data area
+5.3 The data area
 =================
 
 Begins with an 014 character, followed by sets of cell-definition
@@ -756,7 +897,7 @@ data structures:
 
 File: ses.info,  Node: Buffer-local variables in spreadsheets,  Next: Uses of defadvice in SES,  Prev: The data area,  Up: For Gurus
 
-4.4 Buffer-local variables in spreadsheets
+5.4 Buffer-local variables in spreadsheets
 ==========================================
 
 You can add additional local variables to the list at the bottom of the
@@ -788,7 +929,7 @@ avoid virus warnings, each function used in a formula needs
 
 File: ses.info,  Node: Uses of defadvice in SES,  Prev: Buffer-local variables in spreadsheets,  Up: For Gurus
 
-4.5 Uses of defadvice in SES
+5.5 Uses of defadvice in SES
 ============================
 
 `undo-more'
@@ -817,156 +958,161 @@ Index
 * Menu:
 
 * *error*:                               Standard formula functions.
-                                                                (line 6)
+                                                               (line  6)
 * *skip*:                                Standard formula functions.
-                                                                (line 6)
-* advanced features <1>:                 For Gurus.             (line 6)
-* advanced features:                     Advanced Features.     (line 6)
-* basic commands:                        The Basics.            (line 6)
+                                                               (line  6)
+* adding rows or columns:                Resizing.             (line  6)
+* advanced features <1>:                 For Gurus.            (line  6)
+* advanced features:                     Advanced Features.    (line  6)
+* basic commands:                        The Basics.           (line  6)
 * buffer-local variables:                Buffer-local variables in spreadsheets.
-                                                                (line 6)
-* cell printing, more:                   More on cell printing. (line 6)
-* clearing commands:                     Clearing cells.        (line 6)
-* clipboard-yank:                        Copy/cut/paste.        (line 6)
-* copy:                                  Copy/cut/paste.        (line 6)
+                                                               (line  6)
+* C-c M-C-h:                             Advanced Features.    (line  7)
+* cell formatting:                       Printer functions.    (line  6)
+* cell printing, more:                   More on cell printing.
+                                                               (line  6)
+* cell values:                           Formulas.             (line  6)
+* clearing commands:                     Clearing cells.       (line  6)
+* clipboard-yank:                        Copy/cut/paste.       (line  6)
+* column, adding or removing:            Resizing.             (line  6)
+* copy:                                  Copy/cut/paste.       (line  6)
 * copy-region-as-kill:                   Uses of defadvice in SES.
-                                                                (line 6)
-* customizing:                           Customizing SES.       (line 6)
-* cut:                                   Copy/cut/paste.        (line 6)
-* data area:                             The data area.         (line 6)
+                                                               (line  6)
+* customizing:                           Customizing SES.      (line  6)
+* cut:                                   Copy/cut/paste.       (line  6)
+* data area:                             The data area.        (line  6)
 * defadvice:                             Uses of defadvice in SES.
-                                                                (line 6)
-* deferred updates:                      Deferred updates.      (line 6)
+                                                               (line  6)
+* deferred updates:                      Deferred updates.     (line  6)
+* deleting rows or columns:              Resizing.             (line  6)
 * details and summary:                   Spreadsheets with details and summary.
-                                                                (line 6)
-* enable-local-eval:                     Customizing SES.       (line 6)
-* export, and import:                    Import and export.     (line 6)
-* features:                              Sales Pitch.           (line 6)
-* formulas:                              Formulas.              (line 6)
-* formulas, entering:                    Formulas.              (line 6)
-* from:                                  Ranges in formulas.    (line 6)
-* import and export:                     Import and export.     (line 6)
-* keyboard-quit:                         The Basics.            (line 6)
-* kill-ring-save:                        Copy/cut/paste.        (line 6)
-* mouse-set-region:                      Copy/cut/paste.        (line 6)
-* mouse-set-secondary:                   Copy/cut/paste.        (line 6)
-* mouse-yank-at-click:                   Copy/cut/paste.        (line 6)
-* mouse-yank-at-secondary:               Copy/cut/paste.        (line 6)
+                                                               (line  6)
+* dimensions:                            Resizing.             (line  6)
+* editing cells:                         Formulas.             (line  6)
+* enable-local-eval:                     Customizing SES.      (line  6)
+* export, and import:                    Import and export.    (line  6)
+* features:                              Sales Pitch.          (line  6)
+* formatting cells:                      Printer functions.    (line  6)
+* formulas:                              Formulas.             (line  6)
+* formulas, entering:                    Formulas.             (line  6)
+* from:                                  Ranges in formulas.   (line  6)
+* import and export:                     Import and export.    (line  6)
+* inserting rows or columns:             Resizing.             (line  6)
+* introduction:                          Quick Tutorial.       (line  6)
+* keyboard-quit:                         The Basics.           (line  6)
+* kill-ring-save:                        Copy/cut/paste.       (line  6)
+* mouse-set-region:                      Copy/cut/paste.       (line  6)
+* mouse-set-secondary:                   Copy/cut/paste.       (line  6)
+* mouse-yank-at-click:                   Copy/cut/paste.       (line  6)
+* mouse-yank-at-secondary:               Copy/cut/paste.       (line  6)
 * nonrelocatable references:             Nonrelocatable references.
-                                                                (line 6)
-* paste:                                 Copy/cut/paste.        (line 6)
-* print area:                            The print area.        (line 6)
-* printer functions:                     Printer functions.     (line 6)
-* ranges:                                Ranges in formulas.    (line 6)
+                                                               (line  6)
+* paste:                                 Copy/cut/paste.       (line  6)
+* print area:                            The print area.       (line  6)
+* printer functions:                     Printer functions.    (line  6)
+* ranges:                                Ranges in formulas.   (line  6)
 * references, nonrelocatable:            Nonrelocatable references.
-                                                                (line 6)
-* resizing spreadsheets:                 Resizing.              (line 6)
-* run-with-idle-timer:                   Deferred updates.      (line 6)
-* safe-functions:                        Customizing SES.       (line 6)
+                                                               (line  6)
+* removing rows or columns:              Resizing.             (line  6)
+* resizing spreadsheets:                 Resizing.             (line  6)
+* row, adding or removing:               Resizing.             (line  6)
+* run-with-idle-timer:                   Deferred updates.     (line  6)
+* safe-functions:                        Customizing SES.      (line  6)
 * ses+:                                  Standard formula functions.
-                                                                (line 6)
-* ses-append-row-jump-first-column:      Resizing.              (line 6)
+                                                               (line  6)
+* ses-append-row-jump-first-column:      Resizing.             (line  6)
 * ses-average:                           Standard formula functions.
-                                                                (line 6)
-* ses-center:                            Printer functions.     (line 6)
-* ses-center-span:                       Printer functions.     (line 6)
-* ses-clear-cell-backward:               Clearing cells.        (line 6)
-* ses-clear-cell-forward:                Clearing cells.        (line 6)
-* ses-dashfill:                          Printer functions.     (line 6)
-* ses-dashfill-span:                     Printer functions.     (line 6)
+                                                               (line  6)
+* ses-center:                            Printer functions.    (line  6)
+* ses-center-span:                       Printer functions.    (line  6)
+* ses-clear-cell-backward:               Clearing cells.       (line  6)
+* ses-clear-cell-forward:                Clearing cells.       (line  6)
+* ses-dashfill:                          Printer functions.    (line  6)
+* ses-dashfill-span:                     Printer functions.    (line  6)
 * ses-delete-blanks:                     Standard formula functions.
-                                                                (line 6)
-* ses-delete-column:                     Resizing.              (line 6)
-* ses-delete-row:                        Resizing.              (line 6)
-* ses-edit-cell:                         Formulas.              (line 6)
-* ses-export-tsf:                        Import and export.     (line 6)
-* ses-export-tsv:                        Import and export.     (line 6)
-* ses-forward-or-insert:                 Resizing.              (line 6)
-* ses-insert-column:                     Resizing.              (line 6)
-* ses-insert-range:                      Ranges in formulas.    (line 6)
-* ses-insert-range-click:                Ranges in formulas.    (line 6)
-* ses-insert-row:                        Resizing.              (line 6)
-* ses-insert-ses-range:                  Ranges in formulas.    (line 6)
-* ses-insert-ses-range-click:            Ranges in formulas.    (line 6)
-* ses-jump:                              The Basics.            (line 6)
-* ses-kill-override:                     Copy/cut/paste.        (line 6)
-* ses-mark-column:                       The Basics.            (line 6)
-* ses-mark-row:                          The Basics.            (line 6)
-* ses-mark-whole-buffer:                 The Basics.            (line 6)
-* ses-mode-hook:                         Customizing SES.       (line 6)
-* ses-read-cell:                         Formulas.              (line 6)
-* ses-read-cell-printer:                 Printer functions.     (line 6)
-* ses-read-column-printer:               Printer functions.     (line 6)
-* ses-read-default-printer:              Printer functions.     (line 6)
-* ses-read-header-row:                   Advanced Features.     (line 6)
-* ses-read-symbol:                       Formulas.              (line 6)
-* ses-recalculate-all:                   Formulas.              (line 6)
-* ses-recalculate-cell <1>:              More on cell printing. (line 6)
-* ses-recalculate-cell:                  Formulas.              (line 6)
-* ses-reconstruct-all:                   The data area.         (line 6)
-* ses-renarrow-buffer:                   The print area.        (line 6)
-* ses-reprint-all:                       The print area.        (line 6)
-* ses-set-column-width:                  Resizing.              (line 6)
-* ses-sort-column:                       Sorting by column.     (line 6)
-* ses-sort-column-click:                 Sorting by column.     (line 6)
-* ses-tildefill-span:                    Printer functions.     (line 6)
-* ses-truncate-cell:                     More on cell printing. (line 6)
-* ses-yank-pop:                          Copy/cut/paste.        (line 6)
-* set-mark-command:                      The Basics.            (line 6)
-* sorting:                               Sorting by column.     (line 6)
+                                                               (line  6)
+* ses-delete-column:                     Resizing.             (line  6)
+* ses-delete-row:                        Resizing.             (line  6)
+* ses-edit-cell:                         Formulas.             (line  6)
+* ses-export-tsf:                        Import and export.    (line  6)
+* ses-export-tsv:                        Import and export.    (line  6)
+* ses-forward-or-insert:                 Resizing.             (line  6)
+* ses-insert-column:                     Resizing.             (line  6)
+* ses-insert-range:                      Ranges in formulas.   (line  6)
+* ses-insert-range-click:                Ranges in formulas.   (line  6)
+* ses-insert-row:                        Resizing.             (line  6)
+* ses-insert-ses-range:                  Ranges in formulas.   (line  6)
+* ses-insert-ses-range-click:            Ranges in formulas.   (line  6)
+* ses-jump:                              The Basics.           (line  6)
+* ses-kill-override:                     Copy/cut/paste.       (line  6)
+* ses-mark-column:                       The Basics.           (line  6)
+* ses-mark-row:                          The Basics.           (line  6)
+* ses-mark-whole-buffer:                 The Basics.           (line  6)
+* ses-mode-hook:                         Customizing SES.      (line  6)
+* ses-read-cell:                         Formulas.             (line  6)
+* ses-read-cell-printer:                 Printer functions.    (line  6)
+* ses-read-column-printer:               Printer functions.    (line  6)
+* ses-read-default-printer:              Printer functions.    (line  6)
+* ses-read-header-row:                   Advanced Features.    (line  6)
+* ses-read-symbol:                       Formulas.             (line  6)
+* ses-recalculate-all:                   Formulas.             (line  6)
+* ses-recalculate-cell <1>:              More on cell printing.
+                                                               (line  6)
+* ses-recalculate-cell:                  Formulas.             (line  6)
+* ses-reconstruct-all:                   The data area.        (line  6)
+* ses-rename-cell:                       Advanced Features.    (line 19)
+* ses-renarrow-buffer:                   The print area.       (line  6)
+* ses-repair-cell-reference-all:         Advanced Features.    (line 22)
+* ses-reprint-all:                       The print area.       (line  6)
+* ses-set-column-width:                  Resizing.             (line  6)
+* ses-set-header-row:                    Advanced Features.    (line  7)
+* ses-sort-column:                       Sorting by column.    (line  6)
+* ses-sort-column-click:                 Sorting by column.    (line  6)
+* ses-tildefill-span:                    Printer functions.    (line  6)
+* ses-truncate-cell:                     More on cell printing.
+                                                               (line  6)
+* ses-yank-pop:                          Copy/cut/paste.       (line  6)
+* set-mark-command:                      The Basics.           (line  6)
+* sorting:                               Sorting by column.    (line  6)
 * standard formula functions:            Standard formula functions.
-                                                                (line 6)
+                                                               (line  6)
 * summary, and details:                  Spreadsheets with details and summary.
-                                                                (line 6)
-* to:                                    Ranges in formulas.    (line 6)
+                                                               (line  6)
+* to:                                    Ranges in formulas.   (line  6)
+* tutorial:                              Quick Tutorial.       (line  6)
 * undo-more:                             Uses of defadvice in SES.
-                                                                (line 6)
-* updates, deferred:                     Deferred updates.      (line 6)
+                                                               (line  6)
+* updates, deferred:                     Deferred updates.     (line  6)
+* values:                                Formulas.             (line  6)
 * variables, buffer-local:               Buffer-local variables in spreadsheets.
-                                                                (line 6)
-* virus protection:                      Virus protection.      (line 6)
-* widen:                                 The print area.        (line 6)
+                                                               (line  6)
+* virus protection:                      Virus protection.     (line  6)
+* widen:                                 The print area.       (line  6)
 * yank <1>:                              Uses of defadvice in SES.
-                                                                (line 6)
-* yank:                                  Copy/cut/paste.        (line 6)
+                                                               (line  6)
+* yank:                                  Copy/cut/paste.       (line  6)
 
 
 File: ses.info,  Node: Acknowledgments,  Next: GNU Free Documentation License,  Prev: Index,  Up: Top
 
-5 Acknowledgments
-*****************
+Acknowledgments
+***************
 
 Coding by:
 
-     Jonathan Yavner <jyavner@member.fsf.org>
-     Stefan Monnier <monnier@gnu.org>
-     Shigeru Fukaya <shigeru.fukaya@gmail.com>
+     Jonathan Yavner, Stefan Monnier, Shigeru Fukaya
 
 Texinfo manual by:
 
-     Jonathan Yavner <jyavner@member.fsf.org>
-     Brad Collins <brad@chenla.org>
+     Jonathan Yavner, Brad Collins
 
 Ideas from:
 
-     Christoph Conrad <christoph.conrad@gmx.de>
-     CyberBob <cyberbob@redneck.gacracker.org>
-     Syver Enstad <syver-en@online.no>
-     Ami Fischman <fischman@zion.bpnetworks.com>
-     Thomas Gehrlein <Thomas.Gehrlein@t-online.de>
-     Chris F.A. Johnson <c.f.a.johnson@rogers.com>
-     Yusong Li <lyusong@hotmail.com>
-     Juri Linkov <juri@jurta.org>
-     Harald Maier <maierh@myself.com>
-     Alan Nash <anash@san.rr.com>
-     François Pinard <pinard@iro.umontreal.ca>
-     Pedro Pinto <ppinto@cs.cmu.edu>
-     Stefan Reichör <xsteve@riic.at>
-     Oliver Scholz <epameinondas@gmx.de>
-     Richard M. Stallman <rms@gnu.org>
-     Luc Teirlinck <teirllm@dms.auburn.edu>
-     J. Otto Tennant <jotto@pobox.com>
-     Jean-Philippe Theberge <jphil@acs.pagesjaunes.fr>
+     Christoph Conrad, CyberBob, Syver Enstad, Ami Fischman, Thomas
+     Gehrlein, Chris F.A. Johnson, Yusong Li, Juri Linkov, Harald Maier,
+     Alan Nash, FranÃ§ois Pinard, Pedro Pinto, Stefan ReichÃ¶r, Oliver
+     Scholz, Richard M. Stallman, Luc Teirlinck, J. Otto Tennant,
+     Jean-Philippe Theberge
 
 
 File: ses.info,  Node: GNU Free Documentation License,  Prev: Acknowledgments,  Up: Top
@@ -976,7 +1122,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -1457,32 +1603,38 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top966
-Node: Sales Pitch2460
-Node: The Basics3279
-Node: Formulas4599
-Node: Resizing6008
-Node: Printer functions7150
-Node: Clearing cells8906
-Node: Copy/cut/paste9239
-Node: Customizing SES11458
-Node: Advanced Features12826
-Node: The print area13705
-Node: Ranges in formulas14390
-Node: Sorting by column15909
-Node: Standard formula functions16836
-Node: More on cell printing17514
-Node: Import and export19525
-Node: Virus protection20135
-Node: Spreadsheets with details and summary21538
-Node: For Gurus22729
-Node: Deferred updates22991
-Node: Nonrelocatable references24515
-Node: The data area25420
-Node: Buffer-local variables in spreadsheets26647
-Node: Uses of defadvice in SES28097
-Node: Index28920
-Node: Acknowledgments37260
-Node: GNU Free Documentation License38430
+Node: Top890
+Node: Sales Pitch2411
+Node: Quick Tutorial3234
+Node: The Basics5804
+Node: Formulas7188
+Node: Resizing8629
+Node: Printer functions9771
+Node: Clearing cells11527
+Node: Copy/cut/paste11860
+Node: Customizing SES14079
+Node: Advanced Features15447
+Node: The print area16734
+Node: Ranges in formulas17393
+Node: Sorting by column20682
+Node: Standard formula functions21609
+Node: More on cell printing22287
+Node: Import and export24298
+Node: Virus protection24908
+Node: Spreadsheets with details and summary26311
+Node: For Gurus27502
+Node: Deferred updates27764
+Node: Nonrelocatable references29270
+Node: The data area30175
+Node: Buffer-local variables in spreadsheets31402
+Node: Uses of defadvice in SES32852
+Node: Index33675
+Node: Acknowledgments43521
+Node: GNU Free Documentation License44101
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

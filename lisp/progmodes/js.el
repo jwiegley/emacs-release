@@ -1,6 +1,6 @@
 ;;; js.el --- Major mode for editing JavaScript  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2008-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2008-2014 Free Software Foundation, Inc.
 
 ;; Author: Karl Landstrom <karl.landstrom@brgeight.se>
 ;;         Daniel Colascione <dan.colascione@gmail.com>
@@ -55,7 +55,6 @@
 
 (eval-when-compile
   (require 'cl-lib)
-  (require 'comint)
   (require 'ido))
 
 (defvar inferior-moz-buffer)
@@ -460,12 +459,13 @@ The value must be no less than minus `js-indent-level'."
   :group 'js
   :version "24.1")
 
-(defcustom js-auto-indent-flag t
-  "Whether to automatically indent when typing punctuation characters.
-If non-nil, the characters {}();,: also indent the current line
-in Javascript mode."
-  :type 'boolean
-  :group 'js)
+(defcustom js-switch-indent-offset 0
+  "Number of additional spaces for indenting the contents of a switch block.
+The value must not be negative."
+  :type 'integer
+  :safe 'integerp
+  :group 'js
+  :version "24.4")
 
 (defcustom js-flat-functions nil
   "Treat nested functions as top-level functions in `js-mode'.
@@ -1302,7 +1302,7 @@ LIMIT defaults to point."
     (up-list -1)))
 
 (defun js--inside-param-list-p ()
-  "Return non-nil iff point is in a function parameter list."
+  "Return non-nil if point is in a function parameter list."
   (ignore-errors
     (save-excursion
       (js--up-nearby-list)
@@ -1313,7 +1313,7 @@ LIMIT defaults to point."
                              (looking-at "function"))))))))
 
 (defun js--inside-dojo-class-list-p ()
-  "Return non-nil iff point is in a Dojo multiple-inheritance class block."
+  "Return non-nil if point is in a Dojo multiple-inheritance class block."
   (ignore-errors
     (save-excursion
       (js--up-nearby-list)
@@ -1352,7 +1352,7 @@ REGEXPS, but only if FRAMEWORK is in `js-enabled-frameworks'."
 (defun js--forward-destructuring-spec (&optional func)
   "Move forward over a JavaScript destructuring spec.
 If FUNC is supplied, call it with no arguments before every
-variable name in the spec.  Return true iff this was actually a
+variable name in the spec.  Return true if this was actually a
 spec.  FUNC must preserve the match data."
   (pcase (char-after)
     (?\[
@@ -1680,11 +1680,14 @@ This performs fontification according to `js--class-styles'."
      "each"))
   "Regexp matching keywords optionally followed by an opening brace.")
 
+(defconst js--declaration-keyword-re
+  (regexp-opt '("var" "let" "const") 'words)
+  "Regular expression matching variable declaration keywords.")
+
 (defconst js--indent-operator-re
   (concat "[-+*/%<>=&^|?:.]\\([^-+*/]\\|$\\)\\|"
           (js--regexp-opt-symbol '("in" "instanceof")))
   "Regexp matching operators that affect indentation of continued expressions.")
-
 
 (defun js--looking-at-operator-p ()
   "Return non-nil if point is on a JavaScript operator, other than a comma."
@@ -1747,8 +1750,8 @@ nil."
     (when (save-excursion
             (and (not (eq (point-at-bol) (point-min)))
                  (not (looking-at "[{]"))
+                 (js--re-search-backward "[[:graph:]]" nil t)
                  (progn
-                   (js--re-search-backward "[[:graph:]]" nil t)
                    (or (eobp) (forward-char))
                    (when (= (char-before) ?\)) (backward-list))
                    (skip-syntax-backward " ")
@@ -1764,22 +1767,102 @@ nil."
          (list (cons 'c js-comment-lineup-func))))
     (c-get-syntactic-indentation (list (cons symbol anchor)))))
 
+(defun js--same-line (pos)
+  (and (>= pos (point-at-bol))
+       (<= pos (point-at-eol))))
+
+(defun js--multi-line-declaration-indentation ()
+  "Helper function for `js--proper-indentation'.
+Return the proper indentation of the current line if it belongs to a declaration
+statement spanning multiple lines; otherwise, return nil."
+  (let (at-opening-bracket)
+    (save-excursion
+      (back-to-indentation)
+      (when (not (looking-at js--declaration-keyword-re))
+        (when (looking-at js--indent-operator-re)
+          (goto-char (match-end 0)))
+        (while (and (not at-opening-bracket)
+                    (not (bobp))
+                    (let ((pos (point)))
+                      (save-excursion
+                        (js--backward-syntactic-ws)
+                        (or (eq (char-before) ?,)
+                            (and (not (eq (char-before) ?\;))
+                                 (prog2
+                                     (skip-syntax-backward ".")
+                                     (looking-at js--indent-operator-re)
+                                   (js--backward-syntactic-ws))
+                                 (not (eq (char-before) ?\;)))
+                            (js--same-line pos)))))
+          (condition-case nil
+              (backward-sexp)
+            (scan-error (setq at-opening-bracket t))))
+        (when (looking-at js--declaration-keyword-re)
+          (goto-char (match-end 0))
+          (1+ (current-column)))))))
+
+(defun js--indent-in-array-comp (bracket)
+  "Return non-nil if we think we're in an array comprehension.
+In particular, return the buffer position of the first `for' kwd."
+  (let ((end (point)))
+    (save-excursion
+      (goto-char bracket)
+      (when (looking-at "\\[")
+        (forward-char 1)
+        (js--forward-syntactic-ws)
+        (if (looking-at "[[{]")
+            (let (forward-sexp-function) ; Use Lisp version.
+              (forward-sexp)             ; Skip destructuring form.
+              (js--forward-syntactic-ws)
+              (if (and (/= (char-after) ?,) ; Regular array.
+                       (looking-at "for"))
+                  (match-beginning 0)))
+          ;; To skip arbitrary expressions we need the parser,
+          ;; so we'll just guess at it.
+          (if (and (> end (point)) ; Not empty literal.
+                   (re-search-forward "[^,]]* \\(for\\) " end t)
+                   ;; Not inside comment or string literal.
+                   (not (nth 8 (parse-partial-sexp bracket (point)))))
+              (match-beginning 1)))))))
+
+(defun js--array-comp-indentation (bracket for-kwd)
+  (if (js--same-line for-kwd)
+      ;; First continuation line.
+      (save-excursion
+        (goto-char bracket)
+        (forward-char 1)
+        (skip-chars-forward " \t")
+        (current-column))
+    (save-excursion
+      (goto-char for-kwd)
+      (current-column))))
+
 (defun js--proper-indentation (parse-status)
   "Return the proper indentation for the current line."
   (save-excursion
     (back-to-indentation)
-    (cond ((nth 4 parse-status)
+    (cond ((nth 4 parse-status)    ; inside comment
            (js--get-c-offset 'c (nth 8 parse-status)))
-          ((nth 8 parse-status) 0) ; inside string
-          ((js--ctrl-statement-indentation))
+          ((nth 3 parse-status) 0) ; inside string
           ((eq (char-after) ?#) 0)
           ((save-excursion (js--beginning-of-macro)) 4)
+          ;; Indent array comprehension continuation lines specially.
+          ((let ((bracket (nth 1 parse-status))
+                 beg)
+             (and bracket
+                  (not (js--same-line bracket))
+                  (setq beg (js--indent-in-array-comp bracket))
+                  ;; At or after the first loop?
+                  (>= (point) beg)
+                  (js--array-comp-indentation bracket beg))))
+          ((js--ctrl-statement-indentation))
+          ((js--multi-line-declaration-indentation))
           ((nth 1 parse-status)
 	   ;; A single closing paren/bracket should be indented at the
 	   ;; same level as the opening statement. Same goes for
 	   ;; "case" and "default".
-           (let ((same-indent-p (looking-at
-                                 "[]})]\\|\\_<case\\_>\\|\\_<default\\_>"))
+           (let ((same-indent-p (looking-at "[]})]"))
+                 (switch-keyword-p (looking-at "default\\_>\\|case\\_>[^:]"))
                  (continued-expr-p (js--continued-expression-p)))
              (goto-char (nth 1 parse-status)) ; go to the opening char
              (if (looking-at "[({[]\\s-*\\(/[/*]\\|$\\)")
@@ -1787,17 +1870,26 @@ nil."
                    (skip-syntax-backward " ")
                    (when (eq (char-before) ?\)) (backward-list))
                    (back-to-indentation)
-                   (cond (same-indent-p
-                          (current-column))
-                         (continued-expr-p
-                          (+ (current-column) (* 2 js-indent-level)
-                             js-expr-indent-offset))
-                         (t
-                          (+ (current-column) js-indent-level
-                             (pcase (char-after (nth 1 parse-status))
-                               (?\( js-paren-indent-offset)
-                               (?\[ js-square-indent-offset)
-                               (?\{ js-curly-indent-offset))))))
+                   (let* ((in-switch-p (unless same-indent-p
+                                         (looking-at "\\_<switch\\_>")))
+                          (same-indent-p (or same-indent-p
+                                             (and switch-keyword-p
+                                                  in-switch-p)))
+                          (indent
+                           (cond (same-indent-p
+                                  (current-column))
+                                 (continued-expr-p
+                                  (+ (current-column) (* 2 js-indent-level)
+                                     js-expr-indent-offset))
+                                 (t
+                                  (+ (current-column) js-indent-level
+                                     (pcase (char-after (nth 1 parse-status))
+                                       (?\( js-paren-indent-offset)
+                                       (?\[ js-square-indent-offset)
+                                       (?\{ js-curly-indent-offset)))))))
+                     (if in-switch-p
+                         (+ indent js-switch-indent-offset)
+                       indent)))
                ;; If there is something following the opening
                ;; paren/bracket, everything else should be indented at
                ;; the same level.
@@ -1813,32 +1905,39 @@ nil."
 (defun js-indent-line ()
   "Indent the current line as JavaScript."
   (interactive)
-  (save-restriction
-    (widen)
-    (let* ((parse-status
-            (save-excursion (syntax-ppss (point-at-bol))))
-           (offset (- (current-column) (current-indentation))))
-      (indent-line-to (js--proper-indentation parse-status))
-      (when (> offset 0) (forward-char offset)))))
+  (let* ((parse-status
+          (save-excursion (syntax-ppss (point-at-bol))))
+         (offset (- (point) (save-excursion (back-to-indentation) (point)))))
+    (indent-line-to (js--proper-indentation parse-status))
+    (when (> offset 0) (forward-char offset))))
 
 ;;; Filling
+
+(defvar js--filling-paragraph nil)
+
+;; FIXME: Such redefinitions are bad style.  We should try and use some other
+;; way to get the same result.
+(defadvice c-forward-sws (around js-fill-paragraph activate)
+  (if js--filling-paragraph
+      (setq ad-return-value (js--forward-syntactic-ws (ad-get-arg 0)))
+    ad-do-it))
+
+(defadvice c-backward-sws (around js-fill-paragraph activate)
+  (if js--filling-paragraph
+      (setq ad-return-value (js--backward-syntactic-ws (ad-get-arg 0)))
+    ad-do-it))
+
+(defadvice c-beginning-of-macro (around js-fill-paragraph activate)
+  (if js--filling-paragraph
+      (setq ad-return-value (js--beginning-of-macro (ad-get-arg 0)))
+    ad-do-it))
 
 (defun js-c-fill-paragraph (&optional justify)
   "Fill the paragraph with `c-fill-paragraph'."
   (interactive "*P")
-  ;; FIXME: Such redefinitions are bad style.  We should try and use some other
-  ;; way to get the same result.
-  (cl-letf (((symbol-function 'c-forward-sws)
-             (lambda (&optional limit)
-               (js--forward-syntactic-ws limit)))
-            ((symbol-function 'c-backward-sws)
-             (lambda (&optional limit)
-               (js--backward-syntactic-ws limit)))
-            ((symbol-function 'c-beginning-of-macro)
-             (lambda (&optional limit)
-               (js--beginning-of-macro limit))))
-    (let ((fill-paragraph-function 'c-fill-paragraph))
-      (c-fill-paragraph justify))))
+  (let ((js--filling-paragraph t)
+        (fill-paragraph-function 'c-fill-paragraph))
+    (c-fill-paragraph justify)))
 
 ;;; Type database and Imenu
 
@@ -2173,6 +2272,9 @@ marker."
 
 (defvar find-tag-marker-ring)           ; etags
 
+;; etags loads ring.
+(declare-function ring-insert "ring" (ring item))
+
 (defun js-find-symbol (&optional arg)
   "Read a JavaScript symbol and jump to it.
 With a prefix argument, restrict symbols to those from the
@@ -2198,11 +2300,8 @@ current buffer.  Pushes a mark onto the tag ring just like
 
 ;;; MozRepl integration
 
-(put 'js-moz-bad-rpc 'error-conditions '(error timeout))
-(put 'js-moz-bad-rpc 'error-message "Mozilla RPC Error")
-
-(put 'js-js-error 'error-conditions '(error js-error))
-(put 'js-js-error 'error-message "Javascript Error")
+(define-error 'js-moz-bad-rpc "Mozilla RPC Error") ;; '(timeout error))
+(define-error 'js-js-error "Javascript Error") ;; '(js-error error))
 
 (defun js--wait-for-matching-output
   (process regexp timeout &optional start)
@@ -2595,6 +2694,11 @@ with `js--js-encode-value'."
    ;; order to catch a prompt that's only partially arrived
    (save-excursion (forward-line 0) (point))))
 
+;; Presumably "inferior-moz-process" loads comint.
+(declare-function comint-send-string "comint" (process string))
+(declare-function comint-send-input "comint"
+                  (&optional no-newline artificial))
+
 (defun js--js-enter-repl ()
   (inferior-moz-process) ; called for side-effect
   (with-current-buffer inferior-moz-buffer
@@ -2652,6 +2756,10 @@ with `js--js-encode-value'."
 
 (defsubst js--js-true (value)
   (not (js--js-not value)))
+
+;; The somewhat complex code layout confuses the byte-compiler into
+;; thinking this function "might not be defined at runtime".
+(declare-function js--optimize-arglist "js" (arglist))
 
 (eval-and-compile
   (defun js--optimize-arglist (arglist)
@@ -2779,6 +2887,8 @@ If nil, the whole Array is treated as a JS symbol.")
 
     (`error (signal 'js-js-error (list (cl-second result))))
     (x (error "Unmatched case in js--js-decode-retval: %S" x))))
+
+(defvar comint-last-input-end)
 
 (defun js--js-funcall (function &rest arguments)
   "Call the Mozilla function FUNCTION with arguments ARGUMENTS.
@@ -2951,6 +3061,8 @@ left-to-right."
                                       gbrowser))))))
 
 (defvar js-read-tab-history nil)
+
+(declare-function ido-chop "ido" (items elem))
 
 (defun js--read-tab (prompt)
   "Read a Mozilla tab with prompt PROMPT.
@@ -3297,29 +3409,21 @@ If one hasn't been set, or if it's stale, prompt for a new one."
 (define-derived-mode js-mode prog-mode "Javascript"
   "Major mode for editing JavaScript."
   :group 'js
+  (setq-local indent-line-function 'js-indent-line)
+  (setq-local beginning-of-defun-function 'js-beginning-of-defun)
+  (setq-local end-of-defun-function 'js-end-of-defun)
+  (setq-local open-paren-in-column-0-is-defun-start nil)
+  (setq-local font-lock-defaults (list js--font-lock-keywords))
+  (setq-local syntax-propertize-function #'js-syntax-propertize)
 
-  (set (make-local-variable 'indent-line-function) 'js-indent-line)
-  (set (make-local-variable 'beginning-of-defun-function)
-       'js-beginning-of-defun)
-  (set (make-local-variable 'end-of-defun-function)
-       'js-end-of-defun)
-
-  (set (make-local-variable 'open-paren-in-column-0-is-defun-start) nil)
-  (set (make-local-variable 'font-lock-defaults)
-       (list js--font-lock-keywords))
-  (set (make-local-variable 'syntax-propertize-function)
-       #'js-syntax-propertize)
-
-  (set (make-local-variable 'parse-sexp-ignore-comments) t)
-  (set (make-local-variable 'parse-sexp-lookup-properties) t)
-  (set (make-local-variable 'which-func-imenu-joiner-function)
-       #'js--which-func-joiner)
+  (setq-local parse-sexp-ignore-comments t)
+  (setq-local parse-sexp-lookup-properties t)
+  (setq-local which-func-imenu-joiner-function #'js--which-func-joiner)
 
   ;; Comments
-  (set (make-local-variable 'comment-start) "// ")
-  (set (make-local-variable 'comment-end) "")
-  (set (make-local-variable 'fill-paragraph-function)
-       'js-c-fill-paragraph)
+  (setq-local comment-start "// ")
+  (setq-local comment-end "")
+  (setq-local fill-paragraph-function 'js-c-fill-paragraph)
 
   ;; Parse cache
   (add-hook 'before-change-functions #'js--flush-caches t t)
@@ -3329,8 +3433,7 @@ If one hasn't been set, or if it's stale, prompt for a new one."
 
   ;; Imenu
   (setq imenu-case-fold-search nil)
-  (set (make-local-variable 'imenu-create-index-function)
-       #'js--imenu-create-index)
+  (setq imenu-create-index-function #'js--imenu-create-index)
 
   ;; for filling, pretend we're cc-mode
   (setq c-comment-prefix-regexp "//+\\|\\**"
@@ -3341,10 +3444,10 @@ If one hasn't been set, or if it's stale, prompt for a new one."
         c-comment-start-regexp "/[*/]\\|\\s!"
         comment-start-skip "\\(//+\\|/\\*+\\)\\s *")
 
-  (set (make-local-variable 'electric-indent-chars)
-       (append "{}():;," electric-indent-chars)) ;FIXME: js2-mode adds "[]*".
-  (set (make-local-variable 'electric-layout-rules)
-       '((?\; . after) (?\{ . after) (?\} . before)))
+  (setq-local electric-indent-chars
+	      (append "{}():;," electric-indent-chars)) ;FIXME: js2-mode adds "[]*".
+  (setq-local electric-layout-rules
+	      '((?\; . after) (?\{ . after) (?\} . before)))
 
   (let ((c-buffer-is-cc-mode t))
     ;; FIXME: These are normally set by `c-basic-common-init'.  Should
@@ -3356,8 +3459,7 @@ If one hasn't been set, or if it's stale, prompt for a new one."
     (make-local-variable 'adaptive-fill-regexp)
     (c-setup-paragraph-variables))
 
-  (set (make-local-variable 'syntax-begin-function)
-       #'js--syntax-begin-function)
+  (setq-local syntax-begin-function #'js--syntax-begin-function)
 
   ;; Important to fontify the whole buffer syntactically! If we don't,
   ;; then we might have regular expression literals that aren't marked
@@ -3371,8 +3473,7 @@ If one hasn't been set, or if it's stale, prompt for a new one."
   ;; calls to syntax-propertize wherever it's really needed.
   (syntax-propertize (point-max)))
 
-;;;###autoload
-(defalias 'javascript-mode 'js-mode)
+;;;###autoload (defalias 'javascript-mode 'js-mode)
 
 (eval-after-load 'folding
   '(when (fboundp 'folding-add-to-marks-list)

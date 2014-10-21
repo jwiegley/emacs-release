@@ -1,10 +1,10 @@
 ;;; imenu.el --- framework for mode-specific buffer indexes  -*- lexical-binding: t -*-
 
-;; Copyright (C) 1994-1998, 2001-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1994-1998, 2001-2014 Free Software Foundation, Inc.
 
 ;; Author: Ake Stenhoff <etxaksf@aom.ericsson.se>
 ;;         Lars Lindberg <lli@sypro.cap.se>
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 ;; Created: 8 Feb 1994
 ;; Keywords: tools convenience
 
@@ -185,6 +185,13 @@ with name concatenation."
   :type 'string
   :group 'imenu)
 
+(defcustom imenu-generic-skip-comments-and-strings t
+  "When non-nil, ignore text inside comments and strings.
+Only affects `imenu--generic-function'."
+  :type 'boolean
+  :group 'imenu
+  :version "24.4")
+
 ;;;###autoload
 (defvar imenu-generic-expression nil
   "List of definition matchers for creating an Imenu index.
@@ -286,8 +293,10 @@ The function in this variable is called when selecting a normal index-item.")
 
 
 (defun imenu--subalist-p (item)
-  (and (consp (cdr item)) (listp (cadr item))
-       (not (eq (car (cadr item)) 'lambda))))
+  (and (consp item)
+       (consp (cdr item))
+       (listp (cadr item))
+       (not (functionp (cadr item)))))
 
 (defmacro imenu-progress-message (_prevpos &optional _relpos _reverse)
   "Macro to display a progress message.
@@ -405,11 +414,11 @@ Don't move point."
 ;; Regular expression to find C functions
 (defvar imenu-example--function-name-regexp-c
   (concat
-   "^[a-zA-Z0-9]+[ \t]?"		; type specs; there can be no
+   "^[a-zA-Z0-9]+[ \t]?"		; Type specs; there can be no
    "\\([a-zA-Z0-9_*]+[ \t]+\\)?"	; more than 3 tokens, right?
    "\\([a-zA-Z0-9_*]+[ \t]+\\)?"
-   "\\([*&]+[ \t]*\\)?"			; pointer
-   "\\([a-zA-Z0-9_*]+\\)[ \t]*("	; name
+   "\\([*&]+[ \t]*\\)?"			; Pointer.
+   "\\([a-zA-Z0-9_*]+\\)[ \t]*("	; Name.
    ))
 
 (defun imenu-example--create-c-index (&optional regexp)
@@ -447,12 +456,14 @@ Don't move point."
 Simple elements in the alist look like (INDEX-NAME . POSITION).
 POSITION is the buffer position of the item; to go to the item
 is simply to move point to that position.
+POSITION is passed to `imenu-default-goto-function', so it can be a non-number
+if that variable has been changed (e.g. Semantic uses overlays for POSITIONs).
 
 Special elements look like (INDEX-NAME POSITION FUNCTION ARGUMENTS...).
 To \"go to\" a special element means applying FUNCTION
 to INDEX-NAME, POSITION, and the ARGUMENTS.
 
-A nested sub-alist element looks like (INDEX-NAME SUB-ALIST).
+A nested sub-alist element looks like (INDEX-NAME . SUB-ALIST).
 The function `imenu--subalist-p' tests an element and returns t
 if it is a sub-alist.
 
@@ -546,25 +557,21 @@ The returned alist DOES NOT share structure with MENULIST."
 Return a split and sorted copy of ALIST.  The returned alist DOES
 NOT share structure with ALIST."
   (mapcar (lambda (elt)
-            (if (and (consp elt)
-                     (stringp (car elt))
-                     (listp (cdr elt)))
+            (if (imenu--subalist-p elt)
                 (imenu--split-menu (cdr elt) (car elt))
               elt))
 	  alist))
 
 (defun imenu--truncate-items (menulist)
   "Truncate all strings in MENULIST to `imenu-max-item-length'."
-  (mapcar (lambda (item)
-            (cond
-             ((consp (cdr item))
-              (imenu--truncate-items (cdr item)))
-             ;; truncate if necessary
-             ((and (numberp imenu-max-item-length)
-                   (> (length (car item)) imenu-max-item-length))
-              (setcar item (substring (car item) 0 imenu-max-item-length)))))
-	  menulist))
-
+  (mapc (lambda (item)
+	  ;; Truncate if necessary.
+	  (when (and (numberp imenu-max-item-length)
+		     (> (length (car item)) imenu-max-item-length))
+	    (setcar item (substring (car item) 0 imenu-max-item-length)))
+	  (when (imenu--subalist-p item)
+	    (imenu--truncate-items (cdr item))))
+	menulist))
 
 (defun imenu--make-index-alist (&optional noerror)
   "Create an index alist for the definitions in the current buffer.
@@ -577,7 +584,7 @@ See `imenu--index-alist' for the format of the index alist."
 	   (or (not imenu-auto-rescan)
 	       (and imenu-auto-rescan
 		    (> (buffer-size)  imenu-auto-rescan-maxout))))
-      ;; Get the index; truncate if necessary
+      ;; Get the index; truncate if necessary.
       (progn
 	(setq imenu--index-alist
 	      (save-excursion
@@ -640,9 +647,11 @@ Non-nil arguments are in recursive calls."
       ;;   (INDEX-NAME (INDEX-NAME . INDEX-POSITION) ...)
       ;; while a bottom-level element looks like
       ;;   (INDEX-NAME . INDEX-POSITION)
+      ;; or
+      ;;   (INDEX-NAME INDEX-POSITION FUNCTION ARGUMENTS...)
       ;; We are only interested in the bottom-level elements, so we need to
-      ;; recurse if TAIL is a list.
-      (cond ((listp tail)
+      ;; recurse if TAIL is a nested ALIST.
+      (cond ((imenu--subalist-p elt)
 	     (if (setq res (imenu--in-alist str tail))
 		 (setq alist nil)))
 	    ((if imenu-name-lookup-function
@@ -678,19 +687,20 @@ The alternate method, which is the one most often used, is to call
   ;; in these major modes.  But save that change for later.
   (cond ((and imenu-prev-index-position-function
 	      imenu-extract-index-name-function)
-	 (let ((index-alist '()) (pos -1)
+	 (let ((index-alist '()) (pos (point-max))
 	       name)
-	   (goto-char (point-max))
+	   (goto-char pos)
 	   ;; Search for the function
 	   (while (funcall imenu-prev-index-position-function)
-             (when (= pos (point))
+             (unless (< (point) pos)
                (error "Infinite loop at %s:%d: imenu-prev-index-position-function does not move point" (buffer-name) pos))
              (setq pos (point))
 	     (save-excursion
 	       (setq name (funcall imenu-extract-index-name-function)))
 	     (and (stringp name)
- 		  ;; [ydi] updated for imenu-use-markers
-		  (push (cons name (if imenu-use-markers (point-marker) (point)))
+ 		  ;; [ydi] Updated for imenu-use-markers.
+		  (push (cons name
+                              (if imenu-use-markers (point-marker) (point)))
 			index-alist)))
 	   index-alist))
 	;; Use generic expression if possible.
@@ -716,8 +726,12 @@ for modes which use `imenu--generic-function'.  If it is not set, but
 ;; so it needs to be careful never to loop!
 (defun imenu--generic-function (patterns)
   "Return an index alist of the current buffer based on PATTERNS.
-PATTERNS should be an alist which has the same form as
-`imenu-generic-expression'.
+PATTERNS should be an alist with the same form as `imenu-generic-expression'.
+
+If `imenu-generic-skip-comments-and-strings' is non-nil, this ignores
+text inside comments and strings.
+
+If `imenu-case-fold-search' is non-nil, this ignores case.
 
 The return value is an alist of the form
  (INDEX-NAME . INDEX-POSITION)
@@ -743,12 +757,12 @@ depending on PATTERNS."
                 (modify-syntax-entry c (cdr syn) table))
               (car syn))))
     (goto-char (point-max))
-    (unwind-protect			; for syntax table
+    (unwind-protect			; For syntax table.
 	(save-match-data
 	  (set-syntax-table table)
 
-	  ;; map over the elements of imenu-generic-expression
-	  ;; (typically functions, variables ...)
+	  ;; Map over the elements of imenu-generic-expression
+	  ;; (typically functions, variables ...).
 	  (dolist (pat patterns)
 	    (let ((menu-title (car pat))
 		  (regexp (nth 1 pat))
@@ -797,7 +811,9 @@ depending on PATTERNS."
 		      ;; starting with its title (or nil).
 		      (menu (assoc menu-title index-alist)))
 		  ;; Insert the item unless it is already present.
-		  (unless (member item (cdr menu))
+		  (unless (or (member item (cdr menu))
+                              (and imenu-generic-skip-comments-and-strings
+                                   (nth 8 (syntax-ppss))))
 		    (setcdr menu
 			    (cons item (cdr menu)))))
 		;; Go to the start of the match, to make sure we
@@ -996,7 +1012,7 @@ to `imenu-update-menubar'.")
     (imenu item)
     nil))
 
-(defun imenu-default-goto-function (_name position &optional _rest)
+(defun imenu-default-goto-function (_name position &rest _rest)
   "Move to the given position.
 
 NAME is ignored.  POSITION is where to move.  REST is also ignored.
@@ -1004,7 +1020,7 @@ The ignored args just make this function have the same interface as a
 function placed in a special index-item."
   (if (or (< position (point-min))
 	  (> position (point-max)))
-      ;; widen if outside narrowing
+      ;; Widen if outside narrowing.
       (widen))
   (goto-char position))
 
@@ -1025,8 +1041,8 @@ for more information."
 		(nth 2 index-item) imenu-default-goto-function))
 	   (position (if is-special-item
 			 (cadr index-item) (cdr index-item)))
-	   (rest (if is-special-item (cddr index-item))))
-      (apply function (car index-item) position rest))
+	   (args (if is-special-item (cdr (cddr index-item)))))
+      (apply function (car index-item) position args))
     (run-hooks 'imenu-after-jump-hook)))
 
 (provide 'imenu)

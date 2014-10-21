@@ -1,13 +1,12 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/rcirc.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/rcirc.texi.
+This is ../../info/rcirc.info, produced by makeinfo version 4.13 from
+./rcirc.texi.
 
-Copyright (C) 2006-2013 Free Software Foundation, Inc.
+Copyright (C) 2006-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -21,7 +20,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: rcirc.info,  Node: Top,  Next: Basics,  Prev: (dir),  Up: (dir)
+File: rcirc.info,  Node: Top,  Next: Basics,  Up: (dir)
 
 rcirc Manual
 ************
@@ -33,12 +32,12 @@ communicate with each other in real-time.  Communication occurs both in
 topic channels which are collections of many users, or privately, with
 just one other user.
 
-   Copyright (C) 2006-2013 Free Software Foundation, Inc.
+   Copyright (C) 2006-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -101,7 +100,7 @@ and a quick tutorial on `rcirc'.
 * Getting started with rcirc::
 
 
-File: rcirc.info,  Node: Internet Relay Chat,  Next: Getting started with rcirc,  Prev: Basics,  Up: Basics
+File: rcirc.info,  Node: Internet Relay Chat,  Next: Getting started with rcirc,  Up: Basics
 
 1.1 Internet Relay Chat
 =======================
@@ -221,7 +220,7 @@ complete listings of `rcirc' features, use Emacs built-in documentation.
 * Configuration::
 
 
-File: rcirc.info,  Node: rcirc commands,  Next: Useful IRC commands,  Prev: Reference,  Up: Reference
+File: rcirc.info,  Node: rcirc commands,  Next: Useful IRC commands,  Up: Reference
 
 2.1 rcirc commands
 ==================
@@ -461,7 +460,7 @@ daunting task.  This chapters tells you how `rcirc' can help.
 * Notices::
 
 
-File: rcirc.info,  Node: Channels,  Next: People,  Prev: Fighting Information Overload,  Up: Fighting Information Overload
+File: rcirc.info,  Node: Channels,  Next: People,  Up: Fighting Information Overload
 
 3.1 Channels
 ============
@@ -593,7 +592,7 @@ Here are some examples of stuff you can do to configure `rcirc'.
 * Reconnecting after you have lost the connection::
 
 
-File: rcirc.info,  Node: Skipping /away messages using handlers,  Next: Using fly spell mode,  Prev: Hacking and Tweaking,  Up: Hacking and Tweaking
+File: rcirc.info,  Node: Skipping /away messages using handlers,  Next: Using fly spell mode,  Up: Hacking and Tweaking
 
 4.1 Skipping `/away' messages using handlers
 ============================================
@@ -721,7 +720,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -1491,29 +1490,34 @@ Index
 
 
 Tag Table:
-Node: Top922
-Node: Basics2564
-Node: Internet Relay Chat2830
-Node: Getting started with rcirc4351
-Node: Reference7235
-Node: rcirc commands7577
-Node: Useful IRC commands10444
-Node: Configuration11176
-Node: Fighting Information Overload16077
-Node: Channels16577
-Node: People18153
-Node: Keywords19764
-Node: Notices20269
-Node: Hacking and Tweaking21168
-Node: Skipping /away messages using handlers21638
-Node: Using fly spell mode22390
-Node: Scrolling conservatively22816
-Node: Changing the time stamp format23493
-Node: Defining a new command23874
-Node: Reconnecting after you have lost the connection24699
-Node: GNU Free Documentation License26562
-Node: Key Index51745
-Node: Variable Index53131
-Node: Index54640
+Node: Top846
+Node: Basics2474
+Node: Internet Relay Chat2740
+Node: Getting started with rcirc4246
+Node: Reference7130
+Node: rcirc commands7472
+Node: Useful IRC commands10321
+Node: Configuration11053
+Node: Fighting Information Overload15954
+Node: Channels16454
+Node: People17992
+Node: Keywords19603
+Node: Notices20108
+Node: Hacking and Tweaking21007
+Node: Skipping /away messages using handlers21477
+Node: Using fly spell mode22200
+Node: Scrolling conservatively22626
+Node: Changing the time stamp format23303
+Node: Defining a new command23684
+Node: Reconnecting after you have lost the connection24509
+Node: GNU Free Documentation License26372
+Node: Key Index51549
+Node: Variable Index52935
+Node: Index54444
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

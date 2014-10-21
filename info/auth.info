@@ -1,15 +1,14 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/auth.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/auth.texi.
+This is ../../info/auth.info, produced by makeinfo version 4.13 from
+./auth.texi.
 
 This file describes the Emacs auth-source library.
 
-   Copyright (C) 2008-2013 Free Software Foundation, Inc.
+   Copyright (C) 2008-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -35,12 +34,12 @@ This manual describes the Emacs auth-source library.
 
    This file describes the Emacs auth-source library.
 
-   Copyright (C) 2008-2013 Free Software Foundation, Inc.
+   Copyright (C) 2008-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -426,9 +425,9 @@ File: auth.info,  Node: GnuPG and EasyPG Assistant Configuration,  Next: GNU Fre
 Appendix A GnuPG and EasyPG Assistant Configuration
 ***************************************************
 
-If you don't customize `auth-sources', the auth-source library reads
-`~/.authinfo.gpg', which is a GnuPG encrypted file.  Then it will check
-`~/.authinfo' but it's not recommended to use such an unencrypted file.
+If the `auth-sources' variable contains `~/.authinfo.gpg' before
+`~/.authinfo', the auth-source library will try to read the GnuPG
+encrypted `.gpg' file first, before the unencrypted file.
 
    In Emacs 23 or later there is an option `auto-encryption-mode' to
 automatically decrypt `*.gpg' files.  It is enabled by default.  If you
@@ -474,7 +473,7 @@ Appendix B GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -1001,15 +1000,20 @@ Variable Index
 
 
 Tag Table:
-Node: Top970
-Node: Overview2223
-Node: Help for users2964
-Node: Secret Service API7901
-Node: Help for developers13897
-Node: GnuPG and EasyPG Assistant Configuration17620
-Node: GNU Free Documentation License19342
-Node: Index44540
-Node: Function Index44678
-Node: Variable Index45915
+Node: Top894
+Node: Overview2147
+Node: Help for users2888
+Node: Secret Service API7825
+Node: Help for developers13821
+Node: GnuPG and EasyPG Assistant Configuration17544
+Node: GNU Free Documentation License19242
+Node: Index44434
+Node: Function Index44572
+Node: Variable Index45809
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

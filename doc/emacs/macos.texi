@@ -1,5 +1,5 @@
 @c This is part of the Emacs manual.
-@c Copyright (C) 2000-2013 Free Software Foundation, Inc.
+@c Copyright (C) 2000-2014 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
 @node Mac OS / GNUstep
 @appendix Emacs and Mac OS / GNUstep
@@ -40,13 +40,16 @@ Emacs provides a set of key bindings using this modifier key that mimic
 other Mac / GNUstep applications (@pxref{Mac / GNUstep Events}).  You
 can change these bindings in the usual way (@pxref{Key Bindings}).
 
-@c FIXME mention ns-alternate-modifier?
+@vindex ns-alternate-modifier
+@vindex ns-right-alternate-modifier
   The variable @code{ns-right-alternate-modifier} controls the
 behavior of the right @key{alt} and @key{option} keys.  These keys
 behave like the left-hand keys if the value is @code{left} (the
 default).  A value of @code{control}, @code{meta}, @code{alt},
 @code{super}, or @code{hyper} makes them behave like the corresponding
-modifier keys; a value of @code{none} tells Emacs to ignore them.
+modifier keys; a value to @code{left} means be the same key as
+@code{ns-alternate-modifier}; a value of @code{none} tells Emacs to
+ignore them.
 
   @kbd{S-Mouse-1} adjusts the region to the click position,
 just like @kbd{Mouse-3} (@code{mouse-save-then-kill}); it does not pop
@@ -87,9 +90,10 @@ of setting PATH is recommended on Mac OS X 10.5 and later, using the
 @node Mac / GNUstep Customization
 @section Mac / GNUstep Customization
 
-Emacs can be customized in several ways in addition to the standard
-customization buffers and the Options menu.
-
+There are a few customization options that are specific to the
+Nextstep port.  For example, they affect things such as the modifier
+keys and the fullscreen behavior.  To see all such options, use
+@kbd{M-x customize-group @key{RET} ns @key{RET}}.
 
 @subsection Font and Color Panels
 
@@ -113,16 +117,14 @@ close the altered one.
 Useful in this context is the listing of all faces obtained by
 @kbd{M-x list-faces-display}.
 
-@subsection Customization options specific to Mac OS / GNUstep
+@cindex Core Text, on Mac OS X
+In Mac OS X 10.5 and later, Emacs uses a Core Text based font backend
+by default.  If you prefer the older font style, enter the following
+at the command-line before starting Emacs:
 
-The following customization options are specific to the Nextstep port.
-
-@table @code
-@item ns-auto-hide-menu-bar
-Non-nil means the menu-bar is hidden by default, but appears if you
-move the mouse pointer over it.  (Requires Mac OS X 10.6 or later.)
-
-@end table
+@example
+% defaults write org.gnu.Emacs FontBackend ns
+@end example
 
 
 @node Mac / GNUstep Events
@@ -207,4 +209,10 @@ restart Emacs to access newly-available services.
 
 Emacs can be built and run under GNUstep, but there are still
 issues to be addressed.  Interested developers should contact
+@ifnothtml
 @email{emacs-devel@@gnu.org}.
+@end ifnothtml
+@ifhtml
+@url{http://lists.gnu.org/mailman/listinfo/emacs-devel, the
+emacs-devel mailing list}.
+@end ifhtml

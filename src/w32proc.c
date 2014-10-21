@@ -1,5 +1,6 @@
 /* Process support for GNU Emacs on the Microsoft Windows API.
-   Copyright (C) 1992, 1995, 1999-2013 Free Software Foundation, Inc.
+
+Copyright (C) 1992, 1995, 1999-2014 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -21,6 +22,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
      Adapted from alarm.c by Tim Fleehart
 */
 
+#include <mingw_time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -29,6 +31,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/file.h>
+#include <mbstring.h>
 
 /* must include CRT headers *before* config.h */
 #include <config.h>
@@ -40,8 +43,9 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #undef kill
 
 #include <windows.h>
-#ifdef __GNUC__
-/* This definition is missing from mingw32 headers. */
+#if defined(__GNUC__) && !defined(__MINGW64__)
+/* This definition is missing from mingw.org headers, but not MinGW64
+   headers. */
 extern BOOL WINAPI IsValidLocale (LCID, DWORD);
 #endif
 
@@ -230,14 +234,14 @@ sigismember (const sigset_t *set, int signo)
   return (*set & (1U << signo)) != 0;
 }
 
-int
-setpgrp (int pid, int gid)
+pid_t
+getpgrp (void)
 {
-  return 0;
+  return getpid ();
 }
 
 pid_t
-getpgrp (void)
+tcgetpgrp (int fd)
 {
   return getpid ();
 }
@@ -246,6 +250,12 @@ int
 setpgid (pid_t pid, pid_t pgid)
 {
   return 0;
+}
+
+pid_t
+setsid (void)
+{
+  return getpid ();
 }
 
 /* Emulations of interval timers.
@@ -556,7 +566,7 @@ init_timers (void)
 static int
 start_timer_thread (int which)
 {
-  DWORD exit_code;
+  DWORD exit_code, tid;
   HANDLE th;
   struct itimer_data *itimer =
     (which == ITIMER_REAL) ? &real_itimer : &prof_itimer;
@@ -594,7 +604,7 @@ start_timer_thread (int which)
      the way of threads we start to wait for subprocesses.  See also
      new_child below.  */
   itimer->timer_thread = CreateThread (NULL, 64 * 1024, timer_loop,
-				       (void *)itimer, 0x00010000, NULL);
+				       (void *)itimer, 0x00010000, &tid);
 
   if (!itimer->timer_thread)
     {
@@ -783,7 +793,6 @@ alarm (int seconds)
 /* Child process management list.  */
 int child_proc_count = 0;
 child_process child_procs[ MAX_CHILDREN ];
-child_process *dead_child = NULL;
 
 static DWORD WINAPI reader_thread (void *arg);
 
@@ -795,8 +804,50 @@ new_child (void)
   DWORD id;
 
   for (cp = child_procs + (child_proc_count-1); cp >= child_procs; cp--)
-    if (!CHILD_ACTIVE (cp))
+    if (!CHILD_ACTIVE (cp) && cp->procinfo.hProcess == NULL)
       goto Initialize;
+  if (child_proc_count == MAX_CHILDREN)
+    {
+      int i = 0;
+      child_process *dead_cp = NULL;
+
+      DebPrint (("new_child: No vacant slots, looking for dead processes\n"));
+      for (cp = child_procs + (child_proc_count-1); cp >= child_procs; cp--)
+	if (!CHILD_ACTIVE (cp) && cp->procinfo.hProcess)
+	  {
+	    DWORD status = 0;
+
+	    if (!GetExitCodeProcess (cp->procinfo.hProcess, &status))
+	      {
+		DebPrint (("new_child.GetExitCodeProcess: error %lu for PID %lu\n",
+			   GetLastError (), cp->procinfo.dwProcessId));
+		status = STILL_ACTIVE;
+	      }
+	    if (status != STILL_ACTIVE
+		|| WaitForSingleObject (cp->procinfo.hProcess, 0) == WAIT_OBJECT_0)
+	      {
+		DebPrint (("new_child: Freeing slot of dead process %d, fd %d\n",
+			   cp->procinfo.dwProcessId, cp->fd));
+		CloseHandle (cp->procinfo.hProcess);
+		cp->procinfo.hProcess = NULL;
+		CloseHandle (cp->procinfo.hThread);
+		cp->procinfo.hThread = NULL;
+		/* Free up to 2 dead slots at a time, so that if we
+		   have a lot of them, they will eventually all be
+		   freed when the tornado ends.  */
+		if (i == 0)
+		  dead_cp = cp;
+		else
+		  break;
+		i++;
+	      }
+	  }
+      if (dead_cp)
+	{
+	  cp = dead_cp;
+	  goto Initialize;
+	}
+    }
   if (child_proc_count == MAX_CHILDREN)
     return NULL;
   cp = &child_procs[child_proc_count++];
@@ -858,7 +909,7 @@ delete_child (child_process *cp)
     if (fd_info[i].cp == cp)
       emacs_abort ();
 
-  if (!CHILD_ACTIVE (cp))
+  if (!CHILD_ACTIVE (cp) && cp->procinfo.hProcess == NULL)
     return;
 
   /* reap thread if necessary */
@@ -902,7 +953,8 @@ delete_child (child_process *cp)
   if (cp == child_procs + child_proc_count - 1)
     {
       for (i = child_proc_count-1; i >= 0; i--)
-	if (CHILD_ACTIVE (&child_procs[i]))
+	if (CHILD_ACTIVE (&child_procs[i])
+	    || child_procs[i].procinfo.hProcess != NULL)
 	  {
 	    child_proc_count = i + 1;
 	    break;
@@ -919,11 +971,24 @@ find_child_pid (DWORD pid)
   child_process *cp;
 
   for (cp = child_procs + (child_proc_count-1); cp >= child_procs; cp--)
-    if (CHILD_ACTIVE (cp) && pid == cp->pid)
+    if ((CHILD_ACTIVE (cp) || cp->procinfo.hProcess != NULL)
+	&& pid == cp->pid)
       return cp;
   return NULL;
 }
 
+void
+release_listen_threads (void)
+{
+  int i;
+
+  for (i = child_proc_count - 1; i >= 0; i--)
+    {
+      if (CHILD_ACTIVE (&child_procs[i])
+	  && (fd_info[child_procs[i].fd].flags & FILE_LISTEN))
+	child_procs[i].status = STATUS_READ_ERROR;
+    }
+}
 
 /* Thread proc for child process and socket reader threads. Each thread
    is normally blocked until woken by select() to check for input by
@@ -947,10 +1012,15 @@ reader_thread (void *arg)
     {
       int rc;
 
-      if (fd_info[cp->fd].flags & FILE_LISTEN)
+      if (cp->fd >= 0 && fd_info[cp->fd].flags & FILE_LISTEN)
 	rc = _sys_wait_accept (cp->fd);
       else
 	rc = _sys_read_ahead (cp->fd);
+
+      /* Don't bother waiting for the event if we already have been
+	 told to exit by delete_child.  */
+      if (cp->status == STATUS_READ_ERROR || !cp->char_avail)
+	break;
 
       /* The name char_avail is a misnomer - it really just means the
 	 read-ahead has completed, whether successfully or not. */
@@ -969,6 +1039,11 @@ reader_thread (void *arg)
       if (rc == STATUS_READ_FAILED)
 	break;
 
+      /* Don't bother waiting for the acknowledge if we already have
+	 been told to exit by delete_child.  */
+      if (cp->status == STATUS_READ_ERROR || !cp->char_consumed)
+	break;
+
       /* Wait until our input is acknowledged before reading again */
       if (WaitForSingleObject (cp->char_consumed, INFINITE) != WAIT_OBJECT_0)
         {
@@ -976,18 +1051,23 @@ reader_thread (void *arg)
 		     "%lu for fd %ld\n", GetLastError (), cp->fd));
 	  break;
         }
+      /* delete_child sets status to STATUS_READ_ERROR when it wants
+	 us to exit.  */
+      if (cp->status == STATUS_READ_ERROR)
+	break;
     }
   return 0;
 }
 
-/* To avoid Emacs changing directory, we just record here the directory
-   the new process should start in.  This is set just before calling
-   sys_spawnve, and is not generally valid at any other time.  */
+/* To avoid Emacs changing directory, we just record here the
+   directory the new process should start in.  This is set just before
+   calling sys_spawnve, and is not generally valid at any other time.
+   Note that this directory's name is UTF-8 encoded.  */
 static char * process_dir;
 
 static BOOL
 create_child (char *exe, char *cmdline, char *env, int is_gui_app,
-	      int * pPid, child_process *cp)
+	      pid_t * pPid, child_process *cp)
 {
   STARTUPINFO start;
   SECURITY_ATTRIBUTES sec_attrs;
@@ -995,7 +1075,8 @@ create_child (char *exe, char *cmdline, char *env, int is_gui_app,
   SECURITY_DESCRIPTOR sec_desc;
 #endif
   DWORD flags;
-  char dir[ MAXPATHLEN ];
+  char dir[ MAX_PATH ];
+  char *p;
 
   if (cp == NULL) emacs_abort ();
 
@@ -1025,16 +1106,22 @@ create_child (char *exe, char *cmdline, char *env, int is_gui_app,
   sec_attrs.lpSecurityDescriptor = NULL /* &sec_desc */;
   sec_attrs.bInheritHandle = FALSE;
 
-  strcpy (dir, process_dir);
-  unixtodos_filename (dir);
+  filename_to_ansi (process_dir, dir);
+  /* Can't use unixtodos_filename here, since that needs its file name
+     argument encoded in UTF-8.  OTOH, process_dir, which _is_ in
+     UTF-8, points, to the directory computed by our caller, and we
+     don't want to modify that, either.  */
+  for (p = dir; *p; p = CharNextA (p))
+    if (*p == '/')
+      *p = '\\';
 
   flags = (!NILP (Vw32_start_process_share_console)
 	   ? CREATE_NEW_PROCESS_GROUP
 	   : CREATE_NEW_CONSOLE);
   if (NILP (Vw32_start_process_inherit_error_mode))
     flags |= CREATE_DEFAULT_ERROR_MODE;
-  if (!CreateProcess (exe, cmdline, &sec_attrs, NULL, TRUE,
-		      flags, env, dir, &start, &cp->procinfo))
+  if (!CreateProcessA (exe, cmdline, &sec_attrs, NULL, TRUE,
+		       flags, env, dir, &start, &cp->procinfo))
     goto EH_Fail;
 
   cp->pid = (int) cp->procinfo.dwProcessId;
@@ -1042,9 +1129,6 @@ create_child (char *exe, char *cmdline, char *env, int is_gui_app,
   /* Hack for Windows 95, which assigns large (ie negative) pids */
   if (cp->pid < 0)
     cp->pid = -cp->pid;
-
-  /* pid must fit in a Lisp_Int */
-  cp->pid = cp->pid & INTMASK;
 
   *pPid = cp->pid;
 
@@ -1055,17 +1139,17 @@ create_child (char *exe, char *cmdline, char *env, int is_gui_app,
   return FALSE;
 }
 
-/* create_child doesn't know what emacs' file handle will be for waiting
+/* create_child doesn't know what emacs's file handle will be for waiting
    on output from the child, so we need to make this additional call
    to register the handle with the process
    This way the select emulator knows how to match file handles with
    entries in child_procs.  */
 void
-register_child (int pid, int fd)
+register_child (pid_t pid, int fd)
 {
   child_process *cp;
 
-  cp = find_child_pid (pid);
+  cp = find_child_pid ((DWORD)pid);
   if (cp == NULL)
     {
       DebPrint (("register_child unable to find pid %lu\n", pid));
@@ -1092,10 +1176,7 @@ register_child (int pid, int fd)
   fd_info[fd].cp = cp;
 }
 
-/* When a process dies its pipe will break so the reader thread will
-   signal failure to the select emulator.
-   The select emulator then calls this routine to clean up.
-   Since the thread signaled failure we can assume it is exiting.  */
+/* Called from waitpid when a process exits.  */
 static void
 reap_subprocess (child_process *cp)
 {
@@ -1105,7 +1186,7 @@ reap_subprocess (child_process *cp)
 #ifdef FULL_DEBUG
       /* Process should have already died before we are called.  */
       if (WaitForSingleObject (cp->procinfo.hProcess, 0) != WAIT_OBJECT_0)
-	DebPrint (("reap_subprocess: child fpr fd %d has not died yet!", cp->fd));
+	DebPrint (("reap_subprocess: child for fd %d has not died yet!", cp->fd));
 #endif
       CloseHandle (cp->procinfo.hProcess);
       cp->procinfo.hProcess = NULL;
@@ -1113,69 +1194,133 @@ reap_subprocess (child_process *cp)
       cp->procinfo.hThread = NULL;
     }
 
-  /* For asynchronous children, the child_proc resources will be freed
-     when the last pipe read descriptor is closed; for synchronous
-     children, we must explicitly free the resources now because
-     register_child has not been called. */
-  if (cp->fd == -1)
+  /* If cp->fd was not closed yet, we might be still reading the
+     process output, so don't free its resources just yet.  The call
+     to delete_child on behalf of this subprocess will be made by
+     sys_read when the subprocess output is fully read.  */
+  if (cp->fd < 0)
     delete_child (cp);
 }
 
-/* Wait for any of our existing child processes to die
-   When it does, close its handle
-   Return the pid and fill in the status if non-NULL.  */
+/* Wait for a child process specified by PID, or for any of our
+   existing child processes (if PID is nonpositive) to die.  When it
+   does, close its handle.  Return the pid of the process that died
+   and fill in STATUS if non-NULL.  */
 
-int
-sys_wait (int *status)
+pid_t
+waitpid (pid_t pid, int *status, int options)
 {
   DWORD active, retval;
   int nh;
-  int pid;
   child_process *cp, *cps[MAX_CHILDREN];
   HANDLE wait_hnd[MAX_CHILDREN];
+  DWORD timeout_ms;
+  int dont_wait = (options & WNOHANG) != 0;
 
   nh = 0;
-  if (dead_child != NULL)
+  /* According to Posix:
+
+     PID = -1 means status is requested for any child process.
+
+     PID > 0 means status is requested for a single child process
+     whose pid is PID.
+
+     PID = 0 means status is requested for any child process whose
+     process group ID is equal to that of the calling process.  But
+     since Windows has only a limited support for process groups (only
+     for console processes and only for the purposes of passing
+     Ctrl-BREAK signal to them), and since we have no documented way
+     of determining whether a given process belongs to our group, we
+     treat 0 as -1.
+
+     PID < -1 means status is requested for any child process whose
+     process group ID is equal to the absolute value of PID.  Again,
+     since we don't support process groups, we treat that as -1.  */
+  if (pid > 0)
     {
-      /* We want to wait for a specific child */
-      wait_hnd[nh] = dead_child->procinfo.hProcess;
-      cps[nh] = dead_child;
-      if (!wait_hnd[nh]) emacs_abort ();
-      nh++;
-      active = 0;
-      goto get_result;
+      int our_child = 0;
+
+      /* We are requested to wait for a specific child.  */
+      for (cp = child_procs + (child_proc_count-1); cp >= child_procs; cp--)
+	{
+	  /* Some child_procs might be sockets; ignore them.  Also
+	     ignore subprocesses whose output is not yet completely
+	     read.  */
+	  if (CHILD_ACTIVE (cp)
+	      && cp->procinfo.hProcess
+	      && cp->pid == pid)
+	    {
+	      our_child = 1;
+	      break;
+	    }
+	}
+      if (our_child)
+	{
+	  if (cp->fd < 0 || (fd_info[cp->fd].flags & FILE_AT_EOF) != 0)
+	    {
+	      wait_hnd[nh] = cp->procinfo.hProcess;
+	      cps[nh] = cp;
+	      nh++;
+	    }
+	  else if (dont_wait)
+	    {
+	      /* PID specifies our subprocess, but its status is not
+		 yet available.  */
+	      return 0;
+	    }
+	}
+      if (nh == 0)
+	{
+	  /* No such child process, or nothing to wait for, so fail.  */
+	  errno = ECHILD;
+	  return -1;
+	}
     }
   else
     {
       for (cp = child_procs + (child_proc_count-1); cp >= child_procs; cp--)
-	/* some child_procs might be sockets; ignore them */
-	if (CHILD_ACTIVE (cp) && cp->procinfo.hProcess
-	    && (cp->fd < 0 || (fd_info[cp->fd].flags & FILE_AT_EOF) != 0))
-	  {
-	    wait_hnd[nh] = cp->procinfo.hProcess;
-	    cps[nh] = cp;
-	    nh++;
-	  }
+	{
+	  if (CHILD_ACTIVE (cp)
+	      && cp->procinfo.hProcess
+	      && (cp->fd < 0 || (fd_info[cp->fd].flags & FILE_AT_EOF) != 0))
+	    {
+	      wait_hnd[nh] = cp->procinfo.hProcess;
+	      cps[nh] = cp;
+	      nh++;
+	    }
+	}
+      if (nh == 0)
+	{
+	  /* Nothing to wait on, so fail.  */
+	  errno = ECHILD;
+	  return -1;
+	}
     }
 
-  if (nh == 0)
-    {
-      /* Nothing to wait on, so fail */
-      errno = ECHILD;
-      return -1;
-    }
+  if (dont_wait)
+    timeout_ms = 0;
+  else
+    timeout_ms = 1000;	/* check for quit about once a second. */
 
   do
     {
-      /* Check for quit about once a second. */
       QUIT;
-      active = WaitForMultipleObjects (nh, wait_hnd, FALSE, 1000);
-    } while (active == WAIT_TIMEOUT);
+      active = WaitForMultipleObjects (nh, wait_hnd, FALSE, timeout_ms);
+    } while (active == WAIT_TIMEOUT && !dont_wait);
 
   if (active == WAIT_FAILED)
     {
       errno = EBADF;
       return -1;
+    }
+  else if (active == WAIT_TIMEOUT && dont_wait)
+    {
+      /* PID specifies our subprocess, but it didn't exit yet, so its
+	 status is not yet available.  */
+#ifdef FULL_DEBUG
+      DebPrint (("Wait: PID %d not reap yet\n", cp->pid));
+#endif
+      return 0;
     }
   else if (active >= WAIT_OBJECT_0
 	   && active < WAIT_OBJECT_0+MAXIMUM_WAIT_OBJECTS)
@@ -1190,7 +1335,6 @@ sys_wait (int *status)
   else
     emacs_abort ();
 
-get_result:
   if (!GetExitCodeProcess (wait_hnd[active], &retval))
     {
       DebPrint (("Wait.GetExitCodeProcess failed with %lu\n",
@@ -1199,8 +1343,10 @@ get_result:
     }
   if (retval == STILL_ACTIVE)
     {
-      /* Should never happen */
+      /* Should never happen.  */
       DebPrint (("Wait.WaitForMultipleObjects returned an active process\n"));
+      if (pid > 0 && dont_wait)
+	return 0;
       errno = EINVAL;
       return -1;
     }
@@ -1214,6 +1360,8 @@ get_result:
   else
     retval <<= 8;
 
+  if (pid > 0 && active != 0)
+    emacs_abort ();
   cp = cps[active];
   pid = cp->pid;
 #ifdef FULL_DEBUG
@@ -1221,33 +1369,7 @@ get_result:
 #endif
 
   if (status)
-    {
-      *status = retval;
-    }
-  else if (synch_process_alive)
-    {
-      synch_process_alive = 0;
-
-      /* Report the status of the synchronous process.  */
-      if (WIFEXITED (retval))
-	synch_process_retcode = WEXITSTATUS (retval);
-      else if (WIFSIGNALED (retval))
-	{
-	  int code = WTERMSIG (retval);
-	  const char *signame;
-
-	  synchronize_system_messages_locale ();
-	  signame = strsignal (code);
-
-	  if (signame == 0)
-	    signame = "unknown";
-
-	  synch_process_death = signame;
-	}
-
-      reap_subprocess (cp);
-    }
-
+    *status = retval;
   reap_subprocess (cp);
 
   return pid;
@@ -1260,6 +1382,8 @@ get_result:
 # define IMAGE_OPTIONAL_HEADER32 IMAGE_OPTIONAL_HEADER
 #endif
 
+/* Implementation note: This function works with file names encoded in
+   the current ANSI codepage.  */
 static void
 w32_executable_type (char * filename,
 		     int * is_dos_app,
@@ -1432,7 +1556,7 @@ sys_spawnve (int mode, char *cmdname, char **argv, char **envp)
   Lisp_Object program, full;
   char *cmdline, *env, *parg, **targ;
   int arglen, numenv;
-  int pid;
+  pid_t pid;
   child_process *cp;
   int is_dos_app, is_cygnus_app, is_gui_app;
   int do_quoting = 0;
@@ -1450,6 +1574,7 @@ sys_spawnve (int mode, char *cmdname, char **argv, char **envp)
   char *sepchars = " \t*?";
   /* This is for native w32 apps; modified below for Cygwin apps.  */
   char escape_char = '\\';
+  char cmdname_a[MAX_PATH];
 
   /* We don't care about the other modes */
   if (mode != _P_NOWAIT)
@@ -1458,27 +1583,45 @@ sys_spawnve (int mode, char *cmdname, char **argv, char **envp)
       return -1;
     }
 
-  /* Handle executable names without an executable suffix.  */
-  program = build_string (cmdname);
-  if (NILP (Ffile_executable_p (program)))
+  /* Handle executable names without an executable suffix.  The caller
+     already searched exec-path and verified the file is executable,
+     but start-process doesn't do that for file names that are already
+     absolute.  So we double-check this here, just in case.  */
+  if (faccessat (AT_FDCWD, cmdname, X_OK, AT_EACCESS) != 0)
     {
       struct gcpro gcpro1;
 
+      program = build_string (cmdname);
       full = Qnil;
       GCPRO1 (program);
-      openp (Vexec_path, program, Vexec_suffixes, &full, make_number (X_OK));
+      openp (Vexec_path, program, Vexec_suffixes, &full, make_number (X_OK), 0);
       UNGCPRO;
       if (NILP (full))
 	{
 	  errno = EINVAL;
 	  return -1;
 	}
-      program = full;
+      program = ENCODE_FILE (full);
+      cmdname = SDATA (program);
     }
 
   /* make sure argv[0] and cmdname are both in DOS format */
-  cmdname = SDATA (program);
   unixtodos_filename (cmdname);
+  /* argv[0] was encoded by caller using ENCODE_FILE, so it is in
+     UTF-8.  All the other arguments are encoded by ENCODE_SYSTEM or
+     some such, and are in some ANSI codepage.  We need to have
+     argv[0] encoded in ANSI codepage.  */
+  filename_to_ansi (cmdname, cmdname_a);
+  /* We explicitly require that the command's file name be encodable
+     in the current ANSI codepage, because we will be invoking it via
+     the ANSI APIs.  */
+  if (_mbspbrk (cmdname_a, "?"))
+    {
+      errno = ENOENT;
+      return -1;
+    }
+  /* From here on, CMDNAME is an ANSI-encoded string.  */
+  cmdname = cmdname_a;
   argv[0] = cmdname;
 
   /* Determine whether program is a 16-bit DOS executable, or a 32-bit Windows
@@ -1496,7 +1639,9 @@ sys_spawnve (int mode, char *cmdname, char **argv, char **envp)
      while leaving the real app name as argv[0].  */
   if (is_dos_app)
     {
-      cmdname = alloca (MAXPATHLEN);
+      char *p;
+
+      cmdname = alloca (MAX_PATH);
       if (egetenv ("CMDPROXY"))
 	strcpy (cmdname, egetenv ("CMDPROXY"));
       else
@@ -1504,7 +1649,12 @@ sys_spawnve (int mode, char *cmdname, char **argv, char **envp)
 	  strcpy (cmdname, SDATA (Vinvocation_directory));
 	  strcat (cmdname, "cmdproxy.exe");
 	}
-      unixtodos_filename (cmdname);
+
+      /* Can't use unixtodos_filename here, since that needs its file
+	 name argument encoded in UTF-8.  */
+      for (p = cmdname; *p; p = CharNextA (p))
+	if (*p == '/')
+	  *p = '\\';
     }
 
   /* we have to do some conjuring here to put argv and envp into the
@@ -1762,7 +1912,7 @@ extern int proc_buffered_char[];
 
 int
 sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
-	    EMACS_TIME *timeout, void *ignored)
+	    struct timespec *timeout, void *ignored)
 {
   SELECT_TYPE orfds;
   DWORD timeout_ms, start_time;
@@ -1793,12 +1943,17 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
   FD_ZERO (rfds);
   nr = 0;
 
-  /* Always wait on interrupt_handle, to detect C-g (quit).  */
-  wait_hnd[0] = interrupt_handle;
-  fdindex[0] = -1;
+  /* If interrupt_handle is available and valid, always wait on it, to
+     detect C-g (quit).  */
+  nh = 0;
+  if (interrupt_handle && interrupt_handle != INVALID_HANDLE_VALUE)
+    {
+      wait_hnd[0] = interrupt_handle;
+      fdindex[0] = -1;
+      nh++;
+    }
 
   /* Build a list of pipe handles to wait on.  */
-  nh = 1;
   for (i = 0; i < nfds; i++)
     if (FD_ISSET (i, &orfds))
       {
@@ -1819,10 +1974,15 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
 		FD_SET (i, rfds);
 		return 1;
 	      }
+	    else if (noninteractive)
+	      {
+		if (handle_file_notifications (NULL))
+		  return 1;
+	      }
 	  }
 	else
 	  {
-	    /* Child process and socket input */
+	    /* Child process and socket/comm port input.  */
 	    cp = fd_info[i].cp;
 	    if (cp)
 	      {
@@ -1835,7 +1995,7 @@ sys_select (int nfds, SELECT_TYPE *rfds, SELECT_TYPE *wfds, SELECT_TYPE *efds,
 		    /* Wake up the reader thread for this process */
 		    cp->status = STATUS_READ_READY;
 		    if (!SetEvent (cp->char_consumed))
-		      DebPrint (("nt_select.SetEvent failed with "
+		      DebPrint (("sys_select.SetEvent failed with "
 				 "%lu for fd %ld\n", GetLastError (), i));
 		  }
 
@@ -1903,7 +2063,7 @@ count_children:
     /* Some child_procs might be sockets; ignore them.  Also some
        children may have died already, but we haven't finished reading
        the process output; ignore them too.  */
-    if (CHILD_ACTIVE (cp) && cp->procinfo.hProcess
+    if ((CHILD_ACTIVE (cp) && cp->procinfo.hProcess)
 	&& (cp->fd < 0
 	    || (fd_info[cp->fd].flags & FILE_SEND_SIGCHLD) == 0
 	    || (fd_info[cp->fd].flags & FILE_AT_EOF) != 0)
@@ -1919,6 +2079,11 @@ count_children:
     {
       if (timeout)
 	Sleep (timeout_ms);
+      if (noninteractive)
+	{
+	  if (handle_file_notifications (NULL))
+	    return 1;
+	}
       return 0;
     }
 
@@ -1945,6 +2110,11 @@ count_children:
     }
   else if (active == WAIT_TIMEOUT)
     {
+      if (noninteractive)
+	{
+	  if (handle_file_notifications (NULL))
+	    return 1;
+	}
       return 0;
     }
   else if (active >= WAIT_OBJECT_0
@@ -1983,7 +2153,24 @@ count_children:
 	     (*) Note that MsgWaitForMultipleObjects above is an
 	     internal dispatch point for messages that are sent to
 	     windows created by this thread.  */
-	  drain_message_queue ();
+	  if (drain_message_queue ()
+	      /* If drain_message_queue returns non-zero, that means
+		 we received a WM_EMACS_FILENOTIFY message.  If this
+		 is a TTY frame, we must signal the caller that keyboard
+		 input is available, so that w32_console_read_socket
+		 will be called to pick up the notifications.  If we
+		 don't do that, file notifications will only work when
+		 the Emacs TTY frame has focus.  */
+	      && FRAME_TERMCAP_P (SELECTED_FRAME ())
+	      /* they asked for stdin reads */
+	      && FD_ISSET (0, &orfds)
+	      /* the stdin handle is valid */
+	      && keyboard_handle)
+	    {
+	      FD_SET (0, rfds);
+	      if (nr == 0)
+		nr = 1;
+	    }
 	}
       else if (active >= nh)
 	{
@@ -2003,9 +2190,7 @@ count_children:
 	      DebPrint (("select calling SIGCHLD handler for pid %d\n",
 			 cp->pid));
 #endif
-	      dead_child = cp;
 	      sig_handlers[SIGCHLD] (SIGCHLD);
-	      dead_child = NULL;
 	    }
 	}
       else if (fdindex[active] == -1)
@@ -2035,6 +2220,12 @@ count_children:
 	if (WaitForSingleObject (wait_hnd[active], 0) == WAIT_OBJECT_0)
 	  break;
     } while (active < nh + nc);
+
+  if (noninteractive)
+    {
+      if (handle_file_notifications (NULL))
+	nr++;
+    }
 
   /* If no input has arrived and timeout hasn't expired, wait again.  */
   if (nr == 0)
@@ -2082,18 +2273,52 @@ find_child_console (HWND hwnd, LPARAM arg)
 
 /* Emulate 'kill', but only for other processes.  */
 int
-sys_kill (int pid, int sig)
+sys_kill (pid_t pid, int sig)
 {
   child_process *cp;
   HANDLE proc_hand;
   int need_to_free = 0;
   int rc = 0;
 
+  /* Each process is in its own process group.  */
+  if (pid < 0)
+    pid = -pid;
+
   /* Only handle signals that will result in the process dying */
-  if (sig != SIGINT && sig != SIGKILL && sig != SIGQUIT && sig != SIGHUP)
+  if (sig != 0
+      && sig != SIGINT && sig != SIGKILL && sig != SIGQUIT && sig != SIGHUP)
     {
       errno = EINVAL;
       return -1;
+    }
+
+  if (sig == 0)
+    {
+      /* It will take _some_ time before PID 4 or less on Windows will
+	 be Emacs...  */
+      if (pid <= 4)
+	{
+	  errno = EPERM;
+	  return -1;
+	}
+      proc_hand = OpenProcess (PROCESS_QUERY_INFORMATION, 0, pid);
+      if (proc_hand == NULL)
+        {
+	  DWORD err = GetLastError ();
+
+	  switch (err)
+	    {
+	    case ERROR_ACCESS_DENIED: /* existing process, but access denied */
+	      errno = EPERM;
+	      return -1;
+	    case ERROR_INVALID_PARAMETER: /* process PID does not exist */
+	      errno = ESRCH;
+	      return -1;
+	    }
+	}
+      else
+	CloseHandle (proc_hand);
+      return 0;
     }
 
   cp = find_child_pid (pid);
@@ -2431,11 +2656,13 @@ All path elements in FILENAME are converted to their short names.  */)
   filename = Fexpand_file_name (filename, Qnil);
 
   /* luckily, this returns the short version of each element in the path.  */
-  if (GetShortPathName (SDATA (ENCODE_FILE (filename)), shortname, MAX_PATH) == 0)
+  if (w32_get_short_filename (SDATA (ENCODE_FILE (filename)),
+			      shortname, MAX_PATH) == 0)
     return Qnil;
 
   dostounix_filename (shortname);
 
+  /* No need to DECODE_FILE, because 8.3 names are pure ASCII.   */
   return build_string (shortname);
 }
 
@@ -2447,7 +2674,7 @@ If FILENAME does not exist, return nil.
 All path elements in FILENAME are converted to their long names.  */)
   (Lisp_Object filename)
 {
-  char longname[ MAX_PATH ];
+  char longname[ MAX_UTF8_PATH ];
   int drive_only = 0;
 
   CHECK_STRING (filename);
@@ -2459,7 +2686,8 @@ All path elements in FILENAME are converted to their long names.  */)
   /* first expand it.  */
   filename = Fexpand_file_name (filename, Qnil);
 
-  if (!w32_get_long_filename (SDATA (ENCODE_FILE (filename)), longname, MAX_PATH))
+  if (!w32_get_long_filename (SDATA (ENCODE_FILE (filename)), longname,
+			      MAX_UTF8_PATH))
     return Qnil;
 
   dostounix_filename (longname);
@@ -2470,7 +2698,7 @@ All path elements in FILENAME are converted to their long names.  */)
   if (drive_only && longname[1] == ':' && longname[2] == '/' && !longname[3])
     longname[2] = '\0';
 
-  return DECODE_FILE (build_string (longname));
+  return DECODE_FILE (build_unibyte_string (longname));
 }
 
 DEFUN ("w32-set-process-priority", Fw32_set_process_priority,
@@ -2857,10 +3085,10 @@ The return value is a list of pairs of language id and layout id.  */)
     {
       while (--num_layouts >= 0)
 	{
-	  DWORD kl = (DWORD) layouts[num_layouts];
+	  HKL kl = layouts[num_layouts];
 
-	  obj = Fcons (Fcons (make_number (kl & 0xffff),
-			      make_number ((kl >> 16) & 0xffff)),
+	  obj = Fcons (Fcons (make_number (LOWORD (kl)),
+			      make_number (HIWORD (kl))),
 		       obj);
 	}
     }
@@ -2875,10 +3103,10 @@ DEFUN ("w32-get-keyboard-layout", Fw32_get_keyboard_layout,
 The return value is the cons of the language id and the layout id.  */)
   (void)
 {
-  DWORD kl = (DWORD) GetKeyboardLayout (dwWindowsThreadId);
+  HKL kl = GetKeyboardLayout (dwWindowsThreadId);
 
-  return Fcons (make_number (kl & 0xffff),
-		make_number ((kl >> 16) & 0xffff));
+  return Fcons (make_number (LOWORD (kl)),
+		make_number (HIWORD (kl)));
 }
 
 
@@ -2889,14 +3117,14 @@ The keyboard layout setting affects interpretation of keyboard input.
 If successful, the new layout id is returned, otherwise nil.  */)
   (Lisp_Object layout)
 {
-  DWORD kl;
+  HKL kl;
 
   CHECK_CONS (layout);
   CHECK_NUMBER_CAR (layout);
   CHECK_NUMBER_CDR (layout);
 
-  kl = (XINT (XCAR (layout)) & 0xffff)
-    | (XINT (XCDR (layout)) << 16);
+ kl = (HKL) ((XINT (XCAR (layout)) & 0xffff)
+	     | (XINT (XCDR (layout)) << 16));
 
   /* Synchronize layout with input thread.  */
   if (dwWindowsThreadId)
@@ -2911,7 +3139,7 @@ If successful, the new layout id is returned, otherwise nil.  */)
 	    return Qnil;
 	}
     }
-  else if (!ActivateKeyboardLayout ((HKL) kl, 0))
+  else if (!ActivateKeyboardLayout (kl, 0))
     return Qnil;
 
   return Fw32_get_keyboard_layout ();

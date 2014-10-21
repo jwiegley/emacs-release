@@ -1,6 +1,6 @@
 ;;; ediff-mult.el --- support for multi-file/multi-buffer processing in Ediff
 
-;; Copyright (C) 1995-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1995-2014 Free Software Foundation, Inc.
 
 ;; Author: Michael Kifer <kifer@cs.stonybrook.edu>
 ;; Package: ediff
@@ -110,14 +110,11 @@
   :prefix "ediff-"
   :group 'ediff)
 
-
-;; compiler pacifier
-(eval-when-compile
-  (require 'ediff-ptch)
-  (require 'ediff))
-;; end pacifier
-
 (require 'ediff-init)
+(require 'ediff-diff)
+(require 'ediff-wind)
+(require 'ediff-util)
+
 
 ;; meta-buffer
 (ediff-defvar-local ediff-meta-buffer nil "")
@@ -143,7 +140,7 @@ Useful commands (type ? to hide them and free up screen):
  uh/um:\tunmark all sessions marked for hiding/operation
  n,SPC:\tnext session
  p,DEL:\tprevious session
-     E:\tbrowse Ediff on-line manual
+     E:\tbrowse Ediff manual
      T:\ttoggle truncation of long file names
      q:\tquit this session group
 ")
@@ -1118,7 +1115,7 @@ behavior."
     (setq overl
 	  (if (featurep 'xemacs)
 	      (map-extents
-	       (lambda (ext maparg)
+	       (lambda (ext _maparg)
 		 (if (and
 		      (ediff-overlay-get ext 'ediff-meta-info)
 		      (eq (ediff-overlay-get ext 'ediff-meta-session-number)
@@ -1447,7 +1444,7 @@ Useful commands:
 
 
 ;; argument is ignored
-(defun ediff-redraw-registry-buffer (&optional ignore)
+(defun ediff-redraw-registry-buffer (&optional _ignore)
   (ediff-with-current-buffer ediff-registry-buffer
     (let ((point (point))
 	  elt bufAname bufBname bufCname cur-diff total-diffs pt
@@ -1467,7 +1464,7 @@ Useful commands:
      R in any Ediff session:   display session registry
      n,SPC: next session
      p,DEL: previous session
-         E: browse Ediff on-line manual
+         E: browse Ediff manual
          q: bury registry
 
 
@@ -1794,6 +1791,14 @@ all marked sessions must be active."
 	    (display-buffer ediff-tmp-buffer 'not-this-window)
 	    ))
       (error "The patch buffer wasn't found"))))
+
+(declare-function ediff-directories-internal "ediff"
+		  (dir1 dir2 dir3 regexp action jobname
+			&optional startup-hooks merge-autostore-dir))
+
+(declare-function ediff-directory-revisions-internal "ediff"
+		  (dir1 regexp action jobname
+			&optional startup-hooks merge-autostore-dir))
 
 
 ;; This function executes in meta buffer.  It knows where event happened.
@@ -2359,6 +2364,8 @@ If this is a session registry buffer then just bury it."
 	(or (car (overlays-at point))
 	    (setq point (point-min)))
 	point))))
+
+(autoload 'ediff-patch-file-internal "ediff-ptch")
 
 ;; this is the action invoked when the user selects a patch from the meta
 ;; buffer.

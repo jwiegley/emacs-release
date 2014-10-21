@@ -1,6 +1,6 @@
 ;;; tramp-compat.el --- Tramp compatibility functions
 
-;; Copyright (C) 2007-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2007-2014 Free Software Foundation, Inc.
 
 ;; Author: Michael Albinus <michael.albinus@gmx.de>
 ;; Keywords: comm, processes
@@ -29,9 +29,8 @@
 
 ;;; Code:
 
+;; Pacify byte-compiler.
 (eval-when-compile
-
-  ;; Pacify byte-compiler.
   (require 'cl))
 
 (eval-and-compile
@@ -52,6 +51,7 @@
   (require 'format-spec)
   (require 'shell)
 
+  (require 'trampver)
   (require 'tramp-loaddefs)
 
   ;; As long as password.el is not part of (X)Emacs, it shouldn't be
@@ -70,22 +70,6 @@
   (if (featurep 'xemacs)
       (require 'timer-funcs)
     (require 'timer))
-
-  ;; We check whether `start-file-process' is bound.
-  ;; Note: we deactivate this.  There are problems, at least in SXEmacs.
-  (unless t;(fboundp 'start-file-process)
-
-    ;; tramp-util offers integration into other (X)Emacs packages like
-    ;; compile.el, gud.el etc.  Not necessary in Emacs 23.
-    (eval-after-load "tramp"
-      '(require 'tramp-util))
-
-    ;; Make sure that we get integration with the VC package.  When it
-    ;; is loaded, we need to pull in the integration module.  Not
-    ;; necessary in Emacs 23.
-    (eval-after-load "vc"
-      (eval-after-load "tramp"
-	'(require 'tramp-vc))))
 
   ;; Avoid byte-compiler warnings if the byte-compiler supports this.
   ;; Currently, XEmacs supports this.
@@ -112,7 +96,8 @@
   ;; `remote-file-name-inhibit-cache' has been introduced with Emacs 24.1.
   ;; Besides `t', `nil', and integer, we use also timestamps (as
   ;; returned by `current-time') internally.
-  (defvar remote-file-name-inhibit-cache nil)
+  (unless (boundp 'remote-file-name-inhibit-cache)
+    (defvar remote-file-name-inhibit-cache nil))
 
   ;; For not existing functions, or functions with a changed argument
   ;; list, there are compiler warnings.  We want to avoid them in
@@ -132,9 +117,7 @@
   ;; mechanism.
 
   ;; `file-remote-p' has been introduced with Emacs 22.  The version
-  ;; of XEmacs is not a magic file name function (yet); this is
-  ;; corrected in tramp-util.el.  Here it is sufficient if the
-  ;; function exists.
+  ;; of XEmacs is not a magic file name function (yet).
   (unless (fboundp 'file-remote-p)
     (defalias 'file-remote-p
       (lambda (file &optional identification connected)
@@ -200,10 +183,10 @@
 	'file-expand-wildcards 'around 'tramp-advice-file-expand-wildcards)
        (ad-activate 'file-expand-wildcards)))))
 
-;; `with-temp-message' does not exists in XEmacs.
+;; `with-temp-message' does not exist in XEmacs.
 (if (fboundp 'with-temp-message)
     (defalias 'tramp-compat-with-temp-message 'with-temp-message)
-  (defmacro tramp-compat-with-temp-message (message &rest body)
+  (defmacro tramp-compat-with-temp-message (_message &rest body)
     "Display MESSAGE temporarily if non-nil while BODY is evaluated."
     `(progn ,@body)))
 
@@ -254,14 +237,14 @@ this is the function `temp-directory'."
 ;; `make-temp-file' exists in Emacs only.  On XEmacs, we use our own
 ;; implementation with `make-temp-name', creating the temporary file
 ;; immediately in order to avoid a security hole.
-(defsubst tramp-compat-make-temp-file (filename &optional dir-flag)
+(defsubst tramp-compat-make-temp-file (f &optional dir-flag)
   "Create a temporary file (compat function).
-Add the extension of FILENAME, if existing."
+Add the extension of F, if existing."
   (let* (file-name-handler-alist
 	 (prefix (expand-file-name
 		  (symbol-value 'tramp-temp-name-prefix)
 		  (tramp-compat-temporary-file-directory)))
-	 (extension (file-name-extension filename t))
+	 (extension (file-name-extension f t))
 	 result)
     (condition-case nil
 	(setq result
@@ -308,7 +291,7 @@ Not actually used.  Use `(format \"%o\" i)' instead?"
       (error "Non-octal junk in string `%s'" x))
     (string-to-number ostr 8)))
 
-;; ID-FORMAT does not exists in XEmacs.
+;; ID-FORMAT does not exist in XEmacs.
 (defun tramp-compat-file-attributes (filename &optional id-format)
   "Like `file-attributes' for Tramp files (compat function)."
   (cond
@@ -322,20 +305,29 @@ Not actually used.  Use `(format \"%o\" i)' instead?"
 	(wrong-number-of-arguments (file-attributes filename))))))
 
 ;; PRESERVE-UID-GID does not exist in XEmacs.
-;; PRESERVE-SELINUX-CONTEXT has been introduced with Emacs 24.1.
+;; PRESERVE-EXTENDED-ATTRIBUTES has been introduced with Emacs 24.1
+;; (as PRESERVE-SELINUX-CONTEXT), and renamed in Emacs 24.3.
 (defun tramp-compat-copy-file
   (filename newname &optional ok-if-already-exists keep-date
-	    preserve-uid-gid preserve-selinux-context)
+	    preserve-uid-gid preserve-extended-attributes)
   "Like `copy-file' for Tramp files (compat function)."
   (cond
-   (preserve-selinux-context
-    (tramp-compat-funcall
-     'copy-file filename newname ok-if-already-exists keep-date
-     preserve-uid-gid preserve-selinux-context))
+   (preserve-extended-attributes
+    (condition-case nil
+	(tramp-compat-funcall
+	 'copy-file filename newname ok-if-already-exists keep-date
+	 preserve-uid-gid preserve-extended-attributes)
+      (wrong-number-of-arguments
+       (tramp-compat-copy-file
+	filename newname ok-if-already-exists keep-date preserve-uid-gid))))
    (preserve-uid-gid
-    (tramp-compat-funcall
-     'copy-file filename newname ok-if-already-exists keep-date
-     preserve-uid-gid))
+    (condition-case nil
+	(tramp-compat-funcall
+	 'copy-file filename newname ok-if-already-exists keep-date
+	 preserve-uid-gid)
+      (wrong-number-of-arguments
+       (tramp-compat-copy-file
+	filename newname ok-if-already-exists keep-date))))
    (t
     (copy-file filename newname ok-if-already-exists keep-date))))
 
@@ -399,25 +391,37 @@ Not actually used.  Use `(format \"%o\" i)' instead?"
 		 trash)))
        (delete-file filename)))))
 
-;; RECURSIVE has been introduced with Emacs 23.2.
-(defun tramp-compat-delete-directory (directory &optional recursive)
+;; RECURSIVE has been introduced with Emacs 23.2.  TRASH has been
+;; introduced with Emacs 24.1.
+(defun tramp-compat-delete-directory (directory &optional recursive trash)
   "Like `delete-directory' for Tramp files (compat function)."
-  (if (null recursive)
-      (delete-directory directory)
-    (condition-case nil
-	(tramp-compat-funcall 'delete-directory directory recursive)
-      ;; This Emacs version does not support the RECURSIVE flag.  We
-      ;; use the implementation from Emacs 23.2.
-      (wrong-number-of-arguments
-       (setq directory (directory-file-name (expand-file-name directory)))
-       (if (not (file-symlink-p directory))
-	   (mapc (lambda (file)
-		   (if (eq t (car (file-attributes file)))
-		       (tramp-compat-delete-directory file recursive)
-		     (delete-file file)))
-		 (directory-files
-		  directory 'full "^\\([^.]\\|\\.\\([^.]\\|\\..\\)\\).*")))
-       (delete-directory directory)))))
+  (condition-case nil
+      (cond
+       (trash
+	(tramp-compat-funcall 'delete-directory directory recursive trash))
+       (recursive
+	(tramp-compat-funcall 'delete-directory directory recursive))
+       (t
+	(delete-directory directory)))
+    ;; This Emacs version does not support the RECURSIVE or TRASH flag.  We
+    ;; use the implementation from Emacs 23.2.
+    (wrong-number-of-arguments
+     (setq directory (directory-file-name (expand-file-name directory)))
+     (if (not (file-symlink-p directory))
+	 (mapc (lambda (file)
+		 (if (eq t (car (file-attributes file)))
+		     (tramp-compat-delete-directory file recursive trash)
+		   (tramp-compat-delete-file file trash)))
+	       (directory-files
+		directory 'full "^\\([^.]\\|\\.\\([^.]\\|\\..\\)\\).*")))
+     (delete-directory directory))))
+
+;; MUST-SUFFIX doesn't exist on XEmacs.
+(defun tramp-compat-load (file &optional noerror nomessage nosuffix must-suffix)
+  "Like `load' for Tramp files (compat function)."
+  (if must-suffix
+      (tramp-compat-funcall 'load file noerror nomessage nosuffix must-suffix)
+    (load file noerror nomessage nosuffix)))
 
 ;; `number-sequence' does not exist in XEmacs.  Implementation is
 ;; taken from Emacs 23.
@@ -448,20 +452,6 @@ This is, the first, empty, element is omitted.  In XEmacs, the first
 element is not omitted."
   (delete "" (split-string string pattern)))
 
-(defun tramp-compat-call-process
-  (program &optional infile destination display &rest args)
-  "Calls `call-process' on the local host.
-This is needed because for some Emacs flavors Tramp has
-defadvised `call-process' to behave like `process-file'.  The
-Lisp error raised when PROGRAM is nil is trapped also, returning 1."
-  (let ((default-directory
-	  (if (file-remote-p default-directory)
-	      (tramp-compat-temporary-file-directory)
-	    default-directory)))
-    (if (executable-find program)
-	(apply 'call-process program infile destination display args)
-      1)))
-
 (defun tramp-compat-process-running-p (process-name)
   "Returns `t' if system process PROCESS-NAME is running for `user-login-name'."
   (when (stringp process-name)
@@ -488,7 +478,7 @@ Lisp error raised when PROGRAM is nil is trapped also, returning 1."
 
      ;; Fallback, if there is no Lisp support yet.
      (t (let ((default-directory
-		(if (file-remote-p default-directory)
+		(if (tramp-tramp-file-p default-directory)
 		    (tramp-compat-temporary-file-directory)
 		  default-directory))
 	      (unix95 (getenv "UNIX95"))
@@ -543,8 +533,61 @@ EOL-TYPE can be one of `dos', `unix', or `mac'."
 			"`dos', `unix', or `mac'")))))
         (t (error "Can't change EOL conversion -- is MULE missing?"))))
 
+;; `replace-regexp-in-string' does not exist in XEmacs.
+;; Implementation is taken from Emacs 24.
+(if (fboundp 'replace-regexp-in-string)
+    (defalias 'tramp-compat-replace-regexp-in-string 'replace-regexp-in-string)
+  (defun tramp-compat-replace-regexp-in-string
+    (regexp rep string &optional fixedcase literal subexp start)
+    "Replace all matches for REGEXP with REP in STRING.
+
+Return a new string containing the replacements.
+
+Optional arguments FIXEDCASE, LITERAL and SUBEXP are like the
+arguments with the same names of function `replace-match'.  If START
+is non-nil, start replacements at that index in STRING.
+
+REP is either a string used as the NEWTEXT arg of `replace-match' or a
+function.  If it is a function, it is called with the actual text of each
+match, and its value is used as the replacement text.  When REP is called,
+the match data are the result of matching REGEXP against a substring
+of STRING.
+
+To replace only the first match (if any), make REGEXP match up to \\'
+and replace a sub-expression, e.g.
+  (replace-regexp-in-string \"\\\\(foo\\\\).*\\\\'\" \"bar\" \" foo foo\" nil nil 1)
+    => \" bar foo\""
+
+    (let ((l (length string))
+	  (start (or start 0))
+	  matches str mb me)
+      (save-match-data
+	(while (and (< start l) (string-match regexp string start))
+	  (setq mb (match-beginning 0)
+		me (match-end 0))
+	  ;; If we matched the empty string, make sure we advance by one char
+	  (when (= me mb) (setq me (min l (1+ mb))))
+	  ;; Generate a replacement for the matched substring.
+	  ;; Operate only on the substring to minimize string consing.
+	  ;; Set up match data for the substring for replacement;
+	  ;; presumably this is likely to be faster than munging the
+	  ;; match data directly in Lisp.
+	  (string-match regexp (setq str (substring string mb me)))
+	  (setq matches
+		(cons (replace-match (if (stringp rep)
+					 rep
+				       (funcall rep (match-string 0 str)))
+				     fixedcase literal str subexp)
+		      (cons (substring string start mb) ; unmatched prefix
+			    matches)))
+	  (setq start me))
+	;; Reconstruct a string from the pieces.
+	(setq matches (cons (substring string start l) matches)) ; leftover
+	(apply #'concat (nreverse matches))))))
+
 (add-hook 'tramp-unload-hook
 	  (lambda ()
+	    (unload-feature 'tramp-loaddefs 'force)
 	    (unload-feature 'tramp-compat 'force)))
 
 (provide 'tramp-compat)

@@ -1,6 +1,6 @@
 ;;; diff-mode.el --- a mode for viewing/editing context diffs -*- lexical-binding: t -*-
 
-;; Copyright (C) 1998-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1998-2014 Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Keywords: convenience patch diff vc
@@ -124,7 +124,6 @@ when editing big diffs)."
     ("A" . diff-ediff-patch)
     ("r" . diff-restrict-view)
     ("R" . diff-reverse-direction)
-    ("/" . diff-undo)
     ([remap undo] . diff-undo))
   "Basic keymap for `diff-mode', bound to various prefix keys."
   :inherit special-mode-map)
@@ -575,19 +574,21 @@ next hunk if TRY-HARDER is non-nil; otherwise signal an error."
 (easy-mmode-define-navigation
  diff-hunk diff-hunk-header-re "hunk" diff-end-of-hunk diff-restrict-view
  (when diff-auto-refine-mode
-   (setq diff--auto-refine-data (cons (current-buffer) (point-marker)))
-   (run-at-time 0.0 nil
-                (lambda ()
-                  (when diff--auto-refine-data
-                    (let ((buffer (car diff--auto-refine-data))
-                          (point (cdr diff--auto-refine-data)))
-                      (setq diff--auto-refine-data nil)
-                      (with-local-quit
-                        (when (buffer-live-p buffer)
-                          (with-current-buffer buffer
-                            (save-excursion
-                              (goto-char point)
-                              (diff-refine-hunk)))))))))))
+   (unless (prog1 diff--auto-refine-data
+             (setq diff--auto-refine-data
+                   (cons (current-buffer) (point-marker))))
+     (run-at-time 0.0 nil
+                  (lambda ()
+                    (when diff--auto-refine-data
+                      (let ((buffer (car diff--auto-refine-data))
+                            (point (cdr diff--auto-refine-data)))
+                        (setq diff--auto-refine-data nil)
+                        (with-local-quit
+                          (when (buffer-live-p buffer)
+                            (with-current-buffer buffer
+                              (save-excursion
+                                (goto-char point)
+                                (diff-refine-hunk))))))))))))
 
 (easy-mmode-define-navigation
  diff-file diff-file-header-re "file" diff-end-of-file)
@@ -819,9 +820,11 @@ If the OLD prefix arg is passed, tell the file NAME of the old file."
 		       (progn (diff-hunk-prev) (point))
 		     (error (point-min)))))
 	  (header-files
-	   (if (looking-at "[-*][-*][-*] \\(\\S-+\\)\\(\\s-.*\\)?\n[-+][-+][-+] \\(\\S-+\\)")
-	       (list (if old (match-string 1) (match-string 3))
-		     (if old (match-string 3) (match-string 1)))
+           ;; handle filenames with spaces;
+           ;; cf. diff-font-lock-keywords / diff-file-header-face
+	   (if (looking-at "[-*][-*][-*] \\([^\t]+\\)\t.*\n[-+][-+][-+] \\([^\t]+\\)")
+	       (list (if old (match-string 1) (match-string 2))
+		     (if old (match-string 2) (match-string 1)))
 	     (forward-line 1) nil)))
       (delq nil
 	    (append
@@ -830,6 +833,7 @@ If the OLD prefix arg is passed, tell the file NAME of the old file."
 			  (re-search-backward "^Index: \\(.+\\)" limit t)))
 	       (list (match-string 1)))
 	     header-files
+             ;; this assumes that there are no spaces in filenames
 	     (when (re-search-backward
 		    "^diff \\(-\\S-+ +\\)*\\(\\S-+\\)\\( +\\(\\S-+\\)\\)?"
 		    nil t)
@@ -1296,7 +1300,7 @@ See `after-change-functions' for the meaning of BEG, END and LEN."
                           (re-search-forward diff-context-mid-hunk-header-re
                                              nil t)))))
           (when (and ;; Don't try to fixup changes in the hunk header.
-                 (> (car diff-unhandled-changes) start)
+                 (>= (car diff-unhandled-changes) start)
                  ;; Don't try to fixup changes in the mid-hunk header either.
                  (or (not mid)
                      (< (cdr diff-unhandled-changes) (match-beginning 0))
@@ -1362,7 +1366,8 @@ a diff with \\[diff-reverse-direction].
 
   (diff-setup-whitespace)
 
-  (setq buffer-read-only diff-default-read-only)
+  (if diff-default-read-only
+      (setq buffer-read-only t))
   ;; setup change hooks
   (if (not diff-update-on-the-fly)
       (add-hook 'write-contents-functions 'diff-write-contents-hooks nil t)

@@ -1,10 +1,10 @@
 ;;; mailabbrev.el --- abbrev-expansion of mail aliases
 
-;; Copyright (C) 1985-1987, 1992-1993, 1996-1997, 2000-2013 Free
+;; Copyright (C) 1985-1987, 1992-1993, 1996-1997, 2000-2014 Free
 ;; Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com; now jwz@jwz.org>
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 ;; Created: 19 Oct 90
 ;; Keywords: mail
 
@@ -182,7 +182,8 @@ no aliases, which is represented by this being a table with no entries.)")
 	      (nth 5 (file-attributes mail-personal-alias-file)))
 	(build-mail-abbrevs)))
   (mail-abbrevs-sync-aliases)
-  (add-hook 'abbrev-expand-functions 'mail-abbrev-expand-wrapper nil t)
+  (add-function :around (local 'abbrev-expand-function)
+                #'mail-abbrev-expand-wrapper)
   (abbrev-mode 1))
 
 (defun mail-abbrevs-enable ()
@@ -472,10 +473,12 @@ of a mail alias.  The value is set up, buffer-local, when first needed.")
 
 (defun mail-abbrev-expand-wrapper (expand)
   (if (and mail-abbrevs (not (eq mail-abbrevs t)))
-      (if (mail-abbrev-in-expansion-header-p)
+      (if (or (mail-abbrev-in-expansion-header-p)
+	      ;; Necessary for `message-read-from-minibuffer' to work.
+	      (window-minibuffer-p))
 
-          ;; We are in a To: (or CC:, or whatever) header, and
-          ;; should use word-abbrevs to expand mail aliases.
+          ;; We are in a To: (or CC:, or whatever) header or a minibuffer,
+          ;; and should use word-abbrevs to expand mail aliases.
           (let ((local-abbrev-table mail-abbrevs))
 
             ;; Before anything else, resolve aliases if they need it.

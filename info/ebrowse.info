@@ -1,15 +1,14 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/ebrowse.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/ebrowse.texi.
+This is ../../info/ebrowse.info, produced by makeinfo version 4.13 from
+./ebrowse.texi.
 
 This file documents Ebrowse, a C++ class browser for GNU Emacs.
 
-   Copyright (C) 2000-2013 Free Software Foundation, Inc.
+   Copyright (C) 2000-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -23,7 +22,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: ebrowse.info,  Node: Top,  Next: Overview,  Prev: (dir),  Up: (dir)
+File: ebrowse.info,  Node: Top,  Next: Overview,  Up: (dir)
 
 Ebrowse
 *******
@@ -32,12 +31,12 @@ You can browse C++ class hierarchies from within Emacs by using Ebrowse.
 
    This file documents Ebrowse, a C++ class browser for GNU Emacs.
 
-   Copyright (C) 2000-2013 Free Software Foundation, Inc.
+   Copyright (C) 2000-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -181,7 +180,7 @@ available command line options.
 * Verbosity::           Getting feedback for lengthy operations
 
 
-File: ebrowse.info,  Node: Input files,  Next: Output file,  Prev: Generating browser files,  Up: Generating browser files
+File: ebrowse.info,  Node: Input files,  Next: Output file,  Up: Generating browser files
 
 2.1 Specifying Input Files
 ==========================
@@ -370,7 +369,7 @@ calls `M-x describe-mode' in both tree and member buffers.
 * Marking Classes::             Marking and unmarking classes
 
 
-File: ebrowse.info,  Node: Source Display,  Next: Member Display,  Prev: Tree Buffers,  Up: Tree Buffers
+File: ebrowse.info,  Node: Source Display,  Next: Member Display,  Up: Tree Buffers
 
 4.1 Viewing and Finding Class Declarations
 ==========================================
@@ -378,13 +377,13 @@ File: ebrowse.info,  Node: Source Display,  Next: Member Display,  Prev: Tree Bu
 You can view or find a class declaration when the cursor is on a class
 name.
 
-`SPC'
+`<SPC>'
      This command views the class declaration if the database contains
      information about it.  If you don't parse the entire source you
      are working on, some classes will only be known to exist but the
      location of their declarations and definitions will not be known.
 
-`RET'
+`<RET>'
      Works like `SPC', except that it finds the class declaration
      rather than viewing it, so that it is ready for editing.
 
@@ -570,6 +569,9 @@ File: ebrowse.info,  Node: Saving a Tree,  Next: Statistics,  Prev: Killing Clas
 
 File: ebrowse.info,  Node: Statistics,  Next: Marking Classes,  Prev: Saving a Tree,  Up: Tree Buffers
 
+4.10 Statistics
+===============
+
 `x'
      Display statistics for the tree, like number of classes in it,
      number of member functions, etc.  This command can also be found
@@ -578,7 +580,10 @@ File: ebrowse.info,  Node: Statistics,  Next: Marking Classes,  Prev: Saving a T
 
 File: ebrowse.info,  Node: Marking Classes,  Prev: Statistics,  Up: Tree Buffers
 
-   Classes can be marked for operations similar to the standard Emacs
+4.11 Marking Classes
+====================
+
+Classes can be marked for operations similar to the standard Emacs
 commands `M-x tags-search' and `M-x tags-query-replace' (see also *Note
 Tags-like Functions::.)
 
@@ -644,7 +649,7 @@ buffer: members, classes, and the buffer itself.
 * Getting Help::                How to get help for key bindings
 
 
-File: ebrowse.info,  Node: Switching Member Lists,  Next: Finding/Viewing,  Prev: Member Buffers,  Up: Member Buffers
+File: ebrowse.info,  Node: Switching Member Lists,  Next: Finding/Viewing,  Up: Member Buffers
 
 5.1 Switching Member Lists
 ==========================
@@ -686,7 +691,7 @@ File: ebrowse.info,  Node: Finding/Viewing,  Next: Inherited Members,  Prev: Swi
 5.2 Finding and Viewing Member Source
 =====================================
 
-`RET'
+`<RET>'
      This command finds the definition of the member the cursor is on.
      Finding involves roughly the same as the standard Emacs tags
      facility does--loading the file and searching for a regular
@@ -695,7 +700,7 @@ File: ebrowse.info,  Node: Finding/Viewing,  Next: Inherited Members,  Prev: Swi
 `f'
      This command finds the declaration of the member the cursor is on.
 
-`SPC'
+`<SPC>'
      This is the same command as `RET', but views the member definition
      instead of finding the member's source file.
 
@@ -937,6 +942,9 @@ File: ebrowse.info,  Node: Redisplay,  Next: Getting Help,  Prev: Column Width, 
 
 File: ebrowse.info,  Node: Getting Help,  Prev: Redisplay,  Up: Member Buffers
 
+5.14 Getting Help
+=================
+
 `?'
      This key is bound to `describe-mode'.
 
@@ -961,7 +969,7 @@ Tags facility, but better suited to the needs of C++ programmers.
                             identifier
 
 
-File: ebrowse.info,  Node: Finding and Viewing,  Next: Position Stack,  Prev: Tags-like Functions,  Up: Tags-like Functions
+File: ebrowse.info,  Node: Finding and Viewing,  Next: Position Stack,  Up: Tags-like Functions
 
 6.1 Finding and Viewing Members
 ===============================
@@ -1127,7 +1135,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -1646,7 +1654,7 @@ Concept Index
 * class display:                         Switching Classes.    (line  6)
 * class location:                        Go to Class.          (line  6)
 * class members, types:                  Member Buffers.       (line  6)
-* class statistics:                      Statistics.           (line  3)
+* class statistics:                      Statistics.           (line  6)
 * class tree, collapse or expand:        Expanding and Collapsing.
                                                                (line  6)
 * class tree, save to a file:            Saving a Tree.        (line  6)
@@ -1688,7 +1696,7 @@ Concept Index
 * friends:                               Switching Member Lists.
                                                                (line  6)
 * header files:                          Input files.          (line 28)
-* help:                                  Getting Help.         (line  3)
+* help:                                  Getting Help.         (line  6)
 * indentation of the tree:               Tree Indentation.     (line  6)
 * indentation, member:                   Column Width.         (line  6)
 * inherited members:                     Inherited Members.    (line  6)
@@ -1703,7 +1711,7 @@ Concept Index
 * long display:                          Long and Short Display.
                                                                (line  6)
 * major modes, of Ebrowse buffers:       Overview.             (line 35)
-* marking classes:                       Marking Classes.      (line  3)
+* marking classes:                       Marking Classes.      (line  6)
 * maximum regexp length for recording:   Matching.             (line 33)
 * member attribute display:              Attributes.           (line  6)
 * member buffer:                         Overview.             (line 44)
@@ -1729,7 +1737,7 @@ Concept Index
 * mutable attribute:                     Attributes.           (line 33)
 * next member list:                      Switching Member Lists.
                                                                (line  6)
-* operations on marked classes:          Marking Classes.      (line  3)
+* operations on marked classes:          Marking Classes.      (line  6)
 * output file name:                      Output file.          (line  6)
 * parser for C++ sources:                Overview.             (line 26)
 * position stack:                        Position Stack.       (line  6)
@@ -1761,7 +1769,7 @@ Concept Index
 * static members:                        Switching Member Lists.
                                                                (line  6)
 * static variables, list:                Member Display.       (line 31)
-* statistics for a tree:                 Statistics.           (line  3)
+* statistics for a tree:                 Statistics.           (line  6)
 * structs:                               Structs and unions.   (line  6)
 * subclass, display:                     Switching Classes.    (line  6)
 * superclass, display:                   Switching Classes.    (line  6)
@@ -1770,19 +1778,19 @@ Concept Index
 * symbol completion:                     Symbol Completion.    (line  6)
 * tags:                                  Finding and Viewing.  (line  6)
 * template attribute:                    Attributes.           (line 15)
-* toggle mark:                           Marking Classes.      (line  7)
+* toggle mark:                           Marking Classes.      (line 10)
 * tree buffer:                           Overview.             (line 38)
 * tree buffer mode:                      Tree Buffers.         (line  6)
 * tree buffer, switch to:                Switching to Tree.    (line  6)
 * tree indentation:                      Tree Indentation.     (line  6)
-* tree statistics:                       Statistics.           (line  3)
+* tree statistics:                       Statistics.           (line  6)
 * tree, save to a file:                  Saving a Tree.        (line  6)
 * types:                                 Switching Member Lists.
                                                                (line  6)
 * types of class members:                Member Buffers.       (line  6)
 * types, list:                           Member Display.       (line 45)
 * unions:                                Structs and unions.   (line  6)
-* unmark all:                            Marking Classes.      (line 12)
+* unmark all:                            Marking Classes.      (line 15)
 * verbose operation:                     Verbosity.            (line  6)
 * viewing class member, in C++ source:   Finding and Viewing.  (line  6)
 * viewing members, in member buffers:    Finding/Viewing.      (line  6)
@@ -1793,51 +1801,56 @@ Concept Index
 
 
 Tag Table:
-Node: Top988
-Node: Overview2360
-Node: Generating browser files5959
-Node: Input files7110
-Node: Output file8379
-Node: Structs and unions9293
-Node: Matching9742
-Node: Verbosity11711
-Node: Loading a Tree12150
-Node: Tree Buffers13169
-Node: Source Display14452
-Node: Member Display15243
-Node: Go to Class17025
-Node: Quitting17757
-Node: File Name Display17960
-Node: Expanding and Collapsing18917
-Node: Tree Indentation19919
-Node: Killing Classes20311
-Node: Saving a Tree20686
-Node: Statistics21062
-Node: Marking Classes21346
-Node: Member Buffers22166
-Node: Switching Member Lists23784
-Node: Finding/Viewing24593
-Node: Inherited Members25653
-Node: Searching Members25976
-Node: Switching to Tree26890
-Node: Filters27243
-Node: Attributes27993
-Node: Long and Short Display29065
-Node: Regexp Display30024
-Node: Switching Classes30573
-Node: Killing/Burying31383
-Node: Column Width31615
-Node: Redisplay31894
-Node: Getting Help32286
-Node: Tags-like Functions32416
-Node: Finding and Viewing33222
-Node: Position Stack34765
-Node: Search & Replace36071
-Node: Members in Files37201
-Node: Apropos37479
-Node: Symbol Completion38105
-Node: Member Buffer Display38339
-Node: GNU Free Documentation License38604
-Node: Concept Index63792
+Node: Top912
+Node: Overview2270
+Node: Generating browser files5869
+Node: Input files7020
+Node: Output file8256
+Node: Structs and unions9170
+Node: Matching9619
+Node: Verbosity11588
+Node: Loading a Tree12027
+Node: Tree Buffers13046
+Node: Source Display14329
+Node: Member Display15103
+Node: Go to Class16885
+Node: Quitting17617
+Node: File Name Display17820
+Node: Expanding and Collapsing18777
+Node: Tree Indentation19779
+Node: Killing Classes20171
+Node: Saving a Tree20546
+Node: Statistics20922
+Node: Marking Classes21239
+Node: Member Buffers22099
+Node: Switching Member Lists23717
+Node: Finding/Viewing24503
+Node: Inherited Members25567
+Node: Searching Members25890
+Node: Switching to Tree26804
+Node: Filters27157
+Node: Attributes27907
+Node: Long and Short Display28979
+Node: Regexp Display29938
+Node: Switching Classes30487
+Node: Killing/Burying31297
+Node: Column Width31529
+Node: Redisplay31808
+Node: Getting Help32200
+Node: Tags-like Functions32367
+Node: Finding and Viewing33173
+Node: Position Stack34688
+Node: Search & Replace35994
+Node: Members in Files37124
+Node: Apropos37402
+Node: Symbol Completion38028
+Node: Member Buffer Display38262
+Node: GNU Free Documentation License38527
+Node: Concept Index63709
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

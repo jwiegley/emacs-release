@@ -1,10 +1,10 @@
 ;;; pc-win.el --- setup support for `PC windows' (whatever that is)
 
-;; Copyright (C) 1994, 1996-1997, 1999, 2001-2013 Free Software
+;; Copyright (C) 1994, 1996-1997, 1999, 2001-2014 Free Software
 ;; Foundation, Inc.
 
 ;; Author: Morten Welinder <terra@diku.dk>
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 
 ;; This file is part of GNU Emacs.
 
@@ -164,22 +164,43 @@ created."
 ;; platforms.  (Bug#10783)
 
 ;; From src/xfns.c
-(defun x-list-fonts (pattern &optional face frame maximum width)
+(defun x-list-fonts (_pattern &optional _face _frame _maximum width)
+  "Return a list of the names of available fonts matching PATTERN.
+If optional arguments FACE and FRAME are specified, return only fonts
+the same size as FACE on FRAME.
+
+PATTERN should be a string containing a font name in the XLFD,
+Fontconfig, or GTK format.  A font name given in the XLFD format may
+contain wildcard characters:
+  the * character matches any substring, and
+  the ? character matches any single character.
+  PATTERN is case-insensitive.
+
+The return value is a list of strings, suitable as arguments to
+\`set-face-font'.
+
+Fonts Emacs can't use may or may not be excluded
+even if they match PATTERN and FACE.
+The optional fourth argument MAXIMUM sets a limit on how many
+fonts to match.  The first MAXIMUM fonts are reported.
+The optional fifth argument WIDTH, if specified, is a number of columns
+occupied by a character of a font.  In that case, return only fonts
+the WIDTH times as wide as FACE on FRAME."
   (if (or (null width) (and (numberp width) (= width 1)))
       (list "ms-dos")
     (list "no-such-font")))
 (defun x-display-pixel-width (&optional frame) (frame-width frame))
 (defun x-display-pixel-height (&optional frame) (frame-height frame))
-(defun x-display-planes (&optional frame) 4) ;bg switched to 16 colors as well
-(defun x-display-color-cells (&optional frame) 16)
-(defun x-server-max-request-size (&optional frame) 1000000) ; ???
-(defun x-server-vendor (&optional frame) t "GNU")
-(defun x-server-version (&optional frame) '(1 0 0))
-(defun x-display-screens (&optional frame) 1)
-(defun x-display-mm-height (&optional frame) 245) ; Guess the size of my
-(defun x-display-mm-width (&optional frame) 322)  ; monitor, EZ...
-(defun x-display-backing-store (&optional frame) 'not-useful)
-(defun x-display-visual-class (&optional frame) 'static-color)
+(defun x-display-planes (&optional _frame) 4) ;bg switched to 16 colors as well
+(defun x-display-color-cells (&optional _frame) 16)
+(defun x-server-max-request-size (&optional _frame) 1000000) ; ???
+(defun x-server-vendor (&optional _frame) t "GNU")
+(defun x-server-version (&optional _frame) '(1 0 0))
+(defun x-display-screens (&optional _frame) 1)
+(defun x-display-mm-height (&optional _frame) 245) ; Guess the size of my
+(defun x-display-mm-width (&optional _frame) 322)  ; monitor, EZ...
+(defun x-display-backing-store (&optional _frame) 'not-useful)
+(defun x-display-visual-class (&optional _frame) 'static-color)
 (fset 'x-display-save-under 'ignore)
 (fset 'x-get-resource 'ignore)
 
@@ -232,15 +253,14 @@ is not used)."
       (w16-set-clipboard-data text))
   (setq x-last-selected-text text))
 
-;;; Return the value of the current selection.
-;;; Consult the selection.  Treat empty strings as if they were unset.
 (defun x-get-selection-value ()
+  "Return the value of the current selection.
+Consult the selection.  Treat empty strings as if they were unset."
   (if x-select-enable-clipboard
       (let (text)
 	;; Don't die if x-get-selection signals an error.
-	(condition-case c
-	    (setq text (w16-get-clipboard-data))
-	  (error (message "w16-get-clipboard-data:%s" c)))
+	(with-demoted-errors "w16-get-clipboard-data:%s"
+          (setq text (w16-get-clipboard-data)))
 	(if (string= text "") (setq text nil))
 	(cond
 	 ((not text) nil)
@@ -253,7 +273,7 @@ is not used)."
 	  (setq x-last-selected-text text))))))
 
 ;; x-selection-owner-p is used in simple.el.
-(defun x-selection-owner-p (&optional selection terminal)
+(defun x-selection-owner-p (&optional _selection _terminal)
   "Whether the current Emacs process owns the given X Selection.
 The arg should be the name of the selection in question, typically one of
 the symbols `PRIMARY', `SECONDARY', or `CLIPBOARD'.
@@ -285,7 +305,7 @@ On Nextstep, TERMINAL is unused.
 
 ;; x-own-selection-internal and x-disown-selection-internal are used
 ;; in select.el:x-set-selection.
-(defun x-own-selection-internal (selection value &optional frame)
+(defun x-own-selection-internal (_selection value &optional _frame)
   "Assert an X selection of the type SELECTION with and value VALUE.
 SELECTION is a symbol, typically `PRIMARY', `SECONDARY', or `CLIPBOARD'.
 \(Those are literal upper-case symbol names, since that's what X expects.)
@@ -302,7 +322,7 @@ On Nextstep, FRAME is unused.
     (x-select-text value))
   value)
 
-(defun x-disown-selection-internal (selection &optional time-object terminal)
+(defun x-disown-selection-internal (selection &optional _time-object _terminal)
   "If we own the selection SELECTION, disown it.
 Disowning it means there is no such selection.
 
@@ -321,7 +341,8 @@ On MS-DOS, all this does is return non-nil if we own the selection.
       t))
 
 ;; x-get-selection-internal is used in select.el
-(defun x-get-selection-internal (selection-symbol target-type &optional time-stamp terminal)
+(defun x-get-selection-internal (_selection-symbol _target-type
+						  &optional _time-stamp _terminal)
   "Return text selected from some X window.
 SELECTION-SYMBOL is typically `PRIMARY', `SECONDARY', or `CLIPBOARD'.
 \(Those are literal upper-case symbol names, since that's what X expects.)
@@ -403,7 +424,7 @@ Errors out because it is not supposed to be called, ever."
   (error "terminal-init-internal called for window-system `%s'"
 	 (window-system)))
 
-(defun msdos-initialize-window-system ()
+(defun msdos-initialize-window-system (&optional _display)
   "Initialization function for the `pc' \"window system\"."
   (or (eq (window-system) 'pc)
       (error

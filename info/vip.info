@@ -1,13 +1,12 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/vip.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/vip.texi.
+This is ../../info/vip.info, produced by makeinfo version 4.13 from
+./vip.texi.
 
-Copyright (C) 1987, 2001-2013 Free Software Foundation, Inc.
+Copyright (C) 1987, 2001-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -21,7 +20,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: vip.info,  Node: Top,  Next: Survey,  Up: (DIR)
+File: vip.info,  Node: Top,  Next: Survey,  Up: (dir)
 
 VIP
 ***
@@ -41,12 +40,12 @@ before you start using VIP.  Other nodes may be visited as needed.
 `ms@Sail.Stanford.Edu' if you are outside of Japan and to
 `masahiko@sato.riec.tohoku.junet' if you are in Japan.
 
-   Copyright (C) 1987, 2001-2013 Free Software Foundation, Inc.
+   Copyright (C) 1987, 2001-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -63,7 +62,7 @@ before you start using VIP.  Other nodes may be visited as needed.
 * GNU Free Documentation License:: The license for this documentation.
 
 
-File: vip.info,  Node: Survey,  Next: Basic Concepts,  Prev: Top,  Up: Top
+File: vip.info,  Node: Survey,  Next: Vi Commands,  Prev: Top,  Up: Top
 
 1 A Survey of VIP
 *****************
@@ -80,7 +79,7 @@ not found in Vi and on how to use VIP under GNU Emacs.
 * Differences from Vi:: Differences of VIP from Vi is explained.
 
 
-File: vip.info,  Node: Basic Concepts,  Next: Loading VIP,  Prev: Survey,  Up: Survey
+File: vip.info,  Node: Basic Concepts,  Next: Loading VIP,  Up: Survey
 
 1.1 Basic Concepts
 ==================
@@ -125,7 +124,7 @@ The recommended way to load VIP automatically is to include the line:
 directory and it will be executed every time you invoke Emacs.  If you
 wish to be in vi mode whenever Emacs starts up, you can include the
 following line in your `.emacs' file instead of the above line:
-     (setq term-setup-hook 'vip-mode)
+     (add-hook 'emacs-startup-hook 'vip-mode)
    (*Note Vi Mode::, for the explanation of vi mode.)
 
    Even if your `.emacs' file does not contain any of the above lines,
@@ -134,7 +133,7 @@ Emacs.
      M-x vip-mode
 
 
-File: vip.info,  Node: Modes in VIP,  Next: Emacs Mode,  Prev: Loading VIP,  Up: Survey
+File: vip.info,  Node: Modes in VIP,  Next: Differences from Vi,  Prev: Loading VIP,  Up: Survey
 
 1.3 Modes in VIP
 ================
@@ -194,7 +193,7 @@ mode).
                           know enough Emacs commands.
 
 
-File: vip.info,  Node: Emacs Mode,  Next: Vi Mode,  Prev: Modes in VIP,  Up: Modes in VIP
+File: vip.info,  Node: Emacs Mode,  Next: Vi Mode,  Up: Modes in VIP
 
 1.3.1 Emacs Mode
 ----------------
@@ -215,7 +214,7 @@ they do in Vi.  You can go back to emacs mode by typing `C-z'.  You can
 enter insert mode, just as in Vi, by typing `i', `a' etc.
 
 
-File: vip.info,  Node: Insert Mode,  Next: Differences from Vi,  Prev: Vi Mode,  Up: Modes in VIP
+File: vip.info,  Node: Insert Mode,  Prev: Vi Mode,  Up: Modes in VIP
 
 1.3.3 Insert Mode
 -----------------
@@ -239,7 +238,7 @@ change its content while you are in insert mode.
      typing `ESC x' in emacs mode.
 
 
-File: vip.info,  Node: Differences from Vi,  Next: Undoing,  Prev: Insert Mode,  Up: Survey
+File: vip.info,  Node: Differences from Vi,  Prev: Modes in VIP,  Up: Survey
 
 1.4 Differences from Vi
 =======================
@@ -267,7 +266,7 @@ The major differences from Vi are explained below.
 * Misc Commands::       Other useful commands.
 
 
-File: vip.info,  Node: Undoing,  Next: Changing,  Prev: Differences from Vi,  Up: Differences from Vi
+File: vip.info,  Node: Undoing,  Next: Changing,  Up: Differences from Vi
 
 1.4.1 Undoing
 -------------
@@ -502,9 +501,9 @@ Bindings::, for details.
 `X'
      These keys will exit from vi mode and return to emacs mode
      temporarily.  If you type `C' (`X'), Emacs will be in emacs mode
-     and will believe that you have typed `C-c' (`C-x', resp.) in emacs
-     mode. Moreover, if the following character you type is an
-     upper-case letter, then Emacs will believe that you have typed the
+     and will believe that you have typed `C-c' (`C-x') in emacs mode.
+     Moreover, if the following character you type is an upper-case
+     letter, then Emacs will believe that you have typed the
      corresponding control character.  You will be in vi mode again
      after the command is executed.  For example, typing `X S' in vi
      mode is the same as typing `C-x C-s' in emacs mode.  You get the
@@ -586,7 +585,7 @@ File: vip.info,  Node: File Commands,  Next: Misc Commands,  Prev: Buffer Comman
      Insert specified file at point.
 
 
-File: vip.info,  Node: Misc Commands,  Next: Vi Commands,  Prev: File Commands,  Up: Differences from Vi
+File: vip.info,  Node: Misc Commands,  Prev: File Commands,  Up: Differences from Vi
 
 1.4.13 Miscellaneous Commands
 -----------------------------
@@ -616,7 +615,7 @@ File: vip.info,  Node: Misc Commands,  Next: Vi Commands,  Prev: File Commands, 
      Replace.
 
 
-File: vip.info,  Node: Vi Commands,  Next: Numeric Arguments,  Prev: Misc Commands,  Up: Top
+File: vip.info,  Node: Vi Commands,  Next: Ex Commands,  Prev: Survey,  Up: Top
 
 2 Vi Commands
 *************
@@ -640,7 +639,7 @@ commands described in this chapter are to be used in vi mode.
 * Commands in Insert Mode::  Commands for entering insert mode.
 
 
-File: vip.info,  Node: Numeric Arguments,  Next: Important Keys,  Prev: Vi Commands,  Up: Vi Commands
+File: vip.info,  Node: Numeric Arguments,  Next: Important Keys,  Up: Vi Commands
 
 2.1 Numeric Arguments
 =====================
@@ -802,9 +801,9 @@ just type `vip.el' followed by <RET>.  If the file `vip.el' already
 exists in the directory, Emacs will visit that file, and if not, the
 file will be created.  Emacs will use the file name (`vip.el', in this
 case) as the name of the buffer visiting the file.  In order to make
-the buffer name unique, Emacs may append `<2>', `<3>' etc., to the
-buffer name.  As the "file name completion" is provided here, you can
-sometime save typing.  For instance, suppose there is only one file in
+the buffer name unique, Emacs may add a suffix (*note Uniquify:
+(emacs)Uniquify.).  As "file name completion" is provided here, you can
+sometimes save typing.  For instance, suppose there is only one file in
 the default directory whose name starts with `v', that is `vip.el'.
 Then if you just type `v <TAB>' then it will be completed to `vip.el'.
 Thus, in this case, you just have to type `v v <TAB> <RET>' to visit
@@ -1156,7 +1155,7 @@ Following commands are available for searching and replacing.
 return to the original point by `` `'.
 
 
-File: vip.info,  Node: Modifying Commands,  Next: Delete Commands,  Prev: Searching and Replacing,  Up: Vi Commands
+File: vip.info,  Node: Modifying Commands,  Next: Other Vi Commands,  Prev: Searching and Replacing,  Up: Vi Commands
 
 2.9 Modifying Commands
 ======================
@@ -1188,7 +1187,7 @@ be affected by the modifying command.
 * Repeating and Undoing Modifications::
 
 
-File: vip.info,  Node: Delete Commands,  Next: Yank Commands,  Prev: Modifying Commands,  Up: Modifying Commands
+File: vip.info,  Node: Delete Commands,  Next: Yank Commands,  Up: Modifying Commands
 
 2.9.1 Delete Commands
 ---------------------
@@ -1324,7 +1323,7 @@ which you can type `b a r <RET>' to complete the change command.
      Expand current region and change it.
 
 
-File: vip.info,  Node: Repeating and Undoing Modifications,  Next: Other Vi Commands,  Prev: Change Commands,  Up: Modifying Commands
+File: vip.info,  Node: Repeating and Undoing Modifications,  Prev: Change Commands,  Up: Modifying Commands
 
 2.9.5 Repeating and Undoing Modifications
 -----------------------------------------
@@ -1344,7 +1343,7 @@ it.  It is also very easy to undo changes made by modifying commands.
      last modifying command is used again (`vip-repeat').
 
 
-File: vip.info,  Node: Other Vi Commands,  Next: Commands in Insert Mode,  Prev: Repeating and Undoing Modifications,  Up: Vi Commands
+File: vip.info,  Node: Other Vi Commands,  Next: Commands in Insert Mode,  Prev: Modifying Commands,  Up: Vi Commands
 
 2.10 Other Vi Commands
 ======================
@@ -1400,7 +1399,7 @@ assigned to a function that just beeps (`vip-nil').
      &, @, U, [, ], _, q, ~
 
    VIP uses a special local keymap to interpret key strokes you enter
-in vi mode.  The following keys are bound to NIL in the keymap.
+in vi mode.  The following keys are bound to `nil' in the keymap.
 Therefore, these keys are interpreted by the global keymap of Emacs.
 We give below a short description of the functions bound to these keys
 in the global keymap.  See GNU Emacs Manual for details.
@@ -1412,8 +1411,7 @@ in the global keymap.  See GNU Emacs Manual for details.
      Indent line for current major mode (`indent-for-tab-command').
 
 `C-j'
-     Insert a newline, then indent according to mode
-     (`newline-and-indent').
+     Insert a newline, and maybe indent according to mode.
 
 `C-k'
      Kill the rest of the current line; before a newline, kill the
@@ -1453,7 +1451,7 @@ in the global keymap.  See GNU Emacs Manual for details.
      (`kill-region').
 
 
-File: vip.info,  Node: Commands in Insert Mode,  Next: Ex Commands,  Prev: Other Vi Commands,  Up: Vi Commands
+File: vip.info,  Node: Commands in Insert Mode,  Prev: Other Vi Commands,  Up: Vi Commands
 
 2.11 Insert Mode
 ================
@@ -1519,7 +1517,7 @@ repeat command will not really repeat insertion if you move point by
 emacs commands while in insert mode.
 
 
-File: vip.info,  Node: Ex Commands,  Next: Ex Command Reference,  Prev: Commands in Insert Mode,  Up: Top
+File: vip.info,  Node: Ex Commands,  Next: Customization,  Prev: Vi Commands,  Up: Top
 
 3 Ex Commands
 *************
@@ -1549,7 +1547,7 @@ pipe character `|'.
 * Ex Command Reference::        Explain all the Ex commands available in VIP.
 
 
-File: vip.info,  Node: Ex Command Reference,  Next: Customization,  Prev: Ex Commands,  Up: Ex Commands
+File: vip.info,  Node: Ex Command Reference,  Up: Ex Commands
 
 3.1 Ex Command Reference
 ========================
@@ -1721,12 +1719,12 @@ in VIP.
      unabbreviate, xit, z
 
 
-File: vip.info,  Node: Customization,  Next: Customizing Constants,  Prev: Ex Command Reference,  Up: Top
+File: vip.info,  Node: Customization,  Next: GNU Free Documentation License,  Prev: Ex Commands,  Up: Top
 
 4 Customization
 ***************
 
-If you have a file called `.vip' in your home directory, then it will
+If you have a file called `~/.emacs.d/vip' (or `~/.vip'), then it will
 also be loaded when VIP is loaded.  This file is thus useful for
 customizing VIP.
 
@@ -1736,7 +1734,7 @@ customizing VIP.
 * Customizing Key Bindings::    How to change key bindings.
 
 
-File: vip.info,  Node: Customizing Constants,  Next: Customizing Key Bindings,  Prev: Customization,  Up: Customization
+File: vip.info,  Node: Customizing Constants,  Next: Customizing Key Bindings,  Up: Customization
 
 4.1 Customizing Constants
 =========================
@@ -1774,7 +1772,7 @@ values.
      If `t' then <C-h> is bound to `help-command' in insert mode, if
      `nil' then it sis bound to `delete-backward-char'.
    You can reset these constants in VIP by the Ex command `set'.  Or you
-can include a line like this in your `.vip' file:
+can include a line like this in your `~/.emacs.d/vip' file:
      (setq vip-case-fold-search t)
 
 
@@ -1786,7 +1784,7 @@ File: vip.info,  Node: Customizing Key Bindings,  Prev: Customizing Constants,  
 VIP uses `vip-command-mode-map' as the "local keymap" for vi mode.  For
 example, in vi mode, <SPC> is bound to the function `vip-scroll'.  But,
 if you wish to make <SPC> and some other keys  behave like Vi, you can
-include the following lines in your `.vip' file.
+include the following lines in your `~/.emacs.d/vip' file.
 
      (define-key vip-command-mode-map "\C-g" 'vip-info-on-file)
      (define-key vip-command-mode-map "\C-h" 'vip-backward-char)
@@ -1800,14 +1798,14 @@ include the following lines in your `.vip' file.
      (define-key vip-command-mode-map "X" 'vip-delete-backward-char)
 
 
-File: vip.info,  Node: GNU Free Documentation License,  Up: Top
+File: vip.info,  Node: GNU Free Documentation License,  Prev: Customization,  Up: Top
 
 Appendix A GNU Free Documentation License
 *****************************************
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -2307,9 +2305,10 @@ Key Index
 * 010 C-h (vip-delete-backward-char) (insert mode): Insert Mode.
                                                               (line  14)
 * 011 TAB (indent-for-tab-command):      Other Vi Commands.   (line  66)
-* 012 C-j (newline-and-indent):          Other Vi Commands.   (line  69)
-* 013 C-k (kill-line):                   Other Vi Commands.   (line  73)
-* 014 C-l (recenter) <1>:                Other Vi Commands.   (line  78)
+* 012 C-j (electric-newline-and-maybe-indent): Other Vi Commands.
+                                                              (line  69)
+* 013 C-k (kill-line):                   Other Vi Commands.   (line  72)
+* 014 C-l (recenter) <1>:                Other Vi Commands.   (line  77)
 * 014 C-l (recenter):                    Important Keys.      (line  13)
 * 015 RET (vip-scroll-back) <1>:         Viewing the Buffer.  (line  18)
 * 015 RET (vip-scroll-back):             New Bindings.        (line  20)
@@ -2319,20 +2318,20 @@ Key Index
 * 017 C-o (vip-open-line-at-point) <1>:  Commands in Insert Mode.
                                                               (line  35)
 * 017 C-o (vip-open-line-at-point):      New Commands.        (line  16)
-* 020 C-p (previous-line):               Other Vi Commands.   (line  81)
-* 021 C-q (quoted-insert):               Other Vi Commands.   (line  84)
-* 022 C-r (isearch-backward) <1>:        Other Vi Commands.   (line  89)
+* 020 C-p (previous-line):               Other Vi Commands.   (line  80)
+* 021 C-q (quoted-insert):               Other Vi Commands.   (line  83)
+* 022 C-r (isearch-backward) <1>:        Other Vi Commands.   (line  88)
 * 022 C-r (isearch-backward) <2>:        Searching and Replacing.
                                                               (line  34)
 * 022 C-r (isearch-backward):            New Commands.        (line  20)
-* 023 C-s (isearch-forward) <1>:         Other Vi Commands.   (line  92)
+* 023 C-s (isearch-forward) <1>:         Other Vi Commands.   (line  91)
 * 023 C-s (isearch-forward) <2>:         Searching and Replacing.
                                                               (line  30)
 * 023 C-s (isearch-forward):             New Commands.        (line  23)
-* 024 C-t (transpose-chars):             Other Vi Commands.   (line  95)
+* 024 C-t (transpose-chars):             Other Vi Commands.   (line  94)
 * 025 C-u (vip-scroll-down):             Viewing the Buffer.  (line  26)
-* 026 C-v (scroll-up):                   Other Vi Commands.   (line 101)
-* 027 C-w (kill-region):                 Other Vi Commands.   (line 105)
+* 026 C-v (scroll-up):                   Other Vi Commands.   (line 100)
+* 027 C-w (kill-region):                 Other Vi Commands.   (line 104)
 * 027 C-w (vip-delete-backward-word) (insert mode) <1>: Commands in Insert Mode.
                                                               (line  49)
 * 027 C-w (vip-delete-backward-word) (insert mode): Insert Mode.
@@ -2602,50 +2601,55 @@ Concept Index
 
 
 Tag Table:
-Node: Top920
-Node: Survey2634
-Node: Basic Concepts3167
-Node: Loading VIP4826
-Node: Modes in VIP5574
-Node: Emacs Mode8190
-Node: Vi Mode8558
-Node: Insert Mode8880
-Node: Differences from Vi9517
-Node: Undoing10705
-Node: Changing11074
-Node: Searching11706
-Node: z Command12434
-Node: Counts12781
-Node: Marking13298
-Node: Region Commands13812
-Node: New Commands14494
-Node: New Bindings17259
-Node: Window Commands19440
-Node: Buffer Commands19921
-Node: File Commands20420
-Node: Misc Commands20801
-Node: Vi Commands21231
-Node: Numeric Arguments22256
-Node: Important Keys22756
-Node: Buffers and Windows24510
-Node: Files26744
-Node: Viewing the Buffer30000
-Node: Mark Commands31913
-Node: Motion Commands32760
-Node: Searching and Replacing38308
-Node: Modifying Commands40593
-Node: Delete Commands42025
-Node: Yank Commands43742
-Node: Put Back Commands44638
-Node: Change Commands46103
-Node: Repeating and Undoing Modifications47136
-Node: Other Vi Commands47965
-Node: Commands in Insert Mode51607
-Node: Ex Commands53690
-Node: Ex Command Reference54879
-Node: Customization61352
-Node: Customizing Constants61784
-Node: Customizing Key Bindings63118
-Node: GNU Free Documentation License64180
+Node: Top844
+Node: Survey2558
+Node: Basic Concepts3088
+Node: Loading VIP4732
+Node: Modes in VIP5488
+Node: Emacs Mode8113
+Node: Vi Mode8460
+Node: Insert Mode8782
+Node: Differences from Vi9391
+Node: Undoing10564
+Node: Changing10905
+Node: Searching11537
+Node: z Command12265
+Node: Counts12612
+Node: Marking13129
+Node: Region Commands13643
+Node: New Commands14325
+Node: New Bindings17090
+Node: Window Commands19264
+Node: Buffer Commands19745
+Node: File Commands20244
+Node: Misc Commands20625
+Node: Vi Commands21035
+Node: Numeric Arguments22047
+Node: Important Keys22527
+Node: Buffers and Windows24281
+Node: Files26515
+Node: Viewing the Buffer29771
+Node: Mark Commands31684
+Node: Motion Commands32531
+Node: Searching and Replacing38079
+Node: Modifying Commands40364
+Node: Delete Commands41798
+Node: Yank Commands43488
+Node: Put Back Commands44384
+Node: Change Commands45849
+Node: Repeating and Undoing Modifications46882
+Node: Other Vi Commands47685
+Node: Commands in Insert Mode51289
+Node: Ex Commands53352
+Node: Ex Command Reference54522
+Node: Customization60953
+Node: Customizing Constants61386
+Node: Customizing Key Bindings62708
+Node: GNU Free Documentation License63780
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

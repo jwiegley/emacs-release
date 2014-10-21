@@ -1,6 +1,6 @@
 #### -*- Makefile -*- for documentation other than the Emacs manual.
 
-# Copyright (C) 2003-2013 Free Software Foundation, Inc.
+# Copyright (C) 2003-2014 Free Software Foundation, Inc.
 
 # This file is part of GNU Emacs.
 
@@ -259,9 +259,9 @@ $(infodir)/ebrowse$(INFO_EXT): ebrowse.texi
 ebrowse.dvi: ebrowse.texi
 	$(ENVADD) $(TEXI2DVI) $(srcdir)/ebrowse.texi
 
-$(infodir)/woman$(INFO_EXT): woman.texi
+$(infodir)/woman$(INFO_EXT): woman.texi $(emacsdir)/emacsver.texi
 	$(MAKEINFO) $(MAKEINFO_OPTS) $(INFO_OPTS) -o $@ woman.texi
-woman.dvi: woman.texi
+woman.dvi: woman.texi $(emacsdir)/emacsver.texi
 	$(ENVADD) $(TEXI2DVI) $(srcdir)/woman.texi
 
 $(infodir)/speedbar$(INFO_EXT): speedbar.texi
@@ -309,9 +309,9 @@ $(infodir)/rcirc$(INFO_EXT): rcirc.texi
 rcirc.dvi: rcirc.texi
 	$(ENVADD) $(TEXI2DVI) $(srcdir)/rcirc.texi
 
-$(infodir)/erc$(INFO_EXT): erc.texi gpl.texi
+$(infodir)/erc$(INFO_EXT): erc.texi
 	$(MAKEINFO) $(MAKEINFO_OPTS) $(INFO_OPTS) -o $@ erc.texi
-erc.dvi: erc.texi gpl.texi
+erc.dvi: erc.texi
 	$(ENVADD) $(TEXI2DVI) $(srcdir)/erc.texi
 
 $(infodir)/ert$(INFO_EXT): ert.texi

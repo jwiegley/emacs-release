@@ -1,5 +1,5 @@
 #  -*- Makefile -*- for GNU Emacs on the Microsoft Windows API.
-# Copyright (C) 2000-2013 Free Software Foundation, Inc.
+# Copyright (C) 2000-2014 Free Software Foundation, Inc.
 
 # This file is part of GNU Emacs.
 
@@ -27,6 +27,7 @@ LOCAL_FLAGS	= -DNO_LDAV=1 -DNO_ARCHIVES=1 -I../lib \
 		  -I../nt/inc -I../src $(EMACS_EXTRA_C_FLAGS)
 
 LIBS 		= $(BASE_LIBS) $(ADVAPI32)
+LIB_SRC		= .
 
 # The following target is used by makefile.w32-in files in other directories.
 make-docfile:	$(BLD)/make-docfile.exe
@@ -123,10 +124,13 @@ $(BLD)/profile.exe:	$(PROFILEOBJS)
 #
 obj =   dosfns.o msdos.o \
 	xterm.o xfns.o xmenu.o xselect.o xrdb.o xsmfns.o fringe.o image.o \
-	fontset.o menu.o \
-	w32.o w32console.o w32fns.o w32heap.o w32inevt.o cygw32.o \
+	fontset.o menu.o dbusbind.o cygw32.o \
+	nsterm.o nsfns.o nsmenu.o nsselect.o nsimage.o nsfont.o \
+	w32.o w32console.o w32fns.o w32heap.o w32inevt.o w32notify.o \
 	w32menu.o w32proc.o w32reg.o w32select.o w32term.o w32xfns.o \
-	font.o w32font.o w32uniscribe.o \
+	w16select.o widget.o xfont.o ftfont.o xftfont.o ftxfont.o gtkutil.o \
+	xsettings.o xgselect.o termcap.o \
+	font.o w32font.o w32uniscribe.o w32notify.o \
 	dispnew.o frame.o scroll.o xdisp.o window.o bidi.o \
 	charset.o coding.o category.o ccl.o character.o chartab.o \
 	cm.o term.o terminal.o xfaces.o \
@@ -213,7 +217,8 @@ lisp1= \
 	$(lispsource)international/mule-cmds.elc \
 	$(lispsource)international/characters.elc \
 	$(lispsource)international/charprop.el \
-	$(lispsource)case-table.elc
+	$(lispsource)case-table.elc \
+	$(lispsource)emacs-lisp/macroexp.elc
 
 lisp2 = \
 	$(lispsource)language/chinese.elc \
@@ -246,6 +251,7 @@ lisp2 = \
 	$(lispsource)register.elc \
 	$(lispsource)replace.elc \
 	$(lispsource)simple.elc \
+	$(lispsource)emacs-lisp/nadvice.elc \
 	$(lispsource)minibuffer.elc \
 	$(lispsource)startup.elc \
 	$(lispsource)subr.elc \
@@ -287,10 +293,10 @@ $(DOC):		stamp_BLD $(BLD)/make-docfile.exe ../src/$(BLD)/temacs.exe $(lisp1) $(l
 		"$(THISDIR)/$(BLD)/make-docfile" -a $(DOC) -d ../src $(lisp1)
 		"$(THISDIR)/$(BLD)/make-docfile" -a $(DOC) -d ../src $(lisp2)
 		"$(THISDIR)/$(BLD)/make-docfile" -a $(DOC) -d ../src $(OTHER_PLATFORM_SUPPORT)
-		$(CP) $(DOC) ../etc/DOC-X
+		$(CP) $(DOC) ../etc/DOC
 		- mkdir "../src/$(OBJDIR)"
 		- mkdir "../src/$(OBJDIR)/etc"
-		$(CP) $(DOC) ../src/$(OBJDIR)/etc/DOC-X
+		$(CP) $(DOC) ../src/$(OBJDIR)/etc/DOC
 
 {$(BLD)}.$(O){$(BLD)}.exe:
 		$(LINK) $(LINK_OUT)$@ $(LINK_FLAGS) $*.$(O) $(LIBS)
@@ -356,7 +362,6 @@ TAGS: $(BLD)/etags.exe *.c *.h
 ### DEPENDENCIES ###
 
 EMACS_ROOT	= ..
-LIB_SRC		= .
 SRC		= $(EMACS_ROOT)/src
 NT_INC		= $(EMACS_ROOT)/nt/inc
 GNU_LIB		= $(EMACS_ROOT)/lib
@@ -374,6 +379,9 @@ NTLIB_H        = $(LIB_SRC)/ntlib.h \
 SYSTIME_H      = $(SRC)/systime.h \
 		 $(NT_INC)/sys/time.h \
 		 $(GNU_LIB)/timespec.h
+SYSWAIT_H      = $(SRC)/syswait.h \
+		 $(NT_INC)/stdbool.h \
+		 $(NT_INC)/sys/wait.h
 
 $(BLD)/ctags.$(O) : \
 	$(LIB_SRC)/ctags.c \
@@ -419,14 +427,14 @@ $(BLD)/make-docfile.$(O) : \
 $(BLD)/movemail.$(O) : \
 	$(LIB_SRC)/movemail.c \
 	$(LIB_SRC)/pop.h \
-	$(SRC)/syswait.h \
 	$(NT_INC)/pwd.h \
 	$(NT_INC)/sys/file.h \
 	$(NT_INC)/sys/stat.h \
 	$(NT_INC)/unistd.h \
 	$(GNU_LIB)/getopt.h \
 	$(CONFIG_H) \
-	$(NTLIB_H)
+	$(NTLIB_H) \
+	$(SYSWAIT_H)
 
 $(BLD)/ntlib.$(O) : \
 	$(LIB_SRC)/ntlib.c \

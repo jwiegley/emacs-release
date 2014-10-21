@@ -1,6 +1,6 @@
 ;;; mml.el --- A package for parsing and validating MML documents
 
-;; Copyright (C) 1998-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1998-2014 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; This file is part of GNU Emacs.
@@ -260,7 +260,9 @@ part.  This is for the internal use, you should never modify the value.")
 		((string= mode "encrypt")
 		 (setq tags (list "encrypt" method)))
 		((string= mode "signencrypt")
-		 (setq tags (list "sign" method "encrypt" method))))
+		 (setq tags (list "sign" method "encrypt" method)))
+		(t
+		 (error "Unknown secure mode %s" mode)))
 	  (eval `(mml-insert-tag ,secure-mode
 				 ,@tags
 				 ,(if keyfile "keyfile")
@@ -1212,8 +1214,8 @@ If not set, `default-directory' will be used."
 	string
       default)))
 
-(defun mml-minibuffer-read-description ()
-  (let ((description (read-string "One line description: ")))
+(defun mml-minibuffer-read-description (&optional default)
+  (let ((description (read-string "One line description: " default)))
     (when (string-match "\\`[ \t]*\\'" description)
       (setq description nil))
     description))
@@ -1440,7 +1442,9 @@ TYPE is the MIME type to use."
   ;; when you send the message.
   (or (eq mail-user-agent 'message-user-agent)
       (setq mail-encode-mml t))
-  (mml-insert-tag 'part 'type type 'disposition "inline"))
+  (mml-insert-tag 'part 'type type 'disposition "inline")
+  (save-excursion
+    (mml-insert-tag '/part)))
 
 (declare-function message-subscribed-p "message" ())
 (declare-function message-make-mail-followup-to "message"

@@ -1,6 +1,6 @@
 /* syssignal.h - System-dependent definitions for signals.
 
-Copyright (C) 1993, 1999, 2001-2013 Free Software Foundation, Inc.
+Copyright (C) 1993, 1999, 2001-2014 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -18,7 +18,6 @@ You should have received a copy of the GNU General Public License
 along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <signal.h>
-#include <stdbool.h>
 
 extern void init_signals (bool);
 
@@ -50,29 +49,13 @@ char const *safe_strsignal (int) ATTRIBUTE_CONST;
 # define NSIG NSIG_MINIMUM
 #endif
 
+#ifndef SA_SIGINFO
+# define SA_SIGINFO 0
+#endif
+
 #ifndef emacs_raise
 # define emacs_raise(sig) raise (sig)
 #endif
-
-/* On bsd, [man says] kill does not accept a negative number to kill a pgrp.
-   Must do that using the killpg call.  */
-#ifdef BSD_SYSTEM
-#define EMACS_KILLPG(gid, signo) (killpg ( (gid), (signo)))
-#else
-#ifdef WINDOWSNT
-#define EMACS_KILLPG(gid, signo) (kill (gid, signo))
-#else
-#define EMACS_KILLPG(gid, signo) (kill   (-(gid), (signo)))
-#endif
-#endif
-
-/* Define SIGCHLD as an alias for SIGCLD.  There are many conditionals
-   testing SIGCHLD.  */
-#ifdef SIGCLD
-#ifndef SIGCHLD
-#define SIGCHLD SIGCLD
-#endif /* SIGCHLD */
-#endif /* ! defined (SIGCLD) */
 
 #ifndef HAVE_STRSIGNAL
 # define strsignal(sig) safe_strsignal (sig)

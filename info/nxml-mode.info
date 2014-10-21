@@ -1,17 +1,15 @@
-This is
-/misc/emacs/bzr/emacs24-merge/doc/misc/../../info/nxml-mode.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/nxml-mode.texi.
+This is ../../info/nxml-mode.info, produced by makeinfo version 4.13
+from ./nxml-mode.texi.
 
 This manual documents nXML mode, an Emacs major mode for editing XML
 with RELAX NG support.
 
-   Copyright (C) 2007-2013 Free Software Foundation, Inc.
+   Copyright (C) 2007-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -33,12 +31,12 @@ nXML Mode
 This manual documents nXML mode, an Emacs major mode for editing XML
 with RELAX NG support.
 
-   Copyright (C) 2007-2013 Free Software Foundation, Inc.
+   Copyright (C) 2007-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -98,7 +96,8 @@ create RNC schemas.  This program can:
    * convert a RELAX NG XML syntax schema to an RNC schema.
 
 To convert a RELAX NG XML syntax (`.rng') schema to a RNC one, you can
-also use the XSLT stylesheet from `http://www.pantor.com/download.html'.
+also use the XSLT stylesheet from
+`https://github.com/oleg-pavliv/emacs/tree/master/xsl'.
 
    To convert a W3C XML Schema to an RNC schema, you need first to
 convert it to RELAX NG XML syntax using the RELAX NG converter tool
@@ -806,7 +805,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -1287,22 +1286,27 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top1029
-Node: Introduction2079
-Node: Completion4253
-Node: Inserting end-tags8258
-Node: Paragraphs9576
-Node: Outlining11836
-Node: Locating a schema17453
-Node: Commands for locating a schema18900
-Node: Schema locating files21524
-Node: Schema locating file syntax basics22417
-Node: Using the document's URI to locate a schema24309
-Node: Using the document element to locate a schema26835
-Node: Using type identifiers in schema locating files27901
-Node: Using multiple schema locating files30317
-Node: DTDs32145
-Node: Limitations33609
-Node: GNU Free Documentation License34077
+Node: Top953
+Node: Introduction2003
+Node: Completion4194
+Node: Inserting end-tags8199
+Node: Paragraphs9517
+Node: Outlining11777
+Node: Locating a schema17394
+Node: Commands for locating a schema18841
+Node: Schema locating files21465
+Node: Schema locating file syntax basics22358
+Node: Using the document's URI to locate a schema24250
+Node: Using the document element to locate a schema26776
+Node: Using type identifiers in schema locating files27842
+Node: Using multiple schema locating files30258
+Node: DTDs32086
+Node: Limitations33550
+Node: GNU Free Documentation License34018
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

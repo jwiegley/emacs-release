@@ -1,6 +1,6 @@
 ;;; gv.el --- generalized variables  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2012-2014 Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 ;; Keywords: extensions
@@ -102,7 +102,9 @@ DO must return an Elisp expression."
               ;; Follow aliases.
               (setq me (cons (symbol-function head) (cdr place))))
           (if (eq me place)
-              (error "%S is not a valid place expression" place)
+              (if (and (symbolp head) (get head 'setf-method))
+                  (error "Incompatible place needs recompilation: %S" head)
+                (error "%S is not a valid place expression" place))
             (gv-get me do)))))))
 
 ;;;###autoload
@@ -155,11 +157,13 @@ arguments as NAME.  DO is a function as defined in `gv-get'."
         (_ (message "Unknown %s declaration %S" symbol handler) nil))))
 
 ;;;###autoload
-(push `(gv-expander ,(apply-partially #'gv--defun-declaration 'gv-expander))
-      defun-declarations-alist)
+(or (assq 'gv-expander defun-declarations-alist)
+    (push `(gv-expander ,(apply-partially #'gv--defun-declaration 'gv-expander))
+	  defun-declarations-alist))
 ;;;###autoload
-(push `(gv-setter ,(apply-partially #'gv--defun-declaration 'gv-setter))
-      defun-declarations-alist)
+(or (assq 'gv-setter defun-declarations-alist)
+    (push `(gv-setter ,(apply-partially #'gv--defun-declaration 'gv-setter))
+	  defun-declarations-alist))
 
 ;; (defmacro gv-define-expand (name expander)
 ;;   "Use EXPANDER to handle NAME as a generalized var.
@@ -217,13 +221,15 @@ instead the assignment is turned into something equivalent to
     temp)
 so as to preserve the semantics of `setf'."
   (declare (debug (sexp (&or symbolp lambda-expr) &optional sexp)))
+  (when (eq 'lambda (car-safe setter))
+    (message "Use `gv-define-setter' or name %s's setter function" name))
   `(gv-define-setter ,name (val &rest args)
      ,(if fix-return
           `(macroexp-let2 nil v val
              `(progn
-                (,',setter ,@(append args (list v)))
+                (,',setter ,@args ,v)
                 ,v))
-        `(cons ',setter (append args (list val))))))
+        ``(,',setter ,@args ,val))))
 
 ;;; Typical operations on generalized variables.
 
@@ -334,13 +340,22 @@ The return value is the last VAL in the list.
 (gv-define-simple-setter process-filter set-process-filter)
 (gv-define-simple-setter process-sentinel set-process-sentinel)
 (gv-define-simple-setter process-get process-put)
-(gv-define-simple-setter window-buffer set-window-buffer)
-(gv-define-simple-setter window-display-table set-window-display-table 'fix)
-(gv-define-simple-setter window-dedicated-p set-window-dedicated-p)
-(gv-define-simple-setter window-hscroll set-window-hscroll)
 (gv-define-simple-setter window-parameter set-window-parameter)
-(gv-define-simple-setter window-point set-window-point)
-(gv-define-simple-setter window-start set-window-start)
+(gv-define-setter window-buffer (v &optional w)
+  (macroexp-let2 nil v v
+    `(progn (set-window-buffer ,w ,v) ,v)))
+(gv-define-setter window-display-table (v &optional w)
+  (macroexp-let2 nil v v
+    `(progn (set-window-display-table ,w ,v) ,v)))
+(gv-define-setter window-dedicated-p (v &optional w)
+  `(set-window-dedicated-p ,w ,v))
+(gv-define-setter window-hscroll (v &optional w) `(set-window-hscroll ,w ,v))
+(gv-define-setter window-point (v &optional w) `(set-window-point ,w ,v))
+(gv-define-setter window-start (v &optional w) `(set-window-start ,w ,v))
+
+(gv-define-setter buffer-local-value (val var buf)
+  (macroexp-let2 nil v val
+    `(with-current-buffer ,buf (set (make-local-variable ,var) ,v))))
 
 ;;; Some occasionally handy extensions.
 
@@ -440,6 +455,29 @@ The return value is the last VAL in the list.
               (funcall setter
                        `(logior (logand ,v ,mask)
                                 (logand ,getter (lognot ,mask))))))))))
+
+;;; References
+
+;;;###autoload
+(defmacro gv-ref (place)
+  "Return a reference to PLACE.
+This is like the `&' operator of the C language.
+Note: this only works reliably with lexical binding mode, except for very
+simple PLACEs such as (function-symbol 'foo) which will also work in dynamic
+binding mode."
+  (gv-letplace (getter setter) place
+    `(cons (lambda () ,getter)
+           (lambda (gv--val) ,(funcall setter 'gv--val)))))
+
+(defsubst gv-deref (ref)
+  "Dereference REF, returning the referenced value.
+This is like the `*' operator of the C language.
+REF must have been previously obtained with `gv-ref'."
+  (funcall (car ref)))
+;; Don't use `declare' because it seems to introduce circularity problems:
+;; Warning: Eager macro-expansion skipped due to cycle:
+;;  … => (load "gv.el") => (macroexpand-all (defsubst gv-deref …)) => (macroexpand (defun …)) => (load "gv.el")
+(gv-define-setter gv-deref (v ref) `(funcall (cdr ,ref) ,v))
 
 ;;; Vaguely related definitions that should be moved elsewhere.
 

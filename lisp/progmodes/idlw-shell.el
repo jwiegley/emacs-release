@@ -1,12 +1,11 @@
 ;; idlw-shell.el --- run IDL as an inferior process of Emacs.
 
-;; Copyright (C) 1999-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1999-2014 Free Software Foundation, Inc.
 
 ;; Authors: J.D. Smith <jdsmith@as.arizona.edu>
 ;;          Carsten Dominik <dominik@astro.uva.nl>
 ;;          Chris Chase <chase@att.com>
 ;; Maintainer: J.D. Smith <jdsmith@as.arizona.edu>
-;; Version: 6.1.22
 ;; Keywords: processes
 ;; Package: idlwave
 
@@ -41,7 +40,7 @@
 ;;
 ;; New versions of IDLWAVE, documentation, and more information
 ;; available from:
-;;                 http://idlwave.org
+;;                 http://github.com/jdtsmith/idlwave
 ;;
 ;; INSTALLATION:
 ;; =============
@@ -59,7 +58,7 @@
 ;;   The newest version of this file can be found on the maintainers
 ;;   web site.
 ;;
-;;     http://idlwave.org
+;;     http://github.com/jdtsmith/idlwave
 ;;
 ;; DOCUMENTATION
 ;; =============
@@ -923,7 +922,7 @@ IDL has currently stepped.")
    Info documentation for this package is available.  Use \\[idlwave-info]
    to display (complain to your sysadmin if that does not work).
    For PostScript and HTML versions of the documentation, check IDLWAVE's
-   homepage at URL `http://idlwave.org'.
+   homepage at URL `http://github.com/jdtsmith/idlwave'.
    IDLWAVE has customize support - see the group `idlwave'.
 
 8. Keybindings
@@ -1447,10 +1446,10 @@ Otherwise just move the line.  Move down unless UP is non-nil."
 
 ;; Newer versions of comint.el changed the name of comint-filter to
 ;; comint-output-filter.
-(defun idlwave-shell-comint-filter (process string) nil)
-(if (fboundp 'comint-output-filter)
-    (fset 'idlwave-shell-comint-filter (symbol-function 'comint-output-filter))
-  (fset 'idlwave-shell-comint-filter (symbol-function 'comint-filter)))
+(defalias 'idlwave-shell-comint-filter
+  (if (fboundp 'comint-output-filter)
+      #'comint-output-filter
+    #'comint-filter))
 
 (defun idlwave-shell-is-running ()
   "Return t if the shell process is running."

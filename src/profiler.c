@@ -1,6 +1,6 @@
 /* Profiler implementation.
 
-Copyright (C) 2012-2013 Free Software Foundation, Inc.
+Copyright (C) 2012-2014 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -35,6 +35,9 @@ saturated_add (EMACS_INT a, EMACS_INT b)
 
 typedef struct Lisp_Hash_Table log_t;
 
+static Lisp_Object Qprofiler_backtrace_equal;
+static struct hash_table_test hashtest_profiler;
+
 static Lisp_Object
 make_log (int heap_size, int max_stack_depth)
 {
@@ -42,16 +45,17 @@ make_log (int heap_size, int max_stack_depth)
      a special way.  This is OK as long as the object is not exposed
      to Elisp, i.e. until it is returned by *-profiler-log, after which
      it can't be used any more.  */
-  Lisp_Object log = make_hash_table (Qequal, make_number (heap_size),
+  Lisp_Object log = make_hash_table (hashtest_profiler,
+				     make_number (heap_size),
 				     make_float (DEFAULT_REHASH_SIZE),
 				     make_float (DEFAULT_REHASH_THRESHOLD),
-				     Qnil, Qnil, Qnil);
+				     Qnil);
   struct Lisp_Hash_Table *h = XHASH_TABLE (log);
 
   /* What is special about our hash-tables is that the keys are pre-filled
      with the vectors we'll put in them.  */
   int i = ASIZE (h->key_and_value) / 2;
-  while (0 < i)
+  while (i > 0)
     set_hash_key_slot (h, --i,
 		       Fmake_vector (make_number (max_stack_depth), Qnil));
   return log;
@@ -134,10 +138,8 @@ static void evict_lower_half (log_t *log)
 static void
 record_backtrace (log_t *log, EMACS_INT count)
 {
-  struct backtrace *backlist = backtrace_list;
   Lisp_Object backtrace;
-  ptrdiff_t index, i = 0;
-  ptrdiff_t asize;
+  ptrdiff_t index;
 
   if (!INTEGERP (log->next_free))
     /* FIXME: transfer the evicted counts to a special entry rather
@@ -147,16 +149,7 @@ record_backtrace (log_t *log, EMACS_INT count)
 
   /* Get a "working memory" vector.  */
   backtrace = HASH_KEY (log, index);
-  asize = ASIZE (backtrace);
-
-  /* Copy the backtrace contents into working memory.  */
-  for (; i < asize && backlist; i++, backlist = backlist->next)
-    /* FIXME: For closures we should ignore the environment.  */
-    ASET (backtrace, i, backlist->function);
-
-  /* Make sure that unused space of working memory is filled with nil.  */
-  for (; i < asize; i++)
-    ASET (backtrace, i, Qnil);
+  get_backtrace (backtrace);
 
   { /* We basically do a `gethash+puthash' here, except that we have to be
        careful to avoid memory allocation since we're in a signal
@@ -228,7 +221,7 @@ static EMACS_INT current_sampling_interval;
 static void
 handle_profiler_signal (int signal)
 {
-  if (backtrace_list && EQ (backtrace_list->function, Qautomatic_gc))
+  if (EQ (backtrace_top_function (), Qautomatic_gc))
     /* Special case the time-count inside GC because the hash-table
        code is not prepared to be used while the GC is running.
        More specifically it uses ASIZE at many places where it does
@@ -238,30 +231,17 @@ handle_profiler_signal (int signal)
     cpu_gc_count = saturated_add (cpu_gc_count, 1);
   else
     {
-      Lisp_Object oquit;
-      bool saved_pending_signals;
       EMACS_INT count = 1;
 #ifdef HAVE_ITIMERSPEC
       if (profiler_timer_ok)
 	{
 	  int overruns = timer_getoverrun (profiler_timer);
-	  eassert (0 <= overruns);
+	  eassert (overruns >= 0);
 	  count += overruns;
 	}
 #endif
-      /* record_backtrace uses hash functions that call Fequal, which
-	 uses QUIT, which can call malloc, which can cause disaster in
-	 a signal handler.  So inhibit QUIT.  */
-      oquit = Vinhibit_quit;
-      saved_pending_signals = pending_signals;
-      Vinhibit_quit = Qt;
-      pending_signals = 0;
-
       eassert (HASH_TABLE_P (cpu_log));
       record_backtrace (XHASH_TABLE (cpu_log), count);
-
-      Vinhibit_quit = oquit;
-      pending_signals = saved_pending_signals;
     }
 }
 
@@ -287,8 +267,8 @@ setup_cpu_timer (Lisp_Object sampling_interval)
     return NOT_RUNNING;
 
   current_sampling_interval = XINT (sampling_interval);
-  interval = make_emacs_time (current_sampling_interval / billion,
-			      current_sampling_interval % billion);
+  interval = make_timespec (current_sampling_interval / billion,
+			    current_sampling_interval % billion);
   emacs_sigaction_init (&action, deliver_profiler_signal);
   sigaction (SIGPROF, &action, 0);
 
@@ -404,7 +384,7 @@ Return non-nil if the profiler was running.  */)
 DEFUN ("profiler-cpu-running-p",
        Fprofiler_cpu_running_p, Sprofiler_cpu_running_p,
        0, 0, 0,
-       doc: /* Return non-nil iff cpu profiler is running.  */)
+       doc: /* Return non-nil if cpu profiler is running.  */)
   (void)
 {
   return profiler_cpu_running ? Qt : Qnil;
@@ -515,6 +495,66 @@ malloc_probe (size_t size)
   record_backtrace (XHASH_TABLE (memory_log), min (size, MOST_POSITIVE_FIXNUM));
 }
 
+DEFUN ("function-equal", Ffunction_equal, Sfunction_equal, 2, 2, 0,
+       doc: /* Return non-nil if F1 and F2 come from the same source.
+Used to determine if different closures are just different instances of
+the same lambda expression, or are really unrelated function.  */)
+     (Lisp_Object f1, Lisp_Object f2)
+{
+  bool res;
+  if (EQ (f1, f2))
+    res = true;
+  else if (COMPILEDP (f1) && COMPILEDP (f2))
+    res = EQ (AREF (f1, COMPILED_BYTECODE), AREF (f2, COMPILED_BYTECODE));
+  else if (CONSP (f1) && CONSP (f2) && CONSP (XCDR (f1)) && CONSP (XCDR (f2))
+	   && EQ (Qclosure, XCAR (f1))
+	   && EQ (Qclosure, XCAR (f2)))
+    res = EQ (XCDR (XCDR (f1)), XCDR (XCDR (f2)));
+  else
+    res = false;
+  return res ? Qt : Qnil;
+}
+
+static bool
+cmpfn_profiler (struct hash_table_test *t,
+		Lisp_Object bt1, Lisp_Object bt2)
+{
+  if (VECTORP (bt1) && VECTORP (bt2))
+    {
+      ptrdiff_t i, l = ASIZE (bt1);
+      if (l != ASIZE (bt2))
+	return false;
+      for (i = 0; i < l; i++)
+	if (NILP (Ffunction_equal (AREF (bt1, i), AREF (bt2, i))))
+	  return false;
+      return true;
+    }
+  else
+    return EQ (bt1, bt2);
+}
+
+static EMACS_UINT
+hashfn_profiler (struct hash_table_test *ht, Lisp_Object bt)
+{
+  if (VECTORP (bt))
+    {
+      EMACS_UINT hash = 0;
+      ptrdiff_t i, l = ASIZE (bt);
+      for (i = 0; i < l; i++)
+	{
+	  Lisp_Object f = AREF (bt, i);
+	  EMACS_UINT hash1
+	    = (COMPILEDP (f) ? XHASH (AREF (f, COMPILED_BYTECODE))
+	       : (CONSP (f) && CONSP (XCDR (f)) && EQ (Qclosure, XCAR (f)))
+	       ? XHASH (XCDR (XCDR (f))) : XHASH (f));
+	  hash = sxhash_combine (hash, hash1);
+	}
+      return SXHASH_REDUCE (hash);
+    }
+  else
+    return XHASH (bt);
+}
+
 void
 syms_of_profiler (void)
 {
@@ -526,6 +566,16 @@ syms_of_profiler (void)
 If the log gets full, some of the least-seen call-stacks will be evicted
 to make room for new entries.  */);
   profiler_log_size = 10000;
+
+  DEFSYM (Qprofiler_backtrace_equal, "profiler-backtrace-equal");
+
+  hashtest_profiler.name = Qprofiler_backtrace_equal;
+  hashtest_profiler.user_hash_function = Qnil;
+  hashtest_profiler.user_cmp_function = Qnil;
+  hashtest_profiler.cmpfn = cmpfn_profiler;
+  hashtest_profiler.hashfn = hashfn_profiler;
+
+  defsubr (&Sfunction_equal);
 
 #ifdef PROFILER_CPU_SUPPORT
   profiler_cpu_running = NOT_RUNNING;

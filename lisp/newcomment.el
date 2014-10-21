@@ -1,6 +1,6 @@
 ;;; newcomment.el --- (un)comment regions of buffers -*- lexical-binding: t -*-
 
-;; Copyright (C) 1999-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1999-2014 Free Software Foundation, Inc.
 
 ;; Author: code extracted from Emacs-20's simple.el
 ;; Maintainer: Stefan Monnier <monnier@iro.umontreal.ca>
@@ -120,8 +120,9 @@ Comments might be indented to a different value in order not to go beyond
 ;;;###autoload
 (defvar comment-start-skip nil
   "Regexp to match the start of a comment plus everything up to its body.
-If there are any \\(...\\) pairs, the comment delimiter text is held to begin
-at the place matched by the close of the first pair.")
+If there are any \\(...\\) pairs and `comment-use-syntax' is nil,
+the comment delimiter text is held to begin at the place matched
+by the close of the first pair.")
 ;;;###autoload
 (put 'comment-start-skip 'safe-local-variable 'stringp)
 
@@ -312,7 +313,7 @@ If `eol' it only comments out empty lines if comments are
 terminated by the end of line (i.e. `comment-end' is empty)."
   :type '(choice (const :tag "Never" nil)
 	  (const :tag "Always" t)
-	  (const :tag "EOl-terminated" 'eol))
+	  (const :tag "EOl-terminated" eol))
   :group 'comment)
 
 ;;;;
@@ -378,7 +379,10 @@ function should first call this function explicitly."
 		 ;; In case comment-start has changed since last time.
 		 (string-match comment-start-skip comment-start))
       (set (make-local-variable 'comment-start-skip)
-	   (concat "\\(\\(^\\|[^\\\n]\\)\\(\\\\\\\\\\)*\\)\\(\\s<+\\|"
+	   (concat (unless (eq comment-use-syntax t)
+                     ;; `syntax-ppss' will detect escaping.
+                     "\\(\\(^\\|[^\\\n]\\)\\(\\\\\\\\\\)*\\)")
+                   "\\(\\s<+\\|"
 		   (regexp-quote (comment-string-strip comment-start t t))
 		   ;; Let's not allow any \s- but only [ \t] since \n
 		   ;; might be both a comment-end marker and \s-.
@@ -435,18 +439,23 @@ If UNP is non-nil, unquote nested comment markers."
 ;;;; Navigation
 ;;;;
 
-(defvar comment-use-global-state nil
+(defvar comment-use-global-state t
   "Non-nil means that the global syntactic context is used.
 More specifically, it means that `syntax-ppss' is used to find out whether
-point is within a string or not.  Major modes whose syntax is faithfully
-described by the syntax-tables can set this to non-nil so comment markers
-in strings will not confuse Emacs.")
+point is within a string or not.  Major modes whose syntax is not faithfully
+described by the syntax-tables (or where `font-lock-syntax-table' is radically
+different from the main syntax table) can set this to nil,
+then `syntax-ppss' cache won't be used in comment-related routines.")
+
+(make-obsolete-variable 'comment-use-global-state 'comment-use-syntax "24.4")
 
 (defun comment-search-forward (limit &optional noerror)
   "Find a comment start between point and LIMIT.
 Moves point to inside the comment and returns the position of the
 comment-starter.  If no comment is found, moves point to LIMIT
-and raises an error or returns nil if NOERROR is non-nil."
+and raises an error or returns nil if NOERROR is non-nil.
+
+Ensure that `comment-normalize-vars' has been called before you use this."
   (if (not comment-use-syntax)
       (if (re-search-forward comment-start-skip limit noerror)
 	  (or (match-end 1) (match-beginning 0))
@@ -484,7 +493,9 @@ and raises an error or returns nil if NOERROR is non-nil."
   "Find a comment start between LIMIT and point.
 Moves point to inside the comment and returns the position of the
 comment-starter.  If no comment is found, moves point to LIMIT
-and raises an error or returns nil if NOERROR is non-nil."
+and raises an error or returns nil if NOERROR is non-nil.
+
+Ensure that `comment-normalize-vars' has been called before you use this."
   ;; FIXME: If a comment-start appears inside a comment, we may erroneously
   ;; stop there.  This can be rather bad in general, but since
   ;; comment-search-backward is only used to find the comment-column (in
@@ -511,30 +522,40 @@ and raises an error or returns nil if NOERROR is non-nil."
   "Find the beginning of the enclosing comment.
 Returns nil if not inside a comment, else moves point and returns
 the same as `comment-search-backward'."
-  ;; HACK ATTACK!
-  ;; We should really test `in-string-p' but that can be expensive.
-  (unless (eq (get-text-property (point) 'face) 'font-lock-string-face)
-    (let ((pt (point))
-	  (cs (comment-search-backward nil t)))
-      (when cs
-	(if (save-excursion
-	      (goto-char cs)
-	      (and
-	       ;; For modes where comment-start and comment-end are the same,
-	       ;; the search above may have found a `ce' rather than a `cs'.
-	       (or (if comment-end-skip (not (looking-at comment-end-skip)))
-		   ;; Maybe font-lock knows that it's a `cs'?
-		   (eq (get-text-property (match-end 0) 'face)
-		       'font-lock-comment-face)
-		   (unless (eq (get-text-property (point) 'face)
-			       'font-lock-comment-face)
-		     ;; Let's assume it's a `cs' if we're on the same line.
-		     (>= (line-end-position) pt)))
-	       ;; Make sure that PT is not past the end of the comment.
-	       (if (comment-forward 1) (> (point) pt) (eobp))))
-	    cs
-	  (goto-char pt)
-	  nil)))))
+  (if (and comment-use-syntax comment-use-global-state)
+      (let ((state (syntax-ppss)))
+        (when (nth 4 state)
+          (goto-char (nth 8 state))
+          (prog1 (point)
+            (when (save-restriction
+                    ;; `comment-start-skip' sometimes checks that the
+                    ;; comment char is not escaped.  (Bug#16971)
+                    (narrow-to-region (point) (point-max))
+                    (looking-at comment-start-skip))
+              (goto-char (match-end 0))))))
+    ;; Can't rely on the syntax table, let's guess based on font-lock.
+    (unless (eq (get-text-property (point) 'face) 'font-lock-string-face)
+      (let ((pt (point))
+            (cs (comment-search-backward nil t)))
+        (when cs
+          (if (save-excursion
+                (goto-char cs)
+                (and
+                 ;; For modes where comment-start and comment-end are the same,
+                 ;; the search above may have found a `ce' rather than a `cs'.
+                 (or (if comment-end-skip (not (looking-at comment-end-skip)))
+                     ;; Maybe font-lock knows that it's a `cs'?
+                     (eq (get-text-property (match-end 0) 'face)
+                         'font-lock-comment-face)
+                     (unless (eq (get-text-property (point) 'face)
+                                 'font-lock-comment-face)
+                       ;; Let's assume it's a `cs' if we're on the same line.
+                       (>= (line-end-position) pt)))
+                 ;; Make sure that PT is not past the end of the comment.
+                 (if (comment-forward 1) (> (point) pt) (eobp))))
+              cs
+            (goto-char pt)
+            nil))))))
 
 (defun comment-forward (&optional n)
   "Skip forward over N comments.
@@ -1206,7 +1227,8 @@ changed with `comment-style'."
 (defun comment-box (beg end &optional arg)
   "Comment out the BEG .. END region, putting it inside a box.
 The numeric prefix ARG specifies how many characters to add to begin- and
-end- comment markers additionally to what `comment-add' already specifies."
+end- comment markers additionally to what variable `comment-add' already
+specifies."
   (interactive "*r\np")
   (comment-normalize-vars)
   (let ((comment-style (if (cadr (assoc comment-style comment-styles))

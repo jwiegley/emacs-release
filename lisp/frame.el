@@ -1,9 +1,9 @@
 ;;; frame.el --- multi-frame management independent of window systems
 
-;; Copyright (C) 1993-1994, 1996-1997, 2000-2013 Free Software
+;; Copyright (C) 1993-1994, 1996-1997, 2000-2014 Free Software
 ;; Foundation, Inc.
 
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 ;; Keywords: internal
 ;; Package: emacs
 
@@ -120,6 +120,23 @@ appended when the minibuffer frame is created."
 	(delete-frame frame t)
       ;; Gildea@x.org says it is ok to ask questions before terminating.
       (save-buffers-kill-emacs))))
+
+(defun handle-focus-in (_event)
+  "Handle a focus-in event.
+Focus-in events are usually bound to this function.
+Focus-in events occur when a frame has focus, but a switch-frame event
+is not generated.
+This function runs the hook `focus-in-hook'."
+  (interactive "e")
+  (run-hooks 'focus-in-hook))
+
+(defun handle-focus-out (_event)
+  "Handle a focus-out event.
+Focus-out events are usually bound to this function.
+Focus-out events occur when no frame has focus.
+This function runs the hook `focus-out-hook'."
+  (interactive "e")
+  (run-hooks 'focus-out-hook))
 
 ;;;; Arrangement of frames at startup
 
@@ -192,6 +209,8 @@ appended when the minibuffer frame is created."
   "Non-nil means function `frame-notice-user-settings' wasn't run yet.")
 
 (declare-function tool-bar-mode "tool-bar" (&optional arg))
+
+(defalias 'tool-bar-lines-needed 'tool-bar-height)
 
 ;; startup.el calls this function after loading the user's init
 ;; file.  Now default-frame-alist and initial-frame-alist contain
@@ -317,6 +336,9 @@ there (in decreasing order of priority)."
 		   t))
 	  ;; Create the new frame.
 	  (let (parms new)
+	    ;; MS-Windows needs this to avoid inflooping below.
+	    (if (eq system-type 'windows-nt)
+		(sit-for 0 t))
 	    ;; If the frame isn't visible yet, wait till it is.
 	    ;; If the user has to position the window,
 	    ;; Emacs doesn't know its real position until
@@ -497,10 +519,7 @@ See help of `modify-frame-parameters' for more information."
   "Return some frame other than the current frame.
 Create one if necessary.  Note that the minibuffer frame, if separate,
 is not considered (see `next-frame')."
-  (let ((s (if (equal (next-frame (selected-frame)) (selected-frame))
-	       (make-frame)
-	     (next-frame (selected-frame)))))
-    s))
+  (if (equal (next-frame) (selected-frame)) (make-frame) (next-frame)))
 
 (defun next-multiframe-window ()
   "Select the next window, regardless of which frame it is on."
@@ -521,10 +540,14 @@ is not considered (see `next-frame')."
 (defun window-system-for-display (display)
   "Return the window system for DISPLAY.
 Return nil if we don't know how to interpret DISPLAY."
-  (cl-loop for descriptor in display-format-alist
-           for pattern = (car descriptor)
-           for system = (cdr descriptor)
-           when (string-match-p pattern display) return system))
+  ;; MS-Windows doesn't know how to create a GUI frame in a -nw session.
+  (if (and (eq system-type 'windows-nt)
+	   (null (window-system)))
+      nil
+    (cl-loop for descriptor in display-format-alist
+	     for pattern = (car descriptor)
+	     for system = (cdr descriptor)
+	     when (string-match-p pattern display) return system)))
 
 (defun make-frame-on-display (display &optional parameters)
   "Make a frame on display DISPLAY.
@@ -587,8 +610,9 @@ The functions are run with one arg, the newly created frame.")
 (define-obsolete-function-alias 'new-frame 'make-frame "22.1")
 
 (defvar frame-inherited-parameters '()
-  ;; FIXME: Shouldn't we add `font' here as well?
   "Parameters `make-frame' copies from the `selected-frame' to the new frame.")
+
+(defvar x-display-name)
 
 (defun make-frame (&optional parameters)
   "Return a newly created frame displaying the current buffer.
@@ -644,7 +668,7 @@ the new frame according to its own rules."
 	      (cdr (assq 'window-system parameters)))
              (display
               (or (window-system-for-display display)
-                  (error "Don't know how to interpret display \"%S\""
+                  (error "Don't know how to interpret display %S"
                          display)))
 	     (t window-system)))
 	 (frame-creation-function (cdr (assq w frame-creation-function-alist)))
@@ -655,9 +679,8 @@ the new frame according to its own rules."
       (error "Don't know how to create a frame on window system %s" w))
 
     (unless (get w 'window-system-initialized)
-      (unless x-display-name
-        (setq x-display-name display))
-      (funcall (cdr (assq w window-system-initialization-alist)))
+      (funcall (cdr (assq w window-system-initialization-alist)) display)
+      (setq x-display-name display)
       (put w 'window-system-initialized t))
 
     ;; Add parameters from `window-system-default-frame-alist'.
@@ -760,7 +783,7 @@ the user during startup."
 	(nreverse frame-initial-geometry-arguments))
   (cdr param-list))
 
-(declare-function x-focus-frame "xfns.c" (frame))
+(declare-function x-focus-frame "frame.c" (frame))
 
 (defun select-frame-set-input-focus (frame &optional norecord)
   "Select FRAME, raise it, and set input focus, if possible.
@@ -873,8 +896,11 @@ If there is no frame by that name, signal an error."
   "The brightness of the background.
 Set this to the symbol `dark' if your background color is dark,
 `light' if your background is light, or nil (automatic by default)
-if you want Emacs to examine the brightness for you.  Don't set this
-variable with `setq'; this won't have the expected effect."
+if you want Emacs to examine the brightness for you.
+
+If you change this without using customize, you should use
+`frame-set-background-mode' to update existing frames;
+e.g. (mapc 'frame-set-background-mode (frame-list))."
   :group 'faces
   :set #'(lambda (var value)
 	   (set-default var value)
@@ -886,6 +912,9 @@ variable with `setq'; this won't have the expected effect."
 
 (declare-function x-get-resource "frame.c"
 		  (attribute class &optional component subclass))
+
+;; Only used if window-system is not null.
+(declare-function x-display-grayscale-p "xfns.c" (&optional terminal))
 
 (defvar inhibit-frame-set-background-mode nil)
 
@@ -1078,10 +1107,10 @@ number of lines and columns.
 
 If FRAMES is nil, apply the font to the selected frame only.
 If FRAMES is non-nil, it should be a list of frames to act upon,
-or t meaning all graphical frames.  Also, if FRAME is non-nil,
-alter the user's Customization settings as though the
-font-related attributes of the `default' face had been \"set in
-this session\", so that the font is applied to future frames."
+or t meaning all existing graphical frames.
+Also, if FRAMES is non-nil, alter the user's Customization settings
+as though the font-related attributes of the `default' face had been
+\"set in this session\", so that the font is applied to future frames."
   (interactive
    (let* ((completion-ignore-case t)
 	  (font (completing-read "Font name: "
@@ -1257,11 +1286,25 @@ bars (top, bottom, or nil)."
     (unless (memq vert '(left right nil))
       (setq vert default-frame-scroll-bars))
     (cons vert hor)))
+
+(defun frame-monitor-attributes (&optional frame)
+  "Return the attributes of the physical monitor dominating FRAME.
+If FRAME is omitted or nil, describe the currently selected frame.
+
+A frame is dominated by a physical monitor when either the
+largest area of the frame resides in the monitor, or the monitor
+is the closest to the frame if the frame does not intersect any
+physical monitors.
+
+See `display-monitor-attributes-list' for the list of attribute
+keys and their meanings."
+  (or frame (setq frame (selected-frame)))
+  (cl-loop for attributes in (display-monitor-attributes-list frame)
+	   for frames = (cdr (assq 'frames attributes))
+	   if (memq frame frames) return attributes))
+
 
 ;;;; Frame/display capabilities.
-(defun selected-terminal ()
-  "Return the terminal that is now selected."
-  (frame-terminal (selected-frame)))
 
 (declare-function msdos-mouse-p "dosfns.c")
 
@@ -1283,17 +1326,17 @@ frame's display)."
 	       xterm-mouse-mode)
 	  ;; t-mouse is distributed with the GPM package.  It doesn't have
 	  ;; a toggle.
-	  (featurep 't-mouse))))))
+	  (featurep 't-mouse)
+	  ;; No way to check whether a w32 console has a mouse, assume
+	  ;; it always does.
+	  (boundp 'w32-use-full-screen-buffer))))))
 
 (defun display-popup-menus-p (&optional display)
   "Return non-nil if popup menus are supported on DISPLAY.
 DISPLAY can be a display name, a frame, or nil (meaning the selected
 frame's display).
 Support for popup menus requires that the mouse be available."
-  (and
-   (let ((frame-type (framep-on-display display)))
-     (memq frame-type '(x w32 pc ns)))
-   (display-mouse-p display)))
+  (display-mouse-p display))
 
 (defun display-graphic-p (&optional display)
   "Return non-nil if DISPLAY is a graphic display.
@@ -1330,14 +1373,16 @@ frame's display)."
       (with-no-warnings
        (not (null dos-windows-version))))
      ((memq frame-type '(x w32 ns))
-      t)    ;; FIXME?
+      t)
      (t
       nil))))
 
 (declare-function x-display-screens "xfns.c" (&optional terminal))
 
 (defun display-screens (&optional display)
-  "Return the number of screens associated with DISPLAY."
+  "Return the number of screens associated with DISPLAY.
+DISPLAY should be either a frame or a display name (a string).
+If DISPLAY is omitted or nil, it defaults to the selected frame's display."
   (let ((frame-type (framep-on-display display)))
     (cond
      ((memq frame-type '(x w32 ns))
@@ -1349,7 +1394,15 @@ frame's display)."
 
 (defun display-pixel-height (&optional display)
   "Return the height of DISPLAY's screen in pixels.
-For character terminals, each character counts as a single pixel."
+DISPLAY can be a display name or a frame.
+If DISPLAY is omitted or nil, it defaults to the selected frame's display.
+
+For character terminals, each character counts as a single pixel.
+
+For graphical terminals, note that on \"multi-monitor\" setups this
+refers to the pixel height for all physical monitors associated
+with DISPLAY.  To get information for each physical monitor, use
+`display-monitor-attributes-list'."
   (let ((frame-type (framep-on-display display)))
     (cond
      ((memq frame-type '(x w32 ns))
@@ -1361,7 +1414,15 @@ For character terminals, each character counts as a single pixel."
 
 (defun display-pixel-width (&optional display)
   "Return the width of DISPLAY's screen in pixels.
-For character terminals, each character counts as a single pixel."
+DISPLAY can be a display name or a frame.
+If DISPLAY is omitted or nil, it defaults to the selected frame's display.
+
+For character terminals, each character counts as a single pixel.
+
+For graphical terminals, note that on \"multi-monitor\" setups this
+refers to the pixel width for all physical monitors associated
+with DISPLAY.  To get information for each physical monitor, use
+`display-monitor-attributes-list'."
   (let ((frame-type (framep-on-display display)))
     (cond
      ((memq frame-type '(x w32 ns))
@@ -1371,14 +1432,14 @@ For character terminals, each character counts as a single pixel."
 
 (defcustom display-mm-dimensions-alist nil
   "Alist for specifying screen dimensions in millimeters.
-The dimensions will be used for `display-mm-height' and
-`display-mm-width' if defined for the respective display.
+The functions `display-mm-height' and `display-mm-width' consult
+this list before asking the system.
 
-Each element of the alist has the form (display . (width . height)),
-e.g. (\":0.0\" . (287 . 215)).
+Each element has the form (DISPLAY . (WIDTH . HEIGHT)), e.g.
+\(\":0.0\" . (287 . 215)).
 
-If `display' equals t, it specifies dimensions for all graphical
-displays not explicitly specified."
+If `display' is t, it specifies dimensions for all graphical displays
+not explicitly specified."
   :version "22.1"
   :type '(alist :key-type (choice (string :tag "Display name")
 				  (const :tag "Default" t))
@@ -1391,8 +1452,17 @@ displays not explicitly specified."
 
 (defun display-mm-height (&optional display)
   "Return the height of DISPLAY's screen in millimeters.
-System values can be overridden by `display-mm-dimensions-alist'.
-If the information is unavailable, value is nil."
+If the information is unavailable, this function returns nil.
+DISPLAY can be a display name or a frame.
+If DISPLAY is omitted or nil, it defaults to the selected frame's display.
+
+You can override what the system thinks the result should be by
+adding an entry to `display-mm-dimensions-alist'.
+
+For graphical terminals, note that on \"multi-monitor\" setups this
+refers to the height in millimeters for all physical monitors
+associated with DISPLAY.  To get information for each physical
+monitor, use `display-monitor-attributes-list'."
   (and (memq (framep-on-display display) '(x w32 ns))
        (or (cddr (assoc (or display (frame-parameter nil 'display))
 			display-mm-dimensions-alist))
@@ -1403,8 +1473,17 @@ If the information is unavailable, value is nil."
 
 (defun display-mm-width (&optional display)
   "Return the width of DISPLAY's screen in millimeters.
-System values can be overridden by `display-mm-dimensions-alist'.
-If the information is unavailable, value is nil."
+If the information is unavailable, this function returns nil.
+DISPLAY can be a display name or a frame.
+If DISPLAY is omitted or nil, it defaults to the selected frame's display.
+
+You can override what the system thinks the result should be by
+adding an entry to `display-mm-dimensions-alist'.
+
+For graphical terminals, note that on \"multi-monitor\" setups this
+refers to the width in millimeters for all physical monitors
+associated with DISPLAY.  To get information for each physical
+monitor, use `display-monitor-attributes-list'."
   (and (memq (framep-on-display display) '(x w32 ns))
        (or (cadr (assoc (or display (frame-parameter nil 'display))
 			display-mm-dimensions-alist))
@@ -1413,10 +1492,14 @@ If the information is unavailable, value is nil."
 
 (declare-function x-display-backing-store "xfns.c" (&optional terminal))
 
+;; In NS port, the return value may be `buffered', `retained', or
+;; `non-retained'.  See src/nsfns.m.
 (defun display-backing-store (&optional display)
   "Return the backing store capability of DISPLAY's screen.
 The value may be `always', `when-mapped', `not-useful', or nil if
-the question is inapplicable to a certain kind of display."
+the question is inapplicable to a certain kind of display.
+DISPLAY can be a display name or a frame.
+If DISPLAY is omitted or nil, it defaults to the selected frame's display."
   (let ((frame-type (framep-on-display display)))
     (cond
      ((memq frame-type '(x w32 ns))
@@ -1427,7 +1510,9 @@ the question is inapplicable to a certain kind of display."
 (declare-function x-display-save-under "xfns.c" (&optional terminal))
 
 (defun display-save-under (&optional display)
-  "Return non-nil if DISPLAY's screen supports the SaveUnder feature."
+  "Return non-nil if DISPLAY's screen supports the SaveUnder feature.
+DISPLAY can be a display name or a frame.
+If DISPLAY is omitted or nil, it defaults to the selected frame's display."
   (let ((frame-type (framep-on-display display)))
     (cond
      ((memq frame-type '(x w32 ns))
@@ -1438,7 +1523,9 @@ the question is inapplicable to a certain kind of display."
 (declare-function x-display-planes "xfns.c" (&optional terminal))
 
 (defun display-planes (&optional display)
-  "Return the number of planes supported by DISPLAY."
+  "Return the number of planes supported by DISPLAY.
+DISPLAY can be a display name or a frame.
+If DISPLAY is omitted or nil, it defaults to the selected frame's display."
   (let ((frame-type (framep-on-display display)))
     (cond
      ((memq frame-type '(x w32 ns))
@@ -1451,7 +1538,9 @@ the question is inapplicable to a certain kind of display."
 (declare-function x-display-color-cells "xfns.c" (&optional terminal))
 
 (defun display-color-cells (&optional display)
-  "Return the number of color cells supported by DISPLAY."
+  "Return the number of color cells supported by DISPLAY.
+DISPLAY can be a display name or a frame.
+If DISPLAY is omitted or nil, it defaults to the selected frame's display."
   (let ((frame-type (framep-on-display display)))
     (cond
      ((memq frame-type '(x w32 ns))
@@ -1466,7 +1555,9 @@ the question is inapplicable to a certain kind of display."
 (defun display-visual-class (&optional display)
   "Return the visual class of DISPLAY.
 The value is one of the symbols `static-gray', `gray-scale',
-`static-color', `pseudo-color', `true-color', or `direct-color'."
+`static-color', `pseudo-color', `true-color', or `direct-color'.
+DISPLAY can be a display name or a frame.
+If DISPLAY is omitted or nil, it defaults to the selected frame's display."
   (let ((frame-type (framep-on-display display)))
     (cond
      ((memq frame-type '(x w32 ns))
@@ -1476,6 +1567,69 @@ The value is one of the symbols `static-gray', `gray-scale',
       'static-color)
      (t
       'static-gray))))
+
+(declare-function x-display-monitor-attributes-list "xfns.c"
+		  (&optional terminal))
+(declare-function w32-display-monitor-attributes-list "w32fns.c"
+		  (&optional display))
+(declare-function ns-display-monitor-attributes-list "nsfns.m"
+		  (&optional terminal))
+
+(defun display-monitor-attributes-list (&optional display)
+  "Return a list of physical monitor attributes on DISPLAY.
+DISPLAY can be a display name, a terminal name, or a frame.
+If DISPLAY is omitted or nil, it defaults to the selected frame's display.
+Each element of the list represents the attributes of a physical
+monitor.  The first element corresponds to the primary monitor.
+
+The attributes for a physical monitor are represented as an alist
+of attribute keys and values as follows:
+
+ geometry -- Position and size in pixels in the form of (X Y WIDTH HEIGHT)
+ workarea -- Position and size of the work area in pixels in the
+	     form of (X Y WIDTH HEIGHT)
+ mm-size  -- Width and height in millimeters in the form of
+ 	     (WIDTH HEIGHT)
+ frames   -- List of frames dominated by the physical monitor
+ name (*) -- Name of the physical monitor as a string
+ source (*) -- Source of multi-monitor information as a string
+
+where X, Y, WIDTH, and HEIGHT are integers.  X and Y are coordinates
+of the top-left corner, and might be negative for monitors other than
+the primary one.  Keys labeled with (*) are optional.
+
+The \"work area\" is a measure of the \"usable\" display space.
+It may be less than the total screen size, owing to space taken up
+by window manager features (docks, taskbars, etc.).  The precise
+details depend on the platform and environment.
+
+The `source' attribute describes the source from which the information
+was obtained.  On X, this may be one of: \"Gdk\", \"XRandr\", \"Xinerama\",
+or \"fallback\".
+
+A frame is dominated by a physical monitor when either the
+largest area of the frame resides in the monitor, or the monitor
+is the closest to the frame if the frame does not intersect any
+physical monitors.  Every (non-tooltip) frame (including invisible ones)
+in a graphical display is dominated by exactly one physical
+monitor at a time, though it can span multiple (or no) physical
+monitors."
+  (let ((frame-type (framep-on-display display)))
+    (cond
+     ((eq frame-type 'x)
+      (x-display-monitor-attributes-list display))
+     ((eq frame-type 'w32)
+      (w32-display-monitor-attributes-list display))
+     ((eq frame-type 'ns)
+      (ns-display-monitor-attributes-list display))
+     (t
+      (let ((geometry (list 0 0 (display-pixel-width display)
+			    (display-pixel-height display))))
+	`(((geometry . ,geometry)
+	   (workarea . ,geometry)
+	   (mm-size . (,(display-mm-width display)
+		       ,(display-mm-height display)))
+	   (frames . ,(frames-on-display-list display)))))))))
 
 
 ;;;; Frame geometry values
@@ -1587,6 +1741,16 @@ left untouched.  FRAME nil or omitted means use the selected frame."
   :type 'number
   :group 'cursor)
 
+(defcustom blink-cursor-blinks 10
+  "How many times to blink before using a solid cursor on NS, X, and MS-Windows.
+Use 0 or negative value to blink forever."
+  :version "24.4"
+  :type 'integer
+  :group 'cursor)
+
+(defvar blink-cursor-blinks-done 1
+  "Number of blinks done since we started blinking on NS, X, and MS-Windows.")
+
 (defvar blink-cursor-idle-timer nil
   "Timer started after `blink-cursor-delay' seconds of Emacs idle time.
 The function `blink-cursor-start' is called when the timer fires.")
@@ -1604,6 +1768,7 @@ command starts, by installing a pre-command hook."
   (when (null blink-cursor-timer)
     ;; Set up the timer first, so that if this signals an error,
     ;; blink-cursor-end is not added to pre-command-hook.
+    (setq blink-cursor-blinks-done 1)
     (setq blink-cursor-timer
 	  (run-with-timer blink-cursor-interval blink-cursor-interval
 			  'blink-cursor-timer-function))
@@ -1612,7 +1777,14 @@ command starts, by installing a pre-command hook."
 
 (defun blink-cursor-timer-function ()
   "Timer function of timer `blink-cursor-timer'."
-  (internal-show-cursor nil (not (internal-show-cursor-p))))
+  (internal-show-cursor nil (not (internal-show-cursor-p)))
+  ;; Each blink is two calls to this function.
+  (setq blink-cursor-blinks-done (1+ blink-cursor-blinks-done))
+  (when (and (> blink-cursor-blinks 0)
+             (<= (* 2 blink-cursor-blinks) blink-cursor-blinks-done))
+    (blink-cursor-suspend)
+    (add-hook 'post-command-hook 'blink-cursor-check)))
+
 
 (defun blink-cursor-end ()
   "Stop cursor blinking.
@@ -1625,6 +1797,28 @@ itself as a pre-command hook."
     (cancel-timer blink-cursor-timer)
     (setq blink-cursor-timer nil)))
 
+(defun blink-cursor-suspend ()
+  "Suspend cursor blinking.
+This is called when no frame has focus and timers can be suspended.
+Timers are restarted by `blink-cursor-check', which is called when a
+frame receives focus."
+  (blink-cursor-end)
+  (when blink-cursor-idle-timer
+    (cancel-timer blink-cursor-idle-timer)
+    (setq blink-cursor-idle-timer nil)))
+
+(defun blink-cursor-check ()
+  "Check if cursor blinking shall be restarted.
+This is done when a frame gets focus.  Blink timers may be stopped by
+`blink-cursor-suspend'."
+  (when (and blink-cursor-mode
+	     (not blink-cursor-idle-timer))
+    (remove-hook 'post-command-hook 'blink-cursor-check)
+    (setq blink-cursor-idle-timer
+          (run-with-idle-timer blink-cursor-delay
+                               blink-cursor-delay
+                               'blink-cursor-start))))
+
 (define-obsolete-variable-alias 'blink-cursor 'blink-cursor-mode "22.1")
 
 (define-minor-mode blink-cursor-mode
@@ -1632,6 +1826,12 @@ itself as a pre-command hook."
 With a prefix argument ARG, enable Blink Cursor mode if ARG is
 positive, and disable it otherwise.  If called from Lisp, enable
 the mode if ARG is omitted or nil.
+
+If the value of `blink-cursor-blinks' is positive (10 by default),
+the cursor stops blinking after that number of blinks, if Emacs
+gets no input during that time.
+
+See also `blink-cursor-interval' and `blink-cursor-delay'.
 
 This command is effective only on graphical frames.  On text-only
 terminals, cursor blinking is controlled by the terminal."
@@ -1642,16 +1842,71 @@ terminals, cursor blinking is controlled by the terminal."
   :initialize 'custom-initialize-delay
   :group 'cursor
   :global t
-  (if blink-cursor-idle-timer (cancel-timer blink-cursor-idle-timer))
-  (setq blink-cursor-idle-timer nil)
-  (blink-cursor-end)
+  (blink-cursor-suspend)
+  (remove-hook 'focus-in-hook #'blink-cursor-check)
+  (remove-hook 'focus-out-hook #'blink-cursor-suspend)
   (when blink-cursor-mode
-    ;; Hide the cursor.
-    ;;(internal-show-cursor nil nil)
+    (add-hook 'focus-in-hook #'blink-cursor-check)
+    (add-hook 'focus-out-hook #'blink-cursor-suspend)
     (setq blink-cursor-idle-timer
           (run-with-idle-timer blink-cursor-delay
                                blink-cursor-delay
-                               'blink-cursor-start))))
+                               #'blink-cursor-start))))
+
+
+;; Frame maximization/fullscreen
+
+(defun toggle-frame-maximized ()
+  "Toggle maximization state of the selected frame.
+Maximize the selected frame or un-maximize if it is already maximized.
+Respect window manager screen decorations.
+If the frame is in fullscreen mode, don't change its mode,
+just toggle the temporary frame parameter `maximized',
+so the frame will go to the right maximization state
+after disabling fullscreen mode.
+
+Note that with some window managers you may have to set
+`frame-resize-pixelwise' to non-nil in order to make a frame
+appear truly maximized.
+
+See also `toggle-frame-fullscreen'."
+  (interactive)
+  (if (memq (frame-parameter nil 'fullscreen) '(fullscreen fullboth))
+      (modify-frame-parameters
+       nil
+       `((maximized
+	  . ,(unless (eq (frame-parameter nil 'maximized) 'maximized)
+	       'maximized))))
+    (modify-frame-parameters
+     nil
+     `((fullscreen
+	. ,(unless (eq (frame-parameter nil 'fullscreen) 'maximized)
+	     'maximized))))))
+
+(defun toggle-frame-fullscreen ()
+  "Toggle fullscreen mode of the selected frame.
+Enable fullscreen mode of the selected frame or disable if it is
+already fullscreen.  Ignore window manager screen decorations.
+When turning on fullscreen mode, remember the previous value of the
+maximization state in the temporary frame parameter `maximized'.
+Restore the maximization state when turning off fullscreen mode.
+
+Note that with some window managers you may have to set
+`frame-resize-pixelwise' to non-nil in order to make a frame
+appear truly fullscreen.
+
+See also `toggle-frame-maximized'."
+  (interactive)
+  (modify-frame-parameters
+   nil
+   `((maximized
+      . ,(unless (memq (frame-parameter nil 'fullscreen) '(fullscreen fullboth))
+	   (frame-parameter nil 'fullscreen)))
+     (fullscreen
+      . ,(if (memq (frame-parameter nil 'fullscreen) '(fullscreen fullboth))
+	     (if (eq (frame-parameter nil 'maximized) 'maximized)
+		 'maximized)
+	   'fullscreen)))))
 
 
 ;;;; Key bindings
@@ -1660,6 +1915,9 @@ terminals, cursor blinking is controlled by the terminal."
 (define-key ctl-x-5-map "1" 'delete-other-frames)
 (define-key ctl-x-5-map "0" 'delete-frame)
 (define-key ctl-x-5-map "o" 'other-frame)
+(define-key global-map [f11] 'toggle-frame-fullscreen)
+(define-key global-map [(meta f10)] 'toggle-frame-maximized)
+(define-key esc-map    [f10]        'toggle-frame-maximized)
 
 
 ;; Misc.

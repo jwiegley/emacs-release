@@ -1,6 +1,6 @@
 ;;; semantic/bovine/c-by.el --- Generated parser support file
 
-;; Copyright (C) 1999-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1999-2014 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -28,9 +28,13 @@
 
 ;;; Prologue
 ;;
-(declare-function semantic-c-reconstitute-token "semantic/bovine/c")
-(declare-function semantic-c-reconstitute-template "semantic/bovine/c")
-(declare-function semantic-expand-c-tag "semantic/bovine/c")
+(declare-function semantic-c-reconstitute-token "semantic/bovine/c"
+		  (tokenpart declmods typedecl))
+(declare-function semantic-c-reconstitute-template "semantic/bovine/c"
+		  (tag specifier))
+(declare-function semantic-expand-c-tag "semantic/bovine/c" (tag))
+(declare-function semantic-parse-region "semantic"
+		  (start end &optional nonterminal depth returnonerror))
 
 ;;; Declarations
 ;;
@@ -1461,10 +1465,13 @@
       cv-declmods
       opt-ref
       variablearg-opt-name
+      opt-assign
       ,(semantic-lambda
 	(semantic-tag-new-variable
 	 (list
-	  (nth 4 vals))
+	  (append
+	   (nth 4 vals)
+	   (nth 5 vals)))
 	 (nth 1 vals) nil :constant-flag
 	 (if
 	     (member
@@ -1486,6 +1493,19 @@
      (varname
       ,(semantic-lambda
 	(nth 0 vals))
+      )
+     (semantic-list
+      arg-list
+      ,(semantic-lambda
+	(list
+	 (car
+	  (semantic-bovinate-from-nonterminal
+	   (car
+	    (nth 0 vals))
+	   (cdr
+	    (nth 0 vals))
+	   'function-pointer))
+	 (nth 1 vals)))
       )
      (opt-stars
       ,(semantic-lambda
@@ -1512,7 +1532,9 @@
       varnamelist
       ,(semantic-lambda
 	(cons
-	 (nth 1 vals)
+	 (append
+	  (nth 1 vals)
+	  (nth 2 vals))
 	 (nth 4 vals)))
       )
      (opt-ref
@@ -1520,7 +1542,9 @@
       varname-opt-initializer
       ,(semantic-lambda
 	(list
-	 (nth 1 vals)))
+	 (append
+	  (nth 1 vals)
+	  (nth 2 vals))))
       )
      ) ;; end varnamelist
 
@@ -1990,14 +2014,15 @@
       "("
       punctuation
       "\\`[*]\\'"
-      symbol
+      opt-symbol
       close-paren
       ")"
       ,(semantic-lambda
 	(list
 	 (concat
 	  "*"
-	  (nth 2 vals))))
+	  (car
+	   (nth 2 vals)))))
       )
      (open-paren
       "("
@@ -2084,30 +2109,48 @@
       close-paren)
      ) ;; end type-cast-list
 
-    (opt-stuff-after-symbol
+    (opt-brackets-after-symbol
+     (brackets-after-symbol)
+     ( ;;EMPTY
+      )
+     ) ;; end opt-brackets-after-symbol
+
+    (brackets-after-symbol
      (semantic-list
       "^(")
      (semantic-list
       "\\[.*\\]$")
-     ( ;;EMPTY
-      )
-     ) ;; end opt-stuff-after-symbol
+     ) ;; end brackets-after-symbol
 
     (multi-stage-dereference
      (namespace-symbol
-      opt-stuff-after-symbol
+      opt-brackets-after-symbol
       punctuation
       "\\`[.]\\'"
       multi-stage-dereference)
      (namespace-symbol
-      opt-stuff-after-symbol
+      opt-brackets-after-symbol
       punctuation
       "\\`[-]\\'"
       punctuation
       "\\`[>]\\'"
       multi-stage-dereference)
      (namespace-symbol
-      opt-stuff-after-symbol)
+      opt-brackets-after-symbol
+      punctuation
+      "\\`[.]\\'"
+      namespace-symbol
+      opt-brackets-after-symbol)
+     (namespace-symbol
+      opt-brackets-after-symbol
+      punctuation
+      "\\`[-]\\'"
+      punctuation
+      "\\`[>]\\'"
+      namespace-symbol
+      opt-brackets-after-symbol)
+     (namespace-symbol
+      brackets-after-symbol)
      ) ;; end multi-stage-dereference
 
     (string-seq
@@ -2159,6 +2202,8 @@
       "\\`[|]\\'")
      (punctuation
       "\\`[|]\\'")
+     (punctuation
+      "\\`[%]\\'")
      ) ;; end expr-binop
 
     (expression
@@ -2186,7 +2231,7 @@
      (NEW
       builtintype-types
       semantic-list)
-     (namespace-symbol)
+     (symbol)
      (string-seq)
      (type-cast
       expression)
@@ -2216,5 +2261,10 @@
 ;;
 
 (provide 'semantic/bovine/c-by)
+
+;; Local Variables:
+;; version-control: never
+;; no-update-autoloads: t
+;; End:
 
 ;;; semantic/bovine/c-by.el ends here

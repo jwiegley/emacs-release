@@ -1,15 +1,15 @@
 Debugging GNU Emacs
 
-Copyright (C) 1985, 2000-2013 Free Software Foundation, Inc.
+Copyright (C) 1985, 2000-2014 Free Software Foundation, Inc.
 See the end of the file for license conditions.
 
 
 [People who debug Emacs on Windows using Microsoft debuggers should
 read the Windows-specific section near the end of this document.]
 
-** When you debug Emacs with GDB, you should start it in the directory
-where the executable was made (the 'src' directory in the Emacs source
-tree).  That directory has a .gdbinit file that defines various
+** When you debug Emacs with GDB, you should start GDB in the directory
+where the Emacs executable was made (the 'src' directory in the Emacs
+source tree).  That directory has a .gdbinit file that defines various
 "user-defined" commands for debugging Emacs.  (These commands are
 described below under "Examining Lisp object values" and "Debugging
 Emacs Redisplay problems".)
@@ -21,15 +21,19 @@ you will see a warning when GDB starts, like this:
   warning: File ".../src/.gdbinit" auto-loading has been declined by your `auto-load safe-path' set to "$debugdir:$datadir/auto-load".
 
 There are several ways to overcome that difficulty, they are all
-described in the node "Auto-loading safe path" in the GDB user manual.
+described in the node "Auto-loading safe path" in the GDB user
+manual.  If nothing else helps, type "source /path/to/.gdbinit RET" at
+the GDB prompt, to unconditionally load the GDB init file.
 
 ** When you are trying to analyze failed assertions or backtraces, it
-will be essential to compile Emacs either completely without
-optimizations (set CFLAGS to "-O0 -g3") or at least (when using GCC)
-with the -fno-crossjumping option in CFLAGS.  Failure to do so may
-make the compiler recycle the same abort call for all assertions in a
-given function, rendering the stack backtrace useless for identifying
-the specific failed assertion.
+is essential to compile Emacs with flags suitable for debugging.
+With GCC 4.8 or later, you can invoke 'make' with CFLAGS="-Og -g3".
+With older GCC or non-GCC compilers, you can use CFLAGS="-O0 -g3".
+With GCC and higher optimization levels such as -O2, the
+-fno-omit-frame-pointer and -fno-crossjumping options are often
+essential.  The latter prevents GCC from using the same abort call for
+all assertions in a given function, rendering the stack backtrace
+useless for identifying the specific failed assertion.
 
 ** It is a good idea to run Emacs under GDB (or some other suitable
 debugger) *all the time*.  Then, when Emacs crashes, you will be able
@@ -769,4 +773,3 @@ Local variables:
 mode: outline
 paragraph-separate: "[ 	]*$"
 end:
-

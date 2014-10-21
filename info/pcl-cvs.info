@@ -1,13 +1,12 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/pcl-cvs.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/pcl-cvs.texi.
+This is ../../info/pcl-cvs.info, produced by makeinfo version 4.13 from
+./pcl-cvs.texi.
 
-Copyright (C) 1991-2013 Free Software Foundation, Inc.
+Copyright (C) 1991-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -21,7 +20,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: pcl-cvs.info,  Node: Top,  Next: About PCL-CVS,  Prev: (dir),  Up: (dir)
+File: pcl-cvs.info,  Node: Top,  Next: About PCL-CVS,  Up: (dir)
 
 PCL-CVS
 *******
@@ -31,12 +30,12 @@ nowhere near complete, so you are advised to use `M-x customize-group
 RET pcl-cvs <RET>' and to look at the documentation strings of the
 various commands and major modes for further information.
 
-   Copyright (C) 1991-2013 Free Software Foundation, Inc.
+   Copyright (C) 1991-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -122,7 +121,7 @@ taking over the maintenance.
 * Contributors::                Contributors to PCL-CVS.
 
 
-File: pcl-cvs.info,  Node: Contributors,  Prev: About PCL-CVS,  Up: About PCL-CVS
+File: pcl-cvs.info,  Node: Contributors,  Up: About PCL-CVS
 
 1.1 Contributors to PCL-CVS
 ===========================
@@ -139,44 +138,41 @@ me to this package (*note Bugs::).
    * Per Cederqvist wrote most of the otherwise unattributed functions
      in PCL-CVS as well as all the documentation.
 
-   * Inge Wallin <inge@lysator.liu.se> wrote the skeleton of
-     `pcl-cvs.texi', and gave useful comments on it.  He also wrote the
-     files `elib-node.el' and `compile-all.el'.  The file `cookie.el'
-     was inspired by Inge.
+   * Inge Wallin wrote the skeleton of `pcl-cvs.texi', and gave useful
+     comments on it.  He also wrote the files `elib-node.el' and
+     `compile-all.el'.  The file `cookie.el' was inspired by Inge.
 
-   * Linus Tolke <linus@lysator.liu.se> contributed useful comments on
-     both the functionality and the documentation.
+   * Linus Tolke contributed useful comments on both the functionality
+     and the documentation.
 
-   * Jamie Zawinski <jwz@jwz.com> contributed `pcl-cvs-lucid.el', which
-     was later renamed to `pcl-cvs-xemacs.el'.
+   * Jamie Zawinski contributed `pcl-cvs-lucid.el', which was later
+     renamed to `pcl-cvs-xemacs.el'.
 
    * Leif Lonnblad contributed RCVS support (since superseded by the new
      remote CVS support).
 
-   * Jim Blandy <jimb@cyclic.com> contributed hooks to automatically
-     guess CVS log entries from `ChangeLog' contents, and initial
-     support of the new Cygnus / Cyclic remote CVS, as well as various
-     sundry bug fixes and cleanups.
+   * Jim Blandy contributed hooks to automatically guess CVS log
+     entries from `ChangeLog' contents, and initial support of the new
+     Cygnus / Cyclic remote CVS, as well as various sundry bug fixes
+     and cleanups.
 
-   * Jim Kingdon <kingdon@cyclic.com> contributed lots of fixes to the
-     build and installation procedure.
+   * Jim Kingdon contributed lots of fixes to the build and
+     installation procedure.
 
-   * Greg A. Woods <woods@weird.com> contributed code to implement the
-     use of per-file diff buffers, and vendor join diffs with emerge and
-     ediff, as well as various and sundry bug fixes and cleanups.
+   * Greg A. Woods contributed code to implement the use of per-file
+     diff buffers, and vendor join diffs with emerge and ediff, as well
+     as various and sundry bug fixes and cleanups.
 
-   * Greg Klanderman <greg.klanderman@alum.mit.edu> implemented
-     toggling of marked files, setting of CVS command flags via prefix
-     arguments, updated the XEmacs support, updated the manual, and
-     fixed numerous bugs.
+   * Greg Klanderman implemented toggling of marked files, setting of
+     CVS command flags via prefix arguments, updated the XEmacs
+     support, updated the manual, and fixed numerous bugs.
 
-   * Stefan Monnier <monnier@gnu.org> added a slew of other features
-     and introduced even more new bugs.  If there's any bug left, you
-     can be sure it's his.
+   * Stefan Monnier added a slew of other features and introduced even
+     more new bugs.  If there's any bug left, you can be sure it's his.
 
-   * Masatake YAMATO <masata-y@is.aist-nara.ac.jp> made a gracious
-     contribution of his cvstree code to display a tree of tags which
-     was later superseded by the new `cvs-status-mode'.
+   * Masatake YAMATO made a gracious contribution of his cvstree code
+     to display a tree of tags which was later superseded by the new
+     `cvs-status-mode'.
 
    Apart from these, a lot of people have sent us suggestions, ideas,
 requests, bug reports and encouragement.  Thanks a lot!  Without you
@@ -428,7 +424,7 @@ you can use in PCL-CVS.  They are grouped together by type.
 * Miscellaneous commands::      Miscellaneous commands.
 
 
-File: pcl-cvs.info,  Node: Entering PCL-CVS,  Next: Setting flags,  Prev: Commands,  Up: Commands
+File: pcl-cvs.info,  Node: Entering PCL-CVS,  Next: Setting flags,  Up: Commands
 
 5.1 Entering PCL-CVS
 ====================
@@ -1053,7 +1049,7 @@ us, see *note Bugs::.
 * Customizing Faces::
 
 
-File: pcl-cvs.info,  Node: Customizing Faces,  Prev: Customization,  Up: Customization
+File: pcl-cvs.info,  Node: Customizing Faces,  Up: Customization
 
 8.1 Customizing Faces
 =====================
@@ -1090,18 +1086,19 @@ File: pcl-cvs.info,  Node: Bugs,  Next: GNU Free Documentation License,  Prev: C
 9 Bugs (known and unknown)
 **************************
 
-If you find a bug or misfeature, don't hesitate to tell us!  Send email
-to <bug-gnu-emacs@gnu.org> which is gatewayed to the newsgroup
-`gnu.emacs.bugs'.  Feature requests should also be sent there.  We
-prefer discussing one thing at a time.  If you find several unrelated
-bugs, please report them separately.  If you are running PCL-CVS under
-XEmacs, you should also send a copy of bug reports to
-<xemacs-beta@xemacs.org>.
+If you find a bug or misfeature, don't hesitate to tell us!  Use `M-x
+report-emacs-bug' to send us a report.  You can follow the same process
+for feature requests.  We prefer discussing one thing at a time.  If
+you find several unrelated bugs, please report them separately.  If you
+are running PCL-CVS under XEmacs, you should also send a copy of bug
+reports to the XEmacs mailing list
+(http://lists.xemacs.org/mailman/listinfo/xemacs-beta).
 
    If you have problems using PCL-CVS or other questions, send them to
-<help-gnu-emacs@gnu.org>, which is gatewayed to the `gnu.emacs.help'
-newsgroup.  This is a good place to get help, as is <cvs-info@gnu.org>,
-gatewayed to `gnu.cvs.help'.
+the help-gnu-emacs mailing list
+(http://lists.gnu.org/mailman/listinfo/help-gnu-emacs).  This is a good
+place to get help, as is the info-cvs list
+(http://lists.nongnu.org/mailman/listinfo/info-cvs).
 
    If you have ideas for improvements, or if you have written some
 extensions to this package, we would like to hear from you.  We hope
@@ -1126,7 +1123,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -1906,38 +1903,43 @@ this manual.
 
 
 Tag Table:
-Node: Top913
-Node: About PCL-CVS4053
-Node: Contributors5151
-Node: Getting started7701
-Node: Buffer contents10402
-Node: Selected files14696
-Node: Commands16335
-Node: Entering PCL-CVS17742
-Node: Setting flags19963
-Node: Updating the buffer22439
-Node: Movement commands23504
-Node: Marking files24086
-Node: Committing changes25227
-Node: Editing files27146
-Node: Getting info about files28058
-Node: Adding and removing files28577
-Node: Undoing changes29850
-Node: Removing handled entries30326
-Node: Ignoring files31186
-Node: Viewing differences31746
-Node: Invoking Ediff33323
-Node: Updating files34185
-Node: Tagging files34451
-Node: Miscellaneous commands35229
-Node: Log Edit Mode36199
-Node: Log View Mode37571
-Node: Customization38147
-Node: Customizing Faces41779
-Node: Bugs42579
-Node: GNU Free Documentation License44123
-Node: Function and Variable Index69310
-Node: Concept Index76721
-Node: Key Index85145
+Node: Top837
+Node: About PCL-CVS3963
+Node: Contributors5061
+Node: Getting started7379
+Node: Buffer contents10080
+Node: Selected files14374
+Node: Commands16013
+Node: Entering PCL-CVS17420
+Node: Setting flags19624
+Node: Updating the buffer22100
+Node: Movement commands23165
+Node: Marking files23747
+Node: Committing changes24888
+Node: Editing files26807
+Node: Getting info about files27719
+Node: Adding and removing files28238
+Node: Undoing changes29511
+Node: Removing handled entries29987
+Node: Ignoring files30847
+Node: Viewing differences31407
+Node: Invoking Ediff32984
+Node: Updating files33846
+Node: Tagging files34112
+Node: Miscellaneous commands34890
+Node: Log Edit Mode35860
+Node: Log View Mode37232
+Node: Customization37808
+Node: Customizing Faces41440
+Node: Bugs42218
+Node: GNU Free Documentation License43812
+Node: Function and Variable Index68993
+Node: Concept Index76404
+Node: Key Index84828
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

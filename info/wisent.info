@@ -1,14 +1,13 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/wisent.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/wisent.texi.
+This is ../../info/wisent.info, produced by makeinfo version 4.13 from
+./wisent.texi.
 
-Copyright (C) 1988-1993, 1995, 1998-2004, 2007, 2012-2013 Free Software
+Copyright (C) 1988-1993, 1995, 1998-2004, 2007, 2012-2014 Free Software
 Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -37,13 +36,13 @@ in Emacs buffers.
    It also describes how Wisent is used with the Semantic tool set
 described in the *note Semantic Manual: (semantic)Top.
 
-   Copyright (C) 1988-1993, 1995, 1998-2004, 2007, 2012-2013 Free
+   Copyright (C) 1988-1993, 1995, 1998-2004, 2007, 2012-2014 Free
 Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -85,10 +84,11 @@ See the *note Semantic Manual: (semantic)Top.
           June 1985, Report No. UCB/CSD 85/251.
 
    * For generating the lookahead sets, Wisent uses the well-known
-     technique of F. DeRemer and A. Pennello they described in:
+     technique of F. DeRemer and T. Pennello described in:
 
-          `Efficient Construction of LALR(1) Lookahead Sets'
-          October 1982, ACM TOPLS Vol 4 No 4.
+          `Efficient Computation of LALR(1) Look-Ahead Sets'
+          October 1982, ACM TOPLAS Vol 4 No 4, 615-49,
+          `http://dx.doi.org/10.1145/69622.357187'.
 
    * Wisent resolves shift/reduce conflicts using operator precedence
      and associativity.
@@ -159,7 +159,7 @@ between, can be combined into a larger grouping of type `exp'.
 * Conflicts::
 
 
-File: wisent.info,  Node: Grammar format,  Next: Example,  Prev: Wisent Grammar,  Up: Wisent Grammar
+File: wisent.info,  Node: Grammar format,  Next: Example,  Up: Wisent Grammar
 
 2.1 Grammar format
 ==================
@@ -1012,7 +1012,7 @@ VALUE
 
 START
 END
-     Are the optionals beginning and end positions of VALUE in the
+     Are the optional beginning and ending positions of VALUE in the
      input stream.
 
    When there are no more tokens to read the lexer must return the token
@@ -1118,8 +1118,8 @@ finds a token which is acceptable.
 the grammar.  A simple and useful strategy is simply to skip the rest
 of the current statement if an error is detected:
 
-     (stmnt (( error ?; )) ;; on error, skip until ';' is read
-            )
+     (statement (( error ?; )) ;; on error, skip until ';' is read
+                )
 
    It is also useful to recover to the matching close-delimiter of an
 opening-delimiter that has already been parsed:
@@ -1203,7 +1203,7 @@ macros, useful in such actions:
      tokens (*note Useful functions::).
 
  -- Function: wisent-skip-token
-     Skip the lookahead token in order to resume parsing.  Return nil.
+     Skip the lookahead token in order to resume parsing.  Return `nil'.
      Must be used in error recovery semantic actions.
 
      It typically looks like this:
@@ -1216,8 +1216,8 @@ macros, useful in such actions:
           (wisent-errok)))
 
  -- Function: wisent-skip-block
-     Safely skip a block in order to resume parsing.  Return nil.  Must
-     be used in error recovery semantic actions.
+     Safely skip a block in order to resume parsing.  Return `nil'.
+     Must be used in error recovery semantic actions.
 
      A block is data between an open-delimiter (syntax class `(') and a
      matching close-delimiter (syntax class `)'):
@@ -1334,7 +1334,7 @@ worth a mix of the two styles!
 * Useful functions::
 
 
-File: wisent.info,  Node: Iterative style,  Next: Bison style,  Prev: Grammar styles,  Up: Grammar styles
+File: wisent.info,  Node: Iterative style,  Next: Bison style,  Up: Grammar styles
 
 4.1.1 Iterative style
 ---------------------
@@ -1708,7 +1708,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -2296,32 +2296,37 @@ Index
 
 
 Tag Table:
-Node: Top957
-Node: Wisent Overview2244
-Node: Wisent Grammar4465
-Node: Grammar format5702
-Ref: action11775
-Node: Example14013
-Node: Compiling a grammar16057
-Node: Conflicts18158
-Node: Grammar Debugging19740
-Node: Understanding the automaton21108
-Node: Wisent Parsing30773
-Node: Writing a lexer33281
-Node: Actions goodies34900
-Node: Report errors35619
-Node: Error recovery37222
-Ref: wisent-skip-token41566
-Node: Debugging actions42740
-Node: Wisent Semantic44583
-Node: Grammar styles45427
-Node: Iterative style45962
-Node: Bison style48338
-Node: Mixed style50021
-Node: Start nonterminals52631
-Node: Useful functions55480
-Node: Wisent Lex56033
-Node: GNU Free Documentation License57466
-Node: Index82641
+Node: Top881
+Node: Wisent Overview2168
+Node: Wisent Grammar4445
+Node: Grammar format5682
+Ref: action11732
+Node: Example13970
+Node: Compiling a grammar16014
+Node: Conflicts18115
+Node: Grammar Debugging19697
+Node: Understanding the automaton21065
+Node: Wisent Parsing30730
+Node: Writing a lexer33238
+Node: Actions goodies34859
+Node: Report errors35578
+Node: Error recovery37181
+Ref: wisent-skip-token41533
+Node: Debugging actions42710
+Node: Wisent Semantic44553
+Node: Grammar styles45397
+Node: Iterative style45932
+Node: Bison style48285
+Node: Mixed style49968
+Node: Start nonterminals52578
+Node: Useful functions55427
+Node: Wisent Lex55980
+Node: GNU Free Documentation License57413
+Node: Index82582
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

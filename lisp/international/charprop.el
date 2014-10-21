@@ -18,8 +18,8 @@ Property value is an integer.")
 (define-char-code-property 'bidi-class "uni-bidi.el"
   "Unicode bidi class.
 Property value is one of the following symbols:
-  L, LRE, LRO, R, AL, RLE, RLO, PDF, EN, ES, ET,
-  AN, CS, NSM, BN, B, S, WS, ON")
+  L, LRE, LRO, LRI, R, AL, RLE, RLO, RLI, FSI, PDF, PDI,
+  EN, ES, ET, AN, CS, NSM, BN, B, S, WS, ON")
 ;; FILE: uni-decomposition.el
 (define-char-code-property 'decomposition "uni-decomposition.el"
   "Unicode decomposition mapping.
@@ -81,7 +81,9 @@ The value nil means that the actual property value of a character
 is the character itself.")
 ;; Local Variables:
 ;; coding: utf-8
+;; version-control: never
 ;; no-byte-compile: t
+;; no-update-autoloads: t
 ;; End:
 
 ;; charprop.el ends here

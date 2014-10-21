@@ -3,8 +3,8 @@
 ;;; Code:
 
 
-;;;### (autoloads (holiday-bahai-ridvan holiday-bahai-new-year holiday-bahai)
-;;;;;;  "cal-bahai" "cal-bahai.el" (20707 18685 911514 0))
+;;;### (autoloads nil "cal-bahai" "cal-bahai.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from cal-bahai.el
 
 (autoload 'holiday-bahai "cal-bahai" "\
@@ -29,9 +29,8 @@ Only considers the first, ninth, and twelfth days, unless ALL or
 
 ;;;***
 
-;;;### (autoloads (holiday-chinese holiday-chinese-winter-solstice
-;;;;;;  holiday-chinese-qingming holiday-chinese-new-year) "cal-china"
-;;;;;;  "cal-china.el" (20707 18685 911514 0))
+;;;### (autoloads nil "cal-china" "cal-china.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from cal-china.el
 
 (autoload 'holiday-chinese-new-year "cal-china" "\
@@ -62,10 +61,8 @@ Returns nil if it is not visible in the current calendar window.
 
 ;;;***
 
-;;;### (autoloads (holiday-hebrew-misc holiday-hebrew-tisha-b-av
-;;;;;;  holiday-hebrew-passover holiday-hebrew-hanukkah holiday-hebrew-rosh-hashanah
-;;;;;;  holiday-hebrew) "cal-hebrew" "cal-hebrew.el" (20707 18685
-;;;;;;  911514 0))
+;;;### (autoloads nil "cal-hebrew" "cal-hebrew.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from cal-hebrew.el
 
 (autoload 'holiday-hebrew "cal-hebrew" "\
@@ -119,8 +116,8 @@ Kiddush HaHamah.
 
 ;;;***
 
-;;;### (autoloads (holiday-islamic-new-year holiday-islamic) "cal-islam"
-;;;;;;  "cal-islam.el" (20707 18685 911514 0))
+;;;### (autoloads nil "cal-islam" "cal-islam.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from cal-islam.el
 
 (autoload 'holiday-islamic "cal-islam" "\
@@ -138,8 +135,8 @@ Holiday entry for the Islamic New Year, if visible in the calendar window.
 
 ;;;***
 
-;;;### (autoloads (holiday-julian) "cal-julian" "cal-julian.el" (20707
-;;;;;;  18685 911514 0))
+;;;### (autoloads nil "cal-julian" "cal-julian.el" (21291 53104 431149
+;;;;;;  0))
 ;;; Generated autoloads from cal-julian.el
 
 (autoload 'holiday-julian "cal-julian" "\
@@ -152,8 +149,7 @@ nil if it is not visible in the current calendar window.
 
 ;;;***
 
-;;;### (autoloads (solar-equinoxes-solstices) "solar" "solar.el"
-;;;;;;  (20707 18685 911514 0))
+;;;### (autoloads nil "solar" "solar.el" (21291 53104 431149 0))
 ;;; Generated autoloads from solar.el
 
 (autoload 'solar-equinoxes-solstices "solar" "\
@@ -169,7 +165,7 @@ Requires floating point.
 ;;;;;;  "cal-mayan.el" "cal-menu.el" "cal-move.el" "cal-persia.el"
 ;;;;;;  "cal-tex.el" "cal-x.el" "calendar.el" "diary-lib.el" "diary-loaddefs.el"
 ;;;;;;  "holidays.el" "icalendar.el" "lunar.el" "parse-time.el" "time-date.el"
-;;;;;;  "timeclock.el" "todo-mode.el") (20793 40499 276229 696000))
+;;;;;;  "timeclock.el" "todo-mode.el") (21569 15427 178792 15000))
 
 ;;;***
 

@@ -1,10 +1,10 @@
 ;;; jka-cmpr-hook.el --- preloaded code to enable jka-compr.el
 
-;; Copyright (C) 1993-1995, 1997, 1999-2000, 2002-2013 Free Software
-;; Foundation, Inc.
+;; Copyright (C) 1993-1995, 1997, 1999-2000, 2002-2014
+;;   Free Software Foundation, Inc.
 
-;; Author: jka@ece.cmu.edu (Jay K. Adams)
-;; Maintainer: FSF
+;; Author: Jay K. Adams <jka@ece.cmu.edu>
+;; Maintainer: emacs-devel@gnu.org
 ;; Keywords: data
 ;; Package: emacs
 
@@ -234,6 +234,10 @@ options through Custom does this automatically."
      "XZ compressing"     "xz"           ("-c" "-q")
      "XZ uncompressing"   "xz"           ("-c" "-q" "-d")
      t t "\3757zXZ\0"]
+    ["\\.txz\\'"
+     "XZ compressing"     "xz"           ("-c" "-q")
+     "XZ uncompressing"   "xz"           ("-c" "-q" "-d")
+     t nil "\3757zXZ\0"]
     ;; dzip is gzip with random access.  Its compression program can't
     ;; read/write stdin/out, so .dz files can only be viewed without
     ;; saving, having their contents decompressed with gzip.
@@ -302,7 +306,9 @@ variables.  Setting this through Custom does that automatically."
   :group 'jka-compr)
 
 (defcustom jka-compr-mode-alist-additions
-  (list (cons (purecopy "\\.tgz\\'") 'tar-mode) (cons (purecopy "\\.tbz2?\\'") 'tar-mode))
+  (purecopy '(("\\.tgz\\'" . tar-mode)
+              ("\\.tbz2?\\'" . tar-mode)
+              ("\\.txz\\'" . tar-mode)))
   "List of pairs added to `auto-mode-alist' when installing jka-compr.
 Uninstalling jka-compr removes all pairs from `auto-mode-alist' that
 installing added.
@@ -312,10 +318,11 @@ already enabled \(as it is by default), you have to call
 `jka-compr-update' after setting it to properly update other
 variables.  Setting this through Custom does that automatically."
   :type '(repeat (cons string symbol))
+  :version "24.4"			; add txz
   :set 'jka-compr-set
   :group 'jka-compr)
 
-(defcustom jka-compr-load-suffixes (list (purecopy ".gz"))
+(defcustom jka-compr-load-suffixes (purecopy '(".gz"))
   "List of compression related suffixes to try when loading files.
 Enabling Auto Compression mode appends this list to `load-file-rep-suffixes',
 which see.  Disabling Auto Compression mode removes all suffixes

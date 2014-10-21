@@ -1,6 +1,6 @@
 ;;; gnus-int.el --- backend interface functions for Gnus
 
-;; Copyright (C) 1996-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1996-2014 Free Software Foundation, Inc.
 
 ;; Author: Lars Magne Ingebrigtsen <larsi@gnus.org>
 ;; Keywords: news
@@ -113,7 +113,8 @@ If CONFIRM is non-nil, the user will be asked for an NNTP server."
 	(setq gnus-nntp-server
 	      (gnus-completing-read "NNTP server"
                                     (cons gnus-nntp-server
-                                          gnus-secondary-servers)
+					  (if (boundp 'gnus-secondary-servers)
+					      gnus-secondary-servers))
                                     nil gnus-nntp-server)))
 
       (when (and gnus-nntp-server
@@ -248,17 +249,26 @@ If it is down, start it up (again)."
       'denied))
 
 (defvar gnus-backend-trace nil)
+(defvar gnus-backend-trace-elapsed nil)
 
-(defun gnus-open-server (gnus-command-method)
-  "Open a connection to GNUS-COMMAND-METHOD."
-  (when (stringp gnus-command-method)
-    (setq gnus-command-method (gnus-server-to-method gnus-command-method)))
+(defun gnus-backend-trace (type form)
   (when gnus-backend-trace
     (with-current-buffer (get-buffer-create "*gnus trace*")
       (buffer-disable-undo)
       (goto-char (point-max))
       (insert (format-time-string "%H:%M:%S")
-	      (format " %S\n" gnus-command-method))))
+	      (format " %.2fs %s %S\n"
+		      (if (numberp gnus-backend-trace-elapsed)
+			  (- (float-time) gnus-backend-trace-elapsed)
+			0)
+		      type form))
+      (setq gnus-backend-trace-elapsed (float-time)))))
+
+(defun gnus-open-server (gnus-command-method)
+  "Open a connection to GNUS-COMMAND-METHOD."
+  (when (stringp gnus-command-method)
+    (setq gnus-command-method (gnus-server-to-method gnus-command-method)))
+  (gnus-backend-trace :opening gnus-command-method)
   (let ((elem (assoc gnus-command-method gnus-opened-servers))
 	(server (gnus-method-to-server-name gnus-command-method)))
     ;; If this method was previously denied, we just return nil.
@@ -293,7 +303,7 @@ If it is down, start it up (again)."
         (setcar
 	 (cdr elem)
 	 (cond (result
-		(if (eq open-server-function #'nnagent-open-server)
+		(if (eq open-server-function 'nnagent-open-server)
 		    ;; The agent's backend has a "special" status
 		    'offline
 		  'ok))
@@ -333,6 +343,7 @@ If it is down, start it up (again)."
 	    (save-excursion
 	      (gnus-agent-possibly-synchronize-flags-server
 	       gnus-command-method)))
+	  (gnus-backend-trace :opened gnus-command-method)
           result)))))
 
 (defun gnus-close-server (gnus-command-method)
@@ -353,9 +364,13 @@ If it is down, start it up (again)."
   "Read and update infos from GNUS-COMMAND-METHOD."
   (when (stringp gnus-command-method)
     (setq gnus-command-method (gnus-server-to-method gnus-command-method)))
-  (funcall (gnus-get-function gnus-command-method 'finish-retrieve-group-infos)
-	   (nth 1 gnus-command-method)
-	   infos data))
+  (gnus-backend-trace :finishing gnus-command-method)
+  (prog1
+      (funcall (gnus-get-function gnus-command-method
+				  'finish-retrieve-group-infos)
+	       (nth 1 gnus-command-method)
+	       infos data)
+    (gnus-backend-trace :finished gnus-command-method)))
 
 (defun gnus-retrieve-group-data-early (gnus-command-method infos)
   "Start early async retrieval of data from GNUS-COMMAND-METHOD."
@@ -568,18 +583,18 @@ This is the string that Gnus uses to identify the group."
    (gnus-group-method group)))
 
 (defun gnus-warp-to-article ()
-  "Warps from an article in a virtual group to the article in its
-real group. Does nothing on a real group."
+  "Look up the current article in the group where it originated.
+This command only makes sense for groups shows articles gathered
+from other groups -- for instance, search results and the like."
   (interactive)
-  (when (gnus-virtual-group-p gnus-newsgroup-name)
-    (let ((gnus-command-method
-           (gnus-find-method-for-group gnus-newsgroup-name)))
-      (or
-       (when (gnus-check-backend-function
-              'warp-to-article (car gnus-command-method))
-         (funcall (gnus-get-function gnus-command-method 'warp-to-article)))
-       (and (bound-and-true-p gnus-registry-enabled)
-            (gnus-try-warping-via-registry))))))
+  (let ((gnus-command-method
+         (gnus-find-method-for-group gnus-newsgroup-name)))
+    (or
+     (when (gnus-check-backend-function
+            'warp-to-article (car gnus-command-method))
+       (funcall (gnus-get-function gnus-command-method 'warp-to-article)))
+     (and (bound-and-true-p gnus-registry-enabled)
+          (gnus-try-warping-via-registry)))))
 
 (defun gnus-request-head (article group)
   "Request the head of ARTICLE in GROUP."
@@ -739,7 +754,6 @@ If GROUP is nil, all groups on GNUS-COMMAND-METHOD are scanned."
 
 (defun gnus-request-accept-article (group &optional gnus-command-method last
 					  no-encode)
-  ;; Make sure there's a newline at the end of the article.
   (when (stringp gnus-command-method)
     (setq gnus-command-method (gnus-server-to-method gnus-command-method)))
   (when (and (not gnus-command-method)
@@ -747,6 +761,7 @@ If GROUP is nil, all groups on GNUS-COMMAND-METHOD are scanned."
     (setq gnus-command-method (or (gnus-find-method-for-group group)
                                   (gnus-group-name-to-method group))))
   (goto-char (point-max))
+  ;; Make sure there's a newline at the end of the article.
   (unless (bolp)
     (insert "\n"))
   (unless no-encode

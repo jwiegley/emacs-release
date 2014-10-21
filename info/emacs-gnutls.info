@@ -1,16 +1,14 @@
-This is
-/misc/emacs/bzr/emacs24-merge/doc/misc/../../info/emacs-gnutls.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/emacs-gnutls.texi.
+This is ../../info/emacs-gnutls.info, produced by makeinfo version 4.13
+from ./emacs-gnutls.texi.
 
 This file describes the Emacs GnuTLS integration.
 
-   Copyright (C) 2012-2013 Free Software Foundation, Inc.
+   Copyright (C) 2012-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -20,7 +18,7 @@ This file describes the Emacs GnuTLS integration.
 
 INFO-DIR-SECTION Emacs network features
 START-INFO-DIR-ENTRY
-* GnuTLS: (emacs-gnutls).       The Emacs GnuTLS integration.
+* Emacs GnuTLS: (emacs-gnutls). The Emacs GnuTLS integration.
 END-INFO-DIR-ENTRY
 
 
@@ -37,12 +35,12 @@ files and the `gnutls.el' Emacs Lisp library.
 
    This file describes the Emacs GnuTLS integration.
 
-   Copyright (C) 2012-2013 Free Software Foundation, Inc.
+   Copyright (C) 2012-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -96,8 +94,8 @@ second.
 Zaretskii) in the same directory as Emacs, you should be OK.
 
  -- Function: gnutls-available-p
-     This function returns t if GnuTLS is available in this instance of
-     Emacs.
+     This function returns `t' if GnuTLS is available in this instance
+     of Emacs.
 
    Oh, but sometimes things go wrong.  Budgets aren't balanced,
 television ads lie, and even TLS and SSL connections can fail to work
@@ -130,6 +128,22 @@ properly.  Well, there's something to be done in the last case.
      customize `gnutls-trustfiles' to be something else, but let us
      know if you do, so we can make the change to benefit the other
      users of that platform.
+
+ -- Variable: gnutls-verify-error
+     The `gnutls-verify-error' variable allows you to verify SSL/TLS
+     server certificates for all connections or by host name.  It
+     defaults to `nil' for now but will likely be changed to `t' later,
+     meaning that all certificates will be verified.
+
+     There are two checks available currently, that the certificate has
+     been issued by a trusted authority as defined by
+     `gnutls-trustfiles', and that the hostname matches the
+     certificate.  `t' enables both checks, but you can enable them
+     individually as well with `:trustfiles' and `:hostname' instead.
+
+     Because of the low-level interactions with the GnuTLS library,
+     there is no way currently to ask if a certificate can be accepted.
+     You have to look in the `*Messages*' buffer.
 
  -- Variable: gnutls-min-prime-bits
      The `gnutls-min-prime-bits' variable is a pretty exotic
@@ -184,7 +198,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -686,18 +700,24 @@ Variable Index
 
 * gnutls-algorithm-priority:             Help For Users.       (line 32)
 * gnutls-log-level:                      Help For Users.       (line 27)
-* gnutls-min-prime-bits:                 Help For Users.       (line 55)
+* gnutls-min-prime-bits:                 Help For Users.       (line 71)
 * gnutls-trustfiles:                     Help For Users.       (line 40)
+* gnutls-verify-error:                   Help For Users.       (line 55)
 
 
 
 Tag Table:
-Node: Top986
-Node: Overview2216
-Node: Help For Users2936
-Node: Help For Developers5791
-Node: GNU Free Documentation License7502
-Node: Function Index32696
-Node: Variable Index33090
+Node: Top910
+Node: Overview2140
+Node: Help For Users2860
+Node: Help For Developers6528
+Node: GNU Free Documentation License8239
+Node: Function Index33427
+Node: Variable Index33821
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

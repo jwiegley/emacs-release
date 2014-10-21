@@ -1,5 +1,5 @@
 /* Dump Emacs in Mach-O format for use on Mac OS X.
-   Copyright (C) 2001-2013 Free Software Foundation, Inc.
+   Copyright (C) 2001-2014 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -97,6 +97,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #undef free
 
 #include "unexec.h"
+#include "lisp.h"
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -1301,7 +1302,9 @@ dump_it (void)
       }
 
   if (curr_header_offset > text_seg_lowest_offset)
-    unexec_error ("not enough room for load commands for new __DATA segments");
+    unexec_error ("not enough room for load commands for new __DATA segments"
+		  " (increase headerpad_extra in configure.in to at least %lX)",
+		  num_unexec_regions * sizeof (struct segment_command));
 
   printf ("%ld unused bytes follow Mach-O header\n",
 	  text_seg_lowest_offset - curr_header_offset);
@@ -1322,16 +1325,16 @@ unexec (const char *outfile, const char *infile)
     unexec_error ("Unexec from a dumped executable is not supported.");
 
   pagesize = getpagesize ();
-  infd = open (infile, O_RDONLY, 0);
+  infd = emacs_open (infile, O_RDONLY, 0);
   if (infd < 0)
     {
       unexec_error ("cannot open input file `%s'", infile);
     }
 
-  outfd = open (outfile, O_WRONLY | O_TRUNC | O_CREAT, 0755);
+  outfd = emacs_open (outfile, O_WRONLY | O_TRUNC | O_CREAT, 0755);
   if (outfd < 0)
     {
-      close (infd);
+      emacs_close (infd);
       unexec_error ("cannot open output file `%s'", outfile);
     }
 
@@ -1345,7 +1348,7 @@ unexec (const char *outfile, const char *infile)
 
   dump_it ();
 
-  close (outfd);
+  emacs_close (outfd);
 }
 
 

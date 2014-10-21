@@ -1,6 +1,6 @@
 ;;; term.el --- general command interpreter in a window stuff
 
-;; Copyright (C) 1988, 1990, 1992, 1994-1995, 2001-2013 Free Software
+;; Copyright (C) 1988, 1990, 1992, 1994-1995, 2001-2014 Free Software
 ;; Foundation, Inc.
 
 ;; Author: Per Bothner <per@bothner.com>
@@ -397,6 +397,12 @@
 (require 'ring)
 (require 'ehelp)
 
+(declare-function ring-empty-p "ring" (ring))
+(declare-function ring-ref "ring" (ring index))
+(declare-function ring-insert-at-beginning "ring" (ring item))
+(declare-function ring-length "ring" (ring))
+(declare-function ring-insert "ring" (ring item))
+
 (defgroup term nil
   "General command interpreter in a window."
   :group 'processes)
@@ -551,6 +557,13 @@ If non-nil, then show the maximum output when the window is scrolled.
 
 See variable `term-scroll-to-bottom-on-output'.
 This variable is buffer-local."
+  :type 'boolean
+  :group 'term)
+
+(defcustom term-suppress-hard-newline nil
+  "Non-nil means interpreter should not break long lines with newlines.
+This means text can automatically reflow if the window is resized."
+  :version "24.4"
   :type 'boolean
   :group 'term)
 
@@ -947,7 +960,7 @@ is buffer-local."
   (when term-escape-char
     ;; Undo previous term-set-escape-char.
     (define-key term-raw-map term-escape-char 'term-send-raw))
-  (setq term-escape-char (vector key))
+  (setq term-escape-char (if (vectorp key) key (vector key)))
   (define-key term-raw-map term-escape-char term-raw-escape-map)
   ;; FIXME: If we later call term-set-escape-char again with another key,
   ;; we should undo this binding.
@@ -961,9 +974,12 @@ is buffer-local."
   (if (and (not (featurep 'xemacs))
 	   (display-graphic-p)
 	   overflow-newline-into-fringe
+	   ;; Subtract 1 from the width when any fringe has zero width,
+	   ;; not just the right fringe.  Bug#18601.
+	   (/= (frame-parameter nil 'left-fringe) 0)
 	   (/= (frame-parameter nil 'right-fringe) 0))
-      (window-width)
-    (1- (window-width))))
+      (window-body-width)
+    (1- (window-body-width))))
 
 
 (put 'term-mode 'mode-class 'special)
@@ -1239,15 +1255,14 @@ without any interpretation."
     (setq this-command 'yank)
     (mouse-set-point click)
     (term-send-raw-string
-     (or (cond  ; From `mouse-yank-primary':
-	  ((eq system-type 'windows-nt)
-	   (or (x-get-selection 'PRIMARY)
-	       (x-get-selection-value)))
-	  ((fboundp 'x-get-selection-value)
-	   (or (x-get-selection-value)
-	       (x-get-selection 'PRIMARY)))
-	  (t
-	   (x-get-selection 'PRIMARY)))
+     ;; From `mouse-yank-primary':
+     (or (if (fboundp 'x-get-selection-value)
+             (if (eq system-type 'windows-nt)
+                 (or (x-get-selection 'PRIMARY)
+                     (x-get-selection-value))
+               (or (x-get-selection-value)
+                   (x-get-selection 'PRIMARY)))
+	   (x-get-selection 'PRIMARY))
 	 (error "No selection is available")))))
 
 (defun term-paste ()
@@ -2822,8 +2837,9 @@ See `term-prompt-regexp'."
 			  (setq count (length decoded-substring))
 			  (setq temp (- (+ (term-horizontal-column) count)
 					term-width))
-			  (cond ((<= temp 0)) ;; All count chars fit in line.
-				((> count temp)	;; Some chars fit.
+			  (cond ((or term-suppress-hard-newline (<= temp 0)))
+				;; All count chars fit in line.
+				((> count temp) ;; Some chars fit.
 				 ;; This iteration, handle only what fits.
 				 (setq count (- count temp))
 				 (setq count-bytes
@@ -2923,8 +2939,10 @@ See `term-prompt-regexp'."
 			  (let ((end (string-match "\r?$" str i)))
 			    (if end
 				(funcall term-command-hook
-					 (prog1 (substring str (1+ i) end)
-					   (setq i (match-end 0))))
+					 (decode-coding-string
+					  (prog1 (substring str (1+ i) end)
+					    (setq i (match-end 0)))
+					  locale-coding-system))
 			      (setq term-terminal-parameter (substring str i))
 			      (setq term-terminal-state 4)
 			      (setq i str-length))))
@@ -4122,8 +4140,9 @@ Typing SPC flushes the help buffer."
 	    (and (consp first)
 		 (eq (window-buffer (posn-window (event-start first)))
 		     (get-buffer "*Completions*"))
-		 (eq (key-binding key) 'mouse-choose-completion)))
-	  ;; If the user does mouse-choose-completion with the mouse,
+		 (memq (key-binding key)
+                       '(mouse-choose-completion choose-completion))))
+	  ;; If the user does choose-completion with the mouse,
 	  ;; execute the command, then delete the completion window.
 	  (progn
 	    (choose-completion first)

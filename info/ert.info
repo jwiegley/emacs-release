@@ -1,18 +1,17 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/ert.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/ert.texi.
+This is ../../info/ert.info, produced by makeinfo version 4.13 from
+./ert.texi.
 
 INFO-DIR-SECTION Emacs misc features
 START-INFO-DIR-ENTRY
-* ERT: (ert).        Emacs Lisp regression testing tool.
+* ERT: (ert).                   Emacs Lisp regression testing tool.
 END-INFO-DIR-ENTRY
 
-   Copyright (C) 2008, 2010-2013 Free Software Foundation, Inc.
+   Copyright (C) 2008, 2010-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual," and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -21,12 +20,25 @@ END-INFO-DIR-ENTRY
      modify this GNU manual."
 
 
-File: ert.info,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
+File: ert.info,  Node: Top,  Next: Introduction,  Up: (dir)
 
 ERT: Emacs Lisp Regression Testing
 **********************************
 
-ERT is a tool for automated testing in Emacs Lisp.  Its main features
+Copyright (C) 2008, 2010-2014 Free Software Foundation, Inc.
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
+     being "A GNU Manual," and with the Back-Cover Texts as in (a)
+     below.  A copy of the license is included in the section entitled
+     "GNU Free Documentation License".
+
+     (a) The FSF's Back-Cover Text is: "You have the freedom to copy and
+     modify this GNU manual."
+
+   ERT is a tool for automated testing in Emacs Lisp.  Its main features
 are facilities for defining tests, running them and reporting the
 results, and for debugging test failures interactively.
 
@@ -119,7 +131,7 @@ evaluate such comments.
 
    If you know `defun', the syntax of `ert-deftest' should look
 familiar: This example defines a test named `pp-test-quote' that will
-pass if the three calls to `equal' all return true (non-nil).
+pass if the three calls to `equal' all return non-`nil'.
 
    `should' is a macro with the same meaning as `cl-assert' but better
 error reporting.  *Note The `should' Macro::.
@@ -166,7 +178,7 @@ different Emacs versions.
 * Test Selectors::               Choose which tests to run.
 
 
-File: ert.info,  Node: Running Tests Interactively,  Next: Running Tests in Batch Mode,  Prev: How to Run Tests,  Up: How to Run Tests
+File: ert.info,  Node: Running Tests Interactively,  Next: Running Tests in Batch Mode,  Up: How to Run Tests
 
 2.1 Running Tests Interactively
 ===============================
@@ -177,9 +189,10 @@ command `M-x ert RET t RET'.  (For an explanation of the `t' argument,
 buffer, showing the results of the tests run.  It looks like this:
 
      Selector: t
-     Passed: 31
-     Failed: 2 (2 unexpected)
-     Total:  33/33
+     Passed:  31
+     Skipped: 0
+     Failed:  2 (2 unexpected)
+     Total:   33/33
 
      Started at:   2008-09-11 08:39:25-0700
      Finished.
@@ -309,8 +322,8 @@ Lisp's type specifier syntax:
      them.)
 
    * `(satisfies PREDICATE)' selects all tests that satisfy PREDICATE,
-     a function that takes a test as argument and returns non-nil if it
-     is selected.
+     a function that takes a test as argument and returns non-`nil' if
+     it is selected.
 
    Selectors that are frequently useful when selecting tests to run
 include `t' to run all tests that are currently defined in Emacs,
@@ -344,7 +357,7 @@ find where a test was defined if the test was loaded from a file.
 * Useful Techniques::           Some examples.
 
 
-File: ert.info,  Node: The `should' Macro,  Next: Expected Failures,  Prev: How to Write Tests,  Up: How to Write Tests
+File: ert.info,  Node: The `should' Macro,  Next: Expected Failures,  Up: How to Write Tests
 
 3.1 The `should' Macro
 ======================
@@ -374,13 +387,13 @@ debugging.
            :value nil))
 
    In this example, `should' recorded the fact that (= (+ 1 2) 4)
-reduced to (= 3 4) before it reduced to nil.  When debugging why the
+reduced to (= 3 4) before it reduced to `nil'.  When debugging why the
 test failed, it helps to know that the function `+' returned 3 here.
 ERT records the return value for any predicate called directly within
 `should'.
 
    In addition to `should', ERT provides `should-not', which checks
-that the predicate returns nil, and `should-error', which checks that
+that the predicate returns `nil', and `should-error', which checks that
 the form called within it signals an error.  An example use of
 `should-error':
 
@@ -457,10 +470,21 @@ File: ert.info,  Node: Tests and Their Environment,  Next: Useful Techniques,  P
 3.3 Tests and Their Environment
 ===============================
 
-The outcome of running a test should not depend on the current state of
-the environment, and each test should leave its environment in the same
-state it found it in.  In particular, a test should not depend on any
-Emacs customization variables or hooks, and if it has to make any
+Sometimes, it doesn't make sense to run a test due to missing
+preconditions.  A required Emacs feature might not be compiled in, the
+function to be tested could call an external binary which might not be
+available on the test machine, you name it.  In this case, the macro
+`skip-unless' could be used to skip the test:
+
+     (ert-deftest test-dbus ()
+       "A test that checks D-BUS functionality."
+       (skip-unless (featurep 'dbusbind))
+       ...)
+
+   The outcome of running a test should not depend on the current state
+of the environment, and each test should leave its environment in the
+same state it found it in.  In particular, a test should not depend on
+any Emacs customization variables or hooks, and if it has to make any
 changes to Emacs's state or state external to Emacs (such as the file
 system), it should undo these changes before it returns, regardless of
 whether it passed or failed.
@@ -505,7 +529,7 @@ runs `find-file-hook', which can have arbitrary side effects.
 predictable semantics like `with-temp-buffer', `insert' or
 `insert-file-contents-literally', and to activate any desired mode by
 calling the corresponding function directly, after binding the hook
-variables to nil.  This avoids the above problems.
+variables to `nil'.  This avoids the above problems.
 
 
 File: ert.info,  Node: Useful Techniques,  Prev: Tests and Their Environment,  Up: How to Write Tests
@@ -598,7 +622,7 @@ test failed.
 * Interactive Debugging::       Tools available in the ERT results buffer.
 
 
-File: ert.info,  Node: Understanding Explanations,  Next: Interactive Debugging,  Prev: How to Debug Tests,  Up: How to Debug Tests
+File: ert.info,  Node: Understanding Explanations,  Next: Interactive Debugging,  Up: How to Debug Tests
 
 4.1 Understanding Explanations
 ==============================
@@ -718,7 +742,7 @@ There are several ways to add functionality to ERT.
 * Low-Level Functions for Working with Tests::  Use ERT's data for your purposes.
 
 
-File: ert.info,  Node: Defining Explanation Functions,  Next: Low-Level Functions for Working with Tests,  Prev: Extending ERT,  Up: Extending ERT
+File: ert.info,  Node: Defining Explanation Functions,  Next: Low-Level Functions for Working with Tests,  Up: Extending ERT
 
 5.1 Defining Explanation Functions
 ==================================
@@ -730,7 +754,7 @@ arguments given to the explanation function, returns the value that it
 returns.  The explanation can be any object but should have a
 comprehensible printed representation.  If the return value of the
 predicate needs no explanation for a given list of arguments, the
-explanation function should return nil.
+explanation function should return `nil'.
 
    To associate an explanation function with a predicate, add the
 property `ert-explainer' to the symbol that names the predicate.  The
@@ -769,7 +793,7 @@ For information on mocks, stubs, fixtures, or test suites, see below.
 * Fixtures and Test Suites::  How ERT differs from tools for other languages.
 
 
-File: ert.info,  Node: Mocks and Stubs,  Next: Fixtures and Test Suites,  Prev: Other Testing Concepts,  Up: Other Testing Concepts
+File: ert.info,  Node: Mocks and Stubs,  Next: Fixtures and Test Suites,  Up: Other Testing Concepts
 
 6.1 Other Tools for Emacs Lisp
 ==============================
@@ -850,7 +874,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -1331,26 +1355,31 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top915
-Node: Introduction3189
-Node: How to Run Tests6081
-Node: Running Tests Interactively6843
-Node: Running Tests in Batch Mode9608
-Node: Test Selectors10659
-Node: How to Write Tests12698
-Node: The `should' Macro13563
-Node: Expected Failures15611
-Node: Tests and Their Environment17826
-Node: Useful Techniques20873
-Node: How to Debug Tests24623
-Node: Understanding Explanations25020
-Node: Interactive Debugging26913
-Node: Extending ERT29016
-Node: Defining Explanation Functions29371
-Node: Low-Level Functions for Working with Tests30321
-Node: Other Testing Concepts31118
-Node: Mocks and Stubs31528
-Node: Fixtures and Test Suites32140
-Node: GNU Free Documentation License34531
+Node: Top850
+Node: Introduction3733
+Node: How to Run Tests6620
+Node: Running Tests Interactively7382
+Node: Running Tests in Batch Mode10141
+Node: Test Selectors11192
+Node: How to Write Tests13233
+Node: The `should' Macro14098
+Node: Expected Failures16123
+Node: Tests and Their Environment18338
+Node: Useful Techniques21845
+Node: How to Debug Tests25595
+Node: Understanding Explanations25992
+Node: Interactive Debugging27858
+Node: Extending ERT29961
+Node: Defining Explanation Functions30316
+Node: Low-Level Functions for Working with Tests31246
+Node: Other Testing Concepts32043
+Node: Mocks and Stubs32453
+Node: Fixtures and Test Suites33034
+Node: GNU Free Documentation License35425
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

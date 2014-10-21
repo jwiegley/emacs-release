@@ -1,13 +1,12 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/widget.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/widget.texi.
+This is ../../info/widget.info, produced by makeinfo version 4.13 from
+./widget.texi.
 
-Copyright (C) 2000-2013 Free Software Foundation, Inc.
+Copyright (C) 2000-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -27,12 +26,12 @@ File: widget.info,  Node: Top,  Next: Introduction,  Up: (dir)
 The Emacs Widget Library
 ************************
 
-Copyright (C) 2000-2013 Free Software Foundation, Inc.
+Copyright (C) 2000-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -427,7 +426,6 @@ have been created, `widget-setup' must be called to enable them.
 
      This should be called after creating all the widgets and before
      allowing the user to edit them.
-
 
    If you want to insert text outside the widgets in the form, the
 recommended way to do that is with `widget-insert'.
@@ -1599,7 +1597,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -2240,12 +2238,12 @@ variables, and widgets described in this manual.
 * widget-browse-at:                      Widget Browser.      (line  20)
 * widget-browse-other-window:            Widget Browser.      (line  16)
 * widget-button-click <1>:               Setting Up the Buffer.
-                                                              (line  37)
+                                                              (line  36)
 * widget-button-click:                   User Interface.      (line  96)
 * widget-button-face:                    User Interface.      (line 139)
 * widget-button-prefix:                  Basic Types.         (line  32)
 * widget-button-press <1>:               Setting Up the Buffer.
-                                                              (line  37)
+                                                              (line  36)
 * widget-button-press:                   User Interface.      (line  90)
 * widget-button-suffix:                  Basic Types.         (line  35)
 * widget-children-validate:              Basic Types.         (line 153)
@@ -2263,13 +2261,13 @@ variables, and widgets described in this manual.
 * widget-get:                            Widget Properties.   (line  33)
 * widget-get-sibling:                    Utilities.           (line  11)
 * widget-global-map:                     Setting Up the Buffer.
-                                                              (line  43)
+                                                              (line  42)
 * widget-glyph-directory:                Basic Types.         (line 182)
 * widget-glyph-enable:                   Basic Types.         (line 187)
 * widget-insert:                         Setting Up the Buffer.
-                                                              (line  32)
+                                                              (line  31)
 * widget-keymap:                         Setting Up the Buffer.
-                                                              (line  38)
+                                                              (line  37)
 * widget-link-prefix:                    link.                (line  16)
 * widget-link-suffix:                    link.                (line  19)
 * widget-member:                         Widget Properties.   (line  38)
@@ -2303,39 +2301,44 @@ variables, and widgets described in this manual.
 
 
 Tag Table:
-Node: Top985
-Node: Introduction2010
-Node: User Interface5090
-Node: Programming Example10844
-Node: Setting Up the Buffer15102
-Node: Basic Types16778
-Node: link23412
-Node: url-link23913
-Node: info-link24230
-Node: push-button24525
-Node: editable-field25105
-Node: text26507
-Node: menu-choice26809
-Node: radio-button-choice27670
-Node: item29267
-Node: choice-item29660
-Node: toggle30165
-Node: checkbox30927
-Node: checklist31241
-Node: editable-list32694
-Node: group33883
-Node: Sexp Types34178
-Node: constants34531
-Node: generic35593
-Node: atoms36156
-Node: composite38090
-Node: Widget Properties41083
-Node: Defining New Widgets44146
-Node: Widget Browser50183
-Node: Widget Minor Mode51045
-Node: Utilities51605
-Node: Widget Wishlist52097
-Node: GNU Free Documentation License53365
-Node: Index78540
+Node: Top909
+Node: Introduction1934
+Node: User Interface5014
+Node: Programming Example10768
+Node: Setting Up the Buffer15026
+Node: Basic Types16701
+Node: link23335
+Node: url-link23836
+Node: info-link24153
+Node: push-button24448
+Node: editable-field25028
+Node: text26430
+Node: menu-choice26732
+Node: radio-button-choice27593
+Node: item29190
+Node: choice-item29583
+Node: toggle30088
+Node: checkbox30850
+Node: checklist31164
+Node: editable-list32617
+Node: group33806
+Node: Sexp Types34101
+Node: constants34454
+Node: generic35516
+Node: atoms36079
+Node: composite38013
+Node: Widget Properties41006
+Node: Defining New Widgets44069
+Node: Widget Browser50106
+Node: Widget Minor Mode50968
+Node: Utilities51528
+Node: Widget Wishlist52020
+Node: GNU Free Documentation License53288
+Node: Index78457
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

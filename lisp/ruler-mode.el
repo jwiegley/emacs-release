@@ -1,6 +1,6 @@
 ;;; ruler-mode.el --- display a ruler in the header line
 
-;; Copyright (C) 2001-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2001-2014 Free Software Foundation, Inc.
 
 ;; Author: David Ponce <david@dponce.com>
 ;; Maintainer: David Ponce <david@dponce.com>
@@ -137,8 +137,8 @@ or remove a tab stop.  \\[ruler-mode-toggle-show-tab-stops] or
                     (format "Invalid character value: %S" value))
         widget))))
 
-(defcustom ruler-mode-fill-column-char (if (char-displayable-p ?¶)
-                                           ?\¶
+(defcustom ruler-mode-fill-column-char (if (char-displayable-p ?Â¶)
+                                           ?\Â¶
                                          ?\|)
   "Character used at the `fill-column' location."
   :group 'ruler-mode
@@ -163,8 +163,8 @@ or remove a tab stop.  \\[ruler-mode-toggle-show-tab-stops] or
           (integer :tag "Integer char value"
                    :validate ruler-mode-character-validate)))
 
-(defcustom ruler-mode-current-column-char (if (char-displayable-p ?¦)
-                                              ?\¦
+(defcustom ruler-mode-current-column-char (if (char-displayable-p ?Â¦)
+                                              ?\Â¦
                                             ?\@)
   "Character used at the `current-column' location."
   :group 'ruler-mode
@@ -477,8 +477,9 @@ START-EVENT is the mouse click event."
                (not (member ts tab-stop-list))
                (progn
                  (message "Tab stop set to %d" ts)
-                 (setq tab-stop-list (sort (cons ts tab-stop-list)
-                                           #'<)))))))))
+                 (when (null tab-stop-list)
+                   (setq tab-stop-list (indent-accumulate-tab-stops (1- ts))))
+                 (setq tab-stop-list (sort (cons ts tab-stop-list) #'<)))))))))
 
 (defun ruler-mode-mouse-del-tab-stop (start-event)
   "Delete tab stop at the graduation where the mouse pointer is on.
@@ -754,7 +755,7 @@ Optional argument PROPS specifies other text properties to apply."
          i (1+ i) 'help-echo ruler-mode-fill-column-help-echo
          ruler))
        ;; Show the `tab-stop-list' markers.
-       ((and ruler-mode-show-tab-stops (member j tab-stop-list))
+       ((and ruler-mode-show-tab-stops (= j (indent-next-tab-stop (1- j))))
         (aset ruler i ruler-mode-tab-stop-char)
         (put-text-property
          i (1+ i) 'face 'ruler-mode-tab-stop
@@ -774,7 +775,7 @@ Optional argument PROPS specifies other text properties to apply."
 (provide 'ruler-mode)
 
 ;; Local Variables:
-;; coding: iso-latin-1
+;; coding: utf-8
 ;; End:
 
 ;;; ruler-mode.el ends here

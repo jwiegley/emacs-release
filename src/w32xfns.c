@@ -1,5 +1,5 @@
 /* Functions taken directly from X sources for use with the Microsoft Windows API.
-   Copyright (C) 1989, 1992-1995, 1999, 2001-2013 Free Software
+   Copyright (C) 1989, 1992-1995, 1999, 2001-2014 Free Software
    Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -24,6 +24,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #include "lisp.h"
 #include "keyboard.h"
 #include "frame.h"
+#include "window.h"
 #include "charset.h"
 #include "fontset.h"
 #include "blockinput.h"
@@ -90,9 +91,9 @@ signal_quit (void)
 }
 
 void
-select_palette (FRAME_PTR f, HDC hdc)
+select_palette (struct frame *f, HDC hdc)
 {
-  struct w32_display_info *display_info = FRAME_W32_DISPLAY_INFO (f);
+  struct w32_display_info *display_info = FRAME_DISPLAY_INFO (f);
 
   if (!display_info->has_palette)
     return;
@@ -117,7 +118,7 @@ select_palette (FRAME_PTR f, HDC hdc)
 }
 
 void
-deselect_palette (FRAME_PTR f, HDC hdc)
+deselect_palette (struct frame *f, HDC hdc)
 {
   if (f->output_data.w32->old_palette)
     SelectPalette (hdc, f->output_data.w32->old_palette, FALSE);
@@ -126,7 +127,7 @@ deselect_palette (FRAME_PTR f, HDC hdc)
 /* Get a DC for frame and select palette for drawing; force an update of
    all frames if palette's mapping changes.  */
 HDC
-get_frame_dc (FRAME_PTR f)
+get_frame_dc (struct frame *f)
 {
   HDC hdc;
 
@@ -146,7 +147,7 @@ get_frame_dc (FRAME_PTR f)
 }
 
 int
-release_frame_dc (FRAME_PTR f, HDC hdc)
+release_frame_dc (struct frame *f, HDC hdc)
 {
   int ret;
 
@@ -316,20 +317,20 @@ prepend_msg (W32Msg *lpmsg)
   return (TRUE);
 }
 
-/* Process all messages in the current thread's queue.  */
-void
+/* Process all messages in the current thread's queue.  Value is 1 if
+   one of these messages was WM_EMACS_FILENOTIFY, zero otherwise.  */
+int
 drain_message_queue (void)
 {
   MSG msg;
+  int retval = 0;
+
   while (PeekMessage (&msg, NULL, 0, 0, PM_REMOVE))
     {
+      if (msg.message == WM_EMACS_FILENOTIFY)
+	retval = 1;
       TranslateMessage (&msg);
       DispatchMessage (&msg);
     }
-}
-
-/* x_sync is a no-op on W32.  */
-void
-x_sync (struct frame *f)
-{
+  return retval;
 }

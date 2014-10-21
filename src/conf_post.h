@@ -1,6 +1,6 @@
 /* conf_post.h --- configure.ac includes this via AH_BOTTOM
 
-Copyright (C) 1988, 1993-1994, 1999-2002, 2004-2013 Free Software
+Copyright (C) 1988, 1993-1994, 1999-2002, 2004-2014 Free Software
 Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -32,6 +32,16 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 # include config_opsysfile
 #endif
 
+#include <stdbool.h>
+
+/* The pre-C99 <stdbool.h> emulation doesn't work for bool bitfields.
+   Nor does compiling Objective-C with standard GCC.  */
+#if __STDC_VERSION__ < 199901 || NS_IMPL_GNUSTEP
+typedef unsigned int bool_bf;
+#else
+typedef bool bool_bf;
+#endif
+
 #ifndef WINDOWSNT
 /* On AIX 3 this must be included before any other include file.  */
 #include <alloca.h>
@@ -40,17 +50,19 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #endif
 #endif
 
-/* This silences a few compilation warnings on FreeBSD.  */
-#ifdef BSD_SYSTEM_AHB
-#undef BSD_SYSTEM_AHB
-#undef BSD_SYSTEM
-#if __FreeBSD__ == 1
-#define BSD_SYSTEM 199103
-#elif __FreeBSD__ == 2
-#define BSD_SYSTEM 199306
-#elif __FreeBSD__ >= 3
-#define BSD_SYSTEM 199506
+/* When not using Clang, assume its attributes and features are absent.  */
+#ifndef __has_attribute
+# define __has_attribute(a) false
 #endif
+#ifndef __has_feature
+# define __has_feature(a) false
+#endif
+
+/* True if addresses are being sanitized.  */
+#if defined __SANITIZE_ADDRESS__ || __has_feature (address_sanitizer)
+# define ADDRESS_SANITIZER true
+#else
+# define ADDRESS_SANITIZER false
 #endif
 
 #ifdef DARWIN_OS
@@ -58,8 +70,6 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #define malloc unexec_malloc
 #define realloc unexec_realloc
 #define free unexec_free
-/* Don't use posix_memalign because it is not compatible with unexmacosx.c.  */
-#undef HAVE_POSIX_MEMALIGN
 #endif
 /* The following solves the problem that Emacs hangs when evaluating
    (make-comint "test0" "/nodir/nofile" nil "") when /nodir/nofile
@@ -89,7 +99,8 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #ifdef emacs
 char *_getpty();
 #endif
-
+#define INET6 /* Needed for struct sockaddr_in6.  */
+#undef HAVE_GETADDRINFO /* IRIX has getaddrinfo but not struct addrinfo.  */
 #endif /* IRIX6_5 */
 
 #ifdef MSDOS
@@ -110,24 +121,17 @@ You lose; /* Emacs for DOS must be compiled with DJGPP */
 #else
 # define lstat stat
 #endif
-/* The "portable" definition of _GL_INLINE on config.h does not work
-   with DJGPP GCC 3.4.4: it causes unresolved externals in sysdep.c,
-   although lib/execinfo.h is included and the inline functions there
-   are visible.  */
-#if __GNUC__ < 4
-# define _GL_EXECINFO_INLINE inline
-#endif
+
+/* We must intercept 'opendir' calls to stash away the directory name,
+   so we could reuse it in readlinkat; see msdos.c.  */
+#define opendir sys_opendir
+
 /* End of gnulib-related stuff.  */
 
 #define emacs_raise(sig) msdos_fatal_signal (sig)
 
-#ifndef HAVE_SETPGID
-# ifdef USG
-#  define setpgid(pid, pgid) setpgrp ()
-# else
-#  define setpgid(pid, pgid) setpgrp (pid, pgid)
-# endif
-#endif
+/* DATA_START is needed by vm-limit.c and unexcoff.c. */
+#define DATA_START (&etext + 1)
 
 /* Define one of these for easier conditionals.  */
 #ifdef HAVE_X_WINDOWS
@@ -145,7 +149,7 @@ You lose; /* Emacs for DOS must be compiled with DJGPP */
    directory tree).  Given the unknown policy of different DPMI
    hosts regarding loading of untouched pages, I'm not going to risk
    enlarging Emacs footprint by another 100+ KBytes.  */
-#define SYSTEM_PURESIZE_EXTRA (-170000+65000)
+#define SYSTEM_PURESIZE_EXTRA (-170000+90000)
 #endif
 #endif  /* MSDOS */
 
@@ -157,6 +161,10 @@ You lose; /* Emacs for DOS must be compiled with DJGPP */
 #elif defined DARWIN_OS
 #  define SYSTEM_PURESIZE_EXTRA 200000
 #endif
+#endif
+
+#ifdef CYGWIN
+#define SYSTEM_PURESIZE_EXTRA 10000
 #endif
 
 #if defined HAVE_NTGUI && !defined DebPrint
@@ -171,19 +179,17 @@ extern void _DebPrint (const char *fmt, ...);
 #if defined CYGWIN && defined HAVE_NTGUI
 # define NTGUI_UNICODE /* Cygwin runs only on UNICODE-supporting systems */
 # define _WIN32_WINNT 0x500 /* Win2k */
+/* The following was in /usr/include/string.h prior to Cygwin 1.7.33.  */
+#ifndef strnicmp
+#define strnicmp strncasecmp
+#endif
 #endif
 
 #ifdef emacs /* Don't do this for lib-src.  */
 /* Tell regex.c to use a type compatible with Emacs.  */
 #define RE_TRANSLATE_TYPE Lisp_Object
 #define RE_TRANSLATE(TBL, C) char_table_translate (TBL, C)
-#ifdef make_number
-/* If make_number is a macro, use it.  */
 #define RE_TRANSLATE_P(TBL) (!EQ (TBL, make_number (0)))
-#else
-/* If make_number is a function, avoid it.  */
-#define RE_TRANSLATE_P(TBL) (!(INTEGERP (TBL) && XINT (TBL) == 0))
-#endif
 #endif
 
 #include <string.h>
@@ -195,7 +201,9 @@ extern void _DebPrint (const char *fmt, ...);
 #define NO_INLINE
 #endif
 
-#if (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1))
+#if (__clang__								\
+     ? __has_attribute (externally_visible)				\
+     : (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)))
 #define EXTERNALLY_VISIBLE __attribute__((externally_visible))
 #else
 #define EXTERNALLY_VISIBLE
@@ -217,26 +225,91 @@ extern void _DebPrint (const char *fmt, ...);
 
 #define ATTRIBUTE_CONST _GL_ATTRIBUTE_CONST
 
+/* Work around GCC bug 59600: when a function is inlined, the inlined
+   code may have its addresses sanitized even if the function has the
+   no_sanitize_address attribute.  This bug is present in GCC 4.8.2
+   and clang 3.3, the latest releases as of December 2013, and the
+   only platforms known to support address sanitization.  When the bug
+   is fixed the #if can be updated accordingly.  */
+#if ADDRESS_SANITIZER
+# define ADDRESS_SANITIZER_WORKAROUND NO_INLINE
+#else
+# define ADDRESS_SANITIZER_WORKAROUND
+#endif
+
+/* Attribute of functions whose code should not have addresses
+   sanitized.  */
+
+#if (__has_attribute (no_sanitize_address) \
+     || 4 < __GNUC__ + (8 <= __GNUC_MINOR__))
+# define ATTRIBUTE_NO_SANITIZE_ADDRESS \
+    __attribute__ ((no_sanitize_address)) ADDRESS_SANITIZER_WORKAROUND
+#elif __has_attribute (no_address_safety_analysis)
+# define ATTRIBUTE_NO_SANITIZE_ADDRESS \
+    __attribute__ ((no_address_safety_analysis)) ADDRESS_SANITIZER_WORKAROUND
+#else
+# define ATTRIBUTE_NO_SANITIZE_ADDRESS
+#endif
+
 /* Some versions of GNU/Linux define noinline in their headers.  */
 #ifdef noinline
 #undef noinline
 #endif
 
-#define INLINE _GL_INLINE
+/* Use Gnulib's extern-inline module for extern inline functions.
+   An include file foo.h should prepend FOO_INLINE to function
+   definitions, with the following overall pattern:
+
+      [#include any other .h files first.]
+      ...
+      INLINE_HEADER_BEGIN
+      ...
+      INLINE int
+      incr (int i)
+      {
+        return i + 1;
+      }
+      ...
+      INLINE_HEADER_END
+
+   For every executable, exactly one file that includes the header
+   should do this:
+
+      #define INLINE EXTERN_INLINE
+
+   before including config.h or any other .h file.
+   Other .c files should not define INLINE.
+
+   C99 compilers compile functions like 'incr' as C99-style extern
+   inline functions.  Pre-C99 GCCs do something similar with
+   GNU-specific keywords.  Pre-C99 non-GCC compilers use static
+   functions, which bloats the code but is good enough.  */
+
+#ifndef INLINE
+# define INLINE _GL_INLINE
+#endif
 #define EXTERN_INLINE _GL_EXTERN_INLINE
 #define INLINE_HEADER_BEGIN _GL_INLINE_HEADER_BEGIN
 #define INLINE_HEADER_END _GL_INLINE_HEADER_END
+
+/* To use the struct hack with N elements, declare the struct like this:
+     struct s { ...; t name[FLEXIBLE_ARRAY_MEMBER]; };
+   and allocate (offsetof (struct s, name) + N * sizeof (t)) bytes.
+   IBM xlc 12.1 claims to do C99 but mishandles flexible array members.  */
+#if 199901 <= __STDC_VERSION__ && !defined __IBMC__
+# define FLEXIBLE_ARRAY_MEMBER
+#elif __GNUC__ && !defined __STRICT_ANSI__
+# define FLEXIBLE_ARRAY_MEMBER 0
+#else
+# define FLEXIBLE_ARRAY_MEMBER 1
+#endif
 
 /* Use this to suppress gcc's `...may be used before initialized' warnings. */
 #ifdef lint
 /* Use CODE only if lint checking is in effect.  */
 # define IF_LINT(Code) Code
-/* Assume that the expression COND is true.  This differs in intent
-   from 'assert', as it is a message from the programmer to the compiler.  */
-# define lint_assume(cond) ((cond) ? (void) 0 : abort ())
 #else
 # define IF_LINT(Code) /* empty */
-# define lint_assume(cond) ((void) (0 && (cond)))
 #endif
 
 /* conf_post.h ends here */

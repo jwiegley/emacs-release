@@ -1,6 +1,6 @@
 @c -*-texinfo-*-
 @c This is part of the GNU Emacs Lisp Reference Manual.
-@c Copyright (C) 1990-1995, 1998-1999, 2001-2013 Free Software
+@c Copyright (C) 1990-1995, 1998-1999, 2001-2014 Free Software
 @c Foundation, Inc.
 @c See the file elisp.texi for copying conditions.
 @node Modes
@@ -69,11 +69,13 @@ functions are called with arguments, or their return values are used
 in some way.  The hook's documentation says how the functions are
 called.  You can use @code{add-hook} to add a function to an abnormal
 hook, but you must write the function to follow the hook's calling
-convention.
+convention.  By convention, abnormal hook names end in @samp{-functions}.
 
-  By convention, abnormal hook names end in @samp{-functions}.  If the
-variable's name ends in @samp{-function}, then its value is just a single
-function, not a list of functions.
+@cindex single-function hook
+If the variable's name ends in @samp{-function}, then its value is
+just a single function, not a list of functions.  @code{add-hook} cannot be
+used to modify such a @emph{single function hook}, and you have to use
+@code{add-function} instead (@pxref{Advising Functions}).
 
 @menu
 * Running Hooks::    How to run a hook.
@@ -127,47 +129,6 @@ value.  Each hook function is passed the arguments @var{args}.  If this
 function stops because one of the hook functions returns a
 non-@code{nil} value, it returns that value; otherwise it returns
 @code{nil}.
-@end defun
-
-@defmac with-wrapper-hook hook args &rest body
-This macro runs the abnormal hook @code{hook} as a series of nested
-``wrapper functions'' around the @var{body} forms.  The effect is
-similar to nested @code{around} advices (@pxref{Around-Advice}).
-
-Each hook function should accept an argument list consisting of a function
-@var{fun}, followed by the additional arguments listed in @var{args}.
-The first hook function is passed a function @var{fun} that, if it is
-called with arguments @var{args}, performs @var{body} (i.e., the default
-operation).  The @var{fun} passed to each successive hook function is
-constructed from all the preceding hook functions (and @var{body}); if
-this @var{fun} is called with arguments @var{args}, it does what the
-@code{with-wrapper-hook} call would if the preceding hook functions were
-the only ones in @var{hook}.
-
-Each hook function may call its @var{fun} argument as many times as it
-wishes, including never.  In that case, such a hook function acts to
-replace the default definition altogether, and any preceding hook
-functions.  Of course, a subsequent hook function may do the same thing.
-
-Each hook function definition is used to construct the @var{fun} passed
-to the next hook function in @var{hook}, if any.  The last or
-``outermost'' @var{fun} is called once to produce the overall effect.
-
-When might you want to use a wrapper hook?  The function
-@code{filter-buffer-substring} illustrates a common case.  There is a
-basic functionality, performed by @var{body}---in this case, to extract
-a buffer-substring.  Then any number of hook functions can act in
-sequence to modify that string, before returning the final result.
-A wrapper-hook also allows for a hook function to completely replace the
-default definition (by not calling @var{fun}).
-@end defmac
-
-@defun run-hook-wrapped hook wrap-function &rest args
-This function is similar to @code{run-hook-with-args-until-success}.
-Like that function, it runs the functions on the abnormal hook
-@code{hook}, stopping at the first one that returns non-@code{nil}.
-Instead of calling the hook functions directly, though, it actually
-calls @code{wrap-function} with arguments @code{fun} and @code{args}.
 @end defun
 
 @node Setting Hooks
@@ -646,10 +607,10 @@ mode command.  The default value is @code{lisp-interaction-mode}.
 @defvar interpreter-mode-alist
 This variable specifies major modes to use for scripts that specify a
 command interpreter in a @samp{#!} line.  Its value is an alist with
-elements of the form @code{(@var{interpreter} . @var{mode})}; for
-example, @code{("perl" . perl-mode)} is one element present by
-default.  The element says to use mode @var{mode} if the file
-specifies an interpreter which matches @var{interpreter}.
+elements of the form @code{(@var{regexp} . @var{mode})}; this says to
+use mode @var{mode} if the file specifies an interpreter which matches
+@code{\\`@var{regexp}\\'}.  For example, one of the default elements
+is @code{("python[0-9.]*" . python-mode)}.
 @end defvar
 
 @defvar magic-mode-alist
@@ -741,7 +702,7 @@ mode and minor modes.  It uses the @code{documentation} function to
 retrieve the documentation strings of the major and minor mode
 commands (@pxref{Accessing Documentation}).
 
-If called from Lisp with a non-nil @var{buffer} argument, this
+If called from Lisp with a non-@code{nil} @var{buffer} argument, this
 function displays the documentation for that buffer's major and minor
 modes, rather than those of the current buffer.
 @end deffn
@@ -1506,9 +1467,11 @@ designed for abbrevs and Auto Fill mode.  Do not try substituting your
 own definition of @code{self-insert-command} for the standard one.  The
 editor command loop handles this function specially.)
 
-The key sequences bound in a minor mode should consist of @kbd{C-c}
-followed by one of @kbd{.,/?`'"[]\|~!#$%^&*()-_+=}.  (The other
-punctuation characters are reserved for major modes.)
+Minor modes may bind commands to key sequences consisting of @kbd{C-c}
+followed by a punctuation character.  However, sequences consisting of
+@kbd{C-c} followed by one of @kbd{@{@}<>:;}, or a control character or
+digit, are reserved for major modes.  Also, @kbd{C-c @var{letter}} is
+reserved for users.  @xref{Key Binding Conventions}.
 
 @node Defining Minor Modes
 @subsection Defining Minor Modes
@@ -1683,7 +1646,7 @@ minor modes don't need any.
 This defines a global toggle named @var{global-mode} whose meaning is
 to enable or disable the buffer-local minor mode @var{mode} in all
 buffers.  To turn on the minor mode in a buffer, it uses the function
-@var{turn-on}; to turn off the minor mode, it calls @code{mode} with
+@var{turn-on}; to turn off the minor mode, it calls @var{mode} with
 @minus{}1 as argument.
 
 Globally enabling the mode also affects buffers subsequently created
@@ -1800,7 +1763,7 @@ display of the text just as they would text in the buffer.  Any
 characters which have no @code{face} properties are displayed, by
 default, in the face @code{mode-line} or @code{mode-line-inactive}
 (@pxref{Standard Faces,,, emacs, The GNU Emacs Manual}).  The
-@code{help-echo} and @code{local-map} properties in @var{string} have
+@code{help-echo} and @code{keymap} properties in @var{string} have
 special meanings.  @xref{Properties in Mode}.
 
 @item @var{symbol}
@@ -2149,11 +2112,6 @@ visible on screen; or @samp{Bottom} or @samp{All}.
 The status of the subprocess belonging to the current buffer, obtained with
 @code{process-status}.  @xref{Process Information}.
 
-@item %t
-Whether the visited file is a text file or a binary file.  This is a
-meaningful distinction only on certain operating systems (@pxref{MS-DOS
-File Types}).
-
 @item %z
 The mnemonics of keyboard, terminal, and buffer coding systems.
 
@@ -2210,7 +2168,7 @@ The value of @code{global-mode-string}.
   Certain text properties are meaningful in the
 mode line.  The @code{face} property affects the appearance of text; the
 @code{help-echo} property associates help strings with the text, and
-@code{local-map} can make the text mouse-sensitive.
+@code{keymap} can make the text mouse-sensitive.
 
   There are four ways to specify text properties for text in the mode
 line:
@@ -2234,7 +2192,7 @@ structure, and make @var{form} evaluate to a string that has a text
 property.
 @end enumerate
 
-  You can use the @code{local-map} property to specify a keymap.  This
+  You can use the @code{keymap} property to specify a keymap.  This
 keymap only takes real effect for mouse clicks; binding character keys
 and function keys to it has no effect, since it is impossible to move
 point into the mode line.
@@ -2262,6 +2220,12 @@ header line, for windows displaying the buffer.  The format of the value
 is the same as for @code{mode-line-format} (@pxref{Mode Line Data}).
 It is normally @code{nil}, so that ordinary buffers have no header line.
 @end defvar
+
+@defun window-header-line-height &optional window
+This function returns the height in pixels of @var{window}'s header
+line.  @var{window} must be a live window, and defaults to the
+selected window.
+@end defun
 
   A window that is just one line tall never displays a header line.  A
 window that is two lines tall cannot display both a mode line and a
@@ -2488,7 +2452,7 @@ Selecting a special element performs:
 A nested sub-alist element looks like this:
 
 @example
-(@var{menu-title} @var{sub-alist})
+(@var{menu-title} . @var{sub-alist})
 @end example
 
 It creates the submenu @var{menu-title} specified by @var{sub-alist}.
@@ -3336,18 +3300,28 @@ reasonably fast.
 @section Automatic Indentation of code
 
 For programming languages, an important feature of a major mode is to
-provide automatic indentation.  This is controlled in Emacs by
-@code{indent-line-function} (@pxref{Mode-Specific Indent}).
-Writing a good indentation function can be difficult and to a large
-extent it is still a black art.
+provide automatic indentation.  There are two parts: one is to decide what
+is the right indentation of a line, and the other is to decide when to
+reindent a line.  By default, Emacs reindents a line whenever you
+type a character in @code{electric-indent-chars}, which by default only
+includes Newline.  Major modes can add chars to @code{electric-indent-chars}
+according to the syntax of the language.
 
-Many major mode authors will start by writing a simple indentation
-function that works for simple cases, for example by comparing with the
-indentation of the previous text line.  For most programming languages
-that are not really line-based, this tends to scale very poorly:
-improving such a function to let it handle more diverse situations tends
-to become more and more difficult, resulting in the end with a large,
-complex, unmaintainable indentation function which nobody dares to touch.
+Deciding what is the right indentation is controlled in Emacs by
+@code{indent-line-function} (@pxref{Mode-Specific Indent}).  For some modes,
+the @emph{right} indentation cannot be known reliably, typically because
+indentation is significant so several indentations are valid but with different
+meanings.  In that case, the mode should set @code{electric-indent-inhibit} to
+make sure the line is not constantly re-indented against the user's wishes.
+
+Writing a good indentation function can be difficult and to a large extent it
+is still a black art.  Many major mode authors will start by writing a simple
+indentation function that works for simple cases, for example by comparing with
+the indentation of the previous text line.  For most programming languages that
+are not really line-based, this tends to scale very poorly: improving
+such a function to let it handle more diverse situations tends to become more
+and more difficult, resulting in the end with a large, complex, unmaintainable
+indentation function which nobody dares to touch.
 
 A good indentation function will usually need to actually parse the
 text, according to the syntax of the language.  Luckily, it is not
@@ -3365,7 +3339,7 @@ programming languages are designed to be parsed forward, but for the
 purpose of indentation it has the advantage of not needing to
 guess a ``safe'' starting point, and it generally enjoys the property
 that only a minimum of text will be analyzed to decide the indentation
-of a line, so indentation will tend to be unaffected by syntax errors in
+of a line, so indentation will tend to be less affected by syntax errors in
 some earlier unrelated piece of code.  Parsing forward on the other hand
 is usually easier and has the advantage of making it possible to
 reindent efficiently a whole region at a time, with a single parse.
@@ -3386,6 +3360,7 @@ of Lisp sexps and adapts it to non-Lisp languages.
 
 @node SMIE
 @subsection Simple Minded Indentation Engine
+@cindex SMIE
 
 SMIE is a package that provides a generic navigation and indentation
 engine.  Based on a very simple parser using an ``operator precedence
@@ -3415,6 +3390,7 @@ resorting to some special tricks (@pxref{SMIE Tricks}).
 * SMIE Indentation::            Specifying indentation rules.
 * SMIE Indentation Helpers::    Helper functions for indentation rules.
 * SMIE Indentation Example::    Sample indentation rules.
+* SMIE Customization::          Customizing indentation.
 @end menu
 
 @node SMIE setup
@@ -3553,6 +3529,8 @@ simply ignored.
 
 @node SMIE Grammar
 @subsubsection Defining the Grammar of a Language
+@cindex SMIE grammar
+@cindex grammar, SMIE
 
 The usual way to define the SMIE grammar of a language is by
 defining a new global variable that holds the precedence table by
@@ -3628,6 +3606,8 @@ formally as left associative.
 
 @node SMIE Lexer
 @subsubsection Defining Tokens
+@cindex SMIE lexer
+@cindex defining tokens, SMIE
 
 SMIE comes with a predefined lexical analyzer which uses syntax tables
 in the following way: any sequence of characters that have word or
@@ -3762,6 +3742,7 @@ surrounding text to find ad-hoc clues.
 
 @node SMIE Indentation
 @subsubsection Specifying Indentation Rules
+@cindex indentation rules, SMIE
 
 Based on the provided grammar, SMIE will be able to provide automatic
 indentation without any extra effort.  But in practice, this default
@@ -3820,8 +3801,8 @@ expressions (not separated by any token) rather than an expression.
 @end itemize
 
 When @var{arg} is a token, the function is called with point just before
-that token.  A return value of nil always means to fallback on the
-default behavior, so the function should return nil for arguments it
+that token.  A return value of @code{nil} always means to fallback on the
+default behavior, so the function should return @code{nil} for arguments it
 does not expect.
 
 @var{offset} can be:
@@ -3920,7 +3901,7 @@ A few things to note:
 @itemize
 @item
 The first case indicates the basic indentation increment to use.
-If @code{sample-indent-basic} is nil, then SMIE uses the global
+If @code{sample-indent-basic} is @code{nil}, then SMIE uses the global
 setting @code{smie-indent-basic}.  The major mode could have set
 @code{smie-indent-basic} buffer-locally instead, but that
 is discouraged.
@@ -3987,6 +3968,52 @@ The advantage of this formulation is that it reuses the indentation of
 the previous @code{"else"}, rather than going all the way back to the
 first @code{"if"} of the sequence.
 @end itemize
+
+@c In some sense this belongs more in the Emacs manual.
+@node SMIE Customization
+@subsubsection Customizing Indentation
+
+If you are using a mode whose indentation is provided by SMIE, you can
+customize the indentation to suit your preferences.  You can do this
+on a per-mode basis (using the option @code{smie-config}), or a
+per-file basis (using the function @code{smie-config-local} in a
+file-local variable specification).
+
+@defopt smie-config
+This option lets you customize indentation on a per-mode basis.
+It is an alist with elements of the form @code{(@var{mode} . @var{rules})}.
+For the precise form of rules, see the variable's documentation; but
+you may find it easier to use the command @code{smie-config-guess}.
+@end defopt
+
+@deffn Command smie-config-guess
+This command tries to work out appropriate settings to produce
+your preferred style of indentation.  Simply call the command while
+visiting a file that is indented with your style.
+@end deffn
+
+@deffn Command smie-config-save
+Call this command after using @code{smie-config-guess}, to save your
+settings for future sessions.
+@end deffn
+
+@deffn Command smie-config-show-indent &optional move
+This command displays the rules that are used to indent the current
+line.
+@end deffn
+
+@deffn Command smie-config-set-indent
+This command adds a local rule to adjust the indentation of the current line.
+@end deffn
+
+@defun smie-config-local rules
+This function adds @var{rules} as indentation rules for the current buffer.
+These add to any mode-specific rules defined by the @code{smie-config} option.
+To specify custom indentation rules for a specific file, add an entry
+to the file's local variables of the form:
+@code{eval: (smie-config-local '(@var{rules}))}.
+@end defun
+
 
 @node Desktop Save Mode
 @section Desktop Save Mode

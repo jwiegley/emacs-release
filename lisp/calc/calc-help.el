@@ -1,6 +1,6 @@
 ;;; calc-help.el --- help display functions for Calc,
 
-;; Copyright (C) 1990-1993, 2001-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1990-1993, 2001-2014 Free Software Foundation, Inc.
 
 ;; Author: David Gillespie <daveg@synaptics.com>
 ;; Maintainer: Jay Belanger <jay.p.belanger@gmail.com>
@@ -30,7 +30,7 @@
 (require 'calc-macs)
 
 ;; Declare functions which are defined elsewhere.
-(declare-function Info-goto-node "info" (nodename &optional fork))
+(declare-function Info-goto-node "info" (nodename &optional fork strict-case))
 (declare-function Info-last "info" ())
 
 
@@ -386,23 +386,9 @@ C-w  Describe how there is no warranty for Calc."
 
 (defun calc-view-news ()
   (interactive)
-  (let ((path load-path))
-    (while (and path
-		(not (file-exists-p (expand-file-name "calc.el" (car path)))))
-      (setq path (cdr path)))
-    (or (and path
-	     (file-exists-p (expand-file-name "README" (car path))))
-	(error "Can't locate Calc sources"))
-    (calc-quit)
-    (switch-to-buffer "*Help*")
-    (let ((inhibit-read-only t))
-      (erase-buffer)
-      (insert-file-contents (expand-file-name "README" (car path)))
-      (search-forward "Summary of changes")
-      (forward-line -1)
-      (delete-region (point-min) (point))
-      (goto-char (point-min)))
-    (help-mode)))
+  (calc-quit)
+  (view-emacs-news)
+  (re-search-forward "^\*+ .*\\<Calc\\>" nil t))
 
 (defvar calc-help-long-names '((?b . "binary/business")
 			       (?g . "graphics")

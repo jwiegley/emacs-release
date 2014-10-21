@@ -4,6 +4,7 @@
 @setfilename ../../info/calc
 @c [title]
 @settitle GNU Emacs Calc Manual
+@documentencoding UTF-8
 @setchapternewpage odd
 @comment %**end of header (This is for running Texinfo on a region.)
 
@@ -94,14 +95,14 @@ This file documents Calc, the GNU Emacs calculator, included with
 GNU Emacs @value{EMACSVER}.
 @end ifnotinfo
 
-Copyright @copyright{} 1990--1991, 2001--2013 Free Software Foundation, Inc.
+Copyright @copyright{} 1990--1991, 2001--2014 Free Software Foundation, Inc.
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.3 or
 any later version published by the Free Software Foundation; with the
 Invariant Sections being just ``GNU GENERAL PUBLIC LICENSE'', with the
-Front-Cover texts being ``A GNU Manual,'' and with the Back-Cover
+Front-Cover Texts being ``A GNU Manual,'' and with the Back-Cover
 Texts as in (a) below.  A copy of the license is included in the section
 entitled ``GNU Free Documentation License.''
 
@@ -140,7 +141,7 @@ modify this GNU manual.''
 @c [begin]
 @ifnottex
 @node Top, Getting Started, (dir), (dir)
-@chapter The GNU Emacs Calculator
+@top The GNU Emacs Calculator
 
 @noindent
 @dfn{Calc} is an advanced desk calculator and mathematical tool
@@ -3959,7 +3960,7 @@ Next, let's add the line we got from our least-squares fit.
 @ifinfo
 (If you are reading this tutorial on-line while running Calc, typing
 @kbd{g a} may cause the tutorial to disappear from its window and be
-replaced by a buffer named @samp{*Gnuplot Commands*}.  The tutorial
+replaced by a buffer named @file{*Gnuplot Commands*}.  The tutorial
 will reappear when you terminate GNUPLOT by typing @kbd{g q}.)
 @end ifinfo
 
@@ -4460,7 +4461,7 @@ date by one or several months.  @xref{Date Arithmetic}, for more.
 Friday the 13th?  @xref{Types Answer 5, 5}. (@bullet{})
 
 (@bullet{}) @strong{Exercise 6.}  How many leap years will there be
-between now and the year 10001 A.D.?  @xref{Types Answer 6, 6}. (@bullet{})
+between now and the year 10001 AD@?  @xref{Types Answer 6, 6}. (@bullet{})
 
 @cindex Slope and angle of a line
 @cindex Angle and slope of a line
@@ -8896,7 +8897,7 @@ Note that this rule does not mention @samp{O} at all, so it will
 apply to any product-of-sum it encounters---this rule may surprise
 you if you put it into @code{EvalRules}!
 
-In the second rule, the sum of two O's is changed to the smaller O.
+In the second rule, the sum of two O's is changed to the smaller O@.
 The optional constant coefficients are there mostly so that
 @samp{O(x^2) - O(x^3)} and @samp{O(x^3) - O(x^2)} are handled
 as well as @samp{O(x^2) + O(x^3)}.
@@ -9616,8 +9617,8 @@ numeric entry, undo, numeric prefix arguments, etc.
 @cindex Starting the Calculator
 @cindex Running the Calculator
 To start the Calculator in its standard interface, type @kbd{M-x calc}.
-By default this creates a pair of small windows, @samp{*Calculator*}
-and @samp{*Calc Trail*}.  The former displays the contents of the
+By default this creates a pair of small windows, @file{*Calculator*}
+and @file{*Calc Trail*}.  The former displays the contents of the
 Calculator stack and is manipulated exclusively through Calc commands.
 It is possible (though not usually necessary) to create several Calc
 mode buffers each of which has an independent stack, undo list, and
@@ -9625,7 +9626,7 @@ mode settings.  There is exactly one Calc Trail buffer; it records a
 list of the results of all calculations that have been done.  The
 Calc Trail buffer uses a variant of Calc mode, so Calculator commands
 still work when the trail buffer's window is selected.  It is possible
-to turn the trail window off, but the @samp{*Calc Trail*} buffer itself
+to turn the trail window off, but the @file{*Calc Trail*} buffer itself
 still exists and is updated silently.  @xref{Trail Commands}.
 
 @kindex C-x * c
@@ -9909,9 +9910,9 @@ listed.
 
 @kindex h n
 The @kbd{h n} or @kbd{h C-n} (@code{calc-view-news}) command displays
-the ``news'' or change history of Calc.  This is kept in the file
-@file{README}, which Calc looks for in the same directory as the Calc
-source files.
+the ``news'' or change history of Emacs, and jumps to the most recent
+portion concerning Calc (if present).  For older history, see the file
+@file{etc/CALC-NEWS} in the Emacs distribution.
 
 @kindex h C-c
 @kindex h C-d
@@ -10149,10 +10150,10 @@ forget what it was, just run @code{C-x * q} again and enter
 @samp{$} as the formula.
 
 If this is the first time you have used the Calculator in this Emacs
-session, the @kbd{C-x * q} command will create the @code{*Calculator*}
+session, the @kbd{C-x * q} command will create the @file{*Calculator*}
 buffer and perform all the usual initializations; it simply will
 refrain from putting that buffer up in a new window.  The Quick
-Calculator refers to the @code{*Calculator*} buffer for all mode
+Calculator refers to the @file{*Calculator*} buffer for all mode
 settings.  Thus, for example, to set the precision that the Quick
 Calculator uses, simply run the full Calculator momentarily and use
 the regular @kbd{p} command.
@@ -10340,9 +10341,9 @@ that you must always press @kbd{w} yourself to see the messages).
 @pindex another-calc
 It is possible to have any number of Calc mode buffers at once.
 Usually this is done by executing @kbd{M-x another-calc}, which
-is similar to @kbd{C-x * c} except that if a @samp{*Calculator*}
+is similar to @kbd{C-x * c} except that if a @file{*Calculator*}
 buffer already exists, a new, independent one with a name of the
-form @samp{*Calculator*<@var{n}>} is created.  You can also use the
+form @file{*Calculator*<@var{n}>} is created.  You can also use the
 command @code{calc-mode} to put any buffer into Calculator mode, but
 this would ordinarily never be done.
 
@@ -10357,7 +10358,7 @@ global default values of these variables are used only when a new
 Calculator buffer is created.  The @code{calc-quit} command saves
 the stack and mode settings of the buffer being quit as the new defaults.
 
-There is only one trail buffer, @samp{*Calc Trail*}, used by all
+There is only one trail buffer, @file{*Calc Trail*}, used by all
 Calculator buffers.
 
 @node Troubleshooting Commands,  , Multiple Calculators, Introduction
@@ -10986,10 +10987,10 @@ Input is flexible; date forms can be entered in any of the usual
 notations for dates and times.  @xref{Date Formats}.
 
 Date forms are stored internally as numbers, specifically the number
-of days since midnight on the morning of January 1 of the year 1 AD.
+of days since midnight on the morning of December 31 of the year 1 BC@.
 If the internal number is an integer, the form represents a date only;
 if the internal number is a fraction or float, the form represents
-a date and time.  For example, @samp{<6:00am Wed Jan 9, 1991>}
+a date and time.  For example, @samp{<6:00am Thu Jan 10, 1991>}
 is represented by the number 726842.25.  The standard precision of
 12 decimal digits is enough to ensure that a (reasonable) date and
 time can be stored without roundoff error.
@@ -11009,58 +11010,70 @@ You can use the @kbd{v p} (@code{calc-pack}) and @kbd{v u}
 of a date form.  @xref{Packing and Unpacking}.
 
 Date forms can go arbitrarily far into the future or past.  Negative
-year numbers represent years BC@.  Calc uses a combination of the
-Gregorian and Julian calendars, following the history of Great
-Britain and the British colonies.  This is the same calendar that
-is used by the @code{cal} program in most Unix implementations.
+year numbers represent years BC@.  There is no ``year 0''; the day
+before @samp{<Mon Jan 1, +1>} is @samp{<Sun Dec 31, -1>}.  These are
+days 1 and 0 respectively in Calc's internal numbering scheme.  The
+Gregorian calendar is used for all dates, including dates before the
+Gregorian calendar was invented (although that can be configured; see
+below).  Thus Calc's use of the day number @mathit{-10000} to
+represent August 15, 28 BC should be taken with a grain of salt.
 
 @cindex Julian calendar
 @cindex Gregorian calendar
 Some historical background:  The Julian calendar was created by
-Julius Caesar in the year 46 BC as an attempt to fix the gradual
-drift caused by the lack of leap years in the calendar used
-until that time.  The Julian calendar introduced an extra day in
-all years divisible by four.  After some initial confusion, the
-calendar was adopted around the year we call 8 AD@.  Some centuries
-later it became apparent that the Julian year of 365.25 days was
-itself not quite right.  In 1582 Pope Gregory XIII introduced the
-Gregorian calendar, which added the new rule that years divisible
-by 100, but not by 400, were not to be considered leap years
-despite being divisible by four.  Many countries delayed adoption
-of the Gregorian calendar because of religious differences;
-in Britain it was put off until the year 1752, by which time
-the Julian calendar had fallen eleven days behind the true
-seasons.  So the switch to the Gregorian calendar in early
-September 1752 introduced a discontinuity:  The day after
-Sep 2, 1752 is Sep 14, 1752.  Calc follows this convention.
-To take another example, Russia waited until 1918 before
-adopting the new calendar, and thus needed to remove thirteen
-days (between Feb 1, 1918 and Feb 14, 1918).  This means that
-Calc's reckoning will be inconsistent with Russian history between
-1752 and 1918, and similarly for various other countries.
+Julius Caesar in the year 46 BC as an attempt to fix the confusion
+caused by the irregular Roman calendar that was used before that time.
+The Julian calendar introduced an extra day in all years divisible by
+four.  After some initial confusion, the calendar was adopted around
+the year we call 8 AD@.  Some centuries later it became
+apparent that the Julian year of 365.25 days was itself not quite
+right.  In 1582 Pope Gregory XIII introduced the Gregorian calendar,
+which added the new rule that years divisible by 100, but not by 400,
+were not to be considered leap years despite being divisible by four.
+Many countries delayed adoption of the Gregorian calendar
+because of religious differences.  For example, Great Britain and the
+British colonies switched to the Gregorian calendar in September
+1752, when the Julian calendar was eleven days behind the
+Gregorian calendar.  That year in Britain, the day after September 2
+was September 14.  To take another example, Russia did not adopt the
+Gregorian calendar until 1918, and that year in Russia the day after
+January 31 was February 14.  Calc's reckoning therefore matches English
+practice starting in 1752 and Russian practice starting in 1918, but
+disagrees with earlier dates in both countries.
 
-Today's timekeepers introduce an occasional ``leap second'' as
-well, but Calc does not take these minor effects into account.
-(If it did, it would have to report a non-integer number of days
-between, say, @samp{<12:00am Mon Jan 1, 1900>} and
+When the Julian calendar was introduced, it had January 1 as the first
+day of the year.  By the Middle Ages, many European countries
+had changed the beginning of a new year to a different date, often to
+a religious festival.  Almost all countries reverted to using January 1
+as the beginning of the year by the time they adopted the Gregorian
+calendar.
+
+Some calendars attempt to mimic the historical situation by using the
+Gregorian calendar for recent dates and the Julian calendar for older
+dates. The @code{cal} program in most Unix implementations does this,
+for example. While January 1 wasn't always the beginning of a calendar
+year, these hybrid calendars still use January 1 as the beginning of
+the year even for older dates.   The customizable variable
+@code{calc-gregorian-switch} (@pxref{Customizing Calc}) can be set to
+have Calc's date forms switch from the Julian to Gregorian calendar at
+any specified date.
+
+Today's timekeepers introduce an occasional ``leap second''.
+These do not occur regularly and Calc does not take these minor
+effects into account.  (If it did, it would have to report a
+non-integer number of days between, say,
+@samp{<12:00am Mon Jan 1, 1900>} and
 @samp{<12:00am Sat Jan 1, 2000>}.)
-
-Calc uses the Julian calendar for all dates before the year 1752,
-including dates BC when the Julian calendar technically had not
-yet been invented.  Thus the claim that day number @mathit{-10000} is
-called ``August 16, 28 BC'' should be taken with a grain of salt.
-
-Please note that there is no ``year 0''; the day before
-@samp{<Sat Jan 1, +1>} is @samp{<Fri Dec 31, -1>}.  These are
-days 0 and @mathit{-1} respectively in Calc's internal numbering scheme.
 
 @cindex Julian day counting
 Another day counting system in common use is, confusingly, also called
-``Julian.''  The Julian day number is the numbers of days since
-12:00 noon (GMT) on Jan 1, 4713 BC, which in Calc's scheme (in GMT)
-is @mathit{-1721423.5} (recall that Calc starts at midnight instead
-of noon).  Thus to convert a Calc date code obtained by unpacking a
-date form into a Julian day number, simply add 1721423.5 after
+``Julian.''  Julian days go from noon to noon.  The Julian day number
+is the numbers of days since 12:00 noon (GMT) on November 24, 4714 BC
+in the Gregorian calendar (i.e., January 1, 4713 BC in the Julian
+calendar).  In Calc's scheme (in GMT) the Julian day origin is
+@mathit{-1721422.5}, because Calc starts at midnight instead of noon.
+Thus to convert a Calc date code obtained by unpacking a
+date form into a Julian day number, simply add 1721422.5 after
 compensating for the time zone difference.  The built-in @kbd{t J}
 command performs this conversion for you.
 
@@ -11092,7 +11105,7 @@ the Julian cycle as an astronomical dating system; this idea was taken
 up by other astronomers.  (At the time, noon was the start of the
 astronomical day.  Herschel originally suggested counting the days
 since Jan 1, 4713 BC at noon Alexandria time; this was later amended to
-noon GMT.)  Julian day numbering is largely used in astronomy.
+noon GMT@.)  Julian day numbering is largely used in astronomy.
 
 @cindex Unix time format
 The Unix operating system measures time as an integer number of
@@ -11789,6 +11802,18 @@ Thus @kbd{M-@key{DEL}} by itself removes the second-from-top stack element,
 leaving the first, third, fourth, and so on; @kbd{M-3 M-@key{DEL}} deletes
 the third stack element.
 
+The above commands do not depend on the location of the cursor.
+If the customizable variable @code{calc-context-sensitive-enter} is
+non-@code{nil} (@pxref{Customizing Calc}), these commands will become
+context sensitive.  For example, instead of duplicating the top of the stack,
+@key{RET} will copy the element at the cursor to the top of the
+stack.  With a positive numeric prefix, a copy of the element at the
+cursor and the appropriate number of preceding elements will be placed
+at the top of the stack.  A negative prefix will still duplicate the
+specified element of the stack regardless of the cursor  position.
+Similarly, @key{DEL} will remove the corresponding elements from the
+stack.
+
 @kindex @key{TAB}
 @pindex calc-roll-down
 To exchange the top two elements of the stack, press @key{TAB}
@@ -11857,7 +11882,7 @@ the stack objects at the levels determined by the point and the mark.
 @pindex calc-edit-finish
 @cindex Editing the stack with Emacs
 The @kbd{`} (@code{calc-edit}) command creates a temporary buffer
-(@samp{*Calc Edit*}) for editing the top-of-stack value using regular
+(@file{*Calc Edit*}) for editing the top-of-stack value using regular
 Emacs commands.  Note that @kbd{`} is a backquote, not a quote. With a
 numeric prefix argument, it edits the specified number of stack entries
 at once.  (An argument of zero edits the entire stack; a negative
@@ -11870,9 +11895,9 @@ usual meaning (``insert a newline'') if it's a situation where you
 might want to insert new lines into the editing buffer.
 
 When you finish editing, the Calculator parses the lines of text in
-the @samp{*Calc Edit*} buffer as numbers or formulas, replaces the
+the @file{*Calc Edit*} buffer as numbers or formulas, replaces the
 original stack elements in the original buffer with these new values,
-then kills the @samp{*Calc Edit*} buffer.  The original Calculator buffer
+then kills the @file{*Calc Edit*} buffer.  The original Calculator buffer
 continues to exist during editing, but for best results you should be
 careful not to change it until you have finished the edit.  You can
 also cancel the edit by killing the buffer with @kbd{C-x k}.
@@ -11883,7 +11908,7 @@ For example, editing @samp{a + 2} to @samp{3 + 2} and pressing
 finish, Calc will put the result on the stack without evaluating it.
 
 If you give a prefix argument to @kbd{C-c C-c},
-Calc will not kill the @samp{*Calc Edit*} buffer.  You can switch
+Calc will not kill the @file{*Calc Edit*} buffer.  You can switch
 back to that buffer and continue editing if you wish.  However, you
 should understand that if you initiated the edit with @kbd{`}, the
 @kbd{C-c C-c} operation will be programmed to replace the top of the
@@ -11893,13 +11918,13 @@ with other editing commands, though, such as @kbd{s e}
 (@code{calc-edit-variable}; @pxref{Operations on Variables}).
 
 If the @code{calc-edit} command involves more than one stack entry,
-each line of the @samp{*Calc Edit*} buffer is interpreted as a
+each line of the @file{*Calc Edit*} buffer is interpreted as a
 separate formula.  Otherwise, the entire buffer is interpreted as
 one formula, with line breaks ignored.  (You can use @kbd{C-o} or
 @kbd{C-q C-j} to insert a newline in the buffer without pressing @key{RET}.)
 
 The @kbd{`} key also works during numeric or algebraic entry.  The
-text entered so far is moved to the @code{*Calc Edit*} buffer for
+text entered so far is moved to the @file{*Calc Edit*} buffer for
 more extensive editing than is convenient in the minibuffer.
 
 @node Trail Commands, Keep Arguments, Editing Stack Entries, Stack and Trail
@@ -13404,12 +13429,91 @@ dates.  @xref{Specifying Operators}.  To avoid confusion with nameless
 functions, your date formats should avoid using the @samp{#} character.
 
 @menu
+* ISO 8601::
 * Date Formatting Codes::
 * Free-Form Dates::
 * Standard Date Formats::
 @end menu
 
-@node Date Formatting Codes, Free-Form Dates, Date Formats, Date Formats
+@node ISO 8601, Date Formatting Codes, Date Formats, Date Formats
+@subsubsection ISO 8601
+
+@noindent
+@cindex ISO 8601
+The same date can be written down in different formats and Calc tries
+to allow you to choose your preferred format.  Some common formats are
+ambiguous, however; for example, 10/11/2012 means October 11,
+2012 in the United States but it means November 10, 2012 in
+Europe.  To help avoid such ambiguities, the International Organization
+for Standardization (ISO) provides the ISO 8601 standard, which
+provides three different but easily distinguishable and unambiguous
+ways to represent a date.
+
+The ISO 8601 calendar date representation is
+
+@example
+   @var{YYYY}-@var{MM}-@var{DD}
+@end example
+
+@noindent
+where @var{YYYY} is the four digit year, @var{MM} is the two-digit month
+number (01 for January to 12 for December), and @var{DD} is the
+two-digit day of the month (01 to 31).  (Note that @var{YYYY} does not
+correspond to Calc's date formatting code, which will be introduced
+later.)  The year, which should be padded with zeros to ensure it has at
+least four digits, is the Gregorian year, except that the year before
+0001 (1 AD) is the year 0000 (1 BC).  The date October 11, 2012 is
+written 2012-10-11 in this representation and November 10, 2012 is
+written 2012-11-10.
+
+The ISO 8601 ordinal date representation is
+
+@example
+  @var{YYYY}-@var{DDD}
+@end example
+
+@noindent
+where @var{YYYY} is the year, as above, and @var{DDD} is the day of the year.
+The date December 31, 2011 is written 2011-365 in this representation
+and January 1, 2012 is written 2012-001.
+
+The ISO 8601 week date representation is
+
+@example
+ @var{YYYY}-W@var{ww}-@var{D}
+@end example
+
+@noindent
+where @var{YYYY} is the ISO week-numbering year, @var{ww} is the two
+digit week number (preceded by a literal ``W''), and @var{D} is the day
+of the week (1 for Monday through 7 for Sunday).  The ISO week-numbering
+year is based on the Gregorian year but can differ slightly.  The first
+week of an ISO week-numbering year is the week with the Gregorian year's
+first Thursday in it (equivalently, the week containing January 4);
+any day of that week (Monday through Sunday) is part of the same ISO
+week-numbering year, any day from the previous week is part of the
+previous year.  For example, January 4, 2013 is on a Friday, and so
+the first week for the ISO week-numbering year 2013 starts  on
+Monday, December 31, 2012.  The day December 31, 2012 is then part of the
+Gregorian year 2012 but ISO week-numbering year 2013.  In the week
+date representation, this week goes from 2013-W01-1 (December 31,
+2012) to 2013-W01-7 (January 6, 2013).
+
+All three ISO 8601 representations arrange the numbers from most
+significant to least significant; as well as being unambiguous
+representations, they are easy to sort since chronological order in
+this formats corresponds to lexicographical order. The hyphens are
+sometimes omitted.
+
+The ISO 8601 standard uses a 24 hour clock; a particular time is
+represented by @var{hh}:@var{mm}:@var{ss} where @var{hh} is the
+two-digit hour (from 00 to 24), @var{mm} is the two-digit minute (from
+00 to 59) and @var{ss} is the two-digit second.  The seconds or minutes
+and seconds can be omitted, and decimals can be added.  If a date with a
+time is represented, they should be separated by a literal ``T'', so noon
+on December 13, 2012 can be represented as 2012-12-13T12:00.
+
+@node Date Formatting Codes, Free-Form Dates, ISO 8601, Date Formats
 @subsubsection Date Formatting Codes
 
 @noindent
@@ -13426,7 +13530,7 @@ the time part.  The punctuation characters (including spaces) must
 match exactly; letter fields must correspond to suitable text in
 the input.  If this doesn't work, Calc checks if the input is a
 simple number; if so, the number is interpreted as a number of days
-since Jan 1, 1 AD@.  Otherwise, Calc tries a much more relaxed and
+since Dec 31, 1 BC@.  Otherwise, Calc tries a much more relaxed and
 flexible algorithm which is described in the next section.
 
 Weekday names are ignored during reading.
@@ -13450,6 +13554,10 @@ Year:  ``91'' for 1991, `` 7'' for 2007, ``+23'' for 23 AD.
 Year:  ``1991'' for 1991, ``23'' for 23 AD.
 @item YYYY
 Year:  ``1991'' for 1991, ``+23'' for 23 AD.
+@item ZYYY
+Year:  ``1991'' for 1991, ``0023'' for 23 AD, ``0000'' for 1 BC.
+@item IYYY
+Year:  ISO 8601 week-numbering year.
 @item aa
 Year:  ``ad'' or blank.
 @item AA
@@ -13498,6 +13606,8 @@ Day:  ``07'' for 7th day of month.
 Day:  `` 7'' for 7th day of month.
 @item W
 Weekday:  ``0'' for Sunday, ``6'' for Saturday.
+@item w
+Weekday:  ``1'' for Monday, ``7'' for Sunday.
 @item WWW
 Weekday:  ``SUN'' for Sunday.
 @item Www
@@ -13508,12 +13618,16 @@ Weekday:  ``sun'' for Sunday.
 Weekday:  ``SUNDAY'' for Sunday.
 @item Wwww
 Weekday:  ``Sunday'' for Sunday.
+@item Iww
+Week number:  ISO 8601 week number, ``W01'' for week 1.
 @item d
 Day of year:  ``34'' for Feb. 3.
 @item ddd
 Day of year:  ``034'' for Feb. 3.
 @item bdd
 Day of year:  `` 34'' for Feb. 3.
+@item T
+Letter:  Literal ``T''.
 @item h
 Hour:  ``5'' for 5 AM; ``17'' for 5 PM.
 @item hh
@@ -13616,15 +13730,21 @@ abbreviated to one letter, and the alternate forms @samp{a.m.},
 @samp{p.m.}, and @samp{mid} are also understood.  Obviously
 @samp{noon} and @samp{midnight} are allowed only on 12:00:00.
 The words @samp{noon}, @samp{mid}, and @samp{midnight} are also
-recognized with no number attached.
+recognized with no number attached.  Midnight will represent the
+beginning of a day.
 
 If there is no AM/PM indicator, the time is interpreted in 24-hour
 format.
 
-To read the date portion, all words and numbers are isolated
-from the string; other characters are ignored.  All words must
-be either month names or day-of-week names (the latter of which
-are ignored).  Names can be written in full or as three-letter
+When reading the date portion, Calc first checks to see if it is an
+ISO 8601 week-numbering date; if the string contains an integer
+representing the year, a ``W'' followed by two digits for the week
+number, and an integer from 1 to 7 representing the weekday (in that
+order), then all other characters are ignored and this information
+determines the date.  Otherwise, all words and numbers are isolated
+from the string; other characters are ignored.  All words must be
+either month names or day-of-week names (the latter of which are
+ignored). Names can be written in full or as three-letter
 abbreviations.
 
 Large numbers, or numbers with @samp{+} or @samp{-} signs,
@@ -13687,6 +13807,10 @@ command (@pxref{Mode Settings}).
 @samp{j<, h:mm:ss>}  (Julian day plus time)
 @item 9
 @samp{YYddd< hh:mm:ss>}  (Year-day format)
+@item 10
+@samp{ZYYY-MM-DD Www< hh:mm>} (Org mode format)
+@item 11
+@samp{IYYY-Iww-w<Thh:mm:ss>} (ISO 8601 week numbering format)
 @end table
 
 @node Truncating the Stack, Justification, Date Formats, Display Modes
@@ -20632,9 +20756,9 @@ mean, then repeating until the two values converge.
 $$ a_{i+1} = { a_i + b_i \over 2 } , \qquad b_{i+1} = \sqrt{a_i b_i} $$
 @end tex
 
-@cindex Root-mean-square
-Another commonly used mean, the RMS (root-mean-square), can be computed
-for a vector of numbers simply by using the @kbd{A} command.
+@c @cindex Root-mean-square
+@c Another commonly used mean, the RMS (root-mean-square), can be computed
+@c for a vector of numbers simply by using the @kbd{A} command.
 
 @kindex u S
 @pindex calc-vector-sdev
@@ -21500,7 +21624,7 @@ to
 @noindent
 Every character not part of the sub-formula @samp{b} has been changed
 to a dot. (If the customizable variable
-@code{calc-highlight-selections-with-faces} is non-nil, then the characters
+@code{calc-highlight-selections-with-faces} is non-@code{nil}, then the characters
 not part of the sub-formula are de-emphasized by using a less
 noticeable face instead of using dots. @pxref{Displaying Selections}.)
 The @samp{*} next to the line number is to remind you that
@@ -21734,7 +21858,7 @@ by @samp{#} signs:
 @end group
 @end smallexample
 If the customizable variable
-@code{calc-highlight-selections-with-faces} is non-nil, then the
+@code{calc-highlight-selections-with-faces} is non-@code{nil}, then the
 non-selected portion of the formula will be de-emphasized by using a
 less noticeable face (@code{calc-nonselected-face}) instead of dots
 and the selected sub-formula will be highlighted by using a more
@@ -23480,7 +23604,7 @@ of 3 is used.  The lower this limit is, the greater the chance that Calc
 will be unable to integrate a function it could otherwise handle.  Raising
 this limit allows the Calculator to solve more integrals, though the time
 it takes may grow exponentially.  You can monitor the integrator's actions
-by creating an Emacs buffer called @code{*Trace*}.  If such a buffer
+by creating an Emacs buffer called @file{*Trace*}.  If such a buffer
 exists, the @kbd{a i} command will write a log of its actions there.
 
 If you want to manipulate integrals in a purely symbolic way, you can
@@ -27529,17 +27653,17 @@ only during integration by @kbd{a i}.
 @subsection Debugging Rewrites
 
 @noindent
-If a buffer named @samp{*Trace*} exists, the rewrite mechanism will
+If a buffer named @file{*Trace*} exists, the rewrite mechanism will
 record some useful information there as it operates.  The original
 formula is written there, as is the result of each successful rewrite,
 and the final result of the rewriting.  All phase changes are also
 noted.
 
-Calc always appends to @samp{*Trace*}.  You must empty this buffer
+Calc always appends to @file{*Trace*}.  You must empty this buffer
 yourself periodically if it is in danger of growing unwieldy.
 
 Note that the rewriting mechanism is substantially slower when the
-@samp{*Trace*} buffer exists, even if the buffer is not visible on
+@file{*Trace*} buffer exists, even if the buffer is not visible on
 the screen.  Once you are done, you will probably want to kill this
 buffer (with @kbd{C-x k *Trace* @key{RET}}).  If you leave it in
 existence and forget about it, all your future rewrite commands will
@@ -27748,17 +27872,13 @@ while typing @kbd{u c au/yr @key{RET}} produces
 
 If the units you request are inconsistent with the original units, the
 number will be converted into your units times whatever ``remainder''
-units are left over.  For example, converting @samp{55 mph} into acres
+units are left over.  (This can be disabled; @pxref{Customizing Calc}.)
+For example, converting @samp{55 mph} into acres
 produces @samp{6.08e-3 acre / m s}.  (Recall that multiplication binds
 more strongly than division in Calc formulas, so the units here are
 acres per meter-second.)  Remainder units are expressed in terms of
 ``fundamental'' units like @samp{m} and @samp{s}, regardless of the
 input units.
-
-If you want to disallow using inconsistent units, you can set the customizable variable
-@code{calc-ensure-consistent-units} to @code{t} (@pxref{Customizing Calc}).  In this case,
-if you request units which are inconsistent with the original units, you will be warned about
-it and no conversion will occur.
 
 One special exception is that if you specify a single unit name, and
 a compatible unit appears somewhere in the units expression, then
@@ -27801,10 +27921,13 @@ Composite units are expanded as if by @kbd{a x}, so that
 
 If the value on the stack does not contain any units, @kbd{u c} will
 prompt first for the old units which this value should be considered
-to have, then for the new units.  Assuming the old and new units you
-give are consistent with each other, the result also will not contain
-any units.  For example, @kbd{@w{u c} cm @key{RET} in @key{RET}}
-converts the number 2 on the stack to 5.08.
+to have, then for the new units.  (If the value on the stack can be
+simplified so that it doesn't contain any units, like @samp{ft/in} can
+be simplified to 12, then @kbd{u c} will still prompt for both old
+units and new units.   Assuming the old and new units you give are
+consistent with each other, the result also will not contain any
+units.  For example, @kbd{@w{u c} cm @key{RET} in @key{RET}} converts
+the number 2 on the stack to 5.08.
 
 @kindex u b
 @pindex calc-base-units
@@ -27863,7 +27986,7 @@ be considered a ``femto-ton,'' but it is written as @samp{1000 at}
 @kindex u v
 @pindex calc-enter-units-table
 The @kbd{u v} (@code{calc-enter-units-table}) command displays the units table
-in another buffer called @code{*Units Table*}.  Each entry in this table
+in another buffer called @file{*Units Table*}.  Each entry in this table
 gives the unit name as it would appear in an expression, the definition
 of the unit in terms of simpler units, and a full name or description of
 the unit.  Fundamental units are defined as themselves; these are the
@@ -27930,8 +28053,8 @@ radiation related to the cesium-133 atom.  The only SI unit that is not
 based on a fundamental physical process (although there are efforts to
 change this) is the kilogram, which was originally defined as the mass
 of one liter of water, but is now defined as the mass of the
-International Prototype Kilogram (IPK), a cylinder of platinum-iridium
-kept at the Bureau International des Poids et Mesures in S@`evres,
+international prototype of the kilogram (IPK), a cylinder of platinum-iridium
+kept at the Bureau international des poids et mesures in S@`evres,
 France.  (There are several copies of the IPK throughout the world.)
 The British imperial units, once defined in terms of physical objects,
 were redefined in 1963 in terms of SI units.  The US customary units,
@@ -29144,7 +29267,7 @@ result is a surface plot where
 is the height of the point
 at coordinate @expr{(x_i, y_j)} on the surface.  The 3D graph will
 be displayed from a certain default viewpoint; you can change this
-viewpoint by adding a @samp{set view} to the @samp{*Gnuplot Commands*}
+viewpoint by adding a @samp{set view} to the @file{*Gnuplot Commands*}
 buffer as described later.  See the GNUPLOT documentation for a
 description of the @samp{set view} command.
 
@@ -29207,7 +29330,7 @@ you give the @kbd{g p} command, all the curves will be drawn superimposed
 on the same axes.
 
 The @kbd{g a} command (and many others that affect the current graph)
-will cause a special buffer, @samp{*Gnuplot Commands*}, to be displayed
+will cause a special buffer, @file{*Gnuplot Commands*}, to be displayed
 in another window.  This buffer is a template of the commands that will
 be sent to GNUPLOT when it is time to draw the graph.  The first
 @kbd{g a} command adds a @code{plot} command to this buffer.  Succeeding
@@ -29218,7 +29341,7 @@ directly, but you can if you wish.  The only constraint is that there
 must be only one @code{plot} command, and it must be the last command
 in the buffer.  If you want to save and later restore a complete graph
 configuration, you can use regular Emacs commands to save and restore
-the contents of the @samp{*Gnuplot Commands*} buffer.
+the contents of the @file{*Gnuplot Commands*} buffer.
 
 @vindex PlotData1
 @vindex PlotData2
@@ -29270,10 +29393,10 @@ separate ``z''s).  With a zero prefix, it takes three stack entries
 but the ``z'' entry is a vector of curve values.  With a negative
 prefix @expr{-n}, it takes @expr{n} vectors of the form @expr{[x, y, z]}.
 The @kbd{g A} command works by adding a @code{splot} (surface-plot)
-command to the @samp{*Gnuplot Commands*} buffer.
+command to the @file{*Gnuplot Commands*} buffer.
 
 (Although @kbd{g a} adds a 2D @code{plot} command to the
-@samp{*Gnuplot Commands*} buffer, Calc changes this to @code{splot}
+@file{*Gnuplot Commands*} buffer, Calc changes this to @code{splot}
 before sending it to GNUPLOT if it notices that the data points are
 evaluating to @code{xyz} calls.  It will not work to mix 2D and 3D
 @kbd{g a} curves in a single graph, although Calc does not currently
@@ -29305,7 +29428,7 @@ affect the last curve in the list.
 @kindex g p
 @pindex calc-graph-plot
 The @kbd{g p} (@code{calc-graph-plot}) command uses GNUPLOT to draw
-the graph described in the @samp{*Gnuplot Commands*} buffer.  Any
+the graph described in the @file{*Gnuplot Commands*} buffer.  Any
 GNUPLOT parameters which are not defined by commands in this buffer
 are reset to their default values.  The variables named in the @code{plot}
 command are written to a temporary data file and the variable names
@@ -29339,7 +29462,7 @@ the current graph is three-dimensional.
 The @kbd{g P} (@code{calc-graph-print}) command is like @kbd{g p},
 except that it sends the output to a printer instead of to the
 screen.  More precisely, @kbd{g p} looks for @samp{set terminal}
-or @samp{set output} commands in the @samp{*Gnuplot Commands*} buffer;
+or @samp{set output} commands in the @file{*Gnuplot Commands*} buffer;
 lacking these it uses the default settings.  However, @kbd{g P}
 ignores @samp{set terminal} and @samp{set output} commands and
 uses a different set of default values.  All of these values are
@@ -29358,7 +29481,7 @@ The @kbd{g g} (@code{calc-graph-grid}) command turns the ``grid''
 on and off.  It is off by default; tick marks appear only at the
 edges of the graph.  With the grid turned on, dotted lines appear
 across the graph at each tick mark.  Note that this command only
-changes the setting in @samp{*Gnuplot Commands*}; to see the effects
+changes the setting in @file{*Gnuplot Commands*}; to see the effects
 of the change you must give another @kbd{g p} command.
 
 @kindex g b
@@ -29396,7 +29519,7 @@ time. This is usually more than adequate, but there are cases where
 it will not be.  For example, plotting @expr{1 + x} with @expr{x} in the
 interval @samp{[0 ..@: 1e-6]} will round all the data points down
 to 1.0!  Putting the command @samp{set precision @var{n}} in the
-@samp{*Gnuplot Commands*} buffer will cause the data to be computed
+@file{*Gnuplot Commands*} buffer will cause the data to be computed
 at precision @var{n} instead of 5.  Since this is such a rare case,
 there is no keystroke-based command to set the precision.
 
@@ -29411,9 +29534,9 @@ The default title is blank (no title).
 The @kbd{g n} (@code{calc-graph-name}) command sets the title of an
 individual curve.  Like the other curve-manipulating commands, it
 affects the most recently added curve, i.e., the last curve on the
-list in the @samp{*Gnuplot Commands*} buffer.  To set the title of
+list in the @file{*Gnuplot Commands*} buffer.  To set the title of
 the other curves you must first juggle them to the end of the list
-with @kbd{g j}, or edit the @samp{*Gnuplot Commands*} buffer by hand.
+with @kbd{g j}, or edit the @file{*Gnuplot Commands*} buffer by hand.
 Curve titles appear in the key; if the key is turned off they are
 not used.
 
@@ -29426,7 +29549,7 @@ The @kbd{g t} (@code{calc-graph-title-x}) and @kbd{g T}
 and ``y'' axes, respectively.  These titles appear next to the
 tick marks on the left and bottom edges of the graph, respectively.
 Calc does not have commands to control the tick marks themselves,
-but you can edit them into the @samp{*Gnuplot Commands*} buffer if
+but you can edit them into the @file{*Gnuplot Commands*} buffer if
 you wish.  See the GNUPLOT documentation for details.
 
 @kindex g r
@@ -29540,7 +29663,7 @@ value.
 The @code{dumb} device is an interface to ``dumb terminals,'' i.e.,
 terminals with no special graphics facilities.  It writes a crude
 picture of the graph composed of characters like @code{-} and @code{|}
-to a buffer called @samp{*Gnuplot Trail*}, which Calc then displays.
+to a buffer called @file{*Gnuplot Trail*}, which Calc then displays.
 The graph is made the same size as the Emacs screen, which on most
 dumb terminals will be
 @texline @math{80\times24}
@@ -29555,7 +29678,7 @@ spaces.  These are the desired width and height of the graph in
 characters.  Also, the device name @code{big} is like @code{dumb}
 but creates a graph four times the width and height of the Emacs
 screen.  You will then have to scroll around to view the entire
-graph.  In the @samp{*Gnuplot Trail*} buffer, @key{SPC}, @key{DEL},
+graph.  In the @file{*Gnuplot Trail*} buffer, @key{SPC}, @key{DEL},
 @kbd{<}, and @kbd{>} are defined to scroll by one screenful in each
 of the four directions.
 
@@ -29574,7 +29697,7 @@ used.  Many other ``devices'' are really file formats like
 @code{postscript}; in these cases the output in the desired format
 goes into the file you name with @kbd{g O}.  Type @kbd{g O stdout
 @key{RET}} to set GNUPLOT to write to its standard output stream,
-i.e., to @samp{*Gnuplot Trail*}.  This is the default setting.
+i.e., to @file{*Gnuplot Trail*}.  This is the default setting.
 
 Another special output name is @code{tty}, which means that GNUPLOT
 is going to write graphics commands directly to its standard output,
@@ -29598,7 +29721,7 @@ permanently by the @kbd{m m} (@code{calc-save-modes}) command.  The
 default number of data points (see @kbd{g N}) and the X geometry
 (see @kbd{g X}) are also saved.  Other graph information is @emph{not}
 saved; you can save a graph's configuration simply by saving the contents
-of the @samp{*Gnuplot Commands*} buffer.
+of the @file{*Gnuplot Commands*} buffer.
 
 @vindex calc-gnuplot-plot-command
 @vindex calc-gnuplot-default-device
@@ -29639,7 +29762,7 @@ Entering @samp{800x500+0+0} would create an 800-by-500 pixel
 window in the upper-left corner of the screen.  This command has no
 effect if the current device is @code{windows}.
 
-The buffer called @samp{*Gnuplot Trail*} holds a transcript of the
+The buffer called @file{*Gnuplot Trail*} holds a transcript of the
 session with GNUPLOT@.  This shows the commands Calc has ``typed'' to
 GNUPLOT and the responses it has received.  Calc tries to notice when an
 error message has appeared here and display the buffer for you when
@@ -29656,7 +29779,7 @@ usage of GNUPLOT.
 @pindex calc-graph-command
 The @kbd{g C} (@code{calc-graph-command}) command prompts you to
 enter any line of text, then simply sends that line to the current
-GNUPLOT process.  The @samp{*Gnuplot Trail*} buffer looks deceptively
+GNUPLOT process.  The @file{*Gnuplot Trail*} buffer looks deceptively
 like a Shell buffer but you can't type commands in it yourself.
 Instead, you must use @kbd{g C} for this purpose.
 
@@ -29665,21 +29788,21 @@ Instead, you must use @kbd{g C} for this purpose.
 @pindex calc-graph-view-commands
 @pindex calc-graph-view-trail
 The @kbd{g v} (@code{calc-graph-view-commands}) and @kbd{g V}
-(@code{calc-graph-view-trail}) commands display the @samp{*Gnuplot Commands*}
-and @samp{*Gnuplot Trail*} buffers, respectively, in another window.
+(@code{calc-graph-view-trail}) commands display the @file{*Gnuplot Commands*}
+and @file{*Gnuplot Trail*} buffers, respectively, in another window.
 This happens automatically when Calc thinks there is something you
 will want to see in either of these buffers.  If you type @kbd{g v}
 or @kbd{g V} when the relevant buffer is already displayed, the
-buffer is hidden again.  (Note that on MS-Windows, the @samp{*Gnuplot
+buffer is hidden again.  (Note that on MS-Windows, the @file{*Gnuplot
 Trail*} buffer will usually show nothing of interest, because
 GNUPLOT's responses are not communicated back to Calc.)
 
 One reason to use @kbd{g v} is to add your own commands to the
-@samp{*Gnuplot Commands*} buffer.  Press @kbd{g v}, then use
+@file{*Gnuplot Commands*} buffer.  Press @kbd{g v}, then use
 @kbd{C-x o} to switch into that window.  For example, GNUPLOT has
 @samp{set label} and @samp{set arrow} commands that allow you to
 annotate your plots.  Since Calc doesn't understand these commands,
-you have to add them to the @samp{*Gnuplot Commands*} buffer
+you have to add them to the @file{*Gnuplot Commands*} buffer
 yourself, then use @w{@kbd{g p}} to replot using these new commands.  Note
 that your commands must appear @emph{before} the @code{plot} command.
 To get help on any GNUPLOT feature, type, e.g., @kbd{g C help set label}.
@@ -29703,7 +29826,7 @@ exit Emacs if you haven't killed it manually by then.
 @kindex g K
 @pindex calc-graph-kill
 The @kbd{g K} (@code{calc-graph-kill}) command is like @kbd{g q}
-except that it also views the @samp{*Gnuplot Trail*} buffer so that
+except that it also views the @file{*Gnuplot Trail*} buffer so that
 you can see the process being killed.  This is better if you are
 killing GNUPLOT because you think it has gotten stuck.
 
@@ -30058,7 +30181,7 @@ trail all at once.  This mode would normally be used when running
 Calc standalone (@pxref{Standalone Operation}).
 
 If you aren't using the X window system, you must switch into
-the @samp{*Calc Keypad*} window, place the cursor on the desired
+the @file{*Calc Keypad*} window, place the cursor on the desired
 ``key,'' and type @key{SPC} or @key{RET}.  If you think this
 is easier than using Calc normally, go right ahead.
 
@@ -32190,7 +32313,7 @@ after Calc itself is loaded.
 The properties of @code{calc-define} are evaluated in the same order
 that they were added.  They can assume that the Calc modules @file{calc.el},
 @file{calc-ext.el}, and @file{calc-macs.el} have been fully loaded, and
-that the @samp{*Calculator*} buffer will be the current buffer.
+that the @file{*Calculator*} buffer will be the current buffer.
 
 If your @code{calc-define} property only defines algebraic functions,
 you can be sure that it will have been evaluated before Calc tries to
@@ -32277,9 +32400,9 @@ the function with code that looks roughly like this:
 @end smallexample
 
 @findex calc-select-buffer
-The @code{calc-select-buffer} function selects the @samp{*Calculator*}
+The @code{calc-select-buffer} function selects the @file{*Calculator*}
 buffer if necessary, say, because the command was invoked from inside
-the @samp{*Calc Trail*} window.
+the @file{*Calc Trail*} window.
 
 @findex calc-set-command-flag
 You can call, for example, @code{(calc-set-command-flag 'no-align)} to
@@ -32309,7 +32432,7 @@ Do not clear @code{calc-inverse-flag}, @code{calc-hyperbolic-flag},
 and @code{calc-keep-args-flag} at the end of this command.
 
 @item do-edit
-Switch to buffer @samp{*Calc Edit*} after this command.
+Switch to buffer @file{*Calc Edit*} after this command.
 
 @item hold-trail
 Do not move trail pointer to end of trail when something is recorded
@@ -33031,7 +33154,7 @@ It is, of course, polite to put the Calc stack back the way you
 found it when you are done, unless the user of your program is
 actually expecting it to affect the stack.
 
-Note that you do not actually have to switch into the @samp{*Calculator*}
+Note that you do not actually have to switch into the @file{*Calculator*}
 buffer in order to use @code{calc-eval}; it temporarily switches into
 the stack buffer if necessary.
 
@@ -33196,12 +33319,15 @@ Lisp integers.  This is the only storage format for Calc data objects
 which is not a Lisp list.
 
 Large integers are stored as lists of the form @samp{(bigpos @var{d0}
-@var{d1} @var{d2} @dots{})} for positive integers 1000000 or more, or
-@samp{(bigneg @var{d0} @var{d1} @var{d2} @dots{})} for negative integers
-@mathit{-1000000} or less.  Each @var{d} is a base-1000 ``digit,'' a Lisp integer
-from 0 to 999.  The least significant digit is @var{d0}; the last digit,
+@var{d1} @var{d2} @dots{})} for sufficiently large positive integers
+(where ``sufficiently large'' depends on the machine), or
+@samp{(bigneg @var{d0} @var{d1} @var{d2} @dots{})} for negative
+integers.  Each @var{d} is a base-@expr{10^n} ``digit'' (where again,
+@expr{n} depends on the machine), a Lisp integer from 0 to
+99@dots{}9.  The least significant digit is @var{d0}; the last digit,
 @var{dn}, which is always nonzero, is the most significant digit.  For
-example, the integer @mathit{-12345678} is stored as @samp{(bigneg 678 345 12)}.
+example, the integer @mathit{-12345678} might be stored as
+@samp{(bigneg 678 345 12)}.
 
 The distinction between small and large integers is entirely hidden from
 the user.  In @code{defmath} definitions, the Lisp predicate @code{integerp}
@@ -33563,7 +33689,7 @@ entries.)
 @end defun
 
 @defun calc-refresh
-Erase the @code{*Calculator*} buffer and reformat its contents from memory.
+Erase the @file{*Calculator*} buffer and reformat its contents from memory.
 This must be called after changing any parameter, such as the current
 display radix, which might change the appearance of existing stack
 entries.  (During a keyboard macro invoked by the @kbd{X} key, refreshing
@@ -35583,6 +35709,16 @@ have different dimensions. The default value of @code{calc-ensure-consistent-uni
 is @code{nil}.
 @end defvar
 
+@defvar calc-context-sensitive-enter
+The commands @code{calc-enter} and @code{calc-pop} will typically
+duplicate the top of the stack.  If
+@code{calc-context-sensitive-enter} is non-@code{nil}, then the
+@code{calc-enter} will copy the element at the cursor to the
+top of the stack and @code{calc-pop} will delete the element at the
+cursor.  The default value of @code{calc-context-sensitive-enter} is
+@code{nil}.
+@end defvar
+
 @defvar calc-undo-length
 The variable @code{calc-undo-length} determines the number of undo
 steps that Calc will keep track of when @code{calc-quit} is called.
@@ -35590,6 +35726,20 @@ If @code{calc-undo-length} is a non-negative integer, then this is the
 number of undo steps that will be preserved; if
 @code{calc-undo-length} has any other value, then all undo steps will
 be preserved.  The default value of @code{calc-undo-length} is @expr{100}.
+@end defvar
+
+@defvar calc-gregorian-switch
+See @ref{Date Forms}.@*
+The variable @code{calc-gregorian-switch} is either a list of integers
+@code{(@var{YEAR} @var{MONTH} @var{DAY})} or @code{nil}.
+If it is @code{nil}, then Calc's date forms always represent Gregorian dates.
+Otherwise, @code{calc-gregorian-switch} represents the date that the
+calendar switches from Julian dates to Gregorian dates;
+@code{(@var{YEAR} @var{MONTH} @var{DAY})} will be the first Gregorian
+date.  The customization buffer will offer several standard dates to
+choose from, or the user can enter their own date.
+
+The default value of @code{calc-gregorian-switch} is @code{nil}.
 @end defvar
 
 @node Reporting Bugs, Summary, Customizing Calc, Top

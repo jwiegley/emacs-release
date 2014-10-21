@@ -1,5 +1,5 @@
 /* Definitions and headers for communication with NeXT/Open/GNUstep API.
-   Copyright (C) 1989, 1993, 2005, 2008-2013 Free Software Foundation,
+   Copyright (C) 1989, 1993, 2005, 2008-2014 Free Software Foundation,
    Inc.
 
 This file is part of GNU Emacs.
@@ -42,9 +42,54 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #ifndef MAC_OS_X_VERSION_10_8
 #define MAC_OS_X_VERSION_10_8 1080
 #endif
+#ifndef MAC_OS_X_VERSION_10_9
+#define MAC_OS_X_VERSION_10_9 1090
+#endif
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
+#define HAVE_NATIVE_FS
+#endif
+
 #endif /* NS_IMPL_COCOA */
 
 #ifdef __OBJC__
+
+/* CGFloat on GNUstep may be 4 or 8 byte, but functions expect float* for some
+   versions.
+   On Cocoa >= 10.5, functions expect CGFloat*. Make compatible type.  */
+#ifdef NS_IMPL_COCOA
+
+#ifndef NS_HAVE_NSINTEGER
+#if defined (__LP64__) && __LP64__
+typedef double CGFloat;
+typedef long NSInteger;
+typedef unsigned long NSUInteger;
+#else
+typedef float CGFloat;
+typedef int NSInteger;
+typedef unsigned int NSUInteger;
+#endif /* not LP64 */
+#endif /* not NS_HAVE_NSINTEGER */
+
+typedef CGFloat EmacsCGFloat;
+
+#elif GNUSTEP_GUI_MAJOR_VERSION > 0 || GNUSTEP_GUI_MINOR_VERSION >= 22
+typedef CGFloat EmacsCGFloat;
+#else
+typedef float EmacsCGFloat;
+#endif
+
+/* ==========================================================================
+
+   NSColor, EmacsColor category.
+
+   ========================================================================== */
+@interface NSColor (EmacsColor)
++ (NSColor *)colorForEmacsRed:(CGFloat)red green:(CGFloat)green
+                         blue:(CGFloat)blue alpha:(CGFloat)alpha;
+- (NSColor *)colorUsingDefaultColorSpace;
+
+@end
 
 /* ==========================================================================
 
@@ -55,16 +100,36 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 /* We override sendEvent: as a means to stop/start the event loop */
 @interface EmacsApp : NSApplication
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_9
+  BOOL shouldKeepRunning;
+  BOOL isFirst;
+#endif
+#ifdef NS_IMPL_GNUSTEP
+  BOOL applicationDidFinishLaunchingCalled;
+@public
+  int nextappdefined;
+#endif
 }
 - (void)logNotification: (NSNotification *)notification;
+- (void)antialiasThresholdDidChange:(NSNotification *)notification;
 - (void)sendEvent: (NSEvent *)theEvent;
 - (void)showPreferencesWindow: (id)sender;
 - (BOOL) openFile: (NSString *)fileName;
 - (void)fd_handler: (id)unused;
 - (void)timeout_handler: (NSTimer *)timedEntry;
 - (BOOL)fulfillService: (NSString *)name withArg: (NSString *)arg;
+#ifdef NS_IMPL_GNUSTEP
+- (void)sendFromMainThread:(id)unused;
+#endif
 @end
 
+#ifdef NS_IMPL_GNUSTEP
+/* Dummy class to get rid of startup warnings.  */
+@interface EmacsDocument : NSDocument
+{
+}
+@end
+#endif
 
 /* ==========================================================================
 
@@ -80,7 +145,10 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 @interface EmacsView : NSView <NSTextInput>
 #endif
    {
+#ifdef NS_IMPL_COCOA
    char *old_title;
+   BOOL maximizing_resize;
+#endif
    BOOL windowClosing;
    NSString *workingText;
    BOOL processingCompose;
@@ -88,12 +156,14 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
    int tibar_height, tobar_height, bwidth;
    int maximized_width, maximized_height;
    NSWindow *nonfs_window;
+   BOOL fs_is_native;
 @public
    struct frame *emacsframe;
    int rows, cols;
    int scrollbarsNeedingUpdate;
    EmacsToolbar *toolbar;
    NSRect ns_userRect;
+   BOOL wait_for_tool_bar;
    }
 
 /* AppKit-side interface */
@@ -115,10 +185,14 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 - (void) handleFS;
 - (void) setFSValue: (int)value;
 - (void) toggleFullScreen: (id) sender;
+- (BOOL) fsIsNative;
+- (BOOL) isFullscreen;
+#ifdef HAVE_NATIVE_FS
+- (void) updateCollectionBehavior;
+#endif
 
 #ifdef NS_IMPL_GNUSTEP
-/* Not declared, but useful. */
-- (void) unlockFocusNeedsFlush: (BOOL)needs;
+- (void)windowDidMove: (id)sender;
 #endif
 @end
 
@@ -159,6 +233,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 - (NSString *)parseKeyEquiv: (const char *)key;
 - (NSMenuItem *)addItemWithWidgetValue: (void *)wvptr;
 - (void)fillWithWidgetValue: (void *)wvptr;
+- (void)fillWithWidgetValue: (void *)wvptr frame: (struct frame *)f;
 - (EmacsMenu *)addSubmenuWithTitle: (const char *)title forFrame: (struct frame *)f;
 - (void) clear;
 - (Lisp_Object)runMenuAt: (NSPoint)p forFrame: (struct frame *)f
@@ -188,10 +263,14 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
    }
 - initForView: (EmacsView *)view withIdentifier: (NSString *)identifier;
 - (void) clearActive;
+- (void) clearAll;
 - (BOOL) changed;
-- (void) addDisplayItemWithImage: (EmacsImage *)img idx: (int)idx
+- (void) addDisplayItemWithImage: (EmacsImage *)img
+                             idx: (int)idx
+                             tag: (int)tag
                         helpText: (const char *)help
                          enabled: (BOOL)enabled;
+
 /* delegate methods */
 - (NSToolbarItem *)toolbar: (NSToolbar *)toolbar
      itemForItemIdentifier: (NSString *)itemIdentifier
@@ -248,8 +327,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 /* ==========================================================================
 
    File open/save panels
-   This and next override methods to work around OS X behavior of
-   restarting application loop when user dismisses panel.
+   This and next override methods to handle keyboard input in panels.
 
    ========================================================================== */
 
@@ -320,7 +398,7 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
    NSResponder *prevResponder;
 
    /* offset to the bottom of knob of last mouse down */
-   float last_mouse_offset;
+   CGFloat last_mouse_offset;
    float min_portion;
    int pixel_height;
    int last_hit_part;
@@ -383,18 +461,6 @@ extern EmacsMenu *mainMenu, *svcsMenu, *dockMenu;
 @end
 #endif
 
-#ifndef NS_HAVE_NSINTEGER
-#if defined (__LP64__) && __LP64__
-typedef double CGFloat;
-typedef long NSInteger;
-typedef unsigned long NSUInteger;
-#else
-typedef float CGFloat;
-typedef int NSInteger;
-typedef unsigned int NSUInteger;
-#endif /* not LP64 */
-#endif /* not NS_HAVE_NSINTEGER */
-
 #endif  /* __OBJC__ */
 
 
@@ -409,9 +475,6 @@ typedef unsigned int NSUInteger;
 #define KEY_NS_POWER_OFF               ((1<<28)|(0<<16)|1)
 #define KEY_NS_OPEN_FILE               ((1<<28)|(0<<16)|2)
 #define KEY_NS_OPEN_TEMP_FILE          ((1<<28)|(0<<16)|3)
-#define KEY_NS_DRAG_FILE               ((1<<28)|(0<<16)|4)
-#define KEY_NS_DRAG_COLOR              ((1<<28)|(0<<16)|5)
-#define KEY_NS_DRAG_TEXT               ((1<<28)|(0<<16)|6)
 #define KEY_NS_CHANGE_FONT             ((1<<28)|(0<<16)|7)
 #define KEY_NS_OPEN_FILE_LINE          ((1<<28)|(0<<16)|8)
 #define KEY_NS_PUT_WORKING_TEXT        ((1<<28)|(0<<16)|9)
@@ -508,8 +571,7 @@ struct ns_display_info
   /* The generic display parameters corresponding to this NS display. */
   struct terminal *terminal;
 
-  /* This is a cons cell of the form (NAME . FONT-LIST-CACHE).
-     The same cons cell also appears in ns_display_name_list.  */
+  /* This is a cons cell of the form (NAME . FONT-LIST-CACHE).  */
   Lisp_Object name_list_element;
 
   /* The number of fonts loaded. */
@@ -524,8 +586,6 @@ struct ns_display_info
   struct ns_bitmap_record *bitmaps;
   ptrdiff_t bitmaps_size;
   ptrdiff_t bitmaps_last;
-
-  struct image_cache *image_cache;
 
   struct ns_color_table *color_table;
 
@@ -553,17 +613,36 @@ struct ns_display_info
 
   struct frame *x_highlight_frame;
   struct frame *x_focus_frame;
+
+  /* The frame where the mouse was last time we reported a mouse event.  */
+  struct frame *last_mouse_frame;
+
+  /* The frame where the mouse was last time we reported a mouse motion.  */
+  struct frame *last_mouse_motion_frame;
+
+  /* Position where the mouse was last time we reported a motion.
+     This is a position on last_mouse_motion_frame.  */
+  int last_mouse_motion_x;
+  int last_mouse_motion_y;
+
+  /* Where the mouse was last time we reported a mouse position.  */
+  NSRect last_mouse_glyph;
+
+  /* Time of last mouse movement.  */
+  Time last_mouse_movement_time;
+
+  /* The scroll bar in which the last motion event occurred.  */
+#ifdef __OBJC__
+  EmacsScroller *last_mouse_scroll_bar;
+#else
+  void *last_mouse_scroll_bar;
+#endif
 };
 
 /* This is a chain of structures for all the NS displays currently in use.  */
 extern struct ns_display_info *x_display_list;
 
-extern Lisp_Object ns_display_name_list;
 extern struct ns_display_info *ns_display_info_for_name (Lisp_Object name);
-
-struct ns_display_info *check_x_display_info (Lisp_Object frame);
-FRAME_PTR check_x_frame (Lisp_Object frame);
-
 
 struct ns_output
 {
@@ -590,6 +669,7 @@ struct ns_output
   Cursor hand_cursor;
   Cursor hourglass_cursor;
   Cursor horizontal_drag_cursor;
+  Cursor vertical_drag_cursor;
 
   /* NS-specific */
   Cursor current_pointer;
@@ -621,9 +701,6 @@ struct ns_output
   /* This is the Emacs structure for the NS display this frame is on.  */
   struct ns_display_info *display_info;
 
-  /* Non-zero if we want to constrain the frame to the screen.  */
-  int dont_constrain;
-
   /* Non-zero if we are zooming (maximizing) the frame.  */
   int zooming;
 };
@@ -631,15 +708,12 @@ struct ns_output
 /* this dummy decl needed to support TTYs */
 struct x_output
 {
-  unsigned long background_pixel;
-  unsigned long foreground_pixel;
+  int unused;
 };
 
 
 /* This gives the ns_display_info structure for the display F is on.  */
-#define FRAME_NS_DISPLAY_INFO(f) ((f)->output_data.ns->display_info)
-/* the primacy of X must be constantly worked with... */
-#define FRAME_X_DISPLAY_INFO(f) ((f)->output_data.ns->display_info)
+#define FRAME_DISPLAY_INFO(f) ((f)->output_data.ns->display_info)
 #define FRAME_X_OUTPUT(f) ((f)->output_data.ns)
 #define FRAME_NS_WINDOW(f) ((f)->output_data.ns->window_desc)
 #define FRAME_X_WINDOW(f) ((f)->output_data.ns->window_desc)
@@ -648,24 +722,15 @@ struct x_output
 #define FRAME_NS_DISPLAY(f) (0)
 #define FRAME_X_DISPLAY(f) (0)
 #define FRAME_X_SCREEN(f) (0)
-#define FRAME_X_VISUAL(f) FRAME_NS_DISPLAY_INFO(f)->visual
+#define FRAME_X_VISUAL(f) FRAME_DISPLAY_INFO(f)->visual
 
 #define FRAME_FOREGROUND_COLOR(f) ((f)->output_data.ns->foreground_color)
 #define FRAME_BACKGROUND_COLOR(f) ((f)->output_data.ns->background_color)
-
-#define FRAME_X_IMAGE_CACHE(F) FRAME_NS_DISPLAY_INFO ((F))->image_cache
 
 #define NS_FACE_FOREGROUND(f) ((f)->foreground)
 #define NS_FACE_BACKGROUND(f) ((f)->background)
 #define FRAME_NS_TITLEBAR_HEIGHT(f) ((f)->output_data.ns->titlebar_height)
 #define FRAME_TOOLBAR_HEIGHT(f) ((f)->output_data.ns->toolbar_height)
-
-#define FONT_WIDTH(f)	((f)->max_width)
-#define FONT_HEIGHT(f)	((f)->height)
-/*#define FONT_BASE(f)    ((f)->ascent) */
-#define FONT_BASE(f)    (((struct nsfont_info *)f)->max_bounds.ascent)
-/*#define FONT_DESCENT(f) ((f)->descent) */
-#define FONT_DESCENT(f) (((struct nsfont_info *)f)->max_bounds.descent)
 
 #define FRAME_DEFAULT_FACE(f) FACE_FROM_ID (f, DEFAULT_FACE_ID)
 
@@ -676,9 +741,9 @@ struct x_output
 #define FRAME_FONT(f) ((f)->output_data.ns->font)
 
 #ifdef __OBJC__
-#define XNS_SCROLL_BAR(vec) ((id) XSAVE_VALUE (vec)->pointer)
+#define XNS_SCROLL_BAR(vec) ((id) XSAVE_POINTER (vec, 0))
 #else
-#define XNS_SCROLL_BAR(vec) XSAVE_VALUE (vec)->pointer
+#define XNS_SCROLL_BAR(vec) XSAVE_POINTER (vec, 0)
 #endif
 
 /* Compute pixel size for vertical scroll bars */
@@ -703,16 +768,10 @@ struct x_output
 #define NS_TOP_POS(f) ((f)->top_pos)
 #endif
 
-#define FRAME_NS_FONT_TABLE(f) (FRAME_NS_DISPLAY_INFO (f)->font_table)
+#define FRAME_NS_FONT_TABLE(f) (FRAME_DISPLAY_INFO (f)->font_table)
 
 #define FRAME_FONTSET(f) ((f)->output_data.ns->fontset)
 
-#define FRAME_SMALLEST_CHAR_WIDTH(f)  \
-  (FRAME_NS_DISPLAY_INFO (f)->smallest_char_width)
-#define FRAME_SMALLEST_FONT_HEIGHT(f) \
-  (FRAME_NS_DISPLAY_INFO (f)->smallest_font_height)
-#define FONT_TYPE_FOR_UNIBYTE(font, ch)   0
-#define FONT_TYPE_FOR_MULTIBYTE(font, ch) 0
 #define FRAME_BASELINE_OFFSET(f) ((f)->output_data.ns->baseline_offset)
 #define BLACK_PIX_DEFAULT(f) 0x000000
 #define WHITE_PIX_DEFAULT(f) 0xFFFFFF
@@ -744,13 +803,12 @@ void ns_dump_glyphstring (struct glyph_string *s);
 
 /* Implemented in nsterm, published in or needed from nsfns. */
 extern Lisp_Object Qfontsize;
-extern Lisp_Object ns_list_fonts (FRAME_PTR f, Lisp_Object pattern,
+extern Lisp_Object ns_list_fonts (struct frame *f, Lisp_Object pattern,
                                   int size, int maxnames);
 extern void ns_clear_frame (struct frame *f);
 
 extern const char *ns_xlfd_to_fontname (const char *xlfd);
 
-extern void check_ns (void);
 extern Lisp_Object ns_map_event_to_object (void);
 #ifdef __OBJC__
 extern Lisp_Object ns_string_from_pasteboard (id pb);
@@ -778,6 +836,9 @@ extern int ns_lisp_to_color (Lisp_Object color, NSColor **col);
 extern NSColor *ns_lookup_indexed_color (unsigned long idx, struct frame *f);
 extern unsigned long ns_index_color (NSColor *color, struct frame *f);
 extern void ns_free_indexed_color (unsigned long idx, struct frame *f);
+extern const char *ns_get_pending_menu_title (void);
+extern void ns_check_menu_open (NSMenu *menu);
+extern void ns_check_pending_open_menu (void);
 #endif
 
 /* C access to ObjC functionality */
@@ -788,18 +849,21 @@ extern void ns_release_autorelease_pool (void *);
 extern const char *ns_get_defaults_value (const char *key);
 
 /* in nsmenu */
-extern void update_frame_tool_bar (FRAME_PTR f);
-extern void free_frame_tool_bar (FRAME_PTR f);
-extern void find_and_call_menu_selection (FRAME_PTR f,
+extern void update_frame_tool_bar (struct frame *f);
+extern void free_frame_tool_bar (struct frame *f);
+extern void find_and_call_menu_selection (struct frame *f,
     int menu_bar_items_used, Lisp_Object vector, void *client_data);
-extern Lisp_Object find_and_return_menu_selection (FRAME_PTR f,
+extern Lisp_Object find_and_return_menu_selection (struct frame *f,
                                                    bool keymaps,
                                                    void *client_data);
-extern Lisp_Object ns_popup_dialog (Lisp_Object position, Lisp_Object contents,
-                                    Lisp_Object header);
+extern Lisp_Object ns_popup_dialog (Lisp_Object position, Lisp_Object header,
+                                    Lisp_Object contents);
 
 #define NSAPP_DATA2_RUNASSCRIPT 10
 extern void ns_run_ascript (void);
+
+#define NSAPP_DATA2_RUNFILEDIALOG 11
+extern void ns_run_file_dialog (void);
 
 extern const char *ns_etc_directory (void);
 extern const char *ns_exec_path (void);
@@ -826,12 +890,12 @@ extern int x_display_pixel_height (struct ns_display_info *);
 extern int x_display_pixel_width (struct ns_display_info *);
 
 /* This in nsterm.m */
+extern void x_destroy_window (struct frame *f);
 extern int ns_select (int nfds, fd_set *readfds, fd_set *writefds,
-                      fd_set *exceptfds, EMACS_TIME *timeout,
-		      sigset_t *sigmask);
+		      fd_set *exceptfds, struct timespec const *timeout,
+		      sigset_t const *sigmask);
 extern unsigned long ns_get_rgb_color (struct frame *f,
                                        float r, float g, float b, float a);
-extern NSPoint last_mouse_motion_position;
 
 /* From nsterm.m, needed in nsfont.m. */
 #ifdef __OBJC__
@@ -853,16 +917,13 @@ extern char gnustep_base_version[];  /* version tracking */
 
 #define NS_SCROLL_BAR_WIDTH_DEFAULT     [EmacsScroller scrollerWidth]
 /* This is to match emacs on other platforms, ugly though it is. */
-#define NS_SELECTION_COLOR_DEFAULT	@"LightGoldenrod2";
+#define NS_SELECTION_BG_COLOR_DEFAULT	@"LightGoldenrod2";
+#define NS_SELECTION_FG_COLOR_DEFAULT	@"Black";
 #define RESIZE_HANDLE_SIZE 12
 
 /* Little utility macros */
 #define IN_BOUND(min, x, max) (((x) < (min)) \
                                 ? (min) : (((x)>(max)) ? (max) : (x)))
 #define SCREENMAXBOUND(x) (IN_BOUND (-SCREENMAX, x, SCREENMAX))
-
-/* needed somewhere... */
-#define VERTICAL_SCROLL_BAR_WIDTH_TRIM (0)
-
 
 #endif	/* HAVE_NS */

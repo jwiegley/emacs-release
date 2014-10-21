@@ -1,14 +1,12 @@
-This is
-/misc/emacs/bzr/emacs24-merge/doc/misc/../../info/mairix-el.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/mairix-el.texi.
+This is ../../info/mairix-el.info, produced by makeinfo version 4.13
+from ./mairix-el.texi.
 
-Copyright (C) 2008-2013 Free Software Foundation, Inc.
+Copyright (C) 2008-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -22,7 +20,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: mairix-el.info,  Node: Top,  Next: About mairix and mairix.el,  Up: (dir)
+File: mairix-el.info,  Node: Top,  Next: About,  Up: (dir)
 
 mairix.el--Mairix interface for Emacs
 *************************************
@@ -36,12 +34,12 @@ the currently displayed mail, save regularly used searches in your
 `.emacs' for future use and lets you call mairix for updating the
 database.
 
-   Copyright (C) 2008-2013 Free Software Foundation, Inc.
+   Copyright (C) 2008-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -51,15 +49,15 @@ database.
 
 * Menu:
 
-* About mairix and mairix.el::  About the mairix search engine and mairix.el
-* Configuring mairix::          How to configure mairix
-* Setting up mairix.el::        Set up mairix.el
-* Using mairix.el::             List of interactive functions
-* Extending mairix.el::         Support your favorite mail reader!
+* About::                       About the mairix search engine and mairix.el.
+* Configuring mairix::          How to configure mairix.
+* Setting up the mairix interface:: Set up mairix.el.
+* Using::                       List of interactive functions
+* Extending::                   Support your favorite mail reader!
 * GNU Free Documentation License::  The license for this documentation.
 
 
-File: mairix-el.info,  Node: About mairix and mairix.el,  Next: Configuring mairix,  Prev: Top,  Up: Top
+File: mairix-el.info,  Node: About,  Next: Configuring mairix,  Prev: Top,  Up: Top
 
 1 About mairix and mairix.el
 ****************************
@@ -94,14 +92,14 @@ widgets, similar to a customization buffer.
    Currently, `mairix.el' is only tested with mbox output together with
 RMail, Gnus, or VM as the Emacs mail program.  However, it should also
 work with Maildir or MH, and it should be very easy to integrate other
-Emacs mail programs into `mairix.el' (*note Extending mairix.el::).
+Emacs mail programs into `mairix.el' (*note Extending::).
 
    If you use Gnus with maildir or MH, you should really use the native
 Gnus back end `nnmairix' instead, since it is more tightly integrated
 into Gnus and has more features.
 
 
-File: mairix-el.info,  Node: Configuring mairix,  Next: Setting up mairix.el,  Prev: About mairix and mairix.el,  Up: Top
+File: mairix-el.info,  Node: Configuring mairix,  Next: Setting up the mairix interface,  Prev: About,  Up: Top
 
 2 Configuring mairix
 ********************
@@ -156,10 +154,10 @@ Note that this may take a few minutes, but every following index will do
 the updates incrementally and hence is very fast.
 
 
-File: mairix-el.info,  Node: Setting up mairix.el,  Next: Using mairix.el,  Prev: Configuring mairix,  Up: Top
+File: mairix-el.info,  Node: Setting up the mairix interface,  Next: Using,  Prev: Configuring mairix,  Up: Top
 
-3 Setting up mairix.el
-**********************
+3 Setting up the mairix interface
+*********************************
 
 First, put `mairix.el' in your Emacs search path and put `(require
 'mairix)' into your `.emacs' file.  Then, use `M-x customize-group
@@ -171,14 +169,14 @@ files, and VM are supported.  If you use Gnus with maildir or mh, use
 the native Gnus back end nnmairix instead.
 
    If you use another Emacs mail program which is not yet supported by
-mairix.el, it is pretty easy to integrate it.  *Note Extending
-mairix.el::, on how to integrate it into mairix.el.
+mairix.el, it is pretty easy to integrate it.  *Note Extending::, on
+how to integrate it into mairix.el.
 
-   Now you should be ready to go. *Note Using mairix.el::, for the
-available commands.
+   Now you should be ready to go. *Note Using::, for the available
+commands.
 
 
-File: mairix-el.info,  Node: Using mairix.el,  Next: Extending mairix.el,  Prev: Setting up mairix.el,  Up: Top
+File: mairix-el.info,  Node: Using,  Next: Extending,  Prev: Setting up the mairix interface,  Up: Top
 
 4 Using mairix.el
 *****************
@@ -275,13 +273,13 @@ in your `.emacs' and adapt to your needs:
      make updates as fast as possible.  Note that by using these
      options, absolutely no integrity checking is done.  If your
      database somehow gets corrupted, simply delete it and update.  If
-     `mairix-synchronous-update' is nil (the default), mairix will be
+     `mairix-synchronous-update' is `nil' (the default), mairix will be
      called in a subprocess so Emacs will still be usable while the
      update is done.
 
 
 
-File: mairix-el.info,  Node: Extending mairix.el,  Next: GNU Free Documentation License,  Prev: Using mairix.el,  Up: Top
+File: mairix-el.info,  Node: Extending,  Next: GNU Free Documentation License,  Prev: Using,  Up: Top
 
 5 Extending mairix.el
 *********************
@@ -315,14 +313,14 @@ do the following:
    And that's it!
 
 
-File: mairix-el.info,  Node: GNU Free Documentation License,  Prev: Extending mairix.el,  Up: Top
+File: mairix-el.info,  Node: GNU Free Documentation License,  Prev: Extending,  Up: Top
 
 Appendix A GNU Free Documentation License
 *****************************************
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -803,17 +801,17 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top940
-Node: About mairix and mairix.el2536
-Node: Configuring mairix4657
-Node: Setting up mairix.el6657
-Node: Using mairix.el7618
-Node: Extending mairix.el12737
-Node: GNU Free Documentation License14052
+Node: Top864
+Node: About2446
+Node: Configuring mairix4536
+Node: Setting up the mairix interface6526
+Node: Using7490
+Node: Extending12602
+Node: GNU Free Documentation License13897
 
 End Tag Table
 
 
 Local Variables:
-coding: iso-8859-1
+coding: utf-8
 End:

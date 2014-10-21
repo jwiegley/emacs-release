@@ -1,15 +1,14 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/message.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/message.texi.
+This is ../../info/message.info, produced by makeinfo version 4.13 from
+./message.texi.
 
 This file documents Message, the Emacs message composition mode.
 
-   Copyright (C) 1996-2013 Free Software Foundation, Inc.
+   Copyright (C) 1996-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -31,12 +30,12 @@ Message
 
 This file documents Message, the Emacs message composition mode.
 
-   Copyright (C) 1996-2013 Free Software Foundation, Inc.
+   Copyright (C) 1996-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -618,9 +617,8 @@ exist, it will be inserted.
      by the `message-cross-post-note-function' variable.
 
 `C-c C-f t'
-     Replace contents of `To' header with contents of `Cc' or `Bcc'
-     header.  (Iff `Cc' header is not present, `Bcc' header will be
-     used instead.)
+     Replace contents of `To' header with contents of `Cc' header (or
+     the `Bcc' header, if there is no `Cc' header).
 
 `C-c C-f w'
      Insert `To' and `Cc' headers as if you were doing a wide reply
@@ -1485,11 +1483,9 @@ impossible, they will be prompted for.  The following symbols are valid:
 cons should be a symbol.  This symbol's name is the name of the header,
 and the CDR can either be a string to be entered verbatim as the value
 of this header, or it can be a function to be called.  This function
-should return a string to be inserted.  For instance, if you want to
-insert `Mime-Version: 1.0', you should enter `(Mime-Version . "1.0")'
-into the list.  If you want to insert a funny quote, you could enter
-something like `(X-Yow . yow)' into the list.  The function `yow' will
-then be called without any arguments.
+should take no arguments, and return a string to be inserted.  For
+instance, if you want to insert `Mime-Version: 1.0', you should enter
+`(Mime-Version . "1.0")' into the list.
 
    If the list contains a cons where the CAR of the cons is `optional',
 the CDR of this cons will only be inserted if it is non-`nil'.
@@ -1769,8 +1765,8 @@ File: message.info,  Node: Various Message Variables,  Next: Sending Variables, 
 
 `message-fill-column'
      Local value for the column beyond which automatic line-wrapping
-     should happen for message buffers.  If non-nil (the default), also
-     turn on auto-fill in message buffers.
+     should happen for message buffers.  If non-`nil' (the default),
+     also turn on auto-fill in message buffers.
 
 `message-signature-separator'
      Regexp matching the signature separator.  It is `^-- *$' by
@@ -2110,7 +2106,7 @@ File: message.info,  Node: GNU Free Documentation License,  Next: Index,  Prev: 
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -2598,7 +2594,7 @@ File: message.info,  Node: Index,  Next: Key Index,  Prev: GNU Free Documentatio
 * Menu:
 
 * aliases:                               Mail Aliases.        (line   6)
-* approved:                              News Headers.        (line 103)
+* approved:                              News Headers.        (line 101)
 * attachment:                            MIME.                (line   6)
 * attribution line:                      Insertion Variables. (line  33)
 * auto-fill:                             Various Message Variables.
@@ -2628,19 +2624,19 @@ File: message.info,  Node: Index,  Next: Key Index,  Prev: GNU Free Documentatio
 * ispell-message:                        Spelling.            (line   6)
 * ispell-message-dictionary-alist:       Spelling.            (line  15)
 * Lines:                                 News Headers.        (line  32)
-* long lines:                            News Headers.        (line 134)
+* long lines:                            News Headers.        (line 132)
 * mail aliases:                          Mail Aliases.        (line   6)
 * Mail-Followup-To:                      Mailing Lists.       (line   6)
 * mail-header-separator:                 Various Message Variables.
                                                               (line  24)
 * mail-host-address:                     News Headers.        (line  35)
-* message-add-archive-header:            Header Commands.     (line 134)
+* message-add-archive-header:            Header Commands.     (line 133)
 * message-add-header:                    Various Message Variables.
                                                               (line  67)
 * message-allow-no-recipients:           Message Headers.     (line 128)
 * message-alternative-emails:            Message Headers.     (line 111)
-* message-archive-header:                Header Commands.     (line 134)
-* message-archive-note:                  Header Commands.     (line 134)
+* message-archive-header:                Header Commands.     (line 133)
+* message-archive-note:                  Header Commands.     (line 133)
 * message-auto-save-directory:           Various Message Variables.
                                                               (line  32)
 * message-beginning-of-line:             Movement.            (line  14)
@@ -2670,7 +2666,7 @@ File: message.info,  Node: Index,  Next: Key Index,  Prev: GNU Free Documentatio
                                                               (line   7)
 * message-default-headers:               Message Headers.     (line  63)
 * message-default-mail-headers:          Mail Headers.        (line  17)
-* message-default-news-headers:          News Headers.        (line 198)
+* message-default-news-headers:          News Headers.        (line 196)
 * message-deletable-headers:             Message Headers.     (line  52)
 * message-delete-not-region:             Various Commands.    (line  30)
 * message-directory:                     Various Message Variables.
@@ -2728,7 +2724,7 @@ File: message.info,  Node: Index,  Next: Key Index,  Prev: GNU Free Documentatio
 * message-ignored-bounced-headers:       Bouncing.            (line  11)
 * message-ignored-cited-headers:         Insertion Variables. (line  25)
 * message-ignored-mail-headers:          Mail Headers.        (line  12)
-* message-ignored-news-headers:          News Headers.        (line 193)
+* message-ignored-news-headers:          News Headers.        (line 191)
 * message-ignored-resent-headers:        Resending.           (line   9)
 * message-ignored-supersedes-headers:    Superseding.         (line   9)
 * message-indent-citation-function:      Insertion Variables. (line  79)
@@ -2743,7 +2739,7 @@ File: message.info,  Node: Index,  Next: Key Index,  Prev: GNU Free Documentatio
 * message-insert-or-toggle-importance:   Header Commands.     (line  53)
 * message-insert-signature:              Insertion.           (line  22)
 * message-insert-to:                     Header Commands.     (line  82)
-* message-insert-wide-reply:             Header Commands.     (line 130)
+* message-insert-wide-reply:             Header Commands.     (line 129)
 * message-interactive:                   Sending Variables.   (line  26)
 * message-kill-actions:                  Message Actions.     (line  11)
 * message-kill-address:                  Various Commands.    (line  23)
@@ -2831,7 +2827,7 @@ File: message.info,  Node: Index,  Next: Key Index,  Prev: GNU Free Documentatio
 * message-subscribed-addresses:          Mailing Lists.       (line  37)
 * message-subscribed-regexps:            Mailing Lists.       (line  43)
 * message-supersede:                     Superseding.         (line   6)
-* message-syntax-checks:                 News Headers.        (line  93)
+* message-syntax-checks:                 News Headers.        (line  91)
 * message-tab:                           Various Commands.    (line  55)
 * message-tab-body-function:             Various Commands.    (line  55)
 * message-to-list-only:                  Header Commands.     (line  91)
@@ -2885,9 +2881,9 @@ File: message.info,  Node: Index,  Next: Key Index,  Prev: GNU Free Documentatio
 * S/MIME:                                Security.            (line   6)
 * secure:                                Security.            (line   6)
 * Security:                              Security.            (line   6)
-* Sender:                                News Headers.        (line 159)
+* Sender:                                News Headers.        (line 157)
 * sendmail:                              Mail Variables.      (line  72)
-* sendsys:                               News Headers.        (line 162)
+* sendsys:                               News Headers.        (line 160)
 * sign:                                  Security.            (line   6)
 * smtpmail-send-it:                      Mail Variables.      (line   7)
 * spelling:                              Spelling.            (line   6)
@@ -2902,10 +2898,9 @@ File: message.info,  Node: Index,  Next: Key Index,  Prev: GNU Free Documentatio
 * user-full-name:                        News Headers.        (line  11)
 * user-mail-address:                     News Headers.        (line  11)
 * X-Message-SMTP-Method:                 Mail Variables.      (line  28)
-* X-No-Archive:                          Header Commands.     (line 134)
+* X-No-Archive:                          Header Commands.     (line 133)
 * X-Post:                                Header Commands.     (line 115)
 * yanking:                               Insertion Variables. (line  49)
-* yow:                                   News Headers.        (line  70)
 
 
 File: message.info,  Node: Key Index,  Prev: Index,  Up: Top
@@ -2924,7 +2919,7 @@ File: message.info,  Node: Key Index,  Prev: Index,  Up: Top
 * C-c C-c:                               Sending.             (line   7)
 * C-c C-d:                               Sending.             (line  14)
 * C-c C-e:                               Various Commands.    (line  13)
-* C-c C-f a:                             Header Commands.     (line 134)
+* C-c C-f a:                             Header Commands.     (line 133)
 * C-c C-f C-a <1>:                       Header Commands.     (line  60)
 * C-c C-f C-a:                           Mailing Lists.       (line  87)
 * C-c C-f C-b:                           Header Commands.     (line  23)
@@ -2943,7 +2938,7 @@ File: message.info,  Node: Key Index,  Prev: Index,  Up: Top
 * C-c C-f C-w:                           Header Commands.     (line  26)
 * C-c C-f s:                             Header Commands.     (line 109)
 * C-c C-f t:                             Header Commands.     (line 125)
-* C-c C-f w:                             Header Commands.     (line 130)
+* C-c C-f w:                             Header Commands.     (line 129)
 * C-c C-f x:                             Header Commands.     (line 115)
 * C-c C-i:                               Movement.            (line  11)
 * C-c C-k:                               Sending.             (line  17)
@@ -2987,51 +2982,56 @@ File: message.info,  Node: Key Index,  Prev: Index,  Up: Top
 
 
 Tag Table:
-Node: Top1047
-Node: Interface2479
-Node: New Mail Message3674
-Node: New News Message4041
-Node: Reply4439
-Node: Wide Reply5816
-Node: Followup7839
-Node: Canceling News8619
-Node: Superseding9804
-Node: Forwarding10463
-Node: Resending12016
-Node: Bouncing12376
-Node: Mailing Lists12952
-Node: Commands18154
-Node: Buffer Entry18897
-Node: Header Commands19573
-Node: Movement24445
-Node: Insertion25014
-Node: MIME26340
-Node: IDNA27548
-Node: Security28879
-Node: Signing and encryption29436
-Node: Using S/MIME32254
-Node: Using PGP/MIME35478
-Node: PGP Compatibility37206
-Node: Various Commands38708
-Node: Sending40486
-Node: Mail Aliases40901
-Node: Spelling42211
-Node: Variables43522
-Node: Message Headers44246
-Node: Mail Headers50517
-Node: Mail Variables51474
-Node: News Headers55361
-Node: News Variables62363
-Node: Insertion Variables62773
-Node: Various Message Variables68070
-Node: Sending Variables73644
-Node: Message Buffers74956
-Node: Message Actions77094
-Node: Compatibility78571
-Node: Appendices79019
-Node: Responses79242
-Node: GNU Free Documentation License80600
-Node: Index105753
-Node: Key Index128244
+Node: Top971
+Node: Interface2403
+Node: New Mail Message3598
+Node: New News Message3965
+Node: Reply4363
+Node: Wide Reply5740
+Node: Followup7763
+Node: Canceling News8543
+Node: Superseding9728
+Node: Forwarding10387
+Node: Resending11940
+Node: Bouncing12300
+Node: Mailing Lists12876
+Node: Commands18078
+Node: Buffer Entry18821
+Node: Header Commands19497
+Node: Movement24335
+Node: Insertion24904
+Node: MIME26230
+Node: IDNA27438
+Node: Security28769
+Node: Signing and encryption29326
+Node: Using S/MIME32144
+Node: Using PGP/MIME35368
+Node: PGP Compatibility37096
+Node: Various Commands38598
+Node: Sending40376
+Node: Mail Aliases40791
+Node: Spelling42101
+Node: Variables43412
+Node: Message Headers44136
+Node: Mail Headers50407
+Node: Mail Variables51364
+Node: News Headers55251
+Node: News Variables62113
+Node: Insertion Variables62523
+Node: Various Message Variables67820
+Node: Sending Variables73396
+Node: Message Buffers74708
+Node: Message Actions76846
+Node: Compatibility78323
+Node: Appendices78771
+Node: Responses78994
+Node: GNU Free Documentation License80352
+Node: Index105499
+Node: Key Index127917
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

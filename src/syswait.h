@@ -1,5 +1,5 @@
 /* Define wait system call interface for Emacs.
-   Copyright (C) 1993-1995, 2000-2013 Free Software Foundation, Inc.
+   Copyright (C) 1993-1995, 2000-2014 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
 
@@ -25,9 +25,13 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #include <sys/types.h>
 
-#ifdef HAVE_SYS_WAIT_H	/* We have sys/wait.h with POSIXoid definitions. */
+#ifdef HAVE_SYS_WAIT_H	/* We have sys/wait.h with POSIXish definitions.  */
 #include <sys/wait.h>
 #endif  /* !HAVE_SYS_WAIT_H */
+
+#ifndef WCONTINUED
+#define WCONTINUED 8
+#endif
 
 #ifndef WCOREDUMP		/* not POSIX */
 #define WCOREDUMP(status) ((status) & 0x80)
@@ -51,11 +55,8 @@ along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.  */
 #define WTERMSIG(status) ((status) & 0x7f)
 #endif
 
-/* Defined in process.c.  */
-extern void record_child_status_change (pid_t, int);
-
 /* Defined in sysdep.c.  */
-extern void wait_for_termination (pid_t);
-extern void interruptible_wait_for_termination (pid_t);
+extern void wait_for_termination (pid_t, int *, bool);
+extern pid_t child_status_changed (pid_t, int *, int);
 
 #endif /* EMACS_SYSWAIT_H */

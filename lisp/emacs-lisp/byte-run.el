@@ -1,10 +1,10 @@
 ;;; byte-run.el --- byte-compiler support for inlining  -*- lexical-binding: t -*-
 
-;; Copyright (C) 1992, 2001-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1992, 2001-2014 Free Software Foundation, Inc.
 
 ;; Author: Jamie Zawinski <jwz@lucid.com>
 ;;	Hallvard Furuseth <hbf@ulrik.uio.no>
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 ;; Keywords: internal
 ;; Package: emacs
 
@@ -79,12 +79,16 @@ The return value of this function is not used."
                    (list 'quote f) (list 'quote arglist) (list 'quote when))))
    (list 'obsolete
          #'(lambda (f _args new-name when)
-             `(make-obsolete ',f ',new-name ,when)))
+             (list 'make-obsolete
+                   (list 'quote f) (list 'quote new-name) (list 'quote when))))
    (list 'compiler-macro
-         #'(lambda (f _args compiler-function)
-             (if (not (symbolp compiler-function))
-                 (error "Only symbols are supported in `compiler-macro'")
-               `(put ',f 'compiler-macro #',compiler-function))))
+         #'(lambda (f args compiler-function)
+             `(eval-and-compile
+                (put ',f 'compiler-macro
+                     ,(if (eq (car-safe compiler-function) 'lambda)
+                          `(lambda ,(append (cadr compiler-function) args)
+                             ,@(cddr compiler-function))
+                        `#',compiler-function)))))
    (list 'doc-string
          #'(lambda (f _args pos)
              (list 'put (list 'quote f) ''doc-string-elt (list 'quote pos))))
@@ -108,12 +112,13 @@ to set this property.")
                          ''edebug-form-spec (list 'quote spec)))))
    defun-declarations-alist)
   "List associating properties of macros to their macro expansion.
-Each element of the list takes the form (PROP FUN) where FUN is
-a function.  For each (PROP . VALUES) in a macro's declaration,
-the FUN corresponding to PROP is called with the function name
-and the VALUES and should return the code to use to set this property.")
+Each element of the list takes the form (PROP FUN) where FUN is a function.
+For each (PROP . VALUES) in a macro's declaration, the FUN corresponding
+to PROP is called with the macro name, the macro's arglist, and the VALUES
+and should return the code to use to set this property.")
 
 (put 'defmacro 'doc-string-elt 3)
+(put 'defmacro 'lisp-indent-function 2)
 (defalias 'defmacro
   (cons
    'macro
@@ -175,7 +180,7 @@ The return value is undefined.
   ;;    (defun foo (arg) (toto) nil)
   ;; from
   ;;    (defun foo (arg) (toto)).
-  (declare (doc-string 3))
+  (declare (doc-string 3) (indent 2))
   (let ((decls (cond
                 ((eq (car-safe docstring) 'declare)
                  (prog1 (cdr docstring) (setq docstring nil)))
@@ -280,7 +285,6 @@ was first made obsolete, for example a date or a release number."
   (declare (advertised-calling-convention
             ;; New code should always provide the `when' argument.
             (obsolete-name current-name when) "23.1"))
-  (interactive "aMake function obsolete: \nxObsoletion replacement: ")
   (put obsolete-name 'byte-obsolete-info
        ;; The second entry used to hold the `byte-compile' handler, but
        ;; is not used any more nowadays.
@@ -374,7 +378,7 @@ obsolete."
 (defmacro dont-compile (&rest body)
   "Like `progn', but the body always runs interpreted (not compiled).
 If you think you need this, you're probably making a mistake somewhere."
-  (declare (debug t) (indent 0))
+  (declare (debug t) (indent 0) (obsolete nil "24.4"))
   (list 'eval (list 'quote (if (cdr body) (cons 'progn body) (car body)))))
 
 
@@ -387,20 +391,20 @@ If you think you need this, you're probably making a mistake somewhere."
   "Like `progn', but evaluates the body at compile time if you're compiling.
 Thus, the result of the body appears to the compiler as a quoted constant.
 In interpreted code, this is entirely equivalent to `progn'."
-  (declare (debug t) (indent 0))
-  ;; Not necessary because we have it in b-c-initial-macro-environment
-  ;; (list 'quote (eval (cons 'progn body)))
-  (cons 'progn body))
+  (declare (debug (&rest def-form)) (indent 0))
+  (list 'quote (eval (cons 'progn body) lexical-binding)))
 
 (defmacro eval-and-compile (&rest body)
   "Like `progn', but evaluates the body at compile time and at load time."
   (declare (debug t) (indent 0))
-  ;; Remember, it's magic.
-  (cons 'progn body))
+  ;; When the byte-compiler expands code, this macro is not used, so we're
+  ;; either about to run `body' (plain interpretation) or we're doing eager
+  ;; macroexpansion.
+  (list 'quote (eval (cons 'progn body) lexical-binding)))
 
-(put 'with-no-warnings 'lisp-indent-function 0)
 (defun with-no-warnings (&rest body)
   "Like `progn', but prevents compiler warnings in the body."
+  (declare (indent 0))
   ;; The implementation for the interpreter is basically trivial.
   (car (last body)))
 

@@ -1,6 +1,6 @@
 ;;; gnus-registry.el --- article registry for Gnus
 
-;; Copyright (C) 2002-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2002-2014 Free Software Foundation, Inc.
 
 ;; Author: Ted Zlatanov <tzz@lifelogs.com>
 ;; Keywords: news registry
@@ -86,6 +86,12 @@
 (require 'nnmail)
 (require 'easymenu)
 (require 'registry)
+
+;; Silence XEmacs byte compiler, which will otherwise complain about
+;; call to `eieio-persistent-read'.
+(when (featurep 'xemacs)
+   (byte-compiler-options
+     (warnings (- callargs))))
 
 (defvar gnus-adaptive-word-syntax-table)
 
@@ -296,8 +302,14 @@ This is not required after changing `gnus-registry-cache-file'."
     (condition-case nil
         (progn
           (gnus-message 5 "Reading Gnus registry from %s..." file)
-          (setq gnus-registry-db (gnus-registry-fixup-registry
-                                  (eieio-persistent-read file)))
+          (setq gnus-registry-db
+		(gnus-registry-fixup-registry
+		 (condition-case nil
+		     (with-no-warnings
+		       (eieio-persistent-read file 'registry-db))
+		   ;; Older EIEIO versions do not check the class name.
+		   ('wrong-number-of-arguments
+		    (eieio-persistent-read file)))))
           (gnus-message 5 "Reading Gnus registry from %s...done" file))
       (error
        (gnus-message
@@ -982,7 +994,7 @@ only the last one's marks are returned."
   (let* ((article (last articles))
          (id (gnus-registry-fetch-message-id-fast article))
          (marks (when id (gnus-registry-get-id-key id 'mark))))
-    (when (interactive-p)
+    (when (gmm-called-interactively-p 'any)
       (gnus-message 1 "Marks are %S" marks))
     marks))
 
@@ -1113,9 +1125,9 @@ only the last one's marks are returned."
 (add-hook 'gnus-registry-unload-hook 'gnus-registry-unload-hook)
 
 (defun gnus-registry-install-p ()
-  "If the registry is not already enabled, and `gnus-registry-install' is t,
-the registry is enabled.  If `gnus-registry-install' is `ask',
-the user is asked first.  Returns non-nil iff the registry is enabled."
+  "Return non-nil if the registry is enabled (and maybe enable it first).
+If the registry is not already enabled, then if `gnus-registry-install'
+is `ask', ask the user; or if `gnus-registry-install' is non-nil, enable it."
   (interactive)
   (unless gnus-registry-enabled
     (when (if (eq gnus-registry-install 'ask)
@@ -1173,6 +1185,29 @@ data stored in the registry."
                 (ignore-errors
                   (gnus-select-group-with-message-id group message-id) t)
               (throw 'found t))))))))
+
+(defun gnus-registry-remove-extra-data (extra)
+  "Remove tracked EXTRA data from the gnus registry.
+EXTRA is a list of symbols.  Valid symbols are those contained in
+the docs of `gnus-registry-track-extra'.  This command is useful
+when you stop tracking some extra data and now want to purge it
+from your existing entries."
+  (interactive (list (mapcar 'intern
+			     (completing-read-multiple
+			      "Extra data: "
+			      '("subject" "sender" "recipient")))))
+  (when extra
+    (let ((db gnus-registry-db))
+      (registry-reindex db)
+      (loop for k being the hash-keys of (oref db :data)
+	    using (hash-value v)
+	    do (let ((newv (delq nil (mapcar #'(lambda (entry)
+						 (unless (member (car entry) extra)
+						   entry))
+					     v))))
+		 (registry-delete db (list k) nil)
+		 (gnus-registry-insert db k newv)))
+      (registry-reindex db))))
 
 ;; TODO: a few things
 

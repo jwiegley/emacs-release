@@ -1,6 +1,6 @@
 ;;; ede/emacs.el --- Special project for Emacs
 
-;; Copyright (C) 2008-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2008-2014 Free Software Foundation, Inc.
 
 ;; Author: Eric M. Ludlam <eric@siege-engine.com>
 
@@ -59,7 +59,7 @@ DIR is the directory to search from."
   "Get the root directory for DIR."
   (when (not dir) (setq dir default-directory))
   (let ((case-fold-search t)
-	(proj (ede-emacs-file-existing dir)))
+	(proj (ede-files-find-existing dir ede-emacs-project-list)))
     (if proj
 	(ede-up-directory (file-name-directory
 			   (oref proj :file)))
@@ -80,12 +80,6 @@ Return a tuple of ( EMACSNAME . VERSION )."
     (with-current-buffer buff
       (erase-buffer)
       (setq default-directory (file-name-as-directory dir))
-      (or (file-exists-p configure_ac)
-	  (setq configure_ac "configure.in"))
-      ;(call-process "egrep" nil buff nil "-n" "-e" "^version=" "Makefile")
-      (call-process "egrep" nil buff nil "-n" "-e" "AC_INIT" configure_ac)
-      (goto-char (point-min))
-      ;(re-search-forward "version=\\([0-9.]+\\)")
       (cond
        ;; Maybe XEmacs?
        ((file-exists-p "version.sh")
@@ -113,10 +107,11 @@ m4_define(\\[SXEM4CS_BETA_VERSION\\], \\[\\([0-9]+\\)\\])")
        ;; Insert other Emacs here...
 
        ;; Vaguely recent version of GNU Emacs?
-       (t
+       ((or (file-exists-p configure_ac)
+	    (file-exists-p (setq configure_ac "configure.in")))
 	(insert-file-contents configure_ac)
 	(goto-char (point-min))
-	(re-search-forward "AC_INIT(emacs,\\s-*\\([0-9.]+\\)\\s-*)")
+	(re-search-forward "AC_INIT(\\(?:GNU \\)?[eE]macs,\\s-*\\([0-9.]+\\)\\s-*[,)]")
 	(setq ver (match-string 1))
 	)
        )
@@ -134,7 +129,7 @@ m4_define(\\[SXEM4CS_BETA_VERSION\\], \\[\\([0-9]+\\)\\])")
 Return nil if there isn't one.
 Argument DIR is the directory it is created for.
 ROOTPROJ is nil, since there is only one project."
-  (or (ede-emacs-file-existing dir)
+  (or (ede-files-find-existing dir ede-emacs-project-list)
       ;; Doesn't already exist, so let's make one.
       (let* ((vertuple (ede-emacs-version dir))
 	     (proj (ede-emacs-project

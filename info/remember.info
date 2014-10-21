@@ -1,17 +1,15 @@
-This is
-/misc/emacs/bzr/emacs24-merge/doc/misc/../../info/remember.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/remember.texi.
+This is ../../info/remember.info, produced by makeinfo version 4.13
+from ./remember.texi.
 
-This manual is for Remember Mode, version 1.9
+This manual is for Remember Mode, version 2.0
 
-   Copyright (C) 2001, 2004-2005, 2007-2013 Free Software Foundation,
+   Copyright (C) 2001, 2004-2005, 2007-2014 Free Software Foundation,
 Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -25,20 +23,20 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: remember.info,  Node: Top,  Next: Preface,  Prev: (dir),  Up: (dir)
+File: remember.info,  Node: Top,  Next: Preface,  Up: (dir)
 
 Remember
 ********
 
-This manual is for Remember Mode, version 1.9
+This manual is for Remember Mode, version 2.0
 
-   Copyright (C) 2001, 2004-2005, 2007-2013 Free Software Foundation,
+   Copyright (C) 2001, 2004-2005, 2007-2014 Free Software Foundation,
 Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -50,7 +48,6 @@ Inc.
 
 * Preface::                     About the documentation.
 * Introduction::                What is Remember Mode?
-* Installation::                How to install Remember.
 * Implementation::              How Remember came into existence.
 * Quick Start::                 Get started using Remember.
 * Function Reference::          Interactive functions in remember.el.
@@ -64,6 +61,7 @@ Inc.
 Backends
 
 * Text File::                   Saving to a text file.
+* Separate Text Files::         Saving to separate text files.
 * Diary::                       Saving to a Diary file.
 * Mailbox::                     Saving to a mailbox.
 * Org::                         Saving to an Org Mode file.
@@ -74,7 +72,7 @@ File: remember.info,  Node: Preface,  Next: Introduction,  Prev: Top,  Up: Top
 1 Preface
 *********
 
-This document describes remember-el, which was written by John Wiegley,
+This document describes remember.el, which was written by John Wiegley,
 was once maintained by Sacha Chua, and is now maintained by the Emacs
 developers.
 
@@ -82,7 +80,7 @@ developers.
 greatly appreciated.
 
 
-File: remember.info,  Node: Introduction,  Next: Installation,  Prev: Preface,  Up: Top
+File: remember.info,  Node: Introduction,  Next: Implementation,  Prev: Preface,  Up: Top
 
 2 Introduction
 **************
@@ -127,22 +125,9 @@ that very manual-ness which computers from the very beginning have been
 championed as being able to reduce.
 
 
-File: remember.info,  Node: Installation,  Next: Implementation,  Prev: Introduction,  Up: Top
+File: remember.info,  Node: Implementation,  Next: Quick Start,  Prev: Introduction,  Up: Top
 
-3 Installation
-**************
-
-Installing Remember Mode is as simple as adding the following lines to
-your Emacs configuration file (usually `~/.emacs.d/init.el' or
-`~/.emacs').
-
-     (add-to-list 'load-path "/path/to/remember")
-     (require 'remember)
-
-
-File: remember.info,  Node: Implementation,  Next: Quick Start,  Prev: Installation,  Up: Top
-
-4 Implementation
+3 Implementation
 ****************
 
 Hyperbole, as a data presentation tool, always struck me as being very
@@ -186,57 +171,53 @@ feedback will help to make this as intuitive a tool as possible.
 
 File: remember.info,  Node: Quick Start,  Next: Function Reference,  Prev: Implementation,  Up: Top
 
-5 Quick Start
+4 Quick Start
 *************
 
-   * Load `remember.el'.
+   * Type `M-x remember'.  The `*Remember*' buffer should be displayed.
 
-   * Type `M-x remember'. The `*Remember*' buffer should be displayed.
-
-   * Type in what you want to remember. The first line will be treated
+   * Type in what you want to remember.  The first line will be treated
      as the headline, and the rest of the buffer will contain the body
      of the note.
 
    * Type `C-c C-c' (`remember-finalize') to save the note and close
      the `*Remember*' buffer.
 
-   By default, `remember-finalize' saves the note in `~/.notes'.  You
-can edit it now to see the remembered and timestamped note. You can
-edit this file however you want. New entries will always be added to
-the end.
+   By default, `remember-finalize' saves the note in `~/emacs.d/notes'.
+You can edit it now to see the remembered and timestamped note.  You
+can edit this file however you want.  New entries will always be added
+to the end.
 
-   To remember a region of text, use the universal prefix. `C-u M-x
+   To remember a region of text, use the universal prefix.  `C-u M-x
 remember' displays a `*Remember*' buffer with the region as the initial
 contents.
 
    As a simple beginning, you can start by using the Text File backend,
-keeping your `~/.notes' file in outline-mode format, with a final entry
-called `* Raw data'. Remembered data will be added to the end of the
-file. Every so often, you can move the data that gets appended there
-into other files, or reorganize your document.
+keeping your `~/.emacs.d/notes' file in outline-mode format, with a
+final entry called `* Raw data'.  Remembered data will be added to the
+end of the file.  Every so often, you can move the data that gets
+appended there into other files, or reorganize your document.
 
-   You can also store remembered data in other backends.  (*note
-Backends::)
+   You can also store remembered data in other backends.  *Note
+Backends::.
 
-   Here is one way to map the remember functions in your `.emacs' to
-very accessible keystrokes facilities using the mode:
-
-     (autoload 'remember ``remember'' nil t)
-     (autoload 'remember-region ``remember'' nil t)
+   Here is one way to map the remember functions in your init file
+(*note The Emacs Initialization File: (emacs)Init File.) to very
+accessible keystrokes facilities using the mode:
 
      (define-key global-map (kbd "<f9> r") 'remember)
      (define-key global-map (kbd "<f9> R") 'remember-region)
 
    By default, remember uses the first annotation returned by
-`remember-annotation-functions'. To include all of the annotations, set
-`remember-run-all-annotation-functions-flag' to non-nil.
+`remember-annotation-functions'.  To include all of the annotations,
+set `remember-run-all-annotation-functions-flag' to a non-`nil' value.
 
  -- User Option: remember-run-all-annotation-functions-flag
-     Non-nil means use all annotations returned by
+     Non-`nil' means use all annotations returned by
      `remember-annotation-functions'.
 
    You can write custom functions that use a different set of
-remember-annotation-functions. For example:
+remember-annotation-functions.  For example:
 
      (defun my/remember-with-filename ()
       "Always use the filename."
@@ -244,19 +225,31 @@ remember-annotation-functions. For example:
       (let ((remember-annotation-functions '(buffer-file-name)))
        (call-interactively 'remember)))
 
+   The `remember-notes' command creates a "notes" buffer that visits
+the file specified by the option `remember-data-file'.  The option
+`remember-notes-buffer-name' specifies the name of the buffer.  The
+buffer uses `remember-notes-initial-major-mode' and
+`remember-notes-mode' minor mode.  Use `C-c C-c' to save and bury the
+buffer.  The command `save-some-buffers' saves this buffer without
+asking.  This function is a suitable setting for
+`initial-buffer-choice'.
+
 
 File: remember.info,  Node: Function Reference,  Next: Keystrokes,  Prev: Quick Start,  Up: Top
 
-6 Function Reference
+5 Function Reference
 ********************
 
 `remember.el' defines the following interactive functions:
 
- -- Function: remember initial
-     Remember an arbitrary piece of data. With a prefix, it will use the
-     region as INITIAL.
+ -- Function: remember &optional initial
+     Remember an arbitrary piece of data.  With a prefix, it will use
+     the region as INITIAL.
 
- -- Function: remember-region beg end
+ -- Function: remember-other-frame &optional initial
+     Like `remember', but uses a new frame.
+
+ -- Function: remember-region &optional beg end
      If called from within the remember buffer, BEG and END are
      ignored, and the entire buffer will be remembered.  If called from
      any other buffer, that region, plus any context information
@@ -270,34 +263,53 @@ File: remember.info,  Node: Function Reference,  Next: Keystrokes,  Prev: Quick 
  -- Function: remember-finalize
      Remember the contents of the current buffer.
 
+ -- Function: remember-destroy
+     Destroy the current remember buffer.
+
  -- Function: remember-mode
-     This enters the major mode for output from `remember'.  This
-     buffer is used to collect data that you want remember.  Just hit
-     `C-c C-c' when you're done entering, and it will go ahead and file
-     the data for latter retrieval, and possible indexing.
+     This enters the major mode (*note Major Modes: (emacs)Major
+     Modes.) for output from `remember'.  This buffer is used to
+     collect data that you want remember.  Just hit `C-c C-c' when
+     you're done entering, and it will go ahead and file the data for
+     latter retrieval, and possible indexing.
+
+ -- Function: remember-notes &optional switch-to
+     This returns the notes buffer, creating it if needed, and switches
+     to it if called interactively (or if SWITCH-TO is non-`nil').  The
+     notes buffer visits `remember-data-file', and is named
+     `remember-notes-buffer-name'.  It uses
+     `remember-notes-initial-major-mode' and `remember-notes-mode'
+     minor mode.
+
+ -- Function: remember-notes-mode &optional arg
+     This is a minor mode for the notes buffer.  It sets
+     `buffer-save-without-query' so that `save-some-buffers' will save
+     the notes buffer without asking.  Use `C-c C-c' to run the command
+     `remember-notes-save-and-bury-buffer'.
+
+ -- Function: remember-notes-save-and-bury-buffer
+     Save (if it is modified) and bury the current buffer.
 
 
 File: remember.info,  Node: Keystrokes,  Next: Backends,  Prev: Function Reference,  Up: Top
 
-7 Keystroke Reference
+6 Keystroke Reference
 *********************
 
 `remember.el' defines the following keybindings by default:
 
-`C-c C-c (`remember-finalize')'
-     Remember the contents of the current buffer.
+`C-c C-c'
+`C-x C-s'
+     Remember the contents of the current buffer (`remember-finalize').
 
-`C-c C-k (`remember-destroy')'
-     Destroy the current *Remember* buffer.
-
-`C-x C-s (`remember-finalize')'
-     Remember the contents of the current buffer.
+`C-c C-k'
+     Destroy the current `*Remember*' buffer (`remember-destroy').
 
 
 
 File: remember.info,  Node: Backends,  Next: GNU Free Documentation License,  Prev: Keystrokes,  Up: Top
 
-8 Backends
+7 Backends
 **********
 
 You can save remembered notes to a variety of backends.
@@ -305,14 +317,15 @@ You can save remembered notes to a variety of backends.
 * Menu:
 
 * Text File::                   Saving to a text file.
+* Separate Text Files::         Saving to separate text files.
 * Diary::                       Saving to a Diary file.
 * Mailbox::                     Saving to a mailbox.
 * Org::                         Saving to an Org Mode file.
 
 
-File: remember.info,  Node: Text File,  Next: Diary,  Prev: Backends,  Up: Backends
+File: remember.info,  Node: Text File,  Next: Separate Text Files,  Up: Backends
 
-8.1 Saving to a Text File
+7.1 Saving to a Text File
 =========================
 
 Insinuation
@@ -330,9 +343,31 @@ Options
      The text used to begin each remember item.
 
 
-File: remember.info,  Node: Diary,  Next: Mailbox,  Prev: Text File,  Up: Backends
+File: remember.info,  Node: Separate Text Files,  Next: Diary,  Prev: Text File,  Up: Backends
 
-8.2 Saving to a Diary file
+7.2 Saving to Separate Text Files
+=================================
+
+Insinuation
+-----------
+
+     (setq remember-handler-functions '(remember-store-in-files))
+
+Options
+-------
+
+ -- User Option: remember-data-directory
+     The directory in which to store remember data as files.
+
+ -- User Option: remember-directory-file-name-format
+     A format string to use for naming files in the remember directory.
+     File names are formed by calling `format-time-string' at the time
+     of saving, using this format string.
+
+
+File: remember.info,  Node: Diary,  Next: Mailbox,  Prev: Separate Text Files,  Up: Backends
+
+7.3 Saving to a Diary file
 ==========================
 
 Insinuation
@@ -344,13 +379,13 @@ Options
 -------
 
  -- User Option: remember-diary-file
-     File for extracted diary entries.  If this is nil, then
-     `diary-file' will be used instead."
+     File for extracted diary entries.  If this is `nil', then
+     `diary-file' will be used instead.
 
 
 File: remember.info,  Node: Mailbox,  Next: Org,  Prev: Diary,  Up: Backends
 
-8.3 Saving to a Mailbox
+7.4 Saving to a Mailbox
 =======================
 
 Insinuation
@@ -370,7 +405,7 @@ Options
 
 File: remember.info,  Node: Org,  Prev: Mailbox,  Up: Backends
 
-8.4 Saving to an Org Mode file
+7.5 Saving to an Org Mode file
 ==============================
 
 For instructions on how to integrate Remember with Org Mode, consult
@@ -384,7 +419,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -871,33 +906,46 @@ Index
  [index ]
 * Menu:
 
+* annotation:                            Quick Start.          (line 40)
 * diary, integration:                    Diary.                (line  6)
 * mailbox, saving to:                    Mailbox.              (line  6)
+* notes:                                 Quick Start.          (line 57)
 * org mode, integration:                 Org.                  (line  6)
 * remember:                              Function Reference.   (line  9)
-* remember-clipboard:                    Function Reference.   (line 19)
-* remember-finalize:                     Function Reference.   (line 24)
-* remember-mode:                         Function Reference.   (line 27)
-* remember-region:                       Function Reference.   (line 13)
+* remember-clipboard:                    Function Reference.   (line 22)
+* remember-destroy:                      Function Reference.   (line 30)
+* remember-finalize:                     Function Reference.   (line 27)
+* remember-mode:                         Function Reference.   (line 33)
+* remember-notes:                        Function Reference.   (line 40)
+* remember-notes-mode:                   Function Reference.   (line 48)
+* remember-notes-save-and-bury-buffer:   Function Reference.   (line 54)
+* remember-other-frame:                  Function Reference.   (line 13)
+* remember-region:                       Function Reference.   (line 16)
 * text file, saving to:                  Text File.            (line  6)
+* text files, saving to separate:        Separate Text Files.  (line  6)
 
 
 
 Tag Table:
-Node: Top996
-Node: Preface2667
-Node: Introduction3017
-Node: Installation5369
-Node: Implementation5722
-Node: Quick Start8051
-Node: Function Reference10305
-Node: Keystrokes11493
-Node: Backends11938
-Node: Text File12360
-Node: Diary12783
-Node: Mailbox13186
-Node: Org13622
-Node: GNU Free Documentation License13850
-Node: Concept Index39028
+Node: Top920
+Node: Preface2583
+Node: Introduction2933
+Node: Implementation5287
+Node: Quick Start7616
+Node: Function Reference10306
+Node: Keystrokes12518
+Node: Backends12892
+Node: Text File13377
+Node: Separate Text Files13797
+Node: Diary14415
+Node: Mailbox14829
+Node: Org15265
+Node: GNU Free Documentation License15493
+Node: Concept Index40665
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

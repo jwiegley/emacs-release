@@ -1,8 +1,8 @@
 ;;; erc-services.el --- Identify to NickServ
 
-;; Copyright (C) 2002-2004, 2006-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2002-2004, 2006-2014 Free Software Foundation, Inc.
 
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 
 ;; This file is part of GNU Emacs.
 
@@ -62,7 +62,7 @@
 
 (require 'erc)
 (require 'erc-networks)
-(eval-when-compile (require 'cl))
+(eval-when-compile (require 'cl-lib))
 
 ;; Customization:
 

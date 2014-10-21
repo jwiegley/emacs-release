@@ -370,9 +370,6 @@
 
 (require 'mail-utils)		     ; pick up mail-strip-quoted-names
 
-(eval-when-compile
-  (require 'smtpmail))
-
 (autoload 'mail-do-fcc "sendmail")
 
 (defgroup feedmail nil
@@ -410,8 +407,10 @@ sending immediately.  For any other non-nil value, prompt in both
 cases.  You can give a timeout for the prompt; see variable
 `feedmail-confirm-outgoing-timeout'."
   :group 'feedmail-misc
-  :type 'boolean
-  )
+  :type '(choice (const nil)
+		 (const queued)
+		 (const immediate)
+		 (other t)))
 
 
 (defcustom feedmail-display-full-frame 'queued
@@ -428,8 +427,10 @@ it can still be interesting to see a lot about them as they are
 shuttled robotically onward."
   :version "24.1"
   :group 'feedmail-misc
-  :type 'boolean
-  )
+  :type '(choice (const nil)
+		 (const queued)
+		 (const immediate)
+		 (other t)))
 
 
 (defcustom feedmail-confirm-outgoing-timeout nil
@@ -486,8 +487,9 @@ and serially, so slow SMTP conversations can add up to a delay.  There
 is an option for either 'first or 'last because you might have a
 delivery agent that processes the addresses backwards."
   :group 'feedmail-headers
-  :type 'boolean
-  )
+  :type '(choice (const nil)
+		 (const first)
+		 (const last)))
 
 
 (defcustom feedmail-fill-to-cc t
@@ -590,7 +592,7 @@ header is fiddled after the From: header is fiddled."
 (defcustom feedmail-force-binary-write t
   "If non-nil, force writing file as binary (this applies to queues and Fcc:).
 On systems where there is a difference between binary and text files,
-feedmail will temporarily manipulate the value of `buffer-file-type'
+feedmail will temporarily manipulate the value of `coding-system-for-write'
 to make the writing as binary.  If nil, writing will be in text mode.
 On systems where there is no distinction or where it is controlled by other
 variables or other means, this option has no effect."
@@ -1619,6 +1621,10 @@ local gurus."
 		 ;; These mean "report errors by mail" and "deliver in background".
 		 (if (null mail-interactive) '("-oem" "-odb")))))
 
+(declare-function smtpmail-via-smtp "smtpmail"
+		  (recipient smtpmail-text-buffer &optional ask-for-password))
+(defvar smtpmail-smtp-server)
+
 ;; provided by jam@austin.asc.slb.com (James A. McLaughlin);
 ;; simplified by WJC after more feedmail development;
 ;; idea (but not implementation) of copying smtpmail trace buffer to
@@ -2016,7 +2022,6 @@ backup file names and the like)."
 	      (setq buffer-offer-save nil)
 	      (buffer-disable-undo blobby-buffer)
 	      (insert-file-contents-literally maybe-file)
-	      (setq buffer-file-type t) ; binary
 	      (goto-char (point-min))
 	      ;; if at least two line-endings with CRLF, translate the file
 	      (if (looking-at ".*\r\n.*\r\n")
@@ -2334,7 +2339,10 @@ mapped to mostly alphanumerics for safety."
 	(setq filename buffer-file-name)
       (setq filename (feedmail-create-queue-filename queue-directory)))
     ;; make binary file on DOS/Windows 95/Windows NT, etc
-    (let ((buffer-file-type feedmail-force-binary-write))
+    (let ((coding-system-for-write
+	   (if feedmail-force-binary-write
+	       'no-conversion
+	     coding-system-for-write)))
       (write-file filename))
     ;; convenient for moving from draft to q, for example
     (if (and previous-buffer-file-name (or (not is-fqm) (not is-in-this-dir))
@@ -2571,26 +2579,27 @@ mapped to mostly alphanumerics for safety."
 		  ;; Re-insert and handle any Fcc fields (and, optionally,
                   ;; any Bcc).
 		  (when fcc
-                    (let ((old (default-value 'buffer-file-type)))
+                    (let ((coding-system-for-write
+			   (if (and (memq system-type '(ms-dos windows-nt))
+				    feedmail-force-binary-write)
+			       'no-conversion
+			     coding-system-for-write)))
                       (unwind-protect
                           (progn
-                            (setq-default buffer-file-type 
-                                          feedmail-force-binary-write)
                             (insert fcc)
                             (unless feedmail-nuke-bcc-in-fcc
                               (if bcc-holder (insert bcc-holder))
                               (if resent-bcc-holder
                                   (insert resent-bcc-holder)))
-                          
+
                             (run-hooks 'feedmail-before-fcc-hook)
-                          
+
                             (when feedmail-nuke-body-in-fcc
                               (goto-char eoh-marker)
                               (if (natnump feedmail-nuke-body-in-fcc)
                                   (forward-line feedmail-nuke-body-in-fcc))
                               (delete-region (point) (point-max)))
-                            (mail-do-fcc eoh-marker))
-                        (setq-default buffer-file-type old)))))
+                            (mail-do-fcc eoh-marker))))))
 	      ;; User bailed out of one-last-look.
 	      (if feedmail-queue-runner-is-active
 		  (throw 'skip-me-q 'skip-me-q)

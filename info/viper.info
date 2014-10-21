@@ -1,13 +1,12 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/viper.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/viper.texi.
+This is ../../info/viper.info, produced by makeinfo version 4.13 from
+./viper.texi.
 
-Copyright (C) 1995-1997, 2001-2013 Free Software Foundation, Inc.
+Copyright (C) 1995-1997, 2001-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -21,7 +20,7 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: viper.info,  Node: Top,  Next: Overview,  Up: (DIR)
+File: viper.info,  Node: Top,  Next: Overview,  Up: (dir)
 
 Viper
 *****
@@ -65,12 +64,12 @@ may be visited as needed.
 the current address for Viper bug reports.  Please use the Ex command
 `:submitReport' for this purpose.
 
-   Copyright (C) 1995-1997, 2001-2013 Free Software Foundation, Inc.
+   Copyright (C) 1995-1997, 2001-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -84,15 +83,13 @@ the current address for Viper bug reports.  Please use the Ex command
 * Improvements over Vi::        New features, Improvements
 * Customization::               How to customize Viper
 * Commands::                    Vi and Ex Commands
-
+* GNU Free Documentation License:: The license for this documentation.
+* Acknowledgments::
 * Key Index::                   Index of Vi and Ex Commands
 * Function Index::              Index of Viper Functions
 * Variable Index::              Index of Viper Variables
 * Package Index::               Index of Packages Mentioned in this Document
 * Concept Index::               Vi, Ex and Emacs concepts
-
-* Acknowledgments::
-* GNU Free Documentation License:: The license for this documentation.
 
 
 File: viper.info,  Node: Overview,  Next: Improvements over Vi,  Prev: Top,  Up: Top
@@ -115,7 +112,7 @@ familiar with Emacs bindings and prefer them in some cases, especially
 in the Vi Insert state. John Hawkins <jshawkin@eecs.umich.edu> has
 provided a set of customizations, which enables additional Emacs
 bindings under Viper.  These customizations can be included in your
-`~/.viper' file and are found at the following URL:
+`~/.emacs.d/viper' file and are found at the following URL:
 `http://traeki.freeshell.org/files/viper-sample'.
 
 * Menu:
@@ -129,7 +126,7 @@ bindings under Viper.  These customizations can be included in your
 * Unimplemented Features::      That are unlikely to be implemented.
 
 
-File: viper.info,  Node: Emacs Preliminaries,  Next: Loading Viper,  Prev: Overview,  Up: Overview
+File: viper.info,  Node: Emacs Preliminaries,  Next: Loading Viper,  Up: Overview
 
 1.1 Emacs Preliminaries
 =======================
@@ -243,14 +240,16 @@ the place where all general Emacs customization takes place.  Beginning
 with version 20.0, Emacsen have an interactive interface, which
 simplifies the job of customization significantly.
 
-   Viper also uses the file `~/.viper' for Viper-specific customization.
-The location of Viper customization file can be changed by setting the
-variable `viper-custom-file-name' in `.emacs' _prior_ to loading Viper.
+   Viper also uses the file `~/.emacs.d/viper' for Viper-specific
+customization.  The location of Viper customization file can be changed
+by setting the variable `viper-custom-file-name' in `.emacs' _prior_ to
+loading Viper.
 
    The latest versions of Emacs have an interactive customization
 facility, which allows you to (mostly) bypass the use of the `.emacs'
-and `.viper' files. You can reach this customization facility from
-within Viper's VI state by executing the Ex command `:customize'.
+and `viper-custom-file-name' files. You can reach this customization
+facility from within Viper's VI state by executing the Ex command
+`:customize'.
 
    Once invoked, Viper will arrange to bring up Emacs buffers in Vi
 state whenever this makes sense.  *Note Packages that Change Keymaps::,
@@ -375,7 +374,7 @@ Customization::, to find out how to allow Emacs keys in Insert state.
                         replacement commands, such as cw, C, R, etc.
 
 
-File: viper.info,  Node: Emacs State,  Next: Vi State,  Prev: States in Viper,  Up: States in Viper
+File: viper.info,  Node: Emacs State,  Next: Vi State,  Up: States in Viper
 
 1.3.1 Emacs State
 -----------------
@@ -487,9 +486,9 @@ about are:
      Emacs provides in its prompts.  (This is usually convenient, but
      occasionally the prompt may suggest a wrong file name for you.)
      If you see a prompt `/usr/foo/' and you wish to edit the file
-     `~/.viper', you don't have to erase the prompt.  Instead, simply
+     `~/.file', you don't have to erase the prompt.  Instead, simply
      continue typing what you need.  Emacs will interpret
-     `/usr/foo/~/.viper' correctly.  Similarly, if the prompt is
+     `/usr/foo/~/.file' correctly.  Similarly, if the prompt is
      `~/foo/' and you need to get to `/bar/file', keep typing.  Emacs
      interprets `~/foo//bar/' as `/bar/file', since when it sees `//',
      it understands that `~/foo/' is to be discarded.
@@ -530,7 +529,6 @@ about are:
      command will appear in the history list.  This is because having
      `:r' alone as a default is meaningless, since this command
      requires a file argument.
-
    As in Vi, Viper's destructive commands can be re-executed by typing
 ``.''.  However, in addition, Viper keeps track of the history of such
 commands.  This history can be perused by typing `C-c M-p' and `C-c
@@ -674,8 +672,8 @@ use the replace mode.  Initially, the minibuffer comes up in Insert
 state.
 
    Some users prefer plain Emacs bindings in the minibuffer.  To this
-end, set `viper-vi-style-in-minibuffer' to `nil' in `.viper'.  *Note
-Customization::, to learn how to do this.
+end, set `viper-vi-style-in-minibuffer' to `nil' in your Viper
+customization file.  *Note Customization::, to learn how to do this.
 
    When the minibuffer changes Viper states, you will notice that the
 appearance of the text there changes as well.  This is useful because
@@ -796,7 +794,7 @@ the facilities provided by Emacs.
                             you should know about.
 
 
-File: viper.info,  Node: Basics,  Next: Undo and Backups,  Prev: Improvements over Vi,  Up: Improvements over Vi
+File: viper.info,  Node: Basics,  Next: Undo and Backups,  Up: Improvements over Vi
 
 2.1 Basics
 ==========
@@ -846,8 +844,8 @@ sense.
 (*note Multiple Files in Viper::).  In addition to the files, Emacs has
 buffers.  These can be seen in the `:args' list and switched using
 `:next' if you type `:set ex-cycle-through-non-files t', or specify
-`(setq ex-cycle-through-non-files t)' in your `.viper' file.  *Note
-Customization::, for details.
+`(setq ex-cycle-through-non-files t)' in your Viper customization file.
+*Note Customization::, for details.
 
 
 File: viper.info,  Node: Undo and Backups,  Next: History,  Prev: Basics,  Up: Improvements over Vi
@@ -969,8 +967,8 @@ File: viper.info,  Node: Improved Search,  Next: Abbreviation Facilities,  Prev:
 ===================
 
 Viper provides buffer search, the ability to search the buffer for a
-region under the cursor.  You have to turn this on in `.viper' either
-by calling
+region under the cursor.  You have to turn this on in your Viper
+customization file either by calling
 
      (viper-buffer-search-enable)
 
@@ -1004,13 +1002,14 @@ finds them.  This is done through what is known as _faces_ in Emacs.
 The variable that controls how search patterns are highlighted is
 `viper-search-face'.  If you don't want any highlighting at all, put
      (copy-face 'default 'viper-search-face)
-   in `~/.viper'.  If you want to change how patterns are highlighted,
-you will have to change `viper-search-face' to your liking.  The easiest
-way to do this is to use Emacs customization widget, which is accessible
-from the menubar.  Viper customization group is located under the
-_Emulations_ customization group, which in turn is under the _Editing_
-group (or simply by typing `:customize').  All Viper faces are grouped
-together under Viper's _Highlighting_ group.
+   in your Viper customization file.  If you want to change how
+patterns are highlighted, you will have to change `viper-search-face'
+to your liking.  The easiest way to do this is to use Emacs
+customization widget, which is accessible from the menubar.  Viper
+customization group is located under the _Emulations_ customization
+group, which in turn is under the _Editing_ group (or simply by typing
+`:customize').  All Viper faces are grouped together under Viper's
+_Highlighting_ group.
 
    Try it: it is really simple!
 
@@ -1043,7 +1042,8 @@ File: viper.info,  Node: Movement and Markers,  Next: New Commands,  Prev: Abbre
 
 Viper can be set free from the line-limited movements in Vi, such as `l'
 refusing to move beyond the line, <ESC> moving one character back, etc.
-These derive from Ex, which is a line editor.  If your `.viper' contains
+These derive from Ex, which is a line editor.  If your Viper
+customization file contains
 
      `(setq viper-ex-style-motion nil)'
 
@@ -1112,9 +1112,9 @@ These commands have no Vi analogs.
      will be split into 2.  Except for novice users, `C-c' is also set
      to execute an Emacs command from the current major mode.  <ESC>
      will do the same, if you configure <ESC> as Meta by setting
-     `viper-no-multiple-ESC' to `nil' in `.viper'.  *Note
-     Customization::.  `C-\' in Insert, Replace, or Vi states will make
-     Emacs think `Meta' has been hit.
+     `viper-no-multiple-ESC' to `nil' in your Viper customization file.
+     *Note Customization::.  `C-\' in Insert, Replace, or Vi states
+     will make Emacs think `Meta' has been hit.
 
 `\'
      Escape to Emacs to execute a single Emacs command.  For instance,
@@ -1333,9 +1333,9 @@ File: viper.info,  Node: Customization,  Next: Commands,  Prev: Improvements ove
 
 Customization can be done in 2 ways.
 
-   * Elisp code in a `.viper' file in your home directory.  Viper loads
-     `.viper' just before it does the binding for mode hooks.  This is
-     recommended for experts only.
+   * Elisp code in a `~/.emacs.d/viper' (or `~/.viper') file.  Viper
+     loads this file just before it does the binding for mode hooks.
+     This is recommended for experts only.
 
    * Elisp code in your `.emacs' file before and after the `(require
      'viper)' line.  This method is _not_ recommended, unless you know
@@ -1351,13 +1351,13 @@ Customization can be done in 2 ways.
      Lisp commands will be placed in `~/.emacs' or some other
      customization file depending on the version of Emacs that you use.
      Still, it is recommended to separate Viper-related customization
-     produced by the Emacs customization widget and keep it in the
-     `.viper' file.
+     produced by the Emacs customization widget and keep it in your
+     Viper customization file.
 
      Some advanced customization cannot be accomplished this way,
-     however, and has to be done in Emacs Lisp in the `.viper' file.
-     For the common cases, examples are provided that you can use
-     directly.
+     however, and has to be done in Emacs Lisp in your Viper
+     customization file.  For the common cases, examples are provided
+     that you can use directly.
 
 * Menu:
 
@@ -1368,7 +1368,7 @@ Customization can be done in 2 ways.
 * Vi Macros::                    How to do Vi style macros.
 
 
-File: viper.info,  Node: Rudimentary Changes,  Next: Key Bindings,  Prev: Customization,  Up: Customization
+File: viper.info,  Node: Rudimentary Changes,  Next: Key Bindings,  Up: Customization
 
 3.1 Rudimentary Changes
 =======================
@@ -1526,13 +1526,12 @@ get the full list of Vi variables, type `:se <SPC> <TAB>'.
      can add `viper-mode' to the appropriate major mode hooks using
      `viper-load-hook').
 
-     This option must be set in the file `~/.viper'.
+     This option must be set in your Viper customization file.
 
-`viper-custom-file-name "~/.viper"'
+`viper-custom-file-name "~/.emacs.d/viper"'
      File used for Viper-specific customization.  Change this setting,
-     if you want.  Must be set in `.emacs' (not `.viper'!)  before
-     Viper is loaded.  Note that you have to set it as a string inside
-     double quotes.
+     if you want.  Must be set in `.emacs' before Viper is loaded.
+     Note that you have to set it as a string inside double quotes.
 
 `viper-spell-function 'ispell-region'
      Function used by the command `#c<move>' to spell.
@@ -1586,7 +1585,8 @@ get the full list of Vi variables, type `:se <SPC> <TAB>'.
      `viper-repeat-from-history', which checks the second key by which
      it is invoked to see which of the previous commands to invoke.
      Viper binds `f12 1' and `f12 2' only, but the user can bind more
-     in `~/.viper'.  *Note Vi Macros::, for how to do this.
+     in his/her Viper customization file.  *Note Vi Macros::, for how
+     to do this.
 
 `viper-keep-point-on-undo nil'
      If not `nil', Viper tries to not move point when undoing commands.
@@ -1663,8 +1663,8 @@ get the full list of Vi variables, type `:se <SPC> <TAB>'.
 
 `viper-toggle-key "\C-z"'
      Specifies the key used to switch from Emacs to Vi and back.  Must
-     be set in `.viper'.  This variable can't be changed interactively
-     after Viper is loaded.
+     be set in your Viper customization file.  This variable can't be
+     changed interactively after Viper is loaded.
 
      In Insert state, this key acts as a temporary escape to Vi state,
      i.e., it will set Viper up so that the very next command will be
@@ -1704,7 +1704,7 @@ get the full list of Vi variables, type `:se <SPC> <TAB>'.
      running.
    You can reset some of these constants in Viper with the Ex command
 `:set' (when so indicated in the table).  Or you can include a line
-like this in your `.viper' file:
+like this in your Viper customization file:
      (setq viper-case-fold-search t)
    
 
@@ -1767,7 +1767,7 @@ Viper's Replace state.
 
 If you want to bind a key, say `C-v', to the function that scrolls page
 down and to make `0' display information on the current buffer, putting
-this in `.viper' will do the trick in Vi state:
+this in your Viper customization file will do the trick in Vi state:
      (define-key viper-vi-global-user-map "\C-v" 'scroll-down)
    To set a key globally,
      (define-key viper-emacs-global-user-map "\C-c m" 'smail)
@@ -1798,11 +1798,12 @@ keys necessary in that keymap, and put
 
      (viper-modify-major-mode 'dired-mode 'emacs-state my-fancy-map)
 
-in `~/.viper'.  To do the same in Vi and Insert states, you should use
-`vi-state' and `insert-state'.  Changes in Insert state are also in
-effect in Replace state.  For instance, suppose that the user wants to
-use `dd' in Vi state under Dired mode to delete files, `u' to unmark
-files, etc.  The following code in `~/.viper' will then do the job:
+in your Viper customization file.  To do the same in Vi and Insert
+states, you should use `vi-state' and `insert-state'.  Changes in
+Insert state are also in effect in Replace state.  For instance,
+suppose that the user wants to use `dd' in Vi state under Dired mode to
+delete files, `u' to unmark files, etc.  The following code in the
+Viper customization file will then do the job:
 
      (setq my-dired-modifier-map (make-sparse-keymap))
      (define-key my-dired-modifier-map "dd" 'dired-flag-file-deletion)
@@ -1895,8 +1896,8 @@ general info on key bindings in Emacs.
 
 File: viper.info,  Node: Packages that Change Keymaps,  Next: Viper Specials,  Prev: Key Bindings,  Up: Customization
 
-3.2.1 Packages that Change Keymaps
-----------------------------------
+3.3 Packages that Change Keymaps
+================================
 
 Viper is designed to coexist with all major and minor modes of Emacs.
 This means that bindings set by those modes are generally available
@@ -1975,8 +1976,8 @@ can happen only in the beginning, when the minor mode kicks in.  Typing
 `M-x viper-mode' will correct the situation.  Viper knows about several
 such minor modes and takes care of them, so the above trick is usually
 not necessary.  If you find that some minor mode, e.g., `nasty-mode'
-interferes with Viper, putting the following in `.viper' should fix the
-problem:
+interferes with Viper, putting the following in your Viper
+customization file should fix the problem:
      (viper-harness-minor-mode "nasty-mode")
    The argument to `viper-harness-minor-mode' is the name of the file
 for the offending minor mode with the suffixes `.el' and `.elc' removed.
@@ -2003,7 +2004,7 @@ make a minor mode, `my-mode', compatible with Viper is to have the file
 
 File: viper.info,  Node: Viper Specials,  Next: Vi Macros,  Prev: Packages that Change Keymaps,  Up: Customization
 
-3.3 Viper Specials
+3.4 Viper Specials
 ==================
 
 Viper extends Vi with a number of useful features.  This includes
@@ -2020,8 +2021,9 @@ explained here.
      Enable buffer search.  Explicit call to
      `viper-buffer-search-enable' sets `viper-buffer-search-char' to
      `g'.  Alternatively, the user can set `viper-buffer-search-char'
-     in `.viper' to a key sequence to be used for buffer search.  There
-     is no need to call `viper-buffer-search-enable' in that case.  
+     in his/her Viper customization file to a key sequence to be used
+     for buffer search.  There is no need to call
+     `viper-buffer-search-enable' in that case.  
 
 `viper-toggle-search-style'
      This function, bound to `C-c /', lets one toggle case-sensitive and
@@ -2042,8 +2044,8 @@ explained here.
      `/' or if the second `/' doesn't follow quickly enough, then Viper
      will issue the usual prompt `/' and will wait for input, as usual
      in Vi.  If you don't like this behavior, you can "unrecord" these
-     macros in your `~/.viper' file.  For instance, if you don't like
-     the above feature, put this in `~/.viper':
+     macros in your Viper customization file.  For instance, if you
+     don't like the above feature, put this in the file:
           (viper-set-searchstyle-toggling-macros 'undefine)
      
      If you don't like this feature as a default, but would still like
@@ -2116,8 +2118,8 @@ explained here.
      the direction of newer insertions.  Hitting `C-c M-p' or `C-c M-n'
      in succession will undo the previous insertion from the ring and
      insert the next item on the ring.  If a larger ring size is
-     needed, change the value of the above variable in the `~/.viper'
-     file.
+     needed, change the value of the above variable in the Viper
+     customization file.
 
      Since typing these sequences of keys may be tedious, it is
      suggested that the user should bind a function key, such as `f31',
@@ -2181,11 +2183,11 @@ explained here.
           (copy-face 'default 'viper-minibuffer-vi-face)
           (copy-face 'default 'viper-minibuffer-insert-face)
           (copy-face 'default 'viper-minibuffer-emacs-face)
-     in the `~/.viper' file or through the customization widget, as
-     described above.  However, in that case, the user will not have any
-     indication of the current Viper state in the minibuffer.  (This is
-     important if the user accidentally switches to another Viper state
-     by typing <ESC> or `C-z').
+     in their Viper customization file or through the customization
+     widget, as described above.  However, in that case, the user will
+     not have any indication of the current Viper state in the
+     minibuffer.  (This is important if the user accidentally switches
+     to another Viper state by typing <ESC> or `C-z').
 
 `M-x viper-go-away'
      Make Viper disappear from the face of your running Emacs instance.
@@ -2243,7 +2245,7 @@ in an Xterm window (using `emacs -nw') will do no good.
      the mouse-search feature, and the `Meta-Shift-Mouse-1' mouse
      action is already bound to something else, you can rebind the
      mouse-search feature by setting `viper-mouse-search-key' to
-     something else in your `~/.viper' file:
+     something else in your Viper customization file:
           (setq viper-mouse-search-key '(meta 1))
      This would bind mouse search to the action invoked by pressing the
      Meta key and clicking mouse button 1.  The allowed values of
@@ -2253,8 +2255,8 @@ in an Xterm window (using `emacs -nw') will do no good.
 
      If the requested mouse action (e.g., (meta 1)) is already taken
      for other purposes then you have to confirm your intention by
-     placing the following command in `~/.viper' after setting
-     `viper-mouse-search-key':
+     placing the following command in your Viper customization file
+     after setting `viper-mouse-search-key':
           (viper-bind-mouse-search-key 'force)
 
      You can also change this setting interactively, through the
@@ -2296,11 +2298,13 @@ in an Xterm window (using `emacs -nw') will do no good.
      Note: while loading initially, Viper binds this mouse action only
      if it not already bound to something else.  If you want to use
      this feature and the default mouse action is already bound, you
-     can rebind mouse-insert by placing this command in `~/.viper':
+     can rebind mouse-insert by placing this command in your Viper
+     customization file:
           (setq viper-mouse-insert-key '(meta 2))
      If you want to bind mouse-insert to an action even if this action
      is already taken for other purposes in Emacs, then you should add
-     this command to `~/.viper', after setting `viper-mouse-insert-key':
+     this command to your Viper customization file, after setting
+     `viper-mouse-insert-key':
           (viper-bind-mouse-insert-key 'force)
 
      This value can also be changed via the Emacs customization widget
@@ -2348,7 +2352,7 @@ used as a guiding example.
 
 File: viper.info,  Node: Vi Macros,  Prev: Viper Specials,  Up: Customization
 
-3.4 Vi Macros
+3.5 Vi Macros
 =============
 
 Viper supports much enhanced Vi-style macros and also facilitates the
@@ -2423,11 +2427,11 @@ For details, *note Customization: (emacs)Keyboard Macro Query.
    When the user finishes defining a macro (which is done by typing
 `C-x)', a departure from Vi), you will be asked whether you want this
 macro to be global, mode-specific, or buffer-specific.  You will also be
-given a chance to save the macro in your `~/.viper' file.  This is the
-easiest way to save a macro and make it permanently available.  If you
-work your startup files with bare hands, here is how Viper saves the
-above macro so that it will be available in Viper's Insert state (and
-Replace state) in buffer `my-buf' only:
+given a chance to save the macro in your Viper customization file.
+This is the easiest way to save a macro and make it permanently
+available.  If you work your startup files with bare hands, here is how
+Viper saves the above macro so that it will be available in Viper's
+Insert state (and Replace state) in buffer `my-buf' only:
 
      (viper-record-kbd-macro "gg" 'insert-state
             [l up (meta x) n e x t - l i n e return]
@@ -2461,9 +2465,9 @@ either a string (a buffer name), a symbol representing a major mode, or
 
    For convenience, Viper also lets you define Vi-style macros in its
 Emacs state.  There is no Ex command, like `:map' and `:map!' for doing
-this, but the user can include such a macro in the `~/.viper' file.  The
-only thing is that the `viper-record-kbd-macro' command should specify
-`emacs-state' instead of `vi-state' or `insert-state'.
+this, but the user can include such a macro in the Viper customization
+file.  The only thing is that the `viper-record-kbd-macro' command
+should specify `emacs-state' instead of `vi-state' or `insert-state'.
 
    The user can get rid of a macro either by using the Ex commands
 `:unmap' and `:unmap!' or by issuing a call to
@@ -2519,8 +2523,8 @@ and Emacs commands, so that you could see what will happen each time the
 macro is executed.  Suppose now we wanted to bind the key sequence `f13
 f13' to the command `eval-last-sexp'.  To accomplish this, we can type
 `M-x eval-last-sexp' followed by `C-x )'.  If you answer positively to
-Viper's offer to save this macro in `~/.viper' for future uses, the
-following will be inserted in that file:
+Viper's offer to save this macro in your Viper customization file for
+future uses, the following will be inserted in that file:
 
      (viper-record-kbd-macro [f16 f16] 'vi-state
               [(meta x) e v a l - l a s t - s e x p]
@@ -2586,24 +2590,24 @@ which helps keep some potential troubles away.
 recognized as a timeout macro is controlled by the variable
 `viper-fast-keyseq-timeout', which defaults to 200 milliseconds.
 
-   For the most part, Viper macros defined in `~/.viper' can be shared
-between X and TTY modes.  The problem with TTY may be that the function
-keys there generate sequences of events instead of a single event (as
-under a window system).  Emacs maps some of these sequences back to the
-logical keys (e.g., the sequences generated by the arrow keys are
-mapped to `up', `left', etc.).  However, not all function keys are
-mapped in this way.  Macros that are bound to key sequences that
-contain such unmapped function keys have to be redefined for TTY's (and
-possibly for every type of TTY you may be using).  To do this, start
-Emacs on an appropriate TTY device and define the macro using `:map',
-as usual.
+   For the most part, Viper macros defined in the Viper customization
+file can be shared between X and TTY modes.  The problem with TTY may
+be that the function keys there generate sequences of events instead of
+a single event (as under a window system).  Emacs maps some of these
+sequences back to the logical keys (e.g., the sequences generated by
+the arrow keys are mapped to `up', `left', etc.).  However, not all
+function keys are mapped in this way.  Macros that are bound to key
+sequences that contain such unmapped function keys have to be redefined
+for TTY's (and possibly for every type of TTY you may be using).  To do
+this, start Emacs on an appropriate TTY device and define the macro
+using `:map', as usual.
 
    Finally, Viper provides a function that conveniently displays all
 macros currently defined.  To see all macros along with their
 definitions, type `M-x viper-describe-kbd-macros'.
 
 
-File: viper.info,  Node: Commands,  Prev: Customization,  Up: Top
+File: viper.info,  Node: Commands,  Next: GNU Free Documentation License,  Prev: Customization,  Up: Top
 
 4 Commands
 **********
@@ -2626,7 +2630,7 @@ reference has been adapted for Viper.
 * Mouse-bound Commands::        Search and insertion of text
 
 
-File: viper.info,  Node: Groundwork,  Next: Text Handling,  Prev: Commands,  Up: Commands
+File: viper.info,  Node: Groundwork,  Next: Text Handling,  Up: Commands
 
 4.1 Groundwork
 ==============
@@ -2970,16 +2974,16 @@ File: viper.info,  Node: Move Commands,  Next: Marking,  Up: Text Handling
      Find the next bracket/parenthesis/brace and go to its match.  By
      default, Viper ignores brackets/parentheses/braces that occur
      inside parentheses.  You can change this by setting
-     `viper-parse-sexp-ignore-comments' to `nil' in your `.viper' file.
-     This option can also be toggled interactively if you quickly hit
-     `%%%'.
+     `viper-parse-sexp-ignore-comments' to `nil' in your Viper
+     customization file.  This option can also be toggled interactively
+     if you quickly hit `%%%'.
 
      This latter feature is implemented as a vi-style keyboard macro.
      If you don't want this macro, put
 
           (viper-set-parsing-style-toggling-macro 'undefine)
      
-     in your `~/.viper' file.
+     in your Viper customization file.
 
 
 
@@ -3103,7 +3107,8 @@ see options for word-wrap.
 
      Since typing the above sequences of keys may be tedious, the
      functions doing the perusing can be bound to unused keyboard keys
-     in the `~/.viper' file.  *Note Viper Specials::, for details.
+     in the Viper customization file.  *Note Viper Specials::, for
+     details.
    
 
 File: viper.info,  Node: Editing in Insert State,  Next: Deleting Text,  Prev: Appending Text,  Up: Text Handling
@@ -3500,8 +3505,8 @@ you type `1:w' you would see `:11,22w' in the minibuffer.
      added to any file where this newline is missing.  This is done by
      setting Emacs variable `require-final-newline' to `t'.  If you
      don't like this feature, use `setq-default' to set
-     `require-final-newline' to `nil'.  This must be done in `.viper'
-     file.
+     `require-final-newline' to `nil'.  This must be done in the Viper
+     customization file.
 
 `:[x,y] w <name>'
      Write to the file <name>.
@@ -3603,7 +3608,7 @@ you type `1:w' you would see `:11,22w' in the minibuffer.
      VIPER-READ-BUFFER-FUNCTION controls which function is actually
      used to read the buffer name. The default is `read-buffer', but
      better alternatives are also available in Emacs (e.g.,
-     `iswitchb-read-buffer').  
+     `ido-read-buffer').  
 
 `:B'
      Like `:b', but the meaning of EX-CYCLE-OTHER-WINDOW is reversed.
@@ -3837,7 +3842,7 @@ File: viper.info,  Node: Options,  Next: Emacs Related Commands,  Prev: Shell Co
      Set <option> to <value>.
 
 
-File: viper.info,  Node: Emacs Related Commands,  Prev: Options,  Up: Commands
+File: viper.info,  Node: Emacs Related Commands,  Next: Mouse-bound Commands,  Prev: Options,  Up: Commands
 
 4.8 Emacs Related Commands
 ==========================
@@ -3892,7 +3897,7 @@ File: viper.info,  Node: Emacs Related Commands,  Prev: Options,  Up: Commands
      the one you need.
 
 
-File: viper.info,  Node: Mouse-bound Commands,  Up: Commands
+File: viper.info,  Node: Mouse-bound Commands,  Prev: Emacs Related Commands,  Up: Commands
 
 4.9 Mouse-bound Commands
 ========================
@@ -3915,90 +3920,14 @@ insert commands in of Viper:
      Specials::, for more details.
    
 
-File: viper.info,  Node: Acknowledgments,  Up: Top
-
-Acknowledgments
-***************
-
-Viper, formerly known as VIP-19, was written by Michael Kifer.  Viper is
-based on the original VIP package by Masahiko Sato and on its
-enhancement, VIP 4.4, by Aamod Sane.  This manual is an adaptation of
-the manual for VIP 4.4, which, in turn, was based on Sato's manual for
-VIP 3.5.
-
-   Many contributors on the Net pointed out bugs and suggested a number
-of useful features. Scott Bronson and Samuel Padgett contributed
-patches that were incorporated in this code.  Here is a hopefully
-complete list of contributors:
-
-     aaronl@vitelus.com (Aaron Lehmann),
-     ahg@panix.com (Al Gelders),
-     amade@diagram.fr (Paul-Bernard Amade),
-     ascott@fws214.intel.com (Andy Scott),
-     bronson@trestle.com (Scott Bronson),
-     cook@biostat.wisc.edu (Tom Cook),
-     csdayton@midway.uchicago.edu (Soren Dayton),
-     dave@hellgate.utah.edu,
-     dm@scs.cs.nyu.edu (David Mazieres),
-     dominik@strw.LeidenUniv.nl (Carsten Dominik),
-     dwallach@cs.princeton.edu (Dan Wallach),
-     dwight@toolucky.llnl.gov (Dwight Shih),
-     dxc@xprt.net (David X Callaway),
-     edmonds@edmonds.home.cs.ubc.ca (Brian Edmonds),
-     gin@mo.msk.ru (Golubev I.N.),
-     gviswana@cs.wisc.edu (Guhan Viswanathan),
-     gvr@halcyon.com (George V. Reilly),
-     hatazaki@bach.convex.com (Takao Hatazaki),
-     hpz@ibmhpz.aug.ipp-garching.mpg.de (Hans-Peter Zehrfeld),
-     irie@t.email.ne.jp (Irie Tetsuya),
-     jackr@dblues.engr.sgi.com (Jack Repenning),
-     jamesm@bga.com (D.J. Miller II),
-     jjm@hplb.hpl.hp.com (Jean-Jacques Moreau),
-     jl@cse.ogi.edu (John Launchbury),
-     jobrien@hchp.org (John O'Brien),
-     johnw@borland.com (John Wiegley),
-     kanze@gabi-soft.fr (James Kanze),
-     kin@isi.com (Kin Cho),
-     kwzh@gnu.org (Karl Heuer),
-     lindstro@biostat.wisc.edu (Mary Lindstrom),
-     lektu@terra.es (Juanma Barranquero),
-     lennart.borgman.073@student.lu.se (Lennart Borgman),
-     minakaji@osaka.email.ne.jp (Mikio Nakajima),
-     Mark.Bordas@East.Sun.COM (Mark Bordas),
-     meyering@comco.com (Jim Meyering),
-     martin@xemacs.org (Martin Buchholz),
-     mbutler@redfernnetworks.com (Malcolm Butler),
-     mveiga@dit.upm.es (Marcelino Veiga Tuimil),
-     paulk@summit.esg.apertus.com (Paul Keusemann),
-     pfister@cs.stonybrook.edu (Hanspeter Pfister),
-     phil_brooks@MENTORG.COM (Phil Brooks),
-     pogrell@informatik.hu-berlin.de (Lutz Pogrell),
-     pradyut@cs.uchicago.edu (Pradyut Shah),
-     roderick@argon.org (Roderick Schertler),
-     rxga@ulysses.att.com,
-     sawdey@lcse.umn.edu (Aaron Sawdey),
-     simonb@prl.philips.co.uk (Simon Blanchard),
-     spadgett1@nc.rr.com (Samuel Padgett),
-     stephen@farrell.org (Stephen Farrell),
-     storm@cua.dk (Kim F. Storm),
-     sudish@MindSpring.COM (Sudish Joseph),
-     schwab@issan.informatik.uni-dortmund.de (Andreas Schwab)
-     terra@diku.dk (Morten Welinder),
-     thanh@informatics.muni.cz (Han The Thanh),
-     toma@convex.convex.com,
-     vrenjak@sun1.racal.com (Milan Vrenjak),
-     whicken@dragon.parasoft.com (Wendell Hicken),
-     zapman@cc.gatech.edu (Jason Zapman II),
-
-
-File: viper.info,  Node: GNU Free Documentation License,  Up: Top
+File: viper.info,  Node: GNU Free Documentation License,  Next: Acknowledgments,  Prev: Commands,  Up: Top
 
 Appendix A GNU Free Documentation License
 *****************************************
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -4477,7 +4406,83 @@ free software license, such as the GNU General Public License, to
 permit their use in free software.
 
 
-File: viper.info,  Node: Key Index,  Next: Function Index,  Up: Top
+File: viper.info,  Node: Acknowledgments,  Next: Key Index,  Prev: GNU Free Documentation License,  Up: Top
+
+Acknowledgments
+***************
+
+Viper, formerly known as VIP-19, was written by Michael Kifer.  Viper is
+based on the original VIP package by Masahiko Sato and on its
+enhancement, VIP 4.4, by Aamod Sane.  This manual is an adaptation of
+the manual for VIP 4.4, which, in turn, was based on Sato's manual for
+VIP 3.5.
+
+   Many contributors on the Net pointed out bugs and suggested a number
+of useful features. Scott Bronson and Samuel Padgett contributed
+patches that were incorporated in this code.  Here is a hopefully
+complete list of contributors:
+
+     aaronl@vitelus.com (Aaron Lehmann),
+     ahg@panix.com (Al Gelders),
+     amade@diagram.fr (Paul-Bernard Amade),
+     ascott@fws214.intel.com (Andy Scott),
+     bronson@trestle.com (Scott Bronson),
+     cook@biostat.wisc.edu (Tom Cook),
+     csdayton@midway.uchicago.edu (Soren Dayton),
+     dave@hellgate.utah.edu,
+     dm@scs.cs.nyu.edu (David Mazieres),
+     dominik@strw.LeidenUniv.nl (Carsten Dominik),
+     dwallach@cs.princeton.edu (Dan Wallach),
+     dwight@toolucky.llnl.gov (Dwight Shih),
+     dxc@xprt.net (David X Callaway),
+     edmonds@edmonds.home.cs.ubc.ca (Brian Edmonds),
+     gin@mo.msk.ru (Golubev I.N.),
+     gviswana@cs.wisc.edu (Guhan Viswanathan),
+     gvr@halcyon.com (George V. Reilly),
+     hatazaki@bach.convex.com (Takao Hatazaki),
+     hpz@ibmhpz.aug.ipp-garching.mpg.de (Hans-Peter Zehrfeld),
+     irie@t.email.ne.jp (Irie Tetsuya),
+     jackr@dblues.engr.sgi.com (Jack Repenning),
+     jamesm@bga.com (D.J. Miller II),
+     jjm@hplb.hpl.hp.com (Jean-Jacques Moreau),
+     jl@cse.ogi.edu (John Launchbury),
+     jobrien@hchp.org (John O'Brien),
+     johnw@borland.com (John Wiegley),
+     kanze@gabi-soft.fr (James Kanze),
+     kin@isi.com (Kin Cho),
+     kwzh@gnu.org (Karl Heuer),
+     lindstro@biostat.wisc.edu (Mary Lindstrom),
+     lektu@terra.es (Juanma Barranquero),
+     lennart.borgman.073@student.lu.se (Lennart Borgman),
+     minakaji@osaka.email.ne.jp (Mikio Nakajima),
+     Mark.Bordas@East.Sun.COM (Mark Bordas),
+     meyering@comco.com (Jim Meyering),
+     martin@xemacs.org (Martin Buchholz),
+     mbutler@redfernnetworks.com (Malcolm Butler),
+     mveiga@dit.upm.es (Marcelino Veiga Tuimil),
+     paulk@summit.esg.apertus.com (Paul Keusemann),
+     pfister@cs.stonybrook.edu (Hanspeter Pfister),
+     phil_brooks@MENTORG.COM (Phil Brooks),
+     pogrell@informatik.hu-berlin.de (Lutz Pogrell),
+     pradyut@cs.uchicago.edu (Pradyut Shah),
+     roderick@argon.org (Roderick Schertler),
+     rxga@ulysses.att.com,
+     sawdey@lcse.umn.edu (Aaron Sawdey),
+     simonb@prl.philips.co.uk (Simon Blanchard),
+     spadgett1@nc.rr.com (Samuel Padgett),
+     stephen@farrell.org (Stephen Farrell),
+     storm@cua.dk (Kim F. Storm),
+     sudish@MindSpring.COM (Sudish Joseph),
+     schwab@issan.informatik.uni-dortmund.de (Andreas Schwab)
+     terra@diku.dk (Morten Welinder),
+     thanh@informatics.muni.cz (Han The Thanh),
+     toma@convex.convex.com,
+     vrenjak@sun1.racal.com (Milan Vrenjak),
+     whicken@dragon.parasoft.com (Wendell Hicken),
+     zapman@cc.gatech.edu (Jason Zapman II),
+
+
+File: viper.info,  Node: Key Index,  Next: Function Index,  Prev: Acknowledgments,  Up: Top
 
 Key Index
 *********
@@ -4487,8 +4492,8 @@ Key Index
 
 * "<a-z1-9>P:                            Yanking.             (line  38)
 * "<a-z1-9>p:                            Yanking.             (line  38)
-* "<a-z1-9>P:                            Appending Text.      (line  72)
-* "<a-z1-9>p:                            Appending Text.      (line  72)
+* "<a-z1-9>P:                            Appending Text.      (line  73)
+* "<a-z1-9>p:                            Appending Text.      (line  73)
 * "<a-z>y<move>:                         Yanking.             (line  38)
 * "<A-Z>y<move>:                         Yanking.             (line  38)
 * #:                                     New Commands.        (line  39)
@@ -4519,7 +4524,7 @@ Key Index
 * ,:                                     Move Commands.       (line 171)
 * -:                                     Move Commands.       (line 171)
 * . <1>:                                 Undoing.             (line  21)
-* .:                                     Appending Text.      (line  72)
+* .:                                     Appending Text.      (line  73)
 * /<cr>:                                 Move Commands.       (line 171)
 * /<string> <1>:                         Search and Replace.  (line  81)
 * /<string>:                             Move Commands.       (line 171)
@@ -4537,8 +4542,8 @@ Key Index
 * <move>:                                Groundwork.          (line  33)
 * <sp>:                                  Move Commands.       (line 171)
 * =<move>:                               Changing Text.       (line  96)
-* ><move>:                               Appending Text.      (line  72)
-* >>:                                    Appending Text.      (line  72)
+* ><move>:                               Appending Text.      (line  73)
+* >>:                                    Appending Text.      (line  73)
 * ?<cr>:                                 Move Commands.       (line 171)
 * ?<string> <1>:                         Search and Replace.  (line  81)
 * ?<string>:                             Move Commands.       (line 171)
@@ -4551,7 +4556,7 @@ Key Index
 * @@:                                    Mapping.             (line  59)
 * [<a-z> <1>:                            Mapping.             (line  59)
 * [<a-z> <2>:                            Yanking.             (line  38)
-* [<a-z> <3>:                            Appending Text.      (line  72)
+* [<a-z> <3>:                            Appending Text.      (line  73)
 * [<a-z> <4>:                            Move Commands.       (line 171)
 * [<a-z>:                                New Commands.        (line  87)
 * [[:                                    Move Commands.       (line 171)
@@ -4561,7 +4566,7 @@ Key Index
 * \&:                                    Changing Text.       (line  96)
 * ]<a-z> <1>:                            Mapping.             (line  59)
 * ]<a-z> <2>:                            Yanking.             (line  38)
-* ]<a-z> <3>:                            Appending Text.      (line  72)
+* ]<a-z> <3>:                            Appending Text.      (line  73)
 * ]<a-z> <4>:                            Move Commands.       (line 171)
 * ]<a-z>:                                New Commands.        (line  84)
 * ]]:                                    Move Commands.       (line 171)
@@ -4570,8 +4575,8 @@ Key Index
 * `<a-z>:                                Move Commands.       (line 171)
 * `` <1>:                                Marking.             (line  49)
 * ``:                                    Move Commands.       (line 171)
-* a:                                     Appending Text.      (line  72)
-* A:                                     Appending Text.      (line  72)
+* a:                                     Appending Text.      (line  73)
+* A:                                     Appending Text.      (line  73)
 * b:                                     Move Commands.       (line 171)
 * B:                                     Move Commands.       (line 171)
 * C:                                     Changing Text.       (line  96)
@@ -4590,10 +4595,10 @@ Key Index
 * C-c /:                                 Vi State.            (line  71)
 * C-c C-g:                               New Commands.        (line 110)
 * C-c M-n <1>:                           Changing Text.       (line  96)
-* C-c M-n <2>:                           Appending Text.      (line  72)
+* C-c M-n <2>:                           Appending Text.      (line  73)
 * C-c M-n:                               New Commands.        (line 134)
 * C-c M-p <1>:                           Changing Text.       (line  96)
-* C-c M-p <2>:                           Appending Text.      (line  72)
+* C-c M-p <2>:                           Appending Text.      (line  73)
 * C-c M-p:                               New Commands.        (line 134)
 * C-c\:                                  Emacs Related Commands.
                                                               (line  54)
@@ -4648,7 +4653,7 @@ Key Index
 * g<move>:                               Search and Replace.  (line  81)
 * h:                                     Move Commands.       (line 171)
 * H:                                     Move Commands.       (line 171)
-* i <1>:                                 Appending Text.      (line  72)
+* i <1>:                                 Appending Text.      (line  73)
 * i:                                     States in Viper.     (line   6)
 * J:                                     Changing Text.       (line  96)
 * j:                                     Move Commands.       (line 171)
@@ -4672,18 +4677,18 @@ Key Index
                                                               (line  22)
 * meta button2up:                        Mouse-bound Commands.
                                                               (line  22)
-* meta shift button1up:                  Viper Specials.      (line 311)
-* meta shift button2up:                  Viper Specials.      (line 311)
+* meta shift button1up:                  Viper Specials.      (line 314)
+* meta shift button2up:                  Viper Specials.      (line 314)
 * n:                                     Search and Replace.  (line  81)
 * N:                                     Search and Replace.  (line  81)
 * n:                                     Move Commands.       (line 171)
 * N:                                     Move Commands.       (line 171)
-* o:                                     Appending Text.      (line  72)
-* O:                                     Appending Text.      (line  72)
+* o:                                     Appending Text.      (line  73)
+* O:                                     Appending Text.      (line  73)
 * p:                                     Yanking.             (line  38)
 * P:                                     Yanking.             (line  38)
-* p:                                     Appending Text.      (line  72)
-* P:                                     Appending Text.      (line  72)
+* p:                                     Appending Text.      (line  73)
+* P:                                     Appending Text.      (line  73)
 * Q <1>:                                 Search and Replace.  (line  81)
 * Q:                                     New Commands.        (line  23)
 * R:                                     Changing Text.       (line  96)
@@ -4692,10 +4697,10 @@ Key Index
 * S:                                     Changing Text.       (line  96)
 * S-Mouse-1 <1>:                         Mouse-bound Commands.
                                                               (line  22)
-* S-Mouse-1:                             Viper Specials.      (line 311)
+* S-Mouse-1:                             Viper Specials.      (line 314)
 * S-Mouse-2 <1>:                         Mouse-bound Commands.
                                                               (line  22)
-* S-Mouse-2:                             Viper Specials.      (line 311)
+* S-Mouse-2:                             Viper Specials.      (line 314)
 * t<char>:                               Move Commands.       (line 171)
 * T<char>:                               Move Commands.       (line 171)
 * u:                                     Undoing.             (line  21)
@@ -4740,164 +4745,164 @@ Function Index
 * !!<cmd>:                               Shell Commands.      (line  56)
 * !<cmd>:                                Shell Commands.      (line  56)
 * !<move><cmd>:                          Shell Commands.      (line  56)
-* :!! <args>:                            Shell Commands.      (line  56)
-* :!<cmd>:                               Shell Commands.      (line  56)
-* :<address>r !<cmd>:                    Shell Commands.      (line  56)
-* :<address>r <name>:                    Shell Commands.      (line  56)
-* :args <1>:                             File and Buffer Handling.
-                                                              (line 148)
-* :args:                                 New Commands.        (line 151)
-* :cd [<dir>]:                           File and Buffer Handling.
-                                                              (line 148)
-* :copy [z]:                             Changing Text.       (line  96)
-* :e [<files>]:                          File and Buffer Handling.
-                                                              (line 148)
-* :e!:                                   Undoing.             (line  21)
-* :e! [<files>]:                         File and Buffer Handling.
-                                                              (line 148)
-* :edit [<files>]:                       File and Buffer Handling.
-                                                              (line 148)
-* :edit! [<files>]:                      File and Buffer Handling.
-                                                              (line 148)
-* :f:                                    File and Buffer Handling.
-                                                              (line 148)
-* :g:                                    Search and Replace.  (line  81)
-* :global:                               Search and Replace.  (line  81)
-* :k:                                    Marking.             (line  49)
-* :make:                                 Shell Commands.      (line  56)
-* :map:                                  Key Bindings.        (line 126)
-* :map <char> <seq>:                     Mapping.             (line  59)
-* :map! <char> <seq>:                    Mapping.             (line  59)
-* :mark:                                 Marking.             (line  49)
-* :move [z]:                             Changing Text.       (line  96)
-* :n:                                    New Commands.        (line 151)
-* :n [<count> | <file>]:                 File and Buffer Handling.
-                                                              (line 148)
-* :pre <1>:                              File and Buffer Handling.
-                                                              (line 148)
-* :pre:                                  New Commands.        (line 151)
-* :PreviousRelatedFile <1>:              Viper Specials.      (line 208)
-* :PreviousRelatedFile:                  New Commands.        (line 156)
-* :pwd <1>:                              File and Buffer Handling.
-                                                              (line 148)
-* :pwd:                                  New Commands.        (line 151)
-* :q:                                    File and Buffer Handling.
-                                                              (line 148)
-* :q! <1>:                               File and Buffer Handling.
-                                                              (line 148)
-* :q!:                                   Undoing.             (line  21)
-* :quit:                                 File and Buffer Handling.
-                                                              (line 148)
-* :quit!:                                File and Buffer Handling.
-                                                              (line 148)
-* :r:                                    File and Buffer Handling.
-                                                              (line 148)
-* :read:                                 File and Buffer Handling.
-                                                              (line 148)
-* :rec <1>:                              File and Buffer Handling.
-                                                              (line 148)
-* :rec:                                  Undoing.             (line  21)
-* :RelatedFile <1>:                      Viper Specials.      (line 208)
-* :RelatedFile:                          New Commands.        (line 156)
-* :rew:                                  File and Buffer Handling.
-                                                              (line 148)
-* :s/<pat>/<repl>/<f>:                   Changing Text.       (line  96)
-* :set:                                  Rudimentary Changes. (line   6)
-* :set <option>:                         Options.             (line 102)
-* :set <option>=<value>:                 Options.             (line 102)
-* :set ai:                               Options.             (line 102)
-* :set autoindent:                       Options.             (line 102)
-* :set ic:                               Options.             (line 102)
-* :set ignorecase:                       Options.             (line 102)
-* :set magic:                            Options.             (line 102)
-* :set no<option>:                       Options.             (line 102)
-* :set readonly:                         Options.             (line 102)
-* :set ro:                               Options.             (line 102)
-* :set sh=<string>:                      Options.             (line 102)
-* :set shell=<string>:                   Options.             (line 102)
-* :set shiftwidth=<count>:               Options.             (line 102)
-* :set showmatch:                        Options.             (line 102)
-* :set sm:                               Options.             (line 102)
-* :set sw=<count>:                       Options.             (line 102)
-* :set tab-stop-local=<count>:           Options.             (line 102)
-* :set tabstop=<count>:                  Options.             (line 102)
-* :set ts=<count>:                       Options.             (line 102)
-* :set wm=<count>:                       Options.             (line 102)
-* :set wrapmargin=<count>:               Options.             (line 102)
-* :set wrapscan:                         Options.             (line 102)
-* :set ws:                               Options.             (line 102)
-* :sh:                                   Shell Commands.      (line  56)
-* :stop:                                 File and Buffer Handling.
-                                                              (line 148)
-* :substitute/<pat>/<repl>/<f> <1>:      Search and Replace.  (line  81)
-* :substitute/<pat>/<repl>/<f>:          Changing Text.       (line  96)
-* :suspend:                              File and Buffer Handling.
-                                                              (line 148)
-* :t [z]:                                Changing Text.       (line  96)
-* :tag <name>:                           Search and Replace.  (line  81)
-* :unmap <char>:                         Mapping.             (line  59)
-* :unmap! <char>:                        Mapping.             (line  59)
-* :v:                                    Search and Replace.  (line  81)
-* :vglobal:                              Search and Replace.  (line  81)
-* :W:                                    File and Buffer Handling.
-                                                              (line 148)
-* :w !<cmd>:                             Shell Commands.      (line  56)
-* :w <file>:                             File and Buffer Handling.
-                                                              (line 148)
-* :w >> <file>:                          File and Buffer Handling.
-                                                              (line 148)
-* :w! <file>:                            File and Buffer Handling.
-                                                              (line 148)
-* :wq:                                   File and Buffer Handling.
-                                                              (line 148)
-* :Write:                                File and Buffer Handling.
-                                                              (line 148)
-* :write <file>:                         File and Buffer Handling.
-                                                              (line 148)
-* :write >> <file>:                      File and Buffer Handling.
-                                                              (line 148)
-* :write! <file>:                        File and Buffer Handling.
-                                                              (line 148)
-* :WW:                                   File and Buffer Handling.
-                                                              (line 148)
-* :WWrite:                               File and Buffer Handling.
-                                                              (line 148)
-* :x:                                    File and Buffer Handling.
-                                                              (line 148)
-* :x!:                                   File and Buffer Handling.
-                                                              (line 148)
-* :x,y w !<cmd>:                         Shell Commands.      (line  56)
-* :yank:                                 Yanking.             (line  38)
 * add-hook:                              Packages that Change Keymaps.
                                                               (line 108)
+* Ex !! <args>:                          Shell Commands.      (line  56)
+* Ex !<cmd>:                             Shell Commands.      (line  56)
+* Ex <address>r !<cmd>:                  Shell Commands.      (line  56)
+* Ex <address>r <name>:                  Shell Commands.      (line  56)
+* Ex args <1>:                           File and Buffer Handling.
+                                                              (line 148)
+* Ex args:                               New Commands.        (line 151)
+* Ex cd [<dir>]:                         File and Buffer Handling.
+                                                              (line 148)
+* Ex copy [z]:                           Changing Text.       (line  96)
+* Ex e [<files>]:                        File and Buffer Handling.
+                                                              (line 148)
+* Ex e!:                                 Undoing.             (line  21)
+* Ex e! [<files>]:                       File and Buffer Handling.
+                                                              (line 148)
+* Ex edit [<files>]:                     File and Buffer Handling.
+                                                              (line 148)
+* Ex edit! [<files>]:                    File and Buffer Handling.
+                                                              (line 148)
+* Ex f:                                  File and Buffer Handling.
+                                                              (line 148)
+* Ex g:                                  Search and Replace.  (line  81)
+* Ex global:                             Search and Replace.  (line  81)
+* Ex k:                                  Marking.             (line  49)
+* Ex make:                               Shell Commands.      (line  56)
+* Ex map:                                Key Bindings.        (line 127)
+* Ex map <char> <seq>:                   Mapping.             (line  59)
+* Ex map! <char> <seq>:                  Mapping.             (line  59)
+* Ex mark:                               Marking.             (line  49)
+* Ex move [z]:                           Changing Text.       (line  96)
+* Ex n:                                  New Commands.        (line 151)
+* Ex n [<count> | <file>]:               File and Buffer Handling.
+                                                              (line 148)
+* Ex pre <1>:                            File and Buffer Handling.
+                                                              (line 148)
+* Ex pre:                                New Commands.        (line 151)
+* Ex PreviousRelatedFile <1>:            Viper Specials.      (line 209)
+* Ex PreviousRelatedFile:                New Commands.        (line 156)
+* Ex pwd <1>:                            File and Buffer Handling.
+                                                              (line 148)
+* Ex pwd:                                New Commands.        (line 151)
+* Ex q:                                  File and Buffer Handling.
+                                                              (line 148)
+* Ex q! <1>:                             File and Buffer Handling.
+                                                              (line 148)
+* Ex q!:                                 Undoing.             (line  21)
+* Ex quit:                               File and Buffer Handling.
+                                                              (line 148)
+* Ex quit!:                              File and Buffer Handling.
+                                                              (line 148)
+* Ex r:                                  File and Buffer Handling.
+                                                              (line 148)
+* Ex read:                               File and Buffer Handling.
+                                                              (line 148)
+* Ex rec <1>:                            File and Buffer Handling.
+                                                              (line 148)
+* Ex rec:                                Undoing.             (line  21)
+* Ex RelatedFile <1>:                    Viper Specials.      (line 209)
+* Ex RelatedFile:                        New Commands.        (line 156)
+* Ex rew:                                File and Buffer Handling.
+                                                              (line 148)
+* Ex s/<pat>/<repl>/<f>:                 Changing Text.       (line  96)
+* Ex set:                                Rudimentary Changes. (line   6)
+* Ex set <option>:                       Options.             (line 102)
+* Ex set <option>=<value>:               Options.             (line 102)
+* Ex set ai:                             Options.             (line 102)
+* Ex set autoindent:                     Options.             (line 102)
+* Ex set ic:                             Options.             (line 102)
+* Ex set ignorecase:                     Options.             (line 102)
+* Ex set magic:                          Options.             (line 102)
+* Ex set no<option>:                     Options.             (line 102)
+* Ex set readonly:                       Options.             (line 102)
+* Ex set ro:                             Options.             (line 102)
+* Ex set sh=<string>:                    Options.             (line 102)
+* Ex set shell=<string>:                 Options.             (line 102)
+* Ex set shiftwidth=<count>:             Options.             (line 102)
+* Ex set showmatch:                      Options.             (line 102)
+* Ex set sm:                             Options.             (line 102)
+* Ex set sw=<count>:                     Options.             (line 102)
+* Ex set tab-stop-local=<count>:         Options.             (line 102)
+* Ex set tabstop=<count>:                Options.             (line 102)
+* Ex set ts=<count>:                     Options.             (line 102)
+* Ex set wm=<count>:                     Options.             (line 102)
+* Ex set wrapmargin=<count>:             Options.             (line 102)
+* Ex set wrapscan:                       Options.             (line 102)
+* Ex set ws:                             Options.             (line 102)
+* Ex sh:                                 Shell Commands.      (line  56)
+* Ex stop:                               File and Buffer Handling.
+                                                              (line 148)
+* Ex substitute/<pat>/<repl>/<f> <1>:    Search and Replace.  (line  81)
+* Ex substitute/<pat>/<repl>/<f>:        Changing Text.       (line  96)
+* Ex suspend:                            File and Buffer Handling.
+                                                              (line 148)
+* Ex t [z]:                              Changing Text.       (line  96)
+* Ex tag <name>:                         Search and Replace.  (line  81)
+* Ex unmap <char>:                       Mapping.             (line  59)
+* Ex unmap! <char>:                      Mapping.             (line  59)
+* Ex v:                                  Search and Replace.  (line  81)
+* Ex vglobal:                            Search and Replace.  (line  81)
+* Ex W:                                  File and Buffer Handling.
+                                                              (line 148)
+* Ex w !<cmd>:                           Shell Commands.      (line  56)
+* Ex w <file>:                           File and Buffer Handling.
+                                                              (line 148)
+* Ex w >> <file>:                        File and Buffer Handling.
+                                                              (line 148)
+* Ex w! <file>:                          File and Buffer Handling.
+                                                              (line 148)
+* Ex wq:                                 File and Buffer Handling.
+                                                              (line 148)
+* Ex Write:                              File and Buffer Handling.
+                                                              (line 148)
+* Ex write <file>:                       File and Buffer Handling.
+                                                              (line 148)
+* Ex write >> <file>:                    File and Buffer Handling.
+                                                              (line 148)
+* Ex write! <file>:                      File and Buffer Handling.
+                                                              (line 148)
+* Ex WW:                                 File and Buffer Handling.
+                                                              (line 148)
+* Ex WWrite:                             File and Buffer Handling.
+                                                              (line 148)
+* Ex x:                                  File and Buffer Handling.
+                                                              (line 148)
+* Ex x!:                                 File and Buffer Handling.
+                                                              (line 148)
+* Ex x,y w !<cmd>:                       Shell Commands.      (line  56)
+* Ex yank:                               Yanking.             (line  38)
 * remove-hook:                           Packages that Change Keymaps.
                                                               (line 108)
-* toggle-viper-mode <1>:                 Viper Specials.      (line 193)
+* toggle-viper-mode <1>:                 Viper Specials.      (line 194)
 * toggle-viper-mode:                     States in Viper.     (line   6)
-* viper-add-local-keys:                  Key Bindings.        (line 185)
-* viper-buffer-search-enable:            Viper Specials.      (line  21)
+* viper-add-local-keys:                  Key Bindings.        (line 186)
+* viper-buffer-search-enable:            Viper Specials.      (line  22)
 * viper-describe-kbd-macros:             Vi Macros.           (line 253)
-* viper-glob-function:                   Rudimentary Changes. (line 180)
-* viper-go-away <1>:                     Viper Specials.      (line 188)
+* viper-glob-function:                   Rudimentary Changes. (line 179)
+* viper-go-away <1>:                     Viper Specials.      (line 189)
 * viper-go-away:                         States in Viper.     (line   6)
 * viper-harness-minor-mode:              Packages that Change Keymaps.
                                                               (line 108)
 * viper-mode:                            Packages that Change Keymaps.
                                                               (line 108)
 * viper-modify-major-mode:               Key Bindings.        (line  83)
-* viper-mouse-click-insert-word:         Viper Specials.      (line 311)
-* viper-mouse-click-search-word:         Viper Specials.      (line 311)
-* viper-set-emacs-state-searchstyle-macros: Viper Specials.   (line  75)
-* viper-set-expert-level:                Viper Specials.      (line  86)
+* viper-mouse-click-insert-word:         Viper Specials.      (line 314)
+* viper-mouse-click-search-word:         Viper Specials.      (line 314)
+* viper-set-emacs-state-searchstyle-macros: Viper Specials.   (line  76)
+* viper-set-expert-level:                Viper Specials.      (line  87)
 * viper-set-hooks:                       Packages that Change Keymaps.
                                                               (line 108)
 * viper-set-parsing-style-toggling-macro: Move Commands.      (line 168)
-* viper-set-searchstyle-toggling-macros: Viper Specials.      (line  45)
+* viper-set-searchstyle-toggling-macros: Viper Specials.      (line  46)
 * viper-set-syntax-preference <1>:       Groundwork.          (line 147)
 * viper-set-syntax-preference:           Movement and Markers.
-                                                              (line  49)
+                                                              (line  50)
 * viper-unrecord-kbd-macro:              Vi Macros.           (line 126)
-* viper-zap-local-keys:                  Key Bindings.        (line 185)
+* viper-zap-local-keys:                  Key Bindings.        (line 186)
 
 
 File: viper.info,  Node: Variable Index,  Next: Package Index,  Prev: Function Index,  Up: Top
@@ -4911,22 +4916,22 @@ Variable Index
 * buffer-read-only:                      Rudimentary Changes. (line 339)
 * ex-cycle-other-window:                 Rudimentary Changes. (line 339)
 * ex-cycle-through-non-files:            Rudimentary Changes. (line 339)
-* function-key-map:                      Key Bindings.        (line 185)
-* input-decode-map:                      Key Bindings.        (line 185)
+* function-key-map:                      Key Bindings.        (line 186)
+* input-decode-map:                      Key Bindings.        (line 186)
 * viper-allow-multiline-replace-regions: Rudimentary Changes. (line 339)
 * viper-always <1>:                      Packages that Change Keymaps.
                                                               (line 108)
 * viper-always:                          Rudimentary Changes. (line 339)
 * viper-auto-indent:                     Rudimentary Changes. (line 339)
-* viper-buffer-search-char <1>:          Viper Specials.      (line  21)
+* viper-buffer-search-char <1>:          Viper Specials.      (line  22)
 * viper-buffer-search-char:              Rudimentary Changes. (line 339)
 * viper-case-fold-search:                Rudimentary Changes. (line 339)
-* viper-command-ring-size:               Viper Specials.      (line 136)
+* viper-command-ring-size:               Viper Specials.      (line 137)
 * viper-custom-file-name:                Rudimentary Changes. (line 339)
 * viper-delete-backwards-in-replace:     Rudimentary Changes. (line 339)
-* viper-dired-modifier-map:              Viper Specials.      (line  67)
+* viper-dired-modifier-map:              Viper Specials.      (line  68)
 * viper-electric-mode:                   Rudimentary Changes. (line 339)
-* viper-emacs-global-user-map:           Key Bindings.        (line 185)
+* viper-emacs-global-user-map:           Key Bindings.        (line 186)
 * viper-emacs-state-cursor-color:        Rudimentary Changes. (line 265)
 * viper-emacs-state-hook:                Rudimentary Changes. (line 339)
 * viper-emacs-state-mode-list:           Packages that Change Keymaps.
@@ -4935,17 +4940,17 @@ Variable Index
 * viper-ex-style-editing:                Rudimentary Changes. (line 339)
 * viper-ex-style-motion:                 Rudimentary Changes. (line 339)
 * viper-fast-keyseq-timeout:             Rudimentary Changes. (line 339)
-* viper-insert-global-user-map:          Key Bindings.        (line 185)
+* viper-insert-global-user-map:          Key Bindings.        (line 186)
 * viper-insert-state-cursor-color:       Rudimentary Changes. (line 261)
 * viper-insert-state-hook:               Rudimentary Changes. (line 339)
 * viper-insert-state-mode-list:          Packages that Change Keymaps.
                                                               (line  68)
-* viper-insertion-ring-size:             Viper Specials.      (line 107)
+* viper-insertion-ring-size:             Viper Specials.      (line 108)
 * viper-keep-point-on-repeat:            Rudimentary Changes. (line 339)
 * viper-keep-point-on-undo:              Rudimentary Changes. (line 339)
-* viper-major-mode-modifier-list:        Key Bindings.        (line 115)
-* viper-mouse-insert-key:                Viper Specials.      (line 231)
-* viper-multiclick-timeout:              Viper Specials.      (line 311)
+* viper-major-mode-modifier-list:        Key Bindings.        (line 116)
+* viper-mouse-insert-key:                Viper Specials.      (line 232)
+* viper-multiclick-timeout:              Viper Specials.      (line 314)
 * viper-no-multiple-ESC:                 Rudimentary Changes. (line 339)
 * viper-parse-sexp-ignore-comments:      Move Commands.       (line 171)
 * viper-re-query-replace:                Rudimentary Changes. (line 339)
@@ -4962,17 +4967,17 @@ Variable Index
 * viper-search-scroll-threshold:         Rudimentary Changes. (line 339)
 * viper-search-wrap-around:              Rudimentary Changes. (line 339)
 * viper-shift-width:                     Rudimentary Changes. (line 339)
-* viper-slash-and-colon-map:             Viper Specials.      (line  67)
-* viper-smart-suffix-list:               Viper Specials.      (line  89)
+* viper-slash-and-colon-map:             Viper Specials.      (line  68)
+* viper-smart-suffix-list:               Viper Specials.      (line  90)
 * viper-spell-function <1>:              Rudimentary Changes. (line 339)
 * viper-spell-function:                  New Commands.        (line  66)
 * viper-surrounding-word-function:       Rudimentary Changes. (line 339)
 * viper-syntax-preference <1>:           Groundwork.          (line 147)
 * viper-syntax-preference:               Movement and Markers.
-                                                              (line  17)
+                                                              (line  18)
 * viper-tags-file-name:                  Rudimentary Changes. (line 339)
 * viper-toggle-key:                      Rudimentary Changes. (line 339)
-* viper-vi-global-user-map:              Key Bindings.        (line 185)
+* viper-vi-global-user-map:              Key Bindings.        (line 186)
 * viper-vi-state-hook:                   Rudimentary Changes. (line 339)
 * viper-vi-state-mode-list:              Packages that Change Keymaps.
                                                               (line  68)
@@ -5019,7 +5024,6 @@ Concept Index
 * % (Ex address):                        Groundwork.          (line  58)
 * .emacs:                                Customization.       (line  12)
 * .viper:                                Customization.       (line   8)
-* :customize:                            Customization.       (line  19)
 * <a-z>:                                 Groundwork.          (line  33)
 * <address>:                             Groundwork.          (line  33)
 * <args>:                                Groundwork.          (line  76)
@@ -5069,8 +5073,8 @@ Concept Index
 * cut and paste:                         Yanking.             (line   6)
 * describing regions:                    Basics.              (line  21)
 * desktop:                               Useful Packages.     (line  52)
-* Destructive command history:           Viper Specials.      (line 136)
-* Destructive command ring:              Viper Specials.      (line 136)
+* Destructive command history:           Viper Specials.      (line 137)
+* Destructive command ring:              Viper Specials.      (line 137)
 * dired:                                 Useful Packages.     (line  44)
 * dynamic abbrevs:                       Abbreviation Facilities.
                                                               (line  11)
@@ -5084,13 +5088,14 @@ Concept Index
 * Ex commands <1>:                       Groundwork.          (line 165)
 * Ex commands <2>:                       Vi State.            (line  74)
 * Ex commands:                           States in Viper.     (line   6)
+* Ex customize:                          Customization.       (line  19)
 * Ex style motion:                       Movement and Markers.
                                                               (line   6)
 * expanding (region):                    Basics.              (line  21)
 * font-lock:                             Useful Packages.     (line  48)
 * global keymap:                         Emacs Preliminaries. (line  61)
 * headings <1>:                          Move Commands.       (line   6)
-* headings:                              Viper Specials.      (line  81)
+* headings:                              Viper Specials.      (line  82)
 * history:                               History.             (line   6)
 * incremental search:                    Improved Search.     (line  23)
 * initialization:                        Customization.       (line   8)
@@ -5100,7 +5105,7 @@ Concept Index
 * Insert state:                          States in Viper.     (line   6)
 * inserting:                             Appending Text.      (line  11)
 * Insertion history:                     New Commands.        (line 134)
-* Insertion ring <1>:                    Viper Specials.      (line 107)
+* Insertion ring <1>:                    Viper Specials.      (line 108)
 * Insertion ring:                        New Commands.        (line 134)
 * interactive shell:                     Useful Packages.     (line  21)
 * ispell:                                Useful Packages.     (line  56)
@@ -5148,21 +5153,21 @@ Concept Index
 * mode:                                  Emacs Preliminaries. (line  61)
 * mode line <1>:                         States in Viper.     (line  54)
 * mode line:                             Emacs Preliminaries. (line  46)
-* mouse:                                 Viper Specials.      (line 230)
+* mouse:                                 Viper Specials.      (line 231)
 * mouse search:                          Improved Search.     (line  33)
-* mouse-insert:                          Viper Specials.      (line 283)
-* mouse-search:                          Viper Specials.      (line 230)
+* mouse-insert:                          Viper Specials.      (line 284)
+* mouse-search:                          Viper Specials.      (line 231)
 * movement commands <1>:                 Move Commands.       (line   6)
 * movement commands:                     Basics.              (line  21)
 * movements:                             Groundwork.          (line  33)
-* Multifile documents and programs:      Viper Specials.      (line 195)
+* Multifile documents and programs:      Viper Specials.      (line 196)
 * multiple files <1>:                    File and Buffer Handling.
                                                               (line   6)
 * multiple files:                        Multiple Files in Viper.
                                                               (line   6)
 * multiple undo:                         Vi State.            (line  56)
 * paragraphs <1>:                        Move Commands.       (line   6)
-* paragraphs:                            Viper Specials.      (line  81)
+* paragraphs:                            Viper Specials.      (line  82)
 * paren matching <1>:                    Options.             (line  62)
 * paren matching:                        Move Commands.       (line   6)
 * paste <1>:                             Yanking.             (line   6)
@@ -5196,9 +5201,9 @@ Concept Index
 * searching <1>:                         Options.             (line  87)
 * searching:                             Move Commands.       (line   6)
 * sections <1>:                          Move Commands.       (line   6)
-* sections:                              Viper Specials.      (line  81)
+* sections:                              Viper Specials.      (line  82)
 * sentences <1>:                         Move Commands.       (line   6)
-* sentences:                             Viper Specials.      (line  81)
+* sentences:                             Viper Specials.      (line  82)
 * setting variables:                     Rudimentary Changes. (line   6)
 * shell <1>:                             Options.             (line  53)
 * shell:                                 Useful Packages.     (line  21)
@@ -5208,13 +5213,13 @@ Concept Index
 * substitution:                          Changing Text.       (line   6)
 * syntax table <1>:                      Groundwork.          (line 147)
 * syntax table:                          Movement and Markers.
-                                                              (line  17)
+                                                              (line  18)
 * tabbing:                               Options.             (line  72)
 * text:                                  Emacs Preliminaries. (line   6)
 * text processing:                       Search and Replace.  (line  43)
 * textmarkers <1>:                       Move Commands.       (line   6)
 * textmarkers <2>:                       Movement and Markers.
-                                                              (line  57)
+                                                              (line  58)
 * textmarkers <3>:                       Undo and Backups.    (line  17)
 * textmarkers:                           Multiple Files in Viper.
                                                               (line  11)
@@ -5246,60 +5251,65 @@ Concept Index
 
 
 Tag Table:
-Node: Top927
-Node: Overview4043
-Node: Emacs Preliminaries5644
-Node: Loading Viper11006
-Node: States in Viper13197
-Node: Emacs State18266
-Node: Vi State19752
-Node: Insert State26636
-Node: Replace State29520
-Node: The Minibuffer31189
-Node: Multiple Files in Viper33097
-Node: Unimplemented Features36544
-Node: Improvements over Vi37272
-Node: Basics38363
-Node: Undo and Backups40819
-Node: History41997
-Node: Macros and Registers43608
-Node: Completion45297
-Node: Improved Search45736
-Node: Abbreviation Facilities48101
-Node: Movement and Markers49086
-Node: New Commands52143
-Node: Useful Packages58236
-Node: Customization60303
-Node: Rudimentary Changes62115
-Node: Key Bindings76937
-Node: Packages that Change Keymaps86824
-Node: Viper Specials92703
-Node: Vi Macros110423
-Node: Commands123830
-Node: Groundwork124674
-Node: Text Handling131150
-Node: Move Commands131827
-Node: Marking135585
-Node: Appending Text136838
-Node: Editing in Insert State139181
-Node: Deleting Text139776
-Node: Changing Text141125
-Node: Search and Replace144132
-Node: Yanking146697
-Node: Undoing147623
-Node: Display147971
-Node: File and Buffer Handling149287
-Node: Mapping153817
-Node: Shell Commands155520
-Node: Options157365
-Node: Emacs Related Commands159564
-Node: Mouse-bound Commands161145
-Node: Acknowledgments162017
-Node: GNU Free Documentation License165163
-Node: Key Index190299
-Node: Function Index207914
-Node: Variable Index219596
-Node: Package Index225267
-Node: Concept Index225926
+Node: Top851
+Node: Overview3965
+Node: Emacs Preliminaries5574
+Node: Loading Viper10919
+Node: States in Viper13135
+Node: Emacs State18204
+Node: Vi State19666
+Node: Insert State26547
+Node: Replace State29431
+Node: The Minibuffer31100
+Node: Multiple Files in Viper33029
+Node: Unimplemented Features36476
+Node: Improvements over Vi37204
+Node: Basics38295
+Node: Undo and Backups40732
+Node: History41910
+Node: Macros and Registers43521
+Node: Completion45210
+Node: Improved Search45649
+Node: Abbreviation Facilities48054
+Node: Movement and Markers49039
+Node: New Commands52112
+Node: Useful Packages58225
+Node: Customization60292
+Node: Rudimentary Changes62132
+Node: Key Bindings76986
+Node: Packages that Change Keymaps86931
+Node: Viper Specials92827
+Node: Vi Macros110679
+Node: Commands124140
+Node: Groundwork125023
+Node: Text Handling131482
+Node: Move Commands132159
+Node: Marking135938
+Node: Appending Text137191
+Node: Editing in Insert State139548
+Node: Deleting Text140143
+Node: Changing Text141492
+Node: Search and Replace144499
+Node: Yanking147064
+Node: Undoing147990
+Node: Display148338
+Node: File and Buffer Handling149654
+Node: Mapping154194
+Node: Shell Commands155897
+Node: Options157742
+Node: Emacs Related Commands159941
+Node: Mouse-bound Commands161551
+Node: GNU Free Documentation License162454
+Node: Acknowledgments187625
+Node: Key Index190828
+Node: Function Index208467
+Node: Variable Index220149
+Node: Package Index225820
+Node: Concept Index226479
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

@@ -1,14 +1,12 @@
-This is
-/misc/emacs/bzr/emacs24-merge/doc/misc/../../info/autotype.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/autotype.texi.
+This is ../../info/autotype.info, produced by makeinfo version 4.13
+from ./autotype.texi.
 
-Copyright (C) 1994-1995, 1999, 2001-2013 Free Software Foundation, Inc.
+Copyright (C) 1994-1995, 1999, 2001-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -18,8 +16,8 @@ Copyright (C) 1994-1995, 1999, 2001-2013 Free Software Foundation, Inc.
 
 INFO-DIR-SECTION Emacs misc features
 START-INFO-DIR-ENTRY
-* Autotype: (autotype).         Convenient features for text that you
-                                  enter frequently in Emacs.
+* Autotype: (autotype).         Convenient features for text that you enter
+                                  frequently in Emacs.
 END-INFO-DIR-ENTRY
 
 
@@ -54,13 +52,13 @@ can be defined for inserting and navigating between text more
 generally.  A sort of meta-expansion facility can be used to try a set
 of alternative completions and expansions of text at point.
 
-   Copyright (C) 1994-1995, 1999, 2001-2013 Free Software Foundation,
+   Copyright (C) 1994-1995, 1999, 2001-2014 Free Software Foundation,
 Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -216,8 +214,12 @@ the following table:
      passed through `skeleton-transformation' when that is non-`nil'.
 
 `?\n'
-     Insert a newline and align under current line.  Use newline
-     character `?\n' to prevent alignment.
+     Insert a newline and align under current line, but not if this is
+     the last element of a skeleton and the newline would be inserted
+     at end of line, or this is the first element and the newline would
+     be inserted at beginning of line.  Use newline character `?\n' to
+     prevent alignment.  Use `"\n"' as the first or last string element
+     of a skeleton to insert a newline unconditionally.
 
 `_'
      Interesting point.  When wrapping skeletons around successive
@@ -230,11 +232,11 @@ the following table:
      that interregion.
 
 `&'
-     Logical and.  Iff preceding element moved point, i.e., usually
+     Logical and.  If preceding element moved point, i.e., usually
      inserted something, do following element.
 
 `|'
-     Logical xor.  Iff preceding element didn't move point, i.e.,
+     Logical xor.  If preceding element didn't move point, i.e.,
      usually inserted nothing, do following element.
 
 `-NUMBER'
@@ -300,7 +302,7 @@ File: autotype.info,  Node: Inserting Pairs,  Next: Autoinserting,  Prev: Skelet
 Various characters usually appear in pairs.  When, for example, you
 insert an open parenthesis, no matter whether you are programming or
 writing prose, you will surely enter a closing one later.  By entering
-both at the same time and leaving the cursor inbetween, Emacs can
+both at the same time and leaving the cursor in between, Emacs can
 guarantee you that such parentheses are always balanced.  And if you
 have a non-qwerty keyboard, where typing some of the stranger
 programming language symbols makes you bend your fingers backwards,
@@ -614,7 +616,7 @@ Appendix A GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -1128,14 +1130,14 @@ Command Index
 * copyright:                             Copyrights.           (line  6)
 * copyright-update:                      Copyrights.           (line 12)
 * define-auto-insert:                    Autoinserting.        (line 52)
-* define-skeleton:                       Skeleton Language.    (line 89)
+* define-skeleton:                       Skeleton Language.    (line 93)
 * executable-self-display:               Executables.          (line 37)
 * executable-set-magic:                  Executables.          (line 30)
 * hippie-expand:                         Hippie Expand.        (line  6)
 * quickurl:                              QuickURL.             (line  6)
 * quickurl-add-url:                      QuickURL.             (line 17)
 * quickurl-list:                         QuickURL.             (line 17)
-* skeleton-further-elements:             Skeleton Language.    (line 82)
+* skeleton-further-elements:             Skeleton Language.    (line 86)
 * skeleton-insert:                       Skeleton Language.    (line  6)
 * skeleton-pair-insert-maybe:            Inserting Pairs.      (line 15)
 * tempo-backward-mark:                   Tempo.                (line 11)
@@ -1182,22 +1184,27 @@ Variable Index
 
 
 Tag Table:
-Node: Top1007
-Node: Using Skeletons4165
-Node: Wrapping Skeletons5651
-Node: Skeletons as Abbrevs8283
-Node: Skeleton Language9214
-Node: Inserting Pairs12809
-Node: Autoinserting15231
-Node: Copyrights19061
-Node: Executables20962
-Node: Timestamps22666
-Node: QuickURL24046
-Node: Tempo24917
-Node: Hippie Expand26105
-Node: GNU Free Documentation License27142
-Node: Concept Index52325
-Node: Command Index53441
-Node: Variable Index54906
+Node: Top931
+Node: Using Skeletons4089
+Node: Wrapping Skeletons5575
+Node: Skeletons as Abbrevs8207
+Node: Skeleton Language9138
+Node: Inserting Pairs13035
+Node: Autoinserting15458
+Node: Copyrights19288
+Node: Executables21189
+Node: Timestamps22893
+Node: QuickURL24273
+Node: Tempo25144
+Node: Hippie Expand26332
+Node: GNU Free Documentation License27369
+Node: Concept Index52546
+Node: Command Index53662
+Node: Variable Index55127
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

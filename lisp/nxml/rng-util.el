@@ -1,9 +1,9 @@
 ;;; rng-util.el --- utility functions for RELAX NG library
 
-;; Copyright (C) 2003, 2007-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2003, 2007-2014 Free Software Foundation, Inc.
 
 ;; Author: James Clark
-;; Keywords: XML, RelaxNG
+;; Keywords: wp, hypermedia, languages, XML, RelaxNG
 
 ;; This file is part of GNU Emacs.
 
@@ -164,6 +164,8 @@ HIST, if non-nil, specifies a history list as with `completing-read'."
   (when (string-match " \\'" string)
     (setq string (substring string 0 -1)))
   string)
+
+(define-error 'rng-error nil)
 
 (provide 'rng-util)
 

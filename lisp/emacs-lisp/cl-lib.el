@@ -1,6 +1,6 @@
 ;;; cl-lib.el --- Common Lisp extensions for Emacs  -*- lexical-binding: t -*-
 
-;; Copyright (C) 1993, 2001-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1993, 2001-2014 Free Software Foundation, Inc.
 
 ;; Author: Dave Gillespie <daveg@synaptics.com>
 ;; Version: 1.0
@@ -34,13 +34,6 @@
 
 ;; This file contains the portions of the Common Lisp extensions
 ;; package which should always be present.
-
-
-;;; Future notes:
-
-;; Once Emacs 19 becomes standard, many things in this package which are
-;; messy for reasons of compatibility can be greatly simplified.  For now,
-;; I prefer to maintain one unified version.
 
 
 ;;; Change Log:
@@ -93,8 +86,8 @@
 
 (require 'macroexp)
 
-(defvar cl-optimize-speed 1)
-(defvar cl-optimize-safety 1)
+(defvar cl--optimize-speed 1)
+(defvar cl--optimize-safety 1)
 
 ;;;###autoload
 (define-obsolete-variable-alias
@@ -156,8 +149,8 @@ an element already on the list.
                  ;; earlier and should have triggered them already.
                  (with-no-warnings ,place)
                (setq ,place (cons ,var ,place))))
-	(list 'setq place (cl-list* 'cl-adjoin x place keys)))
-    (cl-list* 'cl-callf2 'cl-adjoin x place keys)))
+	`(setq ,place (cl-adjoin ,x ,place ,@keys)))
+    `(cl-callf2 cl-adjoin ,x ,place ,@keys)))
 
 (defun cl--set-elt (seq n val)
   (if (listp seq) (setcar (nthcdr n seq) val) (aset seq n val)))
@@ -242,42 +235,36 @@ one value.
 	   (equal (buffer-name (symbol-value 'byte-compile--outbuffer))
 		  " *Compiler Output*"))))
 
-(defvar cl-proclaims-deferred nil)
+(defvar cl--proclaims-deferred nil)
 
 (defun cl-proclaim (spec)
   "Record a global declaration specified by SPEC."
-  (if (fboundp 'cl-do-proclaim) (cl-do-proclaim spec t)
-    (push spec cl-proclaims-deferred))
+  (if (fboundp 'cl--do-proclaim) (cl--do-proclaim spec t)
+    (push spec cl--proclaims-deferred))
   nil)
 
 (defmacro cl-declaim (&rest specs)
   "Like `cl-proclaim', but takes any number of unevaluated, unquoted arguments.
 Puts `(cl-eval-when (compile load eval) ...)' around the declarations
 so that they are registered at compile-time as well as run-time."
-  (let ((body (mapcar (function (lambda (x)
-                                  (list 'cl-proclaim (list 'quote x))))
-		      specs)))
-    (if (cl--compiling-file) (cl-list* 'cl-eval-when '(compile load eval) body)
-      (cons 'progn body))))   ; avoid loading cl-macs.el for cl-eval-when
+  (let ((body (mapcar (lambda (x) `(cl-proclaim ',x)) specs)))
+    (if (cl--compiling-file) `(cl-eval-when (compile load eval) ,@body)
+      `(progn ,@body))))           ; Avoid loading cl-macs.el for cl-eval-when.
 
 
 ;;; Symbols.
 
-(defun cl-random-time ()
+(defun cl--random-time ()
   (let* ((time (copy-sequence (current-time-string))) (i (length time)) (v 0))
     (while (>= (cl-decf i) 0) (setq v (+ (* v 3) (aref time i))))
     v))
 
-(defvar cl--gensym-counter (* (logand (cl-random-time) 1023) 100))
+(defvar cl--gensym-counter (* (logand (cl--random-time) 1023) 100))
 
 
 ;;; Numbers.
 
-(defun cl-floatp-safe (object)
-  "Return t if OBJECT is a floating point number.
-On Emacs versions that lack floating-point support, this function
-always returns nil."
-  (and (numberp object) (not (integerp object))))
+(define-obsolete-function-alias 'cl-floatp-safe 'floatp "24.4")
 
 (defsubst cl-plusp (number)
   "Return t if NUMBER is positive."
@@ -295,7 +282,8 @@ always returns nil."
   "Return t if INTEGER is even."
   (eq (logand integer 1) 0))
 
-(defvar cl--random-state (vector 'cl-random-state-tag -1 30 (cl-random-time)))
+(defvar cl--random-state
+  (vector 'cl--random-state-tag -1 30 (cl--random-time)))
 
 (defconst cl-most-positive-float nil
   "The largest value that a Lisp float can hold.
@@ -726,6 +714,9 @@ If ALIST is non-nil, the new pairs are prepended to it."
 
 ;;;###autoload
 (progn
+  ;; The `assert' macro from the cl package signals
+  ;; `cl-assertion-failed' at runtime so always define it.
+  (define-error 'cl-assertion-failed (purecopy "Assertion failed"))
   ;; Make sure functions defined with cl-defsubst can be inlined even in
   ;; packages which do not require CL.  We don't put an autoload cookie
   ;; directly on that function, since those cookies only go to cl-loaddefs.
@@ -737,9 +728,10 @@ If ALIST is non-nil, the new pairs are prepended to it."
   (put 'cl-defsubst 'doc-string-elt 3)
   (put 'cl-defstruct 'doc-string-elt 2))
 
-(load "cl-loaddefs" nil 'quiet)
-
 (provide 'cl-lib)
+(or (load "cl-loaddefs" 'noerror 'quiet)
+    ;; When bootstrapping, cl-loaddefs hasn't been built yet!
+    (require 'cl-macs))
 
 ;; Local variables:
 ;; byte-compile-dynamic: t

@@ -277,8 +277,8 @@
 1998-08-26  Mike McEwan  <mike@lotusland.demon.co.uk>
 
 	* gnus-sum.el (gnus-build-all-threads): `save-excursion' and
- 	`set-buffer' back to `gnus-summary-buffer' in order to access
- 	buffer-local variables.
+	`set-buffer' back to `gnus-summary-buffer' in order to access
+	buffer-local variables.
 
 1998-08-26  Lars Magne Ingebrigtsen  <larsi@gnus.org>
 
@@ -340,7 +340,7 @@
 
 	* nnmail.el (nnmail-spool-file): Allow lists of files.
 
-1998-08-20  Per Starback  <starback@update.uu.se>
+1998-08-20  Per Starb√§ck  <starback@update.uu.se>
 
 	* gnus/gnus-start.el (gnus-check-first-time-used): Change current
 	buffer before creating help group.
@@ -452,7 +452,7 @@
 	* gnus-sum.el (gnus-remove-thread): Didn't work with sparse
 	threads.
 
-1998-08-14  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-08-14  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* nndoc.el (nndoc-generate-mime-parts-head): Use original Subject,
 	Message-ID, and References in fully blown articles.
@@ -619,7 +619,7 @@
 
 	* gnus.el: Gnus v5.6.31 is released.
 
-1998-08-09  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-08-09  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* nndoc.el: Split MIME multipart messages, maybe recursively.
 	(nndoc-mime-parts-type-p, nndoc-transform-mime-parts,
@@ -760,7 +760,7 @@
 	* gnus-group.el (gnus-group-read-ephemeral-group): Make the server
 	unique.
 
-1998-07-28  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-07-28  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* gnus-uu.el (gnus-uu-reginize-string): Consider the number of
 	parts as part of the fixed subject, instead of a wild quantity.
@@ -910,10 +910,10 @@
 1998-07-11  Mike McEwan  <mike@lotusland.demon.co.uk>
 
 	* gnus-agent.el (gnus-agent-fetch-headers): Note last fetched
- 	headers per sesion to aid expiry in `headers only' groups.
+	headers per sesion to aid expiry in `headers only' groups.
 
 	* gnus-agent.el (gnus-agent-expire): Update group info to add
- 	expired articles to list of read articles and prevent
+	expired articles to list of read articles and prevent
 	re-fetching.
 
 1998-07-12  Lars Magne Ingebrigtsen  <larsi@ifi.uio.no>
@@ -943,7 +943,7 @@
 
 	* nntp.el (nntp-server-opened-hook): Doc change.
 
-1998-07-10  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-07-10  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* gnus-sum.el (gnus-summary-respool-trace): New command and
 	keystroke.
@@ -1003,7 +1003,7 @@
 	* nntp.el (nntp-record-command): Give more precise time info.
 	(nntp-next-result-arrived-p): Look for the end of error lines.
 
-1998-07-01  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-07-01  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* gnus-util.el (gnus-delete-if): Would do the opposite.
 
@@ -1266,7 +1266,7 @@
 1998-06-05  Hrvoje Niksic  <hniksic@srce.hr>
 
 	* nnmail.el (nnmail-get-split-group): Don't regexp-quote
- 	nnmail-procmail-suffix.
+	nnmail-procmail-suffix.
 
 1998-06-24  Kim-Minh Kaplan  <kaplan@sky.fr>
 
@@ -1959,12 +1959,6 @@
 
 	* nntp.el: Check whether the connection died.
 
-1998-03-01  Kim-Minh Kaplan  <KimMinh.Kaplan@utopia.eunet.fr>
-
-	* gnus.texi (Easy Picons): Removed references to
-	`gnus-group-display-picons'.
-	(Hard Picons): Ditto.
-
 1998-03-02  Lars Magne Ingebrigtsen  <larsi@ifi.uio.no>
 
 	* gnus-sum.el (gnus-summary-exit-no-update): Run
@@ -1999,9 +1993,9 @@
 	(gnus-picons-setup-buffer): New function.
 	(gnus-picons-set-buffer): Use them.
 	(gnus-picons-display-x-face): Put back the `buf' binding: it is
- 	needed when `gnus-picons-display-where' is not set to article.
-  	Also move the X-Face to the left, near the address.  It seems more
- 	logical.
+	needed when `gnus-picons-display-where' is not set to article.
+	Also move the X-Face to the left, near the address.  It seems more
+	logical.
 
 1998-02-28  Lars Magne Ingebrigtsen  <larsi@menja.ifi.uio.no>
 
@@ -2016,7 +2010,7 @@
 	* gnus-picon.el (gnus-picons-display-x-face): `buf' -- unbound
 	var.
 
-1998-02-28  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-02-28  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* gnus: configure'd.
 
@@ -2370,7 +2364,7 @@
 
 	* gnus-sum.el (gnus-summary-exit): Call purging function.
 
-1998-02-13  FranÁois Pinard  <pinard@iro.umontreal.ca>
+1998-02-13  Fran√ßois Pinard  <pinard@iro.umontreal.ca>
 
 	* nnmail.el (nnmail-get-new-mail): Don't clear split-history.
 	(nnmail-purge-split-history): New function.
@@ -2651,7 +2645,7 @@
 	(gnus-split-methods): Add default values for choices.
 
 	* gnus-score.el (gnus-home-score-file): Add non-nil default for
- 	function.
+	function.
 	(gnus-home-adapt-file): Ditto.
 
 	* gnus-sum.el (gnus-move-split-methods): Add default values for
@@ -2717,7 +2711,7 @@
 1997-12-05  Danny Siu  <dsiu@adobe.com>
 
 	* nndoc.el (nndoc-babyl-body-begin): quote the regexp for the
- 	string "*** EOOH ***" properly.
+	string "*** EOOH ***" properly.
 	(nndoc-babyl-head-begin): Same as above.
 
 1997-12-14  Lars Magne Ingebrigtsen  <larsi@ifi.uio.no>
@@ -2765,10 +2759,10 @@
 1997-11-27  MORIOKA Tomohiko  <morioka@jaist.ac.jp>
 
 	* nnmail.el (nnmail-file-coding-system): Use `raw-text' in
- 	default.
+	default.
 
 	* nnheader.el (nnheader-file-coding-system): Use `raw-text' in
- 	default.
+	default.
 
 1997-12-06  Kim-Minh Kaplan  <KimMinh.Kaplan@utopia.eunet.fr>
 
@@ -3226,7 +3220,7 @@
 1997-10-16  Colin Rafferty  <craffert@ml.com>
 
 	* message.el (message-make-fqdn): Made certain that user-mail is
-		  not nil.
+	not nil.
 
 1997-10-25  David S. Goldberg  <dsg@linus.mitre.org>
 
@@ -3708,7 +3702,7 @@
 	* gnus.el: Quassia Gnus v0.1 is released.
 
 
-  Copyright (C) 1997-2013 Free Software Foundation, Inc.
+  Copyright (C) 1997-2014 Free Software Foundation, Inc.
 
   This file is part of GNU Emacs.
 
@@ -3724,3 +3718,7 @@
 
   You should have received a copy of the GNU General Public License
   along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+
+;; Local Variables:
+;; coding: utf-8
+;; End:

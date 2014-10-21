@@ -1,6 +1,6 @@
 ;;; hilit-chg.el --- minor mode displaying buffer changes with special face
 
-;; Copyright (C) 1998, 2000-2013 Free Software Foundation, Inc.
+;; Copyright (C) 1998, 2000-2014 Free Software Foundation, Inc.
 
 ;; Author: Richard Sharman <rsharman@pobox.com>
 ;; Keywords: faces
@@ -333,7 +333,7 @@ enable the mode if ARG is omitted or nil.
 
 When Highlight Changes is enabled, changes are marked with a text
 property.  Normally they are displayed in a distinctive face, but
-command \\[highlight-changes-visible-mode] can be used to toggles
+command \\[highlight-changes-visible-mode] can be used to toggle
 this on and off.
 
 Other functions for buffers in this mode include:
@@ -379,7 +379,7 @@ in a distinctive face.
 The default value can be customized with variable
 `highlight-changes-visibility-initial-state'.
 
-This command does not itself set highlight-changes mode."
+This command does not itself set Highlight Changes mode."
 
   t		;; init-value
   nil		;; lighter
@@ -455,7 +455,7 @@ Otherwise, this list will be constructed when needed from
   "Call function FUNC for each region used by Highlight Changes mode.
 If START-POSITION is nil, (point-min) is used.
 If END-POSITION is nil, (point-max) is used.
-FUNC is called with 3 params: PROPERTY START STOP."
+FUNC is called with three params: PROPERTY START STOP."
   (let ((start (or start-position (point-min)))
 	(limit (or end-position (point-max)))
 	prop end)
@@ -470,8 +470,8 @@ FUNC is called with 3 params: PROPERTY START STOP."
 (defun hilit-chg-display-changes (&optional beg end)
   "Display face information for Highlight Changes mode.
 
-An overlay from BEG to END containing a change face is added from the
-information in the text property of type `hilit-chg'.
+An overlay from BEG to END containing a change face is added
+from the information in the text property of type `hilit-chg'.
 
 This is the opposite of `hilit-chg-hide-changes'."
   (hilit-chg-map-changes 'hilit-chg-make-ov beg end))
@@ -523,28 +523,12 @@ the text properties of type `hilit-chg'."
   (remove-overlays beg end 'hilit-chg t)
   (hilit-chg-display-changes beg end))
 
-;; Inspired by font-lock.  Something like this should be moved to subr.el.
-(defmacro highlight-save-buffer-state (&rest body)
-  "Bind variables according to VARLIST and eval BODY restoring buffer state."
-  (declare (indent 0) (debug t))
-  (let ((modified (make-symbol "modified")))
-    `(let* ((,modified (buffer-modified-p))
-            (inhibit-modification-hooks t)
-            deactivate-mark
-            ;; So we don't check the file's mtime.
-            buffer-file-name
-            buffer-file-truename)
-       (progn
-         ,@body)
-       (unless ,modified
-         (restore-buffer-modified-p nil)))))
-
 ;;;###autoload
 (defun highlight-changes-remove-highlight (beg end)
   "Remove the change face from the region between BEG and END.
 This allows you to manually remove highlighting from uninteresting changes."
   (interactive "r")
-  (highlight-save-buffer-state
+  (with-silent-modifications
     (remove-text-properties beg end '(hilit-chg nil))
     (hilit-chg-fixup beg end)))
 
@@ -568,40 +552,40 @@ This allows you to manually remove highlighting from uninteresting changes."
 	  (if (and highlight-changes-mode
 		   highlight-changes-visible-mode)
 	      (hilit-chg-fixup beg end))
-        (highlight-save-buffer-state
-         (if (and (= beg end) (> leng-before 0))
-             ;; deletion
-             (progn
-               ;; The eolp and bolp tests are a kludge!  But they prevent
-               ;; rather nasty looking displays when deleting text at the end
-               ;; of line, such as normal corrections as one is typing and
-               ;; immediately makes a correction, and when deleting first
-               ;; character of a line.
-               ;; (if (= leng-before 1)
-               ;;     (if (eolp)
-               ;;         (setq beg-decr 0 end-incr 0)
-               ;;       (if (bolp)
-               ;;   	(setq beg-decr 0))))
-               ;; (setq beg (max (- beg beg-decr) (point-min)))
-               (setq end (min (+ end end-incr) (point-max)))
-               (setq type 'hilit-chg-delete))
-           ;; Not a deletion.
-           ;; Most of the time the following is not necessary, but
-           ;; if the current text was marked as a deletion then
-           ;; the old overlay is still in effect.  So if the user adds some
-           ;; text where she earlier deleted text, we have to remove the
-           ;; deletion marking, and replace it explicitly with a `changed'
-           ;; marking, otherwise its highlighting would disappear.
-           (if (eq (get-text-property end 'hilit-chg) 'hilit-chg-delete)
-               (save-restriction
-                 (widen)
-                 (put-text-property end (+ end 1) 'hilit-chg 'hilit-chg)
-                 (if highlight-changes-visible-mode
-                     (hilit-chg-fixup beg (+ end 1))))))
-         (unless no-property-change
-           (put-text-property beg end 'hilit-chg type))
-         (if (or highlight-changes-visible-mode no-property-change)
-             (hilit-chg-make-ov type beg end)))))))
+        (with-silent-modifications
+          (if (and (= beg end) (> leng-before 0))
+              ;; deletion
+              (progn
+                ;; The eolp and bolp tests are a kludge!  But they prevent
+                ;; rather nasty looking displays when deleting text at the end
+                ;; of line, such as normal corrections as one is typing and
+                ;; immediately makes a correction, and when deleting first
+                ;; character of a line.
+                ;; (if (= leng-before 1)
+                ;;     (if (eolp)
+                ;;         (setq beg-decr 0 end-incr 0)
+                ;;       (if (bolp)
+                ;;   	(setq beg-decr 0))))
+                ;; (setq beg (max (- beg beg-decr) (point-min)))
+                (setq end (min (+ end end-incr) (point-max)))
+                (setq type 'hilit-chg-delete))
+            ;; Not a deletion.
+            ;; Most of the time the following is not necessary, but
+            ;; if the current text was marked as a deletion then
+            ;; the old overlay is still in effect.  So if the user adds some
+            ;; text where she earlier deleted text, we have to remove the
+            ;; deletion marking, and replace it explicitly with a `changed'
+            ;; marking, otherwise its highlighting would disappear.
+            (if (eq (get-text-property end 'hilit-chg) 'hilit-chg-delete)
+                (save-restriction
+                  (widen)
+                  (put-text-property end (+ end 1) 'hilit-chg 'hilit-chg)
+                  (if highlight-changes-visible-mode
+                      (hilit-chg-fixup end (+ end 1))))))
+          (unless no-property-change
+            (put-text-property beg end 'hilit-chg type))
+          (if (or highlight-changes-visible-mode no-property-change)
+              (hilit-chg-make-ov type beg end)))))))
 
 (defun hilit-chg-update ()
   "Update a buffer's highlight changes when visibility changed."
@@ -635,7 +619,7 @@ This removes all saved change information."
       (message "Cannot remove highlighting from read-only mode buffer %s"
 	       (buffer-name))
     (remove-hook 'after-change-functions 'hilit-chg-set-face-on-change t)
-    (highlight-save-buffer-state
+    (with-silent-modifications
       (hilit-chg-hide-changes)
       (hilit-chg-map-changes
        (lambda (_prop start stop)
@@ -747,7 +731,7 @@ You can automatically rotate colors when the buffer is saved by adding
 this function to `write-file-functions' as a buffer-local value.  To do
 this, eval the following in the buffer to be saved:
 
-  \(add-hook 'write-file-functions 'highlight-changes-rotate-faces nil t)"
+  (add-hook 'write-file-functions 'highlight-changes-rotate-faces nil t)"
   (interactive)
   (when (and highlight-changes-mode highlight-changes-visible-mode)
     (let ((modified (buffer-modified-p))
@@ -876,7 +860,7 @@ changes are made, so \\[highlight-changes-next-change] and
     (get-buffer (read-buffer "buffer-a " (current-buffer) t))
     (get-buffer
      (read-buffer "buffer-b "
-		  (window-buffer (next-window (selected-window))) t))))
+		  (window-buffer (next-window)) t))))
   (let ((file-a (buffer-file-name buf-a))
 	(file-b (buffer-file-name buf-b)))
     (highlight-markup-buffers buf-a file-a buf-b file-b)
@@ -1037,6 +1021,12 @@ This is called when `global-highlight-changes-mode' is turned on."
 ;; 			   ))
 ;;
 ;; ================== end of debug ===============
+
+(defun hilit-chg-unload-function ()
+  "Unload the Highlight Changes library."
+  (global-hi-lock-mode -1)
+  ;; continue standard unloading
+  nil)
 
 (provide 'hilit-chg)
 

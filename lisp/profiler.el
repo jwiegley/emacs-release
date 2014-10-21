@@ -1,22 +1,24 @@
 ;;; profiler.el --- UI and helper functions for Emacs's native profiler -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2012-2014 Free Software Foundation, Inc.
 
 ;; Author: Tomohiro Matsuyama <tomo@cx4a.org>
 ;; Keywords: lisp
 
-;; This program is free software; you can redistribute it and/or modify
+;; This file is part of GNU Emacs.
+
+;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
 ;; (at your option) any later version.
 
-;; This program is distributed in the hope that it will be useful,
+;; GNU Emacs is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -25,6 +27,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'pcase)
 
 (defgroup profiler nil
   "Emacs profiler."
@@ -58,7 +61,7 @@
 (defun profiler-format-number (number)
   "Format NUMBER in human readable string."
   (if (and (integerp number) (> number 0))
-      (cl-loop with i = (% (1+ (floor (log10 number))) 3)
+      (cl-loop with i = (% (1+ (floor (log number 10))) 3)
 	       for c in (append (number-to-string number) nil)
 	       if (= i 0)
 	       collect ?, into s
@@ -84,10 +87,12 @@
 		       (profiler-ensure-string arg)))
 	   for len = (length str)
 	   if (< width len)
-	   collect (substring str 0 width) into frags
+           collect (progn (put-text-property (max 0 (- width 2)) len
+                                             'invisible 'profiler str)
+                          str) into frags
 	   else
 	   collect
-	   (let ((padding (make-string (- width len) ?\s)))
+           (let ((padding (make-string (max 0 (- width len)) ?\s)))
 	     (cl-ecase align
 	       (left (concat str padding))
 	       (right (concat padding str))))
@@ -200,11 +205,18 @@ function name of a function itself."
     (goto-char (point-min))
     (read (current-buffer))))
 
+(defun profiler-running-p (&optional mode)
+  "Return non-nil if the profiler is running.
+Optional argument MODE means only check for the specified mode (cpu or mem)."
+  (cond ((eq mode 'cpu) (and (fboundp 'profiler-cpu-running-p)
+                             (profiler-cpu-running-p)))
+        ((eq mode 'mem) (profiler-memory-running-p))
+        (t (or (profiler-running-p 'cpu)
+               (profiler-running-p 'mem)))))
+
 (defun profiler-cpu-profile ()
   "Return CPU profile."
-  (when (and (fboundp 'profiler-cpu-running-p)
-             (fboundp 'profiler-cpu-log)
-             (profiler-cpu-running-p))
+  (when (profiler-running-p 'cpu)
     (profiler-make-profile
      :type 'cpu
      :timestamp (current-time)
@@ -239,18 +251,17 @@ function name of a function itself."
   (not (profiler-calltree-count< a b)))
 
 (defun profiler-calltree-depth (tree)
-  (let ((parent (profiler-calltree-parent tree)))
-    (if (null parent)
-	0
-      (1+ (profiler-calltree-depth parent)))))
+  (let ((d 0))
+    (while (setq tree (profiler-calltree-parent tree))
+      (cl-incf d))
+    d))
 
 (defun profiler-calltree-find (tree entry)
   "Return a child tree of ENTRY under TREE."
   (let (result (children (profiler-calltree-children tree)))
-    ;; FIXME: Use `assoc'.
     (while (and children (null result))
       (let ((child (car children)))
-	(when (equal (profiler-calltree-entry child) entry)
+	(when (function-equal (profiler-calltree-entry child) entry)
 	  (setq result child))
 	(setq children (cdr children))))
     result))
@@ -261,10 +272,9 @@ function name of a function itself."
     (profiler-calltree-walk child function)))
 
 (defun profiler-calltree-build-1 (tree log &optional reverse)
-  ;; FIXME: Do a better job of reconstructing a complete call-tree
-  ;; when the backtraces have been truncated.  Ideally, we should be
-  ;; able to reduce profiler-max-stack-depth to 3 or 4 and still
-  ;; get a meaningful call-tree.
+  ;; This doesn't try to stitch up partial backtraces together.
+  ;; We still use it for reverse calltrees, but for forward calltrees, we use
+  ;; profiler-calltree-build-unified instead now.
   (maphash
    (lambda (backtrace count)
      (let ((node tree)
@@ -281,6 +291,115 @@ function name of a function itself."
                (setq node child)))))))
    log))
 
+
+(define-hash-table-test 'profiler-function-equal #'function-equal
+  (lambda (f) (cond
+          ((byte-code-function-p f) (aref f 1))
+          ((eq (car-safe f) 'closure) (cddr f))
+          (t f))))
+
+(defun profiler-calltree-build-unified (tree log)
+  ;; Let's try to unify all those partial backtraces into a single
+  ;; call tree.  First, we record in fun-map all the functions that appear
+  ;; in `log' and where they appear.
+  (let ((fun-map (make-hash-table :test 'profiler-function-equal))
+        (parent-map (make-hash-table :test 'eq))
+        (leftover-tree (profiler-make-calltree
+                        :entry (intern "...") :parent tree)))
+    (push leftover-tree (profiler-calltree-children tree))
+    (maphash
+     (lambda (backtrace _count)
+       (let ((max (length backtrace)))
+         ;; Don't record the head elements in there, since we want to use this
+         ;; fun-map to find parents of partial backtraces, but parents only
+         ;; make sense if they have something "above".
+         (dotimes (i (1- max))
+           (let ((f (aref backtrace i)))
+             (when f
+               (push (cons i backtrace) (gethash f fun-map)))))))
+     log)
+    ;; Then, for each partial backtrace, try to find a parent backtrace
+    ;; (i.e. a backtrace that describes (part of) the truncated part of
+    ;; the partial backtrace).  For a partial backtrace like "[f3 f2 f1]" (f3
+    ;; is deeper), any backtrace that includes f1 could be a parent; and indeed
+    ;; the counts of this partial backtrace could each come from a different
+    ;; parent backtrace (some of which may not even be in `log').  So we should
+    ;; consider each backtrace that includes f1 and give it some percentage of
+    ;; `count'.  But we can't know for sure what percentage to give to each
+    ;; possible parent.
+    ;; The "right" way might be to give a percentage proportional to the counts
+    ;; already registered for that parent, or some such statistical principle.
+    ;; But instead, we will give all our counts to a single "best
+    ;; matching" parent.  So let's look for the best matching parent, and store
+    ;; the result in parent-map.
+    ;; Using the "best matching parent" is important also to try and avoid
+    ;; stitching together backtraces that can't possibly go together.
+    ;; For example, when the head is `apply' (or `mapcar', ...), we want to
+    ;; make sure we don't just use any parent that calls `apply', since most of
+    ;; them would never, in turn, cause apply to call the subsequent function.
+    (maphash
+     (lambda (backtrace _count)
+       (let* ((max (1- (length backtrace)))
+              (head (aref backtrace max))
+              (best-parent nil)
+              (best-match (1+ max))
+              (parents (gethash head fun-map)))
+         (pcase-dolist (`(,i . ,parent) parents)
+           (when t ;; (<= (- max i) best-match) ;Else, it can't be better.
+             (let ((match max)
+                   (imatch i))
+               (cl-assert (>= match imatch))
+               (cl-assert (function-equal (aref backtrace max)
+                                          (aref parent i)))
+               (while (progn
+                        (cl-decf imatch) (cl-decf match)
+                        (when (> imatch 0)
+                          (function-equal (aref backtrace match)
+                                          (aref parent imatch)))))
+               (when (< match best-match)
+                 (cl-assert (<= (- max i) best-match))
+                 ;; Let's make sure this parent is not already our child: we
+                 ;; don't want cycles here!
+                 (let ((valid t)
+                       (tmp-parent parent))
+                   (while (setq tmp-parent
+                                (if (eq tmp-parent backtrace)
+                                    (setq valid nil)
+                                  (cdr (gethash tmp-parent parent-map)))))
+                   (when valid
+                     (setq best-match match)
+                     (setq best-parent (cons i parent))))))))
+         (puthash backtrace best-parent parent-map)))
+     log)
+    ;; Now we have a single parent per backtrace, so we have a unified tree.
+    ;; Let's build the actual call-tree from it.
+    (maphash
+     (lambda (backtrace count)
+       (let ((node tree)
+             (parents (list (cons -1 backtrace)))
+             (tmp backtrace)
+             (max (length backtrace)))
+         (while (setq tmp (gethash tmp parent-map))
+           (push tmp parents)
+           (setq tmp (cdr tmp)))
+         (when (aref (cdar parents) (1- max))
+           (cl-incf (profiler-calltree-count leftover-tree) count)
+           (setq node leftover-tree))
+         (pcase-dolist (`(,i . ,parent) parents)
+           (let ((j (1- max)))
+             (while (> j i)
+               (let ((f (aref parent j)))
+                 (cl-decf j)
+                 (when f
+                   (let ((child (profiler-calltree-find node f)))
+                     (unless child
+                       (setq child (profiler-make-calltree
+                                    :entry f :parent node))
+                       (push child (profiler-calltree-children node)))
+                     (cl-incf (profiler-calltree-count child) count)
+                     (setq node child)))))))))
+     log)))
+
 (defun profiler-calltree-compute-percentages (tree)
   (let ((total-count 0))
     ;; FIXME: the memory profiler's total wraps around all too easily!
@@ -295,7 +414,9 @@ function name of a function itself."
 
 (cl-defun profiler-calltree-build (log &key reverse)
   (let ((tree (profiler-make-calltree)))
-    (profiler-calltree-build-1 tree log reverse)
+    (if reverse
+        (profiler-calltree-build-1 tree log reverse)
+      (profiler-calltree-build-unified tree log))
     (profiler-calltree-compute-percentages tree)
     tree))
 
@@ -363,7 +484,7 @@ RET: expand or collapse"))
 (defun profiler-report-make-name-part (tree)
   (let* ((entry (profiler-calltree-entry tree))
 	 (depth (profiler-calltree-depth tree))
-	 (indent (make-string (* (1- depth) 2) ?\s))
+	 (indent (make-string (* (1- depth) 1) ?\s))
 	 (mark (if (profiler-calltree-leaf-p tree)
 		   profiler-report-leaf-mark
 		 profiler-report-closed-mark))
@@ -371,7 +492,7 @@ RET: expand or collapse"))
     (format "%s%s %s" indent mark entry)))
 
 (defun profiler-report-header-line-format (fmt &rest args)
-  (let* ((header (apply 'profiler-format fmt args))
+  (let* ((header (apply #'profiler-format fmt args))
 	 (escaped (replace-regexp-in-string "%" "%%" header)))
     (concat " " escaped)))
 
@@ -396,7 +517,7 @@ RET: expand or collapse"))
     (insert (propertize (concat line "\n") 'calltree tree))))
 
 (defun profiler-report-insert-calltree-children (tree)
-  (mapc 'profiler-report-insert-calltree
+  (mapc #'profiler-report-insert-calltree
 	(profiler-calltree-children tree)))
 
 
@@ -404,7 +525,6 @@ RET: expand or collapse"))
 
 (defvar profiler-report-mode-map
   (let ((map (make-sparse-keymap)))
-    ;; FIXME: Add menu.
     (define-key map "n"	    'profiler-report-next-entry)
     (define-key map "p"	    'profiler-report-previous-entry)
     ;; I find it annoying more than helpful to not be able to navigate
@@ -424,8 +544,50 @@ RET: expand or collapse"))
     (define-key map "D"	    'profiler-report-descending-sort)
     (define-key map "="	    'profiler-report-compare-profile)
     (define-key map (kbd "C-x C-w") 'profiler-report-write-profile)
-    (define-key map "q"     'quit-window)
-    map))
+    (easy-menu-define  profiler-report-menu map "Menu for Profiler Report mode."
+      '("Profiler"
+        ["Next Entry" profiler-report-next-entry :active t
+         :help "Move to next entry"]
+        ["Previous Entry" profiler-report-previous-entry :active t
+         :help "Move to previous entry"]
+        "--"
+        ["Toggle Entry" profiler-report-toggle-entry
+         :active (profiler-report-calltree-at-point)
+         :help "Expand or collapse the current entry"]
+        ["Find Entry" profiler-report-find-entry
+         ;; FIXME should deactivate if not on a known function.
+         :active (profiler-report-calltree-at-point)
+         :help "Find the definition of the current entry"]
+        ["Describe Entry" profiler-report-describe-entry
+         :active (profiler-report-calltree-at-point)
+         :help "Show the documentation of the current entry"]
+        "--"
+        ["Show Calltree" profiler-report-render-calltree
+         :active profiler-report-reversed
+         :help "Show calltree view"]
+        ["Show Reversed Calltree" profiler-report-render-reversed-calltree
+         :active (not profiler-report-reversed)
+         :help "Show reversed calltree view"]
+        ["Sort Ascending" profiler-report-ascending-sort
+         :active (not (eq profiler-report-order 'ascending))
+         :help "Sort calltree view in ascending order"]
+        ["Sort Descending" profiler-report-descending-sort
+         :active (not (eq profiler-report-order 'descending))
+         :help "Sort calltree view in descending order"]
+        "--"
+        ["Compare Profile..." profiler-report-compare-profile :active t
+         :help "Compare current profile with another"]
+        ["Write Profile..." profiler-report-write-profile :active t
+         :help "Write current profile to a file"]
+        "--"
+        ["Start Profiler" profiler-start :active (not (profiler-running-p))
+         :help "Start profiling"]
+        ["Stop Profiler" profiler-stop :active (profiler-running-p)
+         :help "Stop profiling"]
+        ["New Report" profiler-report :active (profiler-running-p)
+         :help "Make a new report"]))
+      map)
+  "Keymap for `profiler-report-mode'.")
 
 (defun profiler-report-make-buffer-name (profile)
   (format "*%s-Profiler-Report %s*"
@@ -453,6 +615,7 @@ return it."
 
 (define-derived-mode profiler-report-mode special-mode "Profiler-Report"
   "Profiler Report Mode."
+  (add-to-invisibility-spec '(profiler . t))
   (setq buffer-read-only t
 	buffer-undo-list t
 	truncate-lines t))
@@ -482,9 +645,10 @@ return it."
   (forward-line -1)
   (profiler-report-move-to-entry))
 
-(defun profiler-report-expand-entry ()
-  "Expand entry at point."
-  (interactive)
+(defun profiler-report-expand-entry (&optional full)
+  "Expand entry at point.
+With a prefix argument, expand the whole subtree."
+  (interactive "P")
   (save-excursion
     (beginning-of-line)
     (when (search-forward (concat profiler-report-closed-mark " ")
@@ -494,7 +658,14 @@ return it."
 	  (let ((inhibit-read-only t))
 	    (replace-match (concat profiler-report-open-mark " "))
 	    (forward-line)
-	    (profiler-report-insert-calltree-children tree)
+            (let ((first (point))
+                  (last (copy-marker (point) t)))
+              (profiler-report-insert-calltree-children tree)
+              (when full
+                (goto-char first)
+                (while (< (point) last)
+                  (profiler-report-expand-entry)
+                  (forward-line 1))))
 	    t))))))
 
 (defun profiler-report-collapse-entry ()
@@ -519,21 +690,25 @@ return it."
 	    (delete-region start (line-beginning-position)))))
       t)))
 
-(defun profiler-report-toggle-entry ()
+(defun profiler-report-toggle-entry (&optional arg)
   "Expand entry at point if the tree is collapsed,
 otherwise collapse."
-  (interactive)
-  (or (profiler-report-expand-entry)
+  (interactive "P")
+  (or (profiler-report-expand-entry arg)
       (profiler-report-collapse-entry)))
 
 (defun profiler-report-find-entry (&optional event)
   "Find entry at point."
   (interactive (list last-nonmenu-event))
-  (if event (posn-set-point (event-end event)))
-  (let ((tree (profiler-report-calltree-at-point)))
-    (when tree
-      (let ((entry (profiler-calltree-entry tree)))
-	(find-function entry)))))
+  (with-current-buffer
+      (if event (window-buffer (posn-window (event-start event)))
+        (current-buffer))
+    (and event (setq event (event-end event))
+         (posn-set-point event))
+    (let ((tree (profiler-report-calltree-at-point)))
+      (when tree
+        (let ((entry (profiler-calltree-entry tree)))
+          (find-function entry))))))
 
 (defun profiler-report-describe-entry ()
   "Describe entry at point."

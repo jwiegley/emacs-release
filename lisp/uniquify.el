@@ -1,10 +1,10 @@
 ;;; uniquify.el --- unique buffer names dependent on file name -*- lexical-binding: t -*-
 
-;; Copyright (C) 1989, 1995-1997, 2001-2013 Free Software Foundation,
+;; Copyright (C) 1989, 1995-1997, 2001-2014 Free Software Foundation,
 ;; Inc.
 
 ;; Author: Dick King <king@reasoning.com>
-;; Maintainer: FSF
+;; Maintainer: emacs-devel@gnu.org
 ;; Keywords: files
 ;; Created: 15 May 86
 ;; Package: emacs
@@ -26,7 +26,7 @@
 
 ;;; Commentary:
 
-;; Emacs's standard method for making buffer names unique adds <2>, <3>,
+;; Emacs's traditional method for making buffer names unique adds <2>, <3>,
 ;; etc. to the end of (all but one of) the buffers.  This file replaces
 ;; that behavior, for buffers visiting files and dired buffers, with a
 ;; uniquification that adds parts of the file name until the buffer names
@@ -93,24 +93,29 @@
   :group 'files)
 
 
-(defcustom uniquify-buffer-name-style nil
-  "If non-nil, buffer names are uniquified with parts of directory name.
-The value determines the buffer name style and is one of `forward',
-`reverse', `post-forward', or `post-forward-angle-brackets'.
-For example, files `/foo/bar/mumble/name' and `/baz/quux/mumble/name'
+(defcustom uniquify-buffer-name-style 'post-forward-angle-brackets
+  "How to construct unique buffer names for files with the same base name.
+The value can be one of: `forward', `reverse', `post-forward',
+`post-forward-angle-brackets', or nil.
+
+For example, the files `/foo/bar/mumble/name' and `/baz/quux/mumble/name'
 would have the following buffer names in the various styles:
-  forward        bar/mumble/name  quux/mumble/name
-  reverse        name\\mumble\\bar  name\\mumble\\quux
-  post-forward   name|bar/mumble  name|quux/mumble
-  post-forward-angle-brackets   name<bar/mumble>  name<quux/mumble>
-  nil            name  name<2>
-Of course, the \"mumble\" part may be stripped as well, depending on the setting
-of `uniquify-strip-common-suffix'."
+
+  forward                       bar/mumble/name    quux/mumble/name
+  reverse                       name\\mumble\\bar    name\\mumble\\quux
+  post-forward                  name|bar/mumble    name|quux/mumble
+  post-forward-angle-brackets   name<bar/mumble>   name<quux/mumble>
+  nil                           name               name<2>
+
+The \"mumble\" part may be stripped as well, depending on the
+setting of `uniquify-strip-common-suffix'.  For more options that
+you can set, browse the `uniquify' custom group."
   :type '(radio (const forward)
 		(const reverse)
 		(const post-forward)
 		(const post-forward-angle-brackets)
-		(const :tag "standard Emacs behavior (nil)" nil))
+		(const :tag "numeric suffixes" nil))
+  :version "24.4"
   :require 'uniquify
   :group 'uniquify)
 
@@ -184,10 +189,9 @@ contains the name of the directory which the buffer is visiting.")
 ;; Internal variables used free
 (defvar uniquify-possibly-resolvable nil)
 
-(defvar uniquify-managed nil
+(defvar-local uniquify-managed nil
   "Non-nil if the name of this buffer is managed by uniquify.
 It actually holds the list of `uniquify-item's corresponding to the conflict.")
-(make-variable-buffer-local 'uniquify-managed)
 (put 'uniquify-managed 'permanent-local t)
 
 ;; Used in desktop.el to save the non-uniquified buffer name
@@ -465,27 +469,34 @@ For use on `kill-buffer-hook'."
 ;; rename-buffer and create-file-buffer.  (Setting find-file-hook isn't
 ;; sufficient.)
 
-(defadvice rename-buffer (after rename-buffer-uniquify activate)
+(advice-add 'rename-buffer :around #'uniquify--rename-buffer-advice)
+(defun uniquify--rename-buffer-advice (rb-fun newname &optional unique &rest args)
   "Uniquify buffer names with parts of directory name."
+  (let ((retval (apply rb-fun newname unique args)))
   (uniquify-maybe-rerationalize-w/o-cb)
-  (if (null (ad-get-arg 1))		; no UNIQUE argument.
+    (if (null unique)
       ;; Mark this buffer so it won't be renamed by uniquify.
       (setq uniquify-managed nil)
     (when uniquify-buffer-name-style
       ;; Rerationalize w.r.t the new name.
       (uniquify-rationalize-file-buffer-names
-       (ad-get-arg 0)
+         newname
        (uniquify-buffer-file-name (current-buffer))
        (current-buffer))
-      (setq ad-return-value (buffer-name (current-buffer))))))
+        (setq retval (buffer-name (current-buffer)))))
+    retval))
 
-(defadvice create-file-buffer (after create-file-buffer-uniquify activate)
+
+(advice-add 'create-file-buffer :around #'uniquify--create-file-buffer-advice)
+(defun uniquify--create-file-buffer-advice (cfb-fun filename &rest args)
   "Uniquify buffer names with parts of directory name."
+  (let ((retval (apply cfb-fun filename args)))
   (if uniquify-buffer-name-style
-      (let ((filename (expand-file-name (directory-file-name (ad-get-arg 0)))))
+        (let ((filename (expand-file-name (directory-file-name filename))))
 	(uniquify-rationalize-file-buffer-names
 	 (file-name-nondirectory filename)
-	 (file-name-directory filename) ad-return-value))))
+           (file-name-directory filename) retval)))
+    retval))
 
 ;;; The End
 
@@ -497,9 +508,8 @@ For use on `kill-buffer-hook'."
 	(set-buffer buf)
 	(when uniquify-managed
 	  (push (cons buf (uniquify-item-base (car uniquify-managed))) buffers)))
-      (dolist (fun '(rename-buffer create-file-buffer))
-	(ad-remove-advice fun 'after (intern (concat (symbol-name fun) "-uniquify")))
-	(ad-update fun))
+      (advice-remove 'rename-buffer #'uniquify--rename-buffer-advice)
+      (advice-remove 'create-file-buffer #'uniquify--create-file-buffer-advice)
       (dolist (buf buffers)
 	(set-buffer (car buf))
 	(rename-buffer (cdr buf) t))))

@@ -1,6 +1,6 @@
 ;;; gnus.el --- a newsreader for GNU Emacs
 
-;; Copyright (C) 1987-1990, 1993-1998, 2000-2013 Free Software
+;; Copyright (C) 1987-1990, 1993-1998, 2000-2014 Free Software
 ;; Foundation, Inc.
 
 ;; Author: Masanobu UMEDA <umerin@flab.flab.fujitsu.junet>
@@ -1628,7 +1628,7 @@ slower."
     ("nnfolder" mail respool address)
     ("nngateway" post-mail address prompt-address physical-address)
     ("nnweb" none)
-    ("nnrss" none)
+    ("nnrss" none global)
     ("nnagent" post-mail)
     ("nnimap" post-mail address prompt-address physical-address respool
      server-marks)
@@ -1649,6 +1649,7 @@ this variable.  I think."
 					     (const post-mail))
 			(checklist :inline t :greedy t
 				   (const :format "%v " address)
+				   (const global)
 				   (const :format "%v " prompt-address)
 				   (const :format "%v " physical-address)
 				   (const virtual)
@@ -2495,9 +2496,19 @@ Disabling the agent may result in noticeable loss of performance."
   :type 'boolean)
 
 (defcustom gnus-other-frame-function 'gnus
-  "Function called by the command `gnus-other-frame'."
+  "Function called by the command `gnus-other-frame' when starting Gnus."
   :group 'gnus-start
   :type '(choice (function-item gnus)
+		 (function-item gnus-no-server)
+		 (function-item gnus-slave)
+		 (function-item gnus-slave-no-server)))
+
+(defcustom gnus-other-frame-resume-function 'gnus-group-get-new-news
+  "Function called by the command `gnus-other-frame' when resuming Gnus."
+  :version "24.4"
+  :group 'gnus-start
+  :type '(choice (function-item gnus)
+		 (function-item gnus-group-get-new-news)
 		 (function-item gnus-no-server)
 		 (function-item gnus-slave)
 		 (function-item gnus-slave-no-server)))
@@ -2626,10 +2637,11 @@ a string, be sure to use a valid format, see RFC 2616."
     (scored . score) (saved . save)
     (cached . cache) (downloadable . download)
     (unsendable . unsend) (forwarded . forward)
-    (seen . seen)))
+    (seen . seen) (unexist . unexist)))
 
 (defconst gnus-article-special-mark-lists
   '((seen range)
+    (unexist range)
     (killed range)
     (bookmark tuple)
     (uid tuple)
@@ -2644,7 +2656,7 @@ a string, be sure to use a valid format, see RFC 2616."
 ;; `score' is not a proper mark
 ;; `bookmark': don't propagated it, or fix the bug in update-mark.
 (defconst gnus-article-unpropagated-mark-lists
-  '(seen cache download unsend score bookmark)
+  '(seen cache download unsend score bookmark unexist)
   "Marks that shouldn't be propagated to back ends.
 Typical marks are those that make no sense in a standalone back end,
 such as a mark that says whether an article is stored in the cache
@@ -2676,7 +2688,6 @@ such as a mark that says whether an article is stored in the cache
     (gnus-tree-mode "(gnus)Tree Display"))
   "Alist of major modes and related Info nodes.")
 
-(defvar gnus-group-buffer "*Group*")
 (defvar gnus-summary-buffer "*Summary*")
 (defvar gnus-article-buffer "*Article*")
 (defvar gnus-server-buffer "*Server*")
@@ -2996,7 +3007,7 @@ with some simple extensions.
             summary just like information from any other summary
             specifier.
 &user-date; Age sensitive date format. Various date format is
-            defined in `gnus-summary-user-date-format-alist'.
+            defined in `gnus-user-date-format-alist'.
 
 
 The %U (status), %R (replied) and %z (zcore) specs have to be handled
@@ -3023,7 +3034,7 @@ See Info node `(gnus)Formatting Variables'."
 
 (defun gnus-suppress-keymap (keymap)
   (suppress-keymap keymap)
-  (let ((keys `([backspace] [delete] "\177" "\M-u"))) ;gnus-mouse-2
+  (let ((keys `([delete] "\177" "\M-u"))) ;gnus-mouse-2
     (while keys
       (define-key keymap (pop keys) 'undefined))))
 
@@ -3235,9 +3246,9 @@ If ARG, insert string at point."
 		    0))
       (string-to-number
        (if (zerop major)
-	     (format "%s00%02d%02d"
+	     (format "%1.2f00%02d%02d"
 		     (if (member alpha '("(ding)" "d"))
-			 "4.99"
+			 4.99
 		       (+ 5 (* 0.02
 			       (abs
 				(- (mm-char-int (aref (downcase alpha) 0))
@@ -4233,8 +4244,7 @@ parameters."
       (setq valids (cdr valids)))
     outs))
 
-(eval-and-compile
-  (autoload 'message-y-or-n-p "message" nil nil 'macro))
+(autoload 'message-y-or-n-p "message" nil nil 'macro)
 
 (defun gnus-read-group (prompt &optional default)
   "Prompt the user for a group name.
@@ -4348,13 +4358,22 @@ server."
   (interactive "P")
   (gnus arg nil 'slave))
 
+(defun gnus-delete-gnus-frame ()
+  "Delete gnus frame unless it is the only one.
+Used for `gnus-exit-gnus-hook' in `gnus-other-frame'."
+  (when (and (frame-live-p gnus-other-frame-object)
+             (cdr (frame-list)))
+    (delete-frame gnus-other-frame-object))
+  (setq gnus-other-frame-object nil))
+
 ;;;###autoload
 (defun gnus-other-frame (&optional arg display)
   "Pop up a frame to read news.
 This will call one of the Gnus commands which is specified by the user
 option `gnus-other-frame-function' (default `gnus') with the argument
-ARG if Gnus is not running, otherwise just pop up a Gnus frame.  The
-optional second argument DISPLAY should be a standard display string
+ARG if Gnus is not running, otherwise pop up a Gnus frame and run the
+command specified by `gnus-other-frame-resume-function'.
+The optional second argument DISPLAY should be a standard display string
 such as \"unix:0\" to specify where to pop up a frame.  If DISPLAY is
 omitted or the function `make-frame-on-display' is not available, the
 current display is used."
@@ -4386,14 +4405,16 @@ current display is used."
 		 (make-frame-on-display display gnus-other-frame-parameters)
 	       (make-frame gnus-other-frame-parameters))))
       (if alive
-	  (switch-to-buffer gnus-group-buffer)
+	  (progn (switch-to-buffer gnus-group-buffer)
+		 (funcall gnus-other-frame-resume-function arg))
 	(funcall gnus-other-frame-function arg)
-	(add-hook 'gnus-exit-gnus-hook
-		  (lambda nil
-                    (when (and (frame-live-p gnus-other-frame-object)
-                               (cdr (frame-list)))
-                      (delete-frame gnus-other-frame-object))
-                    (setq gnus-other-frame-object nil)))))))
+	(add-hook 'gnus-exit-gnus-hook 'gnus-delete-gnus-frame)
+  ;; One might argue that `gnus-delete-gnus-frame' should not be called
+  ;; from `gnus-suspend-gnus-hook', but, on the other hand, one might
+  ;; argue that it should.  No matter what you think, for the sake of
+  ;; those who want it to be called from it, please keep (defun
+  ;; gnus-delete-gnus-frame) even if you remove the next `add-hook'.
+  (add-hook 'gnus-suspend-gnus-hook 'gnus-delete-gnus-frame)))))
 
 ;;;###autoload
 (defun gnus (&optional arg dont-connect slave)
@@ -4413,12 +4434,13 @@ prompt the user for the name of an NNTP server to use."
     (gnus-1 arg dont-connect slave)
     (gnus-final-warning)))
 
-(eval-and-compile
-  (unless (fboundp 'debbugs-gnu)
-    (autoload 'debbugs-gnu "debbugs-gnu" "List all outstanding Emacs bugs." t)))
+(declare-function debbugs-gnu "ext:debbugs-gnu"
+		  (severities &optional packages archivedp suppress tags))
+
 (defun gnus-list-debbugs ()
   "List all open Gnus bug reports."
   (interactive)
+  (require 'debbugs-gnu)
   (debbugs-gnu nil "gnus"))
 
 ;; Allow redefinition of Gnus functions.

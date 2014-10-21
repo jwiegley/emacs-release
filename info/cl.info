@@ -1,15 +1,14 @@
-This is /misc/emacs/bzr/emacs24-merge/doc/misc/../../info/cl.info,
-produced by makeinfo version 4.13 from
-/misc/emacs/bzr/emacs24-merge/doc/misc/cl.texi.
+This is ../../info/cl.info, produced by makeinfo version 4.13 from
+./cl.texi.
 
 This file documents the GNU Emacs Common Lisp emulation package.
 
-   Copyright (C) 1993, 2001-2013 Free Software Foundation, Inc.
+   Copyright (C) 1993, 2001-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -30,12 +29,12 @@ GNU Emacs Common Lisp Emulation
 
 This file documents the GNU Emacs Common Lisp emulation package.
 
-   Copyright (C) 1993, 2001-2013 Free Software Foundation, Inc.
+   Copyright (C) 1993, 2001-2014 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover texts
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
      being "A GNU Manual", and with the Back-Cover Texts as in (a)
      below.  A copy of the license is included in the section entitled
      "GNU Free Documentation License".
@@ -1019,9 +1018,6 @@ analogues in Common Lisp.
      variable with a specified VALUE (such as `(a 17)' in the above
      example).
 
-     Note that the `cl.el' version of this macro behaves slightly
-     differently.  *Note Obsolete Macros::.
-
  -- Macro: cl-letf* (bindings...) forms...
      This macro is to `cl-letf' what `let*' is to `let': It does the
      bindings in sequential rather than parallel order.
@@ -1099,14 +1095,8 @@ These forms make `let'-like bindings to functions instead of variables.
      of symbols rather than on the value cells.  Each BINDING must be a
      list of the form `(NAME ARGLIST FORMS...)', which defines a
      function exactly as if it were a `cl-defun' form.  The function
-     NAME is defined accordingly for the duration of the body of the
-     `cl-flet'; then the old function definition, or lack thereof, is
-     restored.
-
-     You can use `cl-flet' to disable or modify the behavior of
-     functions (including Emacs primitives) in a temporary, localized
-     fashion.  (Compare this with the idea of advising functions.
-     *Note Advising Functions: (elisp)Advising Functions.)
+     NAME is defined accordingly but only within the body of the
+     `cl-flet', hiding any external definition if applicable.
 
      The bindings are lexical in scope.  This means that all references
      to the named functions must appear physically within the body of
@@ -1343,6 +1333,16 @@ the block does not actually `cl-return-from' the block.
      This macro is exactly like `(cl-return-from nil RESULT)'.  Common
      Lisp loops like `cl-do' and `cl-dolist' implicitly enclose
      themselves in `nil' blocks.
+
+ -- Macro: cl-tagbody &rest labels-or-statements
+     This macro executes statements while allowing for control transfer
+     to user-defined labels.  Each element of LABELS-OR-STATEMENTS can
+     be either a label (an integer or a symbol), or a cons-cell (a
+     statement).  This distinction is made before macroexpansion.
+     Statements are executed in sequence, discarding any return value.
+     Any statement can transfer control at any time to the statements
+     that follow one of the labels with the special form `(go LABEL)'.
+     Labels have lexical scope and dynamic extent.
 
 
 File: cl.info,  Node: Iteration,  Next: Loop Facility,  Prev: Blocks and Exits,  Up: Control Structure
@@ -4283,9 +4283,24 @@ the `cl.el' versions are not simply aliases to the `cl-lib.el' versions.
      C-language calls to the message routines rather than going through
      the Lisp `message' function.
 
+     For those cases where the dynamic scoping of `flet' is desired,
+     `cl-flet' is clearly not a substitute.  The most direct
+     replacement would be instead to use `cl-letf' to temporarily
+     rebind `(symbol-function 'FUN)'.  But in most cases, a better
+     substitute is to use an advice, such as:
+
+          (defvar my-fun-advice-enable nil)
+          (add-advice 'FUN :around
+                      (lambda (orig &rest args)
+                        (if my-fun-advice-enable (do-something)
+                          (apply orig args))))
+
+     so that you can then replace the `flet' with a simple dynamically
+     scoped binding of `my-fun-advice-enable'.
+
      Note that many primitives (e.g., `+') have special byte-compile
-     handling.  Attempts to redefine such functions using `flet' will
-     fail if byte-compiled.
+     handling.  Attempts to redefine such functions using `flet',
+     `cl-letf', or an advice will fail when byte-compiled.
 
  -- Macro: labels (bindings...) forms...
      This macro is replaced by `cl-labels' (*note Function Bindings::),
@@ -4296,12 +4311,6 @@ the `cl.el' versions are not simply aliases to the `cl-lib.el' versions.
      This version of `labels' uses the obsolete `lexical-let' form
      (*note Obsolete Lexical Binding::), rather than the true lexical
      binding that `cl-labels' uses.
-
- -- Macro: letf (bindings...) forms...
-     This macro is almost exactly the same as `cl-letf', which replaces
-     it (*note Modify Macros::).  The only difference is in details
-     that relate to some deprecated usage of `symbol-function' in place
-     forms.
 
 
 File: cl.info,  Node: Obsolete Setf Customization,  Prev: Obsolete Macros,  Up: Obsolete Features
@@ -4475,7 +4484,7 @@ Appendix E GNU Free Documentation License
 
                      Version 1.3, 3 November 2008
 
-     Copyright (C) 2000, 2001, 2002, 2007, 2008, 2009 Free Software Foundation, Inc.
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
      `http://fsf.org/'
 
      Everyone is permitted to copy and distribute verbatim copies
@@ -4970,8 +4979,8 @@ Function Index
 * cl-assoc-if-not:                       Association Lists.   (line  25)
 * cl-block:                              Blocks and Exits.    (line  13)
 * cl-caddr:                              List Functions.      (line  10)
-* cl-callf:                              Modify Macros.       (line 139)
-* cl-callf2:                             Modify Macros.       (line 152)
+* cl-callf:                              Modify Macros.       (line 136)
+* cl-callf2:                             Modify Macros.       (line 149)
 * cl-case:                               Conditionals.        (line  10)
 * cl-ceiling:                            Numerical Functions. (line  44)
 * cl-check-type:                         Assertions.          (line  39)
@@ -5029,11 +5038,11 @@ Function Index
 * cl-incf:                               Modify Macros.       (line  18)
 * cl-intersection:                       Lists as Sets.       (line  52)
 * cl-isqrt:                              Numerical Functions. (line  19)
-* cl-labels:                             Function Bindings.   (line  36)
+* cl-labels:                             Function Bindings.   (line  30)
 * cl-lcm:                                Numerical Functions. (line  14)
 * cl-ldiff:                              List Functions.      (line  43)
 * cl-letf:                               Modify Macros.       (line  89)
-* cl-letf*:                              Modify Macros.       (line 135)
+* cl-letf*:                              Modify Macros.       (line 132)
 * cl-list*:                              List Functions.      (line  37)
 * cl-list-length:                        List Functions.      (line  30)
 * cl-load-time-value:                    Time of Evaluation.  (line  95)
@@ -5141,6 +5150,7 @@ Function Index
 * cl-substitute-if:                      Sequence Functions.  (line 108)
 * cl-substitute-if-not:                  Sequence Functions.  (line 108)
 * cl-symbol-macrolet:                    Macro Bindings.      (line  21)
+* cl-tagbody:                            Blocks and Exits.    (line  61)
 * cl-tailp:                              Lists as Sets.       (line  26)
 * cl-the:                                Declarations.        (line  46)
 * cl-tree-equal:                         List Functions.      (line  55)
@@ -5156,8 +5166,7 @@ Function Index
                                                               (line  50)
 * eval-when-compile:                     Time of Evaluation.  (line  86)
 * flet:                                  Obsolete Macros.     (line  11)
-* labels:                                Obsolete Macros.     (line  44)
-* letf:                                  Obsolete Macros.     (line  54)
+* labels:                                Obsolete Macros.     (line  59)
 * lexical-let:                           Obsolete Lexical Binding.
                                                               (line  11)
 * lexical-let*:                          Obsolete Lexical Binding.
@@ -5192,69 +5201,74 @@ Variable Index
 
 
 Tag Table:
-Node: Top999
-Node: Overview3042
-Node: Usage5252
-Node: Organization5686
-Node: Naming Conventions8731
-Node: Program Structure10040
-Node: Argument Lists10467
-Node: Time of Evaluation19648
-Node: Predicates25576
-Node: Type Predicates25904
-Node: Equality Predicates30637
-Node: Control Structure31991
-Node: Assignment32840
-Node: Generalized Variables34083
-Node: Setf Extensions34866
-Node: Modify Macros39021
-Node: Variable Bindings45718
-Node: Dynamic Bindings46271
-Node: Function Bindings47105
-Node: Macro Bindings49664
-Node: Conditionals52947
-Node: Blocks and Exits55547
-Node: Iteration58583
-Node: Loop Facility63862
-Node: Loop Basics64762
-Node: Loop Examples67319
-Node: For Clauses69628
-Node: Iteration Clauses81494
-Node: Accumulation Clauses83364
-Node: Other Clauses85735
-Node: Multiple Values91830
-Node: Macros93375
-Node: Declarations96625
-Node: Symbols104466
-Node: Property Lists104789
-Node: Creating Symbols108019
-Node: Numbers110022
-Node: Predicates on Numbers110488
-Node: Numerical Functions111295
-Node: Random Numbers114606
-Node: Implementation Parameters117173
-Node: Sequences120346
-Node: Sequence Basics121038
-Node: Mapping over Sequences124599
-Node: Sequence Functions130742
-Node: Searching Sequences136341
-Node: Sorting Sequences139432
-Node: Lists142125
-Node: List Functions142573
-Node: Substitution of Expressions145302
-Node: Lists as Sets147240
-Node: Association Lists151038
-Node: Structures152523
-Node: Assertions167369
-Node: Efficiency Concerns169896
-Node: Common Lisp Compatibility174523
-Node: Porting Common Lisp176976
-Node: Obsolete Features185978
-Node: Obsolete Lexical Binding186641
-Node: Obsolete Macros190404
-Node: Obsolete Setf Customization193133
-Node: GNU Free Documentation License199615
-Node: Function Index224797
-Node: Variable Index239380
+Node: Top923
+Node: Overview2966
+Node: Usage5176
+Node: Organization5610
+Node: Naming Conventions8655
+Node: Program Structure9964
+Node: Argument Lists10391
+Node: Time of Evaluation19572
+Node: Predicates25500
+Node: Type Predicates25828
+Node: Equality Predicates30561
+Node: Control Structure31915
+Node: Assignment32764
+Node: Generalized Variables34007
+Node: Setf Extensions34790
+Node: Modify Macros38945
+Node: Variable Bindings45531
+Node: Dynamic Bindings46084
+Node: Function Bindings46918
+Node: Macro Bindings49190
+Node: Conditionals52473
+Node: Blocks and Exits55073
+Node: Iteration58698
+Node: Loop Facility63977
+Node: Loop Basics64877
+Node: Loop Examples67434
+Node: For Clauses69743
+Node: Iteration Clauses81609
+Node: Accumulation Clauses83479
+Node: Other Clauses85850
+Node: Multiple Values91945
+Node: Macros93490
+Node: Declarations96740
+Node: Symbols104581
+Node: Property Lists104904
+Node: Creating Symbols108134
+Node: Numbers110137
+Node: Predicates on Numbers110603
+Node: Numerical Functions111410
+Node: Random Numbers114721
+Node: Implementation Parameters117288
+Node: Sequences120461
+Node: Sequence Basics121153
+Node: Mapping over Sequences124714
+Node: Sequence Functions130857
+Node: Searching Sequences136456
+Node: Sorting Sequences139547
+Node: Lists142240
+Node: List Functions142688
+Node: Substitution of Expressions145417
+Node: Lists as Sets147355
+Node: Association Lists151153
+Node: Structures152638
+Node: Assertions167484
+Node: Efficiency Concerns170011
+Node: Common Lisp Compatibility174638
+Node: Porting Common Lisp177091
+Node: Obsolete Features186093
+Node: Obsolete Lexical Binding186756
+Node: Obsolete Macros190519
+Node: Obsolete Setf Customization193679
+Node: GNU Free Documentation License200161
+Node: Function Index225337
+Node: Variable Index239920
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:
